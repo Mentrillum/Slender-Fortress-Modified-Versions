@@ -1,0 +1,1136 @@
+﻿"Phrases"
+{
+	"SF2 Difficulty Vote Menu Title"
+	{
+		"en"	"Select a difficulty:"
+		"ru"	"Выберите сложность:"
+	}
+
+	"SF2 Difficulty Vote Finished"
+	{
+		"en"	"Vote successful! The difficulty has been changed to:"
+		"ru"	"Голосование успешно завершено! Сложность изменена на:"
+	}
+
+	"SF2 Easy Difficulty"
+	{
+		"en"	"Newbie"
+		"ru"	"Для Новичков"
+	}
+
+	"SF2 Normal Difficulty"
+	{
+		"en"	"Normal"
+		"ru"	"Обычная"
+	}
+
+	"SF2 Hard Difficulty"
+	{
+		"en"	"Hardcore"
+		"ru"	"Высокая"
+	}
+
+	"SF2 Insane Difficulty"
+	{
+		"en"	"Insane"
+		"ru"	"Безумная"
+	}
+
+	"SF2 Default Intro Message Singular"
+	{
+		"#format"		"{1:d}"
+		"en"	"Collect {1} page"
+		"ru"	"Найдите {1} страницу"
+	}
+
+	"SF2 Default Intro Message Plural"
+	{
+		"#format"		"{1:d}"
+		"en"	"Collect all {1} pages"
+		"ru"	"Найдите все {1} страниц(ы)"
+	}
+
+	"SF2 Default Escape Message"
+	{
+		"en"	"Escape!"
+		"ru"	"Спасайтесь!"
+	}
+
+	"SF2 Default Survive Message"
+	{
+		"en"	"Survive!"
+		"ru"	"Выживайте!"
+	}
+
+	"SF2 Grace Period End"
+	{
+		"en"	"Grace period ended. Death will now result in elimination."
+		"ru"	"Отсрочка закончилась. Теперь смерть будет настоящей."
+	}
+
+	"SF2 Player Escaped"
+	{
+		"#format"		"{1:s}"
+		"en"			"{olive}{1}{default} has escaped!"
+		"ru"			"{olive}{1}{default} спасся!"
+	}
+
+	"SF2 Camping System Warning"
+	{
+		"#format"		"{1:d}"
+		"en"			"WARNING: If you do not move from your spot in {1} seconds, you will be caught by the enemy."
+		"ru"			"ВНИМАНИЕ: Если в течение {1} секунд Вы не начнёте двигаться, Вы будете схвачены!"
+	}
+
+	"SF2 Main Menu Title"
+	{
+		"en"	"Main Menu"
+		"ru"	"Главное Меню"
+	}
+
+	"SF2 Queue Menu Title"
+	{
+		"en"	"Queue List"
+		"ru"	"Список Очереди"
+	}
+
+	"SF2 Reset Queue Points Option"
+	{
+		"#format"	"{1:d}"
+		"en"	"Your points: {1} (select to reset)"
+		"ru"	"Ваши очки очереди: {1} (выберите для обнуления)"
+	}
+
+	"SF2 Should Reset Queue Points"
+	{
+		"en"	"Do you really want to reset your queue points to 0?"
+		"ru"	"Вы действительно хотите обнулить ваши очки очереди?"
+	}
+
+	"SF2 Queue Points Reset"
+	{
+		"en"	"You have reset your queue points to 0."
+		"ru"	"Вы обнулили ваши очки очереди."
+	}
+
+	"SF2 Ghost Mode Menu Title"
+	{
+		"en"	"Toggle Ghost Mode:"
+		"ru"	"Вкл/Выкл Режим Призрака:"
+	}
+
+	"SF2 Ghost Mode Enabled"
+	{
+		"en"	"You are now in Ghost Mode. Use a voice command to teleport to a RED player."
+		"ru"	"Теперь Вы Призрак. Голосовые команды телепортируют к Красным."
+	}
+
+	"SF2 Ghost Mode Disabled"
+	{
+		"en"	"You have turned off Ghost Mode."
+		"ru"	"Вы отключили Режим Призрака."
+	}
+
+	"SF2 Ghost Mode Not Allowed"
+	{
+		"en"	"You cannot toggle Ghost Mode right now."
+		"ru"	"Сейчас Вы не можете стать Призраком."
+	}
+
+	"SF2 Ghost Mode Bad Connection"
+	{
+		"#format"	"{1:d}"
+		"en"	"You were booted out of Ghost Mode due to timing out for {1} second(s)."
+		"ru"	"Вы были возвращены из Режима Призрака из-за проблем с подключением за последние {1} секунд(ы)."
+	}
+
+	"SF2 Prefix"
+	{
+		"en"	"[SF2] "
+	}
+
+	"SF2 Help Menu Title"
+	{
+		"en"	"Help Menu"
+		"ru"	"Помощь"
+	}
+
+	"SF2 Help Objective Menu Title"
+	{
+		"en"	"Objective"
+		"ru"	"Цель"
+	}
+
+	"SF2 Help Objective Description"
+	{
+		"en"	"Slender Fortress 2 (SF2) is a gamemode based on\n the game \"Slender: The Eight Pages\" by Mark\nJ. Hadley. The goal is to collect all items\nin the map and escape without getting caught\nby the enemy. Grab pages by hitting them\nwith your melee weapon."
+		"ru"	"Slender Fortress 2 (SF2) это игровой режим основанный\nна игре \"Slender: The Eight Pages\" за авторством\nMark J. Hadley. Цель - найти и собрать все предметы\nна карте и не попасться преследователю.\nСобирайте предметы, ударяя их."
+	}
+
+	"SF2 Help Objective Description 2"
+	{
+		"en"	"Only a certain amount of players will be\nselected on BLU to play the game. The rest of\nthe players will have to wait on BLU until it's\n their turn. BLU can observe RED in real-time\n by using the command !slghost without having\nto spectate."
+		"ru"	"Только определённое количество игроков будет\nвыбрано для игры за Красных. Остальным игрокам\nнеобходимо ждать своей очереди в команде Синих.\nСиние могут наблюдать за Красными,\nиспользуя команду !slghost."
+	}
+
+	"SF2 Help Commands Menu Title"
+	{
+		"en"	"List of Commands"
+		"ru"	"Список Команд чата"
+	}
+
+	"SF2 Help Commands Description"
+	{
+		"en"	"!slender - Displays the main menu.\n!slnext - Displays a list of players showing who's next.\n!slghost - Displays the Ghost Mode menu.\n!slhelp - Shows the Help menu.\n!slcredits - Shows the awesome guys who helped with this mod."
+		"ru"	"!slender - Показать главное меню.\n!slnext - Показать следующих игроков в очереди.\n!slghost - Показать меню Режима Призрака.\n!slhelp - Показать меню Помощь.\n!slcredits - Показать тех замечательных людей, кто помог с этим модом."
+	}
+
+	"SF2 Help Ghost Mode Menu Title"
+	{
+		"en"	"What is Ghost Mode?"
+		"ru"	"Что такое Режим Призрака?"
+	}
+
+	"SF2 Help Ghost Mode Description"
+	{
+		"en"	"Ghost Mode is a feature that BLU players can\nuse to observe RED players without having\nto go to Spectator. RED players will not be\nable to see you, nor will be able to interact\nwith you. You also can't interact with RED."
+		"ru"	"Режим Призрака это возможность Синих видеть\nКрасных, без необходимости переключаться в\nНаблюдателей. Красные не смогут увидеть Вас и\nне смогут взаимодействовать с Вами. Вы так же\nне сможете взаимодействовать с ними."
+	}
+
+	"SF2 Help Controls Menu Title"
+	{
+		"en"	"Controls"
+		"ru"	"Управление"
+	}
+
+	"SF2 Help Controls Description"
+	{
+		"en"	"Primary attack - Grab page\nSecondary attack - Toggle flashlight\nReload - Blink\nHOLD Special attack - Sprint"
+		"ru"	"\"ЛКМ\" - Взять предмет\n\"ПКМ\" - Вкл./Выкл. Фонарик\n\"Перезарядка\" - Моргнуть\nДержать \"Специальная Атака\" - Бег"
+	}
+
+	"SF2 Help Sprinting And Stamina Menu Title"
+	{
+		"en"	"Sprinting and Stamina"
+		"ru"	"Бег и Выносливость"
+	}
+
+	"SF2 Help Sprinting And Stamina Description"
+	{
+		"en"	"You have the ability to sprint, which can be\ndone via holding down your special attack key\n(default bind is L, you can change this in Options).\nHowever, sprinting does not last forever,\nso it's best to conserve your stamina for\nemergencies only. Jumping also decreases your stamina.\n \nIn addition, sprinting makes more sound\nthan walking or crouching, so sprinting is not\nan option in stealth."
+		"ru"	"У Вас есть возможность быстро бежать, которая\nактивируется нажатием кнопки специальной атаки\n(по умолчанию L, можно изменить в настройках).\nОднако, нельзя бежать бесконечно, так что\nлучше сохранить силы для особого случая.\nПрыжки так же требуют сил.\n \nК тому же, бег производит больше шума чем ходьба,\nтак что бег не лучшая идея для незаметности."
+	}
+
+	"SF2 Help Class Info Menu Title"
+	{
+		"en"	"Class Info"
+		"ru"	"Информация о классах"
+	}
+
+	"SF2 Help Class Info Description"
+	{
+		"en"	"Select an option to see the info regarding\neach player class, including buffs and nerfs."
+		"ru"	"Выбери один из классов,\nчто-бы увидеть сильные и слабые стороны."
+	}
+
+	"SF2 Help Scout Class Info Menu Title"
+	{
+		"en"	"The Scout"
+		"ru"	"Разведчик"
+	}
+
+	"SF2 Help Scout Class Info Description"
+	{
+		"en"	"[+] 15%% increase in sprint duration\n[-] Low health, most affected by screen wobbling"
+		"ru"	"[+] На 15%% увеличена продолжительность бега\n[-] Мало здоровья, наиболее подвержен внушению"
+	}
+
+	"SF2 Help Soldier Class Info Menu Title"
+	{
+		"en"	"The Soldier"
+		"ru"	"Солдат"
+	}
+
+	"SF2 Help Soldier Class Info Description"
+	{
+		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[-] The Half-Zatoichi only restores 20 HP on kill\n[-] The Escape Plan only affects sprinting speed"
+		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полу-Затойчи восстанавливает только 20HP за убийство\n[-] План эвакуации влияет только на скорость бега"
+	}
+
+	"SF2 Help Sniper Class Info Menu Title"
+	{
+		"en"	"The Sniper"
+		"ru"	"Спайпер"
+	}
+
+	"SF2 Help Sniper Class Info Description"
+	{
+		"en"	"[+] Blink rate increased by 40%%\n[-] Low health, most affected by screen wobbling"
+		"ru"	"[+] Моргает на 40%% реже\n[-] Мало здоровья, наиболее подвержен внушению"
+	}
+
+	"SF2 Help Demoman Class Info Menu Title"
+	{
+		"en"	"The Demoman"
+		"ru"	"Подрывник"
+	}
+
+	"SF2 Help Demoman Class Info Description"
+	{
+		"en"	"[+] 66%% increase in scare sprint duration\n[-] The Half-Zatoichi only restores 20 HP on kill"
+		"ru"	"[+] На 66%% увеличена продолжительность бега при испуге\n[-] Полу-Затойчи восстанавливает только 20HP за убийство"
+	}
+
+	"SF2 Help Heavy Class Info Menu Title"
+	{
+		"en"	"The Heavy"
+		"ru"	"Пулемётчик"
+	}
+
+	"SF2 Help Heavy Class Info Description"
+	{
+		"en"	"[+] Large health, least affected by screen wobbling\n[-] The Gloves of Running Urgently only affects sprinting speed"
+		"ru"	"[+] Много здоровья, мало подвержен внушению\n[-] ГРУ влияют только на скорость бега"
+	}
+
+	"SF2 Help Medic Class Info Menu Title"
+	{
+		"en"	"The Medic"
+		"ru"	"Медик"
+	}
+
+	"SF2 Help Medic Class Info Description"
+	{
+		"en"	"[+] Regenerates health over time\n[-] Prioritized target to bosses"
+		"ru"	"[+] Со временем восстанавливает здоровье\n[-] Приоритетная цель"
+	}
+
+	"SF2 Help Pyro Class Info Menu Title"
+	{
+		"en"	"The Pyro"
+		"ru"	"Поджигатель"
+	}
+
+	"SF2 Help Pyro Class Info Description"
+	{
+		"en"	"[+] Fireproof, duh!\n[-] The Powerjack only restores 20 HP on kill, and\nmelee damage taken increased to 33%%"
+		"ru"	"[+] Огнеупорный, хех!\n[-] Разъединитель восстанавливает только 20HP за убийство, и\nполучаемый при ближнем бое урон увеличен на 33%%"
+	}
+
+	"SF2 Help Spy Class Info Menu Title"
+	{
+		"en"	"The Spy"
+		"ru"	"Шпион"
+	}
+
+	"SF2 Help Spy Class Info Description"
+	{
+		"en"	"[+] All sounds you make are 35%% quieter to bosses\n[-] Low health, most affected by screen wobbling"
+		"ru"	"[+] Все издаваемые звуки на 35%% тише\n[-] Мало здоровья, наиболее подвержен внушению"
+	}
+
+	"SF2 Help Engineer Class Info Menu Title"
+	{
+		"en"	"The Engineer"
+		"ru"	"Инженер"
+	}
+
+	"SF2 Help Engineer Class Info Description"
+	{
+		"en"	"[+] 33%% increase in Flashlight battery life\n[-] Low health, most affected by screen wobbling"
+		"ru"	"[+] Батарея фонарика служит на 33%% дольше\n[-] Мало здоровья, наиболее подвержен внушению"
+	}
+
+	"SF2 Settings Menu Title"
+	{
+		"en"	"Settings"
+		"ru"	"Настройки"
+	}
+
+	"SF2 Settings PvP Menu Title"
+	{
+		"en"	"PvP Arena Settings"
+		"ru"	"Настройки PvP арены"
+	}
+
+	"SF2 Settings PvP Spawn Menu Title"
+	{
+		"en"	"Enable/Disable automatic spawning"
+		"ru"	"Вкл./Выкл. автоматическое возрождение сразу на арене"
+	}
+
+	"SF2 Settings Hints Menu Title"
+	{
+		"en"	"Toggle hints"
+		"ru"	"Вкл./Выкл. советы"
+	}
+
+	"SF2 Settings Mute Mode Menu Title"
+	{
+		"en"	"Set mute mode"
+		"ru"	"Настройки голосового чата"
+	}
+
+	"SF2 Settings Film Grain Menu Title"
+	{
+		"en"	"Toggle film grain"
+		"ru"	"Вкл./Выкл. эффект плёнки"
+	}
+
+	"SF2 Settings Proxy Menu Title"
+	{
+		"en"	"Allow being picked as a proxy"
+		"ru"	"Разрешить выбор в качестве помощника"
+	}
+
+	"SF2 Settings Music Volume Title"
+	{
+		"en" 	"Set music volume"
+	}
+	
+	"SF2 Music Volum Changed"
+	{
+		"#format"		"{1:d}"
+		"en" 	"{lightgreen}Music volume set to {1}%."
+	}
+
+	"SF2 Ad Message 1"
+	{
+		"en"	"{olive}Slender Fortress official Steam group: {lightgreen}http://steamcommunity.com/groups/SlenderFortress{default}"
+		"ru"	"{olive}Официальная группа Slender Fortress в Steam: {lightgreen}http://steamcommunity.com/groups/SlenderFortress{default}"
+	}
+
+	"SF2 Ad Message 2"
+	{
+		"en"	"{olive}New to this gamemode? Type {lightgreen}!slender{olive} in chat to open the main menu."
+		"ru"	"{olive}Незнакомы с модом? Напишите {lightgreen}!slender{olive} в чате, чтобы открыть главное меню."
+	}
+
+	"SF2 Welcome Message"
+	{
+		"en"	"{olive}Welcome to {lightgreen}Slender Fortress{olive}! If you are new to this gamemode, access the main menu by typing {lightgreen}!slender{olive} in chat."
+		"ru"	"{olive}Добро Пожаловать в {lightgreen}Slender Fortress{olive}! Если вы новичок, откройте главное меню, набрав в чате {lightgreen}!slender{olive}."
+	}
+
+	"SF2 No Queue Points To Spectator"
+	{
+		"en"	"{olive}You were given no queue points because you were in the Spectator team."
+		"ru"	"{olive}Вы не получите очков очереди, находясь в Наблюдателях."
+	}
+
+	"SF2 PvP Spawn Accept"
+	{
+		"en"	"{lightgreen}Enabled PvP Arena automatic spawning."
+		"ru"	"{lightgreen}Включено автоматическое возрождение на PvP арене."
+	}
+
+	"SF2 PvP Spawn Decline"
+	{
+		"en"	"{lightgreen}Disabled PvP Arena automatic spawning."
+		"ru"	"{lightgreen}Отключено автоматическое возрождение на PvP арене."
+	}
+
+	"SF2 Exiting PvP Arena"
+	{
+		"#format"	"{1:d}"
+		"en"	"You are exiting the PvP Arena!\nYou will lose your weapons in {1} second(s) if you don't return!"
+		"ru"	"Вы покинули PvP арену!\nВы потеряете своё оружие через {1} секунд(у) если не вернётесь обратно!"
+	}
+
+	"SF2 Enabled Hints"
+	{
+		"en"	"{lightgreen}Enabled hints."
+		"ru"	"{lightgreen}Включены советы."
+	}
+
+	"SF2 Disabled Hints"
+	{
+		"en"	"{lightgreen}Disabled hints."
+		"ru"	"{lightgreen}Выключены советы."
+	}
+
+	"SF2 Enabled Film Grain"
+	{
+		"en"	"{lightgreen}Enabled film grain."
+		"ru"	"{lightgreen}Включен эффект плёнки."
+	}
+
+	"SF2 Disabled Film Grain"
+	{
+		"en"	"{lightgreen}Disabled film grain."
+		"ru"	"{lightgreen}Выключен эффект плёнки."
+	}
+	
+	"SF2 Enabled Proxy"
+	{
+		"en"	"{lightgreen}You are now opt'd in to be chosen as a Proxy."
+		"ru"	"{lightgreen}Теперь вы можете быть выбраны в качестве Помощника."
+	}
+
+	"SF2 Disabled Proxy"
+	{
+		"en"	"{lightgreen}You will no longer be chosen as a Proxy."
+		"ru"	"{lightgreen}Больше вы не можете быть выбраны в качестве Помощника."
+	}
+
+	"SF2 Give Queue Points"
+	{
+		"#format"	"{1:d}"
+		"en"	"{olive}You have been given {1} queue points for playing."
+		"ru"	"{olive}Вами были получены {1} очков очереди."
+	}
+
+	"SF2 Give Group Queue Points"
+	{
+		"#format"	"{1:d}"
+		"en"	"{olive}Your group has been given {1} queue points for playing."
+		"ru"	"{olive}Вашей группой были получены {1} очков очереди."
+	}
+
+	"SF2 Force Play"
+	{
+		"en"	"{lightgreen}You have been forced in due to a player on RED disconnecting or spectating. Have fun!"
+		"ru"	"{lightgreen}Вы были перемещены к Красным из-за нехватки игроков. Наслаждайтесь!"
+	}
+
+	"SF2 Special Round Announce Chat"
+	{
+		"#format"	"{1:s}"
+		"en"	"Chosen special round: {lightgreen}{1}"
+		"ru"	"Выбран специальный раунд: {lightgreen}{1}"
+	}
+
+	"SF2 Hint Sprint"
+	{
+		"en"	"Sprint - HOLD Special Attack"
+		"ru"	"Бег - Держать кнопку \"Специальная Атака\""
+	}
+
+	"SF2 Hint Flashlight"
+	{
+		"en"	"Flashlight - Secondary Attack"
+		"ru"	"Фонарик - ПКМ"
+	}
+
+	"SF2 Hint Blink"
+	{
+		"en"	"Blink - Reload"
+		"ru"	"Моргнуть - \"Перезарядка\""
+	}
+
+	"SF2 Hint Main Menu"
+	{
+		"en"	"Main Menu - Type !sf2 or !slender in chat"
+		"ru"	"Главное меню - Напишите в чате !sf2 или !slender"
+	}
+
+	"SF2 Admin Menu Boss Main"
+	{
+		"en"	"Boss Administration"
+		"ru"	"Управление Боссами"
+	}
+
+	"SF2 Admin Menu Add Boss"
+	{
+		"en"	"Add a boss"
+		"ru"	"Добавить босса"
+	}
+
+	"SF2 Admin Menu Add Fake Boss"
+	{
+		"en"	"Add a fake boss"
+		"ru"	"Добавить имитацию босса"
+	}
+
+	"SF2 Admin Menu Remove Boss"
+	{
+		"en"	"Remove a boss"
+		"ru"	"Убрать босса"
+	}
+
+	"SF2 Admin Menu Spawn Boss"
+	{
+		"en"	"Spawn an active boss"
+		"ru"	"Создать активного босса"
+	}
+
+	"SF2 Admin Menu Boss Attack Waiters"
+	{
+		"en"	"Toggle boss attacking waiters (BLU)"
+		"ru"	"Вкл./Выкл. Нападение босса на Синих"
+	}
+
+	"SF2 Admin Menu Boss Attack Waiters Confirm"
+	{
+		"#format"	"{1:s}"
+		"en"	"Should {1} attack the waiters (BLU)?"
+		"ru"	"Должен ли {1} нападать на Синих?"
+	}
+
+	"SF2 Admin Menu Boss Teleport"
+	{
+		"en"	"Toggle boss teleporting to RED"
+		"ru"	"Вкл./Выкл. телепортацию босса к Красным"
+	}
+
+	"SF2 Admin Menu Boss Teleport Confirm"
+	{
+		"#format"	"{1:s}"
+		"en"	"Should {1} be able to teleport near RED?"
+		"ru"	"Должен ли {1} телепортироваться к Красным?"
+	}
+
+	"SF2 Admin Menu Override Boss"
+	{
+		"en"	"Set the next boss override"
+		"ru"	"Выбор босса для следующего раунда"
+	}
+
+	"SF2 Admin Menu Current Boss Override"
+	{
+		"#format"	"{1:s}"
+		"en"	"Current Boss Override: {1}"
+		"ru"	"Выбранный босс для следующего раунда: {1}"
+	}
+
+	"SF2 Admin Menu Player Set Play State"
+	{
+		"en"	"Force player in/out of game"
+		"ru"	"Добавить/Убрать игрока"
+	}
+
+	"SF2 Admin Menu Player Set Play State Confirm"
+	{
+		"#format"	"{1:s}"
+		"en"	"Force {1} in or out of the game?"
+		"ru"	"Действительно переместить игрока {1}?"
+	}
+
+	"SF2 Admin Menu Player Force Proxy"
+	{
+		"en"	"Force player to be a Proxy"
+		"ru"	"Сделать игрока Помощником"
+	}
+
+	"SF2 Admin Menu Player Force Proxy Boss"
+	{
+		"en"	"Which boss should the player be a Proxy for?"
+		"ru"	"Помощником, какому боссу должен стать игрок?"
+	}
+
+	"SF2 Boss Does Not Exist"
+	{
+		"en"	"That boss does not exist anymore!"
+		"ru"	"Этот босс больше не существует"
+	}
+
+	"SF2 Player Does Not Exist"
+	{
+		"en"	"That player does not exist!"
+		"ru"	"Этот игрок не существует!"
+	}
+
+	"SF2 No Active Bosses"
+	{
+		"en"	"There are no active bosses available!"
+		"ru"	"Нет активных боссов!"
+	}
+
+	"SF2 Spawned Boss"
+	{
+		"en"	"Spawned the boss at your location!"
+		"ru"	"Босс создан рядом с Вами!"
+	}
+
+	"SF2 Removed Boss"
+	{
+		"en"	"Removed boss!"
+		"ru"	"Босс убран!"
+	}
+
+	"SF2 Boss Not Allowed To Have Proxies"
+	{
+		"en"	"That boss isn't allowed to have proxies!"
+		"ru"	"У этого босса не может быть помощников!"
+	}
+
+	"SF2 Boss Should Teleport"
+	{
+		"en"	"Boss is now able to teleport!"
+		"ru"	"Теперь босс может телепортироваться!"
+	}
+
+	"SF2 Boss Should Not Teleport"
+	{
+		"en"	"Boss can no longer teleport!"
+		"ru"	"Теперь босс больше не может телепортироваться!"
+	}
+
+	"SF2 Boss Attack Waiters"
+	{
+		"en"	"Boss will now attack waiters!"
+		"ru"	"Теперь босс нападает на Синих!"
+	}
+
+	"SF2 Boss Do Not Attack Waiters"
+	{
+		"en"	"Boss will no longer attack waiters!"
+		"ru"	"Теперь босс больше не нападает на Синих!"
+	}
+
+	"SF2 Player Already A Proxy"
+	{
+		"en"	"That player already is a Proxy!"
+		"ru"	"Этот игрок уже помощник!"
+	}
+
+	"SF2 Unable To Perform Action On Player In Round"
+	{
+		"#format"	"{1:s}"
+		"en"	"Unable to perform action on {1} because he/she is currently playing in the round."
+		"ru"	"Не возможно совершать действия над {1} потому что он/она сейчас играет за Красных."
+	}
+
+	"SF2 Player Forced In Game"
+	{
+		"#format"	"{1:s}"
+		"en"	"Forced {1} into the game."
+		"ru"	"Игрок {1} перемещён к Красным."
+	}
+
+	"SF2 Player Forced Out Of Game"
+	{
+		"#format"	"{1:s}"
+		"en"	"Forced {1} out of the game."
+		"ru"	"Игрок {1} перемещён к Синим."
+	}
+
+	"SF2 Cannot Use Command"
+	{
+		"en"	"This command cannot be used at this time."
+		"ru"	"Эта команда сейчас недоступна."
+	}
+
+	"SF2 Player No Place For Proxy"
+	{
+		"#format"	"{1:s}"
+		"en"	"Could not find a good Proxy position for {1}!"
+		"ru"	"Не получается найти хорошую позицию для помощника {1}!"
+	}
+
+	"SF2 In"
+	{
+		"en"	"In"
+		"ru"	"В"
+	}
+
+	"SF2 Out"
+	{
+		"en"	"Out"
+		"ru"	"Из"
+	}
+
+	"SF2 Group Main Menu Title"
+	{
+		"en"	"Group Menu"
+		"ru"	"Меню групп"
+	}
+
+	"SF2 Group Main Menu Description"
+	{
+		"en"	"Administrate, view info, create, or leave a group."
+		"ru"	"Управление, просмотр информации, создание, или выход из группы."
+	}
+
+	"SF2 Admin Group Menu Title"
+	{
+		"en"	"Administrate/View info of current group"
+		"ru"	"Управление/Просмотр информации текущей группы"
+	}
+
+	"SF2 Admin Group Menu Description"
+	{
+		"#format"	"{1:s},{2:s},{3:d},{4:d},{5:d}"
+		"en"	"Group Name: {1}\nGroup Leader: {2}\nMembers: {3}/{4}\nQueue Points: {5}"
+		"ru"	"Название группы: {1}\nЛидер группы: {2}\nУчастники: {3}/{4}\nОчки очереди: {5}"
+	}
+
+	"SF2 View Current Group Info Menu Title"
+	{
+		"en"	"View info of current group"
+		"ru"	"Просмот информации о текущей группе"
+	}
+
+	"SF2 View Group Members Menu Title"
+	{
+		"en"	"View group members"
+		"ru"	"Просмотр участников группы"
+	}
+
+	"SF2 View Group Members Menu Description"
+	{
+		"en"	"List of all members in your group:"
+		"ru"	"Список всех участников Вашей группы:"
+	}
+
+	"SF2 Set Group Name Menu Title"
+	{
+		"en"	"Set group name"
+		"ru"	"Задать название группы"
+	}
+
+	"SF2 Set Group Name Menu Description"
+	{
+		"en"	"You can set a custom name for your group to make\nit uniquely identifiable from others. You can set\nyour current group's name by typing the following\nin chat:\n \n /slgroupname <name>\n \nThe maximum name length is 64 characters."
+		"ru"	"Вы можете задать произвольное имя для Вашей группы\nчто-бы отличить её от других групп. Задать название\nВашей текущей группы можно, набрав в чате:\n \n /slgroupname <name>\n \nМаксимальная длинна названия ограничена 64 символами."
+	}
+
+	"SF2 Invalid Group Name"
+	{
+		"en"	"Invalid group name!"
+		"ru"	"Недопустимое название группы!"
+	}
+
+	"SF2 Group Name Set"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"	"Your group's name has been changed from {1} to {2}."
+		"ru"	"Название вашей группы изменено с {1} на {2}."
+	}
+
+	"SF2 Set Group Leader Menu Title"
+	{
+		"en"	"Set group leader"
+		"ru"	"Установить лидера группы"
+	}
+
+	"SF2 Set Group Leader Menu Description"
+	{
+		"en"	"Who should be the new group leader?"
+		"ru"	"Кто станет новым лидером группы?"
+	}
+
+	"SF2 Group Has Too Many Members"
+	{
+		"en"	"Your group has too many members! Some of your members will be kicked off the group to make room."
+		"ru"	"В вашей группе слишком много участников! Кто-то будет убран из группы, что-бы освободить место."
+	}
+
+	"SF2 Invite To Group Menu Title"
+	{
+		"en"	"Invite players to group"
+		"ru"	"Пригласить игроков в группу"
+	}
+
+	"SF2 Invite To Group Menu Description"
+	{
+		"en"	"Invite players to join your group!\n \nNOTE: You cannot invite players that are\nalready in a group, or is currently playing as RED."
+		"ru"	"Пригласить игроков в Вашу группу!\n \nИНФОРМАЦИЯ: Вы не сможете пригласить игроков,\nкоторые уже в группе или сейчас в команде Красных."
+	}
+
+	"SF2 Group Invitation Sent"
+	{
+		"#format"	"{1:s}"
+		"en"	"Sent a group invitation to {1}."
+		"ru"	"Приглашение игроку {1} отправлено."
+	}
+
+	"SF2 Group Invite Menu Description"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"	"You have been invited by {1} to join the\n{2} group.\n \nWARNING: By joining a group, all your queue points will\nbe reset to 0! You will only be queued in when your\ngroup is picked.\n \nDo you accept the invitation?"
+		"ru"	"{1} Пригласил Вас присоедениться к группе\n{2}.\n \nВНИМАНИЕ: Присоединившись к группе, все Ваши очки очереди\nбудут сброшены на 0! Ваша очередь будет продвигаться\nтолько в составе группы.\n \nВы принимаете приглашение?"
+	}
+
+	"SF2 No Group Invite Spam"
+	{
+		"#format"	"{1:d},{2:s}"
+		"en"	"You must wait {1} seconds before sending another invite to {2}."
+		"ru"	"Вы должны подождать {1} секунд(ы) перед следующим приглашением в {2}."
+	}
+
+	"SF2 Kick From Group Menu Title"
+	{
+		"en"	"Kick players from group"
+		"ru"	"Выгнать игрока из группы"
+	}
+
+	"SF2 Kick From Group Menu Description"
+	{
+		"en"	"Kick unwanted players from the group."
+		"ru"	"Выгнать нежелательных игроков из группы."
+	}
+
+	"SF2 Kicked From Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"You have been kicked from the {1} group."
+		"ru"	"Вас выгнали из группы {1}."
+	}
+
+	"SF2 Player Kicked From Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"Kicked {1} from the group."
+		"ru"	"{1} Исключён из группы."
+	}
+
+	"SF2 Reset Group Queue Points Menu Title"
+	{
+		"en"	"Reset group's queue points"
+		"ru"	"Сбросить очки очереди группы"
+	}
+
+	"SF2 Reset Group Queue Points Menu Description"
+	{
+		"en"	"Are you sure you want to reset\nthe group's queue points back to 0?"
+		"ru"	"Вы уверены, что хотите сбросить\nочки очереди группы обратно на 0?"
+	}
+
+	"SF2 Group Queue Points Reset"
+	{
+		"en"	"Your group's queue points were reset to 0!"
+		"ru"	"Очки очереди Вашей группы были сброшены на 0!"
+	}
+
+	"SF2 Group Is Full"
+	{
+		"en"	"You cannot perform this command because the group is full!"
+		"ru"	"Вы не можете использовать эту команду, в группе уже максимальное количество игроков!"
+	}
+
+	"SF2 Not Group Leader"
+	{
+		"en"	"You cannot perform this command because you are not the group leader."
+		"ru"	"Вы не можете использовать эту команду, Вы не лидер группы."
+	}
+
+	"SF2 No Players Available"
+	{
+		"en"	"You cannot perform this command because there are no players available!"
+		"ru"	"Вы не можете использовать эту команду, нет доступных игроков!"
+	}
+
+	"SF2 Player Not In Group"
+	{
+		"en"	"You cannot perform this command because the player is not in your group."
+		"ru"	"Вы не можете использовать эту команду, игрок не в Вашей группе."
+	}
+
+	"SF2 Player In Another Group"
+	{
+		"en"	"You cannot perform this command because the player is already in another group."
+		"ru"	"Вы не можете использовать эту команду, игрок уже участник другой группы."
+	}
+
+	"SF2 Player In Group"
+	{
+		"en"	"You cannot perform this command because the player is already in your group."
+		"ru"	"Вы не можете использовать эту команду, игрок уже участник Вашей группы."
+	}
+
+	"SF2 Create Group Menu Title"
+	{
+		"en"	"Create new group"
+		"ru"	"Создать новую группу"
+	}
+
+	"SF2 Create Group Menu Description"
+	{
+		"#format"	"{1:d},{2:d}"
+		"en"	"Creating a group allows you to play together with\nfriends! However, you can only invite {1} player(s)\ninto your group. And for queuing, the entire group's\nqueue points will be set to yours,\nwhich is {2}. However, your personal queue points\nWILL BE RESET TO 0!\n \nCreate new group?"
+		"ru"	"Создав группу, можно играть вместе с друзьями!\nОднако, Вы можете пригласить только {1} игроков\nв Вашу группу. И об очках очереди для группы, они\nбудут установлены равными Вашим ({2}).\nНо при этом, Ваши персональные очки БУДУТ СБРОШЕНЫ на 0!\n \nСоздать новую группу?"
+	}
+
+	"SF2 Player New Group Leader"
+	{
+		"#format"	"{1:s}"
+		"en"	"{1} is now the new leader of your group."
+		"ru"	"Теперь {1} лидер Вашей группы."
+	}
+
+	"SF2 New Group Leader"
+	{
+		"#format"	"{1:s}"
+		"en"	"You are now the group leader of the {1} group."
+		"ru"	"Теперь Вы лидер группы {1}."
+	}
+
+	"SF2 In Group"
+	{
+		"en"	"You cannot perform this command because you are already in the group!"
+		"ru"	"Вы не можете использовать эту команду, Вы уже участник этой группы!"
+	}
+
+	"SF2 In Another Group"
+	{
+		"en"	"You cannot perform this command because you are already in another group!"
+		"ru"	"Вы не можете использовать эту команду, Вы уже участник другой группы!"
+	}
+
+	"SF2 Joined Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"You are now in the {1} group. Welcome!"
+		"ru"	"Теперь Вы участник группы {1}. Добро пожаловать!"
+	}
+
+	"SF2 Left Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"You have left the {1} group."
+		"ru"	"Вы покинули группу {1}."
+	}
+
+	"SF2 Player Joined Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"Player {1} has joined your group."
+		"ru"	"Игрок {1} присоединился к Вашей группе."
+	}
+
+	"SF2 Player Left Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"Player {1} has left your group."
+		"ru"	"Игрок {1} покинул Вашу группу."
+	}
+
+	"SF2 Created Group"
+	{
+		"#format"	"{1:s}"
+		"en"	"Group creation successful! Your new group's name is: {1}"
+		"ru"	"Группа успешно создана! Имя вашей группы: {1}"
+	}
+
+	"SF2 Max Groups Reached"
+	{
+		"en"	"Unable to create a new group because the maximum number of groups has been reached!"
+		"ru"	"Невозможно создать новую группу, уже создано максимальное число групп!"
+	}
+
+	"SF2 Group Does Not Exist"
+	{
+		"en"	"You cannot perform this command because your group no longer exists!"
+		"ru"	"Вы не можете использовать эту команду, Ваша группа больше не существует!"
+	}
+
+	"SF2 Leave Group Menu Title"
+	{
+		"en"	"Leave current group"
+		"ru"	"Покинуть текущую группу"
+	}
+
+	"SF2 Leave Group Menu Description"
+	{
+		"#format"	"{1:s}"
+		"en"	"Are you sure you want to leave the {1} group?"
+		"ru"	"Вы действительно хотите покинуть группу {1}?"
+	}
+
+	"SF2 Proxy Ask Menu Title"
+	{
+		"en"	"You have been chosen to become a Proxy!"
+		"ru"	"Вас выбрали помощником!"
+	}
+
+	"SF2 Proxy Ask Menu Description"
+	{
+		"en"	"As a Proxy, your goal is to kill the RED team. You\nwill be teleported near a RED player's position\nonce you accept. In addition, Proxies are able to\nsee the RED team outlines through walls, so you can\nlaunch surprise attacks if need be. However, your\nlife is dependent on your Control meter, therefore\nit will not last forever.\n \nDo you accept?"
+		"ru"	"Цель помощника, убить игроков команды Красных. Вы\nбудете телепортированы к игроку команды Красных\nкак только согласитесь. В дополнение, Помощники могут\nвидеть игроков Красных через стены, так что вы можете,\nпри желании, устроить им сюрприз. Однако, время зависит\nуровня от Контроля Вас боссом, который не бесконечен.\n \nВы согласны?"
+	}
+
+	"SF2 Too Much Time"
+	{
+		"en"	"{olive}[SF2] {lightgreen}Sorry you took too much time, your spawnpoint is actually visible to a player."
+		"ru"	"{olive}[SF2] {lightgreen}Извините, но Вы думали слишком долго, Вас увидят."
+	}
+
+	"SF2 Too Many Proxies"
+	{
+		"en"	"Sorry, but there are too many Proxies currently in game at the moment."
+		"ru"	"Извините, но в данный момент Помощников слишком много."
+	}
+
+	"SF2 Proxy Force Message"
+	{
+		"#format"	"{1:d}"
+		"en"	"You've been chosen to be a Proxy!\nYou will be teleported to the RED area in {1} second(s)."
+		"ru"	"Вас выбрали Помощником!\nВы будете телепортированы к Красным через {1} секунд(ы)."
+	}
+	
+	"SF2 Boss Pack Menu Title"
+	{
+		"en" "Show the current pack, if there's one:"
+	}
+	
+	"SF2 Boss Pack Vote Menu Title"
+	{
+		"en"	"Select the boss pack for the next map!"
+		"ru"	"Выберите список боссов для следующей карты!"
+	}
+
+	"SF2 Boss Pack Vote Successful"
+	{
+		"#format"	"{1:s}"
+		"en"	"Vote successful! The next boss pack to be loaded on the next map is: {1}"
+		"ru"	"Голосование успешно завершено! Список боссов для следующей карты: {1}"
+	}
+
+	"SF2 Boss Pack No Vote"
+	{
+		"en"	"Nobody voted. The next boss pack to be loaded on the next map is the default one."
+		"ru"	"Никто не проголосовал. Список боссов для следующей карты: по умолчанию."
+	}
+	
+	"SF2 Special Round Vote Menu Title"
+	{
+		"en"	"Select the Special Round!"
+	}
+	
+	"SF2 Special Round Vote Successful"
+	{
+		"#format"	"{1:s}"
+		"en"	"Vote successful! Activating Special Round: {1}"
+	}
+
+	"SF2 Projected Flashlight"
+	{
+		"en"	"{olive}Your flashlight mode has been set to {lightgreen}Projected{olive}."
+		"ru"	"{olive}Режим Вашего фонарика изменён на {lightgreen}Проецируемый{olive}."
+	}
+
+	"SF2 Normal Flashlight"
+	{
+		"en"	"{olive}Your flashlight mode has been set to {lightgreen}Normal{olive}."
+		"ru"	"{olive}Режим Вашего фонарика изменён на {lightgreen}Обычный{olive}."
+	}
+	
+	"SF2 Mute Mode Normal"
+	{
+		"en"	"{lightgreen}Mute mode set to normal."
+		"ru"	"{lightgreen}Режим чата по умолчанию."
+	}
+	
+	"SF2 Mute Mode Opposing"
+	{
+		"en"	"{lightgreen}Muted opposing team."
+		"ru"	"{lightgreen}Чат другой команды выключен."
+	}
+	
+	"SF2 Mute Mode Proxy"
+	{
+		"en"	"{lightgreen}Muted opposing team, but settings will be automatically set to normal if you're a proxy."
+		"ru"	"{lightgreen}Чат другой команды выключен, но будет автоматически включен, если Вы станете Помощником."
+	}
+	
+	"SF2 Recent Changes"
+	{
+		"en"	"Recent Changes:"
+	}
+	
+	"SF2 Change Log"
+	{
+		"en"	"-Fixed an issue where boss's light could create lighting problems with the props.\n-Fixed an issue where proxies could spawn disguised.\n-Fixed ghost camera overlay from not being applied to ghosts.\n-Added an update panel.\n-(!slghost) is now a toggle command!\n-Updated credits menu."
+	}
+}
