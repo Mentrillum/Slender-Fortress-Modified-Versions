@@ -136,6 +136,21 @@ stock bool SF_IsRaidMap()
 	return view_as<bool>(g_bIsRaidMap || (GetConVarInt(g_cvRaidMap) == 1));
 }
 
+stock bool SF_IsProxyMap()
+{
+	return view_as<bool>(g_bIsProxyMap || (GetConVarInt(g_cvProxyMap) == 1));
+}
+
+stock bool SF_BossesChaseEndlessly()
+{
+	return view_as<bool>(g_bBossesChaseEndlessly || (GetConVarInt(g_cvBossChaseEndlessly) == 1));
+}
+
+stock bool SF_IsBoxingMap()
+{
+	return view_as<bool>(g_bIsBoxingMap || (GetConVarInt(g_cvBoxingMap) == 1));
+}
+
 int SDK_StartTouch(int iEntity, int iOther)
 {
 	if(g_hSDKStartTouch != INVALID_HANDLE)
@@ -355,24 +370,6 @@ stock void SDK_GetSmoothedVelocity(int iEntity, float flVector[3])
 	}
 	SDKCall(g_hSDKGetSmoothedVelocity, iEntity, flVector);
 }
-// ===========================================================
-// CAmmoDef
-// ===========================================================
-stock int GetAmmoIndex(const char[] sAmmoName)
-{
-	if (g_hSDKGetAmmoDef != null)
-	{
-		Address CAmmoDef = SDKCall(g_hSDKGetAmmoDef);
-		if (CAmmoDef >= view_as<Address>(2000))
-		{
-			if (g_hSDKAmmoDefIndex != null)
-			{
-				return SDKCall(g_hSDKAmmoDefIndex, CAmmoDef, sAmmoName);
-			}
-		}
-	}
-	return -1;
-}
 
 //  =========================================================
 //  GLOW FUNCTIONS
@@ -433,10 +430,13 @@ stock void SDK_EquipWearable(int client, int entity)
 
 stock void KillClient(int client)
 {
-	SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
-	ForcePlayerSuicide(client);
-	SetVariantInt(9001);
-	AcceptEntityInput(client, "RemoveHealth");
+	if (client != -1)
+	{
+		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+		ForcePlayerSuicide(client);
+		SetVariantInt(9001);
+		AcceptEntityInput(client, "RemoveHealth");
+	}
 }
 
 #define SF_IGNORE_LOS	0x0004
@@ -822,7 +822,7 @@ stock float TF2_GetClassBaseSpeed(TFClassType class)
 		}
 		case TFClass_Spy:
 		{
-			return 300.0;
+			return 320.0;
 		}
 	}
 	
@@ -887,6 +887,16 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int iSlot)
 	
 	iWearable = INVALID_ENT_REFERENCE;
 	while ((iWearable = FindEntityByClassname(iWearable, "tf_wearable_vm")) != -1)
+	{
+		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
+		if (iWeaponAssociated == iWeapon)
+		{
+			AcceptEntityInput(iWearable, "Kill");
+		}
+	}
+	
+	iWearable = INVALID_ENT_REFERENCE;
+	while ((iWearable = FindEntityByClassname(iWearable, "tf_wearable_campaign_item")) != -1)
 	{
 		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
 		if (iWeaponAssociated == iWeapon)

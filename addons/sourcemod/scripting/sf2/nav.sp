@@ -697,11 +697,11 @@ stock void CalculateFeelerReflexAdjustment(const float flOriginalMovePos[3],
 	}
 	
 	float avoidHullMins[3], avoidHullMaxs[3];
-	avoidHullMins = HULL_HUMAN_MINS;
+	GetEntPropVector(iTraceFilterFunctionData, Prop_Data, "m_vecMins", avoidHullMins);
 	avoidHullMins[0] /= 2.0;
 	avoidHullMins[1] /= 2.0;
 	
-	avoidHullMaxs = HULL_HUMAN_MAXS;
+	GetEntPropVector(iTraceFilterFunctionData, Prop_Data, "m_vecMaxs", avoidHullMaxs);
 	avoidHullMaxs[0] /= 2.0;
 	avoidHullMaxs[1] /= 2.0;
 	avoidHullMaxs[2] -= flFeelerHeight;

@@ -5,11 +5,9 @@
 //Handle g_hClimbUpToLedge;
 //Handle g_hJumpAcrossGap;
 Handle g_hGetGravity;
+Handle g_hGetGroundNormal;
 Handle g_hGetMaxDeceleration;
 Handle g_hGetAcceleration;
-Handle g_hGetFrictionForward;
-Handle g_hGetFrictionSideways;
-Handle g_hIsAbleToClimb;
 Handle g_hIsAbleToJumpAcrossGaps;
 Handle g_hGetStepHeight;
 Handle g_hGetMaxJumpHeight;
@@ -384,7 +382,7 @@ public void InitNextBotGameData(Handle hGameData)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::GetGroundNormal offset from SF2 gamedata!");
 	}
-	
+
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::Approach");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
@@ -403,6 +401,10 @@ public void InitNextBotGameData(Handle hGameData)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::FaceTowards offset from SF2 gamedata!");
 	}
+	
+    iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetGroundNormal");
+    if(iOffset == -1) SetFailState("Failed to get offset of NextBotGroundLocomotion::GetGroundNormal");
+    g_hGetGroundNormal = DHookCreate(iOffset, HookType_Raw, ReturnType_VectorPtr, ThisPointer_Address, NextBotGroundLocomotion_GetGroundNormal);
 	
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "NextBotGroundLocomotion::SetVelocity");
@@ -437,16 +439,6 @@ public void InitNextBotGameData(Handle hGameData)
 
 	iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetMaxDeceleration"); 
 	g_hGetMaxDeceleration = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetMaxDeceleration);
-
-	iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetFrictionForward"); 
-	g_hGetFrictionForward = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetFrictionForward);
-	
-	iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetFrictionSideways"); 
-	g_hGetFrictionSideways = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetFrictionSideways);
-	
-	iOffset = GameConfGetOffset(hGameData, "ILocomotion::IsAbleToClimb"); 
-	g_hIsAbleToClimb = DHookCreate(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address, IsAbleToClimb);
-	if (g_hIsAbleToClimb == null) SetFailState("Failed to create hook for ILocomotion::IsAbleToClimb!");
 	
 	iOffset = GameConfGetOffset(hGameData, "ILocomotion::IsAbleToJumpAcrossGaps"); 
 	g_hIsAbleToJumpAcrossGaps = DHookCreate(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address, IsAbleToClimb);

@@ -1,6 +1,7 @@
 Handle g_hSDKLookupSequence;
 Handle g_hSDKLookupPoseParameter;
 Handle g_hSDKSetPoseParameter;
+Handle g_hSDKAddGestureSequence;
 
 int g_ipStudioHdrOffset;
 
@@ -13,22 +14,28 @@ void CBaseAnimating_InitGameData(Handle hGameData)
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 	g_hSDKLookupSequence = EndPrepSDKCall();
 	if (g_hSDKLookupSequence == INVALID_HANDLE) SetFailState("Failed to retrieve LookupSequence signature");
-	
+
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseAnimating::LookupPoseParameter");
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_ByValue);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
-	g_hSDKLookupPoseParameter = EndPrepSDKCall();
-	if (g_hSDKLookupPoseParameter == INVALID_HANDLE) PrintToServer("Failed to retrieve CBaseAnimating::LookupPoseParameter signature!");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if((g_hSDKLookupPoseParameter = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for CBaseAnimating::LookupPoseParameter");
 	
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseAnimating::SetPoseParameter");
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_ByValue);
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_ByValue);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
 	PrepSDKCall_AddParameter(SDKType_Float, SDKPass_Plain);
-	g_hSDKSetPoseParameter = EndPrepSDKCall();
-	if (g_hSDKSetPoseParameter == INVALID_HANDLE) PrintToServer("Failed to retrieve CBaseAnimating::SetPoseParameter signature!");
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
+	if((g_hSDKSetPoseParameter = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for CBaseAnimating::SetPoseParameter");
+	
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseAnimatingOverlay::AddGestureSequence");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain); 
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if((g_hSDKAddGestureSequence = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for CBaseAnimatingOverlay::AddGestureSequence");
 	
 	g_ipStudioHdrOffset = GameConfGetOffset(hGameData, "CBaseAnimating::m_pStudioHdr");
 }
@@ -65,4 +72,13 @@ stock void CBaseAnimating_SetPoseParameter(int iEntity, Address pStudioHdr, int 
 	{
 		SDKCall(g_hSDKSetPoseParameter, iEntity, pStudioHdr, iPoseParam, flNewValue);
 	}
+}
+
+stock void CBaseAnimating_PlayGesture(int iEntity, const char[] anim)
+{
+	int iSequence = CBaseAnimating_LookupSequence(iEntity, anim);
+	if(iSequence < 0)
+		return;
+		
+	SDKCall(g_hSDKAddGestureSequence, iEntity, iSequence, true);
 }

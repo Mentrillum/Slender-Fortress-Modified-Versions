@@ -10,13 +10,14 @@
 #define MAX_BOSSES 32
 #define MAX_NPCTELEPORTER 5
 #define MAX_NODES -1
+#define MAX_TRAPS 64
 
 // Difficulty modifiers.
 #define DIFFICULTY_EASY 0.75
 #define DIFFICULTY_NORMAL 1.0
-#define DIFFICULTY_HARD 2.0
-#define DIFFICULTY_INSANE 3.5
-#define DIFFICULTY_NIGHTMARE 5.5
+#define DIFFICULTY_HARD 1.25
+#define DIFFICULTY_INSANE 1.75
+#define DIFFICULTY_NIGHTMARE 3.0
 
 // Music system flags.
 #define MUSICF_PAGES1PERCENT (1 << 0)
@@ -63,7 +64,12 @@ enum
 	SPECIALROUND_PAGEDETECTOR,
 	SPECIALROUND_GLITCHEDPAGE,
 	SPECIALROUND_CLASSSCRAMBLE,
-	SPECIALROUND_EARTHQUAKE,
+	SPECIALROUND_2DOOM,
+	SPECIALROUND_WALLHAX,
+	SPECIALROUND_HYPERSNATCHER,
+	SPECIALROUND_PAGEREWARDS,
+	SPECIALROUND_TINYBOSSES,
+	SPECIALROUND_RUNNINGINTHE90S,
 	SPECIALROUND_MAXROUNDS
 };
 
@@ -84,7 +90,9 @@ enum SoundType
 	SoundType_None = 0,
 	SoundType_Footstep,
 	SoundType_Voice,
-	SoundType_Weapon
+	SoundType_Weapon,
+	SoundType_Flashlight,
+	SoundType_NIL
 };
 
 enum
@@ -94,6 +102,7 @@ enum
 	Difficulty_Hard,
 	Difficulty_Insane,
 	Difficulty_Nightmare,
+	Difficulty_Unusued, //DO NOT TOUCH
 	Difficulty_Max
 };
 
@@ -141,6 +150,7 @@ enum SF2RoundState
 #define SFF_HASVIEWSHAKE (1 << 13)
 #define SFF_COPIES (1 << 14)
 #define SFF_ATTACKPROPS (1 << 15)
+#define SFF_WEAPONKILLS (1 << 16)
 
 // Interrup conditions.
 #define COND_HEARDSUSPICIOUSSOUND (1 << 0)
@@ -150,7 +160,17 @@ enum SF2RoundState
 #define COND_HEARDVOICE (1 << 4)
 #define COND_CHASETARGETINVALIDATED (1 << 5)
 #define COND_SAWENEMY (1 << 5)
+#define COND_HEARDFLASHLIGHT (1 << 6)
 
+// Projectile flags.
+#define PROJ_FIREBALL (1 << 0)
+#define PROJ_ICEBALL (1 << 1)
+#define PROJ_ROCKET (1 << 2)
+#define PROJ_SENTRYROCKET (1 << 3)
+#define PROJ_GRENADE (1 << 4)
+#define PROJ_ARROW (1 << 5)
+#define PROJ_MANGLER (1 << 6)
+#define PROJ_BASEBALL (1 << 7)
 
 forward SF2_OnBossAdded(iBossIndex);
 

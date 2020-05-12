@@ -18,6 +18,7 @@ Handle g_hMenuSettings;
 Handle g_hMenuCredits;
 Handle g_hMenuCredits2;
 Handle g_hMenuCredits3;
+Handle g_hMenuCredits4;
 Handle g_hMenuUpdate;
 
 #include "sf2/playergroups/menus.sp"
@@ -135,19 +136,18 @@ void SetupMenus()
 	
 	g_hMenuCredits = CreateMenu(Menu_Credits);
 	
-	Format(buffer, sizeof(buffer), "Credits\n \n");
-	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012\n");
-	StrCat(buffer, sizeof(buffer), "\n \n");
-	StrCat(buffer, sizeof(buffer), "Mark J. Hadley -The creator of the Slender game\n");
-	StrCat(buffer, sizeof(buffer), "Axel Nosferatu -Composing the new music\n");
-	StrCat(buffer, sizeof(buffer), "Mark Steen -Composing the original intro music\n");
-	StrCat(buffer, sizeof(buffer), "Mammoth Mogul -for being a GREAT test subject\n");
-	StrCat(buffer, sizeof(buffer), "Egosins -for offering to host this publicly\n");
-	StrCat(buffer, sizeof(buffer), "Glubbable -for working on a ton of maps\n");
-	StrCat(buffer, sizeof(buffer), "Somberguy -suggestions and support\n");
-	StrCat(buffer, sizeof(buffer), "Omi-Box -materials, maps, current Slender Man model, and more\n");
-	StrCat(buffer, sizeof(buffer), "Narry Gewman -imported first Slender Man model\n");
-	StrCat(buffer, sizeof(buffer), "Simply Delicious -for the awesome camera overlay\n");
+	Format(buffer, sizeof(buffer), "Credits\n");
+	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012, Mentrillum, The Gaben\n");
+	StrCat(buffer, sizeof(buffer), "Mark J. Hadley - The creator of the Slender game\n");
+	StrCat(buffer, sizeof(buffer), "Mark Steen - Compositing the intro music\n");
+	StrCat(buffer, sizeof(buffer), "Dj-Rec0il - Compositing the Running In The 90s cover\n");
+	StrCat(buffer, sizeof(buffer), "Mammoth Mogul - For being a GREAT test subject\n");
+	StrCat(buffer, sizeof(buffer), "Egosins - For offering to host this publicly\n");
+	StrCat(buffer, sizeof(buffer), "Glubbable - For working on a ton of maps\n");
+	StrCat(buffer, sizeof(buffer), "Somberguy - Suggestions and support\n");
+	StrCat(buffer, sizeof(buffer), "Omi-Box - Materials, maps, current Slender Man model, and more\n");
+	StrCat(buffer, sizeof(buffer), "Narry Gewman - Imported first Slender Man model\n");
+	StrCat(buffer, sizeof(buffer), "Simply Delicious - For the awesome camera overlay\n");
 	StrCat(buffer, sizeof(buffer), "Jason278 -Page models");
 	
 	SetMenuTitle(g_hMenuCredits, buffer);
@@ -157,7 +157,7 @@ void SetupMenus()
 	g_hMenuCredits2 = CreateMenu(Menu_Credits2);
 	
 	Format(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
-	StrCat(buffer, sizeof(buffer), "And to all the peeps who alpha-tested this thing!\n \n");
+	StrCat(buffer, sizeof(buffer), "To all the peeps who alpha-tested this thing!\n \n");
 	StrCat(buffer, sizeof(buffer), "Tofu\n");
 	StrCat(buffer, sizeof(buffer), "Ace-Dashie\n");
 	StrCat(buffer, sizeof(buffer), "Hobbes\n");
@@ -176,7 +176,7 @@ void SetupMenus()
 	g_hMenuCredits3 = CreateMenu(Menu_Credits3);
 	
 	Format(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
-	StrCat(buffer, sizeof(buffer), "And credits to all peeps who gave special round suggestions!\n \n");
+	StrCat(buffer, sizeof(buffer), "Credits to all peeps who gave special round suggestions!\n \n");
 	StrCat(buffer, sizeof(buffer), "TehPlayer14\n");
 	StrCat(buffer, sizeof(buffer), "SirAnthony\n");
 	StrCat(buffer, sizeof(buffer), "DelcsXCritical\n");
@@ -189,11 +189,30 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Firedudeet\n \n");
 	
 	SetMenuTitle(g_hMenuCredits3, buffer);
-	AddMenuItem(g_hMenuCredits3, "0", "Back");
+	AddMenuItem(g_hMenuCredits3, "0", "Next");
+	AddMenuItem(g_hMenuCredits3, "1", "Back");
+	
+	g_hMenuCredits4 = CreateMenu(Menu_Credits4);
+	
+	Format(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
+	StrCat(buffer, sizeof(buffer), "And major special thanks for keeping this plugin going!\n \n");
+	StrCat(buffer, sizeof(buffer), "Demon Hamster Eating My Wafflez\n");
+	StrCat(buffer, sizeof(buffer), "Dookster\n");
+	StrCat(buffer, sizeof(buffer), "Glacetomic\n");
+	StrCat(buffer, sizeof(buffer), "Phantasmo\n");
+	StrCat(buffer, sizeof(buffer), "Geo\n");
+	StrCat(buffer, sizeof(buffer), "[NxN]Nameless\n");
+	StrCat(buffer, sizeof(buffer), "_Painkiller76_\n");
+	StrCat(buffer, sizeof(buffer), "Odie\n");
+	StrCat(buffer, sizeof(buffer), "Tons of members from the Russian SF2 server\n");
+	StrCat(buffer, sizeof(buffer), "And you for playing this new way of SF2!\n \n");
+	
+	SetMenuTitle(g_hMenuCredits4, buffer);
+	AddMenuItem(g_hMenuCredits4, "0", "Back");
 	
 	g_hMenuUpdate = CreateMenu(Menu_Update);
 	Format(buffer, sizeof(buffer), "%tSlender Fortress\n \n", "SF2 Prefix");
-	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012\n");
+	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012, Mentrillum, The Gaben\n");
 	StrCat(buffer, sizeof(buffer), "Version: ");
 	StrCat(buffer, sizeof(buffer), PLUGIN_VERSION);
 	StrCat(buffer, sizeof(buffer), "\n \n");
@@ -311,13 +330,13 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 		char sInfo[64], sDisplay[256], sColor[32];
 		GetMenuItem(menu, param1, sInfo, sizeof(sInfo), _, sDisplay, sizeof(sDisplay));
 		
-		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE)))
+		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_WALLHAX)))
 		{
 			SetConVarInt(g_cvDifficulty, Difficulty_Insane);
 		}
 		else if ((!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && GetRandomInt(1, 200) <= 2) || bPlayersCalledForNightmare) 
 			SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
-		else if (IsSpecialRoundRunning() && SF_SpecialRound(SPECIALROUND_NOGRACE))
+		else if (IsSpecialRoundRunning() && SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM))
 		{
 			SetConVarInt(g_cvDifficulty, Difficulty_Hard);
 		}
@@ -351,6 +370,38 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
 					EmitSoundToAll(g_strSoundNightmareMode[i]);
 				SpecialRoundGameText("Nightmare mode!", "leaderboard_streak");
+				if (SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
+				{
+					int iRandomQuote = GetRandomInt(1, 5);
+					switch (iRandomQuote)
+					{
+						case 1:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
+							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Oh no! You're not slipping out of your contract THAT easily.");
+						}
+						case 2:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
+							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  You ready to die some more? Great!");
+						}
+						case 3:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
+							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+						}
+						case 4:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
+							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  I love the smell of DEATH in the morning.");
+						}
+						case 5:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
+							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+						}
+					}
+				}
 			}
 			default:
 			{
@@ -747,7 +798,18 @@ public int Menu_Credits3(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits2, param1, MENU_TIME_FOREVER);
+			case 0: DisplayMenu(g_hMenuCredits4, param1, MENU_TIME_FOREVER);
+			case 1: DisplayMenu(g_hMenuCredits2, param1, MENU_TIME_FOREVER);
+		}
+	}
+}
+public int Menu_Credits4(Handle menu, MenuAction action,int param1,int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 0: DisplayMenu(g_hMenuCredits3, param1, MENU_TIME_FOREVER);
 		}
 	}
 }

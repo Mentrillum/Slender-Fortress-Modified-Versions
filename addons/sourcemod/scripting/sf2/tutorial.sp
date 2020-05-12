@@ -58,7 +58,11 @@ public void Tutorial_OnRoundStateChange(SF2RoundState oldRoundState, SF2RoundSta
 		{
 			if (SF_IsSurvivalMap())
 			{
-				Tutorial_PrintMessage("Survive!", "Your team collected all the objective, now It's time to survive! Try not to stay in the same spot otherwise you will be an easy target for the monster, try to move around the map sneakly, if the monster found you, try to bring it away from your team, your death can save a lot of lives!", 7.0);
+				Tutorial_PrintMessage("Survive!", "Your team collected all the objectives, now It's time to survive! Try not to stay in the same spot otherwise you will be an easy target for the monster, try to move around the map sneakly, if the monster finds you, try to bring it away from your team, your death can save a lot of lives!", 7.0);
+			}
+			if (SF_IsRaidMap())
+			{
+				Tutorial_PrintMessage("Kill bosses!", "Your team must kill the main boss in order to escape, or survive until the escape opens itself. Sometimes the main boss can bring in companions that aren't needed to be killed, but can save lives. Its very essential to keep yourself alive for as long as possible, you only have one life!", 7.0);
 			}
 		}
 	}
@@ -78,7 +82,7 @@ public Action Timer_TutorialGraceEnd2ndMessage(Handle timer)
 	
 	g_hTimerTutorialMessage = INVALID_HANDLE;
 	
-	Tutorial_PrintMessage("The boss is near help!", "If you can hear the monster, don't move or use voice commands! The monster can hear you! If you really need to move, move slowly, the monster is only attracted by suspicious sounds!", 7.0);
+	Tutorial_PrintMessage("The boss is near help!", "If you can hear the monster, don't move or use voice commands, the monster can hear you! If you really need to move, move slowly, the monster is only attracted by suspicious sounds!", 7.0);
 	
 	g_hTimerTutorialMessage = CreateTimer(8.0, Timer_TutorialGraceEnd3rdMessage);
 	
@@ -90,7 +94,7 @@ public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 	
 	g_hTimerTutorialMessage = INVALID_HANDLE;
 	
-	Tutorial_PrintMessage("Play in group?", "While you are looking for the objectives, don't stay in group, try to go where your team doesn't, you will increase everyone's chance of surviving!", 7.0);
+	Tutorial_PrintMessage("Playing in a group?", "While you are looking for the objectives, don't stay in a group, try to go where your team doesn't, you will increase everyone's chance of surviving!", 7.0);
 }
 
 

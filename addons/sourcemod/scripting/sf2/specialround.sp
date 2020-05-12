@@ -5,7 +5,7 @@
 
 #define SR_CYCLELENGTH 10.0
 #define SR_STARTDELAY 1.25
-#define SR_MUSIC "slender/specialround_new.mp3"
+#define SR_MUSIC "slender/specialround.mp3"
 #define SR_SOUND_SELECT "slender/specialroundselect.mp3"
 
 #define FILE_SPECIALROUNDS "configs/sf2/specialrounds.cfg"
@@ -240,7 +240,7 @@ void SpecialRoundCycleStart()
 	g_iSpecialRoundType = 0;
 	g_iSpecialRoundCycleNum = 0;
 	g_flSpecialRoundCycleEndTime = GetGameTime() + SR_CYCLELENGTH;
-	g_hSpecialRoundTimer = CreateTimer(0.12, Timer_SpecialRoundCycle, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hSpecialRoundTimer = CreateTimer(0.2, Timer_SpecialRoundCycle, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void SpecialRoundCycleFinish()
@@ -298,13 +298,20 @@ ArrayList SpecialEnabledList()
 			arrayEnabledRounds.Push(SPECIALROUND_DOOMBOX);
 		}
 		
-		if (GetActivePlayerCount() <= GetConVarInt(g_cvMaxPlayers) * 2)
+		if (GetActivePlayerCount() <= GetConVarInt(g_cvMaxPlayers) * 2 && GetConVarInt(g_cvDifficulty) != 4)
 		{
 			arrayEnabledRounds.Push(SPECIALROUND_DOUBLEMAXPLAYERS);
 		}
 		if (GetArraySize(GetSelectableBossProfileList()) > 0 && GetActivePlayerCount() <= GetConVarInt(g_cvMaxPlayers) * 2)
 		{
-			arrayEnabledRounds.Push(SPECIALROUND_2DOUBLE);
+			if (GetConVarInt(g_cvDifficulty) <= 3)
+			{
+				arrayEnabledRounds.Push(SPECIALROUND_2DOUBLE);
+			}
+			if (GetConVarInt(g_cvDifficulty) <= 2)
+			{
+				arrayEnabledRounds.Push(SPECIALROUND_2DOOM);
+			}
 		}
 		/*
 		if (GetActivePlayerCount() > 1)
@@ -312,7 +319,7 @@ ArrayList SpecialEnabledList()
 			arrayEnabledRounds.Push(SPECIALROUND_SINGLEPLAYER);
 		}
 		*/
-		if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && GetConVarInt(g_cvDifficulty) != 4)
+		if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && GetConVarInt(g_cvDifficulty) != 4)
 			arrayEnabledRounds.Push(SPECIALROUND_INSANEDIFFICULTY);
 		if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !GetConVarBool(g_cvNightvisionEnabled) && !SF_SpecialRound(SPECIALROUND_NOULTRAVISION))
 			arrayEnabledRounds.Push(SPECIALROUND_LIGHTSOUT);
@@ -383,9 +390,15 @@ ArrayList SpecialEnabledList()
 		
 		if (!SF_SpecialRound(SPECIALROUND_CLASSSCRAMBLE) && g_iPageMax >= 4 && GetRoundState() != SF2RoundState_Escape)
 			arrayEnabledRounds.Push(SPECIALROUND_CLASSSCRAMBLE);
-		
-		if (!SF_SpecialRound(SPECIALROUND_EARTHQUAKE))
-			arrayEnabledRounds.Push(SPECIALROUND_EARTHQUAKE);
+			
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_BossesChaseEndlessly() && GetConVarInt(g_cvDifficulty) != 4)
+			arrayEnabledRounds.Push(SPECIALROUND_WALLHAX);
+			
+		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER)  && !SF_IsRaidMap() && !SF_BossesChaseEndlessly() && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_DOOMBOX) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && GetArraySize(GetSelectableBossProfileList()) > 0)
+			arrayEnabledRounds.Push(SPECIALROUND_HYPERSNATCHER);
+			
+		if (!SF_SpecialRound(SPECIALROUND_PAGEREWARDS) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
+			arrayEnabledRounds.Push(SPECIALROUND_PAGEREWARDS);
 		
 		//Always keep this special round push at the bottom, we need the array lenght
 		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && arrayEnabledRounds.Length > 5)
@@ -479,6 +492,66 @@ void SpecialRoundStart()
 			ForceInNextPlayersInQueue(GetConVarInt(g_cvMaxPlayers));
 			SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
 			SF_AddSpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS);
+		}
+		case SPECIALROUND_WALLHAX:
+		{
+			SetConVarString(g_cvDifficulty, "3"); //Insane
+			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+			{	
+				if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+				SlenderRemoveGlow(iNPCIndex);
+				char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+				NPCGetProfile(iNPCIndex, sProfile, sizeof(sProfile));
+				if (NPCGetCustomOutlinesState(iNPCIndex))
+				{
+					int color[4];
+					color[0] = NPCGetOutlineColorR(iNPCIndex);
+					color[1] = NPCGetOutlineColorG(iNPCIndex);
+					color[2] = NPCGetOutlineColorB(iNPCIndex);
+					color[3] = NPCGetOutlineTransparency(iNPCIndex);
+					if (color[0] < 0) color[0] = 0;
+					if (color[1] < 0) color[1] = 0;
+					if (color[2] < 0) color[2] = 0;
+					if (color[3] < 0) color[3] = 0;
+					if (color[0] > 255) color[0] = 255;
+					if (color[1] > 255) color[1] = 255;
+					if (color[2] > 255) color[2] = 255;
+					if (color[3] > 255) color[3] = 255;
+					SlenderAddGlow(iNPCIndex,_,color);
+				}
+				else
+				{
+					int iPurple[4] = {150, 0, 255, 255};
+					SlenderAddGlow(iNPCIndex,_,iPurple);
+				}
+			}
+			SF_AddSpecialRound(SPECIALROUND_WALLHAX);
+		}
+		case SPECIALROUND_HYPERSNATCHER:
+		{
+			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCStopMusic();
+			char sSnatcher[64] = "hypersnatcher_nerfed";
+			NPCRemoveAll();
+			Handle hSelectableBosses = GetSelectableBossProfileList();
+			if (GetArraySize(hSelectableBosses) > 0)
+			{
+				if (strlen(sSnatcher) > 0 && IsProfileValid(sSnatcher))
+				{
+					AddProfile(sSnatcher);
+				}
+				else
+				{
+					CPrintToChatAll("{olive}Hyper Snathcer doesn't exist, initiating Doom Box...");
+					GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+					AddProfile(sBuffer,_,_,_,false);
+					GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+					AddProfile(sBuffer,_,_,_,false);
+					GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+					AddProfile(sBuffer,_,_,_,false);
+				}
+			}
+			SF_AddSpecialRound(SPECIALROUND_HYPERSNATCHER);
 		}
 		case SPECIALROUND_LIGHTSOUT,SPECIALROUND_NIGHTVISION:
 		{
@@ -575,6 +648,7 @@ void SpecialRoundStart()
 		case SPECIALROUND_REALISM:
 		{
 			SF_AddSpecialRound(SPECIALROUND_REALISM);
+			NPCStopMusic();
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i)) continue;
@@ -582,6 +656,12 @@ void SpecialRoundStart()
 				if (!g_bPlayerEliminated[i])
 				{
 					ClientResetOverlay(i);
+					ClientRemoveMusicFlag(i, MUSICF_PAGES1PERCENT);
+					ClientRemoveMusicFlag(i, MUSICF_PAGES25PERCENT);
+					ClientRemoveMusicFlag(i, MUSICF_PAGES50PERCENT);
+					ClientRemoveMusicFlag(i, MUSICF_PAGES75PERCENT);
+					g_iPlayerPageMusicMaster[i] = INVALID_ENT_REFERENCE;
+					ClientUpdateMusicSystem(i);
 				}
 			}
 		}
@@ -609,6 +689,21 @@ void SpecialRoundStart()
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_PAGEDETECTOR);
+		}
+		case SPECIALROUND_2DOOM:
+		{
+			ForceInNextPlayersInQueue(GetConVarInt(g_cvMaxPlayers));
+			SetConVarString(g_cvDifficulty, "2"); // Override difficulty to Hardcore.
+			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			Handle hSelectableBosses = GetSelectableBossProfileList();
+			if (GetArraySize(hSelectableBosses) > 0)
+			{
+				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+				AddProfile(sBuffer,_,_,_,false);
+				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+				AddProfile(sBuffer,_,_,_,false);
+			}
+			SF_AddSpecialRound(SPECIALROUND_2DOOM);
 		}
 		default:
 		{
@@ -725,7 +820,7 @@ public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 			char sSpecialRound[64], sSpecialRoundName[64], display[120];
 			NativeVotes_GetItem(menu, param1, sSpecialRound, sizeof(sSpecialRound), sSpecialRoundName, sizeof(sSpecialRoundName));
 			
-			CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Special Round Vote Successful", sSpecialRoundName);
+			CPrintToChatAll("{yellow}%t{default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", sSpecialRoundName);
 			Format(display,120,"%t","SF2 Special Round Vote Successful", sSpecialRoundName);
 			
 			g_iSpecialRoundType = StringToInt(sSpecialRound);

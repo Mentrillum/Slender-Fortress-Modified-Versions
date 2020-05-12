@@ -11,7 +11,7 @@ static int g_iPathBehindNodeIndex[MAX_PATH];
 static int g_iRefChasePathTarget[MAX_PATH] = { INVALID_ENT_REFERENCE, ... };
 static float g_flChasePathAvoidRange[MAX_PATH];
 static float g_flChasePathNodeTolerance[MAX_PATH] = { 32.0, ... };
-static float g_flChasePathLookAheadDistance[MAX_PATH] = {300.0, ...};
+static float g_flChasePathLookAheadDistance[MAX_PATH] = {10.0, ...};
 static float g_flChasePathLastBuildTime[MAX_PATH];
 
 static float g_vecPathMovePosition[MAX_PATH][3];
@@ -31,8 +31,8 @@ methodmap ChaserPathLogic
 		g_iPathNodeIndex[iIndex] = 0;
 		g_iPathBehindNodeIndex[iIndex] = 0;
 		g_flChasePathNodeTolerance[iIndex] = 32.0;
-		g_flChasePathLookAheadDistance[iIndex] = 300.0;
-		g_flChasePathAvoidRange[iIndex] = 300.0;
+		g_flChasePathLookAheadDistance[iIndex] = 100.0;
+		g_flChasePathAvoidRange[iIndex] = 100.0;
 		g_flChasePathLastBuildTime[iIndex] = GetGameTime();
 		return view_as<ChaserPathLogic>(iIndex);
 	}
@@ -184,12 +184,12 @@ methodmap ChaserPathLogic
 		CNavArea startArea = SDK_GetLastKnownArea(iEntity);
 		if (startArea != INVALID_NAV_AREA)
 		{
-			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 200.0);
+			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 50.0);
 			if (this.IsRepathNeeded(endArea))
 			{
 				float vecStartPos[3];
 				GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", vecStartPos);
-				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 200.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
+				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 50.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
 				{
 					g_hChasePath[this.Index].Clear();
 					return false;
@@ -214,11 +214,11 @@ methodmap ChaserPathLogic
 		
 		this.ClearPath();
 		
-		CNavArea startArea = NavMesh_GetNearestArea(vecStartPos, _, 200.0);
+		CNavArea startArea = NavMesh_GetNearestArea(vecStartPos, _, 50.0);
 		if (startArea != INVALID_NAV_AREA)
 		{
-			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 200.0);
-			if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 200.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
+			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 50.0);
+			if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 50.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
 			{
 				g_hChasePath[this.Index].Clear();
 				return false;
@@ -242,15 +242,19 @@ methodmap ChaserPathLogic
 			height = 16.0;
 		}
 		
-		float additionalHeight = 80.0;
+		float additionalHeight = 0.0;
+		if (height < 32.0)
+		{
+			additionalHeight = 16.0;
+		}
 		float flGravity = nextbotLocomotion.GetGravity();
 		
 		height += additionalHeight;
 		
 		float speed = SquareRoot( 2.0 * flGravity * height );
-		float time = speed / flGravity;
+		float time = (speed / flGravity);
 		
-		time += SquareRoot( (2.0 * additionalHeight) / flGravity );
+		time += SquareRoot( ( 2 * additionalHeight) / flGravity );
 		
 		SubtractVectors( vecEndPos, vecStartPos, vecJumpVel );
 		vecJumpVel[0] /= time;
@@ -258,7 +262,7 @@ methodmap ChaserPathLogic
 		vecJumpVel[2] /= time;
 		
 		vecJumpVel[2] = speed;
-
+		
 		float flJumpSpeed = GetVectorLength(vecJumpVel);
 		float flMaxSpeed = 650.0;
 		if ( flJumpSpeed > flMaxSpeed )

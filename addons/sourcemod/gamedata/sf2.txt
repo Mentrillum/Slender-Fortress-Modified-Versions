@@ -24,6 +24,11 @@
 				"linux"		"182"
 				"windows"	"181"
 			}
+			"CTFGameRules::GetGameType"
+			{
+				"linux"		"136"
+				"windows"	"135"
+			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"windows"	"18"
@@ -221,6 +226,11 @@
 				"linux"		"106"
 				"windows"	"105"
 			}
+			"NextBotGroundLocomotion::GetGroundNormal"
+			{
+				"windows"	"65"
+				"linux"		"66"
+			}
 			"NextBotGroundLocomotion::GetAcceleration"
 			{
 				"linux"		"103"
@@ -301,6 +311,11 @@
 				"library"		"server"
 				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x85\xF6\x75\x2A\x33\xC0\x5E\x5D\xC3\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x53"
 				"linux"		"@_Z14LookupSequenceP10CStudioHdrPKc"
+			}
+			"CBaseAnimatingOverlay::AddGestureSequence"
+			{
+				"windows"	"\x55\x8B\xEC\x56\x6A\x00\xFF\x75\x08\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x85\xC0\x78\x2A"
+				"linux"		"@_ZN21CBaseAnimatingOverlay18AddGestureSequenceEib"
 			}
 			"CBaseAnimating::ResetSequence"
 			{

@@ -61,6 +61,12 @@
 		"en"	"Survive!"
 		"ru"	"Выживайте!"
 	}
+	
+	"SF2 Default Boxing Message"
+	{
+		"en"	"Kill the champion!"
+		"ru"	"Выживайте!"
+	}
 
 	"SF2 Grace Period End"
 	{
@@ -75,10 +81,16 @@
 		"ru"			"{olive}{1}{default} спасся!"
 	}
 
+	"SF2 Player Killed Champion"
+	{
+		"#format"		"{1:s}{2:s}"
+		"en"			"{red}{1}{default} has killed the {valve}{2}!"
+	}
+
 	"SF2 Camping System Warning"
 	{
 		"#format"		"{1:d}"
-		"en"			"WARNING: If you do not move from your spot in {1} seconds, you will be caught by the enemy."
+		"en"			"WARNING: If you do not move from your spot in {1} seconds, you will be caught by the boss."
 		"ru"			"ВНИМАНИЕ: Если в течение {1} секунд Вы не начнёте двигаться, Вы будете схвачены!"
 	}
 
@@ -121,8 +133,7 @@
 
 	"SF2 Ghost Mode Enabled"
 	{
-		"en"	"You are now in Ghost Mode. Use a voice command to teleport to a RED player."
-		"ru"	"Теперь Вы Призрак. Голосовые команды телепортируют к Красным."
+		"en"	"You are now in Ghost Mode. Use a voice command to teleport to a RED player. Crouch to snap yourself to the ground while in mid-air."
 	}
 
 	"SF2 Ghost Mode Disabled"
@@ -146,7 +157,7 @@
 
 	"SF2 Prefix"
 	{
-		"en"	"[SF2] "
+		"en"	"[SF2]"
 	}
 
 	"SF2 Help Menu Title"
@@ -265,8 +276,8 @@
 
 	"SF2 Help Sniper Class Info Description"
 	{
-		"en"	"[+] Blink rate increased by 40%%\n[-] Low health, most affected by screen wobbling"
-		"ru"	"[+] Моргает на 40%% реже\n[-] Мало здоровья, наиболее подвержен внушению"
+		"en"	"[+] Blink rate increased by 45%%\n[-] Low health, most affected by screen wobbling"
+		"ru"	"[+] Моргает на 45%% реже\n[-] Мало здоровья, наиболее подвержен внушению"
 	}
 
 	"SF2 Help Demoman Class Info Menu Title"
@@ -337,8 +348,7 @@
 
 	"SF2 Help Engineer Class Info Description"
 	{
-		"en"	"[+] 33%% increase in Flashlight battery life\n[-] Low health, most affected by screen wobbling"
-		"ru"	"[+] Батарея фонарика служит на 33%% дольше\n[-] Мало здоровья, наиболее подвержен внушению"
+		"en"	"[+] 75%% increase in Flashlight battery life\n[+] 60% decrease in Flashlight recharge rate\n[-] Low health, most affected by screen wobbling"
 	}
 
 	"SF2 Settings Menu Title"
@@ -392,6 +402,17 @@
 	{
 		"#format"		"{1:d}"
 		"en" 	"{lightgreen}Music volume set to {1}%."
+	}
+	
+	"SF2 Settings Flashlight Temperature Title"
+	{
+		"en" 	"Set flashlight temperature"
+	}
+	
+	"SF2 Flashlight Temperature Changed"
+	{
+		"#format"		"{1:d}"
+		"en" 	"{lightgreen}Flashlight temperature set to {1}%."
 	}
 
 	"SF2 Ad Message 1"
@@ -687,22 +708,22 @@
 	"SF2 Unable To Perform Action On Player In Round"
 	{
 		"#format"	"{1:s}"
-		"en"	"Unable to perform action on {1} because he/she is currently playing in the round."
-		"ru"	"Не возможно совершать действия над {1} потому что он/она сейчас играет за Красных."
+		"en"	"Unable to perform action on {red}{1}{default} because he/she is currently playing in the round."
+		"ru"	"Не возможно совершать действия над {red}{1}{default} потому что он/она сейчас играет за Красных."
 	}
 
 	"SF2 Player Forced In Game"
 	{
 		"#format"	"{1:s}"
-		"en"	"Forced {1} into the game."
-		"ru"	"Игрок {1} перемещён к Красным."
+		"en"	"Forced {blue}{1}{default} into the game."
+		"ru"	"Игрок {blue}{1}{default} перемещён к Красным."
 	}
 
 	"SF2 Player Forced Out Of Game"
 	{
 		"#format"	"{1:s}"
-		"en"	"Forced {1} out of the game."
-		"ru"	"Игрок {1} перемещён к Синим."
+		"en"	"Forced {red}{1}{default} out of the game."
+		"ru"	"Игрок {red}{1}{default} перемещён к Синим."
 	}
 
 	"SF2 Cannot Use Command"
@@ -714,8 +735,8 @@
 	"SF2 Player No Place For Proxy"
 	{
 		"#format"	"{1:s}"
-		"en"	"Could not find a good Proxy position for {1}!"
-		"ru"	"Не получается найти хорошую позицию для помощника {1}!"
+		"en"	"Could not find a good Proxy position for {blue}{1}!"
+		"ru"	"Не получается найти хорошую позицию для помощника {blue}{1}!"
 	}
 
 	"SF2 In"
@@ -1131,6 +1152,21 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed an issue where boss's light could create lighting problems with the props.\n-Fixed an issue where proxies could spawn disguised.\n-Fixed ghost camera overlay from not being applied to ghosts.\n-Added an update panel.\n-(!slghost) is now a toggle command!\n-Updated credits menu."
+		"en"	"-Added iceballs for bosses.\n-Added multiple attack, hit, and miss sounds for any specified attack.\n-Finalized fireballs.\n-Fixed a bug where bosses used footsteps on chase initial animations.\n-Fixed a bug where proxy outline colors were still randomized, now yellow.\n-Added download, logging, and PvP fixes provided by Fire."
+	}
+	"SF2 Smite player"
+	{
+		"en"			"Smite player"
+	}
+	
+	"SF2 Smote target"
+	{
+		"#format"		"{1:s}{2:s}"
+		"en"			"{valve}{1}{default} summoned the power of Zeus and smote {red}{2}!"
+	}
+	
+	"SF2 Boxing Initiate"
+	{
+		"en"			"The difficulty has been set to {yellow}Normal{default}.\nThe difficulty will increase as our champion gets weaker."
 	}
 }

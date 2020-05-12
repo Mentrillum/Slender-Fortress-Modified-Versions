@@ -9,6 +9,7 @@
 
 static Handle g_hBossProfileList = INVALID_HANDLE;
 static Handle g_hSelectableBossProfileList = INVALID_HANDLE;
+static Handle g_hSelectableBoxingBossProfileList = INVALID_HANDLE;
 static Handle g_hSelectableBossProfileQueueList = INVALID_HANDLE;
 
 static Handle g_hBossProfileNames = INVALID_HANDLE;
@@ -46,6 +47,11 @@ methodmap SF2BossProfile
 		public get() { return GetBossProfileSkin(this.Index); }
 	}
 	
+	property int SkinMax
+	{
+		public get() { return GetBossProfileSkinMax(this.Index); }
+	}
+	
 	property int BodyGroups
 	{
 		public get() { return GetBossProfileBodyGroups(this.Index); }
@@ -64,6 +70,31 @@ methodmap SF2BossProfile
 	property int Flags
 	{
 		public get() { return GetBossProfileFlags(this.Index); }
+	}
+	
+	property int UseRaidHitbox
+	{
+		public get() { return GetBossProfileRaidHitbox(this.Index); }
+	}
+	
+	property int OutlineColorR
+	{
+		public get() { return GetBossProfileOutlineColorR(this.Index); }
+	}
+	
+	property int OutlineColorG
+	{
+		public get() { return GetBossProfileOutlineColorG(this.Index); }
+	}
+	
+	property int OutlineColorB
+	{
+		public get() { return GetBossProfileOutlineColorB(this.Index); }
+	}
+	
+	property int OutlineTransparency
+	{
+		public get() { return GetBossProfileOutlineTransparency(this.Index); }
 	}
 	
 	property float SearchRadius
@@ -145,38 +176,46 @@ enum
 	BossProfileData_Type,
 	BossProfileData_ModelScale,
 	BossProfileData_Skin,
+	BossProfileData_SkinMax,
 	BossProfileData_Body,
 	BossProfileData_Flags,
+	BossProfileData_UseRaidHitbox,
 	
 	BossProfileData_SpeedEasy,
 	BossProfileData_SpeedNormal,
 	BossProfileData_SpeedHard,
 	BossProfileData_SpeedInsane,
+	BossProfileData_SpeedNightmare,
 	
 	BossProfileData_WalkSpeedEasy,
 	BossProfileData_WalkSpeedNormal,
 	BossProfileData_WalkSpeedHard,
 	BossProfileData_WalkSpeedInsane,
+	BossProfileData_WalkSpeedNightmare,
 	
 	BossProfileData_AirSpeedEasy,
 	BossProfileData_AirSpeedNormal,
 	BossProfileData_AirSpeedHard,
 	BossProfileData_AirSpeedInsane,
+	BossProfileData_AirSpeedNightmare,
 	
 	BossProfileData_MaxSpeedEasy,
 	BossProfileData_MaxSpeedNormal,
 	BossProfileData_MaxSpeedHard,
 	BossProfileData_MaxSpeedInsane,
+	BossProfileData_MaxSpeedNightmare,
 	
 	BossProfileData_MaxWalkSpeedEasy,
 	BossProfileData_MaxWalkSpeedNormal,
 	BossProfileData_MaxWalkSpeedHard,
 	BossProfileData_MaxWalkSpeedInsane,
+	BossProfileData_MaxWalkSpeedNightmare,
 	
 	BossProfileData_MaxAirSpeedEasy,
 	BossProfileData_MaxAirSpeedNormal,
 	BossProfileData_MaxAirSpeedHard,
 	BossProfileData_MaxAirSpeedInsane,
+	BossProfileData_MaxAirSpeedNightmare,
 	
 	BossProfileData_SearchRange,
 	BossProfileData_FieldOfView,
@@ -191,6 +230,12 @@ enum
 	BossProfileData_AngerAddOnPageGrab,
 	BossProfileData_AngerPageGrabTimeDiffReq,
 	BossProfileData_InstantKillRadius,
+	
+	BossProfileData_EnableCustomizableOutlines,
+	BossProfileData_OutlineColorR,
+	BossProfileData_OutlineColorG,
+	BossProfileData_OutlineColorB,
+	BossProfileData_OutlineColorTrans,
 	
 	BossProfileData_ScareRadius,
 	BossProfileData_ScareCooldown,
@@ -261,7 +306,7 @@ public Action Command_NextPack(int client,int args)
 	KvGetString(g_hBossPackConfig, "name", bossPackName, sizeof(bossPackName), nextpack);
 	if(StrEqual(bossPackName,""))
 		Format(bossPackName,sizeof(bossPackName),"Core Pack");
-	CPrintToChat(client,"{olive}Naxt pack:{lightgreen}%s",bossPackName);
+	CPrintToChat(client,"{olive}Next pack:{lightgreen}%s",bossPackName);
 	return Plugin_Handled;
 }
 
@@ -285,6 +330,12 @@ void ClearBossProfiles()
 	{
 		delete g_hSelectableBossProfileList;
 		g_hSelectableBossProfileList = INVALID_HANDLE;
+	}
+	
+	if (g_hSelectableBoxingBossProfileList != INVALID_HANDLE)
+	{
+		delete g_hSelectableBoxingBossProfileList;
+		g_hSelectableBoxingBossProfileList = INVALID_HANDLE;
 	}
 	
 	ClearTrie(g_hBossProfileNames);
@@ -321,6 +372,11 @@ void ReloadBossProfiles()
 	if (g_hSelectableBossProfileList == INVALID_HANDLE)
 	{
 		g_hSelectableBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
+	}
+	
+	if (g_hSelectableBoxingBossProfileList == INVALID_HANDLE)
+	{
+		g_hSelectableBoxingBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
 	if (g_hSelectableBossProfileQueueList != INVALID_HANDLE)
@@ -497,10 +553,17 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 		return false;
 	}
 	
-	int iBossSkin = KvGetNum(kv, "skin");
+	int iBossSkin = KvGetNum(kv, "skin", 0);
 	if (iBossSkin < 0)
 	{
 		Format(sLoadFailReasonBuffer, iLoadFailReasonBufferLen, "skin must be a value that is at least 0!");
+		return false;
+	}
+	
+	int iBossSkinMax = KvGetNum(kv, "skin_max", 0);
+	if (iBossSkinMax < 0)
+	{
+		Format(sLoadFailReasonBuffer, iLoadFailReasonBufferLen, "skin_max must be a value that is at least 0!");
 		return false;
 	}
 	
@@ -511,6 +574,16 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 		return false;
 	}
 	
+	int iUseRaidHitbox = KvGetNum(kv, "use_raid_hitbox");
+	if (iUseRaidHitbox < 0)
+	{
+		iUseRaidHitbox = 0;
+	}
+	else if (iUseRaidHitbox > 1)
+	{
+		iUseRaidHitbox = 1;
+	}
+
 	float flBossAngerStart = KvGetFloat(kv, "anger_start", 1.0);
 	if (flBossAngerStart < 0.0)
 	{
@@ -597,24 +670,51 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	/*Deprecated stuff*/
 	if (KvGetFloat(kv, "jump_cooldown", 0.0) != 0.0)
 	{
-		PrintToServer("\"jump_cooldown\" is marked as deprecated, thanks to remove it from the boss profile.");
+		PrintToServer("\"jump_cooldown\" is marked as deprecated, please remove it from the profile.");
 	}
 	
 	float flBossDefaultSpeed = KvGetFloat(kv, "speed", 150.0);
 	float flBossSpeedEasy = KvGetFloat(kv, "speed_easy", flBossDefaultSpeed);
 	float flBossSpeedHard = KvGetFloat(kv, "speed_hard", flBossDefaultSpeed);
 	float flBossSpeedInsane = KvGetFloat(kv, "speed_insane", flBossDefaultSpeed);
+	float flBossSpeedNightmare = KvGetFloat(kv, "speed_nightmare", flBossDefaultSpeed);
 	
 	float flBossDefaultMaxSpeed = KvGetFloat(kv, "speed_max", 150.0);
 	float flBossMaxSpeedEasy = KvGetFloat(kv, "speed_max_easy", flBossDefaultMaxSpeed);
 	float flBossMaxSpeedHard = KvGetFloat(kv, "speed_max_hard", flBossDefaultMaxSpeed);
 	float flBossMaxSpeedInsane = KvGetFloat(kv, "speed_max_insane", flBossDefaultMaxSpeed);
+	float flBossMaxSpeedNightmare = KvGetFloat(kv, "speed_max_nightmare", flBossDefaultMaxSpeed);
 	
+	bool bUseCustomOutlines = view_as<bool>(KvGetNum(kv, "customizable_outlines"));
+	int iOutlineColorR = KvGetNum(kv, "outline_color_r", 255);
+	int iOutlineColorG = KvGetNum(kv, "outline_color_g", 255);
+	int iOutlineColorB = KvGetNum(kv, "outline_color_b", 255);
+	int iOutlineColorTrans = KvGetNum(kv, "outline_color_transparency", 255);
+
 	float flBossEyePosOffset[3];
 	KvGetVector(kv, "eye_pos", flBossEyePosOffset);
 	
 	float flBossEyeAngOffset[3];
 	KvGetVector(kv, "eye_ang_offset", flBossEyeAngOffset);
+	
+	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH];
+	KvGetString(kv, "cloak_on_sound", sCOn, sizeof(sCOn));
+	KvGetString(kv, "cloak_off_sound", sCOff, sizeof(sCOff));
+	KvGetString(kv, "player_jarate_sound", sJ, sizeof(sJ));
+	KvGetString(kv, "player_milk_sound", sM, sizeof(sM));
+	KvGetString(kv, "player_gas_sound", sG, sizeof(sG));
+	KvGetString(kv, "player_stun_sound", sS, sizeof(sS));
+	KvGetString(kv, "fire_explode_sound", sFE, sizeof(sFE));
+	KvGetString(kv, "fire_shoot_sound", sFS, sizeof(sFS));
+	KvGetString(kv, "fire_iceball_slow_sound", sFIS, sizeof(sFIS));
+	KvGetString(kv, "rocket_explode_sound", sRE, sizeof(sRE));
+	KvGetString(kv, "rocket_shoot_sound", sRS, sizeof(sRS));
+	KvGetString(kv, "grenade_shoot_sound", sGrenadeShoot, sizeof(sGrenadeShoot));
+	KvGetString(kv, "sentryrocket_shoot_sound", sSentryrocketShoot, sizeof(sSentryrocketShoot));
+	KvGetString(kv, "arrow_shoot_sound", sArrowShoot, sizeof(sArrowShoot));
+	KvGetString(kv, "mangler_shoot_sound", sManglerShoot, sizeof(sManglerShoot));
+	KvGetString(kv, "baseball_shoot_sound", sBaseballShoot, sizeof(sBaseballShoot));
+	KvGetString(kv, "engine_sound", sEngineSound, sizeof(sEngineSound));
 	
 	// Parse through flags.
 	int iBossFlags = 0;
@@ -629,6 +729,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	if (KvGetNum(kv, "copy")) iBossFlags |= SFF_COPIES;
 	if (KvGetNum(kv, "wander_move", 1)) iBossFlags |= SFF_WANDERMOVE;
 	if (KvGetNum(kv, "attack_props", 0)) iBossFlags |= SFF_ATTACKPROPS;
+	if (KvGetNum(kv, "attack_weaponsenable", 0)) iBossFlags |= SFF_WEAPONKILLS;
 	
 	// Try validating unique profile.
 	int iUniqueProfileIndex = -1;
@@ -671,7 +772,9 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	SetArrayCell(g_hBossProfileData, iIndex, iBossType, BossProfileData_Type);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossModelScale, BossProfileData_ModelScale);
 	SetArrayCell(g_hBossProfileData, iIndex, iBossSkin, BossProfileData_Skin);
+	SetArrayCell(g_hBossProfileData, iIndex, iBossSkinMax, BossProfileData_SkinMax);
 	SetArrayCell(g_hBossProfileData, iIndex, iBossBodyGroups, BossProfileData_Body);
+	SetArrayCell(g_hBossProfileData, iIndex, iUseRaidHitbox, BossProfileData_UseRaidHitbox);
 	
 	SetArrayCell(g_hBossProfileData, iIndex, iBossFlags, BossProfileData_Flags);
 	
@@ -679,11 +782,13 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedEasy, BossProfileData_SpeedEasy);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedHard, BossProfileData_SpeedHard);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedInsane, BossProfileData_SpeedInsane);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedNightmare, BossProfileData_SpeedNightmare);
 	
 	SetArrayCell(g_hBossProfileData, iIndex, flBossDefaultMaxSpeed, BossProfileData_MaxSpeedNormal);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedEasy, BossProfileData_MaxSpeedEasy);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedHard, BossProfileData_MaxSpeedHard);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedInsane, BossProfileData_MaxSpeedInsane);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedNightmare, BossProfileData_MaxSpeedNightmare);
 	
 	SetArrayCell(g_hBossProfileData, iIndex, flBossEyePosOffset[0], BossProfileData_EyePosOffsetX);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossEyePosOffset[1], BossProfileData_EyePosOffsetY);
@@ -704,10 +809,84 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	
 	SetArrayCell(g_hBossProfileData, iIndex, iBossTeleportType, BossProfileData_TeleportType);
 	
+	SetArrayCell(g_hBossProfileData, iIndex, bUseCustomOutlines, BossProfileData_EnableCustomizableOutlines);
+	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorR, BossProfileData_OutlineColorR);
+	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorG, BossProfileData_OutlineColorG);
+	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorB, BossProfileData_OutlineColorB);
+	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorTrans, BossProfileData_OutlineColorTrans);
+
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSearchRadius, BossProfileData_SearchRange);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossFOV, BossProfileData_FieldOfView);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxTurnRate, BossProfileData_TurnRate);
 	
+	if(sCOn[0])
+	{
+		PrecacheSound2(sCOn);
+	}
+	if (sCOff[0])
+	{
+		PrecacheSound2(sCOff);
+	}
+	if (sJ[0])
+	{
+		PrecacheSound2(sJ);
+	}
+	if (sM[0])
+	{
+		PrecacheSound2(sM);
+	}
+	if (sG[0])
+	{
+		PrecacheSound2(sG);
+	}
+	if (sS[0])
+	{
+		PrecacheSound2(sS);
+	}
+	if (sFE[0])
+	{
+		PrecacheSound2(sFE);
+	}
+	if (sFS[0])
+	{
+		PrecacheSound2(sFS);
+	}
+	if (sFIS[0])
+	{
+		PrecacheSound2(sFIS);
+	}
+	if (sRE[0])
+	{
+		PrecacheSound2(sRE);
+	}
+	if (sRS[0])
+	{
+		PrecacheSound2(sRS);
+	}
+	if (sGrenadeShoot[0])
+	{
+		PrecacheSound2(sGrenadeShoot);
+	}
+	if (sSentryrocketShoot[0])
+	{
+		PrecacheSound2(sSentryrocketShoot);
+	}
+	if (sArrowShoot[0])
+	{
+		PrecacheSound2(sArrowShoot);
+	}
+	if (sManglerShoot[0])
+	{
+		PrecacheSound2(sManglerShoot);
+	}
+	if (sBaseballShoot[0])
+	{
+		PrecacheSound2(sBaseballShoot);
+	}
+	if (sEngineSound[0])
+	{
+		PrecacheSound2(sEngineSound);
+	}
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection", 1)))
 	{
 		if (FindStringInArray(GetSelectableBossProfileList(), sProfile) == -1)
@@ -722,12 +901,28 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 		if (selectIndex != -1)
 		{
 			RemoveFromArray(GetSelectableBossProfileList(), selectIndex);
+		}	
+	}
+	if (view_as<bool>(KvGetNum(kv, "enable_random_selection_boxing", 0)))
+	{
+		if (FindStringInArray(GetSelectableBoxingBossProfileList(), sProfile) == -1)
+		{
+			// Add to the selectable boss list if it isn't there already.
+			PushArrayString(GetSelectableBoxingBossProfileList(), sProfile);
+		}
+	}
+	else
+	{
+		int selectIndex = FindStringInArray(GetSelectableBoxingBossProfileList(), sProfile);
+		if (selectIndex != -1)
+		{
+			RemoveFromArray(GetSelectableBoxingBossProfileList(), selectIndex);
 		}
 	}
 	
-	if (KvGotoFirstSubKey(kv))
+	if (KvGotoFirstSubKey(kv)) //Special thanks to Fire for modifying the code for download errors.
 	{
-		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH];
+		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH], s6[PLATFORM_MAX_PATH];
 		
 		do
 		{
@@ -740,8 +935,17 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 					IntToString(i, s3, sizeof(s3));
 					KvGetString(kv, s3, s4, sizeof(s4));
 					if (!s4[0]) break;
+					Format(s6, sizeof(s6), "sound/%s", s4);
 					
-					PrecacheSound2(s4);
+					if(FileExists(s6, false) || FileExists(s6, true))
+					{
+						PrecacheSound2(s4);
+					}
+					else
+					{
+						LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+						PrecacheSound(s4);
+					}
 				}
 			}
 			else if (StrEqual(s2, "download"))
@@ -752,7 +956,14 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 					KvGetString(kv, s3, s4, sizeof(s4));
 					if (!s4[0]) break;
 					
-					AddFileToDownloadsTable(s4);
+					if(FileExists(s4) || FileExists(s4, true))
+					{
+						AddFileToDownloadsTable(s4);
+					}
+					else
+					{
+						LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s4);
+					}
 				}
 			}
 			else if (StrEqual(s2, "mod_precache"))
@@ -763,7 +974,10 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 					KvGetString(kv, s3, s4, sizeof(s4));
 					if (!s4[0]) break;
 					
-					PrecacheModel(s4, true);
+					if(!PrecacheModel(s4, true))
+					{
+						LogSF2Message("File %s failed to be precached, likely does not exist.", s4);
+					}
 				}
 			}
 			else if (StrEqual(s2, "mat_download"))
@@ -775,9 +989,24 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 					if (!s4[0]) break;
 					
 					Format(s5, sizeof(s5), "%s.vtf", s4);
-					AddFileToDownloadsTable(s5);
+					if(FileExists(s5) || FileExists(s5, true))
+					{
+						AddFileToDownloadsTable(s5);
+					}
+					else
+					{
+						LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s5);
+					}
+
 					Format(s5, sizeof(s5), "%s.vmt", s4);
-					AddFileToDownloadsTable(s5);
+					if(FileExists(s5) || FileExists(s5, true))
+					{
+						AddFileToDownloadsTable(s5);
+					}
+					else
+					{
+						LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s5);
+					}
 				}
 			}
 			else if (StrEqual(s2, "mod_download"))
@@ -793,7 +1022,14 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 					for (int is = 0; is < sizeof(extensions); is++)
 					{
 						Format(s5, sizeof(s5), "%s%s", s4, extensions[is]);
-						AddFileToDownloadsTable(s5);
+						if(FileExists(s5) || FileExists(s5, true))
+						{
+							AddFileToDownloadsTable(s5);
+						}
+						else
+						{
+							LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s5);
+						}
 					}
 				}
 			}
@@ -1016,7 +1252,8 @@ public Action Timer_StartBossPackVote(Handle timer)
 
 public Action Timer_BossPackVoteLoop(Handle timer)
 {
-	if (timer != g_hBossPackVoteTimer || g_bBossPackVoteCompleted || g_bBossPackVoteStarted) return Plugin_Stop;
+	if (timer != g_hBossPackVoteTimer || g_bBossPackVoteCompleted || g_bBossPackVoteStarted) 
+		return Plugin_Stop;
 	
 	if (!NativeVotes_IsVoteInProgress())
 	{
@@ -1128,9 +1365,19 @@ int GetBossProfileSkin(int iProfileIndex)
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_Skin);
 }
 
+int GetBossProfileSkinMax(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SkinMax);
+}
+
 int GetBossProfileBodyGroups(int iProfileIndex)
 {
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_Body);
+}
+
+int GetBossProfileRaidHitbox(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_UseRaidHitbox);
 }
 
 float GetBossProfileModelScale(int iProfileIndex)
@@ -1155,6 +1402,7 @@ float GetBossProfileSpeed(int iProfileIndex, int iDifficulty)
 		case Difficulty_Easy: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedEasy);
 		case Difficulty_Hard: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedHard);
 		case Difficulty_Insane: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedInsane);
+		case Difficulty_Nightmare: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedNightmare);
 	}
 	
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedNormal);
@@ -1167,6 +1415,7 @@ float GetBossProfileMaxSpeed(int iProfileIndex, int iDifficulty)
 		case Difficulty_Easy: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedEasy);
 		case Difficulty_Hard: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedHard);
 		case Difficulty_Insane: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedInsane);
+		case Difficulty_Nightmare: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedNightmare);
 	}
 	
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedNormal);
@@ -1236,8 +1485,33 @@ int GetBossProfileTeleportType(int iProfileIndex)
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_TeleportType);
 }
 
+bool GetBossProfileCustomOutlinesState(int iProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_EnableCustomizableOutlines));
+}
+
+int GetBossProfileOutlineColorR(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_OutlineColorR);
+}
+
+int GetBossProfileOutlineColorG(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_OutlineColorG);
+}
+
+int GetBossProfileOutlineColorB(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_OutlineColorB);
+}
+
+int GetBossProfileOutlineTransparency(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_OutlineColorTrans);
+}
+
 // Code originally from FF2. Credits to the original authors Rainbolt Dash and FlaminSarge.
-stock bool GetRandomStringFromProfile(const char[] sProfile, const char[] strKeyValue, char[] buffer,int bufferlen,int index = -1,int iAttackIndex = -1)
+stock bool GetRandomStringFromProfile(const char[] sProfile, const char[] strKeyValue, char[] buffer,int bufferlen,int index = -1,int iAttackIndex = 1)
 {
 	strcopy(buffer, bufferlen, "");
 	
@@ -1288,6 +1562,10 @@ Handle GetBossProfileList()
 Handle GetSelectableBossProfileList()
 {
 	return g_hSelectableBossProfileList;
+}
+Handle GetSelectableBoxingBossProfileList()
+{
+	return g_hSelectableBoxingBossProfileList;
 }
 
 /**

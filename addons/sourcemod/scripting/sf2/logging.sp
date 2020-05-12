@@ -7,10 +7,13 @@ static char g_strLogFilePath[512] = "";
 
 void InitializeLogging()
 {
-	char sDateSuffix[256];
-	FormatTime(sDateSuffix, sizeof(sDateSuffix), "sf2-%Y-%m-%d.log", GetTime());
+	BuildPath(Path_SM, g_strLogFilePath, sizeof(g_strLogFilePath), "logs/sf2");
+	if(!DirExists(g_strLogFilePath))
+		CreateDirectory(g_strLogFilePath, FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC);
 	
-	BuildPath(Path_SM, g_strLogFilePath, sizeof(g_strLogFilePath), "logs/%s", sDateSuffix);
+	char sDateSuffix[256];
+	FormatTime(sDateSuffix, sizeof(sDateSuffix), "%Y-%m-%d.log", GetTime());
+	BuildPath(Path_SM, g_strLogFilePath, sizeof(g_strLogFilePath), "logs/sf2/%s", sDateSuffix);
 	
 	char sMap[64];
 	GetCurrentMap(sMap, sizeof(sMap));
