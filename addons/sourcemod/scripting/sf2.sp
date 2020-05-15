@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.3 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.3 Modified"
+#define PLUGIN_VERSION "1.5.3.4 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.3.4 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -109,6 +109,8 @@ public Plugin myinfo =
 #define ICEBALL_IMPACT "weapons/icicle_freeze_victim_01.wav"
 #define ROCKET_SHOOT "weapons/rocket_shoot.wav"
 #define ROCKET_IMPACT "weapons/explode1.wav"
+#define ROCKET_IMPACT2 "weapons/explode1.wav"
+#define ROCKET_IMPACT3 "weapons/explode1.wav"
 #define ROCKET_MODEL "models/weapons/w_models/w_rocket.mdl"
 #define ROCKET_TRAIL "rockettrail"
 #define ROCKET_EXPLODE_PARTICLE "ExplosionCore_MidAir"
@@ -948,7 +950,7 @@ public void OnPluginStart()
 	g_cvUltravisionEnabled = CreateConVar("sf2_player_ultravision_enabled", "1", "Enable/Disable player Ultravision. This helps players see in the dark when their Flashlight is off or unavailable.", _, true, 0.0, true, 1.0);
 	g_cvUltravisionRadiusRed = CreateConVar("sf2_player_ultravision_radius_red", "512.0");
 	g_cvUltravisionRadiusBlue = CreateConVar("sf2_player_ultravision_radius_blue", "800.0");
-	g_cvNightvisionRadius = CreateConVar("sf2_player_nightvision_radius", "400.0");
+	g_cvNightvisionRadius = CreateConVar("sf2_player_nightvision_radius", "650.0");
 	g_cvUltravisionBrightness = CreateConVar("sf2_player_ultravision_brightness", "-4");
 	g_cvNightvisionEnabled = CreateConVar("sf2_player_flashlight_isnightvision", "0", "Enable/Disable flashlight replacement with nightvision",_, true, 0.0, true, 1.0);
 	
@@ -1620,6 +1622,8 @@ static void PrecacheStuff()
 	PrecacheSound2(ICEBALL_IMPACT);
 	PrecacheSound2(ROCKET_SHOOT);
 	PrecacheSound2(ROCKET_IMPACT);
+	PrecacheSound2(ROCKET_IMPACT2);
+	PrecacheSound2(ROCKET_IMPACT3);
 	PrecacheSound2(GRENADE_SHOOT);
 	PrecacheSound2(SENTRYROCKET_SHOOT);
 	PrecacheSound2(ARROW_SHOOT);

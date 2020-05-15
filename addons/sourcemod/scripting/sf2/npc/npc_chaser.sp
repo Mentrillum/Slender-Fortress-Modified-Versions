@@ -1773,7 +1773,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		}
 	}
 	
-	if (NPCHasAttribute(iBossIndex, "alert copies"))
+	/*if (NPCHasAttribute(iBossIndex, "alert copies"))
 	{
 		if ((NPCGetFlags(iBossIndex) & SFF_COPIES))
 		{
@@ -1789,7 +1789,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				}
 			}
 		}
-	}
+	}*/
 	
 	// Gather data about the players around me and get the best new target, in case my old target is invalidated.
 	// Fix for optimization
@@ -2051,7 +2051,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	if(g_bSlenderGiveUp[iBossIndex])
 	{
 		//Damit our target is unreachable for some unexplained reasons, haaaaaaaaaaaa!
-		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0)))
+		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0)))
 		{
 			iState = STATE_IDLE;
 			g_bSlenderGiveUp[iBossIndex] = false;
@@ -2426,13 +2426,13 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						{
 							SlenderMarkAsFake(iBossIndex);
 						}
-						if (g_flNPCProjectileCooldown[iBossIndex] <= GetGameTime() && !NPCChaserUseProjectileAmmo(iBossIndex) && bPlayerVisible[iTarget] && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && bPlayerInFOV[iTarget])
+						if (g_flNPCProjectileCooldown[iBossIndex] <= GetGameTime() && !NPCChaserUseProjectileAmmo(iBossIndex) && bPlayerVisible[iTarget] && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && bPlayerInFOV[iTarget] && !g_bNPCHasCloaked[iBossIndex])
 						{
 							NPCChaserProjectileShoot(iBossIndex, slender, iTarget, sSlenderProfile, flMyPos);
 						}
 						else if (NPCChaserUseProjectileAmmo(iBossIndex))
 						{
-							if (g_flNPCProjectileCooldown[iBossIndex] <= GetGameTime() && bPlayerVisible[iTarget] && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && bPlayerInFOV[iTarget] && (g_iNPCProjectileAmmo[iBossIndex] != 0))
+							if (g_flNPCProjectileCooldown[iBossIndex] <= GetGameTime() && bPlayerVisible[iTarget] && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && bPlayerInFOV[iTarget] && !g_bNPCHasCloaked[iBossIndex] && (g_iNPCProjectileAmmo[iBossIndex] != 0))
 							{
 								NPCChaserProjectileShoot(iBossIndex, slender, iTarget, sSlenderProfile, flMyPos);
 								g_iNPCProjectileAmmo[iBossIndex] = g_iNPCProjectileAmmo[iBossIndex] - 1;
@@ -3084,10 +3084,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					if (iOldState != STATE_ATTACK)
 					{
 						// Sound handling.
-						if(!view_as<bool>(GetProfileNum(sSlenderProfile,"normal_sound_hook",0)))
-						{
-							SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial");
-						}
+						SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial");
 						if (view_as<bool>(GetProfileNum(sSlenderProfile,"use_chase_initial_animation",0)) && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
 						{
 							g_bNPCUsesChaseInitialAnimation[iBossIndex] = true;
@@ -3219,8 +3216,16 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			{
 				if (NavMesh_Exists() && g_flSlenderLastCalculPathTime[iBossIndex] <= GetGameTime())
 				{
-					g_hBossChaserPathLogic[iBossIndex].ComputePathFromPosToPos(flMyPos, g_flSlenderGoalPos[iBossIndex], SlenderChaseBossShortestPathCost, g_ILocomotion[iBossIndex], _, _);
-					g_flSlenderLastCalculPathTime[iBossIndex] = GetGameTime()+0.3;
+					bool bCompute = g_hBossChaserPathLogic[iBossIndex].ComputePathToPos(g_INextBot[iBossIndex].GetEntity(), g_flSlenderGoalPos[iBossIndex], SlenderChaseBossShortestPathCost, g_ILocomotion[iBossIndex], _, _);
+					if (bCompute)
+					{
+						g_flSlenderLastCalculPathTime[iBossIndex] = GetGameTime()+0.3;
+					}
+					else
+					{
+						g_hBossChaserPathLogic[iBossIndex].ClearPath();
+						g_bSlenderGiveUp[iBossIndex] = true;
+					}
 				}
 			}
 			if (iState == STATE_CHASE || iState == STATE_ATTACK)
@@ -3268,6 +3273,15 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				}
 			}
 		}
+	}
+	
+	if (iState == STATE_WANDER || iState == STATE_ALERT)
+	{
+		SetEntPropFloat(slender, Prop_Data, "m_speed", flWalkSpeed);
+	}
+	else if (iState == STATE_CHASE)
+	{
+		SetEntPropFloat(slender, Prop_Data, "m_speed", flSpeed);
 	}
 	
 	// Sound handling.
@@ -3414,24 +3428,18 @@ public Action Hook_IceballTouch(int entity,int iOther)
 	float flEntPos[3], flOtherPos[3];
 	GetEntPropVector(iOther, Prop_Data, "m_vecAbsOrigin", flOtherPos);
 	GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flEntPos);
-	char buffer[PLATFORM_MAX_PATH], buffer2[PLATFORM_MAX_PATH], s[4];
-	buffer = "weapons/explode";
-	for (int i = 1; i <= 3; i++)
-	{
-		IntToString(i, s, sizeof(s));
-		Format(buffer2, sizeof(buffer2), "%s%s.wav", buffer, s);
-
-		StopSound(entity, SNDCHAN_WEAPON, buffer2);
-	}
+	StopSound(entity, SNDCHAN_AUTO, ROCKET_IMPACT);
+	StopSound(entity, SNDCHAN_AUTO, ROCKET_IMPACT2);
+	StopSound(entity, SNDCHAN_AUTO, ROCKET_IMPACT3);
 	int slender = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 	if(slender != INVALID_ENT_REFERENCE)
 	{
 		int iBossIndex = NPCGetFromEntIndex(slender);
-		if(!g_sSlenderFireballExplodeSound[iBossIndex][0])
+		if(!g_sSlenderFireballExplodeSound[iBossIndex][0] && iBossIndex != -1)
 		{
 			g_sSlenderFireballExplodeSound[iBossIndex] = FIREBALL_IMPACT;
 		}
-		EmitSoundToAll(g_sSlenderFireballExplodeSound[iBossIndex], entity, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+		EmitSoundToAll(g_sSlenderFireballExplodeSound[iBossIndex], entity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 		CreateGeneralParticle(entity, "spell_batball_impact_blue", 2.5);
 	}
 	return Plugin_Handled;
@@ -3443,15 +3451,9 @@ public Action Hook_FireballTouch(int entity,int iOther)
 	float flEntPos[3], flOtherPos[3];
 	GetEntPropVector(iOther, Prop_Data, "m_vecAbsOrigin", flOtherPos);
 	GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flEntPos);
-	char buffer[PLATFORM_MAX_PATH], buffer2[PLATFORM_MAX_PATH], s[4];
-	buffer = "weapons/explode";
-	for (int i = 1; i <= 3; i++)
-	{
-		IntToString(i, s, sizeof(s));
-		Format(buffer2, sizeof(buffer2), "%s%s.wav", buffer, s);
-
-		StopSound(entity, SNDCHAN_WEAPON, buffer2);
-	}
+	StopSound(entity, SNDCHAN_AUTO, ROCKET_IMPACT);
+	StopSound(entity, SNDCHAN_AUTO, ROCKET_IMPACT2);
+	StopSound(entity, SNDCHAN_AUTO, ROCKET_IMPACT3);
 	int slender = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 	if(slender != INVALID_ENT_REFERENCE)
 	{
@@ -3460,7 +3462,7 @@ public Action Hook_FireballTouch(int entity,int iOther)
 		{
 			g_sSlenderFireballExplodeSound[iBossIndex] = FIREBALL_IMPACT;
 		}
-		EmitSoundToAll(g_sSlenderFireballExplodeSound[iBossIndex], entity, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+		EmitSoundToAll(g_sSlenderFireballExplodeSound[iBossIndex], entity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 		CreateGeneralParticle(entity, "bombinomicon_burningdebris", 2.5);
 	}
 	return Plugin_Handled;
@@ -3589,7 +3591,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				{
 					g_sSlenderFireballShootSound[iBossIndex] = FIREBALL_SHOOT;
 				}
-				EmitSoundToAll(g_sSlenderFireballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+				EmitSoundToAll(g_sSlenderFireballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 		}
@@ -3636,7 +3638,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				{
 					g_sSlenderFireballShootSound[iBossIndex] = FIREBALL_SHOOT;
 				}
-				EmitSoundToAll(g_sSlenderFireballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+				EmitSoundToAll(g_sSlenderFireballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 		}
@@ -3675,7 +3677,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				{
 					g_sSlenderRocketShootSound[iBossIndex] = ROCKET_SHOOT;
 				}
-				EmitSoundToAll(g_sSlenderRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+				EmitSoundToAll(g_sSlenderRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 		}
@@ -3725,7 +3727,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 					{
 						g_sSlenderGrenadeShootSound[iBossIndex] = GRENADE_SHOOT;
 					}
-					EmitSoundToAll(g_sSlenderGrenadeShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+					EmitSoundToAll(g_sSlenderGrenadeShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 				}
 			}
@@ -3765,7 +3767,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				{
 					g_sSlenderSentryRocketShootSound[iBossIndex] = SENTRYROCKET_SHOOT;
 				}
-				EmitSoundToAll(g_sSlenderSentryRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+				EmitSoundToAll(g_sSlenderSentryRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 		}
@@ -3812,7 +3814,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 					{
 						g_sSlenderArrowShootSound[iBossIndex] = ARROW_SHOOT;
 					}
-					EmitSoundToAll(g_sSlenderArrowShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+					EmitSoundToAll(g_sSlenderArrowShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 				}
 			}
@@ -3854,7 +3856,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				{
 					g_sSlenderManglerShootSound[iBossIndex] = MANGLER_SHOOT;
 				}
-				EmitSoundToAll(g_sSlenderManglerShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+				EmitSoundToAll(g_sSlenderManglerShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 		}
@@ -3901,7 +3903,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				{
 					g_sSlenderBaseballShootSound[iBossIndex] = BASEBALL_SHOOT;
 				}
-				EmitSoundToAll(g_sSlenderBaseballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_MINIBIKE);
+				EmitSoundToAll(g_sSlenderBaseballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 		}
@@ -4163,207 +4165,250 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 						float vecMovePos[3];
 						g_hBossChaserPathLogic[iBossIndex].GetMovePosition(vecMovePos);
 						
-						if (SlenderChaseBoss_OnStuckResolvePath(iBoss, flMyPos, flMyEyeAng, vecMovePos, vecMovePos))
+						if (GetVectorDistance(flMyPos, vecMovePos, false) >= 0.01)
 						{
-							if (NPCGetRaidHitbox(iBossIndex) == 1)
-							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
-								{
-									bPathResolved = true;
-									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-								}
-								else
-								{
-									vecMovePos[2] += g_ILocomotion[iBossIndex].GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
-									{
-										bPathResolved = true;
-										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-									}
-								}
-							}
-							else if (NPCGetRaidHitbox(iBossIndex) == 0)
-							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
-								{
-									bPathResolved = true;
-									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-								}
-								else
-								{
-									vecMovePos[2] += g_ILocomotion[iBossIndex].GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
-									{
-										bPathResolved = true;
-										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-									}
-								}
-							}
+							TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
 						}
-						if (!bPathResolved)
+						else
 						{
-							g_hBossChaserPathLogic[iBossIndex].GetMovePosition(vecMovePos);
-							if (NPCGetRaidHitbox(iBossIndex) == 1)
+							if (!SF_IsBoxingMap())
 							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+								if (iState == STATE_CHASE)
 								{
-									bPathResolved = false;
-									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-								}
-								else
-								{
-									vecMovePos[2] += g_ILocomotion[iBossIndex].GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+									int iTarget2 = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
+									
+									if (!iTarget2 || iTarget2 == INVALID_ENT_REFERENCE)
 									{
-										bPathResolved = true;
-										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
+										// We don't have any good targets. Remove myself for now.
+										if (SlenderCanRemove(iBossIndex)) RemoveSlender(iBossIndex);
 									}
 									else
 									{
-										CNavArea area = NavMesh_GetNearestArea(flMyPos, _, 200.0);
-										if (area == INVALID_NAV_AREA)
+										float flTeleportMinRange = CalculateTeleportMinRange(iBossIndex, g_flSlenderTeleportMinRange[iBossIndex], g_flSlenderTeleportMaxRange[iBossIndex]);
+										int iTeleportAreaIndex = -1;
+										float flTeleportPos[3];
+										
+										// Search surrounding nav areas around target.
+										if (NavMesh_Exists())
 										{
-											area = g_hBossChaserPathLogic[iBossIndex].GetMovePositionNavArea();
-										}
-										if (area != INVALID_NAV_AREA)
-										{
-											area.GetCenter(vecMovePos);
-											if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+											CNavArea TargetArea = SDK_GetLastKnownArea(iTarget2);
+											if (TargetArea != INVALID_NAV_AREA)
 											{
-												bPathResolved = false;
-												TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-											}
-											else
-											{
-												vecMovePos[2] += g_ILocomotion[iBossIndex].GetStepHeight();
-												if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+												bool bShouldBeBehindObstruction = false;
+												if (NPCGetTeleportType(iBossIndex) == 2)
 												{
-													bPathResolved = true;
-													TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
+													bShouldBeBehindObstruction = true;
 												}
-											}
-										}
-										if (!bPathResolved)
-										{
-											if (!SF_IsBoxingMap())
-											{
-												RemoveSlender(iBossIndex);//We are stuck there's no way out for us, unspawn, players are just going to abuse that we are stuck.
-											}
-											else
-											{
-												float flTeleportPos[3];
-												ArrayList hRespawnPoint = new ArrayList();
-												char sName[32];
-												int ent = -1;
-												while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
+												
+												// Search outwards until travel distance is at maximum range.
+												Handle hAreaArray = CreateArray(2);
+												ArrayStack hAreas = CreateStack();
+												NavMesh_CollectSurroundingAreas(hAreas, TargetArea, g_flSlenderTeleportMaxRange[iBossIndex]);
+												
 												{
-													GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-													if (StrContains(sName, "sf2_boss_respawnpoint", false))
+													int iPoppedAreas;
+												
+													while (!IsStackEmpty(hAreas))
 													{
-														hRespawnPoint.Push(ent);
+														CNavArea Area = INVALID_NAV_AREA;
+														int iAreaIndex = -1;
+														PopStackCell(hAreas, iAreaIndex);
+														Area = CNavArea(iAreaIndex);
+														
+														int iIndex = PushArrayCell(hAreaArray, Area.Index);
+														SetArrayCell(hAreaArray, iIndex, float(Area.CostSoFar), 1);
+														iPoppedAreas++;
+													}
+													
+						#if defined DEBUG
+													SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d areas", iBossIndex, iPoppedAreas);
+						#endif
+													
+													CloseHandle(hAreas);
+												}
+												
+												Handle hAreaArrayClose = CreateArray(4);
+												Handle hAreaArrayAverage = CreateArray(4);
+												Handle hAreaArrayFar = CreateArray(4);
+												
+												for (int i = 1; i <= 3; i++)
+												{
+													float flRangeSectionMin = flTeleportMinRange + (g_flSlenderTeleportMaxRange[iBossIndex] - flTeleportMinRange) * (float(i - 1) / 3.0);
+													float flRangeSectionMax = flTeleportMinRange + (g_flSlenderTeleportMaxRange[iBossIndex] - flTeleportMinRange) * (float(i) / 3.0);
+													
+													for (int i2 = 0, iSize = GetArraySize(hAreaArray); i2 < iSize; i2++)
+													{
+														int iAreaIndex = GetArrayCell(hAreaArray, i2);
+														
+														float flAreaSpawnPoint[3];
+														NavMeshArea_GetCenter(iAreaIndex, flAreaSpawnPoint);
+														
+														int iBoss = NPCGetEntIndex(iBossIndex);
+														
+														// Check space. First raise to HalfHumanHeight * 2, then trace downwards to get ground level.
+														{
+															float flTraceStartPos[3];
+															flTraceStartPos[0] = flAreaSpawnPoint[0];
+															flTraceStartPos[1] = flAreaSpawnPoint[1];
+															flTraceStartPos[2] = flAreaSpawnPoint[2] + (HalfHumanHeight * 2.0);
+															
+															float flTraceMins[3];
+															flTraceMins[0] = g_flSlenderDetectMins[iBossIndex][0];
+															flTraceMins[1] = g_flSlenderDetectMins[iBossIndex][1];
+															flTraceMins[2] = 0.0;
+															
+															
+															float flTraceMaxs[3];
+															flTraceMaxs[0] = g_flSlenderDetectMaxs[iBossIndex][0];
+															flTraceMaxs[1] = g_flSlenderDetectMaxs[iBossIndex][1];
+															flTraceMaxs[2] = 0.0;
+															
+															Handle hTrace = TR_TraceHullFilterEx(flTraceStartPos,
+																flAreaSpawnPoint,
+																flTraceMins,
+																flTraceMaxs,
+																MASK_NPCSOLID,
+																TraceRayDontHitEntity,
+																iBoss);
+															
+															float flTraceHitPos[3];
+															TR_GetEndPosition(flTraceHitPos, hTrace);
+															flTraceHitPos[2] += 1.0;
+															CloseHandle(hTrace);
+
+															flAreaSpawnPoint[0] = flTraceHitPos[0];
+															flAreaSpawnPoint[1] = flTraceHitPos[1];
+															flAreaSpawnPoint[2] = flTraceHitPos[2];
+														}
+			
+														AddVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);				
+														
+														SubtractVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
+
+														// Check travel distance and put in the appropriate arrays.
+														float flDist = view_as<float>(GetArrayCell(hAreaArray, i2, 1));
+														if (flDist > flRangeSectionMin && flDist < flRangeSectionMax)
+														{
+															int iIndex = -1;
+															Handle hTargetAreaArray = INVALID_HANDLE;
+															
+															switch (i)
+															{
+																case 1: 
+																{
+																	iIndex = PushArrayCell(hAreaArrayClose, iAreaIndex);
+																	hTargetAreaArray = hAreaArrayClose;
+																}
+																case 2: 
+																{
+																	iIndex = PushArrayCell(hAreaArrayAverage, iAreaIndex);
+																	hTargetAreaArray = hAreaArrayAverage;
+																}
+																case 3: 
+																{
+																	iIndex = PushArrayCell(hAreaArrayFar, iAreaIndex);
+																	hTargetAreaArray = hAreaArrayFar;
+																}
+															}
+															
+															if (hTargetAreaArray != INVALID_HANDLE && iIndex != -1)
+															{
+																SetArrayCell(hTargetAreaArray, iIndex, flAreaSpawnPoint[0], 1);
+																SetArrayCell(hTargetAreaArray, iIndex, flAreaSpawnPoint[1], 2);
+																SetArrayCell(hTargetAreaArray, iIndex, flAreaSpawnPoint[2], 3);
+															}
+														}
 													}
 												}
-												ent = -1;
-												if (hRespawnPoint.Length > 0) ent = hRespawnPoint.Get(GetRandomInt(0,hRespawnPoint.Length-1));
 												
-												delete hRespawnPoint;
-												if (ent > MAX_BOSSES)
+												CloseHandle(hAreaArray);
+												
+						#if defined DEBUG
+												SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d close areas, %d average areas, %d far areas", iBossIndex, GetArraySize(hAreaArrayClose),
+													GetArraySize(hAreaArrayAverage),
+													GetArraySize(hAreaArrayFar));
+						#endif
+												
+												int iArrayIndex = -1;
+												
+												if (GetArraySize(hAreaArrayClose))
 												{
-													GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
-													TeleportEntity(iBossIndex, flTeleportPos, NULL_VECTOR, NULL_VECTOR);
+													iArrayIndex = GetRandomInt(0, GetArraySize(hAreaArrayClose) - 1);
+													iTeleportAreaIndex = GetArrayCell(hAreaArrayClose, iArrayIndex);
+													flTeleportPos[0] = view_as<float>(GetArrayCell(hAreaArrayClose, iArrayIndex, 1));
+													flTeleportPos[1] = view_as<float>(GetArrayCell(hAreaArrayClose, iArrayIndex, 2));
+													flTeleportPos[2] = view_as<float>(GetArrayCell(hAreaArrayClose, iArrayIndex, 3));
 												}
-												else
+												else if (GetArraySize(hAreaArrayAverage))
 												{
-													RemoveSlender(iBossIndex);
+													iArrayIndex = GetRandomInt(0, GetArraySize(hAreaArrayAverage) - 1);
+													iTeleportAreaIndex = GetArrayCell(hAreaArrayAverage, iArrayIndex);
+													flTeleportPos[0] = view_as<float>(GetArrayCell(hAreaArrayAverage, iArrayIndex, 1));
+													flTeleportPos[1] = view_as<float>(GetArrayCell(hAreaArrayAverage, iArrayIndex, 2));
+													flTeleportPos[2] = view_as<float>(GetArrayCell(hAreaArrayAverage, iArrayIndex, 3));
 												}
+												else if (GetArraySize(hAreaArrayFar))
+												{
+													iArrayIndex = GetRandomInt(0, GetArraySize(hAreaArrayFar) - 1);
+													iTeleportAreaIndex = GetArrayCell(hAreaArrayFar, iArrayIndex);
+													flTeleportPos[0] = view_as<float>(GetArrayCell(hAreaArrayFar, iArrayIndex, 1));
+													flTeleportPos[1] = view_as<float>(GetArrayCell(hAreaArrayFar, iArrayIndex, 2));
+													flTeleportPos[2] = view_as<float>(GetArrayCell(hAreaArrayFar, iArrayIndex, 3));
+												}
+												
+												CloseHandle(hAreaArrayClose);
+												CloseHandle(hAreaArrayAverage);
+												CloseHandle(hAreaArrayFar);
 											}
 										}
+										
+										if (iTeleportAreaIndex == -1)
+										{
+											// We don't have any good areas. Remove myself for now.
+											RemoveSlender(iBossIndex);
+										}
+										else
+										{
+											TeleportEntity(iBoss, flTeleportPos, NULL_VECTOR, NULL_VECTOR);
+										}
 									}
-								}
-							}
-							else if (NPCGetRaidHitbox(iBossIndex) == 0)
-							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
-								{
-									bPathResolved = false;
-									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
 								}
 								else
 								{
-									vecMovePos[2] += g_ILocomotion[iBossIndex].GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+									RemoveSlender(iBossIndex); //Don't even try this method on blocked wandering areas.
+								}
+							}
+							else
+							{
+								float flTeleportPos[3];
+								ArrayList hRespawnPoint = new ArrayList();
+								char sName[32];
+								int ent = -1;
+								while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
+								{
+									GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
+									if (StrContains(sName, "sf2_boss_respawnpoint", false))
 									{
-										bPathResolved = true;
-										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
+										hRespawnPoint.Push(ent);
 									}
-									else
-									{
-										CNavArea area = NavMesh_GetNearestArea(flMyPos, _, 200.0);
-										if (area == INVALID_NAV_AREA)
-										{
-											area = g_hBossChaserPathLogic[iBossIndex].GetMovePositionNavArea();
-										}
-										if (area != INVALID_NAV_AREA)
-										{
-											area.GetCenter(vecMovePos);
-											if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
-											{
-												bPathResolved = false;
-												TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-											}
-											else
-											{
-												vecMovePos[2] += g_ILocomotion[iBossIndex].GetStepHeight();
-												if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
-												{
-													bPathResolved = true;
-													TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
-												}
-											}
-										}
-										if (!bPathResolved)
-										{
-											if (!SF_IsBoxingMap())
-											{
-												RemoveSlender(iBossIndex);//We are stuck there's no way out for us, unspawn, players are just going to abuse that we are stuck.
-											}
-											else
-											{
-												float flTeleportPos[3];
-												ArrayList hRespawnPoint = new ArrayList();
-												char sName[32];
-												int ent = -1;
-												while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
-												{
-													GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-													if (StrContains(sName, "sf2_boss_respawnpoint", false))
-													{
-														hRespawnPoint.Push(ent);
-													}
-												}
-												ent = -1;
-												if (hRespawnPoint.Length > 0) ent = hRespawnPoint.Get(GetRandomInt(0,hRespawnPoint.Length-1));
-												
-												delete hRespawnPoint;
-												if (ent > MAX_BOSSES)
-												{
-													GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
-													TeleportEntity(iBossIndex, flTeleportPos, NULL_VECTOR, NULL_VECTOR);
-												}
-												else
-												{
-													RemoveSlender(iBossIndex);
-												}
-											}
-										}
-									}
+								}
+								ent = -1;
+								if (hRespawnPoint.Length > 0) ent = hRespawnPoint.Get(GetRandomInt(0,hRespawnPoint.Length-1));
+
+								delete hRespawnPoint;
+								if (ent > MAX_BOSSES)
+								{
+									GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
+									TeleportEntity(iBossIndex, flTeleportPos, NULL_VECTOR, NULL_VECTOR);
+								}
+								else
+								{
+									RemoveSlender(iBossIndex);
 								}
 							}
 						}
-						if (bPathResolved)
-						{
-							g_flLastStuckTime[iBossIndex] = 0.0;
-						}
+						
+						g_flLastStuckTime[iBossIndex] = 0.0;
 					}
 				}
 			}
@@ -4808,11 +4853,11 @@ public int SlenderChaseBossShortestPathCost(CNavArea area, CNavArea fromArea, CN
 		
 		if (ladder != INVALID_NAV_LADDER)
 		{
-			iDist = RoundFloat(ladder.Length);
+			iDist = RoundToFloor(ladder.Length);
 		}
 		else
 		{
-			iDist = RoundFloat(GetVectorDistance(flAreaCenter, flFromAreaCenter));
+			iDist = RoundToFloor(GetVectorDistance(flAreaCenter, flFromAreaCenter));
 		}
 		
 		int iCost = iDist + fromArea.CostSoFar;
@@ -5100,6 +5145,10 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	bool bHit = false;
 
 	if (!g_bSlenderAttacking[iBossIndex]) return;
+	if (view_as<bool>(GetProfileNum(sProfile,"use_chase_initial_animation",0)) && g_bNPCUsesChaseInitialAnimation[iBossIndex])
+	{
+		g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(0.1, Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+	}
 
 	if (NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) == 1)
 	{

@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Added iceballs for bosses.\n-Added multiple attack, hit, and miss sounds for any specified attack.\n-Finalized fireballs.\n-Fixed a bug where bosses used footsteps on chase initial animations.\n-Fixed a bug where proxy outline colors were still randomized, now yellow.\n-Added download, logging, and PvP fixes provided by Fire."
+		"en"	"-Fixed a client pre-think unoptimization.\n-Changed boss pathing method to something more managable.\n-Increased MAX_PATH count to 256.\n-Implemented a new boss unstuck method.\n-Increased default nightvision radius from 400 to 650.\n-Fixed a bug where engine sounds will still play after bosses disappear on fake."
 	}
 	"SF2 Smite player"
 	{

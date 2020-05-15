@@ -227,10 +227,7 @@ public void Hook_ClientPreThink(int client)
 		
 			int iRoundState = view_as<int>(GameRules_GetRoundState());
 
-			// No double jumping for players in play.
-			SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
-		
-			if (!g_bPlayerProxy[client])
+			if (!g_bPlayerProxy[client] && GetClientTeam(client) == TFTeam_Red)
 			{
 				if (iRoundState == 4)
 				{
@@ -406,7 +403,7 @@ public void Hook_ClientPreThink(int client)
 					}
 				}
 			}
-			else
+			else if (g_bPlayerProxy[client] && GetClientTeam(client) == TFTeam_Blue)
 			{
 				TFClassType iClass = TF2_GetPlayerClass(client);
 				bool bSpeedup = TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly);
@@ -680,16 +677,19 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		if(slender != INVALID_ENT_REFERENCE)
 		{
 			int iBossIndex = NPCGetFromEntIndex(slender);
-			if(!g_sSlenderIceballImpactSound[iBossIndex][0])
+			if (iBossIndex != -1)
 			{
-				g_sSlenderIceballImpactSound[iBossIndex] = ICEBALL_IMPACT;
-			}
-			EmitSoundToClient(victim, g_sSlenderIceballImpactSound[iBossIndex], _, MUSIC_CHAN);
-			SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
-			TF2_StunPlayer(victim, NPCChaserGetIceballSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, victim);
-			if (g_bPlayerEliminated[victim])
-			{
-				CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(victim));
+				if(!g_sSlenderIceballImpactSound[iBossIndex][0])
+				{
+					g_sSlenderIceballImpactSound[iBossIndex] = ICEBALL_IMPACT;
+				}
+				EmitSoundToClient(victim, g_sSlenderIceballImpactSound[iBossIndex], _, MUSIC_CHAN);
+				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				TF2_StunPlayer(victim, NPCChaserGetIceballSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, victim);
+				if (g_bPlayerEliminated[victim])
+				{
+					CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(victim));
+				}
 			}
 		}
 	}
@@ -700,8 +700,11 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		if(slender != INVALID_ENT_REFERENCE)
 		{
 			int iBossIndex = NPCGetFromEntIndex(slender);
-			SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
-			TF2_IgnitePlayer(victim, victim);
+			if (iBossIndex != -1)
+			{
+				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				TF2_IgnitePlayer(victim, victim);
+			}
 		}
 	}
 	
@@ -2917,7 +2920,7 @@ public Action Timer_ClientSprinting(Handle timer, any userid)
 		g_iPlayerSprintPoints[client] = 0;
 		return;
 	}
-	
+
 	if (IsClientReallySprinting(client)) 
 	{
 		int iOverride = GetConVarInt(g_cvPlayerInfiniteSprintOverride);
@@ -2995,6 +2998,10 @@ public Action Timer_ClientRechargeSprint(Handle timer, any userid)
 	int client = GetClientOfUserId(userid);
 	if (client <= 0) return;
 	
+	float flVelSpeed[3];
+	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", flVelSpeed);
+	float flSpeed = GetVectorLength(flVelSpeed);
+	
 	if (timer != g_hPlayerSprintTimer[client]) return;
 	
 	if (IsClientSprinting(client)) 
@@ -3009,8 +3016,18 @@ public Action Timer_ClientRechargeSprint(Handle timer, any userid)
 		g_hPlayerSprintTimer[client] = INVALID_HANDLE;
 		return;
 	}
-	
-	g_iPlayerSprintPoints[client]++;
+	if (g_iPlayerSprintPoints[client] > 10)
+	{
+		TF2Attrib_SetByName(client, "increased jump height", 1.0);
+	}
+	if ((!GetEntProp(client, Prop_Send, "m_bDucking") && !GetEntProp(client, Prop_Send, "m_bDucked")) || (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked") && IsClientReallySprinting(client) || flSpeed > 0.0))
+	{
+		g_iPlayerSprintPoints[client]++;
+	}
+	else if ((GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) && !IsClientReallySprinting(client) && flSpeed == 0.0)
+	{
+		g_iPlayerSprintPoints[client] += 2;
+	}
 	ClientSprintTimer(client, true);
 }
 
@@ -3283,6 +3300,9 @@ void ClientEnableProxy(int client,int iBossIndex)
 	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
 	PvP_SetPlayerPvPState(client, false, true, false);
 	TF2_RespawnPlayer(client);
+	
+	// No double jumping for players in play.
+	SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
 	
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);

@@ -1085,6 +1085,8 @@ void RemoveProfile(int iBossIndex)
 	
 	NPCChaserOnRemoveProfile(iBossIndex);
 	
+	int slender = NPCGetEntIndex(iBossIndex);
+	
 	// Remove all possible sounds, for emergencies.
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -1168,11 +1170,6 @@ void RemoveProfile(int iBossIndex)
 	g_iNPCType[iBossIndex] = -1;
 	g_iNPCProfileIndex[iBossIndex] = -1;
 	g_iNPCUniqueProfileIndex[iBossIndex] = -1;
-	
-	if(view_as<bool>(GetProfileNum(sProfile,"use_engine_sounds",0)) && g_sSlenderEngineSound[iBossIndex][0])
-	{
-		StopSound(iBossIndex, SNDCHAN_STATIC, g_sSlenderEngineSound[iBossIndex]);
-	}
 	
 	NPCSetFlags(iBossIndex, 0);
 	
@@ -2861,6 +2858,9 @@ bool SlenderMarkAsFake(int iBossIndex)
 	
 	NPCSetFlags(iBossIndex, iBossFlags | SFF_MARKEDASFAKE);
 	
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	
 	g_hSlenderFakeTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderMarkedAsFake, iBossIndex, TIMER_FLAG_NO_MAPCHANGE);
 	
 	if (slender && slender != INVALID_ENT_REFERENCE)
@@ -2871,7 +2871,13 @@ bool SlenderMarkAsFake(int iBossIndex)
 		if (!(iFlags & 0x0004)) iFlags |= 0x0004; // 	FSOLID_NOT_SOLID
 		if (!(iFlags & 0x0008)) iFlags |= 0x0008; // 	FSOLID_TRIGGER
 		SetEntProp(slender, Prop_Send, "m_usSolidFlags", iFlags);
-		
+	
+		if(view_as<bool>(GetProfileNum(sProfile,"use_engine_sounds",0)) && g_sSlenderEngineSound[iBossIndex][0])
+		{
+			StopSound(slender, SNDCHAN_STATIC, g_sSlenderEngineSound[iBossIndex]);
+		}
+	
+
 		SetEntPropFloat(slender, Prop_Send, "m_flPlaybackRate", 0.0);
 		SetEntityRenderFx(slender, RENDERFX_FADE_FAST);
 	}

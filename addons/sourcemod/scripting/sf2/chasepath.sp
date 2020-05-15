@@ -3,15 +3,15 @@
 #endif
 #define _sf2_chasepath_included
 
-#define MAX_PATH 32
+#define MAX_PATH 256
 
 static NavPath g_hChasePath[MAX_PATH] = { null, ... };
 static int g_iPathNodeIndex[MAX_PATH];
 static int g_iPathBehindNodeIndex[MAX_PATH];
 static int g_iRefChasePathTarget[MAX_PATH] = { INVALID_ENT_REFERENCE, ... };
 static float g_flChasePathAvoidRange[MAX_PATH];
-static float g_flChasePathNodeTolerance[MAX_PATH] = { 32.0, ... };
-static float g_flChasePathLookAheadDistance[MAX_PATH] = {10.0, ...};
+static float g_flChasePathNodeTolerance[MAX_PATH] = { 256.0, ... };
+static float g_flChasePathLookAheadDistance[MAX_PATH] = {300.0, ...};
 static float g_flChasePathLastBuildTime[MAX_PATH];
 
 static float g_vecPathMovePosition[MAX_PATH][3];
@@ -30,9 +30,9 @@ methodmap ChaserPathLogic
 		g_lastKnownTargetArea[iIndex] = INVALID_NAV_AREA;
 		g_iPathNodeIndex[iIndex] = 0;
 		g_iPathBehindNodeIndex[iIndex] = 0;
-		g_flChasePathNodeTolerance[iIndex] = 32.0;
-		g_flChasePathLookAheadDistance[iIndex] = 100.0;
-		g_flChasePathAvoidRange[iIndex] = 100.0;
+		g_flChasePathNodeTolerance[iIndex] = 256.0;
+		g_flChasePathLookAheadDistance[iIndex] = 300.0;
+		g_flChasePathAvoidRange[iIndex] = 300.0;
 		g_flChasePathLastBuildTime[iIndex] = GetGameTime();
 		return view_as<ChaserPathLogic>(iIndex);
 	}
@@ -214,11 +214,11 @@ methodmap ChaserPathLogic
 		
 		this.ClearPath();
 		
-		CNavArea startArea = NavMesh_GetNearestArea(vecStartPos, _, 50.0);
+		CNavArea startArea = NavMesh_GetNearestArea(vecStartPos, _, 200.0);
 		if (startArea != INVALID_NAV_AREA)
 		{
-			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 50.0);
-			if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 50.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
+			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 200.0);
+			if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 200.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
 			{
 				g_hChasePath[this.Index].Clear();
 				return false;
@@ -430,7 +430,7 @@ methodmap ChaserPathLogic
 			}
 		}
 		
-		if ((g_vecPathMovePosition[this.Index][2] - vecFeetPos[2]) > JumpCrouchHeight)
+		/*if ((g_vecPathMovePosition[this.Index][2] - vecFeetPos[2]) > JumpCrouchHeight)
 		{
 			static const float jumpCloseRange = 50.0;
 			
@@ -460,7 +460,7 @@ methodmap ChaserPathLogic
 					return;
 				}
 			}
-		}
+		}*/
 		if (pathNodeIndex < (hPath.Length - 1))
 		{
 			float vecFloorNormalDir[3];
