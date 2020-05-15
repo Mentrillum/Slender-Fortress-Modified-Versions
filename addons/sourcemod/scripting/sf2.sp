@@ -8040,7 +8040,9 @@ void SpawnPages()
 			}
 		}
 	}
-	
+
+	strcopy(g_strPageRefModel, sizeof(g_strPageRefModel), PAGE_MODEL);
+
 	// Get a reference entity, if any.
 	ent = -1;
 	while ((ent = FindEntityByClassname(ent, "prop_dynamic")) != -1)
@@ -8100,9 +8102,9 @@ void SpawnPages()
 				}
 				else
 				{
-					DispatchKeyValue(page, "modelname", PAGE_MODEL);
-					DispatchKeyValue(page, "model", PAGE_MODEL);
-					//SetEntityModel(page, PAGE_MODEL);
+					DispatchKeyValue(page2, "modelname", PAGE_MODEL);
+					DispatchKeyValue(page2, "model", PAGE_MODEL);
+					SetEntityModel(page2, PAGE_MODEL);
 				}
 				
 				DispatchKeyValue(page2, "solid", "0");
@@ -8140,7 +8142,7 @@ void SpawnPages()
 					{
 						DispatchKeyValue(iEnt, "modelname", PAGE_MODEL);
 						DispatchKeyValue(iEnt, "model", PAGE_MODEL);
-						//SetEntityModel(ent, PAGE_MODEL);
+						SetEntityModel(iEnt, PAGE_MODEL);
 					}
 					DispatchSpawn(iEnt);
 					ActivateEntity(iEnt);

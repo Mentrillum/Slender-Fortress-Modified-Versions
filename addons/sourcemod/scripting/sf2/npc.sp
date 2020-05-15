@@ -2107,7 +2107,7 @@ void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float time
 
 	char sName[64];
 
-	if (iParticle != -1 && iBossIndex != -1)
+	if (iParticle != -1 && iBossIndex != -1 && iParticle != INVALID_ENT_REFERENCE)
 	{
         TeleportEntity(iParticle, flSlenderPosition, NULL_VECTOR, NULL_VECTOR);
 

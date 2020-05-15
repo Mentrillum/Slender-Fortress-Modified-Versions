@@ -2154,7 +2154,6 @@ void ClientProcessVisibility(int client)
 							g_iSlenderState[iMaster] = STATE_CHASE;
 							g_iSlenderTarget[iMaster] = client;
 							g_flSlenderTimeUntilNoPersistence[iMaster] = GetGameTime() + NPCChaserGetChaseDuration(iMaster, iDifficulty);
-							NPCChaserUpdateBossAnimation(iMaster, slender, g_iSlenderState[iMaster]);
 							g_bPlayerScaredByBoss[client][iMaster] = true;
 						}
 					}
