@@ -3,14 +3,14 @@
 #endif
 #define _sf2_chasepath_included
 
-#define MAX_PATH 256
+#define MAX_PATH 32
 
 static NavPath g_hChasePath[MAX_PATH] = { null, ... };
 static int g_iPathNodeIndex[MAX_PATH];
 static int g_iPathBehindNodeIndex[MAX_PATH];
 static int g_iRefChasePathTarget[MAX_PATH] = { INVALID_ENT_REFERENCE, ... };
 static float g_flChasePathAvoidRange[MAX_PATH];
-static float g_flChasePathNodeTolerance[MAX_PATH] = { 256.0, ... };
+static float g_flChasePathNodeTolerance[MAX_PATH] = { 32.0, ... };
 static float g_flChasePathLookAheadDistance[MAX_PATH] = {300.0, ...};
 static float g_flChasePathLastBuildTime[MAX_PATH];
 
@@ -30,7 +30,7 @@ methodmap ChaserPathLogic
 		g_lastKnownTargetArea[iIndex] = INVALID_NAV_AREA;
 		g_iPathNodeIndex[iIndex] = 0;
 		g_iPathBehindNodeIndex[iIndex] = 0;
-		g_flChasePathNodeTolerance[iIndex] = 256.0;
+		g_flChasePathNodeTolerance[iIndex] = 32.0;
 		g_flChasePathLookAheadDistance[iIndex] = 300.0;
 		g_flChasePathAvoidRange[iIndex] = 300.0;
 		g_flChasePathLastBuildTime[iIndex] = GetGameTime();
