@@ -3347,7 +3347,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
 				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
-				SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial");
 			}
 		}
 	}
@@ -3913,7 +3912,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 
 void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 {
-	char sAnimation[64];
+	char sAnimation[256];
 	float flPlaybackRate;
 	bool bAnimationFound = false;
 	
@@ -3936,9 +3935,9 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_AttackAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, NPCGetCurrentAttackIndex(iBossIndex)+1);
 	else if (iState == STATE_STUN)
 		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_StunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1);
-	else if (g_bNPCUsesChaseInitialAnimation[iBossIndex])
+	else if (iState == STATE_CHASE && g_bNPCUsesChaseInitialAnimation[iBossIndex])
 		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_ChaseInitialAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1);
-	else if (g_bNPCUsesRageAnimation1[iBossIndex] || g_bNPCUsesRageAnimation2[iBossIndex] || g_bNPCUsesRageAnimation3[iBossIndex])
+	else if (iState == STATE_CHASE && (g_bNPCUsesRageAnimation1[iBossIndex] || g_bNPCUsesRageAnimation2[iBossIndex] || g_bNPCUsesRageAnimation3[iBossIndex]))
 		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RageAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1);
 	
 	if (flPlaybackRate<-12.0) flPlaybackRate = -12.0;
@@ -3959,7 +3958,7 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 				g_iNPCCurrentAnimationSequence[iBossIndex] = 0;
 				//SendDebugMessageToPlayers(DEBUG_BOSS_ANIMATION, 0, "INVALID ANIMATION %s", sAnimation);
 			}
-			bool bAnimationLoop = (iState == STATE_IDLE || iState == STATE_ALERT || iState == STATE_CHASE || iState == STATE_WANDER);
+			bool bAnimationLoop = (iState == STATE_IDLE || iState == STATE_ALERT || (iState == STATE_CHASE && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex]) || iState == STATE_WANDER);
 			SetEntProp(iEnt, Prop_Data, "m_bSequenceLoops", bAnimationLoop);
 		}
 	}

@@ -1801,7 +1801,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 {
 	KvRewind(g_hConfig);
 	KvJumpToKey(g_hConfig, sProfile);
-	char sAnimationSection[20], sKeyAnimationName[50], sKeyAnimationPlayBackRate[65];
+	char sAnimationSection[128], sKeyAnimationName[256], sKeyAnimationPlayBackRate[128];
 	if (iAnimationSection == ChaserAnimation_IdleAnimations)
 	{
 		strcopy(sAnimationSection, sizeof(sAnimationSection), "idle");
@@ -1972,13 +1972,13 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 	{
 		strcopy(sAnimationSection, sizeof(sAnimationSection), "chaseinitial");
 		strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_chaseinitial");
-		strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_chaseinitial_playbakrate");
+		strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_chaseinitial_playbackrate");
 	}
 	else if (iAnimationSection == ChaserAnimation_RageAnimations)
 	{
 		strcopy(sAnimationSection, sizeof(sAnimationSection), "rage");
 		strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_rage");
-		strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_rage_playbakrate");
+		strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_rage_playbackrate");
 	}
 	else if (iAnimationSection == ChaserAnimation_StunAnimations)
 	{

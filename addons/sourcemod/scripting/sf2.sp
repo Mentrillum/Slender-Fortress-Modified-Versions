@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.4 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.4 Modified"
+#define PLUGIN_VERSION "1.5.3.5 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.3.5 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -961,7 +961,7 @@ public void OnPluginStart()
 	g_cv20Dollars = CreateConVar("sf2_20dollarmode", "0", "Enable/Disable $20 mode.", _, true, 0.0, true, 1.0);
 	HookConVarChange(g_cv20Dollars, OnConVarChanged);
 	
-	g_cvMaxPlayers = CreateConVar("sf2_maxplayers", "5", "The maximum amount of players that can be in one round.", _, true, 1.0);
+	g_cvMaxPlayers = CreateConVar("sf2_maxplayers", "6", "The maximum amount of players that can be in one round.", _, true, 1.0);
 	HookConVarChange(g_cvMaxPlayers, OnConVarChanged);
 	
 	g_cvMaxPlayersOverride = CreateConVar("sf2_maxplayers_override", "-1", "Overrides the maximum amount of players that can be in one round.", _, true, -1.0);
@@ -1059,7 +1059,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_boss_attack_waiters", Command_SlenderAttackWaiters, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_boss_no_teleport", Command_SlenderNoTeleport, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_proxy", Command_ForceProxy, ADMFLAG_SLAY);
-	//RegAdminCmd("sm_slnightfision", Command_NightVision, ADMFLAG_SLAY);
+	//RegAdminCmd("sm_sf2_nightvision", Command_NightVision, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_escape", Command_ForceEscape, ADMFLAG_CHEATS);
 	
 	// Hook onto existing console commands.
@@ -2319,6 +2319,11 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 		{
 			return Plugin_Handled;
 		}
+	}
+	
+	if (IsRoundEnding() || IsRoundInIntro() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
+	{
+		return Plugin_Handled;
 	}
 	
 	return Plugin_Continue;
@@ -4146,7 +4151,7 @@ public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3]
 		}
 		case 201, 202:
 		{
-			if (IsClientInGhostMode(iClient) || !g_bPlayerEliminated[iClient] || g_bPlayerProxy[iClient])
+			if (IsClientInGhostMode(iClient))
 			{
 				impulse = 0;
 			}
@@ -6204,7 +6209,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	Handle hProf = CreateProfiler();
 	StartProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Started profiling...");
-	
+
 	//PrintToChatAll("(SPAWN) Spawn event called.");
 	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("EVENT START: Event_PlayerSpawn(%d)", iClient);
 #endif
@@ -6278,7 +6283,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		g_bBackStabbed[iClient] = false;
 		TF2_RemoveCondition(iClient, view_as<TFCond>(82));
 		TF2_RemoveCondition(iClient, TFCond_SpawnOutline);
-		
+
 		if (HandlePlayerTeam(iClient))
 		{
 #if defined DEBUG
@@ -6336,7 +6341,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				ClientStartCampingTimer(iClient);
 				
 				HandlePlayerIntroState(iClient);
-				
+	
 				// screen overlay timer
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{

@@ -207,8 +207,6 @@ public void Hook_ClientPreThink(int client)
 		SetEntityFlags(client,GetEntityFlags(client)^FL_EDICT_ALWAYS);
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
 		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
-		// You can now infinitely jump in Ghost Mode.
-		SetEntProp(client, Prop_Send, "m_iAirDash", -1);
 		if(TF2_IsPlayerInCondition(client,TFCond_HalloweenKart) || !TF2_IsPlayerInCondition(client, TFCond_Stealthed))
 		{
 			TF2_RemoveCondition(client,TFCond_HalloweenKart);
@@ -3282,9 +3280,7 @@ void ClientEnableProxy(int client,int iBossIndex)
 	if (NPCGetUniqueID(iBossIndex) == -1) return;
 	if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return;
 	if (g_bPlayerProxy[client]) return;
-	
-	TF2_RemoveCondition(client, view_as<TFCond>(82));
-	
+
 	TF2_RemovePlayerDisguise(client);
 	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -3294,15 +3290,17 @@ void ClientEnableProxy(int client,int iBossIndex)
 	ClientDisableConstantGlow(client);
 	
 	ClientStopProxyForce(client);
+
+	TF2_RemoveCondition(client,TFCond_HalloweenKart);
+	TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
+	TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
+	TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
 	
 	g_bPlayerProxy[client] = true;
 	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
 	PvP_SetPlayerPvPState(client, false, true, false);
 	TF2_RespawnPlayer(client);
-	
-	// No double jumping for players in play.
-	SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
-	
+
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
 	
@@ -3933,7 +3931,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 	Call_PushCell(iBossIndex);
 	Call_Finish();
 	
-	if (!NPCHasDeathCamEnabled(iBossIndex))
+	if (!NPCHasDeathCamEnabled(iBossIndex) && !(NPCGetFlags(iBossIndex) & SFF_FAKE))
 	{
 		SetEntProp(client, Prop_Data, "m_takedamage", 2); // We do this because the point_viewcontrol changes our lifestate.
 		
@@ -3951,6 +3949,10 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 		SetVariantInt(9001);//Maybe it doesn't work like SDKHooks_TakeDamage, maybe not. Tbh I don't want to test this one.
 		AcceptEntityInput(client, "RemoveHealth");
 		return;
+	}
+	else if (NPCGetFlags(iBossIndex) & SFF_FAKE)
+	{
+		SlenderMarkAsFake(iBossIndex);
 	}
 	
 	g_iPlayerDeathCamBoss[client] = NPCGetUniqueID(iBossIndex);
@@ -4062,6 +4064,7 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 	{
 		//Then kill him anyways.
 		KillClient(client);
+		ForcePlayerSuicide(client);
 	}
 	ClientResetDeathCam(client);
 }
@@ -4930,7 +4933,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		{
 			ClientRemoveMusicFlag(client, MUSICF_PAGES75PERCENT);
 			g_iPlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
-			NPCStopMusic();
+			//NPCStopMusic();
 		}
 		
 		int iOldChasingBoss = g_iPlayerChaseMusicMaster[client];
@@ -7006,6 +7009,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 			CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			//PrintToChatAll("Proxy model:%s",g_sClientProxyModel[client]);
 		}
+		ClientDisableConstantGlow(client);
 		int iYellow[4] = {255, 208, 0, 255};
 		ClientEnableConstantGlow(client, "head", iYellow);
 		

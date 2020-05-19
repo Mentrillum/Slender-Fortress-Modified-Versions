@@ -65,7 +65,7 @@ public void PvP_Initialize()
 {
 	g_hCvarAvoidTeammates =	FindConVar("tf_avoidteammates");
 	
-	g_cvPvPArenaLeaveTime = CreateConVar("sf2_player_pvparena_leavetime", "3");
+	g_cvPvPArenaLeaveTime = CreateConVar("sf2_player_pvparena_leavetime", "6");
 	g_cvPvPArenaPlayerCollisions = CreateConVar("sf2_player_pvparena_collisions", "1");
 	g_cvPvPArenaProjectileZap = CreateConVar("sf2_pvp_projectile_removal", "0", "This is an experimental code! It could make your server crash, if you get any crash disable this cvar");
 	
@@ -722,6 +722,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		TeleportEntity(iClient, flPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
 		
 		EmitAmbientSound(SF2_PVP_SPAWN_SOUND, flPos, _, SNDLEVEL_NORMAL, _, 1.0);
+		TF2_AddCondition(iClient, TFCond_UberchargedCanteen, 1.5);
 	}
 	
 	CloseHandle(hSpawnPointList);
