@@ -130,8 +130,6 @@ void SetupMenus()
 	AddMenuItem(g_hMenuSettings, "0", buffer);
 	Format(buffer, sizeof(buffer), "%t", "SF2 Settings Proxy Menu Title");
 	AddMenuItem(g_hMenuSettings, "0", buffer);
-	Format(buffer, sizeof(buffer), "%t", "SF2 Settings Music Volume Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
 	SetMenuExitBackButton(g_hMenuSettings, true);
 	
 	g_hMenuCredits = CreateMenu(Menu_Credits);

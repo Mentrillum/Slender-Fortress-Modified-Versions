@@ -1645,7 +1645,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	if (NPCGetFlags(iBossIndex) & SFF_MARKEDASFAKE) return Plugin_Stop;
 	
 	//CTFBaseBoss doesn't call CBaseCombatCharacter::UpdateLastKnownArea automaticly, manually call it so we can use SDK_GetLastKnownArea on the boss.
-	if(slender > MaxClients) SDK_UpdateLastKnownArea(slender);
+	SDK_UpdateLastKnownArea(slender);
 	
 	/*int iCurrentSequence = GetEntProp(slender, Prop_Send, "m_nSequence");
 	if (iCurrentSequence != g_iNPCCurrentAnimationSequence[iBossIndex])
@@ -3289,7 +3289,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				|| (iState == STATE_CHASE && g_flSlenderCalculatedSpeed[iBossIndex] > 0.0)
 				|| (iState == STATE_ATTACK))
 			{
-				if (NavMesh_Exists() && slender > MaxClients && g_flSlenderLastCalculPathTime[iBossIndex] <= GetGameTime())
+				if (NavMesh_Exists() && g_flSlenderLastCalculPathTime[iBossIndex] <= GetGameTime())
 				{
 					bool bCompute = g_hBossChaserPathLogic[iBossIndex].ComputePathToPos(g_INextBot[iBossIndex].GetEntity(), g_flSlenderGoalPos[iBossIndex], SlenderChaseBossShortestPathCost, g_ILocomotion[iBossIndex], _, _);
 					if (bCompute)
