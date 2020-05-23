@@ -715,7 +715,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	KvGetString(kv, "mangler_shoot_sound", sManglerShoot, sizeof(sManglerShoot));
 	KvGetString(kv, "baseball_shoot_sound", sBaseballShoot, sizeof(sBaseballShoot));
 	KvGetString(kv, "engine_sound", sEngineSound, sizeof(sEngineSound));
-	
+
 	// Parse through flags.
 	int iBossFlags = 0;
 	if (KvGetNum(kv, "static_shake")) iBossFlags |= SFF_HASSTATICSHAKE;
@@ -1071,7 +1071,7 @@ void SetupTimeLimitTimerForBossPackVote()
 				}
 				else
 				{
-					g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+					g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT);
 				}
 			}
 			else
@@ -1104,7 +1104,7 @@ void CheckRoundLimitForBossPackVote(int roundCount)
 			}
 			else
 			{
-				g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT);
 			}
 		}
 	}
@@ -1246,7 +1246,7 @@ public Action Timer_StartBossPackVote(Handle timer)
 {
 	if (timer != g_hBossPackVoteMapTimer) return;
 	
-	g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT);
 	TriggerTimer(g_hBossPackVoteTimer, true);
 }
 

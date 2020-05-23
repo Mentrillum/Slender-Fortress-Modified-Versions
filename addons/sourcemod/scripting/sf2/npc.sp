@@ -921,7 +921,8 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	char sGasPlayerHitSound[PLATFORM_MAX_PATH];
 	char sStunPlayerHitSound[PLATFORM_MAX_PATH];
 	char sEngineSound[PLATFORM_MAX_PATH];
-
+	char sShockwaveBeam[PLATFORM_MAX_PATH];
+	char sShockwaveHalo[PLATFORM_MAX_PATH];
 	
 	GetProfileString(sProfile, "cloak_on_sound", sCloakOnSound, sizeof(sCloakOnSound));
 	GetProfileString(sProfile, "cloak_off_sound", sCloakOffSound, sizeof(sCloakOffSound));
@@ -940,6 +941,8 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	GetProfileString(sProfile, "player_gas_sound", sGasPlayerHitSound, sizeof(sGasPlayerHitSound));
 	GetProfileString(sProfile, "player_stun_sound", sStunPlayerHitSound, sizeof(sStunPlayerHitSound));
 	GetProfileString(sProfile, "engine_sound", sEngineSound, sizeof(sEngineSound));
+	GetProfileString(sProfile, "shockwave_beam_sprite", sShockwaveBeam, sizeof(sShockwaveBeam));
+	GetProfileString(sProfile, "shockwave_halo_sprite", sShockwaveHalo, sizeof(sShockwaveHalo));
 
 	strcopy(g_sSlenderCloakOnSound[Npc.Index], sizeof(g_sSlenderCloakOnSound[]), sCloakOnSound);
 	strcopy(g_sSlenderCloakOffSound[Npc.Index], sizeof(g_sSlenderCloakOffSound[]), sCloakOffSound);
@@ -958,8 +961,10 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	strcopy(g_sSlenderManglerShootSound[Npc.Index], sizeof(g_sSlenderManglerShootSound[]), sShootManglerSound);
 	strcopy(g_sSlenderBaseballShootSound[Npc.Index], sizeof(g_sSlenderBaseballShootSound[]), sShootBaseballSound);
 	strcopy(g_sSlenderEngineSound[Npc.Index], sizeof(g_sSlenderEngineSound[]), sEngineSound);
+	strcopy(g_sSlenderShockwaveBeamSprite[Npc.Index], sizeof(g_sSlenderShockwaveBeamSprite[]), sShockwaveBeam);
+	strcopy(g_sSlenderShockwaveHaloSprite[Npc.Index], sizeof(g_sSlenderShockwaveHaloSprite[]), sShockwaveHalo);
 
-	g_hSlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hSlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT);
 	
 	SlenderRemoveTargetMemory(Npc.Index);
 	
@@ -1139,7 +1144,7 @@ void RemoveProfile(int iBossIndex)
 				g_hPlayerStaticTimer[i] = CreateTimer(g_flPlayerStaticDecreaseRate[i], 
 					Timer_ClientDecreaseStatic, 
 					GetClientUserId(i), 
-					TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+					TIMER_REPEAT);
 					
 				TriggerTimer(g_hPlayerStaticTimer[i], true);
 			}
@@ -1250,7 +1255,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			}
 			g_iSlenderModel[iBossIndex] = EntIndexToEntRef(iSlenderModel);
 			g_iSlender[iBossIndex] = g_iSlenderModel[iBossIndex];
-			g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderBlinkBossThink, g_iSlender[iBossIndex], TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderBlinkBossThink, g_iSlender[iBossIndex], TIMER_REPEAT);
 			
 			SDKHook(iSlenderModel, SDKHook_SetTransmit, Hook_SlenderModelSetTransmit);
 			
@@ -1400,7 +1405,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			g_flSlenderNextPathTime[iBossIndex] = GetGameTime();
 			g_flSlenderLastCalculPathTime[iBossIndex] = -1.0;
 			g_flLastStuckTime[iBossIndex] = -1.0;
-			g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(iBoss), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(iBoss), TIMER_REPEAT);
 			g_iSlenderInterruptConditions[iBossIndex] = 0;
 			g_bSlenderChaseDeathPosition[iBossIndex] = false;
 			g_iNPCPlayerScareVictin[iBossIndex] = INVALID_ENT_REFERENCE;
@@ -2107,23 +2112,16 @@ void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float time
 
 	char sName[64];
 
-	if (iParticle != -1 && iBossIndex != -1 && iParticle != INVALID_ENT_REFERENCE)
+	if (IsValidEdict(iParticle))
 	{
         TeleportEntity(iParticle, flSlenderPosition, NULL_VECTOR, NULL_VECTOR);
 
-        GetEntPropString(iBossIndex, Prop_Data, "m_iName", sName, sizeof(sName));
-
         DispatchKeyValue(iParticle, "targetname", "tf2particle");
-        DispatchKeyValue(iParticle, "parentname", sName);
+		GetEntPropString(iParticle, Prop_Data, "m_iName", sName, sizeof(sName));
         DispatchKeyValue(iParticle, "effect_name", sSectionName);
-		
         DispatchSpawn(iParticle);
-        SetVariantString(sName);
-
-        AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-
         CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
     }
 }
@@ -2150,25 +2148,19 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
 	char sName[64];
 	char sPlayerName[128];
 
-	if (iParticle != -1)
+	if (IsValidEdict(iParticle))
 	{
         TeleportEntity(iParticle, flPlayerPosition, NULL_VECTOR, NULL_VECTOR);
 
-        GetEntPropString(iBossIndex, Prop_Data, "m_iName", sName, sizeof(sName));
-		GetEntPropString(iClient, Prop_Data, "m_iName", sPlayerName, sizeof(sPlayerName));
-
         DispatchKeyValue(iParticle, "targetname", "tf2particle");
-        DispatchKeyValue(iParticle, "parentname", sPlayerName);
+		GetEntPropString(iParticle, Prop_Data, "m_iName", sName, sizeof(sName));
         DispatchKeyValue(iParticle, "effect_name", sSectionName);
-		
+        DispatchKeyValue(iParticle, "parentname", sName);
         DispatchSpawn(iParticle);
-
-        SetVariantString(sPlayerName);
+        SetVariantString(sName);
         AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
-		
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-
         CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
     }
 }
@@ -2198,23 +2190,19 @@ void SlenderCreateSpawnParticle(int iBossIndex, const char[] sSectionName, float
 
 	char sName[64];
 
-	if (iParticle != -1)
+	if (IsValidEdict(iParticle))
 	{
-        TeleportEntity(iParticle, flEffectPos, NULL_VECTOR, NULL_VECTOR);
-
-        GetEntPropString(iBossIndex, Prop_Data, "m_iName", sName, sizeof(sName));
+        TeleportEntity(iParticle, flPlayerPosition, NULL_VECTOR, NULL_VECTOR);
 
         DispatchKeyValue(iParticle, "targetname", "tf2particle");
-        DispatchKeyValue(iParticle, "parentname", sName);
+		GetEntPropString(iParticle, Prop_Data, "m_iName", sName, sizeof(sName));
         DispatchKeyValue(iParticle, "effect_name", sSectionName);
-		
+        DispatchKeyValue(iParticle, "parentname", sName);
         DispatchSpawn(iParticle);
         SetVariantString(sName);
-
         AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-
         CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
     }
 }

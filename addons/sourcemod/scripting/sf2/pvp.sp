@@ -514,7 +514,7 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 		if (IsClientInPvP(iOther))
 		{
 			g_iPlayerPvPTimerCount[iOther] = GetConVarInt(g_cvPvPArenaLeaveTime);
-			g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+			g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT);
 		}
 	}
 

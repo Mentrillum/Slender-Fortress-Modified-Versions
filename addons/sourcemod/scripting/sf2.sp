@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.5 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.5 Modified"
+#define PLUGIN_VERSION "1.5.3.6 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.3.6 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -261,6 +261,8 @@ char g_sSlenderArrowShootSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderManglerShootSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderBaseballShootSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderEngineSound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderShockwaveBeamSprite[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderShockwaveHaloSprite[MAX_BOSSES][PLATFORM_MAX_PATH];
 
 int g_iSlenderTeleportTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 bool g_bSlenderTeleportTargetIsCamping[MAX_BOSSES] = false;
@@ -420,7 +422,6 @@ enum PlayerPreferences
 	bool:PlayerPreference_ShowHints,
 	bool:PlayerPreference_EnableProxySelection,
 	bool:PlayerPreference_ProjectedFlashlight,
-	Float:PlayerPreference_MusicVolume,
 };
 
 bool g_bPlayerHints[MAXPLAYERS + 1][PlayerHint_MaxNum];
@@ -679,6 +680,8 @@ Handle g_hCookie;
 
 int g_SmokeSprite;
 int g_LightningSprite;
+int g_ShockwaveBeam;
+int g_ShockwaveHalo;
 
 // Global forwards.
 Handle fOnBossAdded;
@@ -1444,6 +1447,8 @@ public void OnMapStart()
 	PrecacheSound(SOUND_THUNDER, true);
 	g_SmokeSprite = PrecacheModel("sprites/steam1.vmt");
 	g_LightningSprite = PrecacheModel("sprites/lgtning.vmt");
+	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
+	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
 #if defined DEBUG
 	g_iPathLaserModelIndex = PrecacheModel("materials/sprites/laserbeam.vmt");
 #endif
@@ -1556,13 +1561,13 @@ static void StartPlugin()
 	g_iRoundEndCount = 0;
 	g_iRoundActiveCount = 0;
 	g_iRoundState = SF2RoundState_Invalid;
-	g_hRoundMessagesTimer = CreateTimer(200.0, Timer_RoundMessages, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hRoundMessagesTimer = CreateTimer(200.0, Timer_RoundMessages, _, TIMER_REPEAT);
 	g_iRoundMessagesNum = 0;
 	
 	g_iRoundWarmupRoundCount = 0;
 	
-	g_hClientAverageUpdateTimer = CreateTimer(0.2, Timer_ClientAverageUpdate, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	g_hBossCountUpdateTimer = CreateTimer(2.0, Timer_BossCountUpdate, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hClientAverageUpdateTimer = CreateTimer(0.2, Timer_ClientAverageUpdate, _, TIMER_REPEAT);
+	g_hBossCountUpdateTimer = CreateTimer(2.0, Timer_BossCountUpdate, _, TIMER_REPEAT);
 	
 	SetRoundState(SF2RoundState_Waiting);
 	
@@ -4241,7 +4246,6 @@ public void OnClientCookiesCached(int iClient)
 	g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = MuteMode_Normal;
 	g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = true;
 	g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_MusicVolume] = 1.0;
 	
 	if (sCookie[0])
 	{
@@ -4259,8 +4263,6 @@ public void OnClientCookiesCached(int iClient)
 		if (count > 4)
 			g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = view_as<bool>(StringToInt(s2[4]));
 		if (count > 5)
-			g_iPlayerPreferences[iClient][PlayerPreference_MusicVolume] = StringToFloat(s2[5])/100.0;
-		if (count > 6)
 			g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = view_as<bool>(StringToInt(s2[6]));
 	}
 }
@@ -4409,8 +4411,7 @@ public void OnClientDisconnect(int iClient)
 	g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = true;
 	g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = true;
 	g_iPlayerPreferences[iClient][PlayerPreference_ProjectedFlashlight] = false;
-	g_iPlayerPreferences[iClient][PlayerPreference_MusicVolume] = 1.0;
-	
+
 	// Reset any iClient functions that may be still active.
 	ClientResetOverlay(iClient);
 	ClientResetFlashlight(iClient);
@@ -4573,7 +4574,7 @@ void SetRoundState(SF2RoundState iRoundState)
 			if (g_iRoundEscapeTimeLimit > 0)
 			{
 				g_iRoundTime = g_iRoundEscapeTimeLimit;
-				g_hRoundTimer = CreateTimer(1.0, Timer_RoundTimeEscape, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				g_hRoundTimer = CreateTimer(1.0, Timer_RoundTimeEscape, _, TIMER_REPEAT);
 			}
 			else
 			{
@@ -6345,7 +6346,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				// screen overlay timer
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					g_hPlayerOverlayCheck[iClient] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(iClient), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+					g_hPlayerOverlayCheck[iClient] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(iClient), TIMER_REPEAT);
 					TriggerTimer(g_hPlayerOverlayCheck[iClient], true);
 				}
 				if (DidClientEscape(iClient))
@@ -7553,7 +7554,7 @@ public Action Timer_RoundStart(Handle timer)
 				// Automatically set it to Normal.
 				SetConVarInt(g_cvDifficulty, Difficulty_Normal);
 				
-				g_hVoteTimer = CreateTimer(1.0, Timer_VoteDifficulty, hArrayClients, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				g_hVoteTimer = CreateTimer(1.0, Timer_VoteDifficulty, hArrayClients, TIMER_REPEAT);
 				TriggerTimer(g_hVoteTimer, true);
 				
 				if (iGameText != -1)
@@ -7600,7 +7601,7 @@ public Action Timer_RoundGrace(Handle timer)
 	{
 		// Set round time.
 		g_iRoundTime = g_iRoundTimeLimit;
-		g_hRoundTimer = CreateTimer(1.0, Timer_RoundTime, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		g_hRoundTimer = CreateTimer(1.0, Timer_RoundTime, _, TIMER_REPEAT);
 	}
 	else
 	{

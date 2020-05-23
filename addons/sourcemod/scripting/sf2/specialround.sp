@@ -240,7 +240,7 @@ void SpecialRoundCycleStart()
 	g_iSpecialRoundType = 0;
 	g_iSpecialRoundCycleNum = 0;
 	g_flSpecialRoundCycleEndTime = GetGameTime() + SR_CYCLELENGTH;
-	g_hSpecialRoundTimer = CreateTimer(0.2, Timer_SpecialRoundCycle, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hSpecialRoundTimer = CreateTimer(0.2, Timer_SpecialRoundCycle, _, TIMER_REPEAT);
 }
 
 void SpecialRoundCycleFinish()
@@ -586,7 +586,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_DREAMFAKEBOSSES:
 		{
-			CreateTimer(2.0,Timer_SpecialRoundFakeBosses,_,TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(2.0,Timer_SpecialRoundFakeBosses,_,TIMER_REPEAT);
 			SF_AddSpecialRound(SPECIALROUND_DREAMFAKEBOSSES);
 		}
 		case SPECIALROUND_1UP:
@@ -673,7 +673,7 @@ void SpecialRoundStart()
 			}
 			else
 			{
-				CreateTimer(5.0, Timer_SpecialRoundVoteLoop, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(5.0, Timer_SpecialRoundVoteLoop, _, TIMER_REPEAT);
 			}
 			SF_AddSpecialRound(SPECIALROUND_VOTE);
 		}

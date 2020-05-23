@@ -3,7 +3,7 @@
 #endif
 #define _sf2_nav_included
 
-#define JumpCrouchHeight 58.0
+#define JumpCrouchHeight 72.0
 
 #define INVALID_NAV_AREA view_as<CNavArea>(-1)
 #define INVALID_NAV_LADDER view_as<CNavLadder>(-1)
@@ -168,13 +168,13 @@ stock bool NavPathConstructTrivialPath(ArrayList hNavPath, const float flStartPo
 
 	if (startArea == INVALID_NAV_AREA)
 	{
-		startArea = NavMesh_GetNearestArea(flStartPos, _, flNearestAreaRadius);
+		startArea = NavMesh_GetNearestArea(flStartPos);
 		if (startArea == INVALID_NAV_AREA) return false;
 	}
 	
 	if (endArea == INVALID_NAV_AREA)
 	{
-		endArea = NavMesh_GetNearestArea(flEndPos, _, flNearestAreaRadius);
+		endArea = NavMesh_GetNearestArea(flEndPos);
 		if (endArea == INVALID_NAV_AREA) return false;
 	}
 
@@ -205,13 +205,13 @@ stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStar
 	
 	if (startArea == INVALID_NAV_AREA)
 	{
-		startArea = NavMesh_GetNearestArea(flStartPos, _, flNearestAreaRadius);
+		startArea = NavMesh_GetNearestArea(flStartPos);
 		if (startArea == INVALID_NAV_AREA) return false;
 	}
 	
 	if (endArea == INVALID_NAV_AREA)
 	{
-		endArea = NavMesh_GetNearestArea(flEndPos, _, flNearestAreaRadius);
+		endArea = NavMesh_GetNearestArea(flEndPos);
 		if (endArea == INVALID_NAV_AREA) return false;
 	}
 	
@@ -224,7 +224,7 @@ stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStar
 	
 	bool bResult = NavMesh_BuildPath(startArea, endArea, flEndPos, fCostFunction, iCostData, closestArea);
 
-	if (!bResult && !bPopulateIfIncomplete) return false;
+	if (!bResult || !bPopulateIfIncomplete) return false;
 	
 	if (bResult)
 	{

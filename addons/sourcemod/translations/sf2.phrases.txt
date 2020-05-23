@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a massive bug during the escape phase.\n-Fixed a bug with chase initial and rage animation playback rates.\n-Reverted most pathing settings back to 1.5.0.\n-Added an anti-spawncamping feature for auto spawn in PvP.\n-Increased PvP leave time from 3 seconds to 6 by default.\n-You can no longer suicide whilst the round is ending, the intro is going, or in PvP."
+		"en"	"-Prevented most repeatable timers from lingering on following maps.\n-Bosses can no longer try to travel through blocked areas.\n-Prevented bosses from stopping while using the jump exploit.\n-Removed music settings."
 	}
 	"SF2 Smite player"
 	{

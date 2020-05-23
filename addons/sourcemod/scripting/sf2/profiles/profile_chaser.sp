@@ -265,6 +265,40 @@ enum
 	ChaserProfileData_SmiteColorB,
 	ChaserProfileData_SmiteTransparency,
 	
+	ChaserProfileData_ShockwavesEnable,
+	ChaserProfileData_ShockwaveHeightEasy,
+	ChaserProfileData_ShockwaveHeightNormal,
+	ChaserProfileData_ShockwaveHeightHard,
+	ChaserProfileData_ShockwaveHeightInsane,
+	ChaserProfileData_ShockwaveHeightNightmare,
+	ChaserProfileData_ShockwaveRangeEasy,
+	ChaserProfileData_ShockwaveRangeNormal,
+	ChaserProfileData_ShockwaveRangeHard,
+	ChaserProfileData_ShockwaveRangeInsane,
+	ChaserProfileData_ShockwaveRangeNightmare,
+	ChaserProfileData_ShockwaveDrainEasy,
+	ChaserProfileData_ShockwaveDrainNormal,
+	ChaserProfileData_ShockwaveDrainHard,
+	ChaserProfileData_ShockwaveDrainInsane,
+	ChaserProfileData_ShockwaveDrainNightmare,
+	ChaserProfileData_ShockwaveForceEasy,
+	ChaserProfileData_ShockwaveForceNormal,
+	ChaserProfileData_ShockwaveForceHard,
+	ChaserProfileData_ShockwaveForceInsane,
+	ChaserProfileData_ShockwaveForceNightmare,
+	ChaserProfileData_ShockwaveStunEnabled,
+	ChaserProfileData_ShockwaveStunDurationEasy,
+	ChaserProfileData_ShockwaveStunDurationNormal,
+	ChaserProfileData_ShockwaveStunDurationHard,
+	ChaserProfileData_ShockwaveStunDurationInsane,
+	ChaserProfileData_ShockwaveStunDurationNightmare,
+	ChaserProfileData_ShockwaveStunSlowdownEasy,
+	ChaserProfileData_ShockwaveStunSlowdownNormal,
+	ChaserProfileData_ShockwaveStunSlowdownHard,
+	ChaserProfileData_ShockwaveStunSlowdownInsane,
+	ChaserProfileData_ShockwaveStunSlowdownNightmare,
+	ChaserProfileData_ShockwaveAttackIndexes,
+	
 	ChaserProfileData_EnableDamageParticles,
 	ChaserProfileData_DamageParticleVolume,
 	ChaserProfileData_DamageParticlePitch,
@@ -656,6 +690,49 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	int iDamageParticlePitch = KvGetNum(kv, "damage_particle_effect_pitch");
 	if (iDamageParticlePitch < 1) iDamageParticlePitch = 1;
 	if (iDamageParticlePitch > 255) iDamageParticlePitch = 255;
+	
+	bool bShockwaveEnabled = view_as<bool>(KvGetNum(kv, "shockwave"));
+	
+	float flShockwaveHeight = KvGetFloat(kv, "shockwave_height", 64.0);
+	float flShockwaveHeightEasy = KvGetFloat(kv, "shockwave_height_easy", flShockwaveHeight);
+	float flShockwaveHeightHard = KvGetFloat(kv, "shockwave_height_hard", flShockwaveHeight);
+	float flShockwaveHeightInsane = KvGetFloat(kv, "shockwave_height_insane", flShockwaveHeight);
+	float flShockwaveHeightNightmare = KvGetFloat(kv, "shockwave_height_nightmare", flShockwaveHeight);
+	
+	float flShockwaveRange = KvGetFloat(kv, "shockwave_range", 200.0);
+	float flShockwaveRangeEasy = KvGetFloat(kv, "shockwave_range_easy", flShockwaveRange);
+	float flShockwaveRangeHard = KvGetFloat(kv, "shockwave_range_hard", flShockwaveRange);
+	float flShockwaveRangeInsane = KvGetFloat(kv, "shockwave_range_insane", flShockwaveRange);
+	float flShockwaveRangeNightmare = KvGetFloat(kv, "shockwave_range_nightmare", flShockwaveRange);
+	
+	float flShockwaveDrain = KvGetFloat(kv, "shockwave_drain", 0.2);
+	float flShockwaveDrainEasy = KvGetFloat(kv, "shockwave_drain_easy", flShockwaveDrain);
+	float flShockwaveDrainHard = KvGetFloat(kv, "shockwave_drain_hard", flShockwaveDrain);
+	float flShockwaveDrainInsane = KvGetFloat(kv, "shockwave_drain_insane", flShockwaveDrain);
+	float flShockwaveDrainNightmare = KvGetFloat(kv, "shockwave_drain_nightmare", flShockwaveDrain);
+
+	float flShockwaveForce = KvGetFloat(kv, "shockwave_force", 6.0);
+	float flShockwaveForceEasy = KvGetFloat(kv, "shockwave_force_easy", flShockwaveForce);
+	float flShockwaveForceHard = KvGetFloat(kv, "shockwave_force_hard", flShockwaveForce);
+	float flShockwaveForceInsane = KvGetFloat(kv, "shockwave_force_insane", flShockwaveForce);
+	float flShockwaveForceNightmare = KvGetFloat(kv, "shockwave_force_nightmare", flShockwaveForce);
+	
+	bool bShockwaveStunEnabled = view_as<bool>(KvGetNum(kv, "shockwave_stun"));
+	
+	float flShockwaveStunDuration = KvGetFloat(kv, "shockwave_stun_duration", 2.0);
+	float flShockwaveStunDurationEasy = KvGetFloat(kv, "shockwave_stun_duration_easy", flShockwaveStunDuration);
+	float flShockwaveStunDurationHard = KvGetFloat(kv, "shockwave_stun_duration_hard", flShockwaveStunDuration);
+	float flShockwaveStunDurationInsane = KvGetFloat(kv, "shockwave_stun_duration_insane", flShockwaveStunDuration);
+	float flShockwaveStunDurationNightmare = KvGetFloat(kv, "shockwave_stun_duration_nightmare", flShockwaveStunDuration);
+	
+	float flShockwaveStunSlowdown = KvGetFloat(kv, "shockwave_stun_slowdown", 0.7);
+	float flShockwaveStunSlowdownEasy = KvGetFloat(kv, "shockwave_stun_slowdown_easy", flShockwaveStunSlowdown);
+	float flShockwaveStunSlowdownHard = KvGetFloat(kv, "shockwave_stun_slowdown_hard", flShockwaveStunSlowdown);
+	float flShockwaveStunSlowdownInsane = KvGetFloat(kv, "shockwave_stun_slowdown_insane", flShockwaveStunSlowdown);
+	float flShockwaveStunSlowdownNightmare = KvGetFloat(kv, "shockwave_stun_slowdown_nightmare", flShockwaveStunSlowdown);
+	
+	int iShockwaveAttackIndexes = KvGetNum(kv, "shockwave_attack_index", 1);
+	if (iShockwaveAttackIndexes < 0) iShockwaveAttackIndexes = 1;
 
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossStepSize, ChaserProfileData_StepSize);
 	
@@ -889,6 +966,40 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bDamageParticlesEnabled, ChaserProfileData_EnableDamageParticles);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flDamageParticleVolume, ChaserProfileData_DamageParticleVolume);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iDamageParticlePitch, ChaserProfileData_DamageParticlePitch);
+	
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bShockwaveEnabled, ChaserProfileData_ShockwavesEnable);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveHeightEasy, ChaserProfileData_ShockwaveHeightEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveHeight, ChaserProfileData_ShockwaveHeightNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveHeightHard, ChaserProfileData_ShockwaveHeightHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveHeightInsane, ChaserProfileData_ShockwaveHeightInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveHeightNightmare, ChaserProfileData_ShockwaveHeightNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveRangeEasy, ChaserProfileData_ShockwaveRangeEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveRange, ChaserProfileData_ShockwaveRangeNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveRangeHard, ChaserProfileData_ShockwaveRangeHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveRangeInsane, ChaserProfileData_ShockwaveRangeInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveRangeNightmare, ChaserProfileData_ShockwaveRangeNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveDrainEasy, ChaserProfileData_ShockwaveDrainEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveDrain, ChaserProfileData_ShockwaveDrainNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveDrainHard, ChaserProfileData_ShockwaveDrainHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveDrainInsane, ChaserProfileData_ShockwaveDrainInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveDrainNightmare, ChaserProfileData_ShockwaveDrainNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveForceEasy, ChaserProfileData_ShockwaveForceEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveForce, ChaserProfileData_ShockwaveForceNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveForceHard, ChaserProfileData_ShockwaveForceHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveForceInsane, ChaserProfileData_ShockwaveForceInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveForceNightmare, ChaserProfileData_ShockwaveForceNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bShockwaveStunEnabled, ChaserProfileData_ShockwaveStunEnabled);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunDurationEasy, ChaserProfileData_ShockwaveStunDurationEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunDuration, ChaserProfileData_ShockwaveStunDurationNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunDurationHard, ChaserProfileData_ShockwaveStunDurationHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunDurationInsane, ChaserProfileData_ShockwaveStunDurationInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunDurationNightmare, ChaserProfileData_ShockwaveStunDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdownEasy, ChaserProfileData_ShockwaveStunSlowdownEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdown, ChaserProfileData_ShockwaveStunSlowdownNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdownHard, ChaserProfileData_ShockwaveStunSlowdownHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdownInsane, ChaserProfileData_ShockwaveStunSlowdownInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdownNightmare, ChaserProfileData_ShockwaveStunSlowdownNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iShockwaveAttackIndexes, ChaserProfileData_ShockwaveAttackIndexes);
 		
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "memory_lifetime", 10.0), ChaserProfileData_MemoryLifeTime);
 	
@@ -1769,6 +1880,99 @@ float GetChaserProfileCloakRange(int iChaserProfileIndex,int iDifficulty)
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakRangeNormal));
+}
+
+bool GetChaserProfileShockwaveState(int iChaserProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwavesEnable));
+}
+
+float GetChaserProfileShockwaveHeight(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveHeightEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveHeightHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveHeightInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveHeightNightmare));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveHeightNormal));
+}
+
+float GetChaserProfileShockwaveRange(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveRangeEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveRangeHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveRangeInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveRangeNightmare));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveRangeNormal));
+}
+
+float GetChaserProfileShockwaveDrain(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveDrainEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveDrainHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveDrainInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveDrainNightmare));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveDrainNormal));
+}
+
+float GetChaserProfileShockwaveForce(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveForceEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveForceHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveForceInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveForceNightmare));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveForceNormal));
+}
+
+bool GetChaserProfileShockwaveStunState(int iChaserProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunEnabled));
+}
+
+float GetChaserProfileShockwaveStunDuration(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationNightmare));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationNormal));
+}
+
+float GetChaserProfileShockwaveStunSlowdown(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownNightmare));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownNormal));
+}
+
+int GetChaserProfileShockwaveAttackIndexes(int iChaserProfileIndex)
+{
+	return GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveAttackIndexes);
 }
 
 stock float GetChaserProfileAwarenessIncreaseRate(int iChaserProfileIndex,int difficulty)

@@ -160,11 +160,14 @@ methodmap ChaserPathLogic
 					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
 					return false;//Failed to build our path
 				}
-				g_iPathNodeIndex[this.Index] = 1;
-				g_iPathBehindNodeIndex[this.Index] = 0;
-				g_lastKnownTargetArea[this.Index] = currentTargetArea;
-				g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
-				return true;
+				else
+				{
+					g_iPathNodeIndex[this.Index] = 1;
+					g_iPathBehindNodeIndex[this.Index] = 0;
+					g_lastKnownTargetArea[this.Index] = currentTargetArea;
+					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
+					return true;
+				}
 			}
 			
 			//The target might not have moved but is still in same area, update our goal position.
@@ -184,21 +187,25 @@ methodmap ChaserPathLogic
 		CNavArea startArea = SDK_GetLastKnownArea(iEntity);
 		if (startArea != INVALID_NAV_AREA)
 		{
-			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos, _, 50.0);
+			CNavArea endArea = NavMesh_GetNearestArea(vecEndPos);
 			if (this.IsRepathNeeded(endArea))
 			{
+				closestAreaIndex = CNavArea(0);
 				float vecStartPos[3];
 				GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", vecStartPos);
-				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 50.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) && !populateIfIncomplete)
+				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 10000.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) || !populateIfIncomplete)
 				{
 					g_hChasePath[this.Index].Clear();
 					return false;
 				}
-				g_iPathNodeIndex[this.Index] = 1;
-				g_iPathBehindNodeIndex[this.Index] = 0;
-				g_lastKnownTargetArea[this.Index] = endArea;
-				g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
-				return true;
+				else
+				{
+					g_iPathNodeIndex[this.Index] = 1;
+					g_iPathBehindNodeIndex[this.Index] = 0;
+					g_lastKnownTargetArea[this.Index] = endArea;
+					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
+					return true;
+				}
 			}
 			//The target might not have moved but is still in same area, update our goal position.
 			vecEndPos[2] = endArea.GetZ(vecEndPos);
@@ -223,11 +230,14 @@ methodmap ChaserPathLogic
 				g_hChasePath[this.Index].Clear();
 				return false;
 			}
-			g_iPathNodeIndex[this.Index] = 1;
-			g_iPathBehindNodeIndex[this.Index] = 0;
-			g_lastKnownTargetArea[this.Index] = endArea;
-			g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
-			return true;
+			else
+			{
+				g_iPathNodeIndex[this.Index] = 1;
+				g_iPathBehindNodeIndex[this.Index] = 0;
+				g_lastKnownTargetArea[this.Index] = endArea;
+				g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
+				return true;
+			}
 		}
 		return false;
 	}
@@ -432,7 +442,7 @@ methodmap ChaserPathLogic
 		
 		/*if ((g_vecPathMovePosition[this.Index][2] - vecFeetPos[2]) > JumpCrouchHeight)
 		{
-			static const float jumpCloseRange = 50.0;
+			static const float jumpCloseRange = 60.0;
 			
 			float vTo2D[3];
 			MakeVectorFromPoints(vecFeetPos, g_vecPathMovePosition[this.Index], vTo2D);

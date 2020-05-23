@@ -101,6 +101,16 @@ static int g_iNPCSmiteColorG[MAX_BOSSES];
 static int g_iNPCSmiteColorB[MAX_BOSSES];
 static int g_iNPCSmiteTransparency[MAX_BOSSES];
 
+static bool g_bNPCShockwaveEnabled[MAX_BOSSES];
+static float g_flNPCShockwaveHeight[MAX_BOSSES][Difficulty_Max];
+static float g_flNPCShockwaveRange[MAX_BOSSES][Difficulty_Max];
+static float g_flNPCShockwaveDrain[MAX_BOSSES][Difficulty_Max];
+static float g_flNPCShockwaveForce[MAX_BOSSES][Difficulty_Max];
+static bool g_bNPCShockwaveStunEnabled[MAX_BOSSES];
+static float g_flNPCShockwaveStunDuration[MAX_BOSSES][Difficulty_Max];
+static float g_flNPCShockwaveStunSlowdown[MAX_BOSSES][Difficulty_Max];
+static int g_iNPCShockwaveAttackIndexes[MAX_BOSSES];
+
 static int g_iNPCState[MAX_BOSSES] = { -1, ... };
 static int g_iNPCTeleporter[MAX_BOSSES][MAX_NPCTELEPORTER];
 static int g_iNPCMovementActivity[MAX_BOSSES] = { -1, ... };
@@ -1189,6 +1199,51 @@ int NPCChaserGetDamageParticlePitch(int iNPCIndex)
 	return g_iSlenderDamageClientSoundPitch[iNPCIndex];
 }
 
+bool NPCChaserShockwaveOnAttack(int iNPCIndex)
+{
+	return g_bNPCShockwaveEnabled[iNPCIndex];
+}
+
+bool NPCChaserShockwaveStunEnabled(int iNPCIndex)
+{
+	return g_bNPCShockwaveStunEnabled[iNPCIndex];
+}
+
+int NPCChaserGetShockwaveAttackIndexes(int iNPCIndex)
+{
+	return g_iNPCShockwaveAttackIndexes[iNPCIndex];
+}
+
+float NPCChaserGetShockwaveDrain(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCShockwaveDrain[iNPCIndex][iDifficulty];
+}
+
+float NPCChaserGetShockwaveForce(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCShockwaveForce[iNPCIndex][iDifficulty];
+}
+
+float NPCChaserGetShockwaveHeight(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCShockwaveHeight[iNPCIndex][iDifficulty];
+}
+
+float NPCChaserGetShockwaveRange(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCShockwaveRange[iNPCIndex][iDifficulty];
+}
+
+float NPCChaserGetShockwaveStunDuration(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty];
+}
+
+float NPCChaserGetShockwaveStunSlowdown(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty];
+}
+
 int NPCChaserGetState(int iNPCIndex)
 {
 	return g_iNPCState[iNPCIndex];
@@ -1254,6 +1309,13 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 		g_flNPCBleedDuration[iNPCIndex][iDifficulty] = GetChaserProfileBleedPlayerDuration(iUniqueProfileIndex, iDifficulty);
 		g_flNPCElectricDuration[iNPCIndex][iDifficulty] = GetChaserProfileEletricPlayerDuration(iUniqueProfileIndex, iDifficulty);
 		g_flNPCElectricSlowdown[iNPCIndex][iDifficulty] = GetChaserProfileEletricPlayerSlowdown(iUniqueProfileIndex, iDifficulty);
+		
+		g_flNPCShockwaveDrain[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveDrain(iUniqueProfileIndex, iDifficulty);
+		g_flNPCShockwaveForce[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveForce(iUniqueProfileIndex, iDifficulty);
+		g_flNPCShockwaveHeight[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveHeight(iUniqueProfileIndex, iDifficulty);
+		g_flNPCShockwaveRange[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveRange(iUniqueProfileIndex, iDifficulty);
+		g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveStunDuration(iUniqueProfileIndex, iDifficulty);
+		g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveStunSlowdown(iUniqueProfileIndex, iDifficulty);
 	}
 	
 	g_NPCBaseAttacksCount[iNPCIndex] = GetChaserProfileAttackCount(iUniqueProfileIndex);
@@ -1345,6 +1407,9 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	g_bSlenderHasDamageParticleEffect[iNPCIndex] = GetChaserProfileDamageParticleState(iUniqueProfileIndex);
 	g_flSlenderDamageClientSoundVolume[iNPCIndex] = GetChaserProfileDamageParticleVolume(iUniqueProfileIndex);
 	g_iSlenderDamageClientSoundPitch[iNPCIndex] = GetChaserProfileDamageParticlePitch(iUniqueProfileIndex);
+	g_bNPCShockwaveEnabled[iNPCIndex] = GetChaserProfileShockwaveState(iUniqueProfileIndex);
+	g_bNPCShockwaveStunEnabled[iNPCIndex] = GetChaserProfileShockwaveStunState(iUniqueProfileIndex);
+	g_iNPCShockwaveAttackIndexes[iNPCIndex] = GetChaserProfileShockwaveAttackIndexes(iUniqueProfileIndex);
 	
 }
 
@@ -1397,6 +1462,13 @@ static void NPCChaserResetValues(int iNPCIndex)
 		g_flNPCBleedDuration[iNPCIndex][iDifficulty] = 0.0;
 		g_flNPCElectricDuration[iNPCIndex][iDifficulty] = 0.0;
 		g_flNPCElectricSlowdown[iNPCIndex][iDifficulty] = 0.0;
+		
+		g_flNPCShockwaveDrain[iNPCIndex][iDifficulty] = 0.0;
+		g_flNPCShockwaveForce[iNPCIndex][iDifficulty] = 0.0;
+		g_flNPCShockwaveHeight[iNPCIndex][iDifficulty] = 0.0;
+		g_flNPCShockwaveRange[iNPCIndex][iDifficulty] = 0.0;
+		g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty] = 0.0;
+		g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty] = 0.0;
 	}
 	
 	// Clear attack data.
@@ -1476,6 +1548,9 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_iNPCSmiteColorG[iNPCIndex] = 0;
 	g_iNPCSmiteColorB[iNPCIndex] = 0;
 	g_iNPCSmiteTransparency[iNPCIndex] = 0;
+	g_bNPCShockwaveEnabled[iNPCIndex] = false;
+	g_bNPCShockwaveStunEnabled[iNPCIndex] = false;
+	g_iNPCShockwaveAttackIndexes[iNPCIndex] = 0;
 	g_flNPCTimeUntilChaseAfterInitial[iNPCIndex] = 0.0;
 	g_bSlenderHasDamageParticleEffect[iNPCIndex] = false;
 	g_flSlenderDamageClientSoundVolume[iNPCIndex] = 0.0;
@@ -1570,7 +1645,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	if (NPCGetFlags(iBossIndex) & SFF_MARKEDASFAKE) return Plugin_Stop;
 	
 	//CTFBaseBoss doesn't call CBaseCombatCharacter::UpdateLastKnownArea automaticly, manually call it so we can use SDK_GetLastKnownArea on the boss.
-	SDK_UpdateLastKnownArea(slender);
+	if(slender > MaxClients) SDK_UpdateLastKnownArea(slender);
 	
 	/*int iCurrentSequence = GetEntProp(slender, Prop_Send, "m_nSequence");
 	if (iCurrentSequence != g_iNPCCurrentAnimationSequence[iBossIndex])
@@ -2562,7 +2637,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				if (!IsValidEdict(iTarget) || (0 < iTarget <= MaxClients && DidClientEscape(iTarget)))
 				{
 					if (g_hBossFailSafeTimer[iBossIndex] == INVALID_HANDLE)
-						g_hBossFailSafeTimer[iBossIndex] = CreateTimer(5.0, Timer_DeathPosChaseStop, iBossIndex); //Setup a fail safe timer in case we can't finish our path.
+						g_hBossFailSafeTimer[iBossIndex] = CreateTimer(2.5, Timer_DeathPosChaseStop, iBossIndex); //Setup a fail safe timer in case we can't finish our path.
 					// Even if the target isn't valid anymore, see if I still have some ways to go on my current path,
 					// because I shouldn't actually know that the target has died until I see it.
 					if (!g_hBossChaserPathLogic[iBossIndex].IsPathValid())
@@ -2933,7 +3008,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						}
 						else
 						{
-							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossExplosiveDance, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossExplosiveDance, EntIndexToEntRef(slender), TIMER_REPEAT);
 						}
 						
 						g_flSlenderTimeUntilAttackEnd[iBossIndex] = GetGameTime()+NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)+0.01;
@@ -3214,7 +3289,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				|| (iState == STATE_CHASE && g_flSlenderCalculatedSpeed[iBossIndex] > 0.0)
 				|| (iState == STATE_ATTACK))
 			{
-				if (NavMesh_Exists() && g_flSlenderLastCalculPathTime[iBossIndex] <= GetGameTime())
+				if (NavMesh_Exists() && slender > MaxClients && g_flSlenderLastCalculPathTime[iBossIndex] <= GetGameTime())
 				{
 					bool bCompute = g_hBossChaserPathLogic[iBossIndex].ComputePathToPos(g_INextBot[iBossIndex].GetEntity(), g_flSlenderGoalPos[iBossIndex], SlenderChaseBossShortestPathCost, g_ILocomotion[iBossIndex], _, _);
 					if (bCompute)
@@ -4852,11 +4927,11 @@ public int SlenderChaseBossShortestPathCost(CNavArea area, CNavArea fromArea, CN
 		
 		if (ladder != INVALID_NAV_LADDER)
 		{
-			iDist = RoundToFloor(ladder.Length);
+			iDist = RoundFloat(ladder.Length);
 		}
 		else
 		{
-			iDist = RoundToFloor(GetVectorDistance(flAreaCenter, flFromAreaCenter));
+			iDist = RoundFloat(GetVectorDistance(flAreaCenter, flFromAreaCenter));
 		}
 		
 		int iCost = iDist + fromArea.CostSoFar;
@@ -5117,13 +5192,11 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
 	
 	float flDamage = NPCChaserGetAttackDamage(iBossIndex, iAttackIndex);
-	float flSmiteDamage = NPCChaserGetSmiteDamage(iBossIndex);
-	float iSmiteDamageType = NPCChaserGetSmiteDamageType(iBossIndex);
 	float flDamageVsProps = NPCChaserGetAttackDamageVsProps(iBossIndex, iAttackIndex);
 	int iDamageType = NPCChaserGetAttackDamageType(iBossIndex, iAttackIndex);
 	
 	// Damage all players within range.
-	float vecMyPos[3], flMyEyePos[3], vecMyEyeAng[3];
+	float vecMyPos[3], flMyEyePos[3], vecMyEyeAng[3], vecMyShockPos[3];
 	NPCGetEyePosition(iBossIndex, flMyEyePos);
 	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", vecMyEyeAng);
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", vecMyPos);
@@ -5142,6 +5215,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	float flAttackDamageForce = NPCChaserGetAttackDamageForce(iBossIndex, iAttackIndex);
 	
 	bool bHit = false;
+	bool bHeight = false;
 
 	if (!g_bSlenderAttacking[iBossIndex]) return;
 	if (view_as<bool>(GetProfileNum(sProfile,"use_chase_initial_animation",0)) && g_bNPCUsesChaseInitialAnimation[iBossIndex])
@@ -5206,14 +5280,82 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					}
 				}
 			}
+			if (NPCChaserShockwaveOnAttack(iBossIndex))
+			{
+				char sIndexes[8];
+				char sCurrentIndex[2];
+				int iDamageIndexes = NPCChaserGetShockwaveAttackIndexes(iBossIndex);
+				IntToString(iDamageIndexes, sIndexes, sizeof(sIndexes));
+				IntToString(iAttackIndex+1, sCurrentIndex, sizeof(sCurrentIndex));
+				char sNumber = sCurrentIndex[0];
+				int iAttackNumber = 0;
+				if (FindCharInString(sIndexes, sNumber) != -1)
+				{
+					iAttackNumber += iAttackIndex+1;
+				}
+				if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+				{
+					int iIndexLength = strlen(sIndexes);
+					int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+					if (iAttackNumber == iCurrentAtkIndex)
+					{
+						int iBeamColor[3], iHaloColor[3];
+						int iColor1[4], iColor2[4];
+						float flInner;
+						flInner = (NPCChaserGetShockwaveRange(iBossIndex, iDifficulty)/2);
+						int iDefaultColorBeam[3] = {128, 128, 128};
+						int iDefaultColorHalo[3] = {255, 255, 255};
+						
+						GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", vecMyShockPos);
+						vecMyShockPos[2] += 10;
+
+						KvGetVector(g_hConfig, "shockwave_color_1", iBeamColor, iDefaultColorBeam);
+						KvGetVector(g_hConfig, "shockwave_color_2", iHaloColor, iDefaultColorHalo);
+
+						iColor1[0] = RoundFloat(iBeamColor[0]);
+						iColor1[1] = RoundFloat(iBeamColor[1]);
+						iColor1[2] = RoundFloat(iBeamColor[2]);
+						iColor1[3] = KvGetNum(g_hConfig, "shockwave_alpha_1", 255);
+	
+						iColor2[0] = RoundFloat(iHaloColor[0]);
+						iColor2[1] = RoundFloat(iHaloColor[1]);
+						iColor2[2] = RoundFloat(iHaloColor[2]);
+						iColor2[3] = KvGetNum(g_hConfig, "shockwave_alpha_2", 255);
+						int iModelBeam, iModelHalo;
+						if(!g_sSlenderShockwaveBeamSprite[iBossIndex][0])
+						{
+							iModelBeam = g_ShockwaveBeam;
+						}
+						else
+						{
+							iModelBeam = PrecacheModel(g_sSlenderShockwaveBeamSprite[iBossIndex], true);
+						}
+						if(!g_sSlenderShockwaveHaloSprite[iBossIndex][0])
+						{
+							iModelHalo = g_ShockwaveHalo;
+						}
+						else
+						{
+							iModelHalo = PrecacheModel(g_sSlenderShockwaveHaloSprite[iBossIndex], true);
+						}
+			
+						TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.2, 5.0, 0.0, iColor2, 15, 0); //Inner
+						TE_SendToAll();
+
+						TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.3, 10.0, 0.0, iColor1, 15, 0); //Outer
+						TE_SendToAll();
+					}
+				}
+			}
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i)) continue;
 				
 				if (!bAttackEliminated && g_bPlayerEliminated[i]) continue;
 				
-				float flTargetPos[3];
+				float flTargetPos[3], vecClientPos[3];
 				GetClientEyePosition(i, flTargetPos);
+				GetClientAbsOrigin(i, vecClientPos);
 				
 				hTrace = TR_TraceRayFilterEx(flMyEyePos,
 					flTargetPos,
@@ -5262,6 +5404,8 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							GetAngleVectors(flDirection, flDirection, NULL_VECTOR, NULL_VECTOR);
 							NormalizeVector(flDirection, flDirection);
 							ScaleVector(flDirection, flAttackDamageForce);
+							
+							if (NPCChaserShockwaveOnAttack(iBossIndex) && (vecClientPos[2] <= NPCChaserGetShockwaveHeight(iBossIndex, iDifficulty)) && (flTargetDist <= NPCChaserGetShockwaveRange(iBossIndex, iDifficulty))) bHeight = true;
 							
 							if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT))
 							{
@@ -5739,7 +5883,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 										if (iAttackNumber == iCurrentAtkIndex)
 										{
 											PerformSmiteBoss(iBossIndex, i, EntIndexToEntRef(slender));
-											SDKHooks_TakeDamage(i, slender, slender, flSmiteDamage, iSmiteDamageType, _, flDirection, flMyEyePos);
+											SDKHooks_TakeDamage(i, slender, slender, NPCChaserGetSmiteDamage(iBossIndex), NPCChaserGetSmiteDamageType(iBossIndex), _, flDirection, flMyEyePos);
 											ClientViewPunch(i, flViewPunch);
 											if(view_as<bool>(GetProfileNum(sProfile, "player_smite_message", 0)))
 											{
@@ -5752,6 +5896,52 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 												GetProfileString(sProfileName, "name", sName, sizeof(sName));
 												if (!sName[0]) strcopy(sName, sizeof(sName), sProfileName);
 												if (TF2_GetClientTeam(i) == 2) CPrintToChatAll("{yellow}%t{default}%t", "SF2 Prefix", "SF2 Smote target", sName, sPlayer);	
+											}
+										}
+									}
+									if (NPCChaserShockwaveOnAttack(iBossIndex))
+									{
+										char sIndexes[8];
+										char sCurrentIndex[2];
+										int iDamageIndexes = NPCChaserGetShockwaveAttackIndexes(iBossIndex);
+										IntToString(iDamageIndexes, sIndexes, sizeof(sIndexes));
+										IntToString(iAttackIndex+1, sCurrentIndex, sizeof(sCurrentIndex));
+										char sNumber = sCurrentIndex[0];
+										int iAttackNumber = 0;
+										if (FindCharInString(sIndexes, sNumber) != -1)
+										{
+											iAttackNumber += iAttackIndex+1;
+										}
+										if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+										{
+											int iIndexLength = strlen(sIndexes);
+											int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+											if (iAttackNumber == iCurrentAtkIndex)
+											{
+												if (bHeight)
+												{
+													float flPercentLife;
+													flPercentLife = ClientGetFlashlightBatteryLife(i) - NPCChaserGetShockwaveDrain(iBossIndex, iDifficulty);
+													if (flPercentLife < 0) flPercentLife = 0;
+													ClientSetFlashlightBatteryLife(i, flPercentLife);
+													if (NPCChaserGetShockwaveForce(iBossIndex, iDifficulty) > 0)
+													{
+														float flDirectionForce[3];
+														
+														MakeVectorFromPoints(vecClientPos, vecMyPos, flDirectionForce);
+
+														NormalizeVector(flDirectionForce, flDirectionForce);
+														
+														ScaleVector(flDirectionForce, -NPCChaserGetShockwaveForce(iBossIndex, iDifficulty));
+
+														TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, flDirectionForce);
+													}
+													
+													if (NPCChaserShockwaveStunEnabled(iBossIndex))
+													{
+														TF2_StunPlayer(i, NPCChaserGetShockwaveStunDuration(iBossIndex, iDifficulty), NPCChaserGetShockwaveStunSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, i);
+													}		
+												}
 											}
 										}
 									}
@@ -5985,6 +6175,8 @@ public Action Timer_SlenderChaseBossExplosiveDance (Handle timer, any entref)
 	for (int i = 0; i < 3; i++) vecMyEyeAng[i] = AngleNormalize(vecMyEyeAng[i]);
 	
 	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
+	
+	if (!g_bSlenderAttacking[iBossIndex]) return Plugin_Stop;
 
 	static int iExploded = 0;
 	iExploded++;

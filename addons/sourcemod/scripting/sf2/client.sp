@@ -1571,7 +1571,7 @@ void ClientTurnOffFlashlight(int client)
 
 void ClientStartRechargingFlashlightBattery(int client)
 {
-	g_hPlayerFlashlightBatteryTimer[client] = CreateTimer(SF2_FLASHLIGHT_RECHARGE_RATE, Timer_RechargeFlashlight, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerFlashlightBatteryTimer[client] = CreateTimer(SF2_FLASHLIGHT_RECHARGE_RATE, Timer_RechargeFlashlight, GetClientUserId(client), TIMER_REPEAT);
 }
 
 void ClientStartDrainingFlashlightBattery(int client)
@@ -1586,7 +1586,7 @@ void ClientStartDrainingFlashlightBattery(int client)
 		flRechargeRate *= 0.8;
 	}
 	
-	g_hPlayerFlashlightBatteryTimer[client] = CreateTimer(flDrainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerFlashlightBatteryTimer[client] = CreateTimer(flDrainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT);
 }
 
 void ClientHandleFlashlight(int client)
@@ -1717,7 +1717,7 @@ void ClientActivateUltravision(int client, bool bNightVision = false)
 		SDKHook(ent, SDKHook_SetTransmit, Hook_UltravisionSetTransmit);
 		
 		// Fade in effect.
-		CreateTimer(0.0, Timer_UltravisionFadeInEffect, g_iPlayerUltravisionEnt[client], TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(0.0, Timer_UltravisionFadeInEffect, g_iPlayerUltravisionEnt[client], TIMER_REPEAT);
 	}
 
 #if defined DEBUG
@@ -2152,6 +2152,8 @@ void ClientProcessVisibility(int client)
 							g_iSlenderState[iMaster] = STATE_CHASE;
 							g_iSlenderTarget[iMaster] = client;
 							g_flSlenderTimeUntilNoPersistence[iMaster] = GetGameTime() + NPCChaserGetChaseDuration(iMaster, iDifficulty);
+							if (iMaster != -1 && slender && slender != INVALID_ENT_REFERENCE)
+							NPCChaserUpdateBossAnimation(iMaster, slender, g_iSlenderState[iMaster]);
 							g_bPlayerScaredByBoss[client][iMaster] = true;
 						}
 					}
@@ -2296,7 +2298,7 @@ void ClientProcessVisibility(int client)
 			g_hPlayerStaticTimer[client] = CreateTimer(g_flPlayerStaticDecreaseRate[client], 
 				Timer_ClientDecreaseStatic, 
 				GetClientUserId(client), 
-				TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				TIMER_REPEAT);
 				
 			TriggerTimer(g_hPlayerStaticTimer[client], true);
 		}
@@ -2321,7 +2323,7 @@ void ClientProcessVisibility(int client)
 			g_hPlayerLastStaticTimer[client] = CreateTimer(0.0, 
 				Timer_ClientFadeOutLastStaticSound, 
 				GetClientUserId(client), 
-				TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				TIMER_REPEAT);
 			
 			TriggerTimer(g_hPlayerLastStaticTimer[client], true);
 			
@@ -2335,7 +2337,7 @@ void ClientProcessVisibility(int client)
 			g_hPlayerStaticTimer[client] = CreateTimer(flStaticIncreaseRate, 
 				Timer_ClientIncreaseStatic, 
 				GetClientUserId(client), 
-				TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				TIMER_REPEAT);
 			
 			TriggerTimer(g_hPlayerStaticTimer[client], true);
 		}
@@ -3105,7 +3107,7 @@ void ClientStartProxyForce(int client,int iSlenderID, const float flPos[3])
 
 	g_iPlayerProxyAvailableCount[client] = 0;
 	g_bPlayerProxyAvailableInForce[client] = true;
-	g_hPlayerProxyAvailableTimer[client] = CreateTimer(1.0, Timer_ClientForceProxy, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerProxyAvailableTimer[client] = CreateTimer(1.0, Timer_ClientForceProxy, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerProxyAvailableTimer[client], true);
 	
 #if defined DEBUG
@@ -4159,7 +4161,7 @@ void ClientSetGhostModeState(int client, bool bState)
 		ClientHandleGhostMode(client, true);
 		if (GetConVarBool(g_cvGhostModeConnectionCheck))
 		{
-			g_hPlayerGhostModeConnectionCheckTimer[client] = CreateTimer(0.0, Timer_GhostModeConnectionCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			g_hPlayerGhostModeConnectionCheckTimer[client] = CreateTimer(0.0, Timer_GhostModeConnectionCheck, GetClientUserId(client), TIMER_REPEAT);
 			g_flPlayerGhostModeConnectionTimeOutTime[client] = -1.0;
 			g_flPlayerGhostModeConnectionBootTime[client] = -1.0;
 		}
@@ -4284,7 +4286,7 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 		ClientActivateUltravision(client);
 		
 		// screen overlay timer
-		g_hPlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		g_hPlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT);
 		TriggerTimer(g_hPlayerOverlayCheck[client], true);
 		
 		CreateTimer(0.2, Timer_ClientGhostStripWearables, GetClientUserId(client));
@@ -4507,7 +4509,7 @@ stock void ClientResetCampingStats(int client)
 
 void ClientStartCampingTimer(int client)
 {
-	g_hPlayerCampingTimer[client] = CreateTimer(5.0, Timer_ClientCheckCamp, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerCampingTimer[client] = CreateTimer(5.0, Timer_ClientCheckCamp, GetClientUserId(client), TIMER_REPEAT);
 }
 
 public Action Timer_ClientCheckCamp(Handle timer, any userid)
@@ -4668,7 +4670,7 @@ void ClientUnblink(int client)
 
 void ClientStartDrainingBlinkMeter(int client)
 {
-	g_hPlayerBlinkTimer[client] = CreateTimer(ClientGetBlinkRate(client), Timer_BlinkTimer, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerBlinkTimer[client] = CreateTimer(ClientGetBlinkRate(client), Timer_BlinkTimer, GetClientUserId(client), TIMER_REPEAT);
 }
 
 public Action Timer_BlinkTimer(Handle timer, any userid)
@@ -5339,9 +5341,7 @@ stock void ClientMusicStart(int client, const char[] sNewMusic, float flVolume=-
 		GetBossMusic(g_strPlayerMusic[client],sizeof(g_strPlayerMusic[]));
 	if (flVolume >= 0.0) g_flPlayerMusicVolume[client] = flVolume;
 	if (flTargetVolume >= 0.0) g_flPlayerMusicTargetVolume[client] = flTargetVolume;
-	
-	if (g_flPlayerMusicTargetVolume[client] > g_iPlayerPreferences[client][PlayerPreference_MusicVolume]) g_flPlayerMusicTargetVolume[client] = g_iPlayerPreferences[client][PlayerPreference_MusicVolume];
-	
+
 	if (!bCopyOnly)
 	{
 		bool bPlayMusicOnEscape = false;
@@ -5358,12 +5358,12 @@ stock void ClientMusicStart(int client, const char[] sNewMusic, float flVolume=-
 		}
 		if(g_iPageCount < g_iPageMax)
 		{
-			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT);
 			TriggerTimer(g_hPlayerMusicTimer[client], true);
 		}
 		if(!bPlayMusicOnEscape)
 		{
-			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT);
 			TriggerTimer(g_hPlayerMusicTimer[client], true);
 		}
 	}
@@ -5375,7 +5375,7 @@ stock void ClientMusicStart(int client, const char[] sNewMusic, float flVolume=-
 
 stock void ClientMusicStop(int client)
 {
-	g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeOutMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeOutMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerMusicTimer[client], true);
 }
 
@@ -5425,7 +5425,7 @@ stock void Client20DollarsMusicStart(int client,int iBossIndex)
 	
 	g_iPlayer20DollarsMusicMaster[client] = iBossIndex;
 	strcopy(g_strPlayer20DollarsMusic[client], sizeof(g_strPlayer20DollarsMusic[]), sBuffer);
-	g_hPlayer20DollarsMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeIn20DollarsMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayer20DollarsMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeIn20DollarsMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayer20DollarsMusicTimer[client][iBossIndex], true);
 	
 	if (iOldMaster != -1)
@@ -5445,7 +5445,7 @@ stock void Client20DollarsMusicStop(int client,int iBossIndex)
 		strcopy(g_strPlayer20DollarsMusic[client], sizeof(g_strPlayer20DollarsMusic[]), "");
 	}
 	
-	g_hPlayer20DollarsMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOut20DollarsMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayer20DollarsMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOut20DollarsMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayer20DollarsMusicTimer[client][iBossIndex], true);
 }
 
@@ -5495,7 +5495,7 @@ stock void ClientAlertMusicStart(int client,int iBossIndex)
 	
 	g_iPlayerAlertMusicMaster[client] = iBossIndex;
 	strcopy(g_strPlayerAlertMusic[client], sizeof(g_strPlayerAlertMusic[]), sBuffer);
-	g_hPlayerAlertMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeInAlertMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerAlertMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeInAlertMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerAlertMusicTimer[client][iBossIndex], true);
 	
 	if (iOldMaster != -1)
@@ -5515,7 +5515,7 @@ stock void ClientAlertMusicStop(int client,int iBossIndex)
 		strcopy(g_strPlayerAlertMusic[client], sizeof(g_strPlayerAlertMusic[]), "");
 	}
 	
-	g_hPlayerAlertMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOutAlertMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerAlertMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOutAlertMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerAlertMusicTimer[client][iBossIndex], true);
 }
 
@@ -5567,7 +5567,7 @@ stock void ClientMusicChaseStart(int client,int iBossIndex)
 	strcopy(g_strPlayerChaseMusic[client], sizeof(g_strPlayerChaseMusic[]), sBuffer);
 	if(MusicActive())//A boss is overriding the music.
 		GetBossMusic(g_strPlayerChaseMusic[client],sizeof(g_strPlayerChaseMusic[]));
-	g_hPlayerChaseMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerChaseMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerChaseMusicTimer[client][iBossIndex], true);
 	
 	if (iOldMaster != -1)
@@ -5587,7 +5587,7 @@ stock void ClientMusicChaseStop(int client,int iBossIndex)
 		strcopy(g_strPlayerChaseMusic[client], sizeof(g_strPlayerChaseMusic[]), "");
 	}
 	
-	g_hPlayerChaseMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOutChaseMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerChaseMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOutChaseMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerChaseMusicTimer[client][iBossIndex], true);
 }
 
@@ -5636,7 +5636,7 @@ stock void ClientMusicChaseSeeStart(int client,int iBossIndex)
 	
 	g_iPlayerChaseMusicSeeMaster[client] = iBossIndex;
 	strcopy(g_strPlayerChaseMusicSee[client], sizeof(g_strPlayerChaseMusicSee[]), sBuffer);
-	g_hPlayerChaseMusicSeeTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusicSee, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerChaseMusicSeeTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusicSee, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerChaseMusicSeeTimer[client][iBossIndex], true);
 	
 	if (iOldMaster != -1)
@@ -5656,7 +5656,7 @@ stock void ClientMusicChaseSeeStop(int client,int iBossIndex)
 		strcopy(g_strPlayerChaseMusicSee[client], sizeof(g_strPlayerChaseMusicSee[]), "");
 	}
 	
-	g_hPlayerChaseMusicSeeTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOutChaseMusicSee, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerChaseMusicSeeTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeOutChaseMusicSee, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayerChaseMusicSeeTimer[client][iBossIndex], true);
 }
 
@@ -5693,7 +5693,7 @@ stock void Client90sMusicStart(int client)
 	g_iPlayer90sMusicMaster[client] = 1;
 	
 	strcopy(g_strPlayer90sMusic[client], sizeof(g_strPlayer90sMusic[]), sBuffer);
-	g_hPlayer90sMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeIn90sMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayer90sMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeIn90sMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayer90sMusicTimer[client], true);
 	
 	if (client != -1)
@@ -5712,7 +5712,7 @@ stock void Client90sMusicStop(int client)
 		strcopy(g_strPlayer90sMusic[client], sizeof(g_strPlayer90sMusic[]), "");
 	}
 	
-	g_hPlayer90sMusicTimer[client]= CreateTimer(0.01, Timer_PlayerFadeOut90sMusic, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayer90sMusicTimer[client]= CreateTimer(0.01, Timer_PlayerFadeOut90sMusic, GetClientUserId(client), TIMER_REPEAT);
 	TriggerTimer(g_hPlayer90sMusicTimer[client], true);
 }
 
@@ -5776,11 +5776,11 @@ public Action Timer_PlayerFadeIn20DollarsMusic(Handle timer, any userid)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	g_flPlayer20DollarsMusicVolumes[client][iBossIndex] += 0.07;
-	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] > g_iPlayerPreferences[client][PlayerPreference_MusicVolume]) g_flPlayer20DollarsMusicVolumes[client][iBossIndex] = g_iPlayerPreferences[client][PlayerPreference_MusicVolume];
+	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] > 1.0) g_flPlayer20DollarsMusicVolumes[client][iBossIndex] = 1.0;
 
 	if (g_strPlayer20DollarsMusic[client][0]) EmitSoundToClient(client, g_strPlayer20DollarsMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer20DollarsMusicVolumes[client][iBossIndex]);
 	
-	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] >= g_iPlayerPreferences[client][PlayerPreference_MusicVolume])
+	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] >= 1.0)
 	{
 		g_hPlayer20DollarsMusicTimer[client][iBossIndex] = INVALID_HANDLE;
 		return Plugin_Stop;
@@ -5850,11 +5850,11 @@ public Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	g_flPlayerAlertMusicVolumes[client][iBossIndex] += 0.07;
-	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] > g_iPlayerPreferences[client][PlayerPreference_MusicVolume]) g_flPlayerAlertMusicVolumes[client][iBossIndex] = g_iPlayerPreferences[client][PlayerPreference_MusicVolume];
+	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] > 1.0) g_flPlayerAlertMusicVolumes[client][iBossIndex] = 1.0;
 
 	if (g_strPlayerAlertMusic[client][0]) EmitSoundToClient(client, g_strPlayerAlertMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerAlertMusicVolumes[client][iBossIndex]);
 	
-	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] >= g_iPlayerPreferences[client][PlayerPreference_MusicVolume])
+	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] >= 1.0)
 	{
 		g_hPlayerAlertMusicTimer[client][iBossIndex] = INVALID_HANDLE;
 		return Plugin_Stop;
@@ -5924,11 +5924,11 @@ public Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	g_flPlayerChaseMusicVolumes[client][iBossIndex] += 0.07;
-	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] > g_iPlayerPreferences[client][PlayerPreference_MusicVolume]) g_flPlayerChaseMusicVolumes[client][iBossIndex] = g_iPlayerPreferences[client][PlayerPreference_MusicVolume];
+	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] > 1.0) g_flPlayerChaseMusicVolumes[client][iBossIndex] = 1.0;
 
 	if (g_strPlayerChaseMusic[client][0]) EmitSoundToClient(client, g_strPlayerChaseMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicVolumes[client][iBossIndex]);
 	
-	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] >= g_iPlayerPreferences[client][PlayerPreference_MusicVolume])
+	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] >= 1.0)
 	{
 		g_hPlayerChaseMusicTimer[client][iBossIndex] = INVALID_HANDLE;
 		return Plugin_Stop;
@@ -6060,11 +6060,11 @@ public Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
 	if (client <= 0) return Plugin_Stop;
 
 	g_flPlayer90sMusicVolumes[client] += 0.28;
-	if (g_flPlayer90sMusicVolumes[client] > g_iPlayerPreferences[client][PlayerPreference_MusicVolume]) g_flPlayer90sMusicVolumes[client] = g_iPlayerPreferences[client][PlayerPreference_MusicVolume];
+	if (g_flPlayer90sMusicVolumes[client] > 1.0) g_flPlayer90sMusicVolumes[client] = 1.0;
 
 	if (g_strPlayer90sMusic[client][0]) EmitSoundToClient(client, g_strPlayer90sMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer90sMusicVolumes[client]);
 	
-	if (g_flPlayer90sMusicVolumes[client] >= g_iPlayerPreferences[client][PlayerPreference_MusicVolume])
+	if (g_flPlayer90sMusicVolumes[client] >= 1.0)
 	{
 		g_hPlayer90sMusicTimer[client] = INVALID_HANDLE;
 		return Plugin_Stop;
@@ -6332,12 +6332,11 @@ void ClientSaveCookies(int client)
 	
 	// Save and reset our queue points.
 	char s[64];
-	Format(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
+	Format(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
 		g_iPlayerPreferences[client][PlayerPreference_ShowHints], 
 		g_iPlayerPreferences[client][PlayerPreference_MuteMode], 
 		g_iPlayerPreferences[client][PlayerPreference_FilmGrain],
 		g_iPlayerPreferences[client][PlayerPreference_EnableProxySelection],
-		RoundToNearest(g_iPlayerPreferences[client][PlayerPreference_MusicVolume]*100.0),
 		g_iPlayerPreferences[client][PlayerPreference_PvPAutoSpawn]);
 		
 	SetClientCookie(client, g_hCookie, s);
@@ -6778,6 +6777,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					}
 				}
 			}
+			CloseHandle(hItem);
 		}
 		
 		// Fixes the Pretty Boy's Pocket Pistol glitch.
@@ -6835,6 +6835,8 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				}
 			}
 		}
+		CloseHandle(hWeapon);
+		CloseHandle(hItem);
 	}
 	//Remove the teleport ability
 	if (IsClientInPvP(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_bPlayerEliminated[client])) //DidClientEscape(client)
@@ -6860,6 +6862,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				}
 			}
 		}
+		CloseHandle(hWeapon);
 	}
 	//Force them to take their melee wep, it prevents the civilian bug.
 	ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
@@ -6937,11 +6940,15 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			if (hItemOverride != INVALID_HANDLE)
 			{
 				hItem = hItemOverride;
+				
+				CloseHandle(hItemOverride);
 
 				return Plugin_Changed;
 			}
+			CloseHandle(hItemOverride);
 		}
 	}
+	CloseHandle(hItem);
 	
 	return Plugin_Continue;
 }
@@ -7006,7 +7013,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 			SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
 			strcopy(g_sClientProxyModel[client],sizeof(g_sClientProxyModel[]),sBuffer);
 			//Prevent plugins like Model manager to override proxy model.
-			CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT);
 			//PrintToChatAll("Proxy model:%s",g_sClientProxyModel[client]);
 		}
 		ClientDisableConstantGlow(client);

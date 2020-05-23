@@ -635,23 +635,6 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				SendPanelToClient(hPanel, param1, Panel_SettingsProxy, 30);
 				CloseHandle(hPanel);
 			}
-			case 5:
-			{
-				char sBuffer[512];
-				Format(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Music Volume Title", param1);
-				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
-				
-				DrawPanelItem(hPanel, "0%");
-				DrawPanelItem(hPanel, "25%");
-				DrawPanelItem(hPanel, "50%");
-				DrawPanelItem(hPanel, "75%");
-				DrawPanelItem(hPanel, "100% (Default)");
-				
-				SendPanelToClient(hPanel, param1, Panel_SettingsMusicVolume, 30);
-				CloseHandle(hPanel);
-			}
 		}
 	}
 	else if (action == MenuAction_Cancel)
@@ -731,19 +714,6 @@ public int Panel_SettingsProxy(Handle menu, MenuAction action,int param1,int par
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
-	}
-}
-
-public int Panel_SettingsMusicVolume(Handle menu, MenuAction action,int param1,int param2)
-{
-	if (action == MenuAction_Select)
-	{
-		float flDesiredVolume = 0.0;
-		for (int i = 1; i < param2; i++)
-			flDesiredVolume += 0.25;
-		g_iPlayerPreferences[param1][PlayerPreference_MusicVolume] = flDesiredVolume;
-		CPrintToChat(param1, "%t", "SF2 Music Volum Changed", RoundToNearest(flDesiredVolume*100.0));
 		DisplayMenu(g_hMenuSettings, param1, 30);
 	}
 }
