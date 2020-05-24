@@ -6060,11 +6060,11 @@ public Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
 	if (client <= 0) return Plugin_Stop;
 
 	g_flPlayer90sMusicVolumes[client] += 0.28;
-	if (g_flPlayer90sMusicVolumes[client] > 1.0) g_flPlayer90sMusicVolumes[client] = 1.0;
+	if (g_flPlayer90sMusicVolumes[client] > 0.5) g_flPlayer90sMusicVolumes[client] = 0.5;
 
 	if (g_strPlayer90sMusic[client][0]) EmitSoundToClient(client, g_strPlayer90sMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer90sMusicVolumes[client]);
 	
-	if (g_flPlayer90sMusicVolumes[client] >= 1.0)
+	if (g_flPlayer90sMusicVolumes[client] >= 0.5)
 	{
 		g_hPlayer90sMusicTimer[client] = INVALID_HANDLE;
 		return Plugin_Stop;
@@ -6777,7 +6777,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					}
 				}
 			}
-			CloseHandle(hItem);
 		}
 		
 		// Fixes the Pretty Boy's Pocket Pistol glitch.
@@ -6835,8 +6834,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				}
 			}
 		}
-		CloseHandle(hWeapon);
-		CloseHandle(hItem);
 	}
 	//Remove the teleport ability
 	if (IsClientInPvP(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_bPlayerEliminated[client])) //DidClientEscape(client)
@@ -6862,7 +6859,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				}
 			}
 		}
-		CloseHandle(hWeapon);
 	}
 	//Force them to take their melee wep, it prevents the civilian bug.
 	ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
@@ -6940,15 +6936,11 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			if (hItemOverride != INVALID_HANDLE)
 			{
 				hItem = hItemOverride;
-				
-				CloseHandle(hItemOverride);
 
 				return Plugin_Changed;
 			}
-			CloseHandle(hItemOverride);
 		}
 	}
-	CloseHandle(hItem);
 	
 	return Plugin_Continue;
 }

@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.6 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.6 Modified"
+#define PLUGIN_VERSION "1.5.3.6a Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.3.6a Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -2314,6 +2314,7 @@ public Action Hook_CommandSayTeam(int iClient, const char[] command,int argc)
 public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
+	if (GetClientTeam(iClient) == TFTeam_Spectator) return Plugin_Continue;
 	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
 	
 	if (IsRoundInIntro() && !g_bPlayerEliminated[iClient]) return Plugin_Handled;

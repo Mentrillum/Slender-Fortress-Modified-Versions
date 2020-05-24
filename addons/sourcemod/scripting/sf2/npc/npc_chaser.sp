@@ -4048,6 +4048,9 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 		SDKUnhook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);
 		return;
 	}
+
+	char sSlenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, sSlenderProfile, sizeof(sSlenderProfile));
 	
 	float flMyPos[3], flMyEyeAng[3];
 	GetEntPropVector(iBoss, Prop_Data, "m_vecAbsOrigin", flMyPos);
@@ -4258,6 +4261,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 									}
 									else
 									{
+										bool bIgnoreFuncNavPrefer = view_as<bool>(GetProfileNum(sSlenderProfile, "ignore_nav_prefer", 1));
 										float flTeleportMinRange = CalculateTeleportMinRange(iBossIndex, g_flSlenderTeleportMinRange[iBossIndex], g_flSlenderTeleportMaxRange[iBossIndex]);
 										int iTeleportAreaIndex = -1;
 										float flTeleportPos[3];
@@ -4289,18 +4293,22 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 														PopStackCell(hAreas, iAreaIndex);
 														Area = CNavArea(iAreaIndex);
 														
+														// Check flags.
+														if (Area.Attributes & NAV_MESH_NO_HOSTAGES)
+														{
+															// Don't spawn/teleport at areas marked with the "NO HOSTAGES" flag.
+															continue;
+														}
+														// Check if the nav area has a func prefer on it.
+														if (bIgnoreFuncNavPrefer && NavHasFuncPrefer(Area.Index))
+															continue;
+														
 														int iIndex = PushArrayCell(hAreaArray, Area.Index);
 														SetArrayCell(hAreaArray, iIndex, float(Area.CostSoFar), 1);
 														iPoppedAreas++;
-													}
-													
-						#if defined DEBUG
-													SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d areas", iBossIndex, iPoppedAreas);
-						#endif
-													
+													}		
 													CloseHandle(hAreas);
 												}
-												
 												Handle hAreaArrayClose = CreateArray(4);
 												Handle hAreaArrayAverage = CreateArray(4);
 												Handle hAreaArrayFar = CreateArray(4);
@@ -4317,7 +4325,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 														float flAreaSpawnPoint[3];
 														NavMeshArea_GetCenter(iAreaIndex, flAreaSpawnPoint);
 														
-														int iBoss = NPCGetEntIndex(iBossIndex);
+														int iBoss2 = NPCGetEntIndex(iBossIndex);
 														
 														// Check space. First raise to HalfHumanHeight * 2, then trace downwards to get ground level.
 														{
@@ -4343,19 +4351,37 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 																flTraceMaxs,
 																MASK_NPCSOLID,
 																TraceRayDontHitEntity,
-																iBoss);
+																iBoss2);
 															
 															float flTraceHitPos[3];
 															TR_GetEndPosition(flTraceHitPos, hTrace);
 															flTraceHitPos[2] += 1.0;
 															CloseHandle(hTrace);
-
+															
+															if (IsSpaceOccupiedNPC(flTraceHitPos,
+																g_flSlenderDetectMins[iBossIndex],
+																g_flSlenderDetectMaxs[iBossIndex],
+																iBoss2))
+															{
+																continue;
+															}
+															float flChangedMins[3] = {-20.0, -20.0, 0.0};
+															float flChangedMaxs[3] = {20.0, 20.0, 83.0};
+															if (IsSpaceOccupiedNPC(flTraceHitPos,
+																flChangedMins,
+																flChangedMaxs,
+																iBoss2))
+															{
+																// Can't let an NPC spawn here; too little space. If we let it spawn here it will be non solid!
+																continue;
+															}
+															
 															flAreaSpawnPoint[0] = flTraceHitPos[0];
 															flAreaSpawnPoint[1] = flTraceHitPos[1];
 															flAreaSpawnPoint[2] = flTraceHitPos[2];
 														}
-			
-														AddVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);				
+											
+														AddVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
 														
 														SubtractVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
 
@@ -5192,6 +5218,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
 	
 	float flDamage = NPCChaserGetAttackDamage(iBossIndex, iAttackIndex);
+	float flTinyDamage = flDamage * 0.5;
 	float flDamageVsProps = NPCChaserGetAttackDamageVsProps(iBossIndex, iAttackIndex);
 	int iDamageType = NPCChaserGetAttackDamageType(iBossIndex, iAttackIndex);
 	
@@ -5469,15 +5496,28 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 								TF2_RemoveCondition(i, TFCond_MegaHeal);
 								TF2_SetPlayerPowerPlay(i, false);
 							}
-							
-							Call_StartForward(fOnClientDamagedByBoss);
-							Call_PushCell(i);
-							Call_PushCell(iBossIndex);
-							Call_PushCell(slender);
-							Call_PushFloat(flDamage);
-							Call_PushCell(iDamageType);
-							Call_Finish();
-							SDKHooks_TakeDamage(i, slender, slender, flDamage, iDamageType, _, flDirection, flMyEyePos);
+							if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
+							{
+								Call_StartForward(fOnClientDamagedByBoss);
+								Call_PushCell(i);
+								Call_PushCell(iBossIndex);
+								Call_PushCell(slender);
+								Call_PushFloat(flTinyDamage);
+								Call_PushCell(iDamageType);
+								Call_Finish();
+								SDKHooks_TakeDamage(i, slender, slender, flTinyDamage, iDamageType, _, flDirection, flMyEyePos);
+							}
+							else
+							{
+								Call_StartForward(fOnClientDamagedByBoss);
+								Call_PushCell(i);
+								Call_PushCell(iBossIndex);
+								Call_PushCell(slender);
+								Call_PushFloat(flDamage);
+								Call_PushCell(iDamageType);
+								Call_Finish();
+								SDKHooks_TakeDamage(i, slender, slender, flDamage, iDamageType, _, flDirection, flMyEyePos);
+							}
 							ClientViewPunch(i, flViewPunch);
 							
 							if(TF2_IsPlayerInCondition(i, TFCond_Gas))

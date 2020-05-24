@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Prevented most repeatable timers from lingering on following maps.\n-Bosses can no longer try to travel through blocked areas.\n-Prevented bosses from stopping while using the jump exploit.\n-Removed music settings."
+		"en"	"-Fixed a bug where Tiny Bosses and In the 90s wouldn't work.\n-Fixed a bug where sometimes players wouldn't get their replaced weapons.\n-Fixed the new unstuck method a little.\n-Hyper Snatcher now has less restrictions.\n-Attempted to fix the spectator bug."
 	}
 	"SF2 Smite player"
 	{

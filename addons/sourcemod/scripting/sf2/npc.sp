@@ -1301,7 +1301,9 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			DispatchKeyValue(iBoss,       "model",      sBuffer);
 			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
-				DispatchKeyValue(iBoss,       "modelscale", "0.25");
+				float flScaleModel = NPCGetModelScale(iBossIndex) * 0.25;
+				FloatToString(flScaleModel, sBuffer, sizeof(sBuffer));
+				DispatchKeyValue(iBoss,       "modelscale", sBuffer);
 			}
 			else
 			{
@@ -2013,7 +2015,8 @@ void SlenderPerformVoice(int iBossIndex, const char[] sSectionName,const int iAt
 		g_flSlenderNextVoiceSound[iBossIndex] = GetGameTime() + flCooldown;
 		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 		{
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, 125);
+			int iPitchSmall = iPitch + 25;
+			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitchSmall);
 		}
 		else
 		{
