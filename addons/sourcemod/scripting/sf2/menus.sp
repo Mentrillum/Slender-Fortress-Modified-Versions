@@ -138,7 +138,7 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012, Mentrillum, The Gaben\n");
 	StrCat(buffer, sizeof(buffer), "Mark J. Hadley - The creator of the Slender game\n");
 	StrCat(buffer, sizeof(buffer), "Mark Steen - Compositing the intro music\n");
-	StrCat(buffer, sizeof(buffer), "Dj-Rec0il - Compositing the Running In The 90s cover\n");
+	StrCat(buffer, sizeof(buffer), "Toby Fox - Compositing The World Revolving\n");
 	StrCat(buffer, sizeof(buffer), "Mammoth Mogul - For being a GREAT test subject\n");
 	StrCat(buffer, sizeof(buffer), "Egosins - For offering to host this publicly\n");
 	StrCat(buffer, sizeof(buffer), "Glubbable - For working on a ton of maps\n");

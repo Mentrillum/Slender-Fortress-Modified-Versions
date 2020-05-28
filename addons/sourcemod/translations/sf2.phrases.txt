@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where Tiny Bosses and In the 90s wouldn't work.\n-Fixed a bug where sometimes players wouldn't get their replaced weapons.\n-Fixed the new unstuck method a little.\n-Hyper Snatcher now has less restrictions.\n-Attempted to fix the spectator bug."
+		"en"	"-Added a new special round, Triple Bosses.\n-Re-enabled debugging mode on toggle.\n-Removed TIMER_FLAG_NO_MAPCHANGE on all timers.\n-Removed In The 90s music for now."
 	}
 	"SF2 Smite player"
 	{

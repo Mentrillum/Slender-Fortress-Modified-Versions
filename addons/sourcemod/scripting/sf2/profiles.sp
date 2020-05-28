@@ -1082,7 +1082,7 @@ void SetupTimeLimitTimerForBossPackVote()
 					g_hBossPackVoteMapTimer = INVALID_HANDLE;
 				}
 				
-				g_hBossPackVoteMapTimer = CreateTimer(float(time - startTime), Timer_StartBossPackVote, _, TIMER_FLAG_NO_MAPCHANGE);
+				g_hBossPackVoteMapTimer = CreateTimer(float(time - startTime), Timer_StartBossPackVote);
 			}
 		}
 	}

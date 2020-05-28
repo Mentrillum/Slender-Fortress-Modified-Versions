@@ -276,7 +276,7 @@ void SpecialRoundCycleFinish()
 		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", sDescChat); // For those who are using minimized HUD...
 	}
 		
-	g_hSpecialRoundTimer = CreateTimer(SR_STARTDELAY, Timer_SpecialRoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
+	g_hSpecialRoundTimer = CreateTimer(SR_STARTDELAY, Timer_SpecialRoundStart);
 }
 
 ArrayList SpecialEnabledList()
@@ -405,6 +405,9 @@ ArrayList SpecialEnabledList()
 			
 		if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
 			arrayEnabledRounds.Push(SPECIALROUND_RUNNINGINTHE90S);
+			
+		if (!SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && GetArraySize(GetSelectableBossProfileList()) > 0)
+			arrayEnabledRounds.Push(SPECIALROUND_TRIPLEBOSSES);
 		
 		//Always keep this special round push at the bottom, we need the array lenght
 		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && arrayEnabledRounds.Length > 5)
@@ -558,6 +561,36 @@ void SpecialRoundStart()
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_HYPERSNATCHER);
+		}
+		case SPECIALROUND_TRIPLEBOSSES:
+		{
+			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			sCurrentMusicTrack = TRIPLEBOSSESMUSIC;
+			int iTripleBosses=0;
+			for(int client = 1;client <=MaxClients;client ++)
+			{
+				if(IsValidClient(client) && !g_bPlayerEliminated[client])
+				{
+					ClientChaseMusicReset(client);
+					ClientChaseMusicSeeReset(client);
+					ClientAlertMusicReset(client);
+					StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
+					ClientMusicStart(client, TRIPLEBOSSESMUSIC, _, MUSIC_PAGE_VOLUME);
+					ClientUpdateMusicSystem(client);
+				}
+			}
+			for (int i = 0; i < MAX_BOSSES; i++)
+			{
+				NPCStopMusic();
+				SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(i);
+				if (!Npc.IsValid()) continue;
+				Npc.GetProfile(sBuffer, sizeof(sBuffer));
+				if (iTripleBosses == 1) break;
+				AddProfile(sBuffer,_,_,_,false);
+				AddProfile(sBuffer,_,_,_,false);
+				iTripleBosses += 1;
+			}
+			SF_AddSpecialRound(SPECIALROUND_TRIPLEBOSSES);
 		}
 		case SPECIALROUND_LIGHTSOUT,SPECIALROUND_NIGHTVISION:
 		{

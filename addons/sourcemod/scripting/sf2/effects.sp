@@ -204,7 +204,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 					TeleportEntity(iEnt, flEffectPos, flEffectAng, NULL_VECTOR);
 					
 					float flLifeTime = KvGetFloat(g_hConfig, "lifetime");
-					if (flLifeTime > 0.0) CreateTimer(flLifeTime, Timer_KillEntity, EntIndexToEntRef(iEnt), TIMER_FLAG_NO_MAPCHANGE);
+					if (flLifeTime > 0.0) CreateTimer(flLifeTime, Timer_KillEntity, EntIndexToEntRef(iEnt));
 					
 					char sParentCustom[64];
 					KvGetString(g_hConfig, "parent_custom", sParentCustom, sizeof(sParentCustom));

@@ -391,7 +391,7 @@ public void PvP_OnPlayerSpawn(int iClient)
 				
 				if (bAutoSpawn)
 				{
-					g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.12, Timer_TeleportPlayerToPvP, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.12, Timer_TeleportPlayerToPvP, GetClientUserId(iClient));
 				}
 			}
 			else
@@ -437,7 +437,7 @@ public void PvP_OnPlayerDeath(int iClient, bool bFake)
 				{
 					if (!IsRoundEnding())
 					{
-						g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+						g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient));
 					}
 				}
 			}

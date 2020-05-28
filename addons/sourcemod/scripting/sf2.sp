@@ -30,14 +30,14 @@ bool steamtools=false;
 bool steamworks=false;
 bool sendproxymanager=false;
 
-//#define DEBUG
+#define DEBUG
 #define SF2
 
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.6a Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.6a Modified"
+#define PLUGIN_VERSION "1.5.3.7 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.3.7 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -151,7 +151,8 @@ public Plugin myinfo =
 #define HYPERSNATCHER_NIGHTAMRE_4 "slender/snatcher/nightmare4.wav"
 #define HYPERSNATCHER_NIGHTAMRE_5 "slender/snatcher/nightmare5.wav"
 
-#define NINETYSMUSIC "slender/sf2modified_runninginthe90s.wav"
+//#define NINETYSMUSIC "slender/sf2modified_runninginthe90s.wav"
+#define TRIPLEBOSSESMUSIC "slender/sf2modified_triplebosses.wav"
 
 #define SF2_HUD_TEXT_COLOR_R 127
 #define SF2_HUD_TEXT_COLOR_G 167
@@ -1665,7 +1666,8 @@ static void PrecacheStuff()
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_4);
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_5);
 	
-	PrecacheSound2(NINETYSMUSIC);
+	//PrecacheSound2(NINETYSMUSIC);
+	PrecacheSound2(TRIPLEBOSSESMUSIC);
 
 	PrecacheSound2(PROXY_RAGE_MODE_SOUND);
 	
@@ -1791,7 +1793,11 @@ public void TF2_OnConditionAdded(int iClient, TFCond cond)
 		if (g_bPlayerProxy[iClient])
 		{
 			//Stop proxies from using kart commands
-			TF2_RemoveCondition(iClient, view_as<TFCond>(82));
+			TF2_RemoveCondition(iClient,TFCond_HalloweenKart);
+			TF2_RemoveCondition(iClient,TFCond_HalloweenKartDash);
+			TF2_RemoveCondition(iClient,TFCond_HalloweenKartNoTurn);
+			TF2_RemoveCondition(iClient,TFCond_HalloweenKartCage);
+			TF2_RemoveCondition(iClient, TFCond_SpawnOutline);
 		}
 	}
 }
@@ -2480,7 +2486,7 @@ public Action Command_RemoveSlender(int iClient,int args)
 	
 	NPCRemove(iBossIndex);
 	
-	if (GetRandomStringFromProfile(sProfile,"sound_music",sCurrentMusicTrack,sizeof(sCurrentMusicTrack)))
+	if (GetRandomStringFromProfile(sProfile,"sound_music",sCurrentMusicTrack,sizeof(sCurrentMusicTrack)) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 	{
 		NPCStopMusic();
 	}
@@ -3823,7 +3829,7 @@ static void CollectPage(int page,int activator)
 	
 	if (SF_SpecialRound(SPECIALROUND_PAGEREWARDS) && !g_bPlayerGettingPageReward[activator])
 	{
-		g_hPlayerPageRewardTimer[activator] = CreateTimer(3.0, Timer_GiveRandomPageReward, EntIndexToEntRef(activator), TIMER_FLAG_NO_MAPCHANGE);
+		g_hPlayerPageRewardTimer[activator] = CreateTimer(3.0, Timer_GiveRandomPageReward, EntIndexToEntRef(activator));
 		g_bPlayerGettingPageReward[activator] = true;
 		EmitRollSound(activator);
 	}
@@ -4324,7 +4330,7 @@ public void OnClientPutInServer(int iClient)
 	ClientChaseMusicSeeReset(iClient);
 	ClientAlertMusicReset(iClient);
 	Client20DollarsMusicReset(iClient);
-	Client90sMusicReset(iClient);
+	//Client90sMusicReset(iClient);
 	ClientMusicReset(iClient);
 	ClientResetProxy(iClient);
 	ClientResetHints(iClient);
@@ -4438,7 +4444,7 @@ public void OnClientDisconnect(int iClient)
 			{
 				if (!IsRoundEnding()) 
 				{
-					CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.2, Timer_CheckRoundWinConditions);
 				}
 			}
 		}
@@ -4523,12 +4529,12 @@ void SetRoundState(SF2RoundState iRoundState)
 			g_iRoundIntroText = 0;
 			g_bRoundIntroTextDefault = false;
 			g_bProxySurvivalRageMode = false;
-			g_hRoundIntroTextTimer = CreateTimer(0.0, Timer_IntroTextSequence, _, TIMER_FLAG_NO_MAPCHANGE);
+			g_hRoundIntroTextTimer = CreateTimer(0.0, Timer_IntroTextSequence);
 			TriggerTimer(g_hRoundIntroTextTimer);
 			
 			// Gather data on the intro parameters set by the map.
 			float flHoldTime = g_flRoundIntroFadeHoldTime;
-			g_hRoundIntroTimer = CreateTimer(flHoldTime, Timer_ActivateRoundFromIntro, _, TIMER_FLAG_NO_MAPCHANGE);
+			g_hRoundIntroTimer = CreateTimer(flHoldTime, Timer_ActivateRoundFromIntro);
 			
 			// Trigger any intro logic entities, if any.
 			int ent = -1;
@@ -4547,9 +4553,9 @@ void SetRoundState(SF2RoundState iRoundState)
 		{
 			// Start the grace period timer.
 			g_bRoundGrace = true;
-			g_hRoundGraceTimer = CreateTimer(GetConVarFloat(g_cvGraceTime), Timer_RoundGrace, _, TIMER_FLAG_NO_MAPCHANGE);
+			g_hRoundGraceTimer = CreateTimer(GetConVarFloat(g_cvGraceTime), Timer_RoundGrace);
 			
-			CreateTimer(2.0, Timer_RoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(2.0, Timer_RoundStart);
 			
 			// Enable movement on players.
 			for (int i = 1; i <= MaxClients; i++)
@@ -5624,7 +5630,7 @@ void SetPageCount(int iNum)
 			}
 		}
 		
-		CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(0.2, Timer_CheckRoundWinConditions);
 	}
 }
 
@@ -6073,7 +6079,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 					CPrintToChat(iClient, "%T", "SF2 Normal Flashlight", iClient);
 				}
 				
-				CreateTimer(5.0, Timer_WelcomeMessage, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(5.0, Timer_WelcomeMessage, GetClientUserId(iClient));
 			}
 		}
 	}
@@ -6107,7 +6113,11 @@ static bool HandlePlayerTeam(int iClient, bool bRespawn=true)
 		{
 			if (bRespawn)
 			{
-				TF2_RemoveCondition(iClient, view_as<TFCond>(82));
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKart);
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKartDash);
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKartNoTurn);
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKartCage);
+				TF2_RemoveCondition(iClient, TFCond_SpawnOutline);
 				ChangeClientTeamNoSuicide(iClient, TFTeam_Red);
 			}
 			else
@@ -6122,7 +6132,11 @@ static bool HandlePlayerTeam(int iClient, bool bRespawn=true)
 		{
 			if (bRespawn)
 			{
-				TF2_RemoveCondition(iClient, view_as<TFCond>(82));
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKart);
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKartDash);
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKartNoTurn);
+				TF2_RemoveCondition(iClient,TFCond_HalloweenKartCage);
+				TF2_RemoveCondition(iClient, TFCond_SpawnOutline);
 				ChangeClientTeamNoSuicide(iClient, TFTeam_Blue);
 			}
 			else
@@ -6154,7 +6168,7 @@ static void HandlePlayerIntroState(int iClient)
 		flDelay = GetClientLatency(iClient, NetFlow_Outgoing);
 	}
 	
-	CreateTimer(flDelay * 4.0, Timer_IntroBlackOut, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(flDelay * 4.0, Timer_IntroBlackOut, GetClientUserId(iClient));
 	
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 2) DebugMessage("END HandlePlayerIntroState(%d)", iClient);
@@ -6247,7 +6261,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientChaseMusicSeeReset(iClient);
 		ClientAlertMusicReset(iClient);
 		Client20DollarsMusicReset(iClient);
-		Client90sMusicReset(iClient);
+		//Client90sMusicReset(iClient);
 		ClientMusicReset(iClient);
 		ClientResetProxy(iClient);
 		ClientResetHints(iClient);
@@ -6276,14 +6290,21 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	
 	if (IsPlayerAlive(iClient) && IsClientParticipating(iClient))
 	{
-		if(MusicActive())//A boss is overriding the music.
+		if(MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
 		{
 			char sPath[PLATFORM_MAX_PATH];
 			GetBossMusic(sPath,sizeof(sPath));
 			StopSound(iClient, MUSIC_CHAN, sPath);
+			if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+			{
+				StopSound(iClient, MUSIC_CHAN, TRIPLEBOSSESMUSIC);
+			}
 		}
 		g_bBackStabbed[iClient] = false;
-		TF2_RemoveCondition(iClient, view_as<TFCond>(82));
+		TF2_RemoveCondition(iClient,TFCond_HalloweenKart);
+		TF2_RemoveCondition(iClient,TFCond_HalloweenKartDash);
+		TF2_RemoveCondition(iClient,TFCond_HalloweenKartNoTurn);
+		TF2_RemoveCondition(iClient,TFCond_HalloweenKartCage);
 		TF2_RemoveCondition(iClient, TFCond_SpawnOutline);
 
 		if (HandlePlayerTeam(iClient))
@@ -6309,7 +6330,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientChaseMusicSeeReset(iClient);
 			ClientAlertMusicReset(iClient);
 			Client20DollarsMusicReset(iClient);
-			Client90sMusicReset(iClient);
+			//Client90sMusicReset(iClient);
 			ClientMusicReset(iClient);
 			ClientResetProxy(iClient);
 			ClientResetHints(iClient);
@@ -6352,7 +6373,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				}
 				if (DidClientEscape(iClient))
 				{
-					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(iClient));
 				}
 				else
 				{
@@ -6376,7 +6397,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				TF2Attrib_RemoveByDefIndex(iClient, 49);
 			}
 			ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
-			g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient));
 			
 			HandlePlayerHUD(iClient);
 		}
@@ -6419,7 +6440,7 @@ public Action Event_PostInventoryApplication(Handle event, const char[] name, bo
 	if (iClient > 0)
 	{
 		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
-		g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+		g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient));
 	}
 	
 #if defined DEBUG
@@ -6665,7 +6686,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		ClientChaseMusicSeeReset(iClient);
 		ClientAlertMusicReset(iClient);
 		Client20DollarsMusicReset(iClient);
-		Client90sMusicReset(iClient);
+		//Client90sMusicReset(iClient);
 		ClientMusicReset(iClient);
 
 		ClientResetFlashlight(iClient);
@@ -6681,7 +6702,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		
 		if (IsRoundInWarmup())
 		{
-			CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient));
 		}
 		else
 		{
@@ -6691,13 +6712,13 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 						CreateTimer(0.1, Timer_ReplacePlayerRagdoll, GetClientUserId(iClient));
 				if (IsRoundInIntro() || g_bRoundGrace || DidClientEscape(iClient))
 				{
-					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient));
 				}
 				else
 				{
 					g_bPlayerEliminated[iClient] = true;
 					g_bPlayerEscaped[iClient] = false;
-					g_hPlayerSwitchBlueTimer[iClient] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					g_hPlayerSwitchBlueTimer[iClient] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(iClient));
 				}
 			}
 			else
@@ -6769,7 +6790,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				}
 			}
 			
-			CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(0.2, Timer_CheckRoundWinConditions);
 			
 			// Notify to other bosses that this player has died.
 			for (int i = 0; i < MAX_BOSSES; i++)
@@ -6830,7 +6851,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 						WritePackCell(hPack, GetClientUserId(iAttacker));
 						WritePackCell(hPack, iAttackerPreHealth + iKatanaHealthGain);
 						
-						CreateTimer(0.0, Timer_SetPlayerHealth, hPack, TIMER_FLAG_NO_MAPCHANGE);
+						CreateTimer(0.0, Timer_SetPlayerHealth, hPack);
 					}
 				}
 			}
@@ -7501,7 +7522,7 @@ void CreateGeneralParticle(int entity, const char[] sSectionName, float time, fl
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
 
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
     }
 }
 
@@ -8727,7 +8748,7 @@ void InitializeNewGame()
 			if (g_bSpecialRoundContinuous)
 			{
 				// Display the current special round going on to late players.
-				CreateTimer(3.0, Timer_DisplaySpecialRound, _, TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(3.0, Timer_DisplaySpecialRound);
 			}
 		}
 	}
@@ -8807,7 +8828,7 @@ void InitializeNewGame()
 				if (!IsFakeClient(i))
 				{
 					// Currently in intro state, play intro music.
-					g_hPlayerIntroMusicTimer[i] = CreateTimer(0.5, Timer_PlayIntroMusicToPlayer, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
+					g_hPlayerIntroMusicTimer[i] = CreateTimer(0.5, Timer_PlayIntroMusicToPlayer, GetClientUserId(i));
 				}
 				else
 				{
@@ -8827,12 +8848,19 @@ void InitializeNewGame()
 		{
 			if (!SF_IsBoxingMap())
 			{
-				if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_DOOMBOX) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_2DOOM) || SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
+				if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_DOOMBOX) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_2DOOM))
 				{
 					AddProfile(g_strRoundBossProfile);
 					RemoveBossProfileFromQueueList(g_strRoundBossProfile);
 				}
-				else
+				else if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+				{
+					AddProfile(g_strRoundBossProfile);
+					AddProfile(g_strRoundBossProfile,_,_,_,false);
+					AddProfile(g_strRoundBossProfile,_,_,_,false);
+					RemoveBossProfileFromQueueList(g_strRoundBossProfile);
+				}
+				else if (!SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_DOOMBOX) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 				{
 					SelectProfile(view_as<SF2NPC_BaseNPC>(0), g_strRoundBossProfile);
 					RemoveBossProfileFromQueueList(g_strRoundBossProfile);
@@ -8940,7 +8968,7 @@ public Action Timer_IntroTextSequence(Handle timer)
 	}
 	
 	g_iRoundIntroText++;
-	g_hRoundIntroTextTimer = CreateTimer(flDuration, Timer_IntroTextSequence, _, TIMER_FLAG_NO_MAPCHANGE);
+	g_hRoundIntroTextTimer = CreateTimer(flDuration, Timer_IntroTextSequence);
 }
 
 public Action Timer_ActivateRoundFromIntro(Handle timer)
@@ -8957,12 +8985,19 @@ public Action Timer_ActivateRoundFromIntro(Handle timer)
 	{
 		if (!SF_IsBoxingMap())
 		{
-			if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_DOOMBOX) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_2DOOM) || SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
+			if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_DOOMBOX) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_2DOOM))
 			{
 				AddProfile(g_strRoundBossProfile);
 				RemoveBossProfileFromQueueList(g_strRoundBossProfile);
 			}
-			else
+			else if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+			{
+				AddProfile(g_strRoundBossProfile);
+				AddProfile(g_strRoundBossProfile,_,_,_,false);
+				AddProfile(g_strRoundBossProfile,_,_,_,false);
+				RemoveBossProfileFromQueueList(g_strRoundBossProfile);
+			}
+			else if (!SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_DOOMBOX) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
 				SelectProfile(view_as<SF2NPC_BaseNPC>(0), g_strRoundBossProfile);
 				RemoveBossProfileFromQueueList(g_strRoundBossProfile);

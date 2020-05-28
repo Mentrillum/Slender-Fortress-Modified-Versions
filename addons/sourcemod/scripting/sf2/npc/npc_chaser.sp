@@ -2475,7 +2475,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						float flCloakDist = GetVectorDistance(g_flSlenderGoalPos[iBossIndex], flMyPos);
 						float flCloakRange;
 						flCloakRange = NPCChaserGetCloakRange(iBossIndex, iDifficulty);
-						if (flCloakDist <= flCloakRange && !g_bNPCHasCloaked[iBossIndex] && g_flSlenderNextCloakTime[iBossIndex] <= GetGameTime())
+						if (flCloakDist <= flCloakRange && !g_bNPCHasCloaked[iBossIndex] && g_flSlenderNextCloakTime[iBossIndex] <= GetGameTime() && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
 						{
 							//Time for a more cloaking aproach!
 							SetEntityRenderMode(slender, RENDER_TRANSCOLOR);
@@ -2564,7 +2564,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							}
 							if (NPCHasAttribute(iBossIndex, "alert copies"))
 							{
-								g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex), TIMER_FLAG_NO_MAPCHANGE);
+								g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex));
 								g_bNPCStopAlertingCopies[iBossIndex] = false;
 							}
 						}
@@ -2578,7 +2578,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							}
 							if (NPCHasAttribute(iBossIndex, "alert copies"))
 							{
-								g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex), TIMER_FLAG_NO_MAPCHANGE);
+								g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex));
 								g_bNPCStopAlertingCopies[iBossIndex] = false;
 							}
 						}
@@ -2671,7 +2671,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						}
 						if (NPCHasAttribute(iBossIndex, "alert copies"))
 						{
-							g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex), TIMER_FLAG_NO_MAPCHANGE);
+							g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex));
 							g_bNPCStopAlertingCopies[iBossIndex] = false;
 						}
 					}
@@ -2732,7 +2732,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						}
 						if (NPCHasAttribute(iBossIndex, "alert copies"))
 						{
-							g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex), TIMER_FLAG_NO_MAPCHANGE);
+							g_hNPCResetAlertCopyTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderResetAlertCopy, EntIndexToEntRef(iBossIndex));
 							g_bNPCStopAlertingCopies[iBossIndex] = false;
 						}
 					}
@@ -2758,24 +2758,19 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				{
 					NPC_DropKey(iBossIndex);
 				}
-				if (SF_IsBoxingMap() && view_as<bool>(GetProfileNum(sSlenderProfile,"boxing_boss",0)))
-				{
-					CPrintToChatAll("Our champion has just been defeated by the {red}RED {default}team, congratulations {red}RED {default}team, the prize of victory is yours!");
-				}
 			}
 			if (SF_IsBoxingMap() && view_as<bool>(GetProfileNum(sSlenderProfile,"boxing_boss",0)))
 			{
 				float flPercent = NPCChaserGetStunInitialHealth(iBossIndex) > 0 ? (NPCChaserGetStunHealth(iBossIndex) / NPCChaserGetStunInitialHealth(iBossIndex)) : 0.0;
 				if (flPercent < 0.75 && flPercent >= 0.5 && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsedRage1[iBossIndex])
 				{
-					CPrintToChatAll("Our champion looks like its not playing games anymore, difficulty increased to {orange}Hardcore{default}! Good luck!");
 					SetConVarInt(g_cvDifficulty, Difficulty_Hard);
 					SlenderPerformVoice(iBossIndex, "sound_rage");
 					g_bNPCUsedRage1[iBossIndex] = true;
 					g_bNPCUsesRageAnimation1[iBossIndex] = true;
 					flSpeed *= 0.0;
 					NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
-					g_hSlenderRage1Timer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "rage_timer", 0.0), Timer_SlenderRageOneTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+					g_hSlenderRage1Timer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "rage_timer", 0.0), Timer_SlenderRageOneTimer, EntIndexToEntRef(slender));
 					if (g_bSlenderAttacking[iBossIndex])
 					{
 						// Cancel attacking.
@@ -2787,14 +2782,13 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				}
 				else if (flPercent < 0.5 && flPercent >= 0.25 && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsedRage2[iBossIndex])
 				{
-					CPrintToChatAll("Our champion looks like its mad, difficulty increased to {red}Insane{default}! Good luck!");
 					SetConVarInt(g_cvDifficulty, Difficulty_Insane);
 					SlenderPerformVoice(iBossIndex, "sound_rage");
 					g_bNPCUsedRage2[iBossIndex] = true;
 					g_bNPCUsesRageAnimation2[iBossIndex] = true;
 					flSpeed *= 0.0;
 					NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
-					g_hSlenderRage2Timer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "rage_timer", 0.0), Timer_SlenderRageTwoTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+					g_hSlenderRage2Timer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "rage_timer", 0.0), Timer_SlenderRageTwoTimer, EntIndexToEntRef(slender));
 					if (g_bSlenderAttacking[iBossIndex])
 					{
 						// Cancel attacking.
@@ -2806,14 +2800,13 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				}
 				else if (flPercent < 0.25 && !g_bNPCUsesRageAnimation3[iBossIndex] && !g_bNPCUsedRage3[iBossIndex])
 				{
-					CPrintToChatAll("Our champion looks like its enraged, difficulty increased to {valve}Nightmare{default}! Good luck!");
 					SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
 					SlenderPerformVoice(iBossIndex, "sound_rage");
 					g_bNPCUsedRage3[iBossIndex] = true;
 					g_bNPCUsesRageAnimation3[iBossIndex] = true;
 					flSpeed *= 0.0;
 					NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
-					g_hSlenderRage3Timer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "rage_timer", 0.0), Timer_SlenderRageThreeTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+					g_hSlenderRage3Timer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "rage_timer", 0.0), Timer_SlenderRageThreeTimer, EntIndexToEntRef(slender));
 					if (g_bSlenderAttacking[iBossIndex])
 					{
 						// Cancel attacking.
@@ -3002,7 +2995,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 						if((NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_ExplosiveDance))
 						{
-							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender));
 							g_bNPCAlreadyAttacked[iBossIndex] = false;
 							NPCSetCurrentAttackRepeat(iBossIndex, iAttackIndex, 0);
 						}
@@ -3165,7 +3158,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							g_bNPCUsesChaseInitialAnimation[iBossIndex] = true;
 							flSpeed *= 0.0;
 							NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
-							g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+							g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender));
 						}
 					}
 				}
@@ -3796,7 +3789,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 					}
 
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					CreateTimer(0.1, Timer_DestroyProjectile, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_DestroyProjectile, EntIndexToEntRef(iProjectileEnt));
 					if(!g_sSlenderGrenadeShootSound[iBossIndex][0])
 					{
 						g_sSlenderGrenadeShootSound[iBossIndex] = GRENADE_SHOOT;
@@ -3883,7 +3876,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 					}
 
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					CreateTimer(0.1, Timer_DestroyProjectile, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_DestroyProjectile, EntIndexToEntRef(iProjectileEnt));
 					if(!g_sSlenderArrowShootSound[iBossIndex][0])
 					{
 						g_sSlenderArrowShootSound[iBossIndex] = ARROW_SHOOT;
@@ -4238,11 +4231,20 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 					
 					if (g_flLastStuckTime[iBossIndex] <= GetGameTime()-1.0)
 					{
+						CNavArea area2 = NavMesh_GetNearestArea(flMyPos, _, 200.0);
 						bool bPathResolved = false;
 						float vecMovePos[3];
 						g_hBossChaserPathLogic[iBossIndex].GetMovePosition(vecMovePos);
+						if (area2 == INVALID_NAV_AREA)
+						{
+							area2 = g_hBossChaserPathLogic[iBossIndex].GetMovePositionNavArea();
+						}
+						if (area2 != INVALID_NAV_AREA)
+						{
+							area2.GetCenter(vecMovePos);
+						}
 						
-						if (GetVectorDistance(flMyPos, vecMovePos, false) >= 0.01)
+						if (GetVectorDistance(flMyPos, vecMovePos, false) >= 10.0)
 						{
 							TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
 						}
@@ -5247,12 +5249,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	if (!g_bSlenderAttacking[iBossIndex]) return;
 	if (view_as<bool>(GetProfileNum(sProfile,"use_chase_initial_animation",0)) && g_bNPCUsesChaseInitialAnimation[iBossIndex])
 	{
-		g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(0.1, Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(0.1, Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender));
 	}
 
 	if (NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) == 1)
 	{
-		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender));
 		if (g_hSlenderBackupAtkTimer[iBossIndex] == INVALID_HANDLE && g_bNPCAlreadyAttacked[iBossIndex])
 		{
 			g_bSlenderAttacking[iBossIndex] = false;
@@ -5307,7 +5309,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					}
 				}
 			}
-			if (NPCChaserShockwaveOnAttack(iBossIndex))
+			/*if (NPCChaserShockwaveOnAttack(iBossIndex))
 			{
 				char sIndexes[8];
 				char sCurrentIndex[2];
@@ -5373,7 +5375,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 						TE_SendToAll();
 					}
 				}
-			}
+			}*/
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i)) continue;
@@ -5757,7 +5759,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
 										if (iAttackNumber == iCurrentAtkIndex)
 										{
-											g_hPlayerIgniteTimer[i] = CreateTimer(NPCChaserGetIgniteDelay(iBossIndex, iDifficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(i), TIMER_FLAG_NO_MAPCHANGE);
+											g_hPlayerIgniteTimer[i] = CreateTimer(NPCChaserGetIgniteDelay(iBossIndex, iDifficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(i));
 											g_hPlayerResetIgnite[i] = INVALID_HANDLE;
 										}
 									}
@@ -5939,7 +5941,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 											}
 										}
 									}
-									if (NPCChaserShockwaveOnAttack(iBossIndex))
+									/*if (NPCChaserShockwaveOnAttack(iBossIndex))
 									{
 										char sIndexes[8];
 										char sCurrentIndex[2];
@@ -5984,7 +5986,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 												}
 											}
 										}
-									}
+									}*/
 								}
 							}
 							if (NPCChaserDamageParticlesEnabled(iBossIndex))
@@ -6136,12 +6138,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	}
 	if (NPCChaserGetAttackDisappear(iBossIndex, iAttackIndex) != 1 && NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) != 1)
 	{
-		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender));
 		g_NPCBaseAttacks[iBossIndex][iAttackIndex][SF2NPCChaser_BaseAttackNextAttackTime] = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
 	}
 	if(NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) == 1 && !g_bNPCAlreadyAttacked[iBossIndex])
 	{
-		g_hSlenderBackupAtkTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEndBackup, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_hSlenderBackupAtkTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEndBackup, EntIndexToEntRef(slender));
 		g_NPCBaseAttacks[iBossIndex][iAttackIndex][SF2NPCChaser_BaseAttackNextAttackTime] = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
 		g_bNPCAlreadyAttacked[iBossIndex] = true;
 	}
@@ -6166,7 +6168,7 @@ public Action Timer_SlenderChaseBossAttackIgniteHit (Handle timer, any entref)
 	if (timer != g_hPlayerIgniteTimer[player]) return;
 	
 	TF2_IgnitePlayer(player, player);
-	g_hPlayerResetIgnite[player] = CreateTimer(0.1, Timer_SlenderChaseBossResetIgnite, EntIndexToEntRef(player), TIMER_FLAG_NO_MAPCHANGE);
+	g_hPlayerResetIgnite[player] = CreateTimer(0.1, Timer_SlenderChaseBossResetIgnite, EntIndexToEntRef(player));
 	
 }
 
@@ -6251,14 +6253,14 @@ public Action Timer_SlenderChaseBossExplosiveDance (Handle timer, any entref)
 							
 					AcceptEntityInput(explosivePower, "Explode");
 					AcceptEntityInput(explosivePower, "kill");
-					CreateTimer(0.1, Timer_DestroyExplosion, EntIndexToEntRef(explosivePower), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_DestroyExplosion, EntIndexToEntRef(explosivePower));
 				}
 			}
 		}
 	}
 	else
 	{
-		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender));
 		iExploded=0;
 		return Plugin_Stop;
 	}

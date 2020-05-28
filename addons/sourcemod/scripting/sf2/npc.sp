@@ -402,7 +402,10 @@ stock bool MusicActive()
 }
 stock void GetBossMusic(char[] buffer,int bufferlen)
 {
-	strcopy(buffer,bufferlen,sCurrentMusicTrack);
+	if (!SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))	
+		strcopy(buffer,bufferlen,sCurrentMusicTrack);
+	else
+		strcopy(buffer,bufferlen,TRIPLEBOSSESMUSIC);
 }
 public Action BossMusic(Handle timer,any iBossIndex)
 {
@@ -449,8 +452,8 @@ void NPCChaseAlerts(int iNPCIndex, int iNPCCopyIndex)
 			g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
 			g_bNPCAlertedCopy[i] = true;
 			NPCChaserUpdateBossAnimation(i, iBossEnt, g_iSlenderState[i]);
-			g_hNPCRegisterAlertingCopiesTimer[i] = CreateTimer(0.1, Timer_SlenderStopAlerts, EntIndexToEntRef(i), TIMER_FLAG_NO_MAPCHANGE);
-			g_hNPCRegisterAlertingCopiesTimer[iNPCIndex] = CreateTimer(0.3, Timer_SlenderStopAlerts, EntIndexToEntRef(iBossEnt), TIMER_FLAG_NO_MAPCHANGE);
+			g_hNPCRegisterAlertingCopiesTimer[i] = CreateTimer(0.1, Timer_SlenderStopAlerts, EntIndexToEntRef(i));
+			g_hNPCRegisterAlertingCopiesTimer[iNPCIndex] = CreateTimer(0.3, Timer_SlenderStopAlerts, EntIndexToEntRef(iBossEnt));
 		}
 		if ((g_iSlenderState[iNPCCopyIndex] == STATE_CHASE || g_iSlenderState[iNPCCopyIndex] == STATE_ATTACK || g_iSlenderState[iNPCCopyIndex] == STATE_STUN) && !g_bNPCAlertedCopy[i] && !g_bNPCStopAlertingCopies[iNPCCopyIndex] && g_iSlenderState[i] != STATE_CHASE && g_iSlenderState[i] != STATE_ATTACK && g_iSlenderState[i] != STATE_STUN)
 		{
@@ -461,8 +464,8 @@ void NPCChaseAlerts(int iNPCIndex, int iNPCCopyIndex)
 			g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
 			g_bNPCAlertedCopy[i] = true;
 			NPCChaserUpdateBossAnimation(i, iBossEnt, g_iSlenderState[i]);
-			g_hNPCRegisterAlertingCopiesTimer[i] = CreateTimer(0.1, Timer_SlenderStopAlerts, EntIndexToEntRef(i), TIMER_FLAG_NO_MAPCHANGE);
-			g_hNPCRegisterAlertingCopiesTimer[iNPCCopyIndex] = CreateTimer(0.3, Timer_SlenderStopAlerts, EntIndexToEntRef(iBossEnt), TIMER_FLAG_NO_MAPCHANGE);
+			g_hNPCRegisterAlertingCopiesTimer[i] = CreateTimer(0.1, Timer_SlenderStopAlerts, EntIndexToEntRef(i));
+			g_hNPCRegisterAlertingCopiesTimer[iNPCCopyIndex] = CreateTimer(0.3, Timer_SlenderStopAlerts, EntIndexToEntRef(iBossEnt));
 		}
 	}
 }
@@ -996,7 +999,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 		if(hTimerMusic==INVALID_HANDLE)
 		{
 			float time = GetProfileFloat(sProfile,"sound_music_loop",0.0);
-			if(time > 0.0)
+			if(time > 0.0 && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
 				GetRandomStringFromProfile(sProfile,"sound_music",sCurrentMusicTrack,sizeof(sCurrentMusicTrack));
 				hTimerMusic = CreateTimer(time,BossMusic,Npc.Index);
@@ -2125,7 +2128,7 @@ void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float time
         DispatchSpawn(iParticle);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
     }
 }
 
@@ -2164,7 +2167,7 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
         AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
     }
 }
 
@@ -2206,7 +2209,7 @@ void SlenderCreateSpawnParticle(int iBossIndex, const char[] sSectionName, float
         AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
     }
 }
 
@@ -2852,11 +2855,11 @@ bool SlenderMarkAsFake(int iBossIndex)
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
-	g_hSlenderFakeTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderMarkedAsFake, iBossIndex, TIMER_FLAG_NO_MAPCHANGE);
+	g_hSlenderFakeTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderMarkedAsFake, iBossIndex);
 	
 	if (slender && slender != INVALID_ENT_REFERENCE)
 	{
-		CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(slender));
 	
 		int iFlags = GetEntProp(slender, Prop_Send, "m_usSolidFlags");
 		if (!(iFlags & 0x0004)) iFlags |= 0x0004; // 	FSOLID_NOT_SOLID
