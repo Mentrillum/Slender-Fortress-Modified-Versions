@@ -142,6 +142,10 @@ public Plugin myinfo =
 #define CRIT_ROLL "items/powerup_pickup_crits.wav"
 #define LOSE_SPRINT_ROLL "misc/banana_slip.wav"
 
+#define FIREWORK_EXPLOSION	"weapons/flare_detonator_explode.wav"
+#define FIREWORK_START "weapons/flare_detonator_launch.wav"
+#define FIREWORK_PARTICLE	"burningplayer_rainbow_flame"
+
 #define GENERIC_ROLL_TICK_1 "ui/buttonrollover.wav"
 #define GENERIC_ROLL_TICK_2 "ui/buttonrollover.wav"
 
@@ -324,6 +328,12 @@ float g_flSlenderNextFootstepWalkSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextFootstepRunSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextFootstepStunSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextFootstepAttackSound[MAX_BOSSES] = { -1.0, ... };
+
+float g_flSlenderIdleFootstepTime[MAX_BOSSES];
+float g_flSlenderWalkFootstepTime[MAX_BOSSES];
+float g_flSlenderRunFootstepTime[MAX_BOSSES];
+float g_flSlenderStunFootstepTime[MAX_BOSSES];
+float g_flSlenderAttackFootstepTime[MAX_BOSSES];
 
 float g_flSlenderTimeUntilRecover[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderTimeUntilAlert[MAX_BOSSES] = { -1.0, ... };
@@ -1659,6 +1669,8 @@ static void PrecacheStuff()
 	PrecacheSound2(GENERIC_ROLL_TICK_1);
 	PrecacheSound2(GENERIC_ROLL_TICK_2);
 	PrecacheSound2(LOSE_SPRINT_ROLL);
+	PrecacheSound2(FIREWORK_EXPLOSION);
+	PrecacheSound2(FIREWORK_START);
 	
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_1);
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_2);
@@ -4081,7 +4093,7 @@ public Action Timer_GiveRandomPageReward(Handle timer, any entref)
 		}
 		case 5:
 		{
-			TF2_MakeBleed(player, player, 10.0);
+			TF2_MakeBleed(player, player, 8.0);
 			EmitSoundToClient(player, BLEED_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 		}
 		case 6:
@@ -4091,8 +4103,75 @@ public Action Timer_GiveRandomPageReward(Handle timer, any entref)
 			{
 				case 1, 2, 3, 4, 5:
 				{
-					EmitSoundToClient(player, EXPLODE_PLAYER, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-					FakeClientCommandEx(player, "explode");
+					int iDeathEffect = GetRandomInt(1, 3);
+					switch (iDeathEffect)
+					{
+						case 1:
+						{
+							EmitSoundToAll(EXPLODE_PLAYER, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+							SDKHooks_TakeDamage(player, player, player, 9001.0, 262272, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+							return;
+						}
+						case 2:
+						{
+							EmitSoundToAll(FIREWORK_START, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+							float fPush[3], flPlayerPos[3];
+							GetClientAbsOrigin(player, flPlayerPos);
+							flPlayerPos[2] += 10.0;
+							fPush[2] = 4096.0;
+							TeleportEntity(player, flPlayerPos, NULL_VECTOR, fPush);
+
+							int iParticle = AttachParticle(player, FIREWORK_PARTICLE);
+							CreateTimer(0.5, Timer_DestroyEntity, iParticle);
+
+							CreateTimer(0.5, Timer_Firework_Explode, GetClientUserId(player));
+						}
+						case 3:
+						{
+							// define where the lightning strike ends
+							float clientpos[3];
+							GetClientAbsOrigin(player, clientpos);
+							clientpos[2] -= 26; // increase y-axis by 26 to strike at player's chest instead of the ground
+							
+							// get random numbers for the x and y starting positions
+							int randomx = GetRandomInt(-500, 500);
+							int randomy = GetRandomInt(-500, 500);
+							
+							// define where the lightning strike starts
+							float startpos[3];
+							startpos[0] = clientpos[0] + randomx;
+							startpos[1] = clientpos[1] + randomy;
+							startpos[2] = clientpos[2] + 800;
+							
+							// define the color of the strike
+							int color[4];
+							color[0] = 255;
+							color[1] = 255;
+							color[2] = 255;
+							color[3] = 255;
+							
+							// define the direction of the sparks
+							float dir[3];
+							
+							TE_SetupBeamPoints(startpos, clientpos, g_LightningSprite, 0, 0, 0, 0.2, 20.0, 10.0, 0, 1.0, color, 3);
+							TE_SendToAll();
+							
+							TE_SetupSparks(clientpos, dir, 5000, 1000);
+							TE_SendToAll();
+							
+							TE_SetupEnergySplash(clientpos, dir, false);
+							TE_SendToAll();
+							
+							TE_SetupSmoke(clientpos, g_SmokeSprite, 5.0, 10);
+							TE_SendToAll();
+							
+							CreateTimer(0.01, Timer_AshRagdoll, GetClientUserId(player));
+							
+							SDKHooks_TakeDamage(player, player, player, 9001.0, 1048576, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+							
+							EmitAmbientSound(SOUND_THUNDER, startpos, player, SNDLEVEL_RAIDSIREN);
+						}
+					}
 				}
 				case 6:
 				{
@@ -4121,24 +4200,33 @@ public Action Timer_GiveRandomPageReward(Handle timer, any entref)
 					TF2_AddCondition(player, TFCond_UberchargedCanteen, 5.0);
 					EmitSoundToClient(player, UBER_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 				}
-				case 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31:
-				{
-					EmitSoundToClient(player, NO_EFFECT_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-				}
 				case 15, 16:
 				{
 					EmitSoundToClient(player, LOSE_SPRINT_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					g_iPlayerSprintPoints[player] = 0;
 				}
+				default:
+				{
+					EmitSoundToClient(player, NO_EFFECT_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				}
 			}
 		}
-		case 0, 8:
+		default:
 		{
 			EmitSoundToClient(player, NO_EFFECT_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 		}
 	}
 	g_hPlayerPageRewardTimer[player] = INVALID_HANDLE;
 	g_hPlayerPageRewardCycleTimer[player] = INVALID_HANDLE;
+}
+
+public Action Timer_Firework_Explode(Handle hTimer, int iUserId){
+	int client = GetClientOfUserId(iUserId);
+	if(!client) return Plugin_Stop;
+
+	EmitSoundToAll(FIREWORK_EXPLOSION, client);
+	SDKHooks_TakeDamage(client, client, client, 9001.0, 1327104, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+	return Plugin_Stop;
 }
 
 //	==========================================================
@@ -7535,6 +7623,16 @@ void DestroyEntity(int ref)
 		ref = INVALID_ENT_REFERENCE;
 	}
 		
+}
+
+public Action Timer_DestroyEntity(Handle timer, any entref)
+{
+	int iEnt = EntRefToEntIndex(entref);
+	if (iEnt != INVALID_ENT_REFERENCE)
+	{
+		AcceptEntityInput(iEnt, "Kill");
+	}
+	return Plugin_Continue;
 }
 
 public Action Timer_RoundStart(Handle timer)

@@ -2046,11 +2046,19 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 	if (sPath[0])
 	{
 		char sBuffer[512];
-		float flCooldownIdle = GetProfileFloat(sProfile, "animation_idle_footstepinterval", 0.0);
-		float flCooldownWalk = GetProfileFloat(sProfile, "animation_walk_footstepinterval", 0.0);
-		float flCooldownRun = GetProfileFloat(sProfile, "animation_run_footstepinterval", 0.0);
-		float flCooldownStun = GetProfileFloat(sProfile, "animation_stun_footstepinterval", 0.0);
-		float flCooldownAttack = GetProfileFloat(sProfile, "animation_attack_footstepinterval", 0.0);
+		float flCooldownIdle = g_flSlenderIdleFootstepTime[iBossIndex];
+		float flCooldownWalk = g_flSlenderWalkFootstepTime[iBossIndex];
+		float flCooldownRun = g_flSlenderRunFootstepTime[iBossIndex];
+		float flCooldownStun = g_flSlenderStunFootstepTime[iBossIndex];
+		float flCooldownAttack = g_flSlenderAttackFootstepTime[iBossIndex];
+		
+		if (g_flSlenderIdleFootstepTime[iBossIndex] <= 0.0) flCooldownIdle = GetProfileFloat(sProfile, "animation_idle_footstepinterval", 0.0);
+		if (g_flSlenderWalkFootstepTime[iBossIndex] <= 0.0) flCooldownWalk = GetProfileFloat(sProfile, "animation_walk_footstepinterval", 0.0);
+		if (g_flSlenderRunFootstepTime[iBossIndex] <= 0.0) flCooldownRun = GetProfileFloat(sProfile, "animation_run_footstepinterval", 0.0);
+		if (g_flSlenderStunFootstepTime[iBossIndex] <= 0.0) flCooldownStun = GetProfileFloat(sProfile, "animation_stun_footstepinterval", 0.0);
+		if (g_flSlenderAttackFootstepTime[iBossIndex] <= 0.0) flCooldownAttack = GetProfileFloat(sProfile, "animation_attack_footstepinterval", 0.0);
+		//All of this is an emergency safety for bosses with the old system.
+		
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_volume");
 		float flVolume = GetProfileFloat(sProfile, sBuffer, 1.0);

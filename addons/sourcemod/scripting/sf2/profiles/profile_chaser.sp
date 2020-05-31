@@ -2001,11 +2001,11 @@ stock float GetChaserProfileAwarenessDecreaseRate(int iChaserProfileIndex,int di
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateNormal));
 }
 
-stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, int difficulty, int iAnimationIndex = -1)
+stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, int difficulty, int iAnimationIndex = -1, float &flFootstepInterval)
 {
 	KvRewind(g_hConfig);
 	KvJumpToKey(g_hConfig, sProfile);
-	char sAnimationSection[128], sKeyAnimationName[256], sKeyAnimationPlayBackRate[128];
+	char sAnimationSection[128], sKeyAnimationName[256], sKeyAnimationPlayBackRate[128], sKeyAnimationFootstepInt[128];
 	if (iAnimationSection == ChaserAnimation_IdleAnimations)
 	{
 		strcopy(sAnimationSection, sizeof(sAnimationSection), "idle");
@@ -2017,26 +2017,31 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_easy");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_easy_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_easy_footstepinterval");
 				}
 				case Difficulty_Normal:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_footstepinterval");
 				}
 				case Difficulty_Hard:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_hard");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_hard_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_hard_footstepinterval");
 				}
 				case Difficulty_Insane:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_insane");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_insane_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_insane_footstepinterval");
 				}
 				case Difficulty_Nightmare:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_nightmare");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_nightmare_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_nightmare_footstepinterval");
 				}
 			}
 		}
@@ -2044,6 +2049,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 		{
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_playbackrate");
+			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_footstepinterval");
 		}
 	}
 	else if (iAnimationSection == ChaserAnimation_WalkAnimations)
@@ -2057,26 +2063,31 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_easy");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_easy_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
 				}
 				case Difficulty_Normal:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
 				}
 				case Difficulty_Hard:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_hard");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_hard_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
 				}
 				case Difficulty_Insane:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_insane");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_insane_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
 				}
 				case Difficulty_Nightmare:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_nightmare");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_nightmare_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
 				}
 			}
 		}
@@ -2084,6 +2095,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 		{
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_playbackrate");
+			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
 		}
 	}
 	else if (iAnimationSection == ChaserAnimation_WalkAlertAnimations)
@@ -2097,26 +2109,31 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_easy");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_easy_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
 				}
 				case Difficulty_Normal:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
 				}
 				case Difficulty_Hard:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_hard");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_hard_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
 				}
 				case Difficulty_Insane:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_insane");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_insane_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
 				}
 				case Difficulty_Nightmare:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_nightmare");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_nightmare_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
 				}
 			}
 		}
@@ -2124,6 +2141,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 		{
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_playbackrate");
+			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
 		}
 	}
 	else if (iAnimationSection == ChaserAnimation_AttackAnimations)
@@ -2131,6 +2149,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 		strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
 		strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_attack");
 		strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_attack_playbackrate");
+		strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
 	}
 	else if (iAnimationSection == ChaserAnimation_RunAnimations)
 	{
@@ -2143,26 +2162,31 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_easy");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_easy_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_easy_footstepinterval");
 				}
 				case Difficulty_Normal:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
 				}
 				case Difficulty_Hard:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_hard");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_hard_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_hard_footstepinterval");
 				}
 				case Difficulty_Insane:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_insane");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_insane_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_insane_footstepinterval");
 				}
 				case Difficulty_Nightmare:
 				{
 					strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_nightmare");
 					strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_nightmare_playbackrate");
+					strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_nightmare_footstepinterval");
 				}
 			}
 		}
@@ -2170,6 +2194,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 		{
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_playbackrate");
+			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
 		}
 	}
 	else if (iAnimationSection == ChaserAnimation_ChaseInitialAnimations)
@@ -2189,6 +2214,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 		strcopy(sAnimationSection, sizeof(sAnimationSection), "stun");
 		strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_stun");
 		strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_stun_playbackrate");
+		strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_stun_footstepinterval");
 	}
 	else if (iAnimationSection == ChaserAnimation_DeathAnimations)
 	{
@@ -2233,6 +2259,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 	}
 	KvGetString(g_hConfig, sKeyAnimationName, sAnimation, iLenght);
 	flPlaybackRate = KvGetFloat(g_hConfig, sKeyAnimationPlayBackRate, 1.0);
+	flFootstepInterval = KvGetFloat(g_hConfig, sKeyAnimationFootstepInt, 0.0);
 	return true;
 }
 

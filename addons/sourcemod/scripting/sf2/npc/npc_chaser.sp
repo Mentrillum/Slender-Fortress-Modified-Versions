@@ -119,6 +119,7 @@ static bool g_bNPCCurrentAnimationSequenceIsLooped[MAX_BOSSES] = { false, ... };
 static bool g_bNPCUsesChaseInitialAnimation[MAX_BOSSES] = { false, ... };
 static float g_flNPCTimeUntilChaseAfterInitial[MAX_BOSSES];
 static float g_flNPCCurrentAnimationSequencePlaybackRate[MAX_BOSSES] = { 1.0, ... };
+static char g_sNPCurrentAnimationSequenceName[MAX_BOSSES][256];
 static bool g_bNPCAlreadyAttacked[MAX_BOSSES];
 static Handle g_hBossFailSafeTimer[MAX_BOSSES];
 
@@ -3175,7 +3176,37 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	
 	if (iOldState != iState)
 		NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
-	
+		
+	if (view_as<bool>(GetProfileNum(sSlenderProfile,"old_animation_ai",0)))
+	{
+		float flSlenderVelocity[3];
+		float flVelocity, flWalkVelocity, flGeneralVel;
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsVelocity", flSlenderVelocity);
+		flGeneralVel = GetVectorLength(flSlenderVelocity);
+		if (g_flSlenderCalculatedSpeed[iBossIndex] <= 0.0) flVelocity = 0.0;
+		else flVelocity = (flGeneralVel + ((g_flSlenderCalculatedSpeed[iBossIndex] * g_flRoundDifficultyModifier)/15))/g_flSlenderCalculatedSpeed[iBossIndex];
+		
+		if (g_flSlenderCalculatedWalkSpeed[iBossIndex] <= 0.0) flWalkVelocity = 0.0;
+		else flWalkVelocity = (flGeneralVel + ((g_flSlenderCalculatedWalkSpeed[iBossIndex] * g_flRoundDifficultyModifier)/15))/g_flSlenderCalculatedWalkSpeed[iBossIndex];
+		if (g_ILocomotion[iBossIndex].IsOnGround())
+		{
+			if (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) || iState == STATE_ALERT)
+			{
+				float flPlaybackSpeed = flWalkVelocity * g_flNPCCurrentAnimationSequencePlaybackRate[iBossIndex];
+				if (flPlaybackSpeed > 12.0) flPlaybackSpeed = 12.0;
+				if (flPlaybackSpeed < 0.0) flPlaybackSpeed = 0.0;
+				SetEntPropFloat(slender, Prop_Send, "m_flPlaybackRate", flPlaybackSpeed);
+			}
+			if (iState == STATE_CHASE && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
+			{
+				float flPlaybackSpeed = flVelocity * g_flNPCCurrentAnimationSequencePlaybackRate[iBossIndex];
+				if (flPlaybackSpeed > 12.0) flPlaybackSpeed = 12.0;
+				if (flPlaybackSpeed < 0.0) flPlaybackSpeed = 0.0;
+				SetEntPropFloat(slender, Prop_Send, "m_flPlaybackRate", flPlaybackSpeed);
+			}
+		}
+	}
+
 	switch (iState)
 	{
 		case STATE_WANDER, STATE_ALERT, STATE_CHASE, STATE_ATTACK:
@@ -3345,11 +3376,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	
 	if (iState == STATE_WANDER || iState == STATE_ALERT)
 	{
-		SetEntPropFloat(slender, Prop_Data, "m_speed", flWalkSpeed);
+		SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedWalkSpeed[iBossIndex]);
 	}
 	else if (iState == STATE_CHASE)
 	{
-		SetEntPropFloat(slender, Prop_Data, "m_speed", flSpeed);
+		SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedSpeed[iBossIndex]);
 	}
 	
 	// Sound handling.
@@ -3981,7 +4012,7 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 {
 	char sAnimation[256];
-	float flPlaybackRate;
+	float flPlaybackRate, flTempFootsteps;
 	bool bAnimationFound = false;
 	
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
@@ -3990,27 +4021,27 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
 	if (iState == STATE_IDLE)
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
 	else if (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
 	else if (iState == STATE_ALERT && (view_as<bool>(GetProfileNum(sProfile,"use_alert_walking_animation",0))))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
 	else if (iState == STATE_ALERT && (!view_as<bool>(GetProfileNum(sProfile,"use_alert_walking_animation",0))))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
 	else if (iState == STATE_CHASE && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
 	else if (iState == STATE_ATTACK)
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_AttackAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, NPCGetCurrentAttackIndex(iBossIndex)+1);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_AttackAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, NPCGetCurrentAttackIndex(iBossIndex)+1, g_flSlenderAttackFootstepTime[iBossIndex]);
 	else if (iState == STATE_STUN)
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_StunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_StunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderStunFootstepTime[iBossIndex]);
 	else if (iState == STATE_CHASE && g_bNPCUsesChaseInitialAnimation[iBossIndex])
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_ChaseInitialAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_ChaseInitialAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, flTempFootsteps);
 	else if (iState == STATE_CHASE && (g_bNPCUsesRageAnimation1[iBossIndex] || g_bNPCUsesRageAnimation2[iBossIndex] || g_bNPCUsesRageAnimation3[iBossIndex]))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RageAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1);
+		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RageAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, flTempFootsteps); //We made flTempFootsteps to store it in nothing.
 	
 	if (flPlaybackRate<-12.0) flPlaybackRate = -12.0;
 	if (flPlaybackRate>12.0) flPlaybackRate = 12.0;
-	
+
 	if (bAnimationFound && strcmp(sAnimation,"") != 0)
 	{
 		Action action = Plugin_Continue;
@@ -4019,7 +4050,9 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 		Call_Finish(action);
 		if (action != Plugin_Handled)
 		{
+			g_flNPCCurrentAnimationSequencePlaybackRate[iBossIndex] = flPlaybackRate;
 			g_iNPCCurrentAnimationSequence[iBossIndex] = EntitySetAnimation(iEnt, sAnimation, flPlaybackRate);
+			g_sNPCurrentAnimationSequenceName[iBossIndex] = sAnimation;
 			EntitySetAnimation(iEnt, sAnimation, flPlaybackRate);//Fix an issue where an anim could start on the wrong frame.
 			if (g_iNPCCurrentAnimationSequence[iBossIndex] <= -1)
 			{
