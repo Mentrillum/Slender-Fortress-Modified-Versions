@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Added a new special round, Triple Bosses.\n-Re-enabled debugging mode on toggle.\n-Removed TIMER_FLAG_NO_MAPCHANGE on all timers.\n-Removed In The 90s music for now."
+		"en"	"-Players now receive a random buff upon making the boxing boss rage.\n-Basically any boss can spawn in Boxing Ring now.\n-Pathing cost has been mostly reverted.\n-You can now use logic_relays when the boxing boss is raged.\n-Fixed the civilian PvP bug."
 	}
 	"SF2 Smite player"
 	{
@@ -1168,5 +1168,11 @@
 	"SF2 Boxing Initiate"
 	{
 		"en"			"The difficulty has been set to {yellow}Normal{default}.\nThe difficulty will increase as our champion gets weaker."
+	}
+	
+	"SF2 Boxing Win Message"
+	{
+		"#format"		"{1:s}{2:s}"
+		"en"			"{red}{1}{default} has just defeated {valve}{2}."
 	}
 }

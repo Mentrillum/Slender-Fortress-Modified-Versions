@@ -447,7 +447,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flStunDuration = KvGetFloat(kv, "stun_duration");
 	if (flStunDuration < 0.0) flStunDuration = 0.0;
 	
-	float flStunCooldown = KvGetFloat(kv, "stun_cooldown", 2.0);
+	float flStunCooldown = KvGetFloat(kv, "stun_cooldown", 3.5);
 	if (flStunCooldown < 0.0) flStunCooldown = 0.0;
 	
 	float flStunHealth = KvGetFloat(kv, "stun_health");

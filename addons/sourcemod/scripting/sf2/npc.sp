@@ -1208,6 +1208,7 @@ void RemoveProfile(int iBossIndex)
 	g_iSlenderTarget[iBossIndex] = INVALID_ENT_REFERENCE;
 	g_iSlenderModel[iBossIndex] = INVALID_ENT_REFERENCE;
 	g_flSlenderAcceleration[iBossIndex] = 0.0;
+	g_bSlenderBoxingBossIsKilled[iBossIndex] = false;
 	g_flSlenderTimeUntilNextProxy[iBossIndex] = -1.0;
 	g_flNPCSearchRadius[iBossIndex] = 0.0;
 	g_flNPCInstantKillRadius[iBossIndex] = 0.0;
@@ -1469,6 +1470,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			
 			//Stun Health
 			float flMaxHealth = NPCChaserGetStunInitialHealth(iBossIndex);
+			int iHealth = 0;
 			for(int iClient=1; iClient<=MaxClients; iClient++)
 			{
 				if(IsValidClient(iClient) && !g_bPlayerEliminated[iClient] && IsPlayerAlive(iClient))
@@ -1476,7 +1478,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 					char sClassName[64], sSectionName[64];
 					TF2_GetClassName(TF2_GetPlayerClass(iClient), sClassName, sizeof(sClassName));
 					Format(sSectionName, sizeof(sSectionName), "stun_health_per_%s", sClassName);
-					int iHealth = GetProfileNum(sProfile, sSectionName, 0);
+					iHealth = GetProfileNum(sProfile, sSectionName, 0);
 					if(iHealth>0)
 					{
 						flMaxHealth += float(iHealth);
@@ -2169,10 +2171,7 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
         DispatchKeyValue(iParticle, "targetname", "tf2particle");
 		GetEntPropString(iParticle, Prop_Data, "m_iName", sName, sizeof(sName));
         DispatchKeyValue(iParticle, "effect_name", sSectionName);
-        DispatchKeyValue(iParticle, "parentname", sName);
         DispatchSpawn(iParticle);
-        SetVariantString(sName);
-        AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
         CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
@@ -2211,10 +2210,7 @@ void SlenderCreateSpawnParticle(int iBossIndex, const char[] sSectionName, float
         DispatchKeyValue(iParticle, "targetname", "tf2particle");
 		GetEntPropString(iParticle, Prop_Data, "m_iName", sName, sizeof(sName));
         DispatchKeyValue(iParticle, "effect_name", sSectionName);
-        DispatchKeyValue(iParticle, "parentname", sName);
         DispatchSpawn(iParticle);
-        SetVariantString(sName);
-        AcceptEntityInput(iParticle, "SetParent", iParticle, iParticle, 0);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
         CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
@@ -3140,6 +3136,15 @@ public bool TraceRayDontHitEntityAndProxies(int entity,int mask,any data)
 	{
 		if (g_bPlayerProxy[entity] || IsClientInGhostMode(entity)) return false;
 	}
+	int iBossIndex = NPCGetFromEntIndex(entity);
+	if (iBossIndex != -1) return false;
+	if (IsValidEdict(entity))
+	{
+		char sClass[64];
+		GetEntityNetClass(entity, sClass, sizeof(sClass));
+		if (StrEqual(sClass, "CTFBaseBoss")) return false;
+	}
+
 	return true;
 }
 

@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.7 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.7 Modified"
+#define PLUGIN_VERSION "1.5.3.8 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.3.8 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -148,6 +148,8 @@ public Plugin myinfo =
 
 #define GENERIC_ROLL_TICK_1 "ui/buttonrollover.wav"
 #define GENERIC_ROLL_TICK_2 "ui/buttonrollover.wav"
+
+#define MINICRIT_BUFF "weapons/buff_banner_flag.wav"
 
 #define HYPERSNATCHER_NIGHTAMRE_1 "slender/snatcher/nightmare1.wav"
 #define HYPERSNATCHER_NIGHTAMRE_2 "slender/snatcher/nightmare2.wav"
@@ -279,6 +281,10 @@ float g_flSlenderTeleportMaxRange[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderTeleportMaxTargetTime[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderTeleportMaxTargetStress[MAX_BOSSES] = { 0.0, ... };
 float g_flSlenderTeleportPlayersRestTime[MAX_BOSSES][MAXPLAYERS + 1];
+
+int g_iSlenderBoxingBossCount = 0;
+int g_iSlenderBoxingBossKilled = 0;
+bool g_bSlenderBoxingBossIsKilled[MAX_BOSSES] = false;
 
 // For boss type 2
 // General variables
@@ -1671,6 +1677,7 @@ static void PrecacheStuff()
 	PrecacheSound2(LOSE_SPRINT_ROLL);
 	PrecacheSound2(FIREWORK_EXPLOSION);
 	PrecacheSound2(FIREWORK_START);
+	PrecacheSound2(MINICRIT_BUFF);
 	
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_1);
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_2);
@@ -2277,7 +2284,7 @@ public Action Hook_CommandSay(int iClient, const char[] command,int argc)
 		g_bPlayerCalledForNightmare[iClient] = (StrContains(sMessage, "nightmare", false) != -1 || StrContains(sMessage, "Nightmare", false) != -1);
 	}
 	
-	if (!g_bEnabled || GetConVarBool(g_cvAllChat)) return Plugin_Continue;
+	if (!g_bEnabled || (GetConVarBool(g_cvAllChat) && !SF_IsBoxingMap())) return Plugin_Continue;
 	
 	if (!IsRoundEnding())
 	{
@@ -2312,7 +2319,7 @@ public Action Hook_CommandSayTeam(int iClient, const char[] command,int argc)
 		g_bPlayerCalledForNightmare[iClient] = (StrContains(sMessage, "nightmare", false) != -1 || StrContains(sMessage, "Nightmare", false) != -1);
 	}
 	
-	if (!g_bEnabled || GetConVarBool(g_cvAllChat)) return Plugin_Continue;
+	if (!g_bEnabled || (GetConVarBool(g_cvAllChat) && !SF_IsBoxingMap())) return Plugin_Continue;
 	
 	if (!IsRoundEnding())
 	{
@@ -2497,6 +2504,11 @@ public Action Command_RemoveSlender(int iClient,int args)
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
 	NPCRemove(iBossIndex);
+	
+	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape))
+	{
+		g_iSlenderBoxingBossCount -= 1;
+	}
 	
 	if (GetRandomStringFromProfile(sProfile,"sound_music",sCurrentMusicTrack,sizeof(sCurrentMusicTrack)) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 	{
@@ -2809,6 +2821,11 @@ public Action Command_AddSlender(int iClient,int args)
 	
 		SpawnSlender(Npc, flPos);
 		
+		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape))
+		{
+			g_iSlenderBoxingBossCount += 1;
+		}
+		
 		LogAction(iClient, -1, "%N added a boss! (%s)", iClient, sProfile);
 	}
 	
@@ -2818,6 +2835,7 @@ public void NPCSpawn(const char[] output,int iEnt,int activator, float delay)
 {
 	if (!g_bEnabled) return;
 	char targetName[255];
+	float vecPos[3];
 	GetEntPropString(iEnt, Prop_Data, "m_iName", targetName, sizeof(targetName));
 	if (targetName[0])
 	{
@@ -2849,6 +2867,33 @@ public void NPCSpawn(const char[] output,int iEnt,int activator, float delay)
 						SpawnSlender(Npc, flPos);
 						break;
 					}
+				}
+			}
+		}
+		if (SF_IsBoxingMap())
+		{
+			ArrayList hSpawnPoint = new ArrayList();
+			if (StrEqual(targetName, "sf2_boxing_boss_spawn"))
+			{
+				hSpawnPoint.Push(iEnt);
+			}
+			iEnt = -1;
+			if (hSpawnPoint.Length > 0) iEnt = hSpawnPoint.Get(GetRandomInt(0,hSpawnPoint.Length-1));
+			delete hSpawnPoint;
+			if (iEnt > MaxClients)
+			{
+				GetEntPropVector(iEnt, Prop_Data, "m_vecAbsOrigin", vecPos);
+				for(int iNpc = 0;iNpc <= MAX_BOSSES; iNpc++)
+				{
+					SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(iNpc);
+					if (!Npc.IsValid()) continue;
+					if (Npc.Flags & SFF_NOTELEPORT)
+					{
+						continue;
+					}
+					Npc.UnSpawn();
+					SpawnSlender(Npc, vecPos);
+					break;
 				}
 			}
 		}
@@ -4617,6 +4662,11 @@ void SetRoundState(SF2RoundState iRoundState)
 			g_iRoundIntroText = 0;
 			g_bRoundIntroTextDefault = false;
 			g_bProxySurvivalRageMode = false;
+			if (SF_IsBoxingMap())
+			{
+				g_iSlenderBoxingBossCount = 0;
+				g_iSlenderBoxingBossKilled = 0;
+			}
 			g_hRoundIntroTextTimer = CreateTimer(0.0, Timer_IntroTextSequence);
 			TriggerTimer(g_hRoundIntroTextTimer);
 			
@@ -4685,6 +4735,15 @@ void SetRoundState(SF2RoundState iRoundState)
 				{
 					AcceptEntityInput(ent, "FireUser1");
 					break;
+				}
+			}
+			if (SF_IsBoxingMap())
+			{
+				for (int iBoss = 0; iBoss < MAX_BOSSES; iBoss++)
+				{
+					SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(iBoss);
+					if (!Npc.IsValid()) continue;
+					g_iSlenderBoxingBossCount += 1;
 				}
 			}
 		}
@@ -8092,7 +8151,6 @@ static void InitializeMapEntities()
 			else if (!StrContains(targetName, "sf2_boxing_map", false))
 			{
 				g_bIsBoxingMap = true;
-				SetConVarInt(g_cvAllChat, 1);
 			}
 			else if (!StrContains(targetName, "sf2_survival_time_limit_", false))
 			{

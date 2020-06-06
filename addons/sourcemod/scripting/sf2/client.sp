@@ -654,10 +654,10 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	
 	char classname[64];
 
-	if (GetEntityClassname(inflictor, classname, sizeof(classname)) && (StrEqual(classname, "env_explosion") || StrEqual(classname, "tf_projectile_sentryrocket") || StrEqual(classname, "tf_projectile_rocket") || StrEqual(classname, "tf_projectile_pipe") || StrEqual(classname, "tf_projectile_arrow")))
+	if (IsValidEntity(inflictor) && GetEntityClassname(inflictor, classname, sizeof(classname)) && (StrEqual(classname, "env_explosion") || StrEqual(classname, "tf_projectile_sentryrocket") || StrEqual(classname, "tf_projectile_rocket") || StrEqual(classname, "tf_projectile_pipe") || StrEqual(classname, "tf_projectile_arrow")))
 	{
 		int npcIndex = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
-		if (IsValidEntity(inflictor) && npcIndex != -1)
+		if (npcIndex != -1)
 		{
 			bool bAttackEliminated = view_as<bool>(NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS);
 			if(!bAttackEliminated && (GetClientTeam(victim) == TFTeam_Blue) && IsValidClient(victim) )
@@ -6580,10 +6580,13 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	
 	for (int i = 0; i <= 5; i++)
 	{
-		int iWeapon = GetPlayerWeaponSlot(client, i);
-		if (!IsValidEdict(iWeapon)) continue;
-		
-		iOldWeaponItemIndexes[i] = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+		if (IsClientInGame(client) && IsValidClient(client))
+		{
+			int iWeapon = GetPlayerWeaponSlot(client, i);
+			if (!IsValidEdict(iWeapon)) continue;
+			
+			iOldWeaponItemIndexes[i] = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+		}
 	}
 #endif
 	
