@@ -2879,7 +2879,10 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							}
 						}
 					}
-					SlenderPerformVoice(iBossIndex, "sound_rage");
+					char sRageSound2Path[PLATFORM_MAX_PATH];
+					GetRandomStringFromProfile(sSlenderProfile, "sound_rage_2", sRageSound2Path, sizeof(sRageSound2Path));
+					if (sRageSound2Path[0]) SlenderPerformVoice(iBossIndex, "sound_rage_2");
+					else SlenderPerformVoice(iBossIndex, "sound_rage");
 					NPCSetAddSpeed(iBossIndex, 12.5);
 					NPCSetAddMaxSpeed(iBossIndex, 25.0);
 					if(view_as<bool>(GetProfileNum(sSlenderProfile,"normal_sound_hook",0)))
@@ -2963,7 +2966,10 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							}
 						}
 					}
-					SlenderPerformVoice(iBossIndex, "sound_rage");
+					char sRageSound3Path[PLATFORM_MAX_PATH];
+					GetRandomStringFromProfile(sSlenderProfile, "sound_rage_3", sRageSound3Path, sizeof(sRageSound3Path));
+					if (sRageSound3Path[0]) SlenderPerformVoice(iBossIndex, "sound_rage_3");
+					else SlenderPerformVoice(iBossIndex, "sound_rage");
 					NPCSetAddSpeed(iBossIndex, 12.5);
 					NPCSetAddMaxSpeed(iBossIndex, 25.0);
 					if(view_as<bool>(GetProfileNum(sSlenderProfile,"normal_sound_hook",0)))
@@ -3588,13 +3594,16 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		}
 	}
 	
-	if (iState == STATE_WANDER || iState == STATE_ALERT)
+	switch (iState)
 	{
-		SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedWalkSpeed[iBossIndex]);
-	}
-	else if (iState == STATE_CHASE)
-	{
-		SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedSpeed[iBossIndex]);
+		case STATE_WANDER, STATE_ALERT:
+		{
+			SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedWalkSpeed[iBossIndex]);
+		}
+		case STATE_CHASE:
+		{
+			SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedSpeed[iBossIndex]);
+		}
 	}
 	
 	// Sound handling.
@@ -3602,17 +3611,20 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	{
 		if (GetGameTime() >= g_flSlenderNextVoiceSound[iBossIndex])
 		{
-			if (iState == STATE_IDLE || iState == STATE_WANDER)
+			switch (iState)
 			{
-				SlenderPerformVoice(iBossIndex, "sound_idle");
-			}
-			else if (iState == STATE_ALERT)
-			{
-				SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
-			}
-			else if (iState == STATE_CHASE || iState == STATE_ATTACK)
-			{
-				SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
+				case STATE_IDLE, STATE_WANDER:
+				{
+					SlenderPerformVoice(iBossIndex, "sound_idle");
+				}
+				case STATE_ALERT:
+				{
+					SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
+				}
+				case STATE_CHASE, STATE_ATTACK:
+				{
+					SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
+				}
 			}
 		}
 	}
@@ -3620,17 +3632,20 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	{
 		if (GetGameTime() >= g_flSlenderNextVoiceSound[iBossIndex])
 		{
-			if (iState == STATE_IDLE || iState == STATE_WANDER)
+			switch (iState)
 			{
-				SlenderPerformVoice(iBossIndex, "sound_idle");
-			}
-			else if (iState == STATE_ALERT)
-			{
-				SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
-			}
-			else if (iState == STATE_CHASE || iState == STATE_ATTACK)
-			{
-				SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
+				case STATE_IDLE, STATE_WANDER:
+				{
+					SlenderPerformVoice(iBossIndex, "sound_idle");
+				}
+				case STATE_ALERT:
+				{
+					SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
+				}
+				case STATE_CHASE, STATE_ATTACK:
+				{
+					SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
+				}
 			}
 		}
 		if ((iState == STATE_IDLE || iState == STATE_WANDER) && (iOldState == STATE_ALERT || iOldState == STATE_CHASE || iOldState == STATE_ATTACK))
@@ -3665,30 +3680,31 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	}
 	
 	//Footstep handling.
-	if (GetGameTime() >= g_flSlenderNextFootstepIdleSound[iBossIndex] && iState == STATE_IDLE)
+	switch (iState)
 	{
-		SlenderCastFootstep(iBossIndex, "sound_footsteps");
-	}
-	if (GetGameTime() >= g_flSlenderNextFootstepWalkSound[iBossIndex])
-	{
-		if (iState == STATE_WANDER || iState == STATE_ALERT)
+		case STATE_IDLE:
 		{
-			SlenderCastFootstep(iBossIndex, "sound_footsteps");
+			if (GetGameTime() >= g_flSlenderNextFootstepIdleSound[iBossIndex]) SlenderCastFootstep(iBossIndex, "sound_footsteps");
+		}
+		case STATE_WANDER, STATE_ALERT:
+		{
+			if (GetGameTime() >= g_flSlenderNextFootstepWalkSound[iBossIndex]) SlenderCastFootstep(iBossIndex, "sound_footsteps");
+		}
+		case STATE_CHASE:
+		{
+			if (GetGameTime() >= g_flSlenderNextFootstepRunSound[iBossIndex] && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				SlenderCastFootstep(iBossIndex, "sound_footsteps");
+		}
+		case STATE_STUN:
+		{
+			if (GetGameTime() >= g_flSlenderNextFootstepStunSound[iBossIndex]) SlenderCastFootstep(iBossIndex, "sound_footsteps");
+		}
+		case STATE_ATTACK:
+		{
+			if (GetGameTime() >= g_flSlenderNextFootstepAttackSound[iBossIndex]) SlenderCastFootstep(iBossIndex, "sound_footsteps");
 		}
 	}
-	if (GetGameTime() >= g_flSlenderNextFootstepRunSound[iBossIndex] && iState == STATE_CHASE && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
-	{
-		SlenderCastFootstep(iBossIndex, "sound_footsteps");
-	}
-	if (GetGameTime() >= g_flSlenderNextFootstepStunSound[iBossIndex] && iState == STATE_STUN)
-	{
-		SlenderCastFootstep(iBossIndex, "sound_footsteps");
-	}
-	if (GetGameTime() >= g_flSlenderNextFootstepAttackSound[iBossIndex] && iState == STATE_ATTACK)
-	{
-		SlenderCastFootstep(iBossIndex, "sound_footsteps");
-	}
-	
+
 	// Reset our interrupt conditions.
 	g_iSlenderInterruptConditions[iBossIndex] = 0;
 
@@ -3810,13 +3826,9 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 	float flSlenderPosition[3];
 	NPCGetEyePosition(iBossIndex, flSlenderPosition);
 	GetClientEyePosition(iTarget, flClientPos);
-	if (iProjectileType != 3 && iProjectileType != 5 && iProjectileType != 7)
+	switch (iProjectileType)
 	{
-		flClientPos[2] -= 25;
-	}
-	else
-	{
-		if (iProjectileType == 3)
+		case SF2BossProjectileType_Grenade:
 		{
 			if (flShootDist < 600)
 			{
@@ -3831,9 +3843,13 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				flClientPos[2] += 120;
 			}
 		}
-		else if (iProjectileType == 5)
+		case SF2BossProjectileType_Arrow, SF2BossProjectileType_Baseball:
 		{
 			flClientPos[2] -= 0;
+		}
+		default:
+		{
+			flClientPos[2] -= 25;
 		}
 	}
 
@@ -4187,11 +4203,16 @@ int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const cha
 				flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 				flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 				GetProfileString(sSlenderProfile, "baseball_model", sBaseballModel, sizeof(sBaseballModel));
+				int iModel;
 				if (!sBaseballModel[0])
 				{
 					sBaseballModel = BASEBALL_MODEL;
+					iModel = PrecacheModel(sBaseballModel, true);
 				}
-				int iModel = PrecacheModel(sBaseballModel, true);
+				else
+				{
+					iModel = PrecacheModel(sBaseballModel, true);
+				}
 
 				SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 				SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hThrower", slender);
