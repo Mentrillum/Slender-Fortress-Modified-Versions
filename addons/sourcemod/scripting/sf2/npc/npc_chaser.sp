@@ -138,6 +138,9 @@ static char sElectricPlayerParticleBlue[PLATFORM_MAX_PATH];
 static char sGestureShootAnim[PLATFORM_MAX_PATH];
 static char sKeyModel[PLATFORM_MAX_PATH];
 
+static bool g_bNPCStealingLife[MAX_BOSSES];
+static Handle g_hNPCLifeStealTimer[MAX_BOSSES];
+
 //Special thanks to The Gaben
 static bool g_bSlenderHasDamageParticleEffect[MAX_BOSSES];
 static float g_flSlenderDamageClientSoundVolume[MAX_BOSSES];
@@ -163,6 +166,8 @@ enum SF2NPCChaser_BaseAttackStructure
 	SF2NPCChaser_BaseAttackRepeat,
 	SF2NPCChaser_CurrentAttackRepeat,
 	SF2NPCChaser_WeaponAttackIndex,
+	bool:SF2NPCChaser_BaseAttackLifeSteal,
+	Float:SF2NPCChaser_BaseAttackLifeStealDuration,
 	Float:SF2NPCChaser_BaseAttackNextAttackTime
 };
 
@@ -627,6 +632,16 @@ float NPCChaserGetAttackDamageVsProps(int iNPCIndex,int iAttackIndex)
 float NPCChaserGetAttackDamageForce(int iNPCIndex,int iAttackIndex)
 {
 	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDamageForce];
+}
+
+float NPCChaserGetAttackLifeStealDuration(int iNPCIndex,int iAttackIndex)
+{
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackLifeStealDuration];
+}
+
+bool NPCChaserGetAttackLifeStealState(int iNPCIndex,int iAttackIndex)
+{
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackLifeSteal];
 }
 
 int NPCChaserGetAttackDamageType(int iNPCIndex,int iAttackIndex)
@@ -1339,6 +1354,8 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackRepeat] = GetChaserProfileAttackRepeat(iUniqueProfileIndex, i);
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackNextAttackTime] = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_WeaponAttackIndex] = GetChaserProfileAttackCooldown(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeSteal] = GetChaserProfileAttackLifeStealState(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeStealDuration] = GetChaserProfileAttackLifeStealDuration(iUniqueProfileIndex, i);
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_CurrentAttackRepeat] = 0;
 	}
 	// Get stun data.
@@ -1367,6 +1384,9 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	
 	g_bNPCAlreadyAttacked[iNPCIndex] = false;
 	g_bNPCVelocityCancel[iNPCIndex] = false;
+	
+	g_bNPCStealingLife[iNPCIndex] = false;
+	g_hNPCLifeStealTimer[iNPCIndex] = INVALID_HANDLE;
 	
 	//Get Projectile Data
 	g_bNPCProjectileEnabled[iNPCIndex] = GetChaserProfileProjectileState(iUniqueProfileIndex);
@@ -1492,6 +1512,8 @@ static void NPCChaserResetValues(int iNPCIndex)
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackRepeat] = 0;
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackNextAttackTime] = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_WeaponAttackIndex] = 0;
+		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeSteal] = false;
+		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeStealDuration] = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_CurrentAttackRepeat] = 0;
 	}
 	
@@ -1506,6 +1528,8 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_bNPCCloakEnabled[iNPCIndex] = false;
 	g_bNPCHasCloaked[iNPCIndex] = false;
 	g_bNPCVelocityCancel[iNPCIndex] = false;
+	g_bNPCStealingLife[iNPCIndex] = false;
+	g_hNPCLifeStealTimer[iNPCIndex] = INVALID_HANDLE;
 	
 	g_bNPCUsedRage1[iNPCIndex] = false;
 	g_bNPCUsedRage2[iNPCIndex] = false;
@@ -2842,7 +2866,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					{
 						// Cancel attacking.
 						g_bSlenderAttacking[iBossIndex] = false;
+						g_bNPCStealingLife[iBossIndex] = false;
 						g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+						g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 						g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 						g_bNPCAlreadyAttacked[iBossIndex] = false;
 					}
@@ -2925,7 +2951,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					{
 						// Cancel attacking.
 						g_bSlenderAttacking[iBossIndex] = false;
+						g_bNPCStealingLife[iBossIndex] = false;
 						g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+						g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 						g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 						g_bNPCAlreadyAttacked[iBossIndex] = false;
 					}
@@ -3012,7 +3040,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					{
 						// Cancel attacking.
 						g_bSlenderAttacking[iBossIndex] = false;
+						g_bNPCStealingLife[iBossIndex] = false;
 						g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+						g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 						g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 						g_bNPCAlreadyAttacked[iBossIndex] = false;
 					}
@@ -3204,6 +3234,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						{
 							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossExplosiveDance, EntIndexToEntRef(slender), TIMER_REPEAT);
 						}
+						if(NPCChaserGetAttackLifeStealState(iBossIndex, iAttackIndex))
+						{
+							if (!g_bNPCStealingLife[iBossIndex])
+							{
+								g_hNPCLifeStealTimer[iBossIndex] = CreateTimer(0.5, Timer_SlenderStealLife, EntIndexToEntRef(slender), TIMER_REPEAT);
+								g_bNPCStealingLife[iBossIndex] = true;
+							}
+						}
 						
 						g_flSlenderTimeUntilAttackEnd[iBossIndex] = GetGameTime()+NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)+0.01;
 						
@@ -3291,7 +3329,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					{
 						// Cancel attacking.
 						g_bSlenderAttacking[iBossIndex] = false;
+						g_bNPCStealingLife[iBossIndex] = false;
 						g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+						g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 						g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 						g_bNPCAlreadyAttacked[iBossIndex] = false;
 					}
@@ -3648,33 +3688,45 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				}
 			}
 		}
-		if ((iState == STATE_IDLE || iState == STATE_WANDER) && (iOldState == STATE_ALERT || iOldState == STATE_CHASE || iOldState == STATE_ATTACK))
+		switch (iState)
 		{
-			ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-			ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
-			SlenderPerformVoice(iBossIndex, "sound_idle");
-		}
-		if ((iState == STATE_ALERT) && (iOldState == STATE_IDLE || iOldState == STATE_WANDER || iOldState == STATE_CHASE || iOldState == STATE_ATTACK))
-		{
-			ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
-			ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
-			SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
-		}
-		if ((iState == STATE_CHASE || iState == STATE_ATTACK) && (iOldState == STATE_ALERT || iOldState == STATE_IDLE || iOldState == STATE_WANDER))
-		{
-			char sSoundPath[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sSlenderProfile, "sound_chaseenemyinitial", sSoundPath, sizeof(sSoundPath));
-			if (!sSoundPath[0])
+			case STATE_IDLE, STATE_WANDER:
 			{
-				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
-				SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
+				if (iOldState == STATE_ALERT || iOldState == STATE_CHASE || iOldState == STATE_ATTACK)
+				{
+					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
+					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
+					SlenderPerformVoice(iBossIndex, "sound_idle");
+				}
 			}
-			else if (sSoundPath[0])
+			case STATE_ALERT:
 			{
-				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
-				ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
+				if (iOldState == STATE_IDLE || iOldState == STATE_WANDER || iOldState == STATE_CHASE || iOldState == STATE_ATTACK)
+				{
+					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
+					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
+					SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
+				}
+			}
+			case STATE_CHASE, STATE_ATTACK:
+			{
+				if (iOldState == STATE_ALERT || iOldState == STATE_IDLE || iOldState == STATE_WANDER)
+				{
+					char sSoundPath[PLATFORM_MAX_PATH];
+					GetRandomStringFromProfile(sSlenderProfile, "sound_chaseenemyinitial", sSoundPath, sizeof(sSoundPath));
+					if (!sSoundPath[0])
+					{
+						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
+						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
+						SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
+					}
+					else if (sSoundPath[0])
+					{
+						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
+						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
+						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
+					}
+				}
 			}
 		}
 	}
@@ -4254,25 +4306,55 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-
-	if (iState == STATE_IDLE)
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
-	else if (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
-	else if (iState == STATE_ALERT && (view_as<bool>(GetProfileNum(sProfile,"use_alert_walking_animation",0))))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
-	else if (iState == STATE_ALERT && (!view_as<bool>(GetProfileNum(sProfile,"use_alert_walking_animation",0))))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
-	else if (iState == STATE_CHASE && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
-	else if (iState == STATE_ATTACK)
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_AttackAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, NPCGetCurrentAttackIndex(iBossIndex)+1, g_flSlenderAttackFootstepTime[iBossIndex]);
-	else if (iState == STATE_STUN)
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_StunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderStunFootstepTime[iBossIndex]);
-	else if (iState == STATE_CHASE && g_bNPCUsesChaseInitialAnimation[iBossIndex])
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_ChaseInitialAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, flTempFootsteps);
-	else if (iState == STATE_CHASE && (g_bNPCUsesRageAnimation1[iBossIndex] || g_bNPCUsesRageAnimation2[iBossIndex] || g_bNPCUsesRageAnimation3[iBossIndex]))
-		bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RageAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, flTempFootsteps); //We made flTempFootsteps to store it in nothing.
+	
+	switch (iState)
+	{
+		case STATE_IDLE:
+		{
+			bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+		}
+		case STATE_WANDER:
+		{
+			if (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE)
+			{
+				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+			}
+		}
+		case STATE_ALERT:
+		{
+			if (view_as<bool>(GetProfileNum(sProfile,"use_alert_walking_animation",0)))
+			{
+				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+			}
+			else
+			{
+				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+			}
+		}
+		case STATE_CHASE:
+		{
+			if (!g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+			{
+				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+			}
+			else if (g_bNPCUsesChaseInitialAnimation[iBossIndex])
+			{
+				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_ChaseInitialAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, flTempFootsteps);
+			}
+			else if (g_bNPCUsesRageAnimation1[iBossIndex] || g_bNPCUsesRageAnimation2[iBossIndex] || g_bNPCUsesRageAnimation3[iBossIndex])
+			{
+				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RageAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, flTempFootsteps);
+			}
+		}
+		case STATE_ATTACK:
+		{
+			bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_AttackAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, NPCGetCurrentAttackIndex(iBossIndex)+1, g_flSlenderAttackFootstepTime[iBossIndex]);
+		}
+		case STATE_STUN:
+		{
+			bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_StunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderStunFootstepTime[iBossIndex]);
+		}
+	}
 	
 	if (flPlaybackRate<-12.0) flPlaybackRate = -12.0;
 	if (flPlaybackRate>12.0) flPlaybackRate = 12.0;
@@ -4431,7 +4513,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 	}
 	if (bPFUpdate)
 	{
-		g_hBossChaserPathLogic[iBossIndex].Update(g_INextBot[iBossIndex], !bChangeAngle, TraceRayDontHitEntityAndProxies);
+		g_hBossChaserPathLogic[iBossIndex].Update(g_INextBot[iBossIndex], !bChangeAngle, TraceRayDontHitAnyPlayer);
 	}
 	else
 		g_ILocomotion[iBossIndex].Stop();
@@ -4453,11 +4535,11 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 			hullcheckmins = HULL_HUMAN_MINS;
 			hullcheckmaxs = HULL_HUMAN_MAXS;
 		}
-		hullcheckmins[0] -= 50.0;
-		hullcheckmins[1] -= 50.0;
+		hullcheckmins[0] -= 10.0;
+		hullcheckmins[1] -= 10.0;
 		
-		hullcheckmaxs[0] += 50.0;
-		hullcheckmaxs[1] += 50.0;
+		hullcheckmaxs[0] += 10.0;
+		hullcheckmaxs[1] += 10.0;
 		
 		hullcheckmins[2] += g_ILocomotion[iBossIndex].GetStepHeight();
 		hullcheckmaxs[2] -= g_ILocomotion[iBossIndex].GetStepHeight();
@@ -5475,6 +5557,118 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	
 }
 
+public Action Timer_SlenderStealLife(Handle timer, any entref)
+{
+	if (!g_bEnabled) return Plugin_Stop;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return Plugin_Stop;
+	
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
+	
+	if (!g_bSlenderAttacking[iBossIndex]) return Plugin_Stop;
+	
+	if (timer != g_hNPCLifeStealTimer[iBossIndex]) return Plugin_Stop;
+	
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	
+	int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+	float flDamage = NPCChaserGetAttackDamage(iBossIndex, iAttackIndex);
+	
+	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
+	
+	bool bHit = false;
+	
+	float flTargetDist;
+	Handle hTrace;
+	
+	float vecMyPos[3], flMyEyePos[3], vecMyEyeAng[3], vecMyShockPos[3];
+	NPCGetEyePosition(iBossIndex, flMyEyePos);
+	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", vecMyEyeAng);
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", vecMyPos);
+
+	float flAttackRange = NPCChaserGetAttackRange(iBossIndex, iAttackIndex);
+	float flAttackFOV = NPCChaserGetAttackSpread(iBossIndex, iAttackIndex);
+	float flAttackDamageForce = NPCChaserGetAttackDamageForce(iBossIndex, iAttackIndex);
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i)) continue;
+
+		if (!bAttackEliminated && g_bPlayerEliminated[i]) continue;
+
+		float flTargetPos[3], vecClientPos[3];
+		GetClientEyePosition(i, flTargetPos);
+		GetClientAbsOrigin(i, vecClientPos);
+
+		hTrace = TR_TraceRayFilterEx(flMyEyePos,
+			flTargetPos,
+			MASK_NPCSOLID,
+			RayType_EndPoint,
+			TraceRayDontHitEntityAndProxies,
+			slender);
+				
+		bool bTraceDidHit = TR_DidHit(hTrace);
+		int iTraceHitEntity = TR_GetEntityIndex(hTrace);
+		CloseHandle(hTrace);
+				
+		if (bTraceDidHit && iTraceHitEntity != i)
+		{
+			float flTargetMins[3], flTargetMaxs[3];
+			GetEntPropVector(i, Prop_Send, "m_vecMins", flTargetMins);
+			GetEntPropVector(i, Prop_Send, "m_vecMaxs", flTargetMaxs);
+			GetClientAbsOrigin(i, flTargetPos);
+			for (int i2 = 0; i2 < 3; i2++) flTargetPos[i2] += ((flTargetMins[i2] + flTargetMaxs[i2]) / 2.0);
+
+			hTrace = TR_TraceRayFilterEx(flMyEyePos,
+				flTargetPos,
+				MASK_NPCSOLID,
+				RayType_EndPoint,
+				TraceRayDontHitEntityAndProxies,
+				slender);
+						
+			bTraceDidHit = TR_DidHit(hTrace);
+			iTraceHitEntity = TR_GetEntityIndex(hTrace);
+			CloseHandle(hTrace);
+		}
+				
+		if (!bTraceDidHit || iTraceHitEntity == i)
+		{
+			flTargetDist = GetVectorDistance(flTargetPos, flMyEyePos);
+
+			if (flTargetDist <= flAttackRange)
+			{
+				float flDirection[3];
+				SubtractVectors(flTargetPos, flMyEyePos, flDirection);
+				GetVectorAngles(flDirection, flDirection);
+						
+				if (FloatAbs(AngleDiff(flDirection[1], vecMyEyeAng[1])) <= flAttackFOV)
+				{
+					bHit = true;
+					GetAngleVectors(flDirection, flDirection, NULL_VECTOR, NULL_VECTOR);
+					NormalizeVector(flDirection, flDirection);
+					ScaleVector(flDirection, flAttackDamageForce);
+					
+					float flHealthRecover = flDamage * 0.75;
+					NPCChaserAddStunHealth(iBossIndex, flHealthRecover);
+					
+					if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)))
+					{
+						UpdateHealthBar(iBossIndex);
+					}
+					SDKHooks_TakeDamage(i, slender, slender, flDamage * 0.25, 3, _, flDirection, flMyEyePos);
+				}
+			}
+		}
+	}
+
+	return Plugin_Continue;
+}
+
 public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 {
 	if (!g_bEnabled) return;
@@ -5541,7 +5735,9 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		if (g_hSlenderBackupAtkTimer[iBossIndex] == INVALID_HANDLE && g_bNPCAlreadyAttacked[iBossIndex])
 		{
 			g_bSlenderAttacking[iBossIndex] = false;
+			g_bNPCStealingLife[iBossIndex] = false;
 			g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+			g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 			g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 			g_bNPCAlreadyAttacked[iBossIndex] = false;
 			return;
@@ -5894,7 +6090,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetJarateDuration(iBossIndex, iDifficulty) > 0.0)
 										{
 											GetProfileString(sProfile, "player_jarate_particle", sJaratePlayerParticle, sizeof(sJaratePlayerParticle));
 											if(!sJaratePlayerParticle[0])
@@ -5935,7 +6131,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetMilkDuration(iBossIndex, iDifficulty) > 0.0)
 										{
 											GetProfileString(sProfile, "player_milk_particle", sMilkPlayerParticle, sizeof(sMilkPlayerParticle));
 											if(!sMilkPlayerParticle[0])
@@ -5976,7 +6172,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetGasDuration(iBossIndex, iDifficulty) > 0.0)
 										{
 											GetProfileString(sProfile, "player_gas_particle", sGasPlayerParticle, sizeof(sGasPlayerParticle));
 											if(!sGasPlayerParticle[0])
@@ -6017,7 +6213,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetMarkDuration(iBossIndex, iDifficulty))
 										{
 											TF2_AddCondition(i, TFCond_MarkedForDeath, NPCChaserGetMarkDuration(iBossIndex, iDifficulty));
 										}
@@ -6040,7 +6236,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetIgniteDelay(iBossIndex, iDifficulty) && g_hPlayerIgniteTimer[i] == INVALID_HANDLE)
 										{
 											g_hPlayerIgniteTimer[i] = CreateTimer(NPCChaserGetIgniteDelay(iBossIndex, iDifficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(i));
 											g_hPlayerResetIgnite[i] = INVALID_HANDLE;
@@ -6064,7 +6260,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty) > 0.0)
 										{
 											GetProfileString(sProfile, "player_stun_particle", sStunPlayerParticle, sizeof(sStunPlayerParticle));
 											if(!sStunPlayerParticle[0])
@@ -6116,7 +6312,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetBleedDuration(iBossIndex, iDifficulty) > 0.0)
 										{
 											TF2_MakeBleed(i, i, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
 										}
@@ -6139,7 +6335,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										int iIndexLength = strlen(sIndexes);
 										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
+										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetElectricDuration(iBossIndex, iDifficulty) > 0.0)
 										{
 											GetProfileString(sProfile, "player_electric_red_particle", sElectricPlayerParticleRed, sizeof(sElectricPlayerParticleRed));
 											GetProfileString(sProfile, "player_electric_blue_particle", sElectricPlayerParticleBlue, sizeof(sElectricPlayerParticleBlue));
@@ -6434,7 +6630,9 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	{
 		RemoveSlender(iBossIndex);
 		g_bSlenderAttacking[iBossIndex] = false;
+		g_bNPCStealingLife[iBossIndex] = false;
 		g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+		g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 		g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 		g_bNPCAlreadyAttacked[iBossIndex] = false;
 	}
@@ -6943,7 +7141,9 @@ static Action Timer_SlenderChaseBossAttackEnd(Handle timer, any entref)
 	if (timer != g_hSlenderAttackTimer[iBossIndex]) return;
 	
 	g_bSlenderAttacking[iBossIndex] = false;
+	g_bNPCStealingLife[iBossIndex] = false;
 	g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+	g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 	g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 	g_bNPCAlreadyAttacked[iBossIndex] = false;
 }
@@ -6961,7 +7161,9 @@ static Action Timer_SlenderChaseBossAttackEndBackup(Handle timer, any entref)
 	if (timer != g_hSlenderBackupAtkTimer[iBossIndex]) return;
 	
 	g_bSlenderAttacking[iBossIndex] = false;
+	g_bNPCStealingLife[iBossIndex] = false;
 	g_hSlenderAttackTimer[iBossIndex] = INVALID_HANDLE;
+	g_hNPCLifeStealTimer[iBossIndex] = INVALID_HANDLE;
 	g_hSlenderBackupAtkTimer[iBossIndex] = INVALID_HANDLE;
 	g_bNPCAlreadyAttacked[iBossIndex] = false;
 }

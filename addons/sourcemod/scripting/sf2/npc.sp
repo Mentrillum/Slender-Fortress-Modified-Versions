@@ -1717,6 +1717,7 @@ float Boss_HitBox_Damage(int hitbox,int attacker,float damage,int damagetype,boo
 		{
 			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+			int iState = g_iSlenderState[iBossIndex];
 			
 			if (NPCChaserIsStunEnabled(iBossIndex))
 			{
@@ -1726,7 +1727,7 @@ float Boss_HitBox_Damage(int hitbox,int attacker,float damage,int damagetype,boo
 				}
 				
 				//(Experimental)
-				if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)))
+				if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)) && iState != STATE_STUN)
 				{
 					UpdateHealthBar(iBossIndex);
 				}
@@ -1864,46 +1865,49 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 	float flMyEyePos[3];
 	SlenderGetEyePosition(iBossIndex, flMyEyePos);
 	
-	if (iSoundType == SoundType_Footstep)
+	switch (iSoundType)
 	{
-		if (!(GetEntityFlags(client) & FL_ONGROUND)) return false;
+		case SoundType_Footstep:
+		{
+			if (!(GetEntityFlags(client) & FL_ONGROUND)) return false;
 		
-		if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) flDistance *= 1.85;
-		if (IsClientReallySprinting(client)) flDistance *= 0.66;
-		
-		hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
-		bTraceHit = TR_DidHit(hTrace);
-		CloseHandle(hTrace);
-	}
-	else if (iSoundType == SoundType_Voice || iSoundType == SoundType_Flashlight)
-	{
-		float flHisEyePos[3];
-		GetClientEyePosition(client, flHisEyePos);
-		
-		hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
-		bTraceHit = TR_DidHit(hTrace);
-		CloseHandle(hTrace);
-		
-		flDistance *= 0.5;
-	}
-	else if (iSoundType == SoundType_Weapon)
-	{
-		float flHisMins[3], flHisMaxs[3];
-		GetEntPropVector(client, Prop_Send, "m_vecMins", flHisMins);
-		GetEntPropVector(client, Prop_Send, "m_vecMaxs", flHisMaxs);
-		
-		float flMiddle[3];
-		for (int i = 0; i < 2; i++) flMiddle[i] = (flHisMins[i] + flHisMaxs[i]) / 2.0;
-		
-		float flEndPos[3];
-		GetClientAbsOrigin(client, flEndPos);
-		AddVectors(flHisPos, flMiddle, flEndPos);
-		
-		hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
-		bTraceHit = TR_DidHit(hTrace);
-		CloseHandle(hTrace);
-		
-		flDistance *= 0.66;
+			if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) flDistance *= 1.85;
+			if (IsClientReallySprinting(client)) flDistance *= 0.66;
+			
+			hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			bTraceHit = TR_DidHit(hTrace);
+			CloseHandle(hTrace);
+		}
+		case SoundType_Voice, SoundType_Flashlight:
+		{
+			float flHisEyePos[3];
+			GetClientEyePosition(client, flHisEyePos);
+			
+			hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			bTraceHit = TR_DidHit(hTrace);
+			CloseHandle(hTrace);
+			
+			flDistance *= 0.5;
+		}
+		case SoundType_Weapon:
+		{
+			float flHisMins[3], flHisMaxs[3];
+			GetEntPropVector(client, Prop_Send, "m_vecMins", flHisMins);
+			GetEntPropVector(client, Prop_Send, "m_vecMaxs", flHisMaxs);
+			
+			float flMiddle[3];
+			for (int i = 0; i < 2; i++) flMiddle[i] = (flHisMins[i] + flHisMaxs[i]) / 2.0;
+			
+			float flEndPos[3];
+			GetClientAbsOrigin(client, flEndPos);
+			AddVectors(flHisPos, flMiddle, flEndPos);
+			
+			hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			bTraceHit = TR_DidHit(hTrace);
+			CloseHandle(hTrace);
+			
+			flDistance *= 0.66;
+		}
 	}
 	
 	if (bTraceHit) flDistance *= 1.66;
@@ -2074,35 +2078,53 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
 		int iPitch = GetProfileNum(sProfile, sBuffer, 100);
 		
-		if (iState == STATE_IDLE && flCooldownIdle != 0.0)
+		switch (iState)
 		{
-			float flCooldownIdle2 = flCooldownIdle;
-			g_flSlenderNextFootstepIdleSound[iBossIndex] = GetGameTime() + flCooldownIdle2;
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
-		}
-		else if (iState == STATE_WANDER || iState == STATE_ALERT && flCooldownWalk != 0.0)
-		{
-			float flCooldownWalk2 = flCooldownWalk;
-			g_flSlenderNextFootstepWalkSound[iBossIndex] = GetGameTime() + flCooldownWalk2;
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
-		}
-		else if (iState == STATE_CHASE && flCooldownRun != 0.0)
-		{
-			float flCooldownRun2 = flCooldownRun;
-			g_flSlenderNextFootstepRunSound[iBossIndex] = GetGameTime() + flCooldownRun2;
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
-		}
-		else if (iState == STATE_STUN && flCooldownStun != 0.0)
-		{
-			float flCooldownStun2 = flCooldownStun;
-			g_flSlenderNextFootstepStunSound[iBossIndex] = GetGameTime() + flCooldownStun2;
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
-		}
-		else if (iState == STATE_ATTACK && flCooldownAttack != 0.0)
-		{
-			float flCooldownAttack2 = flCooldownAttack;
-			g_flSlenderNextFootstepAttackSound[iBossIndex] = GetGameTime() + flCooldownAttack;
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+			case STATE_IDLE:
+			{
+				if (flCooldownIdle != 0.0)
+				{
+					float flCooldownIdle2 = flCooldownIdle;
+					g_flSlenderNextFootstepIdleSound[iBossIndex] = GetGameTime() + flCooldownIdle2;
+					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+				}
+			}
+			case STATE_WANDER, STATE_ALERT:
+			{
+				if (flCooldownWalk != 0.0)
+				{
+					float flCooldownWalk2 = flCooldownWalk;
+					g_flSlenderNextFootstepWalkSound[iBossIndex] = GetGameTime() + flCooldownWalk2;
+					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+				}
+			}
+			case STATE_CHASE:
+			{
+				if (flCooldownRun != 0.0)
+				{
+					float flCooldownRun2 = flCooldownRun;
+					g_flSlenderNextFootstepRunSound[iBossIndex] = GetGameTime() + flCooldownRun2;
+					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+				}
+			}
+			case STATE_STUN:
+			{
+				if (flCooldownStun != 0.0)
+				{
+					float flCooldownStun2 = flCooldownStun;
+					g_flSlenderNextFootstepStunSound[iBossIndex] = GetGameTime() + flCooldownStun2;
+					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+				}
+			}
+			case STATE_ATTACK:
+			{
+				if (flCooldownAttack != 0.0)
+				{
+					float flCooldownAttack2 = flCooldownAttack;
+					g_flSlenderNextFootstepAttackSound[iBossIndex] = GetGameTime() + flCooldownAttack;
+					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+				}
+			}
 		}
 	}
 }
@@ -3145,6 +3167,16 @@ public bool TraceRayDontHitEntityAndProxies(int entity,int mask,any data)
 		if (StrEqual(sClass, "CTFBaseBoss")) return false;
 	}
 
+	return true;
+}
+
+public bool TraceRayDontHitAnyPlayer(int entity,int mask,any data)
+{
+	if (entity == data) return false;
+	if (entity > 0 && entity <= MaxClients)
+	{
+		if (g_bPlayerProxy[entity] || IsClientInGhostMode(entity)) return false;
+	}
 	return true;
 }
 

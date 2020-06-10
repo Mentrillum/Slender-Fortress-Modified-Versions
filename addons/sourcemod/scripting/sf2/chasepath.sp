@@ -272,6 +272,7 @@ methodmap ChaserPathLogic
 		vecJumpVel[2] /= time;
 		
 		vecJumpVel[2] = speed;
+		vecJumpVel[2] += 20.0;
 		
 		float flJumpSpeed = GetVectorLength(vecJumpVel);
 		float flMaxSpeed = 650.0;
@@ -395,7 +396,6 @@ methodmap ChaserPathLogic
 					Handle hTrace = INVALID_HANDLE;
 					if (fTraceFilterFunction != view_as<TraceEntityFilter>(INVALID_FUNCTION))
 					{
-						
 						hTrace = TR_TraceRayFilterEx(vecTracePos, forwadPos, MASK_PLAYERSOLID, RayType_EndPoint, fTraceFilterFunction, nextbot.GetEntity());
 					}
 					else

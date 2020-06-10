@@ -2505,7 +2505,7 @@ public Action Command_RemoveSlender(int iClient,int args)
 	
 	NPCRemove(iBossIndex);
 	
-	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape))
+	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && view_as<bool>(GetProfileNum(sProfile,"boxing_boss",0)))
 	{
 		g_iSlenderBoxingBossCount -= 1;
 	}
@@ -2821,7 +2821,7 @@ public Action Command_AddSlender(int iClient,int args)
 	
 		SpawnSlender(Npc, flPos);
 		
-		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape))
+		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && view_as<bool>(GetProfileNum(sProfile,"boxing_boss",0)))
 		{
 			g_iSlenderBoxingBossCount += 1;
 		}
@@ -4739,11 +4739,13 @@ void SetRoundState(SF2RoundState iRoundState)
 			}
 			if (SF_IsBoxingMap())
 			{
+				char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
 				for (int iBoss = 0; iBoss < MAX_BOSSES; iBoss++)
 				{
 					SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(iBoss);
 					if (!Npc.IsValid()) continue;
-					g_iSlenderBoxingBossCount += 1;
+					Npc.GetProfile(sBuffer, sizeof(sBuffer));
+					if (view_as<bool>(GetProfileNum(sBuffer,"boxing_boss",0))) g_iSlenderBoxingBossCount += 1;
 				}
 			}
 		}
