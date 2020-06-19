@@ -2068,6 +2068,12 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_nightmare_playbackrate");
 						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_nightmare_footstepinterval");
 					}
+					case Difficulty_Apollyon:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_apollyon");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_apollyon_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_apollyon_footstepinterval");
+					}
 				}
 			}
 			else
@@ -2114,6 +2120,12 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_nightmare_playbackrate");
 						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
 					}
+					case Difficulty_Apollyon:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_apollyon");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_apollyon_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
+					}
 				}
 			}
 			else
@@ -2159,6 +2171,12 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_nightmare");
 						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_nightmare_playbackrate");
 						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
+					}
+					case Difficulty_Apollyon:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_apollyon");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_apollyon_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
 					}
 				}
 			}
@@ -2212,6 +2230,12 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_nightmare");
 						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_nightmare_playbackrate");
 						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_nightmare_footstepinterval");
+					}
+					case Difficulty_Apollyon:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_apollyon");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_apollyon_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_apollyon_footstepinterval");
 					}
 				}
 			}

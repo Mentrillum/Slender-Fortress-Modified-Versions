@@ -151,6 +151,11 @@ stock bool SF_IsBoxingMap()
 	return view_as<bool>(g_bIsBoxingMap || (GetConVarInt(g_cvBoxingMap) == 1));
 }
 
+stock bool SF_IsRenevantMap()
+{
+	return view_as<bool>(g_bIsRenevantMap || (GetConVarInt(g_cvRenevantMap) == 1));
+}
+
 int SDK_StartTouch(int iEntity, int iOther)
 {
 	if(g_hSDKStartTouch != INVALID_HANDLE)
@@ -1343,7 +1348,7 @@ public Action Timer_KillEntity(Handle timer, any entref)
 //	==========================================================
 stock bool IsInfiniteFlashlightEnabled()
 {
-	return view_as<bool>(g_bRoundInfiniteFlashlight || (GetConVarInt(g_cvPlayerInfiniteFlashlightOverride) == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT));
+	return view_as<bool>(g_bRoundInfiniteFlashlight || (GetConVarInt(g_cvPlayerInfiniteFlashlightOverride) == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((GetConVarBool(g_cvNightvisionEnabled) || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_iNightvisionType == 1));
 }
 
 int g_iArraySpecialRoundType[SPECIALROUND_MAXROUNDS];

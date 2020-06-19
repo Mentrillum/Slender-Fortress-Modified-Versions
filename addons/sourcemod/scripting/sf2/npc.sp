@@ -23,6 +23,7 @@ int g_iNPCRaidHitbox[MAX_BOSSES] = { 0, ... };
 
 static float g_flNPCFieldOfView[MAX_BOSSES] = { 0.0, ... };
 static float g_flNPCTurnRate[MAX_BOSSES] = { 0.0, ... };
+static float g_flNPCBackstabFOV[MAX_BOSSES] = { 0.0, ... };
 
 g_iSlender[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_iSlenderHitboxOwner[2049] = { INVALID_ENT_REFERENCE, ... };
@@ -570,6 +571,11 @@ float NPCGetFOV(int iNPCIndex)
 	return g_flNPCFieldOfView[iNPCIndex];
 }
 
+float NPCGetBackstabFOV(int iNPCIndex)
+{
+	return g_flNPCBackstabFOV[iNPCIndex];
+}
+
 float NPCGetAnger(int iNPCIndex)
 {
 	return g_flNPCAnger[iNPCIndex];
@@ -841,6 +847,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	
 	g_flNPCTurnRate[Npc.Index] = GetBossProfileTurnRate(iProfileIndex);
 	g_flNPCFieldOfView[Npc.Index] = GetBossProfileFOV(iProfileIndex);
+	g_flNPCBackstabFOV[Npc.Index] = 180.0;
 	
 	g_flNPCSearchRadius[Npc.Index] = GetBossProfileSearchRadius(iProfileIndex);
 	
@@ -894,6 +901,19 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	g_flSlenderProxyTeleportMinRange[Npc.Index] = GetProfileFloat(sProfile, "proxies_teleport_range_min");
 	g_flSlenderProxyTeleportMaxRange[Npc.Index] = GetProfileFloat(sProfile, "proxies_teleport_range_max");
 	g_bNPCVelocityCancel[Npc.Index] = false;
+	g_hSlenderBurnTimer[Npc.Index] = INVALID_HANDLE;
+	g_hSlenderBleedTimer[Npc.Index] = INVALID_HANDLE;
+	g_hSlenderMarkedTimer[Npc.Index] = INVALID_HANDLE;
+	g_hSlenderMilkedTimer[Npc.Index] = INVALID_HANDLE;
+	g_hSlenderGasTimer[Npc.Index] = INVALID_HANDLE;
+	g_hSlenderJarateTimer[Npc.Index] = INVALID_HANDLE;
+	g_flSlenderStopBurning[Npc.Index] = GetGameTime();
+	g_flSlenderStopBleeding[Npc.Index] = GetGameTime();
+	g_bSlenderIsBurning[Npc.Index] = false;
+	g_bSlenderIsMarked[Npc.Index] = false;
+	g_bSlenderIsMilked[Npc.Index] = false;
+	g_bSlenderIsGassed[Npc.Index] = false;
+	g_bSlenderIsJarate[Npc.Index] = false;
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -1184,6 +1204,7 @@ void RemoveProfile(int iBossIndex)
 	NPCSetAnger(iBossIndex, 1.0);
 	
 	g_flNPCFieldOfView[iBossIndex] = 0.0;
+	g_flNPCBackstabFOV[iBossIndex] = 0.0;
 	
 	g_flNPCAddSpeed[iBossIndex] = 0.0;
 	g_flNPCAddMaxSpeed[iBossIndex] = 0.0;
@@ -1201,6 +1222,19 @@ void RemoveProfile(int iBossIndex)
 	g_hSlenderEntityThink[iBossIndex] = INVALID_HANDLE;
 	g_hNPCResetAlertCopyTimer[iBossIndex] = INVALID_HANDLE;
 	g_hNPCRegisterAlertingCopiesTimer[iBossIndex] = INVALID_HANDLE;
+	g_hSlenderBurnTimer[iBossIndex] = INVALID_HANDLE;
+	g_hSlenderBleedTimer[iBossIndex] = INVALID_HANDLE;
+	g_hSlenderMarkedTimer[iBossIndex] = INVALID_HANDLE;
+	g_hSlenderMilkedTimer[iBossIndex] = INVALID_HANDLE;
+	g_hSlenderJarateTimer[iBossIndex] = INVALID_HANDLE;
+	g_hSlenderGasTimer[iBossIndex] = INVALID_HANDLE;
+	g_flSlenderStopBurning[iBossIndex] = GetGameTime();
+	g_flSlenderStopBleeding[iBossIndex] = GetGameTime();
+	g_bSlenderIsBurning[iBossIndex] = false;
+	g_bSlenderIsMarked[iBossIndex] = false;
+	g_bSlenderIsMilked[iBossIndex] = false;
+	g_bSlenderIsGassed[iBossIndex] = false;
+	g_bSlenderIsJarate[iBossIndex] = false;
 	
 	g_hSlenderFakeTimer[iBossIndex] = INVALID_HANDLE;
 	g_flSlenderLastKill[iBossIndex] = -1.0;
@@ -1422,6 +1456,19 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			g_hNPCResetAlertCopyTimer[iBossIndex] = INVALID_HANDLE;
 			g_hNPCRegisterAlertingCopiesTimer[iBossIndex] = INVALID_HANDLE;
 			g_bNPCVelocityCancel[iBossIndex] = false;
+			g_hSlenderBurnTimer[iBossIndex] = INVALID_HANDLE;
+			g_hSlenderBleedTimer[iBossIndex] = INVALID_HANDLE;
+			g_hSlenderMarkedTimer[iBossIndex] = INVALID_HANDLE;
+			g_hSlenderMilkedTimer[iBossIndex] = INVALID_HANDLE;
+			g_hSlenderGasTimer[iBossIndex] = INVALID_HANDLE;
+			g_hSlenderJarateTimer[iBossIndex] = INVALID_HANDLE;
+			g_flSlenderStopBurning[iBossIndex] = GetGameTime();
+			g_flSlenderStopBleeding[iBossIndex] = GetGameTime();
+			g_bSlenderIsBurning[iBossIndex] = false;
+			g_bSlenderIsMarked[iBossIndex] = false;
+			g_bSlenderIsMilked[iBossIndex] = false;
+			g_bSlenderIsGassed[iBossIndex] = false;
+			g_bSlenderIsJarate[iBossIndex] = false;
 			
 			Spawn_Chaser(iBossIndex);
 			
@@ -1482,6 +1529,11 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 					if(iHealth>0)
 					{
 						flMaxHealth += float(iHealth);
+					}
+					if (SF_IsBoxingMap() && StrEqual(sClassName, "scout", false))
+					{
+						NPCSetAddSpeed(iBossIndex, 7.5);
+						NPCSetAddMaxSpeed(iBossIndex, 12.5);
 					}
 					else
 					{
@@ -1661,16 +1713,85 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 		GetEntityNetClass(hitbox, sClass, sizeof(sClass));
 		if (StrEqual(sClass, "CTFBaseBoss"))
 		{
+			float flMyPos[3], flMyEyeAng[3], flClientPos[3], flBuffer[3], flTraceStartPos[3], flTraceEndPos[3];
+			GetEntPropVector(hitbox, Prop_Data, "m_vecAbsOrigin", flMyPos);
+			
+			int iBossIndex = NPCGetFromEntIndex(hitbox);
+			int slender = NPCGetEntIndex(iBossIndex);
+			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+			
+			NPCGetEyePosition(iBossIndex, flTraceStartPos);
+
+			int damagetype = DMG_BULLET;
 			bool bMiniCrit = false;
 			int damage = GetEventInt(event, "damageamount");
 			int attacker = GetClientOfUserId(GetEventInt(event, "attacker_player"));
+			GetClientAbsOrigin(attacker, flClientPos);
+			float flShootDist = GetVectorDistance(flClientPos, flMyPos);
+			GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
+			GetClientEyePosition(attacker, flTraceEndPos);
 			
+			AddVectors(flMyEyeAng, g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng);
+			for (int i = 0; i < 3; i++) flMyEyeAng[i] = AngleNormalize(flMyEyeAng[i]);
+
 			if(!IsValidClient(attacker)) return;
 			
+			if ((g_bSlenderIsMilked[iBossIndex] || TF2_IsPlayerInCondition(attacker, TFCond_RegenBuffed)) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+			{
+				int iHealth = GetClientHealth(attacker);
+				float flDamage = damage;
+				flDamage *= 0.35;
+				int iNewHealth = iHealth + view_as<int>(flDamage);
+				if(iNewHealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))
+				{
+					SetEntityHealth(attacker, iNewHealth);
+				}
+				else
+				{
+					int iMaxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
+					SetEntityHealth(attacker, iMaxHealth);
+				}
+			}
+			if (g_bSlenderIsGassed[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+			{
+				g_hSlenderBurnTimer[iBossIndex] = CreateTimer(0.5, Timer_BossBurn, EntIndexToEntRef(slender), TIMER_REPEAT);
+				g_flSlenderStopBurning[iBossIndex] = GetGameTime() + 15.0;
+				g_bSlenderIsBurning[iBossIndex] = true;
+				g_bSlenderIsGassed[iBossIndex] = false;
+				g_hSlenderGasTimer[iBossIndex] = INVALID_HANDLE;
+			}
+			
+			if(TF2_GetPlayerClass(attacker) == TFClass_Scout)
+			{
+				int iStick = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+				if(IsValidEntity(iStick) && GetEntProp(iStick, Prop_Send, "m_iItemDefinitionIndex") == 349 && iStick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_bSlenderIsBurning[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					SetEventBool(event, "crit", true);
+					damagetype |= DMG_CRIT;
+					damage *= 3;
+				}
+				if(IsValidEntity(iStick) && (GetEntProp(iStick, Prop_Send, "m_iItemDefinitionIndex") == 325 || GetEntProp(iStick, Prop_Send, "m_iItemDefinitionIndex") == 452) && iStick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderBleedTimer[iBossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT);
+					g_flSlenderStopBleeding[iBossIndex] = GetGameTime() + 5.0;
+				}
+				if(IsValidEntity(iStick) && GetEntProp(iStick, Prop_Send, "m_iItemDefinitionIndex") == 355 && iStick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderMarkedTimer[iBossIndex] = CreateTimer(15.0, Timer_BossMarked, EntIndexToEntRef(slender));
+					g_bSlenderIsMarked[iBossIndex] = true;
+				}
+				if(IsValidEntity(iStick) && GetEntProp(iStick, Prop_Send, "m_iItemDefinitionIndex") == 648 && iStick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && flShootDist > 72.0 && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderBleedTimer[iBossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT);
+					g_flSlenderStopBleeding[iBossIndex] = GetGameTime() + 5.0;
+				}
+			}
 			if(TF2_GetPlayerClass(attacker) == TFClass_Pyro)
 			{
 				//Probably the only time where buffing the phlog is a good thing.
 				int iPhlog = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Primary);
+				int iFragment = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
 				if(IsValidEntity(iPhlog) && GetEntProp(iPhlog, Prop_Send, "m_iItemDefinitionIndex") == TF_WEAPON_PHLOGISTINATOR && GetEntPropFloat(attacker, Prop_Send, "m_flNextRageEarnTime") <= GetGameTime() && !view_as<bool>(GetEntProp(attacker, Prop_Send, "m_bRageDraining")))
 				{
 					float fRage = GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter");
@@ -1678,18 +1799,166 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 					if (fRage > 100.0) fRage = 100.0;
 					SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter", fRage);
 				}
+				if(IsValidEntity(iFragment) && GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 348 && iFragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderBurnTimer[iBossIndex] = CreateTimer(0.5, Timer_BossBurn, EntIndexToEntRef(slender), TIMER_REPEAT);
+					g_flSlenderStopBurning[iBossIndex] = GetGameTime() + 15.0;
+					g_bSlenderIsBurning[iBossIndex] = true;
+				}
+				if(IsValidEntity(iFragment) && (GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 38 || GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 457 || GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 1000) && iFragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_bSlenderIsBurning[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderBurnTimer[iBossIndex] = INVALID_HANDLE;
+					g_flSlenderStopBurning[iBossIndex] = GetGameTime();
+					g_bSlenderIsBurning[iBossIndex] = false;
+					bMiniCrit = true;
+					float flDamageReturn = damage * 1.35;
+					damage = RoundToFloor(flDamageReturn);
+				}
+				if(IsValidEntity(iFragment) && GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 1181 && iFragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
+				{
+					TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
+				}
+				if(IsValidEntity(iFragment) && (GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 813 || GetEntProp(iFragment, Prop_Send, "m_iItemDefinitionIndex") == 834) && iFragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && (g_bSlenderIsJarate[iBossIndex] || g_bSlenderIsMilked[iBossIndex] || g_bSlenderIsGassed[iBossIndex]))
+				{
+					SetEventBool(event, "crit", true);
+					damagetype |= DMG_CRIT;
+					damage *= 3;
+				}
 			}
 			if(TF2_GetPlayerClass(attacker) == TFClass_Soldier)
 			{
 				int iWhip = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-				if(IsValidEntity(iWhip) && GetEntProp(iWhip, Prop_Send, "m_iItemDefinitionIndex") == 447)
+				if(IsValidEntity(iWhip) && GetEntProp(iWhip, Prop_Send, "m_iItemDefinitionIndex") == 447 && iWhip == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
 				{
 					TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
 				}
 			}
-			
-			int damagetype = DMG_BULLET;
-			
+			if(TF2_GetPlayerClass(attacker) == TFClass_Heavy)
+			{
+				int iGloves = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+				if(IsValidEntity(iGloves) && GetEntProp(iGloves, Prop_Send, "m_iItemDefinitionIndex") == 426 && iGloves == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
+				{
+					TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
+				}
+				if(IsValidEntity(iGloves) && GetEntProp(iGloves, Prop_Send, "m_iItemDefinitionIndex") == 43 && iGloves == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && !IsClientCritBoosted(attacker) && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_iPlayerHitsToCrits[attacker]++;
+					if (g_iPlayerHitsToCrits[attacker] == 5)
+					{
+						TF2_AddCondition(attacker, TFCond_CritOnFlagCapture, 5.0);
+						g_iPlayerHitsToCrits[attacker] = 0;
+					}
+				}
+			}
+			if(TF2_GetPlayerClass(attacker) == TFClass_Engineer)
+			{
+				int iWrench = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+				if(IsValidEntity(iWrench) && GetEntProp(iWrench, Prop_Send, "m_iItemDefinitionIndex") == 155 && iWrench == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderBleedTimer[iBossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT);
+					g_flSlenderStopBleeding[iBossIndex] = GetGameTime() + 5.0;
+				}
+			}
+			if(TF2_GetPlayerClass(attacker) == TFClass_Sniper)
+			{
+				int iSharpy = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+				if(IsValidEntity(iSharpy) && GetEntProp(iSharpy, Prop_Send, "m_iItemDefinitionIndex") == 171 && iSharpy == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_hSlenderBleedTimer[iBossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT);
+					g_flSlenderStopBleeding[iBossIndex] = GetGameTime() + 6.0;
+				}
+				if(IsValidEntity(iSharpy) && GetEntProp(iSharpy, Prop_Send, "m_iItemDefinitionIndex") == 232 && iSharpy == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_bSlenderIsMarked[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					SetEventBool(event, "crit", true);
+					damagetype |= DMG_CRIT;
+					damage *= 3;
+					bMiniCrit = false;
+				}
+			}
+			if(TF2_GetPlayerClass(attacker) == TFClass_DemoMan)
+			{
+				int iSword = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+				if(IsValidEntity(iSword) && (GetEntProp(iSword, Prop_Send, "m_iItemDefinitionIndex") == 132 || GetEntProp(iSword, Prop_Send, "m_iItemDefinitionIndex") == 266 || GetEntProp(iSword, Prop_Send, "m_iItemDefinitionIndex") == 482 || GetEntProp(iSword, Prop_Send, "m_iItemDefinitionIndex") == 1082) && iSword == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+				{
+					g_iPlayerHitsToHeads[attacker]++;
+					if (g_iPlayerHitsToHeads[attacker] == 5)
+					{
+						if(!TF2_IsPlayerInCondition(attacker, TFCond_DemoBuff))
+						{
+							TF2_AddCondition(attacker, TFCond_DemoBuff, -1.0);
+						}
+						int iDecapitations = GetEntProp(attacker, Prop_Send, "m_iDecapitations");
+						int iHealth = GetClientHealth(attacker);
+						SetEntProp(attacker, Prop_Send, "m_iDecapitations", iDecapitations+1);
+						SetEntityHealth(attacker, iHealth+15);
+						TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 0.01);
+						g_iPlayerHitsToHeads[attacker] = 0;
+					}
+				}
+			}
+			if(TF2_GetPlayerClass(attacker) == TFClass_Spy)
+			{
+				int iStabbingTime = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+				char sWeaponClass[64];
+				GetEdictClassname(iStabbingTime, sWeaponClass, sizeof(sWeaponClass));
+				if (IsValidEntity(iStabbingTime) && iStabbingTime == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && (StrEqual(sWeaponClass, "tf_weapon_knife", false) || (TF2_GetPlayerClass(attacker) == TFClass_Spy && StrEqual(sWeaponClass, "saxxy", false))) && SF_IsBoxingMap())
+				{
+					SubtractVectors(flTraceEndPos, flTraceStartPos, flBuffer);
+					GetVectorAngles(flBuffer, flBuffer);
+
+					if (FloatAbs(AngleDiff(flMyEyeAng[1], flBuffer[1])) >= (NPCGetBackstabFOV(iBossIndex) * 0.5) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && GetProfileFloat(sProfile, "backstab_damage_scale", 0.1) > 0.0)
+					{
+						SetEventBool(event, "crit", true);
+						damagetype |= DMG_CRIT;
+						EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
+						SetEntPropFloat(iStabbingTime, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
+						SetEntPropFloat(attacker, Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
+						SetEntPropFloat(attacker, Prop_Send, "m_flStealthNextChangeTime", GetGameTime() + 2.0);
+						int vm = GetEntPropEnt(attacker, Prop_Send, "m_hViewModel");
+						if (vm > MaxClients)
+						{
+							int iMeleeIndex = GetEntProp(iStabbingTime, Prop_Send, "m_iItemDefinitionIndex");
+							int anim = 41;
+							switch (iMeleeIndex)
+							{
+								case 4, 194, 225, 356, 461, 574, 649, 665, 794, 803, 883, 892, 901, 910, 959, 968: anim = 15;
+								case 638: anim = 31;
+							}
+							SetEntProp(vm, Prop_Send, "m_nSequence", anim);
+							float flBackstabDamage = NPCChaserGetStunInitialHealth(iBossIndex) * GetProfileFloat(sProfile, "backstab_damage_scale", 0.1);
+							int iDamageReturn = RoundToFloor(flBackstabDamage);
+							damage = iDamageReturn;
+
+							if (iMeleeIndex == 356) //Kunai
+							{
+								int iHealth = GetClientHealth(attacker) + 200;
+								if(iHealth > 500)
+								{
+									iHealth = 500;
+								}
+								SetEntityHealth(attacker, iHealth);
+							}
+							switch (iMeleeIndex)
+							{
+								case 356: //Kunai
+								{
+									int iHealth = GetClientHealth(attacker) + 200;
+									if(iHealth > 500)
+									{
+										iHealth = 500;
+									}
+									SetEntityHealth(attacker, iHealth);
+								}
+								case 461: //Big Earner
+								{
+									TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
+								}
+							}
+						}
+					}
+				}
+			}
+
 			//The crit boolean if for both mini crit and critical hit.
 			if(GetEventBool(event, "crit", false))
 			{
@@ -1700,9 +1969,271 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 				else //Random crit
 					damagetype |= DMG_CRIT;
 			}
+			if ((g_bSlenderIsMarked[iBossIndex] || g_bSlenderIsJarate[iBossIndex]) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+			{
+				bMiniCrit = true;
+				float flDamageReturn = damage * 1.35;
+				damage = RoundToFloor(flDamageReturn);
+			}
 			Boss_HitBox_Damage(hitbox, attacker, float(damage), damagetype, bMiniCrit);
 		}
 	}
+}
+
+public Action Timer_BossBurn(Handle timer, any entref)
+{
+	if (!g_bEnabled) return Plugin_Stop;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	
+	if (!SF_IsBoxingMap()) return Plugin_Stop;
+
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return Plugin_Stop;
+	
+	if (GetGameTime() >= g_flSlenderStopBurning[iBossIndex])
+	{
+		g_hSlenderBurnTimer[iBossIndex] = INVALID_HANDLE;
+		g_bSlenderIsBurning[iBossIndex] = false;
+		return Plugin_Stop;
+	}	
+	int iState = g_iSlenderState[iBossIndex];
+
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	
+	if (timer != g_hSlenderBurnTimer[iBossIndex]) return Plugin_Stop;
+	if (NPCChaserIsStunEnabled(iBossIndex))
+	{
+		if (!g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		{
+			float flBurnDamage = -4.0 * GetProfileFloat(sProfile,"fire_damage_multiplier", 1.0);
+			NPCChaserAddStunHealth(iBossIndex, flBurnDamage);
+		}
+		if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)) && iState != STATE_STUN && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		{
+			UpdateHealthBar(iBossIndex);
+		}
+	}
+	return Plugin_Continue;
+}
+
+public Action Timer_BossBleed(Handle timer, any entref)
+{
+	if (!g_bEnabled) return Plugin_Stop;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	
+	if (!SF_IsBoxingMap()) return Plugin_Stop;
+
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return Plugin_Stop;
+	
+	if (GetGameTime() >= g_flSlenderStopBleeding[iBossIndex])
+	{
+		g_hSlenderBleedTimer[iBossIndex] = INVALID_HANDLE;
+		return Plugin_Stop;
+	}	
+	int iState = g_iSlenderState[iBossIndex];
+
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	
+	if (timer != g_hSlenderBleedTimer[iBossIndex]) return Plugin_Stop;
+	if (NPCChaserIsStunEnabled(iBossIndex))
+	{
+		if (!g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		{
+			NPCChaserAddStunHealth(iBossIndex, -4.0);
+		}
+		if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)) && iState != STATE_STUN && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		{
+			UpdateHealthBar(iBossIndex);
+		}
+	}
+	return Plugin_Continue;
+}
+
+public Action Timer_BossMarked(Handle timer, any entref)
+{
+	if (!g_bEnabled) return;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	
+	if (!SF_IsBoxingMap()) return;
+
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return;
+	
+	g_hSlenderMarkedTimer[iBossIndex] = INVALID_HANDLE;
+	g_bSlenderIsMarked[iBossIndex] = false;
+
+	if (timer != g_hSlenderMarkedTimer[iBossIndex]) return;
+}
+
+public Action Timer_BossJarate(Handle timer, any entref)
+{
+	if (!g_bEnabled) return;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	
+	if (!SF_IsBoxingMap()) return;
+
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return;
+	
+	g_hSlenderJarateTimer[iBossIndex] = INVALID_HANDLE;
+	g_bSlenderIsJarate[iBossIndex] = false;
+	if (!g_bNPCHasCloaked[iBossIndex])
+	{
+		SetEntityRenderMode(slender, RENDER_NORMAL);
+		SetEntityRenderColor(slender, 255, 255, 255, 255);
+	}
+	else
+	{
+		SetEntityRenderMode(slender, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(slender, 255, 255, 255, 0);
+	}
+
+	if (timer != g_hSlenderJarateTimer[iBossIndex]) return;
+}
+
+public Action Timer_BossMilked(Handle timer, any entref)
+{
+	if (!g_bEnabled) return;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	
+	if (!SF_IsBoxingMap()) return;
+
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return;
+	
+	g_hSlenderMilkedTimer[iBossIndex] = INVALID_HANDLE;
+	g_bSlenderIsMilked[iBossIndex] = false;
+
+	if (timer != g_hSlenderMilkedTimer[iBossIndex]) return;
+}
+
+public Action Timer_BossGassed(Handle timer, any entref)
+{
+	if (!g_bEnabled) return;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	
+	if (!SF_IsBoxingMap()) return;
+
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return;
+	
+	g_hSlenderGasTimer[iBossIndex] = INVALID_HANDLE;
+	g_bSlenderIsGassed[iBossIndex] = false;
+
+	if (timer != g_hSlenderGasTimer[iBossIndex]) return;
+}
+
+public Action Hook_MilkTouch(int iJar, int client)
+{
+	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	{
+		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		
+		float flBossPosition[3], flJarPosition[3];
+		int slender = NPCGetEntIndex(iNPCIndex);
+		GetEntPropVector(iJar, Prop_Data, "m_vecOrigin", flJarPosition);
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flBossPosition);
+		
+		float flDistance = GetVectorDistance(flJarPosition, flBossPosition);
+		if (flDistance <= 512.0)
+		{
+			g_bSlenderIsMilked[iNPCIndex] = true;
+			g_hSlenderMilkedTimer[iNPCIndex] = CreateTimer(10.0, Timer_BossMilked, EntIndexToEntRef(slender));
+		}
+	}
+	if (MaxClients >= client > 0 && IsClientInGame(client))
+	{
+		if (SF_IsBoxingMap())
+		{
+			return Plugin_Handled;
+		}
+	}
+	
+	return Plugin_Continue;
+}
+
+public Action Hook_JarateTouch(int iJar, int client)
+{
+	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	{
+		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		
+		float flBossPosition[3], flJarPosition[3];
+		int slender = NPCGetEntIndex(iNPCIndex);
+		GetEntPropVector(iJar, Prop_Data, "m_vecOrigin", flJarPosition);
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flBossPosition);
+		
+		float flDistance = GetVectorDistance(flJarPosition, flBossPosition);
+		if (flDistance <= 512.0)
+		{
+			if (!g_bNPCHasCloaked[iNPCIndex])
+			{
+				SetEntityRenderMode(slender, RENDER_NORMAL);
+				SetEntityRenderColor(slender, 255, 255, 128, 255);
+			}
+			else
+			{
+				SetEntityRenderMode(slender, RENDER_TRANSCOLOR);
+				SetEntityRenderColor(slender, 255, 255, 128, 75);
+			}
+			g_bSlenderIsJarate[iNPCIndex] = true;
+			g_hSlenderJarateTimer[iNPCIndex] = CreateTimer(10.0, Timer_BossJarate, EntIndexToEntRef(slender));
+		}
+	}
+	if (MaxClients >= client > 0 && IsClientInGame(client))
+	{
+		if (SF_IsBoxingMap())
+		{
+			return Plugin_Handled;
+		}
+	}
+	
+	return Plugin_Continue;
+}
+
+public Action Hook_GasTouch(int iJar, int client)
+{
+	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	{
+		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		
+		float flBossPosition[3], flJarPosition[3];
+		int slender = NPCGetEntIndex(iNPCIndex);
+		GetEntPropVector(iJar, Prop_Data, "m_vecOrigin", flJarPosition);
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flBossPosition);
+		
+		float flDistance = GetVectorDistance(flJarPosition, flBossPosition);
+		PrintToChatAll("%f", flDistance);
+		if (flDistance <= 512.0)
+		{
+			g_bSlenderIsGassed[iNPCIndex] = true;
+			g_hSlenderGasTimer[iNPCIndex] = CreateTimer(10.0, Timer_BossGassed, EntIndexToEntRef(slender));
+		}
+	}
+	if (MaxClients >= client > 0 && IsClientInGame(client))
+	{
+		if (SF_IsBoxingMap())
+		{
+			return Plugin_Handled;
+		}
+	}
+	
+	return Plugin_Continue;
 }
 
 float Boss_HitBox_Damage(int hitbox,int attacker,float damage,int damagetype,bool bMiniCrit=false)
@@ -1727,7 +2258,7 @@ float Boss_HitBox_Damage(int hitbox,int attacker,float damage,int damagetype,boo
 				}
 				
 				//(Experimental)
-				if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)) && iState != STATE_STUN)
+				if (view_as<bool>(GetProfileNum(sProfile,"healthbar",0)) && iState != STATE_STUN && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
 				{
 					UpdateHealthBar(iBossIndex);
 				}
@@ -1834,8 +2365,9 @@ public Action Hook_SlenderGlowSetTransmit(int entity,int other)
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_bPlayerProxy[other]) return Plugin_Continue;
 	if (IsClientInGhostMode(other)) return Plugin_Continue;
-	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && TF2_GetClientTeam(other) == 2 && !g_bPlayerEscaped[other]) return Plugin_Continue;
-	if (SF_IsBoxingMap() && TF2_GetClientTeam(other) == 2 && !g_bPlayerEscaped[other]) return Plugin_Continue;
+	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && TF2_GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) return Plugin_Continue;
+	bool bNightVision = (GetConVarBool(g_cvNightvisionEnabled) || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
+	if (bNightVision && g_iNightvisionType == 2 && TF2_GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other] && IsClientUsingFlashlight(other)) return Plugin_Continue;
 	return Plugin_Handled;
 }
 

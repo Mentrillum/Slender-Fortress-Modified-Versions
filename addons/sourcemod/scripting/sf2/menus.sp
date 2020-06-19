@@ -15,6 +15,7 @@ Handle g_hMenuHelpControls;
 Handle g_hMenuHelpClassInfo;
 Handle g_hMenuHelpGhostMode;
 Handle g_hMenuSettings;
+Handle g_hMenuSettingsFlashlightTemp1;
 Handle g_hMenuCredits;
 Handle g_hMenuCredits2;
 Handle g_hMenuCredits3;
@@ -130,8 +131,24 @@ void SetupMenus()
 	AddMenuItem(g_hMenuSettings, "0", buffer);
 	Format(buffer, sizeof(buffer), "%t", "SF2 Settings Proxy Menu Title");
 	AddMenuItem(g_hMenuSettings, "0", buffer);
+	Format(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlight Temperature Title");
+	AddMenuItem(g_hMenuSettings, "0", buffer);
 	SetMenuExitBackButton(g_hMenuSettings, true);
 	
+	g_hMenuSettingsFlashlightTemp1 = CreateMenu(Menu_Settings_Flashlighttemp1);
+	SetMenuTitle(g_hMenuSettingsFlashlightTemp1, buffer);
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "0", "1000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "1", "2000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "2", "3000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "3", "4000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "4", "5000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "5", "6000 Kelvin (Default)");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "6", "7000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "7", "8000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "8", "9000 Kelvin");
+	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "9", "10000 Kelvin");
+	SetMenuExitBackButton(g_hMenuSettingsFlashlightTemp1, true);
+
 	g_hMenuCredits = CreateMenu(Menu_Credits);
 	
 	Format(buffer, sizeof(buffer), "Credits\n");
@@ -334,7 +351,7 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 		}
 		else if ((!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && GetRandomInt(1, 200) <= 2) || bPlayersCalledForNightmare) 
 			SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
-		else if (IsSpecialRoundRunning() && SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM))
+		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM)))
 		{
 			SetConVarInt(g_cvDifficulty, Difficulty_Hard);
 		}
@@ -632,6 +649,74 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				
 				SendPanelToClient(hPanel, param1, Panel_SettingsProxy, 30);
 				CloseHandle(hPanel);
+			}
+			case 5: DisplayMenu(g_hMenuSettingsFlashlightTemp1, param1, 30);
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			DisplayMenu(g_hMenuMain, param1, 30);
+		}
+	}
+}
+
+public int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action,int param1,int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 0:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_1000;
+				ClientSaveCookies(param1);
+			}
+			case 1:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_2000;
+				ClientSaveCookies(param1);
+			}
+			case 2:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_3000;
+				ClientSaveCookies(param1);
+			}
+			case 3:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_4000;
+				ClientSaveCookies(param1);
+			}
+			case 4:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_5000;
+				ClientSaveCookies(param1);
+			}
+			case 5:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_6000;
+				ClientSaveCookies(param1);
+			}
+			case 6:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_7000;
+				ClientSaveCookies(param1);
+			}
+			case 7:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_8000;
+				ClientSaveCookies(param1);
+			}
+			case 8:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_9000;
+				ClientSaveCookies(param1);
+			}
+			case 9:
+			{
+				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_10000;
+				ClientSaveCookies(param1);
 			}
 		}
 	}

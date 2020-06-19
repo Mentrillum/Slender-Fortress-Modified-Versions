@@ -50,6 +50,8 @@ static float g_flPlayerFlashlightNextInputTime[MAXPLAYERS + 1] = { -1.0, ... };
 
 static int g_ActionItemIndexes[] = { 57, 231 };
 
+static int g_UtilityItems[] = { 222, 1121, 163, 1180, 131, 406, 1099, 311, 58, 1105 };
+
 // Ultravision data.
 static bool g_bPlayerUltravision[MAXPLAYERS + 1] = { false, ... };
 static int g_iPlayerUltravisionEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -101,7 +103,7 @@ static char g_sOldClientModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 char g_sClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Nav Data
-static CNavArea g_lastNavArea[MAXPLAYERS + 1];
+//static CNavArea g_lastNavArea[MAXPLAYERS + 1];
 static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 
 //	==========================================================
@@ -380,7 +382,14 @@ public void Hook_ClientPreThink(int client)
 					{
 						if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed);
+							if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed);
+							}
+							else
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed*2.5);
+							}
 							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-170.0);
 						}
 						else
@@ -391,7 +400,14 @@ public void Hook_ClientPreThink(int client)
 					}
 					else 
 					{
-						SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed);
+						if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+						{
+							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed);
+						}
+						else
+						{
+							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed*2.5);
+						}
 						SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flWalkSpeed-20.0);
 					}
 					
@@ -547,7 +563,7 @@ public Action Hook_ClientSetTransmit(int client,int other)
 public Action TF2_CalcIsAttackCritical(int client,int weapon, char[] sWeaponName, bool &result)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	
+
 	if ((IsRoundInWarmup() || IsClientInPvP(client)) && !IsRoundEnding())
 	{
 		if (!GetConVarBool(g_cvPlayerFakeLagCompensation))
@@ -747,8 +763,8 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 										{
 											AcceptEntityInput(iWearable, "Kill");
 											damage = 0.0;
-											EmitSoundToClient(victim, "Player.Spy_Shield_Break", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
-											EmitSoundToClient(attacker, "Player.Spy_Shield_Break", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
+											EmitSoundToClient(victim, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
+											EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
 
 											SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
 											SetEntPropFloat(attacker, Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
@@ -757,11 +773,10 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 											if (vm > MaxClients)
 											{
 												int iMeleeIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-												int anim = 15;
+												int anim = 41;
 												switch (iMeleeIndex)
 												{
-													case 727: anim = 41;
-													case 4, 194, 665, 794, 803, 883, 892, 901, 910: anim = 10;
+													case 4, 194, 225, 356, 461, 574, 649, 665, 794, 803, 883, 892, 901, 910, 959, 968: anim = 15;
 													case 638: anim = 31;
 												}
 												SetEntProp(vm, Prop_Send, "m_nSequence", anim);
@@ -1452,6 +1467,8 @@ void ClientTurnOnFlashlight(int client)
 	float flEyePos[3];
 	GetClientEyePosition(client, flEyePos);
 	
+	FlashlightTemperature iTemperature = g_iPlayerPreferences[client][PlayerPreference_FlashlightTemperature];
+	
 	if (g_iPlayerPreferences[client][PlayerPreference_ProjectedFlashlight])
 	{
 		// If the player is using the projected flashlight, just set effect flags.
@@ -1469,7 +1486,46 @@ void ClientTurnOnFlashlight(int client)
 		{
 			TeleportEntity(ent, flEyePos, NULL_VECTOR, NULL_VECTOR);
 			DispatchKeyValue(ent, "targetname", "WUBADUBDUBMOTHERBUCKERS");
-			DispatchKeyValue(ent, "rendercolor", "255 255 255");
+			if (iTemperature == FlashlightTemperature_1000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "255 150 50");
+			}
+			if (iTemperature == FlashlightTemperature_2000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "255 210 100");
+			}
+			if (iTemperature == FlashlightTemperature_3000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "255 255 120");
+			}
+			if (iTemperature == FlashlightTemperature_4000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "255 255 185");
+			}
+			if (iTemperature == FlashlightTemperature_5000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "255 255 210");
+			}
+			if (iTemperature == FlashlightTemperature_6000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "255 255 255");
+			}
+			if (iTemperature == FlashlightTemperature_7000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "210 255 255");
+			}
+			if (iTemperature == FlashlightTemperature_8000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "185 255 255");
+			}
+			if (iTemperature == FlashlightTemperature_9000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "150 255 255");
+			}
+			if (iTemperature == FlashlightTemperature_10000)
+			{
+				DispatchKeyValue(ent, "rendercolor", "125 255 255");
+			}
 			SetVariantFloat(SF2_FLASHLIGHT_WIDTH);
 			AcceptEntityInput(ent, "spotlight_radius");
 			SetVariantFloat(SF2_FLASHLIGHT_LENGTH);
@@ -1508,7 +1564,46 @@ void ClientTurnOnFlashlight(int client)
 		DispatchKeyValue(ent, "spotlightlength", sBuffer);
 		FloatToString(SF2_FLASHLIGHT_WIDTH, sBuffer, sizeof(sBuffer));
 		DispatchKeyValue(ent, "spotlightwidth", sBuffer);
-		DispatchKeyValue(ent, "rendercolor", "255 255 255");
+		if (iTemperature == FlashlightTemperature_1000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "255 150 50");
+		}
+		if (iTemperature == FlashlightTemperature_2000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "255 210 100");
+		}
+		if (iTemperature == FlashlightTemperature_3000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "255 255 120");
+		}
+		if (iTemperature == FlashlightTemperature_4000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "255 255 185");
+		}
+		if (iTemperature == FlashlightTemperature_5000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "255 255 210");
+		}
+		if (iTemperature == FlashlightTemperature_6000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "255 255 255");
+		}
+		if (iTemperature == FlashlightTemperature_7000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "210 255 255");
+		}
+		if (iTemperature == FlashlightTemperature_8000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "185 255 255");
+		}
+		if (iTemperature == FlashlightTemperature_9000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "150 255 255");
+		}
+		if (iTemperature == FlashlightTemperature_10000)
+		{
+			DispatchKeyValue(ent, "rendercolor", "125 255 255");
+		}
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
 		SetVariantString("!activator");
@@ -1578,6 +1673,36 @@ void ClientStartDrainingFlashlightBattery(int client)
 {
 	float flDrainRate = SF2_FLASHLIGHT_DRAIN_RATE;
 	float flRechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
+	bool bNightVision = (GetConVarBool(g_cvNightvisionEnabled) || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
+	
+	if (bNightVision && g_iNightvisionType == 2) //Blue nightvision
+	{
+		switch (iDifficulty)
+		{
+			case Difficulty_Normal:
+			{
+				flDrainRate *= 0.5;
+			}
+			case Difficulty_Hard:
+			{
+				flDrainRate *= 0.4;
+			}
+			case Difficulty_Insane:
+			{
+				flDrainRate *= 0.3;
+			}
+			case Difficulty_Nightmare:
+			{
+				flDrainRate *= 0.2;
+			}
+			case Difficulty_Apollyon:
+			{
+				flDrainRate *= 0.1;
+			}
+		}
+	}
+	
 	if (TF2_GetPlayerClass(client) == TFClass_Engineer) 
 	{
 		// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
@@ -1665,7 +1790,23 @@ void ClientActivateUltravision(int client, bool bNightVision = false)
 		
 		TeleportEntity(ent, flEyePos, view_as<float>({ 90.0, 0.0, 0.0 }), NULL_VECTOR);
 		if (bNightVision && !g_bPlayerEliminated[client])
-			DispatchKeyValue(ent, "rendercolor", "110 255 100");
+		{
+			switch (g_iNightvisionType)
+			{
+				case 0:
+				{
+					DispatchKeyValue(ent, "rendercolor", "50 255 50");
+				}
+				case 1:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 50 50");
+				}
+				case 2:
+				{
+					DispatchKeyValue(ent, "rendercolor", "50 50 255");
+				}
+			}
+		}
 		else
 			DispatchKeyValue(ent, "rendercolor", "0 200 255");
 		
@@ -1690,7 +1831,7 @@ void ClientActivateUltravision(int client, bool bNightVision = false)
 		AcceptEntityInput(ent, "brightness");
 		if (bNightVision && !g_bPlayerEliminated[client])
 		{
-			SetVariantInt(4);
+			SetVariantInt(5);
 			AcceptEntityInput(ent, "brightness");
 		}
 		
@@ -1710,7 +1851,23 @@ void ClientActivateUltravision(int client, bool bNightVision = false)
 		SetEntityRenderFx(ent, RENDERFX_SOLID_SLOW);
 		SetEntityRenderColor(ent, 100, 200, 255, 255);
 		if (bNightVision && !g_bPlayerEliminated[client])
-			SetEntityRenderColor(ent, 110, 255, 100, 255);
+		{
+			switch (g_iNightvisionType)
+			{
+				case 0:
+				{
+					DispatchKeyValue(ent, "rendercolor", "50 255 50");
+				}
+				case 1:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 50 50");
+				}
+				case 2:
+				{
+					DispatchKeyValue(ent, "rendercolor", "50 50 255");
+				}
+			}
+		}
 		
 		g_iPlayerUltravisionEnt[client] = EntIndexToEntRef(ent);
 		
@@ -2998,7 +3155,7 @@ public Action Timer_ClientRechargeSprint(Handle timer, any userid)
 	if (client <= 0) return;
 	
 	float flVelSpeed[3];
-	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", flVelSpeed);
+	GetEntPropVector(client, Prop_Data, "m_vecBaseVelocity", flVelSpeed);
 	float flSpeed = GetVectorLength(flVelSpeed);
 	
 	if (timer != g_hPlayerSprintTimer[client]) return;
@@ -4149,7 +4306,7 @@ void ClientSetGhostModeState(int client, bool bState)
 		TF2_RemoveCondition(client,TFCond_Taunting);
 		
 		TFClassType iDesiredClass = TF2_GetPlayerClass(client);
-		if(iDesiredClass == TFClass_Unknown) iDesiredClass = TFClass_Scout;
+		if(iDesiredClass == TFClass_Unknown) iDesiredClass = TFClass_Spy;
 		
 		//Set player's class to spy, this replaces old ghost mode mechanics.
 		TF2_SetPlayerClass(client, TFClass_Spy);
@@ -4827,7 +4984,7 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 		NPCGetProfile(iJumpScareBoss, sProfile, sizeof(sProfile));
 		GetRandomStringFromProfile(sProfile, "overlay_jumpscare", sMaterial, sizeof(sMaterial), 1);
 	}
-	else if (IsClientInGhostMode(client))
+	else if (IsClientInGhostMode(client) && !SF_IsBoxingMap())
 	{
 		strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_GHOST);
 	}
@@ -6308,6 +6465,24 @@ stock void ClientShowMainMessage(int client, const char[] sMessage, any ...)
 	ShowSyncHudText(client, g_hHudSync, message);
 }
 
+stock void ClientShowRenevantMessage(int client, const char[] sMessage, any ...)
+{
+	char message[512];
+	VFormat(message, sizeof(message), sMessage, 3);
+	
+	SetHudTextParams(-1.0, 0.25,
+		5.0,
+		255,
+		255,
+		255,
+		200,
+		2,
+		1.0,
+		0.05,
+		2.0);
+	ShowSyncHudText(client, g_hHudSync, message);
+}
+
 stock void ClientResetSlenderStats(int client)
 {
 #if defined DEBUG
@@ -6349,6 +6524,7 @@ void ClientSaveCookies(int client)
 		g_iPlayerPreferences[client][PlayerPreference_MuteMode], 
 		g_iPlayerPreferences[client][PlayerPreference_FilmGrain],
 		g_iPlayerPreferences[client][PlayerPreference_EnableProxySelection],
+		g_iPlayerPreferences[client][PlayerPreference_FlashlightTemperature],
 		g_iPlayerPreferences[client][PlayerPreference_PvPAutoSpawn]);
 		
 	SetClientCookie(client, g_hCookie, s);
@@ -6591,6 +6767,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 #endif
 	
 	bool bRemoveWeapons = true;
+	bool bKeepUtilityItems = false;
 	bool bRestrictWeapons = true;
 	bool bUseStock = false;
 	bool bRemoveWearables = false;
@@ -6601,6 +6778,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		{
 			bRemoveWeapons = false;
 			bRestrictWeapons = false;
+			bKeepUtilityItems = false;
 		}
 	}
 	
@@ -6609,6 +6787,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	{
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
+		bKeepUtilityItems = false;
 	}
 	
 	if (g_bPlayerProxy[client])
@@ -6617,12 +6796,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = true;
 		bUseStock = true;
 		bRemoveWearables = true;
+		bKeepUtilityItems = false;
 	}
 	
 	if (IsRoundInWarmup()) 
 	{
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
+		bKeepUtilityItems = false;
 	}
 	
 	if (IsClientInGhostMode(client)) 
@@ -6634,14 +6815,16 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	{
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
+		bKeepUtilityItems = false;
 	}
 	
-	if (SF_IsBoxingMap() && !g_bPlayerEliminated[client])
+	if (SF_IsBoxingMap() && !g_bPlayerEliminated[client] && !IsRoundEnding())
 	{
 		bRestrictWeapons = false;
+		bKeepUtilityItems = true;
 	}
 
-	if (bRemoveWeapons)
+	if (bRemoveWeapons && !bKeepUtilityItems)
 	{
 		for (int i = 0; i <= 5; i++)
 		{
@@ -6664,6 +6847,45 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
 			{
 				AcceptEntityInput(ent, "Kill");
+			}
+		}
+
+		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
+	}
+	
+	if (bKeepUtilityItems)
+	{
+		for (int i = 0; i <= 5; i++)
+		{
+			if ((i == TFWeaponSlot_Melee || i == TFWeaponSlot_Secondary) && !IsClientInGhostMode(client)) continue;
+			TF2_RemoveWeaponSlotAndWearables(client, i);
+		}
+		
+		int ent = -1;
+		while ((ent = FindEntityByClassname(ent, "tf_weapon_builder")) != -1)
+		{
+			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				AcceptEntityInput(ent, "Kill");
+			}
+		}
+		
+		int iWeapon = INVALID_ENT_REFERENCE;
+		iWeapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+
+		if (IsValidEdict(iWeapon))
+		{
+			int itemIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+			switch (itemIndex)
+			{
+				case 222, 1121, 163, 129, 226, 354, 1001, 131, 406, 1099, 42, 159, 311, 433, 863, 1002, 1190, 58, 1105:
+				{
+					//Do nothing
+				}
+				default:
+				{
+					TF2_RemoveWeaponSlotAndWearables(client, TFWeaponSlot_Secondary);
+				}
 			}
 		}
 
@@ -6828,21 +7050,45 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				}
 				case 326: // The Back Scratcher
 				{
-					if (!SF_IsBoxingMap())
-					{
-						TF2_RemoveWeaponSlot(client, iSlot);
-						
-						hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
-						int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-						CloseHandle(hWeapon);
-						EquipPlayerWeapon(client, iEnt);
-					}
+					TF2_RemoveWeaponSlot(client, iSlot);
+
+					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					CloseHandle(hWeapon);
+					EquipPlayerWeapon(client, iEnt);
 				}
 				case 304: // Amputator
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
 					hItem = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
+					int iEnt = TF2Items_GiveNamedItem(client, hItem);
+					CloseHandle(hItem);
+					EquipPlayerWeapon(client, iEnt);
+				}
+				case 239: //GRU
+				{
+					TF2_RemoveWeaponSlot(client, iSlot);
+					
+					hItem = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
+					int iEnt = TF2Items_GiveNamedItem(client, hItem);
+					CloseHandle(hItem);
+					EquipPlayerWeapon(client, iEnt);
+				}
+				case 1100: //Bread Bite
+				{
+					TF2_RemoveWeaponSlot(client, iSlot);
+					
+					hItem = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
+					int iEnt = TF2Items_GiveNamedItem(client, hItem);
+					CloseHandle(hItem);
+					EquipPlayerWeapon(client, iEnt);
+				}
+				case 426: //Eviction Notice
+				{
+					TF2_RemoveWeaponSlot(client, iSlot);
+					
+					hItem = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
 					int iEnt = TF2Items_GiveNamedItem(client, hItem);
 					CloseHandle(hItem);
 					EquipPlayerWeapon(client, iEnt);

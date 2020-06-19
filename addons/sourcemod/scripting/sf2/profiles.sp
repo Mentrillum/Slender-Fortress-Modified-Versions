@@ -10,6 +10,7 @@
 static Handle g_hBossProfileList = INVALID_HANDLE;
 static Handle g_hSelectableBossProfileList = INVALID_HANDLE;
 static Handle g_hSelectableBoxingBossProfileList = INVALID_HANDLE;
+static Handle g_hSelectableRenevantBossProfileList = INVALID_HANDLE;
 static Handle g_hSelectableBossProfileQueueList = INVALID_HANDLE;
 
 static Handle g_hBossProfileNames = INVALID_HANDLE;
@@ -306,7 +307,7 @@ public Action Command_NextPack(int client,int args)
 	KvGetString(g_hBossPackConfig, "name", bossPackName, sizeof(bossPackName), nextpack);
 	if(StrEqual(bossPackName,""))
 		Format(bossPackName,sizeof(bossPackName),"Core Pack");
-	CPrintToChat(client,"{olive}Next pack:{lightgreen}%s",bossPackName);
+	CPrintToChat(client,"{olive}Next pack: {lightgreen}%s",bossPackName);
 	return Plugin_Handled;
 }
 
@@ -336,6 +337,12 @@ void ClearBossProfiles()
 	{
 		delete g_hSelectableBoxingBossProfileList;
 		g_hSelectableBoxingBossProfileList = INVALID_HANDLE;
+	}
+	
+	if (g_hSelectableRenevantBossProfileList != INVALID_HANDLE)
+	{
+		delete g_hSelectableRenevantBossProfileList;
+		g_hSelectableRenevantBossProfileList = INVALID_HANDLE;
 	}
 	
 	ClearTrie(g_hBossProfileNames);
@@ -377,6 +384,11 @@ void ReloadBossProfiles()
 	if (g_hSelectableBoxingBossProfileList == INVALID_HANDLE)
 	{
 		g_hSelectableBoxingBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
+	}
+	
+	if (g_hSelectableRenevantBossProfileList == INVALID_HANDLE)
+	{
+		g_hSelectableRenevantBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
 	if (g_hSelectableBossProfileQueueList != INVALID_HANDLE)
@@ -887,6 +899,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	{
 		PrecacheSound2(sEngineSound);
 	}
+	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection", 1)))
 	{
 		if (FindStringInArray(GetSelectableBossProfileList(), sProfile) == -1)
@@ -903,6 +916,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 			RemoveFromArray(GetSelectableBossProfileList(), selectIndex);
 		}	
 	}
+	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection_boxing", 0)))
 	{
 		if (FindStringInArray(GetSelectableBoxingBossProfileList(), sProfile) == -1)
@@ -917,6 +931,23 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 		if (selectIndex != -1)
 		{
 			RemoveFromArray(GetSelectableBoxingBossProfileList(), selectIndex);
+		}
+	}
+	
+	if (view_as<bool>(KvGetNum(kv, "enable_random_selection_renevant", 0)))
+	{
+		if (FindStringInArray(GetSelectableRenevantBossProfileList(), sProfile) == -1)
+		{
+			// Add to the selectable boss list if it isn't there already.
+			PushArrayString(GetSelectableRenevantBossProfileList(), sProfile);
+		}
+	}
+	else
+	{
+		int selectIndex = FindStringInArray(GetSelectableRenevantBossProfileList(), sProfile);
+		if (selectIndex != -1)
+		{
+			RemoveFromArray(GetSelectableRenevantBossProfileList(), selectIndex);
 		}
 	}
 	
@@ -1566,6 +1597,10 @@ Handle GetSelectableBossProfileList()
 Handle GetSelectableBoxingBossProfileList()
 {
 	return g_hSelectableBoxingBossProfileList;
+}
+Handle GetSelectableRenevantBossProfileList()
+{
+	return g_hSelectableRenevantBossProfileList;
 }
 
 /**

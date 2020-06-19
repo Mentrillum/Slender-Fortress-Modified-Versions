@@ -38,7 +38,6 @@ static const char g_sPvPProjectileClasses[][] =
 };
 static const char g_sPvPProjectileClassesNoTouch[][] = 
 {
-	"tf_projectile_ball_ornament",
 	"tf_projectile_flare"
 };
 

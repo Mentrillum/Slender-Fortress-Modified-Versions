@@ -3,7 +3,7 @@
 #endif
 #define _sf2_chasepath_included
 
-#define MAX_PATH 32
+#define MAX_PATH 64
 
 static NavPath g_hChasePath[MAX_PATH] = { null, ... };
 static int g_iPathNodeIndex[MAX_PATH];

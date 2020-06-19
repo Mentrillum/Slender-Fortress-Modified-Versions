@@ -741,6 +741,10 @@ void SpecialRoundStart()
 				AddProfile(sBuffer,_,_,_,false);
 				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
 				AddProfile(sBuffer,_,_,_,false);
+				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+				AddProfile(sBuffer,_,_,_,false);
+				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+				AddProfile(sBuffer,_,_,_,false);
 			}
 			SF_AddSpecialRound(SPECIALROUND_2DOOM);
 		}

@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.3.8 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.3.8 Modified"
+#define PLUGIN_VERSION "1.5.4 Beta Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.4 Beta Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -156,6 +156,9 @@ public Plugin myinfo =
 #define HYPERSNATCHER_NIGHTAMRE_3 "slender/snatcher/nightmare3.wav"
 #define HYPERSNATCHER_NIGHTAMRE_4 "slender/snatcher/nightmare4.wav"
 #define HYPERSNATCHER_NIGHTAMRE_5 "slender/snatcher/nightmare5.wav"
+#define SNATCHER_APOLLYON_1 "slender/snatcher/apollyon1.wav"
+#define SNATCHER_APOLLYON_2 "slender/snatcher/apollyon2.wav"
+#define SNATCHER_APOLLYON_3 "slender/snatcher/apollyon3.wav"
 
 //#define NINETYSMUSIC "slender/sf2modified_runninginthe90s.wav"
 #define TRIPLEBOSSESMUSIC "slender/sf2modified_triplebosses.wav"
@@ -170,6 +173,20 @@ enum MuteMode
 	MuteMode_Normal = 0,
 	MuteMode_DontHearOtherTeam,
 	MuteMode_DontHearOtherTeamIfNotProxy
+};
+
+enum FlashlightTemperature
+{
+	FlashlightTemperature_6000,
+	FlashlightTemperature_1000,
+	FlashlightTemperature_2000,
+	FlashlightTemperature_3000,
+	FlashlightTemperature_4000,
+	FlashlightTemperature_5000,
+	FlashlightTemperature_7000,
+	FlashlightTemperature_8000,
+	FlashlightTemperature_9000,
+	FlashlightTemperature_10000
 };
 
 char g_strSoundNightmareMode[][] =
@@ -286,6 +303,10 @@ int g_iSlenderBoxingBossCount = 0;
 int g_iSlenderBoxingBossKilled = 0;
 bool g_bSlenderBoxingBossIsKilled[MAX_BOSSES] = false;
 
+int g_iRenevantWaveNumber = 0;
+bool g_bRenevantMultiEffect = false;
+bool g_bRenevantBeaconEffect = false;
+
 // For boss type 2
 // General variables
 int g_iSlenderHealth[MAX_BOSSES];
@@ -351,6 +372,8 @@ float g_flSlenderTimeUntilAttackEnd[MAX_BOSSES] = {-1.0, ... };
 
 bool g_bSlenderInBacon[MAX_BOSSES];
 
+int g_iNightvisionType = 0;
+
 //Healthbar
 int g_ihealthBar;
 
@@ -387,6 +410,26 @@ bool g_bNPCAlertedCopy[MAX_BOSSES];
 bool g_bNPCStopAlertingCopies[MAX_BOSSES];
 Handle g_hNPCResetAlertCopyTimer[MAX_BOSSES];
 Handle g_hNPCRegisterAlertingCopiesTimer[MAX_BOSSES];
+
+//Boxing data
+Handle g_hSlenderBurnTimer[MAX_BOSSES];
+Handle g_hSlenderBleedTimer[MAX_BOSSES];
+Handle g_hSlenderMarkedTimer[MAX_BOSSES];
+Handle g_hSlenderMilkedTimer[MAX_BOSSES];
+Handle g_hSlenderGasTimer[MAX_BOSSES];
+Handle g_hSlenderJarateTimer[MAX_BOSSES];
+float g_flSlenderStopBurning[MAX_BOSSES];
+float g_flSlenderStopBleeding[MAX_BOSSES];
+bool g_bSlenderIsBurning[MAX_BOSSES]; //This is for the Sun-on-a-Stick
+bool g_bSlenderIsMarked[MAX_BOSSES]; //For mini-crits and Bushwacka
+bool g_bSlenderIsMilked[MAX_BOSSES];
+bool g_bSlenderIsGassed[MAX_BOSSES];
+bool g_bSlenderIsJarate[MAX_BOSSES];
+int g_iPlayerHitsToCrits[MAXPLAYERS + 1];
+int g_iPlayerHitsToHeads[MAXPLAYERS + 1];
+
+static bool g_bPlayersAreCritted = false;
+static bool g_bPlayersAreMiniCritted = false;
 
 float g_flPlayerIgniteNextTime[MAXPLAYERS + 1][MAX_BOSSES];
 
@@ -439,6 +482,7 @@ enum PlayerPreferences
 	bool:PlayerPreference_ShowHints,
 	bool:PlayerPreference_EnableProxySelection,
 	bool:PlayerPreference_ProjectedFlashlight,
+	FlashlightTemperature:PlayerPreference_FlashlightTemperature,
 };
 
 bool g_bPlayerHints[MAXPLAYERS + 1][PlayerHint_MaxNum];
@@ -547,6 +591,7 @@ bool g_bIsRaidMap = false;
 bool g_bIsProxyMap = false;
 bool g_bBossesChaseEndlessly = false;
 bool g_bIsBoxingMap = false;
+bool g_bIsRenevantMap = false;
 bool g_bAllTalkOn = false;
 bool g_bRoundInfiniteBlink = false;
 bool g_bRoundInfiniteSprint = false;
@@ -554,6 +599,7 @@ bool g_bRoundInfiniteSprint = false;
 Handle g_hRoundGraceTimer = INVALID_HANDLE;
 static Handle g_hRoundTimer = INVALID_HANDLE;
 static Handle g_hVoteTimer = INVALID_HANDLE;
+Handle g_hRenevantWaveTimer = INVALID_HANDLE;
 static char g_strRoundBossProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 static char g_strRoundBoxingBossProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 
@@ -565,6 +611,7 @@ int g_iSpecialRoundTime = 0;
 static int g_iTimeEscape = 0;
 static int g_iRoundTimeLimit = 0;
 static int g_iRoundEscapeTimeLimit = 0;
+static int g_iRenevantTimer = 0;
 static int g_iRoundTimeGainFromPage = 0;
 static bool g_bRoundHasEscapeObjective = false;
 
@@ -607,6 +654,7 @@ static int g_iRoundMessagesNum = 0;
 
 static Handle g_hBossCountUpdateTimer = INVALID_HANDLE;
 static Handle g_hClientAverageUpdateTimer = INVALID_HANDLE;
+static Handle g_hBlueNightvisionOutlineTimer = INVALID_HANDLE;
 
 // Server variables.
 Handle g_cvVersion;
@@ -671,6 +719,7 @@ Handle g_cvProxyMap;
 Handle g_cvBossChaseEndlessly;
 Handle g_cvSurvivalMap;
 Handle g_cvBoxingMap;
+Handle g_cvRenevantMap;
 Handle g_cvTimeEscapeSurvival;
 
 Handle g_cvPlayerInfiniteSprintOverride;
@@ -968,10 +1017,10 @@ public void OnPluginStart()
 	g_cvPlayerBlinkHoldTime = CreateConVar("sf2_player_blink_holdtime", "0.15", "How long (in seconds) a player will stay in Blink mode when he or she blinks.", _, true, 0.0);
 	
 	g_cvUltravisionEnabled = CreateConVar("sf2_player_ultravision_enabled", "1", "Enable/Disable player Ultravision. This helps players see in the dark when their Flashlight is off or unavailable.", _, true, 0.0, true, 1.0);
-	g_cvUltravisionRadiusRed = CreateConVar("sf2_player_ultravision_radius_red", "512.0");
-	g_cvUltravisionRadiusBlue = CreateConVar("sf2_player_ultravision_radius_blue", "800.0");
-	g_cvNightvisionRadius = CreateConVar("sf2_player_nightvision_radius", "650.0");
-	g_cvUltravisionBrightness = CreateConVar("sf2_player_ultravision_brightness", "-4");
+	g_cvUltravisionRadiusRed = CreateConVar("sf2_player_ultravision_radius_red", "600.0");
+	g_cvUltravisionRadiusBlue = CreateConVar("sf2_player_ultravision_radius_blue", "1600.0");
+	g_cvNightvisionRadius = CreateConVar("sf2_player_nightvision_radius", "900.0");
+	g_cvUltravisionBrightness = CreateConVar("sf2_player_ultravision_brightness", "-2");
 	g_cvNightvisionEnabled = CreateConVar("sf2_player_flashlight_isnightvision", "0", "Enable/Disable flashlight replacement with nightvision",_, true, 0.0, true, 1.0);
 	
 	g_cvGhostModeConnection = CreateConVar("sf2_ghostmode_no_tolerance", "0", "If set on 1, it will instant kick out the client of the Ghost mode if the client has timed out.");
@@ -1031,6 +1080,8 @@ public void OnPluginStart()
 	g_cvProxyMap = CreateConVar("sf2_isproxymap", "0", "Set to 1 if the map is a proxy survival map.", _, true, 0.0, true, 1.0);
 	
 	g_cvBoxingMap = CreateConVar("sf2_isboxingmap", "0", "Set to 1 if the map is a boxing map.", _, true, 0.0, true, 1.0);
+	
+	g_cvRenevantMap = CreateConVar("sf2_isrenevantmap", "0", "Set to 1 if the map uses Renevant logic.", _, true, 0.0, true, 1.0);
 	
 	g_cvSurvivalMap = CreateConVar("sf2_issurvivalmap", "0", "Set to 1 if the map is a survival map.", _, true, 0.0, true, 1.0);
 	g_cvTimeEscapeSurvival = CreateConVar("sf2_survival_time_limit", "30", "when X secs left the mod will turn back the Survive! text to Escape! text", _, true, 0.0);
@@ -1623,6 +1674,7 @@ static void PrecacheStuff()
 	PrecacheSound(CRIT_SOUND);
 	PrecacheSound(ZAP_SOUND);
 	PrecacheSound(PAGE_DETECTOR_BEEP);
+	PrecacheSound("player/spy_shield_break.wav");
 	
 	// simple_bot;
 	PrecacheModel("models/humans/group01/female_01.mdl", true);
@@ -1684,6 +1736,9 @@ static void PrecacheStuff()
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_3);
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_4);
 	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_5);
+	PrecacheSound2(SNATCHER_APOLLYON_1);
+	PrecacheSound2(SNATCHER_APOLLYON_2);
+	PrecacheSound2(SNATCHER_APOLLYON_3);
 	
 	//PrecacheSound2(NINETYSMUSIC);
 	PrecacheSound2(TRIPLEBOSSESMUSIC);
@@ -2284,7 +2339,7 @@ public Action Hook_CommandSay(int iClient, const char[] command,int argc)
 		g_bPlayerCalledForNightmare[iClient] = (StrContains(sMessage, "nightmare", false) != -1 || StrContains(sMessage, "Nightmare", false) != -1);
 	}
 	
-	if (!g_bEnabled || (GetConVarBool(g_cvAllChat) && !SF_IsBoxingMap())) return Plugin_Continue;
+	if (!g_bEnabled || GetConVarBool(g_cvAllChat)) return Plugin_Continue;
 	
 	if (!IsRoundEnding())
 	{
@@ -2319,7 +2374,7 @@ public Action Hook_CommandSayTeam(int iClient, const char[] command,int argc)
 		g_bPlayerCalledForNightmare[iClient] = (StrContains(sMessage, "nightmare", false) != -1 || StrContains(sMessage, "Nightmare", false) != -1);
 	}
 	
-	if (!g_bEnabled || (GetConVarBool(g_cvAllChat) && !SF_IsBoxingMap())) return Plugin_Continue;
+	if (!g_bEnabled || GetConVarBool(g_cvAllChat)) return Plugin_Continue;
 	
 	if (!IsRoundEnding())
 	{
@@ -2352,7 +2407,7 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 		}
 	}
 	
-	if (IsRoundEnding() || IsRoundInIntro() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
+	if (IsRoundInIntro() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
 	{
 		return Plugin_Handled;
 	}
@@ -3033,6 +3088,43 @@ public Action Hook_CommandDisguise(int iClient, const char[] command,int argc)
 	return Plugin_Handled;
 }
 
+public Action Timer_BlueNightvisionOutline(Handle timer)
+{
+	if (timer != g_hBlueNightvisionOutlineTimer) return Plugin_Stop;
+	
+	if (!g_bEnabled) return Plugin_Stop;
+
+	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	{	
+		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		SlenderRemoveGlow(iNPCIndex);
+		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(iNPCIndex, sProfile, sizeof(sProfile));
+		if (NPCGetCustomOutlinesState(iNPCIndex))
+		{
+			int color[4];
+			color[0] = NPCGetOutlineColorR(iNPCIndex);
+			color[1] = NPCGetOutlineColorG(iNPCIndex);
+			color[2] = NPCGetOutlineColorB(iNPCIndex);
+			color[3] = NPCGetOutlineTransparency(iNPCIndex);
+			if (color[0] < 0) color[0] = 0;
+			if (color[1] < 0) color[1] = 0;
+			if (color[2] < 0) color[2] = 0;
+			if (color[3] < 0) color[3] = 0;
+			if (color[0] > 255) color[0] = 255;
+			if (color[1] > 255) color[1] = 255;
+			if (color[2] > 255) color[2] = 255;
+			if (color[3] > 255) color[3] = 255;
+			SlenderAddGlow(iNPCIndex,_,color);
+		}
+		else
+		{
+			int iPurple[4] = {150, 0, 255, 255};
+			SlenderAddGlow(iNPCIndex,_,iPurple);
+		}
+	}
+}
+
 public Action Timer_BossCountUpdate(Handle timer)
 {
 	if (timer != g_hBossCountUpdateTimer) return Plugin_Stop;
@@ -3263,6 +3355,7 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 			case Difficulty_Hard: g_flRoundDifficultyModifier = DIFFICULTY_HARD;
 			case Difficulty_Insane: g_flRoundDifficultyModifier = DIFFICULTY_INSANE;
 			case Difficulty_Nightmare: g_flRoundDifficultyModifier = DIFFICULTY_NIGHTMARE;
+			case Difficulty_Apollyon: g_flRoundDifficultyModifier = DIFFICULTY_APOLLYON;
 			default: g_flRoundDifficultyModifier = DIFFICULTY_NORMAL;
 		}
 	}
@@ -3343,6 +3436,18 @@ public void OnEntityCreated(int ent, const char[] classname)
 	else if(strcmp(classname, "tf_projectile_pipe") == 0)
 	{
 		//SDKHook(ent, SDKHook_Spawn, Hook_ProjectileSpawn);
+	}
+	else if(strcmp(classname, "tf_projectile_jar_milk") == 0 && SF_IsBoxingMap())
+	{
+		SDKHook(ent, SDKHook_Touch, Hook_MilkTouch);
+	}
+	else if(strcmp(classname, "tf_projectile_jar") == 0 && SF_IsBoxingMap())
+	{
+		SDKHook(ent, SDKHook_Touch, Hook_JarateTouch);
+	}
+	else if(strcmp(classname, "tf_projectile_jar_gas") == 0 && SF_IsBoxingMap())
+	{
+		//SDKHook(ent, SDKHook_Touch, Hook_GasTouch);
 	}
 
 	PvP_OnEntityCreated(ent, classname);
@@ -4386,6 +4491,7 @@ public void OnClientCookiesCached(int iClient)
 	g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = MuteMode_Normal;
 	g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = true;
 	g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = true;
+	g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_6000;
 	
 	if (sCookie[0])
 	{
@@ -4403,7 +4509,9 @@ public void OnClientCookiesCached(int iClient)
 		if (count > 4)
 			g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = view_as<bool>(StringToInt(s2[4]));
 		if (count > 5)
-			g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = view_as<bool>(StringToInt(s2[6]));
+			g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = view_as<bool>(StringToInt(s2[5]));
+		if (count > 6)
+			g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = view_as<FlashlightTemperature>(StringToInt(s2[6]));
 	}
 }
 
@@ -4551,6 +4659,7 @@ public void OnClientDisconnect(int iClient)
 	g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = true;
 	g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = true;
 	g_iPlayerPreferences[iClient][PlayerPreference_ProjectedFlashlight] = false;
+	g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_6000;
 
 	// Reset any iClient functions that may be still active.
 	ClientResetOverlay(iClient);
@@ -4563,6 +4672,11 @@ public void OnClientDisconnect(int iClient)
 	ClientStopProxyForce(iClient);
 	
 	Network_ResetClient(iClient);
+	
+	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
+	{
+		CreateTimer(0.2, Timer_CheckAlivePlayers);
+	}
 	
 	if (!IsRoundInWarmup())
 	{
@@ -4634,12 +4748,33 @@ void SetRoundState(SF2RoundState iRoundState)
 		case SF2RoundState_Intro:
 		{
 			g_hRoundIntroTimer = INVALID_HANDLE;
+			g_iNightvisionType = GetRandomInt(2, 2);
 		}
 		case SF2RoundState_Active:
 		{
 			g_bRoundGrace = false;
 			g_hRoundGraceTimer = INVALID_HANDLE;
 			g_hRoundTimer = INVALID_HANDLE;
+			g_hRenevantWaveTimer = INVALID_HANDLE;
+			g_bPlayersAreCritted = false;
+			g_bPlayersAreMiniCritted = false;
+			g_bRenevantMultiEffect = false;
+			g_bRenevantBeaconEffect = false;
+			bool bNightVision = (GetConVarBool(g_cvNightvisionEnabled) || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
+			if (bNightVision)
+			{
+				switch (g_iNightvisionType)
+				{
+					case 2:
+					{
+						g_hBlueNightvisionOutlineTimer = CreateTimer(10.0, Timer_BlueNightvisionOutline, _, TIMER_REPEAT);
+					}
+					default:
+					{
+						g_hBlueNightvisionOutlineTimer = INVALID_HANDLE;
+					}
+				}
+			}
 		}
 		case SF2RoundState_Escape:
 		{
@@ -5739,6 +5874,32 @@ void SetPageCount(int iNum)
 				}
 			}
 			
+			if (SF_IsRenevantMap())
+			{
+				char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
+				float flTimer = ((float(g_iRenevantTimer) - 60)/5);
+				g_iRenevantWaveNumber = 1;
+				g_bRenevantMultiEffect = false;
+				g_bRenevantBeaconEffect = false;
+				Handle hSelectableBosses = GetSelectableRenevantBossProfileList();
+				char sName[SF2_MAX_NAME_LENGTH];
+				if (GetArraySize(hSelectableBosses) > 0)
+				{
+					GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+					GetProfileString(sBuffer, "name", sName, sizeof(sName));
+					if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+					AddProfile(sBuffer);
+				}
+				for (int i = 0; i < iClientsNum; i++)
+				{
+					int iClient = iClients[i];
+					ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
+				}
+				g_hRenevantWaveTimer = CreateTimer(flTimer, Timer_RenevantWave, _, TIMER_REPEAT);
+				SetConVarInt(g_cvDifficulty, Difficulty_Normal);
+				CPrintToChatAll("The difficulty has been set to {yellow}%t{default}.", "SF2 Normal Difficulty");
+			}
+			
 			if (SF_SpecialRound(SPECIALROUND_LASTRESORT))
 			{
 				char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -5753,6 +5914,7 @@ void SetPageCount(int iNum)
 			{
 				SetConVarInt(g_cvDifficulty, Difficulty_Normal);
 				CPrintToChatAll("%t", "SF2 Boxing Initiate");
+				CreateTimer(0.2, Timer_CheckAlivePlayers);
 			}
 		}
 		else
@@ -6428,6 +6590,11 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientHandleGhostMode(iClient);
 	}
 	
+	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
+	{
+		CreateTimer(0.2, Timer_CheckAlivePlayers);
+	}
+	
 	g_hPlayerPostWeaponsTimer[iClient] = INVALID_HANDLE;
 	g_hPlayerIgniteTimer[iClient] = INVALID_HANDLE;
 	g_hPlayerResetIgnite[iClient] = INVALID_HANDLE;
@@ -6436,6 +6603,8 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	g_hPlayerFireworkTimer[iClient] = INVALID_HANDLE;
 	
 	g_bPlayerGettingPageReward[iClient] = false;
+	g_iPlayerHitsToCrits[iClient] = 0;
+	g_iPlayerHitsToHeads[iClient] = 0;
 	
 	if (IsPlayerAlive(iClient) && IsClientParticipating(iClient))
 	{
@@ -6857,7 +7026,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		{
 			if (!g_bPlayerEliminated[iClient])
 			{
-				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT))
+				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT) || g_bRenevantMultiEffect)
 						CreateTimer(0.1, Timer_ReplacePlayerRagdoll, GetClientUserId(iClient));
 				if (IsRoundInIntro() || g_bRoundGrace || DidClientEscape(iClient))
 				{
@@ -7014,6 +7183,8 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		g_hPlayerFireworkTimer[iClient] = INVALID_HANDLE;
 		
 		g_bPlayerGettingPageReward[iClient] = false;
+		g_iPlayerHitsToCrits[iClient] = 0;
+		g_iPlayerHitsToHeads[iClient] = 0;
 	}
 	if (!IsRoundEnding() && !g_bRoundWaitingForPlayers)
 	{
@@ -7055,6 +7226,10 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			CreateTimer(0.2, Timer_SendDeath, event2);
 		}
 	}
+	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
+	{
+		CreateTimer(0.2, Timer_CheckAlivePlayers);
+	}
 	PvP_OnPlayerDeath(iClient, bFake);
 	
 #if defined DEBUG
@@ -7088,6 +7263,99 @@ public Action Timer_RevertSourceTVBotName(Handle timer)
 		//TF2_ChangePlayerName(iSourceTV, g_sOldSourceTVClientName, true);
 		SetClientName(iSourceTV, g_sOldSourceTVClientName);
 		SetEntPropString(iSourceTV, Prop_Data, "m_szNetname", g_sOldSourceTVClientName);
+	}
+	return Plugin_Continue;
+}
+
+public Action Timer_CheckAlivePlayers(Handle timer)
+{
+	if (!g_bEnabled || !SF_IsBoxingMap()) return Plugin_Continue;
+	
+	int iClients[MAXPLAYERS + 1];
+	int iClientsNum;
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+
+		iClients[iClientsNum] = i;
+		iClientsNum++;
+	}
+	
+	switch (iClientsNum)
+	{
+		case 1:
+		{
+			for (int i = 0; i < iClientsNum; i++)
+			{
+				int iClient = iClients[i];
+				TF2_AddCondition(iClient, TFCond_HalloweenCritCandy, -1.0);
+			}
+			if (!g_bPlayersAreCritted)
+			{
+				if (g_iRoundTime > 120)
+				{
+					g_iRoundTime = 120;
+					CPrintToChatAll("Only 1 {red}RED{default} player is alive, 2 minutes left on the timer...");
+					for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+					{	
+						if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+						NPCSetAddSpeed(iNPCIndex, 25.0);
+						NPCSetAddMaxSpeed(iNPCIndex, 50.0);
+					}
+					g_bPlayersAreCritted = true;
+				}
+				else
+				{
+					CPrintToChatAll("Only 1 {red}RED{default} player is alive...");
+					for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+					{	
+						if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+						NPCSetAddSpeed(iNPCIndex, 25.0);
+						NPCSetAddMaxSpeed(iNPCIndex, 50.0);
+					}
+					g_bPlayersAreCritted = true;
+				}
+			}
+		}
+		case 2, 3:
+		{
+			if (!g_bPlayersAreMiniCritted)
+			{
+				if (g_iRoundTime > 200)
+				{
+					g_iRoundTime = 200;
+					CPrintToChatAll("3 {red}RED{default} players are alive, 3 minutes and 20 seconds left on the timer...");
+					for (int i = 0; i < iClientsNum; i++)
+					{
+						int iClient = iClients[i];
+						TF2_AddCondition(iClient, TFCond_Buffed, -1.0);
+					}
+					g_bPlayersAreMiniCritted = true;
+				}
+				else
+				{
+					CPrintToChatAll("3 {red}RED{default} players are alive...");
+					for (int i = 0; i < iClientsNum; i++)
+					{
+						int iClient = iClients[i];
+						TF2_AddCondition(iClient, TFCond_Buffed, -1.0);
+					}
+					g_bPlayersAreMiniCritted = true;
+				}
+			}
+		}
+		default:
+		{
+			for (int i = 0; i < iClientsNum; i++)
+			{
+				int iClient = iClients[i];
+				TF2_RemoveCondition(iClient, TFCond_Buffed);
+				TF2_RemoveCondition(iClient, TFCond_HalloweenCritCandy);
+			}
+			g_bPlayersAreCritted = false;
+			g_bPlayersAreMiniCritted = false;
+		}
 	}
 	return Plugin_Continue;
 }
@@ -7728,7 +7996,7 @@ public Action Timer_RoundStart(Handle timer)
 		}
 		
 		// Show difficulty menu.
-		if (!SF_IsBoxingMap())
+		if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
 		{
 			if (iClientsNum)
 			{
@@ -7996,6 +8264,486 @@ public Action Timer_VoteDifficulty(Handle timer, any data)
 	return Plugin_Stop;
 }
 
+public Action Timer_RenevantWave(Handle timer, any data)
+{
+	if (timer != g_hRenevantWaveTimer || IsRoundEnding())
+	{
+		return Plugin_Stop;
+	}
+	g_iRenevantWaveNumber += 1;
+		
+	int iClients[MAXPLAYERS + 1];
+	int iClientsNum;
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+
+		iClients[iClientsNum] = i;
+		iClientsNum++;
+	}
+		
+	if (SF_IsRenevantMap())
+	{
+		char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer2[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer3[SF2_MAX_PROFILE_NAME_LENGTH];
+		char sName[SF2_MAX_NAME_LENGTH], sName2[SF2_MAX_NAME_LENGTH], sName3[SF2_MAX_NAME_LENGTH];
+		Handle hSelectableBosses = GetSelectableRenevantBossProfileList();
+		int iDifficulty = GetConVarInt(g_cvDifficulty);
+		switch (g_iRenevantWaveNumber)
+		{
+			case 2: //Wave 2
+			{
+				int iRandomWave = GetRandomInt(0, 2);
+				switch (iRandomWave)
+				{
+					case 0: //Normal
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
+						}
+					}
+					case 1: //Difficulty increase
+					{
+						SetConVarInt(g_cvDifficulty, Difficulty_Hard);
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
+						}
+					}
+					case 2: //Boss abilities
+					{
+						g_bRenevantMultiEffect = true;
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nBosses can now inflict Multieffect.", g_iRenevantWaveNumber, sName);
+						}
+					}
+				}
+			}
+			case 3: //Wave 3
+			{
+				int iRandomWave = GetRandomInt(0, 3);
+				switch (iRandomWave)
+				{
+					case 0: //Normal
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
+						}
+					}
+					case 1: //Double Trouble
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
+							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
+							AddProfile(sBuffer,_,_,_,false);
+							AddProfile(sBuffer2,_,_,_,false);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s and %s", g_iRenevantWaveNumber, sName, sName2);
+						}
+					}
+					case 2: //Difficulty Increase
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						switch (iDifficulty)
+						{
+							case Difficulty_Normal:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Hard);
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
+								}
+							}
+							case Difficulty_Hard:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Insane);
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Insane Difficulty");
+								}
+							}
+						}
+					}
+					case 3: //Bacon Spray
+					{
+						g_bRenevantBeaconEffect = true;
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nBosses are now alerted on spawn.", g_iRenevantWaveNumber, sName);
+						}
+					}
+				}
+			}
+			case 4: //Wave 4
+			{
+				int iRandomWave = GetRandomInt(0, 2);
+				switch (iRandomWave)
+				{
+					case 0: //Normal
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
+						}
+					}
+					case 1: //Double Trouble
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
+							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
+							AddProfile(sBuffer,_,_,_,false);
+							AddProfile(sBuffer2,_,_,_,false);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s and %s", g_iRenevantWaveNumber, sName, sName2);
+						}
+					}
+					case 2: //Difficulty Increase
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						switch (iDifficulty)
+						{
+							case Difficulty_Normal:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Hard);
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
+								}
+							}
+							case Difficulty_Hard:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Insane);
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Insane Difficulty");
+								}
+							}
+							case Difficulty_Insane:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: Nightmare!", g_iRenevantWaveNumber, sName);
+								}
+							}
+						}
+					}
+				}
+			}
+			case 5: //Wave 5
+			{
+				int iRandomWave = GetRandomInt(0, 3);
+				switch (iRandomWave)
+				{
+					case 0: //Normal
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							AddProfile(sBuffer);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
+						}
+					}
+					case 1: //Double Trouble
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
+							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
+							AddProfile(sBuffer,_,_,_,false);
+							AddProfile(sBuffer2,_,_,_,false);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s and %s", g_iRenevantWaveNumber, sName, sName2);
+						}
+					}
+					case 2: //Difficulty Increase
+					{
+						switch (iDifficulty)
+						{
+							case Difficulty_Normal:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Hard);
+								if (GetArraySize(hSelectableBosses) > 0)
+								{
+									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+									GetProfileString(sBuffer, "name", sName, sizeof(sName));
+									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+									AddProfile(sBuffer);
+								}
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
+								}
+							}
+							case Difficulty_Hard:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Insane);
+								if (GetArraySize(hSelectableBosses) > 0)
+								{
+									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+									GetProfileString(sBuffer, "name", sName, sizeof(sName));
+									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+									AddProfile(sBuffer);
+								}
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Insane Difficulty");
+								}
+							}
+							case Difficulty_Insane:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
+								if (GetArraySize(hSelectableBosses) > 0)
+								{
+									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+									GetProfileString(sBuffer, "name", sName, sizeof(sName));
+									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+									AddProfile(sBuffer);
+								}
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: Nightmare!", g_iRenevantWaveNumber, sName);
+								}
+							}
+							case Difficulty_Nightmare:
+							{
+								SetConVarInt(g_cvDifficulty, Difficulty_Apollyon);
+								if (GetArraySize(hSelectableBosses) > 0)
+								{
+									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+									float flTeleportPos[3];
+									GetProfileString(sBuffer, "name", sName, sizeof(sName));
+									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+									AddProfile(sBuffer);
+
+									SF_RenevantSpawnApollyon();
+								}
+								for (int i = 0; i < iClientsNum; i++)
+								{
+									int iClient = iClients[i];
+									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
+								}
+								CPrintToChatAll("The difficulty has been set to: {darkgray}Apollyon{default}!");
+								g_bBossesChaseEndlessly = true;
+								g_bRoundInfiniteSprint = true;
+								
+								for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+									EmitSoundToAll(g_strSoundNightmareMode[i]);
+								SpecialRoundGameText("Apollyon mode!", "leaderboard_streak");
+								int iRandomQuote = GetRandomInt(1, 8);
+								switch (iRandomQuote)
+								{
+									case 1:
+									{
+										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
+										CPrintToChatAll("{purple}Snatcher {default}:  Oh no! You're not slipping out of your contract THAT easily.");
+									}
+									case 2:
+									{
+										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
+										CPrintToChatAll("{purple}Snatcher {default}:  You ready to die some more? Great!");
+									}
+									case 3:
+									{
+										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
+										CPrintToChatAll("{purple}Snatcher {default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+									}
+									case 4:
+									{
+										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
+										CPrintToChatAll("{purple}Snatcher {default}:  I love the smell of DEATH in the morning.");
+									}
+									case 5:
+									{
+										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
+										CPrintToChatAll("{purple}Snatcher {default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+									}
+									case 6:
+									{
+										EmitSoundToAll(SNATCHER_APOLLYON_1);
+										CPrintToChatAll("{purple}Snatcher {default}:  Ah! It gets better every time!");
+									}
+									case 7:
+									{
+										EmitSoundToAll(SNATCHER_APOLLYON_2);
+										CPrintToChatAll("{purple}Snatcher {default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+									}
+									case 8:
+									{
+										EmitSoundToAll(SNATCHER_APOLLYON_3);
+										CPrintToChatAll("{purple}Snatcher {default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+									}
+								}
+							}
+						}
+					}
+					case 3: //Doom Box
+					{
+						if (GetArraySize(hSelectableBosses) > 0)
+						{
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
+							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer3, sizeof(sBuffer3));
+							GetProfileString(sBuffer, "name", sName, sizeof(sName));
+							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
+							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
+							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
+							GetProfileString(sBuffer3, "name", sName3, sizeof(sName3));
+							if (!sName3[0]) strcopy(sName3, sizeof(sName3), sBuffer3);
+							AddProfile(sBuffer,_,_,_,false);
+							AddProfile(sBuffer2,_,_,_,false);
+							AddProfile(sBuffer3,_,_,_,false);
+						}
+						for (int i = 0; i < iClientsNum; i++)
+						{
+							int iClient = iClients[i];
+							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s, %s, and %s", g_iRenevantWaveNumber, sName, sName2, sName3);
+						}
+					}
+				}
+				return Plugin_Stop;
+			}
+		}
+	}
+	return Plugin_Continue;
+}
+
+void SF_RenevantSpawnApollyon()
+{
+	ArrayList hSpawnPoint = new ArrayList();
+	float flTeleportPos[3];
+	int ent = -1, iSpawnTeam = 0;
+	while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
+	{
+		iSpawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
+		if (iSpawnTeam == TFTeam_Red) 
+		{
+			hSpawnPoint.Push(ent);
+		}
+
+	}
+	ent = -1;
+	if (hSpawnPoint.Length > 0) ent = hSpawnPoint.Get(GetRandomInt(0,hSpawnPoint.Length-1));
+
+	delete hSpawnPoint;
+
+	if (ent > MaxClients)
+	{
+		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
+		for(int iNpc = 0;iNpc <= MAX_BOSSES; iNpc++)
+		{
+			SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(iNpc);
+			if (!Npc.IsValid()) continue;
+			if (Npc.Flags & SFF_NOTELEPORT)
+			{
+				continue;
+			}
+			Npc.UnSpawn();
+			SpawnSlender(Npc, flTeleportPos);
+		}
+	}
+}
+
 void SF_FailRoundEnd(float time=2.0)
 {
 	//Check round win conditions again.
@@ -8057,6 +8805,7 @@ static void InitializeMapEntities()
 	g_bRoundInfiniteFlashlight = false;
 	g_bIsSurvivalMap = false;
 	g_bIsBoxingMap = false;
+	g_bIsRenevantMap = false;
 	g_bAllTalkOn = false;
 	g_bIsRaidMap = false;
 	g_bIsProxyMap = false;
@@ -8067,6 +8816,7 @@ static void InitializeMapEntities()
 	
 	g_iRoundTimeLimit = GetConVarInt(g_cvTimeLimit);
 	g_iRoundEscapeTimeLimit = GetConVarInt(g_cvTimeLimitEscape);
+	g_iRenevantTimer = GetConVarInt(g_cvTimeLimitEscape);
 	g_iTimeEscape = GetConVarInt(g_cvTimeEscapeSurvival);
 	g_iRoundTimeGainFromPage = GetConVarInt(g_cvTimeGainFromPageGrab);
 	
@@ -8109,6 +8859,7 @@ static void InitializeMapEntities()
 			{
 				ReplaceString(targetName, sizeof(targetName), "sf2_escape_time_limit_", "", false);
 				g_iRoundEscapeTimeLimit = StringToInt(targetName);
+				g_iRenevantTimer = StringToInt(targetName);
 				
 				LogSF2Message("Found sf2_escape_time_limit entity, set escape time limit to %d", g_iRoundEscapeTimeLimit);
 			}
@@ -8153,6 +8904,7 @@ static void InitializeMapEntities()
 			else if (!StrContains(targetName, "sf2_boxing_map", false))
 			{
 				g_bIsBoxingMap = true;
+				g_bAllTalkOn = true;
 			}
 			else if (!StrContains(targetName, "sf2_survival_time_limit_", false))
 			{
@@ -8160,6 +8912,10 @@ static void InitializeMapEntities()
 				g_iTimeEscape = StringToInt(targetName);
 				
 				LogSF2Message("Found sf2_survival_time_limit_ entity, set survival time limit to %d", g_iTimeEscape);
+			}
+			else if (!StrContains(targetName, "sf2_renevant_map", false))
+			{
+				g_bIsRenevantMap = true;
 			}
 		}
 	}
@@ -8873,7 +9629,7 @@ void InitializeNewGame()
 	HandleSpecialRoundState();
 	
 	// Was a new special round initialized?
-	if (g_bSpecialRound && !SF_IsBoxingMap())
+	if (g_bSpecialRound && !SF_IsBoxingMap() && !SF_IsRenevantMap())
 	{
 		if (g_bSpecialRoundNew)
 		{
@@ -9004,7 +9760,7 @@ void InitializeNewGame()
 		// Spawn the boss!
 		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
 		{
-			if (!SF_IsBoxingMap())
+			if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
 			{
 				if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_DOOMBOX) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_2DOOM))
 				{
@@ -9141,7 +9897,7 @@ public Action Timer_ActivateRoundFromIntro(Handle timer)
 	// Spawn the boss!
 	if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
 	{
-		if (!SF_IsBoxingMap())
+		if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
 		{
 			if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_DOOMBOX) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_2DOOM))
 			{
@@ -9251,6 +10007,7 @@ public int Native_GetDifficultyModifier(Handle plugin,int numParams)
 		case Difficulty_Hard: return view_as<int>(DIFFICULTY_HARD);
 		case Difficulty_Insane: return view_as<int>(DIFFICULTY_INSANE);
 		case Difficulty_Nightmare: return view_as<int>(DIFFICULTY_NIGHTMARE);
+		case Difficulty_Apollyon: return view_as<int>(DIFFICULTY_APOLLYON);
 	}
 	
 	return view_as<int>(DIFFICULTY_NORMAL);

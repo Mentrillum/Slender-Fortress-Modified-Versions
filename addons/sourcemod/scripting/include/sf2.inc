@@ -7,7 +7,7 @@
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
 #define SF2_MAX_NAME_LENGTH 32
 
-#define MAX_BOSSES 32
+#define MAX_BOSSES 64
 #define MAX_NPCTELEPORTER 5
 #define MAX_NODES -1
 #define MAX_TRAPS 64
@@ -18,6 +18,7 @@
 #define DIFFICULTY_HARD 1.25
 #define DIFFICULTY_INSANE 1.75
 #define DIFFICULTY_NIGHTMARE 3.0
+#define DIFFICULTY_APOLLYON 5.5
 
 // Music system flags.
 #define MUSICF_PAGES1PERCENT (1 << 0)
@@ -103,6 +104,7 @@ enum
 	Difficulty_Hard,
 	Difficulty_Insane,
 	Difficulty_Nightmare,
+	Difficulty_Apollyon,
 	Difficulty_Unusued, //DO NOT TOUCH
 	Difficulty_Max
 };

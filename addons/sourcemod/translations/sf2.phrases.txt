@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Players now receive a random buff upon making the boxing boss rage.\n-Basically any boss can spawn in Boxing Ring now.\n-Pathing cost has been mostly reverted.\n-You can now use logic_relays when the boxing boss is raged.\n-Fixed the civilian PvP bug."
+		"en"	"-Silent Slender can now spawn 2 more bosses.\n-Added flashlight temperatures.\n-Nightvision can now be either green, red, or blue.\n-Ultravision and night vision settings have been changed.\n-The conch now works in Boxing Ring.\n-Recharging sprint faster now only requires the player to be crouching and standing still."
 	}
 	"SF2 Smite player"
 	{
