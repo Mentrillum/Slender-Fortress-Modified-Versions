@@ -2407,7 +2407,7 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 		}
 	}
 	
-	if (IsRoundInIntro() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
+	if (IsRoundInEnding() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
 	{
 		return Plugin_Handled;
 	}
@@ -4748,7 +4748,7 @@ void SetRoundState(SF2RoundState iRoundState)
 		case SF2RoundState_Intro:
 		{
 			g_hRoundIntroTimer = INVALID_HANDLE;
-			g_iNightvisionType = GetRandomInt(2, 2);
+			g_iNightvisionType = GetRandomInt(0, 2);
 		}
 		case SF2RoundState_Active:
 		{
