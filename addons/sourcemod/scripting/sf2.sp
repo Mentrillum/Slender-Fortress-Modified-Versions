@@ -2407,7 +2407,7 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 		}
 	}
 	
-	if (IsRoundInEnding() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
+	if (IsRoundEnding() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
 	{
 		return Plugin_Handled;
 	}
