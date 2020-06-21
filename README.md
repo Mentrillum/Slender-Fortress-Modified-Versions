@@ -8,7 +8,7 @@ Special thanks to:
 
 - x3m77rus for making russian translations, and updating some part of the code to support more translation text.
 
-# Slender Fortress New Versions
+# Slender Fortress Modified Versions
 
 Since Kit is busy with his real life, Kenzzer is no longer working on SF2, I used the new versions to create the new modified versions to allow much more diversity to SF2.
 
