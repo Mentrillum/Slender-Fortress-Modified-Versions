@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.4 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.4 Modified"
+#define PLUGIN_VERSION "1.5.5 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -177,7 +177,7 @@ enum MuteMode
 
 enum FlashlightTemperature
 {
-	FlashlightTemperature_6000,
+	FlashlightTemperature_6000 = 0,
 	FlashlightTemperature_1000,
 	FlashlightTemperature_2000,
 	FlashlightTemperature_3000,
@@ -2339,7 +2339,7 @@ public Action Hook_CommandSay(int iClient, const char[] command,int argc)
 		g_bPlayerCalledForNightmare[iClient] = (StrContains(sMessage, "nightmare", false) != -1 || StrContains(sMessage, "Nightmare", false) != -1);
 	}
 	
-	if (!g_bEnabled || GetConVarBool(g_cvAllChat)) return Plugin_Continue;
+	if (!g_bEnabled || GetConVarBool(g_cvAllChat) || SF_IsBoxingMap()) return Plugin_Continue;
 	
 	if (!IsRoundEnding())
 	{
@@ -2374,7 +2374,7 @@ public Action Hook_CommandSayTeam(int iClient, const char[] command,int argc)
 		g_bPlayerCalledForNightmare[iClient] = (StrContains(sMessage, "nightmare", false) != -1 || StrContains(sMessage, "Nightmare", false) != -1);
 	}
 	
-	if (!g_bEnabled || GetConVarBool(g_cvAllChat)) return Plugin_Continue;
+	if (!g_bEnabled || GetConVarBool(g_cvAllChat) || SF_IsBoxingMap()) return Plugin_Continue;
 	
 	if (!IsRoundEnding())
 	{
@@ -3133,6 +3133,7 @@ public Action Timer_BossCountUpdate(Handle timer)
 
 	int iBossCount = NPCGetCount();
 	int iBossPreferredCount;
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -3271,9 +3272,56 @@ public Action Timer_BossCountUpdate(Handle timer)
 				}
 				
 				Npc.GetProfile(sProfile, sizeof(sProfile));
-				if (iCopyCount >= GetProfileNum(sProfile, "copy_max", 10)) 
+				int CopyNormal = GetProfileNum(sProfile, "copy_max", 10);
+				int CopyEasy = GetProfileNum(sProfile, "copy_max_easy", CopyNormal);
+				int CopyHard = GetProfileNum(sProfile, "copy_max_hard", CopyNormal);
+				int CopyInsane = GetProfileNum(sProfile, "copy_max_insane", CopyHard);
+				int CopyNightmare = GetProfileNum(sProfile, "copy_max_nightmare", CopyInsane);
+				int CopyApollyon = GetProfileNum(sProfile, "copy_max_apollyon", CopyNightmare);
+				switch (iDifficulty)
 				{
-					continue;
+					case Difficulty_Easy:
+					{
+						if (iCopyCount >= CopyEasy) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Normal:
+					{
+						if (iCopyCount >= CopyNormal) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Hard:
+					{
+						if (iCopyCount >= CopyHard) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Insane:
+					{
+						if (iCopyCount >= CopyInsane) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						if (iCopyCount >= CopyNightmare) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						if (iCopyCount >= CopyApollyon) 
+						{
+							continue;
+						}
+					}
 				}
 				SF2NPC_BaseNPC NpcCopy = AddProfile(sProfile, _, Npc);
 				if (!NpcCopy.IsValid())
@@ -3390,7 +3438,7 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 	{
 		g_b20Dollars = view_as<bool>(StringToInt(intValue));
 	}
-	else if (cvar == g_cvAllChat)
+	else if (cvar == g_cvAllChat || SF_IsBoxingMap())
 	{
 		if (g_bEnabled)
 		{
@@ -4501,15 +4549,15 @@ public void OnClientCookiesCached(int iClient)
 		if (count > 0)
 			g_iPlayerQueuePoints[iClient] = StringToInt(s2[0]);
 		if (count > 1)
-			g_iPlayerPreferences[iClient][PlayerPreference_ShowHints] = view_as<bool>(StringToInt(s2[1]));
+			g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = view_as<bool>(StringToInt(s2[1]));
 		if (count > 2)
-			g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = view_as<MuteMode>(StringToInt(s2[2]));
+			g_iPlayerPreferences[iClient][PlayerPreference_ShowHints] = view_as<MuteMode>(StringToInt(s2[2]));
 		if (count > 3)
-			g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = view_as<bool>(StringToInt(s2[3]));
+			g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = view_as<bool>(StringToInt(s2[3]));
 		if (count > 4)
-			g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = view_as<bool>(StringToInt(s2[4]));
+			g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = view_as<bool>(StringToInt(s2[4]));
 		if (count > 5)
-			g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = view_as<bool>(StringToInt(s2[5]));
+			g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = view_as<bool>(StringToInt(s2[5]));
 		if (count > 6)
 			g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = view_as<FlashlightTemperature>(StringToInt(s2[6]));
 	}

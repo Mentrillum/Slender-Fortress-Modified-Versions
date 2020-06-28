@@ -187,37 +187,22 @@ enum
 	BossProfileData_SpeedHard,
 	BossProfileData_SpeedInsane,
 	BossProfileData_SpeedNightmare,
-	
-	BossProfileData_WalkSpeedEasy,
-	BossProfileData_WalkSpeedNormal,
-	BossProfileData_WalkSpeedHard,
-	BossProfileData_WalkSpeedInsane,
-	BossProfileData_WalkSpeedNightmare,
-	
-	BossProfileData_AirSpeedEasy,
-	BossProfileData_AirSpeedNormal,
-	BossProfileData_AirSpeedHard,
-	BossProfileData_AirSpeedInsane,
-	BossProfileData_AirSpeedNightmare,
-	
+	BossProfileData_SpeedApollyon,
+
 	BossProfileData_MaxSpeedEasy,
 	BossProfileData_MaxSpeedNormal,
 	BossProfileData_MaxSpeedHard,
 	BossProfileData_MaxSpeedInsane,
 	BossProfileData_MaxSpeedNightmare,
+	BossProfileData_MaxSpeedApollyon,
 	
-	BossProfileData_MaxWalkSpeedEasy,
-	BossProfileData_MaxWalkSpeedNormal,
-	BossProfileData_MaxWalkSpeedHard,
-	BossProfileData_MaxWalkSpeedInsane,
-	BossProfileData_MaxWalkSpeedNightmare,
-	
-	BossProfileData_MaxAirSpeedEasy,
-	BossProfileData_MaxAirSpeedNormal,
-	BossProfileData_MaxAirSpeedHard,
-	BossProfileData_MaxAirSpeedInsane,
-	BossProfileData_MaxAirSpeedNightmare,
-	
+	BossProfileData_IdleLifetimeEasy,
+	BossProfileData_IdleLifetimeNormal,
+	BossProfileData_IdleLifetimeHard,
+	BossProfileData_IdleLifetimeInsane,
+	BossProfileData_IdleLifetimeNightmare,
+	BossProfileData_IdleLifetimeApollyon,
+
 	BossProfileData_SearchRange,
 	BossProfileData_FieldOfView,
 	BossProfileData_TurnRate,
@@ -688,14 +673,23 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	float flBossDefaultSpeed = KvGetFloat(kv, "speed", 150.0);
 	float flBossSpeedEasy = KvGetFloat(kv, "speed_easy", flBossDefaultSpeed);
 	float flBossSpeedHard = KvGetFloat(kv, "speed_hard", flBossDefaultSpeed);
-	float flBossSpeedInsane = KvGetFloat(kv, "speed_insane", flBossDefaultSpeed);
-	float flBossSpeedNightmare = KvGetFloat(kv, "speed_nightmare", flBossDefaultSpeed);
+	float flBossSpeedInsane = KvGetFloat(kv, "speed_insane", flBossSpeedHard);
+	float flBossSpeedNightmare = KvGetFloat(kv, "speed_nightmare", flBossSpeedInsane);
+	float flBossSpeedApollyon = KvGetFloat(kv, "speed_apollyon", flBossSpeedNightmare);
 	
 	float flBossDefaultMaxSpeed = KvGetFloat(kv, "speed_max", 150.0);
 	float flBossMaxSpeedEasy = KvGetFloat(kv, "speed_max_easy", flBossDefaultMaxSpeed);
 	float flBossMaxSpeedHard = KvGetFloat(kv, "speed_max_hard", flBossDefaultMaxSpeed);
-	float flBossMaxSpeedInsane = KvGetFloat(kv, "speed_max_insane", flBossDefaultMaxSpeed);
-	float flBossMaxSpeedNightmare = KvGetFloat(kv, "speed_max_nightmare", flBossDefaultMaxSpeed);
+	float flBossMaxSpeedInsane = KvGetFloat(kv, "speed_max_insane", flBossMaxSpeedHard);
+	float flBossMaxSpeedNightmare = KvGetFloat(kv, "speed_max_nightmare", flBossMaxSpeedInsane);
+	float flBossMaxSpeedApollyon = KvGetFloat(kv, "speed_max_apollyon", flBossMaxSpeedNightmare);
+	
+	float flBossDefaultIdleLifetime = KvGetFloat(kv, "idle_lifetime", 10.0);
+	float flBossIdleLifetimeEasy = KvGetFloat(kv, "idle_lifetime_easy", flBossDefaultIdleLifetime);
+	float flBossIdleLifetimeHard = KvGetFloat(kv, "idle_lifetime_hard", flBossDefaultIdleLifetime);
+	float flBossIdleLifetimeInsane = KvGetFloat(kv, "idle_lifetime_insane", flBossIdleLifetimeHard);
+	float flBossIdleLifetimeNightmare = KvGetFloat(kv, "idle_lifetime_nightmare", flBossIdleLifetimeInsane);
+	float flBossIdleLifetimeApollyon = KvGetFloat(kv, "idle_lifetime_apollyon", flBossIdleLifetimeNightmare);
 	
 	bool bUseCustomOutlines = view_as<bool>(KvGetNum(kv, "customizable_outlines"));
 	int iOutlineColorR = KvGetNum(kv, "outline_color_r", 255);
@@ -795,12 +789,21 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedHard, BossProfileData_SpeedHard);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedInsane, BossProfileData_SpeedInsane);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedNightmare, BossProfileData_SpeedNightmare);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossSpeedApollyon, BossProfileData_SpeedApollyon);
 	
 	SetArrayCell(g_hBossProfileData, iIndex, flBossDefaultMaxSpeed, BossProfileData_MaxSpeedNormal);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedEasy, BossProfileData_MaxSpeedEasy);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedHard, BossProfileData_MaxSpeedHard);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedInsane, BossProfileData_MaxSpeedInsane);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedNightmare, BossProfileData_MaxSpeedNightmare);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxSpeedApollyon, BossProfileData_MaxSpeedApollyon);
+
+	SetArrayCell(g_hBossProfileData, iIndex, flBossDefaultIdleLifetime, BossProfileData_IdleLifetimeNormal);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossIdleLifetimeEasy, BossProfileData_IdleLifetimeEasy);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossIdleLifetimeHard, BossProfileData_IdleLifetimeHard);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossIdleLifetimeInsane, BossProfileData_IdleLifetimeInsane);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossIdleLifetimeNightmare, BossProfileData_IdleLifetimeNightmare);
+	SetArrayCell(g_hBossProfileData, iIndex, flBossIdleLifetimeApollyon, BossProfileData_IdleLifetimeApollyon);
 	
 	SetArrayCell(g_hBossProfileData, iIndex, flBossEyePosOffset[0], BossProfileData_EyePosOffsetX);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossEyePosOffset[1], BossProfileData_EyePosOffsetY);
@@ -833,71 +836,258 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	
 	if(sCOn[0])
 	{
-		PrecacheSound2(sCOn);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sCOn);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sCOn);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sCOn);
+		}
 	}
 	if (sCOff[0])
 	{
-		PrecacheSound2(sCOff);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sCOff);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sCOff);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sCOff);
+		}
 	}
 	if (sJ[0])
 	{
-		PrecacheSound2(sJ);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sJ);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sJ);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sJ);
+		}
 	}
 	if (sM[0])
 	{
-		PrecacheSound2(sM);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sM);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sM);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sM);
+		}
 	}
 	if (sG[0])
 	{
-		PrecacheSound2(sG);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sG);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sG);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sG);
+		}
 	}
 	if (sS[0])
 	{
-		PrecacheSound2(sS);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sS);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sS);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sS);
+		}
 	}
 	if (sFE[0])
 	{
-		PrecacheSound2(sFE);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sFE);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sFE);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sFE);
+		}
 	}
 	if (sFS[0])
 	{
-		PrecacheSound2(sFS);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sFS);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sFS);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sFS);
+		}
 	}
 	if (sFIS[0])
 	{
-		PrecacheSound2(sFIS);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sFIS);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sFIS);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sFIS);
+		}
 	}
 	if (sRE[0])
 	{
-		PrecacheSound2(sRE);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sRE);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sRE);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sRE);
+		}
 	}
 	if (sRS[0])
 	{
-		PrecacheSound2(sRS);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sRS);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sRS);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sRS);
+		}
 	}
 	if (sGrenadeShoot[0])
 	{
-		PrecacheSound2(sGrenadeShoot);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sGrenadeShoot);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sGrenadeShoot);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sGrenadeShoot);
+		}
 	}
 	if (sSentryrocketShoot[0])
 	{
-		PrecacheSound2(sSentryrocketShoot);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sSentryrocketShoot);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sSentryrocketShoot);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sSentryrocketShoot);
+		}
 	}
 	if (sArrowShoot[0])
 	{
-		PrecacheSound2(sArrowShoot);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sArrowShoot);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sArrowShoot);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sArrowShoot);
+		}
 	}
 	if (sManglerShoot[0])
 	{
-		PrecacheSound2(sManglerShoot);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sManglerShoot);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sManglerShoot);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sManglerShoot);
+		}
 	}
 	if (sBaseballShoot[0])
 	{
-		PrecacheSound2(sBaseballShoot);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sBaseballShoot);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sBaseballShoot);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sBaseballShoot);
+		}
 	}
 	if (sEngineSound[0])
 	{
-		PrecacheSound2(sEngineSound);
+		char s6[PLATFORM_MAX_PATH];
+		Format(s6, sizeof(s6), "sound/%s", sEngineSound);
+
+		if (FileExists(s6, false) || FileExists(s6, true))
+		{
+			PrecacheSound2(sEngineSound);
+		}
+		else
+		{
+			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
+			PrecacheSound(sEngineSound);
+		}
 	}
 	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection", 1)))
@@ -1434,6 +1624,7 @@ float GetBossProfileSpeed(int iProfileIndex, int iDifficulty)
 		case Difficulty_Hard: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedHard);
 		case Difficulty_Insane: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedInsane);
 		case Difficulty_Nightmare: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedNightmare);
+		case Difficulty_Apollyon: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedApollyon);
 	}
 	
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_SpeedNormal);
@@ -1447,9 +1638,24 @@ float GetBossProfileMaxSpeed(int iProfileIndex, int iDifficulty)
 		case Difficulty_Hard: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedHard);
 		case Difficulty_Insane: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedInsane);
 		case Difficulty_Nightmare: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedNightmare);
+		case Difficulty_Apollyon: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedApollyon);
 	}
 	
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_MaxSpeedNormal);
+}
+
+float GetBossProfileIdleLifetime(int iProfileIndex, int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeEasy);
+		case Difficulty_Hard: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeHard);
+		case Difficulty_Insane: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeInsane);
+		case Difficulty_Nightmare: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeNightmare);
+		case Difficulty_Apollyon: return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeApollyon);
+	}
+	
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeNormal);
 }
 
 float GetBossProfileSearchRadius(int iProfileIndex)

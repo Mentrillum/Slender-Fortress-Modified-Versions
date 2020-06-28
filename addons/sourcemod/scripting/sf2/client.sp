@@ -6330,7 +6330,7 @@ stock void ClientUpdateListeningFlags(int client, bool bReset=false)
 	{
 		if (i == client || !IsClientInGame(i) || IsClientSourceTV(i)) continue;
 		
-		if (bReset || IsRoundEnding() || GetConVarBool(g_cvAllChat))
+		if (bReset || IsRoundEnding() || GetConVarBool(g_cvAllChat) || SF_IsBoxingMap())
 		{
 			SetListenOverride(client, i, Listen_Default);
 			continue;
@@ -6519,13 +6519,13 @@ void ClientSaveCookies(int client)
 	
 	// Save and reset our queue points.
 	char s[64];
-	Format(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
+	Format(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
+		g_iPlayerPreferences[client][PlayerPreference_PvPAutoSpawn], 
 		g_iPlayerPreferences[client][PlayerPreference_ShowHints], 
-		g_iPlayerPreferences[client][PlayerPreference_MuteMode], 
+		g_iPlayerPreferences[client][PlayerPreference_MuteMode],
 		g_iPlayerPreferences[client][PlayerPreference_FilmGrain],
 		g_iPlayerPreferences[client][PlayerPreference_EnableProxySelection],
-		g_iPlayerPreferences[client][PlayerPreference_FlashlightTemperature],
-		g_iPlayerPreferences[client][PlayerPreference_PvPAutoSpawn]);
+		g_iPlayerPreferences[client][PlayerPreference_FlashlightTemperature]);
 		
 	SetClientCookie(client, g_hCookie, s);
 }
@@ -6740,6 +6740,8 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	if (client <= 0) return;
 	
 	if (IsClientInGame(client) && !IsPlayerAlive(client)) return;
+	
+	if (!IsValidClient(client)) return;
 	
 	if (timer != g_hPlayerPostWeaponsTimer[client]) return;
 	

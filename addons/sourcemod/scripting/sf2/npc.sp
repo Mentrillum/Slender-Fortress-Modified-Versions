@@ -32,6 +32,7 @@ static float g_flNPCSpeed[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCMaxSpeed[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCAddSpeed[MAX_BOSSES];
 static float g_flNPCAddMaxSpeed[MAX_BOSSES];
+static float g_flNPCIdleLifetime[MAX_BOSSES][Difficulty_Max];
 
 static float g_flNPCScareRadius[MAX_BOSSES];
 static float g_flNPCScareCooldown[MAX_BOSSES];
@@ -576,6 +577,11 @@ float NPCGetBackstabFOV(int iNPCIndex)
 	return g_flNPCBackstabFOV[iNPCIndex];
 }
 
+float NPCGetIdleLifetime(int iNPCIndex,int iDifficulty)
+{
+	return g_flNPCIdleLifetime[iNPCIndex][iDifficulty];
+}
+
 float NPCGetAnger(int iNPCIndex)
 {
 	return g_flNPCAnger[iNPCIndex];
@@ -843,6 +849,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	{
 		g_flNPCSpeed[Npc.Index][iDifficulty] = GetBossProfileSpeed(iProfileIndex, iDifficulty);
 		g_flNPCMaxSpeed[Npc.Index][iDifficulty] = GetBossProfileMaxSpeed(iProfileIndex, iDifficulty);
+		g_flNPCIdleLifetime[Npc.Index][iDifficulty] = GetBossProfileIdleLifetime(iProfileIndex, iDifficulty);
 	}
 	
 	g_flNPCTurnRate[Npc.Index] = GetBossProfileTurnRate(iProfileIndex);
@@ -1435,7 +1442,12 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			float flMin = GetProfileFloat(sProfile, "search_wander_time_min", 3.0);
 			float flMax = GetProfileFloat(sProfile, "search_wander_time_max", 4.5);
 			g_flSlenderNextWanderPos[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
-			g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + GetProfileFloat(sProfile, "idle_lifetime", 10.0);
+			
+			for (int iDifficulty = 0; iDifficulty < Difficulty_Max; iDifficulty++)
+			{
+				g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, iDifficulty);
+			}
+			
 			g_flSlenderTimeUntilRecover[iBossIndex] = -1.0;
 			g_flSlenderTimeUntilAlert[iBossIndex] = -1.0;
 			g_flSlenderTimeUntilIdle[iBossIndex] = -1.0;
@@ -1469,6 +1481,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			g_bSlenderIsMilked[iBossIndex] = false;
 			g_bSlenderIsGassed[iBossIndex] = false;
 			g_bSlenderIsJarate[iBossIndex] = false;
+			g_flNPCAddSpeed[iBossIndex] = 0.0;
 			
 			Spawn_Chaser(iBossIndex);
 			
@@ -1736,7 +1749,7 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 			for (int i = 0; i < 3; i++) flMyEyeAng[i] = AngleNormalize(flMyEyeAng[i]);
 
 			if(!IsValidClient(attacker)) return;
-			
+
 			if ((g_bSlenderIsMilked[iBossIndex] || TF2_IsPlayerInCondition(attacker, TFCond_RegenBuffed)) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
 			{
 				int iHealth = GetClientHealth(attacker);
@@ -2244,6 +2257,14 @@ float Boss_HitBox_Damage(int hitbox,int attacker,float damage,int damagetype,boo
 		if (iBossIndex == -1) return damage;
 		if(IsValidClient(attacker) && g_bPlayerProxy[attacker])
 			damage = 0.0;
+
+		bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
+
+		if (SF_IsBoxingMap() && !bAttackEliminated && (GetClientTeam(attacker) == TFTeam_Blue) && IsValidClient(attacker))
+		{
+			damage = 0.0;
+		}
+
 		if (NPCGetType(iBossIndex) == SF2BossType_Chaser && damage > 0.0)
 		{
 			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -3498,7 +3519,15 @@ stock int SpawnSlenderModel(int iBossIndex, const float pos[3])
 		SetVariantFloat(GetProfileFloat(sProfile, "animation_idle_playbackrate", 1.0));
 		AcceptEntityInput(iSlenderModel, "SetPlaybackRate");
 		
-		SetEntPropFloat(iSlenderModel, Prop_Send, "m_flModelScale", flModelScale);
+		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
+		{
+			float flScaleModel = flModelScale * 0.25;
+			SetEntPropFloat(iSlenderModel, Prop_Send, "m_flModelScale", flScaleModel);
+		}
+		else
+		{
+			SetEntPropFloat(iSlenderModel, Prop_Send, "m_flModelScale", flModelScale);
+		}
 		if (NPCGetModelSkinMax(iBossIndex) > 0)
 		{
 			int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iBossIndex));

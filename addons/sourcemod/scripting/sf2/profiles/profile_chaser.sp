@@ -43,24 +43,28 @@ enum
 	ChaserProfileData_WalkSpeedHard,
 	ChaserProfileData_WalkSpeedInsane,
 	ChaserProfileData_WalkSpeedNightmare,
+	ChaserProfileData_WalkSpeedApollyon,
 	
 	ChaserProfileData_AirSpeedEasy,
 	ChaserProfileData_AirSpeedNormal,
 	ChaserProfileData_AirSpeedHard,
 	ChaserProfileData_AirSpeedInsane,
 	ChaserProfileData_AirSpeedNightmare,
+	ChaserProfileData_AirSpeedApollyon,
 	
 	ChaserProfileData_MaxWalkSpeedEasy,
 	ChaserProfileData_MaxWalkSpeedNormal,
 	ChaserProfileData_MaxWalkSpeedHard,
 	ChaserProfileData_MaxWalkSpeedInsane,
 	ChaserProfileData_MaxWalkSpeedNightmare,
+	ChaserProfileData_MaxWalkSpeedApollyon,
 	
 	ChaserProfileData_MaxAirSpeedEasy,
 	ChaserProfileData_MaxAirSpeedNormal,
 	ChaserProfileData_MaxAirSpeedHard,
 	ChaserProfileData_MaxAirSpeedInsane,
 	ChaserProfileData_MaxAirSpeedNightmare,
+	ChaserProfileData_MaxAirSpeedApollyon,
 	
 	ChaserProfileData_WakeRadius,
 	
@@ -71,18 +75,21 @@ enum
 	ChaserProfileData_SearchAlertDurationHard,
 	ChaserProfileData_SearchAlertDurationInsane,
 	ChaserProfileData_SearchAlertDurationNightmare,
+	ChaserProfileData_SearchAlertDurationApollyon,
 
 	ChaserProfileData_SearchAlertGracetime,
 	ChaserProfileData_SearchAlertGracetimeEasy,
 	ChaserProfileData_SearchAlertGracetimeHard,
 	ChaserProfileData_SearchAlertGracetimeInsane,
 	ChaserProfileData_SearchAlertGracetimeNightmare,
+	ChaserProfileData_SearchAlertGracetimeApollyon,
 	
 	ChaserProfileData_SearchChaseDuration,
 	ChaserProfileData_SearchChaseDurationEasy,
 	ChaserProfileData_SearchChaseDurationHard,
 	ChaserProfileData_SearchChaseDurationInsane,
 	ChaserProfileData_SearchChaseDurationNightmare,
+	ChaserProfileData_SearchChaseDurationApollyon,
 	
 	ChaserProfileData_CanBeStunned,
 	ChaserProfileData_StunDuration,
@@ -101,11 +108,14 @@ enum
 	ChaserProfileData_AwarenessIncreaseRateHard,
 	ChaserProfileData_AwarenessIncreaseRateInsane,
 	ChaserProfileData_AwarenessIncreaseRateNightmare,
+	ChaserProfileData_AwarenessIncreaseRateApollyon,
+	
 	ChaserProfileData_AwarenessDecreaseRateEasy,
 	ChaserProfileData_AwarenessDecreaseRateNormal,
 	ChaserProfileData_AwarenessDecreaseRateHard,
 	ChaserProfileData_AwarenessDecreaseRateInsane,
 	ChaserProfileData_AwarenessDecreaseRateNightmare,
+	ChaserProfileData_AwarenessDecreaseRateApollyon,
 	
 	ChaserProfileData_CanCloak,
 	ChaserProfileData_CloakCooldownEasy,
@@ -113,11 +123,14 @@ enum
 	ChaserProfileData_CloakCooldownHard,
 	ChaserProfileData_CloakCooldownInsane,
 	ChaserProfileData_CloakCooldownNightmare,
+	ChaserProfileData_CloakCooldownApollyon,
+	
 	ChaserProfileData_CloakRangeEasy,
 	ChaserProfileData_CloakRangeNormal,
 	ChaserProfileData_CloakRangeHard,
 	ChaserProfileData_CloakRangeInsane,
 	ChaserProfileData_CloakRangeNightmare,
+	ChaserProfileData_CloakRangeApollyon,
 	
 	ChaserProfileData_ProjectileEnable,
 	ChaserProfileData_ProjectileCooldownMinEasy,
@@ -125,26 +138,36 @@ enum
 	ChaserProfileData_ProjectileCooldownMinHard,
 	ChaserProfileData_ProjectileCooldownMinInsane,
 	ChaserProfileData_ProjectileCooldownMinNightmare,
+	ChaserProfileData_ProjectileCooldownMinApollyon,
+	
 	ChaserProfileData_ProjectileCooldownMaxEasy,
 	ChaserProfileData_ProjectileCooldownMaxNormal,
 	ChaserProfileData_ProjectileCooldownMaxHard,
 	ChaserProfileData_ProjectileCooldownMaxInsane,
 	ChaserProfileData_ProjectileCooldownMaxNightmare,
+	ChaserProfileData_ProjectileCooldownMaxApollyon,
+	
 	ChaserProfileData_ProjectileSpeedEasy,
 	ChaserProfileData_ProjectileSpeedNormal,
 	ChaserProfileData_ProjectileSpeedHard,
 	ChaserProfileData_ProjectileSpeedInsane,
 	ChaserProfileData_ProjectileSpeedNightmare,
+	ChaserProfileData_ProjectileSpeedApollyon,
+	
 	ChaserProfileData_ProjectileDamageEasy,
 	ChaserProfileData_ProjectileDamageNormal,
 	ChaserProfileData_ProjectileDamageHard,
 	ChaserProfileData_ProjectileDamageInsane,
 	ChaserProfileData_ProjectileDamageNightmare,
+	ChaserProfileData_ProjectileDamageApollyon,
+	
 	ChaserProfileData_ProjectileRadiusEasy,
 	ChaserProfileData_ProjectileRadiusNormal,
 	ChaserProfileData_ProjectileRadiusHard,
 	ChaserProfileData_ProjectileRadiusInsane,
 	ChaserProfileData_ProjectileRadiusNightmare,
+	ChaserProfileData_ProjectileRadiusApollyon,
+	
 	ChaserProfileData_ProjectileType,
 	ChaserProfileData_CriticlaRockets,
 	ChaserProfileData_UseShootGesture,
@@ -154,28 +177,36 @@ enum
 	ChaserProfileData_ProjectileClipHard,
 	ChaserProfileData_ProjectileClipInsane,
 	ChaserProfileData_ProjectileClipNightmare,
+	ChaserProfileData_ProjectileClipApollyon,
+	
 	ChaserProfileData_ProjectileReloadTimeEasy,
 	ChaserProfileData_ProjectileReloadTimeNormal,
 	ChaserProfileData_ProjectileReloadTimeHard,
 	ChaserProfileData_ProjectileReloadTimeInsane,
 	ChaserProfileData_ProjectileReloadTimeNightmare,
+	ChaserProfileData_ProjectileReloadTimeApollyon,
+	
 	ChaserProfileData_UseChargeUpProjectiles,
 	ChaserProfileData_ProjectileChargeUpEasy,
 	ChaserProfileData_ProjectileChargeUpNormal,
 	ChaserProfileData_ProjectileChargeUpHard,
 	ChaserProfileData_ProjectileChargeUpInsane,
 	ChaserProfileData_ProjectileChargeUpNightmare,
+	ChaserProfileData_ProjectileChargeUpApollyon,
 	
 	ChaserProfileData_IceballSlowdownDurationEasy,
 	ChaserProfileData_IceballSlowdownDurationNormal,
 	ChaserProfileData_IceballSlowdownDurationHard,
 	ChaserProfileData_IceballSlowdownDurationInsane,
 	ChaserProfileData_IceballSlowdownDurationNightmare,
+	ChaserProfileData_IceballSlowdownDurationApollyon,
+	
 	ChaserProfileData_IceballSlowdownPercentEasy,
 	ChaserProfileData_IceballSlowdownPercentNormal,
 	ChaserProfileData_IceballSlowdownPercentHard,
 	ChaserProfileData_IceballSlowdownPercentInsane,
 	ChaserProfileData_IceballSlowdownPercentNightmare,
+	ChaserProfileData_IceballSlowdownPercentApollyon,
 	
 	ChaserProfileData_AdvancedDamageEffectsEnabled,
 	ChaserProfileData_AdvancedDamageEffectsParticles,
@@ -187,6 +218,7 @@ enum
 	ChaserProfileData_JarateAdvancedDurationHard,
 	ChaserProfileData_JarateAdvancedDurationInsane,
 	ChaserProfileData_JarateAdvancedDurationNightmare,
+	ChaserProfileData_JarateAdvancedDurationApollyon,
 	
 	ChaserProfileData_EnableMilkAdvanced,
 	ChaserProfileData_MilkAdvancedIndexes,
@@ -195,6 +227,7 @@ enum
 	ChaserProfileData_MilkAdvancedDurationHard,
 	ChaserProfileData_MilkAdvancedDurationInsane,
 	ChaserProfileData_MilkAdvancedDurationNightmare,
+	ChaserProfileData_MilkAdvancedDurationApollyon,
 	
 	ChaserProfileData_EnableGasAdvanced,
 	ChaserProfileData_GasAdvancedIndexes,
@@ -203,6 +236,7 @@ enum
 	ChaserProfileData_GasAdvancedDurationHard,
 	ChaserProfileData_GasAdvancedDurationInsane,
 	ChaserProfileData_GasAdvancedDurationNightmare,
+	ChaserProfileData_GasAdvancedDurationApollyon,
 	
 	ChaserProfileData_EnableMarkAdvanced,
 	ChaserProfileData_MarkAdvancedIndexes,
@@ -211,6 +245,7 @@ enum
 	ChaserProfileData_MarkAdvancedDurationHard,
 	ChaserProfileData_MarkAdvancedDurationInsane,
 	ChaserProfileData_MarkAdvancedDurationNightmare,
+	ChaserProfileData_MarkAdvancedDurationApollyon,
 	
 	ChaserProfileData_EnableIgniteAdvanced,
 	ChaserProfileData_IgniteAdvancedIndexes,
@@ -219,6 +254,7 @@ enum
 	ChaserProfileData_IgniteAdvancedDelayHard,
 	ChaserProfileData_IgniteAdvancedDelayInsane,
 	ChaserProfileData_IgniteAdvancedDelayNightmare,
+	ChaserProfileData_IgniteAdvancedDelayApollyon,
 	
 	ChaserProfileData_EnableStunAdvanced,
 	ChaserProfileData_StunAdvancedIndexes,
@@ -227,11 +263,13 @@ enum
 	ChaserProfileData_StunAdvancedDurationHard,
 	ChaserProfileData_StunAdvancedDurationInsane,
 	ChaserProfileData_StunAdvancedDurationNightmare,
+	ChaserProfileData_StunAdvancedDurationApollyon,
 	ChaserProfileData_StunAdvancedSlowdownEasy,
 	ChaserProfileData_StunAdvancedSlowdownNormal,
 	ChaserProfileData_StunAdvancedSlowdownHard,
 	ChaserProfileData_StunAdvancedSlowdownInsane,
 	ChaserProfileData_StunAdvancedSlowdownNightmare,
+	ChaserProfileData_StunAdvancedSlowdownApollyon,
 	ChaserProfileData_StunAdvancedType,
 	
 	ChaserProfileData_EnableBleedAdvanced,
@@ -241,6 +279,7 @@ enum
 	ChaserProfileData_BleedAdvancedDurationHard,
 	ChaserProfileData_BleedAdvancedDurationInsane,
 	ChaserProfileData_BleedAdvancedDurationNightmare,
+	ChaserProfileData_BleedAdvancedDurationApollyon,
 	
 	ChaserProfileData_EnableEletricAdvanced,
 	ChaserProfileData_EletricAdvancedIndexes,
@@ -249,11 +288,13 @@ enum
 	ChaserProfileData_EletricAdvancedDurationHard,
 	ChaserProfileData_EletricAdvancedDurationInsane,
 	ChaserProfileData_EletricAdvancedDurationNightmare,
+	ChaserProfileData_EletricAdvancedDurationApollyon,
 	ChaserProfileData_EletricAdvancedSlowdownEasy,
 	ChaserProfileData_EletricAdvancedSlowdownNormal,
 	ChaserProfileData_EletricAdvancedSlowdownHard,
 	ChaserProfileData_EletricAdvancedSlowdownInsane,
 	ChaserProfileData_EletricAdvancedSlowdownNightmare,
+	ChaserProfileData_EletricAdvancedSlowdownApollyon,
 	ChaserProfileData_EletricAdvancedType,
 	
 	ChaserProfileData_EnableSmiteAdvanced,
@@ -402,26 +443,30 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flBossDefaultWalkSpeed = KvGetFloat(kv, "walkspeed", 30.0);
 	float flBossWalkSpeedEasy = KvGetFloat(kv, "walkspeed_easy", flBossDefaultWalkSpeed);
 	float flBossWalkSpeedHard = KvGetFloat(kv, "walkspeed_hard", flBossDefaultWalkSpeed);
-	float flBossWalkSpeedInsane = KvGetFloat(kv, "walkspeed_insane", flBossDefaultWalkSpeed);
-	float flBossWalkSpeedNightmare = KvGetFloat(kv, "walkspeed_nightmare", flBossDefaultWalkSpeed);
+	float flBossWalkSpeedInsane = KvGetFloat(kv, "walkspeed_insane", flBossWalkSpeedHard);
+	float flBossWalkSpeedNightmare = KvGetFloat(kv, "walkspeed_nightmare", flBossWalkSpeedInsane);
+	float flBossWalkSpeedApollyon = KvGetFloat(kv, "walkspeed_apollyon", flBossWalkSpeedNightmare);
 	
 	float flBossDefaultAirSpeed = KvGetFloat(kv, "airspeed", 50.0);
 	float flBossAirSpeedEasy = KvGetFloat(kv, "airspeed_easy", flBossDefaultAirSpeed);
 	float flBossAirSpeedHard = KvGetFloat(kv, "airspeed_hard", flBossDefaultAirSpeed);
-	float flBossAirSpeedInsane = KvGetFloat(kv, "airspeed_insane", flBossDefaultAirSpeed);
-	float flBossAirSpeedNightmare = KvGetFloat(kv, "airspeed_nightmare", flBossDefaultAirSpeed);
+	float flBossAirSpeedInsane = KvGetFloat(kv, "airspeed_insane", flBossAirSpeedHard);
+	float flBossAirSpeedNightmare = KvGetFloat(kv, "airspeed_nightmare", flBossAirSpeedInsane);
+	float flBossAirSpeedApollyon = KvGetFloat(kv, "airspeed_apollyon", flBossAirSpeedNightmare);
 	
 	float flBossDefaultMaxWalkSpeed = KvGetFloat(kv, "walkspeed_max", 30.0);
 	float flBossMaxWalkSpeedEasy = KvGetFloat(kv, "walkspeed_max_easy", flBossDefaultMaxWalkSpeed);
 	float flBossMaxWalkSpeedHard = KvGetFloat(kv, "walkspeed_max_hard", flBossDefaultMaxWalkSpeed);
-	float flBossMaxWalkSpeedInsane = KvGetFloat(kv, "walkspeed_max_insane", flBossDefaultMaxWalkSpeed);
-	float flBossMaxWalkSpeedNightmare = KvGetFloat(kv, "walkspeed_max_nightmare", flBossDefaultMaxWalkSpeed);
+	float flBossMaxWalkSpeedInsane = KvGetFloat(kv, "walkspeed_max_insane", flBossMaxWalkSpeedHard);
+	float flBossMaxWalkSpeedNightmare = KvGetFloat(kv, "walkspeed_max_nightmare", flBossMaxWalkSpeedInsane);
+	float flBossMaxWalkSpeedApollyon = KvGetFloat(kv, "walkspeed_max_apollyon", flBossMaxWalkSpeedNightmare);
 	
 	float flBossDefaultMaxAirSpeed = KvGetFloat(kv, "airspeed_max", 50.0);
 	float flBossMaxAirSpeedEasy = KvGetFloat(kv, "airspeed_max_easy", flBossDefaultMaxAirSpeed);
 	float flBossMaxAirSpeedHard = KvGetFloat(kv, "airspeed_max_hard", flBossDefaultMaxAirSpeed);
-	float flBossMaxAirSpeedInsane = KvGetFloat(kv, "airspeed_max_insane", flBossDefaultMaxAirSpeed);
-	float flBossMaxAirSpeedNightmare = KvGetFloat(kv, "airspeed_max_nightmare", flBossDefaultMaxAirSpeed);
+	float flBossMaxAirSpeedInsane = KvGetFloat(kv, "airspeed_max_insane", flBossMaxAirSpeedHard);
+	float flBossMaxAirSpeedNightmare = KvGetFloat(kv, "airspeed_max_nightmare", flBossMaxAirSpeedInsane);
+	float flBossMaxAirSpeedApollyon = KvGetFloat(kv, "airspeed_max_apollyon", flBossMaxAirSpeedNightmare);
 	
 	float flWakeRange = KvGetFloat(kv, "wake_radius");
 	if (flWakeRange < 0.0) flWakeRange = 0.0;
@@ -429,20 +474,23 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flAlertGracetime = KvGetFloat(kv, "search_alert_gracetime", 0.5);
 	float flAlertGracetimeEasy = KvGetFloat(kv, "search_alert_gracetime_easy", flAlertGracetime);
 	float flAlertGracetimeHard = KvGetFloat(kv, "search_alert_gracetime_hard", flAlertGracetime);
-	float flAlertGracetimeInsane = KvGetFloat(kv, "search_alert_gracetime_insane", flAlertGracetime);
-	float flAlertGracetimeNightmare = KvGetFloat(kv, "search_alert_gracetime_nightmare", flAlertGracetime);
+	float flAlertGracetimeInsane = KvGetFloat(kv, "search_alert_gracetime_insane", flAlertGracetimeHard);
+	float flAlertGracetimeNightmare = KvGetFloat(kv, "search_alert_gracetime_nightmare", flAlertGracetimeInsane);
+	float flAlertGracetimeApollyon = KvGetFloat(kv, "search_alert_gracetime_apollyon", flAlertGracetimeNightmare);
 	
 	float flAlertDuration = KvGetFloat(kv, "search_alert_duration", 5.0);
 	float flAlertDurationEasy = KvGetFloat(kv, "search_alert_duration_easy", flAlertDuration);
 	float flAlertDurationHard = KvGetFloat(kv, "search_alert_duration_hard", flAlertDuration);
-	float flAlertDurationInsane = KvGetFloat(kv, "search_alert_duration_insane", flAlertDuration);
-	float flAlertDurationNightmare = KvGetFloat(kv, "search_alert_duration_nightmare", flAlertDuration);
+	float flAlertDurationInsane = KvGetFloat(kv, "search_alert_duration_insane", flAlertDurationHard);
+	float flAlertDurationNightmare = KvGetFloat(kv, "search_alert_duration_nightmare", flAlertDurationInsane);
+	float flAlertDurationApollyon = KvGetFloat(kv, "search_alert_duration_apollyon", flAlertDurationNightmare);
 	
 	float flChaseDuration = KvGetFloat(kv, "search_chase_duration", 10.0);
 	float flChaseDurationEasy = KvGetFloat(kv, "search_chase_duration_easy", flChaseDuration);
 	float flChaseDurationHard = KvGetFloat(kv, "search_chase_duration_hard", flChaseDuration);
-	float flChaseDurationInsane = KvGetFloat(kv, "search_chase_duration_insane", flChaseDuration);
-	float flChaseDurationNightmare = KvGetFloat(kv, "search_chase_duration_nightmare", flChaseDuration);
+	float flChaseDurationInsane = KvGetFloat(kv, "search_chase_duration_insane", flChaseDurationHard);
+	float flChaseDurationNightmare = KvGetFloat(kv, "search_chase_duration_nightmare", flChaseDurationInsane);
+	float flChaseDurationApollyon = KvGetFloat(kv, "search_chase_duration_apollyon", flChaseDurationNightmare);
 	
 	bool bCanBeStunned = view_as<bool>(KvGetNum(kv, "stun_enabled"));
 	
@@ -468,58 +516,67 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flBossDefaultCloakCooldown = KvGetFloat(kv, "cloak_cooldown", 8.0);
 	float flBossCloakCooldownEasy = KvGetFloat(kv, "cloak_cooldown_easy", flBossDefaultCloakCooldown);
 	float flBossCloakCooldownHard = KvGetFloat(kv, "cloak_cooldown_hard", flBossDefaultCloakCooldown);
-	float flBossCloakCooldownInsane = KvGetFloat(kv, "cloak_cooldown_insane", flBossDefaultCloakCooldown);
-	float flBossCloakCooldownNightmare = KvGetFloat(kv, "cloak_cooldown_nightmare", flBossDefaultCloakCooldown);
+	float flBossCloakCooldownInsane = KvGetFloat(kv, "cloak_cooldown_insane", flBossCloakCooldownHard);
+	float flBossCloakCooldownNightmare = KvGetFloat(kv, "cloak_cooldown_nightmare", flBossCloakCooldownInsane);
+	float flBossCloakCooldownApollyon = KvGetFloat(kv, "cloak_cooldown_apollyon", flBossCloakCooldownNightmare);
 	
 	float flBossDefaultCloakRange = KvGetFloat(kv, "cloak_range", 250.0);
 	float flBossCloakRangeEasy = KvGetFloat(kv, "cloak_range_easy", flBossDefaultCloakRange);
 	float flBossCloakRangeHard = KvGetFloat(kv, "cloak_range_hard", flBossDefaultCloakRange);
-	float flBossCloakRangeInsane = KvGetFloat(kv, "cloak_range_insane", flBossDefaultCloakRange);
-	float flBossCloakRangeNightmare = KvGetFloat(kv, "cloak_range_nightmare", flBossDefaultCloakRange);
+	float flBossCloakRangeInsane = KvGetFloat(kv, "cloak_range_insane", flBossCloakRangeHard);
+	float flBossCloakRangeNightmare = KvGetFloat(kv, "cloak_range_nightmare", flBossCloakRangeInsane);
+	float flBossCloakRangeApollyon = KvGetFloat(kv, "cloak_range_apollyon", flBossCloakRangeNightmare);
 	
 	bool bProjectileEnable = view_as<bool>(KvGetNum(kv, "projectile_enable"));
 	
 	float flProjectileCooldownMin = KvGetFloat(kv, "projectile_cooldown_min", 1.0);
 	float flProjectileCooldownMinEasy = KvGetFloat(kv, "projectile_cooldown_min_easy", flProjectileCooldownMin);
 	float flProjectileCooldownMinHard = KvGetFloat(kv, "projectile_cooldown_min_hard", flProjectileCooldownMin);
-	float flProjectileCooldownMinInsane = KvGetFloat(kv, "projectile_cooldown_min_insane", flProjectileCooldownMin);
-	float flProjectileCooldownMinNightmare = KvGetFloat(kv, "projectile_cooldown_min_nightmare", flProjectileCooldownMin);
+	float flProjectileCooldownMinInsane = KvGetFloat(kv, "projectile_cooldown_min_insane", flProjectileCooldownMinHard);
+	float flProjectileCooldownMinNightmare = KvGetFloat(kv, "projectile_cooldown_min_nightmare", flProjectileCooldownMinInsane);
+	float flProjectileCooldownMinApollyon = KvGetFloat(kv, "projectile_cooldown_min_apollyon", flProjectileCooldownMinNightmare);
 	
 	float flProjectileCooldownMax = KvGetFloat(kv, "projectile_cooldown_max", 2.0);
 	float flProjectileCooldownMaxEasy = KvGetFloat(kv, "projectile_cooldown_max_easy", flProjectileCooldownMax);
 	float flProjectileCooldownMaxHard = KvGetFloat(kv, "projectile_cooldown_max_hard", flProjectileCooldownMax);
-	float flProjectileCooldownMaxInsane = KvGetFloat(kv, "projectile_cooldown_max_insane", flProjectileCooldownMax);
-	float flProjectileCooldownMaxNightmare = KvGetFloat(kv, "projectile_cooldown_max_nightmare", flProjectileCooldownMax);
+	float flProjectileCooldownMaxInsane = KvGetFloat(kv, "projectile_cooldown_max_insane", flProjectileCooldownMaxHard);
+	float flProjectileCooldownMaxNightmare = KvGetFloat(kv, "projectile_cooldown_max_nightmare", flProjectileCooldownMaxInsane);
+	float flProjectileCooldownMaxApollyon = KvGetFloat(kv, "projectile_cooldown_max_apollyon", flProjectileCooldownMaxNightmare);
 	
 	float flIceballSlowdownDuration = KvGetFloat(kv, "projectile_iceslow_duration", 2.0);
 	float flIceballSlowdownDurationEasy = KvGetFloat(kv, "projectile_iceslow_duration_easy", flIceballSlowdownDuration);
 	float flIceballSlowdownDurationHard = KvGetFloat(kv, "projectile_iceslow_duration_hard", flIceballSlowdownDuration);
-	float flIceballSlowdownDurationInsane = KvGetFloat(kv, "projectile_iceslow_duration_insane", flIceballSlowdownDuration);
-	float flIceballSlowdownDurationNightmare = KvGetFloat(kv, "projectile_iceslow_duration_nightmare", flIceballSlowdownDuration);
+	float flIceballSlowdownDurationInsane = KvGetFloat(kv, "projectile_iceslow_duration_insane", flIceballSlowdownDurationHard);
+	float flIceballSlowdownDurationNightmare = KvGetFloat(kv, "projectile_iceslow_duration_nightmare", flIceballSlowdownDurationInsane);
+	float flIceballSlowdownDurationApollyon = KvGetFloat(kv, "projectile_iceslow_duration_apollyon", flIceballSlowdownDurationNightmare);
 	
 	float flIceballSlowdownPercent = KvGetFloat(kv, "projectile_iceslow_percent", 0.55);
 	float flIceballSlowdownPercentEasy = KvGetFloat(kv, "projectile_iceslow_percent_easy", flIceballSlowdownPercent);
 	float flIceballSlowdownPercentHard = KvGetFloat(kv, "projectile_iceslow_percent_hard", flIceballSlowdownPercent);
-	float flIceballSlowdownPercentInsane = KvGetFloat(kv, "projectile_iceslow_percent_insane", flIceballSlowdownPercent);
-	float flIceballSlowdownPercentNightmare = KvGetFloat(kv, "projectile_iceslow_percent_nightmare", flIceballSlowdownPercent);
+	float flIceballSlowdownPercentInsane = KvGetFloat(kv, "projectile_iceslow_percent_insane", flIceballSlowdownPercentHard);
+	float flIceballSlowdownPercentNightmare = KvGetFloat(kv, "projectile_iceslow_percent_nightmare", flIceballSlowdownPercentInsane);
+	float flIceballSlowdownPercentApollyon = KvGetFloat(kv, "projectile_iceslow_percent_apollyon", flIceballSlowdownPercentNightmare);
 
 	float flProjectileSpeed = KvGetFloat(kv, "projectile_speed", 400.0);
 	float flProjectileSpeedEasy = KvGetFloat(kv, "projectile_speed_easy", flProjectileSpeed);
 	float flProjectileSpeedHard = KvGetFloat(kv, "projectile_speed_hard", flProjectileSpeed);
-	float flProjectileSpeedInsane = KvGetFloat(kv, "projectile_speed_insane", flProjectileSpeed);
-	float flProjectileSpeedNightmare = KvGetFloat(kv, "projectile_speed_nightmare", flProjectileSpeed);
+	float flProjectileSpeedInsane = KvGetFloat(kv, "projectile_speed_insane", flProjectileSpeedHard);
+	float flProjectileSpeedNightmare = KvGetFloat(kv, "projectile_speed_nightmare", flProjectileSpeedInsane);
+	float flProjectileSpeedApollyon = KvGetFloat(kv, "projectile_speed_apollyon", flProjectileSpeedNightmare);
 
 	float flProjectileDamage = KvGetFloat(kv, "projectile_damage", 50.0);
 	float flProjectileDamageEasy = KvGetFloat(kv, "projectile_damage_easy", flProjectileDamage);
 	float flProjectileDamageHard = KvGetFloat(kv, "projectile_damage_hard", flProjectileDamage);
-	float flProjectileDamageInsane = KvGetFloat(kv, "projectile_damage_insane", flProjectileDamage);
-	float flProjectileDamageNightmare = KvGetFloat(kv, "projectile_damage_nightmare", flProjectileDamage);
+	float flProjectileDamageInsane = KvGetFloat(kv, "projectile_damage_insane", flProjectileDamageHard);
+	float flProjectileDamageNightmare = KvGetFloat(kv, "projectile_damage_nightmare", flProjectileDamageInsane);
+	float flProjectileDamageApollyon = KvGetFloat(kv, "projectile_damage_apollyon", flProjectileDamageNightmare);
 
 	float flProjectileRadius = KvGetFloat(kv, "projectile_damageradius", 128.0);
 	float flProjectileRadiusEasy = KvGetFloat(kv, "projectile_damageradius_easy", flProjectileRadius);
 	float flProjectileRadiusHard = KvGetFloat(kv, "projectile_damageradius_hard", flProjectileRadius);
-	float flProjectileRadiusInsane = KvGetFloat(kv, "projectile_damageradius_insane", flProjectileRadius);
-	float flProjectileRadiusNightmare = KvGetFloat(kv, "projectile_damageradius_nightmare", flProjectileRadius);
+	float flProjectileRadiusInsane = KvGetFloat(kv, "projectile_damageradius_insane", flProjectileRadiusHard);
+	float flProjectileRadiusNightmare = KvGetFloat(kv, "projectile_damageradius_nightmare", flProjectileRadiusInsane);
+	float flProjectileRadiusApollyon = KvGetFloat(kv, "projectile_damageradius_apollyon", flProjectileRadiusNightmare);
 	
 	bool bRocketCritical = view_as<bool>(KvGetNum(kv, "enable_crit_rockets"));
 	bool bUseShootGesture = view_as<bool>(KvGetNum(kv, "use_gesture_shoot"));
@@ -529,22 +586,25 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	int iProjectileClips = KvGetNum(kv, "projectile_ammo_loaded", 3);
 	int iProjectileClipsEasy = KvGetNum(kv, "projectile_ammo_loaded_easy", iProjectileClips);
 	int iProjectileClipsHard = KvGetNum(kv, "projectile_ammo_loaded_hard", iProjectileClips);
-	int iProjectileClipsInsane = KvGetNum(kv, "projectile_ammo_loaded_insane", iProjectileClips);
-	int iProjectileClipsNightmare = KvGetNum(kv, "projectile_ammo_loaded_nightmare", iProjectileClips);
+	int iProjectileClipsInsane = KvGetNum(kv, "projectile_ammo_loaded_insane", iProjectileClipsHard);
+	int iProjectileClipsNightmare = KvGetNum(kv, "projectile_ammo_loaded_nightmare", iProjectileClipsInsane);
+	int iProjectileClipsApollyon = KvGetNum(kv, "projectile_ammo_loaded_apollyon", iProjectileClipsNightmare);
 	
 	float flProjectilesReload = KvGetFloat(kv, "projectile_reload_time", 2.0);
 	float flProjectilesReloadEasy = KvGetFloat(kv, "projectile_reload_time_easy", flProjectilesReload);
 	float flProjectilesReloadHard = KvGetFloat(kv, "projectile_reload_time_hard", flProjectilesReload);
-	float flProjectilesReloadInsane = KvGetFloat(kv, "projectile_reload_time_insane", flProjectilesReload);
-	float flProjectilesReloadNightmare = KvGetFloat(kv, "projectile_reload_time_nightmare", flProjectilesReload);
+	float flProjectilesReloadInsane = KvGetFloat(kv, "projectile_reload_time_insane", flProjectilesReloadHard);
+	float flProjectilesReloadNightmare = KvGetFloat(kv, "projectile_reload_time_nightmare", flProjectilesReloadInsane);
+	float flProjectilesReloadApollyon = KvGetFloat(kv, "projectile_reload_time_apollyon", flProjectilesReloadNightmare);
 	
 	bool bEnableChargeUpProjectiles = view_as<bool>(KvGetNum(kv, "projectile_chargeup_enable"));
 	
 	float flProjectileChargeUpDuration = KvGetFloat(kv, "projectile_chargeup_duration", 5.0);
 	float flProjectileChargeUpDurationEasy = KvGetFloat(kv, "projectile_chargeup_duration_easy", flProjectileChargeUpDuration);
 	float flProjectileChargeUpDurationHard = KvGetFloat(kv, "projectile_chargeup_duration_hard", flProjectileChargeUpDuration);
-	float flProjectileChargeUpDurationInsane = KvGetFloat(kv, "projectile_chargeup_duration_insane", flProjectileChargeUpDuration);
-	float flProjectileChargeUpDurationNightmare = KvGetFloat(kv, "projectile_chargeup_duration_nightmare", flProjectileChargeUpDuration);
+	float flProjectileChargeUpDurationInsane = KvGetFloat(kv, "projectile_chargeup_duration_insane", flProjectileChargeUpDurationHard);
+	float flProjectileChargeUpDurationNightmare = KvGetFloat(kv, "projectile_chargeup_duration_nightmare", flProjectileChargeUpDurationInsane);
+	float flProjectileChargeUpDurationApollyon = KvGetFloat(kv, "projectile_chargeup_duration_apollyon", flProjectileChargeUpDurationNightmare);
 	
 	bool bAdvancedDamageEffectsEnabled = view_as<bool>(KvGetNum(kv, "player_damage_effects"));
 	bool bAdvancedDamageEffectsParticles = view_as<bool>(KvGetNum(kv, "player_attach_particle", 1));
@@ -557,8 +617,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flJaratePlayerDurationNormal = KvGetFloat(kv, "player_jarate_duration");
 	float flJaratePlayerDurationEasy = KvGetFloat(kv, "player_jarate_duration_easy", flJaratePlayerDurationNormal);
 	float flJaratePlayerDurationHard = KvGetFloat(kv, "player_jarate_duration_hard", flJaratePlayerDurationNormal);
-	float flJaratePlayerDurationInsane = KvGetFloat(kv, "player_jarate_duration_insane", flJaratePlayerDurationNormal);
-	float flJaratePlayerDurationNightmare = KvGetFloat(kv, "player_jarate_duration_nightmare", flJaratePlayerDurationNormal);
+	float flJaratePlayerDurationInsane = KvGetFloat(kv, "player_jarate_duration_insane", flJaratePlayerDurationHard);
+	float flJaratePlayerDurationNightmare = KvGetFloat(kv, "player_jarate_duration_nightmare", flJaratePlayerDurationInsane);
+	float flJaratePlayerDurationApollyon = KvGetFloat(kv, "player_jarate_duration_apollyon", flJaratePlayerDurationNightmare);
 
 	bool bMilkPlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_milk_on_hit"));
 	
@@ -568,8 +629,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flMilkPlayerDurationNormal = KvGetFloat(kv, "player_milk_duration");
 	float flMilkPlayerDurationEasy = KvGetFloat(kv, "player_milk_duration_easy", flMilkPlayerDurationNormal);
 	float flMilkPlayerDurationHard = KvGetFloat(kv, "player_milk_duration_hard", flMilkPlayerDurationNormal);
-	float flMilkPlayerDurationInsane = KvGetFloat(kv, "player_milk_duration_insane", flMilkPlayerDurationNormal);
-	float flMilkPlayerDurationNightmare = KvGetFloat(kv, "player_milk_duration_nightmare", flMilkPlayerDurationNormal);
+	float flMilkPlayerDurationInsane = KvGetFloat(kv, "player_milk_duration_insane", flMilkPlayerDurationHard);
+	float flMilkPlayerDurationNightmare = KvGetFloat(kv, "player_milk_duration_nightmare", flMilkPlayerDurationInsane);
+	float flMilkPlayerDurationApollyon = KvGetFloat(kv, "player_milk_duration_apollyon", flMilkPlayerDurationNightmare);
 
 	bool bGasPlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_gas_on_hit"));
 	
@@ -579,8 +641,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flGasPlayerDurationNormal = KvGetFloat(kv, "player_gas_duration");
 	float flGasPlayerDurationEasy = KvGetFloat(kv, "player_gas_duration_easy", flGasPlayerDurationNormal);
 	float flGasPlayerDurationHard = KvGetFloat(kv, "player_gas_duration_hard", flGasPlayerDurationNormal);
-	float flGasPlayerDurationInsane = KvGetFloat(kv, "player_gas_duration_insane", flGasPlayerDurationNormal);
-	float flGasPlayerDurationNightmare = KvGetFloat(kv, "player_gas_duration_nightmare", flGasPlayerDurationNormal);
+	float flGasPlayerDurationInsane = KvGetFloat(kv, "player_gas_duration_insane", flGasPlayerDurationHard);
+	float flGasPlayerDurationNightmare = KvGetFloat(kv, "player_gas_duration_nightmare", flGasPlayerDurationInsane);
+	float flGasPlayerDurationApollyon = KvGetFloat(kv, "player_gas_duration_apollyon", flGasPlayerDurationNightmare);
 
 	bool bMarkPlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_mark_on_hit"));
 	
@@ -590,8 +653,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flMarkPlayerDurationNormal = KvGetFloat(kv, "player_mark_duration");
 	float flMarkPlayerDurationEasy = KvGetFloat(kv, "player_mark_duration_easy", flMarkPlayerDurationNormal);
 	float flMarkPlayerDurationHard = KvGetFloat(kv, "player_mark_duration_hard", flMarkPlayerDurationNormal);
-	float flMarkPlayerDurationInsane = KvGetFloat(kv, "player_mark_duration_insane", flMarkPlayerDurationNormal);
-	float flMarkPlayerDurationNightmare = KvGetFloat(kv, "player_mark_duration_nightmare", flMarkPlayerDurationNormal);
+	float flMarkPlayerDurationInsane = KvGetFloat(kv, "player_mark_duration_insane", flMarkPlayerDurationHard);
+	float flMarkPlayerDurationNightmare = KvGetFloat(kv, "player_mark_duration_nightmare", flMarkPlayerDurationInsane);
+	float flMarkPlayerDurationApollyon = KvGetFloat(kv, "player_mark_duration_apollyon", flMarkPlayerDurationNightmare);
 
 	bool bIgnitePlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_ignite_on_hit"));
 	
@@ -601,8 +665,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flIgnitePlayerDelayNormal = KvGetFloat(kv, "player_ignite_delay");
 	float flIgnitePlayerDelayEasy = KvGetFloat(kv, "player_ignite_delay_easy", flIgnitePlayerDelayNormal);
 	float flIgnitePlayerDelayHard = KvGetFloat(kv, "player_ignite_delay_hard", flIgnitePlayerDelayNormal);
-	float flIgnitePlayerDelayInsane = KvGetFloat(kv, "player_ignite_delay_insane", flIgnitePlayerDelayNormal);
-	float flIgnitePlayerDelayNightmare = KvGetFloat(kv, "player_ignite_delay_nightmare", flIgnitePlayerDelayNormal);
+	float flIgnitePlayerDelayInsane = KvGetFloat(kv, "player_ignite_delay_insane", flIgnitePlayerDelayHard);
+	float flIgnitePlayerDelayNightmare = KvGetFloat(kv, "player_ignite_delay_nightmare", flIgnitePlayerDelayInsane);
+	float flIgnitePlayerDelayApollyon = KvGetFloat(kv, "player_ignite_delay_apollyon", flIgnitePlayerDelayNightmare);
 
 	bool bStunPlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_stun_on_hit"));
 	
@@ -616,8 +681,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flStunPlayerDurationNormal = KvGetFloat(kv, "player_stun_duration");
 	float flStunPlayerDurationEasy = KvGetFloat(kv, "player_stun_duration_easy", flStunPlayerDurationNormal);
 	float flStunPlayerDurationHard = KvGetFloat(kv, "player_stun_duration_hard", flStunPlayerDurationNormal);
-	float flStunPlayerDurationInsane = KvGetFloat(kv, "player_stun_duration_insane", flStunPlayerDurationNormal);
-	float flStunPlayerDurationNightmare = KvGetFloat(kv, "player_stun_duration_nightmare", flStunPlayerDurationNormal);
+	float flStunPlayerDurationInsane = KvGetFloat(kv, "player_stun_duration_insane", flStunPlayerDurationHard);
+	float flStunPlayerDurationNightmare = KvGetFloat(kv, "player_stun_duration_nightmare", flStunPlayerDurationInsane);
+	float flStunPlayerDurationApollyon = KvGetFloat(kv, "player_stun_duration_apollyon", flStunPlayerDurationNightmare);
 	
 	float flStunPlayerSlowdownNormal = KvGetFloat(kv, "player_stun_slowdown");
 	if (flStunPlayerSlowdownNormal > 1.0) flStunPlayerSlowdownNormal = 1.0;
@@ -628,12 +694,15 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flStunPlayerSlowdownHard = KvGetFloat(kv, "player_stun_slowdown_hard", flStunPlayerSlowdownNormal);
 	if (flStunPlayerSlowdownHard > 1.0) flStunPlayerSlowdownHard = 1.0;
 	if (flStunPlayerSlowdownHard < 0.0) flStunPlayerSlowdownHard = 0.0;
-	float flStunPlayerSlowdownInsane = KvGetFloat(kv, "player_stun_slowdown_insane", flStunPlayerSlowdownNormal);
+	float flStunPlayerSlowdownInsane = KvGetFloat(kv, "player_stun_slowdown_insane", flStunPlayerSlowdownHard);
 	if (flStunPlayerSlowdownInsane > 1.0) flStunPlayerSlowdownInsane = 1.0;
 	if (flStunPlayerSlowdownInsane < 0.0) flStunPlayerSlowdownInsane = 0.0;
-	float flStunPlayerSlowdownNightmare = KvGetFloat(kv, "player_stun_slowdown_nightmare", flStunPlayerSlowdownNormal);
+	float flStunPlayerSlowdownNightmare = KvGetFloat(kv, "player_stun_slowdown_nightmare", flStunPlayerSlowdownInsane);
 	if (flStunPlayerSlowdownNightmare > 1.0) flStunPlayerSlowdownNightmare = 1.0;
 	if (flStunPlayerSlowdownNightmare < 0.0) flStunPlayerSlowdownNightmare = 0.0;
+	float flStunPlayerSlowdownApollyon = KvGetFloat(kv, "player_stun_slowdown_apollyon", flStunPlayerSlowdownNightmare);
+	if (flStunPlayerSlowdownApollyon > 1.0) flStunPlayerSlowdownApollyon = 1.0;
+	if (flStunPlayerSlowdownApollyon < 0.0) flStunPlayerSlowdownApollyon = 0.0;
 
 	bool bBleedPlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_bleed_on_hit"));
 	
@@ -643,8 +712,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flBleedPlayerDurationNormal = KvGetFloat(kv, "player_bleed_duration");
 	float flBleedPlayerDurationEasy = KvGetFloat(kv, "player_bleed_duration_easy", flBleedPlayerDurationNormal);
 	float flBleedPlayerDurationHard = KvGetFloat(kv, "player_bleed_duration_hard", flBleedPlayerDurationNormal);
-	float flBleedPlayerDurationInsane = KvGetFloat(kv, "player_bleed_duration_insane", flBleedPlayerDurationNormal);
-	float flBleedPlayerDurationNightmare = KvGetFloat(kv, "player_bleed_duration_nightmare", flBleedPlayerDurationNormal);
+	float flBleedPlayerDurationInsane = KvGetFloat(kv, "player_bleed_duration_insane", flBleedPlayerDurationHard);
+	float flBleedPlayerDurationNightmare = KvGetFloat(kv, "player_bleed_duration_nightmare", flBleedPlayerDurationInsane);
+	float flBleedPlayerDurationApollyon = KvGetFloat(kv, "player_bleed_duration_apollyon", flBleedPlayerDurationNightmare);
 
 	bool bEletricPlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_electric_slow_on_hit"));
 	
@@ -654,8 +724,9 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flEletricPlayerDurationNormal = KvGetFloat(kv, "player_electric_slow_duration");
 	float flEletricPlayerDurationEasy = KvGetFloat(kv, "player_electric_slow_duration_easy", flEletricPlayerDurationNormal);
 	float flEletricPlayerDurationHard = KvGetFloat(kv, "player_electric_slow_duration_hard", flEletricPlayerDurationNormal);
-	float flEletricPlayerDurationInsane = KvGetFloat(kv, "player_electric_slow_duration_insane", flEletricPlayerDurationNormal);
-	float flEletricPlayerDurationNightmare = KvGetFloat(kv, "player_electric_slow_duration_nightmare", flEletricPlayerDurationNormal);
+	float flEletricPlayerDurationInsane = KvGetFloat(kv, "player_electric_slow_duration_insane", flEletricPlayerDurationHard);
+	float flEletricPlayerDurationNightmare = KvGetFloat(kv, "player_electric_slow_duration_nightmare", flEletricPlayerDurationInsane);
+	float flEletricPlayerDurationApollyon = KvGetFloat(kv, "player_electric_slow_duration_apollyon", flEletricPlayerDurationNightmare);
 	
 	float flEletricPlayerSlowdownNormal = KvGetFloat(kv, "player_electric_slow_slowdown");
 	if (flEletricPlayerSlowdownNormal > 1.0) flEletricPlayerSlowdownNormal = 1.0;
@@ -666,12 +737,15 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	float flEletricPlayerSlowdownHard = KvGetFloat(kv, "player_electric_slow_slowdown_hard", flEletricPlayerSlowdownNormal);
 	if (flEletricPlayerSlowdownHard > 1.0) flEletricPlayerSlowdownHard = 1.0;
 	if (flEletricPlayerSlowdownHard < 0.0) flEletricPlayerSlowdownHard = 0.0;
-	float flEletricPlayerSlowdownInsane = KvGetFloat(kv, "player_electric_slow_slowdown_insane", flEletricPlayerSlowdownNormal);
+	float flEletricPlayerSlowdownInsane = KvGetFloat(kv, "player_electric_slow_slowdown_insane", flEletricPlayerSlowdownHard);
 	if (flEletricPlayerSlowdownInsane > 1.0) flEletricPlayerSlowdownInsane = 1.0;
 	if (flEletricPlayerSlowdownInsane < 0.0) flEletricPlayerSlowdownInsane = 0.0;
-	float flEletricPlayerSlowdownNightmare = KvGetFloat(kv, "player_electric_slow_slowdown_nightmare", flEletricPlayerSlowdownNormal);
+	float flEletricPlayerSlowdownNightmare = KvGetFloat(kv, "player_electric_slow_slowdown_nightmare", flEletricPlayerSlowdownInsane);
 	if (flEletricPlayerSlowdownNightmare > 1.0) flEletricPlayerSlowdownNightmare = 1.0;
 	if (flEletricPlayerSlowdownNightmare < 0.0) flEletricPlayerSlowdownNightmare = 0.0;
+	float flEletricPlayerSlowdownApollyon = KvGetFloat(kv, "player_electric_slow_slowdown_apollyon", flEletricPlayerSlowdownNightmare);
+	if (flEletricPlayerSlowdownApollyon > 1.0) flEletricPlayerSlowdownApollyon = 1.0;
+	if (flEletricPlayerSlowdownApollyon < 0.0) flEletricPlayerSlowdownApollyon = 0.0;
 	
 	bool bSmitePlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_smite_on_hit"));
 	
@@ -743,42 +817,49 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossWalkSpeedHard, ChaserProfileData_WalkSpeedHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossWalkSpeedInsane, ChaserProfileData_WalkSpeedInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossWalkSpeedNightmare, ChaserProfileData_WalkSpeedNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossWalkSpeedApollyon, ChaserProfileData_WalkSpeedApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossDefaultAirSpeed, ChaserProfileData_AirSpeedNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossAirSpeedEasy, ChaserProfileData_AirSpeedEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossAirSpeedHard, ChaserProfileData_AirSpeedHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossAirSpeedInsane, ChaserProfileData_AirSpeedInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossAirSpeedNightmare, ChaserProfileData_AirSpeedNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossAirSpeedApollyon, ChaserProfileData_AirSpeedApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossDefaultMaxWalkSpeed, ChaserProfileData_MaxWalkSpeedNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxWalkSpeedEasy, ChaserProfileData_MaxWalkSpeedEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxWalkSpeedHard, ChaserProfileData_MaxWalkSpeedHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxWalkSpeedInsane, ChaserProfileData_MaxWalkSpeedInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxWalkSpeedNightmare, ChaserProfileData_MaxWalkSpeedNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxWalkSpeedApollyon, ChaserProfileData_MaxWalkSpeedApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossDefaultMaxAirSpeed, ChaserProfileData_MaxAirSpeedNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxAirSpeedEasy, ChaserProfileData_MaxAirSpeedEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxAirSpeedHard, ChaserProfileData_MaxAirSpeedHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxAirSpeedInsane, ChaserProfileData_MaxAirSpeedInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxAirSpeedNightmare, ChaserProfileData_MaxAirSpeedNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossMaxAirSpeedApollyon, ChaserProfileData_MaxAirSpeedApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertGracetime, ChaserProfileData_SearchAlertGracetime);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertGracetimeEasy, ChaserProfileData_SearchAlertGracetimeEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertGracetimeHard, ChaserProfileData_SearchAlertGracetimeHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertGracetimeInsane, ChaserProfileData_SearchAlertGracetimeInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertGracetimeNightmare, ChaserProfileData_SearchAlertGracetimeNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertGracetimeApollyon, ChaserProfileData_SearchAlertGracetimeApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertDuration, ChaserProfileData_SearchAlertDuration);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertDurationEasy, ChaserProfileData_SearchAlertDurationEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertDurationHard, ChaserProfileData_SearchAlertDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertDurationInsane, ChaserProfileData_SearchAlertDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertDurationNightmare, ChaserProfileData_SearchAlertDurationNightmare);
-		
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flAlertDurationApollyon, ChaserProfileData_SearchAlertDurationApollyon);
+
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flChaseDuration, ChaserProfileData_SearchChaseDuration);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flChaseDurationEasy, ChaserProfileData_SearchChaseDurationEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flChaseDurationHard, ChaserProfileData_SearchChaseDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flChaseDurationInsane, ChaserProfileData_SearchChaseDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flChaseDurationNightmare, ChaserProfileData_SearchChaseDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flChaseDurationApollyon, ChaserProfileData_SearchChaseDurationApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flWakeRange, ChaserProfileData_WakeRadius);
 	
@@ -799,12 +880,14 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakCooldownHard, ChaserProfileData_CloakCooldownHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakCooldownInsane, ChaserProfileData_CloakCooldownInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakCooldownNightmare, ChaserProfileData_CloakCooldownNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakCooldownApollyon, ChaserProfileData_CloakCooldownApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossDefaultCloakRange, ChaserProfileData_CloakRangeNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakRangeEasy, ChaserProfileData_CloakRangeEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakRangeHard, ChaserProfileData_CloakRangeHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakRangeInsane, ChaserProfileData_CloakRangeInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakRangeNightmare, ChaserProfileData_CloakRangeNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossCloakRangeApollyon, ChaserProfileData_CloakRangeApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bProjectileEnable, ChaserProfileData_ProjectileEnable);
 	
@@ -821,42 +904,49 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMinHard, ChaserProfileData_ProjectileCooldownMinHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMinInsane, ChaserProfileData_ProjectileCooldownMinInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMinNightmare, ChaserProfileData_ProjectileCooldownMinNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMinApollyon, ChaserProfileData_ProjectileCooldownMinApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMax, ChaserProfileData_ProjectileCooldownMaxNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMaxEasy, ChaserProfileData_ProjectileCooldownMaxEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMaxHard, ChaserProfileData_ProjectileCooldownMaxHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMaxInsane, ChaserProfileData_ProjectileCooldownMaxInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMaxNightmare, ChaserProfileData_ProjectileCooldownMaxNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileCooldownMaxApollyon, ChaserProfileData_ProjectileCooldownMaxApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownDuration, ChaserProfileData_IceballSlowdownDurationNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownDurationEasy, ChaserProfileData_IceballSlowdownDurationEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownDurationHard, ChaserProfileData_IceballSlowdownDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownDurationInsane, ChaserProfileData_IceballSlowdownDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownDurationNightmare, ChaserProfileData_IceballSlowdownDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownDurationApollyon, ChaserProfileData_IceballSlowdownDurationApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownPercent, ChaserProfileData_IceballSlowdownPercentNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownPercentEasy, ChaserProfileData_IceballSlowdownPercentEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownPercentHard, ChaserProfileData_IceballSlowdownPercentHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownPercentInsane, ChaserProfileData_IceballSlowdownPercentInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownPercentNightmare, ChaserProfileData_IceballSlowdownPercentNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIceballSlowdownPercentApollyon, ChaserProfileData_IceballSlowdownPercentApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileSpeed, ChaserProfileData_ProjectileSpeedNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileSpeedEasy, ChaserProfileData_ProjectileSpeedEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileSpeedHard, ChaserProfileData_ProjectileSpeedHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileSpeedInsane, ChaserProfileData_ProjectileSpeedInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileSpeedNightmare, ChaserProfileData_ProjectileSpeedNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileSpeedApollyon, ChaserProfileData_ProjectileSpeedApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileDamage, ChaserProfileData_ProjectileDamageNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileDamageEasy, ChaserProfileData_ProjectileDamageEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileDamageHard, ChaserProfileData_ProjectileDamageHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileDamageInsane, ChaserProfileData_ProjectileDamageInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileDamageNightmare, ChaserProfileData_ProjectileDamageNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileDamageApollyon, ChaserProfileData_ProjectileDamageApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileRadius, ChaserProfileData_ProjectileRadiusNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileRadiusEasy, ChaserProfileData_ProjectileRadiusEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileRadiusHard, ChaserProfileData_ProjectileRadiusHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileRadiusInsane, ChaserProfileData_ProjectileRadiusInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileRadiusNightmare, ChaserProfileData_ProjectileRadiusNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileRadiusApollyon, ChaserProfileData_ProjectileRadiusApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iProjectileType, ChaserProfileData_ProjectileType);
 	
@@ -865,18 +955,21 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iProjectileClipsHard, ChaserProfileData_ProjectileClipHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iProjectileClipsInsane, ChaserProfileData_ProjectileClipInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iProjectileClipsNightmare, ChaserProfileData_ProjectileClipNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iProjectileClipsApollyon, ChaserProfileData_ProjectileClipApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectilesReload, ChaserProfileData_ProjectileReloadTimeNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectilesReloadEasy, ChaserProfileData_ProjectileReloadTimeEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectilesReloadHard, ChaserProfileData_ProjectileReloadTimeHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectilesReloadInsane, ChaserProfileData_ProjectileReloadTimeInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectilesReloadNightmare, ChaserProfileData_ProjectileReloadTimeNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectilesReloadApollyon, ChaserProfileData_ProjectileReloadTimeApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileChargeUpDuration, ChaserProfileData_ProjectileChargeUpNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileChargeUpDurationEasy, ChaserProfileData_ProjectileChargeUpEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileChargeUpDurationHard, ChaserProfileData_ProjectileChargeUpHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileChargeUpDurationInsane, ChaserProfileData_ProjectileChargeUpInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileChargeUpDurationNightmare, ChaserProfileData_ProjectileChargeUpNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flProjectileChargeUpDurationApollyon, ChaserProfileData_ProjectileChargeUpApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bAdvancedDamageEffectsEnabled, ChaserProfileData_AdvancedDamageEffectsEnabled);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bAdvancedDamageEffectsParticles, ChaserProfileData_AdvancedDamageEffectsParticles);
@@ -888,6 +981,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flJaratePlayerDurationHard, ChaserProfileData_JarateAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flJaratePlayerDurationInsane, ChaserProfileData_JarateAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flJaratePlayerDurationNightmare, ChaserProfileData_JarateAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flJaratePlayerDurationApollyon, ChaserProfileData_JarateAdvancedDurationApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bMilkPlayerAdvanced, ChaserProfileData_EnableMilkAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iMilkPlayerAttackIndexes, ChaserProfileData_MilkAdvancedIndexes);
@@ -896,6 +990,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMilkPlayerDurationHard, ChaserProfileData_MilkAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMilkPlayerDurationInsane, ChaserProfileData_MilkAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMilkPlayerDurationNightmare, ChaserProfileData_MilkAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMilkPlayerDurationApollyon, ChaserProfileData_MilkAdvancedDurationApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bGasPlayerAdvanced, ChaserProfileData_EnableGasAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iGasPlayerAttackIndexes, ChaserProfileData_GasAdvancedIndexes);
@@ -904,6 +999,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flGasPlayerDurationHard, ChaserProfileData_GasAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flGasPlayerDurationInsane, ChaserProfileData_GasAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flGasPlayerDurationNightmare, ChaserProfileData_GasAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flGasPlayerDurationApollyon, ChaserProfileData_GasAdvancedDurationApollyon);
 
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bMarkPlayerAdvanced, ChaserProfileData_EnableMarkAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iMarkPlayerAttackIndexes, ChaserProfileData_MarkAdvancedIndexes);
@@ -912,6 +1008,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMarkPlayerDurationHard, ChaserProfileData_MarkAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMarkPlayerDurationInsane, ChaserProfileData_MarkAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMarkPlayerDurationNightmare, ChaserProfileData_MarkAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flMarkPlayerDurationApollyon, ChaserProfileData_MarkAdvancedDurationApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bIgnitePlayerAdvanced, ChaserProfileData_EnableIgniteAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iIgnitePlayerAttackIndexes, ChaserProfileData_IgniteAdvancedIndexes);
@@ -920,6 +1017,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIgnitePlayerDelayHard, ChaserProfileData_IgniteAdvancedDelayHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIgnitePlayerDelayInsane, ChaserProfileData_IgniteAdvancedDelayInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIgnitePlayerDelayNightmare, ChaserProfileData_IgniteAdvancedDelayNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flIgnitePlayerDelayApollyon, ChaserProfileData_IgniteAdvancedDelayApollyon);
 
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bStunPlayerAdvanced, ChaserProfileData_EnableStunAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iStunPlayerAttackIndexes, ChaserProfileData_StunAdvancedIndexes);
@@ -928,11 +1026,13 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerDurationHard, ChaserProfileData_StunAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerDurationInsane, ChaserProfileData_StunAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerDurationNightmare, ChaserProfileData_StunAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerDurationApollyon, ChaserProfileData_StunAdvancedDurationApollyon);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerSlowdownEasy, ChaserProfileData_StunAdvancedSlowdownEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerSlowdownNormal, ChaserProfileData_StunAdvancedSlowdownNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerSlowdownHard, ChaserProfileData_StunAdvancedSlowdownHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerSlowdownInsane, ChaserProfileData_StunAdvancedSlowdownInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerSlowdownNightmare, ChaserProfileData_StunAdvancedSlowdownNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flStunPlayerSlowdownApollyon, ChaserProfileData_StunAdvancedSlowdownApollyon);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iStunPlayerType, ChaserProfileData_StunAdvancedType);
 
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bBleedPlayerAdvanced, ChaserProfileData_EnableBleedAdvanced);
@@ -942,6 +1042,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBleedPlayerDurationHard, ChaserProfileData_BleedAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBleedPlayerDurationInsane, ChaserProfileData_BleedAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBleedPlayerDurationNightmare, ChaserProfileData_BleedAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBleedPlayerDurationApollyon, ChaserProfileData_BleedAdvancedDurationApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bEletricPlayerAdvanced, ChaserProfileData_EnableEletricAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iEletricPlayerAttackIndexes, ChaserProfileData_EletricAdvancedIndexes);
@@ -950,11 +1051,13 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerDurationHard, ChaserProfileData_EletricAdvancedDurationHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerDurationInsane, ChaserProfileData_EletricAdvancedDurationInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerDurationNightmare, ChaserProfileData_EletricAdvancedDurationNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerDurationApollyon, ChaserProfileData_EletricAdvancedDurationApollyon);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerSlowdownEasy, ChaserProfileData_EletricAdvancedSlowdownEasy);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerSlowdownNormal, ChaserProfileData_EletricAdvancedSlowdownNormal);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerSlowdownHard, ChaserProfileData_EletricAdvancedSlowdownHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerSlowdownInsane, ChaserProfileData_EletricAdvancedSlowdownInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerSlowdownNightmare, ChaserProfileData_EletricAdvancedSlowdownNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flEletricPlayerSlowdownApollyon, ChaserProfileData_EletricAdvancedSlowdownApollyon);
 	
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bSmitePlayerAdvanced, ChaserProfileData_EnableSmiteAdvanced);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iSmiteAttackIndexes, ChaserProfileData_SmiteAdvancedIndexes);
@@ -1011,6 +1114,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_increase_hard", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_increase_insane", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_increase_nightmare", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_increase_apollyon", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateApollyon);
 	
 	float flDefaultAwarenessDecreaseRate = KvGetFloat(kv, "awareness_rate_decrease", 150.0);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_easy", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateEasy);
@@ -1018,6 +1122,7 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_hard", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateHard);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_insane", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_nightmare", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_apollyon", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateApollyon);
 	
 	ParseChaserProfileAttacks(kv, iUniqueProfileIndex);
 	
@@ -1168,6 +1273,7 @@ float GetChaserProfileWalkSpeed(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_WalkSpeedHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_WalkSpeedInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_WalkSpeedNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_WalkSpeedApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_WalkSpeedNormal));
@@ -1181,6 +1287,7 @@ float GetChaserProfileAirSpeed(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AirSpeedHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AirSpeedInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AirSpeedNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AirSpeedApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AirSpeedNormal));
@@ -1194,6 +1301,7 @@ float GetChaserProfileMaxWalkSpeed(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedNormal));
@@ -1207,6 +1315,7 @@ float GetChaserProfileMaxAirSpeed(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxAirSpeedHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxAirSpeedInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxAirSpeedNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxAirSpeedApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MaxAirSpeedNormal));
@@ -1220,6 +1329,7 @@ float GetChaserProfileAlertGracetime(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertGracetime));
@@ -1233,6 +1343,7 @@ float GetChaserProfileAlertDuration(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchAlertDuration));
@@ -1246,6 +1357,7 @@ float GetChaserProfileChaseDuration(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchChaseDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchChaseDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchChaseDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchChaseDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchChaseDuration));
@@ -1259,6 +1371,7 @@ float GetChaserProfileProjectileCooldownMin(int iChaserProfileIndex,int iDifficu
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinNormal));
@@ -1272,6 +1385,7 @@ float GetChaserProfileProjectileCooldownMax(int iChaserProfileIndex,int iDifficu
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxNormal));
@@ -1285,6 +1399,7 @@ float GetChaserProfileIceballSlowdownDuration(int iChaserProfileIndex,int iDiffi
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationNormal));
@@ -1298,6 +1413,7 @@ float GetChaserProfileIceballSlowdownPercent(int iChaserProfileIndex,int iDiffic
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentNormal));
@@ -1311,6 +1427,7 @@ float GetChaserProfileProjectileSpeed(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileSpeedHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileSpeedInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileSpeedNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileSpeedApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileSpeedNormal));
@@ -1324,6 +1441,7 @@ float GetChaserProfileProjectileDamage(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileDamageHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileDamageInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileDamageNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileDamageApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileDamageNormal));
@@ -1337,6 +1455,7 @@ float GetChaserProfileProjectileRadius(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileRadiusHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileRadiusInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileRadiusNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileRadiusApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileRadiusNormal));
@@ -1350,6 +1469,7 @@ float GetChaserProfileJaratePlayerDuration(int iChaserProfileIndex,int iDifficul
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationNormal));
@@ -1363,6 +1483,7 @@ float GetChaserProfileMilkPlayerDuration(int iChaserProfileIndex,int iDifficulty
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationNormal));
@@ -1376,6 +1497,7 @@ float GetChaserProfileGasPlayerDuration(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationNormal));
@@ -1389,6 +1511,7 @@ float GetChaserProfileMarkPlayerDuration(int iChaserProfileIndex,int iDifficulty
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationNormal));
@@ -1402,6 +1525,7 @@ float GetChaserProfileIgnitePlayerDelay(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayNormal));
@@ -1415,6 +1539,7 @@ float GetChaserProfileStunPlayerDuration(int iChaserProfileIndex,int iDifficulty
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationNormal));
@@ -1428,6 +1553,7 @@ float GetChaserProfileStunPlayerSlowdown(int iChaserProfileIndex,int iDifficulty
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownNormal));
@@ -1441,6 +1567,7 @@ float GetChaserProfileBleedPlayerDuration(int iChaserProfileIndex,int iDifficult
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationNormal));
@@ -1454,6 +1581,7 @@ float GetChaserProfileEletricPlayerDuration(int iChaserProfileIndex,int iDifficu
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationNormal));
@@ -1467,6 +1595,7 @@ float GetChaserProfileEletricPlayerSlowdown(int iChaserProfileIndex,int iDifficu
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownNormal));
@@ -1806,6 +1935,7 @@ float GetChaserProfileProjectileAmmoReloadTime(int iChaserProfileIndex,int iDiff
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeNormal));
@@ -1819,6 +1949,7 @@ float GetChaserProfileProjectileChargeUpTime(int iChaserProfileIndex,int iDiffic
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpNormal));
@@ -1887,6 +2018,7 @@ float GetChaserProfileCloakCooldown(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakCooldownHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakCooldownInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakCooldownNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakCooldownApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakCooldownNormal));
@@ -1900,6 +2032,7 @@ float GetChaserProfileCloakRange(int iChaserProfileIndex,int iDifficulty)
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakRangeHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakRangeInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakRangeNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakRangeApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CloakRangeNormal));
@@ -2006,6 +2139,7 @@ stock float GetChaserProfileAwarenessIncreaseRate(int iChaserProfileIndex,int di
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateNormal));
@@ -2019,6 +2153,7 @@ stock float GetChaserProfileAwarenessDecreaseRate(int iChaserProfileIndex,int di
 		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateHard));
 		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateInsane));
 		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateApollyon));
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateNormal));

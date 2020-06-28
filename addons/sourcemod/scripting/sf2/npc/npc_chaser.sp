@@ -1382,6 +1382,9 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	
 	NPCChaserSetStunHealth(iNPCIndex, NPCChaserGetStunInitialHealth(iNPCIndex));
 	
+	NPCSetAddSpeed(iNPCIndex, -NPCGetAddSpeed(iNPCIndex));
+	NPCSetAddMaxSpeed(iNPCIndex, -NPCGetAddMaxSpeed(iNPCIndex));
+	
 	g_bNPCAlreadyAttacked[iNPCIndex] = false;
 	g_bNPCVelocityCancel[iNPCIndex] = false;
 	
@@ -1580,6 +1583,9 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_bSlenderHasDamageParticleEffect[iNPCIndex] = false;
 	g_flSlenderDamageClientSoundVolume[iNPCIndex] = 0.0;
 	g_iSlenderDamageClientSoundPitch[iNPCIndex] = 0;
+	
+	NPCSetAddSpeed(iNPCIndex, -NPCGetAddSpeed(iNPCIndex));
+	NPCSetAddMaxSpeed(iNPCIndex, -NPCGetAddMaxSpeed(iNPCIndex));
 	
 	NPCChaserSetStunHealth(iNPCIndex, 0.0);
 	
@@ -1826,7 +1832,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		flSpeed = flForwardSpeed;
 	
 	g_flSlenderCalculatedWalkSpeed[iBossIndex] = flWalkSpeed;
-	g_flSlenderCalculatedSpeed[iBossIndex] = flSpeed;
+	if (!g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+	{
+		g_flSlenderCalculatedSpeed[iBossIndex] = flSpeed;
+	}
+	else
+	{
+		g_flSlenderCalculatedSpeed[iBossIndex] = 0.0;
+	}
 	g_flSlenderCalculatedAirSpeed[iBossIndex] = flAirSpeed;
 	
 	int iOldState = g_iSlenderState[iBossIndex];
@@ -2789,6 +2802,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					}
 					else NPC_DropKey(iBossIndex);
 				}
+				g_bNPCUsesChaseInitialAnimation[iBossIndex] = false;
 				if (SF_IsBoxingMap() && view_as<bool>(GetProfileNum(sSlenderProfile,"boxing_boss",0)))
 				{
 					for(int client = 1;client <=MaxClients;client ++)
@@ -3121,7 +3135,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					g_bSlenderInvestigatingSound[iBossIndex] = false;
 					g_flSlenderTargetSoundDiscardMasterPosTime[iBossIndex] = -1.0;
 					
-					g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + GetProfileFloat(sSlenderProfile, "idle_lifetime", 10.0);
+					g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, iDifficulty);
 				}
 				
 				if(g_bNPCHasCloaked[iBossIndex] && NPCChaserIsCloakEnabled(iBossIndex))
@@ -3595,7 +3609,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					SendDebugMessageToPlayer(iTarget, DEBUG_BOSS_CHASE, 1, "g_flSlenderTimeUntilAlert[%d]: %f\ng_flSlenderTimeUntilNoPersistence[%d]: %f", iBossIndex, g_flSlenderTimeUntilAlert[iBossIndex] - GetGameTime(), iBossIndex, g_flSlenderTimeUntilNoPersistence[iBossIndex] - GetGameTime());
 #endif
 				
-					if (bPlayerInFOV[iTarget] && bPlayerVisible[iTarget])
+					if (bPlayerInFOV[iTarget] && bPlayerVisible[iTarget] && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
 					{
 						float flDistRatio = flPlayerDists[iTarget] / NPCGetSearchRadius(iBossIndex);
 						
@@ -4311,31 +4325,541 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState)
 	{
 		case STATE_IDLE:
 		{
-			bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+			switch (iDifficulty)
+			{
+				case Difficulty_Normal:
+				{
+					bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+				}
+				case Difficulty_Hard:
+				{
+					bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					}
+					else
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					}
+				}
+				case Difficulty_Insane:
+				{
+					bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+					{
+						bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						}
+					}
+					else
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					}
+				}
+				case Difficulty_Nightmare:
+				{
+					bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+					{
+						bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+							if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						}
+					}
+					else
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					}
+				}
+				case Difficulty_Apollyon:
+				{
+					bool bAnimationFound5 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					if (!bAnimationFound5 || strcmp(sAnimation,"") <= 0)
+					{
+						bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+							if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+								if (bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+						}
+					}
+					else
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_IdleAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+					}
+				}
+			}
 		}
 		case STATE_WANDER:
 		{
 			if (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE)
 			{
-				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+				switch (iDifficulty)
+				{
+					case Difficulty_Normal:
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+					}
+					case Difficulty_Hard:
+					{
+						bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Insane:
+					{
+						bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						bool bAnimationFound5 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound5 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+								{
+									bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									}
+									else
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									}
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}	
+				}
 			}
 		}
 		case STATE_ALERT:
 		{
 			if (view_as<bool>(GetProfileNum(sProfile,"use_alert_walking_animation",0)))
 			{
-				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+				switch (iDifficulty)
+				{
+					case Difficulty_Normal:
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+					}
+					case Difficulty_Hard:
+					{
+						bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Insane:
+					{
+						bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						bool bAnimationFound5 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound5 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+								{
+									bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									}
+									else
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									}
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAlertAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}	
+				}
 			}
 			else
 			{
-				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+				switch (iDifficulty)
+				{
+					case Difficulty_Normal:
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+					}
+					case Difficulty_Hard:
+					{
+						bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Insane:
+					{
+						bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						bool bAnimationFound5 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						if (!bAnimationFound5 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+								{
+									bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									}
+									else
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+									}
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_WalkAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderWalkFootstepTime[iBossIndex]);
+						}
+					}	
+				}
 			}
 		}
 		case STATE_CHASE:
 		{
 			if (!g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
 			{
-				bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+				switch (iDifficulty)
+				{
+					case Difficulty_Normal:
+					{
+						bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+					}
+					case Difficulty_Hard:
+					{
+						bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Insane:
+					{
+						bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderRunFootstepTime[iBossIndex]);
+								if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderRunFootstepTime[iBossIndex]);
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderRunFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						bool bAnimationFound5 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						if (!bAnimationFound5 || strcmp(sAnimation,"") <= 0)
+						{
+							bool bAnimationFound4 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							if (!bAnimationFound4 || strcmp(sAnimation,"") <= 0)
+							{
+								bool bAnimationFound3 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderRunFootstepTime[iBossIndex]);
+								if (!bAnimationFound3 || strcmp(sAnimation,"") <= 0)
+								{
+									bool bAnimationFound2 = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderRunFootstepTime[iBossIndex]);
+									if (!bAnimationFound2 || strcmp(sAnimation,"") <= 0)
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 1, _, g_flSlenderRunFootstepTime[iBossIndex]);
+									}
+									else
+									{
+										bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 2, _, g_flSlenderRunFootstepTime[iBossIndex]);
+									}
+								}
+								else
+								{
+									bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 3, _, g_flSlenderRunFootstepTime[iBossIndex]);
+								}
+							}
+							else
+							{
+								bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, 4, _, g_flSlenderRunFootstepTime[iBossIndex]);
+							}
+						}
+						else
+						{
+							bAnimationFound = GetProfileAnimation(sProfile, ChaserAnimation_RunAnimations, sAnimation, sizeof(sAnimation), flPlaybackRate, iDifficulty, _, g_flSlenderRunFootstepTime[iBossIndex]);
+						}
+					}	
+				}
 			}
 			else if (g_bNPCUsesChaseInitialAnimation[iBossIndex])
 			{
@@ -5365,6 +5889,8 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 	
 	if (timer != g_hSlenderChaseInitialTimer[iBossIndex]) return;
 	
+	if (!g_bNPCUsesChaseInitialAnimation[iBossIndex]) return;
+	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -5373,7 +5899,20 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	
-	float flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty);
+	float flOriginalSpeed;
+	
+	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+	}
+	else
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+		if ((flOriginalSpeed < 520.0))
+		{
+			flOriginalSpeed = 520.0;
+		}
+	}
 	float flSpeed = flOriginalSpeed;
 	g_flSlenderCalculatedSpeed[iBossIndex] = flSpeed;
 	
@@ -5395,6 +5934,8 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	
 	if (timer != g_hSlenderRage1Timer[iBossIndex]) return;
 	
+	if (!g_bNPCUsesRageAnimation1[iBossIndex]) return;
+	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -5403,7 +5944,20 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	
-	float flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty);
+	float flOriginalSpeed;
+	
+	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+	}
+	else
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+		if ((flOriginalSpeed < 520.0))
+		{
+			flOriginalSpeed = 520.0;
+		}
+	}
 	float flSpeed = flOriginalSpeed;
 	g_flSlenderCalculatedSpeed[iBossIndex] = flSpeed;
 	
@@ -5425,6 +5979,8 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	
 	if (timer != g_hSlenderRage2Timer[iBossIndex]) return;
 	
+	if (!g_bNPCUsesRageAnimation2[iBossIndex]) return;
+	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -5433,7 +5989,20 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	
-	float flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty);
+	float flOriginalSpeed;
+	
+	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+	}
+	else
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+		if ((flOriginalSpeed < 520.0))
+		{
+			flOriginalSpeed = 520.0;
+		}
+	}
 	float flSpeed = flOriginalSpeed;
 	g_flSlenderCalculatedSpeed[iBossIndex] = flSpeed;
 	
@@ -5455,6 +6024,8 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	
 	if (timer != g_hSlenderRage3Timer[iBossIndex]) return;
 	
+	if (!g_bNPCUsesRageAnimation3[iBossIndex]) return;
+	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -5463,7 +6034,20 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	
-	float flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty);
+	float flOriginalSpeed;
+	
+	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+	}
+	else
+	{
+		flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+		if ((flOriginalSpeed < 520.0))
+		{
+			flOriginalSpeed = 520.0;
+		}
+	}
 	float flSpeed = flOriginalSpeed;
 	g_flSlenderCalculatedSpeed[iBossIndex] = flSpeed;
 	

@@ -350,7 +350,16 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 			SetConVarInt(g_cvDifficulty, Difficulty_Insane);
 		}
 		else if ((!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && GetRandomInt(1, 200) <= 2) || bPlayersCalledForNightmare) 
-			SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
+		{
+			if (GetRandomInt(1, 2000) <= 1)
+			{
+				SetConVarInt(g_cvDifficulty, Difficulty_Apollyon);
+			}
+			else
+			{
+				SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
+			}
+		}
 		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM)))
 		{
 			SetConVarInt(g_cvDifficulty, Difficulty_Hard);
@@ -415,6 +424,58 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
 							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 						}
+					}
+				}
+			}
+			case Difficulty_Apollyon:
+			{
+				Format(sDisplay, sizeof(sDisplay), "Apollyon!");
+				strcopy(sColor, sizeof(sColor), "{darkgray}");
+				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+					EmitSoundToAll(g_strSoundNightmareMode[i]);
+				SpecialRoundGameText("Apollyon mode!", "leaderboard_streak");
+				int iRandomQuote = GetRandomInt(1, 8);
+				switch (iRandomQuote)
+				{
+					case 1:
+					{
+						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
+						CPrintToChatAll("{purple}Snatcher {default}:  Oh no! You're not slipping out of your contract THAT easily.");
+					}
+					case 2:
+					{
+						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
+						CPrintToChatAll("{purple}Snatcher {default}:  You ready to die some more? Great!");
+					}
+					case 3:
+					{
+						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
+						CPrintToChatAll("{purple}Snatcher {default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+					}
+					case 4:
+					{
+						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
+						CPrintToChatAll("{purple}Snatcher {default}:  I love the smell of DEATH in the morning.");
+					}
+					case 5:
+					{
+						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
+						CPrintToChatAll("{purple}Snatcher {default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+					}
+					case 6:
+					{
+						EmitSoundToAll(SNATCHER_APOLLYON_1);
+						CPrintToChatAll("{purple}Snatcher {default}:  Ah! It gets better every time!");
+					}
+					case 7:
+					{
+						EmitSoundToAll(SNATCHER_APOLLYON_2);
+						CPrintToChatAll("{purple}Snatcher {default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+					}
+					case 8:
+					{
+						EmitSoundToAll(SNATCHER_APOLLYON_3);
+						CPrintToChatAll("{purple}Snatcher {default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 					}
 				}
 			}

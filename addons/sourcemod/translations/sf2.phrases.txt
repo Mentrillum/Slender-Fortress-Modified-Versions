@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Silent Slender can now spawn 2 more bosses.\n-Added flashlight temperatures.\n-Nightvision can now be either green, red, or blue.\n-Ultravision and night vision settings have been changed.\n-The conch now works in Boxing Ring.\n-Recharging sprint faster now only requires the player to be crouching and standing still."
+		"en"	"-Welcome to the secret updates-\n-Added more Apollyon modifiers.\n-Apollyon can now occur naturally but super rarely.\n-Creators can now adjust copies based on difficulty.\n-Idle lifetime can now be set via difficulty.\n-Fixed broken downloads."
 	}
 	"SF2 Smite player"
 	{

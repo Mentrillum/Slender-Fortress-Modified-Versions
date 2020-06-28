@@ -298,17 +298,17 @@ ArrayList SpecialEnabledList()
 			arrayEnabledRounds.Push(SPECIALROUND_DOOMBOX);
 		}
 		
-		if (GetActivePlayerCount() <= GetConVarInt(g_cvMaxPlayers) * 2 && GetConVarInt(g_cvDifficulty) != 4)
+		if (GetActivePlayerCount() <= GetConVarInt(g_cvMaxPlayers) * 2 && GetConVarInt(g_cvDifficulty) < 3)
 		{
 			arrayEnabledRounds.Push(SPECIALROUND_DOUBLEMAXPLAYERS);
 		}
 		if (GetArraySize(GetSelectableBossProfileList()) > 0 && GetActivePlayerCount() <= GetConVarInt(g_cvMaxPlayers) * 2)
 		{
-			if (GetConVarInt(g_cvDifficulty) <= 3)
+			if (GetConVarInt(g_cvDifficulty) < 3)
 			{
 				arrayEnabledRounds.Push(SPECIALROUND_2DOUBLE);
 			}
-			if (GetConVarInt(g_cvDifficulty) <= 2)
+			if (GetConVarInt(g_cvDifficulty) < 2)
 			{
 				arrayEnabledRounds.Push(SPECIALROUND_2DOOM);
 			}
@@ -319,7 +319,7 @@ ArrayList SpecialEnabledList()
 			arrayEnabledRounds.Push(SPECIALROUND_SINGLEPLAYER);
 		}
 		*/
-		if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && GetConVarInt(g_cvDifficulty) != 4)
+		if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && GetConVarInt(g_cvDifficulty) < 3)
 			arrayEnabledRounds.Push(SPECIALROUND_INSANEDIFFICULTY);
 		if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !GetConVarBool(g_cvNightvisionEnabled) && !SF_SpecialRound(SPECIALROUND_NOULTRAVISION))
 			arrayEnabledRounds.Push(SPECIALROUND_LIGHTSOUT);
@@ -391,7 +391,7 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_CLASSSCRAMBLE) && g_iPageMax >= 4 && GetRoundState() != SF2RoundState_Escape)
 			arrayEnabledRounds.Push(SPECIALROUND_CLASSSCRAMBLE);
 			
-		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_BossesChaseEndlessly() && GetConVarInt(g_cvDifficulty) != 4)
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_BossesChaseEndlessly() && GetConVarInt(g_cvDifficulty) < 4)
 			arrayEnabledRounds.Push(SPECIALROUND_WALLHAX);
 			
 		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER)  && !SF_IsRaidMap() && !SF_BossesChaseEndlessly() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && GetArraySize(GetSelectableBossProfileList()) > 0)
@@ -456,13 +456,13 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_INSANEDIFFICULTY:
 		{
-			if (GetConVarInt(g_cvDifficulty) != 4)
+			if (GetConVarInt(g_cvDifficulty) < 3)
 				SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
 			SF_AddSpecialRound(SPECIALROUND_INSANEDIFFICULTY);
 		}
 		case SPECIALROUND_NOGRACE:
 		{
-			if (GetConVarInt(g_cvDifficulty) != 4)
+			if (GetConVarInt(g_cvDifficulty) < 2)
 				SetConVarString(g_cvDifficulty, "2"); // Override difficulty to Hardcore.
 			if(g_hRoundGraceTimer!=INVALID_HANDLE)
 				TriggerTimer(g_hRoundGraceTimer);
@@ -481,7 +481,8 @@ void SpecialRoundStart()
 		case SPECIALROUND_2DOUBLE:
 		{
 			ForceInNextPlayersInQueue(GetConVarInt(g_cvMaxPlayers));
-			SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
+			if (GetConVarInt(g_cvDifficulty) < 3)
+				SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
 			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
 			Handle hSelectableBosses = GetSelectableBossProfileList();
 			if (GetArraySize(hSelectableBosses) > 0)
@@ -499,12 +500,14 @@ void SpecialRoundStart()
 		case SPECIALROUND_DOUBLEMAXPLAYERS:
 		{
 			ForceInNextPlayersInQueue(GetConVarInt(g_cvMaxPlayers));
-			SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
+			if (GetConVarInt(g_cvDifficulty) < 3)
+				SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
 			SF_AddSpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS);
 		}
 		case SPECIALROUND_WALLHAX:
 		{
-			SetConVarString(g_cvDifficulty, "3"); //Insane
+			if (GetConVarInt(g_cvDifficulty) < 3)
+				SetConVarString(g_cvDifficulty, "3"); //Insane
 			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 			{	
 				if (NPCGetUniqueID(iNPCIndex) == -1) continue;
@@ -732,7 +735,8 @@ void SpecialRoundStart()
 		case SPECIALROUND_2DOOM:
 		{
 			ForceInNextPlayersInQueue(GetConVarInt(g_cvMaxPlayers));
-			SetConVarString(g_cvDifficulty, "2"); // Override difficulty to Hardcore.
+			if (GetConVarInt(g_cvDifficulty) < 2)
+				SetConVarString(g_cvDifficulty, "2"); // Override difficulty to Hardcore.
 			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
 			Handle hSelectableBosses = GetSelectableBossProfileList();
 			if (GetArraySize(hSelectableBosses) > 0)
