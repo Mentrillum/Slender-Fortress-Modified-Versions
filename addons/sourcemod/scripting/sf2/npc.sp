@@ -1740,7 +1740,10 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 			bool bMiniCrit = false;
 			int damage = GetEventInt(event, "damageamount");
 			int attacker = GetClientOfUserId(GetEventInt(event, "attacker_player"));
-			GetClientAbsOrigin(attacker, flClientPos);
+			if (IsValidClient(attacker))
+			{
+				GetClientAbsOrigin(attacker, flClientPos);
+			}
 			float flShootDist = GetVectorDistance(flClientPos, flMyPos);
 			GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
 			GetClientEyePosition(attacker, flTraceEndPos);

@@ -348,7 +348,7 @@
 
 	"SF2 Help Engineer Class Info Description"
 	{
-		"en"	"[+] 75%% increase in Flashlight battery life\n[+] 60% decrease in Flashlight recharge rate\n[-] Low health, most affected by screen wobbling"
+		"en"	"[+] 75%% increase in Flashlight battery life\n[+] 60%% decrease in Flashlight recharge rate\n[-] Low health, most affected by screen wobbling"
 	}
 
 	"SF2 Settings Menu Title"
@@ -1152,7 +1152,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Welcome to the secret updates-\n-Added more Apollyon modifiers.\n-Apollyon can now occur naturally but super rarely.\n-Creators can now adjust copies based on difficulty.\n-Idle lifetime can now be set via difficulty.\n-Fixed broken downloads."
+		"en"	"-Welcome to the secret updates-\n-Reduced max boss count from 64 to 32.\n-Increased max animation and attack count to 16.\n-Added bullet and rocket attacks.\n-Changed a few if statemets to switch statemets.\n-Added rocket shoot animations."
 	}
 	"SF2 Smite player"
 	{

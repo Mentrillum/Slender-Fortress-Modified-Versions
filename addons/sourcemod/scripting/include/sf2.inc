@@ -7,7 +7,7 @@
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
 #define SF2_MAX_NAME_LENGTH 32
 
-#define MAX_BOSSES 64
+#define MAX_BOSSES 32
 #define MAX_NPCTELEPORTER 5
 #define MAX_NODES -1
 #define MAX_TRAPS 64
@@ -174,6 +174,7 @@ enum SF2RoundState
 #define PROJ_ARROW (1 << 5)
 #define PROJ_MANGLER (1 << 6)
 #define PROJ_BASEBALL (1 << 7)
+#define PROJ_FIREBALL_ATTACK (1 << 8)
 
 forward SF2_OnBossAdded(iBossIndex);
 

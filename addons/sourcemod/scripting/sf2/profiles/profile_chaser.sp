@@ -4,7 +4,7 @@
 
 #define _sf2_profiles_chaser
 
-#define SF2_CHASER_BOSS_MAX_ATTACKS 8
+#define SF2_CHASER_BOSS_MAX_ATTACKS 16
 
 Handle g_hChaserProfileNames;
 Handle g_hChaserProfileData;
@@ -369,6 +369,13 @@ enum
 	ChaserProfileAttackData_CanUseWeaponTypes,
 	ChaserProfileAttackData_LifeStealEnabled,
 	ChaserProfileAttackData_LifeStealDuration,
+	ChaserProfileAttackData_ProjectileDamage,
+	ChaserProfileAttackData_ProjectileSpeed,
+	ChaserProfileAttackData_ProjectileRadius,
+	ChaserProfileAttackData_ProjectileCrits,
+	ChaserProfileAttackData_BulletCount,
+	ChaserProfileAttackData_BulletDamage,
+	ChaserProfileAttackData_BulletSpread,
 	ChaserProfileAttackData_MaxStats
 };
 
@@ -394,6 +401,7 @@ enum
 	ChaserAnimation_WalkAnimations, //Array that contains all the walk animations
 	ChaserAnimation_WalkAlertAnimations, //Array that contains all the alert walk animations
 	ChaserAnimation_AttackAnimations, //Array that contains all the attack animations (working on attack index)
+	ChaserAnimation_ShootAnimations, //Array that contains all the attack animations after we shoot something
 	ChaserAnimation_RunAnimations, //Array that contains all the run animations
 	ChaserAnimation_StunAnimations, //Array that contains all the stun animations
 	ChaserAnimation_ChaseInitialAnimations, //Array that contains all the chase initial animations
@@ -1223,6 +1231,26 @@ static int ParseChaserProfileAttacks(Handle kv,int iUniqueProfileIndex)
 		float flAttackLifeStealDuration = KvGetFloat(kv, "attack_lifesteal_duration", 0.0);
 		if (flAttackLifeStealDuration < 0.0) flAttackLifeStealDuration = 0.0;
 		
+		float flAttackProjectileDamage = KvGetFloat(kv, "attack_projectile_damage", 20.0);
+		if (flAttackProjectileDamage < 0.0) flAttackProjectileDamage = 0.0;
+		
+		float flAttackProjectileSpeed = KvGetFloat(kv, "attack_projectile_speed", 1100.0);
+		if (flAttackProjectileSpeed < 0.0) flAttackProjectileSpeed = 0.0;
+		
+		float flAttackProjectileRadius = KvGetFloat(kv, "attack_projectile_radius", 128.0);
+		if (flAttackProjectileRadius < 0.0) flAttackProjectileRadius = 0.0;
+		
+		bool bAttackCritProjectiles = view_as<bool>(KvGetNum(kv, "attack_projectile_crits", 0));
+		
+		int iAttackBulletCount = KvGetNum(kv, "attack_bullet_count", 4);
+		if (iAttackBulletCount < 1) iAttackBulletCount = 1;
+		
+		float flAttackBulletDamage = KvGetFloat(kv, "attack_bullet_damage", 8.0);
+		if (flAttackBulletDamage < 0.0) flAttackBulletDamage = 0.0;
+		
+		float flAttackBulletSpread = KvGetFloat(kv, "attack_bullet_spread", 0.1);
+		if (flAttackBulletSpread < 0.0) flAttackBulletSpread = 0.0;
+		
 		char sAtkWeaponString[PLATFORM_MAX_PATH];
 		KvGetString(kv, "attack_weapontype", sAtkWeaponString, sizeof(sAtkWeaponString));
 		
@@ -1247,6 +1275,13 @@ static int ParseChaserProfileAttacks(Handle kv,int iUniqueProfileIndex)
 		SetArrayCell(hAttacks, iAttackIndex, bAttackWeapons, ChaserProfileAttackData_CanUseWeaponTypes);
 		SetArrayCell(hAttacks, iAttackIndex, bAttackLifeSteal, ChaserProfileAttackData_LifeStealEnabled);
 		SetArrayCell(hAttacks, iAttackIndex, flAttackLifeStealDuration, ChaserProfileAttackData_LifeStealDuration);
+		SetArrayCell(hAttacks, iAttackIndex, flAttackProjectileDamage, ChaserProfileAttackData_ProjectileDamage);
+		SetArrayCell(hAttacks, iAttackIndex, flAttackProjectileSpeed, ChaserProfileAttackData_ProjectileSpeed);
+		SetArrayCell(hAttacks, iAttackIndex, flAttackProjectileRadius, ChaserProfileAttackData_ProjectileRadius);
+		SetArrayCell(hAttacks, iAttackIndex, bAttackCritProjectiles, ChaserProfileAttackData_ProjectileCrits);
+		SetArrayCell(hAttacks, iAttackIndex, iAttackBulletCount, ChaserProfileAttackData_BulletCount);
+		SetArrayCell(hAttacks, iAttackIndex, flAttackBulletDamage, ChaserProfileAttackData_BulletDamage);
+		SetArrayCell(hAttacks, iAttackIndex, flAttackBulletSpread, ChaserProfileAttackData_BulletSpread);
 		
 		if (iMaxAttacks > 0)//Backward compatibility
 		{
@@ -1731,6 +1766,55 @@ float GetChaserProfileAttackLifeStealDuration(int iChaserProfileIndex,int  iAtta
 	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
 	
 	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LifeStealDuration));
+}
+
+float GetChaserProfileAttackProjectileDamage(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileDamage));
+}
+
+float GetChaserProfileAttackProjectileSpeed(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileSpeed));
+}
+
+float GetChaserProfileAttackProjectileRadius(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileRadius));
+}
+
+bool GetChaserProfileAttackCritProjectiles(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+
+	return view_as<bool>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileCrits));
+}
+
+int GetChaserProfileAttackBulletCount(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_BulletCount);
+}
+
+float GetChaserProfileAttackBulletDamage(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_BulletDamage));
+}
+
+float GetChaserProfileAttackBulletSpread(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_BulletSpread));
 }
 
 float GetChaserProfileAttackDamageVsProps(int iChaserProfileIndex,int  iAttackIndex)
@@ -2329,6 +2413,13 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_attack_playbackrate");
 			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
 		}
+		case ChaserAnimation_ShootAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "shoot");
+			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_shoot");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_shoot_playbackrate");
+			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
+		}
 		case ChaserAnimation_RunAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
@@ -2469,6 +2560,11 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_attack_playbackrate");
+		}
+		case ChaserAnimation_ShootAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "shoot");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_shoot_playbackrate");
 		}
 		case ChaserAnimation_RunAnimations:
 		{

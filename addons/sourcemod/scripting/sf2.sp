@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5 Modified"
+#define PLUGIN_VERSION "1.5.5.1 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.1 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -1140,9 +1140,9 @@ public void OnPluginStart()
 	AddCommandListener(Hook_CommandSuicideAttempt, "kill");
 	AddCommandListener(Hook_CommandSuicideAttempt, "explode");
 	AddCommandListener(Hook_CommandSuicideAttempt, "joinclass");
-	AddCommandListener(Hook_CommandSuicideAttempt, "join_class");
+	AddCommandListener(Hook_CommandPreventJoinTeam, "join_class");
 	AddCommandListener(Hook_CommandSuicideAttempt, "jointeam");
-	AddCommandListener(Hook_CommandSuicideAttempt, "autoteam");
+	AddCommandListener(Hook_CommandPreventJoinTeam, "autoteam");
 	AddCommandListener(Hook_CommandSuicideAttempt, "spectate");
 	AddCommandListener(Hook_CommandVoiceMenu, "voicemenu");
 	AddCommandListener(Hook_CommandSay, "say");
@@ -2407,7 +2407,35 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 		}
 	}
 	
-	if (IsRoundEnding() || IsClientInPvP(iClient)) //Nobody asked you to break my plugin, or cheat your way out of PvP to miss a kill.
+	if (IsClientInPvP(iClient)) //Nobody asked you to cheat your way out of PvP to miss a kill.
+	{
+		return Plugin_Handled;
+	}
+	
+	return Plugin_Continue;
+}
+public Action Hook_CommandPreventJoinTeam(int iClient, const char[] command,int argc)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (GetClientTeam(iClient) == TFTeam_Spectator) return Plugin_Continue;
+	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
+	
+	if (IsRoundInIntro() && !g_bPlayerEliminated[iClient]) return Plugin_Handled;
+	
+	if (GetConVarBool(g_cvBlockSuicideDuringRound))
+	{
+		if (!g_bRoundGrace && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		{
+			return Plugin_Handled;
+		}
+	}
+	
+	if (IsClientInPvP(iClient)) //Nobody asked you to cheat your way out of PvP to miss a kill.
+	{
+		return Plugin_Handled;
+	}
+	
+	if (IsClientInKart(iClient))
 	{
 		return Plugin_Handled;
 	}
@@ -3628,7 +3656,7 @@ public Action Hook_BlockUserMessageEx(UserMsg msg_id, BfRead msg, const int[] pl
 public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	
+
 	if (IsValidClient(entity))
 	{
 		if (IsClientInGhostMode(entity))

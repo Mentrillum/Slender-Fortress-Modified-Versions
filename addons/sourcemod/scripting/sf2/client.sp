@@ -721,6 +721,21 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 			}
 		}
 	}
+
+	if (IsValidEntity(inflictor) && GetEntityClassname(inflictor, classname, sizeof(classname)) && StrEqual(classname, "tf_projectile_rocket") && (ProjectileGetFlags(inflictor) & PROJ_FIREBALL_ATTACK))
+	{
+		int slender = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
+		if(slender != INVALID_ENT_REFERENCE)
+		{
+			int iBossIndex = NPCGetFromEntIndex(slender);
+			int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+			if (iBossIndex != -1)
+			{
+				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex+1), DMG_SHOCK|DMG_ALWAYSGIB);
+				TF2_IgnitePlayer(victim, victim);
+			}
+		}
+	}
 	
 	if (attacker != victim && IsValidClient(attacker))
 	{
@@ -6579,6 +6594,11 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 		}
 		
 		if (IsClientInGhostMode(other) || (g_bPlayerProxy[iOwner] && g_bPlayerProxy[other]))
+		{
+			return Plugin_Continue;
+		}
+		
+		if (SF_SpecialRound(SPECIALROUND_WALLHAX) && IsPlayerAlive(iOwner) && IsPlayerAlive(other))
 		{
 			return Plugin_Continue;
 		}
