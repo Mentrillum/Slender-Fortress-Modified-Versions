@@ -499,6 +499,18 @@ int SDK_SwitchWeapon(int client, int weapon)
 	return -1;
 }
 
+stock bool IsClientInKart(int client)
+{
+	if (TF2_IsPlayerInCondition(client, TFCond_HalloweenKart) ||
+		TF2_IsPlayerInCondition(client, TFCond_HalloweenKartDash) ||
+		TF2_IsPlayerInCondition(client, TFCond_HalloweenKartNoTurn) ||
+		TF2_IsPlayerInCondition(client, TFCond_HalloweenKartCage))
+	{
+		return true;
+	}
+	return false;
+}
+
 stock bool IsClientCritUbercharged(int client)
 {
 	if (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) ||
