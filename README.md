@@ -12,7 +12,7 @@ Special thanks to:
 
 Since Kit is busy with his real life, Kenzzer is no longer working on SF2, I used the new versions to create the new modified versions to allow much more diversity to SF2.
 
-![](https://cloud.githubusercontent.com/assets/4492504/4125890/ff16b996-32e5-11e4-96b9-102fc0175adf.jpg)
+![SF2M-Logo](https://user-images.githubusercontent.com/42941613/86555411-1e298280-bf05-11ea-8246-6d893d5aa5c7.png)
 
 Slender Fortress
 ================
