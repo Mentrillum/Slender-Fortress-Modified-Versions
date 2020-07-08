@@ -264,7 +264,7 @@ public Action Command_Pack(int client,int args)
 	KvGetString(g_hBossPackConfig, "name", bossPackName, sizeof(bossPackName), MapbossPack);
 	if(StrEqual(bossPackName,""))
 		Format(bossPackName,sizeof(bossPackName),"Core Pack");
-	CPrintToChat(client,"{olive}Pack:{lightgreen}%s",bossPackName);
+	CPrintToChat(client,"{olive}Pack: {lightgreen}%s",bossPackName);
 	return Plugin_Handled;
 }
 
@@ -736,6 +736,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	if (KvGetNum(kv, "wander_move", 1)) iBossFlags |= SFF_WANDERMOVE;
 	if (KvGetNum(kv, "attack_props", 0)) iBossFlags |= SFF_ATTACKPROPS;
 	if (KvGetNum(kv, "attack_weaponsenable", 0)) iBossFlags |= SFF_WEAPONKILLS;
+	if (KvGetNum(kv, "kill_weaponsenable", 0)) iBossFlags |= SFF_WEAPONKILLSONRADIUS;
 	
 	// Try validating unique profile.
 	int iUniqueProfileIndex = -1;

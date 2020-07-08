@@ -2716,7 +2716,7 @@ void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float time
         DispatchSpawn(iParticle);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
+        CreateTimer(0.1, Timer_SlenderDeleteParticle, iParticle);
     }
 }
 

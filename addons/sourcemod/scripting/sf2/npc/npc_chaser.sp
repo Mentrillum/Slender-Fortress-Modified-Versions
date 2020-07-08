@@ -142,6 +142,10 @@ static char sKeyModel[PLATFORM_MAX_PATH];
 static bool g_bNPCStealingLife[MAX_BOSSES];
 static Handle g_hNPCLifeStealTimer[MAX_BOSSES];
 
+static bool g_bNPCTrapsEnabled[MAX_BOSSES];
+static int g_iNPCTrapType[MAX_BOSSES];
+static float g_flNPCNextTrapSpawn[MAX_BOSSES][Difficulty_Max];
+
 //Special thanks to The Gaben
 static bool g_bSlenderHasDamageParticleEffect[MAX_BOSSES];
 static float g_flSlenderDamageClientSoundVolume[MAX_BOSSES];
@@ -1244,6 +1248,21 @@ int NPCChaserGetSmiteColorTrans(int iNPCIndex)
 	return g_iNPCSmiteTransparency[iNPCIndex];
 }
 
+bool NPCChaserGetTrapState(int iNPCIndex)
+{
+	return g_bNPCTrapsEnabled[iNPCIndex];
+}
+
+int NPCChaserGetTrapType(int iNPCIndex)
+{
+	return g_iNPCTrapType[iNPCIndex];
+}
+
+float NPCChaserGetTrapSpawnTime(int iNPCIndex, int iDifficulty)
+{
+	return g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty];
+}
+
 bool NPCChaserDamageParticlesEnabled(int iNPCIndex)
 {
 	return g_bSlenderHasDamageParticleEffect[iNPCIndex];
@@ -1376,6 +1395,9 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 		g_flNPCShockwaveRange[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveRange(iUniqueProfileIndex, iDifficulty);
 		g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveStunDuration(iUniqueProfileIndex, iDifficulty);
 		g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveStunSlowdown(iUniqueProfileIndex, iDifficulty);
+		
+		g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty] = GetChaserProfileTrapSpawnCooldown(iUniqueProfileIndex, iDifficulty);
+		g_flSlenderNextTrapPlacement[iNPCIndex] = GetGameTime() + g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty];
 	}
 	
 	g_NPCBaseAttacksCount[iNPCIndex] = GetChaserProfileAttackCount(iUniqueProfileIndex);
@@ -1486,6 +1508,9 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	g_bNPCShockwaveStunEnabled[iNPCIndex] = GetChaserProfileShockwaveStunState(iUniqueProfileIndex);
 	g_iNPCShockwaveAttackIndexes[iNPCIndex] = GetChaserProfileShockwaveAttackIndexes(iUniqueProfileIndex);
 	
+	g_bNPCTrapsEnabled[iNPCIndex] = GetChaserProfileTrapState(iUniqueProfileIndex);
+	g_iNPCTrapType[iNPCIndex] = GetChaserProfileTrapType(iUniqueProfileIndex);
+	
 }
 
 void NPCChaserOnRemoveProfile(int iNPCIndex)
@@ -1544,6 +1569,9 @@ static void NPCChaserResetValues(int iNPCIndex)
 		g_flNPCShockwaveRange[iNPCIndex][iDifficulty] = 0.0;
 		g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty] = 0.0;
 		g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty] = 0.0;
+		
+		g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty] = 0.0;
+		g_flSlenderNextTrapPlacement[iNPCIndex] = 0.0;
 	}
 	
 	// Clear attack data.
@@ -1641,6 +1669,9 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_bSlenderHasDamageParticleEffect[iNPCIndex] = false;
 	g_flSlenderDamageClientSoundVolume[iNPCIndex] = 0.0;
 	g_iSlenderDamageClientSoundPitch[iNPCIndex] = 0;
+	
+	g_bNPCTrapsEnabled[iNPCIndex] = false;
+	g_iNPCTrapType[iNPCIndex] = 0;
 	
 	NPCSetAddSpeed(iNPCIndex, -NPCGetAddSpeed(iNPCIndex));
 	NPCSetAddMaxSpeed(iNPCIndex, -NPCGetAddMaxSpeed(iNPCIndex));
@@ -2107,6 +2138,20 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		flDist = GetVectorDistance(flTraceStartPos, flTraceEndPos);
 		flPlayerDists[i] = flDist;
 		
+		//Trap check
+		if (g_bPlayerTrapped[i] && GetVectorDistance(flTraceStartPos, flTraceEndPos) <= flSearchRange && IsValidClient(i) && !g_bPlayerEliminated[i])
+		{
+			if (iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
+			{
+				iState = STATE_CHASE;
+				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+				g_bSlenderGiveUp[iBossIndex] = false;
+				iBestNewTarget = i;
+				g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
+			}
+		}
+		
 		if ((bPlayerNear[i] && iState != STATE_CHASE && iState != STATE_ALERT) || (bIsVisible && bPlayerInFOV[i]))
 		{
 			float flTargetPos[3];
@@ -2222,7 +2267,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	if(g_bSlenderGiveUp[iBossIndex])
 	{
 		//Damit our target is unreachable for some unexplained reasons, haaaaaaaaaaaa!
-		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0)))
+		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0)) || !SF_IsBoxingMap())
 		{
 			iState = STATE_IDLE;
 			g_bSlenderGiveUp[iBossIndex] = false;
@@ -2232,6 +2277,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			//RemoveSlender(iBossIndex);
 			g_bSlenderGiveUp[iBossIndex] = false;
 		if(SF_IsProxyMap() && !(NPCGetFlags(iBossIndex) & SFF_NOTELEPORT))
+			//RemoveSlender(iBossIndex);
+			g_bSlenderGiveUp[iBossIndex] = false;
+		if(SF_IsBoxingMap() && !(NPCGetFlags(iBossIndex) & SFF_NOTELEPORT))
 			//RemoveSlender(iBossIndex);
 			g_bSlenderGiveUp[iBossIndex] = false;
 		if((SF_BossesChaseEndlessly() || view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0))) && !(NPCGetFlags(iBossIndex) & SFF_NOTELEPORT))
@@ -2318,6 +2366,43 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		
 	}
 	if(SF_IsProxyMap() && !g_bSlenderGiveUp[iBossIndex] && !bBuilding)
+	{
+		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
+		{
+			if(iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
+			{
+				Handle hArrayRaidTargets = CreateArray();
+					
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!IsClientInGame(i) ||
+						!IsPlayerAlive(i) ||
+						g_bPlayerEliminated[i] ||
+						IsClientInGhostMode(i) ||
+						DidClientEscape(i))
+					{
+						continue;
+					}
+					PushArrayCell(hArrayRaidTargets, i);
+				}
+				if(GetArraySize(hArrayRaidTargets)>0)
+				{
+					int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
+					if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
+					{
+						iBestNewTarget = iRaidTarget;
+						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+						iState = STATE_CHASE;
+						iTarget = iBestNewTarget;
+					}
+				}
+				
+				CloseHandle(hArrayRaidTargets);
+			}
+		}
+		
+	}
+	if(SF_IsBoxingMap() && !g_bSlenderGiveUp[iBossIndex] && !bBuilding)
 	{
 		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
 		{
@@ -2448,6 +2533,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					iState = STATE_ALERT;
 				}
 			}
+			if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && NPCChaserGetTrapState(iBossIndex))
+			{
+				Trap_SpawnTrap(flMyPos, flMyEyeAng, iBossIndex);
+				g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime()+NPCChaserGetTrapSpawnTime(iBossIndex, iDifficulty);
+			}
 		}
 		case STATE_ALERT:
 		{
@@ -2556,6 +2646,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						break;
 					}
 				}
+			}
+			if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && NPCChaserGetTrapState(iBossIndex))
+			{
+				Trap_SpawnTrap(flMyPos, flMyEyeAng, iBossIndex);
+				g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime()+NPCChaserGetTrapSpawnTime(iBossIndex, iDifficulty);
 			}
 		}
 		case STATE_CHASE, STATE_ATTACK, STATE_STUN:
@@ -3185,9 +3280,15 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		iState = STATE_CHASE;
 	}
+	if (SF_IsBoxingMap() && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && !g_bSlenderGiveUp[iBossIndex])
+	{
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		iState = STATE_CHASE;
+	}
 	if (SF_BossesChaseEndlessly() && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && !g_bSlenderGiveUp[iBossIndex])
 	{
 		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		iState = STATE_CHASE;
 	}
 	if (view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0)) && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && !g_bSlenderGiveUp[iBossIndex])
@@ -3207,6 +3308,13 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	{
 		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		g_bNPCAlertedCopy[iBossIndex] = true;
+		iState = STATE_CHASE;
+	}
+	if (iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && g_bPlayerTrapped[iTarget])
+	{
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iTarget);
 		iState = STATE_CHASE;
 	}
 	// Finally, set our new state.
@@ -3516,6 +3624,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 						}
 					}
+					
+					if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
 				}
 				else
 				{

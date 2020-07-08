@@ -33,7 +33,15 @@ enum
 	SF2BossProjectileType_Baseball = 7,
 	SF2BossProjectileType_Unused,
 	SF2BossProjectileType_Custom
-}
+};
+
+enum
+{
+	SF2BossTrapType_Invalid = -1,
+	SF2BossTrapType_BearTrap = 0,
+	SF2BossTrapType_Unused,
+	SF2BossTrapType_Custom
+};
 
 enum
 {
@@ -339,6 +347,15 @@ enum
 	ChaserProfileData_ShockwaveStunSlowdownInsane,
 	ChaserProfileData_ShockwaveStunSlowdownNightmare,
 	ChaserProfileData_ShockwaveAttackIndexes,
+	
+	ChaserProfileData_TrapsEnabled,
+	ChaserProfileData_TrapType,
+	ChaserProfileData_TrapSpawnCooldownEasy,
+	ChaserProfileData_TrapSpawnCooldownNormal,
+	ChaserProfileData_TrapSpawnCooldownHard,
+	ChaserProfileData_TrapSpawnCooldownInsane,
+	ChaserProfileData_TrapSpawnCooldownNightmare,
+	ChaserProfileData_TrapSpawnCooldownApollyon,
 	
 	ChaserProfileData_EnableDamageParticles,
 	ChaserProfileData_DamageParticleVolume,
@@ -817,6 +834,17 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	
 	int iShockwaveAttackIndexes = KvGetNum(kv, "shockwave_attack_index", 1);
 	if (iShockwaveAttackIndexes < 0) iShockwaveAttackIndexes = 1;
+	
+	bool bTrapsEnabled = view_as<bool>(KvGetNum(kv, "traps_enabled"));
+	
+	int iTrapType = KvGetNum(kv, "trap_type", 0);
+	
+	float flTrapSpawnCooldown = KvGetFloat(kv, "trap_spawn_cooldown", 8.0);
+	float flTrapSpawnCooldownEasy = KvGetFloat(kv, "trap_spawn_cooldown_easy", flTrapSpawnCooldown);
+	float flTrapSpawnCooldownHard = KvGetFloat(kv, "trap_spawn_cooldown_hard", flTrapSpawnCooldown);
+	float flTrapSpawnCooldownInsane = KvGetFloat(kv, "trap_spawn_cooldown_insane", flTrapSpawnCooldownHard);
+	float flTrapSpawnCooldownNightmare = KvGetFloat(kv, "trap_spawn_cooldown_nightmare", flTrapSpawnCooldownInsane);
+	float flTrapSpawnCooldownApollyon = KvGetFloat(kv, "trap_spawn_cooldown_apollyon", flTrapSpawnCooldownNightmare);
 
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flBossStepSize, ChaserProfileData_StepSize);
 	
@@ -1113,6 +1141,15 @@ bool LoadChaserBossProfile(Handle kv, const char[] sProfile,int &iUniqueProfileI
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdownInsane, ChaserProfileData_ShockwaveStunSlowdownInsane);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flShockwaveStunSlowdownNightmare, ChaserProfileData_ShockwaveStunSlowdownNightmare);
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iShockwaveAttackIndexes, ChaserProfileData_ShockwaveAttackIndexes);
+	
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, bTrapsEnabled, ChaserProfileData_TrapsEnabled);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, iTrapType, ChaserProfileData_TrapType);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flTrapSpawnCooldown, ChaserProfileData_TrapSpawnCooldownNormal);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flTrapSpawnCooldownEasy, ChaserProfileData_TrapSpawnCooldownEasy);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flTrapSpawnCooldownHard, ChaserProfileData_TrapSpawnCooldownHard);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flTrapSpawnCooldownInsane, ChaserProfileData_TrapSpawnCooldownInsane);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flTrapSpawnCooldownNightmare, ChaserProfileData_TrapSpawnCooldownNightmare);
+	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, flTrapSpawnCooldownApollyon, ChaserProfileData_TrapSpawnCooldownApollyon);
 		
 	SetArrayCell(g_hChaserProfileData, iUniqueProfileIndex, KvGetFloat(kv, "memory_lifetime", 10.0), ChaserProfileData_MemoryLifeTime);
 	
@@ -2213,6 +2250,30 @@ float GetChaserProfileShockwaveStunSlowdown(int iChaserProfileIndex,int iDifficu
 int GetChaserProfileShockwaveAttackIndexes(int iChaserProfileIndex)
 {
 	return GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ShockwaveAttackIndexes);
+}
+
+bool GetChaserProfileTrapState(int iChaserProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapsEnabled));
+}
+
+int GetChaserProfileTrapType(int iChaserProfileIndex)
+{
+	return GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapType);
+}
+
+float GetChaserProfileTrapSpawnCooldown(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownNormal));
 }
 
 stock float GetChaserProfileAwarenessIncreaseRate(int iChaserProfileIndex,int difficulty)

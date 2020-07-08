@@ -209,9 +209,12 @@ public void Hook_ClientPreThink(int client)
 		SetEntityFlags(client,GetEntityFlags(client)^FL_EDICT_ALWAYS);
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
 		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
-		if(TF2_IsPlayerInCondition(client,TFCond_HalloweenKart) || !TF2_IsPlayerInCondition(client, TFCond_Stealthed))
+		if(IsClientInKart(client) || !TF2_IsPlayerInCondition(client, TFCond_Stealthed))
 		{
 			TF2_RemoveCondition(client,TFCond_HalloweenKart);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
 			TF2_RemoveCondition(client,TFCond_Taunting);
 			ClientHandleGhostMode(client, true);
 		}
@@ -380,40 +383,65 @@ public void Hook_ClientPreThink(int client)
 					
 					if (IsClientSprinting(client)) 
 					{
-						if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+						if (!g_bPlayerTrapped[client])
 						{
-							if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+							if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
 							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed);
+								if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+								{
+									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed);
+								}
+								else
+								{
+									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed*2.5);
+								}
+								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-220.0);
 							}
 							else
 							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed*2.5);
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
+								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-220.0);
 							}
-							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-170.0);
 						}
 						else
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
-							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-170.0);
+							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 0.1);
+							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", 0.1);
 						}
 					}
 					else 
 					{
-						if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+						if (!g_bPlayerTrapped[client])
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed);
+							if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed);
+							}
+							else
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed*2.5);
+							}
+							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flWalkSpeed-75.0);
 						}
 						else
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed*2.5);
+							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 0.1);
+							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", 0.1);
 						}
-						SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flWalkSpeed-20.0);
 					}
 					
 					if (ClientCanBreath(client) && !g_bPlayerBreath[client])
 					{
 						ClientStartBreathing(client);
+					}
+					
+					if (g_bPlayerTrapped[client])
+					{
+						TF2Attrib_SetByName(client, "increased jump height", 0.0);
+					}
+					else
+					{
+						TF2Attrib_SetByName(client, "increased jump height", 1.0);
 					}
 				}
 			}
@@ -457,6 +485,23 @@ public void Hook_ClientPreThink(int client)
 		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
+		if (IsClientInKart(client))
+		{
+			TF2_RemoveCondition(client,TFCond_HalloweenKart);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+		}
+	}
+	if (IsRoundInWarmup() || (IsRoundInIntro() && !g_bPlayerEliminated[client]) || IsRoundEnding()) //I told you, stop breaking my plugin
+	{
+		if (IsClientInKart(client))
+		{
+			TF2_RemoveCondition(client,TFCond_HalloweenKart);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
+			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+		}
 	}
 	
 	// Calculate player stress levels.
@@ -668,6 +713,19 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		return Plugin_Changed;
 	}
 	
+	if (IsValidClient(attacker) && IsValidClient(victim) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && g_bPlayerTrapped[victim])
+	{
+		if (!g_bPlayerEliminated[attacker] && !g_bPlayerEliminated[victim])
+		{
+			if (damagetype & 0x80) // 0x80 == melee damage
+			{
+				g_bPlayerTrapped[victim] = false;
+				TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
+				TF2_AddCondition(victim, TFCond_SpeedBuffAlly, 4.0);
+			}
+		}
+	}
+
 	char classname[64];
 
 	if (IsValidEntity(inflictor) && GetEntityClassname(inflictor, classname, sizeof(classname)) && (StrEqual(classname, "env_explosion") || StrEqual(classname, "tf_projectile_sentryrocket") || StrEqual(classname, "tf_projectile_rocket") || StrEqual(classname, "tf_projectile_pipe") || StrEqual(classname, "tf_projectile_arrow")))
@@ -741,7 +799,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	{
 		if (!IsRoundEnding())
 		{
-			if (IsClientInPvP(victim) && IsClientInPvP(attacker))
+			if (IsClientInPvP(victim) && IsClientInPvP(attacker) || IsRoundInWarmup())
 			{
 				if (attacker == inflictor)
 				{
@@ -1697,11 +1755,11 @@ void ClientStartDrainingFlashlightBattery(int client)
 		{
 			case Difficulty_Normal:
 			{
-				flDrainRate *= 0.5;
+				flDrainRate *= 0.4;
 			}
 			case Difficulty_Hard:
 			{
-				flDrainRate *= 0.4;
+				flDrainRate *= 0.35;
 			}
 			case Difficulty_Insane:
 			{
@@ -3187,10 +3245,6 @@ public Action Timer_ClientRechargeSprint(Handle timer, any userid)
 		g_hPlayerSprintTimer[client] = INVALID_HANDLE;
 		return;
 	}
-	if (g_iPlayerSprintPoints[client] > 10)
-	{
-		TF2Attrib_SetByName(client, "increased jump height", 1.0);
-	}
 	if ((!GetEntProp(client, Prop_Send, "m_bDucking") && !GetEntProp(client, Prop_Send, "m_bDucked")) || (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked") && IsClientReallySprinting(client) || flSpeed > 0.0))
 	{
 		g_iPlayerSprintPoints[client]++;
@@ -3465,10 +3519,13 @@ void ClientEnableProxy(int client,int iBossIndex)
 	
 	ClientStopProxyForce(client);
 
-	TF2_RemoveCondition(client,TFCond_HalloweenKart);
-	TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
-	TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
-	TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+	if (IsClientInKart(client))
+	{
+		TF2_RemoveCondition(client,TFCond_HalloweenKart);
+		TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
+		TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
+		TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+	}
 	
 	g_bPlayerProxy[client] = true;
 	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
@@ -3958,7 +4015,7 @@ void ClientOnJump(int client)
 		if (!IsRoundEnding() && !IsRoundInWarmup() && !DidClientEscape(client))
 		{
 			int iOverride = GetConVarInt(g_cvPlayerInfiniteSprintOverride);
-			if ((!g_bRoundInfiniteSprint && iOverride != 1) || iOverride == 0)
+			if ((!g_bRoundInfiniteSprint && iOverride != 1) || iOverride == 0 && !g_bPlayerTrapped[client])
 			{
 				if(g_iPlayerSprintPoints[client] >= 2)
 				{
@@ -3974,6 +4031,13 @@ void ClientOnJump(int client)
 					// If the player hasn't sprinted recently, force us to regenerate the stamina.
 					ClientSprintTimer(client, true);
 				}
+			}
+			if (g_bPlayerTrapped[client])
+				g_iPlayerTrapCount[client] -= 1;
+			if (g_bPlayerTrapped[client] && g_iPlayerTrapCount[client] <= 1)
+			{
+				g_bPlayerTrapped[client] = false;
+				g_iPlayerTrapCount[client] = 0;
 			}
 		}
 	}
@@ -6585,20 +6649,23 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 			AcceptEntityInput(iGlowManager, "Disable");
 			AcceptEntityInput(iGlowManager, "Enable");
 		}
-		
-		if (iOwner == other) return Plugin_Handled;
-		
-		if (!IsPlayerAlive(iOwner) || !IsPlayerAlive(other) || !g_bPlayerEliminated[other]) 
+
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !IsClientInGhostMode(other) && !g_bPlayerProxy[other])
 		{
-			return Plugin_Handled;
+			if (iOwner == other) return Plugin_Handled;
+		
+			if (!IsPlayerAlive(iOwner) || !IsPlayerAlive(other) || !g_bPlayerEliminated[other] || !SF_SpecialRound(SPECIALROUND_WALLHAX)) 
+			{
+				return Plugin_Handled;
+			}
 		}
 		
-		if (IsClientInGhostMode(other) || (g_bPlayerProxy[iOwner] && g_bPlayerProxy[other]))
+		if (IsClientInGhostMode(other) || g_bPlayerProxy[other])
 		{
 			return Plugin_Continue;
 		}
 		
-		if (SF_SpecialRound(SPECIALROUND_WALLHAX) && IsPlayerAlive(iOwner) && IsPlayerAlive(other))
+		if (SF_SpecialRound(SPECIALROUND_WALLHAX) && !g_bPlayerEscaped[other] && GetClientTeam(other) == TFTeam_Red)
 		{
 			return Plugin_Continue;
 		}

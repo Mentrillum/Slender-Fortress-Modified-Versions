@@ -36,8 +36,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.1 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.1 Modified"
+#define PLUGIN_VERSION "1.5.5.2 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.2 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -162,6 +162,10 @@ public Plugin myinfo =
 
 //#define NINETYSMUSIC "slender/sf2modified_runninginthe90s.wav"
 #define TRIPLEBOSSESMUSIC "slender/sf2modified_triplebosses.wav"
+
+#define TRAP_DEPLOY "slender/modified_traps/beartrap/trap_deploy.mp3"
+#define TRAP_CLOSE "slender/modified_traps/beartrap/trap_close.mp3"
+#define TRAP_MODEL "models/mentrillum/traps/beartrap.mdl"
 
 #define SF2_HUD_TEXT_COLOR_R 127
 #define SF2_HUD_TEXT_COLOR_G 167
@@ -350,6 +354,7 @@ float g_flSlenderNextVoiceSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextMoanSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextWanderPos[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextCloakTime[MAX_BOSSES] = { -1.0, ... };
+float g_flSlenderNextTrapPlacement[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextFootstepIdleSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextFootstepWalkSound[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderNextFootstepRunSound[MAX_BOSSES] = { -1.0, ... };
@@ -455,6 +460,9 @@ float g_flPlayerStaticShakeMinVolume[MAXPLAYERS + 1];
 float g_flPlayerStaticShakeMaxVolume[MAXPLAYERS + 1];
 
 float g_flPlayerProxyNextVoiceSound[MAXPLAYERS + 1];
+
+bool g_bPlayerTrapped[MAXPLAYERS + 1];
+int g_iPlayerTrapCount[MAXPLAYERS + 1];
 
 // Fake lag compensation for FF.
 bool g_bPlayerLagCompensation[MAXPLAYERS + 1];
@@ -852,6 +860,7 @@ ConVar g_cvLookAheadDist;
 #include "sf2/client.sp"
 #include "sf2/specialround.sp"
 #include "sf2/adminmenu.sp"
+#include "sf2/traps.sp"
 
 
 #define SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND "ui/item_acquired.wav"
@@ -1132,6 +1141,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_force_proxy", Command_ForceProxy, ADMFLAG_SLAY);
 	//RegAdminCmd("sm_sf2_nightvision", Command_NightVision, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_escape", Command_ForceEscape, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_set_difficulty", Command_ForceDifficulty, ADMFLAG_SLAY);
 	
 	// Hook onto existing console commands.
 	AddCommandListener(Hook_CommandBuild, "build");
@@ -1681,6 +1691,7 @@ static void PrecacheStuff()
 	
 	PrecacheModel(PAGE_MODEL, true);
 	PrecacheModel(SF_KEYMODEL, true);
+	PrecacheModel(TRAP_MODEL, true);
 	
 	PrecacheSound2(FLASHLIGHT_CLICKSOUND);
 	PrecacheSound2(FLASHLIGHT_CLICKSOUND_NIGHTVISION);
@@ -1742,6 +1753,9 @@ static void PrecacheStuff()
 	
 	//PrecacheSound2(NINETYSMUSIC);
 	PrecacheSound2(TRIPLEBOSSESMUSIC);
+	
+	PrecacheSound2(TRAP_CLOSE);
+	PrecacheSound2(TRAP_DEPLOY);
 
 	PrecacheSound2(PROXY_RAGE_MODE_SOUND);
 	
@@ -1795,6 +1809,18 @@ static void PrecacheStuff()
 	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_7.vmt");
 	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_8.vtf");
 	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_8.vmt");
+	
+	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.mdl");
+	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.sw.vtx");
+	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.dx80.vtx");
+	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.dx90.vtx");
+	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.phy");
+	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.vvd");
+	
+	AddFileToDownloadsTable("materials/models/mentrillum/traps/beartrap/trap_m.vtf");
+	AddFileToDownloadsTable("materials/models/mentrillum/traps/beartrap/trap_m.vmt");
+	AddFileToDownloadsTable("materials/models/mentrillum/traps/beartrap/trap_n.vtf");
+	AddFileToDownloadsTable("materials/models/mentrillum/traps/beartrap/trap_r.vtf");
 	
 	// pvp
 	PvP_Precache();
@@ -2869,6 +2895,47 @@ public Action Command_ForceEscape(int iClient,int args)
 		}
 	}
 	
+	return Plugin_Handled;
+}
+public Action Command_ForceDifficulty(int iClient,int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	
+	if (args == 0)
+	{
+		ReplyToCommand(iClient, "Usage: sm_sf2_set_difficulty <difficulty 1-5>");
+		return Plugin_Handled;
+	}
+	
+	if (IsRoundEnding() || IsRoundInWarmup())
+	{
+		CPrintToChat(iClient, "{yellow}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
+		return Plugin_Handled;
+	}
+	
+	char arg1[32];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	
+	int iNewDifficulty = StringToInt(arg1);
+	
+	if (iNewDifficulty < 6)
+	{
+		SetConVarInt(g_cvDifficulty, iNewDifficulty);
+	}
+	else
+	{
+		SetConVarInt(g_cvDifficulty, 5);
+	}
+	
+	switch (iNewDifficulty)
+	{
+		case Difficulty_Normal: CPrintToChatAll("{yellow}%t{collectors}%N {default}set the difficulty to {yellow}%t{default}.", "SF2 Prefix", iClient, "SF2 Normal Difficulty");
+		case Difficulty_Hard: CPrintToChatAll("{yellow}%t{collectors}%N {default}set the difficulty to {orange}%t{default}.", "SF2 Prefix", iClient, "SF2 Hard Difficulty");
+		case Difficulty_Insane: CPrintToChatAll("{yellow}%t{collectors}%N {default}set the difficulty to {red}%t{default}.", "SF2 Prefix", iClient, "SF2 Insane Difficulty");
+		case Difficulty_Nightmare: CPrintToChatAll("{yellow}%t{collectors}%N {default}set the difficulty to {valve}Nightmare!", "SF2 Prefix", iClient);
+		case Difficulty_Apollyon: CPrintToChatAll("{yellow}%t{collectors}%N {default}set the difficulty to {darkgray}Apollyon!", "SF2 Prefix", iClient);
+	}
+
 	return Plugin_Handled;
 }
 public Action Command_AddSlender(int iClient,int args)
@@ -6682,6 +6749,9 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	g_iPlayerHitsToCrits[iClient] = 0;
 	g_iPlayerHitsToHeads[iClient] = 0;
 	
+	g_bPlayerTrapped[iClient] = false;
+	g_iPlayerTrapCount[iClient] = 0;
+	
 	if (IsPlayerAlive(iClient) && IsClientParticipating(iClient))
 	{
 		if(MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
@@ -6883,14 +6953,26 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			SetEntPropString(iSourceTV, Prop_Data, "m_szNetname", sBossName);
 
 			event.SetString("assister_fallback","");
-			if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS)
+			if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS || NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
 			{
-				char sWeaponType[PLATFORM_MAX_PATH];
-				int iWeaponNum = GetProfileAttackNum(sProfile, "attack_weapontypeint", 0, iAttackIndex+1);
-				GetProfileAttackString(sProfile, "attack_weapontype", sWeaponType, sizeof(sWeaponType), "", iAttackIndex+1);
-				event.SetString("weapon_logclassname",sWeaponType);
-				event.SetString("weapon",sWeaponType);
-				event.SetInt("customkill",iWeaponNum);
+				if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS)
+				{
+					char sWeaponType[PLATFORM_MAX_PATH];
+					int iWeaponNum = GetProfileAttackNum(sProfile, "attack_weapontypeint", 0, iAttackIndex+1);
+					GetProfileAttackString(sProfile, "attack_weapontype", sWeaponType, sizeof(sWeaponType), "", iAttackIndex+1);
+					event.SetString("weapon_logclassname",sWeaponType);
+					event.SetString("weapon",sWeaponType);
+					event.SetInt("customkill",iWeaponNum);
+				}
+				else if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
+				{
+					char sWeaponType[PLATFORM_MAX_PATH];
+					int iWeaponNum = GetProfileNum(sProfile, "kill_weapontypeint", 0);
+					GetProfileString(sProfile, "kill_weapontype", sWeaponType, sizeof(sWeaponType));
+					event.SetString("weapon_logclassname",sWeaponType);
+					event.SetString("weapon",sWeaponType);
+					event.SetInt("customkill",iWeaponNum);
+				}
 			}
 			else
 			{
@@ -7261,6 +7343,9 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		g_bPlayerGettingPageReward[iClient] = false;
 		g_iPlayerHitsToCrits[iClient] = 0;
 		g_iPlayerHitsToHeads[iClient] = 0;
+		
+		g_bPlayerTrapped[iClient] = false;
+		g_iPlayerTrapCount[iClient] = 0;
 	}
 	if (!IsRoundEnding() && !g_bRoundWaitingForPlayers)
 	{
