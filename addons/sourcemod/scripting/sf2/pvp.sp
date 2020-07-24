@@ -836,15 +836,21 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	 *
 	 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
 	 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
-	 * penetration of the bullet through teammates without damaging them. To keep the penetration behavior (such as with the Machina) 
-	 * but damage teammates, the damage type is switched to TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
+	 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
+	 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 *
 	 */
 	for (int i = 0; i < sizeof(fixWeaponPenetrationClasses); i++)
 	{
 		if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
 		{
-			customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
+			int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+
+			if ((itemDefIndex == 526 || itemDefIndex == 30665) && GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") >= 150.0 )  // The Machina, Shooting Star
+				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
+			else
+				customDamageType = 0; // no penetration behavior.
+
 			return MRES_Supercede;
 		}
 	}
