@@ -464,10 +464,6 @@ float g_flPlayerProxyNextVoiceSound[MAXPLAYERS + 1];
 bool g_bPlayerTrapped[MAXPLAYERS + 1];
 int g_iPlayerTrapCount[MAXPLAYERS + 1];
 
-// Fake lag compensation for FF.
-bool g_bPlayerLagCompensation[MAXPLAYERS + 1];
-int g_iPlayerLagCompensationTeam[MAXPLAYERS + 1];
-
 // Difficulty
 bool g_bPlayerCalledForNightmare[MAXPLAYERS + 1];
 bool g_bProxySurvivalRageMode = false;
@@ -696,6 +692,7 @@ Handle g_cvSpecialRoundInterval;
 Handle g_cvNewBossRoundBehavior;
 Handle g_cvNewBossRoundInterval;
 Handle g_cvNewBossRoundForce;
+ConVar g_cvIgnoreRoundWinConditions;
 Handle g_cvPlayerVoiceDistance;
 Handle g_cvPlayerVoiceWallScale;
 Handle g_cvUltravisionEnabled;
@@ -717,7 +714,6 @@ Handle g_cvWarmupRound;
 Handle g_cvWarmupRoundNum;
 Handle g_cvPlayerViewbobHurtEnabled;
 Handle g_cvPlayerViewbobSprintEnabled;
-Handle g_cvPlayerFakeLagCompensation;
 Handle g_cvPlayerProxyWaitTime;
 Handle g_cvPlayerProxyAsk;
 Handle g_cvHalfZatoichiHealthGain;
@@ -829,6 +825,7 @@ Handle g_hSDKStudioFrameAdvance;
 Handle g_hSDKStartTouch;
 Handle g_hSDKEndTouch;
 Handle g_hSDKWeaponSwitch;
+Handle g_hSDKWeaponGetCustomDamageType;
 
 int g_iOffset_m_id;
 
@@ -1015,8 +1012,6 @@ public void OnPluginStart()
 	g_cvGravity = FindConVar("sv_gravity");
 	HookConVarChange(g_cvGravity, OnConVarChanged);
 	
-	g_cvPlayerFakeLagCompensation = CreateConVar("sf2_player_fakelagcompensation", "0", "(EXPERIMENTAL) Enable/Disable fake lag compensation for some hitscan weapons such as the Sniper Rifle.", _, true, 0.0, true, 1.0);
-	
 	g_cvPlayerShakeEnabled = CreateConVar("sf2_player_shake_enabled", "1", "Enable/Disable player view shake during boss encounters.", _, true, 0.0, true, 1.0);
 	HookConVarChange(g_cvPlayerShakeEnabled, OnConVarChanged);
 	g_cvPlayerShakeFrequencyMax = CreateConVar("sf2_player_shake_frequency_max", "255", "Maximum frequency value of the shake. Should be a value between 1-255.", _, true, 1.0, true, 255.0);
@@ -1066,6 +1061,9 @@ public void OnPluginStart()
 	g_cvNewBossRoundInterval = CreateConVar("sf2_newbossround_interval", "3", "If this many rounds are completed, the next round's boss will be randomly chosen, but will not be the main boss.", _, true, 0.0);
 	g_cvNewBossRoundForce = CreateConVar("sf2_newbossround_forceenable", "-1", "Sets whether a new boss will be chosen on the next round or not. Set to -1 to let the game choose.", _, true, -1.0, true, 1.0);
 	
+	g_cvIgnoreRoundWinConditions = CreateConVar("sf2_ignore_round_win_conditions", "0", "If set to 1, round will not end when RED is eliminated.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	HookConVarChange(g_cvIgnoreRoundWinConditions, OnConVarChanged);
+
 	g_cvTimeLimit = CreateConVar("sf2_timelimit_default", "300", "The time limit of the round. Maps can change the time limit.", _, true, 0.0);
 	g_cvTimeLimitEscape = CreateConVar("sf2_timelimit_escape_default", "90", "The time limit to escape. Maps can change the time limit.", _, true, 0.0);
 	g_cvTimeGainFromPageGrab = CreateConVar("sf2_time_gain_page_grab", "12", "The time gained from grabbing a page. Maps can change the time gain amount.");
@@ -1456,6 +1454,9 @@ static void SDK_Init()
 	}
 	DHookAddParam(g_hSDKShouldTransmit, HookParamType_ObjectPtr);
 	
+	iOffset = GameConfGetOffset(hConfig, "CTFWeaponBase::GetCustomDamageType");
+	g_hSDKWeaponGetCustomDamageType = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_WeaponGetCustomDamageType);
+
 	g_iOffset_m_id = GameConfGetOffset(hConfig, "CNavArea::m_id");
 	
 	//Initialize the nextbot logic.
@@ -3543,6 +3544,13 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 			}
 		}
 	}
+	else if (cvar == g_cvIgnoreRoundWinConditions)
+	{
+		if (!view_as<bool>(StringToInt(intValue)) && !IsRoundInWarmup() && !IsRoundEnding())
+		{
+			CheckRoundWinConditions();
+		}
+	}
 }
 
 //	==========================================================
@@ -3616,6 +3624,25 @@ public void Hook_ProjectileSpawn(int ent)
 	}
 
 	SDKUnhook(ent, SDKHook_Spawn, Hook_ProjectileSpawn);
+}
+
+public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Handle hParams)
+{
+	if (!g_bEnabled) return MRES_Ignored;
+
+	int ownerEntity = GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity");
+	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity))
+	{
+		int customDamageType = DHookGetReturn(hReturn);
+		MRESReturn hookResult = PvP_GetWeaponCustomDamageType(weapon, ownerEntity, customDamageType);
+		if (hookResult != MRES_Ignored)
+		{
+			DHookSetReturn(hReturn, customDamageType);
+			return hookResult;
+		}
+	}
+
+	return MRES_Ignored;
 }
 
 public void OnEntityDestroyed(int ent)
@@ -4531,8 +4558,6 @@ public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3]
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	ClientDisableFakeLagCompensation(iClient);
-	
 	bool bChanged = false;
 	
 	// Check impulse (block spraying and built-in flashlight)
@@ -4688,7 +4713,8 @@ public void OnClientPutInServer(int iClient)
 	SDKHook(iClient, SDKHook_SetTransmit, Hook_ClientSetTransmit);
 	SDKHook(iClient, SDKHook_TraceAttack, Hook_PvPPlayerTraceAttack);
 	SDKHook(iClient, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
-	
+	SDKHook(iClient, SDKHook_WeaponEquipPost, Hook_ClientWeaponEquipPost);
+
 	DHookEntity(g_hSDKWantsLagCompensationOnEntity, true, iClient); 
 	DHookEntity(g_hSDKShouldTransmit, true, iClient);
 	
@@ -4700,8 +4726,6 @@ public void OnClientPutInServer(int iClient)
 		SetPlayerGroupInvitedPlayerCount(i, iClient, 0);
 		SetPlayerGroupInvitedPlayerTime(i, iClient, 0.0);
 	}
-	
-	ClientDisableFakeLagCompensation(iClient);
 	
 	ClientResetStatic(iClient);
 	ClientResetSlenderStats(iClient);
@@ -5300,12 +5324,6 @@ stock bool IsClientParticipating(int iClient)
 	}
 	
 	int iTeam = GetClientTeam(iClient);
-	
-	if (g_bPlayerLagCompensation[iClient]) 
-	{
-		iTeam = g_iPlayerLagCompensationTeam[iClient];
-	}
-	
 	switch (iTeam)
 	{
 		case TFTeam_Unassigned, TFTeam_Spectator: return false;
@@ -6702,7 +6720,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientSetGhostModeState(iClient, false);
 		SetEntityGravity(iClient, 1.0);
 		g_iPlayerPageCount[iClient] = 0;
-		ClientDisableFakeLagCompensation(iClient);
 	
 		ClientResetStatic(iClient);
 		ClientResetSlenderStats(iClient);
@@ -6780,8 +6797,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		else
 		{
 			g_iPlayerPageCount[iClient] = 0;
-			
-			ClientDisableFakeLagCompensation(iClient);
 			
 			ClientResetStatic(iClient);
 			ClientResetSlenderStats(iClient);
@@ -7045,8 +7060,6 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("EVENT START: Event_PlayerHurt");
 #endif
 	
-	ClientDisableFakeLagCompensation(iClient);
-
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	if (attacker > 0)
 	{
@@ -7149,8 +7162,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 
 	if (!bFake)
 	{
-		ClientDisableFakeLagCompensation(iClient);
-		
 		ClientResetStatic(iClient);
 		ClientResetSlenderStats(iClient);
 		ClientResetCampingStats(iClient);
@@ -8910,7 +8921,10 @@ void SF_FailRoundEnd(float time=2.0)
 	//Check round win conditions again.
 	CreateTimer((time-0.8), Timer_CheckRoundWinConditions);
 	
-	g_hTimerFail = CreateTimer(time, Timer_Fail);
+	if (!g_cvIgnoreRoundWinConditions.BoolValue)
+	{
+		g_hTimerFail = CreateTimer(time, Timer_Fail);
+	}
 }
 
 void SF_FailEnd()
@@ -10094,7 +10108,7 @@ public Action Timer_ActivateRoundFromIntro(Handle timer)
 
 void CheckRoundWinConditions()
 {
-	if (IsRoundInWarmup() || IsRoundEnding()) return;
+	if (IsRoundInWarmup() || IsRoundEnding() || g_cvIgnoreRoundWinConditions.BoolValue) return;
 	
 	int iTotalCount = 0;
 	int iAliveCount = 0;

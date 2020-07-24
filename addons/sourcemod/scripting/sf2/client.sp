@@ -21,13 +21,6 @@ char g_strPlayerBreathSounds[][] =
 	"slender/fastbreath1.wav"
 };
 
-static char g_strPlayerLagCompensationWeapons[][] = 
-{
-	"tf_weapon_sniperrifle",
-	"tf_weapon_sniperrifle_decap",
-	"tf_weapon_sniperrifle_classic"
-};
-
 //Client Special Round Timer
 static Handle g_hClientSpecialRoundTimer[MAXPLAYERS + 1];
 
@@ -611,73 +604,6 @@ public Action TF2_CalcIsAttackCritical(int client,int weapon, char[] sWeaponName
 
 	if ((IsRoundInWarmup() || IsClientInPvP(client)) && !IsRoundEnding())
 	{
-		if (!GetConVarBool(g_cvPlayerFakeLagCompensation))
-		{
-			bool bNeedsManualDamage = false;
-			
-			// Fake lag compensation isn't enabled; check to see if we need to deal damage manually.
-			for (int i = 0; i < sizeof(g_strPlayerLagCompensationWeapons); i++)
-			{
-				if (StrEqual(sWeaponName, g_strPlayerLagCompensationWeapons[i], false))
-				{
-					bNeedsManualDamage = true;
-					break;
-				}
-			}
-			
-			if (bNeedsManualDamage)
-			{
-				float flStartPos[3], flEyeAng[3];
-				GetClientEyePosition(client, flStartPos);
-				GetClientEyeAngles(client, flEyeAng);
-				
-				Handle hTrace = TR_TraceRayFilterEx(flStartPos, flEyeAng, MASK_SHOT, RayType_Infinite, TraceRayDontHitEntity, client);
-				int iHitEntity = TR_GetEntityIndex(hTrace);
-				int iHitGroup = TR_GetHitGroup(hTrace);
-				CloseHandle(hTrace);
-				
-				if (IsValidClient(iHitEntity))
-				{
-					if (GetClientTeam(iHitEntity) == GetClientTeam(client))
-					{
-						if (IsRoundInWarmup() || IsClientInPvP(iHitEntity))
-						{
-							float flChargedDamage = GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage");
-							if (flChargedDamage < 50.0) flChargedDamage = 50.0;
-							int iDamageType = DMG_BULLET;
-							
-							if (IsClientCritBoosted(client))
-							{
-								result = true;
-								iDamageType |= DMG_ACID;
-							}
-							else if (iHitGroup == 1)
-							{
-								if (StrEqual(sWeaponName, "tf_weapon_sniperrifle_classic", false))
-								{
-									if (flChargedDamage >= 150.0)
-									{
-										result = true;
-										iDamageType |= DMG_ACID;
-									}
-								}
-								else
-								{
-									if (TF2_IsPlayerInCondition(client, TFCond_Zoomed))
-									{
-										result = true;
-										iDamageType |= DMG_ACID;
-									}
-								}
-							}
-							
-							SDKHooks_TakeDamage(iHitEntity, client, client, flChargedDamage, iDamageType);
-							return Plugin_Changed;
-						}
-					}
-				}
-			}
-		}
 	}
 	
 	return Plugin_Continue;
@@ -1009,6 +935,11 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	return Plugin_Continue;
 }
 
+public void Hook_ClientWeaponEquipPost(int client, int weapon)
+{
+	DHookEntity(g_hSDKWeaponGetCustomDamageType, true, weapon);
+}
+
 public Action Hook_TEFireBullets(const char[] te_name,const int[] Players,int numClients, float delay)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -1016,13 +947,6 @@ public Action Hook_TEFireBullets(const char[] te_name,const int[] Players,int nu
 	int client = TE_ReadNum("m_iPlayer") + 1;
 	if (IsValidClient(client))
 	{
-		if (GetConVarBool(g_cvPlayerFakeLagCompensation))
-		{
-			if ((IsRoundInWarmup() || IsClientInPvP(client)))
-			{
-				ClientEnableFakeLagCompensation(client);
-			}
-		}
 	}
 	
 	return Plugin_Continue;
@@ -1101,8 +1025,6 @@ void ClientEscape(int client)
 	
 	g_iPlayerPageCount[client] = 0;
 	
-	ClientDisableFakeLagCompensation(client);
-	
 	ClientResetStatic(client);
 	ClientResetSlenderStats(client);
 	ClientResetCampingStats(client);
@@ -1172,65 +1094,6 @@ stock float ClientGetDistanceFromEntity(int client,int entity)
 	GetClientAbsOrigin(client, flStartPos);
 	GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flEndPos);
 	return GetVectorDistance(flStartPos, flEndPos);
-}
-
-void ClientEnableFakeLagCompensation(int client)
-{
-	if (!IsValidClient(client) || !IsPlayerAlive(client) || g_bPlayerLagCompensation[client]) return;
-	
-	// Can only enable lag compensation if we're in either of these two teams only.
-	int iMyTeam = GetClientTeam(client);
-	if (iMyTeam != TFTeam_Red && iMyTeam != TFTeam_Blue) return;
-	
-	// Can only enable lag compensation if there are other active teammates around. This is to prevent spontaneous round restarting.
-	int iCount;
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (i == client) continue;
-		
-		if (IsValidClient(i) && IsPlayerAlive(i))
-		{
-			int iTeam = GetClientTeam(i);
-			if ((iTeam == TFTeam_Red || iTeam == TFTeam_Blue) && iTeam == iMyTeam)
-			{
-				iCount++;
-			}
-		}
-	}
-	
-	if (!iCount) return;
-	
-	// Can only enable lag compensation only for specific weapons.
-	int iActiveWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-	if (!IsValidEdict(iActiveWeapon)) return;
-	
-	char sClassName[64];
-	GetEdictClassname(iActiveWeapon, sClassName, sizeof(sClassName));
-	
-	bool bCompensate = false;
-	for (int i = 0; i < sizeof(g_strPlayerLagCompensationWeapons); i++)
-	{
-		if (StrEqual(sClassName, g_strPlayerLagCompensationWeapons[i], false))
-		{
-			bCompensate = true;
-			break;
-		}
-	}
-	
-	if (!bCompensate) return;
-	
-	g_bPlayerLagCompensation[client] = true;
-	g_iPlayerLagCompensationTeam[client] = iMyTeam;
-	SetEntProp(client, Prop_Send, "m_iTeamNum", 0);
-}
-
-void ClientDisableFakeLagCompensation(int client)
-{
-	if (!g_bPlayerLagCompensation[client]) return;
-	
-	SetEntProp(client, Prop_Send, "m_iTeamNum", g_iPlayerLagCompensationTeam[client]);
-	g_bPlayerLagCompensation[client] = false;
-	g_iPlayerLagCompensationTeam[client] = -1;
 }
 
 //	==========================================================
