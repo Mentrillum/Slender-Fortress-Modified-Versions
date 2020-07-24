@@ -3,7 +3,6 @@
 #endif
 #define _sf2_pvp_included
 
-
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 #define FLAME_HIT_DELAY 0.05
 
@@ -814,6 +813,45 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 
 	return Plugin_Continue;
 }
+
+MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
+{
+	static const char fixWeaponPenetrationClasses[][] = 
+	{
+		"tf_weapon_sniperrifle",
+		"tf_weapon_sniperrifle_decap",
+		"tf_weapon_sniperrifle_classic"
+	};
+
+	char sWeaponName[256];
+	GetEntityClassname(weapon, sWeaponName, sizeof(sWeaponName));
+
+	/*
+	 * Fixes the sniper rifle not damaging teammates.
+	 * 
+	 * WHY? For every other hitscan weapon in the game, simply enforcing lag compensation in CTFPlayer::WantsLagCompensationOnEntity()
+	 * works. However, when it comes to weapons that penetrate teammates, the bullet trace will not iterate through teammates. This is
+	 * the case with all sniper rifles, and is the reason why damage is never normally dealt to teammates despite having friendly fire 
+	 * on and lag compensation.
+	 *
+	 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
+	 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
+	 * penetration of the bullet through teammates without damaging them. To keep the penetration behavior (such as with the Machina) 
+	 * but damage teammates, the damage type is switched to TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
+	 *
+	 */
+	for (int i = 0; i < sizeof(fixWeaponPenetrationClasses); i++)
+	{
+		if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
+		{
+			customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
+			return MRES_Supercede;
+		}
+	}
+
+	return MRES_Ignored;
+}
+
 // API
 
 public void PvP_InitializeAPI()

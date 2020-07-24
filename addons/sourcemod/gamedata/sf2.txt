@@ -19,6 +19,11 @@
 				"windows"	"327"
 				"linux"		"328"
 			}
+			"CTFWeaponBase::GetCustomDamageType"
+			{
+				"windows"	"373"
+				"linux"		"379"	
+			}
 			"CTFGameRules::IsInTraining"
 			{
 				"linux"		"182"
