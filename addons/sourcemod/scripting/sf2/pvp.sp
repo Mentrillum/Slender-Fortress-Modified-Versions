@@ -49,18 +49,65 @@ static bool g_bPlayerInPvPTrigger[MAXPLAYERS + 1];
 static int g_iPvPUserIdLastTrace;
 static float g_flTimeLastTrace;
 
-enum
+static ArrayList g_hPvPBallsOfFire;
+
+enum struct PvPProjectile_BallOfFire
 {
-	PvPFlameEntData_EntRef = 0,
-	PvPFlameEntData_LastHitEntRef,
-	PvPFlameEntData_MaxStats
-};
+	int EntIndex;
+	ArrayList TouchedEntities;
+
+	void Init(int entIndex)
+	{
+		this.EntIndex = entIndex;
+		this.TouchedEntities = new ArrayList();
+	}
+
+	void OnTouchPost(int otherEntity)
+	{
+		int ent = this.EntIndex;
+		int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
+		if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity || !IsClientInPvP(ownerEntity))
+			return;
+		
+		if (IsValidEntity(otherEntity))
+		{
+			if ( this.TouchedEntities.FindValue(otherEntity) == -1 )
+			{
+				this.TouchedEntities.Push(otherEntity);
+
+				if (IsValidClient(otherEntity) && IsClientInPvP(otherEntity) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
+				{
+					float flDamage = SDKCall(g_hSDKEntityGetDamage, ent);
+					float flDamageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? FindConVar("tf_fireball_burning_bonus").FloatValue : 1.0;
+					float flDamagePos[3];
+					GetEntPropVector(ent, Prop_Data, "m_vecOrigin", flDamagePos);
+					// int iDamageCustom = 79;
+
+					if (TF2_GetPlayerClass(otherEntity) == TFClass_Pyro)
+					{
+						TF2_AddCondition(otherEntity, TFCond_BurningPyro, FindConVar("tf_fireball_burn_duration").FloatValue * 0.5, ownerEntity);
+					}
+
+					TF2_IgnitePlayer(otherEntity, ownerEntity);
+					SDKHooks_TakeDamage(otherEntity, ownerEntity, ownerEntity, flDamage * flDamageBonus, 0x1220000, GetEntPropEnt(ownerEntity, Prop_Send, "m_hActiveWeapon"), NULL_VECTOR, flDamagePos);
+				}
+			}
+		}
+	}
+
+	void Cleanup()
+	{
+		delete this.TouchedEntities;
+	}
+}
 
 public void PvP_Initialize()
 {
 	g_cvPvPArenaLeaveTime = CreateConVar("sf2_player_pvparena_leavetime", "5");
 	g_cvPvPArenaProjectileZap = CreateConVar("sf2_pvp_projectile_removal", "0", "This is an experimental code! It could make your server crash, if you get any crash disable this cvar");
 	
+	g_hPvPBallsOfFire = new ArrayList(sizeof(PvPProjectile_BallOfFire));
+
 	AddTempEntHook("TFBlood", TempEntHook_PvPBlood);
 	AddTempEntHook("World Decal", TempEntHook_PvPDecal);
 	AddTempEntHook("Entity Decal", TempEntHook_PvPDecal);
@@ -261,6 +308,17 @@ public void PvP_OnEntityDestroyed(int ent, const char[] sClassname)
 #if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ENTITIES,0,"\x08FF4040FF- %i(%s)",ent,sClassname);
 #endif
+
+	if (StrEqual(sClassname, "tf_projectile_balloffire", false))
+	{
+		int index = g_hPvPBallsOfFire.FindValue( ent );
+		if (index != -1) {
+			PvPProjectile_BallOfFire projectileData;
+			g_hPvPBallsOfFire.GetArray(index, projectileData, sizeof(projectileData));
+			projectileData.Cleanup();
+			g_hPvPBallsOfFire.Erase(index);
+		}
+	}
 }
 
 public Action Hook_PvPProjectile_OnTouch(int iProjectile, int iClient)
@@ -381,8 +439,20 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 				*/
 				SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
 			}
-			else if (StrEqual(sClassname, "tf_projectile_balloffire", false))
+			else if (StrEqual(sClass, "tf_projectile_balloffire", false))
 			{
+				/*
+					Replicate projectile logic for Dragon's Fury projectiles.
+
+					KR: The projectile checks the team of its owner entity (the player), not itself. CBaseEntity::InSameTeam()
+					could be hooked to change this, but I think that would be too game-changing and not really worth doing for
+					a single case, so the enemy player logic is sort of replicated.
+				*/
+
+				PvPProjectile_BallOfFire projectileData;
+				projectileData.Init( ent );
+				g_hPvPBallsOfFire.PushArray( projectileData, sizeof(projectileData) );
+
 				SDKHook(ent, SDKHook_TouchPost, Hook_PvPProjectileBallOfFireTouchPost);
 			}
 
@@ -403,18 +473,11 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 
 public void Hook_PvPProjectileBallOfFireTouchPost(int projectile, int otherEntity)
 {
-	int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-	if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity || !IsClientInPvP(ownerEntity))
-		return;
-	
-	if (IsValidClient(otherEntity))
-	{
-		float flDamage = SDKCall(g_hSDKEntityGetDamage, projectile);
-		float flDamageBonus = 1.0;
-		if (TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire))
-			flDamageBonus = FindConVar("tf_fireball_burning_bonus").FloatValue;
-		
-		
+	int index = g_hPvPBallsOfFire.FindValue( projectile );
+	if (index != -1) {
+		PvPProjectile_BallOfFire projectileData;
+		g_hPvPBallsOfFire.GetArray(index, projectileData, sizeof(projectileData));
+		projectileData.OnTouchPost(otherEntity);
 	}
 }
 
@@ -883,8 +946,6 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	char sWeaponName[256];
 	GetEntityClassname(weapon, sWeaponName, sizeof(sWeaponName));
 
-	int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-
 	/*
 	 * Fixes the sniper rifle not damaging teammates.
 	 * 
@@ -895,8 +956,6 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	 *
 	 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
 	 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
-	 * penetration of the bullet through teammates without damaging them. To keep the penetration behavior (such as with the Machina) 
-	 * but damage teammates, the damage type is switched to TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
 	 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 *
