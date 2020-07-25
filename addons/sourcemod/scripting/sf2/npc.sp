@@ -174,13 +174,7 @@ methodmap SF2NPC_BaseNPC
 	{
 		public get() { return NPCGetTeleportType(this.Index); }
 	}
-	
-	property int Enemy
-	{
-		public get() { return NPCGetEnemy(this.Index); }
-		public set(int entIndex) { NPCSetEnemy(this.Index, entIndex); }
-	}
-	
+
 	property bool DeathCamEnabled
 	{
 		public get() { return NPCHasDeathCamEnabled(this.Index); }
@@ -440,7 +434,7 @@ void NPCRemoveAll()
 		NPCRemove(i);
 	}
 }
-void NPCChaseAlerts(int iNPCIndex, int iNPCCopyIndex)
+/*void NPCChaseAlerts(int iNPCIndex, int iNPCCopyIndex)
 {
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	for (int i = 0; i < MAX_BOSSES; i++)
@@ -470,7 +464,7 @@ void NPCChaseAlerts(int iNPCIndex, int iNPCCopyIndex)
 			g_hNPCRegisterAlertingCopiesTimer[iNPCCopyIndex] = CreateTimer(0.3, Timer_SlenderStopAlerts, EntIndexToEntRef(iBossEnt));
 		}
 	}
-}
+}*/
 
 int NPCGetType(int iNPCIndex)
 {
@@ -637,16 +631,6 @@ float NPCGetInstantKillRadius(int iNPCIndex)
 int NPCGetTeleportType(int iNPCIndex)
 {
 	return g_iNPCTeleportType[iNPCIndex];
-}
-
-int NPCGetEnemy(int iNPCIndex)
-{
-	return g_iNPCEnemy[iNPCIndex];
-}
-
-void NPCSetEnemy(int iNPCIndex,int ent)
-{
-	g_iNPCEnemy[iNPCIndex] = IsValidEntity(ent) ? EntIndexToEntRef(ent) : INVALID_ENT_REFERENCE;
 }
 
 /**
@@ -921,7 +905,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	g_bSlenderIsMilked[Npc.Index] = false;
 	g_bSlenderIsGassed[Npc.Index] = false;
 	g_bSlenderIsJarate[Npc.Index] = false;
-	
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_flPlayerLastChaseBossEncounterTime[i][Npc.Index] = -1.0;
@@ -1119,9 +1103,7 @@ void RemoveProfile(int iBossIndex)
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
 	NPCChaserOnRemoveProfile(iBossIndex);
-	
-	int slender = NPCGetEntIndex(iBossIndex);
-	
+
 	// Remove all possible sounds, for emergencies.
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -1260,7 +1242,7 @@ void RemoveProfile(int iBossIndex)
 	g_bNPCChasingScareVictin[iBossIndex] = false;
 	g_bNPCLostChasingScareVictim[iBossIndex] = false;
 	g_bNPCVelocityCancel[iBossIndex] = false;
-	
+
 	for (int i = 0; i < 3; i++)
 	{
 		g_flSlenderDetectMins[iBossIndex][i] = 0.0;
@@ -1482,7 +1464,8 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			g_bSlenderIsGassed[iBossIndex] = false;
 			g_bSlenderIsJarate[iBossIndex] = false;
 			g_flNPCAddSpeed[iBossIndex] = 0.0;
-			
+			g_iSlenderAutoChaseCount[iBossIndex] = 0;
+
 			Spawn_Chaser(iBossIndex);
 			
 			NPCChaserResetAnimationInfo(iBossIndex, 0);
@@ -1603,42 +1586,6 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 	}
 }
 
-void Slender_HitboxScale(int iHitbox,float flScale)
-{
-	SetEntPropFloat(iHitbox, Prop_Send, "m_flModelScale", flScale);
-
-	float flMins[3];
-	float flMaxs[3];
-	
-	/*GetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMins", flMins);
-	GetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMaxs", flMaxs);
-	
-	ScaleVector(flMins, flScale);
-	ScaleVector(flMaxs, flScale);
-	
-	SetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMins", flMins);
-	SetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMaxs", flMaxs);
-	
-	GetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMinsPreScaled", flMins);
-	GetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMaxsPreScaled", flMaxs);
-	
-	ScaleVector(flMins, flScale);
-	ScaleVector(flMaxs, flScale);
-	
-	SetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMinsPreScaled", flMins);
-	SetEntPropVector(iHitbox, Prop_Send, "m_vecSpecifiedSurroundingMaxsPreScaled", flMaxs);*/
-	
-	GetEntPropVector(iHitbox, Prop_Data, "m_vecMins", flMins);
-	GetEntPropVector(iHitbox, Prop_Data, "m_vecMaxs", flMaxs);
-	
-	ScaleVector(flMins, flScale);
-	ScaleVector(flMaxs, flScale);
-	
-	SetEntPropVector(iHitbox, Prop_Data, "m_vecMins", flMins);
-	SetEntPropVector(iHitbox, Prop_Data, "m_vecMaxs", flMaxs);
-	
-}
-
 void RemoveSlender(int iBossIndex)
 {
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -1672,9 +1619,6 @@ void RemoveSlender(int iBossIndex)
 		}
 		
 		AcceptEntityInput(iBoss, "Kill");
-
-		char sTeleportParticle[PLATFORM_MAX_PATH];
-		char sTeleportSound[PLATFORM_MAX_PATH];
 	}
 	
 	iBoss = g_iSlenderHitbox[iBossIndex];
@@ -1743,10 +1687,10 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 			if (IsValidClient(attacker))
 			{
 				GetClientAbsOrigin(attacker, flClientPos);
+				GetClientEyePosition(attacker, flTraceEndPos);
 			}
 			float flShootDist = GetVectorDistance(flClientPos, flMyPos);
 			GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
-			GetClientEyePosition(attacker, flTraceEndPos);
 			
 			AddVectors(flMyEyeAng, g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng);
 			for (int i = 0; i < 3; i++) flMyEyeAng[i] = AngleNormalize(flMyEyeAng[i]);
@@ -1990,6 +1934,10 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 				bMiniCrit = true;
 				float flDamageReturn = damage * 1.35;
 				damage = RoundToFloor(flDamageReturn);
+			}
+			if (SF_IsBoxingMap() && GetClientTeam(attacker) == TFTeam_Blue)
+			{
+				damage = 0.0;
 			}
 			Boss_HitBox_Damage(hitbox, attacker, float(damage), damagetype, bMiniCrit);
 		}
@@ -2537,7 +2485,7 @@ void SlenderPrintChatMessage(int iBossIndex, int iPlayer)
 	}
 	if (sBuffer[0] && TF2_GetClientTeam(iPlayer) == 2)
 	{
-		CPrintToChatAll("{yellow}%s {red}%s {default}%s", sPrefix, sPlayer, sBuffer);
+		CPrintToChatAll("{royalblue}%s {red}%s {default}%s", sPrefix, sPlayer, sBuffer);
 	}
 }
 
@@ -2677,7 +2625,7 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 				if (flCooldownAttack != 0.0)
 				{
 					float flCooldownAttack2 = flCooldownAttack;
-					g_flSlenderNextFootstepAttackSound[iBossIndex] = GetGameTime() + flCooldownAttack;
+					g_flSlenderNextFootstepAttackSound[iBossIndex] = GetGameTime() + flCooldownAttack2;
 					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
 				}
 			}
@@ -2685,7 +2633,7 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 	}
 }
 
-void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float time, float flParticleZPos)
+void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float flParticleZPos)
 {
 	if (iBossIndex == -1) return;
 
@@ -2720,7 +2668,7 @@ void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float time
     }
 }
 
-void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, float time, float flParticleZPos, int iClient)
+void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, float flParticleZPos, int iClient)
 {
 	if (iBossIndex == -1) return;
 
@@ -2740,7 +2688,6 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
     int iParticle = CreateEntityByName("info_particle_system");
 
 	char sName[64];
-	char sPlayerName[128];
 
 	if (IsValidEdict(iParticle))
 	{
@@ -2752,46 +2699,7 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
         DispatchSpawn(iParticle);
         ActivateEntity(iParticle);
         AcceptEntityInput(iParticle, "start");
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
-    }
-}
-
-void SlenderCreateSpawnParticle(int iBossIndex, const char[] sSectionName, float time)
-{
-	int slender = NPCGetEntIndex(iBossIndex);
-
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-
-	char sPath[PLATFORM_MAX_PATH];
-	GetProfileString(sProfile, sSectionName, sPath, sizeof(sPath));
-	
-	float flBasePos[3], flBaseAng[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flBasePos);
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flBaseAng);
-
-	float flEffectPos[3], flEffectAng[3];
-
-	KvGetVector(g_hConfig, "projectile_pos_offset", flEffectPos);
-	KvGetVector(g_hConfig, "nil", flEffectAng);
-	VectorTransform(flEffectPos, flBasePos, flBaseAng, flEffectPos);
-	AddVectors(flEffectAng, flBaseAng, flEffectAng);
-
-    int iParticle = CreateEntityByName("info_particle_system");
-
-	char sName[64];
-
-	if (IsValidEdict(iParticle))
-	{
-        TeleportEntity(iParticle, flPlayerPosition, NULL_VECTOR, NULL_VECTOR);
-
-        DispatchKeyValue(iParticle, "targetname", "tf2particle");
-		GetEntPropString(iParticle, Prop_Data, "m_iName", sName, sizeof(sName));
-        DispatchKeyValue(iParticle, "effect_name", sSectionName);
-        DispatchSpawn(iParticle);
-        ActivateEntity(iParticle);
-        AcceptEntityInput(iParticle, "start");
-        CreateTimer(time, Timer_SlenderDeleteParticle, iParticle);
+        CreateTimer(0.1, Timer_SlenderDeleteParticle, iParticle);
     }
 }
 

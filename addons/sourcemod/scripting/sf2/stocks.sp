@@ -155,7 +155,7 @@ stock bool SF_IsRenevantMap()
 {
 	return view_as<bool>(g_bIsRenevantMap || (GetConVarInt(g_cvRenevantMap) == 1));
 }
-
+/*
 int SDK_StartTouch(int iEntity, int iOther)
 {
 	if(g_hSDKStartTouch != INVALID_HANDLE)
@@ -173,7 +173,7 @@ int SDK_EndTouch(int iEntity, int iOther)
 	}
 	return -1;
 }
-
+*/
 bool SDK_PointIsWithin(int iFunc, float flPos[3])
 {
 	if(g_hSDKPointIsWithin != INVALID_HANDLE)
@@ -348,15 +348,6 @@ stock void EntitySetBlendAnimation(int iEntity, const char[] sParameter, float f
 	SetEntPropFloat(iEntity, Prop_Send, "m_flPoseParameter", flNewValue, iParameter);
 	//PrintToChatAll("called");
 }
-
-void SDK_Entity_VPhysicsInitNormal(int iEntity, int solidType, int nSolidFlags, bool createAsleep, int pSolid = 0)
-{
-	if (g_hSDKCBaseEntityVPhysicsInitNormal != INVALID_HANDLE)
-	{
-		SDKCall(g_hSDKCBaseEntityVPhysicsInitNormal, iEntity, solidType, nSolidFlags, createAsleep, pSolid);
-	}
-}
-
 stock void SDK_GetVectors(int iEntity, float vecForward[3], float vecRight[3], float vecUp[3])
 {
 	if (g_hSDKGetVectors != INVALID_HANDLE)
@@ -947,53 +938,6 @@ void TE_Particle(int iParticleIndex, float origin[3]=NULL_VECTOR, float start[3]
         TE_WriteNum("m_iAttachmentPointIndex", attachpoint);
     }
     TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
-}
-
-void TE_DrawBox(int client, float m_vecOrigin[3], float m_vecEndOrigin[3], float m_vecMins[3], float m_vecMaxs[3], float flDur = 0.1, int iLaserIndex, int iColor[4])
-{
-	if( m_vecMins[0] == m_vecMaxs[0] && m_vecMins[1] == m_vecMaxs[1] && m_vecMins[2] == m_vecMaxs[2] )
-	{
-		m_vecMins = view_as<float>({-15.0, -15.0, -15.0});
-		m_vecMaxs = view_as<float>({15.0, 15.0, 15.0});
-	}
-	else
-	{
-		AddVectors(m_vecEndOrigin, m_vecMaxs, m_vecMaxs);
-		AddVectors(m_vecOrigin, m_vecMins, m_vecMins);
-	}
-
-	float vPos1[3], vPos2[3], vPos3[3], vPos4[3], vPos5[3], vPos6[3];
-	vPos1 = m_vecMaxs;
-	vPos1[0] = m_vecMins[0];
-	vPos2 = m_vecMaxs;
-	vPos2[1] = m_vecMins[1];
-	vPos3 = m_vecMaxs;
-	vPos3[2] = m_vecMins[2];
-	vPos4 = m_vecMins;
-	vPos4[0] = m_vecMaxs[0];
-	vPos5 = m_vecMins;
-	vPos5[1] = m_vecMaxs[1];
-	vPos6 = m_vecMins;
-	vPos6[2] = m_vecMaxs[2];
-
-	TE_SendBeam(client, m_vecMaxs, vPos1, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, m_vecMaxs, vPos2, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, m_vecMaxs, vPos3, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos6, vPos1, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos6, vPos2, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos6, m_vecMins, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos4, m_vecMins, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos5, m_vecMins, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos5, vPos1, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos5, vPos3, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos4, vPos3, flDur, iLaserIndex, iColor);
-	TE_SendBeam(client, vPos4, vPos2, flDur, iLaserIndex, iColor);
-}
-
-void TE_SendBeam(int client, float m_vecMins[3], float m_vecMaxs[3], float flDur = 0.1, int iLaserIndex, int iColor[4])
-{
-	TE_SetupBeamPoints(m_vecMins, m_vecMaxs, iLaserIndex, iLaserIndex, 0, 30, flDur, 5.0, 5.0, 1, 0.0, iColor, 30);
-	TE_SendToClient(client);
 }
 
 stock void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float duration, float radius, int command, bool airShake)

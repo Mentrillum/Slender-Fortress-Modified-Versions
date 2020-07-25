@@ -3,14 +3,12 @@
 #endif
 #define _sf2_pvp_included
 
+
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 #define FLAME_HIT_DELAY 0.05
 
 Handle g_cvPvPArenaLeaveTime;
-Handle g_cvPvPArenaPlayerCollisions;
 Handle g_cvPvPArenaProjectileZap;
-
-Handle g_hCvarAvoidTeammates;
 
 static const char g_sPvPProjectileClasses[][] = 
 {
@@ -60,10 +58,7 @@ enum
 
 public void PvP_Initialize()
 {
-	g_hCvarAvoidTeammates =	FindConVar("tf_avoidteammates");
-	
-	g_cvPvPArenaLeaveTime = CreateConVar("sf2_player_pvparena_leavetime", "6");
-	g_cvPvPArenaPlayerCollisions = CreateConVar("sf2_player_pvparena_collisions", "1");
+	g_cvPvPArenaLeaveTime = CreateConVar("sf2_player_pvparena_leavetime", "5");
 	g_cvPvPArenaProjectileZap = CreateConVar("sf2_pvp_projectile_removal", "0", "This is an experimental code! It could make your server crash, if you get any crash disable this cvar");
 	
 	AddTempEntHook("TFBlood", TempEntHook_PvPBlood);
@@ -97,6 +92,16 @@ public void PvP_OnMapStart()
 			}
 		}
 	}
+	iEnt = -1;
+	while ((iEnt = FindEntityByClassname(iEnt, "func_respawnroom")) != -1)
+	{
+		if(IsValidEntity(iEnt))
+		{
+			SDKHook( iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing );
+			SDKHook( iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing );
+			SDKHook( iEnt, SDKHook_EndTouch, PvP_OnTriggerStartTouchBoxing );
+		}
+	}
 }
 
 public void PvP_OnRoundStart()
@@ -118,6 +123,22 @@ public void PvP_OnRoundStart()
 				SetEntProp(iEnt, Prop_Data, "m_spawnflags", flags);
 				SDKHook( iEnt, SDKHook_EndTouch, PvP_OnTriggerEndTouch );
 			}
+		}
+	}
+	iEnt = -1;
+	while ((iEnt = FindEntityByClassname(iEnt, "func_respawnroom")) != -1)
+	{
+		if(IsValidEntity(iEnt))
+		{
+			//Add physics object flag, so we can zap projectiles!
+			int flags = GetEntProp(iEnt, Prop_Data, "m_spawnflags");
+			flags |= TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS;
+			//flags |= TRIGGER_PHYSICS_OBJECTS;
+			flags |= TRIGGER_PHYSICS_DEBRIS;
+			SetEntProp(iEnt, Prop_Data, "m_spawnflags", flags);
+			SDKHook( iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing );
+			SDKHook( iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing );
+			SDKHook( iEnt, SDKHook_EndTouch, PvP_OnTriggerStartTouchBoxing );
 		}
 	}
 }
@@ -439,7 +460,7 @@ void PvP_ZapProjectile(int iProjectile,bool bEffects=true)
 		TE_Particle(g_iParticle[ZapParticle], flPos, flPos);
 		TE_SendToAll();
 		//Play zap sound.
-		EmitSoundToAll(ZAP_SOUND, iProjectile, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+		EmitSoundToAll(ZAP_SOUND, iProjectile, SNDCHAN_AUTO, SNDLEVEL_CAR);
 		SetEntityRenderMode(iProjectile, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(iProjectile, 0, 0, 0, 1);
 	}
@@ -559,6 +580,26 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 	}
 }
 
+public Action PvP_OnTriggerStartTouchBoxing(int trigger,int iOther)
+{
+	//A projectile went in the area. (Experimental)
+	if (iOther>MaxClients && IsValidEntity(iOther) && !IsRoundInWarmup())
+	{
+		//Get entity's classname.
+		char sClassname[50];
+		GetEntityClassname(iOther,sClassname,sizeof(sClassname));
+		for (int i = 0; i < (sizeof(g_sPvPProjectileClasses)-4); i++)
+		{
+			if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
+			{
+				//Yup it's a projectile zap it!
+				//But we have to wait to prevent some bugs.
+				CreateTimer(0.1,EntityStillAlive,iOther);
+			}
+		}
+	}
+}
+
 public Action EntityStillAlive(Handle timer, int iRef)
 {
 	int iEnt = EntRefToEntIndex(iRef);
@@ -596,15 +637,6 @@ void PvP_SetPlayerPvPState(int iClient, bool bStatus, bool bRemoveProjectiles=tr
 		SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
 		SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
 	}
-	
-	/*if (bStatus && GetConVarBool(g_cvPvPArenaPlayerCollisions))
-	{
-		SDKHook(iClient, SDKHook_ShouldCollide, Hook_ClientPvPShouldCollide);
-	}
-	else
-	{
-		SDKUnhook(iClient, SDKHook_ShouldCollide, Hook_ClientPvPShouldCollide);
-	}*/
 }
 
 static void PvP_OnFlameEntityStartTouchPost(int flame,int iOther) //Thanks Fire
@@ -863,6 +895,8 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	 *
 	 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
 	 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
+	 * penetration of the bullet through teammates without damaging them. To keep the penetration behavior (such as with the Machina) 
+	 * but damage teammates, the damage type is switched to TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
 	 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 *
@@ -871,6 +905,9 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	{
 		if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
 		{
+			customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
+			int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+
 			if ((itemDefIndex == 526 || itemDefIndex == 30665) && GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") >= 150.0 )  // The Machina, Shooting Star
 				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
 			else

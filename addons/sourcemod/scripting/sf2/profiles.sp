@@ -6,6 +6,7 @@
 #define FILE_PROFILES "configs/sf2/profiles.cfg"
 #define FILE_PROFILES_PACKS "configs/sf2/profiles_packs.cfg"
 #define FILE_PROFILES_PACKS_DIR "configs/sf2/profiles/packs"
+#define FILE_PROFILES_PACKS_ALT "configs/sf2/profiles/bosses"
 
 static Handle g_hBossProfileList = INVALID_HANDLE;
 static Handle g_hSelectableBossProfileList = INVALID_HANDLE;
@@ -737,6 +738,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	if (KvGetNum(kv, "attack_props", 0)) iBossFlags |= SFF_ATTACKPROPS;
 	if (KvGetNum(kv, "attack_weaponsenable", 0)) iBossFlags |= SFF_WEAPONKILLS;
 	if (KvGetNum(kv, "kill_weaponsenable", 0)) iBossFlags |= SFF_WEAPONKILLSONRADIUS;
+	if (KvGetNum(kv, "random_attacks", 0)) iBossFlags |= SFF_RANDOMATTACKS;
 	
 	// Try validating unique profile.
 	int iUniqueProfileIndex = -1;

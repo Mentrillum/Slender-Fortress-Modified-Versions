@@ -1672,12 +1672,12 @@ float GetChaserProfileEletricPlayerSlowdown(int iChaserProfileIndex,int iDifficu
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownNormal));
 }
-
+/*
 Handle GetChaserProfileAnimationsData(int iChaserProfileIndex)
 {
 	return view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Animations));
 }
-
+*/
 float GetChaserProfileWakeRadius(int iChaserProfileIndex)
 {
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_WakeRadius));
@@ -1924,25 +1924,11 @@ float GetChaserProfileAttackCooldown(int iChaserProfileIndex,int  iAttackIndex)
 	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_Cooldown));
 }
 
-bool GetChaserProfileAttackWeaponState(int iChaserProfileIndex,int iAttackIndex)
-{
-	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
-
-	return view_as<bool>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_CanUseWeaponTypes));
-}
-
 bool GetChaserProfileAttackLifeStealState(int iChaserProfileIndex,int iAttackIndex)
 {
 	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
 
 	return view_as<bool>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LifeStealEnabled));
-}
-
-int GetChaserProfileAttackWeaponType(int iChaserProfileIndex,int  iAttackIndex)
-{
-	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
-
-	return GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_WeaponInt);
 }
 
 bool GetChaserProfileEnableAdvancedDamageEffects(int iChaserProfileIndex)

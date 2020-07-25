@@ -95,6 +95,10 @@ public Action Hook_TrapTouch(int iTrap, int client)
 		if (!g_bPlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red && !g_bTrapClosed[iTrap])
 		{
 			g_bPlayerTrapped[client] = true;
+			if (!g_bPlayerHints[client][PlayerHint_Trap])
+			{
+				ClientShowHint(client, PlayerHint_Trap);
+			}
 			SDKHooks_TakeDamage(client, client, client, 10.0, 128);
 			g_iPlayerTrapCount[client] = GetRandomInt(2, 4);
 			g_bTrapClosed[iTrap] = true;
