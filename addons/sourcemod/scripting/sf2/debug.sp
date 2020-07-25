@@ -25,12 +25,10 @@ int g_iPlayerDebugFlags[MAXPLAYERS + 1] = { 0, ... };
 static char g_strDebugLogFilePath[512] = "";
 
 Handle g_cvDebugDetail = INVALID_HANDLE;
-Handle g_cvDebugBosses = INVALID_HANDLE;
 
 void InitializeDebug()
 {
 	g_cvDebugDetail = CreateConVar("sf2_debug_detail", "0", "0 = off, 1 = debug only large, expensive functions, 2 = debug more events, 3 = debug client functions");
-	g_cvDebugBosses = CreateConVar("sf2_debug_bosses", "0");
 	
 	RegAdminCmd("sm_sf2_debug_boss_teleport", Command_DebugBossTeleport, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_boss_chase", Command_DebugBossChase, ADMFLAG_CHEATS);

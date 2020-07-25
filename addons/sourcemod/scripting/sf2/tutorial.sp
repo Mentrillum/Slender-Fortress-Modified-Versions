@@ -1,8 +1,8 @@
 //Cvars
-Handle g_hCvarEnableTutorial;
+//Handle g_hCvarEnableTutorial;
 
 //Detours
-static Handle g_hSDKGamerulesIsInTraining;
+//static Handle g_hSDKGamerulesIsInTraining;
 
 //Timer data
 static Handle g_hTimerTutorialMessage;
@@ -13,7 +13,7 @@ static bool g_bClientTutorialEnabled[MAXPLAYERS + 1] =  {false, ...};
 
 public void Tutorial_Initialize()
 {
-	g_hCvarEnableTutorial = CreateConVar("sf2_enable_tutorial", "1", "Enable the tutorial interface for new players");
+	//g_hCvarEnableTutorial = CreateConVar("sf2_enable_tutorial", "1", "Enable the tutorial interface for new players");
 }
 
 
@@ -160,7 +160,7 @@ void Tutorial_OnMapEnd()
 /*
  * SDK Calls detours
  */
-
+/*
 void Tutorial_SetupSDK(Handle hConfig)
 {
 	int iOffset = GameConfGetOffset(hConfig, "CTFGameRules::IsInTraining"); 
@@ -177,7 +177,7 @@ void Tutorial_EnableHooks()
 	DHookGamerules(g_hSDKGamerulesIsInTraining, false);
 	DHookGamerules(g_hSDKGamerulesIsInTraining, true);
 }
-
+*/
 /*
  * Detour functions
  */

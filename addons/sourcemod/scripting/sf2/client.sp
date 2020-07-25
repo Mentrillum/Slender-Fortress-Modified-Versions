@@ -43,8 +43,6 @@ static float g_flPlayerFlashlightNextInputTime[MAXPLAYERS + 1] = { -1.0, ... };
 
 static int g_ActionItemIndexes[] = { 57, 231 };
 
-static int g_UtilityItems[] = { 222, 1121, 163, 1180, 131, 406, 1099, 311, 58, 1105 };
-
 // Ultravision data.
 static bool g_bPlayerUltravision[MAXPLAYERS + 1] = { false, ... };
 static int g_iPlayerUltravisionEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -344,10 +342,26 @@ public void Hook_ClientPreThink(int client)
 								float flMaxHealth = float(SDKCall(g_hSDKGetMaxHealth, client));
 								float flPercentage = flHealth / flMaxHealth;
 								
-								if (flPercentage < 0.805 && flPercentage >= 0.605) flSprintSpeed += (flSprintSpeed * 0.05);
-								else if (flPercentage < 0.605 && flPercentage >= 0.405) flSprintSpeed += (flSprintSpeed * 0.1);
-								else if (flPercentage < 0.405 && flPercentage >= 0.205) flSprintSpeed += (flSprintSpeed * 0.15);
-								else if (flPercentage < 0.205) flSprintSpeed += (flSprintSpeed * 0.2);
+								if (flPercentage < 0.805 && flPercentage >= 0.605) 
+								{
+									flWalkSpeed += (flWalkSpeed * 0.05);
+									flSprintSpeed += (flSprintSpeed * 0.05);
+								}
+								else if (flPercentage < 0.605 && flPercentage >= 0.405) 
+								{
+									flWalkSpeed += (flWalkSpeed * 0.1);
+									flSprintSpeed += (flSprintSpeed * 0.1);
+								}
+								else if (flPercentage < 0.405 && flPercentage >= 0.205)
+								{
+									flWalkSpeed += (flWalkSpeed * 0.15);
+									flSprintSpeed += (flSprintSpeed * 0.15);
+								}
+								else if (flPercentage < 0.205)
+								{
+									flWalkSpeed += (flWalkSpeed * 0.2);
+									flSprintSpeed += (flSprintSpeed * 0.2);
+								}
 							}
 						}
 					}
@@ -371,8 +385,19 @@ public void Hook_ClientPreThink(int client)
 					}
 					
 					float flSprintSpeedSubtract = ((flSprintSpeed - flWalkSpeed) * 0.5);
-					flSprintSpeedSubtract -= flSprintSpeedSubtract * (g_iPlayerSprintPoints[client] != 0 ? (float(g_iPlayerSprintPoints[client]) / 100.0) : 0.0);
-					flSprintSpeed -= flSprintSpeedSubtract;
+					float flWalkSpeedSubtract = ((flSprintSpeed - flWalkSpeed) * 0.35);
+					if (g_iPlayerSprintPoints[client] > 7)
+					{
+						flSprintSpeedSubtract -= flSprintSpeedSubtract * (g_iPlayerSprintPoints[client] != 0 ? (float(g_iPlayerSprintPoints[client]) / 100.0) : 0.0);
+						flSprintSpeed -= flSprintSpeedSubtract;
+					}
+					else
+					{
+						flSprintSpeedSubtract += 25;
+						flSprintSpeed -= flSprintSpeedSubtract;
+						flWalkSpeedSubtract += 15;
+						flWalkSpeed -= flWalkSpeedSubtract;
+					}
 					
 					if (IsClientSprinting(client)) 
 					{
@@ -604,6 +629,7 @@ public Action TF2_CalcIsAttackCritical(int client,int weapon, char[] sWeaponName
 
 	if ((IsRoundInWarmup() || IsClientInPvP(client)) && !IsRoundEnding())
 	{
+		//Save this for later I guess
 	}
 	
 	return Plugin_Continue;
@@ -947,6 +973,7 @@ public Action Hook_TEFireBullets(const char[] te_name,const int[] Players,int nu
 	int client = TE_ReadNum("m_iPlayer") + 1;
 	if (IsValidClient(client))
 	{
+		//Save this for later I guess
 	}
 	
 	return Plugin_Continue;
@@ -1005,6 +1032,7 @@ void ClientShowHint(int client,int iHint)
 		case PlayerHint_Flashlight: PrintHintText(client, "%T", "SF2 Hint Flashlight", client);
 		case PlayerHint_Blink: PrintHintText(client, "%T", "SF2 Hint Blink", client);
 		case PlayerHint_MainMenu: PrintHintText(client, "%T", "SF2 Hint Main Menu", client);
+		case PlayerHint_Trap: PrintHintText(client, "%T", "SF2 Hint Trap", client);
 	}
 }
 
@@ -1024,7 +1052,7 @@ void ClientEscape(int client)
 	g_bPlayerEscaped[client] = true;
 	
 	g_iPlayerPageCount[client] = 0;
-	
+
 	ClientResetStatic(client);
 	ClientResetSlenderStats(client);
 	ClientResetCampingStats(client);
@@ -3114,7 +3142,8 @@ public Action Timer_ClientRechargeSprint(Handle timer, any userid)
 	}
 	else if ((GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) && !IsClientReallySprinting(client) && flSpeed == 0.0)
 	{
-		g_iPlayerSprintPoints[client] += 2;
+		if (!SF_SpecialRound(SPECIALROUND_COFFEE)) g_iPlayerSprintPoints[client] += 2;
+		else g_iPlayerSprintPoints[client] += 1;
 	}
 	ClientSprintTimer(client, true);
 }
@@ -4172,7 +4201,7 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 //	==========================================================
 //	NAV AREA FUNCTIONS
 //	==========================================================
-void ClientNavAreaUpdate(int client, CNavArea newArea, CNavArea oldArea)
+/*void ClientNavAreaUpdate(int client, CNavArea newArea, CNavArea oldArea)
 {
 	if (GetRoundState() != SF2RoundState_Active) return;
 	
@@ -4199,7 +4228,7 @@ void ClientNavAreaUpdate(int client, CNavArea newArea, CNavArea oldArea)
 #if defined DEBUG
 	SendDebugMessageToPlayer(client, DEBUG_NAV, 1, "Old area: %i DHF:%s, New area: %i DHF:%s, is considered as exit camper: %s", oldArea.Index, (oldArea.Attributes & NAV_MESH_DONT_HIDE) ? "true" : "false", newArea.Index, (newArea.Attributes & NAV_MESH_DONT_HIDE) ? "true" : "false", (g_bPlayerIsExitCamping[client]) ? "true" : "false" );
 #endif
-}
+}*/
 
 
 //	==========================================================
@@ -5045,7 +5074,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		int iOldChasingSeeBoss = g_iPlayerChaseMusicSeeMaster[client];
 		int iOldAlertBoss = g_iPlayerAlertMusicMaster[client];
 		int iOld20DollarsBoss = g_iPlayer20DollarsMusicMaster[client];
-		int iOld90sSprint = g_iPlayer20DollarsMusicMaster[client];
+		//int iOld90sSprint = g_iPlayer20DollarsMusicMaster[client];
 		
 		float flAnger = -1.0;
 		float flSeeAnger = -1.0;

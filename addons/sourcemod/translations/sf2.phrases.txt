@@ -89,9 +89,9 @@
 	"SF2 Player Escaped"
 	{
 		"#format"		"{1:s}"
-		"en"			"{olive}{1}{default} has escaped!"
-		"ru"			"{olive}{1}{default} спасся!"
-		"fi"			"{olive}{1}{default} on paennut!"
+		"en"			"{dodgerblue}{1}{default} has escaped!"
+		"ru"			"{dodgerblue}{1}{default} спасся!"
+		"fi"			"{dodgerblue}{1}{default} on paennut!"
 	}
 
 	"SF2 Player Killed Champion"
@@ -479,8 +479,8 @@
 	"SF2 Music Volum Changed"
 	{
 		"#format"		"{1:d}"
-		"en" 	"{lightgreen}Music volume set to {1}%."
-		"fi"	"{lightgreen}Musiikin äänenvoimakkuus vaihdettu {1}%."
+		"en" 	"{lightblue}Music volume set to {1}%."
+		"fi"	"{lightblue}Musiikin äänenvoimakkuus vaihdettu {1}%."
 	}
 
 	"SF2 Settings Flashlight Temperature Title"
@@ -492,50 +492,48 @@
 	"SF2 Flashlight Temperature Changed"
 	{
 		"#format"		"{1:d}"
-		"en" 	"{lightgreen}Flashlight temperature set to {1}%."
-		"fi"	"{lightgreen}Taskulampun lämpötila vaihdettu {1}%."
+		"en" 	"{lightblue}Flashlight temperature set to {1}%."
+		"fi"	"{lightblue}Taskulampun lämpötila vaihdettu {1}%."
 	}
 
 	"SF2 Ad Message 1"
 	{
-		"en"	"{olive}Slender Fortress official Steam group: {lightgreen}http://steamcommunity.com/groups/SlenderFortress{default}"
-		"ru"	"{olive}Официальная группа Slender Fortress в Steam: {lightgreen}http://steamcommunity.com/groups/SlenderFortress{default}"
-		"fi"	"{olive}Slender Fortress virallinen Steam ryhmä: {lightgreen}http://steamcommunity.com/groups/SlenderFortress{default}"
+		"en"	"{dodgerblue}Slender Fortress Modified official Discord server: {lightblue}https://discord.gg/uytDCFS{default}"
 	}
 
 	"SF2 Ad Message 2"
 	{
-		"en"	"{olive}New to this gamemode? Type {lightgreen}!slender{olive} in chat to open the main menu."
-		"ru"	"{olive}Незнакомы с модом? Напишите {lightgreen}!slender{olive} в чате, чтобы открыть главное меню."
-		"fi"	"{olive}Uusi tähän pelitilaan? Kirjoita {lightgreen}!slender{olive} chattiin avataksesi päävalikon."
+		"en"	"{dodgerblue}New to this gamemode? Type {lightblue}!slender{dodgerblue} in chat to open the main menu."
+		"ru"	"{dodgerblue}Незнакомы с модом? Напишите {lightblue}!slender{dodgerblue} в чате, чтобы открыть главное меню."
+		"fi"	"{dodgerblue}Uusi tähän pelitilaan? Kirjoita {lightblue}!slender{dodgerblue} chattiin avataksesi päävalikon."
 	}
 
 	"SF2 Welcome Message"
 	{
-		"en"	"{olive}Welcome to {lightgreen}Slender Fortress{olive}! If you are new to this gamemode, access the main menu by typing {lightgreen}!slender{olive} in chat."
-		"ru"	"{olive}Добро Пожаловать в {lightgreen}Slender Fortress{olive}! Если вы новичок, откройте главное меню, набрав в чате {lightgreen}!slender{olive}."
-		"fi"	"{olive}Tervetuloa {lightgreen}Slender Fortress:iin{olive}! Jos olet uusi tähän pelitilaan, pääset päävalikkoon kirjoittamalla {lightgreen}!slender{olive} chattiin."
+		"en"	"{dodgerblue}Welcome to {lightblue}Slender Fortress{dodgerblue}! If you are new to this gamemode, access the main menu by typing {lightblue}!slender{dodgerblue} in chat."
+		"ru"	"{dodgerblue}Добро Пожаловать в {lightblue}Slender Fortress{dodgerblue}! Если вы новичок, откройте главное меню, набрав в чате {lightblue}!slender{dodgerblue}."
+		"fi"	"{dodgerblue}Tervetuloa {lightblue}Slender Fortress:iin{dodgerblue}! Jos olet uusi tähän pelitilaan, pääset päävalikkoon kirjoittamalla {lightblue}!slender{dodgerblue} chattiin."
 	}
 
 	"SF2 No Queue Points To Spectator"
 	{
-		"en"	"{olive}You were given no queue points because you were in the Spectator team."
-		"ru"	"{olive}Вы не получите очков очереди, находясь в Наблюдателях."
-		"fi"	"{olive}Sinulle ei annettu pisteitä, koska olit Katsoja tiimillä."
+		"en"	"{dodgerblue}You were given no queue points because you were in the Spectator team."
+		"ru"	"{dodgerblue}Вы не получите очков очереди, находясь в Наблюдателях."
+		"fi"	"{dodgerblue}Sinulle ei annettu pisteitä, koska olit Katsoja tiimillä."
 	}
 
 	"SF2 PvP Spawn Accept"
 	{
-		"en"	"{lightgreen}Enabled PvP Arena automatic spawning."
-		"ru"	"{lightgreen}Включено автоматическое возрождение на PvP арене."
-		"fi"	"{lightgreen}Otettiin käyttöön automaattinen PvP areenalla syntyminen"
+		"en"	"{lightblue}Enabled PvP Arena automatic spawning."
+		"ru"	"{lightblue}Включено автоматическое возрождение на PvP арене."
+		"fi"	"{lightblue}Otettiin käyttöön automaattinen PvP areenalla syntyminen"
 	}
 
 	"SF2 PvP Spawn Decline"
 	{
-		"en"	"{lightgreen}Disabled PvP Arena automatic spawning."
-		"ru"	"{lightgreen}Отключено автоматическое возрождение на PvP арене."
-		"fi"	"{lightgreen}Poistettiin käytöstä automaattinen PvP areenalla syntyminen."
+		"en"	"{lightblue}Disabled PvP Arena automatic spawning."
+		"ru"	"{lightblue}Отключено автоматическое возрождение на PvP арене."
+		"fi"	"{lightblue}Poistettiin käytöstä automaattinen PvP areenalla syntyminen."
 	}
 
 	"SF2 Exiting PvP Arena"
@@ -548,75 +546,75 @@
 
 	"SF2 Enabled Hints"
 	{
-		"en"	"{lightgreen}Enabled hints."
-		"ru"	"{lightgreen}Включены советы."
-		"fi"	"{lightgreen}Vihjeet otettiin käyttöön."
+		"en"	"{lightblue}Enabled hints."
+		"ru"	"{lightblue}Включены советы."
+		"fi"	"{lightblue}Vihjeet otettiin käyttöön."
 	}
 
 	"SF2 Disabled Hints"
 	{
-		"en"	"{lightgreen}Disabled hints."
-		"ru"	"{lightgreen}Выключены советы."
-		"fi"	"{lightgreen}Vihjeet poistettiin käytöstä."
+		"en"	"{lightblue}Disabled hints."
+		"ru"	"{lightblue}Выключены советы."
+		"fi"	"{lightblue}Vihjeet poistettiin käytöstä."
 	}
 
 	"SF2 Enabled Film Grain"
 	{
-		"en"	"{lightgreen}Enabled film grain."
-		"ru"	"{lightgreen}Включен эффект плёнки."
-		"fi"	"{lightgreen}Otettiin käyttöön näytön rakeisuus tehoste."
+		"en"	"{lightblue}Enabled film grain."
+		"ru"	"{lightblue}Включен эффект плёнки."
+		"fi"	"{lightblue}Otettiin käyttöön näytön rakeisuus tehoste."
 	}
 
 	"SF2 Disabled Film Grain"
 	{
-		"en"	"{lightgreen}Disabled film grain."
-		"ru"	"{lightgreen}Выключен эффект плёнки."
-		"fi"	"{lightgreen}Poistettiin näytön rakeisuus tehoste."
+		"en"	"{lightblue}Disabled film grain."
+		"ru"	"{lightblue}Выключен эффект плёнки."
+		"fi"	"{lightblue}Poistettiin näytön rakeisuus tehoste."
 	}
 
 	"SF2 Enabled Proxy"
 	{
-		"en"	"{lightgreen}You are now opt'd in to be chosen as a Proxy."
-		"ru"	"{lightgreen}Теперь вы можете быть выбраны в качестве Помощника."
-		"fi"	"{lightgreen}Olet nyt valittavissa avustajaksi."
+		"en"	"{lightblue}You are now opt'd in to be chosen as a Proxy."
+		"ru"	"{lightblue}Теперь вы можете быть выбраны в качестве Помощника."
+		"fi"	"{lightblue}Olet nyt valittavissa avustajaksi."
 	}
 
 	"SF2 Disabled Proxy"
 	{
-		"en"	"{lightgreen}You will no longer be chosen as a Proxy."
-		"ru"	"{lightgreen}Больше вы не можете быть выбраны в качестве Помощника."
-		"fi"	"{lightgreen}Sinua ei enään valita avustajaksi."
+		"en"	"{lightblue}You will no longer be chosen as a Proxy."
+		"ru"	"{lightblue}Больше вы не можете быть выбраны в качестве Помощника."
+		"fi"	"{lightblue}Sinua ei enään valita avustajaksi."
 	}
 
 	"SF2 Give Queue Points"
 	{
 		"#format"	"{1:d}"
-		"en"	"{olive}You have been given {1} queue points for playing."
-		"ru"	"{olive}Вами были получены {1} очков очереди."
-		"fi"	"{olive}Sinulle on annettu {1} jonopistettä pelaamisesta."
+		"en"	"{dodgerblue}You have been given {1} queue points for playing."
+		"ru"	"{dodgerblue}Вами были получены {1} очков очереди."
+		"fi"	"{dodgerblue}Sinulle on annettu {1} jonopistettä pelaamisesta."
 	}
 
 	"SF2 Give Group Queue Points"
 	{
 		"#format"	"{1:d}"
-		"en"	"{olive}Your group has been given {1} queue points for playing."
-		"ru"	"{olive}Вашей группой были получены {1} очков очереди."
-		"fi"	"{olive}Sinun ryhmällesi on annettu {1} jonopistettä pelaamisesta."
+		"en"	"{dodgerblue}Your group has been given {1} queue points for playing."
+		"ru"	"{dodgerblue}Вашей группой были получены {1} очков очереди."
+		"fi"	"{dodgerblue}Sinun ryhmällesi on annettu {1} jonopistettä pelaamisesta."
 	}
 
 	"SF2 Force Play"
 	{
-		"en"	"{lightgreen}You have been forced in due to a player on RED disconnecting or spectating. Have fun!"
-		"ru"	"{lightgreen}Вы были перемещены к Красным из-за нехватки игроков. Наслаждайтесь!"
-		"fi"	"{lightgreen}Sinut on pakotettu peliin, koska RED:in pelaaja katkaisi yhteyden tai meni katselemaan. Pidä hauskaa!"
+		"en"	"{lightblue}You have been forced in due to a player on RED disconnecting or spectating. Have fun!"
+		"ru"	"{lightblue}Вы были перемещены к Красным из-за нехватки игроков. Наслаждайтесь!"
+		"fi"	"{lightblue}Sinut on pakotettu peliin, koska RED:in pelaaja katkaisi yhteyden tai meni katselemaan. Pidä hauskaa!"
 	}
 
 	"SF2 Special Round Announce Chat"
 	{
 		"#format"	"{1:s}"
-		"en"	"Chosen special round: {lightgreen}{1}"
-		"ru"	"Выбран специальный раунд: {lightgreen}{1}"
-		"fi"	"Valittu erikois erä: {lightgreen}{1}"
+		"en"	"Chosen special round: {lightblue}{1}"
+		"ru"	"Выбран специальный раунд: {lightblue}{1}"
+		"fi"	"Valittu erikois erä: {lightblue}{1}"
 	}
 
 	"SF2 Hint Sprint"
@@ -645,6 +643,11 @@
 		"en"	"Main Menu - Type !sf2 or !slender in chat"
 		"ru"	"Главное меню - Напишите в чате !sf2 или !slender"
 		"fi"	"Päävalikko - Kirjoita !sf2 tai !slender chattiin"
+	}
+	
+	"SF2 Hint Trap"
+	{
+		"en"	"Get Out of Trap - Press the jump key a few times."
 	}
 
 	"SF2 Admin Menu Boss Main"
@@ -1247,9 +1250,9 @@
 
 	"SF2 Too Much Time"
 	{
-		"en"	"{olive}[SF2] {lightgreen}Sorry you took too much time, your spawnpoint is actually visible to a player."
-		"ru"	"{olive}[SF2] {lightgreen}Извините, но Вы думали слишком долго, Вас увидят."
-		"fi"	"{olive}[SF2] {lightgreen}Valitettavasti olet viettänyt liian paljon aikaa, aloituspisteesi on näkyvillä pelaajalle."
+		"en"	"{dodgerblue}[SF2] {lightblue}Sorry you took too much time, your spawnpoint is actually visible to a player."
+		"ru"	"{dodgerblue}[SF2] {lightblue}Извините, но Вы думали слишком долго, Вас увидят."
+		"fi"	"{dodgerblue}[SF2] {lightblue}Valitettavasti olet viettänyt liian paljon aikaa, aloituspisteesi on näkyvillä pelaajalle."
 	}
 
 	"SF2 Too Many Proxies"
@@ -1310,37 +1313,37 @@
 
 	"SF2 Projected Flashlight"
 	{
-		"en"	"{olive}Your flashlight mode has been set to {lightgreen}Projected{olive}."
-		"ru"	"{olive}Режим Вашего фонарика изменён на {lightgreen}Проецируемый{olive}."
-		"fi"	"{olive}Taskulamppusi on asetettu tilaan {lightgreen}Projected{olive}"
+		"en"	"{dodgerblue}Your flashlight mode has been set to {lightblue}Projected{dodgerblue}."
+		"ru"	"{dodgerblue}Режим Вашего фонарика изменён на {lightblue}Проецируемый{dodgerblue}."
+		"fi"	"{dodgerblue}Taskulamppusi on asetettu tilaan {lightblue}Projected{dodgerblue}"
 	}
 
 	"SF2 Normal Flashlight"
 	{
-		"en"	"{olive}Your flashlight mode has been set to {lightgreen}Normal{olive}."
-		"ru"	"{olive}Режим Вашего фонарика изменён на {lightgreen}Обычный{olive}."
-		"fi"	"{olive}Taskulamppusi on vaihdettu tilaan {lightgreen}Normaali{olive}."
+		"en"	"{dodgerblue}Your flashlight mode has been set to {lightblue}Normal{dodgerblue}."
+		"ru"	"{dodgerblue}Режим Вашего фонарика изменён на {lightblue}Обычный{dodgerblue}."
+		"fi"	"{dodgerblue}Taskulamppusi on vaihdettu tilaan {lightblue}Normaali{dodgerblue}."
 	}
 
 	"SF2 Mute Mode Normal"
 	{
-		"en"	"{lightgreen}Mute mode set to normal."
-		"ru"	"{lightgreen}Режим чата по умолчанию."
-		"fi"	"{lightgreen}Mykistystila asetettu normaaliksi."
+		"en"	"{lightblue}Mute mode set to normal."
+		"ru"	"{lightblue}Режим чата по умолчанию."
+		"fi"	"{lightblue}Mykistystila asetettu normaaliksi."
 	}
 
 	"SF2 Mute Mode Opposing"
 	{
-		"en"	"{lightgreen}Muted opposing team."
-		"ru"	"{lightgreen}Чат другой команды выключен."
-		"fi"	"{lightgreen}Vastatiimi vaimennettiin."
+		"en"	"{lightblue}Muted opposing team."
+		"ru"	"{lightblue}Чат другой команды выключен."
+		"fi"	"{lightblue}Vastatiimi vaimennettiin."
 	}
 
 	"SF2 Mute Mode Proxy"
 	{
-		"en"	"{lightgreen}Muted opposing team, but settings will be automatically set to normal if you're a proxy."
-		"ru"	"{lightgreen}Чат другой команды выключен, но будет автоматически включен, если Вы станете Помощником."
-		"fi"	"{lightgreen}Vastatiimi hiljennettiin, mutta asetukset asetetaan automaattisesti normaaliksi, jos olet avustaja."
+		"en"	"{lightblue}Muted opposing team, but settings will be automatically set to normal if you're a proxy."
+		"ru"	"{lightblue}Чат другой команды выключен, но будет автоматически включен, если Вы станете Помощником."
+		"fi"	"{lightblue}Vastatiimi hiljennettiin, mutta asetukset asetetaan automaattisesti normaaliksi, jos olet avustaja."
 	}
 
 	"SF2 Recent Changes"
@@ -1351,7 +1354,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Added Finnish translations (Thx Blad3z).\n-Added boss traps.\n-Bosses that kill on touch now receive kill icons.\n-Fixed a bug where RED outlines wouldn't be visible on ghost or proxy."
+		"en"	"-Made a clear indication on how to get out of bear traps.\n-Added randomized boss attacks.\n-Added boss auto chase on toggle.\n-Fixed a bug with the sniper riles in PvP (Thx KitRifty).\n-Player speed is changed when only 7 points of sprint remains."
 	}
 
 	"SF2 Smite player"

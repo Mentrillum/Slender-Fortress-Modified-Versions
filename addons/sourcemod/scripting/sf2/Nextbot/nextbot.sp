@@ -401,11 +401,7 @@ public void InitNextBotGameData(Handle hGameData)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::FaceTowards offset from SF2 gamedata!");
 	}
-	
-    iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetGroundNormal");
-    if(iOffset == -1) SetFailState("Failed to get offset of NextBotGroundLocomotion::GetGroundNormal");
-    g_hGetGroundNormal = DHookCreate(iOffset, HookType_Raw, ReturnType_VectorPtr, ThisPointer_Address, NextBotGroundLocomotion_GetGroundNormal);
-	
+
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "NextBotGroundLocomotion::SetVelocity");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, VDECODE_FLAG_ALLOWNULL);
@@ -439,6 +435,10 @@ public void InitNextBotGameData(Handle hGameData)
 
 	iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetMaxDeceleration"); 
 	g_hGetMaxDeceleration = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetMaxDeceleration);
+	
+    iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetGroundNormal");
+    g_hGetGroundNormal = DHookCreate(iOffset, HookType_Raw, ReturnType_VectorPtr, ThisPointer_Address, NextBotGroundLocomotion_GetGroundNormal);
+	if(g_hGetGroundNormal == null) SetFailState("Failed to create hook for NextBotGroundLocomotion::GetGroundNormal");
 	
 	iOffset = GameConfGetOffset(hGameData, "ILocomotion::IsAbleToJumpAcrossGaps"); 
 	g_hIsAbleToJumpAcrossGaps = DHookCreate(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address, IsAbleToClimb);

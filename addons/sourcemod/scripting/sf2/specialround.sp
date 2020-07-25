@@ -370,7 +370,7 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_REVOLUTION))
 			arrayEnabledRounds.Push(SPECIALROUND_REVOLUTION);
 		
-		if (!SF_SpecialRound(SPECIALROUND_DISTORTION) && iPlayers >= 4)
+		if (!SF_SpecialRound(SPECIALROUND_DISTORTION) && iPlayers >= 4 && g_iPageMax > 4)
 			arrayEnabledRounds.Push(SPECIALROUND_DISTORTION);
 		
 		if (!SF_SpecialRound(SPECIALROUND_MULTIEFFECT))
@@ -397,7 +397,7 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER)  && !SF_IsRaidMap() && !SF_BossesChaseEndlessly() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && GetArraySize(GetSelectableBossProfileList()) > 0)
 			arrayEnabledRounds.Push(SPECIALROUND_HYPERSNATCHER);
 			
-		if (!SF_SpecialRound(SPECIALROUND_PAGEREWARDS) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
+		if (!SF_SpecialRound(SPECIALROUND_PAGEREWARDS) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && g_iPageMax > 4)
 			arrayEnabledRounds.Push(SPECIALROUND_PAGEREWARDS);
 			
 		if (!SF_SpecialRound(SPECIALROUND_TINYBOSSES) && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
