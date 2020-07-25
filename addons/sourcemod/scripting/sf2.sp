@@ -810,6 +810,7 @@ Handle g_hSDKWeaponPistol;
 Handle g_hSDKWeaponWrench;
 
 Handle g_hSDKGetMaxHealth;
+Handle g_hSDKEntityGetDamage;
 Handle g_hSDKGetLastKnownArea;
 Handle g_hSDKUpdateLastKnownArea;
 Handle g_hSDKWantsLagCompensationOnEntity;
@@ -826,6 +827,7 @@ Handle g_hSDKStartTouch;
 Handle g_hSDKEndTouch;
 Handle g_hSDKWeaponSwitch;
 Handle g_hSDKWeaponGetCustomDamageType;
+Handle g_hSDKProjectileCanCollideWithTeammates;
 
 int g_iOffset_m_id;
 
@@ -1409,6 +1411,14 @@ static void SDK_Init()
 	}*/
 
 	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::GetDamage");
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
+	if ((g_hSDKEntityGetDamage = EndPrepSDKCall()) == INVALID_HANDLE)
+	{
+		SetFailState("Failed to retrieve CBaseEntity::GetDamage offset from SF2 gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::GetVectors");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
@@ -1456,6 +1466,9 @@ static void SDK_Init()
 	
 	iOffset = GameConfGetOffset(hConfig, "CTFWeaponBase::GetCustomDamageType");
 	g_hSDKWeaponGetCustomDamageType = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_WeaponGetCustomDamageType);
+
+	iOffset = GameConfGetOffset(hConfig, "CBaseProjectile::CanCollideWithTeammates");
+	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 
 	g_iOffset_m_id = GameConfGetOffset(hConfig, "CNavArea::m_id");
 	

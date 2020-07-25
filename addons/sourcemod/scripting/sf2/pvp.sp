@@ -21,6 +21,7 @@ static const char g_sPvPProjectileClasses[][] =
 	"tf_projectile_cleaver",
 	"tf_projectile_energy_ball",
 	"tf_projectile_flare",
+	"tf_projectile_balloffire",
 	"tf_projectile_jar",
 	"tf_projectile_jar_milk",
 	"tf_projectile_pipe",
@@ -46,8 +47,6 @@ static Handle g_hPlayerPvPRespawnTimer[MAXPLAYERS + 1];
 static int g_iPlayerPvPTimerCount[MAXPLAYERS + 1];
 static bool g_bPlayerInPvPTrigger[MAXPLAYERS + 1];
 
-static Handle g_hPvPFlameEntities;
-
 //Blood
 static int g_iPvPUserIdLastTrace;
 static float g_flTimeLastTrace;
@@ -70,9 +69,6 @@ public void PvP_Initialize()
 	AddTempEntHook("TFBlood", TempEntHook_PvPBlood);
 	AddTempEntHook("World Decal", TempEntHook_PvPDecal);
 	AddTempEntHook("Entity Decal", TempEntHook_PvPDecal);
-	
-	
-	g_hPvPFlameEntities = CreateArray(PvPFlameEntData_MaxStats);
 }
 
 public void PvP_SetupMenus()
@@ -85,7 +81,6 @@ public void PvP_SetupMenus()
 
 public void PvP_OnMapStart()
 {
-	ClearArray(g_hPvPFlameEntities);
 	int iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "trigger_multiple")) != -1)
 	{
@@ -221,33 +216,22 @@ public void PvP_OnEntityCreated(int ent, const char[] sClassname)
 #if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ENTITIES,0,"\x083EFF3EFF+ %i(%s)",ent,sClassname);
 #endif
-	if (StrEqual(sClassname, "tf_flame", false))
+	for (int i = 0; i < sizeof(g_sPvPProjectileClasses); i++)
 	{
-		int iIndex = PushArrayCell(g_hPvPFlameEntities, EntIndexToEntRef(ent));
-		if (iIndex != -1)
+		if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
 		{
-			SetArrayCell(g_hPvPFlameEntities, iIndex, INVALID_ENT_REFERENCE, PvPFlameEntData_LastHitEntRef);
+			SDKHook(ent, SDKHook_Spawn, Hook_PvPProjectileSpawn);
+			SDKHook(ent, SDKHook_SpawnPost, Hook_PvPProjectileSpawnPost);
+			break;
 		}
 	}
-	else
+
+	for (int i = 0; i < sizeof(g_sPvPProjectileClassesNoTouch); i++)
 	{
-		for (int i = 0; i < sizeof(g_sPvPProjectileClasses); i++)
+		if (StrEqual(sClassname, g_sPvPProjectileClassesNoTouch[i], false))
 		{
-			if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
-			{
-				SDKHook(ent, SDKHook_Spawn, Hook_PvPProjectileSpawn);
-				SDKHook(ent, SDKHook_SpawnPost, Hook_PvPProjectileSpawnPost);
-				break;
-			}
-			//g_sPvPProjectileClassesNoTouch's size should be always under or equal to the size of g_sPvPProjectileClasses
-			if(i<sizeof(g_sPvPProjectileClassesNoTouch))
-			{
-				if (StrEqual(sClassname, g_sPvPProjectileClassesNoTouch[i], false))
-				{
-					SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
-					break;
-				}
-			}
+			SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
+			break;
 		}
 	}
 }
@@ -256,16 +240,8 @@ public void PvP_OnEntityDestroyed(int ent, const char[] sClassname)
 #if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ENTITIES,0,"\x08FF4040FF- %i(%s)",ent,sClassname);
 #endif
-	if (StrEqual(sClassname, "tf_flame", false))
-	{
-		int entref = EntIndexToEntRef(ent);
-		int iIndex = FindValueInArray(g_hPvPFlameEntities, entref);
-		if (iIndex != -1)
-		{
-			RemoveFromArray(g_hPvPFlameEntities, iIndex);
-		}
-	}
 }
+
 public Action Hook_PvPProjectile_OnTouch(int iProjectile, int iClient)
 {
 	// Check if the projectile hit a player outside of pvp area
@@ -318,7 +294,7 @@ public Action Hook_PvPProjectileSpawn(int ent)
 	{
 		iOwnerEntity = GetEntDataEnt2(ent, iThrowerOffset);
 	}
-	
+
 	if (IsValidClient(iOwnerEntity))
 	{
 		if (IsClientInPvP(iOwnerEntity))
@@ -352,11 +328,43 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 	{
 		iOwnerEntity = GetEntDataEnt2(ent, iThrowerOffset);
 	}
-	
+
 	if (IsValidClient(iOwnerEntity))
 	{
 		if (IsClientInPvP(iOwnerEntity))
 		{
+			static const char fixWeaponNotCollidingWithTeammates[][] = 
+			{
+				"tf_projectile_rocket",
+				"tf_projectile_sentryrocket",
+				"tf_projectile_flare"
+			};
+
+			for (int i = 0; i < sizeof(fixWeaponNotCollidingWithTeammates); i++)
+			{
+				if (StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
+				{
+					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
+					break;
+				}
+			}
+
+			if (StrEqual(sClass, "tf_projectile_pipe", false) && GetEntProp(ent, Prop_Send, "m_iType") == 3)
+			{
+				/*
+					Loose Cannon's projectiles
+
+					KR: I'm assuming that stopping non-PvP players from getting bounced is the reason why this is implemented.
+					Despite hooking onto Touch, the knockback still happens half of the time. StartTouch yields the same result
+					so this is really the best that can be done.
+				*/
+				SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
+			}
+			else if (StrEqual(sClassname, "tf_projectile_balloffire", false))
+			{
+				SDKHook(ent, SDKHook_TouchPost, Hook_PvPProjectileBallOfFireTouchPost);
+			}
+
 			if(g_hPlayerPvPTimer[iOwnerEntity]==INVALID_HANDLE)
 			{
 				SetEntProp(ent, Prop_Data, "m_iInitialTeamNum", 0);
@@ -369,6 +377,23 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 					PvP_ZapProjectile(ent,false);
 			}
 		}
+	}
+}
+
+public void Hook_PvPProjectileBallOfFireTouchPost(int projectile, int otherEntity)
+{
+	int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
+	if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity || !IsClientInPvP(ownerEntity))
+		return;
+	
+	if (IsValidClient(otherEntity))
+	{
+		float flDamage = SDKCall(g_hSDKEntityGetDamage, projectile);
+		float flDamageBonus = 1.0;
+		if (TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire))
+			flDamageBonus = FindConVar("tf_fireball_burning_bonus").FloatValue;
+		
+		
 	}
 }
 
@@ -826,6 +851,8 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	char sWeaponName[256];
 	GetEntityClassname(weapon, sWeaponName, sizeof(sWeaponName));
 
+	int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+
 	/*
 	 * Fixes the sniper rifle not damaging teammates.
 	 * 
@@ -844,8 +871,6 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	{
 		if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
 		{
-			int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-
 			if ((itemDefIndex == 526 || itemDefIndex == 30665) && GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") >= 150.0 )  // The Machina, Shooting Star
 				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
 			else
@@ -856,6 +881,12 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	}
 
 	return MRES_Ignored;
+}
+
+public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, Handle hReturn, Handle hParams)
+{
+	DHookSetReturn(hReturn, true);
+	return MRES_Supercede;
 }
 
 // API
