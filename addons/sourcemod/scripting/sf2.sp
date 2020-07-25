@@ -9913,6 +9913,7 @@ public Action Timer_PlayIntroMusicToPlayer(Handle timer, any userid)
 {
 	int iClient = GetClientOfUserId(userid);
 	if (iClient <= 0) return;
+	if (!IsClientInGame(iClient)) return;
 	
 	if (timer != g_hPlayerIntroMusicTimer[iClient]) return;
 	

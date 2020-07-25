@@ -1687,10 +1687,10 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 			if (IsValidClient(attacker))
 			{
 				GetClientAbsOrigin(attacker, flClientPos);
+				GetClientEyePosition(attacker, flTraceEndPos);
 			}
 			float flShootDist = GetVectorDistance(flClientPos, flMyPos);
 			GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
-			GetClientEyePosition(attacker, flTraceEndPos);
 			
 			AddVectors(flMyEyeAng, g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng);
 			for (int i = 0; i < 3; i++) flMyEyeAng[i] = AngleNormalize(flMyEyeAng[i]);
