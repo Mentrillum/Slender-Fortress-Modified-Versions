@@ -19,6 +19,7 @@ static const char g_sPvPProjectileClasses[][] =
 	"tf_projectile_cleaver",
 	"tf_projectile_energy_ball",
 	"tf_projectile_flare",
+	"tf_projectile_balloffire",
 	"tf_projectile_jar",
 	"tf_projectile_jar_milk",
 	"tf_projectile_pipe",
@@ -44,30 +45,72 @@ static Handle g_hPlayerPvPRespawnTimer[MAXPLAYERS + 1];
 static int g_iPlayerPvPTimerCount[MAXPLAYERS + 1];
 static bool g_bPlayerInPvPTrigger[MAXPLAYERS + 1];
 
-static Handle g_hPvPFlameEntities;
-
 //Blood
 static int g_iPvPUserIdLastTrace;
 static float g_flTimeLastTrace;
 
-enum
+static ArrayList g_hPvPBallsOfFire;
+
+enum struct PvPProjectile_BallOfFire
 {
-	PvPFlameEntData_EntRef = 0,
-	PvPFlameEntData_LastHitEntRef,
-	PvPFlameEntData_MaxStats
-};
+	int EntIndex;
+	ArrayList TouchedEntities;
+
+	void Init(int entIndex)
+	{
+		this.EntIndex = entIndex;
+		this.TouchedEntities = new ArrayList();
+	}
+
+	void OnTouchPost(int otherEntity)
+	{
+		int ent = this.EntIndex;
+		int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
+		if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity || !IsClientInPvP(ownerEntity))
+			return;
+		
+		if (IsValidEntity(otherEntity))
+		{
+			if ( this.TouchedEntities.FindValue(otherEntity) == -1 )
+			{
+				this.TouchedEntities.Push(otherEntity);
+
+				if (IsValidClient(otherEntity) && IsClientInPvP(otherEntity) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
+				{
+					float flDamage = SDKCall(g_hSDKEntityGetDamage, ent);
+					float flDamageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? FindConVar("tf_fireball_burning_bonus").FloatValue : 1.0;
+					float flDamagePos[3];
+					GetEntPropVector(ent, Prop_Data, "m_vecOrigin", flDamagePos);
+					// int iDamageCustom = 79;
+
+					if (TF2_GetPlayerClass(otherEntity) == TFClass_Pyro)
+					{
+						TF2_AddCondition(otherEntity, TFCond_BurningPyro, FindConVar("tf_fireball_burn_duration").FloatValue * 0.5, ownerEntity);
+					}
+
+					TF2_IgnitePlayer(otherEntity, ownerEntity);
+					SDKHooks_TakeDamage(otherEntity, ownerEntity, ownerEntity, flDamage * flDamageBonus, 0x1220000, GetEntPropEnt(ownerEntity, Prop_Send, "m_hActiveWeapon"), NULL_VECTOR, flDamagePos);
+				}
+			}
+		}
+	}
+
+	void Cleanup()
+	{
+		delete this.TouchedEntities;
+	}
+}
 
 public void PvP_Initialize()
 {
 	g_cvPvPArenaLeaveTime = CreateConVar("sf2_player_pvparena_leavetime", "5");
 	g_cvPvPArenaProjectileZap = CreateConVar("sf2_pvp_projectile_removal", "0", "This is an experimental code! It could make your server crash, if you get any crash disable this cvar");
 	
+	g_hPvPBallsOfFire = new ArrayList(sizeof(PvPProjectile_BallOfFire));
+
 	AddTempEntHook("TFBlood", TempEntHook_PvPBlood);
 	AddTempEntHook("World Decal", TempEntHook_PvPDecal);
 	AddTempEntHook("Entity Decal", TempEntHook_PvPDecal);
-	
-	
-	g_hPvPFlameEntities = CreateArray(PvPFlameEntData_MaxStats);
 }
 
 public void PvP_SetupMenus()
@@ -80,7 +123,6 @@ public void PvP_SetupMenus()
 
 public void PvP_OnMapStart()
 {
-	ClearArray(g_hPvPFlameEntities);
 	int iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "trigger_multiple")) != -1)
 	{
@@ -242,33 +284,22 @@ public void PvP_OnEntityCreated(int ent, const char[] sClassname)
 #if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ENTITIES,0,"\x083EFF3EFF+ %i(%s)",ent,sClassname);
 #endif
-	if (StrEqual(sClassname, "tf_flame", false))
+	for (int i = 0; i < sizeof(g_sPvPProjectileClasses); i++)
 	{
-		int iIndex = PushArrayCell(g_hPvPFlameEntities, EntIndexToEntRef(ent));
-		if (iIndex != -1)
+		if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
 		{
-			SetArrayCell(g_hPvPFlameEntities, iIndex, INVALID_ENT_REFERENCE, PvPFlameEntData_LastHitEntRef);
+			SDKHook(ent, SDKHook_Spawn, Hook_PvPProjectileSpawn);
+			SDKHook(ent, SDKHook_SpawnPost, Hook_PvPProjectileSpawnPost);
+			break;
 		}
 	}
-	else
+
+	for (int i = 0; i < sizeof(g_sPvPProjectileClassesNoTouch); i++)
 	{
-		for (int i = 0; i < sizeof(g_sPvPProjectileClasses); i++)
+		if (StrEqual(sClassname, g_sPvPProjectileClassesNoTouch[i], false))
 		{
-			if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
-			{
-				SDKHook(ent, SDKHook_Spawn, Hook_PvPProjectileSpawn);
-				SDKHook(ent, SDKHook_SpawnPost, Hook_PvPProjectileSpawnPost);
-				break;
-			}
-			//g_sPvPProjectileClassesNoTouch's size should be always under or equal to the size of g_sPvPProjectileClasses
-			if(i<sizeof(g_sPvPProjectileClassesNoTouch))
-			{
-				if (StrEqual(sClassname, g_sPvPProjectileClassesNoTouch[i], false))
-				{
-					SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
-					break;
-				}
-			}
+			SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
+			break;
 		}
 	}
 }
@@ -277,16 +308,19 @@ public void PvP_OnEntityDestroyed(int ent, const char[] sClassname)
 #if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ENTITIES,0,"\x08FF4040FF- %i(%s)",ent,sClassname);
 #endif
-	if (StrEqual(sClassname, "tf_flame", false))
+
+	if (StrEqual(sClassname, "tf_projectile_balloffire", false))
 	{
-		int entref = EntIndexToEntRef(ent);
-		int iIndex = FindValueInArray(g_hPvPFlameEntities, entref);
-		if (iIndex != -1)
-		{
-			RemoveFromArray(g_hPvPFlameEntities, iIndex);
+		int index = g_hPvPBallsOfFire.FindValue( ent );
+		if (index != -1) {
+			PvPProjectile_BallOfFire projectileData;
+			g_hPvPBallsOfFire.GetArray(index, projectileData, sizeof(projectileData));
+			projectileData.Cleanup();
+			g_hPvPBallsOfFire.Erase(index);
 		}
 	}
 }
+
 public Action Hook_PvPProjectile_OnTouch(int iProjectile, int iClient)
 {
 	// Check if the projectile hit a player outside of pvp area
@@ -339,7 +373,7 @@ public Action Hook_PvPProjectileSpawn(int ent)
 	{
 		iOwnerEntity = GetEntDataEnt2(ent, iThrowerOffset);
 	}
-	
+
 	if (IsValidClient(iOwnerEntity))
 	{
 		if (IsClientInPvP(iOwnerEntity))
@@ -373,11 +407,55 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 	{
 		iOwnerEntity = GetEntDataEnt2(ent, iThrowerOffset);
 	}
-	
+
 	if (IsValidClient(iOwnerEntity))
 	{
 		if (IsClientInPvP(iOwnerEntity))
 		{
+			static const char fixWeaponNotCollidingWithTeammates[][] = 
+			{
+				"tf_projectile_rocket",
+				"tf_projectile_sentryrocket",
+				"tf_projectile_flare"
+			};
+
+			for (int i = 0; i < sizeof(fixWeaponNotCollidingWithTeammates); i++)
+			{
+				if (StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
+				{
+					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
+					break;
+				}
+			}
+
+			if (StrEqual(sClass, "tf_projectile_pipe", false) && GetEntProp(ent, Prop_Send, "m_iType") == 3)
+			{
+				/*
+					Loose Cannon's projectiles
+
+					KR: I'm assuming that stopping non-PvP players from getting bounced is the reason why this is implemented.
+					Despite hooking onto Touch, the knockback still happens half of the time. StartTouch yields the same result
+					so this is really the best that can be done.
+				*/
+				SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
+			}
+			else if (StrEqual(sClass, "tf_projectile_balloffire", false))
+			{
+				/*
+					Replicate projectile logic for Dragon's Fury projectiles.
+
+					KR: The projectile checks the team of its owner entity (the player), not itself. CBaseEntity::InSameTeam()
+					could be hooked to change this, but I think that would be too game-changing and not really worth doing for
+					a single case, so the enemy player logic is sort of replicated.
+				*/
+
+				PvPProjectile_BallOfFire projectileData;
+				projectileData.Init( ent );
+				g_hPvPBallsOfFire.PushArray( projectileData, sizeof(projectileData) );
+
+				SDKHook(ent, SDKHook_TouchPost, Hook_PvPProjectileBallOfFireTouchPost);
+			}
+
 			if(g_hPlayerPvPTimer[iOwnerEntity]==INVALID_HANDLE)
 			{
 				SetEntProp(ent, Prop_Data, "m_iInitialTeamNum", 0);
@@ -390,6 +468,16 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 					PvP_ZapProjectile(ent,false);
 			}
 		}
+	}
+}
+
+public void Hook_PvPProjectileBallOfFireTouchPost(int projectile, int otherEntity)
+{
+	int index = g_hPvPBallsOfFire.FindValue( projectile );
+	if (index != -1) {
+		PvPProjectile_BallOfFire projectileData;
+		g_hPvPBallsOfFire.GetArray(index, projectileData, sizeof(projectileData));
+		projectileData.OnTouchPost(otherEntity);
 	}
 }
 
@@ -868,8 +956,6 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	 *
 	 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
 	 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
-	 * penetration of the bullet through teammates without damaging them. To keep the penetration behavior (such as with the Machina) 
-	 * but damage teammates, the damage type is switched to TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
 	 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 	 *
@@ -891,6 +977,12 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	}
 
 	return MRES_Ignored;
+}
+
+public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, Handle hReturn, Handle hParams)
+{
+	DHookSetReturn(hReturn, true);
+	return MRES_Supercede;
 }
 
 // API

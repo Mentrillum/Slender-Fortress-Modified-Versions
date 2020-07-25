@@ -34,6 +34,11 @@
 				"linux"		"136"
 				"windows"	"135"
 			}
+			"CBaseEntity::GetDamage"
+			{
+				"linux"		"129"
+				"windows"	"128"
+			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"windows"	"18"
@@ -64,6 +69,11 @@
 			{
 				"linux"		"288"
 				"windows"	"283"
+			}
+			"CBaseProjectile::CanCollideWithTeammates"
+			{
+				"linux"		"223"
+				"windows"	"222"
 			}
 			"CTFPlayer::EquipWearable"
 			{
