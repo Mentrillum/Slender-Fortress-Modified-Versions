@@ -148,6 +148,8 @@ static int g_iSlenderDamageClientSoundPitch[MAX_BOSSES];
 static char sDamageEffectParticle[PLATFORM_MAX_PATH];
 static char sDamageEffectSound[PLATFORM_MAX_PATH];
 
+static bool g_bNPCInAutoChase[MAX_BOSSES];
+
 enum struct BaseAttackStructure
 {
 	int BaseAttackType;
@@ -1226,6 +1228,8 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	g_bNPCTrapsEnabled[iNPCIndex] = GetChaserProfileTrapState(iUniqueProfileIndex);
 	g_iNPCTrapType[iNPCIndex] = GetChaserProfileTrapType(iUniqueProfileIndex);
 	
+	g_bNPCInAutoChase[iNPCIndex] = false;
+	
 }
 
 void NPCChaserOnRemoveProfile(int iNPCIndex)
@@ -1388,6 +1392,8 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_bNPCTrapsEnabled[iNPCIndex] = false;
 	g_iNPCTrapType[iNPCIndex] = 0;
 	
+	g_bNPCInAutoChase[iNPCIndex] = false;
+	
 	NPCSetAddSpeed(iNPCIndex, -NPCGetAddSpeed(iNPCIndex));
 	NPCSetAddMaxSpeed(iNPCIndex, -NPCGetAddMaxSpeed(iNPCIndex));
 	
@@ -1451,13 +1457,20 @@ public Action Timer_DeathPosChaseStop(Handle timer, int iBossIndex)
 		return Plugin_Stop;
 	}
 	
+	if (g_bNPCInAutoChase[iBossIndex])
+	{
+		g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
+		g_bNPCInAutoChase[iBossIndex] = false;
+		return Plugin_Stop;
+	}
+	
 	if (!g_bSlenderChaseDeathPosition[iBossIndex])
 	{
 		g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
 		g_bSlenderGiveUp[iBossIndex] = true;
 		return Plugin_Stop;
 	}
-	
+
 	g_bSlenderChaseDeathPosition[iBossIndex] = false;
 	g_bSlenderGiveUp[iBossIndex] = true;
 	g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
@@ -1859,6 +1872,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			if (iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 			{
 				bPlayerInTrap[i] = true;
+				g_bNPCInAutoChase[iBossIndex] = true;
 			}
 		}
 		
@@ -1867,6 +1881,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			if (g_iSlenderAutoChaseCount[iBossIndex] >= GetProfileNum(sSlenderProfile,"auto_chase_count", 5) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 			{
 				bPlayerMadeNoise[i] = true;
+				g_bNPCInAutoChase[iBossIndex] = true;
 			}
 		}
 		
@@ -2478,6 +2493,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 								g_bNPCStopAlertingCopies[iBossIndex] = false;
 							}
 							g_iSlenderAutoChaseCount[iBossIndex] = 0;
+							g_bNPCInAutoChase[iBossIndex] = false;
 						}
 						else if (bIsDeathPosVisible || g_bPlayerEliminated[iTarget])
 						{
@@ -2605,7 +2621,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						}
 					}
 				}
-				if (0 < iTarget <= MaxClients && DidClientEscape(iTarget))
+				if (!IsValidEdict(iTarget) || (0 < iTarget <= MaxClients && DidClientEscape(iTarget)))
 				{
 					if (g_hBossFailSafeTimer[iBossIndex] == INVALID_HANDLE)
 						g_hBossFailSafeTimer[iBossIndex] = CreateTimer(2.5, Timer_DeathPosChaseStop, iBossIndex); //Setup a fail safe timer in case we can't finish our path.

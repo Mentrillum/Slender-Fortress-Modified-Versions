@@ -34,8 +34,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.3 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.3 Modified"
+#define PLUGIN_VERSION "1.5.5.3a Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.3a Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -1433,7 +1433,7 @@ static void SDK_Init()
 	}
 
 	iOffset = GameConfGetOffset(hConfig, "CBaseProjectile::CanCollideWithTeammates");
-	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity, Hook_PvPProjectileCanCollideWithTeammates);
+	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	if (g_hSDKProjectileCanCollideWithTeammates == INVALID_HANDLE)
 	{
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");

@@ -1354,7 +1354,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Updated plugin syntax.\n-Fixed Escape Plan glitchy movement.\n-Fixed a bug where auto chase wouldn't work on alert.\n-Possibly fixed the glitchy hitbox movement.\n-Possibly fixed a bug where players get stuck on deathcam.\n-Fixed missing changed color text."
+		"en"	"-Fixed a bug where bosses would still chase dead players.\n-Fixed crashes regarding the PvP logic."
 	}
 
 	"SF2 Smite player"

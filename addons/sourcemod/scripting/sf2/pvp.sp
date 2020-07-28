@@ -423,7 +423,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				if (StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
 				{
-					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent);
+					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
 					break;
 				}
 			}
