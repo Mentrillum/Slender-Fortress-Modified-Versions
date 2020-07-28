@@ -1367,7 +1367,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			DHookRaw(g_hGetHullMins, false, view_as<Address>(g_IBody[iBossIndex]));
 			DHookRaw(g_hGetHullMaxs, false, view_as<Address>(g_IBody[iBossIndex]));
 			DHookRaw(g_hGetSolidMask, false, view_as<Address>(g_IBody[iBossIndex]));
-		
+
 			SetEntityFlags(iBoss, FL_NPC);
 		
 			ActivateEntity(iBoss);
@@ -1392,6 +1392,8 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				SetEntProp(iBoss, Prop_Send, "m_nSkin", NPCGetModelSkin(iBossIndex));
 			}
 			
+			SetEntData(iBoss, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
+
 			SDKHook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);
 			SDKHook(iBoss, SDKHook_SetTransmit, Hook_SlenderModelSetTransmit);
 			
@@ -2416,7 +2418,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 	
 	if (bTraceHit) flDistance *= 1.66;
 	
-	if (TF2_GetPlayerClass(client) == TFClass_Spy) flDistance *= 1.35;
+	if (TF2_GetPlayerClass(client) == TFClass_Spy) flDistance *= 1.3;
 	
 	if (flDistance > flHearRadius) return false;
 	

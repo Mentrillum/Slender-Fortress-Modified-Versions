@@ -1354,7 +1354,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Made a clear indication on how to get out of bear traps.\n-Added randomized boss attacks.\n-Added boss auto chase on toggle.\n-Fixed a bug with the sniper riles in PvP (Thx KitRifty).\n-Player speed is changed when only 7 points of sprint remains."
+		"en"	"-Updated plugin syntax.\n-Fixed Escape Plan glitchy movement.\n-Fixed a bug where auto chase wouldn't work on alert.\n-Possibly fixed the glitchy hitbox movement.\n-Possibly fixed a bug where players get stuck on deathcam.\n-Fixed missing changed color text."
 	}
 
 	"SF2 Smite player"

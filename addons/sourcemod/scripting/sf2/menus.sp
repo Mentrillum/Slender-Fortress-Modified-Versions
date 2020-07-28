@@ -731,52 +731,52 @@ public int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action,int para
 		{
 			case 0:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_1000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 1;
 				ClientSaveCookies(param1);
 			}
 			case 1:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_2000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 2;
 				ClientSaveCookies(param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_3000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 3;
 				ClientSaveCookies(param1);
 			}
 			case 3:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_4000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 4;
 				ClientSaveCookies(param1);
 			}
 			case 4:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_5000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 5;
 				ClientSaveCookies(param1);
 			}
 			case 5:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_6000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 6;
 				ClientSaveCookies(param1);
 			}
 			case 6:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_7000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 7;
 				ClientSaveCookies(param1);
 			}
 			case 7:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_8000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 8;
 				ClientSaveCookies(param1);
 			}
 			case 8:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_9000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 9;
 				ClientSaveCookies(param1);
 			}
 			case 9:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_10000;
+				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 10;
 				ClientSaveCookies(param1);
 			}
 		}
@@ -798,13 +798,13 @@ public int Panel_SettingsFilmGrain(Handle menu, MenuAction action,int param1,int
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FilmGrain] = true;
+				g_iPlayerPreferences[param1].PlayerPreference_FilmGrain = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Film Grain", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_FilmGrain] = false;
+				g_iPlayerPreferences[param1].PlayerPreference_FilmGrain = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Film Grain", param1);
 			}
@@ -822,13 +822,13 @@ public int Panel_SettingsHints(Handle menu, MenuAction action,int param1,int par
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_ShowHints] = true;
+				g_iPlayerPreferences[param1].PlayerPreference_ShowHints = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Hints", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_ShowHints] = false;
+				g_iPlayerPreferences[param1].PlayerPreference_ShowHints = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Hints", param1);
 			}
@@ -846,13 +846,13 @@ public int Panel_SettingsProxy(Handle menu, MenuAction action,int param1,int par
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_EnableProxySelection] = true;
+				g_iPlayerPreferences[param1].PlayerPreference_EnableProxySelection = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Proxy", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_EnableProxySelection] = false;
+				g_iPlayerPreferences[param1].PlayerPreference_EnableProxySelection = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Proxy", param1);
 			}
@@ -870,21 +870,21 @@ public int Panel_SettingsMuteMode(Handle menu, MenuAction action,int param1,int 
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_MuteMode] = MuteMode_Normal;
+				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 1;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Normal", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_MuteMode] = MuteMode_DontHearOtherTeam;
+				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 2;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Opposing", param1);
 			}
 			case 3:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_MuteMode] = MuteMode_DontHearOtherTeamIfNotProxy;
+				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 3;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Proxy", param1);

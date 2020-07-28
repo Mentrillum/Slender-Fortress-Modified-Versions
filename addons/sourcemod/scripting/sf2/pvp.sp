@@ -423,7 +423,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				if (StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
 				{
-					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
+					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent);
 					break;
 				}
 			}
@@ -432,7 +432,6 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				/*
 					Loose Cannon's projectiles
-
 					KR: I'm assuming that stopping non-PvP players from getting bounced is the reason why this is implemented.
 					Despite hooking onto Touch, the knockback still happens half of the time. StartTouch yields the same result
 					so this is really the best that can be done.
@@ -443,7 +442,6 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				/*
 					Replicate projectile logic for Dragon's Fury projectiles.
-
 					KR: The projectile checks the team of its owner entity (the player), not itself. CBaseEntity::InSameTeam()
 					could be hooked to change this, but I think that would be too game-changing and not really worth doing for
 					a single case, so the enemy player logic is sort of replicated.
@@ -494,7 +492,7 @@ public void PvP_OnPlayerSpawn(int iClient)
 		{
 			if (g_bPlayerEliminated[iClient] || g_bPlayerEscaped[iClient])
 			{
-				bool bAutoSpawn = g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn];
+				bool bAutoSpawn = g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn;
 				
 				if (bAutoSpawn)
 				{
@@ -536,7 +534,7 @@ public void PvP_OnPlayerDeath(int iClient, bool bFake)
 	{
 		if (!IsClientInGhostMode(iClient) && !g_bPlayerProxy[iClient])
 		{
-			bool bAutoSpawn = g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn];
+			bool bAutoSpawn = g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn;
 			
 			if (bAutoSpawn)
 			{

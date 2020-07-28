@@ -326,7 +326,7 @@ public void Hook_ClientPreThink(int client)
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == iWeapon)
 								{
-									flSprintSpeed += (flSprintSpeed * 0.06);
+									flSprintSpeed += (flSprintSpeed * 0.05);
 								}
 							}
 							case 239: // Gloves of Running Urgently
@@ -342,7 +342,12 @@ public void Hook_ClientPreThink(int client)
 								float flMaxHealth = float(SDKCall(g_hSDKGetMaxHealth, client));
 								float flPercentage = flHealth / flMaxHealth;
 								
-								if (flPercentage < 0.805 && flPercentage >= 0.605) 
+								if (flPercentage > 0.805)
+								{
+									flWalkSpeed += 0;
+									flSprintSpeed += 0;
+								}
+								else if (flPercentage < 0.805 && flPercentage >= 0.605) 
 								{
 									flWalkSpeed += (flWalkSpeed * 0.05);
 									flSprintSpeed += (flSprintSpeed * 0.05);
@@ -1274,7 +1279,7 @@ public Action Hook_FlashlightSetTransmit(int ent,int other)
 	if (EntRefToEntIndex(g_iPlayerFlashlightEnt[other]) != ent) return Plugin_Handled;
 	
 	// We've already checked for flashlight ownership in the last statement. So we can do just this.
-	if (g_iPlayerPreferences[other][PlayerPreference_ProjectedFlashlight]) return Plugin_Handled;
+	if (g_iPlayerPreferences[other].PlayerPreference_ProjectedFlashlight) return Plugin_Handled;
 	
 	return Plugin_Continue;
 }
@@ -1430,10 +1435,8 @@ void ClientTurnOnFlashlight(int client)
 	
 	float flEyePos[3];
 	GetClientEyePosition(client, flEyePos);
-	
-	FlashlightTemperature iTemperature = g_iPlayerPreferences[client][PlayerPreference_FlashlightTemperature];
-	
-	if (g_iPlayerPreferences[client][PlayerPreference_ProjectedFlashlight])
+
+	if (g_iPlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
 	{
 		// If the player is using the projected flashlight, just set effect flags.
 		int iEffects = GetEntProp(client, Prop_Send, "m_fEffects");
@@ -1450,43 +1453,43 @@ void ClientTurnOnFlashlight(int client)
 		{
 			TeleportEntity(ent, flEyePos, NULL_VECTOR, NULL_VECTOR);
 			DispatchKeyValue(ent, "targetname", "WUBADUBDUBMOTHERBUCKERS");
-			if (iTemperature == FlashlightTemperature_1000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 1)
 			{
 				DispatchKeyValue(ent, "rendercolor", "255 150 50");
 			}
-			if (iTemperature == FlashlightTemperature_2000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 2)
 			{
 				DispatchKeyValue(ent, "rendercolor", "255 210 100");
 			}
-			if (iTemperature == FlashlightTemperature_3000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 3)
 			{
 				DispatchKeyValue(ent, "rendercolor", "255 255 120");
 			}
-			if (iTemperature == FlashlightTemperature_4000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 4)
 			{
 				DispatchKeyValue(ent, "rendercolor", "255 255 185");
 			}
-			if (iTemperature == FlashlightTemperature_5000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 5)
 			{
 				DispatchKeyValue(ent, "rendercolor", "255 255 210");
 			}
-			if (iTemperature == FlashlightTemperature_6000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 6)
 			{
 				DispatchKeyValue(ent, "rendercolor", "255 255 255");
 			}
-			if (iTemperature == FlashlightTemperature_7000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 7)
 			{
 				DispatchKeyValue(ent, "rendercolor", "210 255 255");
 			}
-			if (iTemperature == FlashlightTemperature_8000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 8)
 			{
 				DispatchKeyValue(ent, "rendercolor", "185 255 255");
 			}
-			if (iTemperature == FlashlightTemperature_9000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 9)
 			{
 				DispatchKeyValue(ent, "rendercolor", "150 255 255");
 			}
-			if (iTemperature == FlashlightTemperature_10000)
+			if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 10)
 			{
 				DispatchKeyValue(ent, "rendercolor", "125 255 255");
 			}
@@ -1528,43 +1531,43 @@ void ClientTurnOnFlashlight(int client)
 		DispatchKeyValue(ent, "spotlightlength", sBuffer);
 		FloatToString(SF2_FLASHLIGHT_WIDTH, sBuffer, sizeof(sBuffer));
 		DispatchKeyValue(ent, "spotlightwidth", sBuffer);
-		if (iTemperature == FlashlightTemperature_1000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 1)
 		{
 			DispatchKeyValue(ent, "rendercolor", "255 150 50");
 		}
-		if (iTemperature == FlashlightTemperature_2000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 2)
 		{
 			DispatchKeyValue(ent, "rendercolor", "255 210 100");
 		}
-		if (iTemperature == FlashlightTemperature_3000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 3)
 		{
 			DispatchKeyValue(ent, "rendercolor", "255 255 120");
 		}
-		if (iTemperature == FlashlightTemperature_4000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 4)
 		{
 			DispatchKeyValue(ent, "rendercolor", "255 255 185");
 		}
-		if (iTemperature == FlashlightTemperature_5000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 5)
 		{
 			DispatchKeyValue(ent, "rendercolor", "255 255 210");
 		}
-		if (iTemperature == FlashlightTemperature_6000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 6)
 		{
 			DispatchKeyValue(ent, "rendercolor", "255 255 255");
 		}
-		if (iTemperature == FlashlightTemperature_7000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 7)
 		{
 			DispatchKeyValue(ent, "rendercolor", "210 255 255");
 		}
-		if (iTemperature == FlashlightTemperature_8000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 8)
 		{
 			DispatchKeyValue(ent, "rendercolor", "185 255 255");
 		}
-		if (iTemperature == FlashlightTemperature_9000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 9)
 		{
 			DispatchKeyValue(ent, "rendercolor", "150 255 255");
 		}
-		if (iTemperature == FlashlightTemperature_10000)
+		if (g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature == 10)
 		{
 			DispatchKeyValue(ent, "rendercolor", "125 255 255");
 		}
@@ -1613,7 +1616,7 @@ void ClientTurnOffFlashlight(int client)
 	
 	if (IsClientInGame(client))
 	{
-		if (g_iPlayerPreferences[client][PlayerPreference_ProjectedFlashlight])
+		if (g_iPlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
 		{
 			int iEffects = GetEntProp(client, Prop_Send, "m_fEffects");
 			if (iEffects & (1 << 2))
@@ -2992,6 +2995,8 @@ static void ClientSprintTimer(int client, bool bRecharge=false)
 	else
 	{
 		if (TF2_GetPlayerClass(client) == TFClass_Scout) flRate *= 1.15;
+		else if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.3;
+		else if (TF2_GetPlayerClass(client) == TFClass_Medic || TF2_GetPlayerClass(client) == TFClass_Spy) flRate *= 1.05;
 	}
 	
 	if (bRecharge) g_hPlayerSprintTimer[client] = CreateTimer(flRate, Timer_ClientRechargeSprint, GetClientUserId(client));
@@ -3469,8 +3474,6 @@ void ClientEnableProxy(int client,int iBossIndex)
 	{	
 		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
 		SlenderRemoveGlow(iNPCIndex);
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		NPCGetProfile(iNPCIndex, sProfile, sizeof(sProfile));
 		if (NPCGetCustomOutlinesState(iNPCIndex))
 		{
 			int color[4];
@@ -4078,6 +4081,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 		ForcePlayerSuicide(client);//Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 		SetVariantInt(9001);//Maybe it doesn't work like SDKHooks_TakeDamage, maybe not. Tbh I don't want to test this one.
 		AcceptEntityInput(client, "RemoveHealth");
+		KillClient(client);
 		return;
 	}
 	else if (NPCGetFlags(iBossIndex) & SFF_FAKE)
@@ -4186,6 +4190,7 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 			ForcePlayerSuicide(client);//Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 			SetVariantInt(9001);//Maybe it doesn't work like SDKHooks_TakeDamage, maybe not. Tbh I don't want to test this one.
 			AcceptEntityInput(client, "RemoveHealth");
+			KillClient(client);
 		}
 		else
 			SlenderMarkAsFake(iDeathCamBoss);	
@@ -4969,7 +4974,7 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	}
 	else
 	{
-		if (!g_iPlayerPreferences[client][PlayerPreference_FilmGrain])
+		if (!g_iPlayerPreferences[client].PlayerPreference_FilmGrain)
 			strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_DEFAULT_NO_FILMGRAIN);
 		else
 			strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_DEFAULT);
@@ -6306,18 +6311,16 @@ stock void ClientUpdateListeningFlags(int client, bool bReset=false)
 			SetListenOverride(client, i, Listen_Default);
 			continue;
 		}
-		
-		MuteMode iMuteMode = g_iPlayerPreferences[client][PlayerPreference_MuteMode];
-		
+
 		if (g_bPlayerEliminated[client])
 		{
 			if (!g_bPlayerEliminated[i])
 			{
-				if (iMuteMode == MuteMode_DontHearOtherTeam)
+				if (g_iPlayerPreferences[client].PlayerPreference_MuteMode == 1)
 				{
 					SetListenOverride(client, i, Listen_No);
 				}
-				else if (iMuteMode == MuteMode_DontHearOtherTeamIfNotProxy && !g_bPlayerProxy[client])
+				else if (g_iPlayerPreferences[client].PlayerPreference_MuteMode == 2 && !g_bPlayerProxy[client])
 				{
 					SetListenOverride(client, i, Listen_No);
 				}
@@ -6491,12 +6494,12 @@ void ClientSaveCookies(int client)
 	// Save and reset our queue points.
 	char s[64];
 	Format(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
-		g_iPlayerPreferences[client][PlayerPreference_PvPAutoSpawn], 
-		g_iPlayerPreferences[client][PlayerPreference_ShowHints], 
-		g_iPlayerPreferences[client][PlayerPreference_MuteMode],
-		g_iPlayerPreferences[client][PlayerPreference_FilmGrain],
-		g_iPlayerPreferences[client][PlayerPreference_EnableProxySelection],
-		g_iPlayerPreferences[client][PlayerPreference_FlashlightTemperature]);
+		g_iPlayerPreferences[client].PlayerPreference_PvPAutoSpawn, 
+		g_iPlayerPreferences[client].PlayerPreference_ShowHints, 
+		g_iPlayerPreferences[client].PlayerPreference_MuteMode,
+		g_iPlayerPreferences[client].PlayerPreference_FilmGrain,
+		g_iPlayerPreferences[client].PlayerPreference_EnableProxySelection,
+		g_iPlayerPreferences[client].PlayerPreference_FlashlightTemperature);
 		
 	SetClientCookie(client, g_hCookie, s);
 }

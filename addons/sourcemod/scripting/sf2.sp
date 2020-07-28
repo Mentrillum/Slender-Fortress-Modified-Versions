@@ -21,12 +21,10 @@
 #define REQUIRE_PLUGIN
 
 #undef REQUIRE_EXTENSIONS
-#tryinclude <steamtools>
 #tryinclude <steamworks>
 #tryinclude <sendproxy>
 #define REQUIRE_EXTENSIONS
 
-bool steamtools=false;
 bool steamworks=false;
 bool sendproxymanager=false;
 
@@ -172,26 +170,26 @@ public Plugin myinfo =
 #define SF2_HUD_TEXT_COLOR_B 141
 #define SF2_HUD_TEXT_COLOR_A 255
 
-enum MuteMode
+enum struct MuteMode
 {
-	MuteMode_Normal = 0,
-	MuteMode_DontHearOtherTeam,
-	MuteMode_DontHearOtherTeamIfNotProxy
-};
+	int MuteMode_Normal;
+	int MuteMode_DontHearOtherTeam;
+	int MuteMode_DontHearOtherTeamIfNotProxy;
+}
 
-enum FlashlightTemperature
+enum struct FlashlightTemperature
 {
-	FlashlightTemperature_6000 = 0,
-	FlashlightTemperature_1000,
-	FlashlightTemperature_2000,
-	FlashlightTemperature_3000,
-	FlashlightTemperature_4000,
-	FlashlightTemperature_5000,
-	FlashlightTemperature_7000,
-	FlashlightTemperature_8000,
-	FlashlightTemperature_9000,
-	FlashlightTemperature_10000
-};
+	int FlashlightTemperature_6000;
+	int FlashlightTemperature_1000;
+	int FlashlightTemperature_2000;
+	int FlashlightTemperature_3000;
+	int FlashlightTemperature_4000;
+	int FlashlightTemperature_5000;
+	int FlashlightTemperature_7000;
+	int FlashlightTemperature_8000;
+	int FlashlightTemperature_9000;
+	int FlashlightTemperature_10000;
+}
 
 char g_strSoundNightmareMode[][] =
 {
@@ -473,19 +471,20 @@ enum
 	PlayerHint_MaxNum
 };
 
-enum PlayerPreferences
+enum struct PlayerPreferences
 {
-	bool:PlayerPreference_PvPAutoSpawn,
-	MuteMode:PlayerPreference_MuteMode,
-	bool:PlayerPreference_FilmGrain,
-	bool:PlayerPreference_ShowHints,
-	bool:PlayerPreference_EnableProxySelection,
-	bool:PlayerPreference_ProjectedFlashlight,
-	FlashlightTemperature:PlayerPreference_FlashlightTemperature,
-};
+	bool PlayerPreference_PvPAutoSpawn;
+	bool PlayerPreference_FilmGrain;
+	bool PlayerPreference_ShowHints;
+	bool PlayerPreference_EnableProxySelection;
+	bool PlayerPreference_ProjectedFlashlight;
+	
+	int PlayerPreference_MuteMode; //1 = Normal, 2 = Opposing Team, 3 = Opposing Team Proxy Ignore
+	int PlayerPreference_FlashlightTemperature; //1 = 1000, 2 = 2000, 3 = 3000, 4 = 4000, 5 = 5000, 6 = 6000, 7 = 7000, 8 = 8000, 9 = 9000, 10 = 10000
+}
 
 bool g_bPlayerHints[MAXPLAYERS + 1][PlayerHint_MaxNum];
-int g_iPlayerPreferences[MAXPLAYERS + 1][PlayerPreferences];
+PlayerPreferences g_iPlayerPreferences[MAXPLAYERS + 1];
 
 //Particle data.
 enum
@@ -931,10 +930,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	PvP_InitializeAPI();
 	
 	SpecialRoundInitializeAPI();
-	
-	#if defined _steamtools_included
-	MarkNativeAsOptional("Steam_SetGameDescription");
-	#endif
+
 	#if defined _SteamWorks_Included
 	MarkNativeAsOptional("SteamWorks_SetGameDescription");
 	#endif
@@ -1182,9 +1178,7 @@ public void OnPluginStart()
 	AddNormalSoundHook(view_as<NormalSHook>(Hook_NormalSound));
 	
 	AddTempEntHook("Fire Bullets", Hook_TEFireBullets);
-	
-	steamtools = LibraryExists("SteamTools");
-	
+
 	steamworks = LibraryExists("SteamWorks");
 	
 	sendproxymanager = LibraryExists("sendproxy");
@@ -1225,12 +1219,6 @@ public void OnPluginEnd()
 }
 public void OnLibraryAdded(const char[] name)
 {
-	
-	if(!strcmp(name, "SteamTools", false))
-	{
-		steamtools = true;
-	}
-	
 	if(!strcmp(name, "SteamWorks", false))
 	{
 		steamworks = true;
@@ -1244,12 +1232,6 @@ public void OnLibraryAdded(const char[] name)
 }
 public void OnLibraryRemoved(const char[] name)
 {
-	
-	if(!strcmp(name, "SteamTools", false))
-	{
-		steamtools = false;
-	}
-	
 	if(!strcmp(name, "SteamWorks", false))
 	{
 		steamworks = false;
@@ -1386,9 +1368,9 @@ static void SDK_Init()
 	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_ByValue);
 	if ((g_hSDKGetSmoothedVelocity = EndPrepSDKCall()) == INVALID_HANDLE)
 	{
-		SetFailState("Couldn't find CBaseEntity::GetSmoothedVelocity offset in BossHunt gamedata!");
+		SetFailState("Couldn't find CBaseEntity::GetSmoothedVelocity offset from SF2 gamedata!");
 	}
-
+	
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::GetDamage");
 	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
@@ -1451,12 +1433,11 @@ static void SDK_Init()
 	}
 
 	iOffset = GameConfGetOffset(hConfig, "CBaseProjectile::CanCollideWithTeammates");
-	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity, Hook_PvPProjectileCanCollideWithTeammates);
 	if (g_hSDKProjectileCanCollideWithTeammates == INVALID_HANDLE)
 	{
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
-
 
 	g_iOffset_m_id = GameConfGetOffset(hConfig, "CNavArea::m_id");
 	
@@ -1604,14 +1585,6 @@ static void StartPlugin()
 	if(steamworks)
 	{
 		SteamWorks_SetGameDescription(sBuffer);
-		steamtools=false;
-	}
-	#endif
-	#if defined _steamtools_included
-	if(steamtools)
-	{
-		Steam_SetGameDescription(sBuffer);
-		steamworks=false;
 	}
 	#endif
 	
@@ -2052,7 +2025,7 @@ public void OnGameFrame()
 					if (!IsClientInGame(iClient) || !g_bPlayerEliminated[iClient]) continue;
 					if (g_bPlayerProxy[iClient]) continue;
 					
-					if (!g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection])
+					if (!g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection)
 					{
 #if defined DEBUG
 						SendDebugMessageToPlayer(iClient, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because of your preferences.", iBossIndex);
@@ -3786,7 +3759,6 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 								if (IsClientSprinting(entity) && !(GetEntProp(entity, Prop_Send, "m_bDucking") || GetEntProp(entity, Prop_Send, "m_bDucked")))
 								{
 									g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDFOOTSTEPLOUD;
-									if (g_iSlenderState[iBossIndex] == STATE_ALERT) g_iSlenderAutoChaseCount[iBossIndex]++;
 								}
 							}
 						}
@@ -4609,12 +4581,12 @@ public void OnClientCookiesCached(int iClient)
 	
 	g_iPlayerQueuePoints[iClient] = 0;
 	
-	g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = false;
-	g_iPlayerPreferences[iClient][PlayerPreference_ShowHints] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = MuteMode_Normal;
-	g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_6000;
+	g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn = false;
+	g_iPlayerPreferences[iClient].PlayerPreference_ShowHints = true;
+	g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = 1;
+	g_iPlayerPreferences[iClient].PlayerPreference_FilmGrain = false;
+	g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection = true;
+	g_iPlayerPreferences[iClient].PlayerPreference_FlashlightTemperature = 6;
 	
 	if (sCookie[0])
 	{
@@ -4624,17 +4596,17 @@ public void OnClientCookiesCached(int iClient)
 		if (count > 0)
 			g_iPlayerQueuePoints[iClient] = StringToInt(s2[0]);
 		if (count > 1)
-			g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = view_as<bool>(StringToInt(s2[1]));
+			g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn = view_as<bool>(StringToInt(s2[1]));
 		if (count > 2)
-			g_iPlayerPreferences[iClient][PlayerPreference_ShowHints] = view_as<MuteMode>(StringToInt(s2[2]));
+			g_iPlayerPreferences[iClient].PlayerPreference_ShowHints = view_as<bool>(StringToInt(s2[2]));
 		if (count > 3)
-			g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = view_as<bool>(StringToInt(s2[3]));
+			g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = view_as<int>(StringToInt(s2[3]));
 		if (count > 4)
-			g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = view_as<bool>(StringToInt(s2[4]));
+			g_iPlayerPreferences[iClient].PlayerPreference_FilmGrain = view_as<bool>(StringToInt(s2[4]));
 		if (count > 5)
-			g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = view_as<bool>(StringToInt(s2[5]));
+			g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection = view_as<bool>(StringToInt(s2[5]));
 		if (count > 6)
-			g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = view_as<FlashlightTemperature>(StringToInt(s2[6]));
+			g_iPlayerPreferences[iClient].PlayerPreference_FlashlightTemperature = view_as<int>(StringToInt(s2[6]));
 	}
 }
 
@@ -4658,8 +4630,8 @@ public void OnClientPutInServer(int iClient)
 	g_bPlayerPlayedSpecialRound[iClient] = true;
 	g_bPlayerPlayedNewBossRound[iClient] = true;
 	
-	g_iPlayerPreferences[iClient][PlayerPreference_PvPAutoSpawn] = false;
-	g_iPlayerPreferences[iClient][PlayerPreference_ProjectedFlashlight] = false;
+	g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn = false;
+	g_iPlayerPreferences[iClient].PlayerPreference_ProjectedFlashlight = false;
 	
 	g_iPlayerPageCount[iClient] = 0;
 	g_iPlayerDesiredFOV[iClient] = 90;
@@ -4744,7 +4716,7 @@ public void OnClientGetProjectedFlashlightSetting(QueryCookie cookie,int iClient
 		char sAuth[64];
 		GetClientAuthId(iClient,AuthId_Engine, sAuth, sizeof(sAuth));
 		
-		g_iPlayerPreferences[iClient][PlayerPreference_ProjectedFlashlight] = true;
+		g_iPlayerPreferences[iClient].PlayerPreference_ProjectedFlashlight = true;
 		LogSF2Message("Player %N (%s) has mat_supportflashlight enabled, projected flashlight will be used", iClient, sAuth);
 	}
 }
@@ -4777,12 +4749,12 @@ public void OnClientDisconnect(int iClient)
 	ClientSetPlayerGroup(iClient, -1);
 	
 	// Reset variables.
-	g_iPlayerPreferences[iClient][PlayerPreference_ShowHints] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_MuteMode] = MuteMode_Normal;
-	g_iPlayerPreferences[iClient][PlayerPreference_FilmGrain] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_EnableProxySelection] = true;
-	g_iPlayerPreferences[iClient][PlayerPreference_ProjectedFlashlight] = false;
-	g_iPlayerPreferences[iClient][PlayerPreference_FlashlightTemperature] = FlashlightTemperature_6000;
+	g_iPlayerPreferences[iClient].PlayerPreference_ShowHints = true;
+	g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = 1;
+	g_iPlayerPreferences[iClient].PlayerPreference_FilmGrain = false;
+	g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection = true;
+	g_iPlayerPreferences[iClient].PlayerPreference_ProjectedFlashlight = false;
+	g_iPlayerPreferences[iClient].PlayerPreference_FlashlightTemperature = 6;
 
 	// Reset any iClient functions that may be still active.
 	ClientResetOverlay(iClient);
@@ -6498,7 +6470,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			{
 				g_bPlayerChoseTeam[iClient] = true;
 				
-				if (g_iPlayerPreferences[iClient][PlayerPreference_ProjectedFlashlight])
+				if (g_iPlayerPreferences[iClient].PlayerPreference_ProjectedFlashlight)
 				{
 					EmitSoundToClient(iClient, SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND);
 					CPrintToChat(iClient, "%T", "SF2 Projected Flashlight", iClient);
@@ -8204,6 +8176,9 @@ public Action Timer_RoundTime(Handle timer)
 		{
 			if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_bPlayerEliminated[i] || IsClientInGhostMode(i)) continue;
 			
+			float flBuffer[3];
+			GetClientAbsOrigin(i, flBuffer);
+			ClientStartDeathCam(i, 0, flBuffer);
 			KillClient(i);
 		}
 		

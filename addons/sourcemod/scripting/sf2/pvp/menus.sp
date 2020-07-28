@@ -47,12 +47,12 @@ public int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_PvPAutoSpawn] = true;
+				g_iPlayerPreferences[param1].PlayerPreference_PvPAutoSpawn = true;
 				CPrintToChat(param1, "%T", "SF2 PvP Spawn Accept", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1][PlayerPreference_PvPAutoSpawn] = false;
+				g_iPlayerPreferences[param1].PlayerPreference_PvPAutoSpawn = false;
 				CPrintToChat(param1, "%T", "SF2 PvP Spawn Decline", param1);
 			}
 		}

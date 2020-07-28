@@ -265,7 +265,7 @@ public Action Command_Pack(int client,int args)
 	KvGetString(g_hBossPackConfig, "name", bossPackName, sizeof(bossPackName), MapbossPack);
 	if(StrEqual(bossPackName,""))
 		Format(bossPackName,sizeof(bossPackName),"Core Pack");
-	CPrintToChat(client,"{olive}Pack: {lightgreen}%s",bossPackName);
+	CPrintToChat(client,"{dodgerblue}Pack: {lightblue}%s",bossPackName);
 	return Plugin_Handled;
 }
 
@@ -280,7 +280,7 @@ public Action Command_NextPack(int client,int args)
 	GetConVarString(g_cvBossProfilePack, nextpack, sizeof(nextpack));
 	if (strcmp(nextpack, "") == 0)
 	{
-		CPrintToChat(client,"{olive}%t{lightgreen}%t.","SF2 Prefix","Pending Vote");
+		CPrintToChat(client,"{dodgerblue}%t{lightblue}%t.","SF2 Prefix","Pending Vote");
 		return Plugin_Handled;
 	}
 	
@@ -293,7 +293,7 @@ public Action Command_NextPack(int client,int args)
 	KvGetString(g_hBossPackConfig, "name", bossPackName, sizeof(bossPackName), nextpack);
 	if(StrEqual(bossPackName,""))
 		Format(bossPackName,sizeof(bossPackName),"Core Pack");
-	CPrintToChat(client,"{olive}Next pack: {lightgreen}%s",bossPackName);
+	CPrintToChat(client,"{dodgerblue}Next pack: {lightblue}%s",bossPackName);
 	return Plugin_Handled;
 }
 

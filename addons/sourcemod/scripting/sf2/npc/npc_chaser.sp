@@ -148,38 +148,38 @@ static int g_iSlenderDamageClientSoundPitch[MAX_BOSSES];
 static char sDamageEffectParticle[PLATFORM_MAX_PATH];
 static char sDamageEffectSound[PLATFORM_MAX_PATH];
 
-enum SF2NPCChaser_BaseAttackStructure
+enum struct BaseAttackStructure
 {
-	SF2NPCChaser_BaseAttackType,
-	Float:SF2NPCChaser_BaseAttackDamage,
-	Float:SF2NPCChaser_BaseAttackDamageVsProps,
-	Float:SF2NPCChaser_BaseAttackDamageForce,
-	SF2NPCChaser_BaseAttackDamageType,
-	Float:SF2NPCChaser_BaseAttackDamageDelay,
-	Float:SF2NPCChaser_BaseAttackRange,
-	Float:SF2NPCChaser_BaseAttackDuration,
-	Float:SF2NPCChaser_BaseAttackSpread,
-	Float:SF2NPCChaser_BaseAttackBeginRange,
-	Float:SF2NPCChaser_BaseAttackBeginFOV,
-	Float:SF2NPCChaser_BaseAttackCooldown,
-	SF2NPCChaser_BaseAttackDisappear,
-	SF2NPCChaser_BaseAttackRepeat,
-	SF2NPCChaser_CurrentAttackRepeat,
-	SF2NPCChaser_WeaponAttackIndex,
-	bool:SF2NPCChaser_BaseAttackLifeSteal,
-	Float:SF2NPCChaser_BaseAttackLifeStealDuration,
-	Float:SF2NPCChaser_BaseAttackProjectileDamage,
-	Float:SF2NPCChaser_BaseAttackProjectileSpeed,
-	Float:SF2NPCChaser_BaseAttackProjectileRadius,
-	bool:SF2NPCChaser_BaseAttackProjectileCrits,
-	SF2NPCChaser_BaseAttackBulletCount,
-	Float:SF2NPCChaser_BaseAttackBulletDamage,
-	Float:SF2NPCChaser_BaseAttackBulletSpread,
-	Float:SF2NPCChaser_BaseAttackNextAttackTime
-};
+	int BaseAttackType;
+	float BaseAttackDamage;
+	float BaseAttackDamageVsProps;
+	float BaseAttackDamageForce;
+	int BaseAttackDamageType;
+	float BaseAttackDamageDelay;
+	float BaseAttackRange;
+	float BaseAttackDuration;
+	float BaseAttackSpread;
+	float BaseAttackBeginRange;
+	float BaseAttackBeginFOV;
+	float BaseAttackCooldown;
+	int BaseAttackDisappear;
+	int BaseAttackRepeat;
+	int CurrentAttackRepeat;
+	int WeaponAttackIndex;
+	bool BaseAttackLifeSteal;
+	float BaseAttackLifeStealDuration;
+	float BaseAttackProjectileDamage;
+	float BaseAttackProjectileSpeed;
+	float BaseAttackProjectileRadius;
+	bool BaseAttackProjectileCrits;
+	int BaseAttackBulletCount;
+	float BaseAttackBulletDamage;
+	float BaseAttackBulletSpread;
+	float BaseAttackNextAttackTime;
+}
 
 static int g_NPCBaseAttacksCount[MAX_BOSSES];
-g_NPCBaseAttacks[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS][SF2NPCChaser_BaseAttackStructure];
+BaseAttackStructure g_NPCBaseAttacks[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS];
 static int g_iNPCCurrentAttackIndex[MAX_BOSSES];
 
 const SF2NPC_Chaser SF2_INVALID_NPC_CHASER = view_as<SF2NPC_Chaser>(-1);
@@ -493,107 +493,107 @@ int NPCChaserGetAttackCount(int iNPCIndex)
 
 int NPCChaserGetAttackType(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackType];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackType;
 }
 
 float NPCChaserGetAttackDamage(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDamage];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDamage;
 }
 
 float NPCChaserGetAttackDamageVsProps(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDamageVsProps];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDamageVsProps;
 }
 
 float NPCChaserGetAttackDamageForce(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDamageForce];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDamageForce;
 }
 /*
 float NPCChaserGetAttackLifeStealDuration(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackLifeStealDuration];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackLifeStealDuration;
 }
 */
 bool NPCChaserGetAttackLifeStealState(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackLifeSteal];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackLifeSteal;
 }
 
 float NPCChaserGetAttackProjectileDamage(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackProjectileDamage];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackProjectileDamage;
 }
 
 float NPCChaserGetAttackProjectileSpeed(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackProjectileSpeed];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackProjectileSpeed;
 }
 
 bool NPCChaserGetAttackProjectileCrits(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackProjectileCrits];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackProjectileCrits;
 }
 
 int NPCChaserGetAttackBulletCount(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackBulletCount];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackBulletCount;
 }
 
 float NPCChaserGetAttackBulletDamage(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackBulletDamage];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackBulletDamage;
 }
 
 float NPCChaserGetAttackBulletSpread(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackBulletSpread];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackBulletSpread;
 }
 
 int NPCChaserGetAttackDamageType(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDamageType];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDamageType;
 }
 
 int NPCChaserGetAttackDisappear(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDisappear];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDisappear;
 }
 
 int NPCChaserGetAttackRepeat(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackRepeat];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackRepeat;
 }
 
 float NPCChaserGetAttackDamageDelay(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDamageDelay];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDamageDelay;
 }
 
 float NPCChaserGetAttackRange(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackRange];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackRange;
 }
 
 float NPCChaserGetAttackDuration(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackDuration];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackDuration;
 }
 
 float NPCChaserGetAttackSpread(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackSpread];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackSpread;
 }
 
 float NPCChaserGetAttackBeginRange(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackBeginRange];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackBeginRange;
 }
 
 float NPCChaserGetAttackBeginFOV(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackBeginFOV];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackBeginFOV;
 }
 
 int NPCSetCurrentAttackIndex(int iNPCIndex, int iAttackIndex)
@@ -608,17 +608,17 @@ int NPCGetCurrentAttackIndex(int iNPCIndex)
 
 int NPCSetCurrentAttackRepeat(int iNPCIndex, int iAttackIndex, int iValue)
 {
-	g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_CurrentAttackRepeat] = iValue;
+	g_NPCBaseAttacks[iNPCIndex][iAttackIndex].CurrentAttackRepeat = iValue;
 }
 
 float NPCChaserGetAttackCooldown(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackCooldown];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackCooldown;
 }
 
 float NPCChaserGetNextAttackTime(int iNPCIndex,int iAttackIndex)
 {
-	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][SF2NPCChaser_BaseAttackNextAttackTime];
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex].BaseAttackNextAttackTime;
 }
 
 bool NPCChaserIsStunEnabled(int iNPCIndex)
@@ -1119,32 +1119,32 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	// Get attack data.
 	for (int i = 0; i < g_NPCBaseAttacksCount[iNPCIndex]; i++)
 	{
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackType] = GetChaserProfileAttackType(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamage] = GetChaserProfileAttackDamage(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageVsProps] = GetChaserProfileAttackDamageVsProps(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageForce] = GetChaserProfileAttackDamageForce(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageType] = GetChaserProfileAttackDamageType(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageDelay] = GetChaserProfileAttackDamageDelay(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackRange] = GetChaserProfileAttackRange(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDuration] = GetChaserProfileAttackDuration(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackSpread] = GetChaserProfileAttackSpread(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBeginRange] = GetChaserProfileAttackBeginRange(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBeginFOV] = GetChaserProfileAttackBeginFOV(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackCooldown] = GetChaserProfileAttackCooldown(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDisappear] = GetChaserProfileAttackDisappear(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackRepeat] = GetChaserProfileAttackRepeat(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackNextAttackTime] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_WeaponAttackIndex] = GetChaserProfileAttackCooldown(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeSteal] = GetChaserProfileAttackLifeStealState(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeStealDuration] = GetChaserProfileAttackLifeStealDuration(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileDamage] = GetChaserProfileAttackProjectileDamage(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileSpeed] = GetChaserProfileAttackProjectileSpeed(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileRadius] = GetChaserProfileAttackProjectileRadius(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileCrits] = GetChaserProfileAttackCritProjectiles(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBulletCount] = GetChaserProfileAttackBulletCount(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBulletDamage] = GetChaserProfileAttackBulletDamage(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBulletSpread] = GetChaserProfileAttackBulletSpread(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_CurrentAttackRepeat] = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackType = GetChaserProfileAttackType(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamage = GetChaserProfileAttackDamage(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageVsProps = GetChaserProfileAttackDamageVsProps(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageForce = GetChaserProfileAttackDamageForce(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageType = GetChaserProfileAttackDamageType(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageDelay = GetChaserProfileAttackDamageDelay(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRange = GetChaserProfileAttackRange(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDuration = GetChaserProfileAttackDuration(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackSpread = GetChaserProfileAttackSpread(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginRange = GetChaserProfileAttackBeginRange(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginFOV = GetChaserProfileAttackBeginFOV(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackCooldown = GetChaserProfileAttackCooldown(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDisappear = GetChaserProfileAttackDisappear(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRepeat = GetChaserProfileAttackRepeat(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackNextAttackTime = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].WeaponAttackIndex = GetChaserProfileAttackCooldown(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeSteal = GetChaserProfileAttackLifeStealState(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeStealDuration = GetChaserProfileAttackLifeStealDuration(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileDamage = GetChaserProfileAttackProjectileDamage(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileSpeed = GetChaserProfileAttackProjectileSpeed(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileRadius = GetChaserProfileAttackProjectileRadius(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileCrits = GetChaserProfileAttackCritProjectiles(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletCount = GetChaserProfileAttackBulletCount(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletDamage = GetChaserProfileAttackBulletDamage(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletSpread = GetChaserProfileAttackBulletSpread(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].CurrentAttackRepeat = 0;
 	}
 	// Get stun data.
 	g_bNPCStunEnabled[iNPCIndex] = GetChaserProfileStunState(iUniqueProfileIndex);
@@ -1293,32 +1293,32 @@ static void NPCChaserResetValues(int iNPCIndex)
 	for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
 	{
 		// Base attack data.
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackType] = SF2BossAttackType_Invalid;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamage] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageVsProps] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageForce] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageType] = 0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDamageDelay] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackRange] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDuration] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackSpread] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBeginRange] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBeginFOV] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackCooldown] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackDisappear] = 0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackRepeat] = 0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackNextAttackTime] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_WeaponAttackIndex] = 0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeSteal] = false;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackLifeStealDuration] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileDamage] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileSpeed] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileRadius] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackProjectileCrits] = false;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBulletCount] = 0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBulletDamage] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_BaseAttackBulletSpread] = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i][SF2NPCChaser_CurrentAttackRepeat] = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackType = SF2BossAttackType_Invalid;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamage = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageVsProps = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageForce = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageType = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageDelay = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRange = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDuration = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackSpread = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginRange = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginFOV = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackCooldown = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDisappear = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRepeat = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackNextAttackTime = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].WeaponAttackIndex = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeSteal = false;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeStealDuration = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileDamage = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileSpeed = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileRadius = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileCrits = false;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletCount = 0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletDamage = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletSpread = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i].CurrentAttackRepeat = 0;
 	}
 	
 	g_bNPCStunEnabled[iNPCIndex] = false;
@@ -1437,6 +1437,33 @@ stock bool IsTargetValidForSlender(int iTarget, bool bIncludeEliminated=false)
 	return true;
 }
 
+public Action Timer_DeathPosChaseStop(Handle timer, int iBossIndex)
+{
+	if (!g_bEnabled)
+	{
+		g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
+		return Plugin_Stop;
+	}
+	
+	if (timer != g_hBossFailSafeTimer[iBossIndex])
+	{
+		g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
+		return Plugin_Stop;
+	}
+	
+	if (!g_bSlenderChaseDeathPosition[iBossIndex])
+	{
+		g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
+		g_bSlenderGiveUp[iBossIndex] = true;
+		return Plugin_Stop;
+	}
+	
+	g_bSlenderChaseDeathPosition[iBossIndex] = false;
+	g_bSlenderGiveUp[iBossIndex] = true;
+	g_hBossFailSafeTimer[iBossIndex] = INVALID_HANDLE;
+	return Plugin_Continue;
+}
+
 public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 {
 	if (!g_bEnabled) return Plugin_Stop;
@@ -1472,13 +1499,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		SetEntPropFloat(slender, Prop_Send, "m_flPlaybackRate", g_flNPCCurrentAnimationSequencePlaybackRate[iBossIndex]);
 	}*/
 	
-	float flSlenderVelocity[3], flMyPos[3], flMyEyeAng[3];
+	float flMyPos[3], flMyEyeAng[3];
 	float flBuffer[3];
 	
 	char sSlenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sSlenderProfile, sizeof(sSlenderProfile));
 	
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsVelocity", flSlenderVelocity);
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flMyPos);
 	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
 	
@@ -1867,7 +1893,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 				g_flSlenderLastFoundPlayerPos[iBossIndex][i][2] = flTargetPos[2];
 			}
 		}
-		if ((bPlayerMadeNoise[i] || bPlayerInTrap[i]) && iState != STATE_CHASE && iState != STATE_ALERT)
+		if ((bPlayerMadeNoise[i] || bPlayerInTrap[i]) && iState != STATE_CHASE && iState != STATE_STUN && iState != STATE_ATTACK)
 		{
 			iBestNewTarget = i;
 			iState = STATE_CHASE;
@@ -2139,24 +2165,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			}
 		}
 		
-	}
-	if(NPCHasAttribute(iBossIndex, "chase target on scare") && !g_bSlenderGiveUp[iBossIndex] && !bBuilding && !g_bNPCChasingScareVictin[iBossIndex])
-	{
-		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
-		{
-			int iScareTarget = EntRefToEntIndex(g_iNPCPlayerScareVictin[iBossIndex]);
-			if(iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
-			{
-				if(IsValidClient(iScareTarget) && !g_bPlayerEliminated[iScareTarget])
-				{
-					iBestNewTarget = iScareTarget;
-					g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-					iState = STATE_CHASE;
-					iTarget = iBestNewTarget;
-					g_bNPCChasingScareVictin[iBossIndex] = true;
-				}
-			}
-		}
 	}
 	// Process which state we should be in.
 	switch (iState)
@@ -2597,8 +2605,10 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						}
 					}
 				}
-				else
+				if (0 < iTarget <= MaxClients && DidClientEscape(iTarget))
 				{
+					if (g_hBossFailSafeTimer[iBossIndex] == INVALID_HANDLE)
+						g_hBossFailSafeTimer[iBossIndex] = CreateTimer(2.5, Timer_DeathPosChaseStop, iBossIndex); //Setup a fail safe timer in case we can't finish our path.
 					// Even if the target isn't valid anymore, see if I still have some ways to go on my current path,
 					// because I shouldn't actually know that the target has died until I see it.
 					if (!g_hBossChaserPathLogic[iBossIndex].IsPathValid())
@@ -5209,10 +5219,10 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 				
 				if (NPCGetFlags(iBossIndex) & SFF_ATTACKPROPS)
 				{
-					for (int iAttackIndex = 0; iAttackIndex < NPCChaserGetAttackCount(iBossIndex); iAttackIndex++)
+					for (int iAttackIndex2 = 0; iAttackIndex2 < NPCChaserGetAttackCount(iBossIndex); iAttackIndex2++)
 					{
-						if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile) continue;
-						bBlockingProp = NPC_CanAttackProps(iBossIndex,NPCChaserGetAttackRange(iBossIndex, iAttackIndex), NPCChaserGetAttackSpread(iBossIndex, iAttackIndex));
+						if (NPCChaserGetAttackType(iBossIndex, iAttackIndex2) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex2) == SF2BossAttackType_Projectile) continue;
+						bBlockingProp = NPC_CanAttackProps(iBossIndex,NPCChaserGetAttackRange(iBossIndex, iAttackIndex2), NPCChaserGetAttackSpread(iBossIndex, iAttackIndex2));
 						if (bBlockingProp) break;
 					}
 				}
@@ -7381,10 +7391,6 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					
 					if (tracerEffect[0])
 					{
-						if ( DMG_BULLET && DMG_CRIT )
-						{
-							Format( effect, sizeof(effect), "%s_crit", tracerEffect );
-						}
 						int tblidx = FindStringTable("ParticleEffectNames");
 						if (tblidx == INVALID_STRING_TABLE) 
 						{
@@ -7394,12 +7400,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 						char tmp[256];
 						int count = GetStringTableNumStrings(tblidx);
 						int stridx = INVALID_STRING_INDEX;
-						for (int i = 0; i < count; i++)
+						for (int i2 = 0; i2 < count; i2++)
 						{
-							ReadStringTable(tblidx, i, tmp, sizeof(tmp));
+							ReadStringTable(tblidx, i2, tmp, sizeof(tmp));
 							if (StrEqual(tmp, effect, false))
 							{
-								stridx = i;
+								stridx = i2;
 								break;
 							}
 						}
@@ -7489,12 +7495,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	if (NPCChaserGetAttackDisappear(iBossIndex, iAttackIndex) != 1 && NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) != 1)
 	{
 		g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender));
-		g_NPCBaseAttacks[iBossIndex][iAttackIndex][SF2NPCChaser_BaseAttackNextAttackTime] = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
+		g_NPCBaseAttacks[iBossIndex][iAttackIndex].BaseAttackNextAttackTime = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
 	}
 	if(NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) == 1 && !g_bNPCAlreadyAttacked[iBossIndex])
 	{
 		g_hSlenderBackupAtkTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEndBackup, EntIndexToEntRef(slender));
-		g_NPCBaseAttacks[iBossIndex][iAttackIndex][SF2NPCChaser_BaseAttackNextAttackTime] = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
+		g_NPCBaseAttacks[iBossIndex][iAttackIndex].BaseAttackNextAttackTime = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
 		g_bNPCAlreadyAttacked[iBossIndex] = true;
 	}
 	if (NPCChaserGetAttackDisappear(iBossIndex, iAttackIndex) == 1)
