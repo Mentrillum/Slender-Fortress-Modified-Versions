@@ -2526,13 +2526,21 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						float flAttackBeginRangeEx, flAttackBeginFOVEx;
 						float flDist = GetVectorDistance(g_flSlenderGoalPos[iBossIndex], flMyPos);
 						float flFov = (FloatAbs(AngleDiff(flAttackDirection[0], flMyEyeAng[0])) + FloatAbs(AngleDiff(flAttackDirection[1], flMyEyeAng[1])));
-						if (!NPCGetFlags(iBossIndex) & SFF_ATTACKPROPS)
+						if (!NPCGetFlags(iBossIndex) & SFF_RANDOMATTACKS)
 						{
 							for (int iAttackIndex = 0; iAttackIndex < NPCChaserGetAttackCount(iBossIndex); iAttackIndex++)
 							{
 								int[] iAttackArray2 = new int[SF2_CHASER_BOSS_MAX_ATTACKS];
 								char sIndexes[16];
 								flAttackBeginRangeEx = NPCChaserGetAttackBeginRange(iBossIndex, iAttackIndex);
+								if (NPCGetRaidHitbox(iBossIndex) == 1 && flAttackBeginRangeEx != 0.0)
+								{
+									flAttackBeginRangeEx += g_flSlenderDetectMaxs[iBossIndex][0];
+								}
+								else if (NPCGetRaidHitbox(iBossIndex) == 0 && flAttackBeginRangeEx != 0.0)
+								{
+									flAttackBeginRangeEx += 13.0;
+								}
 								flAttackBeginFOVEx = NPCChaserGetAttackBeginFOV(iBossIndex, iAttackIndex);
 								if (flDist <= flAttackBeginRangeEx && flFov <= (flAttackBeginFOVEx / 2.0) && NPCChaserGetNextAttackTime(iBossIndex,iAttackIndex) <= GetGameTime() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && (iDifficulty >= GetProfileAttackNum(sSlenderProfile, "attack_use_on_difficulty", 0, iAttackIndex+1)))
 								{
@@ -2571,6 +2579,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							char sIndexes[16];
 							flAttackBeginRangeEx = NPCChaserGetAttackBeginRange(iBossIndex, iRandomAttackIndex);
 							flAttackBeginFOVEx = NPCChaserGetAttackBeginFOV(iBossIndex, iRandomAttackIndex);
+							if (NPCGetRaidHitbox(iBossIndex) == 1 && flAttackBeginRangeEx != 0.0)
+							{
+								flAttackBeginRangeEx += g_flSlenderDetectMaxs[iBossIndex][0];
+							}
+							else if (NPCGetRaidHitbox(iBossIndex) == 0 && flAttackBeginRangeEx != 0.0)
+							{
+								flAttackBeginRangeEx += 13.0;
+							}
 							if (flDist <= flAttackBeginRangeEx && flFov <= (flAttackBeginFOVEx / 2.0) && NPCChaserGetNextAttackTime(iBossIndex,iRandomAttackIndex) <= GetGameTime() && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && (iDifficulty >= GetProfileAttackNum(sSlenderProfile, "attack_use_on_difficulty", 0, iRandomAttackIndex+1)))
 							{
 								// ENOUGH TALK! HAVE AT YOU!

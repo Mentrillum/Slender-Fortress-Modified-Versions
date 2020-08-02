@@ -1354,7 +1354,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where bosses would still chase dead players.\n-Fixed crashes regarding the PvP logic."
+		"en"	"-Fixed the boss glitchy hitbox for real.\n-Fixed a bug where mute mode was broken.\n-In Boxing, Medics can finally pick up health kits."
 	}
 
 	"SF2 Smite player"

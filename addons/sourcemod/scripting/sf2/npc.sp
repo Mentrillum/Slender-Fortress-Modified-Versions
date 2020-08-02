@@ -1375,11 +1375,17 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			{
 				SetEntPropVector(iBoss, Prop_Send, "m_vecMins", g_flSlenderDetectMins[iBossIndex]);
 				SetEntPropVector(iBoss, Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iBossIndex]);
+				
+				SetEntPropVector(iBoss, Prop_Send, "m_vecMinsPreScaled", g_flSlenderDetectMins[iBossIndex]);
+				SetEntPropVector(iBoss, Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iBossIndex]);
 			}
 			else if (NPCGetRaidHitbox(iBossIndex) == 0)
 			{
 				SetEntPropVector(iBoss, Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
 				SetEntPropVector(iBoss, Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
+				
+				SetEntPropVector(iBoss, Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
+				SetEntPropVector(iBoss, Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
 			}
 			
 			if (NPCGetModelSkinMax(iBossIndex) > 0)

@@ -870,21 +870,21 @@ public int Panel_SettingsMuteMode(Handle menu, MenuAction action,int param1,int 
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 1;
+				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 0;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Normal", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 2;
+				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 1;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Opposing", param1);
 			}
 			case 3:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 3;
+				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 2;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Proxy", param1);

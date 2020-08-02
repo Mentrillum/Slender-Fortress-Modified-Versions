@@ -34,8 +34,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.3a Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.3a Modified"
+#define PLUGIN_VERSION "1.5.5.3b Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.3b Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -479,7 +479,7 @@ enum struct PlayerPreferences
 	bool PlayerPreference_EnableProxySelection;
 	bool PlayerPreference_ProjectedFlashlight;
 	
-	int PlayerPreference_MuteMode; //1 = Normal, 2 = Opposing Team, 3 = Opposing Team Proxy Ignore
+	int PlayerPreference_MuteMode; //0 = Normal, 1 = Opposing Team, 2 = Opposing Team Proxy Ignore
 	int PlayerPreference_FlashlightTemperature; //1 = 1000, 2 = 2000, 3 = 3000, 4 = 4000, 5 = 5000, 6 = 6000, 7 = 7000, 8 = 8000, 9 = 9000, 10 = 10000
 }
 
@@ -1433,7 +1433,7 @@ static void SDK_Init()
 	}
 
 	iOffset = GameConfGetOffset(hConfig, "CBaseProjectile::CanCollideWithTeammates");
-	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	g_hSDKProjectileCanCollideWithTeammates = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity, Hook_PvPProjectileCanCollideWithTeammates);
 	if (g_hSDKProjectileCanCollideWithTeammates == INVALID_HANDLE)
 	{
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
@@ -3496,7 +3496,7 @@ public void OnEntityCreated(int ent, const char[] classname)
 	{
 		SDKHook(ent, SDKHook_SetTransmit, Hook_FlashlightBeamSetTransmit);
 	}
-	else if(strncmp(classname, "item_healthkit_", 15) == 0)
+	else if(strncmp(classname, "item_healthkit_", 15) == 0 && !SF_IsBoxingMap())
 	{
 		SDKHook(ent, SDKHook_Touch, Hook_HealthKitOnTouch);
 	}
@@ -4583,7 +4583,7 @@ public void OnClientCookiesCached(int iClient)
 	
 	g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn = false;
 	g_iPlayerPreferences[iClient].PlayerPreference_ShowHints = true;
-	g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = 1;
+	g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = 0;
 	g_iPlayerPreferences[iClient].PlayerPreference_FilmGrain = false;
 	g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection = true;
 	g_iPlayerPreferences[iClient].PlayerPreference_FlashlightTemperature = 6;
@@ -4750,7 +4750,7 @@ public void OnClientDisconnect(int iClient)
 	
 	// Reset variables.
 	g_iPlayerPreferences[iClient].PlayerPreference_ShowHints = true;
-	g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = 1;
+	g_iPlayerPreferences[iClient].PlayerPreference_MuteMode = 0;
 	g_iPlayerPreferences[iClient].PlayerPreference_FilmGrain = false;
 	g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection = true;
 	g_iPlayerPreferences[iClient].PlayerPreference_ProjectedFlashlight = false;
@@ -9271,7 +9271,7 @@ void SpawnPages()
 public Action Page_RemoveAlwaysTransmit(Handle timer, int iRef)
 {
 	int iPage = EntRefToEntIndex(iRef);
-	if (iPage > MaxClients)
+	if (iPage > MaxClients && IsValidEdict(iPage))
 	{
 		//All the pages are now "registred" by the client, nuke the always transmit flag.
 		SetEntityFlags(iPage, GetEntityFlags(iPage)^FL_EDICT_ALWAYS);

@@ -6324,7 +6324,7 @@ stock void ClientUpdateListeningFlags(int client, bool bReset=false)
 				{
 					SetListenOverride(client, i, Listen_No);
 				}
-				else
+				else if (g_iPlayerPreferences[client].PlayerPreference_MuteMode == 0)
 				{
 					SetListenOverride(client, i, Listen_Default);
 				}
@@ -7130,7 +7130,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 	
 	float flHealthFromPack = 1.0;
-	if (!g_bPlayerEliminated[client])
+	if (!g_bPlayerEliminated[client] && !SF_IsBoxingMap())
 	{
 		if (g_bPlayerHasRegenerationItem[client])
 			flHealthFromPack = 0.40;
