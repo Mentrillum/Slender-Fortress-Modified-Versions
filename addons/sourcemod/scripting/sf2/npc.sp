@@ -633,6 +633,40 @@ int NPCGetTeleportType(int iNPCIndex)
 	return g_iNPCTeleportType[iNPCIndex];
 }
 
+bool NPCShouldSeeEntity(int iNPCIndex, int entity)
+{
+	if (!IsValidEntity(entity))
+		return false;
+
+	Action result = Plugin_Continue;
+	Call_StartForward(fOnBossSeeEntity);
+	Call_PushCell(iNPCIndex);
+	Call_PushCell(entity);
+	Call_Finish(result);
+
+	if (result != Plugin_Continue)
+		return false;
+	
+	return true;
+}
+
+bool NPCShouldHearEntity(int iNPCIndex, int entity)
+{
+	if (!IsValidEntity(entity))
+		return false;
+	
+	Action result = Plugin_Continue;
+	Call_StartForward(fOnBossHearEntity);
+	Call_PushCell(iNPCIndex);
+	Call_PushCell(entity);
+	Call_Finish(result);
+
+	if (result != Plugin_Continue)
+		return false;
+	
+	return true;
+}
+
 /**
  *	Returns the boss's eye position (eye pos offset + absorigin).
  */
@@ -1600,11 +1634,12 @@ void RemoveSlender(int iBossIndex)
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
 	int iBoss = NPCGetEntIndex(iBossIndex);
-	SDKUnhook(iBoss, SDKHook_SetTransmit, Hook_SlenderModelSetTransmit);
-	g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
-	
 	if (iBoss && iBoss != INVALID_ENT_REFERENCE)
 	{
+		Call_StartForward(fOnBossDespawn);
+		Call_PushCell(iBossIndex);
+		Call_Finish();
+
 		//Turn off all slender's effects in order to prevent some bugs.
 		SlenderRemoveEffects(iBoss, true);
 		// Stop all possible looping sounds.
@@ -1626,12 +1661,17 @@ void RemoveSlender(int iBossIndex)
 			}
 		}
 		
+		g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
 		AcceptEntityInput(iBoss, "Kill");
 	}
-	
+	else 
+	{
+		g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
+	}
+
 	iBoss = g_iSlenderHitbox[iBossIndex];
 	g_iSlenderHitbox[iBossIndex] = INVALID_ENT_REFERENCE;
-	
+
 	if (iBoss && iBoss != INVALID_ENT_REFERENCE && IsValidEntity(iBoss))
 		AcceptEntityInput(iBoss, "Kill");
 }

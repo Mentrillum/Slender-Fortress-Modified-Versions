@@ -64,6 +64,9 @@ enum struct PvPProjectile_BallOfFire
 
 	void OnTouchPost(int otherEntity)
 	{
+		if (IsRoundEnding())
+			return;
+
 		int ent = this.EntIndex;
 		int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
 		if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity || !IsClientInPvP(ownerEntity))

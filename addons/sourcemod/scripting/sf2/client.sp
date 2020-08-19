@@ -2941,6 +2941,8 @@ void ClientResetSprint(int client)
 	if (GetConVarInt(g_cvDebugDetail) > 2) DebugMessage("START ClientResetSprint(%d)", client);
 #endif
 
+	bool bWasSprinting = IsClientSprinting(client);
+
 	g_bPlayerSprint[client] = false;
 	g_iPlayerSprintPoints[client] = 100;
 	g_hPlayerSprintTimer[client] = INVALID_HANDLE;
@@ -2953,6 +2955,13 @@ void ClientResetSprint(int client)
 		ClientSetFOV(client, g_iPlayerDesiredFOV[client]);
 	}
 	
+	if (bWasSprinting)
+	{
+		Call_StartForward(fOnClientStopSprinting);
+		Call_PushCell(client);
+		Call_Finish();
+	}
+
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 2) DebugMessage("END ClientResetSprint(%d)", client);
 #endif
@@ -2973,6 +2982,10 @@ void ClientStartSprint(int client)
 	
 	SDKHook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
 	SDKUnhook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
+
+	Call_StartForward(fOnClientStartSprinting);
+	Call_PushCell(client);
+	Call_Finish();
 }
 
 static void ClientSprintTimer(int client, bool bRecharge=false)
@@ -3016,6 +3029,10 @@ void ClientStopSprint(int client)
 	
 	SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
 	SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
+
+	Call_StartForward(fOnClientStopSprinting);
+	Call_PushCell(client);
+	Call_Finish();
 }
 
 bool IsClientReallySprinting(int client)
@@ -4748,6 +4765,11 @@ bool IsClientBlinking(int client)
 float ClientGetBlinkMeter(int client)
 {
 	return g_flPlayerBlinkMeter[client];
+}
+
+void ClientSetBlinkMeter(int client, float amount)
+{
+	g_flPlayerBlinkMeter[client] = amount;
 }
 
 int ClientGetBlinkCount(int client)

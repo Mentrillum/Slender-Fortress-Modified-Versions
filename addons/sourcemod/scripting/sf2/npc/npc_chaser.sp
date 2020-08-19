@@ -1765,6 +1765,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							bIsVisible = false;
 						}
 					}
+
+					if (bIsVisible)
+					{
+						bIsVisible = NPCShouldSeeEntity(iBossIndex, i);
+					}
+
 					if (bIsVisible)
 					{
 						flDist = GetVectorDistance(flTraceStartPos, flTraceEndPos);
@@ -1805,6 +1811,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							bIsVisible = false;
 						}
 					}
+
+					if (bIsVisible)
+					{
+						bIsVisible = NPCShouldSeeEntity(iBossIndex, i);
+					}
+
 					if (bIsVisible)
 					{
 						flDist = GetVectorDistance(flTraceStartPos, flTraceEndPos);
@@ -1835,6 +1847,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		
 		if (!bIsVisible && iTraceHitEntity == i) bIsVisible = true;
 		
+		if (bIsVisible)
+		{
+			bIsVisible = NPCShouldSeeEntity(iBossIndex, i);
+		}
+
 		bPlayerVisible[i] = bIsVisible;
 		
 		// Near radius check.
@@ -5113,6 +5130,11 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 						}
 					}
 					
+					if (bCanSeeTarget)
+					{
+						bCanSeeTarget = NPCShouldSeeEntity(iBossIndex, iTarget);
+					}
+
 					if (NPCHasAttribute(iBossIndex, "always look at target while chasing") || bCanSeeTarget)
 					{
 						if (iTarget && iTarget != INVALID_ENT_REFERENCE)
