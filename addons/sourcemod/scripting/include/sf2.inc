@@ -178,78 +178,287 @@ enum SF2RoundState
 #define PROJ_BASEBALL (1 << 7)
 #define PROJ_FIREBALL_ATTACK (1 << 8)
 
-forward SF2_OnBossAdded(iBossIndex);
+/**
+ * Called when a boss is added into the game.
+ *
+ * @param iBossIndex	The index of the newly created boss.
+ */
+forward void SF2_OnBossAdded(int iBossIndex);
 
-forward SF2_OnBossSpawn(iBossIndex);
+/**
+ * Called when the boss spawns into the map.
+ *
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnBossSpawn(int iBossIndex);
 
-forward SF2_OnBossChangeState(iBossIndex, iOldState, iNewState);
+/**
+ * Called when the boss despawns from the map.
+ *
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnBossDespawn(int iBossIndex);
 
-forward Action:SF2_OnBossAnimationUpdate(iBossIndex);
+/**
+ * Called when the boss changes states. Currently only used for Chaser bosses.
+ *
+ * @param iBossIndex	Boss index.
+ * @param iOldState		The old state.
+ * @param iNewState		The new state.
+ */
+forward void SF2_OnBossChangeState(int iBossIndex, int iOldState, int iNewState);
 
-forward Action:SF2_OnBossGetSpeed(client, &Float:flSpeed);
+/**
+ * Called when the boss updates its animation.
+ *
+ * @param iBossIndex	Boss index. 
+ * @return				If Plugin_Handled, animation change will be blocked.
+ */
+forward Action SF2_OnBossAnimationUpdate(int iBossIndex);
 
-forward Action:SF2_OnBossGetWalkSpeed(client, &Float:flWalkSpeed);
+/**
+ * Called to determine the boss's run speed.
+ *
+ * @param iBossIndex	Boss index.
+ * @param flSpeed		The boss's run speed.
+ * @return				If Plugin_Changed, flSpeed is used as the boss's run speed.
+ */
+forward Action SF2_OnBossGetSpeed(int iBossIndex, float &flSpeed);
 
-forward SF2_OnBossRemoved(iBossIndex);
+/**
+ * Called to determine the boss's walk speed.
+ *
+ * @param iBossIndex	Boss index.
+ * @param flSpeed		The boss's walk speed.
+ * @return				If Plugin_Changed, flSpeed is used as the boss's walk speed.
+ */
+forward Action SF2_OnBossGetWalkSpeed(int iBossIndex, float &flWalkSpeed);
 
-forward SF2_OnPagesSpawned();
+/**
+ * Called after the boss has determined it can hear the entity.
+ *
+ * @param iBossIndex	Boss index.
+ * @param entity		Entity index.
+ * @return				Returning a value other than Plugin_Continue will block hearing to the entity.
+ */
+forward Action SF2_OnBossHearEntity(int iBossIndex, int entity);
 
-forward SF2_OnClientCollectPage(pageEnt, client);
+/**
+ * Called after the boss has determined it can see the entity.
+ *
+ * @param iBossIndex	Boss index.
+ * @param entity		Entity index.
+ * @return				Returning a value other than Plugin_Continue will block vision to the entity.
+ */
+forward Action SF2_OnBossSeeEntity(int iBossIndex, int entity);
 
-forward SF2_OnClientBlinked(client);
+/**
+ * Called when a boss is removed from the game.
+ *
+ * @param iBossIndex	The index of the boss to be removed.
+ */
+forward void SF2_OnBossRemoved(int iBossIndex);
 
-forward SF2_OnClientCaughtByBoss(client, iBossIndex);
+/**
+ * Called when pages have spawned into the map.
+ */
+forward void SF2_OnPagesSpawned();
 
-forward Action:SF2_OnClientGiveQueuePoints(client, &iAddAmount);
+/**
+ * Called when the round state changes.
+ * 
+ * @param iOldState		Old state.
+ * @param iNewState		New state.
+ */
+forward void SF2_OnRoundStateChange(SF2RoundState iOldState, SF2RoundState iNewState);
 
-forward SF2_OnClientActivateFlashlight(client);
+/**
+ * Called when a player collects a page.
+ *
+ * @param pageEnt	The entity index of the page.
+ * @param client	Client index.
+ */
+forward void SF2_OnClientCollectPage(int pageEnt, int client);
 
-forward SF2_OnClientDeactivateFlashlight(client);
+/**
+ * Called when a player blinks.
+ *
+ * @param client	Client index.
+ */
+forward void SF2_OnClientBlink(int client);
 
-forward SF2_OnClientBreakFlashlight(client);
+/**
+ * Called when the player gets caught by a boss, either from too much static, being within
+ * a boss's kill radius, or dies from too much camping. This is also called for fake bosses.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnClientCaughtByBoss(int client, int iBossIndex);
 
-forward SF2_OnClientEscape(client);
+/**
+ * Called when giving queue points to the player at the end of the round.
+ *
+ * @param client		Client index.
+ * @param iAddAmount	The amount of queue points to give.
+ * @return				If Plugin_Changed, iAddAmount will be used as the amount to give.
+ */
+forward Action SF2_OnClientGiveQueuePoints(int client, int &iAddAmount);
 
-forward SF2_OnClientLooksAtBoss(client, iBossIndex);
+/**
+ * Called when the player turns on their flashlight.
+ *
+ * @param client		Client index.
+ */
+forward void SF2_OnClientActivateFlashlight(int client);
 
-forward SF2_OnClientLooksAwayFromBoss(client, iBossIndex);
+/**
+ * Called when the player turns off their flashlight.
+ *
+ * @param client		Client index.
+ */
+forward void SF2_OnClientDeactivateFlashlight(int client);
 
-forward SF2_OnClientStartDeathCam(client, iBossIndex);
+/**
+ * Called when the player breaks their flashlight.
+ *
+ * @param client		Client index.
+ */
+forward void SF2_OnClientBreakFlashlight(int client);
 
-forward SF2_OnClientEndDeathCam(client, iBossIndex);
+/**
+ * Called when the player starts sprinting.
+ *
+ * @param client		Client index.
+ */
+forward void SF2_OnClientStartSprinting(int client);
 
-forward Action:SF2_OnClientGetDefaultWalkSpeed(client, &Float:flDefault);
+/**
+ * Called when the player stops sprinting.
+ *
+ * @param client		Client index.
+ */
+forward void SF2_OnClientStopSprinting(int client);
 
-forward Action:SF2_OnClientGetDefaultSprintSpeed(client, &Float:flDefault);
+/**
+ * Called when the player escapes from the map.
+ *
+ * @param client		Client index.
+ */
+forward void SF2_OnClientEscape(int client);
 
-forward Action:SF2_OnClientTakeDamage(victim, attacker, &Float:damage);
+/**
+ * Called when the player looks at the boss.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss the client is looking at.
+ */
+forward void SF2_OnClientLooksAtBoss(int client, int iBossIndex);
 
-forward Action:SF2_OnGroupGiveQueuePoints(iGroupIndex, &iAddAmount);
+/**
+ * Called when the player looks away from the boss.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss the client is no longer looking at.
+ */
+forward void SF2_OnClientLooksAwayFromBoss(int client, int iBossIndex);
 
-forward SF2_OnClientDamagedByBoss(client, iBossIndex, inflictor, Float:flDamage, iDamageType);
+/**
+ * Called when the player gets caught in a boss's deathcam.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnClientStartDeathCam(int client, int iBossIndex);
 
-forward SF2_OnClientSpawnedAsProxy(client);
+/**
+ * Called when the player gets exits a boss's deathcam.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnClientEndDeathCam(int client, int iBossIndex);
+
+/**
+ * Called to determine a player's default walk speed.
+ *
+ * @param client		Client index.
+ * @param flDefault		The default walk speed.
+ * @return				If Plugin_Changed, flDefault is used as player's default walk speed.
+ */
+forward Action SF2_OnClientGetDefaultWalkSpeed(int client, float &flDefault);
+
+/**
+ * Called to determine a player's default sprint speed.
+ *
+ * @param client		Client index.
+ * @param flDefault		The default sprint speed.
+ * @return				If Plugin_Changed, flDefault is used as player's default sprint speed.
+ */
+forward Action SF2_OnClientGetDefaultSprintSpeed(int client, float &flDefault);
+
+/**
+ * Called when a player gets damaged.
+ *
+ * @param victim		The player who got damaged.
+ * @param attacker		The damage source.
+ * @param damage		The amount of damage to take.
+ * @return				If Plugin_Changed, damage is overrided.
+ */
+forward Action SF2_OnClientTakeDamage(int victim, int attacker, float &damage);
+
+/**
+ * Called when giving queue points to the group at the end of the round.
+ *
+ * @param iGroupIndex		Group index.
+ * @param iAddAmount		The amount of queue points to give.
+ * @return					If Plugin_Changed, iAddAmount will be used as the amount to give.
+ */
+forward Action SF2_OnGroupGiveQueuePoints(int iGroupIndex, int &iAddAmount);
+
+/**
+ * Called when a player gets damaged by the boss.
+ *
+ * @param client		The player who got damaged.
+ * @param iBossIndex	Boss that damaged the player.
+ * @param inflictor		The inflictor of the damage.
+ * @param flDamage		The amount of damage taken.
+ * @param iDamageType	The damage type.
+ */
+forward void SF2_OnClientDamagedByBoss(int client, int iBossIndex, int inflictor, float flDamage, int iDamageType);
+
+/**
+ * Called when a player spawns as a proxy.
+ */
+forward void SF2_OnClientSpawnedAsProxy(int client);
 
 /**
  * Returns a bool about the gamemode's state.
  *
  * @return				True if the gamemode is running, false if not.
  */
-native bool:SF2_IsRunning();
+native bool SF2_IsRunning();
 
 /**
  * Returns the current state of the round.
  *
- * @return				Current state or the round.
+ * @return				Current state of the round.
  */
-native SF2_GetRoundState();
+native SF2RoundState SF2_GetRoundState();
+
+/**
+ * Returns whether or not the round is in grace period.
+ *
+ * @return				True if in grace period, false otherise.
+ */
+native bool SF2_IsRoundInGracePeriod();
 
 /**
  * Returns the current difficulty of the round.
  *
  * @return				Integer of the difficulty.
  */
-native SF2_GetCurrentDifficulty();
+native int SF2_GetCurrentDifficulty();
 
 /**
  * Returns the current difficulty of the round.
@@ -257,21 +466,21 @@ native SF2_GetCurrentDifficulty();
  * @param iDifficulty	Difficulty number.
  * @return				Modifier float value of the indicated difficulty number.
  */
-native Float:SF2_GetDifficultyModifier(iDifficulty);
+native float SF2_GetDifficultyModifier(int iDifficulty);
 
 /**
  * Returns a bool indicating whether or not a special round is currently running.
  *
  * @return				True if a special round is running, false if not.
  */
-native bool:SF2_IsSpecialRoundRunning();
+native bool SF2_IsSpecialRoundRunning();
 
 /**
  * Returns the type of special round that is running.
  *
  * @return				Special round type.
  */
-native SF2_GetSpecialRoundType();
+native int SF2_GetSpecialRoundType();
 
 /**
  * Returns a bool about the client's elimination state.
@@ -279,7 +488,7 @@ native SF2_GetSpecialRoundType();
  * @param client		Client index.
  * @return				True if the player is eliminated, false if not.
  */
-native bool:SF2_IsClientEliminated(client);
+native bool SF2_IsClientEliminated(int client);
 
 /**
  * Returns a bool about the client's ghost mode state.
@@ -287,7 +496,7 @@ native bool:SF2_IsClientEliminated(client);
  * @param client		Client index.
  * @return				True if the player is in Ghost Mode, false if not.
  */
-native bool:SF2_IsClientInGhostMode(client);
+native bool SF2_IsClientInGhostMode(int client);
 
 /**
  * Returns a bool if the client is in a Player vs. Player zone or not.
@@ -295,7 +504,7 @@ native bool:SF2_IsClientInGhostMode(client);
  * @param client		Client index.
  * @return				True if the player is in a PvP zone, false if not.
  */
-native bool:SF2_IsClientInPvP(client);
+native bool SF2_IsClientInPvP(int client);
 
 /**
  * Tells whether if the client is a Proxy or not.
@@ -303,7 +512,7 @@ native bool:SF2_IsClientInPvP(client);
  * @param client		Client index.
  * @return				True if the player is a Proxy, false if not.
  */
-native bool:SF2_IsClientProxy(client);
+native bool SF2_IsClientProxy(int client);
 
 /**
  * Tells whether or not the client is looking at the boss.
@@ -312,7 +521,7 @@ native bool:SF2_IsClientProxy(client);
  * @param iBossIndex	Boss index.
  * @return				True if the player is a Proxy, false if not.
  */
-native bool:SF2_IsClientLookingAtBoss(client, iBossIndex);
+native bool SF2_IsClientLookingAtBoss(int client, int iBossIndex);
 
 /**
  * Gives the amount of times the client has blinked in one life. This count will reset upon spawn.
@@ -320,7 +529,29 @@ native bool:SF2_IsClientLookingAtBoss(client, iBossIndex);
  * @param client		Client index.
  * @return				Number of times the client has blinked in one life.
  */
-native SF2_GetClientBlinkCount(client);
+native int SF2_GetClientBlinkCount(int client);
+
+/**
+ * Returns whether or not the client is in a blink state (visibility obscured).
+ *
+ * @param client		Client index.
+ * @return				True if blinking, false otherwise.
+ */
+native bool SF2_IsClientBlinking(int client);
+
+/**
+ * Returns the value of the client's blink meter.
+ * @param client		Client index.
+ * @return				Blink meter, a value between 0 and 1.
+ */
+native float SF2_GetClientBlinkMeter(int client);
+
+/**
+ * Sets the value of the client's blink meter.
+ * @param client		Client index.
+ * @param amount		Blink meter, a value between 0 and 1.
+ */
+native void SF2_SetClientBlinkMeter(int client, float amount);
 
 /**
  * If the client is a Proxy, then this returns the boss index that the client is associated with.
@@ -328,7 +559,15 @@ native SF2_GetClientBlinkCount(client);
  * @param client		Client index.
  * @return				If the client is a proxy, then this will return a boss index, -1 if not.
  */
-native SF2_GetClientProxyMaster(client);
+native int SF2_GetClientProxyMaster(int client);
+
+/**
+ * If the client is a Proxy, then this sets the boss index that the client is associated with.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss index.
+ */
+native void SF2_SetClientProxyMaster(int client, int iBossIndex);
 
 /**
  * If the client is a Proxy, then this returns the amount of Control points the client has left.
@@ -336,65 +575,554 @@ native SF2_GetClientProxyMaster(client);
  * @param client		Client index.
  * @return				If the client is a proxy, then this will return the amount of Control Points out of 100, else 0.
  */
-native SF2_GetClientProxyControlAmount(client);
+native int SF2_GetClientProxyControlAmount(int client);
 
 /**
- * If the client is a Proxy, then this returns the rate which each Control point will drain for the client.
+ * If the client is a Proxy, then this sets the amount of Control points the client has left.
+ *
+ * @param client		Client index.
+ * @param iAmount		The amount of Control points. Must be between 0-100.
+ */
+native void SF2_SetClientProxyControlAmount(int client, int iAmount);
+
+/**
+ * If the client is a Proxy, then this returns the interval which each Control point will drain for the client.
  *
  * @param client		Client index.
  * @return				If the client is a proxy, then this will return a boss index, -1 if not.
  */
-native Float:SF2_GetClientProxyControlRate(client);
+native float SF2_GetClientProxyControlRate(int client);
 
-native bool:SF2_DidClientEscape(client);
+/**
+ * If the client is a Proxy, then this sets the interval which each Control point will drain for the client.
+ *
+ * @param client		Client index.
+ * @param flInterval	Interval to subtract one Control point from the client.
+ */
+native float SF2_SetClientProxyControlRate(int client, float flInterval);
 
-native SF2_SetClientProxyMaster(client, iBossIndex);
+/**
+ * Tells whether or not the client escaped from the map.
+ *
+ * @param client		Client index.
+ * @return				True if the client escaped, false otherwise.
+ */
+native bool SF2_DidClientEscape(int client);
 
-native SF2_SetClientProxyControlAmount(client, iAmount);
+/**
+ * Forces a client to escape.
+ *
+ * @param client		Client index.
+ */
+native void SF2_ForceClientEscape(int client);
 
-native SF2_SetClientProxyControlRate(client, Float:flAmount);
+/**
+ * Returns the amount of flashlight the client has.
+ *
+ * @param client		Client index.
+ * @return				Percentage of battery life.
+ */
+native float SF2_GetClientFlashlightBatteryLife(int client);
 
-native SF2_CollectAsPage(pageEnt, client);
+/**
+ * Sets the amount of flashlight the client has. The value should be between 0 and 1.
+ *
+ * @param client		Client index.
+ * @param batteryLife	The amount of battery life.
+ */
+native void SF2_SetClientFlashlightBatteryLife(int client, float batteryLife);
 
-native SF2_GetMaxBossCount();
+/**
+ * Returns whether or not the player is using their flashlight.
+ *
+ * @param client		Client index.
+ * @return				True if using flashlight, false otherwise.
+ */
+native bool SF2_IsClientUsingFlashlight(int client);
 
-native SF2_EntIndexToBossIndex(iEntIndex);
+/**
+ * Returns the amount of sprint points the client has.
+ *
+ * @param client	Client index.
+ * @return			Sprint points.
+ */
+native int SF2_GetClientSprintPoints(int client);
 
-native SF2_BossIndexToEntIndex(iBossIndex);
+/**
+ * Sets the amount of sprint points the client has. The value should be between 0 and 100.
+ *
+ * @param client			Client index.
+ * @param sprintPoints		Sprint points.
+ */
+native int SF2_SetClientSprintPoints(int client, int sprintPoints);
 
-native SF2_BossIndexToEntIndexEx(iBossIndex); //Don't use this function unless you know what it does!!!! Most will not!
+/**
+ * Returns whether or not the client wants to sprint.
+ *
+ * @param client			Client index.
+ * @return					True if wants to sprint, false otherwise.
+ */
+native bool SF2_IsClientSprinting(int client);
 
-native SF2_BossIDToBossIndex(iBossID);
+/**
+ * Returns whether or not the client is actually in sprint state.
+ *
+ * @param client			Client index.
+ * @return					True if in sprint state, false otherwise.
+ */
+native bool SF2_IsClientReallySprinting(int client);
 
-native SF2_BossIndexToBossID(iBossID);
+/**
+ * Returns whether or not the client is caught in a trap.
+ *
+ * @param client			Client index.
+ * @return					True if trapped, false otherwise.
+ */
+native bool SF2_IsClientTrapped(int client);
 
-native SF2_GetBossName(iBossIndex, String:sBuffer[], iBufferLen);
+/**
+ * Collects the given entity as a page.
+ *
+ * @param pageEnt		Entity index.
+ * @param client		Client index.
+ */
+native void SF2_CollectAsPage(int pageEnt, int client);
 
-native SF2_GetBossModelEntity(iBossIndex);
+/**
+ * Returns the maximum boss count.
+ *
+ * @return	Maximum boss count.
+ */
+native int SF2_GetMaxBossCount();
 
-native SF2_GetBossTarget(iBossIndex);
+/**
+ * Converts the entity index into a boss index.
+ *
+ * @param iEntIndex		Entity index.
+ * @return				Boss index, or -1 if entity index is not a boss.
+ */
+native int SF2_EntIndexToBossIndex(int iEntIndex);
 
-native SF2_GetBossMaster(iBossIndex);
+/**
+ * Returns the entity index of a boss.
+ *
+ * @param iBossIndex	Boss index.
+ * @return				Entity index, or -1 if the boss has not spawned.
+ */
+native int SF2_BossIndexToEntIndex(int iBossIndex);
 
-native SF2_GetBossState(iBossIndex);
+native int SF2_BossIndexToEntIndexEx(int iBossIndex); //Don't use this function unless you know what it does!!!! Most will not!
 
-native Float:SF2_GetBossFOV(iBossIndex);
+/**
+ * Converts a boss unique ID to a boss index.
+ *
+ * @param iBossID		Unique id.
+ * @return				Boss index, or -1 if no boss has the unique id.
+ */
+native int SF2_BossIDToBossIndex(int iBossID);
 
-native bool:SF2_IsBossProfileValid(const String:sProfile[]);
+/**
+ * Returns the unique ID of a boss. A unique ID to a boss index is the equivalent of an entity reference to an entity index.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Unique id.
+ */
+native int SF2_BossIndexToBossID(int iBossIndex);
 
-native SF2_GetBossProfileNum(const String:sProfile[], const String:sKey[], iDefaultValue=0);
+/**
+ * Adds a boss into the game.
+ *
+ * @param profile			Name of profile.
+ * @param flags				Additional flags to add to the boss.
+ * @param spawnCompanions	Add companions of the boss.
+ * @param playSpawnSound	Play spawn sound.
+ * @return					Boss index, or -1 if failed.
+ */
+native int SF2_AddBoss(const char[] profile, int flags=0, bool spawnCompanions=true, bool playSpawnSound=true);
 
-native Float:SF2_GetBossProfileFloat(const String:sProfile[], const String:sKey[], Float:flDefaultValue=0.0);
+/**
+ * Removes a boss from the game.
+ *
+ * @param iBossIndex	Boss index.
+ */
+native void SF2_RemoveBoss(int iBossIndex);
 
-native bool:SF2_GetBossProfileString(const String:sProfile[], const String:sKey[], String:sBuffer[], iBufferLen, const String:sDefaultValue[]="");
+/**
+ * Retrieves the profile name of the boss.
+ *
+ * @param iBossIndex		Boss index.
+ * @param sBuffer			Buffer to store the profile name.
+ * @param iBufferLen		Max length of sBuffer.
+ */
+native void SF2_GetBossName(int iBossIndex, char[] sBuffer, int iBufferLen);
 
-native bool:SF2_GetBossProfileVector(const String:sProfile[], const String:sKey[], Float:flBuffer[3], const Float:flDefaultValue[3]=NULL_VECTOR);
+/**
+ * Returns the type of the boss. See the SF2BossType enumeration for possible values.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Entity index.
+ */
+native int SF2_GetBossType(int iBossIndex);
 
-native bool:SF2_GetRandomStringFromBossProfile(const String:sProfile, const String:sKey[], String:sBuffer[], iBufferLen, iIndex=-1);
+/**
+ * Returns the flags of the boss.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Flags.
+ */
+native int SF2_GetBossFlags(int iBossIndex);
 
-native bool:SF2_IsSurvivalMap();
+/**
+ * Sets the flags of the boss.
+ *
+ * @param iBossIndex		Boss index.
+ * @param flags				Flags.
+ */
+native void SF2_SetBossFlags(int iBossIndex, int flags);
 
-public SharedPlugin:__pl_sf2 = 
+/**
+ * Spawns the boss into the map.
+ *
+ * @param iBossIndex		Boss index.
+ */
+native void SF2_SpawnBoss(int iBossIndex, const float position[3]);
+
+/**
+ * Despawns the boss from the map.
+ *
+ * @param iBossIndex		Boss index.
+ */
+native void SF2_DespawnBoss(int iBossIndex);
+
+/**
+ * Returns the entity index of the boss's model.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Entity index.
+ */
+native int SF2_GetBossModelEntity(int iBossIndex);
+
+/**
+ * Returns the boss's current target.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Entity index.
+ */
+native int SF2_GetBossTarget(int iBossIndex);
+
+/**
+ * If the boss is a copy, this returns the boss that this copy is associated with.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Boss index of master boss.
+ */
+native int SF2_GetBossMaster(int iBossIndex);
+
+/**
+ * Returns the boss's current state.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					The boss's state.
+ */
+native int SF2_GetBossState(int iBossIndex);
+
+/**
+ * Returns the boss's field of view.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Field of view.
+ */
+native float SF2_GetBossFOV(int iBossIndex);
+
+/**
+ * If the boss is in a chase state, returns the time which the boss's persistency on the target ends.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Time where persistency ends.
+ */
+native float SF2_GetBossTimeUntilNoPersistence(int iBossIndex);
+
+/**
+ * If the boss is in a chase state, sets the time which the boss's persistency on the target ends.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param time				Time where persistency ends.
+ */
+native void SF2_SetBossTimeUntilNoPersistence(int iBossIndex, float time);
+
+/**
+ * If the boss is in an alert state, returns the time which the boss should revert to idle state.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Time where chase state should revert to idle state.
+ */
+native float SF2_GetBossTimeUntilIdle(int iBossIndex);
+
+/**
+ * If the boss is in an alert state, sets the time which the boss should revert to idle state.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param time				Time where chase state should revert to idle state.
+ */
+native void SF2_SetBossTimeUntilIdle(int iBossIndex, float time);
+
+/**
+ * If the boss is in a chase state, returns the time which the boss should revert to alert state.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Time where chase state should revert to alert state.
+ */
+native float SF2_GetBossTimeUntilAlert(int iBossIndex);
+
+/**
+ * If the boss is in a chase state, sets the time which the boss should revert to alert state.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param time				Time where chase state should revert to alert state.
+ */
+native void SF2_SetBossTimeUntilAlert(int iBossIndex, float time);
+
+/**
+ * Returns whether or not the boss is stunnable.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					True if stunnable, false otherwise.
+ */
+native bool SF2_IsBossStunnable(int iBossIndex);
+
+/**
+ * Returns whether or not the boss is stunnable by flashlight.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					True if stunnable by flashlight, false otherwise.
+ */
+native bool SF2_IsBossStunnableByFlashlight(int iBossIndex);
+
+/**
+ * Returns whether or not the boss is cloaked.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					True if cloaked, false otherwise.
+ */
+native bool SF2_IsBossCloaked(int iBossIndex);
+
+/**
+ * Returns the amount of health the boss has before stun.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					The health amount.
+ */
+native float SF2_GetBossStunHealth(int iBossIndex);
+
+/**
+ * Sets the amount of health the boss has before stun.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param health			The health amount.
+ */
+native void SF2_SetBossStunHealth(int iBossIndex, float health);
+
+/**
+ * Returns the time where the boss is not under stun cooldown.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @return					Time when boss is not under stun cooldown.
+ */
+native float SF2_GetBossNextStunTime(int iBossIndex);
+
+/**
+ * Sets the time where the boss is not under stun cooldown.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param time				Time when boss is not under stun cooldown.
+ */
+native float SF2_SetBossNextStunTime(int iBossIndex, float time);
+
+/**
+ * Forces the boss to stop chasing.
+ *
+ * Only used with Chaser bosses.
+ *
+ * Note: If the boss is set to chase endlessly then this will not do anything.
+ *
+ * @param iBossIndex		Boss index.
+ */
+native void SF2_ForceBossGiveUp(int iBossIndex);
+
+/**
+ * Gets the current goal position of the boss.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param position			Buffer to store position.
+ */
+native void SF2_GetBossGoalPosition(int iBossIndex, float position[3]);
+
+/**
+ * Returns whether or not the boss is able to hear the player given sound type.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param client			Client index.
+ * @param soundType			The type of sound to check.
+ * @return					True if boss can hear, false otherwise.
+ */
+native bool SF2_CanBossHearClient(int iBossIndex, int client, SoundType soundType);
+
+/**
+ * Creates a sound hint for the boss to follow.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param soundType			The type of sound hint to create.
+ * @param position			The position of the sound.
+ */
+native void SF2_CreateBossSoundHint(int iBossIndex, SoundType soundType, const float position[3]);
+
+/**
+ * Returns if the given profile is loaded or not.
+ *
+ * @param sProfile		Profile name.
+ * @return				True if loaded, false otherwise.
+ */
+native bool SF2_IsBossProfileValid(const char[] sProfile);
+
+/**
+ * Retrieves an integer keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param iDefaultValue		Fallback value.
+ * @return					The value, or iDefaultValue if the key doesn't exist.
+ */
+native int SF2_GetBossProfileNum(const char[] sProfile, const char[] sKey, int iDefaultValue=0);
+
+/**
+ * Retrieves a float keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param flDefaultValue	Fallback value.
+ * @return					The value, or flDefaultValue if the key doesn't exist.
+ */
+native float SF2_GetBossProfileFloat(const char[] sProfile, const char[] sKey, float flDefaultValue=0.0);
+
+/**
+ * Retrieves a string keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param sBuffer			Buffer to store the value.
+ * @param iBufferLen		Max length of sBuffer.
+ * @param sDefaultValue		Fallback value.
+ * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ */
+native bool SF2_GetBossProfileString(const char[] sProfile, const char[] sKey, char[] sBuffer, int iBufferLen, const char[] sDefaultValue="");
+
+/**
+ * Retrieves a vector keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param flBuffer			Buffer to store the value.
+ * @param flDefaultValue	Fallback value.
+ * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ */
+native bool SF2_GetBossProfileVector(const char[] sProfile, const char[] sKey, float flBuffer[3], const float flDefaultValue[3]=NULL_VECTOR);
+
+/**
+ * Retrieves a random string keyvalue from a section within the profile.
+ *
+ * Example: In a profile, a valid section would look like this:
+ *
+ * "profile"
+ * {
+ *   "section"
+ *   {
+ *     "1"   "item1"
+ *     "2"   "item2"
+ *   }
+ * }
+ *
+ * This function will randomly choose a string value within "section" if sKey = "section".
+ * 
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key. Must be a section.
+ * @param sBuffer			Buffer to store the value.
+ * @param iBufferLen		Max length of sBuffer.
+ * @param iIndex			If < 0, value will be chosen randomly; otherwise will retrieve the value with the specified index.
+ * @return					True if profile exists and key is set; false otherwise.
+ */
+native bool SF2_GetRandomStringFromBossProfile(const char[] sProfile, const char[] sKey, char[] sBuffer, int iBufferLen, int iIndex=-1);
+
+/**
+ * Returns if current map is a survival map or not.
+ *
+ * @return	True if current map is a survival map; false otherwise.
+ */
+native bool SF2_IsSurvivalMap();
+
+/**
+ * Returns if current map is a Boxing map or not.
+ *
+ * @return	True if Boxing map, false otherwise.
+ */
+native bool SF2_IsBoxingMap();
+
+/**
+ * Returns if current map is a Raid map or not.
+ *
+ * @return	True if Raid map, false otherwise.
+ */
+native bool SF2_IsRaidMap();
+
+/**
+ * Returns if current map is a Proxy map or not.
+ *
+ * @return	True if Proxy map, false otherwise.
+ */
+native bool SF2_IsProxyMap();
+
+/**
+ * Returns if current map is a Renevant map or not.
+ *
+ * @return	True if Renevant map, false otherwise.
+ */
+native bool SF2_IsRenevantMap();
+
+
+public SharedPlugin __pl_sf2 = 
 {
 	name = "sf2",
 	file = "sf2.smx",
