@@ -11,8 +11,6 @@ Handle g_hGetAcceleration;
 Handle g_hIsAbleToJumpAcrossGaps;
 Handle g_hGetStepHeight;
 Handle g_hGetMaxJumpHeight;
-Handle g_hGetRunSpeed;
-Handle g_hGetWalkSpeed;
 Handle g_hGetSpeedLimit;
 Handle g_hShouldCollide;
 
@@ -436,8 +434,8 @@ public void InitNextBotGameData(Handle hGameData)
 	iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetMaxDeceleration"); 
 	g_hGetMaxDeceleration = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetMaxDeceleration);
 	
-    iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetGroundNormal");
-    g_hGetGroundNormal = DHookCreate(iOffset, HookType_Raw, ReturnType_VectorPtr, ThisPointer_Address, NextBotGroundLocomotion_GetGroundNormal);
+	iOffset = GameConfGetOffset(hGameData, "NextBotGroundLocomotion::GetGroundNormal");
+	g_hGetGroundNormal = DHookCreate(iOffset, HookType_Raw, ReturnType_VectorPtr, ThisPointer_Address, NextBotGroundLocomotion_GetGroundNormal);
 	if(g_hGetGroundNormal == null) SetFailState("Failed to create hook for NextBotGroundLocomotion::GetGroundNormal");
 	
 	iOffset = GameConfGetOffset(hGameData, "ILocomotion::IsAbleToJumpAcrossGaps"); 
@@ -455,15 +453,7 @@ public void InitNextBotGameData(Handle hGameData)
 	iOffset = GameConfGetOffset(hGameData, "ILocomotion::GetMaxAcceleration"); 
 	g_hGetAcceleration = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetAcceleration);
 	if (g_hGetAcceleration == null) SetFailState("Failed to create hook for ILocomotion::GetMaxAcceleration!");
-	
-	iOffset = GameConfGetOffset(hGameData, "ILocomotion::GetRunSpeed"); 
-	g_hGetRunSpeed = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetRunSpeed);
-	if (g_hGetRunSpeed == null) SetFailState("Failed to create hook for ILocomotion::GetRunSpeed!");
-	
-	iOffset = GameConfGetOffset(hGameData, "ILocomotion::GetWalkSpeed"); 
-	g_hGetWalkSpeed = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetWalkSpeed);
-	if (g_hGetWalkSpeed == null) SetFailState("Failed to create hook for ILocomotion::GetWalkSpeed!");
-	
+
 	iOffset = GameConfGetOffset(hGameData, "ILocomotion::GetSpeedLimit");
 	g_hGetSpeedLimit = DHookCreate(iOffset, HookType_Raw, ReturnType_Float, ThisPointer_Address, GetSpeedLimit);
 	if (g_hGetSpeedLimit == null) SetFailState("Failed to create hook for ILocomotion::GetSpeedLimit!");

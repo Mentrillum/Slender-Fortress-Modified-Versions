@@ -1275,6 +1275,21 @@
 		"en" "Show the current pack, if there's one:"
 		"fi" "Näytä nykyinen pakkaus, jos sellainen on:"
 	}
+	
+	"SF2 Boss Next Pack Menu Title"
+	{
+		"en" "Show the next boss pack, if there is one:"
+	}
+	
+	"SF2 Boss View On List Title"
+	{
+		"en" "Show the bosses on the current pack:"
+	}
+	
+	"SF2 Boss List Menu Title"
+	{
+		"en" "Current Bosses"
+	}
 
 	"SF2 Boss Pack Vote Menu Title"
 	{
@@ -1354,7 +1369,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed the boss glitchy hitbox for real.\n-Fixed a bug where mute mode was broken.\n-In Boxing, Medics can finally pick up health kits."
+		"en"	"-Hyper Snatcher is now more crazy, you'll see how... :smug:\n-Added boss spawn animations.\n-Cleaned up all compile warnings.\n-Added the Advanced Death Cams (In development).\n-The Dragon's Fury no longer hurts when rounds end.\n-Added a ton of natives from KitRifty."
 	}
 
 	"SF2 Smite player"

@@ -275,7 +275,7 @@ methodmap ChaserPathLogic
 		vecJumpVel[2] += 20.0;
 		
 		float flJumpSpeed = GetVectorLength(vecJumpVel);
-		float flMaxSpeed = 650.0;
+		float flMaxSpeed = 2000.0;
 		if ( flJumpSpeed > flMaxSpeed )
 		{
 			vecJumpVel[0] *= flMaxSpeed / flJumpSpeed;

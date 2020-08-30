@@ -597,6 +597,47 @@ stock void TF2_ChangePlayerName(int iClient, const char[] sNewName, bool bPrintI
 	SetEntPropString(iClient, Prop_Data, "m_szNetname", sNewName);
 }
 
+stock int TF2_FindNoiseMaker(int iClient)
+{
+	int iEntity = MaxClients + 1;
+	while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable")) > MaxClients)
+	{
+		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient)
+		{
+			if (TF2_WeaponFindAttribute(iEntity, 196) > 0.0)
+			{
+				return iEntity;
+			}
+		}
+	}
+	
+	return -1;
+}
+
+stock float TF2_WeaponFindAttribute(int iWeapon, int iAttrib)
+{
+	Address addAttrib = TF2Attrib_GetByDefIndex(iWeapon, iAttrib);
+	if (addAttrib == Address_Null)
+	{
+		int iItemDefIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+		int iAttributes[16];
+		float flAttribValues[16];
+		
+		int iMaxAttrib = TF2Attrib_GetStaticAttribs(iItemDefIndex, iAttributes, flAttribValues);
+		for (int i = 0; i < iMaxAttrib; i++)
+		{
+			if (iAttributes[i] == iAttrib)
+			{
+				return flAttribValues[i];
+			}
+		}
+		
+		return 0.0;
+	}
+	
+	return TF2Attrib_GetValue(addAttrib);
+}
+
 stock void ClientSwitchToWeaponSlot(int client,int iSlot)
 {
 	int iWeapon = GetPlayerWeaponSlot(client, iSlot);

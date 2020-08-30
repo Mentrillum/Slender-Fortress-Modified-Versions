@@ -177,6 +177,7 @@ enum
 	BossProfileData_UniqueProfileIndex,
 	BossProfileData_Type,
 	BossProfileData_ModelScale,
+	BossProfileData_Health,
 	BossProfileData_Skin,
 	BossProfileData_SkinMax,
 	BossProfileData_Body,
@@ -551,6 +552,13 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 		return false;
 	}
 	
+	int iBossHealth = KvGetNum(kv, "health", 30000);
+	if (iBossHealth < 1)
+	{
+		Format(sLoadFailReasonBuffer, iLoadFailReasonBufferLen, "health must be a value that is at least 1!");
+		return false;
+	}
+	
 	int iBossSkin = KvGetNum(kv, "skin", 0);
 	if (iBossSkin < 0)
 	{
@@ -780,6 +788,7 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	
 	SetArrayCell(g_hBossProfileData, iIndex, iBossType, BossProfileData_Type);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossModelScale, BossProfileData_ModelScale);
+	SetArrayCell(g_hBossProfileData, iIndex, iBossHealth, BossProfileData_Health);
 	SetArrayCell(g_hBossProfileData, iIndex, iBossSkin, BossProfileData_Skin);
 	SetArrayCell(g_hBossProfileData, iIndex, iBossSkinMax, BossProfileData_SkinMax);
 	SetArrayCell(g_hBossProfileData, iIndex, iBossBodyGroups, BossProfileData_Body);
@@ -1607,6 +1616,11 @@ int GetBossProfileRaidHitbox(int iProfileIndex)
 float GetBossProfileModelScale(int iProfileIndex)
 {
 	return view_as<float>(GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_ModelScale));
+}
+
+int GetBossProfileHealth(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_Health);
 }
 
 int GetBossProfileType(int iProfileIndex)

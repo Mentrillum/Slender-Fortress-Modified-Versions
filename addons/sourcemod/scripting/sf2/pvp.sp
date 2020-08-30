@@ -145,7 +145,7 @@ public void PvP_OnMapStart()
 	iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "func_respawnroom")) != -1)
 	{
-		if(IsValidEntity(iEnt))
+		if(IsValidEntity(iEnt) && SF_IsBoxingMap())
 		{
 			SDKHook( iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing );
 			SDKHook( iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing );
@@ -178,7 +178,7 @@ public void PvP_OnRoundStart()
 	iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "func_respawnroom")) != -1)
 	{
-		if(IsValidEntity(iEnt))
+		if(IsValidEntity(iEnt) && SF_IsBoxingMap())
 		{
 			//Add physics object flag, so we can zap projectiles!
 			int flags = GetEntProp(iEnt, Prop_Data, "m_spawnflags");
@@ -426,7 +426,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				if (StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
 				{
-					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, true, ent);
+					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
 					break;
 				}
 			}
@@ -647,7 +647,7 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 public Action PvP_OnTriggerStartTouchBoxing(int trigger,int iOther)
 {
 	//A projectile went in the area. (Experimental)
-	if (iOther>MaxClients && IsValidEntity(iOther) && !IsRoundInWarmup())
+	if (iOther>MaxClients && IsValidEntity(iOther) && !IsRoundInWarmup() && !IsRoundEnding())
 	{
 		//Get entity's classname.
 		char sClassname[50];
@@ -935,8 +935,12 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 	return Plugin_Continue;
 }
 
-MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
+MRESReturn PvP_GetWeaponCustomDamageType(int client, int weapon, int &customDamageType)
 {
+	if (!IsValidClient(client))
+	{
+		return MRES_Ignored;
+	}
 	static const char fixWeaponPenetrationClasses[][] = 
 	{
 		"tf_weapon_sniperrifle",
@@ -980,7 +984,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	return MRES_Ignored;
 }
 
-public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, Handle hReturn, Handle hParams)
+public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(Handle hReturn, Handle hParams)
 {
 	DHookSetReturn(hReturn, true);
 	return MRES_Supercede;

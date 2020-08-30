@@ -4,7 +4,8 @@
 
 #define _sf2_profiles_chaser
 
-#define SF2_CHASER_BOSS_MAX_ATTACKS 16
+#define SF2_CHASER_BOSS_MAX_ATTACKS 9
+#define SF2_CHASER_BOSS_MAX_ANIMATIONS 16
 
 Handle g_hChaserProfileNames;
 Handle g_hChaserProfileData;
@@ -409,7 +410,11 @@ enum
 	ChaserAnimationType_Stunned = 0,
 	ChaserAnimationType_StunnedPlaybackRate,
 	ChaserAnimationType_Death = 0,
-	ChaserAnimationType_DeathPlaybackRate
+	ChaserAnimationType_DeathPlaybackRate,
+	ChaserAnimationType_Spawn = 0,
+	ChaserAnimationType_SpawnPlaybackRate,
+	ChaserAnimationType_Deathcam = 0,
+	ChaserAnimationType_DeathcamPlaybackRate
 };
 
 enum
@@ -425,6 +430,8 @@ enum
 	ChaserAnimation_RageAnimations, //Array that contains all the rage animations, used for Boxing Maps
 	ChaserAnimation_DeathAnimations, //Array that contains all the death animations
 	ChaserAnimation_JumpAnimations, //Array that contains all the jump animations
+	ChaserAnimation_SpawnAnimations, //Array that contains all the spawn animations
+	ChaserAnimation_DeathcamAnimations, //Array that contains all the deathcam animations
 	ChaserAnimation_MaxAnimations
 };
 
@@ -2550,6 +2557,18 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_jump");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_jump_playbackrate");
 		}
+		case ChaserAnimation_SpawnAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "spawn");
+			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_spawn");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_spawn_playbackrate");
+		}
+		case ChaserAnimation_DeathcamAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
+			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_deathcam");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_deathcam_playbackrate");
+		}
 	}
 	
 	if (KvJumpToKey(g_hConfig, "animations"))
@@ -2560,7 +2579,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 			if (iAnimationIndex == -1)
 			{
 				int iTotalAnimation;
-				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ATTACKS; iAnimationIndex++)
+				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
 				{
 					IntToString(iAnimationIndex, sNum, sizeof(sNum));
 					if (KvJumpToKey(g_hConfig, sNum))
@@ -2603,6 +2622,11 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "walk");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_walk_playbackrate");
 		}
+		case ChaserAnimation_WalkAlertAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "walkalert");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_walkalert_playbackrate");
+		}
 		case ChaserAnimation_AttackAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
@@ -2617,6 +2641,16 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_run_playbackrate");
+		}
+		case ChaserAnimation_ChaseInitialAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "chaseinitial");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_chaseinitial_playbackrate");
+		}
+		case ChaserAnimation_RageAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "rage");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_rage_playbackrate");
 		}
 		case ChaserAnimation_StunAnimations:
 		{
@@ -2633,6 +2667,16 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "jump");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_jump_playbackrate");
 		}
+		case ChaserAnimation_SpawnAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "spawn");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_spawn_playbackrate");
+		}
+		case ChaserAnimation_DeathcamAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_deathcam_playbackrate");
+		}
 	}
 	
 	if (KvJumpToKey(g_hConfig, "animations"))
@@ -2643,7 +2687,7 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 			if (iAnimationIndex == -1)
 			{
 				int iTotalAnimation;
-				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ATTACKS; iAnimationIndex++)
+				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
 				{
 					IntToString(iAnimationIndex, sNum, sizeof(sNum));
 					if (KvJumpToKey(g_hConfig, sNum))

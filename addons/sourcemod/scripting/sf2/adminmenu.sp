@@ -348,7 +348,7 @@ public int AdminTopMenu_BossMain(Handle topmenu, TopMenuAction action, TopMenuOb
 	}
 }
 
-static bool DisplayAddBossAdminMenu(int client)
+static bool DisplayAddBossAdminMenu(int client) //Use for view boss list
 {
 	if (g_hConfig != INVALID_HANDLE)
 	{

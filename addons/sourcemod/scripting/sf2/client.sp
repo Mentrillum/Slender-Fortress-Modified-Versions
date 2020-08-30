@@ -7,6 +7,7 @@
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
 #define SF2_OVERLAY_GHOST "overlays/slender/ghostcamera"
+#define SF2_OVERLAY_MARBLEHORNETS "overlays/slender/marblehornetsoverlay"
 
 #define SF2_ULTRAVISION_WIDTH 800.0
 #define SF2_ULTRAVISION_LENGTH 800.0
@@ -30,7 +31,11 @@ static bool g_bPlayerDeathCam[MAXPLAYERS + 1] = { false, ... };
 static bool g_bPlayerDeathCamShowOverlay[MAXPLAYERS + 1] = { false, ... };
 static int g_iPlayerDeathCamEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 static int g_iPlayerDeathCamEnt2[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_iPlayerDeathCamTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 static Handle g_hPlayerDeathCamTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+static bool g_bCameraDeathCamAdvanced[2049] = { false, ... };
+static float g_flCameraPlayerOffsetBackward[2049] = { 0.0, ... };
+static float g_flCameraPlayerOffsetDownward[2049] = { 0.0, ... };
 
 // Flashlight data.
 static bool g_bPlayerFlashlight[MAXPLAYERS + 1] = { false, ... };
@@ -97,6 +102,9 @@ char g_sClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
 static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 
+//Noise makers
+static bool g_bClientHasNoiseMaker[MAXPLAYERS + 1];
+
 //	==========================================================
 //	GENERAL CLIENT HOOK FUNCTIONS
 //	==========================================================
@@ -105,15 +113,6 @@ static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 #define SF2_PLAYER_VIEWBOB_SCALE_X 0.05
 #define SF2_PLAYER_VIEWBOB_SCALE_Y 0.0
 #define SF2_PLAYER_VIEWBOB_SCALE_Z 0.0
-
-
-public MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, Handle hReturn, Handle hParams)
-{
-	if (!g_bEnabled || IsFakeClient(client)) return MRES_Ignored;
-	
-	DHookSetReturn(hReturn, true);
-	return MRES_Supercede;
-}
 
 public Action CH_ShouldCollide(int ent1,int ent2, bool &result)
 {
@@ -225,6 +224,21 @@ public void Hook_ClientPreThink(int client)
 			{
 				if (iRoundState == 4)
 				{
+					if (IsClientInDeathCam(client))
+					{
+						int ent = EntRefToEntIndex(g_iPlayerDeathCamEnt[client]);
+						if (ent && ent != INVALID_ENT_REFERENCE && g_bCameraDeathCamAdvanced[ent])
+						{
+							float vecCamPos[3], vecCamAngs[3];
+							GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", vecCamAngs);
+							GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", vecCamPos);
+							
+							vecCamPos[0] -= g_flCameraPlayerOffsetBackward[ent];
+							vecCamPos[2] -= g_flCameraPlayerOffsetDownward[ent];
+							
+							TeleportEntity(client, vecCamPos, vecCamAngs, NULL_VECTOR);
+						}
+					}
 					bool bDanger = false;
 					
 					if (!bDanger)
@@ -1096,6 +1110,9 @@ void ClientEscape(int client)
 		GetClientName(client, sName, sizeof(sName));
 		CPrintToChatAll("%t", "SF2 Player Escaped", sName);
 	}
+	
+	if (SF_SpecialRound(SPECIALROUND_REALISM))
+		StopSound(client, SNDCHAN_STATIC, MARBLEHORNETS_STATIC);
 	
 	CheckRoundWinConditions();
 	
@@ -2208,7 +2225,7 @@ void ClientProcessVisibility(int client)
 				if (SlenderKillsOnNear(i))
 				{
 					if (g_flPlayerStaticAmount[client] >= 1.0 ||
-						GetVectorDistance(flMyPos, flSlenderPos) <= NPCGetInstantKillRadius(i))
+						GetVectorDistance(flMyPos, flSlenderPos) <= NPCGetInstantKillRadius(i) && !g_bSlenderInDeathcam[i])
 					{
 						bool bKillPlayer = true;
 						if (g_flPlayerStaticAmount[client] < 1.0)
@@ -2961,7 +2978,7 @@ void ClientResetSprint(int client)
 		Call_PushCell(client);
 		Call_Finish();
 	}
-
+	
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 2) DebugMessage("END ClientResetSprint(%d)", client);
 #endif
@@ -2982,7 +2999,7 @@ void ClientStartSprint(int client)
 	
 	SDKHook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
 	SDKUnhook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
-
+	
 	Call_StartForward(fOnClientStartSprinting);
 	Call_PushCell(client);
 	Call_Finish();
@@ -3029,7 +3046,7 @@ void ClientStopSprint(int client)
 	
 	SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
 	SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
-
+	
 	Call_StartForward(fOnClientStopSprinting);
 	Call_PushCell(client);
 	Call_Finish();
@@ -3490,6 +3507,7 @@ void ClientEnableProxy(int client,int iBossIndex)
 	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 	{	
 		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		if (g_bSlenderInDeathcam[iNPCIndex]) continue;
 		SlenderRemoveGlow(iNPCIndex);
 		if (NPCGetCustomOutlinesState(iNPCIndex))
 		{
@@ -3513,6 +3531,14 @@ void ClientEnableProxy(int client,int iBossIndex)
 			int iPurple[4] = {150, 0, 255, 255};
 			SlenderAddGlow(iNPCIndex,_,iPurple);
 		}
+	}
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i) || DidClientEscape(i) || g_bPlayerEliminated[i]) continue;
+		ClientDisableConstantGlow(i);
+		int iRed[4] = {184, 56, 59, 255};
+		ClientEnableConstantGlow(i, "head", iRed);
 	}
 	
 	//SDKHook(client, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
@@ -3955,6 +3981,31 @@ void ClientOnJump(int client)
 	}
 }
 
+public Action OnClientCommandKeyValues(int iClient, KeyValues hKeyValue)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	
+	char sName[64];
+	hKeyValue.GetSectionName(sName, sizeof(sName));
+	int iTeam = GetClientTeam(iClient);
+	if (strcmp(sName, "use_action_slot_item_server") == 0)
+	{
+		if (g_bClientHasNoiseMaker[iClient])
+		{
+			if (GetClientTeam(iClient) != TFTeam_Spectator)
+			{
+				if (GetClientTeam(iClient) == iTeam)
+					return Plugin_Handled;
+					
+				return Plugin_Continue;
+			}
+			return Plugin_Handled;
+		}
+	}
+	
+	return Plugin_Continue;
+}
+
 //	==========================================================
 //	DEATH CAM FUNCTIONS
 //	==========================================================
@@ -3990,6 +4041,7 @@ void ClientResetDeathCam(int client)
 	int ent = EntRefToEntIndex(g_iPlayerDeathCamEnt[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
+		g_bCameraDeathCamAdvanced[ent] = false;
 		AcceptEntityInput(ent, "Disable");
 		AcceptEntityInput(ent, "Kill");
 	}
@@ -4000,8 +4052,15 @@ void ClientResetDeathCam(int client)
 		AcceptEntityInput(ent, "Kill");
 	}
 	
+	ent = EntRefToEntIndex(g_iPlayerDeathCamTarget[client]);
+	if (ent && ent != INVALID_ENT_REFERENCE)
+	{
+		AcceptEntityInput(ent, "Kill");
+	}
+	
 	g_iPlayerDeathCamEnt[client] = INVALID_ENT_REFERENCE;
 	g_iPlayerDeathCamEnt2[client] = INVALID_ENT_REFERENCE;
+	g_iPlayerDeathCamTarget[client] = INVALID_ENT_REFERENCE;
 	
 	if (IsClientInGame(client))
 	{
@@ -4018,7 +4077,7 @@ void ClientResetDeathCam(int client)
 #endif
 }
 
-void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
+void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], bool bAnticamp = false)
 {
 	if (IsClientInDeathCam(client)) return;
 	if (!NPCIsValid(iBossIndex)) return;
@@ -4031,7 +4090,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 	if (GetProfileNum(sProfile, "death_cam_play_scare_sound"))
 	{
 		GetRandomStringFromProfile(sProfile, "sound_scare_player", buffer, sizeof(buffer));
-		if (buffer[0]) EmitSoundToClient(client, buffer, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		if (buffer[0] && !SF_SpecialRound(SPECIALROUND_REALISM)) EmitSoundToClient(client, buffer, _, MUSIC_CHAN, SNDLEVEL_NONE);
 	}
 	
 	GetRandomStringFromProfile(sProfile, "sound_player_deathcam", buffer, sizeof(buffer));
@@ -4042,7 +4101,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 	else
 	{
 		// Legacy support for "sound_player_death"
-		if (g_b20Dollars)
+		if (g_b20Dollars || SF_SpecialRound(SPECIALROUND_20DOLLARS))
 		{
 			GetRandomStringFromProfile(sProfile, "sound_player_death_20dollars", buffer, sizeof(buffer));
 			if (strlen(buffer) > 0)
@@ -4096,8 +4155,6 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 		if (iSlender > MaxClients) SDKHooks_TakeDamage(client, iSlender, iSlender, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
 		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
 		ForcePlayerSuicide(client);//Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
-		SetVariantInt(9001);//Maybe it doesn't work like SDKHooks_TakeDamage, maybe not. Tbh I don't want to test this one.
-		AcceptEntityInput(client, "RemoveHealth");
 		KillClient(client);
 		return;
 	}
@@ -4119,10 +4176,28 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 	vecAng[2] = 0.0;
 	
 	// Create fake model.
-	int slender = SpawnSlenderModel(iBossIndex, vecLookPos);
+	int slender = SpawnSlenderModel(iBossIndex, vecLookPos, true);
 	TeleportEntity(slender, vecLookPos, vecAng, NULL_VECTOR);
 	g_iPlayerDeathCamEnt2[client] = EntIndexToEntRef(slender);
-	SDKHook(slender, SDKHook_SetTransmit, Hook_DeathCamSetTransmit);
+	if (!view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0)))
+	{
+		SDKHook(slender, SDKHook_SetTransmit, Hook_DeathCamSetTransmit);
+	}
+	else
+	{
+		SetEntityMoveType(client, MOVETYPE_NOCLIP);
+		if (!bAnticamp)
+		{
+			int slenderEnt = NPCGetEntIndex(iBossIndex);
+			if (slenderEnt && slenderEnt != INVALID_ENT_REFERENCE)
+			{
+				g_bSlenderInDeathcam[iBossIndex] = true;
+				SetEntityRenderMode(slenderEnt, RENDER_TRANSCOLOR);
+				SetEntityRenderColor(slenderEnt, 255, 255, 255, 0);
+				g_hSlenderEntityThink[iBossIndex] = INVALID_HANDLE;
+			}
+		}
+	}
 	
 	// Create camera look point.
 	char sName[64];
@@ -4130,12 +4205,31 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 	
 	float flOffsetPos[3];
 	int target = CreateEntityByName("info_target");
-	GetProfileVector(sProfile, "death_cam_pos", flOffsetPos);
-	AddVectors(vecLookPos, flOffsetPos, flOffsetPos);
-	TeleportEntity(target, flOffsetPos, NULL_VECTOR, NULL_VECTOR);
-	DispatchKeyValue(target, "targetname", sName);
-	SetVariantString("!activator");
-	AcceptEntityInput(target, "SetParent", slender);
+	if (!view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0)))
+	{
+		GetProfileVector(sProfile, "death_cam_pos", flOffsetPos);
+		AddVectors(vecLookPos, flOffsetPos, flOffsetPos);
+		TeleportEntity(target, flOffsetPos, NULL_VECTOR, NULL_VECTOR);
+		DispatchKeyValue(target, "targetname", sName);
+		SetVariantString("!activator");
+		AcceptEntityInput(target, "SetParent", slender);
+	}
+	else
+	{
+		char sBoneName[PLATFORM_MAX_PATH];
+		AddVectors(vecLookPos, flOffsetPos, flOffsetPos);
+		TeleportEntity(target, flOffsetPos, NULL_VECTOR, NULL_VECTOR);
+		DispatchKeyValue(target, "targetname", sName);
+		SetVariantString("!activator");
+		AcceptEntityInput(target, "SetParent", slender);
+		GetProfileString(sProfile, "death_cam_attachtment_target_point", sBoneName, sizeof(sBoneName));
+		if (sBoneName[0])
+		{
+			SetVariantString(sBoneName);
+			AcceptEntityInput(target, "SetParentAttachment");
+		}
+	}
+	g_iPlayerDeathCamTarget[client] = EntIndexToEntRef(target);
 	
 	// Create the camera itself.
 	int camera = CreateEntityByName("point_viewcontrol");
@@ -4145,6 +4239,35 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3])
 	DispatchSpawn(camera);
 	AcceptEntityInput(camera, "Enable", client);
 	g_iPlayerDeathCamEnt[client] = EntIndexToEntRef(camera);
+	if (view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0)))
+	{
+		float flCamSpeed, flCamAcceleration, flCamDeceleration;
+		char sBuffer[PLATFORM_MAX_PATH];
+		
+		flCamSpeed = GetProfileFloat(sProfile, "death_cam_speed", 1000.0);
+		flCamAcceleration = GetProfileFloat(sProfile, "death_cam_acceleration", 1000.0);
+		flCamDeceleration = GetProfileFloat(sProfile, "death_cam_deceleration", 1000.0);
+		FloatToString(flCamSpeed, sBuffer, sizeof(sBuffer));
+		DispatchKeyValue(camera, "acceleration", sBuffer);
+		FloatToString(flCamAcceleration, sBuffer, sizeof(sBuffer));
+		DispatchKeyValue(camera, "deceleration", sBuffer);
+		FloatToString(flCamDeceleration, sBuffer, sizeof(sBuffer));
+		DispatchKeyValue(camera, "speed", sBuffer);
+		
+		SetVariantString("!activator");
+		AcceptEntityInput(camera, "SetParent", slender);
+		char sAttachmentName[PLATFORM_MAX_PATH];
+		GetProfileString(sProfile, "death_cam_attachtment_point", sAttachmentName, sizeof(sAttachmentName));
+		if (sAttachmentName[0])
+		{
+			SetVariantString(sAttachmentName);
+			AcceptEntityInput(camera, "SetParentAttachment");
+		}
+		
+		g_bCameraDeathCamAdvanced[camera] = true;
+		g_flCameraPlayerOffsetBackward[camera] = GetProfileFloat(sProfile, "deathcam_death_backward_offset", 0.0);
+		g_flCameraPlayerOffsetDownward[camera] = GetProfileFloat(sProfile, "deathcam_death_downward_offset", 0.0);
+	}
 	
 	if (GetProfileNum(sProfile, "death_cam_overlay") && GetProfileFloat(sProfile, "death_cam_time_overlay_start") >= 0.0)
 	{
@@ -4194,6 +4317,17 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 	int iDeathCamBoss = NPCGetFromUniqueID(g_iPlayerDeathCamBoss[client]);
 	if (iDeathCamBoss != -1)
 	{
+		if (g_bSlenderInDeathcam[iDeathCamBoss])
+		{
+			int iSlender = NPCGetEntIndex(iDeathCamBoss);
+			if (iSlender && iSlender != INVALID_ENT_REFERENCE)
+			{
+				SetEntityRenderMode(iSlender, RENDER_NORMAL);
+				SetEntityRenderColor(iSlender, 255, 255, 255, 255);
+				g_hSlenderEntityThink[iDeathCamBoss] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(iSlender), TIMER_REPEAT);
+				g_bSlenderInDeathcam[iDeathCamBoss] = false;
+			}
+		}
 		if (NPCHasAttribute(iDeathCamBoss, "ignite player on death"))
 		{
 			float flValue = NPCGetAttributeValue(iDeathCamBoss, "ignite player on death");
@@ -4205,8 +4339,6 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 			if (iSlender > MaxClients) SDKHooks_TakeDamage(client, iSlender, iSlender, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
 			SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
 			ForcePlayerSuicide(client);//Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
-			SetVariantInt(9001);//Maybe it doesn't work like SDKHooks_TakeDamage, maybe not. Tbh I don't want to test this one.
-			AcceptEntityInput(client, "RemoveHealth");
 			KillClient(client);
 		}
 		else
@@ -4319,9 +4451,8 @@ void ClientSetGhostModeState(int client, bool bState)
 		for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 		{	
 			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+			if (g_bSlenderInDeathcam[iNPCIndex]) continue;
 			SlenderRemoveGlow(iNPCIndex);
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iNPCIndex, sProfile, sizeof(sProfile));
 			if (NPCGetCustomOutlinesState(iNPCIndex))
 			{
 				int color[4];
@@ -4344,6 +4475,14 @@ void ClientSetGhostModeState(int client, bool bState)
 				int iPurple[4] = {150, 0, 255, 255};
 				SlenderAddGlow(iNPCIndex,_,iPurple);
 			}
+		}
+		
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!IsValidClient(i) || DidClientEscape(i) || g_bPlayerEliminated[i]) continue;
+			ClientDisableConstantGlow(i);
+			int iRed[4] = {184, 56, 59, 255};
+			ClientEnableConstantGlow(i, "head", iRed);
 		}
 
 		PvP_OnClientGhostModeEnable(client);
@@ -4539,7 +4678,7 @@ void ClientPerformScare(int client,int iBossIndex)
 	
 	if (sScareSound[0])
 	{
-		EmitSoundToClient(client, sScareSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		if (!SF_SpecialRound(SPECIALROUND_REALISM)) EmitSoundToClient(client, sScareSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
 		
 		if (NPCGetFlags(iBossIndex) & SFF_HASSIGHTSOUNDS)
 		{
@@ -4592,7 +4731,7 @@ void ClientPerformSightSound(int client,int iBossIndex)
 	
 	if (sSightSound[0])
 	{
-		EmitSoundToClient(client, sSightSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		if (!SF_SpecialRound(SPECIALROUND_REALISM)) EmitSoundToClient(client, sSightSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
 		
 		float flCooldownMin = GetProfileFloat(sProfile, "sound_sight_cooldown_min", 8.0);
 		float flCooldownMax = GetProfileFloat(sProfile, "sound_sight_cooldown_max", 14.0);
@@ -4727,7 +4866,7 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 			else
 			{
 				g_iPlayerCampingStrikes[client] = 0;
-				ClientStartDeathCam(client, 0, flPos);
+				ClientStartDeathCam(client, 0, flPos, true);
 			}
 		}
 		else
@@ -4992,7 +5131,7 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	}
 	else if (SF_SpecialRound(SPECIALROUND_REALISM))
 	{
-		return Plugin_Continue;
+		strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_MARBLEHORNETS);
 	}
 	else
 	{
@@ -5019,7 +5158,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 	int iAlertBoss = -1;
 	int i20DollarsBoss = -1;
 	
-	if (IsRoundEnding() || !IsClientInGame(client) || IsFakeClient(client) || DidClientEscape(client) || (g_bPlayerEliminated[client] && !IsClientInGhostMode(client) && !g_bPlayerProxy[client])) 
+	if (IsRoundEnding() || !IsClientInGame(client) || IsFakeClient(client) || DidClientEscape(client) || (g_bPlayerEliminated[client] && !IsClientInGhostMode(client) && !g_bPlayerProxy[client]) || SF_SpecialRound(SPECIALROUND_REALISM)) 
 	{
 		g_iPlayerMusicFlags[client] = 0;
 		g_iPlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
@@ -5163,13 +5302,13 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 									}
 								}
 								
-								if (g_b20Dollars)
+								if (g_b20Dollars || SF_SpecialRound(SPECIALROUND_20DOLLARS))
 								{
 									if (iOld20DollarsBoss == -1 || !PlayerCanSeeSlender(client, iOld20DollarsBoss, false) || (NPCGetAnger(i) > fl20DollarsAnger))
 									{
 										GetRandomStringFromProfile(sProfile, "sound_20dollars_music", sPath, sizeof(sPath), 1);
 										
-										if (sPath[0])
+										if (sPath[0] || SF_SpecialRound(SPECIALROUND_20DOLLARS))
 										{
 											fl20DollarsAnger = NPCGetAnger(i);
 											i20DollarsBoss = i;
@@ -5570,6 +5709,7 @@ stock void Client20DollarsMusicReset(int client)
 			
 				GetRandomStringFromProfile(sProfile, "sound_20dollars_music", sOldMusic, sizeof(sOldMusic), 1);
 				if (sOldMusic[0]) StopSound(client, MUSIC_CHAN, sOldMusic);
+				if (!sOldMusic[0] && SF_SpecialRound(SPECIALROUND_20DOLLARS)) StopSound(client, MUSIC_CHAN, TWENTYDOLLARS_MUSIC);
 			}
 		}
 	}
@@ -5588,8 +5728,15 @@ stock void Client20DollarsMusicStart(int client,int iBossIndex)
 	char sBuffer[PLATFORM_MAX_PATH];
 	GetRandomStringFromProfile(sProfile, "sound_20dollars_music", sBuffer, sizeof(sBuffer), 1);
 	
-	if (!sBuffer[0]) return;
-	
+	if (SF_SpecialRound(SPECIALROUND_20DOLLARS) && !sBuffer[0])
+	{
+		sBuffer = TWENTYDOLLARS_MUSIC;
+	}
+	else
+	{
+		return;
+	}
+
 	g_iPlayer20DollarsMusicMaster[client] = iBossIndex;
 	strcopy(g_strPlayer20DollarsMusic[client], sizeof(g_strPlayer20DollarsMusic[]), sBuffer);
 	g_hPlayer20DollarsMusicTimer[client][iBossIndex] = CreateTimer(0.01, Timer_PlayerFadeIn20DollarsMusic, GetClientUserId(client), TIMER_REPEAT);
@@ -5978,6 +6125,10 @@ public Action Timer_PlayerFadeOut20DollarsMusic(Handle timer, any userid)
 	
 	char sBuffer[PLATFORM_MAX_PATH];
 	GetRandomStringFromProfile(sProfile, "sound_20dollars_music", sBuffer, sizeof(sBuffer), 1);
+	if (SF_SpecialRound(SPECIALROUND_20DOLLARS) && !sBuffer[0])
+	{
+		sBuffer = TWENTYDOLLARS_MUSIC;
+	}
 	
 	if (StrEqual(sBuffer, g_strPlayer20DollarsMusic[client], false))
 	{
@@ -6738,6 +6889,14 @@ void SF2_RefreshRestrictions()
 		}
 	}
 }
+public Action Timer_ClientPostNoiseMaker(Handle hTimer, int iUserid)
+{
+	int iClient = GetClientOfUserId(iUserid);
+	if (iClient <= 0) return;
+
+	int iItem = TF2_FindNoiseMaker(iClient);
+	g_bClientHasNoiseMaker[iClient] = (iItem > MaxClients) ? true : false;
+}
 public Action Timer_ClientPostWeapons(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
@@ -6750,7 +6909,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	if (timer != g_hPlayerPostWeaponsTimer[client]) return;
 	
 	g_bPlayerHasRegenerationItem[client] = false;
-	
+
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 0) 
 	{

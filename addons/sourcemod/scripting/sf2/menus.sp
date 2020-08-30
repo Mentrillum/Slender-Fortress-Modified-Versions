@@ -42,9 +42,13 @@ void SetupMenus()
 	AddMenuItem(g_hMenuMain, "0", buffer);
 	Format(buffer, sizeof(buffer), "%t (!slpack)", "SF2 Boss Pack Menu Title");
 	AddMenuItem(g_hMenuMain, "0", buffer);
+	Format(buffer, sizeof(buffer), "%t (!slnextpack)", "SF2 Boss Next Pack Menu Title");
+	AddMenuItem(g_hMenuMain, "0", buffer);
 	Format(buffer, sizeof(buffer), "%t (!slsettings)", "SF2 Settings Menu Title");
 	AddMenuItem(g_hMenuMain, "0", buffer);
 	strcopy(buffer, sizeof(buffer), "Credits (!slcredits)");
+	AddMenuItem(g_hMenuMain, "0", buffer);
+	Format(buffer, sizeof(buffer), "%t (!slviewbosslist)", "SF2 Boss View On List Title");
 	AddMenuItem(g_hMenuMain, "0", buffer);
 	
 	g_hMenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
@@ -118,7 +122,7 @@ void SetupMenus()
 	Format(buffer, sizeof(buffer), "%t", "SF2 Help Engineer Class Info Menu Title");
 	AddMenuItem(g_hMenuHelpClassInfo, "Engineer", buffer);
 	SetMenuExitBackButton(g_hMenuHelpClassInfo, true);
-	
+
 	g_hMenuSettings = CreateMenu(Menu_Settings);
 	SetMenuTitle(g_hMenuSettings, "%t%t\n \n", "SF2 Prefix", "SF2 Settings Menu Title");
 	Format(buffer, sizeof(buffer), "%t", "SF2 Settings PvP Menu Title");
@@ -238,7 +242,7 @@ void SetupMenus()
 	SetMenuTitle(g_hMenuUpdate, buffer);
 	
 	AddMenuItem(g_hMenuUpdate, "0", "Display main menu");
-	
+
 	PvP_SetupMenus();
 }
 
@@ -321,15 +325,17 @@ public int Menu_Main(Handle menu, MenuAction action,int param1,int param2)
 			case 2:	DisplayGroupMainMenuToClient(param1);
 			case 3: FakeClientCommand(param1, "sm_slghost");
 			case 4: FakeClientCommand(param1, "sm_slpack");
-			case 5: DisplayMenu(g_hMenuSettings, param1, 30);
-			case 6: DisplayMenu(g_hMenuCredits, param1, MENU_TIME_FOREVER);
+			case 5: FakeClientCommand(param1, "sm_slnextpack");
+			case 6: DisplayMenu(g_hMenuSettings, param1, 30);
+			case 7: DisplayMenu(g_hMenuCredits, param1, MENU_TIME_FOREVER);
+			case 8: DisplayBossList(param1);
 		}
 	}
 }
 
 public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int param2)
 {
-	if (action == MenuAction_VoteEnd)
+	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
 	{
 		int iClientInGame = 0, iClientCallingForNightmare = 0;
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
@@ -609,7 +615,7 @@ public int Menu_ClassInfo(Handle menu, MenuAction action,int param1,int param2)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_hMenuMain, param1, 30);
+			DisplayMenu(g_hMenuHelp, param1, 30);
 		}
 	}
 	else if (action == MenuAction_Select)
@@ -1142,6 +1148,48 @@ public int Menu_ResetQueuePoints(Handle menu, MenuAction action,int param1,int p
 			DisplayQueuePointsMenu(param1);
 		}
 		
+		case MenuAction_End: CloseHandle(menu);
+	}
+}
+
+void DisplayBossList(int client)
+{
+	Handle menu = CreateMenu(Menu_BossList);
+	
+	if (g_hConfig != INVALID_HANDLE)
+	{
+		KvRewind(g_hConfig);
+		if (KvGotoFirstSubKey(g_hConfig))
+		{
+			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char sDisplayName[SF2_MAX_NAME_LENGTH];
+			
+			do
+			{
+				KvGetSectionName(g_hConfig, sProfile, sizeof(sProfile));
+				KvGetString(g_hConfig, "name", sDisplayName, sizeof(sDisplayName));
+				if (!sDisplayName[0]) strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
+				AddMenuItem(menu, sProfile, sDisplayName);
+			}
+			while (KvGotoNextKey(g_hConfig));
+		}
+	}
+	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Boss List Menu Title", client);
+	SetMenuExitBackButton(menu, true);
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+}
+
+public int Menu_BossList(Handle menu, MenuAction action,int param1,int param2)
+{
+	switch (action)
+	{
+		case MenuAction_Cancel:
+		{
+			if (param2 == MenuCancel_ExitBack)
+			{
+				DisplayMenu(g_hMenuMain, param1, 30);
+			}
+		}
 		case MenuAction_End: CloseHandle(menu);
 	}
 }

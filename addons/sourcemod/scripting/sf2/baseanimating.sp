@@ -13,7 +13,7 @@ void CBaseAnimating_InitGameData(Handle hGameData)
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 	g_hSDKLookupSequence = EndPrepSDKCall();
-	if (g_hSDKLookupSequence == INVALID_HANDLE) SetFailState("Failed to retrieve LookupSequence signature");
+	if (g_hSDKLookupSequence == INVALID_HANDLE) SetFailState("Failed to create Call for LookupSequence signature");
 
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseAnimating::LookupPoseParameter");
@@ -36,7 +36,7 @@ void CBaseAnimating_InitGameData(Handle hGameData)
 	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain); 
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 	if((g_hSDKAddGestureSequence = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create Call for CBaseAnimatingOverlay::AddGestureSequence");
-	
+
 	g_ipStudioHdrOffset = GameConfGetOffset(hGameData, "CBaseAnimating::m_pStudioHdr");
 }
 

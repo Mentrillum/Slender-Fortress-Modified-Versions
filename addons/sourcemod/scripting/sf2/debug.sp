@@ -19,6 +19,7 @@
 #define DEBUG_NAV (1 << 10)
 #define DEBUG_BOSS_ANIMATION (1 << 11)
 #define DEBUG_EVENT (1 << 12)
+#define DEBUG_KILLICONS (1 << 13)
 
 int g_iPlayerDebugFlags[MAXPLAYERS + 1] = { 0, ... };
 
@@ -42,6 +43,7 @@ void InitializeDebug()
 	RegAdminCmd("sm_sf2_debug_ghost_mode", Command_DebugGhostMode, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_nav", Command_DebugNav, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_events", Command_DebugEvent, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_debug_kill_icons", Command_DebugKillIcons, ADMFLAG_CHEATS);
 }
 
 void InitializeDebugLogging()
@@ -327,6 +329,25 @@ public Action Command_DebugEvent(int client,int args)
 	{
 		g_iPlayerDebugFlags[client] &= ~DEBUG_EVENT;
 		PrintToChat(client, "Disabled debugging events.");
+	}
+	
+	return Plugin_Handled;
+}
+
+public Action Command_DebugKillIcons(int client,int args)
+{
+	if (client < 1 || client > MaxClients) return Plugin_Handled;
+	
+	bool bInMode = view_as<bool>(g_iPlayerDebugFlags[client] & DEBUG_KILLICONS);
+	if (!bInMode)
+	{
+		g_iPlayerDebugFlags[client] |= DEBUG_KILLICONS;
+		PrintToChat(client, "Enabled debugging kill icons.");
+	}
+	else
+	{
+		g_iPlayerDebugFlags[client] &= ~DEBUG_KILLICONS;
+		PrintToChat(client, "Disabled debugging kill icons.");
 	}
 	
 	return Plugin_Handled;
