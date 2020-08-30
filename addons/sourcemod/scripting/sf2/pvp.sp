@@ -984,7 +984,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int client, int weapon, int &customDama
 	return MRES_Ignored;
 }
 
-public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(Handle hReturn, Handle hParams)
+public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, Handle hReturn, Handle hParams)
 {
 	DHookSetReturn(hReturn, true);
 	return MRES_Supercede;
