@@ -935,7 +935,7 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 	return Plugin_Continue;
 }
 
-MRESReturn PvP_GetWeaponCustomDamageType(int client, int weapon, int &customDamageType)
+MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
 {
 	if (!IsValidClient(client))
 	{
