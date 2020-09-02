@@ -937,7 +937,7 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 
 MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsValidEdict(weapon) || weapon == -1 || client == -1)
 	{
 		return MRES_Ignored;
 	}
@@ -978,6 +978,10 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 				customDamageType = 0; // no penetration behavior.
 
 			return MRES_Supercede;
+		}
+		else
+		{
+			return MRES_Ignored;
 		}
 	}
 

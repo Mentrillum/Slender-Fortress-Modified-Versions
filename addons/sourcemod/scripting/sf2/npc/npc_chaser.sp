@@ -3830,6 +3830,11 @@ public Action Hook_ManglerTouch(int entity,int iOther)
 			if (flDistance <= NPCChaserGetProjectileRadius(iBossIndex, iDifficulty))
 			{
 				SDKHooks_TakeDamage(iOther, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				if(TF2_IsPlayerInCondition(iOther, TFCond_Gas))
+				{
+					TF2_IgnitePlayer(iOther, iOther);
+					TF2_RemoveCondition(iOther, TFCond_Gas);
+				}
 			}
 		}
 	}

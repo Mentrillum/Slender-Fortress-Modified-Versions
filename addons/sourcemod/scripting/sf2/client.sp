@@ -114,6 +114,14 @@ static bool g_bClientHasNoiseMaker[MAXPLAYERS + 1];
 #define SF2_PLAYER_VIEWBOB_SCALE_Y 0.0
 #define SF2_PLAYER_VIEWBOB_SCALE_Z 0.0
 
+public MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, Handle hReturn, Handle hParams)
+{
+	if (!g_bEnabled || IsFakeClient(client)) return MRES_Ignored;
+
+	DHookSetReturn(hReturn, true);
+	return MRES_Supercede;
+}
+
 public Action CH_ShouldCollide(int ent1,int ent2, bool &result)
 {
 	SF2RoundState state = GetRoundState();
@@ -829,7 +837,11 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 										}
 									}
 								}
-								damage = float(GetEntProp(victim, Prop_Send, "m_iHealth")) * 2.0;
+								if (damagecustom == TF_CUSTOM_BACKSTAB) // Modify backstab damage.
+								{
+									damage = float(GetEntProp(victim, Prop_Send, "m_iHealth")) * 0.3;
+									if (damagetype & DMG_ACID) damage /= 2.0;
+								}
 								
 								Handle hCvar = FindConVar("tf_weapon_criticals");
 								if (hCvar != INVALID_HANDLE && GetConVarBool(hCvar)) damagetype |= DMG_ACID;
@@ -3535,10 +3547,18 @@ void ClientEnableProxy(int client,int iBossIndex)
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i) || DidClientEscape(i) || g_bPlayerEliminated[i]) continue;
+		if (!IsValidClient(i)) continue;
 		ClientDisableConstantGlow(i);
-		int iRed[4] = {184, 56, 59, 255};
-		ClientEnableConstantGlow(i, "head", iRed);
+		if (!g_bPlayerProxy[i] && !DidClientEscape(i) && !g_bPlayerEliminated[i])
+		{
+			int iRed[4] = {184, 56, 59, 255};
+			ClientEnableConstantGlow(i, "head", iRed);
+		}
+		else if ((g_bPlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+		{
+			int iYellow[4] = {255, 208, 0, 255};
+			ClientEnableConstantGlow(i, "head", iYellow);
+		}
 	}
 	
 	//SDKHook(client, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
@@ -3721,7 +3741,7 @@ bool ClientEnableConstantGlow(int client, const char[] sAttachment="", int iColo
 		SetEntPropEnt(iGlow, Prop_Send, "m_hOwnerEntity", iGlowManager);
 		
 		Network_HookEntity(iGlow);
-		SDKHook(iGlow, SDKHook_SetTransmit, Hook_ConstantGlowSetTransmit);
+		SDKHook(iGlow, SDKHook_SetTransmit, Hook_ConstantGlowSetTransmitVersion2);
 		
 #if defined DEBUG
 		if (GetConVarInt(g_cvDebugDetail) > 2) DebugMessage("END ClientEnableConstantGlow(%d) -> true", client);
@@ -4479,10 +4499,18 @@ void ClientSetGhostModeState(int client, bool bState)
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsValidClient(i) || DidClientEscape(i) || g_bPlayerEliminated[i]) continue;
+			if (!IsValidClient(i)) continue;
 			ClientDisableConstantGlow(i);
-			int iRed[4] = {184, 56, 59, 255};
-			ClientEnableConstantGlow(i, "head", iRed);
+			if (!g_bPlayerProxy[i] && !DidClientEscape(i) && !g_bPlayerEliminated[i])
+			{
+				int iRed[4] = {184, 56, 59, 255};
+				ClientEnableConstantGlow(i, "head", iRed);
+			}
+			else if ((g_bPlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+			{
+				int iYellow[4] = {255, 208, 0, 255};
+				ClientEnableConstantGlow(i, "head", iYellow);
+			}
 		}
 
 		PvP_OnClientGhostModeEnable(client);
@@ -6770,6 +6798,15 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 			}
 		}
 	}
+	return Plugin_Handled;
+}
+
+public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_bPlayerProxy[other]) return Plugin_Continue;
+	if (IsClientInGhostMode(other)) return Plugin_Continue;
+	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) return Plugin_Continue;
 	return Plugin_Handled;
 }
 

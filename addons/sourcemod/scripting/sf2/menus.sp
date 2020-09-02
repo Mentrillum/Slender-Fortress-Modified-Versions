@@ -48,7 +48,7 @@ void SetupMenus()
 	AddMenuItem(g_hMenuMain, "0", buffer);
 	strcopy(buffer, sizeof(buffer), "Credits (!slcredits)");
 	AddMenuItem(g_hMenuMain, "0", buffer);
-	Format(buffer, sizeof(buffer), "%t (!slviewbosslist)", "SF2 Boss View On List Title");
+	Format(buffer, sizeof(buffer), "%t (!slbosslist)", "SF2 Boss View On List Title");
 	AddMenuItem(g_hMenuMain, "0", buffer);
 	
 	g_hMenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
@@ -156,7 +156,7 @@ void SetupMenus()
 	g_hMenuCredits = CreateMenu(Menu_Credits);
 	
 	Format(buffer, sizeof(buffer), "Credits\n");
-	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012, Mentrillum, The Gaben\n");
+	StrCat(buffer, sizeof(buffer), "Coders: KitRifty, Kenzzer, Mentrillum, The Gaben\n");
 	StrCat(buffer, sizeof(buffer), "Mark J. Hadley - The creator of the Slender game\n");
 	StrCat(buffer, sizeof(buffer), "Mark Steen - Compositing the intro music\n");
 	StrCat(buffer, sizeof(buffer), "Toby Fox - Compositing The World Revolving\n");
@@ -231,7 +231,7 @@ void SetupMenus()
 	
 	g_hMenuUpdate = CreateMenu(Menu_Update);
 	Format(buffer, sizeof(buffer), "%tSlender Fortress\n \n", "SF2 Prefix");
-	StrCat(buffer, sizeof(buffer), "Coders: Kit o' Rifty, Benoist3012, Mentrillum, The Gaben\n");
+	StrCat(buffer, sizeof(buffer), "Coders: KitRifty, Kenzzer, Mentrillum, The Gaben\n");
 	StrCat(buffer, sizeof(buffer), "Version: ");
 	StrCat(buffer, sizeof(buffer), PLUGIN_VERSION);
 	StrCat(buffer, sizeof(buffer), "\n \n");
@@ -400,38 +400,6 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
 					EmitSoundToAll(g_strSoundNightmareMode[i]);
 				SpecialRoundGameText("Nightmare mode!", "leaderboard_streak");
-				if (SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
-				{
-					int iRandomQuote = GetRandomInt(1, 5);
-					switch (iRandomQuote)
-					{
-						case 1:
-						{
-							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Oh no! You're not slipping out of your contract THAT easily.");
-						}
-						case 2:
-						{
-							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  You ready to die some more? Great!");
-						}
-						case 3:
-						{
-							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
-						}
-						case 4:
-						{
-							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  I love the smell of DEATH in the morning.");
-						}
-						case 5:
-						{
-							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-							CPrintToChatAll("{ghostwhite}Hyper Snatcher {default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
-						}
-					}
-				}
 			}
 			case Difficulty_Apollyon:
 			{
@@ -446,42 +414,42 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 					case 1:
 					{
 						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-						CPrintToChatAll("{purple}Snatcher {default}:  Oh no! You're not slipping out of your contract THAT easily.");
+						CPrintToChatAll("{purple}Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
 					}
 					case 2:
 					{
 						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-						CPrintToChatAll("{purple}Snatcher {default}:  You ready to die some more? Great!");
+						CPrintToChatAll("{purple}Snatcher{default}:  You ready to die some more? Great!");
 					}
 					case 3:
 					{
 						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-						CPrintToChatAll("{purple}Snatcher {default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+						CPrintToChatAll("{purple}Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
 					}
 					case 4:
 					{
 						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-						CPrintToChatAll("{purple}Snatcher {default}:  I love the smell of DEATH in the morning.");
+						CPrintToChatAll("{purple}Snatcher{default}:  I love the smell of DEATH in the morning.");
 					}
 					case 5:
 					{
 						EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-						CPrintToChatAll("{purple}Snatcher {default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+						CPrintToChatAll("{purple}Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 					}
 					case 6:
 					{
 						EmitSoundToAll(SNATCHER_APOLLYON_1);
-						CPrintToChatAll("{purple}Snatcher {default}:  Ah! It gets better every time!");
+						CPrintToChatAll("{purple}Snatcher{default}:  Ah! It gets better every time!");
 					}
 					case 7:
 					{
 						EmitSoundToAll(SNATCHER_APOLLYON_2);
-						CPrintToChatAll("{purple}Snatcher {default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+						CPrintToChatAll("{purple}Snatcher{default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
 					}
 					case 8:
 					{
 						EmitSoundToAll(SNATCHER_APOLLYON_3);
-						CPrintToChatAll("{purple}Snatcher {default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+						CPrintToChatAll("{purple}Snatcher{default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 					}
 				}
 			}
@@ -521,7 +489,7 @@ public int Menu_GhostMode(Handle menu, MenuAction action,int param1,int param2)
 						ClientSetGhostModeState(param1, true);
 						HandlePlayerHUD(param1);
 						
-						CPrintToChat(param1, "{olive}%T", "SF2 Ghost Mode Enabled", param1);
+						CPrintToChat(param1, "{dodgerblue}%T", "SF2 Ghost Mode Enabled", param1);
 					}
 				}
 				case 1:
@@ -532,7 +500,7 @@ public int Menu_GhostMode(Handle menu, MenuAction action,int param1,int param2)
 						ClientSetGhostModeState(param1, false);
 						TF2_RespawnPlayer(param1);
 						
-						CPrintToChat(param1, "{olive}%T", "SF2 Ghost Mode Disabled", param1);
+						CPrintToChat(param1, "{dodgerblue}%T", "SF2 Ghost Mode Disabled", param1);
 					}
 				}
 			}
@@ -1128,7 +1096,7 @@ public int Menu_ResetQueuePoints(Handle menu, MenuAction action,int param1,int p
 				case 0:
 				{
 					ClientSetQueuePoints(param1, 0);
-					CPrintToChat(param1, "{olive}%T", "SF2 Queue Points Reset", param1);
+					CPrintToChat(param1, "{dodgerblue}%T", "SF2 Queue Points Reset", param1);
 					
 					// Special round.
 					if (IsSpecialRoundRunning()) 

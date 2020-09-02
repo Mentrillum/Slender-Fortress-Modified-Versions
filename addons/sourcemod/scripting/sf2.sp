@@ -34,8 +34,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.4 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.4 Modified"
+#define PLUGIN_VERSION "1.5.5.4a Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.4a Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -51,7 +51,7 @@ bool sendproxymanager=false;
 public Plugin myinfo = 
 {
     name = "Slender Fortress",
-    author	= "KitRifty, Benoist3012, Mentrillum, The Gaben",
+    author	= "KitRifty, Kenzzer, Mentrillum, The Gaben",
     description	= "Based on the game Slender: The Eight Pages.",
     version = PLUGIN_VERSION,
     url = "https://discord.gg/uytDCFS"
@@ -824,6 +824,7 @@ Handle g_hSDKGetMaxHealth;
 Handle g_hSDKEntityGetDamage;
 Handle g_hSDKGetLastKnownArea;
 Handle g_hSDKUpdateLastKnownArea;
+Handle g_hSDKWantsLagCompensationOnEntity;
 Handle g_hSDKShouldTransmit;
 Handle g_hSDKEquipWearable;
 Handle g_hSDKPlaySpecificSequence;
@@ -1176,6 +1177,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slsettings", Command_Settings);
 	RegConsoleCmd("sm_slcredits", Command_Credits);
 	RegConsoleCmd("sm_slviewbosslist", Command_BossList);
+	RegConsoleCmd("sm_slbosslist", Command_BossList);
 	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
 	RegConsoleCmd("+sprint", Command_SprintOn);
 	RegConsoleCmd("-sprint", Command_SprintOff);
@@ -1474,7 +1476,18 @@ static void SDK_Init()
 		SetFailState("Couldn't find CBaseAnimating::StudioFrameAdvance offset in SF2 gamedata!");
 	}
 
-	int iOffset = GameConfGetOffset(hConfig, "CBaseEntity::ShouldTransmit");
+	int iOffset = GameConfGetOffset(hConfig, "CTFPlayer::WantsLagCompensationOnEntity"); 
+	g_hSDKWantsLagCompensationOnEntity = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity, Hook_ClientWantsLagCompensationOnEntity); 
+	if (g_hSDKWantsLagCompensationOnEntity == INVALID_HANDLE)
+	{
+		SetFailState("Failed to create hook CTFPlayer::WantsLagCompensationOnEntity offset from SF2 gamedata!");
+	}
+
+	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
+	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
+	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_Unknown);
+
+	iOffset = GameConfGetOffset(hConfig, "CBaseEntity::ShouldTransmit");
 	g_hSDKShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
 	if (g_hSDKShouldTransmit == INVALID_HANDLE)
 	{
@@ -2663,7 +2676,14 @@ public Action Command_RemoveSlender(int iClient,int args)
 	
 	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 	{
-		NPCStopMusic();
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!IsValidClient(i) || !IsClientInGame(i) || IsClientSourceTV(i)) continue;
+
+			char sPath[PLATFORM_MAX_PATH];
+			GetBossMusic(sPath,sizeof(sPath));
+			StopSound(i, MUSIC_CHAN, sPath);
+		}
 	}
 	
 	CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Removed Boss", iClient);
@@ -3350,6 +3370,7 @@ public Action Timer_BossCountUpdate(Handle timer)
 
 	int iBossCount = NPCGetCount();
 	int iBossPreferredCount;
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
 
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -3488,9 +3509,56 @@ public Action Timer_BossCountUpdate(Handle timer)
 				}
 				
 				Npc.GetProfile(sProfile, sizeof(sProfile));
-				if (iCopyCount >= GetProfileNum(sProfile, "copy_max", 10)) 
+				int CopyNormal = GetProfileNum(sProfile, "copy_max", 10);
+				int CopyEasy = GetProfileNum(sProfile, "copy_max_easy", CopyNormal);
+				int CopyHard = GetProfileNum(sProfile, "copy_max_hard", CopyNormal);
+				int CopyInsane = GetProfileNum(sProfile, "copy_max_insane", CopyHard);
+				int CopyNightmare = GetProfileNum(sProfile, "copy_max_nightmare", CopyInsane);
+				int CopyApollyon = GetProfileNum(sProfile, "copy_max_apollyon", CopyNightmare);
+				switch (iDifficulty)
 				{
-					continue;
+					case Difficulty_Easy:
+					{
+						if (iCopyCount >= CopyEasy) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Normal:
+					{
+						if (iCopyCount >= CopyNormal) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Hard:
+					{
+						if (iCopyCount >= CopyHard) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Insane:
+					{
+						if (iCopyCount >= CopyInsane) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						if (iCopyCount >= CopyNightmare) 
+						{
+							continue;
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						if (iCopyCount >= CopyApollyon) 
+						{
+							continue;
+						}
+					}
 				}
 				SF2NPC_BaseNPC NpcCopy = AddProfile(sProfile, _, Npc);
 				if (!NpcCopy.IsValid())
@@ -3536,7 +3604,7 @@ public Action Timer_RoundMessages(Handle timer)
 	
 	switch (g_iRoundMessagesNum)
 	{
-		case 0: CPrintToChatAll("{royalblue}== {violet}Slender Fortress{royalblue} coded by {hotpink}Kit o' Rifty & Kenzzer{royalblue}==\n== Modified by {deeppink}Mentrillum & The Gaben{royalblue}, current version {violet}%s{royalblue}==", PLUGIN_VERSION_DISPLAY);
+		case 0: CPrintToChatAll("{royalblue}== {violet}Slender Fortress{royalblue} coded by {hotpink}KitRifty & Kenzzer{royalblue}==\n== Modified by {deeppink}Mentrillum & The Gaben{royalblue}, current version {violet}%s{royalblue}==", PLUGIN_VERSION_DISPLAY);
 		case 1: CPrintToChatAll("%t", "SF2 Ad Message 1");
 		case 2: CPrintToChatAll("%t", "SF2 Ad Message 2");
 	}
@@ -3715,7 +3783,7 @@ public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Han
 	if (!g_bEnabled) return MRES_Ignored;
 
 	int ownerEntity = GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity");
-	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && !IsRoundInWarmup())
+	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && IsValidEdict(weapon) && IsValidEntity(weapon))
 	{
 		int customDamageType = DHookGetReturn(hReturn);
 		MRESReturn hookResult = PvP_GetWeaponCustomDamageType(weapon, ownerEntity, customDamageType);
@@ -4753,7 +4821,7 @@ public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3]
 
 public void OnClientCookiesCached(int iClient)
 {
-	if (!g_bEnabled || !IsValidClient(iClient)) return;
+	if (!g_bEnabled) return;
 	
 	// Load our saved settings.
 	char sCookie[64];
@@ -4822,6 +4890,8 @@ public void OnClientPutInServer(int iClient)
 	SDKHook(iClient, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 	
 	SDKHook(iClient, SDKHook_WeaponEquipPost, Hook_ClientWeaponEquipPost);
+	
+	DHookEntity(g_hSDKWantsLagCompensationOnEntity, true, iClient); 
 
 	DHookEntity(g_hSDKShouldTransmit, true, iClient);
 	
@@ -5657,7 +5727,7 @@ public Action Hook_SlenderObjectSetTransmit(int ent,int other)
 }
 public Action Hook_SlenderObjectSetTransmitEx(int ent,int other)
 {
-	if (!g_bEnabled || !IsValidClient(other)) return Plugin_Continue;
+	if (!g_bEnabled) return Plugin_Continue;
 	
 	if (!IsPlayerAlive(other) || IsClientInDeathCam(other))
 	{
@@ -7096,6 +7166,10 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				else 
 					GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
 			}
+			else if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && iDifficulty >= 4 && StrEqual(sProfile, "hypersnatcher_nerfed"))
+			{
+				sBossName = "Absolute Snatcher";
+			}
 			
 			//TF2_ChangePlayerName(iSourceTV, sBossName, true);
 			SetClientName(iSourceTV, sBossName);
@@ -8310,7 +8384,7 @@ public Action Timer_RoundStart(Handle timer)
 		}
 		
 		// Show difficulty menu.
-		if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
+		if (!SF_IsBoxingMap() && !SF_IsRenevantMap() && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
 		{
 			if (iClientsNum)
 			{

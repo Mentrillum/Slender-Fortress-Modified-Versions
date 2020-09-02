@@ -1230,35 +1230,38 @@ void RemoveProfile(int iBossIndex)
 	NPCChaserOnRemoveProfile(iBossIndex);
 
 	// Remove all possible sounds, for emergencies.
-	for (int i = 1; i <= MaxClients; i++)
+	if (!MusicActive())
 	{
-		if (!IsClientInGame(i)) continue;
-		
-		// Remove chase music.
-		if (g_iPlayerChaseMusicMaster[i] == iBossIndex)
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			ClientChaseMusicReset(i);
-			ClientAlertMusicReset(i);
-			ClientChaseMusicSeeReset(i);
+			if (!IsClientInGame(i)) continue;
+			
+			// Remove chase music.
+			if (g_iPlayerChaseMusicMaster[i] == iBossIndex)
+			{
+				ClientChaseMusicReset(i);
+				ClientAlertMusicReset(i);
+				ClientChaseMusicSeeReset(i);
+			}
+			
+			// Don't forget search theme
+			if(g_iPlayerAlertMusicMaster[i] == iBossIndex)
+			{
+				ClientChaseMusicReset(i);
+				ClientAlertMusicReset(i);
+				ClientChaseMusicSeeReset(i);
+			}
+			
+			if(g_iPlayerChaseMusicSeeMaster[i] == iBossIndex)
+			{
+				ClientChaseMusicReset(i);
+				ClientAlertMusicReset(i);
+				ClientChaseMusicSeeReset(i);
+			}
+			ClientUpdateMusicSystem(i);
 		}
-		
-		// Don't forget search theme
-		if(g_iPlayerAlertMusicMaster[i] == iBossIndex)
-		{
-			ClientChaseMusicReset(i);
-			ClientAlertMusicReset(i);
-			ClientChaseMusicSeeReset(i);
-		}
-		
-		if(g_iPlayerChaseMusicSeeMaster[i] == iBossIndex)
-		{
-			ClientChaseMusicReset(i);
-			ClientAlertMusicReset(i);
-			ClientChaseMusicSeeReset(i);
-		}
-		ClientUpdateMusicSystem(i);
 	}
-	
+
 	// Clean up on the clients.
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -1526,8 +1529,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(iBoss, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
 
 			SDKHook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);
-			SDKHook(iBoss, SDKHook_SetTransmit, Hook_SlenderModelSetTransmitNextbot);
-			
+
 			// Reset stats.
 			g_bSlenderInBacon[iBossIndex] = false;
 			g_iSlender[iBossIndex] = EntIndexToEntRef(iBoss);

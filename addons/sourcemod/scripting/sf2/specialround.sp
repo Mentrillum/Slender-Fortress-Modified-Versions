@@ -540,6 +540,21 @@ void SpecialRoundStart()
 					SlenderAddGlow(iNPCIndex,_,iPurple);
 				}
 			}
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!IsValidClient(i)) continue;
+				ClientDisableConstantGlow(i);
+				if (!g_bPlayerProxy[i] && !DidClientEscape(i) && !g_bPlayerEliminated[i])
+				{
+					int iRed[4] = {184, 56, 59, 255};
+					ClientEnableConstantGlow(i, "head", iRed);
+				}
+				else if ((g_bPlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+				{
+					int iYellow[4] = {255, 208, 0, 255};
+					ClientEnableConstantGlow(i, "head", iYellow);
+				}
+			}
 			SF_AddSpecialRound(SPECIALROUND_WALLHAX);
 		}
 		case SPECIALROUND_HYPERSNATCHER:
@@ -920,7 +935,7 @@ public Action Timer_DisplaySpecialRound(Handle timer)
 	if (strcmp(sDescChat, "") != 0)
 		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", sDescChat);
 	else
-		CPrintToChatAll("{olive}Special round in developement...");
+		CPrintToChatAll("{dodgerblue}Special round in developement...");
 }
 
 void SpecialCreateVote()
@@ -933,23 +948,63 @@ void SpecialCreateVote()
 	NativeVotes_SetDetails(voteMenu,Tittle);
 	
 	ArrayList arrayEnabledRounds = SpecialEnabledList();
-	
+	int iBlacklistedItems[5];
+	int[] iWhitelistedItems = new int[arrayEnabledRounds.Length - 1];
+	char sWhitelisted[16];
+
 	for (int i = 0; i < 5; i++)
 	{
-		int iEnabledSpecialRound = arrayEnabledRounds.Get(GetRandomInt(0, arrayEnabledRounds.Length-1));
-		char sItem[30], sItemOutPut[30];
-		SpecialRoundGetDescriptionHud(iEnabledSpecialRound, sItem, sizeof(sItem));
-		for (int iBit = 0; iBit < 30; iBit++)
+		bool bChange = false;
+		
+		int iRandomRound = GetRandomInt(0, arrayEnabledRounds.Length - 1);
+		for (int i2 = 0; i2 < 5; i2++)
 		{
-			if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
-			{
-				break;
-			}
-			sItemOutPut[iBit] = sItem[iBit];
+			if (iRandomRound == iBlacklistedItems[i]) bChange = true;
 		}
-		IntToString(iEnabledSpecialRound,sItem,sizeof(sItem));
-		NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
-		arrayEnabledRounds.Erase(iEnabledSpecialRound);
+		
+		if (bChange)
+		{
+			for (int i3 = 0; i3 < arrayEnabledRounds.Length - 1; i3++)
+			{
+				if (i3 != iBlacklistedItems[0] && i3 != iBlacklistedItems[1] && i3 != iBlacklistedItems[2] && i3 != iBlacklistedItems[3] && i3 != iBlacklistedItems[4] && i3 != SPECIALROUND_VOTE)
+				{
+					iWhitelistedItems[i3] = i3;
+					IntToString(i3, sWhitelisted, sizeof(sWhitelisted));
+				}
+			}
+			int iRandomRoundNew = GetRandomInt(0, StringToInt(sWhitelisted));
+			char sItem[30], sItemOutPut[30];
+			SpecialRoundGetDescriptionHud(iRandomRoundNew, sItem, sizeof(sItem));
+			for (int iBit = 0; iBit < 30; iBit++)
+			{
+				if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
+				{
+					break;
+				}
+				sItemOutPut[iBit] = sItem[iBit];
+			}
+			IntToString(iRandomRound,sItem,sizeof(sItem));
+			NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
+			
+			iBlacklistedItems[i] = iRandomRoundNew;
+		}
+		else
+		{
+			char sItem[30], sItemOutPut[30];
+			SpecialRoundGetDescriptionHud(iRandomRound, sItem, sizeof(sItem));
+			for (int iBit = 0; iBit < 30; iBit++)
+			{
+				if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
+				{
+					break;
+				}
+				sItemOutPut[iBit] = sItem[iBit];
+			}
+			IntToString(iRandomRound,sItem,sizeof(sItem));
+			NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
+			
+			iBlacklistedItems[i] = iRandomRound;
+		}
 	}
 	
 	delete arrayEnabledRounds;
