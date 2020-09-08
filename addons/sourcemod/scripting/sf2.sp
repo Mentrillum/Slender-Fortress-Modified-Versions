@@ -225,7 +225,7 @@ float g_flLastCommandTime[MAXPLAYERS + 1];
 
 bool g_bEnabled;
 
-Handle g_hConfig;
+KeyValues g_hConfig;
 Handle g_hRestrictedWeaponsConfig;
 Handle g_hSpecialRoundsConfig;
 
@@ -738,7 +738,7 @@ Handle g_cvPlayerInfiniteBlinkOverride;
 Handle g_cvGravity;
 float g_flGravity;
 
-Handle g_cvMaxRounds;
+ConVar g_cvMaxRounds;
 
 bool g_b20Dollars;
 
@@ -821,7 +821,6 @@ Handle g_hSDKWeaponPistol;
 Handle g_hSDKWeaponWrench;
 
 Handle g_hSDKGetMaxHealth;
-Handle g_hSDKEntityGetDamage;
 Handle g_hSDKGetLastKnownArea;
 Handle g_hSDKUpdateLastKnownArea;
 Handle g_hSDKWantsLagCompensationOnEntity;
@@ -962,6 +961,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	CreateNative("SF2_GetBossTarget", Native_GetBossTarget);
 	CreateNative("SF2_GetBossMaster", Native_GetBossMaster);
 	CreateNative("SF2_GetBossState", Native_GetBossState);
+	CreateNative("SF2_GetBossEyePosition", Native_GetBossEyePosition);
+	CreateNative("SF2_GetBossEyePositionOffset", Native_GetBossEyePositionOffset);
 	CreateNative("SF2_GetBossFOV", Native_GetBossFOV);
 	CreateNative("SF2_GetBossTimeUntilNoPersistence", Native_GetBossTimeUntilNoPersistence);
 	CreateNative("SF2_SetBossTimeUntilNoPersistence", Native_SetBossTimeUntilNoPersistence);
@@ -1441,14 +1442,6 @@ static void SDK_Init()
 		SetFailState("Couldn't find CBaseEntity::GetSmoothedVelocity offset from SF2 gamedata!");
 	}
 	
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::GetDamage");
-	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
-	if ((g_hSDKEntityGetDamage = EndPrepSDKCall()) == INVALID_HANDLE)
-	{
-		SetFailState("Failed to retrieve CBaseEntity::GetDamage offset from SF2 gamedata!");
-	}
-
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::GetVectors");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
@@ -10651,6 +10644,30 @@ public int Native_GetBossMaster(Handle plugin,int numParams)
 public int Native_GetBossState(Handle plugin,int numParams)
 {
 	return g_iSlenderState[GetNativeCell(1)];
+}
+
+public int Native_GetBossEyePosition(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC boss = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!boss.IsValid() || !IsValidEntity(boss.EntIndex))
+		return;
+	
+	float eyePos[3];
+	boss.GetEyePosition(eyePos);
+
+	SetNativeArray(2, eyePos, 3);
+}
+
+public int Native_GetBossEyePositionOffset(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC boss = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!boss.IsValid())
+		return;
+	
+	float eyePos[3];
+	boss.GetEyePositionOffset(eyePos);
+
+	SetNativeArray(2, eyePos, 3);
 }
 
 public int Native_GetBossFOV(Handle plugin, int numParams)

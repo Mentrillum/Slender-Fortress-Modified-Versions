@@ -830,6 +830,22 @@ native int SF2_GetBossMaster(int iBossIndex);
 native int SF2_GetBossState(int iBossIndex);
 
 /**
+ * Returns the boss's eye position in the world. Used for visibility checks.
+ *
+ * @param iBossIndex		Boss index.
+ * @param eyePos			Buffer to store result.
+ */
+native void SF2_GetBossEyePosition(int iBossIndex, float eyePos[3]);
+
+/**
+ * Returns the boss's eye position offset. This is a local offset vector.
+ *
+ * @param iBossIndex		Boss index.
+ * @param eyePosOffset		Buffer to store result.
+ */
+native void SF2_GetBossEyePositionOffset(int iBossIndex, float eyePosOffset[3]);
+
+/**
  * Returns the boss's field of view.
  *
  * @param iBossIndex		Boss index.

@@ -80,7 +80,7 @@ enum struct PvPProjectile_BallOfFire
 
 				if (IsValidClient(otherEntity) && IsClientInPvP(otherEntity) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
 				{
-					float flDamage = SDKCall(g_hSDKEntityGetDamage, ent);
+					float flDamage = GetEntDataFloat(ent, FindSendPropInfo("CTFProjectile_BallOfFire", "m_iDeflected") + 4);
 					float flDamageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? FindConVar("tf_fireball_burning_bonus").FloatValue : 1.0;
 					float flDamagePos[3];
 					GetEntPropVector(ent, Prop_Data, "m_vecOrigin", flDamagePos);
