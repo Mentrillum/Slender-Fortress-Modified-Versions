@@ -148,7 +148,10 @@ static int g_iSlenderDamageClientSoundPitch[MAX_BOSSES];
 static char sDamageEffectParticle[PLATFORM_MAX_PATH];
 static char sDamageEffectSound[PLATFORM_MAX_PATH];
 
+static bool g_bNPCAutoChaseEnabled[MAX_BOSSES] = { false, ... };
 static bool g_bNPCInAutoChase[MAX_BOSSES];
+
+static bool g_bNPCChasesEndlessly[MAX_BOSSES] = { false, ... };
 
 enum struct BaseAttackStructure
 {
@@ -218,6 +221,11 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	{
 		public get() { return NPCChaserGetStunDuration(this.Index); }
 	}
+
+	property float StunCooldown
+	{
+		public get() { return NPCChaserGetStunCooldown(this.Index); }
+	}
 	
 	property float StunHealth
 	{
@@ -231,6 +239,16 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		public set(float amount) { NPCChaserSetStunInitialHealth(this.Index, amount); }
 	}
 	
+	property bool HasDamageParticles
+	{
+		public get() { return NPCChaserDamageParticlesEnabled(this.Index); }
+	}
+
+	property bool UseShootGesture
+	{
+		public get() { return NPCChaserUseShootGesture(this.Index); }
+	}
+
 	property bool CloakEnabled
 	{
 		public get() { return NPCChaserIsCloakEnabled(this.Index); }
@@ -246,11 +264,26 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		return NPCChaserGetCloakRange(this.Index, difficulty);
 	}
 
+	property bool HasKeyDrop
+	{
+		public get() { return NPCChaseHasKeyDrop(this.Index); }
+	}
+
 	property bool ProjectileEnabled
 	{
 		public get() { return NPCChaserIsProjectileEnabled(this.Index); }
 	}
 	
+	property bool ProjectileUsesAmmo
+	{
+		public get() { return NPCChaserUseProjectileAmmo(this.Index); }
+	}
+
+	property int ProjectileType
+	{
+		public get() { return NPCChaserGetProjectileType(this.Index); }
+	}
+
 	public float GetProjectileCooldownMin(int difficulty)
 	{
 		return NPCChaserGetProjectileCooldownMin(this.Index, difficulty);
@@ -274,6 +307,11 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	public float GetProjectileRadius(int difficulty)
 	{
 		return NPCChaserGetProjectileRadius(this.Index, difficulty);
+	}
+
+	public float GetProjectileReloadTime(int difficulty)
+	{
+		return NPCChaserGetProjectileReloadTime(this.Index, difficulty);
 	}
 
 	property bool AdvancedDamageEffectsEnabled
@@ -387,9 +425,24 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		public set(int state) { NPCChaserSetState(this.Index, state); }
 	}
 
-	public SF2NPC_Chaser(int index)
+	property bool HasTraps
 	{
-		return view_as<SF2NPC_Chaser>(SF2NPC_BaseNPC(index));
+		public get() { return NPCChaserGetTrapState(this.Index); }
+	}
+
+	property int TrapType
+	{
+		public get() { return NPCChaserGetTrapType(this.Index); }
+	}
+
+	public float GetTrapCooldown(int difficulty)
+	{
+		return NPCChaserGetTrapSpawnTime(this.Index, difficulty);
+	}
+
+	property bool HasCriticalRockets
+	{
+		public get() { return NPCChaserHasCriticalRockets(this.Index); }
 	}
 	
 	public int GetTeleporter(int iTeleporterNumber)
@@ -425,6 +478,23 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	public void AddStunHealth(float amount)
 	{
 		NPCChaserAddStunHealth(this.Index, amount);
+	}
+
+	property bool AutoChaseEnabled 
+	{
+		public get() { return g_bNPCAutoChaseEnabled[this.Index]; }
+		public set(bool autoChase) { g_bNPCAutoChaseEnabled[this.Index] = autoChase; }
+	}
+
+	property bool ChasesEndlessly
+	{
+		public get() { return g_bNPCChasesEndlessly[this.Index]; }
+		public set(bool chaseEndlessly) { g_bNPCChasesEndlessly[this.Index] = chaseEndlessly; }
+	}
+
+	public SF2NPC_Chaser(int index)
+	{
+		return view_as<SF2NPC_Chaser>(SF2NPC_BaseNPC(index));
 	}
 }
 
@@ -1062,106 +1132,109 @@ void NPCChaserSetState(int iNPCIndex,int iState)
 
 int NPCChaserOnSelectProfile(int iNPCIndex)
 {
-	int iUniqueProfileIndex = NPCGetUniqueProfileIndex(iNPCIndex);
+	// int iUniqueProfileIndex = NPCGetUniqueProfileIndex(iNPCIndex);
 
-	g_flNPCWakeRadius[iNPCIndex] = GetChaserProfileWakeRadius(iUniqueProfileIndex);
-	g_flNPCStepSize[iNPCIndex] = GetChaserProfileStepSize(iUniqueProfileIndex);
+	SF2ChaserBossProfile profile = SF2ChaserBossProfile(NPCGetProfileIndex(iNPCIndex));
+
+	g_flNPCWakeRadius[iNPCIndex] = profile.WakeRadius;
+	g_flNPCStepSize[iNPCIndex] = profile.StepSize;
 	
 	for (int iDifficulty = 0; iDifficulty < Difficulty_Max; iDifficulty++)
 	{
-		g_flNPCWalkSpeed[iNPCIndex][iDifficulty] = GetChaserProfileWalkSpeed(iUniqueProfileIndex, iDifficulty);
-		g_flNPCAirSpeed[iNPCIndex][iDifficulty] = GetChaserProfileAirSpeed(iUniqueProfileIndex, iDifficulty);
+		g_flNPCWalkSpeed[iNPCIndex][iDifficulty] = profile.GetWalkSpeed(iDifficulty);
+		g_flNPCAirSpeed[iNPCIndex][iDifficulty] = profile.GetAirSpeed(iDifficulty);
 		
-		g_flNPCMaxWalkSpeed[iNPCIndex][iDifficulty] = GetChaserProfileMaxWalkSpeed(iUniqueProfileIndex, iDifficulty);
-		g_flNPCMaxAirSpeed[iNPCIndex][iDifficulty] = GetChaserProfileMaxAirSpeed(iUniqueProfileIndex, iDifficulty);
+		g_flNPCMaxWalkSpeed[iNPCIndex][iDifficulty] = profile.GetMaxWalkSpeed(iDifficulty);
+		g_flNPCMaxAirSpeed[iNPCIndex][iDifficulty] = profile.GetMaxAirSpeed(iDifficulty);
 		
-		g_flNPCAlertGracetime[iNPCIndex][iDifficulty] = GetChaserProfileAlertGracetime(iUniqueProfileIndex, iDifficulty);
-		g_flNPCAlertDuration[iNPCIndex][iDifficulty] = GetChaserProfileAlertDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCChaseDuration[iNPCIndex][iDifficulty] = GetChaserProfileChaseDuration(iUniqueProfileIndex, iDifficulty);
+		g_flNPCAlertGracetime[iNPCIndex][iDifficulty] = profile.GetAlertStateGraceTime(iDifficulty);
+		g_flNPCAlertDuration[iNPCIndex][iDifficulty] = profile.GetAlertStateDuration(iDifficulty);
+		g_flNPCChaseDuration[iNPCIndex][iDifficulty] = profile.GetChaseStateDuration(iDifficulty);
 		
-		g_flNPCCloakCooldown[iNPCIndex][iDifficulty] = GetChaserProfileCloakCooldown(iUniqueProfileIndex, iDifficulty);
-		g_flNPCCloakRange[iNPCIndex][iDifficulty] = GetChaserProfileCloakRange(iUniqueProfileIndex, iDifficulty);
+		g_flNPCCloakCooldown[iNPCIndex][iDifficulty] = profile.GetCloakCooldown(iDifficulty);
+		g_flNPCCloakRange[iNPCIndex][iDifficulty] = profile.GetCloakRange(iDifficulty);
 
-		g_flNPCProjectileCooldownMin[iNPCIndex][iDifficulty] = GetChaserProfileProjectileCooldownMin(iUniqueProfileIndex, iDifficulty);
-		g_flNPCProjectileCooldownMax[iNPCIndex][iDifficulty] = GetChaserProfileProjectileCooldownMax(iUniqueProfileIndex, iDifficulty);
-		g_flNPCProjectileSpeed[iNPCIndex][iDifficulty] = GetChaserProfileProjectileSpeed(iUniqueProfileIndex, iDifficulty);
-		g_flNPCProjectileDamage[iNPCIndex][iDifficulty] = GetChaserProfileProjectileDamage(iUniqueProfileIndex, iDifficulty);
-		g_flNPCProjectileRadius[iNPCIndex][iDifficulty] = GetChaserProfileProjectileRadius(iUniqueProfileIndex, iDifficulty);
-		g_flIceballSlowdownDuration[iNPCIndex][iDifficulty] = GetChaserProfileIceballSlowdownDuration(iUniqueProfileIndex, iDifficulty);
-		g_flIceballSlowdownPercent[iNPCIndex][iDifficulty] = GetChaserProfileIceballSlowdownPercent(iUniqueProfileIndex, iDifficulty);
-		g_iNPCProjectileLoadedAmmo[iNPCIndex][iDifficulty] = GetChaserProfileProjectileLoadedAmmo(iUniqueProfileIndex, iDifficulty);
-		g_flNPCProjectileReloadTime[iNPCIndex][iDifficulty] = GetChaserProfileProjectileAmmoReloadTime(iUniqueProfileIndex, iDifficulty);
-		g_flNPCProjectileChargeUpTime[iNPCIndex][iDifficulty] = GetChaserProfileProjectileChargeUpTime(iUniqueProfileIndex, iDifficulty);
+		g_flNPCProjectileCooldownMin[iNPCIndex][iDifficulty] = profile.GetProjectileCooldownMin(iDifficulty);
+		g_flNPCProjectileCooldownMax[iNPCIndex][iDifficulty] = profile.GetProjectileCooldownMax(iDifficulty);
+		g_flNPCProjectileSpeed[iNPCIndex][iDifficulty] = profile.GetProjectileSpeed(iDifficulty);
+		g_flNPCProjectileDamage[iNPCIndex][iDifficulty] = profile.GetProjectileDamage(iDifficulty);
+		g_flNPCProjectileRadius[iNPCIndex][iDifficulty] = profile.GetProjectileRadius(iDifficulty);
+		g_flIceballSlowdownDuration[iNPCIndex][iDifficulty] = profile.GetIceballSlowdownDuration(iDifficulty);
+		g_flIceballSlowdownPercent[iNPCIndex][iDifficulty] = profile.GetIceballSlowdownPercent(iDifficulty);
+		g_iNPCProjectileLoadedAmmo[iNPCIndex][iDifficulty] = profile.GetProjectileLoadedAmmo(iDifficulty);
+		g_flNPCProjectileReloadTime[iNPCIndex][iDifficulty] = profile.GetProjectileReloadTime(iDifficulty);
+		g_flNPCProjectileChargeUpTime[iNPCIndex][iDifficulty] = profile.GetProjectileChargeUpTime(iDifficulty);
 		g_iNPCProjectileAmmo[iNPCIndex] = g_iNPCProjectileLoadedAmmo[iNPCIndex][iDifficulty];
 		g_flNPCProjectileTimeToReload[iNPCIndex] = g_flNPCProjectileReloadTime[iNPCIndex][iDifficulty];
 		
-		g_flNPCJarateDuration[iNPCIndex][iDifficulty] = GetChaserProfileJaratePlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCMilkDuration[iNPCIndex][iDifficulty] = GetChaserProfileMilkPlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCGasDuration[iNPCIndex][iDifficulty] = GetChaserProfileGasPlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCMarkDuration[iNPCIndex][iDifficulty] = GetChaserProfileMarkPlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCIgniteDelay[iNPCIndex][iDifficulty] = GetChaserProfileIgnitePlayerDelay(iUniqueProfileIndex, iDifficulty);
-		g_flNPCStunAttackDuration[iNPCIndex][iDifficulty] = GetChaserProfileStunPlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCStunAttackSlowdown[iNPCIndex][iDifficulty] = GetChaserProfileStunPlayerSlowdown(iUniqueProfileIndex, iDifficulty);
-		g_flNPCBleedDuration[iNPCIndex][iDifficulty] = GetChaserProfileBleedPlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCElectricDuration[iNPCIndex][iDifficulty] = GetChaserProfileEletricPlayerDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCElectricSlowdown[iNPCIndex][iDifficulty] = GetChaserProfileEletricPlayerSlowdown(iUniqueProfileIndex, iDifficulty);
+		g_flNPCJarateDuration[iNPCIndex][iDifficulty] = profile.GetJarateDuration(iDifficulty);
+		g_flNPCMilkDuration[iNPCIndex][iDifficulty] = profile.GetMilkDuration(iDifficulty);
+		g_flNPCGasDuration[iNPCIndex][iDifficulty] = profile.GetGasDuration(iDifficulty);
+		g_flNPCMarkDuration[iNPCIndex][iDifficulty] = profile.GetMarkDuration(iDifficulty);
+		g_flNPCIgniteDelay[iNPCIndex][iDifficulty] = profile.GetIgniteDelay(iDifficulty);
+		g_flNPCStunAttackDuration[iNPCIndex][iDifficulty] = profile.GetStunAttackDuration(iDifficulty);
+		g_flNPCStunAttackSlowdown[iNPCIndex][iDifficulty] = profile.GetStunAttackSlowdown(iDifficulty);
+		g_flNPCBleedDuration[iNPCIndex][iDifficulty] = profile.GetBleedDuration(iDifficulty);
+		g_flNPCElectricDuration[iNPCIndex][iDifficulty] = profile.GetElectricDuration(iDifficulty);
+		g_flNPCElectricSlowdown[iNPCIndex][iDifficulty] = profile.GetElectricSlowdown(iDifficulty);
 		
-		g_flNPCShockwaveDrain[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveDrain(iUniqueProfileIndex, iDifficulty);
-		g_flNPCShockwaveForce[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveForce(iUniqueProfileIndex, iDifficulty);
-		g_flNPCShockwaveHeight[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveHeight(iUniqueProfileIndex, iDifficulty);
-		g_flNPCShockwaveRange[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveRange(iUniqueProfileIndex, iDifficulty);
-		g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveStunDuration(iUniqueProfileIndex, iDifficulty);
-		g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty] = GetChaserProfileShockwaveStunSlowdown(iUniqueProfileIndex, iDifficulty);
+		g_flNPCShockwaveDrain[iNPCIndex][iDifficulty] = profile.GetShockwaveDrain(iDifficulty);
+		g_flNPCShockwaveForce[iNPCIndex][iDifficulty] = profile.GetShockwaveForce(iDifficulty);
+		g_flNPCShockwaveHeight[iNPCIndex][iDifficulty] = profile.GetShockwaveHeight(iDifficulty);
+		g_flNPCShockwaveRange[iNPCIndex][iDifficulty] = profile.GetShockwaveRange(iDifficulty);
+		g_flNPCShockwaveStunDuration[iNPCIndex][iDifficulty] = profile.GetShockwaveStunDuration(iDifficulty);
+		g_flNPCShockwaveStunSlowdown[iNPCIndex][iDifficulty] = profile.GetShockwaveStunSlowdown(iDifficulty);
 		
-		g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty] = GetChaserProfileTrapSpawnCooldown(iUniqueProfileIndex, iDifficulty);
+		g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty] = profile.GetTrapCooldown(iDifficulty);
 		g_flSlenderNextTrapPlacement[iNPCIndex] = GetGameTime() + g_flNPCNextTrapSpawn[iNPCIndex][iDifficulty];
 	}
 	
-	g_NPCBaseAttacksCount[iNPCIndex] = GetChaserProfileAttackCount(iUniqueProfileIndex);
+	g_NPCBaseAttacksCount[iNPCIndex] = profile.AttackCount;
 	// Get attack data.
 	for (int i = 0; i < g_NPCBaseAttacksCount[iNPCIndex]; i++)
 	{
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackType = GetChaserProfileAttackType(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamage = GetChaserProfileAttackDamage(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageVsProps = GetChaserProfileAttackDamageVsProps(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageForce = GetChaserProfileAttackDamageForce(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageType = GetChaserProfileAttackDamageType(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageDelay = GetChaserProfileAttackDamageDelay(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRange = GetChaserProfileAttackRange(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDuration = GetChaserProfileAttackDuration(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackSpread = GetChaserProfileAttackSpread(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginRange = GetChaserProfileAttackBeginRange(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginFOV = GetChaserProfileAttackBeginFOV(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackCooldown = GetChaserProfileAttackCooldown(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDisappear = GetChaserProfileAttackDisappear(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRepeat = GetChaserProfileAttackRepeat(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackType = profile.GetAttackType(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamage = profile.GetAttackDamage(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageVsProps = profile.GetAttackDamageVsProps(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageForce = profile.GetAttackDamageForce(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageType = profile.GetAttackDamageType(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDamageDelay = profile.GetAttackDamageDelay(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRange = profile.GetAttackRange(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDuration = profile.GetAttackDuration(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackSpread = profile.GetAttackSpread(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginRange = profile.GetAttackBeginRange(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBeginFOV = profile.GetAttackBeginFOV(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackCooldown = profile.GetAttackCooldown(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackDisappear = profile.ShouldDisappearAfterAttack(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackRepeat = profile.GetAttackRepeatCount(i);
 		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackNextAttackTime = 0.0;
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeSteal = GetChaserProfileAttackLifeStealState(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeStealDuration = GetChaserProfileAttackLifeStealDuration(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileDamage = GetChaserProfileAttackProjectileDamage(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileSpeed = GetChaserProfileAttackProjectileSpeed(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileRadius = GetChaserProfileAttackProjectileRadius(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileCrits = GetChaserProfileAttackCritProjectiles(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletCount = GetChaserProfileAttackBulletCount(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletDamage = GetChaserProfileAttackBulletDamage(iUniqueProfileIndex, i);
-		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletSpread = GetChaserProfileAttackBulletSpread(iUniqueProfileIndex, i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeSteal = profile.CanAttackLifeSteal(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackLifeStealDuration = profile.GetAttackLifeStealDuration(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileDamage = profile.GetAttackProjectileDamage(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileSpeed = profile.GetAttackProjectileSpeed(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileRadius = profile.GetAttackProjectileRadius(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackProjectileCrits = profile.AreAttackProjectilesCritBoosted(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletCount = profile.GetAttackBulletCount(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletDamage = profile.GetAttackBulletDamage(i);
+		g_NPCBaseAttacks[iNPCIndex][i].BaseAttackBulletSpread = profile.GetAttackBulletSpread(i);
 		g_NPCBaseAttacks[iNPCIndex][i].CurrentAttackRepeat = 0;
 	}
+
 	// Get stun data.
-	g_bNPCStunEnabled[iNPCIndex] = GetChaserProfileStunState(iUniqueProfileIndex);
-	g_flNPCStunDuration[iNPCIndex] = GetChaserProfileStunDuration(iUniqueProfileIndex);
-	g_flNPCStunCooldown[iNPCIndex] = GetChaserProfileStunCooldown(iUniqueProfileIndex);
-	g_bNPCStunFlashlightEnabled[iNPCIndex] = GetChaserProfileStunFlashlightState(iUniqueProfileIndex);
-	g_flNPCStunFlashlightDamage[iNPCIndex] = GetChaserProfileStunFlashlightDamage(iUniqueProfileIndex);
-	g_flNPCStunInitialHealth[iNPCIndex] = GetChaserProfileStunHealth(iUniqueProfileIndex);
+	g_bNPCStunEnabled[iNPCIndex] = profile.StunEnabled;
+	g_flNPCStunDuration[iNPCIndex] = profile.StunDuration;
+	g_flNPCStunCooldown[iNPCIndex] = profile.StunCooldown;
+	g_bNPCStunFlashlightEnabled[iNPCIndex] = profile.StunByFlashlightEnabled;
+	g_flNPCStunFlashlightDamage[iNPCIndex] = profile.StunFlashlightDamage;
+	g_flNPCStunInitialHealth[iNPCIndex] = profile.StunHealth;
 	
 	//Get Key Data
-	g_bNPCHasKeyDrop[iNPCIndex] = GetChaserProfileKeyDrop(iUniqueProfileIndex);
+	g_bNPCHasKeyDrop[iNPCIndex] = profile.HasKeyDrop;
 	
 	//Get Cloak Data
-	g_bNPCCloakEnabled[iNPCIndex] = GetChaserProfileCloakState(iUniqueProfileIndex);
+	g_bNPCCloakEnabled[iNPCIndex] = profile.CloakEnabled;
 	
-	float fStunHealthPerPlayer = GetChaserProfileStunHealthPerPlayer(iUniqueProfileIndex);
+	float fStunHealthPerPlayer = profile.StunHealthPerPlayer;
 	int count;
 	for(int iClient;iClient<=MaxClients;iClient++)
 		if(IsValidClient(iClient) && g_bPlayerEliminated[iClient])
@@ -1181,54 +1254,62 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	g_hNPCLifeStealTimer[iNPCIndex] = INVALID_HANDLE;
 	
 	//Get Projectile Data
-	g_bNPCProjectileEnabled[iNPCIndex] = GetChaserProfileProjectileState(iUniqueProfileIndex);
-	g_iNPCProjectileType[iNPCIndex] = GetChaserProfileProjectileType(iUniqueProfileIndex);
-	g_bNPCCriticalRockets[iNPCIndex] = GetChaserProfileCriticalRockets(iUniqueProfileIndex);
-	g_bNPCUseShootGesture[iNPCIndex] = GetChaserProfileGestureShoot(iUniqueProfileIndex);
-	g_bNPCUseProjectileAmmo[iNPCIndex] = GetChaserProfileProjectileAmmoState(iUniqueProfileIndex);
-	g_bNPCUseChargeUpProjectiles[iNPCIndex] = GetChaserProfileChargeUpProjectilesState(iUniqueProfileIndex);
+	g_bNPCProjectileEnabled[iNPCIndex] = profile.ProjectileEnabled;
+	g_iNPCProjectileType[iNPCIndex] = profile.ProjectileType;
+	g_bNPCCriticalRockets[iNPCIndex] = profile.HasCriticalRockets;
+	g_bNPCUseShootGesture[iNPCIndex] = profile.UseShootGesture;
+	g_bNPCUseProjectileAmmo[iNPCIndex] = profile.ProjectileUsesAmmo;
+	g_bNPCUseChargeUpProjectiles[iNPCIndex] = profile.ChargeUpProjectiles;
 	g_flNPCProjectileCooldown[iNPCIndex] = 0.0;
 	g_bNPCReloadingProjectiles[iNPCIndex] = false;
 	
-	g_bNPCUseAdvancedDamageEffects[iNPCIndex] = GetChaserProfileEnableAdvancedDamageEffects(iUniqueProfileIndex);
-	g_bNPCAttachDamageParticle[iNPCIndex] = GetChaserProfileEnableAdvancedDamageParticles(iUniqueProfileIndex);
-	g_bNPCJaratePlayerEnabled[iNPCIndex] = GetChaserProfileJarateState(iUniqueProfileIndex);
-	g_iNPCJarateAttackIndexes[iNPCIndex] = GetChaserProfileJarateAttackIndexes(iUniqueProfileIndex);
-	g_bNPCMilkPlayerEnabled[iNPCIndex] = GetChaserProfileMilkState(iUniqueProfileIndex);
-	g_iNPCMilkAttackIndexes[iNPCIndex] = GetChaserProfileMilkAttackIndexes(iUniqueProfileIndex);
-	g_bNPCGasPlayerEnabled[iNPCIndex] = GetChaserProfileGasState(iUniqueProfileIndex);
-	g_iNPCGasAttackIndexes[iNPCIndex] = GetChaserProfileGasAttackIndexes(iUniqueProfileIndex);
-	g_bNPCMarkPlayerEnabled[iNPCIndex] = GetChaserProfileMarkState(iUniqueProfileIndex);
-	g_iNPCMarkAttackIndexes[iNPCIndex] = GetChaserProfileMarkAttackIndexes(iUniqueProfileIndex);
-	g_bNPCIgnitePlayerEnabled[iNPCIndex] = GetChaserProfileIgniteState(iUniqueProfileIndex);
-	g_iNPCIgniteAttackIndexes[iNPCIndex] = GetChaserProfileIgniteAttackIndexes(iUniqueProfileIndex);
-	g_bNPCStunPlayerEnabled[iNPCIndex] = GetChaserProfileStunAttackState(iUniqueProfileIndex);
-	g_iNPCStunAttackIndexes[iNPCIndex] = GetChaserProfileStunAttackIndexes(iUniqueProfileIndex);
-	g_iNPCStunAttackType[iNPCIndex] = GetChaserProfileStunDamageType(iUniqueProfileIndex);
-	g_bNPCBleedPlayerEnabled[iNPCIndex] = GetChaserProfileBleedState(iUniqueProfileIndex);
-	g_iNPCBleedAttackIndexes[iNPCIndex] = GetChaserProfileBleedAttackIndexes(iUniqueProfileIndex);
-	g_bNPCElectricPlayerEnabled[iNPCIndex] = GetChaserProfileEletricAttackState(iUniqueProfileIndex);
-	g_iNPCElectricAttackIndexes[iNPCIndex] = GetChaserProfileEletricAttackIndexes(iUniqueProfileIndex);
-	g_bNPCSmitePlayerEnabled[iNPCIndex] = GetChaserProfileSmiteState(iUniqueProfileIndex);
-	g_iNPCSmiteAttackIndexes[iNPCIndex] = GetChaserProfileSmiteAttackIndexes(iUniqueProfileIndex);
-	g_flNPCSmiteDamage[iNPCIndex] = GetChaserProfileSmiteDamage(iUniqueProfileIndex);
-	g_iNPCSmiteDamageType[iNPCIndex] = GetChaserProfileSmiteDamageType(iUniqueProfileIndex);
-	g_iNPCSmiteColorR[iNPCIndex] = GetChaserProfileSmiteColorR(iUniqueProfileIndex);
-	g_iNPCSmiteColorG[iNPCIndex] = GetChaserProfileSmiteColorG(iUniqueProfileIndex);
-	g_iNPCSmiteColorB[iNPCIndex] = GetChaserProfileSmiteColorB(iUniqueProfileIndex);
-	g_iNPCSmiteTransparency[iNPCIndex] = GetChaserProfileSmiteColorTrans(iUniqueProfileIndex);
-	g_bSlenderHasDamageParticleEffect[iNPCIndex] = GetChaserProfileDamageParticleState(iUniqueProfileIndex);
-	g_flSlenderDamageClientSoundVolume[iNPCIndex] = GetChaserProfileDamageParticleVolume(iUniqueProfileIndex);
-	g_iSlenderDamageClientSoundPitch[iNPCIndex] = GetChaserProfileDamageParticlePitch(iUniqueProfileIndex);
-	g_bNPCShockwaveEnabled[iNPCIndex] = GetChaserProfileShockwaveState(iUniqueProfileIndex);
-	g_bNPCShockwaveStunEnabled[iNPCIndex] = GetChaserProfileShockwaveStunState(iUniqueProfileIndex);
-	g_iNPCShockwaveAttackIndexes[iNPCIndex] = GetChaserProfileShockwaveAttackIndexes(iUniqueProfileIndex);
+	g_bNPCUseAdvancedDamageEffects[iNPCIndex] = profile.AdvancedDamageEffectsEnabled;
+	g_bNPCAttachDamageParticle[iNPCIndex] = profile.AttachDamageEffectsParticle;
+	g_bNPCJaratePlayerEnabled[iNPCIndex] = profile.JaratePlayerOnHit;
+	g_iNPCJarateAttackIndexes[iNPCIndex] = profile.JarateAttackIndexes;
+	g_bNPCMilkPlayerEnabled[iNPCIndex] = profile.MilkPlayerOnHit;
+	g_iNPCMilkAttackIndexes[iNPCIndex] = profile.MilkAttackIndexes;
+	g_bNPCGasPlayerEnabled[iNPCIndex] = profile.GasPlayerOnHit;
+	g_iNPCGasAttackIndexes[iNPCIndex] = profile.GasAttackIndexes;
+	g_bNPCMarkPlayerEnabled[iNPCIndex] = profile.MarkPlayerOnHit;
+	g_iNPCMarkAttackIndexes[iNPCIndex] = profile.MarkAttackIndexes;
+	g_bNPCIgnitePlayerEnabled[iNPCIndex] = profile.IgnitePlayerOnHit;
+	g_iNPCIgniteAttackIndexes[iNPCIndex] = profile.IgniteAttackIndexes;
+	g_bNPCStunPlayerEnabled[iNPCIndex] = profile.StunPlayerOnHit;
+	g_iNPCStunAttackIndexes[iNPCIndex] = profile.StunAttackIndexes;
+	g_iNPCStunAttackType[iNPCIndex] = profile.StunAttackType;
+	g_bNPCBleedPlayerEnabled[iNPCIndex] = profile.BleedPlayerOnHit;
+	g_iNPCBleedAttackIndexes[iNPCIndex] = profile.BleedAttackIndexes;
+	g_bNPCElectricPlayerEnabled[iNPCIndex] = profile.ElectricPlayerOnHit;
+	g_iNPCElectricAttackIndexes[iNPCIndex] = profile.ElectricAttackIndexes;
+	g_bNPCSmitePlayerEnabled[iNPCIndex] = profile.SmitePlayerOnHit;
+	g_iNPCSmiteAttackIndexes[iNPCIndex] = profile.SmiteAttackIndexes;
+	g_flNPCSmiteDamage[iNPCIndex] = profile.SmiteDamage;
+	g_iNPCSmiteDamageType[iNPCIndex] = profile.SmiteDamageType;
+
+	int smiteColor[4];
+	profile.GetSmiteColor(smiteColor);
+
+	g_iNPCSmiteColorR[iNPCIndex] = smiteColor[0];
+	g_iNPCSmiteColorG[iNPCIndex] = smiteColor[1];
+	g_iNPCSmiteColorB[iNPCIndex] = smiteColor[2];
+	g_iNPCSmiteTransparency[iNPCIndex] = smiteColor[3];
+	g_bSlenderHasDamageParticleEffect[iNPCIndex] = profile.HasDamageParticles;
+	g_flSlenderDamageClientSoundVolume[iNPCIndex] = profile.DamageParticleVolume;
+	g_iSlenderDamageClientSoundPitch[iNPCIndex] = profile.DamageParticlePitch;
+
+	g_bNPCShockwaveEnabled[iNPCIndex] = profile.HasShockwaves;
+	g_bNPCShockwaveStunEnabled[iNPCIndex] = profile.ShockwaveStunEnabled;
+	g_iNPCShockwaveAttackIndexes[iNPCIndex] = profile.ShockwaveAttackIndexes;
 	
-	g_bNPCTrapsEnabled[iNPCIndex] = GetChaserProfileTrapState(iUniqueProfileIndex);
-	g_iNPCTrapType[iNPCIndex] = GetChaserProfileTrapType(iUniqueProfileIndex);
+	g_bNPCTrapsEnabled[iNPCIndex] = profile.HasTraps;
+	g_iNPCTrapType[iNPCIndex] = profile.TrapType;
 	
+	g_bNPCAutoChaseEnabled[iNPCIndex] = profile.AutoChaseEnabled;
 	g_bNPCInAutoChase[iNPCIndex] = false;
 	g_bAutoChasingLoudPlayer[iNPCIndex] = false;
+
+	g_bNPCChasesEndlessly[iNPCIndex] = profile.ChasesEndlessly;
 
 }
 
@@ -1392,8 +1473,11 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_bNPCTrapsEnabled[iNPCIndex] = false;
 	g_iNPCTrapType[iNPCIndex] = 0;
 	
+	g_bNPCAutoChaseEnabled[iNPCIndex] = false;
 	g_bNPCInAutoChase[iNPCIndex] = false;
 	g_bAutoChasingLoudPlayer[iNPCIndex] = false;
+
+	g_bNPCChasesEndlessly[iNPCIndex] = false;
 
 	NPCSetAddSpeed(iNPCIndex, -NPCGetAddSpeed(iNPCIndex));
 	NPCSetAddMaxSpeed(iNPCIndex, -NPCGetAddMaxSpeed(iNPCIndex));
@@ -1751,20 +1835,22 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			if(IsValidEntity(i))
 			{
 				GetEdictClassname(i, strClass, sizeof(strClass));
-				if(strcmp(strClass, "obj_sentrygun") == 0 && !GetEntProp(i, Prop_Send, "m_bCarried"))
+				if ((strcmp(strClass, "obj_sentrygun") == 0 || strcmp(strClass, "obj_dispenser") == 0) && !GetEntProp(i, Prop_Send, "m_bCarried"))
 				{
 					GetEntPropVector(i, Prop_Data, "m_vecAbsOrigin", flTraceEndPos);
+
 					Handle hTrace = TR_TraceHullFilterEx(flTraceStartPos,
-					flTraceEndPos,
-					flTraceMins,
-					flTraceMaxs,
-					MASK_NPCSOLID,
-					TraceRayBossVisibility,
-					slender);
+						flTraceEndPos,
+						flTraceMins,
+						flTraceMaxs,
+						MASK_NPCSOLID,
+						TraceRayBossVisibility,
+						slender
+					);
 					
 					bool bIsVisible = !TR_DidHit(hTrace);
 					int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-					CloseHandle(hTrace);
+					delete hTrace;
 					
 					if (!bIsVisible && iTraceHitEntity == i) bIsVisible = true;
 					
@@ -1779,50 +1865,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							bIsVisible = false;
 						}
 					}
+
 					if (bIsVisible)
 					{
 						bIsVisible = NPCShouldSeeEntity(iBossIndex, i);
-						flDist = GetVectorDistance(flTraceStartPos, flTraceEndPos);
-						if (flDist < flBestNewTargetDist)
-						{
-							iBestNewTarget = i;
-							flBestNewTargetDist = flDist;
-							bBuilding = true;
-							g_iSlenderInterruptConditions[iBossIndex] |= COND_SAWENEMY;
-						}
 					}
-				}
-				if(strcmp(strClass, "obj_dispenser") == 0 && !GetEntProp(i, Prop_Send, "m_bCarried"))
-				{
-					GetEntPropVector(i, Prop_Data, "m_vecAbsOrigin", flTraceEndPos);
-					Handle hTrace = TR_TraceHullFilterEx(flTraceStartPos,
-					flTraceEndPos,
-					flTraceMins,
-					flTraceMaxs,
-					MASK_NPCSOLID,
-					TraceRayBossVisibility,
-					slender);
-					
-					bool bIsVisible = !TR_DidHit(hTrace);
-					int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-					CloseHandle(hTrace);
-					
-					if (!bIsVisible && iTraceHitEntity == i) bIsVisible = true;
-					
+
 					if (bIsVisible)
 					{
-						// FOV check.
-						SubtractVectors(flTraceEndPos, flTraceStartPos, flBuffer);
-						GetVectorAngles(flBuffer, flBuffer);
-						
-						if (FloatAbs(AngleDiff(flMyEyeAng[1], flBuffer[1])) > (NPCGetFOV(iBossIndex) * 0.5))
-						{
-							bIsVisible = false;
-						}
-					}
-					if (bIsVisible)
-					{
-						bIsVisible = NPCShouldSeeEntity(iBossIndex, i);
 						flDist = GetVectorDistance(flTraceStartPos, flTraceEndPos);
 						if (flDist < flBestNewTargetDist)
 						{
@@ -1847,7 +1897,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		
 		bool bIsVisible = !TR_DidHit(hTrace);
 		int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-		CloseHandle(hTrace);
+		delete hTrace;
 		
 		if (!bIsVisible && iTraceHitEntity == i) bIsVisible = true;
 		
@@ -1897,7 +1947,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			}
 		}
 		
-		if (view_as<bool>(GetProfileNum(sSlenderProfile,"auto_chase_enabled",0)))
+		if (g_bNPCAutoChaseEnabled[iBossIndex])
 		{
 			if (g_iSlenderAutoChaseCount[iBossIndex] >= GetProfileNum(sSlenderProfile,"auto_chase_count", 30) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 			{
@@ -1995,7 +2045,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					slender);
 					
 				bool bDidHit = TR_DidHit(hTrace);
-				CloseHandle(hTrace);
+				delete hTrace;
 				
 				if (!bDidHit)
 				{
@@ -2054,7 +2104,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	if(g_bSlenderGiveUp[iBossIndex])
 	{
 		//Damit our target is unreachable for some unexplained reasons, haaaaaaaaaaaa!
-		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0)) || !SF_IsBoxingMap())
+		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !g_bNPCChasesEndlessly[iBossIndex] || !SF_IsBoxingMap())
 		{
 			iState = STATE_IDLE;
 			g_bSlenderGiveUp[iBossIndex] = false;
@@ -2069,7 +2119,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		if(SF_IsBoxingMap() && !(NPCGetFlags(iBossIndex) & SFF_NOTELEPORT))
 			//RemoveSlender(iBossIndex);
 			g_bSlenderGiveUp[iBossIndex] = false;
-		if((SF_BossesChaseEndlessly() || view_as<bool>(GetProfileNum(sSlenderProfile,"boss_chases_endlessly",0))) && !(NPCGetFlags(iBossIndex) & SFF_NOTELEPORT))
+		if((SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex]) && !(NPCGetFlags(iBossIndex) & SFF_NOTELEPORT))
 			//RemoveSlender(iBossIndex);
 			//Do not, ok?
 			g_bSlenderGiveUp[iBossIndex] = false;
@@ -2110,7 +2160,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					}
 				}
 				
-				CloseHandle(hArrayRaidTargets);
+				delete hArrayRaidTargets;
 			}
 		}
 		
@@ -2147,7 +2197,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					}
 				}
 				
-				CloseHandle(hArrayRaidTargets);
+				delete hArrayRaidTargets;
 			}
 		}
 		
@@ -2184,7 +2234,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					}
 				}
 				
-				CloseHandle(hArrayRaidTargets);
+				delete hArrayRaidTargets;
 			}
 		}
 		
@@ -2221,7 +2271,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 					}
 				}
 				
-				CloseHandle(hArrayRaidTargets);
+				delete hArrayRaidTargets;
 			}
 		}
 		
@@ -2260,7 +2310,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			}
 			if (iInterruptConditions & COND_SAWENEMY)
 			{
-				if (view_as<bool>(GetProfileNum(sSlenderProfile,"auto_chase_enabled",0)))
+				if (g_bNPCAutoChaseEnabled[iBossIndex])
 				{
 					g_iSlenderAutoChaseCount[iBossIndex]++;
 				}
@@ -2351,7 +2401,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						
 					bool bIsVisible = !TR_DidHit(hTrace);
 					int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-					CloseHandle(hTrace);
+					delete hTrace;
 					
 					if (!bIsVisible && iTraceHitEntity == iBestNewTarget) bIsVisible = true;
 					
@@ -2519,7 +2569,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 							TraceRayBossVisibility,
 							slender);
 						bIsDeathPosVisible = !TR_DidHit(hTrace);
-						CloseHandle(hTrace);
+						delete hTrace;
 					}
 					
 					if (iTarget <= MaxClients && !bPlayerVisible[iTarget])
@@ -6292,7 +6342,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 				
 		bool bTraceDidHit = TR_DidHit(hTrace);
 		int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-		CloseHandle(hTrace);
+		delete hTrace;
 				
 		if (bTraceDidHit && iTraceHitEntity != i)
 		{
@@ -6311,7 +6361,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 						
 			bTraceDidHit = TR_DidHit(hTrace);
 			iTraceHitEntity = TR_GetEntityIndex(hTrace);
-			CloseHandle(hTrace);
+			delete hTrace;
 		}
 				
 		if (!bTraceDidHit || iTraceHitEntity == i)
@@ -6552,7 +6602,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				
 				bool bTraceDidHit = TR_DidHit(hTrace);
 				int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-				CloseHandle(hTrace);
+				delete hTrace;
 				
 				if (bTraceDidHit && iTraceHitEntity != i)
 				{
@@ -6571,7 +6621,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 						
 					bTraceDidHit = TR_DidHit(hTrace);
 					iTraceHitEntity = TR_GetEntityIndex(hTrace);
-					CloseHandle(hTrace);
+					delete hTrace;
 				}
 				
 				if (!bTraceDidHit || iTraceHitEntity == i)

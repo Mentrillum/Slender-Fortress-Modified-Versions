@@ -34,11 +34,6 @@
 				"linux"		"136"
 				"windows"	"135"
 			}
-			"CBaseEntity::GetDamage"
-			{
-				"linux"		"129"
-				"windows"	"128"
-			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"windows"	"18"

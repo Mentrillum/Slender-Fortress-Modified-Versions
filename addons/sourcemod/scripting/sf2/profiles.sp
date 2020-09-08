@@ -4,35 +4,35 @@
 #define _sf2_profiles_included
 
 #define FILE_PROFILES "configs/sf2/profiles.cfg"
+#define FILE_PROFILES_DIR "configs/sf2/profiles"
 #define FILE_PROFILES_PACKS "configs/sf2/profiles_packs.cfg"
 #define FILE_PROFILES_PACKS_DIR "configs/sf2/profiles/packs"
 #define FILE_PROFILES_PACKS_ALT "configs/sf2/profiles/bosses"
 
-static Handle g_hBossProfileList = INVALID_HANDLE;
-static Handle g_hSelectableBossProfileList = INVALID_HANDLE;
-static Handle g_hSelectableBoxingBossProfileList = INVALID_HANDLE;
-static Handle g_hSelectableRenevantBossProfileList = INVALID_HANDLE;
-static Handle g_hSelectableBossProfileQueueList = INVALID_HANDLE;
+static ArrayList g_hBossProfileList = null;
+static ArrayList g_hSelectableBossProfileList = null;
+static ArrayList g_hSelectableBoxingBossProfileList = null;
+static ArrayList g_hSelectableRenevantBossProfileList = null;
+static ArrayList g_hSelectableBossProfileQueueList = null;
 
-static Handle g_hBossProfileNames = INVALID_HANDLE;
-static Handle g_hBossProfileData = INVALID_HANDLE;
+static StringMap g_hBossProfileNames = null;
+static ArrayList g_hBossProfileData = null;
 
-Handle g_cvBossProfilePack = INVALID_HANDLE;
-Handle g_cvBossProfilePackDefault = INVALID_HANDLE;
+ConVar g_cvBossProfilePack = null;
+ConVar g_cvBossProfilePackDefault = null;
 
-Handle g_hBossPackConfig = INVALID_HANDLE;
+KeyValues g_hBossPackConfig = null;
 
-Handle g_cvBossPackEndOfMapVote;
-Handle g_cvBossPackVoteStartTime;
-Handle g_cvBossPackVoteStartRound;
-Handle g_cvBossPackVoteShuffle;
+ConVar g_cvBossPackEndOfMapVote;
+ConVar g_cvBossPackVoteStartTime;
+ConVar g_cvBossPackVoteStartRound;
+ConVar g_cvBossPackVoteShuffle;
 
 static bool g_bBossPackVoteEnabled = false;
 
 static char MapbossPack[64];
 
-
-methodmap SF2BossProfile
+methodmap SF2BaseBossProfile
 {
 	property int Index
 	{
@@ -234,8 +234,8 @@ enum
 
 void InitializeBossProfiles()
 {
-	g_hBossProfileNames = CreateTrie();
-	g_hBossProfileData = CreateArray(BossProfileData_MaxStats);
+	g_hBossProfileNames = new StringMap();
+	g_hBossProfileData = new ArrayList(BossProfileData_MaxStats);
 	
 	g_cvBossProfilePack = CreateConVar("sf2_boss_profile_pack", "", "The boss pack referenced in profiles_packs.cfg that should be loaded.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	g_cvBossProfilePackDefault = CreateConVar("sf2_boss_profile_pack_default", "", "If the boss pack defined in sf2_boss_profile_pack is blank or could not be loaded, this pack will be used instead.", FCVAR_NOTIFY);
@@ -245,14 +245,13 @@ void InitializeBossProfiles()
 	g_cvBossPackVoteShuffle = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
 	
 	InitializeChaserProfiles();
-	
 }
 /*
 Command
 */
 public Action Command_Pack(int client,int args)
 {
-	if (!GetConVarBool(g_cvBossPackEndOfMapVote) || !g_bBossPackVoteEnabled)
+	if (!g_cvBossPackEndOfMapVote.BoolValue || !g_bBossPackVoteEnabled)
 	{
 		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
 		return Plugin_Handled;
@@ -272,13 +271,15 @@ public Action Command_Pack(int client,int args)
 
 public Action Command_NextPack(int client,int args)
 {
-	if (!GetConVarBool(g_cvBossPackEndOfMapVote) || !g_bBossPackVoteEnabled)
+	if (!g_cvBossPackEndOfMapVote.BoolValue || !g_bBossPackVoteEnabled)
 	{
 		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
 		return Plugin_Handled;
 	}
+
 	char nextpack[128];
-	GetConVarString(g_cvBossProfilePack, nextpack, sizeof(nextpack));
+	g_cvBossProfilePack.GetString(nextpack, sizeof(nextpack));
+
 	if (strcmp(nextpack, "") == 0)
 	{
 		CPrintToChat(client,"{dodgerblue}%t{lightblue}%t.","SF2 Prefix","Pending Vote");
@@ -308,77 +309,77 @@ void BossProfilesOnMapEnd()
  */
 void ClearBossProfiles()
 {
-	if (g_hBossProfileList != INVALID_HANDLE)
+	if (g_hBossProfileList != null)
 	{
-		CloseHandle(g_hBossProfileList);
-		g_hBossProfileList = INVALID_HANDLE;
+		delete g_hBossProfileList;
+		g_hBossProfileList = null;
 	}
 	
-	if (g_hSelectableBossProfileList != INVALID_HANDLE)
+	if (g_hSelectableBossProfileList != null)
 	{
 		delete g_hSelectableBossProfileList;
-		g_hSelectableBossProfileList = INVALID_HANDLE;
+		g_hSelectableBossProfileList = null;
 	}
 	
-	if (g_hSelectableBoxingBossProfileList != INVALID_HANDLE)
+	if (g_hSelectableBoxingBossProfileList != null)
 	{
 		delete g_hSelectableBoxingBossProfileList;
-		g_hSelectableBoxingBossProfileList = INVALID_HANDLE;
+		g_hSelectableBoxingBossProfileList = null;
 	}
 	
-	if (g_hSelectableRenevantBossProfileList != INVALID_HANDLE)
+	if (g_hSelectableRenevantBossProfileList != null)
 	{
 		delete g_hSelectableRenevantBossProfileList;
-		g_hSelectableRenevantBossProfileList = INVALID_HANDLE;
+		g_hSelectableRenevantBossProfileList = null;
 	}
 	
-	ClearTrie(g_hBossProfileNames);
-	ClearArray(g_hBossProfileData);
+	g_hBossProfileNames.Clear();
+	g_hBossProfileData.Clear();
 	
 	ClearChaserProfiles();
 }
 
 void ReloadBossProfiles()
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		CloseHandle(g_hConfig);
-		g_hConfig = INVALID_HANDLE;
+		delete g_hConfig;
+		g_hConfig = null;
 	}
 	
-	if (g_hBossPackConfig != INVALID_HANDLE)
+	if (g_hBossPackConfig != null)
 	{
-		CloseHandle(g_hBossPackConfig);
-		g_hBossPackConfig = INVALID_HANDLE;
+		delete g_hBossPackConfig;
+		g_hBossPackConfig = null;
 	}
 	
 	// Clear and reload the lists.
 	ClearBossProfiles();
 	
-	g_hConfig = CreateKeyValues("root");
-	g_hBossPackConfig = CreateKeyValues("root");
+	g_hConfig = new KeyValues("root");
+	g_hBossPackConfig = new KeyValues("root");
 	
-	if (g_hBossProfileList == INVALID_HANDLE)
+	if (g_hBossProfileList == null)
 	{
-		g_hBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
+		g_hBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
-	if (g_hSelectableBossProfileList == INVALID_HANDLE)
+	if (g_hSelectableBossProfileList == null)
 	{
-		g_hSelectableBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
+		g_hSelectableBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
-	if (g_hSelectableBoxingBossProfileList == INVALID_HANDLE)
+	if (g_hSelectableBoxingBossProfileList == null)
 	{
-		g_hSelectableBoxingBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
+		g_hSelectableBoxingBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
-	if (g_hSelectableRenevantBossProfileList == INVALID_HANDLE)
+	if (g_hSelectableRenevantBossProfileList == null)
 	{
-		g_hSelectableRenevantBossProfileList = CreateArray(SF2_MAX_PROFILE_NAME_LENGTH);
+		g_hSelectableRenevantBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
-	if (g_hSelectableBossProfileQueueList != INVALID_HANDLE)
+	if (g_hSelectableBossProfileQueueList != null)
 	{
 		delete g_hSelectableBossProfileQueueList;
 	}
@@ -389,6 +390,9 @@ void ReloadBossProfiles()
 	BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES);
 	LoadProfilesFromFile(configPath);
 	
+	// Then, load profiles individually from configs/sf2/profiles directory.
+	LoadProfilesFromDirectory(FILE_PROFILES_DIR);
+
 	BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_PACKS);
 	FileToKeyValues(g_hBossPackConfig, configPath);
 	
@@ -402,7 +406,7 @@ void ReloadBossProfiles()
 		{
 			int endVoteItemCount = 0;
 		
-			GetConVarString(g_cvBossProfilePack, MapbossPack, sizeof(MapbossPack));
+			g_cvBossProfilePack.GetString(MapbossPack, sizeof(MapbossPack));
 			
 			bool voteBossPackLoaded = false;
 			
@@ -422,7 +426,16 @@ void ReloadBossProfiles()
 					Format(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
 					
 					BuildPath(Path_SM, configPath, sizeof(configPath), packConfigFilePath);
-					LoadProfilesFromFile(configPath);
+
+					if (DirExists(configPath))
+					{
+						Format(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+						LoadProfilesFromDirectory(packConfigFilePath);
+					}
+					else if (FileExists(configPath))
+					{
+						LoadProfilesFromFile(configPath);
+					}
 					
 					if (!voteBossPackLoaded)
 					{
@@ -444,7 +457,7 @@ void ReloadBossProfiles()
 			
 			if (!voteBossPackLoaded)
 			{
-				GetConVarString(g_cvBossProfilePackDefault, MapbossPack, sizeof(MapbossPack));
+				g_cvBossProfilePackDefault.GetString(MapbossPack, sizeof(MapbossPack));
 				if (strlen(MapbossPack) > 0)
 				{
 					if (KvJumpToKey(g_hBossPackConfig, MapbossPack))
@@ -456,7 +469,16 @@ void ReloadBossProfiles()
 						Format(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
 						
 						BuildPath(Path_SM, configPath, sizeof(configPath), packConfigFilePath);
-						LoadProfilesFromFile(configPath);
+
+						if (DirExists(configPath))
+						{
+							Format(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+							LoadProfilesFromDirectory(packConfigFilePath);
+						}
+						else if (FileExists(configPath))
+						{
+							LoadProfilesFromFile(configPath);
+						}
 					}
 				}
 			}
@@ -475,9 +497,9 @@ void ReloadBossProfiles()
 	{
 		g_bBossPackVoteEnabled = false;
 	}
-	g_hSelectableBossProfileQueueList = CloneArray(g_hSelectableBossProfileList);
+	g_hSelectableBossProfileQueueList = g_hSelectableBossProfileList.Clone();
 	
-	SetConVarString(g_cvBossProfilePack, "");
+	g_cvBossProfilePack.SetString("");
 }
 
 static void LoadProfilesFromFile(const char[] configPath)
@@ -490,10 +512,10 @@ static void LoadProfilesFromFile(const char[] configPath)
 		return;
 	}
 	
-	Handle kv = CreateKeyValues("root");
+	KeyValues kv = new KeyValues("root");
 	if (!FileToKeyValues(kv, configPath))
 	{
-		CloseHandle(kv);
+		delete kv;
 		LogSF2Message("Unexpected error while reading file! Skipping...");
 		return;
 	}
@@ -528,15 +550,120 @@ static void LoadProfilesFromFile(const char[] configPath)
 			LogSF2Message("No boss profiles loaded from file!");
 		}
 		
-		CloseHandle(kv);
+		delete kv;
 	}
 }
 
+/**
+ * Loads a profile from the specified file.
+ */
+static bool LoadProfileFile(const char[] profilePath, char[] profileName, int profileNameLen, char[] errorReason, int errorReasonLen)
+{
+	if (!FileExists(profilePath))
+	{
+		strcopy(errorReason, errorReasonLen, "File not found.");
+		return false;
+	}
+
+	KeyValues kv = new KeyValues("root");
+	if (!FileToKeyValues(kv, profilePath))
+	{
+		delete kv;
+		strcopy(errorReason, errorReasonLen, "Parsing failed. Check the formatting of your file!");
+		return false;
+	}
+
+	KvGetSectionName(kv, profileName, profileNameLen);
+
+	bool result = LoadBossProfile(kv, profileName, errorReason, errorReasonLen);
+
+	delete kv;
+
+	return result;
+}
+
+static void LoadProfilesFromDirectory(const char[] relDirPath)
+{
+	LogSF2Message("Loading boss profile files from directory %s...", relDirPath);
+
+	char dirPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, dirPath, sizeof(dirPath), relDirPath);
+
+	if (!DirExists(dirPath))
+	{
+		LogSF2Message("%s does not exist, skipping.", dirPath);
+		return;
+	}
+
+	DirectoryListing directory = OpenDirectory(dirPath);
+	if (directory == null)
+	{
+		LogSF2Message("%s directory could not be read, skipping.", dirPath);
+		return;
+	}
+
+	int count = 0;
+
+	char filePath[PLATFORM_MAX_PATH];
+	char fileName[PLATFORM_MAX_PATH];
+	char profileName[SF2_MAX_PROFILE_NAME_LENGTH];
+	char errorReason[512];
+	FileType fileType;
+
+	while (directory.GetNext(fileName, sizeof(fileName), fileType))
+	{
+		if (fileType == FileType_Directory)
+			continue;
+		
+		Format(filePath, sizeof(filePath), "%s/%s", relDirPath, fileName);
+		BuildPath(Path_SM, filePath, sizeof(filePath), filePath);
+
+		if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason)))
+		{
+			LogSF2Message("%s...FAILED (reason: %s)", filePath, errorReason);
+		}
+		else 
+		{
+			LogSF2Message("%s...", profileName, filePath);
+			count++;
+		}
+	}
+
+	delete directory;
+
+	LogSF2Message("Loaded %d boss profile(s) from directory!", count, relDirPath);
+}
+
+/**
+ * Attempts to precache a sound path, a path relative to sound/ folder.
+ *
+ * If the sound file exists within the server files, the file is added to the downloads table.
+ *
+ * @param soundPath		Path to sound, relative to sound/ folder.
+ */
+void TryPrecacheBossProfileSoundPath(const char[] soundPath)
+{
+	if (!soundPath[0])
+		return;
+	
+	char fullPath[PLATFORM_MAX_PATH];
+	Format(fullPath, sizeof(fullPath), "sound/%s", soundPath);
+
+	if (FileExists(fullPath, false) || FileExists(fullPath, true))
+	{
+		PrecacheSound2(soundPath);
+	}
+	else
+	{
+		LogSF2Message("Sound file %s does not exist, excluding from downloads!", fullPath);
+		PrecacheSound(soundPath);
+	}
+}
 
 /**
  *	Loads a profile in the current KeyValues position in kv.
  */
-static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailReasonBuffer,int iLoadFailReasonBufferLen)
+static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFailReasonBuffer, int iLoadFailReasonBufferLen)
 {
 	int iBossType = KvGetNum(kv, "type", SF2BossType_Unknown);
 	if (iBossType == SF2BossType_Unknown || iBossType >= SF2BossType_MaxTypes) 
@@ -711,25 +838,6 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	
 	float flBossEyeAngOffset[3];
 	KvGetVector(kv, "eye_ang_offset", flBossEyeAngOffset);
-	
-	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH];
-	KvGetString(kv, "cloak_on_sound", sCOn, sizeof(sCOn));
-	KvGetString(kv, "cloak_off_sound", sCOff, sizeof(sCOff));
-	KvGetString(kv, "player_jarate_sound", sJ, sizeof(sJ));
-	KvGetString(kv, "player_milk_sound", sM, sizeof(sM));
-	KvGetString(kv, "player_gas_sound", sG, sizeof(sG));
-	KvGetString(kv, "player_stun_sound", sS, sizeof(sS));
-	KvGetString(kv, "fire_explode_sound", sFE, sizeof(sFE));
-	KvGetString(kv, "fire_shoot_sound", sFS, sizeof(sFS));
-	KvGetString(kv, "fire_iceball_slow_sound", sFIS, sizeof(sFIS));
-	KvGetString(kv, "rocket_explode_sound", sRE, sizeof(sRE));
-	KvGetString(kv, "rocket_shoot_sound", sRS, sizeof(sRS));
-	KvGetString(kv, "grenade_shoot_sound", sGrenadeShoot, sizeof(sGrenadeShoot));
-	KvGetString(kv, "sentryrocket_shoot_sound", sSentryrocketShoot, sizeof(sSentryrocketShoot));
-	KvGetString(kv, "arrow_shoot_sound", sArrowShoot, sizeof(sArrowShoot));
-	KvGetString(kv, "mangler_shoot_sound", sManglerShoot, sizeof(sManglerShoot));
-	KvGetString(kv, "baseball_shoot_sound", sBaseballShoot, sizeof(sBaseballShoot));
-	KvGetString(kv, "engine_sound", sEngineSound, sizeof(sEngineSound));
 
 	// Parse through flags.
 	int iBossFlags = 0;
@@ -748,7 +856,9 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	if (KvGetNum(kv, "kill_weaponsenable", 0)) iBossFlags |= SFF_WEAPONKILLSONRADIUS;
 	if (KvGetNum(kv, "random_attacks", 0)) iBossFlags |= SFF_RANDOMATTACKS;
 	
-	// Try validating unique profile.
+	// Try validating unique profile type.
+	// The unique profile index specifies the location of a boss's type-specific data in another array.
+
 	int iUniqueProfileIndex = -1;
 	
 	switch (iBossType)
@@ -768,24 +878,25 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	KvCopySubkeys(kv, g_hConfig);
 	
 	bool createNewBoss = false;
-	int iIndex = FindStringInArray(GetBossProfileList(), sProfile);
+	int iIndex = GetBossProfileList().FindString(sProfile);
 	if (iIndex == -1)
 	{
 		createNewBoss = true;
 	}
 	
 	// Add to/Modify our array.
+	// Cache values into g_hBossProfileData, because traversing a KeyValues object is expensive.
+
 	if (createNewBoss)
 	{
-		iIndex = PushArrayCell(g_hBossProfileData, -1);
-		SetTrieValue(g_hBossProfileNames, sProfile, iIndex);
+		iIndex = g_hBossProfileData.Push(-1);
+		g_hBossProfileNames.SetValue(sProfile, iIndex);
 		
 		// Add to the boss list since it's not there already.
-		PushArrayString(GetBossProfileList(), sProfile);
+		GetBossProfileList().PushString(sProfile);
 	}
-	
+
 	SetArrayCell(g_hBossProfileData, iIndex, iUniqueProfileIndex, BossProfileData_UniqueProfileIndex);
-	
 	SetArrayCell(g_hBossProfileData, iIndex, iBossType, BossProfileData_Type);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossModelScale, BossProfileData_ModelScale);
 	SetArrayCell(g_hBossProfileData, iIndex, iBossHealth, BossProfileData_Health);
@@ -846,316 +957,97 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 	SetArrayCell(g_hBossProfileData, iIndex, flBossFOV, BossProfileData_FieldOfView);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxTurnRate, BossProfileData_TurnRate);
 	
-	if(sCOn[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sCOn);
+	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH];
+	KvGetString(kv, "cloak_on_sound", sCOn, sizeof(sCOn));
+	KvGetString(kv, "cloak_off_sound", sCOff, sizeof(sCOff));
+	KvGetString(kv, "player_jarate_sound", sJ, sizeof(sJ));
+	KvGetString(kv, "player_milk_sound", sM, sizeof(sM));
+	KvGetString(kv, "player_gas_sound", sG, sizeof(sG));
+	KvGetString(kv, "player_stun_sound", sS, sizeof(sS));
+	KvGetString(kv, "fire_explode_sound", sFE, sizeof(sFE));
+	KvGetString(kv, "fire_shoot_sound", sFS, sizeof(sFS));
+	KvGetString(kv, "fire_iceball_slow_sound", sFIS, sizeof(sFIS));
+	KvGetString(kv, "rocket_explode_sound", sRE, sizeof(sRE));
+	KvGetString(kv, "rocket_shoot_sound", sRS, sizeof(sRS));
+	KvGetString(kv, "grenade_shoot_sound", sGrenadeShoot, sizeof(sGrenadeShoot));
+	KvGetString(kv, "sentryrocket_shoot_sound", sSentryrocketShoot, sizeof(sSentryrocketShoot));
+	KvGetString(kv, "arrow_shoot_sound", sArrowShoot, sizeof(sArrowShoot));
+	KvGetString(kv, "mangler_shoot_sound", sManglerShoot, sizeof(sManglerShoot));
+	KvGetString(kv, "baseball_shoot_sound", sBaseballShoot, sizeof(sBaseballShoot));
+	KvGetString(kv, "engine_sound", sEngineSound, sizeof(sEngineSound));
 
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sCOn);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sCOn);
-		}
-	}
-	if (sCOff[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sCOff);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sCOff);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sCOff);
-		}
-	}
-	if (sJ[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sJ);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sJ);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sJ);
-		}
-	}
-	if (sM[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sM);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sM);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sM);
-		}
-	}
-	if (sG[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sG);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sG);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sG);
-		}
-	}
-	if (sS[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sS);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sS);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sS);
-		}
-	}
-	if (sFE[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sFE);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sFE);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sFE);
-		}
-	}
-	if (sFS[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sFS);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sFS);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sFS);
-		}
-	}
-	if (sFIS[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sFIS);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sFIS);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sFIS);
-		}
-	}
-	if (sRE[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sRE);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sRE);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sRE);
-		}
-	}
-	if (sRS[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sRS);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sRS);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sRS);
-		}
-	}
-	if (sGrenadeShoot[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sGrenadeShoot);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sGrenadeShoot);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sGrenadeShoot);
-		}
-	}
-	if (sSentryrocketShoot[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sSentryrocketShoot);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sSentryrocketShoot);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sSentryrocketShoot);
-		}
-	}
-	if (sArrowShoot[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sArrowShoot);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sArrowShoot);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sArrowShoot);
-		}
-	}
-	if (sManglerShoot[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sManglerShoot);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sManglerShoot);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sManglerShoot);
-		}
-	}
-	if (sBaseballShoot[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sBaseballShoot);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sBaseballShoot);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sBaseballShoot);
-		}
-	}
-	if (sEngineSound[0])
-	{
-		char s6[PLATFORM_MAX_PATH];
-		Format(s6, sizeof(s6), "sound/%s", sEngineSound);
-
-		if (FileExists(s6, false) || FileExists(s6, true))
-		{
-			PrecacheSound2(sEngineSound);
-		}
-		else
-		{
-			LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-			PrecacheSound(sEngineSound);
-		}
-	}
+	TryPrecacheBossProfileSoundPath(sCOn);
+	TryPrecacheBossProfileSoundPath(sCOff);
+	TryPrecacheBossProfileSoundPath(sJ);
+	TryPrecacheBossProfileSoundPath(sM);
+	TryPrecacheBossProfileSoundPath(sG);
+	TryPrecacheBossProfileSoundPath(sS);
+	TryPrecacheBossProfileSoundPath(sFE);
+	TryPrecacheBossProfileSoundPath(sFS);
+	TryPrecacheBossProfileSoundPath(sFIS);
+	TryPrecacheBossProfileSoundPath(sRE);
+	TryPrecacheBossProfileSoundPath(sRS);
+	TryPrecacheBossProfileSoundPath(sGrenadeShoot);
+	TryPrecacheBossProfileSoundPath(sSentryrocketShoot);
+	TryPrecacheBossProfileSoundPath(sArrowShoot);
+	TryPrecacheBossProfileSoundPath(sManglerShoot);
+	TryPrecacheBossProfileSoundPath(sBaseballShoot);
+	TryPrecacheBossProfileSoundPath(sEngineSound);
 	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection", 1)))
 	{
-		if (FindStringInArray(GetSelectableBossProfileList(), sProfile) == -1)
+		if (GetSelectableBossProfileList().FindString(sProfile) == -1)
 		{
 			// Add to the selectable boss list if it isn't there already.
-			PushArrayString(GetSelectableBossProfileList(), sProfile);
+			GetSelectableBossProfileList().PushString(sProfile);
 		}
 	}
 	else
 	{
-		int selectIndex = FindStringInArray(GetSelectableBossProfileList(), sProfile);
+		int selectIndex = GetSelectableBossProfileList().FindString(sProfile);
 		if (selectIndex != -1)
 		{
-			RemoveFromArray(GetSelectableBossProfileList(), selectIndex);
+			GetSelectableBossProfileList().Erase(selectIndex);
 		}	
 	}
 	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection_boxing", 0)))
 	{
-		if (FindStringInArray(GetSelectableBoxingBossProfileList(), sProfile) == -1)
+		if (GetSelectableBoxingBossProfileList().FindString(sProfile) == -1)
 		{
 			// Add to the selectable boss list if it isn't there already.
-			PushArrayString(GetSelectableBoxingBossProfileList(), sProfile);
+			GetSelectableBoxingBossProfileList().PushString(sProfile);
 		}
 	}
 	else
 	{
-		int selectIndex = FindStringInArray(GetSelectableBoxingBossProfileList(), sProfile);
+		int selectIndex = GetSelectableBoxingBossProfileList().FindString(sProfile);
 		if (selectIndex != -1)
 		{
-			RemoveFromArray(GetSelectableBoxingBossProfileList(), selectIndex);
+			GetSelectableBoxingBossProfileList().Erase(selectIndex);
 		}
 	}
 	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection_renevant", 0)))
 	{
-		if (FindStringInArray(GetSelectableRenevantBossProfileList(), sProfile) == -1)
+		if (GetSelectableRenevantBossProfileList().FindString(sProfile) == -1)
 		{
 			// Add to the selectable boss list if it isn't there already.
-			PushArrayString(GetSelectableRenevantBossProfileList(), sProfile);
+			GetSelectableRenevantBossProfileList().PushString(sProfile);
 		}
 	}
 	else
 	{
-		int selectIndex = FindStringInArray(GetSelectableRenevantBossProfileList(), sProfile);
+		int selectIndex = GetSelectableRenevantBossProfileList().FindString(sProfile);
 		if (selectIndex != -1)
 		{
-			RemoveFromArray(GetSelectableRenevantBossProfileList(), selectIndex);
+			GetSelectableRenevantBossProfileList().Erase(selectIndex);
 		}
 	}
 	
 	if (KvGotoFirstSubKey(kv)) //Special thanks to Fire for modifying the code for download errors.
 	{
-		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH], s6[PLATFORM_MAX_PATH];
+		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH];
 		
 		do
 		{
@@ -1168,17 +1060,8 @@ static bool LoadBossProfile(Handle kv, const char[] sProfile, char[] sLoadFailRe
 					IntToString(i, s3, sizeof(s3));
 					KvGetString(kv, s3, s4, sizeof(s4));
 					if (!s4[0]) break;
-					Format(s6, sizeof(s6), "sound/%s", s4);
-					
-					if(FileExists(s6, false) || FileExists(s6, true))
-					{
-						PrecacheSound2(s4);
-					}
-					else
-					{
-						LogSF2Message("Sound file %s does not exist, removing from downloads", s6);
-						PrecacheSound(s4);
-					}
+
+					TryPrecacheBossProfileSoundPath(s4);
 				}
 			}
 			else if (StrEqual(s2, "download"))
@@ -1293,9 +1176,9 @@ void SetupTimeLimitTimerForBossPackVote()
 	int time;
 	if (GetMapTimeLeft(time) && time > 0)
 	{
-		if (GetConVarBool(g_cvBossPackEndOfMapVote) && g_bBossPackVoteEnabled && !g_bBossPackVoteCompleted && !g_bBossPackVoteStarted)
+		if (g_cvBossPackEndOfMapVote.BoolValue && g_bBossPackVoteEnabled && !g_bBossPackVoteCompleted && !g_bBossPackVoteStarted)
 		{
-			int startTime = GetConVarInt(g_cvBossPackVoteStartTime) * 60;
+			int startTime = g_cvBossPackVoteStartTime.IntValue * 60;
 			if ((time - startTime) <= 0)
 			{
 				if (!NativeVotes_IsVoteInProgress())
@@ -1311,7 +1194,7 @@ void SetupTimeLimitTimerForBossPackVote()
 			{
 				if (g_hBossPackVoteMapTimer != INVALID_HANDLE)
 				{
-					CloseHandle(g_hBossPackVoteMapTimer);
+					delete g_hBossPackVoteMapTimer;
 					g_hBossPackVoteMapTimer = INVALID_HANDLE;
 				}
 				
@@ -1323,13 +1206,13 @@ void SetupTimeLimitTimerForBossPackVote()
 
 void CheckRoundLimitForBossPackVote(int roundCount)
 {
-	if (!GetConVarBool(g_cvBossPackEndOfMapVote) || !g_bBossPackVoteEnabled || g_bBossPackVoteStarted || g_bBossPackVoteCompleted) return;
+	if (!g_cvBossPackEndOfMapVote.BoolValue || !g_bBossPackVoteEnabled || g_bBossPackVoteStarted || g_bBossPackVoteCompleted) return;
 	
 	if (g_cvMaxRounds == INVALID_HANDLE) return;
 	
-	if (GetConVarInt(g_cvMaxRounds) > 0)
+	if (g_cvMaxRounds.IntValue > 0)
 	{
-		if (roundCount >= (GetConVarInt(g_cvMaxRounds) - GetConVarInt(g_cvBossPackVoteStartRound)))
+		if (roundCount >= (g_cvMaxRounds.IntValue - g_cvBossPackVoteStartRound.IntValue))
 		{
 			if (!NativeVotes_IsVoteInProgress())
 			{
@@ -1342,7 +1225,7 @@ void CheckRoundLimitForBossPackVote(int roundCount)
 		}
 	}
 	
-	CloseHandle(g_cvMaxRounds);
+	// CloseHandle(g_cvMaxRounds);
 }
 
 void InitiateBossPackVote(int Initiator)
@@ -1386,13 +1269,13 @@ void InitiateBossPackVote(int Initiator)
 	
 	if (GetArraySize(menuOptionsInfo) == 0)
 	{
-		CloseHandle(menuDisplayNamesTrie);
-		CloseHandle(menuOptionsInfo);
-		CloseHandle(voteMenu);
+		delete menuDisplayNamesTrie;
+		delete menuOptionsInfo;
+		delete voteMenu;
 		return;
 	}
 	
-	if (GetConVarBool(g_cvBossPackVoteShuffle))
+	if (g_cvBossPackVoteShuffle.BoolValue)
 	{
 		SortADTArray(menuOptionsInfo, Sort_Random, Sort_String);
 	}
@@ -1408,19 +1291,19 @@ void InitiateBossPackVote(int Initiator)
 		}
 	}
 	
-	CloseHandle(menuDisplayNamesTrie);
-	CloseHandle(menuOptionsInfo);
+	delete menuDisplayNamesTrie;
+	delete menuOptionsInfo;
 	
 	g_bBossPackVoteStarted = true;
 	if (g_hBossPackVoteMapTimer != INVALID_HANDLE)
 	{
-		CloseHandle(g_hBossPackVoteMapTimer);
+		delete g_hBossPackVoteMapTimer;
 		g_hBossPackVoteMapTimer = INVALID_HANDLE;
 	}
 	
 	if (g_hBossPackVoteTimer != INVALID_HANDLE)
 	{
-		CloseHandle(g_hBossPackVoteTimer);
+		delete g_hBossPackVoteTimer;
 		g_hBossPackVoteTimer = INVALID_HANDLE;
 	}
 	
@@ -1437,15 +1320,15 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 			{
 				NativeVotes_DisplayFail(menu, NativeVotesFail_NotEnoughVotes);
 				char defaultpack[128];
-				GetConVarString(g_cvBossProfilePackDefault, defaultpack, sizeof(defaultpack));
-				SetConVarString(g_cvBossProfilePack,defaultpack);
+				g_cvBossProfilePackDefault.GetString(defaultpack, sizeof(defaultpack));
+				g_cvBossProfilePack.SetString(defaultpack);
 				//CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Boss Pack No Vote");
 			}
 			else
 			{
 				char defaultpack[128];
-				GetConVarString(g_cvBossProfilePackDefault, defaultpack, sizeof(defaultpack));
-				SetConVarString(g_cvBossProfilePack,defaultpack);
+				g_cvBossProfilePackDefault.GetString(defaultpack, sizeof(defaultpack));
+				g_cvBossProfilePack.SetString(defaultpack);
 				NativeVotes_DisplayFail(menu, NativeVotesFail_Generic);
 			}
 			g_bBossPackVoteStarted = false;
@@ -1461,7 +1344,7 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 			char bossPack[64], bossPackName[64], display[120];
 			NativeVotes_GetItem(menu, param1, bossPack, sizeof(bossPack), bossPackName, sizeof(bossPackName));
 			
-			SetConVarString(g_cvBossProfilePack, bossPack);
+			g_cvBossProfilePack.SetString(bossPack);
 			
 			CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Boss Pack Vote Successful", bossPackName);
 			Format(display,120,"%t","SF2 Boss Pack Vote Successful", bossPackName);
@@ -1470,7 +1353,7 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 		case MenuAction_End:
 		{
 			g_bBossPackVoteStarted = false;
-			CloseHandle(menu);
+			delete menu;
 		}
 	}
 }
@@ -1500,7 +1383,7 @@ public Action Timer_BossPackVoteLoop(Handle timer)
 
 bool IsProfileValid(const char[] sProfile)
 {
-	return view_as<bool>((FindStringInArray(GetBossProfileList(), sProfile) != -1));
+	return view_as<bool>((GetBossProfileList().FindString(sProfile) != -1));
 }
 
 stock int GetProfileNum(const char[] sProfile, const char[] keyValue,int defaultValue=0)
@@ -1805,7 +1688,7 @@ stock bool GetRandomStringFromProfile(const char[] sProfile, const char[] strKey
 /**
  *	Returns an array of strings of the profile names of every valid boss.
  */
-Handle GetBossProfileList()
+ArrayList GetBossProfileList()
 {
 	return g_hBossProfileList;
 }
@@ -1813,15 +1696,17 @@ Handle GetBossProfileList()
 /**
  *	Returns an array of strings of the profile names of every valid boss that can be randomly selected.
  */
-Handle GetSelectableBossProfileList()
+ArrayList GetSelectableBossProfileList()
 {
 	return g_hSelectableBossProfileList;
 }
-Handle GetSelectableBoxingBossProfileList()
+
+ArrayList GetSelectableBoxingBossProfileList()
 {
 	return g_hSelectableBoxingBossProfileList;
 }
-Handle GetSelectableRenevantBossProfileList()
+
+ArrayList GetSelectableRenevantBossProfileList()
 {
 	return g_hSelectableRenevantBossProfileList;
 }
@@ -1829,22 +1714,25 @@ Handle GetSelectableRenevantBossProfileList()
 /**
  * Returns an array of boss that didn't play in game yet.
  */
-Handle GetSelectableBossProfileQueueList()
+ArrayList GetSelectableBossProfileQueueList()
 {
-	if (GetArraySize(g_hSelectableBossProfileQueueList) <= 0)//If every boss were selected at least once, refill the list.
+	if (g_hSelectableBossProfileQueueList.Length <= 0) //If every boss were selected at least once, refill the list.
 	{
 		delete g_hSelectableBossProfileQueueList;
-		g_hSelectableBossProfileQueueList = CloneArray(GetSelectableBossProfileList());
+		g_hSelectableBossProfileQueueList = GetSelectableBossProfileList().Clone();
 	}
-	if (g_hSelectableBossProfileQueueList == INVALID_HANDLE || g_hSelectableBossProfileQueueList == null)
-		g_hSelectableBossProfileQueueList = CloneArray(GetSelectableBossProfileList());
+
+	if (g_hSelectableBossProfileQueueList == null)
+		g_hSelectableBossProfileQueueList = GetSelectableBossProfileList().Clone();
+
 	return g_hSelectableBossProfileQueueList;
 }
+
 void RemoveBossProfileFromQueueList(const char[] sProfile)
 {
-	int selectIndex = FindStringInArray(GetSelectableBossProfileQueueList(), sProfile);
+	int selectIndex = GetSelectableBossProfileQueueList().FindString(sProfile);
 	if (selectIndex != -1)
 	{
-		RemoveFromArray(GetSelectableBossProfileQueueList(), selectIndex);
+		GetSelectableBossProfileQueueList().Erase(selectIndex);
 	}
 }
