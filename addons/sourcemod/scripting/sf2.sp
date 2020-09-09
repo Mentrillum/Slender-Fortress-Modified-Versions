@@ -546,7 +546,6 @@ float g_iPlayerProxyAskPosition[MAXPLAYERS + 1][3];
 int g_iPlayerDesiredFOV[MAXPLAYERS + 1];
 
 Handle g_hPlayerPostWeaponsTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
-Handle g_hPlayerPostNoiseMakerTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 Handle g_hPlayerIgniteTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 Handle g_hPlayerResetIgnite[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 Handle g_hPlayerPageRewardTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
@@ -1039,7 +1038,7 @@ public void OnPluginStart()
 	g_hPageMusicRanges = CreateArray(3);
 	
 	// Register console variables.
-	g_cvVersion = CreateConVar("sf2_version", PLUGIN_VERSION, "The current version of Slender Fortress. DO NOT TOUCH!", FCVAR_SPONLY | FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	g_cvVersion = CreateConVar("sf2modified_version", PLUGIN_VERSION, "The current version of Slender Fortress. DO NOT TOUCH!", FCVAR_SPONLY | FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	SetConVarString(g_cvVersion, PLUGIN_VERSION);
 	
 	g_cvEnabled = CreateConVar("sf2_enabled", "1", "Enable/Disable the Slender Fortress gamemode. This will take effect on map change.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
@@ -2253,7 +2252,7 @@ public Action Command_SprintOn(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	if (IsValidClient(iClient) && IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient])
+	if (IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient])
 	{
 		ClientHandleSprint(iClient, true);
 	}
@@ -2265,7 +2264,7 @@ public Action Command_SprintOff(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	if (IsValidClient(iClient) && IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient])
+	if (IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient])
 	{
 		ClientHandleSprint(iClient, false);
 	}
@@ -2283,7 +2282,6 @@ public Action DevCommand_BossPackVote(int iClient,int args)
 public Action Command_NoPoints(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (iClient > MaxClients) return Plugin_Continue;
 	if(!g_bAdminNoPoints[iClient])
 		g_bAdminNoPoints[iClient] = true;
 	else
@@ -2571,7 +2569,7 @@ public Action Command_ClientPerformScare(int iClient,int args)
 
 	if (args < 2)
 	{
-		if (IsValidClient(iClient)) ReplyToCommand(iClient, "Usage: sm_sf2_scare <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(iClient, "Usage: sm_sf2_scare <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -2669,14 +2667,7 @@ public Action Command_RemoveSlender(int iClient,int args)
 	
 	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 	{
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsValidClient(i) || !IsClientInGame(i) || IsClientSourceTV(i)) continue;
-
-			char sPath[PLATFORM_MAX_PATH];
-			GetBossMusic(sPath,sizeof(sPath));
-			StopSound(i, MUSIC_CHAN, sPath);
-		}
+		NPCStopMusic();
 	}
 	
 	CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Removed Boss", iClient);
@@ -2692,11 +2683,8 @@ public Action Command_GetBossIndexes(int iClient,int args)
 	char sMessage[512];
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
-	if (IsValidClient(iClient))
-	{
-		ClientCommand(iClient, "echo Active Boss Indexes:");
-		ClientCommand(iClient, "echo ----------------------------");
-	}
+	ClientCommand(iClient, "echo Active Boss Indexes:");
+	ClientCommand(iClient, "echo ----------------------------");
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -2733,7 +2721,7 @@ public Action Command_SlenderAttackWaiters(int iClient,int args)
 
 	if (args < 2)
 	{
-		if (IsValidClient(iClient)) ReplyToCommand(iClient, "Usage: sm_sf2_boss_attack_waiters <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
+		ReplyToCommand(iClient, "Usage: sm_sf2_boss_attack_waiters <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -2782,7 +2770,7 @@ public Action Command_SlenderNoTeleport(int iClient,int args)
 
 	if (args < 2)
 	{
-		if (IsValidClient(iClient)) ReplyToCommand(iClient, "Usage: sm_sf2_boss_no_teleport <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
+		ReplyToCommand(iClient, "Usage: sm_sf2_boss_no_teleport <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -2831,13 +2819,13 @@ public Action Command_ForceProxy(int iClient,int args)
 	
 	if (args < 1)
 	{
-		if (IsValidClient(iClient)) ReplyToCommand(iClient, "Usage: sm_sf2_force_proxy <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(iClient, "Usage: sm_sf2_force_proxy <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		if (IsValidClient(iClient)) CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
+		CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
 		return Plugin_Handled;
 	}
 	
@@ -2868,12 +2856,12 @@ public Action Command_ForceProxy(int iClient,int args)
 	int iBossIndex = StringToInt(arg2);
 	if (iBossIndex < 0 || iBossIndex >= MAX_BOSSES)
 	{
-		if (IsValidClient(iClient)) ReplyToCommand(iClient, "Boss index is out of range!");
+		ReplyToCommand(iClient, "Boss index is out of range!");
 		return Plugin_Handled;
 	}
 	else if (NPCGetUniqueID(iBossIndex) == -1)
 	{
-		if (IsValidClient(iClient)) ReplyToCommand(iClient, "Boss index is invalid! Boss index not active!");
+		ReplyToCommand(iClient, "Boss index is invalid! Boss index not active!");
 		return Plugin_Handled;
 	}
 	
@@ -2887,7 +2875,7 @@ public Action Command_ForceProxy(int iClient,int args)
 		
 		if (!g_bPlayerEliminated[iTarget])
 		{
-			if (IsValidClient(iClient)) CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", iClient, sName);
+			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", iClient, sName);
 			continue;
 		}
 		
@@ -2897,7 +2885,7 @@ public Action Command_ForceProxy(int iClient,int args)
 		
 		if (!SpawnProxy(iClient,iBossIndex,flintPos)) 
 		{
-			if (IsValidClient(iClient)) CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", iClient, sName);
+			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", iClient, sName);
 			continue;
 		}
 		
@@ -3776,7 +3764,7 @@ public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Han
 	if (!g_bEnabled) return MRES_Ignored;
 
 	int ownerEntity = GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity");
-	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && IsValidEdict(weapon) && IsValidEntity(weapon))
+	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && IsValidEntity(weapon))
 	{
 		int customDamageType = DHookGetReturn(hReturn);
 		MRESReturn hookResult = PvP_GetWeaponCustomDamageType(weapon, ownerEntity, customDamageType);
@@ -6936,7 +6924,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	}
 	
 	g_hPlayerPostWeaponsTimer[iClient] = INVALID_HANDLE;
-	g_hPlayerPostNoiseMakerTimer[iClient] = INVALID_HANDLE;
 	g_hPlayerIgniteTimer[iClient] = INVALID_HANDLE;
 	g_hPlayerResetIgnite[iClient] = INVALID_HANDLE;
 	g_hPlayerPageRewardTimer[iClient] = INVALID_HANDLE;
@@ -7104,7 +7091,6 @@ public Action Event_PostInventoryApplication(Handle event, const char[] name, bo
 	{
 		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
 		g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient));
-		g_hPlayerPostNoiseMakerTimer[iClient] = CreateTimer(0.1, Timer_ClientPostNoiseMaker, GetClientUserId(iClient));
 	}
 	
 #if defined DEBUG

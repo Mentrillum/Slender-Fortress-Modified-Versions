@@ -937,7 +937,7 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 
 MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
 {
-	if (!IsValidClient(client) || !IsValidEdict(weapon) || weapon == -1 || client == -1)
+	if (!IsValidClient(client) || !IsValidEdict(weapon))
 	{
 		return MRES_Ignored;
 	}

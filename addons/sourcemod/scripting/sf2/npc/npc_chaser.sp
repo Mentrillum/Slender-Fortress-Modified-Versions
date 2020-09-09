@@ -5742,16 +5742,10 @@ public MRESReturn GetMaxDeceleration(Address pThis, Handle hReturn)
 	{
 		return MRES_Ignored;
 	}
-	int iState = g_iSlenderState[iBossIndex];
-	if (iState != STATE_CHASE)
-		return MRES_Ignored;
-	else
-	{
-		DHookSetReturn(hReturn, 2000.0);
+	DHookSetReturn(hReturn, g_flSlenderAcceleration[iBossIndex]);
 #if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_NEXTBOT, 0, "Nextbot (%i) GetDeceleration:2000.0", iBossIndex);
+	SendDebugMessageToPlayers(DEBUG_NEXTBOT, 0, "Nextbot (%i) GetDeceleration:%0.0f", iBossIndex, g_flSlenderAcceleration[iBossIndex]);
 #endif
-	}
 	return MRES_Supercede;
 }
 public MRESReturn GetStepHeight(Address pThis, Handle hReturn)

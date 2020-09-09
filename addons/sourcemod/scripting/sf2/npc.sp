@@ -1526,6 +1526,9 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				SetEntProp(iBoss, Prop_Send, "m_nSkin", NPCGetModelSkin(iBossIndex));
 			}
 			
+			float vecEyePos[3] = {0.0, 0.0, 70.0};
+			SetEntPropVector(iBoss, Prop_Data, "m_vecViewOffset", vecEyePos);
+			
 			if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(iBoss, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
 
 			SDKHook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);

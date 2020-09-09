@@ -102,9 +102,6 @@ char g_sClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
 static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 
-//Noise makers
-static bool g_bClientHasNoiseMaker[MAXPLAYERS + 1];
-
 //	==========================================================
 //	GENERAL CLIENT HOOK FUNCTIONS
 //	==========================================================
@@ -4001,31 +3998,6 @@ void ClientOnJump(int client)
 	}
 }
 
-public Action OnClientCommandKeyValues(int iClient, KeyValues hKeyValue)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-	
-	char sName[64];
-	hKeyValue.GetSectionName(sName, sizeof(sName));
-	int iTeam = GetClientTeam(iClient);
-	if (strcmp(sName, "use_action_slot_item_server") == 0)
-	{
-		if (g_bClientHasNoiseMaker[iClient])
-		{
-			if (GetClientTeam(iClient) != TFTeam_Spectator)
-			{
-				if (GetClientTeam(iClient) == iTeam)
-					return Plugin_Handled;
-					
-				return Plugin_Continue;
-			}
-			return Plugin_Handled;
-		}
-	}
-	
-	return Plugin_Continue;
-}
-
 //	==========================================================
 //	DEATH CAM FUNCTIONS
 //	==========================================================
@@ -4595,6 +4567,7 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 		SetEntityGravity(client, 0.5);
 		TF2_AddCondition(client, TFCond_Stealthed, -1.0);
 		SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_NO);
+		SetEntData(client, g_offsCollisionGroup, 2, 4, true);
 		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);//Fix client predictions!
 		Client_ModelOverrides(client, g_iGhostModelIndex);
 		
@@ -6925,14 +6898,6 @@ void SF2_RefreshRestrictions()
 			g_hPlayerPostWeaponsTimer[client]=CreateTimer(1.0,Timer_ClientPostWeapons,GetClientUserId(client));
 		}
 	}
-}
-public Action Timer_ClientPostNoiseMaker(Handle hTimer, int iUserid)
-{
-	int iClient = GetClientOfUserId(iUserid);
-	if (iClient <= 0) return;
-
-	int iItem = TF2_FindNoiseMaker(iClient);
-	g_bClientHasNoiseMaker[iClient] = (iItem > MaxClients) ? true : false;
 }
 public Action Timer_ClientPostWeapons(Handle timer, any userid)
 {

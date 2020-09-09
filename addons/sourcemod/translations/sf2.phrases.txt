@@ -1369,7 +1369,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where Special Round Vote would randomly break.\n-Reimplemented difficulty copies.\n-Fixed hit detection in PvP.\n-Fixed a bug where cookies weren't cached properly.\n-The PvP crash fix now actually works.\n-Fixed a bug where difficulty music themes were inconsistent."
+		"en"	"-Created an alternate boss loading system (From KitRifty).\n-Boss deceleration now has the same value as the boss' acceleration.\n-Removed unnecessary checks on most admin commands.\n-Upgraded the syntax again."
 	}
 
 	"SF2 Smite player"

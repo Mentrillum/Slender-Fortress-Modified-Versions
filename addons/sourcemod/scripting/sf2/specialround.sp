@@ -948,7 +948,10 @@ void SpecialCreateVote()
 	NativeVotes_SetDetails(voteMenu,Tittle);
 	
 	ArrayList arrayEnabledRounds = SpecialEnabledList();
-	int iBlacklistedItems[5];
+	int iBlacklistedItems[8];
+	iBlacklistedItems[5] = 3;
+	iBlacklistedItems[6] = 27;
+	iBlacklistedItems[7] = 30;
 	int[] iWhitelistedItems = new int[arrayEnabledRounds.Length - 1];
 	char sWhitelisted[16];
 
@@ -959,14 +962,14 @@ void SpecialCreateVote()
 		int iRandomRound = GetRandomInt(0, arrayEnabledRounds.Length - 1);
 		for (int i2 = 0; i2 < 5; i2++)
 		{
-			if (iRandomRound == iBlacklistedItems[i]) bChange = true;
+			if (iRandomRound == iBlacklistedItems[0] || iRandomRound == iBlacklistedItems[1] || iRandomRound == iBlacklistedItems[2] || iRandomRound == iBlacklistedItems[3] || iRandomRound == iBlacklistedItems[4] || iRandomRound == iBlacklistedItems[5] || iRandomRound == iBlacklistedItems[6] || iRandomRound == iBlacklistedItems[7]) bChange = true;
 		}
 		
 		if (bChange)
 		{
 			for (int i3 = 0; i3 < arrayEnabledRounds.Length - 1; i3++)
 			{
-				if (i3 != iBlacklistedItems[0] && i3 != iBlacklistedItems[1] && i3 != iBlacklistedItems[2] && i3 != iBlacklistedItems[3] && i3 != iBlacklistedItems[4] && i3 != SPECIALROUND_VOTE)
+				if (i3 != iBlacklistedItems[0] && i3 != iBlacklistedItems[1] && i3 != iBlacklistedItems[2] && i3 != iBlacklistedItems[3] && i3 != iBlacklistedItems[4] && i3 != iBlacklistedItems[5] && i3 != iBlacklistedItems[6] && i3 != iBlacklistedItems[7])
 				{
 					iWhitelistedItems[i3] = i3;
 					IntToString(i3, sWhitelisted, sizeof(sWhitelisted));
@@ -983,7 +986,7 @@ void SpecialCreateVote()
 				}
 				sItemOutPut[iBit] = sItem[iBit];
 			}
-			IntToString(iRandomRound,sItem,sizeof(sItem));
+			IntToString(iRandomRoundNew,sItem,sizeof(sItem));
 			NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
 			
 			iBlacklistedItems[i] = iRandomRoundNew;
