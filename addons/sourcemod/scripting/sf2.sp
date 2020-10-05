@@ -2515,12 +2515,7 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 	{
 		return Plugin_Handled;
 	}
-	
-	if (IsClientInKart(iClient))
-	{
-		SDKHooks_TakeDamage(iClient, 0, 0, 9999.0); // that should do.
-	}
-	
+
 	return Plugin_Continue;
 }
 public Action Hook_CommandPreventJoinTeam(int iClient, const char[] command,int argc)
