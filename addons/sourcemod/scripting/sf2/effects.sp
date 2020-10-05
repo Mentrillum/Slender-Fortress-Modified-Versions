@@ -25,6 +25,8 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 	int  iBossID = NPCGetUniqueID(iBossIndex);
 	if (iBossID == -1) return;
 	
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
+	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
@@ -43,7 +45,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 	
 	if (GetArraySize(hArray) == 0)
 	{
-		CloseHandle(hArray);
+		delete hArray;
 		return;
 	}
 	
@@ -52,7 +54,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 	if (!sEvent[0]) 
 	{
 		LogError("Could not spawn effects for boss %d: invalid event string!", iBossIndex);
-		CloseHandle(hArray);
+		delete hArray;
 		return;
 	}
 	
@@ -190,7 +192,18 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 							ActivateEntity(iEnt);
 							
 							int  r, g, b, a;
-							KvGetColor(g_hConfig, "rendercolor", r, g, b, a);
+							if (view_as<bool>(KvGetNum(g_hConfig, "difficulty_lights", 0)))
+							{
+								switch (iDifficulty)
+								{
+									case Difficulty_Normal: KvGetColor(g_hConfig, "rendercolor", r, g, b, a);
+									case Difficulty_Hard: KvGetColor(g_hConfig, "rendercolor_hard", r, g, b, a);
+									case Difficulty_Insane: KvGetColor(g_hConfig, "rendercolor_insane", r, g, b, a);
+									case Difficulty_Nightmare: KvGetColor(g_hConfig, "rendercolor_nightmare", r, g, b, a);
+									case Difficulty_Apollyon: KvGetColor(g_hConfig, "rendercolor_apollyon", r, g, b, a);
+								}
+							}
+							else KvGetColor(g_hConfig, "rendercolor", r, g, b, a);
 							SetEntityRenderColor(iEnt, r, g, b, a);
 						}
 					}
@@ -220,6 +233,16 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 					
 						SetVariantString("!activator");
 						AcceptEntityInput(iEnt, "SetParent", iTarget);
+						if (iEffectType == EffectType_DynamicLight && view_as<bool>(KvGetNum(g_hConfig, "attach_point", 0)))
+						{
+							char sAttachment[PLATFORM_MAX_PATH];
+							KvGetString(g_hConfig, "attachment_point", sAttachment, sizeof(sAttachment));
+							if (sAttachment[0])
+							{
+								SetVariantString(sAttachment);
+								AcceptEntityInput(iEnt, "SetParentAttachment");
+							}
+						}
 					}
 					else
 					{
@@ -232,6 +255,16 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 						
 						SetVariantString("!activator");
 						AcceptEntityInput(iEnt, "SetParent", iSlender);
+						if (iEffectType == EffectType_DynamicLight && view_as<bool>(KvGetNum(g_hConfig, "attach_point", 0)))
+						{
+							char sAttachment[PLATFORM_MAX_PATH];
+							KvGetString(g_hConfig, "attachment_point", sAttachment, sizeof(sAttachment));
+							if (sAttachment[0])
+							{
+								SetVariantString(sAttachment);
+								AcceptEntityInput(iEnt, "SetParentAttachment");
+							}
+						}
 					}
 					
 					switch (iEffectType)
@@ -253,7 +286,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 		KvGoBack(g_hConfig);
 	}
 	
-	CloseHandle(hArray);
+	delete hArray;
 }
 void SlenderRemoveEffects(int iSlender,bool bKill=false)
 {

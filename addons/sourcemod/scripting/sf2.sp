@@ -34,8 +34,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.4b Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.4b Modified"
+#define PLUGIN_VERSION "1.5.5.5 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.5 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -159,6 +159,16 @@ public Plugin myinfo =
 #define SNATCHER_APOLLYON_1 "slender/snatcher/apollyon1.wav"
 #define SNATCHER_APOLLYON_2 "slender/snatcher/apollyon2.wav"
 #define SNATCHER_APOLLYON_3 "slender/snatcher/apollyon3.wav"
+#define HYPERSNATCHER_FORCEOUT_1 "slender/snatcher/forcedout1.wav"
+#define HYPERSNATCHER_FORCEOUT_2 "slender/snatcher/forcedout2.wav"
+#define HYPERSNATCHER_FORCEOUT_3 "slender/snatcher/forcedout3.wav"
+#define HYPERSNATCHER_FORCEOUT_4 "slender/snatcher/forcedout4.wav"
+#define HYPERSNATCHER_ATTEMPTFORCEOUT_1 "slender/snatcher/attemptforceout1.wav"
+#define HYPERSNATCHER_ATTEMPTFORCEOUT_2 "slender/snatcher/attemptforceout2.wav"
+#define HYPERSNATCHER_ATTEMPTFORCEOUT_3 "slender/snatcher/attemptforceout3.wav"
+#define HYPERSNATCHER_ATTEMPTFORCEOUT_4 "slender/snatcher/attemptforceout4.wav"
+#define HYPERSNATCHER_ATTEMPTFORCEOUT_5 "slender/snatcher/attemptforceout5.wav"
+#define HYPERSNATCHER_ATTEMPTFORCEOUT_6 "slender/snatcher/attemptforceout6.wav"
 
 #define NULLSOUND "misc/null.wav"
 
@@ -168,6 +178,8 @@ public Plugin myinfo =
 #define TRAP_DEPLOY "slender/modified_traps/beartrap/trap_deploy.mp3"
 #define TRAP_CLOSE "slender/modified_traps/beartrap/trap_close.mp3"
 #define TRAP_MODEL "models/mentrillum/traps/beartrap.mdl"
+
+#define LASER_MODEL "sprites/laser.vmt"
 
 #define SF2_HUD_TEXT_COLOR_R 127
 #define SF2_HUD_TEXT_COLOR_G 167
@@ -317,12 +329,17 @@ int g_iSlenderHealth[MAX_BOSSES];
 bool g_bSlenderAttacking[MAX_BOSSES];
 bool g_bSlenderGiveUp[MAX_BOSSES];
 Handle g_hSlenderAttackTimer[MAX_BOSSES];
+Handle g_hSlenderLaserTimer[MAX_BOSSES];
 Handle g_hSlenderBackupAtkTimer[MAX_BOSSES];
 Handle g_hSlenderChaseInitialTimer[MAX_BOSSES];
 Handle g_hSlenderRage1Timer[MAX_BOSSES];
 Handle g_hSlenderRage2Timer[MAX_BOSSES];
 Handle g_hSlenderRage3Timer[MAX_BOSSES];
 Handle g_hSlenderSpawnTimer[MAX_BOSSES];
+Handle g_hSlenderHealTimer[MAX_BOSSES];
+Handle g_hSlenderHealDelayTimer[MAX_BOSSES];
+Handle g_hSlenderHealEventTimer[MAX_BOSSES];
+Handle g_hSlenderStartFleeTimer[MAX_BOSSES];
 
 int g_iSlenderInterruptConditions[MAX_BOSSES];
 float g_flSlenderLastFoundPlayer[MAX_BOSSES][MAXPLAYERS + 1];
@@ -664,77 +681,78 @@ static Handle g_hClientAverageUpdateTimer = INVALID_HANDLE;
 static Handle g_hBlueNightvisionOutlineTimer = INVALID_HANDLE;
 
 // Server variables.
-Handle g_cvVersion;
-Handle g_cvEnabled;
-Handle g_cvSlenderMapsOnly;
-Handle g_cvPlayerViewbobEnabled;
-Handle g_cvPlayerShakeEnabled;
-Handle g_cvPlayerShakeFrequencyMax;
-Handle g_cvPlayerShakeAmplitudeMax;
-Handle g_cvGraceTime;
-Handle g_cvAllChat;
-Handle g_cv20Dollars;
-Handle g_cvMaxPlayers;
-Handle g_cvMaxPlayersOverride;
-Handle g_cvCampingEnabled;
-Handle g_cvCampingMaxStrikes;
-Handle g_cvCampingStrikesWarn;
-Handle g_cvExitCampingTimeAllowed;
-Handle g_cvCampingMinDistance;
-Handle g_cvCampingNoStrikeSanity;
-Handle g_cvCampingNoStrikeBossDistance;
-Handle g_cvDifficulty;
-Handle g_cvBossMain;
-Handle g_cvBossProfileOverride;
-Handle g_cvPlayerBlinkRate;
-Handle g_cvPlayerBlinkHoldTime;
-Handle g_cvSpecialRoundBehavior;
-Handle g_cvSpecialRoundForce;
-Handle g_cvSpecialRoundOverride;
-Handle g_cvSpecialRoundInterval;
-Handle g_cvNewBossRoundBehavior;
-Handle g_cvNewBossRoundInterval;
-Handle g_cvNewBossRoundForce;
+ConVar g_cvVersion;
+ConVar g_cvEnabled;
+ConVar g_cvSlenderMapsOnly;
+ConVar g_cvPlayerViewbobEnabled;
+ConVar g_cvPlayerShakeEnabled;
+ConVar g_cvPlayerShakeFrequencyMax;
+ConVar g_cvPlayerShakeAmplitudeMax;
+ConVar g_cvGraceTime;
+ConVar g_cvAllChat;
+ConVar g_cv20Dollars;
+ConVar g_cvMaxPlayers;
+ConVar g_cvMaxPlayersOverride;
+ConVar g_cvCampingEnabled;
+ConVar g_cvCampingMaxStrikes;
+ConVar g_cvCampingStrikesWarn;
+ConVar g_cvExitCampingTimeAllowed;
+ConVar g_cvCampingMinDistance;
+ConVar g_cvCampingNoStrikeSanity;
+ConVar g_cvCampingNoStrikeBossDistance;
+ConVar g_cvDifficulty;
+ConVar g_cvBossMain;
+ConVar g_cvBossProfileOverride;
+ConVar g_cvPlayerBlinkRate;
+ConVar g_cvPlayerBlinkHoldTime;
+ConVar g_cvSpecialRoundBehavior;
+ConVar g_cvSpecialRoundForce;
+ConVar g_cvSpecialRoundOverride;
+ConVar g_cvSpecialRoundInterval;
+ConVar g_cvNewBossRoundBehavior;
+ConVar g_cvNewBossRoundInterval;
+ConVar g_cvNewBossRoundForce;
 ConVar g_cvIgnoreRoundWinConditions;
 ConVar g_cvDisableBossCrushFix;
-Handle g_cvPlayerVoiceDistance;
-Handle g_cvPlayerVoiceWallScale;
-Handle g_cvUltravisionEnabled;
-Handle g_cvUltravisionRadiusRed;
-Handle g_cvUltravisionRadiusBlue;
-Handle g_cvUltravisionBrightness;
-Handle g_cvNightvisionRadius;
-Handle g_cvNightvisionEnabled;
-Handle g_cvGhostModeConnection;
-Handle g_cvGhostModeConnectionCheck;
-Handle g_cvGhostModeConnectionTolerance;
-Handle g_cvIntroEnabled;
-Handle g_cvIntroDefaultHoldTime;
-Handle g_cvIntroDefaultFadeTime;
-Handle g_cvTimeLimit;
-Handle g_cvTimeLimitEscape;
-Handle g_cvTimeGainFromPageGrab;
-Handle g_cvWarmupRound;
-Handle g_cvWarmupRoundNum;
-Handle g_cvPlayerViewbobHurtEnabled;
-Handle g_cvPlayerViewbobSprintEnabled;
-Handle g_cvPlayerProxyWaitTime;
-Handle g_cvPlayerProxyAsk;
-Handle g_cvHalfZatoichiHealthGain;
-Handle g_cvBlockSuicideDuringRound;
-Handle g_cvRaidMap;
-Handle g_cvProxyMap;
-Handle g_cvBossChaseEndlessly;
-Handle g_cvSurvivalMap;
-Handle g_cvBoxingMap;
-Handle g_cvRenevantMap;
-Handle g_cvTimeEscapeSurvival;
+ConVar g_cvIgnoreRedPlayerDeathSwap;
+ConVar g_cvPlayerVoiceDistance;
+ConVar g_cvPlayerVoiceWallScale;
+ConVar g_cvUltravisionEnabled;
+ConVar g_cvUltravisionRadiusRed;
+ConVar g_cvUltravisionRadiusBlue;
+ConVar g_cvUltravisionBrightness;
+ConVar g_cvNightvisionRadius;
+ConVar g_cvNightvisionEnabled;
+ConVar g_cvGhostModeConnection;
+ConVar g_cvGhostModeConnectionCheck;
+ConVar g_cvGhostModeConnectionTolerance;
+ConVar g_cvIntroEnabled;
+ConVar g_cvIntroDefaultHoldTime;
+ConVar g_cvIntroDefaultFadeTime;
+ConVar g_cvTimeLimit;
+ConVar g_cvTimeLimitEscape;
+ConVar g_cvTimeGainFromPageGrab;
+ConVar g_cvWarmupRound;
+ConVar g_cvWarmupRoundNum;
+ConVar g_cvPlayerViewbobHurtEnabled;
+ConVar g_cvPlayerViewbobSprintEnabled;
+ConVar g_cvPlayerProxyWaitTime;
+ConVar g_cvPlayerProxyAsk;
+ConVar g_cvHalfZatoichiHealthGain;
+ConVar g_cvBlockSuicideDuringRound;
+ConVar g_cvRaidMap;
+ConVar g_cvProxyMap;
+ConVar g_cvBossChaseEndlessly;
+ConVar g_cvSurvivalMap;
+ConVar g_cvBoxingMap;
+ConVar g_cvRenevantMap;
+ConVar g_cvTimeEscapeSurvival;
 
-Handle g_cvPlayerInfiniteSprintOverride;
-Handle g_cvPlayerInfiniteFlashlightOverride;
-Handle g_cvPlayerInfiniteBlinkOverride;
+ConVar g_cvPlayerInfiniteSprintOverride;
+ConVar g_cvPlayerInfiniteFlashlightOverride;
+ConVar g_cvPlayerInfiniteBlinkOverride;
 
-Handle g_cvGravity;
+ConVar g_cvGravity;
 float g_flGravity;
 
 ConVar g_cvMaxRounds;
@@ -754,8 +772,8 @@ Handle g_hCookie;
 
 int g_SmokeSprite;
 int g_LightningSprite;
-//int g_ShockwaveBeam;
-//int g_ShockwaveHalo;
+int g_ShockwaveBeam;
+int g_ShockwaveHalo;
 
 // Global forwards.
 Handle fOnBossAdded;
@@ -1117,6 +1135,8 @@ public void OnPluginStart()
 	
 	g_cvIgnoreRoundWinConditions = CreateConVar("sf2_ignore_round_win_conditions", "0", "If set to 1, round will not end when RED is eliminated.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	HookConVarChange(g_cvIgnoreRoundWinConditions, OnConVarChanged);
+	g_cvIgnoreRedPlayerDeathSwap = CreateConVar("sf2_ignore_red_player_death_team_switch", "0", "If set to 1, RED players will not switch back to the BLU team.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	HookConVarChange(g_cvIgnoreRedPlayerDeathSwap, OnConVarChanged);
 	
 	g_cvDisableBossCrushFix = CreateConVar("sf2_disable_boss_crush_fix", "0", "Enables/disables the boss crushing patch from Secret Update 4, should only be turned on if the server introduces players getting stuck in bosses.", _, true, 0.0, true, 1.0);
 	
@@ -1199,7 +1219,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_force_escape", Command_ForceEscape, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_set_difficulty", Command_ForceDifficulty, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_special_round", Command_ForceSpecialRound, ADMFLAG_SLAY);
-	
+
 	// Hook onto existing console commands.
 	AddCommandListener(Hook_CommandBuild, "build");
 	AddCommandListener(Hook_CommandTaunt, "taunt");
@@ -1388,6 +1408,7 @@ static void SDK_Init()
 					g_hSDKEquipWearable = EndPrepSDKCall();
 				}
 			}
+			delete hGameConf;
 		}
 	}
 	if( g_hSDKEquipWearable == INVALID_HANDLE )
@@ -1570,8 +1591,9 @@ public void OnMapStart()
 	PrecacheSound(SOUND_THUNDER, true);
 	g_SmokeSprite = PrecacheModel("sprites/steam1.vmt");
 	g_LightningSprite = PrecacheModel("sprites/lgtning.vmt");
-	//g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
-	//g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
+	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
+	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
+	PrecacheModel(LASER_MODEL, true);
 }
 
 public void OnConfigsExecuted()
@@ -1617,20 +1639,20 @@ static void StartPlugin()
 #endif
 	
 	// Handle ConVars.
-	Handle hCvar = FindConVar("mp_friendlyfire");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, true);
+	ConVar hCvar = FindConVar("mp_friendlyfire");
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, true);
 	
 	hCvar = FindConVar("mp_flashlight");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, true);
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, true);
 	
 	hCvar = FindConVar("mat_supportflashlight");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, true);
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, true);
 	
 	hCvar = FindConVar("mp_autoteambalance");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, false);
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
 	
 	hCvar = FindConVar("tf_base_boss_max_turn_rate");
-	if (hCvar != INVALID_HANDLE && GetConVarInt(hCvar) < 720) SetConVarInt(hCvar, 720);
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE) && GetConVarInt(hCvar) < 720) SetConVarInt(hCvar, 720);
 	
 	g_flGravity = GetConVarFloat(g_cvGravity);
 	
@@ -1787,6 +1809,16 @@ static void PrecacheStuff()
 	PrecacheSound2(SNATCHER_APOLLYON_1);
 	PrecacheSound2(SNATCHER_APOLLYON_2);
 	PrecacheSound2(SNATCHER_APOLLYON_3);
+	PrecacheSound2(HYPERSNATCHER_ATTEMPTFORCEOUT_1);
+	PrecacheSound2(HYPERSNATCHER_ATTEMPTFORCEOUT_2);
+	PrecacheSound2(HYPERSNATCHER_ATTEMPTFORCEOUT_3);
+	PrecacheSound2(HYPERSNATCHER_ATTEMPTFORCEOUT_4);
+	PrecacheSound2(HYPERSNATCHER_ATTEMPTFORCEOUT_5);
+	PrecacheSound2(HYPERSNATCHER_ATTEMPTFORCEOUT_6);
+	PrecacheSound2(HYPERSNATCHER_FORCEOUT_1);
+	PrecacheSound2(HYPERSNATCHER_FORCEOUT_2);
+	PrecacheSound2(HYPERSNATCHER_FORCEOUT_3);
+	PrecacheSound2(HYPERSNATCHER_FORCEOUT_4);
 	
 	//PrecacheSound2(NINETYSMUSIC);
 	PrecacheSound2(TRIPLEBOSSESMUSIC);
@@ -1871,14 +1903,14 @@ static void StopPlugin()
 	g_bEnabled = false;
 	
 	// Reset CVars.
-	Handle hCvar = FindConVar("mp_friendlyfire");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, false);
+	ConVar hCvar = FindConVar("mp_friendlyfire");
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
 	
 	hCvar = FindConVar("mp_flashlight");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, false);
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
 	
 	hCvar = FindConVar("mat_supportflashlight");
-	if (hCvar != INVALID_HANDLE) SetConVarBool(hCvar, false);
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
 	
 	// Cleanup bosses.
 	NPCRemoveAll();
@@ -2188,7 +2220,7 @@ public void OnGameFrame()
 #endif
 			}
 			
-			CloseHandle(hProxyCandidates);
+			delete hProxyCandidates;
 		}
 	}
 	
@@ -2484,6 +2516,11 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 		return Plugin_Handled;
 	}
 	
+	if (IsClientInKart(iClient))
+	{
+		SDKHooks_TakeDamage(iClient, 0, 0, 9999.0); // that should do.
+	}
+	
 	return Plugin_Continue;
 }
 public Action Hook_CommandPreventJoinTeam(int iClient, const char[] command,int argc)
@@ -2626,7 +2663,7 @@ public Action Command_SpawnSlender(int iClient,int args)
 	
 	Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
 	TR_GetEndPosition(endPos, hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	
 	SpawnSlender(Npc, endPos);
 	
@@ -3050,7 +3087,11 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 		case SPECIALROUND_CLASSSCRAMBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Class Scramble.", "SF2 Prefix", iClient);
 		case SPECIALROUND_2DOOM: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Silent Slender.", "SF2 Prefix", iClient);
 		case SPECIALROUND_WALLHAX: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", iClient);
-		case SPECIALROUND_HYPERSNATCHER: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Hyper Snatcher {default}(Warning, you're going to die).", "SF2 Prefix", iClient);
+		case SPECIALROUND_HYPERSNATCHER:
+		{
+			if (!SF_IsBoxingMap()) CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Hyper Snatcher {default}(Warning, you're going to die).", "SF2 Prefix", iClient);
+			else CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Hyper Argonite Giant {default}(Warning, be so prepared).", "SF2 Prefix", iClient);
+		}
 		case SPECIALROUND_PAGEREWARDS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Page Rewards.", "SF2 Prefix", iClient);
 		case SPECIALROUND_TINYBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Tiny Bosses.", "SF2 Prefix", iClient);
 		case SPECIALROUND_RUNNINGINTHE90S: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}In The 90s.", "SF2 Prefix", iClient);
@@ -3060,6 +3101,7 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 
 	return Plugin_Handled;
 }
+
 public Action Command_AddSlender(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -3089,7 +3131,7 @@ public Action Command_AddSlender(int iClient,int args)
 
 		Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
 		TR_GetEndPosition(flPos, hTrace);
-		CloseHandle(hTrace);
+		delete hTrace;
 	
 		SpawnSlender(Npc, flPos);
 		
@@ -3202,7 +3244,7 @@ public Action Command_AddSlenderFake(int iClient,int args)
 		
 		Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
 		TR_GetEndPosition(flPos, hTrace);
-		CloseHandle(hTrace);
+		delete hTrace;
 	
 		SpawnSlender(Npc, flPos);
 		
@@ -3262,21 +3304,116 @@ public Action Command_ForceState(int iClient,int args)
 		
 		if (IsClientSourceTV(target)) continue;//Exclude the sourcetv bot
 		
-		GetClientName(target, sName, sizeof(sName));
+		if (g_bPlayerProxy[target]) continue;//Can't force proxies
 		
-		if (iState && g_bPlayerEliminated[target])
+		GetClientName(target, sName, sizeof(sName));
+		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) || SF_IsBoxingMap())
 		{
-			SetClientPlayState(target, true);
-			
-			CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
-			LogAction(iClient, target, "%N forced %N into the game.", iClient, target);
+			if (iState && g_bPlayerEliminated[target])
+			{
+				SetClientPlayState(target, true);
+				
+				CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
+				LogAction(iClient, target, "%N forced %N into the game.", iClient, target);
+			}
+			else if (!iState && !g_bPlayerEliminated[target])
+			{
+				SetClientPlayState(target, false);
+				
+				CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced Out Of Game", sName);
+				LogAction(iClient, target, "%N took %N out of the game.", iClient, target);
+			}
 		}
-		else if (!iState && !g_bPlayerEliminated[target])
+		else
 		{
-			SetClientPlayState(target, false);
-			
-			CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced Out Of Game", sName);
-			LogAction(iClient, target, "%N took %N out of the game.", iClient, target);
+			if (iState && g_bPlayerEliminated[target])
+			{
+				SetClientPlayState(target, true);
+				
+				CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
+				LogAction(iClient, target, "%N forced %N into the game.", iClient, target);
+			}
+			else if (!iState && !g_bPlayerEliminated[target])
+			{
+				if (CheckCommandAccess(target, "sm_sf2_setplaystate", ADMFLAG_SLAY))
+				{
+					SetClientPlayState(target, false);
+				
+					CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced Out Of Game", sName);
+					LogAction(iClient, target, "%N took %N out of the game.", iClient, target);
+					int iRandomQuote = GetRandomInt(1, 4);
+					switch (iRandomQuote)
+					{
+						case 1:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_FORCEOUT_1);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  You taking a break kid? Oh, no I don't mind. I have an eternity, YOUR the one who should be worried.");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  You taking a break kid? Oh, no I don't mind. I have an eternity, YOUR the one who should be worried.");
+						}
+						case 2:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_FORCEOUT_2);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  Oh, so you refuse to die kiddo?");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  Oh, so you refuse to die kiddo?");
+						}
+						case 3:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_FORCEOUT_3);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  But don't be too proud of yourself, I'm only half finished with you...");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  But don't be too proud of yourself, I'm only half finished with you...");
+						}
+						case 4:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_FORCEOUT_4);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  I was kind of expecting a new victim to step in my traps, I've already taken your soul and everything. Have you even completed your contractual obligations yet?");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  I was kind of expecting a new victim to step in my traps, I've already taken your soul and everything. Have you even completed your contractual obligations yet?");
+						}
+					}
+				}
+				else
+				{
+					int iRandomQuote = GetRandomInt(1, 6);
+					switch (iRandomQuote)
+					{
+						case 1:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_ATTEMPTFORCEOUT_1);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  Whats the hurry kid? Its not like you'll DIE if you slow down.");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  Whats the hurry kid? Its not like you'll DIE if you slow down.");
+						}
+						case 2:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_ATTEMPTFORCEOUT_2);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  They say you can't truely appreciate something until its gone, I'm just helping you appreciate living.");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  They say you can't truely appreciate something until its gone, I'm just helping you appreciate living.");
+						}
+						case 3:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_ATTEMPTFORCEOUT_3);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  If only you knew a lawyer- oh wait, you do, ITS ME. At least, I was, I'll take your case, just need one soul as a down payment.");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  If only you knew a lawyer- oh wait, you do, ITS ME. At least, I was, I'll take your case, just need one soul as a down payment.");
+						}
+						case 4:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_ATTEMPTFORCEOUT_4);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  Don't worry kid, I'm an equal opportunity employer. All souls are good to me regardless of age, race, gender, or their position on the endangered species list.");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  Don't worry kid, I'm an equal opportunity employer. All souls are good to me regardless of age, race, gender, or their position on the endangered species list.");
+						}
+						case 5:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_ATTEMPTFORCEOUT_5);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  Don't give me that look, this is teamwork. I'm the team, your the work. Now get to it trooper!");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}: Don't give me that look, this is teamwork. I'm the team, your the work. Now get to it trooper!");
+						}
+						case 6:
+						{
+							EmitSoundToClient(target, HYPERSNATCHER_ATTEMPTFORCEOUT_6);
+							if (GetConVarInt(g_cvDifficulty) < 4) CPrintToChat(target, "{ghostwhite}Hyper Snatcher{default}:  Not a fan? Too bad, you don't make the calls here.");
+							else CPrintToChat(target, "{darkblue}Cosmic Snatcher{default}:  Not a fan? Too bad, you don't make the calls here.");
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -3558,16 +3695,16 @@ void ReloadRestrictedWeapons()
 {
 	if (g_hRestrictedWeaponsConfig != INVALID_HANDLE)
 	{
-		CloseHandle(g_hRestrictedWeaponsConfig);
+		delete g_hRestrictedWeaponsConfig;
 		g_hRestrictedWeaponsConfig = INVALID_HANDLE;
 	}
 	
 	char buffer[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, buffer, sizeof(buffer), FILE_RESTRICTEDWEAPONS);
-	Handle kv = CreateKeyValues("root");
+	KeyValues kv = new KeyValues("root");
 	if (!FileToKeyValues(kv, buffer))
 	{
-		CloseHandle(kv);
+		delete kv;
 		LogError("Failed to load restricted weapons list! File not found!");
 	}
 	else
@@ -3635,6 +3772,7 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 				StopSound(i, MUSIC_CHAN, sPath);
 			}
 		}
+		ChangeAllSlenderModels();
 	}
 	else if (cvar == g_cvMaxPlayers || cvar == g_cvMaxPlayersOverride)
 	{
@@ -4362,7 +4500,7 @@ static void CollectPage(int page,int activator)
 	SetEventInt(hEvent, "player", activator);
 	SetEventInt(hEvent, "points", 1);
 	FireEvent(hEvent);
-	
+
 	int iPage2 = GetEntPropEnt(page, Prop_Send, "m_hOwnerEntity");
 	if (iPage2 > MaxClients)
 		AcceptEntityInput(iPage2, "Kill");
@@ -5191,10 +5329,32 @@ void SetRoundState(SF2RoundState iRoundState)
 			while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 			{
 				GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-				if (StrEqual(sName, "sf2_logic_escape", false))
+				if (!SF_IsBoxingMap())
 				{
-					AcceptEntityInput(ent, "FireUser1");
-					break;
+					if (StrEqual(sName, "sf2_logic_escape", false))
+					{
+						AcceptEntityInput(ent, "FireUser1");
+						break;
+					}
+				}
+				else
+				{
+					if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
+					{
+						if (StrEqual(sName, "sf2_logic_escape", false))
+						{
+							AcceptEntityInput(ent, "FireUser1");
+							break;
+						}
+					}
+					else
+					{
+						if (StrEqual(sName, "sf2_logic_escape_hyper", false))
+						{
+							AcceptEntityInput(ent, "FireUser1");
+							break;
+						}
+					}
 				}
 			}
 			if (SF_IsBoxingMap())
@@ -5541,7 +5701,7 @@ void SetClientPlayState(int iClient, bool bState, bool bEnablePlay=true)
 	Handle message = StartMessageAll("PlayerTauntSoundLoopEnd", USERMSG_RELIABLE);
 	BfWriteByte(message, iClient);
 	EndMessage();
-	
+
 	if (bState)
 	{
 		if (!g_bPlayerEliminated[iClient]) return;
@@ -5662,7 +5822,7 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage=false)
 		}
 	}
 	
-	CloseHandle(hArray);
+	delete hArray;
 	
 	for (int i = 0, iSize = GetArraySize(hPlayers); i < iSize; i++)
 	{
@@ -5673,7 +5833,7 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage=false)
 		if (bShowMessage) CPrintToChat(iClient, "%T", "SF2 Force Play", iClient);
 	}
 	
-	CloseHandle(hPlayers);
+	delete hPlayers;
 }
 
 public int SortQueueList(int index1,int index2, Handle array, Handle hndl)
@@ -5782,7 +5942,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 					iBestPlayer = iTempPlayer;
 				}
 				
-				CloseHandle(hArray);
+				delete hArray;
 				
 				float buffer[3];
 				if (iBestPlayer != -1 && SlenderCalculateApproachToPlayer(iBossIndex, iBestPlayer, buffer))
@@ -5913,7 +6073,6 @@ void SlenderOnClientStressUpdate(int iClient)
 		}
 		else if (!g_bRoundGrace)
 		{
-			bool bRaidTeleport = view_as<bool>(GetProfileNum(sProfile, "experimental_raid_teleport", 0));
 			int iPreferredTeleportTarget = INVALID_ENT_REFERENCE;
 			
 			float flTargetStressMin = GetProfileFloat(sProfile, "teleport_target_stress_min", 0.2);
@@ -5923,50 +6082,63 @@ void SlenderOnClientStressUpdate(int iClient)
 			
 			float flPreferredTeleportTargetStress = flTargetStress;
 			
-			Handle hArrayRaidTargets = CreateArray();
-			
-			for (int i = 1; i <= MaxClients; i++)
+			if(SF_IsRaidMap() || SF_IsBoxingMap() || SF_IsProxyMap() || SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex])
 			{
-				if (!IsClientInGame(i) ||
-					!IsPlayerAlive(i) ||
-					g_bPlayerEliminated[i] ||
-					IsClientInGhostMode(i) ||
-					DidClientEscape(i))
+				Handle hArrayRaidTargets = CreateArray();
+				for (int i = 1; i <= MaxClients; i++)
 				{
-					continue;
-				}
-				if (g_bPlayerIsExitCamping[i])
-				{
-					if((iTeleportTarget != INVALID_ENT_REFERENCE && !g_bPlayerIsExitCamping[iTeleportTarget]))
+					if (!IsClientInGame(i) ||
+						!IsPlayerAlive(i) ||
+						g_bPlayerEliminated[i] ||
+						IsClientInGhostMode(i) ||
+						DidClientEscape(i))
 					{
-						iPreferredTeleportTarget = i;
-						break;
+						continue;
 					}
+					PushArrayCell(hArrayRaidTargets, i);
 				}
-				if(bRaidTeleport)
-				{
-					if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
-					{
-						PushArrayCell(hArrayRaidTargets, i);
-					}
-				}
-				if (g_flPlayerStress[i] < flPreferredTeleportTargetStress)
-				{
-					if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
-					{
-						iPreferredTeleportTarget = i;
-						flPreferredTeleportTargetStress = g_flPlayerStress[i];
-					}
-				}
-			}
-			if(bRaidTeleport)
-			{
 				if(GetArraySize(hArrayRaidTargets)>0)
 				{
-					iPreferredTeleportTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
+					int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
+					if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
+					{
+						iPreferredTeleportTarget = iRaidTarget;
+					}
+				}
+				delete hArrayRaidTargets;
+				
+			}
+			else
+			{
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!IsClientInGame(i) ||
+						!IsPlayerAlive(i) ||
+						g_bPlayerEliminated[i] ||
+						IsClientInGhostMode(i) ||
+						DidClientEscape(i))
+					{
+						continue;
+					}
+					if (g_bPlayerIsExitCamping[i])
+					{
+						if((iTeleportTarget != INVALID_ENT_REFERENCE && !g_bPlayerIsExitCamping[iTeleportTarget]))
+						{
+							iPreferredTeleportTarget = i;
+							break;
+						}
+					}
+					if (g_flPlayerStress[i] < flPreferredTeleportTargetStress)
+					{
+						if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
+						{
+							iPreferredTeleportTarget = i;
+							flPreferredTeleportTargetStress = g_flPlayerStress[i];
+						}
+					}
 				}
 			}
-			CloseHandle(hArrayRaidTargets);
+
 			if (iPreferredTeleportTarget && iPreferredTeleportTarget != INVALID_ENT_REFERENCE)
 			{
 				// Set our preferred target to the new guy.
@@ -7134,22 +7306,62 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				
 			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], sBossName[64];
 			NPCGetProfile(npcIndex, sProfile, sizeof(sProfile));
-			if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) || (SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && iDifficulty < 4))
+			if (StrEqual(sProfile, "hypersnatcher_nerfed") && iDifficulty >= 4)
 			{
-				GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+				sBossName = "Cosmic Snatcher";
 			}
-			else if (SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && iDifficulty >= 4)
+			else
 			{
-				if (StrEqual(sProfile, "hypersnatcher_nerfed")) 
-					sBossName = "Absolute Snatcher";
-				else 
-					GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+				switch (iDifficulty)
+				{
+					case Difficulty_Normal: GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+					case Difficulty_Hard:
+					{
+						GetProfileString(sProfile, "name_hard", sBossName, sizeof(sBossName));
+						if (!sBossName[0]) GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+					}
+					case Difficulty_Insane:
+					{
+						GetProfileString(sProfile, "name_insane", sBossName, sizeof(sBossName));
+						if (!sBossName[0])
+						{
+							GetProfileString(sProfile, "name_hard", sBossName, sizeof(sBossName));
+							if (!sBossName[0]) GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+						}
+					}
+					case Difficulty_Nightmare:
+					{
+						GetProfileString(sProfile, "name_nightmare", sBossName, sizeof(sBossName));
+						if (!sBossName[0])
+						{
+							GetProfileString(sProfile, "name_insane", sBossName, sizeof(sBossName));
+							if (!sBossName[0])
+							{
+								GetProfileString(sProfile, "name_hard", sBossName, sizeof(sBossName));
+								if (!sBossName[0]) GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+							}
+						}
+					}
+					case Difficulty_Apollyon:
+					{
+						GetProfileString(sProfile, "name_apollyon", sBossName, sizeof(sBossName));
+						if (!sBossName[0])
+						{
+							GetProfileString(sProfile, "name_nightmare", sBossName, sizeof(sBossName));
+							if (!sBossName[0])
+							{
+								GetProfileString(sProfile, "name_insane", sBossName, sizeof(sBossName));
+								if (!sBossName[0])
+								{
+									GetProfileString(sProfile, "name_hard", sBossName, sizeof(sBossName));
+									if (!sBossName[0]) GetProfileString(sProfile, "name", sBossName, sizeof(sBossName));
+								}
+							}
+						}
+					}
+				}
 			}
-			else if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && iDifficulty >= 4 && StrEqual(sProfile, "hypersnatcher_nerfed"))
-			{
-				sBossName = "Absolute Snatcher";
-			}
-			
+
 			//TF2_ChangePlayerName(iSourceTV, sBossName, true);
 			SetClientName(iSourceTV, sBossName);
 			SetEntPropString(iSourceTV, Prop_Data, "m_szNetname", sBossName);
@@ -7485,6 +7697,12 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 					GetClientAbsOrigin(iClient, g_flSlenderChaseDeathPosition[i]);
 				}
 			}
+			
+			if (g_cvIgnoreRedPlayerDeathSwap.BoolValue)
+			{
+				g_bPlayerEliminated[iClient] = false;
+				g_bPlayerEscaped[iClient] = false;
+			}
 		}
 		
 		if (g_bPlayerProxy[iClient])
@@ -7667,8 +7885,8 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 					for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 					{	
 						if (NPCGetUniqueID(iNPCIndex) == -1) continue;
-						NPCSetAddSpeed(iNPCIndex, 25.0);
-						NPCSetAddMaxSpeed(iNPCIndex, 50.0);
+						NPCSetAddSpeed(iNPCIndex, 50.0);
+						NPCSetAddMaxSpeed(iNPCIndex, 75.0);
 					}
 					g_bPlayersAreCritted = true;
 				}
@@ -7678,8 +7896,8 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 					for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 					{	
 						if (NPCGetUniqueID(iNPCIndex) == -1) continue;
-						NPCSetAddSpeed(iNPCIndex, 25.0);
-						NPCSetAddMaxSpeed(iNPCIndex, 50.0);
+						NPCSetAddSpeed(iNPCIndex, 50.0);
+						NPCSetAddMaxSpeed(iNPCIndex, 75.0);
 					}
 					g_bPlayersAreCritted = true;
 				}
@@ -8220,7 +8438,7 @@ public Action Timer_SetPlayerHealth(Handle timer, any data)
 	ResetPack(hPack);
 	int iAttacker = GetClientOfUserId(ReadPackCell(hPack));
 	int iHealth = ReadPackCell(hPack);
-	CloseHandle(hPack);
+	delete hPack;
 	
 	if (iAttacker <= 0) return;
 	
@@ -8234,6 +8452,7 @@ public Action Timer_PlayerSwitchToBlue(Handle timer, any userid)
 	if (iClient <= 0) return;
 	
 	if (timer != g_hPlayerSwitchBlueTimer[iClient]) return;
+	if (g_cvIgnoreRedPlayerDeathSwap.BoolValue) return;
 	
 	ChangeClientTeam(iClient, TFTeam_Blue);
 }
@@ -8383,12 +8602,12 @@ public Action Timer_RoundStart(Handle timer)
 			}
 			else
 			{
-				CloseHandle(hArrayClients);
+				delete hArrayClients;
 			}
 		}
 		else
 		{
-			CloseHandle(hArrayClients);
+			delete hArrayClients;
 		}
 	}
 }
@@ -8450,7 +8669,7 @@ public Action Timer_RoundTime(Handle timer)
 		
 		return Plugin_Stop;
 	}
-	if(SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
+	if(SF_SpecialRound(SPECIALROUND_REVOLUTION))
 	{
 		if(g_iSpecialRoundTime % 60 == 0)
 		{
@@ -8510,7 +8729,7 @@ public Action Timer_RoundTimeEscape(Handle timer)
 		return Plugin_Stop;
 	}
 	
-	if(SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
+	if(SF_SpecialRound(SPECIALROUND_REVOLUTION))
 	{
 		if(g_iSpecialRoundTime % 60 == 0)
 		{
@@ -8609,7 +8828,7 @@ public Action Timer_VoteDifficulty(Handle timer, any data)
 	
 	if (timer != g_hVoteTimer || IsRoundEnding()) 
 	{
-		CloseHandle(hArrayClients);
+		delete hArrayClients;
 		return Plugin_Stop;
 	}
 	
@@ -8626,7 +8845,7 @@ public Action Timer_VoteDifficulty(Handle timer, any data)
 		iClientsNum++;
 	}
 	
-	CloseHandle(hArrayClients);
+	delete hArrayClients;
 	
 	RandomizeVoteMenu();
 	VoteMenu(g_hMenuVoteDifficulty, iClients, iClientsNum, 15);
@@ -9127,7 +9346,7 @@ void SF_FailRoundEnd(float time=2.0)
 void SF_FailEnd()
 {
 	if (g_hTimerFail != INVALID_HANDLE)
-		CloseHandle(g_hTimerFail);
+		delete g_hTimerFail;
 	g_hTimerFail = INVALID_HANDLE;
 }
 
@@ -9203,7 +9422,7 @@ static void InitializeMapEntities()
 				ReplaceString(targetName, sizeof(targetName), "sf2_maxpages_", "", false);
 				g_iPageMax = StringToInt(targetName);
 			}
-			else if (!StrContains(targetName, "sf2_logic_escape", false))
+			else if (!StrContains(targetName, "sf2_logic_escape", false) || !StrContains(targetName, "sf2_logic_escape_hyper", false))
 			{
 				g_bRoundHasEscapeObjective = true;
 			}
@@ -9523,7 +9742,7 @@ void SpawnPages()
 		{
 			if (view_as<bool>(GetArrayCell(hArray, i, 1)))
 			{
-				CloseHandle(view_as<Handle>(GetArrayCell(hArray, i)));
+				delete view_as<Handle>(GetArrayCell(hArray, i));
 			}
 		}
 	
@@ -9531,8 +9750,8 @@ void SpawnPages()
 		Call_Finish();
 	}
 	
-	CloseHandle(hPageTrie);
-	CloseHandle(hArray);
+	delete hPageTrie;
+	delete hArray;
 }
 public Action Page_RemoveAlwaysTransmit(Handle timer, int iRef)
 {
@@ -9999,7 +10218,7 @@ void InitializeNewGame()
 	HandleSpecialRoundState();
 	
 	// Was a new special round initialized?
-	if (g_bSpecialRound && !SF_IsBoxingMap() && !SF_IsRenevantMap())
+	if (g_bSpecialRound && !SF_IsRenevantMap())
 	{
 		if (g_bSpecialRoundNew)
 		{

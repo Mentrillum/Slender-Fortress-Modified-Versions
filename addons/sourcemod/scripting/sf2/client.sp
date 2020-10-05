@@ -97,6 +97,10 @@ static char g_sOldClientModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Proxy model
 char g_sClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+char g_sClientProxyModelHard[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+char g_sClientProxyModelInsane[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+char g_sClientProxyModelNightmare[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+char g_sClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Nav Data
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
@@ -680,6 +684,12 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		return Plugin_Changed;
 	}
 	
+	if (IsClientInKart(victim) && (attacker == 0 || inflictor == 0))
+	{
+		damage = 0.0;
+		return Plugin_Changed;
+	}
+	
 	char inflictorClass[32];
 	if(inflictor >= 0) GetEdictClassname(inflictor, inflictorClass, sizeof(inflictorClass));
 
@@ -796,6 +806,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 							NormalizeVector(flMyDirection, flMyDirection);
 							ScaleVector(flMyDirection, 32.0);
 							AddVectors(flMyDirection, flMyPos, flMyDirection);
+							int iMaxHealth = SDKCall(g_hSDKGetMaxHealth, victim);
 							
 							float p[3], s[3];
 							MakeVectorFromPoints(flMyPos, flHisPos, p);
@@ -836,12 +847,12 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 								}
 								if (damagecustom == TF_CUSTOM_BACKSTAB) // Modify backstab damage.
 								{
-									damage = float(GetEntProp(victim, Prop_Send, "m_iHealth")) * 0.3;
+									damage = float(iMaxHealth) * 0.3;
 									if (damagetype & DMG_ACID) damage /= 2.0;
 								}
 								
-								Handle hCvar = FindConVar("tf_weapon_criticals");
-								if (hCvar != INVALID_HANDLE && GetConVarBool(hCvar)) damagetype |= DMG_ACID;
+								ConVar hCvar = FindConVar("tf_weapon_criticals");
+								if (hCvar != view_as<ConVar>(INVALID_HANDLE) && GetConVarBool(hCvar)) damagetype |= DMG_ACID;
 								
 								if (!IsClientCritUbercharged(victim))
 								{
@@ -2753,7 +2764,7 @@ static void ClientProcessInteractiveGlow(int client)
 	
 	Handle hTrace = TR_TraceRayFilterEx(flStartPos, flMyEyeAng, MASK_VISIBLE, RayType_Infinite, TraceRayDontHitPlayers, -1);
 	int iEnt = TR_GetEntityIndex(hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	
 	if (IsValidEntity(iEnt))
 	{
@@ -3369,7 +3380,7 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 {
 	switch (action)
 	{
-		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_End: delete menu;
 		case MenuAction_Select:
 		{
 			if (!IsRoundEnding())
@@ -4403,7 +4414,7 @@ void ClientSetGhostModeState(int client, bool bState)
 	Handle message = StartMessageAll("PlayerTauntSoundLoopEnd", USERMSG_RELIABLE);
 	BfWriteByte(message, client);
 	EndMessage();
-	
+
 	if (bState && !IsClientInGame(client)) return;
 	
 	g_bPlayerGhostMode[client] = bState;
@@ -5050,7 +5061,7 @@ float ClientGetBlinkRate(int client)
 		Handle hTrace = TR_TraceRayFilterEx(startPos, endPos, MASK_VISIBLE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, client);
 		TR_GetEndPosition(endPos, hTrace);
 		bool bHit = TR_DidHit(hTrace);
-		CloseHandle(hTrace);
+		delete hTrace;
 		
 		if (bHit)
 		{
@@ -6554,7 +6565,7 @@ stock void ClientUpdateListeningFlags(int client, bool bReset=false)
 						{
 							Handle hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitCharacters);
 							bool bDidHit = TR_DidHit(hTrace);
-							CloseHandle(hTrace);
+							delete hTrace;
 							
 							if (bDidHit)
 							{
@@ -6777,9 +6788,13 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
 {
 	if (!g_bEnabled) return Plugin_Continue;
+
+	int iOwner = GetEntPropEnt(ent, Prop_Send, "moveparent");
+	if (iOwner == other) return Plugin_Handled;
+
 	if (g_bPlayerProxy[other]) return Plugin_Continue;
 	if (IsClientInGhostMode(other)) return Plugin_Continue;
-	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) return Plugin_Continue;
+	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && ((GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) || (g_bPlayerProxy[other]))) return Plugin_Continue;
 	return Plugin_Handled;
 }
 
@@ -6868,7 +6883,7 @@ stock bool IsPointVisibleToPlayer(int client, const float pos[3], bool bCheckFOV
 	
 	Handle hTrace = TR_TraceRayFilterEx(eyePos, pos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, client);
 	bool bHit = TR_DidHit(hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	
 	if (bHit) return false;
 	
@@ -7197,7 +7212,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	{
 		int iWeapon = INVALID_ENT_REFERENCE;
 		Handle hWeapon;
-		Handle hItem;
 		for (int iSlot = 0; iSlot <= 5; iSlot++)
 		{
 			iWeapon = GetPlayerWeaponSlot(client, iSlot);
@@ -7212,7 +7226,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					
 					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 20.0 ; 206 ; 1.33");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-					CloseHandle(hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 326: // The Back Scratcher
@@ -7221,47 +7235,48 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-					CloseHandle(hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 304: // Amputator
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
-					hItem = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
-					int iEnt = TF2Items_GiveNamedItem(client, hItem);
-					CloseHandle(hItem);
+					hWeapon = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 239: //GRU
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
-					hItem = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
-					int iEnt = TF2Items_GiveNamedItem(client, hItem);
-					CloseHandle(hItem);
+					hWeapon = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 1100: //Bread Bite
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
-					hItem = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
-					int iEnt = TF2Items_GiveNamedItem(client, hItem);
-					CloseHandle(hItem);
+					hWeapon = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 426: //Eviction Notice
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
-					hItem = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
-					int iEnt = TF2Items_GiveNamedItem(client, hItem);
-					CloseHandle(hItem);
+					hWeapon = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 			}
 		}
+		delete hWeapon;
 	}
 	//Remove the teleport ability
 	if (IsClientInPvP(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_bPlayerEliminated[client])) //DidClientEscape(client)
@@ -7282,11 +7297,12 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					
 					hWeapon = PrepareItemHandle("tf_weapon_wrench", 589, 0, 0, "93 ; 0.5 ; 732 ; 0.5");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-					CloseHandle(hWeapon);
+					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
 				}
 			}
 		}
+		delete hWeapon;
 	}
 	//Force them to take their melee wep, it prevents the civilian bug.
 	ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
@@ -7367,6 +7383,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 				return Plugin_Changed;
 			}
+			delete hItemOverride;
 		}
 	}
 	
@@ -7407,7 +7424,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0) return;
-	
+
 	int iMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[client]);
 	
 	if (g_bPlayerProxy[client] && iMaster != -1)
@@ -7416,26 +7433,99 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 		NPCGetProfile(iMaster, sProfile, sizeof(sProfile));
 		
 		// Set custom model, if any.
-		char sBuffer[PLATFORM_MAX_PATH];
+		char sBuffer[PLATFORM_MAX_PATH], sBufferHard[PLATFORM_MAX_PATH], sBufferInsane[PLATFORM_MAX_PATH], sBufferNightmare[PLATFORM_MAX_PATH], sBufferApollyon[PLATFORM_MAX_PATH];
 		char sSectionName[64];
 		
 		TF2_RegeneratePlayer(client);
 		
 		char sClassName[64];
 		TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
-		
-		Format(sSectionName, sizeof(sSectionName), "mod_proxy_%s", sClassName);
-		if ((GetRandomStringFromProfile(sProfile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0]) ||
-			(GetRandomStringFromProfile(sProfile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0]))
+
+		if (view_as<bool>(KvGetNum(g_hConfig, "proxy_difficulty_models", 0)))
 		{
-			SetVariantString(sBuffer);
-			AcceptEntityInput(client, "SetCustomModel");
-			SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
-			strcopy(g_sClientProxyModel[client],sizeof(g_sClientProxyModel[]),sBuffer);
-			//Prevent plugins like Model manager to override proxy model.
-			CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT);
-			//PrintToChatAll("Proxy model:%s",g_sClientProxyModel[client]);
+			char sSectionNameHard[128], sSectionNameInsane[128], sSectionNameNightmare[128], sSectionNameApollyon[128];
+			
+			Format(sSectionName, sizeof(sSectionName), "mod_proxy_%s", sClassName);
+			Format(sSectionNameHard, sizeof(sSectionNameHard), "mod_proxy_%s_hard", sClassName);
+			Format(sSectionNameInsane, sizeof(sSectionNameInsane), "mod_proxy_%s_insane", sClassName);
+			Format(sSectionNameNightmare, sizeof(sSectionNameNightmare), "mod_proxy_%s_nightmare", sClassName);
+			Format(sSectionNameApollyon, sizeof(sSectionNameApollyon), "mod_proxy_%s_apollyon", sClassName);
+			
+			if ((GetRandomStringFromProfile(sProfile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0]) ||
+				(GetRandomStringFromProfile(sProfile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0]))
+			{
+				SetVariantString(sBuffer);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+				strcopy(g_sClientProxyModel[client],sizeof(g_sClientProxyModel[]),sBuffer);
+				
+				if ((GetRandomStringFromProfile(sProfile, sSectionNameHard, sBufferHard, sizeof(sBufferHard)) && sBufferHard[0]) ||
+					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_hard", sBufferHard, sizeof(sBufferHard)) && sBufferHard[0]))
+				{
+					strcopy(g_sClientProxyModelHard[client],sizeof(g_sClientProxyModelHard[]),sBufferHard);
+				}
+				else
+				{
+					strcopy(sBufferHard,sizeof(sBufferHard),sBuffer);
+					strcopy(g_sClientProxyModelHard[client],sizeof(g_sClientProxyModelHard[]),sBufferHard);
+				}
+				
+				if ((GetRandomStringFromProfile(sProfile, sSectionNameInsane, sBufferInsane, sizeof(sBufferInsane)) && sBufferInsane[0]) ||
+					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_insane", sBufferInsane, sizeof(sBufferInsane)) && sBufferInsane[0]))
+				{
+					strcopy(g_sClientProxyModelInsane[client],sizeof(g_sClientProxyModelInsane[]),sBufferInsane);
+				}
+				else
+				{
+					strcopy(sBufferInsane,sizeof(sBufferInsane),sBufferHard);
+					strcopy(g_sClientProxyModelInsane[client],sizeof(g_sClientProxyModelInsane[]),sBufferInsane);
+				}
+				
+				if ((GetRandomStringFromProfile(sProfile, sSectionNameNightmare, sBufferNightmare, sizeof(sBufferNightmare)) && sBufferNightmare[0]) ||
+					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_nightmare", sBufferNightmare, sizeof(sBufferNightmare)) && sBufferNightmare[0]))
+				{
+					strcopy(g_sClientProxyModelNightmare[client],sizeof(g_sClientProxyModelNightmare[]),sBufferNightmare);
+				}
+				else
+				{
+					strcopy(sBufferNightmare,sizeof(sBufferNightmare),sBufferInsane);
+					strcopy(g_sClientProxyModelNightmare[client],sizeof(g_sClientProxyModelNightmare[]),sBufferNightmare);
+				}
+				
+				if ((GetRandomStringFromProfile(sProfile, sSectionNameApollyon, sBufferApollyon, sizeof(sBufferApollyon)) && sBufferApollyon[0]) ||
+					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_apollyon", sBufferApollyon, sizeof(sBufferApollyon)) && sBufferApollyon[0]))
+				{
+					strcopy(g_sClientProxyModelApollyon[client],sizeof(g_sClientProxyModelApollyon[]),sBufferApollyon);
+				}
+				else
+				{
+					strcopy(sBufferApollyon,sizeof(sBufferApollyon),sBufferNightmare);
+					strcopy(g_sClientProxyModelApollyon[client],sizeof(g_sClientProxyModelApollyon[]),sBufferApollyon);
+				}
+				
+				CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT);
+			}
 		}
+		else
+		{
+			Format(sSectionName, sizeof(sSectionName), "mod_proxy_%s", sClassName);
+			if ((GetRandomStringFromProfile(sProfile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0]) ||
+				(GetRandomStringFromProfile(sProfile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0]))
+			{
+				SetVariantString(sBuffer);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+				strcopy(g_sClientProxyModel[client],sizeof(g_sClientProxyModel[]),sBuffer);
+				strcopy(g_sClientProxyModelHard[client],sizeof(g_sClientProxyModelHard[]),sBuffer);
+				strcopy(g_sClientProxyModelInsane[client],sizeof(g_sClientProxyModelInsane[]),sBuffer);
+				strcopy(g_sClientProxyModelNightmare[client],sizeof(g_sClientProxyModelNightmare[]),sBuffer);
+				strcopy(g_sClientProxyModelApollyon[client],sizeof(g_sClientProxyModelApollyon[]),sBuffer);
+				//Prevent plugins like Model manager to override proxy model.
+				CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT);
+				//PrintToChatAll("Proxy model:%s",g_sClientProxyModel[client]);
+			}
+		}
+		
 		ClientDisableConstantGlow(client);
 		int iYellow[4] = {255, 208, 0, 255};
 		ClientEnableConstantGlow(client, "head", iYellow);
@@ -7477,7 +7567,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				}
 				Handle ZombieSoul = PrepareItemHandle("tf_wearable", index, 100, 7,"448 ; 1.0 ; 450 ; 1");
 				int entity = TF2Items_GiveNamedItem(client, ZombieSoul);
-				CloseHandle(ZombieSoul);
+				delete ZombieSoul;
 				if( IsValidEdict( entity ) )
 				{
 					SDK_EquipWearable(client, entity);
@@ -7499,14 +7589,57 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 	if(!IsValidClient(client)) return Plugin_Stop;
 	if(!IsPlayerAlive(client)) return Plugin_Stop;
 	if(!g_bPlayerProxy[client]) return Plugin_Stop;
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	
 	char sModel[PLATFORM_MAX_PATH];
 	GetEntPropString(client, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
-	if (strcmp(sModel,g_sClientProxyModel[client]) != 0)
+	switch (iDifficulty)
 	{
-		SetVariantString(g_sClientProxyModel[client]);
-		AcceptEntityInput(client, "SetCustomModel");
-		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+		case Difficulty_Normal:
+		{
+			if (strcmp(sModel,g_sClientProxyModel[client]) != 0)
+			{
+				SetVariantString(g_sClientProxyModel[client]);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+			}
+		}
+		case Difficulty_Hard:
+		{
+			if (strcmp(sModel,g_sClientProxyModelHard[client]) != 0)
+			{
+				SetVariantString(g_sClientProxyModelHard[client]);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+			}
+		}
+		case Difficulty_Insane:
+		{
+			if (strcmp(sModel,g_sClientProxyModelInsane[client]) != 0)
+			{
+				SetVariantString(g_sClientProxyModelInsane[client]);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+			}
+		}
+		case Difficulty_Nightmare:
+		{
+			if (strcmp(sModel,g_sClientProxyModelNightmare[client]) != 0)
+			{
+				SetVariantString(g_sClientProxyModelNightmare[client]);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+			}
+		}
+		case Difficulty_Apollyon:
+		{
+			if (strcmp(sModel,g_sClientProxyModelApollyon[client]) != 0)
+			{
+				SetVariantString(g_sClientProxyModelApollyon[client]);
+				AcceptEntityInput(client, "SetCustomModel");
+				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+			}
+		}
 	}
 	return Plugin_Continue;
 }

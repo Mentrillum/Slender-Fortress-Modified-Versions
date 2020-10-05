@@ -26,7 +26,7 @@ public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param
 				DrawPanelItem(hPanel, sBuffer);
 				
 				SendPanelToClient(hPanel, param1, Panel_SettingsPvPSpawn, 30);
-				CloseHandle(hPanel);
+				delete hPanel;
 			}
 		}
 	}

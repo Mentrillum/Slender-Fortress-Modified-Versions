@@ -143,7 +143,7 @@ public int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2
 {
 	if (action == MenuAction_End) 
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Select)
 	{
@@ -216,7 +216,7 @@ void DisplayResetGroupQueuePointsMenuToClient(int client)
 
 public int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,int param2)
 {
-	if (action == MenuAction_End) CloseHandle(menu);
+	if (action == MenuAction_End) delete menu;
 	else if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack) DisplayAdminGroupMenuToClient(param1);

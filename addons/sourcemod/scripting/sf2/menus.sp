@@ -607,7 +607,7 @@ public int Menu_ClassInfoBackOnly(Handle menu, MenuAction action,int param1,int 
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Select)
 	{
@@ -636,7 +636,7 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				DrawPanelItem(hPanel, sBuffer);
 				
 				SendPanelToClient(hPanel, param1, Panel_SettingsHints, 30);
-				CloseHandle(hPanel);
+				delete hPanel;
 			}
 			case 2:
 			{
@@ -651,7 +651,7 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				DrawPanelItem(hPanel, "Mute opposing team except when I'm a proxy");
 				
 				SendPanelToClient(hPanel, param1, Panel_SettingsMuteMode, 30);
-				CloseHandle(hPanel);
+				delete hPanel;
 			}
 			case 3:
 			{
@@ -667,7 +667,7 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				DrawPanelItem(hPanel, sBuffer);
 				
 				SendPanelToClient(hPanel, param1, Panel_SettingsFilmGrain, 30);
-				CloseHandle(hPanel);
+				delete hPanel;
 			}
 			case 4:
 			{
@@ -683,7 +683,7 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				DrawPanelItem(hPanel, sBuffer);
 				
 				SendPanelToClient(hPanel, param1, Panel_SettingsProxy, 30);
-				CloseHandle(hPanel);
+				delete hPanel;
 			}
 			case 5: DisplayMenu(g_hMenuSettingsFlashlightTemp1, param1, 30);
 		}
@@ -965,7 +965,7 @@ void DisplayQueuePointsMenu(int client)
 		}
 	}
 	
-	CloseHandle(hQueueList);
+	delete hQueueList;
 	
 	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Queue Menu Title", client);
 	SetMenuExitBackButton(menu, true);
@@ -1024,14 +1024,14 @@ void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
 		DisplayQueuePointsMenu(client);
 	}
 	
-	CloseHandle(hPlayers);
+	delete hPlayers;
 }
 
 public int Menu_ViewGroupMembersQueue(Handle menu, MenuAction action,int param1,int param2)
 {
 	switch (action)
 	{
-		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_End: delete menu;
 		case MenuAction_Select: DisplayQueuePointsMenu(param1);
 		case MenuAction_Cancel:
 		{
@@ -1081,7 +1081,7 @@ public int Menu_QueuePoints(Handle menu, MenuAction action,int param1,int param2
 				DisplayMenu(g_hMenuMain, param1, 30);
 			}
 		}
-		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_End: delete menu;
 	}
 }
 
@@ -1116,7 +1116,7 @@ public int Menu_ResetQueuePoints(Handle menu, MenuAction action,int param1,int p
 			DisplayQueuePointsMenu(param1);
 		}
 		
-		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_End: delete menu;
 	}
 }
 
@@ -1158,6 +1158,6 @@ public int Menu_BossList(Handle menu, MenuAction action,int param1,int param2)
 				DisplayMenu(g_hMenuMain, param1, 30);
 			}
 		}
-		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_End: delete menu;
 	}
 }

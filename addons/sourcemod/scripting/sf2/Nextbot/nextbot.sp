@@ -28,6 +28,7 @@ Handle g_hGetCrouchHullHeight;
 Handle g_hGetHullMins;
 Handle g_hGetHullMaxs;
 Handle g_hGetSolidMask;
+Handle g_hGetCurrencyValue;
 
 static Handle g_hSDKGetHullWidth;
 
@@ -494,4 +495,8 @@ public void InitNextBotGameData(Handle hGameData)
 	iOffset = GameConfGetOffset(hGameData, "IBody::GetSolidMask");
 	g_hGetSolidMask = DHookCreate(iOffset, HookType_Raw, ReturnType_Int, ThisPointer_Address, GetSolidMask);
 	if (g_hGetSolidMask == null) SetFailState("Failed to create hook for IBody::GetSolidMask!");
+	
+	iOffset = GameConfGetOffset(hGameData, "CTFBaseBoss::GetCurrencyValue");
+	g_hGetCurrencyValue = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_Address, GetCurrencyValue);
+	if (g_hGetCurrencyValue == null) SetFailState("Failed to create hook for CTFBaseBoss::GetCurrencyValue!");
 }

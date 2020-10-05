@@ -284,7 +284,7 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		CPrintToChat(client, "%T", "SF2 No Players Available", client);
 	}
 	
-	CloseHandle(hPlayers);
+	delete hPlayers;
 }
 
 public int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int param2)
@@ -354,7 +354,7 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		CPrintToChat(client, "%T", "SF2 No Players Available", client);
 	}
 	
-	CloseHandle(hPlayers);
+	delete hPlayers;
 }
 
 public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int param2)
@@ -450,7 +450,7 @@ void DisplayKickFromGroupMenuToClient(int client)
 		CPrintToChat(client, "%T", "SF2 No Players Available", client);
 	}
 	
-	CloseHandle(hPlayers);
+	delete hPlayers;
 }
 
 public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int param2)
@@ -593,7 +593,7 @@ void DisplayInviteToGroupMenuToClient(int client)
 		CPrintToChat(client, "%T", "SF2 No Players Available", client);
 	}
 	
-	CloseHandle(hPlayers);
+	delete hPlayers;
 }
 
 public int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int param2)

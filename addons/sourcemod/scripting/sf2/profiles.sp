@@ -957,7 +957,7 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	SetArrayCell(g_hBossProfileData, iIndex, flBossFOV, BossProfileData_FieldOfView);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxTurnRate, BossProfileData_TurnRate);
 	
-	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH];
+	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH], sSpawnParticleSound[PLATFORM_MAX_PATH], sDespawnParticleSound[PLATFORM_MAX_PATH];
 	KvGetString(kv, "cloak_on_sound", sCOn, sizeof(sCOn));
 	KvGetString(kv, "cloak_off_sound", sCOff, sizeof(sCOff));
 	KvGetString(kv, "player_jarate_sound", sJ, sizeof(sJ));
@@ -975,6 +975,8 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	KvGetString(kv, "mangler_shoot_sound", sManglerShoot, sizeof(sManglerShoot));
 	KvGetString(kv, "baseball_shoot_sound", sBaseballShoot, sizeof(sBaseballShoot));
 	KvGetString(kv, "engine_sound", sEngineSound, sizeof(sEngineSound));
+	KvGetString(kv, "tp_effect_spawn_sound", sSpawnParticleSound, sizeof(sSpawnParticleSound));
+	KvGetString(kv, "tp_effect_despawn_sound", sDespawnParticleSound, sizeof(sDespawnParticleSound));
 
 	TryPrecacheBossProfileSoundPath(sCOn);
 	TryPrecacheBossProfileSoundPath(sCOff);
@@ -993,6 +995,8 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	TryPrecacheBossProfileSoundPath(sManglerShoot);
 	TryPrecacheBossProfileSoundPath(sBaseballShoot);
 	TryPrecacheBossProfileSoundPath(sEngineSound);
+	TryPrecacheBossProfileSoundPath(sSpawnParticleSound);
+	TryPrecacheBossProfileSoundPath(sDespawnParticleSound);
 	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection", 1)))
 	{

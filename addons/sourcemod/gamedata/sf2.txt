@@ -34,6 +34,11 @@
 				"linux"		"136"
 				"windows"	"135"
 			}
+			"CTFBaseBoss::GetCurrencyValue"
+			{
+				"windows"	"329"
+				"linux"		"333"
+			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"windows"	"18"

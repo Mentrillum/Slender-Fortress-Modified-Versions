@@ -1369,7 +1369,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Created an alternate boss loading system (From KitRifty).\n-Boss deceleration now has the same value as the boss' acceleration.\n-Removed unnecessary checks on most admin commands.\n-Upgraded the syntax again."
+		"en"	"-Replaced Absolute Snatcher with Cosmic Snatcher.\n-Added boss difficulty models, names, proxy models.\n-Improved proxy spawnrates on endless chasing scenarios.\n-Added boss light attachments.\n-Fixed a bug where outline owners can see their own outline.\n-Upgraded the syntax yet again.\n-Many more."
 	}
 
 	"SF2 Smite player"

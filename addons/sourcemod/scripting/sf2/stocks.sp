@@ -291,7 +291,7 @@ stock bool IsSpaceOccupied(const float pos[3], const float mins[3], const float 
 	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitEntity, entity);
 	bool bHit = TR_DidHit(hTrace);
 	ref = TR_GetEntityIndex(hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	return bHit;
 }
 
@@ -300,7 +300,7 @@ stock bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3],
 	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
 	bool bHit = TR_DidHit(hTrace);
 	ref = TR_GetEntityIndex(hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	return bHit;
 }
 
@@ -309,7 +309,7 @@ stock bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const 
 	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
 	bool bHit = TR_DidHit(hTrace);
 	ref = TR_GetEntityIndex(hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	return bHit;
 }
 
@@ -318,7 +318,7 @@ stock bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const flo
 	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
 	bool bHit = TR_DidHit(hTrace);
 	ref = TR_GetEntityIndex(hTrace);
-	CloseHandle(hTrace);
+	delete hTrace;
 	return bHit;
 }
 
@@ -1330,7 +1330,7 @@ stock void CloseEvent(Event event)
 }
 public Action CloseEventTimer(Handle timer,Event event)
 {
-	CloseHandle(event);
+	delete event;
 }
 public Action Timer_KillEntity(Handle timer, any entref)
 {

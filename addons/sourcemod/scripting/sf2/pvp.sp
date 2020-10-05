@@ -271,7 +271,7 @@ public void PvP_OnGameFrame()
 				
 				hTrace = TR_TraceHullFilterEx(flOrigin, flOrigin, flMins, flMaxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, iOwnerEntity);
 				iHitEntity = TR_GetEntityIndex(hTrace);
-				CloseHandle(hTrace);
+				delete hTrace;
 				
 				if (IsValidEntity(iHitEntity))
 				{
@@ -400,6 +400,8 @@ public Action PvP_EntitySpawnPost(Handle timer,any ent)
 
 public void Hook_PvPProjectileSpawnPost(int ent)
 {
+	if (!IsValidEntity(ent)) return;
+	
 	char sClass[64];
 	GetEntityClassname(ent, sClass, sizeof(sClass));
 	
@@ -424,7 +426,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 
 			for (int i = 0; i < sizeof(fixWeaponNotCollidingWithTeammates); i++)
 			{
-				if (StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
+				if (IsValidEntity(ent) && StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
 				{
 					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
 					break;
@@ -844,8 +846,8 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		TF2_AddCondition(iClient, TFCond_UberchargedCanteen, 1.5);
 	}
 	
-	CloseHandle(hSpawnPointList);
-	CloseHandle(hClearSpawnPointList);
+	delete hSpawnPointList;
+	delete hClearSpawnPointList;
 }
 
 public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
@@ -937,52 +939,55 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 
 MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
 {
-	if (!IsValidClient(client) || !IsValidEntity(weapon))
+	if (IsValidClient(client) && IsClientInPvP(client) && IsValidEntity(weapon))
+	{
+		static const char fixWeaponPenetrationClasses[][] = 
+		{
+			"tf_weapon_sniperrifle",
+			"tf_weapon_sniperrifle_decap",
+			"tf_weapon_sniperrifle_classic"
+		};
+
+		char sWeaponName[256];
+		GetEntityClassname(weapon, sWeaponName, sizeof(sWeaponName));
+
+		/*
+		 * Fixes the sniper rifle not damaging teammates.
+		 * 
+		 * WHY? For every other hitscan weapon in the game, simply enforcing lag compensation in CTFPlayer::WantsLagCompensationOnEntity()
+		 * works. However, when it comes to weapons that penetrate teammates, the bullet trace will not iterate through teammates. This is
+		 * the case with all sniper rifles, and is the reason why damage is never normally dealt to teammates despite having friendly fire 
+		 * on and lag compensation.
+		 *
+		 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
+		 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
+		 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
+		 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
+		 *
+		 */
+		for (int i = 0; i < sizeof(fixWeaponPenetrationClasses); i++)
+		{
+			if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
+			{
+				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
+				int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+
+				if ((itemDefIndex == 526 || itemDefIndex == 30665) && GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") >= 150.0 )  // The Machina, Shooting Star
+					customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
+				else
+					customDamageType = 0; // no penetration behavior.
+
+				return MRES_Supercede;
+			}
+			else
+			{
+				return MRES_Ignored;
+			}
+		}
+	}
+	else
 	{
 		return MRES_Ignored;
-	}
-	static const char fixWeaponPenetrationClasses[][] = 
-	{
-		"tf_weapon_sniperrifle",
-		"tf_weapon_sniperrifle_decap",
-		"tf_weapon_sniperrifle_classic"
-	};
-
-	char sWeaponName[256];
-	GetEntityClassname(weapon, sWeaponName, sizeof(sWeaponName));
-
-	/*
-	 * Fixes the sniper rifle not damaging teammates.
-	 * 
-	 * WHY? For every other hitscan weapon in the game, simply enforcing lag compensation in CTFPlayer::WantsLagCompensationOnEntity()
-	 * works. However, when it comes to weapons that penetrate teammates, the bullet trace will not iterate through teammates. This is
-	 * the case with all sniper rifles, and is the reason why damage is never normally dealt to teammates despite having friendly fire 
-	 * on and lag compensation.
-	 *
-	 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
-	 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
-	 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
-	 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
-	 *
-	 */
-	for (int i = 0; i < sizeof(fixWeaponPenetrationClasses); i++)
-	{
-		if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
-		{
-			customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
-			int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-
-			if ((itemDefIndex == 526 || itemDefIndex == 30665) && GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") >= 150.0 )  // The Machina, Shooting Star
-				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
-			else
-				customDamageType = 0; // no penetration behavior.
-
-			return MRES_Supercede;
-		}
-		else
-		{
-			return MRES_Ignored;
-		}
 	}
 
 	return MRES_Ignored;

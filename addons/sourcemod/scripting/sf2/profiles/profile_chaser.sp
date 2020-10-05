@@ -17,6 +17,7 @@ enum
 	SF2BossAttackType_Ranged = 1,
 	SF2BossAttackType_Projectile = 2,
 	SF2BossAttackType_ExplosiveDance = 3,
+	SF2BossAttackType_LaserBeam = 4,
 	SF2BossAttackType_Unused,
 	SF2BossAttackType_Custom
 };
@@ -131,6 +132,7 @@ enum
 	ChaserProfileData_ChasesEndlessly,
 
 	ChaserProfileData_CanCloak,
+	ChaserProfileData_CloakOnFlee,
 	ChaserProfileData_CloakCooldownEasy,
 	ChaserProfileData_CloakCooldownNormal,
 	ChaserProfileData_CloakCooldownHard,
@@ -222,7 +224,23 @@ enum
 	ChaserProfileData_IceballSlowdownPercentApollyon,
 	
 	ChaserProfileData_AdvancedDamageEffectsEnabled,
+	ChaserProfileData_AdvancedDamageEffectsRandom,
 	ChaserProfileData_AdvancedDamageEffectsParticles,
+	
+	ChaserProfileData_RandomAdvancedIndexes,
+	ChaserProfileData_RandomAdvancedDurationEasy,
+	ChaserProfileData_RandomAdvancedDurationNormal,
+	ChaserProfileData_RandomAdvancedDurationHard,
+	ChaserProfileData_RandomAdvancedDurationInsane,
+	ChaserProfileData_RandomAdvancedDurationNightmare,
+	ChaserProfileData_RandomAdvancedDurationApollyon,
+	ChaserProfileData_RandomAdvancedSlowdownEasy,
+	ChaserProfileData_RandomAdvancedSlowdownNormal,
+	ChaserProfileData_RandomAdvancedSlowdownHard,
+	ChaserProfileData_RandomAdvancedSlowdownInsane,
+	ChaserProfileData_RandomAdvancedSlowdownNightmare,
+	ChaserProfileData_RandomAdvancedSlowdownApollyon,
+	ChaserProfileData_RandomAdvancedStunType,
 	
 	ChaserProfileData_EnableJarateAdvanced,
 	ChaserProfileData_JarateAdvancedIndexes,
@@ -365,6 +383,12 @@ enum
 	ChaserProfileData_EnableDamageParticles,
 	ChaserProfileData_DamageParticleVolume,
 	ChaserProfileData_DamageParticlePitch,
+	
+	ChaserProfileData_CanSelfHeal,
+	ChaserProfileData_HealStartHealthPercentage,
+	ChaserProfileData_HealPercentageOne,
+	ChaserProfileData_HealPercentageTwo,
+	ChaserProfileData_HealPercentageThree,
 
 	ChaserProfileData_MaxStats
 };
@@ -374,6 +398,11 @@ enum
 	ChaserProfileAttackData_Type = 0,
 	ChaserProfileAttackData_CanUseAgainstProps,
 	ChaserProfileAttackData_Damage,
+	ChaserProfileAttackData_DamageEasy,
+	ChaserProfileAttackData_DamageHard,
+	ChaserProfileAttackData_DamageInsane,
+	ChaserProfileAttackData_DamageNightmare,
+	ChaserProfileAttackData_DamageApollyon,
 	ChaserProfileAttackData_DamageVsProps,
 	ChaserProfileAttackData_DamageForce,
 	ChaserProfileAttackData_DamageType,
@@ -398,6 +427,14 @@ enum
 	ChaserProfileAttackData_BulletCount,
 	ChaserProfileAttackData_BulletDamage,
 	ChaserProfileAttackData_BulletSpread,
+	ChaserProfileAttackData_LaserDamage,
+	ChaserProfileAttackData_LaserSize,
+	ChaserProfileAttackData_LaserColorR,
+	ChaserProfileAttackData_LaserColorG,
+	ChaserProfileAttackData_LaserColorB,
+	ChaserProfileAttackData_LaserAttachment,
+	ChaserProfileAttackData_LaserDuration,
+	ChaserProfileAttackData_PullIn,
 	ChaserProfileAttackData_MaxStats
 };
 
@@ -417,6 +454,8 @@ enum
 	ChaserAnimationType_DeathPlaybackRate,
 	ChaserAnimationType_Spawn = 0,
 	ChaserAnimationType_SpawnPlaybackRate,
+	ChaserAnimationType_Heal = 0,
+	ChaserAnimationType_HealPlaybackRate,
 	ChaserAnimationType_Deathcam = 0,
 	ChaserAnimationType_DeathcamPlaybackRate
 };
@@ -435,6 +474,8 @@ enum
 	ChaserAnimation_DeathAnimations, //Array that contains all the death animations
 	ChaserAnimation_JumpAnimations, //Array that contains all the jump animations
 	ChaserAnimation_SpawnAnimations, //Array that contains all the spawn animations
+	ChaserAnimation_FleeInitialAnimations, //Array that contains all the flee initial animations
+	ChaserAnimation_HealAnimations, //Array that contains all the self healing animations
 	ChaserAnimation_DeathcamAnimations, //Array that contains all the deathcam animations
 	ChaserAnimation_MaxAnimations
 };
@@ -471,9 +512,24 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		public get() { return GetChaserProfileEnableAdvancedDamageEffects(this.UniqueProfileIndex); }
 	}
 
+	property bool AdvancedDamageEffectsRandom
+	{
+		public get() { return GetChaserProfileEnableAdvancedDamageEffectsRandom(this.UniqueProfileIndex); }
+	}
+
 	property bool AttachDamageEffectsParticle
 	{
 		public get() { return GetChaserProfileEnableAdvancedDamageParticles(this.UniqueProfileIndex); }
+	}
+	
+	property int RandomAttackIndexes
+	{
+		public get() { return GetChaserProfileRandomAttackIndexes(this.UniqueProfileIndex); }
+	}
+		
+	property int RandomAttackStunType
+	{
+		public get() { return GetChaserProfileRandomStunType(this.UniqueProfileIndex); }
 	}
 
 	property bool JaratePlayerOnHit
@@ -695,6 +751,31 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	{
 		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ChasesEndlessly)); }
 	}
+	
+	property bool SelfHealState
+	{
+		public get() { return GetChaserProfileSelfHealState(this.UniqueProfileIndex); }
+	}
+	
+	property float SelfHealStartPercentage
+	{
+		public get() { return GetChaserProfileSelfHealStartPercentage(this.UniqueProfileIndex); }
+	}
+	
+	property float SelfHealPercentageOne
+	{
+		public get() { return GetChaserProfileSelfHealPercentageOne(this.UniqueProfileIndex); }
+	}
+	
+	property float SelfHealPercentageTwo
+	{
+		public get() { return GetChaserProfileSelfHealPercentageTwo(this.UniqueProfileIndex); }
+	}
+	
+	property float SelfHealPercentageThree
+	{
+		public get() { return GetChaserProfileSelfHealPercentageThree(this.UniqueProfileIndex); }
+	}
 
 	public SF2ChaserBossProfile(int profileIndex)
 	{
@@ -795,6 +876,16 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	{
 		return GetChaserProfileIceballSlowdownPercent(this.UniqueProfileIndex, difficulty);
 	}
+	
+	public float GetRandomDuration(int difficulty)
+	{
+		return GetChaserProfileRandomEffectDuration(this.UniqueProfileIndex, difficulty);
+	}
+	
+	public float GetRandomSlowdown(int difficulty)
+	{
+		return GetChaserProfileRandomEffectSlowdown(this.UniqueProfileIndex, difficulty);
+	}
 
 	public float GetJarateDuration(int difficulty)
 	{
@@ -861,9 +952,9 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		return GetChaserProfileAttackRepeat(this.UniqueProfileIndex, attackIndex);
 	}
 
-	public float GetAttackDamage(int attackIndex)
+	public float GetAttackDamage(int attackIndex, int difficulty)
 	{
-		return GetChaserProfileAttackDamage(this.UniqueProfileIndex, attackIndex);
+		return GetChaserProfileAttackDamage(this.UniqueProfileIndex, attackIndex, difficulty);
 	}
 
 	public float GetAttackDamageVsProps(int attackIndex)
@@ -959,6 +1050,38 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	public float GetAttackBulletSpread(int attackIndex)
 	{
 		return GetChaserProfileAttackBulletSpread(this.UniqueProfileIndex, attackIndex);
+	}
+	
+	public float GetAttackLaserDamage(int attackIndex)
+	{
+		return GetChaserProfileAttackLaserDamage(this.UniqueProfileIndex, attackIndex);
+	}
+	
+	public float GetAttackLaserSize(int attackIndex)
+	{
+		return GetChaserProfileAttackLaserSize(this.UniqueProfileIndex, attackIndex);
+	}
+
+	public void GetAttackLaserColor(int color[3],int attackIndex)
+	{
+		color[0] = GetChaserProfileAttackLaserColorR(this.UniqueProfileIndex, attackIndex);
+		color[1] = GetChaserProfileAttackLaserColorG(this.UniqueProfileIndex, attackIndex);
+		color[2] = GetChaserProfileAttackLaserColorB(this.UniqueProfileIndex, attackIndex);
+	}
+
+	public bool IsLaserOnAttachment(int attackIndex)
+	{
+		return GetChaserProfileEnableLaserAttachment(this.UniqueProfileIndex, attackIndex);
+	}
+	
+	public float GetAttackLaserDuration(int attackIndex)
+	{
+		return GetChaserProfileAttackLaserDuration(this.UniqueProfileIndex, attackIndex);
+	}
+	
+	public bool CanAttackPullIn(int attackIndex)
+	{
+		return GetChaserProfileAttackPullIn(this.UniqueProfileIndex, attackIndex);
 	}
 
 	public void GetSmiteColor(int color[4])
@@ -1219,7 +1342,41 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	float flProjectileChargeUpDurationApollyon = KvGetFloat(kv, "projectile_chargeup_duration_apollyon", flProjectileChargeUpDurationNightmare);
 	
 	bool bAdvancedDamageEffectsEnabled = view_as<bool>(KvGetNum(kv, "player_damage_effects"));
+	bool bAdvancedDamageEffectsRandom = view_as<bool>(KvGetNum(kv, "player_damage_random_effects"));
 	bool bAdvancedDamageEffectsParticles = view_as<bool>(KvGetNum(kv, "player_attach_particle", 1));
+	
+	int iRandomEffectAttackIndexes = KvGetNum(kv, "player_random_attack_indexes", 1);
+	if (iRandomEffectAttackIndexes < 0) iRandomEffectAttackIndexes = 1;
+	
+	float flRandomEffectDurationNormal = KvGetFloat(kv, "player_random_duration");
+	float flRandomEffectDurationEasy = KvGetFloat(kv, "player_random_duration_easy", flRandomEffectDurationNormal);
+	float flRandomEffectDurationHard = KvGetFloat(kv, "player_random_duration_hard", flRandomEffectDurationNormal);
+	float flRandomEffectDurationInsane = KvGetFloat(kv, "player_random_duration_insane", flRandomEffectDurationHard);
+	float flRandomEffectDurationNightmare = KvGetFloat(kv, "player_random_duration_nightmare", flRandomEffectDurationInsane);
+	float flRandomEffectDurationApollyon = KvGetFloat(kv, "player_random_duration_apollyon", flRandomEffectDurationNightmare);
+	
+	float flRandomEffectSlowdownNormal = KvGetFloat(kv, "player_random_slowdown");
+	if (flRandomEffectSlowdownNormal > 1.0) flRandomEffectSlowdownNormal = 1.0;
+	if (flRandomEffectSlowdownNormal < 0.0) flRandomEffectSlowdownNormal = 0.0;
+	float flRandomEffectSlowdownEasy = KvGetFloat(kv, "player_random_slowdown_easy", flRandomEffectSlowdownNormal);
+	if (flRandomEffectSlowdownEasy > 1.0) flRandomEffectSlowdownEasy = 1.0;
+	if (flRandomEffectSlowdownEasy < 0.0) flRandomEffectSlowdownEasy = 0.0;
+	float flRandomEffectSlowdownHard = KvGetFloat(kv, "player_random_slowdown_hard", flRandomEffectSlowdownNormal);
+	if (flRandomEffectSlowdownHard > 1.0) flRandomEffectSlowdownHard = 1.0;
+	if (flRandomEffectSlowdownHard < 0.0) flRandomEffectSlowdownHard = 0.0;
+	float flRandomEffectSlowdownInsane = KvGetFloat(kv, "player_random_slowdown_insane", flRandomEffectSlowdownHard);
+	if (flRandomEffectSlowdownInsane > 1.0) flRandomEffectSlowdownInsane = 1.0;
+	if (flRandomEffectSlowdownInsane < 0.0) flRandomEffectSlowdownInsane = 0.0;
+	float flRandomEffectSlowdownNightmare = KvGetFloat(kv, "player_random_slowdown_nightmare", flRandomEffectSlowdownInsane);
+	if (flRandomEffectSlowdownNightmare > 1.0) flRandomEffectSlowdownNightmare = 1.0;
+	if (flRandomEffectSlowdownNightmare < 0.0) flRandomEffectSlowdownNightmare = 0.0;
+	float flRandomEffectSlowdownApollyon = KvGetFloat(kv, "player_random_slowdown_apollyon", flRandomEffectSlowdownNightmare);
+	if (flRandomEffectSlowdownApollyon > 1.0) flRandomEffectSlowdownApollyon = 1.0;
+	if (flRandomEffectSlowdownApollyon < 0.0) flRandomEffectSlowdownApollyon = 0.0;
+	
+	int iRandomStunType = KvGetNum(kv, "player_random_stun_type");
+	if (iRandomStunType < 0) iRandomStunType = 0;
+	if (iRandomStunType > 3) iRandomStunType = 3;
 	
 	bool bJaratePlayerAdvanced = view_as<bool>(KvGetNum(kv, "player_jarate_on_hit"));
 	
@@ -1436,6 +1593,20 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	bool bAutoChaseEnabled = view_as<bool>(KvGetNum(kv, "auto_chase_enabled", 0));
 
 	bool bChasesEndlessly = view_as<bool>(KvGetNum(kv,"boss_chases_endlessly", 0));
+	
+	bool bSelfHeal = view_as<bool>(KvGetNum(kv, "self_heal_enabled", 0));
+	float flHealthPercentageToHeal = KvGetFloat(kv, "health_percentage_to_heal", 0.35);
+	if (flHealthPercentageToHeal < 0.0) flHealthPercentageToHeal = 0.0;
+	if (flHealthPercentageToHeal > 0.999) flHealthPercentageToHeal = 0.999;
+	float flHealPercentageOne = KvGetFloat(kv, "heal_percentage_one", 0.75);
+	if (flHealPercentageOne < 0.0) flHealPercentageOne = 0.0;
+	if (flHealPercentageOne > 1.0) flHealPercentageOne = 1.0;
+	float flHealPercentageTwo = KvGetFloat(kv, "heal_percentage_two", 0.5);
+	if (flHealPercentageTwo < 0.0) flHealPercentageTwo = 0.0;
+	if (flHealPercentageTwo > 1.0) flHealPercentageTwo = 1.0;
+	float flHealPercentageThree = KvGetFloat(kv, "heal_percentage_three", 0.25);
+	if (flHealPercentageThree < 0.0) flHealPercentageThree = 0.0;
+	if (flHealPercentageThree > 1.0) flHealPercentageThree = 1.0;
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flBossStepSize, ChaserProfileData_StepSize);
 	
@@ -1599,7 +1770,23 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flProjectileChargeUpDurationApollyon, ChaserProfileData_ProjectileChargeUpApollyon);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bAdvancedDamageEffectsEnabled, ChaserProfileData_AdvancedDamageEffectsEnabled);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bAdvancedDamageEffectsRandom, ChaserProfileData_AdvancedDamageEffectsRandom);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bAdvancedDamageEffectsParticles, ChaserProfileData_AdvancedDamageEffectsParticles);
+	
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iRandomEffectAttackIndexes, ChaserProfileData_RandomAdvancedIndexes);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectDurationEasy, ChaserProfileData_RandomAdvancedDurationEasy);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectDurationNormal, ChaserProfileData_RandomAdvancedDurationNormal);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectDurationHard, ChaserProfileData_RandomAdvancedDurationHard);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectDurationInsane, ChaserProfileData_RandomAdvancedDurationInsane);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectDurationNightmare, ChaserProfileData_RandomAdvancedDurationNightmare);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectDurationApollyon, ChaserProfileData_RandomAdvancedDurationApollyon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectSlowdownEasy, ChaserProfileData_RandomAdvancedSlowdownEasy);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectSlowdownNormal, ChaserProfileData_RandomAdvancedSlowdownNormal);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectSlowdownHard, ChaserProfileData_RandomAdvancedSlowdownHard);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectSlowdownInsane, ChaserProfileData_RandomAdvancedSlowdownInsane);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectSlowdownNightmare, ChaserProfileData_RandomAdvancedSlowdownNightmare);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flRandomEffectSlowdownApollyon, ChaserProfileData_RandomAdvancedSlowdownApollyon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iRandomStunType, ChaserProfileData_RandomAdvancedStunType);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bJaratePlayerAdvanced, ChaserProfileData_EnableJarateAdvanced);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iJaratePlayerAttackIndexes, ChaserProfileData_JarateAdvancedIndexes);
@@ -1741,7 +1928,13 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flTrapSpawnCooldownInsane, ChaserProfileData_TrapSpawnCooldownInsane);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flTrapSpawnCooldownNightmare, ChaserProfileData_TrapSpawnCooldownNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flTrapSpawnCooldownApollyon, ChaserProfileData_TrapSpawnCooldownApollyon);
-		
+	
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bSelfHeal, ChaserProfileData_CanSelfHeal);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flHealthPercentageToHeal, ChaserProfileData_HealStartHealthPercentage);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flHealPercentageOne, ChaserProfileData_HealPercentageOne);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flHealPercentageTwo, ChaserProfileData_HealPercentageTwo);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flHealPercentageThree, ChaserProfileData_HealPercentageThree);
+
 	g_hChaserProfileData.Set(iUniqueProfileIndex, KvGetFloat(kv, "memory_lifetime", 10.0), ChaserProfileData_MemoryLifeTime);
 	
 	float flDefaultAwarenessIncreaseRate = KvGetFloat(kv, "awareness_rate_increase", 75.0);
@@ -1810,6 +2003,12 @@ static int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		if (flAttackRange < 0.0) flAttackRange = 0.0;
 		
 		float flAttackDamage = KvGetFloat(kv, "attack_damage");
+		float flAttackDamageEasy = KvGetFloat(kv, "attack_damage_easy", flAttackDamage);
+		float flAttackDamageHard = KvGetFloat(kv, "attack_damage_hard", flAttackDamage);
+		float flAttackDamageInsane = KvGetFloat(kv, "attack_damage_insane", flAttackDamageHard);
+		float flAttackDamageNightmare = KvGetFloat(kv, "attack_damage_nightmare", flAttackDamageInsane);
+		float flAttackDamageApollyon = KvGetFloat(kv, "attack_damage_apollyon", flAttackDamageNightmare);
+		
 		float flAttackDamageVsProps = KvGetFloat(kv, "attack_damage_vs_props", flAttackDamage);
 		float flAttackDamageForce = KvGetFloat(kv, "attack_damageforce");
 		
@@ -1882,37 +2081,63 @@ static int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		float flAttackBulletSpread = KvGetFloat(kv, "attack_bullet_spread", 0.1);
 		if (flAttackBulletSpread < 0.0) flAttackBulletSpread = 0.0;
 		
-		char sAtkWeaponString[PLATFORM_MAX_PATH];
-		KvGetString(kv, "attack_weapontype", sAtkWeaponString, sizeof(sAtkWeaponString));
+		float flAttackLaserDamage = KvGetFloat(kv, "attack_laser_damage", 25.0);
+		if (flAttackLaserDamage < 0.0) flAttackLaserDamage = 0.0;
 		
-		int iAttackIndex = PushArrayCell(hAttacks, -1);
+		float flAttackLaserSize = KvGetFloat(kv, "attack_laser_size", 12.0);
+		if (flAttackLaserSize < 0.0) flAttackLaserSize = 0.0;
+
+		int iAttackLaserColorR = KvGetNum(kv, "attack_laser_color_r", 255);
+		int iAttackLaserColorG = KvGetNum(kv, "attack_laser_color_g", 255);
+		int iAttackLaserColorB = KvGetNum(kv, "attack_laser_color_b", 255);
 		
-		SetArrayCell(hAttacks, iAttackIndex, iAttackType, ChaserProfileAttackData_Type);
-		SetArrayCell(hAttacks, iAttackIndex, bAttackProps, ChaserProfileAttackData_CanUseAgainstProps);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackRange, ChaserProfileAttackData_Range);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackDamage, ChaserProfileAttackData_Damage);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackDamageVsProps, ChaserProfileAttackData_DamageVsProps);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackDamageForce, ChaserProfileAttackData_DamageForce);
-		SetArrayCell(hAttacks, iAttackIndex, iAttackDamageType, ChaserProfileAttackData_DamageType);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackDamageDelay, ChaserProfileAttackData_DamageDelay);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackDuration, ChaserProfileAttackData_Duration);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackSpread, ChaserProfileAttackData_Spread);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackBeginRange, ChaserProfileAttackData_BeginRange);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackBeginFOV, ChaserProfileAttackData_BeginFOV);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackCooldown, ChaserProfileAttackData_Cooldown);
-		SetArrayCell(hAttacks, iAttackIndex, iAttackDisappear, ChaserProfileAttackData_Disappear);
-		SetArrayCell(hAttacks, iAttackIndex, iAttackRepeat, ChaserProfileAttackData_Repeat);
-		SetArrayCell(hAttacks, iAttackIndex, iAttackWeaponInt, ChaserProfileAttackData_WeaponInt);
-		SetArrayCell(hAttacks, iAttackIndex, bAttackWeapons, ChaserProfileAttackData_CanUseWeaponTypes);
-		SetArrayCell(hAttacks, iAttackIndex, bAttackLifeSteal, ChaserProfileAttackData_LifeStealEnabled);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackLifeStealDuration, ChaserProfileAttackData_LifeStealDuration);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackProjectileDamage, ChaserProfileAttackData_ProjectileDamage);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackProjectileSpeed, ChaserProfileAttackData_ProjectileSpeed);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackProjectileRadius, ChaserProfileAttackData_ProjectileRadius);
-		SetArrayCell(hAttacks, iAttackIndex, bAttackCritProjectiles, ChaserProfileAttackData_ProjectileCrits);
-		SetArrayCell(hAttacks, iAttackIndex, iAttackBulletCount, ChaserProfileAttackData_BulletCount);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackBulletDamage, ChaserProfileAttackData_BulletDamage);
-		SetArrayCell(hAttacks, iAttackIndex, flAttackBulletSpread, ChaserProfileAttackData_BulletSpread);
+		bool bAttackLaserAttachment = view_as<bool>(KvGetNum(kv, "attack_laser_attachment", 0));
+		
+		float flAttackLaserDuration = KvGetFloat(kv, "attack_laser_duration", flAttackDuration);
+		
+		bool bAttackPullIn = view_as<bool>(KvGetNum(kv, "attack_pull_player_in", 0));
+
+		int iAttackIndex = hAttacks.Push(-1);
+		
+		hAttacks.Set(iAttackIndex, iAttackType, ChaserProfileAttackData_Type);
+		hAttacks.Set(iAttackIndex, bAttackProps, ChaserProfileAttackData_CanUseAgainstProps);
+		hAttacks.Set(iAttackIndex, flAttackRange, ChaserProfileAttackData_Range);
+		hAttacks.Set(iAttackIndex, flAttackDamage, ChaserProfileAttackData_Damage);
+		hAttacks.Set(iAttackIndex, flAttackDamageEasy, ChaserProfileAttackData_DamageEasy);
+		hAttacks.Set(iAttackIndex, flAttackDamageHard, ChaserProfileAttackData_DamageHard);
+		hAttacks.Set(iAttackIndex, flAttackDamageInsane, ChaserProfileAttackData_DamageInsane);
+		hAttacks.Set(iAttackIndex, flAttackDamageNightmare, ChaserProfileAttackData_DamageNightmare);
+		hAttacks.Set(iAttackIndex, flAttackDamageApollyon, ChaserProfileAttackData_DamageApollyon);
+		hAttacks.Set(iAttackIndex, flAttackDamageVsProps, ChaserProfileAttackData_DamageVsProps);
+		hAttacks.Set(iAttackIndex, flAttackDamageForce, ChaserProfileAttackData_DamageForce);
+		hAttacks.Set(iAttackIndex, iAttackDamageType, ChaserProfileAttackData_DamageType);
+		hAttacks.Set(iAttackIndex, flAttackDamageDelay, ChaserProfileAttackData_DamageDelay);
+		hAttacks.Set(iAttackIndex, flAttackDuration, ChaserProfileAttackData_Duration);
+		hAttacks.Set(iAttackIndex, flAttackSpread, ChaserProfileAttackData_Spread);
+		hAttacks.Set(iAttackIndex, flAttackBeginRange, ChaserProfileAttackData_BeginRange);
+		hAttacks.Set(iAttackIndex, flAttackBeginFOV, ChaserProfileAttackData_BeginFOV);
+		hAttacks.Set(iAttackIndex, flAttackCooldown, ChaserProfileAttackData_Cooldown);
+		hAttacks.Set(iAttackIndex, iAttackDisappear, ChaserProfileAttackData_Disappear);
+		hAttacks.Set(iAttackIndex, iAttackRepeat, ChaserProfileAttackData_Repeat);
+		hAttacks.Set(iAttackIndex, iAttackWeaponInt, ChaserProfileAttackData_WeaponInt);
+		hAttacks.Set(iAttackIndex, bAttackWeapons, ChaserProfileAttackData_CanUseWeaponTypes);
+		hAttacks.Set(iAttackIndex, bAttackLifeSteal, ChaserProfileAttackData_LifeStealEnabled);
+		hAttacks.Set(iAttackIndex, flAttackLifeStealDuration, ChaserProfileAttackData_LifeStealDuration);
+		hAttacks.Set(iAttackIndex, flAttackProjectileDamage, ChaserProfileAttackData_ProjectileDamage);
+		hAttacks.Set(iAttackIndex, flAttackProjectileSpeed, ChaserProfileAttackData_ProjectileSpeed);
+		hAttacks.Set(iAttackIndex, flAttackProjectileRadius, ChaserProfileAttackData_ProjectileRadius);
+		hAttacks.Set(iAttackIndex, bAttackCritProjectiles, ChaserProfileAttackData_ProjectileCrits);
+		hAttacks.Set(iAttackIndex, iAttackBulletCount, ChaserProfileAttackData_BulletCount);
+		hAttacks.Set(iAttackIndex, flAttackBulletDamage, ChaserProfileAttackData_BulletDamage);
+		hAttacks.Set(iAttackIndex, flAttackBulletSpread, ChaserProfileAttackData_BulletSpread);
+		hAttacks.Set(iAttackIndex, flAttackLaserDamage, ChaserProfileAttackData_LaserDamage);
+		hAttacks.Set(iAttackIndex, flAttackLaserSize, ChaserProfileAttackData_LaserSize);
+		hAttacks.Set(iAttackIndex, iAttackLaserColorR, ChaserProfileAttackData_LaserColorR);
+		hAttacks.Set(iAttackIndex, iAttackLaserColorG, ChaserProfileAttackData_LaserColorG);
+		hAttacks.Set(iAttackIndex, iAttackLaserColorB, ChaserProfileAttackData_LaserColorB);
+		hAttacks.Set(iAttackIndex, bAttackLaserAttachment, ChaserProfileAttackData_LaserAttachment);
+		hAttacks.Set(iAttackIndex, flAttackLaserDuration, ChaserProfileAttackData_LaserDuration);
+		hAttacks.Set(iAttackIndex, bAttackPullIn, ChaserProfileAttackData_PullIn);
 		
 		if (iMaxAttacks > 0)//Backward compatibility
 		{
@@ -2127,6 +2352,34 @@ float GetChaserProfileProjectileRadius(int iChaserProfileIndex,int iDifficulty)
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_ProjectileRadiusNormal));
 }
 
+float GetChaserProfileRandomEffectDuration(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationNormal));
+}
+
+float GetChaserProfileRandomEffectSlowdown(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownNormal));
+}
+
 float GetChaserProfileJaratePlayerDuration(int iChaserProfileIndex,int iDifficulty)
 {
 	switch (iDifficulty)
@@ -2284,6 +2537,16 @@ int GetChaserProfileAttackCount(int iChaserProfileIndex)
 	return GetArraySize(hAttacks);
 }
 
+int GetChaserProfileRandomAttackIndexes(int iChaserProfileIndex)
+{
+	return GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedIndexes);
+}
+
+int GetChaserProfileRandomStunType(int iChaserProfileIndex)
+{
+	return GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_RandomAdvancedStunType);
+}
+
 int GetChaserProfileJarateAttackIndexes(int iChaserProfileIndex)
 {
 	return GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_JarateAdvancedIndexes);
@@ -2385,10 +2648,19 @@ int GetChaserProfileAttackRepeat(int iChaserProfileIndex,int iAttackIndex)
 	return GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_Repeat);
 }
 
-float GetChaserProfileAttackDamage(int iChaserProfileIndex,int  iAttackIndex)
+float GetChaserProfileAttackDamage(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
 {
 	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
-	
+
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_DamageEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_DamageHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_DamageInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_DamageNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_DamageApollyon));
+	}
+
 	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_Damage));
 }
 
@@ -2446,6 +2718,62 @@ float GetChaserProfileAttackBulletSpread(int iChaserProfileIndex,int  iAttackInd
 	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
 	
 	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_BulletSpread));
+}
+
+float GetChaserProfileAttackLaserDamage(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserDamage));
+}
+
+float GetChaserProfileAttackLaserSize(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserSize));
+}
+
+int GetChaserProfileAttackLaserColorR(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserColorR);
+}
+
+int GetChaserProfileAttackLaserColorG(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserColorG);
+}
+
+int GetChaserProfileAttackLaserColorB(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserColorB);
+}
+
+bool GetChaserProfileEnableLaserAttachment(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<bool>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserAttachment));
+}
+
+float GetChaserProfileAttackLaserDuration(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_LaserDuration));
+}
+
+bool GetChaserProfileAttackPullIn(int iChaserProfileIndex,int iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<bool>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_PullIn));
 }
 
 float GetChaserProfileAttackDamageVsProps(int iChaserProfileIndex,int  iAttackIndex)
@@ -2528,6 +2856,11 @@ bool GetChaserProfileAttackLifeStealState(int iChaserProfileIndex,int iAttackInd
 bool GetChaserProfileEnableAdvancedDamageEffects(int iChaserProfileIndex)
 {
 	return view_as<bool>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AdvancedDamageEffectsEnabled));
+}
+
+bool GetChaserProfileEnableAdvancedDamageEffectsRandom(int iChaserProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_AdvancedDamageEffectsRandom));
 }
 
 bool GetChaserProfileEnableAdvancedDamageParticles(int iChaserProfileIndex)
@@ -2856,6 +3189,31 @@ float GetChaserProfileTrapSpawnCooldown(int iChaserProfileIndex,int iDifficulty)
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownNormal));
 }
 
+bool GetChaserProfileSelfHealState(int iChaserProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_CanSelfHeal));
+}
+
+float GetChaserProfileSelfHealStartPercentage(int iChaserProfileIndex)
+{
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_HealStartHealthPercentage));
+}
+
+float GetChaserProfileSelfHealPercentageOne(int iChaserProfileIndex)
+{
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_HealPercentageOne));
+}
+
+float GetChaserProfileSelfHealPercentageTwo(int iChaserProfileIndex)
+{
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_HealPercentageTwo));
+}
+
+float GetChaserProfileSelfHealPercentageThree(int iChaserProfileIndex)
+{
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_HealPercentageThree));
+}
+
 stock float GetChaserProfileAwarenessIncreaseRate(int iChaserProfileIndex,int difficulty)
 {
 	switch (difficulty)
@@ -3150,6 +3508,18 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_spawn");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_spawn_playbackrate");
 		}
+		case ChaserAnimation_FleeInitialAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "fleestart");
+			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_fleestart");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_fleestart_playbackrate");
+		}
+		case ChaserAnimation_HealAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "heal");
+			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_heal");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_heal_playbackrate");
+		}
 		case ChaserAnimation_DeathcamAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
@@ -3259,6 +3629,11 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "spawn");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_spawn_playbackrate");
 		}
+		case ChaserAnimation_HealAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "heal");
+			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_heal_playbackrate");
+		}
 		case ChaserAnimation_DeathcamAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
@@ -3309,6 +3684,19 @@ stock int GetProfileAttackNum(const char[] sProfile, const char[] keyValue,int d
 	IntToString(iAttackIndex, sKey, sizeof(sKey));
 	KvJumpToKey(g_hConfig, sKey);
 	return KvGetNum(g_hConfig, keyValue, defaultValue);
+}
+
+stock float GetProfileAttackFloat(const char[] sProfile, const char[] keyValue,float defaultValue=0.0, const int iAttackIndex)
+{
+	if (!IsProfileValid(sProfile)) return defaultValue;
+	
+	char sKey[4];
+	KvRewind(g_hConfig);
+	KvJumpToKey(g_hConfig, sProfile);
+	KvJumpToKey(g_hConfig, "attacks");
+	IntToString(iAttackIndex, sKey, sizeof(sKey));
+	KvJumpToKey(g_hConfig, sKey);
+	return KvGetFloat(g_hConfig, keyValue, defaultValue);
 }
 
 stock bool GetProfileAttackString(const char[] sProfile, const char[] keyValue, char[] sBuffer, int iLenght, const char[] sDefaultValue = "", const int iAttackIndex)
