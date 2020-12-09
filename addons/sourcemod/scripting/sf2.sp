@@ -9445,7 +9445,6 @@ void SpawnPages()
 						
 						PushArrayCell(hButtStallion, ent);
 						SetArrayCell(hArray, iIndex, true, 1);
-						delete hButtStallion;
 					}
 					else
 					{
@@ -9498,7 +9497,6 @@ void SpawnPages()
 			{
 				Handle hButtStallion = view_as<Handle>(GetArrayCell(hArray, i));
 				ent = GetArrayCell(hButtStallion, GetRandomInt(0, GetArraySize(hButtStallion) - 1));
-				delete hButtStallion;
 			}
 			else
 			{
