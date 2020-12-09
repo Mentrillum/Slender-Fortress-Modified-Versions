@@ -3281,6 +3281,8 @@ public Action Command_ForceState(int iClient,int args)
 		
 		GetClientName(target, sName, sizeof(sName));
 		
+		if (g_bPlayerProxy[target]) continue;//Can't force proxies
+		
 		if (iState && g_bPlayerEliminated[target])
 		{
 			SetClientPlayState(target, true);
