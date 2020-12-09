@@ -1,12 +1,14 @@
 Current developer: [Mentrillum](https://steamcommunity.com/id/Mentrillum/)
 
-New versions coder/developer: [Kenzzer](http://steamcommunity.com/id/Benoist3012/)
+New versions programmer: [Kenzzer](http://steamcommunity.com/id/Benoist3012/)
 
-Original coder: [KitRifty](https://github.com/KitRifty)
+Original programmer: [KitRifty](https://github.com/KitRifty)
 
 Special thanks to:
 
-- x3m77rus for making russian translations, and updating some part of the code to support more translation text.
+- x3m77rus + Blueberryy for making russian translations, and updating some part of the code to support more translation text.
+- Blad3z for making Finnish translations.
+- Glacetomic for the sweet Slender Fortress 2 Modified logo
 
 # Slender Fortress Modified Versions
 
