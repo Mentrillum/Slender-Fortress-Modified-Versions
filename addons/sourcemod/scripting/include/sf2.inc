@@ -178,6 +178,7 @@ enum SF2RoundState
 #define PROJ_MANGLER (1 << 6)
 #define PROJ_BASEBALL (1 << 7)
 #define PROJ_FIREBALL_ATTACK (1 << 8)
+#define PROJ_ICEBALL_ATTACK (1 << 9)
 
 /**
  * Called when a boss is added into the game.

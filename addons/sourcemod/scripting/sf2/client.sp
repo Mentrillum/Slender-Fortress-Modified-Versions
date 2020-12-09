@@ -349,7 +349,7 @@ public void Hook_ClientPreThink(int client)
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == iWeapon)
 								{
-									flSprintSpeed += (flSprintSpeed * 0.05);
+									flSprintSpeed += (flSprintSpeed * 0.025);
 								}
 							}
 							case 239: // Gloves of Running Urgently
@@ -744,6 +744,25 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				EmitSoundToClient(victim, g_sSlenderIceballImpactSound[iBossIndex], _, MUSIC_CHAN);
 				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
 				TF2_StunPlayer(victim, NPCChaserGetIceballSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, victim);
+				if (g_bPlayerEliminated[victim])
+				{
+					CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(victim));
+				}
+			}
+		}
+	}
+	if (IsValidEntity(inflictor) && GetEntityClassname(inflictor, classname, sizeof(classname)) && StrEqual(classname, "tf_projectile_rocket") && (ProjectileGetFlags(inflictor) & PROJ_ICEBALL_ATTACK))
+	{
+		int iDifficulty = GetConVarInt(g_cvDifficulty);
+		int slender = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
+		if(slender != INVALID_ENT_REFERENCE)
+		{
+			int iBossIndex = NPCGetFromEntIndex(slender);
+			if (iBossIndex != -1)
+			{
+				EmitSoundToClient(victim, ICEBALL_IMPACT, _, MUSIC_CHAN);
+				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetAttackProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				TF2_StunPlayer(victim, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, victim);
 				if (g_bPlayerEliminated[victim])
 				{
 					CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(victim));
@@ -1965,15 +1984,15 @@ static float ClientGetDefaultSprintSpeed(int client)
 	
 	switch (iClass)
 	{
-		case TFClass_Scout: flReturn = 310.0;
-		case TFClass_Sniper: flReturn = 300.0;
-		case TFClass_Soldier: flReturn = 280.0;
-		case TFClass_DemoMan: flReturn = 285.0;
-		case TFClass_Heavy: flReturn = 275.0;
-		case TFClass_Medic: flReturn = 305.0;
-		case TFClass_Pyro: flReturn = 300.0;
-		case TFClass_Spy: flReturn = 305.0;
-		case TFClass_Engineer: flReturn = 300.0;
+		case TFClass_Scout: flReturn = 300.0;
+		case TFClass_Sniper: flReturn = 290.0;
+		case TFClass_Soldier: flReturn = 270.0;
+		case TFClass_DemoMan: flReturn = 275.0;
+		case TFClass_Heavy: flReturn = 270.0;
+		case TFClass_Medic: flReturn = 295.0;
+		case TFClass_Pyro: flReturn = 290.0;
+		case TFClass_Spy: flReturn = 295.0;
+		case TFClass_Engineer: flReturn = 290.0;
 	}
 	
 	// Call our forward.
@@ -2317,6 +2336,11 @@ void ClientProcessVisibility(int client)
 							NPCChaserUpdateBossAnimation(iMaster, slender, g_iSlenderState[iMaster]);
 							g_bPlayerScaredByBoss[client][iMaster] = true;
 						}
+					}
+					if (view_as<bool>(GetProfileNum(sProfile,"jumpscare_on_scare",0)))
+					{
+						float flJumpScareDuration = GetProfileFloat(sProfile, "jumpscare_duration");
+						ClientDoJumpScare(client, iMaster, flJumpScareDuration);
 					}
 				}
 				else
@@ -3045,7 +3069,7 @@ static void ClientSprintTimer(int client, bool bRecharge=false)
 	else
 	{
 		if (TF2_GetPlayerClass(client) == TFClass_Scout) flRate *= 1.15;
-		else if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.3;
+		else if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.2;
 		else if (TF2_GetPlayerClass(client) == TFClass_Medic || TF2_GetPlayerClass(client) == TFClass_Spy) flRate *= 1.05;
 	}
 	
@@ -4413,6 +4437,7 @@ void ClientSetGhostModeState(int client, bool bState)
 	
 	Handle message = StartMessageAll("PlayerTauntSoundLoopEnd", USERMSG_RELIABLE);
 	BfWriteByte(message, client);
+	delete message;
 	EndMessage();
 
 	if (bState && !IsClientInGame(client)) return;
@@ -6926,6 +6951,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	if (timer != g_hPlayerPostWeaponsTimer[client]) return;
 	
 	g_bPlayerHasRegenerationItem[client] = false;
+	Handle hItem = INVALID_HANDLE;
 
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 0) 
@@ -7111,18 +7137,17 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		
 		if (g_hRestrictedWeaponsConfig != INVALID_HANDLE)
 		{
-			Handle hItem = INVALID_HANDLE;
-			
+			hItem = INVALID_HANDLE;
 			int iWeapon = INVALID_ENT_REFERENCE;
 			for (int iSlot = 0; iSlot <= 5; iSlot++)
 			{
+				hItem = INVALID_HANDLE;
 				iWeapon = GetPlayerWeaponSlot(client, iSlot);
 				
 				if (IsValidEdict(iWeapon))
 				{
 					if (bUseStock || IsWeaponRestricted(iPlayerClass, GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex")))
 					{
-						hItem = INVALID_HANDLE;
 						TF2_RemoveWeaponSlotAndWearables(client, iSlot);
 						
 						switch (iSlot)
@@ -7233,7 +7258,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 
-					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
+					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.13 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
@@ -7338,6 +7363,8 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 	
 	TF2Attrib_SetByDefIndex(client, 109, flHealthFromPack);
+	
+	delete hItem;
 	
 #if defined DEBUG
 	int iWeapon = INVALID_ENT_REFERENCE;

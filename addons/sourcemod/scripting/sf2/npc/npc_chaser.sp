@@ -200,6 +200,8 @@ enum struct BaseAttackStructure
 	float BaseAttackProjectileSpeed;
 	float BaseAttackProjectileRadius;
 	bool BaseAttackProjectileCrits;
+	float BaseAttackProjectileIceSlowdownPercent;
+	float BaseAttackProjectileIceSlowdownDuration;
 	int BaseAttackBulletCount;
 	float BaseAttackBulletDamage;
 	float BaseAttackBulletSpread;
@@ -637,6 +639,16 @@ float NPCChaserGetAttackProjectileSpeed(int iNPCIndex,int iAttackIndex)
 bool NPCChaserGetAttackProjectileCrits(int iNPCIndex,int iAttackIndex)
 {
 	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][1].BaseAttackProjectileCrits;
+}
+
+float NPCChaserGetAttackProjectileIceSlowdownPercent(int iNPCIndex,int iAttackIndex)
+{
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][1].BaseAttackProjectileIceSlowdownPercent;
+}
+
+float NPCChaserGetAttackProjectileIceSlowdownDuration(int iNPCIndex,int iAttackIndex)
+{
+	return g_NPCBaseAttacks[iNPCIndex][iAttackIndex][1].BaseAttackProjectileIceSlowdownDuration;
 }
 
 int NPCChaserGetAttackBulletCount(int iNPCIndex,int iAttackIndex)
@@ -1332,6 +1344,8 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileSpeed = profile.GetAttackProjectileSpeed(i);
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileRadius = profile.GetAttackProjectileRadius(i);
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileCrits = profile.AreAttackProjectilesCritBoosted(i);
+		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileIceSlowdownPercent = profile.GetAttackProjectileIceSlowdownPercent(i);
+		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileIceSlowdownDuration = profile.GetAttackProjectileIceSlowdownDuration(i);
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackBulletCount = profile.GetAttackBulletCount(i);
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackBulletDamage = profile.GetAttackBulletDamage(i);
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackBulletSpread = profile.GetAttackBulletSpread(i);
@@ -1550,6 +1564,8 @@ static void NPCChaserResetValues(int iNPCIndex)
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileSpeed = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileRadius = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileCrits = false;
+		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileIceSlowdownPercent = 0.0;
+		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackProjectileIceSlowdownDuration = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackBulletCount = 0;
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackBulletDamage = 0.0;
 		g_NPCBaseAttacks[iNPCIndex][i][1].BaseAttackBulletSpread = 0.0;
@@ -1856,8 +1872,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	}
 	if (g_flRoundDifficultyModifier > 1.0)
 	{
-		flSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier)/15);
-		flMaxSpeed = flOriginalMaxSpeed + ((flOriginalMaxSpeed * g_flRoundDifficultyModifier)/20);
+		flSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier)/15) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
+		flMaxSpeed = flOriginalMaxSpeed + ((flOriginalMaxSpeed * g_flRoundDifficultyModifier)/20) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
 	}
 	if (flSpeed < flOriginalSpeed) flSpeed = flOriginalSpeed;
 	if (flSpeed > flMaxSpeed) flSpeed = flMaxSpeed;
@@ -1866,8 +1882,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	float flMaxWalkSpeed = flOriginalMaxWalkSpeed;
 	if (g_flRoundDifficultyModifier > 1.0)
 	{
-		flWalkSpeed = flOriginalWalkSpeed + ((flOriginalWalkSpeed * g_flRoundDifficultyModifier)/15);
-		flMaxWalkSpeed = flOriginalMaxWalkSpeed + ((flOriginalMaxWalkSpeed * g_flRoundDifficultyModifier)/20);
+		flWalkSpeed = flOriginalWalkSpeed + ((flOriginalWalkSpeed * g_flRoundDifficultyModifier)/15) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
+		flMaxWalkSpeed = flOriginalMaxWalkSpeed + ((flOriginalMaxWalkSpeed * g_flRoundDifficultyModifier)/20) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
 	}
 	if (flWalkSpeed < flOriginalWalkSpeed) flWalkSpeed = flOriginalWalkSpeed;
 	if (flWalkSpeed > flMaxWalkSpeed) flWalkSpeed = flMaxWalkSpeed;
@@ -1876,8 +1892,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	float flMaxAirSpeed = flOriginalMaxAirSpeed;
 	if (g_flRoundDifficultyModifier > 1.0)
 	{
-		flAirSpeed = flOriginalAirSpeed + ((flOriginalAirSpeed * g_flRoundDifficultyModifier)/15);
-		flMaxAirSpeed = flOriginalMaxAirSpeed + ((flOriginalMaxAirSpeed * g_flRoundDifficultyModifier)/20);
+		flAirSpeed = flOriginalAirSpeed + ((flOriginalAirSpeed * g_flRoundDifficultyModifier)/15) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
+		flMaxAirSpeed = flOriginalMaxAirSpeed + ((flOriginalMaxAirSpeed * g_flRoundDifficultyModifier)/20) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
 	}
 	if (flAirSpeed < flOriginalAirSpeed) flAirSpeed = flOriginalAirSpeed;
 	if (flAirSpeed > flMaxAirSpeed) flAirSpeed = flMaxAirSpeed;
@@ -2304,118 +2320,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	int iInterruptConditions = g_iSlenderInterruptConditions[iBossIndex];
 	bool bDoChasePersistencyInit = false;
 	
-	if(SF_IsRaidMap() && !g_bSlenderGiveUp[iBossIndex] && !bBuilding && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
-	{
-		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
-		{
-			if(iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
-			{
-				Handle hArrayRaidTargets = CreateArray();
-					
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (!IsClientInGame(i) ||
-						!IsPlayerAlive(i) ||
-						g_bPlayerEliminated[i] ||
-						IsClientInGhostMode(i) ||
-						DidClientEscape(i))
-					{
-						continue;
-					}
-					PushArrayCell(hArrayRaidTargets, i);
-				}
-				if(GetArraySize(hArrayRaidTargets)>0)
-				{
-					int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
-					if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
-					{
-						iBestNewTarget = iRaidTarget;
-						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-						iState = STATE_CHASE;
-						iTarget = iBestNewTarget;
-					}
-				}
-				
-				delete hArrayRaidTargets;
-			}
-		}
-		
-	}
-	if((SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex]) && !g_bSlenderGiveUp[iBossIndex] && !bBuilding && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
-	{
-		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
-		{
-			if(iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
-			{
-				Handle hArrayRaidTargets = CreateArray();
-					
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (!IsClientInGame(i) ||
-						!IsPlayerAlive(i) ||
-						g_bPlayerEliminated[i] ||
-						IsClientInGhostMode(i) ||
-						DidClientEscape(i))
-					{
-						continue;
-					}
-					PushArrayCell(hArrayRaidTargets, i);
-				}
-				if(GetArraySize(hArrayRaidTargets)>0)
-				{
-					int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
-					if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
-					{
-						iBestNewTarget = iRaidTarget;
-						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-						iState = STATE_CHASE;
-						iTarget = iBestNewTarget;
-					}
-				}
-				
-				delete hArrayRaidTargets;
-			}
-		}
-		
-	}
-	if(SF_IsProxyMap() && !g_bSlenderGiveUp[iBossIndex] && !bBuilding && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
-	{
-		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
-		{
-			if(iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
-			{
-				Handle hArrayRaidTargets = CreateArray();
-					
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (!IsClientInGame(i) ||
-						!IsPlayerAlive(i) ||
-						g_bPlayerEliminated[i] ||
-						IsClientInGhostMode(i) ||
-						DidClientEscape(i))
-					{
-						continue;
-					}
-					PushArrayCell(hArrayRaidTargets, i);
-				}
-				if(GetArraySize(hArrayRaidTargets)>0)
-				{
-					int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
-					if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
-					{
-						iBestNewTarget = iRaidTarget;
-						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-						iState = STATE_CHASE;
-						iTarget = iBestNewTarget;
-					}
-				}
-				
-				delete hArrayRaidTargets;
-			}
-		}
-		
-	}
-	if(SF_IsBoxingMap() && !g_bSlenderGiveUp[iBossIndex] && !bBuilding && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
+	if((SF_IsRaidMap() || (SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex]) || SF_IsProxyMap() || SF_IsBoxingMap()) && !g_bSlenderGiveUp[iBossIndex] && !bBuilding && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
 	{
 		if(!IsValidClient(iTarget) || (IsValidClient(iTarget) && g_bPlayerEliminated[iTarget]))
 		{
@@ -5051,6 +4956,59 @@ int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarget, con
 				}
 			}
 		}
+		case 2:
+		{
+			sProjectileName = "tf_projectile_rocket";
+			iProjectileEnt = CreateEntityByName(sProjectileName);
+			if (iProjectileEnt != -1)
+			{
+				float flVelocity[3], flBufferProj[3];
+
+				GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
+
+				flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex);
+				flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex);
+				flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex);
+				AttachParticle(iProjectileEnt, "spell_fireball_small_blue");
+				AttachParticle(iProjectileEnt, "spell_fireball_small_glow_blue");
+
+				SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+				SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flModelScale", 1.0);
+				SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
+				SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
+				SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
+				SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_IceballTouch); //This is where the damage comes into play.
+
+				SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     2, 1);
+
+				DispatchSpawn(iProjectileEnt);
+				ProjectileSetFlags(iProjectileEnt, PROJ_ICEBALL_ATTACK);
+
+				TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
+
+				char sPath[PLATFORM_MAX_PATH];
+				GetRandomStringFromProfile(sSlenderProfile, sSectionName, sPath, sizeof(sPath));
+				
+				if (sPath[0])
+				{
+					char sBuffer[512];
+					strcopy(sBuffer, sizeof(sBuffer), sSectionName);
+					StrCat(sBuffer, sizeof(sBuffer), "_volume");
+					float flVolume = GetProfileFloat(sSlenderProfile, sBuffer, 1.0);
+					strcopy(sBuffer, sizeof(sBuffer), sSectionName);
+					StrCat(sBuffer, sizeof(sBuffer), "_channel");
+					int iChannel = GetProfileNum(sSlenderProfile, sBuffer, SNDCHAN_WEAPON);
+					strcopy(sBuffer, sizeof(sBuffer), sSectionName);
+					StrCat(sBuffer, sizeof(sBuffer), "_level");
+					int iLevel = GetProfileNum(sSlenderProfile, sBuffer, SNDLEVEL_SCREAMING);
+					strcopy(sBuffer, sizeof(sBuffer), sSectionName);
+					StrCat(sBuffer, sizeof(sBuffer), "_pitch");
+					int iPitch = GetProfileNum(sSlenderProfile, sBuffer, 100);
+					
+					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+				}
+			}
+		}
 	}
 	return iProjectileEnt;
 }
@@ -7094,6 +7052,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 			}
 		}
 	}
+	delete hTrace;
 
 	return Plugin_Continue;
 }
@@ -8429,6 +8388,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		g_bNPCAlreadyAttacked[iBossIndex] = false;
 		g_bNPCUseFireAnimation[iBossIndex] = false;
 	}
+	delete hTrace;
 	return;
 }
 
@@ -8798,6 +8758,7 @@ static bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRa
 				else
 					return true;
 			}
+			delete hTrace;
 		}
 	}
 	

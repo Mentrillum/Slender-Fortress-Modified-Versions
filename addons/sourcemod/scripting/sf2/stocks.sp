@@ -676,7 +676,7 @@ stock void UTIL_SayText2(int[] players, int playersNum, int iEntity, bool bChat,
 	message.WriteString(param3);
 
 	message.WriteString(param4);
-	
+	delete message;
 	EndMessage();
 }
 
@@ -689,6 +689,7 @@ stock void UTIL_ClientScreenShake(int client, float amplitude, float duration, f
 		BfWriteFloat(hBf, amplitude);
 		BfWriteFloat(hBf, frequency);
 		BfWriteFloat(hBf, duration);
+		delete hBf;
 		EndMessage();
 	}
 }
@@ -707,6 +708,7 @@ public void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int
 	BfWriteByte(bf, g);
 	BfWriteByte(bf, b);
 	BfWriteByte(bf, a);
+	delete bf;
 	EndMessage();
 }
 
@@ -1005,7 +1007,7 @@ stock void UTIL_ScreenShake(float center[3], float amplitude, float frequency, f
 					BfWriteFloat(msg, localAmplitude);
 					BfWriteFloat(msg, frequency);
 					BfWriteFloat(msg, duration);
-
+					delete msg;
 					EndMessage();
 				}
 			}
@@ -1328,9 +1330,17 @@ stock void CloseEvent(Event event)
 {
 	CreateTimer(10.0,CloseEventTimer,event);
 }
+stock void DeleteHandle(Handle handle)
+{
+	CreateTimer(0.1,CloseHandleTimer,handle);
+}
 public Action CloseEventTimer(Handle timer,Event event)
 {
 	delete event;
+}
+public Action CloseHandleTimer(Handle timer,Handle handle)
+{
+	delete handle;
 }
 public Action Timer_KillEntity(Handle timer, any entref)
 {

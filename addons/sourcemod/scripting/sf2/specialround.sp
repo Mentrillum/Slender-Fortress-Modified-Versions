@@ -489,8 +489,8 @@ void SpecialRoundStart()
 		case SPECIALROUND_DOUBLETROUBLE:
 		{
 			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			Handle hSelectableBosses = GetSelectableBossProfileList();
-			Handle hSelectableBoxingBosses = GetSelectableBoxingBossProfileList();
+			Handle hSelectableBosses = CloneArray(GetSelectableBossProfileList());
+			Handle hSelectableBoxingBosses = CloneArray(GetSelectableBoxingBossProfileList());
 			
 			if (!SF_IsBoxingMap())
 			{
@@ -508,13 +508,15 @@ void SpecialRoundStart()
 					AddProfile(sBuffer);
 				}
 			}
+			delete hSelectableBosses;
+			delete hSelectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_DOUBLETROUBLE);
 		}
 		case SPECIALROUND_DOOMBOX:
 		{
 			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			Handle hSelectableBosses = GetSelectableBossProfileList();
-			Handle hSelectableBoxingBosses = GetSelectableBoxingBossProfileList();
+			Handle hSelectableBosses = CloneArray(GetSelectableBossProfileList());
+			Handle hSelectableBoxingBosses = CloneArray(GetSelectableBoxingBossProfileList());
 			
 			if (!SF_IsBoxingMap())
 			{
@@ -536,6 +538,8 @@ void SpecialRoundStart()
 					AddProfile(sBuffer,_,_,_,false);
 				}
 			}
+			delete hSelectableBosses;
+			delete hSelectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_DOOMBOX);
 		}
 		case SPECIALROUND_INSANEDIFFICULTY:
@@ -568,8 +572,8 @@ void SpecialRoundStart()
 			if (GetConVarInt(g_cvDifficulty) < 3 && !SF_IsBoxingMap())
 				SetConVarString(g_cvDifficulty, "3"); // Override difficulty to Insane.
 			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			Handle hSelectableBosses = GetSelectableBossProfileList();
-			Handle hSelectableBoxingBosses = GetSelectableBossProfileList();
+			Handle hSelectableBosses = CloneArray(GetSelectableBossProfileList());
+			Handle hSelectableBoxingBosses = CloneArray(GetSelectableBossProfileList());
 			if (!SF_IsBoxingMap())
 			{
 				if (GetArraySize(hSelectableBosses) > 0)
@@ -586,6 +590,8 @@ void SpecialRoundStart()
 					AddProfile(sBuffer);
 				}
 			}
+			delete hSelectableBosses;
+			delete hSelectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_2DOUBLE);
 		}
 		case SPECIALROUND_SUPRISE:
@@ -658,8 +664,8 @@ void SpecialRoundStart()
 			char sGiant[64] = "hyperargonitegiant_boxing";
 			char sMagician[64] = "hyperargonitemagician_boxing";
 			NPCRemoveAll();
-			Handle hSelectableBosses = GetSelectableBossProfileList();
-			Handle hSelectableBoxingBosses = GetSelectableBoxingBossProfileList();
+			Handle hSelectableBosses = CloneArray(GetSelectableBossProfileList());
+			Handle hSelectableBoxingBosses = CloneArray(GetSelectableBoxingBossProfileList());
 			if (!SF_IsBoxingMap())
 			{
 				if (GetArraySize(hSelectableBosses) > 0)
@@ -700,27 +706,27 @@ void SpecialRoundStart()
 									case 1:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
 									}
 									case 2:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  You ready to die some more? Great!");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  You ready to die some more? Great!");
 									}
 									case 3:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
 										}
 									case 4:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  I love the smell of DEATH in the morning.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  I love the smell of DEATH in the morning.");
 									}
 									case 5:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 									}
 								}
 								AddProfile(sSnatcher,_,_,_,false);
@@ -738,42 +744,42 @@ void SpecialRoundStart()
 									case 1:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
 									}
 									case 2:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  You ready to die some more? Great!");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  You ready to die some more? Great!");
 									}
 									case 3:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
 									}
 									case 4:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  I love the smell of DEATH in the morning.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  I love the smell of DEATH in the morning.");
 									}
 										case 5:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 									}
 									case 6:
 									{
 										EmitSoundToAll(SNATCHER_APOLLYON_1);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Ah! It gets better every time!");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Ah! It gets better every time!");
 									}
 									case 7:
 									{
 										EmitSoundToAll(SNATCHER_APOLLYON_2);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
 									}
 									case 8:
 									{
 										EmitSoundToAll(SNATCHER_APOLLYON_3);
-										CPrintToChatAll("{darkblue}Cosmic Snatcher{default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+										CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 									}
 								}
 								AddProfile(sSnatcher,_,_,_,false);
@@ -782,7 +788,7 @@ void SpecialRoundStart()
 					}
 					else
 					{
-						CPrintToChatAll("{royalblue}Hyper Snathcer and or Cosmic Snatcher don't exist, initiating Doom Box...");
+						CPrintToChatAll("{royalblue}Hyper Snathcer doesn't exist, initiating Doom Box...");
 						GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
 						AddProfile(sBuffer,_,_,_,false);
 						GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
@@ -810,6 +816,8 @@ void SpecialRoundStart()
 					}
 				}
 			}
+			delete hSelectableBosses;
+			delete hSelectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_HYPERSNATCHER);
 		}
 		case SPECIALROUND_TRIPLEBOSSES:
@@ -989,7 +997,7 @@ void SpecialRoundStart()
 			if (GetConVarInt(g_cvDifficulty) < 2)
 				SetConVarString(g_cvDifficulty, "2"); // Override difficulty to Hardcore.
 			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			Handle hSelectableBosses = GetSelectableBossProfileList();
+			Handle hSelectableBosses = CloneArray(GetSelectableBossProfileList());
 			if (GetArraySize(hSelectableBosses) > 0)
 			{
 				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
@@ -1001,6 +1009,7 @@ void SpecialRoundStart()
 				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
 				AddProfile(sBuffer,_,_,_,false);
 			}
+			delete hSelectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_2DOOM);
 		}
 		default:

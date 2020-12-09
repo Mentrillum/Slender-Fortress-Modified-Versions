@@ -43,7 +43,7 @@ methodmap SF2BaseBossProfile
 	{
 		public get() { return GetBossProfileUniqueProfileIndex(this.Index); }
 	}
-	
+
 	property int Skin
 	{
 		public get() { return GetBossProfileSkin(this.Index); }
@@ -168,6 +168,7 @@ methodmap SF2BaseBossProfile
 	{
 		GetBossProfileEyeAngleOffset(this.Index, buffer);
 	}
+
 }
 
 #include "sf2/profiles/profile_chaser.sp"
@@ -227,7 +228,7 @@ enum
 	
 	BossProfileData_ScareRadius,
 	BossProfileData_ScareCooldown,
-	
+
 	BossProfileData_TeleportType,
 	BossProfileData_MaxStats
 };

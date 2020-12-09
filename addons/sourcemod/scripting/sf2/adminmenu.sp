@@ -35,6 +35,7 @@ public void OnAdminMenuReady(Handle hTopMenu)
 		AddToTopMenu(hTopMenu, "sf2_player_setplaystate", TopMenuObject_Item, AdminTopMenu_PlayerSetPlayState, hPlayerCommands, "sm_sf2_setplaystate", ADMFLAG_SLAY);
 		AddToTopMenu(hTopMenu, "sf2_player_force_proxy", TopMenuObject_Item, AdminTopMenu_PlayerForceProxy, hPlayerCommands, "sm_sf2_force_proxy", ADMFLAG_SLAY);
 	}
+	delete hTopMenu;
 }
 
 static void DisplayPlayerForceProxyAdminMenu(int client)

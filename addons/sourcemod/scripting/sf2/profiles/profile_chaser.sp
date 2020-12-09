@@ -435,6 +435,8 @@ enum
 	ChaserProfileAttackData_LaserAttachment,
 	ChaserProfileAttackData_LaserDuration,
 	ChaserProfileAttackData_PullIn,
+	ChaserProfileAttackData_ProjectileIceSlowdownPercent,
+	ChaserProfileAttackData_ProjectileIceSlowdownDuration,
 	ChaserProfileAttackData_MaxStats
 };
 
@@ -1035,6 +1037,16 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	public bool AreAttackProjectilesCritBoosted(int attackIndex)
 	{
 		return GetChaserProfileAttackCritProjectiles(this.UniqueProfileIndex, attackIndex);
+	}
+	
+	public float GetAttackProjectileIceSlowdownPercent(int attackIndex)
+	{
+		return GetChaserProfileAttackProjectileIceSlowPercent(this.UniqueProfileIndex, attackIndex);
+	}
+	
+	public float GetAttackProjectileIceSlowdownDuration(int attackIndex)
+	{
+		return GetChaserProfileAttackProjectileIceSlowDuration(this.UniqueProfileIndex, attackIndex);
 	}
 
 	public int GetAttackBulletCount(int attackIndex)
@@ -2072,6 +2084,12 @@ static int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		
 		bool bAttackCritProjectiles = view_as<bool>(KvGetNum(kv, "attack_projectile_crits", 0));
 		
+		float flAttackProjectileIceSlowdownPercent = KvGetFloat(kv, "attack_projectile_iceslow_percent", 0.55);
+		if (flAttackProjectileIceSlowdownPercent < 0.0) flAttackProjectileIceSlowdownPercent = 0.0;
+		
+		float flAttackProjectileIceSlowdownDuration = KvGetFloat(kv, "attack_projectile_iceslow_duration", 2.0);
+		if (flAttackProjectileIceSlowdownDuration < 0.0) flAttackProjectileIceSlowdownDuration = 0.0;
+		
 		int iAttackBulletCount = KvGetNum(kv, "attack_bullet_count", 4);
 		if (iAttackBulletCount < 1) iAttackBulletCount = 1;
 		
@@ -2127,6 +2145,8 @@ static int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		hAttacks.Set(iAttackIndex, flAttackProjectileSpeed, ChaserProfileAttackData_ProjectileSpeed);
 		hAttacks.Set(iAttackIndex, flAttackProjectileRadius, ChaserProfileAttackData_ProjectileRadius);
 		hAttacks.Set(iAttackIndex, bAttackCritProjectiles, ChaserProfileAttackData_ProjectileCrits);
+		hAttacks.Set(iAttackIndex, flAttackProjectileIceSlowdownPercent, ChaserProfileAttackData_ProjectileIceSlowdownPercent);
+		hAttacks.Set(iAttackIndex, flAttackProjectileIceSlowdownDuration, ChaserProfileAttackData_ProjectileIceSlowdownDuration);
 		hAttacks.Set(iAttackIndex, iAttackBulletCount, ChaserProfileAttackData_BulletCount);
 		hAttacks.Set(iAttackIndex, flAttackBulletDamage, ChaserProfileAttackData_BulletDamage);
 		hAttacks.Set(iAttackIndex, flAttackBulletSpread, ChaserProfileAttackData_BulletSpread);
@@ -2697,6 +2717,20 @@ bool GetChaserProfileAttackCritProjectiles(int iChaserProfileIndex,int iAttackIn
 	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
 
 	return view_as<bool>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileCrits));
+}
+
+float GetChaserProfileAttackProjectileIceSlowPercent(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercent));
+}
+
+float GetChaserProfileAttackProjectileIceSlowDuration(int iChaserProfileIndex,int  iAttackIndex)
+{
+	Handle hAttacks = view_as<Handle>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_Attacks));
+	
+	return view_as<float>(GetArrayCell(hAttacks, iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDuration));
 }
 
 int GetChaserProfileAttackBulletCount(int iChaserProfileIndex,int iAttackIndex)

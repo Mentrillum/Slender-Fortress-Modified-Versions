@@ -117,10 +117,12 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 		{
 			Handle hMessage = StartMessageOne("TrainingObjective", iClient);
 			BfWriteString(hMessage, sTitle);
+			delete hMessage;
 			EndMessage();
 			
 			hMessage = StartMessageOne("TrainingMsg", iClient);
 			BfWriteString(hMessage, sMessage);
+			delete hMessage;
 			EndMessage();
 		}
 	}
@@ -133,10 +135,12 @@ void Tutorial_PrintMessageToClient(int iClient, const char[] sTitle, const char[
 	GameRules_SetProp("m_bIsTrainingHUDVisible", true, 1, _, true);
 	Handle hMessage = StartMessageOne("TrainingObjective", iClient);
 	BfWriteString(hMessage, sTitle);
+	delete hMessage;
 	EndMessage();
 	
 	hMessage = StartMessageOne("TrainingMsg", iClient);
 	BfWriteString(hMessage, sMessage);
+	delete hMessage;
 	EndMessage();
 }
 

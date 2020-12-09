@@ -2013,7 +2013,7 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 				int iHealth = GetClientHealth(attacker);
 				float flDamage = float(damage);
 				flDamage *= 0.35;
-				int iNewHealth = iHealth + view_as<int>(flDamage);
+				int iNewHealth = iHealth + RoundToCeil(flDamage);
 				if(iNewHealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))
 				{
 					SetEntityHealth(attacker, iNewHealth);
@@ -2253,6 +2253,7 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 			Boss_HitBox_Damage(hitbox, attacker, float(damage), damagetype, bMiniCrit);
 		}
 	}
+	delete event;
 }
 
 public Action Timer_BossBurn(Handle timer, any entref)
@@ -3665,9 +3666,7 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 							
 							if (PlayerCanSeeSlender(i, iBossIndex, false))
 							{
-								if ((NPCGetDistanceFromEntity(iBossIndex, i) <= GetProfileFloat(sProfile, "jumpscare_distance") &&
-									GetGameTime() >= g_flSlenderNextJumpScare[iBossIndex]) ||
-									PlayerCanSeeSlender(i, iBossIndex))
+								if ((NPCGetDistanceFromEntity(iBossIndex, i) <= GetProfileFloat(sProfile, "jumpscare_distance") && GetGameTime() >= g_flSlenderNextJumpScare[iBossIndex]) || (PlayerCanSeeSlender(i, iBossIndex) && !view_as<bool>(GetProfileNum(sProfile,"jumpscare_no_sight",0))))
 								{
 									bDidJumpScare = true;
 								

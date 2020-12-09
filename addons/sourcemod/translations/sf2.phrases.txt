@@ -25,7 +25,7 @@
 	{
 		"en"	"Normal"
 		"ru"	"Обычная"
-		"fi"	"Normaali"
+		"fi"	"Tavallinen"
 	}
 
 	"SF2 Hard Difficulty"
@@ -657,6 +657,7 @@
 	{
 		"en"	"Get Out of Trap - Press the jump key a few times."
 		"ru"	"Выбраться из ловушки - нажмите клавишу прыжка несколько раз."
+		"fi"	"Poistu Ansasta - Paina hyppy nappia pari kertaa."
 	}
 
 	"SF2 Admin Menu Boss Main"
@@ -1385,8 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Replaced Absolute Snatcher with Cosmic Snatcher.\n-Added boss difficulty models, names, proxy models.\n-Improved proxy spawnrates on endless chasing scenarios.\n-Added boss light attachments.\n-Fixed a bug where outline owners can see their own outline.\n-Upgraded the syntax yet again.\n-Many more."
-		"ru"	"-Заменён Absolute Snatcher на Cosmic Snatcher.\n-Добавлены модели сложности боссов, имена, модели помощников.\n-Улучшена частота появления помощников в бесконечных сценариях погони.\n-Добавлены прицепляемые лампы для боссов.\n-Исправлена ошибка, из-за которой игроки, получившие контур могли видеть свои собственные контуры.\n-Ещё раз обновил синтаксис.\n-Многое другое."
+		"en"	"-Cosmic Snatcher and Hyper Snatcher are no longer merged together.\n-Fixed all lingering memory leaks.\n-Nerfed the class speeds very slightly.\n-Decreased the Demoman's sprint duration increase.\n-Handles that were not closed are now closed."
 	}
 
 	"SF2 Smite player"
