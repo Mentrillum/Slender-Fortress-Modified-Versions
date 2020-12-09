@@ -6570,7 +6570,6 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 			}
 		}
 	}*/
-	delete event;
 }
 public Action Hook_TriggerNPCTouch(int iTrigger, int iOther)
 {
