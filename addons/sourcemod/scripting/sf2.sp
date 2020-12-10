@@ -3860,8 +3860,6 @@ public Action Hook_TauntUserMessage(UserMsg msg_id, BfRead msg, const int[] play
 	
 	RequestFrame(Frame_SendNewTauntMessage, dataTaunt);//Resend taunt sound to eliminated players only
 	
-	delete dataTaunt;
-	
 	return Plugin_Handled;//Never ever allow a red player/proxy to hear taunt sound, we keep the playing area "tauntmusicless"
 }
 
