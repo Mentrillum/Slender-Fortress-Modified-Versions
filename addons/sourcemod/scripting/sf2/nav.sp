@@ -52,7 +52,7 @@ methodmap NavPath < ArrayList
 		return NavPathGetNodeLadder(this, nodeIndex);
 	}
 	
-	public bool ConstructPathFromPoints(float startPos[3], float endPos[3], float nearestAreaRadius, NavPathCostFunctor costFunction, any costData = -1, bool populateIfIncomplete = true, CNavArea &closestAreaIndex = view_as<CNavArea>(0), CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
+	public bool ConstructPathFromPoints(float startPos[3], float endPos[3], float nearestAreaRadius, NavPathCostFunctor costFunction, any costData = -1, bool populateIfIncomplete = true, int &closestAreaIndex = 0, CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
 	{
 		return NavPathConstructPathFromPoints(this, startPos, endPos, nearestAreaRadius, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea);
 	}
@@ -199,31 +199,30 @@ stock bool NavPathConstructTrivialPath(ArrayList hNavPath, const float flStartPo
 /**
  *	Constructs a path leading from flStartPos to flEndPos. First node index (0) is the start of the path, last node index is the end.
  */
-stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStartPos[3], const float flEndPos[3], float flNearestAreaRadius, NavPathCostFunctor fCostFunction, any iCostData=-1, bool bPopulateIfIncomplete=false,CNavArea &closestArea = view_as<CNavArea>(0), CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
+stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStartPos[3], const float flEndPos[3], float flNearestAreaRadius, NavPathCostFunctor fCostFunction, any iCostData=-1, bool bPopulateIfIncomplete=false,int &iClosestAreaIndex=0, CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
 {
 	hNavPath.Clear();
 	
-	if (startArea == INVALID_NAV_AREA)
+	int iStartAreaIndex = view_as<int>(NavMesh_GetNearestArea(flStartPos));
+	if (iStartAreaIndex == -1) return false;
+	
+	int iEndAreaIndex = view_as<int>(NavMesh_GetNearestArea(flEndPos));
+	if (iEndAreaIndex == -1) return false;
+	
+	if (iStartAreaIndex == iEndAreaIndex)
 	{
-		startArea = NavMesh_GetNearestArea(flStartPos);
-		if (startArea == INVALID_NAV_AREA) return false;
+		return NavPathConstructTrivialPath(hNavPath, flStartPos, flEndPos, flNearestAreaRadius);
 	}
 	
-	if (endArea == INVALID_NAV_AREA)
-	{
-		endArea = NavMesh_GetNearestArea(flEndPos);
-		if (endArea == INVALID_NAV_AREA) return false;
-	}
+	iClosestAreaIndex = 0;
 	
-	if (startArea == endArea)
-	{
-		return NavPathConstructTrivialPath(hNavPath, flStartPos, flEndPos, flNearestAreaRadius, startArea, endArea);
-	}
-	
-	closestArea = CNavArea(0);
-	
-	bool bResult = NavMesh_BuildPath(startArea, endArea, flEndPos, fCostFunction, iCostData, closestArea);
-
+	bool bResult = NavMesh_BuildPath(view_as<CNavArea>(iStartAreaIndex),
+		view_as<CNavArea>(iEndAreaIndex),
+		flEndPos,
+		fCostFunction,
+		iCostData,
+		view_as<CNavArea>(iClosestAreaIndex));
+		
 	if (!bResult || !bPopulateIfIncomplete) return false;
 	
 	if (bResult)
@@ -232,41 +231,42 @@ stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStar
 		float flEndPosOnNavMesh[3];
 		flEndPosOnNavMesh[0] = flEndPos[0];
 		flEndPosOnNavMesh[1] = flEndPos[1];
-		flEndPosOnNavMesh[2] = endArea.GetZ(flEndPos);
+		flEndPosOnNavMesh[2] = NavMeshArea_GetZ(iEndAreaIndex, flEndPos);
 		
 		NavPathAddNodeToHead(hNavPath, flEndPosOnNavMesh, endArea);
 	}
 	
 	float flCenter[3], flCenterPortal[3], flClosestPoint[3];
 	
-	CNavArea tempArea = closestArea;
-	CNavArea tempAreaParent = tempArea.Parent;
+	int iTempAreaIndex = iClosestAreaIndex;
+	int iTempParentAreaIndex = NavMeshArea_GetParent(iTempAreaIndex);
 	int iNavDirection;
 	float flHalfWidth;
 	
-	while (tempAreaParent != INVALID_NAV_AREA)
+	while (iTempParentAreaIndex != -1)
 	{
 		// Build a path of waypoints along the nav mesh for our AI to follow.
 		
-		tempAreaParent.GetCenter(flCenter);
-		iNavDirection = tempArea.ComputeDirection(flCenter);
-		tempArea.ComputePortal(tempAreaParent, iNavDirection, flCenterPortal, flHalfWidth);
-		tempArea.ComputeClosestPointInPortal(tempAreaParent, iNavDirection, flCenterPortal, flClosestPoint);
+		NavMeshArea_GetCenter(iTempParentAreaIndex, flCenter);
+		iNavDirection = NavMeshArea_ComputeDirection(iTempAreaIndex, flCenter);
+		NavMeshArea_ComputePortal(iTempAreaIndex, iTempParentAreaIndex, iNavDirection, flCenterPortal, flHalfWidth);
+		NavMeshArea_ComputeClosestPointInPortal(iTempAreaIndex, iTempParentAreaIndex, iNavDirection, flCenterPortal, flClosestPoint);
 		
-		flClosestPoint[2] = tempArea.GetZ(flClosestPoint);
+		flClosestPoint[2] = NavMeshArea_GetZ(iTempAreaIndex, flClosestPoint);
 		
-		NavPathAddNodeToHead(hNavPath, flClosestPoint, tempArea);
+		NavPathAddNodeToHead(hNavPath, flClosestPoint, view_as<CNavArea>(iTempAreaIndex));
 		
-		tempArea = tempAreaParent;
-		tempAreaParent = tempArea.Parent;
+		iTempAreaIndex = iTempParentAreaIndex;
+		iTempParentAreaIndex = NavMeshArea_GetParent(iTempAreaIndex);
 	}
 	
 	float flStartPosOnNavMesh[3];
 	flStartPosOnNavMesh[0] = flStartPos[0];
 	flStartPosOnNavMesh[1] = flStartPos[1];
-	flStartPosOnNavMesh[2] = startArea.GetZ(flStartPos);
+	flStartPosOnNavMesh[2] = NavMeshArea_GetZ(iStartAreaIndex, flStartPos);
 	
-	NavPathAddNodeToHead(hNavPath, flStartPosOnNavMesh, startArea);
+	NavPathAddNodeToHead(hNavPath, flStartPosOnNavMesh, view_as<CNavArea>(iStartAreaIndex));
+	
 	return bResult;
 }
 

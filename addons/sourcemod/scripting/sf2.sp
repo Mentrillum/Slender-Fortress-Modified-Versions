@@ -34,8 +34,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.6 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.6 Modified"
+#define PLUGIN_VERSION "1.5.5.6a Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.6a Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -1200,6 +1200,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_add_boss", Command_AddSlender, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_add_boss_fake", Command_AddSlenderFake, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_remove_boss", Command_RemoveSlender, ADMFLAG_SLAY);
+	RegAdminCmd("sm_sf2_remove_all_bosses", Command_RemoveAllSlenders, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_getbossindexes", Command_GetBossIndexes, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_setplaystate", Command_ForceState, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_boss_attack_waiters", Command_SlenderAttackWaiters, ADMFLAG_SLAY);
@@ -2685,6 +2686,33 @@ public Action Command_RemoveSlender(int iClient,int args)
 	CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Removed Boss", iClient);
 	LogAction(iClient, -1, "%N removed boss %d! (%s)", iClient, iBossIndex, sProfile);
 	
+	return Plugin_Handled;
+}
+
+public Action Command_RemoveAllSlenders(int iClient,int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	
+	if (!SF_IsBoxingMap())
+	{
+		for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+		{
+			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+			NPCRemove(iNPCIndex);
+		}
+		CPrintToChat(iClient, "{royalblue}%t{default}Removed all bosses.", "SF2 Prefix", iClient);
+		LogAction(iClient, -1, "%N removed all active bosses.", iClient);
+	}
+	else
+	{
+		CPrintToChat(iClient, "{royalblue}%t{default}Cannot use this command in Boxing maps.", "SF2 Prefix", iClient);
+	}
+
+	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+	{
+		NPCStopMusic();
+	}
+
 	return Plugin_Handled;
 }
 
@@ -7715,9 +7743,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 	delete event;
 }
 
-public Action Timer_SendDeath(Handle timer, Event event)
+public Action Timer_SendDeath(Handle timer, Handle event)
 {
-	int iClient = GetClientOfUserId(event.GetInt("userid"));
+	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (iClient > 0)
 	{
 		//Send it to the clients

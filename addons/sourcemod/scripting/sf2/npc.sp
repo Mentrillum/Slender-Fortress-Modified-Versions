@@ -49,6 +49,9 @@ static float g_flNPCInstantKillRadius[MAX_BOSSES] = { 0.0, ... };
 
 static bool g_bNPCDeathCamEnabled[MAX_BOSSES] = { false, ... };
 
+bool g_bNPCChasesEndlessly[MAX_BOSSES] = { false, ... };
+bool g_bNPCTeleportIgnoreChase[MAX_BOSSES] = { false, ... };
+
 static int g_iNPCEnemy[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
 static Handle hTimerMusic = INVALID_HANDLE;//Planning to add a bosses array on.
@@ -883,6 +886,10 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	
 	g_iNPCRaidHitbox[Npc.Index] = GetBossProfileRaidHitbox(iProfileIndex);
 	
+	g_bNPCChasesEndlessly[Npc.Index] = GetBossProfileEndlessChaseState(iProfileIndex);
+	
+	g_bNPCTeleportIgnoreChase[Npc.Index] = GetBossProfileTeleportIgnoreChaseState(iProfileIndex);
+	
 	g_bSlenderUseCustomOutlines[Npc.Index] = GetBossProfileCustomOutlinesState(iProfileIndex);
 	g_iSlenderOutlineColorR[Npc.Index] = GetBossProfileOutlineColorR(iProfileIndex);
 	g_iSlenderOutlineColorG[Npc.Index] = GetBossProfileOutlineColorG(iProfileIndex);
@@ -1373,6 +1380,10 @@ void RemoveProfile(int iBossIndex)
 	g_flSlenderTeleportTargetTime[iBossIndex] = -1.0;
 	g_flSlenderTimeUntilKill[iBossIndex] = -1.0;
 	
+	g_iNPCRaidHitbox[iBossIndex] = 0;
+	g_bNPCChasesEndlessly[iBossIndex] = false;
+	g_bNPCTeleportIgnoreChase[iBossIndex] = false;
+	
 	// Remove all copies associated with me.
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -1751,6 +1762,8 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			g_iSlenderSoundTarget[iBossIndex] = INVALID_ENT_REFERENCE;
 			g_bAutoChasingLoudPlayer[iBossIndex] = false;
 			g_bSlenderInDeathcam[iBossIndex] = false;
+			g_bNPCChasesEndlessly[iBossIndex] = false;
+			g_bNPCTeleportIgnoreChase[iBossIndex] = false;
 	
 			Spawn_Chaser(iBossIndex);
 			
@@ -1808,6 +1821,10 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			if(view_as<bool>(GetProfileNum(sProfile,"use_engine_sounds",0)) && g_sSlenderEngineSound[iBossIndex][0])
 			{
 				EmitSoundToAll(g_sSlenderEngineSound[iBossIndex], iBoss, SNDCHAN_STATIC, 83, _, 0.8);
+			}
+			if (SF_BossesChaseEndlessly() || SF_IsRaidMap())
+			{
+				NPCSetFlags(iBossIndex,NPCGetFlags(iBossIndex)|SFF_NOTELEPORT);
 			}
 			
 			//Stun Health
@@ -1922,6 +1939,11 @@ void RemoveSlender(int iBossIndex)
 				StopSound(iBoss, SNDCHAN_STATIC, sLoopSound);
 			}
 		}
+		int iBossFlags = NPCGetFlags(iBossIndex);
+		if (SF_IsRaidMap() || SF_BossesChaseEndlessly() && !view_as<bool>(GetProfileNum(sProfile,"healthbar",0)))
+		{
+			NPCSetFlags(iBossIndex, iBossFlags & ~SFF_NOTELEPORT);
+		}
 		
 		g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
 		AcceptEntityInput(iBoss, "Kill");
@@ -2012,7 +2034,7 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 			{
 				int iHealth = GetClientHealth(attacker);
 				float flDamage = float(damage);
-				flDamage *= 0.35;
+				flDamage *= 0.475;
 				int iNewHealth = iHealth + RoundToCeil(flDamage);
 				if(iNewHealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))
 				{
@@ -4067,7 +4089,34 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 	
 	if (!g_bRoundGrace)
 	{	
-		int iTeleportTarget = EntRefToEntIndex(g_iSlenderTeleportTarget[iBossIndex]);
+		int iTeleportTarget;
+		if (SF_IsBoxingMap() || SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || g_bNPCChasesEndlessly[iBossIndex] || g_bNPCTeleportIgnoreChase[iBossIndex])
+		{
+			Handle hArrayRaidTargets = CreateArray();
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!IsClientInGame(i) ||
+					!IsPlayerAlive(i) ||
+					g_bPlayerEliminated[i] ||
+					IsClientInGhostMode(i) ||
+					DidClientEscape(i))
+				{
+					continue;
+				}
+				PushArrayCell(hArrayRaidTargets, i);
+			}
+			if(GetArraySize(hArrayRaidTargets)>0)
+			{
+				int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
+				if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
+				{
+					iTeleportTarget = iRaidTarget;
+				}
+			}
+			delete hArrayRaidTargets;
+		}
+		else iTeleportTarget = EntRefToEntIndex(g_iSlenderTeleportTarget[iBossIndex]);
+		
 		int iTeleportAreaIndex = -1;
 		if (iBossIndex == -1) //Please don't ask why I did this
 			return false;

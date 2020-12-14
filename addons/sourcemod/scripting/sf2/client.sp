@@ -349,7 +349,7 @@ public void Hook_ClientPreThink(int client)
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == iWeapon)
 								{
-									flSprintSpeed += (flSprintSpeed * 0.025);
+									flSprintSpeed += (flSprintSpeed * 0.05);
 								}
 							}
 							case 239: // Gloves of Running Urgently
@@ -1984,15 +1984,15 @@ static float ClientGetDefaultSprintSpeed(int client)
 	
 	switch (iClass)
 	{
-		case TFClass_Scout: flReturn = 300.0;
-		case TFClass_Sniper: flReturn = 290.0;
-		case TFClass_Soldier: flReturn = 270.0;
-		case TFClass_DemoMan: flReturn = 275.0;
-		case TFClass_Heavy: flReturn = 270.0;
-		case TFClass_Medic: flReturn = 295.0;
-		case TFClass_Pyro: flReturn = 290.0;
-		case TFClass_Spy: flReturn = 295.0;
-		case TFClass_Engineer: flReturn = 290.0;
+		case TFClass_Scout: flReturn = 310.0;
+		case TFClass_Sniper: flReturn = 300.0;
+		case TFClass_Soldier: flReturn = 280.0;
+		case TFClass_DemoMan: flReturn = 285.0;
+		case TFClass_Heavy: flReturn = 275.0;
+		case TFClass_Medic: flReturn = 305.0;
+		case TFClass_Pyro: flReturn = 300.0;
+		case TFClass_Spy: flReturn = 305.0;
+		case TFClass_Engineer: flReturn = 300.0;
 	}
 	
 	// Call our forward.
@@ -3069,7 +3069,7 @@ static void ClientSprintTimer(int client, bool bRecharge=false)
 	else
 	{
 		if (TF2_GetPlayerClass(client) == TFClass_Scout) flRate *= 1.15;
-		else if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.2;
+		else if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.25;
 		else if (TF2_GetPlayerClass(client) == TFClass_Medic || TF2_GetPlayerClass(client) == TFClass_Spy) flRate *= 1.05;
 	}
 	
@@ -7258,7 +7258,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 
-					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.13 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
+					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);

@@ -159,8 +159,6 @@ static char sDamageEffectSound[PLATFORM_MAX_PATH];
 static bool g_bNPCAutoChaseEnabled[MAX_BOSSES] = { false, ... };
 static bool g_bNPCInAutoChase[MAX_BOSSES];
 
-bool g_bNPCChasesEndlessly[MAX_BOSSES] = { false, ... };
-
 static float g_flNPCLaserTimer[MAX_BOSSES];
 
 //KF2 Patriarch's Heal Logic
@@ -1455,8 +1453,6 @@ int NPCChaserOnSelectProfile(int iNPCIndex)
 	g_bNPCInAutoChase[iNPCIndex] = false;
 	g_bAutoChasingLoudPlayer[iNPCIndex] = false;
 
-	g_bNPCChasesEndlessly[iNPCIndex] = profile.ChasesEndlessly;
-	
 	g_flNPCLaserTimer[iNPCIndex] = GetGameTime();
 	
 	g_bNPCCanSelfHeal[iNPCIndex] = profile.SelfHealState;
@@ -1653,8 +1649,6 @@ static void NPCChaserResetValues(int iNPCIndex)
 	g_bNPCAutoChaseEnabled[iNPCIndex] = false;
 	g_bNPCInAutoChase[iNPCIndex] = false;
 	g_bAutoChasingLoudPlayer[iNPCIndex] = false;
-
-	g_bNPCChasesEndlessly[iNPCIndex] = false;
 
 	NPCSetAddSpeed(iNPCIndex, -NPCGetAddSpeed(iNPCIndex));
 	NPCSetAddMaxSpeed(iNPCIndex, -NPCGetAddMaxSpeed(iNPCIndex));
@@ -6436,7 +6430,7 @@ public MRESReturn GetHullMaxs(Address pThis, Handle hReturn, Handle hParams)
 // Shortest-path cost function for NavMesh_BuildPath.
 public int SlenderChaseBossShortestPathCost(CNavArea area, CNavArea fromArea, CNavLadder ladder, any pBotLocomotion)
 {
-	if (fromArea == INVALID_NAV_AREA)
+	if (fromArea == INVALID_NAV_AREA || area == INVALID_NAV_AREA)
 	{
 		return 0;
 	}

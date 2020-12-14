@@ -228,6 +228,9 @@ enum
 	
 	BossProfileData_ScareRadius,
 	BossProfileData_ScareCooldown,
+	
+	BossProfileData_ChasesEndlessly,	
+	BossProfileData_TeleportIgnoreChase,
 
 	BossProfileData_TeleportType,
 	BossProfileData_MaxStats
@@ -834,6 +837,10 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	int iOutlineColorB = KvGetNum(kv, "outline_color_b", 255);
 	int iOutlineColorTrans = KvGetNum(kv, "outline_color_transparency", 255);
 
+	bool bChasesEndlessly = view_as<bool>(KvGetNum(kv,"boss_chases_endlessly", 0));
+	
+	bool bTeleportIgnoreChase = view_as<bool>(KvGetNum(kv,"teleport_ignore_chase", 0));
+	
 	float flBossEyePosOffset[3];
 	KvGetVector(kv, "eye_pos", flBossEyePosOffset);
 	
@@ -953,6 +960,9 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorG, BossProfileData_OutlineColorG);
 	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorB, BossProfileData_OutlineColorB);
 	SetArrayCell(g_hBossProfileData, iIndex, iOutlineColorTrans, BossProfileData_OutlineColorTrans);
+	
+	SetArrayCell(g_hBossProfileData, iIndex, bChasesEndlessly, BossProfileData_ChasesEndlessly);
+	SetArrayCell(g_hBossProfileData, iIndex, bTeleportIgnoreChase, BossProfileData_TeleportIgnoreChase);
 
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSearchRadius, BossProfileData_SearchRange);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossFOV, BossProfileData_FieldOfView);
@@ -1561,6 +1571,16 @@ float GetBossProfileIdleLifetime(int iProfileIndex, int iDifficulty)
 	}
 	
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_IdleLifetimeNormal);
+}
+
+bool GetBossProfileEndlessChaseState(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_ChasesEndlessly);
+}
+
+bool GetBossProfileTeleportIgnoreChaseState(int iProfileIndex)
+{
+	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_TeleportIgnoreChase);
 }
 
 float GetBossProfileSearchRadius(int iProfileIndex)

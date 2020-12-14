@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Cosmic Snatcher and Hyper Snatcher are no longer merged together.\n-Fixed all lingering memory leaks.\n-Nerfed the class speeds very slightly.\n-Decreased the Demoman's sprint duration increase.\n-Handles that were not closed are now closed."
+		"en"	"-Reverted all nerfs from Christmas Breakdown (Minus the Demoman's sprint duration, now 25%%).\n-Optimized the pathing AI in blocked areas by 45%%.\n-Optimized general pathing AI.\n-Added a admin command where it removes all active bosses.\n-Fixed a bug where bosses on endless chasing or RAID mode despawn and respawn immediately."
 	}
 
 	"SF2 Smite player"

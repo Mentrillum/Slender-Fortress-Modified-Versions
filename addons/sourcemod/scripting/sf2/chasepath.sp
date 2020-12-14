@@ -135,7 +135,7 @@ methodmap ChaserPathLogic
 		return true;//This should never ever be reached
 	}
 	
-	public bool ComputePath(int iEntity, int iTarget, NavPathCostFunctor costFunction, any costData, bool populateIfIncomplete = true, CNavArea &closestAreaIndex = INVALID_NAV_AREA)
+	/*public bool ComputePath(int iEntity, int iTarget, NavPathCostFunctor costFunction, any costData, bool populateIfIncomplete = true, CNavArea &closestAreaIndex = INVALID_NAV_AREA)
 	{
 		if (g_flChasePathLastBuildTime[this.Index] > GetGameTime()) return false;
 		
@@ -176,7 +176,7 @@ methodmap ChaserPathLogic
 			return true;
 		}
 		return false;
-	}
+	}*/
 	
 	public bool ComputePathToPos(int iEntity, float vecEndPos[3], NavPathCostFunctor costFunction, any costData, bool populateIfIncomplete = true, CNavArea &closestAreaIndex = INVALID_NAV_AREA)
 	{
@@ -193,8 +193,16 @@ methodmap ChaserPathLogic
 				closestAreaIndex = CNavArea(0);
 				float vecStartPos[3];
 				GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", vecStartPos);
-				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 10000.0, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea) || !populateIfIncomplete)
+				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 10000.0, costFunction, costData, populateIfIncomplete, view_as<int>(closestAreaIndex), startArea, endArea) || !populateIfIncomplete)
 				{
+					g_iPathNodeIndex[this.Index] = -1;
+					g_iPathBehindNodeIndex[this.Index] = -1;
+					g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
+					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
+					startArea = INVALID_NAV_AREA;
+					endArea = INVALID_NAV_AREA;
+					closestAreaIndex = INVALID_NAV_AREA;
+					costData = 0;
 					g_hChasePath[this.Index].Clear();
 					return false;
 				}
@@ -215,7 +223,7 @@ methodmap ChaserPathLogic
 		return false;
 	}
 	
-	public bool ComputePathFromPosToPos(float vecStartPos[3], float vecEndPos[3], NavPathCostFunctor costFunction, any costData, bool populateIfIncomplete = true, CNavArea &closestAreaIndex = view_as<CNavArea>(0))
+	/*public bool ComputePathFromPosToPos(float vecStartPos[3], float vecEndPos[3], NavPathCostFunctor costFunction, any costData, bool populateIfIncomplete = true, CNavArea &closestAreaIndex = view_as<CNavArea>(0))
 	{
 		if (g_flChasePathLastBuildTime[this.Index] > GetGameTime()) return false;
 		
@@ -240,7 +248,7 @@ methodmap ChaserPathLogic
 			}
 		}
 		return false;
-	}
+	}*/
 	
 	public void Jump(NextBotGroundLocomotion nextbotLocomotion, float vecStartPos[3], float vecEndPos[3])
 	{
