@@ -128,6 +128,8 @@ enum
 	ChaserProfileData_AwarenessDecreaseRateApollyon,
 
 	ChaserProfileData_AutoChaseEnabled,
+	
+	ChaserProfileData_ChasesEndlessly,
 
 	ChaserProfileData_CanCloak,
 	ChaserProfileData_CloakOnFlee,
@@ -747,6 +749,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseEnabled)); }
 	}
 
+	property bool ChasesEndlessly
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ChasesEndlessly)); }
+	}
+	
 	property bool SelfHealState
 	{
 		public get() { return GetChaserProfileSelfHealState(this.UniqueProfileIndex); }
@@ -1597,6 +1604,8 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 
 	bool bAutoChaseEnabled = view_as<bool>(KvGetNum(kv, "auto_chase_enabled", 0));
 
+	bool bChasesEndlessly = view_as<bool>(KvGetNum(kv,"boss_chases_endlessly", 0));
+	
 	bool bSelfHeal = view_as<bool>(KvGetNum(kv, "self_heal_enabled", 0));
 	float flHealthPercentageToHeal = KvGetFloat(kv, "health_percentage_to_heal", 0.35);
 	if (flHealthPercentageToHeal < 0.0) flHealthPercentageToHeal = 0.0;
@@ -1957,6 +1966,8 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	g_hChaserProfileData.Set(iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_apollyon", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateApollyon);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bAutoChaseEnabled, ChaserProfileData_AutoChaseEnabled);
+
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bChasesEndlessly, ChaserProfileData_ChasesEndlessly);
 
 	ParseChaserProfileAttacks(kv, iUniqueProfileIndex);
 	

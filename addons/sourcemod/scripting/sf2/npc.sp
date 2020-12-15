@@ -49,9 +49,6 @@ static float g_flNPCInstantKillRadius[MAX_BOSSES] = { 0.0, ... };
 
 static bool g_bNPCDeathCamEnabled[MAX_BOSSES] = { false, ... };
 
-bool g_bNPCChasesEndlessly[MAX_BOSSES] = { false, ... };
-bool g_bNPCTeleportIgnoreChase[MAX_BOSSES] = { false, ... };
-
 static int g_iNPCEnemy[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
 static Handle hTimerMusic = INVALID_HANDLE;//Planning to add a bosses array on.
@@ -886,10 +883,6 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	
 	g_iNPCRaidHitbox[Npc.Index] = GetBossProfileRaidHitbox(iProfileIndex);
 	
-	g_bNPCChasesEndlessly[Npc.Index] = GetBossProfileEndlessChaseState(iProfileIndex);
-	
-	g_bNPCTeleportIgnoreChase[Npc.Index] = GetBossProfileTeleportIgnoreChaseState(iProfileIndex);
-	
 	g_bSlenderUseCustomOutlines[Npc.Index] = GetBossProfileCustomOutlinesState(iProfileIndex);
 	g_iSlenderOutlineColorR[Npc.Index] = GetBossProfileOutlineColorR(iProfileIndex);
 	g_iSlenderOutlineColorG[Npc.Index] = GetBossProfileOutlineColorG(iProfileIndex);
@@ -1379,11 +1372,7 @@ void RemoveProfile(int iBossIndex)
 	g_flSlenderNextTeleportTime[iBossIndex] = -1.0;
 	g_flSlenderTeleportTargetTime[iBossIndex] = -1.0;
 	g_flSlenderTimeUntilKill[iBossIndex] = -1.0;
-	
-	g_iNPCRaidHitbox[iBossIndex] = 0;
-	g_bNPCChasesEndlessly[iBossIndex] = false;
-	g_bNPCTeleportIgnoreChase[iBossIndex] = false;
-	
+
 	// Remove all copies associated with me.
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -1762,9 +1751,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			g_iSlenderSoundTarget[iBossIndex] = INVALID_ENT_REFERENCE;
 			g_bAutoChasingLoudPlayer[iBossIndex] = false;
 			g_bSlenderInDeathcam[iBossIndex] = false;
-			g_bNPCChasesEndlessly[iBossIndex] = false;
-			g_bNPCTeleportIgnoreChase[iBossIndex] = false;
-	
+
 			Spawn_Chaser(iBossIndex);
 			
 			NPCChaserResetAnimationInfo(iBossIndex, 0);
@@ -4090,7 +4077,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 	if (!g_bRoundGrace)
 	{	
 		int iTeleportTarget;
-		if (SF_IsBoxingMap() || SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || g_bNPCChasesEndlessly[iBossIndex] || g_bNPCTeleportIgnoreChase[iBossIndex])
+		if (SF_IsBoxingMap() || SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap())
 		{
 			Handle hArrayRaidTargets = CreateArray();
 			for (int i = 1; i <= MaxClients; i++)
