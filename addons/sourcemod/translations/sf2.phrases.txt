@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Removed SteamWorks, CollisionHooks, and Send Proxy Manager.\n-Ghosts can now noclip.\n-Hopefully reduced crashing instances.\n-Added a boss attribute, "block walk speed under difficulty".\n-Fixed a bug where players can noclip after a advanced deathcam stage from a fake boss."
+		"en"	"-Removed SteamWorks, CollisionHooks, and Send Proxy Manager.\n-Ghosts can now noclip.\n-Hopefully reduced crashing instances.\n-Added a boss attribute, block walk speed under difficulty.\n-Fixed a bug where players can noclip after a advanced deathcam stage from a fake boss."
 	}
 
 	"SF2 Smite player"
