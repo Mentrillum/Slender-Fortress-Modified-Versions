@@ -4127,7 +4127,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	{
 		case STATE_WANDER, STATE_ALERT:
 		{
-			SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedWalkSpeed[iBossIndex]);
+			if (iDifficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 1.0)))
+				SetEntPropFloat(slender, Prop_Data, "m_speed", g_flSlenderCalculatedWalkSpeed[iBossIndex]);
+			else SetEntPropFloat(slender, Prop_Data, "m_speed", 0.0);
 		}
 		case STATE_CHASE:
 		{

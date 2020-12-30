@@ -586,7 +586,7 @@ public void PvP_OnTriggerStartTouch(int trigger,int iOther)
 	
 	if (StrContains(sName, "sf2_pvp_trigger", false) == 0)
 	{
-		if (IsValidClient(iOther) && IsPlayerAlive(iOther))
+		if (IsValidClient(iOther) && IsPlayerAlive(iOther) && !IsClientInGhostMode(iOther))
 		{
 			if (!g_bPlayerEliminated[iOther] && !DidClientEscape(iOther))
 				return;
@@ -624,7 +624,9 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 		if (IsClientInPvP(iOther))
 		{
 			g_iPlayerPvPTimerCount[iOther] = GetConVarInt(g_cvPvPArenaLeaveTime);
-			g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT);
+			if (g_iPlayerPvPTimerCount[iOther] != 0) 
+				g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT);
+			else g_hPlayerPvPTimer[iOther] = CreateTimer(0.1, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT);
 		}
 	}
 
@@ -939,7 +941,7 @@ public Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 
 MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
 {
-	if (IsValidClient(client) && IsClientInPvP(client) && IsValidEntity(weapon))
+	if (IsValidClient(client) && IsClientInPvP(client) && IsValidEntity(weapon) && IsValidEdict(weapon) && IsValidEntity(client))
 	{
 		static const char fixWeaponPenetrationClasses[][] = 
 		{
@@ -995,6 +997,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 
 public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, Handle hReturn, Handle hParams)
 {
+	if (!IsValidEdict(projectile) || !IsValidEntity(projectile)) return MRES_Ignored;
 	DHookSetReturn(hReturn, true);
 	return MRES_Supercede;
 }

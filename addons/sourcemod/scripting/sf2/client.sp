@@ -36,6 +36,7 @@ static Handle g_hPlayerDeathCamTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 static bool g_bCameraDeathCamAdvanced[2049] = { false, ... };
 static float g_flCameraPlayerOffsetBackward[2049] = { 0.0, ... };
 static float g_flCameraPlayerOffsetDownward[2049] = { 0.0, ... };
+static float g_vecPlayerOriginalDeathcamPosition[MAXPLAYERS + 1][3];
 
 // Flashlight data.
 static bool g_bPlayerFlashlight[MAXPLAYERS + 1] = { false, ... };
@@ -121,54 +122,6 @@ public MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, Handle hRe
 
 	DHookSetReturn(hReturn, true);
 	return MRES_Supercede;
-}
-
-public Action CH_ShouldCollide(int ent1,int ent2, bool &result)
-{
-	SF2RoundState state = GetRoundState();
-	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro) return Plugin_Continue;
-	
-	if (MaxClients >= ent1 > 0)
-	{
-		if (IsClientInGhostMode(ent1))
-		{
-			result = false;
-			return Plugin_Changed;
-		}
-	}
-	if (MaxClients >= ent2 > 0)
-	{
-		if (IsClientInGhostMode(ent2))
-		{
-			result = false;
-			return Plugin_Changed;
-		}
-	}
-	return Plugin_Continue;
-}
-
-public Action CH_PassFilter(int ent1,int ent2, bool &result)
-{
-	SF2RoundState state = GetRoundState();
-	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro) return Plugin_Continue;
-	
-	if (MaxClients >= ent1 > 0)
-	{
-		if (IsClientInGhostMode(ent1))
-		{
-			result = false;
-			return Plugin_Changed;
-		}
-	}
-	if (MaxClients >= ent2 > 0)
-	{
-		if (IsClientInGhostMode(ent2))
-		{
-			result = false;
-			return Plugin_Changed;
-		}
-	}
-	return Plugin_Continue;
 }
 
 float ClientGetScareBoostEndTime(int client)
@@ -1021,6 +974,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 
 public void Hook_ClientWeaponEquipPost(int client, int weapon)
 {
+	if (!IsValidClient(client) || !IsClientInGame(client) || !IsValidEdict(weapon)) return;
 	DHookEntity(g_hSDKWeaponGetCustomDamageType, true, weapon);
 }
 
@@ -4213,6 +4167,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	else
 	{
 		SetEntityMoveType(client, MOVETYPE_NOCLIP);
+		GetClientAbsOrigin(client, g_vecPlayerOriginalDeathcamPosition[client]);
 		if (!bAnticamp)
 		{
 			int slenderEnt = NPCGetEntIndex(iBossIndex);
@@ -4352,7 +4307,7 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 				SetEntityRenderMode(iSlender, RENDER_NORMAL);
 				SetEntityRenderColor(iSlender, 255, 255, 255, 255);
 				g_hSlenderEntityThink[iDeathCamBoss] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(iSlender), TIMER_REPEAT);
-				g_bSlenderInDeathcam[iDeathCamBoss] = false;
+				if (!(NPCGetFlags(iDeathCamBoss) & SFF_FAKE)) g_bSlenderInDeathcam[iDeathCamBoss] = false;
 			}
 		}
 		if (NPCHasAttribute(iDeathCamBoss, "ignite player on death"))
@@ -4369,7 +4324,15 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 			KillClient(client);
 		}
 		else
+		{
+			if (g_bSlenderInDeathcam[iDeathCamBoss])
+			{
+				TeleportEntity(client, g_vecPlayerOriginalDeathcamPosition[client], NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+				g_bSlenderInDeathcam[iDeathCamBoss] = false;
+			}
 			SlenderMarkAsFake(iDeathCamBoss);	
+			SetEntityMoveType(client, MOVETYPE_WALK);
+		}
 	}
 	else//The boss is invalid? But the player got a death cam?
 	{
@@ -4539,6 +4502,7 @@ void ClientSetGhostModeState(int client, bool bState)
 			TF2_RemoveCondition(client, TFCond_Stealthed);
 			SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
+			SetEntityMoveType(client, MOVETYPE_WALK);
 			Client_ModelOverrides(client);
 		}
 	}
@@ -4604,7 +4568,8 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 		TF2_AddCondition(client, TFCond_Stealthed, -1.0);
 		SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_NO);
 		SetEntData(client, g_offsCollisionGroup, 2, 4, true);
-		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);//Fix client predictions!
+		SetEntProp(client, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
+		SetEntityMoveType(client, MOVETYPE_NOCLIP);
 		Client_ModelOverrides(client, g_iGhostModelIndex);
 		
 		// Set first observer target.
@@ -6816,7 +6781,7 @@ public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
 
 	int iOwner = GetEntPropEnt(ent, Prop_Send, "moveparent");
 	if (iOwner == other) return Plugin_Handled;
-
+	if (!IsValidClient(other)) return Plugin_Handled;
 	if (g_bPlayerProxy[other]) return Plugin_Continue;
 	if (IsClientInGhostMode(other)) return Plugin_Continue;
 	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && ((GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) || (g_bPlayerProxy[other]))) return Plugin_Continue;
@@ -7769,7 +7734,7 @@ public Action Timer_RespawnPlayer(Handle timer, any userid)
 	int client = GetClientOfUserId(userid);
 	if (client <= 0) return;
 	
-	if (IsPlayerAlive(client)) return;
+	if (!IsValidClient(client) || !IsClientInGame(client) || IsPlayerAlive(client)) return;
 	
 	TF2_RespawnPlayer(client);
 }

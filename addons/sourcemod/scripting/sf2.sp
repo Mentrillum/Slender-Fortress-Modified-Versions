@@ -7,7 +7,6 @@
 #include <dhooks>
 #include <navmesh>
 #include <nativevotes>
-#include <collisionhook>
 
 #pragma semicolon 1
 
@@ -21,12 +20,10 @@
 #define REQUIRE_PLUGIN
 
 #undef REQUIRE_EXTENSIONS
-#tryinclude <steamworks>
-#tryinclude <sendproxy>
+#tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
 
-bool steamworks=false;
-bool sendproxymanager=false;
+bool steamtools=false;
 
 #define DEBUG
 #define SF2
@@ -34,8 +31,8 @@ bool sendproxymanager=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.5.5.6a Modified"
-#define PLUGIN_VERSION_DISPLAY "1.5.5.6a Modified"
+#define PLUGIN_VERSION "1.5.5.6b Modified"
+#define PLUGIN_VERSION_DISPLAY "1.5.5.6b Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -1004,8 +1001,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	
 	SpecialRoundInitializeAPI();
 
-	#if defined _SteamWorks_Included
-	MarkNativeAsOptional("SteamWorks_SetGameDescription");
+	#if defined _steamtools_included
+	MarkNativeAsOptional("Steam_SetGameDescription");
 	#endif
 	
 	return APLRes_Success;
@@ -1260,10 +1257,8 @@ public void OnPluginStart()
 	
 	AddTempEntHook("Fire Bullets", Hook_TEFireBullets);
 
-	steamworks = LibraryExists("SteamWorks");
-	
-	sendproxymanager = LibraryExists("sendproxy");
-	
+	steamtools = LibraryExists("SteamTools");
+
 	InitializeBossProfiles();
 	
 	NPCInitialize();
@@ -1300,27 +1295,17 @@ public void OnPluginEnd()
 }
 public void OnLibraryAdded(const char[] name)
 {
-	if(!strcmp(name, "SteamWorks", false))
+	if(!strcmp(name, "SteamTools", false))
 	{
-		steamworks = true;
-	}
-	
-	if(!strcmp(name, "sendproxy", false))
-	{
-		sendproxymanager = true;
+		steamtools = true;
 	}
 	
 }
 public void OnLibraryRemoved(const char[] name)
 {
-	if(!strcmp(name, "SteamWorks", false))
+	if(!strcmp(name, "SteamTools", false))
 	{
-		steamworks = false;
-	}
-	
-	if(!strcmp(name, "sendproxy", false))
-	{
-		sendproxymanager = false;
+		steamtools = false;
 	}
 	
 }
@@ -1644,6 +1629,16 @@ static void StartPlugin()
 	
 	hCvar = FindConVar("tf_base_boss_max_turn_rate");
 	if (hCvar != view_as<ConVar>(INVALID_HANDLE) && GetConVarInt(hCvar) < 720) SetConVarInt(hCvar, 720);
+
+	//New CollisionHooks, or replacement, I don't judge.
+	hCvar = FindConVar("tf_avoidteammates");
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, true);
+
+	hCvar = FindConVar("tf_avoidteammates_pushaway");
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
+
+	hCvar = FindConVar("sv_noclipspeed");
+	if (hCvar != view_as<ConVar>(INVALID_HANDLE) && GetConVarInt(hCvar) < 2) SetConVarInt(hCvar, 2);
 	
 	g_flGravity = GetConVarFloat(g_cvGravity);
 	
@@ -1656,10 +1651,10 @@ static void StartPlugin()
 	
 	char sBuffer[64];
 	Format(sBuffer, sizeof(sBuffer), "Slender Fortress (%s)", PLUGIN_VERSION_DISPLAY);
-	#if defined _SteamWorks_Included
-	if(steamworks)
+	#if defined _steamtools_included
+	if(steamtools)
 	{
-		SteamWorks_SetGameDescription(sBuffer);
+		Steam_SetGameDescription(sBuffer);
 	}
 	#endif
 	
@@ -2312,7 +2307,6 @@ public Action Command_MainMenu(int iClient,int args)
 public Action Command_Tutorial(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (!sendproxymanager) return Plugin_Continue;
 	//Tutorial_HandleClient(iClient);
 	return Plugin_Handled;
 }
@@ -3812,15 +3806,19 @@ public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Han
 	if (!g_bEnabled) return MRES_Ignored;
 
 	int ownerEntity = GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity");
-	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && IsValidEntity(weapon))
+	if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && IsValidEntity(weapon) && ownerEntity)
 	{
 		int customDamageType = DHookGetReturn(hReturn);
-		MRESReturn hookResult = PvP_GetWeaponCustomDamageType(weapon, ownerEntity, customDamageType);
-		if (hookResult != MRES_Ignored)
+		if (customDamageType != -1)
 		{
-			DHookSetReturn(hReturn, customDamageType);
-			return hookResult;
+			MRESReturn hookResult = PvP_GetWeaponCustomDamageType(weapon, ownerEntity, customDamageType);
+			if (hookResult != MRES_Ignored)
+			{
+				DHookSetReturn(hReturn, customDamageType);
+				return hookResult;
+			}
 		}
+		else return MRES_Ignored;
 	}
 	else
 	{
@@ -7775,7 +7773,7 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+		if (!IsValidClient(i) || !IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
 
 		iClients[iClientsNum] = i;
 		iClientsNum++;

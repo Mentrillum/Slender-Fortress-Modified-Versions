@@ -2255,7 +2255,7 @@ public Action Event_HitBoxHurt(Handle event, const char[] name, bool dB)
 				float flDamageReturn = damage * 1.35;
 				damage = RoundToFloor(flDamageReturn);
 			}
-			if (SF_IsBoxingMap() && GetClientTeam(attacker) == TFTeam_Blue)
+			if (IsValidClient(attacker) && ((SF_IsBoxingMap() && GetClientTeam(attacker) == TFTeam_Blue) || (g_bPlayerProxy[attacker])))
 			{
 				damage = 0;
 			}

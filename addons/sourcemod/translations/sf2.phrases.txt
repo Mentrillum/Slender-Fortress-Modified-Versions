@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Reverted all nerfs from Christmas Breakdown (Minus the Demoman's sprint duration, now 25%%).\n-Optimized the pathing AI in blocked areas by 45%%.\n-Optimized general pathing AI.\n-Added a admin command where it removes all active bosses.\n-Fixed a bug where bosses on endless chasing or RAID mode despawn and respawn immediately."
+		"en"	"-Removed SteamWorks, CollisionHooks, and Send Proxy Manager.\n-Ghosts can now noclip.\n-Hopefully reduced crashing instances.\n-Added a boss attribute, "block walk speed under difficulty".\n-Fixed a bug where players can noclip after a advanced deathcam stage from a fake boss."
 	}
 
 	"SF2 Smite player"
