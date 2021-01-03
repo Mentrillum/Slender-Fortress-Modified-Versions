@@ -290,6 +290,14 @@ forward void SF2_OnClientCollectPage(int pageEnt, int client);
 forward void SF2_OnClientBlink(int client);
 
 /**
+ * Called when a player gets scared from a boss.
+ *
+ * @param client		Client index.
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnClientScare(int client, int iBossIndex);
+
+/**
  * Called when the player gets caught by a boss, either from too much static, being within
  * a boss's kill radius, or dies from too much camping. This is also called for fake bosses.
  *

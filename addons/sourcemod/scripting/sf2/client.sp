@@ -4710,6 +4710,11 @@ void ClientPerformScare(int client,int iBossIndex)
 			ClientAddStress(client, 0.45);
 		}
 	}
+
+	Call_StartForward(fOnClientScare)
+	Call_PushCell(client)
+	Call_PushCell(iBossIndex)
+	Call_Finish()
 }
 
 void ClientPerformSightSound(int client,int iBossIndex)
