@@ -777,6 +777,7 @@ Handle fOnPagesSpawned;
 Handle fOnRoundStateChange;
 Handle fOnClientCollectPage;
 Handle fOnClientBlink;
+Handle fOnClientScare;
 Handle fOnClientCaughtByBoss;
 Handle fOnClientGiveQueuePoints;
 Handle fOnClientActivateFlashlight;
@@ -898,6 +899,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	fOnRoundStateChange = CreateGlobalForward("SF2_OnRoundStateChange", ET_Ignore, Param_Cell, Param_Cell);
 	fOnClientCollectPage = CreateGlobalForward("SF2_OnClientCollectPage", ET_Ignore, Param_Cell, Param_Cell);
 	fOnClientBlink = CreateGlobalForward("SF2_OnClientBlink", ET_Ignore, Param_Cell);
+	fOnClientScare = CreateGlobalForward("SF2_OnClientScare", ET_Ignore, Param_Cell, Param_Cell);
 	fOnClientCaughtByBoss = CreateGlobalForward("SF2_OnClientCaughtByBoss", ET_Ignore, Param_Cell, Param_Cell);
 	fOnClientGiveQueuePoints = CreateGlobalForward("SF2_OnClientGiveQueuePoints", ET_Hook, Param_Cell, Param_CellByRef);
 	fOnClientActivateFlashlight = CreateGlobalForward("SF2_OnClientActivateFlashlight", ET_Ignore, Param_Cell);
