@@ -1882,8 +1882,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	float flMaxWalkSpeed = flOriginalMaxWalkSpeed;
 	if (g_flRoundDifficultyModifier > 1.0)
 	{
-		flWalkSpeed = flOriginalWalkSpeed + ((flOriginalWalkSpeed * g_flRoundDifficultyModifier)/15) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
-		flMaxWalkSpeed = flOriginalMaxWalkSpeed + ((flOriginalMaxWalkSpeed * g_flRoundDifficultyModifier)/20) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
+		flWalkSpeed = (flOriginalWalkSpeed + (flOriginalWalkSpeed * g_flRoundDifficultyModifier)/15);
+		flMaxWalkSpeed = (flOriginalMaxWalkSpeed + (flOriginalMaxWalkSpeed * g_flRoundDifficultyModifier)/20);
 	}
 	if (flWalkSpeed < flOriginalWalkSpeed) flWalkSpeed = flOriginalWalkSpeed;
 	if (flWalkSpeed > flMaxWalkSpeed) flWalkSpeed = flMaxWalkSpeed;
