@@ -74,8 +74,8 @@ void Hook_TrapThink(int iTrap)
 		if (!iBoss || iBoss == INVALID_ENT_REFERENCE) continue;
 		GetEntPropVector(iBoss, Prop_Data, "m_vecAbsOrigin", flOtherPos);
 		GetEntPropVector(iTrap, Prop_Data, "m_vecAbsOrigin", flEntPos);
-		float flDistance = GetVectorDistance(flOtherPos, flEntPos);
-		if (flDistance <= 75.0)
+		float flDistance = GetVectorSquareMagnitude(flOtherPos, flEntPos);
+		if (flDistance <= SquareFloat(75.0))
 		{
 			if (iState != 1)
 				AcceptEntityInput(iTrap, "DisableCollision");

@@ -100,7 +100,35 @@ enum
 	ChaserProfileData_SearchChaseDurationInsane,
 	ChaserProfileData_SearchChaseDurationNightmare,
 	ChaserProfileData_SearchChaseDurationApollyon,
-	
+
+	ChaserProfileData_SearchWanderRangeMin,
+	ChaserProfileData_SearchWanderRangeMinEasy,
+	ChaserProfileData_SearchWanderRangeMinHard,
+	ChaserProfileData_SearchWanderRangeMinInsane,
+	ChaserProfileData_SearchWanderRangeMinNightmare,
+	ChaserProfileData_SearchWanderRangeMinApollyon,
+
+	ChaserProfileData_SearchWanderRangeMax,
+	ChaserProfileData_SearchWanderRangeMaxEasy,
+	ChaserProfileData_SearchWanderRangeMaxHard,
+	ChaserProfileData_SearchWanderRangeMaxInsane,
+	ChaserProfileData_SearchWanderRangeMaxNightmare,
+	ChaserProfileData_SearchWanderRangeMaxApollyon,
+
+	ChaserProfileData_SearchWanderTimeMin,
+	ChaserProfileData_SearchWanderTimeMinEasy,
+	ChaserProfileData_SearchWanderTimeMinHard,
+	ChaserProfileData_SearchWanderTimeMinInsane,
+	ChaserProfileData_SearchWanderTimeMinNightmare,
+	ChaserProfileData_SearchWanderTimeMinApollyon,
+
+	ChaserProfileData_SearchWanderTimeMax,
+	ChaserProfileData_SearchWanderTimeMaxEasy,
+	ChaserProfileData_SearchWanderTimeMaxHard,
+	ChaserProfileData_SearchWanderTimeMaxInsane,
+	ChaserProfileData_SearchWanderTimeMaxNightmare,
+	ChaserProfileData_SearchWanderTimeMaxApollyon,
+
 	ChaserProfileData_CanBeStunned,
 	ChaserProfileData_StunDuration,
 	ChaserProfileData_StunCooldown,
@@ -128,6 +156,12 @@ enum
 	ChaserProfileData_AwarenessDecreaseRateApollyon,
 
 	ChaserProfileData_AutoChaseEnabled,
+	ChaserProfileData_AutoChaseCount,
+	ChaserProfileData_AutoChaseAdd,
+	ChaserProfileData_AutoChaseAddFootstep,
+	ChaserProfileData_AutoChaseAddVoice,
+	ChaserProfileData_AutoChaseAddWeapon,
+	ChaserProfileData_AutoChaseSprinters,
 	
 	ChaserProfileData_ChasesEndlessly,
 
@@ -749,6 +783,36 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseEnabled)); }
 	}
 
+	property int AutoChaseThreshold
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseCount)); }
+	}
+
+	property int AutoChaseAddGeneral
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseAdd)); }
+	}
+
+	property int AutoChaseAddFootstep
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseAddFootstep)); }
+	}
+
+	property int AutoChaseAddVoice
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseAddVoice)); }
+	}
+
+	property int AutoChaseAddWeapon
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseAddWeapon)); }
+	}
+
+	property bool AutoChaseSprinters
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseSprinters)); }
+	}
+
 	property bool ChasesEndlessly
 	{
 		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ChasesEndlessly)); }
@@ -817,6 +881,26 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	public float GetChaseStateDuration(int difficulty)
 	{
 		return GetChaserProfileChaseDuration(this.UniqueProfileIndex, difficulty);
+	}
+
+	public float GetWanderRangeMin(int difficulty)
+	{
+		return GetChaserProfileWanderRangeMin(this.UniqueProfileIndex, difficulty);
+	}
+
+	public float GetWanderRangeMax(int difficulty)
+	{
+		return GetChaserProfileWanderRangeMax(this.UniqueProfileIndex, difficulty);
+	}
+
+	public float GetWanderTimeMin(int difficulty)
+	{
+		return GetChaserProfileWanderTimeMin(this.UniqueProfileIndex, difficulty);
+	}
+
+	public float GetWanderTimeMax(int difficulty)
+	{
+		return GetChaserProfileWanderTimeMax(this.UniqueProfileIndex, difficulty);
 	}
 
 	public float GetAwarenessIncreaseRate(int difficulty)
@@ -1178,9 +1262,9 @@ void ClearChaserProfiles()
  *	Parses and stores the unique values of a chaser profile from the current position in the profiles config.
  *	Returns true if loading was successful, false if not.
  */
-bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProfileIndex, char[] sLoadFailReasonBuffer, int iLoadFailReasonBufferLen)
+bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProfileIndex, char[] sLoadFailReasonBuffer)
 {
-	strcopy(sLoadFailReasonBuffer, iLoadFailReasonBufferLen, "");
+	sLoadFailReasonBuffer[0] = '\0';
 	
 	iUniqueProfileIndex = g_hChaserProfileData.Push(-1);
 	g_hChaserProfileNames.SetValue(sProfile, iUniqueProfileIndex);
@@ -1238,7 +1322,35 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	float flChaseDurationInsane = KvGetFloat(kv, "search_chase_duration_insane", flChaseDurationHard);
 	float flChaseDurationNightmare = KvGetFloat(kv, "search_chase_duration_nightmare", flChaseDurationInsane);
 	float flChaseDurationApollyon = KvGetFloat(kv, "search_chase_duration_apollyon", flChaseDurationNightmare);
-	
+
+	float flWanderRangeMin = KvGetFloat(kv, "search_wander_range_min", 400.0);
+	float flWanderRangeMinEasy = KvGetFloat(kv, "search_wander_range_min_easy", flWanderRangeMin);
+	float flWanderRangeMinHard = KvGetFloat(kv, "search_wander_range_min_hard", flWanderRangeMin);
+	float flWanderRangeMinInsane = KvGetFloat(kv, "search_wander_range_min_insane", flWanderRangeMinHard);
+	float flWanderRangeMinNightmare = KvGetFloat(kv, "search_wander_range_min_nightmare", flWanderRangeMinInsane);
+	float flWanderRangeMinApollyon = KvGetFloat(kv, "search_wander_range_min_apollyon", flWanderRangeMinNightmare);
+
+	float flWanderRangeMax = KvGetFloat(kv, "search_wander_range_max", 1024.0);
+	float flWanderRangeMaxEasy = KvGetFloat(kv, "search_wander_range_max_easy", flWanderRangeMax);
+	float flWanderRangeMaxHard = KvGetFloat(kv, "search_wander_range_max_hard", flWanderRangeMax);
+	float flWanderRangeMaxInsane = KvGetFloat(kv, "search_wander_range_max_insane", flWanderRangeMaxHard);
+	float flWanderRangeMaxNightmare = KvGetFloat(kv, "search_wander_range_max_nightmare", flWanderRangeMaxInsane);
+	float flWanderRangeMaxApollyon = KvGetFloat(kv, "search_wander_range_max_apollyon", flWanderRangeMaxNightmare);
+
+	float flWanderTimeMin = KvGetFloat(kv, "search_wander_time_min", 3.0);
+	float flWanderTimeMinEasy = KvGetFloat(kv, "search_wander_time_min_easy", flWanderTimeMin);
+	float flWanderTimeMinHard = KvGetFloat(kv, "search_wander_time_min_hard", flWanderTimeMin);
+	float flWanderTimeMinInsane = KvGetFloat(kv, "search_wander_time_min_insane", flWanderTimeMinHard);
+	float flWanderTimeMinNightmare = KvGetFloat(kv, "search_wander_time_min_nightmare", flWanderTimeMinInsane);
+	float flWanderTimeMinApollyon = KvGetFloat(kv, "search_wander_time_min_apollyon", flWanderTimeMinNightmare);
+
+	float flWanderTimeMax = KvGetFloat(kv, "search_wander_time_max", 4.5);
+	float flWanderTimeMaxEasy = KvGetFloat(kv, "search_wander_time_max_easy", flWanderTimeMax);
+	float flWanderTimeMaxHard = KvGetFloat(kv, "search_wander_time_max_hard", flWanderTimeMax);
+	float flWanderTimeMaxInsane = KvGetFloat(kv, "search_wander_time_max_insane", flWanderTimeMaxHard);
+	float flWanderTimeMaxNightmare = KvGetFloat(kv, "search_wander_time_max_nightmare", flWanderTimeMaxInsane);
+	float flWanderTimeMaxApollyon = KvGetFloat(kv, "search_wander_time_max_apollyon", flWanderTimeMaxNightmare);
+
 	bool bCanBeStunned = view_as<bool>(KvGetNum(kv, "stun_enabled"));
 	
 	float flStunDuration = KvGetFloat(kv, "stun_duration");
@@ -1603,6 +1715,17 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	float flTrapSpawnCooldownApollyon = KvGetFloat(kv, "trap_spawn_cooldown_apollyon", flTrapSpawnCooldownNightmare);
 
 	bool bAutoChaseEnabled = view_as<bool>(KvGetNum(kv, "auto_chase_enabled", 0));
+	int iAutoChaseCount = KvGetNum(kv, "auto_chase_count", 30);
+	if (iAutoChaseCount < 0) iAutoChaseCount = 0;
+	int iAutoChaseAdd = KvGetNum(kv, "sound_alert_add", 0);
+	if (iAutoChaseAdd < 0) iAutoChaseAdd = 0;
+	int iAutoChaseAddFootsteps = KvGetNum(kv, "sound_alert_add_footsteps", 2);
+	if (iAutoChaseAddFootsteps < 0) iAutoChaseAddFootsteps = 0;
+	int iAutoChaseAddVoice = KvGetNum(kv, "sound_alert_add_voice", 8);
+	if (iAutoChaseAddVoice < 0) iAutoChaseAddVoice = 0;
+	int iAutoChaseAddWeapon = KvGetNum(kv, "sound_alert_add_weapon", 4);
+	if (iAutoChaseAddWeapon < 0) iAutoChaseAddWeapon = 0;
+	bool bAutoChaseSprinters = view_as<bool>(KvGetNum(kv, "auto_chase_sprinters", 0));
 
 	bool bChasesEndlessly = view_as<bool>(KvGetNum(kv,"boss_chases_endlessly", 0));
 	
@@ -1670,6 +1793,34 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flChaseDurationInsane, ChaserProfileData_SearchChaseDurationInsane);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flChaseDurationNightmare, ChaserProfileData_SearchChaseDurationNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flChaseDurationApollyon, ChaserProfileData_SearchChaseDurationApollyon);
+
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMin, ChaserProfileData_SearchWanderRangeMin);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMinEasy, ChaserProfileData_SearchWanderRangeMinEasy);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMinHard, ChaserProfileData_SearchWanderRangeMinHard);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMinInsane, ChaserProfileData_SearchWanderRangeMinInsane);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMinNightmare, ChaserProfileData_SearchWanderRangeMinNightmare);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMinApollyon, ChaserProfileData_SearchWanderRangeMinApollyon);
+
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMax, ChaserProfileData_SearchWanderRangeMax);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMaxEasy, ChaserProfileData_SearchWanderRangeMaxEasy);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMaxHard, ChaserProfileData_SearchWanderRangeMaxHard);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMaxInsane, ChaserProfileData_SearchWanderRangeMaxInsane);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMaxNightmare, ChaserProfileData_SearchWanderRangeMaxNightmare);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderRangeMaxApollyon, ChaserProfileData_SearchWanderRangeMaxApollyon);
+	
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMin, ChaserProfileData_SearchWanderTimeMin);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMinEasy, ChaserProfileData_SearchWanderTimeMinEasy);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMinHard, ChaserProfileData_SearchWanderTimeMinHard);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMinInsane, ChaserProfileData_SearchWanderTimeMinInsane);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMinNightmare, ChaserProfileData_SearchWanderTimeMinNightmare);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMinApollyon, ChaserProfileData_SearchWanderTimeMinApollyon);
+
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMax, ChaserProfileData_SearchWanderTimeMax);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMaxEasy, ChaserProfileData_SearchWanderTimeMaxEasy);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMaxHard, ChaserProfileData_SearchWanderTimeMaxHard);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMaxInsane, ChaserProfileData_SearchWanderTimeMaxInsane);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMaxNightmare, ChaserProfileData_SearchWanderTimeMaxNightmare);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flWanderTimeMaxApollyon, ChaserProfileData_SearchWanderTimeMaxApollyon);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flWakeRange, ChaserProfileData_WakeRadius);
 	
@@ -1966,6 +2117,12 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUniqueProf
 	g_hChaserProfileData.Set(iUniqueProfileIndex, KvGetFloat(kv, "awareness_rate_decrease_apollyon", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateApollyon);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bAutoChaseEnabled, ChaserProfileData_AutoChaseEnabled);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iAutoChaseCount, ChaserProfileData_AutoChaseCount);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iAutoChaseAdd, ChaserProfileData_AutoChaseAdd);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iAutoChaseAddFootsteps, ChaserProfileData_AutoChaseAddFootstep);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iAutoChaseAddVoice, ChaserProfileData_AutoChaseAddVoice);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, iAutoChaseAddWeapon, ChaserProfileData_AutoChaseAddWeapon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bAutoChaseSprinters, ChaserProfileData_AutoChaseSprinters);
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bChasesEndlessly, ChaserProfileData_ChasesEndlessly);
 
@@ -1987,7 +2144,7 @@ static int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		char sNum[3];
 		for (int i = 1; i <= SF2_CHASER_BOSS_MAX_ATTACKS; i++)
 		{
-			IntToString(i, sNum, sizeof(sNum));
+			FormatEx(sNum, sizeof(sNum), "%d", i);
 			if (KvJumpToKey(kv, sNum))
 			{
 				iMaxAttacks++;
@@ -2005,7 +2162,7 @@ static int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		if (iMaxAttacks > 0) //Backward compatibility
 		{
 			char sNum[3];
-			IntToString(iAttackNum, sNum, sizeof(sNum));
+			FormatEx(sNum, sizeof(sNum), "%d", iAttackNum);
 			KvJumpToKey(kv, sNum);
 		}
 		int iAttackType = KvGetNum(kv, "attack_type", SF2BossAttackType_Melee);
@@ -2272,6 +2429,62 @@ float GetChaserProfileChaseDuration(int iChaserProfileIndex,int iDifficulty)
 	}
 	
 	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchChaseDuration));
+}
+
+float GetChaserProfileWanderRangeMin(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMin));
+}
+
+float GetChaserProfileWanderRangeMax(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMax));
+}
+
+float GetChaserProfileWanderTimeMin(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMin));
+}
+
+float GetChaserProfileWanderTimeMax(int iChaserProfileIndex,int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxEasy));
+		case Difficulty_Hard: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxHard));
+		case Difficulty_Insane: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxInsane));
+		case Difficulty_Nightmare: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxNightmare));
+		case Difficulty_Apollyon: return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxApollyon));
+	}
+	
+	return view_as<float>(GetArrayCell(g_hChaserProfileData, iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMax));
 }
 
 float GetChaserProfileProjectileCooldownMin(int iChaserProfileIndex,int iDifficulty)
@@ -3572,7 +3785,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 				int iTotalAnimation;
 				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
 				{
-					IntToString(iAnimationIndex, sNum, sizeof(sNum));
+					FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
 					if (KvJumpToKey(g_hConfig, sNum))
 					{
 						iTotalAnimation++;
@@ -3581,7 +3794,7 @@ stock bool GetProfileAnimation(const char[] sProfile, int iAnimationSection, cha
 				}
 				iAnimationIndex = GetRandomInt(1, iTotalAnimation);
 			}
-			IntToString(iAnimationIndex, sNum, sizeof(sNum));
+			FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
 			if (!KvJumpToKey(g_hConfig, sNum))
 			{
 				return false;
@@ -3685,7 +3898,7 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 				int iTotalAnimation;
 				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
 				{
-					IntToString(iAnimationIndex, sNum, sizeof(sNum));
+					FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
 					if (KvJumpToKey(g_hConfig, sNum))
 					{
 						iTotalAnimation++;
@@ -3694,7 +3907,7 @@ stock bool GetProfileBlendAnimationSpeed(const char[] sProfile, int iAnimationSe
 				}
 				iAnimationIndex = GetRandomInt(1, iTotalAnimation);
 			}
-			IntToString(iAnimationIndex, sNum, sizeof(sNum));
+			FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
 			if (!KvJumpToKey(g_hConfig, sNum))
 			{
 				return false;
@@ -3715,7 +3928,7 @@ stock int GetProfileAttackNum(const char[] sProfile, const char[] keyValue,int d
 	KvRewind(g_hConfig);
 	KvJumpToKey(g_hConfig, sProfile);
 	KvJumpToKey(g_hConfig, "attacks");
-	IntToString(iAttackIndex, sKey, sizeof(sKey));
+	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
 	KvJumpToKey(g_hConfig, sKey);
 	return KvGetNum(g_hConfig, keyValue, defaultValue);
 }
@@ -3728,7 +3941,7 @@ stock float GetProfileAttackFloat(const char[] sProfile, const char[] keyValue,f
 	KvRewind(g_hConfig);
 	KvJumpToKey(g_hConfig, sProfile);
 	KvJumpToKey(g_hConfig, "attacks");
-	IntToString(iAttackIndex, sKey, sizeof(sKey));
+	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
 	KvJumpToKey(g_hConfig, sKey);
 	return KvGetFloat(g_hConfig, keyValue, defaultValue);
 }
@@ -3741,7 +3954,7 @@ stock bool GetProfileAttackString(const char[] sProfile, const char[] keyValue, 
 	KvRewind(g_hConfig);
 	KvJumpToKey(g_hConfig, sProfile);
 	KvJumpToKey(g_hConfig, "attacks");
-	IntToString(iAttackIndex, sKey, sizeof(sKey));
+	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
 	KvJumpToKey(g_hConfig, sKey);
 	KvGetString(g_hConfig, keyValue, sBuffer, iLenght, sDefaultValue);
 	return true;
@@ -3757,7 +3970,7 @@ stock bool GetProfileAttackVector(const char[] sProfile, const char[] keyValue, 
 	KvRewind(g_hConfig);
 	KvJumpToKey(g_hConfig, sProfile);
 	KvJumpToKey(g_hConfig, "attacks");
-	IntToString(iAttackIndex, sKey, sizeof(sKey));
+	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
 	KvJumpToKey(g_hConfig, sKey);
 	KvGetVector(g_hConfig, keyValue, buffer, defaultValue);
 	return true;

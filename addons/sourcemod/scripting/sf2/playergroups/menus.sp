@@ -177,7 +177,7 @@ void DisplayAdminGroupMenuToClient(int client)
 	
 	char sLeaderName[MAX_NAME_LENGTH];
 	int iGroupLeader = GetPlayerGroupLeader(iGroupIndex);
-	if (IsValidClient(iGroupLeader)) GetClientName(iGroupLeader, sLeaderName, sizeof(sLeaderName));
+	if (IsValidClient(iGroupLeader)) FormatEx(sLeaderName, sizeof(sLeaderName), "%N", iGroupLeader);
 	else strcopy(sLeaderName, sizeof(sLeaderName), "---");
 	
 	int iMemberCount = GetPlayerGroupMemberCount(iGroupIndex);
@@ -269,8 +269,8 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		for (int i = 0; i < iPlayerCount; i++)
 		{
 			int iClient = GetArrayCell(hPlayers, i);
-			IntToString(GetClientUserId(iClient), sUserId, sizeof(sUserId));
-			GetClientName(iClient, sName, sizeof(sName));
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
+			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -339,8 +339,8 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		for (int i = 0; i < iPlayerCount; i++)
 		{
 			int iClient = GetArrayCell(hPlayers, i);
-			IntToString(GetClientUserId(iClient), sUserId, sizeof(sUserId));
-			GetClientName(iClient, sName, sizeof(sName));
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
+			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -379,7 +379,7 @@ public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int par
 				char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
 				char sName[MAX_NAME_LENGTH];
 				GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
-				GetClientName(iPlayer, sName, sizeof(sName));
+				Format(sName, sizeof(sName), "%N", iPlayer);
 				
 				SetPlayerGroupLeader(iGroupIndex, iPlayer);
 			}
@@ -435,8 +435,8 @@ void DisplayKickFromGroupMenuToClient(int client)
 		for (int i = 0; i < iPlayerCount; i++)
 		{
 			int iClient = GetArrayCell(hPlayers, i);
-			IntToString(GetClientUserId(iClient), sUserId, sizeof(sUserId));
-			GetClientName(iClient, sName, sizeof(sName));
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
+			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -475,7 +475,7 @@ public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int para
 				char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
 				char sName[MAX_NAME_LENGTH];
 				GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
-				GetClientName(iPlayer, sName, sizeof(sName));
+				FormatEx(sName, sizeof(sName), "%N", iPlayer);
 				
 				CPrintToChat(iPlayer, "%T", "SF2 Kicked From Group", iPlayer, sGroupName);
 				ClientSetPlayerGroup(iPlayer, -1);
@@ -578,8 +578,8 @@ void DisplayInviteToGroupMenuToClient(int client)
 		for (int i = 0; i < iPlayerCount; i++)
 		{
 			int iClient = GetArrayCell(hPlayers, i);
-			IntToString(GetClientUserId(iClient), sUserId, sizeof(sUserId));
-			GetClientName(iClient, sName, sizeof(sName));
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
+			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		

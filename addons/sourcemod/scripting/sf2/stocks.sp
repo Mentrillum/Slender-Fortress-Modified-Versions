@@ -155,6 +155,11 @@ stock bool SF_IsRenevantMap()
 {
 	return view_as<bool>(g_bIsRenevantMap || (GetConVarInt(g_cvRenevantMap) == 1));
 }
+
+stock bool SF_IsSlaughterRunMap()
+{
+	return view_as<bool>(g_bIsSlaughterRunMap || (GetConVarInt(g_cvSlaughterRunMap) == 1));
+}
 /*
 int SDK_StartTouch(int iEntity, int iOther)
 {
@@ -247,7 +252,7 @@ stock bool IsEntityClassname(int iEnt, const char[] classname, bool bCaseSensiti
 	char sBuffer[256];
 	GetEntityClassname(iEnt, sBuffer, sizeof(sBuffer));
 	
-	return StrEqual(sBuffer, classname, bCaseSensitive);
+	return strcmp(sBuffer, classname, bCaseSensitive) == 0;
 }
 
 stock int FindEntityByTargetname(const char[] targetName, const char[] className, bool caseSensitive=true)
@@ -257,7 +262,7 @@ stock int FindEntityByTargetname(const char[] targetName, const char[] className
 	{
 		char sName[64];
 		GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-		if (StrEqual(sName, targetName, caseSensitive))
+		if (strcmp(sName, targetName, caseSensitive) == 0)
 		{
 			return ent;
 		}
@@ -266,14 +271,32 @@ stock int FindEntityByTargetname(const char[] targetName, const char[] className
 	return INVALID_ENT_REFERENCE;
 }
 
-stock float EntityDistanceFromEntity(int ent1,int ent2, bool bSquared=false)
+stock float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
+{
+	float vec3[3];
+	SubtractVectors(vec1, vec2, vec3);
+	float flResult = GetVectorLength(vec3, true);
+	return flResult;
+}
+
+stock float SquareFloat(const float value)
+{
+	return value * value; //Using this to combine GetVectorSquareMagnitude() to improve performance
+}
+
+stock int SquareInt(const int value)
+{
+	return value * value; //Using this to combine GetVectorSquareMagnitude() to improve performance
+}
+
+stock float EntityDistanceFromEntity(int ent1,int ent2)
 {
 	if (!IsValidEntity(ent1) || !IsValidEntity(ent2)) return -1.0;
 	
 	float flMyPos[3],flHisPos[3];
 	GetEntPropVector(ent1, Prop_Data, "m_vecAbsOrigin", flMyPos);
 	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", flHisPos);
-	return GetVectorDistance(flMyPos, flHisPos, bSquared);
+	return GetVectorSquareMagnitude(flMyPos, flHisPos);
 }
 
 stock void GetEntityOBBCenterPosition(int ent, float flBuffer)
@@ -378,12 +401,12 @@ stock int TF2_CreateGlow(int iEnt)
 
 	char strName[126], strClass[64];
 	GetEntityClassname(iEnt, strClass, sizeof(strClass));
-	Format(strName, sizeof(strName), "%s%i", strClass, iEnt);
+	FormatEx(strName, sizeof(strName), "%s%i", strClass, iEnt);
 	DispatchKeyValue(iEnt, "targetname", strName);
 	
 	int ent = CreateEntityByName("tf_glow");
 	DispatchKeyValue(ent, "target", strName);
-	Format(strName, sizeof(strName), "tf_glow_%i", iEnt);
+	FormatEx(strName, sizeof(strName), "tf_glow_%i", iEnt);
 	DispatchKeyValue(ent, "targetname", strName);
 	DispatchKeyValue(ent, "Mode", "0");
 	DispatchSpawn(ent);
@@ -444,14 +467,14 @@ stock void SDK_StopHealing(int iHealer, int iClient)
 	int iEntity = CreateEntityByName("obj_dispenser");
 	if(iEntity > MaxClients)
 	{
-		int iTeam = GetClientTeam(iClient);
-		DispatchSpawn(iEntity);
 		float vecPos[3];
 		GetClientEyePosition(iClient, vecPos);
 		TeleportEntity(iEntity, vecPos, NULL_VECTOR, NULL_VECTOR);
+		int iTeam = GetClientTeam(iClient);
+		DispatchSpawn(iEntity);
 
 		char strTeam[5];
-		IntToString(iTeam, strTeam, sizeof(strTeam));
+		FormatEx(strTeam, sizeof(strTeam), "%d", iTeam);
 		DispatchKeyValue(iEntity, "teamnum", strTeam);
 
 		SetVariantInt(iTeam);
@@ -476,7 +499,7 @@ stock void SDK_StopHealing(int iHealer, int iClient)
 		SDK_StartTouch(iEntity, iClient);
 		SetEntProp(iEntity, Prop_Send, "m_bCarryDeploy", true);
 		//SDK_EndTouch(iEntity, iClient);
-		CreateTimer(10.0, Timer_KillEntity, EntIndexToEntRef(iEntity));
+		CreateTimer(10.0, Timer_KillEntity, EntIndexToEntRef(iEntity), TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
@@ -559,7 +582,7 @@ stock void TF2_StripWearables(int client)
 	{
 		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			AcceptEntityInput(iEntity, "Kill");
+			RemoveEntity(iEntity);
 		}
 	}
 
@@ -568,7 +591,7 @@ stock void TF2_StripWearables(int client)
 	{
 		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			AcceptEntityInput(iEntity, "Kill");
+			RemoveEntity(iEntity);
 		}
 	}
 }
@@ -795,7 +818,7 @@ stock void GameTextTFMessage(const char[] message, const char[] icon="")
 	DispatchKeyValue(ent, "icon", icon);
 	DispatchSpawn(ent);
 	AcceptEntityInput(ent, "Display");
-	AcceptEntityInput(ent, "Kill");
+	RemoveEntity(ent);
 }
 
 stock int BuildAnnotationBitString(const int[] clients,int iMaxClients)
@@ -917,8 +940,8 @@ stock void SpecialRoundGameText(const char[] strMessage, const char strIcon[]=""
 	DispatchKeyValue(iEntity,"targetname", "game_text1");
 	DispatchKeyValue(iEntity,"background", "0");
 	DispatchSpawn(iEntity);
-	AcceptEntityInput(iEntity, "Display", iEntity, iEntity);
-	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(iEntity));
+	AcceptEntityInput(iEntity, "Display", iEntity, iEntity); //The only time I keep this.
+	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(iEntity), TIMER_FLAG_NO_MAPCHANGE);
 }
 // Removes wearables such as botkillers from weapons.
 stock void TF2_RemoveWeaponSlotAndWearables(int client,int iSlot)
@@ -932,7 +955,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int iSlot)
 		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
 		if (iWeaponAssociated == iWeapon)
 		{
-			AcceptEntityInput(iWearable, "Kill");
+			RemoveEntity(iWearable);
 		}
 	}
 	
@@ -942,7 +965,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int iSlot)
 		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
 		if (iWeaponAssociated == iWeapon)
 		{
-			AcceptEntityInput(iWearable, "Kill");
+			RemoveEntity(iWearable);
 		}
 	}
 	
@@ -952,7 +975,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int iSlot)
 		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
 		if (iWeaponAssociated == iWeapon)
 		{
-			AcceptEntityInput(iWearable, "Kill");
+			RemoveEntity(iWearable);
 		}
 	}
 	
@@ -1022,11 +1045,11 @@ stock float ComputeShakeAmplitude(float center[3], float playerPos[3], float amp
 	float localAmplitude = -1.0;
 	float delta[3];
 	SubtractVectors(center, playerPos, delta);
-	float distance = GetVectorLength(delta);
+	float distance = GetVectorLength(delta, true);
 
-	if(distance <= radius)
+	if(distance <= SquareFloat(radius))
 	{
-		float perc = 1.0 - (distance / radius);
+		float perc = 1.0 - ((distance / SquareFloat(radius)));
 		localAmplitude = amplitude * perc;
 	}
 
@@ -1206,16 +1229,16 @@ stock void PrecacheSound2(const char[] path)
 {
 	PrecacheSound(path, true);
 	char buffer[PLATFORM_MAX_PATH];
-	Format(buffer, sizeof(buffer), "sound/%s", path);
+	FormatEx(buffer, sizeof(buffer), "sound/%s", path);
 	AddFileToDownloadsTable(buffer);
 }
 
 stock void PrecacheMaterial2(const char[] path)
 {
 	char buffer[PLATFORM_MAX_PATH];
-	Format(buffer, sizeof(buffer), "materials/%s.vmt", path);
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", path);
 	AddFileToDownloadsTable(buffer);
-	Format(buffer, sizeof(buffer), "materials/%s.vtf", path);
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", path);
 	AddFileToDownloadsTable(buffer);
 }
 
@@ -1251,7 +1274,7 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 	for (int i=0; i < numStrings; i++) {
 		ReadStringTable(tableidx, i, buf, sizeof(buf));
 		
-		if (StrEqual(buf, str)) {
+		if (strcmp(buf, str) == 0) {
 			return i;
 		}
 	}
@@ -1347,7 +1370,7 @@ public Action Timer_KillEntity(Handle timer, any entref)
 	int ent = EntRefToEntIndex(entref);
 	if (ent == INVALID_ENT_REFERENCE) return;
 	
-	AcceptEntityInput(ent, "Kill");
+	RemoveEntity(ent);
 }
 
 //	==========================================================

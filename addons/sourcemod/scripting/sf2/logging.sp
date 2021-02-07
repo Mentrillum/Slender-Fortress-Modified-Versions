@@ -25,6 +25,6 @@ stock void LogSF2Message(const char[] sMessage, any ...)
 {
 	char sLogMessage[1024], sTemp[1024];
 	VFormat(sTemp, sizeof(sTemp), sMessage, 2);
-	Format(sLogMessage, sizeof(sLogMessage), "%s", sTemp);
+	FormatEx(sLogMessage, sizeof(sLogMessage), "%s", sTemp);
 	LogToFile(g_strLogFilePath, sLogMessage);
 }

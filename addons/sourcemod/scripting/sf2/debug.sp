@@ -63,7 +63,7 @@ stock void DebugMessage(const char[] sMessage, any ...)
 {
 	char sDebugMessage[1024], sTemp[1024];
 	VFormat(sTemp, sizeof(sTemp), sMessage, 2);
-	Format(sDebugMessage, sizeof(sDebugMessage), "%s", sTemp);
+	FormatEx(sDebugMessage, sizeof(sDebugMessage), "%s", sTemp);
 	//LogMessage(sDebugMessage);
 	LogToFile(g_strDebugLogFilePath, sDebugMessage);
 }

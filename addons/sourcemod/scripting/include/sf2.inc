@@ -36,7 +36,6 @@ enum
 {
 	SPECIALROUND_DOUBLETROUBLE = 1,
 	SPECIALROUND_INSANEDIFFICULTY,
-	SPECIALROUND_SINGLEPLAYER,
 	SPECIALROUND_DOUBLEMAXPLAYERS,
 	SPECIALROUND_LIGHTSOUT,
 	SPECIALROUND_BEACON,
@@ -63,7 +62,6 @@ enum
 	SPECIALROUND_VOTE,
 	SPECIALROUND_COFFEE,
 	SPECIALROUND_PAGEDETECTOR,
-	SPECIALROUND_GLITCHEDPAGE,
 	SPECIALROUND_CLASSSCRAMBLE,
 	SPECIALROUND_2DOOM,
 	SPECIALROUND_WALLHAX,
@@ -85,6 +83,7 @@ enum
 	STATE_CHASE,
 	STATE_ATTACK,
 	STATE_STUN,
+	STATE_DEATHCAM,
 	MAX_STATE
 };
 
@@ -443,6 +442,11 @@ forward void SF2_OnClientDamagedByBoss(int client, int iBossIndex, int inflictor
 forward void SF2_OnClientSpawnedAsProxy(int client);
 
 /**
+ * Called whenever the Renevant gamemode triggers a new wave.
+ */
+forward void SF2_OnRenevantWaveTrigger(int iWave);
+
+/**
  * Returns a bool about the gamemode's state.
  *
  * @return				True if the gamemode is running, false if not.
@@ -714,14 +718,21 @@ native int SF2_GetMaxBossCount();
 native int SF2_EntIndexToBossIndex(int iEntIndex);
 
 /**
- * Returns the entity index of a boss.
+ * Returns the entity index of a boss using EntRefToEntIndex().
  *
  * @param iBossIndex	Boss index.
  * @return				Entity index, or -1 if the boss has not spawned.
  */
 native int SF2_BossIndexToEntIndex(int iBossIndex);
 
-native int SF2_BossIndexToEntIndexEx(int iBossIndex); //Don't use this function unless you know what it does!!!! Most will not!
+
+/**
+ * Returns the entity index of a boss using NPCGetEntIndex() rather than EntRefToEntIndex().
+ *
+ * @param iBossIndex	Boss index.
+ * @return				Entity index, or -1 if the boss has not spawned.
+ */
+native int SF2_BossIndexToEntIndexEx(int iBossIndex);
 
 /**
  * Converts a boss unique ID to a boss index.
@@ -1107,10 +1118,74 @@ native bool SF2_GetBossProfileVector(const char[] sProfile, const char[] sKey, f
  * @param sKey				Name of the key. Must be a section.
  * @param sBuffer			Buffer to store the value.
  * @param iBufferLen		Max length of sBuffer.
- * @param iIndex			If < 0, value will be chosen randomly; otherwise will retrieve the value with the specified index.
+ * @param iIndex			Mainly used for attack indexes, selects a random sound from an array that is iIndex.
  * @return					True if profile exists and key is set; false otherwise.
  */
 native bool SF2_GetRandomStringFromBossProfile(const char[] sProfile, const char[] sKey, char[] sBuffer, int iBufferLen, int iIndex=-1);
+
+/**
+ * Returns an attribute name if one exists
+ * @param iBossIndex	Boss index.
+ * @param sAttribute	Name of attribute.
+*/
+native bool SF2_GetBossAttributeName(int iBossIndex, const char[] sAttribute);
+
+/**
+ * Returns the value of an attribute.
+ * @param iBossIndex	Boss index.
+ * @param sAttribute	Name of attribute.
+ * @param flDefaultValue	Default value of attribute.
+*/
+native float SF2_GetBossAttributeValue(int iBossIndex, const char[] sAttribute, float flDefaultValue = 0.0);
+
+/**
+ * Returns the projectile type a boss uses.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex	Boss index.
+*/
+native int SF2_GetBossProjectileType(int iBossIndex);
+
+/**
+ * Returns the current attack index of the boss.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex	Boss index.
+*/
+native int SF2_GetBossCurrentAttackIndex(int iBossIndex);
+
+/**
+ * Returns the damage type of a set attack index.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex	Boss index.
+ * @param iAttackIndex	Attack index.
+*/
+native int SF2_GetBossAttackIndexDamageType(int iBossIndex, int iAttackIndex);
+
+/**
+ * Returns the damage of a set attack index.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex	Boss index.
+ * @param iAttackIndex	Attack index.
+ * @param iDifficulty	The difficulty.
+*/
+native float SF2_GetBossAttackIndexDamage(int iBossIndex, int iAttackIndex, int iDifficulty);
+
+/**
+ * Returns the attack type of a set attack index.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex	Boss index.
+ * @param iAttackIndex	Attack index.
+*/
+native int SF2_GetBossAttackIndexType(int iBossIndex, int iAttackIndex);
 
 /**
  * Returns if current map is a survival map or not.
@@ -1147,6 +1222,12 @@ native bool SF2_IsProxyMap();
  */
 native bool SF2_IsRenevantMap();
 
+/**
+ * Returns if current map is a Slaughter Run map or not.
+ *
+ * @return	True if Slaughter Run map, false otherwise.
+ */
+native bool SF2_IsSlaughterRunMap();
 
 public SharedPlugin __pl_sf2 = 
 {

@@ -1,4 +1,5 @@
 Handle g_hSDKLookupSequence;
+Handle g_hSDKLookupSequenceLinux;
 Handle g_hSDKLookupPoseParameter;
 Handle g_hSDKSetPoseParameter;
 Handle g_hSDKAddGestureSequence;
@@ -14,6 +15,13 @@ void CBaseAnimating_InitGameData(Handle hGameData)
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 	g_hSDKLookupSequence = EndPrepSDKCall();
 	if (g_hSDKLookupSequence == INVALID_HANDLE) SetFailState("Failed to create Call for LookupSequence signature");
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseAnimating::LookupSequence");
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
+	g_hSDKLookupSequenceLinux = EndPrepSDKCall();
+	if (g_hSDKLookupSequenceLinux == INVALID_HANDLE && g_iServerOS == 1) PrintToServer("Failed to retrieve CBaseAnimating::LookupSequence signature, will use Windows solution.");
 
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseAnimating::LookupPoseParameter");
@@ -42,10 +50,28 @@ void CBaseAnimating_InitGameData(Handle hGameData)
 
 stock int CBaseAnimating_LookupSequence(int iEntity, const char[] sName)
 {
-	Address pStudioHdr = CBaseAnimating_GetModelPtr(iEntity);
-	if (g_hSDKLookupSequence != INVALID_HANDLE && pStudioHdr != Address_Null)
+	switch (g_iServerOS)
 	{
-		return SDKCall(g_hSDKLookupSequence, pStudioHdr, sName);
+		case 0: //Windows
+		{
+			Address pStudioHdr = CBaseAnimating_GetModelPtr(iEntity);
+			if (g_hSDKLookupSequence != INVALID_HANDLE && pStudioHdr != Address_Null)
+				return SDKCall(g_hSDKLookupSequence, pStudioHdr, sName);
+		}
+		case 1: //Linux
+		{
+			if (g_hSDKLookupSequenceLinux != INVALID_HANDLE)
+			{
+				return SDKCall(g_hSDKLookupSequenceLinux, iEntity, sName);
+			}
+			else
+			{
+				//Do a Windows solution
+				Address pStudioHdr = CBaseAnimating_GetModelPtr(iEntity);
+				if (g_hSDKLookupSequence != INVALID_HANDLE && pStudioHdr != Address_Null)
+					return SDKCall(g_hSDKLookupSequence, pStudioHdr, sName);
+			}
+		}
 	}
 	return -1;
 }

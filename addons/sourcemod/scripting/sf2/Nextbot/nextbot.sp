@@ -499,4 +499,5 @@ public void InitNextBotGameData(Handle hGameData)
 	iOffset = GameConfGetOffset(hGameData, "CTFBaseBoss::GetCurrencyValue");
 	g_hGetCurrencyValue = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_Address, GetCurrencyValue);
 	if (g_hGetCurrencyValue == null) SetFailState("Failed to create hook for CTFBaseBoss::GetCurrencyValue!");
+
 }

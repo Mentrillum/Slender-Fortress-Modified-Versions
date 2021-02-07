@@ -96,7 +96,7 @@ void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
 	
 	// Anti-spam.
 	char sName[MAX_NAME_LENGTH];
-	GetClientName(client, sName, sizeof(sName));
+	FormatEx(sName, sizeof(sName), "%N", client);
 	
 	if (IsValidClient(iInviter))
 	{
@@ -113,19 +113,19 @@ void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
 	GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
 	
 	int iGroupLeader = GetPlayerGroupLeader(iGroupIndex);
-	if (IsValidClient(iGroupLeader)) GetClientName(iGroupLeader, sLeaderName, sizeof(sLeaderName));
+	if (IsValidClient(iGroupLeader)) FormatEx(sLeaderName, sizeof(sLeaderName), "%N", iGroupLeader);
 	else strcopy(sLeaderName, sizeof(sLeaderName), "nobody");
 	
 	Handle hMenu = CreateMenu(Menu_GroupInvite);
 	SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, sLeaderName, sGroupName);
 	
 	char sGroupID[64];
-	IntToString(iGroupID, sGroupID, sizeof(sGroupID));
+	FormatEx(sGroupID, sizeof(sGroupID), "%d", iGroupID);
 	
 	char sBuffer[256];
-	Format(sBuffer, sizeof(sBuffer), "%T", "Yes", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", client);
 	AddMenuItem(hMenu, sGroupID, sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "No", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", client);
 	AddMenuItem(hMenu, "0", sBuffer);
 	DisplayMenu(hMenu, client, 10);
 	
@@ -205,9 +205,9 @@ void DisplayResetGroupQueuePointsMenuToClient(int client)
 	SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
 	
 	char sBuffer[256];
-	Format(sBuffer, sizeof(sBuffer), "%T", "Yes", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", client);
 	AddMenuItem(hMenu, "0", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "No", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", client);
 	AddMenuItem(hMenu, "0", sBuffer);
 	
 	SetMenuExitBackButton(hMenu, true);
@@ -391,14 +391,14 @@ stock void ClearPlayerGroupMembers(int iGroupIndex)
 stock bool GetPlayerGroupName(int iGroupIndex, char[] sBuffer,int iBufferLen)
 {
 	char sGroupIndex[32];
-	IntToString(iGroupIndex, sGroupIndex, sizeof(sGroupIndex)); 
+	FormatEx(sGroupIndex, sizeof(sGroupIndex), "%d", iGroupIndex);
 	return GetTrieString(g_hPlayerGroupNames, sGroupIndex, sBuffer, iBufferLen);
 }
 
 stock void SetPlayerGroupName(int iGroupIndex, const char[] sGroupName)
 {
 	char sGroupIndex[32];
-	IntToString(iGroupIndex, sGroupIndex, sizeof(sGroupIndex)); 
+	FormatEx(sGroupIndex, sizeof(sGroupIndex), "%d", iGroupIndex);
 	SetTrieString(g_hPlayerGroupNames, sGroupIndex, sGroupName);
 }
 
@@ -465,7 +465,7 @@ stock void SetPlayerGroupLeader(int iGroupIndex,int iGroupLeader)
 		CPrintToChat(iGroupLeader, "%T", "SF2 New Group Leader", iGroupLeader, sGroupName);
 		
 		char sName[MAX_NAME_LENGTH];
-		GetClientName(iGroupLeader, sName, sizeof(sName));
+		FormatEx(sName, sizeof(sName), "%N", iGroupLeader);
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -549,7 +549,7 @@ stock void ClientSetPlayerGroup(int client,int iGroupIndex)
 	g_iPlayerCurrentGroup[client] = iGroupIndex;
 	
 	char sName[MAX_NAME_LENGTH];
-	GetClientName(client, sName, sizeof(sName));
+	FormatEx(sName, sizeof(sName), "%N", client);
 	
 	if (IsPlayerGroupActive(iOldPlayerGroup))
 	{

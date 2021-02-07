@@ -319,7 +319,7 @@ stock int FindClosestPositionOnPath(ArrayList hNavPath, const float flFeetPos[3]
 		
 		// Convert flAlong to unit vector.
 		SubtractVectors(flTo, flFrom, flAlong);
-		flLength = GetVectorLength(flAlong);
+		flLength = GetVectorLength(flAlong, true);
 		NormalizeVector(flAlong, flAlong);
 		
 		SubtractVectors(flFeetPos, flFrom, flToFeetPos);
@@ -332,7 +332,7 @@ stock int FindClosestPositionOnPath(ArrayList hNavPath, const float flFeetPos[3]
 			flPos[1] = flFrom[1];
 			flPos[2] = flFrom[2];
 		}
-		else if (flCloseLength >= flLength)
+		else if (SquareFloat(flCloseLength) >= flLength)
 		{
 			flPos[0] = flTo[0];
 			flPos[1] = flTo[1];
@@ -400,7 +400,7 @@ stock int NavPathFindAheadPathPoint(ArrayList hNavPath, float flAheadRange,int i
 		
 		static float closeEpsilon = 20.0;
 		
-		if (GetVectorDistance(flFeetPos2D, flPathNodePos2D) < closeEpsilon)
+		if (GetVectorSquareMagnitude(flFeetPos2D, flPathNodePos2D) < SquareFloat(closeEpsilon))
 		{
 			iStartPathNodeIndex++;
 		}
@@ -505,14 +505,14 @@ stock int NavPathFindAheadPathPoint(ArrayList hNavPath, float flAheadRange,int i
 			float flAlong[3];
 			SubtractVectors(flPathNodePos, flFeetPos, flAlong);
 			flAlong[2] = 0.0;
-			flRangeSoFar += GetVectorLength(flAlong);
+			flRangeSoFar += GetVectorLength(flAlong, true);
 		}
 		else
 		{
-			flRangeSoFar += GetVectorLength(flTo);
+			flRangeSoFar += GetVectorLength(flTo, true);
 		}
 		
-		if (flRangeSoFar >= flAheadRange)
+		if (flRangeSoFar >= SquareFloat(flAheadRange))
 		{
 			// Went ahead of flAheadRange; stop.
 			break;
@@ -549,8 +549,8 @@ stock int NavPathFindAheadPathPoint(ArrayList hNavPath, float flAheadRange,int i
 		CopyVector(flTo, flTo2D);
 		flTo2D[2] = 0.0;
 		
-		float flLength = GetVectorLength(flTo2D);
-		float t = 1.0 - ((flRangeSoFar - flAheadRange) / flLength);
+		float flLength = GetVectorLength(flTo2D, true);
+		float t = 1.0 - ((SquareFloat(flRangeSoFar - flAheadRange) / flLength));
 		
 		if (t < 0.0) t = 0.0;
 		else if (t > 1.0) t = 1.0;
@@ -608,7 +608,7 @@ stock int NavPathFindAheadPathPoint(ArrayList hNavPath, float flAheadRange,int i
 		CopyVector(flInitDir, flInitDir2D);
 		flInitDir2D[2] = 0.0;
 		
-		if (GetVectorDotProduct(flTo2D, flInitDir2D) < 0.0 || GetVectorLength(flTo2D) < epsilon)
+		if (GetVectorDotProduct(flTo2D, flInitDir2D) < 0.0 || GetVectorLength(flTo2D, true) < SquareFloat(epsilon))
 		{
 			// Check points ahead.
 			for (i = iStartPathNodeIndex; i < hNavPath.Length; i++)
@@ -620,7 +620,7 @@ stock int NavPathFindAheadPathPoint(ArrayList hNavPath, float flAheadRange,int i
 				flTo2D[1] = flPathNodePos[1] - flCentroid2D[1];
 				
 				// Check if the point ahead is either a jump/ladder area or is far enough.
-				if (NavPathGetNodeArea(hNavPath, i).Attributes & NAV_MESH_JUMP || GetVectorLength(flTo2D) > epsilon)
+				if (NavPathGetNodeArea(hNavPath, i).Attributes & NAV_MESH_JUMP || GetVectorLength(flTo2D, true) > SquareFloat(epsilon))
 				{
 					CopyVector(flPathNodePos, flPoint);
 					iStartPathNodeIndex = i;

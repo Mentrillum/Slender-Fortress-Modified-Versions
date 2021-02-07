@@ -40,8 +40,8 @@ static const char g_sPvPProjectileClassesNoTouch[][] =
 };
 
 static bool g_bPlayerInPvP[MAXPLAYERS + 1];
-static Handle g_hPlayerPvPTimer[MAXPLAYERS + 1];
-static Handle g_hPlayerPvPRespawnTimer[MAXPLAYERS + 1];
+Handle g_hPlayerPvPTimer[MAXPLAYERS + 1];
+Handle g_hPlayerPvPRespawnTimer[MAXPLAYERS + 1];
 static int g_iPlayerPvPTimerCount[MAXPLAYERS + 1];
 static bool g_bPlayerInPvPTrigger[MAXPLAYERS + 1];
 
@@ -289,7 +289,7 @@ public void PvP_OnEntityCreated(int ent, const char[] sClassname)
 #endif
 	for (int i = 0; i < sizeof(g_sPvPProjectileClasses); i++)
 	{
-		if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
+		if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 		{
 			SDKHook(ent, SDKHook_Spawn, Hook_PvPProjectileSpawn);
 			SDKHook(ent, SDKHook_SpawnPost, Hook_PvPProjectileSpawnPost);
@@ -299,7 +299,7 @@ public void PvP_OnEntityCreated(int ent, const char[] sClassname)
 
 	for (int i = 0; i < sizeof(g_sPvPProjectileClassesNoTouch); i++)
 	{
-		if (StrEqual(sClassname, g_sPvPProjectileClassesNoTouch[i], false))
+		if (strcmp(sClassname, g_sPvPProjectileClassesNoTouch[i], false) == 0)
 		{
 			SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
 			break;
@@ -312,7 +312,7 @@ public void PvP_OnEntityDestroyed(int ent, const char[] sClassname)
 	SendDebugMessageToPlayers(DEBUG_ENTITIES,0,"\x08FF4040FF- %i(%s)",ent,sClassname);
 #endif
 
-	if (StrEqual(sClassname, "tf_projectile_balloffire", false))
+	if (strcmp(sClassname, "tf_projectile_balloffire", false) == 0)
 	{
 		int index = g_hPvPBallsOfFire.FindValue( ent );
 		if (index != -1) {
@@ -330,7 +330,7 @@ public Action Hook_PvPProjectile_OnTouch(int iProjectile, int iClient)
 	// Without that, cannon balls can bounce players which should not happen because they are outside of pvp.
 	if (IsValidClient(iClient) && !IsClientInPvP(iClient))
 	{
-		AcceptEntityInput(iProjectile,"Kill");
+		RemoveEntity(iProjectile);
 		return Plugin_Handled;
 	}
 	
@@ -340,7 +340,7 @@ public Action Hook_PvPProjectile_OnTouch(int iProjectile, int iClient)
 	
 	if (iOwnerEntity == iClient)
 	{
-		AcceptEntityInput(iProjectile,"Kill");
+		RemoveEntity(iProjectile);
 		return Plugin_Handled;
 	}
 
@@ -356,7 +356,7 @@ public Action PvP_OnTriggerStartTouchEx(int trigger,int iOther)
 		GetEntityClassname(iOther,sClassname,sizeof(sClassname));
 		for (int i = 0; i < sizeof(g_sPvPProjectileClasses); i++)
 		{
-			if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
+			if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 			{
 				SetEntProp(iOther, Prop_Data, "m_usSolidFlags", 0);
 			}
@@ -426,14 +426,14 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 
 			for (int i = 0; i < sizeof(fixWeaponNotCollidingWithTeammates); i++)
 			{
-				if (IsValidEntity(ent) && StrEqual(sClass, fixWeaponNotCollidingWithTeammates[i], false))
+				if (IsValidEntity(ent) && strcmp(sClass, fixWeaponNotCollidingWithTeammates[i], false) == 0)
 				{
 					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
 					break;
 				}
 			}
 
-			if (StrEqual(sClass, "tf_projectile_pipe", false) && GetEntProp(ent, Prop_Send, "m_iType") == 3)
+			if (strcmp(sClass, "tf_projectile_pipe", false) == 0 && GetEntProp(ent, Prop_Send, "m_iType") == 3)
 			{
 				/*
 					Loose Cannon's projectiles
@@ -443,7 +443,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 				*/
 				SDKHook(ent, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
 			}
-			else if (StrEqual(sClass, "tf_projectile_balloffire", false))
+			else if (strcmp(sClass, "tf_projectile_balloffire", false) == 0)
 			{
 				/*
 					Replicate projectile logic for Dragon's Fury projectiles.
@@ -530,7 +530,7 @@ void PvP_ZapProjectile(int iProjectile,bool bEffects=true)
 		SetEntityRenderMode(iProjectile, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(iProjectile, 0, 0, 0, 1);
 	}
-	AcceptEntityInput(iProjectile,"Kill");
+	RemoveEntity(iProjectile);
 }
 
 public void PvP_OnPlayerDeath(int iClient, bool bFake)
@@ -638,11 +638,11 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 		GetEntityClassname(iOther,sClassname,sizeof(sClassname));
 		for (int i = 0; i < (sizeof(g_sPvPProjectileClasses)-4); i++)
 		{
-			if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
+			if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 			{
 				//Yup it's a projectile zap it!
 				//But we have to wait to prevent some bugs.
-				CreateTimer(0.1,EntityStillAlive,iOther);
+				CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
@@ -658,11 +658,11 @@ public Action PvP_OnTriggerStartTouchBoxing(int trigger,int iOther)
 		GetEntityClassname(iOther,sClassname,sizeof(sClassname));
 		for (int i = 0; i < (sizeof(g_sPvPProjectileClasses)-4); i++)
 		{
-			if (StrEqual(sClassname, g_sPvPProjectileClasses[i], false))
+			if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 			{
 				//Yup it's a projectile zap it!
 				//But we have to wait to prevent some bugs.
-				CreateTimer(0.1,EntityStillAlive,iOther);
+				CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
@@ -777,7 +777,7 @@ static void PvP_RemovePlayerProjectiles(int iClient)
 				}
 			}
 			
-			if (bMine) AcceptEntityInput(ent, "Kill");
+			if (bMine) RemoveEntity(ent);
 		}
 	}
 }
@@ -969,7 +969,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 		 */
 		for (int i = 0; i < sizeof(fixWeaponPenetrationClasses); i++)
 		{
-			if (StrEqual(sWeaponName, fixWeaponPenetrationClasses[i], false))
+			if (strcmp(sWeaponName, fixWeaponPenetrationClasses[i], false) == 0)
 			{
 				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
 				int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");

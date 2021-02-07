@@ -33,7 +33,7 @@ methodmap ChaserPathLogic
 		g_flChasePathNodeTolerance[iIndex] = 32.0;
 		g_flChasePathLookAheadDistance[iIndex] = 300.0;
 		g_flChasePathAvoidRange[iIndex] = 300.0;
-		g_flChasePathLastBuildTime[iIndex] = GetGameTime();
+		g_flChasePathLastBuildTime[iIndex] = 0.0;
 		return view_as<ChaserPathLogic>(iIndex);
 	}
 	
@@ -73,6 +73,19 @@ methodmap ChaserPathLogic
 		g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
 		g_iPathNodeIndex[this.Index] = 0;
 		g_iPathBehindNodeIndex[this.Index] = 0;
+	}
+
+	public void ResetPathing()
+	{
+		g_hChasePath[this.Index].Clear();
+		g_iRefChasePathTarget[this.Index] = INVALID_ENT_REFERENCE;
+		g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
+		g_iPathNodeIndex[this.Index] = 0;
+		g_iPathBehindNodeIndex[this.Index] = 0;
+		g_flChasePathLastBuildTime[this.Index] = 0.0;
+		g_flChasePathNodeTolerance[this.Index] = 0.0;
+		g_flChasePathLookAheadDistance[this.Index] = 0.0;
+		g_flChasePathAvoidRange[this.Index] = 0.0;
 	}
 	
 	public bool IsPathValid()
@@ -195,8 +208,8 @@ methodmap ChaserPathLogic
 				GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", vecStartPos);
 				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 10000.0, costFunction, costData, populateIfIncomplete, view_as<int>(closestAreaIndex), startArea, endArea) || !populateIfIncomplete)
 				{
-					g_iPathNodeIndex[this.Index] = -1;
-					g_iPathBehindNodeIndex[this.Index] = -1;
+					g_iPathNodeIndex[this.Index] = 0;
+					g_iPathBehindNodeIndex[this.Index] = 0;
 					g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
 					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
 					startArea = INVALID_NAV_AREA;
@@ -208,8 +221,8 @@ methodmap ChaserPathLogic
 				}
 				else
 				{
-					g_iPathNodeIndex[this.Index] = 1;
-					g_iPathBehindNodeIndex[this.Index] = 0;
+					//g_iPathNodeIndex[this.Index] = 1;
+					//g_iPathBehindNodeIndex[this.Index] = 0;
 					g_lastKnownTargetArea[this.Index] = endArea;
 					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
 					return true;
@@ -282,13 +295,13 @@ methodmap ChaserPathLogic
 		vecJumpVel[2] = speed;
 		vecJumpVel[2] += 20.0;
 		
-		float flJumpSpeed = GetVectorLength(vecJumpVel);
+		float flJumpSpeed = GetVectorLength(vecJumpVel, true);
 		float flMaxSpeed = 2000.0;
-		if ( flJumpSpeed > flMaxSpeed )
+		if (flJumpSpeed > SquareFloat(flMaxSpeed))
 		{
-			vecJumpVel[0] *= flMaxSpeed / flJumpSpeed;
-			vecJumpVel[1] *= flMaxSpeed / flJumpSpeed;
-			vecJumpVel[2] *= flMaxSpeed / flJumpSpeed;
+			vecJumpVel[0] *= (SquareFloat(flMaxSpeed) / flJumpSpeed)/2;
+			vecJumpVel[1] *= (SquareFloat(flMaxSpeed) / flJumpSpeed)/2;
+			vecJumpVel[2] *= (SquareFloat(flMaxSpeed) / flJumpSpeed)/2;
 		}
 
 		nextbotLocomotion.Jump();
@@ -338,7 +351,7 @@ methodmap ChaserPathLogic
 		AddVectors(vecFeetPos, vecEyePos, vecCentroidPos);
 		ScaleVector(vecCentroidPos, 0.5);
 		
-		if (GetVectorDistance(vecFeetPos, vecPathNodePos) < this.flNodeDistTolerance || ((-this.flNodeDistTolerance < vecPathNodePos[0]-vecFeetPos[0] < this.flNodeDistTolerance) && (-this.flNodeDistTolerance < vecPathNodePos[1]-vecFeetPos[1] < this.flNodeDistTolerance)))
+		if (GetVectorSquareMagnitude(vecFeetPos, vecPathNodePos) < SquareFloat(this.flNodeDistTolerance) || ((-this.flNodeDistTolerance < vecPathNodePos[0]-vecFeetPos[0] < this.flNodeDistTolerance) && (-this.flNodeDistTolerance < vecPathNodePos[1]-vecFeetPos[1] < this.flNodeDistTolerance)))
 		{
 			g_iPathNodeIndex[this.Index] = ++pathNodeIndex;
 			
@@ -383,8 +396,8 @@ methodmap ChaserPathLogic
 				vecGoalPos2D = g_vecPathMovePosition[this.Index];
 				vecGoalPos2D[2] = 0.0;
 				
-				float fl2DDist = GetVectorDistance(vecMyPos2D, vecGoalPos2D);
-				if (fl2DDist <= 120.0)
+				float fl2DDist = GetVectorSquareMagnitude(vecMyPos2D, vecGoalPos2D);
+				if (fl2DDist <= SquareFloat(120.0))
 				{
 					//Before we actually jump like freaking retards, let's check first if we aren't actually on a slope...
 					bool bJump = false;
@@ -456,7 +469,7 @@ methodmap ChaserPathLogic
 			MakeVectorFromPoints(vecFeetPos, g_vecPathMovePosition[this.Index], vTo2D);
 			vTo2D[2] = 0.0;
 			
-			if (GetVectorLength(vTo2D) < jumpCloseRange)
+			if (GetVectorLength(vTo2D, true) < SquareFloat(jumpCloseRange))
 			{
 				int pathNextNodeIndex = pathBehindNodeIndex + 1;
 				if (pathBehindNodeIndex >= 0 && pathNextNodeIndex < hPath.Length)

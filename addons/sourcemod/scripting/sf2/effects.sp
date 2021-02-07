@@ -73,7 +73,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 		// Validate effect event. Check to see if it matches with ours.
 		char sEffectEvent[64];
 		KvGetString(g_hConfig, "event", sEffectEvent, sizeof(sEffectEvent));
-		if (StrEqual(sEffectEvent, sEvent, false)) 
+		if (strcmp(sEffectEvent, sEvent, false) == 0) 
 		{
 			// Validate effect type.
 			char sEffectType[64];
@@ -85,7 +85,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 				// Check base position behavior.
 				char sBasePosCustom[64];
 				KvGetString(g_hConfig, "origin_custom", sBasePosCustom, sizeof(sBasePosCustom));
-				if (StrEqual(sBasePosCustom, "&CURRENTTARGET&", false))
+				if (strcmp(sBasePosCustom, "&CURRENTTARGET&", false) == 0)
 				{
 					int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
 					if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
@@ -111,7 +111,7 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 				
 				char sBaseAngCustom[64];
 				KvGetString(g_hConfig, "angles_custom", sBaseAngCustom, sizeof(sBaseAngCustom));
-				if (StrEqual(sBaseAngCustom, "&CURRENTTARGET&", false))
+				if (strcmp(sBaseAngCustom, "&CURRENTTARGET&", false) == 0)
 				{
 					int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
 					if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
@@ -154,6 +154,14 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 					DispatchKeyValue(iEnt, "renderfx", sValue);
 					KvGetString(g_hConfig, "spawnflags", sValue, sizeof(sValue));
 					DispatchKeyValue(iEnt, "spawnflags", sValue);
+
+					float flEffectPos[3], flEffectAng[3];
+					
+					KvGetVector(g_hConfig, "origin", flEffectPos);
+					KvGetVector(g_hConfig, "angles", flEffectAng);
+					VectorTransform(flEffectPos, flBasePos, flBaseAng, flEffectPos);
+					AddVectors(flEffectAng, flBaseAng, flEffectAng);
+					TeleportEntity(iEnt, flEffectPos, flEffectAng, NULL_VECTOR);
 					
 					switch (iEffectType)
 					{
@@ -208,20 +216,12 @@ void SlenderSpawnEffects(int iBossIndex, EffectEvent iEvent)
 						}
 					}
 					
-					float flEffectPos[3], flEffectAng[3];
-					
-					KvGetVector(g_hConfig, "origin", flEffectPos);
-					KvGetVector(g_hConfig, "angles", flEffectAng);
-					VectorTransform(flEffectPos, flBasePos, flBaseAng, flEffectPos);
-					AddVectors(flEffectAng, flBaseAng, flEffectAng);
-					TeleportEntity(iEnt, flEffectPos, flEffectAng, NULL_VECTOR);
-					
 					float flLifeTime = KvGetFloat(g_hConfig, "lifetime");
-					if (flLifeTime > 0.0) CreateTimer(flLifeTime, Timer_KillEntity, EntIndexToEntRef(iEnt));
+					if (flLifeTime > 0.0) CreateTimer(flLifeTime, Timer_KillEntity, EntIndexToEntRef(iEnt), TIMER_FLAG_NO_MAPCHANGE);
 					
 					char sParentCustom[64];
 					KvGetString(g_hConfig, "parent_custom", sParentCustom, sizeof(sParentCustom));
-					if (StrEqual(sParentCustom, "&CURRENTTARGET&", false))
+					if (strcmp(sParentCustom, "&CURRENTTARGET&", false) == 0)
 					{
 						int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
 						if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
@@ -297,7 +297,7 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 		{
 			AcceptEntityInput(iEffect, "TurnOff");
 			if(bKill)
-				AcceptEntityInput(iEffect, "Kill");
+				RemoveEntity(iEffect);
 		}
 	}
 	
@@ -308,7 +308,7 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 		{
 			AcceptEntityInput(iEffect, "TurnOff");
 			if(bKill)
-				AcceptEntityInput(iEffect, "Kill");
+				RemoveEntity(iEffect);
 		}
 	}
 	
@@ -319,10 +319,10 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 		{
 			if(bKill)
 			{
-				AcceptEntityInput(iEffect, "Kill");
+				RemoveEntity(iEffect);
 				int iEnt = GetEntPropEnt(iEffect, Prop_Send, "m_hOwnerEntity");
 				if (iEnt > MaxClients)
-					AcceptEntityInput(iEnt, "Kill");
+					RemoveEntity(iEnt);
 			}
 		}
 	}
@@ -334,13 +334,13 @@ stock void GetEffectEventString(EffectEvent iEvent, char[] sBuffer,int iBufferLe
 		case EffectEvent_Constant: strcopy(sBuffer, iBufferLen, "constant");
 		case EffectEvent_HitPlayer: strcopy(sBuffer, iBufferLen, "boss_hitplayer");
 		case EffectEvent_PlayerSeesBoss: strcopy(sBuffer, iBufferLen, "boss_seenbyplayer");
-		default: strcopy(sBuffer, iBufferLen, "");
+		default: sBuffer[0] = '\0';
 	}
 }
 
 stock EffectType GetEffectTypeFromString(const char[] sType)
 {
-	if (StrEqual(sType, "steam", false)) return EffectType_Steam;
-	if (StrEqual(sType, "dynamiclight", false)) return EffectType_DynamicLight;
+	if (strcmp(sType, "steam", false) == 0) return EffectType_Steam;
+	if (strcmp(sType, "dynamiclight", false) == 0) return EffectType_DynamicLight;
 	return EffectType_Invalid;
 }

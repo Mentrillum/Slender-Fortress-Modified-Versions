@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Removed SteamWorks, CollisionHooks, and Send Proxy Manager.\n-Ghosts can now noclip.\n-Hopefully reduced crashing instances.\n-Added a boss attribute, block walk speed under difficulty.\n-Fixed a bug where players can noclip after a advanced deathcam stage from a fake boss."
+		"en"	"-Added new auto chase key values.\n-Replaced almost all GetVectorLength and GetVectorDistance functions with GetVectorSquareMagnitude.\n-Added an alternative to multi attack, hit, and miss sounds.\n-Strings are now optimized.\n-Auto chase now has a cooldown."
 	}
 
 	"SF2 Smite player"

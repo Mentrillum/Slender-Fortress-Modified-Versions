@@ -51,7 +51,7 @@ public int AdminTopMenu_PlayerForceProxy(Handle topmenu, TopMenuAction action, T
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
-		Format(buffer, maxlength, "%t%T", "SF2 Prefix", "SF2 Admin Menu Player Force Proxy", param);
+		FormatEx(buffer, maxlength, "%t%T", "SF2 Prefix", "SF2 Admin Menu Player Force Proxy", param);
 	}
 	else if (action == TopMenuAction_SelectOption)
 	{
@@ -88,7 +88,7 @@ public int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 			g_iPlayerAdminMenuTargetUserId[param1] = StringToInt(sUserId);
 		
 			char sName[MAX_NAME_LENGTH];
-			GetClientName(client, sName, sizeof(sName));
+			FormatEx(sName, sizeof(sName), "%N", client);
 			
 			Handle hMenu = CreateMenu(AdminMenu_PlayerForceProxyBoss);
 			if (!AddBossTargetsToMenu(hMenu))
@@ -178,7 +178,7 @@ public int AdminTopMenu_PlayerSetPlayState(Handle topmenu, TopMenuAction action,
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
-		Format(buffer, maxlength, "%t%T", "SF2 Prefix", "SF2 Admin Menu Player Set Play State", param);
+		FormatEx(buffer, maxlength, "%t%T", "SF2 Prefix", "SF2 Admin Menu Player Set Play State", param);
 	}
 	else if (action == TopMenuAction_SelectOption)
 	{
@@ -212,14 +212,14 @@ public int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param
 		else
 		{
 			char sName[MAX_NAME_LENGTH];
-			GetClientName(client, sName, sizeof(sName));
+			FormatEx(sName, sizeof(sName), "%N", client);
 			
 			Handle hMenu = CreateMenu(AdminMenu_PlayerSetPlayStateConfirm);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Set Play State Confirm", param1, sName);
 			char sBuffer[256];
-			Format(sBuffer, sizeof(sBuffer), "%T", "SF2 In", param1);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 In", param1);
 			AddMenuItem(hMenu, sUserId, sBuffer);
-			Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Out", param1);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Out", param1);
 			AddMenuItem(hMenu, sUserId, sBuffer);
 			SetMenuExitBackButton(hMenu, true);
 			DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
@@ -269,19 +269,19 @@ static void DisplayBossMainAdminMenu(int client)
 	SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Main", client);
 	
 	char sBuffer[512];
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Add Boss", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Add Boss", client);
 	AddMenuItem(hMenu, "add_boss", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Add Fake Boss", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Add Fake Boss", client);
 	AddMenuItem(hMenu, "add_boss_fake", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Remove Boss", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Remove Boss", client);
 	AddMenuItem(hMenu, "remove_boss", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Spawn Boss", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Spawn Boss", client);
 	AddMenuItem(hMenu, "spawn_boss", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Boss Attack Waiters", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Boss Attack Waiters", client);
 	AddMenuItem(hMenu, "boss_attack_waiters", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Boss Teleport", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Boss Teleport", client);
 	AddMenuItem(hMenu, "boss_no_teleport", sBuffer);
-	Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Override Boss", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Override Boss", client);
 	AddMenuItem(hMenu, "override_boss", sBuffer);
 	
 	
@@ -306,31 +306,31 @@ public int AdminMenu_BossMain(Handle menu, MenuAction action,int param1,int para
 	{
 		char sInfo[64];
 		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
-		if (StrEqual(sInfo, "add_boss"))
+		if (strcmp(sInfo, "add_boss") == 0)
 		{
 			DisplayAddBossAdminMenu(param1);
 		}
-		else if (StrEqual(sInfo, "add_boss_fake"))
+		else if (strcmp(sInfo, "add_boss_fake") == 0)
 		{
 			DisplayAddFakeBossAdminMenu(param1);
 		}
-		else if (StrEqual(sInfo, "remove_boss"))
+		else if (strcmp(sInfo, "remove_boss") == 0)
 		{
 			DisplayRemoveBossAdminMenu(param1);
 		}
-		else if (StrEqual(sInfo, "spawn_boss"))
+		else if (strcmp(sInfo, "spawn_boss") == 0)
 		{
 			DisplaySpawnBossAdminMenu(param1);
 		}
-		else if (StrEqual(sInfo, "boss_attack_waiters"))
+		else if (strcmp(sInfo, "boss_attack_waiters") == 0)
 		{
 			DisplayBossAttackWaitersAdminMenu(param1);
 		}
-		else if (StrEqual(sInfo, "boss_no_teleport"))
+		else if (strcmp(sInfo, "boss_no_teleport") == 0)
 		{
 			DisplayBossTeleportAdminMenu(param1);
 		}
-		else if (StrEqual(sInfo, "override_boss"))
+		else if (strcmp(sInfo, "override_boss") == 0)
 		{
 			DisplayOverrideBossAdminMenu(param1);
 		}
@@ -341,7 +341,7 @@ public int AdminTopMenu_BossMain(Handle topmenu, TopMenuAction action, TopMenuOb
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
-		Format(buffer, maxlength, "%t%T", "SF2 Prefix", "SF2 Admin Menu Boss Main", param);
+		FormatEx(buffer, maxlength, "%t%T", "SF2 Prefix", "SF2 Admin Menu Boss Main", param);
 	}
 	else if (action == TopMenuAction_SelectOption)
 	{
@@ -486,12 +486,12 @@ static int AddBossTargetsToMenu(Handle hMenu)
 		NPCGetProfile(i, sProfile, sizeof(sProfile));
 		
 		GetProfileString(sProfile, "name", sBuffer, sizeof(sBuffer));
-		if (strlen(sBuffer) == 0) strcopy(sBuffer, sizeof(sBuffer), sProfile);
+		if (sBuffer[0] == '\0') strcopy(sBuffer, sizeof(sBuffer), sProfile);
 		
-		Format(sDisplay, sizeof(sDisplay), "%d - %s", i, sBuffer);
+		FormatEx(sDisplay, sizeof(sDisplay), "%d - %s", i, sBuffer);
 		if (g_iSlenderCopyMaster[i] != -1)
 		{
-			Format(sBuffer, sizeof(sBuffer), " (copy of boss %d)", g_iSlenderCopyMaster[i]);
+			FormatEx(sBuffer, sizeof(sBuffer), " (copy of boss %d)", g_iSlenderCopyMaster[i]);
 			StrCat(sDisplay, sizeof(sDisplay), sBuffer);
 		}
 		
@@ -500,7 +500,7 @@ static int AddBossTargetsToMenu(Handle hMenu)
 			StrCat(sDisplay, sizeof(sDisplay), " (fake)");
 		}
 		
-		IntToString(iUniqueID, sInfo, sizeof(sInfo));
+		FormatEx(sInfo, sizeof(sInfo), "%d", iUniqueID);
 		
 		AddMenuItem(hMenu, sInfo, sDisplay);
 		iCount++;
@@ -687,9 +687,9 @@ public int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1
 			Handle hMenu = CreateMenu(AdminMenu_BossAttackWaitersConfirm);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Attack Waiters Confirm", param1, sName);
 			char sBuffer[256];
-			Format(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
 			AddMenuItem(hMenu, sID, sBuffer);
-			Format(sBuffer, sizeof(sBuffer), "%T", "No", param1);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
 			AddMenuItem(hMenu, sID, sBuffer);
 			SetMenuExitBackButton(hMenu, true);
 			DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
@@ -794,9 +794,9 @@ public int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int 
 			Handle hMenu = CreateMenu(AdminMenu_BossTeleportConfirm);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Teleport Confirm", param1, sName);
 			char sBuffer[256];
-			Format(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
 			AddMenuItem(hMenu, sID, sBuffer);
-			Format(sBuffer, sizeof(sBuffer), "%T", "No", param1);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
 			AddMenuItem(hMenu, sID, sBuffer);
 			SetMenuExitBackButton(hMenu, true);
 			DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
@@ -865,11 +865,11 @@ static bool DisplayOverrideBossAdminMenu(int client)
 			char sProfileOverride[SF2_MAX_PROFILE_NAME_LENGTH], sProfileDisplayName[SF2_MAX_PROFILE_NAME_LENGTH];
 			GetConVarString(g_cvBossProfileOverride, sProfileOverride, sizeof(sProfileOverride));
 			
-			if (strlen(sProfileOverride) > 0 && IsProfileValid(sProfileOverride))
+			if (sProfileOverride[0] != '\0' && IsProfileValid(sProfileOverride))
 			{
 				GetProfileString(sProfileOverride, "name", sProfileDisplayName, sizeof(sProfileDisplayName));
 				
-				if (strlen(sProfileDisplayName) == 0)
+				if (sProfileDisplayName[0] == '\0')
 					strcopy(sProfileDisplayName, sizeof(sProfileDisplayName), sProfileOverride);
 			}
 			else
