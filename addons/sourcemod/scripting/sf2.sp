@@ -68,7 +68,6 @@ public Plugin myinfo =
 #define FIREWORKSRED_PARTICLENAME "utaunt_firework_teamcolor_red"
 #define TELEPORTEDINBLU_PARTICLENAME "teleported_red"
 #define SOUND_THUNDER "ambient/explosions/explode_9.wav"
-#define DISSOLVE_SOUND "player/dissolve.wav"
 
 #define SPECIALROUND_BOO_DISTANCE 120.0
 #define SPECIALROUND_BOO_DURATION 4.0
@@ -1780,8 +1779,7 @@ static void PrecacheStuff()
 	PrecacheSound(ZAP_SOUND);
 	PrecacheSound(PAGE_DETECTOR_BEEP);
 	PrecacheSound("player/spy_shield_break.wav");
-	PrecacheSound(DISSOLVE_SOUND);
-	
+
 	PrecacheSound(CRIT_ROLL);
 	PrecacheSound(EXPLODE_PLAYER);
 	PrecacheSound(UBER_ROLL);
@@ -8537,6 +8535,7 @@ public Action Timer_ModifyRagdoll(Handle timer, any userid)
 			else SetEntProp(ent, Prop_Send, "m_bGib", GetEntProp(ragdoll, Prop_Send, "m_bGib"));
 
 			if (g_bSlenderHasDecapKillEffect[iBossIndex]) SetEntProp(ent, Prop_Send, "m_iDamageCustom", TF_CUSTOM_DECAPITATION);
+			else if (g_bSlenderHasPlasmaRagdollOnKill[iBossIndex]) SetEntProp(ent, Prop_Send, "m_iDamageCustom", TF_CUSTOM_PLASMA);
 			else SetEntProp(ent, Prop_Send, "m_iDamageCustom", GetEntProp(ragdoll, Prop_Send, "m_iDamageCustom"));
 
 			if (g_bSlenderHasBurnKillEffect[iBossIndex]) SetEntProp(ent, Prop_Send, "m_bBurning", true);
@@ -8569,13 +8568,7 @@ public Action Timer_ModifyRagdoll(Handle timer, any userid)
 			char sType[2];
 			int iType = g_iSlenderDissolveRagdollType[iBossIndex];
 			IntToString(iType, sType, sizeof(sType));
-			if (g_bSlenderHasPlasmaRagdollOnKill[iBossIndex] && !g_bSlenderHasDissolveRagdollOnKill[iBossIndex]) 
-			{
-				DispatchKeyValue(dissolver, "dissolvetype", "0");
-				EmitSoundToAll(DISSOLVE_SOUND, ent, SNDCHAN_AUTO, 80, _, 1.0);
-			}
-			else if (g_bSlenderHasDissolveRagdollOnKill[iBossIndex] && !g_bSlenderHasPlasmaRagdollOnKill[iBossIndex]) 
-				DispatchKeyValue(dissolver, "dissolvetype", sType);
+			DispatchKeyValue(dissolver, "dissolvetype", sType);
 			DispatchKeyValue(dissolver, "magnitude", "1");
 			DispatchKeyValue(dissolver, "target", "!activator");
 
@@ -8583,7 +8576,6 @@ public Action Timer_ModifyRagdoll(Handle timer, any userid)
 			RemoveEntity(dissolver);
 		}
 	}
-	if (g_bSlenderHasPlasmaRagdollOnKill[iBossIndex]) EmitSoundToAll(DISSOLVE_SOUND, ragdoll, SNDCHAN_AUTO, 80, _, 1.0);
 	RemoveEntity(ragdoll);
 	return Plugin_Continue;
 }
