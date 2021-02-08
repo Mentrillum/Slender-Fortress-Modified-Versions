@@ -914,8 +914,8 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flBossJumpscareDistanceApollyon = KvGetFloat(kv, "jumpscare_distance_apollyon", flBossJumpscareDistanceNightmare);
 
 	float flBossJumpscareDuration = KvGetFloat(kv, "jumpscare_duration", 0.0);
-	float flBossJumpscareDurationEasy = KvGetFloat(kv, "jumpscare_duration_easy", flBossJumpscareDistance);
-	float flBossJumpscareDurationHard = KvGetFloat(kv, "jumpscare_duration_hard", flBossJumpscareDistance);
+	float flBossJumpscareDurationEasy = KvGetFloat(kv, "jumpscare_duration_easy", flBossJumpscareDuration);
+	float flBossJumpscareDurationHard = KvGetFloat(kv, "jumpscare_duration_hard", flBossJumpscareDuration);
 	float flBossJumpscareDurationInsane = KvGetFloat(kv, "jumpscare_duration_insane", flBossJumpscareDurationHard);
 	float flBossJumpscareDurationNightmare = KvGetFloat(kv, "jumpscare_duration_nightmare", flBossJumpscareDurationInsane);
 	float flBossJumpscareDurationApollyon = KvGetFloat(kv, "jumpscare_duration_apollyon", flBossJumpscareDurationNightmare);
