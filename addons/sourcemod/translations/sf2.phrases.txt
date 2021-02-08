@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Added new auto chase key values.\n-Replaced almost all GetVectorLength and GetVectorDistance functions with GetVectorSquareMagnitude.\n-Added an alternative to multi attack, hit, and miss sounds.\n-Strings are now optimized.\n-Auto chase now has a cooldown."
+		"en"	"-Fixed a bug where advanced deathcam bosses break on AFK people.\n-Added an alternative directory to get config files (data\).\n-Slaughter Run's timer equation can now be customized.\n-Fixed a bug where jumpscare_duration didn't have a default value."
 	}
 
 	"SF2 Smite player"

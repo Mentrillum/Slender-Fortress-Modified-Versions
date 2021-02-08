@@ -4330,7 +4330,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	
 	if (GetProfileNum(sProfile, "death_cam_overlay") && GetProfileFloat(sProfile, "death_cam_time_overlay_start") >= 0.0)
 	{
-		if (view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0))) 
+		if (view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0)) && !bAnticamp) 
 		{
 			int iSlender = NPCGetEntIndex(iBossIndex);
 			if (iSlender && iSlender != INVALID_ENT_REFERENCE)
@@ -4343,7 +4343,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	}
 	else
 	{
-		if (view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0))) 
+		if (view_as<bool>(GetProfileNum(sProfile,"death_cam_public",0)) && !bAnticamp) 
 		{
 			int iSlender = NPCGetEntIndex(iBossIndex);
 			if (iSlender && iSlender != INVALID_ENT_REFERENCE)

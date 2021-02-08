@@ -9,6 +9,7 @@
 #define SR_SOUND_SELECT "slender/specialroundselect.mp3"
 
 #define FILE_SPECIALROUNDS "configs/sf2/specialrounds.cfg"
+#define FILE_SPECIALROUNDS_DATA "data/sf2/specialrounds.cfg"
 
 static Handle g_hSpecialRoundCycleNames = INVALID_HANDLE;
 
@@ -35,12 +36,13 @@ void ReloadSpecialRounds()
 	}
 	
 	char buffer[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS);
+	if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS);
+	else BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS_DATA);
 	KeyValues kv = new KeyValues("root");
 	if (!FileToKeyValues(kv, buffer))
 	{
 		delete kv;
-		LogError("Failed to load special rounds! File %s not found!", FILE_SPECIALROUNDS);
+		LogError("Failed to load special rounds! File %s not found!", !GetConVarBool(g_cvUseAlternateConfigDirectory) ? FILE_SPECIALROUNDS : FILE_SPECIALROUNDS_DATA);
 	}
 	else
 	{

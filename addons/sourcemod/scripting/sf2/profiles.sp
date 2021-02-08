@@ -7,7 +7,11 @@
 #define FILE_PROFILES_DIR "configs/sf2/profiles"
 #define FILE_PROFILES_PACKS "configs/sf2/profiles_packs.cfg"
 #define FILE_PROFILES_PACKS_DIR "configs/sf2/profiles/packs"
-#define FILE_PROFILES_PACKS_ALT "configs/sf2/profiles/bosses"
+
+#define FILE_PROFILES_DATA "data/sf2/profiles.cfg"
+#define FILE_PROFILES_DIR_DATA "data/sf2/profiles"
+#define FILE_PROFILES_PACKS_DATA "data/sf2/profiles_packs.cfg"
+#define FILE_PROFILES_PACKS_DIR_DATA "data/sf2/profiles/packs"
 
 static ArrayList g_hBossProfileList = null;
 static ArrayList g_hSelectableBossProfileList = null;
@@ -451,14 +455,17 @@ void ReloadBossProfiles()
 	
 	char configPath[PLATFORM_MAX_PATH];
 	
-	// First load from configs/sf2/profiles.cfg
-	BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES);
+	// First load from configs/sf2/profiles.cfg or data/sf2/profiles.cfg
+	if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES);
+	else BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_DATA);
 	LoadProfilesFromFile(configPath);
 	
-	// Then, load profiles individually from configs/sf2/profiles directory.
-	LoadProfilesFromDirectory(FILE_PROFILES_DIR);
+	// Then, load profiles individually from configs/sf2/profiles or data/sf2/profiles directory.
+	if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) LoadProfilesFromDirectory(FILE_PROFILES_DIR);
+	else LoadProfilesFromDirectory(FILE_PROFILES_DIR_DATA);
 
-	BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_PACKS);
+	if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_PACKS);
+	else BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_PACKS_DATA);
 	FileToKeyValues(g_hBossPackConfig, configPath);
 	
 	g_bBossPackVoteEnabled = true;
@@ -488,13 +495,14 @@ void ReloadBossProfiles()
 					KvGetString(g_hBossPackConfig, "file", packConfigFile, sizeof(packConfigFile));
 					
 					char packConfigFilePath[PLATFORM_MAX_PATH];
-					FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+					if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+					else FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 					
 					BuildPath(Path_SM, configPath, sizeof(configPath), packConfigFilePath);
 
 					if (DirExists(configPath))
 					{
-						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !GetConVarBool(g_cvUseAlternateConfigDirectory) ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 						LoadProfilesFromDirectory(packConfigFilePath);
 					}
 					else if (FileExists(configPath))
@@ -531,13 +539,14 @@ void ReloadBossProfiles()
 						KvGetString(g_hBossPackConfig, "file", packConfigFile, sizeof(packConfigFile));
 						
 						char packConfigFilePath[PLATFORM_MAX_PATH];
-						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+						if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+						else FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 						
 						BuildPath(Path_SM, configPath, sizeof(configPath), packConfigFilePath);
 
 						if (DirExists(configPath))
 						{
-							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
+							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !GetConVarBool(g_cvUseAlternateConfigDirectory) ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 							LoadProfilesFromDirectory(packConfigFilePath);
 						}
 						else if (FileExists(configPath))
@@ -904,7 +913,7 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flBossJumpscareDistanceNightmare = KvGetFloat(kv, "jumpscare_distance_nightmare", flBossJumpscareDistanceInsane);
 	float flBossJumpscareDistanceApollyon = KvGetFloat(kv, "jumpscare_distance_apollyon", flBossJumpscareDistanceNightmare);
 
-	float flBossJumpscareDuration = KvGetFloat(kv, "jumpscare_duration");
+	float flBossJumpscareDuration = KvGetFloat(kv, "jumpscare_duration", 0.0);
 	float flBossJumpscareDurationEasy = KvGetFloat(kv, "jumpscare_duration_easy", flBossJumpscareDistance);
 	float flBossJumpscareDurationHard = KvGetFloat(kv, "jumpscare_duration_hard", flBossJumpscareDistance);
 	float flBossJumpscareDurationInsane = KvGetFloat(kv, "jumpscare_duration_insane", flBossJumpscareDurationHard);

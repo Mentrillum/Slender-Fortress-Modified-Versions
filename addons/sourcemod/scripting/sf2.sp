@@ -31,8 +31,8 @@ bool steamtools=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.0 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.0 Modified"
+#define PLUGIN_VERSION "1.6.01 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.01 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -55,6 +55,7 @@ public Plugin myinfo =
 }
 
 #define FILE_RESTRICTEDWEAPONS "configs/sf2/restrictedweapons.cfg"
+#define FILE_RESTRICTEDWEAPONS_DATA "data/sf2/restrictedweapons.cfg"
 
 #define BOSS_THINKRATE 0.1 // doesn't really matter much since timers go at a minimum of 0.1 seconds anyways
 
@@ -765,6 +766,8 @@ ConVar g_cvBoxingMap;
 ConVar g_cvRenevantMap;
 ConVar g_cvSlaughterRunMap;
 ConVar g_cvTimeEscapeSurvival;
+ConVar g_cvSlaughterRunDivisibleTime;
+ConVar g_cvUseAlternateConfigDirectory;
 
 ConVar g_cvPlayerInfiniteSprintOverride;
 ConVar g_cvPlayerInfiniteFlashlightOverride;
@@ -1199,7 +1202,11 @@ public void OnPluginStart()
 	g_cvRenevantMap = CreateConVar("sf2_isrenevantmap", "0", "Set to 1 if the map uses Renevant logic.", _, true, 0.0, true, 1.0);
 
 	g_cvSlaughterRunMap = CreateConVar("sf2_isslaughterrunmap", "0", "Set to 1 if the map is a slaughter run map.", _, true, 0.0, true, 1.0);
+
+	g_cvSlaughterRunDivisibleTime = CreateConVar("sf2_slaughterrun_divide_time", "125.0", "Determines how much the average time should be divided by in Slaughter Run, the lower the number, the longer the bosses spawn.", _, true, 0.0);
 	
+	g_cvUseAlternateConfigDirectory = CreateConVar("sf2_alternateconfigs", "0", "Set to 1 if the server should pick up the configs from data/.", _, true, 0.0, true, 1.0);
+
 	g_cvSurvivalMap = CreateConVar("sf2_issurvivalmap", "0", "Set to 1 if the map is a survival map.", _, true, 0.0, true, 1.0);
 	g_cvTimeEscapeSurvival = CreateConVar("sf2_survival_time_limit", "30", "when X secs left the mod will turn back the Survive! text to Escape! text", _, true, 0.0);
 
@@ -3808,7 +3815,8 @@ void ReloadRestrictedWeapons()
 	}
 	
 	char buffer[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, buffer, sizeof(buffer), FILE_RESTRICTEDWEAPONS);
+	if (!GetConVarBool(g_cvUseAlternateConfigDirectory)) BuildPath(Path_SM, buffer, sizeof(buffer), FILE_RESTRICTEDWEAPONS);
+	else BuildPath(Path_SM, buffer, sizeof(buffer), FILE_RESTRICTEDWEAPONS_DATA);
 	KeyValues kv = new KeyValues("root");
 	if (!FileToKeyValues(kv, buffer))
 	{
@@ -6541,7 +6549,7 @@ void SetPageCount(int iNum)
 						{
 							flSpeed = flOriginalSpeed + NPCGetAnger(iNPCIndex);
 						}
-						flTimerCheck = flSpeed/125.0;
+						flTimerCheck = flSpeed/GetConVarFloat(g_cvSlaughterRunDivisibleTime);
 						flTimes[iBosses] = flTimerCheck;
 						iBosses++;
 					}
@@ -8558,7 +8566,7 @@ public Action Timer_ModifyRagdoll(Handle timer, any userid)
 			ActivateEntity(ent);
 			SetEntPropEnt(client, Prop_Send, "m_hRagdoll", ent, 0);
 		}
-		if (g_bSlenderHasDissolveRagdollOnKill[iBossIndex] || g_bSlenderHasPlasmaRagdollOnKill[iBossIndex])
+		if (g_bSlenderHasDissolveRagdollOnKill[iBossIndex])
 		{
 			int dissolver = CreateEntityByName("env_entity_dissolver");
 			if (!IsValidEntity(dissolver))
