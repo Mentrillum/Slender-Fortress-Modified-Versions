@@ -310,7 +310,7 @@ public void Hook_ClientPreThink(int client)
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == iWeapon)
 								{
-									flSprintSpeed += (flSprintSpeed * 0.1);
+									flSprintSpeed += (flSprintSpeed * 0.075);
 								}
 							}
 							case 775: // Escape Plan
@@ -318,13 +318,8 @@ public void Hook_ClientPreThink(int client)
 								float flHealth = float(GetEntProp(client, Prop_Send, "m_iHealth"));
 								float flMaxHealth = float(SDKCall(g_hSDKGetMaxHealth, client));
 								float flPercentage = flHealth / flMaxHealth;
-								
-								if (flPercentage > 0.805)
-								{
-									flWalkSpeed += 0;
-									flSprintSpeed += 0;
-								}
-								else if (flPercentage < 0.805 && flPercentage >= 0.605) 
+
+								if (flPercentage < 0.805 && flPercentage >= 0.605) 
 								{
 									flWalkSpeed += (flWalkSpeed * 0.05);
 									flSprintSpeed += (flSprintSpeed * 0.05);
@@ -352,7 +347,7 @@ public void Hook_ClientPreThink(int client)
 					if (TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly))
 					{
 						flWalkSpeed += (flWalkSpeed * 0.115);
-						flSprintSpeed += (flSprintSpeed * 0.175);
+						flSprintSpeed += (flSprintSpeed * 0.165);
 					}
 					
 					if (bDanger)
@@ -3450,7 +3445,7 @@ void ClientEnableProxy(int client,int iBossIndex)
 		TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
 		TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
 	}
-	
+
 	g_bPlayerProxy[client] = true;
 	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
 	PvP_SetPlayerPvPState(client, false, true, false);
@@ -7323,7 +7318,16 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				{
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
-					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 20.0 ; 206 ; 1.33");
+					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 12.0 ; 412 ; 1.2");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					delete hWeapon;
+					EquipPlayerWeapon(client, iEnt);
+				}
+				case 310: //The Warrior's Spirit
+				{
+					TF2_RemoveWeaponSlot(client, iSlot);
+
+					hWeapon = PrepareItemHandle("tf_weapon_fists", 310, 0, 0, "2 ; 1.3 ; 412 ; 1.3");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);
@@ -7369,6 +7373,15 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					TF2_RemoveWeaponSlot(client, iSlot);
 					
 					hWeapon = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
+					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+					delete hWeapon;
+					EquipPlayerWeapon(client, iEnt);
+				}
+				case 775: //The Escape Plan (Its like, real buggy on wearer)
+				{
+					TF2_RemoveWeaponSlot(client, iSlot);
+					
+					hWeapon = PrepareItemHandle("tf_weapon_shovel", 775, 0, 0, "414 ; 1 ; 734 ; 0.1");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
 					EquipPlayerWeapon(client, iEnt);

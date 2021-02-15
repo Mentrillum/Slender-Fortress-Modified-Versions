@@ -242,7 +242,7 @@ void SpecialRoundCycleStart()
 	g_iSpecialRoundType = 0;
 	g_iSpecialRoundCycleNum = 0;
 	g_flSpecialRoundCycleEndTime = GetGameTime() + SR_CYCLELENGTH;
-	g_hSpecialRoundTimer = CreateTimer(0.2, Timer_SpecialRoundCycle, _, TIMER_REPEAT);
+	g_hSpecialRoundTimer = CreateTimer(0.1, Timer_SpecialRoundCycle, _, TIMER_REPEAT);
 }
 
 void SpecialRoundCycleFinish()

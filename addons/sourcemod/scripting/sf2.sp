@@ -21,9 +21,8 @@
 
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
+#tryinclude <steamworks>
 #define REQUIRE_EXTENSIONS
-
-bool steamtools=false;
 
 #define DEBUG
 #define SF2
@@ -31,8 +30,8 @@ bool steamtools=false;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.01 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.01 Modified"
+#define PLUGIN_VERSION "1.6.02 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.02 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -1052,6 +1051,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	#if defined _steamtools_included
 	MarkNativeAsOptional("Steam_SetGameDescription");
 	#endif
+	#if defined _SteamWorks_Included
+	MarkNativeAsOptional("SteamWorks_SetGameDescription");
+	#endif
 	
 	return APLRes_Success;
 }
@@ -1310,8 +1312,6 @@ public void OnPluginStart()
 	
 	AddTempEntHook("Fire Bullets", Hook_TEFireBullets);
 
-	steamtools = LibraryExists("SteamTools");
-
 	InitializeBossProfiles();
 	
 	NPCInitialize();
@@ -1346,22 +1346,7 @@ public void OnPluginEnd()
 {
 	StopPlugin();
 }
-public void OnLibraryAdded(const char[] name)
-{
-	if(!strcmp(name, "SteamTools", false))
-	{
-		steamtools = true;
-	}
-	
-}
-public void OnLibraryRemoved(const char[] name)
-{
-	if(!strcmp(name, "SteamTools", false))
-	{
-		steamtools = false;
-	}
-	
-}
+
 static void SDK_Init()
 {
 	// Check SDKHooks gamedata.
@@ -1708,11 +1693,11 @@ static void StartPlugin()
 	g_bPlayerViewbobHurtEnabled = GetConVarBool(g_cvPlayerViewbobHurtEnabled);
 	g_bPlayerViewbobSprintEnabled = GetConVarBool(g_cvPlayerViewbobSprintEnabled);
 	
+	#if defined _SteamWorks_Included
+		SteamWorks_SetGameDescription("Slender Fortress (" ... PLUGIN_VERSION_DISPLAY ... ")");
+	#endif
 	#if defined _steamtools_included
-	if(steamtools)
-	{
 		Steam_SetGameDescription( "Slender Fortress (" ... PLUGIN_VERSION_DISPLAY ... ")" );
-	}
 	#endif
 	
 	PrecacheStuff();
@@ -7921,12 +7906,11 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 			{
 				int iSlender = NPCGetEntIndex(npcIndex);
 				g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
-				int iAttackIndex = NPCGetCurrentAttackIndex(npcIndex);
-				
+
 				char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH];
 				NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
 				
-				if(GetRandomStringFromProfile(npcProfile, "sound_attack_killed_client", buffer, sizeof(buffer), _, iAttackIndex+1) && buffer[0] != '\0')
+				if(GetRandomStringFromProfile(npcProfile, "sound_attack_killed_client", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
 					if (g_bPlayerEliminated[iClient])
 					{
@@ -7934,7 +7918,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 					}
 				}
 				
-				if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer),_,iAttackIndex+1) && buffer[0] != '\0')
+				if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
 					if (g_bPlayerEliminated[iClient])
 					{
@@ -7944,7 +7928,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 				
 				SlenderPrintChatMessage(npcIndex, iClient);
 				
-				SlenderPerformVoice(npcIndex, "sound_attack_killed",iAttackIndex+1);
+				SlenderPerformVoice(npcIndex, "sound_attack_killed");
 			}
 			
 			char classname[64];
@@ -7954,8 +7938,9 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 				int npcIndex2 = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 				if (npcIndex2 != -1)
 				{
-					int iAttackIndex = NPCGetCurrentAttackIndex(npcIndex2);
-					
+					int iSlender = NPCGetEntIndex(npcIndex);
+					g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
+
 					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH];
 					NPCGetProfile(npcIndex2, npcProfile, sizeof(npcProfile));
 					
@@ -7967,7 +7952,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 						}
 					}
 					
-					if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer),_,iAttackIndex+1) && buffer[0] != '\0')
+					if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer)) && buffer[0] != '\0')
 					{
 						if (g_bPlayerEliminated[iClient])
 						{
@@ -7977,7 +7962,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 					
 					SlenderPrintChatMessage(npcIndex2, iClient);
 					
-					SlenderPerformVoice(npcIndex2, "sound_attack_killed",iAttackIndex);
+					SlenderPerformVoice(npcIndex2, "sound_attack_killed");
 				}
 			}
 			
