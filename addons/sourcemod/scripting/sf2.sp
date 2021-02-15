@@ -22,6 +22,8 @@
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
 #tryinclude <steamworks>
+bool steamtools;
+bool steamworks;
 #define REQUIRE_EXTENSIONS
 
 #define DEBUG
@@ -1312,6 +1314,10 @@ public void OnPluginStart()
 	
 	AddTempEntHook("Fire Bullets", Hook_TEFireBullets);
 
+	steamtools = LibraryExists("SteamTools");
+	
+	steamworks = LibraryExists("SteamWorks");
+
 	InitializeBossProfiles();
 	
 	NPCInitialize();
@@ -1346,7 +1352,34 @@ public void OnPluginEnd()
 {
 	StopPlugin();
 }
-
+public void OnLibraryAdded(const char[] name)
+{
+	
+	if(!strcmp(name, "SteamTools", false))
+	{
+		steamtools = true;
+	}
+	
+	if(!strcmp(name, "SteamWorks", false))
+	{
+		steamworks = true;
+	}
+	
+}
+public void OnLibraryRemoved(const char[] name)
+{
+	
+	if(!strcmp(name, "SteamTools", false))
+	{
+		steamtools = false;
+	}
+	
+	if(!strcmp(name, "SteamWorks", false))
+	{
+		steamworks = false;
+	}
+	
+}
 static void SDK_Init()
 {
 	// Check SDKHooks gamedata.
@@ -1657,6 +1690,8 @@ static void StartPlugin()
 #if defined DEBUG
 	InitializeDebugLogging();
 #endif
+
+	int i2 = 0;
 	
 	// Handle ConVars.
 	ConVar hCvar = FindConVar("mp_friendlyfire");
@@ -1692,15 +1727,28 @@ static void StartPlugin()
 	g_bPlayerViewbobEnabled = GetConVarBool(g_cvPlayerViewbobEnabled);
 	g_bPlayerViewbobHurtEnabled = GetConVarBool(g_cvPlayerViewbobHurtEnabled);
 	g_bPlayerViewbobSprintEnabled = GetConVarBool(g_cvPlayerViewbobSprintEnabled);
-	
+
 	#if defined _SteamWorks_Included
+	if(steamworks)
+	{
 		SteamWorks_SetGameDescription("Slender Fortress (" ... PLUGIN_VERSION_DISPLAY ... ")");
+		steamtools=false;
+	}
 	#endif
 	#if defined _steamtools_included
-		Steam_SetGameDescription( "Slender Fortress (" ... PLUGIN_VERSION_DISPLAY ... ")" );
+	if(steamtools)
+	{
+		Steam_SetGameDescription("Slender Fortress (" ... PLUGIN_VERSION_DISPLAY ... ")");
+		steamworks=false;
+	}
 	#endif
+
+	if (steamworks) i2 = 1;
+	else if (steamtools) i2 = 2;
 	
 	PrecacheStuff();
+
+	if (i2 == 1 || i2 == 2 || i2 == 0) WarningRemoval(); //Sourcemod loves to call steamworks and steamtools unused symbols, do this to prevent this
 	
 	// Reset special round.
 	g_bSpecialRound = false;
@@ -1750,6 +1798,11 @@ static void StartPlugin()
 		if (!IsClientInGame(i)) continue;
 		OnClientPutInServer(i);
 	}
+}
+
+void WarningRemoval()
+{
+
 }
 
 static void PrecacheStuff()
