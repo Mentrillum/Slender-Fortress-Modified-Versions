@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where advanced deathcam bosses break on AFK people.\n-Added an alternative directory to get config files (data\).\n-Slaughter Run's timer equation can now be customized.\n-Fixed a bug where jumpscare_duration didn't have a default value."
+		"en"	"-Reduced special round interval from 0.2 to 0.1.\n-Re-added support for Steamworks allowing for cross compatibility.\n-Fixed a bug where sound_attack_killed plus variants wouldn't play.\n-Removed the heal on kill for the Warrior's Spirit.\n-Fixed the Escape Plan movement jitter bug."
 	}
 
 	"SF2 Smite player"
