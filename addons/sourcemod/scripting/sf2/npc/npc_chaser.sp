@@ -1914,13 +1914,13 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 		{
 			flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
 			flOriginalMaxSpeed = NPCGetMaxSpeed(iBossIndex, iDifficulty) + NPCGetAddMaxSpeed(iBossIndex);
-			if (flOriginalSpeed < (SF_IsSlaughterRunMap() ? 600.0 : 520.0))
+			if (flOriginalSpeed < (SF_IsSlaughterRunMap() ? 580.0 : 520.0))
 			{
-				flOriginalSpeed = SF_IsSlaughterRunMap() ? 600.0 : 520.0;
+				flOriginalSpeed = SF_IsSlaughterRunMap() ? 580.0 : 520.0;
 			}
-			if (flOriginalMaxSpeed < (SF_IsSlaughterRunMap() ? 600.0 : 520.0))
+			if (flOriginalMaxSpeed < (SF_IsSlaughterRunMap() ? 580.0 : 520.0))
 			{
-				flOriginalMaxSpeed = SF_IsSlaughterRunMap() ? 600.0 : 520.0;
+				flOriginalMaxSpeed = SF_IsSlaughterRunMap() ? 580.0 : 520.0;
 			}
 		}
 	}

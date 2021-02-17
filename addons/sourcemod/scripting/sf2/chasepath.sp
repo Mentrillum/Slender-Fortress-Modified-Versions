@@ -299,9 +299,9 @@ methodmap ChaserPathLogic
 		float flMaxSpeed = 2000.0;
 		if (flJumpSpeed > SquareFloat(flMaxSpeed))
 		{
-			vecJumpVel[0] *= (SquareFloat(flMaxSpeed) / flJumpSpeed)/2;
-			vecJumpVel[1] *= (SquareFloat(flMaxSpeed) / flJumpSpeed)/2;
-			vecJumpVel[2] *= (SquareFloat(flMaxSpeed) / flJumpSpeed)/2;
+			vecJumpVel[0] *= (SquareFloat(flMaxSpeed) / flJumpSpeed);
+			vecJumpVel[1] *= (SquareFloat(flMaxSpeed) / flJumpSpeed);
+			vecJumpVel[2] *= (SquareFloat(flMaxSpeed) / flJumpSpeed);
 		}
 
 		nextbotLocomotion.Jump();

@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Reduced special round interval from 0.2 to 0.1.\n-Re-added support for Steamworks allowing for cross compatibility.\n-Fixed a bug where sound_attack_killed plus variants wouldn't play.\n-Removed the heal on kill for the Warrior's Spirit.\n-Fixed the Escape Plan movement jitter bug."
+		"en"	"-Fixed a bug where footstep and voice auto chase counts were inverted.\n-Reduced default Slaughter Run boss speed from 600 to 580.\n-Max air speed is no longer divided by 2.\n-Reverted the code for the bobbing functions."
 	}
 
 	"SF2 Smite player"

@@ -2494,17 +2494,17 @@ void ClientProcessViewAngles(int client)
 					{
 						float flVelocity[3];
 						GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", flVelocity);
-						float flSpeed = GetVectorLength(flVelocity, true);
+						float flSpeed = GetVectorLength(flVelocity);
 						
 						float flPunchIdle[3];
 						
 						if (flSpeed > 0.0)
 						{
-							if (flSpeed >= SquareFloat(60.0))
+							if (flSpeed >= 60.0)
 							{
-								flPunchIdle[0] = (SquareFloat(Sine(GetGameTime() * SF2_PLAYER_VIEWBOB_TIMER)) * flSpeed * SquareFloat(SF2_PLAYER_VIEWBOB_SCALE_X) / SquareFloat(400.0));
-								flPunchIdle[1] = (SquareFloat(Sine(2.0 * GetGameTime() * SF2_PLAYER_VIEWBOB_TIMER)) * flSpeed * SquareFloat(SF2_PLAYER_VIEWBOB_SCALE_Y) / SquareFloat(400.0));
-								flPunchIdle[2] = (SquareFloat(Sine(1.6 * GetGameTime() * SF2_PLAYER_VIEWBOB_TIMER)) * flSpeed * SquareFloat(SF2_PLAYER_VIEWBOB_SCALE_Z) / SquareFloat(400.0));
+								flPunchIdle[0] = Sine(GetGameTime() * SF2_PLAYER_VIEWBOB_TIMER) * flSpeed * SF2_PLAYER_VIEWBOB_SCALE_X / 400.0;
+								flPunchIdle[1] = Sine(2.0 * GetGameTime() * SF2_PLAYER_VIEWBOB_TIMER) * flSpeed * SF2_PLAYER_VIEWBOB_SCALE_Y / 400.0;
+								flPunchIdle[2] = Sine(1.6 * GetGameTime() * SF2_PLAYER_VIEWBOB_TIMER) * flSpeed * SF2_PLAYER_VIEWBOB_SCALE_Z / 400.0;
 								
 								AddVectors(flPunchVel, flPunchIdle, flPunchVel);
 							}

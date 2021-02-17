@@ -32,8 +32,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.02 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.02 Modified"
+#define PLUGIN_VERSION "1.6.03 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.03 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -4244,9 +4244,9 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 							GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 							g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
 							g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDVOICE;
-							if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] <= GetGameTime())
+							if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] < GetGameTime())
 							{
-								g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddFootstep(iBossIndex);
+								g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddVoice(iBossIndex);
 								g_iSlenderSoundTarget[iBossIndex] = EntIndexToEntRef(entity);
 								g_flSlenderAutoChaseCooldown[iBossIndex] = GetGameTime() + 0.3;
 							}
@@ -4282,9 +4282,9 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDFOOTSTEP;
-								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] <= GetGameTime())
+								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] < GetGameTime())
 								{
-									g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddVoice(iBossIndex);
+									g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddFootstep(iBossIndex);
 									g_iSlenderSoundTarget[iBossIndex] = EntIndexToEntRef(entity);
 									g_flSlenderAutoChaseCooldown[iBossIndex] = GetGameTime() + 0.3;
 								}
@@ -4310,7 +4310,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDWEAPON;
-								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] <= GetGameTime())
+								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] < GetGameTime())
 								{
 									g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddWeapon(iBossIndex);
 									g_iSlenderSoundTarget[iBossIndex] = EntIndexToEntRef(entity);
@@ -4333,7 +4333,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDFLASHLIGHT;
-								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] <= GetGameTime())
+								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] < GetGameTime())
 								{
 									g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddWeapon(iBossIndex);
 									g_iSlenderSoundTarget[iBossIndex] = EntIndexToEntRef(entity);
