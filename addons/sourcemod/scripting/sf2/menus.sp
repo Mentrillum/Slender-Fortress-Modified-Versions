@@ -179,6 +179,7 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Simply Delicious - For the awesome camera overlay\n");
 	StrCat(buffer, sizeof(buffer), "Jason278 -Page models");
 	StrCat(buffer, sizeof(buffer), "Hydra X9K Music - Triple Bosses Music composer (Never Let Up Remix)\n");
+	StrCat(buffer, sizeof(buffer), "Dj-Rec0il - Running In the 90s Remix composer\n");
 	
 	SetMenuTitle(g_hMenuCredits1, buffer);
 	AddMenuItem(g_hMenuCredits1, "0", "Next");

@@ -7,6 +7,7 @@
 #include <dhooks>
 #include <navmesh>
 #include <nativevotes>
+#include <collisionhook>
 
 #pragma semicolon 1
 
@@ -32,8 +33,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.03 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.03 Modified"
+#define PLUGIN_VERSION "1.6.04 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.04 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -163,7 +164,7 @@ public Plugin myinfo =
 
 #define NULLSOUND "misc/null.wav"
 
-//#define NINETYSMUSIC "slender/sf2modified_runninginthe90s.wav"
+#define NINETYSMUSIC "slender/sf2modified_runninginthe90s_v2.wav"
 #define TRIPLEBOSSESMUSIC "slender/sf2modified_triplebosses_v2.wav"
 
 #define TRAP_DEPLOY "slender/modified_traps/beartrap/trap_deploy.mp3"
@@ -619,10 +620,9 @@ Handle g_hPlayer20DollarsMusicTimer[MAXPLAYERS + 1][MAX_BOSSES];
 int g_iPlayer20DollarsMusicMaster[MAXPLAYERS + 1] = { -1, ... };
 
 
-//char g_strPlayer90sMusic[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-//float g_flPlayer90sMusicVolumes[MAXPLAYERS + 1];
-//Handle g_hPlayer90sMusicTimer[MAXPLAYERS + 1];
-//int g_iPlayer90sMusicMaster[MAXPLAYERS + 1];
+char g_strPlayer90sMusic[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+float g_flPlayer90sMusicVolumes[MAXPLAYERS + 1];
+Handle g_hPlayer90sMusicTimer[MAXPLAYERS + 1];
 
 
 SF2RoundState g_iRoundState = SF2RoundState_Invalid;
@@ -1709,16 +1709,6 @@ static void StartPlugin()
 	hCvar = FindConVar("tf_base_boss_max_turn_rate");
 	if (hCvar != view_as<ConVar>(INVALID_HANDLE) && GetConVarInt(hCvar) < 720) SetConVarInt(hCvar, 720);
 
-	//New CollisionHooks, or replacement, I don't judge.
-	hCvar = FindConVar("tf_avoidteammates");
-	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, true);
-
-	hCvar = FindConVar("tf_avoidteammates_pushaway");
-	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
-
-	hCvar = FindConVar("sv_noclipspeed");
-	if (hCvar != view_as<ConVar>(INVALID_HANDLE) && GetConVarInt(hCvar) < 2) SetConVarInt(hCvar, 2);
-	
 	g_flGravity = GetConVarFloat(g_cvGravity);
 	
 	g_b20Dollars = GetConVarBool(g_cv20Dollars);
@@ -1895,7 +1885,7 @@ static void PrecacheStuff()
 	PrecacheSound2(SNATCHER_APOLLYON_2);
 	PrecacheSound2(SNATCHER_APOLLYON_3);
 	
-	//PrecacheSound2(NINETYSMUSIC);
+	PrecacheSound2(NINETYSMUSIC);
 	PrecacheSound2(TRIPLEBOSSESMUSIC);
 	
 	PrecacheSound2(TRAP_CLOSE);
@@ -2059,7 +2049,7 @@ public void CleanTimerHandles()
 		g_hPlayerCampingTimer[i] = INVALID_HANDLE;
 		g_hPlayerBlinkTimer[i] = INVALID_HANDLE;
 		g_hPlayerMusicTimer[i] = INVALID_HANDLE;
-		//g_hPlayer90sMusicTimer[i] = INVALID_HANDLE;
+		g_hPlayer90sMusicTimer[i] = INVALID_HANDLE;
 		g_hPlayerFlashlightBatteryTimer[i] = INVALID_HANDLE;
 	}
 	for (int iBossIndex = 0; iBossIndex < MAX_BOSSES; iBossIndex++)
@@ -5268,7 +5258,7 @@ public void OnClientPutInServer(int iClient)
 	ClientChaseMusicSeeReset(iClient);
 	ClientAlertMusicReset(iClient);
 	Client20DollarsMusicReset(iClient);
-	//Client90sMusicReset(iClient);
+	Client90sMusicReset(iClient);
 	ClientMusicReset(iClient);
 	ClientResetProxy(iClient);
 	ClientResetHints(iClient);
@@ -6604,7 +6594,7 @@ void SetPageCount(int iNum)
 						{
 							flAverageTime += (flTimes[i3]/GetRandomFloat(10.0, 20.0));
 						}
-						PrintToChatAll("%f", flAverageTime);
+						PrintToChatAll("Time before bosses spawn: %f seconds", flAverageTime);
 						CreateTimer(flAverageTime, Timer_SlaughterRunSpawnBosses, _, TIMER_FLAG_NO_MAPCHANGE);
 					}
 				}
@@ -7405,7 +7395,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientChaseMusicSeeReset(iClient);
 		ClientAlertMusicReset(iClient);
 		Client20DollarsMusicReset(iClient);
-		//Client90sMusicReset(iClient);
+		Client90sMusicReset(iClient);
 		ClientMusicReset(iClient);
 		ClientResetProxy(iClient);
 		ClientResetHints(iClient);
@@ -7486,7 +7476,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientChaseMusicSeeReset(iClient);
 			ClientAlertMusicReset(iClient);
 			Client20DollarsMusicReset(iClient);
-			//Client90sMusicReset(iClient);
+			Client90sMusicReset(iClient);
 			ClientMusicReset(iClient);
 			ClientResetProxy(iClient);
 			ClientResetHints(iClient);
@@ -7911,7 +7901,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 		ClientChaseMusicSeeReset(iClient);
 		ClientAlertMusicReset(iClient);
 		Client20DollarsMusicReset(iClient);
-		//Client90sMusicReset(iClient);
+		Client90sMusicReset(iClient);
 		ClientMusicReset(iClient);
 
 		ClientResetFlashlight(iClient);

@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where footstep and voice auto chase counts were inverted.\n-Reduced default Slaughter Run boss speed from 600 to 580.\n-Max air speed is no longer divided by 2.\n-Reverted the code for the bobbing functions."
+		"en"	"-Special Round Vote now has a new system to pick random votes without repeats and breaking.\n-Silent Slender now only spawns 3 bosses compared to 4.\n-In The 90s music is back and extended.\n-Auto chase sprinters is now dependent on the boss' search sound range.\n-Ghost mode now uses Collision Hooks rather than noclip.\n-Added proxy weapons."
 	}
 
 	"SF2 Smite player"

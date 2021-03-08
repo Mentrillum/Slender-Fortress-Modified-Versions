@@ -124,6 +124,54 @@ public MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, Handle hRe
 	return MRES_Supercede;
 }
 
+public Action CH_ShouldCollide(int ent1,int ent2, bool &result)
+{
+	SF2RoundState state = GetRoundState();
+	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro) return Plugin_Continue;
+
+	if (MaxClients >= ent1 > 0)
+	{
+		if (IsClientInGhostMode(ent1))
+		{
+			result = false;
+			return Plugin_Changed;
+		}
+	}
+	if (MaxClients >= ent2 > 0)
+	{
+		if (IsClientInGhostMode(ent2))
+		{
+			result = false;
+			return Plugin_Changed;
+		}
+	}
+	return Plugin_Continue;
+}
+
+public Action CH_PassFilter(int ent1,int ent2, bool &result)
+{
+	SF2RoundState state = GetRoundState();
+	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro) return Plugin_Continue;
+
+	if (MaxClients >= ent1 > 0)
+	{
+		if (IsClientInGhostMode(ent1))
+		{
+			result = false;
+			return Plugin_Changed;
+		}
+	}
+	if (MaxClients >= ent2 > 0)
+	{
+		if (IsClientInGhostMode(ent2))
+		{
+			result = false;
+			return Plugin_Changed;
+		}
+	}
+	return Plugin_Continue;
+}
+
 float ClientGetScareBoostEndTime(int client)
 {
 	return g_flPlayerScareBoostEndTime[client];
@@ -185,6 +233,7 @@ public void Hook_ClientPreThink(int client)
 
 			if (!g_bPlayerProxy[client] && GetClientTeam(client) == TFTeam_Red)
 			{
+				if (TF2_IsPlayerInCondition(client,TFCond_Disguised)) TF2_RemoveCondition(client,TFCond_Disguised);
 				if (iRoundState == 4)
 				{
 					if (IsClientInDeathCam(client))
@@ -388,7 +437,7 @@ public void Hook_ClientPreThink(int client)
 								}
 								else
 								{
-									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed*2.5);
+									if (SF_IsBoxingMap() || SF_IsRaidMap()) SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed*2.5);
 								}
 								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-220.0);
 							}
@@ -414,7 +463,7 @@ public void Hook_ClientPreThink(int client)
 							}
 							else
 							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed*2.5);
+								if (SF_IsBoxingMap() || SF_IsRaidMap()) SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed*2.5);
 							}
 							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flWalkSpeed-75.0);
 						}
@@ -1064,7 +1113,7 @@ void ClientEscape(int client)
 	ClientChaseMusicSeeReset(client);
 	ClientAlertMusicReset(client);
 	Client20DollarsMusicReset(client);
-	//Client90sMusicReset(client);
+	Client90sMusicReset(client);
 	ClientMusicReset(client);
 	ClientResetProxy(client);
 	ClientResetHints(client);
@@ -2982,7 +3031,7 @@ void ClientStartSprint(int client)
 	TriggerTimer(g_hPlayerSprintTimer[client], true);
 	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
 	{
-		//Client90sMusicStart(client);
+		Client90sMusicStart(client);
 	}
 	
 	SDKHook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
@@ -3029,7 +3078,7 @@ void ClientStopSprint(int client)
 	ClientSprintTimer(client, true);
 	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
 	{
-		//Client90sMusicStop(client);
+		Client90sMusicStop(client);
 	}
 	
 	SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
@@ -3564,63 +3613,27 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 
 	if (!IsValidClient(client) || !g_bPlayerProxy[client]) return;
 
-	int iBossIndex = g_iPlayerProxyMaster[client];
+	int iBossIndex = NPCGetFromUniqueID(g_iPlayerProxyMaster[client]);
 
-	if (NPCGetUniqueID(iBossIndex) == -1) return;
+	if (iBossIndex == -1) return;
 
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
-	if (view_as<bool>(GetProfileNum(sProfile,"proxies_weapon",0)))
-	{
-		int iWeaponIndex;
-		char sWeaponName[PLATFORM_MAX_PATH], sWeaponStats[PLATFORM_MAX_PATH], sClassName[64], sSectionName[64], sWeaponStatsNew[PLATFORM_MAX_PATH];
-		TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
-		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_class_%s", sClassName);
-		GetProfileString(sProfile, sSectionName, sWeaponName, sizeof(sWeaponName));
-		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_stats_%s", sClassName);
-		GetProfileString(sProfile, sSectionName, sWeaponStats, sizeof(sWeaponStats));
-		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_index_%s", sClassName);
-		iWeaponIndex = GetProfileNum(sProfile, sSectionName, 0);
+	int iWeaponIndex;
+	char sWeaponName[PLATFORM_MAX_PATH], sWeaponStats[PLATFORM_MAX_PATH], sClassName[64], sSectionName[64];
+	TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
+	FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_class_%s", sClassName);
+	GetProfileString(sProfile, sSectionName, sWeaponName, sizeof(sWeaponName));
+	FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_stats_%s", sClassName);
+	GetProfileString(sProfile, sSectionName, sWeaponStats, sizeof(sWeaponStats));
+	FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_index_%s", sClassName);
+	iWeaponIndex = GetProfileNum(sProfile, sSectionName, 0);
 
-		int iWeapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-		if (iWeapon && iWeapon != INVALID_ENT_REFERENCE) TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee); //The boss has a melee weapon to replace for proxies
-	
-		if (strcmp(sClassName, "sniper", false) == 0)
-		{
-			FormatEx(sWeaponStatsNew, sizeof(sWeaponStatsNew), "42 ; 1 ; %s", sWeaponStats); //Fucking headshots, go away
-			Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStatsNew);
-			int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-			delete hWeapon;
-			EquipPlayerWeapon(client, iEnt);
-		}
-		else if (strcmp(sClassName, "spy", false) == 0)
-		{
-			if (iWeaponIndex == 61) 
-			{
-				FormatEx(sWeaponStatsNew, sizeof(sWeaponStatsNew), "42 ; 1 ; %s", sWeaponStats); //Fucking headshots, go away
-				Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStatsNew);
-				int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-				delete hWeapon;
-				EquipPlayerWeapon(client, iEnt);
-			}
-			else
-			{
-				Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats);
-				int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-				delete hWeapon;
-				EquipPlayerWeapon(client, iEnt);
-			}
-		}
-		else
-		{
-			Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats);
-			int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-			delete hWeapon;
-			EquipPlayerWeapon(client, iEnt);
-		}
-	}
-	else return;
+	Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats);
+	int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+	delete hWeapon;
+	EquipPlayerWeapon(client, iEnt);
 }
 
 public bool Hook_ClientProxyShouldCollide(int ent,int collisiongroup,int contentsmask, bool originalResult)
@@ -4618,7 +4631,7 @@ void ClientSetGhostModeState(int client, bool bState)
 			TF2_RemoveCondition(client, TFCond_Stealthed);
 			SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
-			SetEntityMoveType(client, MOVETYPE_WALK);
+			//SetEntityMoveType(client, MOVETYPE_WALK);
 			Client_ModelOverrides(client);
 		}
 	}
@@ -4685,9 +4698,12 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 		SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_NO);
 		SetEntData(client, g_offsCollisionGroup, 2, 4, true);
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
-		SetEntityMoveType(client, MOVETYPE_NOCLIP);
 		Client_ModelOverrides(client, g_iGhostModelIndex);
-		
+		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
+		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
+		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
+		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
+
 		// Set first observer target.
 		ClientGhostModeNextTarget(client);
 		ClientActivateUltravision(client);
@@ -5363,8 +5379,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		int iOldChasingSeeBoss = g_iPlayerChaseMusicSeeMaster[client];
 		int iOldAlertBoss = g_iPlayerAlertMusicMaster[client];
 		int iOld20DollarsBoss = g_iPlayer20DollarsMusicMaster[client];
-		//int iOld90sSprint = g_iPlayer20DollarsMusicMaster[client];
-		
+
 		float flAnger = -1.0;
 		float flSeeAnger = -1.0;
 		float flAlertAnger = -1.0;
@@ -6105,16 +6120,12 @@ stock void ClientMusicChaseSeeStop(int client,int iBossIndex)
 	TriggerTimer(g_hPlayerChaseMusicSeeTimer[client][iBossIndex], true);
 }
 
-/*stock void Client90sMusicReset(int client)
+stock void Client90sMusicReset(int client)
 {
 	char sOldMusic[PLATFORM_MAX_PATH];
 	strcopy(sOldMusic, sizeof(sOldMusic), g_strPlayer90sMusic[client]);
 	g_strPlayer90sMusic[client][0] = '\0';
 	if (IsValidClient(client) && sOldMusic[0]) StopSound(client, MUSIC_CHAN, sOldMusic);
-	
-	g_iPlayer90sMusicMaster[client] = -1;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 
 	g_hPlayer90sMusicTimer[client] = INVALID_HANDLE;
 	g_flPlayer90sMusicVolumes[client] = 0.0;
@@ -6134,17 +6145,10 @@ stock void Client90sMusicStart(int client)
 	sBuffer = NINETYSMUSIC;
 	
 	if (!sBuffer[0]) return;
-	
-	g_iPlayer90sMusicMaster[client] = 1;
-	
+
 	strcopy(g_strPlayer90sMusic[client], sizeof(g_strPlayer90sMusic[]), sBuffer);
 	g_hPlayer90sMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeIn90sMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_hPlayer90sMusicTimer[client], true);
-	
-	if (client != -1)
-	{
-		Client90sMusicStop(client);
-	}
 }
 
 stock void Client90sMusicStop(int client)
@@ -6153,13 +6157,12 @@ stock void Client90sMusicStop(int client)
 
 	if (!IsClientSprinting(client))
 	{
-		g_iPlayer90sMusicMaster[client] = -1;
 		g_strPlayer90sMusic[client][0] = '\0';
 	}
 	
 	g_hPlayer90sMusicTimer[client]= CreateTimer(0.01, Timer_PlayerFadeOut90sMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_hPlayer90sMusicTimer[client], true);
-}*/
+}
 
 public Action Timer_PlayerFadeInMusic(Handle timer, any userid)
 {
@@ -6505,11 +6508,13 @@ public Action Timer_PlayerFadeOutChaseMusicSee(Handle timer, any userid)
 	
 	return Plugin_Continue;
 }
-/*
+
 public Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0) return Plugin_Stop;
+
+	if (g_hPlayer90sMusicTimer[client] != timer) return Plugin_Stop;
 
 	g_flPlayer90sMusicVolumes[client] += 0.28;
 	if (g_flPlayer90sMusicVolumes[client] > 0.5) g_flPlayer90sMusicVolumes[client] = 0.5;
@@ -6529,6 +6534,8 @@ public Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0) return Plugin_Stop;
+
+	if (g_hPlayer90sMusicTimer[client] != timer) return Plugin_Stop;
 
 	char sBuffer[PLATFORM_MAX_PATH];
 	sBuffer = NINETYSMUSIC;
@@ -6552,7 +6559,7 @@ public Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
 	
 	return Plugin_Continue;
 }
-*/
+
 stock bool ClientHasMusicFlag(int client,int iFlag)
 {
 	return view_as<bool>(g_iPlayerMusicFlags[client] & iFlag);
@@ -6886,6 +6893,7 @@ public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
 	int iOwner = GetEntPropEnt(ent, Prop_Send, "moveparent");
 	if (iOwner == other) return Plugin_Handled;
 	if (!IsValidClient(other)) return Plugin_Handled;
+	if (!IsPlayerAlive(other)) return Plugin_Handled;
 	if (g_bPlayerProxy[other]) return Plugin_Continue;
 	if (IsClientInGhostMode(other)) return Plugin_Continue;
 	if (SF_SpecialRound(SPECIALROUND_WALLHAX) && ((GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) || (g_bPlayerProxy[other]))) return Plugin_Continue;

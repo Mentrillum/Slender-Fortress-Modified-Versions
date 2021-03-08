@@ -927,12 +927,6 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flBossJumpscareCooldownNightmare = KvGetFloat(kv, "jumpscare_cooldown_nightmare", flBossJumpscareCooldownInsane);
 	float flBossJumpscareCooldownApollyon = KvGetFloat(kv, "jumpscare_cooldown_apollyon", flBossJumpscareCooldownNightmare);
 
-	/*Deprecated stuff*/
-	if (KvGetFloat(kv, "jump_cooldown", 0.0) != 0.0)
-	{
-		PrintToServer("\"jump_cooldown\" is marked as deprecated, please remove it from the profile.");
-	}
-	
 	float flBossDefaultSpeed = KvGetFloat(kv, "speed", 150.0);
 	float flBossSpeedEasy = KvGetFloat(kv, "speed_easy", flBossDefaultSpeed);
 	float flBossSpeedHard = KvGetFloat(kv, "speed_hard", flBossDefaultSpeed);

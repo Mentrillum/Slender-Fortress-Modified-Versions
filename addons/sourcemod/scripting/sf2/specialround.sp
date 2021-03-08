@@ -19,7 +19,6 @@ static float g_flSpecialRoundCycleEndTime = -1.0;
 static bool g_bStarted = false;
 static int doubleroulettecount = 0;
 static int g_iSpecialRoundType = 0;
-
 void ReloadSpecialRounds()
 {
 	if (g_hSpecialRoundCycleNames == INVALID_HANDLE)
@@ -100,7 +99,7 @@ stock void SpecialRoundGetDescriptionChat(int iSpecialRound, char[] buffer,int b
 	if (g_hSpecialRoundsConfig == INVALID_HANDLE) return;
 	
 	KvRewind(g_hSpecialRoundsConfig);
-	char sSpecialRound[45];
+	char sSpecialRound[64];
 	IntToString(iSpecialRound, sSpecialRound, sizeof(sSpecialRound));
 	
 	if (!KvJumpToKey(g_hSpecialRoundsConfig, sSpecialRound)) return;
@@ -946,8 +945,6 @@ void SpecialRoundStart()
 				AddProfile(sBuffer,_,_,_,false);
 				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
 				AddProfile(sBuffer,_,_,_,false);
-				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-				AddProfile(sBuffer,_,_,_,false);
 			}
 			delete hSelectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_2DOOM);
@@ -1013,141 +1010,66 @@ void SpecialCreateVote()
 	FormatEx(Tittle,255,"%t%t","SF2 Prefix","SF2 Special Round Vote Menu Title");
 	NativeVotes_SetDetails(voteMenu,Tittle);
 	
-	ArrayList arrayEnabledRounds = SpecialEnabledList();
-	int iBlacklistedItems[6];
-	iBlacklistedItems[5] = 26;
-	int[] iWhitelistedItems = new int[arrayEnabledRounds.Length - 1];
-	char sWhitelisted[16];
+	ArrayList arrayEnabledRounds = SpecialEnabledList().Clone();
+	int iEraseVoteRound = arrayEnabledRounds.FindValue(SPECIALROUND_VOTE);
+	if (iEraseVoteRound != -1) arrayEnabledRounds.Erase(iEraseVoteRound);
 
 	for (int i = 0; i < 5; i++)
 	{
-		bool bChange = false;
-		
-		int iRandomRound = GetRandomInt(0, arrayEnabledRounds.Length - 1);
-		for (int i2 = 0; i2 < 5; i2++)
+		int iRound = arrayEnabledRounds.Get(GetRandomInt(0,arrayEnabledRounds.Length-1));
+		int iEraseRound = arrayEnabledRounds.FindValue(iRound);
+		if (iEraseRound != -1) arrayEnabledRounds.Erase(iEraseRound);
+
+		char sItem[30], sItemOutPut[30];
+		switch (iRound)
 		{
-			if (iRandomRound == iBlacklistedItems[0] || iRandomRound == iBlacklistedItems[1] || iRandomRound == iBlacklistedItems[2] || iRandomRound == iBlacklistedItems[3] || iRandomRound == iBlacklistedItems[4] || iRandomRound == iBlacklistedItems[5]) bChange = true;
+			case SPECIALROUND_DOUBLETROUBLE: FormatEx(sItem, sizeof(sItem), "Double Trouble");
+			case SPECIALROUND_INSANEDIFFICULTY: FormatEx(sItem, sizeof(sItem), "Suicide Time");
+			case SPECIALROUND_DOUBLEMAXPLAYERS: FormatEx(sItem, sizeof(sItem), "Double Players");
+			case SPECIALROUND_LIGHTSOUT: FormatEx(sItem, sizeof(sItem), "Lights Out");
+			case SPECIALROUND_BEACON: FormatEx(sItem, sizeof(sItem), "Bacon Spray");
+			case SPECIALROUND_DOOMBOX: FormatEx(sItem, sizeof(sItem), "Doom Box");
+			case SPECIALROUND_NOGRACE: FormatEx(sItem, sizeof(sItem), "Start Running");
+			case SPECIALROUND_2DOUBLE: FormatEx(sItem, sizeof(sItem), "Double It All");
+			case SPECIALROUND_DOUBLEROULETTE: FormatEx(sItem, sizeof(sItem), "Double Roulette");
+			case SPECIALROUND_NIGHTVISION: FormatEx(sItem, sizeof(sItem), "Night Vision");
+			case SPECIALROUND_INFINITEFLASHLIGHT: FormatEx(sItem, sizeof(sItem), "Infinite Flashlight");
+			case SPECIALROUND_DREAMFAKEBOSSES: FormatEx(sItem, sizeof(sItem), "Just a Dream");
+			case SPECIALROUND_EYESONTHECLOACK: FormatEx(sItem, sizeof(sItem), "Countdown");
+			case SPECIALROUND_NOPAGEBONUS: FormatEx(sItem, sizeof(sItem), "Deadline");
+			case SPECIALROUND_DUCKS: FormatEx(sItem, sizeof(sItem), "Ducks");
+			case SPECIALROUND_1UP: FormatEx(sItem, sizeof(sItem), "1-Up");
+			case SPECIALROUND_NOULTRAVISION: FormatEx(sItem, sizeof(sItem), "Blind");
+			case SPECIALROUND_SUPRISE: FormatEx(sItem, sizeof(sItem), "Surprise");
+			case SPECIALROUND_LASTRESORT: FormatEx(sItem, sizeof(sItem), "Last Resort");
+			case SPECIALROUND_ESCAPETICKETS: FormatEx(sItem, sizeof(sItem), "Escape Tickets");
+			case SPECIALROUND_REVOLUTION: FormatEx(sItem, sizeof(sItem), "Special Round Revolution");
+			case SPECIALROUND_DISTORTION: FormatEx(sItem, sizeof(sItem), "Space Distortion");
+			case SPECIALROUND_MULTIEFFECT: FormatEx(sItem, sizeof(sItem), "Multieffect");
+			case SPECIALROUND_BOO: FormatEx(sItem, sizeof(sItem), "Boo");
+			case SPECIALROUND_REALISM: FormatEx(sItem, sizeof(sItem), "Marble Hornets");
+			case SPECIALROUND_COFFEE: FormatEx(sItem, sizeof(sItem), "Coffee");
+			case SPECIALROUND_PAGEDETECTOR: FormatEx(sItem, sizeof(sItem), "Page Detector");
+			case SPECIALROUND_CLASSSCRAMBLE: FormatEx(sItem, sizeof(sItem), "Class Scramble");
+			case SPECIALROUND_2DOOM: FormatEx(sItem, sizeof(sItem), "Silent Slender");
+			case SPECIALROUND_WALLHAX: FormatEx(sItem, sizeof(sItem), "Wall Hax");
+			case SPECIALROUND_HYPERSNATCHER: FormatEx(sItem, sizeof(sItem), "Hyper Snatcher");
+			case SPECIALROUND_PAGEREWARDS: FormatEx(sItem, sizeof(sItem), "Page Rewards");
+			case SPECIALROUND_TINYBOSSES: FormatEx(sItem, sizeof(sItem), "Tiny Bosses");
+			case SPECIALROUND_RUNNINGINTHE90S: FormatEx(sItem, sizeof(sItem), "In The 90s");
+			case SPECIALROUND_TRIPLEBOSSES: FormatEx(sItem, sizeof(sItem), "Triple Bosses");
+			case SPECIALROUND_20DOLLARS: FormatEx(sItem, sizeof(sItem), "20 Dollars");
 		}
-		
-		if (bChange)
+		for (int iBit = 0; iBit < 30; iBit++)
 		{
-			for (int i3 = 0; i3 < arrayEnabledRounds.Length - 1; i3++)
+			if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
 			{
-				if (i3 != iBlacklistedItems[0] && i3 != iBlacklistedItems[1] && i3 != iBlacklistedItems[2] && i3 != iBlacklistedItems[3] && i3 != iBlacklistedItems[4] && i3 != iBlacklistedItems[5])
-				{
-					iWhitelistedItems[i3] = i3;
-					FormatEx(sWhitelisted, sizeof(sWhitelisted), "%d", i3);
-				}
+				break;
 			}
-			int iRandomRoundNew = GetRandomInt(0, StringToInt(sWhitelisted));
-			char sItem[30], sItemOutPut[30];
-			switch (iRandomRoundNew)
-			{
-				case SPECIALROUND_DOUBLETROUBLE: FormatEx(sItem, sizeof(sItem), "Double Trouble");
-				case SPECIALROUND_INSANEDIFFICULTY: FormatEx(sItem, sizeof(sItem), "Suicide Time");
-				case SPECIALROUND_DOUBLEMAXPLAYERS: FormatEx(sItem, sizeof(sItem), "Double Players");
-				case SPECIALROUND_LIGHTSOUT: FormatEx(sItem, sizeof(sItem), "Lights Out");
-				case SPECIALROUND_BEACON: FormatEx(sItem, sizeof(sItem), "Bacon Spray");
-				case SPECIALROUND_DOOMBOX: FormatEx(sItem, sizeof(sItem), "Doom Box");
-				case SPECIALROUND_NOGRACE: FormatEx(sItem, sizeof(sItem), "Start Running");
-				case SPECIALROUND_2DOUBLE: FormatEx(sItem, sizeof(sItem), "Double It All");
-				case SPECIALROUND_DOUBLEROULETTE: FormatEx(sItem, sizeof(sItem), "Double Roulette");
-				case SPECIALROUND_NIGHTVISION: FormatEx(sItem, sizeof(sItem), "Night Vision");
-				case SPECIALROUND_INFINITEFLASHLIGHT: FormatEx(sItem, sizeof(sItem), "Infinite Flashlight");
-				case SPECIALROUND_DREAMFAKEBOSSES: FormatEx(sItem, sizeof(sItem), "Just a Dream");
-				case SPECIALROUND_EYESONTHECLOACK: FormatEx(sItem, sizeof(sItem), "Countdown");
-				case SPECIALROUND_NOPAGEBONUS: FormatEx(sItem, sizeof(sItem), "Deadline");
-				case SPECIALROUND_DUCKS: FormatEx(sItem, sizeof(sItem), "Ducks");
-				case SPECIALROUND_1UP: FormatEx(sItem, sizeof(sItem), "1 Up");
-				case SPECIALROUND_NOULTRAVISION: FormatEx(sItem, sizeof(sItem), "Blind");
-				case SPECIALROUND_SUPRISE: FormatEx(sItem, sizeof(sItem), "Surprise");
-				case SPECIALROUND_LASTRESORT: FormatEx(sItem, sizeof(sItem), "Last Resort");
-				case SPECIALROUND_ESCAPETICKETS: FormatEx(sItem, sizeof(sItem), "Escape Tickets");
-				case SPECIALROUND_REVOLUTION: FormatEx(sItem, sizeof(sItem), "Special Round Revolution");
-				case SPECIALROUND_DISTORTION: FormatEx(sItem, sizeof(sItem), "Space Distortion");
-				case SPECIALROUND_MULTIEFFECT: FormatEx(sItem, sizeof(sItem), "Multieffect");
-				case SPECIALROUND_BOO: FormatEx(sItem, sizeof(sItem), "Boo");
-				case SPECIALROUND_REALISM: FormatEx(sItem, sizeof(sItem), "Marble Hornets");
-				case SPECIALROUND_COFFEE: FormatEx(sItem, sizeof(sItem), "Coffee");
-				case SPECIALROUND_PAGEDETECTOR: FormatEx(sItem, sizeof(sItem), "Page Detector");
-				case SPECIALROUND_CLASSSCRAMBLE: FormatEx(sItem, sizeof(sItem), "Class Scramble");
-				case SPECIALROUND_2DOOM: FormatEx(sItem, sizeof(sItem), "Silent Slender");
-				case SPECIALROUND_WALLHAX: FormatEx(sItem, sizeof(sItem), "Wall Hax");
-				case SPECIALROUND_HYPERSNATCHER: FormatEx(sItem, sizeof(sItem), "Hyper Snatcher");
-				case SPECIALROUND_PAGEREWARDS: FormatEx(sItem, sizeof(sItem), "Page Rewards");
-				case SPECIALROUND_TINYBOSSES: FormatEx(sItem, sizeof(sItem), "Tiny Bosses");
-				case SPECIALROUND_RUNNINGINTHE90S: FormatEx(sItem, sizeof(sItem), "In The 90s");
-				case SPECIALROUND_TRIPLEBOSSES: FormatEx(sItem, sizeof(sItem), "Triple Bosses");
-				case SPECIALROUND_20DOLLARS: FormatEx(sItem, sizeof(sItem), "20 Dollars");
-			}
-			for (int iBit = 0; iBit < 30; iBit++)
-			{
-				if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
-				{
-					break;
-				}
-				sItemOutPut[iBit] = sItem[iBit];
-			}
-			FormatEx(sItem, sizeof(sItem), "%d", iRandomRoundNew);
-			NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
-			
-			iBlacklistedItems[i] = iRandomRoundNew;
+			sItemOutPut[iBit] = sItem[iBit];
 		}
-		else
-		{
-			char sItem[30], sItemOutPut[30];
-			switch (iRandomRound)
-			{
-				case SPECIALROUND_DOUBLETROUBLE: FormatEx(sItem, sizeof(sItem), "Double Trouble");
-				case SPECIALROUND_INSANEDIFFICULTY: FormatEx(sItem, sizeof(sItem), "Suicide Time");
-				case SPECIALROUND_DOUBLEMAXPLAYERS: FormatEx(sItem, sizeof(sItem), "Double Players");
-				case SPECIALROUND_LIGHTSOUT: FormatEx(sItem, sizeof(sItem), "Lights Out");
-				case SPECIALROUND_BEACON: FormatEx(sItem, sizeof(sItem), "Bacon Spray");
-				case SPECIALROUND_DOOMBOX: FormatEx(sItem, sizeof(sItem), "Doom Box");
-				case SPECIALROUND_NOGRACE: FormatEx(sItem, sizeof(sItem), "Start Running");
-				case SPECIALROUND_2DOUBLE: FormatEx(sItem, sizeof(sItem), "Double It All");
-				case SPECIALROUND_DOUBLEROULETTE: FormatEx(sItem, sizeof(sItem), "Double Roulette");
-				case SPECIALROUND_NIGHTVISION: FormatEx(sItem, sizeof(sItem), "Night Vision");
-				case SPECIALROUND_INFINITEFLASHLIGHT: FormatEx(sItem, sizeof(sItem), "Infinite Flashlight");
-				case SPECIALROUND_DREAMFAKEBOSSES: FormatEx(sItem, sizeof(sItem), "Just a Dream");
-				case SPECIALROUND_EYESONTHECLOACK: FormatEx(sItem, sizeof(sItem), "Countdown");
-				case SPECIALROUND_NOPAGEBONUS: FormatEx(sItem, sizeof(sItem), "Deadline");
-				case SPECIALROUND_DUCKS: FormatEx(sItem, sizeof(sItem), "Ducks");
-				case SPECIALROUND_1UP: FormatEx(sItem, sizeof(sItem), "1 Up");
-				case SPECIALROUND_NOULTRAVISION: FormatEx(sItem, sizeof(sItem), "Blind");
-				case SPECIALROUND_SUPRISE: FormatEx(sItem, sizeof(sItem), "Surprise");
-				case SPECIALROUND_LASTRESORT: FormatEx(sItem, sizeof(sItem), "Last Resort");
-				case SPECIALROUND_ESCAPETICKETS: FormatEx(sItem, sizeof(sItem), "Escape Tickets");
-				case SPECIALROUND_REVOLUTION: FormatEx(sItem, sizeof(sItem), "Special Round Revolution");
-				case SPECIALROUND_DISTORTION: FormatEx(sItem, sizeof(sItem), "Space Distortion");
-				case SPECIALROUND_MULTIEFFECT: FormatEx(sItem, sizeof(sItem), "Multieffect");
-				case SPECIALROUND_BOO: FormatEx(sItem, sizeof(sItem), "Boo");
-				case SPECIALROUND_REALISM: FormatEx(sItem, sizeof(sItem), "Marble Hornets");
-				case SPECIALROUND_COFFEE: FormatEx(sItem, sizeof(sItem), "Coffee");
-				case SPECIALROUND_PAGEDETECTOR: FormatEx(sItem, sizeof(sItem), "Page Detector");
-				case SPECIALROUND_CLASSSCRAMBLE: FormatEx(sItem, sizeof(sItem), "Class Scramble");
-				case SPECIALROUND_2DOOM: FormatEx(sItem, sizeof(sItem), "Silent Slender");
-				case SPECIALROUND_WALLHAX: FormatEx(sItem, sizeof(sItem), "Wall Hax");
-				case SPECIALROUND_HYPERSNATCHER: FormatEx(sItem, sizeof(sItem), "Hyper Snatcher");
-				case SPECIALROUND_PAGEREWARDS: FormatEx(sItem, sizeof(sItem), "Page Rewards");
-				case SPECIALROUND_TINYBOSSES: FormatEx(sItem, sizeof(sItem), "Tiny Bosses");
-				case SPECIALROUND_RUNNINGINTHE90S: FormatEx(sItem, sizeof(sItem), "In The 90s");
-				case SPECIALROUND_TRIPLEBOSSES: FormatEx(sItem, sizeof(sItem), "Triple Bosses");
-				case SPECIALROUND_20DOLLARS: FormatEx(sItem, sizeof(sItem), "20 Dollars");
-			}
-			for (int iBit = 0; iBit < 30; iBit++)
-			{
-				if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
-				{
-					break;
-				}
-				sItemOutPut[iBit] = sItem[iBit];
-			}
-			FormatEx(sItem, sizeof(sItem), "%d", iRandomRound);
-			NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
-			
-			iBlacklistedItems[i] = iRandomRound;
-		}
+		FormatEx(sItem, sizeof(sItem), "%d", iRound);
+		NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
 	}
 	
 	delete arrayEnabledRounds;

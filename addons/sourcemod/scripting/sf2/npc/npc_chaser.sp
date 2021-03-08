@@ -2047,6 +2047,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 	
 	int iBestNewTarget = INVALID_ENT_REFERENCE;
 	float flSearchRange = NPCGetSearchRadius(iBossIndex, iDifficulty);
+	float flSearchSoundRange = NPCGetHearingRadius(iBossIndex, iDifficulty);
 	float flBestNewTargetDist = SquareFloat(flSearchRange);
 	int iState = iOldState;
 	
@@ -2235,7 +2236,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			}
 		}
 
-		if (NPCChaserCanAutoChaseSprinters(iBossIndex) && IsClientReallySprinting(i) && GetVectorSquareMagnitude(flTraceStartPos, flTraceEndPos) <= SquareFloat(flSearchRange) && g_flNPCAutoChaseSprinterCooldown[iBossIndex] <= GetGameTime() && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN) 
+		if (NPCChaserCanAutoChaseSprinters(iBossIndex) && IsClientReallySprinting(i) && GetVectorSquareMagnitude(flTraceStartPos, flTraceEndPos) <= SquareFloat(flSearchSoundRange) && g_flNPCAutoChaseSprinterCooldown[iBossIndex] <= GetGameTime() && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN) 
 		{
 			bPlayerMadeNoise[i] = true;
 			g_bNPCInAutoChase[iBossIndex] = true;
@@ -4381,7 +4382,7 @@ public Action Timer_DestroyProjectile(Handle timer, any entref)
 
 public Action Hook_ManglerTouch(int entity, int iOther)
 {
-	if (MAX_BOSSES >= NPCGetFromEntIndex(iOther) > -1) return Plugin_Continue;
+	//if (IsValidEntity(NPCGetEntIndex(iOther))) return Plugin_Continue;
 	int iDifficulty = GetConVarInt(g_cvDifficulty);
 	int iRandomSound = GetRandomInt(0, 2);
 	float flEntPos[3], flOtherPos[3];
