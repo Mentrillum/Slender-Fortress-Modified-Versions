@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Special Round Vote now has a new system to pick random votes without repeats and breaking.\n-Silent Slender now only spawns 3 bosses compared to 4.\n-In The 90s music is back and extended.\n-Auto chase sprinters is now dependent on the boss' search sound range.\n-Ghost mode now uses Collision Hooks rather than noclip.\n-Added proxy weapons."
+		"en"	"-Fixed a bug where when someone dies, the round will sometimes not end.\n-After the weapon restrictions refresh, if players are not in the PvP arena or are not eliminated from the game, the weapons refresh them.\n-RED's collision group is now non-solid for ghosts to pass through easily."
 	}
 
 	"SF2 Smite player"

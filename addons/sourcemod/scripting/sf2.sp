@@ -33,8 +33,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.04 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.04 Modified"
+#define PLUGIN_VERSION "1.6.05 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.05 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -7510,6 +7510,8 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				ClientStartCampingTimer(iClient);
 				
 				HandlePlayerIntroState(iClient);
+
+				SetEntData(iClient, g_offsCollisionGroup, 2, 4, true);
 	
 				// screen overlay timer
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
@@ -7948,7 +7950,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 			if (npcIndex != -1)
 			{
 				int iSlender = NPCGetEntIndex(npcIndex);
-				g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
+				if (iSlender && iSlender != INVALID_ENT_REFERENCE) g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
 
 				char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH];
 				NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
@@ -7982,7 +7984,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 				if (npcIndex2 != -1)
 				{
 					int iSlender = NPCGetEntIndex(npcIndex);
-					g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
+					if (iSlender && iSlender != INVALID_ENT_REFERENCE) g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
 
 					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH];
 					NPCGetProfile(npcIndex2, npcProfile, sizeof(npcProfile));

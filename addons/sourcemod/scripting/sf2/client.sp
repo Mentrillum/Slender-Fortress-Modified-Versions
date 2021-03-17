@@ -7009,7 +7009,7 @@ void SF2_RefreshRestrictions()
 {
 	for(int client=1;client <=MaxClients;client++)
 	{
-		if(IsValidClient(client))
+		if(IsValidClient(client) && (!g_bPlayerEliminated[client] || !IsClientInPvP(client)))
 		{
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_hPlayerPostWeaponsTimer[client]=CreateTimer(1.0,Timer_ClientPostWeapons,GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);

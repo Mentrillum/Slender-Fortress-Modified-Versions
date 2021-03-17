@@ -864,8 +864,8 @@ public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 	if (g_iPlayerPvPTimerCount[iClient] <= 0)
 	{
 		PvP_SetPlayerPvPState(iClient, false);
-		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
 		TF2_RemoveCondition(iClient, TFCond_Taunting);
+		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
 		return Plugin_Stop;
 	}
 	
