@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where when someone dies, the round will sometimes not end.\n-After the weapon restrictions refresh, if players are not in the PvP arena or are not eliminated from the game, the weapons refresh them.\n-RED's collision group is now non-solid for ghosts to pass through easily."
+		"en"	"-Fixed a bug where when someone dies, the round will sometimes not end.\n-After the weapon restrictions refresh, if players are not in the PvP arena or are not eliminated from the game, the weapons refresh them."
 	}
 
 	"SF2 Smite player"

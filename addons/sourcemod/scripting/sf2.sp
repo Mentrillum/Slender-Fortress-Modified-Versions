@@ -7511,8 +7511,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				
 				HandlePlayerIntroState(iClient);
 
-				SetEntData(iClient, g_offsCollisionGroup, 2, 4, true);
-	
 				// screen overlay timer
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
