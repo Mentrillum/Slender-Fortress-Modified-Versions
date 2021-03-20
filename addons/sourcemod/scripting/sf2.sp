@@ -7981,7 +7981,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 				int npcIndex2 = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 				if (npcIndex2 != -1)
 				{
-					int iSlender = NPCGetEntIndex(npcIndex);
+					int iSlender = NPCGetEntIndex(npcIndex2);
 					if (iSlender && iSlender != INVALID_ENT_REFERENCE) g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
 
 					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH];
