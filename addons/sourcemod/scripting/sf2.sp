@@ -33,8 +33,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.05 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.05 Modified"
+#define PLUGIN_VERSION "1.6.06 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.06 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -71,6 +71,10 @@ public Plugin myinfo =
 #define FIREWORKSRED_PARTICLENAME "utaunt_firework_teamcolor_red"
 #define TELEPORTEDINBLU_PARTICLENAME "teleported_red"
 #define SOUND_THUNDER "ambient/explosions/explode_9.wav"
+
+#define EXPLOSIVEDANCE_EXPLOSION1 "weapons/explode1.wav"
+#define EXPLOSIVEDANCE_EXPLOSION2 "weapons/explode2.wav"
+#define EXPLOSIVEDANCE_EXPLOSION3 "weapons/explode3.wav"
 
 #define SPECIALROUND_BOO_DISTANCE 120.0
 #define SPECIALROUND_BOO_DURATION 4.0
@@ -1813,6 +1817,9 @@ static void PrecacheStuff()
 	PrecacheSound(CRIT_SOUND);
 	PrecacheSound(ZAP_SOUND);
 	PrecacheSound(PAGE_DETECTOR_BEEP);
+	PrecacheSound(EXPLOSIVEDANCE_EXPLOSION1);
+	PrecacheSound(EXPLOSIVEDANCE_EXPLOSION2);
+	PrecacheSound(EXPLOSIVEDANCE_EXPLOSION3);
 	PrecacheSound("player/spy_shield_break.wav");
 
 	PrecacheSound(CRIT_ROLL);
@@ -2220,10 +2227,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 				if (g_iSlenderCopyMaster[iBossIndex] != -1) continue; // Copies cannot generate proxies.
 				
 				if (GetGameTime() < g_flSlenderTimeUntilNextProxy[iBossIndex]) continue; // Proxy spawning hasn't cooled down yet.
-				
-				int iTeleportTarget = EntRefToEntIndex(g_iSlenderTeleportTarget[iBossIndex]);
-				if (!iTeleportTarget || iTeleportTarget == INVALID_ENT_REFERENCE) continue; // No teleport target.
-				
+
 				NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 				
 				int iMaxProxies = GetProfileNum(sProfile, "proxies_max");
@@ -3106,7 +3110,7 @@ public Action Command_ForceProxy(int iClient,int args)
 		return Plugin_Handled;
 	}
 	
-	if (IsRoundEnding() || IsRoundInWarmup())
+	if (GetRoundState() != SF2RoundState_Active && GetRoundState() != SF2RoundState_Escape)
 	{
 		CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
 		return Plugin_Handled;
@@ -3155,15 +3159,15 @@ public Action Command_ForceProxy(int iClient,int args)
 		char sName[MAX_NAME_LENGTH];
 		if (IsClientSourceTV(iTarget)) continue;//Exclude the sourcetv bot
 		FormatEx(sName, sizeof(sName), "%N", iTarget);
+
+		if (g_bPlayerProxy[iTarget]) continue; //Exclude any active proxies
 		
 		if (!g_bPlayerEliminated[iTarget])
 		{
 			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", iClient, sName);
 			continue;
 		}
-		
-		if (g_bPlayerProxy[iTarget]) continue;
-		
+
 		float flintPos[3];
 		
 		if (!SpawnProxy(iClient,iBossIndex,flintPos)) 
@@ -6085,7 +6089,7 @@ public Action Hook_SlenderObjectSetTransmit(int ent,int other)
 	{
 		if (!IsValidEdict(GetEntPropEnt(other, Prop_Send, "m_hObserverTarget"))) return Plugin_Handled;
 	}
-	if (IsClientInGhostMode(other)) return Plugin_Handled;
+	if (IsClientInGhostMode(other) || g_bPlayerProxy[other]) return Plugin_Handled;
 	if (IsValidClient(other))
 	{
 		if(ClientGetDistanceFromEntity(other,ent)>=SquareFloat(320.0))
@@ -6101,7 +6105,7 @@ public Action Hook_SlenderObjectSetTransmitEx(int ent,int other)
 	{
 		if (!IsValidEdict(GetEntPropEnt(other, Prop_Send, "m_hObserverTarget"))) return Plugin_Handled;
 	}
-	if (IsClientInGhostMode(other)) return Plugin_Handled;
+	if (IsClientInGhostMode(other) || g_bPlayerProxy[other]) return Plugin_Handled;
 	if (IsValidClient(other))
 	{
 		if(ClientGetDistanceFromEntity(other,ent)<=SquareFloat(320.0))
@@ -6308,60 +6312,31 @@ void SlenderOnClientStressUpdate(int iClient)
 			float flTargetStress = flTargetStressMax - ((flTargetStressMax - flTargetStressMin) / (g_flRoundDifficultyModifier * NPCGetAnger(iBossIndex)));
 			
 			float flPreferredTeleportTargetStress = flTargetStress;
-			
-			if(SF_IsRaidMap() || SF_IsBoxingMap() || SF_IsProxyMap() || SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex])
+
+			for (int i = 1; i <= MaxClients; i++)
 			{
-				Handle hArrayRaidTargets = CreateArray();
-				for (int i = 1; i <= MaxClients; i++)
+				if (!IsClientInGame(i) ||
+					!IsPlayerAlive(i) ||
+					g_bPlayerEliminated[i] ||
+					IsClientInGhostMode(i) ||
+					DidClientEscape(i))
 				{
-					if (!IsClientInGame(i) ||
-						!IsPlayerAlive(i) ||
-						g_bPlayerEliminated[i] ||
-						IsClientInGhostMode(i) ||
-						DidClientEscape(i))
-					{
-						continue;
-					}
-					PushArrayCell(hArrayRaidTargets, i);
+					continue;
 				}
-				if(GetArraySize(hArrayRaidTargets)>0)
+				if (g_bPlayerIsExitCamping[i])
 				{
-					int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
-					if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
+					if((iTeleportTarget != INVALID_ENT_REFERENCE && !g_bPlayerIsExitCamping[iTeleportTarget]))
 					{
-						iPreferredTeleportTarget = iRaidTarget;
+						iPreferredTeleportTarget = i;
+						break;
 					}
 				}
-				delete hArrayRaidTargets;
-				
-			}
-			else
-			{
-				for (int i = 1; i <= MaxClients; i++)
+				if (g_flPlayerStress[i] < flPreferredTeleportTargetStress)
 				{
-					if (!IsClientInGame(i) ||
-						!IsPlayerAlive(i) ||
-						g_bPlayerEliminated[i] ||
-						IsClientInGhostMode(i) ||
-						DidClientEscape(i))
+				if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
 					{
-						continue;
-					}
-					if (g_bPlayerIsExitCamping[i])
-					{
-						if((iTeleportTarget != INVALID_ENT_REFERENCE && !g_bPlayerIsExitCamping[iTeleportTarget]))
-						{
-							iPreferredTeleportTarget = i;
-							break;
-						}
-					}
-					if (g_flPlayerStress[i] < flPreferredTeleportTargetStress)
-					{
-						if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
-						{
-							iPreferredTeleportTarget = i;
-							flPreferredTeleportTargetStress = g_flPlayerStress[i];
-						}
+						iPreferredTeleportTarget = i;
+						flPreferredTeleportTargetStress = g_flPlayerStress[i];
 					}
 				}
 			}

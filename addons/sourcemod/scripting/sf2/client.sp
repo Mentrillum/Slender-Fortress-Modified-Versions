@@ -49,6 +49,16 @@ static float g_flPlayerFlashlightNextInputTime[MAXPLAYERS + 1] = { -1.0, ... };
 
 static int g_ActionItemIndexes[] = { 57, 231 };
 
+static int g_iMeleeWeaponIndexesScout[] = { 0, 190, 44, 221, 264, 317, 325, 349, 355, 423, 450, 452, 474, 572, 648, 660, 880, 939, 954, 999, 1013, 1071, 1123, 1127, 30667, 30758 };
+static int g_iMeleeWeaponIndexesSoldier[] = { 6, 196, 128, 154, 264, 357, 416, 423, 447, 474, 775, 880, 939, 954, 1013, 1071, 1123, 1127, 30758 };
+static int g_iMeleeWeaponIndexesPyro[] = { 2, 192, 38, 153, 214, 264, 326, 348, 423, 457, 466, 474, 593, 739, 813, 880, 939, 954, 1000, 1013, 1071, 1123, 1127, 1181, 30758 };
+static int g_iMeleeWeaponIndexesDemo[] = { 1, 191, 132, 154, 172, 264, 266, 307, 327, 357, 404, 423, 474, 482, 609, 880, 939, 954, 1013, 1071, 1082, 1123, 1127, 30758 };
+static int g_iMeleeWeaponIndexesHeavy[] = { 5, 195, 43, 239, 264, 310, 331, 423, 426, 474, 587, 656, 880, 939, 954, 1013, 1071, 1084, 1100, 1123, 1127, 1184, 30758 };
+static int g_iMeleeWeaponIndexesEngineer[] = { 7, 197, 142, 155, 169, 329, 423, 589, 662, 795, 804, 884, 893, 902, 911, 960, 969, 1071, 1123, 15072, 15074, 15075, 15139, 15140, 15114, 15156, 30758 };
+static int g_iMeleeWeaponIndexesMedic[] = { 8, 198, 37, 173, 264, 304, 413, 423, 474, 880, 939, 954, 1003, 1013, 1071, 1123, 1127, 1143, 30758 };
+static int g_iMeleeWeaponIndexesSniper[] = { 3, 193, 171, 232, 264, 401, 423, 474, 880, 939, 954, 1013, 1071, 1123, 1127, 30758 };
+static int g_iMeleeWeaponIndexesSpy[] = { 4, 194, 225, 356, 423, 461, 574, 638, 649, 665, 727, 794, 803, 883, 892, 901, 910, 959, 968, 1071, 15062, 15094, 15095, 15096, 15118, 15119, 15143, 15144, 30758 };
+
 // Ultravision data.
 static bool g_bPlayerUltravision[MAXPLAYERS + 1] = { false, ... };
 static int g_iPlayerUltravisionEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -3475,6 +3485,7 @@ void ClientEnableProxy(int client,int iBossIndex)
 {
 	if (NPCGetUniqueID(iBossIndex) == -1) return;
 	if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return;
+	if (GetClientTeam(client) != TFTeam_Blue) return;
 	if (g_bPlayerProxy[client]) return;
 
 	TF2_RemovePlayerDisguise(client);
@@ -3540,7 +3551,8 @@ void ClientEnableProxy(int client,int iBossIndex)
 	
 	CreateTimer(0.33, Timer_ApplyCustomModel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
-	if (view_as<bool>(GetProfileNum(sProfile,"proxies_weapon",0))) CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	if (view_as<bool>(GetProfileNum(sProfile,"proxies_weapon",0))) 
+		CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	
 	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 	{	
@@ -3610,30 +3622,123 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 	if (!g_bEnabled) return;
 
 	int client = GetClientOfUserId(userid);
-
-	if (!IsValidClient(client) || !g_bPlayerProxy[client]) return;
+	if (client <= 0) return;
 
 	int iBossIndex = NPCGetFromUniqueID(g_iPlayerProxyMaster[client]);
+	
+	if (g_bPlayerProxy[client] && iBossIndex != -1)
+	{
+		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
-	if (iBossIndex == -1) return;
+		int iWeaponIndex;
+		char sWeaponName[PLATFORM_MAX_PATH], sWeaponStats[PLATFORM_MAX_PATH], sClassName[64], sSectionName[64];
+		TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
+		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_class_%s", sClassName);
+		GetProfileString(sProfile, sSectionName, sWeaponName, sizeof(sWeaponName));
+		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_stats_%s", sClassName);
+		GetProfileString(sProfile, sSectionName, sWeaponStats, sizeof(sWeaponStats));
+		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_index_%s", sClassName);
+		iWeaponIndex = GetProfileNum(sProfile, sSectionName, 0);
 
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-
-	int iWeaponIndex;
-	char sWeaponName[PLATFORM_MAX_PATH], sWeaponStats[PLATFORM_MAX_PATH], sClassName[64], sSectionName[64];
-	TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
-	FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_class_%s", sClassName);
-	GetProfileString(sProfile, sSectionName, sWeaponName, sizeof(sWeaponName));
-	FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_stats_%s", sClassName);
-	GetProfileString(sProfile, sSectionName, sWeaponStats, sizeof(sWeaponStats));
-	FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_index_%s", sClassName);
-	iWeaponIndex = GetProfileNum(sProfile, sSectionName, 0);
-
-	Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats);
-	int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
-	delete hWeapon;
-	EquipPlayerWeapon(client, iEnt);
+		switch (TF2_GetPlayerClass(client))
+		{
+			case TFClass_Scout:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesScout); i++)
+				{
+					if (g_iMeleeWeaponIndexesScout[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Soldier:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesSoldier); i++)
+				{
+					if (g_iMeleeWeaponIndexesSoldier[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Pyro:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesPyro); i++)
+				{
+					if (g_iMeleeWeaponIndexesPyro[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_DemoMan:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesDemo); i++)
+				{
+					if (g_iMeleeWeaponIndexesDemo[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Heavy:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesHeavy); i++)
+				{
+					if (g_iMeleeWeaponIndexesHeavy[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Engineer:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesEngineer); i++)
+				{
+					if (g_iMeleeWeaponIndexesEngineer[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Medic:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesMedic); i++)
+				{
+					if (g_iMeleeWeaponIndexesMedic[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Sniper:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesSniper); i++)
+				{
+					if (g_iMeleeWeaponIndexesSniper[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+			case TFClass_Spy:
+			{
+				for (int i = 0; i < sizeof(g_iMeleeWeaponIndexesSpy); i++)
+				{
+					if (g_iMeleeWeaponIndexesSpy[i] == iWeaponIndex)
+					{
+						TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
+					}
+				}
+			}
+		}
+		Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats);
+		int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
+		delete hWeapon;
+		EquipPlayerWeapon(client, iEnt);
+	}
 }
 
 public bool Hook_ClientProxyShouldCollide(int ent,int collisiongroup,int contentsmask, bool originalResult)
@@ -4629,6 +4734,7 @@ void ClientSetGhostModeState(int client, bool bState)
 		{
 			SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_YES);
 			TF2_RemoveCondition(client, TFCond_Stealthed);
+			SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
 			SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
 			//SetEntityMoveType(client, MOVETYPE_WALK);
@@ -4695,6 +4801,7 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 		TF2_StripWearables(client);
 		SetEntityGravity(client, 0.5);
 		TF2_AddCondition(client, TFCond_Stealthed, -1.0);
+		SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
 		SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_NO);
 		SetEntData(client, g_offsCollisionGroup, 2, 4, true);
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);

@@ -4100,32 +4100,28 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 	if (!g_bRoundGrace)
 	{	
 		int iTeleportTarget;
-		if (SF_IsBoxingMap() || SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap())
+		Handle hArrayRaidTargets = CreateArray();
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			Handle hArrayRaidTargets = CreateArray();
-			for (int i = 1; i <= MaxClients; i++)
+			if (!IsClientInGame(i) ||
+				!IsPlayerAlive(i) ||
+				g_bPlayerEliminated[i] ||
+				IsClientInGhostMode(i) ||
+				DidClientEscape(i))
 			{
-				if (!IsClientInGame(i) ||
-					!IsPlayerAlive(i) ||
-					g_bPlayerEliminated[i] ||
-					IsClientInGhostMode(i) ||
-					DidClientEscape(i))
-				{
-					continue;
-				}
-				PushArrayCell(hArrayRaidTargets, i);
+				continue;
 			}
-			if(GetArraySize(hArrayRaidTargets)>0)
-			{
-				int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
-				if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
-				{
-					iTeleportTarget = iRaidTarget;
-				}
-			}
-			delete hArrayRaidTargets;
+			PushArrayCell(hArrayRaidTargets, i);
 		}
-		else iTeleportTarget = EntRefToEntIndex(g_iSlenderTeleportTarget[iBossIndex]);
+		if(GetArraySize(hArrayRaidTargets)>0)
+		{
+			int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
+			if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
+			{
+				iTeleportTarget = iRaidTarget;
+			}
+		}
+		delete hArrayRaidTargets;
 		
 		int iTeleportAreaIndex = -1;
 		if (iBossIndex == -1) //Please don't ask why I did this
@@ -4156,7 +4152,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 			}
 			else if (NavMesh_Exists() && iTeleportTarget && iTeleportTarget != INVALID_ENT_REFERENCE)// If the map has no pre defined spawn point search surrounding nav areas around target.
 			{
-				float flTeleportMinRange = CalculateTeleportMinRange(iBossIndex, GetProfileFloat(sProfile,"proxies_teleport_range_min",500.0), GetProfileFloat(sProfile,"proxies_teleport_range_min",3200.0));
+				float flTeleportMinRange = CalculateTeleportMinRange(iBossIndex, GetProfileFloat(sProfile,"proxies_teleport_range_min",500.0), GetProfileFloat(sProfile,"proxies_teleport_range_max",3200.0));
 				CNavArea TargetArea = SDK_GetLastKnownArea(iTeleportTarget);
 				if (TargetArea != INVALID_NAV_AREA)
 				{
@@ -4177,6 +4173,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 							if (NavMeshArea_GetFlags(iAreaIndex) & NAV_MESH_NO_HOSTAGES)
 							{
 								// Don't spawn/teleport at areas marked with the "NO HOSTAGES" flag.
+								SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport spawn point has NO HOSTAGES flag");
 								continue;
 							}
 							
@@ -4254,6 +4251,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 							HULL_TF2PLAYER_MAXS,
 							iBoss))
 							{
+								SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Boss(%i) blocks spawnpoint for proxy", iBoss);
 								continue;
 							}
 						
@@ -4262,7 +4260,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 							flAreaSpawnPoint[2] = flTraceHitPos[2];
 							// Check visibility.
 							if (IsPointVisibleToAPlayer(flAreaSpawnPoint, false, false) && !SF_IsBoxingMap() && !SF_IsRaidMap() && !SF_IsProxyMap() && !SF_BossesChaseEndlessly()) continue;
-							
+
 							bool bTooNear = false;
 							
 							// Check minimum range with players.
@@ -4283,6 +4281,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 								if (GetVectorSquareMagnitude(flAreaSpawnPoint, flTempPos) <= SquareFloat(GetProfileFloat(sProfile,"proxies_teleport_range_min",500.0)))
 								{
 									bTooNear = true;
+									SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Players are too close for spawnpoint");
 									break;
 								}
 							}

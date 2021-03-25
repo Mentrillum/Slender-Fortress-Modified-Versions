@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where when someone dies, the round will sometimes not end.\n-After the weapon restrictions refresh, if players are not in the PvP arena or are not eliminated from the game, the weapons refresh them."
+		"en"	"-Reworked the proxy spawns.\n-Proxies no longer see any pages.\n-Fixed a bug where proxy weapons wouldn't equip for the melee slot.\n-The viewmodel now disables on ghost mode.\n-Reworked Seeman's Explosive Dance."
 	}
 
 	"SF2 Smite player"

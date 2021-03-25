@@ -3798,7 +3798,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 						}
 						else if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_ExplosiveDance)
 						{
-							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossExplosiveDance, EntIndexToEntRef(slender), TIMER_REPEAT);
+							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderPrepareExplosiveDance, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 							g_NPCBaseAttacks[iBossIndex][iAttackIndex][1].BaseAttackNextAttackTime = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
 						}
 						else if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam)
@@ -8885,6 +8885,16 @@ public Action Timer_SlenderChaseBossResetIgnite (Handle timer, any entref)
 	g_hPlayerIgniteTimer[player] = INVALID_HANDLE;
 }
 
+public Action Timer_SlenderPrepareExplosiveDance(Handle timer, any entref)
+{
+	if (!g_bEnabled) return;
+
+	int slender = EntRefToEntIndex(entref);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+
+	CreateTimer(0.13, Timer_SlenderChaseBossExplosiveDance, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+}
+
 public Action Timer_SlenderChaseBossExplosiveDance (Handle timer, any entref)
 {
 	if (!g_bEnabled) return Plugin_Stop;
@@ -8894,18 +8904,21 @@ public Action Timer_SlenderChaseBossExplosiveDance (Handle timer, any entref)
 
 	int iBossIndex = NPCGetFromEntIndex(slender);
 	if (iBossIndex == -1) return Plugin_Stop;
-	
-	if (timer != g_hSlenderAttackTimer[iBossIndex]) return Plugin_Stop;
-	
-	if (NPCGetFlags(iBossIndex) & SFF_FAKE)
-	{
-		SlenderMarkAsFake(iBossIndex);
-		return Plugin_Stop;
-	}
-	
+
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
+	static int iExploded = 0;
+
+	if (NPCGetFlags(iBossIndex) & SFF_FAKE)
+	{
+		SlenderMarkAsFake(iBossIndex);
+		iExploded=0;
+		return Plugin_Stop;
+	}
+
+	int flRange = GetProfileAttackNum(sProfile, "attack_explosivedance_radius", 350, NPCGetCurrentAttackIndex(iBossIndex));
+	
 	// Damage all players within range.
 	float vecMyPos[3], flMyEyePos[3], vecMyEyeAng[3];
 	NPCGetEyePosition(iBossIndex, flMyEyePos);
@@ -8919,40 +8932,53 @@ public Action Timer_SlenderChaseBossExplosiveDance (Handle timer, any entref)
 	
 	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
 	
-	if (!g_bSlenderAttacking[iBossIndex]) return Plugin_Stop;
+	if (!g_bSlenderAttacking[iBossIndex])
+	{
+		iExploded=0;
+		return Plugin_Stop;
+	}
 
-	static int iExploded = 0;
 	iExploded++;
 	if (iExploded <= 35)
 	{
 		float flSlenderPosition[3], flexplosionPosition[3];
-		GetEntPropVector(slender, Prop_Data, "m_vecOrigin", flSlenderPosition);
-		flexplosionPosition[2] = flSlenderPosition[2];
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flSlenderPosition);
+		flexplosionPosition[2] = flSlenderPosition[2] + 50.0;
 		for (int e = 0; e < 5; e++)
-		{
-			for (int i = 1; i <= MaxClients; i++)
+		{					
+			int explosivePower = CreateEntityByName("info_particle_system");
+			if (explosivePower != -1)
 			{
-				if (!IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i)) continue;
-				
-				if (!bAttackEliminated && g_bPlayerEliminated[i]) continue;
-					
-				int explosivePower = CreateEntityByName("env_explosion");
-				if (explosivePower != -1)
+				DispatchKeyValue(explosivePower, "targetname", "KABLOOEEH!!");
+				DispatchKeyValue(explosivePower, "effect_name", "ExplosionCore_MidAir");
+				SetEntPropEnt(explosivePower, Prop_Data, "m_hOwnerEntity", slender);
+				flexplosionPosition[0]=flSlenderPosition[0]+GetRandomInt(-flRange, flRange);
+				flexplosionPosition[1]=flSlenderPosition[1]+GetRandomInt(-flRange, flRange);
+				TeleportEntity(explosivePower, flexplosionPosition, NULL_VECTOR, NULL_VECTOR);
+				DispatchSpawn(explosivePower);
+				ActivateEntity(explosivePower);
+				AcceptEntityInput(explosivePower, "start");
+				int iRandomNumber = GetRandomInt(0, 2);
+				switch (iRandomNumber)
 				{
-					DispatchKeyValueFloat(explosivePower, "DamageForce", 180.0);
-						
-					SetEntProp(explosivePower, Prop_Data, "m_iMagnitude", 666, 4);
-					SetEntProp(explosivePower, Prop_Data, "m_iRadiusOverride", 200, 4);
-					SetEntPropEnt(explosivePower, Prop_Data, "m_hOwnerEntity", slender);
-					flexplosionPosition[0]=flSlenderPosition[0]+GetRandomInt(-350, 350);
-					flexplosionPosition[1]=flSlenderPosition[1]+GetRandomInt(-350, 350);
-					TeleportEntity(explosivePower, flexplosionPosition, NULL_VECTOR, NULL_VECTOR);
-					DispatchSpawn(explosivePower);
-							
-					AcceptEntityInput(explosivePower, "Explode");
-					RemoveEntity(explosivePower);
-					CreateTimer(0.1, Timer_DestroyExplosion, EntIndexToEntRef(explosivePower), TIMER_FLAG_NO_MAPCHANGE);
+					case 0: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION1, explosivePower, SNDCHAN_AUTO, SNDLEVEL_CAR);
+					case 1: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION2, explosivePower, SNDCHAN_AUTO, SNDLEVEL_CAR);
+					case 2: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION3, explosivePower, SNDCHAN_AUTO, SNDLEVEL_CAR);
 				}
+				for (int i = 1; i < MaxClients; i++)
+				{
+					if (!IsValidClient(i) || !IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i)) continue;
+					if (!bAttackEliminated && g_bPlayerEliminated[i]) continue;
+
+					float flClientPos[3];
+					GetClientAbsOrigin(i, flClientPos);
+
+					if (GetVectorSquareMagnitude(flexplosionPosition, flClientPos) <= SquareFloat(200.0))
+					{
+						SDKHooks_TakeDamage(i, slender, slender, 666.6, 64);
+					}
+				}
+				CreateTimer(0.1, Timer_DestroyExplosion, EntIndexToEntRef(explosivePower), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
