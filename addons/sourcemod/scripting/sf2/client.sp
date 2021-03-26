@@ -757,9 +757,9 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		if(slender != INVALID_ENT_REFERENCE)
 		{
 			int iBossIndex = NPCGetFromEntIndex(slender);
-			int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 			if (iBossIndex != -1)
 			{
+				int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 				EmitSoundToClient(victim, ICEBALL_IMPACT, _, MUSIC_CHAN);
 				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex), DMG_SHOCK|DMG_ALWAYSGIB);
 				TF2_StunPlayer(victim, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, iAttackIndex), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, iAttackIndex), TF_STUNFLAG_SLOWDOWN, victim);
@@ -791,9 +791,9 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		if(slender != INVALID_ENT_REFERENCE)
 		{
 			int iBossIndex = NPCGetFromEntIndex(slender);
-			int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 			if (iBossIndex != -1)
 			{
+				int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 				SDKHooks_TakeDamage(victim, slender, slender, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex), DMG_SHOCK|DMG_ALWAYSGIB);
 				TF2_IgnitePlayer(victim, victim);
 			}
