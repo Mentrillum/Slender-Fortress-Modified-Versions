@@ -3110,7 +3110,7 @@ public Action Command_ForceProxy(int iClient,int args)
 		return Plugin_Handled;
 	}
 	
-	if (GetRoundState() != SF2RoundState_Active && GetRoundState() != SF2RoundState_Escape)
+	if (IsRoundEnding() || IsRoundInWarmup())
 	{
 		CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
 		return Plugin_Handled;
@@ -3160,13 +3160,13 @@ public Action Command_ForceProxy(int iClient,int args)
 		if (IsClientSourceTV(iTarget)) continue;//Exclude the sourcetv bot
 		FormatEx(sName, sizeof(sName), "%N", iTarget);
 
-		if (g_bPlayerProxy[iTarget]) continue; //Exclude any active proxies
-		
 		if (!g_bPlayerEliminated[iTarget])
 		{
 			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", iClient, sName);
 			continue;
 		}
+
+		if (g_bPlayerProxy[iTarget]) continue; //Exclude any active proxies
 
 		float flintPos[3];
 		
@@ -6333,7 +6333,7 @@ void SlenderOnClientStressUpdate(int iClient)
 				}
 				if (g_flPlayerStress[i] < flPreferredTeleportTargetStress)
 				{
-				if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
+					if (g_flSlenderTeleportPlayersRestTime[iBossIndex][i] <= GetGameTime())
 					{
 						iPreferredTeleportTarget = i;
 						flPreferredTeleportTargetStress = g_flPlayerStress[i];
@@ -6483,34 +6483,37 @@ void SetPageCount(int iNum)
 			
 			if (SF_SpecialRound(SPECIALROUND_CLASSSCRAMBLE))
 			{
-				for (int iClient = 1; iClient <= MaxClients; iClient++)
+				for (int iClient = 0; iClient <= MAX_BOSSES; iClient++)
 				{
-					if (IsValidClient(iClient) && IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+					if (!IsValidClient(iClient)) continue;
+					if (!IsPlayerAlive(iClient)) continue;
+					if (g_bPlayerEliminated[iClient]) continue;
+					if (DidClientEscape(iClient)) continue;
+
+					TFClassType newClass;
+					switch (g_iPlayerRandomClassNumber[iClient])
 					{
-						TFClassType newClass;
-						switch (g_iPlayerRandomClassNumber[iClient])
-						{
-							case 1: newClass = TFClass_Scout;
-							case 2: newClass = TFClass_Soldier;
-							case 3: newClass = TFClass_Pyro;
-							case 4: newClass = TFClass_DemoMan;
-							case 5: newClass = TFClass_Heavy;
-							case 6: newClass = TFClass_Engineer;
-							case 7: newClass = TFClass_Medic;
-							case 8: newClass = TFClass_Sniper;
-							case 9: newClass = TFClass_Spy;
-						}
-
-						TF2_SetPlayerClass(iClient, newClass);
-
-						CreateTimer(0.001 + (float(iClient)/100), Timer_ClassScramblePlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-						
-						// Regenerate player but keep health the same.
-						int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
-						TF2_RegeneratePlayer(iClient);
-						SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
-						SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
+						case 1: newClass = TFClass_Scout;
+						case 2: newClass = TFClass_Soldier;
+						case 3: newClass = TFClass_Pyro;
+						case 4: newClass = TFClass_DemoMan;
+						case 5: newClass = TFClass_Heavy;
+						case 6: newClass = TFClass_Engineer;
+						case 7: newClass = TFClass_Medic;
+						case 8: newClass = TFClass_Sniper;
+						case 9: newClass = TFClass_Spy;
 					}
+
+					TF2_SetPlayerClass(iClient, newClass);
+
+					CreateTimer(0.1, Timer_ClassScramblePlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.25, Timer_ClassScramblePlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+
+					// Regenerate player but keep health the same.
+					int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
+					TF2_RegeneratePlayer(iClient);
+					SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
+					SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
 				}
 			}
 			

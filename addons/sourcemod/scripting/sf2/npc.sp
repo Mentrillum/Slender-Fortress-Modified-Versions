@@ -4128,6 +4128,7 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 			return false;
 		else
 		{
+			if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return false;
 			ArrayList hSpawnPoint = new ArrayList();
 			char sName[32];
 			int ent = -1;
@@ -4173,7 +4174,6 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 							if (NavMeshArea_GetFlags(iAreaIndex) & NAV_MESH_NO_HOSTAGES)
 							{
 								// Don't spawn/teleport at areas marked with the "NO HOSTAGES" flag.
-								SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport spawn point has NO HOSTAGES flag");
 								continue;
 							}
 							
@@ -4251,7 +4251,6 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 							HULL_TF2PLAYER_MAXS,
 							iBoss))
 							{
-								SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Boss(%i) blocks spawnpoint for proxy", iBoss);
 								continue;
 							}
 						
@@ -4281,7 +4280,6 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 								if (GetVectorSquareMagnitude(flAreaSpawnPoint, flTempPos) <= SquareFloat(GetProfileFloat(sProfile,"proxies_teleport_range_min",500.0)))
 								{
 									bTooNear = true;
-									SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Players are too close for spawnpoint");
 									break;
 								}
 							}
