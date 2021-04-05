@@ -7733,436 +7733,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							
 							if (NPCChaserUseAdvancedDamageEffects(iBossIndex))
 							{
-								if (NPCChaserUseRandomAdvancedDamageEffects(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserRandomEffectIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserRandomEffectDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											int iRandomEffect = GetRandomInt(0, 6);
-											switch (iRandomEffect)
-											{
-												case 0: TF2_AddCondition(i, TFCond_Jarated, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
-												case 1: TF2_AddCondition(i, TFCond_Milked, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
-												case 2: TF2_AddCondition(i, TFCond_Gas, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
-												case 3: TF2_AddCondition(i, TFCond_MarkedForDeath, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
-												case 4: TF2_MakeBleed(i, i, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
-												case 5: TF2_IgnitePlayer(i, i);
-												case 6:
-												{
-													if (NPCChaserRandomEffectStunType(iBossIndex) == 1)
-													{
-														TF2_StunPlayer(i, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty), NPCChaserRandomEffectSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, i);
-													}
-													if (NPCChaserRandomEffectStunType(iBossIndex) == 2)
-													{
-														TF2_StunPlayer(i, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty), NPCChaserRandomEffectSlowdown(iBossIndex, iDifficulty), TF_STUNFLAGS_SMALLBONK, i);
-													}
-													if (NPCChaserRandomEffectStunType(iBossIndex) == 3)
-													{
-														TF2_StunPlayer(i, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty), NPCChaserRandomEffectSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_BONKSTUCK, i);
-													}
-												}
-											}
-										}
-									}
-								}
-								if (NPCChaserJaratePlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetJarateAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetJarateDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											GetProfileString(sProfile, "player_jarate_particle", sJaratePlayerParticle, sizeof(sJaratePlayerParticle));
-											if(!sJaratePlayerParticle[0])
-											{
-												sJaratePlayerParticle = JARATE_PARTICLE;
-											}
-											if (NPCChaserAttachDamageParticle(iBossIndex))
-											{
-												SlenderCreateParticleAttach(iBossIndex, sJaratePlayerParticle, 35.0, i);
-											}
-											else
-											{
-												SlenderCreateParticle(iBossIndex, sJaratePlayerParticle, 35.0);
-											}
-											if(!g_sSlenderJarateHitSound[iBossIndex][0])
-											{
-												g_sSlenderJarateHitSound[iBossIndex] = JARATE_HITPLAYER;
-											}
-											EmitSoundToAll(g_sSlenderJarateHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-											TF2_AddCondition(i, TFCond_Jarated, NPCChaserGetJarateDuration(iBossIndex, iDifficulty));
-										}
-									}
-								}
-								if (NPCChaserMilkPlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetMilkAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetMilkDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											GetProfileString(sProfile, "player_milk_particle", sMilkPlayerParticle, sizeof(sMilkPlayerParticle));
-											if(!sMilkPlayerParticle[0])
-											{
-												sMilkPlayerParticle = MILK_PARTICLE;
-											}
-											if (NPCChaserAttachDamageParticle(iBossIndex))
-											{
-												SlenderCreateParticleAttach(iBossIndex, sMilkPlayerParticle, 35.0, i);
-											}
-											else
-											{
-												SlenderCreateParticle(iBossIndex, sMilkPlayerParticle, 55.0);
-											}
-											if(!g_sSlenderMilkHitSound[iBossIndex][0])
-											{
-												g_sSlenderMilkHitSound[iBossIndex] = JARATE_HITPLAYER;
-											}
-											EmitSoundToAll(g_sSlenderMilkHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-											TF2_AddCondition(i, TFCond_Milked, NPCChaserGetMilkDuration(iBossIndex, iDifficulty));
-										}
-									}
-								}
-								if (NPCChaserGasPlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetGasAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetGasDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											GetProfileString(sProfile, "player_gas_particle", sGasPlayerParticle, sizeof(sGasPlayerParticle));
-											if(!sGasPlayerParticle[0])
-											{
-												sGasPlayerParticle = GAS_PARTICLE;
-											}
-											if (NPCChaserAttachDamageParticle(iBossIndex))
-											{
-												SlenderCreateParticleAttach(iBossIndex, sGasPlayerParticle, 35.0, i);
-											}
-											else
-											{
-												SlenderCreateParticle(iBossIndex, sGasPlayerParticle, 55.0);
-											}
-											if(!g_sSlenderGasHitSound[iBossIndex][0])
-											{
-												g_sSlenderGasHitSound[iBossIndex] = JARATE_HITPLAYER;
-											}
-											EmitSoundToAll(g_sSlenderGasHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-											TF2_AddCondition(i, TFCond_Gas, NPCChaserGetGasDuration(iBossIndex, iDifficulty));
-										}
-									}
-								}
-								if (NPCChaserMarkPlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetMarkAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetMarkDuration(iBossIndex, iDifficulty))
-										{
-											TF2_AddCondition(i, TFCond_MarkedForDeath, NPCChaserGetMarkDuration(iBossIndex, iDifficulty));
-										}
-									}
-								}
-								if (NPCChaserIgnitePlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetIgniteAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetIgniteDelay(iBossIndex, iDifficulty) && g_hPlayerIgniteTimer[i] == INVALID_HANDLE)
-										{
-											g_hPlayerIgniteTimer[i] = CreateTimer(NPCChaserGetIgniteDelay(iBossIndex, iDifficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(i));
-											g_hPlayerResetIgnite[i] = INVALID_HANDLE;
-										}
-									}
-								}
-								if (NPCChaserStunPlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetStunAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											GetProfileString(sProfile, "player_stun_particle", sStunPlayerParticle, sizeof(sStunPlayerParticle));
-											if(!sStunPlayerParticle[0])
-											{
-												sStunPlayerParticle = STUN_PARTICLE;
-											}
-											if (NPCChaserAttachDamageParticle(iBossIndex))
-											{
-												SlenderCreateParticleAttach(iBossIndex, sStunPlayerParticle, 35.0, i);
-											}
-											else
-											{
-												SlenderCreateParticle(iBossIndex, sStunPlayerParticle, 55.0);
-											}
-											if(!g_sSlenderStunHitSound[iBossIndex][0])
-											{
-												g_sSlenderStunHitSound[iBossIndex] = JARATE_HITPLAYER;
-											}
-											EmitSoundToAll(g_sSlenderStunHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-											if (NPCChaserGetStunAttackType(iBossIndex) == 1)
-											{
-												TF2_StunPlayer(i, NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty), NPCChaserGetStunAttackSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, i);
-											}
-											if (NPCChaserGetStunAttackType(iBossIndex) == 2)
-											{
-												TF2_StunPlayer(i, NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty), NPCChaserGetStunAttackSlowdown(iBossIndex, iDifficulty), TF_STUNFLAGS_SMALLBONK, i);
-											}
-											if (NPCChaserGetStunAttackType(iBossIndex) == 3)
-											{
-												TF2_StunPlayer(i, NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty), NPCChaserGetStunAttackSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_BONKSTUCK, i);
-											}
-										}
-									}
-								}
-								if (NPCChaserBleedPlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetBleedAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetBleedDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											TF2_MakeBleed(i, i, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
-										}
-									}
-								}
-								if (NPCChaserElectricPlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetElectricAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetElectricDuration(iBossIndex, iDifficulty) > 0.0)
-										{
-											GetProfileString(sProfile, "player_electric_red_particle", sElectricPlayerParticleRed, sizeof(sElectricPlayerParticleRed));
-											GetProfileString(sProfile, "player_electric_blue_particle", sElectricPlayerParticleBlue, sizeof(sElectricPlayerParticleBlue));
-											if(!sElectricPlayerParticleRed[0])
-											{
-												sElectricPlayerParticleRed = ELECTRIC_RED_PARTICLE;
-											}
-											if(!sElectricPlayerParticleBlue[0])
-											{
-												sElectricPlayerParticleBlue = ELECTRIC_BLUE_PARTICLE;
-											}
-											if (NPCChaserAttachDamageParticle(iBossIndex))
-											{
-												if (GetClientTeam(i) == TFTeam_Red)
-												{
-													SlenderCreateParticleAttach(iBossIndex, sElectricPlayerParticleRed, 35.0, i);
-												}
-												else if (GetClientTeam(i) == TFTeam_Blue)
-												{
-													SlenderCreateParticleAttach(iBossIndex, sElectricPlayerParticleBlue, 35.0, i);
-												}
-											}
-											else
-											{
-												if (GetClientTeam(i) == TFTeam_Red)
-												{
-													SlenderCreateParticle(iBossIndex, sElectricPlayerParticleRed, 55.0);
-												}
-												else if (GetClientTeam(i) == TFTeam_Blue)
-												{
-													SlenderCreateParticle(iBossIndex, sElectricPlayerParticleBlue, 55.0);
-												}
-											}
-											if (NPCChaserGetStunAttackType(iBossIndex) == 1)
-											{
-												TF2_StunPlayer(i, NPCChaserGetElectricDuration(iBossIndex, iDifficulty), NPCChaserGetElectricSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, i);
-											}
-											if (NPCChaserGetStunAttackType(iBossIndex) == 2)
-											{
-												TF2_StunPlayer(i, NPCChaserGetElectricDuration(iBossIndex, iDifficulty), NPCChaserGetElectricSlowdown(iBossIndex, iDifficulty), TF_STUNFLAGS_SMALLBONK, i);
-											}
-											if (NPCChaserGetStunAttackType(iBossIndex) == 3)
-											{
-												TF2_StunPlayer(i, NPCChaserGetElectricDuration(iBossIndex, iDifficulty), NPCChaserGetElectricSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_BONKSTUCK, i);
-											}
-										}
-									}
-								}
-								if (NPCChaserSmitePlayerOnHit(iBossIndex))
-								{
-									char sIndexes[8];
-									char sCurrentIndex[2];
-									int iDamageIndexes = NPCChaserGetSmiteAttackIndexes(iBossIndex);
-									FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-									FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-									char sNumber = sCurrentIndex[0];
-									int iAttackNumber = 0;
-									if (FindCharInString(sIndexes, sNumber) != -1)
-									{
-										iAttackNumber += iAttackIndex+1;
-									}
-									if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-									{
-										int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-										if (iAttackNumber == iCurrentAtkIndex)
-										{
-											PerformSmiteBoss(iBossIndex, i, EntIndexToEntRef(slender));
-											SDKHooks_TakeDamage(i, slender, slender, NPCChaserGetSmiteDamage(iBossIndex), NPCChaserGetSmiteDamageType(iBossIndex), _, flDirection, flMyEyePos);
-											ClientViewPunch(i, flViewPunch);
-											if(view_as<bool>(GetProfileNum(sProfile, "player_smite_message", 0)))
-											{
-												char sProfileName[SF2_MAX_PROFILE_NAME_LENGTH];
-												NPCGetProfile(iBossIndex, sProfileName, sizeof(sProfileName));
-												char sPlayer[32];
-												FormatEx(sPlayer, sizeof(sPlayer), "%N", i);
-
-												char sName[SF2_MAX_NAME_LENGTH];
-												GetProfileString(sProfileName, "name", sName, sizeof(sName));
-												if (!sName[0]) strcopy(sName, sizeof(sName), sProfileName);
-												if (GetClientTeam(i) == 2) CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Smote target", sName, sPlayer);	
-											}
-										}
-									}
-									/*if (NPCChaserShockwaveOnAttack(iBossIndex))
-									{
-										char sIndexes[8];
-										char sCurrentIndex[2];
-										int iDamageIndexes = NPCChaserGetShockwaveAttackIndexes(iBossIndex);
-										FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
-										FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
-										char sNumber = sCurrentIndex[0];
-										int iAttackNumber = 0;
-										if (FindCharInString(sIndexes, sNumber) != -1)
-										{
-											iAttackNumber += iAttackIndex+1;
-										}
-										if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
-										{
-											int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-											if (iAttackNumber == iCurrentAtkIndex)
-											{
-												if (bHeight)
-												{
-													float flPercentLife;
-													flPercentLife = ClientGetFlashlightBatteryLife(i) - NPCChaserGetShockwaveDrain(iBossIndex, iDifficulty);
-													if (flPercentLife < 0) flPercentLife = 0;
-													ClientSetFlashlightBatteryLife(i, flPercentLife);
-													if (NPCChaserGetShockwaveForce(iBossIndex, iDifficulty) > 0)
-													{
-														float flDirectionForce[3];
-														
-														MakeVectorFromPoints(vecClientPos, vecMyPos, flDirectionForce);
-
-														NormalizeVector(flDirectionForce, flDirectionForce);
-														
-														ScaleVector(flDirectionForce, -NPCChaserGetShockwaveForce(iBossIndex, iDifficulty));
-
-														TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, flDirectionForce);
-													}
-													
-													if (NPCChaserShockwaveStunEnabled(iBossIndex))
-													{
-														TF2_StunPlayer(i, NPCChaserGetShockwaveStunDuration(iBossIndex, iDifficulty), NPCChaserGetShockwaveStunSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, i);
-													}		
-												}
-											}
-										}
-									}*/
-								}
+								SlenderDoDamageEffects(iBossIndex, iAttackIndex, i);
 							}
 							if (NPCChaserDamageParticlesEnabled(iBossIndex))
 							{
@@ -8768,7 +8339,10 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					
 				//	TE_SetupBeamPoints(flEffectPos, endpos, g_iPathLaserModelIndex, g_iPathLaserModelIndex, 0, 30, 0.1, 0.1, 0.1, 5, 0.0, view_as<int>({255, 0, 255, 255}), 30);
 				//	TE_SendToAll();
-					
+					if (NPCChaserUseAdvancedDamageEffects(iBossIndex))
+					{
+						SlenderDoDamageEffects(iBossIndex, iAttackIndex, TR_GetEntityIndex(trace));
+					}
 					SDKHooks_TakeDamage(TR_GetEntityIndex(trace), slender, slender, NPCChaserGetAttackBulletDamage(iBossIndex, iAttackIndex), DMG_BULLET, _, CalculateBulletDamageForce(vecDir, 1.0), endpos);
 				}
 				
@@ -8996,7 +8570,7 @@ public Action Timer_DestroyExplosion(Handle timer, any explosionRef)
 	int explosion = EntRefToEntIndex(explosionRef);
 	if (explosion != -1)
 	{
-		RemoveEntity(explosion);
+		RemoveEdict(explosion);
 	}
 	
 	return Plugin_Continue;
@@ -9023,6 +8597,447 @@ public Action Timer_SlenderChaseBossAttackBeginLaser(Handle timer, any entref)
 	g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDuration(iBossIndex, iAttackIndex)-NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender));
 	
 	g_NPCBaseAttacks[iBossIndex][iAttackIndex][1].BaseAttackNextAttackTime = GetGameTime()+NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex);
+}
+
+void SlenderDoDamageEffects(int iBossIndex, int iAttackIndex, int iClient)
+{
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
+	int slender = NPCGetEntIndex(iBossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	float flMyEyePos[3];
+	NPCGetEyePosition(iBossIndex, flMyEyePos);
+	if (NPCChaserUseRandomAdvancedDamageEffects(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserRandomEffectIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserRandomEffectDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				int iRandomEffect = GetRandomInt(0, 6);
+				switch (iRandomEffect)
+				{
+					case 0: TF2_AddCondition(iClient, TFCond_Jarated, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
+					case 1: TF2_AddCondition(iClient, TFCond_Milked, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
+					case 2: TF2_AddCondition(iClient, TFCond_Gas, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
+					case 3: TF2_AddCondition(iClient, TFCond_MarkedForDeath, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
+					case 4: TF2_MakeBleed(iClient, iClient, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty));
+					case 5: TF2_IgnitePlayer(iClient, iClient);
+					case 6:
+					{
+						if (NPCChaserRandomEffectStunType(iBossIndex) == 1)
+						{
+							TF2_StunPlayer(iClient, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty), NPCChaserRandomEffectSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+						}
+						if (NPCChaserRandomEffectStunType(iBossIndex) == 2)
+						{
+							TF2_StunPlayer(iClient, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty), NPCChaserRandomEffectSlowdown(iBossIndex, iDifficulty), TF_STUNFLAGS_SMALLBONK, iClient);
+						}
+						if (NPCChaserRandomEffectStunType(iBossIndex) == 3)
+						{
+							TF2_StunPlayer(iClient, NPCChaserRandomEffectDuration(iBossIndex, iDifficulty), NPCChaserRandomEffectSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_BONKSTUCK, iClient);
+						}
+					}
+				}
+			}
+		}
+	}
+	if (NPCChaserJaratePlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetJarateAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetJarateDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				GetProfileString(sProfile, "player_jarate_particle", sJaratePlayerParticle, sizeof(sJaratePlayerParticle));
+				if(!sJaratePlayerParticle[0])
+				{
+					sJaratePlayerParticle = JARATE_PARTICLE;
+				}
+				if (NPCChaserAttachDamageParticle(iBossIndex))
+				{
+					SlenderCreateParticleAttach(iBossIndex, sJaratePlayerParticle, 35.0, iClient);
+				}
+				else
+				{
+					SlenderCreateParticle(iBossIndex, sJaratePlayerParticle, 35.0);
+				}
+				if(!g_sSlenderJarateHitSound[iBossIndex][0])
+				{
+					g_sSlenderJarateHitSound[iBossIndex] = JARATE_HITPLAYER;
+				}
+				EmitSoundToAll(g_sSlenderJarateHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				TF2_AddCondition(iClient, TFCond_Jarated, NPCChaserGetJarateDuration(iBossIndex, iDifficulty));
+			}
+		}
+	}
+	if (NPCChaserMilkPlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetMilkAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetMilkDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				GetProfileString(sProfile, "player_milk_particle", sMilkPlayerParticle, sizeof(sMilkPlayerParticle));
+				if(!sMilkPlayerParticle[0])
+				{
+					sMilkPlayerParticle = MILK_PARTICLE;
+				}
+				if (NPCChaserAttachDamageParticle(iBossIndex))
+				{
+					SlenderCreateParticleAttach(iBossIndex, sMilkPlayerParticle, 35.0, iClient);
+				}
+				else
+				{
+					SlenderCreateParticle(iBossIndex, sMilkPlayerParticle, 55.0);
+				}
+				if(!g_sSlenderMilkHitSound[iBossIndex][0])
+				{
+					g_sSlenderMilkHitSound[iBossIndex] = JARATE_HITPLAYER;
+				}
+				EmitSoundToAll(g_sSlenderMilkHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				TF2_AddCondition(iClient, TFCond_Milked, NPCChaserGetMilkDuration(iBossIndex, iDifficulty));
+			}
+		}
+	}
+	if (NPCChaserGasPlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetGasAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetGasDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				GetProfileString(sProfile, "player_gas_particle", sGasPlayerParticle, sizeof(sGasPlayerParticle));
+				if(!sGasPlayerParticle[0])
+				{
+					sGasPlayerParticle = GAS_PARTICLE;
+				}
+				if (NPCChaserAttachDamageParticle(iBossIndex))
+				{
+					SlenderCreateParticleAttach(iBossIndex, sGasPlayerParticle, 35.0, iClient);
+				}
+				else
+				{
+					SlenderCreateParticle(iBossIndex, sGasPlayerParticle, 55.0);
+				}
+				if(!g_sSlenderGasHitSound[iBossIndex][0])
+				{
+					g_sSlenderGasHitSound[iBossIndex] = JARATE_HITPLAYER;
+				}
+				EmitSoundToAll(g_sSlenderGasHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				TF2_AddCondition(iClient, TFCond_Gas, NPCChaserGetGasDuration(iBossIndex, iDifficulty));
+			}
+		}
+	}
+	if (NPCChaserMarkPlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetMarkAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetMarkDuration(iBossIndex, iDifficulty))
+			{
+				TF2_AddCondition(iClient, TFCond_MarkedForDeath, NPCChaserGetMarkDuration(iBossIndex, iDifficulty));
+			}
+		}
+	}
+	if (NPCChaserIgnitePlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetIgniteAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetIgniteDelay(iBossIndex, iDifficulty) && g_hPlayerIgniteTimer[iClient] == INVALID_HANDLE)
+			{
+				g_hPlayerIgniteTimer[iClient] = CreateTimer(NPCChaserGetIgniteDelay(iBossIndex, iDifficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(iClient));
+				g_hPlayerResetIgnite[iClient] = INVALID_HANDLE;
+			}
+		}
+	}
+	if (NPCChaserStunPlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetStunAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				GetProfileString(sProfile, "player_stun_particle", sStunPlayerParticle, sizeof(sStunPlayerParticle));
+				if(!sStunPlayerParticle[0])
+				{
+					sStunPlayerParticle = STUN_PARTICLE;
+				}
+				if (NPCChaserAttachDamageParticle(iBossIndex))
+				{
+					SlenderCreateParticleAttach(iBossIndex, sStunPlayerParticle, 35.0, iClient);
+				}
+				else
+				{
+					SlenderCreateParticle(iBossIndex, sStunPlayerParticle, 55.0);
+				}
+				if(!g_sSlenderStunHitSound[iBossIndex][0])
+				{
+					g_sSlenderStunHitSound[iBossIndex] = JARATE_HITPLAYER;
+				}
+				EmitSoundToAll(g_sSlenderStunHitSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				if (NPCChaserGetStunAttackType(iBossIndex) == 1)
+				{
+					TF2_StunPlayer(iClient, NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty), NPCChaserGetStunAttackSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+				}
+				if (NPCChaserGetStunAttackType(iBossIndex) == 2)
+				{
+					TF2_StunPlayer(iClient, NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty), NPCChaserGetStunAttackSlowdown(iBossIndex, iDifficulty), TF_STUNFLAGS_SMALLBONK, iClient);
+				}
+				if (NPCChaserGetStunAttackType(iBossIndex) == 3)
+				{
+					TF2_StunPlayer(iClient, NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty), NPCChaserGetStunAttackSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_BONKSTUCK, iClient);
+				}
+			}
+		}
+	}
+	if (NPCChaserBleedPlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetBleedAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetBleedDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				TF2_MakeBleed(iClient, iClient, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
+			}
+		}
+	}
+	if (NPCChaserElectricPlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetElectricAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+		iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetElectricDuration(iBossIndex, iDifficulty) > 0.0)
+			{
+				GetProfileString(sProfile, "player_electric_red_particle", sElectricPlayerParticleRed, sizeof(sElectricPlayerParticleRed));
+				GetProfileString(sProfile, "player_electric_blue_particle", sElectricPlayerParticleBlue, sizeof(sElectricPlayerParticleBlue));
+				if(!sElectricPlayerParticleRed[0])
+				{
+					sElectricPlayerParticleRed = ELECTRIC_RED_PARTICLE;
+				}
+				if(!sElectricPlayerParticleBlue[0])
+				{
+					sElectricPlayerParticleBlue = ELECTRIC_BLUE_PARTICLE;
+				}
+				if (NPCChaserAttachDamageParticle(iBossIndex))
+				{
+					if (GetClientTeam(iClient) == TFTeam_Red)
+					{
+						SlenderCreateParticleAttach(iBossIndex, sElectricPlayerParticleRed, 35.0, iClient);
+					}
+					else if (GetClientTeam(iClient) == TFTeam_Blue)
+					{
+						SlenderCreateParticleAttach(iBossIndex, sElectricPlayerParticleBlue, 35.0, iClient);
+					}
+				}
+				else
+				{
+					if (GetClientTeam(iClient) == TFTeam_Red)
+					{
+						SlenderCreateParticle(iBossIndex, sElectricPlayerParticleRed, 55.0);
+					}
+					else if (GetClientTeam(iClient) == TFTeam_Blue)
+					{
+						SlenderCreateParticle(iBossIndex, sElectricPlayerParticleBlue, 55.0);
+					}
+				}
+				if (NPCChaserGetStunAttackType(iBossIndex) == 1)
+				{
+					TF2_StunPlayer(iClient, NPCChaserGetElectricDuration(iBossIndex, iDifficulty), NPCChaserGetElectricSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+				}
+				if (NPCChaserGetStunAttackType(iBossIndex) == 2)
+				{
+					TF2_StunPlayer(iClient, NPCChaserGetElectricDuration(iBossIndex, iDifficulty), NPCChaserGetElectricSlowdown(iBossIndex, iDifficulty), TF_STUNFLAGS_SMALLBONK, iClient);
+				}
+				if (NPCChaserGetStunAttackType(iBossIndex) == 3)
+				{
+					TF2_StunPlayer(iClient, NPCChaserGetElectricDuration(iBossIndex, iDifficulty), NPCChaserGetElectricSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_BONKSTUCK, iClient);
+				}
+			}
+		}
+	}
+	if (NPCChaserSmitePlayerOnHit(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetSmiteAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex)
+			{
+				PerformSmiteBoss(iBossIndex, iClient, EntIndexToEntRef(slender));
+				SDKHooks_TakeDamage(iClient, slender, slender, NPCChaserGetSmiteDamage(iBossIndex), NPCChaserGetSmiteDamageType(iBossIndex), _, view_as<float>({ 0.0, 0.0, 0.0 }), flMyEyePos);
+				ClientViewPunch(iClient, view_as<float>({ 0.0, 0.0, 0.0 }));
+				if(view_as<bool>(GetProfileNum(sProfile, "player_smite_message", 0)))
+				{
+					char sProfileName[SF2_MAX_PROFILE_NAME_LENGTH];
+					NPCGetProfile(iBossIndex, sProfileName, sizeof(sProfileName));
+					char sPlayer[32];
+					FormatEx(sPlayer, sizeof(sPlayer), "%N", iClient);
+
+					char sName[SF2_MAX_NAME_LENGTH];
+					GetProfileString(sProfileName, "name", sName, sizeof(sName));
+					if (!sName[0]) strcopy(sName, sizeof(sName), sProfileName);
+					if (GetClientTeam(iClient) == 2) CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Smote target", sName, sPlayer);	
+				}
+			}
+		}
+	}
+	/*if (NPCChaserShockwaveOnAttack(iBossIndex))
+	{
+		char sIndexes[8];
+		char sCurrentIndex[2];
+		int iDamageIndexes = NPCChaserGetShockwaveAttackIndexes(iBossIndex);
+		FormatEx(sIndexes, sizeof(sIndexes), "%d", iDamageIndexes);
+		FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", iAttackIndex+1);
+		char sNumber = sCurrentIndex[0];
+		int iAttackNumber = 0;
+		if (FindCharInString(sIndexes, sNumber) != -1)
+		{
+			iAttackNumber += iAttackIndex+1;
+		}
+		if (sIndexes[0] && sCurrentIndex[0] && iAttackNumber != -1)
+		{
+			int iCurrentAtkIndex = StringToInt(sCurrentIndex);
+			if (iAttackNumber == iCurrentAtkIndex)
+			{
+				if (bHeight)
+				{
+					float flPercentLife;
+					flPercentLife = ClientGetFlashlightBatteryLife(iClient) - NPCChaserGetShockwaveDrain(iBossIndex, iDifficulty);
+					if (flPercentLife < 0) flPercentLife = 0;
+					ClientSetFlashlightBatteryLife(iClient, flPercentLife);
+					if (NPCChaserGetShockwaveForce(iBossIndex, iDifficulty) > 0)
+					{
+						float flDirectionForce[3];
+													
+						MakeVectorFromPoints(vecClientPos, vecMyPos, flDirectionForce);
+
+						NormalizeVector(flDirectionForce, flDirectionForce);
+														
+						ScaleVector(flDirectionForce, -NPCChaserGetShockwaveForce(iBossIndex, iDifficulty));
+
+						TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, flDirectionForce);
+					}
+
+					if (NPCChaserShockwaveStunEnabled(iBossIndex))
+					{
+						TF2_StunPlayer(iClient, NPCChaserGetShockwaveStunDuration(iBossIndex, iDifficulty), NPCChaserGetShockwaveStunSlowdown(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+					}		
+				}
+			}
+		}
+	}*/
 }
 
 public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
@@ -9145,7 +9160,10 @@ public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
 				TE_SetupBeamPoints(flEffectPos, flClientPos, g_ShockwaveBeam, g_ShockwaveHalo, 0, 30, 0.1, NPCChaserGetAttackLaserSize(iBossIndex, iAttackIndex), NPCChaserGetAttackLaserSize(iBossIndex, iAttackIndex), 5, GetProfileAttackFloat(sProfile, "attack_laser_noise", 1.0, iAttackIndex+1), iColorReal, 1);
 				TE_SendToAll();
 			}
-
+			if (NPCChaserUseAdvancedDamageEffects(iBossIndex))
+			{
+				SlenderDoDamageEffects(iBossIndex, iAttackIndex, TR_GetEntityIndex(trace));
+			}
 			SDKHooks_TakeDamage(TR_GetEntityIndex(trace), slender, slender, NPCChaserGetAttackLaserDamage(iBossIndex, iAttackIndex), DMG_SHOCK|DMG_ALWAYSGIB, _, _, endpos);
 		}
 

@@ -33,8 +33,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.6.06 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.6.06 Modified"
+#define PLUGIN_VERSION "1.6.1 Modified"
+#define PLUGIN_VERSION_DISPLAY "1.6.1 Modified"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -75,6 +75,8 @@ public Plugin myinfo =
 #define EXPLOSIVEDANCE_EXPLOSION1 "weapons/explode1.wav"
 #define EXPLOSIVEDANCE_EXPLOSION2 "weapons/explode2.wav"
 #define EXPLOSIVEDANCE_EXPLOSION3 "weapons/explode3.wav"
+
+#define SPECIAL1UPSOUND "mvm/mvm_revive.wav"
 
 #define SPECIALROUND_BOO_DISTANCE 120.0
 #define SPECIALROUND_BOO_DURATION 4.0
@@ -318,6 +320,7 @@ char g_sSlenderShockwaveBeamSprite[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderShockwaveHaloSprite[MAX_BOSSES][PLATFORM_MAX_PATH];
 
 int g_iSlenderTeleportTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+int g_iSlenderProxyTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 bool g_bSlenderTeleportTargetIsCamping[MAX_BOSSES] = false;
 
 float g_flSlenderNextTeleportTime[MAX_BOSSES] = { -1.0, ... };
@@ -475,6 +478,9 @@ int g_iPlayerHitsToHeads[MAXPLAYERS + 1];
 
 static bool g_bPlayersAreCritted = false;
 static bool g_bPlayersAreMiniCritted = false;
+
+bool g_bPlayerIn1UpCondition[MAXPLAYERS + 1];
+bool g_bPlayerDied1Up[MAXPLAYERS + 1];
 
 float g_flPlayerLastChaseBossEncounterTime[MAXPLAYERS + 1][MAX_BOSSES];
 
@@ -836,34 +842,6 @@ Handle fOnClientSpawnedAsProxy;
 Handle fOnClientDamagedByBoss;
 Handle fOnGroupGiveQueuePoints;
 Handle fOnRenevantTriggerWave;
-
-Handle g_hSDKWeaponScattergun;
-Handle g_hSDKWeaponPistolScout;
-Handle g_hSDKWeaponBat;
-Handle g_hSDKWeaponSniperRifle;
-Handle g_hSDKWeaponSMG;
-Handle g_hSDKWeaponKukri;
-Handle g_hSDKWeaponRocketLauncher;
-Handle g_hSDKWeaponShotgunSoldier;
-Handle g_hSDKWeaponShovel;
-Handle g_hSDKWeaponGrenadeLauncher;
-Handle g_hSDKWeaponStickyLauncher;
-Handle g_hSDKWeaponBottle;
-Handle g_hSDKWeaponMinigun;
-Handle g_hSDKWeaponShotgunHeavy;
-Handle g_hSDKWeaponFists;
-Handle g_hSDKWeaponSyringeGun;
-Handle g_hSDKWeaponMedigun;
-Handle g_hSDKWeaponBonesaw;
-Handle g_hSDKWeaponFlamethrower;
-Handle g_hSDKWeaponShotgunPyro;
-Handle g_hSDKWeaponFireaxe;
-Handle g_hSDKWeaponRevolver;
-Handle g_hSDKWeaponKnife;
-Handle g_hSDKWeaponInvis;
-Handle g_hSDKWeaponShotgunPrimary;
-Handle g_hSDKWeaponPistol;
-Handle g_hSDKWeaponWrench;
 
 Handle g_hSDKGetMaxHealth;
 Handle g_hSDKGetLastKnownArea;
@@ -1331,9 +1309,7 @@ public void OnPluginStart()
 	Tutorial_Initialize();
 	
 	SetupAdminMenu();
-	
-	SetupClassDefaultWeapons();
-	
+
 	SetupPlayerGroups();
 	
 	PvP_Initialize();
@@ -1590,60 +1566,11 @@ static void SDK_Init()
 	delete hConfig;
 }
 
-static void SetupClassDefaultWeapons()
-{
-	// Scout
-	g_hSDKWeaponScattergun = PrepareItemHandle("tf_weapon_scattergun", 13, 0, 0, "");
-	g_hSDKWeaponPistolScout = PrepareItemHandle("tf_weapon_pistol", 23, 0, 0, "");
-	g_hSDKWeaponBat = PrepareItemHandle("tf_weapon_bat", 0, 0, 0, "");
-	
-	// Sniper
-	g_hSDKWeaponSniperRifle = PrepareItemHandle("tf_weapon_sniperrifle", 14, 0, 0, "");
-	g_hSDKWeaponSMG = PrepareItemHandle("tf_weapon_smg", 16, 0, 0, "");
-	g_hSDKWeaponKukri = PrepareItemHandle("tf_weapon_club", 3, 0, 0, "");
-	
-	// Soldier
-	g_hSDKWeaponRocketLauncher = PrepareItemHandle("tf_weapon_rocketlauncher", 18, 0, 0, "");
-	g_hSDKWeaponShotgunSoldier = PrepareItemHandle("tf_weapon_shotgun", 10, 0, 0, "");
-	g_hSDKWeaponShovel = PrepareItemHandle("tf_weapon_shovel", 6, 0, 0, "");
-	
-	// Demoman
-	g_hSDKWeaponGrenadeLauncher = PrepareItemHandle("tf_weapon_grenadelauncher", 19, 0, 0, "");
-	g_hSDKWeaponStickyLauncher = PrepareItemHandle("tf_weapon_pipebomblauncher", 20, 0, 0, "");
-	g_hSDKWeaponBottle = PrepareItemHandle("tf_weapon_bottle", 1, 0, 0, "");
-	
-	// Heavy
-	g_hSDKWeaponMinigun = PrepareItemHandle("tf_weapon_minigun", 15, 0, 0, "");
-	g_hSDKWeaponShotgunHeavy = PrepareItemHandle("tf_weapon_shotgun", 11, 0, 0, "");
-	g_hSDKWeaponFists = PrepareItemHandle("tf_weapon_fists", 5, 0, 0, "");
-	
-	// Medic
-	g_hSDKWeaponSyringeGun = PrepareItemHandle("tf_weapon_syringegun_medic", 17, 0, 0, "");
-	g_hSDKWeaponMedigun = PrepareItemHandle("tf_weapon_medigun", 29, 0, 0, "");
-	g_hSDKWeaponBonesaw = PrepareItemHandle("tf_weapon_bonesaw", 8, 0, 0, "");
-	
-	// Pyro
-	g_hSDKWeaponFlamethrower = PrepareItemHandle("tf_weapon_flamethrower", 21, 0, 0, "254 ; 4.0");
-	g_hSDKWeaponShotgunPyro = PrepareItemHandle("tf_weapon_shotgun", 12, 0, 0, "");
-	g_hSDKWeaponFireaxe = PrepareItemHandle("tf_weapon_fireaxe", 2, 0, 0, "");
-	
-	// Spy
-	g_hSDKWeaponRevolver = PrepareItemHandle("tf_weapon_revolver", 24, 0, 0, "");
-	g_hSDKWeaponKnife = PrepareItemHandle("tf_weapon_knife", 4, 0, 0, "");
-	g_hSDKWeaponInvis = PrepareItemHandle("tf_weapon_invis", 297, 0, 0, "");
-	
-	// Engineer
-	g_hSDKWeaponShotgunPrimary = PrepareItemHandle("tf_weapon_shotgun", 9, 0, 0, "");
-	g_hSDKWeaponPistol = PrepareItemHandle("tf_weapon_pistol", 22, 0, 0, "");
-	g_hSDKWeaponWrench = PrepareItemHandle("tf_weapon_wrench", 7, 0, 0, "");
-}
-
 public void OnMapStart()
 {
 	g_hTimerFail = INVALID_HANDLE;
 	PvP_OnMapStart();
 	FindHealthBar();
-	SF2_SetGhostModel(PrecacheModel(GHOST_MODEL));
 	PrecacheSound(SOUND_THUNDER, true);
 	PrecacheSound("weapons/teleporter_send.wav");
 	g_SmokeSprite = PrecacheModel("sprites/steam1.vmt");
@@ -1820,6 +1747,7 @@ static void PrecacheStuff()
 	PrecacheSound(EXPLOSIVEDANCE_EXPLOSION1);
 	PrecacheSound(EXPLOSIVEDANCE_EXPLOSION2);
 	PrecacheSound(EXPLOSIVEDANCE_EXPLOSION3);
+	PrecacheSound(SPECIAL1UPSOUND);
 	PrecacheSound("player/spy_shield_break.wav");
 
 	PrecacheSound(CRIT_ROLL);
@@ -1992,9 +1920,11 @@ static void StopPlugin()
 	hCvar = FindConVar("mat_supportflashlight");
 	if (hCvar != view_as<ConVar>(INVALID_HANDLE)) SetConVarBool(hCvar, false);
 
+	if (MusicActive()) NPCStopMusic();
+
 	//Remove Timer handles
 	CleanTimerHandles();
-	
+
 	// Cleanup bosses.
 	NPCRemoveAll();
 	
@@ -2227,6 +2157,9 @@ public Action Timer_GlobalGameFrame(Handle timer)
 				if (g_iSlenderCopyMaster[iBossIndex] != -1) continue; // Copies cannot generate proxies.
 				
 				if (GetGameTime() < g_flSlenderTimeUntilNextProxy[iBossIndex]) continue; // Proxy spawning hasn't cooled down yet.
+
+				int iTeleportTarget = EntRefToEntIndex(g_iSlenderProxyTarget[iBossIndex]);
+				if (!iTeleportTarget || iTeleportTarget == INVALID_ENT_REFERENCE) continue; // No teleport target.
 
 				NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 				
@@ -2839,7 +2772,7 @@ public Action Command_RemoveSlender(int iClient,int args)
 		g_iSlenderBoxingBossCount -= 1;
 	}
 	
-	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES) && BossHasMusic(sProfile))
 	{
 		NPCStopMusic();
 	}
@@ -3290,11 +3223,11 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 	{
 		iSpecialRound = 1;
 	}
-	else if (iSpecialRound > 37)
+	else if (iSpecialRound > 38)
 	{
-		iSpecialRound = 37;
+		iSpecialRound = 38;
 	}
-	else if (iSpecialRound > 0 && iSpecialRound < 38)
+	else if (iSpecialRound > 0 && iSpecialRound < 39)
 	{
 		SetConVarInt(g_cvSpecialRoundOverride, iSpecialRound);
 	}
@@ -3342,6 +3275,7 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 		case SPECIALROUND_RUNNINGINTHE90S: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}In The 90s.", "SF2 Prefix", iClient);
 		case SPECIALROUND_TRIPLEBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Triple Bosses.", "SF2 Prefix", iClient);
 		case SPECIALROUND_20DOLLARS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}20 Dollars.", "SF2 Prefix", iClient);
+		case SPECIALROUND_MODBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}MODified Bosses {default}(WARNING, ITS H3LL).", "SF2 Prefix", iClient);
 	}
 
 	return Plugin_Handled;
@@ -4346,10 +4280,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 		char classname[64];
 		if (GetEntityClassname(entity, classname, sizeof(classname)) && strcmp(classname, "tf_projectile_rocket") == 0 && ((ProjectileGetFlags(entity) & PROJ_ICEBALL) || (ProjectileGetFlags(entity) & PROJ_FIREBALL)))
 		{
-			switch (channel)
-			{
-				case SNDCHAN_VOICE, SNDCHAN_WEAPON, SNDCHAN_ITEM, SNDCHAN_BODY, SNDCHAN_AUTO: return Plugin_Handled;
-			}
+			if (strcmp(sample, EXPLOSIVEDANCE_EXPLOSION1, false) == 0 || strcmp(sample, EXPLOSIVEDANCE_EXPLOSION2, false) == 0 || strcmp(sample, EXPLOSIVEDANCE_EXPLOSION3, false) == 0) return Plugin_Handled;
 		}
 	}
 	
@@ -5340,6 +5271,8 @@ public void OnClientDisconnect(int iClient)
 	g_bSeeUpdateMenu[iClient] = false;
 	g_bPlayerEscaped[iClient] = false;
 	g_bAdminNoPoints[iClient] = false;
+	g_bPlayerIn1UpCondition[iClient] = false;
+	g_bPlayerDied1Up[iClient] = false;
 	
 	// Save and reset settings for the next iClient.
 	ClientSaveCookies(iClient);
@@ -6312,7 +6245,8 @@ void SlenderOnClientStressUpdate(int iClient)
 			float flTargetStress = flTargetStressMax - ((flTargetStressMax - flTargetStressMin) / (g_flRoundDifficultyModifier * NPCGetAnger(iBossIndex)));
 			
 			float flPreferredTeleportTargetStress = flTargetStress;
-
+			
+			Handle hArrayRaidTargets = CreateArray();
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i) ||
@@ -6339,7 +6273,17 @@ void SlenderOnClientStressUpdate(int iClient)
 						flPreferredTeleportTargetStress = g_flPlayerStress[i];
 					}
 				}
+				PushArrayCell(hArrayRaidTargets, i);
 			}
+			if(GetArraySize(hArrayRaidTargets)>0)
+			{
+				int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
+				if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
+				{
+					g_iSlenderProxyTarget[iBossIndex] = EntIndexToEntRef(iRaidTarget);
+				}
+			}
+			delete hArrayRaidTargets;
 
 			if (iPreferredTeleportTarget && iPreferredTeleportTarget != INVALID_ENT_REFERENCE)
 			{
@@ -6507,7 +6451,7 @@ void SetPageCount(int iNum)
 					TF2_SetPlayerClass(iClient, newClass);
 
 					CreateTimer(0.1, Timer_ClassScramblePlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-					CreateTimer(0.25, Timer_ClassScramblePlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.25, Timer_ClassScramblePlayer2, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 
 					// Regenerate player but keep health the same.
 					int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
@@ -7015,6 +6959,13 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 #endif
 
 	SF_FailEnd();
+
+	for (int i = 1; i < MaxClients; i++)
+	{
+		if (!IsValidClient(i)) continue;
+		g_bPlayerDied1Up[i] = false;
+		g_bPlayerIn1UpCondition[i] = false;
+	}
 	
 	SpecialRound_RoundEnd();
 	
@@ -7506,9 +7457,10 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					ClientActivateUltravision(iClient);
 				}
 				
-				if (SF_SpecialRound(SPECIALROUND_1UP))
+				if (SF_SpecialRound(SPECIALROUND_1UP) && !g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient])
 				{
-					TF2_AddCondition(iClient,TFCond_PreventDeath,-1.0);
+					g_bPlayerDied1Up[iClient] = false;
+					g_bPlayerIn1UpCondition[iClient] = true;
 				}
 				
 				if (SF_SpecialRound(SPECIALROUND_PAGEDETECTOR))
@@ -7903,7 +7855,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dB)
 			{
 				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT) || g_bRenevantMultiEffect)
 						CreateTimer(0.1, Timer_ReplacePlayerRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-				if (IsRoundInIntro() || g_bRoundGrace || DidClientEscape(iClient))
+				if (IsRoundInIntro() || g_bRoundGrace || DidClientEscape(iClient) || (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient]))
 				{
 					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 				}
@@ -8737,7 +8689,7 @@ public Action Timer_RoundStart(Handle timer)
 		}
 		
 		// Show difficulty menu.
-		if (!SF_IsBoxingMap() && !SF_IsRenevantMap() && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
+		if (!SF_IsBoxingMap() && !SF_IsRenevantMap() && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && !SF_SpecialRound(SPECIALROUND_MODBOSSES))
 		{
 			if (iClientsNum)
 			{
@@ -8819,6 +8771,8 @@ public Action Timer_RoundTime(Handle timer)
 			float flBuffer[3];
 			GetClientAbsOrigin(i, flBuffer);
 			ClientStartDeathCam(i, 0, flBuffer);
+			g_bPlayerDied1Up[i] = false;
+			g_bPlayerIn1UpCondition[i] = false;
 			KillClient(i);
 		}
 		
@@ -8879,6 +8833,8 @@ public Action Timer_RoundTimeEscape(Handle timer)
 			float flBuffer[3];
 			GetClientAbsOrigin(i, flBuffer);
 			ClientStartDeathCam(i, 0, flBuffer);
+			g_bPlayerDied1Up[i] = false;
+			g_bPlayerIn1UpCondition[i] = false;
 			KillClient(i);
 		}
 		return Plugin_Stop;
@@ -9379,42 +9335,42 @@ public Action Timer_RenevantWave(Handle timer, any data)
 									case 1:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-										CPrintToChatAll("{purple}Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
+										CPrintToChatAll("{purple}Snatcher{default}: Oh no! You're not slipping out of your contract THAT easily.");
 									}
 									case 2:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-										CPrintToChatAll("{purple}Snatcher{default}:  You ready to die some more? Great!");
+										CPrintToChatAll("{purple}Snatcher{default}: You ready to die some more? Great!");
 									}
 									case 3:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-										CPrintToChatAll("{purple}Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+										CPrintToChatAll("{purple}Snatcher{default}: Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
 									}
 									case 4:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-										CPrintToChatAll("{purple}Snatcher{default}:  I love the smell of DEATH in the morning.");
+										CPrintToChatAll("{purple}Snatcher{default}: I love the smell of DEATH in the morning.");
 									}
 									case 5:
 									{
 										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-										CPrintToChatAll("{purple}Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+										CPrintToChatAll("{purple}Snatcher{default}: Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 									}
 									case 6:
 									{
 										EmitSoundToAll(SNATCHER_APOLLYON_1);
-										CPrintToChatAll("{purple}Snatcher{default}:  Ah! It gets better every time!");
+										CPrintToChatAll("{purple}Snatcher{default}: Ah! It gets better every time!");
 									}
 									case 7:
 									{
 										EmitSoundToAll(SNATCHER_APOLLYON_2);
-										CPrintToChatAll("{purple}Snatcher{default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+										CPrintToChatAll("{purple}Snatcher{default}: Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
 									}
 									case 8:
 									{
 										EmitSoundToAll(SNATCHER_APOLLYON_3);
-										CPrintToChatAll("{purple}Snatcher{default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+										CPrintToChatAll("{purple}Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 									}
 								}
 							}
@@ -10512,7 +10468,7 @@ void InitializeNewGame()
 	else
 	{
 		// Spawn the boss!
-		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
+		if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && !SF_SpecialRound(SPECIALROUND_MODBOSSES))
 		{
 			if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
 			{
@@ -10651,7 +10607,7 @@ public Action Timer_ActivateRoundFromIntro(Handle timer)
 	SF2_RefreshRestrictions();
 
 	// Spawn the boss!
-	if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
+	if (!SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && !SF_SpecialRound(SPECIALROUND_MODBOSSES))
 	{
 		if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
 		{
@@ -10700,7 +10656,7 @@ void CheckRoundWinConditions()
 	{
 		if (!IsClientInGame(i)) continue;
 		iTotalCount++;
-		if (!g_bPlayerEliminated[i] && !IsClientInDeathCam(i)) 
+		if ((!g_bPlayerEliminated[i] && !IsClientInDeathCam(i)) || (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[i])) 
 		{
 			iAliveCount++;
 			if (DidClientEscape(i)) iEscapedCount++;

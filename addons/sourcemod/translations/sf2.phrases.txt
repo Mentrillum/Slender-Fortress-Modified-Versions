@@ -1386,7 +1386,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Reworked the proxy spawns.\n-Proxies no longer see any pages.\n-Fixed a bug where proxy weapons wouldn't equip for the melee slot.\n-The viewmodel now disables on ghost mode.\n-Reworked Seeman's Explosive Dance."
+		"en"	"-Reworked traps.\n-Fixed occasional server chokes.\n-Proxies no longer get random crits.\n-Fixed TF2ItemType memory leaks.\n-1-Up has been reworked.\n-Damage effects now apply on bullets and lasers.\n-Fixed ghost mode audio issues.\n-Added a new special round, MODified bosses."
 	}
 
 	"SF2 Smite player"

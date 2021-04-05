@@ -56,6 +56,8 @@ static float g_flNPCInstantKillRadius[MAX_BOSSES] = { 0.0, ... };
 
 static bool g_bNPCDeathCamEnabled[MAX_BOSSES] = { false, ... };
 
+static bool g_bNPCProxyWeaponsEnabled[MAX_BOSSES] = { false, ... };
+
 static int g_iNPCEnemy[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
 Handle hTimerMusic = INVALID_HANDLE;//Planning to add a bosses array on.
@@ -255,6 +257,10 @@ methodmap SF2NPC_BaseNPC
 	}
 }
 
+bool NPCHasProxyWeapons(int iNPCIndex)
+{
+	return g_bNPCProxyWeaponsEnabled[iNPCIndex];
+}
 
 bool NPCHasDeathCamEnabled(int iNPCIndex)
 {
@@ -402,6 +408,60 @@ stock bool MusicActive()
 {
 	if(hTimerMusic!=INVALID_HANDLE)
 		return true;
+	return false;
+}
+stock bool BossHasMusic(char[] sProfile)
+{
+	int iDifficulty = GetConVarInt(g_cvDifficulty);
+	char sTemp[512];
+	switch (iDifficulty)
+	{
+		case Difficulty_Normal:
+		{
+			if (GetRandomStringFromProfile(sProfile,"sound_music",sTemp,sizeof(sTemp))) return true;
+			else return false;
+		}
+		case Difficulty_Hard:
+		{
+			if (GetRandomStringFromProfile(sProfile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+			else 
+				if (GetRandomStringFromProfile(sProfile,"sound_music",sTemp,sizeof(sTemp))) return true;
+				else return false;
+		}
+		case Difficulty_Insane:
+		{
+			if (GetRandomStringFromProfile(sProfile,"sound_music_insane",sTemp,sizeof(sTemp))) return true;
+			else
+				if (GetRandomStringFromProfile(sProfile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+				else
+					if (GetRandomStringFromProfile(sProfile,"sound_music",sTemp,sizeof(sTemp))) return true;
+					else return false;
+		}
+		case Difficulty_Nightmare:
+		{
+			if (GetRandomStringFromProfile(sProfile,"sound_music_nightmare",sTemp,sizeof(sTemp))) return true;
+			else
+				if (GetRandomStringFromProfile(sProfile,"sound_music_insane",sTemp,sizeof(sTemp))) return true;
+				else
+					if (GetRandomStringFromProfile(sProfile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+					else
+						if (GetRandomStringFromProfile(sProfile,"sound_music",sTemp,sizeof(sTemp))) return true;
+						else return false;
+		}
+		case Difficulty_Apollyon:
+		{
+			if (GetRandomStringFromProfile(sProfile,"sound_music_apollyon",sTemp,sizeof(sTemp))) return true;
+			else
+				if (GetRandomStringFromProfile(sProfile,"sound_music_nightmare",sTemp,sizeof(sTemp))) return true;
+				else
+					if (GetRandomStringFromProfile(sProfile,"sound_music_insane",sTemp,sizeof(sTemp))) return true;
+					else
+						if (GetRandomStringFromProfile(sProfile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+						else
+							if (GetRandomStringFromProfile(sProfile,"sound_music",sTemp,sizeof(sTemp))) return true;
+							else return false;
+		}
+	}
 	return false;
 }
 stock void GetBossMusic(char[] buffer,int bufferlen)
@@ -922,6 +982,8 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	g_iSlenderOutlineColorG[Npc.Index] = GetBossProfileOutlineColorG(iProfileIndex);
 	g_iSlenderOutlineColorB[Npc.Index] = GetBossProfileOutlineColorB(iProfileIndex);
 	g_iSlenderOutlineTransparency[Npc.Index] = GetBossProfileOutlineTransparency(iProfileIndex);
+
+	g_bNPCProxyWeaponsEnabled[Npc.Index] = GetBossProfileProxyWeapons(iProfileIndex);
 	
 	if (SF_IsSlaughterRunMap()) NPCSetFlags(Npc.Index, GetBossProfileFlags(iProfileIndex) | iAdditionalBossFlags | SFF_NOTELEPORT);
 	else NPCSetFlags(Npc.Index, GetBossProfileFlags(iProfileIndex) | iAdditionalBossFlags);
@@ -1043,6 +1105,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	}
 	
 	g_iSlenderTeleportTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_iSlenderProxyTarget[Npc.Index] = INVALID_ENT_REFERENCE;
 	g_flSlenderTeleportMaxTargetStress[Npc.Index] = 9999.0;
 	g_flSlenderTeleportMaxTargetTime[Npc.Index] = -1.0;
 	g_flSlenderNextTeleportTime[Npc.Index] = -1.0;
@@ -1409,6 +1472,7 @@ void RemoveProfile(int iBossIndex)
 	
 	g_iNPCTeleportType[iBossIndex] = -1;
 	g_iSlenderTeleportTarget[iBossIndex] = INVALID_ENT_REFERENCE;
+	g_iSlenderProxyTarget[iBossIndex] = INVALID_ENT_REFERENCE;
 	g_flSlenderTeleportMaxTargetStress[iBossIndex] = 9999.0;
 	g_flSlenderTeleportMaxTargetTime[iBossIndex] = -1.0;
 	g_flSlenderNextTeleportTime[iBossIndex] = -1.0;
@@ -2789,10 +2853,12 @@ void SlenderPrintChatMessage(int iBossIndex, int iPlayer)
 	
 	char sBuffer[PLATFORM_MAX_PATH];
 	char sPrefix[PLATFORM_MAX_PATH];
+	char sName[SF2_MAX_NAME_LENGTH];
 
 	GetRandomStringFromProfile(sProfile, "chat_message_upon_death", sBuffer, sizeof(sBuffer));
 	GetProfileString(sProfile, "chat_message_upon_death_prefix", sPrefix, sizeof(sPrefix));
-	char sPlayer[32];
+	GetProfileString(sProfile, "name", sName, sizeof(sName));
+	char sPlayer[32], sReplacePlayer[64];
 	FormatEx(sPlayer, sizeof(sPlayer), "%N", iPlayer);
 	if (!sPrefix[0])
 	{
@@ -2800,7 +2866,15 @@ void SlenderPrintChatMessage(int iBossIndex, int iPlayer)
 	}
 	if (sBuffer[0] && GetClientTeam(iPlayer) == 2)
 	{
-		CPrintToChatAll("{royalblue}%s {red}%s {default}%s", sPrefix, sPlayer, sBuffer);
+		Format(sPlayer, sizeof(sPlayer), "{red}%s", sPlayer);
+		if (StrContains(sBuffer, "[PLAYER]", true) != -1) 
+		{
+			FormatEx(sReplacePlayer, sizeof(sReplacePlayer), "%s{default}", sPlayer);
+			ReplaceString(sBuffer, sizeof(sBuffer), "[PLAYER]", sReplacePlayer, true);
+		}
+		else Format(sBuffer, sizeof(sBuffer), "%s{default} %s", sPlayer, sBuffer);
+		if (StrContains(sBuffer, "[BOSS]", true) != -1) ReplaceString(sBuffer, sizeof(sBuffer), "[BOSS]", sName, true);
+		CPrintToChatAll("{royalblue}%s{default} %s", sPrefix, sBuffer);
 	}
 }
 
@@ -4091,7 +4165,7 @@ public bool TraceRayDontHitBosses(int entity,int mask, any data)
 
 stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 {
-	if (iBossIndex == -1) return false;
+	if (iBossIndex == -1 || client <= 0) return false;
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -4099,36 +4173,15 @@ stock bool SpawnProxy(int client,int iBossIndex,float flTeleportPos[3])
 	
 	if (!g_bRoundGrace)
 	{	
-		int iTeleportTarget;
-		Handle hArrayRaidTargets = CreateArray();
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsClientInGame(i) ||
-				!IsPlayerAlive(i) ||
-				g_bPlayerEliminated[i] ||
-				IsClientInGhostMode(i) ||
-				DidClientEscape(i))
-			{
-				continue;
-			}
-			PushArrayCell(hArrayRaidTargets, i);
-		}
-		if(GetArraySize(hArrayRaidTargets)>0)
-		{
-			int iRaidTarget = GetArrayCell(hArrayRaidTargets,GetRandomInt(0, GetArraySize(hArrayRaidTargets) - 1));
-			if(IsValidClient(iRaidTarget) && !g_bPlayerEliminated[iRaidTarget])
-			{
-				iTeleportTarget = iRaidTarget;
-			}
-		}
-		delete hArrayRaidTargets;
-		
 		int iTeleportAreaIndex = -1;
 		if (iBossIndex == -1) //Please don't ask why I did this
 			return false;
 		else
 		{
 			if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return false;
+			
+			int iTeleportTarget = EntRefToEntIndex(g_iSlenderProxyTarget[iBossIndex]);
+
 			ArrayList hSpawnPoint = new ArrayList();
 			char sName[32];
 			int ent = -1;

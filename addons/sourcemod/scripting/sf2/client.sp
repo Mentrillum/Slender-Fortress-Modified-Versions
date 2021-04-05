@@ -3,7 +3,6 @@
 #endif
 #define _sf2_client_included
 
-#define GHOST_MODEL "models/empty.mdl"
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
 #define SF2_OVERLAY_GHOST "overlays/slender/ghostcamera"
@@ -48,6 +47,7 @@ Handle g_hPlayerFlashlightBatteryTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... }
 static float g_flPlayerFlashlightNextInputTime[MAXPLAYERS + 1] = { -1.0, ... };
 
 static int g_ActionItemIndexes[] = { 57, 231 };
+static int g_iPlayerOriginalColor[MAXPLAYERS + 1][4];
 
 // Ultravision data.
 static bool g_bPlayerUltravision[MAXPLAYERS + 1] = { false, ... };
@@ -234,6 +234,17 @@ public void Hook_ClientPreThink(int client)
 			if (!g_bPlayerProxy[client] && GetClientTeam(client) == TFTeam_Red)
 			{
 				if (TF2_IsPlayerInCondition(client,TFCond_Disguised)) TF2_RemoveCondition(client,TFCond_Disguised);
+
+				if (TF2_IsPlayerInCondition(client,TFCond_Taunting) && TF2_GetPlayerClass(client) == TFClass_Soldier)
+				{
+					int iWeapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+					if (iWeapon && iWeapon != INVALID_ENT_REFERENCE)
+					{
+						int iItemDef = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+						if (iItemDef == 775 || iItemDef == 128) TF2_RemoveCondition(client,TFCond_Taunting); //Stop suiciding...
+					}
+				}
+
 				if (iRoundState == 4)
 				{
 					if (IsClientInDeathCam(client))
@@ -3541,8 +3552,7 @@ void ClientEnableProxy(int client,int iBossIndex)
 	
 	CreateTimer(0.33, Timer_ApplyCustomModel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
-	if (view_as<bool>(GetProfileNum(sProfile,"proxies_weapon",0))) 
-		CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	if (NPCHasProxyWeapons(iBossIndex)) CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	
 	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 	{	
@@ -3635,6 +3645,7 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 	
 	if (g_bPlayerProxy[client] && iBossIndex != -1)
 	{
+		if (!NPCHasProxyWeapons(iBossIndex)) return;
 		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -3656,9 +3667,10 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 			case 1: TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
 			case 2: TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
 		}
-		Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats);
+		Handle hWeapon = PrepareItemHandle(sWeaponName, iWeaponIndex, 0, 0, sWeaponStats, true);
 		int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 		delete hWeapon;
+		hWeapon = null;
 		EquipPlayerWeapon(client, iEnt);
 	}
 }
@@ -4537,15 +4549,9 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 
 static bool g_bPlayerGhostMode[MAXPLAYERS + 1] = { false, ... };
 static int g_iPlayerGhostModeTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_iGhostModelIndex;
 Handle g_hPlayerGhostModeConnectionCheckTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 static float g_flPlayerGhostModeConnectionTimeOutTime[MAXPLAYERS + 1] = { -1.0, ... };
 static float g_flPlayerGhostModeConnectionBootTime[MAXPLAYERS + 1] = { -1.0, ... };
-
-void SF2_SetGhostModel(int iModelIndex)
-{
-	g_iGhostModelIndex = iModelIndex;
-}
 
 /**
  *	Enables/Disables ghost mode on the player.
@@ -4659,8 +4665,11 @@ void ClientSetGhostModeState(int client, bool bState)
 			SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
 			SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
+			SetEntProp(client, Prop_Data, "m_usSolidFlags", 16);
+			SetEntProp(client, Prop_Send, "m_nSolidType", 2);
 			//SetEntityMoveType(client, MOVETYPE_WALK);
-			Client_ModelOverrides(client);
+			SetEntityRenderMode(client, RENDER_NORMAL);
+			SetEntityRenderColor(client, g_iPlayerOriginalColor[client][0], g_iPlayerOriginalColor[client][1], g_iPlayerOriginalColor[client][2], g_iPlayerOriginalColor[client][3]);
 		}
 	}
 }
@@ -4726,8 +4735,12 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 		SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
 		SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_NO);
 		SetEntData(client, g_offsCollisionGroup, 2, 4, true);
-		SetEntProp(client, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
-		Client_ModelOverrides(client, g_iGhostModelIndex);
+		GetEntProp(client, Prop_Send, "m_usSolidFlags", FSOLID_NOT_SOLID);
+		GetEntProp(client, Prop_Data, "m_nSolidType", SOLID_NONE);
+		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
+		GetEntityRenderColor(client, g_iPlayerOriginalColor[client][0], g_iPlayerOriginalColor[client][1], g_iPlayerOriginalColor[client][2], g_iPlayerOriginalColor[client][3]);
+		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(client, 255, 255, 255, 0);
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
@@ -4916,10 +4929,6 @@ void ClientPerformSightSound(int client,int iBossIndex)
 		float flStressScalar = 1.0 + ((SquareFloat(flDistUnComfortZone) / flBossDist));
 		
 		ClientAddStress(client, 0.1 * flStressScalar);
-	}
-	else
-	{
-		LogError("Warning! %s supports sight sounds, but was given a blank sound!", sProfile);
 	}
 }
 
@@ -6203,7 +6212,7 @@ public Action Timer_PlayerFadeInMusic(Handle timer, any userid)
 	g_flPlayerMusicVolume[client] += 0.07;
 	if (g_flPlayerMusicVolume[client] > g_flPlayerMusicTargetVolume[client]) g_flPlayerMusicVolume[client] = g_flPlayerMusicTargetVolume[client];
 	
-	if (g_strPlayerMusic[client][0]) EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, g_flPlayerMusicVolume[client]);
+	if (g_strPlayerMusic[client][0]) EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, g_flPlayerMusicVolume[client], 100);
 
 	if (g_flPlayerMusicVolume[client] >= g_flPlayerMusicTargetVolume[client])
 	{
@@ -6224,7 +6233,7 @@ public Action Timer_PlayerFadeOutMusic(Handle timer, any userid)
 	g_flPlayerMusicVolume[client] -= 0.07;
 	if (g_flPlayerMusicVolume[client] < 0.0) g_flPlayerMusicVolume[client] = 0.0;
 
-	if (g_strPlayerMusic[client][0]) EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, g_flPlayerMusicVolume[client]);
+	if (g_strPlayerMusic[client][0]) EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, g_flPlayerMusicVolume[client], 100);
 
 	if (g_flPlayerMusicVolume[client] <= 0.0)
 	{
@@ -6255,7 +6264,7 @@ public Action Timer_PlayerFadeIn20DollarsMusic(Handle timer, any userid)
 	g_flPlayer20DollarsMusicVolumes[client][iBossIndex] += 0.07;
 	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] > 1.0) g_flPlayer20DollarsMusicVolumes[client][iBossIndex] = 1.0;
 
-	if (g_strPlayer20DollarsMusic[client][0]) EmitSoundToClient(client, g_strPlayer20DollarsMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer20DollarsMusicVolumes[client][iBossIndex]);
+	if (g_strPlayer20DollarsMusic[client][0]) EmitSoundToClient(client, g_strPlayer20DollarsMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer20DollarsMusicVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] >= 1.0)
 	{
@@ -6305,7 +6314,7 @@ public Action Timer_PlayerFadeOut20DollarsMusic(Handle timer, any userid)
 	g_flPlayer20DollarsMusicVolumes[client][iBossIndex] -= 0.07;
 	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] < 0.0) g_flPlayer20DollarsMusicVolumes[client][iBossIndex] = 0.0;
 
-	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer20DollarsMusicVolumes[client][iBossIndex]);
+	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer20DollarsMusicVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayer20DollarsMusicVolumes[client][iBossIndex] <= 0.0)
 	{
@@ -6336,7 +6345,7 @@ public Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
 	g_flPlayerAlertMusicVolumes[client][iBossIndex] += 0.07;
 	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] > 1.0) g_flPlayerAlertMusicVolumes[client][iBossIndex] = 1.0;
 
-	if (g_strPlayerAlertMusic[client][0]) EmitSoundToClient(client, g_strPlayerAlertMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerAlertMusicVolumes[client][iBossIndex]);
+	if (g_strPlayerAlertMusic[client][0]) EmitSoundToClient(client, g_strPlayerAlertMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerAlertMusicVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] >= 1.0)
 	{
@@ -6379,7 +6388,7 @@ public Action Timer_PlayerFadeOutAlertMusic(Handle timer, any userid)
 	g_flPlayerAlertMusicVolumes[client][iBossIndex] -= 0.07;
 	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] < 0.0) g_flPlayerAlertMusicVolumes[client][iBossIndex] = 0.0;
 
-	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerAlertMusicVolumes[client][iBossIndex]);
+	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerAlertMusicVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayerAlertMusicVolumes[client][iBossIndex] <= 0.0)
 	{
@@ -6410,7 +6419,7 @@ public Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
 	g_flPlayerChaseMusicVolumes[client][iBossIndex] += 0.07;
 	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] > 1.0) g_flPlayerChaseMusicVolumes[client][iBossIndex] = 1.0;
 
-	if (g_strPlayerChaseMusic[client][0]) EmitSoundToClient(client, g_strPlayerChaseMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicVolumes[client][iBossIndex]);
+	if (g_strPlayerChaseMusic[client][0]) EmitSoundToClient(client, g_strPlayerChaseMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] >= 1.0)
 	{
@@ -6441,7 +6450,7 @@ public Action Timer_PlayerFadeInChaseMusicSee(Handle timer, any userid)
 	g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] += 0.07;
 	if (g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] > 1.0) g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] = 1.0;
 
-	if (g_strPlayerChaseMusicSee[client][0]) EmitSoundToClient(client, g_strPlayerChaseMusicSee[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicSeeVolumes[client][iBossIndex]);
+	if (g_strPlayerChaseMusicSee[client][0]) EmitSoundToClient(client, g_strPlayerChaseMusicSee[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicSeeVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] >= 1.0)
 	{
@@ -6484,7 +6493,7 @@ public Action Timer_PlayerFadeOutChaseMusic(Handle timer, any userid)
 	g_flPlayerChaseMusicVolumes[client][iBossIndex] -= 0.07;
 	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] < 0.0) g_flPlayerChaseMusicVolumes[client][iBossIndex] = 0.0;
 
-	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicVolumes[client][iBossIndex]);
+	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayerChaseMusicVolumes[client][iBossIndex] <= 0.0)
 	{
@@ -6527,7 +6536,7 @@ public Action Timer_PlayerFadeOutChaseMusicSee(Handle timer, any userid)
 	g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] -= 0.07;
 	if (g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] < 0.0) g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] = 0.0;
 
-	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicSeeVolumes[client][iBossIndex]);
+	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayerChaseMusicSeeVolumes[client][iBossIndex], 100);
 	
 	if (g_flPlayerChaseMusicSeeVolumes[client][iBossIndex] <= 0.0)
 	{
@@ -6548,7 +6557,7 @@ public Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
 	g_flPlayer90sMusicVolumes[client] += 0.28;
 	if (g_flPlayer90sMusicVolumes[client] > 0.5) g_flPlayer90sMusicVolumes[client] = 0.5;
 
-	if (g_strPlayer90sMusic[client][0]) EmitSoundToClient(client, g_strPlayer90sMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer90sMusicVolumes[client]);
+	if (g_strPlayer90sMusic[client][0]) EmitSoundToClient(client, g_strPlayer90sMusic[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer90sMusicVolumes[client], 100);
 	
 	if (g_flPlayer90sMusicVolumes[client] >= 0.5)
 	{
@@ -6578,7 +6587,7 @@ public Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
 	g_flPlayer90sMusicVolumes[client] -= 0.28;
 	if (g_flPlayer90sMusicVolumes[client] < 0.0) g_flPlayer90sMusicVolumes[client] = 0.0;
 
-	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer90sMusicVolumes[client]);
+	if (sBuffer[0]) EmitSoundToClient(client, sBuffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_flPlayer90sMusicVolumes[client], 100);
 	
 	if (g_flPlayer90sMusicVolumes[client] <= 0.0)
 	{
@@ -7247,7 +7256,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			int iWeapon = INVALID_ENT_REFERENCE;
 			for (int iSlot = 0; iSlot <= 5; iSlot++)
 			{
-				hItem = INVALID_HANDLE;
 				iWeapon = GetPlayerWeaponSlot(client, iSlot);
 				
 				if (IsValidEdict(iWeapon))
@@ -7262,51 +7270,51 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 							{
 								switch (iPlayerClass)
 								{
-									case TFClass_Scout: hItem = g_hSDKWeaponScattergun;
-									case TFClass_Sniper: hItem = g_hSDKWeaponSniperRifle;
-									case TFClass_Soldier: hItem = g_hSDKWeaponRocketLauncher;
-									case TFClass_DemoMan: hItem = g_hSDKWeaponGrenadeLauncher;
-									case TFClass_Heavy: hItem = g_hSDKWeaponMinigun;
-									case TFClass_Medic: hItem = g_hSDKWeaponSyringeGun;
-									case TFClass_Pyro: hItem = g_hSDKWeaponFlamethrower;
-									case TFClass_Spy: hItem = g_hSDKWeaponRevolver;
-									case TFClass_Engineer: hItem = g_hSDKWeaponShotgunPrimary;
+									case TFClass_Scout: hItem = PrepareItemHandle("tf_weapon_scattergun", 13, 0, 0, "");
+									case TFClass_Sniper: hItem = PrepareItemHandle("tf_weapon_sniperrifle", 14, 0, 0, "");
+									case TFClass_Soldier: hItem = PrepareItemHandle("tf_weapon_rocketlauncher", 18, 0, 0, "");
+									case TFClass_DemoMan: hItem = PrepareItemHandle("tf_weapon_grenadelauncher", 19, 0, 0, "");
+									case TFClass_Heavy: hItem = PrepareItemHandle("tf_weapon_minigun", 15, 0, 0, "");
+									case TFClass_Medic: hItem = PrepareItemHandle("tf_weapon_syringegun_medic", 17, 0, 0, "");
+									case TFClass_Pyro: hItem = PrepareItemHandle("tf_weapon_flamethrower", 21, 0, 0, "254 ; 4.0");
+									case TFClass_Spy: hItem = PrepareItemHandle("tf_weapon_revolver", 24, 0, 0, "");
+									case TFClass_Engineer: hItem = PrepareItemHandle("tf_weapon_shotgun", 9, 0, 0, "");
 								}
 							}
 							case TFWeaponSlot_Secondary:
 							{
 								switch (iPlayerClass)
 								{
-									case TFClass_Scout: hItem = g_hSDKWeaponPistolScout;
-									case TFClass_Sniper: hItem = g_hSDKWeaponSMG;
-									case TFClass_Soldier: hItem = g_hSDKWeaponShotgunSoldier;
-									case TFClass_DemoMan: hItem = g_hSDKWeaponStickyLauncher;
-									case TFClass_Heavy: hItem = g_hSDKWeaponShotgunHeavy;
-									case TFClass_Medic: hItem = g_hSDKWeaponMedigun;
-									case TFClass_Pyro: hItem = g_hSDKWeaponShotgunPyro;
-									case TFClass_Engineer: hItem = g_hSDKWeaponPistol;
+									case TFClass_Scout: hItem = PrepareItemHandle("tf_weapon_pistol", 23, 0, 0, "");
+									case TFClass_Sniper: hItem = PrepareItemHandle("tf_weapon_smg", 16, 0, 0, "");
+									case TFClass_Soldier: hItem = PrepareItemHandle("tf_weapon_shotgun", 10, 0, 0, "");
+									case TFClass_DemoMan: hItem = PrepareItemHandle("tf_weapon_pipebomblauncher", 20, 0, 0, "");
+									case TFClass_Heavy: hItem = PrepareItemHandle("tf_weapon_shotgun", 11, 0, 0, "");
+									case TFClass_Medic: hItem = PrepareItemHandle("tf_weapon_medigun", 29, 0, 0, "");
+									case TFClass_Pyro: hItem = PrepareItemHandle("tf_weapon_shotgun", 12, 0, 0, "");
+									case TFClass_Engineer: hItem = PrepareItemHandle("tf_weapon_pistol", 22, 0, 0, "");
 								}
 							}
 							case TFWeaponSlot_Melee:
 							{
 								switch (iPlayerClass)
 								{
-									case TFClass_Scout: hItem = g_hSDKWeaponBat;
-									case TFClass_Sniper: hItem = g_hSDKWeaponKukri;
-									case TFClass_Soldier: hItem = g_hSDKWeaponShovel;
-									case TFClass_DemoMan: hItem = g_hSDKWeaponBottle;
-									case TFClass_Heavy: hItem = g_hSDKWeaponFists;
-									case TFClass_Medic: hItem = g_hSDKWeaponBonesaw;
-									case TFClass_Pyro: hItem = g_hSDKWeaponFireaxe;
-									case TFClass_Spy: hItem = g_hSDKWeaponKnife;
-									case TFClass_Engineer: hItem = g_hSDKWeaponWrench;
+									case TFClass_Scout: hItem = PrepareItemHandle("tf_weapon_bat", 0, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_Sniper: hItem = PrepareItemHandle("tf_weapon_club", 3, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_Soldier: hItem = PrepareItemHandle("tf_weapon_shovel", 6, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_DemoMan: hItem = PrepareItemHandle("tf_weapon_bottle", 1, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_Heavy: hItem = PrepareItemHandle("tf_weapon_fists", 5, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_Medic: hItem = PrepareItemHandle("tf_weapon_bonesaw", 8, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_Pyro: hItem = PrepareItemHandle("tf_weapon_fireaxe", 2, 0, 0, "", g_bPlayerProxy[client]);
+									case TFClass_Spy: hItem = PrepareItemHandle("tf_weapon_knife", 4, 0, 0, "");
+									case TFClass_Engineer: hItem = PrepareItemHandle("tf_weapon_wrench", 7, 0, 0, "", g_bPlayerProxy[client]);
 								}
 							}
 							case 4:
 							{
 								switch (iPlayerClass)
 								{
-									case TFClass_Spy: hItem = g_hSDKWeaponInvis;
+									case TFClass_Spy: hItem = PrepareItemHandle("tf_weapon_invis", 297, 0, 0, "");
 								}
 							}
 						}
@@ -7327,6 +7335,8 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					}
 				}
 			}
+			delete hItem;
+			hItem = null;
 		}
 		
 		// Fixes the Pretty Boy's Pocket Pistol glitch.
@@ -7358,6 +7368,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 12.0 ; 412 ; 1.2");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 310: //The Warrior's Spirit
@@ -7367,6 +7378,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_fists", 310, 0, 0, "2 ; 1.3 ; 412 ; 1.3");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 326: // The Back Scratcher
@@ -7376,6 +7388,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 304: // Amputator
@@ -7385,6 +7398,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 239: //GRU
@@ -7394,6 +7408,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 1100: //Bread Bite
@@ -7403,6 +7418,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 426: //Eviction Notice
@@ -7412,6 +7428,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 				case 775: //The Escape Plan (Its like, real buggy on wearer)
@@ -7421,6 +7438,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_shovel", 775, 0, 0, "414 ; 1 ; 734 ; 0.1");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 			}
@@ -7447,6 +7465,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					hWeapon = PrepareItemHandle("tf_weapon_wrench", 589, 0, 0, "93 ; 0.5 ; 732 ; 0.5");
 					int iEnt = TF2Items_GiveNamedItem(client, hWeapon);
 					delete hWeapon;
+					hWeapon = null;
 					EquipPlayerWeapon(client, iEnt);
 				}
 			}
@@ -7535,6 +7554,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 			delete hItemOverride;
+			hItemOverride = null;
 		}
 	}
 	
@@ -7546,7 +7566,10 @@ public void Frame_ReplaceSpyCicle(int client)
 	if (IsClientInGame(client))
 	{
 		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
-		int iNewKnife = TF2Items_GiveNamedItem(client, g_hSDKWeaponKnife);
+		Handle hItem = PrepareItemHandle("tf_weapon_knife", 4, 0, 0, "");
+		int iNewKnife = TF2Items_GiveNamedItem(client, hItem);
+		delete hItem;
+		hItem = null;
 		EquipPlayerWeapon(client, iNewKnife);
 		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 	}
@@ -7719,6 +7742,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				Handle ZombieSoul = PrepareItemHandle("tf_wearable", index, 100, 7,"448 ; 1.0 ; 450 ; 1");
 				int entity = TF2Items_GiveNamedItem(client, ZombieSoul);
 				delete ZombieSoul;
+				ZombieSoul = null;
 				if( IsValidEdict( entity ) )
 				{
 					SDK_EquipWearable(client, entity);
@@ -7894,14 +7918,13 @@ public Action Timer_RespawnPlayer(Handle timer, any userid)
 	if (client <= 0) return;
 	
 	if (!IsValidClient(client) || !IsClientInGame(client) || IsPlayerAlive(client)) return;
+
+	if (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !DidClientEscape(client) && !IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro() && !g_bRoundGrace) 
+	{
+		g_bPlayerDied1Up[client] = true;
+		g_bPlayerIn1UpCondition[client] = false;
+		EmitSoundToClient(client, SPECIAL1UPSOUND);
+	}
 	
 	TF2_RespawnPlayer(client);
-}
-
-void Client_ModelOverrides(int iEntity, int iModelIndex = 0)
-{
-    for(int i=0; i<4; i++)
-    {
-        SetEntProp(iEntity, Prop_Send, "m_nModelIndexOverrides", iModelIndex, _, i);
-    }
 }

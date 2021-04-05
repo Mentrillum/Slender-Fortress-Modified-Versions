@@ -364,7 +364,7 @@ public int Menu_Main(Handle menu, MenuAction action,int param1,int param2)
 
 public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int param2)
 {
-	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER))
+	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && !SF_SpecialRound(SPECIALROUND_MODBOSSES))
 	{
 		int iClientInGame = 0, iClientCallingForNightmare = 0;
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
@@ -384,7 +384,7 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 		{
 			SetConVarInt(g_cvDifficulty, Difficulty_Insane);
 		}
-		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
+		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_HYPERSNATCHER) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
 		{
 			if (GetRandomInt(1, 20) <= 1)
 			{

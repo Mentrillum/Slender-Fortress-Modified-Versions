@@ -292,7 +292,7 @@ ArrayList SpecialEnabledList()
 			if (IsValidClient(iClient) && !g_bPlayerEliminated[iClient])
 				iPlayers++;
 		}
-		
+
 		if (!SF_IsBoxingMap())
 		{
 			if (GetArraySize(GetSelectableBossProfileList()) > 0)
@@ -427,6 +427,9 @@ ArrayList SpecialEnabledList()
 
 		if (!SF_SpecialRound(SPECIALROUND_20DOLLARS) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_IsBoxingMap())
 			arrayEnabledRounds.Push(SPECIALROUND_20DOLLARS);
+
+		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_VOTE) && GetArraySize(GetSelectableAdminBossProfileList()) > 0)
+			arrayEnabledRounds.Push(SPECIALROUND_MODBOSSES);
 		
 		//Always keep this special round push at the bottom, we need the array lenght
 		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && arrayEnabledRounds.Length > 5 && !SF_IsBoxingMap())
@@ -669,27 +672,27 @@ void SpecialRoundStart()
 								case 1:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Oh no! You're not slipping out of your contract THAT easily.");
 								}
 								case 2:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  You ready to die some more? Great!");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: You ready to die some more? Great!");
 								}
 								case 3:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
 								}
 								case 4:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  I love the smell of DEATH in the morning.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: I love the smell of DEATH in the morning.");
 								}
 								case 5:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 								}
 							}
 							AddProfile(sSnatcher,_,_,_,false);
@@ -707,42 +710,42 @@ void SpecialRoundStart()
 								case 1:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh no! You're not slipping out of your contract THAT easily.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Oh no! You're not slipping out of your contract THAT easily.");
 								}
 								case 2:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  You ready to die some more? Great!");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: You ready to die some more? Great!");
 								}
 								case 3:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
 								}
 								case 4:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  I love the smell of DEATH in the morning.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: I love the smell of DEATH in the morning.");
 								}
 								case 5:
 								{
 									EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
 								}
 								case 6:
 								{
 									EmitSoundToAll(SNATCHER_APOLLYON_1);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Ah! It gets better every time!");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Ah! It gets better every time!");
 								}
 								case 7:
 								{
 									EmitSoundToAll(SNATCHER_APOLLYON_2);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
 								}
 								case 8:
 								{
 									EmitSoundToAll(SNATCHER_APOLLYON_3);
-									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}:  Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+									CPrintToChatAll("{ghostwhite}Hyper Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 								}
 							}
 							AddProfile(sSnatcher,_,_,_,false);
@@ -762,6 +765,99 @@ void SpecialRoundStart()
 			}
 			delete hSelectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_HYPERSNATCHER);
+		}
+		case SPECIALROUND_MODBOSSES:
+		{
+			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCStopMusic();
+			NPCRemoveAll();
+			Handle hSelectableBosses = CloneArray(GetSelectableAdminBossProfileList());
+			if (GetArraySize(hSelectableBosses) > 0)
+			{
+				GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
+				AddProfile(sBuffer);
+				int iRandomDifficulty = GetRandomInt(1, 5);
+				switch (iRandomDifficulty)
+				{
+					case 1:
+					{
+						SetConVarInt(g_cvDifficulty, Difficulty_Normal);
+						CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
+					}
+					case 2:
+					{
+						SetConVarInt(g_cvDifficulty, Difficulty_Hard);
+						CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
+					}
+					case 3:
+					{
+						SetConVarInt(g_cvDifficulty, Difficulty_Insane);
+						CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
+					}
+					case 4:
+					{
+						for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+							EmitSoundToAll(g_strSoundNightmareMode[i]);
+						SpecialRoundGameText("Nightmare mode!", "leaderboard_streak");
+						SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
+						CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {valve}Nightmare!", "SF2 Prefix");
+					}
+					case 5:
+					{
+						for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+							EmitSoundToAll(g_strSoundNightmareMode[i]);
+						SpecialRoundGameText("Apollyon mode!", "leaderboard_streak");
+						SetConVarInt(g_cvDifficulty, Difficulty_Apollyon);
+						CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {darkgray}Apollyon!", "SF2 Prefix");
+						int iRandomQuote = GetRandomInt(1, 8);
+						switch (iRandomQuote)
+						{
+							case 1:
+							{
+								EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
+								CPrintToChatAll("{purple}Snatcher{default}: Oh no! You're not slipping out of your contract THAT easily.");
+							}
+							case 2:
+							{
+								EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
+								CPrintToChatAll("{purple}Snatcher{default}: You ready to die some more? Great!");
+							}
+							case 3:
+							{
+								EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
+								CPrintToChatAll("{purple}Snatcher{default}: Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+							}
+							case 4:
+							{
+								EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
+								CPrintToChatAll("{purple}Snatcher{default}: I love the smell of DEATH in the morning.");
+							}
+							case 5:
+							{
+								EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
+								CPrintToChatAll("{purple}Snatcher{default}: Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+							}
+							case 6:
+							{
+								EmitSoundToAll(SNATCHER_APOLLYON_1);
+								CPrintToChatAll("{purple}Snatcher{default}: Ah! It gets better every time!");
+							}
+							case 7:
+							{
+								EmitSoundToAll(SNATCHER_APOLLYON_2);
+								CPrintToChatAll("{purple}Snatcher{default}: Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+							}
+							case 8:
+							{
+								EmitSoundToAll(SNATCHER_APOLLYON_3);
+								CPrintToChatAll("{purple}Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+							}
+						}
+					}
+				}
+			}
+			delete hSelectableBosses;
+			SF_AddSpecialRound(SPECIALROUND_MODBOSSES);
 		}
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
@@ -837,7 +933,8 @@ void SpecialRoundStart()
 				
 				if (!g_bPlayerEliminated[i])
 				{
-					TF2_AddCondition(i,TFCond_PreventDeath,-1.0);
+					g_bPlayerDied1Up[i] = false;
+					g_bPlayerIn1UpCondition[i] = true;
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_1UP);
@@ -1011,7 +1108,11 @@ void SpecialCreateVote()
 	NativeVotes_SetDetails(voteMenu,Tittle);
 	
 	ArrayList arrayEnabledRounds = SpecialEnabledList().Clone();
+
 	int iEraseVoteRound = arrayEnabledRounds.FindValue(SPECIALROUND_VOTE);
+	if (iEraseVoteRound != -1) arrayEnabledRounds.Erase(iEraseVoteRound);
+
+	iEraseVoteRound = arrayEnabledRounds.FindValue(SPECIALROUND_MODBOSSES);
 	if (iEraseVoteRound != -1) arrayEnabledRounds.Erase(iEraseVoteRound);
 
 	for (int i = 0; i < 5; i++)

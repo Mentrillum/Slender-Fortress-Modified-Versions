@@ -15,6 +15,7 @@
 
 static ArrayList g_hBossProfileList = null;
 static ArrayList g_hSelectableBossProfileList = null;
+static ArrayList g_hSelectableAdminBossProfileList = null;
 static ArrayList g_hSelectableBoxingBossProfileList = null;
 static ArrayList g_hSelectableRenevantBossProfileList = null;
 static ArrayList g_hSelectableBossProfileQueueList = null;
@@ -297,6 +298,8 @@ enum
 	BossProfileData_JumpscareCooldownNightmare,
 	BossProfileData_JumpscareCooldownApollyon,
 
+	BossProfileData_ProxyWeapons,
+
 	BossProfileData_TeleportType,
 	BossProfileData_MaxStats
 };
@@ -389,7 +392,13 @@ void ClearBossProfiles()
 		delete g_hSelectableBossProfileList;
 		g_hSelectableBossProfileList = null;
 	}
-	
+
+	if (g_hSelectableAdminBossProfileList != null)
+	{
+		delete g_hSelectableAdminBossProfileList;
+		g_hSelectableAdminBossProfileList = null;
+	}	
+
 	if (g_hSelectableBoxingBossProfileList != null)
 	{
 		delete g_hSelectableBoxingBossProfileList;
@@ -436,6 +445,11 @@ void ReloadBossProfiles()
 	if (g_hSelectableBossProfileList == null)
 	{
 		g_hSelectableBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
+	}
+	
+	if (g_hSelectableAdminBossProfileList == null)
+	{
+		g_hSelectableAdminBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
 	if (g_hSelectableBoxingBossProfileList == null)
@@ -961,6 +975,8 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flStaticRadiusNightmare = KvGetFloat(kv, "static_radius_nightmare", flStaticRadiusInsane);
 	float flStaticRadiusApollyon = KvGetFloat(kv, "static_radius_apollyon", flStaticRadiusNightmare);
 
+	bool bProxyWeaponsEnabled = view_as<bool>(KvGetNum(kv, "proxies_weapon", 0));
+
 	float flBossEyePosOffset[3];
 	KvGetVector(kv, "eye_pos", flBossEyePosOffset);
 	
@@ -1151,6 +1167,8 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSearchSoundRadiusNightmare, BossProfileData_SearchSoundRangeNightmare);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossSearchSoundRadiusApollyon, BossProfileData_SearchSoundRangeApollyon);
 
+	SetArrayCell(g_hBossProfileData, iIndex, bProxyWeaponsEnabled, BossProfileData_ProxyWeapons);
+
 	SetArrayCell(g_hBossProfileData, iIndex, flBossFOV, BossProfileData_FieldOfView);
 	SetArrayCell(g_hBossProfileData, iIndex, flBossMaxTurnRate, BossProfileData_TurnRate);
 	
@@ -1210,6 +1228,23 @@ static bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 		{
 			GetSelectableBossProfileList().Erase(selectIndex);
 		}	
+	}
+	
+	if (view_as<bool>(KvGetNum(kv, "admin_only", 0)))
+	{
+		if (GetSelectableAdminBossProfileList().FindString(sProfile) == -1)
+		{
+			// Add to the selectable boss list if it isn't there already.
+			GetSelectableAdminBossProfileList().PushString(sProfile);
+		}
+	}
+	else
+	{
+		int selectIndex = GetSelectableAdminBossProfileList().FindString(sProfile);
+		if (selectIndex != -1)
+		{
+			GetSelectableAdminBossProfileList().Erase(selectIndex);
+		}
 	}
 	
 	if (view_as<bool>(KvGetNum(kv, "enable_random_selection_boxing", 0)))
@@ -1983,6 +2018,11 @@ int GetBossProfileOutlineTransparency(int iProfileIndex)
 	return GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_OutlineColorTrans);
 }
 
+bool GetBossProfileProxyWeapons(int iProfileIndex)
+{
+	return view_as<bool>(GetArrayCell(g_hBossProfileData, iProfileIndex, BossProfileData_ProxyWeapons));
+}
+
 // Code originally from FF2. Credits to the original authors Rainbolt Dash and FlaminSarge.
 stock bool GetRandomStringFromProfile(const char[] sProfile, const char[] strKeyValue, char[] buffer,int bufferlen,int index = -1,int iAttackIndex = -1)
 {
@@ -2062,6 +2102,11 @@ ArrayList GetSelectableBossProfileList()
 ArrayList GetSelectableBoxingBossProfileList()
 {
 	return g_hSelectableBoxingBossProfileList;
+}
+
+ArrayList GetSelectableAdminBossProfileList()
+{
+	return g_hSelectableAdminBossProfileList;
 }
 
 ArrayList GetSelectableRenevantBossProfileList()

@@ -903,14 +903,20 @@ stock float TF2_GetClassBaseSpeed(TFClassType class)
 	return 0.0;
 }
 
-stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att)
+stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att, bool bDisableCrits = false)
 {
 	Handle hItem = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
 	TF2Items_SetClassname(hItem, classname);
 	TF2Items_SetItemIndex(hItem, index);
 	TF2Items_SetLevel(hItem, level);
 	TF2Items_SetQuality(hItem, quality);
-	
+
+	if (bDisableCrits)
+	{
+		if (att[0]) Format(att, PLATFORM_MAX_PATH, "%s ; 28 ; 0.0", att);
+		else FormatEx(att, PLATFORM_MAX_PATH, "28 ; 0.0");
+	}
+
 	// Set attributes.
 	char atts[32][32];
 	int count = ExplodeString(att, " ; ", atts, 32, 32);
