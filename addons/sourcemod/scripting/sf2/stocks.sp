@@ -913,26 +913,48 @@ stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality,
 
 	if (bDisableCrits)
 	{
-		if (att[0]) Format(att, PLATFORM_MAX_PATH, "%s ; 28 ; 0.0", att);
-		else FormatEx(att, PLATFORM_MAX_PATH, "28 ; 0.0");
-	}
-
-	// Set attributes.
-	char atts[32][32];
-	int count = ExplodeString(att, " ; ", atts, 32, 32);
-	if (count > 1)
-	{
-		TF2Items_SetNumAttributes(hItem, count / 2);
-		int i2 = 0;
-		for (int i = 0; i < count; i+= 2)
+		// Set attributes.
+		char atts[32][32];
+		int count = ExplodeString(att, " ; ", atts, 32, 32);
+		if (count > 1)
 		{
-			TF2Items_SetAttribute(hItem, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
-			i2++;
+			TF2Items_SetNumAttributes(hItem, count / 2);
+			int i2 = 0;
+			for (int i = 0; i < count + 2; i+= 2)
+			{
+				if (i == count)
+				{
+					TF2Items_SetAttribute(hItem, i2, 28, 0.0);
+				}
+				else TF2Items_SetAttribute(hItem, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
+				i2++;
+			}
+		}
+		else
+		{
+			TF2Items_SetNumAttributes(hItem, 1);
+			TF2Items_SetAttribute(hItem, 0, 28, 0.0);
 		}
 	}
 	else
 	{
-		TF2Items_SetNumAttributes(hItem, 0);
+		// Set attributes.
+		char atts[32][32];
+		int count = ExplodeString(att, " ; ", atts, 32, 32);
+		if (count > 1)
+		{
+			TF2Items_SetNumAttributes(hItem, count / 2);
+			int i2 = 0;
+			for (int i = 0; i < count; i+= 2)
+			{
+				TF2Items_SetAttribute(hItem, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
+				i2++;
+			}
+		}
+		else
+		{
+			TF2Items_SetNumAttributes(hItem, 0);
+		}	
 	}
 	
 	return hItem;

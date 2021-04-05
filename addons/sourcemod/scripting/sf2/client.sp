@@ -7066,7 +7066,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	if (timer != g_hPlayerPostWeaponsTimer[client]) return;
 	
 	g_bPlayerHasRegenerationItem[client] = false;
-	Handle hItem = INVALID_HANDLE;
 
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 0) 
@@ -7252,10 +7251,10 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		
 		if (g_hRestrictedWeaponsConfig != INVALID_HANDLE)
 		{
-			hItem = INVALID_HANDLE;
 			int iWeapon = INVALID_ENT_REFERENCE;
 			for (int iSlot = 0; iSlot <= 5; iSlot++)
 			{
+				Handle hItem;
 				iWeapon = GetPlayerWeaponSlot(client, iSlot);
 				
 				if (IsValidEdict(iWeapon))
@@ -7334,9 +7333,9 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 							g_bPlayerHasRegenerationItem[client] = IsRegenWeapon(iWeapon);
 					}
 				}
+				delete hItem;
+				hItem = null;
 			}
-			delete hItem;
-			hItem = null;
 		}
 		
 		// Fixes the Pretty Boy's Pocket Pistol glitch.
@@ -7506,9 +7505,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 	
 	TF2Attrib_SetByDefIndex(client, 109, flHealthFromPack);
-	
-	delete hItem;
-	
+
 #if defined DEBUG
 	int iWeapon = INVALID_ENT_REFERENCE;
 	
