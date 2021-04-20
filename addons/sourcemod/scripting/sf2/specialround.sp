@@ -995,6 +995,7 @@ void SpecialRoundStart()
 					ClientRemoveMusicFlag(i, MUSICF_PAGES50PERCENT);
 					ClientRemoveMusicFlag(i, MUSICF_PAGES75PERCENT);
 					g_iPlayerPageMusicMaster[i] = INVALID_ENT_REFERENCE;
+					g_iPageMusicActiveIndex[i] = -1;
 					ClientMusicStart(i, NULLSOUND, _, MUSIC_PAGE_VOLUME);
 					CreateTimer(0.1, Timer_RealismCheck, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
 					StopSound(i, MUSIC_CHAN, g_strRoundIntroMusic);

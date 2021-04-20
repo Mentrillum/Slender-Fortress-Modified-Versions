@@ -1,0 +1,242 @@
+@include "base.fgd"
+
+@BaseClass base(Targetname, Parentname, Angles) = SF2SpawnPoint
+[
+	output OnSpawn(void) : "Sent when an entity spawns at this spawnpoint. The activator is the entity that spawned."
+]
+
+@PointClass base(Targetname) = sf2_gamerules : "Proxy entity for SF2's Gamerules"
+[
+	boss(string) : "Boss" : "" : "The main boss of the map. This is set at round start."
+
+	maxplayers(integer) : "Max Players" : 8 : "Maximum amount of players per round. This is set at round start."
+
+	maxpages(integer) : "Max Pages" : 1 : "Maximum amount of pages to spawn in the round. This is set at round start."
+
+	initialtimelimit(integer) : "Time Limit (in seconds)" : 200 : "How much time the players start out with after exiting grace period. This is set at round start."
+
+	pagecollectaddtime(integer) : "Time to Add on Page Collect (in seconds)" : 30 : "How much time to add to the clock upon collecting a page. This is set at round start."
+
+	pagecollectsound(sound) : "Page Collect Sound" : "slender/slenderpagegrab.wav" : "The sound path of the sound played when collecting a page. This is set at round start."
+
+	intromusicpath(sound) : "Intro Music Path" : "slender/intro.mp3" : "The sound path to the music played during Intro phase. This is set at round start."
+
+	introfadecolor(color255) : "Intro Fade Color" : "0 0 0 255" : "The color of the fade overlayed on players during Intro phase. This is set at round start."
+
+	introfadeholdtime(float) : "Intro Fade Hold Time (in seconds)" : "9" : "The amount of time to hold the fade during Intro phase. This is set at round start."
+
+	introfadetime(float) : "Intro Fade Time (in seconds)" : "1" : "The amount of time it takes to fade out during Intro phase. This is set at round start."
+
+	escape(choices) : "Escape to Win" : 0 : "Are players required to enter an escape zone to win after collecting all pages? If not, all players will auto-escape after collecting all pages. This is set at round start." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	escapetime(integer) : "Escape Time" : 200 : "If players have to escape, how much time (in seconds) that should be given for them. This is set at round start."
+
+	stoppagemusiconescape(choices) : "Stop Page Music on Escape" : 0 : "Stops the page music when entering the Escape phase." = 
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	survive(choices) : "Survive before Escape" : 0 : "Are players required to survive before trying to escape? NOTE: If this is a Proxy Survival map (sf2_logic_proxy), this will always be Yes." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	surviveuntiltime(integer) : "Survive Until Time (in seconds)" : 30 : "If Survive before Escape, then when the round time reaches this number, survival is complete and players must escape."
+
+	infiniteflashlight(choices) : "Infinite Flashlight" : 0 : "Enable/disable infinite flashlight. This is set at round start." =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
+	]
+
+	infinitesprint(choices) : "Infinite Sprint" : 0 : "Enable/disable infinite sprint. This is set at round start." =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
+	]
+
+	infiniteblink(choices) : "Infinite Blink" : 0 : "Enable/disable infinite blink. This is set at round start." =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
+	]
+
+	bosseschaseendlessly(choices) : "Bosses Chase Endlessly" : 0 : "If enabled, bosses in the map will chase players endlessly. This is set at round start." =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
+	]
+
+	input SetTimeLimit(integer) : "Sets the maximum time of a round."
+	input SetEscapeTimeLimit(integer) : "Sets how much time players have to escape the map, if there is an escape objective."
+	input SetTime(integer) : "Sets the current round time."
+	input SetTimeToAddOnCollectPage(integer) : "Sets the time to add to the round when collecting a page."
+	input SetCollectedPages(integer) : "Sets the amount of pages collected. This will fire the OnCollectedPagesChanged output."
+	input AddCollectedPages(integer) : "Adds the amount of pages collected. This will fire the OnCollectedPagesChanged output."
+	input SubtractCollectedPages(integer) : "Subtracts the amount of pages collected. This will fire the OnCollectedPagesChanged output."
+	input EnableInfiniteFlashlight(void) : "Enable infinite flashlight."
+	input DisableInfiniteFlashlight(void) : "Disable infinite flashlight."
+	input EnableInfiniteSprint(void) : "Enable infinite sprint."
+	input DisableInfiniteSprint(void) : "Disable infinite sprint." 
+	input EnableInfiniteBlink(void) : "Enable infinite blink."
+	input DisableInfiniteBlink(void) : "Disable infinite blink." 
+	input SetBossOverride(string) : "Sets the boss override."
+	input ClearBossOverride(void) : "Clears the boss override."
+	input SetDifficulty(integer) : "Sets the difficulty of the game, from Normal (1) to Apollyon (5). This will fire the OnDifficultyChanged output."
+	input EnableBossesChaseEndlessly(void) : "Enable bosses chasing players endlessly."
+	input DisableBossesChaseEndlessly(void) : "Disable bosses chasing players endlessly."
+	input EndGracePeriod(void) : "Ends the grace period of the round. This will fire the OnGracePeriodEnded output."
+
+	output OnStateEnterWaiting(void) : "Sent when entering the Waiting round state."
+	output OnStateExitWaiting(void) : "Sent when exiting the Waiting round state."
+	output OnStateEnterIntro(void) : "Sent when entering the Intro round state."
+	output OnStateExitIntro(void) : "Sent when exiting the Intro round state."
+	output OnStateEnterActive(void) : "Sent when entering the Active round state."
+	output OnStateExitActive(void) : "Sent when exiting the Active round state."
+	output OnStateEnterEscape(void) : "Sent when entering the Escape round state."
+	output OnStateExitEscape(void) : "Sent when exiting the Escape round state."
+	output OnStateEnterOutro(void) : "Sent when entering the Outro round state."
+	output OnStateExitOutro(void) : "Sent when exiting the Outro round state."
+	output OnGracePeriodEnded(void) : "Sent when the round's grace period ends."
+	output OnDifficultyChanged(integer) : "Sent when the game's difficulty is changed. The difficulty number is passed down as an integer."
+	output OnCollectedPagesChanged(integer) : "Sent when the collected page count changes. The page count is passed down as an integer."
+	output OnSurvivalComplete(void) : "Sent when round time reaches Survive Until Time during Escape phase."
+]
+
+@PointClass base(game_text) iconsprite("editor/game_text.vmt") = sf2_game_text : "A game_text entity specialized for SF2."
+[
+]
+
+@SolidClass base(trigger_multiple) = sf2_trigger_escape : "A trigger brush that when touched by a RED player during Escape phase, will let that player escape the map."
+[
+]
+
+@PointClass base(SF2SpawnPoint, EnableDisable) studio("models/editor/playerstart.mdl") = sf2_info_player_escapespawn : "A spawnpoint for RED players that escape the map."
+[
+]
+
+@SolidClass base(trigger_multiple) = sf2_trigger_pvp : "A trigger brush that when touched by a player will enter PvP mode."
+[
+]
+
+@PointClass base(SF2SpawnPoint, EnableDisable) studio("models/editor/playerstart.mdl") = sf2_info_player_pvpspawn : "A spawnpoint for players in PvP."
+[
+]
+
+@PointClass base(SF2SpawnPoint, EnableDisable) studio("models/editor/playerstart.mdl") = sf2_info_player_proxyspawn : "A spawnpoint for proxies in the RED play area."
+[
+	ignorevisibility(choices) : "Ignore Visibility" : 0 : "If visibility is ignored, then proxies can spawn here regardless if a RED player has LOS or not." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	input EnableIgnoreVisibility(void) : "Starts ignoring visibility checks."
+	input DisableIgnoreVisibility(void) : "Stops ignoring visibility checks."
+]
+
+@PointClass base(Targetname) = sf2_logic_proxy : "Proxy entity for SF2 game type Proxy Survival"
+[
+]
+
+@PointClass base(Targetname) = sf2_logic_raid : "Proxy entity for SF2 game type Raid"
+[
+]
+
+@PointClass base(SF2SpawnPoint) studio("models/arrival/slenderman.mdl") = sf2_info_boss_spawn : "An entity that can spawn a boss with the matching profile at its location."
+[
+	profile(string) : "Boss Profile" : "" : "The name of the boss profile to look for."
+	max(integer) : "Max Bosses" : 1 : "Maximum amount of bosses to match when spawning."
+
+	input Spawn(void) : "Finds a boss with the matching profile name and spawns it here. If successful, this will call the OnSpawn output for each boss spawned."
+	input SetBossProfile(string) : "Sets the boss profile name to look for among active bosses."
+]
+
+@PointClass base(Targetname, Parentname, Angles) studioprop() = sf2_info_page_spawn : "The spawn point of a page."
+[
+	model(studio) : "Model" : "models/slender/sheet.mdl" : "The world model of the page entity that spawns here."
+	skin(integer) : "Skin" : -1 : "Set this to a number other than 0 to use that skin instead of the default. Setting this to -1 will make the game iterate the skins incrementally for each page entity created."
+	modelscale(float) : "Model Scale" : "1.0" : "A multiplier for the size of the model."
+	group(string) : "Group" : "" : "The group this spawn point belongs to. When the game chooses page spawn locations, if a group is chosen, then only one spawn point in that group will be used and the rest will be ignored."
+	animation(string) : "Animation" : "" : "The animation to play for the page that spawns here."
+
+	renderamt(integer) : "FX Amount (0 - 255)" : 255 : "The FX amount is used by the selected Render Mode."
+	rendercolor(color255) : "FX Color (R G B)" : "255 255 255" : "The FX color is used by the selected Render Mode."
+	rendermode(choices) : "Render Mode" : 0 : "Used to set a non-standard rendering mode on this entity. See also 'FX Amount' and 'FX Color'." =
+	[
+		0: "Normal"
+		1: "Color"
+		2: "Texture"
+		3: "Glow"
+		4: "Solid"
+		5: "Additive"
+		7: "Additive Fractional Frame"
+		9: "World Space Glow"
+	]
+]
+
+@PointClass base(Targetname) = sf2_info_page_music : "Entity that contains array of ranges and sounds to play during page collection."
+[
+	range1(string) : "Range 1" : "1,2" : "Specifies the collected page count range in which to play music. The range can be in one of two formats: <min>,<max> or just <num>. <min>, <max>, and <num> are integers, <min> specifies minimum collected page count while <max> specifies the maximum. Use <num> to play music only when collected page count is equal. Range 2-16 follow the same format. If you need more page ranges, create another sf2_info_page_music entity."
+	music1(sound) : "Range 1 Music" : "slender/newambience_1.wav" : "Music to play when collected page count is within Range 1."
+	range2(string) : "Range 2" : "3,4" : ""
+	music2(sound) : "Range 2 Music" : "slender/newambience_2.wav" : ""
+	range3(string) : "Range 3" : "5,6" : ""
+	music3(sound) : "Range 3 Music" : "slender/newambience_3.wav" : ""
+	range4(string) : "Range 4" : "7,8" : ""
+	music4(sound) : "Range 4 Music" : "slender/newambience_4.wav" : ""
+	range5(string) : "Range 5" : "" : ""
+	music5(sound) : "Range 5 Music" : "" : ""
+	range6(string) : "Range 6" : "" : ""
+	music6(sound) : "Range 6 Music" : "" : ""
+	range7(string) : "Range 7" : "" : ""
+	music7(sound) : "Range 7 Music" : "" : ""
+	range8(string) : "Range 8" : "" : ""
+	music8(sound) : "Range 8 Music" : "" : ""
+	range9(string) : "Range 9" : "" : ""
+	music9(sound) : "Range 9 Music" : "" : ""
+	range10(string) : "Range 10" : "" : ""
+	music10(sound) : "Range 10 Music" : "" : ""
+	range11(string) : "Range 11" : "" : ""
+	music11(sound) : "Range 11 Music" : "" : ""
+	range12(string) : "Range 12" : "" : ""
+	music12(sound) : "Range 12 Music" : "" : ""
+	range13(string) : "Range 13" : "" : ""
+	music13(sound) : "Range 13 Music" : "" : ""
+	range14(string) : "Range 14" : "" : ""
+	music14(sound) : "Range 14 Music" : "" : ""
+	range15(string) : "Range 15" : "" : ""
+	music15(sound) : "Range 15 Music" : "" : ""
+	range16(string) : "Range 16" : "" : ""
+	music16(sound) : "Range 16 Music" : "" : ""
+	layered(choices) : "Layered Tracks" : 0 : "(NOT IMPLEMENTED) If layered, then when the page music changes, tracks will transition fade in/out and remain synced. Recommended for page music tracks that have the same length." =
+	[
+		0: "No"
+		1: "Yes"
+	]
+]
+
+@PointClass base(Targetname) = sf2_logic_boxing : "Proxy entity for SF2 game type Boxing"
+[
+]
+
+@PointClass base(Targetname) = sf2_logic_arena : "Proxy entity for SF2 game type Arena"
+[
+	finaletime(integer) : "Finale Time (in seconds)" : 60 : "Waves will stop advancing at this many seconds before the Escape Time runs out. This should not be greater than the Escape Time set by sf2_gamerules."
+
+	input SetWave(integer) : "Sets the current wave. This will call the OnWaveTriggered output."
+	input SetWaveResetTimer(integer) : "Sets the current wave and resets the timer. This will call the OnWaveTriggered output."
+	input RequestWave(void) : "Requests the current wave number. This will call the OnRequestWave output."
+	output OnRequestWave(integer) : "Sent when the RequestWave input is called. The current wave number is passed down as an integer."
+	output OnWaveTriggered(integer) : "Sent when the wave changes. The current wave number is passed down as an integer."
+]
+
+@PointClass base(Targetname) = sf2_logic_slaughter : "Proxy entity for SF2 game type Slaughter Run"
+[
+]

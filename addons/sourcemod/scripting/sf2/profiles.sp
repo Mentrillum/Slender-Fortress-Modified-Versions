@@ -2114,6 +2114,15 @@ ArrayList GetSelectableRenevantBossProfileList()
 	return g_hSelectableRenevantBossProfileList;
 }
 
+bool GetRandomRenevantBossProfile(char[] sBuffer, int iBufferLen)
+{
+	if (g_hSelectableRenevantBossProfileList.Length == 0)
+		return false;
+
+	GetArrayString(g_hSelectableRenevantBossProfileList, GetRandomInt(0, g_hSelectableRenevantBossProfileList.Length - 1), sBuffer, iBufferLen);
+	return true;
+}
+
 /**
  * Returns an array of boss that didn't play in game yet.
  */

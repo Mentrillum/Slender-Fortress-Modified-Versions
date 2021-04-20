@@ -584,7 +584,7 @@ public void PvP_OnTriggerStartTouch(int trigger,int iOther)
 	char sName[64];
 	GetEntPropString(trigger, Prop_Data, "m_iName", sName, sizeof(sName));
 	
-	if (StrContains(sName, "sf2_pvp_trigger", false) == 0)
+	if (StrContains(sName, "sf2_pvp_trigger", false) == 0 || SF2TriggerPvPEntity(trigger).IsValid())
 	{
 		if (IsValidClient(iOther) && IsPlayerAlive(iOther) && !IsClientInGhostMode(iOther))
 		{
@@ -792,50 +792,60 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 	if (timer != g_hPlayerPvPRespawnTimer[iClient]) return;
 	g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
 	
-	Handle hSpawnPointList = CreateArray();
-	
+	ArrayList hSpawnPointList = new ArrayList();
+	ArrayList hClearSpawnPointList = new ArrayList();
+
 	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
+
 	{
-		char sName[32];
-		GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-		if (!StrContains(sName, "sf2_pvp_spawnpoint", false))
-		{
-			PushArrayCell(hSpawnPointList, ent);
-		}
-	}
-	
-	float flMins[3], flMaxs[3];
-	GetEntPropVector(iClient, Prop_Send, "m_vecMins", flMins);
-	GetEntPropVector(iClient, Prop_Send, "m_vecMaxs", flMaxs);
-	
-	Handle hClearSpawnPointList = CloneArray(hSpawnPointList);
-	for (int i = 0; i < GetArraySize(hSpawnPointList); i++)
-	{
-		int iEnt = GetArrayCell(hSpawnPointList, i);
-		
 		float flMyPos[3];
-		GetEntPropVector(iEnt, Prop_Data, "m_vecAbsOrigin", flMyPos);
-		
-		if (IsSpaceOccupiedPlayer(flMyPos, flMins, flMaxs, iClient))
+		float flMins[3], flMaxs[3];
+		GetEntPropVector(iClient, Prop_Send, "m_vecMins", flMins);
+		GetEntPropVector(iClient, Prop_Send, "m_vecMaxs", flMaxs);
+
+		char sName[32];
+
+		ent = -1;
+		while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 		{
-			int iIndex = FindValueInArray(hClearSpawnPointList, iEnt);
-			if (iIndex != -1)
-			{
-				RemoveFromArray(hClearSpawnPointList, iIndex);
-			}
+			if (StrContains(sName, "sf2_pvp_spawnpoint", false))
+				continue;
+
+			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
+			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flMyPos);
+
+			hSpawnPointList.Push(ent);
+			if (!IsSpaceOccupiedPlayer(flMyPos, flMins, flMaxs, iClient))
+				hClearSpawnPointList.Push(ent);
+		}
+
+		ent = -1;
+		while ((ent = FindEntityByClassname(ent, "sf2_info_player_pvpspawn")) != -1)
+		{
+			SF2PlayerPvPSpawnEntity spawnPoint = SF2PlayerPvPSpawnEntity(ent);
+			if (!spawnPoint.IsValid() || !spawnPoint.Enabled)
+				continue;
+
+			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flMyPos);
+
+			hSpawnPointList.Push(ent);
+			if (!IsSpaceOccupiedPlayer(flMyPos, flMins, flMaxs, iClient))
+				hClearSpawnPointList.Push(ent);
 		}
 	}
 	
 	int iNum;
-	if ((iNum = GetArraySize(hClearSpawnPointList)) > 0)
+	if ((iNum = hClearSpawnPointList.Length) > 0)
 	{
-		ent = GetArrayCell(hClearSpawnPointList, GetRandomInt(0, iNum - 1));
+		ent = hClearSpawnPointList.Get(GetRandomInt(0, iNum - 1));
 	}
-	else if ((iNum = GetArraySize(hSpawnPointList)) > 0)
+	else if ((iNum = hSpawnPointList.Length) > 0)
 	{
-		ent = GetArrayCell(hSpawnPointList, GetRandomInt(0, iNum - 1));
+		ent = hSpawnPointList.Get(GetRandomInt(0, iNum - 1));
 	}
+
+	delete hSpawnPointList;
+	delete hClearSpawnPointList;
 	
 	if (iNum > 0)
 	{
@@ -846,10 +856,13 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		
 		EmitAmbientSound(SF2_PVP_SPAWN_SOUND, flPos, _, SNDLEVEL_NORMAL, _, 1.0);
 		TF2_AddCondition(iClient, TFCond_UberchargedCanteen, 1.5);
+
+		SF2PlayerPvPSpawnEntity spawnPoint = SF2PlayerPvPSpawnEntity(ent);
+		if (spawnPoint.IsValid())
+		{
+			spawnPoint.FireOutputNoVariant("OnSpawn", iClient, ent);
+		}
 	}
-	
-	delete hSpawnPointList;
-	delete hClearSpawnPointList;
 }
 
 public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
