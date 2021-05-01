@@ -193,6 +193,14 @@ bool SDK_PointIsWithin(int iFunc, float flPos[3])
 //	ENTITY & ENTITY NETWORK FUNCTIONS
 //	==========================================================
 
+stock int EnsureEntRef(int entIndex)
+{
+	if (entIndex & (1 << 31))
+		return entIndex;
+	
+	return IsValidEntity(entIndex) ? EntIndexToEntRef(entIndex) : INVALID_ENT_REFERENCE;
+}
+
 stock void Network_HookEntity(int iEnt)
 {
 	Network_ResetEntity(iEnt);

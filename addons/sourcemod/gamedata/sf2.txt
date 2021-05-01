@@ -60,6 +60,11 @@
 				"linux"    	"140"
 				"windows"       "139"
 			}
+			"CBaseEntity::KeyValue"
+			{
+				"linux"		"30"
+				"windows"	"31"
+			}
 			"CBaseAnimating::StudioFrameAdvance"
 			{
 				"linux"		"194"
@@ -296,6 +301,11 @@
 				"linux"		"34"
 				"windows"	"34"
 			}
+			"CBaseTrigger::PassesTriggerFilters"
+			{
+				"linux"		"201"
+				"windows"	"200"
+			}
 		}
 		"Signatures"
 		{
@@ -344,6 +354,14 @@
 				"library"	 "server"
 				"linux"		"@_ZN12CBaseTrigger13PointIsWithinERK6Vector"
 				"windows" 	"\x53\x8B\xDC\x83\xEC\x2A\x83\xE4\x2A\x83\xC4\x2A\x55\x8B\x6B\x2A\x89\x6C\x2A\x2A\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x8B\x43\x2A\x56\x50\x8B\xF1"
+			}
+
+			// "CreateEntityByName( %s, %d ) - CreateEdict failed."
+			"CreateEntityByName"
+			{
+				"library"	"server"
+				"linux"		"@_Z18CreateEntityByNamePKci"
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x0C\x83\xFE\xFF\x74\x24\x8B\x0D"
 			}
 		}
 	}

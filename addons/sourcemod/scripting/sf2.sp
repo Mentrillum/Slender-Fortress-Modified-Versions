@@ -168,6 +168,8 @@ public Plugin myinfo =
 #define SNATCHER_APOLLYON_2 "slender/snatcher/apollyon2.wav"
 #define SNATCHER_APOLLYON_3 "slender/snatcher/apollyon3.wav"
 
+#define RENEVANT_MAXWAVES 5
+
 #define NULLSOUND "misc/null.wav"
 
 #define NINETYSMUSIC "slender/sf2modified_runninginthe90s_v2.wav"
@@ -176,14 +178,6 @@ public Plugin myinfo =
 #define TRAP_DEPLOY "slender/modified_traps/beartrap/trap_deploy.mp3"
 #define TRAP_CLOSE "slender/modified_traps/beartrap/trap_close.mp3"
 #define TRAP_MODEL "models/mentrillum/traps/beartrap.mdl"
-
-#define DUCK_COLLECT1 "ambient/bumper_car_quack1.wav"
-#define DUCK_COLLECT2 "ambient/bumper_car_quack2.wav"
-#define DUCK_COLLECT3 "ambient/bumper_car_quack3.wav"
-#define DUCK_COLLECT4 "ambient/bumper_car_quack4.wav"
-#define DUCK_COLLECT5 "ambient/bumper_car_quack5.wav"
-#define DUCK_COLLECT6 "ambient/bumper_car_quack9.wav"
-#define DUCK_COLLECT7 "ambient/bumper_car_quack11.wav"
 
 #define LASER_MODEL "sprites/laser.vmt"
 
@@ -223,6 +217,17 @@ char g_strSoundNightmareMode[][] =
  "ambient/halloween/windgust_08.wav"
 };
 
+static const char g_sPageCollectDuckSounds[][] = 
+{
+	"ambient/bumper_car_quack1.wav",
+	"ambient/bumper_car_quack2.wav",
+	"ambient/bumper_car_quack3.wav",
+	"ambient/bumper_car_quack4.wav",
+	"ambient/bumper_car_quack5.wav",
+	"ambient/bumper_car_quack9.wav",
+	"ambient/bumper_car_quack11.wav"
+};
+
 //Update
 bool g_bSeeUpdateMenu[MAXPLAYERS+1] = false;
 //Command
@@ -247,7 +252,8 @@ KeyValues g_hConfig;
 Handle g_hRestrictedWeaponsConfig;
 Handle g_hSpecialRoundsConfig;
 
-Handle g_hPageMusicRanges;
+ArrayList g_hPageMusicRanges;
+int g_iPageMusicActiveIndex[MAXPLAYERS + 1] = { -1, ... };
 
 int g_iSlenderModel[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_iSlenderPoseEnt[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
@@ -338,6 +344,7 @@ int g_iSlenderBoxingBossKilled = 0;
 bool g_bSlenderBoxingBossIsKilled[MAX_BOSSES] = false;
 
 int g_iRenevantWaveNumber = 0;
+int g_iRenevantFinaleTime = 0;
 bool g_bRenevantMultiEffect = false;
 bool g_bRenevantBeaconEffect = false;
 
@@ -588,6 +595,7 @@ float g_flPlayerProxyControlRate[MAXPLAYERS + 1];
 Handle g_flPlayerProxyVoiceTimer[MAXPLAYERS + 1];
 int g_iPlayerProxyAskMaster[MAXPLAYERS + 1] = { -1, ... };
 float g_iPlayerProxyAskPosition[MAXPLAYERS + 1][3];
+int g_iPlayerProxyAskSpawnPoint[MAXPLAYERS + 1] = { -1, ... };
 
 int g_iPlayerDesiredFOV[MAXPLAYERS + 1];
 
@@ -662,11 +670,11 @@ static int g_iRoundActiveCount = 0;
 int g_iRoundTime = 0;
 int g_iSpecialRoundTime = 0;
 static int g_iTimeEscape = 0;
-static int g_iRoundTimeLimit = 0;
-static int g_iRoundEscapeTimeLimit = 0;
-static int g_iRenevantTimer = 0;
-static int g_iRoundTimeGainFromPage = 0;
-static bool g_bRoundHasEscapeObjective = false;
+int g_iRoundTimeLimit = 0;
+int g_iRoundEscapeTimeLimit = 0;
+int g_iRoundTimeGainFromPage = 0;
+bool g_bRoundHasEscapeObjective = false;
+bool g_bRoundStopPageMusicOnEscape = false;
 
 static int g_iRoundEscapePointEntity = INVALID_ENT_REFERENCE;
 
@@ -884,6 +892,7 @@ Handle g_hTimerFail;
 #include "sf2/nav.sp"
 #include "sf2/effects.sp"
 #include "sf2/playergroups.sp"
+#include "sf2/entities.sp"
 #include "sf2/menus.sp"
 #include "sf2/tutorial.sp"
 #include "sf2/npc.sp"
@@ -896,6 +905,8 @@ Handle g_hTimerFail;
 
 #define SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND "ui/item_acquired.wav"
 
+SF2GamerulesEntity g_GamerulesEntity = view_as<SF2GamerulesEntity>(-1);
+SF2LogicRenevantEntity g_RenevantLogicEntity = view_as<SF2LogicRenevantEntity>(-1);
 
 //	==========================================================
 //	GENERAL PLUGIN HOOK FUNCTIONS
@@ -1074,7 +1085,7 @@ public void OnPluginStart()
 	g_offsCollisionGroup = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
 	if (g_offsCollisionGroup == -1)  LogError("Couldn't find CBaseEntity offset for m_CollisionGroup!");
 	
-	g_hPageMusicRanges = CreateArray(3);
+	g_hPageMusicRanges = new ArrayList(3);
 	
 	// Register console variables.
 	g_cvVersion = CreateConVar("sf2modified_version", PLUGIN_VERSION, "The current version of Slender Fortress. DO NOT TOUCH!", FCVAR_SPONLY | FCVAR_NOTIFY | FCVAR_DONTRECORD);
@@ -1315,6 +1326,8 @@ public void OnPluginStart()
 	PvP_Initialize();
 	
 	Nav_Initialize();
+
+	SF2MapEntity_Initialize();
 	
 	// @TODO: When cvars are finalized, set this to true.
 	AutoExecConfig(false);
@@ -1363,7 +1376,7 @@ public void OnLibraryRemoved(const char[] name)
 static void SDK_Init()
 {
 	// Check SDKHooks gamedata.
-	Handle hConfig = LoadGameConfigFile("sdkhooks.games");
+	GameData hConfig = LoadGameConfigFile("sdkhooks.games");
 	if (hConfig == INVALID_HANDLE) SetFailState("Couldn't find SDKHooks gamedata!");
 	
 	StartPrepSDKCall(SDKCall_Entity);
@@ -1563,7 +1576,18 @@ static void SDK_Init()
 	//Initialize tutorial detours & calls
 	//Tutorial_SetupSDK(hConfig);
 	
+	SF2MapEntity_InitGameData(hConfig);
+
 	delete hConfig;
+}
+
+#pragma dynamic 2097152
+public Action OnLevelInit(const char[] mapName, char mapEntities[2097152])
+{
+	// Since OnLevelInit is called before OnConfigsExecuted() we shouldn't check g_bEnabled
+	SF2MapEntity_OnLevelInit(mapName);
+
+	return Plugin_Continue;
 }
 
 public void OnMapStart()
@@ -1578,6 +1602,8 @@ public void OnMapStart()
 	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
 	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
 	PrecacheModel(LASER_MODEL, true);
+
+	SF2MapEntity_OnMapStart();
 }
 
 public void OnConfigsExecuted()
@@ -1826,13 +1852,10 @@ static void PrecacheStuff()
 	PrecacheSound2(TRAP_CLOSE);
 	PrecacheSound2(TRAP_DEPLOY);
 
-	PrecacheSound(DUCK_COLLECT1);
-	PrecacheSound(DUCK_COLLECT2);
-	PrecacheSound(DUCK_COLLECT3);
-	PrecacheSound(DUCK_COLLECT4);
-	PrecacheSound(DUCK_COLLECT5);
-	PrecacheSound(DUCK_COLLECT6);
-	PrecacheSound(DUCK_COLLECT7);
+	for (int i = 0; i < sizeof(g_sPageCollectDuckSounds); i++)
+	{
+		PrecacheSound(g_sPageCollectDuckSounds[i]);
+	}
 
 	PrecacheSound2(PROXY_RAGE_MODE_SOUND);
 	
@@ -2278,8 +2301,9 @@ public Action Timer_GlobalGameFrame(Handle timer)
 				for (int iNum = 0; iNum < iSpawnNum && iNum < iAvailableProxies; iNum++)
 				{
 					int iClient = GetArrayCell(hProxyCandidates, iNum);
-					
-					if(!SpawnProxy(iClient,iBossIndex,flDestinationPos))
+					int iSpawnPoint = -1;
+
+					if (!SpawnProxy(iClient, iBossIndex, flDestinationPos, iSpawnPoint))
 					{
 #if defined DEBUG
 						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not find any areas to place proxies (spawned %d)!", iBossIndex, iNum);
@@ -2290,11 +2314,11 @@ public Action Timer_GlobalGameFrame(Handle timer)
 					bCooldown = true;
 					if (!GetConVarBool(g_cvPlayerProxyAsk))
 					{
-						ClientStartProxyForce(iClient, NPCGetUniqueID(iBossIndex), flDestinationPos);
+						ClientStartProxyForce(iClient, NPCGetUniqueID(iBossIndex), flDestinationPos, iSpawnPoint);
 					}
 					else
 					{
-						DisplayProxyAskMenu(iClient, NPCGetUniqueID(iBossIndex), flDestinationPos);
+						DisplayProxyAskMenu(iClient, NPCGetUniqueID(iBossIndex), flDestinationPos, iSpawnPoint);
 					}
 				}
 				// Set the cooldown time!
@@ -3102,15 +3126,15 @@ public Action Command_ForceProxy(int iClient,int args)
 		if (g_bPlayerProxy[iTarget]) continue; //Exclude any active proxies
 
 		float flintPos[3];
-		
-		if (!SpawnProxy(iClient,iBossIndex,flintPos)) 
+		int iSpawnPoint = -1;
+
+		if (!SpawnProxy(iClient, iBossIndex, flintPos, iSpawnPoint)) 
 		{
 			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", iClient, sName);
 			continue;
 		}
 		
-		ClientEnableProxy(iTarget, iBossIndex);
-		TeleportEntity(iTarget, flintPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+		ClientEnableProxy(iTarget, iBossIndex, flintPos, iSpawnPoint);
 	}
 	
 	return Plugin_Handled;
@@ -4023,6 +4047,9 @@ public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Han
 
 public void OnEntityDestroyed(int ent)
 {
+	// Since OnLevelInit is called before OnConfigsExecuted() we shouldn't check g_bEnabled
+	SF2MapEntity_OnEntityDestroyed(ent);
+
 	if (!g_bEnabled) return;
 
 	if (!IsValidEntity(ent) || ent <= 0) return;
@@ -4544,50 +4571,21 @@ static void CollectPage(int page,int activator)
 
 	SetPageCount(g_iPageCount + 1);
 	g_iPlayerPageCount[activator] += 1;
-	strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), PAGE_GRABSOUND);
-	
-	if (!SF_SpecialRound(SPECIALROUND_DUCKS))
-	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
-		{
-			char sName[64];
-			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-			
-			if (strcmp(sName, "sf2_page_sound", false) == 0)
-			{
-				char sPagePath[PLATFORM_MAX_PATH];
-				GetEntPropString(ent, Prop_Data, "m_iszSound", sPagePath, sizeof(sPagePath));
 
-				if (sPagePath[0] == '\0')
-				{
-					LogError("Found sf2_page_sound entity, but it has no sound path specified! Default page sound will be used instead.");
-				}
-				else
-				{
-					strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), sPagePath);
-				}
-				
-				break;
-			}
-		}
+	// Play page collect sound
+	char sPageCollectSound[PLATFORM_MAX_PATH];
+	if (SF_SpecialRound(SPECIALROUND_DUCKS))
+	{
+		// Ducks!
+		int iRandomSound = GetRandomInt(0, sizeof(g_sPageCollectDuckSounds));
+		strcopy(sPageCollectSound, sizeof(sPageCollectSound), g_sPageCollectDuckSounds[iRandomSound]);
 	}
 	else
 	{
-		int iRandomSound = GetRandomInt(0, 6);
-		switch (iRandomSound)
-		{
-			case 0: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT1);
-			case 1: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT2);
-			case 2: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT3);
-			case 3: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT4);
-			case 4: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT5);
-			case 5: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT6);
-			case 6: strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), DUCK_COLLECT7);
-		}
+		strcopy(sPageCollectSound, sizeof(sPageCollectSound), g_strPageCollectSound);
 	}
 
-	EmitSoundToAll(g_strPageCollectSound, activator, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+	EmitSoundToAll(sPageCollectSound, activator, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 
 	Call_StartForward(fOnClientCollectPage);
 	Call_PushCell(page);
@@ -5353,6 +5351,37 @@ SF2RoundState GetRoundState()
 	return g_iRoundState;
 }
 
+void SetRoundTime(int iTime)
+{
+	int iOldRoundTime = g_iRoundTime;
+	if (iTime == iOldRoundTime)
+		return;
+
+	g_iRoundTime = iTime;
+
+	switch (GetRoundState())
+	{
+		case SF2RoundState_Escape:
+		{
+			if (SF_IsSurvivalMap() && iTime <= g_iTimeEscape && iOldRoundTime > g_iTimeEscape && g_GamerulesEntity.IsValid())
+			{
+				g_GamerulesEntity.FireOutputNoVariant("OnSurvivalComplete", -1, g_GamerulesEntity.EntRef);
+			}
+		}
+	}
+}
+
+void SetGracePeriodState(bool state)
+{
+	bool bOldGraceState = g_bRoundGrace;
+	g_bRoundGrace = state;
+
+	if (!g_bRoundGrace && bOldGraceState) 
+	{
+		SF2MapEntity_OnGracePeriodEnd();
+	}
+}
+
 void SetRoundState(SF2RoundState iRoundState)
 {
 	if (g_iRoundState == iRoundState) return;
@@ -5363,7 +5392,7 @@ void SetRoundState(SF2RoundState iRoundState)
 	g_iRoundState = iRoundState;
 	
 	//Tutorial_OnRoundStateChange(iOldRoundState, g_iRoundState);
-	
+
 	// Cleanup from old roundstate if needed.
 	switch (iOldRoundState)
 	{
@@ -5377,14 +5406,12 @@ void SetRoundState(SF2RoundState iRoundState)
 		}
 		case SF2RoundState_Active:
 		{
-			g_bRoundGrace = false;
+			SetGracePeriodState(false);
 			g_hRoundGraceTimer = INVALID_HANDLE;
 			g_hRoundTimer = INVALID_HANDLE;
-			g_hRenevantWaveTimer = INVALID_HANDLE;
 			g_bPlayersAreCritted = false;
 			g_bPlayersAreMiniCritted = false;
-			g_bRenevantMultiEffect = false;
-			g_bRenevantBeaconEffect = false;
+			
 			bool bNightVision = (GetConVarBool(g_cvNightvisionEnabled) || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
 			if (bNightVision)
 			{
@@ -5417,16 +5444,12 @@ void SetRoundState(SF2RoundState iRoundState)
 		}
 		case SF2RoundState_Intro:
 		{
-			g_bRoundGrace = true;
+			SetGracePeriodState(true);
 			g_hRoundIntroTimer = INVALID_HANDLE;
 			g_iRoundIntroText = 0;
 			g_bRoundIntroTextDefault = false;
 			g_bProxySurvivalRageMode = false;
-			if (SF_IsBoxingMap())
-			{
-				g_iSlenderBoxingBossCount = 0;
-				g_iSlenderBoxingBossKilled = 0;
-			}
+
 			g_hRoundIntroTextTimer = CreateTimer(0.0, Timer_IntroTextSequence);
 			TriggerTimer(g_hRoundIntroTextTimer);
 			
@@ -5450,7 +5473,7 @@ void SetRoundState(SF2RoundState iRoundState)
 		case SF2RoundState_Active:
 		{
 			// Start the grace period timer.
-			g_bRoundGrace = true;
+			SetGracePeriodState(true);
 			g_hRoundGraceTimer = CreateTimer(GetConVarFloat(g_cvGraceTime), Timer_RoundGrace);
 			
 			CreateTimer(2.0, Timer_RoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -5478,7 +5501,7 @@ void SetRoundState(SF2RoundState iRoundState)
 			// Initialize the escape timer, if needed.
 			if (g_iRoundEscapeTimeLimit > 0)
 			{
-				g_iRoundTime = g_iRoundEscapeTimeLimit;
+				SetRoundTime(g_iRoundEscapeTimeLimit);
 				g_hRoundTimer = CreateTimer(1.0, Timer_RoundTimeEscape, _, TIMER_REPEAT);
 			}
 			else
@@ -5519,8 +5542,13 @@ void SetRoundState(SF2RoundState iRoundState)
 					}
 				}
 			}
+
 			if (SF_IsBoxingMap())
 			{
+				g_cvDifficulty.IntValue = Difficulty_Normal;
+				CPrintToChatAll("%t", "SF2 Boxing Initiate");
+				CreateTimer(0.2, Timer_CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
+
 				char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
 				for (int iBoss = 0; iBoss < MAX_BOSSES; iBoss++)
 				{
@@ -5529,6 +5557,10 @@ void SetRoundState(SF2RoundState iRoundState)
 					Npc.GetProfile(sBuffer, sizeof(sBuffer));
 					if (view_as<bool>(GetProfileNum(sBuffer,"boxing_boss",0))) g_iSlenderBoxingBossCount += 1;
 				}
+			}
+			else if (SF_IsRenevantMap())
+			{
+				Renevant_SetWave(1, true);
 			}
 		}
 		case SF2RoundState_Outro:
@@ -5572,7 +5604,9 @@ void SetRoundState(SF2RoundState iRoundState)
 			}
 		}
 	}
-	
+
+	SF2MapEntity_OnRoundStateChanged(iRoundState, iOldRoundState);
+
 	Call_StartForward(fOnRoundStateChange);
 	Call_PushCell(iOldRoundState);
 	Call_PushCell(g_iRoundState);
@@ -5933,15 +5967,43 @@ void TeleportClientToEscapePoint(int iClient)
 {
 	if (!IsClientInGame(iClient)) return;
 	
-	int ent = EntRefToEntIndex(g_iRoundEscapePointEntity);
-	if (ent && ent != -1)
+	ArrayList hSpawnPoints = new ArrayList();
+
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "sf2_info_player_escapespawn")) != -1)
 	{
+		SF2PlayerEscapeSpawnEntity spawnPoint = SF2PlayerEscapeSpawnEntity(ent);
+		if (!spawnPoint.IsValid() || !spawnPoint.Enabled)
+			continue;
+		
+		hSpawnPoints.Push(ent);
+	}
+
+	if (hSpawnPoints.Length > 0)
+		ent = hSpawnPoints.Get(GetRandomInt(0, hSpawnPoints.Length - 1));
+	else 
+		ent = EntRefToEntIndex(g_iRoundEscapePointEntity);
+
+	delete hSpawnPoints;
+
+	if (ent && IsValidEntity(ent))
+	{
+		SF2PlayerEscapeSpawnEntity spawnPoint = SF2PlayerEscapeSpawnEntity(ent);
+
 		float flPos[3], flAng[3];
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flPos);
 		GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", flAng);
 		
 		TeleportEntity(iClient, flPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
-		AcceptEntityInput(ent, "FireUser1", iClient);
+
+		if (spawnPoint.IsValid())
+		{
+			spawnPoint.FireOutputNoVariant("OnSpawn", iClient, ent);
+		}
+		else 
+		{
+			AcceptEntityInput(ent, "FireUser1", iClient);
+		}
 	}
 }
 
@@ -6310,7 +6372,7 @@ void SlenderOnClientStressUpdate(int iClient)
 
 static int GetPageMusicRanges()
 {
-	ClearArray(g_hPageMusicRanges);
+	g_hPageMusicRanges.Clear();
 	
 	char sName[64];
 	
@@ -6326,7 +6388,7 @@ static int GetPageMusicRanges()
 			char sPageRanges[2][32];
 			ExplodeString(sName, "-", sPageRanges, 2, 32);
 			
-			int iIndex = PushArrayCell(g_hPageMusicRanges, EntIndexToEntRef(ent));
+			int iIndex = g_hPageMusicRanges.Push(EnsureEntRef(ent));
 			if (iIndex != -1)
 			{
 				int iMin = StringToInt(sPageRanges[0]);
@@ -6335,32 +6397,48 @@ static int GetPageMusicRanges()
 #if defined DEBUG
 				DebugMessage("Page range found: entity %d, iMin = %d, iMax = %d", ent, iMin, iMax);
 #endif
-				SetArrayCell(g_hPageMusicRanges, iIndex, iMin, 1);
-				SetArrayCell(g_hPageMusicRanges, iIndex, iMax, 2);
+				g_hPageMusicRanges.Set(iIndex, iMin, 1);
+				g_hPageMusicRanges.Set(iIndex, iMax, 2);
 			}
 		}
 	}
+
+	while ((ent = FindEntityByClassname(ent, "sf2_info_page_music")) != -1)
+	{
+		SF2PageMusicEntity pageMusic = SF2PageMusicEntity(ent);
+		if (!pageMusic.IsValid())
+			continue;
+		
+		pageMusic.InsertRanges(g_hPageMusicRanges);
+	}
 	
 	// precache
-	if (GetArraySize(g_hPageMusicRanges) > 0)
+	if (g_hPageMusicRanges.Length > 0)
 	{
 		char sPath[PLATFORM_MAX_PATH];
 		
-		for (int i = 0; i < GetArraySize(g_hPageMusicRanges); i++)
+		for (int i = 0; i < g_hPageMusicRanges.Length; i++)
 		{
-			ent = EntRefToEntIndex(GetArrayCell(g_hPageMusicRanges, i));
+			ent = EntRefToEntIndex(g_hPageMusicRanges.Get(i));
 			if (!ent || ent == INVALID_ENT_REFERENCE) continue;
 			
-			GetEntPropString(ent, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
-			if (sPath[0])
+			SF2PageMusicEntity pageMusic = SF2PageMusicEntity(ent);
+			if (pageMusic.IsValid())
 			{
-				PrecacheSound(sPath);
+				// Don't do anything; entity already precached its own music.
+			}
+			else
+			{
+				GetEntPropString(ent, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
+				if (sPath[0] != '\0')
+					PrecacheSound(sPath);
 			}
 		}
 	}
 	
 	LogSF2Message("Loaded page music ranges successfully!");
 }
+
 void SetPageCount(int iNum)
 {
 	if (iNum > g_iPageMax) iNum = g_iPageMax;
@@ -6376,9 +6454,20 @@ void SetPageCount(int iNum)
 			{
 				TriggerTimer(g_hRoundGraceTimer);
 			}
-			if(!SF_SpecialRound(SPECIALROUND_NOPAGEBONUS))
-				g_iRoundTime += g_iRoundTimeGainFromPage;
-			if (g_iRoundTime > g_iRoundTimeLimit) g_iRoundTime = g_iRoundTimeLimit;
+
+			if (g_iRoundTime < g_iRoundTimeLimit)
+			{
+				// Add round time.
+				int iRoundTime = g_iRoundTime;
+
+				if (!SF_SpecialRound(SPECIALROUND_NOPAGEBONUS))
+					iRoundTime += g_iRoundTimeGainFromPage;
+
+				if (iRoundTime > g_iRoundTimeLimit) iRoundTime = g_iRoundTimeLimit;
+
+				SetRoundTime(iRoundTime);
+			}
+			
 			if (SF_SpecialRound(SPECIALROUND_DISTORTION))
 			{
 				ArrayList hClientSwap = new ArrayList();
@@ -6583,33 +6672,6 @@ void SetPageCount(int iNum)
 				}
 			}
 			
-			if (SF_IsRenevantMap())
-			{
-				char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-				float flTimer = ((float(g_iRenevantTimer) - 60)/5);
-				g_iRenevantWaveNumber = 1;
-				g_bRenevantMultiEffect = false;
-				g_bRenevantBeaconEffect = false;
-				Handle hSelectableBosses = CloneArray(GetSelectableRenevantBossProfileList());
-				char sName[SF2_MAX_NAME_LENGTH];
-				if (GetArraySize(hSelectableBosses) > 0)
-				{
-					GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-					GetProfileString(sBuffer, "name", sName, sizeof(sName));
-					if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-					AddProfile(sBuffer);
-				}
-				for (int i = 0; i < iClientsNum; i++)
-				{
-					int iClient = iClients[i];
-					ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
-				}
-				g_hRenevantWaveTimer = CreateTimer(flTimer, Timer_RenevantWave, _, TIMER_REPEAT);
-				SetConVarInt(g_cvDifficulty, Difficulty_Normal);
-				CPrintToChatAll("The difficulty has been set to {yellow}%t{default}.", "SF2 Normal Difficulty");
-				delete hSelectableBosses;
-			}
-			
 			if (SF_SpecialRound(SPECIALROUND_LASTRESORT))
 			{
 				char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -6620,12 +6682,6 @@ void SetPageCount(int iNum)
 					AddProfile(sBuffer);
 				}
 				delete hSelectableBosses;
-			}
-			if (SF_IsBoxingMap())
-			{
-				SetConVarInt(g_cvDifficulty, Difficulty_Normal);
-				CPrintToChatAll("%t", "SF2 Boxing Initiate");
-				CreateTimer(0.2, Timer_CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 		else
@@ -6653,6 +6709,8 @@ void SetPageCount(int iNum)
 		}
 		
 		CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
+
+		SF2MapEntity_OnPageCountChanged(g_iPageCount, iOldPageCount);
 	}
 }
 
@@ -8131,7 +8189,7 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 			{
 				if (g_iRoundTime > 120)
 				{
-					g_iRoundTime = 120;
+					SetRoundTime(120);
 					CPrintToChatAll("Only 1 {red}RED{default} player is alive, 2 minutes left on the timer...");
 					for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 					{	
@@ -8160,7 +8218,7 @@ public Action Timer_CheckAlivePlayers(Handle timer)
 			{
 				if (g_iRoundTime > 200)
 				{
-					g_iRoundTime = 200;
+					SetRoundTime(200);
 					CPrintToChatAll("3 {red}RED{default} players are alive, 3 minutes and 20 seconds left on the timer...");
 					for (int i = 0; i < iClientsNum; i++)
 					{
@@ -8728,7 +8786,7 @@ public Action Timer_RoundGrace(Handle timer)
 {
 	if (timer != g_hRoundGraceTimer) return;
 	
-	g_bRoundGrace = false;
+	SetGracePeriodState(false);
 	g_hRoundGraceTimer = INVALID_HANDLE;
 	
 	for (int i = 1; i <= MaxClients; i++)
@@ -8742,7 +8800,7 @@ public Action Timer_RoundGrace(Handle timer)
 	if (g_iRoundTimeLimit > 0)
 	{
 		// Set round time.
-		g_iRoundTime = g_iRoundTimeLimit;
+		SetRoundTime(g_iRoundTimeLimit);
 		g_hRoundTimer = CreateTimer(1.0, Timer_RoundTime, _, TIMER_REPEAT);
 	}
 	else
@@ -8778,16 +8836,19 @@ public Action Timer_RoundTime(Handle timer)
 		
 		return Plugin_Stop;
 	}
-	if(SF_SpecialRound(SPECIALROUND_REVOLUTION))
+
+	if (SF_SpecialRound(SPECIALROUND_REVOLUTION))
 	{
-		if(g_iSpecialRoundTime % 60 == 0)
+		if (g_iSpecialRoundTime % 60 == 0)
 		{
 			SpecialRoundCycleStart();
 		}
 	}
-	if(g_bSpecialRound)
+
+	if (g_bSpecialRound)
 		g_iSpecialRoundTime++;
-	g_iRoundTime--;
+	
+	SetRoundTime(g_iRoundTime - 1);
 	
 	if (SF_SpecialRound(SPECIALROUND_REALISM))
 	{
@@ -8903,32 +8964,33 @@ public Action Timer_RoundTimeEscape(Handle timer)
 		
 		if (!SF_SpecialRound(SPECIALROUND_REALISM))
 		{
-			if(SF_IsSurvivalMap() && g_iRoundTime > g_iTimeEscape)
+			char sText[512];
+			if (SF_IsBoxingMap())
+				FormatEx(sText, sizeof(sText), "%T", "SF2 Default Boxing Message", i);
+			else 
 			{
-				if(SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK))
-					ShowSyncHudText(i, g_hRoundTimerSync, "%T\n??:??", "SF2 Default Survive Message", i);
+				if (SF_IsSurvivalMap() && g_iRoundTime > g_iTimeEscape)
+					FormatEx(sText, sizeof(sText), "%T", "SF2 Default Survive Message", i);
 				else
-					ShowSyncHudText(i, g_hRoundTimerSync, "%T\n%d:%02d", "SF2 Default Survive Message", i, minutes, seconds);
+					FormatEx(sText, sizeof(sText), "%T", "SF2 Default Escape Message", i);
 			}
-			else if (SF_IsBoxingMap())
-			{
-				if(SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK))
-					ShowSyncHudText(i, g_hRoundTimerSync, "%T\n??:??", "SF2 Default Boxing Message", i);
-				else
-					ShowSyncHudText(i, g_hRoundTimerSync, "%T\n%d:%02d", "SF2 Default Boxing Message", i, minutes, seconds);
-			}
-			else if ((!SF_IsSurvivalMap() || g_iRoundTime < g_iTimeEscape) && !SF_IsBoxingMap())
-			{
-				if(SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK))
-					ShowSyncHudText(i, g_hRoundTimerSync, "%T\n??:??", "SF2 Default Escape Message", i);
-				else
-					ShowSyncHudText(i, g_hRoundTimerSync, "%T\n%d:%02d", "SF2 Default Escape Message", i, minutes, seconds);
-			}
+
+			char sTimerText[128];
+			if (SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK))
+				strcopy(sTimerText, sizeof(sTimerText), "\n??:??");
+			else
+				FormatEx(sTimerText, sizeof(sTimerText), "\n%d:%02d", minutes, seconds);
+
+			StrCat(sText, sizeof(sText), sTimerText);
+
+			ShowSyncHudText(i, g_hRoundTimerSync, sText);
 		}
 	}
-	if(g_bSpecialRound)
+
+	if (g_bSpecialRound)
 		g_iSpecialRoundTime++;
-	g_iRoundTime--;
+	
+	SetRoundTime(g_iRoundTime - 1);
 	
 	return Plugin_Continue;
 }
@@ -8964,454 +9026,19 @@ public Action Timer_VoteDifficulty(Handle timer, any data)
 	return Plugin_Stop;
 }
 
-public Action Timer_RenevantWave(Handle timer, any data)
+static bool Renevant_TryAddBossProfile(char[] sProfile, int iProfileLen, char[] sName, int iNameLen, bool bPlaySpawnSound=true)
 {
-	if (timer != g_hRenevantWaveTimer || IsRoundEnding())
-	{
-		return Plugin_Stop;
-	}
-	g_iRenevantWaveNumber += 1;
-		
-	int iClients[MAXPLAYERS + 1];
-	int iClientsNum;
+	if (!GetRandomRenevantBossProfile(sProfile, iProfileLen))
+		return false;
 
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+	GetProfileString(sProfile, "name", sName, iNameLen);
+	if (!sName[0]) strcopy(sName, iNameLen, sProfile);
+	AddProfile(sProfile, _, _, _, bPlaySpawnSound);
 
-		iClients[iClientsNum] = i;
-		iClientsNum++;
-	}
-		
-	if (SF_IsRenevantMap())
-	{
-		char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer2[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer3[SF2_MAX_PROFILE_NAME_LENGTH];
-		char sName[SF2_MAX_NAME_LENGTH], sName2[SF2_MAX_NAME_LENGTH], sName3[SF2_MAX_NAME_LENGTH];
-		Handle hSelectableBosses = CloneArray(GetSelectableRenevantBossProfileList());
-		int iDifficulty = GetConVarInt(g_cvDifficulty);
-		switch (g_iRenevantWaveNumber)
-		{
-			case 2: //Wave 2
-			{
-				int iRandomWave = GetRandomInt(0, 2);
-				switch (iRandomWave)
-				{
-					case 0: //Normal
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
-						}
-					}
-					case 1: //Difficulty increase
-					{
-						SetConVarInt(g_cvDifficulty, Difficulty_Hard);
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
-						}
-					}
-					case 2: //Boss abilities
-					{
-						g_bRenevantMultiEffect = true;
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nBosses can now inflict Multieffect.", g_iRenevantWaveNumber, sName);
-						}
-					}
-				}
-			}
-			case 3: //Wave 3
-			{
-				int iRandomWave = GetRandomInt(0, 3);
-				switch (iRandomWave)
-				{
-					case 0: //Normal
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
-						}
-					}
-					case 1: //Double Trouble
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
-							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
-							AddProfile(sBuffer,_,_,_,false);
-							AddProfile(sBuffer2,_,_,_,false);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s and %s", g_iRenevantWaveNumber, sName, sName2);
-						}
-					}
-					case 2: //Difficulty Increase
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						switch (iDifficulty)
-						{
-							case Difficulty_Normal:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Hard);
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
-								}
-							}
-							case Difficulty_Hard:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Insane);
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Insane Difficulty");
-								}
-							}
-						}
-					}
-					case 3: //Bacon Spray
-					{
-						g_bRenevantBeaconEffect = true;
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nBosses are now alerted on spawn.", g_iRenevantWaveNumber, sName);
-						}
-					}
-				}
-			}
-			case 4: //Wave 4
-			{
-				int iRandomWave = GetRandomInt(0, 2);
-				switch (iRandomWave)
-				{
-					case 0: //Normal
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
-						}
-					}
-					case 1: //Double Trouble
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
-							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
-							AddProfile(sBuffer,_,_,_,false);
-							AddProfile(sBuffer2,_,_,_,false);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s and %s", g_iRenevantWaveNumber, sName, sName2);
-						}
-					}
-					case 2: //Difficulty Increase
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						switch (iDifficulty)
-						{
-							case Difficulty_Normal:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Hard);
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
-								}
-							}
-							case Difficulty_Hard:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Insane);
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Insane Difficulty");
-								}
-							}
-							case Difficulty_Insane:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: Nightmare!", g_iRenevantWaveNumber, sName);
-								}
-							}
-						}
-					}
-				}
-			}
-			case 5: //Wave 5
-			{
-				int iRandomWave = GetRandomInt(0, 3);
-				switch (iRandomWave)
-				{
-					case 0: //Normal
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							AddProfile(sBuffer);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
-						}
-					}
-					case 1: //Double Trouble
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
-							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
-							AddProfile(sBuffer,_,_,_,false);
-							AddProfile(sBuffer2,_,_,_,false);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s and %s", g_iRenevantWaveNumber, sName, sName2);
-						}
-					}
-					case 2: //Difficulty Increase
-					{
-						switch (iDifficulty)
-						{
-							case Difficulty_Normal:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Hard);
-								if (GetArraySize(hSelectableBosses) > 0)
-								{
-									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-									GetProfileString(sBuffer, "name", sName, sizeof(sName));
-									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-									AddProfile(sBuffer);
-								}
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Hard Difficulty");
-								}
-							}
-							case Difficulty_Hard:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Insane);
-								if (GetArraySize(hSelectableBosses) > 0)
-								{
-									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-									GetProfileString(sBuffer, "name", sName, sizeof(sName));
-									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-									AddProfile(sBuffer);
-								}
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: %t", g_iRenevantWaveNumber, sName, "SF2 Insane Difficulty");
-								}
-							}
-							case Difficulty_Insane:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Nightmare);
-								if (GetArraySize(hSelectableBosses) > 0)
-								{
-									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-									GetProfileString(sBuffer, "name", sName, sizeof(sName));
-									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-									AddProfile(sBuffer);
-								}
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s\nDifficulty set to: Nightmare!", g_iRenevantWaveNumber, sName);
-								}
-							}
-							case Difficulty_Nightmare:
-							{
-								SetConVarInt(g_cvDifficulty, Difficulty_Apollyon);
-								if (GetArraySize(hSelectableBosses) > 0)
-								{
-									GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-									GetProfileString(sBuffer, "name", sName, sizeof(sName));
-									if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-									AddProfile(sBuffer);
-
-									SF_RenevantSpawnApollyon();
-								}
-								for (int i = 0; i < iClientsNum; i++)
-								{
-									int iClient = iClients[i];
-									ClientShowRenevantMessage(iClient, "Wave %d:\nBoss: %s", g_iRenevantWaveNumber, sName);
-								}
-								CPrintToChatAll("The difficulty has been set to: {darkgray}Apollyon{default}!");
-								g_bBossesChaseEndlessly = true;
-								g_bRoundInfiniteSprint = true;
-								
-								for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-									EmitSoundToAll(g_strSoundNightmareMode[i]);
-								SpecialRoundGameText("Apollyon mode!", "leaderboard_streak");
-								int iRandomQuote = GetRandomInt(1, 8);
-								switch (iRandomQuote)
-								{
-									case 1:
-									{
-										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
-										CPrintToChatAll("{purple}Snatcher{default}: Oh no! You're not slipping out of your contract THAT easily.");
-									}
-									case 2:
-									{
-										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
-										CPrintToChatAll("{purple}Snatcher{default}: You ready to die some more? Great!");
-									}
-									case 3:
-									{
-										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
-										CPrintToChatAll("{purple}Snatcher{default}: Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
-									}
-									case 4:
-									{
-										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
-										CPrintToChatAll("{purple}Snatcher{default}: I love the smell of DEATH in the morning.");
-									}
-									case 5:
-									{
-										EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
-										CPrintToChatAll("{purple}Snatcher{default}: Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
-									}
-									case 6:
-									{
-										EmitSoundToAll(SNATCHER_APOLLYON_1);
-										CPrintToChatAll("{purple}Snatcher{default}: Ah! It gets better every time!");
-									}
-									case 7:
-									{
-										EmitSoundToAll(SNATCHER_APOLLYON_2);
-										CPrintToChatAll("{purple}Snatcher{default}: Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
-									}
-									case 8:
-									{
-										EmitSoundToAll(SNATCHER_APOLLYON_3);
-										CPrintToChatAll("{purple}Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
-									}
-								}
-							}
-						}
-					}
-					case 3: //Doom Box
-					{
-						if (GetArraySize(hSelectableBosses) > 0)
-						{
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer, sizeof(sBuffer));
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer2, sizeof(sBuffer2));
-							GetArrayString(hSelectableBosses, GetRandomInt(0, GetArraySize(hSelectableBosses) - 1), sBuffer3, sizeof(sBuffer3));
-							GetProfileString(sBuffer, "name", sName, sizeof(sName));
-							if (!sName[0]) strcopy(sName, sizeof(sName), sBuffer);
-							GetProfileString(sBuffer2, "name", sName2, sizeof(sName2));
-							if (!sName2[0]) strcopy(sName2, sizeof(sName2), sBuffer2);
-							GetProfileString(sBuffer3, "name", sName3, sizeof(sName3));
-							if (!sName3[0]) strcopy(sName3, sizeof(sName3), sBuffer3);
-							AddProfile(sBuffer,_,_,_,false);
-							AddProfile(sBuffer2,_,_,_,false);
-							AddProfile(sBuffer3,_,_,_,false);
-						}
-						for (int i = 0; i < iClientsNum; i++)
-						{
-							int iClient = iClients[i];
-							ClientShowRenevantMessage(iClient, "Wave %d:\nBosses: %s, %s, and %s", g_iRenevantWaveNumber, sName, sName2, sName3);
-						}
-					}
-				}
-				return Plugin_Stop;
-			}
-		}
-		delete hSelectableBosses;
-		Call_StartForward(fOnRenevantTriggerWave);
-		Call_PushCell(g_iRenevantWaveNumber);
-		Call_Finish();
-	}
-	return Plugin_Continue;
+	return true;
 }
 
-void SF_RenevantSpawnApollyon()
+static void Renevant_SpawnApollyon()
 {
 	ArrayList hSpawnPoint = new ArrayList();
 	float flTeleportPos[3];
@@ -9423,8 +9050,8 @@ void SF_RenevantSpawnApollyon()
 		{
 			hSpawnPoint.Push(ent);
 		}
-
 	}
+
 	ent = -1;
 	if (hSpawnPoint.Length > 0) ent = hSpawnPoint.Get(GetRandomInt(0,hSpawnPoint.Length-1));
 
@@ -9445,6 +9072,327 @@ void SF_RenevantSpawnApollyon()
 			SpawnSlender(Npc, flTeleportPos);
 		}
 	}
+}
+
+static void Renevant_BroadcastMessage(const char[] sMessage, ...)
+{
+	char sFormat[512];
+	VFormat(sFormat, sizeof(sFormat), sMessage, 2);
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+
+		ClientShowRenevantMessage(i, sFormat);
+	}
+}
+
+enum RenevantWave
+{
+	RenevantWave_Normal = 0,
+	RenevantWave_IncreaseDifficulty,
+	RenevantWave_MultiEffect,
+	RenevantWave_BaconSpray,
+	RenevantWave_DoubleTrouble,
+	RenevantWave_DoomBox,
+	RenevantWave_Max
+}
+
+static void Renevant_DoWaveAction(RenevantWave action)
+{
+	char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer2[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer3[SF2_MAX_PROFILE_NAME_LENGTH];
+	char sName[SF2_MAX_NAME_LENGTH], sName2[SF2_MAX_NAME_LENGTH], sName3[SF2_MAX_NAME_LENGTH];
+
+	char sBroadcastMessage[512]; char sBroadcastBuffer[256];
+	FormatEx(sBroadcastMessage, sizeof(sBroadcastMessage), "Wave %d", g_iRenevantWaveNumber);
+
+	int iAddedBossCount = 0;
+	if (Renevant_TryAddBossProfile(sBuffer, sizeof(sBuffer), sName, sizeof(sName)))
+		iAddedBossCount++;
+
+	if (iAddedBossCount == 1 && action != RenevantWave_DoubleTrouble && action != RenevantWave_DoomBox)
+	{
+		FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
+		StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+	}
+
+	switch (action)
+	{
+		case RenevantWave_Normal:
+		{
+		}
+		case RenevantWave_IncreaseDifficulty:
+		{
+			switch (g_cvDifficulty.IntValue)
+			{
+				case Difficulty_Normal:
+				{
+					g_cvDifficulty.IntValue = Difficulty_Hard;
+
+					FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nDifficulty set to: %t",  "SF2 Hard Difficulty"); 
+					StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+				}
+				case Difficulty_Hard:
+				{
+					g_cvDifficulty.IntValue = Difficulty_Insane;
+
+					FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nDifficulty set to: %t",  "SF2 Insane Difficulty"); 
+					StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+				}
+				case Difficulty_Insane:
+				{
+					g_cvDifficulty.IntValue = Difficulty_Nightmare;
+
+					FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nDifficulty set to: %t",  "SF2 Nightmare Difficulty"); 
+					StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+				}
+				case Difficulty_Nightmare:
+				{
+					g_cvDifficulty.IntValue = Difficulty_Apollyon;
+
+					g_bBossesChaseEndlessly = true;
+					g_bRoundInfiniteSprint = true;
+					
+					Renevant_SpawnApollyon();
+
+					CPrintToChatAll("The difficulty has been set to: {darkgray}Apollyon{default}!");
+					
+					for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+						EmitSoundToAll(g_strSoundNightmareMode[i]);
+					
+					SpecialRoundGameText("Apollyon mode!", "leaderboard_streak");
+
+					int iRandomQuote = GetRandomInt(1, 8);
+					switch (iRandomQuote)
+					{
+						case 1:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_1);
+							CPrintToChatAll("{purple}Snatcher{default}: Oh no! You're not slipping out of your contract THAT easily.");
+						}
+						case 2:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_2);
+							CPrintToChatAll("{purple}Snatcher{default}: You ready to die some more? Great!");
+						}
+						case 3:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_3);
+							CPrintToChatAll("{purple}Snatcher{default}: Live fast, die young, and leave behind a pretty corpse, huh? At least you got two out of three right.");
+						}
+						case 4:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_4);
+							CPrintToChatAll("{purple}Snatcher{default}: I love the smell of DEATH in the morning.");
+						}
+						case 5:
+						{
+							EmitSoundToAll(HYPERSNATCHER_NIGHTAMRE_5);
+							CPrintToChatAll("{purple}Snatcher{default}: Oh ho ho! I hope you don't think one measely death gets you out of your contract. We're only getting started.");
+						}
+						case 6:
+						{
+							EmitSoundToAll(SNATCHER_APOLLYON_1);
+							CPrintToChatAll("{purple}Snatcher{default}: Ah! It gets better every time!");
+						}
+						case 7:
+						{
+							EmitSoundToAll(SNATCHER_APOLLYON_2);
+							CPrintToChatAll("{purple}Snatcher{default}: Hope you enjoyed that one kiddo, because theres a lot more where that came from!");
+						}
+						case 8:
+						{
+							EmitSoundToAll(SNATCHER_APOLLYON_3);
+							CPrintToChatAll("{purple}Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
+						}
+					}
+				}
+			}
+		}
+		case RenevantWave_MultiEffect:
+		{
+			g_bRenevantMultiEffect = true;
+			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nBosses can now inflict Multieffect.");
+		}
+		case RenevantWave_BaconSpray:
+		{
+			g_bRenevantBeaconEffect = true;
+			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nBosses are now alerted on spawn.");
+		}
+		case RenevantWave_DoubleTrouble:
+		{
+			if (Renevant_TryAddBossProfile(sBuffer2, sizeof(sBuffer2), sName2, sizeof(sName2)))
+				iAddedBossCount++;
+
+			if (iAddedBossCount == 1)
+			{
+				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
+				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			}
+			else if (iAddedBossCount == 2)
+			{
+				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBosses: %s and %s", sName, sName2); 
+				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			}
+		}
+		case RenevantWave_DoomBox:
+		{
+			if (Renevant_TryAddBossProfile(sBuffer2, sizeof(sBuffer2), sName2, sizeof(sName2)))
+				iAddedBossCount++;
+			if (Renevant_TryAddBossProfile(sBuffer3, sizeof(sBuffer3), sName3, sizeof(sName3)))
+				iAddedBossCount++;
+
+			if (iAddedBossCount == 1)
+			{
+				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
+				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			}
+			else if (iAddedBossCount == 2)
+			{
+				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBosses: %s and %s", sName, sName2); 
+				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			}
+			else if (iAddedBossCount == 3)
+			{
+				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBosses: %s, %s, and %s", sName, sName2, sName3); 
+				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			}
+		}
+	}
+
+	Renevant_BroadcastMessage(sBroadcastMessage);
+}
+
+void Renevant_SetWave(int iWave, bool bResetTimer=false)
+{
+	if (!SF_IsRenevantMap() || g_iRenevantWaveNumber == iWave)
+		return;
+	
+	g_iRenevantWaveNumber = iWave;
+
+	if (bResetTimer && iWave < RENEVANT_MAXWAVES && iWave != 0)
+	{
+		float flTime = ((float(g_iRoundEscapeTimeLimit) - float(g_iRenevantFinaleTime)) / RENEVANT_MAXWAVES);
+		g_hRenevantWaveTimer = CreateTimer(flTime, Timer_RenevantWave, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	if (iWave == 0 || iWave >= RENEVANT_MAXWAVES)
+		g_hRenevantWaveTimer = INVALID_HANDLE; // At zero/max wave so stop it.
+
+	switch (g_iRenevantWaveNumber)
+	{
+		case 1: //Wave 1
+		{
+			g_cvDifficulty.IntValue = Difficulty_Normal;
+
+			Renevant_DoWaveAction(RenevantWave_Normal);
+
+			CPrintToChatAll("The difficulty has been set to {yellow}%t{default}.", "SF2 Normal Difficulty");
+		}
+		case 2: //Wave 2
+		{
+			int iRandomWave = GetRandomInt(0, 2);
+			switch (iRandomWave)
+			{
+				case 0:
+				{
+					Renevant_DoWaveAction(RenevantWave_Normal);
+				}
+				case 1:
+				{
+					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);		
+				}
+				case 2:
+				{
+					Renevant_DoWaveAction(RenevantWave_MultiEffect);
+				}
+			}
+		}
+		case 3: //Wave 3
+		{
+			int iRandomWave = GetRandomInt(0, 3);
+			switch (iRandomWave)
+			{
+				case 0:
+				{
+					Renevant_DoWaveAction(RenevantWave_Normal);
+				}
+				case 1:
+				{
+					Renevant_DoWaveAction(RenevantWave_DoubleTrouble);
+				}
+				case 2:
+				{
+					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);
+				}
+				case 3:
+				{
+					Renevant_DoWaveAction(RenevantWave_BaconSpray);
+				}
+			}
+		}
+		case 4: //Wave 4
+		{
+			int iRandomWave = GetRandomInt(0, 2);
+			switch (iRandomWave)
+			{
+				case 0:
+				{
+					Renevant_DoWaveAction(RenevantWave_Normal);
+				}
+				case 1:
+				{
+					Renevant_DoWaveAction(RenevantWave_DoubleTrouble);
+				}
+				case 2:
+				{
+					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);
+				}
+			}
+		}
+		case 5: //Wave 5
+		{
+			int iRandomWave = GetRandomInt(0, 3);
+			switch (iRandomWave)
+			{
+				case 0:
+				{
+					Renevant_DoWaveAction(RenevantWave_Normal);
+				}
+				case 1:
+				{
+					Renevant_DoWaveAction(RenevantWave_DoubleTrouble);
+				}
+				case 2:
+				{
+					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);
+				}
+				case 3:
+				{
+					Renevant_DoWaveAction(RenevantWave_DoomBox);
+				}
+			}
+		}
+	}
+
+	SF2MapEntity_OnRenevantWaveTriggered(g_iRenevantWaveNumber);
+
+	Call_StartForward(fOnRenevantTriggerWave);
+	Call_PushCell(g_iRenevantWaveNumber);
+	Call_Finish();
+}
+
+public Action Timer_RenevantWave(Handle timer, any data)
+{
+	if (timer != g_hRenevantWaveTimer || IsRoundEnding())
+		return Plugin_Stop;
+
+	Renevant_SetWave(g_iRenevantWaveNumber + 1);
+	
+	if (g_iRenevantWaveNumber == RENEVANT_MAXWAVES)
+		return Plugin_Stop;
+	
+	return Plugin_Continue;
 }
 
 void SF_FailRoundEnd(float time=2.0)
@@ -9502,153 +9450,306 @@ public Action Timer_Fail(Handle hTimer)
 	return Plugin_Stop;
 }
 
+/**
+ *	Initialize pages and entities.
+ */
 static void InitializeMapEntities()
 {
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("START InitializeMapEntities()");
 #endif
 	
-	g_bRoundInfiniteFlashlight = false;
 	g_bIsSurvivalMap = false;
 	g_bIsBoxingMap = false;
 	g_bIsRenevantMap = false;
 	g_bIsSlaughterRunMap = false;
 	g_bIsRaidMap = false;
 	g_bIsProxyMap = false;
-	g_bBossesChaseEndlessly = false;
-	g_bRoundInfiniteBlink = false;
-	g_bRoundInfiniteSprint = false;
-	g_bRoundHasEscapeObjective = false;
-	
-	g_iRoundTimeLimit = GetConVarInt(g_cvTimeLimit);
-	g_iRoundEscapeTimeLimit = GetConVarInt(g_cvTimeLimitEscape);
-	g_iRenevantTimer = GetConVarInt(g_cvTimeLimitEscape);
-	g_iTimeEscape = GetConVarInt(g_cvTimeEscapeSurvival);
-	g_iRoundTimeGainFromPage = GetConVarInt(g_cvTimeGainFromPageGrab);
-	
+
+	SF2GamerulesEntity gamerules = FindSF2GamerulesEntity();
+	g_GamerulesEntity = gamerules;
+
+	if (gamerules.IsValid())
+	{
+		if (g_iRoundActiveCount == 1)
+			g_cvMaxPlayers.SetInt(gamerules.MaxPlayers);
+
+		char sBossName[SF2_MAX_PROFILE_NAME_LENGTH];
+		gamerules.GetBossName(sBossName, sizeof(sBossName));
+		if (sBossName[0] != '\0') g_cvBossMain.SetString(sBossName);
+
+		g_iPageMax = gamerules.MaxPages;
+
+		g_iRoundTimeLimit = gamerules.InitialTimeLimit;
+		g_iRoundTimeGainFromPage = gamerules.PageCollectAddTime;
+
+		gamerules.GetPageCollectSoundPath(g_strPageCollectSound, sizeof(g_strPageCollectSound));
+		if (g_strPageCollectSound[0] == '\0')
+			strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), PAGE_GRABSOUND); // Roll with default instead.
+		else
+			PrecacheSound(g_strPageCollectSound); // Precache or else...
+
+		g_bRoundHasEscapeObjective = gamerules.HasEscapeObjective;
+		g_iRoundEscapeTimeLimit = gamerules.EscapeTimeLimit;
+		g_bRoundStopPageMusicOnEscape = gamerules.StopPageMusicOnEscape;
+		g_bIsSurvivalMap = gamerules.Survive;
+		g_iTimeEscape = gamerules.SurviveUntilTime;
+
+		g_bRoundInfiniteFlashlight = gamerules.InfiniteFlashlight;
+		g_bRoundInfiniteSprint = gamerules.InfiniteSprint;
+		g_bRoundInfiniteBlink = gamerules.InfiniteBlink;
+
+		g_bBossesChaseEndlessly = gamerules.BossesChaseEndlessly;
+
+		gamerules.GetIntroMusicPath(g_strRoundIntroMusic, sizeof(g_strRoundIntroMusic));
+		if (g_strRoundIntroMusic[0] == '\0') 
+			strcopy(g_strRoundIntroMusic, sizeof(g_strRoundIntroMusic), SF2_INTRO_DEFAULT_MUSIC); // Roll with default instead.
+		else 
+			PrecacheSound(g_strRoundIntroMusic); // Precache or else...
+		
+		gamerules.GetIntroFadeColor(g_iRoundIntroFadeColor);
+		g_flRoundIntroFadeHoldTime = gamerules.IntroFadeHoldTime;
+		g_flRoundIntroFadeDuration = gamerules.IntroFadeTime;
+	}
+	else 
+	{
+		g_iRoundTimeLimit = g_cvTimeLimit.IntValue;
+		g_iRoundTimeGainFromPage = g_cvTimeGainFromPageGrab.IntValue;
+		strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), PAGE_GRABSOUND);
+
+		g_bRoundHasEscapeObjective = false;
+		g_iRoundEscapeTimeLimit = g_cvTimeLimitEscape.IntValue;
+		g_bRoundStopPageMusicOnEscape = false;
+		g_iTimeEscape = g_cvTimeEscapeSurvival.IntValue;
+
+		g_bRoundInfiniteFlashlight = false;
+		g_bRoundInfiniteSprint = false;
+		g_bRoundInfiniteBlink = false;
+
+		g_bBossesChaseEndlessly = false;
+
+		strcopy(g_strRoundIntroMusic, sizeof(g_strRoundIntroMusic), SF2_INTRO_DEFAULT_MUSIC);
+
+		g_iRoundIntroFadeColor[0] = 0;
+		g_iRoundIntroFadeColor[1] = 0;
+		g_iRoundIntroFadeColor[2] = 0;
+		g_iRoundIntroFadeColor[3] = 255;
+		g_flRoundIntroFadeHoldTime = g_cvIntroDefaultHoldTime.FloatValue;
+		g_flRoundIntroFadeDuration = g_cvIntroDefaultFadeTime.FloatValue;
+	}
+
+	// Check the game type.
+	if (FindLogicProxyEntity().IsValid())
+	{
+		g_bIsProxyMap = true;
+		g_bIsSurvivalMap = true;
+	}
+	else if (FindLogicRaidEntity().IsValid())
+	{
+		g_bIsRaidMap = true;
+	}
+	else if (FindLogicBoxingEntity().IsValid())
+	{
+		g_bIsBoxingMap = true;
+	}
+	else if (FindLogicSlaughterEntity().IsValid())
+	{
+		g_bIsSlaughterRunMap = true;
+	}
+	else if ((g_RenevantLogicEntity = FindLogicRenevantEntity()).IsValid())
+	{
+		g_bIsRenevantMap = true;
+	}
+
+	if (SF_IsRenevantMap())
+	{
+		if (g_RenevantLogicEntity.IsValid())
+		{
+			g_iRenevantFinaleTime = g_RenevantLogicEntity.FinaleTime;
+		}
+		else 
+		{
+			g_iRenevantFinaleTime = 60;
+		}
+	}
+
 	char targetName[64];
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 	{
 		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
-		if (targetName[0])
+		if (targetName[0] == '\0')
+			continue;
+
+		if (!StrContains(targetName, "sf2_maxpages_", false))
 		{
-			if (!StrContains(targetName, "sf2_maxpages_", false))
+			ReplaceString(targetName, sizeof(targetName), "sf2_maxpages_", "", false);
+			g_iPageMax = StringToInt(targetName);
+		}
+		else if (!StrContains(targetName, "sf2_logic_escape", false) || !StrContains(targetName, "sf2_logic_escape_hyper", false))
+		{
+			g_bRoundHasEscapeObjective = true;
+		}
+		else if (strcmp(targetName, "sf2_escape_custommusic", false) == 0)
+		{
+			g_bRoundStopPageMusicOnEscape = true;
+		}
+		else if (!StrContains(targetName, "sf2_infiniteflashlight", false))
+		{
+			g_bRoundInfiniteFlashlight = true;
+		}
+		else if (!StrContains(targetName, "sf2_infiniteblink", false))
+		{
+			g_bRoundInfiniteBlink = true;
+		}
+		else if (!StrContains(targetName, "sf2_infinitesprint", false))
+		{
+			g_bRoundInfiniteSprint = true;
+		}
+		else if (!StrContains(targetName, "sf2_time_limit_", false))
+		{
+			ReplaceString(targetName, sizeof(targetName), "sf2_time_limit_", "", false);
+			g_iRoundTimeLimit = StringToInt(targetName);
+			
+			LogSF2Message("Found sf2_time_limit entity, set time limit to %d", g_iRoundTimeLimit);
+		}
+		else if (!StrContains(targetName, "sf2_escape_time_limit_", false))
+		{
+			ReplaceString(targetName, sizeof(targetName), "sf2_escape_time_limit_", "", false);
+			g_iRoundEscapeTimeLimit = StringToInt(targetName);
+			
+			LogSF2Message("Found sf2_escape_time_limit entity, set escape time limit to %d", g_iRoundEscapeTimeLimit);
+		}
+		else if (!StrContains(targetName, "sf2_time_gain_from_page_", false))
+		{
+			ReplaceString(targetName, sizeof(targetName), "sf2_time_gain_from_page_", "", false);
+			g_iRoundTimeGainFromPage = StringToInt(targetName);
+			
+			LogSF2Message("Found sf2_time_gain_from_page entity, set time gain to %d", g_iRoundTimeGainFromPage);
+		}
+		else if (g_iRoundActiveCount == 1 && (!StrContains(targetName, "sf2_maxplayers_", false)))
+		{
+			ReplaceString(targetName, sizeof(targetName), "sf2_maxplayers_", "", false);
+			SetConVarInt(g_cvMaxPlayers, StringToInt(targetName));
+			
+			LogSF2Message("Found sf2_maxplayers entity, set maxplayers to %d", StringToInt(targetName));
+		}
+		else if (!StrContains(targetName, "sf2_boss_override_", false))
+		{
+			ReplaceString(targetName, sizeof(targetName), "sf2_boss_override_", "", false);
+			SetConVarString(g_cvBossProfileOverride, targetName);
+			
+			LogSF2Message("Found sf2_boss_override entity, set boss profile override to %s", targetName);
+		}
+		else if (!StrContains(targetName, "sf2_survival_map", false))
+		{
+			g_bIsSurvivalMap = true;
+		}
+		else if (!StrContains(targetName, "sf2_raid_map", false))
+		{
+			g_bIsRaidMap = true;
+		}
+		else if (!StrContains(targetName, "sf2_bosses_chase_endlessly", false))
+		{
+			g_bBossesChaseEndlessly = true;
+		}
+		else if (!StrContains(targetName, "sf2_proxy_map", false))
+		{
+			g_bIsProxyMap = true;
+			g_bIsSurvivalMap = true;
+		}
+		else if (!StrContains(targetName, "sf2_boxing_map", false))
+		{
+			g_bIsBoxingMap = true;
+		}
+		else if (!StrContains(targetName, "sf2_survival_time_limit_", false))
+		{
+			ReplaceString(targetName, sizeof(targetName), "sf2_survival_time_limit_", "", false);
+			g_iTimeEscape = StringToInt(targetName);
+			
+			LogSF2Message("Found sf2_survival_time_limit_ entity, set survival time limit to %d", g_iTimeEscape);
+		}
+		else if (!StrContains(targetName, "sf2_renevant_map", false))
+		{
+			g_bIsRenevantMap = true;
+		}
+		else if (!StrContains(targetName, "sf2_slaughterrun_map", false))
+		{
+			g_bIsSlaughterRunMap = true;
+		}
+	}
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
+	{
+		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+		if (targetName[0] == '\0')
+			continue;
+		
+		if (strcmp(targetName, "sf2_page_sound", false) == 0)
+		{
+			char sPagePath[PLATFORM_MAX_PATH];
+			GetEntPropString(ent, Prop_Data, "m_iszSound", sPagePath, sizeof(sPagePath));
+
+			if (sPagePath[0] == '\0')
 			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_maxpages_", "", false);
-				g_iPageMax = StringToInt(targetName);
+				LogError("Found sf2_page_sound entity, but it has no sound path specified! Default page sound will be used instead.");
 			}
-			else if (!StrContains(targetName, "sf2_logic_escape", false) || !StrContains(targetName, "sf2_logic_escape_hyper", false))
+			else
 			{
-				g_bRoundHasEscapeObjective = true;
-			}
-			else if (!StrContains(targetName, "sf2_infiniteflashlight", false))
-			{
-				g_bRoundInfiniteFlashlight = true;
-			}
-			else if (!StrContains(targetName, "sf2_infiniteblink", false))
-			{
-				g_bRoundInfiniteBlink = true;
-			}
-			else if (!StrContains(targetName, "sf2_infinitesprint", false))
-			{
-				g_bRoundInfiniteSprint = true;
-			}
-			else if (!StrContains(targetName, "sf2_time_limit_", false))
-			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_time_limit_", "", false);
-				g_iRoundTimeLimit = StringToInt(targetName);
-				
-				LogSF2Message("Found sf2_time_limit entity, set time limit to %d", g_iRoundTimeLimit);
-			}
-			else if (!StrContains(targetName, "sf2_escape_time_limit_", false))
-			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_escape_time_limit_", "", false);
-				g_iRoundEscapeTimeLimit = StringToInt(targetName);
-				g_iRenevantTimer = StringToInt(targetName);
-				
-				LogSF2Message("Found sf2_escape_time_limit entity, set escape time limit to %d", g_iRoundEscapeTimeLimit);
-			}
-			else if (!StrContains(targetName, "sf2_time_gain_from_page_", false))
-			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_time_gain_from_page_", "", false);
-				g_iRoundTimeGainFromPage = StringToInt(targetName);
-				
-				LogSF2Message("Found sf2_time_gain_from_page entity, set time gain to %d", g_iRoundTimeGainFromPage);
-			}
-			else if (g_iRoundActiveCount == 1 && (!StrContains(targetName, "sf2_maxplayers_", false)))
-			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_maxplayers_", "", false);
-				SetConVarInt(g_cvMaxPlayers, StringToInt(targetName));
-				
-				LogSF2Message("Found sf2_maxplayers entity, set maxplayers to %d", StringToInt(targetName));
-			}
-			else if (!StrContains(targetName, "sf2_boss_override_", false))
-			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_boss_override_", "", false);
-				SetConVarString(g_cvBossProfileOverride, targetName);
-				
-				LogSF2Message("Found sf2_boss_override entity, set boss profile override to %s", targetName);
-			}
-			else if (!StrContains(targetName, "sf2_survival_map", false))
-			{
-				g_bIsSurvivalMap = true;
-			}
-			else if (!StrContains(targetName, "sf2_raid_map", false))
-			{
-				g_bIsRaidMap = true;
-			}
-			else if (!StrContains(targetName, "sf2_bosses_chase_endlessly", false))
-			{
-				g_bBossesChaseEndlessly = true;
-			}
-			else if (!StrContains(targetName, "sf2_proxy_map", false))
-			{
-				g_bIsProxyMap = true;
-				g_bIsSurvivalMap = true;
-			}
-			else if (!StrContains(targetName, "sf2_boxing_map", false))
-			{
-				g_bIsBoxingMap = true;
-			}
-			else if (!StrContains(targetName, "sf2_survival_time_limit_", false))
-			{
-				ReplaceString(targetName, sizeof(targetName), "sf2_survival_time_limit_", "", false);
-				g_iTimeEscape = StringToInt(targetName);
-				
-				LogSF2Message("Found sf2_survival_time_limit_ entity, set survival time limit to %d", g_iTimeEscape);
-			}
-			else if (!StrContains(targetName, "sf2_renevant_map", false))
-			{
-				g_bIsRenevantMap = true;
-			}
-			else if (!StrContains(targetName, "sf2_slaughterrun_map", false))
-			{
-				g_bIsSlaughterRunMap = true;
+				strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), sPagePath);
 			}
 		}
 	}
-	
+
+	// For old page spawn points, get the reference entity if it exists.
+	g_bPageRef = false;
+	strcopy(g_strPageRefModel, sizeof(g_strPageRefModel), PAGE_MODEL);
+	g_flPageRefModelScale = 1.0;
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "prop_dynamic")) != -1)
+	{
+		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+		if (targetName[0] == '\0')
+			continue;
+		
+		if (strcmp(targetName, "sf2_page_model", false) == 0)
+		{
+			g_bPageRef = true;
+			GetEntPropString(ent, Prop_Data, "m_ModelName", g_strPageRefModel, sizeof(g_strPageRefModel));
+			g_flPageRefModelScale = GetEntPropFloat(ent, Prop_Send, "m_flModelScale");
+			break;
+		}
+	}
+
+#if defined DEBUG
+	LogSF2Message("ROUND SETTINGS:\n - Time limit: %i\n - Time gain from page: %i\n - Page collect sound: %s\n - Escape?: %i\n - Escape time limit: %i\n - Stop page music on escape: %i\n - Survive before escape?: %i\n - Survive until time: %i\n - Infinite flashlight: %i\n - Infinite sprint: %i\n - Infinite blink: %i\n - Bosses chase endlessly: %i\n - Intro music: %s\n - Intro fade hold time: %f\n - Intro fade time: %f",
+		g_iRoundTimeLimit, g_iRoundTimeGainFromPage, g_strPageCollectSound, g_bRoundHasEscapeObjective, g_iRoundEscapeTimeLimit, g_bRoundStopPageMusicOnEscape, g_bIsSurvivalMap, g_iTimeEscape, g_bRoundInfiniteFlashlight, g_bRoundInfiniteSprint, g_bRoundInfiniteBlink, g_bBossesChaseEndlessly, g_strRoundIntroMusic, g_flRoundIntroFadeHoldTime, g_flRoundIntroFadeDuration);
+#endif
+
+	GetRoundIntroParameters();
+	GetRoundEscapeParameters();
+	GetPageMusicRanges();
 	SpawnPages();
-	
+
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("END InitializeMapEntities()");
 #endif
 }
+
 void SpawnPages()
 {
-	PrecacheModel(PAGE_MODEL, true);
+	ArrayList hArray = new ArrayList(2);
+	StringMap hPageGroupsByName = new StringMap();
 	
-	g_bPageRef = false;
-	//for (int i = 0; i < sizeof(g_strPageRefModel); i++) strcopy(g_strPageRefModel[i], sizeof(g_strPageRefModel[]), "");
-	g_strPageRefModel[0] = '\0';
-	g_flPageRefModelScale = 1.0;
-	
-	Handle hArray = CreateArray(2);
-	Handle hPageTrie = CreateTrie();
-	
-	char targetName[64];
+	ArrayList hPageSpawnPoints = new ArrayList();
+
 	int ent = -1;
+	char targetName[64];
+
+	// Collect all possible page spawn points.
+	ent = -1;
 	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 	{
 		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
@@ -9656,223 +9757,233 @@ void SpawnPages()
 		{
 			if (!StrContains(targetName, "sf2_page_spawnpoint", false))
 			{
-				if (!StrContains(targetName, "sf2_page_spawnpoint_", false))
-				{
-					ReplaceString(targetName, sizeof(targetName), "sf2_page_spawnpoint_", "", false);
-					if (targetName[0])
-					{
-						Handle hButtStallion = INVALID_HANDLE;
-						if (!GetTrieValue(hPageTrie, targetName, hButtStallion))
-						{
-							hButtStallion = CreateArray();
-							SetTrieValue(hPageTrie, targetName, hButtStallion);
-						}
-						
-						int iIndex = FindValueInArray(hArray, hButtStallion);
-						if (iIndex == -1)
-						{
-							iIndex = PushArrayCell(hArray, hButtStallion);
-						}
-						
-						PushArrayCell(hButtStallion, ent);
-						SetArrayCell(hArray, iIndex, true, 1);
-					}
-					else
-					{
-						int iIndex = PushArrayCell(hArray, ent);
-						SetArrayCell(hArray, iIndex, false, 1);
-					}
-				}
-				else
-				{
-					int iIndex = PushArrayCell(hArray, ent);
-					SetArrayCell(hArray, iIndex, false, 1);
-				}
+				hPageSpawnPoints.Push(EnsureEntRef(ent));
 			}
 		}
 	}
 
-	strcopy(g_strPageRefModel, sizeof(g_strPageRefModel), PAGE_MODEL);
-
-	// Get a reference entity, if any.
 	ent = -1;
-	while ((ent = FindEntityByClassname(ent, "prop_dynamic")) != -1)
+	while ((ent = FindEntityByClassname(ent, "sf2_info_page_spawn")) != -1)
 	{
-		if (g_bPageRef) break;
-	
-		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
-		if (targetName[0])
+		SF2PageSpawnEntity pageSpawn = SF2PageSpawnEntity(ent);
+		if (pageSpawn.IsValid())
 		{
-			if (strcmp(targetName, "sf2_page_model", false) == 0)
-			{
-				g_bPageRef = true;
-				GetEntPropString(ent, Prop_Data, "m_ModelName", g_strPageRefModel, sizeof(g_strPageRefModel));
-				g_flPageRefModelScale = GetEntPropFloat(ent, Prop_Send, "m_flModelScale");
-				break;
-			}
+			hPageSpawnPoints.Push(EnsureEntRef(ent));
 		}
 	}
-	
-	int iPageCount = GetArraySize(hArray);
-	if (iPageCount)
+
+	if (hPageSpawnPoints.Length > 0)
 	{
-		SortADTArray(hArray, Sort_Random, Sort_Integer);
-		
-		float vecPos[3], vecAng[3], vecDir[3];
-		int page;
-		ent = -1;
-		
-		for (int i = 0; i < iPageCount && (i + 1) <= g_iPageMax; i++)
+		// Try to sort spawn points into their respective groups.
+
+		char sPageGroup[64];
+
+		for (int i = 0; i < hPageSpawnPoints.Length; i++)
 		{
-			if (view_as<bool>(GetArrayCell(hArray, i, 1)))
+			int iSpawnPoint = hPageSpawnPoints.Get(i);
+			if (!IsValidEntity(iSpawnPoint))
+				continue;
+			
+			// Get page group if possible.
+			SF2PageSpawnEntity pageSpawn = SF2PageSpawnEntity(iSpawnPoint);
+			if (pageSpawn.IsValid())
 			{
-				Handle hButtStallion = view_as<Handle>(GetArrayCell(hArray, i));
-				ent = GetArrayCell(hButtStallion, GetRandomInt(0, GetArraySize(hButtStallion) - 1));
+				pageSpawn.GetGroup(sPageGroup, sizeof(sPageGroup));
 			}
 			else
 			{
-				ent = GetArrayCell(hArray, i);
+				GetEntPropString(iSpawnPoint, Prop_Data, "m_iName", sPageGroup, sizeof(sPageGroup));
+
+				if (!StrContains(sPageGroup, "sf2_page_spawnpoint_", false))
+					ReplaceString(sPageGroup, sizeof(sPageGroup), "sf2_page_spawnpoint_", "", false);
+				else
+					sPageGroup[0] = '\0';
 			}
+
+			if (sPageGroup[0] != '\0')
+			{
+				// Spawn point belongs to a group.
+
+				ArrayList hButtStallion;
+				if (!hPageGroupsByName.GetValue(sPageGroup, hButtStallion))
+				{
+					// Initialize new page group since it didn't exist.
+					hButtStallion = new ArrayList();
+					hPageGroupsByName.SetValue(sPageGroup, hButtStallion);
+
+					int iIndex = hArray.Push(hButtStallion);
+					hArray.Set(iIndex, true, 1);
+				}
+
+				hButtStallion.Push(EnsureEntRef(iSpawnPoint));
+			}
+			else
+			{
+				int iIndex = hArray.Push(EnsureEntRef(iSpawnPoint));
+				hArray.Set(iIndex, false, 1);
+			}
+		}
+	}
+	
+	delete hPageSpawnPoints;
+	
+	int iPageCount = hArray.Length;
+	if (iPageCount)
+	{
+		// Spawn all pages.
+		hArray.Sort(Sort_Random, Sort_Integer);
+		
+		float vecPos[3], vecAng[3];
+		int page;
+		
+		char sPageModel[PLATFORM_MAX_PATH];
+		char sPageParentName[64];
+		float flPageModelScale;
+		int iPageSkin;
+		RenderFx iPageRenderFx;
+		RenderMode iPageRenderMode;
+		int iPageRenderColor[4];
+		char sPageAnimation[64];
+
+		for (int i = 0; i < iPageCount && (i + 1) <= g_iPageMax; i++)
+		{
+			int iSpawnPoint = -1;
+			if (view_as<bool>(hArray.Get(i, 1)))
+			{
+				ArrayList hButtStallion = view_as<ArrayList>(hArray.Get(i));
+				iSpawnPoint = hButtStallion.Get(GetRandomInt(0, hButtStallion.Length - 1));
+			}
+			else
+			{
+				iSpawnPoint = hArray.Get(i);
+			}
+
+			SF2PageSpawnEntity spawnPoint = SF2PageSpawnEntity(iSpawnPoint);
 			
-			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", vecPos);
-			GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", vecAng);
-			GetAngleVectors(vecAng, vecDir, NULL_VECTOR, NULL_VECTOR);
-			NormalizeVector(vecDir, vecDir);
-			ScaleVector(vecDir, 1.0);
+			GetEntPropVector(iSpawnPoint, Prop_Data, "m_vecAbsOrigin", vecPos);
+			GetEntPropVector(iSpawnPoint, Prop_Data, "m_angAbsRotation", vecAng);
+			GetEntPropString(iSpawnPoint, Prop_Data, "m_iParent", sPageParentName, sizeof(sPageParentName));
 			
+			// Get model, scale, skin, and animation.
+			if (spawnPoint.IsValid())
+			{
+				spawnPoint.GetModel(sPageModel, sizeof(sPageModel));
+				flPageModelScale = spawnPoint.ModelScale;
+				iPageSkin = spawnPoint.Skin == -1 ? i : spawnPoint.Skin;
+				iPageRenderFx = spawnPoint.RenderFx;
+				iPageRenderMode = spawnPoint.RenderMode;
+				spawnPoint.GetRenderColor(iPageRenderColor[0], iPageRenderColor[1], iPageRenderColor[2], iPageRenderColor[3]);
+				spawnPoint.GetAnimation(sPageAnimation, sizeof(sPageAnimation));
+			}
+			else if (g_bPageRef)
+			{
+				strcopy(sPageModel, sizeof(sPageModel), g_strPageRefModel);
+				flPageModelScale = g_flPageRefModelScale;
+				iPageSkin = i;
+				iPageRenderFx = RENDERFX_NONE;
+				iPageRenderMode = RENDER_NORMAL;
+				iPageRenderColor[0] = 255; iPageRenderColor[1] = 255; iPageRenderColor[2] = 255; iPageRenderColor[3] = 255; 
+				sPageAnimation[0] = '\0';
+			}
+			else
+			{
+				strcopy(sPageModel, sizeof(sPageModel), PAGE_MODEL);
+				flPageModelScale = PAGE_MODELSCALE;
+				iPageSkin = i;
+				iPageRenderFx = RENDERFX_NONE;
+				iPageRenderMode = RENDER_NORMAL;
+				iPageRenderColor[0] = 255; iPageRenderColor[1] = 255; iPageRenderColor[2] = 255; iPageRenderColor[3] = 255; 
+				sPageAnimation[0] = '\0';
+			}
+
+			// Create fake page model
 			char pageName[50];
 			int page2 = CreateEntityByName("prop_dynamic_override");
 			if (page2 != -1)
 			{
-				TeleportEntity(page2, vecPos, vecAng, NULL_VECTOR);
 				DispatchKeyValue(page2, "targetname", "sf2_page_ex");
-				
-				if (g_bPageRef)
-				{
-					SetEntityModel(page2, g_strPageRefModel);
-				}
-				else
-				{
-					DispatchKeyValue(page2, "modelname", PAGE_MODEL);
-					DispatchKeyValue(page2, "model", PAGE_MODEL);
-					SetEntityModel(page2, PAGE_MODEL);
-				}
-				
+				DispatchKeyValue(page2, "parentname", sPageParentName);
 				DispatchKeyValue(page2, "solid", "0");
-				DispatchKeyValue(page2, "parentname", pageName);
+				SetEntityModel(page2, sPageModel);
+				TeleportEntity(page2, vecPos, vecAng, NULL_VECTOR);
 				DispatchSpawn(page2);
 				ActivateEntity(page2);
-				SetVariantInt(i);
+				SetVariantInt(iPageSkin);
 				AcceptEntityInput(page2, "Skin");
 				AcceptEntityInput(page2, "DisableCollision");
-				//SetVariantString(pageName);
-				//AcceptEntityInput(page2, "SetParent");
-				
-				if (g_bPageRef)
-				{
-					SetEntPropFloat(page2, Prop_Send, "m_flModelScale", g_flPageRefModelScale);
-				}
-				else
-				{
-					SetEntPropFloat(page2, Prop_Send, "m_flModelScale", PAGE_MODELSCALE);
-				}
-				
-				SetEntityFlags(page2, GetEntityFlags(page2)|FL_EDICT_ALWAYS);
+				SetEntPropFloat(page2, Prop_Send, "m_flModelScale", flPageModelScale);
+				SetEntityFlags(page2, GetEntityFlags(page2) | FL_EDICT_ALWAYS);
+				SetEntityRenderMode(page2, iPageRenderMode);
+				SetEntityRenderFx(page2, iPageRenderFx);
+				SetEntityRenderColor(page2, iPageRenderColor[0], iPageRenderColor[1], iPageRenderColor[2], iPageRenderColor[3]);
+
 				CreateTimer(1.0, Page_RemoveAlwaysTransmit, EntIndexToEntRef(page2), TIMER_FLAG_NO_MAPCHANGE);
 				SDKHook(page2, SDKHook_SetTransmit, Hook_SlenderObjectSetTransmitEx);
-				/*int iEnt = CreateEntityByName("tf_taunt_prop");
-				if (iEnt != -1)
+
+				if (sPageAnimation[0] != '\0')
 				{
-					float flModelScale = GetEntPropFloat(page2, Prop_Send, "m_flModelScale");
-					
-					if (g_bPageRef)
-					{
-						SetEntityModel(iEnt, g_strPageRefModel);
-					}
-					else
-					{
-						DispatchKeyValue(iEnt, "modelname", PAGE_MODEL);
-						DispatchKeyValue(iEnt, "model", PAGE_MODEL);
-						SetEntityModel(iEnt, PAGE_MODEL);
-					}
-					DispatchSpawn(iEnt);
-					ActivateEntity(iEnt);
-					SetEntityRenderMode(iEnt, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iEnt, 0, 0, 0, 0);
-					SetEntProp(iEnt, Prop_Send, "m_bGlowEnabled", 1);
-					SetEntPropFloat(iEnt, Prop_Send, "m_flModelScale", flModelScale);
-					
-					int iFlags = GetEntProp(iEnt, Prop_Send, "m_fEffects");
-					SetEntProp(iEnt, Prop_Send, "m_fEffects", iFlags | (1 << 0));
-					
-					SetVariantString("!activator");
-					AcceptEntityInput(iEnt, "SetParent", page2);
-				}*/
+					SetVariantString(sPageAnimation);
+					AcceptEntityInput(page2, "SetDefaultAnimation");
+					SetVariantString(sPageAnimation);
+					AcceptEntityInput(page2, "SetAnimation");
+				}
 			}
+
+			// Create actual page entity
 			page = CreateEntityByName("prop_dynamic_override");
 			if (page != -1)
 			{
-				TeleportEntity(page, vecPos, vecAng, NULL_VECTOR);
-				FormatEx(pageName,50,"sf2_page_ex_%i",i);
+				FormatEx(pageName, sizeof(pageName), "sf2_page_ex_%d", i);
 				DispatchKeyValue(page, "targetname", pageName);
-				
-				if (g_bPageRef)
-				{
-					SetEntityModel(page, g_strPageRefModel);
-				}
-				else
-				{
-					DispatchKeyValue(page, "modelname", PAGE_MODEL);
-					DispatchKeyValue(page, "model", PAGE_MODEL);
-					SetEntityModel(page, PAGE_MODEL);
-				}
-				
+				DispatchKeyValue(page, "parentname", sPageParentName);
 				DispatchKeyValue(page, "solid", "2");
-				
-				SetEntPropEnt(page, Prop_Send, "m_hOwnerEntity", page2);
-				SetEntPropEnt(page, Prop_Send, "m_hEffectEntity", page2);
-				
+				SetEntityModel(page, sPageModel);
+				TeleportEntity(page, vecPos, vecAng, NULL_VECTOR);
 				DispatchSpawn(page);
 				ActivateEntity(page);
-				SetVariantInt(i);
+				SetVariantInt(iPageSkin);
 				AcceptEntityInput(page, "Skin");
 				AcceptEntityInput(page, "EnableCollision");
-				
+				SetEntPropFloat(page, Prop_Send, "m_flModelScale", flPageModelScale);
 				SetEntPropEnt(page, Prop_Send, "m_hOwnerEntity", page2);
 				SetEntPropEnt(page, Prop_Send, "m_hEffectEntity", page2);
-				
-				if (g_bPageRef)
-				{
-					SetEntPropFloat(page, Prop_Send, "m_flModelScale", g_flPageRefModelScale);
-				}
-				else
-				{
-					SetEntPropFloat(page, Prop_Send, "m_flModelScale", PAGE_MODELSCALE);
-				}
 				SetEntProp(page, Prop_Send, "m_fEffects", EF_ITEM_BLINK);
-				SetEntityFlags(page, GetEntityFlags(page)|FL_EDICT_ALWAYS);
+				SetEntityFlags(page, GetEntityFlags(page) | FL_EDICT_ALWAYS);
+				SetEntityRenderMode(page, iPageRenderMode);
+				SetEntityRenderFx(page, iPageRenderFx);
+				SetEntityRenderColor(page, iPageRenderColor[0], iPageRenderColor[1], iPageRenderColor[2], iPageRenderColor[3]);
+				
 				CreateTimer(1.0, Page_RemoveAlwaysTransmit, EntIndexToEntRef(page), TIMER_FLAG_NO_MAPCHANGE);
 				SDKHook(page, SDKHook_OnTakeDamage, Hook_PageOnTakeDamage);
 				SDKHook(page, SDKHook_SetTransmit, Hook_SlenderObjectSetTransmit);
+
+				if (sPageAnimation[0] != '\0')
+				{
+					SetVariantString(sPageAnimation);
+					AcceptEntityInput(page, "SetDefaultAnimation");
+					SetVariantString(sPageAnimation);
+					AcceptEntityInput(page, "SetAnimation");
+				}
 			}
 		}
 		
 		// Safely remove all handles.
-		for (int i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
+		for (int i = 0, iSize = hArray.Length; i < iSize; i++)
 		{
-			if (view_as<bool>(GetArrayCell(hArray, i, 1)))
+			if (view_as<bool>(hArray.Get(i, 1)))
 			{
-				delete view_as<Handle>(GetArrayCell(hArray, i));
+				delete view_as<ArrayList>(hArray.Get(i));
 			}
 		}
 	
 		Call_StartForward(fOnPagesSpawned);
 		Call_Finish();
 	}
-	
-	delete hPageTrie;
+
+	delete hPageGroupsByName;
 	delete hArray;
 }
+
 public Action Page_RemoveAlwaysTransmit(Handle timer, int iRef)
 {
 	int iPage = EntRefToEntIndex(iRef);
@@ -9882,6 +9993,7 @@ public Action Page_RemoveAlwaysTransmit(Handle timer, int iRef)
 		SetEntityFlags(iPage, GetEntityFlags(iPage)^FL_EDICT_ALWAYS);
 	}
 }
+
 static bool HandleSpecialRoundState()
 {
 #if defined DEBUG
@@ -10233,14 +10345,6 @@ static void SelectStartingBossesForRound()
 
 static void GetRoundIntroParameters()
 {
-	g_iRoundIntroFadeColor[0] = 0;
-	g_iRoundIntroFadeColor[1] = 0;
-	g_iRoundIntroFadeColor[2] = 0;
-	g_iRoundIntroFadeColor[3] = 255;
-	
-	g_flRoundIntroFadeHoldTime = GetConVarFloat(g_cvIntroDefaultHoldTime);
-	g_flRoundIntroFadeDuration = GetConVarFloat(g_cvIntroDefaultFadeTime);
-	
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "env_fade")) != -1)
 	{
@@ -10263,9 +10367,6 @@ static void GetRoundIntroParameters()
 			break;
 		}
 	}
-	
-	// Get the intro music.
-	strcopy(g_strRoundIntroMusic, sizeof(g_strRoundIntroMusic), SF2_INTRO_DEFAULT_MUSIC);
 	
 	ent = -1;
 	while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
@@ -10315,10 +10416,24 @@ void InitializeNewGame()
 	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("START InitializeNewGame()");
 #endif
 
+	InitializeMapEntities();
+
 	//Tutorial_EnableHooks();
-	GetRoundIntroParameters();
-	GetRoundEscapeParameters();
 	
+	if (SF_IsBoxingMap())
+	{
+		g_iSlenderBoxingBossCount = 0;
+		g_iSlenderBoxingBossKilled = 0;
+	}
+	else if (SF_IsRenevantMap())
+	{
+		g_hRenevantWaveTimer = INVALID_HANDLE;
+		g_bRenevantMultiEffect = false;
+		g_bRenevantBeaconEffect = false;
+
+		Renevant_SetWave(0);
+	}
+
 	// Choose round state.
 	if (GetConVarBool(g_cvIntroEnabled))
 	{
@@ -10415,11 +10530,6 @@ void InitializeNewGame()
 	{
 		g_iNewBossRoundCount++;
 	}
-	
-	InitializeMapEntities();
-	
-	// Initialize pages and entities.
-	GetPageMusicRanges();
 
 	SelectStartingBossesForRound();
 	

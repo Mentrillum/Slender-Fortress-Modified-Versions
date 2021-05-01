@@ -3301,7 +3301,7 @@ void ClientStartProxyAvailableTimer(int client)
 	g_hPlayerProxyAvailableTimer[client] = CreateTimer(flCooldown, Timer_ClientProxyAvailable, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
-void ClientStartProxyForce(int client,int iSlenderID, const float flPos[3])
+void ClientStartProxyForce(int client, int iSlenderID, const float flPos[3], int iSpawnPoint)
 {
 #if defined DEBUG
 	if (GetConVarInt(g_cvDebugDetail) > 2) DebugMessage("START ClientStartProxyForce(%d, %d, flPos)", client, iSlenderID);
@@ -3309,6 +3309,7 @@ void ClientStartProxyForce(int client,int iSlenderID, const float flPos[3])
 
 	g_iPlayerProxyAskMaster[client] = iSlenderID;
 	for (int i = 0; i < 3; i++) g_iPlayerProxyAskPosition[client][i] = flPos[i];
+	g_iPlayerProxyAskSpawnPoint[client] = EnsureEntRef(iSpawnPoint);
 
 	g_iPlayerProxyAvailableCount[client] = 0;
 	g_bPlayerProxyAvailableInForce[client] = true;
@@ -3373,8 +3374,7 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 				}
 				else
 				{
-					ClientEnableProxy(client, iBossIndex);
-					TeleportEntity(client, g_iPlayerProxyAskPosition[client], NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+					ClientEnableProxy(client, iBossIndex, g_iPlayerProxyAskPosition[client], g_iPlayerProxyAskSpawnPoint[client]);
 				}
 			}
 			else
@@ -3388,7 +3388,7 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-void DisplayProxyAskMenu(int client,int iAskMaster, const float flPos[3])
+void DisplayProxyAskMenu(int client, int iAskMaster, const float flPos[3], int iSpawnPoint)
 {
 	char sBuffer[512];
 	Handle hMenu = CreateMenu(Menu_ProxyAsk);
@@ -3401,6 +3401,8 @@ void DisplayProxyAskMenu(int client,int iAskMaster, const float flPos[3])
 	
 	g_iPlayerProxyAskMaster[client] = iAskMaster;
 	for (int i = 0; i < 3; i++) g_iPlayerProxyAskPosition[client][i] = flPos[i];
+	g_iPlayerProxyAskSpawnPoint[client] = EnsureEntRef(iSpawnPoint);
+
 	DisplayMenu(hMenu, client, 15);
 }
 
@@ -3435,21 +3437,25 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 					{
 						if (param2 == 0)
 						{
-							if(!IsPointVisibleToAPlayer(g_iPlayerProxyAskPosition[param1], _, false))
+							bool bIgnoreVisibility = false;
+							int iSpawnPoint = g_iPlayerProxyAskSpawnPoint[param1];
+							float flSpawnPos[3];
+
+							if (IsValidEntity(iSpawnPoint))
 							{
-								ClientEnableProxy(param1, iBossIndex);
-								/*char sName[64];
-								int ent = -1;
-								while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
-								{
-									GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-									if (strcmp(sName, "sf2_proxy_spawn_point", false) == 0)
-									{
-										GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", g_iPlayerProxyAskPosition[param1]);
-										break;
-									}
-								}*/
-								TeleportEntity(param1, g_iPlayerProxyAskPosition[param1], NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+								GetEntPropVector(iSpawnPoint, Prop_Data, "m_vecAbsOrigin", flSpawnPos);
+
+								SF2PlayerProxySpawnEntity spawnPoint = SF2PlayerProxySpawnEntity(iSpawnPoint);
+								if (spawnPoint.IsValid()) bIgnoreVisibility = spawnPoint.IgnoreVisibility;
+							}
+							else 
+							{
+								for (int i = 0; i < 3; i++) flSpawnPos[i] = g_iPlayerProxyAskPosition[param1][i];
+							}
+
+							if (bIgnoreVisibility || !IsPointVisibleToAPlayer(flSpawnPos, _, false))
+							{
+								ClientEnableProxy(param1, iBossIndex, flSpawnPos, iSpawnPoint);
 							}
 							else
 							{
@@ -3482,7 +3488,12 @@ public Action Timer_ClientProxyAvailable(Handle timer, any userid)
 	g_hPlayerProxyAvailableTimer[client] = INVALID_HANDLE;
 }
 
-void ClientEnableProxy(int client,int iBossIndex)
+/**
+ *	Respawns a player as a proxy.
+ *
+ *	@noreturn
+ */
+void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSpawnPoint=-1)
 {
 	if (NPCGetUniqueID(iBossIndex) == -1) return;
 	if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return;
@@ -3601,10 +3612,25 @@ void ClientEnableProxy(int client,int iBossIndex)
 	
 	//SDKHook(client, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
 	
+	SF2PlayerProxySpawnEntity spawnPoint = SF2PlayerProxySpawnEntity(iSpawnPoint);
+	if (spawnPoint.IsValid())
+	{
+		float flSpawnPos[3]; float flAng[3];
+		GetEntPropVector(iSpawnPoint, Prop_Data, "m_vecAbsOrigin", flSpawnPos);
+		GetEntPropVector(iSpawnPoint, Prop_Data, "m_angAbsRotation", flAng);
+		TeleportEntity(client, flSpawnPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
+		spawnPoint.FireOutputNoVariant("OnSpawn", client, iSpawnPoint);
+	}
+	else 
+	{
+		TeleportEntity(client, flPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+	}
+
 	Call_StartForward(fOnClientSpawnedAsProxy);
 	Call_PushCell(client);
 	Call_Finish();
 }
+
 public Action Timer_ClassScramblePlayer(Handle timer, any userid)
 {
 	if (!g_bEnabled) return;
@@ -5329,6 +5355,7 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 {
 	int iOldPageMusicMaster = EntRefToEntIndex(g_iPlayerPageMusicMaster[client]);
+	int iOldPageMusicActiveIndex = g_iPageMusicActiveIndex[client];
 	int iOldMusicFlags = g_iPlayerMusicFlags[client];
 	int iChasingBoss = -1;
 	int iChasingSeeBoss = -1;
@@ -5339,7 +5366,9 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 	{
 		g_iPlayerMusicFlags[client] = 0;
 		g_iPlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
-		if(MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
+		g_iPageMusicActiveIndex[client] = -1;
+
+		if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
 		{
 			char sPath[PLATFORM_MAX_PATH];
 			GetBossMusic(sPath,sizeof(sPath));
@@ -5352,35 +5381,25 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 	}
 	else
 	{
-		bool bPlayMusicOnEscape = true;
-		char sName[64];
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
-		{
-			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-			if (strcmp(sName, "sf2_escape_custommusic", false) == 0)
-			{
-				bPlayMusicOnEscape = false;
-				break;
-			}
-		}
-		
+		bool bPlayMusicOnEscape = !g_bRoundStopPageMusicOnEscape;
+
 		// Page music first.
 		int iPageRange = 0;
 		
-		if (GetArraySize(g_hPageMusicRanges) > 0) // Map has its own defined page music?
+		if (g_hPageMusicRanges.Length > 0) // Map has its own defined page music?
 		{
-			for (int i = 0, iSize = GetArraySize(g_hPageMusicRanges); i < iSize; i++)
+			for (int i = 0, iSize = g_hPageMusicRanges.Length; i < iSize; i++)
 			{
-				ent = EntRefToEntIndex(GetArrayCell(g_hPageMusicRanges, i));
+				int ent = EntRefToEntIndex(g_hPageMusicRanges.Get(i));
 				if (!ent || ent == INVALID_ENT_REFERENCE) continue;
 				
-				int iMin = GetArrayCell(g_hPageMusicRanges, i, 1);
-				int iMax = GetArrayCell(g_hPageMusicRanges, i, 2);
+				int iMin = g_hPageMusicRanges.Get(i, 1);
+				int iMax = g_hPageMusicRanges.Get(i, 2);
 				
 				if (g_iPageCount >= iMin && g_iPageCount <= iMax)
 				{
-					g_iPlayerPageMusicMaster[client] = GetArrayCell(g_hPageMusicRanges, i);
+					g_iPlayerPageMusicMaster[client] = g_hPageMusicRanges.Get(i);
+					g_iPageMusicActiveIndex[client] = i;
 					break;
 				}
 			}
@@ -5388,6 +5407,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		else // Nope. Use old system instead.
 		{
 			g_iPlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
+			g_iPageMusicActiveIndex[client] = -1;
 		
 			float flPercent = g_iPageMax > 0 ? (float(g_iPageCount) / float(g_iPageMax)) : 0.0;
 			if (flPercent > 0.0 && flPercent <= 0.25) iPageRange = 1;
@@ -5410,6 +5430,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		{
 			ClientRemoveMusicFlag(client, MUSICF_PAGES75PERCENT);
 			g_iPlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
+			g_iPageMusicActiveIndex[client] = -1;
 			//NPCStopMusic();
 		}
 		
@@ -5578,10 +5599,11 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		bool b20Dollars = ClientHasMusicFlag(client, MUSICF_20DOLLARS);
 		bool bWas20Dollars = ClientHasMusicFlag2(iOldMusicFlags, MUSICF_20DOLLARS);
 		char sPath[PLATFORM_MAX_PATH];
+
 		if (IsRoundEnding() || !IsClientInGame(client) || IsFakeClient(client) || DidClientEscape(client) || (g_bPlayerEliminated[client] && !IsClientInGhostMode(client) && !g_bPlayerProxy[client])) 
 		{
 		}
-		else if(MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
+		else if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES)) //A boss is overriding the music.
 		{
 			if (!SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
@@ -5595,91 +5617,98 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 				return;
 			}
 		}
+
 		// Custom system.
-		if (GetArraySize(g_hPageMusicRanges) > 0) 
+		if (g_hPageMusicRanges.Length > 0) 
 		{
-		
 			int iMaster = EntRefToEntIndex(g_iPlayerPageMusicMaster[client]);
-			if (iMaster != INVALID_ENT_REFERENCE)
+			int iPageMusicActiveIndex = g_iPageMusicActiveIndex[client];
+
+			if (iPageMusicActiveIndex != iOldPageMusicActiveIndex)
 			{
-				for (int i = 0, iSize = GetArraySize(g_hPageMusicRanges); i < iSize; i++)
+				// Page music was changed.
+
+				// Stop the old music.
+				if (iOldPageMusicActiveIndex != -1 && iOldPageMusicMaster && iOldPageMusicMaster != INVALID_ENT_REFERENCE)
 				{
-					int ent = EntRefToEntIndex(GetArrayCell(g_hPageMusicRanges, i));
-					if (!ent || ent == INVALID_ENT_REFERENCE) continue;
-					
-					GetEntPropString(ent, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
-					
-					if (ent == iMaster && 
-						(iOldPageMusicMaster != iMaster || iOldPageMusicMaster == INVALID_ENT_REFERENCE))
-					{
-						if (!sPath[0])
-						{
-							LogError("Could not play music of page range %d-%d: no sound path specified!", GetArrayCell(g_hPageMusicRanges, i, 1), GetArrayCell(g_hPageMusicRanges, i, 2));
-						}
-						else
-						{
-							ClientMusicStart(client, sPath, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
-						}
-						
-						if (iOldPageMusicMaster && iOldPageMusicMaster != INVALID_ENT_REFERENCE)
-						{
-							GetEntPropString(iOldPageMusicMaster, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
-							if (sPath[0])
-							{
-								StopSound(client, MUSIC_CHAN, sPath);
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				if (iOldPageMusicMaster && iOldPageMusicMaster != INVALID_ENT_REFERENCE)
-				{
-					GetEntPropString(iOldPageMusicMaster, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
-					if (sPath[0])
-					{
+					int iOldPageRangeMin = g_hPageMusicRanges.Get(iOldPageMusicActiveIndex, 1);
+
+					SF2PageMusicEntity oldPageMusic = SF2PageMusicEntity(iOldPageMusicMaster);
+					if (oldPageMusic.IsValid())
+						oldPageMusic.GetRangeMusic(iOldPageRangeMin, sPath, sizeof(sPath));
+					else
+						GetEntPropString(iOldPageMusicMaster, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
+
+					if (sPath[0] != '\0') 
 						StopSound(client, MUSIC_CHAN, sPath);
+				}
+				
+				// Play new music.
+				if (iPageMusicActiveIndex != -1 && iMaster && iMaster != INVALID_ENT_REFERENCE)
+				{
+					int iPageRangeMin = g_hPageMusicRanges.Get(iPageMusicActiveIndex, 1);
+					int iPageRangeMax = g_hPageMusicRanges.Get(iPageMusicActiveIndex, 2);
+
+					SF2PageMusicEntity pageMusic = SF2PageMusicEntity(iMaster);
+					if (pageMusic.IsValid())
+					{
+						pageMusic.GetRangeMusic(g_iPageCount, sPath, sizeof(sPath));
+					}
+					else
+					{
+						GetEntPropString(iMaster, Prop_Data, "m_iszSound", sPath, sizeof(sPath));
+					}
+
+					// Play the new music.
+					if (sPath[0] == '\0')
+					{
+						LogError("Could not play music of page range %d - %d: no valid sound path specified!", iPageRangeMin, iPageRangeMax);
+					}
+					else
+					{
+						ClientMusicStart(client, sPath, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
 					}
 				}
 			}
 		}
-		
-		// Old system.
-		if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES1PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES1PERCENT))
+		else
 		{
-			StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES1_SOUND);
-		}
-		else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES1PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES1PERCENT))
-		{
-			ClientMusicStart(client, MUSIC_GOTPAGES1_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
-		}
-		
-		if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES25PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES25PERCENT))
-		{
-			StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES2_SOUND);
-		}
-		else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES25PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES25PERCENT))
-		{
-			ClientMusicStart(client, MUSIC_GOTPAGES2_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
-		}
-		
-		if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES50PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES50PERCENT))
-		{
-			StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES3_SOUND);
-		}
-		else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES50PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES50PERCENT))
-		{
-			ClientMusicStart(client, MUSIC_GOTPAGES3_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
-		}
-		
-		if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES75PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES75PERCENT))
-		{
-			StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES4_SOUND);
-		}
-		else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES75PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES75PERCENT))
-		{
-			ClientMusicStart(client, MUSIC_GOTPAGES4_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
+			// Old system.
+			if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES1PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES1PERCENT))
+			{
+				StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES1_SOUND);
+			}
+			else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES1PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES1PERCENT))
+			{
+				ClientMusicStart(client, MUSIC_GOTPAGES1_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
+			}
+			
+			if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES25PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES25PERCENT))
+			{
+				StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES2_SOUND);
+			}
+			else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES25PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES25PERCENT))
+			{
+				ClientMusicStart(client, MUSIC_GOTPAGES2_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
+			}
+			
+			if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES50PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES50PERCENT))
+			{
+				StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES3_SOUND);
+			}
+			else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES50PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES50PERCENT))
+			{
+				ClientMusicStart(client, MUSIC_GOTPAGES3_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
+			}
+			
+			if ((bInitialize || ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES75PERCENT)) && !ClientHasMusicFlag(client, MUSICF_PAGES75PERCENT))
+			{
+				StopSound(client, MUSIC_CHAN, MUSIC_GOTPAGES4_SOUND);
+			}
+			else if ((bInitialize || !ClientHasMusicFlag2(iOldMusicFlags, MUSICF_PAGES75PERCENT)) && ClientHasMusicFlag(client, MUSICF_PAGES75PERCENT))
+			{
+				ClientMusicStart(client, MUSIC_GOTPAGES4_SOUND, _, MUSIC_PAGE_VOLUME, bChase || bAlert);
+			}
 		}
 		
 		int iMainMusicState = 0;
@@ -5805,6 +5834,7 @@ stock void ClientMusicReset(int client)
 	g_flPlayerMusicTargetVolume[client] = 0.0;
 	g_hPlayerMusicTimer[client] = INVALID_HANDLE;
 	g_iPlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
+	g_iPageMusicActiveIndex[client] = -1;
 }
 
 stock void ClientMusicStart(int client, const char[] sNewMusic, float flVolume=-1.0, float flTargetVolume=-1.0, bool bCopyOnly=false)
@@ -5827,18 +5857,8 @@ stock void ClientMusicStart(int client, const char[] sNewMusic, float flVolume=-
 
 	if (!bCopyOnly)
 	{
-		bool bPlayMusicOnEscape = false;
-		char sName[64];
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
-		{
-			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-			if (strcmp(sName, "sf2_escape_custommusic", false) == 0)
-			{
-				bPlayMusicOnEscape = true;
-				break;
-			}
-		}
+		bool bPlayMusicOnEscape = !g_bRoundStopPageMusicOnEscape;
+
 		if(g_iPageCount < g_iPageMax)
 		{
 			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
