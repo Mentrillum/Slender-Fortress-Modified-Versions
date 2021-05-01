@@ -111,6 +111,7 @@
 
 @PointClass base(game_text) iconsprite("editor/game_text.vmt") = sf2_game_text : "A game_text entity specialized for SF2."
 [
+	input Display(string) : "Display the message text. If targetname is provided, will show text to that entity only."
 ]
 
 @SolidClass base(trigger_multiple) = sf2_trigger_escape : "A trigger brush that when touched by a RED player during Escape phase, will let that player escape the map."
