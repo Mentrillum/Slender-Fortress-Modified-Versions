@@ -892,7 +892,7 @@ Handle g_hTimerFail;
 #include "sf2/nav.sp"
 #include "sf2/effects.sp"
 #include "sf2/playergroups.sp"
-#include "sf2/entities.sp"
+#include "sf2/mapentities.sp"
 #include "sf2/menus.sp"
 #include "sf2/tutorial.sp"
 #include "sf2/npc.sp"
