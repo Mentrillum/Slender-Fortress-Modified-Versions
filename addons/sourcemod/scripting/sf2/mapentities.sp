@@ -197,23 +197,23 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 	}
 }
 
-#include "sf2/entities/sf2_game_text.sp"
-#include "sf2/entities/sf2_gamerules.sp"
-#include "sf2/entities/sf2_trigger_escape.sp"
-#include "sf2/entities/sf2_info_player_escapespawn.sp"
-#include "sf2/entities/sf2_trigger_pvp.sp"
-#include "sf2/entities/sf2_info_player_pvpspawn.sp"
-#include "sf2/entities/sf2_info_player_proxyspawn.sp"
-#include "sf2/entities/sf2_info_boss_spawn.sp"
-#include "sf2/entities/sf2_info_page_spawn.sp"
-#include "sf2/entities/sf2_info_page_music.sp"
-#include "sf2/entities/sf2_logic_proxy.sp"
-#include "sf2/entities/sf2_logic_raid.sp"
+#include "sf2/mapentities/sf2_game_text.sp"
+#include "sf2/mapentities/sf2_gamerules.sp"
+#include "sf2/mapentities/sf2_trigger_escape.sp"
+#include "sf2/mapentities/sf2_info_player_escapespawn.sp"
+#include "sf2/mapentities/sf2_trigger_pvp.sp"
+#include "sf2/mapentities/sf2_info_player_pvpspawn.sp"
+#include "sf2/mapentities/sf2_info_player_proxyspawn.sp"
+#include "sf2/mapentities/sf2_info_boss_spawn.sp"
+#include "sf2/mapentities/sf2_info_page_spawn.sp"
+#include "sf2/mapentities/sf2_info_page_music.sp"
+#include "sf2/mapentities/sf2_logic_proxy.sp"
+#include "sf2/mapentities/sf2_logic_raid.sp"
 
 // Modified only
-#include "sf2/entities/sf2_logic_arena.sp"
-#include "sf2/entities/sf2_logic_boxing.sp"
-#include "sf2/entities/sf2_logic_slaughter.sp"
+#include "sf2/mapentities/sf2_logic_arena.sp"
+#include "sf2/mapentities/sf2_logic_boxing.sp"
+#include "sf2/mapentities/sf2_logic_slaughter.sp"
 
 /**
  * A single output that is registered to the entity using AddOutput.
@@ -1102,7 +1102,12 @@ void SF2MapEntity_InitGameData(GameData hConfig)
 	g_hSDKAcceptInput.AddParam(HookParamType_CharPtr);
 	g_hSDKAcceptInput.AddParam(HookParamType_CBaseEntity);
 	g_hSDKAcceptInput.AddParam(HookParamType_CBaseEntity);
-	g_hSDKAcceptInput.AddParam(HookParamType_Object, 20); // SIZEOF_VARIANT_T
+
+	if (g_iServerOS == 0)
+		g_hSDKAcceptInput.AddParam(HookParamType_Object, 20); // Windows: SIZEOF_VARIANT_T
+	else
+		g_hSDKAcceptInput.AddParam(HookParamType_ObjectPtr); // Linux: wtf?
+	
 	g_hSDKAcceptInput.AddParam(HookParamType_Int);
 
 	delete hSdkToolsConfig;
