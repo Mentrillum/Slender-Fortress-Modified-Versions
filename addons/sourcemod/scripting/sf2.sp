@@ -83,8 +83,8 @@ public Plugin myinfo =
 
 #define PAGE_DETECTOR_BEEP "items/cart_explode_trigger.wav"
 
-#define PAGE_MODEL "models/slender/sheet.mdl"
-#define PAGE_MODELSCALE 1.1
+#define PAGE_MODEL "models/slender/pickups/sheet.mdl"
+#define PAGE_MODELSCALE 1.0
 
 #define DEFAULT_CLOAKONSOUND "weapons/medi_shield_deploy.wav"
 #define DEFAULT_CLOAKOFFSOUND "weapons/medi_shield_retract.wav"
@@ -1884,13 +1884,13 @@ static void PrecacheStuff()
 	PrecacheMaterial2(SF2_OVERLAY_GHOST);
 	PrecacheMaterial2(SF2_OVERLAY_MARBLEHORNETS);
 	
-	AddFileToDownloadsTable("models/slender/sheet.mdl");
-	AddFileToDownloadsTable("models/slender/sheet.dx80.vtx");
-	AddFileToDownloadsTable("models/slender/sheet.dx90.vtx");
-	AddFileToDownloadsTable("models/slender/sheet.phy");
-	AddFileToDownloadsTable("models/slender/sheet.sw.vtx");
-	AddFileToDownloadsTable("models/slender/sheet.vvd");
-	AddFileToDownloadsTable("models/slender/sheet.xbox");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.mdl");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.dx80.vtx");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.dx90.vtx");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.phy");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.sw.vtx");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.vvd");
+	AddFileToDownloadsTable("models/slender/pickups/sheet.xbox");
 	
 	AddFileToDownloadsTable("models/demani_sf/key_australium.mdl");
 	AddFileToDownloadsTable("models/demani_sf/key_australium.dx80.vtx");
@@ -1902,22 +1902,22 @@ static void PrecacheStuff()
 	AddFileToDownloadsTable("materials/models/demani_sf/key_australium.vtf");
 	AddFileToDownloadsTable("materials/models/demani_sf/key_australium_normal.vtf");
 	
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_1.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_1.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_2.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_2.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_3.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_3.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_4.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_4.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_5.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_5.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_6.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_6.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_7.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_7.vmt");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_8.vtf");
-	AddFileToDownloadsTable("materials/models/Jason278/Slender/Sheets/Sheet_8.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_1.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_1.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_2.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_2.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_3.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_3.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_4.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_4.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_5.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_5.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_6.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_6.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_7.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_7.vmt");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_8.vtf");
+	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_8.vmt");
 	
 	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.mdl");
 	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.sw.vtx");
