@@ -199,6 +199,8 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 		int iBossEntIndex = NPCGetEntIndex(iBossIndex);
 		if (IsValidEntity(iBossEntIndex))
 		{
+			TeleportEntity(iBossEntIndex, NULL_VECTOR, flAng, NULL_VECTOR);
+
 			if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_NODROP))
 			{
 				// Drop (teleport) it to the ground.

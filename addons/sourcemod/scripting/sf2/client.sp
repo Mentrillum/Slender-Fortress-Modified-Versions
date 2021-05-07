@@ -5859,12 +5859,7 @@ stock void ClientMusicStart(int client, const char[] sNewMusic, float flVolume=-
 	{
 		bool bPlayMusicOnEscape = !g_bRoundStopPageMusicOnEscape;
 
-		if(g_iPageCount < g_iPageMax)
-		{
-			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-			TriggerTimer(g_hPlayerMusicTimer[client], true);
-		}
-		if(!bPlayMusicOnEscape)
+		if (g_iPageCount < g_iPageMax || bPlayMusicOnEscape)
 		{
 			g_hPlayerMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeInMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			TriggerTimer(g_hPlayerMusicTimer[client], true);

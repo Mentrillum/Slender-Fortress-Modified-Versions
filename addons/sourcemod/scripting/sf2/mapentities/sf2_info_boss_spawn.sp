@@ -70,8 +70,9 @@ methodmap SF2BossSpawnEntity < SF2MapEntity
 
 		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 
-		float flPos[3];
+		float flPos[3]; float flAng[3];
 		GetEntPropVector(this.EntRef, Prop_Data, "m_vecAbsOrigin", flPos);
+		GetEntPropVector(this.EntRef, Prop_Data, "m_angAbsRotation", flAng);
 
 		int iCount = 0;
 		int iMaxCount = this.MaxBosses;
@@ -87,7 +88,12 @@ methodmap SF2BossSpawnEntity < SF2MapEntity
 				SpawnSlender(view_as<SF2NPC_BaseNPC>(iBossIndex), flPos);
 				iCount++;
 
-				this.FireOutputNoVariant("OnSpawn", NPCGetEntIndex(iBossIndex), this.EntRef);
+				int iBossEntIndex = NPCGetEntIndex(iBossIndex);
+				if (IsValidEntity(iBossEntIndex))
+				{
+					TeleportEntity(iBossEntIndex, NULL_VECTOR, flAng, NULL_VECTOR);
+					this.FireOutputNoVariant("OnSpawn", iBossEntIndex, this.EntRef);
+				}
 			}
 		}
 	}

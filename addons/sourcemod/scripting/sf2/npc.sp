@@ -1826,8 +1826,8 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			for (int iDifficulty2 = 0; iDifficulty2 < Difficulty_Max; iDifficulty2++)
 			{
 				g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, iDifficulty2);
-				float flMin = GetChaserProfileWanderTimeMin(iBossIndex, iDifficulty2);
-				float flMax = GetChaserProfileWanderTimeMax(iBossIndex, iDifficulty2);
+				float flMin = GetChaserProfileWanderTimeMin(NPCGetUniqueProfileIndex(iBossIndex), iDifficulty2);
+				float flMax = GetChaserProfileWanderTimeMax(NPCGetUniqueProfileIndex(iBossIndex), iDifficulty2);
 				g_flSlenderNextWanderPos[iBossIndex][iDifficulty2] = GetGameTime() + GetRandomFloat(flMin, flMax);
 			}
 			

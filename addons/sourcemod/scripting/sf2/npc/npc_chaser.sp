@@ -4032,8 +4032,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref)
 			{
 				if (GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][iDifficulty])
 				{
-					float flMin = GetChaserProfileWanderTimeMin(iBossIndex, iDifficulty);
-					float flMax = GetChaserProfileWanderTimeMax(iBossIndex, iDifficulty);
+					float flMin = GetChaserProfileWanderTimeMin(NPCGetUniqueProfileIndex(iBossIndex), iDifficulty);
+					float flMax = GetChaserProfileWanderTimeMax(NPCGetUniqueProfileIndex(iBossIndex), iDifficulty);
 					g_flSlenderNextWanderPos[iBossIndex][iDifficulty] = GetGameTime() + GetRandomFloat(flMin, flMax);
 					
 					if (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE)
