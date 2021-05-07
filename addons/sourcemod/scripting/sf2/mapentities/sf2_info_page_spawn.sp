@@ -16,6 +16,7 @@ enum struct SF2PageSpawnEntityData
 	float ModelScale;
 	char Group[64];
 	char Animation[64];
+	char CollectSound[PLATFORM_MAX_PATH];
 
 	// renderamt, rendermode, and rendercolor are properties of CBaseEntity and
 	// thus do not need to be saved here.
@@ -23,11 +24,12 @@ enum struct SF2PageSpawnEntityData
 	void Init(int entIndex)
 	{
 		this.EntRef = EnsureEntRef(entIndex);
-		strcopy(this.Model, PLATFORM_MAX_PATH, "models/slender/sheet.mdl");
+		strcopy(this.Model, PLATFORM_MAX_PATH, PAGE_MODEL);
 		this.Skin = -1;
 		this.ModelScale = 1.0;
 		this.Group[0] = '\0';
 		this.Animation[0] = '\0';
+		this.CollectSound[0] = '\0';
 	}
 
 	void SetModel(const char[] sModel)
@@ -43,6 +45,11 @@ enum struct SF2PageSpawnEntityData
 	void SetAnimation(const char[] sAnimation)
 	{
 		strcopy(this.Animation, 64, sAnimation);
+	}
+
+	void SetCollectSound(const char[] sSound)
+	{
+		strcopy(this.CollectSound, PLATFORM_MAX_PATH, sSound);
 	}
 
 	void Destroy()
@@ -92,6 +99,12 @@ methodmap SF2PageSpawnEntity < SF2MapEntity
 	{
 		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
 		strcopy(sBuffer, iBufferLen, entData.Animation);
+	}
+
+	public void GetCollectSound(char[] sBuffer, int iBufferLen)
+	{
+		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
+		strcopy(sBuffer, iBufferLen, entData.CollectSound);
 	}
 
 	public void GetRenderColor(int& r, int& g, int& b, int& a)
@@ -190,6 +203,13 @@ static Action SF2PageSpawnEntity_OnEntityKeyValue(int entity, const char[] sClas
 
 		return Plugin_Handled;
 	}
+	else if (strcmp(szKeyName, "collectsound", false) == 0)
+	{
+		entData.SetCollectSound(szValue);
+		SF2PageSpawnEntityData_Update(entData);
+
+		return Plugin_Handled;
+	}
 
 	return Plugin_Continue;
 }
@@ -208,6 +228,9 @@ static void SF2PageSpawnEntity_SpawnPost(int entity)
 
 	if (entData.Model[0] != '\0')
 		PrecacheModel(entData.Model); // Precache, or else...
+
+	if (entData.CollectSound[0] != '\0')
+		PrecacheSound(entData.CollectSound); // Precache, or else...
 }
 
 static void SF2PageSpawnEntity_OnEntityDestroyed(int entity, const char[] sClass)

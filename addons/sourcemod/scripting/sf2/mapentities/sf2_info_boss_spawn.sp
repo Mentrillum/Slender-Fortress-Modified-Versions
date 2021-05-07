@@ -71,7 +71,7 @@ methodmap SF2BossSpawnEntity < SF2MapEntity
 		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 
 		float flPos[3];
-		GetEntPropVector(this.EntRef, Prop_Data, "m_vecOrigin", flPos);
+		GetEntPropVector(this.EntRef, Prop_Data, "m_vecAbsOrigin", flPos);
 
 		int iCount = 0;
 		int iMaxCount = this.MaxBosses;

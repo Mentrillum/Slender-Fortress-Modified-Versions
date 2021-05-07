@@ -209,6 +209,7 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 #include "sf2/mapentities/sf2_info_page_music.sp"
 #include "sf2/mapentities/sf2_logic_proxy.sp"
 #include "sf2/mapentities/sf2_logic_raid.sp"
+#include "sf2/mapentities/sf2_boss_maker.sp"
 
 // Modified only
 #include "sf2/mapentities/sf2_logic_arena.sp"
@@ -370,6 +371,9 @@ void SF2MapEntity_Initialize()
 
 	// sf2_logic_raid
 	SF2LogicRaidEntity_Initialize();
+
+	// sf2_boss_maker
+	SF2BossMakerEntity_Initialize();
 
 	// Modified
 	
