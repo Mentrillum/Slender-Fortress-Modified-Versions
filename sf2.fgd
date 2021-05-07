@@ -41,7 +41,7 @@
 		1 : "Yes"
 	]
 
-	survive(choices) : "Survive before Escape" : 0 : "Are players required to survive before trying to escape? NOTE: If this is a Proxy Survival map (sf2_logic_proxy), this will always be Yes." =
+	survive(choices) : "Survive before Escape" : 0 : "Are players required to survive before trying to escape? NOTE: For Modified, if this is a Proxy Survival map (sf2_logic_proxy), this will always be Yes." =
 	[
 		0 : "No"
 		1 : "Yes"
@@ -67,12 +67,36 @@
 		1 : "Enabled"
 	]
 
-	bosseschaseendlessly(choices) : "Bosses Chase Endlessly" : 0 : "If enabled, bosses in the map will chase players endlessly. This is set at round start." =
+	bosseschaseendlessly(choices) : "Bosses Chase Endlessly" : 0 : "(Modified only) If enabled, bosses in the map will chase players endlessly. This is set at round start." =
 	[
 		0 : "Disabled"
 		1 : "Enabled"
 	]
 
+	unreachableescape(choices) : "Unreachable Escape" : 0 : "(Private only) Is the escape zone unreachable by players?" = 
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	adventuremap(choices) : "Is Adventure Map" : 0 : "(Private only) Is this an Adventure map?" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	classicmap(choices) : "Is Classic Map" : 0 : "(Private only) Is this a Classic map?" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	escapemap(choices) : "Is Escape Map" : 0 : "(Private only) Is this an Escape map?" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
 	input SetTimeLimit(integer) : "Sets the maximum time of a round."
 	input SetEscapeTimeLimit(integer) : "Sets how much time players have to escape the map, if there is an escape objective."
 	input SetTime(integer) : "Sets the current round time."
@@ -88,9 +112,9 @@
 	input DisableInfiniteBlink(void) : "Disable infinite blink." 
 	input SetBossOverride(string) : "Sets the boss override."
 	input ClearBossOverride(void) : "Clears the boss override."
-	input SetDifficulty(integer) : "Sets the difficulty of the game, from Normal (1) to Apollyon (5). This will fire the OnDifficultyChanged output."
-	input EnableBossesChaseEndlessly(void) : "Enable bosses chasing players endlessly."
-	input DisableBossesChaseEndlessly(void) : "Disable bosses chasing players endlessly."
+	input SetDifficulty(integer) : "Sets the difficulty of the game, from Normal (1) to Nightmare (4), Apollyon (5) for Modified. This will fire the OnDifficultyChanged output."
+	input EnableBossesChaseEndlessly(void) : "(Modified only) Enable bosses chasing players endlessly."
+	input DisableBossesChaseEndlessly(void) : "(Modified only) Disable bosses chasing players endlessly."
 	input EndGracePeriod(void) : "Ends the grace period of the round. This will fire the OnGracePeriodEnded output."
 
 	output OnStateEnterWaiting(void) : "Sent when entering the Waiting round state."
@@ -159,13 +183,50 @@
 	input SetBossProfile(string) : "Sets the boss profile name to look for among active bosses."
 ]
 
+@PointClass base(SF2SpawnPoint) sphere(spawnradius) iconsprite("editor/npc_maker.vmt") = sf2_boss_maker : "An entity that can create and spawn bosses at its location."
+[
+	profile(string) : "Boss Profile" : "" : "The name of the boss profile to spawn."
+	spawncount(integer) : "Spawn Count" : 1 : "Amount of bosses to spawn at once."
+	spawnradius(float) : "Spawn Radius" : "0.0" : "If set, will spawn the boss in a random point located around this entity. NOTE: Bosses will spawn around in a 2D flat circle, rather than a sphere. This also does not do space checking so make sure that the entity has enough room to spawn."
+	maxlive(integer) : "Max Live Children" : -1 : "The maximum amount of bosses that can exist at once from this entity. -1 = no limit"
+	spawndestination(target_destination) : "Spawn Destination" : "" : "If set, bosses will spawn at this entity."
+	spawnanim(string) : "Spawn Animation" : "" : "If set, boss will play this animation upon spawning. Only for Chaser bosses."
+	spawnanimrate(float) : "Spawn Animation Playback Rate" : "1.0" : "The playback rate of the spawn animation."
+	spawnanimtime(float) : "Spawn Animation Duration" : "0.0" : "How long the boss should play its animation."
+
+	spawnflags(flags) =
+	[
+		1 : "Do Not Drop" : 0
+		2 : "Don't spawn - add only" : 0
+		4 : "Is Fake" : 0
+		8 : "No Teleport" : 0
+		16 : "Attack Waiters" : 0
+		32 : "No Companions" : 0
+		64 : "No Spawn Sound" : 0
+		128 : "No Copies" : 0
+	]
+
+	input Spawn(void) : "Spawns bosses at this entity. OnSpawn output is fired for each successful spawn."
+	input SetBossProfile(string) : "Sets the boss profile name to spawn."
+	input SetSpawnRadius(float) : "Sets the spawn radius of this entity."
+	input SetMaxLiveChildren(integer) : "Sets the maximum amount of bosses that can exist at once from this entity."
+	input SetSpawnDestination(string) : "Sets the spawn destination."
+	input RespawnAll(void) : "Respawns all active bosses created by this entity."
+	input DespawnAll(void) : "Despawns all bosses created by this entity."
+	input RemoveAll(void) : "Removes all bosses created by this entity."
+	input SetSpawnAnimation(string) : "Sets the spawn animation."
+	input SetSpawnAnimationPlaybackRate(float) : "Sets the spawn animation's playback rate."
+	input SetSpawnAnimationDuration(float) : "Sets the spawn animation's duration."
+]
+
 @PointClass base(Targetname, Parentname, Angles) studioprop() = sf2_info_page_spawn : "The spawn point of a page."
 [
-	model(studio) : "Model" : "models/slender/sheet.mdl" : "The world model of the page entity that spawns here."
+	model(studio) : "Model" : "models/slender/pickups/sheet.mdl" : "The world model of the page entity that spawns here."
 	skin(integer) : "Skin" : -1 : "Set this to a number other than 0 to use that skin instead of the default. Setting this to -1 will make the game iterate the skins incrementally for each page entity created."
 	modelscale(float) : "Model Scale" : "1.0" : "A multiplier for the size of the model."
 	group(string) : "Group" : "" : "The group this spawn point belongs to. When the game chooses page spawn locations, if a group is chosen, then only one spawn point in that group will be used and the rest will be ignored."
 	animation(string) : "Animation" : "" : "The animation to play for the page that spawns here."
+	collectsound(sound) : "Collect Sound" : "" : "If defined, will override sf2_gamerules's Page Collect Sound."
 
 	renderamt(integer) : "FX Amount (0 - 255)" : 255 : "The FX amount is used by the selected Render Mode."
 	rendercolor(color255) : "FX Color (R G B)" : "255 255 255" : "The FX color is used by the selected Render Mode."
@@ -184,14 +245,14 @@
 
 @PointClass base(Targetname) = sf2_info_page_music : "Entity that contains array of ranges and sounds to play during page collection."
 [
-	range1(string) : "Range 1" : "1,2" : "Specifies the collected page count range in which to play music. The range can be in one of two formats: <min>,<max> or just <num>. <min>, <max>, and <num> are integers, <min> specifies minimum collected page count while <max> specifies the maximum. Use <num> to play music only when collected page count is equal. Range 2-16 follow the same format. If you need more page ranges, create another sf2_info_page_music entity."
+	range1(string) : "Range 1" : "1,2" : "Specifies the collected page count range in which to play music. This range is inclusive. The value can be in one of two formats: <min>,<max> or just <num>. <min> specifies minimum collected page count while <max> specifies the maximum. Use <num> to play music only when collected page count is equal. Range 2-16 follow the same format. If you need more page ranges, create another of this entity."
 	music1(sound) : "Range 1 Music" : "slender/newambience_1.wav" : "Music to play when collected page count is within Range 1."
-	range2(string) : "Range 2" : "3,4" : ""
-	music2(sound) : "Range 2 Music" : "slender/newambience_2.wav" : ""
-	range3(string) : "Range 3" : "5,6" : ""
-	music3(sound) : "Range 3 Music" : "slender/newambience_3.wav" : ""
-	range4(string) : "Range 4" : "7,8" : ""
-	music4(sound) : "Range 4 Music" : "slender/newambience_4.wav" : ""
+	range2(string) : "Range 2" : "" : ""
+	music2(sound) : "Range 2 Music" : "" : ""
+	range3(string) : "Range 3" : "" : ""
+	music3(sound) : "Range 3 Music" : "" : ""
+	range4(string) : "Range 4" : "" : ""
+	music4(sound) : "Range 4 Music" : "" : ""
 	range5(string) : "Range 5" : "" : ""
 	music5(sound) : "Range 5 Music" : "" : ""
 	range6(string) : "Range 6" : "" : ""
@@ -223,11 +284,11 @@
 	]
 ]
 
-@PointClass base(Targetname) = sf2_logic_boxing : "Proxy entity for SF2 game type Boxing"
+@PointClass base(Targetname) = sf2_logic_boxing : "(Modified only) Proxy entity for SF2 game type Boxing"
 [
 ]
 
-@PointClass base(Targetname) = sf2_logic_arena : "Proxy entity for SF2 game type Arena"
+@PointClass base(Targetname) = sf2_logic_arena : "(Modified only) Proxy entity for SF2 game type Arena"
 [
 	finaletime(integer) : "Finale Time (in seconds)" : 60 : "Waves will stop advancing at this many seconds before the Escape Time runs out. This should not be greater than the Escape Time set by sf2_gamerules."
 
@@ -238,6 +299,26 @@
 	output OnWaveTriggered(integer) : "Sent when the wave changes. The current wave number is passed down as an integer."
 ]
 
-@PointClass base(Targetname) = sf2_logic_slaughter : "Proxy entity for SF2 game type Slaughter Run"
+@PointClass base(Targetname) = sf2_logic_slaughter : "(Modified only) Proxy entity for SF2 game type Slaughter Run"
+[
+]
+
+@PointClass base(Targetname) = sf2_logic_survival2 : " (Private only) Proxy entity for SF2 game type Survival 2"
+[
+]
+
+@PointClass base(Targetname) = sf2_info_jumprestrict : "(Private only) Explicitly defines setting of stamina jump restriction."
+[
+	nojumprestriction(choices) : "Stamina Jump Restriction" : 0 : "If set to Block, then players cannot jump when their Stamina is low." =
+	[
+		0 : "Block"
+		1 : "Don't Block"
+	]
+
+	input EnableStaminaJumpRestriction(void) : "Enable the stamina jump restriction."
+	input DisableStaminaJumpRestriction(void) : "Disable the stamina jump restriction."
+]
+
+@SolidClass base(trigger_multiple) = sf2_trigger_pve : "(Private only) A trigger brush that when touched by a player will enter PvE mode."
 [
 ]

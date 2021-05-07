@@ -433,6 +433,13 @@ int g_iNightvisionType = 0;
 int g_ihealthBar;
 
 // Page data.
+enum struct SF2PageEntityData
+{
+	int EntRef;
+	char CollectSound[PLATFORM_MAX_PATH];
+}
+
+ArrayList g_hPages;
 int g_iPageCount;
 int g_iPageMax;
 float g_flPageFoundLastTime;
@@ -1085,6 +1092,7 @@ public void OnPluginStart()
 	g_offsCollisionGroup = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
 	if (g_offsCollisionGroup == -1)  LogError("Couldn't find CBaseEntity offset for m_CollisionGroup!");
 	
+	g_hPages = new ArrayList(sizeof(SF2PageEntityData));
 	g_hPageMusicRanges = new ArrayList(3);
 	
 	// Register console variables.
@@ -4583,6 +4591,19 @@ static void CollectPage(int page,int activator)
 	else
 	{
 		strcopy(sPageCollectSound, sizeof(sPageCollectSound), g_strPageCollectSound);
+
+		if (IsValidEntity(page))
+		{
+			int iPageIndex = g_hPages.FindValue(EnsureEntRef(page));
+			if (iPageIndex != -1)
+			{
+				SF2PageEntityData pageData;
+				g_hPages.GetArray(iPageIndex, pageData, sizeof(pageData));
+
+				if (pageData.CollectSound[0] != '\0')
+					strcopy(sPageCollectSound, sizeof(sPageCollectSound), pageData.CollectSound);
+			}
+		}
 	}
 
 	EmitSoundToAll(sPageCollectSound, activator, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
@@ -9740,6 +9761,8 @@ static void InitializeMapEntities()
 
 void SpawnPages()
 {
+	g_hPages.Clear();
+
 	ArrayList hArray = new ArrayList(2);
 	StringMap hPageGroupsByName = new StringMap();
 	
@@ -9964,6 +9987,12 @@ void SpawnPages()
 					SetVariantString(sPageAnimation);
 					AcceptEntityInput(page, "SetAnimation");
 				}
+
+				SF2PageEntityData pageData;
+				pageData.EntRef = EnsureEntRef(page);
+				spawnPoint.GetCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
+
+				g_hPages.PushArray(pageData, sizeof(pageData));
 			}
 		}
 		
