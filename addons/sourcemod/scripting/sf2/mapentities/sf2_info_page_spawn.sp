@@ -13,10 +13,12 @@ enum struct SF2PageSpawnEntityData
 	int EntRef;
 	char Model[PLATFORM_MAX_PATH];
 	int Skin;
+	int Bodygroup;
 	float ModelScale;
 	char Group[64];
 	char Animation[64];
 	char CollectSound[PLATFORM_MAX_PATH];
+	int CollectSoundPitch;
 
 	// renderamt, rendermode, and rendercolor are properties of CBaseEntity and
 	// thus do not need to be saved here.
@@ -26,10 +28,12 @@ enum struct SF2PageSpawnEntityData
 		this.EntRef = EnsureEntRef(entIndex);
 		strcopy(this.Model, PLATFORM_MAX_PATH, PAGE_MODEL);
 		this.Skin = -1;
+		this.Bodygroup = 0;
 		this.ModelScale = 1.0;
 		this.Group[0] = '\0';
 		this.Animation[0] = '\0';
 		this.CollectSound[0] = '\0';
+		this.CollectSoundPitch = 0;
 	}
 
 	void SetModel(const char[] sModel)
@@ -89,6 +93,11 @@ methodmap SF2PageSpawnEntity < SF2MapEntity
 		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.ModelScale; }
 	}
 
+	property int Bodygroup
+	{
+		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.Bodygroup; }
+	}
+
 	public void GetGroup(char[] sBuffer, int iBufferLen)
 	{
 		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
@@ -105,6 +114,11 @@ methodmap SF2PageSpawnEntity < SF2MapEntity
 	{
 		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
 		strcopy(sBuffer, iBufferLen, entData.CollectSound);
+	}
+
+	property int CollectSoundPitch
+	{
+		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.CollectSoundPitch; }
 	}
 
 	public void GetRenderColor(int& r, int& g, int& b, int& a)
@@ -130,12 +144,13 @@ void SF2PageSpawnEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2PageSpawnEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2PageSpawnEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2PageSpawnEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2PageSpawnEntity_OnAcceptEntityInput);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2PageSpawnEntity_OnAcceptEntityInput);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2PageSpawnEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PageSpawnEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PageSpawnEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PageSpawnEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PageSpawnEntity_OnMapStart);
 }
 
+/*
 static void SF2PageSpawnEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -143,6 +158,7 @@ static void SF2PageSpawnEntity_OnLevelInit(const char[] sMapName)
 static void SF2PageSpawnEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2PageSpawnEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -182,6 +198,11 @@ static Action SF2PageSpawnEntity_OnEntityKeyValue(int entity, const char[] sClas
 
 		return Plugin_Handled;
 	}
+	else if (strcmp(szKeyName, "setbodygroup", false) == 0)
+	{
+		entData.Bodygroup = StringToInt(szValue);
+		SF2PageSpawnEntityData_Update(entData);
+	}
 	else if (strcmp(szKeyName, "modelscale", false) == 0)
 	{
 		entData.ModelScale = StringToFloat(szValue);
@@ -210,10 +231,24 @@ static Action SF2PageSpawnEntity_OnEntityKeyValue(int entity, const char[] sClas
 
 		return Plugin_Handled;
 	}
+	else if (strcmp(szKeyName, "collectsoundpitch", false) == 0)
+	{
+		int iPitch = StringToInt(szValue);
+		if (iPitch < 0)
+			iPitch = 0;
+		else if (iPitch > 255)
+			iPitch = 255;
+
+		entData.CollectSoundPitch = iPitch;
+		SF2PageSpawnEntityData_Update(entData);
+
+		return Plugin_Handled;
+	}
 
 	return Plugin_Continue;
 }
 
+/*
 static Action SF2PageSpawnEntity_OnAcceptEntityInput(int entity, const char[] sClass, const char[] szInputName, int activator, int caller)
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
@@ -221,6 +256,7 @@ static Action SF2PageSpawnEntity_OnAcceptEntityInput(int entity, const char[] sC
 
 	return Plugin_Continue;
 }
+*/
 
 static void SF2PageSpawnEntity_SpawnPost(int entity) 
 {

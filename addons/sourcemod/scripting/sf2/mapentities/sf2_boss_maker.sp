@@ -394,10 +394,11 @@ void SF2BossMakerEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2BossMakerEntity_OnEntityDestroyed);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2BossMakerEntity_OnAcceptEntityInput);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2BossMakerEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2BossMakerEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2BossMakerEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2BossMakerEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2BossMakerEntity_OnMapStart);
 }
 
+/*
 static void SF2BossMakerEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -405,6 +406,7 @@ static void SF2BossMakerEntity_OnLevelInit(const char[] sMapName)
 static void SF2BossMakerEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2BossMakerEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -416,7 +418,7 @@ static void SF2BossMakerEntity_InitializeEntity(int entity, const char[] sClass)
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2BossMakerEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2BossMakerEntity_SpawnPost);
 }
 
 static Action SF2BossMakerEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
@@ -602,9 +604,11 @@ static Action SF2BossMakerEntity_OnAcceptEntityInput(int entity, const char[] sC
 	return Plugin_Continue;
 }
 
+/*
 static void SF2BossMakerEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2BossMakerEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

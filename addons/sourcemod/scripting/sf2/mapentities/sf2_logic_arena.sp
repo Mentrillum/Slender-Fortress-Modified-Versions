@@ -73,11 +73,12 @@ void SF2LogicRenevantEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2LogicRenevantEntity_OnEntityDestroyed);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicRenevantEntity_OnAcceptEntityInput);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicRenevantEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicRenevantEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicRenevantEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicRenevantEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicRenevantEntity_OnMapStart);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnRenevantWaveTriggered, SF2LogicRenevantEntity_OnRenevantWaveTriggered);
 }
 
+/*
 static void SF2LogicRenevantEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -85,6 +86,7 @@ static void SF2LogicRenevantEntity_OnLevelInit(const char[] sMapName)
 static void SF2LogicRenevantEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2LogicRenevantEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -96,7 +98,7 @@ static void SF2LogicRenevantEntity_InitializeEntity(int entity, const char[] sCl
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2LogicRenevantEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2LogicRenevantEntity_SpawnPost);
 }
 
 static Action SF2LogicRenevantEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
@@ -198,9 +200,11 @@ static Action SF2LogicRenevantEntity_OnAcceptEntityInput(int entity, const char[
 	return Plugin_Continue;
 }
 
+/*
 static void SF2LogicRenevantEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2LogicRenevantEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

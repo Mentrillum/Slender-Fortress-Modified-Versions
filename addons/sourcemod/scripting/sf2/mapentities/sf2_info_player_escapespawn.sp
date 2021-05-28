@@ -52,10 +52,11 @@ void SF2PlayerEscapeSpawnEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2PlayerEscapeSpawnEntity_OnEntityDestroyed);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2PlayerEscapeSpawnEntity_OnAcceptEntityInput);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2PlayerEscapeSpawnEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PlayerEscapeSpawnEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PlayerEscapeSpawnEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PlayerEscapeSpawnEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PlayerEscapeSpawnEntity_OnMapStart);
 }
 
+/*
 static void SF2PlayerEscapeSpawnEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -63,6 +64,7 @@ static void SF2PlayerEscapeSpawnEntity_OnLevelInit(const char[] sMapName)
 static void SF2PlayerEscapeSpawnEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2PlayerEscapeSpawnEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -74,7 +76,7 @@ static void SF2PlayerEscapeSpawnEntity_InitializeEntity(int entity, const char[]
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2PlayerEscapeSpawnEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2PlayerEscapeSpawnEntity_SpawnPost);
 }
 
 static Action SF2PlayerEscapeSpawnEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
@@ -128,9 +130,11 @@ static Action SF2PlayerEscapeSpawnEntity_OnAcceptEntityInput(int entity, const c
 	return Plugin_Continue;
 }
 
+/*
 static void SF2PlayerEscapeSpawnEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2PlayerEscapeSpawnEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

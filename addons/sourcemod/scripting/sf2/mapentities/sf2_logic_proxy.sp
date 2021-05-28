@@ -61,12 +61,13 @@ void SF2LogicProxyEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2LogicProxyEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2LogicProxyEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2LogicProxyEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicProxyEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicProxyEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicProxyEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicProxyEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicProxyEntity_OnAcceptEntityInput);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicProxyEntity_OnEntityKeyValue);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicProxyEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicProxyEntity_OnMapStart);
 }
 
+/*
 static void SF2LogicProxyEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -74,6 +75,7 @@ static void SF2LogicProxyEntity_OnLevelInit(const char[] sMapName)
 static void SF2LogicProxyEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2LogicProxyEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -85,9 +87,10 @@ static void SF2LogicProxyEntity_InitializeEntity(int entity, const char[] sClass
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2LogicProxyEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2LogicProxyEntity_SpawnPost);
 }
 
+/*
 static Action SF2LogicProxyEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
@@ -107,6 +110,7 @@ static Action SF2LogicProxyEntity_OnAcceptEntityInput(int entity, const char[] s
 static void SF2LogicProxyEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2LogicProxyEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

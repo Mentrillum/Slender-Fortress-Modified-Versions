@@ -808,10 +808,11 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		ent = -1;
 		while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 		{
+			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
+
 			if (StrContains(sName, "sf2_pvp_spawnpoint", false))
 				continue;
 
-			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
 			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flMyPos);
 
 			hSpawnPointList.Push(ent);

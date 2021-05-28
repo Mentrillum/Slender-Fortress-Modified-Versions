@@ -46,18 +46,8 @@ void SF2TriggerPvPEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2TriggerPvPEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2TriggerPvPEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2TriggerPvPEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2TriggerPvPEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2TriggerPvPEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2TriggerPvPEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2TriggerPvPEntity_OnMapStart);
-}
-
-static void SF2TriggerPvPEntity_OnLevelInit(const char[] sMapName) 
-{
-}
-
-static void SF2TriggerPvPEntity_OnMapStart() 
-{
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2TriggerPvPEntity_OnAcceptEntityInput);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2TriggerPvPEntity_OnEntityKeyValue);
 }
 
 static void SF2TriggerPvPEntity_InitializeEntity(int entity, const char[] sClass)
@@ -75,6 +65,7 @@ static void SF2TriggerPvPEntity_InitializeEntity(int entity, const char[] sClass
 	SDKHook(entity, SDKHook_EndTouchPost, SF2TriggerPvPEntity_OnEndTouchPost);
 }
 
+/*
 static Action SF2TriggerPvPEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
@@ -90,11 +81,13 @@ static Action SF2TriggerPvPEntity_OnAcceptEntityInput(int entity, const char[] s
 
 	return Plugin_Continue;
 }
+*/
 
 static void SF2TriggerPvPEntity_SpawnPost(int entity) 
 {
 	// Add physics object flag, so we can zap projectiles!
 	int flags = GetEntProp(entity, Prop_Data, "m_spawnflags");
+	flags |= TRIGGER_CLIENTS;
 	flags |= TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS;
 	//flags |= TRIGGER_PHYSICS_OBJECTS;
 	flags |= TRIGGER_PHYSICS_DEBRIS;

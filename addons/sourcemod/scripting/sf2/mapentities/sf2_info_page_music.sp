@@ -172,10 +172,11 @@ void SF2PageMusicEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2PageMusicEntity_OnEntityDestroyed);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2PageMusicEntity_OnAcceptEntityInput);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2PageMusicEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PageMusicEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PageMusicEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PageMusicEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PageMusicEntity_OnMapStart);
 }
 
+/*
 static void SF2PageMusicEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -183,6 +184,7 @@ static void SF2PageMusicEntity_OnLevelInit(const char[] sMapName)
 static void SF2PageMusicEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2PageMusicEntity_InitializeEntity(int entity, const char[] sClass)
 {
