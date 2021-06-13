@@ -61,12 +61,13 @@ void SF2LogicRaidEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2LogicRaidEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2LogicRaidEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2LogicRaidEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicRaidEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicRaidEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicRaidEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicRaidEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicRaidEntity_OnAcceptEntityInput);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicRaidEntity_OnEntityKeyValue);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicRaidEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicRaidEntity_OnMapStart);
 }
 
+/*
 static void SF2LogicRaidEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -74,6 +75,7 @@ static void SF2LogicRaidEntity_OnLevelInit(const char[] sMapName)
 static void SF2LogicRaidEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2LogicRaidEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -85,9 +87,10 @@ static void SF2LogicRaidEntity_InitializeEntity(int entity, const char[] sClass)
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2LogicRaidEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2LogicRaidEntity_SpawnPost);
 }
 
+/*
 static Action SF2LogicRaidEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
@@ -107,6 +110,7 @@ static Action SF2LogicRaidEntity_OnAcceptEntityInput(int entity, const char[] sC
 static void SF2LogicRaidEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2LogicRaidEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

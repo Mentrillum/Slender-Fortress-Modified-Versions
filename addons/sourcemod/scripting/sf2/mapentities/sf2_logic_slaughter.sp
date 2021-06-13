@@ -61,12 +61,13 @@ void SF2LogicSlaughterEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2LogicSlaughterEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2LogicSlaughterEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2LogicSlaughterEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicSlaughterEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicSlaughterEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicSlaughterEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicSlaughterEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicSlaughterEntity_OnAcceptEntityInput);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicSlaughterEntity_OnEntityKeyValue);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicSlaughterEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicSlaughterEntity_OnMapStart);
 }
 
+/*
 static void SF2LogicSlaughterEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -74,6 +75,7 @@ static void SF2LogicSlaughterEntity_OnLevelInit(const char[] sMapName)
 static void SF2LogicSlaughterEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2LogicSlaughterEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -85,9 +87,10 @@ static void SF2LogicSlaughterEntity_InitializeEntity(int entity, const char[] sC
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2LogicSlaughterEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2LogicSlaughterEntity_SpawnPost);
 }
 
+/*
 static Action SF2LogicSlaughterEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
@@ -107,6 +110,7 @@ static Action SF2LogicSlaughterEntity_OnAcceptEntityInput(int entity, const char
 static void SF2LogicSlaughterEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2LogicSlaughterEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

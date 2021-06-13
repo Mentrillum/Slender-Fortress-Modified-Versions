@@ -18,11 +18,14 @@ enum struct SF2GamerulesEntityData
 	char BossName[SF2_MAX_PROFILE_NAME_LENGTH];
 	int MaxPlayers;
 	int MaxPages;
+	char PageTextEntityName[64];
 	int InitialTimeLimit;
 	int PageCollectAddTime;
 	char PageCollectSoundPath[PLATFORM_MAX_PATH];
+	int PageCollectSoundPitch;
 	bool HasEscapeObjective;
 	int EscapeTimeLimit;
+	char EscapeTextEntityName[64];
 	bool StopPageMusicOnEscape;
 	bool Survive;
 	int SurviveUntilTime;
@@ -35,6 +38,8 @@ enum struct SF2GamerulesEntityData
 	int IntroFadeColor[4];
 	float IntroFadeHoldTime;
 	float IntroFadeTime;
+	char IntroTextEntityName[64];
+	float IntroTextDelay;
 
 	void Init(int entIndex) 
 	{
@@ -47,13 +52,16 @@ enum struct SF2GamerulesEntityData
 
 		this.MaxPlayers = 8;
 		this.MaxPages = 1;
+		this.PageTextEntityName[0] = '\0';
 
 		this.InitialTimeLimit = g_cvTimeLimit.IntValue;
 		this.PageCollectAddTime = g_cvTimeGainFromPageGrab.IntValue;
 		strcopy(this.PageCollectSoundPath, PLATFORM_MAX_PATH, PAGE_GRABSOUND);
+		this.PageCollectSoundPitch = 100;
 
 		this.HasEscapeObjective = false;
 		this.EscapeTimeLimit = g_cvTimeLimitEscape.IntValue;
+		this.EscapeTextEntityName[0] = '\0';
 		this.StopPageMusicOnEscape = false;
 		this.Survive = false;
 		this.SurviveUntilTime = g_cvTimeEscapeSurvival.IntValue;
@@ -68,6 +76,8 @@ enum struct SF2GamerulesEntityData
 		this.IntroFadeColor[0] = 0; this.IntroFadeColor[1] = 0; this.IntroFadeColor[2] = 0; this.IntroFadeColor[3] = 255;
 		this.IntroFadeHoldTime = g_cvIntroDefaultHoldTime.FloatValue;
 		this.IntroFadeTime = g_cvIntroDefaultFadeTime.FloatValue;
+		this.IntroTextEntityName[0] = '\0';
+		this.IntroTextDelay = 0.0;
 	}
 
 	void SetBossName(const char[] sBossName)
@@ -80,6 +90,11 @@ enum struct SF2GamerulesEntityData
 		strcopy(this.PageCollectSoundPath, PLATFORM_MAX_PATH, sPath);
 	}
 
+	void SetPageTextEntityName(const char[] sName)
+	{
+		strcopy(this.PageTextEntityName, 64, sName);
+	}
+
 	void SetIntroMusicPath(const char[] sPath)
 	{
 		strcopy(this.IntroMusicPath, PLATFORM_MAX_PATH, sPath);
@@ -88,6 +103,16 @@ enum struct SF2GamerulesEntityData
 	void SetIntroMusicColor(const iColor[4])
 	{
 		for (int i = 0; i < 4; i++) this.IntroFadeColor[i] = iColor[i];
+	}
+
+	void SetIntroTextEntityName(const char[] sName)
+	{
+		strcopy(this.IntroTextEntityName, 64, sName);
+	}
+
+	void SetEscapeTextEntityName(const char[] sName)
+	{
+		strcopy(this.EscapeTextEntityName, 64, sName);
 	}
 }
 
@@ -123,6 +148,19 @@ methodmap SF2GamerulesEntity < SF2MapEntity
 		}
 	}
 
+	property SF2GameTextEntity PageTextEntity
+	{
+		public get() 
+		{  
+			SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData); 
+
+			if (entData.PageTextEntityName[0] == '\0')
+				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, entData.PageTextEntityName, -1, -1, -1));
+		}
+	}
+
 	property int InitialTimeLimit
 	{
 		public get() 
@@ -143,6 +181,14 @@ methodmap SF2GamerulesEntity < SF2MapEntity
 	{
 		SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData);
 		strcopy(sBuffer, iBufferLen, entData.PageCollectSoundPath);
+	}
+
+	property int PageCollectSoundPitch
+	{
+		public get() 
+		{
+			SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData); return entData.PageCollectSoundPitch;
+		}
 	}
 
 	property bool InfiniteFlashlight
@@ -201,6 +247,19 @@ methodmap SF2GamerulesEntity < SF2MapEntity
 		}
 	}
 
+	property SF2GameTextEntity EscapeTextEntity
+	{
+		public get() 
+		{  
+			SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData); 
+
+			if (entData.EscapeTextEntityName[0] == '\0')
+				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, entData.EscapeTextEntityName, -1, -1, -1));
+		}
+	}
+
 	property bool Survive
 	{
 		public get() 
@@ -248,6 +307,27 @@ methodmap SF2GamerulesEntity < SF2MapEntity
 		public get() 
 		{
 			SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData); return entData.IntroFadeTime;
+		}
+	}
+
+	property SF2GameTextEntity IntroTextEntity
+	{
+		public get() 
+		{  
+			SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData); 
+
+			if (entData.IntroTextEntityName[0] == '\0')
+				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, entData.IntroTextEntityName, -1, -1, -1));
+		}
+	}
+
+	property float IntroTextDelay
+	{
+		public get() 
+		{
+			SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(this.EntRef, entData); return entData.IntroTextDelay;
 		}
 	}
 }
@@ -338,6 +418,12 @@ static Action SF2GamerulesEntity_OnEntityKeyValue(int entity, const char[] sClas
 
 		return Plugin_Handled;
 	}
+	else if (strcmp(szKeyName, "pagetextname", false) == 0)
+	{
+		entData.SetPageTextEntityName(szValue);
+		SF2GamerulesEntityData_Update(entData);
+		return Plugin_Handled;
+	}
 	else if (strcmp(szKeyName, "initialtimelimit", false) == 0) 
 	{
 		int iRoundTimeLimit = StringToInt(szValue);
@@ -364,6 +450,19 @@ static Action SF2GamerulesEntity_OnEntityKeyValue(int entity, const char[] sClas
 
 		return Plugin_Handled;
 	}
+	else if (strcmp(szKeyName, "pagecollectsoundpitch", false) == 0)
+	{
+		int iPitch = StringToInt(szValue);
+		if (iPitch < 1)
+			iPitch = 1;
+		else if (iPitch > 255)
+			iPitch = 255;
+
+		entData.PageCollectSoundPitch = iPitch;
+		SF2GamerulesEntityData_Update(entData);
+
+		return Plugin_Handled;
+	}
 	else if (strcmp(szKeyName, "escape", false) == 0) 
 	{
 		entData.HasEscapeObjective = StringToInt(szValue) != 0;
@@ -376,6 +475,12 @@ static Action SF2GamerulesEntity_OnEntityKeyValue(int entity, const char[] sClas
 		entData.EscapeTimeLimit = StringToInt(szValue);
 		SF2GamerulesEntityData_Update(entData);
 
+		return Plugin_Handled;
+	}
+	else if (strcmp(szKeyName, "escapetextname", false) == 0)
+	{
+		entData.SetEscapeTextEntityName(szValue);
+		SF2GamerulesEntityData_Update(entData);
 		return Plugin_Handled;
 	}
 	else if (strcmp(szKeyName, "stoppagemusiconescape", false) == 0) 
@@ -467,6 +572,22 @@ static Action SF2GamerulesEntity_OnEntityKeyValue(int entity, const char[] sClas
 
 		return Plugin_Handled;
 	}
+	else if (strcmp(szKeyName, "introtextname", false) == 0)
+	{
+		entData.SetIntroTextEntityName(szValue);
+		SF2GamerulesEntityData_Update(entData);
+		return Plugin_Handled;
+	}
+	else if (strcmp(szKeyName, "introtextdelay", false) == 0)
+	{
+		float flDelay = StringToFloat(szValue);
+		if (flDelay < 0.0) flDelay = 0.0;
+
+		entData.IntroTextDelay = flDelay;
+		SF2GamerulesEntityData_Update(entData);
+
+		return Plugin_Handled;
+	}
 	else if (strcmp(szKeyName, "OnGracePeriodEnded", false) == 0 ||
 				strcmp(szKeyName, "OnDifficultyChanged", false) == 0 ||
 				strcmp(szKeyName, "OnStateEnterWaiting", false) == 0 ||
@@ -486,6 +607,30 @@ static Action SF2GamerulesEntity_OnEntityKeyValue(int entity, const char[] sClas
 		return Plugin_Handled;
 	}
 
+	char sOutputName[64];
+
+	// OnCollectedXPages output
+	for (int iPageCount = 1; iPageCount <= 32; iPageCount++)
+	{
+		FormatEx(sOutputName, sizeof(sOutputName), iPageCount == 1 ? "OnCollected%dPage" : "OnCollected%dPages", iPageCount);
+		if (strcmp(szKeyName, sOutputName, false) == 0)
+		{
+			gameRules.AddOutput(szKeyName, szValue);
+			return Plugin_Handled;
+		}
+	}
+
+	// OnDifficultyX output
+	for (int iDifficulty = 0; iDifficulty <= Difficulty_Max; iDifficulty++)
+	{
+		FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", iDifficulty);
+		if (strcmp(szKeyName, sOutputName, false) == 0)
+		{
+			gameRules.AddOutput(szKeyName, szValue);
+			return Plugin_Handled;
+		}
+	}
+
 	return Plugin_Continue;
 }
 
@@ -493,6 +638,8 @@ static Action SF2GamerulesEntity_OnAcceptEntityInput(int entity, const char[] sC
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
 		return Plugin_Continue;
+
+	SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(entity, entData);
 
 	if (strcmp(szInputName, "SetTimeLimit", false) == 0) 
 	{
@@ -516,6 +663,14 @@ static Action SF2GamerulesEntity_OnAcceptEntityInput(int entity, const char[] sC
 	else if (strcmp(szInputName, "SetTime", false) == 0) 
 	{
 		int iRoundTime = SF2MapEntity_GetIntFromVariant();
+		if (iRoundTime < 0) iRoundTime = 0;
+
+		SetRoundTime(iRoundTime);
+		return Plugin_Handled;
+	}
+	else if (strcmp(szInputName, "AddTime", false) == 0) 
+	{
+		int iRoundTime = g_iRoundTime + SF2MapEntity_GetIntFromVariant();
 		if (iRoundTime < 0) iRoundTime = 0;
 
 		SetRoundTime(iRoundTime);
@@ -548,6 +703,26 @@ static Action SF2GamerulesEntity_OnAcceptEntityInput(int entity, const char[] sC
 		if (iPagesCollected < 0) iPagesCollected = 0;
 		
 		SetPageCount(iPagesCollected);
+		return Plugin_Handled;
+	}
+	else if (strcmp(szInputName, "SetPageTextEntity", false) == 0)
+	{
+		char sVariant[64];
+		SF2MapEntity_GetVariantString(sVariant, sizeof(sVariant));
+
+		entData.SetPageTextEntityName(sVariant);
+		SF2GamerulesEntityData_Update(entData);
+
+		return Plugin_Handled;
+	}
+	else if (strcmp(szInputName, "SetEscapeTextEntity", false) == 0)
+	{
+		char sVariant[64];
+		SF2MapEntity_GetVariantString(sVariant, sizeof(sVariant));
+
+		entData.SetEscapeTextEntityName(sVariant);
+		SF2GamerulesEntityData_Update(entData);
+
 		return Plugin_Handled;
 	}
 	else if (strcmp(szInputName, "EnableInfiniteFlashlight", false) == 0) 
@@ -636,6 +811,13 @@ static Action SF2GamerulesEntity_OnAcceptEntityInput(int entity, const char[] sC
 
 static void SF2GamerulesEntity_SpawnPost(int entity) 
 {
+	SF2GamerulesEntityData entData; SF2GamerulesEntityData_Get(entity, entData);
+
+	if (entData.PageCollectSoundPath[0] != '\0')
+		PrecacheSound(entData.PageCollectSoundPath);
+
+	if (entData.IntroMusicPath[0] != '\0')
+		PrecacheSound(entData.IntroMusicPath);
 }
 
 static void SF2GamerulesEntity_OnRoundStateChanged(SF2RoundState iRoundState, SF2RoundState iOldRoundState)
@@ -684,6 +866,13 @@ static void SF2GamerulesEntity_OnRoundStateChanged(SF2RoundState iRoundState, SF
 
 static void SF2GameRulesEntity_OnPageCountChanged(int iPageCount, int iOldPageCount)
 {
+	char sOutputName[64];
+
+	if (iPageCount > 0 && iPageCount <= 32)
+		FormatEx(sOutputName, sizeof(sOutputName), iPageCount == 1 ? "OnCollected%dPage" : "OnCollected%dPages", iPageCount);
+	else
+		sOutputName[0] = '\0';
+
 	for (int i = 0; i < g_EntityData.Length; i++) 
 	{
 		SF2GamerulesEntityData entData;
@@ -692,10 +881,15 @@ static void SF2GameRulesEntity_OnPageCountChanged(int iPageCount, int iOldPageCo
 		if (!IsValidEntity(entData.EntRef))
 			continue;
 		
+		SF2GamerulesEntity thisEnt = view_as<SF2GamerulesEntity>(entData.EntRef);
+		
 		SF2MapEntityVariant inputVariant;
 		inputVariant.Init();
 		inputVariant.SetInt(iPageCount);
-		SF2GamerulesEntity(entData.EntRef).FireOutput("OnCollectedPagesChanged", -1, entData.EntRef, inputVariant);
+		thisEnt.FireOutput("OnCollectedPagesChanged", -1, entData.EntRef, inputVariant);
+
+		if (sOutputName[0] != '\0')
+			thisEnt.FireOutputNoVariant(sOutputName, -1, entData.EntRef);
 	}
 }
 
@@ -715,6 +909,9 @@ static void SF2GameRulesEntity_OnGracePeriodEnd()
 
 static void SF2GameRulesEntity_OnDifficultyChanged(int iDifficulty, int iOldDifficulty)
 {
+	char sOutputName[64];
+	FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", iDifficulty);
+
 	for (int i = 0; i < g_EntityData.Length; i++) 
 	{
 		SF2GamerulesEntityData entData;
@@ -722,11 +919,14 @@ static void SF2GameRulesEntity_OnDifficultyChanged(int iDifficulty, int iOldDiff
 
 		if (!IsValidEntity(entData.EntRef))
 			continue;
+
+		SF2GamerulesEntity thisEnt = view_as<SF2GamerulesEntity>(entData.EntRef);
 		
 		SF2MapEntityVariant inputVariant;
 		inputVariant.Init();
 		inputVariant.SetInt(iDifficulty);
-		SF2GamerulesEntity(entData.EntRef).FireOutput("OnDifficultyChanged", -1, entData.EntRef, inputVariant);
+		thisEnt.FireOutput("OnDifficultyChanged", -1, entData.EntRef, inputVariant);
+		thisEnt.FireOutputNoVariant(sOutputName, -1, entData.EntRef);
 	}
 }
 

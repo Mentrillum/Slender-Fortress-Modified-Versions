@@ -437,6 +437,7 @@ enum struct SF2PageEntityData
 {
 	int EntRef;
 	char CollectSound[PLATFORM_MAX_PATH];
+	int CollectSoundPitch;
 }
 
 ArrayList g_hPages;
@@ -694,6 +695,7 @@ static Handle g_hRoundIntroTextTimer = INVALID_HANDLE;
 static int g_iRoundIntroText;
 char g_strRoundIntroMusic[PLATFORM_MAX_PATH] = "";
 static char g_strPageCollectSound[PLATFORM_MAX_PATH] = "";
+static int g_iPageSoundPitch = 100;
 char sCurrentMusicTrack[PLATFORM_MAX_PATH], sCurrentMusicTrackNormal[PLATFORM_MAX_PATH], sCurrentMusicTrackHard[PLATFORM_MAX_PATH], sCurrentMusicTrackInsane[PLATFORM_MAX_PATH], sCurrentMusicTrackNightmare[PLATFORM_MAX_PATH], sCurrentMusicTrackApollyon[PLATFORM_MAX_PATH];
 
 static int g_iRoundWarmupRoundCount = 0;
@@ -4581,7 +4583,7 @@ static void CollectPage(int page,int activator)
 	g_iPlayerPageCount[activator] += 1;
 
 	// Play page collect sound
-	char sPageCollectSound[PLATFORM_MAX_PATH];
+	char sPageCollectSound[PLATFORM_MAX_PATH]; int iPageCollectionSoundPitch = g_iPageSoundPitch;
 	if (SF_SpecialRound(SPECIALROUND_DUCKS))
 	{
 		// Ducks!
@@ -4602,11 +4604,14 @@ static void CollectPage(int page,int activator)
 
 				if (pageData.CollectSound[0] != '\0')
 					strcopy(sPageCollectSound, sizeof(sPageCollectSound), pageData.CollectSound);
+
+				if (pageData.CollectSoundPitch > 0)
+					iPageCollectionSoundPitch = pageData.CollectSoundPitch;
 			}
 		}
 	}
 
-	EmitSoundToAll(sPageCollectSound, activator, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+	EmitSoundToAll(sPageCollectSound, activator, SNDCHAN_ITEM, SNDLEVEL_SCREAMING, _, _, iPageCollectionSoundPitch);
 
 	Call_StartForward(fOnClientCollectPage);
 	Call_PushCell(page);
@@ -5467,12 +5472,9 @@ void SetRoundState(SF2RoundState iRoundState)
 		{
 			SetGracePeriodState(true);
 			g_hRoundIntroTimer = INVALID_HANDLE;
-			g_iRoundIntroText = 0;
-			g_bRoundIntroTextDefault = false;
 			g_bProxySurvivalRageMode = false;
 
-			g_hRoundIntroTextTimer = CreateTimer(0.0, Timer_IntroTextSequence);
-			TriggerTimer(g_hRoundIntroTextTimer);
+			StartIntroTextSequence();
 			
 			// Gather data on the intro parameters set by the map.
 			float flHoldTime = g_flRoundIntroFadeHoldTime;
@@ -6635,6 +6637,8 @@ void SetPageCount(int iNum)
 			g_flPageFoundLastTime = GetGameTime();
 		}
 		
+		SF2MapEntity_OnPageCountChanged(g_iPageCount, iOldPageCount);
+
 		// Notify logic entities.
 		char sTargetName[64];
 		char sFindTargetName[64];
@@ -6674,8 +6678,16 @@ void SetPageCount(int iNum)
 			
 			if (iClientsNum && !SF_SpecialRound(SPECIALROUND_REALISM))
 			{
-				int iGameTextEscape = GetTextEntity("sf2_escape_message", false);
-				if (iGameTextEscape != -1)
+				int iGameTextEscape = -1;
+				SF2GameTextEntity gameText = SF2GameTextEntity(-1);
+
+				if (g_GamerulesEntity.IsValid() && (gameText = g_GamerulesEntity.EscapeTextEntity).IsValid())
+				{
+					char sMessage[512];
+					gameText.GetEscapeMessage(sMessage, sizeof(sMessage));
+					ShowHudTextUsingTextEntity(iClients, iClientsNum, gameText.EntRef, g_hHudSync, sMessage);
+				}
+				else if (IsValidEntity((iGameTextEscape = GetTextEntity("sf2_escape_message", false))))
 				{
 					// Custom escape message.
 					char sMessage[512];
@@ -6709,8 +6721,16 @@ void SetPageCount(int iNum)
 		{
 			if (iClientsNum && !SF_SpecialRound(SPECIALROUND_REALISM))
 			{
-				int iGameTextPage = GetTextEntity("sf2_page_message", false);
-				if (iGameTextPage != -1)
+				int iGameTextPage = -1;
+				SF2GameTextEntity gameText = SF2GameTextEntity(-1);
+
+				if (g_GamerulesEntity.IsValid() && (gameText = g_GamerulesEntity.PageTextEntity).IsValid())
+				{
+					char sMessage[512];
+					gameText.GetPageMessage(sMessage, sizeof(sMessage));
+					ShowHudTextUsingTextEntity(iClients, iClientsNum, gameText.EntRef, g_hHudSync, sMessage);
+				}
+				else if (IsValidEntity((iGameTextPage = GetTextEntity("sf2_page_message", false))))
 				{
 					// Custom page message.
 					char sMessage[512];
@@ -6730,8 +6750,6 @@ void SetPageCount(int iNum)
 		}
 		
 		CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
-
-		SF2MapEntity_OnPageCountChanged(g_iPageCount, iOldPageCount);
 	}
 }
 
@@ -8744,23 +8762,9 @@ public Action Timer_RoundStart(Handle timer)
 		int iClients[MAXPLAYERS + 1];
 		int iClientsNum = 0;
 		
-		int iGameText = GetTextEntity("sf2_intro_message", false);
-		
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsClientInGame(i) || IsFakeClient(i) || g_bPlayerEliminated[i]) continue;
-			
-			if (iGameText == -1)
-			{
-				if (g_iPageMax > 1)
-				{
-					ClientShowMainMessage(i, "%T", "SF2 Default Intro Message Plural", i, g_iPageMax);
-				}
-				else
-				{
-					ClientShowMainMessage(i, "%T", "SF2 Default Intro Message Singular", i, g_iPageMax);
-				}
-			}
 			
 			PushArrayCell(hArrayClients, GetClientUserId(i));
 			iClients[iClientsNum] = i;
@@ -8778,12 +8782,26 @@ public Action Timer_RoundStart(Handle timer)
 				g_hVoteTimer = CreateTimer(1.0, Timer_VoteDifficulty, hArrayClients, TIMER_REPEAT);
 				TriggerTimer(g_hVoteTimer, true);
 				
-				if (iGameText != -1)
+				int iGameText = -1;
+				char sMessage[512];
+
+				if (g_GamerulesEntity.IsValid() && g_GamerulesEntity.IntroTextEntity.IsValid())
 				{
-					char sMessage[512];
+					// Do nothing; already being handled.
+				}
+				else if ((iGameText = GetTextEntity("sf2_intro_message", false)) != -1)
+				{
 					GetEntPropString(iGameText, Prop_Data, "m_iszMessage", sMessage, sizeof(sMessage));
-					
 					ShowHudTextUsingTextEntity(iClients, iClientsNum, iGameText, g_hHudSync, sMessage);
+				}
+				else
+				{
+					for (int i = 0; i < iClientsNum; i++)
+					{
+						int iClient = iClients[i];
+						FormatEx(sMessage, sizeof(sMessage), "%T", g_iPageMax > 1 ? "SF2 Default Intro Message Plural" : "SF2 Default Intro Message Singular", iClient, g_iPageMax);
+						ClientShowMainMessage(iClient, sMessage);
+					}
 				}
 			}
 			else
@@ -9507,8 +9525,8 @@ static void InitializeMapEntities()
 		gamerules.GetPageCollectSoundPath(g_strPageCollectSound, sizeof(g_strPageCollectSound));
 		if (g_strPageCollectSound[0] == '\0')
 			strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), PAGE_GRABSOUND); // Roll with default instead.
-		else
-			PrecacheSound(g_strPageCollectSound); // Precache or else...
+
+		g_iPageSoundPitch = gamerules.PageCollectSoundPitch;
 
 		g_bRoundHasEscapeObjective = gamerules.HasEscapeObjective;
 		g_iRoundEscapeTimeLimit = gamerules.EscapeTimeLimit;
@@ -9525,8 +9543,6 @@ static void InitializeMapEntities()
 		gamerules.GetIntroMusicPath(g_strRoundIntroMusic, sizeof(g_strRoundIntroMusic));
 		if (g_strRoundIntroMusic[0] == '\0') 
 			strcopy(g_strRoundIntroMusic, sizeof(g_strRoundIntroMusic), SF2_INTRO_DEFAULT_MUSIC); // Roll with default instead.
-		else 
-			PrecacheSound(g_strRoundIntroMusic); // Precache or else...
 		
 		gamerules.GetIntroFadeColor(g_iRoundIntroFadeColor);
 		g_flRoundIntroFadeHoldTime = gamerules.IntroFadeHoldTime;
@@ -9537,6 +9553,7 @@ static void InitializeMapEntities()
 		g_iRoundTimeLimit = g_cvTimeLimit.IntValue;
 		g_iRoundTimeGainFromPage = g_cvTimeGainFromPageGrab.IntValue;
 		strcopy(g_strPageCollectSound, sizeof(g_strPageCollectSound), PAGE_GRABSOUND);
+		g_iPageSoundPitch = 100;
 
 		g_bRoundHasEscapeObjective = false;
 		g_iRoundEscapeTimeLimit = g_cvTimeLimitEscape.IntValue;
@@ -9865,6 +9882,7 @@ void SpawnPages()
 		int iPageSkin;
 		RenderFx iPageRenderFx;
 		RenderMode iPageRenderMode;
+		int iPageBodygroup;
 		int iPageRenderColor[4];
 		char sPageAnimation[64];
 
@@ -9893,6 +9911,7 @@ void SpawnPages()
 				spawnPoint.GetModel(sPageModel, sizeof(sPageModel));
 				flPageModelScale = spawnPoint.ModelScale;
 				iPageSkin = spawnPoint.Skin == -1 ? i : spawnPoint.Skin;
+				iPageBodygroup = spawnPoint.Bodygroup;
 				iPageRenderFx = spawnPoint.RenderFx;
 				iPageRenderMode = spawnPoint.RenderMode;
 				spawnPoint.GetRenderColor(iPageRenderColor[0], iPageRenderColor[1], iPageRenderColor[2], iPageRenderColor[3]);
@@ -9903,6 +9922,7 @@ void SpawnPages()
 				strcopy(sPageModel, sizeof(sPageModel), g_strPageRefModel);
 				flPageModelScale = g_flPageRefModelScale;
 				iPageSkin = i;
+				iPageBodygroup = 0;
 				iPageRenderFx = RENDERFX_NONE;
 				iPageRenderMode = RENDER_NORMAL;
 				iPageRenderColor[0] = 255; iPageRenderColor[1] = 255; iPageRenderColor[2] = 255; iPageRenderColor[3] = 255; 
@@ -9913,6 +9933,7 @@ void SpawnPages()
 				strcopy(sPageModel, sizeof(sPageModel), PAGE_MODEL);
 				flPageModelScale = PAGE_MODELSCALE;
 				iPageSkin = i;
+				iPageBodygroup = 0;
 				iPageRenderFx = RENDERFX_NONE;
 				iPageRenderMode = RENDER_NORMAL;
 				iPageRenderColor[0] = 255; iPageRenderColor[1] = 255; iPageRenderColor[2] = 255; iPageRenderColor[3] = 255; 
@@ -9933,6 +9954,8 @@ void SpawnPages()
 				ActivateEntity(page2);
 				SetVariantInt(iPageSkin);
 				AcceptEntityInput(page2, "Skin");
+				SetVariantInt(iPageBodygroup);
+				AcceptEntityInput(page2, "SetBodyGroup");
 				AcceptEntityInput(page2, "DisableCollision");
 				SetEntPropFloat(page2, Prop_Send, "m_flModelScale", flPageModelScale);
 				SetEntityFlags(page2, GetEntityFlags(page2) | FL_EDICT_ALWAYS);
@@ -9966,6 +9989,8 @@ void SpawnPages()
 				ActivateEntity(page);
 				SetVariantInt(iPageSkin);
 				AcceptEntityInput(page, "Skin");
+				SetVariantInt(iPageBodygroup);
+				AcceptEntityInput(page, "SetBodyGroup");
 				AcceptEntityInput(page, "EnableCollision");
 				SetEntPropFloat(page, Prop_Send, "m_flModelScale", flPageModelScale);
 				SetEntPropEnt(page, Prop_Send, "m_hOwnerEntity", page2);
@@ -9991,6 +10016,7 @@ void SpawnPages()
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
 				spawnPoint.GetCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
+				pageData.CollectSoundPitch = spawnPoint.CollectSoundPitch;
 
 				g_hPages.PushArray(pageData, sizeof(pageData));
 			}
@@ -10659,6 +10685,63 @@ public Action Timer_PlayIntroMusicToPlayer(Handle timer, any userid)
 	g_hPlayerIntroMusicTimer[iClient] = INVALID_HANDLE;
 	
 	EmitSoundToClient(iClient, g_strRoundIntroMusic, _, MUSIC_CHAN, SNDLEVEL_NONE);
+}
+
+static void StartIntroTextSequence()
+{
+	g_iRoundIntroText = 1;
+	g_bRoundIntroTextDefault = false;
+	g_hRoundIntroTextTimer = null;
+
+	if (g_GamerulesEntity.IsValid()) 
+	{
+		SF2GameTextEntity textEntity = g_GamerulesEntity.IntroTextEntity;
+		if (textEntity.IsValid()) 
+		{
+			g_hRoundIntroTextTimer = CreateTimer(g_GamerulesEntity.IntroTextDelay, Timer_NewIntroTextSequence, textEntity.EntRef, TIMER_FLAG_NO_MAPCHANGE);
+		}
+	}
+
+	if (g_hRoundIntroTextTimer == null) 
+	{
+		// Use old intro text sequence.
+		g_hRoundIntroTextTimer = CreateTimer(0.0, Timer_IntroTextSequence, _, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+
+static Action Timer_NewIntroTextSequence(Handle timer, any data)
+{
+	if (!g_bEnabled) return;
+	if (g_hRoundIntroTextTimer != timer) return;
+
+	SF2GameTextEntity textEntity = SF2GameTextEntity(data);
+	if (!textEntity.IsValid()) return;
+
+	int iClients[MAXPLAYERS + 1];
+	int iClientsNum;
+	
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (!IsClientInGame(iClient) || g_bPlayerEliminated[iClient]) continue;
+		
+		iClients[iClientsNum] = iClient;
+		iClientsNum++;
+	}
+	
+	char sMessage[512];
+	textEntity.GetIntroMessage(sMessage, sizeof(sMessage));
+	ShowHudTextUsingTextEntity(iClients, iClientsNum, textEntity.EntRef, g_hHudSync, sMessage);
+
+	SF2GameTextEntity nextTextEntity = textEntity.NextIntroTextEntity;
+	if (nextTextEntity.IsValid())
+	{
+		float flDuration = GetEntPropFloat(textEntity.EntRef, Prop_Data, "m_textParms.fadeinTime") 
+			+ GetEntPropFloat(textEntity.EntRef, Prop_Data, "m_textParms.fadeoutTime") 
+			+ GetEntPropFloat(textEntity.EntRef, Prop_Data, "m_textParms.holdTime")
+			+ textEntity.NextIntroTextDelay;
+		
+		g_hRoundIntroTextTimer = CreateTimer(flDuration, Timer_NewIntroTextSequence, nextTextEntity.EntRef, TIMER_FLAG_NO_MAPCHANGE);
+	}
 }
 
 public Action Timer_IntroTextSequence(Handle timer)

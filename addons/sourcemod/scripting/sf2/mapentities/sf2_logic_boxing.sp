@@ -61,12 +61,13 @@ void SF2LogicBoxingEntity_Initialize()
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2LogicBoxingEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2LogicBoxingEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2LogicBoxingEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicBoxingEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicBoxingEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicBoxingEntity_OnLevelInit);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicBoxingEntity_OnMapStart);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2LogicBoxingEntity_OnAcceptEntityInput);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2LogicBoxingEntity_OnEntityKeyValue);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2LogicBoxingEntity_OnLevelInit);
+	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2LogicBoxingEntity_OnMapStart);
 }
 
+/*
 static void SF2LogicBoxingEntity_OnLevelInit(const char[] sMapName) 
 {
 }
@@ -74,6 +75,7 @@ static void SF2LogicBoxingEntity_OnLevelInit(const char[] sMapName)
 static void SF2LogicBoxingEntity_OnMapStart() 
 {
 }
+*/
 
 static void SF2LogicBoxingEntity_InitializeEntity(int entity, const char[] sClass)
 {
@@ -85,9 +87,10 @@ static void SF2LogicBoxingEntity_InitializeEntity(int entity, const char[] sClas
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	SDKHook(entity, SDKHook_SpawnPost, SF2LogicBoxingEntity_SpawnPost);
+	//SDKHook(entity, SDKHook_SpawnPost, SF2LogicBoxingEntity_SpawnPost);
 }
 
+/*
 static Action SF2LogicBoxingEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
 {
 	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
@@ -107,6 +110,7 @@ static Action SF2LogicBoxingEntity_OnAcceptEntityInput(int entity, const char[] 
 static void SF2LogicBoxingEntity_SpawnPost(int entity) 
 {
 }
+*/
 
 static void SF2LogicBoxingEntity_OnEntityDestroyed(int entity, const char[] sClass)
 {

@@ -210,6 +210,7 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 #include "sf2/mapentities/sf2_logic_proxy.sp"
 #include "sf2/mapentities/sf2_logic_raid.sp"
 #include "sf2/mapentities/sf2_boss_maker.sp"
+#include "sf2/mapentities/sf2_trigger_boss_despawn.sp"
 
 // Modified only
 #include "sf2/mapentities/sf2_logic_arena.sp"
@@ -374,6 +375,9 @@ void SF2MapEntity_Initialize()
 
 	// sf2_boss_maker
 	SF2BossMakerEntity_Initialize();
+
+	// sf2_trigger_boss_despawn
+	SF2TriggerBossDespawnEntity_Initialize();
 
 	// Modified
 	
@@ -851,20 +855,15 @@ int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] szName, int s
 		return -1;
 	}
 
-	char sTargetName[PLATFORM_MAX_PATH];
-
 	// dear god
-
-	int iMaxEntities = GetMaxEntities() * 2; // multiply by 2 to get non-networked entities too
-	for (int i = startEnt + 1; i < iMaxEntities; i++)
+	char sTargetName[PLATFORM_MAX_PATH];
+	int ent = startEnt;
+	while ((ent = FindEntityByClassname(ent, "*")) != -1)
 	{
-		if (!IsValidEntity(i))
-			continue;
-
-		GetEntPropString(i, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
+		GetEntPropString(ent, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
 		if (strcmp(sTargetName, szName) == 0) 
 		{
-			return i;
+			return ent;
 		}
 	}
 
