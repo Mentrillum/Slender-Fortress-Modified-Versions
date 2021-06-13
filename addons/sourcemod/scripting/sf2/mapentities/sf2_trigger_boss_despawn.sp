@@ -43,6 +43,8 @@ methodmap SF2TriggerBossDespawnEntity < SF2TriggerMapEntity
 
 void SF2TriggerBossDespawnEntity_Initialize() 
 {
+	g_EntityData = new ArrayList(sizeof(SF2TriggerBossDespawnEntityData));
+
 	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2TriggerBossDespawnEntity_TranslateClassname);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2TriggerBossDespawnEntity_InitializeEntity);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2TriggerBossDespawnEntity_OnEntityDestroyed);
@@ -104,7 +106,7 @@ static void SF2TriggerBossDespawnEntity_OnStartTouchPost(int entity, int toucher
 
 	if (thisEnt.PassesTriggerFilters(toucher))
 	{
-		int iBossIndex = NPCGetFromEntIndex(entity);
+		int iBossIndex = NPCGetFromEntIndex(toucher);
 		if (iBossIndex != -1) 
 		{
 			thisEnt.FireOutputNoVariant("OnDespawn", toucher, entity);
