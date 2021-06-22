@@ -6,23 +6,23 @@
 		{
 			"CBaseCombatCharacter::GetLastKnownArea"
 			{
-				"linux"		"316"
-				"windows"	"315"
+				"windows"	"316"
+				"linux"		"317"
 			}
 			"CBaseCombatCharacter::UpdateLastKnownArea"
 			{
-				"linux"		"319"
-				"windows"	"318"
+				"windows"	"319"
+				"linux"		"320"
 			}
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
-				"windows"	"327"
-				"linux"		"328"
+				"windows"	"328"
+				"linux"		"329"
 			}
 			"CTFWeaponBase::GetCustomDamageType"
 			{
-				"windows"	"373"
-				"linux"		"379"	
+				"windows"	"374"
+				"linux"		"380"	
 			}
 			"CTFGameRules::IsInTraining"
 			{
@@ -36,14 +36,13 @@
 			}
 			"CTFBaseBoss::GetCurrencyValue"
 			{
-				"windows"	"329"
-				"linux"		"333"
+				"windows"	"330"
+				"linux"		"334"
 			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"windows"	"18"
-				"linux"	"19"
-				"mac"	"19"
+				"linux"		"19"
 			}
 			"CBaseEntity::MyNextBotPointer"
 			{
@@ -67,8 +66,8 @@
 			}
 			"CBaseAnimating::StudioFrameAdvance"
 			{
-				"linux"		"194"
-				"windows"	"193"
+				"linux"		"195"
+				"windows"	"194"
 			}
 			"CBaseAnimating::m_pStudioHdr"
 			{
@@ -77,14 +76,13 @@
 			}
 			"CBaseProjectile::CanCollideWithTeammates"
 			{
-				"linux"		"223"
-				"windows"	"222"
+				"linux"		"224"
+				"windows"	"223"
 			}
 			"CTFPlayer::EquipWearable"
 			{
-				"windows"	"430"
-				"linux"		"431"
-				"mac"		"431"
+				"windows"	"431"
+				"linux"		"432"
 			}
 			"INextBotComponent::GetBot"
 			{
@@ -303,8 +301,8 @@
 			}
 			"CBaseTrigger::PassesTriggerFilters"
 			{
-				"linux"		"201"
-				"windows"	"200"
+				"linux"		"202"
+				"windows"	"201"
 			}
 		}
 		"Signatures"
@@ -324,8 +322,8 @@
 			"LookupSequence"
 			{
 				"library"		"server"
-				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x85\xF6\x75\x2A\x33\xC0\x5E\x5D\xC3\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x53"
-				"linux"		"@_Z14LookupSequenceP10CStudioHdrPKc"
+				"windows"		"\x55\x8B\xEC\x56\x8B\x75\x08\x85\xF6\x75\x2A\x33\xC0\x5E\x5D\xC3\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x53"
+				"linux"			"@_Z14LookupSequenceP10CStudioHdrPKc"
 			}
 			"CBaseAnimating::LookupSequence"
 			{
