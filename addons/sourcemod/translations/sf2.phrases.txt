@@ -241,7 +241,7 @@
 		"en"	"Only a certain amount of players will be\nselected on BLU to play the game. The rest of\nthe players will have to wait on BLU until it's\n their turn. BLU can observe RED in real-time\n by using the command !slghost without having\nto spectate."
 		"ru"	"Только определённое количество игроков будет\nвыбрано для игры за КРАСНЫХ. Остальным игрокам\nнеобходимо ждать своей очереди в команде СИНИХ.\nСиние могут наблюдать за красными,\nиспользуя команду !slghost."
 		"fi"	"Vain osa pelaajista valitaan RED:lle\npelaamaan peliä. Muut pelaajat joutuvat odottamaan\nvuoroaan BLU:lla kunnes on heidän vuoronsa.\nBLU pystyy katsomaan RED:iä reaaliaikaisesti\nkäyttäen komentoa !slghost."
-		"chi"	"只有一部分的玩家会被选入蓝队进行游戏\n剩下的玩家必须在蓝队等待直到轮到自己\n蓝队可以使用!slghost来实时观察红队\n而不用进入观察者队伍。"
+		"chi"	"只有一部分的蓝队玩家会被选入游戏\n剩下的玩家必须在蓝队等待直到轮到自己\n蓝队可以使用!slghost来实时观察红队\n而不用进入观察者队伍。"
 	}
 
 	"SF2 Help Commands Menu Title"
