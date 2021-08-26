@@ -1624,6 +1624,14 @@ public Action Timer_BossPackVoteLoop(Handle timer)
 	if (timer != g_hBossPackVoteTimer || g_bBossPackVoteCompleted || g_bBossPackVoteStarted) 
 		return Plugin_Stop;
 	
+	#if defined _mapchooser_included_
+	if (HasEndOfMapVoteFinished())
+	{
+		g_hBossPackVoteTimer = INVALID_HANDLE;
+		InitiateBossPackVote(99);
+		return Plugin_Stop;
+	}
+	#endif
 	if (!NativeVotes_IsVoteInProgress())
 	{
 		g_hBossPackVoteTimer = INVALID_HANDLE;
