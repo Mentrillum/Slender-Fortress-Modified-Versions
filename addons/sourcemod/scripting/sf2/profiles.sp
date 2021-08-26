@@ -37,6 +37,17 @@ static bool g_bBossPackVoteEnabled = false;
 
 static char MapbossPack[64];
 
+#undef REQUIRE_PLUGIN
+#tryinclude <mapchooser_extended>
+#tryinclude <mapchooser>
+#define REQUIRE_PLUGIN
+
+#if defined _mapchooser_extended_included_
+ConVar g_cvBossPackVoteAfterMapChooser;
+#elseif defined _mapchooser_included_
+ConVar g_cvBossPackVoteAfterMapChooser;
+#endif
+
 methodmap SF2BaseBossProfile
 {
 	property int Index
@@ -315,6 +326,12 @@ void InitializeBossProfiles()
 	g_cvBossPackVoteStartTime = CreateConVar("sf2_boss_profile_pack_endvote_start", "4", "Specifies when to start the vote based on time remaining on the map, in minutes.", FCVAR_NOTIFY);
 	g_cvBossPackVoteStartRound = CreateConVar("sf2_boss_profile_pack_endvote_startround", "2", "Specifies when to start the vote based on rounds remaining on the map.", FCVAR_NOTIFY);
 	g_cvBossPackVoteShuffle = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
+	
+	#if defined _mapchooser_extended_included_
+	g_cvBossPackVoteAfterMapChooser = CreateConVar("sf2_boss_profile_pack_endvote_start_after_mapvote", "0", "Start the boss pack vote immediately after a map vote has competed(Require mapchooser or MCE).");
+	#elseif defined _mapchooser_included_
+	g_cvBossPackVoteAfterMapChooser = CreateConVar("sf2_boss_profile_pack_endvote_start_after_mapvote", "0", "Start the boss pack vote immediately after a map vote has competed(Require mapchooser or MCE).");
+	#endif
 	
 	InitializeChaserProfiles();
 }
@@ -2148,3 +2165,38 @@ void RemoveBossProfileFromQueueList(const char[] sProfile)
 		GetSelectableBossProfileQueueList().Erase(selectIndex);
 	}
 }
+
+//I Don't want to touch the original code
+#if defined _mapchooser_extended_included_
+public void OnMapVoteEnd(const char[] map)
+{	
+	if (!g_cvBossPackEndOfMapVote.BoolValue || !g_bBossPackVoteEnabled || g_bBossPackVoteStarted || g_bBossPackVoteCompleted || !g_cvBossPackVoteAfterMapChooser.BoolValue) return;
+	
+	if (!NativeVotes_IsVoteInProgress())
+	{
+		InitiateBossPackVote(99);
+	}
+	else
+	{
+		g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT);
+	}
+}
+#elseif defined _mapchooser_included_
+public void OnMapVoteStarted()
+{
+	if (!g_cvBossPackEndOfMapVote.BoolValue || !g_bBossPackVoteEnabled || g_bBossPackVoteStarted || g_bBossPackVoteCompleted || !g_cvBossPackVoteAfterMapChooser.BoolValue) return;
+	
+	if (HasEndOfMapVoteFinished())
+	{
+		InitiateBossPackVote(99);
+	}
+	else if (!NativeVotes_IsVoteInProgress())
+	{
+		InitiateBossPackVote(99);
+	}
+	else
+	{
+		g_hBossPackVoteTimer = CreateTimer(5.0, Timer_BossPackVoteLoop, _, TIMER_REPEAT);
+	}
+}
+#endif
