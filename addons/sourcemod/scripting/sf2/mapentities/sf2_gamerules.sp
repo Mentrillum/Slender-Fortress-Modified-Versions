@@ -800,7 +800,7 @@ static Action SF2GamerulesEntity_OnAcceptEntityInput(int entity, const char[] sC
 	}
 	else if (strcmp(szInputName, "EndGracePeriod", false) == 0)
 	{
-		if (g_bRoundGrace && g_hRoundGraceTimer != INVALID_HANDLE) 
+		if (g_bRoundGrace && g_hRoundGraceTimer != null) 
 			TriggerTimer(g_hRoundGraceTimer);
 		
 		return Plugin_Handled;

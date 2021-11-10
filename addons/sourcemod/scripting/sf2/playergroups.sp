@@ -13,7 +13,7 @@ static int g_iPlayerGroupLeader[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
 static int g_iPlayerGroupID[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
 static int g_iPlayerGroupQueuePoints[SF2_MAX_PLAYER_GROUPS];
 static int g_bPlayerGroupPlaying[SF2_MAX_PLAYER_GROUPS] = { false, ... };
-static Handle g_hPlayerGroupNames;
+static StringMap g_hPlayerGroupNames;
 static bool g_bPlayerGroupInvitedPlayer[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
 static int g_iPlayerGroupInvitedPlayerCount[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
 static float g_flPlayerGroupInvitedPlayerTime[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
@@ -21,7 +21,7 @@ static float g_flPlayerGroupInvitedPlayerTime[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS 
 void SetupPlayerGroups()
 {
 	g_iPlayerGroupGlobalID = -1;
-	g_hPlayerGroupNames = CreateTrie();
+	g_hPlayerGroupNames = new StringMap();
 }
 
 stock int GetPlayerGroupFromID(int iGroupID)
@@ -254,7 +254,7 @@ void CheckPlayerGroup(int iGroupIndex)
 	if (!IsPlayerGroupActive(iGroupIndex)) return;
 	
 #if defined DEBUG
-	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("START CheckPlayerGroup(%d)", iGroupIndex);
+	if (g_cvDebugDetail.IntValue > 0) DebugMessage("START CheckPlayerGroup(%d)", iGroupIndex);
 #endif
 	
 	int iMemberCount = GetPlayerGroupMemberCount(iGroupIndex);
@@ -272,7 +272,7 @@ void CheckPlayerGroup(int iGroupIndex)
 				if (!IsValidClient(i) || !IsClientParticipating(i))
 				{
 #if defined DEBUG
-					if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("CheckPlayerGroup(%d): Invalid client detected (%d), removing from group", iGroupIndex, i);
+					if (g_cvDebugDetail.IntValue > 0) DebugMessage("CheckPlayerGroup(%d): Invalid client detected (%d), removing from group", iGroupIndex, i);
 #endif
 					
 					ClientSetPlayerGroup(i, -1);
@@ -287,7 +287,7 @@ void CheckPlayerGroup(int iGroupIndex)
 		if (iExcessMemberCount > 0)
 		{
 #if defined DEBUG
-			if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("CheckPlayerGroup(%d): Excess members detected", iGroupIndex);
+			if (g_cvDebugDetail.IntValue > 0) DebugMessage("CheckPlayerGroup(%d): Excess members detected", iGroupIndex);
 #endif
 
 			int iGroupLeader = GetPlayerGroupLeader(iGroupIndex);
@@ -312,7 +312,7 @@ void CheckPlayerGroup(int iGroupIndex)
 	}
 	
 #if defined DEBUG
-	if (GetConVarInt(g_cvDebugDetail) > 0) DebugMessage("END CheckPlayerGroup(%d)", iGroupIndex);
+	if (g_cvDebugDetail.IntValue > 0) DebugMessage("END CheckPlayerGroup(%d)", iGroupIndex);
 #endif
 }
 
@@ -392,14 +392,14 @@ stock bool GetPlayerGroupName(int iGroupIndex, char[] sBuffer,int iBufferLen)
 {
 	char sGroupIndex[32];
 	FormatEx(sGroupIndex, sizeof(sGroupIndex), "%d", iGroupIndex);
-	return GetTrieString(g_hPlayerGroupNames, sGroupIndex, sBuffer, iBufferLen);
+	return g_hPlayerGroupNames.GetString(sGroupIndex, sBuffer, iBufferLen);
 }
 
 stock void SetPlayerGroupName(int iGroupIndex, const char[] sGroupName)
 {
 	char sGroupIndex[32];
 	FormatEx(sGroupIndex, sizeof(sGroupIndex), "%d", iGroupIndex);
-	SetTrieString(g_hPlayerGroupNames, sGroupIndex, sGroupName);
+	g_hPlayerGroupNames.SetString(sGroupIndex, sGroupName);
 }
 
 stock int GetPlayerGroupID(int iGroupIndex)

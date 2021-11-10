@@ -20,12 +20,14 @@
 #define DEBUG_BOSS_ANIMATION (1 << 11)
 #define DEBUG_EVENT (1 << 12)
 #define DEBUG_KILLICONS (1 << 13)
+#define DEBUG_ARRAYLIST (1 << 14)
+#define DEBUG_BOSS_IDLE (1 << 15)
 
 int g_iPlayerDebugFlags[MAXPLAYERS + 1] = { 0, ... };
 
 static char g_strDebugLogFilePath[512] = "";
 
-Handle g_cvDebugDetail = INVALID_HANDLE;
+ConVar g_cvDebugDetail = null;
 
 void InitializeDebug()
 {
@@ -44,6 +46,8 @@ void InitializeDebug()
 	RegAdminCmd("sm_sf2_debug_nav", Command_DebugNav, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_events", Command_DebugEvent, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_kill_icons", Command_DebugKillIcons, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_debug_arraylists", Command_DebugArrayLists, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_debug_boss_idle", Command_DebugBossIdle, ADMFLAG_CHEATS);
 }
 
 void InitializeDebugLogging()
@@ -107,6 +111,19 @@ stock void SendDebugMessageToPlayers(int iDebugFlags,int iType, const char[] sMe
 	}
 }
 
+stock void SendDebugMessageToPlayersSpecialRound(const char[] sMessage, any ...)
+{
+	char sMsg[1024];
+	VFormat(sMsg, sizeof(sMsg), sMessage, 2);
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || (g_bPlayerEliminated[i] && !IsClientInGhostMode(i)) || DidClientEscape(i)) continue;
+		
+		PrintCenterText(i, sMsg);
+	}
+}
+
 public Action Command_DebugBossTeleport(int client,int args)
 {
 	if (client < 1 || client > MaxClients) return Plugin_Handled;
@@ -140,6 +157,25 @@ public Action Command_DebugBossChase(int client,int args)
 	{
 		g_iPlayerDebugFlags[client] &= ~DEBUG_BOSS_CHASE;
 		PrintToChat(client, "Disabled debugging boss chasing.");
+	}
+	
+	return Plugin_Handled;
+}
+
+public Action Command_DebugBossIdle(int client,int args)
+{
+	if (client < 1 || client > MaxClients) return Plugin_Handled;
+	
+	bool bInMode = view_as<bool>(g_iPlayerDebugFlags[client] & DEBUG_BOSS_IDLE);
+	if (!bInMode)
+	{
+		g_iPlayerDebugFlags[client] |= DEBUG_BOSS_IDLE;
+		PrintToChat(client, "Enabled debugging boss idling.");
+	}
+	else
+	{
+		g_iPlayerDebugFlags[client] &= ~DEBUG_BOSS_IDLE;
+		PrintToChat(client, "Disabled debugging boss idling.");
 	}
 	
 	return Plugin_Handled;
@@ -301,16 +337,22 @@ public Action Command_DebugNav(int client,int args)
 	if (client < 1 || client > MaxClients) return Plugin_Handled;
 	
 	bool bInMode = view_as<bool>(g_iPlayerDebugFlags[client] & DEBUG_NAV);
-	if (!bInMode)
+	if (!SF_SpecialRound(SPECIALROUND_DEBUGMODE))
 	{
-		g_iPlayerDebugFlags[client] |= DEBUG_NAV;
-		PrintToChat(client, "Enabled debugging nav.");
+		if (!bInMode)
+		{
+			g_iPlayerDebugFlags[client] |= DEBUG_NAV;
+			PrintToChat(client, "Enabled debugging nav.");
+		}
+		else
+		{
+			g_iPlayerDebugFlags[client] &= ~DEBUG_NAV;
+			PrintToChat(client, "Disabled debugging nav.");
+		}
+
+		g_bDebuggingBossPathing = !bInMode;
 	}
-	else
-	{
-		g_iPlayerDebugFlags[client] &= ~DEBUG_NAV;
-		PrintToChat(client, "Disabled debugging nav.");
-	}
+	else PrintToChat(client, "This command cannot be used at this time.");
 	
 	return Plugin_Handled;
 }
@@ -348,6 +390,25 @@ public Action Command_DebugKillIcons(int client,int args)
 	{
 		g_iPlayerDebugFlags[client] &= ~DEBUG_KILLICONS;
 		PrintToChat(client, "Disabled debugging kill icons.");
+	}
+	
+	return Plugin_Handled;
+}
+
+public Action Command_DebugArrayLists(int client,int args)
+{
+	if (client < 1 || client > MaxClients) return Plugin_Handled;
+	
+	bool bInMode = view_as<bool>(g_iPlayerDebugFlags[client] & DEBUG_ARRAYLIST);
+	if (!bInMode)
+	{
+		g_iPlayerDebugFlags[client] |= DEBUG_ARRAYLIST;
+		PrintToChat(client, "Enabled debugging array lists.");
+	}
+	else
+	{
+		g_iPlayerDebugFlags[client] &= ~DEBUG_ARRAYLIST;
+		PrintToChat(client, "Disabled debugging array lists.");
 	}
 	
 	return Plugin_Handled;

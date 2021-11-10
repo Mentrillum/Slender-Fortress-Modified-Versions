@@ -48,6 +48,21 @@
 		"chi"	"疯狂"
 	}
 
+	"SF2 Nightmare Difficulty"
+	{
+		"en"	"Nightmare"
+	}
+
+	"SF2 Apollyon Difficulty"
+	{
+		"en"	"Apollyon"
+	}
+
+	"SF2 Calamity Difficulty"
+	{
+		"en"	"Calamity"
+	}
+
 	"SF2 Default Intro Message Singular"
 	{
 		"#format"		"{1:d}"
@@ -492,6 +507,11 @@
 		"chi"	"开启/关闭自动重生"
 	}
 
+	"SF2 Settings PvP Spawn Protection Title"
+	{
+		"en"	"Enable/Disable spawn protection"
+	}
+
 	"SF2 Settings Hints Menu Title"
 	{
 		"en"	"Toggle hints"
@@ -532,12 +552,27 @@
 
 	}
 
+	"SF2 Settings Proxy Ask Menu Title"
+	{
+		"en"	"Enable/Disable the proxy ask message"
+	}
+
 	"SF2 Settings Ghost Overlay Menu Title"
 	{
 		"en"	"Toggle Ghost Mode overlay"
 		"ru"	"Вкл./выкл. экран режима призрака"
 		"fi"	"Vaihda Haamu Tilan overlay"
 		"chi"	"开关幽灵模式覆盖"
+	}
+	
+	"SF2 Settings Ghost Mode Teleport Menu Title"
+	{
+		"en"	"Set ghost mode teleport state"
+	}
+	
+	"SF2 Settings Ghost Mode Toggle State Menu Title"
+	{
+		"en"	"Set ghost mode toggle state"
 	}
 
 	"SF2 Settings Music Volume Title"
@@ -576,9 +611,9 @@
 
 	"SF2 Ad Message 1"
 	{
-		"en"	"{dodgerblue}Slender Fortress Modified official Discord server: {lightblue}https://discord.gg/uytDCFS{default}"
-		"ru"	"{dodgerblue}Официальный Discord сервер Slender Fortress Modified: {lightblue}https://discord.gg/uytDCFS{default}"
-		"chi"	"{dodgerblue}Slender Fortress Modified官方Discord服务器：{lightblue}https://discord.gg/uytDCFS{default}"
+		"en"	"{dodgerblue}Slender Fortress Modified official Discord server: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
+		"ru"	"{dodgerblue}Официальный Discord сервер Slender Fortress Modified: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
+		"chi"	"{dodgerblue}Slender Fortress Modified官方Discord服务器：{lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 	}
 
 	"SF2 Ad Message 2"
@@ -619,6 +654,16 @@
 		"ru"	"{lightblue}Отключено автоматическое возрождение на PvP арене."
 		"fi"	"{lightblue}Poistettiin käytöstä automaattinen PvP areenalla syntyminen."
 		"chi"	"{lightblue}已关闭PvP区域自动重生。"
+	}
+
+	"SF2 PvP Protection On"
+	{
+		"en"	"{lightblue}Enabled PvP Spawn Protection."
+	}
+
+	"SF2 PvP Protection Off"
+	{
+		"en"	"{lightblue}Disabled PvP Spawn Protection."
 	}
 
 	"SF2 Exiting PvP Arena"
@@ -676,6 +721,16 @@
 		"ru"	"{lightblue}Больше вы не можете быть выбраны в качестве помощника."
 		"fi"	"{lightblue}Sinua ei enään valita avustajaksi."
 		"chi"	"{lightblue}你不再会被选为小弟。"
+	}
+
+	"SF2 Enabled Ask Message Proxy"
+	{
+		"en"	"{lightblue}You will now be prompted and asked when you can become a proxy."
+	}
+
+	"SF2 Disabled Ask Message Proxy"
+	{
+		"en"	"{lightblue}You will no longer be prompted and asked when you can become a proxy."
 	}
 
 	"SF2 Give Queue Points"
@@ -1567,6 +1622,41 @@
 		"ru"	"{lightblue}Чат другой команды выключен, но будет автоматически включен, если вы станете помощником."
 		"fi"	"{lightblue}Vastatiimi hiljennettiin, mutta asetukset asetetaan automaattisesti normaaliksi, jos olet avustaja."
 		"chi"	"{lightblue}禁言敌方队伍，但将在成为小弟后自动设为普通。"
+	}
+
+	"SF2 Settings Ghost Mode Teleport Title"
+	{
+		"en" 	"Change ghost mode teleport state"
+	}
+
+	"SF2 Teleport Ghost Players"
+	{
+		"en"	"{lightblue}You can now teleport to only players during ghost mode."
+	}
+
+	"SF2 Teleport Ghost Bosses"
+	{
+		"en"	"{lightblue}You can now teleport to only bosses during ghost mode."
+	}
+
+	"SF2 Settings Ghost Mode Toggle State Title"
+	{
+		"en" 	"Set ghost mode toggle state"
+	}
+
+	"SF2 Toggle Ghost Default"
+	{
+		"en"	"{lightblue}Ghost mode will now be enabled any time you want."
+	}
+
+	"SF2 Toggle Ghost On Grace"
+	{
+		"en"	"{lightblue}Ghost mode will now be enabled whenever grace period ends."
+	}
+
+	"SF2 Toggle Ghost On Death"
+	{
+		"en"	"{lightblue}Ghost mode will now be enabled upon dying in RED."
 	}
 
 	"SF2 Recent Changes"

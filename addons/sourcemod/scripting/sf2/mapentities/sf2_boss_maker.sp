@@ -45,12 +45,20 @@ enum struct SF2BossMakerEntityData
 		this.SpawnAnimationDuration = 0.0;
 
 		this.Bosses = new ArrayList();
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for this.Bosses in SF2BossMakerEntityData.", this.Bosses);
+		#endif
 	}
 
 	void Destroy()
 	{
 		if (this.Bosses != null)
+		{
 			delete this.Bosses;
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for this.Bosses in SF2BossMakerEntityData.", this.Bosses);
+			#endif
+		}
 	}
 
 	void SetBossProfile(const char[] sProfile)

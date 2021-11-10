@@ -8,7 +8,7 @@
 #define INVALID_NAV_AREA view_as<CNavArea>(-1)
 #define INVALID_NAV_LADDER view_as<CNavLadder>(-1)
 
-static Handle g_hFuncNavPrefer;
+static ArrayList g_hFuncNavPrefer;
 
 methodmap NavPath < ArrayList
 {
@@ -46,12 +46,7 @@ methodmap NavPath < ArrayList
 	{
 		return NavPathGetNodeArea(this, nodeIndex);
 	}
-	
-	public CNavLadder GetNodeLadder(int nodeIndex)
-	{
-		return NavPathGetNodeLadder(this, nodeIndex);
-	}
-	
+
 	public bool ConstructPathFromPoints(float startPos[3], float endPos[3], float nearestAreaRadius, NavPathCostFunctor costFunction, any costData = -1, bool populateIfIncomplete = true, int &closestAreaIndex = 0, CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
 	{
 		return NavPathConstructPathFromPoints(this, startPos, endPos, nearestAreaRadius, costFunction, costData, populateIfIncomplete, closestAreaIndex, startArea, endArea);
@@ -65,16 +60,16 @@ methodmap NavPath < ArrayList
 
 void Nav_Initialize()
 {
-	g_hFuncNavPrefer = CreateArray();
+	g_hFuncNavPrefer = new ArrayList();
 }
 
 stock void NavCollectFuncNavPrefer()
 {
-	ClearArray(g_hFuncNavPrefer);
+	g_hFuncNavPrefer.Clear();
 	int iFunc = -1;
 	while ((iFunc = FindEntityByClassname(iFunc, "func_nav_prefer")) != -1)
 	{
-		PushArrayCell(g_hFuncNavPrefer, iFunc);
+		g_hFuncNavPrefer.Push(iFunc);
 	}
 }
 
@@ -82,11 +77,11 @@ stock bool NavHasFuncPrefer(int iAreaIndex)
 {
 	float flCenter[3];
 	NavMeshArea_GetCenter(iAreaIndex, flCenter);
-	if (GetArraySize(g_hFuncNavPrefer) > 0)
+	if (g_hFuncNavPrefer.Length > 0)
 	{
-		for (int a = 1;a <= (GetArraySize(g_hFuncNavPrefer) - 1);a++)
+		for (int a = 1;a <= (g_hFuncNavPrefer.Length - 1);a++)
 		{
-			int iFunc = GetArrayCell(g_hFuncNavPrefer, a);
+			int iFunc = g_hFuncNavPrefer.Get(a);
 			if (SDK_PointIsWithin(iFunc, flCenter))
 				return true;
 		}
@@ -96,11 +91,17 @@ stock bool NavHasFuncPrefer(int iAreaIndex)
 
 stock ArrayList CreateNavPath()
 {
-	return new ArrayList(5);
+	ArrayList aArray = new ArrayList(4);
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for aArray in CreateNavPath.", aArray);
+	#endif
+	return aArray;
 }
 
 stock void NavPathSetNodePosition(ArrayList hNavPath, int iNodeIndex, const float pos[3])
 {
+	if (hNavPath == null) return;
+
 	hNavPath.Set(iNodeIndex, pos[0], 0);
 	hNavPath.Set(iNodeIndex, pos[1], 1);
 	hNavPath.Set(iNodeIndex, pos[2], 2);
@@ -108,6 +109,8 @@ stock void NavPathSetNodePosition(ArrayList hNavPath, int iNodeIndex, const floa
 
 stock void NavPathGetNodePosition(ArrayList hNavPath,int iNodeIndex, float buffer[3])
 {
+	if (hNavPath == null) return;
+
 	buffer[0] = hNavPath.Get(iNodeIndex, 0);
 	buffer[1] = hNavPath.Get(iNodeIndex, 1);
 	buffer[2] = hNavPath.Get(iNodeIndex, 2);
@@ -118,13 +121,10 @@ stock CNavArea NavPathGetNodeArea(ArrayList hNavPath,int iNodeIndex)
 	return CNavArea(hNavPath.Get(iNodeIndex, 3));
 }
 
-stock CNavLadder NavPathGetNodeLadder(ArrayList hNavPath,int iNodeIndex)
+stock int NavPathAddNodeToHead(ArrayList hNavPath, const float flNodePos[3], CNavArea nodeArea)
 {
-	return CNavLadder(hNavPath.Get(iNodeIndex, 4));
-}
+	if (hNavPath == null) return -1;
 
-stock int NavPathAddNodeToHead(ArrayList hNavPath, const float flNodePos[3], CNavArea nodeArea, CNavLadder ladderArea = INVALID_NAV_LADDER)
-{
 	int iIndex = -1;
 
 	if (hNavPath.Length == 0)
@@ -140,21 +140,22 @@ stock int NavPathAddNodeToHead(ArrayList hNavPath, const float flNodePos[3], CNa
 	}
 	
 	hNavPath.Set(iIndex, nodeArea, 3);
-	hNavPath.Set(iIndex, ladderArea, 4);
 	
 	return iIndex;
 }
 
 stock bool NavPathIsValid(ArrayList hNavPath)
 {
+	if (hNavPath == null) return false;
 	return (hNavPath.Length > 0);
 }
 
-stock int NavPathAddNodeToTail(ArrayList hNavPath, const float flNodePos[3], CNavArea nodeArea, const CNavLadder ladderArea = INVALID_NAV_LADDER)
+stock int NavPathAddNodeToTail(ArrayList hNavPath, const float flNodePos[3], CNavArea nodeArea)
 {
+	if (hNavPath == null) return -1;
+
 	int iIndex = hNavPath.PushArray(flNodePos, 3);
 	hNavPath.Set(iIndex, nodeArea, 3);
-	hNavPath.Set(iIndex, ladderArea, 4);
 	
 	return iIndex;
 }
@@ -164,17 +165,23 @@ stock int NavPathAddNodeToTail(ArrayList hNavPath, const float flNodePos[3], CNa
  */
 stock bool NavPathConstructTrivialPath(ArrayList hNavPath, const float flStartPos[3], const float flEndPos[3], float flNearestAreaRadius, CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
 {
-	hNavPath.Clear();
+	if (hNavPath == null) return false;
+
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Using array list %b in NavPathConstructTrivialPath.", hNavPath);
+	#endif
+
+	//hNavPath.Clear();
 
 	if (startArea == INVALID_NAV_AREA)
 	{
-		startArea = NavMesh_GetNearestArea(flStartPos);
+		startArea = NavMesh_GetNearestArea(flStartPos, _, flNearestAreaRadius);
 		if (startArea == INVALID_NAV_AREA) return false;
 	}
 	
 	if (endArea == INVALID_NAV_AREA)
 	{
-		endArea = NavMesh_GetNearestArea(flEndPos);
+		endArea = NavMesh_GetNearestArea(flEndPos, _, flNearestAreaRadius);
 		if (endArea == INVALID_NAV_AREA) return false;
 	}
 
@@ -193,6 +200,10 @@ stock bool NavPathConstructTrivialPath(ArrayList hNavPath, const float flStartPo
 	
 	NavPathAddNodeToTail(hNavPath, flEndPosOnNavMesh, endArea);
 
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Ended usage of array list %b in NavPathConstructTrivialPath.", hNavPath);
+	#endif
+
 	return true;
 }
 
@@ -201,12 +212,18 @@ stock bool NavPathConstructTrivialPath(ArrayList hNavPath, const float flStartPo
  */
 stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStartPos[3], const float flEndPos[3], float flNearestAreaRadius, NavPathCostFunctor fCostFunction, any iCostData=-1, bool bPopulateIfIncomplete=false,int &iClosestAreaIndex=0, CNavArea startArea = INVALID_NAV_AREA, CNavArea endArea = INVALID_NAV_AREA)
 {
-	hNavPath.Clear();
+	if (hNavPath == null) return false;
+
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Using array list %b in NavPathConstructPathFromPoints.", hNavPath);
+	#endif
+
+	//hNavPath.Clear();
 	
-	int iStartAreaIndex = view_as<int>(NavMesh_GetNearestArea(flStartPos));
+	int iStartAreaIndex = view_as<int>(NavMesh_GetNearestArea(flStartPos, _, flNearestAreaRadius));
 	if (iStartAreaIndex == -1) return false;
 	
-	int iEndAreaIndex = view_as<int>(NavMesh_GetNearestArea(flEndPos));
+	int iEndAreaIndex = view_as<int>(NavMesh_GetNearestArea(flEndPos, _, flNearestAreaRadius));
 	if (iEndAreaIndex == -1) return false;
 	
 	if (iStartAreaIndex == iEndAreaIndex)
@@ -266,6 +283,10 @@ stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStar
 	flStartPosOnNavMesh[2] = NavMeshArea_GetZ(iStartAreaIndex, flStartPos);
 	
 	NavPathAddNodeToHead(hNavPath, flStartPosOnNavMesh, view_as<CNavArea>(iStartAreaIndex));
+
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Ended usage of array list %b in NavPathConstructPathFromPoints.", hNavPath);
+	#endif
 	
 	return bResult;
 }
@@ -277,7 +298,7 @@ stock bool NavPathConstructPathFromPoints(ArrayList hNavPath, const float flStar
  */
 stock int FindClosestPositionOnPath(ArrayList hNavPath, const float flFeetPos[3], const float flCentroidPos[3], const float flEyePos[3], float flBuffer[3]=NULL_VECTOR, bool bLocal=false, int iPathNodeIndex=-1)
 {
-	if (hNavPath == INVALID_HANDLE) return -1;
+	if (hNavPath == null) return -1;
 	
 	int iNodeCount = hNavPath.Length;
 	if (iNodeCount == 0) return -1;
@@ -373,7 +394,7 @@ stock int FindClosestPositionOnPath(ArrayList hNavPath, const float flFeetPos[3]
  */
 stock int NavPathFindAheadPathPoint(ArrayList hNavPath, float flAheadRange,int iPathNodeIndex, const float flFeetPos[3], const float flCentroidPos[3], const float flEyePos[3], float flPoint[3],int &iPrevPathNodeIndex)
 {
-	if (hNavPath == INVALID_HANDLE) return -1;
+	if (hNavPath == null) return -1;
 	
 	int iAfterPathNodeIndex;
 	
@@ -707,7 +728,7 @@ stock void CalculateFeelerReflexAdjustment(const float flOriginalMovePos[3],
 	avoidHullMaxs[2] -= flFeelerHeight;
 	if (avoidHullMaxs[2] <= 0.0) avoidHullMaxs[2] = 0.1;
 	
-	Handle hTrace = INVALID_HANDLE;
+	Handle hTrace = null;
 	if (fTraceFilterFunction != view_as<TraceEntityFilter>(INVALID_FUNCTION))
 	{
 		hTrace = TR_TraceHullFilterEx(flFromPos, flToPos, avoidHullMins, avoidHullMaxs, iTraceMask, fTraceFilterFunction, iTraceFilterFunctionData);

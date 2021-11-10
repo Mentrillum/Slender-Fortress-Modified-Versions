@@ -128,42 +128,37 @@ static bool g_bClientAndEntityNetwork[2049][MAXPLAYERS+1];
 
 stock bool SF_IsSurvivalMap()
 {
-	return view_as<bool>(g_bIsSurvivalMap || (GetConVarInt(g_cvSurvivalMap) == 1));
+	return view_as<bool>(g_bIsSurvivalMap || (g_cvSurvivalMap.IntValue == 1));
 }
 
 stock bool SF_IsRaidMap()
 {
-	return view_as<bool>(g_bIsRaidMap || (GetConVarInt(g_cvRaidMap) == 1));
+	return view_as<bool>(g_bIsRaidMap || (g_cvRaidMap.IntValue == 1));
 }
 
 stock bool SF_IsProxyMap()
 {
-	return view_as<bool>(g_bIsProxyMap || (GetConVarInt(g_cvProxyMap) == 1));
+	return view_as<bool>(g_bIsProxyMap || (g_cvProxyMap.IntValue == 1));
 }
 
 stock bool SF_BossesChaseEndlessly()
 {
-	return view_as<bool>(g_bBossesChaseEndlessly || (GetConVarInt(g_cvBossChaseEndlessly) == 1));
+	return view_as<bool>(g_bBossesChaseEndlessly || (g_cvBossChaseEndlessly.IntValue == 1));
 }
 
 stock bool SF_IsBoxingMap()
 {
-	return view_as<bool>(g_bIsBoxingMap || (GetConVarInt(g_cvBoxingMap) == 1));
-}
-
-stock bool SF_IsRenevantMap()
-{
-	return view_as<bool>(g_bIsRenevantMap || (GetConVarInt(g_cvRenevantMap) == 1));
+	return view_as<bool>(g_bIsBoxingMap || (g_cvBoxingMap.IntValue == 1));
 }
 
 stock bool SF_IsSlaughterRunMap()
 {
-	return view_as<bool>(g_bIsSlaughterRunMap || (GetConVarInt(g_cvSlaughterRunMap) == 1));
+	return view_as<bool>(g_bIsSlaughterRunMap || (g_cvSlaughterRunMap.IntValue == 1));
 }
 /*
 int SDK_StartTouch(int iEntity, int iOther)
 {
-	if(g_hSDKStartTouch != INVALID_HANDLE)
+	if(g_hSDKStartTouch != null)
 	{
 		return SDKCall(g_hSDKStartTouch, iEntity, iOther);
 	}
@@ -172,7 +167,7 @@ int SDK_StartTouch(int iEntity, int iOther)
 
 int SDK_EndTouch(int iEntity, int iOther)
 {
-	if(g_hSDKEndTouch != INVALID_HANDLE)
+	if(g_hSDKEndTouch != null)
 	{
 		return SDKCall(g_hSDKEndTouch, iEntity, iOther);
 	}
@@ -181,7 +176,7 @@ int SDK_EndTouch(int iEntity, int iOther)
 */
 bool SDK_PointIsWithin(int iFunc, float flPos[3])
 {
-	if(g_hSDKPointIsWithin != INVALID_HANDLE)
+	if(g_hSDKPointIsWithin != null)
 	{
 		return view_as<bool>(SDKCall(g_hSDKPointIsWithin, iFunc, flPos));
 	}
@@ -197,7 +192,7 @@ stock int EnsureEntRef(int entIndex)
 {
 	if (entIndex & (1 << 31))
 		return entIndex;
-	
+
 	return IsValidEntity(entIndex) ? EntIndexToEntRef(entIndex) : INVALID_ENT_REFERENCE;
 }
 
@@ -297,6 +292,32 @@ stock int SquareInt(const int value)
 	return value * value; //Using this to combine GetVectorSquareMagnitude() to improve performance
 }
 
+stock float Math_Min(float flReturn, float flMin)
+{
+	if (flReturn < flMin) {
+		flReturn = flMin;
+	}
+	
+	return flReturn;
+}
+
+stock float Math_Max(float flReturn, float flMax)
+{	
+	if (flReturn > flMax) {
+		flReturn = flMax;
+	}
+	
+	return flReturn;
+}
+
+stock float Math_Clamp(float flReturn, float flMin, float flMax)
+{
+	flReturn = Math_Min(flReturn, flMin);
+	flReturn = Math_Max(flReturn, flMax);
+
+	return flReturn;
+}
+
 stock float EntityDistanceFromEntity(int ent1,int ent2)
 {
 	if (!IsValidEntity(ent1) || !IsValidEntity(ent2)) return -1.0;
@@ -381,7 +402,7 @@ stock void EntitySetBlendAnimation(int iEntity, const char[] sParameter, float f
 }
 stock void SDK_GetVectors(int iEntity, float vecForward[3], float vecRight[3], float vecUp[3])
 {
-	if (g_hSDKGetVectors != INVALID_HANDLE)
+	if (g_hSDKGetVectors != null)
 	{
 		SDKCall(g_hSDKGetVectors, iEntity, vecForward, vecRight, vecUp);
 		return;
@@ -390,7 +411,7 @@ stock void SDK_GetVectors(int iEntity, float vecForward[3], float vecRight[3], f
 
 stock void SDK_GetSmoothedVelocity(int iEntity, float flVector[3])
 {
-	if (g_hSDKGetSmoothedVelocity == INVALID_HANDLE)
+	if (g_hSDKGetSmoothedVelocity == null)
 	{
 		LogError("SDKCall for GetSmoothedVelocity is invalid!");
 		return;
@@ -433,7 +454,7 @@ stock int TF2_CreateGlow(int iEnt)
 //Credits to Linux_lover for this stock and signature.
 stock void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 {
-	if(g_hSDKPlaySpecificSequence != INVALID_HANDLE)
+	if(g_hSDKPlaySpecificSequence != null)
 	{
 #if defined DEBUG
 		static bool once = true;
@@ -449,7 +470,7 @@ stock void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 
 stock void SDK_EquipWearable(int client, int entity)
 {
-	if(g_hSDKEquipWearable != INVALID_HANDLE)
+	if(g_hSDKEquipWearable != null)
 	{
 		SDKCall( g_hSDKEquipWearable, client, entity );
 	}
@@ -464,6 +485,18 @@ stock void KillClient(int client)
 		SetVariantInt(9001);
 		AcceptEntityInput(client, "RemoveHealth");
 	}
+}
+
+stock bool IsEntityAProjectile(int entity)
+{
+	char classname[64];
+	if (IsValidEntity(entity) && GetEntityClassname(entity, classname, sizeof(classname)) && 
+	(strcmp(classname, "env_explosion") == 0 || 
+	strcmp(classname, "tf_projectile_sentryrocket") == 0 || 
+	strcmp(classname, "tf_projectile_rocket") == 0 || 
+	strcmp(classname, "tf_projectile_pipe") == 0 || 
+	strcmp(classname, "tf_projectile_arrow") == 0)) return true;
+	return false;
 }
 
 #define SF_IGNORE_LOS	0x0004
@@ -513,7 +546,7 @@ stock void SDK_StopHealing(int iHealer, int iClient)
 
 int SDK_SwitchWeapon(int client, int weapon)
 {
-	if(g_hSDKWeaponSwitch != INVALID_HANDLE)
+	if(g_hSDKWeaponSwitch != null)
 	{
 		return SDKCall(g_hSDKWeaponSwitch, client, weapon, 0);
 	}
@@ -714,7 +747,7 @@ stock void UTIL_SayText2(int[] players, int playersNum, int iEntity, bool bChat,
 stock void UTIL_ClientScreenShake(int client, float amplitude, float duration, float frequency)
 {
 	Handle hBf = StartMessageOne("Shake", client);
-	if (hBf != INVALID_HANDLE)
+	if (hBf != null)
 	{
 		BfWriteByte(hBf, 0);
 		BfWriteFloat(hBf, amplitude);
@@ -846,7 +879,7 @@ stock int BuildAnnotationBitString(const int[] clients,int iMaxClients)
 stock void SpawnAnnotation(int client,int entity, const float pos[3], const char[] message, float lifetime)
 {
 	Handle event = CreateEvent("show_annotation", true);
-	if (event != INVALID_HANDLE)
+	if (event != null)
 	{
 		new bitstring = BuildAnnotationBitString(id, pos, type, team);
 		if (bitstring > 1)
@@ -967,6 +1000,13 @@ stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality,
 	
 	return hItem;
 }
+
+stock void SpeakResponseConcept(int client, const char[] concept) //Thanks The Gaben 
+{
+	SetVariantString(concept);
+	AcceptEntityInput(client, "SpeakResponseConcept");
+}
+
 stock void SpecialRoundGameText(const char[] strMessage, const char strIcon[]="")
 {
 	int iEntity = CreateEntityByName("game_text_tf");
@@ -1046,7 +1086,7 @@ stock void UTIL_ScreenShake(float center[3], float amplitude, float frequency, f
 {
 	for(int i=1; i<=MaxClients; i++)
 	{
-		if(IsClientInGame(i) && !IsFakeClient(i))
+		if(IsClientInGame(i) && !IsFakeClient(i) && !IsClientInGhostMode(i))
 		{
 			if(!airShake && command == 0 && !(GetEntityFlags(i) && FL_ONGROUND)) continue;
 
@@ -1145,6 +1185,7 @@ stock float FloatMax(float a, float b)
 
 stock CNavArea SDK_GetLastKnownArea(int iEntity)//Only parse entities that their server class inherits from CBaseCombatCharacter and nothing else!
 {
+	if (!IsValidEntity(iEntity)) return INVALID_NAV_AREA;
 	if (g_hSDKGetLastKnownArea != null)
 	{
 		Address lastNavArea = SDKCall(g_hSDKGetLastKnownArea, iEntity);
@@ -1318,8 +1359,10 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 	return INVALID_STRING_INDEX;
 }
 
-stock void InsertNodesAroundPoint(Handle hArray, const float flOrigin[3], float flDist, float flAddAng, Function iCallback=INVALID_FUNCTION, any data=-1)
+stock void InsertNodesAroundPoint(ArrayList hArray, const float flOrigin[3], float flDist, float flAddAng, Function iCallback=INVALID_FUNCTION, any data=-1)
 {
+	if (hArray == null) return;
+	
 	float flDirection[3];
 	float flPos[3];
 	
@@ -1341,7 +1384,7 @@ stock void InsertNodesAroundPoint(Handle hArray, const float flOrigin[3], float 
 		{
 			Action iAction = Plugin_Continue;
 			
-			Call_StartFunction(INVALID_HANDLE, iCallback);
+			Call_StartFunction(null, iCallback);
 			Call_PushArray(flOrigin, 3);
 			Call_PushArrayEx(flPos2, 3, SM_PARAM_COPYBACK);
 			Call_PushCell(data);
@@ -1354,7 +1397,7 @@ stock void InsertNodesAroundPoint(Handle hArray, const float flOrigin[3], float 
 			}
 		}
 		
-		PushArrayArray(hArray, flPos, 3);
+		hArray.PushArray(flPos, 3);
 	}
 }
 
@@ -1387,34 +1430,48 @@ public bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 //	==========================================================
 stock void CloseEvent(Event event)
 {
-	CreateTimer(10.0,CloseEventTimer,event);
+	CreateTimer(10.0,CloseEventTimer,event,TIMER_FLAG_NO_MAPCHANGE);
 }
 stock void DeleteHandle(Handle handle)
 {
-	CreateTimer(0.1,CloseHandleTimer,handle);
+	CreateTimer(0.1,CloseHandleTimer,handle,TIMER_FLAG_NO_MAPCHANGE);
 }
 public Action CloseEventTimer(Handle timer,Event event)
 {
 	delete event;
+	return Plugin_Stop;
 }
 public Action CloseHandleTimer(Handle timer,Handle handle)
 {
 	delete handle;
+	return Plugin_Stop;
 }
 public Action Timer_KillEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (ent == INVALID_ENT_REFERENCE) return;
+	if (ent == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	if (!IsValidEntity(ent)) return Plugin_Stop;
 	
 	RemoveEntity(ent);
+
+	return Plugin_Stop;
+}
+public Action Timer_KillEdict(Handle timer, any entref)
+{
+	int ent = EntRefToEntIndex(entref);
+	if (!IsValidEdict(ent)) return Plugin_Stop;
+	
+	RemoveEdict(ent);
+
+	return Plugin_Stop;
 }
 
 //	==========================================================
-//	SPECIAL ROUND FUCNTIONS
+//	SPECIAL ROUND FUNCTIONS
 //	==========================================================
 stock bool IsInfiniteFlashlightEnabled()
 {
-	return view_as<bool>(g_bRoundInfiniteFlashlight || (GetConVarInt(g_cvPlayerInfiniteFlashlightOverride) == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((GetConVarBool(g_cvNightvisionEnabled) || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_iNightvisionType == 1));
+	return view_as<bool>(g_bRoundInfiniteFlashlight || (g_cvPlayerInfiniteFlashlightOverride.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_cvNightvisionEnabled.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_iNightvisionType == 1));
 }
 
 int g_iArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
@@ -1478,4 +1535,17 @@ stock void SF_RemoveAllSpecialRound()
 	{
 		g_iArraySpecialRoundType[iArray] = 0;
 	}
+}
+
+//	==========================================================
+//	OTHER FUNCTIONS
+//	==========================================================
+stock int GetLocalGlobalDifficulty(int iNPCIndex = 1)
+{
+	if (SF_IsBoxingMap())
+	{
+		if (NPCGetUniqueID(iNPCIndex) != -1) return NPCChaserGetBoxingDifficulty(iNPCIndex);
+		else return g_cvDifficulty.IntValue;
+	}
+	return g_cvDifficulty.IntValue;
 }

@@ -167,30 +167,30 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 	switch (hookType)
 	{
 		case SF2MapEntityHook_OnLevelInit:
-			g_CustomEntityOnLevelInit.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnLevelInit.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_TranslateClassname:
-			g_CustomEntityTranslateClassname.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityTranslateClassname.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnEntityCreated:
-			g_CustomEntityInitialize.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityInitialize.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnEntityDestroyed:
-			g_CustomEntityOnDestroyed.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnDestroyed.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnMapStart:
-			g_CustomEntityOnMapStart.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnMapStart.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnEntityKeyValue:
-			g_CustomEntityOnEntityKeyValue.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnEntityKeyValue.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnAcceptEntityInput:
-			g_CustomEntityOnAcceptEntityInput.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnAcceptEntityInput.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnRoundStateChanged:
-			g_CustomEntityOnRoundStateChanged.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnRoundStateChanged.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnGracePeriodEnd:
-			g_CustomEntityOnGracePeriodEnd.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnGracePeriodEnd.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnDifficultyChanged:
-			g_CustomEntityOnDifficultyChanged.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnDifficultyChanged.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnPageCountChanged:
-			g_CustomEntityOnPageCountChanged.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnPageCountChanged.AddFunction(null, hookFunc);
 		
 		case SF2MapEntityHook_OnRenevantWaveTriggered:
-			g_CustomEntityOnRenevantWaveTriggered.AddFunction(INVALID_HANDLE, hookFunc);
+			g_CustomEntityOnRenevantWaveTriggered.AddFunction(null, hookFunc);
 		
 		default:
 			ThrowError("Unhandled hooktype %i", hookType);
@@ -270,6 +270,9 @@ enum struct SF2MapEntityData
 		this.Classname[0] = '\0';
 		this.Outputs = new ArrayList(sizeof(SF2MapEntityOutputData));
 		this.FiredOutputs = new ArrayList(sizeof(SF2MapEntityFireOutputData));
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b and %b have been created for this.Outputs and this.FiredOutputs in SF2MapEntityData.", this.Outputs, this.FiredOutputs);
+		#endif
 		this.OutputIDStamp = 0;
 	}
 
@@ -730,6 +733,9 @@ static void SF2MapEntity_FireOutput(int entity, const char[] szKeyName, int acti
 
 	// need to clone because DoOutputEvent with no delay could affect array size mid-loop
 	ArrayList outputs = entData.Outputs.Clone();
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Clone array list %b has been created for outputs in SF2MapEntity_FireOutput.", outputs);
+	#endif
 
 	for (int i = 0; i < outputs.Length; i++) 
 	{
@@ -772,6 +778,9 @@ static void SF2MapEntity_FireOutput(int entity, const char[] szKeyName, int acti
 	}
 
 	delete outputs;
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Clone array list %b has been deleted for outputs in SF2MapEntity_FireOutput.", outputs);
+	#endif
 }
 
 static Action SF2MapEntity_TimerDoOutputEvent(Handle timer, any data)
@@ -802,20 +811,20 @@ static Action SF2MapEntity_TimerDoOutputEvent(Handle timer, any data)
 	return Plugin_Handled;
 }
 
-static int SF2MapEntity_FindProceduralTarget(const char[] szName, int searchingEntity, int activator, int caller)
+static int SF2MapEntity_FindProceduralTarget(const char[] sName, int searchingEntity, int activator, int caller)
 {
-	if (szName[0] != '!')
+	if (sName[0] != '!')
 		return -1;
 	
-	if ( strcmp( szName, "!activator" ) == 0 )
+	if ( strcmp( sName, "!activator" ) == 0 )
 	{
 		return activator;
 	}
-	else if ( strcmp( szName, "!caller" ) == 0)
+	else if ( strcmp( sName, "!caller" ) == 0)
 	{
 		return caller;
 	}
-	else if ( strcmp( szName, "!self" ) == 0)
+	else if ( strcmp( sName, "!self" ) == 0)
 	{
 		return searchingEntity;
 	}
@@ -833,19 +842,19 @@ static int SF2MapEntity_FindProceduralTarget(const char[] szName, int searchingE
 		// For custom entities we'll just spit out a message in console instead.
 		// So much nicer, don't you think?
 
-		LogSF2Message("%i (%s): Invalid entity search name %s", searchingEntity, sClass, szName);
+		LogSF2Message("%i (%s): Invalid entity search name %s", searchingEntity, sClass, sName);
 	}
 	
 	return -1;
 }
 
-int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] szName, int searchingEntity, int activator, int caller)
+int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] sName, int searchingEntity, int activator, int caller)
 {
-	if (szName[0] == '!')
+	if (sName[0] == '!')
 	{
 		if (startEnt == -1)
 		{
-			int target = SF2MapEntity_FindProceduralTarget(szName, searchingEntity, activator, caller);
+			int target = SF2MapEntity_FindProceduralTarget(sName, searchingEntity, activator, caller);
 			if (IsValidEntity(target)) 
 			{
 				return target;
@@ -856,12 +865,13 @@ int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] szName, int s
 	}
 
 	// dear god
+
 	char sTargetName[PLATFORM_MAX_PATH];
 	int ent = startEnt;
 	while ((ent = FindEntityByClassname(ent, "*")) != -1)
 	{
 		GetEntPropString(ent, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
-		if (strcmp(sTargetName, szName) == 0) 
+		if (strcmp(sTargetName, sName) == 0) 
 		{
 			return ent;
 		}
@@ -1110,7 +1120,7 @@ void SF2MapEntity_InitGameData(GameData hConfig)
 		g_hSDKAcceptInput.AddParam(HookParamType_Object, 20); // Windows: SIZEOF_VARIANT_T
 	else
 		g_hSDKAcceptInput.AddParam(HookParamType_ObjectPtr); // Linux: wtf?
-	
+
 	g_hSDKAcceptInput.AddParam(HookParamType_Int);
 
 	delete hSdkToolsConfig;
@@ -1126,7 +1136,7 @@ void SF2MapEntity_InitGameData(GameData hConfig)
 	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseTrigger::PassesTriggerFilters");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-	if ((g_hSDKPassesTriggerFilters = EndPrepSDKCall()) == INVALID_HANDLE)
+	if ((g_hSDKPassesTriggerFilters = EndPrepSDKCall()) == null)
 		SetFailState("Failed to setup CBaseTrigger::PassesTriggerFilters call from gamedata!");
 }
 

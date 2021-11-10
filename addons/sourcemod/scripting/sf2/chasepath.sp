@@ -11,7 +11,7 @@ static int g_iPathBehindNodeIndex[MAX_PATH];
 static int g_iRefChasePathTarget[MAX_PATH] = { INVALID_ENT_REFERENCE, ... };
 static float g_flChasePathAvoidRange[MAX_PATH];
 static float g_flChasePathNodeTolerance[MAX_PATH] = { 32.0, ... };
-static float g_flChasePathLookAheadDistance[MAX_PATH] = {300.0, ...};
+static float g_flChasePathLookAheadDistance[MAX_PATH] = {512.0, ...};
 static float g_flChasePathLastBuildTime[MAX_PATH];
 
 static float g_vecPathMovePosition[MAX_PATH][3];
@@ -23,15 +23,30 @@ methodmap ChaserPathLogic
 {
 	public ChaserPathLogic(int iIndex)
 	{
-		if (g_hChasePath[iIndex] != null) delete g_hChasePath[iIndex];
-		
-		g_hChasePath[iIndex] = new NavPath();
+		if (g_hChasePath[iIndex] != null) 
+		{
+			delete g_hChasePath[iIndex];
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for g_hChasePath[iIndex] in DeletePathing.", g_hChasePath[iIndex]);
+			#endif
+			g_hChasePath[iIndex] = new NavPath();
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for g_hChasePath[iIndex] in DeletePathing.", g_hChasePath[iIndex]);
+			#endif
+		}
+		else
+		{
+			g_hChasePath[iIndex] = new NavPath();
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for g_hChasePath[iIndex] in DeletePathing.", g_hChasePath[iIndex]);
+			#endif
+		}
 		g_iRefChasePathTarget[iIndex] = INVALID_ENT_REFERENCE;
 		g_lastKnownTargetArea[iIndex] = INVALID_NAV_AREA;
 		g_iPathNodeIndex[iIndex] = 0;
 		g_iPathBehindNodeIndex[iIndex] = 0;
 		g_flChasePathNodeTolerance[iIndex] = 32.0;
-		g_flChasePathLookAheadDistance[iIndex] = 300.0;
+		g_flChasePathLookAheadDistance[iIndex] = 512.0;
 		g_flChasePathAvoidRange[iIndex] = 300.0;
 		g_flChasePathLastBuildTime[iIndex] = 0.0;
 		return view_as<ChaserPathLogic>(iIndex);
@@ -75,9 +90,16 @@ methodmap ChaserPathLogic
 		g_iPathBehindNodeIndex[this.Index] = 0;
 	}
 
-	public void ResetPathing()
+	public void ClearData()
 	{
-		g_hChasePath[this.Index].Clear();
+		g_iRefChasePathTarget[this.Index] = INVALID_ENT_REFERENCE;
+		g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
+		g_iPathNodeIndex[this.Index] = 0;
+		g_iPathBehindNodeIndex[this.Index] = 0;
+	}
+
+	public void DeletePathing()
+	{
 		g_iRefChasePathTarget[this.Index] = INVALID_ENT_REFERENCE;
 		g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
 		g_iPathNodeIndex[this.Index] = 0;
@@ -86,6 +108,25 @@ methodmap ChaserPathLogic
 		g_flChasePathNodeTolerance[this.Index] = 0.0;
 		g_flChasePathLookAheadDistance[this.Index] = 0.0;
 		g_flChasePathAvoidRange[this.Index] = 0.0;
+
+		if (g_hChasePath[this.Index] != null)
+		{
+			delete g_hChasePath[this.Index];
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for g_hChasePath[this.Index] in DeletePathing.", g_hChasePath[this.Index]);
+			#endif
+			g_hChasePath[this.Index] = null;
+		}
+	}
+
+	public void RecreatePath()
+	{
+		if (g_hChasePath[this.Index] != null)
+		{
+			delete g_hChasePath[this.Index];
+			g_hChasePath[this.Index] = new NavPath();
+		}
+		else g_hChasePath[this.Index] = new NavPath();
 	}
 	
 	public bool IsPathValid()
@@ -196,7 +237,7 @@ methodmap ChaserPathLogic
 		if (g_flChasePathLastBuildTime[this.Index] > GetGameTime()) return false;
 		
 		this.ClearPath();
-		
+
 		CNavArea startArea = SDK_GetLastKnownArea(iEntity);
 		if (startArea != INVALID_NAV_AREA)
 		{
@@ -206,11 +247,12 @@ methodmap ChaserPathLogic
 				closestAreaIndex = CNavArea(0);
 				float vecStartPos[3];
 				GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", vecStartPos);
-				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 10000.0, costFunction, costData, populateIfIncomplete, view_as<int>(closestAreaIndex), startArea, endArea) || !populateIfIncomplete)
+				if (!g_hChasePath[this.Index].ConstructPathFromPoints(vecStartPos, vecEndPos, 200.0, costFunction, costData, populateIfIncomplete, view_as<int>(closestAreaIndex), startArea, endArea) || !populateIfIncomplete)
 				{
 					g_iPathNodeIndex[this.Index] = 0;
 					g_iPathBehindNodeIndex[this.Index] = 0;
 					g_lastKnownTargetArea[this.Index] = INVALID_NAV_AREA;
+					g_iRefChasePathTarget[this.Index] = INVALID_ENT_REFERENCE;
 					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
 					startArea = INVALID_NAV_AREA;
 					endArea = INVALID_NAV_AREA;
@@ -221,8 +263,9 @@ methodmap ChaserPathLogic
 				}
 				else
 				{
-					//g_iPathNodeIndex[this.Index] = 1;
-					//g_iPathBehindNodeIndex[this.Index] = 0;
+					g_iRefChasePathTarget[this.Index] = INVALID_ENT_REFERENCE;
+					g_iPathNodeIndex[this.Index] = 1;
+					g_iPathBehindNodeIndex[this.Index] = 0;
 					g_lastKnownTargetArea[this.Index] = endArea;
 					g_flChasePathLastBuildTime[this.Index] = GetGameTime()+0.3;
 					return true;
@@ -363,12 +406,7 @@ methodmap ChaserPathLogic
 			}
 			hPath.GetNodePosition(pathNodeIndex, vecPathNodePos);
 		}
-		CNavLadder pathNodeLadder = hPath.GetNodeLadder(pathNodeIndex);
-		if (pathNodeLadder != INVALID_NAV_LADDER)
-		{
-			// @TODO: Traverse ladders, maybe?
-		}
-		
+
 		CopyVector(vecPathNodePos, g_vecPathMovePosition[this.Index]);
 		
 		int pathBehindNodeIndex = 0;
@@ -414,7 +452,7 @@ methodmap ChaserPathLogic
 					vecTracePos[2] += 1.0;
 					GetPositionForward(vecTracePos, goalAng, forwadPos, nextbot.GetBodyInterface().GetHullWidth()+1.0);
 					
-					Handle hTrace = INVALID_HANDLE;
+					Handle hTrace = null;
 					if (fTraceFilterFunction != view_as<TraceEntityFilter>(INVALID_FUNCTION))
 					{
 						hTrace = TR_TraceRayFilterEx(vecTracePos, forwadPos, MASK_PLAYERSOLID, RayType_EndPoint, fTraceFilterFunction, nextbot.GetEntity());
@@ -432,7 +470,7 @@ methodmap ChaserPathLogic
 						
 						forwadPos[2] += 18.0;
 						
-						hTrace = INVALID_HANDLE;
+						hTrace = null;
 						if (fTraceFilterFunction != view_as<TraceEntityFilter>(INVALID_FUNCTION))
 						{
 							

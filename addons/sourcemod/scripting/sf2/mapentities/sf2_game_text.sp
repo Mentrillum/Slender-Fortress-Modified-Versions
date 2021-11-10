@@ -127,6 +127,22 @@ methodmap SF2GameTextEntity < SF2MapEntity
 			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, entData.NextIntroTextEntityName, -1, -1, -1));
 		}
 	}
+
+	public bool ValidateMessageString(char[] sBuffer, int iBufferSize)
+	{
+		if (StrContains(sBuffer, "%d") != -1)
+		{
+			char sName[64];
+			GetEntPropString(this.EntRef, Prop_Data, "m_iName", sName, sizeof(sName));
+			char[] sMessage = new char[iBufferSize];
+			strcopy(sMessage, iBufferSize, sBuffer);
+			ReplaceString(sMessage, iBufferSize, "%d", "%%d");
+			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", sName, sMessage);
+			return false;
+		}
+
+		return true;
+	}
 }
 
 void SF2GameTextEntity_Initialize() 
@@ -194,6 +210,8 @@ static Action SF2GameTextEntity_OnAcceptEntityInput(int entity, const char[] sCl
 		
 		char sMessage[512];
 		thisEnt.GetFormattedMessage(sMessage, sizeof(sMessage));
+
+		if (!thisEnt.ValidateMessageString(sMessage, sizeof(sMessage))) return Plugin_Handled;
 
 		char sVariant[PLATFORM_MAX_PATH];
 		SF2MapEntity_GetVariantString(sVariant, sizeof(sVariant));

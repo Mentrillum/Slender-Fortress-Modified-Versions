@@ -246,7 +246,10 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		return;
 	}
 	
-	Handle hPlayers = CreateArray();
+	ArrayList hPlayers = new ArrayList();
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hPlayers in DisplayViewGroupMembersMenuToClient.", hPlayers);
+	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
@@ -254,10 +257,10 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		int iTempGroup = ClientGetPlayerGroup(i);
 		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
 		
-		PushArrayCell(hPlayers, i);
+		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = GetArraySize(hPlayers);
+	int iPlayerCount = hPlayers.Length;
 	if (iPlayerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_ViewGroupMembers);
@@ -268,7 +271,7 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		
 		for (int i = 0; i < iPlayerCount; i++)
 		{
-			int iClient = GetArrayCell(hPlayers, i);
+			int iClient = hPlayers.Get(i);
 			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
 			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
@@ -285,6 +288,9 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	}
 	
 	delete hPlayers;
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hPlayers in DisplayViewGroupMembersMenuToClient.", hPlayers);
+	#endif
 }
 
 public int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int param2)
@@ -315,7 +321,10 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		return;
 	}
 	
-	Handle hPlayers = CreateArray();
+	ArrayList hPlayers = new ArrayList();
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hPlayers in DisplaySetGroupLeaderMenuToClient.", hPlayers);
+	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
@@ -324,10 +333,10 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
 		if (i == client) continue;
 		
-		PushArrayCell(hPlayers, i);
+		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = GetArraySize(hPlayers);
+	int iPlayerCount = hPlayers.Length;
 	if (iPlayerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_SetGroupLeader);
@@ -338,7 +347,7 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		
 		for (int i = 0; i < iPlayerCount; i++)
 		{
-			int iClient = GetArrayCell(hPlayers, i);
+			int iClient = hPlayers.Get(i);
 			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
 			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
@@ -355,6 +364,9 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	}
 	
 	delete hPlayers;
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hPlayers in DisplaySetGroupLeaderMenuToClient.", hPlayers);
+	#endif
 }
 
 public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int param2)
@@ -411,7 +423,10 @@ void DisplayKickFromGroupMenuToClient(int client)
 		return;
 	}
 	
-	Handle hPlayers = CreateArray();
+	ArrayList hPlayers = new ArrayList();
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hPlayers in DisplayKickFromGroupMenuToClient.", hPlayers);
+	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
@@ -420,10 +435,10 @@ void DisplayKickFromGroupMenuToClient(int client)
 		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
 		if (i == client) continue;
 		
-		PushArrayCell(hPlayers, i);
+		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = GetArraySize(hPlayers);
+	int iPlayerCount = hPlayers.Length;
 	if (iPlayerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_KickFromGroup);
@@ -434,7 +449,7 @@ void DisplayKickFromGroupMenuToClient(int client)
 		
 		for (int i = 0; i < iPlayerCount; i++)
 		{
-			int iClient = GetArrayCell(hPlayers, i);
+			int iClient = hPlayers.Get(i);
 			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
 			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
@@ -451,6 +466,9 @@ void DisplayKickFromGroupMenuToClient(int client)
 	}
 	
 	delete hPlayers;
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hPlayers in DisplayKickFromGroupMenuToClient.", hPlayers);
+	#endif
 }
 
 public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int param2)
@@ -554,7 +572,10 @@ void DisplayInviteToGroupMenuToClient(int client)
 		return;
 	}
 	
-	Handle hPlayers = CreateArray();
+	ArrayList hPlayers = new ArrayList();
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hPlayers in DisplayInviteToGroupMenuToClient.", hPlayers);
+	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i) || !IsClientParticipating(i)) continue;
@@ -563,10 +584,10 @@ void DisplayInviteToGroupMenuToClient(int client)
 		if (IsPlayerGroupActive(iTempGroup)) continue;
 		if (!g_bPlayerEliminated[i]) continue;
 		
-		PushArrayCell(hPlayers, i);
+		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = GetArraySize(hPlayers);
+	int iPlayerCount = hPlayers.Length;
 	if (iPlayerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_InviteToGroup);
@@ -577,7 +598,7 @@ void DisplayInviteToGroupMenuToClient(int client)
 		
 		for (int i = 0; i < iPlayerCount; i++)
 		{
-			int iClient = GetArrayCell(hPlayers, i);
+			int iClient = hPlayers.Get(i);
 			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
 			FormatEx(sName, sizeof(sName), "%N", iClient);
 			AddMenuItem(hMenu, sUserId, sName);
@@ -594,6 +615,9 @@ void DisplayInviteToGroupMenuToClient(int client)
 	}
 	
 	delete hPlayers;
+	#if defined DEBUG
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hPlayers in DisplayInviteToGroupMenuToClient.", hPlayers);
+	#endif
 }
 
 public int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int param2)

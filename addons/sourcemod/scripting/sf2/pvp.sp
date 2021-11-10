@@ -7,8 +7,8 @@
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 #define FLAME_HIT_DELAY 0.05
 
-Handle g_cvPvPArenaLeaveTime;
-Handle g_cvPvPArenaProjectileZap;
+ConVar g_cvPvPArenaLeaveTime = null;
+ConVar g_cvPvPArenaProjectileZap = null;
 
 static const char g_sPvPProjectileClasses[][] = 
 {
@@ -121,6 +121,7 @@ public void PvP_SetupMenus()
 	g_hMenuSettingsPvP = CreateMenu(Menu_SettingsPvP);
 	SetMenuTitle(g_hMenuSettingsPvP, "%t%t\n \n", "SF2 Prefix", "SF2 Settings PvP Menu Title");
 	AddMenuItem(g_hMenuSettingsPvP, "0", "Toggle automatic spawning");
+	AddMenuItem(g_hMenuSettingsPvP, "1", "Toggle spawn protection");
 	SetMenuExitBackButton(g_hMenuSettingsPvP, true);
 }
 
@@ -136,9 +137,9 @@ public void PvP_OnMapStart()
 			if(strcmp(strName, "sf2_pvp_trigger") == 0)
 			{
 				//StartTouch seems to be unreliable if a player is teleported/spawned in the trigger
-				//SDKHook( iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouch );
+				//SDKHook(iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouch);
 				//But end touch works fine.
-				SDKHook( iEnt, SDKHook_EndTouch, PvP_OnTriggerEndTouch );
+				SDKHook(iEnt, SDKHook_EndTouch, PvP_OnTriggerEndTouch);
 			}
 		}
 	}
@@ -147,9 +148,9 @@ public void PvP_OnMapStart()
 	{
 		if(IsValidEntity(iEnt) && SF_IsBoxingMap())
 		{
-			SDKHook( iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing );
-			SDKHook( iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing );
-			SDKHook( iEnt, SDKHook_EndTouch, PvP_OnTriggerStartTouchBoxing );
+			SDKHook(iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing);
+			SDKHook(iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing);
+			SDKHook(iEnt, SDKHook_EndTouch, PvP_OnTriggerStartTouchBoxing);
 		}
 	}
 }
@@ -186,9 +187,9 @@ public void PvP_OnRoundStart()
 			//flags |= TRIGGER_PHYSICS_OBJECTS;
 			flags |= TRIGGER_PHYSICS_DEBRIS;
 			SetEntProp(iEnt, Prop_Data, "m_spawnflags", flags);
-			SDKHook( iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing );
-			SDKHook( iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing );
-			SDKHook( iEnt, SDKHook_EndTouch, PvP_OnTriggerStartTouchBoxing );
+			SDKHook(iEnt, SDKHook_StartTouch, PvP_OnTriggerStartTouchBoxing);
+			SDKHook(iEnt, SDKHook_Touch, PvP_OnTriggerStartTouchBoxing);
+			SDKHook(iEnt, SDKHook_EndTouch, PvP_OnTriggerStartTouchBoxing);
 		}
 	}
 }
@@ -248,7 +249,7 @@ public void PvP_OnGameFrame()
 		
 		float flOrigin[3];
 		
-		Handle hTrace = INVALID_HANDLE;
+		Handle hTrace = null;
 		int ent = -1;
 		int iOwnerEntity = INVALID_ENT_REFERENCE; 
 		int iHitEntity = INVALID_ENT_REFERENCE;
@@ -279,6 +280,7 @@ public void PvP_OnGameFrame()
 				}
 			}
 		}
+		delete hTrace;
 	}
 }
 
@@ -396,6 +398,7 @@ public Action PvP_EntitySpawnPost(Handle timer,any ent)
 		if(GetEntProp(ent, Prop_Data, "m_usSolidFlags")!=0)
 			PvP_ZapProjectile(ent,false);
 	}
+	return Plugin_Stop;
 }
 
 public void Hook_PvPProjectileSpawnPost(int ent)
@@ -459,7 +462,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 				SDKHook(ent, SDKHook_TouchPost, Hook_PvPProjectileBallOfFireTouchPost);
 			}
 
-			if(g_hPlayerPvPTimer[iOwnerEntity]==INVALID_HANDLE)
+			if(g_hPlayerPvPTimer[iOwnerEntity]==null)
 			{
 				SetEntProp(ent, Prop_Data, "m_iInitialTeamNum", 0);
 				SetEntProp(ent, Prop_Send, "m_iTeamNum", 0);
@@ -467,7 +470,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			else
 			{
 				//Client is not in pvp, remove the projectile
-				if(GetConVarBool(g_cvPvPArenaProjectileZap))
+				if(g_cvPvPArenaProjectileZap.BoolValue)
 					PvP_ZapProjectile(ent,false);
 			}
 		}
@@ -501,12 +504,12 @@ public void PvP_OnPlayerSpawn(int iClient)
 				
 				if (bAutoSpawn)
 				{
-					g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.12, Timer_TeleportPlayerToPvP, GetClientUserId(iClient));
+					g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.12, Timer_TeleportPlayerToPvP, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 				}
 			}
 			else
 			{
-				g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
+				g_hPlayerPvPRespawnTimer[iClient] = null;
 			}
 		}
 	}
@@ -547,7 +550,7 @@ public void PvP_OnPlayerDeath(int iClient, bool bFake)
 				{
 					if (!IsRoundEnding())
 					{
-						g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient));
+						g_hPlayerPvPRespawnTimer[iClient] = CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 					}
 				}
 			}
@@ -557,12 +560,12 @@ public void PvP_OnPlayerDeath(int iClient, bool bFake)
 
 public void PvP_OnClientGhostModeEnable(int iClient)
 {
-	g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
+	g_hPlayerPvPRespawnTimer[iClient] = null;
 }
 
 public void PvP_OnClientPutInPlay(int iClient)
 {
-	g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
+	g_hPlayerPvPRespawnTimer[iClient] = null;
 }
 
 public bool Hook_ClientPvPShouldCollide(int ent,int collisiongroup,int contentsmask, bool originalResult)
@@ -605,7 +608,7 @@ public void PvP_OnTriggerStartTouch(int trigger,int iOther)
 			{
 				// Player left and came back again, but is still in PvP mode.
 				g_iPlayerPvPTimerCount[iOther] = 0;
-				g_hPlayerPvPTimer[iOther] = INVALID_HANDLE;
+				g_hPlayerPvPTimer[iOther] = null;
 			}
 			else
 			{
@@ -623,10 +626,10 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 		
 		if (IsClientInPvP(iOther))
 		{
-			g_iPlayerPvPTimerCount[iOther] = GetConVarInt(g_cvPvPArenaLeaveTime);
+			g_iPlayerPvPTimerCount[iOther] = g_cvPvPArenaLeaveTime.IntValue;
 			if (g_iPlayerPvPTimerCount[iOther] != 0) 
-				g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT);
-			else g_hPlayerPvPTimer[iOther] = CreateTimer(0.1, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT);
+				g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			else g_hPlayerPvPTimer[iOther] = CreateTimer(0.1, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 
@@ -675,6 +678,7 @@ public Action EntityStillAlive(Handle timer, int iRef)
 	{
 		PvP_ZapProjectile(iEnt);
 	}
+	return Plugin_Stop;
 }
 /**
  *	Enables/Disables PvP mode on the player.
@@ -687,8 +691,8 @@ void PvP_SetPlayerPvPState(int iClient, bool bStatus, bool bRemoveProjectiles=tr
 	if (bStatus == bOldInPvP) return; // no change
 	
 	g_bPlayerInPvP[iClient] = bStatus;
-	g_hPlayerPvPTimer[iClient] = INVALID_HANDLE;
-	g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
+	g_hPlayerPvPTimer[iClient] = null;
+	g_hPlayerPvPRespawnTimer[iClient] = null;
 	g_iPlayerPvPTimerCount[iClient] = 0;
 	
 	if (bRemoveProjectiles)
@@ -748,9 +752,9 @@ static void PvP_OnFlameEntityStartTouchPost(int flame,int iOther) //Thanks Fire
 void PvP_ForceResetPlayerPvPData(int iClient)
 {
 	g_bPlayerInPvP[iClient] = false;
-	g_hPlayerPvPTimer[iClient] = INVALID_HANDLE;
+	g_hPlayerPvPTimer[iClient] = null;
 	g_iPlayerPvPTimerCount[iClient] = 0;
-	g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
+	g_hPlayerPvPRespawnTimer[iClient] = null;
 }
 
 static void PvP_RemovePlayerProjectiles(int iClient)
@@ -790,7 +794,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 	if (g_bPlayerProxy[iClient]) return;
 	
 	if (timer != g_hPlayerPvPRespawnTimer[iClient]) return;
-	g_hPlayerPvPRespawnTimer[iClient] = INVALID_HANDLE;
+	g_hPlayerPvPRespawnTimer[iClient] = null;
 	
 	ArrayList hSpawnPointList = new ArrayList();
 	ArrayList hClearSpawnPointList = new ArrayList();
@@ -810,14 +814,14 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		{
 			GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
 
-			if (StrContains(sName, "sf2_pvp_spawnpoint", false))
-				continue;
+			if (!StrContains(sName, "sf2_pvp_spawnpoint", false))
+			{
+				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flMyPos);
 
-			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flMyPos);
-
-			hSpawnPointList.Push(ent);
-			if (!IsSpaceOccupiedPlayer(flMyPos, flMins, flMaxs, iClient))
-				hClearSpawnPointList.Push(ent);
+				hSpawnPointList.Push(ent);
+				if (!IsSpaceOccupiedPlayer(flMyPos, flMins, flMaxs, iClient))
+					hClearSpawnPointList.Push(ent);
+			}
 		}
 
 		ent = -1;
@@ -856,7 +860,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		TeleportEntity(iClient, flPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
 		
 		EmitAmbientSound(SF2_PVP_SPAWN_SOUND, flPos, _, SNDLEVEL_NORMAL, _, 1.0);
-		TF2_AddCondition(iClient, TFCond_UberchargedCanteen, 1.5);
+		if (g_iPlayerPreferences[iClient].PlayerPreference_PvPSpawnProtection) TF2_AddCondition(iClient, TFCond_UberchargedCanteen, 1.5);
 
 		SF2PlayerPvPSpawnEntity spawnPoint = SF2PlayerPvPSpawnEntity(ent);
 		if (spawnPoint.IsValid())

@@ -50,7 +50,9 @@ void Trap_SpawnTrap(float flPosition[3], float flDirection[3], int iBossIndex)
 				SetVariantString("trapopened");
 				AcceptEntityInput(iTrap, "SetAnimation");
 				
-				g_flTrapDespawnTimer[iTrap] = GetGameTime() + GetRandomFloat(30.0, 60.0);
+				g_iTrapEntityCount++;
+				
+				g_flTrapDespawnTimer[iTrap] = GetGameTime() + GetRandomFloat(20.0, 40.0);
 				g_iTrapState[iTrap] = 0;
 				
 				EmitSoundToAll(TRAP_DEPLOY, iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -155,9 +157,9 @@ public Action Hook_TrapOnTakeDamage(int iTrap,int &attacker,int &inflictor,float
 				g_iTrapState[iTrap] = 1;
 				EmitSoundToAll(TRAP_CLOSE, iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				AcceptEntityInput(iTrap, "DisableCollision");
-				if (g_flTrapDespawnTimer[iTrap] > 10.0)
+				if (g_flTrapDespawnTimer[iTrap] > 5.0)
 				{
-					g_flTrapDespawnTimer[iTrap] = GetGameTime()+10.0;
+					g_flTrapDespawnTimer[iTrap] = GetGameTime()+5.0;
 				}
 			}
 		}
@@ -170,5 +172,6 @@ void Trap_Despawn(int iTrap)
 {
 	SDKUnhook(iTrap, SDKHook_Think, Hook_TrapThink);
 	SDKUnhook(iTrap, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
+	g_iTrapEntityCount--;
 	RemoveEntity(iTrap);
 }

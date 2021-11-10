@@ -67,34 +67,7 @@ static void SF2MapEntityBase_InitializeEntity(int entity, const char[] sClass)
 
 	g_EntityData.PushArray(entData, sizeof(entData));
 
-	// SDKHook(entity, SDKHook_SpawnPost, SF2MapEntityBase_SpawnPost);
-}
-
-static void SF2MapEntityBase_OnEntityDestroyed(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-
-	SF2MapEntityBaseData entData;
-	int iIndex = SF2MapEntityBaseData_Get(entity, entData);
-	if (iIndex != -1)
-	{
-		entData.Destroy();
-		g_EntityData.Erase(iIndex);
-	}
-}
-
-/*
-static void SF2MapEntityBase_SpawnPost(int entity) 
-{
-}
-
-static void SF2MapEntityBase_OnLevelInit(const char[] sMapName) 
-{
-}
-
-static void SF2MapEntityBase_OnMapStart() 
-{
+	//SDKHook(entity, SDKHook_SpawnPost, SF2MapEntityBase_SpawnPost);
 }
 
 static Action SF2MapEntityBase_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
@@ -112,7 +85,24 @@ static Action SF2MapEntityBase_OnAcceptEntityInput(int entity, const char[] sCla
 
 	return Plugin_Continue;
 }
-*/
+
+static void SF2MapEntityBase_SpawnPost(int entity) 
+{
+}
+
+static void SF2MapEntityBase_OnEntityDestroyed(int entity, const char[] sClass)
+{
+	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
+		return;
+
+	SF2MapEntityBaseData entData;
+	int iIndex = SF2MapEntityBaseData_Get(entity, entData);
+	if (iIndex != -1)
+	{
+		entData.Destroy();
+		g_EntityData.Erase(iIndex);
+	}
+}
 
 static Action SF2MapEntityBase_TranslateClassname(const char[] sClass, char[] sBuffer, int iBufferLen)
 {

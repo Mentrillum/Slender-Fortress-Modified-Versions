@@ -64,7 +64,7 @@ methodmap INextBotComponent __nullable__
 {
 	public Address GetBot()
 	{
-		if (g_hSDKGetBot != INVALID_HANDLE)
+		if (g_hSDKGetBot != null)
 			return SDKCall(g_hSDKGetBot, this);
 		return Address_Null;
 	}
@@ -80,7 +80,7 @@ methodmap IBody < INextBotComponent
 {
 	public float GetHullWidth()
 	{
-		if (this.Verify() && g_hSDKGetHullWidth != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKGetHullWidth != null)
 			return SDKCall(g_hSDKGetHullWidth, this);
 		return 0.0;
 	}
@@ -90,18 +90,18 @@ methodmap INextBot __nullable__
 {
 	public int GetEntity()
 	{
-		if (g_hSDKGetEntity != INVALID_HANDLE)
+		if (g_hSDKGetEntity != null)
 			return SDKCall(g_hSDKGetEntity, this);
 		return -1;
 	}
 	public void Update()
 	{
-		if (g_hSDKUpdate != INVALID_HANDLE)
+		if (g_hSDKUpdate != null)
 			SDKCall(g_hSDKUpdate, this);
 	}
 	public IBody GetBodyInterface()
 	{
-		if (g_hSDKGetBodyInterface != INVALID_HANDLE)
+		if (g_hSDKGetBodyInterface != null)
 			return SDKCall(g_hSDKGetBodyInterface, this);
 		return view_as<IBody>(Address_Null);
 	}
@@ -111,80 +111,95 @@ methodmap INextBot __nullable__
 	}
 }
 
+public Address SF2_GetLocomotionInterface(int index) 
+{ 
+	return SDKCall(g_hSDKGetLocomotionInterface, SDKCall(g_hSDKGetNextBot, index)); 
+}
+
+public ILocomotion SF2_GetLocomotionInterfaceEx(int index) 
+{ 
+	return SDKCall(g_hSDKGetLocomotionInterface, SDKCall(g_hSDKGetNextBot, index)); 
+}
+
+public Address SF2_GetBodyInterface(int index)      
+{ 
+	return SDKCall(g_hSDKGetBodyInterface,       SDKCall(g_hSDKGetNextBot, index)); 
+}
+
 methodmap ILocomotion < INextBotComponent
 {
 	public void Stop()
 	{
-		if (this.Verify() && g_hSDKStop != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKStop != null)
 			SDKCall(g_hSDKStop, this);
 	}
 	public void Walk()
 	{
-		if (this.Verify() && g_hSDKWalk != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKWalk != null)
 			SDKCall(g_hSDKWalk, this);
 	}
 	public void Run()
 	{
-		if (this.Verify() && g_hSDKRun != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKRun != null)
 			SDKCall(g_hSDKRun, this);
 	}
 	public void Jump()
 	{
-		if (this.Verify() && g_hSDKJump != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKJump != null)
 			SDKCall(g_hSDKJump, this);
 	}
 	public void Approach(float vecApproach[3], float flPriority)
 	{
-		if (this.Verify() && g_hSDKApproach != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKApproach != null)
 			SDKCall(g_hSDKApproach, this, vecApproach, flPriority);
 	}
 	public void FaceTowards(float vecFacePos[3])
 	{
-		if (this.Verify() && g_hSDKFaceTowards != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKFaceTowards != null)
 			SDKCall(g_hSDKFaceTowards, this, vecFacePos);
 	}
 	public void GetGroundNormal(float vecNormal[3])
 	{
-		if (this.Verify() && g_hSDKGetGroundNormal != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKGetGroundNormal != null)
 			SDKCall(g_hSDKGetGroundNormal, this, vecNormal);
 	}
 	public void GetGroundMotionVector(float vecMotion[3])
 	{
-		if (this.Verify() && g_hSDKGetGroundMotionVector != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKGetGroundMotionVector != null)
 			SDKCall(g_hSDKGetGroundMotionVector, this, vecMotion);
 	}
 	public void GetFeet(float vecFeet[3])
 	{
-		if (this.Verify() && g_hSDKGetFeet != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKGetFeet != null)
 			SDKCall(g_hSDKGetFeet, this, vecFeet);
 	}
 	public float GetStepHeight()
 	{
-		if (this.Verify() && g_hSDKGetStepHeight != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKGetStepHeight != null)
 			return SDKCall(g_hSDKGetStepHeight, this);
 		return 18.0;
 	}
 	public bool IsClimbingOrJumping()
 	{
-		if (this.Verify() && g_hSDKIsClimbingOrJumping != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKIsClimbingOrJumping != null)
 			return SDKCall(g_hSDKIsClimbingOrJumping, this);
 		return false;
 	}
 	public bool IsOnGround()
 	{
-		if (this.Verify() && g_hSDKIsOnGround != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKIsOnGround != null)
 			return SDKCall(g_hSDKIsOnGround, this);
 		return true;
 	}
 	public bool IsStuck()
 	{
-		if (this.Verify() && g_hSDKIsStuck != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKIsStuck != null)
 			return SDKCall(g_hSDKIsStuck, this);
 		return false;
 	}
 	public float GetGroundSpeed()
 	{
-		if (this.Verify() && g_hSDKGetGroundSpeed != INVALID_HANDLE)
+		if (this.Verify() && g_hSDKGetGroundSpeed != null)
 			return SDKCall(g_hSDKGetGroundSpeed, this);
 		return 0.0;
 	}
@@ -194,12 +209,12 @@ methodmap NextBotGroundLocomotion < ILocomotion
 {
 	public void SetVelocity(float vecVel[3])
 	{
-		if (g_hSDKSetVel != INVALID_HANDLE)
+		if (g_hSDKSetVel != null)
 			SDKCall(g_hSDKSetVel, this, vecVel);
 	}
 	public float GetGravity()
 	{
-		if (g_hSDKGetGravity != INVALID_HANDLE)
+		if (g_hSDKGetGravity != null)
 			return SDKCall(g_hSDKGetGravity, this);
 		return 0.0;
 	}
@@ -220,16 +235,16 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "CBaseEntity::MyNextBotPointer");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
 	g_hSDKGetNextBot = EndPrepSDKCall();
-	if (g_hSDKGetNextBot == INVALID_HANDLE)
+	if (g_hSDKGetNextBot == null)
 	{
 		PrintToServer("Failed to retrieve CBaseEntity::MyNextBotPointer offset from SF2 gamedata!");
 	}
-	
+
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "INextBotComponent::GetBot");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
 	g_hSDKGetBot = EndPrepSDKCall();
-	if (g_hSDKGetBot == INVALID_HANDLE)
+	if (g_hSDKGetBot == null)
 	{
 		PrintToServer("Failed to retrieve INextBotComponent::GetBot offset from SF2 gamedata!");
 	}
@@ -238,7 +253,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "INextBot::GetEntity");
 	PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Pointer);
 	g_hSDKGetEntity = EndPrepSDKCall();
-	if (g_hSDKGetEntity == INVALID_HANDLE)
+	if (g_hSDKGetEntity == null)
 	{
 		PrintToServer("Failed to retrieve INextBot::GetEntity offset from SF2 gamedata!");
 	}
@@ -247,7 +262,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "INextBot::GetLocomotionInterface");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
 	g_hSDKGetLocomotionInterface = EndPrepSDKCall();
-	if (g_hSDKGetLocomotionInterface == INVALID_HANDLE)
+	if (g_hSDKGetLocomotionInterface == null)
 	{
 		PrintToServer("Failed to retrieve INextBot::GetLocomotionInterface offset from SF2 gamedata!");
 	}
@@ -256,7 +271,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "INextBot::GetBodyInterface");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
 	g_hSDKGetBodyInterface = EndPrepSDKCall();
-	if (g_hSDKGetBodyInterface == INVALID_HANDLE)
+	if (g_hSDKGetBodyInterface == null)
 	{
 		PrintToServer("Failed to retrieve INextBot::GetBodyInterface offset from SF2 gamedata!");
 	}
@@ -264,7 +279,7 @@ public void InitNextBotGameData(Handle hGameData)
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "INextBot::Update");
 	g_hSDKUpdate = EndPrepSDKCall();
-	if (g_hSDKUpdate == INVALID_HANDLE)
+	if (g_hSDKUpdate == null)
 	{
 		PrintToServer("Failed to retrieve INextBot::Update offset from SF2 gamedata!");
 	}
@@ -273,7 +288,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "IBody::GetHullWidth");
 	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_ByValue);
 	g_hSDKGetHullWidth = EndPrepSDKCall();
-	if (g_hSDKGetHullWidth == INVALID_HANDLE)
+	if (g_hSDKGetHullWidth == null)
 	{
 		PrintToServer("Failed to retrieve IBody::GetHullWidth offset from SF2 gamedata!");
 	}
@@ -281,7 +296,7 @@ public void InitNextBotGameData(Handle hGameData)
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::Stop");
 	g_hSDKStop = EndPrepSDKCall();
-	if (g_hSDKStop == INVALID_HANDLE)
+	if (g_hSDKStop == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::Stop offset from SF2 gamedata!");
 	}
@@ -289,7 +304,7 @@ public void InitNextBotGameData(Handle hGameData)
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::Walk");
 	g_hSDKWalk = EndPrepSDKCall();
-	if (g_hSDKWalk == INVALID_HANDLE)
+	if (g_hSDKWalk == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::Walk offset from SF2 gamedata!");
 	}
@@ -297,7 +312,7 @@ public void InitNextBotGameData(Handle hGameData)
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::Run");
 	g_hSDKRun = EndPrepSDKCall();
-	if (g_hSDKRun == INVALID_HANDLE)
+	if (g_hSDKRun == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::Run offset from SF2 gamedata!");
 	}
@@ -305,7 +320,7 @@ public void InitNextBotGameData(Handle hGameData)
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::Jump");
 	g_hSDKJump = EndPrepSDKCall();
-	if (g_hSDKJump == INVALID_HANDLE)
+	if (g_hSDKJump == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::Jump offset from SF2 gamedata!");
 	}
@@ -314,7 +329,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::GetStepHeight");
 	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_ByValue);
 	g_hSDKGetStepHeight = EndPrepSDKCall();
-	if (g_hSDKGetStepHeight == INVALID_HANDLE)
+	if (g_hSDKGetStepHeight == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::GetStepHeight offset from SF2 gamedata!");
 	}
@@ -323,7 +338,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::IsClimbingOrJumping");
 	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);
 	g_hSDKIsClimbingOrJumping = EndPrepSDKCall();
-	if (g_hSDKIsClimbingOrJumping == INVALID_HANDLE)
+	if (g_hSDKIsClimbingOrJumping == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::IsClimbingOrJumping offset from SF2 gamedata!");
 	}
@@ -332,7 +347,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::IsOnGround");
 	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);
 	g_hSDKIsOnGround = EndPrepSDKCall();
-	if (g_hSDKIsOnGround == INVALID_HANDLE)
+	if (g_hSDKIsOnGround == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::IsOnGround offset from SF2 gamedata!");
 	}
@@ -341,16 +356,16 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::IsStuck");
 	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);
 	g_hSDKIsStuck = EndPrepSDKCall();
-	if (g_hSDKIsStuck == INVALID_HANDLE)
+	if (g_hSDKIsStuck == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::IsStuck offset from SF2 gamedata!");
 	}
-	
+
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::GetGroundSpeed");
 	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_ByValue);
 	g_hSDKGetGroundSpeed = EndPrepSDKCall();
-	if (g_hSDKGetGroundSpeed == INVALID_HANDLE)
+	if (g_hSDKGetGroundSpeed == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::GetGroundSpeed offset from SF2 gamedata!");
 	}
@@ -359,7 +374,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::GetFeet");
 	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_Pointer, _, VENCODE_FLAG_COPYBACK);
 	g_hSDKGetFeet = EndPrepSDKCall();
-	if (g_hSDKGetFeet == INVALID_HANDLE)
+	if (g_hSDKGetFeet == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::GetFeet offset from SF2 gamedata!");
 	}
@@ -368,7 +383,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::GetGroundMotionVector");
 	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_Pointer, _, VENCODE_FLAG_COPYBACK);
 	g_hSDKGetGroundMotionVector = EndPrepSDKCall();
-	if (g_hSDKGetGroundMotionVector == INVALID_HANDLE)
+	if (g_hSDKGetGroundMotionVector == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::GetGroundMotionVector offset from SF2 gamedata!");
 	}
@@ -377,7 +392,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::GetGroundNormal");
 	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_Pointer, _, VENCODE_FLAG_COPYBACK);
 	g_hSDKGetGroundNormal = EndPrepSDKCall();
-	if (g_hSDKGetGroundNormal == INVALID_HANDLE)
+	if (g_hSDKGetGroundNormal == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::GetGroundNormal offset from SF2 gamedata!");
 	}
@@ -387,7 +402,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
 	PrepSDKCall_AddParameter(SDKType_Float, SDKPass_ByValue);
 	g_hSDKApproach = EndPrepSDKCall();
-	if (g_hSDKApproach == INVALID_HANDLE)
+	if (g_hSDKApproach == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::Approach offset from SF2 gamedata!");
 	}
@@ -396,7 +411,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "ILocomotion::FaceTowards");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
 	g_hSDKFaceTowards = EndPrepSDKCall();
-	if (g_hSDKFaceTowards == INVALID_HANDLE)
+	if (g_hSDKFaceTowards == null)
 	{
 		PrintToServer("Failed to retrieve ILocomotion::FaceTowards offset from SF2 gamedata!");
 	}
@@ -405,7 +420,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "NextBotGroundLocomotion::SetVelocity");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, VDECODE_FLAG_ALLOWNULL);
 	g_hSDKSetVel = EndPrepSDKCall();
-	if (g_hSDKSetVel == INVALID_HANDLE)
+	if (g_hSDKSetVel == null)
 	{
 		PrintToServer("Failed to retrieve NextBotGroundLocomotion::SetVelocity offset from SF2 gamedata!");
 	}
@@ -414,7 +429,7 @@ public void InitNextBotGameData(Handle hGameData)
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "NextBotGroundLocomotion::GetGravity");
 	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_ByValue);
 	g_hSDKGetGravity = EndPrepSDKCall();
-	if (g_hSDKGetGravity == INVALID_HANDLE)
+	if (g_hSDKGetGravity == null)
 	{
 		PrintToServer("Failed to retrieve NextBotGroundLocomotion::GetGravity offset from SF2 gamedata!");
 	}

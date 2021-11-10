@@ -32,6 +32,9 @@ enum struct SF2PageMusicEntityData
 	{
 		this.EntRef = EnsureEntRef(entIndex);
 		this.Ranges = new ArrayList(sizeof(SF2PageMusicEntityRangeData));
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for this.Ranges in SF2PageMusicEntityData.", this.Ranges);
+		#endif
 		this.Ranges.Resize(SF2MAPENTITES_PAGE_MUSIC_MAXRANGES);
 		this.Layered = false;
 

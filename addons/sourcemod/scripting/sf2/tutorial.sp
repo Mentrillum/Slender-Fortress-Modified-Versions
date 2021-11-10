@@ -47,7 +47,7 @@ public void Tutorial_HandleClient(int iClient)
 public void Tutorial_OnRoundStateChange(SF2RoundState oldRoundState, SF2RoundState newRoundState)
 {
 	
-	g_hTimerTutorialMessage = INVALID_HANDLE;
+	g_hTimerTutorialMessage = null;
 	switch (newRoundState)
 	{
 		case SF2RoundState_Active:
@@ -71,30 +71,33 @@ public void Tutorial_OnRoundStateChange(SF2RoundState oldRoundState, SF2RoundSta
 		case SF2RoundState_Active:
 		{
 			Tutorial_PrintMessage("Page Finding?", "The grace period ended, now starts the serious things! While you were in grace period the monster couldn't spawn on the map, but now he can! In order to survive you have to collect the objective (pages, gas cans,ect...)", 8.0);
-			g_hTimerTutorialMessage = CreateTimer(9.0, Timer_TutorialGraceEnd2ndMessage);
+			g_hTimerTutorialMessage = CreateTimer(9.0, Timer_TutorialGraceEnd2ndMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 }
 
 public Action Timer_TutorialGraceEnd2ndMessage(Handle timer)
 {
-	if (g_hTimerTutorialMessage != timer)return;
+	if (g_hTimerTutorialMessage != timer) return Plugin_Stop;
 	
-	g_hTimerTutorialMessage = INVALID_HANDLE;
+	g_hTimerTutorialMessage = null;
 	
 	Tutorial_PrintMessage("The boss is near help!", "If you can hear the monster, don't move or use voice commands, the monster can hear you! If you really need to move, move slowly, the monster is only attracted by suspicious sounds!", 7.0);
 	
-	g_hTimerTutorialMessage = CreateTimer(8.0, Timer_TutorialGraceEnd3rdMessage);
+	g_hTimerTutorialMessage = CreateTimer(8.0, Timer_TutorialGraceEnd3rdMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 	
+	return Plugin_Stop;
 }
 
 public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 {
-	if (g_hTimerTutorialMessage != timer)return;
+	if (g_hTimerTutorialMessage != timer) return Plugin_Stop;
 	
-	g_hTimerTutorialMessage = INVALID_HANDLE;
+	g_hTimerTutorialMessage = null;
 	
 	Tutorial_PrintMessage("Playing in a group?", "While you are looking for the objectives, don't stay in a group, try to go where your team doesn't, you will increase everyone's chance of surviving!", 7.0);
+
+	return Plugin_Stop;
 }
 
 
@@ -104,7 +107,7 @@ public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 
 void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const float flLifeTime=5.0)
 {
-	g_hTimerHideTutorialMessage = INVALID_HANDLE;
+	g_hTimerHideTutorialMessage = null;
 	
 	PrintToChatAll("called1");
 	//Tell the client, to print the training message.
@@ -126,7 +129,7 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 			EndMessage();
 		}
 	}
-	g_hTimerHideTutorialMessage = CreateTimer(flLifeTime, Timer_TutorialHideMessage);
+	g_hTimerHideTutorialMessage = CreateTimer(flLifeTime, Timer_TutorialHideMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void Tutorial_PrintMessageToClient(int iClient, const char[] sTitle, const char[] sMessage)
@@ -146,12 +149,14 @@ void Tutorial_PrintMessageToClient(int iClient, const char[] sTitle, const char[
 
 public Action Timer_TutorialHideMessage(Handle timer)
 {
-	if (g_hTimerHideTutorialMessage != timer) return;
+	if (g_hTimerHideTutorialMessage != timer) return Plugin_Stop;
 	
 	//Tell the client to hide the message
 	GameRules_SetProp("m_bIsTrainingHUDVisible", false, 1, _, true);
 	
-	g_hTimerHideTutorialMessage = INVALID_HANDLE;
+	g_hTimerHideTutorialMessage = null;
+
+	return Plugin_Stop;
 }
 
 /*

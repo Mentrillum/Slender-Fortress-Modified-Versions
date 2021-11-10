@@ -19,6 +19,7 @@
 #define DIFFICULTY_INSANE 1.75
 #define DIFFICULTY_NIGHTMARE 3.0
 #define DIFFICULTY_APOLLYON 5.5
+#define DIFFICULTY_RESTARTSESSION 14.0
 
 // Music system flags.
 #define MUSICF_PAGES1PERCENT (1 << 0)
@@ -64,14 +65,15 @@ enum
 	SPECIALROUND_PAGEDETECTOR,
 	SPECIALROUND_CLASSSCRAMBLE,
 	SPECIALROUND_2DOOM,
-	SPECIALROUND_WALLHAX,
-	SPECIALROUND_HYPERSNATCHER,
 	SPECIALROUND_PAGEREWARDS,
 	SPECIALROUND_TINYBOSSES,
 	SPECIALROUND_RUNNINGINTHE90S,
 	SPECIALROUND_TRIPLEBOSSES,
 	SPECIALROUND_20DOLLARS,
 	SPECIALROUND_MODBOSSES,
+	SPECIALROUND_BOSSROULETTE,
+	SPECIALROUND_THANATOPHOBIA,
+	SPECIALROUND_DEBUGMODE,
 	SPECIALROUND_MAXROUNDS
 };
 
@@ -262,6 +264,14 @@ forward Action SF2_OnBossSeeEntity(int iBossIndex, int entity);
 forward void SF2_OnBossRemoved(int iBossIndex);
 
 /**
+ * Called when the boss gets stun by a player.
+ *
+ * @param iBossIndex	Boss index.
+ * @param iClient		The client who stunned the boss, will return -1 if the stun was a flashlight stun.
+ */
+forward void SF2_OnBossStunned(int iBossIndex, int iClient);
+
+/**
  * Called when pages have spawned into the map.
  */
 forward void SF2_OnPagesSpawned();
@@ -448,6 +458,11 @@ forward void SF2_OnClientSpawnedAsProxy(int client);
 forward void SF2_OnRenevantWaveTrigger(int iWave);
 
 /**
+ * Called whenever the boss pack vote starts
+ */
+forward void SF2_OnBossPackVoteStart();
+
+/**
  * Returns a bool about the gamemode's state.
  *
  * @return				True if the gamemode is running, false if not.
@@ -534,7 +549,7 @@ native bool SF2_IsClientProxy(int client);
  *
  * @param client		Client index.
  * @param iBossIndex	Boss index.
- * @return				True if the player is a Proxy, false if not.
+ * @return				True if the player is looking at a boss, false if not.
  */
 native bool SF2_IsClientLookingAtBoss(int client, int iBossIndex);
 
@@ -694,6 +709,26 @@ native bool SF2_IsClientReallySprinting(int client);
  * @return					True if trapped, false otherwise.
  */
 native bool SF2_IsClientTrapped(int client);
+
+/**
+ * Returns whether or not a proxy can be spawned, returns a teleport position or spawn point if defined and the result is true, works well with SF2_ClientForceProxy.
+ *
+ * @param iClient		Client index.
+ * @param iBossIndex	Boss index.
+ * @param flTeleportPos	Position to return
+ * @param iSpawnPoint	Spawn point to return, defaults to -1.
+ */
+native bool SF2_ClientSpawnProxy(int iClient, int iBossIndex, float flTeleportPos[3], int &iSpawnPoint = -1);
+
+/**
+ * Spawns a player as a proxy at a given position or spawn point.
+ *
+ * @param iClient		Client index.
+ * @param iBossIndex	Boss index.
+ * @param flTeleportPos	Position to return
+ * @param iSpawnPoint	Spawn point to return, defaults to -1.
+ */
+native bool SF2_ClientForceProxy(int iClient, int iBossIndex, const float flTeleportPos[3], int iSpawnPoint);
 
 /**
  * Collects the given entity as a page.
@@ -1045,8 +1080,9 @@ native bool SF2_CanBossHearClient(int iBossIndex, int client, SoundType soundTyp
  * @param iBossIndex		Boss index.
  * @param soundType			The type of sound hint to create.
  * @param position			The position of the sound.
+ * @param iDifficulty		The difficulty.
  */
-native void SF2_CreateBossSoundHint(int iBossIndex, SoundType soundType, const float position[3]);
+native void SF2_CreateBossSoundHint(int iBossIndex, SoundType soundType, const float position[3], int iDifficulty);
 
 /**
  * Returns if the given profile is loaded or not.
@@ -1187,6 +1223,37 @@ native float SF2_GetBossAttackIndexDamage(int iBossIndex, int iAttackIndex, int 
  * @param iAttackIndex	Attack index.
 */
 native int SF2_GetBossAttackIndexType(int iBossIndex, int iAttackIndex);
+
+/**
+ * Returns the distance of 2 vectors without utilizing the square root function and converting the values properly.
+ *
+ * @param vec1	Position 1.
+ * @param vec2	Position 2.
+*/
+native float SF2_GetVectorSquareMagnitude(const float vec1[3], const float vec2[3]);
+
+/**
+ * Starts a boss pack vote
+ *
+ * @param iInitiator	Whoever started the vote, keep above 33 for non-clients
+*/
+native void SF2_InitiateBossPackVote(int iInitiator);
+
+/**
+ * Returns the flags of the projectile.
+ *
+ * @param iProjectile		Entity index.
+ * @return					Flags.
+ */
+native int SF2_GetProjectileFlags(int iProjectile);
+
+/**
+ * Sets the flags of the projectile.
+ *
+ * @param iProjectile		Entity index.
+ * @param flags				Flags.
+ */
+native void SF2_SetProjectileFlags(int iProjectile, int flags);
 
 /**
  * Returns if current map is a survival map or not.

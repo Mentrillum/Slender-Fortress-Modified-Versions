@@ -3,14 +3,14 @@
 #endif
 #define _sf2_adminmenu_included
 
-static Handle g_hTopMenu = INVALID_HANDLE;
+static Handle g_hTopMenu = null;
 static int g_iPlayerAdminMenuTargetUserId[MAXPLAYERS + 1] = { -1, ... };
 
 void SetupAdminMenu()
 {
 	/* Account for late loading */
-	Handle hTopMenu = INVALID_HANDLE;
-	if (LibraryExists("adminmenu") && ((hTopMenu = GetAdminTopMenu()) != INVALID_HANDLE))
+	Handle hTopMenu = null;
+	if (LibraryExists("adminmenu") && ((hTopMenu = GetAdminTopMenu()) != null))
 	{
 		OnAdminMenuReady(hTopMenu);
 	}
@@ -67,7 +67,7 @@ public int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack && g_hTopMenu != INVALID_HANDLE)
+		if (param2 == MenuCancel_ExitBack && g_hTopMenu != null)
 		{
 			DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
 		}
@@ -138,10 +138,7 @@ public int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int par
 			}
 			else
 			{
-				char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-				NPCGetProfile(iIndex, sProfile, sizeof(sProfile));
-			
-				if (!view_as<bool>(GetProfileNum(sProfile, "proxies", 0)) ||
+				if (!(NPCGetFlags(iIndex) & SFF_PROXIES) ||
 					g_iSlenderCopyMaster[iIndex] != -1)
 				{
 					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Not Allowed To Have Proxies", param1);
@@ -194,7 +191,7 @@ public int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack && g_hTopMenu != INVALID_HANDLE)
+		if (param2 == MenuCancel_ExitBack && g_hTopMenu != null)
 		{
 			DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
 		}
@@ -297,7 +294,7 @@ public int AdminMenu_BossMain(Handle menu, MenuAction action,int param1,int para
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack && g_hTopMenu != INVALID_HANDLE)
+		if (param2 == MenuCancel_ExitBack && g_hTopMenu != null)
 		{
 			DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
 		}
@@ -351,10 +348,10 @@ public int AdminTopMenu_BossMain(Handle topmenu, TopMenuAction action, TopMenuOb
 
 static bool DisplayAddBossAdminMenu(int client) //Use for view boss list
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_AddBoss);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Boss", client);
@@ -364,12 +361,12 @@ static bool DisplayAddBossAdminMenu(int client) //Use for view boss list
 			
 			do
 			{
-				KvGetSectionName(g_hConfig, sProfile, sizeof(sProfile));
-				KvGetString(g_hConfig, "name", sDisplayName, sizeof(sDisplayName));
+				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
+				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
 				if (!sDisplayName[0]) strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
 				AddMenuItem(hMenu, sProfile, sDisplayName);
 			}
-			while (KvGotoNextKey(g_hConfig));
+			while (g_hConfig.GotoNextKey());
 			
 			SetMenuExitBackButton(hMenu, true);
 			
@@ -409,10 +406,10 @@ public int AdminMenu_AddBoss(Handle menu, MenuAction action,int param1,int param
 
 static bool DisplayAddFakeBossAdminMenu(int client)
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_AddFakeBoss);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Fake Boss", client);
@@ -422,12 +419,12 @@ static bool DisplayAddFakeBossAdminMenu(int client)
 			
 			do
 			{
-				KvGetSectionName(g_hConfig, sProfile, sizeof(sProfile));
-				KvGetString(g_hConfig, "name", sDisplayName, sizeof(sDisplayName));
-				if (!sDisplayName[0]) strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
+				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
+				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
+				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
 				AddMenuItem(hMenu, sProfile, sDisplayName);
 			}
-			while (KvGotoNextKey(g_hConfig));
+			while (g_hConfig.GotoNextKey());
 			
 			SetMenuExitBackButton(hMenu, true);
 			
@@ -467,10 +464,10 @@ public int AdminMenu_AddFakeBoss(Handle menu, MenuAction action,int param1,int p
 
 static int AddBossTargetsToMenu(Handle hMenu)
 {
-	if (g_hConfig == INVALID_HANDLE) return 0;
+	if (g_hConfig == null) return 0;
 	
-	KvRewind(g_hConfig);
-	if (!KvGotoFirstSubKey(g_hConfig)) return 0;
+	g_hConfig.Rewind();
+	if (!g_hConfig.GotoFirstSubKey()) return 0;
 	
 	char sBuffer[512];
 	char sDisplay[512], sInfo[64];
@@ -485,7 +482,7 @@ static int AddBossTargetsToMenu(Handle hMenu)
 		
 		NPCGetProfile(i, sProfile, sizeof(sProfile));
 		
-		GetProfileString(sProfile, "name", sBuffer, sizeof(sBuffer));
+		NPCGetBossName(_, sBuffer, sizeof(sBuffer), sProfile);
 		if (sBuffer[0] == '\0') strcopy(sBuffer, sizeof(sBuffer), sProfile);
 		
 		FormatEx(sDisplay, sizeof(sDisplay), "%d - %s", i, sBuffer);
@@ -494,7 +491,7 @@ static int AddBossTargetsToMenu(Handle hMenu)
 			FormatEx(sBuffer, sizeof(sBuffer), " (copy of boss %d)", g_iSlenderCopyMaster[i]);
 			StrCat(sDisplay, sizeof(sDisplay), sBuffer);
 		}
-		
+
 		if (NPCGetFlags(i) & SFF_FAKE)
 		{
 			StrCat(sDisplay, sizeof(sDisplay), " (fake)");
@@ -511,10 +508,10 @@ static int AddBossTargetsToMenu(Handle hMenu)
 
 static bool DisplayRemoveBossAdminMenu(int client)
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_RemoveBoss);
 			if (!AddBossTargetsToMenu(hMenu))
@@ -569,10 +566,10 @@ public int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int pa
 
 static bool DisplaySpawnBossAdminMenu(int client)
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_SpawnBoss);
 			if (!AddBossTargetsToMenu(hMenu))
@@ -627,10 +624,10 @@ public int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int par
 
 static bool DisplayBossAttackWaitersAdminMenu(int client)
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_BossAttackWaiters);
 			if (!AddBossTargetsToMenu(hMenu))
@@ -681,8 +678,8 @@ public int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1
 			NPCGetProfile(iIndex, sProfile, sizeof(sProfile));
 		
 			char sName[SF2_MAX_NAME_LENGTH];
-			GetProfileString(sProfile, "name", sName, sizeof(sName));
-			if (!sName[0]) strcopy(sName, sizeof(sName), sProfile);
+			NPCGetBossName(_, sName, sizeof(sName), sProfile);
+			if (sName[0] == '\0') strcopy(sName, sizeof(sName), sProfile);
 			
 			Handle hMenu = CreateMenu(AdminMenu_BossAttackWaitersConfirm);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Attack Waiters Confirm", param1, sName);
@@ -734,10 +731,10 @@ public int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int
 
 static bool DisplayBossTeleportAdminMenu(int client)
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_BossTeleport);
 			if (!AddBossTargetsToMenu(hMenu))
@@ -788,8 +785,8 @@ public int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int 
 			NPCGetProfile(iIndex, sProfile, sizeof(sProfile));
 		
 			char sName[SF2_MAX_NAME_LENGTH];
-			GetProfileString(sProfile, "name", sName, sizeof(sName));
-			if (!sName[0]) strcopy(sName, sizeof(sName), sProfile);
+			NPCGetBossName(_, sName, sizeof(sName), sProfile);
+			if (sName[0] == '\0') strcopy(sName, sizeof(sName), sProfile);
 			
 			Handle hMenu = CreateMenu(AdminMenu_BossTeleportConfirm);
 			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Teleport Confirm", param1, sName);
@@ -841,10 +838,10 @@ public int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int para
 
 static bool DisplayOverrideBossAdminMenu(int client)
 {
-	if (g_hConfig != INVALID_HANDLE)
+	if (g_hConfig != null)
 	{
-		KvRewind(g_hConfig);
-		if (KvGotoFirstSubKey(g_hConfig))
+		g_hConfig.Rewind();
+		if (g_hConfig.GotoFirstSubKey())
 		{
 			Handle hMenu = CreateMenu(AdminMenu_OverrideBoss);
 			
@@ -853,21 +850,21 @@ static bool DisplayOverrideBossAdminMenu(int client)
 			
 			do
 			{
-				KvGetSectionName(g_hConfig, sProfile, sizeof(sProfile));
-				KvGetString(g_hConfig, "name", sDisplayName, sizeof(sDisplayName));
-				if (!sDisplayName[0]) strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
+				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
+				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
+				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
 				AddMenuItem(hMenu, sProfile, sDisplayName);
 			}
-			while (KvGotoNextKey(g_hConfig));
+			while (g_hConfig.GotoNextKey());
 			
 			SetMenuExitBackButton(hMenu, true);
 			
 			char sProfileOverride[SF2_MAX_PROFILE_NAME_LENGTH], sProfileDisplayName[SF2_MAX_PROFILE_NAME_LENGTH];
-			GetConVarString(g_cvBossProfileOverride, sProfileOverride, sizeof(sProfileOverride));
+			g_cvBossProfileOverride.GetString(sProfileOverride, sizeof(sProfileOverride));
 			
 			if (sProfileOverride[0] != '\0' && IsProfileValid(sProfileOverride))
 			{
-				GetProfileString(sProfileOverride, "name", sProfileDisplayName, sizeof(sProfileDisplayName));
+				NPCGetBossName(_, sProfileDisplayName, sizeof(sProfileDisplayName), sProfileOverride);
 				
 				if (sProfileDisplayName[0] == '\0')
 					strcopy(sProfileDisplayName, sizeof(sProfileDisplayName), sProfileOverride);
