@@ -111,19 +111,6 @@ stock void SendDebugMessageToPlayers(int iDebugFlags,int iType, const char[] sMe
 	}
 }
 
-stock void SendDebugMessageToPlayersSpecialRound(const char[] sMessage, any ...)
-{
-	char sMsg[1024];
-	VFormat(sMsg, sizeof(sMsg), sMessage, 2);
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || (g_bPlayerEliminated[i] && !IsClientInGhostMode(i)) || DidClientEscape(i)) continue;
-		
-		PrintCenterText(i, sMsg);
-	}
-}
-
 public Action Command_DebugBossTeleport(int client,int args)
 {
 	if (client < 1 || client > MaxClients) return Plugin_Handled;

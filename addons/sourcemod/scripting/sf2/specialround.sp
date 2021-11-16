@@ -78,6 +78,19 @@ void ReloadSpecialRounds()
 	}
 }
 
+stock void SendDebugMessageToPlayersSpecialRound(const char[] sMessage, any ...)
+{
+	char sMsg[1024];
+	VFormat(sMsg, sizeof(sMsg), sMessage, 2);
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || (g_bPlayerEliminated[i] && !IsClientInGhostMode(i)) || DidClientEscape(i)) continue;
+		
+		PrintCenterText(i, sMsg);
+	}
+}
+
 stock void SpecialRoundGetDescriptionHud(int iSpecialRound, char[] buffer,int bufferlen)
 {
 	strcopy(buffer, bufferlen, "");
