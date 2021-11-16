@@ -6,23 +6,23 @@
 		{
 			"CBaseCombatCharacter::GetLastKnownArea"
 			{
-				"windows"	"316"
-				"linux"		"317"
-			}
-			"CBaseCombatCharacter::UpdateLastKnownArea"
-			{
 				"windows"	"319"
 				"linux"		"320"
 			}
+			"CBaseCombatCharacter::UpdateLastKnownArea"
+			{
+				"windows"	"322"
+				"linux"		"323"
+			}
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
-				"windows"	"328"
-				"linux"		"329"
+				"windows"	"331"
+				"linux"		"332"
 			}
 			"CTFWeaponBase::GetCustomDamageType"
 			{
-				"windows"	"374"
-				"linux"		"380"	
+				"windows"	"377"
+				"linux"		"383"	
 			}
 			"CTFGameRules::IsInTraining"
 			{
@@ -36,8 +36,8 @@
 			}
 			"CTFBaseBoss::GetCurrencyValue"
 			{
-				"windows"	"330"
-				"linux"		"334"
+				"windows"	"332"
+				"linux"		"338"
 			}
 			"CBaseEntity::ShouldTransmit"
 			{
@@ -51,13 +51,13 @@
 			}
 			"CBaseEntity::GetVectors"
 			{
-				"linux"    	"137"
-				"windows"       "136"
+				"linux"    	"140"
+				"windows"       "139"
 			}
 			"CBaseEntity::GetSmoothedVelocity"
 			{
-				"linux"    	"140"
-				"windows"       "139"
+				"linux"    	"143"
+				"windows"       "142"
 			}
 			"CBaseEntity::KeyValue"
 			{
@@ -66,8 +66,8 @@
 			}
 			"CBaseAnimating::StudioFrameAdvance"
 			{
-				"linux"		"195"
-				"windows"	"194"
+				"linux"		"198"
+				"windows"	"197"
 			}
 			"CBaseAnimating::m_pStudioHdr"
 			{
@@ -76,13 +76,13 @@
 			}
 			"CBaseProjectile::CanCollideWithTeammates"
 			{
-				"linux"		"224"
-				"windows"	"223"
+				"linux"		"227"
+				"windows"	"226"
 			}
 			"CTFPlayer::EquipWearable"
 			{
-				"windows"	"431"
-				"linux"		"432"
+				"windows"	"434"
+				"linux"		"435"
 			}
 			"INextBotComponent::GetBot"
 			{
@@ -301,8 +301,8 @@
 			}
 			"CBaseTrigger::PassesTriggerFilters"
 			{
-				"linux"		"202"
-				"windows"	"201"
+				"linux"		"205"
+				"windows"	"204"
 			}
 		}
 		"Signatures"
