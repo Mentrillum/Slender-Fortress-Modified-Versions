@@ -594,7 +594,14 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 			if (!bSayTeam) 
 			{
-				FakeClientCommandEx(client, "say_team %s", sArgs);
+				if (sArgs[0] != '"')	// Don't let ! commands get detected twice
+				{
+					FakeClientCommandEx(client, "say_team \"%s\"", sArgs);
+				}
+				else
+				{
+					FakeClientCommandEx(client, "say_team %s", sArgs);
+				}
 				return Plugin_Stop;
 			}
 		}
