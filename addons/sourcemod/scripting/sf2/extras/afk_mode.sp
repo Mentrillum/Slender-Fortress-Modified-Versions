@@ -30,6 +30,6 @@ void AFK_CheckTime(int iClient)
 	if (g_fAfkAtGameTime[iClient] != 0.0 && g_fAfkAtGameTime[iClient] < GetGameTime())
 	{
 		g_bPlayerNoPoints[iClient] = true;
-		PrintCenterText(iClient, "%T", "SF2 AFK Status");
+		PrintCenterText(iClient, "%T", "SF2 AFK Status", iClient);
 	}
 }

@@ -346,13 +346,13 @@ public Action Command_NoPoints(int iClient,int args)
 	if (!g_bEnabled) return Plugin_Continue;
 	if(!g_bPlayerNoPoints[iClient])
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK On");
+		CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
 		g_bPlayerNoPoints[iClient] = true;
 		AFK_SetTime(iClient);
 	}
 	else
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK Off");
+		CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
 		g_bPlayerNoPoints[iClient] = false;
 		AFK_SetTime(iClient);
 	}
@@ -448,13 +448,13 @@ public Action Command_NoPointsAdmin(int iClient,int args)
 	if (!g_bEnabled) return Plugin_Continue;
 	if(!g_bAdminNoPoints[iClient])
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK On");
+		CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
 		g_bAdminNoPoints[iClient] = true;
 		AFK_SetTime(iClient);
 	}
 	else
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK Off");
+		CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
 		g_bAdminNoPoints[iClient] = false;
 		AFK_SetTime(iClient);
 	}
