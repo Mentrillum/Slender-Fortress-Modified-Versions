@@ -191,6 +191,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slcredits", Command_Credits);
 	RegConsoleCmd("sm_slviewbosslist", Command_BossList);
 	RegConsoleCmd("sm_slbosslist", Command_BossList);
+	RegConsoleCmd("sm_slafk", Command_NoPoints);
 	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
 	RegConsoleCmd("+sprint", Command_SprintOn);
 	RegConsoleCmd("-sprint", Command_SprintOff);
@@ -199,7 +200,7 @@ public void OnPluginStart()
 
 	RegAdminCmd("sm_slgroupname", Command_GroupName, ADMFLAG_SLAY); //People like to use naughty names, keep it at this for now until pre-defined group names are made
 	RegAdminCmd("sm_sf2_bosspack_vote", DevCommand_BossPackVote, ADMFLAG_CHEATS);
-	RegAdminCmd("sm_sf2_nopoints", Command_NoPoints, ADMFLAG_SLAY);
+	RegAdminCmd("sm_sf2_nopoints", Command_NoPointsAdmin, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_scare", Command_ClientPerformScare, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_spawn_boss", Command_SpawnSlender, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_spawn_all_bosses", Command_SpawnAllSlenders, ADMFLAG_SLAY);
@@ -340,6 +341,24 @@ public Action Command_BossList(int iClient,int args)
 	return Plugin_Handled;
 }
 
+public Action Command_NoPoints(int iClient,int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if(!g_bPlayerNoPoints[iClient])
+	{
+		CPrintToChat(iClient, "%T", "SF2 AFK On");
+		g_bPlayerNoPoints[iClient] = true;
+		AFK_SetTime(iClient);
+	}
+	else
+	{
+		CPrintToChat(iClient, "%T", "SF2 AFK Off");
+		g_bPlayerNoPoints[iClient] = false;
+		AFK_SetTime(iClient);
+	}
+	return Plugin_Handled;
+}
+
 public Action Command_ToggleFlashlight(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -424,18 +443,20 @@ public Action DevCommand_BossPackVote(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_NoPoints(int iClient,int args)
+public Action Command_NoPointsAdmin(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if(!g_bAdminNoPoints[iClient])
 	{
-		CPrintToChat(iClient, "{royalblue}Disabled going to RED naturally.");
+		CPrintToChat(iClient, "%T", "SF2 AFK On");
 		g_bAdminNoPoints[iClient] = true;
+		AFK_SetTime(iClient);
 	}
 	else
 	{
-		CPrintToChat(iClient, "{royalblue}Enabled going to RED naturally.");
+		CPrintToChat(iClient, "%T", "SF2 AFK Off");
 		g_bAdminNoPoints[iClient] = false;
+		AFK_SetTime(iClient);
 	}
 	return Plugin_Handled;
 }

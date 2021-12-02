@@ -232,6 +232,7 @@ static const char g_sPageCollectDuckSounds[][] =
 //Update
 bool g_bSeeUpdateMenu[MAXPLAYERS + 1] = false;
 //Command
+bool g_bPlayerNoPoints[MAXPLAYERS + 1] = false;
 bool g_bAdminNoPoints[MAXPLAYERS + 1] = false;
 
 // Offsets.
@@ -989,6 +990,7 @@ Handle g_hRenevantWaveTimer = null;
 #include "sf2/extras/renevant_mode.sp"
 #include "sf2/extras/natives.sp"
 #include "sf2/extras/commands.sp"
+#include "sf2/extras/afk_mode.sp"
 
 #define SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND "ui/item_acquired.wav"
 
@@ -3533,6 +3535,7 @@ public Action OnPlayerRunCmd(int iClient, int &buttons, int &impulse, float vel[
 		{
 			if (!(g_iPlayerLastButtons[iClient] & button))
 			{
+				AFK_SetTime(iClient);
 				ClientOnButtonPress(iClient, button);
 				if (button == IN_ATTACK2)
 				{
@@ -3590,6 +3593,9 @@ public Action OnPlayerRunCmd(int iClient, int &buttons, int &impulse, float vel[
 			ClientOnButtonRelease(iClient, button);
 		}
 	}
+	
+	AFK_CheckTime(iClient);
+	
 	if (!bChanged) g_iPlayerLastButtons[iClient] = buttons;
 	return (bChanged) ? Plugin_Changed : Plugin_Continue;
 }
@@ -3785,6 +3791,7 @@ public void OnClientDisconnect(int iClient)
 	
 	g_bSeeUpdateMenu[iClient] = false;
 	g_bPlayerEscaped[iClient] = false;
+	g_bPlayerNoPoints[iClient] = false;
 	g_bAdminNoPoints[iClient] = false;
 	g_bPlayerIn1UpCondition[iClient] = false;
 	g_bPlayerDied1Up[iClient] = false;
@@ -3849,6 +3856,7 @@ public void OnClientDisconnect(int iClient)
 	g_iPlayerQueuePoints[iClient] = 0;
 	
 	PvP_OnClientDisconnect(iClient);
+	AFK_SetTime(iClient, false);
 	
 	#if defined DEBUG
 	if (g_cvDebugDetail.IntValue > 0) DebugMessage("END OnClientDisconnect(%d)", iClient);
@@ -4539,7 +4547,7 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage = false)
 		if (!hArray.Get(i, 2))
 		{
 			int iClient = hArray.Get(i);
-			if (g_bPlayerPlaying[iClient] || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bAdminNoPoints[iClient]) continue;
+			if (g_bPlayerPlaying[iClient] || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bPlayerNoPoints[iClient] || g_bAdminNoPoints[iClient]) continue;
 			
 			hPlayers.Push(iClient);
 			iAmountLeft -= 1;
@@ -4565,6 +4573,19 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage = false)
 				
 				iAmountLeft -= iMemberCount;
 			}
+		}
+	}
+	
+	// Could not find anyone, see if there was people we can force in
+	for (int i = 0, iSize = hArray.Length; i < iSize && iAmountLeft > 0; i++)
+	{
+		if (!hArray.Get(i, 2))
+		{
+			int iClient = hArray.Get(i);
+			if (g_bPlayerPlaying[iClient] || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bAdminNoPoints[iClient]) continue;
+			
+			hPlayers.Push(iClient);
+			iAmountLeft -= 1;
 		}
 	}
 	
