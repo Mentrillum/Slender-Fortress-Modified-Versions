@@ -446,18 +446,60 @@ public Action DevCommand_BossPackVote(int iClient,int args)
 public Action Command_NoPointsAdmin(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if(!g_bAdminNoPoints[iClient])
+	
+	if (args < 1)
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
-		g_bAdminNoPoints[iClient] = true;
+		ReplyToCommand(iClient, "Usage: sm_sf2_nopoints <name|#userid> <0/1>");
+		return Plugin_Handled;
+	}
+	
+	char arg1[32];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+	
+	if ((target_count = ProcessTargetString(
+			arg1,
+			iClient,
+			target_list,
+			MAXPLAYERS,
+			0,
+			target_name,
+			sizeof(target_name),
+			tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(iClient, target_count);
+		return Plugin_Handled;
+	}
+	
+	bool bMode;
+	if (args > 2)
+	{
+		char arg2[32];
+		GetCmdArg(2, arg2, sizeof(arg2));
+		bMode = view_as<bool>(StringToInt(arg2));
+	}
+	
+	for (int i = 0; i < target_count; i++)
+	{
+		int iTarget = target_list[i];
+		if (IsClientSourceTV(iTarget)) continue;//Exclude the sourcetv bot
+		
+		g_bAdminNoPoints[iClient] = args > 1 ? bMode : !g_bAdminNoPoints[iClient];
+		if(g_bAdminNoPoints[iClient])
+		{
+			CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
+		}
+		else
+		{
+			CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
+		}
+		
 		AFK_SetTime(iClient);
 	}
-	else
-	{
-		CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
-		g_bAdminNoPoints[iClient] = false;
-		AFK_SetTime(iClient);
-	}
+	
 	return Plugin_Handled;
 }
 

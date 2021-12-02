@@ -4547,7 +4547,7 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage = false)
 		if (!hArray.Get(i, 2))
 		{
 			int iClient = hArray.Get(i);
-			if (g_bPlayerPlaying[iClient] || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bPlayerNoPoints[iClient] || g_bAdminNoPoints[iClient]) continue;
+			if (g_bPlayerPlaying[iClient] || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bAdminNoPoints[iClient]) continue;
 			
 			hPlayers.Push(iClient);
 			iAmountLeft -= 1;
@@ -4573,19 +4573,6 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage = false)
 				
 				iAmountLeft -= iMemberCount;
 			}
-		}
-	}
-	
-	// Could not find anyone, see if there was people we can force in
-	for (int i = 0, iSize = hArray.Length; i < iSize && iAmountLeft > 0; i++)
-	{
-		if (!hArray.Get(i, 2))
-		{
-			int iClient = hArray.Get(i);
-			if (g_bPlayerPlaying[iClient] || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bAdminNoPoints[iClient]) continue;
-			
-			hPlayers.Push(iClient);
-			iAmountLeft -= 1;
 		}
 	}
 	
@@ -4620,9 +4607,12 @@ void ForceInNextPlayersInQueue(int iAmount, bool bShowMessage = false)
 public int SortQueueList(int index1, int index2, Handle array, Handle hndl)
 {
 	ArrayList aArray = view_as<ArrayList>(array);
+	
+	bool bDisabled = g_bPlayerNoPoints[aArray.Get(index1, 0)];
+	if (bDisabled != g_bPlayerNoPoints[aArray.Get(index2, 0)]) return bDisabled ? 1 : -1;
+	
 	int iQueuePoints1 = aArray.Get(index1, 1);
 	int iQueuePoints2 = aArray.Get(index2, 1);
-	
 	if (iQueuePoints1 > iQueuePoints2) return -1;
 	else if (iQueuePoints1 == iQueuePoints2) return 0;
 	return 1;

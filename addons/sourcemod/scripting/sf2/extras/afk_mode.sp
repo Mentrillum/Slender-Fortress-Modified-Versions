@@ -12,6 +12,7 @@ void AFK_SetTime(int iClient, bool bReset = true)
 	if (g_fAfkAtGameTime[iClient] != 0.0 && g_fAfkAtGameTime[iClient] < GetGameTime())
 	{
 		g_bPlayerNoPoints[iClient] = false;
+		PrintCenterText(iClient, "");
 	}
 	
 	if (g_bPlayerNoPoints[iClient] || g_bAdminNoPoints[iClient])
