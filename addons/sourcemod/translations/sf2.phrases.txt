@@ -675,6 +675,21 @@
 		"chi"	"你正离开PvP区域！\n假如你不回去，你会在 {1} 秒后失去你的武器！"
 	}
 
+	"SF2 AFK On"
+	{
+		"en"	"{royalblue}Disabled going to RED naturally."
+	}
+
+	"SF2 AFK Off"
+	{
+		"en"	"{royalblue}Enabled going to RED naturally."
+	}
+
+	"SF2 AFK Status"
+	{
+		"en"	"You are currently AFK, press a button to wake up."
+	}
+
 	"SF2 Enabled Hints"
 	{
 		"en"	"{lightblue}Enabled hints."

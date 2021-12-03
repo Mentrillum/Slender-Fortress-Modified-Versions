@@ -136,6 +136,8 @@ public void OnPluginStart()
 	
 	g_cvPlayerProxyWaitTime = CreateConVar("sf2_player_proxy_waittime", "35", "How long (in seconds) after a player was chosen to be a Proxy must the system wait before choosing him again.");
 	g_cvPlayerProxyAsk = CreateConVar("sf2_player_proxy_ask", "0", "Set to 1 if the player can choose before becoming a Proxy, set to 0 to force.");
+	
+	g_cvPlayerAFKTime = CreateConVar("sf2_player_afk_time", "60.0", "Amount of time before a player is considered AFK, set to 0 to disable.", _, true, 0.0);
 
 	g_cvPlayerInfiniteSprintOverride = CreateConVar("sf2_player_infinite_sprint_override", "-1", "1 = infinite sprint, 0 = never have infinite sprint, -1 = let the game choose.", _, true, -1.0, true, 1.0);
 	g_cvPlayerInfiniteFlashlightOverride = CreateConVar("sf2_player_infinite_flashlight_override", "-1", "1 = infinite flashlight, 0 = never have infinite flashlight, -1 = let the game choose.", _, true, -1.0, true, 1.0);
@@ -191,6 +193,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slcredits", Command_Credits);
 	RegConsoleCmd("sm_slviewbosslist", Command_BossList);
 	RegConsoleCmd("sm_slbosslist", Command_BossList);
+	RegConsoleCmd("sm_slafk", Command_NoPoints);
 	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
 	RegConsoleCmd("+sprint", Command_SprintOn);
 	RegConsoleCmd("-sprint", Command_SprintOff);
@@ -199,7 +202,7 @@ public void OnPluginStart()
 
 	RegAdminCmd("sm_slgroupname", Command_GroupName, ADMFLAG_SLAY); //People like to use naughty names, keep it at this for now until pre-defined group names are made
 	RegAdminCmd("sm_sf2_bosspack_vote", DevCommand_BossPackVote, ADMFLAG_CHEATS);
-	RegAdminCmd("sm_sf2_nopoints", Command_NoPoints, ADMFLAG_SLAY);
+	RegAdminCmd("sm_sf2_nopoints", Command_NoPointsAdmin, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_scare", Command_ClientPerformScare, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_spawn_boss", Command_SpawnSlender, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_spawn_all_bosses", Command_SpawnAllSlenders, ADMFLAG_SLAY);
@@ -340,6 +343,24 @@ public Action Command_BossList(int iClient,int args)
 	return Plugin_Handled;
 }
 
+public Action Command_NoPoints(int iClient,int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if(!g_bPlayerNoPoints[iClient])
+	{
+		CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
+		g_bPlayerNoPoints[iClient] = true;
+		AFK_SetTime(iClient);
+	}
+	else
+	{
+		CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
+		g_bPlayerNoPoints[iClient] = false;
+		AFK_SetTime(iClient);
+	}
+	return Plugin_Handled;
+}
+
 public Action Command_ToggleFlashlight(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -424,19 +445,63 @@ public Action DevCommand_BossPackVote(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_NoPoints(int iClient,int args)
+public Action Command_NoPointsAdmin(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if(!g_bAdminNoPoints[iClient])
+	
+	if (args < 1)
 	{
-		CPrintToChat(iClient, "{royalblue}Disabled going to RED naturally.");
-		g_bAdminNoPoints[iClient] = true;
+		ReplyToCommand(iClient, "Usage: sm_sf2_nopoints <name|#userid> <0/1>");
+		return Plugin_Handled;
 	}
-	else
+	
+	char arg1[32];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+	
+	if ((target_count = ProcessTargetString(
+			arg1,
+			iClient,
+			target_list,
+			MAXPLAYERS,
+			0,
+			target_name,
+			sizeof(target_name),
+			tn_is_ml)) <= 0)
 	{
-		CPrintToChat(iClient, "{royalblue}Enabled going to RED naturally.");
-		g_bAdminNoPoints[iClient] = false;
+		ReplyToTargetError(iClient, target_count);
+		return Plugin_Handled;
 	}
+	
+	bool bMode;
+	if (args > 2)
+	{
+		char arg2[32];
+		GetCmdArg(2, arg2, sizeof(arg2));
+		bMode = view_as<bool>(StringToInt(arg2));
+	}
+	
+	for (int i = 0; i < target_count; i++)
+	{
+		int iTarget = target_list[i];
+		if (IsClientSourceTV(iTarget)) continue;//Exclude the sourcetv bot
+		
+		g_bAdminNoPoints[iClient] = args > 1 ? bMode : !g_bAdminNoPoints[iClient];
+		if(g_bAdminNoPoints[iClient])
+		{
+			CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
+		}
+		else
+		{
+			CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
+		}
+		
+		AFK_SetTime(iClient);
+	}
+	
 	return Plugin_Handled;
 }
 
@@ -573,7 +638,14 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 			if (!bSayTeam) 
 			{
-				FakeClientCommandEx(client, "say_team %s", sArgs);
+				if (sArgs[0] != '!' || sArgs[1] != '!')	// Don't let ! commands get detected twice
+				{
+					FakeClientCommandEx(client, "say_team \" %s\"", sArgs);
+				}
+				else
+				{
+					FakeClientCommandEx(client, "say_team %s", sArgs);
+				}
 				return Plugin_Stop;
 			}
 		}
