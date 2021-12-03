@@ -850,6 +850,7 @@ ConVar g_cvPlayerViewbobHurtEnabled;
 ConVar g_cvPlayerViewbobSprintEnabled;
 ConVar g_cvPlayerProxyWaitTime;
 ConVar g_cvPlayerProxyAsk;
+ConVar g_cvPlayerAFKTime;
 ConVar g_cvBlockSuicideDuringRound;
 ConVar g_cvRaidMap;
 ConVar g_cvProxyMap;

@@ -3,8 +3,6 @@
 #endif
 #define _sf2_afk_mode_included
 
-#define AFK_TIME	90.0
-
 static float g_fAfkAtGameTime[MAXPLAYERS + 1];
 
 void AFK_SetTime(int iClient, bool bReset = true)
@@ -20,9 +18,13 @@ void AFK_SetTime(int iClient, bool bReset = true)
 		// Player already has their points disabled
 		g_fAfkAtGameTime[iClient] = 0.0;
 	}
+	else if(!bReset || !g_cvPlayerAFKTime.BoolValue)
+	{
+		g_fAfkAtGameTime[iClient] = 0.0;
+	}
 	else
 	{
-		g_fAfkAtGameTime[iClient] = bReset ? (GetGameTime() + AFK_TIME) : 0.0;
+		g_fAfkAtGameTime[iClient] = GetGameTime() + g_cvPlayerAFKTime.FloatValue;
 	}
 }
 
