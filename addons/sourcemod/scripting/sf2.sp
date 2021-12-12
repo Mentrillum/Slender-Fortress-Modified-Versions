@@ -8162,7 +8162,7 @@ void SF_FailRoundEnd(float time = 2.0)
 void SF_FailEnd()
 {
 	if (g_hTimerFail != null)
-		delete g_hTimerFail;
+		KillTimer(g_hTimerFail);
 	g_hTimerFail = null;
 }
 
