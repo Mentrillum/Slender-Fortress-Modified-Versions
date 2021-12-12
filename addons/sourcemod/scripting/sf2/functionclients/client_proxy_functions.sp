@@ -782,6 +782,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	bool bRestrictWeapons = true;
 	bool bUseStock = false;
 	bool bRemoveWearables = false;
+	bool bPreventAttack = false;
 	
 	if (IsRoundEnding())
 	{
@@ -793,12 +794,21 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 	}
 	
-	// pvp
-	if (IsClientInPvP(client)) 
+	if (g_bPlayerEliminated[client] && g_cvPlayerKeepWeapons.BoolValue)
 	{
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
+	}
+	
+	// pvp
+	if (IsClientInPvP(client))
+	{
+		bRemoveWeapons = false;
+		bRestrictWeapons = false;
+		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (g_bPlayerProxy[client])
@@ -808,6 +818,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bUseStock = true;
 		bRemoveWearables = true;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (IsRoundInWarmup()) 
@@ -815,6 +826,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (IsClientInGhostMode(client)) 
@@ -827,12 +839,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (SF_IsBoxingMap() && !g_bPlayerEliminated[client] && !IsRoundEnding())
 	{
 		bRestrictWeapons = false;
 		bKeepUtilityItems = true;
+		bPreventAttack = false;
 	}
 
 	if (bRemoveWeapons && !bKeepUtilityItems)
@@ -1210,6 +1224,23 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 		delete hWeapon;
 	}
+	
+	// Restrict gun firing
+	if (bPreventAttack)
+	{
+		int iWeapon = INVALID_ENT_REFERENCE;
+		for (int iSlot = 0; iSlot <= 5; iSlot++)
+		{
+			if (iSlot == TFWeaponSlot_Melee) continue;
+			
+			iWeapon = GetPlayerWeaponSlot(client, iSlot);
+			if (!iWeapon || iWeapon == INVALID_ENT_REFERENCE) continue;
+			
+			TF2Attrib_SetByDefIndex(iWeapon, 128, 1.0); // While active:
+			TF2Attrib_SetByDefIndex(iWeapon, 821, 1.0); // No Attack
+		}
+	}
+	
 	//Remove the teleport ability
 	if (IsClientInPvP(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_bPlayerEliminated[client])) //DidClientEscape(client)
 	{

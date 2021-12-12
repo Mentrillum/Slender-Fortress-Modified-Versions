@@ -862,6 +862,7 @@ ConVar g_cvSlaughterRunMap;
 ConVar g_cvTimeEscapeSurvival;
 ConVar g_cvSlaughterRunDivisibleTime;
 ConVar g_cvUseAlternateConfigDirectory;
+ConVar g_cvPlayerKeepWeapons;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
