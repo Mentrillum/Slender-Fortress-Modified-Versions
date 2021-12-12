@@ -479,7 +479,7 @@ public Action Command_NoPointsAdmin(int iClient,int args)
 	}
 	
 	bool bMode;
-	if (args > 2)
+	if (args > 1)
 	{
 		char arg2[32];
 		GetCmdArg(2, arg2, sizeof(arg2));

@@ -705,6 +705,8 @@ void PvP_SetPlayerPvPState(int iClient, bool bStatus, bool bRemoveProjectiles=tr
 	{
 		// Regenerate player but keep health the same.
 		int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
+		TF2_RemoveWeaponSlot(iClient, TFWeaponSlot_Primary);
+		TF2_RemoveWeaponSlot(iClient, TFWeaponSlot_Secondary);
 		TF2_RegeneratePlayer(iClient);
 		SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
 		SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);

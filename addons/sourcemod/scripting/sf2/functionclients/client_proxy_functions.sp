@@ -799,7 +799,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
-		bPreventAttack = false;
+		bPreventAttack = true;
 	}
 	
 	// pvp
@@ -1229,6 +1229,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	if (bPreventAttack)
 	{
 		int iWeapon = INVALID_ENT_REFERENCE;
+		while ((iWeapon = FindEntityByClassname(iWeapon, "tf_wearable_demoshield")) != INVALID_ENT_REFERENCE)
+		{
+			if (GetEntPropEnt(iWeapon, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				RemoveEntity(iWeapon);
+			}
+		}
+		
 		for (int iSlot = 0; iSlot <= 5; iSlot++)
 		{
 			if (iSlot == TFWeaponSlot_Melee) continue;
@@ -1236,8 +1244,19 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			iWeapon = GetPlayerWeaponSlot(client, iSlot);
 			if (!iWeapon || iWeapon == INVALID_ENT_REFERENCE) continue;
 			
-			TF2Attrib_SetByDefIndex(iWeapon, 128, 1.0); // While active:
-			TF2Attrib_SetByDefIndex(iWeapon, 821, 1.0); // No Attack
+			int iItemDef = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+			switch (iItemDef)
+			{
+				case 1101:
+				{
+					TF2_RemoveWeaponSlotAndWearables(client, iSlot);
+				}
+				default:
+				{
+					SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", 99999999.9);
+					SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", 99999999.9);
+				}
+			}
 		}
 	}
 	
