@@ -1247,7 +1247,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			int iItemDef = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
 			switch (iItemDef)
 			{
-				case 1101:
+				case 30, 212, 59, 60, 297, 947, 1101:	// Invis Watch, Base Jumper
 				{
 					TF2_RemoveWeaponSlotAndWearables(client, iSlot);
 				}
