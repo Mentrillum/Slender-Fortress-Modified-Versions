@@ -4480,10 +4480,13 @@ void SlenderDoDamageEffects(int iBossIndex, int iAttackIndex, int iClient)
 			for (int iIndex = 0; iIndex < iCount && iIndex < NPCChaserGetAttackCount(iBossIndex); iIndex++)
 			{
 				int iForIndex = StringToInt(sAllowedIndexesList[iIndex]);
-				if (iForIndex == iAttackIndex + 1 && NPCChaserGetStunAttackDuration(iBossIndex, iDifficulty))
+				if (iForIndex == iAttackIndex + 1 && NPCChaserGetBleedDuration(iBossIndex, iDifficulty))
 				{
-					TF2_MakeBleed(iClient, iClient, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
-					break;
+					if (!TF2_IsPlayerInCondition(iClient, TFCond_Bleeding))
+					{
+						TF2_MakeBleed(iClient, iClient, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
+						break;
+					}
 				}
 			}
 		}
@@ -4500,7 +4503,10 @@ void SlenderDoDamageEffects(int iBossIndex, int iAttackIndex, int iClient)
 				int iCurrentAtkIndex = StringToInt(sCurrentIndex);
 				if (iAttackNumber == iCurrentAtkIndex && NPCChaserGetBleedDuration(iBossIndex, iDifficulty) > 0.0)
 				{
-					TF2_MakeBleed(iClient, iClient, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
+					if (!TF2_IsPlayerInCondition(iClient, TFCond_Bleeding))
+					{
+						TF2_MakeBleed(iClient, iClient, NPCChaserGetBleedDuration(iBossIndex, iDifficulty));
+					}
 				}
 			}
 		}

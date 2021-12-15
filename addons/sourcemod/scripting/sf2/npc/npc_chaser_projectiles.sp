@@ -437,7 +437,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 							CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
 						}
 
-						CreateTimer(0.1, Timer_KillEntity, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
+						CreateTimer(5.0, Timer_KillEntity, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
 						if (i == 0) EmitSoundToAll(g_sSlenderArrowShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 						g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 					}
