@@ -158,13 +158,15 @@ public void OnPluginStart()
 	g_cvSlaughterRunDivisibleTime = CreateConVar("sf2_slaughterrun_divide_time", "125.0", "Determines how much the average time should be divided by in Slaughter Run, the lower the number, the longer the bosses spawn.", _, true, 0.0);
 	
 	g_cvUseAlternateConfigDirectory = CreateConVar("sf2_alternateconfigs", "0", "Set to 1 if the server should pick up the configs from data/.", _, true, 0.0, true, 1.0);
-
+	
+	g_cvPlayerKeepWeapons = CreateConVar("sf2_player_keep_weapons", "0", "Set to 1 if players can keep their non-melee weapons outside of PvP arenas.", _, true, 0.0, true, 1.0);
+	
 	g_cvRestartSession = CreateConVar("sf2_dont_touch_this", "0", "Seriously, do not touch this.", _, true, 0.0, true, 1.0);
 	g_cvRestartSession.AddChangeHook(OnConVarChanged);
-
+	
 	g_cvSurvivalMap = CreateConVar("sf2_issurvivalmap", "0", "Set to 1 if the map is a survival map.", _, true, 0.0, true, 1.0);
 	g_cvTimeEscapeSurvival = CreateConVar("sf2_survival_time_limit", "30", "when X secs left the mod will turn back the Survive! text to Escape! text", _, true, 0.0);
-
+	
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();
@@ -477,7 +479,7 @@ public Action Command_NoPointsAdmin(int iClient,int args)
 	}
 	
 	bool bMode;
-	if (args > 2)
+	if (args > 1)
 	{
 		char arg2[32];
 		GetCmdArg(2, arg2, sizeof(arg2));

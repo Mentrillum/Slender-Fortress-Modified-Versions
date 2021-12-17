@@ -782,6 +782,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	bool bRestrictWeapons = true;
 	bool bUseStock = false;
 	bool bRemoveWearables = false;
+	bool bPreventAttack = false;
 	
 	if (IsRoundEnding())
 	{
@@ -793,12 +794,21 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 	}
 	
-	// pvp
-	if (IsClientInPvP(client)) 
+	if (g_bPlayerEliminated[client] && g_cvPlayerKeepWeapons.BoolValue)
 	{
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = true;
+	}
+	
+	// pvp
+	if (IsClientInPvP(client))
+	{
+		bRemoveWeapons = false;
+		bRestrictWeapons = false;
+		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (g_bPlayerProxy[client])
@@ -808,6 +818,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bUseStock = true;
 		bRemoveWearables = true;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (IsRoundInWarmup()) 
@@ -815,6 +826,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (IsClientInGhostMode(client)) 
@@ -827,12 +839,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (SF_IsBoxingMap() && !g_bPlayerEliminated[client] && !IsRoundEnding())
 	{
 		bRestrictWeapons = false;
 		bKeepUtilityItems = true;
+		bPreventAttack = false;
 	}
 
 	if (bRemoveWeapons && !bKeepUtilityItems)
@@ -1210,6 +1224,42 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 		delete hWeapon;
 	}
+	
+	// Restrict gun firing
+	if (bPreventAttack)
+	{
+		int iWeapon = INVALID_ENT_REFERENCE;
+		while ((iWeapon = FindEntityByClassname(iWeapon, "tf_wearable_demoshield")) != INVALID_ENT_REFERENCE)
+		{
+			if (GetEntPropEnt(iWeapon, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				RemoveEntity(iWeapon);
+			}
+		}
+		
+		for (int iSlot = 0; iSlot <= 5; iSlot++)
+		{
+			if (iSlot == TFWeaponSlot_Melee) continue;
+			
+			iWeapon = GetPlayerWeaponSlot(client, iSlot);
+			if (!iWeapon || iWeapon == INVALID_ENT_REFERENCE) continue;
+			
+			int iItemDef = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+			switch (iItemDef)
+			{
+				case 30, 212, 59, 60, 297, 947, 1101:	// Invis Watch, Base Jumper
+				{
+					TF2_RemoveWeaponSlotAndWearables(client, iSlot);
+				}
+				default:
+				{
+					SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", 99999999.9);
+					SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", 99999999.9);
+				}
+			}
+		}
+	}
+	
 	//Remove the teleport ability
 	if (IsClientInPvP(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_bPlayerEliminated[client])) //DidClientEscape(client)
 	{
