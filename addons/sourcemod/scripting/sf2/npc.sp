@@ -2771,7 +2771,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			}
 			if(view_as<bool>(GetProfileNum(sProfile,"use_engine_sounds",0)) && g_sSlenderEngineSound[iBossIndex][0] != '\0')
 			{
-				EmitSoundToAll(g_sSlenderEngineSound[iBossIndex], iBoss, SNDCHAN_STATIC, 83, _, 0.8);
+				EmitSoundToAll(g_sSlenderEngineSound[iBossIndex], iBoss, SNDCHAN_STATIC, GetProfileNum(sProfile, "engine_sound_level", 83), _, GetProfileFloat(sProfile, "engine_sound_volume", 0.8));
 			}
 			if (SF_BossesChaseEndlessly() || SF_IsRaidMap())
 			{
