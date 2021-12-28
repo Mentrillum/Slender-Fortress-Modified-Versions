@@ -1167,7 +1167,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			char sSoundPath[PLATFORM_MAX_PATH];
 			float vecSpread = NPCChaserGetAttackBulletSpread(iBossIndex, iAttackIndex, iDifficulty);
 			GetRandomStringFromProfile(sProfile, "sound_bulletshoot", sSoundPath, sizeof(sSoundPath));
-			if (sSoundPath[0] != '\0') EmitSoundToAll(sSoundPath, slender, SNDCHAN_WEAPON, SNDLEVEL_SCREAMING);
+			if (sSoundPath[0] != '\0') EmitSoundToAll(sSoundPath, slender, SNDCHAN_WEAPON, GetProfileNum(sProfile, "sound_bulletshoot_level", SNDLEVEL_SCREAMING));
 
 			float flEffectPos[3];
 			float flClientPos[3];
