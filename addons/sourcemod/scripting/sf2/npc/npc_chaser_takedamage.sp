@@ -23,32 +23,26 @@
     }
 */
 
-public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
 	if (!IsValidEntity(victim))
 	{
 		//Theres no boss, what?
-		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamage);
-		return Plugin_Stop;
-	}
-	int iBossHealth = GetEntProp(victim, Prop_Data, "m_iHealth");
-
-	if(damage >= float(iBossHealth))
-	{	
-		SetEntProp(victim, Prop_Data, "m_iHealth", 30000);
+		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
+		return;
 	}
 
 	float flMyPos[3], flMyEyeAng[3], flClientPos[3], flBuffer[3], flTraceStartPos[3], flTraceEndPos[3];
 	GetEntPropVector(victim, Prop_Data, "m_vecAbsOrigin", flMyPos);
 
-	int iBossIndex = NPCGetFromEntIndex(victim);
+	int iBossIndex = NPCGetFromEntIndex(g_iSlenderHitboxOwner[victim]);
 	if (iBossIndex == -1)
 	{
 		//Theres still no boss, how did this happen?
-		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamage);
-		return Plugin_Stop;
+		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
+		return;
 	}
-	int slender = victim;
+	int slender = g_iSlenderHitboxOwner[victim];
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 
@@ -64,7 +58,6 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
 
 	AddVectors(flMyEyeAng, g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng);
-	for (int i = 0; i < 3; i++) flMyEyeAng[i] = AngleNormalize(flMyEyeAng[i]);
 
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && (TF2_IsPlayerInCondition(attacker, TFCond_RegenBuffed)) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
 	{
@@ -356,7 +349,7 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 		}
 	}
 
-	return Plugin_Changed;
+	return;
 }
 
 void UpdateHealthBar(int iBossIndex)
@@ -386,7 +379,9 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 	if (iBossIndex == -1) return;
 	if (!victim || victim == INVALID_ENT_REFERENCE) return;
 	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-	SetEntPropFloat(victim, Prop_Data, "m_speed", 0.0);
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(victim);
+	npc.flWalkSpeed = 0.0;
+	npc.flRunSpeed = 0.0;
 	int iState = g_iSlenderState[iBossIndex];
 	bool bDoChasePersistencyInit = false;
 	if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
@@ -534,6 +529,9 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 		SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 		EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], victim, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 		g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+		Call_StartForward(fOnBossDecloaked);
+		Call_PushCell(iBossIndex);
+		Call_Finish();
 	}
 				
 	if (!bDoChasePersistencyInit)
@@ -593,8 +591,39 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 			ClientStopAllSlenderSounds(victim, sProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 		}
 	}
-						
-	if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
 
 	NPCChaserUpdateBossAnimation(iBossIndex, victim, g_iSlenderState[iBossIndex]);
+}
+
+public Action Hook_HitboxOnTakeDamage(int hitbox,int &attacker,int &inflictor,float &damage,int &damagetype)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	int iBossIndex = NPCGetFromEntIndex(g_iSlenderHitboxOwner[hitbox]);
+	if(iBossIndex != -1 && NPCGetUniqueID(iBossIndex) != -1 && NPCChaserGetState(iBossIndex) == STATE_STUN)
+		damage = 0.0;
+	Hook_SlenderOnTakeDamage(hitbox, attacker, inflictor, damage, damagetype);
+	int iBossHealth = GetEntProp(hitbox, Prop_Data, "m_iHealth");
+
+	if(damage >= float(iBossHealth))
+	{	
+		RemoveSlender(iBossIndex);
+	}
+	
+	return Plugin_Changed;
+}
+
+public Action Hook_SlenderOnTakeDamageOriginal(int slender,int &attacker,int &inflictor,float &damage,int &damagetype)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	
+	int iBossIndex = NPCGetFromEntIndex(slender);
+	if (iBossIndex == -1) return Plugin_Continue;
+	if(IsValidEntity(attacker) && IsValidEntity(g_iSlenderHitbox[iBossIndex]))
+	{
+		if(attacker <= MaxClients && !IsValidClient(attacker)) return Plugin_Continue;
+		SDKHooks_TakeDamage(g_iSlenderHitbox[iBossIndex], attacker, attacker, damage, damagetype);
+		Hook_SlenderOnTakeDamage(slender, attacker, inflictor, damage, damagetype);
+	}
+	return Plugin_Changed;
 }

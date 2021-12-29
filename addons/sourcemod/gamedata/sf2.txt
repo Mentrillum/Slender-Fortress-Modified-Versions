@@ -64,6 +64,11 @@
 				"linux"		"30"
 				"windows"	"31"
 			}
+			"CBaseEntity::UpdateTransmitState"
+			{
+				"linux"		"20"
+				"windows"	"19"
+			}
 			"CBaseAnimating::StudioFrameAdvance"
 			{
 				"linux"		"198"

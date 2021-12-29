@@ -15,8 +15,6 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	iUniqueProfileIndex = g_hChaserProfileData.Push(-1);
 	g_hChaserProfileNames.SetValue(sProfile, iUniqueProfileIndex);
 	
-	float flBossStepSize = kv.GetFloat("stepsize", 18.0);
-	
 	float flBossDefaultWalkSpeed = kv.GetFloat("walkspeed", 30.0);
 	float flBossWalkSpeedEasy = kv.GetFloat("walkspeed_easy", flBossDefaultWalkSpeed);
 	float flBossWalkSpeedHard = kv.GetFloat("walkspeed_hard", flBossDefaultWalkSpeed);
@@ -618,8 +616,6 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flCrawlSpeedMultiplierInsane = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierHard);
 	float flCrawlSpeedMultiplierNightmare = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierInsane);
 	float flCrawlSpeedMultiplierApollyon = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierNightmare);
-
-	g_hChaserProfileData.Set(iUniqueProfileIndex, flBossStepSize, ChaserProfileData_StepSize);
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, view_as<bool>(kv.GetNum("difficulty_affects_animations")), ChaserProfileData_DifficultyAffectsAnimations);
 	

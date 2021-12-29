@@ -13,6 +13,8 @@ public void OnPluginStart()
 	AddTempEntHook("World Decal", Hook_BlockDecals);
 	AddTempEntHook("Entity Decal", Hook_BlockDecals);
 	//AddTempEntHook("TFExplosion", Hook_DebugExplosion);
+
+	for (int i = 0; i < MAX_BOSSES; i++) g_pPath[i] = PathFollower(_, TraceRayDontHitAnyEntity_Pathing, Path_FilterOnlyActors);
 	
 	// Get offsets.
 	g_offsPlayerFOV = FindSendPropInfo("CBasePlayer", "m_iFOV");
@@ -110,6 +112,10 @@ public void OnPluginStart()
 	g_cvBossProfileOverride = CreateConVar("sf2_boss_profile_override", "", "Overrides which boss will be chosen next. Only applies to the first boss being chosen.");
 	g_cvDifficulty = CreateConVar("sf2_difficulty", "1", "Difficulty of the game. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon.", _, true, 1.0, true, 5.0);
 	g_cvDifficulty.AddChangeHook(OnConVarChanged);
+
+	g_cvCameraOverlay = CreateConVar("sf2_camera_overlay", SF2_OVERLAY_DEFAULT, "The overlay directory for what RED players will see with No Filmgrain off. This value shouldn't be updated in realtime and should be set before a map changes fully.");
+	g_cvOverlayNoGrain = CreateConVar("sf2_camera_overlay_nograin", SF2_OVERLAY_DEFAULT_NO_FILMGRAIN, "The overlay directory for what RED players will see with No Filmgrain on. This value shouldn't be updated in realtime and should be set before a map changes fully.");
+	g_cvGhostOverlay = CreateConVar("sf2_camera_ghost_overlay", SF2_OVERLAY_GHOST, "The overlay directory for what BLU ghosted players will see. This value shouldn't be updated in realtime and should be set before a map changes fully.");
 	
 	g_cvSpecialRoundBehavior = CreateConVar("sf2_specialround_mode", "0", "0 = Special Round resets on next round, 1 = Special Round keeps going until all players have played (not counting spectators, recently joined players, and those who reset their queue points during the round)", _, true, 0.0, true, 1.0);
 	g_cvSpecialRoundForce = CreateConVar("sf2_specialround_forceenable", "-1", "Sets whether a Special Round will occur on the next round or not.", _, true, -1.0, true, 1.0);
@@ -126,6 +132,8 @@ public void OnPluginStart()
 	g_cvIgnoreRedPlayerDeathSwap.AddChangeHook(OnConVarChanged);
 	
 	g_cvDisableBossCrushFix = CreateConVar("sf2_disable_boss_crush_fix", "0", "Enables/disables the boss crushing patch from Secret Update 4, should only be turned on if the server introduces players getting stuck in bosses.", _, true, 0.0, true, 1.0);
+
+	g_cvEnableWallHax = CreateConVar("sf2_enable_wall_hax", "0", "Enables/disables the Wall Hax special round without needing to turn on Wall Hax. This will not force the difficulty to Insane and will show player + boss outlines.", _, true, 0.0, true, 1.0);
 	
 	g_cvTimeLimit = CreateConVar("sf2_timelimit_default", "300", "The time limit of the round. Maps can change the time limit.", _, true, 0.0);
 	g_cvTimeLimitEscape = CreateConVar("sf2_timelimit_escape_default", "90", "The time limit to escape. Maps can change the time limit.", _, true, 0.0);
@@ -136,7 +144,7 @@ public void OnPluginStart()
 	
 	g_cvPlayerProxyWaitTime = CreateConVar("sf2_player_proxy_waittime", "35", "How long (in seconds) after a player was chosen to be a Proxy must the system wait before choosing him again.");
 	g_cvPlayerProxyAsk = CreateConVar("sf2_player_proxy_ask", "0", "Set to 1 if the player can choose before becoming a Proxy, set to 0 to force.");
-	
+
 	g_cvPlayerAFKTime = CreateConVar("sf2_player_afk_time", "60.0", "Amount of time before a player is considered AFK, set to 0 to disable.", _, true, 0.0);
 
 	g_cvPlayerInfiniteSprintOverride = CreateConVar("sf2_player_infinite_sprint_override", "-1", "1 = infinite sprint, 0 = never have infinite sprint, -1 = let the game choose.", _, true, -1.0, true, 1.0);
@@ -152,25 +160,30 @@ public void OnPluginStart()
 	g_cvBoxingMap = CreateConVar("sf2_isboxingmap", "0", "Set to 1 if the map is a boxing map.", _, true, 0.0, true, 1.0);
 	
 	g_cvRenevantMap = CreateConVar("sf2_isrenevantmap", "0", "Set to 1 if the map uses Renevant logic.", _, true, 0.0, true, 1.0);
+	g_cvDefaultRenevantBoss = CreateConVar("sf2_renevant_boss_default", "", "Determine what boss should spawn during the Single Boss wave, if nothing is inputted, Single Boss will not trigger.");
+	g_cvDefaultRenevantBossMessage = CreateConVar("sf2_renevant_bossspawn_message", "", "This is what will be used as the spawn message for the Single Boss wave.");
 
 	g_cvSlaughterRunMap = CreateConVar("sf2_isslaughterrunmap", "0", "Set to 1 if the map is a slaughter run map.", _, true, 0.0, true, 1.0);
 
 	g_cvSlaughterRunDivisibleTime = CreateConVar("sf2_slaughterrun_divide_time", "125.0", "Determines how much the average time should be divided by in Slaughter Run, the lower the number, the longer the bosses spawn.", _, true, 0.0);
 	
 	g_cvUseAlternateConfigDirectory = CreateConVar("sf2_alternateconfigs", "0", "Set to 1 if the server should pick up the configs from data/.", _, true, 0.0, true, 1.0);
-	
+
 	g_cvPlayerKeepWeapons = CreateConVar("sf2_player_keep_weapons", "0", "Set to 1 if players can keep their non-melee weapons outside of PvP arenas.", _, true, 0.0, true, 1.0);
-	
+
 	g_cvRestartSession = CreateConVar("sf2_dont_touch_this", "0", "Seriously, do not touch this.", _, true, 0.0, true, 1.0);
 	g_cvRestartSession.AddChangeHook(OnConVarChanged);
-	
+
 	g_cvSurvivalMap = CreateConVar("sf2_issurvivalmap", "0", "Set to 1 if the map is a survival map.", _, true, 0.0, true, 1.0);
 	g_cvTimeEscapeSurvival = CreateConVar("sf2_survival_time_limit", "30", "when X secs left the mod will turn back the Survive! text to Escape! text", _, true, 0.0);
-	
+
+	g_cvFullyEnableSpectator = CreateConVar("sf2_enable_spectator", "0", "Determines if all spectator restrictions should be disabled.", _, true, 0.0, true, 1.0);
+
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();
 	g_hHudSync2 = CreateHudSynchronizer();
+	g_hHudSync3 = CreateHudSynchronizer();
 	g_hRoundTimerSync = CreateHudSynchronizer();
 	g_hCookie = RegClientCookie("sf2_newcookies", "", CookieAccess_Private);
 	
@@ -225,6 +238,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_debug_logic_escape", Command_DebugLogicEscape, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_kill_client", Command_ClientKillDeathcam, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_end_grace_period", Command_ForceEndGrace, ADMFLAG_SLAY);
+	RegAdminCmd("sm_sf2_reloadprofiles", Command_ReloadProfiles, ADMFLAG_CHEATS);
 
 	// Hook onto existing console commands.
 	AddCommandListener(Hook_CommandBuild, "build");
@@ -292,8 +306,6 @@ public void OnPluginStart()
 	SetupPlayerGroups();
 	
 	PvP_Initialize();
-	
-	Nav_Initialize();
 
 	SF2MapEntity_Initialize();
 	
@@ -612,7 +624,7 @@ public Action Command_GhostMode(int iClient,int args)
 		ClientSetGhostModeState(iClient, false);
 		TF2_RespawnPlayer(iClient);
 		TF2_RemoveCondition(iClient, TFCond_StealthedUserBuffFade);
-		
+
 		CPrintToChat(iClient, "{dodgerblue}%T", "SF2 Ghost Mode Disabled", iClient);
 	}
 	g_flLastCommandTime[iClient] = GetEngineTime()+0.5;
@@ -621,7 +633,7 @@ public Action Command_GhostMode(int iClient,int args)
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs) {
 	if (!g_bPlayerCalledForNightmare[client])
-		g_bPlayerCalledForNightmare[client] = (StrContains(sArgs, "nightmare", false) != -1 || StrContains(sArgs, "Nightmare", false) != -1 );
+		g_bPlayerCalledForNightmare[client] = (StrContains(sArgs, "nightmare", false) != -1 || StrContains(sArgs, "Nightmare", false) != -1);
 
 	if (!g_bEnabled || g_cvAllChat.BoolValue || SF_IsBoxingMap()) return Plugin_Continue;
 
@@ -640,7 +652,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 			if (!bSayTeam) 
 			{
-				if (sArgs[0] == '!' || sArgs[1] == '!')	// Don't let ! commands get detected twice
+				if (sArgs[0] != '!' || sArgs[1] != '!')	// Don't let ! commands get detected twice
 				{
 					FakeClientCommandEx(client, "say_team \" %s\"", sArgs);
 				}
@@ -1223,6 +1235,18 @@ public Action Command_ForceEndGrace(int iClient,int args)
 	return Plugin_Handled;
 }
 
+public Action Command_ReloadProfiles(int iClient, int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	ReloadBossProfiles();
+	ReloadRestrictedWeapons();
+	ReloadSpecialRounds();
+	CPrintToChatAll("{royalblue}%t{default} Reloaded all profiles successfully.", "SF2 Prefix");
+
+	return Plugin_Handled;
+}
+
 public Action Command_ToggleAllAttackWaiters(int iClient,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -1501,7 +1525,7 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 		case SPECIALROUND_MODBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}MODified Bosses {default}(WARNING, ITS H3LL).", "SF2 Prefix", iClient);
 		case SPECIALROUND_BOSSROULETTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boss Roulette.", "SF2 Prefix", iClient);
 		case SPECIALROUND_THANATOPHOBIA: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Thanatophobia.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DEBUGMODE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Debug Mode.", "SF2 Prefix", iClient);
+		case SPECIALROUND_WALLHAX: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", iClient);
 	}
 
 	return Plugin_Handled;

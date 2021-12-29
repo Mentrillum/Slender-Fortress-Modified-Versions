@@ -385,11 +385,11 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 		char sInfo[64], sDisplay[256], sColor[32], sNightmareDisplay[256];
 		GetMenuItem(menu, param1, sInfo, sizeof(sInfo), _, sDisplay, sizeof(sDisplay));
 		
-		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_DEBUGMODE) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS)))
+		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_WALLHAX) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS)))
 		{
 			g_cvDifficulty.SetInt(Difficulty_Insane);
 		}
-		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DEBUGMODE) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
+		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
 		{
 			if (GetRandomInt(1, 20) <= 1)
 			{
@@ -400,7 +400,7 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				g_cvDifficulty.SetInt(Difficulty_Nightmare);
 			}
 		}
-		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM) || SF_SpecialRound(SPECIALROUND_DEBUGMODE)))
+		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM)))
 		{
 			g_cvDifficulty.SetInt(Difficulty_Hard);
 		}

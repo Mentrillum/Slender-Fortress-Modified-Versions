@@ -14,6 +14,8 @@
 #define SF2_FLASHLIGHT_ENABLEAT 0.3 // The percentage of the Flashlight battery where the Flashlight will be able to be used again (if the player shortens out the Flashlight from excessive use).
 #define SF2_FLASHLIGHT_COOLDOWN 0.4 // How much time players have to wait before being able to switch their flashlight on again after turning it off.
 
+#define HalfHumanHeight 35.5
+
 // Hud Element hiding flags (possibly outdated)
 #define	HIDEHUD_WEAPONSELECTION		( 1<<0 )	// Hide ammo count & weapon selection
 #define	HIDEHUD_FLASHLIGHT			( 1<<1 )
@@ -174,15 +176,6 @@ int SDK_EndTouch(int iEntity, int iOther)
 	return -1;
 }
 */
-bool SDK_PointIsWithin(int iFunc, float flPos[3])
-{
-	if(g_hSDKPointIsWithin != null)
-	{
-		return view_as<bool>(SDKCall(g_hSDKPointIsWithin, iFunc, flPos));
-	}
-
-	return false;
-}
 
 //	==========================================================
 //	ENTITY & ENTITY NETWORK FUNCTIONS
@@ -200,6 +193,19 @@ stock void Network_HookEntity(int iEnt)
 {
 	Network_ResetEntity(iEnt);
 	SDKHook(iEnt, SDKHook_SetTransmit, NetworkHook_EntityTransmission);
+}
+
+stock int SetEntityTransmitState(int iEntity, int iNewFlags)
+{
+    if (!IsValidEdict(iEntity))
+        return 0;
+
+    int iFlags = GetEdictFlags(iEntity);
+    iFlags &= ~(FL_EDICT_ALWAYS | FL_EDICT_PVSCHECK | FL_EDICT_DONTSEND);
+    iFlags |= iNewFlags;
+    SetEdictFlags(iEntity, iFlags);
+
+    return iFlags;
 }
 
 public Action NetworkHook_EntityTransmission(int iEntity, int iClient)
@@ -276,10 +282,11 @@ stock int FindEntityByTargetname(const char[] targetName, const char[] className
 
 stock float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
 {
-	float vec3[3];
+	return GetVectorDistance(vec1, vec2, true);
+	/*float vec3[3];
 	SubtractVectors(vec1, vec2, vec3);
 	float flResult = GetVectorLength(vec3, true);
-	return flResult;
+	return flResult;*/
 }
 
 stock float SquareFloat(const float value)
@@ -356,6 +363,15 @@ stock bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3],
 	return bHit;
 }
 
+stock bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+{
+	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
+	bool bHit = TR_DidHit(hTrace);
+	ref = TR_GetEntityIndex(hTrace);
+	delete hTrace;
+	return bHit;
+}
+
 stock bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
 	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
@@ -376,14 +392,19 @@ stock bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const flo
 
 int EntitySetAnimation(int iEntity, const char[] sName, float flPlaybackRate = 1.0, int iForceSequence = -1)
 {
+	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(iEntity);
 	int iSequence = iForceSequence;
 	if (iForceSequence == -1)
 	{
-		iSequence = CBaseAnimating_LookupSequence(iEntity, sName);
+		iSequence = animationEntity.LookupSequence(sName);
 	}
 	
-	SDKCall(g_hSDKResetSequence, iEntity, iSequence);
-	
+	if (iSequence != -1)
+	{
+		animationEntity.ResetSequence(iSequence);
+		SetEntPropFloat(iEntity, Prop_Data, "m_flCycle", 0.0);
+	}
+
 	if (flPlaybackRate<-12.0) flPlaybackRate = -12.0;
 	if (flPlaybackRate>12.0) flPlaybackRate = 12.0;
 	SetEntPropFloat(iEntity, Prop_Send, "m_flPlaybackRate", flPlaybackRate);
@@ -497,6 +518,16 @@ stock bool IsEntityAProjectile(int entity)
 	strcmp(classname, "tf_projectile_pipe") == 0 || 
 	strcmp(classname, "tf_projectile_arrow") == 0)) return true;
 	return false;
+}
+
+stock void DestroyAllActiveWeapons(int client)
+{
+	for (int i = 0; i <= 5; i++)
+	{
+		int iWeapon = GetPlayerWeaponSlot(client, i);
+		if (!IsValidEntity(iWeapon)) continue;
+		RemoveEntity(iWeapon);
+	}
 }
 
 #define SF_IGNORE_LOS	0x0004
@@ -628,9 +659,93 @@ stock void TF2_StripWearables(int client)
 	}
 
 	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_wearable_vm")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
 	while((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
 	{
 		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_wearable_razorback")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+}
+
+stock void TF2_DestroySpyWeapons(int client)
+{
+	int iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_revolver")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_builder")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_knife")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "saxxy")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_pda_spy")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_invis")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		{
+			RemoveEntity(iEntity);
+		}
+	}
+
+	iEntity = MaxClients+1;
+	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_sapper")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
 			RemoveEntity(iEntity);
 		}
@@ -1180,44 +1295,6 @@ stock float FloatMax(float a, float b)
 }
 
 //	==========================================================
-//	NAV FUNCTIONS
-//	==========================================================
-
-stock CNavArea SDK_GetLastKnownArea(int iEntity)//Only parse entities that their server class inherits from CBaseCombatCharacter and nothing else!
-{
-	if (!IsValidEntity(iEntity)) return INVALID_NAV_AREA;
-	if (g_hSDKGetLastKnownArea != null)
-	{
-		Address lastNavArea = SDKCall(g_hSDKGetLastKnownArea, iEntity);
-		if (!IsValidAddress(lastNavArea)) return INVALID_NAV_AREA;
-		
-		int iNavID = GetNavAreaIDFromNavAreaPointer(lastNavArea);
-		return NavMesh_FindAreaByID(iNavID);
-	}
-	return INVALID_NAV_AREA;
-}
-
-stock void SDK_UpdateLastKnownArea(int iEntity)
-{
-	if (g_hSDKUpdateLastKnownArea != null)
-	{
-		SDKCall(g_hSDKUpdateLastKnownArea, iEntity);
-	}
-}
-
-stock int GetNavAreaIDFromNavAreaPointer(Address pNavArea)
-{
-	return LoadFromAddress(view_as<Address>(view_as<int>(pNavArea)+(g_iOffset_m_id*4)), NumberType_Int32);
-}
-
-bool IsValidAddress(Address addr)
-{
-	if (addr == Address_Null) return false;
-	if (addr <= view_as<Address>(VALID_MINIMUM_MEMORY_ADDRESS)) return false;
-	
-	return true;
-}
-//	==========================================================
 //	VECTOR FUNCTIONS
 //	==========================================================
 
@@ -1408,12 +1485,24 @@ stock void InsertNodesAroundPoint(ArrayList hArray, const float flOrigin[3], flo
 public bool TraceRayDontHitEntity(int entity,int mask,any data)
 {
 	if (entity == data) return false;
+	if (IsValidEntity(entity))
+	{
+		char sClass[64];
+		GetEntityClassname(entity, sClass, sizeof(sClass));
+		if (strcmp(sClass, "base_boss") == 0 || strcmp(sClass, "base_npc")) return false;
+	}
 	return true;
 }
 
 public bool TraceRayDontHitPlayers(int entity,int mask, any data)
 {
 	if (entity > 0 && entity <= MaxClients) return false;
+	if (IsValidEntity(entity))
+	{
+		char sClass[64];
+		GetEntityClassname(entity, sClass, sizeof(sClass));
+		if (strcmp(sClass, "base_boss") == 0 || strcmp(sClass, "base_npc")) return false;
+	}
 	return true;
 }
 
@@ -1421,6 +1510,12 @@ public bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 {
 	if (entity == data) return false;
 	if (entity > 0 && entity <= MaxClients) return false;
+	if (IsValidEntity(entity))
+	{
+		char sClass[64];
+		GetEntityClassname(entity, sClass, sizeof(sClass));
+		if (strcmp(sClass, "base_boss") == 0 || strcmp(sClass, "base_npc")) return false;
+	}
 	
 	return true;
 }
@@ -1462,6 +1557,14 @@ public Action Timer_KillEdict(Handle timer, any entref)
 	if (!IsValidEdict(ent)) return Plugin_Stop;
 	
 	RemoveEdict(ent);
+
+	return Plugin_Stop;
+}
+public Action Timer_KillSlender(Handle timer, any data)
+{
+	if (data == -1 || NPCGetUniqueID(data) == -1) return Plugin_Stop;
+	
+	RemoveSlender(data);
 
 	return Plugin_Stop;
 }

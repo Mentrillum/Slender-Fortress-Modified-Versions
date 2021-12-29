@@ -22,6 +22,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	fOnBossSeeEntity = CreateGlobalForward("SF2_OnBossSeeEntity", ET_Hook, Param_Cell, Param_Cell);
 	fOnBossRemoved = CreateGlobalForward("SF2_OnBossRemoved", ET_Ignore, Param_Cell);
 	fOnBossStunned = CreateGlobalForward("SF2_OnBossStunned", ET_Ignore, Param_Cell, Param_Cell);
+	fOnBossCloaked = CreateGlobalForward("SF2_OnBossCloaked", ET_Ignore, Param_Cell);
+	fOnBossDecloaked = CreateGlobalForward("SF2_OnBossDecloaked", ET_Ignore, Param_Cell);
 	fOnPagesSpawned = CreateGlobalForward("SF2_OnPagesSpawned", ET_Ignore);
 	fOnRoundStateChange = CreateGlobalForward("SF2_OnRoundStateChange", ET_Ignore, Param_Cell, Param_Cell);
 	fOnClientCollectPage = CreateGlobalForward("SF2_OnClientCollectPage", ET_Ignore, Param_Cell, Param_Cell);
@@ -47,6 +49,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	fOnGroupGiveQueuePoints = CreateGlobalForward("SF2_OnGroupGiveQueuePoints", ET_Hook, Param_Cell, Param_CellByRef);
 	fOnRenevantTriggerWave = CreateGlobalForward("SF2_OnRenevantWaveTrigger", ET_Ignore, Param_Cell);
 	fOnBossPackVoteStart = CreateGlobalForward("SF2_OnBossPackVoteStart", ET_Ignore);
+	fOnDifficultyChange = CreateGlobalForward("SF2_OnDifficultyChange", ET_Ignore, Param_Cell);
 	
 	CreateNative("SF2_IsRunning", Native_IsRunning);
 	CreateNative("SF2_GetRoundState", Native_GetRoundState);
@@ -96,6 +99,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	CreateNative("SF2_DespawnBoss", Native_DespawnBoss);
 	CreateNative("SF2_GetBossModelEntity", Native_GetBossModelEntity);
 	CreateNative("SF2_GetBossTarget", Native_GetBossTarget);
+	CreateNative("SF2_SetBossTarget", Native_SetBossTarget);
 	CreateNative("SF2_GetBossMaster", Native_GetBossMaster);
 	CreateNative("SF2_GetBossState", Native_GetBossState);
 	CreateNative("SF2_GetBossEyePosition", Native_GetBossEyePosition);
@@ -123,6 +127,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	CreateNative("SF2_GetBossProfileFloat", Native_GetBossProfileFloat);
 	CreateNative("SF2_GetBossProfileString", Native_GetBossProfileString);
 	CreateNative("SF2_GetBossProfileVector", Native_GetBossProfileVector);
+	CreateNative("SF2_GetBossAttackProfileNum", Native_GetBossAttackProfileNum);
+	CreateNative("SF2_GetBossAttackProfileFloat", Native_GetBossAttackProfileFloat);
+	CreateNative("SF2_GetBossAttackProfileString", Native_GetBossAttackProfileString);
+	CreateNative("SF2_GetBossAttackProfileVector", Native_GetBossAttackProfileVector);
 	CreateNative("SF2_GetRandomStringFromBossProfile", Native_GetRandomStringFromBossProfile);
 	CreateNative("SF2_GetBossAttributeName", Native_GetBossAttributeName);
 	CreateNative("SF2_GetBossAttributeValue", Native_GetBossAttributeValue);
@@ -304,12 +312,23 @@ void SDK_Init()
 	{
 		SetFailState("Failed to retrieve CBaseAnimating::ResetSequence signature from SF2 gamedata!");
 	}
-	
+
 	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseAnimating::StudioFrameAdvance");
-	if ((g_hSDKStudioFrameAdvance = EndPrepSDKCall()) == null)
+	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::MyNextBotPointer");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
+	g_hSDKGetNextBot = EndPrepSDKCall();
+	if (g_hSDKGetNextBot == null)
 	{
-		SetFailState("Couldn't find CBaseAnimating::StudioFrameAdvance offset in SF2 gamedata!");
+		PrintToServer("Failed to retrieve CBaseEntity::MyNextBotPointer offset from SF2 gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "INextBot::GetLocomotionInterface");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
+	g_hSDKGetLocomotionInterface = EndPrepSDKCall();
+	if (g_hSDKGetLocomotionInterface == null)
+	{
+		PrintToServer("Failed to retrieve INextBot::GetLocomotionInterface offset from SF2 gamedata!");
 	}
 
 	int iOffset = GameConfGetOffset(hConfig, "CTFPlayer::WantsLagCompensationOnEntity"); 
@@ -335,6 +354,13 @@ void SDK_Init()
 		SetFailState("Failed to create hook CBaseEntity::ShouldTransmit offset from SF2 gamedata!");
 	}
 	DHookAddParam(g_hSDKShouldTransmit, HookParamType_ObjectPtr);
+
+	iOffset = GameConfGetOffset(hConfig, "CBaseEntity::UpdateTransmitState");
+	g_hSDKUpdateTransmitState = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	if (!g_hSDKUpdateTransmitState)
+	{
+		SetFailState("Failed to create hook CBaseEntity::UpdateTransmitState offset from SF2 gamedata!");
+	}
 	
 	iOffset = GameConfGetOffset(hConfig, "CTFWeaponBase::GetCustomDamageType");
 	g_hSDKWeaponGetCustomDamageType = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_WeaponGetCustomDamageType);
@@ -350,12 +376,11 @@ void SDK_Init()
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
 
-	g_iOffset_m_id = GameConfGetOffset(hConfig, "CNavArea::m_id");
-	
-	//Initialize the nextbot logic.
-	InitNextBotGameData(hConfig);
-	CBaseAnimating_InitGameData(hConfig);
-	
+	iOffset = GameConfGetOffset(hConfig, "ILocomotion::ShouldCollideWith");
+	g_hShouldCollide = DHookCreate(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address, ShouldCollideWith);
+	if (g_hShouldCollide == null) SetFailState("Failed to create hook for ILocomotion::ShouldCollideWith!");
+	DHookAddParam(g_hShouldCollide, HookParamType_CBaseEntity);
+
 	//Initialize tutorial detours & calls
 	//Tutorial_SetupSDK(hConfig);
 
@@ -399,14 +424,14 @@ public int Native_GetDifficultyModifier(Handle plugin,int numParams)
 	
 	switch (iDifficulty)
 	{
-		case Difficulty_Easy: return view_as<int>(DIFFICULTY_NORMAL);
-		case Difficulty_Hard: return view_as<int>(DIFFICULTY_HARD);
-		case Difficulty_Insane: return view_as<int>(DIFFICULTY_INSANE);
-		case Difficulty_Nightmare: return view_as<int>(DIFFICULTY_NIGHTMARE);
-		case Difficulty_Apollyon: return view_as<int>(DIFFICULTY_APOLLYON);
+		case Difficulty_Easy: return view_as<int>(DIFFICULTYMODIFIER_NORMAL);
+		case Difficulty_Hard: return view_as<int>(DIFFICULTYMODIFIER_HARD);
+		case Difficulty_Insane: return view_as<int>(DIFFICULTYMODIFIER_INSANE);
+		case Difficulty_Nightmare: return view_as<int>(DIFFICULTYMODIFIER_NIGHTMARE);
+		case Difficulty_Apollyon: return view_as<int>(DIFFICULTYMODIFIER_APOLLYON);
 	}
 	
-	return view_as<int>(DIFFICULTY_NORMAL);
+	return view_as<int>(DIFFICULTYMODIFIER_NORMAL);
 }
 
 public int Native_IsClientEliminated(Handle plugin,int numParams)
@@ -657,6 +682,11 @@ public int Native_GetBossTarget(Handle plugin,int numParams)
 	return EntRefToEntIndex(g_iSlenderTarget[GetNativeCell(1)]);
 }
 
+public int Native_SetBossTarget(Handle plugin, int numParams)
+{
+	g_iSlenderTarget[GetNativeCell(1)] = EntIndexToEntRef(GetNativeCell(2));
+}
+
 public int Native_GetBossMaster(Handle plugin,int numParams)
 {
 	return g_iSlenderCopyMaster[GetNativeCell(1)];
@@ -897,6 +927,66 @@ public int Native_GetBossProfileVector(Handle plugin,int numParams)
 	GetNativeArray(4, flDefaultValue, 3);
 	
 	bool bSuccess = GetProfileVector(sProfile, sKeyValue, flResult, flDefaultValue);
+	
+	SetNativeArray(3, flResult, 3);
+	return bSuccess;
+}
+
+public int Native_GetBossAttackProfileNum(Handle plugin,int numParams)
+{
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	
+	char sKeyValue[256];
+	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
+	
+	return GetProfileAttackNum(sProfile, sKeyValue, GetNativeCell(3), GetNativeCell(4));
+}
+
+public int Native_GetBossAttackProfileFloat(Handle plugin,int numParams)
+{
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char sKeyValue[256];
+	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
+	
+	return view_as<int>(GetProfileAttackFloat(sProfile, sKeyValue, view_as<float>(GetNativeCell(3)), GetNativeCell(4)));
+}
+
+public int Native_GetBossAttackProfileString(Handle plugin,int numParams)
+{
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char sKeyValue[256];
+	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
+	
+	int iResultLen = GetNativeCell(4);
+	char[] sResult = new char[iResultLen];
+	
+	char sDefaultValue[512];
+	GetNativeString(5, sDefaultValue, sizeof(sDefaultValue));
+	
+	bool bSuccess = GetProfileAttackString(sProfile, sKeyValue, sResult, iResultLen, sDefaultValue, GetNativeCell(6));
+	
+	SetNativeString(3, sResult, iResultLen);
+	return bSuccess;
+}
+
+public int Native_GetBossAttackProfileVector(Handle plugin,int numParams)
+{
+	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char sKeyValue[256];
+	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
+	
+	float flResult[3];
+	float flDefaultValue[3];
+	GetNativeArray(4, flDefaultValue, 3);
+	
+	bool bSuccess = GetProfileAttackVector(sProfile, sKeyValue, flResult, flDefaultValue, GetNativeCell(5));
 	
 	SetNativeArray(3, flResult, 3);
 	return bSuccess;

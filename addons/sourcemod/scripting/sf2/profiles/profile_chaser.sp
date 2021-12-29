@@ -49,7 +49,6 @@ enum
 
 enum
 {
-	ChaserProfileData_StepSize,
 	ChaserProfileData_WalkSpeedEasy,
 	ChaserProfileData_WalkSpeedNormal,
 	ChaserProfileData_WalkSpeedHard,
@@ -715,11 +714,6 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	property bool DifficultyAffectsAnimations
 	{
 		public get() { return g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_DifficultyAffectsAnimations); }
-	}
-
-	property float StepSize
-	{
-		public get() { return GetChaserProfileStepSize(this.UniqueProfileIndex); }
 	}
 
 	property float WakeRadius
@@ -1692,11 +1686,6 @@ void ClearChaserProfiles()
 	
 	g_hChaserProfileNames.Clear();
 	g_hChaserProfileData.Clear();
-}
-
-float GetChaserProfileStepSize(int iChaserProfileIndex)
-{
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StepSize));
 }
 
 int GetChaserProfileAutoChaseCount(int iChaserProfileIndex,int iDifficulty)

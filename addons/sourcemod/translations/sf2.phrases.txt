@@ -674,7 +674,7 @@
 		"fi"	"Olet lähtemässä PvP Areenalta!\nMenetät aseesi {1} sekunnin päästä jos et palaa!"
 		"chi"	"你正离开PvP区域！\n假如你不回去，你会在 {1} 秒后失去你的武器！"
 	}
-
+	
 	"SF2 AFK On"
 	{
 		"en"	"{royalblue}Disabled going to RED naturally."
@@ -1684,7 +1684,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Reworked traps.\n-Fixed occasional server chokes.\n-Proxies no longer get random crits.\n-Fixed TF2ItemType memory leaks.\n-1-Up has been reworked.\n-Damage effects now apply on bullets and lasers.\n-Fixed ghost mode audio issues.\n-Added a new special round, MODified bosses."
+		"en"	"-Upgraded the boss base to CBaseNPC\n-body_pitch and body_yaw now get affected\n-Difficulty theme loops are no longer experimental\n-Bosses now turn more smoothly\n-Re-added Wall Hax but removed Debug Mode\n-It is now possible to show the boss outline with a CVar"
 	}
 
 	"SF2 Smite player"

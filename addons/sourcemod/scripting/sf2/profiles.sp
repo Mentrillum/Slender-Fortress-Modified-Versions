@@ -18,6 +18,7 @@ static ArrayList g_hSelectableBossProfileList = null;
 static ArrayList g_hSelectableAdminBossProfileList = null;
 static ArrayList g_hSelectableBoxingBossProfileList = null;
 static ArrayList g_hSelectableRenevantBossProfileList = null;
+static ArrayList g_hSelectableRenevantBossAdminProfileList = null;
 static ArrayList g_hSelectableBossProfileQueueList = null;
 
 StringMap g_hBossProfileNames = null;
@@ -141,6 +142,11 @@ void ClearBossProfiles()
 		delete g_hSelectableRenevantBossProfileList;
 	}
 	
+	if (g_hSelectableRenevantBossAdminProfileList != null)
+	{
+		delete g_hSelectableRenevantBossAdminProfileList;
+	}
+	
 	g_hBossProfileNames.Clear();
 	g_hBossProfileData.Clear();
 	
@@ -188,6 +194,11 @@ void ReloadBossProfiles()
 	if (g_hSelectableRenevantBossProfileList == null)
 	{
 		g_hSelectableRenevantBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
+	}
+	
+	if (g_hSelectableRenevantBossAdminProfileList == null)
+	{
+		g_hSelectableRenevantBossAdminProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 	
 	if (g_hSelectableBossProfileQueueList != null)
@@ -889,6 +900,11 @@ ArrayList GetSelectableAdminBossProfileList()
 ArrayList GetSelectableRenevantBossProfileList()
 {
 	return g_hSelectableRenevantBossProfileList;
+}
+
+ArrayList GetSelectableRenevantBossAdminProfileList()
+{
+	return g_hSelectableRenevantBossAdminProfileList;
 }
 
 bool GetRandomRenevantBossProfile(char[] sBuffer, int iBufferLen)

@@ -165,6 +165,16 @@ enum
 	BossProfileData_Flags,
 	BossProfileData_UseRaidHitbox,
 	BossProfileData_IgnoreNavPrefer,
+	BossProfileData_StepSize,
+
+	BossProfileData_DiscoMode,
+	BossProfileData_DiscoDistanceMin,
+	BossProfileData_DiscoDistanceMax,
+
+	BossProfileData_FestiveLights,
+	BossProfileData_FestiveLightBrightness,
+	BossProfileData_FestiveLightDistance,
+	BossProfileData_FestiveLightRadius,
 
 	BossProfileData_BlinkLookRateMultipler,
 	BossProfileData_BlinkStaticRateMultiplier,
@@ -360,6 +370,8 @@ enum
 	BossProfileData_TeleportPersistencyPeriodInsane,
 	BossProfileData_TeleportPersistencyPeriodNightmare,
 	BossProfileData_TeleportPersistencyPeriodApollyon,
+
+	BossProfileData_TeleportIgnoreChases,
 
 	BossProfileData_JumpscareDistanceEasy,
 	BossProfileData_JumpscareDistanceNormal,
@@ -689,12 +701,8 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 		flBossFOV = 360.0;
 	}
 	
-	float flBossMaxTurnRate = kv.GetFloat("turnrate", 90.0);
-	if (flBossMaxTurnRate < 0.0)
-	{
-		flBossMaxTurnRate = 0.0;
-	}
-	
+	float flBossMaxTurnRate = kv.GetFloat("maxyawrate", 250.0);
+
 	float flBossScareCooldown = kv.GetFloat("scare_cooldown");
 	if (flBossScareCooldown < 0.0)
 	{
@@ -722,6 +730,17 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 		}
 	}
 
+	float flBossStepSize = kv.GetFloat("stepsize", 18.0);
+
+	bool bDiscoMode = view_as<bool>(kv.GetNum("disco_mode"));
+	float flDiscoModeRangeMin = kv.GetFloat("disco_mode_rng_distance_min", 420.0);
+	float flDiscoModeRangeMax = kv.GetFloat("disco_mode_rng_distance_max", 750.0);
+
+	bool bFestiveLights = view_as<bool>(kv.GetNum("festive_lights"));
+	int iFestiveLightBrightness = kv.GetNum("festive_light_brightness");
+	float flFestiveLightDistance = kv.GetFloat("festive_light_distance");
+	float flFestiveLightRadius = kv.GetFloat("festive_light_radius");
+
 	float flBlinkLookRateMultiplier = kv.GetFloat("blink_look_rate_multiply", 1.0);
 	float flBlinkStaticRateMultiplier = kv.GetFloat("blink_static_rate_multiply", 1.0);
 	
@@ -743,8 +762,8 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flSoundMusicLoopEasy = kv.GetFloat("sound_music_loop_easy", flSoundMusicLoop);
 	float flSoundMusicLoopHard = kv.GetFloat("sound_music_loop_hard", flSoundMusicLoop);
 	float flSoundMusicLoopInsane = kv.GetFloat("sound_music_loop_insane", flSoundMusicLoopHard);
-	float flSoundMusicLoopNightmare = kv.GetFloat("sound_music_loop_nightmare", flSoundMusicLoopNightmare);
-	float flSoundMusicLoopApollyon = kv.GetFloat("sound_music_loop_apollyon", flSoundMusicLoopApollyon);
+	float flSoundMusicLoopNightmare = kv.GetFloat("sound_music_loop_nightmare", flSoundMusicLoopInsane);
+	float flSoundMusicLoopApollyon = kv.GetFloat("sound_music_loop_apollyon", flSoundMusicLoopNightmare);
 
 	float flInstantKillCooldown = kv.GetFloat("kill_cooldown");
 	float flInstantKillCooldownEasy = kv.GetFloat("kill_cooldown_easy", flInstantKillCooldown);
@@ -1172,6 +1191,16 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	g_hBossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("ignore_nav_prefer", 1)), BossProfileData_IgnoreNavPrefer);
 	g_hBossProfileData.Set(iIndex, flBlinkLookRateMultiplier, BossProfileData_BlinkLookRateMultipler);
 	g_hBossProfileData.Set(iIndex, flBlinkStaticRateMultiplier, BossProfileData_BlinkStaticRateMultiplier);
+	g_hBossProfileData.Set(iIndex, flBossStepSize, BossProfileData_StepSize);
+
+	g_hBossProfileData.Set(iIndex, bDiscoMode, BossProfileData_DiscoMode);
+	g_hBossProfileData.Set(iIndex, flDiscoModeRangeMin, BossProfileData_DiscoDistanceMin);
+	g_hBossProfileData.Set(iIndex, flDiscoModeRangeMax, BossProfileData_DiscoDistanceMax);
+
+	g_hBossProfileData.Set(iIndex, bFestiveLights, BossProfileData_FestiveLights);
+	g_hBossProfileData.Set(iIndex, iFestiveLightBrightness, BossProfileData_FestiveLightBrightness);
+	g_hBossProfileData.Set(iIndex, flFestiveLightDistance, BossProfileData_FestiveLightDistance);
+	g_hBossProfileData.Set(iIndex, flFestiveLightRadius, BossProfileData_FestiveLightRadius);
 
 	g_hBossProfileData.Set(iIndex, bDeathCam, BossProfileData_HasDeathCam);
 	g_hBossProfileData.Set(iIndex, bDeathCamScareSound, BossProfileData_DeathCamPlayScareSound);
@@ -1355,6 +1384,8 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	g_hBossProfileData.Set(iIndex, flBossTeleportRangeMaxInsane, BossProfileData_TeleportRangeMaxInsane);
 	g_hBossProfileData.Set(iIndex, flBossTeleportRangeMaxNightmare, BossProfileData_TeleportRangeMaxNightmare);
 	g_hBossProfileData.Set(iIndex, flBossTeleportRangeMaxApollyon, BossProfileData_TeleportRangeMaxApollyon);
+
+	g_hBossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("teleport_target_ignore_chases")), BossProfileData_TeleportIgnoreChases);
 
 	g_hBossProfileData.Set(iIndex, flBossJumpscareDistance, BossProfileData_JumpscareDistanceNormal);
 	g_hBossProfileData.Set(iIndex, flBossJumpscareDistanceEasy, BossProfileData_JumpscareDistanceEasy);
@@ -1692,6 +1723,23 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 		}
 	}
 	
+	if (view_as<bool>(kv.GetNum("enable_random_selection_renevant_admin", 0)))
+	{
+		if (GetSelectableRenevantBossAdminProfileList().FindString(sProfile) == -1)
+		{
+			// Add to the selectable boss list if it isn't there already.
+			GetSelectableRenevantBossAdminProfileList().PushString(sProfile);
+		}
+	}
+	else
+	{
+		int selectIndex = GetSelectableRenevantBossAdminProfileList().FindString(sProfile);
+		if (selectIndex != -1)
+		{
+			GetSelectableRenevantBossAdminProfileList().Erase(selectIndex);
+		}
+	}
+	
 	if (KvGotoFirstSubKey(kv)) //Special thanks to Fire for modifying the code for download errors.
 	{
 		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH];
@@ -1906,6 +1954,46 @@ int GetBossProfileMaxCopies(int iProfileIndex, int iDifficulty)
 float GetBossProfileModelScale(int iProfileIndex)
 {
 	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_ModelScale));
+}
+
+float GetBossProfileStepSize(int iProfileIndex)
+{
+	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_StepSize));
+}
+
+bool GetBossProfileDiscoModeState(int iProfileIndex)
+{
+	return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_DiscoMode));
+}
+
+float GetBossProfileDiscoRadiusMin(int iProfileIndex)
+{
+	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_DiscoDistanceMin));
+}
+
+float GetBossProfileDiscoRadiusMax(int iProfileIndex)
+{
+	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_DiscoDistanceMax));
+}
+
+bool GetBossProfileFestiveLightState(int iProfileIndex)
+{
+	return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_FestiveLights));
+}
+
+int GetBossProfileFestiveLightBrightness(int iProfileIndex)
+{
+	return g_hBossProfileData.Get(iProfileIndex, BossProfileData_FestiveLightBrightness);
+}
+
+float GetBossProfileFestiveLightDistance(int iProfileIndex)
+{
+	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_FestiveLightDistance));
+}
+
+float GetBossProfileFestiveLightRadius(int iProfileIndex)
+{
+	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_FestiveLightRadius));
 }
 
 int GetBossProfileHealth(int iProfileIndex)
@@ -2238,6 +2326,11 @@ float GetBossProfileTeleportRangeMax(int iProfileIndex, int iDifficulty)
 	}
 	
 	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportRangeMaxNormal));
+}
+
+bool GetBossProfileTeleportIgnoreChases(int iProfileIndex)
+{
+	return g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportIgnoreChases);
 }
 
 float GetBossProfileJumpscareDistance(int iProfileIndex, int iDifficulty)

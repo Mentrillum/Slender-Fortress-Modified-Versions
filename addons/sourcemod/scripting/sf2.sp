@@ -5,9 +5,10 @@
 #include <tf2items>
 #include <tf2attributes>
 #include <dhooks>
-#include <navmesh>
 #include <nativevotes>
 #include <collisionhook>
+#include <cbasenpc>
+#include <cbasenpc/util>
 
 #pragma semicolon 1
 
@@ -34,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.0 Modified"
-#define PLUGIN_VERSION_DISPLAY "1.7.0 Modified"
+#define PLUGIN_VERSION "1.7.1 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -245,10 +246,6 @@ int g_offsFogCtrlEnable = -1;
 int g_offsFogCtrlEnd = -1;
 int g_offsCollisionGroup = -1;
 
-//temp
-int g_iPathLaserModelIndex;
-bool g_bDebuggingBossPathing;
-
 //Commands
 float g_flLastCommandTime[MAXPLAYERS + 1];
 
@@ -280,7 +277,10 @@ Handle g_hSlenderDeathCamTimer[MAX_BOSSES];
 int g_iSlenderDeathCamTarget[MAX_BOSSES];
 float g_flSlenderLastKill[MAX_BOSSES];
 int g_iSlenderState[MAX_BOSSES];
+int g_iSlenderHitbox[MAX_BOSSES];
+int g_iSlenderHitboxOwner[2049] = { INVALID_ENT_REFERENCE, ... };
 int g_iSlenderTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+bool g_bSlenderTargetIsVisible[MAX_BOSSES] = false;
 bool g_bSlenderSpawning[MAX_BOSSES] = false;
 float g_flSlenderAcceleration[MAX_BOSSES][Difficulty_Max];
 float g_flSlenderGoalPos[MAX_BOSSES][3];
@@ -374,6 +374,7 @@ float g_flSlenderTeleportMaxRange[MAX_BOSSES][Difficulty_Max];
 float g_flSlenderTeleportMaxTargetTime[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderTeleportMaxTargetStress[MAX_BOSSES] = { 0.0, ... };
 float g_flSlenderTeleportPlayersRestTime[MAX_BOSSES][MAXPLAYERS + 1];
+bool g_bSlenderTeleportIgnoreChases[MAX_BOSSES];
 
 bool g_bSlenderInDeathcam[MAX_BOSSES] = false;
 
@@ -388,6 +389,7 @@ Handle g_hOnGameFrameTimer = null;
 
 // For boss type 2
 // General variables
+PathFollower g_pPath[MAX_BOSSES];
 bool g_bSlenderAttacking[MAX_BOSSES];
 bool g_bSlenderGiveUp[MAX_BOSSES];
 Handle g_hSlenderAttackTimer[MAX_BOSSES];
@@ -411,6 +413,9 @@ float g_flSlenderLastCalculPathTime[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderCalculatedWalkSpeed[MAX_BOSSES];
 float g_flSlenderCalculatedSpeed[MAX_BOSSES];
 float g_flSlenderCalculatedAcceleration[MAX_BOSSES];
+float g_flSlenderCalculatedMaxWalkSpeed[MAX_BOSSES];
+float g_flSlenderCalculatedMaxSpeed[MAX_BOSSES];
+float g_flSlenderSpeedMultiplier[MAX_BOSSES];
 float g_flSlenderTimeUntilNoPersistence[MAX_BOSSES];
 
 float g_flSlenderProxyTeleportMinRange[MAX_BOSSES][Difficulty_Max];
@@ -490,9 +495,6 @@ int g_iSlenderProxySpawnLevel[MAX_BOSSES];
 int g_iSlenderProxySpawnFlags[MAX_BOSSES];
 float g_flSlenderProxySpawnVolume[MAX_BOSSES];
 int g_iSlenderProxySpawnPitch[MAX_BOSSES];
-
-Handle g_hDebugSpawnAllSlendersTimer;
-float g_flDebugTimeUntilSlendersRespawn;
 
 bool g_bSlenderInBacon[MAX_BOSSES];
 
@@ -721,7 +723,7 @@ Handle g_hPlayer90sMusicTimer[MAXPLAYERS + 1];
 
 SF2RoundState g_iRoundState = SF2RoundState_Invalid;
 bool g_bRoundGrace = false;
-float g_flRoundDifficultyModifier = DIFFICULTY_NORMAL;
+float g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
 bool g_bRoundInfiniteFlashlight = false;
 bool g_bIsSurvivalMap = false;
 bool g_bIsRaidMap = false;
@@ -813,6 +815,9 @@ ConVar g_cvCampingMinDistance;
 ConVar g_cvCampingNoStrikeSanity;
 ConVar g_cvCampingNoStrikeBossDistance;
 ConVar g_cvDifficulty;
+ConVar g_cvCameraOverlay;
+ConVar g_cvOverlayNoGrain;
+ConVar g_cvGhostOverlay;
 ConVar g_cvBossMain;
 ConVar g_cvBossProfileOverride;
 ConVar g_cvPlayerBlinkRate;
@@ -826,6 +831,7 @@ ConVar g_cvNewBossRoundInterval;
 ConVar g_cvNewBossRoundForce;
 ConVar g_cvIgnoreRoundWinConditions;
 ConVar g_cvDisableBossCrushFix;
+ConVar g_cvEnableWallHax;
 ConVar g_cvIgnoreRedPlayerDeathSwap;
 ConVar g_cvPlayerVoiceDistance;
 ConVar g_cvPlayerVoiceWallScale;
@@ -858,11 +864,14 @@ ConVar g_cvBossChaseEndlessly;
 ConVar g_cvSurvivalMap;
 ConVar g_cvBoxingMap;
 ConVar g_cvRenevantMap;
+ConVar g_cvDefaultRenevantBoss;
+ConVar g_cvDefaultRenevantBossMessage;
 ConVar g_cvSlaughterRunMap;
 ConVar g_cvTimeEscapeSurvival;
 ConVar g_cvSlaughterRunDivisibleTime;
 ConVar g_cvUseAlternateConfigDirectory;
 ConVar g_cvPlayerKeepWeapons;
+ConVar g_cvFullyEnableSpectator;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
@@ -884,6 +893,7 @@ bool g_bPlayerViewbobSprintEnabled;
 
 Handle g_hHudSync;
 Handle g_hHudSync2;
+Handle g_hHudSync3;
 Handle g_hRoundTimerSync;
 
 Handle g_hCookie;
@@ -905,6 +915,8 @@ Handle fOnBossSeeEntity;
 Handle fOnBossHearEntity;
 Handle fOnBossRemoved;
 Handle fOnBossStunned;
+Handle fOnBossCloaked;
+Handle fOnBossDecloaked;
 Handle fOnPagesSpawned;
 Handle fOnRoundStateChange;
 Handle fOnClientCollectPage;
@@ -930,26 +942,28 @@ Handle fOnClientDamagedByBoss;
 Handle fOnGroupGiveQueuePoints;
 Handle fOnRenevantTriggerWave;
 Handle fOnBossPackVoteStart;
+Handle fOnDifficultyChange;
 
 Handle g_hSDKGetMaxHealth;
 Handle g_hSDKGetLastKnownArea;
 Handle g_hSDKUpdateLastKnownArea;
 Handle g_hSDKWantsLagCompensationOnEntity;
 Handle g_hSDKShouldTransmit;
+DynamicHook g_hSDKUpdateTransmitState;
+Handle g_hShouldCollide;
+Handle g_hSDKGetLocomotionInterface;
+Handle g_hSDKGetNextBot;
 Handle g_hSDKEquipWearable;
 Handle g_hSDKPlaySpecificSequence;
 Handle g_hSDKPointIsWithin;
 Handle g_hSDKGetSmoothedVelocity;
 Handle g_hSDKGetVectors;
 Handle g_hSDKResetSequence;
-Handle g_hSDKStudioFrameAdvance;
 Handle g_hSDKStartTouch;
 Handle g_hSDKEndTouch;
 Handle g_hSDKWeaponSwitch;
 Handle g_hSDKWeaponGetCustomDamageType;
 Handle g_hSDKProjectileCanCollideWithTeammates;
-
-int g_iOffset_m_id;
 
 int g_iServerOS;
 
@@ -966,18 +980,19 @@ int g_iRenevantWaveNumber = 0;
 int g_iRenevantFinaleTime = 0;
 bool g_bRenevantMultiEffect = false;
 bool g_bRenevantBeaconEffect = false;
+bool g_bRenevant90sEffect = false;
+bool g_bRenevantMarkForDeath = false;
 bool g_bIsRenevantMap = false;
 Handle g_hRenevantWaveTimer = null;
+ArrayList g_aRenevantWaveList;
 
 #if defined DEBUG
 #include "sf2/debug.sp"
 #endif
-#include "sf2/nextbot/nextbot.sp"
 #include "sf2/stocks.sp"
-#include "sf2/baseanimating.sp"
 #include "sf2/logging.sp"
 #include "sf2/profiles.sp"
-#include "sf2/nav.sp"
+//#include "sf2/nav.sp"
 #include "sf2/effects.sp"
 #include "sf2/playergroups.sp"
 #include "sf2/mapentities.sp"
@@ -1058,9 +1073,14 @@ public void OnMapStart()
 	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
 	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
 	PrecacheModel(LASER_MODEL, true);
-	g_iPathLaserModelIndex = PrecacheModel("materials/sprites/laserbeam.vmt");
-	g_bDebuggingBossPathing = false;
-	
+	char sOverlay[PLATFORM_MAX_PATH];
+	g_cvCameraOverlay.GetString(sOverlay, sizeof(sOverlay));
+	PrecacheMaterial2(sOverlay);
+	g_cvOverlayNoGrain.GetString(sOverlay, sizeof(sOverlay));
+	PrecacheMaterial2(sOverlay);
+	g_cvGhostOverlay.GetString(sOverlay, sizeof(sOverlay));
+	PrecacheMaterial2(sOverlay);
+
 	SF2MapEntity_OnMapStart();
 }
 
@@ -1120,12 +1140,12 @@ static void StartPlugin()
 	
 	hCvar = FindConVar("mp_autoteambalance");
 	if (hCvar != null) hCvar.SetBool(false);
-	
-	hCvar = FindConVar("tf_base_boss_max_turn_rate");
-	if (hCvar != null && hCvar.IntValue < 720) hCvar.SetInt(720);
 
-	hCvar = FindConVar("mp_allowspectators");
-	if (hCvar != null) hCvar.SetBool(false);
+	if (!g_cvFullyEnableSpectator.BoolValue)
+	{
+		hCvar = FindConVar("mp_allowspectators");
+		if (hCvar != null) hCvar.SetBool(false);
+	}
 	
 	g_flGravity = g_cvGravity.FloatValue;
 	
@@ -1332,9 +1352,6 @@ static void PrecacheStuff()
 	PrecacheSound(SR_SOUND_SELECT_BR);
 	PrecacheSound2(SF2_INTRO_DEFAULT_MUSIC);
 	
-	PrecacheMaterial2(SF2_OVERLAY_DEFAULT);
-	PrecacheMaterial2(SF2_OVERLAY_DEFAULT_NO_FILMGRAIN);
-	PrecacheMaterial2(SF2_OVERLAY_GHOST);
 	PrecacheMaterial2(SF2_OVERLAY_MARBLEHORNETS);
 	
 	AddFileToDownloadsTable("models/slender/pickups/sheet.mdl");
@@ -1396,7 +1413,7 @@ static void StopPlugin()
 	
 	g_bRestartSessionEnabled = false;
 	g_cvRestartSession.SetBool(false);
-	
+
 	// Reset CVars.
 	ConVar hCvar = FindConVar("mp_friendlyfire");
 	if (hCvar != null) hCvar.SetBool(false);
@@ -1423,6 +1440,11 @@ static void StopPlugin()
 		ClientDisableConstantGlow(i);
 		ClientRemoveInteractiveGlow(i);
 	}
+
+	g_bRenevantMultiEffect = false;
+	g_bRenevantBeaconEffect = false;
+	g_bRenevant90sEffect = false;
+	g_bRenevantMarkForDeath = false;
 	
 	BossProfilesOnMapEnd();
 	
@@ -1556,13 +1578,6 @@ public Action Timer_GlobalGameFrame(Handle timer)
 	if (!g_bRoundGrace && GetRoundState() == SF2RoundState_Active) g_flRoundTimeMessage += 0.1;
 	else g_flRoundTimeMessage = 0.0;
 
-	if (!g_bRoundGrace && SF_SpecialRound(SPECIALROUND_DEBUGMODE))
-	{
-		SendDebugMessageToPlayersSpecialRound("g_flDebugTimeUntilSlendersRespawn: %f", g_flDebugTimeUntilSlendersRespawn);
-		g_flDebugTimeUntilSlendersRespawn -= 0.1;
-	}
-	else g_flDebugTimeUntilSlendersRespawn = 0.0;
-
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
 	{
 		char sBoxingBossName[SF2_MAX_NAME_LENGTH], sMessage[1024];
@@ -1656,8 +1671,6 @@ public Action Timer_GlobalGameFrame(Handle timer)
 	// Check if we can add some proxies.
 	if (!g_bRoundGrace)
 	{
-		if (NavMesh_Exists())
-		{
 			ArrayList hProxyCandidates = new ArrayList();
 
 			for (int iBossIndex = 0; iBossIndex < MAX_BOSSES; iBossIndex++)
@@ -1725,7 +1738,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 				
 				for (int iClient = 1; iClient <= MaxClients; iClient++)
 				{
-					if (!IsClientInGame(iClient) || !g_bPlayerEliminated[iClient]) continue;
+					if (!IsClientInGame(iClient) || !g_bPlayerEliminated[iClient] || GetClientTeam(iClient) == TFTeam_Red) continue;
 					if (g_bPlayerProxy[iClient]) continue;
 					
 					if (!g_iPlayerPreferences[iClient].PlayerPreference_EnableProxySelection)
@@ -1807,7 +1820,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 					}
 					else
 					{
-						DisplayProxyAskMenu(iClient, NPCGetUniqueID(iBossIndex), flDestinationPos, iSpawnPoint);
+						if (!IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro()) DisplayProxyAskMenu(iClient, NPCGetUniqueID(iBossIndex), flDestinationPos, iSpawnPoint);
 					}
 				}
 				// Set the cooldown time!
@@ -1827,7 +1840,6 @@ public Action Timer_GlobalGameFrame(Handle timer)
 			}
 			
 			delete hProxyCandidates;
-		}
 	}
 	
 	PvP_OnGameFrame();
@@ -2130,17 +2142,18 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 	{
 		switch (StringToInt(intValue))
 		{
-			case Difficulty_Easy :g_flRoundDifficultyModifier = DIFFICULTY_NORMAL;
-			case Difficulty_Hard: g_flRoundDifficultyModifier = DIFFICULTY_HARD;
-			case Difficulty_Insane: g_flRoundDifficultyModifier = DIFFICULTY_INSANE;
-			case Difficulty_Nightmare: g_flRoundDifficultyModifier = DIFFICULTY_NIGHTMARE;
+			case Difficulty_Easy: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
+			case Difficulty_Hard: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_HARD;
+			case Difficulty_Insane: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_INSANE;
+			case Difficulty_Nightmare: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NIGHTMARE;
 			case Difficulty_Apollyon:
 			{
-				if (g_bRestartSessionEnabled) g_flRoundDifficultyModifier = DIFFICULTY_RESTARTSESSION;
-				else g_flRoundDifficultyModifier = DIFFICULTY_APOLLYON;
+				if (g_bRestartSessionEnabled) g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_RESTARTSESSION;
+				else g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_APOLLYON;
 			}
-			default: g_flRoundDifficultyModifier = DIFFICULTY_NORMAL;
+			default: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
 		}
+		CheckIfMusicValid();
 		if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 		{
 			for (int i = 1; i <= MaxClients; i++)
@@ -2149,10 +2162,14 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 				
 				char sPath[PLATFORM_MAX_PATH];
 				GetBossMusic(sPath, sizeof(sPath));
-				StopSound(i, MUSIC_CHAN, sPath);
+				if (sPath[0] != '\0') StopSound(i, MUSIC_CHAN, sPath);
+				ClientUpdateMusicSystem(i);
 			}
 		}
 		ChangeAllSlenderModels();
+		Call_StartForward(fOnDifficultyChange);
+		Call_PushCell(StringToInt(intValue));
+		Call_Finish();
 	}
 	else if (cvar == g_cvMaxPlayers || cvar == g_cvMaxPlayersOverride)
 	{
@@ -2213,7 +2230,7 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 			g_cvIgnoreRoundWinConditions.SetBool(true);
 			g_cvIgnoreRedPlayerDeathSwap.SetBool(true);
 			g_cvBossChaseEndlessly.SetBool(true);
-			g_flRoundDifficultyModifier = DIFFICULTY_RESTARTSESSION;
+			g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_RESTARTSESSION;
 			if (g_hRoundGraceTimer != null)
 			{
 				TriggerTimer(g_hRoundGraceTimer);
@@ -2293,7 +2310,7 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 			g_cvIgnoreRoundWinConditions.SetBool(false);
 			g_cvIgnoreRedPlayerDeathSwap.SetBool(false);
 			g_cvBossChaseEndlessly.SetBool(false);
-			g_flRoundDifficultyModifier = DIFFICULTY_APOLLYON;
+			g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_APOLLYON;
 		}
 	}
 }
@@ -2337,7 +2354,6 @@ public void OnEntityCreated(int ent, const char[] classname)
 	{
 		CreateTimer(0.1, Timer_FullyBuildBuilding, EntIndexToEntRef(ent), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
 	PvP_OnEntityCreated(ent, classname);
 }
 
@@ -2448,6 +2464,7 @@ public void OnEntityDestroyed(int ent)
 			}
 		}
 	}
+	g_iSlenderHitboxOwner[ent]=-1;
 	
 	PvP_OnEntityDestroyed(ent, sClassname);
 }
@@ -3597,7 +3614,7 @@ public Action OnPlayerRunCmd(int iClient, int &buttons, int &impulse, float vel[
 	}
 	
 	AFK_CheckTime(iClient);
-	
+
 	if (!bChanged) g_iPlayerLastButtons[iClient] = buttons;
 	return (bChanged) ? Plugin_Changed : Plugin_Continue;
 }
@@ -3983,6 +4000,11 @@ void SetRoundState(SF2RoundState iRoundState)
 			g_hRoundIntroTimer = null;
 			g_flRoundTimeMessage = 0.0;
 			g_bProxySurvivalRageMode = false;
+			g_hRenevantWaveTimer = null;
+			g_bRenevantMultiEffect = false;
+			g_bRenevantBeaconEffect = false;
+			g_bRenevant90sEffect = false;
+			g_bRenevantMarkForDeath = false;
 			if (g_cvRestartSession.BoolValue)
 			{
 				g_bRestartSessionEnabled = false;
@@ -4612,9 +4634,10 @@ public int SortQueueList(int index1, int index2, Handle array, Handle hndl)
 	
 	bool bDisabled = g_bPlayerNoPoints[aArray.Get(index1, 0)];
 	if (bDisabled != g_bPlayerNoPoints[aArray.Get(index2, 0)]) return bDisabled ? 1 : -1;
-	
+
 	int iQueuePoints1 = aArray.Get(index1, 1);
 	int iQueuePoints2 = aArray.Get(index2, 1);
+	
 	if (iQueuePoints1 > iQueuePoints2) return -1;
 	else if (iQueuePoints1 == iQueuePoints2) return 0;
 	return 1;
@@ -4740,7 +4763,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 					
 					// Take care of angle offsets.
 					AddVectors(flAng, g_flSlenderEyeAngOffset[iBossIndex], flAng);
-					for (int i = 0; i < 3; i++)flAng[i] = AngleNormalize(flAng[i]);
+					for (int i = 0; i < 3; i++) flAng[i] = AngleNormalize(flAng[i]);
 					
 					flAng[0] = 0.0;
 					
@@ -4837,7 +4860,7 @@ void SlenderOnClientStressUpdate(int iClient)
 		{
 			if (g_bPlayerEliminated[iTeleportTarget] || 
 				DidClientEscape(iTeleportTarget) || 
-				flStress >= g_flSlenderTeleportMaxTargetStress[iBossIndex] || 
+				(!SF_IsRenevantMap() && !SF_IsSurvivalMap() && !g_bSlenderTeleportIgnoreChases[iBossIndex] && flStress >= g_flSlenderTeleportMaxTargetStress[iBossIndex]) || 
 				GetGameTime() >= g_flSlenderTeleportMaxTargetTime[iBossIndex])
 			{
 				// Queue for a new target and mark the old target in the rest period.
@@ -5400,8 +5423,8 @@ public bool TraceFilter_NotTeam(int entity, int contentsMask, int team)
 	if (IsValidEdict(entity))
 	{
 		char sClass[64];
-		GetEntityNetClass(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "CTFBaseBoss") == 0) return false;
+		GetEntityClassname(entity, sClass, sizeof(sClass));
+		if (strcmp(sClass, "base_npc") == 0) return false;
 	}
 	return true;
 }
@@ -5502,8 +5525,6 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	NPCStopMusic();
 	// Remove all bosses from the game.
 	NPCRemoveAll();
-	// Collect the func_nav_prefer.
-	NavCollectFuncNavPrefer();
 	// Collect trigger_multiple to prevent touch bug.
 	SF_CollectTriggersMultiple();
 	// Refresh groups.
@@ -5828,7 +5849,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			// Boss round.
 			if (g_bNewBossRound) g_bPlayerPlayedNewBossRound[iClient] = true;
 			
-			g_hPlayerSwitchBlueTimer[iClient] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			if (!g_cvFullyEnableSpectator.BoolValue) g_hPlayerSwitchBlueTimer[iClient] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 		}
 		else
 		{
@@ -6013,7 +6034,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	Handle hProf = CreateProfiler();
 	StartProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Started profiling...");
-	
+
 	//PrintToChatAll("(SPAWN) Spawn event called.");
 	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerSpawn(%d)", iClient);
 	#endif
@@ -6095,7 +6116,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		{
 			char sPath[PLATFORM_MAX_PATH];
 			GetBossMusic(sPath, sizeof(sPath));
-			StopSound(iClient, MUSIC_CHAN, sPath);
+			if (sPath[0] != '\0') StopSound(iClient, MUSIC_CHAN, sPath);
 			if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
 				StopSound(iClient, MUSIC_CHAN, TRIPLEBOSSESMUSIC);
@@ -6184,6 +6205,11 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					int iRed[4] = { 184, 56, 59, 255 };
 					ClientEnableConstantGlow(iClient, "head", iRed);
 					ClientActivateUltravision(iClient);
+				}
+
+				if (SF_IsRenevantMap() && g_bRenevantMarkForDeath && !DidClientEscape(iClient))
+				{
+					TF2_AddCondition(iClient, TFCond_MarkedForDeathSilent, -1.0);
 				}
 				
 				if (SF_SpecialRound(SPECIALROUND_1UP) && !g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient])
@@ -6525,6 +6551,11 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			case PROJ_ICEBALL: CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 			case PROJ_ICEBALL_ATTACK: CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 		}
+	}
+	if (MAX_BOSSES > npcIndex >= 0 && NPCHasAttribute(npcIndex, "ignite player on death"))
+	{
+		float flValue = NPCGetAttributeValue(npcIndex, "ignite player on death");
+		if (flValue > 0.0) TF2_IgnitePlayer(iClient, iClient);
 	}
 
 	#if defined DEBUG
@@ -7852,12 +7883,6 @@ public Action Timer_RoundGrace(Handle timer)
 		g_hRoundTimer = null;
 	}
 
-	if (SF_SpecialRound(SPECIALROUND_DEBUGMODE))
-	{
-		g_hDebugSpawnAllSlendersTimer = CreateTimer(5.0, Timer_DebugBossesSpawnInitial, _, TIMER_FLAG_NO_MAPCHANGE);
-		g_flDebugTimeUntilSlendersRespawn = 5.0;
-	}
-	
 	if (g_bRestartSessionEnabled)
 	{
 		ArrayList hSpawnPoint = new ArrayList();
@@ -7900,35 +7925,6 @@ public Action Timer_RoundGrace(Handle timer)
 	CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
 	
 	return Plugin_Stop;
-}
-
-public Action Timer_DebugBossesSpawnInitial(Handle timer)
-{
-	if (!g_bEnabled) return Plugin_Stop;
-
-	if (timer != g_hDebugSpawnAllSlendersTimer) return Plugin_Stop;
-
-	if (!SF_SpecialRound(SPECIALROUND_DEBUGMODE)) return Plugin_Stop;
-
-	g_hDebugSpawnAllSlendersTimer = CreateTimer(20.0, Timer_DebugBossesSpawn, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	g_flDebugTimeUntilSlendersRespawn = 20.0;
-	NPCSpawnAllBossesDebug();
-
-	return Plugin_Stop;
-}
-
-public Action Timer_DebugBossesSpawn(Handle timer)
-{
-	if (!g_bEnabled) return Plugin_Stop;
-
-	if (timer != g_hDebugSpawnAllSlendersTimer) return Plugin_Stop;
-
-	if (!SF_SpecialRound(SPECIALROUND_DEBUGMODE)) return Plugin_Stop;
-
-	g_flDebugTimeUntilSlendersRespawn = 20.0;
-	NPCSpawnAllBossesDebug();
-
-	return Plugin_Continue;
 }
 
 public Action Timer_RoundTime(Handle timer)
@@ -8029,7 +8025,7 @@ public Action Timer_RoundTimeEscape(Handle timer)
 	
 	if ((1.0 - ((float(g_iRoundTime)) / (float(g_iRoundEscapeTimeLimit + g_iTimeEscape)))) >= 0.65)
 	{
-		if (!g_bProxySurvivalRageMode)
+		if (!g_bProxySurvivalRageMode && !SF_IsRenevantMap())
 		{
 			bool bProxyBoss = false;
 			for (int iBossIndex = 0; iBossIndex < MAX_BOSSES; iBossIndex++)
@@ -9226,8 +9222,15 @@ void InitializeNewGame()
 		g_hRenevantWaveTimer = null;
 		g_bRenevantMultiEffect = false;
 		g_bRenevantBeaconEffect = false;
-		
+		g_bRenevant90sEffect = false;
+		g_bRenevantMarkForDeath = false;
+
 		Renevant_SetWave(0);
+	}
+
+	if (g_aRenevantWaveList != null)
+	{
+		delete g_aRenevantWaveList;
 	}
 	
 	// Choose round state.

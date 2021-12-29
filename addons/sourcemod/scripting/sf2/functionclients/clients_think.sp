@@ -297,7 +297,7 @@ public void Hook_ClientPreThink(int client)
 					{
 						if (!g_bPlayerTrapped[client])
 						{
-							if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+							if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_bRenevant90sEffect)
 							{
 								if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
 								{

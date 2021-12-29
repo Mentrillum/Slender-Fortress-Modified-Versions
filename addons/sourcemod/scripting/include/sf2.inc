@@ -13,13 +13,13 @@
 #define MAX_TRAPS 64
 
 // Difficulty modifiers.
-#define DIFFICULTY_EASY 0.75
-#define DIFFICULTY_NORMAL 1.0
-#define DIFFICULTY_HARD 1.25
-#define DIFFICULTY_INSANE 1.75
-#define DIFFICULTY_NIGHTMARE 3.0
-#define DIFFICULTY_APOLLYON 5.5
-#define DIFFICULTY_RESTARTSESSION 14.0
+#define DIFFICULTYMODIFIER_EASY 0.75
+#define DIFFICULTYMODIFIER_NORMAL 1.0
+#define DIFFICULTYMODIFIER_HARD 1.25
+#define DIFFICULTYMODIFIER_INSANE 1.75
+#define DIFFICULTYMODIFIER_NIGHTMARE 3.0
+#define DIFFICULTYMODIFIER_APOLLYON 5.5
+#define DIFFICULTYMODIFIER_RESTARTSESSION 14.0
 
 // Music system flags.
 #define MUSICF_PAGES1PERCENT (1 << 0)
@@ -73,7 +73,7 @@ enum
 	SPECIALROUND_MODBOSSES,
 	SPECIALROUND_BOSSROULETTE,
 	SPECIALROUND_THANATOPHOBIA,
-	SPECIALROUND_DEBUGMODE,
+	SPECIALROUND_WALLHAX,
 	SPECIALROUND_MAXROUNDS
 };
 
@@ -272,6 +272,20 @@ forward void SF2_OnBossRemoved(int iBossIndex);
 forward void SF2_OnBossStunned(int iBossIndex, int iClient);
 
 /**
+ * Called when the boss cloaks.
+ *
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnBossCloaked(int iBossIndex);
+
+/**
+ * Called when the boss decloaks
+ *
+ * @param iBossIndex	Boss index.
+ */
+forward void SF2_OnBossDecloaked(int iBossIndex);
+
+/**
  * Called when pages have spawned into the map.
  */
 forward void SF2_OnPagesSpawned();
@@ -461,6 +475,13 @@ forward void SF2_OnRenevantWaveTrigger(int iWave);
  * Called whenever the boss pack vote starts
  */
 forward void SF2_OnBossPackVoteStart();
+
+/**
+ * Called whenever the difficulty changes
+ *
+ * @param iBossIndex	The index of the newly created boss.
+ */
+forward void SF2_OnDifficultyChanged(int iDifficulty);
 
 /**
  * Returns a bool about the gamemode's state.
@@ -868,6 +889,16 @@ native int SF2_GetBossModelEntity(int iBossIndex);
 native int SF2_GetBossTarget(int iBossIndex);
 
 /**
+ * If the boss is in a chase state, sets the target for the boss.
+ * 
+ * Only used with Chaser bosses.
+ *
+ * @param iBossIndex		Boss index.
+ * @param iClient			The new target.
+ */
+native void SF2_SetBossTarget(int iBossIndex, int iClient);
+
+/**
  * If the boss is a copy, this returns the boss that this copy is associated with.
  *
  * @param iBossIndex		Boss index.
@@ -1134,6 +1165,53 @@ native bool SF2_GetBossProfileString(const char[] sProfile, const char[] sKey, c
  * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
  */
 native bool SF2_GetBossProfileVector(const char[] sProfile, const char[] sKey, float flBuffer[3], const float flDefaultValue[3]=NULL_VECTOR);
+
+/**
+ * Retrieves an integer keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param iDefaultValue		Fallback value.
+ * @param iAttackIndex		Attack Index to use.
+ * @return					The value, or iDefaultValue if the key doesn't exist.
+ */
+native int SF2_GetBossAttackProfileNum(const char[] sProfile, const char[] sKey, int iDefaultValue=0, const int iAttackIndex);
+
+/**
+ * Retrieves a float keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param flDefaultValue	Fallback value.
+ * @param iAttackIndex		Attack Index to use.
+ * @return					The value, or flDefaultValue if the key doesn't exist.
+ */
+native float SF2_GetBossAttackProfileFloat(const char[] sProfile, const char[] sKey, float flDefaultValue=0.0, const int iAttackIndex);
+
+/**
+ * Retrieves a string keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param sBuffer			Buffer to store the value.
+ * @param iBufferLen		Max length of sBuffer.
+ * @param sDefaultValue		Fallback value.
+ * @param iAttackIndex		Attack Index to use.
+ * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ */
+native bool SF2_GetBossAttackProfileString(const char[] sProfile, const char[] sKey, char[] sBuffer, int iBufferLen, const char[] sDefaultValue="", const int iAttackIndex);
+
+/**
+ * Retrieves a vector keyvalue from the profile.
+ *
+ * @param sProfile			Profile name.
+ * @param sKey				Name of the key.
+ * @param flBuffer			Buffer to store the value.
+ * @param flDefaultValue	Fallback value.
+ * @param iAttackIndex		Attack Index to use.
+ * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ */
+native bool SF2_GetBossAttackProfileVector(const char[] sProfile, const char[] sKey, float flBuffer[3], const float flDefaultValue[3]=NULL_VECTOR, const int iAttackIndex);
 
 /**
  * Retrieves a random string keyvalue from a section within the profile.
