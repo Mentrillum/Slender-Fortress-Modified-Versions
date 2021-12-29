@@ -5424,7 +5424,7 @@ public bool TraceFilter_NotTeam(int entity, int contentsMask, int team)
 	{
 		char sClass[64];
 		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_npc") == 0) return false;
+		if (strcmp(sClass, "base_npc") == 0 || strcmp(sClass, "base_boss") == 0) return false;
 	}
 	return true;
 }
