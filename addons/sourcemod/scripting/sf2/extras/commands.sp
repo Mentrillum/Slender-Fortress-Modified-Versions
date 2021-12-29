@@ -652,7 +652,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 			if (!bSayTeam) 
 			{
-				if (sArgs[0] != '!' || sArgs[1] != '!')	// Don't let ! commands get detected twice
+				if (sArgs[0] == '!' || sArgs[1] == '!')	// Don't let ! commands get detected twice
 				{
 					FakeClientCommandEx(client, "say_team \" %s\"", sArgs);
 				}
