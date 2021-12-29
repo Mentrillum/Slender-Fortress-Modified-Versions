@@ -1,14 +1,8 @@
-// base
-
-// Not an actual entity; use this as a template for creating new entities.
-// Replace "SF2PageMusicEntity" with the identifier you want.
-
-// To initialize, call the SF2PageMusicEntity_Initialize() function from SF2MapEntity_Initialize().
+// sf2_info_page_music
 
 static const char g_sEntityClassname[] = "sf2_info_page_music"; // The custom classname of the entity. Should be prefixed with "sf2_"
-static const char g_sEntityTranslatedClassname[] = "info_target"; // The actual, underlying game entity that exists, like "info_target" or "game_text".
 
-static ArrayList g_EntityData;
+static CEntityFactory g_entityFactory;
 
 #define SF2MAPENTITES_PAGE_MUSIC_MAXRANGES 16
 
@@ -20,54 +14,66 @@ enum struct SF2PageMusicEntityRangeData
 }
 
 /**
- *	Internal data stored for the entity.
+ *	Interface that exposes public methods for interacting with the entity.
  */
-enum struct SF2PageMusicEntityData
+methodmap SF2PageMusicEntity < CBaseEntity
 {
-	int EntRef;
-	ArrayList Ranges;
-	bool Layered;
+	public SF2PageMusicEntity(int entIndex) { return view_as<SF2PageMusicEntity>(CBaseEntity(entIndex)); }
 
-	void Init(int entIndex)
+	public bool IsValid()
 	{
-		this.EntRef = EnsureEntRef(entIndex);
-		this.Ranges = new ArrayList(sizeof(SF2PageMusicEntityRangeData));
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for this.Ranges in SF2PageMusicEntityData.", this.Ranges);
-		#endif
-		this.Ranges.Resize(SF2MAPENTITES_PAGE_MUSIC_MAXRANGES);
-		this.Layered = false;
+		if (!CBaseEntity(this.index).IsValid())
+			return false;
 
-		SF2PageMusicEntityRangeData rangeData;
-
-		for (int i = 0; i < this.Ranges.Length; i++)
-		{
-			this.Ranges.GetArray(i, rangeData, sizeof(rangeData));
-			rangeData.Min = 0;
-			rangeData.Max = 0;
-			rangeData.Music[0] = '\0';
-			this.Ranges.SetArray(i, rangeData, sizeof(rangeData));
-		}
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
 	}
 
-	void GetRange(int index, SF2PageMusicEntityRangeData rangeData)
+	property bool Layered
+	{
+		public get() { return !!this.GetProp(Prop_Data, "sf2_bLayered"); }
+		public set(bool value) { this.SetProp(Prop_Data, "sf2_bLayered", value); }
+	}
+
+	property ArrayList Ranges
+	{
+		public get() { return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hRanges")); }
+		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hRanges", value); }
+	}
+
+	public void GetRangeKeyValue(int index, char[] sBuffer, int iBufferLen)
+	{
+		char sFieldName[64];
+		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRange%d", index);
+
+		this.GetPropString(Prop_Data, sFieldName, sBuffer, iBufferLen);
+	}
+
+	public void GetRangeMusicKeyValue(int index, char[] sBuffer, int iBufferLen)
+	{
+		char sFieldName[64];
+		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRangeMusic%d", index);
+
+		this.GetPropString(Prop_Data, sFieldName, sBuffer, iBufferLen);
+	}
+
+	public void GetRange(int index, SF2PageMusicEntityRangeData rangeData)
 	{
 		this.Ranges.GetArray(index, rangeData, sizeof(rangeData));
 	}
 
-	void SetRange(int index, SF2PageMusicEntityRangeData rangeData)
+	public void SetRange(int index, SF2PageMusicEntityRangeData rangeData)
 	{
 		this.Ranges.SetArray(index, rangeData, sizeof(rangeData));
 	}
 
-	bool IsRangeSet(int index)
+	public bool IsRangeSet(int index)
 	{
 		SF2PageMusicEntityRangeData rangeData;
 		this.GetRange(index, rangeData);
 		return rangeData.Music[0] != '\0';
 	}
 
-	bool GetRangeMusic(int num, char[] sBuffer, int iBufferLen)
+	public bool GetRangeMusic(int num, char[] sBuffer, int iBufferLen)
 	{
 		SF2PageMusicEntityRangeData rangeData;
 
@@ -87,7 +93,7 @@ enum struct SF2PageMusicEntityData
 		return false;
 	}
 
-	bool GetRangeBounds(int num, int &min, int &max)
+	public bool GetRangeBounds(int num, int &min, int &max)
 	{
 		SF2PageMusicEntityRangeData rangeData;
 
@@ -108,239 +114,124 @@ enum struct SF2PageMusicEntityData
 		return false;
 	}
 
-	void Destroy()
-	{
-		if (this.Ranges != null)
-			delete this.Ranges;
-	}
-}
-
-/**
- *	Interface that exposes public methods for interacting with the entity.
- */
-methodmap SF2PageMusicEntity < SF2MapEntity
-{
-	public SF2PageMusicEntity(int entIndex) { return view_as<SF2PageMusicEntity>(SF2MapEntity(entIndex)); }
-
-	public bool IsValid()
-	{
-		if (!SF2MapEntity(this.EntRef).IsValid())
-			return false;
-
-		SF2PageMusicEntityData entData;
-		return (SF2PageMusicEntityData_Get(this.EntRef, entData) != -1);
-	}
-
-	property bool Layered
-	{
-		public get() { SF2PageMusicEntityData entData; SF2PageMusicEntityData_Get(this.EntRef, entData); return entData.Layered; }
-	}
-
-	public bool GetRangeMusic(int num, char[] sBuffer, int iBufferLen)
-	{
-		SF2PageMusicEntityData entData; SF2PageMusicEntityData_Get(this.EntRef, entData);
-		return entData.GetRangeMusic(num, sBuffer, iBufferLen);
-	}
-
-	public bool GetRangeBounds(int num, int &min, int &max)
-	{
-		SF2PageMusicEntityData entData; SF2PageMusicEntityData_Get(this.EntRef, entData);
-		return entData.GetRangeBounds(num, min, max);
-	}
-
 	public void InsertRanges(ArrayList hRanges)
 	{
-		SF2PageMusicEntityData entData; SF2PageMusicEntityData_Get(this.EntRef, entData);
 		SF2PageMusicEntityRangeData rangeData;
 
-		for (int i = 0; i < entData.Ranges.Length; i++)
+		for (int i = 0; i < this.Ranges.Length; i++)
 		{
-			entData.GetRange(i, rangeData);
+			this.GetRange(i, rangeData);
 			if (rangeData.Music[0] != '\0')
 			{
-				int index = hRanges.Push(this.EntRef);
+				int index = hRanges.Push(EnsureEntRef(this.index));
 				hRanges.Set(index, rangeData.Min, 1);
 				hRanges.Set(index, rangeData.Max, 2);
 			}
 		}
 	}
-}
 
-void SF2PageMusicEntity_Initialize() 
-{
-	g_EntityData = new ArrayList(sizeof(SF2PageMusicEntityData));
-
-	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2PageMusicEntity_TranslateClassname);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2PageMusicEntity_InitializeEntity);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2PageMusicEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2PageMusicEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2PageMusicEntity_OnEntityKeyValue);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PageMusicEntity_OnLevelInit);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PageMusicEntity_OnMapStart);
-}
-
-/*
-static void SF2PageMusicEntity_OnLevelInit(const char[] sMapName) 
-{
-}
-
-static void SF2PageMusicEntity_OnMapStart() 
-{
-}
-*/
-
-static void SF2PageMusicEntity_InitializeEntity(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-	
-	SF2PageMusicEntityData entData;
-	entData.Init(entity);
-
-	g_EntityData.PushArray(entData, sizeof(entData));
-
-	SDKHook(entity, SDKHook_SpawnPost, SF2PageMusicEntity_SpawnPost);
-}
-
-static Action SF2PageMusicEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	SF2PageMusicEntityData entData;
-	if (SF2PageMusicEntityData_Get(entity, entData) == -1)
-		return Plugin_Continue;
-	
-	if (StrContains(szKeyName, "range", false) == 0)
+	public static void Initialize()
 	{
-		if (szValue[0] == '\0')
-			return Plugin_Continue;
+		Initialize();
+	}
+}
 
-		char sBuffer[256];
-		strcopy(sBuffer, sizeof(sBuffer), szKeyName);
-		ReplaceStringEx(sBuffer, sizeof(sBuffer), "range", "", _, _, false);
-		
-		int rangeId = StringToInt(sBuffer) - 1;
-		if (rangeId < 0 || rangeId >= SF2MAPENTITES_PAGE_MUSIC_MAXRANGES)
-			return Plugin_Continue;
+static void Initialize() 
+{
+	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
+	g_entityFactory.DeriveFromBaseEntity(true);
+	g_entityFactory.BeginDataMapDesc()
+		.DefineBoolField("sf2_bLayered", _, "layered")
+		.DefineIntField("sf2_hRanges");
 
-		char sTokens[2][16];
-		int iNumTokens = ExplodeString(szValue, ",", sTokens, 2, 16);
+	char sFieldName[64];
+	char sKeyName[64];
 
+	for (int i = 0; i < SF2MAPENTITES_PAGE_MUSIC_MAXRANGES; i++)
+	{
+		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRange%d", (i + 1));
+		FormatEx(sKeyName, sizeof(sKeyName), "range%d", (i + 1));
+		g_entityFactory.DefineStringField(sFieldName, _, sKeyName);
+
+		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRangeMusic%d", (i + 1));
+		FormatEx(sKeyName, sizeof(sKeyName), "music%d", (i + 1));
+		g_entityFactory.DefineStringField(sFieldName, _, sKeyName);
+	}
+
+	g_entityFactory.EndDataMapDesc();
+	g_entityFactory.Install();
+}
+
+static void OnCreated(int entity)
+{
+	SF2PageMusicEntity thisEnt = SF2PageMusicEntity(entity);
+
+	thisEnt.Ranges = new ArrayList(sizeof(SF2PageMusicEntityRangeData));
+	thisEnt.Ranges.Resize(SF2MAPENTITES_PAGE_MUSIC_MAXRANGES);
+	thisEnt.Layered = false;
+
+	SF2PageMusicEntityRangeData rangeData;
+
+	for (int i = 0; i < thisEnt.Ranges.Length; i++)
+	{
+		thisEnt.Ranges.GetArray(i, rangeData, sizeof(rangeData));
+		rangeData.Min = 0;
+		rangeData.Max = 0;
+		rangeData.Music[0] = '\0';
+		thisEnt.Ranges.SetArray(i, rangeData, sizeof(rangeData));
+	}
+
+	SDKHook(entity, SDKHook_SpawnPost, OnSpawn);
+}
+
+static void OnRemoved(int entity)
+{
+	SF2PageMusicEntity thisEnt = SF2PageMusicEntity(entity);
+
+	ArrayList hRanges = thisEnt.Ranges;
+	if (hRanges != null)
+	{
+		delete hRanges;
+	}
+
+	SDKUnhook(entity, SDKHook_SpawnPost, OnSpawn);
+}
+
+static void OnSpawn(int entity)
+{
+	SF2PageMusicEntity thisEnt = SF2PageMusicEntity(entity);
+
+	char sBuffer[PLATFORM_MAX_PATH];
+	char sTokens[2][16];
+
+	for (int i = 0; i < SF2MAPENTITES_PAGE_MUSIC_MAXRANGES; i++)
+	{
 		SF2PageMusicEntityRangeData rangeData;
-		entData.GetRange(rangeId, rangeData);
-		
+		thisEnt.GetRange(i, rangeData);
+
+		// Get the range from keyvalue.
+		thisEnt.GetRangeKeyValue((i + 1), sBuffer, sizeof(sBuffer));
+		int iNumTokens = ExplodeString(sBuffer, ",", sTokens, 2, 16);
+
 		if (iNumTokens == 1)
 		{
 			rangeData.Min = StringToInt(sTokens[0]);
 			rangeData.Max = rangeData.Min;
 		}
-		else
+		else 
 		{
 			rangeData.Min = StringToInt(sTokens[0]);
 			rangeData.Max = StringToInt(sTokens[1]);
 		}
 
-		entData.SetRange(rangeId, rangeData);
+		// Get the range music from keyvalue.
+		thisEnt.GetRangeMusicKeyValue((i + 1), sBuffer, sizeof(sBuffer));
+		strcopy(rangeData.Music, PLATFORM_MAX_PATH, sBuffer);
 
-		return Plugin_Handled;
-	}
-	else if (StrContains(szKeyName, "music", false) == 0)
-	{
-		char sBuffer[256];
-		strcopy(sBuffer, sizeof(sBuffer), szKeyName);
-		ReplaceStringEx(sBuffer, sizeof(sBuffer), "music", "", _, _, false);
-		
-		int rangeId = StringToInt(sBuffer) - 1;
-		if (rangeId < 0 || rangeId >= SF2MAPENTITES_PAGE_MUSIC_MAXRANGES)
-			return Plugin_Continue;
-		
-		SF2PageMusicEntityRangeData rangeData;
-		entData.GetRange(rangeId, rangeData);
-		strcopy(rangeData.Music, PLATFORM_MAX_PATH, szValue);
-		entData.SetRange(rangeId, rangeData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "layered", false) == 0)
-	{
-		entData.Layered = StringToInt(szValue) != 0;
-		SF2PageMusicEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
-}
-
-static Action SF2PageMusicEntity_OnAcceptEntityInput(int entity, const char[] sClass, const char[] szInputName, int activator, int caller)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	return Plugin_Continue;
-}
-
-static void SF2PageMusicEntity_SpawnPost(int entity) 
-{
-	SF2PageMusicEntityData entData;
-	if (SF2PageMusicEntityData_Get(entity, entData) == -1)
-		return;
-
-	// Precache, or else...
-	SF2PageMusicEntityRangeData rangeData;
-
-	for (int i = 0; i < SF2MAPENTITES_PAGE_MUSIC_MAXRANGES; i++)
-	{
-		entData.GetRange(i, rangeData);
-		
+		// Precache, or else...
 		if (rangeData.Music[0] != '\0')
 			PrecacheSound(rangeData.Music);
+
+		thisEnt.SetRange(i, rangeData);
 	}
-}
-
-static void SF2PageMusicEntity_OnEntityDestroyed(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-
-	SF2PageMusicEntityData entData;
-	int iIndex = SF2PageMusicEntityData_Get(entity, entData);
-	if (iIndex != -1)
-	{
-		entData.Destroy();
-		g_EntityData.Erase(iIndex);
-	}
-}
-
-static Action SF2PageMusicEntity_TranslateClassname(const char[] sClass, char[] sBuffer, int iBufferLen)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-	
-	strcopy(sBuffer, iBufferLen, g_sEntityTranslatedClassname);
-	return Plugin_Handled;
-}
-
-static int SF2PageMusicEntityData_Get(int entIndex, SF2PageMusicEntityData entData)
-{
-	entData.EntRef = EnsureEntRef(entIndex);
-	if (entData.EntRef == INVALID_ENT_REFERENCE)
-		return -1;
-
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return -1;
-	
-	g_EntityData.GetArray(iIndex, entData, sizeof(entData));
-	return iIndex;
-}
-
-static int SF2PageMusicEntityData_Update(SF2PageMusicEntityData entData)
-{
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return;
-	
-	g_EntityData.SetArray(iIndex, entData, sizeof(entData));
 }

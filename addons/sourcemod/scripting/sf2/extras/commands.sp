@@ -307,7 +307,7 @@ public void OnPluginStart()
 	
 	PvP_Initialize();
 
-	SF2MapEntity_Initialize();
+	SetupCustomMapEntities();
 	
 	// @TODO: When cvars are finalized, set this to true.
 	AutoExecConfig(false);

@@ -1,9 +1,6 @@
 // sf2_boss_maker
 
 static const char g_sEntityClassname[] = "sf2_boss_maker"; // The custom classname of the entity. Should be prefixed with "sf2_"
-static const char g_sEntityTranslatedClassname[] = "info_target"; // The actual, underlying game entity that exists, like "info_target" or "game_text".
-
-static ArrayList g_EntityData;
 
 #define SF_SF2_BOSS_MAKER_NODROP 1
 #define SF_SF2_BOSS_MAKER_ADDONLY 2
@@ -14,154 +11,114 @@ static ArrayList g_EntityData;
 #define SF_SF2_BOSS_MAKER_NOSPAWNSOUND 64
 #define SF_SF2_BOSS_MAKER_NOCOPIES 128
 
-/**
- *	Internal data stored for the entity.
- */
-enum struct SF2BossMakerEntityData
-{
-	int EntRef;
-	char BossProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	int SpawnCount;
-	float SpawnRadius;
-	int MaxLiveBosses;
-	int SpawnDestination;
-	char SpawnDestinationName[64];
-	char SpawnAnimation[64];
-	float SpawnAnimationPlaybackRate;
-	float SpawnAnimationDuration;
-	ArrayList Bosses;
-
-	void Init(int entIndex)
-	{
-		this.EntRef = EnsureEntRef(entIndex);
-		this.BossProfile[0] = '\0';
-		this.SpawnCount = 1;
-		this.SpawnRadius = 0.0;
-		this.MaxLiveBosses = -1;
-		this.SpawnDestination = INVALID_ENT_REFERENCE;
-		this.SpawnDestinationName[0] = '\0';
-		this.SpawnAnimation[0] = '\0';
-		this.SpawnAnimationPlaybackRate = 1.0;
-		this.SpawnAnimationDuration = 0.0;
-
-		this.Bosses = new ArrayList();
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for this.Bosses in SF2BossMakerEntityData.", this.Bosses);
-		#endif
-	}
-
-	void Destroy()
-	{
-		if (this.Bosses != null)
-		{
-			delete this.Bosses;
-			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for this.Bosses in SF2BossMakerEntityData.", this.Bosses);
-			#endif
-		}
-	}
-
-	void SetBossProfile(const char[] sProfile)
-	{
-		strcopy(this.BossProfile, SF2_MAX_PROFILE_NAME_LENGTH, sProfile);
-	}
-
-	void SetSpawnDestinationName(const char[] sTargetName)
-	{
-		strcopy(this.SpawnDestinationName, 64, sTargetName);
-	}
-
-	void SetSpawnAnimation(const char[] sAnimation)
-	{
-		strcopy(this.SpawnAnimation, 64, sAnimation);
-	}
-}
+static CEntityFactory g_entityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
  */
-methodmap SF2BossMakerEntity < SF2MapEntity
+methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 {
-	public SF2BossMakerEntity(int entIndex) { return view_as<SF2BossMakerEntity>(SF2MapEntity(entIndex)); }
+	public SF2BossMakerEntity(int entIndex) { return view_as<SF2BossMakerEntity>(CBaseEntity(entIndex)); }
 
 	public bool IsValid()
 	{
-		if (!SF2MapEntity(this.EntRef).IsValid())
+		if (!CBaseEntity(this.index).IsValid())
 			return false;
 
-		SF2BossMakerEntityData entData;
-		return (SF2BossMakerEntityData_Get(this.EntRef, entData) != -1);
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
 	}
 
 	public void GetBossProfile(char[] sBuffer, int iBufferLen)
 	{
-		SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); 
-		strcopy(sBuffer, iBufferLen, entData.BossProfile);
+		this.GetPropString(Prop_Data, "sf2_szBossProfile", sBuffer, iBufferLen);
+	}
+
+	public void SetBossProfile(const char[] sBuffer)
+	{
+		this.SetPropString(Prop_Data, "sf2_szBossProfile", sBuffer);
+	}
+
+	public static void Initialize()
+	{
+		Initialize();
+	}
+
+	property ArrayList Bosses
+	{
+		public get() { return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hBosses")); }
+		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hBosses", value); } 
 	}
 
 	property int SpawnCount
 	{
-		public get() { SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); return entData.SpawnCount; }
+		public get() { return this.GetProp(Prop_Data, "sf2_iSpawnCount"); }
+		public set(int value) { this.SetProp(Prop_Data, "sf2_iSpawnCount", value); }
 	}
 
 	property float SpawnRadius
 	{
-		public get() { SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); return entData.SpawnRadius; }
+		public get() { return this.GetPropFloat(Prop_Data, "sf2_flSpawnRadius"); }
+		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flSpawnRadius", value); }
 	}
 
 	property int MaxLiveBosses
 	{
-		public get() { SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); return entData.MaxLiveBosses; }
+		public get() { return this.GetProp(Prop_Data, "sf2_nMaxLiveChildren"); }
+		public set(int value) { this.SetProp(Prop_Data, "sf2_nMaxLiveChildren", value); }
 	}
 
 	property int SpawnDestination
 	{
-		public get() { SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); return entData.SpawnDestination; }
-		public set(int entity)
-		{ 
-			SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData);
-			if (!IsValidEntity(entity)) 
-			{
-				entData.SpawnDestination = INVALID_ENT_REFERENCE;
-				SF2BossMakerEntityData_Update(entData);
-				return;
-			}
-
-			entData.SpawnDestination = EnsureEntRef(entity);
-			SF2BossMakerEntityData_Update(entData);
-		}
+		public get() { return this.GetPropEnt(Prop_Data, "sf2_iDestinationEntity"); }
+		public set(int entity) { this.SetPropEnt(Prop_Data, "sf2_iDestinationEntity", IsValidEntity(entity) ? entity : INVALID_ENT_REFERENCE); }
 	}
 
 	public void GetSpawnDestinationName(char[] sBuffer, int iBufferLen)
 	{
-		SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); 
-		strcopy(sBuffer, iBufferLen, entData.SpawnDestinationName);
+		this.GetPropString(Prop_Data, "sf2_szDestinationName", sBuffer, iBufferLen);
+	}
+
+	public void SetSpawnDestinationName(const char[] sBuffer)
+	{
+		this.SetPropString(Prop_Data, "sf2_szDestinationName", sBuffer);
 	}
 
 	public void GetSpawnAnimation(char[] sBuffer, int iBufferLen)
 	{
-		SF2BossMakerEntityData entData; SF2BossMakerEntityData_Get(this.EntRef, entData); 
-		strcopy(sBuffer, iBufferLen, entData.SpawnAnimation);
+		this.GetPropString(Prop_Data, "sf2_szSpawnAnim", sBuffer, iBufferLen);
+	}
+
+	public void SetSpawnAnimation(const char[] sBuffer)
+	{
+		this.SetPropString(Prop_Data, "sf2_szSpawnAnim", sBuffer);
+	}
+
+	property float SpawnAnimationPlaybackRate
+	{
+		public get() { return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimRate"); }
+		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimRate", value); }
+	}
+
+	property float SpawnAnimationDuration
+	{
+		public get() { return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration"); }
+		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration", value); }
 	}
 
 	property int LiveCount
 	{
 		public get() 
 		{ 
-			SF2BossMakerEntityData entData; 
-			SF2BossMakerEntityData_Get(this.EntRef, entData);
-			
 			// Prune the list of invalid IDs.
-			ArrayList bossIds = entData.Bosses;
-			for (int i = bossIds.Length - 1; i >= 0; i--)
+			for (int i = this.Bosses.Length - 1; i >= 0; i--)
 			{
-				int iBossID = bossIds.Get(i);
+				int iBossID = this.Bosses.Get(i);
 				int iBossIndex = NPCGetFromUniqueID(iBossID);
 				if (!NPCIsValid(iBossIndex))
-					bossIds.Erase(i);
+					this.Bosses.Erase(i);
 			}
 
-			return bossIds.Length; 
+			return this.Bosses.Length; 
 		}
 	}
 
@@ -170,24 +127,21 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 		if (!NPCIsValid(iBossIndex))
 			return;
 		
-		SF2BossMakerEntityData entData; 
-		SF2BossMakerEntityData_Get(this.EntRef, entData);
-
 		float flPos[3]; float flAng[3];
 
-		int iSpawnDestination = entData.SpawnDestination;
-		if (IsValidEntity(iSpawnDestination))
+		CBaseEntity spawnDestination = CBaseEntity(this.SpawnDestination);
+		if (spawnDestination.IsValid())
 		{
-			GetEntPropVector(iSpawnDestination, Prop_Data, "m_vecAbsOrigin", flPos);
-			GetEntPropVector(iSpawnDestination, Prop_Data, "m_angAbsRotation", flAng);
+			spawnDestination.GetAbsOrigin(flPos);
+			spawnDestination.GetAbsAngles(flAng);
 		}
 		else 
 		{
-			GetEntPropVector(this.EntRef, Prop_Data, "m_vecAbsOrigin", flPos);
-			GetEntPropVector(this.EntRef, Prop_Data, "m_angAbsRotation", flAng);
+			this.GetAbsOrigin(flPos);
+			this.GetAbsAngles(flAng);
 		}
 
-		int iSpawnFlags = GetEntProp(this.EntRef, Prop_Data, "m_spawnflags");
+		int iSpawnFlags = this.GetProp(Prop_Data, "m_spawnflags");
 
 		float flSpawnRadius = this.SpawnRadius;
 		if (flSpawnRadius > 0.0)
@@ -204,66 +158,65 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 
 		SpawnSlender(view_as<SF2NPC_BaseNPC>(iBossIndex), flPos);
 
-		int iBossEntIndex = NPCGetEntIndex(iBossIndex);
-		if (IsValidEntity(iBossEntIndex))
+		CBaseAnimating bossEntity = CBaseAnimating(NPCGetEntIndex(iBossIndex));
+		if (bossEntity.IsValid())
 		{
-			TeleportEntity(iBossEntIndex, NULL_VECTOR, flAng, NULL_VECTOR);
-
 			if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_NODROP))
 			{
 				// Drop (teleport) it to the ground.
 
 				float flMins[3]; float flMaxs[3];
-				GetEntPropVector(iBossEntIndex, Prop_Data, "m_vecAbsOrigin", flPos);
-				GetEntPropVector(iBossEntIndex, Prop_Send, "m_vecMins", flMins);
-				GetEntPropVector(iBossEntIndex, Prop_Send, "m_vecMaxs", flMaxs);
+				bossEntity.GetAbsOrigin(flPos);
+				bossEntity.GetPropVector(Prop_Send, "m_vecMins", flMins);
+				bossEntity.GetPropVector(Prop_Send, "m_vecMaxs", flMaxs);
 
 				float flEndPos[3];
 				flEndPos[0] = flPos[0];
 				flEndPos[1] = flPos[1];
 				flEndPos[2] = flPos[2] - 1024.0;
 
-				Handle hTrace = TR_TraceHullFilterEx(flPos, flEndPos, flMins, flMaxs, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitEntity, iBossEntIndex);
-				bool bTraceHit = TR_DidHit(hTrace);
-				TR_GetEndPosition(flEndPos, hTrace);
-				delete hTrace;
+				TR_TraceHullFilter(flPos, flEndPos, flMins, flMaxs, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitEntity, bossEntity.index);
+				bool bTraceHit = TR_DidHit();
+				TR_GetEndPosition(flEndPos);
 
 				if (bTraceHit)
 				{
-					TeleportEntity(iBossEntIndex, flEndPos, NULL_VECTOR, NULL_VECTOR);
+					bossEntity.Teleport(flEndPos, NULL_VECTOR, NULL_VECTOR);
 				}
 			}
 
-			if (NPCGetType(iBossIndex) == SF2BossType_Chaser && entData.SpawnAnimation[0] != '\0')
+			if (NPCGetType(iBossIndex) == SF2BossType_Chaser)
 			{
-				float flPlaybackRate = entData.SpawnAnimationPlaybackRate;
-				float flDuration = entData.SpawnAnimationDuration;
+				char sSpawnAnim[64];
+				this.GetSpawnAnimation(sSpawnAnim, sizeof(sSpawnAnim));
 
-				EntitySetAnimation(iBossEntIndex, entData.SpawnAnimation, flPlaybackRate);
-				EntitySetAnimation(iBossEntIndex, entData.SpawnAnimation, flPlaybackRate); //Fix an issue where an anim could start on the wrong frame.
+				if (sSpawnAnim[0] != '\0')
+				{
+					float flPlaybackRate = this.SpawnAnimationPlaybackRate;
+					float flDuration = this.SpawnAnimationDuration;
 
-				g_bSlenderSpawning[iBossIndex] = true;
-				g_hSlenderSpawnTimer[iBossIndex] = CreateTimer(flDuration, Timer_SlenderSpawnTimer, EntIndexToEntRef(iBossEntIndex), TIMER_FLAG_NO_MAPCHANGE);
-				g_hSlenderEntityThink[iBossIndex] = null;
+					EntitySetAnimation(bossEntity.index, sSpawnAnim, flPlaybackRate);
+					EntitySetAnimation(bossEntity.index, sSpawnAnim, flPlaybackRate); //Fix an issue where an anim could start on the wrong frame.
+
+					g_bSlenderSpawning[iBossIndex] = true;
+					g_hSlenderSpawnTimer[iBossIndex] = CreateTimer(flDuration, Timer_SlenderSpawnTimer, EntIndexToEntRef(bossEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+					g_hSlenderEntityThink[iBossIndex] = null;
+				}
 			}
 
-			this.FireOutputNoVariant("OnSpawn", iBossEntIndex, this.EntRef);
+			this.FireOutput("OnSpawn", bossEntity.index);
 		}
 	}
 
 	public void RespawnAllChildren()
-	{
-		SF2BossMakerEntityData entData; 
-		SF2BossMakerEntityData_Get(this.EntRef, entData);
-
-		ArrayList bossIds = entData.Bosses; 
-		for (int i = bossIds.Length - 1; i >= 0; i--)
+	{ 
+		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
-			int iBossID = bossIds.Get(i);
+			int iBossID = this.Bosses.Get(i);
 			int iBossIndex = NPCGetFromUniqueID(iBossID);
 			if (!NPCIsValid(iBossIndex))
 			{
-				bossIds.Erase(i);
+				this.Bosses.Erase(i);
 				continue;
 			}
 
@@ -273,17 +226,13 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 
 	public void DespawnAllChildren()
 	{
-		SF2BossMakerEntityData entData; 
-		SF2BossMakerEntityData_Get(this.EntRef, entData);
-
-		ArrayList bossIds = entData.Bosses; 
-		for (int i = bossIds.Length - 1; i >= 0; i--)
+		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
-			int iBossID = bossIds.Get(i);
+			int iBossID = this.Bosses.Get(i);
 			int iBossIndex = NPCGetFromUniqueID(iBossID);
 			if (!NPCIsValid(iBossIndex))
 			{
-				bossIds.Erase(i);
+				this.Bosses.Erase(i);
 				continue;
 			}
 
@@ -293,13 +242,9 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 
 	public void RemoveAllChildren()
 	{
-		SF2BossMakerEntityData entData; 
-		SF2BossMakerEntityData_Get(this.EntRef, entData);
-
-		ArrayList bossIds = entData.Bosses; 
-		for (int i = bossIds.Length - 1; i >= 0; i--)
+		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
-			int iBossID = bossIds.Get(i);
+			int iBossID = this.Bosses.Get(i);
 			int iBossIndex = NPCGetFromUniqueID(iBossID);
 			if (!NPCIsValid(iBossIndex))
 				continue;
@@ -307,7 +252,7 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 			RemoveProfile(iBossIndex);
 		}
 
-		bossIds.Clear();
+		this.Bosses.Clear();
 	}
 
 	public void Spawn()
@@ -325,29 +270,29 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 		if (this.MaxLiveBosses != -1 && iLiveCount >= this.MaxLiveBosses)
 			return; // Hit limit; don't spawn.
 
-		SF2BossMakerEntityData entData; 
-		SF2BossMakerEntityData_Get(this.EntRef, entData);
-
-		int iSpawnFlags = GetEntProp(this.EntRef, Prop_Data, "m_spawnflags");
+		int iSpawnFlags = this.GetProp(Prop_Data, "m_spawnflags");
 
 		// Calculate the spawn destination.
-		if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_ADDONLY) && entData.SpawnDestinationName[0] != '\0')
+		if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_ADDONLY))
 		{
-			int iSpawnDestination = entData.SpawnDestination;
-			if (!IsValidEntity(iSpawnDestination))
+			char sSpawnDestinationName[64];
+			this.GetSpawnDestinationName(sSpawnDestinationName, sizeof(sSpawnDestinationName));
+			if (sSpawnDestinationName[0] != '\0')
 			{
-				// Find the spawn destination entity and cache it.
-				int target = -1;
-				while ((target = SF2MapEntity_FindEntityByTargetname(target, entData.SpawnDestinationName, this.EntRef, this.EntRef, this.EntRef)) != -1)
+				int iSpawnDestination = this.SpawnDestination;
+				if (!IsValidEntity(iSpawnDestination))
 				{
-					if (!IsValidEntity(target))
-						continue;
-					
-					iSpawnDestination = EnsureEntRef(target);
-					entData.SpawnDestination = target;
-					SF2BossMakerEntityData_Update(entData);
+					// Find the spawn destination entity and cache it.
+					int target = -1;
+					while ((target = SF2MapEntity_FindEntityByTargetname(target, sSpawnDestinationName, this.index, this.index, this.index)) != -1)
+					{
+						if (!IsValidEntity(target))
+							continue;
+						
+						this.SpawnDestination = target;
 
-					break;
+						break;
+					}
 				}
 			}
 		}
@@ -380,7 +325,7 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 			if (!NPCIsValid(iBossIndex))
 				continue;
 
-			entData.Bosses.Push(NPCGetUniqueID(iBossIndex));
+			this.Bosses.Push(NPCGetUniqueID(iBossIndex));
 
 			if ((iSpawnFlags & SF_SF2_BOSS_MAKER_NOCOPIES))
 				NPCSetFlags(iBossIndex, NPCGetFlags(iBossIndex) & ~SFF_COPIES);
@@ -393,273 +338,113 @@ methodmap SF2BossMakerEntity < SF2MapEntity
 	}
 }
 
-void SF2BossMakerEntity_Initialize() 
+static void Initialize() 
 {
-	g_EntityData = new ArrayList(sizeof(SF2BossMakerEntityData));
-
-	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2BossMakerEntity_TranslateClassname);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2BossMakerEntity_InitializeEntity);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2BossMakerEntity_OnEntityDestroyed);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2BossMakerEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2BossMakerEntity_OnEntityKeyValue);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2BossMakerEntity_OnLevelInit);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2BossMakerEntity_OnMapStart);
+	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
+	g_entityFactory.DeriveFromFactory(SF2BossMakerEntity.GetBaseFactory());
+	g_entityFactory.BeginDataMapDesc()
+		.DefineStringField("sf2_szBossProfile", _, "profile")
+		.DefineIntField("sf2_iSpawnCount", _, "spawncount")
+		.DefineFloatField("sf2_flSpawnRadius", _, "spawnradius")
+		.DefineIntField("sf2_nMaxLiveChildren", _, "maxlive")
+		.DefineEntityField("sf2_iDestinationEntity")
+		.DefineStringField("sf2_szDestinationName", _, "spawndestination")
+		.DefineStringField("sf2_szSpawnAnim", _, "spawnanim")
+		.DefineFloatField("sf2_flSpawnAnimRate", _, "spawnanimrate")
+		.DefineFloatField("sf2_flSpawnAnimDuration", _, "spawnanimtime")
+		.DefineIntField("sf2_hBosses")
+		.DefineInputFunc("Spawn", InputFuncValueType_Void, InputSpawn)
+		.DefineInputFunc("SetBossProfile", InputFuncValueType_String, InputSetBossProfile)
+		.DefineInputFunc("SetSpawnRadius", InputFuncValueType_Float, InputSetSpawnRadius)
+		.DefineInputFunc("SetMaxLiveChildren", InputFuncValueType_Integer, InputSetMaxLiveChildren)
+		.DefineInputFunc("SetSpawnDestination", InputFuncValueType_String, InputSetSpawnDestination)
+		.DefineInputFunc("RespawnAll", InputFuncValueType_Void, InputRespawnAll)
+		.DefineInputFunc("DespawnAll", InputFuncValueType_Void, InputDespawnAll)
+		.DefineInputFunc("RemoveAll", InputFuncValueType_Void, InputRemoveAll)
+		.DefineInputFunc("SetSpawnAnimation", InputFuncValueType_String, InputSetSpawnAnimation)
+		.DefineInputFunc("SetSpawnAnimationPlaybackRate", InputFuncValueType_Float, InputSetSpawnAnimationPlaybackRate)
+		.DefineInputFunc("SetSpawnAnimationDuration", InputFuncValueType_Float, InputSetSpawnAnimationDuration)
+		.EndDataMapDesc();
+	g_entityFactory.Install();
 }
 
-/*
-static void SF2BossMakerEntity_OnLevelInit(const char[] sMapName) 
+static void OnCreated(int entity)
 {
+	SF2BossMakerEntity thisEnt = SF2BossMakerEntity(entity);
+	thisEnt.Bosses = new ArrayList();
+	thisEnt.SetBossProfile("");
+	thisEnt.SpawnCount = 1;
+	thisEnt.SpawnRadius = 0.0;
+	thisEnt.MaxLiveBosses = -1;
+	thisEnt.SpawnDestination = INVALID_ENT_REFERENCE;
+	thisEnt.SetSpawnDestinationName("");
+	thisEnt.SetSpawnAnimation("");
+	thisEnt.SpawnAnimationPlaybackRate = 1.0;
+	thisEnt.SpawnAnimationDuration = 0.0;
 }
 
-static void SF2BossMakerEntity_OnMapStart() 
+static void OnRemoved(int entity)
 {
-}
-*/
-
-static void SF2BossMakerEntity_InitializeEntity(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-	
-	SF2BossMakerEntityData entData;
-	entData.Init(entity);
-
-	g_EntityData.PushArray(entData, sizeof(entData));
-
-	//SDKHook(entity, SDKHook_SpawnPost, SF2BossMakerEntity_SpawnPost);
-}
-
-static Action SF2BossMakerEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	SF2BossMakerEntityData entData;
-	int iIndex = SF2BossMakerEntityData_Get(entity, entData);
-	if (iIndex == -1)
-		return Plugin_Continue;
-	
-	SF2BossMakerEntity spawnPoint = SF2BossMakerEntity(entity);
-
-	if (strcmp(szKeyName, "profile", false) == 0)
+	SF2BossMakerEntity thisEnt = SF2BossMakerEntity(entity);
+	if (thisEnt.Bosses != null)
 	{
-		entData.SetBossProfile(szValue);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "spawncount", false) == 0)
-	{
-		int iValue = StringToInt(szValue);
-		if (iValue < 0)
-			iValue = 0;
-
-		entData.SpawnCount = iValue;
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "spawnradius", false) == 0)
-	{
-		float flValue = StringToFloat(szValue);
-		if (flValue < 0.0)
-			flValue = 0.0;
-
-		entData.SpawnRadius = flValue;
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "maxlive", false) == 0)
-	{
-		entData.MaxLiveBosses = StringToInt(szValue);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "spawndestination", false) == 0)
-	{
-		entData.SetSpawnDestinationName(szValue);
-		entData.SpawnDestination = INVALID_ENT_REFERENCE; // mark as dirty.
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "spawnanim", false) == 0)
-	{
-		entData.SetSpawnAnimation(szValue);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "spawnanimrate", false) == 0)
-	{
-		entData.SpawnAnimationPlaybackRate = StringToFloat(szValue);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "spawnanimtime", false) == 0)
-	{
-		entData.SpawnAnimationDuration = StringToFloat(szValue);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "OnSpawn", false) == 0)
-	{
-		spawnPoint.AddOutput(szKeyName, szValue);
-
-		return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
-}
-
-static Action SF2BossMakerEntity_OnAcceptEntityInput(int entity, const char[] sClass, const char[] szInputName, int activator, int caller)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	SF2BossMakerEntityData entData;
-	int iIndex = SF2BossMakerEntityData_Get(entity, entData);
-	if (iIndex == -1)
-		return Plugin_Continue;
-	
-	SF2BossMakerEntity spawnPoint = SF2BossMakerEntity(entity);
-
-	if (strcmp(szInputName, "Spawn", false) == 0)
-	{
-		spawnPoint.Spawn();
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "RespawnAll", false) == 0)
-	{
-		spawnPoint.RespawnAllChildren();
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "DespawnAll", false) == 0)
-	{
-		spawnPoint.DespawnAllChildren();
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "RemoveAll", false) == 0)
-	{
-		spawnPoint.RemoveAllChildren();
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetSpawnRadius", false) == 0)
-	{
-		entData.SpawnRadius = SF2MapEntity_GetFloatFromVariant();
-		if (entData.SpawnRadius < 0.0) entData.SpawnRadius = 0.0;
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetMaxLiveChildren", false) == 0)
-	{
-		entData.MaxLiveBosses = SF2MapEntity_GetIntFromVariant();
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetSpawnDestination", false) == 0)
-	{
-		char sDestinationName[64];
-		SF2MapEntity_GetStringFromVariant(sDestinationName, sizeof(sDestinationName));
-
-		entData.SetSpawnDestinationName(sDestinationName);
-		entData.SpawnDestination = INVALID_ENT_REFERENCE; // mark as dirty.
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetBossProfile", false) == 0)
-	{
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		SF2MapEntity_GetStringFromVariant(sProfile, sizeof(sProfile));
-
-		entData.SetBossProfile(sProfile);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetSpawnAnimation", false) == 0)
-	{
-		char sAnimation[64];
-		SF2MapEntity_GetStringFromVariant(sAnimation, sizeof(sAnimation));
-
-		entData.SetSpawnAnimation(sAnimation);
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetSpawnAnimationPlaybackRate", false) == 0)
-	{
-		entData.SpawnAnimationPlaybackRate = SF2MapEntity_GetFloatFromVariant();
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szInputName, "SetSpawnAnimationDuration", false) == 0)
-	{
-		entData.SpawnAnimationDuration = SF2MapEntity_GetFloatFromVariant();
-		SF2BossMakerEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
-}
-
-/*
-static void SF2BossMakerEntity_SpawnPost(int entity) 
-{
-}
-*/
-
-static void SF2BossMakerEntity_OnEntityDestroyed(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-
-	SF2BossMakerEntityData entData;
-	int iIndex = SF2BossMakerEntityData_Get(entity, entData);
-	if (iIndex != -1)
-	{
-		entData.Destroy();
-		g_EntityData.Erase(iIndex);
+		delete thisEnt.Bosses;
 	}
 }
 
-static Action SF2BossMakerEntity_TranslateClassname(const char[] sClass, char[] sBuffer, int iBufferLen)
+static void InputSpawn(int entity, int activator, int caller)
 {
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-	
-	strcopy(sBuffer, iBufferLen, g_sEntityTranslatedClassname);
-	return Plugin_Handled;
+	SF2BossMakerEntity(entity).Spawn();
 }
 
-static int SF2BossMakerEntityData_Get(int entIndex, SF2BossMakerEntityData entData)
+static void InputSetBossProfile(int entity, int activator, int caller, const char[] value)
 {
-	entData.EntRef = EnsureEntRef(entIndex);
-	if (entData.EntRef == INVALID_ENT_REFERENCE)
-		return -1;
-
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return -1;
-	
-	g_EntityData.GetArray(iIndex, entData, sizeof(entData));
-	return iIndex;
+	SF2BossMakerEntity(entity).SetBossProfile(value);
 }
 
-static int SF2BossMakerEntityData_Update(SF2BossMakerEntityData entData)
+static void InputSetSpawnRadius(int entity, int activator, int caller, float value)
 {
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return;
-	
-	g_EntityData.SetArray(iIndex, entData, sizeof(entData));
+	SF2BossMakerEntity(entity).SpawnRadius = value;
+}
+
+static void InputSetMaxLiveChildren(int entity, int activator, int caller, int value)
+{
+	SF2BossMakerEntity(entity).MaxLiveBosses = value;
+}
+
+static void InputSetSpawnDestination(int _entity, int activator, int caller, const char[] value)
+{
+	SF2BossMakerEntity entity = SF2BossMakerEntity(_entity);
+	entity.SetSpawnAnimation(value);
+	entity.SpawnDestination = INVALID_ENT_REFERENCE; // mark as dirty.
+}
+
+static void InputRespawnAll(int entity, int activator, int caller)
+{
+	SF2BossMakerEntity(entity).RespawnAllChildren();
+}
+
+static void InputDespawnAll(int entity, int activator, int caller)
+{
+	SF2BossMakerEntity(entity).DespawnAllChildren();
+}
+
+static void InputRemoveAll(int entity, int activator, int caller)
+{
+	SF2BossMakerEntity(entity).RemoveAllChildren();
+}
+
+static void InputSetSpawnAnimation(int entity, int activator, int caller, const char[] value)
+{
+	SF2BossMakerEntity(entity).SetSpawnAnimation(value);
+}
+
+static void InputSetSpawnAnimationPlaybackRate(int entity, int activator, int caller, float value)
+{
+	SF2BossMakerEntity(entity).SpawnAnimationPlaybackRate = value;
+}
+
+static void InputSetSpawnAnimationDuration(int entity, int activator, int caller, float value)
+{
+	SF2BossMakerEntity(entity).SpawnAnimationDuration = value;
 }

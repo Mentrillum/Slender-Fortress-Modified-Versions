@@ -745,7 +745,7 @@ static int g_iRoundEndCount = 0;
 static int g_iRoundActiveCount = 0;
 int g_iRoundTime = 0;
 int g_iSpecialRoundTime = 0;
-static int g_iTimeEscape = 0;
+int g_iTimeEscape = 0;
 int g_iRoundTimeLimit = 0;
 int g_iRoundEscapeTimeLimit = 0;
 int g_iRoundTimeGainFromPage = 0;
@@ -956,6 +956,7 @@ Handle g_hSDKGetNextBot;
 Handle g_hSDKEquipWearable;
 Handle g_hSDKPlaySpecificSequence;
 Handle g_hSDKPointIsWithin;
+Handle g_hSDKPassesTriggerFilters;
 Handle g_hSDKGetSmoothedVelocity;
 Handle g_hSDKGetVectors;
 Handle g_hSDKResetSequence;
@@ -1011,7 +1012,6 @@ ArrayList g_aRenevantWaveList;
 
 #define SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND "ui/item_acquired.wav"
 
-SF2GamerulesEntity g_GamerulesEntity = view_as<SF2GamerulesEntity>(-1);
 SF2LogicRenevantEntity g_RenevantLogicEntity = view_as<SF2LogicRenevantEntity>(-1);
 
 public void OnAllPluginsLoaded()
@@ -1050,15 +1050,6 @@ public void OnLibraryRemoved(const char[] name)
 		steamworks = false;
 	}
 	
-}
-
-#pragma dynamic 2097152
-public Action OnLevelInit(const char[] mapName, char mapEntities[2097152])
-{
-	// Since OnLevelInit is called before OnConfigsExecuted() we shouldn't check g_bEnabled
-	SF2MapEntity_OnLevelInit(mapName);
-	
-	return Plugin_Continue;
 }
 
 public void OnMapStart()
@@ -2433,9 +2424,6 @@ public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Han
 
 public void OnEntityDestroyed(int ent)
 {
-	// Since OnLevelInit is called before OnConfigsExecuted() we shouldn't check g_bEnabled
-	SF2MapEntity_OnEntityDestroyed(ent);
-	
 	if (!g_bEnabled) return;
 	
 	if (!IsValidEntity(ent) || ent <= 0) return;
@@ -3916,7 +3904,7 @@ void SetRoundTime(int iCurrentTime)
 		{
 			if (SF_IsSurvivalMap() && iCurrentTime <= g_iTimeEscape && iOldRoundTime > g_iTimeEscape && g_GamerulesEntity.IsValid())
 			{
-				g_GamerulesEntity.FireOutputNoVariant("OnSurvivalComplete", -1, g_GamerulesEntity.EntRef);
+				g_GamerulesEntity.FireOutput("OnSurvivalComplete");
 			}
 		}
 	}
@@ -4546,7 +4534,7 @@ void TeleportClientToEscapePoint(int iClient)
 		
 		if (spawnPoint.IsValid())
 		{
-			spawnPoint.FireOutputNoVariant("OnSpawn", iClient, ent);
+			spawnPoint.FireOutput("OnSpawn", iClient);
 		}
 		else
 		{
@@ -5253,7 +5241,7 @@ void SetPageCount(int iNum)
 					gameText.GetEscapeMessage(sMessage, sizeof(sMessage));
 					if (gameText.ValidateMessageString(sMessage, sizeof(sMessage)))
 					{
-						ShowHudTextUsingTextEntity(iClients, iClientsNum, gameText.EntRef, g_hHudSync, sMessage);
+						ShowHudTextUsingTextEntity(iClients, iClientsNum, gameText.index, g_hHudSync, sMessage);
 					}
 				}
 				else if (IsValidEntity((iGameTextEscape = GetTextEntity("sf2_escape_message", false))))
@@ -5299,7 +5287,7 @@ void SetPageCount(int iNum)
 					gameText.GetPageMessage(sMessage, sizeof(sMessage));
 					if (gameText.ValidateMessageString(sMessage, sizeof(sMessage)))
 					{
-						ShowHudTextUsingTextEntity(iClients, iClientsNum, gameText.EntRef, g_hHudSync, sMessage);
+						ShowHudTextUsingTextEntity(iClients, iClientsNum, gameText.index, g_hHudSync, sMessage);
 					}
 				}
 				else if (IsValidEntity((iGameTextPage = GetTextEntity("sf2_page_message", false))))
@@ -8539,7 +8527,7 @@ void SpawnPages()
 			SF2PageSpawnEntity pageSpawn = SF2PageSpawnEntity(iSpawnPoint);
 			if (pageSpawn.IsValid())
 			{
-				pageSpawn.GetGroup(sPageGroup, sizeof(sPageGroup));
+				pageSpawn.GetPageGroup(sPageGroup, sizeof(sPageGroup));
 			}
 			else
 			{
@@ -8619,14 +8607,14 @@ void SpawnPages()
 			// Get model, scale, skin, and animation.
 			if (spawnPoint.IsValid())
 			{
-				spawnPoint.GetModel(sPageModel, sizeof(sPageModel));
-				flPageModelScale = spawnPoint.ModelScale;
-				iPageSkin = spawnPoint.Skin == -1 ? i : spawnPoint.Skin;
-				iPageBodygroup = spawnPoint.Bodygroup;
-				iPageRenderFx = spawnPoint.RenderFx;
-				iPageRenderMode = spawnPoint.RenderMode;
+				spawnPoint.GetPageModel(sPageModel, sizeof(sPageModel));
+				flPageModelScale = spawnPoint.PageModelScale;
+				iPageSkin = spawnPoint.PageSkin == -1 ? i : spawnPoint.PageSkin;
+				iPageBodygroup = spawnPoint.PageBodygroup;
+				iPageRenderFx = spawnPoint.GetRenderFx();
+				iPageRenderMode = spawnPoint.GetRenderMode();
 				spawnPoint.GetRenderColor(iPageRenderColor[0], iPageRenderColor[1], iPageRenderColor[2], iPageRenderColor[3]);
-				spawnPoint.GetAnimation(sPageAnimation, sizeof(sPageAnimation));
+				spawnPoint.GetPageAnimation(sPageAnimation, sizeof(sPageAnimation));
 			}
 			else if (g_bPageRef)
 			{
@@ -8726,8 +8714,8 @@ void SpawnPages()
 				
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
-				spawnPoint.GetCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
-				pageData.CollectSoundPitch = spawnPoint.CollectSoundPitch;
+				spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
+				pageData.CollectSoundPitch = spawnPoint.PageCollectSoundPitch;
 				
 				g_hPages.PushArray(pageData, sizeof(pageData));
 			}
@@ -9444,7 +9432,7 @@ static void StartIntroTextSequence()
 		SF2GameTextEntity textEntity = g_GamerulesEntity.IntroTextEntity;
 		if (textEntity.IsValid())
 		{
-			g_hRoundIntroTextTimer = CreateTimer(g_GamerulesEntity.IntroTextDelay, Timer_NewIntroTextSequence, textEntity.EntRef, TIMER_FLAG_NO_MAPCHANGE);
+			g_hRoundIntroTextTimer = CreateTimer(g_GamerulesEntity.IntroTextDelay, Timer_NewIntroTextSequence, EntIndexToEntRef(textEntity.index), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 	
@@ -9460,7 +9448,7 @@ static Action Timer_NewIntroTextSequence(Handle timer, any data)
 	if (!g_bEnabled) return Plugin_Stop;
 	if (g_hRoundIntroTextTimer != timer) return Plugin_Stop;
 	
-	SF2GameTextEntity textEntity = SF2GameTextEntity(data);
+	SF2GameTextEntity textEntity = SF2GameTextEntity(EntRefToEntIndex(data));
 	if (!textEntity.IsValid()) return Plugin_Stop;
 	
 	int iClients[MAXPLAYERS + 1];
@@ -9476,17 +9464,17 @@ static Action Timer_NewIntroTextSequence(Handle timer, any data)
 	
 	char sMessage[512];
 	textEntity.GetIntroMessage(sMessage, sizeof(sMessage));
-	ShowHudTextUsingTextEntity(iClients, iClientsNum, textEntity.EntRef, g_hHudSync, sMessage);
+	ShowHudTextUsingTextEntity(iClients, iClientsNum, textEntity.index, g_hHudSync, sMessage);
 	
 	SF2GameTextEntity nextTextEntity = textEntity.NextIntroTextEntity;
 	if (nextTextEntity.IsValid())
 	{
-		float flDuration = GetEntPropFloat(textEntity.EntRef, Prop_Data, "m_textParms.fadeinTime")
-		 + GetEntPropFloat(textEntity.EntRef, Prop_Data, "m_textParms.fadeoutTime")
-		 + GetEntPropFloat(textEntity.EntRef, Prop_Data, "m_textParms.holdTime")
+		float flDuration = textEntity.GetPropFloat(Prop_Data, "m_textParms.fadeinTime")
+		 + textEntity.GetPropFloat(Prop_Data, "m_textParms.fadeoutTime")
+		 + textEntity.GetPropFloat(Prop_Data, "m_textParms.holdTime")
 		 + textEntity.NextIntroTextDelay;
 		
-		g_hRoundIntroTextTimer = CreateTimer(flDuration, Timer_NewIntroTextSequence, nextTextEntity.EntRef, TIMER_FLAG_NO_MAPCHANGE);
+		g_hRoundIntroTextTimer = CreateTimer(flDuration, Timer_NewIntroTextSequence, EntIndexToEntRef(nextTextEntity.index), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	return Plugin_Continue;
