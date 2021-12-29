@@ -5,11 +5,9 @@
 
 //#define DEBUG_MAPENTITIES
 
-static PrivateForward g_CustomEntityInitialize;
 static PrivateForward g_CustomEntityOnMapStart;
 static PrivateForward g_CustomEntityOnRoundStateChanged;
 static PrivateForward g_CustomEntityOnGracePeriodEnd;
-static PrivateForward g_CustomEntityOnDestroyed;
 static PrivateForward g_CustomEntityOnDifficultyChanged;
 static PrivateForward g_CustomEntityOnPageCountChanged;
 
@@ -47,8 +45,6 @@ methodmap SF2TriggerMapEntity < CBaseEntity
 
 enum SF2MapEntityHook
 {
-	SF2MapEntityHook_OnEntityCreated,
-	SF2MapEntityHook_OnEntityDestroyed,
 	SF2MapEntityHook_OnMapStart,
 	SF2MapEntityHook_OnRoundStateChanged,
 	SF2MapEntityHook_OnGracePeriodEnd,
@@ -62,10 +58,6 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 {
 	switch (hookType)
 	{
-		case SF2MapEntityHook_OnEntityCreated:
-			g_CustomEntityInitialize.AddFunction(null, hookFunc);
-		case SF2MapEntityHook_OnEntityDestroyed:
-			g_CustomEntityOnDestroyed.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnMapStart:
 			g_CustomEntityOnMapStart.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnRoundStateChanged:
@@ -108,9 +100,7 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 
 void SetupCustomMapEntities()
 {
-	g_CustomEntityInitialize = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_CustomEntityOnMapStart = new PrivateForward(ET_Ignore);
-	g_CustomEntityOnDestroyed = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_CustomEntityOnRoundStateChanged = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_CustomEntityOnGracePeriodEnd = new PrivateForward(ET_Ignore);
 	g_CustomEntityOnDifficultyChanged = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
@@ -122,6 +112,8 @@ void SetupCustomMapEntities()
 
 	// Initialize static entity data.
 	// Unfortunately, there's no better way to do it other than sticking the initialization functions here.
+
+	SF2SpawnPointBaseEntity.Initialize();
 
 	// sf2_game_text
 	SF2GameTextEntity.Initialize();
