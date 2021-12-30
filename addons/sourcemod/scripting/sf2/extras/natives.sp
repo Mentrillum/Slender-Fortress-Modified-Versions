@@ -284,6 +284,13 @@ void SDK_Init()
 		PrintToServer("Failed to retrieve CBaseTrigger::PointIsWithin signature from SF2 gamedata!");
 		//Don't have to call SetFailState, since this function is used in a minor part of the code.
 	}
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseTrigger::PassesTriggerFilters");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if ((g_hSDKPassesTriggerFilters = EndPrepSDKCall()) == INVALID_HANDLE)
+		SetFailState("Failed to setup CBaseTrigger::PassesTriggerFilters call from gamedata!");
 	
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hConfig, SDKConf_Virtual, "CBaseEntity::GetSmoothedVelocity");
@@ -384,8 +391,6 @@ void SDK_Init()
 	//Initialize tutorial detours & calls
 	//Tutorial_SetupSDK(hConfig);
 
-	SF2MapEntity_InitGameData(hConfig);
-	
 	delete hConfig;
 }
 

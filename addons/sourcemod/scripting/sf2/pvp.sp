@@ -867,7 +867,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		SF2PlayerPvPSpawnEntity spawnPoint = SF2PlayerPvPSpawnEntity(ent);
 		if (spawnPoint.IsValid())
 		{
-			spawnPoint.FireOutputNoVariant("OnSpawn", iClient, ent);
+			spawnPoint.FireOutput("OnSpawn", iClient);
 		}
 	}
 }

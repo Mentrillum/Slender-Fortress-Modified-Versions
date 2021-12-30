@@ -391,7 +391,7 @@ void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSp
 		GetEntPropVector(iSpawnPoint, Prop_Data, "m_vecAbsOrigin", flSpawnPos);
 		GetEntPropVector(iSpawnPoint, Prop_Data, "m_angAbsRotation", flAng);
 		TeleportEntity(client, flSpawnPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
-		spawnPoint.FireOutputNoVariant("OnSpawn", client, iSpawnPoint);
+		spawnPoint.FireOutput("OnSpawn", client);
 	}
 	else 
 	{

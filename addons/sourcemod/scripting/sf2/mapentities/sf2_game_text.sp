@@ -5,56 +5,49 @@
 // Normally, game_text entities' messages get immediately replaced in-game due to the
 // constant displaying of HUD text by SF2, rendering the text unreadable and useless.
 
-static const char g_sEntityClassname[] = "sf2_game_text";
-static const char g_sEntityTranslatedClassname[] = "game_text";
+static const char g_sEntityClassname[] = "sf2_game_text"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
-static ArrayList g_EntityData;
-
-/**
- *	Internal data stored for the entity.
- */
-enum struct SF2GameTextEntityData
-{
-	int EntRef;
-	char NextIntroTextEntityName[64];
-	float NextIntroTextDelay;
-
-	void Init(int entIndex)
-	{
-		this.EntRef = EnsureEntRef(entIndex);
-		this.NextIntroTextEntityName[0] = '\0';
-		this.NextIntroTextDelay = 0.0;
-	}
-
-	void Destroy()
-	{
-	}
-
-	void SetNextIntroTextEntityName(const char[] sName) 
-	{
-		strcopy(this.NextIntroTextEntityName, 64, sName);
-	}
-}
+static CEntityFactory g_entityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
  */
-methodmap SF2GameTextEntity < SF2MapEntity
+methodmap SF2GameTextEntity < CBaseEntity
 {
-	public SF2GameTextEntity(int entIndex) { return view_as<SF2GameTextEntity>(SF2MapEntity(entIndex)); }
+	public SF2GameTextEntity(int entIndex) { return view_as<SF2GameTextEntity>(CBaseEntity(entIndex)); }
 
 	public bool IsValid()
 	{
-		if (!SF2MapEntity(this.EntRef).IsValid())
+		if (!CBaseEntity(this.index).IsValid())
 			return false;
 
-		SF2GameTextEntityData entData;
-		return (SF2GameTextEntityData_Get(this.EntRef, entData) != -1);
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
 	}
 
 	public void GetMessage(char[] sBuffer, int iBufferSize)
 	{
-		GetEntPropString(this.EntRef, Prop_Data, "m_iszMessage", sBuffer, iBufferSize);
+		this.GetPropString(Prop_Data, "m_iszMessage", sBuffer, iBufferSize);
+	}
+
+	public void SetMessage(const char[] sBuffer)
+	{
+		this.SetPropString(Prop_Data, "m_iszMessage", sBuffer);
+	}
+
+	public bool ValidateMessageString(char[] sBuffer, int iBufferSize)
+	{
+		if (StrContains(sBuffer, "%d") != -1)
+		{
+			char sName[64];
+			this.GetPropString(Prop_Data, "m_iName", sName, sizeof(sName));
+			char[] sMessage = new char[iBufferSize];
+			strcopy(sMessage, iBufferSize, sBuffer);
+			ReplaceString(sMessage, iBufferSize, "%d", "%%d");
+			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", sName, sMessage);
+			return false;
+		}
+
+		return true;
 	}
 
 	public void GetFormattedMessage(char[] sBuffer, int iBufferSize)
@@ -111,190 +104,98 @@ methodmap SF2GameTextEntity < SF2MapEntity
 
 	property float NextIntroTextDelay
 	{
-		public get() { SF2GameTextEntityData entData; SF2GameTextEntityData_Get(this.EntRef, entData); return entData.NextIntroTextDelay; }
+		public get() { return this.GetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay"); }
+		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay", value); }
+	}
+
+	public void GetNextIntroTextEntityName(char[] sBuffer, int iBufferSize)
+	{
+		this.GetPropString(Prop_Data, "sf2_szNextIntroText", sBuffer, iBufferSize);
+	}
+
+	public void SetNextIntroTextEntityName(const char[] sBuffer)
+	{
+		this.SetPropString(Prop_Data, "sf2_szNextIntroText", sBuffer);
 	}
 
 	property SF2GameTextEntity NextIntroTextEntity
 	{
 		public get() 
 		{  
-			SF2GameTextEntityData entData;
-			SF2GameTextEntityData_Get(this.EntRef, entData);
+			char sIntroTextName[64];
+			this.GetNextIntroTextEntityName(sIntroTextName, sizeof(sIntroTextName));
 
-			if (entData.NextIntroTextEntityName[0] == '\0')
+			if (sIntroTextName[0] == '\0')
 				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
 
-			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, entData.NextIntroTextEntityName, -1, -1, -1));
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, sIntroTextName, -1, -1, -1));
 		}
 	}
 
-	public bool ValidateMessageString(char[] sBuffer, int iBufferSize)
+	public static void Initialize()
 	{
-		if (StrContains(sBuffer, "%d") != -1)
-		{
-			char sName[64];
-			GetEntPropString(this.EntRef, Prop_Data, "m_iName", sName, sizeof(sName));
-			char[] sMessage = new char[iBufferSize];
-			strcopy(sMessage, iBufferSize, sBuffer);
-			ReplaceString(sMessage, iBufferSize, "%d", "%%d");
-			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", sName, sMessage);
-			return false;
-		}
-
-		return true;
+		Initialize();
 	}
 }
 
-void SF2GameTextEntity_Initialize() 
+static void Initialize() 
 {
-	g_EntityData = new ArrayList(sizeof(SF2GameTextEntityData));
-
-	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2GameTextEntity_TranslateClassname);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2GameTextEntity_InitializeEntity);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2GameTextEntity_OnEntityKeyValue);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2GameTextEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2GameTextEntity_OnEntityDestroyed);
+	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
+	g_entityFactory.DeriveFromClass("game_text");
+	g_entityFactory.BeginDataMapDesc()
+		.DefineFloatField("sf2_flNextIntroTextDelay", _, "nextintrotextdelay")
+		.DefineStringField("sf2_szNextIntroText", _, "nextintrotextname")
+		.DefineInputFunc("Display", InputFuncValueType_String, InputDisplay)
+		.EndDataMapDesc();
+	g_entityFactory.Install();
 }
 
-static void SF2GameTextEntity_InitializeEntity(int entity, const char[] sClass)
+static void OnCreated(int entity)
 {
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-	
-	SF2GameTextEntityData entData;
-	entData.Init(entity);
-
-	g_EntityData.PushArray(entData, sizeof(entData));
 }
 
-static Action SF2GameTextEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
+static void OnRemoved(int entity)
 {
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	SF2GameTextEntityData entData;
-	if (SF2GameTextEntityData_Get(entity, entData) == -1)
-		return Plugin_Continue;
-
-	if (strcmp(szKeyName, "nextintrotextname", false) == 0) 
-	{
-		entData.SetNextIntroTextEntityName(szValue);
-		SF2GameTextEntityData_Update(entData);
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "nextintrotextdelay", false) == 0)
-	{
-		float flDelay = StringToFloat(szValue);
-		if (flDelay < 0.0)
-			flDelay = 0.0;
-
-		entData.NextIntroTextDelay = flDelay;
-		SF2GameTextEntityData_Update(entData);
-		return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
 }
 
-static Action SF2GameTextEntity_OnAcceptEntityInput(int entity, const char[] sClass, const char[] szInputName, int activator, int caller)
+static void InputDisplay(int entity, int activator, int caller, const char[] value)
 {
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
 	SF2GameTextEntity thisEnt = SF2GameTextEntity(entity);
 
-	if (strcmp(szInputName, "display", false) == 0)
-	{
-		int iClients[MAXPLAYERS + 1];
-		int iClientsNum;
-		
-		char sMessage[512];
-		thisEnt.GetFormattedMessage(sMessage, sizeof(sMessage));
-
-		if (!thisEnt.ValidateMessageString(sMessage, sizeof(sMessage))) return Plugin_Handled;
-
-		char sVariant[PLATFORM_MAX_PATH];
-		SF2MapEntity_GetVariantString(sVariant, sizeof(sVariant));
-
-		if (sVariant[0] != '\0')
-		{
-			// If a targetname is specified, try to show text to the matched entity.
-
-			int target = -1;
-			while ((target = SF2MapEntity_FindEntityByTargetname(target, sVariant, caller, activator, caller)) != -1)
-			{
-				if (IsValidClient(target))
-				{
-					iClients[iClientsNum++] = target;
-				}
-			}
-		}
-		else 
-		{
-			int iSpawnFlags = GetEntProp(entity, Prop_Data, "m_spawnflags");
-
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (!IsClientInGame(i)) continue;
-				
-				// If 'All Players' not set, only show message to RED.
-				if ((iSpawnFlags & 1) == 0 && g_bPlayerEliminated[i] && !IsClientInGhostMode(i))
-					continue;
-
-				iClients[iClientsNum++] = i;
-			}
-		}
-
-		ShowHudTextUsingTextEntity(iClients, iClientsNum, entity, g_hHudSync, sMessage);
-
-		return Plugin_Handled;
-	}
+	int iClients[MAXPLAYERS + 1];
+	int iClientsNum;
 	
-	return Plugin_Continue;
-}
+	char sMessage[512];
+	thisEnt.GetFormattedMessage(sMessage, sizeof(sMessage));
 
-static void SF2GameTextEntity_OnEntityDestroyed(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
+	if (!thisEnt.ValidateMessageString(sMessage, sizeof(sMessage)))
 		return;
 
-	SF2GameTextEntityData entData;
-	int iIndex = SF2GameTextEntityData_Get(entity, entData);
-	if (iIndex != -1)
+	if (value[0] != '\0')
 	{
-		entData.Destroy();
-		g_EntityData.Erase(iIndex);
+		// If a targetname is specified, try to show text to the matched entity.
+
+		int target = -1;
+		while ((target = SF2MapEntity_FindEntityByTargetname(target, value, caller, activator, caller)) != -1 && target > 0 && target <= MaxClients)
+		{
+			iClients[iClientsNum++] = target;
+		}
 	}
-}
+	else 
+	{
+		int iSpawnFlags = thisEnt.GetProp(Prop_Data, "m_spawnflags");
 
-static Action SF2GameTextEntity_TranslateClassname(const char[] sClass, char[] sBuffer, int iBufferLen)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-	
-	strcopy(sBuffer, iBufferLen, g_sEntityTranslatedClassname);
-	return Plugin_Handled;
-}
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!IsClientInGame(i)) continue;
+			
+			// If 'All Players' not set, only show message to RED.
+			if ((iSpawnFlags & 1) == 0 && g_bPlayerEliminated[i] && !IsClientInGhostMode(i))
+				continue;
 
-static int SF2GameTextEntityData_Get(int entIndex, SF2GameTextEntityData entData)
-{
-	entData.EntRef = EnsureEntRef(entIndex);
-	if (entData.EntRef == INVALID_ENT_REFERENCE)
-		return -1;
+			iClients[iClientsNum++] = i;
+		}
+	}
 
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return -1;
-	
-	g_EntityData.GetArray(iIndex, entData, sizeof(entData));
-	return iIndex;
-}
-
-static int SF2GameTextEntityData_Update(SF2GameTextEntityData entData)
-{
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return;
-	
-	g_EntityData.SetArray(iIndex, entData, sizeof(entData));
+	ShowHudTextUsingTextEntity(iClients, iClientsNum, entity, g_hHudSync, sMessage);
 }
