@@ -235,6 +235,7 @@ bool g_bSeeUpdateMenu[MAXPLAYERS + 1] = false;
 //Command
 bool g_bPlayerNoPoints[MAXPLAYERS + 1] = false;
 bool g_bAdminNoPoints[MAXPLAYERS + 1] = false;
+bool g_bAdminAllTalk[MAXPLAYERS + 1] = false;
 
 // Offsets.
 int g_offsPlayerFOV = -1;
@@ -3800,6 +3801,7 @@ public void OnClientDisconnect(int iClient)
 	g_bPlayerEscaped[iClient] = false;
 	g_bPlayerNoPoints[iClient] = false;
 	g_bAdminNoPoints[iClient] = false;
+	g_bAdminAllTalk[iClient] = false;
 	g_bPlayerIn1UpCondition[iClient] = false;
 	g_bPlayerDied1Up[iClient] = false;
 	g_bPlayerFullyDied1Up[iClient] = false;

@@ -239,6 +239,9 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_kill_client", Command_ClientKillDeathcam, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_end_grace_period", Command_ForceEndGrace, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_reloadprofiles", Command_ReloadProfiles, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_alltalk", Command_AllTalkToggle, ADMFLAG_SLAY);
+	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
+	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
 
 	// Hook onto existing console commands.
 	AddCommandListener(Hook_CommandBuild, "build");
@@ -1772,4 +1775,38 @@ public Action Timer_ForcePlayer(Handle timer, any userid)
 	SetClientPlayState(iClient, true);
 	//CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
 	return Plugin_Stop;
+}
+
+public Action Command_AllTalkToggle(int iClient, int args)
+{
+	g_bAdminAllTalk[iClient] = !g_bAdminAllTalk[iClient];
+	CPrintToChat(iClient, "{royalblue}%t{default}You will %s hear and speak to all players.", "SF2 Prefix", g_bAdminAllTalk[iClient] ? "now" : "no longer");
+
+	for (int target = 1; target <= MaxClients; target++)
+	{
+		ClientUpdateListeningFlags(target);
+	}
+	return Plugin_Handled;
+}
+
+public Action Command_AllTalkOn(int iClient, int args)
+{
+	g_bAdminAllTalk[iClient] = true;
+
+	for (int target = 1; target <= MaxClients; target++)
+	{
+		ClientUpdateListeningFlags(target);
+	}
+	return Plugin_Handled;
+}
+
+public Action Command_AllTalkOff(int iClient, int args)
+{
+	g_bAdminAllTalk[iClient] = false;
+
+	for (int target = 1; target <= MaxClients; target++)
+	{
+		ClientUpdateListeningFlags(target);
+	}
+	return Plugin_Handled;
 }
