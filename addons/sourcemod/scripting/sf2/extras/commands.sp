@@ -635,6 +635,13 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	if (!g_bPlayerCalledForNightmare[client])
 		g_bPlayerCalledForNightmare[client] = (StrContains(sArgs, "nightmare", false) != -1 || StrContains(sArgs, "Nightmare", false) != -1);
 
+	if (g_hTimerChangeClientName[client] != null)
+	{
+		Handle timer = g_hTimerChangeClientName[client];
+		TriggerTimer(timer);
+		KillTimer(timer);
+	}
+
 	if (!g_bEnabled || g_cvAllChat.BoolValue || SF_IsBoxingMap()) return Plugin_Continue;
 
 	if (!IsRoundEnding()) {
