@@ -8714,8 +8714,17 @@ void SpawnPages()
 				
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
-				spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
-				pageData.CollectSoundPitch = spawnPoint.PageCollectSoundPitch;
+
+				if (spawnPoint.IsValid())
+				{
+					spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
+					pageData.CollectSoundPitch = spawnPoint.PageCollectSoundPitch;
+				}
+				else
+				{
+					pageData.CollectSound[0] = '\0';
+					pageData.CollectSoundPitch = 0;
+				}
 				
 				g_hPages.PushArray(pageData, sizeof(pageData));
 			}
