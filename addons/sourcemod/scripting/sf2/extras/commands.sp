@@ -1809,4 +1809,4 @@ public Action Command_AllTalkOff(int iClient, int args)
 		ClientUpdateListeningFlags(target);
 	}
 	return Plugin_Handled;
-}
+} 

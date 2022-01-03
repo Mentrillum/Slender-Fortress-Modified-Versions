@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.1 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.1 M"
+#define PLUGIN_VERSION "1.7.1.1 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1.1 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -967,8 +967,6 @@ Handle g_hSDKWeaponSwitch;
 Handle g_hSDKWeaponGetCustomDamageType;
 Handle g_hSDKProjectileCanCollideWithTeammates;
 
-int g_iServerOS;
-
 // SourceTV userid used for boss name
 int g_iSourceTVUserID = -1;
 char g_sOldSourceTVClientName[64];
@@ -1661,7 +1659,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 		}
 	}
 	// Check if we can add some proxies.
-	if (!g_bRoundGrace)
+	if (!g_bRoundGrace && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap())
 	{
 			ArrayList hProxyCandidates = new ArrayList();
 
@@ -4095,6 +4093,7 @@ void SetRoundState(SF2RoundState iRoundState)
 			}
 			else if (SF_IsRenevantMap())
 			{
+				NPCRemoveAll();
 				Renevant_SetWave(1, true);
 			}
 		}
@@ -8716,7 +8715,7 @@ void SpawnPages()
 				
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
-
+				
 				if (spawnPoint.IsValid())
 				{
 					spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);

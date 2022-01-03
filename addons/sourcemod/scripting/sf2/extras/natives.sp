@@ -339,11 +339,6 @@ void SDK_Init()
 	}
 
 	int iOffset = GameConfGetOffset(hConfig, "CTFPlayer::WantsLagCompensationOnEntity"); 
-	switch (iOffset)
-	{
-		case 328: g_iServerOS = 0; //Windows
-		case 329: g_iServerOS = 1; //Linux
-	}
 	g_hSDKWantsLagCompensationOnEntity = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity, Hook_ClientWantsLagCompensationOnEntity); 
 	if (g_hSDKWantsLagCompensationOnEntity == null)
 	{
