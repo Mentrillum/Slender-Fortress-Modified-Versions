@@ -7085,9 +7085,8 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			event2.SetString("assister_fallback", sString);
 			event.GetString("weapon", sString, sizeof(sString));
 			event2.SetString("weapon", sString);
-			event2.SetInt("ignore", event2.GetInt("ignore"));
-			
-			CreateTimer(flTime, Timer_SendDeath, event2, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			event2.SetInt("ignore", event.GetInt("ignore"));
+			CreateTimer(0.2, Timer_SendDeath, event2, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
