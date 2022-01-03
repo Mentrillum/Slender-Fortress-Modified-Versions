@@ -872,6 +872,7 @@ ConVar g_cvSlaughterRunDivisibleTime;
 ConVar g_cvUseAlternateConfigDirectory;
 ConVar g_cvPlayerKeepWeapons;
 ConVar g_cvFullyEnableSpectator;
+ConVar g_cvUsePlayersForKillFeed;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
@@ -6673,25 +6674,28 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 
 static int GetClientForDeath(int exclude1, int exclude2 = 0)
 {
-	// Use AFKs first
-	for (int i = 1; i <= MaxClients; i++)
+	if (g_cvUsePlayersForKillFeed.BoolValue)
 	{
-		if (i != exclude1 && i != exclude2 && IsClientInGame(i) && g_bPlayerNoPoints[i])
-			return i;
-	}
-	
-	// Use BLU second
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (i != exclude1 && i != exclude2 && IsClientInGame(i) && GetClientTeam(i) == TFTeam_Blue)
-			return i;
-	}
-	
-	// Anyone else last
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (i != exclude1 && i != exclude2 && IsClientInGame(i))
-			return i;
+		// Use AFKs first
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i) && g_bPlayerNoPoints[i])
+				return i;
+		}
+		
+		// Use BLU second
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i) && GetClientTeam(i) == TFTeam_Blue)
+				return i;
+		}
+		
+		// Anyone else last
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i))
+				return i;
+		}
 	}
 	return -1;
 }
@@ -7081,9 +7085,9 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			event2.SetString("assister_fallback", sString);
 			event.GetString("weapon", sString, sizeof(sString));
 			event2.SetString("weapon", sString);
-			event2.SetInt("ignore", event.GetInt("ignore"));
-
-			CreateTimer(0.2, Timer_SendDeath, event2);
+			event2.SetInt("ignore", event2.GetInt("ignore"));
+			
+			CreateTimer(flTime, Timer_SendDeath, event2, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
@@ -7128,8 +7132,16 @@ public Action Timer_SendDeath(Handle timer, Event event)
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
 	if (iClient > 0)
 	{
-		//Send it to the clients
 		int iIgnore = event.GetInt("ignore");
+		if(!iIgnore)
+		{
+			//Delay event until their name is correct
+			int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
+			if(iAttacker > 0 && iAttacker <= MaxClients && g_hTimerChangeClientName[iAttacker])
+				return Plugin_Continue;
+		}
+		
+		//Send it to the clients
 		for (int i = 1; i<=MaxClients; i++)
 		{
 			if(i != iIgnore && IsValidClient(i))

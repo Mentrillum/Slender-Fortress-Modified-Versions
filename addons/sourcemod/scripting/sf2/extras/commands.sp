@@ -179,14 +179,16 @@ public void OnPluginStart()
 
 	g_cvFullyEnableSpectator = CreateConVar("sf2_enable_spectator", "0", "Determines if all spectator restrictions should be disabled.", _, true, 0.0, true, 1.0);
 
+	g_cvUsePlayersForKillFeed = CreateConVar("sf2_kill_feed_players", "0", "Uses players for kill feed when SourceTV is unavailable.", _, true, 0.0, true, 1.0);
+
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
-	
+
 	g_hHudSync = CreateHudSynchronizer();
 	g_hHudSync2 = CreateHudSynchronizer();
 	g_hHudSync3 = CreateHudSynchronizer();
 	g_hRoundTimerSync = CreateHudSynchronizer();
 	g_hCookie = RegClientCookie("sf2_newcookies", "", CookieAccess_Private);
-	
+
 	// Register console commands.
 	RegConsoleCmd("sm_sf2", Command_MainMenu);
 	RegConsoleCmd("sm_sl", Command_MainMenu);
