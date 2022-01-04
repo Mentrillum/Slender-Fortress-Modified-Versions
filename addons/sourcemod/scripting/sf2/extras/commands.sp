@@ -179,6 +179,8 @@ public void OnPluginStart()
 
 	g_cvFullyEnableSpectator = CreateConVar("sf2_enable_spectator", "0", "Determines if all spectator restrictions should be disabled.", _, true, 0.0, true, 1.0);
 
+	g_cvAllowPlayerPeeking = CreateConVar("sf2_player_peeking", "0", "Allow players to go into thirdperson by crouching and taunting.", _, true, 0.0, true, 1.0);
+
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();

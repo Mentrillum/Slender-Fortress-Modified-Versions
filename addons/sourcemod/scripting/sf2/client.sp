@@ -107,6 +107,9 @@ char g_sClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
 static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 
+//Peeking Data
+static bool g_bPlayerPeeking[MAXPLAYERS + 1] = { false, ... };
+
 //	==========================================================
 //	GENERAL CLIENT HOOK FUNCTIONS
 //	==========================================================
@@ -1905,6 +1908,28 @@ void ClientHandleSprint(int client, bool bSprint)
 		{
 			ClientStopSprint(client);
 		}
+	}
+}
+ /**
+  *	Handles thirdperson peeking
+  */
+bool ClientStartPeeking(int client)
+{
+	if (!g_bPlayerPeeking[client] && g_cvAllowPlayerPeeking.BoolValue && !TF2_IsPlayerInCondition(client, TFCond_Dazed) && GetClientButtons(client) & IN_DUCK)
+	{
+		TF2_StunPlayer(client, 999.9, 1.0, TF_STUNFLAGS_LOSERSTATE);
+		g_bPlayerPeeking[client] = true;
+		return true;
+	}
+	return false;
+}
+
+void ClientEndPeeking(int client)
+{
+	if (g_bPlayerPeeking[client])
+	{
+		TF2_RemoveCondition(client, TFCond_Dazed);
+		g_bPlayerPeeking[client] = false;
 	}
 }
 
