@@ -688,7 +688,7 @@ public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int a
 	
 	if (g_cvBlockSuicideDuringRound.BoolValue)
 	{
-		if (!g_bRoundGrace && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		if (IsRoundPlaying() && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
 		{
 			return Plugin_Handled;
 		}
@@ -716,7 +716,7 @@ public Action Hook_CommandPreventJoinTeam(int iClient, const char[] command,int 
 	
 	if (g_cvBlockSuicideDuringRound.BoolValue)
 	{
-		if (!g_bRoundGrace && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		if (IsRoundPlaying() && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
 		{
 			return Plugin_Handled;
 		}
@@ -744,7 +744,7 @@ public Action Hook_BlockCommand(int iClient, const char[] command,int argc)
 public Action Hook_BlockLoadout(int iClient, const char[] command,int argc) 
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (!g_bRoundGrace && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient)) return Plugin_Handled;
+	if (IsRoundPlaying() && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient)) return Plugin_Handled;
 	return Plugin_Continue;
 }
 

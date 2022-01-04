@@ -7,7 +7,6 @@
 
 static PrivateForward g_CustomEntityOnMapStart;
 static PrivateForward g_CustomEntityOnRoundStateChanged;
-static PrivateForward g_CustomEntityOnGracePeriodEnd;
 static PrivateForward g_CustomEntityOnDifficultyChanged;
 static PrivateForward g_CustomEntityOnPageCountChanged;
 
@@ -47,7 +46,6 @@ enum SF2MapEntityHook
 {
 	SF2MapEntityHook_OnMapStart,
 	SF2MapEntityHook_OnRoundStateChanged,
-	SF2MapEntityHook_OnGracePeriodEnd,
 	SF2MapEntityHook_OnDifficultyChanged,
 	SF2MapEntityHook_OnPageCountChanged,
 	SF2MapEntityHook_OnRenevantWaveTriggered,
@@ -62,8 +60,6 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 			g_CustomEntityOnMapStart.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnRoundStateChanged:
 			g_CustomEntityOnRoundStateChanged.AddFunction(null, hookFunc);
-		case SF2MapEntityHook_OnGracePeriodEnd:
-			g_CustomEntityOnGracePeriodEnd.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnDifficultyChanged:
 			g_CustomEntityOnDifficultyChanged.AddFunction(null, hookFunc);
 		case SF2MapEntityHook_OnPageCountChanged:
@@ -102,7 +98,6 @@ void SetupCustomMapEntities()
 {
 	g_CustomEntityOnMapStart = new PrivateForward(ET_Ignore);
 	g_CustomEntityOnRoundStateChanged = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
-	g_CustomEntityOnGracePeriodEnd = new PrivateForward(ET_Ignore);
 	g_CustomEntityOnDifficultyChanged = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_CustomEntityOnPageCountChanged = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 
@@ -268,12 +263,6 @@ void SF2MapEntity_OnPageCountChanged(int iPageCount, int iOldPageCount)
 	Call_StartForward(g_CustomEntityOnPageCountChanged);
 	Call_PushCell(iPageCount);
 	Call_PushCell(iOldPageCount);
-	Call_Finish();
-}
-
-void SF2MapEntity_OnGracePeriodEnd()
-{
-	Call_StartForward(g_CustomEntityOnGracePeriodEnd);
 	Call_Finish();
 }
 

@@ -723,7 +723,6 @@ Handle g_hPlayer90sMusicTimer[MAXPLAYERS + 1];
 
 
 SF2RoundState g_iRoundState = SF2RoundState_Invalid;
-bool g_bRoundGrace = false;
 float g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
 bool g_bRoundInfiniteFlashlight = false;
 bool g_bIsSurvivalMap = false;
@@ -1565,7 +1564,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 	
 	if (timer != g_hOnGameFrameTimer) return Plugin_Stop;
 	
-	if (!g_bRoundGrace && GetRoundState() == SF2RoundState_Active) g_flRoundTimeMessage += 0.1;
+	if (IsRoundPlaying()) g_flRoundTimeMessage += 0.1;
 	else g_flRoundTimeMessage = 0.0;
 
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
@@ -1659,7 +1658,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 		}
 	}
 	// Check if we can add some proxies.
-	if (!g_bRoundGrace && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap())
+	if (IsRoundPlaying() && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap())
 	{
 			ArrayList hProxyCandidates = new ArrayList();
 
@@ -2257,7 +2256,7 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 				}
 				else SetClientPlayState(i, false);
 			}
-			if (!g_bRoundGrace)
+			if (IsRoundPlaying())
 			{
 				ArrayList hSpawnPoint = new ArrayList();
 				float flTeleportPos[3];
@@ -3843,7 +3842,7 @@ public void OnClientDisconnect(int iClient)
 	{
 		if (g_bPlayerPlaying[iClient] && !g_bPlayerEliminated[iClient])
 		{
-			if (g_bRoundGrace)
+			if (!IsRoundPlaying())
 			{
 				// Force the next player in queue to take my place, if any.
 				ForceInNextPlayersInQueue(1, true);
@@ -3910,17 +3909,6 @@ void SetRoundTime(int iCurrentTime)
 	}
 }
 
-void SetGracePeriodState(bool state)
-{
-	bool bOldGraceState = g_bRoundGrace;
-	g_bRoundGrace = state;
-	
-	if (!g_bRoundGrace && bOldGraceState)
-	{
-		SF2MapEntity_OnGracePeriodEnd();
-	}
-}
-
 void SetRoundState(SF2RoundState iRoundState)
 {
 	if (g_iRoundState == iRoundState) return;
@@ -3943,11 +3931,50 @@ void SetRoundState(SF2RoundState iRoundState)
 			g_hRoundIntroTimer = null;
 			if (!IsInfiniteFlashlightEnabled())g_iNightvisionType = GetRandomInt(0, 2);
 			else g_iNightvisionType = 1;
+
+			// Enable movement on players.
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+				SetEntityFlags(i, GetEntityFlags(i) & ~FL_FROZEN);
+			}
+
+			// Fade in.
+			float flFadeTime = g_flRoundIntroFadeDuration;
+			int iFadeFlags = SF_FADE_IN | FFADE_PURGE;
+			
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+				UTIL_ScreenFade(i, FixedUnsigned16(flFadeTime, 1 << 12), 0, iFadeFlags, g_iRoundIntroFadeColor[0], g_iRoundIntroFadeColor[1], g_iRoundIntroFadeColor[2], g_iRoundIntroFadeColor[3]);
+			}
+		}
+		case SF2RoundState_Grace:
+		{
+			g_hRoundGraceTimer = null;
+
+			for (int iClient = 1; iClient <= MaxClients; iClient++)
+			{
+				if (!IsClientParticipating(iClient))
+				{
+					g_bPlayerEliminated[iClient] = true;
+				}
+
+				if (IsValidClient(iClient))
+				{
+					TF2Attrib_RemoveByDefIndex(iClient, 10);
+
+					if (IsClientParticipating(iClient) && GetClientTeam(iClient) == TFTeam_Blue && g_iPlayerPreferences[iClient].PlayerPreference_GhostModeToggleState == 1)
+					{
+						CreateTimer(0.25, Timer_ToggleGhostModeCommand, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					}
+				}
+			}
+
+			CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
 		}
 		case SF2RoundState_Active:
 		{
-			SetGracePeriodState(false);
-			g_hRoundGraceTimer = null;
 			g_hRoundTimer = null;
 			g_bPlayersAreCritted = false;
 			g_bPlayersAreMiniCritted = false;
@@ -3984,7 +4011,6 @@ void SetRoundState(SF2RoundState iRoundState)
 		}
 		case SF2RoundState_Intro:
 		{
-			SetGracePeriodState(true);
 			g_hRoundIntroTimer = null;
 			g_flRoundTimeMessage = 0.0;
 			g_bProxySurvivalRageMode = false;
@@ -4017,30 +4043,33 @@ void SetRoundState(SF2RoundState iRoundState)
 				}
 			}
 		}
-		case SF2RoundState_Active:
+		case SF2RoundState_Grace:
 		{
 			// Start the grace period timer.
-			SetGracePeriodState(true);
 			g_hRoundGraceTimer = CreateTimer(g_cvGraceTime.FloatValue, Timer_RoundGrace, _, TIMER_FLAG_NO_MAPCHANGE);
 			
 			CreateTimer(2.0, Timer_RoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
 			
-			// Enable movement on players.
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
-				SetEntityFlags(i, GetEntityFlags(i) & ~FL_FROZEN);
+
 				TF2Attrib_SetByDefIndex(i, 10, 7.0);
 			}
-			
-			// Fade in.
-			float flFadeTime = g_flRoundIntroFadeDuration;
-			int iFadeFlags = SF_FADE_IN | FFADE_PURGE;
-			
-			for (int i = 1; i <= MaxClients; i++)
+		}
+		case SF2RoundState_Active:
+		{
+			// Initialize the main round timer.
+			if (g_iRoundTimeLimit > 0)
 			{
-				if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
-				UTIL_ScreenFade(i, FixedUnsigned16(flFadeTime, 1 << 12), 0, iFadeFlags, g_iRoundIntroFadeColor[0], g_iRoundIntroFadeColor[1], g_iRoundIntroFadeColor[2], g_iRoundIntroFadeColor[3]);
+				// Set round time.
+				SetRoundTime(g_iRoundTimeLimit);
+				g_hRoundTimer = CreateTimer(1.0, Timer_RoundTime, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			}
+			else
+			{
+				// Infinite round time.
+				g_hRoundTimer = null;
 			}
 		}
 		case SF2RoundState_Escape:
@@ -4145,6 +4174,11 @@ void SetRoundState(SF2RoundState iRoundState)
 	Call_PushCell(iOldRoundState);
 	Call_PushCell(g_iRoundState);
 	Call_Finish();
+}
+
+bool IsRoundPlaying()
+{
+	return (GetRoundState() == SF2RoundState_Active || GetRoundState() == SF2RoundState_Escape);
 }
 
 bool IsRoundInEscapeObjective()
@@ -4867,7 +4901,7 @@ void SlenderOnClientStressUpdate(int iClient)
 				#endif
 			}
 		}
-		else if (!g_bRoundGrace)
+		else if (IsRoundPlaying())
 		{
 			int iPreferredTeleportTarget = INVALID_ENT_REFERENCE;
 			
@@ -5806,7 +5840,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 		int iintTeam = GetEventInt(event, "team");
 		if (iintTeam <= TFTeam_Spectator)
 		{
-			if (g_bRoundGrace)
+			if (!IsRoundPlaying())
 			{
 				if (g_bPlayerPlaying[iClient] && !g_bPlayerEliminated[iClient])
 				{
@@ -6160,7 +6194,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			
 			if (!g_bPlayerEliminated[iClient])
 			{
-				if ((SF_IsRaidMap() || SF_IsBoxingMap()) && g_bRoundGrace)
+				if ((SF_IsRaidMap() || SF_IsBoxingMap()) && !IsRoundPlaying())
 					TF2Attrib_SetByDefIndex(iClient, 10, 7.0);
 				else
 					TF2Attrib_RemoveByDefIndex(iClient, 10);
@@ -6670,7 +6704,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				}
 				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT) || g_bRenevantMultiEffect)
 					CreateTimer(0.1, Timer_ReplacePlayerRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-				if (IsRoundInIntro() || g_bRoundGrace || DidClientEscape(iClient) || (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient]))
+				if (IsRoundInIntro() || !IsRoundPlaying() || DidClientEscape(iClient) || (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient]))
 				{
 					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 				}
@@ -6685,7 +6719,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 					CreateTimer(0.25, Timer_ToggleGhostModeCommand, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
 				if (SF_SpecialRound(SPECIALROUND_REALISM))
 					StopSound(iClient, SNDCHAN_STATIC, MARBLEHORNETS_STATIC);
-				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_bRoundGrace && !DidClientEscape(iClient))
+				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !DidClientEscape(iClient))
 				{
 					for (int iReds = 1; iReds <= MaxClients; iReds++)
 					{
@@ -6908,7 +6942,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 	if (!IsRoundEnding() && !g_bRoundWaitingForPlayers)
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
-		if (!g_bRoundGrace && iClient != iAttacker)
+		if (IsRoundPlaying() && iClient != iAttacker)
 		{
 			//Copy the data
 			char sString[64];
@@ -7845,32 +7879,6 @@ public Action Timer_CheckRoundWinConditions(Handle timer)
 public Action Timer_RoundGrace(Handle timer)
 {
 	if (timer != g_hRoundGraceTimer) return Plugin_Stop;
-	
-	SetGracePeriodState(false);
-	g_hRoundGraceTimer = null;
-	
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientParticipating(i))g_bPlayerEliminated[i] = true;
-		if (IsValidClient(i))
-			TF2Attrib_RemoveByDefIndex(i, 10);
-		
-		if (IsClientParticipating(i) && GetClientTeam(i) == TFTeam_Blue && g_iPlayerPreferences[i].PlayerPreference_GhostModeToggleState == 1)
-			CreateTimer(0.25, Timer_ToggleGhostModeCommand, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
-	}
-	
-	// Initialize the main round timer.
-	if (g_iRoundTimeLimit > 0)
-	{
-		// Set round time.
-		SetRoundTime(g_iRoundTimeLimit);
-		g_hRoundTimer = CreateTimer(1.0, Timer_RoundTime, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	}
-	else
-	{
-		// Infinite round time.
-		g_hRoundTimer = null;
-	}
 
 	if (g_bRestartSessionEnabled)
 	{
@@ -7911,8 +7919,7 @@ public Action Timer_RoundGrace(Handle timer)
 		#endif
 	}
 	
-	CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
-	
+	SetRoundState(SF2RoundState_Active);
 	return Plugin_Stop;
 }
 
