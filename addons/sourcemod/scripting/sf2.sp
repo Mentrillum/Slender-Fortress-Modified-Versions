@@ -1434,6 +1434,7 @@ static void StopPlugin()
 		ClientDeactivateUltravision(i);
 		ClientDisableConstantGlow(i);
 		ClientRemoveInteractiveGlow(i);
+		g_hTimerChangeClientName[i] = null;
 	}
 
 	g_bRenevantMultiEffect = false;
@@ -6435,7 +6436,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			
 			int userid = GetClientUserId(iTarget);
 			event.SetInt("attacker", userid);
-			g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget);
+			g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
 			
 			if(!IsClientSourceTV(iTarget))
 			{
@@ -6456,14 +6457,14 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 					SetClientName(iTarget, sBossName);
 					SetEntPropString(iTarget, Prop_Data, "m_szNetname", sBossName);
 					
-					g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget);
+					g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
 					
 					char sString[64];
 					Event event2 = CreateEvent("player_death", true);
 					event2.SetInt("userid", event.GetInt("userid"));
 					event2.SetInt("victim_entindex", event.GetInt("victim_entindex"));
 					event2.SetInt("inflictor_entindex", event.GetInt("inflictor_entindex"));
-					event2.SetInt("attacker", userid);
+					event2.SetInt("attacker", GetClientUserId(iTarget));
 					event2.SetInt("weaponid", event.GetInt("weaponid"));
 					event2.SetInt("damagebits", event.GetInt("damagebits"));
 					event2.SetInt("customkill", event.GetInt("customkill"));
@@ -6557,7 +6558,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				
 				int userid = GetClientUserId(iTarget);
 				event.SetInt("attacker", userid);
-				g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget);
+				g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
 				
 				if(!IsClientSourceTV(iTarget))
 				{
@@ -6578,14 +6579,14 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 						SetClientName(iTarget, sBossName);
 						SetEntPropString(iTarget, Prop_Data, "m_szNetname", sBossName);
 						
-						g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget);
+						g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
 						
 						char sString[64];
 						Event event2 = CreateEvent("player_death", true);
 						event2.SetInt("userid", event.GetInt("userid"));
 						event2.SetInt("victim_entindex", event.GetInt("victim_entindex"));
 						event2.SetInt("inflictor_entindex", event.GetInt("inflictor_entindex"));
-						event2.SetInt("attacker", userid);
+						event2.SetInt("attacker", GetClientUserId(iTarget));
 						event2.SetInt("weaponid", event.GetInt("weaponid"));
 						event2.SetInt("damagebits", event.GetInt("damagebits"));
 						event2.SetInt("customkill", event.GetInt("customkill"));
@@ -7135,7 +7136,7 @@ public Action Timer_SendDeath(Handle timer, Event event)
 	if (iClient > 0)
 	{
 		int iIgnore = event.GetInt("ignore");
-		if(!iIgnore)
+		if (!iIgnore)
 		{
 			//Delay event until their name is correct
 			int iAttacker = GetClientOfUserId(event.GetInt("attacker"));

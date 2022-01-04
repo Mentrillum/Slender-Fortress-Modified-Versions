@@ -241,6 +241,12 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_kill_client", Command_ClientKillDeathcam, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_end_grace_period", Command_ForceEndGrace, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_reloadprofiles", Command_ReloadProfiles, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_alltalk", Command_AllTalkToggle, ADMFLAG_SLAY);
+	RegAdminCmd("sm_slalltalk", Command_AllTalkToggle, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
+	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
+	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("-slalltalk", Command_AllTalkOff, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 
 	// Hook onto existing console commands.
 	AddCommandListener(Hook_CommandBuild, "build");
@@ -638,11 +644,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		g_bPlayerCalledForNightmare[client] = (StrContains(sArgs, "nightmare", false) != -1 || StrContains(sArgs, "Nightmare", false) != -1);
 
 	if (g_hTimerChangeClientName[client] != null)
-	{
-		Handle timer = g_hTimerChangeClientName[client];
-		TriggerTimer(timer);
-		KillTimer(timer);
-	}
+		TriggerTimer(g_hTimerChangeClientName[client]);
 
 	if (!g_bEnabled || g_cvAllChat.BoolValue || SF_IsBoxingMap()) return Plugin_Continue;
 
