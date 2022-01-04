@@ -6460,7 +6460,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 					event2.SetInt("userid", event.GetInt("userid"));
 					event2.SetInt("victim_entindex", event.GetInt("victim_entindex"));
 					event2.SetInt("inflictor_entindex", event.GetInt("inflictor_entindex"));
-					event2.SetInt("attacker", GetClientUserId(iTarget));
+					event2.SetInt("attacker", userid);
 					event2.SetInt("weaponid", event.GetInt("weaponid"));
 					event2.SetInt("damagebits", event.GetInt("damagebits"));
 					event2.SetInt("customkill", event.GetInt("customkill"));
@@ -6582,7 +6582,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 						event2.SetInt("userid", event.GetInt("userid"));
 						event2.SetInt("victim_entindex", event.GetInt("victim_entindex"));
 						event2.SetInt("inflictor_entindex", event.GetInt("inflictor_entindex"));
-						event2.SetInt("attacker", GetClientUserId(iTarget));
+						event2.SetInt("attacker", userid);
 						event2.SetInt("weaponid", event.GetInt("weaponid"));
 						event2.SetInt("damagebits", event.GetInt("damagebits"));
 						event2.SetInt("customkill", event.GetInt("customkill"));
