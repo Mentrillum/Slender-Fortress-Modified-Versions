@@ -3971,6 +3971,45 @@ void SetRoundState(SF2RoundState iRoundState)
 				}
 			}
 
+			if (g_bRestartSessionEnabled)
+			{
+				ArrayList hSpawnPoint = new ArrayList();
+#if defined DEBUG
+				SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hSpawnPoint in SetRoundState(SF2RoundState_Grace).", hSpawnPoint);
+#endif
+				float flTeleportPos[3];
+				int ent = -1, iSpawnTeam = 0;
+				while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
+				{
+					iSpawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
+					if (iSpawnTeam == TFTeam_Red)
+					{
+						hSpawnPoint.Push(ent);
+					}
+					
+				}
+				ent = -1;
+				if (hSpawnPoint.Length > 0)
+				{
+					for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+					{
+						ent = hSpawnPoint.Get(GetRandomInt(0, hSpawnPoint.Length - 1));
+						
+						if (IsValidEntity(ent))
+						{
+							GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
+							SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(iNPCIndex);
+							if (!Npc.IsValid()) continue;
+							SpawnSlender(Npc, flTeleportPos);
+						}
+					}
+				}
+				delete hSpawnPoint;
+#if defined DEBUG
+				SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hSpawnPoint in SetRoundState(SF2RoundState_Grace).", hSpawnPoint);
+#endif
+			}
+
 			CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
 		}
 		case SF2RoundState_Active:
@@ -7879,45 +7918,6 @@ public Action Timer_CheckRoundWinConditions(Handle timer)
 public Action Timer_RoundGrace(Handle timer)
 {
 	if (timer != g_hRoundGraceTimer) return Plugin_Stop;
-
-	if (g_bRestartSessionEnabled)
-	{
-		ArrayList hSpawnPoint = new ArrayList();
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hSpawnPoint in Timer_RoundGrace.", hSpawnPoint);
-		#endif
-		float flTeleportPos[3];
-		int ent = -1, iSpawnTeam = 0;
-		while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
-		{
-			iSpawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
-			if (iSpawnTeam == TFTeam_Red)
-			{
-				hSpawnPoint.Push(ent);
-			}
-			
-		}
-		ent = -1;
-		if (hSpawnPoint.Length > 0)
-		{
-			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
-			{
-				ent = hSpawnPoint.Get(GetRandomInt(0, hSpawnPoint.Length - 1));
-				
-				if (IsValidEntity(ent))
-				{
-					GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
-					SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(iNPCIndex);
-					if (!Npc.IsValid()) continue;
-					SpawnSlender(Npc, flTeleportPos);
-				}
-			}
-		}
-		delete hSpawnPoint;
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hSpawnPoint in Timer_RoundGrace.", hSpawnPoint);
-		#endif
-	}
 	
 	SetRoundState(SF2RoundState_Active);
 	return Plugin_Stop;
@@ -9246,7 +9246,7 @@ void InitializeNewGame()
 	}
 	else
 	{
-		SetRoundState(SF2RoundState_Active);
+		SetRoundState(SF2RoundState_Grace);
 		SF2_RefreshRestrictions();
 	}
 	
@@ -9580,7 +9580,7 @@ public Action Timer_ActivateRoundFromIntro(Handle timer)
 	if (g_hRoundIntroTimer != timer) return Plugin_Stop;
 	
 	// Obviously we don't want to spawn the boss when g_strRoundBossProfile isn't set yet.
-	SetRoundState(SF2RoundState_Active);
+	SetRoundState(SF2RoundState_Grace);
 	SF2_RefreshRestrictions();
 	
 	// Spawn the boss!
