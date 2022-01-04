@@ -1132,7 +1132,10 @@ static void StartPlugin()
 	
 	hCvar = FindConVar("mp_autoteambalance");
 	if (hCvar != null) hCvar.SetBool(false);
-
+	
+	hCvar = FindConVar("mp_scrambleteams_auto");
+	if (hCvar != null) hCvar.SetBool(false);
+	
 	if (!g_cvFullyEnableSpectator.BoolValue)
 	{
 		hCvar = FindConVar("mp_allowspectators");
