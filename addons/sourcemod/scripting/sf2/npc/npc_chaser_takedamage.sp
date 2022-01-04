@@ -380,11 +380,13 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 	if (!victim || victim == INVALID_ENT_REFERENCE) return;
 	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(victim);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	npc.flWalkSpeed = 0.0;
 	npc.flRunSpeed = 0.0;
 	int iState = g_iSlenderState[iBossIndex];
 	bool bDoChasePersistencyInit = false;
 	if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
+	loco.ClearStuckStatus();
 	g_iSlenderState[iBossIndex] = STATE_STUN;
 	if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
 	if (NPCChaseHasKeyDrop(iBossIndex))
@@ -602,6 +604,7 @@ public Action Hook_HitboxOnTakeDamage(int hitbox,int &attacker,int &inflictor,fl
 	int iBossIndex = NPCGetFromEntIndex(g_iSlenderHitboxOwner[hitbox]);
 	if(iBossIndex != -1 && NPCGetUniqueID(iBossIndex) != -1 && NPCChaserGetState(iBossIndex) == STATE_STUN)
 		damage = 0.0;
+	if (!IsValidClient(attacker)) damage = 0.0;
 	Hook_SlenderOnTakeDamage(hitbox, attacker, inflictor, damage, damagetype);
 	int iBossHealth = GetEntProp(hitbox, Prop_Data, "m_iHealth");
 

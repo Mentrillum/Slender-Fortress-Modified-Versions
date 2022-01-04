@@ -2655,6 +2655,8 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
 	if (g_bRoundGrace) return;
 
+	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return; // Stop spawning bosses before all pages are picked up in Renevant.
+
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	Npc.UnSpawn();
 	Npc.GetProfile(sProfile,sizeof(sProfile));
@@ -2796,6 +2798,9 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				if (view_as<bool>(GetProfileNum(sProfile,"body_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(iBossIndex, iDifficulty));
 				else npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(iBossIndex));
 			}
+
+			npcEntity.SetProp(Prop_Send, "m_usSolidFlags", 0);
+			npcEntity.SetProp(Prop_Data, "m_nSolidType", 0);
 
 			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
 			SetEntityFlags(npcEntity.iEnt, FL_NPC);
@@ -3372,7 +3377,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 			if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) flDistance *= 1.85;
 			if (IsClientReallySprinting(client)) flDistance *= 0.66;
 			
-			hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
 			bTraceHit = TR_DidHit(hTrace);
 			delete hTrace;
 		}
@@ -3381,7 +3386,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 			float flHisEyePos[3];
 			GetClientEyePosition(client, flHisEyePos);
 			
-			hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
 			bTraceHit = TR_DidHit(hTrace);
 			delete hTrace;
 			
@@ -3400,7 +3405,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 			GetClientAbsOrigin(client, flEndPos);
 			AddVectors(flHisPos, flMiddle, flEndPos);
 			
-			hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
 			bTraceHit = TR_DidHit(hTrace);
 			delete hTrace;
 			

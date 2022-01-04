@@ -3149,7 +3149,11 @@ stock void ClientUpdateListeningFlags(int client, bool bReset=false)
 			continue;
 		}
 
-		if (g_bPlayerEliminated[client])
+		if (g_bAdminAllTalk[client] || g_bAdminAllTalk[i])
+		{
+			SetListenOverride(client, i, Listen_Default);
+		}
+		else if (g_bPlayerEliminated[client])
 		{
 			if (!g_bPlayerEliminated[i])
 			{

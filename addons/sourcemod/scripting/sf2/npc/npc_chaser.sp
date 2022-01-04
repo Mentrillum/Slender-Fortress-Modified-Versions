@@ -3340,10 +3340,10 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 	if (timer != g_hSlenderChaseInitialTimer[iBossIndex]) return Plugin_Stop;
 	
 	if (!g_bNPCUsesChaseInitialAnimation[iBossIndex]) return Plugin_Stop;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-	
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+
 	int iOldState = g_iSlenderState[iBossIndex];
 	int iState = iOldState;
 	
@@ -3368,6 +3368,7 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 	
 	g_bNPCUsesChaseInitialAnimation[iBossIndex] = false;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	if (iState != STATE_ATTACK) NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 	g_hSlenderChaseInitialTimer[iBossIndex] = null;
 	return Plugin_Stop;
@@ -3386,9 +3387,9 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	if (timer != g_hSlenderRage1Timer[iBossIndex]) return Plugin_Stop;
 	
 	if (!g_bNPCUsesRageAnimation1[iBossIndex]) return Plugin_Stop;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iOldState = g_iSlenderState[iBossIndex];
 	int iState = iOldState;
@@ -3414,6 +3415,7 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	
 	g_bNPCUsesRageAnimation1[iBossIndex] = false;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	if (iState != STATE_ATTACK) NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 	return Plugin_Stop;
 }
@@ -3431,9 +3433,9 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	if (timer != g_hSlenderRage2Timer[iBossIndex]) return Plugin_Stop;
 	
 	if (!g_bNPCUsesRageAnimation2[iBossIndex]) return Plugin_Stop;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iOldState = g_iSlenderState[iBossIndex];
 	int iState = iOldState;
@@ -3459,6 +3461,7 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	
 	g_bNPCUsesRageAnimation2[iBossIndex] = false;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	if (iState != STATE_ATTACK) NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 	return Plugin_Stop;
 }
@@ -3476,9 +3479,9 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	if (timer != g_hSlenderRage3Timer[iBossIndex]) return Plugin_Stop;
 	
 	if (!g_bNPCUsesRageAnimation3[iBossIndex]) return Plugin_Stop;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iOldState = g_iSlenderState[iBossIndex];
 	int iState = iOldState;
@@ -3504,6 +3507,7 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	
 	g_bNPCUsesRageAnimation3[iBossIndex] = false;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	if (iState != STATE_ATTACK) NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 	return Plugin_Stop;
 }
@@ -3521,9 +3525,14 @@ public Action Timer_SlenderSpawnTimer(Handle timer, any entref)
 	if (timer != g_hSlenderSpawnTimer[iBossIndex]) return Plugin_Stop;
 	
 	if (!g_bSlenderSpawning[iBossIndex]) return Plugin_Stop;
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+
 	SDKHook(slender, SDKHook_Think, SlenderChaseBossProcessMovement);
 	g_bSlenderSpawning[iBossIndex] = false;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(slender), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	NPCChaserUpdateBossAnimation(iBossIndex, slender, STATE_IDLE);
 	return Plugin_Stop;
@@ -3540,9 +3549,9 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	if (timer != g_hSlenderHealTimer[iBossIndex]) return Plugin_Stop;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iOldState = g_iSlenderState[iBossIndex];
 	int iState = iOldState;
@@ -3569,6 +3578,7 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 	g_bNPCSetHealDestination[iBossIndex] = false;
 	g_bNPCRunningToHeal[iBossIndex] = false;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	g_bNPCUseStartFleeAnimation[iBossIndex] = false;
 	g_bNPCUsesHealAnimation[iBossIndex] = false;
 	g_bNPCHealing[iBossIndex] = false;
@@ -3675,9 +3685,9 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	if (timer != g_hSlenderStartFleeTimer[iBossIndex]) return Plugin_Stop;
 	
 	if (!g_bNPCUseStartFleeAnimation[iBossIndex]) return Plugin_Stop;
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iOldState = g_iSlenderState[iBossIndex];
 	int iState = iOldState;
@@ -3705,6 +3715,7 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	g_bNPCUseStartFleeAnimation[iBossIndex] = false;
 	g_bNPCRunningToHeal[iBossIndex] = true;
 	g_flLastStuckTime[iBossIndex] = 0.0;
+	loco.ClearStuckStatus();
 	NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 	
 	return Plugin_Stop;

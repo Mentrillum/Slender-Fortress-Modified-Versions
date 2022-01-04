@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.1 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.1 M"
+#define PLUGIN_VERSION "1.7.1.1 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1.1 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -235,6 +235,7 @@ bool g_bSeeUpdateMenu[MAXPLAYERS + 1] = false;
 //Command
 bool g_bPlayerNoPoints[MAXPLAYERS + 1] = false;
 bool g_bAdminNoPoints[MAXPLAYERS + 1] = false;
+bool g_bAdminAllTalk[MAXPLAYERS + 1] = false;
 
 // Offsets.
 int g_offsPlayerFOV = -1;
@@ -967,8 +968,6 @@ Handle g_hSDKWeaponSwitch;
 Handle g_hSDKWeaponGetCustomDamageType;
 Handle g_hSDKProjectileCanCollideWithTeammates;
 
-int g_iServerOS;
-
 // SourceTV userid used for boss name
 int g_iSourceTVUserID = -1;
 char g_sOldClientName[MAXPLAYERS + 1][64];
@@ -1664,7 +1663,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 		}
 	}
 	// Check if we can add some proxies.
-	if (!g_bRoundGrace)
+	if (!g_bRoundGrace && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap())
 	{
 			ArrayList hProxyCandidates = new ArrayList();
 
@@ -3804,6 +3803,7 @@ public void OnClientDisconnect(int iClient)
 	g_bPlayerEscaped[iClient] = false;
 	g_bPlayerNoPoints[iClient] = false;
 	g_bAdminNoPoints[iClient] = false;
+	g_bAdminAllTalk[iClient] = false;
 	g_bPlayerIn1UpCondition[iClient] = false;
 	g_bPlayerDied1Up[iClient] = false;
 	g_bPlayerFullyDied1Up[iClient] = false;
@@ -4097,6 +4097,7 @@ void SetRoundState(SF2RoundState iRoundState)
 			}
 			else if (SF_IsRenevantMap())
 			{
+				NPCRemoveAll();
 				Renevant_SetWave(1, true);
 			}
 		}
@@ -8881,8 +8882,17 @@ void SpawnPages()
 				
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
-				spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
-				pageData.CollectSoundPitch = spawnPoint.PageCollectSoundPitch;
+				
+				if (spawnPoint.IsValid())
+				{
+					spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
+					pageData.CollectSoundPitch = spawnPoint.PageCollectSoundPitch;
+				}
+				else
+				{
+					pageData.CollectSound[0] = '\0';
+					pageData.CollectSoundPitch = 0;
+				}
 				
 				g_hPages.PushArray(pageData, sizeof(pageData));
 			}

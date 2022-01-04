@@ -114,7 +114,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 
 		hTrace = TR_TraceRayFilterEx(flMyEyePos,
 			flTargetPos,
-			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 			RayType_EndPoint,
 			TraceRayDontHitAnyEntity,
 			slender);
@@ -133,7 +133,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 
 			hTrace = TR_TraceRayFilterEx(flMyEyePos,
 				flTargetPos,
-				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 				RayType_EndPoint,
 				TraceRayDontHitAnyEntity,
 				slender);
@@ -198,6 +198,9 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 	
@@ -243,6 +246,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 	if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
+	loco.ClearStuckStatus();
 	if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
 
 	if (NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) == 1)
@@ -456,7 +460,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							{
 								hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 									flTargetPosShockwave,
-									CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+									CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 									RayType_EndPoint,
 									TraceRayDontHitCharactersOrEntity,
 									slender);
@@ -475,7 +479,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									
 									hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 										flTargetPosShockwave,
-										CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+										CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 										RayType_EndPoint,
 										TraceRayDontHitCharactersOrEntity,
 										slender);
@@ -539,7 +543,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							{
 								hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 									flTargetPosShockwave,
-									CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+									CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 									RayType_EndPoint,
 									TraceRayDontHitCharactersOrEntity,
 									slender);
@@ -558,7 +562,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									
 									hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 										flTargetPosShockwave,
-										CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+										CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 										RayType_EndPoint,
 										TraceRayDontHitCharactersOrEntity,
 										slender);
@@ -610,7 +614,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				
 				hTrace = TR_TraceRayFilterEx(flMyEyePos,
 					flTargetPos,
-					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 					RayType_EndPoint,
 					TraceRayDontHitAnyEntity,
 					slender);
@@ -629,7 +633,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					
 					hTrace = TR_TraceRayFilterEx(flMyEyePos,
 						flTargetPos,
-						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 						RayType_EndPoint,
 						TraceRayDontHitAnyEntity,
 						slender);
@@ -1218,7 +1222,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				vecEnd[2] = flEffectPos[2] + vecDir[2] * 9001.0;
 				
 				// Fire a bullet (ignoring the shooter).
-				Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+				Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 				RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
 				if ( TR_GetFraction(trace) < 1.0 )
 				{
@@ -1596,7 +1600,7 @@ public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
 		vecEnd[1] = flEffectPos[1] + vecDir[1] * 9001.0; 
 		vecEnd[2] = flEffectPos[2] + vecDir[2] * 9001.0;
 
-		Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+		Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 		RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
 		if ( TR_GetFraction(trace) < 1.0 )
 		{
@@ -1695,7 +1699,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 		{
 			Handle hTrace = TR_TraceRayFilterEx(flMyEyePos,
 				flTargetPos,
-				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 				RayType_EndPoint,
 				TraceRayDontHitAnyEntity,
 				iBoss);
@@ -1717,7 +1721,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 						flPosForward, 
 						g_flSlenderDetectMins[iBossIndex], 
 						g_flSlenderDetectMaxs[iBossIndex], 
-						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 						TraceRayBossVisibility, 
 						iBoss);
 					}
@@ -1727,7 +1731,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 						flPosForward, 
 						HULL_HUMAN_MINS, 
 						HULL_HUMAN_MAXS, 
-						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 						TraceRayBossVisibility, 
 						iBoss);
 					}

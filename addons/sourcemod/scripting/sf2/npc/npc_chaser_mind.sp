@@ -53,7 +53,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	char sSlenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sSlenderProfile, sizeof(sSlenderProfile));
 	
-	npcEntity.GetAbsOrigin(flMyPos);
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flMyPos);
 	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flMyEyeAng);
 	
 	AddVectors(flMyEyeAng, g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng);
@@ -259,7 +259,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	
 	bool bInFlashlight = false;
 	bool bDoubleFlashlightDamage = false;
-	
+
 	// Gather data about the players around me and get the best new target, in case my old target is invalidated.
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -281,7 +281,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					
 					Handle hTrace = TR_TraceRayFilterEx(flTraceStartPos, 
 						flTraceEndPos, 
-						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 						RayType_EndPoint, 
 						TraceRayBossVisibility, 
 						slender);
@@ -328,7 +328,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		
 		Handle hTrace = TR_TraceRayFilterEx(flTraceStartPos, 
 					flTraceEndPos, 
-					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 					RayType_EndPoint, 
 					TraceRayBossVisibility, 
 					slender);
@@ -336,7 +336,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		bool bIsVisible = !TR_DidHit(hTrace);
 		int iTraceHitEntity = TR_GetEntityIndex(hTrace);
 		delete hTrace;
-		
+
 		if (!bIsVisible && iTraceHitEntity == i) bIsVisible = true;
 		
 		if (bIsVisible)
@@ -760,7 +760,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					
 					Handle hTrace = TR_TraceRayFilterEx(flTraceStartPos, 
 						flTraceEndPos, 
-						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 						RayType_EndPoint, 
 						TraceRayBossVisibility, 
 						slender);
@@ -951,7 +951,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						GetEntPropVector(iTarget, Prop_Send, "m_vecMins", flTargetMins);
 						GetEntPropVector(iTarget, Prop_Send, "m_vecMaxs", flTargetMaxs);
 						GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flTraceEndPos);
-						for (int i = 0; i < 3; i++)flTraceEndPos[i] += ((flTargetMins[i] + flTargetMaxs[i]) / 2.0);
+						for (int i = 0; i < 3; i++) flTraceEndPos[i] += ((flTargetMins[i] + flTargetMaxs[i]) / 2.0);
 					}
 					
 					bool bIsDeathPosVisible = false;
@@ -960,7 +960,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					{
 						Handle hTrace = TR_TraceRayFilterEx(flTraceStartPos, 
 							g_flSlenderChaseDeathPosition[iBossIndex], 
-							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 							RayType_EndPoint, 
 							TraceRayBossVisibility, 
 							slender);
@@ -1117,6 +1117,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				if (!g_bSlenderAttacking[iBossIndex] || (g_flSlenderTimeUntilAttackEnd[iBossIndex] != -1.0 && g_flSlenderTimeUntilAttackEnd[iBossIndex] <= GetGameTime()))
 				{
 					if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
+					loco.ClearStuckStatus();
 					g_flSlenderTimeUntilAttackEnd[iBossIndex] = -1.0;
 					if (IsValidClient(iTarget))
 					{
@@ -2074,6 +2075,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							}
 						}
 						if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
+						loco.ClearStuckStatus();
 					}
 				}
 				else

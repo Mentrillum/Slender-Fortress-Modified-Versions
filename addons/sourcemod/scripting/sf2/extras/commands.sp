@@ -1784,3 +1784,37 @@ public Action Timer_ForcePlayer(Handle timer, any userid)
 	//CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
 	return Plugin_Stop;
 }
+
+public Action Command_AllTalkToggle(int iClient, int args)
+{
+	g_bAdminAllTalk[iClient] = !g_bAdminAllTalk[iClient];
+	CPrintToChat(iClient, "{royalblue}%t{default}You will %s hear and speak to all players.", "SF2 Prefix", g_bAdminAllTalk[iClient] ? "now" : "no longer");
+
+	for (int target = 1; target <= MaxClients; target++)
+	{
+		ClientUpdateListeningFlags(target);
+	}
+	return Plugin_Handled;
+}
+
+public Action Command_AllTalkOn(int iClient, int args)
+{
+	g_bAdminAllTalk[iClient] = true;
+
+	for (int target = 1; target <= MaxClients; target++)
+	{
+		ClientUpdateListeningFlags(target);
+	}
+	return Plugin_Handled;
+}
+
+public Action Command_AllTalkOff(int iClient, int args)
+{
+	g_bAdminAllTalk[iClient] = false;
+
+	for (int target = 1; target <= MaxClients; target++)
+	{
+		ClientUpdateListeningFlags(target);
+	}
+	return Plugin_Handled;
+} 
