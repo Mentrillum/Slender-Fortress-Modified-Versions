@@ -634,7 +634,7 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 	}
 
 	//A projectile went off pvp area. (Experimental)
-	if (iOther>MaxClients && IsValidEntity(iOther))
+	if (iOther>MaxClients && IsValidEntity(iOther) && !GetEntProp(iOther, Prop_Send, "m_iDeflected"))
 	{
 		//Get entity's classname.
 		char sClassname[50];
