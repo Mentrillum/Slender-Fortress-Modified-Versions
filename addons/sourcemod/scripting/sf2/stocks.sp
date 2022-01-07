@@ -176,7 +176,15 @@ int SDK_EndTouch(int iEntity, int iOther)
 	return -1;
 }
 */
+bool SDK_PointIsWithin(int iFunc, float flPos[3])
+{
+	if(g_hSDKPointIsWithin != null)
+	{
+		return view_as<bool>(SDKCall(g_hSDKPointIsWithin, iFunc, flPos));
+	}
 
+	return false;
+}
 //	==========================================================
 //	ENTITY & ENTITY NETWORK FUNCTIONS
 //	==========================================================
@@ -439,9 +447,37 @@ stock void SDK_GetSmoothedVelocity(int iEntity, float flVector[3])
 	SDKCall(g_hSDKGetSmoothedVelocity, iEntity, flVector);
 }
 
+stock void NavCollectFuncNavPrefer()
+{
+	if (g_aFuncNavPrefer == null) return;
+	g_aFuncNavPrefer.Clear();
+	int iFunc = -1;
+	while ((iFunc = FindEntityByClassname(iFunc, "func_nav_prefer")) != -1)
+	{
+		g_aFuncNavPrefer.Push(iFunc);
+	}
+}
+
+stock bool NavHasFuncPrefer(CNavArea area)
+{
+	if (g_aFuncNavPrefer == null) return false;
+	float flCenter[3];
+	area.GetCenter(flCenter);
+	if (g_aFuncNavPrefer.Length > 0)
+	{
+		for (int a = 1; a <= (g_aFuncNavPrefer.Length - 1); a++)
+		{
+			int iFunc = g_aFuncNavPrefer.Get(a);
+			if (SDK_PointIsWithin(iFunc, flCenter))
+				return true;
+		}
+	}
+	return false;
+}
+
 //  =========================================================
 //  GLOW FUNCTIONS
-//
+//  =========================================================
 //I borrowed this glow creation code from Pelipoika, cause It's efficient and clean 
 stock int TF2_CreateGlow(int iEnt)
 {

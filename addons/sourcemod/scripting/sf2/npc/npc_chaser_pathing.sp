@@ -290,7 +290,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 				ScaleVector(flVecPathNodePos, sSegment.length);
 				AddVectors(flVecPathEndPos, flVecPathNodePos, flVecPathEndPos);
 
-				if (g_pPath[iBossIndex].IsDiscontinuityAhead(bot, JUMP_OVER_GAP, 200.0) || g_pPath[iBossIndex].IsDiscontinuityAhead(bot, CLIMB_UP, 200.0) || g_pPath[iBossIndex].IsDiscontinuityAhead(bot, LADDER_UP, 200.0))
+				if (g_pPath[iBossIndex].IsDiscontinuityAhead(bot, JUMP_OVER_GAP, 120.0) || g_pPath[iBossIndex].IsDiscontinuityAhead(bot, CLIMB_UP, 120.0) || g_pPath[iBossIndex].IsDiscontinuityAhead(bot, LADDER_UP, 120.0))
 				{
 					CBaseNPC_Jump(loco, flMyPos, flVecPathEndPos);
 				}
@@ -565,7 +565,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 									}
 									else
 									{
-										CNavArea area = TheNavMesh.GetNearestNavArea(flMyPos, _, 2500.0);
+										CNavArea area = TheNavMesh.GetNearestNavArea(flMyPos, _, 300.0);
 										if (area == NULL_AREA)
 										{
 											area = sSegment.area;
@@ -681,7 +681,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 									}
 									else
 									{
-										CNavArea area = TheNavMesh.GetNearestNavArea(flMyPos, _, 2500.0);
+										CNavArea area = TheNavMesh.GetNearestNavArea(flMyPos, _, 300.0);
 										if (area == NULL_AREA)
 										{
 											area = sSegment.area;
@@ -979,19 +979,19 @@ public void CBaseNPC_Jump(NextBotGroundLocomotion nextbotLocomotion, float vecSt
 		height = 16.0;
 	}
 	
-	float additionalHeight = 0.0;
+	float additionalHeight = 20.0;
 	if (height < 32.0)
 	{
-		additionalHeight = 16.0;
+		additionalHeight += 8.0;
 	}
 	float flGravity = nextbotLocomotion.GetGravity();
 	
 	height += additionalHeight;
 	
-	float speed = SquareRoot(2.1 * flGravity * height);
+	float speed = SquareRoot(2.0 * flGravity * height);
 	float time = (speed / flGravity);
 	
-	time += SquareRoot((0.9 * additionalHeight) / flGravity);
+	time += SquareRoot((2.0 * additionalHeight) / flGravity);
 	
 	SubtractVectors(vecEndPos, vecStartPos, vecJumpVel);
 	vecJumpVel[0] /= time;
@@ -1002,7 +1002,7 @@ public void CBaseNPC_Jump(NextBotGroundLocomotion nextbotLocomotion, float vecSt
 	vecJumpVel[2] += height+additionalHeight;
 		
 	float flJumpSpeed = GetVectorLength(vecJumpVel, true);
-	float flMaxSpeed = SquareFloat(1000.0);
+	float flMaxSpeed = SquareFloat(650.0);
 	if (flJumpSpeed > flMaxSpeed)
 	{
 		vecJumpVel[0] *= (flMaxSpeed / flJumpSpeed);

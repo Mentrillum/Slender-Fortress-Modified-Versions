@@ -25,6 +25,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	INextBot bot = npc.GetBot();
 	CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npc.GetEntity());
 
+	loco.ClearStuckStatus();
+
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_BOSS_IDLE, 1, "g_flSlenderTimeUntilKill[%d]: %f", iBossIndex, g_flSlenderTimeUntilKill[iBossIndex] - GetGameTime());
 	#endif

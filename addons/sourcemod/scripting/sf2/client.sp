@@ -105,8 +105,8 @@ char g_sClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Nav Data
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
-static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 
+static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
 //Peeking Data
 static bool g_bPlayerPeeking[MAXPLAYERS + 1] = { false, ... };
 
@@ -1910,7 +1910,7 @@ void ClientHandleSprint(int client, bool bSprint)
 		}
 	}
 }
- /**
+/**
   *	Handles thirdperson peeking
   */
 bool ClientStartPeeking(int client)
@@ -1923,7 +1923,7 @@ bool ClientStartPeeking(int client)
 	}
 	return false;
 }
-
+  
 void ClientEndPeeking(int client)
 {
 	if (g_bPlayerPeeking[client])
@@ -2392,7 +2392,6 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 	SendDebugMessageToPlayer(client, DEBUG_NAV, 1, "Old area: %i DHF:%s, New area: %i DHF:%s, is considered as exit camper: %s", oldArea.Index, (oldArea.Attributes & NAV_MESH_DONT_HIDE) ? "true" : "false", newArea.Index, (newArea.Attributes & NAV_MESH_DONT_HIDE) ? "true" : "false", (g_bPlayerIsExitCamping[client]) ? "true" : "false" );
 #endif
 }*/
-
 
 //	==========================================================
 //	GHOST MODE FUNCTIONS

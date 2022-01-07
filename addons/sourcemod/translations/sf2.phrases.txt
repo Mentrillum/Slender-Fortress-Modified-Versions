@@ -1684,7 +1684,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Upgraded the boss base to CBaseNPC\n-body_pitch and body_yaw now get affected\n-Difficulty theme loops are no longer experimental\n-Bosses now turn more smoothly\n-Re-added Wall Hax but removed Debug Mode\n-It is now possible to show the boss outline with a CVar"
+		"en"	"-Fixed a bug where bosses wouldn't collide with any trigger brush\n-Set the boss' entity health to the 32 bit integer limit minus 1\n-Bosses during endless chasing and RAID no longer get the no teleport flag upon spawning\n-Upgraded the grace period states\n-Bosses can now phase through deathcam players\n-func_nav_prefer can be used properly again"
 	}
 
 	"SF2 Smite player"

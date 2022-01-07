@@ -121,8 +121,6 @@ static bool g_bNPCProxySpawnEffectEnabled[MAX_BOSSES];
 static float g_flNPCProxySpawnEffectLifetime[MAX_BOSSES];
 static float g_flNPCProxySpawnEffectZOffset[MAX_BOSSES];
 
-static NextBotActionFactory g_bNBActionFactory;
-
 Handle hTimerMusic = null;//Planning to add a bosses array on.
 
 int g_iBossPathingColor[MAX_BOSSES][4];
@@ -2751,33 +2749,29 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			npcBoss.flRunSpeed = g_flSlenderCalculatedSpeed[iBossIndex];
 			npcBoss.flMaxYawRate = NPCGetTurnRate(iBossIndex);
 			g_pPath[iBossIndex].SetMinLookAheadDistance(GetProfileFloat(sProfile, "search_node_dist_lookahead", 512.0));
-			locomotion.SetSpeedLimit(5000.0);
 			locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
 			locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
 			locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
 			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
 			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
-			g_bNBActionFactory = new NextBotActionFactory("SlenderBossAction");
-			g_bNBActionFactory.SetEventCallback(EventResponderType_OnStuck, CBaseNPC_OnStuck);
-
 			if (NPCGetRaidHitbox(iBossIndex) == 1)
 			{
-				npcBoss.SetBodyMins(g_flSlenderDetectMins[iBossIndex]);
-				npcBoss.SetBodyMaxs(g_flSlenderDetectMaxs[iBossIndex]);
+				npcEntity.SetPropVector(Prop_Send, "m_vecMins", g_flSlenderDetectMins[iBossIndex]);
+				npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iBossIndex]);
 
 				npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", g_flSlenderDetectMins[iBossIndex]);
 				npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iBossIndex]);
 			}
 			else if (NPCGetRaidHitbox(iBossIndex) == 0)
 			{
-				npcBoss.SetBodyMins(HULL_HUMAN_MINS);
-				npcBoss.SetBodyMaxs(HULL_HUMAN_MAXS);
+				npcEntity.SetPropVector(Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
+				npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
 
 				npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
 				npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
 			}
-			
+
 			if (NPCGetModelSkinMax(iBossIndex) > 0)
 			{
 				int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iBossIndex));
@@ -2799,17 +2793,13 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				else npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(iBossIndex));
 			}
 
-			npcEntity.SetProp(Prop_Send, "m_usSolidFlags", 0);
-			npcEntity.SetProp(Prop_Data, "m_nSolidType", 0);
-
 			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
-			SetEntityFlags(npcEntity.iEnt, FL_NPC);
+			npcEntity.AddFlag(FL_NPC);
 			SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
 
 			//if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(iBoss, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
 
 			SDKHook(npcEntity.iEnt, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamageOriginal);
-			SDKHook(npcEntity.iEnt, SDKHook_ShouldCollide, Hook_HitBoxShouldCollide);
 
 			// Reset stats.
 			g_bSlenderInBacon[iBossIndex] = false;
@@ -2855,11 +2845,10 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			
 			SetEntityModel(g_iSlenderHitbox[iBossIndex], sBuffer);
 			TeleportEntity(g_iSlenderHitbox[iBossIndex], flTruePos, flVecAng, NULL_VECTOR);
-			//DispatchKeyValue(g_iSlenderHitbox[iBossIndex],"health","30000");
 			DispatchKeyValue(g_iSlenderHitbox[iBossIndex],"TeamNum","1");
 			DispatchSpawn(g_iSlenderHitbox[iBossIndex]);
 			ActivateEntity(g_iSlenderHitbox[iBossIndex]);
-			SetEntityMoveType(g_iSlenderHitbox[iBossIndex],MOVETYPE_NONE);
+			SetEntityMoveType(g_iSlenderHitbox[iBossIndex], MOVETYPE_NONE);
 			SetEntityRenderMode(g_iSlenderHitbox[iBossIndex], RENDER_TRANSCOLOR);
 			SetEntityRenderColor(g_iSlenderHitbox[iBossIndex], 0, 0, 0, 0);
 			SetVariantString("!activator");
@@ -2902,9 +2891,9 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			}
 			if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(g_iSlenderHitbox[iBossIndex], FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
 
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_iHealth", 30000);
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_iMaxHealth", 30000);
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_initialHealth", 30000);
+			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_iHealth", 2147483646);
+			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_iMaxHealth", 2147483646);
+			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_initialHealth", 2147483646);
 
 			for (int iDifficulty2 = 0; iDifficulty2 < Difficulty_Max; iDifficulty2++)
 			{
@@ -2999,10 +2988,10 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				EmitSoundToAll(g_sSlenderEngineSound[iBossIndex], npcEntity.iEnt, SNDCHAN_STATIC, GetProfileNum(sProfile, "engine_sound_level", 83), 
 				_, GetProfileFloat(sProfile, "engine_sound_volume", 0.8));
 			}
-			if (SF_BossesChaseEndlessly() || SF_IsRaidMap())
+			/*if (SF_BossesChaseEndlessly() || SF_IsRaidMap())
 			{
 				NPCSetFlags(iBossIndex,NPCGetFlags(iBossIndex)|SFF_NOTELEPORT);
-			}
+			}*/
 
 			//Stun Health
 			float flMaxHealth = NPCChaserGetStunInitialHealth(iBossIndex);
@@ -3100,7 +3089,7 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 		GetEdictClassname(other, strClass, sizeof(strClass));
 		if (strcmp(strClass, "player") == 0)
 		{
-			if (!g_bPlayerProxy[other] && !IsClientInGhostMode(other) && GetClientTeam(other) != TFTeam_Blue)
+			if (!g_bPlayerProxy[other] && !IsClientInGhostMode(other) && GetClientTeam(other) != TFTeam_Blue && !IsClientInDeathCam(other))
 			{
 				return true;
 			}
@@ -4175,6 +4164,7 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 		{
 			float flTeleportTime = GetRandomFloat(NPCGetTeleportTimeMin(iBossIndex, iDifficulty), NPCGetTeleportTimeMax(iBossIndex, iDifficulty));
 			g_flSlenderNextTeleportTime[iBossIndex] = GetGameTime() + flTeleportTime;
+			bool bIgnoreFuncNavPrefer = g_bNPCIgnoreNavPrefer[iBossIndex];
 			
 			int iTeleportTarget = EntRefToEntIndex(g_iSlenderTeleportTarget[iBossIndex]);
 			
@@ -4221,6 +4211,9 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 								// Don't spawn/teleport at areas marked with the "NO HOSTAGES" flag.
 								continue;
 							}
+							// Check if the nav area has a func prefer on it.
+							if (bIgnoreFuncNavPrefer && NavHasFuncPrefer(Area))
+								continue;
 
 							int iIndex = hAreaArray.Push(Area);
 							hAreaArray.Set(iIndex, Area.GetCostSoFar(), 1);

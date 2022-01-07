@@ -181,6 +181,8 @@ public void OnPluginStart()
 
 	g_cvAllowPlayerPeeking = CreateConVar("sf2_player_peeking", "0", "Allow players to go into thirdperson by crouching and taunting.", _, true, 0.0, true, 1.0);
 
+	g_cvUsePlayersForKillFeed = CreateConVar("sf2_kill_feed_players", "0", "Uses players for kill feed when SourceTV is unavailable.", _, true, 0.0, true, 1.0);
+
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();
@@ -242,8 +244,11 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_end_grace_period", Command_ForceEndGrace, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_reloadprofiles", Command_ReloadProfiles, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_alltalk", Command_AllTalkToggle, ADMFLAG_SLAY);
+	RegAdminCmd("sm_slalltalk", Command_AllTalkToggle, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
 	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
+	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("-slalltalk", Command_AllTalkOff, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 
 	// Hook onto existing console commands.
 	AddCommandListener(Hook_CommandBuild, "build");
@@ -313,6 +318,8 @@ public void OnPluginStart()
 	PvP_Initialize();
 
 	SetupCustomMapEntities();
+
+	g_aFuncNavPrefer = new ArrayList();
 	
 	// @TODO: When cvars are finalized, set this to true.
 	AutoExecConfig(false);
@@ -640,7 +647,10 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	if (!g_bPlayerCalledForNightmare[client])
 		g_bPlayerCalledForNightmare[client] = (StrContains(sArgs, "nightmare", false) != -1 || StrContains(sArgs, "Nightmare", false) != -1);
 
-	if (!g_bEnabled || g_cvAllChat.BoolValue || SF_IsBoxingMap()) return Plugin_Continue;
+	if (g_hTimerChangeClientName[client] != null)
+		TriggerTimer(g_hTimerChangeClientName[client]);
+
+	if (!g_bEnabled || g_cvAllChat.BoolValue || SF_IsBoxingMap() || g_bAdminAllTalk[client]) return Plugin_Continue;
 
 	if (!IsRoundEnding()) {
 		bool bSayTeam = strcmp(command, "say_team") == 0;

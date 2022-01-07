@@ -666,9 +666,12 @@ public Action PvP_OnTriggerStartTouchBoxing(int trigger,int iOther)
 		{
 			if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 			{
-				//Yup it's a projectile zap it!
-				//But we have to wait to prevent some bugs.
-				CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
+				if (!GetEntProp(iOther, Prop_Send, "m_iDeflected"))
+				{
+					//Yup it's a projectile zap it!
+					//But we have to wait to prevent some bugs.
+					CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
+				}
 			}
 		}
 	}

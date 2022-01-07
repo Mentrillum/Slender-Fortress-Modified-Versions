@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.1.1 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.1.1 M"
+#define PLUGIN_VERSION "1.7.1.2 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1.2 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -873,6 +873,7 @@ ConVar g_cvUseAlternateConfigDirectory;
 ConVar g_cvPlayerKeepWeapons;
 ConVar g_cvFullyEnableSpectator;
 ConVar g_cvAllowPlayerPeeking;
+ConVar g_cvUsePlayersForKillFeed;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
@@ -969,8 +970,8 @@ Handle g_hSDKProjectileCanCollideWithTeammates;
 
 // SourceTV userid used for boss name
 int g_iSourceTVUserID = -1;
-char g_sOldSourceTVClientName[64];
-Handle g_hTimerChangeSourceTVBotName = null;
+char g_sOldClientName[MAXPLAYERS + 1][64];
+Handle g_hTimerChangeClientName[MAXPLAYERS + 1] = null;
 
 //Fail Timer
 Handle g_hTimerFail = null;
@@ -985,6 +986,8 @@ bool g_bRenevantMarkForDeath = false;
 bool g_bIsRenevantMap = false;
 Handle g_hRenevantWaveTimer = null;
 ArrayList g_aRenevantWaveList;
+
+stock ArrayList g_aFuncNavPrefer;
 
 #if defined DEBUG
 #include "sf2/debug.sp"
@@ -1129,6 +1132,9 @@ static void StartPlugin()
 	if (hCvar != null) hCvar.SetBool(true);
 	
 	hCvar = FindConVar("mp_autoteambalance");
+	if (hCvar != null) hCvar.SetBool(false);
+
+	hCvar = FindConVar("mp_scrambleteams_auto");
 	if (hCvar != null) hCvar.SetBool(false);
 
 	if (!g_cvFullyEnableSpectator.BoolValue)
@@ -1429,6 +1435,7 @@ static void StopPlugin()
 		ClientDeactivateUltravision(i);
 		ClientDisableConstantGlow(i);
 		ClientRemoveInteractiveGlow(i);
+		g_hTimerChangeClientName[i] = null;
 	}
 
 	g_bRenevantMultiEffect = false;
@@ -1439,6 +1446,8 @@ static void StopPlugin()
 	BossProfilesOnMapEnd();
 	
 	Tutorial_OnMapEnd();
+
+	if (g_aFuncNavPrefer != null) delete g_aFuncNavPrefer;
 	
 	delete g_hConfig;
 }
@@ -1454,7 +1463,6 @@ public void CleanTimerHandles()
 	g_hRoundGraceTimer = null;
 	g_hRoundTimer = null;
 	g_hRenevantWaveTimer = null;
-	g_hTimerChangeSourceTVBotName = null;
 	g_hVoteTimer = null;
 	g_hTimerFail = null;
 	g_hBossPackVoteTimer = null;
@@ -3941,7 +3949,7 @@ void SetRoundState(SF2RoundState iRoundState)
 				if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
 				SetEntityFlags(i, GetEntityFlags(i) & ~FL_FROZEN);
 			}
-
+			
 			// Fade in.
 			float flFadeTime = g_flRoundIntroFadeDuration;
 			int iFadeFlags = SF_FADE_IN | FFADE_PURGE;
@@ -3977,9 +3985,9 @@ void SetRoundState(SF2RoundState iRoundState)
 			if (g_bRestartSessionEnabled)
 			{
 				ArrayList hSpawnPoint = new ArrayList();
-#if defined DEBUG
+				#if defined DEBUG
 				SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hSpawnPoint in SetRoundState(SF2RoundState_Grace).", hSpawnPoint);
-#endif
+				#endif
 				float flTeleportPos[3];
 				int ent = -1, iSpawnTeam = 0;
 				while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
@@ -4008,15 +4016,16 @@ void SetRoundState(SF2RoundState iRoundState)
 					}
 				}
 				delete hSpawnPoint;
-#if defined DEBUG
+				#if defined DEBUG
 				SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hSpawnPoint in SetRoundState(SF2RoundState_Grace).", hSpawnPoint);
-#endif
+				#endif
 			}
 
 			CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
 		}
 		case SF2RoundState_Active:
 		{
+			g_hRoundGraceTimer = null;
 			g_hRoundTimer = null;
 			g_bPlayersAreCritted = false;
 			g_bPlayersAreMiniCritted = false;
@@ -4101,6 +4110,7 @@ void SetRoundState(SF2RoundState iRoundState)
 		}
 		case SF2RoundState_Active:
 		{
+			if (SF_IsRenevantMap()) NPCRemoveAll();
 			// Initialize the main round timer.
 			if (g_iRoundTimeLimit > 0)
 			{
@@ -4164,7 +4174,6 @@ void SetRoundState(SF2RoundState iRoundState)
 			}
 			else if (SF_IsRenevantMap())
 			{
-				NPCRemoveAll();
 				Renevant_SetWave(1, true);
 			}
 		}
@@ -5650,6 +5659,18 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	delete hProf;
 	
 	#endif
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "trigger_teleport")) != -1)
+	{
+		if (IsValidEntity(ent))
+		{
+			int flags = GetEntProp(ent, Prop_Data, "m_spawnflags");
+			if ((flags & TRIGGER_CLIENTS) && !(flags & TRIGGER_NPCS) && !(flags & TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS))
+			{
+				SetEntProp(ent, Prop_Data, "m_spawnflags", flags | TRIGGER_NPCS); //Some maps have this bug where teleport triggers are for clients but not for bosses, it is a problem in RED sometimes.
+			}	
+		}
+	}
 	//Nextbot doesn't trigger the triggers with npc flags, for map backward compatibility we are going to change the trigger filter and force a custom one.
 	/*int iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "trigger_*")) != -1)
@@ -5704,6 +5725,8 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 	#endif
 	
 	SF_FailEnd();
+
+	if (SF_IsRenevantMap() && g_hRenevantWaveTimer != null) KillTimer(g_hRenevantWaveTimer);
 	
 	for (int i = 1; i < MaxClients; i++)
 	{
@@ -6163,7 +6186,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	g_hPlayerPageRewardTimer[iClient] = null;
 	g_hPlayerPageRewardCycleTimer[iClient] = null;
 	g_hPlayerFireworkTimer[iClient] = null;
-	
+
 	g_iPlayerBossKillSubject[iClient] = INVALID_ENT_REFERENCE;
 	
 	g_bPlayerGettingPageReward[iClient] = false;
@@ -6459,22 +6482,25 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	int npcIndex = NPCGetFromEntIndex(inflictor);
 	if (npcIndex != -1 && !IsEntityAProjectile(inflictor))
 	{
-		int iSourceTV = GetClientOfUserId(g_iSourceTVUserID);
+		int iTarget = GetClientOfUserId(g_iSourceTVUserID);
 		int iAttackIndex = NPCGetCurrentAttackIndex(npcIndex);
-		if (MaxClients >= iSourceTV > 0 && IsClientInGame(iSourceTV) && IsClientSourceTV(iSourceTV)) //If the server has a source TV bot uses to print boss' name in kill feed.
+		if (MaxClients < iTarget || iTarget < 1 || !IsClientInGame(iTarget) || !IsClientSourceTV(iTarget)) //If the server has a source TV bot uses to print boss' name in kill feed.
+			iTarget = GetClientForDeath(iClient);
+
+		if (iTarget != -1)
 		{
-			if (g_hTimerChangeSourceTVBotName != null)
-				delete g_hTimerChangeSourceTVBotName;
-			else //No timer running that means the SourceTV bot's current name is the correct one, we can safely update our last known SourceTV bot's name.
-				GetEntPropString(iSourceTV, Prop_Data, "m_szNetname", g_sOldSourceTVClientName, sizeof(g_sOldSourceTVClientName));
+			if (g_hTimerChangeClientName[iTarget] != null)
+				KillTimer(g_hTimerChangeClientName[iTarget]);
+			else 
+				GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_sOldClientName[iTarget], sizeof(g_sOldClientName[]));
 			
 			char sBossName[SF2_MAX_NAME_LENGTH], sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(npcIndex, sProfile, sizeof(sProfile));
 			NPCGetBossName(npcIndex, sBossName, sizeof(sBossName));
 			
-			//TF2_ChangePlayerName(iSourceTV, sBossName, true);
-			SetClientName(iSourceTV, sBossName);
-			SetEntPropString(iSourceTV, Prop_Data, "m_szNetname", sBossName);
+			//TF2_ChangePlayerName(iTarget, sBossName, true);
+			SetClientName(iTarget, sBossName);
+			SetEntPropString(iTarget, Prop_Data, "m_szNetname", sBossName);
 			
 			event.SetString("assister_fallback", "");
 			if ((NPCGetFlags(npcIndex) & SFF_WEAPONKILLS) || (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS))
@@ -6504,15 +6530,70 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				event.SetString("weapon_logclassname", "");
 			}
 			
-			event.SetInt("attacker", g_iSourceTVUserID);
-			g_hTimerChangeSourceTVBotName = CreateTimer(0.6, Timer_RevertSourceTVBotName);
+			int userid = GetClientUserId(iTarget);
+			event.SetInt("attacker", userid);
+			g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
+
+			if(!IsClientSourceTV(iTarget))
+			{
+				event.SetInt("ignore", iTarget);
+
+				//Show a different attacker to the user were taking
+				iTarget = GetClientForDeath(iClient, iTarget);
+				if (iTarget != -1)
+				{
+					if (g_hTimerChangeClientName[iTarget] != null)
+						KillTimer(g_hTimerChangeClientName[iTarget]);
+					else 
+						GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_sOldClientName[iTarget], sizeof(g_sOldClientName[]));
+
+					Format(sBossName, sizeof(sBossName), " %s", sBossName);
+
+					//TF2_ChangePlayerName(iTarget, sBossName, true);
+					SetClientName(iTarget, sBossName);
+					SetEntPropString(iTarget, Prop_Data, "m_szNetname", sBossName);
+
+					g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
+
+					char sString[64];
+					Event event2 = CreateEvent("player_death", true);
+					event2.SetInt("userid", event.GetInt("userid"));
+					event2.SetInt("victim_entindex", event.GetInt("victim_entindex"));
+					event2.SetInt("inflictor_entindex", event.GetInt("inflictor_entindex"));
+					event2.SetInt("attacker", GetClientUserId(iTarget));
+					event2.SetInt("weaponid", event.GetInt("weaponid"));
+					event2.SetInt("damagebits", event.GetInt("damagebits"));
+					event2.SetInt("customkill", event.GetInt("customkill"));
+					event2.SetInt("assister", event.GetInt("assister"));
+					event2.SetInt("stun_flags", event.GetInt("stun_flags"));
+					event2.SetInt("death_flags", event.GetInt("death_flags"));
+					event2.SetBool("silent_kill", event.GetBool("silent_kill"));
+					event2.SetInt("playerpenetratecount", event.GetInt("playerpenetratecount"));
+					event2.SetInt("kill_streak_total", event.GetInt("kill_streak_total"));
+					event2.SetInt("kill_streak_wep", event.GetInt("kill_streak_wep"));
+					event2.SetInt("kill_streak_assist", event.GetInt("kill_streak_assist"));
+					event2.SetInt("kill_streak_victim", event.GetInt("kill_streak_victim"));
+					event2.SetInt("ducks_streaked", event.GetInt("ducks_streaked"));
+					event2.SetInt("duck_streak_total", event.GetInt("duck_streak_total"));
+					event2.SetInt("duck_streak_assist", event.GetInt("duck_streak_assist"));
+					event2.SetInt("duck_streak_victim", event.GetInt("duck_streak_victim"));
+					event2.SetBool("rocket_jump", event.GetBool("rocket_jump"));
+					event2.SetInt("weapon_def_index", event.GetInt("weapon_def_index"));
+					event.GetString("weapon_logclassname", sString, sizeof(sString));
+					event2.SetString("weapon_logclassname", sString);
+					event.GetString("weapon", sString, sizeof(sString));
+					event2.SetString("weapon", sString);
+					event2.SetInt("send", userid);
+
+					CreateTimer(0.2, Timer_SendDeathToSpecific, event2);
+				}
+			}
 		}
 	}
-	char sStringName[128];
-	
-	event.GetString("weapon", sStringName, sizeof(sStringName));
-	
+
 	#if defined DEBUG
+	char sStringName[128];
+	event.GetString("weapon", sStringName, sizeof(sStringName));
 	SendDebugMessageToPlayers(DEBUG_KILLICONS, 0, "String kill icon is %s, integer kill icon is %i.", sStringName, event.GetInt("customkill"));
 	#endif
 	
@@ -6521,21 +6602,24 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 		int npcIndex2 = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 		if (npcIndex2 != -1)
 		{
-			int iSourceTV = GetClientOfUserId(g_iSourceTVUserID);
-			if (MaxClients >= iSourceTV > 0 && IsClientInGame(iSourceTV) && IsClientSourceTV(iSourceTV)) //If the server has a source TV bot uses to print boss' name in kill feed.
+			int iTarget = GetClientOfUserId(g_iSourceTVUserID);
+			if (MaxClients < iTarget || iTarget < 1 || !IsClientInGame(iTarget) || !IsClientSourceTV(iTarget)) //If the server has a source TV bot uses to print boss' name in kill feed.
+				iTarget = GetClientForDeath(iClient);
+
+			if (iTarget != -1)
 			{
-				if (g_hTimerChangeSourceTVBotName != null)
-					delete g_hTimerChangeSourceTVBotName;
+				if (g_hTimerChangeClientName[iTarget] != null)
+					KillTimer(g_hTimerChangeClientName[iTarget]);
 				else //No timer running that means the SourceTV bot's current name is the correct one, we can safely update our last known SourceTV bot's name.
-					GetEntPropString(iSourceTV, Prop_Data, "m_szNetname", g_sOldSourceTVClientName, sizeof(g_sOldSourceTVClientName));
+				GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_sOldClientName[iTarget], sizeof(g_sOldClientName[]));
 				
 				char sBossName[SF2_MAX_NAME_LENGTH], sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 				NPCGetProfile(npcIndex2, sProfile, sizeof(sProfile));
 				NPCGetBossName(npcIndex2, sBossName, sizeof(sBossName));
 				
-				//TF2_ChangePlayerName(iSourceTV, sBossName, true);
-				SetClientName(iSourceTV, sBossName);
-				SetEntPropString(iSourceTV, Prop_Data, "m_szNetname", sBossName);
+				//TF2_ChangePlayerName(iTarget, sBossName, true);
+				SetClientName(iTarget, sBossName);
+				SetEntPropString(iTarget, Prop_Data, "m_szNetname", sBossName);
 				
 				event.SetString("assister_fallback", "");
 				
@@ -6568,8 +6652,64 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 					}
 				}
 				
-				event.SetInt("attacker", g_iSourceTVUserID);
-				g_hTimerChangeSourceTVBotName = CreateTimer(0.6, Timer_RevertSourceTVBotName);
+				int userid = GetClientUserId(iTarget);
+				event.SetInt("attacker", userid);
+				g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
+
+				if(!IsClientSourceTV(iTarget))
+				{
+					event.SetInt("ignore", iTarget);
+
+					//Show a different attacker to the user were taking
+					iTarget = GetClientForDeath(iClient, iTarget);
+					if (iTarget != -1)
+					{
+						if (g_hTimerChangeClientName[iTarget] != null)
+							KillTimer(g_hTimerChangeClientName[iTarget]);
+						else 
+							GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_sOldClientName[iTarget], sizeof(g_sOldClientName[]));
+
+						Format(sBossName, sizeof(sBossName), " %s", sBossName);
+
+						//TF2_ChangePlayerName(iTarget, sBossName, true);
+						SetClientName(iTarget, sBossName);
+						SetEntPropString(iTarget, Prop_Data, "m_szNetname", sBossName);
+
+						g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
+
+						char sString[64];
+						Event event2 = CreateEvent("player_death", true);
+						event2.SetInt("userid", event.GetInt("userid"));
+						event2.SetInt("victim_entindex", event.GetInt("victim_entindex"));
+						event2.SetInt("inflictor_entindex", event.GetInt("inflictor_entindex"));
+						event2.SetInt("attacker", GetClientUserId(iTarget));
+						event2.SetInt("weaponid", event.GetInt("weaponid"));
+						event2.SetInt("damagebits", event.GetInt("damagebits"));
+						event2.SetInt("customkill", event.GetInt("customkill"));
+						event2.SetInt("assister", event.GetInt("assister"));
+						event2.SetInt("stun_flags", event.GetInt("stun_flags"));
+						event2.SetInt("death_flags", event.GetInt("death_flags"));
+						event2.SetBool("silent_kill", event.GetBool("silent_kill"));
+						event2.SetInt("playerpenetratecount", event.GetInt("playerpenetratecount"));
+						event2.SetInt("kill_streak_total", event.GetInt("kill_streak_total"));
+						event2.SetInt("kill_streak_wep", event.GetInt("kill_streak_wep"));
+						event2.SetInt("kill_streak_assist", event.GetInt("kill_streak_assist"));
+						event2.SetInt("kill_streak_victim", event.GetInt("kill_streak_victim"));
+						event2.SetInt("ducks_streaked", event.GetInt("ducks_streaked"));
+						event2.SetInt("duck_streak_total", event.GetInt("duck_streak_total"));
+						event2.SetInt("duck_streak_assist", event.GetInt("duck_streak_assist"));
+						event2.SetInt("duck_streak_victim", event.GetInt("duck_streak_victim"));
+						event2.SetBool("rocket_jump", event.GetBool("rocket_jump"));
+						event2.SetInt("weapon_def_index", event.GetInt("weapon_def_index"));
+						event.GetString("weapon_logclassname", sString, sizeof(sString));
+						event2.SetString("weapon_logclassname", sString);
+						event.GetString("weapon", sString, sizeof(sString));
+						event2.SetString("weapon", sString);
+						event2.SetInt("send", userid);
+
+						CreateTimer(0.2, Timer_SendDeathToSpecific, event2);
+					}
+				}
 			}
 		}
 	}
@@ -6626,17 +6766,36 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	#if defined DEBUG
 	if (g_cvDebugDetail.IntValue > 1) DebugMessage("EVENT END: Event_PlayerDeathPre");
 	#endif
-	//CreateTimer(0.2, Timer_CheckEvent, event);
-	//CreateTimer(0.4, Timer_CheckEvent, event);
 	event.BroadcastDisabled = true;
 	return Plugin_Changed;
 }
 
-public Action Timer_CheckEvent(Handle timer, Event event)
+static int GetClientForDeath(int exclude1, int exclude2 = 0)
 {
-	if (event || event != null || event != null) PrintToChatAll("PlayerDeathPre is valid");
-	else PrintToChatAll("PlayerDeathPre is invalid");
-	return Plugin_Stop;
+	if (g_cvUsePlayersForKillFeed.BoolValue)
+	{
+		// Use AFKs first
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i) && g_bPlayerNoPoints[i])
+				return i;
+		}
+
+		// Use BLU second
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i) && GetClientTeam(i) == TFTeam_Blue)
+				return i;
+		}
+
+		// Anyone else last
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i))
+				return i;
+		}
+	}
+	return -1;
 }
 
 public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
@@ -7018,7 +7177,8 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			event.GetString("weapon", sString, sizeof(sString));
 			event2.SetString("weapon", sString);
 
-			CreateTimer(0.2, Timer_SendDeath, event2);
+			event2.SetInt("ignore", event.GetInt("ignore"));
+			CreateTimer(0.2, Timer_SendDeath, event2, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
@@ -7063,10 +7223,19 @@ public Action Timer_SendDeath(Handle timer, Event event)
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
 	if (iClient > 0)
 	{
+		int iIgnore = event.GetInt("ignore");
+		if (!iIgnore)
+		{
+			//Delay event until their name is correct
+			int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
+			if(iAttacker > 0 && iAttacker <= MaxClients && g_hTimerChangeClientName[iAttacker])
+				return Plugin_Continue;
+		}
+
 		//Send it to the clients
 		for (int i = 1; i<=MaxClients; i++)
 		{
-			if(IsValidClient(i))
+			if(i != iIgnore && IsValidClient(i))
 			{
 				if (!g_bPlayerEliminated[iClient] || g_bPlayerEliminated[i] || GetClientTeam(iClient) == GetClientTeam(i)) event.FireToClient(i);
 			}
@@ -7076,15 +7245,24 @@ public Action Timer_SendDeath(Handle timer, Event event)
 	return Plugin_Stop;
 }
 
-public Action Timer_RevertSourceTVBotName(Handle timer)
+public Action Timer_SendDeathToSpecific(Handle timer, Event event)
 {
-	g_hTimerChangeSourceTVBotName = null;
-	int iSourceTV = GetClientOfUserId(g_iSourceTVUserID);
-	if (MaxClients >= iSourceTV > 0 && IsClientInGame(iSourceTV) && IsClientSourceTV(iSourceTV))
+	int iClient = GetClientOfUserId(event.GetInt("send"));
+	if (iClient > 0)
+		event.FireToClient(iClient);
+
+	event.Cancel();
+	return Plugin_Stop;
+}
+
+public Action Timer_RevertClientName(Handle timer, int index)
+{
+	g_hTimerChangeClientName[index] = null;
+	if (IsClientInGame(index))
 	{
-		//TF2_ChangePlayerName(iSourceTV, g_sOldSourceTVClientName, true);
-		SetClientName(iSourceTV, g_sOldSourceTVClientName);
-		SetEntPropString(iSourceTV, Prop_Data, "m_szNetname", g_sOldSourceTVClientName);
+		//TF2_ChangePlayerName(iSourceTV, g_sOldClientName[index], true);
+		SetClientName(index, g_sOldClientName[index]);
+		SetEntPropString(index, Prop_Data, "m_szNetname", g_sOldClientName[index]);
 	}
 	return Plugin_Continue;
 }
