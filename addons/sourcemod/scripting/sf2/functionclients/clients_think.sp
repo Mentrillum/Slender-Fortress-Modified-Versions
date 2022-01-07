@@ -1062,6 +1062,8 @@ void ClientOnButtonRelease(int client,int button)
 		}
 		case IN_DUCK:
 		{
+			ClientEndPeeking(client);
+			
 			if (IsClientInGhostMode(client))
 			{
 				SetEntityGravity(client, 0.5);

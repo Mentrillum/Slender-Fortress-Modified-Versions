@@ -872,6 +872,7 @@ ConVar g_cvSlaughterRunDivisibleTime;
 ConVar g_cvUseAlternateConfigDirectory;
 ConVar g_cvPlayerKeepWeapons;
 ConVar g_cvFullyEnableSpectator;
+ConVar g_cvAllowPlayerPeeking;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
@@ -1848,6 +1849,7 @@ public Action Hook_CommandTaunt(int iClient, const char[] command, int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (!g_bPlayerEliminated[iClient] && GetRoundState() == SF2RoundState_Intro) return Plugin_Handled;
+	if (!g_bPlayerEliminated[iClient] && ClientStartPeeking(iClient)) return Plugin_Handled;
 	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
 	
 	return Plugin_Continue;
@@ -2569,6 +2571,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 				case SNDCHAN_VOICE:
 				{
 					if (IsRoundInIntro()) return Plugin_Handled;
+					if (!StrContains(sample, "vo/halloween_scream")) return Plugin_Handled;
 					
 					for (int iBossIndex = 0; iBossIndex < MAX_BOSSES; iBossIndex++)
 					{
