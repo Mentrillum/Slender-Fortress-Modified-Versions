@@ -1850,6 +1850,7 @@ public Action Hook_CommandTaunt(int iClient, const char[] command, int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (!g_bPlayerEliminated[iClient] && GetRoundState() == SF2RoundState_Intro) return Plugin_Handled;
+	if (!g_bPlayerEliminated[iClient] && ClientStartPeeking(iClient)) return Plugin_Handled;
 	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
 	
 	return Plugin_Continue;
