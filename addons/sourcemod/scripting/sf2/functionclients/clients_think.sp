@@ -1223,7 +1223,7 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 		/*if(IsSpaceOccupiedIgnorePlayers(flPos, flMins, flMaxs, client))
 			//LogSF2Message("[SF2 AFK TIMER] Client %i (%N) is stuck, no actions taken", client, client);*/
 		if (!SF_IsBoxingMap() && g_cvCampingEnabled.BoolValue && 
-			!g_bRoundGrace &&
+			IsRoundPlaying() &&
 			g_flPlayerStaticAmount[client] <= g_cvCampingNoStrikeSanity.FloatValue && 
 			(iClosestBoss == -1 || flDistFromClosestBoss >= g_cvCampingNoStrikeBossDistance.FloatValue) &&
 			flDistFromLastPosition <= SquareFloat(g_cvCampingMinDistance.FloatValue))

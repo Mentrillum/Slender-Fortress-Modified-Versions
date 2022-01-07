@@ -307,6 +307,8 @@ static void Initialize()
 		.DefineOutput("OnStateExitWaiting")
 		.DefineOutput("OnStateEnterIntro")
 		.DefineOutput("OnStateExitIntro")
+		.DefineOutput("OnStateEnterGrace")
+		.DefineOutput("OnStateExitGrace")
 		.DefineOutput("OnStateEnterActive")
 		.DefineOutput("OnStateExitActive")
 		.DefineOutput("OnStateEnterEscape")
@@ -338,7 +340,6 @@ static void Initialize()
 
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnRoundStateChanged, OnRoundStateChanged);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnPageCountChanged, OnPageCountChanged);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnGracePeriodEnd, OnGracePeriodEnd);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnDifficultyChanged, OnDifficultyChanged);
 }
 
@@ -422,6 +423,11 @@ static void OnRoundStateChanged(SF2RoundState iRoundState, SF2RoundState iOldRou
 			gameRules.FireOutput("OnStateExitWaiting");
 		case SF2RoundState_Intro:
 			gameRules.FireOutput("OnStateExitIntro");
+		case SF2RoundState_Grace:
+		{
+			gameRules.FireOutput("OnGracePeriodEnded");
+			gameRules.FireOutput("OnStateExitGrace");
+		}
 		case SF2RoundState_Active:
 			gameRules.FireOutput("OnStateExitActive");
 		case SF2RoundState_Escape:
@@ -436,6 +442,8 @@ static void OnRoundStateChanged(SF2RoundState iRoundState, SF2RoundState iOldRou
 			gameRules.FireOutput("OnStateEnterWaiting");
 		case SF2RoundState_Intro:
 			gameRules.FireOutput("OnStateEnterIntro");
+		case SF2RoundState_Grace:
+			gameRules.FireOutput("OnStateEnterGrace");
 		case SF2RoundState_Active:
 			gameRules.FireOutput("OnStateEnterActive");
 		case SF2RoundState_Escape:
@@ -463,15 +471,6 @@ static void OnPageCountChanged(int iPageCount, int iOldPageCount)
 
 	if (sOutputName[0] != '\0')
 		gameRules.FireOutput(sOutputName);
-}
-
-static void OnGracePeriodEnd()
-{
-	SF2GamerulesEntity gameRules = FindSF2GamerulesEntity();
-	if (!gameRules.IsValid())
-		return;
-
-	gameRules.FireOutput("OnGracePeriodEnded");
 }
 
 static void OnDifficultyChanged(int iDifficulty, int iOldDifficulty)
@@ -636,6 +635,6 @@ static void InputSetDifficulty(int entity, int activator, int caller, int value)
 
 static void InputEndGracePeriod(int entity, int activator, int caller)
 {
-	if (g_bRoundGrace && g_hRoundGraceTimer != INVALID_HANDLE) 
+	if (GetRoundState() == SF2RoundState_Grace && g_hRoundGraceTimer != null) 
 		TriggerTimer(g_hRoundGraceTimer);
 }

@@ -2653,7 +2653,7 @@ void RemoveProfile(int iBossIndex)
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	if (g_bRoundGrace) return;
+	if (!IsRoundPlaying()) return;
 
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return; // Stop spawning bosses before all pages are picked up in Renevant.
 
@@ -4169,7 +4169,7 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
-	if (!g_bRoundGrace)
+	if (IsRoundPlaying())
 	{
 		if (GetGameTime() >= g_flSlenderNextTeleportTime[iBossIndex])
 		{
@@ -4942,7 +4942,7 @@ bool SpawnProxy(int client, int iBossIndex, float flTeleportPos[3], int &iSpawnP
 	if (iBossIndex == -1 || client <= 0) 
 		return false;
 
-	if (g_bRoundGrace)
+	if (!IsRoundPlaying())
 		return false;
 	
 	if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return false;

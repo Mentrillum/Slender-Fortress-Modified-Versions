@@ -405,7 +405,7 @@ public int Native_GetRoundState(Handle plugin,int numParams)
 
 public int Native_IsRoundInGracePeriod(Handle plugin, int numParams)
 {
-	return g_bRoundGrace;
+	return GetRoundState() == SF2RoundState_Grace;
 }
 
 public int Native_GetCurrentDifficulty(Handle plugin,int numParams)

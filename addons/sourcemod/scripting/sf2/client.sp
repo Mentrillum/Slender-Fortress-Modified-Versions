@@ -3522,7 +3522,7 @@ public Action Timer_RespawnPlayer(Handle timer, any userid)
 	
 	if (!IsValidClient(client) || !IsClientInGame(client) || IsPlayerAlive(client)) return Plugin_Stop;
 
-	if (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !DidClientEscape(client) && !IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro() && !g_bRoundGrace) 
+	if (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !DidClientEscape(client) && !IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro() && IsRoundPlaying()) 
 	{
 		g_bPlayerDied1Up[client] = true;
 		g_bPlayerIn1UpCondition[client] = false;

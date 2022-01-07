@@ -134,6 +134,7 @@ enum SF2RoundState
 	SF2RoundState_Invalid = -1,
 	SF2RoundState_Waiting = 0,		// waiting for players
 	SF2RoundState_Intro,				// if intro is enabled, intro stage for RED
+	SF2RoundState_Grace,			// round is in grace period for RED
 	SF2RoundState_Active,			// round is running for RED
 	SF2RoundState_Escape,			// escape stage for RED
 	SF2RoundState_Outro				// round win for a team, next round coming soon
