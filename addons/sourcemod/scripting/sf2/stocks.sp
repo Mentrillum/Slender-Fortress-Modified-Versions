@@ -397,7 +397,7 @@ stock bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const flo
 	return bHit;
 }
 
-int EntitySetAnimation(int iEntity, const char[] sName, float flPlaybackRate = 1.0, int iForceSequence = -1)
+int EntitySetAnimation(int iEntity, const char[] sName, float flPlaybackRate = 1.0, int iForceSequence = -1, float flCycle = 0.0)
 {
 	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(iEntity);
 	int iSequence = iForceSequence;
@@ -409,7 +409,7 @@ int EntitySetAnimation(int iEntity, const char[] sName, float flPlaybackRate = 1
 	if (iSequence != -1)
 	{
 		animationEntity.ResetSequence(iSequence);
-		SetEntPropFloat(iEntity, Prop_Data, "m_flCycle", 0.0);
+		SetEntPropFloat(iEntity, Prop_Data, "m_flCycle", flCycle);
 	}
 
 	if (flPlaybackRate<-12.0) flPlaybackRate = -12.0;
@@ -427,6 +427,21 @@ stock void EntitySetBlendAnimation(int iEntity, const char[] sParameter, float f
 	utils_StudioSetPoseParameter(iEntity, iParameter, flSpeed, flNewValue);
 	SetEntPropFloat(iEntity, Prop_Send, "m_flPoseParameter", flNewValue, iParameter);
 	//PrintToChatAll("called");
+}
+stock void CBaseNPC_RemoveAllLayers(int iEntity)
+{
+	if (!IsValidEntity(iEntity)) return;
+	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(iEntity);
+	int iCount = animationEntity.GetNumAnimOverlays();
+	for(int i = 0; i < iCount; i++) 
+	{
+		CAnimationLayer pOverlay = animationEntity.GetAnimOverlay(i); 
+		if (!pOverlay.IsAlive()) 
+		{
+			continue; 
+		}
+		pOverlay.KillMe();
+	}
 }
 stock void SDK_GetVectors(int iEntity, float vecForward[3], float vecRight[3], float vecUp[3])
 {

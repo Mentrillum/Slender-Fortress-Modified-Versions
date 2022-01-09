@@ -25,8 +25,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	INextBot bot = npc.GetBot();
 	CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npc.GetEntity());
 
-	loco.ClearStuckStatus();
-
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_BOSS_IDLE, 1, "g_flSlenderTimeUntilKill[%d]: %f", iBossIndex, g_flSlenderTimeUntilKill[iBossIndex] - GetGameTime());
 	#endif
@@ -1171,6 +1169,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					{
 						RemoveSlender(iBossIndex);
 					}
+					loco.ClearStuckStatus();
 					if (NPCHasAttribute(iBossIndex, "add stun health on stun"))
 					{
 						float flValue = NPCGetAttributeValue(iBossIndex, "add stun health on stun");
@@ -1994,6 +1993,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					{
 						g_bSlenderAttacking[iBossIndex] = true;
 						npcEntity.RemoveAllGestures();
+						CBaseNPC_RemoveAllLayers(slender);
+						loco.ClearStuckStatus();
 						int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 						if (!NPCChaserGetAttackWhileRunningState(iBossIndex, iAttackIndex))
 						{

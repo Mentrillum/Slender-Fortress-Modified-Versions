@@ -14,8 +14,11 @@ public void OnPluginStart()
 	AddTempEntHook("Entity Decal", Hook_BlockDecals);
 	//AddTempEntHook("TFExplosion", Hook_DebugExplosion);
 
+	g_bNBActionFactory = new NextBotActionFactory("SlenderBossAction");
+	g_bNBActionFactory.SetEventCallback(EventResponderType_OnStuck, CBaseNPC_OnStuck);
+
 	for (int i = 0; i < MAX_BOSSES; i++) g_pPath[i] = PathFollower(_, TraceRayDontHitAnyEntity_Pathing, Path_FilterOnlyActors);
-	
+
 	// Get offsets.
 	g_offsPlayerFOV = FindSendPropInfo("CBasePlayer", "m_iFOV");
 	if (g_offsPlayerFOV == -1) SetFailState("Couldn't find CBasePlayer offset for m_iFOV.");
@@ -131,7 +134,7 @@ public void OnPluginStart()
 	g_cvIgnoreRedPlayerDeathSwap = CreateConVar("sf2_ignore_red_player_death_team_switch", "0", "If set to 1, RED players will not switch back to the BLU team.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_cvIgnoreRedPlayerDeathSwap.AddChangeHook(OnConVarChanged);
 	
-	g_cvDisableBossCrushFix = CreateConVar("sf2_disable_boss_crush_fix", "0", "Enables/disables the boss crushing patch from Secret Update 4, should only be turned on if the server introduces players getting stuck in bosses.", _, true, 0.0, true, 1.0);
+	g_cvDisableBossCrushFix = CreateConVar("sf2_disable_boss_crush_fix", "1", "Enables/disables the boss crushing patch from Secret Update 4, should only be off if absolutely necessary.", _, true, 0.0, true, 1.0);
 
 	g_cvEnableWallHax = CreateConVar("sf2_enable_wall_hax", "0", "Enables/disables the Wall Hax special round without needing to turn on Wall Hax. This will not force the difficulty to Insane and will show player + boss outlines.", _, true, 0.0, true, 1.0);
 	
@@ -190,6 +193,20 @@ public void OnPluginStart()
 	g_hHudSync3 = CreateHudSynchronizer();
 	g_hRoundTimerSync = CreateHudSynchronizer();
 	g_hCookie = RegClientCookie("sf2_newcookies", "", CookieAccess_Private);
+	
+	switch(g_cvDifficulty.IntValue)
+	{
+		case Difficulty_Easy: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
+		case Difficulty_Hard: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_HARD;
+		case Difficulty_Insane: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_INSANE;
+		case Difficulty_Nightmare: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NIGHTMARE;
+		case Difficulty_Apollyon:
+		{
+			if (g_bRestartSessionEnabled) g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_RESTARTSESSION;
+			else g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_APOLLYON;
+		}
+		default: g_flRoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
+	}
 	
 	// Register console commands.
 	RegConsoleCmd("sm_sf2", Command_MainMenu);

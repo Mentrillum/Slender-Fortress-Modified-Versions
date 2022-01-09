@@ -77,8 +77,18 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 					{
 						if (GetGameTime() < g_flNPCBaseAttackRunDurationTime[iBossIndex][iCurrentAttackIndex])
 						{
-							if (npc != INVALID_NPC) npc.flWalkSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty) * g_flSlenderSpeedMultiplier[iBossIndex];
-							if (npc != INVALID_NPC) npc.flRunSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty) * g_flSlenderSpeedMultiplier[iBossIndex];
+							float flAttackSpeed, flOriginalSpeed;
+							flOriginalSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty);
+							if (g_flRoundDifficultyModifier > 1.0)
+							{
+								flAttackSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier) / 15.0) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
+							}
+							else
+							{
+								flAttackSpeed = flOriginalSpeed + NPCGetAnger(iBossIndex);
+							}
+							if (npc != INVALID_NPC) npc.flWalkSpeed = flAttackSpeed * g_flSlenderSpeedMultiplier[iBossIndex];
+							if (npc != INVALID_NPC) npc.flRunSpeed = flAttackSpeed * g_flSlenderSpeedMultiplier[iBossIndex];
 						}
 						else
 						{
@@ -88,8 +98,19 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 					}
 					else
 					{
-						if (npc != INVALID_NPC) npc.flWalkSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty) * g_flSlenderSpeedMultiplier[iBossIndex];
-						if (npc != INVALID_NPC) npc.flRunSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty) * g_flSlenderSpeedMultiplier[iBossIndex];
+						float flAttackSpeed, flOriginalSpeed;
+						flOriginalSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty);
+						if (g_flRoundDifficultyModifier > 1.0)
+						{
+							flAttackSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier) / 15.0) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
+						}
+						else
+						{
+							flAttackSpeed = flOriginalSpeed + NPCGetAnger(iBossIndex);
+						}
+
+						if (npc != INVALID_NPC) npc.flWalkSpeed = flAttackSpeed * g_flSlenderSpeedMultiplier[iBossIndex];
+						if (npc != INVALID_NPC) npc.flRunSpeed = flAttackSpeed * g_flSlenderSpeedMultiplier[iBossIndex];
 					}
 				}
 				else
@@ -380,7 +401,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 		hullcheckmins[2] += loco.GetStepHeight();
 		hullcheckmaxs[2] += 5.0;
 		
-		if (!g_bNPCVelocityCancel[iBossIndex] && IsSpaceOccupiedIgnorePlayers(flMyPos, hullcheckmins, hullcheckmaxs, iBoss))//The boss will start to merge with shits, cancel out velocity.
+		if (!g_bNPCVelocityCancel[iBossIndex] && IsSpaceOccupiedIgnorePlayersAndEnts(flMyPos, hullcheckmins, hullcheckmaxs, iBoss))//The boss will start to merge with shits, cancel out velocity.
 		{
 			float vec3Origin[3];
 			loco.SetVelocity(vec3Origin);
@@ -397,13 +418,13 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 		flCrawlDetectMins = g_flNPCCrawlDetectMins[iBossIndex];
 		flCrawlDetectMaxs = g_flNPCCrawlDetectMaxs[iBossIndex];
 
-		if (IsSpaceOccupiedIgnorePlayers(flMyPos, flCrawlDetectMins, flCrawlDetectMaxs, iBoss) && !g_bNPCIsCrawling[iBossIndex])
+		if (IsSpaceOccupiedIgnorePlayersAndEnts(flMyPos, flCrawlDetectMins, flCrawlDetectMaxs, iBoss) && !g_bNPCIsCrawling[iBossIndex])
 		{
 			NPCChaserUpdateBossAnimation(iBossIndex, iBoss, g_iSlenderState[iBossIndex]);
 			g_bNPCIsCrawling[iBossIndex] = true;
 			g_bNPCChangeToCrawl[iBossIndex] = true;
 		}
-		if (!IsSpaceOccupiedIgnorePlayers(flMyPos, flCrawlDetectMins, flCrawlDetectMaxs, iBoss) && g_bNPCIsCrawling[iBossIndex])
+		if (!IsSpaceOccupiedIgnorePlayersAndEnts(flMyPos, flCrawlDetectMins, flCrawlDetectMaxs, iBoss) && g_bNPCIsCrawling[iBossIndex])
 		{
 			NPCChaserUpdateBossAnimation(iBossIndex, iBoss, g_iSlenderState[iBossIndex]);
 			g_bNPCIsCrawling[iBossIndex] = false;
@@ -411,7 +432,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 		}
 	}
 
-	if (iState == STATE_CHASE || iState == STATE_ALERT || iState == STATE_WANDER)
+	if (iState == STATE_CHASE || iState == STATE_ALERT || iState == STATE_WANDER || (iState == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(iBossIndex, iAttackIndex)))
 	{
 		int iPitch = combatChar.LookupPoseParameter("body_pitch");
 		int iYaw = combatChar.LookupPoseParameter("body_yaw");
@@ -485,15 +506,13 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 				{
 					if (g_flLastStuckTime[iBossIndex] == 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
 
-					if (g_flLastStuckTime[iBossIndex] <= GetGameTime()-1.0 && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex] && 
+					if ((g_flLastStuckTime[iBossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex] && 
 					g_pPath[iBossIndex].FirstSegment() != NULL_PATH_SEGMENT && 
 					g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].FirstSegment()) != NULL_PATH_SEGMENT)
 					{
 						float vecMovePos[3];
 						Segment sSegment;
-						if (g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].FirstSegment())) != NULL_PATH_SEGMENT) //See if we can get the third segment, thats often a nicer solution for specific situations the second segment can't resolve.
-							sSegment = g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].FirstSegment()));
-						else sSegment = g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].FirstSegment());
+						sSegment = g_pPath[iBossIndex].NextSegment(g_pPath[iBossIndex].FirstSegment());
 						sSegment.GetPos(vecMovePos);
 						bool bPathResolved = false;
 
@@ -501,7 +520,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 						{
 							if (NPCGetRaidHitbox(iBossIndex) == 1)
 							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+								if (!IsSpaceOccupied(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
 								{
 									bPathResolved = true;
 									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -511,7 +530,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 								else
 								{
 									vecMovePos[2] += loco.GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+									if (!IsSpaceOccupied(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
 									{
 										bPathResolved = true;
 										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -522,7 +541,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 							}
 							else if (NPCGetRaidHitbox(iBossIndex) == 0)
 							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+								if (!IsSpaceOccupied(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
 								{
 									bPathResolved = true;
 									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -532,7 +551,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 								else
 								{
 									vecMovePos[2] += loco.GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+									if (!IsSpaceOccupied(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
 									{
 										bPathResolved = true;
 										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -546,7 +565,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 						{
 							if (NPCGetRaidHitbox(iBossIndex) == 1)
 							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+								if (!IsSpaceOccupied(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
 								{
 									bPathResolved = false;
 									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -556,7 +575,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 								else
 								{
 									vecMovePos[2] += loco.GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+									if (!IsSpaceOccupied(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
 									{
 										bPathResolved = true;
 										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -573,7 +592,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 										if (area != NULL_AREA)
 										{
 											area.GetCenter(vecMovePos);
-											if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+											if (!IsSpaceOccupied(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
 											{
 												bPathResolved = false;
 												TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -583,7 +602,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 											else
 											{
 												vecMovePos[2] += loco.GetStepHeight();
-												if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
+												if (!IsSpaceOccupied(vecMovePos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBoss))
 												{
 													bPathResolved = true;
 													TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -662,7 +681,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 							}
 							else if (NPCGetRaidHitbox(iBossIndex) == 0)
 							{
-								if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+								if (!IsSpaceOccupied(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
 								{
 									bPathResolved = false;
 									TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -672,7 +691,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 								else
 								{
 									vecMovePos[2] += loco.GetStepHeight();
-									if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+									if (!IsSpaceOccupied(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
 									{
 										bPathResolved = true;
 										TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -689,7 +708,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 										if (area != NULL_AREA)
 										{
 											area.GetCenter(vecMovePos);
-											if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+											if (!IsSpaceOccupied(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
 											{
 												bPathResolved = false;
 												TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -699,7 +718,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 											else
 											{
 												vecMovePos[2] += loco.GetStepHeight();
-												if (!IsSpaceOccupiedIgnorePlayers(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
+												if (!IsSpaceOccupied(vecMovePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, iBoss))
 												{
 													bPathResolved = true;
 													TeleportEntity(iBoss, vecMovePos, NULL_VECTOR, NULL_VECTOR);
@@ -779,6 +798,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 						}
 						if (bPathResolved)
 						{
+							loco.ClearStuckStatus();
 							g_flLastStuckTime[iBossIndex] = 0.0;
 						}
 					}
@@ -786,6 +806,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 			}
 			else
 			{
+				loco.ClearStuckStatus();
 				g_flLastStuckTime[iBossIndex] = 0.0;
 				g_flLastPos[iBossIndex] = flMyPos;
 			}
@@ -1043,15 +1064,15 @@ stock bool SlenderChaseBoss_OnStuckResolvePath(int slender, float flMyPos[3], fl
 				GetPositionForward(flMyPos, flMyAng, flFreePos, float(r));
 
 				// Perform a line of sight check to avoid spawning players in unreachable map locations.
-				TR_TraceRayFilter(flMyPos, flFreePos, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
+				TR_TraceRayFilter(flMyPos, flFreePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
 
 				if(!TR_DidHit())
 				{
 					// Perform an other line of sight check to avoid moving in a area that can't reach the original goal!
-					TR_TraceRayFilter(flFreePos, flGoalPosition, MASK_NPCSOLID, RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
+					TR_TraceRayFilter(flFreePos, flGoalPosition, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
 					if(!TR_DidHit())
 					{
-						TR_TraceHullFilter(flMyPos, flFreePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, MASK_NPCSOLID, TraceRayDontHitAnyEntity, slender);
+						TR_TraceHullFilter(flMyPos, flFreePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, TraceRayDontHitAnyEntity, slender);
 					
 						if(!TR_DidHit())
 						{

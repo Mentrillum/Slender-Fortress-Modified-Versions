@@ -651,6 +651,7 @@ enum
 	ChaserProfileAttackData_UseOnDifficulty,
 	ChaserProfileAttackData_BlockOnDifficulty,
 	ChaserProfileAttackData_ExplosiveDanceRadius,
+	ChaserProfileAttackData_Gestures,
 	ChaserProfileAttackData_MaxStats
 };
 
@@ -1581,6 +1582,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	public bool CanAttackPullIn(int attackIndex)
 	{
 		return GetChaserProfileAttackPullIn(this.UniqueProfileIndex, attackIndex);
+	}
+
+	public bool HasAttackGestures(int attackIndex)
+	{
+		return GetChaserProfileAttackGesturesState(this.UniqueProfileIndex, attackIndex);
 	}
 
 	public void GetSmiteColor(int color[4])
@@ -2759,6 +2765,14 @@ int GetChaserProfileAttackExplosiveDanceRadius(int iChaserProfileIndex,int iAtta
 
 	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ExplosiveDanceRadius);
 }
+
+bool GetChaserProfileAttackGesturesState(int iChaserProfileIndex,int iAttackIndex)
+{
+	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+
+	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Gestures));
+}
+
 
 bool GetChaserProfileEnableAdvancedDamageEffects(int iChaserProfileIndex)
 {

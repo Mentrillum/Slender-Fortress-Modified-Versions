@@ -1764,6 +1764,10 @@ static Action Timer_SlenderChaseBossAttackEnd(Handle timer, any entref)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	if (timer != g_hSlenderAttackTimer[iBossIndex]) return Plugin_Stop;
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	loco.ClearStuckStatus();
 	
 	g_bSlenderAttacking[iBossIndex] = false;
 	g_bNPCStealingLife[iBossIndex] = false;
@@ -1773,6 +1777,7 @@ static Action Timer_SlenderChaseBossAttackEnd(Handle timer, any entref)
 	g_bNPCAlreadyAttacked[iBossIndex] = false;
 	g_bNPCUseFireAnimation[iBossIndex] = false;
 	g_hSlenderLaserTimer[iBossIndex] = null;
+	CBaseNPC_RemoveAllLayers(slender);
 	return Plugin_Stop;
 }
 
@@ -1787,6 +1792,10 @@ static Action Timer_SlenderChaseBossAttackEndBackup(Handle timer, any entref)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	if (timer != g_hSlenderBackupAtkTimer[iBossIndex]) return Plugin_Stop;
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	loco.ClearStuckStatus();
 	
 	g_bSlenderAttacking[iBossIndex] = false;
 	g_bNPCStealingLife[iBossIndex] = false;
@@ -1796,5 +1805,6 @@ static Action Timer_SlenderChaseBossAttackEndBackup(Handle timer, any entref)
 	g_bNPCAlreadyAttacked[iBossIndex] = false;
 	g_bNPCUseFireAnimation[iBossIndex] = false;
 	g_hSlenderLaserTimer[iBossIndex] = null;
+	CBaseNPC_RemoveAllLayers(slender);
 	return Plugin_Stop;
 }

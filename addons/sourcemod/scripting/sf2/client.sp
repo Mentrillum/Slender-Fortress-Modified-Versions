@@ -156,7 +156,7 @@ public Action CH_PassFilter(int ent1,int ent2, bool &result)
 	SF2RoundState state = GetRoundState();
 	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro) return Plugin_Continue;
 
-	if (MaxClients >= ent1 > 0)
+	if (IsValidClient(ent1))
 	{
 		if (IsClientInGhostMode(ent1))
 		{
@@ -164,7 +164,7 @@ public Action CH_PassFilter(int ent1,int ent2, bool &result)
 			return Plugin_Changed;
 		}
 	}
-	if (MaxClients >= ent2 > 0)
+	if (IsValidClient(ent2))
 	{
 		if (IsClientInGhostMode(ent2))
 		{

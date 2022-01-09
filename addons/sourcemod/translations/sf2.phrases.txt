@@ -1684,7 +1684,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Fixed a bug where bosses wouldn't collide with any trigger brush\n-Set the boss' entity health to the 32 bit integer limit minus 1\n-Bosses during endless chasing and RAID no longer get the no teleport flag upon spawning\n-Upgraded the grace period states\n-Bosses can now phase through deathcam players\n-func_nav_prefer can be used properly again"
+		"en"	"-Added boss gesture animations for attacks\n-Bosses are now able to use looping animations when applicable on attack animations\n-Likely fixed a bug where bosses randomly unstuck on players\n-Reduced the chances of getting stuck in bosses\n-Fixed a bug where the SourceTV name change was delayed\n-Difficulty modifiers don't reset upon reloading the plugin"
 	}
 
 	"SF2 Smite player"

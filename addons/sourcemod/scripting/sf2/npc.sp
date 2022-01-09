@@ -121,6 +121,8 @@ static bool g_bNPCProxySpawnEffectEnabled[MAX_BOSSES];
 static float g_flNPCProxySpawnEffectLifetime[MAX_BOSSES];
 static float g_flNPCProxySpawnEffectZOffset[MAX_BOSSES];
 
+NextBotActionFactory g_bNBActionFactory;
+
 Handle hTimerMusic = null;//Planning to add a bosses array on.
 
 int g_iBossPathingColor[MAX_BOSSES][4];
@@ -2411,22 +2413,27 @@ void ChangeAllSlenderModels()
 		}
 		if (NPCGetType(iNPCIndex) == SF2BossType_Chaser) 
 		{
+			float flTempHitboxMins[3];
 			NPCChaserUpdateBossAnimation(iNPCIndex, slender, g_iSlenderState[iNPCIndex]);
 			if (NPCGetRaidHitbox(iNPCIndex) == 1)
 			{
-				SetEntPropVector(slender, Prop_Send, "m_vecMins", g_flSlenderDetectMins[iNPCIndex]);
-				SetEntPropVector(slender, Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iNPCIndex]);
+				CopyVector(g_flSlenderDetectMins[iNPCIndex], flTempHitboxMins);
+				flTempHitboxMins[2] = 10.0;
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMins", flTempHitboxMins);
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iNPCIndex]);
 				
-				SetEntPropVector(slender, Prop_Send, "m_vecMinsPreScaled", g_flSlenderDetectMins[iNPCIndex]);
-				SetEntPropVector(slender, Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iNPCIndex]);
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMinsPreScaled", flTempHitboxMins);
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iNPCIndex]);
 			}
 			else if (NPCGetRaidHitbox(iNPCIndex) == 0)
 			{
-				SetEntPropVector(slender, Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
-				SetEntPropVector(slender, Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
+				CopyVector(HULL_HUMAN_MINS, flTempHitboxMins);
+				flTempHitboxMins[2] = 10.0;
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMins", flTempHitboxMins);
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
 				
-				SetEntPropVector(slender, Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
-				SetEntPropVector(slender, Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMinsPreScaled", flTempHitboxMins);
+				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
 			}
 		}
 	}
@@ -2722,6 +2729,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			CBaseNPC_Locomotion locomotion = npcBoss.GetLocomotion();
 			npcEntity.DispatchAnimEvents(npcEntity);
 			npcEntity.Hook_HandleAnimEvent(CBaseAnimating_HandleAnimEvent);
+			CBaseNPC_RemoveAllLayers(npcBoss.GetEntity());
 
 			npcEntity.Teleport(flTruePos, flVecAng);
 			npcEntity.SetModel(sBuffer);
@@ -2755,22 +2763,28 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
 			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
+			float flSlenderBoxMins[3], flSlenderBoxMaxs[3];
+			flSlenderBoxMins[0] = -1.0;
+			flSlenderBoxMins[1] = -1.0;
+			flSlenderBoxMaxs[0] = 1.0;
+			flSlenderBoxMaxs[1] = 1.0;
+			flSlenderBoxMaxs[2] = 1.0;
 			if (NPCGetRaidHitbox(iBossIndex) == 1)
 			{
-				npcEntity.SetPropVector(Prop_Send, "m_vecMins", g_flSlenderDetectMins[iBossIndex]);
-				npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iBossIndex]);
-
-				npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", g_flSlenderDetectMins[iBossIndex]);
-				npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iBossIndex]);
+				npcBoss.SetBodyMins(g_flSlenderDetectMins[iBossIndex]);
+				npcBoss.SetBodyMaxs(g_flSlenderDetectMaxs[iBossIndex]);
 			}
 			else if (NPCGetRaidHitbox(iBossIndex) == 0)
 			{
-				npcEntity.SetPropVector(Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
-				npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
-
-				npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
-				npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
+				npcBoss.SetBodyMins(HULL_HUMAN_MINS);
+				npcBoss.SetBodyMaxs(HULL_HUMAN_MAXS);	
 			}
+			
+			npcEntity.SetPropVector(Prop_Send, "m_vecMins", flSlenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", flSlenderBoxMaxs);
+
+			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", flSlenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", flSlenderBoxMaxs);
 
 			if (NPCGetModelSkinMax(iBossIndex) > 0)
 			{
@@ -2794,7 +2808,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			}
 
 			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
-			npcEntity.AddFlag(FL_NPC);
+			SetEntityFlags(npcEntity.iEnt, FL_NPC);
 			SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
 
 			//if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(iBoss, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
@@ -2842,23 +2856,25 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			float flTempHitboxMins[3];
 			g_iSlenderHitbox[iBossIndex] = CreateEntityByName("base_boss");
 			Address aLocomotion = SF2_GetLocomotionInterface(g_iSlenderHitbox[iBossIndex]);
-			
+
 			SetEntityModel(g_iSlenderHitbox[iBossIndex], sBuffer);
 			TeleportEntity(g_iSlenderHitbox[iBossIndex], flTruePos, flVecAng, NULL_VECTOR);
 			DispatchKeyValue(g_iSlenderHitbox[iBossIndex],"TeamNum","1");
 			DispatchSpawn(g_iSlenderHitbox[iBossIndex]);
 			ActivateEntity(g_iSlenderHitbox[iBossIndex]);
-			SetEntityMoveType(g_iSlenderHitbox[iBossIndex], MOVETYPE_NONE);
+			SetEntityMoveType(g_iSlenderHitbox[iBossIndex],MOVETYPE_NONE);
 			SetEntityRenderMode(g_iSlenderHitbox[iBossIndex], RENDER_TRANSCOLOR);
 			SetEntityRenderColor(g_iSlenderHitbox[iBossIndex], 0, 0, 0, 0);
 			SetVariantString("!activator");
 			AcceptEntityInput(g_iSlenderHitbox[iBossIndex], "SetParent", npcEntity.iEnt);
 			AcceptEntityInput(g_iSlenderHitbox[iBossIndex], "EnableShadow");
 			AcceptEntityInput(g_iSlenderHitbox[iBossIndex], "DisableShadow");
+			if (SF_IsBoxingMap()) SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
 			//Block base_boss's ai.
 			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data,"m_nNextThinkTick",-1);
 			g_iSlenderHitboxOwner[g_iSlenderHitbox[iBossIndex]] = npcEntity.iEnt;
 			SDKHook(g_iSlenderHitbox[iBossIndex], SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
+			//SDKHook(g_iSlenderHitbox[iBossIndex], SDKHook_ShouldCollide, Hook_HitBoxShouldCollide);
 			DHookRaw(g_hShouldCollide, true, aLocomotion);
 			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
@@ -3307,7 +3323,12 @@ public Action Timer_BossMarked(Handle timer, any entref)
 
 public bool Hook_HitBoxShouldCollide(int slender,int collisiongroup,int contentsmask, bool originalResult)
 {
-	return false;
+	if ((contentsmask & CONTENTS_MONSTERCLIP) || (contentsmask & CONTENTS_PLAYERCLIP))
+	{
+		//CONTENTS_MOVEABLE seems to make the hitbox bullet proof
+		return false;
+	}
+	return originalResult;
 }
 
 public bool Hook_BossShouldCollide(int slender,int collisiongroup,int contentsmask, bool originalResult)
@@ -4567,7 +4588,7 @@ stock int SpawnSlenderModel(int iBossIndex, const float pos[3], bool bDeathCam =
 	char buffer[PLATFORM_MAX_PATH], sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
-	float flPlaybackRate, flTempFootsteps;
+	float flPlaybackRate, flTempFootsteps, flCycle;
 	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 
 	GetSlenderModel(iBossIndex, _, buffer, sizeof(buffer));
@@ -4599,14 +4620,14 @@ stock int SpawnSlenderModel(int iBossIndex, const float pos[3], bool bDeathCam =
 		ActivateEntity(iSlenderModel);
 		if (!bDeathCam) 
 		{
-			GetProfileAnimation(iBossIndex, sProfile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+			GetProfileAnimation(iBossIndex, sProfile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex], flCycle);
 		}
 		else 
 		{
-			bool bAnimationFound = GetProfileAnimation(iBossIndex, sProfile, ChaserAnimation_DeathcamAnimations, buffer, sizeof(buffer), flPlaybackRate, 1, _, flTempFootsteps);
+			bool bAnimationFound = GetProfileAnimation(iBossIndex, sProfile, ChaserAnimation_DeathcamAnimations, buffer, sizeof(buffer), flPlaybackRate, 1, _, flTempFootsteps, flCycle);
 			if (!bAnimationFound || strcmp(buffer,"") <= 0)
 			{
-				GetProfileAnimation(iBossIndex, sProfile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex]);
+				GetProfileAnimation(iBossIndex, sProfile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), flPlaybackRate, iDifficulty, _, g_flSlenderIdleFootstepTime[iBossIndex], flCycle);
 			}
 		}
 		if (buffer[0] != '\0')
@@ -4620,6 +4641,7 @@ stock int SpawnSlenderModel(int iBossIndex, const float pos[3], bool bDeathCam =
 		
 		SetVariantFloat(flPlaybackRate);
 		AcceptEntityInput(iSlenderModel, "SetPlaybackRate");
+		SetEntPropFloat(iSlenderModel, Prop_Data, "m_flCycle", flCycle);
 		
 		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 		{

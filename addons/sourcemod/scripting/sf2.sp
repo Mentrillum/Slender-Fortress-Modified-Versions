@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.1.2 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.1.2 M"
+#define PLUGIN_VERSION "1.7.1.3 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1.3 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -6534,7 +6534,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			event.SetInt("attacker", userid);
 			g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
 
-			if(!IsClientSourceTV(iTarget))
+			if(IsValidClient(iTarget))
 			{
 				event.SetInt("ignore", iTarget);
 
@@ -6656,7 +6656,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				event.SetInt("attacker", userid);
 				g_hTimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
 
-				if(!IsClientSourceTV(iTarget))
+				if(IsValidClient(iTarget))
 				{
 					event.SetInt("ignore", iTarget);
 

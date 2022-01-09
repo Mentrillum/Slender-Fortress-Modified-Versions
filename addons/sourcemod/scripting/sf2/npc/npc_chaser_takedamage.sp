@@ -326,26 +326,26 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 			float flMyEyePos[3];
 			SlenderGetAbsOrigin(iBossIndex, flMyEyePos);
 			float flMyEyePosEx[3];
-			GetEntPropVector(slender, Prop_Send, "m_vecMaxs", flMyEyePosEx);
+			GetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMaxs", flMyEyePosEx);
 			flMyEyePos[2]+=flMyEyePosEx[2];
 				
 			TE_Particle(g_iParticle[CriticalHit], flMyEyePos, flMyEyePos);
 			TE_SendToAll();
 				
-			EmitSoundToAll(CRIT_SOUND, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+			EmitSoundToAll(CRIT_SOUND, g_iSlenderHitbox[iBossIndex], SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 		}
 		else if(bMiniCrit)
 		{
 			float flMyEyePos[3];
 			SlenderGetAbsOrigin(iBossIndex, flMyEyePos);
 			float flMyEyePosEx[3];
-			GetEntPropVector(slender, Prop_Send, "m_vecMaxs", flMyEyePosEx);
+			GetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMaxs", flMyEyePosEx);
 			flMyEyePos[2]+=flMyEyePosEx[2];
 				
 			TE_Particle(g_iParticle[MiniCritHit], flMyEyePos, flMyEyePos);
 			TE_SendToAll();
 				
-			EmitSoundToAll(MINICRIT_SOUND, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+			EmitSoundToAll(MINICRIT_SOUND, g_iSlenderHitbox[iBossIndex], SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 		}
 	}
 
@@ -381,10 +381,13 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(victim);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	CBaseCombatCharacter overlay = CBaseCombatCharacter(victim);
 	npc.flWalkSpeed = 0.0;
 	npc.flRunSpeed = 0.0;
 	int iState = g_iSlenderState[iBossIndex];
 	bool bDoChasePersistencyInit = false;
+	overlay.RemoveAllGestures();
+	CBaseNPC_RemoveAllLayers(victim);
 	if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
 	loco.ClearStuckStatus();
 	g_iSlenderState[iBossIndex] = STATE_STUN;
