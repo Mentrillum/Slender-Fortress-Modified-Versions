@@ -63,7 +63,7 @@ public void OnPluginStart()
 	
 	g_cvAllChat = CreateConVar("sf2_alltalk", "0");
 	g_cvAllChat.AddChangeHook(OnConVarChanged);
-	
+
 	g_cvPlayerVoiceDistance = CreateConVar("sf2_player_voice_distance", "800.0", "The maximum distance RED can communicate in voice chat. Set to 0 if you want them to be heard at all times.", _, true, 0.0);
 	g_cvPlayerVoiceWallScale = CreateConVar("sf2_player_voice_scale_blocked", "0.5", "The distance required to hear RED in voice chat will be multiplied by this amount if something is blocking them.");
 	

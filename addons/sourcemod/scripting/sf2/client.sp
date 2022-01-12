@@ -837,8 +837,24 @@ void ClientProcessVisibility(int client)
 							g_iSlenderTarget[i] = EntIndexToEntRef(client);
 							g_flSlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
 							g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
-							if (i != -1 && slender && slender != INVALID_ENT_REFERENCE)
-								NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
+							SlenderPerformVoice(i, "sound_chaseenemyinitial");
+							if (NPCChaserCanUseChaseInitialAnimation(i) && !g_bNPCUsesChaseInitialAnimation[i] && !SF_IsSlaughterRunMap())
+							{
+								if (g_hSlenderChaseInitialTimer[i] == null)
+								{
+									CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+									g_bNPCUsesChaseInitialAnimation[i] = true;
+									npc.flWalkSpeed = 0.0;
+									npc.flRunSpeed = 0.0;
+									NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
+									g_hSlenderChaseInitialTimer[i] = CreateTimer(GetProfileFloat(sProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+								}
+							}
+							else
+							{
+								if (i != -1 && slender && slender != INVALID_ENT_REFERENCE)
+									NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
+							}
 							g_bPlayerScaredByBoss[client][i] = true;
 						}
 					}
@@ -3545,6 +3561,14 @@ public Action Timer_RespawnPlayer(Handle timer, any userid)
 	if (client <= 0) return Plugin_Stop;
 	
 	if (!IsValidClient(client) || !IsClientInGame(client) || IsPlayerAlive(client)) return Plugin_Stop;
+
+	if (SF_SpecialRound(SPECIALROUND_1UP) && IsRoundPlaying() && g_iRoundTime <= 0)
+	{
+		g_bPlayerDied1Up[client] = false;
+		g_bPlayerIn1UpCondition[client] = false;
+		g_bPlayerFullyDied1Up[client] = true;
+		return Plugin_Stop;
+	}
 
 	if (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !DidClientEscape(client) && !IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro() && IsRoundPlaying()) 
 	{

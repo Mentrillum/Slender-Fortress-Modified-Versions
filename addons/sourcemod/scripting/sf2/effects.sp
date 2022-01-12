@@ -239,7 +239,27 @@ void SlenderSpawnEffects(int iBossIndex)
 					
 					GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAng);
 				}
-				
+
+				int iDifficultyIndex = g_hConfig.GetNum("difficulty_indexes", 123456);
+				char sIndexes[8], sCurrentIndex[2];
+				FormatEx(sIndexes, sizeof(sIndexes), "%d", iDifficultyIndex);
+				FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", g_cvDifficulty.IntValue);
+				char sNumber = sCurrentIndex[0];
+				int iDifficultyNumber = 0;
+				if (FindCharInString(sIndexes, sNumber) != -1)
+				{
+					iDifficultyNumber += g_cvDifficulty.IntValue;
+				}
+				if (sIndexes[0] != '\0' && sCurrentIndex[0] != '\0' && iDifficultyNumber != -1)
+				{
+					int iCurrentIndex = StringToInt(sCurrentIndex);
+					if (iDifficultyNumber != iCurrentIndex)
+					{
+						g_hConfig.GoBack();
+						continue;
+					}
+				}
+
 				int  iEnt = -1;
 				
 				switch (iEffectType)

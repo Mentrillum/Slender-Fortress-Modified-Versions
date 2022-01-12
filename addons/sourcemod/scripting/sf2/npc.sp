@@ -2658,7 +2658,7 @@ void RemoveProfile(int iBossIndex)
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	if (!IsRoundPlaying()) return;
+	//if (!IsRoundPlaying()) return;
 
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return; // Stop spawning bosses before all pages are picked up in Renevant.
 
@@ -2764,11 +2764,11 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
 			float flSlenderBoxMins[3], flSlenderBoxMaxs[3];
-			flSlenderBoxMins[0] = -1.0;
-			flSlenderBoxMins[1] = -1.0;
-			flSlenderBoxMaxs[0] = 1.0;
-			flSlenderBoxMaxs[1] = 1.0;
-			flSlenderBoxMaxs[2] = 1.0;
+			flSlenderBoxMins[0] = -11.0;
+			flSlenderBoxMins[1] = -11.0;
+			flSlenderBoxMaxs[0] = 11.0;
+			flSlenderBoxMaxs[1] = 11.0;
+			flSlenderBoxMaxs[2] = 55.0;
 			if (NPCGetRaidHitbox(iBossIndex) == 1)
 			{
 				npcBoss.SetBodyMins(g_flSlenderDetectMins[iBossIndex]);

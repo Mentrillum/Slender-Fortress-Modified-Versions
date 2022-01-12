@@ -6,7 +6,7 @@
 public void Hook_ClientPreThink(int client)
 {
 	if (!g_bEnabled) return;
-	
+
 	ClientProcessFlashlightAngles(client);
 	ClientProcessInteractiveGlow(client);
 	ClientProcessStaticShake(client);

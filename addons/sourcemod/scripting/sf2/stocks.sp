@@ -1344,6 +1344,17 @@ stock float FloatMax(float a, float b)
 	return b;
 }
 
+/**
+ *	Linearly interpolates between flA and flB by t.
+ */
+stock float LerpFloats(const float flA, const float flB, float t)
+{
+    if (t < 0.0) t = 0.0;
+    if (t > 1.0) t = 1.0;
+    
+    return flA + (flB - flA) * t;
+}
+
 //	==========================================================
 //	VECTOR FUNCTIONS
 //	==========================================================

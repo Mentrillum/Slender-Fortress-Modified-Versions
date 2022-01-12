@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.1.3 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.1.3 M"
+#define PLUGIN_VERSION "1.7.1.4 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1.4 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -617,6 +617,7 @@ enum struct PlayerPreferences
 	bool PlayerPreference_ViewBobbing;
 	bool PlayerPreference_GroupOutline;
 	bool PlayerPreference_PvPSpawnProtection;
+	bool PlayerPreference_LegacyHud;
 	
 	int PlayerPreference_MuteMode; //0 = Normal, 1 = Opposing Team, 2 = Opposing Team Proxy Ignore
 	int PlayerPreference_FlashlightTemperature; //1 = 1000, 2 = 2000, 3 = 3000, 4 = 4000, 5 = 5000, 6 = 6000, 7 = 7000, 8 = 8000, 9 = 9000, 10 = 10000
@@ -1199,7 +1200,7 @@ static void StartPlugin()
 	
 	g_iRoundWarmupRoundCount = 0;
 	
-	g_hClientAverageUpdateTimer = CreateTimer(0.2, Timer_ClientAverageUpdate, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hClientAverageUpdateTimer = CreateTimer(0.1, Timer_ClientAverageUpdate, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	g_hBossCountUpdateTimer = CreateTimer(2.0, Timer_BossCountUpdate, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	
 	g_hOnGameFrameTimer = CreateTimer(0.1, Timer_GlobalGameFrame, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
@@ -4262,10 +4263,14 @@ bool IsInfiniteSprintEnabled()
 	return view_as<bool>(g_bRoundInfiniteSprint || (g_cvPlayerInfiniteSprintOverride.IntValue == 1));
 }
 
-#define SF2_PLAYER_HUD_BLINK_SYMBOL "B"
+#define SF2_PLAYER_HUD_BLINK_SYMBOL_ON "O"
+#define SF2_PLAYER_HUD_BLINK_SYMBOL_OFF "Ɵ"
+#define SF2_PLAYER_HUD_BLINK_SYMBOL_OLD "B"
 #define SF2_PLAYER_HUD_FLASHLIGHT_SYMBOL "ϟ"
-#define SF2_PLAYER_HUD_BAR_SYMBOL "|"
-#define SF2_PLAYER_HUD_BAR_MISSING_SYMBOL ""
+#define SF2_PLAYER_HUD_BAR_SYMBOL "█"
+#define SF2_PLAYER_HUD_BAR_MISSING_SYMBOL "░"
+#define SF2_PLAYER_HUD_BAR_SYMBOL_OLD "|"
+#define SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD ""
 #define SF2_PLAYER_HUD_INFINITY_SYMBOL "∞"
 #define SF2_PLAYER_HUD_SPRINT_SYMBOL "»"
 
@@ -4282,12 +4287,14 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 	// First, process through HUD stuff.
 	char buffer[256];
 	
-	static iHudColorHealthy[3] = { 150, 255, 150 };
+	static iHudColorHealthy[3];
 	static iHudColorCritical[3] = { 255, 10, 10 };
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i)) continue;
+		if (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud) iHudColorHealthy = { 50, 255, 50 };
+		else iHudColorHealthy = { 150, 255, 150 };
 		
 		if (IsPlayerAlive(i) && !IsClientInDeathCam(i))
 		{
@@ -4300,9 +4307,14 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
 					iBars = RoundToCeil(float(iMaxBars) * ClientGetBlinkMeter(i));
-					if (iBars > iMaxBars)iBars = iMaxBars;
+					if (iBars > iMaxBars) iBars = iMaxBars;
 					
-					FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL);
+					if (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud)
+					{
+						if (iBars != 0) FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
+						else FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
+					}
+					else FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
 					
 					if (IsInfiniteBlinkEnabled())
 					{
@@ -4314,11 +4326,11 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 						{
 							if (i2 < iBars)
 							{
-								StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_SYMBOL);
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 							}
 							else
 							{
-								StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_MISSING_SYMBOL);
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 							}
 						}
 					}
@@ -4342,18 +4354,18 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 						{
 							if (i2 < iBars)
 							{
-								StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_SYMBOL);
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 							}
 							else
 							{
-								StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_MISSING_SYMBOL);
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 							}
 						}
 					}
 				}
 				
 				iBars = RoundToCeil(float(iMaxBars) * (float(ClientGetSprintPoints(i)) / 100.0));
-				if (iBars > iMaxBars)iBars = iMaxBars;
+				if (iBars > iMaxBars) iBars = iMaxBars;
 				
 				char sBuffer2[64];
 				FormatEx(sBuffer2, sizeof(sBuffer2), "\n%s  ", SF2_PLAYER_HUD_SPRINT_SYMBOL);
@@ -4369,15 +4381,14 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						if (i2 < iBars)
 						{
-							StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_SYMBOL);
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 						}
 						else
 						{
-							StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_MISSING_SYMBOL);
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 						}
 					}
 				}
-				
 				
 				float flHealthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_hSDKGetMaxHealth, i));
 				
@@ -4421,13 +4432,20 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 				{
 					int iMaxBars = 12;
 					int iBars = RoundToCeil(float(iMaxBars) * (float(g_iPlayerProxyControl[i]) / 100.0));
-					if (iBars > iMaxBars)iBars = iMaxBars;
+					if (iBars > iMaxBars) iBars = iMaxBars;
 					
 					strcopy(buffer, sizeof(buffer), "CONTROL\n");
 					
-					for (int i2 = 0; i2 < iBars; i2++)
+					for (int i2 = 0; i2 < iMaxBars; i2++)
 					{
-						StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_BAR_SYMBOL);
+						if (i2 < iBars)
+						{
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+						}
+						else
+						{
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+						}
 					}
 					
 					SetHudTextParams(-1.0, 0.83, 
@@ -5733,6 +5751,7 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		if (!IsValidClient(i)) continue;
 		g_bPlayerDied1Up[i] = false;
 		g_bPlayerIn1UpCondition[i] = false;
+		g_bPlayerFullyDied1Up[i] = true;
 	}
 	
 	ArrayList aRandomBosses = new ArrayList();
@@ -8121,8 +8140,12 @@ public Action Timer_RoundTime(Handle timer)
 			float flBuffer[3];
 			GetClientAbsOrigin(i, flBuffer);
 			ClientStartDeathCam(i, 0, flBuffer, true);
-			g_bPlayerDied1Up[i] = false;
-			g_bPlayerIn1UpCondition[i] = false;
+			if (SF_SpecialRound(SPECIALROUND_1UP))
+			{
+				g_bPlayerDied1Up[i] = false;
+				g_bPlayerIn1UpCondition[i] = false;
+				g_bPlayerFullyDied1Up[i] = true;
+			}
 			KillClient(i);
 		}
 		
@@ -8185,8 +8208,12 @@ public Action Timer_RoundTimeEscape(Handle timer)
 			float flBuffer[3];
 			GetClientAbsOrigin(i, flBuffer);
 			ClientStartDeathCam(i, 0, flBuffer, true);
-			g_bPlayerDied1Up[i] = false;
-			g_bPlayerIn1UpCondition[i] = false;
+			if (SF_SpecialRound(SPECIALROUND_1UP))
+			{
+				g_bPlayerDied1Up[i] = false;
+				g_bPlayerIn1UpCondition[i] = false;
+				g_bPlayerFullyDied1Up[i] = true;
+			}
 			KillClient(i);
 		}
 		return Plugin_Stop;
