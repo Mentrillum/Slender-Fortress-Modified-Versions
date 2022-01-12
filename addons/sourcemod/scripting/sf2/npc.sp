@@ -2658,7 +2658,7 @@ void RemoveProfile(int iBossIndex)
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	//if (!IsRoundPlaying()) return;
+	if (!IsRoundPlaying()) return;
 
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return; // Stop spawning bosses before all pages are picked up in Renevant.
 
