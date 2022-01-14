@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.1.4 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.1.4 M"
+#define PLUGIN_VERSION "1.7.1.5 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.1.5 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -875,6 +875,7 @@ ConVar g_cvPlayerKeepWeapons;
 ConVar g_cvFullyEnableSpectator;
 ConVar g_cvAllowPlayerPeeking;
 ConVar g_cvUsePlayersForKillFeed;
+ConVar g_cvDefaultLegacyHud;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
@@ -3639,6 +3640,7 @@ public void OnClientCookiesCached(int iClient)
 	g_iPlayerPreferences[iClient].PlayerPreference_ProxyShowMessage = g_cvPlayerProxyAsk.BoolValue;
 	g_iPlayerPreferences[iClient].PlayerPreference_PvPSpawnProtection = true;
 	g_iPlayerPreferences[iClient].PlayerPreference_ViewBobbing = g_cvPlayerViewbobEnabled.BoolValue;
+	g_iPlayerPreferences[iClient].PlayerPreference_LegacyHud = g_cvDefaultLegacyHud.BoolValue;
 	
 	if (sCookie[0] != '\0')
 	{
@@ -3671,6 +3673,8 @@ public void OnClientCookiesCached(int iClient)
 			g_iPlayerPreferences[iClient].PlayerPreference_GroupOutline = view_as<bool>(StringToInt(s2[11]));
 		if (count > 12)
 			g_iPlayerPreferences[iClient].PlayerPreference_GhostModeTeleportState = StringToInt(s2[12]);
+		if (count > 13)
+			g_iPlayerPreferences[iClient].PlayerPreference_LegacyHud = view_as<bool>(StringToInt(s2[13]));
 	}
 }
 
@@ -3832,6 +3836,7 @@ public void OnClientDisconnect(int iClient)
 	g_iPlayerPreferences[iClient].PlayerPreference_ProxyShowMessage = g_cvPlayerProxyAsk.BoolValue;
 	g_iPlayerPreferences[iClient].PlayerPreference_PvPSpawnProtection = true;
 	g_iPlayerPreferences[iClient].PlayerPreference_ViewBobbing = g_cvPlayerViewbobEnabled.BoolValue;
+	g_iPlayerPreferences[iClient].PlayerPreference_LegacyHud = g_cvDefaultLegacyHud.BoolValue;
 	
 	// Reset any iClient functions that may be still active.
 	ClientResetOverlay(iClient);

@@ -186,6 +186,8 @@ public void OnPluginStart()
 
 	g_cvUsePlayersForKillFeed = CreateConVar("sf2_kill_feed_players", "0", "Uses players for kill feed when SourceTV is unavailable.", _, true, 0.0, true, 1.0);
 
+	g_cvDefaultLegacyHud = CreateConVar("sf2_default_legacy_hud", "0", "Set to 1 if the server should enable the legacy hud by default in their settings.");
+
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();
@@ -231,6 +233,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slbosslist", Command_BossList);
 	RegConsoleCmd("sm_slafk", Command_NoPoints);
 	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
+	RegConsoleCmd("sm_slhud", Command_MenuSwitchHud);
 	RegConsoleCmd("+sprint", Command_SprintOn);
 	RegConsoleCmd("-sprint", Command_SprintOff);
 	RegConsoleCmd("+blink", Command_BlinkOn);
@@ -367,6 +370,24 @@ public Action Command_Settings(int iClient,int args)
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	DisplayMenu(g_hMenuSettings, iClient, 30);
+	return Plugin_Handled;
+}
+
+public Action Command_MenuSwitchHud(int iClient,int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	
+	char sBuffer[512];
+	FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Hud Version Title", iClient);
+				
+	Handle hPanel = CreatePanel();
+	SetPanelTitle(hPanel, sBuffer);
+				
+	DrawPanelItem(hPanel, "Use the new HUD");
+	DrawPanelItem(hPanel, "Use the legacy HUD");
+				
+	SendPanelToClient(hPanel, iClient, Panel_SettingsHudVersion, 30);
+	delete hPanel;
 	return Plugin_Handled;
 }
 

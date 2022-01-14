@@ -1068,14 +1068,12 @@ public int Panel_SettingsHudVersion(Handle menu, MenuAction action,int param1,in
 			case 1:
 			{
 				g_iPlayerPreferences[param1].PlayerPreference_LegacyHud = false;
-				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 New Hud Use", param1);
 			}
 			case 2:
 			{
 				g_iPlayerPreferences[param1].PlayerPreference_LegacyHud = true;
-				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Legacy Hud Use", param1);
 			}

@@ -3346,7 +3346,7 @@ void ClientSaveCookies(int client)
 	
 	// Save and reset our queue points.
 	char s[512];
-	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
+	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
 		g_iPlayerPreferences[client].PlayerPreference_PvPAutoSpawn, 
 		g_iPlayerPreferences[client].PlayerPreference_ShowHints, 
 		g_iPlayerPreferences[client].PlayerPreference_MuteMode,
@@ -3358,7 +3358,8 @@ void ClientSaveCookies(int client)
 		g_iPlayerPreferences[client].PlayerPreference_ViewBobbing,
 		g_iPlayerPreferences[client].PlayerPreference_GhostModeToggleState,
 		g_iPlayerPreferences[client].PlayerPreference_GroupOutline,
-		g_iPlayerPreferences[client].PlayerPreference_GhostModeTeleportState);
+		g_iPlayerPreferences[client].PlayerPreference_GhostModeTeleportState,
+		g_iPlayerPreferences[client].PlayerPreference_LegacyHud);
 		
 	SetClientCookie(client, g_hCookie, s);
 }
