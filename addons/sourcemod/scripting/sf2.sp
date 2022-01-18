@@ -2347,10 +2347,6 @@ public void OnEntityCreated(int ent, const char[] classname)
 	{
 		SDKHook(ent, SDKHook_Touch, Hook_GhostNoTouch);
 	}
-	else if (strcmp(classname, "tf_dropped_weapon") == 0)
-	{
-		SDKHook(ent, SDKHook_SpawnPost, Hook_DeleteDroppedWeapon);
-	}
 	else if (strcmp(classname, "obj_sentrygun") == 0 || strcmp(classname, "obj_dispenser") == 0 || strcmp(classname, "obj_teleporter") == 0)
 	{
 		CreateTimer(0.1, Timer_FullyBuildBuilding, EntIndexToEntRef(ent), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
@@ -2392,17 +2388,6 @@ public Action Timer_FullyBuildBuilding(Handle timer, any entref)
 	}
 
 	return Plugin_Continue;
-}
-
-public void Hook_DeleteDroppedWeapon(int ent)
-{
-	if (!g_bEnabled) return;
-	
-	if (IsValidEntity(ent))
-	{
-		SDKUnhook(ent, SDKHook_SpawnPost, Hook_DeleteDroppedWeapon);
-		RemoveEntity(ent);
-	}
 }
 
 public MRESReturn Hook_WeaponGetCustomDamageType(int weapon, Handle hReturn, Handle hParams)
