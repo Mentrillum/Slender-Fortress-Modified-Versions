@@ -1007,15 +1007,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 
 				return MRES_Supercede;
 			}
-			else
-			{
-				return MRES_Ignored;
-			}
 		}
-	}
-	else
-	{
-		return MRES_Ignored;
 	}
 
 	return MRES_Ignored;
