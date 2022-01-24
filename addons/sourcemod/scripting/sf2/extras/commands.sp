@@ -1866,5 +1866,6 @@ public Action Command_AllTalkOff(int iClient, int args)
 public Action Command_ConditionToggle(int iClient, int args)
 {
 	g_cvIgnoreRoundWinConditions.BoolValue = !g_cvIgnoreRoundWinConditions.BoolValue;
+	CPrintToChat(iClient, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_cvIgnoreRoundWinConditions.BoolValue ? "dis" : "en");
 	return Plugin_Handled;
 }
