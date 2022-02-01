@@ -5682,35 +5682,6 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	delete hProf;
 	
 	#endif
-	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "trigger_teleport")) != -1)
-	{
-		if (IsValidEntity(ent))
-		{
-			int flags = GetEntProp(ent, Prop_Data, "m_spawnflags");
-			if ((flags & TRIGGER_CLIENTS) && !(flags & TRIGGER_NPCS) && !(flags & TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS))
-			{
-				SetEntProp(ent, Prop_Data, "m_spawnflags", flags | TRIGGER_NPCS); //Some maps have this bug where teleport triggers are for clients but not for bosses, it is a problem in RED sometimes.
-			}	
-		}
-	}
-	//Nextbot doesn't trigger the triggers with npc flags, for map backward compatibility we are going to change the trigger filter and force a custom one.
-	/*int iEnt = -1;
-	while ((iEnt = FindEntityByClassname(iEnt, "trigger_*")) != -1)
-	{
-		if(IsValidEntity(iEnt))
-		{
-			int flags = GetEntProp(iEnt, Prop_Data, "m_spawnflags");
-			if ((flags & TRIGGER_NPCS) && !(flags & TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS))
-			{
-				//Set the trigger to allow every entity, our custom filter will discard the unwanted entities.
-				SetEntProp(iEnt, Prop_Data, "m_spawnflags", flags|TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS);
-				SDKHook(iEnt, SDKHook_StartTouch, Hook_TriggerNPCTouch);
-				SDKHook(iEnt, SDKHook_Touch, Hook_TriggerNPCTouch);
-				SDKHook(iEnt, SDKHook_EndTouch, Hook_TriggerNPCTouch);
-			}
-		}
-	}*/
 }
 public Action Hook_TriggerNPCTouch(int iTrigger, int iOther)
 {
