@@ -560,6 +560,18 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		}
 	}
 
+	// Prevent telefrags
+	if ((damagetype & DMG_CRUSH) && damage > 500.0)
+	{
+		int iBossIndex = NPCGetFromEntIndex(attacker);
+		if (iBossIndex != -1 && IsValidClient(victim))
+		{
+			damage = 0.0;
+			RemoveSlender(iBossIndex);
+			return Plugin_Changed;
+		}
+	}
+
 	if (IsValidEntity(inflictor) && GetEntityClassname(inflictor, classname, sizeof(classname)) && strcmp(classname, "tf_projectile_rocket") == 0 && (ProjectileGetFlags(inflictor) & PROJ_ICEBALL))
 	{
 		int slender = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
