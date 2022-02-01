@@ -265,6 +265,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_reloadprofiles", Command_ReloadProfiles, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_alltalk", Command_AllTalkToggle, ADMFLAG_SLAY);
 	RegAdminCmd("sm_slalltalk", Command_AllTalkToggle, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("sm_sf2_eventmode", Command_ConditionToggle, ADMFLAG_CONVARS);
+	RegAdminCmd("sm_sleventmode", Command_ConditionToggle, ADMFLAG_CONVARS, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
 	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
 	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
@@ -1860,3 +1862,10 @@ public Action Command_AllTalkOff(int iClient, int args)
 	}
 	return Plugin_Handled;
 } 
+
+public Action Command_ConditionToggle(int iClient, int args)
+{
+	g_cvIgnoreRoundWinConditions.BoolValue = !g_cvIgnoreRoundWinConditions.BoolValue;
+	CPrintToChat(iClient, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_cvIgnoreRoundWinConditions.BoolValue ? "dis" : "en");
+	return Plugin_Handled;
+}
