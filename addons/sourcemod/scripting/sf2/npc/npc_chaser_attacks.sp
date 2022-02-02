@@ -67,10 +67,8 @@ public void PerformSmiteBoss(int client, int target, any entref)
 	TE_SetupSmoke(clientpos, g_SmokeSprite, 5.0, 10);
 	TE_SendToAll();
 	
-	if (sSmiteSound[0] != '\0') //No sound, broh
-	{
-		EmitAmbientSound(sSmiteSound, startpos, client, SNDLEVEL_SCREAMING);
-	}
+	EmitAmbientSound(sSmiteSound, startpos, client, SNDLEVEL_SCREAMING);
+
 }
 
 public Action Timer_SlenderStealLife(Handle timer, any entref)
