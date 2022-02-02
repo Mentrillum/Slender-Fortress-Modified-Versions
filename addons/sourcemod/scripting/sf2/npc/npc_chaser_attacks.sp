@@ -49,6 +49,11 @@ public void PerformSmiteBoss(int client, int target, any entref)
 	
 	// define the direction of the sparks
 	float dir[3];
+
+	// Sound stuff
+	char sSmiteSound[PLATFORM_MAX_PATH];
+	GetProfileString(sProfile, "player_smite_sound", sSmiteSound, sizeof(sSmiteSound), SOUND_THUNDER);
+	TryPrecacheBossProfileSoundPath(sSmiteSound);
 	
 	TE_SetupBeamPoints(startpos, clientpos, g_LightningSprite, 0, 0, 0, 0.2, 20.0, 10.0, 0, 1.0, color, 3);
 	TE_SendToAll();
@@ -62,7 +67,7 @@ public void PerformSmiteBoss(int client, int target, any entref)
 	TE_SetupSmoke(clientpos, g_SmokeSprite, 5.0, 10);
 	TE_SendToAll();
 	
-	EmitAmbientSound(SOUND_THUNDER, startpos, client, 90);
+	EmitAmbientSound(sSmiteSound, startpos, client, SNDLEVEL_SCREAMING);
 
 }
 
@@ -355,6 +360,9 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							float flDefaultColorBeam[3] = {128.0, 128.0, 128.0};
 							float flDefaultColorHalo[3] = {255.0, 255.0, 255.0};
 							float vecMyShockPos[3];
+							float flWidth1 = GetProfileFloat(sProfile, "shockwave_width_1", 40.0);
+							float flWidth2 = GetProfileFloat(sProfile, "shockwave_width_2", 20.0);
+							float flAmplitude = GetProfileFloat(sProfile, "shockwave_amplitude", 5.0);
 							
 							GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", vecMyShockPos);
 							vecMyShockPos[2] += 10;
@@ -375,10 +383,10 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							iModelBeam = PrecacheModel(g_sSlenderShockwaveBeamSprite[iBossIndex], true);
 							iModelHalo = PrecacheModel(g_sSlenderShockwaveHaloSprite[iBossIndex], true);
 				
-							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.2, 20.0, 5.0, iColor2, 15, 0); //Inner
+							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.2, flWidth2, flAmplitude, iColor2, 15, 0); //Inner
 							TE_SendToAll();
 
-							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.3, 40.0, 5.0, iColor1, 15, 0); //Outer
+							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.3, flWidth1, flAmplitude, iColor1, 15, 0); //Outer
 							TE_SendToAll();
 						}
 					}
@@ -401,6 +409,9 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							float flDefaultColorBeam[3] = {128.0, 128.0, 128.0};
 							float flDefaultColorHalo[3] = {255.0, 255.0, 255.0};
 							float vecMyShockPos[3];
+							float flWidth1 = GetProfileFloat(sProfile, "shockwave_width_1", 40.0);
+							float flWidth2 = GetProfileFloat(sProfile, "shockwave_width_2", 20.0);
+							float flAmplitude = GetProfileFloat(sProfile, "shockwave_amplitude", 5.0);
 							
 							GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", vecMyShockPos);
 							vecMyShockPos[2] += 10;
@@ -421,10 +432,10 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							iModelBeam = PrecacheModel(g_sSlenderShockwaveBeamSprite[iBossIndex], true);
 							iModelHalo = PrecacheModel(g_sSlenderShockwaveHaloSprite[iBossIndex], true);
 				
-							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.2, 20.0, 5.0, iColor2, 15, 0); //Inner
+							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.2, flWidth2, flAmplitude, iColor2, 15, 0); //Inner
 							TE_SendToAll();
 
-							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.3, 40.0, 5.0, iColor1, 15, 0); //Outer
+							TE_SetupBeamRingPoint(vecMyShockPos, 10.0, NPCChaserGetShockwaveRange(iBossIndex,iDifficulty), iModelBeam, iModelHalo, 0, 30, 0.3, flWidth1, flAmplitude, iColor1, 15, 0); //Outer
 							TE_SendToAll();
 						}
 					}
