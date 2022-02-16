@@ -15,8 +15,6 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	iUniqueProfileIndex = g_hChaserProfileData.Push(-1);
 	g_hChaserProfileNames.SetValue(sProfile, iUniqueProfileIndex);
 	
-	float flBossStepSize = kv.GetFloat("stepsize", 18.0);
-	
 	float flBossDefaultWalkSpeed = kv.GetFloat("walkspeed", 30.0);
 	float flBossWalkSpeedEasy = kv.GetFloat("walkspeed_easy", flBossDefaultWalkSpeed);
 	float flBossWalkSpeedHard = kv.GetFloat("walkspeed_hard", flBossDefaultWalkSpeed);
@@ -618,8 +616,6 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flCrawlSpeedMultiplierInsane = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierHard);
 	float flCrawlSpeedMultiplierNightmare = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierInsane);
 	float flCrawlSpeedMultiplierApollyon = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierNightmare);
-
-	g_hChaserProfileData.Set(iUniqueProfileIndex, flBossStepSize, ChaserProfileData_StepSize);
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, view_as<bool>(kv.GetNum("difficulty_affects_animations")), ChaserProfileData_DifficultyAffectsAnimations);
 	
@@ -1402,6 +1398,8 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 
 		int iAttackExplosiveDanceRadius = kv.GetNum("attack_explosivedance_radius", 350);
 
+		bool bAttackGestures = view_as<bool>(kv.GetNum("attack_gestures", 0));
+
 		int iAttackIndex = hAttacks.Push(-1);
 		
 		hAttacks.Set(iAttackIndex, iAttackType, ChaserProfileAttackData_Type);
@@ -1523,6 +1521,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		hAttacks.Set(iAttackIndex, iAttackUseOnDifficulty, ChaserProfileAttackData_UseOnDifficulty);
 		hAttacks.Set(iAttackIndex, iAttackBlockOnDifficulty, ChaserProfileAttackData_BlockOnDifficulty);
 		hAttacks.Set(iAttackIndex, iAttackExplosiveDanceRadius, ChaserProfileAttackData_ExplosiveDanceRadius);
+		hAttacks.Set(iAttackIndex, bAttackGestures, ChaserProfileAttackData_Gestures);
 		
 		if (iMaxAttacks > 0)//Backward compatibility
 		{
@@ -1536,11 +1535,60 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 	return iMaxAttacks;
 }
 
-stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, int difficulty, int iAnimationIndex = -1, float &flFootstepInterval)
+stock bool GetProfileGesture(int iBossIndex, const char[] sProfile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, float &flCycle, int iAnimationIndex = -1)
 {
 	g_hConfig.Rewind();
 	g_hConfig.JumpToKey(sProfile);
-	char sAnimationSection[128], sKeyAnimationName[256], sKeyAnimationPlayBackRate[128], sKeyAnimationFootstepInt[128];
+	char sAnimationSection[40], sKeyGestureName[65], sKeyGesturePlayBackRate[65], sKeyGestureCycle[65];
+	switch (iAnimationSection)
+	{
+		case ChaserAnimation_AttackAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
+			strcopy(sKeyGestureName, sizeof(sKeyGestureName), "gesture_attack");
+			strcopy(sKeyGesturePlayBackRate, sizeof(sKeyGesturePlayBackRate), "gesture_attack_playbackrate");
+			strcopy(sKeyGestureCycle, sizeof(sKeyGestureCycle), "gesture_attack_cycle");
+		}
+	}
+	if (g_hConfig.JumpToKey("animations"))
+	{
+		if (g_hConfig.JumpToKey(sAnimationSection))
+		{
+			char sNum[3];
+			if (iAnimationIndex == -1)
+			{
+				int iTotalAnimation;
+				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
+				{
+					FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
+					if (g_hConfig.JumpToKey(sNum))
+					{
+						iTotalAnimation++;
+						g_hConfig.GoBack();
+					}
+				}
+				iAnimationIndex = GetRandomInt(1, iTotalAnimation);
+			}
+			FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
+			if (!g_hConfig.JumpToKey(sNum))
+			{
+				return false;
+			}
+		}
+		else
+			return false;
+	}
+	g_hConfig.GetString(sKeyGestureName, sAnimation, iLenght);
+	flPlaybackRate = g_hConfig.GetFloat(sKeyGesturePlayBackRate, 1.0);
+	flCycle = g_hConfig.GetFloat(sKeyGestureCycle, 0.0);
+	return true;
+}
+
+stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, int difficulty, int iAnimationIndex = -1, float &flFootstepInterval, float &flCycle = 0.0)
+{
+	g_hConfig.Rewind();
+	g_hConfig.JumpToKey(sProfile);
+	char sAnimationSection[40], sKeyAnimationName[65], sKeyAnimationPlayBackRate[65], sKeyAnimationFootstepInt[65], sKeyAnimationCycle[65];
 	switch (iAnimationSection)
 	{
 		case ChaserAnimation_IdleAnimations:
@@ -1705,6 +1753,7 @@ stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnima
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_attack");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_attack_playbackrate");
 			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_attack_cycle");
 		}
 		case ChaserAnimation_ShootAnimations:
 		{
@@ -1712,6 +1761,7 @@ stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnima
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_shoot");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_shoot_playbackrate");
 			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_shoot_cycle");
 		}
 		case ChaserAnimation_RunAnimations:
 		{
@@ -1770,12 +1820,14 @@ stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnima
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "chaseinitial");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_chaseinitial");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_chaseinitial_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_chaseinitial_cycle");
 		}
 		case ChaserAnimation_RageAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "rage");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_rage");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_rage_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_rage_cycle");
 		}
 		case ChaserAnimation_StunAnimations:
 		{
@@ -1783,54 +1835,63 @@ stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnima
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_stun");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_stun_playbackrate");
 			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_stun_footstepinterval");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_stun_cycle");
 		}
 		case ChaserAnimation_DeathAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "death");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_death");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_death_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_death_cycle");
 		}
 		case ChaserAnimation_JumpAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "jump");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_jump");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_jump_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_jump_cycle");
 		}
 		case ChaserAnimation_SpawnAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "spawn");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_spawn");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_spawn_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_spawn_cycle");
 		}
 		case ChaserAnimation_FleeInitialAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "fleestart");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_fleestart");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_fleestart_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_fleestart_cycle");
 		}
 		case ChaserAnimation_HealAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "heal");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_heal");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_heal_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_heal_cycle");
 		}
 		case ChaserAnimation_DeathcamAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_deathcam");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_deathcam_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_deathcam_cycle");
 		}
 		case ChaserAnimation_CloakStartAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "cloakstart");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_cloakstart");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_cloakstart_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_cloakstart_cycle");
 		}
 		case ChaserAnimation_CloakEndAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "cloakend");
 			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_cloakend");
 			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_cloakend_playbackrate");
+			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_cloakend_cycle");
 		}
 		case ChaserAnimation_CrawlWalkAnimations:
 		{
@@ -1969,6 +2030,7 @@ stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnima
 	g_hConfig.GetString(sKeyAnimationName, sAnimation, iLenght);
 	flPlaybackRate = g_hConfig.GetFloat(sKeyAnimationPlayBackRate, 1.0);
 	flFootstepInterval = g_hConfig.GetFloat(sKeyAnimationFootstepInt);
+	flCycle = g_hConfig.GetFloat(sKeyAnimationCycle);
 	return true;
 }
 

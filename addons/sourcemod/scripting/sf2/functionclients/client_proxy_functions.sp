@@ -156,7 +156,7 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 
 void DisplayProxyAskMenu(int client, int iAskMaster, const float flPos[3], int iSpawnPoint)
 {
-	if (IsRoundEnding()) return;
+	if (IsRoundEnding() || IsRoundInIntro() || IsRoundInWarmup()) return;
 	char sBuffer[512];
 	Handle hMenu = CreateMenu(Menu_ProxyAsk);
 	SetMenuTitle(hMenu, "%T\n \n%T\n \n", "SF2 Proxy Ask Menu Title", client, "SF2 Proxy Ask Menu Description", client);
@@ -180,7 +180,7 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 		case MenuAction_End: delete menu;
 		case MenuAction_Select:
 		{
-			if (!IsRoundEnding())
+			if (!IsRoundEnding() && !IsRoundInIntro() && !IsRoundInWarmup())
 			{
 				int iBossIndex = NPCGetFromUniqueID(g_iPlayerProxyAskMaster[param1]);
 				if (iBossIndex != -1)
@@ -391,7 +391,7 @@ void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSp
 		GetEntPropVector(iSpawnPoint, Prop_Data, "m_vecAbsOrigin", flSpawnPos);
 		GetEntPropVector(iSpawnPoint, Prop_Data, "m_angAbsRotation", flAng);
 		TeleportEntity(client, flSpawnPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
-		spawnPoint.FireOutputNoVariant("OnSpawn", client, iSpawnPoint);
+		spawnPoint.FireOutput("OnSpawn", client);
 	}
 	else 
 	{
@@ -782,6 +782,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	bool bRestrictWeapons = true;
 	bool bUseStock = false;
 	bool bRemoveWearables = false;
+	bool bPreventAttack = false;
 	
 	if (IsRoundEnding())
 	{
@@ -792,6 +793,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			bKeepUtilityItems = false;
 		}
 	}
+
+	if (g_bPlayerEliminated[client] && g_cvPlayerKeepWeapons.BoolValue)
+	{
+		bRemoveWeapons = false;
+		bRestrictWeapons = false;
+		bKeepUtilityItems = false;
+		bPreventAttack = true;
+	}
 	
 	// pvp
 	if (IsClientInPvP(client)) 
@@ -799,6 +808,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (g_bPlayerProxy[client])
@@ -815,6 +825,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (IsClientInGhostMode(client)) 
@@ -827,12 +838,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		bRemoveWeapons = false;
 		bRestrictWeapons = false;
 		bKeepUtilityItems = false;
+		bPreventAttack = false;
 	}
 	
 	if (SF_IsBoxingMap() && !g_bPlayerEliminated[client] && !IsRoundEnding())
 	{
 		bRestrictWeapons = false;
 		bKeepUtilityItems = true;
+		bPreventAttack = false;
 	}
 
 	if (bRemoveWeapons && !bKeepUtilityItems)
@@ -968,7 +981,6 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					if (bUseStock || IsWeaponRestricted(iPlayerClass, GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex")))
 					{
 						TF2_RemoveWeaponSlotAndWearables(client, iSlot);
-						
 						switch (iSlot)
 						{
 							case TFWeaponSlot_Primary:
@@ -1210,6 +1222,41 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 		delete hWeapon;
 	}
+	
+	if (bPreventAttack)
+	{
+		int iWeapon = INVALID_ENT_REFERENCE;
+		while ((iWeapon = FindEntityByClassname(iWeapon, "tf_wearable_demoshield")) != INVALID_ENT_REFERENCE)
+		{
+			if (GetEntPropEnt(iWeapon, Prop_Send, "m_hOwnerEntity") == client)
+			{
+				RemoveEntity(iWeapon);
+			}
+		}
+
+		for (int iSlot = 0; iSlot <= 5; iSlot++)
+		{
+			if (iSlot == TFWeaponSlot_Melee) continue;
+
+			iWeapon = GetPlayerWeaponSlot(client, iSlot);
+			if (!iWeapon || iWeapon == INVALID_ENT_REFERENCE) continue;
+
+			int iItemDef = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+			switch (iItemDef)
+			{
+				case 30, 212, 59, 60, 297, 947, 1101:	// Invis Watch, Base Jumper
+				{
+					TF2_RemoveWeaponSlotAndWearables(client, iSlot);
+				}
+				default:
+				{
+					SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", 99999999.9);
+					SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", 99999999.9);
+				}
+			}
+		}
+	}
+
 	//Remove the teleport ability
 	if (IsClientInPvP(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_bPlayerEliminated[client])) //DidClientEscape(client)
 	{

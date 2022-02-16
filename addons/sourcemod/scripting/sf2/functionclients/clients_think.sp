@@ -6,7 +6,7 @@
 public void Hook_ClientPreThink(int client)
 {
 	if (!g_bEnabled) return;
-	
+
 	ClientProcessFlashlightAngles(client);
 	ClientProcessInteractiveGlow(client);
 	ClientProcessStaticShake(client);
@@ -297,7 +297,7 @@ public void Hook_ClientPreThink(int client)
 					{
 						if (!g_bPlayerTrapped[client])
 						{
-							if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+							if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_bRenevant90sEffect)
 							{
 								if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
 								{
@@ -557,6 +557,18 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				damage = 0.0;
 				return Plugin_Changed;
 			}
+		}
+	}
+
+	// Prevent telefrags
+	if ((damagetype & DMG_CRUSH) && damage > 500.0)
+	{
+		int iBossIndex = NPCGetFromEntIndex(attacker);
+		if (iBossIndex != -1 && IsValidClient(victim))
+		{
+			damage = 0.0;
+			RemoveSlender(iBossIndex);
+			return Plugin_Changed;
 		}
 	}
 
@@ -1062,6 +1074,8 @@ void ClientOnButtonRelease(int client,int button)
 		}
 		case IN_DUCK:
 		{
+			ClientEndPeeking(client);
+			
 			if (IsClientInGhostMode(client))
 			{
 				SetEntityGravity(client, 0.5);
@@ -1223,7 +1237,7 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 		/*if(IsSpaceOccupiedIgnorePlayers(flPos, flMins, flMaxs, client))
 			//LogSF2Message("[SF2 AFK TIMER] Client %i (%N) is stuck, no actions taken", client, client);*/
 		if (!SF_IsBoxingMap() && g_cvCampingEnabled.BoolValue && 
-			!g_bRoundGrace &&
+		IsRoundPlaying() &&
 			g_flPlayerStaticAmount[client] <= g_cvCampingNoStrikeSanity.FloatValue && 
 			(iClosestBoss == -1 || flDistFromClosestBoss >= g_cvCampingNoStrikeBossDistance.FloatValue) &&
 			flDistFromLastPosition <= SquareFloat(g_cvCampingMinDistance.FloatValue))

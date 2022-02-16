@@ -12,7 +12,7 @@ void AFK_SetTime(int iClient, bool bReset = true)
 		g_bPlayerNoPoints[iClient] = false;
 		PrintCenterText(iClient, "");
 	}
-	
+
 	if (g_bPlayerNoPoints[iClient] || g_bAdminNoPoints[iClient])
 	{
 		// Player already has their points disabled

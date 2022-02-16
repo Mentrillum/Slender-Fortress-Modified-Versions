@@ -17,6 +17,8 @@
 
 	initialtimelimit(integer) : "Time Limit (in seconds)" : 200 : "How much time the players start out with after exiting grace period. This is set at round start."
 
+	pagemusicupdateloop(float) : "Page Music Update Loop (in seconds)" : "0.0" : "(Private only) If non-zero, then this makes the page music update at a fixed interval instead of every time a page is collected. This can provide a nice, transitive effect if your page music tracks play at the same BPM and if you want the page music to transition only at the beats of the music."
+
 	pagecollectaddtime(integer) : "Time to Add on Page Collect (in seconds)" : 30 : "How much time to add to the clock upon collecting a page. This is set at round start."
 
 	pagecollectsound(sound) : "Page Collect Sound" : "slender/slenderpagegrab.wav" : "The sound path of the sound played when collecting a page. This is set at round start."
@@ -135,6 +137,8 @@
 	output OnStateExitWaiting(void) : "Sent when exiting the Waiting round state."
 	output OnStateEnterIntro(void) : "Sent when entering the Intro round state."
 	output OnStateExitIntro(void) : "Sent when exiting the Intro round state."
+	output OnStateEnterGrace(void) : "Sent when entering the Grace round state."
+	output OnStateExitGrace(void) : "Sent when exiting the Grace round state."
 	output OnStateEnterActive(void) : "Sent when entering the Active round state."
 	output OnStateExitActive(void) : "Sent when exiting the Active round state."
 	output OnStateEnterEscape(void) : "Sent when entering the Escape round state."

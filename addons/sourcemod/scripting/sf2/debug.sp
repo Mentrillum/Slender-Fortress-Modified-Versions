@@ -16,12 +16,11 @@
 #define DEBUG_ENTITIES (1 << 7)
 #define DEBUG_GHOSTMODE (1 << 8)
 #define DEBUG_NEXTBOT (1 << 9)
-#define DEBUG_NAV (1 << 10)
-#define DEBUG_BOSS_ANIMATION (1 << 11)
-#define DEBUG_EVENT (1 << 12)
-#define DEBUG_KILLICONS (1 << 13)
-#define DEBUG_ARRAYLIST (1 << 14)
-#define DEBUG_BOSS_IDLE (1 << 15)
+#define DEBUG_BOSS_ANIMATION (1 << 10)
+#define DEBUG_EVENT (1 << 11)
+#define DEBUG_KILLICONS (1 << 12)
+#define DEBUG_ARRAYLIST (1 << 13)
+#define DEBUG_BOSS_IDLE (1 << 14)
 
 int g_iPlayerDebugFlags[MAXPLAYERS + 1] = { 0, ... };
 
@@ -43,7 +42,6 @@ void InitializeDebug()
 	RegAdminCmd("sm_sf2_debug_entity", Command_DebugEntity, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_boss_stun", Command_DebugStun, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_ghost_mode", Command_DebugGhostMode, ADMFLAG_CHEATS);
-	RegAdminCmd("sm_sf2_debug_nav", Command_DebugNav, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_events", Command_DebugEvent, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_kill_icons", Command_DebugKillIcons, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_arraylists", Command_DebugArrayLists, ADMFLAG_CHEATS);
@@ -108,6 +106,19 @@ stock void SendDebugMessageToPlayers(int iDebugFlags,int iType, const char[] sMe
 				case 2: PrintHintText(i, sMsg);
 			}
 		}
+	}
+}
+
+stock void SendDebugMessageToPlayersSpecialRound(const char[] sMessage, any ...)
+{
+	char sMsg[1024];
+	VFormat(sMsg, sizeof(sMsg), sMessage, 2);
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || (g_bPlayerEliminated[i] && !IsClientInGhostMode(i)) || DidClientEscape(i)) continue;
+		
+		PrintCenterText(i, sMsg);
 	}
 }
 
@@ -315,31 +326,6 @@ public Action Command_DebugEntity(int client, int args)
 		g_iPlayerDebugFlags[client] &= ~DEBUG_ENTITIES;
 		PrintToChat(client, "Disabled debugging entities.");
 	}
-	
-	return Plugin_Handled;
-}
-
-public Action Command_DebugNav(int client,int args)
-{
-	if (client < 1 || client > MaxClients) return Plugin_Handled;
-	
-	bool bInMode = view_as<bool>(g_iPlayerDebugFlags[client] & DEBUG_NAV);
-	if (!SF_SpecialRound(SPECIALROUND_DEBUGMODE))
-	{
-		if (!bInMode)
-		{
-			g_iPlayerDebugFlags[client] |= DEBUG_NAV;
-			PrintToChat(client, "Enabled debugging nav.");
-		}
-		else
-		{
-			g_iPlayerDebugFlags[client] &= ~DEBUG_NAV;
-			PrintToChat(client, "Disabled debugging nav.");
-		}
-
-		g_bDebuggingBossPathing = !bInMode;
-	}
-	else PrintToChat(client, "This command cannot be used at this time.");
 	
 	return Plugin_Handled;
 }

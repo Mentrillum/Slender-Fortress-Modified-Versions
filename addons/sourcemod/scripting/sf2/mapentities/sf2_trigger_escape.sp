@@ -3,71 +3,67 @@
 // A trigger that when touched by a player on RED will let the player escape.
 // Escaping can only occur during the Escape phase.
 
-static const char g_sEntityClassname[] = "sf2_trigger_escape"; // The custom classname of the entity. Should be prefixed with "sf2_"
-static const char g_sEntityTranslatedClassname[] = "trigger_multiple"; // The actual, underlying game entity that exists, like "info_target" or "game_text".
+static CEntityFactory g_entityFactory;
 
-void SF2TriggerEscapeEntity_Initialize() 
+/**
+ *	Interface that exposes public methods for interacting with the entity.
+ */
+methodmap SF2TriggerEscapeEntity < SF2TriggerMapEntity
 {
-	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2TriggerEscapeEntity_TranslateClassname);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2TriggerEscapeEntity_InitializeEntity);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2TriggerEscapeEntity_OnAcceptEntityInput);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2TriggerEscapeEntity_OnEntityKeyValue);
-}
+	public SF2TriggerEscapeEntity(int entIndex) { return view_as<SF2TriggerEscapeEntity>(SF2TriggerMapEntity(entIndex)); }
 
-static void SF2TriggerEscapeEntity_InitializeEntity(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-	
-	SDKHook(entity, SDKHook_SpawnPost, SF2TriggerEscapeEntity_SpawnPost);
-	SDKHook(entity, SDKHook_StartTouchPost, SF2TriggerEscapeEntity_OnStartTouchPost);
-}
-
-/*
-static Action SF2TriggerEscapeEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	return Plugin_Continue;
-}
-
-static Action SF2TriggerEscapeEntity_OnAcceptEntityInput(int entity, const char[] sClass, const char[] szInputName, int activator, int caller)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	return Plugin_Continue;
-}
-*/
-
-static void SF2TriggerEscapeEntity_SpawnPost(int entity) 
-{
-	int iSpawnFlags = GetEntProp(entity, Prop_Data, "m_spawnflags");
-	SetEntProp(entity, Prop_Data, "m_spawnflags", iSpawnFlags | TRIGGER_CLIENTS);
-}
-
-static void SF2TriggerEscapeEntity_OnStartTouchPost(int entity, int toucher)
-{
-	if (!g_bEnabled) return;
-
-	SF2TriggerMapEntity trigger = SF2TriggerMapEntity(entity);
-
-	if (IsRoundInEscapeObjective() && trigger.PassesTriggerFilters(toucher))
+	public bool IsValid()
 	{
-		if (IsValidClient(toucher) && IsPlayerAlive(toucher) && !IsClientInDeathCam(toucher) && !g_bPlayerEliminated[toucher] && !DidClientEscape(toucher))
-		{
-			ClientEscape(toucher);
-			TeleportClientToEscapePoint(toucher);
-		}
+		if (!CBaseEntity(this.index).IsValid())
+			return false;
+
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+	}
+
+	public static void Initialize()
+	{
+		Initialize();
 	}
 }
 
-static Action SF2TriggerEscapeEntity_TranslateClassname(const char[] sClass, char[] sBuffer, int iBufferLen)
+static void Initialize()
 {
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-	
-	strcopy(sBuffer, iBufferLen, g_sEntityTranslatedClassname);
-	return Plugin_Handled;
+	g_entityFactory = new CEntityFactory("sf2_trigger_escape", OnCreate);
+	g_entityFactory.DeriveFromClass("trigger_multiple");
+
+	//g_entityFactory.BeginDataMapDesc()
+	//.EndDataMapDesc();
+
+	g_entityFactory.Install();
+}
+
+static void OnCreate(int iEntity)
+{
+	SDKHook(iEntity, SDKHook_SpawnPost, OnSpawn);
+	SDKHook(iEntity, SDKHook_StartTouchPost, OnStartTouchPost);
+}
+
+static void OnSpawn(int iEntity) 
+{
+	int iSpawnFlags = GetEntProp(iEntity, Prop_Data, "m_spawnflags");
+	SetEntProp(iEntity, Prop_Data, "m_spawnflags", iSpawnFlags | TRIGGER_CLIENTS);
+}
+
+static void OnStartTouchPost(int iEntity, int iToucher)
+{
+	if (!g_bEnabled)
+	{
+		return;
+	}
+
+	SF2TriggerMapEntity trigger = SF2TriggerMapEntity(iEntity);
+
+	if (IsRoundInEscapeObjective() && trigger.PassesTriggerFilters(iToucher))
+	{
+		if (IsValidClient(iToucher) && IsPlayerAlive(iToucher) && !IsClientInDeathCam(iToucher) && !g_bPlayerEliminated[iToucher] && !DidClientEscape(iToucher))
+		{
+			ClientEscape(iToucher);
+			TeleportClientToEscapePoint(iToucher);
+		}
+	}
 }

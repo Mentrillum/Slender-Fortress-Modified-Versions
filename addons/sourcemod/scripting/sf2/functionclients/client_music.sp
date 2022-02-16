@@ -23,7 +23,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 		{
 			char sPath[PLATFORM_MAX_PATH];
 			GetBossMusic(sPath,sizeof(sPath));
-			StopSound(client, MUSIC_CHAN, sPath);
+			if (sPath[0] != '\0') StopSound(client, MUSIC_CHAN, sPath);
 			if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
 				StopSound(client, MUSIC_CHAN, TRIPLEBOSSESMUSIC);

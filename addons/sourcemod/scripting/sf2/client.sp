@@ -105,7 +105,10 @@ char g_sClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Nav Data
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
+
 static float g_flClientAllowedTimeNearEscape[MAXPLAYERS + 1];
+//Peeking Data
+static bool g_bPlayerPeeking[MAXPLAYERS + 1] = { false, ... };
 
 //	==========================================================
 //	GENERAL CLIENT HOOK FUNCTIONS
@@ -153,7 +156,7 @@ public Action CH_PassFilter(int ent1,int ent2, bool &result)
 	SF2RoundState state = GetRoundState();
 	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro) return Plugin_Continue;
 
-	if (MaxClients >= ent1 > 0)
+	if (IsValidClient(ent1))
 	{
 		if (IsClientInGhostMode(ent1))
 		{
@@ -161,7 +164,7 @@ public Action CH_PassFilter(int ent1,int ent2, bool &result)
 			return Plugin_Changed;
 		}
 	}
-	if (MaxClients >= ent2 > 0)
+	if (IsValidClient(ent2))
 	{
 		if (IsClientInGhostMode(ent2))
 		{
@@ -376,6 +379,11 @@ void ClientEscape(int client)
 	
 	if (SF_SpecialRound(SPECIALROUND_REALISM))
 		StopSound(client, SNDCHAN_STATIC, MARBLEHORNETS_STATIC);
+
+	if (SF_IsRenevantMap() && g_bRenevantMarkForDeath)
+	{
+		TF2_RemoveCondition(client, TFCond_MarkedForDeathSilent);
+	}
 	
 	CheckRoundWinConditions();
 	
@@ -829,8 +837,24 @@ void ClientProcessVisibility(int client)
 							g_iSlenderTarget[i] = EntIndexToEntRef(client);
 							g_flSlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
 							g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
-							if (i != -1 && slender && slender != INVALID_ENT_REFERENCE)
-								NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
+							SlenderPerformVoice(i, "sound_chaseenemyinitial");
+							if (NPCChaserCanUseChaseInitialAnimation(i) && !g_bNPCUsesChaseInitialAnimation[i] && !SF_IsSlaughterRunMap())
+							{
+								if (g_hSlenderChaseInitialTimer[i] == null)
+								{
+									CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+									g_bNPCUsesChaseInitialAnimation[i] = true;
+									npc.flWalkSpeed = 0.0;
+									npc.flRunSpeed = 0.0;
+									NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
+									g_hSlenderChaseInitialTimer[i] = CreateTimer(GetProfileFloat(sProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+								}
+							}
+							else
+							{
+								if (i != -1 && slender && slender != INVALID_ENT_REFERENCE)
+									NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
+							}
 							g_bPlayerScaredByBoss[client][i] = true;
 						}
 					}
@@ -1553,7 +1577,7 @@ void ClientStartSprint(int client)
 	g_hPlayerSprintTimer[client] = null;
 	ClientSprintTimer(client);
 	TriggerTimer(g_hPlayerSprintTimer[client], true);
-	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) || g_bRenevant90sEffect)
 	{
 		Client90sMusicStart(client);
 	}
@@ -1599,7 +1623,7 @@ void ClientStopSprint(int client)
 	g_bPlayerSprint[client] = false;
 	g_hPlayerSprintTimer[client] = null;
 	ClientSprintTimer(client, true);
-	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) || g_bRenevant90sEffect)
 	{
 		Client90sMusicStop(client);
 	}
@@ -1900,6 +1924,28 @@ void ClientHandleSprint(int client, bool bSprint)
 		{
 			ClientStopSprint(client);
 		}
+	}
+}
+/**
+  *	Handles thirdperson peeking
+  */
+bool ClientStartPeeking(int client)
+{
+	if (!g_bPlayerPeeking[client] && g_cvAllowPlayerPeeking.BoolValue && !TF2_IsPlayerInCondition(client, TFCond_Dazed) && GetClientButtons(client) & IN_DUCK)
+	{
+		TF2_StunPlayer(client, 999.9, 1.0, TF_STUNFLAGS_LOSERSTATE);
+		g_bPlayerPeeking[client] = true;
+		return true;
+	}
+	return false;
+}
+  
+void ClientEndPeeking(int client)
+{
+	if (g_bPlayerPeeking[client])
+	{
+		TF2_RemoveCondition(client, TFCond_Dazed);
+		g_bPlayerPeeking[client] = false;
 	}
 }
 
@@ -2363,7 +2409,6 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 #endif
 }*/
 
-
 //	==========================================================
 //	GHOST MODE FUNCTIONS
 //	==========================================================
@@ -2415,7 +2460,7 @@ void ClientSetGhostModeState(int client, bool bState)
 		
 		//Set player's old class as desired class.
 		SetEntProp(client, Prop_Send, "m_iDesiredPlayerClass", iDesiredClass);
-		
+
 		ClientHandleGhostMode(client, true);
 		if (g_cvGhostModeConnectionCheck.BoolValue)
 		{
@@ -2492,13 +2537,14 @@ void ClientSetGhostModeState(int client, bool bState)
 			SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
 			SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
+			SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
+			SetEntityFlags(client, GetEntityFlags(client) &~ FL_NOTARGET);
 			SetEntProp(client, Prop_Data, "m_usSolidFlags", 16);
 			SetEntProp(client, Prop_Send, "m_nSolidType", 2);
 			SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
 			SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 			SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
 			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-			//SetEntityMoveType(client, MOVETYPE_WALK);
 			SetEntityRenderMode(client, RENDER_NORMAL);
 			SetEntityRenderColor(client, _, _, _, 255);
 		}
@@ -2519,14 +2565,17 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 	if (!TF2_IsPlayerInCondition(client, TFCond_Stealthed) || bForceSpawn)
 	{
 		TF2_StripWearables(client);
+		DestroyAllActiveWeapons(client);
+		TF2_DestroySpyWeapons(client);
 		SetEntityGravity(client, 0.5);
 		TF2_AddCondition(client, TFCond_Stealthed, -1.0);
 		SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
 		SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_NO);
-		SetEntData(client, g_offsCollisionGroup, 2, 4, true);
-		GetEntProp(client, Prop_Send, "m_usSolidFlags", FSOLID_NOT_SOLID);
-		GetEntProp(client, Prop_Data, "m_nSolidType", SOLID_NONE);
-		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
+		SetEntProp(client, Prop_Send, "m_usSolidFlags", 4);
+		SetEntProp(client, Prop_Data, "m_nSolidType", 0);
+		SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
+		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityFlags(client, GetEntityFlags(client) | FL_NOTARGET);
 		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(client, _, _, _, 0);
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
@@ -2553,9 +2602,11 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 public Action Timer_ClientGhostStripWearables(Handle timer, int userid)
 {
 	int iClient = GetClientOfUserId(userid);
-	if (iClient <= 0 || iClient > MaxClients) return Plugin_Stop;
+	if (!IsValidClient(iClient)) return Plugin_Stop;
 	if (!IsClientInGhostMode(iClient)) return Plugin_Stop;
 	TF2_StripWearables(iClient);
+	DestroyAllActiveWeapons(iClient);
+	TF2_DestroySpyWeapons(iClient);
 	return Plugin_Stop;
 }
 
@@ -3049,7 +3100,7 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	int iJumpScareBoss = NPCGetFromUniqueID(g_iPlayerJumpScareBoss[client]);
 	
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	char sMaterial[PLATFORM_MAX_PATH];
+	char sMaterial[PLATFORM_MAX_PATH], sOverlay[PLATFORM_MAX_PATH];
 	
 	if (IsClientInDeathCam(client) && iDeathCamBoss != -1 && g_bPlayerDeathCamShowOverlay[client])
 	{
@@ -3063,7 +3114,8 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	}
 	else if (IsClientInGhostMode(client) && !SF_IsBoxingMap())
 	{
-		strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_GHOST);
+		g_cvGhostOverlay.GetString(sOverlay, sizeof(sOverlay));
+		strcopy(sMaterial, sizeof(sMaterial), sOverlay);
 	}
 	else if (IsRoundInWarmup() || g_bPlayerEliminated[client] || DidClientEscape(client) && !IsClientInGhostMode(client))
 	{
@@ -3076,9 +3128,15 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	else
 	{
 		if (!g_iPlayerPreferences[client].PlayerPreference_FilmGrain)
-			strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_DEFAULT_NO_FILMGRAIN);
+		{
+			g_cvOverlayNoGrain.GetString(sOverlay, sizeof(sOverlay));
+			strcopy(sMaterial, sizeof(sMaterial), sOverlay);
+		}
 		else
-			strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_DEFAULT);
+		{
+			g_cvCameraOverlay.GetString(sOverlay, sizeof(sOverlay));
+			strcopy(sMaterial, sizeof(sMaterial), sOverlay);
+		}
 	}
 	
 	ClientCommand(client, "r_screenoverlay %s", sMaterial);
@@ -3131,7 +3189,11 @@ stock void ClientUpdateListeningFlags(int client, bool bReset=false)
 			continue;
 		}
 
-		if (g_bPlayerEliminated[client])
+		if (g_bAdminAllTalk[client] || g_bAdminAllTalk[i])
+		{
+			SetListenOverride(client, i, Listen_Default);
+		}
+		else if (g_bPlayerEliminated[client])
 		{
 			if (!g_bPlayerEliminated[i])
 			{
@@ -3230,10 +3292,10 @@ stock void ClientShowMainMessage(int client, const char[] sMessage, any ...)
 	ShowSyncHudText(client, g_hHudSync, message);
 }
 
-stock void ClientShowRenevantMessage(int client, const char[] sMessage, any ...)
+stock void ClientShowRenevantMessage(int client, const char[] sMessage, int params, any ...)
 {
 	char message[512];
-	VFormat(message, sizeof(message), sMessage, 3);
+	VFormat(message, sizeof(message), sMessage, params);
 	
 	SetHudTextParams(-1.0, 0.25,
 		5.0,
@@ -3245,7 +3307,7 @@ stock void ClientShowRenevantMessage(int client, const char[] sMessage, any ...)
 		1.0,
 		0.05,
 		2.0);
-	ShowSyncHudText(client, g_hHudSync, message);
+	ShowSyncHudText(client, g_hHudSync3, message);
 }
 
 stock void ClientResetSlenderStats(int client)
@@ -3284,7 +3346,7 @@ void ClientSaveCookies(int client)
 	
 	// Save and reset our queue points.
 	char s[512];
-	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
+	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d", g_iPlayerQueuePoints[client], 
 		g_iPlayerPreferences[client].PlayerPreference_PvPAutoSpawn, 
 		g_iPlayerPreferences[client].PlayerPreference_ShowHints, 
 		g_iPlayerPreferences[client].PlayerPreference_MuteMode,
@@ -3296,7 +3358,8 @@ void ClientSaveCookies(int client)
 		g_iPlayerPreferences[client].PlayerPreference_ViewBobbing,
 		g_iPlayerPreferences[client].PlayerPreference_GhostModeToggleState,
 		g_iPlayerPreferences[client].PlayerPreference_GroupOutline,
-		g_iPlayerPreferences[client].PlayerPreference_GhostModeTeleportState);
+		g_iPlayerPreferences[client].PlayerPreference_GhostModeTeleportState,
+		g_iPlayerPreferences[client].PlayerPreference_LegacyHud);
 		
 	SetClientCookie(client, g_hCookie, s);
 }
@@ -3342,11 +3405,11 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 			AcceptEntityInput(iGlowManager, "Enable");
 		}
 
-		if (!SF_SpecialRound(SPECIALROUND_DEBUGMODE) && !IsClientInGhostMode(other) && !g_bPlayerProxy[other])
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !IsClientInGhostMode(other) && !g_bPlayerProxy[other] && !g_cvEnableWallHax.BoolValue)
 		{
 			if (iOwner == other) return Plugin_Handled;
 		
-			if (!IsPlayerAlive(iOwner) || !IsPlayerAlive(other) || !g_bPlayerEliminated[other] || !SF_SpecialRound(SPECIALROUND_DEBUGMODE)) 
+			if (!IsPlayerAlive(iOwner) || !IsPlayerAlive(other) || !g_bPlayerEliminated[other] || !SF_SpecialRound(SPECIALROUND_WALLHAX) || !g_cvEnableWallHax.BoolValue) 
 			{
 				return Plugin_Handled;
 			}
@@ -3357,7 +3420,7 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 			return Plugin_Continue;
 		}
 		
-		if (SF_SpecialRound(SPECIALROUND_DEBUGMODE) && !g_bPlayerEscaped[other] && GetClientTeam(other) == TFTeam_Red)
+		if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_cvEnableWallHax.BoolValue) && !g_bPlayerEscaped[other] && GetClientTeam(other) == TFTeam_Red)
 		{
 			return Plugin_Continue;
 		}
@@ -3407,7 +3470,7 @@ public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
 	if (!IsPlayerAlive(other)) return Plugin_Handled;
 	if (g_bPlayerProxy[other]) return Plugin_Continue;
 	if (IsClientInGhostMode(other)) return Plugin_Continue;
-	if (SF_SpecialRound(SPECIALROUND_DEBUGMODE) && ((GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) || (g_bPlayerProxy[other]))) return Plugin_Continue;
+	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_cvEnableWallHax.BoolValue) && ((GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) || (g_bPlayerProxy[other]))) return Plugin_Continue;
 	return Plugin_Handled;
 }
 
@@ -3445,7 +3508,7 @@ stock bool IsPointVisibleToAPlayer(const float pos[3], bool bCheckFOV=true, bool
 	return false;
 }
 
-stock bool IsPointVisibleToPlayer(int client, const float pos[3], bool bCheckFOV=true, bool bCheckBlink=false, bool bCheckEliminated=true)
+stock bool IsPointVisibleToPlayer(int client, const float pos[3], bool bCheckFOV=true, bool bCheckBlink=false, bool bCheckEliminated=true, bool bIgnoreFog = false)
 {
 	if (!IsValidClient(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client)) return false;
 	
@@ -3457,7 +3520,7 @@ stock bool IsPointVisibleToPlayer(int client, const float pos[3], bool bCheckFOV
 	GetClientEyePosition(client, eyePos);
 	
 	// Check fog, if we can.
-	if (g_offsPlayerFogCtrl != -1 && g_offsFogCtrlEnable != -1 && g_offsFogCtrlEnd != -1)
+	if (!bIgnoreFog && g_offsPlayerFogCtrl != -1 && g_offsFogCtrlEnable != -1 && g_offsFogCtrlEnd != -1)
 	{
 		int iFogEntity = GetEntDataEnt2(client, g_offsPlayerFogCtrl);
 		if (IsValidEdict(iFogEntity))
@@ -3500,7 +3563,15 @@ public Action Timer_RespawnPlayer(Handle timer, any userid)
 	
 	if (!IsValidClient(client) || !IsClientInGame(client) || IsPlayerAlive(client)) return Plugin_Stop;
 
-	if (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !DidClientEscape(client) && !IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro() && !g_bRoundGrace) 
+	if (SF_SpecialRound(SPECIALROUND_1UP) && IsRoundPlaying() && g_iRoundTime <= 0)
+	{
+		g_bPlayerDied1Up[client] = false;
+		g_bPlayerIn1UpCondition[client] = false;
+		g_bPlayerFullyDied1Up[client] = true;
+		return Plugin_Stop;
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !DidClientEscape(client) && !IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro() && IsRoundPlaying()) 
 	{
 		g_bPlayerDied1Up[client] = true;
 		g_bPlayerIn1UpCondition[client] = false;

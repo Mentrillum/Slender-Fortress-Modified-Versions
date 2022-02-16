@@ -84,7 +84,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 	if (!g_bSlenderAttacking[iBossIndex]) return Plugin_Stop;
 	
 	if (timer != g_hNPCLifeStealTimer[iBossIndex]) return Plugin_Stop;
-	
+
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
@@ -119,7 +119,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 
 		hTrace = TR_TraceRayFilterEx(flMyEyePos,
 			flTargetPos,
-			MASK_NPCSOLID,
+			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 			RayType_EndPoint,
 			TraceRayDontHitAnyEntity,
 			slender);
@@ -138,7 +138,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 
 			hTrace = TR_TraceRayFilterEx(flMyEyePos,
 				flTargetPos,
-				MASK_NPCSOLID,
+				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 				RayType_EndPoint,
 				TraceRayDontHitAnyEntity,
 				slender);
@@ -200,9 +200,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		SlenderMarkAsFake(iBossIndex);
 		return Plugin_Stop;
 	}
-	
+
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	
 	int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 	
@@ -221,8 +224,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", vecMyPos);
 	
 	AddVectors(g_flSlenderEyePosOffset[iBossIndex], vecMyEyeAng, vecMyEyeAng);
-	for (int i = 0; i < 3; i++) vecMyEyeAng[i] = AngleNormalize(vecMyEyeAng[i]);
-	
+
 	float flViewPunch[3];
 	GetProfileAttackVector(sProfile, "attack_punchvel", flViewPunch, _, iAttackIndex+1);
 	
@@ -240,14 +242,16 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	{
 		g_bSlenderAttacking[iBossIndex] = false;
 		g_bNPCStealingLife[iBossIndex] = false;
-		g_hSlenderAttackTimer[iBossIndex] = null;
-		g_hNPCLifeStealTimer[iBossIndex] = null;
-		g_hSlenderBackupAtkTimer[iBossIndex] = null;
+		if (g_hSlenderAttackTimer[iBossIndex] != null) KillTimer(g_hSlenderAttackTimer[iBossIndex]);
+		if (g_hNPCLifeStealTimer[iBossIndex] != null) KillTimer(g_hNPCLifeStealTimer[iBossIndex]);
+		if (g_hSlenderBackupAtkTimer[iBossIndex] != null) KillTimer(g_hSlenderBackupAtkTimer[iBossIndex]);
 		g_bNPCAlreadyAttacked[iBossIndex] = false;
 		g_bNPCUseFireAnimation[iBossIndex] = false;
+		if (g_hSlenderLaserTimer[iBossIndex] != null) KillTimer(g_hSlenderLaserTimer[iBossIndex]);
 		return Plugin_Stop;
 	}
-	g_flLastStuckTime[iBossIndex] = 0.0;
+	if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
+	loco.ClearStuckStatus();
 	if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
 
 	if (NPCChaserGetAttackRepeat(iBossIndex, iAttackIndex) == 1)
@@ -257,11 +261,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		{
 			g_bSlenderAttacking[iBossIndex] = false;
 			g_bNPCStealingLife[iBossIndex] = false;
-			g_hSlenderAttackTimer[iBossIndex] = null;
-			g_hNPCLifeStealTimer[iBossIndex] = null;
-			g_hSlenderBackupAtkTimer[iBossIndex] = null;
+			if (g_hSlenderAttackTimer[iBossIndex] != null) KillTimer(g_hSlenderAttackTimer[iBossIndex]);
+			if (g_hNPCLifeStealTimer[iBossIndex] != null) KillTimer(g_hNPCLifeStealTimer[iBossIndex]);
+			if (g_hSlenderBackupAtkTimer[iBossIndex] != null) KillTimer(g_hSlenderBackupAtkTimer[iBossIndex]);
 			g_bNPCAlreadyAttacked[iBossIndex] = false;
 			g_bNPCUseFireAnimation[iBossIndex] = false;
+			if (g_hSlenderLaserTimer[iBossIndex] != null) KillTimer(g_hSlenderLaserTimer[iBossIndex]);
 			return Plugin_Stop;
 		}
 	}
@@ -278,11 +283,12 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			{
 				g_bSlenderAttacking[iBossIndex] = false;
 				g_bNPCStealingLife[iBossIndex] = false;
-				g_hSlenderAttackTimer[iBossIndex] = null;
-				g_hNPCLifeStealTimer[iBossIndex] = null;
-				g_hSlenderBackupAtkTimer[iBossIndex] = null;
+				if (g_hSlenderAttackTimer[iBossIndex] != null) KillTimer(g_hSlenderAttackTimer[iBossIndex]);
+				if (g_hNPCLifeStealTimer[iBossIndex] != null) KillTimer(g_hNPCLifeStealTimer[iBossIndex]);
+				if (g_hSlenderBackupAtkTimer[iBossIndex] != null) KillTimer(g_hSlenderBackupAtkTimer[iBossIndex]);
 				g_bNPCAlreadyAttacked[iBossIndex] = false;
 				g_bNPCUseFireAnimation[iBossIndex] = false;
+				if (g_hSlenderLaserTimer[iBossIndex] != null) KillTimer(g_hSlenderLaserTimer[iBossIndex]);
 				return Plugin_Stop;
 			}
 		}
@@ -465,7 +471,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							{
 								hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 									flTargetPosShockwave,
-									MASK_NPCSOLID,
+									CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 									RayType_EndPoint,
 									TraceRayDontHitCharactersOrEntity,
 									slender);
@@ -484,7 +490,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									
 									hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 										flTargetPosShockwave,
-										MASK_NPCSOLID,
+										CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 										RayType_EndPoint,
 										TraceRayDontHitCharactersOrEntity,
 										slender);
@@ -548,7 +554,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							{
 								hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 									flTargetPosShockwave,
-									MASK_NPCSOLID,
+									CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 									RayType_EndPoint,
 									TraceRayDontHitCharactersOrEntity,
 									slender);
@@ -567,7 +573,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									
 									hTraceShockwave = TR_TraceRayFilterEx(flMyEyePos,
 										flTargetPosShockwave,
-										MASK_NPCSOLID,
+										CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 										RayType_EndPoint,
 										TraceRayDontHitCharactersOrEntity,
 										slender);
@@ -619,7 +625,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				
 				hTrace = TR_TraceRayFilterEx(flMyEyePos,
 					flTargetPos,
-					MASK_NPCSOLID,
+					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 					RayType_EndPoint,
 					TraceRayDontHitAnyEntity,
 					slender);
@@ -638,7 +644,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					
 					hTrace = TR_TraceRayFilterEx(flMyEyePos,
 						flTargetPos,
-						MASK_NPCSOLID,
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 						RayType_EndPoint,
 						TraceRayDontHitAnyEntity,
 						slender);
@@ -671,7 +677,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 								{
 									case 1:
 									{
-										TF2_MakeBleed(i, i, 4.0);
+										if (!TF2_IsPlayerInCondition(i, TFCond_Bleeding)) TF2_MakeBleed(i, i, 4.0);
 									}
 									case 2:
 									{
@@ -900,7 +906,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							if (NPCHasAttribute(iBossIndex, "bleed player on hit"))
 							{
 								float flDuration = NPCGetAttributeValue(iBossIndex, "bleed player on hit");
-								if (flDuration > 0.0)
+								if (flDuration > 0.0 && !TF2_IsPlayerInCondition(i, TFCond_Bleeding))
 								{
 									TF2_MakeBleed(i, i, flDuration);
 								}
@@ -1178,7 +1184,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			char sSoundPath[PLATFORM_MAX_PATH];
 			float vecSpread = NPCChaserGetAttackBulletSpread(iBossIndex, iAttackIndex, iDifficulty);
 			GetRandomStringFromProfile(sProfile, "sound_bulletshoot", sSoundPath, sizeof(sSoundPath));
-			if (sSoundPath[0] != '\0') EmitSoundToAll(sSoundPath, slender, SNDCHAN_WEAPON, GetProfileNum(sProfile, "sound_bulletshoot_level", SNDLEVEL_SCREAMING));
+			if (sSoundPath[0] != '\0') EmitSoundToAll(sSoundPath, slender, SNDCHAN_WEAPON, GetProfileNum(sProfile, "sound_bulletshoot_level",90));
 
 			float flEffectPos[3];
 			float flClientPos[3];
@@ -1227,7 +1233,8 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				vecEnd[2] = flEffectPos[2] + vecDir[2] * 9001.0;
 				
 				// Fire a bullet (ignoring the shooter).
-				Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, ( MASK_SOLID | CONTENTS_HITBOX ), RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
+				Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
+				RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
 				if ( TR_GetFraction(trace) < 1.0 )
 				{
 					// Verify we have an entity at the point of impact.
@@ -1337,11 +1344,13 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			{
 				g_bSlenderAttacking[iBossIndex] = false;
 				g_bNPCStealingLife[iBossIndex] = false;
-				g_hSlenderAttackTimer[iBossIndex] = null;
-				g_hNPCLifeStealTimer[iBossIndex] = null;
-				g_hSlenderBackupAtkTimer[iBossIndex] = null;
+				if (g_hSlenderAttackTimer[iBossIndex] != null) KillTimer(g_hSlenderAttackTimer[iBossIndex]);
+				if (g_hNPCLifeStealTimer[iBossIndex] != null) KillTimer(g_hNPCLifeStealTimer[iBossIndex]);
+				if (g_hSlenderBackupAtkTimer[iBossIndex] != null) KillTimer(g_hSlenderBackupAtkTimer[iBossIndex]);
 				g_bNPCAlreadyAttacked[iBossIndex] = false;
 				g_bNPCUseFireAnimation[iBossIndex] = false;
+				if (g_hSlenderLaserTimer[iBossIndex] != null) KillTimer(g_hSlenderLaserTimer[iBossIndex]);
+				return Plugin_Stop;
 			}
 		}
 	}
@@ -1363,7 +1372,9 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		if (g_hSlenderBackupAtkTimer[iBossIndex] != null) KillTimer(g_hSlenderBackupAtkTimer[iBossIndex]);
 		g_bNPCAlreadyAttacked[iBossIndex] = false;
 		g_bNPCUseFireAnimation[iBossIndex] = false;
+		if (g_hSlenderLaserTimer[iBossIndex] != null) KillTimer(g_hSlenderLaserTimer[iBossIndex]);
 		RemoveSlender(iBossIndex);
+		return Plugin_Stop;
 	}
 	delete hTrace;
 	delete hTraceShockwave;
@@ -1450,7 +1461,6 @@ public Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 	int iRange = NPCChaserGetAttackExplosiveDanceRadius(iBossIndex, iAttackIndex);
 	
 	AddVectors(g_flSlenderEyePosOffset[iBossIndex], vecMyEyeAng, vecMyEyeAng);
-	for (int i = 0; i < 3; i++) vecMyEyeAng[i] = AngleNormalize(vecMyEyeAng[i]);
 	
 	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
 	
@@ -1601,7 +1611,8 @@ public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
 		vecEnd[1] = flEffectPos[1] + vecDir[1] * 9001.0; 
 		vecEnd[2] = flEffectPos[2] + vecDir[2] * 9001.0;
 
-		Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, ( MASK_SOLID | CONTENTS_HITBOX ), RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
+		Handle trace = TR_TraceRayFilterEx(flEffectPos, vecEnd, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
+		RayType_EndPoint, TraceRayDontHitAnyEntity, slender);
 		if ( TR_GetFraction(trace) < 1.0 )
 		{
 			// Verify we have an entity at the point of impact.
@@ -1677,8 +1688,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 	}
 	GetEntPropVector(iBoss, Prop_Data, "m_angAbsRotation", flMyEyeAng);
 	AddVectors(g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng, flMyEyeAng);
-	for (int i = 0; i < 3; i++) flMyEyeAng[i] = AngleNormalize(flMyEyeAng[i]);
-	
+
 	float flTargetPos[3], flTargetMins[3], flTargetMaxs[3];
 	GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flTargetPos);
 	GetEntPropVector(iTarget, Prop_Send, "m_vecMins", flTargetMins);
@@ -1700,7 +1710,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 		{
 			Handle hTrace = TR_TraceRayFilterEx(flMyEyePos,
 				flTargetPos,
-				MASK_NPCSOLID,
+				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP,
 				RayType_EndPoint,
 				TraceRayDontHitAnyEntity,
 				iBoss);
@@ -1722,7 +1732,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 						flPosForward, 
 						g_flSlenderDetectMins[iBossIndex], 
 						g_flSlenderDetectMaxs[iBossIndex], 
-						MASK_NPCSOLID, 
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 						TraceRayBossVisibility, 
 						iBoss);
 					}
@@ -1732,7 +1742,7 @@ bool NPCAttackValidateTarget(int iBossIndex,int iTarget, float flAttackRange, fl
 						flPosForward, 
 						HULL_HUMAN_MINS, 
 						HULL_HUMAN_MAXS, 
-						MASK_NPCSOLID, 
+						CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, 
 						TraceRayBossVisibility, 
 						iBoss);
 					}
@@ -1765,6 +1775,10 @@ static Action Timer_SlenderChaseBossAttackEnd(Handle timer, any entref)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	if (timer != g_hSlenderAttackTimer[iBossIndex]) return Plugin_Stop;
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	loco.ClearStuckStatus();
 	
 	g_bSlenderAttacking[iBossIndex] = false;
 	g_bNPCStealingLife[iBossIndex] = false;
@@ -1774,6 +1788,7 @@ static Action Timer_SlenderChaseBossAttackEnd(Handle timer, any entref)
 	g_bNPCAlreadyAttacked[iBossIndex] = false;
 	g_bNPCUseFireAnimation[iBossIndex] = false;
 	g_hSlenderLaserTimer[iBossIndex] = null;
+	CBaseNPC_RemoveAllLayers(slender);
 	return Plugin_Stop;
 }
 
@@ -1788,6 +1803,10 @@ static Action Timer_SlenderChaseBossAttackEndBackup(Handle timer, any entref)
 	if (iBossIndex == -1) return Plugin_Stop;
 	
 	if (timer != g_hSlenderBackupAtkTimer[iBossIndex]) return Plugin_Stop;
+
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
+	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	loco.ClearStuckStatus();
 	
 	g_bSlenderAttacking[iBossIndex] = false;
 	g_bNPCStealingLife[iBossIndex] = false;
@@ -1797,5 +1816,6 @@ static Action Timer_SlenderChaseBossAttackEndBackup(Handle timer, any entref)
 	g_bNPCAlreadyAttacked[iBossIndex] = false;
 	g_bNPCUseFireAnimation[iBossIndex] = false;
 	g_hSlenderLaserTimer[iBossIndex] = null;
+	CBaseNPC_RemoveAllLayers(slender);
 	return Plugin_Stop;
 }

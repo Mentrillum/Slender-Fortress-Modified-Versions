@@ -49,7 +49,6 @@ enum
 
 enum
 {
-	ChaserProfileData_StepSize,
 	ChaserProfileData_WalkSpeedEasy,
 	ChaserProfileData_WalkSpeedNormal,
 	ChaserProfileData_WalkSpeedHard,
@@ -652,6 +651,7 @@ enum
 	ChaserProfileAttackData_UseOnDifficulty,
 	ChaserProfileAttackData_BlockOnDifficulty,
 	ChaserProfileAttackData_ExplosiveDanceRadius,
+	ChaserProfileAttackData_Gestures,
 	ChaserProfileAttackData_MaxStats
 };
 
@@ -715,11 +715,6 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	property bool DifficultyAffectsAnimations
 	{
 		public get() { return g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_DifficultyAffectsAnimations); }
-	}
-
-	property float StepSize
-	{
-		public get() { return GetChaserProfileStepSize(this.UniqueProfileIndex); }
 	}
 
 	property float WakeRadius
@@ -1589,6 +1584,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		return GetChaserProfileAttackPullIn(this.UniqueProfileIndex, attackIndex);
 	}
 
+	public bool HasAttackGestures(int attackIndex)
+	{
+		return GetChaserProfileAttackGesturesState(this.UniqueProfileIndex, attackIndex);
+	}
+
 	public void GetSmiteColor(int color[4])
 	{
 		color[0] = GetChaserProfileSmiteColorR(this.UniqueProfileIndex);
@@ -1692,11 +1692,6 @@ void ClearChaserProfiles()
 	
 	g_hChaserProfileNames.Clear();
 	g_hChaserProfileData.Clear();
-}
-
-float GetChaserProfileStepSize(int iChaserProfileIndex)
-{
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StepSize));
 }
 
 int GetChaserProfileAutoChaseCount(int iChaserProfileIndex,int iDifficulty)
@@ -2770,6 +2765,14 @@ int GetChaserProfileAttackExplosiveDanceRadius(int iChaserProfileIndex,int iAtta
 
 	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ExplosiveDanceRadius);
 }
+
+bool GetChaserProfileAttackGesturesState(int iChaserProfileIndex,int iAttackIndex)
+{
+	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+
+	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Gestures));
+}
+
 
 bool GetChaserProfileEnableAdvancedDamageEffects(int iChaserProfileIndex)
 {

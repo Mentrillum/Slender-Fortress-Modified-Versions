@@ -145,6 +145,8 @@ void SetupMenus()
 	AddMenuItem(g_hMenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Proxy Ask Menu Title");
 	AddMenuItem(g_hMenuSettings, "0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Hud Version Title");
+	AddMenuItem(g_hMenuSettings, "0", buffer);
 	SetMenuExitBackButton(g_hMenuSettings, true);
 	
 	g_hMenuSettingsFlashlightTemp1 = CreateMenu(Menu_Settings_Flashlighttemp1);
@@ -385,11 +387,11 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 		char sInfo[64], sDisplay[256], sColor[32], sNightmareDisplay[256];
 		GetMenuItem(menu, param1, sInfo, sizeof(sInfo), _, sDisplay, sizeof(sDisplay));
 		
-		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_DEBUGMODE) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS)))
+		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_WALLHAX) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS)))
 		{
 			g_cvDifficulty.SetInt(Difficulty_Insane);
 		}
-		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DEBUGMODE) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
+		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
 		{
 			if (GetRandomInt(1, 20) <= 1)
 			{
@@ -400,7 +402,7 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				g_cvDifficulty.SetInt(Difficulty_Nightmare);
 			}
 		}
-		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM) || SF_SpecialRound(SPECIALROUND_DEBUGMODE)))
+		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM)))
 		{
 			g_cvDifficulty.SetInt(Difficulty_Hard);
 		}
@@ -777,6 +779,20 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				SendPanelToClient(hPanel, param1, Panel_SettingsProxyAskMenu, 30);
 				delete hPanel;
 			}
+			case 9:
+			{
+				char sBuffer[512];
+				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Hud Version Title", param1);
+				
+				Handle hPanel = CreatePanel();
+				SetPanelTitle(hPanel, sBuffer);
+				
+				DrawPanelItem(hPanel, "Use the new HUD");
+				DrawPanelItem(hPanel, "Use the legacy HUD");
+				
+				SendPanelToClient(hPanel, param1, Panel_SettingsHudVersion, 30);
+				delete hPanel;
+			}
 		}
 	}
 	else if (action == MenuAction_Cancel)
@@ -1036,6 +1052,30 @@ public int Panel_SettingsGhostModeToggleState(Handle menu, MenuAction action,int
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Toggle Ghost On Death", param1);
+			}
+		}
+		
+		DisplayMenu(g_hMenuSettings, param1, 30);
+	}
+}
+
+public int Panel_SettingsHudVersion(Handle menu, MenuAction action,int param1,int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:
+			{
+				g_iPlayerPreferences[param1].PlayerPreference_LegacyHud = false;
+				ClientSaveCookies(param1);
+				CPrintToChat(param1, "%T", "SF2 New Hud Use", param1);
+			}
+			case 2:
+			{
+				g_iPlayerPreferences[param1].PlayerPreference_LegacyHud = true;
+				ClientSaveCookies(param1);
+				CPrintToChat(param1, "%T", "SF2 Legacy Hud Use", param1);
 			}
 		}
 		

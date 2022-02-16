@@ -643,9 +643,12 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 		{
 			if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 			{
-				//Yup it's a projectile zap it!
-				//But we have to wait to prevent some bugs.
-				CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
+				if (!GetEntProp(iOther, Prop_Send, "m_iDeflected"))
+				{
+					//Yup it's a projectile zap it!
+					//But we have to wait to prevent some bugs.
+					CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
+				}
 			}
 		}
 	}
@@ -663,9 +666,12 @@ public Action PvP_OnTriggerStartTouchBoxing(int trigger,int iOther)
 		{
 			if (strcmp(sClassname, g_sPvPProjectileClasses[i], false) == 0)
 			{
-				//Yup it's a projectile zap it!
-				//But we have to wait to prevent some bugs.
-				CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
+				if (!GetEntProp(iOther, Prop_Send, "m_iDeflected"))
+				{
+					//Yup it's a projectile zap it!
+					//But we have to wait to prevent some bugs.
+					CreateTimer(0.1,EntityStillAlive,iOther,TIMER_FLAG_NO_MAPCHANGE);
+				}
 			}
 		}
 	}
@@ -705,6 +711,8 @@ void PvP_SetPlayerPvPState(int iClient, bool bStatus, bool bRemoveProjectiles=tr
 	{
 		// Regenerate player but keep health the same.
 		int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
+		TF2_RemoveWeaponSlot(iClient, TFWeaponSlot_Primary);
+		TF2_RemoveWeaponSlot(iClient, TFWeaponSlot_Secondary);
 		TF2_RegeneratePlayer(iClient);
 		SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
 		SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
@@ -865,7 +873,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		SF2PlayerPvPSpawnEntity spawnPoint = SF2PlayerPvPSpawnEntity(ent);
 		if (spawnPoint.IsValid())
 		{
-			spawnPoint.FireOutputNoVariant("OnSpawn", iClient, ent);
+			spawnPoint.FireOutput("OnSpawn", iClient);
 		}
 	}
 }
@@ -999,15 +1007,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 
 				return MRES_Supercede;
 			}
-			else
-			{
-				return MRES_Ignored;
-			}
 		}
-	}
-	else
-	{
-		return MRES_Ignored;
 	}
 
 	return MRES_Ignored;

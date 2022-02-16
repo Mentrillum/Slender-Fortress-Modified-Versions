@@ -50,6 +50,8 @@ static char sBaseballModel[PLATFORM_MAX_PATH];
 public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, const char[] sSlenderProfile, float flMyPos[3])
 {
 	if (g_bRestartSessionEnabled) return -1;
+
+	CBaseCombatCharacter combatChar = CBaseCombatCharacter(slender);
 	
 	int iProjectileType = NPCChaserGetProjectileType(iBossIndex);
 	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
@@ -184,6 +186,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
 					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
 					DispatchSpawn(iProjectileEnt);
 					ProjectileSetFlags(iProjectileEnt, PROJ_FIREBALL);
@@ -192,7 +195,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderFireballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -225,6 +229,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
 					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
 					DispatchSpawn(iProjectileEnt);
 					ProjectileSetFlags(iProjectileEnt, PROJ_ICEBALL);
@@ -233,7 +238,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderFireballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -267,7 +273,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -315,7 +322,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -358,7 +366,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 						{
 							GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-							CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+							int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+							if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 						}
 
 						if (i == 0) EmitSoundToAll(g_sSlenderGrenadeShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -393,7 +402,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderSentryRocketShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -434,7 +444,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 						{
 							GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-							CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+							int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+							if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 						}
 
 						CreateTimer(5.0, Timer_KillEntity, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
@@ -445,7 +456,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			}
 			case SF2BossProjectileType_Mangler:
 			{
-				sProjectileName = "tf_projectile_rocket";
+				sProjectileName = "tf_projectile_energy_ball";
 				iProjectileEnt = CreateEntityByName(sProjectileName);
 				if (iProjectileEnt != -1)
 				{
@@ -456,27 +467,24 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, "drg_cow_rockettrail_normal_blue");
 
 					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flModelScale", 1.0);
-					SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
+					SetEntProp(iProjectileEnt, Prop_Send, "m_CollisionGroup", 4);
+					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     5, 1);
+					SetEntProp(iProjectileEnt, Prop_Data, "m_takedamage", 0);
+					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", view_as<float>( { 3.0, 3.0, 3.0 } ));
+					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", view_as<float>( { 3.0, 3.0, 3.0 } ));
 					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", view_as<float>( { -15.0, -15.0, -15.0 } ));
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", view_as<float>( { 15.0, 15.0, 15.0 } ));
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", view_as<float>( { -15.0, -15.0, -15.0 } ));
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", view_as<float>( { 15.0, 15.0, 15.0 } ));
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					ProjectileSetFlags(iProjectileEnt, PROJ_MANGLER);
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
 					DispatchSpawn(iProjectileEnt);
-					ProjectileSetFlags(iProjectileEnt, PROJ_MANGLER);
 
 					if(NPCChaserUseShootGesture(iBossIndex))
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderManglerShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -516,7 +524,8 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					{
 						GetProfileString(sSlenderProfile, "gesture_shootprojectile", sGestureShootAnim, sizeof(sGestureShootAnim));
 
-						CBaseAnimating_PlayGesture(slender, sGestureShootAnim);
+						int iSequence = combatChar.LookupSequence(sGestureShootAnim);
+						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
 					if (i == 0) EmitSoundToAll(g_sSlenderBaseballShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -618,6 +627,7 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
 					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
 					DispatchSpawn(iProjectileEnt);
 					ProjectileSetFlags(iProjectileEnt, PROJ_FIREBALL_ATTACK);
@@ -717,6 +727,7 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
 					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
 					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
+					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
 
 					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
@@ -968,6 +979,11 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 					int iBossIndex = NPCGetFromEntIndex(slender);
 					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 					SDKHooks_TakeDamage(iOther, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), 1048576);
+					if(TF2_IsPlayerInCondition(iOther, TFCond_Gas))
+					{
+						TF2_IgnitePlayer(iOther, iOther);
+						TF2_RemoveCondition(iOther, TFCond_Gas);
+					}
 					RemoveEntity(iOther);
 				}
 			}
@@ -984,7 +1000,6 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 				{
 					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 					bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
-					Handle hTrace = null;
 					if (!(ProjectileGetFlags(entity) & PROJ_FIREBALL) && !(ProjectileGetFlags(entity) & PROJ_ICEBALL))
 					{
 						if (!(ProjectileGetFlags(entity) & PROJ_GRENADE))
@@ -999,39 +1014,8 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 
 								float flTargetPos[3];
 								GetClientEyePosition(iClient, flTargetPos);
-
-								hTrace = TR_TraceRayFilterEx(flEntPos,
-									flTargetPos,
-									MASK_NPCSOLID,
-									RayType_EndPoint,
-									TraceRayDontHitAnyEntity,
-									entity);
-										
-								bool bTraceDidHit = TR_DidHit(hTrace);
-								int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-								delete hTrace;
-										
-								if (bTraceDidHit && iTraceHitEntity != iClient)
-								{
-									float flTargetMins[3], flTargetMaxs[3];
-									GetEntPropVector(iClient, Prop_Send, "m_vecMins", flTargetMins);
-									GetEntPropVector(iClient, Prop_Send, "m_vecMaxs", flTargetMaxs);
-									GetClientAbsOrigin(iClient, flTargetPos);
-									for (int i2 = 0; i2 < 3; i2++) flTargetPos[i2] += ((flTargetMins[i2] + flTargetMaxs[i2]) / 2.0);
-
-									hTrace = TR_TraceRayFilterEx(flEntPos,
-										flTargetPos,
-										MASK_NPCSOLID,
-										RayType_EndPoint,
-										TraceRayDontHitAnyEntity,
-										entity);
-												
-									bTraceDidHit = TR_DidHit(hTrace);
-									iTraceHitEntity = TR_GetEntityIndex(hTrace);
-									delete hTrace;
-								}
-										
-								if (!bTraceDidHit || iTraceHitEntity == iClient)
+	
+								if (IsPointVisibleToPlayer(iClient, flEntPos, false, _, _, true))
 								{
 									float flDistance = GetVectorSquareMagnitude(flEntPos, flTargetPos);
 									if (flDistance <= SquareFloat(flRadius))
@@ -1048,6 +1032,11 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 										}
 										if (NPCChaserHasCriticalRockets(iBossIndex) && (ProjectileGetFlags(entity) & PROJ_ROCKET)) SDKHooks_TakeDamage(iClient, entity, entity, flFinalDamage, DMG_SHOCK|DMG_ALWAYSGIB|DMG_ACID);
 										else SDKHooks_TakeDamage(iClient, entity, entity, flFinalDamage, DMG_SHOCK|DMG_ALWAYSGIB);
+										if(TF2_IsPlayerInCondition(iClient, TFCond_Gas))
+										{
+											TF2_IgnitePlayer(iClient, iClient);
+											TF2_RemoveCondition(iClient, TFCond_Gas);
+										}
 									}
 								}
 							}
@@ -1071,7 +1060,6 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 									case 1: EmitSoundToAll(MANGLER_EXPLODE2, entity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 									case 2: EmitSoundToAll(MANGLER_EXPLODE3, entity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 								}
-								CreateGeneralParticle(entity, "drg_cow_explosioncore_normal_blue", 0.1);
 							}
 							RemoveEntity(entity);
 						}
@@ -1085,43 +1073,10 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 								{
 									if (!IsValidClient(iClient) || !IsClientInGame(iClient) || !IsPlayerAlive(iClient) || IsClientInGhostMode(iClient)) continue;
 
-									if (!bAttackEliminated && g_bPlayerEliminated[iClient]) continue;
-
 									float flTargetPos[3];
 									GetClientEyePosition(iClient, flTargetPos);
 
-									hTrace = TR_TraceRayFilterEx(flEntPos,
-										flTargetPos,
-										MASK_NPCSOLID,
-										RayType_EndPoint,
-										TraceRayDontHitAnyEntity,
-										entity);
-											
-									bool bTraceDidHit = TR_DidHit(hTrace);
-									int iTraceHitEntity = TR_GetEntityIndex(hTrace);
-									delete hTrace;
-											
-									if (bTraceDidHit && iTraceHitEntity != iClient)
-									{
-										float flTargetMins[3], flTargetMaxs[3];
-										GetEntPropVector(iClient, Prop_Send, "m_vecMins", flTargetMins);
-										GetEntPropVector(iClient, Prop_Send, "m_vecMaxs", flTargetMaxs);
-										GetClientAbsOrigin(iClient, flTargetPos);
-										for (int i2 = 0; i2 < 3; i2++) flTargetPos[i2] += ((flTargetMins[i2] + flTargetMaxs[i2]) / 2.0);
-
-										hTrace = TR_TraceRayFilterEx(flEntPos,
-											flTargetPos,
-											MASK_NPCSOLID,
-											RayType_EndPoint,
-											TraceRayDontHitAnyEntity,
-											entity);
-													
-										bTraceDidHit = TR_DidHit(hTrace);
-										iTraceHitEntity = TR_GetEntityIndex(hTrace);
-										delete hTrace;
-									}
-											
-									if (!bTraceDidHit || iTraceHitEntity == iClient)
+									if (IsPointVisibleToPlayer(iClient, flEntPos, false, _, _, true))
 									{
 										float flDistance = GetVectorSquareMagnitude(flEntPos, flTargetPos);
 										if (flDistance <= SquareFloat(flRadius))
@@ -1146,6 +1101,11 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 												case 2: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION3, entity, SNDCHAN_AUTO, 50);
 											}
 											CreateGeneralParticle(entity, "ExplosionCore_MidAir", 0.1);
+											if(TF2_IsPlayerInCondition(iClient, TFCond_Gas))
+											{
+												TF2_IgnitePlayer(iClient, iClient);
+												TF2_RemoveCondition(iClient, TFCond_Gas);
+											}
 											RemoveEntity(entity);
 										}
 									}
@@ -1154,11 +1114,17 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 							g_bGrenadeTouchGround[entity] = true;
 						}
 					}
-					if (hTrace != null) delete hTrace;
 				}
 			}
 		}
 	}
 	
+	return Plugin_Handled;
+}
+
+public Action Hook_ProjectileTransmit(int ent, int other)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
 	return Plugin_Handled;
 }

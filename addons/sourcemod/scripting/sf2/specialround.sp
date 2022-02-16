@@ -78,19 +78,6 @@ void ReloadSpecialRounds()
 	}
 }
 
-stock void SendDebugMessageToPlayersSpecialRound(const char[] sMessage, any ...)
-{
-	char sMsg[1024];
-	VFormat(sMsg, sizeof(sMsg), sMessage, 2);
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || (g_bPlayerEliminated[i] && !IsClientInGhostMode(i)) || DidClientEscape(i)) continue;
-		
-		PrintCenterText(i, sMsg);
-	}
-}
-
 stock void SpecialRoundGetDescriptionHud(int iSpecialRound, char[] buffer,int bufferlen)
 {
 	strcopy(buffer, bufferlen, "");
@@ -447,8 +434,8 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_BOSSROULETTE) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_IsProxyMap() && g_iPageMax > 4 && g_iPageMax < 13 && GetArraySize(GetSelectableBossProfileList()) > 0)
 			arrayEnabledRounds.Push(SPECIALROUND_BOSSROULETTE);
 
-		if (!SF_SpecialRound(SPECIALROUND_DEBUGMODE) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && g_cvDifficulty.IntValue < 2)
-			arrayEnabledRounds.Push(SPECIALROUND_DEBUGMODE);
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_IsBoxingMap() && g_cvDifficulty.IntValue < 3)
+			arrayEnabledRounds.Push(SPECIALROUND_WALLHAX);
 		
 		//Always keep this special round push at the bottom, we need the array length.
 		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && arrayEnabledRounds.Length > 5 && !SF_IsBoxingMap())
@@ -885,10 +872,10 @@ void SpecialRoundStart()
 				}
 			}
 		}
-		case SPECIALROUND_DEBUGMODE:
+		case SPECIALROUND_WALLHAX:
 		{
-			if (g_cvDifficulty.IntValue < 2)
-				g_cvDifficulty.SetString("2"); // Override difficulty to Hardcore.
+			if (g_cvDifficulty.IntValue < 3)
+				g_cvDifficulty.SetString("3"); // Override difficulty to Hardcore.
 			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 			{	
 				if (NPCGetUniqueID(iNPCIndex) == -1) continue;
@@ -935,7 +922,7 @@ void SpecialRoundStart()
 					ClientEnableConstantGlow(i, "head", iYellow);
 				}
 			}
-			SF_AddSpecialRound(SPECIALROUND_DEBUGMODE);
+			SF_AddSpecialRound(SPECIALROUND_WALLHAX);
 		}
 		case SPECIALROUND_INFINITEFLASHLIGHT:
 		{
@@ -1206,7 +1193,7 @@ void SpecialCreateVote()
 			case SPECIALROUND_TRIPLEBOSSES: FormatEx(sItem, sizeof(sItem), "Triple Bosses");
 			case SPECIALROUND_20DOLLARS: FormatEx(sItem, sizeof(sItem), "20 Dollars");
 			case SPECIALROUND_BOSSROULETTE: FormatEx(sItem, sizeof(sItem), "Boss Roulette");
-			case SPECIALROUND_DEBUGMODE: FormatEx(sItem, sizeof(sItem), "Debug Mode");
+			case SPECIALROUND_WALLHAX: FormatEx(sItem, sizeof(sItem), "Wall Hax");
 		}
 		for (int iBit = 0; iBit < 30; iBit++)
 		{

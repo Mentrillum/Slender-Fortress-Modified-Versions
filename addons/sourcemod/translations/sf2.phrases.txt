@@ -557,6 +557,11 @@
 		"en"	"Enable/Disable the proxy ask message"
 	}
 
+	"SF2 Settings Hud Version Title"
+	{
+		"en"	"Switch HUD version between legacy and new"
+	}
+
 	"SF2 Settings Ghost Overlay Menu Title"
 	{
 		"en"	"Toggle Ghost Mode overlay"
@@ -573,6 +578,11 @@
 	"SF2 Settings Ghost Mode Toggle State Menu Title"
 	{
 		"en"	"Set ghost mode toggle state"
+	}
+	
+	"SF2 Settings Hud Version Title"
+	{
+		"en"	"Set HUD version"
 	}
 
 	"SF2 Settings Music Volume Title"
@@ -674,7 +684,7 @@
 		"fi"	"Olet lähtemässä PvP Areenalta!\nMenetät aseesi {1} sekunnin päästä jos et palaa!"
 		"chi"	"你正离开PvP区域！\n假如你不回去，你会在 {1} 秒后失去你的武器！"
 	}
-
+	
 	"SF2 AFK On"
 	{
 		"en"	"{royalblue}Disabled going to RED naturally."
@@ -736,6 +746,16 @@
 		"ru"	"{lightblue}Больше вы не можете быть выбраны в качестве помощника."
 		"fi"	"{lightblue}Sinua ei enään valita avustajaksi."
 		"chi"	"{lightblue}你不再会被选为小弟。"
+	}
+
+	"SF2 New Hud Use"
+	{
+		"en"	"{lightblue}Enabled the new HUD."
+	}
+
+	"SF2 Legacy Hud Use"
+	{
+		"en"	"{lightblue}Enabled the legacy HUD."
 	}
 
 	"SF2 Enabled Ask Message Proxy"
@@ -1684,7 +1704,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Reworked traps.\n-Fixed occasional server chokes.\n-Proxies no longer get random crits.\n-Fixed TF2ItemType memory leaks.\n-1-Up has been reworked.\n-Damage effects now apply on bullets and lasers.\n-Fixed ghost mode audio issues.\n-Added a new special round, MODified bosses."
+		"en"	"-Updated the default RED hud, you are still able to use the legacy hud via !slsettings\n-1-Up should hopefully be fixed once the round ends by a timer\n-Bosses with chase initial animations and chase on scare should play the chase initial animation\n-Boss effects can now be difficulty determined\n-Increased CBaseNPC's hitbox to 10x10x55 to fix a bug where bosses cannot trigger thin brushes"
 	}
 
 	"SF2 Smite player"

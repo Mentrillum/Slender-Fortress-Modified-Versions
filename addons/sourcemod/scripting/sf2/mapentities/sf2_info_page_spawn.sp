@@ -1,316 +1,142 @@
 // sf2_info_page_spawn
 
-static const char g_sEntityClassname[] = "sf2_info_page_spawn"; // The custom classname of the entity. Should be prefixed with "sf2_"
-static const char g_sEntityTranslatedClassname[] = "info_target"; // The actual, underlying game entity that exists, like "info_target" or "game_text".
-
-static ArrayList g_EntityData;
-
-/**
- *	Internal data stored for the entity.
- */
-enum struct SF2PageSpawnEntityData
-{
-	int EntRef;
-	char Model[PLATFORM_MAX_PATH];
-	int Skin;
-	int Bodygroup;
-	float ModelScale;
-	char Group[64];
-	char Animation[64];
-	char CollectSound[PLATFORM_MAX_PATH];
-	int CollectSoundPitch;
-
-	// renderamt, rendermode, and rendercolor are properties of CBaseEntity and
-	// thus do not need to be saved here.
-
-	void Init(int entIndex)
-	{
-		this.EntRef = EnsureEntRef(entIndex);
-		strcopy(this.Model, PLATFORM_MAX_PATH, PAGE_MODEL);
-		this.Skin = -1;
-		this.Bodygroup = 0;
-		this.ModelScale = 1.0;
-		this.Group[0] = '\0';
-		this.Animation[0] = '\0';
-		this.CollectSound[0] = '\0';
-		this.CollectSoundPitch = 0;
-	}
-
-	void SetModel(const char[] sModel)
-	{
-		strcopy(this.Model, PLATFORM_MAX_PATH, sModel);
-	}
-
-	void SetGroup(const char[] sGroupName)
-	{
-		strcopy(this.Group, 64, sGroupName);
-	}
-
-	void SetAnimation(const char[] sAnimation)
-	{
-		strcopy(this.Animation, 64, sAnimation);
-	}
-
-	void SetCollectSound(const char[] sSound)
-	{
-		strcopy(this.CollectSound, PLATFORM_MAX_PATH, sSound);
-	}
-
-	void Destroy()
-	{
-	}
-}
+static CEntityFactory g_entityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
  */
-methodmap SF2PageSpawnEntity < SF2MapEntity
+methodmap SF2PageSpawnEntity < CBaseEntity
 {
 	public SF2PageSpawnEntity(int entIndex) { return view_as<SF2PageSpawnEntity>(SF2MapEntity(entIndex)); }
 
 	public bool IsValid()
 	{
-		if (!SF2MapEntity(this.EntRef).IsValid())
+		if (!CBaseEntity(this.index).IsValid())
 			return false;
 
-		SF2PageSpawnEntityData entData;
-		return (SF2PageSpawnEntityData_Get(this.EntRef, entData) != -1);
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
 	}
 
-	public void GetModel(char[] sBuffer, int iBufferLen)
+	public void GetPageModel(char[] sBuffer, int iBufferLen)
 	{
-		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
-		strcopy(sBuffer, iBufferLen, entData.Model);
+		this.GetPropString(Prop_Data, "sf2_sModel", sBuffer, iBufferLen);
 	}
 
-	property int Skin
+	public void SetPageModel(const char[] sBuffer)
 	{
-		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.Skin; }
+		this.SetPropString(Prop_Data, "sf2_sModel", sBuffer);
 	}
 
-	property float ModelScale
+	property int PageSkin
 	{
-		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.ModelScale; }
+		public get() { return this.GetProp(Prop_Data, "sf2_iSkin"); }
+		public set(int value) { this.SetProp(Prop_Data, "sf2_iSkin", value); }
 	}
 
-	property int Bodygroup
+	property float PageModelScale
 	{
-		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.Bodygroup; }
+		public get() { return this.GetPropFloat(Prop_Data, "sf2_flModelScale"); }
+		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flModelScale", value); }
 	}
 
-	public void GetGroup(char[] sBuffer, int iBufferLen)
+	property int PageBodygroup
 	{
-		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
-		strcopy(sBuffer, iBufferLen, entData.Group);
+		public get() { return this.GetProp(Prop_Data, "sf2_iBodyGroup"); }
+		public set(int value) { this.SetProp(Prop_Data, "sf2_iBodyGroup", value); }
 	}
 
-	public void GetAnimation(char[] sBuffer, int iBufferLen)
+	public void GetPageGroup(char[] sBuffer, int iBufferLen)
 	{
-		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
-		strcopy(sBuffer, iBufferLen, entData.Animation);
+		this.GetPropString(Prop_Data, "sf2_sGroup", sBuffer, iBufferLen);
 	}
 
-	public void GetCollectSound(char[] sBuffer, int iBufferLen)
+	public void SetPageGroup(const char[] sBuffer)
 	{
-		SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData);
-		strcopy(sBuffer, iBufferLen, entData.CollectSound);
+		this.SetPropString(Prop_Data, "sf2_sGroup", sBuffer);
 	}
 
-	property int CollectSoundPitch
+	public void GetPageAnimation(char[] sBuffer, int iBufferLen)
 	{
-		public get() { SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(this.EntRef, entData); return entData.CollectSoundPitch; }
+		this.GetPropString(Prop_Data, "sf2_sAnimation", sBuffer, iBufferLen);
 	}
 
-	public void GetRenderColor(int& r, int& g, int& b, int& a)
+	public void SetPageAnimation(const char[] sBuffer)
 	{
-		GetEntityRenderColor(this.EntRef, r, g, b, a);
+		this.SetPropString(Prop_Data, "sf2_sAnimation", sBuffer);
 	}
 
-	property RenderFx RenderFx
+	public void GetPageCollectSound(char[] sBuffer, int iBufferLen)
 	{
-		public get() { return GetEntityRenderFx(this.EntRef); }
+		this.GetPropString(Prop_Data, "sf2_sCollectSound", sBuffer, iBufferLen);
 	}
 
-	property RenderMode RenderMode
+	public void SetPageCollectSound(const char[] sBuffer)
 	{
-		public get() { return GetEntityRenderMode(this.EntRef); }
+		this.SetPropString(Prop_Data, "sf2_sCollectSound", sBuffer);
+	}
+
+	property int PageCollectSoundPitch
+	{
+		public get() { this.GetProp(Prop_Data, "sf2_iCollectSoundPitch"); }
+		public set(int value) { this.SetProp(Prop_Data, "sf2_iCollectSoundPitch", value); }
+	}
+
+	public static void Initialize()
+	{
+		Initialize();
 	}
 }
 
-void SF2PageSpawnEntity_Initialize() 
+static void Initialize()
 {
-	g_EntityData = new ArrayList(sizeof(SF2PageSpawnEntityData));
+	g_entityFactory = new CEntityFactory("sf2_info_page_spawn", OnCreate);
+	g_entityFactory.DeriveFromBaseEntity(true);
 
-	SF2MapEntity_AddHook(SF2MapEntityHook_TranslateClassname, SF2PageSpawnEntity_TranslateClassname);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityCreated, SF2PageSpawnEntity_InitializeEntity);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityDestroyed, SF2PageSpawnEntity_OnEntityDestroyed);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnAcceptEntityInput, SF2PageSpawnEntity_OnAcceptEntityInput);
-	SF2MapEntity_AddHook(SF2MapEntityHook_OnEntityKeyValue, SF2PageSpawnEntity_OnEntityKeyValue);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnLevelInit, SF2PageSpawnEntity_OnLevelInit);
-	//SF2MapEntity_AddHook(SF2MapEntityHook_OnMapStart, SF2PageSpawnEntity_OnMapStart);
+	g_entityFactory.BeginDataMapDesc()
+		.DefineStringField("sf2_sModel", _, "model")
+		.DefineIntField("sf2_iSkin", _, "skin")
+		.DefineIntField("sf2_iBodyGroup", _, "setbodygroup")
+		.DefineFloatField("sf2_flModelScale", _, "modelscale")
+		.DefineStringField("sf2_sGroup", _, "group")
+		.DefineStringField("sf2_sAnimation", _, "animation")
+		.DefineStringField("sf2_sCollectSound", _, "collectsound")
+		.DefineIntField("sf2_iCollectSoundPitch", _, "collectsoundpitch")
+	.EndDataMapDesc();
+
+	g_entityFactory.Install();
 }
 
-/*
-static void SF2PageSpawnEntity_OnLevelInit(const char[] sMapName) 
+static void OnCreate(int iEntity)
 {
+	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(iEntity);
+	thisEnt.SetPageModel(PAGE_MODEL);
+	thisEnt.PageSkin = -1;
+	thisEnt.PageBodygroup = 0;
+	thisEnt.PageModelScale = 1.0;
+	thisEnt.SetPageGroup("");
+	thisEnt.SetPageAnimation("");
+	thisEnt.SetPageCollectSound("");
+	thisEnt.PageCollectSoundPitch = 0;
+	thisEnt.SetRenderColor(255, 255, 255, 255);
+
+	SDKHook(iEntity, SDKHook_SpawnPost, OnSpawn);
 }
 
-static void SF2PageSpawnEntity_OnMapStart() 
+static void OnSpawn(int iEntity) 
 {
-}
-*/
+	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(iEntity);
 
-static void SF2PageSpawnEntity_InitializeEntity(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-	
-	SF2PageSpawnEntityData entData;
-	entData.Init(entity);
+	char sBuffer[PLATFORM_MAX_PATH];
 
-	g_EntityData.PushArray(entData, sizeof(entData));
-
-	SDKHook(entity, SDKHook_SpawnPost, SF2PageSpawnEntity_SpawnPost);
-
-	SetEntityRenderColor(entity, 255, 255, 255, 255);
-}
-
-static Action SF2PageSpawnEntity_OnEntityKeyValue(int entity, const char[] sClass, const char[] szKeyName, const char[] szValue)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	SF2PageSpawnEntityData entData;
-	if (SF2PageSpawnEntityData_Get(entity, entData) == -1)
-		return Plugin_Continue;
-	
-	if (strcmp(szKeyName, "model", false) == 0)
+	thisEnt.GetPageModel(sBuffer, sizeof(sBuffer));
+	if (sBuffer[0])
 	{
-		entData.SetModel(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "skin", false) == 0)
-	{
-		entData.Skin = StringToInt(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "setbodygroup", false) == 0)
-	{
-		entData.Bodygroup = StringToInt(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-	}
-	else if (strcmp(szKeyName, "modelscale", false) == 0)
-	{
-		entData.ModelScale = StringToFloat(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "group", false) == 0)
-	{
-		entData.SetGroup(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "animation", false) == 0)
-	{
-		entData.SetAnimation(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "collectsound", false) == 0)
-	{
-		entData.SetCollectSound(szValue);
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
-	}
-	else if (strcmp(szKeyName, "collectsoundpitch", false) == 0)
-	{
-		int iPitch = StringToInt(szValue);
-		if (iPitch < 0)
-			iPitch = 0;
-		else if (iPitch > 255)
-			iPitch = 255;
-
-		entData.CollectSoundPitch = iPitch;
-		SF2PageSpawnEntityData_Update(entData);
-
-		return Plugin_Handled;
+		PrecacheModel(sBuffer);
 	}
 
-	return Plugin_Continue;
-}
-
-/*
-static Action SF2PageSpawnEntity_OnAcceptEntityInput(int entity, const char[] sClass, const char[] szInputName, int activator, int caller)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-
-	return Plugin_Continue;
-}
-*/
-
-static void SF2PageSpawnEntity_SpawnPost(int entity) 
-{
-	SF2PageSpawnEntityData entData; SF2PageSpawnEntityData_Get(entity, entData);
-
-	if (entData.Model[0] != '\0')
-		PrecacheModel(entData.Model); // Precache, or else...
-
-	if (entData.CollectSound[0] != '\0')
-		PrecacheSound(entData.CollectSound); // Precache, or else...
-}
-
-static void SF2PageSpawnEntity_OnEntityDestroyed(int entity, const char[] sClass)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return;
-
-	SF2PageSpawnEntityData entData;
-	int iIndex = SF2PageSpawnEntityData_Get(entity, entData);
-	if (iIndex != -1)
+	thisEnt.GetPageCollectSound(sBuffer, sizeof(sBuffer));
+	if (sBuffer[0])
 	{
-		entData.Destroy();
-		g_EntityData.Erase(iIndex);
+		PrecacheSound(sBuffer);
 	}
-}
-
-static Action SF2PageSpawnEntity_TranslateClassname(const char[] sClass, char[] sBuffer, int iBufferLen)
-{
-	if (strcmp(sClass, g_sEntityClassname, false) != 0) 
-		return Plugin_Continue;
-	
-	strcopy(sBuffer, iBufferLen, g_sEntityTranslatedClassname);
-	return Plugin_Handled;
-}
-
-static int SF2PageSpawnEntityData_Get(int entIndex, SF2PageSpawnEntityData entData)
-{
-	entData.EntRef = EnsureEntRef(entIndex);
-	if (entData.EntRef == INVALID_ENT_REFERENCE)
-		return -1;
-
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return -1;
-	
-	g_EntityData.GetArray(iIndex, entData, sizeof(entData));
-	return iIndex;
-}
-
-static int SF2PageSpawnEntityData_Update(SF2PageSpawnEntityData entData)
-{
-	int iIndex = g_EntityData.FindValue(entData.EntRef);
-	if (iIndex == -1)
-		return;
-	
-	g_EntityData.SetArray(iIndex, entData, sizeof(entData));
 }

@@ -8,32 +8,44 @@ stock bool SF_IsRenevantMap()
 	return view_as<bool>(g_bIsRenevantMap || (g_cvRenevantMap.IntValue == 1));
 }
 
-static bool Renevant_TryAddBossProfile(char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], int iProfileLen, char[] sName, int iNameLen, bool bPlaySpawnSound=true)
+static bool Renevant_TryAddBossProfile(char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], int iProfileLen, char[] sName, int iNameLen, bool bPlaySpawnSound=true, bool bInvincible = false)
 {
 	if (!GetRandomRenevantBossProfile(sProfile, iProfileLen))
 		return false;
 
 	NPCGetBossName(_, sName, iNameLen, sProfile);
 	if (sName[0] == '\0') strcopy(sName, iNameLen, sProfile);
-	AddProfile(sProfile, _, _, _, bPlaySpawnSound);
+	AddProfile(sProfile, _, _, _, bPlaySpawnSound, bInvincible);
 
 	return true;
 }
 
-static void Renevant_BroadcastMessage(const char[] sMessage, ...)
+static bool Renevant_TryAddSingleBossProfile(char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], char[] sName, int iNameLen, bool bPlaySpawnSound=true, bool bInvincible = false)
+{
+	if (!IsProfileValid(sProfile))
+		return false;
+
+	NPCGetBossName(_, sName, iNameLen, sProfile);
+	if (sName[0] == '\0') strcopy(sName, iNameLen, sProfile);
+	AddProfile(sProfile, _, _, _, bPlaySpawnSound, bInvincible);
+
+	return true;
+}
+
+static void Renevant_BroadcastMessage(const char[] sMessage, int params, ...)
 {
 	char sFormat[512];
-	VFormat(sFormat, sizeof(sFormat), sMessage, 2);
+	VFormat(sFormat, sizeof(sFormat), sMessage, params);
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i) || g_bPlayerEliminated[i]) continue;
+		if (!IsValidClient(i) || !IsClientInGame(i) || (g_bPlayerEliminated[i] && !IsClientInGhostMode(i)) || !IsPlayerAlive(i)) continue;
 
-		ClientShowRenevantMessage(i, sFormat);
+		ClientShowRenevantMessage(i, sFormat, params + 1);
 	}
 }
 
-enum RenevantWave
+enum RenevantWave 
 {
 	RenevantWave_Normal = 0,
 	RenevantWave_IncreaseDifficulty,
@@ -41,6 +53,10 @@ enum RenevantWave
 	RenevantWave_BaconSpray,
 	RenevantWave_DoubleTrouble,
 	RenevantWave_DoomBox,
+	RenevantWave_90s,
+	RenevantWave_MarkForDeath,
+	RenevantWave_SingleBoss,
+	RenevantWave_AdminBoss,
 	RenevantWave_Max
 }
 
@@ -49,14 +65,16 @@ static void Renevant_DoWaveAction(RenevantWave action)
 	char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer2[SF2_MAX_PROFILE_NAME_LENGTH], sBuffer3[SF2_MAX_PROFILE_NAME_LENGTH];
 	char sName[SF2_MAX_NAME_LENGTH], sName2[SF2_MAX_NAME_LENGTH], sName3[SF2_MAX_NAME_LENGTH];
 
-	char sBroadcastMessage[512]; char sBroadcastBuffer[256];
+	char sBroadcastMessage[512], sBroadcastBuffer[256], sSingleBossBroadcast[256];
 	FormatEx(sBroadcastMessage, sizeof(sBroadcastMessage), "Wave %d", g_iRenevantWaveNumber);
 
+	g_cvDefaultRenevantBossMessage.GetString(sSingleBossBroadcast, sizeof(sSingleBossBroadcast));
+
 	int iAddedBossCount = 0;
-	if (Renevant_TryAddBossProfile(sBuffer, sizeof(sBuffer), sName, sizeof(sName)))
+	if (action != RenevantWave_SingleBoss && action != RenevantWave_AdminBoss && Renevant_TryAddBossProfile(sBuffer, sizeof(sBuffer), sName, sizeof(sName), action != RenevantWave_DoomBox && action != RenevantWave_DoubleTrouble))
 		iAddedBossCount++;
 
-	if (iAddedBossCount == 1 && action != RenevantWave_DoubleTrouble && action != RenevantWave_DoomBox)
+	if (iAddedBossCount == 1 && action != RenevantWave_DoubleTrouble && action != RenevantWave_DoomBox && action != RenevantWave_SingleBoss && action != RenevantWave_AdminBoss)
 	{
 		FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
 		StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
@@ -163,15 +181,19 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		{
 			g_bRenevantMultiEffect = true;
 			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nBosses can now inflict Multieffect.");
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_MultiEffect);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
 		}
 		case RenevantWave_BaconSpray:
 		{
 			g_bRenevantBeaconEffect = true;
 			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nBosses are now alerted on spawn.");
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_BaconSpray);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
 		}
 		case RenevantWave_DoubleTrouble:
 		{
-			if (Renevant_TryAddBossProfile(sBuffer2, sizeof(sBuffer2), sName2, sizeof(sName2)))
+			if (Renevant_TryAddBossProfile(sBuffer2, sizeof(sBuffer2), sName2, sizeof(sName2), false))
 				iAddedBossCount++;
 
 			if (iAddedBossCount == 1)
@@ -187,9 +209,9 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		}
 		case RenevantWave_DoomBox:
 		{
-			if (Renevant_TryAddBossProfile(sBuffer2, sizeof(sBuffer2), sName2, sizeof(sName2)))
+			if (Renevant_TryAddBossProfile(sBuffer2, sizeof(sBuffer2), sName2, sizeof(sName2), false))
 				iAddedBossCount++;
-			if (Renevant_TryAddBossProfile(sBuffer3, sizeof(sBuffer3), sName3, sizeof(sName3)))
+			if (Renevant_TryAddBossProfile(sBuffer3, sizeof(sBuffer3), sName3, sizeof(sName3), false))
 				iAddedBossCount++;
 
 			if (iAddedBossCount == 1)
@@ -207,10 +229,71 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBosses: %s, %s, and %s", sName, sName2, sName3); 
 				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
 			}
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_DoomBox);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
+		}
+		case RenevantWave_90s:
+		{
+			g_bRenevant90sEffect = true;
+			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nYou feel very nervous.");
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_90s);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
+		}
+		case RenevantWave_MarkForDeath:
+		{
+			g_bRenevantMarkForDeath = true;
+			for (int iClient = 1; iClient < MaxClients; iClient++)
+			{
+				if (!IsValidClient(iClient)) continue;
+				if (!IsClientInGame(iClient) || 
+					!IsPlayerAlive(iClient) || 
+					g_bPlayerEliminated[iClient] || 
+					IsClientInGhostMode(iClient) || 
+					DidClientEscape(iClient)) continue;
+				TF2_AddCondition(iClient, TFCond_MarkedForDeathSilent, -1.0);
+			}
+			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nEveryone is marked for death permanently.");
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_MarkForDeath);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
+		}
+		case RenevantWave_SingleBoss:
+		{
+			char sBufferSingle[SF2_MAX_PROFILE_NAME_LENGTH], sSingleBossName[SF2_MAX_NAME_LENGTH];
+			g_cvDefaultRenevantBoss.GetString(sBufferSingle, sizeof(sBufferSingle));
+			if (Renevant_TryAddSingleBossProfile(sBufferSingle, sSingleBossName, sizeof(sSingleBossName), _, true))
+				iAddedBossCount++;
+			FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\n%s", sSingleBossBroadcast);
+			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_SingleBoss);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
+		}
+		case RenevantWave_AdminBoss:
+		{
+			ArrayList hSelectableBosses = GetSelectableRenevantBossAdminProfileList().Clone();
+			if (hSelectableBosses.Length > 0)
+			{
+				hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
+				AddProfile(sBuffer);
+				NPCGetBossName(_, sName, sizeof(sName), sBuffer);
+				if (sName[0] == '\0') strcopy(sName, sizeof(sName), sBuffer);
+				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
+				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+			}
+			else
+			{
+				if (Renevant_TryAddBossProfile(sBuffer, sizeof(sBuffer), sName, sizeof(sName), false))
+				{
+					FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
+					StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+				}
+			}
+			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_AdminBoss);
+			if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
+			delete hSelectableBosses;
 		}
 	}
 
-	Renevant_BroadcastMessage(sBroadcastMessage);
+	Renevant_BroadcastMessage(sBroadcastMessage, 2);
 }
 
 void Renevant_SetWave(int iWave, bool bResetTimer=false)
@@ -238,90 +321,30 @@ void Renevant_SetWave(int iWave, bool bResetTimer=false)
 			Renevant_DoWaveAction(RenevantWave_Normal);
 
 			CPrintToChatAll("The difficulty has been set to {yellow}%t{default}.", "SF2 Normal Difficulty");
-		}
-		case 2: //Wave 2
-		{
-			int iRandomWave = GetRandomInt(0, 2);
-			switch (iRandomWave)
+			g_aRenevantWaveList = new ArrayList();
+			for (int i = 0; i < view_as<int>(RenevantWave_Max); i++)
 			{
-				case 0:
-				{
-					Renevant_DoWaveAction(RenevantWave_Normal);
-				}
-				case 1:
-				{
-					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);		
-				}
-				case 2:
-				{
-					Renevant_DoWaveAction(RenevantWave_MultiEffect);
-				}
+				g_aRenevantWaveList.Push(i);
 			}
-		}
-		case 3: //Wave 3
-		{
-			int iRandomWave = GetRandomInt(0, 3);
-			switch (iRandomWave)
+			char sBufferCheck[SF2_MAX_PROFILE_NAME_LENGTH];
+			g_cvDefaultRenevantBoss.GetString(sBufferCheck, sizeof(sBufferCheck));
+			if (sBufferCheck[0] == '\0' || !IsProfileValid(sBufferCheck))
 			{
-				case 0:
-				{
-					Renevant_DoWaveAction(RenevantWave_Normal);
-				}
-				case 1:
-				{
-					Renevant_DoWaveAction(RenevantWave_DoubleTrouble);
-				}
-				case 2:
-				{
-					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);
-				}
-				case 3:
-				{
-					Renevant_DoWaveAction(RenevantWave_BaconSpray);
-				}
+				int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_SingleBoss);
+				if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
 			}
-		}
-		case 4: //Wave 4
-		{
-			int iRandomWave = GetRandomInt(0, 2);
-			switch (iRandomWave)
+			ArrayList hSelectableBosses = GetSelectableRenevantBossAdminProfileList().Clone();
+			if (hSelectableBosses.Length <= 0)
 			{
-				case 0:
-				{
-					Renevant_DoWaveAction(RenevantWave_Normal);
-				}
-				case 1:
-				{
-					Renevant_DoWaveAction(RenevantWave_DoubleTrouble);
-				}
-				case 2:
-				{
-					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);
-				}
+				int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_AdminBoss);
+				if (iEraseWave != -1) g_aRenevantWaveList.Erase(iEraseWave);
 			}
+			delete hSelectableBosses;
 		}
-		case 5: //Wave 5
+		default: //Waves except 1
 		{
-			int iRandomWave = GetRandomInt(0, 3);
-			switch (iRandomWave)
-			{
-				case 0:
-				{
-					Renevant_DoWaveAction(RenevantWave_Normal);
-				}
-				case 1:
-				{
-					Renevant_DoWaveAction(RenevantWave_DoubleTrouble);
-				}
-				case 2:
-				{
-					Renevant_DoWaveAction(RenevantWave_IncreaseDifficulty);
-				}
-				case 3:
-				{
-					Renevant_DoWaveAction(RenevantWave_DoomBox);
-				}
-			}
+			int iRandomWave = g_aRenevantWaveList.Get(GetRandomInt(0, g_aRenevantWaveList.Length - 1));
+			Renevant_DoWaveAction(view_as<RenevantWave>(iRandomWave));
 		}
 	}
 
