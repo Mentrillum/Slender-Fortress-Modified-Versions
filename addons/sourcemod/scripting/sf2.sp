@@ -876,6 +876,7 @@ ConVar g_cvFullyEnableSpectator;
 ConVar g_cvAllowPlayerPeeking;
 ConVar g_cvUsePlayersForKillFeed;
 ConVar g_cvDefaultLegacyHud;
+ConVar g_cvVoiceGriefing;
 
 ConVar g_cvRestartSession;
 bool g_bRestartSessionEnabled;
@@ -2567,21 +2568,25 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 				{
 					if (IsRoundInIntro()) return Plugin_Handled;
 					if (!StrContains(sample, "vo/halloween_scream")) return Plugin_Handled;
+					if (g_cvVoiceGriefing.IntValue == 2) return Plugin_Handled;
 					
-					for (int iBossIndex = 0; iBossIndex < MAX_BOSSES; iBossIndex++)
+					if (!g_cvVoiceGriefing.BoolValue)
 					{
-						if (NPCGetUniqueID(iBossIndex) == -1) continue;
-						
-						if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Voice) && NPCShouldHearEntity(iBossIndex, entity))
+						for (int iBossIndex = 0; iBossIndex < MAX_BOSSES; iBossIndex++)
 						{
-							GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
-							g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
-							g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDVOICE;
-							if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] < GetGameTime())
+							if (NPCGetUniqueID(iBossIndex) == -1) continue;
+							
+							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Voice) && NPCShouldHearEntity(iBossIndex, entity))
 							{
-								g_iSlenderSoundTarget[iBossIndex] = EntIndexToEntRef(entity);
-								g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddVoice(iBossIndex, iDifficulty);
-								g_flSlenderAutoChaseCooldown[iBossIndex] = GetGameTime() + 0.3;
+								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
+								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
+								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDVOICE;
+								if (g_iSlenderState[iBossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(iBossIndex) && g_flSlenderAutoChaseCooldown[iBossIndex] < GetGameTime())
+								{
+									g_iSlenderSoundTarget[iBossIndex] = EntIndexToEntRef(entity);
+									g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddVoice(iBossIndex, iDifficulty);
+									g_flSlenderAutoChaseCooldown[iBossIndex] = GetGameTime() + 0.3;
+								}
 							}
 						}
 					}

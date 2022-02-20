@@ -188,6 +188,8 @@ public void OnPluginStart()
 
 	g_cvDefaultLegacyHud = CreateConVar("sf2_default_legacy_hud", "0", "Set to 1 if the server should enable the legacy hud by default in their settings.");
 
+	g_cvVoiceGriefing = CreateConVar("sf2_voice_grief", "0", "If voicelines won't alert the boss, 2 to disable voice commands outright.", _, true, 0.0, true, 2.0);
+
 	g_cvMaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();
