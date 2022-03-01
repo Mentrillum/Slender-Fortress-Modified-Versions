@@ -3814,6 +3814,8 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
 	char sPath[PLATFORM_MAX_PATH];
 	GetProfileString(sProfile, sSectionName, sPath, sizeof(sPath));
 	
+	float flDuration = GetProfileFloat(sProfile, "player_damage_effect_particle_duration", 1.5);
+	
 	float flPlayerPosition[3];
 	if (IsValidClient(iClient)) GetClientAbsOrigin(iClient, flPlayerPosition);
 	else GetEntPropVector(slender, Prop_Data, "m_vecOrigin", flPlayerPosition);
@@ -3833,7 +3835,7 @@ void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, floa
 		DispatchSpawn(iParticle);
 		ActivateEntity(iParticle);
 		AcceptEntityInput(iParticle, "start");
-		CreateTimer(0.1, Timer_KillEntity, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(flDuration, Timer_KillEntity, iParticle, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
@@ -3854,6 +3856,8 @@ void SlenderCreateParticleSpawnEffect(int iBossIndex, const char[] sSectionName,
 	GetEntPropVector(slender, Prop_Data, "m_vecOrigin", flSlenderPosition);
 	GetProfileVector(sProfile, sVectorOffset, flOffsetPos, view_as<float>( { 0.0, 0.0, 0.0 } ));
 	AddVectors(flOffsetPos, flSlenderPosition, flSlenderPosition);
+	
+	float flDuration = GetProfileFloat(sProfile, "tp_effect_particle_duration", 1.5);
 
 	int iParticle = CreateEntityByName("info_particle_system");
 
@@ -3880,7 +3884,7 @@ void SlenderCreateParticleSpawnEffect(int iBossIndex, const char[] sSectionName,
 			EmitSoundToAll(sSoundEffect, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, flVolume, iPitch);
 		}
 		
-		CreateTimer(0.1, Timer_KillEntity, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(flDuration, Timer_KillEntity, iParticle, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
