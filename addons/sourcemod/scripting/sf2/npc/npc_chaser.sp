@@ -2379,7 +2379,7 @@ void NPCChaserUpdateBossAnimation(int iBossIndex, int iEnt, int iState, bool bSp
 	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
 	
-	bool bClearLayers = GetProfileNum(sProfile, "animation_clear_layers_on_update", 1);
+	bool bClearLayers = view_as<bool>(GetProfileNum(sProfile, "animation_clear_layers_on_update", 1));
 	
 	switch (iState)
 	{
