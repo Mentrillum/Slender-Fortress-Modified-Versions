@@ -40,10 +40,11 @@ static const char g_sPvPProjectileClassesNoTouch[][] =
 };
 
 static bool g_bPlayerInPvP[MAXPLAYERS + 1];
+static bool g_bPlayerIsLeavingPvP[MAXPLAYERS + 1];
 Handle g_hPlayerPvPTimer[MAXPLAYERS + 1];
 Handle g_hPlayerPvPRespawnTimer[MAXPLAYERS + 1];
 static int g_iPlayerPvPTimerCount[MAXPLAYERS + 1];
-static bool g_bPlayerInPvPTrigger[MAXPLAYERS + 1];
+static ArrayList g_hPlayerEnteredPvPTriggers[MAXPLAYERS + 1] = { null, ... };
 
 //Blood
 static int g_iPvPUserIdLastTrace;
@@ -201,12 +202,20 @@ public void PvP_Precache()
 
 public void PvP_OnClientPutInServer(int iClient)
 {
+	g_hPlayerEnteredPvPTriggers[iClient] = new ArrayList();
+
 	PvP_ForceResetPlayerPvPData(iClient);
 }
 
 public void PvP_OnClientDisconnect(int iClient)
 {
 	PvP_SetPlayerPvPState(iClient, false, false, false);
+
+	if (g_hPlayerEnteredPvPTriggers[iClient] != null)
+	{
+		delete g_hPlayerEnteredPvPTriggers[iClient];
+		g_hPlayerEnteredPvPTriggers[iClient] = null;
+	}
 }
 
 public void PvP_OnGameFrame()
@@ -494,6 +503,8 @@ public void PvP_OnPlayerSpawn(int iClient)
 	
 	PvP_SetPlayerPvPState(iClient, false, false, false);
 
+	g_bPlayerIsLeavingPvP[iClient] = false;
+
 	if (IsPlayerAlive(iClient) && IsClientParticipating(iClient))
 	{
 		if (!IsClientInGhostMode(iClient) && !g_bPlayerProxy[iClient])
@@ -540,6 +551,11 @@ public void PvP_OnPlayerDeath(int iClient, bool bFake)
 {
 	if (!bFake)
 	{
+		if (IsClientInPvP(iClient))
+		{
+			g_bPlayerIsLeavingPvP[iClient] = false;
+		}
+
 		if (!IsClientInGhostMode(iClient) && !g_bPlayerProxy[iClient])
 		{
 			bool bAutoSpawn = g_iPlayerPreferences[iClient].PlayerPreference_PvPAutoSpawn;
@@ -602,13 +618,21 @@ public void PvP_OnTriggerStartTouch(int trigger,int iOther)
 			SetEntPropFloat(iOther, Prop_Send, "m_flTorsoScale", 1.0);
 			SetEntPropFloat(iOther, Prop_Send, "m_flHandScale", 1.0);
 			
-			g_bPlayerInPvPTrigger[iOther] = true;
+			int iEntRef = EnsureEntRef(trigger);
+			if (g_hPlayerEnteredPvPTriggers[iOther].FindValue(iEntRef) == -1)
+			{
+				g_hPlayerEnteredPvPTriggers[iOther].Push(iEntRef);
+			}
 			
 			if (IsClientInPvP(iOther))
 			{
-				// Player left and came back again, but is still in PvP mode.
-				g_iPlayerPvPTimerCount[iOther] = 0;
-				g_hPlayerPvPTimer[iOther] = null;
+				if (g_bPlayerIsLeavingPvP[iOther])
+				{
+					// Player left and came back again, but is still in PvP mode.
+					g_iPlayerPvPTimerCount[iOther] = 0;
+					g_hPlayerPvPTimer[iOther] = null;
+					g_bPlayerIsLeavingPvP[iOther] = false;
+				}
 			}
 			else
 			{
@@ -622,14 +646,27 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 {
 	if (IsValidClient(iOther))
 	{
-		g_bPlayerInPvPTrigger[iOther] = false;
+		int iIndex = g_hPlayerEnteredPvPTriggers[iOther].FindValue(EnsureEntRef(trigger));
+		if (iIndex != -1)
+		{
+			g_hPlayerEnteredPvPTriggers[iOther].Erase(iIndex);
+		}
 		
 		if (IsClientInPvP(iOther))
 		{
-			g_iPlayerPvPTimerCount[iOther] = g_cvPvPArenaLeaveTime.IntValue;
-			if (g_iPlayerPvPTimerCount[iOther] != 0) 
-				g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-			else g_hPlayerPvPTimer[iOther] = CreateTimer(0.1, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			if (g_hPlayerEnteredPvPTriggers[iOther].Length == 0)
+			{
+				g_iPlayerPvPTimerCount[iOther] = g_cvPvPArenaLeaveTime.IntValue;
+				if (g_iPlayerPvPTimerCount[iOther] != 0)
+				{
+					g_hPlayerPvPTimer[iOther] = CreateTimer(1.0, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+					g_bPlayerIsLeavingPvP[iOther] = true;
+				}
+				else
+				{
+					g_hPlayerPvPTimer[iOther] = CreateTimer(0.1, Timer_PlayerPvPLeaveCountdown, GetClientUserId(iOther), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				}
+			}
 		}
 	}
 
@@ -763,6 +800,12 @@ void PvP_ForceResetPlayerPvPData(int iClient)
 	g_hPlayerPvPTimer[iClient] = null;
 	g_iPlayerPvPTimerCount[iClient] = 0;
 	g_hPlayerPvPRespawnTimer[iClient] = null;
+	g_bPlayerIsLeavingPvP[iClient] = false;
+
+	if (g_hPlayerEnteredPvPTriggers[iClient] != null)
+	{
+		g_hPlayerEnteredPvPTriggers[iClient].Clear();
+	}
 }
 
 static void PvP_RemovePlayerProjectiles(int iClient)
@@ -890,8 +933,12 @@ public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 	if (g_iPlayerPvPTimerCount[iClient] <= 0)
 	{
 		PvP_SetPlayerPvPState(iClient, false);
-		TF2_RemoveCondition(iClient, TFCond_Taunting);
+		g_bPlayerIsLeavingPvP[iClient] = false;
+
+		// Force them to their melee weapon and stop taunting, to prevent tposing and what not.
 		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
+		TF2_RemoveCondition(iClient, TFCond_Taunting);
+		
 		return Plugin_Stop;
 	}
 	
