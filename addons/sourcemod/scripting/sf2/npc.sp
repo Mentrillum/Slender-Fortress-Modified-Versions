@@ -50,6 +50,7 @@ static float g_flNPCFieldOfView[MAX_BOSSES] = { 0.0, ... };
 static float g_flNPCTurnRate[MAX_BOSSES] = { 0.0, ... };
 static float g_flNPCBackstabFOV[MAX_BOSSES] = { 0.0, ... };
 
+static bool g_bNPCTeleportAllowed[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCTeleportTimeMin[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCTeleportTimeMax[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCTeleportRestPeriod[MAX_BOSSES][Difficulty_Max];
@@ -1166,6 +1167,11 @@ float NPCGetAddAcceleration(int iNPCIndex)
 	return g_flNPCAddAcceleration[iNPCIndex];
 }
 
+bool NPCIsTeleportAllowed(int iNPCIndex, int iDifficulty)
+{
+	return g_bNPCTeleportAllowed[iNPCIndex][iDifficulty];
+}
+
 float NPCGetTeleportTimeMin(int iNPCIndex, int iDifficulty)
 {
 	return g_flNPCTeleportTimeMin[iNPCIndex][iDifficulty];
@@ -1706,6 +1712,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 		g_flNPCHearingRadius[Npc.Index][iDifficulty] = GetBossProfileHearRadius(iProfileIndex, iDifficulty);
 		g_flSlenderTeleportMinRange[Npc.Index][iDifficulty] = GetBossProfileTeleportRangeMin(iProfileIndex, iDifficulty);
 		g_flSlenderTeleportMaxRange[Npc.Index][iDifficulty] = GetBossProfileTeleportRangeMax(iProfileIndex, iDifficulty);
+		g_bNPCTeleportAllowed[Npc.Index][iDifficulty] = GetBossProfileTeleportAllowed(iProfileIndex, iDifficulty);
 		g_flNPCTeleportTimeMin[Npc.Index][iDifficulty] = GetBossProfileTeleportTimeMin(iProfileIndex, iDifficulty);
 		g_flNPCTeleportTimeMax[Npc.Index][iDifficulty] = GetBossProfileTeleportTimeMax(iProfileIndex, iDifficulty);
 		g_flNPCTeleportRestPeriod[Npc.Index][iDifficulty] = GetBossProfileTeleportTargetRestPeriod(iProfileIndex, iDifficulty);
@@ -4145,13 +4152,17 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return Plugin_Continue;
 
 	if (NPCGetFlags(iBossIndex) & SFF_NOTELEPORT) return Plugin_Continue;
-	
+
+	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+
+	if (!NPCIsTeleportAllowed(iBossIndex, iDifficulty)) return Plugin_Continue;
+
 	// Check to see if anyone's looking at me before doing anything.
 	if (PeopleCanSeeSlender(iBossIndex, _, false))
 	{
 		return Plugin_Continue;
 	}
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	
 	if (NPCGetTeleportType(iBossIndex) == 2)
 	{
 		int iBoss = NPCGetEntIndex(iBossIndex);

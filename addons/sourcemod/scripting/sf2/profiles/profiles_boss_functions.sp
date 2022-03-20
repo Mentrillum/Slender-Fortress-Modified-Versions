@@ -315,6 +315,13 @@ enum
 	BossProfileData_StaticGraceTimeNightmare,
 	BossProfileData_StaticGraceTimeApollyon,
 
+	BossProfileData_TeleportAllowedEasy,
+	BossProfileData_TeleportAllowedNormal,
+	BossProfileData_TeleportAllowedHard,
+	BossProfileData_TeleportAllowedInsane,
+	BossProfileData_TeleportAllowedNightmare,
+	BossProfileData_TeleportAllowedApollyon,
+
 	BossProfileData_TeleportRangeMinEasy,
 	BossProfileData_TeleportRangeMinNormal,
 	BossProfileData_TeleportRangeMinHard,
@@ -792,6 +799,13 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flBossSearchSoundRadiusInsane = kv.GetFloat("search_sound_range_insane", flBossSearchSoundRadiusHard);
 	float flBossSearchSoundRadiusNightmare = kv.GetFloat("search_sound_range_nightmare", flBossSearchSoundRadiusInsane);
 	float flBossSearchSoundRadiusApollyon = kv.GetFloat("search_sound_range_apollyon", flBossSearchSoundRadiusNightmare);
+
+	bool bBossTeleportAllowed = kv.GetNum("teleport_allowed", 1) != 0;
+	bool bBossTeleportAllowedEasy = kv.GetNum("teleport_allowed_easy", bBossTeleportAllowed) != 0;
+	bool bBossTeleportAllowedHard = kv.GetNum("teleport_allowed_hard", bBossTeleportAllowed) != 0;
+	bool bBossTeleportAllowedInsane = kv.GetNum("teleport_allowed_insane", bBossTeleportAllowedHard) != 0;
+	bool bBossTeleportAllowedNightmare = kv.GetNum("teleport_allowed_nightmare", bBossTeleportAllowedInsane) != 0;
+	bool bBossTeleportAllowedApollyon = kv.GetNum("teleport_allowed_apollyon", bBossTeleportAllowedNightmare) != 0;
 
 	float flBossTeleportRangeMin = kv.GetFloat("teleport_range_min", 325.0);
 	float flBossTeleportRangeMinEasy = kv.GetFloat("teleport_range_min_easy", flBossTeleportRangeMin);
@@ -1328,6 +1342,13 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	g_hBossProfileData.Set(iIndex, flStaticGraceTimeInsane, BossProfileData_StaticGraceTimeInsane);
 	g_hBossProfileData.Set(iIndex, flStaticGraceTimeNightmare, BossProfileData_StaticGraceTimeNightmare);
 	g_hBossProfileData.Set(iIndex, flStaticGraceTimeApollyon, BossProfileData_StaticGraceTimeApollyon);
+
+	g_hBossProfileData.Set(iIndex, bBossTeleportAllowed, BossProfileData_TeleportAllowedNormal);
+	g_hBossProfileData.Set(iIndex, bBossTeleportAllowedEasy, BossProfileData_TeleportAllowedEasy);
+	g_hBossProfileData.Set(iIndex, bBossTeleportAllowedHard, BossProfileData_TeleportAllowedHard);
+	g_hBossProfileData.Set(iIndex, bBossTeleportAllowedInsane, BossProfileData_TeleportAllowedInsane);
+	g_hBossProfileData.Set(iIndex, bBossTeleportAllowedNightmare, BossProfileData_TeleportAllowedNightmare);
+	g_hBossProfileData.Set(iIndex, bBossTeleportAllowedApollyon, BossProfileData_TeleportAllowedApollyon);
 
 	g_hBossProfileData.Set(iIndex, flBossTeleportTimeMin, BossProfileData_TeleportTimeMinNormal);
 	g_hBossProfileData.Set(iIndex, flBossTeleportTimeMinEasy, BossProfileData_TeleportTimeMinEasy);
@@ -2214,6 +2235,20 @@ float GetBossProfileHearRadius(int iProfileIndex, int iDifficulty)
 	}
 	
 	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_SearchSoundRange));
+}
+
+bool GetBossProfileTeleportAllowed(int iProfileIndex, int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedEasy));
+		case Difficulty_Hard: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedHard));
+		case Difficulty_Insane: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedInsane));
+		case Difficulty_Nightmare: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedNightmare));
+		case Difficulty_Apollyon: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedApollyon));
+	}
+	
+	return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedNormal));
 }
 
 float GetBossProfileTeleportTimeMin(int iProfileIndex, int iDifficulty)
