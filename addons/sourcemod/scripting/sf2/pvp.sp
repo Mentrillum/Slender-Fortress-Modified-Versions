@@ -646,10 +646,21 @@ public Action PvP_OnTriggerEndTouch(int trigger,int iOther)
 {
 	if (IsValidClient(iOther))
 	{
-		int iIndex = g_hPlayerEnteredPvPTriggers[iOther].FindValue(EnsureEntRef(trigger));
-		if (iIndex != -1)
+		if (g_hPlayerEnteredPvPTriggers[iOther] != null)
 		{
-			g_hPlayerEnteredPvPTriggers[iOther].Erase(iIndex);
+			int iTriggerEntRef = EnsureEntRef(trigger);
+			for (int i = g_hPlayerEnteredPvPTriggers[iOther].Length - 1; i >= 0; i--)
+			{
+				int iEntRef = g_hPlayerEnteredPvPTriggers[iOther].Get(i);
+				if (iEntRef == iTriggerEntRef)
+				{
+					g_hPlayerEnteredPvPTriggers[iOther].Erase(i);
+				}
+				else if (EntRefToEntIndex(iEntRef) == INVALID_ENT_REFERENCE)
+				{
+					g_hPlayerEnteredPvPTriggers[iOther].Erase(i);
+				}
+			}
 		}
 		
 		if (IsClientInPvP(iOther))
