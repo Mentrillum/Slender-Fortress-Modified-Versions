@@ -735,6 +735,7 @@ bool g_bIsSlaughterRunMap = false;
 bool g_bRoundInfiniteBlink = false;
 bool g_bRoundInfiniteSprint = false;
 
+static bool g_bRoundTimerPaused = false;
 Handle g_hRoundGraceTimer = null;
 static Handle g_hRoundTimer = null;
 static Handle g_hVoteTimer = null;
@@ -3891,6 +3892,11 @@ SF2RoundState GetRoundState()
 	return g_iRoundState;
 }
 
+void SetRoundTimerPaused(bool bPaused)
+{
+	g_bRoundTimerPaused = bPaused;
+}
+
 void SetRoundTime(int iCurrentTime)
 {
 	int iOldRoundTime = g_iRoundTime;
@@ -5595,6 +5601,7 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	// Reset some global variables.
 	g_iRoundCount++;
 	g_hRoundTimer = null;
+	g_bRoundTimerPaused = false;
 	
 	SetRoundState(SF2RoundState_Invalid);
 	
@@ -8123,7 +8130,10 @@ public Action Timer_RoundTime(Handle timer)
 	if (g_bSpecialRound)
 		g_iSpecialRoundTime++;
 	
-	SetRoundTime(g_iRoundTime - 1);
+	if (!g_bRoundTimerPaused)
+	{
+		SetRoundTime(g_iRoundTime - 1);
+	}
 	
 	if (SF_SpecialRound(SPECIALROUND_REALISM))
 	{
@@ -8268,7 +8278,10 @@ public Action Timer_RoundTimeEscape(Handle timer)
 	if (g_bSpecialRound)
 		g_iSpecialRoundTime++;
 	
-	SetRoundTime(g_iRoundTime - 1);
+	if (!g_bRoundTimerPaused)
+	{
+		SetRoundTime(g_iRoundTime - 1);
+	}
 	
 	return Plugin_Continue;
 }

@@ -301,6 +301,8 @@ static void Initialize()
 		.DefineInputFunc("ClearBossOverride", InputFuncValueType_Void, InputClearBossOverride)
 		.DefineInputFunc("SetDifficulty", InputFuncValueType_Integer, InputSetDifficulty)
 		.DefineInputFunc("EndGracePeriod", InputFuncValueType_Void, InputEndGracePeriod)
+		.DefineInputFunc("PauseTimer", InputFuncValueType_Void, InputPauseTimer)
+		.DefineInputFunc("ResumeTimer", InputFuncValueType_Void, InputResumeTimer)
 		.DefineOutput("OnGracePeriodEnded")
 		.DefineOutput("OnDifficultyChanged")
 		.DefineOutput("OnStateEnterWaiting")
@@ -637,4 +639,14 @@ static void InputEndGracePeriod(int entity, int activator, int caller)
 {
 	if (GetRoundState() == SF2RoundState_Grace && g_hRoundGraceTimer != null) 
 		TriggerTimer(g_hRoundGraceTimer);
+}
+
+static void InputPauseTimer(int entity, int activator, int caller)
+{
+	SetRoundTimerPaused(true);
+}
+
+static void InputResumeTimer(int entity, int activator, int caller)
+{
+	SetRoundTimerPaused(false);
 }

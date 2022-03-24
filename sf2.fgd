@@ -132,6 +132,8 @@
 	input EnableBossesChaseEndlessly(void) : "(Modified only) Enable bosses chasing players endlessly."
 	input DisableBossesChaseEndlessly(void) : "(Modified only) Disable bosses chasing players endlessly."
 	input EndGracePeriod(void) : "Ends the grace period of the round. This will fire the OnGracePeriodEnded output."
+	input PauseTimer(void) : "Pauses the timer."
+	input ResumeTimer(void) : "Resumes the timer."
 
 	output OnStateEnterWaiting(void) : "Sent when entering the Waiting round state."
 	output OnStateExitWaiting(void) : "Sent when exiting the Waiting round state."
