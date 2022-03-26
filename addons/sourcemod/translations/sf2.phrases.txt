@@ -1730,7 +1730,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Updated the default RED hud, you are still able to use the legacy hud via !slsettings\n-1-Up should hopefully be fixed once the round ends by a timer\n-Bosses with chase initial animations and chase on scare should play the chase initial animation\n-Boss effects can now be difficulty determined\n-Increased CBaseNPC's hitbox to 10x10x55 to fix a bug where bosses cannot trigger thin brushes"
+		"en"	"-Removed Marble Hornets\n-Added boss idle music\n-Reworked the boss musics to use multiple chase/alert/idle/etc themes (Experimental slightly)\n-All dropped weapons are now deleted for good\n-Particles now use a new temp ent system\n-Many bug fixes and tweaks"
 	}
 
 	"SF2 Smite player"

@@ -949,7 +949,6 @@ public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 		// Force them to their melee weapon and stop taunting, to prevent tposing and what not.
 		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
 		TF2_RemoveCondition(iClient, TFCond_Taunting);
-		
 		return Plugin_Stop;
 	}
 	

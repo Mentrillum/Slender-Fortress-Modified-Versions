@@ -1713,3 +1713,155 @@ stock int GetLocalGlobalDifficulty(int iNPCIndex = 1)
 	}
 	return g_cvDifficulty.IntValue;
 }
+
+stock void DrawBox(float origin[3], float mins[3], float maxs[3], bool bShouldBeRed)
+{
+	float corners[4][2];
+	corners[0][0] = mins[0]; corners[0][1] = mins[1];
+	corners[1][0] = mins[0]; corners[1][1] = maxs[1];
+	corners[3][0] = maxs[0]; corners[3][1] = mins[1];
+	corners[2][0] = maxs[0]; corners[2][1] = maxs[1];
+
+	int color[4];
+	if (bShouldBeRed)
+		color = {255, 0, 0, 255};
+	else
+		color = {51, 255, 0, 255};
+
+	for(int i=0; i<sizeof(corners); i++)
+	{
+		float start[3], end[3];
+		for(int j=0; j<2; j++)
+		{
+			start[j] = corners[i][j] + origin[j];
+			end[j] = corners[(i+1)%sizeof(corners)][j] + origin[j];
+		}
+		start[2] = end[2] = maxs[2] + origin[2];
+		TE_SetupBeamPoints(start, end, g_iLaserIndex, 0, 0, 15, 0.1, 1.0, 5.0, 5, 0.1, color, 1);
+		TE_SendToAll();
+	}
+
+	for(int i=0; i<sizeof(corners); i++)
+	{
+		float start[3], end[3];
+		for(int j=0; j<2; j++)
+		{
+			start[j] = end[j] = corners[i][j] + origin[j];
+		}
+		start[2] = maxs[2] + origin[2];
+		end[2] = mins[2] + origin[2];
+
+		TE_SetupBeamPoints(start, end, g_iLaserIndex, 0, 0, 15, 0.1, 1.0, 5.0, 5, 0.1, color, 1);
+		TE_SendToAll();
+	}	
+}
+
+void DispatchParticleEffect(int entity, const char[] strParticle, float flStartPos[3], float vecAngles[3], float flEndPos[3], 
+									   int iAttachmentPointIndex = 0, ParticleAttachment iAttachType = PATTACH_CUSTOMORIGIN, bool bResetAllParticlesOnEntity = false)
+{
+	char sParticleReal[PLATFORM_MAX_PATH];
+	FormatEx(sParticleReal, PLATFORM_MAX_PATH, "%s", strParticle);
+	if (strParticle[0] != '\0')
+	{
+		int tblidx = FindStringTable("ParticleEffectNames");
+		if (tblidx == INVALID_STRING_TABLE) 
+		{
+			LogError("Could not find string table: ParticleEffectNames");
+			return;
+		}
+		char tmp[256];
+		int count = GetStringTableNumStrings(tblidx);
+		int stridx = INVALID_STRING_INDEX;
+		for (int i = 0; i < count; i++)
+		{
+			ReadStringTable(tblidx, i, tmp, sizeof(tmp));
+			if (strcmp(tmp, sParticleReal, false) == 0)
+			{
+				stridx = i;
+				break;
+			}
+		}
+		if (stridx == INVALID_STRING_INDEX)
+		{
+			LogError("Could not find particle: %s", sParticleReal);
+			return;
+		}
+
+		TE_Start("TFParticleEffect");
+		TE_WriteFloat("m_vecOrigin[0]", flStartPos[0]);
+		TE_WriteFloat("m_vecOrigin[1]", flStartPos[1]);
+		TE_WriteFloat("m_vecOrigin[2]", flStartPos[2]);
+		TE_WriteVector("m_vecAngles", vecAngles);
+		TE_WriteNum("m_iParticleSystemIndex", stridx);
+		TE_WriteNum("entindex", entity);
+		TE_WriteNum("m_iAttachType", view_as<int>(iAttachType));
+		TE_WriteNum("m_iAttachmentPointIndex", iAttachmentPointIndex);
+		TE_WriteNum("m_bResetParticles", bResetAllParticlesOnEntity);    
+		TE_WriteNum("m_bControlPoint1", 0);    
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 0);  
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", flEndPos[0]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", flEndPos[1]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", flEndPos[2]);
+		TE_SendToAll();
+	}
+	else
+	{
+		LogError("There is no valid particle to use for effects.");
+		return;
+	}
+}
+
+void DispatchParticleEffectBeam(int entity, const char[] strParticle, float flStartPos[3], float vecAngles[3], float flEndPos[3], 
+									   int iAttachmentPointIndex = 0, ParticleAttachment iAttachType = PATTACH_CUSTOMORIGIN, bool bResetAllParticlesOnEntity = false)
+{
+	char sParticleReal[PLATFORM_MAX_PATH];
+	FormatEx(sParticleReal, PLATFORM_MAX_PATH, "%s", strParticle);
+	if (strParticle[0] != '\0')
+	{
+		int tblidx = FindStringTable("ParticleEffectNames");
+		if (tblidx == INVALID_STRING_TABLE) 
+		{
+			LogError("Could not find string table: ParticleEffectNames");
+			return;
+		}
+		char tmp[256];
+		int count = GetStringTableNumStrings(tblidx);
+		int stridx = INVALID_STRING_INDEX;
+		for (int i = 0; i < count; i++)
+		{
+			ReadStringTable(tblidx, i, tmp, sizeof(tmp));
+			if (strcmp(tmp, sParticleReal, false) == 0)
+			{
+				stridx = i;
+				break;
+			}
+		}
+		if (stridx == INVALID_STRING_INDEX)
+		{
+			LogError("Could not find particle: %s", sParticleReal);
+			return;
+		}
+		
+		TE_Start("TFParticleEffect");
+		TE_WriteFloat("m_vecOrigin[0]", flStartPos[0]);
+		TE_WriteFloat("m_vecOrigin[1]", flStartPos[1]);
+		TE_WriteFloat("m_vecOrigin[2]", flStartPos[2]);
+		TE_WriteVector("m_vecAngles", vecAngles);
+		TE_WriteNum("m_iParticleSystemIndex", stridx);
+		TE_WriteNum("entindex", entity);
+		TE_WriteNum("m_iAttachType", view_as<int>(iAttachType));
+		TE_WriteNum("m_iAttachmentPointIndex", iAttachmentPointIndex);
+		TE_WriteNum("m_bResetParticles", bResetAllParticlesOnEntity);    
+		TE_WriteNum("m_bControlPoint1", 1);    
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 5);  
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", flEndPos[0]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", flEndPos[1]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", flEndPos[2]);
+		TE_SendToAll();
+	}
+	else
+	{
+		LogError("There is no valid particle to use for effects.");
+		return;
+	}
+}

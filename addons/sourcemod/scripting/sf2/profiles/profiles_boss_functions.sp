@@ -246,6 +246,13 @@ enum
 	BossProfileData_SearchSoundRangeInsane,
 	BossProfileData_SearchSoundRangeNightmare,
 	BossProfileData_SearchSoundRangeApollyon,
+
+	BossProfileData_TauntAlertRange,
+	BossProfileData_TauntAlertRangeEasy,
+	BossProfileData_TauntAlertRangeHard,
+	BossProfileData_TauntAlertRangeInsane,
+	BossProfileData_TauntAlertRangeNightmare,
+	BossProfileData_TauntAlertRangeApollyon,	
 	
 	BossProfileData_FieldOfView,
 	BossProfileData_TurnRate,
@@ -546,7 +553,6 @@ enum
 	BossProfileData_ProxySpawnPitch,
 
 	BossProfileData_ProxySpawnEffectEnabled,
-	BossProfileData_ProxySpawnEffectLifetime,
 	BossProfileData_ProxySpawnEffectZPosOffset,
 
 	BossProfileData_FakeCopyEnabled,
@@ -799,6 +805,13 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	float flBossSearchSoundRadiusInsane = kv.GetFloat("search_sound_range_insane", flBossSearchSoundRadiusHard);
 	float flBossSearchSoundRadiusNightmare = kv.GetFloat("search_sound_range_nightmare", flBossSearchSoundRadiusInsane);
 	float flBossSearchSoundRadiusApollyon = kv.GetFloat("search_sound_range_apollyon", flBossSearchSoundRadiusNightmare);
+
+	float flTauntAlertRange = kv.GetFloat("taunt_alert_range", 512.0);
+	float flTauntAlertRangeEasy = kv.GetFloat("taunt_alert_range_easy", flTauntAlertRange);
+	float flTauntAlertRangeHard = kv.GetFloat("taunt_alert_range_hard", flTauntAlertRange);
+	float flTauntAlertRangeInsane = kv.GetFloat("taunt_alert_range_insane", flTauntAlertRangeHard);
+	float flTauntAlertRangeNightmare = kv.GetFloat("taunt_alert_range_nightmare", flTauntAlertRangeInsane);
+	float flTauntAlertRangeApollyon = kv.GetFloat("taunt_alert_range_apollyon", flTauntAlertRangeNightmare);
 
 	bool bBossTeleportAllowed = kv.GetNum("teleport_allowed", 1) != 0;
 	bool bBossTeleportAllowedEasy = kv.GetNum("teleport_allowed_easy", bBossTeleportAllowed) != 0;
@@ -1099,7 +1112,6 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	int iProxySpawnPitch = kv.GetNum("sound_proxy_spawn_pitch", SNDPITCH_NORMAL);
 
 	bool bProxySpawnEffects = view_as<bool>(kv.GetNum("proxies_spawn_effect_enabled"));
-	float flProxySpawnEffectLifetime = kv.GetFloat("proxies_spawn_effect_lifetime", 0.1);
 	float flProxySpawnEffectZOffset = kv.GetFloat("proxies_spawn_effect_z_offset");
 
 	bool bProxyWeaponsEnabled = view_as<bool>(kv.GetNum("proxies_weapon", 0));
@@ -1438,6 +1450,13 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	g_hBossProfileData.Set(iIndex, flBossSearchRadiusNightmare, BossProfileData_SearchRangeNightmare);
 	g_hBossProfileData.Set(iIndex, flBossSearchRadiusApollyon, BossProfileData_SearchRangeApollyon);
 
+	g_hBossProfileData.Set(iIndex, flTauntAlertRange, BossProfileData_TauntAlertRange);
+	g_hBossProfileData.Set(iIndex, flTauntAlertRangeEasy, BossProfileData_TauntAlertRangeEasy);
+	g_hBossProfileData.Set(iIndex, flTauntAlertRangeHard, BossProfileData_TauntAlertRangeHard);
+	g_hBossProfileData.Set(iIndex, flTauntAlertRangeInsane, BossProfileData_TauntAlertRangeInsane);
+	g_hBossProfileData.Set(iIndex, flTauntAlertRangeNightmare, BossProfileData_TauntAlertRangeNightmare);
+	g_hBossProfileData.Set(iIndex, flTauntAlertRangeApollyon, BossProfileData_TauntAlertRangeApollyon);
+
 	g_hBossProfileData.Set(iIndex, flBossSearchSoundRadius, BossProfileData_SearchSoundRange);
 	g_hBossProfileData.Set(iIndex, flBossSearchSoundRadiusEasy, BossProfileData_SearchSoundRangeEasy);
 	g_hBossProfileData.Set(iIndex, flBossSearchSoundRadiusHard, BossProfileData_SearchSoundRangeHard);
@@ -1596,7 +1615,6 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	g_hBossProfileData.Set(iIndex, iCreditDrainAmountApollyon, BossProfileData_DrainCreditAmountApollyon);
 
 	g_hBossProfileData.Set(iIndex, bProxySpawnEffects, BossProfileData_ProxySpawnEffectEnabled);
-	g_hBossProfileData.Set(iIndex, flProxySpawnEffectLifetime, BossProfileData_ProxySpawnEffectLifetime);
 	g_hBossProfileData.Set(iIndex, flProxySpawnEffectZOffset, BossProfileData_ProxySpawnEffectZPosOffset);
 
 	g_hBossProfileData.Set(iIndex, bProxyWeaponsEnabled, BossProfileData_ProxyWeapons);
@@ -1633,7 +1651,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	g_hBossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("sound_music_outro_enabled")), BossProfileData_OutroMusicEnabled);
 	
 	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH], sSpawnParticleSound[PLATFORM_MAX_PATH], sDespawnParticleSound[PLATFORM_MAX_PATH];
-	char sOutroSound[PLATFORM_MAX_PATH];
+	char sOutroSound[PLATFORM_MAX_PATH], sSmiteSound[PLATFORM_MAX_PATH], sRocketModel[PLATFORM_MAX_PATH];
 	kv.GetString("cloak_on_sound", sCOn, sizeof(sCOn), DEFAULT_CLOAKONSOUND);
 	kv.GetString("cloak_off_sound", sCOff, sizeof(sCOff), DEFAULT_CLOAKOFFSOUND);
 	kv.GetString("player_jarate_sound", sJ, sizeof(sJ), JARATE_HITPLAYER);
@@ -1654,6 +1672,8 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	kv.GetString("tp_effect_spawn_sound", sSpawnParticleSound, sizeof(sSpawnParticleSound));
 	kv.GetString("tp_effect_despawn_sound", sDespawnParticleSound, sizeof(sDespawnParticleSound));
 	kv.GetString("sound_music_outro", sOutroSound, sizeof(sOutroSound));
+	kv.GetString("player_smite_sound", sSmiteSound, sizeof(sSmiteSound));
+	kv.GetString("rocket_model", sRocketModel, sizeof(sRocketModel), ROCKET_MODEL);
 
 	TryPrecacheBossProfileSoundPath(sCOn);
 	TryPrecacheBossProfileSoundPath(sCOff);
@@ -1675,6 +1695,14 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 	TryPrecacheBossProfileSoundPath(sSpawnParticleSound);
 	TryPrecacheBossProfileSoundPath(sDespawnParticleSound);
 	TryPrecacheBossProfileSoundPath(sOutroSound);
+	TryPrecacheBossProfileSoundPath(sSmiteSound);
+	if (strcmp(sRocketModel, ROCKET_MODEL, true) != 0)
+	{
+		if(!PrecacheModel(sRocketModel, true))
+		{
+			LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", sRocketModel);
+		}
+	}
 	
 	if (view_as<bool>(kv.GetNum("enable_random_selection", 1)))
 	{
@@ -1808,7 +1836,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] sProfile, char[] sLoadFai
 					
 					if(!PrecacheModel(s4, true))
 					{
-						LogSF2Message("Model file %s failed to be precached, likely does not exist.", s4);
+						LogSF2Message("Model file %s failed to be precached, likely does not exist. This will crash the server if not fixed.", s4);
 					}
 				}
 			}
@@ -2247,8 +2275,22 @@ bool GetBossProfileTeleportAllowed(int iProfileIndex, int iDifficulty)
 		case Difficulty_Nightmare: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedNightmare));
 		case Difficulty_Apollyon: return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedApollyon));
 	}
-	
+
 	return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TeleportAllowedNormal));
+}
+
+float GetBossProfileTauntAlertRange(int iProfileIndex, int iDifficulty)
+{
+	switch (iDifficulty)
+	{
+		case Difficulty_Easy: return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TauntAlertRangeEasy));
+		case Difficulty_Hard: return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TauntAlertRangeHard));
+		case Difficulty_Insane: return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TauntAlertRangeInsane));
+		case Difficulty_Nightmare: return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TauntAlertRangeNightmare));
+		case Difficulty_Apollyon: return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TauntAlertRangeApollyon));
+	}
+	
+	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_TauntAlertRange));
 }
 
 float GetBossProfileTeleportTimeMin(int iProfileIndex, int iDifficulty)
@@ -2771,11 +2813,6 @@ int GetBossProfileDrainCreditAmount(int iProfileIndex, int iDifficulty)
 bool GetBossProfileProxySpawnEffectState(int iProfileIndex)
 {
 	return view_as<bool>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_ProxySpawnEffectEnabled));
-}
-
-float GetBossProfileProxySpawnEffectLifetime(int iProfileIndex)
-{
-	return view_as<float>(g_hBossProfileData.Get(iProfileIndex, BossProfileData_ProxySpawnEffectLifetime));
 }
 
 float GetBossProfileProxySpawnEffectZOffset(int iProfileIndex)

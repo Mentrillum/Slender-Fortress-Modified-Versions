@@ -30,7 +30,8 @@
 #define MUSICF_CHASE (1 << 5)
 #define MUSICF_CHASEVISIBLE (1 << 6)
 #define MUSICF_ALERT (1 << 7)
-#define MUSICF_20DOLLARS (1 << 8)
+#define MUSICF_IDLE (1 << 8)
+#define MUSICF_20DOLLARS (1 << 9)
 
 // Special round enumerations.
 enum
@@ -59,7 +60,6 @@ enum
 	SPECIALROUND_DISTORTION,
 	SPECIALROUND_MULTIEFFECT,
 	SPECIALROUND_BOO,
-	SPECIALROUND_REALISM,
 	SPECIALROUND_VOTE,
 	SPECIALROUND_COFFEE,
 	SPECIALROUND_PAGEDETECTOR,
@@ -138,6 +138,18 @@ enum SF2RoundState
 	SF2RoundState_Active,			// round is running for RED
 	SF2RoundState_Escape,			// escape stage for RED
 	SF2RoundState_Outro				// round win for a team, next round coming soon
+};
+
+enum ParticleAttachment
+{
+	PATTACH_ABSORIGIN = 0,			// Create at absorigin, but don't follow
+	PATTACH_ABSORIGIN_FOLLOW,		// Create at absorigin, and update to follow the entity
+	PATTACH_CUSTOMORIGIN,			// Create at a custom origin, but don't follow
+	PATTACH_POINT,					// Create on attachment point, but don't follow
+	PATTACH_POINT_FOLLOW,			// Create on attachment point, and update to follow the entity
+	PATTACH_WORLDORIGIN,			// Used for control points that don't attach to an entity
+	PATTACH_ROOTBONE_FOLLOW,		// Create at the root bone of the entity, and update to follow
+	MAX_PATTACH_TYPES,
 };
 
 // Boss flags.

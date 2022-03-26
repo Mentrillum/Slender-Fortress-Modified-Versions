@@ -348,6 +348,7 @@ void ClientEscape(int client)
 	ClientChaseMusicReset(client);
 	ClientChaseMusicSeeReset(client);
 	ClientAlertMusicReset(client);
+	ClientIdleMusicReset(client);
 	Client20DollarsMusicReset(client);
 	Client90sMusicReset(client);
 	ClientMusicReset(client);
@@ -370,15 +371,12 @@ void ClientEscape(int client)
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
 	
 	HandlePlayerHUD(client);
-	if (!SF_SpecialRound(SPECIALROUND_REALISM) && !SF_IsBoxingMap())
+	if (!SF_IsBoxingMap())
 	{
 		char sName[MAX_NAME_LENGTH];
 		FormatEx(sName, sizeof(sName), "%N", client);
 		CPrintToChatAll("%t", "SF2 Player Escaped", sName);
 	}
-	
-	if (SF_SpecialRound(SPECIALROUND_REALISM))
-		StopSound(client, SNDCHAN_STATIC, MARBLEHORNETS_STATIC);
 
 	if (SF_IsRenevantMap() && g_bRenevantMarkForDeath)
 	{
@@ -1771,8 +1769,8 @@ bool ClientEnableConstantGlow(int client, const char[] sAttachment="", int iColo
 		SetEntityRenderMode(iGlow, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(iGlow, 0, 0, 0, 0);
 		int iGlowManager = TF2_CreateGlow(iGlow);
-		DHookEntity(g_hSDKShouldTransmit, true, iGlowManager);
-		DHookEntity(g_hSDKShouldTransmit, true, iGlow);
+		g_hSDKShouldTransmit.HookEntity(Hook_Pre, iGlowManager, Hook_EntityShouldTransmit);
+		g_hSDKShouldTransmit.HookEntity(Hook_Pre, iGlow, Hook_EntityShouldTransmit);
 		//Set our desired glow color
 		SetVariantColor(iColor);
 		AcceptEntityInput(iGlowManager, "SetGlowColor");
@@ -2035,7 +2033,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	if (g_bSlenderDeathCamScareSound[iBossIndex])
 	{
 		GetRandomStringFromProfile(sProfile, "sound_scare_player", buffer, sizeof(buffer));
-		if (buffer[0] != '\0' && !SF_SpecialRound(SPECIALROUND_REALISM)) EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
+		if (buffer[0] != '\0') EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 	}
 	
 	GetRandomStringFromProfile(sProfile, "sound_player_deathcam", buffer, sizeof(buffer));
@@ -2733,7 +2731,7 @@ void ClientPerformScare(int client,int iBossIndex)
 	
 	if (sScareSound[0] != '\0')
 	{
-		if (!SF_SpecialRound(SPECIALROUND_REALISM)) EmitSoundToClient(client, sScareSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		EmitSoundToClient(client, sScareSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
 		
 		if (NPCGetFlags(iBossIndex) & SFF_HASSIGHTSOUNDS)
 		{
@@ -2791,7 +2789,7 @@ void ClientPerformSightSound(int client,int iBossIndex)
 	
 	if (sSightSound[0] != '\0')
 	{
-		if (!SF_SpecialRound(SPECIALROUND_REALISM)) EmitSoundToClient(client, sSightSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		EmitSoundToClient(client, sSightSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
 		
 		float flCooldownMin = GetProfileFloat(sProfile, "sound_sight_cooldown_min", 8.0);
 		float flCooldownMax = GetProfileFloat(sProfile, "sound_sight_cooldown_max", 14.0);
@@ -3120,10 +3118,6 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	else if (IsRoundInWarmup() || g_bPlayerEliminated[client] || DidClientEscape(client) && !IsClientInGhostMode(client))
 	{
 		return Plugin_Continue;
-	}
-	else if (SF_SpecialRound(SPECIALROUND_REALISM))
-	{
-		strcopy(sMaterial, sizeof(sMaterial), SF2_OVERLAY_MARBLEHORNETS);
 	}
 	else
 	{

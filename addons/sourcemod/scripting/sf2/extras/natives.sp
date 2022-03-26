@@ -348,9 +348,9 @@ void SDK_Init()
 	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
 	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
 	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_Unknown);
-
+//Hook_EntityShouldTransmit
 	iOffset = GameConfGetOffset(hConfig, "CBaseEntity::ShouldTransmit");
-	g_hSDKShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
+	g_hSDKShouldTransmit = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_hSDKShouldTransmit == null)
 	{
 		SetFailState("Failed to create hook CBaseEntity::ShouldTransmit offset from SF2 gamedata!");

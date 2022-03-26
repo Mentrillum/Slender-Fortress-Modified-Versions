@@ -18,7 +18,9 @@ enum EffectType
 	EffectType_DynamicLight,
 	EffectType_Particle,
 	EffectType_Trail,
-	EffectType_PropDynamic
+	EffectType_PropDynamic,
+	EffectType_PointSpotlight,
+	EffectType_Sprite
 };
 
 EffectEvent g_iEntityEffectType[2049];
@@ -269,6 +271,8 @@ void SlenderSpawnEffects(int iBossIndex)
 					case EffectType_Particle: iEnt = CreateEntityByName("info_particle_system");
 					case EffectType_Trail: iEnt = CreateEntityByName("env_spritetrail");
 					case EffectType_PropDynamic: iEnt = CreateEntityByName("prop_dynamic");
+					case EffectType_PointSpotlight: iEnt = CreateEntityByName("point_spotlight");
+					case EffectType_Sprite: iEnt = CreateEntityByName("env_sprite");
 				}
 				
 				if (iEnt != -1)
@@ -527,6 +531,132 @@ void SlenderSpawnEffects(int iBossIndex)
 							DispatchSpawn(iEnt);
 							ActivateEntity(iEnt);
 						}
+						case EffectType_PointSpotlight:
+						{
+							g_hConfig.GetString("spotlightwidth", sValue, sizeof(sValue), "512");
+							DispatchKeyValue(iEnt, "spotlightwidth", sValue);
+							g_hConfig.GetString("spotlightlength", sValue, sizeof(sValue), "1024");
+							DispatchKeyValue(iEnt, "spotlightlength", sValue);
+							DispatchSpawn(iEnt);
+							ActivateEntity(iEnt);
+							
+							int r, g, b, a;
+							if (view_as<bool>(g_hConfig.GetNum("difficulty_lights", 0)) || view_as<bool>(g_hConfig.GetNum("difficulty_rendercolor", 0)))
+							{
+								switch (iDifficulty)
+								{
+									case Difficulty_Normal: g_hConfig.GetColor("rendercolor", r, g, b, a);
+									case Difficulty_Hard:
+									{
+										g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+									}
+									case Difficulty_Insane:
+									{
+										g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0)
+										{
+											g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+											if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+										}
+									}
+									case Difficulty_Nightmare:
+									{
+										g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0)
+										{
+											g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
+											if (r == 0 && g == 0 && b == 0 && a == 0)
+											{
+												g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+												if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+											}
+										}
+									}
+									case Difficulty_Apollyon: 
+									{
+										g_hConfig.GetColor("rendercolor_apollyon", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0)
+										{
+											g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
+											if (r == 0 && g == 0 && b == 0 && a == 0)
+											{
+												g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
+												if (r == 0 && g == 0 && b == 0 && a == 0)
+												{
+													g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+													if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+												}
+											}
+										}
+									}
+								}
+							}
+							else g_hConfig.GetColor("rendercolor", r, g, b, a);
+							SetEntityRenderColor(iEnt, r, g, b, a);
+						}
+						case EffectType_Sprite:
+						{
+							DispatchKeyValue(iEnt, "classname", "env_sprite");
+							g_hConfig.GetString("spritename", sValue, sizeof(sValue));
+							DispatchKeyValue(iEnt, "model", sValue);
+							FormatEx(sValue, sizeof(sValue), "%f", g_hConfig.GetFloat("spritescale", 1.0));
+							DispatchKeyValue(iEnt, "scale", sValue);
+							int r, g, b, a;
+							if (view_as<bool>(g_hConfig.GetNum("difficulty_rendercolor", 0)))
+							{
+								switch (iDifficulty)
+								{
+									case Difficulty_Normal: g_hConfig.GetColor("rendercolor", r, g, b, a);
+									case Difficulty_Hard:
+									{
+										g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+									}
+									case Difficulty_Insane:
+									{
+										g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0)
+										{
+											g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+											if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+										}
+									}
+									case Difficulty_Nightmare:
+									{
+										g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0)
+										{
+											g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
+											if (r == 0 && g == 0 && b == 0 && a == 0)
+											{
+												g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+												if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+											}
+										}
+									}
+									case Difficulty_Apollyon: 
+									{
+										g_hConfig.GetColor("rendercolor_apollyon", r, g, b, a);
+										if (r == 0 && g == 0 && b == 0 && a == 0)
+										{
+											g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
+											if (r == 0 && g == 0 && b == 0 && a == 0)
+											{
+												g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
+												if (r == 0 && g == 0 && b == 0 && a == 0)
+												{
+													g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
+													if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
+												}
+											}
+										}
+									}
+								}
+							}
+							else g_hConfig.GetColor("rendercolor", r, g, b, a);
+							SetEntityRenderColor(iEnt, r, g, b, a);
+						}
 					}
 					
 					float flLifeTime = g_hConfig.GetFloat("lifetime");
@@ -596,6 +726,27 @@ void SlenderSpawnEffects(int iBossIndex)
 						case EffectType_Trail:
 						{
 							AcceptEntityInput(iEnt, "showsprite");
+						}
+						case EffectType_PointSpotlight:
+						{
+							AcceptEntityInput(iEnt, "LightOn");
+							int iOffset = FindDataMapInfo(iEnt, "m_nHaloSprite");
+							if (iOffset != -1)
+							{
+								// m_hSpotlight
+								int iSpotlight = GetEntDataEnt2(iEnt, iOffset + 4);
+								if (IsValidEntity(iSpotlight))
+								{
+									SDKHook(iSpotlight, SDKHook_SetTransmit, Hook_EffectTransmit);
+								}
+
+								// m_hSpotlightTarget
+								iSpotlight = GetEntDataEnt2(iEnt, iOffset + 8);
+								if (IsValidEntity(iSpotlight))
+								{
+									SDKHook(iSpotlight, SDKHook_SetTransmit, Hook_EffectTransmit);
+								}
+							}
 						}
 					}
 					SDKHook(iEnt, SDKHook_SetTransmit, Hook_EffectTransmit);
@@ -714,7 +865,37 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 			RemoveEntity(iEffect);
 		}
 	}
+
+	iEffect = -1;
+	while((iEffect = FindEntityByClassname(iEffect, "point_spotlight")) > MaxClients)
+	{
+		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		{
+			AcceptEntityInput(iEffect, "LightOff");
+			if(bKill)
+			{
+				int iOffset = FindDataMapInfo(iEffect, "m_nHaloSprite");
+				if (iOffset != -1)
+				{
+					// m_hSpotlight
+					int iSpotlight = GetEntDataEnt2(iEffect, iOffset + 4);
+					if (IsValidEntity(iSpotlight))
+					{
+						RemoveEntity(iSpotlight);
+					}
+
+					// m_hSpotlightTarget
+					iSpotlight = GetEntDataEnt2(iEffect, iOffset + 8);
+					if (IsValidEntity(iSpotlight))
+					{
+						RemoveEntity(iSpotlight);
+					}
+				}
+			}
+		}
+	}
 }
+
 stock void GetEffectEventString(EffectEvent iEvent, char[] sBuffer,int iBufferLen)
 {
 	switch (iEvent)
@@ -733,6 +914,8 @@ stock EffectType GetEffectTypeFromString(const char[] sType)
 	if (strcmp(sType, "particle", false) == 0) return EffectType_Particle;
 	if (strcmp(sType, "trail", false) == 0) return EffectType_Trail;
 	if (strcmp(sType, "propdynamic", false) == 0) return EffectType_PropDynamic;
+	if (strcmp(sType, "pointspotlight", false) == 0) return EffectType_PointSpotlight;
+	if (strcmp(sType, "sprite", false) == 0) return EffectType_Sprite;
 	return EffectType_Invalid;
 }
 

@@ -43,6 +43,9 @@ public void OnPluginStart()
 	
 	g_offsCollisionGroup = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
 	if (g_offsCollisionGroup == -1)  LogError("Couldn't find CBaseEntity offset for m_CollisionGroup!");
+
+	g_dataFullDamage = FindSendPropInfo("CTFGrenadePipebombProjectile", "m_bDefensiveBomb") - 4;
+	if (g_dataFullDamage == -1) LogError("Couldn't find CTFGrenadePipebombProjectile offset for m_bDefensiveBomb!");
 	
 	g_hPages = new ArrayList(sizeof(SF2PageEntityData));
 	g_hPageMusicRanges = new ArrayList(3);
@@ -1566,7 +1569,6 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 		case SPECIALROUND_DISTORTION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Space Distortion.", "SF2 Prefix", iClient);
 		case SPECIALROUND_MULTIEFFECT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Multieffect.", "SF2 Prefix", iClient);
 		case SPECIALROUND_BOO: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boo.", "SF2 Prefix", iClient);
-		case SPECIALROUND_REALISM: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Marble Hornets.", "SF2 Prefix", iClient);
 		case SPECIALROUND_VOTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Vote.", "SF2 Prefix", iClient);
 		case SPECIALROUND_COFFEE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Coffee.", "SF2 Prefix", iClient);
 		case SPECIALROUND_PAGEDETECTOR: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Item Detectors.", "SF2 Prefix", iClient);
@@ -1868,4 +1870,4 @@ public Action Command_ConditionToggle(int iClient, int args)
 	g_cvIgnoreRoundWinConditions.BoolValue = !g_cvIgnoreRoundWinConditions.BoolValue;
 	CPrintToChat(iClient, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_cvIgnoreRoundWinConditions.BoolValue ? "dis" : "en");
 	return Plugin_Handled;
-}
+} 

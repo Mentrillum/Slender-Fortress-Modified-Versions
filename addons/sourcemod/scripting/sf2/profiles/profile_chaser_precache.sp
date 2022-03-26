@@ -290,6 +290,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flJaratePlayerDurationNightmare = kv.GetFloat("player_jarate_duration_nightmare", flJaratePlayerDurationInsane);
 	float flJaratePlayerDurationApollyon = kv.GetFloat("player_jarate_duration_apollyon", flJaratePlayerDurationNightmare);
 
+	bool bJaratePlayerParticleBeam = view_as<bool>(kv.GetNum("player_jarate_beam_particle"));
+
 	bool bMilkPlayerAdvanced = view_as<bool>(kv.GetNum("player_milk_on_hit"));
 	
 	int iMilkPlayerAttackIndexes = kv.GetNum("player_milk_attack_indexs", 1);
@@ -302,6 +304,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flMilkPlayerDurationNightmare = kv.GetFloat("player_milk_duration_nightmare", flMilkPlayerDurationInsane);
 	float flMilkPlayerDurationApollyon = kv.GetFloat("player_milk_duration_apollyon", flMilkPlayerDurationNightmare);
 
+	bool bMilkPlayerParticleBeam = view_as<bool>(kv.GetNum("player_milk_beam_particle"));
+
 	bool bGasPlayerAdvanced = view_as<bool>(kv.GetNum("player_gas_on_hit"));
 	
 	int iGasPlayerAttackIndexes = kv.GetNum("player_gas_attack_indexs", 1);
@@ -313,6 +317,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flGasPlayerDurationInsane = kv.GetFloat("player_gas_duration_insane", flGasPlayerDurationHard);
 	float flGasPlayerDurationNightmare = kv.GetFloat("player_gas_duration_nightmare", flGasPlayerDurationInsane);
 	float flGasPlayerDurationApollyon = kv.GetFloat("player_gas_duration_apollyon", flGasPlayerDurationNightmare);
+
+	bool bGasPlayerParticleBeam = view_as<bool>(kv.GetNum("player_gas_beam_particle"));
 
 	bool bMarkPlayerAdvanced = view_as<bool>(kv.GetNum("player_mark_on_hit"));
 	
@@ -385,6 +391,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	if (flStunPlayerSlowdownApollyon > 1.0) flStunPlayerSlowdownApollyon = 1.0;
 	if (flStunPlayerSlowdownApollyon < 0.0) flStunPlayerSlowdownApollyon = 0.0;
 
+	bool bStunPlayerParticleBeam = view_as<bool>(kv.GetNum("player_stun_beam_particle"));
+
 	bool bBleedPlayerAdvanced = view_as<bool>(kv.GetNum("player_bleed_on_hit"));
 	
 	int iBleedPlayerAttackIndexes = kv.GetNum("player_bleed_attack_indexs", 1);
@@ -427,6 +435,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flEletricPlayerSlowdownApollyon = kv.GetFloat("player_electric_slow_slowdown_apollyon", flEletricPlayerSlowdownNightmare);
 	if (flEletricPlayerSlowdownApollyon > 1.0) flEletricPlayerSlowdownApollyon = 1.0;
 	if (flEletricPlayerSlowdownApollyon < 0.0) flEletricPlayerSlowdownApollyon = 0.0;
+
+	bool bElectricPlayerParticleBeam = view_as<bool>(kv.GetNum("player_electric_beam_particle"));
 	
 	bool bSmitePlayerAdvanced = view_as<bool>(kv.GetNum("player_smite_on_hit"));
 	
@@ -504,6 +514,10 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	
 	int iShockwaveAttackIndexes = kv.GetNum("shockwave_attack_index", 1);
 	if (iShockwaveAttackIndexes < 1) iShockwaveAttackIndexes = 1;
+
+	float flShockwaveWidth1 = kv.GetFloat("shockwave_width_1", 40.0);
+	float flShockwaveWidth2 = kv.GetFloat("shockwave_width_2", 20.0);
+	float flShockwaveAmplitude = kv.GetFloat("shockwave_amplitude", 5.0);
 
 	bool bEarthquakeFootstepsEnabled = view_as<bool>(kv.GetNum("earthquake_footsteps"));
 
@@ -857,6 +871,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flJaratePlayerDurationInsane, ChaserProfileData_JarateAdvancedDurationInsane);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flJaratePlayerDurationNightmare, ChaserProfileData_JarateAdvancedDurationNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flJaratePlayerDurationApollyon, ChaserProfileData_JarateAdvancedDurationApollyon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bJaratePlayerParticleBeam, ChaserProfileData_JarateAdvancedBeamParticle);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bMilkPlayerAdvanced, ChaserProfileData_EnableMilkAdvanced);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iMilkPlayerAttackIndexes, ChaserProfileData_MilkAdvancedIndexes);
@@ -866,6 +881,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flMilkPlayerDurationInsane, ChaserProfileData_MilkAdvancedDurationInsane);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flMilkPlayerDurationNightmare, ChaserProfileData_MilkAdvancedDurationNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flMilkPlayerDurationApollyon, ChaserProfileData_MilkAdvancedDurationApollyon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bMilkPlayerParticleBeam, ChaserProfileData_MilkAdvancedBeamParticle);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bGasPlayerAdvanced, ChaserProfileData_EnableGasAdvanced);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iGasPlayerAttackIndexes, ChaserProfileData_GasAdvancedIndexes);
@@ -875,6 +891,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flGasPlayerDurationInsane, ChaserProfileData_GasAdvancedDurationInsane);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flGasPlayerDurationNightmare, ChaserProfileData_GasAdvancedDurationNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flGasPlayerDurationApollyon, ChaserProfileData_GasAdvancedDurationApollyon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bGasPlayerParticleBeam, ChaserProfileData_GasAdvancedBeamParticle);
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bMarkPlayerAdvanced, ChaserProfileData_EnableMarkAdvanced);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iMarkPlayerAttackIndexes, ChaserProfileData_MarkAdvancedIndexes);
@@ -918,6 +935,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flStunPlayerSlowdownNightmare, ChaserProfileData_StunAdvancedSlowdownNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flStunPlayerSlowdownApollyon, ChaserProfileData_StunAdvancedSlowdownApollyon);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iStunPlayerType, ChaserProfileData_StunAdvancedType);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bStunPlayerParticleBeam, ChaserProfileData_StunAdvancedBeamParticle);
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bBleedPlayerAdvanced, ChaserProfileData_EnableBleedAdvanced);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iBleedPlayerAttackIndexes, ChaserProfileData_BleedAdvancedIndexes);
@@ -942,6 +960,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flEletricPlayerSlowdownInsane, ChaserProfileData_EletricAdvancedSlowdownInsane);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flEletricPlayerSlowdownNightmare, ChaserProfileData_EletricAdvancedSlowdownNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flEletricPlayerSlowdownApollyon, ChaserProfileData_EletricAdvancedSlowdownApollyon);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bElectricPlayerParticleBeam, ChaserProfileData_EletricAdvancedBeamParticle);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bSmitePlayerAdvanced, ChaserProfileData_EnableSmiteAdvanced);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iSmiteAttackIndexes, ChaserProfileData_SmiteAdvancedIndexes);
@@ -1002,6 +1021,9 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flShockwaveStunSlowdownNightmare, ChaserProfileData_ShockwaveStunSlowdownNightmare);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flShockwaveStunSlowdownApollyon, ChaserProfileData_ShockwaveStunSlowdownApollyon);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, iShockwaveAttackIndexes, ChaserProfileData_ShockwaveAttackIndexes);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flShockwaveWidth1, ChaserProfileData_ShockwaveWidth1);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flShockwaveWidth2, ChaserProfileData_ShockwaveWidth2);
+	g_hChaserProfileData.Set(iUniqueProfileIndex, flShockwaveAmplitude, ChaserProfileData_ShockwaveAmplitude);
 
 	g_hChaserProfileData.Set(iUniqueProfileIndex, bEarthquakeFootstepsEnabled, ChaserProfileData_EarthquakeFootstepsEnabled);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flEarthquakeFootstepsAmplitude, ChaserProfileData_EarthquakeFootstepsAmplitude);
@@ -1400,6 +1422,11 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 
 		bool bAttackGestures = view_as<bool>(kv.GetNum("attack_gestures", 0));
 
+		bool bAttackDeathCamLowHealth = view_as<bool>(kv.GetNum("attack_deathcam_on_low_health"));
+
+		float flAttackUseOnHealth = kv.GetFloat("attack_use_on_health", -1.0);
+		float flAttackBlockOnHealth = kv.GetFloat("attack_block_on_health", -1.0);
+
 		int iAttackIndex = hAttacks.Push(-1);
 		
 		hAttacks.Set(iAttackIndex, iAttackType, ChaserProfileAttackData_Type);
@@ -1522,7 +1549,10 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		hAttacks.Set(iAttackIndex, iAttackBlockOnDifficulty, ChaserProfileAttackData_BlockOnDifficulty);
 		hAttacks.Set(iAttackIndex, iAttackExplosiveDanceRadius, ChaserProfileAttackData_ExplosiveDanceRadius);
 		hAttacks.Set(iAttackIndex, bAttackGestures, ChaserProfileAttackData_Gestures);
-		
+		hAttacks.Set(iAttackIndex, bAttackDeathCamLowHealth, ChaserProfileAttackData_DeathCamLowHealth);
+		hAttacks.Set(iAttackIndex, flAttackUseOnHealth, ChaserProfileAttackData_UseOnHealth);
+		hAttacks.Set(iAttackIndex, flAttackBlockOnHealth, ChaserProfileAttackData_BlockOnHealth);
+
 		if (iMaxAttacks > 0)//Backward compatibility
 		{
 			kv.GoBack();
@@ -1813,6 +1843,58 @@ stock bool GetProfileAnimation(int iBossIndex, const char[] sProfile, int iAnima
 				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run");
 				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_playbackrate");
 				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
+			}
+		}
+		case ChaserAnimation_RunAltAnimations:
+		{
+			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
+			if (g_bSlenderDifficultyAnimations[iBossIndex])
+			{
+				switch (difficulty)
+				{
+					case Difficulty_Easy:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_easy");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_easy_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_easy_footstepinterval");
+					}
+					case Difficulty_Normal:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_footstepinterval");
+					}
+					case Difficulty_Hard:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_hard");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_hard_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_hard_footstepinterval");
+					}
+					case Difficulty_Insane:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_insane");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_insane_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_insane_footstepinterval");
+					}
+					case Difficulty_Nightmare:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_nightmare");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_nightmare_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_nightmare_footstepinterval");
+					}
+					case Difficulty_Apollyon:
+					{
+						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_apollyon");
+						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_apollyon_playbackrate");
+						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_apollyon_footstepinterval");
+					}
+				}
+			}
+			else
+			{
+				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt");
+				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_playbackrate");
+				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_footstepinterval");
 			}
 		}
 		case ChaserAnimation_ChaseInitialAnimations:

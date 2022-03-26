@@ -344,6 +344,7 @@ enum
 	ChaserProfileData_JarateAdvancedDurationInsane,
 	ChaserProfileData_JarateAdvancedDurationNightmare,
 	ChaserProfileData_JarateAdvancedDurationApollyon,
+	ChaserProfileData_JarateAdvancedBeamParticle,
 	
 	ChaserProfileData_EnableMilkAdvanced,
 	ChaserProfileData_MilkAdvancedIndexes,
@@ -353,6 +354,7 @@ enum
 	ChaserProfileData_MilkAdvancedDurationInsane,
 	ChaserProfileData_MilkAdvancedDurationNightmare,
 	ChaserProfileData_MilkAdvancedDurationApollyon,
+	ChaserProfileData_MilkAdvancedBeamParticle,
 	
 	ChaserProfileData_EnableGasAdvanced,
 	ChaserProfileData_GasAdvancedIndexes,
@@ -362,6 +364,7 @@ enum
 	ChaserProfileData_GasAdvancedDurationInsane,
 	ChaserProfileData_GasAdvancedDurationNightmare,
 	ChaserProfileData_GasAdvancedDurationApollyon,
+	ChaserProfileData_GasAdvancedBeamParticle,
 	
 	ChaserProfileData_EnableMarkAdvanced,
 	ChaserProfileData_MarkAdvancedIndexes,
@@ -405,6 +408,7 @@ enum
 	ChaserProfileData_StunAdvancedSlowdownNightmare,
 	ChaserProfileData_StunAdvancedSlowdownApollyon,
 	ChaserProfileData_StunAdvancedType,
+	ChaserProfileData_StunAdvancedBeamParticle,
 	
 	ChaserProfileData_EnableBleedAdvanced,
 	ChaserProfileData_BleedAdvancedIndexes,
@@ -430,6 +434,7 @@ enum
 	ChaserProfileData_EletricAdvancedSlowdownNightmare,
 	ChaserProfileData_EletricAdvancedSlowdownApollyon,
 	ChaserProfileData_EletricAdvancedType,
+	ChaserProfileData_EletricAdvancedBeamParticle,
 	
 	ChaserProfileData_EnableSmiteAdvanced,
 	ChaserProfileData_SmiteAdvancedIndexes,
@@ -486,6 +491,9 @@ enum
 	ChaserProfileData_ShockwaveStunSlowdownNightmare,
 	ChaserProfileData_ShockwaveStunSlowdownApollyon,
 	ChaserProfileData_ShockwaveAttackIndexes,
+	ChaserProfileData_ShockwaveWidth1,
+	ChaserProfileData_ShockwaveWidth2,
+	ChaserProfileData_ShockwaveAmplitude,
 	
 	ChaserProfileData_TrapsEnabled,
 	ChaserProfileData_TrapType,
@@ -652,6 +660,9 @@ enum
 	ChaserProfileAttackData_BlockOnDifficulty,
 	ChaserProfileAttackData_ExplosiveDanceRadius,
 	ChaserProfileAttackData_Gestures,
+	ChaserProfileAttackData_DeathCamLowHealth,
+	ChaserProfileAttackData_UseOnHealth,
+	ChaserProfileAttackData_BlockOnHealth,
 	ChaserProfileAttackData_MaxStats
 };
 
@@ -689,6 +700,7 @@ enum
 	ChaserAnimation_AttackAnimations, //Array that contains all the attack animations (working on attack index)
 	ChaserAnimation_ShootAnimations, //Array that contains all the attack animations after we shoot something
 	ChaserAnimation_RunAnimations, //Array that contains all the run animations
+	ChaserAnimation_RunAltAnimations, //Array that contains all the alternate run animations
 	ChaserAnimation_StunAnimations, //Array that contains all the stun animations
 	ChaserAnimation_ChaseInitialAnimations, //Array that contains all the chase initial animations
 	ChaserAnimation_RageAnimations, //Array that contains all the rage animations, used for Boxing Maps
@@ -702,6 +714,7 @@ enum
 	ChaserAnimation_CloakEndAnimations, //Array that contains all the cloak end animations
 	ChaserAnimation_CrawlWalkAnimations, //Array that contains all the crawl walking animations
 	ChaserANimation_CrawlRunAnimations, //Array that contains all the crawl running animations
+	ChaserANimation_CrawlAltRunAnimations, //Array that contains all the crawl running animations
 	ChaserAnimation_MaxAnimations
 };
 
@@ -767,6 +780,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		public get() { return GetChaserProfileJarateAttackIndexes(this.UniqueProfileIndex); }
 	}
 
+	property bool JaratePlayerBeamParticle
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_JarateAdvancedBeamParticle)); }
+	}
+
 	property bool MilkPlayerOnHit
 	{
 		public get() { return GetChaserProfileMilkState(this.UniqueProfileIndex); }
@@ -777,6 +795,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		public get() { return GetChaserProfileMilkAttackIndexes(this.UniqueProfileIndex); }
 	}
 
+	property bool MilkPlayerBeamParticle
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_MilkAdvancedBeamParticle)); }
+	}
+
 	property bool GasPlayerOnHit
 	{
 		public get() { return GetChaserProfileGasState(this.UniqueProfileIndex); }
@@ -785,6 +808,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	property int GasAttackIndexes
 	{
 		public get() { return GetChaserProfileGasAttackIndexes(this.UniqueProfileIndex); }
+	}
+
+	property bool GasPlayerBeamParticle
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_GasAdvancedBeamParticle)); }
 	}
 
 	property bool MarkPlayerOnHit
@@ -832,6 +860,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 		public get() { return GetChaserProfileStunDamageType(this.UniqueProfileIndex); }
 	}
 
+	property bool StunPlayerBeamParticle
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_StunAdvancedBeamParticle)); }
+	}
+
 	property bool BleedPlayerOnHit
 	{
 		public get() { return GetChaserProfileBleedState(this.UniqueProfileIndex); }
@@ -850,6 +883,11 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	property int ElectricAttackIndexes
 	{
 		public get() { return GetChaserProfileEletricAttackIndexes(this.UniqueProfileIndex); }
+	}
+
+	property bool ElectricPlayerBeamParticle
+	{
+		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EletricAdvancedBeamParticle)); }
 	}
 
 	property bool SmitePlayerOnHit
@@ -965,6 +1003,21 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	property int ShockwaveAttackIndexes
 	{
 		public get() { return GetChaserProfileShockwaveAttackIndexes(this.UniqueProfileIndex); }
+	}
+
+	property float ShockwaveWidth1
+	{
+		public get() { return GetChaserProfileShockwaveWidth1(this.UniqueProfileIndex); }
+	}
+
+	property float ShockwaveWidth2
+	{
+		public get() { return GetChaserProfileShockwaveWidth2(this.UniqueProfileIndex); }
+	}
+
+	property float ShockwaveAmplitude
+	{
+		public get() { return GetChaserProfileShockwaveAmplitude(this.UniqueProfileIndex); }
 	}
 
 	property bool ShockwaveStunEnabled
@@ -1587,6 +1640,21 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 	public bool HasAttackGestures(int attackIndex)
 	{
 		return GetChaserProfileAttackGesturesState(this.UniqueProfileIndex, attackIndex);
+	}
+
+	public bool AttackDeathCamOnLowHealth(int attackIndex)
+	{
+		return GetChaserProfileAttackDeathCamLowHealth(this.UniqueProfileIndex, attackIndex);
+	}
+
+	public float GetAttackUseOnHealth(int attackIndex)
+	{
+		return GetChaserProfileAttackUseOnHealth(this.UniqueProfileIndex, attackIndex);
+	}
+
+	public float GetAttackBlockOnHealth(int attackIndex)
+	{
+		return GetChaserProfileAttackBlockOnHealth(this.UniqueProfileIndex, attackIndex);
 	}
 
 	public void GetSmiteColor(int color[4])
@@ -2773,6 +2841,26 @@ bool GetChaserProfileAttackGesturesState(int iChaserProfileIndex,int iAttackInde
 	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Gestures));
 }
 
+bool GetChaserProfileAttackDeathCamLowHealth(int iChaserProfileIndex,int iAttackIndex)
+{
+	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+
+	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DeathCamLowHealth));
+}
+
+float GetChaserProfileAttackUseOnHealth(int iChaserProfileIndex,int iAttackIndex)
+{
+	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+
+	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_UseOnHealth));
+}
+
+float GetChaserProfileAttackBlockOnHealth(int iChaserProfileIndex,int iAttackIndex)
+{
+	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+
+	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BlockOnHealth));
+}
 
 bool GetChaserProfileEnableAdvancedDamageEffects(int iChaserProfileIndex)
 {
@@ -3172,6 +3260,21 @@ float GetChaserProfileShockwaveStunSlowdown(int iChaserProfileIndex,int iDifficu
 int GetChaserProfileShockwaveAttackIndexes(int iChaserProfileIndex)
 {
 	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveAttackIndexes);
+}
+
+float GetChaserProfileShockwaveWidth1(int iChaserProfileIndex)
+{
+	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveWidth1);
+}
+
+float GetChaserProfileShockwaveWidth2(int iChaserProfileIndex)
+{
+	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveWidth2);
+}
+
+float GetChaserProfileShockwaveAmplitude(int iChaserProfileIndex)
+{
+	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveAmplitude);
 }
 
 bool GetChaserProfileTrapState(int iChaserProfileIndex)

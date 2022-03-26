@@ -402,7 +402,7 @@ void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSp
 	{
 		char sSpawnEffect[PLATFORM_MAX_PATH];
 		GetProfileString(sProfile, "proxies_spawn_effect", sSpawnEffect, sizeof(sSpawnEffect));
-		CreateGeneralParticle(client, sSpawnEffect, NPCGetProxySpawnEffectLifetime(iBossIndex), NPCGetProxySpawnEffectZOffset(iBossIndex));
+		CreateGeneralParticle(client, sSpawnEffect, NPCGetProxySpawnEffectZOffset(iBossIndex));
 	}
 
 	Call_StartForward(fOnClientSpawnedAsProxy);

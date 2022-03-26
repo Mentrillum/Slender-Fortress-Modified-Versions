@@ -397,10 +397,7 @@ ArrayList SpecialEnabledList()
 		
 		if (!SF_SpecialRound(SPECIALROUND_BOO) && !SF_IsBoxingMap())
 			arrayEnabledRounds.Push(SPECIALROUND_BOO);
-		
-		if (!SF_SpecialRound(SPECIALROUND_REALISM) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_REALISM);
-		
+
 		if (!SF_SpecialRound(SPECIALROUND_COFFEE) && !SF_IsRaidMap() && !SF_IsBoxingMap())
 			arrayEnabledRounds.Push(SPECIALROUND_COFFEE);
 		
@@ -828,6 +825,7 @@ void SpecialRoundStart()
 					ClientChaseMusicReset(client);
 					ClientChaseMusicSeeReset(client);
 					ClientAlertMusicReset(client);
+					ClientIdleMusicReset(client);
 					if (sCurrentMusicTrack[0] != '\0') StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
 					ClientMusicStart(client, TRIPLEBOSSESMUSIC, _, MUSIC_PAGE_VOLUME);
 					ClientUpdateMusicSystem(client);
@@ -1004,31 +1002,6 @@ void SpecialRoundStart()
 			SF_AddSpecialRound(SPECIALROUND_REVOLUTION);
 			g_iSpecialRoundTime = 0;
 		}
-		case SPECIALROUND_REALISM:
-		{
-			SF_AddSpecialRound(SPECIALROUND_REALISM);
-			NPCStopMusic();
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (!IsClientInGame(i)) continue;
-				
-				if (!g_bPlayerEliminated[i])
-				{
-					g_hPlayerOverlayCheck[i] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(i), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-					TriggerTimer(g_hPlayerOverlayCheck[i], true);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES1PERCENT);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES25PERCENT);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES50PERCENT);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES75PERCENT);
-					g_iPlayerPageMusicMaster[i] = INVALID_ENT_REFERENCE;
-					g_iPageMusicActiveIndex[i] = -1;
-					ClientMusicStart(i, NULLSOUND, _, MUSIC_PAGE_VOLUME);
-					CreateTimer(0.1, Timer_RealismCheck, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
-					StopSound(i, MUSIC_CHAN, g_strRoundIntroMusic);
-					EmitSoundToClient(i, MARBLEHORNETS_STATIC, _, SNDCHAN_STATIC, 100, _, 0.8);
-				}
-			}
-		}
 		case SPECIALROUND_VOTE:
 		{
 			if (!NativeVotes_IsVoteInProgress())
@@ -1085,17 +1058,6 @@ void SpecialRoundStart()
 	}
 	if(SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
 		SpecialRoundCycleStart();
-}
-
-public Action Timer_RealismCheck(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if(client <= 0) return Plugin_Stop;
-	if (!IsValidClient(client) || !IsClientInGame(client) || IsClientSourceTV(client)) return Plugin_Stop;
-	
-	ClientUpdateMusicSystem(client);
-
-	return Plugin_Stop;
 }
 
 public Action Timer_SpecialRoundVoteLoop(Handle timer)
@@ -1182,7 +1144,6 @@ void SpecialCreateVote()
 			case SPECIALROUND_DISTORTION: FormatEx(sItem, sizeof(sItem), "Space Distortion");
 			case SPECIALROUND_MULTIEFFECT: FormatEx(sItem, sizeof(sItem), "Multieffect");
 			case SPECIALROUND_BOO: FormatEx(sItem, sizeof(sItem), "Boo");
-			case SPECIALROUND_REALISM: FormatEx(sItem, sizeof(sItem), "Marble Hornets");
 			case SPECIALROUND_COFFEE: FormatEx(sItem, sizeof(sItem), "Coffee");
 			case SPECIALROUND_PAGEDETECTOR: FormatEx(sItem, sizeof(sItem), "Page Detector");
 			case SPECIALROUND_CLASSSCRAMBLE: FormatEx(sItem, sizeof(sItem), "Class Scramble");

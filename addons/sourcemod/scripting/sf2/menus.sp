@@ -243,8 +243,7 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "[NxN]Nameless\n");
 	StrCat(buffer, sizeof(buffer), "Diviously\n");
 	StrCat(buffer, sizeof(buffer), "Astolfo Alter\n");
-	StrCat(buffer, sizeof(buffer), "Nekomata\n");
-	
+
 	SetMenuTitle(g_hMenuCredits4, buffer);
 	AddMenuItem(g_hMenuCredits4, "0", "Next");
 	AddMenuItem(g_hMenuCredits4, "1", "Back");

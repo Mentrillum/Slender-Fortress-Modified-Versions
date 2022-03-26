@@ -483,7 +483,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	if (!g_bEnabled) return Plugin_Continue;
 
 	Action iAction = Plugin_Continue;
-	
+
 	float damage2 = damage;
 	Call_StartForward(fOnClientTakeDamage);
 	Call_PushCell(victim);
@@ -1279,6 +1279,210 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 	{
 		g_bPlayerCampingFirstTime[client] = false;
 		//LogSF2Message("[SF2 AFK TIMER] Client %i (%N) is afk/camping for the 1st time since the reset, don't take any actions for now.....", client, client);
+	}
+	
+	return Plugin_Continue;
+}
+
+#define SF2_PLAYER_HUD_BLINK_SYMBOL_ON "O"
+#define SF2_PLAYER_HUD_BLINK_SYMBOL_OFF "Ɵ"
+#define SF2_PLAYER_HUD_BLINK_SYMBOL_OLD "B"
+#define SF2_PLAYER_HUD_FLASHLIGHT_SYMBOL "ϟ"
+#define SF2_PLAYER_HUD_BAR_SYMBOL "█"
+#define SF2_PLAYER_HUD_BAR_MISSING_SYMBOL "░"
+#define SF2_PLAYER_HUD_BAR_SYMBOL_OLD "|"
+#define SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD ""
+#define SF2_PLAYER_HUD_INFINITY_SYMBOL "∞"
+#define SF2_PLAYER_HUD_SPRINT_SYMBOL "»"
+
+public Action Timer_ClientAverageUpdate(Handle timer)
+{
+	if (timer != g_hClientAverageUpdateTimer) return Plugin_Stop;
+	
+	if (!g_bEnabled) return Plugin_Stop;
+	
+	if (IsRoundInWarmup() || IsRoundEnding()) return Plugin_Continue;
+
+	// First, process through HUD stuff.
+	char buffer[256];
+	
+	static iHudColorHealthy[3];
+	static iHudColorCritical[3] = { 255, 10, 10 };
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i)) continue;
+		if (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud) iHudColorHealthy = { 50, 255, 50 };
+		else iHudColorHealthy = { 150, 255, 150 };
+		
+		if (IsPlayerAlive(i) && !IsClientInDeathCam(i))
+		{
+			if (!g_bPlayerEliminated[i])
+			{
+				if (DidClientEscape(i)) continue;
+				
+				int iMaxBars = 12;
+				int iBars;
+				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
+				{
+					iBars = RoundToCeil(float(iMaxBars) * ClientGetBlinkMeter(i));
+					if (iBars > iMaxBars) iBars = iMaxBars;
+					
+					if (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud)
+					{
+						if (iBars != 0) FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
+						else FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
+					}
+					else FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
+					
+					if (IsInfiniteBlinkEnabled())
+					{
+						StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
+					}
+					else
+					{
+						for (int i2 = 0; i2 < iMaxBars; i2++)
+						{
+							if (i2 < iBars)
+							{
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+							}
+							else
+							{
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+							}
+						}
+					}
+				}
+				if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !SF_IsRaidMap() && !SF_IsBoxingMap())
+				{
+					iBars = RoundToCeil(float(iMaxBars) * ClientGetFlashlightBatteryLife(i));
+					if (iBars > iMaxBars)iBars = iMaxBars;
+					
+					char sBuffer2[64];
+					FormatEx(sBuffer2, sizeof(sBuffer2), "\n%s  ", SF2_PLAYER_HUD_FLASHLIGHT_SYMBOL);
+					StrCat(buffer, sizeof(buffer), sBuffer2);
+					
+					if (IsInfiniteFlashlightEnabled())
+					{
+						StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
+					}
+					else
+					{
+						for (int i2 = 0; i2 < iMaxBars; i2++)
+						{
+							if (i2 < iBars)
+							{
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+							}
+							else
+							{
+								StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+							}
+						}
+					}
+				}
+				
+				iBars = RoundToCeil(float(iMaxBars) * (float(ClientGetSprintPoints(i)) / 100.0));
+				if (iBars > iMaxBars) iBars = iMaxBars;
+				
+				char sBuffer2[64];
+				FormatEx(sBuffer2, sizeof(sBuffer2), "\n%s  ", SF2_PLAYER_HUD_SPRINT_SYMBOL);
+				StrCat(buffer, sizeof(buffer), sBuffer2);
+				
+				if (IsInfiniteSprintEnabled())
+				{
+					StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
+				}
+				else
+				{
+					for (int i2 = 0; i2 < iMaxBars; i2++)
+					{
+						if (i2 < iBars)
+						{
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+						}
+						else
+						{
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+						}
+					}
+				}
+				
+				float flHealthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_hSDKGetMaxHealth, i));
+				
+				int iColor[3];
+				for (int i2 = 0; i2 < 3; i2++)
+				{
+					iColor[i2] = RoundFloat(float(iHudColorHealthy[i2]) + (float(iHudColorCritical[i2] - iHudColorHealthy[i2]) * (1.0 - flHealthRatio)));
+				}
+				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
+				{
+					SetHudTextParams(0.035, 0.83, 
+						0.3, 
+						iColor[0], 
+						iColor[1], 
+						iColor[2], 
+						40, 
+						_, 
+						1.0, 
+						0.07, 
+						0.5);
+				}
+				else if (SF_IsRaidMap() || SF_IsBoxingMap())
+				{
+					SetHudTextParams(0.035, 0.43, 
+						0.3, 
+						iColor[0], 
+						iColor[1], 
+						iColor[2], 
+						40, 
+						_, 
+						1.0, 
+						0.07, 
+						0.5);
+				}
+				ShowSyncHudText(i, g_hHudSync2, buffer);
+				buffer[0] = '\0';
+			}
+			else
+			{
+				if (g_bPlayerProxy[i])
+				{
+					int iMaxBars = 12;
+					int iBars = RoundToCeil(float(iMaxBars) * (float(g_iPlayerProxyControl[i]) / 100.0));
+					if (iBars > iMaxBars) iBars = iMaxBars;
+					
+					strcopy(buffer, sizeof(buffer), "CONTROL\n");
+					
+					for (int i2 = 0; i2 < iMaxBars; i2++)
+					{
+						if (i2 < iBars)
+						{
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+						}
+						else
+						{
+							StrCat(buffer, sizeof(buffer), (!g_iPlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+						}
+					}
+					
+					SetHudTextParams(-1.0, 0.83, 
+						0.3, 
+						SF2_HUD_TEXT_COLOR_R, 
+						SF2_HUD_TEXT_COLOR_G, 
+						SF2_HUD_TEXT_COLOR_B, 
+						40, 
+						_, 
+						1.0, 
+						0.07, 
+						0.5);
+					ShowSyncHudText(i, g_hHudSync2, buffer);
+				}
+			}
+		}
+		ClientUpdateListeningFlags(i);
+		ClientUpdateMusicSystem(i);
 	}
 	
 	return Plugin_Continue;

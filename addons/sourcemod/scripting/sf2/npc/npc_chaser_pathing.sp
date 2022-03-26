@@ -432,7 +432,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 		}
 	}
 
-	if (iState == STATE_CHASE || iState == STATE_ALERT || iState == STATE_WANDER || (iState == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(iBossIndex, iAttackIndex)))
+	if ((iState == STATE_CHASE || iState == STATE_ALERT || iState == STATE_WANDER) && !g_bSlenderInDeathcam[iBossIndex])
 	{
 		int iPitch = combatChar.LookupPoseParameter("body_pitch");
 		int iYaw = combatChar.LookupPoseParameter("body_yaw");
