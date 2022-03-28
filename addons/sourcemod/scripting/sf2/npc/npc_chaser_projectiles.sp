@@ -5,7 +5,6 @@
 
 static char sGestureShootAnim[PLATFORM_MAX_PATH];
 static char sBaseballModel[PLATFORM_MAX_PATH];
-static float g_flProjectileDamage[2049];
 
 //static float g_flProjectileSpeed[2049];
 //static float g_flProjectileDamage[2049];
@@ -476,7 +475,6 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					ProjectileSetFlags(iProjectileEnt, PROJ_MANGLER);
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
 					DispatchSpawn(iProjectileEnt);
-					g_flProjectileDamage[iProjectileEnt] = NPCChaserGetProjectileDamage(iBossIndex, iDifficulty);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{

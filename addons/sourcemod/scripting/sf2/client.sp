@@ -421,7 +421,7 @@ float ClientGetDefaultWalkSpeed(int client)
 	float flReturn = 190.0;
 	float flReturn2 = flReturn;
 	Action iAction = Plugin_Continue;
-	TFClassType iClass = TF2_GetPlayerClass(client);
+	/*TFClassType iClass = TF2_GetPlayerClass(client);
 	
 	switch (iClass)
 	{
@@ -434,7 +434,8 @@ float ClientGetDefaultWalkSpeed(int client)
 		case TFClass_Pyro: flReturn = 180.0;
 		case TFClass_Spy: flReturn = 185.0;
 		case TFClass_Engineer: flReturn = 180.0;
-	}
+	}*/
+	//Psyche, everyone walks the same.
 	
 	// Call our forward.
 	Call_StartForward(fOnClientGetDefaultWalkSpeed);
@@ -1033,7 +1034,7 @@ void ClientProcessVisibility(int client)
 			if (TF2_GetPlayerClass(client) == TFClass_Heavy)
 			{
 				flStaticIncreaseRate *= 1.15;
-				flStaticDecreaseRate *= 0.9;
+				flStaticDecreaseRate *= 0.85;
 			}
 			else if (TF2_GetPlayerClass(client) == TFClass_Sniper && g_bPlayerSeesSlender[client][iBossNewStatic])
 			{

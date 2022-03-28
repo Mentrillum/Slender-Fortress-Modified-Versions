@@ -3454,7 +3454,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 	
 	if (TF2_GetPlayerClass(client) == TFClass_Spy) flDistance *= 1.3;
 
-	if (TF2_GetPlayerClass(client) == TFClass_Scout) flDistance *= 0.85;
+	if (TF2_GetPlayerClass(client) == TFClass_Scout) flDistance *= 0.75;
 	
 	if (flDistance > SquareFloat(flHearRadius)) return false;
 	
@@ -3777,7 +3777,7 @@ void SlenderCastFootstepAnimEvent(int iBossIndex, const char[] sSectionName)
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
 		int iPitch = GetProfileNum(sProfile, sBuffer, 100);
-		if (StrContains(sBuffer, "/", true) != -1) 
+		if (StrContains(sPath, "/", false) != -1 || StrContains(sPath, "\\", false) != -1) 
 		{
 			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
 		}
@@ -3822,7 +3822,7 @@ void SlenderCastAnimEvent(int iBossIndex, const char[] sSectionName)
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
 		int iPitch = GetProfileNum(sProfile, sBuffer, 100);
-		if (StrContains(sBuffer, "/", true) != -1) 
+		if (StrContains(sPath, "/", false) != -1 || StrContains(sPath, "\\", false) != -1) 
 		{
 			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
 		}
