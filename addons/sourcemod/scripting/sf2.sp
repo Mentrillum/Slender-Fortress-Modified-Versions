@@ -6762,7 +6762,7 @@ static int GetClientForDeath(int exclude1, int exclude2 = 0)
 		// Use AFKs first
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (i != exclude1 && i != exclude2 && IsClientInGame(i) && g_bPlayerNoPoints[i])
+			if (i != exclude1 && i != exclude2 && IsClientInGame(i) && GetClientTeam(i) > TFTeam_Spectator && g_bPlayerNoPoints[i])
 				return i;
 		}
 
