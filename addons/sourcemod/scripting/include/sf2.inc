@@ -256,9 +256,10 @@ forward Action SF2_OnBossGetWalkSpeed(int iBossIndex, float &flWalkSpeed);
  *
  * @param iBossIndex	Boss index.
  * @param entity		Entity index.
+ * @param soundType			The type of sound to check.
  * @return				Returning a value other than Plugin_Continue will block hearing to the entity.
  */
-forward Action SF2_OnBossHearEntity(int iBossIndex, int entity);
+forward Action SF2_OnBossHearEntity(int iBossIndex, int entity, SoundType soundType);
 
 /**
  * Called after the boss has determined it can see the entity.
