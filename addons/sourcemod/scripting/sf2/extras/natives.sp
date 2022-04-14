@@ -18,7 +18,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	fOnBossAnimationUpdate = CreateGlobalForward("SF2_OnBossAnimationUpdate", ET_Hook, Param_Cell);
 	fOnBossGetSpeed = CreateGlobalForward("SF2_OnBossGetSpeed", ET_Hook, Param_Cell, Param_FloatByRef);
 	fOnBossGetWalkSpeed = CreateGlobalForward("SF2_OnBossGetWalkSpeed", ET_Hook, Param_Cell, Param_FloatByRef);
-	fOnBossHearEntity = CreateGlobalForward("SF2_OnBossHearEntity", ET_Hook, Param_Cell, Param_Cell);
+	fOnBossHearEntity = CreateGlobalForward("SF2_OnBossHearEntity", ET_Hook, Param_Cell, Param_Cell, Param_Cell);
 	fOnBossSeeEntity = CreateGlobalForward("SF2_OnBossSeeEntity", ET_Hook, Param_Cell, Param_Cell);
 	fOnBossRemoved = CreateGlobalForward("SF2_OnBossRemoved", ET_Ignore, Param_Cell);
 	fOnBossStunned = CreateGlobalForward("SF2_OnBossStunned", ET_Ignore, Param_Cell, Param_Cell);

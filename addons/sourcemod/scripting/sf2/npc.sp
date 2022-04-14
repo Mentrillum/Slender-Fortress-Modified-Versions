@@ -1429,7 +1429,7 @@ bool NPCShouldSeeEntity(int iNPCIndex, int entity)
 	return true;
 }
 
-bool NPCShouldHearEntity(int iNPCIndex, int entity)
+bool NPCShouldHearEntity(int iNPCIndex, int entity, SoundType soundType)
 {
 	if (!IsValidEntity(entity))
 		return false;
@@ -1438,6 +1438,7 @@ bool NPCShouldHearEntity(int iNPCIndex, int entity)
 	Call_StartForward(fOnBossHearEntity);
 	Call_PushCell(iNPCIndex);
 	Call_PushCell(entity);
+	Call_PushCell(soundType);
 	Call_Finish(result);
 
 	if (result != Plugin_Continue)

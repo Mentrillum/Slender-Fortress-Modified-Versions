@@ -2600,7 +2600,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 					{
 						if (NPCGetUniqueID(iBossIndex) == -1) continue;
 						
-						if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Voice) && NPCShouldHearEntity(iBossIndex, entity))
+						if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Voice) && NPCShouldHearEntity(iBossIndex, entity, SoundType_Voice))
 						{
 							GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 							g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
@@ -2638,7 +2638,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 						{
 							if (NPCGetUniqueID(iBossIndex) == -1) continue;
 							
-							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Footstep) && NPCShouldHearEntity(iBossIndex, entity))
+							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Footstep) && NPCShouldHearEntity(iBossIndex, entity, SoundType_Footstep))
 							{
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
@@ -2667,7 +2667,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 						{
 							if (NPCGetUniqueID(iBossIndex) == -1) continue;
 							
-							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Weapon) && NPCShouldHearEntity(iBossIndex, entity))
+							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Weapon) && NPCShouldHearEntity(iBossIndex, entity, SoundType_Weapon))
 							{
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
@@ -2690,7 +2690,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 						{
 							if (NPCGetUniqueID(iBossIndex) == -1) continue;
 							
-							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Flashlight) && NPCShouldHearEntity(iBossIndex, entity))
+							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Flashlight) && NPCShouldHearEntity(iBossIndex, entity, SoundType_Flashlight))
 							{
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
@@ -2710,7 +2710,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 						{
 							if (NPCGetUniqueID(iBossIndex) == -1) continue;
 							
-							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Voice) && NPCShouldHearEntity(iBossIndex, entity))
+							if (SlenderCanHearPlayer(iBossIndex, entity, SoundType_Voice) && NPCShouldHearEntity(iBossIndex, entity, SoundType_Voice))
 							{
 								GetClientAbsOrigin(entity, g_flSlenderTargetSoundTempPos[iBossIndex]);
 								g_iSlenderInterruptConditions[iBossIndex] |= COND_HEARDSUSPICIOUSSOUND;
