@@ -366,6 +366,14 @@ void ClientEscape(int client)
 	ClientDisableConstantGlow(client);
 	
 	ClientHandleGhostMode(client);
+
+	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	{
+		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
+		int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(client);
+		if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
+	}
 	
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
@@ -461,7 +469,7 @@ float ClientGetDefaultSprintSpeed(int client)
 		case TFClass_Sniper: flReturn = 295.0;
 		case TFClass_Soldier: flReturn = 280.0;
 		case TFClass_DemoMan: flReturn = 280.0;
-		case TFClass_Heavy: flReturn = 275.0;
+		case TFClass_Heavy: flReturn = 280.0;
 		case TFClass_Medic: flReturn = 300.0;
 		case TFClass_Pyro: flReturn = 290.0;
 		case TFClass_Spy: flReturn = 300.0;
@@ -836,7 +844,7 @@ void ClientProcessVisibility(int client)
 							g_iSlenderTarget[i] = EntIndexToEntRef(client);
 							g_flSlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
 							g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
-							SlenderPerformVoice(i, "sound_chaseenemyinitial");
+							SlenderPerformVoice(i, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(i) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 							if (NPCChaserCanUseChaseInitialAnimation(i) && !g_bNPCUsesChaseInitialAnimation[i] && !SF_IsSlaughterRunMap())
 							{
 								if (g_hSlenderChaseInitialTimer[i] == null)
@@ -855,6 +863,7 @@ void ClientProcessVisibility(int client)
 									NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
 							}
 							g_bPlayerScaredByBoss[client][i] = true;
+							SlenderAlertAllValidBosses(i, client, client);
 						}
 					}
 					if (NPCGetJumpscareOnScare(iMaster))
@@ -1608,7 +1617,7 @@ void ClientSprintTimer(int client, bool bRecharge=false)
 	}
 	else
 	{
-		if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.175;
+		if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flRate *= 1.16;
 		else if (TF2_GetPlayerClass(client) == TFClass_Medic || TF2_GetPlayerClass(client) == TFClass_Spy || TF2_GetPlayerClass(client)) flRate *= 1.05;
 	}
 	

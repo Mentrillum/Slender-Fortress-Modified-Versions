@@ -273,11 +273,14 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			if (hSelectableBosses.Length > 0)
 			{
 				hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-				AddProfile(sBuffer);
-				NPCGetBossName(_, sName, sizeof(sName), sBuffer);
-				if (sName[0] == '\0') strcopy(sName, sizeof(sName), sBuffer);
-				FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
-				StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+				SF2NPC_BaseNPC Npc = AddProfile(sBuffer);
+				if (Npc.IsValid())
+				{
+					NPCGetBossName(_, sName, sizeof(sName), sBuffer);
+					if (sName[0] == '\0') strcopy(sName, sizeof(sName), sBuffer);
+					FormatEx(sBroadcastBuffer, sizeof(sBroadcastBuffer), "\nBoss: %s", sName); 
+					StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), sBroadcastBuffer);
+				}
 			}
 			else
 			{

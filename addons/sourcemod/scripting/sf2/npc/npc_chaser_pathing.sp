@@ -38,7 +38,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 	int iOldState = g_iSlenderOldState[iBossIndex];
 	g_iSlenderOldState[iBossIndex] = iState;
 	
-	int iDifficulty = g_cvDifficulty.IntValue;
+	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 	
 	if (!g_bSlenderInDeathcam[iBossIndex])
 	{
@@ -118,7 +118,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 					if (npc != INVALID_NPC) npc.flWalkSpeed = 0.0;
 					if (npc != INVALID_NPC) npc.flRunSpeed = 0.0;
 				}
-				loco.SetSpeedLimit(g_flSlenderCalculatedMaxSpeed[iBossIndex]);
+				loco.SetSpeedLimit(999999.9);
 			}
 			case STATE_STUN:
 			{
@@ -132,7 +132,13 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 		npc.flWalkSpeed = 0.0;
 		npc.flRunSpeed = 0.0;
 	}
-	npc.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
+	if (iState == STATE_ATTACK)
+	{
+		int iCurrentAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+		if (NPCChaserGetAttackWhileRunningState(iBossIndex, iCurrentAttackIndex)) npc.flAcceleration = 99999.9;
+		else npc.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
+	}
+	else npc.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
 
 	int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 
@@ -486,7 +492,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 	{
 		bool bRunUnstuck = (iState == STATE_CHASE && g_flSlenderCalculatedSpeed[iBossIndex] > 0.0);
 		if (!bRunUnstuck) bRunUnstuck = (iState == STATE_ALERT && g_flSlenderCalculatedWalkSpeed[iBossIndex] > 0.0);
-		if (!bRunUnstuck) bRunUnstuck = (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && g_flSlenderCalculatedWalkSpeed[iBossIndex] > 0.0);
+		if (!bRunUnstuck) bRunUnstuck = (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && g_flSlenderCalculatedWalkSpeed[iBossIndex] > 0.0 && iDifficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)));
 		if (bRunUnstuck)
 		{
 			if (loco.GetGroundSpeed() <= 0.1 || GetVectorSquareMagnitude(flMyPos, g_flLastPos[iBossIndex]) < 0.1 || loco.IsStuck())

@@ -374,7 +374,7 @@ void UpdateHealthBar(int iBossIndex)
 	SetEntProp(g_ihealthBar, Prop_Send, "m_iBossHealthPercentageByte", healthPercent);
 }
 
-public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], float[3] position)
+public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], float position[3])
 {
 	if (iBossIndex == -1) return;
 	if (!victim || victim == INVALID_ENT_REFERENCE) return;
@@ -566,7 +566,7 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 	g_flSlenderTimeUntilRecover[iBossIndex] = GetGameTime() + NPCChaserGetStunDuration(iBossIndex);
 						
 	// Sound handling. Ignore time check.
-	SlenderPerformVoice(iBossIndex, "sound_stun");
+	SlenderPerformVoice(iBossIndex, "sound_stun", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 	if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 	{
 		char sStunSoundPath[PLATFORM_MAX_PATH];

@@ -38,7 +38,9 @@ static bool g_bBossPackVoteEnabled = false;
 
 static char MapbossPack[64];
 
+#include "sf2/profiles/profiles_boss_functions.sp"
 #include "sf2/profiles/profile_chaser.sp"
+#include "sf2/profiles/profile_statue.sp"
 
 void InitializeBossProfiles()
 {
@@ -52,6 +54,7 @@ void InitializeBossProfiles()
 	g_cvBossPackVoteStartRound = CreateConVar("sf2_boss_profile_pack_endvote_startround", "2", "Specifies when to start the vote based on rounds remaining on the map.", FCVAR_NOTIFY);
 	g_cvBossPackVoteShuffle = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
 	
+	InitializeStatueProfiles();
 	InitializeChaserProfiles();
 }
 /*
@@ -151,6 +154,7 @@ void ClearBossProfiles()
 	g_hBossProfileData.Clear();
 	
 	ClearChaserProfiles();
+	ClearStatueProfiles();
 }
 
 void ReloadBossProfiles()

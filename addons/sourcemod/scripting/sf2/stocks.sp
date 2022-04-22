@@ -296,6 +296,15 @@ stock float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
 	return flResult;
 }
 
+stock float GetVectorAnglesTwoPoints(const float startPos[3], const float endPos[3], float angles[3])
+{
+    static float tmpVec[3];
+    tmpVec[0] = endPos[0] - startPos[0];
+    tmpVec[1] = endPos[1] - startPos[1];
+    tmpVec[2] = endPos[2] - startPos[2];
+    GetVectorAngles(tmpVec, angles);
+}
+
 stock float SquareFloat(const float value)
 {
 	return value * value; //Using this to combine GetVectorSquareMagnitude() to improve performance
@@ -1435,6 +1444,49 @@ stock float AngleDiff(float firstAngle, float secondAngle)
 	float diff = secondAngle - firstAngle;
 	return AngleNormalize(diff);
 }
+//Credits to Boikinov for figuring out these calculations I don't understand the thought process of
+stock float GetAngleBetweenVectors(const float vector1[3], const float vector2[3], const float direction[3])
+{
+    float vector1_n[3], vector2_n[3], direction_n[3], cross[3];
+    NormalizeVector(direction, direction_n);
+    NormalizeVector(vector1, vector1_n);
+    NormalizeVector(vector2, vector2_n);
+    float degree = ArcCosine(GetVectorDotProduct( vector1_n, vector2_n )) * 57.29577951;
+    GetVectorCrossProduct(vector1_n, vector2_n, cross);
+    
+    if (GetVectorDotProduct(cross, direction_n) < 0.0)
+    {
+        degree *= -1.0;
+    }
+
+    return degree;
+}
+
+stock void RotateYaw(float angles[3], float degree)
+{
+    float direction[3], normal[3];
+    GetAngleVectors(angles, direction, NULL_VECTOR, normal);
+    
+    float sin = Sine(degree * 0.01745328);
+    float cos = Cosine(degree * 0.01745328);
+    float a = normal[0] * sin;
+    float b = normal[1] * sin;
+    float c = normal[2] * sin;
+    float x = direction[2] * b + direction[0] * cos - direction[1] * c;
+    float y = direction[0] * c + direction[1] * cos - direction[2] * a;
+    float z = direction[1] * a + direction[2] * cos - direction[0] * b;
+    direction[0] = x;
+    direction[1] = y;
+    direction[2] = z;
+    
+    GetVectorAngles(direction, angles);
+
+    float up[3];
+    GetVectorVectors(direction, NULL_VECTOR, up);
+
+    float roll = GetAngleBetweenVectors(up, normal, direction);
+    angles[2] += roll;
+}
 
 //	==========================================================
 //	PRECACHING FUNCTIONS
@@ -1704,7 +1756,7 @@ stock void SF_RemoveAllSpecialRound()
 //	==========================================================
 //	OTHER FUNCTIONS
 //	==========================================================
-stock int GetLocalGlobalDifficulty(int iNPCIndex = 1)
+stock int GetLocalGlobalDifficulty(int iNPCIndex = -1)
 {
 	if (SF_IsBoxingMap())
 	{

@@ -246,8 +246,8 @@ public void Hook_ClientPreThink(int client)
 						{
 							if (TF2_GetPlayerClass(client) == TFClass_Spy)
 							{
-								flWalkSpeed *= 1.26;
-								flSprintSpeed *= 1.26;
+								flWalkSpeed *= 1.28;
+								flSprintSpeed *= 1.28;
 							}
 							else
 							{

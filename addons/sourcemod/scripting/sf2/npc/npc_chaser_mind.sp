@@ -293,7 +293,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		bPlayerVisible[iEnt] = bIsVisible;
 		
 		// Near radius check.
-		if (bPlayerVisible[iEnt] && 
+		if (!g_bNPCIgnoreNonMarkedForChase[iBossIndex] && bPlayerVisible[iEnt] && 
 			GetVectorSquareMagnitude(flTraceStartPos, flTraceEndPos) <= SquareFloat(NPCChaserGetWakeRadius(iBossIndex)))
 		{
 			bPlayerNear[iEnt] = true;
@@ -320,7 +320,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		if (TF2_GetPlayerClass(iEnt) == TFClass_Spy) flPriorityValue += 0.1;
 		
 		//Taunt alerts
-		if (iState != STATE_ALERT && iState != STATE_ATTACK && iState != STATE_STUN && iState != STATE_CHASE && 
+		if (!g_bNPCIgnoreNonMarkedForChase[iBossIndex] && iState != STATE_ALERT && iState != STATE_ATTACK && iState != STATE_STUN && iState != STATE_CHASE && 
 		GetVectorSquareMagnitude(flTraceStartPos, flTraceEndPos) <= SquareFloat(NPCGetTauntAlertRange(iBossIndex, iDifficulty)) && TF2_IsPlayerInCondition(iEnt, TFCond_Taunting))
 		{
 			if (g_iSlenderTauntAlertCount[iBossIndex] < 5)
@@ -377,29 +377,52 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		{
 			float flTargetPos[3];
 			GetClientAbsOrigin(iEnt, flTargetPos);
-			
-			if (flDist <= SquareFloat(flSearchRange) && !g_bAutoChasingLoudPlayer[iBossIndex])
+			if (!g_bAutoChasingLoudPlayer[iBossIndex] && !g_bNPCIgnoreNonMarkedForChase[iBossIndex])
 			{
-				// Subtract distance to increase priority.
-				flDist -= ((flDist * flPriorityValue));
-				
-				if (flDist < flBestNewTargetDist)
+				if (flDist <= SquareFloat(flSearchRange))
 				{
-					iBestNewTarget = iEnt;
-					flBestNewTargetDist = flDist;
-					g_iSlenderInterruptConditions[iBossIndex] |= COND_SAWENEMY;
-					g_iSlenderSeeTarget[iBossIndex] = EntIndexToEntRef(iEnt);
+					// Subtract distance to increase priority.
+					flDist -= ((flDist * flPriorityValue));
+					
+					if (flDist < flBestNewTargetDist)
+					{
+						iBestNewTarget = iEnt;
+						flBestNewTargetDist = flDist;
+						g_iSlenderInterruptConditions[iBossIndex] |= COND_SAWENEMY;
+						g_iSlenderSeeTarget[iBossIndex] = EntIndexToEntRef(iEnt);
+					}
+					g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][0] = flTargetPos[0];
+					g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][1] = flTargetPos[1];
+					g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][2] = flTargetPos[2];
+					g_flSlenderLastFoundPlayer[iBossIndex][iEnt] = GetGameTime();
 				}
-				g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][0] = flTargetPos[0];
-				g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][1] = flTargetPos[1];
-				g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][2] = flTargetPos[2];
-				g_flSlenderLastFoundPlayer[iBossIndex][iEnt] = GetGameTime();
+			}
+			else if (g_bAutoChasingLoudPlayer[iBossIndex] && g_bNPCIgnoreNonMarkedForChase[iBossIndex])
+			{
+				if (g_aNPCChaseOnLookTarget[iBossIndex].Length > 0 && g_aNPCChaseOnLookTarget[iBossIndex].FindValue(iEnt) != -1 &&
+					flDist <= SquareFloat(flSearchRange))
+				{
+					// Subtract distance to increase priority.
+					flDist -= ((flDist * flPriorityValue));
+					
+					if (flDist < flBestNewTargetDist)
+					{
+						iBestNewTarget = iEnt;
+						flBestNewTargetDist = flDist;
+						g_iSlenderInterruptConditions[iBossIndex] |= COND_SAWENEMY;
+						g_iSlenderSeeTarget[iBossIndex] = EntIndexToEntRef(iEnt);
+					}
+					g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][0] = flTargetPos[0];
+					g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][1] = flTargetPos[1];
+					g_flSlenderLastFoundPlayerPos[iBossIndex][iEnt][2] = flTargetPos[2];
+					g_flSlenderLastFoundPlayer[iBossIndex][iEnt] = GetGameTime();
+				}
 			}
 		}
 
 		if ((bPlayerMadeNoise[iEnt] || bPlayerInTrap[iEnt]) && iState != STATE_CHASE && iState != STATE_STUN && iState != STATE_ATTACK)
 		{
-			if (NPCHasAttribute(iBossIndex, "ignore non-marked for chase") && bPlayerMadeNoise[iEnt])
+			if (g_bNPCIgnoreNonMarkedForChase[iBossIndex] && bPlayerMadeNoise[iEnt])
 			{
 				iBestNewTarget = iEnt;
 				iState = STATE_CHASE;
@@ -410,7 +433,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				g_bAutoChasingLoudPlayer[iBossIndex] = true;
 				g_iSlenderAutoChaseCount[iBossIndex] = 0;
 			}
-			else if (bPlayerInTrap[iEnt] || (!NPCHasAttribute(iBossIndex, "ignore non-marked for chase") && bPlayerMadeNoise[iEnt]))
+			else if (bPlayerInTrap[iEnt] || (!g_bNPCIgnoreNonMarkedForChase[iBossIndex] && bPlayerMadeNoise[iEnt]))
 			{
 				iBestNewTarget = iEnt;
 				iState = STATE_CHASE;
@@ -441,6 +464,32 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				}
 			}
 		}
+		if (NPCChaserCanChaseOnLook(iBossIndex) && bPlayerInFOV[iEnt] && bPlayerVisible[iEnt])
+		{
+			float flEyeAng[3], flRequiredAng[3];
+			GetClientEyeAngles(iEnt, flEyeAng);
+			SubtractVectors(flTraceEndPos, flTraceStartPos, flRequiredAng);
+			GetVectorAngles(flRequiredAng, flRequiredAng);
+			if (FloatAbs(AngleDiff(flEyeAng[0], flRequiredAng[0])) <= 45.0 && FloatAbs(AngleDiff(flRequiredAng[1], flEyeAng[1])) >= 135.0)
+			{
+				if (g_aNPCChaseOnLookTarget[iBossIndex].FindValue(iEnt) == -1)
+				{
+					g_aNPCChaseOnLookTarget[iBossIndex].Push(iEnt);
+					char buffer[PLATFORM_MAX_PATH];
+					GetRandomStringFromProfile(sSlenderProfile, "sound_scare_player", buffer, sizeof(buffer));
+					if (buffer[0] != '\0') EmitSoundToClient(iEnt, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
+					TF2_AddCondition(iEnt, TFCond_MarkedForDeathSilent, -1.0);
+					if (g_hSlenderChaseInitialTimer[iBossIndex] == null && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
+					{
+						g_bNPCUsesChaseInitialAnimation[iBossIndex] = true;
+						npc.flWalkSpeed = 0.0;
+						npc.flRunSpeed = 0.0;
+						NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
+						g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+					}
+				}
+			}
+		}
 	}
 
 	if (IsValidClient(EntRefToEntIndex(g_iSlenderTarget[iBossIndex])) && bPlayerVisible[EntRefToEntIndex(g_iSlenderTarget[iBossIndex])]) g_bSlenderTargetIsVisible[iBossIndex] = true;
@@ -448,7 +497,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 
 	if (g_bAutoChasingLoudPlayer[iBossIndex])
 	{
-		if (iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
+		if (g_aNPCChaseOnLookTarget[iBossIndex].Length <= 0)
 		{
 			g_bAutoChasingLoudPlayer[iBossIndex] = false;
 			g_iSlenderSoundTarget[iBossIndex] = INVALID_ENT_REFERENCE;
@@ -565,6 +614,28 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		}
 	}
 
+	if (NPCChaserCanChaseOnLook(iBossIndex))
+	{
+		if (iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN && NPCAreAvailablePlayersAlive() && g_aNPCChaseOnLookTarget[iBossIndex].Length != 0)
+		{
+			for (int i = 0; i < g_aNPCChaseOnLookTarget[iBossIndex].Length; i++)
+			{
+				int iLookClient = g_aNPCChaseOnLookTarget[iBossIndex].Get(i);
+				if (IsValidClient(iLookClient) && !g_bPlayerEliminated[iLookClient] && IsPlayerAlive(iLookClient) && IsClientInGame(iLookClient) &&
+					!IsClientInGhostMode(iLookClient) && !DidClientEscape(iLookClient))
+				{
+					iBestNewTarget = iLookClient;
+					g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iLookClient);
+					g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+					iState = STATE_CHASE;
+					iTarget = iBestNewTarget;
+					SlenderAlertAllValidBosses(iBossIndex, iTarget, iBestNewTarget);
+				}
+				else i--;
+			}
+		}
+	}
+
 	// Process which state we should be in.
 	switch (iState)
 	{
@@ -584,7 +655,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			}
 			else
 			{
-				if ((NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][iDifficulty] && GetRandomFloat(0.0, 1.0) <= 0.25)
+				if ((NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][iDifficulty] && GetRandomFloat(0.0, 1.0) <= 0.25 && iDifficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)))
 				{
 					iState = STATE_WANDER;
 				}
@@ -736,6 +807,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						iTarget = iBestNewTarget;
 						g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 						iState = STATE_CHASE;
+						SlenderAlertAllValidBosses(iBossIndex, iTarget, iBestNewTarget);
 					}
 				}
 				if (bPlayerInTrap[iBestNewTarget] || bPlayerMadeNoise[iBestNewTarget])
@@ -744,6 +816,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					iTarget = iBestNewTarget;
 					g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 					iState = STATE_CHASE;
+					SlenderAlertAllValidBosses(iBossIndex, iTarget, iBestNewTarget);
 				}
 			}
 			if ((bBuilding))
@@ -927,7 +1000,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						delete hTrace;
 					}
 					
-					if (!bBuilding && !bPlayerVisible[iTarget] && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
+					if (!bBuilding && (!g_bNPCCopyAlerted[iBossIndex] && !bPlayerVisible[iTarget]) && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
 					{
 						if (GetGameTime() >= g_flSlenderTimeUntilAlert[iBossIndex] || (!bAttackEliminated && g_bPlayerEliminated[iTarget]))
 						{
@@ -1231,11 +1304,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							}
 						}
 						NPCChaserSetBoxingRagePhase(iBossIndex, NPCChaserGetBoxingRagePhase(iBossIndex)+1);
-						SlenderPerformVoice(iBossIndex, "sound_rage");
+						SlenderPerformVoice(iBossIndex, "sound_rage", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 						NPCSetAddSpeed(iBossIndex, 12.5);
 						NPCSetAddMaxSpeed(iBossIndex, 25.0);
 						NPCSetAddAcceleration(iBossIndex, 100.0);
-						if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+						/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 						{
 							char sRageSoundPath[PLATFORM_MAX_PATH];
 							GetRandomStringFromProfile(sSlenderProfile, "sound_rage", sRageSoundPath, sizeof(sRageSoundPath));
@@ -1263,7 +1336,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 								ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 							}
-						}
+						}*/
 						g_bNPCUsedRage1[iBossIndex] = true;
 						g_bNPCUsesRageAnimation1[iBossIndex] = true;
 						npc.flWalkSpeed = 0.0;
@@ -1316,12 +1389,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						NPCChaserSetBoxingRagePhase(iBossIndex, NPCChaserGetBoxingRagePhase(iBossIndex)+1);
 						char sRageSound2Path[PLATFORM_MAX_PATH];
 						GetRandomStringFromProfile(sSlenderProfile, "sound_rage_2", sRageSound2Path, sizeof(sRageSound2Path));
-						if (sRageSound2Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_2");
-						else SlenderPerformVoice(iBossIndex, "sound_rage");
+						if (sRageSound2Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_2", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+						else SlenderPerformVoice(iBossIndex, "sound_rage", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 						NPCSetAddSpeed(iBossIndex, 12.5);
 						NPCSetAddMaxSpeed(iBossIndex, 25.0);
 						NPCSetAddAcceleration(iBossIndex, 100.0);
-						if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+						/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 						{
 							char sRageSoundPath[PLATFORM_MAX_PATH];
 							GetRandomStringFromProfile(sSlenderProfile, "sound_rage", sRageSoundPath, sizeof(sRageSoundPath));
@@ -1349,7 +1422,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 								ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 							}
-						}
+						}*/
 						g_bNPCUsedRage2[iBossIndex] = true;
 						g_bNPCUsesRageAnimation2[iBossIndex] = true;
 						npc.flWalkSpeed = 0.0;
@@ -1406,12 +1479,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						NPCChaserSetBoxingRagePhase(iBossIndex, NPCChaserGetBoxingRagePhase(iBossIndex)+1);
 						char sRageSound3Path[PLATFORM_MAX_PATH];
 						GetRandomStringFromProfile(sSlenderProfile, "sound_rage_3", sRageSound3Path, sizeof(sRageSound3Path));
-						if (sRageSound3Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_3");
-						else SlenderPerformVoice(iBossIndex, "sound_rage");
+						if (sRageSound3Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_3", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+						else SlenderPerformVoice(iBossIndex, "sound_rage", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 						NPCSetAddSpeed(iBossIndex, 12.5);
 						NPCSetAddMaxSpeed(iBossIndex, 25.0);
 						NPCSetAddAcceleration(iBossIndex, 100.0);
-						if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+						/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 						{
 							char sRageSoundPath[PLATFORM_MAX_PATH];
 							GetRandomStringFromProfile(sSlenderProfile, "sound_rage", sRageSoundPath, sizeof(sRageSoundPath));
@@ -1439,7 +1512,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 								ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 							}
-						}
+						}*/
 						g_bNPCUsedRage3[iBossIndex] = true;
 						g_bNPCUsesRageAnimation3[iBossIndex] = true;
 						npc.flWalkSpeed = 0.0;
@@ -1582,11 +1655,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 									npc.flRunSpeed = 0.0;
 									g_hSlenderStartFleeTimer[iBossIndex] = CreateTimer(flDelayTimer1, Timer_SlenderFleeAnimationTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 									g_iNPCHealCount[iBossIndex] = 0;
-									SlenderPerformVoice(iBossIndex, "sound_rage");
+									SlenderPerformVoice(iBossIndex, "sound_rage", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 									NPCSetAddSpeed(iBossIndex, 12.5);
 									NPCSetAddMaxSpeed(iBossIndex, 25.0);
 									NPCSetAddAcceleration(iBossIndex, 100.0);
-									if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+									/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 									{
 										char sRageSoundPath[PLATFORM_MAX_PATH];
 										GetRandomStringFromProfile(sSlenderProfile, "sound_rage", sRageSoundPath, sizeof(sRageSoundPath));
@@ -1614,7 +1687,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 											ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 											ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 										}
-									}
+									}*/
 									g_bNPCUseStartFleeAnimation[iBossIndex] = true;
 									NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 								}
@@ -1656,12 +1729,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 									g_iNPCHealCount[iBossIndex] = 0;
 									char sRageSound2Path[PLATFORM_MAX_PATH];
 									GetRandomStringFromProfile(sSlenderProfile, "sound_rage_2", sRageSound2Path, sizeof(sRageSound2Path));
-									if (sRageSound2Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_2");
-									else SlenderPerformVoice(iBossIndex, "sound_rage");
+									if (sRageSound2Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_2", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+									else SlenderPerformVoice(iBossIndex, "sound_rage", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 									NPCSetAddSpeed(iBossIndex, 12.5);
 									NPCSetAddMaxSpeed(iBossIndex, 25.0);
 									NPCSetAddAcceleration(iBossIndex, 100.0);
-									if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+									/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 									{
 										char sRageSoundPath[PLATFORM_MAX_PATH];
 										GetRandomStringFromProfile(sSlenderProfile, "sound_rage", sRageSoundPath, sizeof(sRageSoundPath));
@@ -1689,7 +1762,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 											ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 											ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 										}
-									}
+									}*/
 									g_bNPCUseStartFleeAnimation[iBossIndex] = true;
 									NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 								}
@@ -1735,12 +1808,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 									g_iNPCHealCount[iBossIndex] = 0;
 									char sRageSound3Path[PLATFORM_MAX_PATH];
 									GetRandomStringFromProfile(sSlenderProfile, "sound_rage_3", sRageSound3Path, sizeof(sRageSound3Path));
-									if (sRageSound3Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_3");
-									else SlenderPerformVoice(iBossIndex, "sound_rage");
+									if (sRageSound3Path[0] != '\0') SlenderPerformVoice(iBossIndex, "sound_rage_3", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+									else SlenderPerformVoice(iBossIndex, "sound_rage", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 									NPCSetAddSpeed(iBossIndex, 12.5);
 									NPCSetAddMaxSpeed(iBossIndex, 25.0);
 									NPCSetAddAcceleration(iBossIndex, 100.0);
-									if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+									/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 									{
 										char sRageSoundPath[PLATFORM_MAX_PATH];
 										GetRandomStringFromProfile(sSlenderProfile, "sound_rage", sRageSoundPath, sizeof(sRageSoundPath));
@@ -1768,7 +1841,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 											ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
 											ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 										}
-									}
+									}*/
 									g_bNPCUseStartFleeAnimation[iBossIndex] = true;
 									NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 								}
@@ -1801,7 +1874,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		}
 		g_bSlenderTeleportTargetIsCamping[iBossIndex] = false;
 	}
-	
+
+	if (NPCChaserCanChaseOnLook(iBossIndex) && g_aNPCChaseOnLookTarget[iBossIndex].Length > 0 && IsValidClient(iTarget) && iState != STATE_ATTACK && iState != STATE_STUN)
+	{
+		g_bAutoChasingLoudPlayer[iBossIndex] = true;
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		iState = STATE_CHASE;
+	}
 	if ((SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex] || SF_IsSlaughterRunMap()) && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && !g_bSlenderGiveUp[iBossIndex])
 	{
 		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
@@ -1821,13 +1901,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		g_bNPCChasingScareVictin[iBossIndex] = true;
 		g_bPlayerScaredByBoss[iTarget][iBossIndex] = false;
 		iState = STATE_CHASE;
-	}
-	if ((NPCHasAttribute(iBossIndex, "alert copies") || NPCHasAttribute(iBossIndex, "alert companions")) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && g_bNPCCopyAlerted[iBossIndex])
-	{
-		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		iState = STATE_CHASE;
-		g_bNPCCopyAlerted[iBossIndex] = false;
 	}
 	if (IsValidClient(iBestNewTarget) && (bPlayerInTrap[iBestNewTarget] || bPlayerMadeNoise[iBestNewTarget]) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 	{
@@ -2031,7 +2104,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						}
 						if (!NPCChaserHasMultiAttackSounds(iBossIndex))
 						{
-							SlenderPerformVoice(iBossIndex, "sound_attackenemy", iAttackIndex + 1);
+							SlenderPerformVoice(iBossIndex, "sound_attackenemy", iAttackIndex + 1, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 						}
 						else
 						{
@@ -2039,8 +2112,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							FormatEx(sAttackString, sizeof(sAttackString), "sound_attackenemy_%i", iAttackIndex+1);
 							switch (iAttackIndex)
 							{
-								case 0: SlenderPerformVoice(iBossIndex, "sound_attackenemy");
-								default: SlenderPerformVoice(iBossIndex, sAttackString);
+								case 0: SlenderPerformVoice(iBossIndex, "sound_attackenemy", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+								default: SlenderPerformVoice(iBossIndex, sAttackString, _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 							}
 						}
 						if (g_flLastStuckTime[iBossIndex] != 0.0) g_flLastStuckTime[iBossIndex] = GetGameTime();
@@ -2056,10 +2129,10 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						{
 							if (iOldState != STATE_STUN)
 							{
-								SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial");
+								SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 								if (NPCChaserCanUseChaseInitialAnimation(iBossIndex) && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && !SF_IsSlaughterRunMap())
 								{
-									if (g_hSlenderChaseInitialTimer[iBossIndex] == null)
+									if (g_hSlenderChaseInitialTimer[iBossIndex] == null && g_aNPCChaseOnLookTarget[iBossIndex].Length <= 0)
 									{
 										g_bNPCUsesChaseInitialAnimation[iBossIndex] = true;
 										npc.flWalkSpeed = 0.0;
@@ -2072,74 +2145,16 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						}
 						else
 						{
-							SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial");
+							SlenderPerformVoice(iBossIndex, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 							if (NPCChaserCanUseChaseInitialAnimation(iBossIndex) && !g_bNPCUsesChaseInitialAnimation[iBossIndex] && !SF_IsSlaughterRunMap())
 							{
-								if (g_hSlenderChaseInitialTimer[iBossIndex] == null)
+								if (g_hSlenderChaseInitialTimer[iBossIndex] == null && g_aNPCChaseOnLookTarget[iBossIndex].Length <= 0)
 								{
 									g_bNPCUsesChaseInitialAnimation[iBossIndex] = true;
 									npc.flWalkSpeed = 0.0;
 									npc.flRunSpeed = 0.0;
 									NPCChaserUpdateBossAnimation(iBossIndex, slender, iState);
 									g_hSlenderChaseInitialTimer[iBossIndex] = CreateTimer(GetProfileFloat(sSlenderProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
-								}
-							}
-						}
-						if (iOldState != STATE_STUN && iState != STATE_STUN && iState != STATE_ATTACK)
-						{
-							if ((NPCGetFlags(iBossIndex) & SFF_COPIES) && (NPCHasAttribute(iBossIndex, "alert copies")))
-							{
-								for (int iBossCheck = 0; iBossCheck < MAX_BOSSES; iBossCheck++)
-								{
-									if (NPCGetUniqueID(iBossCheck) != -1 && !g_bSlenderSpawning[iBossCheck] && 
-									g_iSlenderState[iBossCheck] != STATE_ATTACK && g_iSlenderState[iBossCheck] != STATE_STUN && g_iSlenderState[iBossCheck] != STATE_CHASE && 
-									(g_iSlenderCopyMaster[iBossCheck] == iBossIndex || g_iSlenderCopyMaster[iBossIndex] == iBossCheck))
-									{
-										int iBossEnt = NPCGetEntIndex(iBossCheck);
-										if (!iBossEnt || iBossEnt == INVALID_ENT_REFERENCE) continue;
-										
-										float flCopyPos[3];
-										GetEntPropVector(iBossEnt, Prop_Data, "m_vecAbsOrigin", flCopyPos);
-										
-										float flDist1 = GetVectorSquareMagnitude(flCopyPos, flMyPos);
-										
-										if ((flDist1 <= SquareFloat(NPCGetSearchRadius(iBossCheck, iDifficulty)) || flDist1 <= SquareFloat(NPCGetHearingRadius(iBossCheck, iDifficulty))))
-										{
-											if (IsValidClient(iTarget)) g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iTarget);
-											g_flSlenderTimeUntilNoPersistence[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
-											g_flSlenderTimeUntilAlert[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
-											g_iSlenderState[iBossCheck] = STATE_CHASE;
-											NPCChaserUpdateBossAnimation(iBossCheck, iBossEnt, STATE_CHASE);
-											g_bNPCCopyAlerted[iBossCheck] = true;
-										}
-									}
-								}
-							}
-							if (NPCHasAttribute(iBossIndex, "alert companions"))
-							{
-								for (int iBossCheck = 0; iBossCheck < MAX_BOSSES; iBossCheck++)
-								{
-									if (NPCGetUniqueID(iBossCheck) != -1 && !g_bSlenderSpawning[iBossCheck] && 
-									g_iSlenderState[iBossCheck] != STATE_ATTACK && g_iSlenderState[iBossCheck] != STATE_STUN && g_iSlenderState[iBossCheck] != STATE_CHASE && 
-									(g_iSlenderCompanionMaster[iBossCheck] == iBossIndex || g_iSlenderCompanionMaster[iBossIndex] == iBossCheck))
-									{
-										int iBossEnt = NPCGetEntIndex(iBossCheck);
-										if (!iBossEnt || iBossEnt == INVALID_ENT_REFERENCE) continue;
-										
-										float flCopyPos[3];
-										GetEntPropVector(iBossEnt, Prop_Data, "m_vecAbsOrigin", flCopyPos);
-										
-										float flDist1 = GetVectorSquareMagnitude(flCopyPos, flMyPos);
-										
-										if (flDist1 <= SquareFloat(NPCGetSearchRadius(iBossCheck, iDifficulty)) || flDist1 <= SquareFloat(NPCGetHearingRadius(iBossCheck, iDifficulty)))
-										{
-											if (IsValidClient(iTarget)) g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iTarget);
-											g_flSlenderTimeUntilNoPersistence[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
-											g_iSlenderState[iBossCheck] = STATE_CHASE;
-											NPCChaserUpdateBossAnimation(iBossCheck, iBossEnt, STATE_CHASE);
-											g_bNPCCopyAlerted[iBossCheck] = true;
-										}
-									}
 								}
 							}
 						}
@@ -2154,6 +2169,40 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		Call_PushCell(iOldState);
 		Call_PushCell(iState);
 		Call_Finish();
+		/*if (NPCChaserNormalSoundHookEnabled(iBossIndex))
+		{
+			switch (iOldState)
+			{
+				case STATE_IDLE, STATE_WANDER:
+				{
+					if (iState != STATE_IDLE && iState != STATE_WANDER) ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
+				}
+				case STATE_ALERT: ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
+				case STATE_CHASE:
+				{
+					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
+					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
+				}
+			}
+			switch (iState)
+			{
+				case STATE_IDLE, STATE_WANDER:
+				{
+					if (iOldState != STATE_IDLE && iOldState != STATE_WANDER) SlenderPerformVoice(iBossIndex, "sound_idle", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+				}
+				case STATE_ALERT: SlenderPerformVoice(iBossIndex, "sound_alertofenemy", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+				case STATE_CHASE:
+				{
+					char sChaseSoundPath[PLATFORM_MAX_PATH];
+					GetRandomStringFromProfile(sSlenderProfile, "sound_chaseenemyinitial", sChaseSoundPath, sizeof(sChaseSoundPath));
+					if (sChaseSoundPath[0] == '\0' && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
+					{
+						SlenderPerformVoice(iBossIndex, "sound_chasingenemy", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+					}
+				}
+			}
+		}*/
+		if (NPCChaserNormalSoundHookEnabled(iBossIndex)) g_flSlenderNextVoiceSound[iBossIndex] = 0.0;
 	}
 	
 	if (iOldState != iState && !g_bSlenderSpawning[iBossIndex])
@@ -2457,86 +2506,21 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	}
 
 	// Sound handling.
-	if (!NPCChaserNormalSoundHookEnabled(iBossIndex))
+	if (GetGameTime() >= g_flSlenderNextVoiceSound[iBossIndex])
 	{
-		if (GetGameTime() >= g_flSlenderNextVoiceSound[iBossIndex])
-		{
-			switch (iState)
-			{
-				case STATE_IDLE, STATE_WANDER:
-				{
-					SlenderPerformVoice(iBossIndex, "sound_idle");
-				}
-				case STATE_ALERT:
-				{
-					SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
-				}
-				case STATE_CHASE, STATE_ATTACK:
-				{
-					if (!g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
-				}
-			}
-		}
-	}
-	else
-	{
-		if (GetGameTime() >= g_flSlenderNextVoiceSound[iBossIndex])
-		{
-			switch (iState)
-			{
-				case STATE_IDLE, STATE_WANDER:
-				{
-					SlenderPerformVoice(iBossIndex, "sound_idle");
-				}
-				case STATE_ALERT:
-				{
-					SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
-				}
-				case STATE_CHASE, STATE_ATTACK:
-				{
-					if (!g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
-				}
-			}
-		}
 		switch (iState)
 		{
 			case STATE_IDLE, STATE_WANDER:
 			{
-				if (iOldState == STATE_ALERT || iOldState == STATE_CHASE || iOldState == STATE_ATTACK)
-				{
-					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
-					SlenderPerformVoice(iBossIndex, "sound_idle");
-				}
+				SlenderPerformVoice(iBossIndex, "sound_idle", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 			}
 			case STATE_ALERT:
 			{
-				if (iOldState == STATE_IDLE || iOldState == STATE_WANDER || iOldState == STATE_CHASE || iOldState == STATE_ATTACK)
-				{
-					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
-					ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
-					SlenderPerformVoice(iBossIndex, "sound_alertofenemy");
-				}
+				SlenderPerformVoice(iBossIndex, "sound_alertofenemy", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 			}
-			case STATE_CHASE, STATE_ATTACK:
+			case STATE_CHASE:
 			{
-				if (iOldState == STATE_ALERT || iOldState == STATE_IDLE || iOldState == STATE_WANDER)
-				{
-					char sSoundPath[PLATFORM_MAX_PATH];
-					GetRandomStringFromProfile(sSlenderProfile, "sound_chaseenemyinitial", sSoundPath, sizeof(sSoundPath));
-					if (sSoundPath[0] == '\0')
-					{
-						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
-						SlenderPerformVoice(iBossIndex, "sound_chasingenemy");
-					}
-					else if (sSoundPath[0] != '\0')
-					{
-						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_idle", SNDCHAN_AUTO);
-						ClientStopAllSlenderSounds(slender, sSlenderProfile, "sound_chasingenemy", SNDCHAN_AUTO);
-					}
-				}
+				if (!g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex] && !g_bNPCUsesChaseInitialAnimation[iBossIndex]) SlenderPerformVoice(iBossIndex, "sound_chasingenemy", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 			}
 		}
 	}

@@ -6,10 +6,36 @@
 static float g_flTrapDespawnTimer[2049];
 static bool g_bTrapClosed[2049];
 static int g_iTrapState[2049];
+static int g_iTrapMaster[2049];
+static bool g_bTrapStartedOpenAnim[2049];
+static bool g_bTrapDoIdleAnim[2049];
+static bool g_bTrapAnimChange[2049];
+static Handle g_hTrapTimer[2049];
 //State 0 = Idle, State 1 = Closed
 
 void Trap_SpawnTrap(float flPosition[3], float flDirection[3], int iBossIndex)
 {
+	int slender = NPCGetEntIndex(iBossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	float flNewPos[3], flZPos[3], flNewAngles[3], flTempAngles[3], flProduct1[3], flProduct2[3], flCross[3];
+	CopyVector(flPosition, flZPos);
+	flZPos[2] -= 99999.9;
+	Handle hTrace = TR_TraceRayFilterEx(flPosition, flZPos, MASK_PLAYERSOLID | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, slender);
+	TR_GetEndPosition(flNewPos, hTrace);
+	TR_GetPlaneNormal(hTrace, flDirection);
+	delete hTrace;
+
+	CopyVector(flDirection, flTempAngles);
+	NegateVector(flTempAngles);
+	GetVectorAngles(flTempAngles, flNewAngles);
+	flNewAngles[0] -= 90.0;
+
+	GetAngleVectors(flDirection, flProduct1, NULL_VECTOR, NULL_VECTOR);
+	GetAngleVectors(flNewAngles, flProduct2, NULL_VECTOR, NULL_VECTOR);
+	GetVectorCrossProduct(flProduct1, flTempAngles, flCross);
+	float flYaw = GetAngleBetweenVectors(flProduct2, flCross, flTempAngles);
+	RotateYaw(flNewAngles, flYaw - 90.0 );
+
 	switch (NPCChaserGetTrapType(iBossIndex))
 	{
 		case SF2BossTrapType_BearTrap:
@@ -17,8 +43,8 @@ void Trap_SpawnTrap(float flPosition[3], float flDirection[3], int iBossIndex)
 			int iTrap = CreateEntityByName("prop_dynamic");
 			if (iTrap != -1)
 			{
-				TeleportEntity(iTrap, flPosition, flDirection, NULL_VECTOR);
-				SetEntityModel(iTrap, TRAP_MODEL);
+				TeleportEntity(iTrap, flNewPos, flNewAngles, NULL_VECTOR);
+				SetEntityModel(iTrap, g_sSlenderTrapModel[iBossIndex]);
 				DispatchSpawn(iTrap);
 				ActivateEntity(iTrap);
 
@@ -41,48 +67,49 @@ void Trap_SpawnTrap(float flPosition[3], float flDirection[3], int iBossIndex)
 
 				AcceptEntityInput(iTrap, "EnableCollision");
 
-				SDKHook(iTrap, SDKHook_Think, Hook_TrapThink);
-				SDKHook(iTrap, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
+				g_iTrapMaster[iTrap] = iBossIndex;
 
 				g_bTrapClosed[iTrap] = false;
-				SetVariantString("trapopened");
-				AcceptEntityInput(iTrap, "SetDefaultAnimation");
-				SetVariantString("trapopened");
-				AcceptEntityInput(iTrap, "SetAnimation");
+				g_bTrapAnimChange[iTrap] = true;
+				SetEntProp(iTrap, Prop_Data, "m_bSequenceLoops", false);
+				if (g_sSlenderTrapAnimOpen[iBossIndex][0] != '\0')
+				{
+					SetVariantString(g_sSlenderTrapAnimOpen[iBossIndex]);
+					AcceptEntityInput(iTrap, "SetAnimation");
+					HookSingleEntityOutput(iTrap, "OnAnimationDone", OnTrapOpenComplete, false);
+					g_bTrapStartedOpenAnim[iTrap] = true;
+				}
+				else
+				{
+					SetVariantString(g_sSlenderTrapAnimIdle[iBossIndex]);
+					AcceptEntityInput(iTrap, "SetAnimation");
+				}
 				
 				g_iTrapEntityCount++;
 				
 				g_flTrapDespawnTimer[iTrap] = GetGameTime() + GetRandomFloat(20.0, 40.0);
 				g_iTrapState[iTrap] = 0;
 				
-				EmitSoundToAll(TRAP_DEPLOY, iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				EmitSoundToAll(g_sSlenderTrapDeploySound[iBossIndex], iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+
+				SDKHook(iTrap, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
+				g_hTrapTimer[iTrap] = CreateTimer(0.1, Timer_TrapThink, EntIndexToEntRef(iTrap), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 			}
 		}
 	}
 }
 
-void Hook_TrapThink(int iTrap)
+Action Timer_TrapThink(Handle timer, any entref)
 {
-	if (!g_bEnabled) return;
-	
+	if (!g_bEnabled) return Plugin_Stop;
+
+	int iTrap = EntRefToEntIndex(entref);
+	if (!iTrap || iTrap == INVALID_ENT_REFERENCE) return Plugin_Stop;
+
+	if (timer != g_hTrapTimer[iTrap]) return Plugin_Stop;
+
 	if (GetGameTime() >= g_flTrapDespawnTimer[iTrap])
 		Trap_Despawn(iTrap);
-		
-	int iState = g_iTrapState[iTrap];
-	switch (iState)
-	{
-		case 0:
-		{
-			SetVariantString("trapopened");
-			AcceptEntityInput(iTrap, "SetAnimation");
-		}
-		case 1:
-		{
-			SetVariantString("trapclosed");
-			AcceptEntityInput(iTrap, "SetAnimation");
-			AcceptEntityInput(iTrap, "DisableCollision");
-		}
-	}
 
 	if (!g_bTrapClosed[iTrap])
 	{
@@ -111,12 +138,61 @@ void Hook_TrapThink(int iTrap)
 				}
 				SDKHooks_TakeDamage(i, i, i, 10.0, 128);
 				g_iPlayerTrapCount[i] = GetRandomInt(2, 4);
-				g_bTrapClosed[iTrap] = true;
 				g_iTrapState[iTrap] = 1;
-				EmitSoundToAll(TRAP_CLOSE, iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				g_bTrapAnimChange[iTrap] = true;
+				int iBossIndex = g_iTrapMaster[iTrap];
+				EmitSoundToAll(g_sSlenderTrapHitSound[iBossIndex], iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				SetVariantString(g_sSlenderTrapAnimClose[iBossIndex]);
+				AcceptEntityInput(iTrap, "SetAnimation");
 				AcceptEntityInput(iTrap, "DisableCollision");
+				g_bTrapClosed[iTrap] = true;
+				TrapUpdateAnimation(iTrap);
 			}
 		}
+	}
+
+	return Plugin_Continue;
+}
+
+void TrapUpdateAnimation(int iTrap)
+{
+	if (!IsValidEntity(iTrap)) return;
+	int iState = g_iTrapState[iTrap];
+	int iBossIndex = g_iTrapMaster[iTrap];
+	switch (iState)
+	{
+		case 0:
+		{
+			if (!g_bTrapStartedOpenAnim[iTrap] && g_sSlenderTrapAnimOpen[iBossIndex][0] != '\0')
+			{
+				SetVariantString(g_sSlenderTrapAnimOpen[iBossIndex]);
+				AcceptEntityInput(iTrap, "SetAnimation");
+				HookSingleEntityOutput(iTrap, "OnAnimationDone", OnTrapOpenComplete, true);
+				g_bTrapStartedOpenAnim[iTrap] = true;
+			}
+			else if (g_bTrapDoIdleAnim[iTrap])
+			{
+				SetVariantString(g_sSlenderTrapAnimIdle[iBossIndex]);
+				AcceptEntityInput(iTrap, "SetAnimation");
+			}
+		}
+		case 1:
+		{
+			SetVariantString(g_sSlenderTrapAnimClose[iBossIndex]);
+			AcceptEntityInput(iTrap, "SetAnimation");
+			AcceptEntityInput(iTrap, "DisableCollision");
+		}
+	}
+	SetEntProp(iTrap, Prop_Data, "m_bSequenceLoops", false);
+	g_bTrapAnimChange[iTrap] = false;
+}
+
+void OnTrapOpenComplete(const char[] output, int caller, int activator, float delay)
+{
+	if (IsValidEntity(caller))
+	{
+		g_bTrapAnimChange[caller] = true;
+		g_bTrapDoIdleAnim[caller] = true;
 	}
 }
 /*
@@ -155,12 +231,17 @@ public Action Hook_TrapOnTakeDamage(int iTrap,int &attacker,int &inflictor,float
 			{
 				g_bTrapClosed[iTrap] = true;
 				g_iTrapState[iTrap] = 1;
-				EmitSoundToAll(TRAP_CLOSE, iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				g_bTrapAnimChange[iTrap] = true;
+				int iBossIndex = g_iTrapMaster[iTrap];
+				EmitSoundToAll(g_sSlenderTrapMissSound[iBossIndex], iTrap, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				SetVariantString(g_sSlenderTrapAnimClose[iBossIndex]);
+				AcceptEntityInput(iTrap, "SetAnimation");
 				AcceptEntityInput(iTrap, "DisableCollision");
 				if (g_flTrapDespawnTimer[iTrap] > 5.0)
 				{
 					g_flTrapDespawnTimer[iTrap] = GetGameTime()+5.0;
 				}
+				TrapUpdateAnimation(iTrap);
 			}
 		}
 	}
@@ -170,7 +251,7 @@ public Action Hook_TrapOnTakeDamage(int iTrap,int &attacker,int &inflictor,float
 
 void Trap_Despawn(int iTrap)
 {
-	SDKUnhook(iTrap, SDKHook_Think, Hook_TrapThink);
+	if (g_hTrapTimer[iTrap] != null) KillTimer(g_hTrapTimer[iTrap]);
 	SDKUnhook(iTrap, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
 	g_iTrapEntityCount--;
 	RemoveEntity(iTrap);

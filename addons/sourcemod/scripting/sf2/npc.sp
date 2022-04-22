@@ -62,6 +62,7 @@ static float g_flNPCJumpscareDistance[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCJumpscareDuration[MAX_BOSSES][Difficulty_Max];
 static float g_flNPCJumpscareCooldown[MAX_BOSSES][Difficulty_Max];
 static bool g_bNPCJumpscareOnScare[MAX_BOSSES];
+bool g_bNPCIgnoreNonMarkedForChase[MAX_BOSSES];
 
 g_iSlender[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
@@ -533,22 +534,12 @@ void CheckIfMusicValid()
 		if (NPCGetUniqueID(i) == -1) continue;
 		if (g_iNPCAllowMusicOnDifficulty[i] & iDifficulty)
 		{
-			hTimerMusic = CreateTimer(NPCGetSoundMusicLoop(i, iDifficulty),BossMusic,i,TIMER_FLAG_NO_MAPCHANGE);
 			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(i, sProfile, sizeof(sProfile));
 			for(int client = 1;client <=MaxClients;client ++)
 			{
 				if(IsValidClient(client) && (!g_bPlayerEliminated[client] || IsClientInGhostMode(client)))
 				{
-					ClientChaseMusicReset(client);
-					ClientChaseMusicSeeReset(client);
-					ClientAlertMusicReset(client);
-					ClientIdleMusicReset(client);
-					ClientStopAllSlenderSounds(client, sProfile, "sound_chase_music", SNDCHAN_AUTO);
-					ClientStopAllSlenderSounds(client, sProfile, "sound_alert_music", SNDCHAN_AUTO);
-					ClientStopAllSlenderSounds(client, sProfile, "sound_chase_visible", SNDCHAN_AUTO);
-					if (g_strPlayerMusic[client][0] != '\0') EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
-
 					GetRandomStringFromProfile(sProfile,"sound_music",sCurrentMusicTrackNormal,sizeof(sCurrentMusicTrackNormal));
 				
 					GetRandomStringFromProfile(sProfile,"sound_music_hard",sCurrentMusicTrackHard,sizeof(sCurrentMusicTrackHard));
@@ -603,9 +594,22 @@ void CheckIfMusicValid()
 						case Difficulty_Nightmare: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNightmare);
 						case Difficulty_Apollyon: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackApollyon);
 					}
-					if (sCurrentMusicTrack[0] != '\0') StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
-					ClientMusicStart(client, sCurrentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
-					ClientUpdateMusicSystem(client);
+					if (sCurrentMusicTrack[0] != '\0')
+					{
+						hTimerMusic = CreateTimer(NPCGetSoundMusicLoop(i, iDifficulty),BossMusic,i,TIMER_FLAG_NO_MAPCHANGE);
+						StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
+						ClientChaseMusicReset(client);
+						ClientChaseMusicSeeReset(client);
+						ClientAlertMusicReset(client);
+						ClientIdleMusicReset(client);
+						ClientStopAllSlenderSounds(client, sProfile, "sound_chase_music", SNDCHAN_AUTO);
+						ClientStopAllSlenderSounds(client, sProfile, "sound_alert_music", SNDCHAN_AUTO);
+						ClientStopAllSlenderSounds(client, sProfile, "sound_chase_visible", SNDCHAN_AUTO);
+						if (g_strPlayerMusic[client][0] != '\0') EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
+						ClientMusicStart(client, sCurrentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
+						ClientUpdateMusicSystem(client);
+						break;
+					}
 				}
 			}
 			break;
@@ -1813,6 +1817,8 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 
 	g_bSlenderTeleportIgnoreChases[Npc.Index] = GetBossProfileTeleportIgnoreChases(iProfileIndex);
 
+	g_bSlenderTeleportIgnoreVis[Npc.Index] = GetBossProfileTeleportIgnoreVis(iProfileIndex);
+
 	g_bNPCHealthbarEnabled[Npc.Index] = GetBossProfileHealthbarState(iProfileIndex);
 
 	g_bSlenderProxiesAllowNormalVoices[Npc.Index] = GetBossProfileProxyAllowNormalVoices(iProfileIndex);
@@ -1949,80 +1955,39 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 	g_flSlenderTeleportMaxTargetTime[Npc.Index] = -1.0;
 	g_flSlenderNextTeleportTime[Npc.Index] = -1.0;
 	g_flSlenderTeleportTargetTime[Npc.Index] = -1.0;
-	
-	char sCloakOnSound[PLATFORM_MAX_PATH];
-	char sCloakOffSound[PLATFORM_MAX_PATH];
-	char sShootRocketSound[PLATFORM_MAX_PATH];
-	char sRocketModel[PLATFORM_MAX_PATH];
-	char sRocketTrailParticle[PLATFORM_MAX_PATH];
-	char sShootSentryRocketSound[PLATFORM_MAX_PATH];
-	char sShootFireballSound[PLATFORM_MAX_PATH];
-	char sRocketImpactSound[PLATFORM_MAX_PATH];
-	char sRocketExplodeParticle[PLATFORM_MAX_PATH];
-	char sFireballImpactSound[PLATFORM_MAX_PATH];
-	char sIceballImpactSound[PLATFORM_MAX_PATH];
-	char sShootGrenadeSound[PLATFORM_MAX_PATH];
-	char sShootArrowSound[PLATFORM_MAX_PATH];
-	char sShootManglerSound[PLATFORM_MAX_PATH];
-	char sShootBaseballSound[PLATFORM_MAX_PATH];	
-	char sJaratePlayerHitSound[PLATFORM_MAX_PATH];
-	char sMilkPlayerHitSound[PLATFORM_MAX_PATH];
-	char sGasPlayerHitSound[PLATFORM_MAX_PATH];
-	char sStunPlayerHitSound[PLATFORM_MAX_PATH];
-	char sEngineSound[PLATFORM_MAX_PATH];
-	char sShockwaveBeam[PLATFORM_MAX_PATH];
-	char sShockwaveHalo[PLATFORM_MAX_PATH];
-	char sOutroSound[PLATFORM_MAX_PATH];
-	char sSmiteSound[PLATFORM_MAX_PATH];
 
-	GetProfileString(sProfile, "cloak_on_sound", sCloakOnSound, sizeof(sCloakOnSound), DEFAULT_CLOAKONSOUND);
-	GetProfileString(sProfile, "cloak_off_sound", sCloakOffSound, sizeof(sCloakOffSound), DEFAULT_CLOAKOFFSOUND);
-	GetProfileString(sProfile, "rocket_shoot_sound", sShootRocketSound, sizeof(sShootRocketSound), ROCKET_SHOOT);
-	GetProfileString(sProfile, "rocket_model", sRocketModel, sizeof(sRocketModel), ROCKET_MODEL);
-	GetProfileString(sProfile, "sentryrocket_shoot_sound", sShootSentryRocketSound, sizeof(sShootSentryRocketSound), SENTRYROCKET_SHOOT);
-	GetProfileString(sProfile, "fire_shoot_sound", sShootFireballSound, sizeof(sShootFireballSound), FIREBALL_SHOOT);
-	GetProfileString(sProfile, "rocket_explode_sound", sRocketImpactSound, sizeof(sRocketImpactSound), FIREBALL_IMPACT);
-	GetProfileString(sProfile, "rocket_trail_particle", sRocketTrailParticle, sizeof(sRocketTrailParticle), ROCKET_TRAIL);
-	GetProfileString(sProfile, "rocket_explode_particle", sRocketExplodeParticle, sizeof(sRocketExplodeParticle), ROCKET_EXPLODE_PARTICLE);
-	GetProfileString(sProfile, "fire_explode_sound", sFireballImpactSound, sizeof(sFireballImpactSound), FIREBALL_IMPACT);
-	GetProfileString(sProfile, "fire_iceball_slow_sound", sIceballImpactSound, sizeof(sIceballImpactSound), ICEBALL_IMPACT);
-	GetProfileString(sProfile, "grenade_shoot_sound", sShootGrenadeSound, sizeof(sShootGrenadeSound), GRENADE_SHOOT);
-	GetProfileString(sProfile, "arrow_shoot_sound", sShootArrowSound, sizeof(sShootArrowSound), ARROW_SHOOT);
-	GetProfileString(sProfile, "mangler_shoot_sound", sShootManglerSound, sizeof(sShootManglerSound), MANGLER_SHOOT);
-	GetProfileString(sProfile, "baseball_shoot_sound", sShootBaseballSound, sizeof(sShootBaseballSound), BASEBALL_SHOOT);
-	GetProfileString(sProfile, "player_jarate_sound", sJaratePlayerHitSound, sizeof(sJaratePlayerHitSound), JARATE_HITPLAYER);
-	GetProfileString(sProfile, "player_milk_sound", sMilkPlayerHitSound, sizeof(sMilkPlayerHitSound), JARATE_HITPLAYER);
-	GetProfileString(sProfile, "player_gas_sound", sGasPlayerHitSound, sizeof(sGasPlayerHitSound), JARATE_HITPLAYER);
-	GetProfileString(sProfile, "player_stun_sound", sStunPlayerHitSound, sizeof(sStunPlayerHitSound), STUN_HITPLAYER);
-	GetProfileString(sProfile, "engine_sound", sEngineSound, sizeof(sEngineSound));
-	GetProfileString(sProfile, "shockwave_beam_sprite", sShockwaveBeam, sizeof(sShockwaveBeam), "sprites/laser.vmt");
-	GetProfileString(sProfile, "shockwave_halo_sprite", sShockwaveHalo, sizeof(sShockwaveHalo), "sprites/halo01.vmt");
-	GetProfileString(sProfile, "sound_music_outro", sOutroSound, sizeof(sOutroSound));
-	GetProfileString(sProfile, "player_smite_sound", sSmiteSound, sizeof(sSmiteSound), SOUND_THUNDER);
-
-	strcopy(g_sSlenderCloakOnSound[Npc.Index], sizeof(g_sSlenderCloakOnSound[]), sCloakOnSound);
-	strcopy(g_sSlenderCloakOffSound[Npc.Index], sizeof(g_sSlenderCloakOffSound[]), sCloakOffSound);
-	strcopy(g_sSlenderJarateHitSound[Npc.Index], sizeof(g_sSlenderJarateHitSound[]), sJaratePlayerHitSound);
-	strcopy(g_sSlenderMilkHitSound[Npc.Index], sizeof(g_sSlenderMilkHitSound[]), sMilkPlayerHitSound);
-	strcopy(g_sSlenderGasHitSound[Npc.Index], sizeof(g_sSlenderGasHitSound[]), sGasPlayerHitSound);
-	strcopy(g_sSlenderStunHitSound[Npc.Index], sizeof(g_sSlenderStunHitSound[]), sStunPlayerHitSound);
-	strcopy(g_sSlenderFireballExplodeSound[Npc.Index], sizeof(g_sSlenderFireballExplodeSound[]), sFireballImpactSound);
-	strcopy(g_sSlenderFireballShootSound[Npc.Index], sizeof(g_sSlenderFireballShootSound[]), sShootFireballSound);
-	strcopy(g_sSlenderIceballImpactSound[Npc.Index], sizeof(g_sSlenderIceballImpactSound[]), sIceballImpactSound);
-	strcopy(g_sSlenderRocketExplodeSound[Npc.Index], sizeof(g_sSlenderRocketExplodeSound[]), sRocketImpactSound);
-	strcopy(g_sSlenderRocketShootSound[Npc.Index], sizeof(g_sSlenderRocketShootSound[]), sShootRocketSound);
-	strcopy(g_sSlenderRocketModel[Npc.Index], sizeof(g_sSlenderRocketModel[]), sRocketModel);
-	strcopy(g_sSlenderRocketTrailParticle[Npc.Index], sizeof(g_sSlenderRocketTrailParticle[]), sRocketTrailParticle);
-	strcopy(g_sSlenderRocketExplodeParticle[Npc.Index], sizeof(g_sSlenderRocketExplodeParticle[]), sRocketExplodeParticle);
-	strcopy(g_sSlenderGrenadeShootSound[Npc.Index], sizeof(g_sSlenderGrenadeShootSound[]), sShootGrenadeSound);
-	strcopy(g_sSlenderSentryRocketShootSound[Npc.Index], sizeof(g_sSlenderSentryRocketShootSound[]), sShootSentryRocketSound);
-	strcopy(g_sSlenderArrowShootSound[Npc.Index], sizeof(g_sSlenderArrowShootSound[]), sShootArrowSound);
-	strcopy(g_sSlenderManglerShootSound[Npc.Index], sizeof(g_sSlenderManglerShootSound[]), sShootManglerSound);
-	strcopy(g_sSlenderBaseballShootSound[Npc.Index], sizeof(g_sSlenderBaseballShootSound[]), sShootBaseballSound);
-	strcopy(g_sSlenderEngineSound[Npc.Index], sizeof(g_sSlenderEngineSound[]), sEngineSound);
-	strcopy(g_sSlenderShockwaveBeamSprite[Npc.Index], sizeof(g_sSlenderShockwaveBeamSprite[]), sShockwaveBeam);
-	strcopy(g_sSlenderShockwaveHaloSprite[Npc.Index], sizeof(g_sSlenderShockwaveHaloSprite[]), sShockwaveHalo);
-	strcopy(g_sSlenderSmiteSound[Npc.Index], sizeof(g_sSlenderSmiteSound[]), sSmiteSound);
+	GetProfileString(sProfile, "cloak_on_sound", g_sSlenderCloakOnSound[Npc.Index], sizeof(g_sSlenderCloakOnSound[]), DEFAULT_CLOAKONSOUND);
+	GetProfileString(sProfile, "cloak_off_sound", g_sSlenderCloakOffSound[Npc.Index], sizeof(g_sSlenderCloakOffSound[]), DEFAULT_CLOAKOFFSOUND);
+	GetProfileString(sProfile, "rocket_shoot_sound", g_sSlenderRocketShootSound[Npc.Index], sizeof(g_sSlenderRocketShootSound[]), ROCKET_SHOOT);
+	GetProfileString(sProfile, "rocket_model", g_sSlenderRocketModel[Npc.Index], sizeof(g_sSlenderRocketModel[]), ROCKET_MODEL);
+	GetProfileString(sProfile, "sentryrocket_shoot_sound", g_sSlenderSentryRocketShootSound[Npc.Index], sizeof(g_sSlenderSentryRocketShootSound[]), SENTRYROCKET_SHOOT);
+	GetProfileString(sProfile, "fire_shoot_sound", g_sSlenderFireballShootSound[Npc.Index], sizeof(g_sSlenderFireballShootSound[]), FIREBALL_SHOOT);
+	GetProfileString(sProfile, "rocket_explode_sound", g_sSlenderRocketExplodeSound[Npc.Index], sizeof(g_sSlenderRocketExplodeSound[]), FIREBALL_IMPACT);
+	GetProfileString(sProfile, "fire_trail", g_sSlenderFireballTrail[Npc.Index], sizeof(g_sSlenderFireballTrail[]), FIREBALL_TRAIL);
+	GetProfileString(sProfile, "rocket_trail_particle", g_sSlenderRocketTrailParticle[Npc.Index], sizeof(g_sSlenderRocketTrailParticle[]), ROCKET_TRAIL);
+	GetProfileString(sProfile, "rocket_explode_particle", g_sSlenderRocketExplodeParticle[Npc.Index], sizeof(g_sSlenderRocketExplodeParticle[]), ROCKET_EXPLODE_PARTICLE);
+	GetProfileString(sProfile, "fire_explode_sound", g_sSlenderFireballExplodeSound[Npc.Index], sizeof(g_sSlenderFireballExplodeSound[]), FIREBALL_IMPACT);
+	GetProfileString(sProfile, "fire_iceball_slow_sound", g_sSlenderIceballImpactSound[Npc.Index], sizeof(g_sSlenderIceballImpactSound[]), ICEBALL_IMPACT);
+	GetProfileString(sProfile, "fire_iceball_trail", g_sSlenderIceballTrail[Npc.Index], sizeof(g_sSlenderIceballTrail[]), ICEBALL_TRAIL);
+	GetProfileString(sProfile, "grenade_shoot_sound", g_sSlenderGrenadeShootSound[Npc.Index], sizeof(g_sSlenderGrenadeShootSound[]), GRENADE_SHOOT);
+	GetProfileString(sProfile, "arrow_shoot_sound", g_sSlenderArrowShootSound[Npc.Index], sizeof(g_sSlenderArrowShootSound[]), ARROW_SHOOT);
+	GetProfileString(sProfile, "mangler_shoot_sound", g_sSlenderManglerShootSound[Npc.Index], sizeof(g_sSlenderManglerShootSound[]), MANGLER_SHOOT);
+	GetProfileString(sProfile, "baseball_shoot_sound", g_sSlenderBaseballShootSound[Npc.Index], sizeof(g_sSlenderBaseballShootSound[]), BASEBALL_SHOOT);
+	GetProfileString(sProfile, "player_jarate_sound", g_sSlenderJarateHitSound[Npc.Index], sizeof(g_sSlenderJarateHitSound[]), JARATE_HITPLAYER);
+	GetProfileString(sProfile, "player_milk_sound", g_sSlenderMilkHitSound[Npc.Index], sizeof(g_sSlenderMilkHitSound[]), JARATE_HITPLAYER);
+	GetProfileString(sProfile, "player_gas_sound", g_sSlenderGasHitSound[Npc.Index], sizeof(g_sSlenderGasHitSound[]), JARATE_HITPLAYER);
+	GetProfileString(sProfile, "player_stun_sound", g_sSlenderStunHitSound[Npc.Index], sizeof(g_sSlenderStunHitSound[]), STUN_HITPLAYER);
+	GetProfileString(sProfile, "engine_sound", g_sSlenderEngineSound[Npc.Index], sizeof(g_sSlenderEngineSound[]));
+	GetProfileString(sProfile, "shockwave_beam_sprite", g_sSlenderShockwaveBeamSprite[Npc.Index], sizeof(g_sSlenderShockwaveBeamSprite[]), "sprites/laser.vmt");
+	GetProfileString(sProfile, "shockwave_halo_sprite", g_sSlenderShockwaveHaloSprite[Npc.Index], sizeof(g_sSlenderShockwaveHaloSprite[]), "sprites/halo01.vmt");
+	GetProfileString(sProfile, "player_smite_sound", g_sSlenderSmiteSound[Npc.Index], sizeof(g_sSlenderSmiteSound[]), SOUND_THUNDER);
+	GetProfileString(sProfile, "trap_model", g_sSlenderTrapModel[Npc.Index], sizeof(g_sSlenderTrapModel[]), TRAP_MODEL);
+	GetProfileString(sProfile, "trap_deploy_sound", g_sSlenderTrapDeploySound[Npc.Index], sizeof(g_sSlenderTrapDeploySound[]), TRAP_DEPLOY);
+	GetProfileString(sProfile, "trap_miss_sound", g_sSlenderTrapMissSound[Npc.Index], sizeof(g_sSlenderTrapMissSound[]), TRAP_CLOSE);
+	GetProfileString(sProfile, "trap_catch_sound", g_sSlenderTrapHitSound[Npc.Index], sizeof(g_sSlenderTrapHitSound[]), TRAP_CLOSE);
+	GetProfileString(sProfile, "trap_animation_idle", g_sSlenderTrapAnimIdle[Npc.Index], sizeof(g_sSlenderTrapAnimIdle[]), "trapopened");
+	GetProfileString(sProfile, "trap_animation_closed", g_sSlenderTrapAnimClose[Npc.Index], sizeof(g_sSlenderTrapAnimClose[]), "trapclosed");
+	GetProfileString(sProfile, "trap_animation_open", g_sSlenderTrapAnimOpen[Npc.Index], sizeof(g_sSlenderTrapAnimOpen[]));
 
 	g_hSlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	
@@ -2035,6 +2000,10 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 			NPCChaserOnSelectProfile(Npc.Index, bInvincible);
 			
 			SlenderCreateTargetMemory(Npc.Index);
+		}
+		case SF2BossType_Statue:
+		{
+			NPCStatueOnSelectProfile(Npc.Index);
 		}
 	}
 	
@@ -2205,6 +2174,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] sProfile,int iAdditionalBoss
 //SF2NPC_BaseNPC NpcCopyMaster=view_as<SF2NPC_BaseNPC>(SF2_INVALID_NPC) <= Bug?
 SF2NPC_BaseNPC AddProfile(const char[] strName,int iAdditionalBossFlags=0,SF2NPC_BaseNPC NpcCopyMaster=view_as<SF2NPC_BaseNPC>(SF2_INVALID_NPC), bool bSpawnCompanions=true, bool bPlaySpawnSound=true, bool bInvincible = false)
 {
+	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return SF2_INVALID_NPC; // Stop spawning bosses before all pages are picked up in Renevant.
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
 		SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(i);
@@ -2683,7 +2653,7 @@ void RemoveProfile(int iBossIndex)
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	if (!IsRoundPlaying()) return;
+	//if (!IsRoundPlaying()) return;
 
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return; // Stop spawning bosses before all pages are picked up in Renevant.
 
@@ -2701,48 +2671,97 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 	char sBuffer[PLATFORM_MAX_PATH];
 	switch (NPCGetType(iBossIndex))
 	{
-		case SF2BossType_Creeper:
+		case SF2BossType_Statue:
 		{
-			int iSlenderModel = SpawnSlenderModel(iBossIndex, flTruePos);
-			if (iSlenderModel == -1) 
+			GetSlenderModel(iBossIndex, _, sBuffer, sizeof(sBuffer));
+
+			CBaseNPC npcBoss = new CBaseNPC();
+			CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npcBoss.GetEntity());
+			CBaseNPC_Locomotion locomotion = npcBoss.GetLocomotion();
+
+			npcEntity.Teleport(flTruePos, flVecAng);
+			npcEntity.SetModel(sBuffer);
+			npcEntity.SetRenderMode(view_as<RenderMode>(g_iSlenderRenderMode[iBossIndex]));
+			npcEntity.SetRenderFx(view_as<RenderFx>(g_iSlenderRenderFX[iBossIndex]));
+			npcEntity.SetRenderColor(g_iSlenderRenderColor[iBossIndex][0], g_iSlenderRenderColor[iBossIndex][1], g_iSlenderRenderColor[iBossIndex][2], g_iSlenderRenderColor[iBossIndex][3]);
+			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
-				LogError("Could not spawn boss: model failed to spawn!");
-				return;
+				float flScaleModel = NPCGetModelScale(iBossIndex) * 0.5;
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", flScaleModel);
 			}
-			g_iSlenderModel[iBossIndex] = EntIndexToEntRef(iSlenderModel);
-			g_iSlender[iBossIndex] = g_iSlenderModel[iBossIndex];
+			else
+			{
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(iBossIndex));
+			}
+			npcEntity.Spawn();
+			npcEntity.Activate();
+
+			npcBoss.flStepSize = 18.0;
+			npcBoss.flGravity = g_flGravity;
+			npcBoss.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
+			npcBoss.flDeathDropHeight = 99999.0;
+			npcBoss.flJumpHeight = 512.0;
+			npcBoss.flWalkSpeed = g_flSlenderCalculatedWalkSpeed[iBossIndex];
+			npcBoss.flRunSpeed = g_flSlenderCalculatedSpeed[iBossIndex];
+			npcBoss.flMaxYawRate = 0.0;
+			g_pPath[iBossIndex].SetMinLookAheadDistance(GetProfileFloat(sProfile, "search_node_dist_lookahead", 512.0));
+			locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
+			locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
+			locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
+			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
+			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
+
+			float flSlenderBoxMins[3], flSlenderBoxMaxs[3];
+			flSlenderBoxMins[0] = -11.0;
+			flSlenderBoxMins[1] = -11.0;
+			flSlenderBoxMaxs[0] = 11.0;
+			flSlenderBoxMaxs[1] = 11.0;
+			flSlenderBoxMaxs[2] = 55.0;
+
+			npcEntity.SetPropVector(Prop_Send, "m_vecMins", flSlenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", flSlenderBoxMaxs);
+
+			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", flSlenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", flSlenderBoxMaxs);
+
+			if (NPCGetModelSkinMax(iBossIndex) > 0)
+			{
+				int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iBossIndex));
+				npcEntity.SetProp(Prop_Send, "m_nSkin", iRandomSkin);
+			}
+			else
+			{
+				if (view_as<bool>(GetProfileNum(sProfile,"skin_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(iBossIndex, iDifficulty));
+				else npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(iBossIndex));
+			}
+			if (NPCGetModelBodyGroupsMax(iBossIndex) > 0)
+			{
+				int iRandomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(iBossIndex));
+				npcEntity.SetProp(Prop_Send, "m_nBody", iRandomBody);
+			}
+			else
+			{
+				if (view_as<bool>(GetProfileNum(sProfile,"body_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(iBossIndex, iDifficulty));
+				else npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(iBossIndex));
+			}
+
+			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
+			SetEntityFlags(npcEntity.iEnt, FL_NPC);
+			SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
+
+			npcEntity.SetProp(Prop_Send, "m_usSolidFlags", FSOLID_TRIGGER|FSOLID_NOT_SOLID);
+			npcEntity.SetProp(Prop_Data, "m_nSolidType", SOLID_BBOX);
+			npcEntity.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+
+			SDKHook(npcEntity.iEnt, SDKHook_ThinkPost, SlenderStatueSetNextThink);
+			SDKHook(npcEntity.iEnt, SDKHook_Think, SlenderStatueBossProcessMovement);
+
+			g_iSlender[iBossIndex] = EntIndexToEntRef(npcEntity.iEnt);
+
 			g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderBlinkBossThink, g_iSlender[iBossIndex], TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	
-			// Initialize our pose parameters, if needed.
-			int iPose = EntRefToEntIndex(g_iSlenderPoseEnt[iBossIndex]);
-			g_iSlenderPoseEnt[iBossIndex] = INVALID_ENT_REFERENCE;
-			if (iPose && iPose != INVALID_ENT_REFERENCE)
-			{
-				RemoveEntity(iPose);
-			}
-			
-			char sPoseParameter[64];
-			GetProfileString(sProfile, "pose_parameter", sPoseParameter, sizeof(sPoseParameter));
-			if (sPoseParameter[0] != '\0')
-			{
-				iPose = CreateEntityByName("point_posecontroller");
-				if (iPose != -1)
-				{
-					// We got a pose parameter! We need a name!
-					FormatEx(sBuffer, sizeof(sBuffer), "s%dposepls", g_iSlenderModel[iBossIndex]);
-					DispatchKeyValue(iSlenderModel, "targetname", sBuffer);
-					DispatchKeyValue(iPose, "PropName", sBuffer);
-					DispatchKeyValue(iPose, "PoseParameterName", sPoseParameter);
-					DispatchKeyValueFloat(iPose, "PoseValue", GetProfileFloat(sProfile, "pose_parameter_max"));
-					DispatchSpawn(iPose);
-					SetVariantString(sPoseParameter);
-					AcceptEntityInput(iPose, "SetPoseParameterName");
-					SetVariantString("!activator");
-					AcceptEntityInput(iPose, "SetParent", iSlenderModel);
-					
-					g_iSlenderPoseEnt[iBossIndex] = EntIndexToEntRef(iPose);
-				}
-			}
+
+			Spawn_Statue(iBossIndex);
+
 			if (view_as<bool>(GetProfileNum(sProfile,"tp_effect_spawn",0))) SlenderCreateParticleSpawnEffect(iBossIndex, "tp_effect_spawn_particle", "tp_effect_spawn_sound", "tp_effect_origin");
 		}
 		case SF2BossType_Chaser:
@@ -2777,7 +2796,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			npcBoss.flGravity = g_flGravity;
 			npcBoss.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
 			npcBoss.flDeathDropHeight = 99999.0;
-			npcBoss.flJumpHeight = 500.0;
+			npcBoss.flJumpHeight = 512.0;
 			npcBoss.flWalkSpeed = g_flSlenderCalculatedWalkSpeed[iBossIndex];
 			npcBoss.flRunSpeed = g_flSlenderCalculatedSpeed[iBossIndex];
 			npcBoss.flMaxYawRate = NPCGetTurnRate(iBossIndex);
@@ -3171,8 +3190,22 @@ void RemoveSlender(int iBossIndex)
 		//Turn off all slender's effects in order to prevent some bugs.
 		SlenderRemoveEffects(iBoss, true);
 
-		SDKUnhook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);
-		SDKUnhook(iBoss, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamageOriginal);
+		if (NPCGetType(iBossIndex) == SF2BossType_Statue)
+		{
+			SDKUnhook(iBoss, SDKHook_Think, SlenderStatueBossProcessMovement);
+			// Stop all possible looping sounds.
+			ClientStopAllSlenderSounds(iBoss, sProfile, "sound_move", SNDCHAN_AUTO);
+		}
+		else
+		{
+			SDKUnhook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);
+			SDKUnhook(iBoss, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamageOriginal);
+		}
+
+		if (g_pPath[iBossIndex].IsValid())
+		{
+			g_pPath[iBossIndex].Invalidate();
+		}
 
 		int iGlow = EntRefToEntIndex(g_iNPCGlowEntity[iBossIndex]);
 		if(iGlow != INVALID_ENT_REFERENCE)
@@ -3186,9 +3219,6 @@ void RemoveSlender(int iBossIndex)
 			RemoveEntity(iGlow);
 			g_iNPCTauntGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
 		}
-
-		// Stop all possible looping sounds.
-		if (NPCGetType(iBossIndex) == SF2BossType_Creeper) ClientStopAllSlenderSounds(iBoss, sProfile, "sound_move", SNDCHAN_AUTO);
 
 		if (view_as<bool>(GetProfileNum(sProfile,"tp_effect_despawn",0))) SlenderCreateParticleSpawnEffect(iBossIndex, "tp_effect_despawn_particle", "tp_effect_despawn_sound", "tp_effect_origin");
 		
@@ -3413,7 +3443,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 			if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) flDistance *= 1.85;
 			if (IsClientReallySprinting(client)) flDistance *= 0.66;
 			
-			hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
 			bTraceHit = TR_DidHit(hTrace);
 			delete hTrace;
 		}
@@ -3422,7 +3452,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 			float flHisEyePos[3];
 			GetClientEyePosition(client, flHisEyePos);
 			
-			hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
 			bTraceHit = TR_DidHit(hTrace);
 			delete hTrace;
 			
@@ -3441,7 +3471,7 @@ stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
 			GetClientAbsOrigin(client, flEndPos);
 			AddVectors(flHisPos, flMiddle, flEndPos);
 			
-			hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
 			bTraceHit = TR_DidHit(hTrace);
 			delete hTrace;
 			
@@ -3469,19 +3499,19 @@ stock int SlenderArrayIndexToEntIndex(int iBossIndex)
 
 stock bool SlenderOnlyLooksIfNotSeen(int iBossIndex)
 {
-	if (NPCGetType(iBossIndex) == SF2BossType_Creeper) return true;
+	if (NPCGetType(iBossIndex) == SF2BossType_Statue) return true;
 	return false;
 }
 
 stock bool SlenderUsesBlink(int iBossIndex)
 {
-	if (NPCGetType(iBossIndex) == SF2BossType_Creeper) return true;
+	if (NPCGetType(iBossIndex) == SF2BossType_Statue) return true;
 	return false;
 }
 
 stock bool SlenderKillsOnNear(int iBossIndex)
 {
-	if (NPCGetType(iBossIndex) == SF2BossType_Creeper) return false;
+	if (NPCGetType(iBossIndex) == SF2BossType_Statue) return false;
 	return true;
 }
 
@@ -3555,7 +3585,7 @@ void SlenderPrintChatMessage(int iBossIndex, int iPlayer)
 				int iChatLength = strlen(sPrefix) + strlen(sBuffer);
 				if (iChatLength > 255)
 				{
-					LogSF2Message("WARNING! Death message %i has greater than 255 characters, shorten the length of this message.", iRandomMessage);
+					LogSF2Message("WARNING! Death message %i has greater than 255 characters on boss index %i, shorten the length of this message.", iRandomMessage, iBossIndex);
 				}
 				else CPrintToChatAll("{royalblue}%s{default} %s", sPrefix, sBuffer);
 			}
@@ -3563,7 +3593,7 @@ void SlenderPrintChatMessage(int iBossIndex, int iPlayer)
 	}
 }
 
-void SlenderPerformVoice(int iBossIndex, const char[] sSectionName,const int iAttackIndex=-1)
+void SlenderPerformVoice(int iBossIndex, const char[] sSectionName,const int iAttackIndex=-1, int iDefaultChannel = SNDCHAN_AUTO)
 {
 	if (iBossIndex == -1) return;
 
@@ -3591,7 +3621,7 @@ void SlenderPerformVoice(int iBossIndex, const char[] sSectionName,const int iAt
 		float flVolume = GetProfileFloat(sProfile, sBuffer, 1.0);
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_channel");
-		int iChannel = GetProfileNum(sProfile, sBuffer, SNDCHAN_AUTO);
+		int iChannel = GetProfileNum(sProfile, sBuffer, iDefaultChannel);
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_level");
 		int iLevel = GetProfileNum(sProfile, sBuffer, SNDLEVEL_SCREAMING);
@@ -3674,7 +3704,14 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 				{
 					float flCooldownIdle2 = flCooldownIdle;
 					g_flSlenderNextFootstepIdleSound[iBossIndex] = GetGameTime() + flCooldownIdle2;
-					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					{
+						EmitGameSoundToAll(sPath, slender);
+					}
+					else
+					{
+						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					}
 					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
 					{
 						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
@@ -3689,7 +3726,14 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 				{
 					float flCooldownWalk2 = flCooldownWalk;
 					g_flSlenderNextFootstepWalkSound[iBossIndex] = GetGameTime() + flCooldownWalk2;
-					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					{
+						EmitGameSoundToAll(sPath, slender);
+					}
+					else
+					{
+						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					}
 					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
 					{
 						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
@@ -3704,7 +3748,14 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 				{
 					float flCooldownRun2 = flCooldownRun;
 					g_flSlenderNextFootstepRunSound[iBossIndex] = GetGameTime() + flCooldownRun2;
-					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					{
+						EmitGameSoundToAll(sPath, slender);
+					}
+					else
+					{
+						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					}
 					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
 					{
 						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
@@ -3719,7 +3770,14 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 				{
 					float flCooldownStun2 = flCooldownStun;
 					g_flSlenderNextFootstepStunSound[iBossIndex] = GetGameTime() + flCooldownStun2;
-					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					{
+						EmitGameSoundToAll(sPath, slender);
+					}
+					else
+					{
+						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					}
 					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
 					{
 						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
@@ -3734,7 +3792,14 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 				{
 					float flCooldownAttack2 = flCooldownAttack;
 					g_flSlenderNextFootstepAttackSound[iBossIndex] = GetGameTime() + flCooldownAttack2;
-					EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					{
+						EmitGameSoundToAll(sPath, slender);
+					}
+					else
+					{
+						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+					}
 					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
 					{
 						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
@@ -3778,13 +3843,13 @@ void SlenderCastFootstepAnimEvent(int iBossIndex, const char[] sSectionName)
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
 		int iPitch = GetProfileNum(sProfile, sBuffer, 100);
-		if (StrContains(sPath, "/", false) != -1 || StrContains(sPath, "\\", false) != -1) 
-		{
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
-		}
-		else //Lets assume the user is trying to do a game sound like "MVM.GiantHeavyStep" as there are no base sounds in sound/
+		if (StrContains(sPath, "/", false) == -1 && StrContains(sPath, "\\", false) == -1) 
 		{
 			EmitGameSoundToAll(sPath, slender);
+		}
+		else
+		{
+			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
 		}
 	}
 	if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
@@ -3823,13 +3888,13 @@ void SlenderCastAnimEvent(int iBossIndex, const char[] sSectionName)
 		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
 		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
 		int iPitch = GetProfileNum(sProfile, sBuffer, 100);
-		if (StrContains(sPath, "/", false) != -1 || StrContains(sPath, "\\", false) != -1) 
-		{
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
-		}
-		else //Lets assume the user is trying to do a game sound like "MVM.GiantHeavyStep" as there are no base sounds in sound/
+		if (StrContains(sPath, "/", false) == -1 && StrContains(sPath, "\\", false) == -1) 
 		{
 			EmitGameSoundToAll(sPath, slender);
+		}
+		else
+		{
+			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
 		}
 	}
 }
@@ -3937,7 +4002,7 @@ void SlenderCreateParticleSpawnEffect(int iBossIndex, const char[] sSectionName,
 	}
 }
 
-bool SlenderCalculateApproachToPlayer(int iBossIndex,int iBestPlayer, float buffer[3])
+/*bool SlenderCalculateApproachToPlayer(int iBossIndex,int iBestPlayer, float buffer[3])
 {
 	if (!IsValidClient(iBestPlayer)) return false;
 	
@@ -4125,7 +4190,7 @@ bool SlenderCalculateApproachToPlayer(int iBossIndex,int iBestPlayer, float buff
 	#endif
 	delete hTrace;
 	return true;
-}
+}*/
 
 // This functor ensures that the proposed boss position is not too
 // close to other players that are within the distance defined by
@@ -4376,11 +4441,11 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 							}
 								
 							// Check visibility.
-							if (IsPointVisibleToAPlayer(flAreaSpawnPoint, !bShouldBeBehindObstruction, false)) continue;
+							if (!g_bSlenderTeleportIgnoreVis[iBossIndex] && IsPointVisibleToAPlayer(flAreaSpawnPoint, !bShouldBeBehindObstruction, false)) continue;
 								
 							AddVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
 								
-							if (IsPointVisibleToAPlayer(flAreaSpawnPoint, !bShouldBeBehindObstruction, false)) continue;
+							if (!g_bSlenderTeleportIgnoreVis[iBossIndex] && IsPointVisibleToAPlayer(flAreaSpawnPoint, !bShouldBeBehindObstruction, false)) continue;
 								
 							SubtractVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
 								

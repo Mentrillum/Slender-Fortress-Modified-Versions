@@ -398,6 +398,14 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientDisableConstantGlow(iClient);
 		
 		ClientHandleGhostMode(iClient);
+
+		for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+		{
+			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+			if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
+			int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+			if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
+		}
 	}
 	
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
@@ -480,6 +488,14 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientDisableConstantGlow(iClient);
 			
 			ClientHandleGhostMode(iClient);
+
+			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+			{
+				if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+				if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
+				int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+				if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
+			}
 			
 			TF2Attrib_SetByName(iClient, "increased jump height", 1.0);
 			
@@ -1037,6 +1053,14 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		ClientResetDeathCam(iClient);
 		
 		ClientUpdateMusicSystem(iClient);
+
+		for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+		{
+			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+			if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
+			int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+			if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
+		}
 		
 		PvP_SetPlayerPvPState(iClient, false, false, false);
 		

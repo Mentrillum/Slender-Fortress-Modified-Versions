@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.2 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.2 M"
+#define PLUGIN_VERSION "1.7.3 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.3 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -113,7 +113,9 @@ public Plugin myinfo =
 
 #define FIREBALL_SHOOT "misc/halloween/spell_fireball_cast.wav"
 #define FIREBALL_IMPACT "misc/halloween/spell_fireball_impact.wav"
+#define FIREBALL_TRAIL "spell_fireball_small_red"
 #define ICEBALL_IMPACT "weapons/icicle_freeze_victim_01.wav"
+#define ICEBALL_TRAIL "spell_fireball_small_blue"
 #define ROCKET_SHOOT "weapons/rocket_shoot.wav"
 #define ROCKET_IMPACT "weapons/explode1.wav"
 #define ROCKET_MODEL "models/weapons/w_models/w_rocket.mdl"
@@ -261,7 +263,6 @@ ArrayList g_hPageMusicRanges;
 int g_iPageMusicActiveIndex[MAXPLAYERS + 1] = { -1, ... };
 
 int g_iSlenderModel[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
-int g_iSlenderPoseEnt[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_iSlenderCopyMaster[MAX_BOSSES] = { -1, ... };
 int g_iSlenderMaxCopies[MAX_BOSSES][Difficulty_Max];
 int g_iSlenderCompanionMaster[MAX_BOSSES] = { -1, ... };
@@ -349,7 +350,9 @@ char g_sSlenderGasHitSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderStunHitSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderFireballExplodeSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderFireballShootSound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderFireballTrail[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderIceballImpactSound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderIceballTrail[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderRocketExplodeSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderRocketShootSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderRocketModel[MAX_BOSSES][PLATFORM_MAX_PATH];
@@ -364,6 +367,13 @@ char g_sSlenderEngineSound[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderShockwaveBeamSprite[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderShockwaveHaloSprite[MAX_BOSSES][PLATFORM_MAX_PATH];
 char g_sSlenderSmiteSound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderTrapModel[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderTrapDeploySound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderTrapMissSound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderTrapHitSound[MAX_BOSSES][PLATFORM_MAX_PATH];
+char g_sSlenderTrapAnimIdle[MAX_BOSSES][65];
+char g_sSlenderTrapAnimOpen[MAX_BOSSES][65];
+char g_sSlenderTrapAnimClose[MAX_BOSSES][65];
 
 int g_iSlenderTeleportTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_iSlenderProxyTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
@@ -377,6 +387,7 @@ float g_flSlenderTeleportMaxTargetTime[MAX_BOSSES] = { -1.0, ... };
 float g_flSlenderTeleportMaxTargetStress[MAX_BOSSES] = { 0.0, ... };
 float g_flSlenderTeleportPlayersRestTime[MAX_BOSSES][MAXPLAYERS + 1];
 bool g_bSlenderTeleportIgnoreChases[MAX_BOSSES];
+bool g_bSlenderTeleportIgnoreVis[MAX_BOSSES];
 
 bool g_bSlenderInDeathcam[MAX_BOSSES] = false;
 
@@ -2918,12 +2929,26 @@ public void Hook_TriggerTeleportOnStartTouch(const char[] output, int caller, in
 					if (NPCGetUniqueID(i) == -1) continue;
 					if (EntRefToEntIndex(g_iSlenderTarget[i]) == activator)
 					{
-						for (int ii = 0; ii < MAX_NPCTELEPORTER; ii++)
+						if (NPCGetType(i) == SF2BossType_Statue)
 						{
-							if (NPCChaserGetTeleporter(i, ii) == INVALID_ENT_REFERENCE)
+							for (int ii = 0; ii < MAX_NPCTELEPORTER; ii++)
 							{
-								NPCChaserSetTeleporter(i, ii, EntIndexToEntRef(caller));
-								break;
+								if (NPCStatueGetTeleporter(i, ii) == INVALID_ENT_REFERENCE)
+								{
+									NPCStatueSetTeleporter(i, ii, EntIndexToEntRef(caller));
+									break;
+								}
+							}
+						}
+						else
+						{
+							for (int ii = 0; ii < MAX_NPCTELEPORTER; ii++)
+							{
+								if (NPCChaserGetTeleporter(i, ii) == INVALID_ENT_REFERENCE)
+								{
+									NPCChaserSetTeleporter(i, ii, EntIndexToEntRef(caller));
+									break;
+								}
 							}
 						}
 					}
@@ -2946,6 +2971,24 @@ public void Hook_TriggerTeleportOnStartTouch(const char[] output, int caller, in
 						NpcChaser.SetTeleporter(i, NpcChaser.GetTeleporter(i + 1));
 					else
 						NpcChaser.SetTeleporter(i, INVALID_ENT_REFERENCE);
+				}
+			}
+		}
+		SF2NPC_Statue NpcStatue = view_as<SF2NPC_Statue>(NPCGetFromEntIndex(activator));
+		if (NpcStatue.IsValid())
+		{
+			//A boss took a teleporter
+			int iTeleporter = NpcStatue.GetTeleporter(0);
+			if (iTeleporter == EntIndexToEntRef(caller)) //Remove our temp goal, and go back chase our target! GRAAAAAAAAAAAAh! Unless we have some other teleporters to take....fak.
+				NpcStatue.SetTeleporter(0, INVALID_ENT_REFERENCE);
+			if (MAX_NPCTELEPORTER > 2 && NpcStatue.GetTeleporter(1) != INVALID_ENT_REFERENCE)
+			{
+				for (int i = 0; i + 1 < MAX_NPCTELEPORTER; i++)
+				{
+					if (NpcStatue.GetTeleporter(i + 1) != INVALID_ENT_REFERENCE)
+						NpcStatue.SetTeleporter(i, NpcStatue.GetTeleporter(i + 1));
+					else
+						NpcStatue.SetTeleporter(i, INVALID_ENT_REFERENCE);
 				}
 			}
 		}
@@ -3767,6 +3810,14 @@ public void OnClientPutInServer(int iClient)
 	ClientSetScareBoostEndTime(iClient, -1.0);
 	
 	ClientStartProxyAvailableTimer(iClient);
+
+	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	{
+		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
+		if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
+		int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+		if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
+	}
 	
 	if (!IsFakeClient(iClient))
 	{
@@ -4591,158 +4642,6 @@ public Action Hook_SlenderObjectSetTransmitEx(int ent, int other)
 	return Plugin_Continue;
 }
 
-public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
-{
-	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
-	
-	int iBossIndex = NPCGetFromEntIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
-	
-	if (timer != g_hSlenderEntityThink[iBossIndex]) return Plugin_Stop;
-	
-	int iDifficulty = g_cvDifficulty.IntValue;
-
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-	
-	if (NPCGetType(iBossIndex) == SF2BossType_Creeper)
-	{
-		bool bMove = false;
-		
-		if ((GetGameTime() - g_flSlenderLastKill[iBossIndex]) >= NPCGetInstantKillCooldown(iBossIndex, iDifficulty))
-		{
-			if (PeopleCanSeeSlender(iBossIndex, false, false) && !PeopleCanSeeSlender(iBossIndex, true, SlenderUsesBlink(iBossIndex)))
-			{
-				int iBestPlayer = -1;
-				ArrayList hArray = new ArrayList();
-				#if defined DEBUG
-				SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hArray in Timer_SlenderBlinkBossThink.", hArray);
-				#endif
-				
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (!IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInDeathCam(i) || g_bPlayerEliminated[i] || DidClientEscape(i) || IsClientInGhostMode(i) || !PlayerCanSeeSlender(i, iBossIndex, false, false))continue;
-					
-					if (!NPCShouldSeeEntity(iBossIndex, i))
-						continue;
-					
-					hArray.Push(i);
-				}
-				
-				if (hArray.Length)
-				{
-					float flSlenderPos[3];
-					SlenderGetAbsOrigin(iBossIndex, flSlenderPos);
-					
-					float flTempPos[3];
-					int iTempPlayer = -1;
-					float flTempDist = SquareFloat(16384.0);
-					for (int i = 0; i < hArray.Length; i++)
-					{
-						int iClient = hArray.Get(i);
-						GetClientAbsOrigin(iClient, flTempPos);
-						if (GetVectorSquareMagnitude(flTempPos, flSlenderPos) < flTempDist)
-						{
-							iTempPlayer = iClient;
-							flTempDist = GetVectorSquareMagnitude(flTempPos, flSlenderPos);
-						}
-						if (SF_SpecialRound(SPECIALROUND_BOO) && GetVectorSquareMagnitude(flTempPos, flSlenderPos) < SquareFloat(SPECIALROUND_BOO_DISTANCE))
-							TF2_StunPlayer(iClient, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
-					}
-					
-					iBestPlayer = iTempPlayer;
-				}
-				
-				delete hArray;
-				#if defined DEBUG
-				SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hArray in Timer_SlenderBlinkBossThink.", hArray);
-				#endif
-				
-				float buffer[3];
-				if (iBestPlayer != -1 && SlenderCalculateApproachToPlayer(iBossIndex, iBestPlayer, buffer))
-				{
-					bMove = true;
-					
-					float flAng[3], flBuffer[3];
-					float flSlenderPos[3], flPos[3];
-					GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flSlenderPos);
-					GetClientAbsOrigin(iBestPlayer, flPos);
-					SubtractVectors(flPos, buffer, flAng);
-					GetVectorAngles(flAng, flAng);
-					
-					// Take care of angle offsets.
-					AddVectors(flAng, g_flSlenderEyeAngOffset[iBossIndex], flAng);
-					for (int i = 0; i < 3; i++) flAng[i] = AngleNormalize(flAng[i]);
-					
-					flAng[0] = 0.0;
-					
-					// Take care of position offsets.
-					GetProfileVector(sProfile, "pos_offset", flBuffer);
-					AddVectors(buffer, flBuffer, buffer);
-					
-					TeleportEntity(slender, buffer, flAng, NULL_VECTOR);
-					
-					float flMaxRange = g_flSlenderTeleportMaxRange[iBossIndex][iDifficulty];
-					float flDist = GetVectorSquareMagnitude(buffer, flPos);
-					
-					char sBuffer[PLATFORM_MAX_PATH];
-					
-					if (flDist < SquareFloat(flMaxRange * 0.33))
-					{
-						GetSlenderModel(iBossIndex, 2, sBuffer, sizeof(sBuffer));
-					}
-					else if (flDist < SquareFloat(flMaxRange * 0.66))
-					{
-						GetSlenderModel(iBossIndex, 1, sBuffer, sizeof(sBuffer));
-					}
-					else
-					{
-						GetSlenderModel(iBossIndex, _, sBuffer, sizeof(sBuffer));
-					}
-					
-					// Fallback if error.
-					if (sBuffer[0] == '\0') GetSlenderModel(iBossIndex, _, sBuffer, sizeof(sBuffer));
-					
-					SetEntityModel(slender, sBuffer);
-					
-					if (flDist <= SquareFloat(NPCGetInstantKillRadius(iBossIndex)))
-					{
-						if (NPCGetFlags(iBossIndex) & SFF_FAKE)
-						{
-							SlenderMarkAsFake(iBossIndex);
-							return Plugin_Stop;
-						}
-						else
-						{
-							g_flSlenderLastKill[iBossIndex] = GetGameTime();
-							ClientStartDeathCam(iBestPlayer, iBossIndex, buffer);
-						}
-					}
-				}
-			}
-		}
-		
-		if (bMove)
-		{
-			char sBuffer[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_move_single", sBuffer, sizeof(sBuffer));
-			if (sBuffer[0] != '\0') EmitSoundToAll(sBuffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-			
-			GetRandomStringFromProfile(sProfile, "sound_move", sBuffer, sizeof(sBuffer));
-			if (sBuffer[0] != '\0') EmitSoundToAll(sBuffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, SND_CHANGEVOL);
-		}
-		else
-		{
-			char sBuffer[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_move", sBuffer, sizeof(sBuffer));
-			if (sBuffer[0] != '\0') StopSound(slender, SNDCHAN_AUTO, sBuffer);
-		}
-	}
-	
-	return Plugin_Continue;
-}
-
 
 void SlenderOnClientStressUpdate(int iClient)
 {
@@ -5358,7 +5257,7 @@ int GetTextEntity(const char[] sTargetName, bool bCaseSensitive = true)
 	return -1;
 }
 
-void ShowHudTextUsingTextEntity(const int[] iClients, int iClientsNum, int iGameText, Handle hHudSync, const char[] sMessage, ...)
+void ShowHudTextUsingTextEntity(const int[] iClients, int iClientsNum, int iGameText, Handle hHudSync, const char[] sMessage, any ...)
 {
 	if (sMessage[0] == '\0') return;
 	if (!IsValidEntity(iGameText)) return;

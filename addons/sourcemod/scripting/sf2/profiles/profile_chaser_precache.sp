@@ -631,6 +631,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	float flCrawlSpeedMultiplierNightmare = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierInsane);
 	float flCrawlSpeedMultiplierApollyon = kv.GetFloat("crawl_multiplier", flCrawlSpeedMultiplierNightmare);
 
+	bool bChaseOnLook = view_as<bool>(kv.GetNum("chase_upon_look"));
+
 	g_hChaserProfileData.Set(iUniqueProfileIndex, view_as<bool>(kv.GetNum("difficulty_affects_animations")), ChaserProfileData_DifficultyAffectsAnimations);
 	
 	g_hChaserProfileData.Set(iUniqueProfileIndex, flBossDefaultWalkSpeed, ChaserProfileData_WalkSpeedNormal);
@@ -1127,6 +1129,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] sProfile, int &iUni
 	g_hChaserProfileData.Set(iUniqueProfileIndex, view_as<bool>(kv.GetNum("multi_hit_sounds")), ChaserProfileData_MultiHitSounds);
 	g_hChaserProfileData.Set(iUniqueProfileIndex, view_as<bool>(kv.GetNum("multi_miss_sounds")), ChaserProfileData_MultiMissSounds);
 
+	g_hChaserProfileData.Set(iUniqueProfileIndex, bChaseOnLook, ChaserProfileData_ChaseOnLook);
+
 	ParseChaserProfileAttacks(kv, iUniqueProfileIndex);
 	
 	return true;
@@ -1223,9 +1227,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		float flAttackCooldownApollyon = kv.GetFloat("attack_cooldown_apollyon", flAttackCooldownNightmare);
 		if (flAttackCooldownApollyon < 0.0) flAttackCooldownApollyon = 0.0;
 		
-		int iAttackDisappear = kv.GetNum("attack_disappear_upon_damaging");
-		if (iAttackDisappear < 0) iAttackDisappear = 0;
-		else if (iAttackDisappear > 1) iAttackDisappear = 1;
+		int bAttackDisappear = view_as<bool>(kv.GetNum("attack_disappear_upon_damaging"));
 		
 		int iAttackRepeat = kv.GetNum("attack_repeat");
 		if (iAttackRepeat < 0) iAttackRepeat = 0;
@@ -1452,7 +1454,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int iUniqueProfileIndex)
 		hAttacks.Set(iAttackIndex, flAttackCooldownInsane, ChaserProfileAttackData_CooldownInsane);
 		hAttacks.Set(iAttackIndex, flAttackCooldownNightmare, ChaserProfileAttackData_CooldownNightmare);
 		hAttacks.Set(iAttackIndex, flAttackCooldownApollyon, ChaserProfileAttackData_CooldownApollyon);
-		hAttacks.Set(iAttackIndex, iAttackDisappear, ChaserProfileAttackData_Disappear);
+		hAttacks.Set(iAttackIndex, bAttackDisappear, ChaserProfileAttackData_Disappear);
 		hAttacks.Set(iAttackIndex, iAttackRepeat, ChaserProfileAttackData_Repeat);
 		hAttacks.Set(iAttackIndex, iMaxAttackRepeat, ChaserProfileAttackData_MaxAttackRepeat);
 		hAttacks.Set(iAttackIndex, bAttackIgnoreAlwaysLooking, ChaserProfileAttackData_IgnoreAlwaysLooking);

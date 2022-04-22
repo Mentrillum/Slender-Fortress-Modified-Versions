@@ -173,7 +173,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, "spell_fireball_small_red");
+					AttachParticle(iProjectileEnt, g_sSlenderFireballTrail[iBossIndex]);
 
 					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 					SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flModelScale", 1.0);
@@ -216,7 +216,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
 					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, "spell_fireball_small_blue");
+					AttachParticle(iProjectileEnt, g_sSlenderIceballTrail[iBossIndex]);
 
 					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 					SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flModelScale", 1.0);
@@ -612,12 +612,14 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
 					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
 					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, "spell_fireball_small_red");
+					char sFireballTrail[PLATFORM_MAX_PATH];
+					GetProfileAttackString(sSlenderProfile, "attack_fire_trail", sFireballTrail, sizeof(sFireballTrail), FIREBALL_TRAIL, iAttackIndex+1);
+					AttachParticle(iProjectileEnt, sFireballTrail);
 
 					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 					SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
 					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), true); // set damage
+					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
@@ -627,7 +629,7 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
 					DispatchSpawn(iProjectileEnt);
 					ProjectileSetFlags(iProjectileEnt, PROJ_FIREBALL_ATTACK);
-
+					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
 					
 					char sPath[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(sSlenderProfile, sSectionName, sPath, sizeof(sPath));
@@ -672,7 +674,6 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 					if (NPCChaserGetAttackProjectileCrits(iBossIndex, iAttackIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
 					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), true); // set damage
 					ProjectileSetFlags(iProjectileEnt, PROJ_ROCKET);
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
 					if (strcmp(sRocketModel, ROCKET_MODEL, true) != 0)
 					{
 						int iModel;
@@ -720,7 +721,9 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
 					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
 					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, "spell_fireball_small_blue");
+					char sFireballTrail[PLATFORM_MAX_PATH];
+					GetProfileAttackString(sSlenderProfile, "attack_fire_iceball_trail", sFireballTrail, sizeof(sFireballTrail), ICEBALL_TRAIL, iAttackIndex+1);
+					AttachParticle(iProjectileEnt, sFireballTrail);
 
 					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
@@ -850,10 +853,14 @@ public Action Hook_ProjectileAttackTouch(int entity, int iOther)
 				CreateGeneralParticle(entity, "bombinomicon_burningdebris");
 			}
 		}
-		case PROJ_ROCKET, PROJ_GRENADE:
+	}
+	switch (ProjectileGetFlags(entity))
+	{
+		case PROJ_FIREBALL_ATTACK, PROJ_ICEBALL_ATTACK:
 		{
 			float flEntPos[3];
 			GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flEntPos);
+			flEntPos[2] += 10.0;
 			int slender = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 			if(slender != INVALID_ENT_REFERENCE)
 			{
@@ -862,35 +869,54 @@ public Action Hook_ProjectileAttackTouch(int entity, int iOther)
 				{
 					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
 					int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
-					if (!(ProjectileGetFlags(entity) & PROJ_GRENADE))
+					bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
+					float flRadius = NPCChaserGetAttackProjectileRadius(iBossIndex, iAttackIndex, iDifficulty);
+					for (int iClient = 1; iClient <= MaxClients; iClient++)
 					{
-						float flRadius = NPCChaserGetAttackProjectileRadius(iBossIndex, iAttackIndex, iDifficulty);
-						float flFallOff = NPCChaserGetAttackProjectileRadius(iBossIndex, iAttackIndex, iDifficulty)/2.0;
-						for (int iClient = 1; iClient <= MaxClients; iClient++)
+						if (!IsValidClient(iClient) || !IsClientInGame(iClient) || !IsPlayerAlive(iClient) || IsClientInGhostMode(iClient)) continue;
+
+						if (!bAttackEliminated && g_bPlayerEliminated[iClient]) continue;
+
+						float flTargetPos[3];
+						GetClientEyePosition(iClient, flTargetPos);
+
+						Handle hTrace = TR_TraceRayFilterEx(flEntPos, 
+							flTargetPos, 
+							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
+							RayType_EndPoint, 
+							TraceRayBossVisibility, 
+							entity);
+
+						bool bIsVisible = !TR_DidHit(hTrace);
+						int iTraceHitEntity = TR_GetEntityIndex(hTrace);
+						delete hTrace;
+
+						if (!bIsVisible && iTraceHitEntity == iClient) bIsVisible = true;
+	
+						if (bIsVisible)
 						{
-							if(IsValidClient(iClient) && IsPlayerAlive(iClient))
+							float flDistance = GetVectorSquareMagnitude(flEntPos, flTargetPos);
+							if (flDistance <= SquareFloat(flRadius))
 							{
-								float flPlayerPosition[3]; 
-								GetClientEyePosition(iClient, flPlayerPosition);
-								float flDistance = GetVectorSquareMagnitude(flEntPos, flPlayerPosition);
-								if (flDistance <= SquareFloat(flRadius))
+								SDKHooks_TakeDamage(iClient, entity, entity, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), DMG_BLAST);
+								if(TF2_IsPlayerInCondition(iClient, TFCond_Gas))
 								{
-									float flFinalDamage;
-									if (flDistance <= SquareFloat(flFallOff))
-									{
-										flFinalDamage = NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty);
-									}
-									else
-									{
-										float flMultiplier = (1.0 - ((flDistance - SquareFloat(flFallOff)) / (SquareFloat(flRadius) - SquareFloat(flFallOff))));
-										flFinalDamage = flMultiplier * NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty);
-									}
-									if (NPCChaserHasCriticalRockets(iBossIndex) && (ProjectileGetFlags(entity) & PROJ_ROCKET)) SDKHooks_TakeDamage(iClient, slender, slender, flFinalDamage*3.0, DMG_BLAST|DMG_ACID);
-									else SDKHooks_TakeDamage(iClient, slender, slender, flFinalDamage, DMG_BLAST);
+									TF2_IgnitePlayer(iClient, iClient);
+									TF2_RemoveCondition(iClient, TFCond_Gas);
+								}
+								if ((ProjectileGetFlags(entity) & PROJ_FIREBALL_ATTACK))
+								{
+									TF2_IgnitePlayer(iClient, iClient);
+								}
+								else if ((ProjectileGetFlags(entity) & PROJ_ICEBALL_ATTACK))
+								{
+									EmitSoundToClient(iClient, ICEBALL_IMPACT, _, MUSIC_CHAN);
+									TF2_StunPlayer(iClient, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, iAttackIndex, iDifficulty), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, iAttackIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
 								}
 							}
 						}
 					}
+					RemoveEntity(entity);
 				}
 			}
 		}
@@ -903,7 +929,7 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 {
 	switch (ProjectileGetFlags(entity))
 	{
-		case PROJ_ICEBALL:
+		case PROJ_ICEBALL, PROJ_ICEBALL_ATTACK:
 		{
 			float flEntPos[3], flOtherPos[3];
 			GetEntPropVector(iOther, Prop_Data, "m_vecAbsOrigin", flOtherPos);
@@ -919,7 +945,7 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 				CreateGeneralParticle(entity, "spell_batball_impact_blue");
 			}
 		}
-		case PROJ_FIREBALL:
+		case PROJ_FIREBALL, PROJ_FIREBALL_ATTACK:
 		{
 			float flEntPos[3], flOtherPos[3];
 			GetEntPropVector(iOther, Prop_Data, "m_vecAbsOrigin", flOtherPos);
@@ -935,6 +961,9 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 				CreateGeneralParticle(entity, "bombinomicon_burningdebris");
 			}
 		}
+	}
+	switch (ProjectileGetFlags(entity))
+	{
 		case PROJ_BASEBALL:
 		{
 			float flEntPos[3], flOtherPos[3];
@@ -957,7 +986,7 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 				}
 			}
 		}
-		case PROJ_MANGLER, PROJ_GRENADE, PROJ_ROCKET, PROJ_SENTRYROCKET:
+		case PROJ_MANGLER, PROJ_FIREBALL, PROJ_ICEBALL:
 		{
 			float flEntPos[3];
 			GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flEntPos);
@@ -992,7 +1021,7 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 						int iTraceHitEntity = TR_GetEntityIndex(hTrace);
 						delete hTrace;
 
-						if (!bIsVisible && iTraceHitEntity == entity) bIsVisible = true;
+						if (!bIsVisible && iTraceHitEntity == iClient) bIsVisible = true;
 	
 						if (bIsVisible)
 						{
@@ -1009,28 +1038,26 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 									float flMultiplier = (1.0 - ((flDistance - SquareFloat(flFallOff)) / (SquareFloat(flRadius) - SquareFloat(flFallOff))));
 									flFinalDamage = flMultiplier * NPCChaserGetProjectileDamage(iBossIndex, iDifficulty);
 								}
-								if (NPCChaserHasCriticalRockets(iBossIndex) && (ProjectileGetFlags(entity) & PROJ_ROCKET)) SDKHooks_TakeDamage(iClient, entity, entity, flFinalDamage, DMG_ACID|DMG_SHOCK|DMG_ALWAYSGIB);
-								else SDKHooks_TakeDamage(iClient, entity, entity, flFinalDamage, DMG_SHOCK|DMG_ALWAYSGIB);
+								if ((ProjectileGetFlags(entity) & PROJ_MANGLER)) SDKHooks_TakeDamage(iClient, entity, entity, flFinalDamage, DMG_BLAST);
+								else SDKHooks_TakeDamage(iClient, entity, entity, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_BLAST);
 								if(TF2_IsPlayerInCondition(iClient, TFCond_Gas))
 								{
 									TF2_IgnitePlayer(iClient, iClient);
 									TF2_RemoveCondition(iClient, TFCond_Gas);
 								}
+								if ((ProjectileGetFlags(entity) & PROJ_FIREBALL))
+								{
+									TF2_IgnitePlayer(iClient, iClient);
+								}
+								else if ((ProjectileGetFlags(entity) & PROJ_ICEBALL))
+								{
+									EmitSoundToClient(iClient, ICEBALL_IMPACT, _, MUSIC_CHAN);
+									TF2_StunPlayer(iClient, NPCChaserGetIceballSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+								}
 							}
 						}
 					}
-					if (!(ProjectileGetFlags(entity) & PROJ_MANGLER))
-					{
-						int iRandomSound = GetRandomInt(0, 2);
-						switch (iRandomSound)
-						{
-							case 0: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION1, entity, SNDCHAN_AUTO, 50);
-							case 1: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION2, entity, SNDCHAN_AUTO, 50);
-							case 2: EmitSoundToAll(EXPLOSIVEDANCE_EXPLOSION3, entity, SNDCHAN_AUTO, 50);
-						}
-						CreateGeneralParticle(entity, "ExplosionCore_MidAir");
-					}
-					else
+					if ((ProjectileGetFlags(entity) & PROJ_MANGLER))
 					{
 						int iRandomSound = GetRandomInt(0, 2);
 						switch (iRandomSound)
