@@ -1010,7 +1010,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					
 					if (!bBuilding && !bPlayerVisible[iTarget] && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
 					{
-						PrintToChatAll("%i %f", iBossIndex, g_flSlenderTimeUntilAlert[iBossIndex] - GetGameTime());
 						if (GetGameTime() >= g_flSlenderTimeUntilAlert[iBossIndex] || (!bAttackEliminated && g_bPlayerEliminated[iTarget]))
 						{
 							iState = STATE_ALERT;
