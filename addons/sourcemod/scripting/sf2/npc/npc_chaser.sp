@@ -3497,13 +3497,21 @@ stock void SlenderAlertAllValidBosses(int iBossIndex, int iTarget = -1, int iBes
 
 				if ((flDist1 <= SquareFloat(NPCGetSearchRadius(iBossCheck, iDifficulty)) || flDist1 <= SquareFloat(NPCGetHearingRadius(iBossCheck, iDifficulty))))
 				{
-					if (IsValidClient(iTarget)) g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iTarget);
-					else if (IsValidClient(iBestTarget)) g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iBestTarget);
-					g_flSlenderTimeUntilNoPersistence[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
-					g_flSlenderTimeUntilAlert[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
+					if (IsValidClient(iTarget))
+					{
+						g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iTarget);
+						GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossCheck]);
+					}
+					else if (IsValidClient(iBestTarget))
+					{
+						g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iBestTarget);
+						GetClientAbsOrigin(iBestTarget, g_flSlenderGoalPos[iBossCheck]);
+					}
 					g_iSlenderState[iBossCheck] = STATE_CHASE;
 					NPCChaserUpdateBossAnimation(iBossCheck, iBossEnt, STATE_CHASE);
 					g_bNPCCopyAlerted[iBossCheck] = true;
+					g_flSlenderTimeUntilNoPersistence[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
+					g_flSlenderTimeUntilAlert[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
 					SlenderPerformVoice(iBossCheck, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 					if (NPCChaserCanUseChaseInitialAnimation(iBossCheck) && !g_bNPCUsesChaseInitialAnimation[iBossCheck] && !SF_IsSlaughterRunMap())
 					{
@@ -3543,12 +3551,21 @@ stock void SlenderAlertAllValidBosses(int iBossIndex, int iTarget = -1, int iBes
 
 				if (flDist1 <= SquareFloat(NPCGetSearchRadius(iBossCheck, iDifficulty)) || flDist1 <= SquareFloat(NPCGetHearingRadius(iBossCheck, iDifficulty)))
 				{
-					if (IsValidClient(iTarget)) g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iTarget);
-					else if (IsValidClient(iBestTarget)) g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iBestTarget);
-					g_flSlenderTimeUntilNoPersistence[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
+					if (IsValidClient(iTarget))
+					{
+						g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iTarget);
+						GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossCheck]);
+					}
+					else if (IsValidClient(iBestTarget))
+					{
+						g_iSlenderTarget[iBossCheck] = EntIndexToEntRef(iBestTarget);
+						GetClientAbsOrigin(iBestTarget, g_flSlenderGoalPos[iBossCheck]);
+					}
 					g_iSlenderState[iBossCheck] = STATE_CHASE;
 					NPCChaserUpdateBossAnimation(iBossCheck, iBossEnt, STATE_CHASE);
 					g_bNPCCopyAlerted[iBossCheck] = true;
+					g_flSlenderTimeUntilNoPersistence[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
+					g_flSlenderTimeUntilAlert[iBossCheck] = GetGameTime() + NPCChaserGetChaseDuration(iBossCheck, iDifficulty);
 					SlenderPerformVoice(iBossCheck, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 					if (NPCChaserCanUseChaseInitialAnimation(iBossCheck) && !g_bNPCUsesChaseInitialAnimation[iBossCheck] && !SF_IsSlaughterRunMap())
 					{

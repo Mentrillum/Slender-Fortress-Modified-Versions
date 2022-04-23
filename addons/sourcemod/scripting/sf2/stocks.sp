@@ -290,10 +290,7 @@ stock int FindEntityByTargetname(const char[] targetName, const char[] className
 
 stock float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
 {
-	float vec3[3];
-	SubtractVectors(vec1, vec2, vec3);
-	float flResult = GetVectorLength(vec3, true);
-	return flResult;
+	return GetVectorDistance(vec1, vec2, true);
 }
 
 stock float GetVectorAnglesTwoPoints(const float startPos[3], const float endPos[3], float angles[3])

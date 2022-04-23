@@ -841,6 +841,7 @@ void ClientProcessVisibility(int client)
 							int slender = NPCGetEntIndex(i);
 							g_iNPCPlayerScareVictin[i] = EntIndexToEntRef(client);
 							g_iSlenderState[i] = STATE_CHASE;
+							GetClientAbsOrigin(client, g_flSlenderGoalPos[i]);
 							g_iSlenderTarget[i] = EntIndexToEntRef(client);
 							g_flSlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
 							g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);

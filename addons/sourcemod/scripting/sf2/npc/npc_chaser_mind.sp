@@ -426,6 +426,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			{
 				iBestNewTarget = iEnt;
 				iState = STATE_CHASE;
+				SlenderAlertAllValidBosses(iBossIndex, iEnt, iBestNewTarget);
+				GetClientAbsOrigin(iEnt, g_flSlenderGoalPos[iBossIndex]);
 				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 				g_bSlenderGiveUp[iBossIndex] = false;
@@ -437,6 +439,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			{
 				iBestNewTarget = iEnt;
 				iState = STATE_CHASE;
+				SlenderAlertAllValidBosses(iBossIndex, iEnt, iBestNewTarget);
+				GetClientAbsOrigin(iEnt, g_flSlenderGoalPos[iBossIndex]);
 				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 				g_bSlenderGiveUp[iBossIndex] = false;
@@ -607,6 +611,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 						iState = STATE_CHASE;
+						GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 						iTarget = iBestNewTarget;
 					}
 				}
@@ -628,6 +633,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iLookClient);
 					g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 					iState = STATE_CHASE;
+					GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 					iTarget = iBestNewTarget;
 					SlenderAlertAllValidBosses(iBossIndex, iTarget, iBestNewTarget);
 				}
@@ -807,6 +813,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						iTarget = iBestNewTarget;
 						g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 						iState = STATE_CHASE;
+						GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 						SlenderAlertAllValidBosses(iBossIndex, iTarget, iBestNewTarget);
 					}
 				}
@@ -816,6 +823,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					iTarget = iBestNewTarget;
 					g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 					iState = STATE_CHASE;
+					GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 					SlenderAlertAllValidBosses(iBossIndex, iTarget, iBestNewTarget);
 				}
 			}
@@ -1000,8 +1008,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						delete hTrace;
 					}
 					
-					if (!bBuilding && (!g_bNPCCopyAlerted[iBossIndex] && !bPlayerVisible[iTarget]) && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
+					if (!bBuilding && !bPlayerVisible[iTarget] && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
 					{
+						PrintToChatAll("%i %f", iBossIndex, g_flSlenderTimeUntilAlert[iBossIndex] - GetGameTime());
 						if (GetGameTime() >= g_flSlenderTimeUntilAlert[iBossIndex] || (!bAttackEliminated && g_bPlayerEliminated[iTarget]))
 						{
 							iState = STATE_ALERT;
@@ -1054,7 +1063,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flClientPosAttack);
 							flClientPosAttack[2] += 20.0;
 						}
-						flAttackDist = GetVectorSquareMagnitude(g_flSlenderGoalPos[iBossIndex], flMyPos);
+						flAttackDist = GetVectorSquareMagnitude(flMyPos, g_flSlenderGoalPos[iBossIndex]);
 						SubtractVectors(flClientPosAttack, flAttackEyePos, flAttackDirection);
 						GetVectorAngles(flAttackDirection, flAttackDirection);
 						flAttackDirection[2] = 180.0;
@@ -1086,7 +1095,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								int iRandomAttackIndex = aArrayAttacks.Get(GetRandomInt(0, aArrayAttacks.Length - 1));
 								flAttackBeginRangeEx = NPCChaserGetAttackBeginRange(iBossIndex, iRandomAttackIndex);
 								flAttackBeginFOVEx = NPCChaserGetAttackBeginFOV(iBossIndex, iRandomAttackIndex);
-								//PrintToChatAll("%f %f %f", flFov, flAttackBeginFOVEx, flAttackDist);
 								if (flAttackDist <= SquareFloat(flAttackBeginRangeEx) && flFov <= (flAttackBeginFOVEx / 2.0) &&
 								!g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && 
 								!g_bNPCUseStartFleeAnimation[iBossIndex] && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex])
@@ -1173,6 +1181,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						g_bNPCUseFireAnimation[iBossIndex] = false;
 						if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
 						iState = STATE_CHASE;
+						GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 					}
 					else
 					{
@@ -1252,6 +1261,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					{
 						// Chase him again!
 						iState = STATE_CHASE;
+						GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 					}
 					else
 					{
@@ -1871,6 +1881,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		{
 			g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iCampingTarget);
 			iState = STATE_CHASE;
+			GetClientAbsOrigin(iCampingTarget, g_flSlenderGoalPos[iBossIndex]);
 		}
 		g_bSlenderTeleportTargetIsCamping[iBossIndex] = false;
 	}
@@ -1881,12 +1892,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		iState = STATE_CHASE;
+		GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 	}
 	if ((SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex] || SF_IsSlaughterRunMap()) && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && !g_bSlenderGiveUp[iBossIndex])
 	{
 		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
 		iState = STATE_CHASE;
+		GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 	}
 	if ((SF_IsRaidMap() || SF_IsBoxingMap()) && (g_bNPCRunningToHeal[iBossIndex] || g_bNPCHealing[iBossIndex]))
 	{
@@ -1901,6 +1914,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		g_bNPCChasingScareVictin[iBossIndex] = true;
 		g_bPlayerScaredByBoss[iTarget][iBossIndex] = false;
 		iState = STATE_CHASE;
+		GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 	}
 	if (IsValidClient(iBestNewTarget) && (bPlayerInTrap[iBestNewTarget] || bPlayerMadeNoise[iBestNewTarget]) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 	{
@@ -1909,6 +1923,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		iTarget = iBestNewTarget;
 		g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iTarget);
 		iState = STATE_CHASE;
+		GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 	}
 	// Finally, set our new state.
 	g_iSlenderState[iBossIndex] = iState;
