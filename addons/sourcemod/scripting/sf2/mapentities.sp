@@ -250,10 +250,10 @@ void SF2MapEntity_OnRoundStateChanged(SF2RoundState iRoundState, SF2RoundState i
 static void SF2MapEntity_OnDifficultyChanged(ConVar cvar, const char[] sOldValue, const char[] sNewValue)
 {
 	int iOldDifficulty = StringToInt(sOldValue);
-	int iDifficulty = StringToInt(sNewValue);
+	int difficulty = StringToInt(sNewValue);
 
 	Call_StartForward(g_CustomEntityOnDifficultyChanged);
-	Call_PushCell(iDifficulty);
+	Call_PushCell(difficulty);
 	Call_PushCell(iOldDifficulty);
 	Call_Finish();
 }

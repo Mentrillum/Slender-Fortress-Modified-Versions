@@ -330,9 +330,9 @@ static void Initialize()
 	}
 
 	// OnDifficultyX output
-	for (int iDifficulty = 0; iDifficulty <= Difficulty_Max; iDifficulty++)
+	for (int difficulty = 0; difficulty <= Difficulty_Max; difficulty++)
 	{
-		FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", iDifficulty);
+		FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", difficulty);
 		g_entityFactory.DefineOutput(sOutputName);
 	}
 
@@ -475,16 +475,16 @@ static void OnPageCountChanged(int iPageCount, int iOldPageCount)
 		gameRules.FireOutput(sOutputName);
 }
 
-static void OnDifficultyChanged(int iDifficulty, int iOldDifficulty)
+static void OnDifficultyChanged(int difficulty, int iOldDifficulty)
 {
 	SF2GamerulesEntity gameRules = FindSF2GamerulesEntity();
 	if (!gameRules.IsValid())
 		return;
 
 	char sOutputName[64];
-	FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", iDifficulty);
+	FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", difficulty);
 
-	SetVariantInt(iDifficulty);
+	SetVariantInt(difficulty);
 	gameRules.FireOutput("OnDifficultyChanged");
 	gameRules.FireOutput(sOutputName);
 }

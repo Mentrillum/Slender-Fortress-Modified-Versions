@@ -534,19 +534,19 @@ void ClientProcessStaticShake(int client)
 		
 		if (iNewStaticShakeMaster != iOldStaticShakeMaster)
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iNewStaticShakeMaster, sProfile, sizeof(sProfile));
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(iNewStaticShakeMaster, profile, sizeof(profile));
 		
 			if (g_strPlayerStaticShakeSound[client][0] != '\0')
 			{
 				StopSound(client, SNDCHAN_STATIC, g_strPlayerStaticShakeSound[client]);
 			}
 			
-			g_flPlayerStaticShakeMinVolume[client] = GetProfileFloat(sProfile, "sound_static_shake_local_volume_min", 0.0);
-			g_flPlayerStaticShakeMaxVolume[client] = GetProfileFloat(sProfile, "sound_static_shake_local_volume_max", 1.0);
+			g_flPlayerStaticShakeMinVolume[client] = GetProfileFloat(profile, "sound_static_shake_local_volume_min", 0.0);
+			g_flPlayerStaticShakeMaxVolume[client] = GetProfileFloat(profile, "sound_static_shake_local_volume_max", 1.0);
 			
 			char sStaticSound[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_static_shake_local", sStaticSound, sizeof(sStaticSound));
+			GetRandomStringFromProfile(profile, "sound_static_shake_local", sStaticSound, sizeof(sStaticSound));
 			if (sStaticSound[0] != '\0')
 			{
 				strcopy(g_strPlayerStaticShakeSound[client], sizeof(g_strPlayerStaticShakeSound[]), sStaticSound);
@@ -651,7 +651,7 @@ void ClientProcessVisibility(int client)
 {
 	if (!IsClientInGame(client) || !IsPlayerAlive(client)) return;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], sMasterProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH], sMasterProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
 	bool bWasSeeingSlender[MAX_BOSSES];
 	int iOldStaticMode[MAX_BOSSES];
@@ -663,7 +663,7 @@ void ClientProcessVisibility(int client)
 	float flMyPos[3];
 	GetClientAbsOrigin(client, flMyPos);
 
-	int iDifficulty = g_cvDifficulty.IntValue;
+	int difficulty = g_cvDifficulty.IntValue;
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -674,7 +674,7 @@ void ClientProcessVisibility(int client)
 		
 		if (NPCGetUniqueID(i) == -1) continue;
 		
-		NPCGetProfile(i, sProfile, sizeof(sProfile));
+		NPCGetProfile(i, profile, sizeof(profile));
 		
 		int iBoss = NPCGetEntIndex(i);
 		
@@ -697,7 +697,7 @@ void ClientProcessVisibility(int client)
 		{
 			if (iBoss && iBoss != INVALID_ENT_REFERENCE)
 			{
-				int iCopyMaster = NPCGetFromUniqueID(g_iSlenderCopyMaster[i]);
+				int copyMaster = NPCGetFromUniqueID(g_iSlenderCopyMaster[i]);
 				
 				if (!IsPointVisibleToPlayer(client, flSlenderEyePos, true, SlenderUsesBlink(i)))
 				{
@@ -708,15 +708,15 @@ void ClientProcessVisibility(int client)
 					g_bPlayerSeesSlender[client][i] = true;
 				}
 				
-				if ((GetGameTime() - g_flPlayerSeesSlenderLastTime[client][i]) > g_flSlenderStaticGraceTime[i][iDifficulty] ||
+				if ((GetGameTime() - g_flPlayerSeesSlenderLastTime[client][i]) > g_flSlenderStaticGraceTime[i][difficulty] ||
 					(iOldStaticMode[i] == Static_Increase && g_flPlayerStaticAmount[client] > 0.1))
 				{
 					if ((NPCGetFlags(i) & SFF_STATICONLOOK) && 
 						g_bPlayerSeesSlender[client][i])
 					{
-						if (iCopyMaster != -1)
+						if (copyMaster != -1)
 						{
-							g_iPlayerStaticMode[client][iCopyMaster] = Static_Increase;
+							g_iPlayerStaticMode[client][copyMaster] = Static_Increase;
 						}
 						else
 						{
@@ -724,16 +724,16 @@ void ClientProcessVisibility(int client)
 						}
 					}
 					else if ((NPCGetFlags(i) & SFF_STATICONRADIUS) && 
-						GetVectorSquareMagnitude(flMyPos, flSlenderPos) <= SquareFloat(g_flSlenderStaticRadius[i][iDifficulty]))
+						GetVectorSquareMagnitude(flMyPos, flSlenderPos) <= SquareFloat(g_flSlenderStaticRadius[i][difficulty]))
 					{
 						bool bNoObstacles = IsPointVisibleToPlayer(client, flSlenderEyePos, false, false);
 						if (!bNoObstacles) bNoObstacles = IsPointVisibleToPlayer(client, flSlenderOBBCenterPos, false, false);
 						
 						if (bNoObstacles)
 						{
-							if (iCopyMaster != -1)
+							if (copyMaster != -1)
 							{
-								g_iPlayerStaticMode[client][iCopyMaster] = Static_Increase;
+								g_iPlayerStaticMode[client][copyMaster] = Static_Increase;
 							}
 							else
 							{
@@ -747,7 +747,7 @@ void ClientProcessVisibility(int client)
 				if (SlenderKillsOnNear(i))
 				{
 					if (g_flPlayerStaticAmount[client] >= 1.0 ||
-						(GetVectorSquareMagnitude(flMyPos, flSlenderPos) <= SquareFloat(NPCGetInstantKillRadius(i)) && (GetGameTime() - g_flSlenderLastKill[i]) >= NPCGetInstantKillCooldown(i, iDifficulty))
+						(GetVectorSquareMagnitude(flMyPos, flSlenderPos) <= SquareFloat(NPCGetInstantKillRadius(i)) && (GetGameTime() - g_flSlenderLastKill[i]) >= NPCGetInstantKillCooldown(i, difficulty))
 						&& !g_bSlenderInDeathcam[i])
 					{
 						bool bKillPlayer = true;
@@ -843,8 +843,8 @@ void ClientProcessVisibility(int client)
 							g_iSlenderState[i] = STATE_CHASE;
 							GetClientAbsOrigin(client, g_flSlenderGoalPos[i]);
 							g_iSlenderTarget[i] = EntIndexToEntRef(client);
-							g_flSlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
-							g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, iDifficulty);
+							g_flSlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, difficulty);
+							g_flSlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, difficulty);
 							SlenderPerformVoice(i, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(i) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 							if (NPCChaserCanUseChaseInitialAnimation(i) && !g_bNPCUsesChaseInitialAnimation[i] && !SF_IsSlaughterRunMap())
 							{
@@ -855,7 +855,7 @@ void ClientProcessVisibility(int client)
 									npc.flWalkSpeed = 0.0;
 									npc.flRunSpeed = 0.0;
 									NPCChaserUpdateBossAnimation(i, slender, g_iSlenderState[i]);
-									g_hSlenderChaseInitialTimer[i] = CreateTimer(GetProfileFloat(sProfile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+									g_hSlenderChaseInitialTimer[i] = CreateTimer(GetProfileFloat(profile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 								}
 							}
 							else
@@ -869,7 +869,7 @@ void ClientProcessVisibility(int client)
 					}
 					if (NPCGetJumpscareOnScare(iMaster))
 					{
-						float flJumpScareDuration = NPCGetJumpscareDuration(iMaster, iDifficulty);
+						float flJumpScareDuration = NPCGetJumpscareDuration(iMaster, difficulty);
 						ClientDoJumpScare(client, iMaster, flJumpScareDuration);
 					}
 				}
@@ -917,11 +917,11 @@ void ClientProcessVisibility(int client)
 			if (NPCGetFlags(i) & SFF_HASSTATICLOOPLOCALSOUND)
 			{
 				char sLoopSound[PLATFORM_MAX_PATH];
-				GetRandomStringFromProfile(sProfile, "sound_static_loop_local", sLoopSound, sizeof(sLoopSound), 1);
+				GetRandomStringFromProfile(profile, "sound_static_loop_local", sLoopSound, sizeof(sLoopSound), 1);
 				
 				if (sLoopSound[0] != '\0')
 				{
-					EmitSoundToClient(client, sLoopSound, iBoss, SNDCHAN_STATIC, GetProfileNum(sProfile, "sound_static_loop_local_level", SNDLEVEL_NORMAL), SND_CHANGEVOL, 1.0);
+					EmitSoundToClient(client, sLoopSound, iBoss, SNDCHAN_STATIC, GetProfileNum(profile, "sound_static_loop_local_level", SNDLEVEL_NORMAL), SND_CHANGEVOL, 1.0);
 					ClientAddStress(client, 0.03);
 				}
 			}
@@ -934,7 +934,7 @@ void ClientProcessVisibility(int client)
 				if (iBoss && iBoss != INVALID_ENT_REFERENCE)
 				{
 					char sLoopSound[PLATFORM_MAX_PATH];
-					GetRandomStringFromProfile(sProfile, "sound_static_loop_local", sLoopSound, sizeof(sLoopSound), 1);
+					GetRandomStringFromProfile(profile, "sound_static_loop_local", sLoopSound, sizeof(sLoopSound), 1);
 					
 					if (sLoopSound[0] != '\0')
 					{
@@ -970,11 +970,11 @@ void ClientProcessVisibility(int client)
 	
 	if (iBossNewStatic != -1)
 	{
-		int iCopyMaster = NPCGetFromUniqueID(g_iSlenderCopyMaster[iBossNewStatic]);
-		if (iCopyMaster != -1)
+		int copyMaster = NPCGetFromUniqueID(g_iSlenderCopyMaster[iBossNewStatic]);
+		if (copyMaster != -1)
 		{
-			iBossNewStatic = iCopyMaster;
-			g_iPlayerStaticMaster[client] = NPCGetUniqueID(iCopyMaster);
+			iBossNewStatic = copyMaster;
+			g_iPlayerStaticMaster[client] = NPCGetUniqueID(copyMaster);
 		}
 		else
 		{
@@ -1015,12 +1015,12 @@ void ClientProcessVisibility(int client)
 		}
 		else
 		{
-			NPCGetProfile(iBossNewStatic, sProfile, sizeof(sProfile));
+			NPCGetProfile(iBossNewStatic, profile, sizeof(profile));
 		
 			g_strPlayerStaticSound[client][0] = '\0';
 			
 			char sStaticSound[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_static", sStaticSound, sizeof(sStaticSound), 1);
+			GetRandomStringFromProfile(profile, "sound_static", sStaticSound, sizeof(sStaticSound), 1);
 			
 			if (sStaticSound[0] != '\0') 
 			{
@@ -1039,38 +1039,38 @@ void ClientProcessVisibility(int client)
 			TriggerTimer(g_hPlayerLastStaticTimer[client], true);
 			
 			// Start up our own static timer.
-			float flStaticIncreaseRate = (g_flSlenderStaticRate[iBossNewStatic][iDifficulty] - (g_flSlenderStaticRate[iBossNewStatic][iDifficulty] * g_flRoundDifficultyModifier)/10);
-			float flStaticDecreaseRate = (g_flSlenderStaticRateDecay[iBossNewStatic][iDifficulty] + (g_flSlenderStaticRateDecay[iBossNewStatic][iDifficulty] * g_flRoundDifficultyModifier)/10);
+			float staticIncreaseRate = (g_flSlenderStaticRate[iBossNewStatic][difficulty] - (g_flSlenderStaticRate[iBossNewStatic][difficulty] * g_flRoundDifficultyModifier)/10);
+			float staticDecreaseRate = (g_flSlenderStaticRateDecay[iBossNewStatic][difficulty] + (g_flSlenderStaticRateDecay[iBossNewStatic][difficulty] * g_flRoundDifficultyModifier)/10);
 			if (TF2_GetPlayerClass(client) == TFClass_Heavy)
 			{
-				flStaticIncreaseRate *= 1.15;
-				flStaticDecreaseRate *= 0.85;
+				staticIncreaseRate *= 1.15;
+				staticDecreaseRate *= 0.85;
 			}
 			else if (TF2_GetPlayerClass(client) == TFClass_Sniper && g_bPlayerSeesSlender[client][iBossNewStatic])
 			{
 				if (g_bPlayerSeesSlender[client][iBossNewStatic])
 				{
-					flStaticIncreaseRate *= 1.05;
+					staticIncreaseRate *= 1.05;
 				}
 				else
 				{
-					flStaticIncreaseRate *= 0.9;
+					staticIncreaseRate *= 0.9;
 				}
-				flStaticDecreaseRate *= 0.9;
+				staticDecreaseRate *= 0.9;
 			}
 			else if (TF2_GetPlayerClass(client) == TFClass_Engineer)
 			{
-				flStaticIncreaseRate *= 0.9;
+				staticIncreaseRate *= 0.9;
 			}
 			else if (TF2_GetPlayerClass(client) == TFClass_Scout)
 			{
-				flStaticIncreaseRate *= 0.95;
+				staticIncreaseRate *= 0.95;
 			}
 			
-			g_flPlayerStaticIncreaseRate[client] = flStaticIncreaseRate;
-			g_flPlayerStaticDecreaseRate[client] = flStaticDecreaseRate;
+			g_flPlayerStaticIncreaseRate[client] = staticIncreaseRate;
+			g_flPlayerStaticDecreaseRate[client] = staticDecreaseRate;
 			
-			g_hPlayerStaticTimer[client] = CreateTimer(flStaticIncreaseRate, 
+			g_hPlayerStaticTimer[client] = CreateTimer(staticIncreaseRate, 
 				Timer_ClientIncreaseStatic, 
 				GetClientUserId(client), 
 				TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -1152,13 +1152,13 @@ void ClientProcessViewAngles(int client)
 				if (g_bPlayerViewbobHurtEnabled)
 				{
 					// Shake screen the more the player is hurt.
-					float flHealth = float(GetEntProp(client, Prop_Send, "m_iHealth"));
+					float health = float(GetEntProp(client, Prop_Send, "m_iHealth"));
 					float flMaxHealth = float(SDKCall(g_hSDKGetMaxHealth, client));
 					
 					float flPunchVelHurt[3];
-					flPunchVelHurt[0] = Sine(1.22 * GetGameTime()) * 48.5 * ((flMaxHealth - flHealth) / (flMaxHealth * 0.75)) / flMaxHealth;
-					flPunchVelHurt[1] = Sine(2.12 * GetGameTime()) * 80.0 * ((flMaxHealth - flHealth) / (flMaxHealth * 0.75)) / flMaxHealth;
-					flPunchVelHurt[2] = Sine(0.5 * GetGameTime()) * 36.0 * ((flMaxHealth - flHealth) / (flMaxHealth * 0.75)) / flMaxHealth;
+					flPunchVelHurt[0] = Sine(1.22 * GetGameTime()) * 48.5 * ((flMaxHealth - health) / (flMaxHealth * 0.75)) / flMaxHealth;
+					flPunchVelHurt[1] = Sine(2.12 * GetGameTime()) * 80.0 * ((flMaxHealth - health) / (flMaxHealth * 0.75)) / flMaxHealth;
+					flPunchVelHurt[2] = Sine(0.5 * GetGameTime()) * 36.0 * ((flMaxHealth - health) / (flMaxHealth * 0.75)) / flMaxHealth;
 					
 					AddVectors(flPunchVel, flPunchVelHurt, flPunchVel);
 				}
@@ -1271,9 +1271,9 @@ public Action Timer_ClientFadeOutLastStaticSound(Handle timer, any userid)
 //	SPECIAL ROUND FUNCTIONS
 //	==========================================================
 
-void ClientSetSpecialRoundTimer(int iClient, float flTime, Timer callback, any data, int flags=0)
+void ClientSetSpecialRoundTimer(int client, float flTime, Timer callback, any data, int flags=0)
 {
-	g_hClientSpecialRoundTimer[iClient] = CreateTimer(flTime, callback, data, flags);
+	g_hClientSpecialRoundTimer[client] = CreateTimer(flTime, callback, data, flags);
 }
 
 public Action Timer_ClientPageDetector(Handle timer, int userid)
@@ -1281,15 +1281,15 @@ public Action Timer_ClientPageDetector(Handle timer, int userid)
 	if (!SF_SpecialRound(SPECIALROUND_PAGEDETECTOR)) return Plugin_Stop;
 	if (GetRoundState() == SF2RoundState_Escape) return Plugin_Stop;
 	
-	int iClient = GetClientOfUserId(userid);
-	if (g_hClientSpecialRoundTimer[iClient] != timer) return Plugin_Stop;
+	int client = GetClientOfUserId(userid);
+	if (g_hClientSpecialRoundTimer[client] != timer) return Plugin_Stop;
 	
-	if (!IsValidClient(iClient)) return Plugin_Stop;
+	if (!IsValidClient(client)) return Plugin_Stop;
 	
-	if (g_bPlayerEliminated[iClient]) return Plugin_Stop;
+	if (g_bPlayerEliminated[client]) return Plugin_Stop;
 	
 	float flDistance = 99999.0, flClientPos[3], flPagePos[3];
-	GetClientAbsOrigin(iClient, flClientPos);
+	GetClientAbsOrigin(client, flClientPos);
 	
 	char sModel[255], targetName[64];
 	
@@ -1315,8 +1315,8 @@ public Action Timer_ClientPageDetector(Handle timer, int userid)
 	if (flNextBeepTime > 5.0) flNextBeepTime = 5.0;
 	if (flNextBeepTime < 0.1) flNextBeepTime = 0.1;
 	
-	EmitSoundToClient(iClient,PAGE_DETECTOR_BEEP, _, _, _, _, _, 100-RoundToNearest(flNextBeepTime*10.0));
-	g_hClientSpecialRoundTimer[iClient] = CreateTimer(flNextBeepTime, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
+	EmitSoundToClient(client,PAGE_DETECTOR_BEEP, _, _, _, _, _, 100-RoundToNearest(flNextBeepTime*10.0));
+	g_hClientSpecialRoundTimer[client] = CreateTimer(flNextBeepTime, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Stop;
 }
 
@@ -1665,16 +1665,16 @@ public Action Timer_ClassScramblePlayer(Handle timer, any userid)
 {
 	if (!g_bEnabled) return Plugin_Stop;
 
-	int iClient = GetClientOfUserId(userid);
+	int client = GetClientOfUserId(userid);
 
-	if (iClient <= 0 || DidClientEscape(iClient) || g_bPlayerEliminated[iClient] || !IsPlayerAlive(iClient) || IsClientInGhostMode(iClient) || g_bPlayerProxy[iClient]) return Plugin_Stop;
-	g_iPlayerRandomClassNumber[iClient] = GetRandomInt(1, 9);
+	if (client <= 0 || DidClientEscape(client) || g_bPlayerEliminated[client] || !IsPlayerAlive(client) || IsClientInGhostMode(client) || g_bPlayerProxy[client]) return Plugin_Stop;
+	g_iPlayerRandomClassNumber[client] = GetRandomInt(1, 9);
 
 	// Regenerate player but keep health the same.
-	int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
-	TF2_RegeneratePlayer(iClient);
-	SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
-	SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
+	int iHealth = GetEntProp(client, Prop_Send, "m_iHealth");
+	TF2_RegeneratePlayer(client);
+	SetEntProp(client, Prop_Data, "m_iHealth", iHealth);
+	SetEntProp(client, Prop_Send, "m_iHealth", iHealth);
 
 	return Plugin_Stop;
 }
@@ -1682,15 +1682,15 @@ public Action Timer_ClassScramblePlayer2(Handle timer, any userid)
 {
 	if (!g_bEnabled) return Plugin_Stop;
 
-	int iClient = GetClientOfUserId(userid);
+	int client = GetClientOfUserId(userid);
 
-	if (iClient <= 0 || DidClientEscape(iClient) || g_bPlayerEliminated[iClient] || !IsPlayerAlive(iClient) || IsClientInGhostMode(iClient) || g_bPlayerProxy[iClient]) return Plugin_Stop;
+	if (client <= 0 || DidClientEscape(client) || g_bPlayerEliminated[client] || !IsPlayerAlive(client) || IsClientInGhostMode(client) || g_bPlayerProxy[client]) return Plugin_Stop;
 
 	// Regenerate player but keep health the same.
-	int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
-	TF2_RegeneratePlayer(iClient);
-	SetEntProp(iClient, Prop_Data, "m_iHealth", iHealth);
-	SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
+	int iHealth = GetEntProp(client, Prop_Send, "m_iHealth");
+	TF2_RegeneratePlayer(client);
+	SetEntProp(client, Prop_Data, "m_iHealth", iHealth);
+	SetEntProp(client, Prop_Send, "m_iHealth", iHealth);
 
 	return Plugin_Stop;
 }
@@ -1836,8 +1836,8 @@ bool ClientEnableConstantGlow(int client, const char[] sAttachment="", int iColo
 
 public Action Timer_UpdateClientGlow(Handle timer, int userid)
 {
-	int iClient = GetClientOfUserId(userid);
-	if (iClient <= 0 || iClient > MaxClients)
+	int client = GetClientOfUserId(userid);
+	if (client <= 0 || client > MaxClients)
 	{
 		for (int i = 1; i <= MaxClients; i++)//Find the previous client index owning that timer and reset it. 
 		{
@@ -1849,27 +1849,27 @@ public Action Timer_UpdateClientGlow(Handle timer, int userid)
 		}
 		return Plugin_Stop;
 	}
-	if (!IsClientInGame(iClient) || !IsPlayerAlive(iClient) || !DoesClientHaveConstantGlow(iClient))
+	if (!IsClientInGame(client) || !IsPlayerAlive(client) || !DoesClientHaveConstantGlow(client))
 	{
-		g_hClientGlowTimer[iClient] = null;
+		g_hClientGlowTimer[client] = null;
 		return Plugin_Stop;
 	}
 	
 	char sClientModel[128];
-	GetEntPropString(iClient, Prop_Data, "m_ModelName", sClientModel, sizeof(sClientModel));
+	GetEntPropString(client, Prop_Data, "m_ModelName", sClientModel, sizeof(sClientModel));
 	
-	if (strcmp(sClientModel, g_sOldClientModel[iClient]) != 0)
+	if (strcmp(sClientModel, g_sOldClientModel[client]) != 0)
 	{
-		ClientDisableConstantGlow(iClient);
-		ClientEnableConstantGlow(iClient);
-		strcopy(g_sOldClientModel[iClient], sizeof(g_sOldClientModel[]), sClientModel);
+		ClientDisableConstantGlow(client);
+		ClientEnableConstantGlow(client);
+		strcopy(g_sOldClientModel[client], sizeof(g_sOldClientModel[]), sClientModel);
 	}
 	return Plugin_Continue;
 }
 
-public bool ClientGlowFilter(int iClient)
+public bool ClientGlowFilter(int client)
 {
-	if (g_bPlayerEliminated[iClient])
+	if (g_bPlayerEliminated[client])
 		return false;
 	return true;
 }
@@ -1893,11 +1893,11 @@ void ClientDoJumpScare(int client,int iBossIndex, float flLifeTime)
 	g_iPlayerJumpScareBoss[client] = NPCGetUniqueID(iBossIndex);
 	g_flPlayerJumpScareLifeTime[client] = GetGameTime() + flLifeTime;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sBuffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_jumpscare", sBuffer, sizeof(sBuffer), 1);
+	GetRandomStringFromProfile(profile, "sound_jumpscare", sBuffer, sizeof(sBuffer), 1);
 	
 	if (sBuffer[0] != '\0')
 	{
@@ -2038,16 +2038,16 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	
 	char buffer[PLATFORM_MAX_PATH];
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	if (g_bSlenderDeathCamScareSound[iBossIndex])
 	{
-		GetRandomStringFromProfile(sProfile, "sound_scare_player", buffer, sizeof(buffer));
+		GetRandomStringFromProfile(profile, "sound_scare_player", buffer, sizeof(buffer));
 		if (buffer[0] != '\0') EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 	}
 	
-	GetRandomStringFromProfile(sProfile, "sound_player_deathcam", buffer, sizeof(buffer));
+	GetRandomStringFromProfile(profile, "sound_player_deathcam", buffer, sizeof(buffer));
 	if (buffer[0] != '\0') 
 	{
 		EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
@@ -2057,7 +2057,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 		// Legacy support for "sound_player_death"
 		if (g_b20Dollars || SF_SpecialRound(SPECIALROUND_20DOLLARS))
 		{
-			GetRandomStringFromProfile(sProfile, "sound_player_death_20dollars", buffer, sizeof(buffer));
+			GetRandomStringFromProfile(profile, "sound_player_death_20dollars", buffer, sizeof(buffer));
 			if (buffer[0] != '\0')
 			{
 				EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
@@ -2065,7 +2065,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 		}
 		else
 		{
-			GetRandomStringFromProfile(sProfile, "sound_player_death", buffer, sizeof(buffer));
+			GetRandomStringFromProfile(profile, "sound_player_death", buffer, sizeof(buffer));
 			if (buffer[0] != '\0')
 			{
 				EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
@@ -2073,7 +2073,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 		}
 	}
 	
-	GetRandomStringFromProfile(sProfile, "sound_player_deathcam_all", buffer, sizeof(buffer));
+	GetRandomStringFromProfile(profile, "sound_player_deathcam_all", buffer, sizeof(buffer));
 	if (buffer[0] != '\0') 
 	{
 		EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
@@ -2081,7 +2081,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	else
 	{
 		// Legacy support for "sound_player_death_all"
-		GetRandomStringFromProfile(sProfile, "sound_player_death_all", buffer, sizeof(buffer));
+		GetRandomStringFromProfile(profile, "sound_player_death_all", buffer, sizeof(buffer));
 		if (buffer[0] != '\0') 
 		{
 			EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
@@ -2139,7 +2139,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	}
 	else
 	{
-		GetRandomStringFromProfile(sProfile, "sound_player_deathcam_local", buffer, sizeof(buffer));
+		GetRandomStringFromProfile(profile, "sound_player_deathcam_local", buffer, sizeof(buffer));
 		if (buffer[0] != '\0') 
 		{
 			EmitSoundToAll(buffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -2147,7 +2147,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 		else
 		{
 			// Legacy support for "sound_player_death_local" cause why not 
-			GetRandomStringFromProfile(sProfile, "sound_player_death_local", buffer, sizeof(buffer));
+			GetRandomStringFromProfile(profile, "sound_player_death_local", buffer, sizeof(buffer));
 			if (buffer[0] != '\0') 
 			{
 				EmitSoundToAll(buffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -2177,7 +2177,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 	int target = CreateEntityByName("info_target");
 	if (!g_bSlenderPublicDeathCam[iBossIndex])
 	{
-		GetProfileVector(sProfile, "death_cam_pos", flOffsetPos);
+		GetProfileVector(profile, "death_cam_pos", flOffsetPos);
 		AddVectors(vecLookPos, flOffsetPos, flOffsetPos);
 		TeleportEntity(target, flOffsetPos, NULL_VECTOR, NULL_VECTOR);
 		DispatchKeyValue(target, "targetname", sName);
@@ -2192,7 +2192,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 		DispatchKeyValue(target, "targetname", sName);
 		SetVariantString("!activator");
 		AcceptEntityInput(target, "SetParent", slender);
-		GetProfileString(sProfile, "death_cam_attachtment_target_point", sBoneName, sizeof(sBoneName));
+		GetProfileString(profile, "death_cam_attachtment_target_point", sBoneName, sizeof(sBoneName));
 		if (sBoneName[0] != '\0')
 		{
 			SetVariantString(sBoneName);
@@ -2227,7 +2227,7 @@ void ClientStartDeathCam(int client,int iBossIndex, const float vecLookPos[3], b
 		SetVariantString("!activator");
 		AcceptEntityInput(camera, "SetParent", slender);
 		char sAttachmentName[PLATFORM_MAX_PATH];
-		GetProfileString(sProfile, "death_cam_attachtment_point", sAttachmentName, sizeof(sAttachmentName));
+		GetProfileString(profile, "death_cam_attachtment_point", sAttachmentName, sizeof(sAttachmentName));
 		if (sAttachmentName[0] != '\0')
 		{
 			SetVariantString(sAttachmentName);
@@ -2281,13 +2281,13 @@ public Action Timer_ClientResetDeathCam1(Handle timer, any userid)
 	
 	SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(NPCGetFromUniqueID(g_iPlayerDeathCamBoss[client]));
 
-	char buffer[PLATFORM_MAX_PATH], sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char buffer[PLATFORM_MAX_PATH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
 	if(Npc.IsValid())
 	{
 		g_bPlayerDeathCamShowOverlay[client] = true;
-		Npc.GetProfile(sProfile, sizeof(sProfile));
-		GetRandomStringFromProfile(sProfile, "sound_player_deathcam_overlay", buffer, sizeof(buffer));
+		Npc.GetProfile(profile, sizeof(profile));
+		GetRandomStringFromProfile(profile, "sound_player_deathcam_overlay", buffer, sizeof(buffer));
 		if (buffer[0] != '\0') 
 		{
 			EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
@@ -2307,8 +2307,8 @@ public Action Timer_BossDeathCamDelay(Handle timer, any entref)
 	
 	if (timer != g_hSlenderDeathCamTimer[iBossIndex]) return Plugin_Stop;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 
 	g_hSlenderDeathCamTimer[iBossIndex] = CreateTimer(g_flSlenderDeathCamTime[iBossIndex], Timer_BossDeathCamDuration, slender, TIMER_FLAG_NO_MAPCHANGE);
 
@@ -2610,12 +2610,12 @@ void ClientHandleGhostMode(int client, bool bForceSpawn=false)
 
 public Action Timer_ClientGhostStripWearables(Handle timer, int userid)
 {
-	int iClient = GetClientOfUserId(userid);
-	if (!IsValidClient(iClient)) return Plugin_Stop;
-	if (!IsClientInGhostMode(iClient)) return Plugin_Stop;
-	TF2_StripWearables(iClient);
-	DestroyAllActiveWeapons(iClient);
-	TF2_DestroySpyWeapons(iClient);
+	int client = GetClientOfUserId(userid);
+	if (!IsValidClient(client)) return Plugin_Stop;
+	if (!IsClientInGhostMode(client)) return Plugin_Stop;
+	TF2_StripWearables(client);
+	DestroyAllActiveWeapons(client);
+	TF2_DestroySpyWeapons(client);
 	return Plugin_Stop;
 }
 
@@ -2726,19 +2726,19 @@ void ClientPerformScare(int client,int iBossIndex)
 		return;
 	}
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	g_flPlayerScareLastTime[client][iBossIndex] = GetGameTime();
 	g_flPlayerScareNextTime[client][iBossIndex] = GetGameTime() + NPCGetScareCooldown(iBossIndex);
 	
 	// See how much Sanity should be drained from a scare.
-	float flStaticAmount = GetProfileFloat(sProfile, "scare_static_amount", 0.0);
-	g_flPlayerStaticAmount[client] += flStaticAmount;
+	float staticAmount = GetProfileFloat(profile, "scare_static_amount", 0.0);
+	g_flPlayerStaticAmount[client] += staticAmount;
 	if (g_flPlayerStaticAmount[client] > 1.0) g_flPlayerStaticAmount[client] = 1.0;
 	
 	char sScareSound[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_scare_player", sScareSound, sizeof(sScareSound));
+	GetRandomStringFromProfile(profile, "sound_scare_player", sScareSound, sizeof(sScareSound));
 	
 	if (sScareSound[0] != '\0')
 	{
@@ -2746,8 +2746,8 @@ void ClientPerformScare(int client,int iBossIndex)
 		
 		if (NPCGetFlags(iBossIndex) & SFF_HASSIGHTSOUNDS)
 		{
-			float flCooldownMin = GetProfileFloat(sProfile, "sound_sight_cooldown_min", 8.0);
-			float flCooldownMax = GetProfileFloat(sProfile, "sound_sight_cooldown_max", 14.0);
+			float flCooldownMin = GetProfileFloat(profile, "sound_sight_cooldown_min", 8.0);
+			float flCooldownMax = GetProfileFloat(profile, "sound_sight_cooldown_max", 14.0);
 			
 			g_flPlayerSightSoundNextTime[client][iBossIndex] = GetGameTime() + GetRandomFloat(flCooldownMin, flCooldownMax);
 		}
@@ -2792,29 +2792,29 @@ void ClientPerformSightSound(int client,int iBossIndex)
 	int iMaster = NPCGetFromUniqueID(g_iSlenderCopyMaster[iBossIndex]);
 	if (iMaster == -1) iMaster = iBossIndex;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sSightSound[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_sight", sSightSound, sizeof(sSightSound));
+	GetRandomStringFromProfile(profile, "sound_sight", sSightSound, sizeof(sSightSound));
 	
 	if (sSightSound[0] != '\0')
 	{
 		EmitSoundToClient(client, sSightSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
 		
-		float flCooldownMin = GetProfileFloat(sProfile, "sound_sight_cooldown_min", 8.0);
-		float flCooldownMax = GetProfileFloat(sProfile, "sound_sight_cooldown_max", 14.0);
+		float flCooldownMin = GetProfileFloat(profile, "sound_sight_cooldown_min", 8.0);
+		float flCooldownMax = GetProfileFloat(profile, "sound_sight_cooldown_max", 14.0);
 		
 		g_flPlayerSightSoundNextTime[client][iMaster] = GetGameTime() + GetRandomFloat(flCooldownMin, flCooldownMax);
 		
-		float flBossPos[3], flMyPos[3];
+		float bossPos[3], flMyPos[3];
 		int iBoss = NPCGetEntIndex(iBossIndex);
 		GetClientAbsOrigin(client, flMyPos);
-		GetEntPropVector(iBoss, Prop_Data, "m_vecAbsOrigin", flBossPos);
+		GetEntPropVector(iBoss, Prop_Data, "m_vecAbsOrigin", bossPos);
 		float flDistUnComfortZone = 400.0;
-		float flBossDist = GetVectorSquareMagnitude(flMyPos, flBossPos);
+		float bossDist = GetVectorSquareMagnitude(flMyPos, bossPos);
 		
-		float flStressScalar = 1.0 + ((SquareFloat(flDistUnComfortZone) / flBossDist));
+		float flStressScalar = 1.0 + ((SquareFloat(flDistUnComfortZone) / bossDist));
 		
 		ClientAddStress(client, 0.1 * flStressScalar);
 	}
@@ -2973,25 +2973,25 @@ public Action Timer_BlinkTimer(Handle timer, any userid)
 
 static Action Timer_TryUnblink(Handle timer, any userid)
 {
-	int iClient = GetClientOfUserId(userid);
-	if (iClient <= 0 || timer != g_hPlayerBlinkTimer[iClient] || !g_bPlayerBlink[iClient]) return Plugin_Stop;
+	int client = GetClientOfUserId(userid);
+	if (client <= 0 || timer != g_hPlayerBlinkTimer[client] || !g_bPlayerBlink[client]) return Plugin_Stop;
 	
-	if (g_bPlayerHoldingBlink[iClient])
+	if (g_bPlayerHoldingBlink[client])
 	{
 		// Some maps use the env_fade entity, so don't use FFADE_PURGE.
 		// Instead, we resort to spamming fade messages to the client to keep
 		// them blind.
-		UTIL_ScreenFade(iClient, 100, 150, FFADE_IN, 0, 0, 0, 255);
+		UTIL_ScreenFade(client, 100, 150, FFADE_IN, 0, 0, 0, 255);
 		return Plugin_Continue;
 	}
 
-	if (GetGameTime() < g_flTimeUntilUnblink[iClient])
+	if (GetGameTime() < g_flTimeUntilUnblink[client])
 	{
 		return Plugin_Continue;
 	}
 
-	ClientUnblink(iClient);
-	ClientStartDrainingBlinkMeter(iClient);
+	ClientUnblink(client);
+	ClientStartDrainingBlinkMeter(client);
 
 	return Plugin_Stop;
 }
@@ -3108,18 +3108,18 @@ public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	int iDeathCamBoss = NPCGetFromUniqueID(g_iPlayerDeathCamBoss[client]);
 	int iJumpScareBoss = NPCGetFromUniqueID(g_iPlayerJumpScareBoss[client]);
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	char sMaterial[PLATFORM_MAX_PATH], sOverlay[PLATFORM_MAX_PATH];
 	
 	if (IsClientInDeathCam(client) && iDeathCamBoss != -1 && g_bPlayerDeathCamShowOverlay[client])
 	{
-		NPCGetProfile(iDeathCamBoss, sProfile, sizeof(sProfile));
-		GetRandomStringFromProfile(sProfile, "overlay_player_death", sMaterial, sizeof(sMaterial), 1);
+		NPCGetProfile(iDeathCamBoss, profile, sizeof(profile));
+		GetRandomStringFromProfile(profile, "overlay_player_death", sMaterial, sizeof(sMaterial), 1);
 	}
 	else if (iJumpScareBoss != -1 && GetGameTime() <= g_flPlayerJumpScareLifeTime[client])
 	{
-		NPCGetProfile(iJumpScareBoss, sProfile, sizeof(sProfile));
-		GetRandomStringFromProfile(sProfile, "overlay_jumpscare", sMaterial, sizeof(sMaterial), 1);
+		NPCGetProfile(iJumpScareBoss, profile, sizeof(profile));
+		GetRandomStringFromProfile(profile, "overlay_jumpscare", sMaterial, sizeof(sMaterial), 1);
 	}
 	else if (IsClientInGhostMode(client) && !SF_IsBoxingMap())
 	{
@@ -3161,17 +3161,17 @@ stock void ClientStopAllSlenderSounds(int client, const char[] profileName, cons
 	
 	char buffer[PLATFORM_MAX_PATH];
 	
-	g_hConfig.Rewind();
-	if (g_hConfig.JumpToKey(profileName))
+	g_Config.Rewind();
+	if (g_Config.JumpToKey(profileName))
 	{
 		char s[32];
 		
-		if (g_hConfig.JumpToKey(sectionName))
+		if (g_Config.JumpToKey(sectionName))
 		{
 			for (int i2 = 1;; i2++)
 			{
 				FormatEx(s, sizeof(s), "%d", i2);
-				g_hConfig.GetString(s, buffer, sizeof(buffer));
+				g_Config.GetString(s, buffer, sizeof(buffer));
 				if (buffer[0] == '\0') break;
 				
 				if (buffer[0] != '\0') StopSound(client, iChannel, buffer);
@@ -3443,11 +3443,11 @@ public Action Hook_ConstantGlowSetTransmit(int ent,int other)
 				SDK_GetSmoothedVelocity(iOwner, vecSpeed);
 				if (GetVectorLength(vecSpeed, true) >= SquareFloat(100.0))
 				{
-					float flOwnerPos[3], flProxyPos[3];
+					float flOwnerPos[3], proxyPos[3];
 					GetClientEyePosition(iOwner, flOwnerPos);
-					GetClientEyePosition(other, flProxyPos);
+					GetClientEyePosition(other, proxyPos);
 					
-					if (GetVectorSquareMagnitude(flOwnerPos, flProxyPos) <= SquareFloat((700.0 + ((g_bPlayerHasRegenerationItem[iOwner]) ? 300.0 : 0.0))))//To-do add a cvar for that.
+					if (GetVectorSquareMagnitude(flOwnerPos, proxyPos) <= SquareFloat((700.0 + ((g_bPlayerHasRegenerationItem[iOwner]) ? 300.0 : 0.0))))//To-do add a cvar for that.
 					{
 						return Plugin_Continue;
 					}

@@ -116,11 +116,11 @@ public Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 	
 	char cappers[7];
 	int i = 0;
-	for (int iClient; iClient <= MaxClients; iClient++)
+	for (int client; client <= MaxClients; client++)
 	{
-		if (IsValidClient(iClient) && DidClientEscape(iClient) && i < 7)
+		if (IsValidClient(client) && DidClientEscape(client) && i < 7)
 		{
-			cappers[i] = iClient;
+			cappers[i] = client;
 			event.SetString("cappers", cappers);
 			i += 1;
 		}
@@ -176,9 +176,9 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		
 		if (g_bSlenderCustomOutroSong[iNPCIndex])
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iNPCIndex, sProfile, sizeof(sProfile));
-			GetRandomStringFromProfile(sProfile, "sound_music_outro", sMusic[iNPCIndex], sizeof(sMusic[]));
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(iNPCIndex, profile, sizeof(profile));
+			GetRandomStringFromProfile(profile, "sound_music_outro", sMusic[iNPCIndex], sizeof(sMusic[]));
 			if (sMusic[iNPCIndex][0] != '\0') aRandomBosses.Push(iNPCIndex);
 		}
 	}
@@ -214,8 +214,8 @@ public Action Event_PlayerTeamPre(Handle event, const char[] name, bool dB)
 	if (g_cvDebugDetail.IntValue > 1) DebugMessage("EVENT START: Event_PlayerTeamPre");
 	#endif
 	
-	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (iClient > 0)
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client > 0)
 	{
 		if (GetEventInt(event, "team") > 1 || GetEventInt(event, "oldteam") > 1) SetEventBroadcast(event, true);
 	}
@@ -237,69 +237,69 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerTeam");
 	#endif
 	
-	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (iClient > 0)
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client > 0)
 	{
 		int iintTeam = GetEventInt(event, "team");
 		if (iintTeam <= TFTeam_Spectator)
 		{
 			if (!IsRoundPlaying())
 			{
-				if (g_bPlayerPlaying[iClient] && !g_bPlayerEliminated[iClient])
+				if (g_bPlayerPlaying[client] && !g_bPlayerEliminated[client])
 				{
 					ForceInNextPlayersInQueue(1, true);
 				}
 			}
 			
 			// You're not playing anymore.
-			if (g_bPlayerPlaying[iClient])
+			if (g_bPlayerPlaying[client])
 			{
-				ClientSetQueuePoints(iClient, 0);
+				ClientSetQueuePoints(client, 0);
 			}
 			
-			g_bPlayerPlaying[iClient] = false;
-			g_bPlayerEliminated[iClient] = true;
-			g_bPlayerEscaped[iClient] = false;
+			g_bPlayerPlaying[client] = false;
+			g_bPlayerEliminated[client] = true;
+			g_bPlayerEscaped[client] = false;
 			
-			ClientSetGhostModeState(iClient, false);
+			ClientSetGhostModeState(client, false);
 			
-			if (!view_as<bool>(GetEntProp(iClient, Prop_Send, "m_bIsCoaching")))
+			if (!view_as<bool>(GetEntProp(client, Prop_Send, "m_bIsCoaching")))
 			{
 				// This is to prevent player spawn spam when someone is coaching. Who coaches in SF2, anyway?
-				TF2_RespawnPlayer(iClient);
+				TF2_RespawnPlayer(client);
 			}
 			
 			// Special round.
-			if (g_bSpecialRound) g_bPlayerPlayedSpecialRound[iClient] = true;
+			if (g_bSpecialRound) g_bPlayerPlayedSpecialRound[client] = true;
 			
 			// Boss round.
-			if (g_bNewBossRound) g_bPlayerPlayedNewBossRound[iClient] = true;
+			if (g_bNewBossRound) g_bPlayerPlayedNewBossRound[client] = true;
 			
-			if (!g_cvFullyEnableSpectator.BoolValue) g_hPlayerSwitchBlueTimer[iClient] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			if (!g_cvFullyEnableSpectator.BoolValue) g_hPlayerSwitchBlueTimer[client] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 		else
 		{
-			if (!g_bPlayerChoseTeam[iClient])
+			if (!g_bPlayerChoseTeam[client])
 			{
-				g_bPlayerChoseTeam[iClient] = true;
+				g_bPlayerChoseTeam[client] = true;
 				
-				if (g_iPlayerPreferences[iClient].PlayerPreference_ProjectedFlashlight)
+				if (g_iPlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
 				{
-					EmitSoundToClient(iClient, SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND);
-					CPrintToChat(iClient, "%T", "SF2 Projected Flashlight", iClient);
+					EmitSoundToClient(client, SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND);
+					CPrintToChat(client, "%T", "SF2 Projected Flashlight", client);
 				}
 				else
 				{
-					CPrintToChat(iClient, "%T", "SF2 Normal Flashlight", iClient);
+					CPrintToChat(client, "%T", "SF2 Normal Flashlight", client);
 				}
 				
-				CreateTimer(5.0, Timer_WelcomeMessage, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(5.0, Timer_WelcomeMessage, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 			}
-			if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_bPlayerEliminated[iClient] && iintTeam == TFTeam_Red && 
-				TF2_GetPlayerClass(iClient) == TFClass_Medic && !DidClientEscape(iClient))
+			if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_bPlayerEliminated[client] && iintTeam == TFTeam_Red && 
+				TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
 			{
-				ShowVGUIPanel(iClient, "class_red");
-				EmitSoundToClient(iClient, THANATOPHOBIA_MEDICNO);
+				ShowVGUIPanel(client, "class_red");
+				EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
 				TFClassType newClass;
 				int iRandom = GetRandomInt(1, 8);
 				switch (iRandom)
@@ -313,8 +313,8 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 					case 7: newClass = TFClass_Sniper;
 					case 8: newClass = TFClass_Spy;
 				}
-				TF2_SetPlayerClass(iClient, newClass);
-				TF2_RegeneratePlayer(iClient);
+				TF2_SetPlayerClass(client, newClass);
+				TF2_RegeneratePlayer(client);
 			}
 		}
 	}
@@ -339,8 +339,8 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 {
 	if (!g_bEnabled) return;
 	
-	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (iClient <= 0) return;
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client <= 0) return;
 	#if defined DEBUG
 	
 	Handle hProf = CreateProfiler();
@@ -348,62 +348,62 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Started profiling...");
 
 	//PrintToChatAll("(SPAWN) Spawn event called.");
-	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerSpawn(%d)", iClient);
+	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerSpawn(%d)", client);
 	#endif
 	
-	if (GetClientTeam(iClient) > 1)
+	if (GetClientTeam(client) > 1)
 	{
-		g_flLastVisibilityProcess[iClient] = GetGameTime();
-		ClientResetStatic(iClient);
-		if (!g_bSeeUpdateMenu[iClient])
+		g_flLastVisibilityProcess[client] = GetGameTime();
+		ClientResetStatic(client);
+		if (!g_bSeeUpdateMenu[client])
 		{
-			g_bSeeUpdateMenu[iClient] = true;
-			DisplayMenu(g_hMenuUpdate, iClient, 30);
+			g_bSeeUpdateMenu[client] = true;
+			DisplayMenu(g_hMenuUpdate, client, 30);
 		}
 	}
-	if (!IsClientParticipating(iClient))
+	if (!IsClientParticipating(client))
 	{
-		TF2Attrib_SetByName(iClient, "increased jump height", 1.0);
-		TF2Attrib_RemoveByDefIndex(iClient, 10);
+		TF2Attrib_SetByName(client, "increased jump height", 1.0);
+		TF2Attrib_RemoveByDefIndex(client, 10);
 		
-		ClientSetGhostModeState(iClient, false);
-		SetEntityGravity(iClient, 1.0);
-		g_iPlayerPageCount[iClient] = 0;
+		ClientSetGhostModeState(client, false);
+		SetEntityGravity(client, 1.0);
+		g_iPlayerPageCount[client] = 0;
 		
-		ClientResetStatic(iClient);
-		ClientResetSlenderStats(iClient);
-		ClientResetCampingStats(iClient);
-		ClientResetOverlay(iClient);
-		ClientResetJumpScare(iClient);
-		ClientUpdateListeningFlags(iClient);
-		ClientUpdateMusicSystem(iClient);
-		ClientChaseMusicReset(iClient);
-		ClientChaseMusicSeeReset(iClient);
-		ClientAlertMusicReset(iClient);
-		ClientIdleMusicReset(iClient);
-		Client20DollarsMusicReset(iClient);
-		Client90sMusicReset(iClient);
-		ClientMusicReset(iClient);
-		ClientResetProxy(iClient);
-		ClientResetHints(iClient);
-		ClientResetScare(iClient);
+		ClientResetStatic(client);
+		ClientResetSlenderStats(client);
+		ClientResetCampingStats(client);
+		ClientResetOverlay(client);
+		ClientResetJumpScare(client);
+		ClientUpdateListeningFlags(client);
+		ClientUpdateMusicSystem(client);
+		ClientChaseMusicReset(client);
+		ClientChaseMusicSeeReset(client);
+		ClientAlertMusicReset(client);
+		ClientIdleMusicReset(client);
+		Client20DollarsMusicReset(client);
+		Client90sMusicReset(client);
+		ClientMusicReset(client);
+		ClientResetProxy(client);
+		ClientResetHints(client);
+		ClientResetScare(client);
 		
-		ClientResetDeathCam(iClient);
-		ClientResetFlashlight(iClient);
-		ClientDeactivateUltravision(iClient);
-		ClientResetSprint(iClient);
-		ClientResetBreathing(iClient);
-		ClientResetBlink(iClient);
-		ClientResetInteractiveGlow(iClient);
-		ClientDisableConstantGlow(iClient);
+		ClientResetDeathCam(client);
+		ClientResetFlashlight(client);
+		ClientDeactivateUltravision(client);
+		ClientResetSprint(client);
+		ClientResetBreathing(client);
+		ClientResetBlink(client);
+		ClientResetInteractiveGlow(client);
+		ClientDisableConstantGlow(client);
 		
-		ClientHandleGhostMode(iClient);
+		ClientHandleGhostMode(client);
 
 		for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 		{
 			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
 			if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
-			int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+			int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(client);
 			if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
 		}
 	}
@@ -413,149 +413,149 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		CreateTimer(0.2, Timer_CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
-	g_hPlayerPostWeaponsTimer[iClient] = null;
-	g_hPlayerIgniteTimer[iClient] = null;
-	g_hPlayerResetIgnite[iClient] = null;
-	g_hPlayerPageRewardTimer[iClient] = null;
-	g_hPlayerPageRewardCycleTimer[iClient] = null;
-	g_hPlayerFireworkTimer[iClient] = null;
+	g_hPlayerPostWeaponsTimer[client] = null;
+	g_hPlayerIgniteTimer[client] = null;
+	g_hPlayerResetIgnite[client] = null;
+	g_hPlayerPageRewardTimer[client] = null;
+	g_hPlayerPageRewardCycleTimer[client] = null;
+	g_hPlayerFireworkTimer[client] = null;
 
-	g_iPlayerBossKillSubject[iClient] = INVALID_ENT_REFERENCE;
+	g_iPlayerBossKillSubject[client] = INVALID_ENT_REFERENCE;
 	
-	g_bPlayerGettingPageReward[iClient] = false;
-	g_iPlayerHitsToCrits[iClient] = 0;
-	g_iPlayerHitsToHeads[iClient] = 0;
+	g_bPlayerGettingPageReward[client] = false;
+	g_iPlayerHitsToCrits[client] = 0;
+	g_iPlayerHitsToHeads[client] = 0;
 	
-	g_bPlayerTrapped[iClient] = false;
-	g_iPlayerTrapCount[iClient] = 0;
+	g_bPlayerTrapped[client] = false;
+	g_iPlayerTrapCount[client] = 0;
 	
-	g_iPlayerRandomClassNumber[iClient] = 1;
+	g_iPlayerRandomClassNumber[client] = 1;
 	
-	if (IsPlayerAlive(iClient) && IsClientParticipating(iClient))
+	if (IsPlayerAlive(client) && IsClientParticipating(client))
 	{
 		if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES)) //A boss is overriding the music.
 		{
 			char sPath[PLATFORM_MAX_PATH];
 			GetBossMusic(sPath, sizeof(sPath));
-			if (sPath[0] != '\0') StopSound(iClient, MUSIC_CHAN, sPath);
+			if (sPath[0] != '\0') StopSound(client, MUSIC_CHAN, sPath);
 			if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
-				StopSound(iClient, MUSIC_CHAN, TRIPLEBOSSESMUSIC);
+				StopSound(client, MUSIC_CHAN, TRIPLEBOSSESMUSIC);
 			}
 		}
-		g_bBackStabbed[iClient] = false;
-		TF2_RemoveCondition(iClient, TFCond_HalloweenKart);
-		TF2_RemoveCondition(iClient, TFCond_HalloweenKartDash);
-		TF2_RemoveCondition(iClient, TFCond_HalloweenKartNoTurn);
-		TF2_RemoveCondition(iClient, TFCond_HalloweenKartCage);
-		TF2_RemoveCondition(iClient, TFCond_SpawnOutline);
+		g_bBackStabbed[client] = false;
+		TF2_RemoveCondition(client, TFCond_HalloweenKart);
+		TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
+		TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
+		TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
+		TF2_RemoveCondition(client, TFCond_SpawnOutline);
 		
-		if (HandlePlayerTeam(iClient))
+		if (HandlePlayerTeam(client))
 		{
 			#if defined DEBUG
-			if (g_cvDebugDetail.IntValue > 0) DebugMessage("iClient->HandlePlayerTeam()");
+			if (g_cvDebugDetail.IntValue > 0) DebugMessage("client->HandlePlayerTeam()");
 			#endif
 		}
 		else
 		{
-			g_iPlayerPageCount[iClient] = 0;
+			g_iPlayerPageCount[client] = 0;
 			
-			ClientResetStatic(iClient);
-			ClientResetSlenderStats(iClient);
-			ClientResetCampingStats(iClient);
-			ClientResetOverlay(iClient);
-			ClientResetJumpScare(iClient);
-			ClientUpdateListeningFlags(iClient);
-			ClientUpdateMusicSystem(iClient);
-			ClientChaseMusicReset(iClient);
-			ClientChaseMusicSeeReset(iClient);
-			ClientAlertMusicReset(iClient);
-			ClientIdleMusicReset(iClient);
-			Client20DollarsMusicReset(iClient);
-			Client90sMusicReset(iClient);
-			ClientMusicReset(iClient);
-			ClientResetProxy(iClient);
-			ClientResetHints(iClient);
-			ClientResetScare(iClient);
+			ClientResetStatic(client);
+			ClientResetSlenderStats(client);
+			ClientResetCampingStats(client);
+			ClientResetOverlay(client);
+			ClientResetJumpScare(client);
+			ClientUpdateListeningFlags(client);
+			ClientUpdateMusicSystem(client);
+			ClientChaseMusicReset(client);
+			ClientChaseMusicSeeReset(client);
+			ClientAlertMusicReset(client);
+			ClientIdleMusicReset(client);
+			Client20DollarsMusicReset(client);
+			Client90sMusicReset(client);
+			ClientMusicReset(client);
+			ClientResetProxy(client);
+			ClientResetHints(client);
+			ClientResetScare(client);
 			
-			ClientResetDeathCam(iClient);
-			ClientResetFlashlight(iClient);
-			ClientDeactivateUltravision(iClient);
-			ClientResetSprint(iClient);
-			ClientResetBreathing(iClient);
-			ClientResetBlink(iClient);
-			ClientResetInteractiveGlow(iClient);
-			ClientDisableConstantGlow(iClient);
+			ClientResetDeathCam(client);
+			ClientResetFlashlight(client);
+			ClientDeactivateUltravision(client);
+			ClientResetSprint(client);
+			ClientResetBreathing(client);
+			ClientResetBlink(client);
+			ClientResetInteractiveGlow(client);
+			ClientDisableConstantGlow(client);
 			
-			ClientHandleGhostMode(iClient);
+			ClientHandleGhostMode(client);
 
 			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 			{
 				if (NPCGetUniqueID(iNPCIndex) == -1) continue;
 				if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
-				int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+				int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(client);
 				if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
 			}
 			
-			TF2Attrib_SetByName(iClient, "increased jump height", 1.0);
+			TF2Attrib_SetByName(client, "increased jump height", 1.0);
 			
-			if (!g_bPlayerEliminated[iClient])
+			if (!g_bPlayerEliminated[client])
 			{
 				if ((SF_IsRaidMap() || SF_IsBoxingMap()) && !IsRoundPlaying())
-					TF2Attrib_SetByDefIndex(iClient, 10, 7.0);
+					TF2Attrib_SetByDefIndex(client, 10, 7.0);
 				else
-					TF2Attrib_RemoveByDefIndex(iClient, 10);
+					TF2Attrib_RemoveByDefIndex(client, 10);
 				
-				TF2Attrib_SetByDefIndex(iClient, 49, 1.0);
+				TF2Attrib_SetByDefIndex(client, 49, 1.0);
 				
-				ClientStartDrainingBlinkMeter(iClient);
-				ClientSetScareBoostEndTime(iClient, -1.0);
+				ClientStartDrainingBlinkMeter(client);
+				ClientSetScareBoostEndTime(client, -1.0);
 				
-				ClientStartCampingTimer(iClient);
+				ClientStartCampingTimer(client);
 				
-				HandlePlayerIntroState(iClient);
+				HandlePlayerIntroState(client);
 				
-				if (IsFakeClient(iClient))
+				if (IsFakeClient(client))
 				{
-					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 				
 				// screen overlay timer
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					g_hPlayerOverlayCheck[iClient] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(iClient), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-					TriggerTimer(g_hPlayerOverlayCheck[iClient], true);
+					g_hPlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+					TriggerTimer(g_hPlayerOverlayCheck[client], true);
 				}
-				if (DidClientEscape(iClient))
+				if (DidClientEscape(client))
 				{
-					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 				else
 				{
 					int iRed[4] = { 184, 56, 59, 255 };
-					ClientEnableConstantGlow(iClient, "head", iRed);
-					ClientActivateUltravision(iClient);
+					ClientEnableConstantGlow(client, "head", iRed);
+					ClientActivateUltravision(client);
 				}
 
-				if (SF_IsRenevantMap() && g_bRenevantMarkForDeath && !DidClientEscape(iClient))
+				if (SF_IsRenevantMap() && g_bRenevantMarkForDeath && !DidClientEscape(client))
 				{
-					TF2_AddCondition(iClient, TFCond_MarkedForDeathSilent, -1.0);
+					TF2_AddCondition(client, TFCond_MarkedForDeathSilent, -1.0);
 				}
 				
-				if (SF_SpecialRound(SPECIALROUND_1UP) && !g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient])
+				if (SF_SpecialRound(SPECIALROUND_1UP) && !g_bPlayerIn1UpCondition[client] && !g_bPlayerDied1Up[client])
 				{
-					g_bPlayerDied1Up[iClient] = false;
-					g_bPlayerIn1UpCondition[iClient] = true;
-					g_bPlayerFullyDied1Up[iClient] = false;
+					g_bPlayerDied1Up[client] = false;
+					g_bPlayerIn1UpCondition[client] = true;
+					g_bPlayerFullyDied1Up[client] = false;
 				}
 				
 				if (SF_SpecialRound(SPECIALROUND_PAGEDETECTOR))
-					ClientSetSpecialRoundTimer(iClient, 0.0, Timer_ClientPageDetector, GetClientUserId(iClient));
+					ClientSetSpecialRoundTimer(client, 0.0, Timer_ClientPageDetector, GetClientUserId(client));
 
-				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && TF2_GetPlayerClass(iClient) == TFClass_Medic && !DidClientEscape(iClient))
+				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
 				{
-					ShowVGUIPanel(iClient, "class_red");
-					EmitSoundToClient(iClient, THANATOPHOBIA_MEDICNO);
+					ShowVGUIPanel(client, "class_red");
+					EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
 					TFClassType newClass;
 					int iRandom = GetRandomInt(1, 8);
 					switch (iRandom)
@@ -569,27 +569,27 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 						case 7:newClass = TFClass_Sniper;
 						case 8:newClass = TFClass_Spy;
 					}
-					TF2_SetPlayerClass(iClient, newClass);
-					TF2_RegeneratePlayer(iClient);
+					TF2_SetPlayerClass(client, newClass);
+					TF2_RegeneratePlayer(client);
 				}
 			}
 			else
 			{
-				g_hPlayerOverlayCheck[iClient] = null;
-				TF2Attrib_RemoveByDefIndex(iClient, 10);
-				TF2Attrib_RemoveByDefIndex(iClient, 49);
+				g_hPlayerOverlayCheck[client] = null;
+				TF2Attrib_RemoveByDefIndex(client, 10);
+				TF2Attrib_RemoveByDefIndex(client, 49);
 			}
-			ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
-			g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
+			g_hPlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 			
-			HandlePlayerHUD(iClient);
+			HandlePlayerHUD(client);
 		}
 	}
 	
-	PvP_OnPlayerSpawn(iClient);
+	PvP_OnPlayerSpawn(client);
 	
 	#if defined DEBUG
-	if (g_cvDebugDetail.IntValue > 0)DebugMessage("EVENT END: Event_PlayerSpawn(%d)", iClient);
+	if (g_cvDebugDetail.IntValue > 0)DebugMessage("EVENT END: Event_PlayerSpawn(%d)", client);
 	
 	StopProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Stopped profiling, function executed in %f", GetProfilerTime(hProf));
@@ -601,16 +601,16 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 
 public void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast)
 {
-	int iClient = GetClientOfUserId(event.GetInt("userid"));
-	if (iClient <= 0) return;
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client <= 0) return;
 	
-	int iTeam = GetClientTeam(iClient);
+	int iTeam = GetClientTeam(client);
 	
-	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_bPlayerEliminated[iClient] && 
-		iTeam == TFTeam_Red && TF2_GetPlayerClass(iClient) == TFClass_Medic && !DidClientEscape(iClient))
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_bPlayerEliminated[client] && 
+		iTeam == TFTeam_Red && TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
 	{
-		ShowVGUIPanel(iClient, "class_red");
-		EmitSoundToClient(iClient, THANATOPHOBIA_MEDICNO);
+		ShowVGUIPanel(client, "class_red");
+		EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
 		TFClassType newClass;
 		int iRandom = GetRandomInt(1, 8);
 		switch (iRandom)
@@ -624,8 +624,8 @@ public void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast
 			case 7:newClass = TFClass_Sniper;
 			case 8:newClass = TFClass_Spy;
 		}
-		TF2_SetPlayerClass(iClient, newClass);
-		TF2_RegeneratePlayer(iClient);
+		TF2_SetPlayerClass(client, newClass);
+		TF2_RegeneratePlayer(client);
 	}
 }
 
@@ -637,11 +637,11 @@ public Action Event_PostInventoryApplication(Handle event, const char[] name, bo
 	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PostInventoryApplication");
 	#endif
 	
-	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (iClient > 0)
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client > 0)
 	{
-		ClientSwitchToWeaponSlot(iClient, TFWeaponSlot_Melee);
-		g_hPlayerPostWeaponsTimer[iClient] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
+		g_hPlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	#if defined DEBUG
@@ -666,7 +666,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	#if defined DEBUG
 	if (g_cvDebugDetail.IntValue > 1) DebugMessage("EVENT START: Event_PlayerDeathPre");
 	#endif
-	int iClient = GetClientOfUserId(event.GetInt("userid"));
+	int client = GetClientOfUserId(event.GetInt("userid"));
 	
 	int inflictor = event.GetInt("inflictor_entindex");
 	
@@ -675,9 +675,9 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	if (npcIndex != -1 && !IsEntityAProjectile(inflictor))
 	{
 		int iTarget = GetClientOfUserId(g_iSourceTVUserID);
-		int iAttackIndex = NPCGetCurrentAttackIndex(npcIndex);
+		int attackIndex = NPCGetCurrentAttackIndex(npcIndex);
 		if (MaxClients < iTarget || iTarget < 1 || !IsClientInGame(iTarget) || !IsClientSourceTV(iTarget)) //If the server has a source TV bot uses to print boss' name in kill feed.
-			iTarget = GetClientForDeath(iClient);
+			iTarget = GetClientForDeath(client);
 
 		if (iTarget != -1)
 		{
@@ -686,8 +686,8 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			else 
 				GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_sOldClientName[iTarget], sizeof(g_sOldClientName[]));
 			
-			char sBossName[SF2_MAX_NAME_LENGTH], sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(npcIndex, sProfile, sizeof(sProfile));
+			char sBossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(npcIndex, profile, sizeof(profile));
 			NPCGetBossName(npcIndex, sBossName, sizeof(sBossName));
 			
 			//TF2_ChangePlayerName(iTarget, sBossName, true);
@@ -700,8 +700,8 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS)
 				{
 					char sWeaponType[PLATFORM_MAX_PATH];
-					int iWeaponNum = NPCChaserGetAttackWeaponTypeInt(npcIndex, iAttackIndex);
-					GetProfileAttackString(sProfile, "attack_weapontype", sWeaponType, sizeof(sWeaponType), "", iAttackIndex + 1);
+					int iWeaponNum = NPCChaserGetAttackWeaponTypeInt(npcIndex, attackIndex);
+					GetProfileAttackString(profile, "attack_weapontype", sWeaponType, sizeof(sWeaponType), "", attackIndex + 1);
 					event.SetString("weapon_logclassname", sWeaponType);
 					event.SetString("weapon", sWeaponType);
 					event.SetInt("customkill", iWeaponNum);
@@ -709,8 +709,8 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				else if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
 				{
 					char sWeaponType[PLATFORM_MAX_PATH];
-					int iWeaponNum = GetProfileNum(sProfile, "kill_weapontypeint", 0);
-					GetProfileString(sProfile, "kill_weapontype", sWeaponType, sizeof(sWeaponType));
+					int iWeaponNum = GetProfileNum(profile, "kill_weapontypeint", 0);
+					GetProfileString(profile, "kill_weapontype", sWeaponType, sizeof(sWeaponType));
 					event.SetString("weapon_logclassname", sWeaponType);
 					event.SetString("weapon", sWeaponType);
 					event.SetInt("customkill", iWeaponNum);
@@ -731,7 +731,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				event.SetInt("ignore", iTarget);
 
 				//Show a different attacker to the user were taking
-				iTarget = GetClientForDeath(iClient, iTarget);
+				iTarget = GetClientForDeath(client, iTarget);
 				if (iTarget != -1)
 				{
 					if (g_hTimerChangeClientName[iTarget] != null)
@@ -796,7 +796,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 		{
 			int iTarget = GetClientOfUserId(g_iSourceTVUserID);
 			if (MaxClients < iTarget || iTarget < 1 || !IsClientInGame(iTarget) || !IsClientSourceTV(iTarget)) //If the server has a source TV bot uses to print boss' name in kill feed.
-				iTarget = GetClientForDeath(iClient);
+				iTarget = GetClientForDeath(client);
 
 			if (iTarget != -1)
 			{
@@ -805,8 +805,8 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				else //No timer running that means the SourceTV bot's current name is the correct one, we can safely update our last known SourceTV bot's name.
 				GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_sOldClientName[iTarget], sizeof(g_sOldClientName[]));
 				
-				char sBossName[SF2_MAX_NAME_LENGTH], sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-				NPCGetProfile(npcIndex2, sProfile, sizeof(sProfile));
+				char sBossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
+				NPCGetProfile(npcIndex2, profile, sizeof(profile));
 				NPCGetBossName(npcIndex2, sBossName, sizeof(sBossName));
 				
 				//TF2_ChangePlayerName(iTarget, sBossName, true);
@@ -853,7 +853,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 					event.SetInt("ignore", iTarget);
 
 					//Show a different attacker to the user were taking
-					iTarget = GetClientForDeath(iClient, iTarget);
+					iTarget = GetClientForDeath(client, iTarget);
 					if (iTarget != -1)
 					{
 						if (g_hTimerChangeClientName[iTarget] != null)
@@ -908,12 +908,12 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	
 	if (!IsRoundInWarmup())
 	{
-		if (iClient > 0)
+		if (client > 0)
 		{
-			if (g_bBackStabbed[iClient])
+			if (g_bBackStabbed[client])
 			{
 				event.SetInt("customkill", TF_CUSTOM_BACKSTAB);
-				g_bBackStabbed[iClient] = false;
+				g_bBackStabbed[client] = false;
 			}
 		}
 	}
@@ -925,7 +925,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			 || g_bSlenderHasPushRagdollOnKill[npcIndex] || g_bSlenderHasResizeRagdollOnKill[npcIndex]
 			 || g_bSlenderHasBurnKillEffect[npcIndex] || g_bSlenderHasGibKillEffect[npcIndex]))
 	{
-		CreateTimer(0.01, Timer_ModifyRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(0.01, Timer_ModifyRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	if (MAX_BOSSES > npcIndex >= 0 && g_bSlenderPlayerCustomDeathFlag[npcIndex])
 	{
@@ -933,26 +933,26 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	}
 	if (MAX_BOSSES > npcIndex >= 0 && g_bSlenderHasDecapOrGibKillEffect[npcIndex])
 	{
-		CreateTimer(0.01, Timer_DeGibRagdoll, GetClientUserId(iClient));
+		CreateTimer(0.01, Timer_DeGibRagdoll, GetClientUserId(client));
 	}
 
 	if (MAX_BOSSES > npcIndex >= 0 && g_bSlenderHasMultiKillEffect[npcIndex])
 	{
-		CreateTimer(0.01, Timer_MultiRagdoll, GetClientUserId(iClient));
+		CreateTimer(0.01, Timer_MultiRagdoll, GetClientUserId(client));
 	}
 	if (IsEntityAProjectile(inflictor))
 	{
 		switch (ProjectileGetFlags(inflictor))
 		{
-			case PROJ_MANGLER: CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-			case PROJ_ICEBALL: CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-			case PROJ_ICEBALL_ATTACK: CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			case PROJ_MANGLER: CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			case PROJ_ICEBALL: CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			case PROJ_ICEBALL_ATTACK: CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 	if (MAX_BOSSES > npcIndex >= 0 && NPCHasAttribute(npcIndex, "ignite player on death"))
 	{
 		float flValue = NPCGetAttributeValue(npcIndex, "ignite player on death");
-		if (flValue > 0.0) TF2_IgnitePlayer(iClient, iClient);
+		if (flValue > 0.0) TF2_IgnitePlayer(client, client);
 	}
 
 	#if defined DEBUG
@@ -966,8 +966,8 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 {
 	if (!g_bEnabled) return;
 	
-	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (iClient <= 0) return;
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (client <= 0) return;
 	
 	#if defined DEBUG
 	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerHurt");
@@ -983,24 +983,24 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 	}
 	
 	// Play any sounds, if any.
-	if (g_bPlayerProxy[iClient])
+	if (g_bPlayerProxy[client])
 	{
-		int iProxyMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[iClient]);
-		if (iProxyMaster != -1)
+		int proxyMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[client]);
+		if (proxyMaster != -1)
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iProxyMaster, sProfile, sizeof(sProfile));
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(proxyMaster, profile, sizeof(profile));
 			
 			char sBuffer[PLATFORM_MAX_PATH];
-			if (GetRandomStringFromProfile(sProfile, "sound_proxy_hurt", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0')
+			if (GetRandomStringFromProfile(profile, "sound_proxy_hurt", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0')
 			{
-				int iChannel = g_iSlenderProxyHurtChannel[iProxyMaster];
-				int iLevel = g_iSlenderProxyHurtLevel[iProxyMaster];
-				int iFlags = g_iSlenderProxyHurtFlags[iProxyMaster];
-				float flVolume = g_flSlenderProxyHurtVolume[iProxyMaster];
-				int iPitch = g_iSlenderProxyHurtPitch[iProxyMaster];
+				int iChannel = g_iSlenderProxyHurtChannel[proxyMaster];
+				int iLevel = g_iSlenderProxyHurtLevel[proxyMaster];
+				int iFlags = g_iSlenderProxyHurtFlags[proxyMaster];
+				float flVolume = g_flSlenderProxyHurtVolume[proxyMaster];
+				int iPitch = g_iSlenderProxyHurtPitch[proxyMaster];
 				
-				EmitSoundToAll(sBuffer, iClient, iChannel, iLevel, iFlags, flVolume, iPitch);
+				EmitSoundToAll(sBuffer, client, iChannel, iLevel, iFlags, flVolume, iPitch);
 			}
 		}
 	}
@@ -1014,84 +1014,84 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 {
 	if (!g_bEnabled) return;
 
-	int iClient = GetClientOfUserId(event.GetInt("userid"));
-	if (iClient <= 0) return;
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client <= 0) return;
 	
 	#if defined DEBUG
-	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerDeath(%d)", iClient);
+	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT START: Event_PlayerDeath(%d)", client);
 	#endif
 	
-	bool bFake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
+	bool fake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
 	int inflictor = event.GetInt("inflictor_entindex");
 	
 	#if defined DEBUG
 	if (g_cvDebugDetail.IntValue > 0) DebugMessage("inflictor = %d", inflictor);
 	#endif
 	
-	if (!bFake)
+	if (!fake)
 	{
-		ClientResetStatic(iClient);
-		ClientResetSlenderStats(iClient);
-		ClientResetCampingStats(iClient);
-		ClientResetOverlay(iClient);
-		ClientResetJumpScare(iClient);
-		ClientResetInteractiveGlow(iClient);
-		ClientDisableConstantGlow(iClient);
-		ClientChaseMusicReset(iClient);
-		ClientChaseMusicSeeReset(iClient);
-		ClientAlertMusicReset(iClient);
-		ClientIdleMusicReset(iClient);
-		Client20DollarsMusicReset(iClient);
-		Client90sMusicReset(iClient);
-		ClientMusicReset(iClient);
+		ClientResetStatic(client);
+		ClientResetSlenderStats(client);
+		ClientResetCampingStats(client);
+		ClientResetOverlay(client);
+		ClientResetJumpScare(client);
+		ClientResetInteractiveGlow(client);
+		ClientDisableConstantGlow(client);
+		ClientChaseMusicReset(client);
+		ClientChaseMusicSeeReset(client);
+		ClientAlertMusicReset(client);
+		ClientIdleMusicReset(client);
+		Client20DollarsMusicReset(client);
+		Client90sMusicReset(client);
+		ClientMusicReset(client);
 		
-		ClientResetFlashlight(iClient);
-		ClientDeactivateUltravision(iClient);
-		ClientResetSprint(iClient);
-		ClientResetBreathing(iClient);
-		ClientResetBlink(iClient);
-		ClientResetDeathCam(iClient);
+		ClientResetFlashlight(client);
+		ClientDeactivateUltravision(client);
+		ClientResetSprint(client);
+		ClientResetBreathing(client);
+		ClientResetBlink(client);
+		ClientResetDeathCam(client);
 		
-		ClientUpdateMusicSystem(iClient);
+		ClientUpdateMusicSystem(client);
 
 		for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
 		{
 			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
 			if (g_aNPCChaseOnLookTarget[iNPCIndex] == null) continue;
-			int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(iClient);
+			int iFoundClient = g_aNPCChaseOnLookTarget[iNPCIndex].FindValue(client);
 			if (iFoundClient != -1) g_aNPCChaseOnLookTarget[iNPCIndex].Erase(iFoundClient);
 		}
 		
-		PvP_SetPlayerPvPState(iClient, false, false, false);
+		PvP_SetPlayerPvPState(client, false, false, false);
 		
 		if (IsRoundInWarmup())
 		{
-			CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 		else
 		{
-			if (!g_bPlayerEliminated[iClient])
+			if (!g_bPlayerEliminated[client])
 			{
-				if (IsFakeClient(iClient))
+				if (IsFakeClient(client))
 				{
-					TF2_SetPlayerClass(iClient, TFClass_Sniper);
+					TF2_SetPlayerClass(client, TFClass_Sniper);
 				}
 				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT) || g_bRenevantMultiEffect)
-					CreateTimer(0.1, Timer_ReplacePlayerRagdoll, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-				if (IsRoundInIntro() || !IsRoundPlaying() || DidClientEscape(iClient) || (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[iClient] && !g_bPlayerDied1Up[iClient]))
+					CreateTimer(0.1, Timer_ReplacePlayerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+				if (IsRoundInIntro() || !IsRoundPlaying() || DidClientEscape(client) || (SF_SpecialRound(SPECIALROUND_1UP) && g_bPlayerIn1UpCondition[client] && !g_bPlayerDied1Up[client]))
 				{
-					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 				else
 				{
-					g_bPlayerEliminated[iClient] = true;
-					g_bPlayerEscaped[iClient] = false;
-					g_bPlayerFullyDied1Up[iClient] = true;
-					g_hPlayerSwitchBlueTimer[iClient] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+					g_bPlayerEliminated[client] = true;
+					g_bPlayerEscaped[client] = false;
+					g_bPlayerFullyDied1Up[client] = true;
+					g_hPlayerSwitchBlueTimer[client] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
-				if (g_iPlayerPreferences[iClient].PlayerPreference_GhostModeToggleState == 2)
-					CreateTimer(0.25, Timer_ToggleGhostModeCommand, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
-				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !DidClientEscape(iClient))
+				if (g_iPlayerPreferences[client].PlayerPreference_GhostModeToggleState == 2)
+					CreateTimer(0.25, Timer_ToggleGhostModeCommand, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !DidClientEscape(client))
 				{
 					for (int iReds = 1; iReds <= MaxClients; iReds++)
 					{
@@ -1121,8 +1121,8 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 							case 4:
 							{
 								int iMaxHealth = SDKCall(g_hSDKGetMaxHealth, iReds);
-								float flDamageToTake = float(iMaxHealth) / 10.0;
-								SDKHooks_TakeDamage(iReds, iReds, iReds, flDamageToTake, 128, _, view_as<float>( { 0.0, 0.0, 0.0 } ));
+								float damageToTake = float(iMaxHealth) / 10.0;
+								SDKHooks_TakeDamage(iReds, iReds, iReds, damageToTake, 128, _, view_as<float>( { 0.0, 0.0, 0.0 } ));
 							}
 							case 5:
 							{
@@ -1142,38 +1142,38 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			if (npcIndex != -1)
 			{
 				int iSlender = NPCGetEntIndex(npcIndex);
-				if (iSlender && iSlender != INVALID_ENT_REFERENCE) g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
+				if (iSlender && iSlender != INVALID_ENT_REFERENCE) g_iPlayerBossKillSubject[client] = EntIndexToEntRef(iSlender);
 				
 				char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH], sBossName[SF2_MAX_NAME_LENGTH];
 				NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
 				NPCGetBossName(npcIndex, sBossName, sizeof(sBossName));
 
 				#if defined _store_included
-				int iDifficulty = GetLocalGlobalDifficulty(npcIndex);
+				int difficulty = GetLocalGlobalDifficulty(npcIndex);
 				if (NPCGetDrainCreditState(npcIndex))
 				{
-					Store_SetClientCredits(iClient, Store_GetClientCredits(iClient) - NPCGetDrainCreditAmount(npcIndex, iDifficulty));
-					CPrintToChat(iClient, "{valve}%s{default} has stolen {green}%i credits{default} from you.", sBossName, NPCGetDrainCreditAmount(npcIndex, iDifficulty));
+					Store_SetClientCredits(client, Store_GetClientCredits(client) - NPCGetDrainCreditAmount(npcIndex, difficulty));
+					CPrintToChat(client, "{valve}%s{default} has stolen {green}%i credits{default} from you.", sBossName, NPCGetDrainCreditAmount(npcIndex, difficulty));
 				}
 				#endif
 				
 				if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_client", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
-					if (g_bPlayerEliminated[iClient])
+					if (g_bPlayerEliminated[client])
 					{
-						EmitSoundToClient(iClient, buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
+						EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 					}
 				}
 				
 				if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
-					if (g_bPlayerEliminated[iClient])
+					if (g_bPlayerEliminated[client])
 					{
 						EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 					}
 				}
 				
-				SlenderPrintChatMessage(npcIndex, iClient);
+				SlenderPrintChatMessage(npcIndex, client);
 				
 				SlenderPerformVoice(npcIndex, "sound_attack_killed");
 			}
@@ -1184,39 +1184,39 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				if (npcIndex2 != -1)
 				{
 					int iSlender = NPCGetEntIndex(npcIndex2);
-					if (iSlender && iSlender != INVALID_ENT_REFERENCE)g_iPlayerBossKillSubject[iClient] = EntIndexToEntRef(iSlender);
+					if (iSlender && iSlender != INVALID_ENT_REFERENCE)g_iPlayerBossKillSubject[client] = EntIndexToEntRef(iSlender);
 					
 					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH], sBossName[SF2_MAX_NAME_LENGTH];
 					NPCGetProfile(npcIndex2, npcProfile, sizeof(npcProfile));
 					NPCGetBossName(npcIndex2, sBossName, sizeof(sBossName));
 
 					#if defined _store_included
-					int iDifficulty = GetLocalGlobalDifficulty(npcIndex2);
+					int difficulty = GetLocalGlobalDifficulty(npcIndex2);
 					if (NPCGetDrainCreditState(npcIndex2))
 					{
-						Store_SetClientCredits(iClient, Store_GetClientCredits(iClient) - NPCGetDrainCreditAmount(npcIndex2, iDifficulty));
-						CPrintToChat(iClient, "{valve}%s{default} has stolen {green}%i credits{default} from you.", sBossName, NPCGetDrainCreditAmount(npcIndex2, iDifficulty));
+						Store_SetClientCredits(client, Store_GetClientCredits(client) - NPCGetDrainCreditAmount(npcIndex2, difficulty));
+						CPrintToChat(client, "{valve}%s{default} has stolen {green}%i credits{default} from you.", sBossName, NPCGetDrainCreditAmount(npcIndex2, difficulty));
 					}
 					#endif
 					
 					
 					if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_client", buffer, sizeof(buffer)) && buffer[0] != '\0')
 					{
-						if (g_bPlayerEliminated[iClient])
+						if (g_bPlayerEliminated[client])
 						{
-							EmitSoundToClient(iClient, buffer, _, SNDCHAN_STATIC);
+							EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC);
 						}
 					}
 					
 					if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer)) && buffer[0] != '\0')
 					{
-						if (g_bPlayerEliminated[iClient])
+						if (g_bPlayerEliminated[client])
 						{
 							EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 						}
 					}
 					
-					SlenderPrintChatMessage(npcIndex2, iClient);
+					SlenderPrintChatMessage(npcIndex2, client);
 					
 					SlenderPerformVoice(npcIndex2, "sound_attack_killed");
 				}
@@ -1229,46 +1229,46 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			{
 				if (NPCGetUniqueID(i) == -1) continue;
 				
-				if (EntRefToEntIndex(g_iSlenderTarget[i]) == iClient)
+				if (EntRefToEntIndex(g_iSlenderTarget[i]) == client)
 				{
 					g_iSlenderInterruptConditions[i] |= COND_CHASETARGETINVALIDATED;
-					GetClientAbsOrigin(iClient, g_flSlenderChaseDeathPosition[i]);
+					GetClientAbsOrigin(client, g_flSlenderChaseDeathPosition[i]);
 				}
 			}
 			
 			if (g_cvIgnoreRedPlayerDeathSwap.BoolValue)
 			{
-				g_bPlayerEliminated[iClient] = false;
-				g_bPlayerEscaped[iClient] = false;
+				g_bPlayerEliminated[client] = false;
+				g_bPlayerEscaped[client] = false;
 			}
 		}
 		
-		if (g_bPlayerProxy[iClient])
+		if (g_bPlayerProxy[client])
 		{
 			// We're a proxy, so play some sounds.
 			
-			int iProxyMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[iClient]);
-			if (iProxyMaster != -1)
+			int proxyMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[client]);
+			if (proxyMaster != -1)
 			{
-				char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-				NPCGetProfile(iProxyMaster, sProfile, sizeof(sProfile));
+				char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+				NPCGetProfile(proxyMaster, profile, sizeof(profile));
 				
 				char sBuffer[PLATFORM_MAX_PATH];
-				if (GetRandomStringFromProfile(sProfile, "sound_proxy_death", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0')
+				if (GetRandomStringFromProfile(profile, "sound_proxy_death", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0')
 				{
-					int iChannel = g_iSlenderProxyDeathChannel[iProxyMaster];
-					int iLevel = g_iSlenderProxyDeathLevel[iProxyMaster];
-					int iFlags = g_iSlenderProxyDeathFlags[iProxyMaster];
-					float flVolume = g_flSlenderProxyDeathVolume[iProxyMaster];
-					int iPitch = g_iSlenderProxyDeathPitch[iProxyMaster];
+					int iChannel = g_iSlenderProxyDeathChannel[proxyMaster];
+					int iLevel = g_iSlenderProxyDeathLevel[proxyMaster];
+					int iFlags = g_iSlenderProxyDeathFlags[proxyMaster];
+					float flVolume = g_flSlenderProxyDeathVolume[proxyMaster];
+					int iPitch = g_iSlenderProxyDeathPitch[proxyMaster];
 					
-					EmitSoundToAll(sBuffer, iClient, iChannel, iLevel, iFlags, flVolume, iPitch);
+					EmitSoundToAll(sBuffer, client, iChannel, iLevel, iFlags, flVolume, iPitch);
 				}
 			}
 		}
 		
-		ClientResetProxy(iClient, false);
-		ClientUpdateListeningFlags(iClient);
+		ClientResetProxy(client, false);
+		ClientUpdateListeningFlags(client);
 		
 		// Half-Zatoichi nerf code.
 		int iKatanaHealthGain = 10;
@@ -1295,26 +1295,26 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			}
 		}
 		
-		g_hPlayerPostWeaponsTimer[iClient] = null;
-		g_hPlayerIgniteTimer[iClient] = null;
-		g_hPlayerResetIgnite[iClient] = null;
-		g_hPlayerPageRewardTimer[iClient] = null;
-		g_hPlayerPageRewardCycleTimer[iClient] = null;
-		g_hPlayerFireworkTimer[iClient] = null;
+		g_hPlayerPostWeaponsTimer[client] = null;
+		g_hPlayerIgniteTimer[client] = null;
+		g_hPlayerResetIgnite[client] = null;
+		g_hPlayerPageRewardTimer[client] = null;
+		g_hPlayerPageRewardCycleTimer[client] = null;
+		g_hPlayerFireworkTimer[client] = null;
 		
-		g_bPlayerGettingPageReward[iClient] = false;
-		g_iPlayerHitsToCrits[iClient] = 0;
-		g_iPlayerHitsToHeads[iClient] = 0;
+		g_bPlayerGettingPageReward[client] = false;
+		g_iPlayerHitsToCrits[client] = 0;
+		g_iPlayerHitsToHeads[client] = 0;
 		
-		g_bPlayerTrapped[iClient] = false;
-		g_iPlayerTrapCount[iClient] = 0;
+		g_bPlayerTrapped[client] = false;
+		g_iPlayerTrapCount[client] = 0;
 		
-		g_iPlayerRandomClassNumber[iClient] = 1;
+		g_iPlayerRandomClassNumber[client] = 1;
 	}
 	if (!IsRoundEnding() && !g_bRoundWaitingForPlayers)
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
-		if (IsRoundPlaying() && iClient != iAttacker)
+		if (IsRoundPlaying() && client != iAttacker)
 		{
 			//Copy the data
 			char sString[64];
@@ -1356,10 +1356,10 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 	{
 		CreateTimer(0.2, Timer_CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
-	PvP_OnPlayerDeath(iClient, bFake);
+	PvP_OnPlayerDeath(client, fake);
 	
 	#if defined DEBUG
-	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT END: Event_PlayerDeath(%d)", iClient);
+	if (g_cvDebugDetail.IntValue > 0) DebugMessage("EVENT END: Event_PlayerDeath(%d)", client);
 	#endif
 	delete event;
 }

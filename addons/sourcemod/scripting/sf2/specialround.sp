@@ -78,9 +78,9 @@ void ReloadSpecialRounds()
 	}
 }
 
-stock void SpecialRoundGetDescriptionHud(int iSpecialRound, char[] buffer,int bufferlen)
+stock void SpecialRoundGetDescriptionHud(int iSpecialRound, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferlen, "");
+	strcopy(buffer, bufferLen, "");
 
 	if (g_hSpecialRoundsConfig == null) return;
 	
@@ -90,12 +90,12 @@ stock void SpecialRoundGetDescriptionHud(int iSpecialRound, char[] buffer,int bu
 	
 	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return;
 	
-	g_hSpecialRoundsConfig.GetString("display_text_hud", buffer, bufferlen);
+	g_hSpecialRoundsConfig.GetString("display_text_hud", buffer, bufferLen);
 }
 
-stock void SpecialRoundGetDescriptionChat(int iSpecialRound, char[] buffer,int bufferlen)
+stock void SpecialRoundGetDescriptionChat(int iSpecialRound, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferlen, "");
+	strcopy(buffer, bufferLen, "");
 
 	if (g_hSpecialRoundsConfig == null) return;
 	
@@ -105,12 +105,12 @@ stock void SpecialRoundGetDescriptionChat(int iSpecialRound, char[] buffer,int b
 	
 	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return;
 	
-	g_hSpecialRoundsConfig.GetString("display_text_chat", buffer, bufferlen);
+	g_hSpecialRoundsConfig.GetString("display_text_chat", buffer, bufferLen);
 }
 
-stock void SpecialRoundGetIconHud(int iSpecialRound, char[] buffer,int bufferlen)
+stock void SpecialRoundGetIconHud(int iSpecialRound, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferlen, "");
+	strcopy(buffer, bufferLen, "");
 
 	if (g_hSpecialRoundsConfig == null) return;
 	
@@ -120,7 +120,7 @@ stock void SpecialRoundGetIconHud(int iSpecialRound, char[] buffer,int bufferlen
 	
 	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return;
 	
-	g_hSpecialRoundsConfig.GetString("display_icon_hud", buffer, bufferlen);
+	g_hSpecialRoundsConfig.GetString("display_icon_hud", buffer, bufferLen);
 }
 
 stock bool SpecialRoundCanBeSelected(int iSpecialRound)
@@ -174,7 +174,7 @@ public Action Timer_SpecialRoundFakeBosses(Handle timer)
 {
 	if (!g_bSpecialRound) return Plugin_Stop;
 	if (!SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES)) return Plugin_Stop;
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	int iFakeBossCount=0;
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -194,8 +194,8 @@ public Action Timer_SpecialRoundFakeBosses(Handle timer)
 		}
 		//Harcoded max of 3 fake bosses
 		if(iFakeBossCount==3) break;
-		Npc.GetProfile(sProfile, sizeof(sProfile));
-		SF2NPC_BaseNPC NpcFake = AddProfile(sProfile, SFF_FAKE, Npc);
+		Npc.GetProfile(profile, sizeof(profile));
+		SF2NPC_BaseNPC NpcFake = AddProfile(profile, SFF_FAKE, Npc);
 		if (!NpcFake.IsValid())
 		{
 			LogError("Could not add fake boss for %d: No free slots!", i);
@@ -291,9 +291,9 @@ ArrayList SpecialEnabledList()
 		char sSnatcher[64] = "hypersnatcher_nerfed";
 		
 		int iPlayers;
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		for (int client = 1; client <= MaxClients; client++)
 		{
-			if (IsValidClient(iClient) && !g_bPlayerEliminated[iClient])
+			if (IsValidClient(client) && !g_bPlayerEliminated[client])
 				iPlayers++;
 		}
 
@@ -511,14 +511,14 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_THANATOPHOBIA:
 		{
-			for (int iClient = 1; iClient <= MaxClients; iClient++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
-				if (!IsValidClient(iClient)) continue;
-				if (!IsPlayerAlive(iClient)) continue;
-				if (g_bPlayerEliminated[iClient]) continue;
-				if (DidClientEscape(iClient)) continue;
+				if (!IsValidClient(client)) continue;
+				if (!IsPlayerAlive(client)) continue;
+				if (g_bPlayerEliminated[client]) continue;
+				if (DidClientEscape(client)) continue;
 				
-				if (TF2_GetPlayerClass(iClient) == TFClass_Medic)
+				if (TF2_GetPlayerClass(client) == TFClass_Medic)
 				{
 					TFClassType newClass;
 					int iRandom = GetRandomInt(1,8);
@@ -533,10 +533,10 @@ void SpecialRoundStart()
 						case 7: newClass = TFClass_Sniper;
 						case 8: newClass = TFClass_Spy;
 					}
-					TF2_SetPlayerClass(iClient, newClass);
-					TF2_RegeneratePlayer(iClient);
+					TF2_SetPlayerClass(client, newClass);
+					TF2_RegeneratePlayer(client);
 				}
-				else if (TF2_GetPlayerClass(iClient) == TFClass_Sniper)
+				else if (TF2_GetPlayerClass(client) == TFClass_Sniper)
 				{
 					int ent = -1;
 					while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
@@ -545,7 +545,7 @@ void SpecialRoundStart()
 
 						if (642 == itemIndex)
 						{
-							if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == iClient)
+							if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
 							{
 								RemoveEntity(ent);
 							}

@@ -45,7 +45,7 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 			return;
 		}
 
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 
 		float flPos[3]; float flAng[3];
 		this.GetAbsOrigin(flPos);
@@ -59,8 +59,8 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 			if (!NPCIsValid(iBossIndex))
 				continue;
 
-			NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-			if (strcmp(sProfile, sTargetProfile) == 0)
+			NPCGetProfile(iBossIndex, profile, sizeof(profile));
+			if (strcmp(profile, sTargetProfile) == 0)
 			{
 				SpawnSlender(view_as<SF2NPC_BaseNPC>(iBossIndex), flPos);
 				iCount++;

@@ -415,14 +415,14 @@ public int Native_GetCurrentDifficulty(Handle plugin,int numParams)
 
 public int Native_GetDifficultyModifier(Handle plugin,int numParams)
 {
-	int iDifficulty = GetNativeCell(1);
-	if (iDifficulty < Difficulty_Easy || iDifficulty >= Difficulty_Max)
+	int difficulty = GetNativeCell(1);
+	if (difficulty < Difficulty_Easy || difficulty >= Difficulty_Max)
 	{
 		LogError("Difficulty parameter can only be from %d to %d!", Difficulty_Easy, Difficulty_Max - 1);
 		return 1;
 	}
 	
-	switch (iDifficulty)
+	switch (difficulty)
 	{
 		case Difficulty_Easy: return view_as<int>(DIFFICULTYMODIFIER_NORMAL);
 		case Difficulty_Hard: return view_as<int>(DIFFICULTYMODIFIER_HARD);
@@ -609,14 +609,14 @@ public int Native_BossIndexToBossID(Handle plugin,int numParams)
 
 public int Native_AddBoss(Handle plugin, int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, sizeof(profile));
 
 	int flags = GetNativeCell(2);
 	bool spawnCompanions = view_as<bool>(GetNativeCell(3));
 	bool playSpawnSound = view_as<bool>(GetNativeCell(4));
 
-	return view_as<int>(AddProfile(sProfile, flags, _, spawnCompanions, playSpawnSound));
+	return view_as<int>(AddProfile(profile, flags, _, spawnCompanions, playSpawnSound));
 }
 
 public int Native_RemoveBoss(Handle plugin, int numParams)
@@ -630,10 +630,10 @@ public int Native_RemoveBoss(Handle plugin, int numParams)
 
 public int Native_GetBossName(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(GetNativeCell(1), sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(GetNativeCell(1), profile, sizeof(profile));
 	
-	SetNativeString(2, sProfile, GetNativeCell(3));
+	SetNativeString(2, profile, GetNativeCell(3));
 }
 
 public int Native_GetBossType(Handle plugin, int numParams)
@@ -866,38 +866,38 @@ public int Native_CreateBossSoundHint(Handle plugin, int numParams)
 
 public int Native_IsBossProfileValid(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 	
-	return IsProfileValid(sProfile);
+	return IsProfileValid(profile);
 }
 
 public int Native_GetBossProfileNum(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 	
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
 	
-	return GetProfileNum(sProfile, sKeyValue, GetNativeCell(3));
+	return GetProfileNum(profile, sKeyValue, GetNativeCell(3));
 }
 
 public int Native_GetBossProfileFloat(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
 	
-	return view_as<int>(GetProfileFloat(sProfile, sKeyValue, view_as<float>(GetNativeCell(3))));
+	return view_as<int>(GetProfileFloat(profile, sKeyValue, view_as<float>(GetNativeCell(3))));
 }
 
 public int Native_GetBossProfileString(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
@@ -908,7 +908,7 @@ public int Native_GetBossProfileString(Handle plugin,int numParams)
 	char sDefaultValue[512];
 	GetNativeString(5, sDefaultValue, sizeof(sDefaultValue));
 	
-	bool bSuccess = GetProfileString(sProfile, sKeyValue, sResult, iResultLen, sDefaultValue);
+	bool bSuccess = GetProfileString(profile, sKeyValue, sResult, iResultLen, sDefaultValue);
 	
 	SetNativeString(3, sResult, iResultLen);
 	return bSuccess;
@@ -916,8 +916,8 @@ public int Native_GetBossProfileString(Handle plugin,int numParams)
 
 public int Native_GetBossProfileVector(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
@@ -926,7 +926,7 @@ public int Native_GetBossProfileVector(Handle plugin,int numParams)
 	float flDefaultValue[3];
 	GetNativeArray(4, flDefaultValue, 3);
 	
-	bool bSuccess = GetProfileVector(sProfile, sKeyValue, flResult, flDefaultValue);
+	bool bSuccess = GetProfileVector(profile, sKeyValue, flResult, flDefaultValue);
 	
 	SetNativeArray(3, flResult, 3);
 	return bSuccess;
@@ -934,30 +934,30 @@ public int Native_GetBossProfileVector(Handle plugin,int numParams)
 
 public int Native_GetBossAttackProfileNum(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 	
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
 	
-	return GetProfileAttackNum(sProfile, sKeyValue, GetNativeCell(3), GetNativeCell(4));
+	return GetProfileAttackNum(profile, sKeyValue, GetNativeCell(3), GetNativeCell(4));
 }
 
 public int Native_GetBossAttackProfileFloat(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
 	
-	return view_as<int>(GetProfileAttackFloat(sProfile, sKeyValue, view_as<float>(GetNativeCell(3)), GetNativeCell(4)));
+	return view_as<int>(GetProfileAttackFloat(profile, sKeyValue, view_as<float>(GetNativeCell(3)), GetNativeCell(4)));
 }
 
 public int Native_GetBossAttackProfileString(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
@@ -968,7 +968,7 @@ public int Native_GetBossAttackProfileString(Handle plugin,int numParams)
 	char sDefaultValue[512];
 	GetNativeString(5, sDefaultValue, sizeof(sDefaultValue));
 	
-	bool bSuccess = GetProfileAttackString(sProfile, sKeyValue, sResult, iResultLen, sDefaultValue, GetNativeCell(6));
+	bool bSuccess = GetProfileAttackString(profile, sKeyValue, sResult, iResultLen, sDefaultValue, GetNativeCell(6));
 	
 	SetNativeString(3, sResult, iResultLen);
 	return bSuccess;
@@ -976,8 +976,8 @@ public int Native_GetBossAttackProfileString(Handle plugin,int numParams)
 
 public int Native_GetBossAttackProfileVector(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
@@ -986,7 +986,7 @@ public int Native_GetBossAttackProfileVector(Handle plugin,int numParams)
 	float flDefaultValue[3];
 	GetNativeArray(4, flDefaultValue, 3);
 	
-	bool bSuccess = GetProfileAttackVector(sProfile, sKeyValue, flResult, flDefaultValue, GetNativeCell(5));
+	bool bSuccess = GetProfileAttackVector(profile, sKeyValue, flResult, flDefaultValue, GetNativeCell(5));
 	
 	SetNativeArray(3, flResult, 3);
 	return bSuccess;
@@ -994,8 +994,8 @@ public int Native_GetBossAttackProfileVector(Handle plugin,int numParams)
 
 public int Native_GetRandomStringFromBossProfile(Handle plugin,int numParams)
 {
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetNativeString(1, sProfile, SF2_MAX_PROFILE_NAME_LENGTH);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
 
 	char sKeyValue[256];
 	GetNativeString(2, sKeyValue, sizeof(sKeyValue));
@@ -1005,7 +1005,7 @@ public int Native_GetRandomStringFromBossProfile(Handle plugin,int numParams)
 	
 	int iIndex = GetNativeCell(5);
 
-	bool bSuccess = GetRandomStringFromProfile(sProfile, sKeyValue, sBuffer, iBufferLen, iIndex);
+	bool bSuccess = GetRandomStringFromProfile(profile, sKeyValue, sBuffer, iBufferLen, iIndex);
 	SetNativeString(3, sBuffer, iBufferLen);
 	return bSuccess;
 }

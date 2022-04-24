@@ -235,23 +235,23 @@ public Action Hook_FlashlightBeamSetTransmit(int ent,int other)
 	
 	if (iOwner == -1) return Plugin_Continue;
 	
-	int iClient = -1;
+	int client = -1;
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i)) continue;
 		
 		if (EntRefToEntIndex(g_iPlayerFlashlightEntAng[i]) == iOwner)
 		{
-			iClient = i;
+			client = i;
 			break;
 		}
 	}
 	
-	if (iClient == -1) return Plugin_Continue;
+	if (client == -1) return Plugin_Continue;
 	
-	if (iClient == other)
+	if (client == other)
 	{
-		if (!GetEntProp(iClient, Prop_Send, "m_nForceTauntCam") || !GetEntProp(iClient, Prop_Send, "m_iObserverMode"))
+		if (!GetEntProp(client, Prop_Send, "m_nForceTauntCam") || !GetEntProp(client, Prop_Send, "m_iObserverMode"))
 		{
 			return Plugin_Handled;
 		}
@@ -268,23 +268,23 @@ public Action Hook_FlashlightEndSetTransmit(int ent,int other)
 	
 	if (iOwner == -1) return Plugin_Continue;
 	
-	int iClient = -1;
+	int client = -1;
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i)) continue;
 		
 		if (EntRefToEntIndex(g_iPlayerFlashlightEntAng[i]) == iOwner)
 		{
-			iClient = i;
+			client = i;
 			break;
 		}
 	}
 	
-	if (iClient == -1) return Plugin_Continue;
+	if (client == -1) return Plugin_Continue;
 	
-	if (iClient == other)
+	if (client == other)
 	{
-		if (!GetEntProp(iClient, Prop_Send, "m_nForceTauntCam") || !GetEntProp(iClient, Prop_Send, "m_iObserverMode"))
+		if (!GetEntProp(client, Prop_Send, "m_nForceTauntCam") || !GetEntProp(client, Prop_Send, "m_iObserverMode"))
 		{
 			return Plugin_Handled;
 		}
@@ -521,11 +521,11 @@ void ClientStartDrainingFlashlightBattery(int client)
 	float flDrainRate = SF2_FLASHLIGHT_DRAIN_RATE;
 	float flRechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
 	bool bNightVision = (g_cvNightvisionEnabled.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-	int iDifficulty = g_cvDifficulty.IntValue;
+	int difficulty = g_cvDifficulty.IntValue;
 	
 	if (bNightVision && g_iNightvisionType == 2) //Blue nightvision
 	{
-		switch (iDifficulty)
+		switch (difficulty)
 		{
 			case Difficulty_Normal:
 			{

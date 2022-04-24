@@ -6,43 +6,43 @@
 static char sGestureShootAnim[PLATFORM_MAX_PATH];
 static char sBaseballModel[PLATFORM_MAX_PATH];
 
-//static float g_flProjectileSpeed[2049];
-//static float g_flProjectileDamage[2049];
-//static float g_flProjectileRadius[2049];
-//static float g_flProjectileIceSlowPercent[2049];
-//static float g_flProjectileIceSlowDuration[2049];
+//static float g_projectileSpeed[2049];
+//static float g_projectileDamage[2049];
+//static float g_projectileRadius[2049];
+//static float g_projectileIceSlowPercent[2049];
+//static float g_projectileIceSlowDuration[2049];
 //static float g_flOriginalProjectilePos[2049][3];
-//static int g_iProjectileType[2049];
-//static int g_iProjectileRotateState[2049]; // 0 = 0 degrees, 1 = 1-180 degrees, 2 = 181-360 degrees
+//static int g_projectileType[2049];
+//static int g_projectileRotateState[2049]; // 0 = 0 degrees, 1 = 1-180 degrees, 2 = 181-360 degrees
 //static Handle g_hProjectileTimer[2049];
 
 /*public Action Timer_ProjectileThink(Handle timer, any entref)
 {
-	int iProjectile = EntRefToEntIndex(entref);
-	if (!iProjectile || iProjectile == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	int projectile = EntRefToEntIndex(entref);
+	if (!projectile || projectile == INVALID_ENT_REFERENCE) return Plugin_Stop;
 
-	if (timer != g_hProjectileTimer[iProjectile]) return Plugin_Stop;
+	if (timer != g_hProjectileTimer[projectile]) return Plugin_Stop;
 
 	float flPos[3], flAng[3], flNewPos[3];
-	GetEntPropVector(iProjectile, Prop_Data, "m_vecAbsOrigin", flPos);
-	GetEntPropVector(iProjectile, Prop_Data, "m_angAbsRotation", flAng);
+	GetEntPropVector(projectile, Prop_Data, "m_vecAbsOrigin", flPos);
+	GetEntPropVector(projectile, Prop_Data, "m_angAbsRotation", flAng);
 
 	flNewPos[0] = flPos[0];
 	flNewPos[1] = flPos[1];
 	flNewPos[2] = flPos[2];
 
-	float flSpeed = (g_flProjectileSpeed[iProjectile] - 64.0) / 54.0;
-	AddVectors(g_flOriginalProjectilePos[iProjectile], flNewPos, flNewPos);
-	flNewPos[0] += g_flOriginalProjectilePos[iProjectile][0];
-	flNewPos[1] += g_flOriginalProjectilePos[iProjectile][1];
-	switch (g_iProjectileRotateState[iProjectile])
+	float flSpeed = (g_projectileSpeed[projectile] - 64.0) / 54.0;
+	AddVectors(g_flOriginalProjectilePos[projectile], flNewPos, flNewPos);
+	flNewPos[0] += g_flOriginalProjectilePos[projectile][0];
+	flNewPos[1] += g_flOriginalProjectilePos[projectile][1];
+	switch (g_projectileRotateState[projectile])
 	{
-		case 0: flNewPos[2] = g_flOriginalProjectilePos[iProjectile][2];
-		case 1: flNewPos[2] += g_flOriginalProjectilePos[iProjectile][2]/flAng[0];
-		case 2: flNewPos[2] -= g_flOriginalProjectilePos[iProjectile][2]/flAng[0];
+		case 0: flNewPos[2] = g_flOriginalProjectilePos[projectile][2];
+		case 1: flNewPos[2] += g_flOriginalProjectilePos[projectile][2]/flAng[0];
+		case 2: flNewPos[2] -= g_flOriginalProjectilePos[projectile][2]/flAng[0];
 	}
 
-	TeleportEntity(iProjectile, flNewPos, flAng, NULL_VECTOR);
+	TeleportEntity(projectile, flNewPos, flAng, NULL_VECTOR);
 
 	return Plugin_Continue;
 }*/
@@ -53,13 +53,13 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 
 	CBaseCombatCharacter combatChar = CBaseCombatCharacter(slender);
 	
-	int iProjectileType = NPCChaserGetProjectileType(iBossIndex);
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-	int iProjectileEnt;
+	int projectileType = NPCChaserGetProjectileType(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int projectileEnt;
 	float flShootDist = GetVectorSquareMagnitude(g_flSlenderGoalPos[iBossIndex], flMyPos);
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sProjectileName[45];
 	float flClientPos[3];
@@ -73,7 +73,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 	flNonRocketScaleMaxs[2] = 10.0;
 	NPCGetEyePosition(iBossIndex, flSlenderPosition);
 	GetClientEyePosition(iTarget, flClientPos);
-	switch (iProjectileType)
+	switch (projectileType)
 	{
 		case SF2BossProjectileType_Grenade:
 		{
@@ -107,35 +107,35 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 	float flEffectPos[3], flTempEffectPos[3];
 	float flEffectAng[3] = {0.0, 0.0, 0.0};
 	
-	int iRandomPosMin = GetProfileNum(sProfile, "projectile_pos_number_min", 1);
-	int iRandomPosMax = GetProfileNum(sProfile, "projectile_pos_number_max", 1);
+	int iRandomPosMin = GetProfileNum(profile, "projectile_pos_number_min", 1);
+	int iRandomPosMax = GetProfileNum(profile, "projectile_pos_number_max", 1);
 	
 	if (iRandomPosMin == 1 && iRandomPosMax == 1)
 	{
-		g_hConfig.GetVector("projectile_pos_offset", flTempEffectPos);
+		g_Config.GetVector("projectile_pos_offset", flTempEffectPos);
 	}
 	else
 	{
 		int iRandomProjectilePos = GetRandomInt(iRandomPosMin, iRandomPosMax);
 		char sKeyName[PLATFORM_MAX_PATH];
 		FormatEx(sKeyName, sizeof(sKeyName), "projectile_pos_offset_%i", iRandomProjectilePos);
-		g_hConfig.GetVector(sKeyName, flTempEffectPos);
+		g_Config.GetVector(sKeyName, flTempEffectPos);
 	}
 
 	VectorTransform(flTempEffectPos, flBasePos, flBaseAng, flTempEffectPos);
 	AddVectors(flEffectAng, flBaseAng, flEffectAng);
 
-	float vecSpread = NPCChaserGetProjectileDeviation(iBossIndex, iDifficulty);
+	float vecSpread = NPCChaserGetProjectileDeviation(iBossIndex, difficulty);
 
 	int iTeam = 3;
 	int iTeamNon = 5;
 
-	float flMin = NPCChaserGetProjectileCooldownMin(iBossIndex, iDifficulty);
-	float flMax = NPCChaserGetProjectileCooldownMax(iBossIndex, iDifficulty);
+	float flMin = NPCChaserGetProjectileCooldownMin(iBossIndex, difficulty);
+	float flMax = NPCChaserGetProjectileCooldownMax(iBossIndex, difficulty);
 	
-	for (int i = 0; i < NPCChaserGetProjectileCount(iBossIndex, iDifficulty); i++)
+	for (int i = 0; i < NPCChaserGetProjectileCount(iBossIndex, difficulty); i++)
 	{
-		if (NPCChaserGetProjectileCount(iBossIndex, iDifficulty) != 1)
+		if (NPCChaserGetProjectileCount(iBossIndex, difficulty) != 1)
 		{
 			flEffectPos[0] = flTempEffectPos[0] + GetRandomFloat(-10.0, 10.0);
 			flEffectPos[1] = flTempEffectPos[1] + GetRandomFloat(-10.0, 10.0);
@@ -158,38 +158,38 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 		NormalizeVector(flShootDirection, flShootDirection);
 		GetVectorAngles(flShootDirection, flShootAng);
 
-		switch(iProjectileType)
+		switch(projectileType)
 		{
 			case SF2BossProjectileType_Fireball:		
 			{
 				sProjectileName = "tf_projectile_rocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, g_sSlenderFireballTrail[iBossIndex]);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					AttachParticle(projectileEnt, g_sSlenderFireballTrail[iBossIndex]);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flModelScale", 1.0);
-					SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
-					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
-					ProjectileSetFlags(iProjectileEnt, PROJ_FIREBALL);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntPropFloat(projectileEnt, Prop_Data, "m_flModelScale", 1.0);
+					SetEntityRenderMode(projectileEnt, RENDER_TRANSCOLOR);
+					SetEntityRenderColor(projectileEnt, 0, 0, 0, 0);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
+					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					SDKHook(projectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
+					ProjectileSetFlags(projectileEnt, PROJ_FIREBALL);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{
@@ -206,33 +206,33 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			case SF2BossProjectileType_Iceball:
 			{
 				sProjectileName = "tf_projectile_rocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					AttachParticle(iProjectileEnt, g_sSlenderIceballTrail[iBossIndex]);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					AttachParticle(projectileEnt, g_sSlenderIceballTrail[iBossIndex]);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flModelScale", 1.0);
-					SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
-					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
-					ProjectileSetFlags(iProjectileEnt, PROJ_ICEBALL);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntPropFloat(projectileEnt, Prop_Data, "m_flModelScale", 1.0);
+					SetEntityRenderMode(projectileEnt, RENDER_TRANSCOLOR);
+					SetEntityRenderColor(projectileEnt, 0, 0, 0, 0);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
+					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					SDKHook(projectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
+					ProjectileSetFlags(projectileEnt, PROJ_ICEBALL);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{
@@ -249,26 +249,26 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			case SF2BossProjectileType_Rocket:
 			{
 				sProjectileName = "tf_projectile_rocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), true); // set damage
-					ProjectileSetFlags(iProjectileEnt, PROJ_ROCKET);
-					SetEntityModel(iProjectileEnt, g_sSlenderRocketModel[iBossIndex]);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(iBossIndex, difficulty), true); // set damage
+					ProjectileSetFlags(projectileEnt, PROJ_ROCKET);
+					SetEntityModel(projectileEnt, g_sSlenderRocketModel[iBossIndex]);
 
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{
@@ -285,39 +285,39 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			/*case SF2BossProjectileType_Rocket:
 			{
 				sProjectileName = "prop_dynamic_override";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					g_flProjectileSpeed[iProjectileEnt] = NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+					g_projectileSpeed[projectileEnt] = NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					//if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
-					//SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-					g_hProjectileTimer[iProjectileEnt] = CreateTimer(BOSS_THINKRATE, Timer_ProjectileThink, EntIndexToEntRef(iProjectileEnt), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-					ProjectileSetFlags(iProjectileEnt, PROJ_ROCKET);
-					SetEntityModel(iProjectileEnt, ROCKET_MODEL);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					//if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					//SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
+					g_hProjectileTimer[projectileEnt] = CreateTimer(BOSS_THINKRATE, Timer_ProjectileThink, EntIndexToEntRef(projectileEnt), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+					ProjectileSetFlags(projectileEnt, PROJ_ROCKET);
+					SetEntityModel(projectileEnt, ROCKET_MODEL);
 
-					//SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
+					//SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
 
-					GetEntPropVector(iProjectileEnt, Prop_Data, "m_vecOrigin", g_flOriginalProjectilePos[iProjectileEnt]);
-					g_flOriginalProjectilePos[iProjectileEnt][0] /= (g_flProjectileSpeed[iProjectileEnt] - 64.0) / 54.0;
-					g_flOriginalProjectilePos[iProjectileEnt][1] /= (g_flProjectileSpeed[iProjectileEnt] - 64.0) / 54.0;
-					g_flOriginalProjectilePos[iProjectileEnt][2] /= (g_flProjectileSpeed[iProjectileEnt] - 64.0) / 54.0;
+					GetEntPropVector(projectileEnt, Prop_Data, "m_vecOrigin", g_flOriginalProjectilePos[projectileEnt]);
+					g_flOriginalProjectilePos[projectileEnt][0] /= (g_projectileSpeed[projectileEnt] - 64.0) / 54.0;
+					g_flOriginalProjectilePos[projectileEnt][1] /= (g_projectileSpeed[projectileEnt] - 64.0) / 54.0;
+					g_flOriginalProjectilePos[projectileEnt][2] /= (g_projectileSpeed[projectileEnt] - 64.0) / 54.0;
 					PrintToChatAll("%f", flShootAng[0]);
 					if (flShootAng[0] == 0.0  || flShootAng[0] == 180.0)
-						g_iProjectileRotateState[iProjectileEnt] = 0;
+						g_projectileRotateState[projectileEnt] = 0;
 					else if (flShootAng[0] > 0.0 && flShootAng[0] < 180.0)
-						g_iProjectileRotateState[iProjectileEnt] = 1;
+						g_projectileRotateState[projectileEnt] = 1;
 					else if (flShootAng[0] > 180.0)
-						g_iProjectileRotateState[iProjectileEnt] = 2;
+						g_projectileRotateState[projectileEnt] = 2;
 
-					CreateTimer(1.0, Timer_KillEntity, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(1.0, Timer_KillEntity, EntIndexToEntRef(projectileEnt), TIMER_FLAG_NO_MAPCHANGE);
 
 					if(NPCChaserUseShootGesture(iBossIndex))
 					{
@@ -336,28 +336,28 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 				sProjectileName = "tf_projectile_pipe";
 				if (flShootDist <= SquareFloat(1800.0))
 				{
-					iProjectileEnt = CreateEntityByName(sProjectileName);
-					if (iProjectileEnt != -1)
+					projectileEnt = CreateEntityByName(sProjectileName);
+					if (projectileEnt != -1)
 					{
 						float flVelocity[3], flBufferProj[3];
 
 						GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-						flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-						flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-						flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+						flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+						flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+						flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 						
-						TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, NULL_VECTOR);
-						DispatchSpawn(iProjectileEnt);
-						if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
-						SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     3, 1);
-						SetEntProp(iProjectileEnt,    Prop_Send, "m_nSkin",     1, 1);
-						SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-						SetEntPropFloat(iProjectileEnt, Prop_Send, "m_DmgRadius", NPCChaserGetProjectileRadius(iBossIndex, iDifficulty));
-						SetEntPropFloat(iProjectileEnt, Prop_Send, "m_flDamage",  NPCChaserGetProjectileDamage(iBossIndex, iDifficulty));
-						TeleportEntity(iProjectileEnt, NULL_VECTOR, NULL_VECTOR, flVelocity);
-						SetEntDataFloat(iProjectileEnt, g_dataFullDamage, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty));
-						ProjectileSetFlags(iProjectileEnt, PROJ_GRENADE);
+						TeleportEntity(projectileEnt, flEffectPos, flShootAng, NULL_VECTOR);
+						DispatchSpawn(projectileEnt);
+						if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+						SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     3, 1);
+						SetEntProp(projectileEnt,    Prop_Send, "m_nSkin",     1, 1);
+						SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+						SetEntPropFloat(projectileEnt, Prop_Send, "m_DmgRadius", NPCChaserGetProjectileRadius(iBossIndex, difficulty));
+						SetEntPropFloat(projectileEnt, Prop_Send, "m_damage",  NPCChaserGetProjectileDamage(iBossIndex, difficulty));
+						TeleportEntity(projectileEnt, NULL_VECTOR, NULL_VECTOR, flVelocity);
+						SetEntDataFloat(projectileEnt, g_dataFullDamage, NPCChaserGetProjectileDamage(iBossIndex, difficulty));
+						ProjectileSetFlags(projectileEnt, PROJ_GRENADE);
 
 						if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 						{
@@ -375,25 +375,25 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			case SF2BossProjectileType_SentryRocket:
 			{
 				sProjectileName = "tf_projectile_sentryrocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_SentryRocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), true); // set damage
-					ProjectileSetFlags(iProjectileEnt, PROJ_SENTRYROCKET);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_SentryRocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(iBossIndex, difficulty), true); // set damage
+					ProjectileSetFlags(projectileEnt, PROJ_SENTRYROCKET);
 
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{
@@ -412,30 +412,30 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 				sProjectileName = "tf_point_weapon_mimic";
 				if (flShootDist <= SquareFloat(1250.0))
 				{
-					iProjectileEnt = CreateEntityByName(sProjectileName);
-					if (iProjectileEnt != -1)
+					projectileEnt = CreateEntityByName(sProjectileName);
+					if (projectileEnt != -1)
 					{
 						float flVelocity[3], flBufferProj[3];
 
 						GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-						flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-						flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-						flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+						flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+						flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+						flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 
-						if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCrits", 1, 1);
-						SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flDamage", NPCChaserGetProjectileDamage(iBossIndex, iDifficulty));
-						SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flSpeedMin", NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty));
-						SetEntPropFloat(iProjectileEnt, Prop_Data, "m_flSpeedMax", NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty));
-						SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-						ProjectileSetFlags(iProjectileEnt, PROJ_ARROW);
-						TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-						DispatchSpawn(iProjectileEnt);
-						DispatchKeyValueVector(iProjectileEnt, "origin", flEffectPos);
-						DispatchKeyValueVector(iProjectileEnt, "angles", flShootAng);
-						DispatchKeyValue(iProjectileEnt, "WeaponType", "2");
+						if (NPCChaserHasCriticalRockets(iBossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCrits", 1, 1);
+						SetEntPropFloat(projectileEnt, Prop_Data, "m_damage", NPCChaserGetProjectileDamage(iBossIndex, difficulty));
+						SetEntPropFloat(projectileEnt, Prop_Data, "m_flSpeedMin", NPCChaserGetProjectileSpeed(iBossIndex, difficulty));
+						SetEntPropFloat(projectileEnt, Prop_Data, "m_flSpeedMax", NPCChaserGetProjectileSpeed(iBossIndex, difficulty));
+						SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+						ProjectileSetFlags(projectileEnt, PROJ_ARROW);
+						TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+						DispatchSpawn(projectileEnt);
+						DispatchKeyValueVector(projectileEnt, "origin", flEffectPos);
+						DispatchKeyValueVector(projectileEnt, "angles", flShootAng);
+						DispatchKeyValue(projectileEnt, "WeaponType", "2");
 
-						AcceptEntityInput(iProjectileEnt, "FireOnce");
+						AcceptEntityInput(projectileEnt, "FireOnce");
 
 						if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 						{
@@ -445,7 +445,7 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 							if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 						}
 
-						CreateTimer(5.0, Timer_KillEntity, EntIndexToEntRef(iProjectileEnt), TIMER_FLAG_NO_MAPCHANGE);
+						CreateTimer(5.0, Timer_KillEntity, EntIndexToEntRef(projectileEnt), TIMER_FLAG_NO_MAPCHANGE);
 						if (i == 0) EmitSoundToAll(g_sSlenderArrowShootSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 						g_flNPCProjectileCooldown[iBossIndex] = GetGameTime() + GetRandomFloat(flMin, flMax);
 					}
@@ -454,27 +454,27 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			case SF2BossProjectileType_Mangler:
 			{
 				sProjectileName = "tf_projectile_energy_ball";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntProp(iProjectileEnt, Prop_Send, "m_CollisionGroup", 4);
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     5, 1);
-					SetEntProp(iProjectileEnt, Prop_Data, "m_takedamage", 0);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", view_as<float>( { 3.0, 3.0, 3.0 } ));
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", view_as<float>( { 3.0, 3.0, 3.0 } ));
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-					ProjectileSetFlags(iProjectileEnt, PROJ_MANGLER);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntProp(projectileEnt, Prop_Send, "m_CollisionGroup", 4);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     5, 1);
+					SetEntProp(projectileEnt, Prop_Data, "m_takedamage", 0);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMins", view_as<float>( { 3.0, 3.0, 3.0 } ));
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxs", view_as<float>( { 3.0, 3.0, 3.0 } ));
+					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
+					ProjectileSetFlags(projectileEnt, PROJ_MANGLER);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{
@@ -491,31 +491,31 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 			case SF2BossProjectileType_Baseball:
 			{
 				sProjectileName = "tf_projectile_stun_ball";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetProjectileSpeed(iBossIndex, difficulty);
 					GetProfileString(sSlenderProfile, "baseball_model", sBaseballModel, sizeof(sBaseballModel));
 					if (sBaseballModel[0] == '\0')
 					{
 						sBaseballModel = BASEBALL_MODEL;
 					}
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hThrower", slender);
-					SetEntityModel(iProjectileEnt, sBaseballModel);
-					ProjectileSetFlags(iProjectileEnt, PROJ_BASEBALL);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hThrower", slender);
+					SetEntityModel(projectileEnt, sBaseballModel);
+					ProjectileSetFlags(projectileEnt, PROJ_BASEBALL);
 
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
+					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
 
 					if(NPCChaserUseShootGesture(iBossIndex) && i == 0)
 					{
@@ -532,15 +532,15 @@ public int NPCChaserProjectileShoot(int iBossIndex, int slender, int iTarget, co
 		}
 	}
 
-	return iProjectileEnt;
+	return projectileEnt;
 }
 
 public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarget, const char[] sSlenderProfile, const char[] sSectionName)
 {
-	int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
-	int iProjectileType = NPCChaserGetAttackProjectileType(iBossIndex, iAttackIndex);
-	int iProjectileEnt;
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+	int projectileType = NPCChaserGetAttackProjectileType(iBossIndex, attackIndex);
+	int projectileEnt;
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 
 	char sProjectileName[45];
 	float flClientPos[3];
@@ -563,17 +563,17 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 	float flEffectPos[3], flTempEffectPos[3];
 	float flEffectAng[3] = {0.0, 0.0, 0.0};
 	
-	GetProfileAttackVector(sSlenderProfile, "attack_projectile_offset", flTempEffectPos, view_as<float>({0.0, 0.0, 0.0}), iAttackIndex+1);
+	GetProfileAttackVector(sSlenderProfile, "attack_projectile_offset", flTempEffectPos, view_as<float>({0.0, 0.0, 0.0}), attackIndex+1);
 	VectorTransform(flTempEffectPos, flBasePos, flBaseAng, flTempEffectPos);
 	AddVectors(flEffectAng, flBaseAng, flEffectAng);
 
-	float vecSpread = NPCChaserGetAttackProjectileDeviation(iBossIndex, iAttackIndex, iDifficulty);
+	float vecSpread = NPCChaserGetAttackProjectileDeviation(iBossIndex, attackIndex, difficulty);
 
 	int iTeam = 3;
 	int iTeamNon = 5;
-	for (int i = 0; i < NPCChaserGetAttackProjectileCount(iBossIndex, iAttackIndex, iDifficulty); i++)
+	for (int i = 0; i < NPCChaserGetAttackProjectileCount(iBossIndex, attackIndex, difficulty); i++)
 	{
-		if (NPCChaserGetAttackProjectileCount(iBossIndex, iAttackIndex, iDifficulty) != 1)
+		if (NPCChaserGetAttackProjectileCount(iBossIndex, attackIndex, difficulty) != 1)
 		{
 			flEffectPos[0] = flTempEffectPos[0] + GetRandomFloat(-10.0, 10.0);
 			flEffectPos[1] = flTempEffectPos[1] + GetRandomFloat(-10.0, 10.0);
@@ -597,39 +597,39 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 		NormalizeVector(flShootDirection, flShootDirection);
 		GetVectorAngles(flShootDirection, flShootAng);
 
-		switch(iProjectileType)
+		switch(projectileType)
 		{
 			case 0:		
 			{
 				sProjectileName = "tf_projectile_rocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
 					char sFireballTrail[PLATFORM_MAX_PATH];
-					GetProfileAttackString(sSlenderProfile, "attack_fire_trail", sFireballTrail, sizeof(sFireballTrail), FIREBALL_TRAIL, iAttackIndex+1);
-					AttachParticle(iProjectileEnt, sFireballTrail);
+					GetProfileAttackString(sSlenderProfile, "attack_fire_trail", sFireballTrail, sizeof(sFireballTrail), FIREBALL_TRAIL, attackIndex+1);
+					AttachParticle(projectileEnt, sFireballTrail);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
-					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
-					ProjectileSetFlags(iProjectileEnt, PROJ_FIREBALL_ATTACK);
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntityRenderMode(projectileEnt, RENDER_TRANSCOLOR);
+					SetEntityRenderColor(projectileEnt, 0, 0, 0, 0);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					SDKHook(projectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
+					ProjectileSetFlags(projectileEnt, PROJ_FIREBALL_ATTACK);
+					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
 					
 					char sPath[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(sSlenderProfile, sSectionName, sPath, sizeof(sPath));
@@ -657,33 +657,33 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 			case 1:
 			{
 				sProjectileName = "tf_projectile_rocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 					char sRocketModel[PLATFORM_MAX_PATH];
-					GetProfileAttackString(sSlenderProfile, "attack_rocket_model", sRocketModel, sizeof(sRocketModel), ROCKET_MODEL, iAttackIndex+1);
+					GetProfileAttackString(sSlenderProfile, "attack_rocket_model", sRocketModel, sizeof(sRocketModel), ROCKET_MODEL, attackIndex+1);
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					if (NPCChaserGetAttackProjectileCrits(iBossIndex, iAttackIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), true); // set damage
-					ProjectileSetFlags(iProjectileEnt, PROJ_ROCKET);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					if (NPCChaserGetAttackProjectileCrits(iBossIndex, attackIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetAttackProjectileDamage(iBossIndex, attackIndex, difficulty), true); // set damage
+					ProjectileSetFlags(projectileEnt, PROJ_ROCKET);
 					if (strcmp(sRocketModel, ROCKET_MODEL, true) != 0)
 					{
 						int iModel;
 						iModel = PrecacheModel(sRocketModel, true);
-						SetEntProp(iProjectileEnt, Prop_Send, "m_nModelIndexOverrides", iModel);
+						SetEntProp(projectileEnt, Prop_Send, "m_nModelIndexOverrides", iModel);
 					}
 
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeam, 1);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
 
 					char sPath[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(sSlenderProfile, sSectionName, sPath, sizeof(sPath));
@@ -711,35 +711,35 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 			case 2:
 			{
 				sProjectileName = "tf_projectile_rocket";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
 					char sFireballTrail[PLATFORM_MAX_PATH];
-					GetProfileAttackString(sSlenderProfile, "attack_fire_iceball_trail", sFireballTrail, sizeof(sFireballTrail), ICEBALL_TRAIL, iAttackIndex+1);
-					AttachParticle(iProjectileEnt, sFireballTrail);
+					GetProfileAttackString(sSlenderProfile, "attack_fire_iceball_trail", sFireballTrail, sizeof(sFireballTrail), ICEBALL_TRAIL, attackIndex+1);
+					AttachParticle(projectileEnt, sFireballTrail);
 
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
-					SetEntPropVector(iProjectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
-					SetEntityRenderMode(iProjectileEnt, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iProjectileEnt, 0, 0, 0, 0);
-					SetEntDataFloat(iProjectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
-					SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
-					SDKHook(iProjectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMins", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxs", flNonRocketScaleMaxs);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMinsPreScaled", flNonRocketScaleMins);
+					SetEntPropVector(projectileEnt, Prop_Send, "m_vecMaxsPreScaled", flNonRocketScaleMaxs);
+					SetEntityRenderMode(projectileEnt, RENDER_TRANSCOLOR);
+					SetEntityRenderColor(projectileEnt, 0, 0, 0, 0);
+					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, 0.1, true); // set damage to nothing
+					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
+					SDKHook(projectileEnt, SDKHook_SetTransmit, Hook_ProjectileTransmit);
 
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, flVelocity);
-					DispatchSpawn(iProjectileEnt);
-					ProjectileSetFlags(iProjectileEnt, PROJ_ICEBALL_ATTACK);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     iTeamNon, 1);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, flVelocity);
+					DispatchSpawn(projectileEnt);
+					ProjectileSetFlags(projectileEnt, PROJ_ICEBALL_ATTACK);
 
 					char sPath[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(sSlenderProfile, sSectionName, sPath, sizeof(sPath));
@@ -767,30 +767,30 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 			case 3:
 			{
 				sProjectileName = "tf_projectile_pipe";
-				iProjectileEnt = CreateEntityByName(sProjectileName);
-				if (iProjectileEnt != -1)
+				projectileEnt = CreateEntityByName(sProjectileName);
+				if (projectileEnt != -1)
 				{
 					float flVelocity[3], flBufferProj[3];
 
 					GetAngleVectors(flShootAng, flBufferProj, NULL_VECTOR, NULL_VECTOR);
 
-					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
-					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, iAttackIndex, iDifficulty);
+					flVelocity[0] = flBufferProj[0]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[1] = flBufferProj[1]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
+					flVelocity[2] = flBufferProj[2]*NPCChaserGetAttackProjectileSpeed(iBossIndex, attackIndex, difficulty);
 						
-					TeleportEntity(iProjectileEnt, flEffectPos, flShootAng, NULL_VECTOR);
-					DispatchSpawn(iProjectileEnt);
-					if (NPCChaserGetAttackProjectileCrits(iBossIndex, iAttackIndex)) SetEntProp(iProjectileEnt,    Prop_Send, "m_bCritical", 1, 1);
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_iTeamNum",     3, 1);
-					SetEntProp(iProjectileEnt,    Prop_Send, "m_nSkin",     1, 1);
-					SetEntPropEnt(iProjectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					SetEntPropFloat(iProjectileEnt, Prop_Send, "m_DmgRadius", NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty));
-					SetEntPropFloat(iProjectileEnt, Prop_Send, "m_flDamage",  NPCChaserGetAttackProjectileRadius(iBossIndex, iAttackIndex, iDifficulty));
-					SetEntDataFloat(iProjectileEnt, g_dataFullDamage, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty));
-					TeleportEntity(iProjectileEnt, NULL_VECTOR, NULL_VECTOR, flVelocity);
-					ProjectileSetFlags(iProjectileEnt, PROJ_GRENADE);
+					TeleportEntity(projectileEnt, flEffectPos, flShootAng, NULL_VECTOR);
+					DispatchSpawn(projectileEnt);
+					if (NPCChaserGetAttackProjectileCrits(iBossIndex, attackIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     3, 1);
+					SetEntProp(projectileEnt,    Prop_Send, "m_nSkin",     1, 1);
+					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
+					SetEntPropFloat(projectileEnt, Prop_Send, "m_DmgRadius", NPCChaserGetAttackProjectileDamage(iBossIndex, attackIndex, difficulty));
+					SetEntPropFloat(projectileEnt, Prop_Send, "m_damage",  NPCChaserGetAttackProjectileRadius(iBossIndex, attackIndex, difficulty));
+					SetEntDataFloat(projectileEnt, g_dataFullDamage, NPCChaserGetAttackProjectileDamage(iBossIndex, attackIndex, difficulty));
+					TeleportEntity(projectileEnt, NULL_VECTOR, NULL_VECTOR, flVelocity);
+					ProjectileSetFlags(projectileEnt, PROJ_GRENADE);
 
-					//SDKHook(iProjectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
+					//SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
 
 					char sPath[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(sSlenderProfile, sSectionName, sPath, sizeof(sPath));
@@ -818,7 +818,7 @@ public int NPCChaserProjectileAttackShoot(int iBossIndex, int slender, int iTarg
 		}
 	}
 
-	return iProjectileEnt;
+	return projectileEnt;
 }
 
 public Action Hook_ProjectileAttackTouch(int entity, int iOther)
@@ -867,18 +867,18 @@ public Action Hook_ProjectileAttackTouch(int entity, int iOther)
 				int iBossIndex = NPCGetFromEntIndex(slender);
 				if (iBossIndex != -1)
 				{
-					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-					int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+					int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+					int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 					bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
-					float flRadius = NPCChaserGetAttackProjectileRadius(iBossIndex, iAttackIndex, iDifficulty);
-					for (int iClient = 1; iClient <= MaxClients; iClient++)
+					float flRadius = NPCChaserGetAttackProjectileRadius(iBossIndex, attackIndex, difficulty);
+					for (int client = 1; client <= MaxClients; client++)
 					{
-						if (!IsValidClient(iClient) || !IsClientInGame(iClient) || !IsPlayerAlive(iClient) || IsClientInGhostMode(iClient)) continue;
+						if (!IsValidClient(client) || !IsClientInGame(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client)) continue;
 
-						if (!bAttackEliminated && g_bPlayerEliminated[iClient]) continue;
+						if (!bAttackEliminated && g_bPlayerEliminated[client]) continue;
 
 						float flTargetPos[3];
-						GetClientEyePosition(iClient, flTargetPos);
+						GetClientEyePosition(client, flTargetPos);
 
 						Handle hTrace = TR_TraceRayFilterEx(flEntPos, 
 							flTargetPos, 
@@ -891,27 +891,27 @@ public Action Hook_ProjectileAttackTouch(int entity, int iOther)
 						int iTraceHitEntity = TR_GetEntityIndex(hTrace);
 						delete hTrace;
 
-						if (!bIsVisible && iTraceHitEntity == iClient) bIsVisible = true;
+						if (!bIsVisible && iTraceHitEntity == client) bIsVisible = true;
 	
 						if (bIsVisible)
 						{
 							float flDistance = GetVectorSquareMagnitude(flEntPos, flTargetPos);
 							if (flDistance <= SquareFloat(flRadius))
 							{
-								SDKHooks_TakeDamage(iClient, entity, entity, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), DMG_BLAST);
-								if(TF2_IsPlayerInCondition(iClient, TFCond_Gas))
+								SDKHooks_TakeDamage(client, entity, entity, NPCChaserGetAttackProjectileDamage(iBossIndex, attackIndex, difficulty), DMG_BLAST);
+								if(TF2_IsPlayerInCondition(client, TFCond_Gas))
 								{
-									TF2_IgnitePlayer(iClient, iClient);
-									TF2_RemoveCondition(iClient, TFCond_Gas);
+									TF2_IgnitePlayer(client, client);
+									TF2_RemoveCondition(client, TFCond_Gas);
 								}
 								if ((ProjectileGetFlags(entity) & PROJ_FIREBALL_ATTACK))
 								{
-									TF2_IgnitePlayer(iClient, iClient);
+									TF2_IgnitePlayer(client, client);
 								}
 								else if ((ProjectileGetFlags(entity) & PROJ_ICEBALL_ATTACK))
 								{
-									EmitSoundToClient(iClient, ICEBALL_IMPACT, _, MUSIC_CHAN);
-									TF2_StunPlayer(iClient, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, iAttackIndex, iDifficulty), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, iAttackIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+									EmitSoundToClient(client, ICEBALL_IMPACT, _, MUSIC_CHAN);
+									TF2_StunPlayer(client, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, attackIndex, difficulty), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, attackIndex, difficulty), TF_STUNFLAG_SLOWDOWN, client);
 								}
 							}
 						}
@@ -975,8 +975,8 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 				if(slender != INVALID_ENT_REFERENCE)
 				{
 					int iBossIndex = NPCGetFromEntIndex(slender);
-					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-					SDKHooks_TakeDamage(iOther, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), 1048576);
+					int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+					SDKHooks_TakeDamage(iOther, slender, slender, NPCChaserGetProjectileDamage(iBossIndex, difficulty), 1048576);
 					if(TF2_IsPlayerInCondition(iOther, TFCond_Gas))
 					{
 						TF2_IgnitePlayer(iOther, iOther);
@@ -997,18 +997,18 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 				int iBossIndex = NPCGetFromEntIndex(slender);
 				if (iBossIndex != -1)
 				{
-					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+					int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 					bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
-					float flRadius = NPCChaserGetProjectileRadius(iBossIndex, iDifficulty);
-					float flFallOff = NPCChaserGetProjectileRadius(iBossIndex, iDifficulty)/2.0;
-					for (int iClient = 1; iClient <= MaxClients; iClient++)
+					float flRadius = NPCChaserGetProjectileRadius(iBossIndex, difficulty);
+					float flFallOff = NPCChaserGetProjectileRadius(iBossIndex, difficulty)/2.0;
+					for (int client = 1; client <= MaxClients; client++)
 					{
-						if (!IsValidClient(iClient) || !IsClientInGame(iClient) || !IsPlayerAlive(iClient) || IsClientInGhostMode(iClient)) continue;
+						if (!IsValidClient(client) || !IsClientInGame(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client)) continue;
 
-						if (!bAttackEliminated && g_bPlayerEliminated[iClient]) continue;
+						if (!bAttackEliminated && g_bPlayerEliminated[client]) continue;
 
 						float flTargetPos[3];
-						GetClientEyePosition(iClient, flTargetPos);
+						GetClientEyePosition(client, flTargetPos);
 
 						Handle hTrace = TR_TraceRayFilterEx(flEntPos, 
 							flTargetPos, 
@@ -1021,7 +1021,7 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 						int iTraceHitEntity = TR_GetEntityIndex(hTrace);
 						delete hTrace;
 
-						if (!bIsVisible && iTraceHitEntity == iClient) bIsVisible = true;
+						if (!bIsVisible && iTraceHitEntity == client) bIsVisible = true;
 	
 						if (bIsVisible)
 						{
@@ -1031,28 +1031,28 @@ public Action Hook_ProjectileTouch(int entity, int iOther)
 								float flFinalDamage;
 								if (flDistance <= SquareFloat(flFallOff))
 								{
-									flFinalDamage = NPCChaserGetProjectileDamage(iBossIndex, iDifficulty);
+									flFinalDamage = NPCChaserGetProjectileDamage(iBossIndex, difficulty);
 								}
 								else
 								{
 									float flMultiplier = (1.0 - ((flDistance - SquareFloat(flFallOff)) / (SquareFloat(flRadius) - SquareFloat(flFallOff))));
-									flFinalDamage = flMultiplier * NPCChaserGetProjectileDamage(iBossIndex, iDifficulty);
+									flFinalDamage = flMultiplier * NPCChaserGetProjectileDamage(iBossIndex, difficulty);
 								}
-								if ((ProjectileGetFlags(entity) & PROJ_MANGLER)) SDKHooks_TakeDamage(iClient, entity, entity, flFinalDamage, DMG_BLAST);
-								else SDKHooks_TakeDamage(iClient, entity, entity, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_BLAST);
-								if(TF2_IsPlayerInCondition(iClient, TFCond_Gas))
+								if ((ProjectileGetFlags(entity) & PROJ_MANGLER)) SDKHooks_TakeDamage(client, entity, entity, flFinalDamage, DMG_BLAST);
+								else SDKHooks_TakeDamage(client, entity, entity, NPCChaserGetProjectileDamage(iBossIndex, difficulty), DMG_BLAST);
+								if(TF2_IsPlayerInCondition(client, TFCond_Gas))
 								{
-									TF2_IgnitePlayer(iClient, iClient);
-									TF2_RemoveCondition(iClient, TFCond_Gas);
+									TF2_IgnitePlayer(client, client);
+									TF2_RemoveCondition(client, TFCond_Gas);
 								}
 								if ((ProjectileGetFlags(entity) & PROJ_FIREBALL))
 								{
-									TF2_IgnitePlayer(iClient, iClient);
+									TF2_IgnitePlayer(client, client);
 								}
 								else if ((ProjectileGetFlags(entity) & PROJ_ICEBALL))
 								{
-									EmitSoundToClient(iClient, ICEBALL_IMPACT, _, MUSIC_CHAN);
-									TF2_StunPlayer(iClient, NPCChaserGetIceballSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, iClient);
+									EmitSoundToClient(client, ICEBALL_IMPACT, _, MUSIC_CHAN);
+									TF2_StunPlayer(client, NPCChaserGetIceballSlowdownDuration(iBossIndex, difficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, difficulty), TF_STUNFLAG_SLOWDOWN, client);
 								}
 							}
 						}

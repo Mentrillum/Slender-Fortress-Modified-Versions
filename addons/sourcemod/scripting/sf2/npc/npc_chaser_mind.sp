@@ -40,22 +40,22 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	
 	AddVectors(flMyEyeAng, g_flSlenderEyeAngOffset[iBossIndex], flMyEyeAng);
 
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 	
 	float flOriginalSpeed, flOriginalMaxSpeed, flOriginalAcceleration;
 	if (!g_bNPCUsesChaseInitialAnimation[iBossIndex] && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && !g_bNPCUsesHealAnimation[iBossIndex] && !g_bNPCUseStartFleeAnimation[iBossIndex])
 	{
 		if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !SF_IsSlaughterRunMap() && !g_bRenevant90sEffect)
 		{
-			flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
-			flOriginalMaxSpeed = NPCGetMaxSpeed(iBossIndex, iDifficulty) + NPCGetAddMaxSpeed(iBossIndex);
-			flOriginalAcceleration = NPCGetAcceleration(iBossIndex, iDifficulty) + NPCGetAddAcceleration(iBossIndex);
+			flOriginalSpeed = NPCGetSpeed(iBossIndex, difficulty) + NPCGetAddSpeed(iBossIndex);
+			flOriginalMaxSpeed = NPCGetMaxSpeed(iBossIndex, difficulty) + NPCGetAddMaxSpeed(iBossIndex);
+			flOriginalAcceleration = NPCGetAcceleration(iBossIndex, difficulty) + NPCGetAddAcceleration(iBossIndex);
 		}
 		else if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) || SF_IsSlaughterRunMap() || g_bRenevant90sEffect)
 		{
-			flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
-			flOriginalMaxSpeed = NPCGetMaxSpeed(iBossIndex, iDifficulty) + NPCGetAddMaxSpeed(iBossIndex);
-			flOriginalAcceleration = NPCGetAcceleration(iBossIndex, iDifficulty) + NPCGetAddAcceleration(iBossIndex);
+			flOriginalSpeed = NPCGetSpeed(iBossIndex, difficulty) + NPCGetAddSpeed(iBossIndex);
+			flOriginalMaxSpeed = NPCGetMaxSpeed(iBossIndex, difficulty) + NPCGetAddMaxSpeed(iBossIndex);
+			flOriginalAcceleration = NPCGetAcceleration(iBossIndex, difficulty) + NPCGetAddAcceleration(iBossIndex);
 			if (flOriginalSpeed < (SF_IsSlaughterRunMap() ? 580.0 : 520.0))
 			{
 				flOriginalSpeed = SF_IsSlaughterRunMap() ? 580.0 : 520.0;
@@ -74,10 +74,10 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	{
 		flOriginalSpeed = 0.0;
 		flOriginalMaxSpeed = 0.0;
-		flOriginalAcceleration = NPCGetAcceleration(iBossIndex, iDifficulty) + NPCGetAddAcceleration(iBossIndex); //Do this anyways
+		flOriginalAcceleration = NPCGetAcceleration(iBossIndex, difficulty) + NPCGetAddAcceleration(iBossIndex); //Do this anyways
 	}
-	float flOriginalWalkSpeed = NPCChaserGetWalkSpeed(iBossIndex, iDifficulty);
-	float flOriginalMaxWalkSpeed = NPCChaserGetMaxWalkSpeed(iBossIndex, iDifficulty);
+	float flOriginalWalkSpeed = NPCChaserGetWalkSpeed(iBossIndex, difficulty);
+	float flOriginalMaxWalkSpeed = NPCChaserGetMaxWalkSpeed(iBossIndex, difficulty);
 	
 	if (g_bProxySurvivalRageMode)
 	{
@@ -145,15 +145,15 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	}
 	if (g_bNPCHasCloaked[iBossIndex])
 	{
-		flSpeed *= NPCChaserGetCloakSpeedMultiplier(iBossIndex, iDifficulty);
-		flMaxSpeed *= NPCChaserGetCloakSpeedMultiplier(iBossIndex, iDifficulty);
+		flSpeed *= NPCChaserGetCloakSpeedMultiplier(iBossIndex, difficulty);
+		flMaxSpeed *= NPCChaserGetCloakSpeedMultiplier(iBossIndex, difficulty);
 	}
 	if (g_bNPCIsCrawling[iBossIndex])
 	{
-		flWalkSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, iDifficulty);
-		flMaxWalkSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, iDifficulty);
-		flSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, iDifficulty);
-		flMaxSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, iDifficulty);
+		flWalkSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, difficulty);
+		flMaxWalkSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, difficulty);
+		flSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, difficulty);
+		flMaxSpeed *= NPCChaserGetCrawlSpeedMultiplier(iBossIndex, difficulty);
 	}
 	Action fAction = Plugin_Continue;
 	float flForwardSpeed = flWalkSpeed;
@@ -173,7 +173,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	if (fAction == Plugin_Changed)
 		flSpeed = flForwardSpeed;
 	
-	if (iDifficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)))
+	if (difficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)))
 		g_flSlenderCalculatedWalkSpeed[iBossIndex] = flWalkSpeed;
 	else g_flSlenderCalculatedWalkSpeed[iBossIndex] = 0.0;
 	
@@ -194,8 +194,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	
 	int iBestNewTarget = INVALID_ENT_REFERENCE;
 	int iSoundTarget = INVALID_ENT_REFERENCE;
-	float flSearchRange = NPCGetSearchRadius(iBossIndex, iDifficulty);
-	float flSearchSoundRange = NPCGetHearingRadius(iBossIndex, iDifficulty);
+	float flSearchRange = NPCGetSearchRadius(iBossIndex, difficulty);
+	float flSearchSoundRange = NPCGetHearingRadius(iBossIndex, difficulty);
 	float flBestNewTargetDist = SquareFloat(flSearchRange);
 	int iState = iOldState;
 
@@ -207,7 +207,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	bool bPlayerVisible[MAXPLAYERS + 1];
 	
 	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iBossIndex) & SFF_ATTACKWAITERS);
-	bool bStunEnabled = NPCChaserIsStunEnabled(iBossIndex);
+	bool stunEnabled = NPCChaserIsStunEnabled(iBossIndex);
 	
 	float flSlenderMins[3], flSlenderMaxs[3];
 	GetEntPropVector(slender, Prop_Send, "m_vecMins", flSlenderMins);
@@ -321,7 +321,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		
 		//Taunt alerts
 		if (!g_bNPCIgnoreNonMarkedForChase[iBossIndex] && iState != STATE_ALERT && iState != STATE_ATTACK && iState != STATE_STUN && iState != STATE_CHASE && 
-		GetVectorSquareMagnitude(flTraceStartPos, flTraceEndPos) <= SquareFloat(NPCGetTauntAlertRange(iBossIndex, iDifficulty)) && TF2_IsPlayerInCondition(iEnt, TFCond_Taunting))
+		GetVectorSquareMagnitude(flTraceStartPos, flTraceEndPos) <= SquareFloat(NPCGetTauntAlertRange(iBossIndex, difficulty)) && TF2_IsPlayerInCondition(iEnt, TFCond_Taunting))
 		{
 			if (g_iSlenderTauntAlertCount[iBossIndex] < 5)
 			{
@@ -329,11 +329,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				if (IsValidClient(iEnt)) GetClientAbsOrigin(iEnt, flTargetPos);
 				iBestNewTarget = iEnt;
 				if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
-				g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 				g_flSlenderGoalPos[iBossIndex][0] = flTargetPos[0];
 				g_flSlenderGoalPos[iBossIndex][1] = flTargetPos[1];
 				g_flSlenderGoalPos[iBossIndex][2] = flTargetPos[2];
-				g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddVoice(iBossIndex, iDifficulty) * 2;
+				g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddVoice(iBossIndex, difficulty) * 2;
 				iState = STATE_ALERT;
 				g_iSlenderTauntAlertCount[iBossIndex]++;
 			}
@@ -363,7 +363,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		
 		if (NPCChaserIsAutoChaseEnabled(iBossIndex))
 		{
-			if (IsValidClient(iSoundTarget) && g_iSlenderAutoChaseCount[iBossIndex] >= NPCChaserAutoChaseThreshold(iBossIndex, iDifficulty) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
+			if (IsValidClient(iSoundTarget) && g_iSlenderAutoChaseCount[iBossIndex] >= NPCChaserAutoChaseThreshold(iBossIndex, difficulty) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 			{
 				bPlayerMadeNoise[iSoundTarget] = true;
 				g_bNPCInAutoChase[iBossIndex] = true;
@@ -428,8 +428,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				iState = STATE_CHASE;
 				SlenderAlertAllValidBosses(iBossIndex, iEnt, iBestNewTarget);
 				GetClientAbsOrigin(iEnt, g_flSlenderGoalPos[iBossIndex]);
-				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 				g_bSlenderGiveUp[iBossIndex] = false;
 				g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 				g_bAutoChasingLoudPlayer[iBossIndex] = true;
@@ -441,8 +441,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				iState = STATE_CHASE;
 				SlenderAlertAllValidBosses(iBossIndex, iEnt, iBestNewTarget);
 				GetClientAbsOrigin(iEnt, g_flSlenderGoalPos[iBossIndex]);
-				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+				g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 				g_bSlenderGiveUp[iBossIndex] = false;
 				g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
 				g_bAutoChasingLoudPlayer[iBossIndex] = false;
@@ -512,7 +512,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	// Damage us if we're in a flashlight.
 	if (bInFlashlight)
 	{
-		if (bStunEnabled)
+		if (stunEnabled)
 		{
 			if (NPCChaserIsStunByFlashlightEnabled(iBossIndex) && !(SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && !(g_cvNightvisionEnabled.BoolValue))
 			{
@@ -609,7 +609,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					{
 						iBestNewTarget = iRaidClient;
 						g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestNewTarget);
-						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+						g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 						iState = STATE_CHASE;
 						GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 						iTarget = iBestNewTarget;
@@ -631,7 +631,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				{
 					iBestNewTarget = iLookClient;
 					g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iLookClient);
-					g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+					g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 					iState = STATE_CHASE;
 					GetClientAbsOrigin(iBestNewTarget, g_flSlenderGoalPos[iBossIndex]);
 					iTarget = iBestNewTarget;
@@ -661,7 +661,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			}
 			else
 			{
-				if ((NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][iDifficulty] && GetRandomFloat(0.0, 1.0) <= 0.25 && iDifficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)))
+				if ((NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][difficulty] && GetRandomFloat(0.0, 1.0) <= 0.25 && difficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)))
 				{
 					iState = STATE_WANDER;
 				}
@@ -676,7 +676,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					iBestNewTarget = iClientToPos;
 					iState = STATE_ALERT;
 					if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
-					g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+					g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 					g_flSlenderGoalPos[iBossIndex][0] = flClientPosition[0];
 					g_flSlenderGoalPos[iBossIndex][1] = flClientPosition[1];
 					g_flSlenderGoalPos[iBossIndex][2] = flClientPosition[2];
@@ -687,12 +687,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			{
 				if (NPCChaserIsAutoChaseEnabled(iBossIndex))
 				{
-					g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddGeneral(iBossIndex, iDifficulty);
+					g_iSlenderAutoChaseCount[iBossIndex] += NPCChaserAutoChaseAddGeneral(iBossIndex, difficulty);
 				}
 				// I saw someone over here. Automatically put me into alert mode.
 				iState = STATE_ALERT;
 				if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
-				g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 				int iClientToPos = EntRefToEntIndex(g_iSlenderSeeTarget[iBossIndex]);
 				float flClientPosition[3];
 				if (IsValidClient(iClientToPos))
@@ -741,7 +741,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					g_bSlenderInvestigatingSound[iBossIndex] = true; // This is just so that our sound position would be the goal position.
 					iState = STATE_ALERT;
 					if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
-					g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+					g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 				}
 			}
 			if (NPCChaserGetTrapState(iBossIndex))
@@ -749,9 +749,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && g_iTrapEntityCount < 32)
 				{
 					Trap_SpawnTrap(flMyPos, flMyEyeAng, iBossIndex);
-					g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, iDifficulty);
+					g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, difficulty);
 				}
-				else if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && g_iTrapEntityCount >= 32)g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, iDifficulty);
+				else if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && g_iTrapEntityCount >= 32)g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, difficulty);
 			}
 		}
 		case STATE_ALERT:
@@ -863,21 +863,21 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					}
 				}
 				
-				for (int iAttackIndex = 0; iAttackIndex < NPCChaserGetAttackCount(iBossIndex); iAttackIndex++)
+				for (int attackIndex = 0; attackIndex < NPCChaserGetAttackCount(iBossIndex); attackIndex++)
 				{
-					if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam) continue;
+					if (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam) continue;
 					
 					bool bBlockingProp = false;
 					
 					if (NPCGetFlags(iBossIndex) & SFF_ATTACKPROPS)
 					{
-						bBlockingProp = NPC_CanAttackProps(iBossIndex, NPCChaserGetAttackRange(iBossIndex, iAttackIndex), NPCChaserGetAttackSpread(iBossIndex, iAttackIndex));
+						bBlockingProp = NPC_CanAttackProps(iBossIndex, NPCChaserGetAttackRange(iBossIndex, attackIndex), NPCChaserGetAttackSpread(iBossIndex, attackIndex));
 					}
 					
 					if (bBlockingProp)
 					{
 						iState = STATE_ATTACK;
-						NPCSetCurrentAttackIndex(iBossIndex, iAttackIndex);
+						NPCSetCurrentAttackIndex(iBossIndex, attackIndex);
 						break;
 					}
 				}
@@ -887,9 +887,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && g_iTrapEntityCount < 32)
 				{
 					Trap_SpawnTrap(flMyPos, flMyEyeAng, iBossIndex);
-					g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, iDifficulty);
+					g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, difficulty);
 				}
-				else if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && g_iTrapEntityCount >= 32) g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, iDifficulty);
+				else if (g_flSlenderNextTrapPlacement[iBossIndex] <= GetGameTime() && g_iTrapEntityCount >= 32) g_flSlenderNextTrapPlacement[iBossIndex] = GetGameTime() + NPCChaserGetTrapSpawnTime(iBossIndex, difficulty);
 			}
 		}
 		case STATE_CHASE, STATE_ATTACK, STATE_STUN:
@@ -903,8 +903,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					if (NPCChaserIsCloakEnabled(iBossIndex))
 					{
 						float flCloakDist = GetVectorSquareMagnitude(g_flSlenderGoalPos[iBossIndex], flMyPos);
-						float flCloakRange = NPCChaserGetCloakRange(iBossIndex, iDifficulty);
-						float flDecloakRange = NPCChaserGetDecloakRange(iBossIndex, iDifficulty);
+						float flCloakRange = NPCChaserGetCloakRange(iBossIndex, difficulty);
+						float flDecloakRange = NPCChaserGetDecloakRange(iBossIndex, difficulty);
 						if (flCloakDist <= SquareFloat(flCloakRange) && !g_bNPCHasCloaked[iBossIndex] && g_flSlenderNextCloakTime[iBossIndex] <= GetGameTime() && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
 						{
 							//Time for a more cloaking aproach!
@@ -915,7 +915,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							g_iSlenderRenderColor[iBossIndex][0], g_iSlenderRenderColor[iBossIndex][1], g_iSlenderRenderColor[iBossIndex][2], 0);
 
 							SetEntityRenderColor(slender, iCloakColor[0], iCloakColor[1], iCloakColor[2], iCloakColor[3]);
-							g_flNPCNextDecloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakDuration(iBossIndex, iDifficulty);
+							g_flNPCNextDecloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakDuration(iBossIndex, difficulty);
 							SlenderToggleParticleEffects(slender);
 							GetProfileString(sSlenderProfile, "cloak_particle", sCloakParticle, sizeof(sCloakParticle));
 							if (sCloakParticle[0] == '\0')
@@ -943,7 +943,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							}
 							SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 							EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-							g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+							g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, difficulty);
 							Call_StartForward(fOnBossDecloaked);
 							Call_PushCell(iBossIndex);
 							Call_Finish();
@@ -970,12 +970,12 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							}
 							if (g_iNPCProjectileAmmo[iBossIndex] == 0 && !g_bNPCReloadingProjectiles[iBossIndex])
 							{
-								g_flNPCProjectileTimeToReload[iBossIndex] = GetGameTime() + NPCChaserGetProjectileReloadTime(iBossIndex, iDifficulty);
+								g_flNPCProjectileTimeToReload[iBossIndex] = GetGameTime() + NPCChaserGetProjectileReloadTime(iBossIndex, difficulty);
 								g_bNPCReloadingProjectiles[iBossIndex] = true;
 							}
 							if (g_flNPCProjectileTimeToReload[iBossIndex] <= GetGameTime() && g_iNPCProjectileAmmo[iBossIndex] == 0)
 							{
-								g_iNPCProjectileAmmo[iBossIndex] = NPCChaserGetLoadedProjectiles(iBossIndex, iDifficulty);
+								g_iNPCProjectileAmmo[iBossIndex] = NPCChaserGetLoadedProjectiles(iBossIndex, difficulty);
 								g_bNPCReloadingProjectiles[iBossIndex] = false;
 							}
 						}
@@ -1013,7 +1013,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						if (GetGameTime() >= g_flSlenderTimeUntilAlert[iBossIndex] || (!bAttackEliminated && g_bPlayerEliminated[iTarget]))
 						{
 							iState = STATE_ALERT;
-							g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+							g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 							if (NPCHasAttribute(iBossIndex, "chase target on scare"))
 							{
 								g_bNPCLostChasingScareVictim[iBossIndex] = true;
@@ -1077,7 +1077,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							aArrayAttacks.Clear();
 							for (int iAttackIndex2 = 0; iAttackIndex2 < NPCChaserGetAttackCount(iBossIndex); iAttackIndex2++)
 							{
-								if ((iDifficulty >= NPCChaserGetAttackUseOnDifficulty(iBossIndex, iAttackIndex2) && iDifficulty < NPCChaserGetAttackBlockOnDifficulty(iBossIndex, iAttackIndex2)) && 
+								if ((difficulty >= NPCChaserGetAttackUseOnDifficulty(iBossIndex, iAttackIndex2) && difficulty < NPCChaserGetAttackBlockOnDifficulty(iBossIndex, iAttackIndex2)) && 
 								NPCChaserGetNextAttackTime(iBossIndex, iAttackIndex2) <= GetGameTime())
 								{
 									aArrayAttacks.Push(iAttackIndex2);
@@ -1106,17 +1106,17 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						}
 						else
 						{
-							for (int iAttackIndex = 0; iAttackIndex < NPCChaserGetAttackCount(iBossIndex); iAttackIndex++)
+							for (int attackIndex = 0; attackIndex < NPCChaserGetAttackCount(iBossIndex); attackIndex++)
 							{
-								flAttackBeginRangeEx = NPCChaserGetAttackBeginRange(iBossIndex, iAttackIndex);
-								flAttackBeginFOVEx = NPCChaserGetAttackBeginFOV(iBossIndex, iAttackIndex);
-								if (flAttackDist <= SquareFloat(flAttackBeginRangeEx) && ((!bBuilding && flFov <= (flAttackBeginFOVEx / 2.0)) || (bBuilding && flFov > (flAttackBeginFOVEx / 2.0))) && NPCChaserGetNextAttackTime(iBossIndex, iAttackIndex) <= GetGameTime() && 
+								flAttackBeginRangeEx = NPCChaserGetAttackBeginRange(iBossIndex, attackIndex);
+								flAttackBeginFOVEx = NPCChaserGetAttackBeginFOV(iBossIndex, attackIndex);
+								if (flAttackDist <= SquareFloat(flAttackBeginRangeEx) && ((!bBuilding && flFov <= (flAttackBeginFOVEx / 2.0)) || (bBuilding && flFov > (flAttackBeginFOVEx / 2.0))) && NPCChaserGetNextAttackTime(iBossIndex, attackIndex) <= GetGameTime() && 
 								!g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && !g_bNPCUseStartFleeAnimation[iBossIndex] && !g_bNPCRunningToHeal[iBossIndex] && !g_bNPCHealing[iBossIndex]
-								&& (iDifficulty >= NPCChaserGetAttackUseOnDifficulty(iBossIndex, iAttackIndex) && iDifficulty < NPCChaserGetAttackBlockOnDifficulty(iBossIndex, iAttackIndex)))
+								&& (difficulty >= NPCChaserGetAttackUseOnDifficulty(iBossIndex, attackIndex) && difficulty < NPCChaserGetAttackBlockOnDifficulty(iBossIndex, attackIndex)))
 								{
 									// ENOUGH TALK! HAVE AT YOU!
 									iState = STATE_ATTACK;
-									NPCSetCurrentAttackIndex(iBossIndex, iAttackIndex);
+									NPCSetCurrentAttackIndex(iBossIndex, attackIndex);
 									break;
 								}
 							}
@@ -1124,21 +1124,21 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					}
 					if (iState == STATE_CHASE)
 					{
-						for (int iAttackIndex = 0; iAttackIndex < NPCChaserGetAttackCount(iBossIndex); iAttackIndex++)
+						for (int attackIndex = 0; attackIndex < NPCChaserGetAttackCount(iBossIndex); attackIndex++)
 						{
-							if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam)continue;
+							if (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam)continue;
 							
 							bool bBlockingProp = false;
 							
 							if (NPCGetFlags(iBossIndex) & SFF_ATTACKPROPS)
 							{
-								bBlockingProp = NPC_CanAttackProps(iBossIndex, NPCChaserGetAttackRange(iBossIndex, iAttackIndex), NPCChaserGetAttackSpread(iBossIndex, iAttackIndex));
+								bBlockingProp = NPC_CanAttackProps(iBossIndex, NPCChaserGetAttackRange(iBossIndex, attackIndex), NPCChaserGetAttackSpread(iBossIndex, attackIndex));
 							}
 							
 							if (bBlockingProp)
 							{
 								iState = STATE_ATTACK;
-								NPCSetCurrentAttackIndex(iBossIndex, iAttackIndex);
+								NPCSetCurrentAttackIndex(iBossIndex, attackIndex);
 								break;
 							}
 						}
@@ -1187,7 +1187,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						// Target isn't valid anymore. We killed him, Mac!
 						iState = STATE_ALERT;
 						if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
-						g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+						g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 						g_flNPCAutoChaseSprinterCooldown[iBossIndex] = GetGameTime() + 5.0;
 						g_bSlenderAttacking[iBossIndex] = false;
 						g_bNPCStealingLife[iBossIndex] = false;
@@ -1267,7 +1267,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						// WHAT DA FUUUUUUUUUUUQ. TARGET ISN'T VALID. AUSDHASUIHD
 						iState = STATE_ALERT;
 						if (g_hSlenderChaseInitialTimer[iBossIndex] != null) TriggerTimer(g_hSlenderChaseInitialTimer[iBossIndex]);
-						g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+						g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 						g_flNPCAutoChaseSprinterCooldown[iBossIndex] = GetGameTime() + 5.0;
 						if (NPCHasAttribute(iBossIndex, "chase target on scare"))
 						{
@@ -1286,7 +1286,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	
 	if (iState != STATE_STUN)
 	{
-		if (bStunEnabled)
+		if (stunEnabled)
 		{
 			if (NPCChaserGetStunHealth(iBossIndex) <= 0 && g_flSlenderNextStunTime[iBossIndex] <= GetGameTime())
 			{
@@ -1300,7 +1300,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					float flPercent = NPCChaserGetStunInitialHealth(iBossIndex) > 0 ? (NPCChaserGetStunHealth(iBossIndex) / NPCChaserGetStunInitialHealth(iBossIndex)) : 0.0;
 					if (flPercent < 0.75 && flPercent >= 0.5 && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsedRage1[iBossIndex])
 					{
-						if (iDifficulty != 2 && iDifficulty < 2)
+						if (difficulty != 2 && difficulty < 2)
 						{
 							NPCChaserSetBoxingDifficulty(iBossIndex, NPCChaserGetBoxingDifficulty(iBossIndex)+1);
 							for (int client = 1; client <= MaxClients; client++)
@@ -1366,7 +1366,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					}
 					else if (flPercent < 0.5 && flPercent >= 0.25 && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsedRage2[iBossIndex])
 					{
-						if (iDifficulty != 3 && iDifficulty < 3)
+						if (difficulty != 3 && difficulty < 3)
 						{
 							NPCChaserSetBoxingDifficulty(iBossIndex, NPCChaserGetBoxingDifficulty(iBossIndex)+1);
 							for (int client = 1; client <= MaxClients; client++)
@@ -1452,7 +1452,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					}
 					else if (flPercent < 0.25 && !g_bNPCUsesRageAnimation3[iBossIndex] && !g_bNPCUsedRage3[iBossIndex])
 					{
-						if (iDifficulty != 4 && iDifficulty < 4)
+						if (difficulty != 4 && difficulty < 4)
 						{
 							NPCChaserSetBoxingDifficulty(iBossIndex, NPCChaserGetBoxingDifficulty(iBossIndex)+1);
 							for (int client = 1; client <= MaxClients; client++)
@@ -1563,9 +1563,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							
 							// We're allowed to move in wander mode. Get a new wandering position and create a path to follow.
 							// If the position can't be reached, then just get to the closest area that we can get.
-							float flWanderRangeMin = GetProfileFloat(sSlenderProfile, "heal_range_min", 600.0);
-							float flWanderRangeMax = GetProfileFloat(sSlenderProfile, "heal_range_max", 1200.0);
-							float flWanderRange = GetRandomFloat(flWanderRangeMin, flWanderRangeMax);
+							float wanderRangeMin = GetProfileFloat(sSlenderProfile, "heal_range_min", 600.0);
+							float wanderRangeMax = GetProfileFloat(sSlenderProfile, "heal_range_max", 1200.0);
+							float wanderRange = GetRandomFloat(wanderRangeMin, wanderRangeMax);
 							
 							float flFleePos[3];
 							flFleePos[0] = 0.0;
@@ -1574,7 +1574,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							
 							GetAngleVectors(flFleePos, flFleePos, NULL_VECTOR, NULL_VECTOR);
 							NormalizeVector(flFleePos, flFleePos);
-							ScaleVector(flFleePos, flWanderRange);
+							ScaleVector(flFleePos, wanderRange);
 							AddVectors(flFleePos, flMyPos, flFleePos);
 							
 							g_flSlenderGoalPos[iBossIndex][0] = flFleePos[0];
@@ -1592,7 +1592,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 
 								SetEntityRenderColor(slender, iCloakColor[0], iCloakColor[1], iCloakColor[2], iCloakColor[3]);
 								g_bNPCHasCloaked[iBossIndex] = true;
-								g_flNPCNextDecloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakDuration(iBossIndex, iDifficulty);
+								g_flNPCNextDecloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakDuration(iBossIndex, difficulty);
 								SlenderToggleParticleEffects(slender);
 								GetProfileString(sSlenderProfile, "cloak_particle", sCloakParticle, sizeof(sCloakParticle));
 								if (sCloakParticle[0] == '\0')
@@ -1625,7 +1625,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								}
 								SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 								EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-								g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+								g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, difficulty);
 								Call_StartForward(fOnBossDecloaked);
 								Call_PushCell(iBossIndex);
 								Call_Finish();
@@ -1647,7 +1647,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							{
 								case 0:
 								{
-									if (iDifficulty != 2 && iDifficulty < 2)
+									if (difficulty != 2 && difficulty < 2)
 									{
 										NPCChaserSetBoxingDifficulty(iBossIndex, NPCChaserGetBoxingDifficulty(iBossIndex)+1);
 										for (int client = 1; client <= MaxClients; client++)
@@ -1702,7 +1702,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								}
 								case 1:
 								{
-									if (iDifficulty != 3 && iDifficulty < 3)
+									if (difficulty != 3 && difficulty < 3)
 									{
 										NPCChaserSetBoxingDifficulty(iBossIndex, NPCChaserGetBoxingDifficulty(iBossIndex)+1);
 										for (int client = 1; client <= MaxClients; client++)
@@ -1777,7 +1777,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 								}
 								case 2:
 								{
-									if (iDifficulty != 4 && iDifficulty < 4)
+									if (difficulty != 4 && difficulty < 4)
 									{
 										NPCChaserSetBoxingDifficulty(iBossIndex, NPCChaserGetBoxingDifficulty(iBossIndex)+1);
 										for (int client = 1; client <= MaxClients; client++)
@@ -1888,28 +1888,28 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	if (NPCChaserCanChaseOnLook(iBossIndex) && g_aNPCChaseOnLookTarget[iBossIndex].Length > 0 && IsValidClient(iTarget) && iState != STATE_ATTACK && iState != STATE_STUN)
 	{
 		g_bAutoChasingLoudPlayer[iBossIndex] = true;
-		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 		iState = STATE_CHASE;
 		GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 	}
 	if ((SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_BossesChaseEndlessly() || g_bNPCChasesEndlessly[iBossIndex] || SF_IsSlaughterRunMap()) && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && !g_bSlenderGiveUp[iBossIndex])
 	{
-		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 		iState = STATE_CHASE;
 		GetClientAbsOrigin(iTarget, g_flSlenderGoalPos[iBossIndex]);
 	}
 	if ((SF_IsRaidMap() || SF_IsBoxingMap()) && (g_bNPCRunningToHeal[iBossIndex] || g_bNPCHealing[iBossIndex]))
 	{
-		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 		iState = STATE_CHASE;
 	}
 	if (NPCHasAttribute(iBossIndex, "chase target on scare") && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN && IsValidClient(iTarget) && g_bPlayerScaredByBoss[iTarget][iBossIndex] && !g_bNPCChasingScareVictin[iBossIndex] && !g_bNPCLostChasingScareVictim[iBossIndex])
 	{
-		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 		g_bNPCChasingScareVictin[iBossIndex] = true;
 		g_bPlayerScaredByBoss[iTarget][iBossIndex] = false;
 		iState = STATE_CHASE;
@@ -1917,8 +1917,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	}
 	if (IsValidClient(iBestNewTarget) && (bPlayerInTrap[iBestNewTarget] || bPlayerMadeNoise[iBestNewTarget]) && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
 	{
-		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
-		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+		g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
+		g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 		iTarget = iBestNewTarget;
 		g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iTarget);
 		iState = STATE_CHASE;
@@ -1949,7 +1949,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					g_bSlenderInvestigatingSound[iBossIndex] = false;
 					g_flSlenderTargetSoundDiscardMasterPosTime[iBossIndex] = -1.0;
 					
-					g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, iDifficulty);
+					g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, difficulty);
 				}
 				
 				if (g_bNPCHasCloaked[iBossIndex] && NPCChaserIsCloakEnabled(iBossIndex))
@@ -1965,7 +1965,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					}
 					SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 					EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-					g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+					g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, difficulty);
 					Call_StartForward(fOnBossDecloaked);
 					Call_PushCell(iBossIndex);
 					Call_Finish();
@@ -1974,7 +1974,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				if (iState == STATE_WANDER)
 				{
 					// Force new wander position.
-					for (int iDifficulty3; iDifficulty3 < Difficulty_Max; iDifficulty3++)g_flSlenderNextWanderPos[iBossIndex][iDifficulty3] = -1.0;
+					for (int difficulty3; difficulty3 < Difficulty_Max; difficulty3++)g_flSlenderNextWanderPos[iBossIndex][difficulty3] = -1.0;
 				}
 			}
 			
@@ -1992,10 +1992,10 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					g_flSlenderGoalPos[iBossIndex][2] = g_flSlenderTargetSoundMasterPos[iBossIndex][2];
 				}
 				
-				g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilIdle[iBossIndex] = GetGameTime() + NPCChaserGetAlertDuration(iBossIndex, difficulty);
 				g_flSlenderTimeUntilAlert[iBossIndex] = -1.0;
 				g_bNPCLostChasingScareVictim[iBossIndex] = false;
-				g_flSlenderTimeUntilChase[iBossIndex] = GetGameTime() + NPCChaserGetAlertGracetime(iBossIndex, iDifficulty);
+				g_flSlenderTimeUntilChase[iBossIndex] = GetGameTime() + NPCChaserGetAlertGracetime(iBossIndex, difficulty);
 				
 				if (g_bNPCHasCloaked[iBossIndex] && NPCChaserIsCloakEnabled(iBossIndex))
 				{
@@ -2011,7 +2011,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					}
 					SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 					EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-					g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+					g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, difficulty);
 					Call_StartForward(fOnBossDecloaked);
 					Call_PushCell(iBossIndex);
 					Call_Finish();
@@ -2025,7 +2025,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				if (iOldState != STATE_ATTACK && iOldState != STATE_CHASE && iOldState != STATE_STUN)
 				{
 					g_flSlenderTimeUntilIdle[iBossIndex] = -1.0;
-					g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+					g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 					g_iSlenderAutoChaseCount[iBossIndex] = 0;
 					g_flSlenderTimeUntilChase[iBossIndex] = -1.0;
 					
@@ -2048,29 +2048,29 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						npcEntity.RemoveAllGestures();
 						CBaseNPC_RemoveAllLayers(slender);
 						loco.ClearStuckStatus();
-						int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
-						if (!NPCChaserGetAttackWhileRunningState(iBossIndex, iAttackIndex))
+						int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+						if (!NPCChaserGetAttackWhileRunningState(iBossIndex, attackIndex))
 						{
 							npc.flWalkSpeed = 0.0;
 							npc.flRunSpeed = 0.0;
 						}
-						if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_ExplosiveDance && NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_LaserBeam)
+						if (NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_ExplosiveDance && NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_LaserBeam)
 						{
-							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, attackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 							g_bNPCAlreadyAttacked[iBossIndex] = false;
-							NPCSetCurrentAttackRepeat(iBossIndex, iAttackIndex, 0);
-							NPCChaserSetNextAttackTime(iBossIndex, iAttackIndex, GetGameTime() + NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex, iDifficulty));
+							NPCSetCurrentAttackRepeat(iBossIndex, attackIndex, 0);
+							NPCChaserSetNextAttackTime(iBossIndex, attackIndex, GetGameTime() + NPCChaserGetAttackCooldown(iBossIndex, attackIndex, difficulty));
 						}
-						else if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_ExplosiveDance)
+						else if (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_ExplosiveDance)
 						{
-							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderPrepareExplosiveDance, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
-							NPCChaserSetNextAttackTime(iBossIndex, iAttackIndex, GetGameTime() + NPCChaserGetAttackCooldown(iBossIndex, iAttackIndex, iDifficulty));
+							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, attackIndex), Timer_SlenderPrepareExplosiveDance, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+							NPCChaserSetNextAttackTime(iBossIndex, attackIndex, GetGameTime() + NPCChaserGetAttackCooldown(iBossIndex, attackIndex, difficulty));
 						}
-						else if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam)
+						else if (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam)
 						{
-							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, iAttackIndex), Timer_SlenderChaseBossAttackBeginLaser, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+							g_hSlenderAttackTimer[iBossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(iBossIndex, attackIndex), Timer_SlenderChaseBossAttackBeginLaser, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 						}
-						if (NPCChaserGetAttackLifeStealState(iBossIndex, iAttackIndex))
+						if (NPCChaserGetAttackLifeStealState(iBossIndex, attackIndex))
 						{
 							if (!g_bNPCStealingLife[iBossIndex])
 							{
@@ -2079,11 +2079,11 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							}
 						}
 						
-						g_flSlenderTimeUntilAttackEnd[iBossIndex] = GetGameTime() + NPCChaserGetAttackDuration(iBossIndex, iAttackIndex) + 0.01;
+						g_flSlenderTimeUntilAttackEnd[iBossIndex] = GetGameTime() + NPCChaserGetAttackDuration(iBossIndex, attackIndex) + 0.01;
 						
-						g_flNPCBaseAttackRunDurationTime[iBossIndex][iAttackIndex] = GetGameTime() + NPCChaserGetAttackRunDuration(iBossIndex, iAttackIndex);
+						g_flNPCBaseAttackRunDurationTime[iBossIndex][attackIndex] = GetGameTime() + NPCChaserGetAttackRunDuration(iBossIndex, attackIndex);
 						
-						g_flNPCBaseAttackRunDelayTime[iBossIndex][iAttackIndex] = GetGameTime() + NPCChaserGetAttackRunDelay(iBossIndex, iAttackIndex);
+						g_flNPCBaseAttackRunDelayTime[iBossIndex][attackIndex] = GetGameTime() + NPCChaserGetAttackRunDelay(iBossIndex, attackIndex);
 						
 						float flPersistencyTime = GetProfileFloat(sSlenderProfile, "search_chase_persistency_time_init_attack", -1.0);
 						if (flPersistencyTime >= 0.0)
@@ -2111,20 +2111,20 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							}
 							SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 							EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-							g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+							g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, difficulty);
 							Call_StartForward(fOnBossDecloaked);
 							Call_PushCell(iBossIndex);
 							Call_Finish();
 						}
 						if (!NPCChaserHasMultiAttackSounds(iBossIndex))
 						{
-							SlenderPerformVoice(iBossIndex, "sound_attackenemy", iAttackIndex + 1, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+							SlenderPerformVoice(iBossIndex, "sound_attackenemy", attackIndex + 1, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 						}
 						else
 						{
 							char sAttackString[PLATFORM_MAX_PATH];
-							FormatEx(sAttackString, sizeof(sAttackString), "sound_attackenemy_%i", iAttackIndex+1);
-							switch (iAttackIndex)
+							FormatEx(sAttackString, sizeof(sAttackString), "sound_attackenemy_%i", attackIndex+1);
+							switch (attackIndex)
 							{
 								case 0: SlenderPerformVoice(iBossIndex, "sound_attackenemy", _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
 								default: SlenderPerformVoice(iBossIndex, sAttackString, _, NPCChaserNormalSoundHookEnabled(iBossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
@@ -2293,32 +2293,32 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			
 			if (iState == STATE_WANDER)
 			{
-				if (GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][iDifficulty])
+				if (GetGameTime() >= g_flSlenderNextWanderPos[iBossIndex][difficulty])
 				{
-					float flMin = GetChaserProfileWanderTimeMin(NPCGetUniqueProfileIndex(iBossIndex), iDifficulty);
-					float flMax = GetChaserProfileWanderTimeMax(NPCGetUniqueProfileIndex(iBossIndex), iDifficulty);
-					g_flSlenderNextWanderPos[iBossIndex][iDifficulty] = GetGameTime() + GetRandomFloat(flMin, flMax);
+					float flMin = GetChaserProfileWanderTimeMin(NPCGetUniqueProfileIndex(iBossIndex), difficulty);
+					float flMax = GetChaserProfileWanderTimeMax(NPCGetUniqueProfileIndex(iBossIndex), difficulty);
+					g_flSlenderNextWanderPos[iBossIndex][difficulty] = GetGameTime() + GetRandomFloat(flMin, flMax);
 					
 					if (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE)
 					{
 						// We're allowed to move in wander mode. Get a new wandering position and create a path to follow.
 						// If the position can't be reached, then just get to the closest area that we can get.
-						float flWanderRangeMin = NPCChaserGetWanderRangeMin(iBossIndex, iDifficulty);
-						float flWanderRangeMax = NPCChaserGetWanderRangeMax(iBossIndex, iDifficulty);
-						float flWanderRange = GetRandomFloat(flWanderRangeMin, flWanderRangeMax);
+						float wanderRangeMin = NPCChaserGetWanderRangeMin(iBossIndex, difficulty);
+						float wanderRangeMax = NPCChaserGetWanderRangeMax(iBossIndex, difficulty);
+						float wanderRange = GetRandomFloat(wanderRangeMin, wanderRangeMax);
 						
-						float flWanderPos[3];
+						float wanderPos[3];
 
-						flWanderPos[0] = flMyPos[0] + GetRandomFloat(-flWanderRange, flWanderRange);
-						flWanderPos[1] = flMyPos[1] + GetRandomFloat(-flWanderRange, flWanderRange);
-						flWanderPos[2] = flMyPos[2];
+						wanderPos[0] = flMyPos[0] + GetRandomFloat(-wanderRange, wanderRange);
+						wanderPos[1] = flMyPos[1] + GetRandomFloat(-wanderRange, wanderRange);
+						wanderPos[2] = flMyPos[2];
 
-						CNavArea cZArea = TheNavMesh.GetNearestNavArea(flWanderPos, _, flWanderRange);
-						if (cZArea != NULL_AREA) flWanderPos[2] = cZArea.GetZ(flWanderPos[0], flWanderPos[1]);
+						CNavArea cZArea = TheNavMesh.GetNearestNavArea(wanderPos, _, wanderRange);
+						if (cZArea != NULL_AREA) wanderPos[2] = cZArea.GetZ(wanderPos[0], wanderPos[1]);
 
-						g_flSlenderGoalPos[iBossIndex][0] = flWanderPos[0];
-						g_flSlenderGoalPos[iBossIndex][1] = flWanderPos[1];
-						g_flSlenderGoalPos[iBossIndex][2] = flWanderPos[2];
+						g_flSlenderGoalPos[iBossIndex][0] = wanderPos[0];
+						g_flSlenderGoalPos[iBossIndex][1] = wanderPos[1];
+						g_flSlenderGoalPos[iBossIndex][2] = wanderPos[2];
 						
 						g_flSlenderNextPathTime[iBossIndex] = -1.0; // We're not going to wander around too much, so no need for a time constraint.
 					}
@@ -2401,19 +2401,19 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					
 					if ((bBuilding || (bPlayerInFOV[iTarget] && bPlayerVisible[iTarget])) && !g_bNPCUsesChaseInitialAnimation[iBossIndex])
 					{
-						float flDistRatio = (flPlayerDists[iTarget] / SquareFloat(NPCGetSearchRadius(iBossIndex, iDifficulty)));
+						float flDistRatio = (flPlayerDists[iTarget] / SquareFloat(NPCGetSearchRadius(iBossIndex, difficulty)));
 						
-						float flChaseDurationTimeAddMin = GetProfileFloat(sSlenderProfile, "search_chase_duration_add_visible_min", 0.025);
-						float flChaseDurationTimeAddMax = GetProfileFloat(sSlenderProfile, "search_chase_duration_add_visible_max", 0.2);
+						float chaseDurationTimeAddMin = GetProfileFloat(sSlenderProfile, "search_chase_duration_add_visible_min", 0.025);
+						float chaseDurationTimeAddMax = GetProfileFloat(sSlenderProfile, "search_chase_duration_add_visible_max", 0.2);
 						
-						float flChaseDurationAdd = flChaseDurationTimeAddMax - ((flChaseDurationTimeAddMax - flChaseDurationTimeAddMin) * flDistRatio);
+						float chaseDurationAdd = chaseDurationTimeAddMax - ((chaseDurationTimeAddMax - chaseDurationTimeAddMin) * flDistRatio);
 						
-						if (flChaseDurationAdd > 0.0)
+						if (chaseDurationAdd > 0.0)
 						{
-							g_flSlenderTimeUntilAlert[iBossIndex] += flChaseDurationAdd;
-							if (g_flSlenderTimeUntilAlert[iBossIndex] > (GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty)))
+							g_flSlenderTimeUntilAlert[iBossIndex] += chaseDurationAdd;
+							if (g_flSlenderTimeUntilAlert[iBossIndex] > (GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty)))
 							{
-								g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+								g_flSlenderTimeUntilAlert[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 							}
 						}
 						
@@ -2427,9 +2427,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							if (g_flSlenderTimeUntilNoPersistence[iBossIndex] < GetGameTime()) g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime();
 							
 							g_flSlenderTimeUntilNoPersistence[iBossIndex] += flPersistencyTimeAdd;
-							if (g_flSlenderTimeUntilNoPersistence[iBossIndex] > (GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty)))
+							if (g_flSlenderTimeUntilNoPersistence[iBossIndex] > (GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty)))
 							{
-								g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, iDifficulty);
+								g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + NPCChaserGetChaseDuration(iBossIndex, difficulty);
 							}
 						}
 					}
@@ -2492,8 +2492,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				}
 				case STATE_ATTACK:
 				{
-					int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
-					if (g_bNPCAlwaysLookAtTargetWhileAttacking[iBossIndex] && !NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, iAttackIndex) && ((NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_LaserBeam)))
+					int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+					if (g_bNPCAlwaysLookAtTargetWhileAttacking[iBossIndex] && !NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, attackIndex) && ((NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_LaserBeam)))
 					{
 						if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 						{
@@ -2501,7 +2501,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 							GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", vecPosToAt);
 						}
 					}
-					if (!NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, iAttackIndex) && (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam))
+					if (!NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, attackIndex) && (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam))
 					{
 						if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 						{
@@ -2585,9 +2585,9 @@ public Action Timer_SlenderPublicDeathCamThink(Handle timer, any entref)
 
 	if (!g_bSlenderInDeathcam[iBossIndex]) return Plugin_Stop;
 
-	int iClient = EntRefToEntIndex(g_iSlenderDeathCamTarget[iBossIndex]);
+	int client = EntRefToEntIndex(g_iSlenderDeathCamTarget[iBossIndex]);
 
-	if (!IsValidClient(iClient) || (IsValidClient(iClient) && (!IsPlayerAlive(iClient) || g_bPlayerEliminated[iClient] || GetClientTeam(iClient) == TFTeam_Blue)))
+	if (!IsValidClient(client) || (IsValidClient(client) && (!IsPlayerAlive(client) || g_bPlayerEliminated[client] || GetClientTeam(client) == TFTeam_Blue)))
 	{
 		if (g_hSlenderDeathCamTimer[iBossIndex] != null) TriggerTimer(g_hSlenderDeathCamTimer[iBossIndex]);
 		else

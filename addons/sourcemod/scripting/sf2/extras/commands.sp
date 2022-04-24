@@ -191,7 +191,7 @@ public void OnPluginStart()
 
 	g_cvDefaultLegacyHud = CreateConVar("sf2_default_legacy_hud", "0", "Set to 1 if the server should enable the legacy hud by default in their settings.");
 
-	g_cvMaxRounds = FindConVar("mp_maxrounds");
+	g_MaxRounds = FindConVar("mp_maxrounds");
 	
 	g_hHudSync = CreateHudSynchronizer();
 	g_hHudSync2 = CreateHudSynchronizer();
@@ -362,28 +362,28 @@ public Action Hook_BlockDecals(const char[] te_name, const int[] Players, int nu
 //	COMMANDS AND COMMAND HOOK FUNCTIONS
 //	==========================================================
 
-public Action Command_Help(int iClient,int args)
+public Action Command_Help(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	DisplayMenu(g_hMenuHelp, iClient, 30);
+	DisplayMenu(g_hMenuHelp, client, 30);
 	return Plugin_Handled;
 }
 
-public Action Command_Settings(int iClient,int args)
+public Action Command_Settings(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	DisplayMenu(g_hMenuSettings, iClient, 30);
+	DisplayMenu(g_hMenuSettings, client, 30);
 	return Plugin_Handled;
 }
 
-public Action Command_MenuSwitchHud(int iClient,int args)
+public Action Command_MenuSwitchHud(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	char sBuffer[512];
-	FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Hud Version Title", iClient);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Hud Version Title", client);
 				
 	Handle hPanel = CreatePanel();
 	SetPanelTitle(hPanel, sBuffer);
@@ -391,111 +391,111 @@ public Action Command_MenuSwitchHud(int iClient,int args)
 	DrawPanelItem(hPanel, "Use the new HUD");
 	DrawPanelItem(hPanel, "Use the legacy HUD");
 				
-	SendPanelToClient(hPanel, iClient, Panel_SettingsHudVersion, 30);
+	SendPanelToClient(hPanel, client, Panel_SettingsHudVersion, 30);
 	delete hPanel;
 	return Plugin_Handled;
 }
 
-public Action Command_Credits(int iClient,int args)
+public Action Command_Credits(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	DisplayMenu(g_hMenuCredits, iClient, MENU_TIME_FOREVER);
+	DisplayMenu(g_hMenuCredits, client, MENU_TIME_FOREVER);
 	return Plugin_Handled;
 }
 
-public Action Command_BossList(int iClient,int args)
+public Action Command_BossList(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	DisplayBossList(iClient);
+	DisplayBossList(client);
 	return Plugin_Handled;
 }
 
-public Action Command_NoPoints(int iClient,int args)
+public Action Command_NoPoints(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if(!g_bPlayerNoPoints[iClient])
+	if(!g_bPlayerNoPoints[client])
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
-		g_bPlayerNoPoints[iClient] = true;
-		AFK_SetTime(iClient);
+		CPrintToChat(client, "%T", "SF2 AFK On", client);
+		g_bPlayerNoPoints[client] = true;
+		AFK_SetTime(client);
 	}
 	else
 	{
-		CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
-		g_bPlayerNoPoints[iClient] = false;
-		AFK_SetTime(iClient);
+		CPrintToChat(client, "%T", "SF2 AFK Off", client);
+		g_bPlayerNoPoints[client] = false;
+		AFK_SetTime(client);
 	}
 	return Plugin_Handled;
 }
 
-public Action Command_ToggleFlashlight(int iClient,int args)
+public Action Command_ToggleFlashlight(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	if (!IsClientInGame(iClient) || !IsPlayerAlive(iClient)) return Plugin_Handled;
+	if (!IsClientInGame(client) || !IsPlayerAlive(client)) return Plugin_Handled;
 	
-	if (!IsRoundInWarmup() && !IsRoundInIntro() && !IsRoundEnding() && !DidClientEscape(iClient))
+	if (!IsRoundInWarmup() && !IsRoundInIntro() && !IsRoundEnding() && !DidClientEscape(client))
 	{
-		if (GetGameTime() >= ClientGetFlashlightNextInputTime(iClient))
+		if (GetGameTime() >= ClientGetFlashlightNextInputTime(client))
 		{
-			ClientHandleFlashlight(iClient);
+			ClientHandleFlashlight(client);
 		}
 	}
 	
 	return Plugin_Handled;
 }
 
-public Action Command_SprintOn(int iClient,int args)
+public Action Command_SprintOn(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	if (IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient])
+	if (IsPlayerAlive(client) && !g_bPlayerEliminated[client])
 	{
-		ClientHandleSprint(iClient, true);
+		ClientHandleSprint(client, true);
 	}
 	
 	return Plugin_Handled;
 }
 
-public Action Command_SprintOff(int iClient,int args)
+public Action Command_SprintOff(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	if (IsPlayerAlive(iClient) && !g_bPlayerEliminated[iClient])
+	if (IsPlayerAlive(client) && !g_bPlayerEliminated[client])
 	{
-		ClientHandleSprint(iClient, false);
+		ClientHandleSprint(client, false);
 	}
 	
 	return Plugin_Handled;
 }
 
-public Action Command_BlinkOn(int iClient, int iArgs)
+public Action Command_BlinkOn(int client, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (!IsRoundInWarmup() && !IsRoundInIntro() && !IsRoundEnding())
 	{
-		if (!g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		if (!g_bPlayerEliminated[client] && !DidClientEscape(client))
 		{
-			g_bPlayerHoldingBlink[iClient] = true;
-			ClientBlink(iClient);
+			g_bPlayerHoldingBlink[client] = true;
+			ClientBlink(client);
 		}
 	}
 
 	return Plugin_Handled;
 }
 
-public Action Command_BlinkOff(int iClient, int iArgs)
+public Action Command_BlinkOff(int client, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (!IsRoundInWarmup() && !IsRoundInIntro() && !IsRoundEnding())
 	{
-		if (!g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		if (!g_bPlayerEliminated[client] && !DidClientEscape(client))
 		{
-			g_bPlayerHoldingBlink[iClient] = false;
+			g_bPlayerHoldingBlink[client] = false;
 		}
 	}
 
@@ -507,20 +507,20 @@ public Action Command_BlockItemPreset(int client, int args)
 	return Plugin_Stop;
 } 
 
-public Action DevCommand_BossPackVote(int iClient,int args)
+public Action DevCommand_BossPackVote(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	InitiateBossPackVote(iClient);
+	InitiateBossPackVote(client);
 	return Plugin_Handled;
 }
 
-public Action Command_NoPointsAdmin(int iClient,int args)
+public Action Command_NoPointsAdmin(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_nopoints <name|#userid> <0/1>");
+		ReplyToCommand(client, "Usage: sm_sf2_nopoints <name|#userid> <0/1>");
 		return Plugin_Handled;
 	}
 	
@@ -533,7 +533,7 @@ public Action Command_NoPointsAdmin(int iClient,int args)
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
-			iClient,
+			client,
 			target_list,
 			MAXPLAYERS,
 			0,
@@ -541,7 +541,7 @@ public Action Command_NoPointsAdmin(int iClient,int args)
 			sizeof(target_name),
 			tn_is_ml)) <= 0)
 	{
-		ReplyToTargetError(iClient, target_count);
+		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
@@ -558,80 +558,80 @@ public Action Command_NoPointsAdmin(int iClient,int args)
 		int iTarget = target_list[i];
 		if (IsClientSourceTV(iTarget)) continue;//Exclude the sourcetv bot
 		
-		g_bAdminNoPoints[iClient] = args > 1 ? bMode : !g_bAdminNoPoints[iClient];
-		if(g_bAdminNoPoints[iClient])
+		g_bAdminNoPoints[client] = args > 1 ? bMode : !g_bAdminNoPoints[client];
+		if(g_bAdminNoPoints[client])
 		{
-			CPrintToChat(iClient, "%T", "SF2 AFK On", iClient);
+			CPrintToChat(client, "%T", "SF2 AFK On", client);
 		}
 		else
 		{
-			CPrintToChat(iClient, "%T", "SF2 AFK Off", iClient);
+			CPrintToChat(client, "%T", "SF2 AFK Off", client);
 		}
 		
-		AFK_SetTime(iClient);
+		AFK_SetTime(client);
 	}
 	
 	return Plugin_Handled;
 }
 
-public Action Command_MainMenu(int iClient,int args)
+public Action Command_MainMenu(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	DisplayMenu(g_hMenuMain, iClient, 30);
+	DisplayMenu(g_hMenuMain, client, 30);
 	return Plugin_Handled;
 }
 
-public Action Command_Tutorial(int iClient,int args)
+public Action Command_Tutorial(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	//Tutorial_HandleClient(iClient);
+	//Tutorial_HandleClient(client);
 	return Plugin_Handled;
 }
 
-public Action Command_Update(int iClient, int args)
+public Action Command_Update(int client, int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	DisplayMenu(g_hMenuUpdate, iClient, 30);
+	DisplayMenu(g_hMenuUpdate, client, 30);
 	return Plugin_Handled;
 }
 
-public Action Command_Next(int iClient,int args)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-	
-	DisplayQueuePointsMenu(iClient);
-	return Plugin_Handled;
-}
-
-
-public Action Command_Group(int iClient,int args)
+public Action Command_Next(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
-	DisplayGroupMainMenuToClient(iClient);
+	DisplayQueuePointsMenu(client);
 	return Plugin_Handled;
 }
 
-public Action Command_GroupName(int iClient,int args)
+
+public Action Command_Group(int client,int args)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	
+	DisplayGroupMainMenuToClient(client);
+	return Plugin_Handled;
+}
+
+public Action Command_GroupName(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_slgroupname <name>");
+		ReplyToCommand(client, "Usage: sm_slgroupname <name>");
 		return Plugin_Handled;
 	}
 	
-	int iGroupIndex = ClientGetPlayerGroup(iClient);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
-		CPrintToChat(iClient, "%T", "SF2 Group Does Not Exist", iClient);
+		CPrintToChat(client, "%T", "SF2 Group Does Not Exist", client);
 		return Plugin_Handled;
 	}
 	
-	if (GetPlayerGroupLeader(iGroupIndex) != iClient)
+	if (GetPlayerGroupLeader(groupIndex) != client)
 	{
-		CPrintToChat(iClient, "%T", "SF2 Not Group Leader", iClient);
+		CPrintToChat(client, "%T", "SF2 Not Group Leader", client);
 		return Plugin_Handled;
 	}
 	
@@ -639,50 +639,50 @@ public Action Command_GroupName(int iClient,int args)
 	GetCmdArg(1, sGroupName, sizeof(sGroupName));
 	if (sGroupName[0] == '\0')
 	{
-		CPrintToChat(iClient, "%T", "SF2 Invalid Group Name", iClient);
+		CPrintToChat(client, "%T", "SF2 Invalid Group Name", client);
 		return Plugin_Handled;
 	}
 	
 	char sOldGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-	GetPlayerGroupName(iGroupIndex, sOldGroupName, sizeof(sOldGroupName));
-	SetPlayerGroupName(iGroupIndex, sGroupName);
+	GetPlayerGroupName(groupIndex, sOldGroupName, sizeof(sOldGroupName));
+	SetPlayerGroupName(groupIndex, sGroupName);
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
-		if (ClientGetPlayerGroup(i) != iGroupIndex) continue;
+		if (ClientGetPlayerGroup(i) != groupIndex) continue;
 		CPrintToChat(i, "%T", "SF2 Group Name Set", i, sOldGroupName, sGroupName);
 	}
 	
 	return Plugin_Handled;
 }
-public Action Command_GhostMode(int iClient,int args)
+public Action Command_GhostMode(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (IsRoundEnding() || IsRoundInWarmup() || !g_bPlayerEliminated[iClient] || !IsClientParticipating(iClient) || g_bPlayerProxy[iClient] || IsClientInPvP(iClient) || IsClientInKart(iClient) || TF2_IsPlayerInCondition(iClient,TFCond_Taunting)|| TF2_IsPlayerInCondition(iClient,TFCond_Charging) || g_flLastCommandTime[iClient] > GetEngineTime())
+	if (IsRoundEnding() || IsRoundInWarmup() || !g_bPlayerEliminated[client] || !IsClientParticipating(client) || g_bPlayerProxy[client] || IsClientInPvP(client) || IsClientInKart(client) || TF2_IsPlayerInCondition(client,TFCond_Taunting)|| TF2_IsPlayerInCondition(client,TFCond_Charging) || g_flLastCommandTime[client] > GetEngineTime())
 	{
-		CPrintToChat(iClient, "{red}%T", "SF2 Ghost Mode Not Allowed", iClient);
+		CPrintToChat(client, "{red}%T", "SF2 Ghost Mode Not Allowed", client);
 		return Plugin_Handled;
 	}
-	if (!IsClientInGhostMode(iClient))
+	if (!IsClientInGhostMode(client))
 	{
-		TF2_RespawnPlayer(iClient);
-		ClientSetGhostModeState(iClient, true);
-		HandlePlayerHUD(iClient);
-		TF2_AddCondition(iClient, TFCond_StealthedUserBuffFade, -1.0);
+		TF2_RespawnPlayer(client);
+		ClientSetGhostModeState(client, true);
+		HandlePlayerHUD(client);
+		TF2_AddCondition(client, TFCond_StealthedUserBuffFade, -1.0);
 	
-		CPrintToChat(iClient, "{dodgerblue}%T", "SF2 Ghost Mode Enabled", iClient);
+		CPrintToChat(client, "{dodgerblue}%T", "SF2 Ghost Mode Enabled", client);
 	}
 	else
 	{
-		ClientSetGhostModeState(iClient, false);
-		TF2_RespawnPlayer(iClient);
-		TF2_RemoveCondition(iClient, TFCond_StealthedUserBuffFade);
+		ClientSetGhostModeState(client, false);
+		TF2_RespawnPlayer(client);
+		TF2_RemoveCondition(client, TFCond_StealthedUserBuffFade);
 
-		CPrintToChat(iClient, "{dodgerblue}%T", "SF2 Ghost Mode Disabled", iClient);
+		CPrintToChat(client, "{dodgerblue}%T", "SF2 Ghost Mode Disabled", client);
 	}
-	g_flLastCommandTime[iClient] = GetEngineTime()+0.5;
+	g_flLastCommandTime[client] = GetEngineTime()+0.5;
 	return Plugin_Handled;
 }
 
@@ -733,56 +733,56 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	
 	return Plugin_Continue;
 }
-public Action Hook_CommandSuicideAttempt(int iClient, const char[] command,int argc)
+public Action Hook_CommandSuicideAttempt(int client, const char[] command,int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (GetClientTeam(iClient) == TFTeam_Spectator) return Plugin_Continue;
-	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
+	if (GetClientTeam(client) == TFTeam_Spectator) return Plugin_Continue;
+	if (IsClientInGhostMode(client)) return Plugin_Handled;
 	
-	if (IsRoundInIntro() && !g_bPlayerEliminated[iClient]) return Plugin_Handled;
+	if (IsRoundInIntro() && !g_bPlayerEliminated[client]) return Plugin_Handled;
 	
 	if (g_cvBlockSuicideDuringRound.BoolValue)
 	{
-		if (IsRoundPlaying() && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		if (IsRoundPlaying() && !g_bPlayerEliminated[client] && !DidClientEscape(client))
 		{
 			return Plugin_Handled;
 		}
 	}
 	
-	if (IsClientInPvP(iClient)) //Nobody asked you to cheat your way out of PvP to miss a kill.
+	if (IsClientInPvP(client)) //Nobody asked you to cheat your way out of PvP to miss a kill.
 	{
 		return Plugin_Handled;
 	}
 
-	if (IsClientInKart(iClient))
+	if (IsClientInKart(client))
 	{
 		return Plugin_Handled;
 	}
 	
 	return Plugin_Continue;
 }
-public Action Hook_CommandPreventJoinTeam(int iClient, const char[] command,int argc)
+public Action Hook_CommandPreventJoinTeam(int client, const char[] command,int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (GetClientTeam(iClient) == TFTeam_Spectator) return Plugin_Continue;
-	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
+	if (GetClientTeam(client) == TFTeam_Spectator) return Plugin_Continue;
+	if (IsClientInGhostMode(client)) return Plugin_Handled;
 	
-	if (IsRoundInIntro() && !g_bPlayerEliminated[iClient]) return Plugin_Handled;
+	if (IsRoundInIntro() && !g_bPlayerEliminated[client]) return Plugin_Handled;
 	
 	if (g_cvBlockSuicideDuringRound.BoolValue)
 	{
-		if (IsRoundPlaying() && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient))
+		if (IsRoundPlaying() && !g_bPlayerEliminated[client] && !DidClientEscape(client))
 		{
 			return Plugin_Handled;
 		}
 	}
 	
-	if (IsClientInPvP(iClient)) //Nobody asked you to cheat your way out of PvP to miss a kill.
+	if (IsClientInPvP(client)) //Nobody asked you to cheat your way out of PvP to miss a kill.
 	{
 		return Plugin_Handled;
 	}
 	
-	if (IsClientInKart(iClient))
+	if (IsClientInKart(client))
 	{
 		return Plugin_Handled;
 	}
@@ -790,48 +790,48 @@ public Action Hook_CommandPreventJoinTeam(int iClient, const char[] command,int 
 	return Plugin_Continue;
 }
 
-public Action Hook_BlockCommand(int iClient, const char[] command,int argc) 
+public Action Hook_BlockCommand(int client, const char[] command,int argc) 
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	return Plugin_Handled;
 }
 
-public Action Hook_BlockLoadout(int iClient, const char[] command,int argc) 
+public Action Hook_BlockLoadout(int client, const char[] command,int argc) 
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (IsRoundPlaying() && !g_bPlayerEliminated[iClient] && !DidClientEscape(iClient)) return Plugin_Handled;
+	if (IsRoundPlaying() && !g_bPlayerEliminated[client] && !DidClientEscape(client)) return Plugin_Handled;
 	return Plugin_Continue;
 }
 
-public Action Hook_CommandBlockInGhostMode(int iClient, const char[] command,int argc)
+public Action Hook_CommandBlockInGhostMode(int client, const char[] command,int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (IsClientInGhostMode(iClient)) return Plugin_Handled;
-	if (IsRoundInIntro() && !g_bPlayerEliminated[iClient]) return Plugin_Handled;
+	if (IsClientInGhostMode(client)) return Plugin_Handled;
+	if (IsRoundInIntro() && !g_bPlayerEliminated[client]) return Plugin_Handled;
 	
 	return Plugin_Continue;
 }
 
-public Action Hook_CommandVoiceMenu(int iClient, const char[] command,int argc)
+public Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
 {
 	if (!g_bEnabled) return Plugin_Continue;
-	if (IsClientInGhostMode(iClient))
+	if (IsClientInGhostMode(client))
 	{
-		ClientGhostModeNextTarget(iClient);
+		ClientGhostModeNextTarget(client);
 		return Plugin_Handled;
 	}
 	
-	if (g_bPlayerProxy[iClient])
+	if (g_bPlayerProxy[client])
 	{
-		int iMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[iClient]);
+		int iMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[client]);
 		if (iMaster != -1)
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iMaster, sProfile, sizeof(sProfile));
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(iMaster, profile, sizeof(profile));
 			char sBuffer[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_proxy_idle", sBuffer, sizeof(sBuffer));
+			GetRandomStringFromProfile(profile, "sound_proxy_idle", sBuffer, sizeof(sBuffer));
 
-			if (sBuffer[0] != '\0' && GetGameTime() >= g_flPlayerProxyNextVoiceSound[iClient])
+			if (sBuffer[0] != '\0' && GetGameTime() >= g_flPlayerProxyNextVoiceSound[client])
 			{
 				int iChannel = g_iSlenderProxyIdleChannel[iMaster];
 				int iLevel = g_iSlenderProxyIdleLevel[iMaster];
@@ -839,11 +839,11 @@ public Action Hook_CommandVoiceMenu(int iClient, const char[] command,int argc)
 				float flVolume = g_flSlenderProxyIdleVolume[iMaster];
 				int iPitch = g_iSlenderProxyIdlePitch[iMaster];
 
-				EmitSoundToAll(sBuffer, iClient, iChannel, iLevel, iFlags, flVolume, iPitch);
+				EmitSoundToAll(sBuffer, client, iChannel, iLevel, iFlags, flVolume, iPitch);
 				float flCooldownMin = g_flSlenderProxyIdleCooldownMin[iMaster];
 				float flCooldownMax = g_flSlenderProxyIdleCooldownMax[iMaster];
 				
-				g_flPlayerProxyNextVoiceSound[iClient] = GetGameTime() + GetRandomFloat(flCooldownMin, flCooldownMax);
+				g_flPlayerProxyNextVoiceSound[client] = GetGameTime() + GetRandomFloat(flCooldownMin, flCooldownMax);
 			}
 		}
 	}
@@ -851,13 +851,13 @@ public Action Hook_CommandVoiceMenu(int iClient, const char[] command,int argc)
 	return Plugin_Continue;
 }
 
-public Action Command_ClientKillDeathcam(int iClient,int args)
+public Action Command_ClientKillDeathcam(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 2)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_kill_client <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_kill_client <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -871,7 +871,7 @@ public Action Command_ClientKillDeathcam(int iClient,int args)
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
-			iClient,
+			client,
 			target_list,
 			MAXPLAYERS,
 			COMMAND_FILTER_ALIVE,
@@ -879,7 +879,7 @@ public Action Command_ClientKillDeathcam(int iClient,int args)
 			sizeof(target_name),
 			tn_is_ml)) <= 0)
 	{
-		ReplyToTargetError(iClient, target_count);
+		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
@@ -900,13 +900,13 @@ public Action Command_ClientKillDeathcam(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ClientPerformScare(int iClient,int args)
+public Action Command_ClientPerformScare(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 2)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_scare <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_scare <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -920,7 +920,7 @@ public Action Command_ClientPerformScare(int iClient,int args)
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
-			iClient,
+			client,
 			target_list,
 			MAXPLAYERS,
 			COMMAND_FILTER_ALIVE,
@@ -928,7 +928,7 @@ public Action Command_ClientPerformScare(int iClient,int args)
 			sizeof(target_name),
 			tn_is_ml)) <= 0)
 	{
-		ReplyToTargetError(iClient, target_count);
+		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
@@ -941,13 +941,13 @@ public Action Command_ClientPerformScare(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SpawnSlender(int iClient,int args)
+public Action Command_SpawnSlender(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args == 0)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_spawn_boss <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_spawn_boss <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -958,32 +958,32 @@ public Action Command_SpawnSlender(int iClient,int args)
 	if (NPCGetUniqueID(Npc.Index) == -1) return Plugin_Handled;
 	
 	float eyePos[3], eyeAng[3], endPos[3];
-	GetClientEyePosition(iClient, eyePos);
-	GetClientEyeAngles(iClient, eyeAng);
+	GetClientEyePosition(client, eyePos);
+	GetClientEyeAngles(client, eyeAng);
 	
-	Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
+	Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 	TR_GetEndPosition(endPos, hTrace);
 	delete hTrace;
 	
 	SpawnSlender(Npc, endPos);
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	Npc.GetProfile(sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	Npc.GetProfile(profile, sizeof(profile));
 	
-	CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Spawned Boss", iClient);
+	CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
 
 	return Plugin_Handled;
 }
 
-public Action Command_SpawnAllSlenders(int iClient,int args)
+public Action Command_SpawnAllSlenders(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	float eyePos[3], eyeAng[3], endPos[3];
-	GetClientEyePosition(iClient, eyePos);
-	GetClientEyeAngles(iClient, eyeAng);
+	GetClientEyePosition(client, eyePos);
+	GetClientEyeAngles(client, eyeAng);
 	
-	Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
+	Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 	TR_GetEndPosition(endPos, hTrace);
 	delete hTrace;
 	
@@ -994,18 +994,18 @@ public Action Command_SpawnAllSlenders(int iClient,int args)
 		if(Npc.IsValid()) SpawnSlender(Npc, endPos);
 	}
 
-	CPrintToChat(iClient, "{royalblue}%t{default}Spawned all bosses at your location.", "SF2 Prefix");
+	CPrintToChat(client, "{royalblue}%t{default}Spawned all bosses at your location.", "SF2 Prefix");
 
 	return Plugin_Handled;
 }
 
-public Action Command_RemoveSlender(int iClient,int args)
+public Action Command_RemoveSlender(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args == 0)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_remove_boss <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_remove_boss <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -1015,27 +1015,27 @@ public Action Command_RemoveSlender(int iClient,int args)
 	int iBossIndex = StringToInt(arg1);
 	if (NPCGetUniqueID(iBossIndex) == -1) return Plugin_Handled;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 
 	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(iBossIndex))
 	{
 		g_iSlenderBoxingBossCount -= 1;
 	}
 	
-	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES) && BossHasMusic(sProfile) && BossMatchesCurrentMusic(sProfile))
+	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES) && BossHasMusic(profile) && BossMatchesCurrentMusic(profile))
 	{
 		NPCStopMusic();
 	}
 		
 	NPCRemove(iBossIndex);
 	
-	CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Removed Boss", iClient);
+	CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
 	
 	return Plugin_Handled;
 }
 
-public Action Command_RemoveAllSlenders(int iClient,int args)
+public Action Command_RemoveAllSlenders(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
@@ -1046,11 +1046,11 @@ public Action Command_RemoveAllSlenders(int iClient,int args)
 			if (NPCGetUniqueID(iNPCIndex) == -1) continue;
 			NPCRemove(iNPCIndex);
 		}
-		CPrintToChat(iClient, "{royalblue}%t{default}Removed all bosses.", "SF2 Prefix", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}Removed all bosses.", "SF2 Prefix", client);
 	}
 	else
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}Cannot use this command in Boxing maps.", "SF2 Prefix", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}Cannot use this command in Boxing maps.", "SF2 Prefix", client);
 	}
 
 	if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
@@ -1061,31 +1061,31 @@ public Action Command_RemoveAllSlenders(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_GetBossIndexes(int iClient,int args)
+public Action Command_GetBossIndexes(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	char sMessage[512];
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
-	if (!IsValidClient(iClient))
+	if (!IsValidClient(client))
 	{
 		LogMessage("Active Boss Indexes:");
 		LogMessage("----------------------------");
 	}
 	else
 	{
-		ClientCommand(iClient, "echo Active Boss Indexes:");
-		ClientCommand(iClient, "echo ----------------------------");
+		ClientCommand(client, "echo Active Boss Indexes:");
+		ClientCommand(client, "echo ----------------------------");
 	}
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
 		if (NPCGetUniqueID(i) == -1) continue;
 		
-		NPCGetProfile(i, sProfile, sizeof(sProfile));
+		NPCGetProfile(i, profile, sizeof(profile));
 		
-		FormatEx(sMessage, sizeof(sMessage), "%d - %s", i, sProfile);
+		FormatEx(sMessage, sizeof(sMessage), "%d - %s", i, profile);
 		if (NPCGetFlags(i) & SFF_FAKE)
 		{
 			StrCat(sMessage, sizeof(sMessage), " (fake)");
@@ -1098,9 +1098,9 @@ public Action Command_GetBossIndexes(int iClient,int args)
 			StrCat(sMessage, sizeof(sMessage), sCat);
 		}
 		
-		if (IsValidClient(iClient))
+		if (IsValidClient(client))
 		{
-			ClientCommand(iClient, "echo %s", sMessage);
+			ClientCommand(client, "echo %s", sMessage);
 		}
 		else
 		{
@@ -1108,11 +1108,11 @@ public Action Command_GetBossIndexes(int iClient,int args)
 		}
 	}
 	
-	if (IsValidClient(iClient))
+	if (IsValidClient(client))
 	{
-		ClientCommand(iClient, "echo ----------------------------");
+		ClientCommand(client, "echo ----------------------------");
 		
-		ReplyToCommand(iClient, "Printed active boss indexes to your console!");
+		ReplyToCommand(client, "Printed active boss indexes to your console!");
 	}
 	else
 	{
@@ -1124,13 +1124,13 @@ public Action Command_GetBossIndexes(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SlenderAttackWaiters(int iClient,int args)
+public Action Command_SlenderAttackWaiters(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 2)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_boss_attack_waiters <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_boss_attack_waiters <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -1148,15 +1148,15 @@ public Action Command_SlenderAttackWaiters(int iClient,int args)
 	bool bState = view_as<bool>(StringToInt(arg2));
 	bool bOldState = view_as<bool>(iBossFlags & SFF_ATTACKWAITERS);
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	if (bState)
 	{
 		if (!bOldState)
 		{
 			NPCSetFlags(iBossIndex, iBossFlags | SFF_ATTACKWAITERS);
-			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Attack Waiters", iClient);
+			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Attack Waiters", client);
 		}
 	}
 	else
@@ -1164,20 +1164,20 @@ public Action Command_SlenderAttackWaiters(int iClient,int args)
 		if (bOldState)
 		{
 			NPCSetFlags(iBossIndex, iBossFlags & ~SFF_ATTACKWAITERS);
-			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Do Not Attack Waiters", iClient);
+			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Do Not Attack Waiters", client);
 		}
 	}
 	
 	return Plugin_Handled;
 }
 
-public Action Command_SlenderNoTeleport(int iClient,int args)
+public Action Command_SlenderNoTeleport(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 2)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_boss_no_teleport <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_boss_no_teleport <bossindex 0-%d> <0/1>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
@@ -1195,15 +1195,15 @@ public Action Command_SlenderNoTeleport(int iClient,int args)
 	bool bState = view_as<bool>(StringToInt(arg2));
 	bool bOldState = view_as<bool>(iBossFlags & SFF_NOTELEPORT);
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	if (bState)
 	{
 		if (!bOldState)
 		{
 			NPCSetFlags(iBossIndex, iBossFlags | SFF_NOTELEPORT);
-			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Should Not Teleport", iClient);
+			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Should Not Teleport", client);
 		}
 	}
 	else
@@ -1211,20 +1211,20 @@ public Action Command_SlenderNoTeleport(int iClient,int args)
 		if (bOldState)
 		{
 			NPCSetFlags(iBossIndex, iBossFlags & ~SFF_NOTELEPORT);
-			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Should Teleport", iClient);
+			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Should Teleport", client);
 		}
 	}
 	
 	return Plugin_Handled;
 }
 
-public Action Command_ToggleAllBossTeleports(int iClient,int args)
+public Action Command_ToggleAllBossTeleports(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_toggle_boss_teleports <0/1>");
+		ReplyToCommand(client, "Usage: sm_sf2_toggle_boss_teleports <0/1>");
 		return Plugin_Handled;
 	}
 
@@ -1242,17 +1242,17 @@ public Action Command_ToggleAllBossTeleports(int iClient,int args)
 	}
 	if (iState) 
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}All bosses can no longer teleport.", "SF2 Prefix", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}All bosses can no longer teleport.", "SF2 Prefix", client);
 	}
 	else if (!iState) 
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}All bosses can now teleport.", "SF2 Prefix", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}All bosses can now teleport.", "SF2 Prefix", client);
 	}
 
 	return Plugin_Handled;
 }
 
-public Action Command_DebugLogicEscape(int iClient,int args)
+public Action Command_DebugLogicEscape(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
@@ -1278,12 +1278,12 @@ public Action Command_DebugLogicEscape(int iClient,int args)
 			}
 		}
 	}
-	CPrintToChat(iClient, "{royalblue}%t{default}Triggered sf2_logic_escape.", "SF2 Prefix", iClient);
+	CPrintToChat(client, "{royalblue}%t{default}Triggered sf2_logic_escape.", "SF2 Prefix", client);
 
 	return Plugin_Handled;
 }
 
-public Action Command_ForceEndGrace(int iClient,int args)
+public Action Command_ForceEndGrace(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
@@ -1293,7 +1293,7 @@ public Action Command_ForceEndGrace(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ReloadProfiles(int iClient, int args)
+public Action Command_ReloadProfiles(int client, int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
@@ -1305,13 +1305,13 @@ public Action Command_ReloadProfiles(int iClient, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ToggleAllAttackWaiters(int iClient,int args)
+public Action Command_ToggleAllAttackWaiters(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_toggle_attack_waiters <0/1>");
+		ReplyToCommand(client, "Usage: sm_sf2_toggle_attack_waiters <0/1>");
 		return Plugin_Handled;
 	}
 
@@ -1329,29 +1329,29 @@ public Action Command_ToggleAllAttackWaiters(int iClient,int args)
 	}
 	if (iState) 
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}All bosses can now attack waiters.", "SF2 Prefix", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}All bosses can now attack waiters.", "SF2 Prefix", client);
 	}
 	else if (!iState) 
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}All bosses can no longer attack waiters.", "SF2 Prefix", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}All bosses can no longer attack waiters.", "SF2 Prefix", client);
 	}
 
 	return Plugin_Handled;
 }
 
-public Action Command_ForceProxy(int iClient,int args)
+public Action Command_ForceProxy(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_force_proxy <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
+		ReplyToCommand(client, "Usage: sm_sf2_force_proxy <name|#userid> <bossindex 0-%d>", MAX_BOSSES - 1);
 		return Plugin_Handled;
 	}
 	
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
 		return Plugin_Handled;
 	}
 	
@@ -1364,7 +1364,7 @@ public Action Command_ForceProxy(int iClient,int args)
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
-			iClient,
+			client,
 			target_list,
 			MAXPLAYERS,
 			0,
@@ -1372,7 +1372,7 @@ public Action Command_ForceProxy(int iClient,int args)
 			sizeof(target_name),
 			tn_is_ml)) <= 0)
 	{
-		ReplyToTargetError(iClient, target_count);
+		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
@@ -1382,12 +1382,12 @@ public Action Command_ForceProxy(int iClient,int args)
 	int iBossIndex = StringToInt(arg2);
 	if (iBossIndex < 0 || iBossIndex >= MAX_BOSSES)
 	{
-		ReplyToCommand(iClient, "Boss index is out of range!");
+		ReplyToCommand(client, "Boss index is out of range!");
 		return Plugin_Handled;
 	}
 	else if (NPCGetUniqueID(iBossIndex) == -1)
 	{
-		ReplyToCommand(iClient, "Boss index is invalid! Boss index not active!");
+		ReplyToCommand(client, "Boss index is invalid! Boss index not active!");
 		return Plugin_Handled;
 	}
 	
@@ -1401,7 +1401,7 @@ public Action Command_ForceProxy(int iClient,int args)
 
 		if (!g_bPlayerEliminated[iTarget])
 		{
-			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", iClient, sName);
+			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", client, sName);
 			continue;
 		}
 
@@ -1411,9 +1411,9 @@ public Action Command_ForceProxy(int iClient,int args)
 		
 		int iSpawnPoint = -1;
 
-		if (!SpawnProxy(iClient, iBossIndex, flintPos, iSpawnPoint)) 
+		if (!SpawnProxy(client, iBossIndex, flintPos, iSpawnPoint)) 
 		{
-			CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", iClient, sName);
+			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", client, sName);
 			continue;
 		}
 		
@@ -1423,13 +1423,13 @@ public Action Command_ForceProxy(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ForceEscape(int iClient,int args)
+public Action Command_ForceEscape(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_force_escape <name|#userid>");
+		ReplyToCommand(client, "Usage: sm_sf2_force_escape <name|#userid>");
 		return Plugin_Handled;
 	}
 	
@@ -1442,7 +1442,7 @@ public Action Command_ForceEscape(int iClient,int args)
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
-			iClient,
+			client,
 			target_list,
 			MAXPLAYERS,
 			COMMAND_FILTER_ALIVE,
@@ -1450,7 +1450,7 @@ public Action Command_ForceEscape(int iClient,int args)
 			sizeof(target_name),
 			tn_is_ml)) <= 0)
 	{
-		ReplyToTargetError(iClient, target_count);
+		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
@@ -1466,19 +1466,19 @@ public Action Command_ForceEscape(int iClient,int args)
 	
 	return Plugin_Handled;
 }
-public Action Command_ForceDifficulty(int iClient,int args)
+public Action Command_ForceDifficulty(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	if (args == 0)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_set_difficulty <difficulty 1-5>");
+		ReplyToCommand(client, "Usage: sm_sf2_set_difficulty <difficulty 1-5>");
 		return Plugin_Handled;
 	}
 	
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
 		return Plugin_Handled;
 	}
 	
@@ -1502,26 +1502,26 @@ public Action Command_ForceDifficulty(int iClient,int args)
 	
 	switch (iNewDifficulty)
 	{
-		case Difficulty_Normal: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {yellow}%t{default}.", "SF2 Prefix", iClient, "SF2 Normal Difficulty");
-		case Difficulty_Hard: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {orange}%t{default}.", "SF2 Prefix", iClient, "SF2 Hard Difficulty");
-		case Difficulty_Insane: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {red}%t{default}.", "SF2 Prefix", iClient, "SF2 Insane Difficulty");
-		case Difficulty_Nightmare: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {valve}%t!", "SF2 Prefix", iClient, "SF2 Nightmare Difficulty");
+		case Difficulty_Normal: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {yellow}%t{default}.", "SF2 Prefix", client, "SF2 Normal Difficulty");
+		case Difficulty_Hard: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {orange}%t{default}.", "SF2 Prefix", client, "SF2 Hard Difficulty");
+		case Difficulty_Insane: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {red}%t{default}.", "SF2 Prefix", client, "SF2 Insane Difficulty");
+		case Difficulty_Nightmare: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {valve}%t!", "SF2 Prefix", client, "SF2 Nightmare Difficulty");
 		case Difficulty_Apollyon:
 		{
-			if (!g_bRestartSessionEnabled) CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {darkgray}%t!", "SF2 Prefix", iClient, "SF2 Apollyon Difficulty");
-			else CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {mediumslateblue}%t!", "SF2 Prefix", iClient, "SF2 Calamity Difficulty");
+			if (!g_bRestartSessionEnabled) CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {darkgray}%t!", "SF2 Prefix", client, "SF2 Apollyon Difficulty");
+			else CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {mediumslateblue}%t!", "SF2 Prefix", client, "SF2 Calamity Difficulty");
 		}
 	}
 
 	return Plugin_Handled;
 }
-public Action Command_ForceSpecialRound(int iClient,int args)
+public Action Command_ForceSpecialRound(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	
 	if (args == 0)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_force_special_round <specialround 1-39>");
+		ReplyToCommand(client, "Usage: sm_sf2_force_special_round <specialround 1-39>");
 		return Plugin_Handled;
 	}
 
@@ -1545,77 +1545,77 @@ public Action Command_ForceSpecialRound(int iClient,int args)
 	
 	switch (iSpecialRound)
 	{
-		case SPECIALROUND_DOUBLETROUBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Trouble.", "SF2 Prefix", iClient);
-		case SPECIALROUND_INSANEDIFFICULTY: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Suicide Time.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DOUBLEMAXPLAYERS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Players.", "SF2 Prefix", iClient);
-		case SPECIALROUND_LIGHTSOUT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Lights Out.", "SF2 Prefix", iClient);
-		case SPECIALROUND_BEACON: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Bacon Spray.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DOOMBOX: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Stealth Box of Doom.", "SF2 Prefix", iClient);
-		case SPECIALROUND_NOGRACE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Start Running.", "SF2 Prefix", iClient);
-		case SPECIALROUND_2DOUBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double It All, But Go No Higher.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DOUBLEROULETTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Roulette.", "SF2 Prefix", iClient);
-		case SPECIALROUND_NIGHTVISION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Night Vision.", "SF2 Prefix", iClient);
-		case SPECIALROUND_INFINITEFLASHLIGHT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Infinite Flashlight.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DREAMFAKEBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Just A Dream.", "SF2 Prefix", iClient);
-		case SPECIALROUND_EYESONTHECLOACK: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Countdown.", "SF2 Prefix", iClient);
-		case SPECIALROUND_NOPAGEBONUS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Deadline.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DUCKS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Ducks.", "SF2 Prefix", iClient);
-		case SPECIALROUND_1UP: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}1-Up.", "SF2 Prefix", iClient);
-		case SPECIALROUND_NOULTRAVISION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Blind.", "SF2 Prefix", iClient);
-		case SPECIALROUND_SUPRISE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Surprise Me.", "SF2 Prefix", iClient);
-		case SPECIALROUND_LASTRESORT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Last Resort.", "SF2 Prefix", iClient);
-		case SPECIALROUND_ESCAPETICKETS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Escape Tickets.", "SF2 Prefix", iClient);
-		case SPECIALROUND_REVOLUTION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Revolution.", "SF2 Prefix", iClient);
-		case SPECIALROUND_DISTORTION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Space Distortion.", "SF2 Prefix", iClient);
-		case SPECIALROUND_MULTIEFFECT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Multieffect.", "SF2 Prefix", iClient);
-		case SPECIALROUND_BOO: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boo.", "SF2 Prefix", iClient);
-		case SPECIALROUND_VOTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Vote.", "SF2 Prefix", iClient);
-		case SPECIALROUND_COFFEE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Coffee.", "SF2 Prefix", iClient);
-		case SPECIALROUND_PAGEDETECTOR: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Item Detectors.", "SF2 Prefix", iClient);
-		case SPECIALROUND_CLASSSCRAMBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Class Scramble.", "SF2 Prefix", iClient);
-		case SPECIALROUND_2DOOM: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Silent Slender.", "SF2 Prefix", iClient);
-		case SPECIALROUND_PAGEREWARDS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Page Rewards.", "SF2 Prefix", iClient);
-		case SPECIALROUND_TINYBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Tiny Bosses.", "SF2 Prefix", iClient);
-		case SPECIALROUND_RUNNINGINTHE90S: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}In The 90s.", "SF2 Prefix", iClient);
-		case SPECIALROUND_TRIPLEBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Triple Bosses.", "SF2 Prefix", iClient);
-		case SPECIALROUND_20DOLLARS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}20 Dollars.", "SF2 Prefix", iClient);
-		case SPECIALROUND_MODBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}MODified Bosses {default}(WARNING, ITS H3LL).", "SF2 Prefix", iClient);
-		case SPECIALROUND_BOSSROULETTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boss Roulette.", "SF2 Prefix", iClient);
-		case SPECIALROUND_THANATOPHOBIA: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Thanatophobia.", "SF2 Prefix", iClient);
-		case SPECIALROUND_WALLHAX: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", iClient);
+		case SPECIALROUND_DOUBLETROUBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Trouble.", "SF2 Prefix", client);
+		case SPECIALROUND_INSANEDIFFICULTY: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Suicide Time.", "SF2 Prefix", client);
+		case SPECIALROUND_DOUBLEMAXPLAYERS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Players.", "SF2 Prefix", client);
+		case SPECIALROUND_LIGHTSOUT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Lights Out.", "SF2 Prefix", client);
+		case SPECIALROUND_BEACON: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Bacon Spray.", "SF2 Prefix", client);
+		case SPECIALROUND_DOOMBOX: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Stealth Box of Doom.", "SF2 Prefix", client);
+		case SPECIALROUND_NOGRACE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Start Running.", "SF2 Prefix", client);
+		case SPECIALROUND_2DOUBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double It All, But Go No Higher.", "SF2 Prefix", client);
+		case SPECIALROUND_DOUBLEROULETTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Roulette.", "SF2 Prefix", client);
+		case SPECIALROUND_NIGHTVISION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Night Vision.", "SF2 Prefix", client);
+		case SPECIALROUND_INFINITEFLASHLIGHT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Infinite Flashlight.", "SF2 Prefix", client);
+		case SPECIALROUND_DREAMFAKEBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Just A Dream.", "SF2 Prefix", client);
+		case SPECIALROUND_EYESONTHECLOACK: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Countdown.", "SF2 Prefix", client);
+		case SPECIALROUND_NOPAGEBONUS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Deadline.", "SF2 Prefix", client);
+		case SPECIALROUND_DUCKS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Ducks.", "SF2 Prefix", client);
+		case SPECIALROUND_1UP: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}1-Up.", "SF2 Prefix", client);
+		case SPECIALROUND_NOULTRAVISION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Blind.", "SF2 Prefix", client);
+		case SPECIALROUND_SUPRISE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Surprise Me.", "SF2 Prefix", client);
+		case SPECIALROUND_LASTRESORT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Last Resort.", "SF2 Prefix", client);
+		case SPECIALROUND_ESCAPETICKETS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Escape Tickets.", "SF2 Prefix", client);
+		case SPECIALROUND_REVOLUTION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Revolution.", "SF2 Prefix", client);
+		case SPECIALROUND_DISTORTION: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Space Distortion.", "SF2 Prefix", client);
+		case SPECIALROUND_MULTIEFFECT: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Multieffect.", "SF2 Prefix", client);
+		case SPECIALROUND_BOO: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boo.", "SF2 Prefix", client);
+		case SPECIALROUND_VOTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Vote.", "SF2 Prefix", client);
+		case SPECIALROUND_COFFEE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Coffee.", "SF2 Prefix", client);
+		case SPECIALROUND_PAGEDETECTOR: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Item Detectors.", "SF2 Prefix", client);
+		case SPECIALROUND_CLASSSCRAMBLE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Class Scramble.", "SF2 Prefix", client);
+		case SPECIALROUND_2DOOM: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Silent Slender.", "SF2 Prefix", client);
+		case SPECIALROUND_PAGEREWARDS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Page Rewards.", "SF2 Prefix", client);
+		case SPECIALROUND_TINYBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Tiny Bosses.", "SF2 Prefix", client);
+		case SPECIALROUND_RUNNINGINTHE90S: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}In The 90s.", "SF2 Prefix", client);
+		case SPECIALROUND_TRIPLEBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Triple Bosses.", "SF2 Prefix", client);
+		case SPECIALROUND_20DOLLARS: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}20 Dollars.", "SF2 Prefix", client);
+		case SPECIALROUND_MODBOSSES: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}MODified Bosses {default}(WARNING, ITS H3LL).", "SF2 Prefix", client);
+		case SPECIALROUND_BOSSROULETTE: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boss Roulette.", "SF2 Prefix", client);
+		case SPECIALROUND_THANATOPHOBIA: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Thanatophobia.", "SF2 Prefix", client);
+		case SPECIALROUND_WALLHAX: CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", client);
 	}
 
 	return Plugin_Handled;
 }
 
-public Action Command_AddSlender(int iClient,int args)
+public Action Command_AddSlender(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_add_boss <name>");
+		ReplyToCommand(client, "Usage: sm_sf2_add_boss <name>");
 		return Plugin_Handled;
 	}
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetCmdArg(1, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetCmdArg(1, profile, sizeof(profile));
 	
-	g_hConfig.Rewind();
-	if (!g_hConfig.JumpToKey(sProfile)) 
+	g_Config.Rewind();
+	if (!g_Config.JumpToKey(profile)) 
 	{
-		ReplyToCommand(iClient, "That boss does not exist!");
+		ReplyToCommand(client, "That boss does not exist!");
 		return Plugin_Handled;
 	}
 	
-	SF2NPC_BaseNPC Npc = AddProfile(sProfile);
+	SF2NPC_BaseNPC Npc = AddProfile(profile);
 	if (Npc.IsValid())
 	{
 		float eyePos[3], eyeAng[3], flPos[3];
-		GetClientEyePosition(iClient, eyePos);
-		GetClientEyeAngles(iClient, eyeAng);
+		GetClientEyePosition(client, eyePos);
+		GetClientEyeAngles(client, eyeAng);
 
-		Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
+		Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 		TR_GetEndPosition(flPos, hTrace);
 		delete hTrace;
 	
@@ -1640,8 +1640,8 @@ public void NPCSpawn(const char[] output,int iEnt,int activator, float delay)
 		if (!StrContains(targetName, "sf2_spawn_", false))
 		{
 			ReplaceString(targetName, sizeof(targetName), "sf2_spawn_", "", false);
-			g_hConfig.Rewind();
-			if (!g_hConfig.JumpToKey(targetName)) 
+			g_Config.Rewind();
+			if (!g_Config.JumpToKey(targetName)) 
 			{
 				if (!SF_IsBoxingMap())
 				{
@@ -1649,15 +1649,15 @@ public void NPCSpawn(const char[] output,int iEnt,int activator, float delay)
 				}
 				return;
 			}
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			SF2NPC_BaseNPC Npc;
 			for(int iNpc;iNpc<=MAX_BOSSES;iNpc++)
 			{
 				Npc = view_as<SF2NPC_BaseNPC>(iNpc);
 				if(Npc.IsValid())
 				{
-					Npc.GetProfile(sProfile,sizeof(sProfile));
-					if(strcmp(sProfile,targetName) == 0)
+					Npc.GetProfile(profile,sizeof(profile));
+					if(strcmp(profile,targetName) == 0)
 					{
 						Npc.UnSpawn();
 						float flPos[3];
@@ -1699,34 +1699,34 @@ public void NPCSpawn(const char[] output,int iEnt,int activator, float delay)
 	return;
 }
 
-public Action Command_AddSlenderFake(int iClient,int args)
+public Action Command_AddSlenderFake(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 1)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_add_boss_fake <name>");
+		ReplyToCommand(client, "Usage: sm_sf2_add_boss_fake <name>");
 		return Plugin_Handled;
 	}
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	GetCmdArg(1, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetCmdArg(1, profile, sizeof(profile));
 	
-	g_hConfig.Rewind();
-	if (!g_hConfig.JumpToKey(sProfile)) 
+	g_Config.Rewind();
+	if (!g_Config.JumpToKey(profile)) 
 	{
-		ReplyToCommand(iClient, "That boss does not exist!");
+		ReplyToCommand(client, "That boss does not exist!");
 		return Plugin_Handled;
 	}
 	
-	SF2NPC_BaseNPC Npc = AddProfile(sProfile, SFF_FAKE);
+	SF2NPC_BaseNPC Npc = AddProfile(profile, SFF_FAKE);
 	if (Npc.IsValid())
 	{
 		float eyePos[3], eyeAng[3], flPos[3];
-		GetClientEyePosition(iClient, eyePos);
-		GetClientEyeAngles(iClient, eyeAng);
+		GetClientEyePosition(client, eyePos);
+		GetClientEyeAngles(client, eyeAng);
 		
-		Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, iClient);
+		Handle hTrace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 		TR_GetEndPosition(flPos, hTrace);
 		delete hTrace;
 	
@@ -1736,19 +1736,19 @@ public Action Command_AddSlenderFake(int iClient,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ForceState(int iClient,int args)
+public Action Command_ForceState(int client,int args)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (args < 2)
 	{
-		ReplyToCommand(iClient, "Usage: sm_sf2_setplaystate <name|#userid> <0/1>");
+		ReplyToCommand(client, "Usage: sm_sf2_setplaystate <name|#userid> <0/1>");
 		return Plugin_Handled;
 	}
 	
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		CPrintToChat(iClient, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", iClient);
+		CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
 		return Plugin_Handled;
 	}
 	
@@ -1761,7 +1761,7 @@ public Action Command_ForceState(int iClient,int args)
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
-			iClient,
+			client,
 			target_list,
 			MAXPLAYERS,
 			0,
@@ -1769,7 +1769,7 @@ public Action Command_ForceState(int iClient,int args)
 			sizeof(target_name),
 			tn_is_ml)) <= 0)
 	{
-		ReplyToTargetError(iClient, target_count);
+		ReplyToTargetError(client, target_count);
 		return Plugin_Handled;
 	}
 	
@@ -1805,13 +1805,13 @@ public Action Command_ForceState(int iClient,int args)
 			{
 				SetClientPlayState(target, true);
 			}
-			CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
+			CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", client, "SF2 Player Forced In Game", sName);
 		}
 		else if (!iState && !g_bPlayerEliminated[target])
 		{
 			SetClientPlayState(target, false);
 			
-			CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced Out Of Game", sName);
+			CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", client, "SF2 Player Forced Out Of Game", sName);
 		}
 	}
 	
@@ -1820,21 +1820,21 @@ public Action Command_ForceState(int iClient,int args)
 
 public Action Timer_ForcePlayer(Handle timer, any userid)
 {
-	int iClient = GetClientOfUserId(userid);
-	if (iClient <= 0) return Plugin_Stop;
+	int client = GetClientOfUserId(userid);
+	if (client <= 0) return Plugin_Stop;
 
 	char sName[MAX_NAME_LENGTH];
-	FormatEx(sName, sizeof(sName), "%N", iClient);
+	FormatEx(sName, sizeof(sName), "%N", client);
 
-	SetClientPlayState(iClient, true);
-	//CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", iClient, "SF2 Player Forced In Game", sName);
+	SetClientPlayState(client, true);
+	//CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", client, "SF2 Player Forced In Game", sName);
 	return Plugin_Stop;
 }
 
-public Action Command_AllTalkToggle(int iClient, int args)
+public Action Command_AllTalkToggle(int client, int args)
 {
-	g_bAdminAllTalk[iClient] = !g_bAdminAllTalk[iClient];
-	CPrintToChat(iClient, "{royalblue}%t{default}You will %s hear and speak to all players.", "SF2 Prefix", g_bAdminAllTalk[iClient] ? "now" : "no longer");
+	g_bAdminAllTalk[client] = !g_bAdminAllTalk[client];
+	CPrintToChat(client, "{royalblue}%t{default}You will %s hear and speak to all players.", "SF2 Prefix", g_bAdminAllTalk[client] ? "now" : "no longer");
 
 	for (int target = 1; target <= MaxClients; target++)
 	{
@@ -1843,9 +1843,9 @@ public Action Command_AllTalkToggle(int iClient, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_AllTalkOn(int iClient, int args)
+public Action Command_AllTalkOn(int client, int args)
 {
-	g_bAdminAllTalk[iClient] = true;
+	g_bAdminAllTalk[client] = true;
 
 	for (int target = 1; target <= MaxClients; target++)
 	{
@@ -1854,9 +1854,9 @@ public Action Command_AllTalkOn(int iClient, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_AllTalkOff(int iClient, int args)
+public Action Command_AllTalkOff(int client, int args)
 {
-	g_bAdminAllTalk[iClient] = false;
+	g_bAdminAllTalk[client] = false;
 
 	for (int target = 1; target <= MaxClients; target++)
 	{
@@ -1865,9 +1865,9 @@ public Action Command_AllTalkOff(int iClient, int args)
 	return Plugin_Handled;
 } 
 
-public Action Command_ConditionToggle(int iClient, int args)
+public Action Command_ConditionToggle(int client, int args)
 {
 	g_cvIgnoreRoundWinConditions.BoolValue = !g_cvIgnoreRoundWinConditions.BoolValue;
-	CPrintToChat(iClient, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_cvIgnoreRoundWinConditions.BoolValue ? "dis" : "en");
+	CPrintToChat(client, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_cvIgnoreRoundWinConditions.BoolValue ? "dis" : "en");
 	return Plugin_Handled;
 } 

@@ -9,11 +9,11 @@ void DisplayGroupMainMenuToClient(int client)
 	Handle hMenu = CreateMenu(Menu_GroupMain);
 	SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Group Main Menu Title", client, "SF2 Group Main Menu Description", client);
 	
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	bool bGroupIsActive = IsPlayerGroupActive(iGroupIndex);
+	int groupIndex = ClientGetPlayerGroup(client);
+	bool bGroupIsActive = IsPlayerGroupActive(groupIndex);
 	
 	char sBuffer[256];
-	if (bGroupIsActive && GetPlayerGroupLeader(iGroupIndex) == client)
+	if (bGroupIsActive && GetPlayerGroupLeader(groupIndex) == client)
 	{
 		Format(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Group Menu Title", client);
 	}
@@ -53,8 +53,8 @@ public int Menu_GroupMain(Handle menu, MenuAction action,int param1,int param2)
 
 void DisplayCreateGroupMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (IsPlayerGroupActive(groupIndex))
 	{
 		// He's already in a group. Take him back to the main menu.
 		DisplayGroupMainMenuToClient(client);
@@ -81,24 +81,24 @@ public int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2
 	{
 		if (param2 == 0)
 		{
-			int iGroupIndex = ClientGetPlayerGroup(param1);
-			if (IsPlayerGroupActive(iGroupIndex))
+			int groupIndex = ClientGetPlayerGroup(param1);
+			if (IsPlayerGroupActive(groupIndex))
 			{
 				CPrintToChat(param1, "%T", "SF2 In Group", param1);
 			}
 			else
 			{
-				iGroupIndex = CreatePlayerGroup();
-				if (iGroupIndex != -1)
+				groupIndex = CreatePlayerGroup();
+				if (groupIndex != -1)
 				{
 					int iQueuePoints = g_iPlayerQueuePoints[param1];
 				
 					char sGroupName[64];
-					Format(sGroupName, sizeof(sGroupName), "Group %d", iGroupIndex);
-					SetPlayerGroupName(iGroupIndex, sGroupName);
-					ClientSetPlayerGroup(param1, iGroupIndex);
-					SetPlayerGroupLeader(iGroupIndex, param1);
-					SetPlayerGroupQueuePoints(iGroupIndex, iQueuePoints);
+					Format(sGroupName, sizeof(sGroupName), "Group %d", groupIndex);
+					SetPlayerGroupName(groupIndex, sGroupName);
+					ClientSetPlayerGroup(param1, groupIndex);
+					SetPlayerGroupLeader(groupIndex, param1);
+					SetPlayerGroupQueuePoints(groupIndex, iQueuePoints);
 					
 					CPrintToChat(param1, "%T", "SF2 Created Group", param1, sGroupName);
 				}
@@ -115,8 +115,8 @@ public int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2
 
 void DisplayLeaveGroupMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayGroupMainMenuToClient(client);
@@ -125,7 +125,7 @@ void DisplayLeaveGroupMenuToClient(int client)
 	}
 	
 	char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-	GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
+	GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
 	
 	Handle hMenu = CreateMenu(Menu_LeaveGroup);
 	SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Leave Group Menu Title", client, "SF2 Leave Group Menu Description", client, sGroupName);
@@ -146,8 +146,8 @@ public int Menu_LeaveGroup(Handle menu, MenuAction action,int param1,int param2)
 	{
 		if (param2 == 0)
 		{
-			int iGroupIndex = ClientGetPlayerGroup(param1);
-			if (!IsPlayerGroupActive(iGroupIndex))
+			int groupIndex = ClientGetPlayerGroup(param1);
+			if (!IsPlayerGroupActive(groupIndex))
 			{
 				CPrintToChat(param1, "%T", "SF2 Group Does Not Exist", param1);
 			}
@@ -163,8 +163,8 @@ public int Menu_LeaveGroup(Handle menu, MenuAction action,int param1,int param2)
 
 void DisplayAdminGroupMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayGroupMainMenuToClient(client);
@@ -173,16 +173,16 @@ void DisplayAdminGroupMenuToClient(int client)
 	}
 	
 	char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-	GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
+	GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
 	
 	char sLeaderName[MAX_NAME_LENGTH];
-	int iGroupLeader = GetPlayerGroupLeader(iGroupIndex);
+	int iGroupLeader = GetPlayerGroupLeader(groupIndex);
 	if (IsValidClient(iGroupLeader)) FormatEx(sLeaderName, sizeof(sLeaderName), "%N", iGroupLeader);
 	else strcopy(sLeaderName, sizeof(sLeaderName), "---");
 	
-	int iMemberCount = GetPlayerGroupMemberCount(iGroupIndex);
+	int iMemberCount = GetPlayerGroupMemberCount(groupIndex);
 	int iMaxPlayers = GetMaxPlayersForRound();
-	int iQueuePoints = GetPlayerGroupQueuePoints(iGroupIndex);
+	int iQueuePoints = GetPlayerGroupQueuePoints(groupIndex);
 	
 	Handle hMenu = CreateMenu(Menu_AdminGroup);
 	SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Admin Group Menu Title", client, "SF2 Admin Group Menu Description", client, sGroupName, sLeaderName, iMemberCount, iMaxPlayers, iQueuePoints);
@@ -214,8 +214,8 @@ public int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
 	}
 	else if (action == MenuAction_Select)
 	{
-		int iGroupIndex = ClientGetPlayerGroup(param1);
-		if (IsPlayerGroupActive(iGroupIndex))
+		int groupIndex = ClientGetPlayerGroup(param1);
+		if (IsPlayerGroupActive(groupIndex))
 		{
 			switch (param2)
 			{
@@ -237,8 +237,8 @@ public int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
 
 void DisplayViewGroupMembersMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayAdminGroupMenuToClient(client);
@@ -255,13 +255,13 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		if (!IsValidClient(i)) continue;
 		
 		int iTempGroup = ClientGetPlayerGroup(i);
-		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
+		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != groupIndex) continue;
 		
 		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = hPlayers.Length;
-	if (iPlayerCount)
+	int playerCount = hPlayers.Length;
+	if (playerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_ViewGroupMembers);
 		SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, "SF2 View Group Members Menu Description", client);
@@ -269,11 +269,11 @@ void DisplayViewGroupMembersMenuToClient(int client)
 		char sUserId[32];
 		char sName[MAX_NAME_LENGTH];
 		
-		for (int i = 0; i < iPlayerCount; i++)
+		for (int i = 0; i < playerCount; i++)
 		{
-			int iClient = hPlayers.Get(i);
-			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
-			FormatEx(sName, sizeof(sName), "%N", iClient);
+			int clientArray = hPlayers.Get(i);
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(clientArray));
+			FormatEx(sName, sizeof(sName), "%N", clientArray);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -305,8 +305,8 @@ public int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int p
 
 void DisplaySetGroupLeaderMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayAdminGroupMenuToClient(client);
@@ -314,7 +314,7 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		return;
 	}
 	
-	if (GetPlayerGroupLeader(iGroupIndex) != client)
+	if (GetPlayerGroupLeader(groupIndex) != client)
 	{
 		DisplayAdminGroupMenuToClient(client);
 		CPrintToChat(client, "%T", "SF2 Not Group Leader", client);
@@ -330,14 +330,14 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		if (!IsValidClient(i)) continue;
 		
 		int iTempGroup = ClientGetPlayerGroup(i);
-		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
+		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != groupIndex) continue;
 		if (i == client) continue;
 		
 		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = hPlayers.Length;
-	if (iPlayerCount)
+	int playerCount = hPlayers.Length;
+	if (playerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_SetGroupLeader);
 		SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Leader Menu Title", client, "SF2 Set Group Leader Menu Description", client);
@@ -345,11 +345,11 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 		char sUserId[32];
 		char sName[MAX_NAME_LENGTH];
 		
-		for (int i = 0; i < iPlayerCount; i++)
+		for (int i = 0; i < playerCount; i++)
 		{
-			int iClient = hPlayers.Get(i);
-			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
-			FormatEx(sName, sizeof(sName), "%N", iClient);
+			int clientArray = hPlayers.Get(i);
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(clientArray));
+			FormatEx(sName, sizeof(sName), "%N", clientArray);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -378,22 +378,22 @@ public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int par
 	}
 	else if (action == MenuAction_Select)
 	{
-		int iGroupIndex = ClientGetPlayerGroup(param1);
-		if (IsPlayerGroupActive(iGroupIndex) && GetPlayerGroupLeader(iGroupIndex) == param1)
+		int groupIndex = ClientGetPlayerGroup(param1);
+		if (IsPlayerGroupActive(groupIndex) && GetPlayerGroupLeader(groupIndex) == param1)
 		{
 			char sInfo[64];
 			GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
 			int userid = StringToInt(sInfo);
 			int iPlayer = GetClientOfUserId(userid);
 			
-			if (ClientGetPlayerGroup(iPlayer) == iGroupIndex && IsValidClient(iPlayer))
+			if (ClientGetPlayerGroup(iPlayer) == groupIndex && IsValidClient(iPlayer))
 			{
 				char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
 				char sName[MAX_NAME_LENGTH];
-				GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
+				GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
 				Format(sName, sizeof(sName), "%N", iPlayer);
 				
-				SetPlayerGroupLeader(iGroupIndex, iPlayer);
+				SetPlayerGroupLeader(groupIndex, iPlayer);
 			}
 			else
 			{
@@ -407,8 +407,8 @@ public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int par
 
 void DisplayKickFromGroupMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayAdminGroupMenuToClient(client);
@@ -416,7 +416,7 @@ void DisplayKickFromGroupMenuToClient(int client)
 		return;
 	}
 	
-	if (GetPlayerGroupLeader(iGroupIndex) != client)
+	if (GetPlayerGroupLeader(groupIndex) != client)
 	{
 		DisplayAdminGroupMenuToClient(client);
 		CPrintToChat(client, "%T", "SF2 Not Group Leader", client);
@@ -432,14 +432,14 @@ void DisplayKickFromGroupMenuToClient(int client)
 		if (!IsValidClient(i)) continue;
 		
 		int iTempGroup = ClientGetPlayerGroup(i);
-		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
+		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != groupIndex) continue;
 		if (i == client) continue;
 		
 		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = hPlayers.Length;
-	if (iPlayerCount)
+	int playerCount = hPlayers.Length;
+	if (playerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_KickFromGroup);
 		SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Kick From Group Menu Title", client, "SF2 Kick From Group Menu Description", client);
@@ -447,11 +447,11 @@ void DisplayKickFromGroupMenuToClient(int client)
 		char sUserId[32];
 		char sName[MAX_NAME_LENGTH];
 		
-		for (int i = 0; i < iPlayerCount; i++)
+		for (int i = 0; i < playerCount; i++)
 		{
-			int iClient = hPlayers.Get(i);
-			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
-			FormatEx(sName, sizeof(sName), "%N", iClient);
+			int clientArray = hPlayers.Get(i);
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(clientArray));
+			FormatEx(sName, sizeof(sName), "%N", clientArray);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -480,19 +480,19 @@ public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int para
 	}
 	else if (action == MenuAction_Select)
 	{
-		int iGroupIndex = ClientGetPlayerGroup(param1);
-		if (IsPlayerGroupActive(iGroupIndex) && GetPlayerGroupLeader(iGroupIndex) == param1)
+		int groupIndex = ClientGetPlayerGroup(param1);
+		if (IsPlayerGroupActive(groupIndex) && GetPlayerGroupLeader(groupIndex) == param1)
 		{
 			char sInfo[64];
 			GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
 			int userid = StringToInt(sInfo);
 			int iPlayer = GetClientOfUserId(userid);
 			
-			if (ClientGetPlayerGroup(iPlayer) == iGroupIndex)
+			if (ClientGetPlayerGroup(iPlayer) == groupIndex)
 			{
 				char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
 				char sName[MAX_NAME_LENGTH];
-				GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
+				GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
 				FormatEx(sName, sizeof(sName), "%N", iPlayer);
 				
 				CPrintToChat(iPlayer, "%T", "SF2 Kicked From Group", iPlayer, sGroupName);
@@ -511,8 +511,8 @@ public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int para
 
 void DisplaySetGroupNameMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayGroupMainMenuToClient(client);
@@ -520,7 +520,7 @@ void DisplaySetGroupNameMenuToClient(int client)
 		return;
 	}
 	
-	if (GetPlayerGroupLeader(iGroupIndex) != client)
+	if (GetPlayerGroupLeader(groupIndex) != client)
 	{
 		DisplayAdminGroupMenuToClient(client);
 		CPrintToChat(client, "%T", "SF2 Not Group Leader", client);
@@ -548,8 +548,8 @@ public int Menu_SetGroupName(Handle menu, MenuAction action,int param1,int param
 
 void DisplayInviteToGroupMenuToClient(int client)
 {
-	int iGroupIndex = ClientGetPlayerGroup(client);
-	if (!IsPlayerGroupActive(iGroupIndex))
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// His group isn't valid anymore. Take him back to the main menu.
 		DisplayGroupMainMenuToClient(client);
@@ -557,14 +557,14 @@ void DisplayInviteToGroupMenuToClient(int client)
 		return;
 	}
 	
-	if (GetPlayerGroupLeader(iGroupIndex) != client)
+	if (GetPlayerGroupLeader(groupIndex) != client)
 	{
 		DisplayAdminGroupMenuToClient(client);
 		CPrintToChat(client, "%T", "SF2 Not Group Leader", client);
 		return;
 	}
 	
-	if (GetPlayerGroupMemberCount(iGroupIndex) >= GetMaxPlayersForRound())
+	if (GetPlayerGroupMemberCount(groupIndex) >= GetMaxPlayersForRound())
 	{
 		// His group is full!
 		DisplayAdminGroupMenuToClient(client);
@@ -587,8 +587,8 @@ void DisplayInviteToGroupMenuToClient(int client)
 		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = hPlayers.Length;
-	if (iPlayerCount)
+	int playerCount = hPlayers.Length;
+	if (playerCount)
 	{
 		Handle hMenu = CreateMenu(Menu_InviteToGroup);
 		SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Invite To Group Menu Title", client, "SF2 Invite To Group Menu Description", client);
@@ -596,11 +596,11 @@ void DisplayInviteToGroupMenuToClient(int client)
 		char sUserId[32];
 		char sName[MAX_NAME_LENGTH];
 		
-		for (int i = 0; i < iPlayerCount; i++)
+		for (int i = 0; i < playerCount; i++)
 		{
-			int iClient = hPlayers.Get(i);
-			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
-			FormatEx(sName, sizeof(sName), "%N", iClient);
+			int clientArray = hPlayers.Get(i);
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(clientArray));
+			FormatEx(sName, sizeof(sName), "%N", clientArray);
 			AddMenuItem(hMenu, sUserId, sName);
 		}
 		
@@ -629,14 +629,14 @@ public int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int para
 	}
 	else if (action == MenuAction_Select)
 	{
-		int iGroupIndex = ClientGetPlayerGroup(param1);
-		if (IsPlayerGroupActive(iGroupIndex) && GetPlayerGroupLeader(iGroupIndex) == param1)
+		int groupIndex = ClientGetPlayerGroup(param1);
+		if (IsPlayerGroupActive(groupIndex) && GetPlayerGroupLeader(groupIndex) == param1)
 		{
 			char sInfo[64];
 			GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
 			int userid = StringToInt(sInfo);
 			int iInvitedPlayer = GetClientOfUserId(userid);
-			SendPlayerGroupInvitation(iInvitedPlayer, GetPlayerGroupID(iGroupIndex), param1);
+			SendPlayerGroupInvitation(iInvitedPlayer, GetPlayerGroupID(groupIndex), param1);
 		}
 		
 		DisplayInviteToGroupMenuToClient(param1);

@@ -38,7 +38,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 	int iOldState = g_iSlenderOldState[iBossIndex];
 	g_iSlenderOldState[iBossIndex] = iState;
 	
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 	
 	if (!g_bSlenderInDeathcam[iBossIndex])
 	{
@@ -78,7 +78,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 						if (GetGameTime() < g_flNPCBaseAttackRunDurationTime[iBossIndex][iCurrentAttackIndex])
 						{
 							float flAttackSpeed, flOriginalSpeed;
-							flOriginalSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty);
+							flOriginalSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, difficulty);
 							if (g_flRoundDifficultyModifier > 1.0)
 							{
 								flAttackSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier) / 15.0) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
@@ -99,7 +99,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 					else
 					{
 						float flAttackSpeed, flOriginalSpeed;
-						flOriginalSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, iDifficulty);
+						flOriginalSpeed = NPCChaserGetAttackRunSpeed(iBossIndex, iCurrentAttackIndex, difficulty);
 						if (g_flRoundDifficultyModifier > 1.0)
 						{
 							flAttackSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier) / 15.0) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
@@ -140,7 +140,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 	}
 	else npc.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
 
-	int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+	int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 
 	//From Pelipoika's rainbow outline plugin
 	if (NPCGetCustomOutlinesState(iBossIndex) && NPCGetRainbowOutlineState(iBossIndex))
@@ -234,7 +234,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 				}
 				case STATE_ATTACK:
 				{
-					if (g_bNPCAlwaysLookAtTargetWhileAttacking[iBossIndex] && !NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, iAttackIndex) && ((NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_LaserBeam)))
+					if (g_bNPCAlwaysLookAtTargetWhileAttacking[iBossIndex] && !NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, attackIndex) && ((NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_LaserBeam)))
 					{
 						if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 						{
@@ -242,7 +242,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 							GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", vecPosToAt);
 						}
 					}
-					if (!NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, iAttackIndex) && (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam))
+					if (!NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, attackIndex) && (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam))
 					{
 						if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 						{
@@ -286,7 +286,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 			}
 			case STATE_ATTACK:
 			{
-				if (NPCChaserGetAttackWhileRunningState(iBossIndex, iAttackIndex))
+				if (NPCChaserGetAttackWhileRunningState(iBossIndex, attackIndex))
 				{
 					bPFUpdate = true;
 					loco.Run();
@@ -492,7 +492,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 	{
 		bool bRunUnstuck = (iState == STATE_CHASE && g_flSlenderCalculatedSpeed[iBossIndex] > 0.0);
 		if (!bRunUnstuck) bRunUnstuck = (iState == STATE_ALERT && g_flSlenderCalculatedWalkSpeed[iBossIndex] > 0.0);
-		if (!bRunUnstuck) bRunUnstuck = (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && g_flSlenderCalculatedWalkSpeed[iBossIndex] > 0.0 && iDifficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)));
+		if (!bRunUnstuck) bRunUnstuck = (iState == STATE_WANDER && (NPCGetFlags(iBossIndex) & SFF_WANDERMOVE) && g_flSlenderCalculatedWalkSpeed[iBossIndex] > 0.0 && difficulty >= RoundToNearest(NPCGetAttributeValue(iBossIndex, "block walk speed under difficulty", 0.0)));
 		if (bRunUnstuck)
 		{
 			if (loco.GetGroundSpeed() <= 0.1 || GetVectorSquareMagnitude(flMyPos, g_flLastPos[iBossIndex]) < 0.1 || loco.IsStuck())
@@ -503,7 +503,7 @@ public void SlenderChaseBossProcessMovement(int iBoss)
 				{
 					for (int iAttackIndex2 = 0; iAttackIndex2 < NPCChaserGetAttackCount(iBossIndex); iAttackIndex2++)
 					{
-						if (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam) continue;
+						if (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam) continue;
 						bBlockingProp = NPC_CanAttackProps(iBossIndex,NPCChaserGetAttackRange(iBossIndex, iAttackIndex2), NPCChaserGetAttackSpread(iBossIndex, iAttackIndex2));
 						if (bBlockingProp) break;
 					}
@@ -835,7 +835,7 @@ public void SlenderSetNextThink(int iBoss)
 		int iState = g_iSlenderState[iBossIndex];
 		bool bChangeAngle = false;
 		float vecPosToAt[3];
-		int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+		int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 		if (iState != STATE_STUN && !g_bSlenderSpawning[iBossIndex])
 		{
 			int iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
@@ -909,7 +909,7 @@ public void SlenderSetNextThink(int iBoss)
 					}
 					case STATE_ATTACK:
 					{
-						if (g_bNPCAlwaysLookAtTargetWhileAttacking[iBossIndex] && !NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, iAttackIndex) && ((NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) != SF2BossAttackType_LaserBeam)))
+						if (g_bNPCAlwaysLookAtTargetWhileAttacking[iBossIndex] && !NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, attackIndex) && ((NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) != SF2BossAttackType_LaserBeam)))
 						{
 							if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 							{
@@ -917,7 +917,7 @@ public void SlenderSetNextThink(int iBoss)
 								GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", vecPosToAt);
 							}
 						}
-						if (!NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, iAttackIndex) && (NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, iAttackIndex) == SF2BossAttackType_LaserBeam))
+						if (!NPCChaserGetAttackIgnoreAlwaysLooking(iBossIndex, attackIndex) && (NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Ranged || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_Projectile || NPCChaserGetAttackType(iBossIndex, attackIndex) == SF2BossAttackType_LaserBeam))
 						{
 							if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 							{

@@ -20,24 +20,24 @@ public void Tutorial_Initialize()
 /*
  * Tutorial clients handling.
  */
-public void Tutorial_HandleClient(int iClient)
+public void Tutorial_HandleClient(int client)
 {
-	if (GetRoundState() != SF2RoundState_Active && !g_bPlayerEliminated[iClient] && !g_bClientTutorialEnabled[iClient])
+	if (GetRoundState() != SF2RoundState_Active && !g_bPlayerEliminated[client] && !g_bClientTutorialEnabled[client])
 	{
-		CPrintToChat(iClient, "{aqua}Sorry you can't use the tutorial command right now!");
+		CPrintToChat(client, "{aqua}Sorry you can't use the tutorial command right now!");
 		return;
 	}
-	g_bClientTutorialEnabled[iClient] = !g_bClientTutorialEnabled[iClient];
-	if (g_bClientTutorialEnabled[iClient])
+	g_bClientTutorialEnabled[client] = !g_bClientTutorialEnabled[client];
+	if (g_bClientTutorialEnabled[client])
 	{
-		CPrintToChat(iClient, "{aqua}SF2 Tutorial enabled!");
-		if (GetRoundState() == SF2RoundState_Active && !g_bPlayerEliminated[iClient])
+		CPrintToChat(client, "{aqua}SF2 Tutorial enabled!");
+		if (GetRoundState() == SF2RoundState_Active && !g_bPlayerEliminated[client])
 		{
-			Tutorial_PrintMessageToClient(iClient, "Welcome!", "Welcome on Slender Fortress 2! This mod was coded by Benoist3012 & Kit o Rifty. Grace period is active you can change your class.\n To collect a page press %+attack%.\n To use your flashlight %+attack2%.\n To sprint press %+attack3% or %+sprint%.");
+			Tutorial_PrintMessageToClient(client, "Welcome!", "Welcome on Slender Fortress 2! This mod was coded by Benoist3012 & Kit o Rifty. Grace period is active you can change your class.\n To collect a page press %+attack%.\n To use your flashlight %+attack2%.\n To sprint press %+attack3% or %+sprint%.");
 		}
 	}
 	else
-		CPrintToChat(iClient, "{aqua}SF2 Tutorial disabled!");
+		CPrintToChat(client, "{aqua}SF2 Tutorial disabled!");
 }
 
 /*
@@ -114,16 +114,16 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 	GameRules_SetProp("m_bIsInTraining", true, 1, _, true);
 	GameRules_SetProp("m_bIsTrainingHUDVisible", true, 1, _, true);
 	
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	for (int client = 1; client <= MaxClients; client++)
 	{
-		if (IsClientInGame(iClient) && !g_bPlayerEliminated[iClient] && g_bClientTutorialEnabled[iClient])
+		if (IsClientInGame(client) && !g_bPlayerEliminated[client] && g_bClientTutorialEnabled[client])
 		{
-			Handle hMessage = StartMessageOne("TrainingObjective", iClient);
+			Handle hMessage = StartMessageOne("TrainingObjective", client);
 			BfWriteString(hMessage, sTitle);
 			delete hMessage;
 			EndMessage();
 			
-			hMessage = StartMessageOne("TrainingMsg", iClient);
+			hMessage = StartMessageOne("TrainingMsg", client);
 			BfWriteString(hMessage, sMessage);
 			delete hMessage;
 			EndMessage();
@@ -132,16 +132,16 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 	g_hTimerHideTutorialMessage = CreateTimer(flLifeTime, Timer_TutorialHideMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-void Tutorial_PrintMessageToClient(int iClient, const char[] sTitle, const char[] sMessage)
+void Tutorial_PrintMessageToClient(int client, const char[] sTitle, const char[] sMessage)
 {
 	//Tell the client, to print the training message.
 	GameRules_SetProp("m_bIsTrainingHUDVisible", true, 1, _, true);
-	Handle hMessage = StartMessageOne("TrainingObjective", iClient);
+	Handle hMessage = StartMessageOne("TrainingObjective", client);
 	BfWriteString(hMessage, sTitle);
 	delete hMessage;
 	EndMessage();
 	
-	hMessage = StartMessageOne("TrainingMsg", iClient);
+	hMessage = StartMessageOne("TrainingMsg", client);
 	BfWriteString(hMessage, sMessage);
 	delete hMessage;
 	EndMessage();

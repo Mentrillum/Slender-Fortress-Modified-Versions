@@ -373,12 +373,12 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_cvRestartSession.BoolValue)
 	{
 		int iClientInGame = 0, iClientCallingForNightmare = 0;
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		for (int client = 1; client <= MaxClients; client++)
 		{
-			if (IsClientInGame(iClient) && !g_bPlayerEliminated[iClient])
+			if (IsClientInGame(client) && !g_bPlayerEliminated[client])
 			{
 				iClientInGame++;
-				if (g_bPlayerCalledForNightmare[iClient]) iClientCallingForNightmare++;
+				if (g_bPlayerCalledForNightmare[client]) iClientCallingForNightmare++;
 			}
 		}
 		bool bPlayersCalledForNightmare = (iClientInGame == iClientCallingForNightmare);
@@ -410,8 +410,8 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 			g_cvDifficulty.SetString(sInfo);
 		}
 		
-		int iDifficulty = g_cvDifficulty.IntValue;
-		switch (iDifficulty)
+		int difficulty = g_cvDifficulty.IntValue;
+		switch (difficulty)
 		{
 			case Difficulty_Easy:
 			{
@@ -1173,14 +1173,14 @@ void DisplayQueuePointsMenu(int client)
 				}
 				else
 				{
-					for (int iClient = 1; iClient <= MaxClients; iClient++)
+					for (int i2 = 1; i2 <= MaxClients; i2++)
 					{
-						if (!IsValidClient(iClient)) continue;
-						if (ClientGetPlayerGroup(iClient) == iIndex)
+						if (!IsValidClient(i2)) continue;
+						if (ClientGetPlayerGroup(i2) == iIndex)
 						{
-							FormatEx(sBuffer, sizeof(sBuffer), "%N - %d", iClient, g_iPlayerQueuePoints[iClient]);
-							FormatEx(sInfo, sizeof(sInfo), "player_%d", GetClientUserId(iClient));
-							AddMenuItem(menu, "player", sBuffer, g_bPlayerPlaying[iClient] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+							FormatEx(sBuffer, sizeof(sBuffer), "%N - %d", i2, g_iPlayerQueuePoints[i2]);
+							FormatEx(sInfo, sizeof(sInfo), "player_%d", GetClientUserId(i2));
+							AddMenuItem(menu, "player", sBuffer, g_bPlayerPlaying[i2] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 							break;
 						}
 					}
@@ -1196,9 +1196,9 @@ void DisplayQueuePointsMenu(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
+void DisplayViewGroupMembersQueueMenu(int client,int groupIndex)
 {
-	if (!IsPlayerGroupActive(iGroupIndex))
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// The group isn't valid anymore. Take him back to the main menu.
 		DisplayQueuePointsMenu(client);
@@ -1215,16 +1215,16 @@ void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
 		if (!IsValidClient(i)) continue;
 		
 		int iTempGroup = ClientGetPlayerGroup(i);
-		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
+		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != groupIndex) continue;
 		
 		hPlayers.Push(i);
 	}
 	
-	int iPlayerCount = hPlayers.Length;
-	if (iPlayerCount)
+	int playerCount = hPlayers.Length;
+	if (playerCount)
 	{
 		char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-		GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
+		GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
 		
 		Handle hMenu = CreateMenu(Menu_ViewGroupMembersQueue);
 		SetMenuTitle(hMenu, "%t%T (%s)\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, sGroupName);
@@ -1232,12 +1232,12 @@ void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
 		char sUserId[32];
 		char sName[MAX_NAME_LENGTH * 2];
 		
-		for (int i = 0; i < iPlayerCount; i++)
+		for (int i = 0; i < playerCount; i++)
 		{
-			int iClient = hPlayers.Get(i);
-			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
-			FormatEx(sName, sizeof(sName), "%N", iClient);
-			if (GetPlayerGroupLeader(iGroupIndex) == iClient) StrCat(sName, sizeof(sName), " (LEADER)");
+			int clientArray = hPlayers.Get(i);
+			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(clientArray));
+			FormatEx(sName, sizeof(sName), "%N", clientArray);
+			if (GetPlayerGroupLeader(groupIndex) == clientArray) StrCat(sName, sizeof(sName), " (LEADER)");
 			
 			AddMenuItem(hMenu, sUserId, sName);
 		}
@@ -1354,22 +1354,22 @@ void DisplayBossList(int client)
 {
 	Handle menu = CreateMenu(Menu_BossList);
 	
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			char sDisplayName[SF2_MAX_NAME_LENGTH];
 			
 			do
 			{
-				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
-				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
-				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
-				AddMenuItem(menu, sProfile, sDisplayName);
+				g_Config.GetSectionName(profile, sizeof(profile));
+				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), profile);
+				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), profile);
+				AddMenuItem(menu, profile, sDisplayName);
 			}
-			while (g_hConfig.GotoNextKey());
+			while (g_Config.GotoNextKey());
 		}
 	}
 	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Boss List Menu Title", client);

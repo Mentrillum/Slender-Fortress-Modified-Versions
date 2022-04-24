@@ -93,12 +93,12 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 
 		float flAnger = -1.0;
 		float flSeeAnger = -1.0;
-		float flAlertAnger = -1.0;
+		float alertAnger = -1.0;
 		float fl20DollarsAnger = -1.0;
 		
 		float flBuffer[3], flBuffer2[3], flBuffer3[3];
 		
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		
 		for (int i = 0; i < MAX_BOSSES; i++)
 		{
@@ -106,7 +106,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 			
 			if (NPCGetEntIndex(i) == INVALID_ENT_REFERENCE) continue;
 			
-			NPCGetProfile(i, sProfile, sizeof(sProfile));
+			NPCGetProfile(i, profile, sizeof(profile));
 			
 			int iBossType = NPCGetType(i);
 			
@@ -127,7 +127,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 							(iTarget == client || GetVectorSquareMagnitude(flBuffer, flBuffer2) <= SquareFloat(850.0) || GetVectorSquareMagnitude(flBuffer, flBuffer3) <= SquareFloat(850.0) || GetVectorSquareMagnitude(flBuffer, g_flSlenderGoalPos[i]) <= SquareFloat(850.0)))
 						{
 							static char sPath[PLATFORM_MAX_PATH];
-							GetRandomStringFromProfile(sProfile, "sound_chase_music", sPath, sizeof(sPath));
+							GetRandomStringFromProfile(profile, "sound_chase_music", sPath, sizeof(sPath));
 							if (sPath[0])
 							{
 								if (NPCGetAnger(i) > flAnger)
@@ -142,7 +142,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 							{
 								if (iOldChasingSeeBoss == -1 || !PlayerCanSeeSlender(client, iOldChasingSeeBoss, false) || (NPCGetAnger(i) > flSeeAnger))
 								{
-									GetRandomStringFromProfile(sProfile, "sound_chase_visible", sPath, sizeof(sPath));
+									GetRandomStringFromProfile(profile, "sound_chase_visible", sPath, sizeof(sPath));
 									
 									if (sPath[0])
 									{
@@ -155,8 +155,8 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 								{
 									if (iOld20DollarsBoss == -1 || !PlayerCanSeeSlender(client, iOld20DollarsBoss, false) || (NPCGetAnger(i) > fl20DollarsAnger))
 									{
-										if (!GetRandomStringFromProfile(sProfile, "sound_20dollars_music", sPath, sizeof(sPath)))
-										GetRandomStringFromProfile(sProfile, "sound_20dollars", sPath, sizeof(sPath));
+										if (!GetRandomStringFromProfile(profile, "sound_20dollars_music", sPath, sizeof(sPath)))
+										GetRandomStringFromProfile(profile, "sound_20dollars", sPath, sizeof(sPath));
 										
 										if (sPath[0] || SF_SpecialRound(SPECIALROUND_20DOLLARS))
 										{
@@ -172,16 +172,16 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 					if (g_iSlenderState[i] == STATE_ALERT)
 					{
 						char sPath[PLATFORM_MAX_PATH];
-						GetRandomStringFromProfile(sProfile, "sound_alert_music", sPath, sizeof(sPath));
+						GetRandomStringFromProfile(profile, "sound_alert_music", sPath, sizeof(sPath));
 						if (!sPath[0]) continue;
 					
 						if (!(NPCGetFlags(i) & SFF_MARKEDASFAKE))
 						{
 							if (GetVectorSquareMagnitude(flBuffer, flBuffer3) <= SquareFloat(850.0) || GetVectorSquareMagnitude(flBuffer, g_flSlenderGoalPos[i]) <= SquareFloat(850.0))
 							{
-								if (NPCGetAnger(i) > flAlertAnger)
+								if (NPCGetAnger(i) > alertAnger)
 								{
-									flAlertAnger = NPCGetAnger(i);
+									alertAnger = NPCGetAnger(i);
 									iAlertBoss = i;
 								}
 							}
@@ -191,7 +191,7 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 					if (g_iSlenderState[i] == STATE_IDLE || g_iSlenderState[i] == STATE_WANDER)
 					{
 						char sPath[PLATFORM_MAX_PATH];
-						GetRandomStringFromProfile(sProfile, "sound_idle_music", sPath, sizeof(sPath));
+						GetRandomStringFromProfile(profile, "sound_idle_music", sPath, sizeof(sPath));
 						if (!sPath[0]) continue;
 					
 						if (!(NPCGetFlags(i) & SFF_MARKEDASFAKE))
@@ -514,8 +514,8 @@ stock void ClientUpdateMusicSystem(int client, bool bInitialize=false)
 				// Excitement, though, really depends on how close the boss is in relation to the
 				// player.
 				
-				float flBossDist = NPCGetDistanceFromEntity(iBossToUse, client);
-				float flScalar = (flBossDist / SquareFloat(700.0));
+				float bossDist = NPCGetDistanceFromEntity(iBossToUse, client);
+				float flScalar = (bossDist / SquareFloat(700.0));
 				if (flScalar > 1.0) flScalar = 1.0;
 				float flStressAdd = 0.1 * (1.0 - flScalar);
 				
@@ -585,7 +585,7 @@ void Client20DollarsMusicReset(int client)
 	g_iPlayer20DollarsMusicMaster[client] = -1;
 	g_iPlayer20DollarsMusicOldMaster[client] = -1;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -598,10 +598,10 @@ void Client20DollarsMusicReset(int client)
 			if (IsValidClient(client))
 			{
 				StopSound(client, MUSIC_CHAN, TWENTYDOLLARS_MUSIC);
-				NPCGetProfile(i, sProfile, sizeof(sProfile));
+				NPCGetProfile(i, profile, sizeof(profile));
 
-				ClientStopAllSlenderSounds(client, sProfile, "sound_20dollars_music", MUSIC_CHAN);
-				ClientStopAllSlenderSounds(client, sProfile, "sound_20dollars", MUSIC_CHAN);
+				ClientStopAllSlenderSounds(client, profile, "sound_20dollars_music", MUSIC_CHAN);
+				ClientStopAllSlenderSounds(client, profile, "sound_20dollars", MUSIC_CHAN);
 			}
 		}
 	}
@@ -616,12 +616,12 @@ void Client20DollarsMusicStart(int client,int iBossIndex)
 
 	g_iPlayer20DollarsMusicOldMaster[client] = iOldMaster;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sBuffer[PLATFORM_MAX_PATH];
-	if (!GetRandomStringFromProfile(sProfile, "sound_20dollars_music", sBuffer, sizeof(sBuffer)))
-	GetRandomStringFromProfile(sProfile, "sound_20dollars", sBuffer, sizeof(sBuffer));
+	if (!GetRandomStringFromProfile(profile, "sound_20dollars_music", sBuffer, sizeof(sBuffer)))
+	GetRandomStringFromProfile(profile, "sound_20dollars", sBuffer, sizeof(sBuffer));
 	
 	if (SF_SpecialRound(SPECIALROUND_20DOLLARS))
 	{
@@ -663,7 +663,7 @@ void ClientAlertMusicReset(int client)
 	g_iPlayerAlertMusicMaster[client] = -1;
 	g_iPlayerAlertMusicOldMaster[client] = -1;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -675,9 +675,9 @@ void ClientAlertMusicReset(int client)
 		{
 			if (IsValidClient(client))
 			{
-				NPCGetProfile(i, sProfile, sizeof(sProfile));
+				NPCGetProfile(i, profile, sizeof(profile));
 			
-				ClientStopAllSlenderSounds(client, sProfile, "sound_alert_music", MUSIC_CHAN);
+				ClientStopAllSlenderSounds(client, profile, "sound_alert_music", MUSIC_CHAN);
 			}
 		}
 	}
@@ -692,11 +692,11 @@ void ClientAlertMusicStart(int client,int iBossIndex)
 
 	g_iPlayerAlertMusicOldMaster[client] = iOldMaster;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sBuffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_alert_music", sBuffer, sizeof(sBuffer));
+	GetRandomStringFromProfile(profile, "sound_alert_music", sBuffer, sizeof(sBuffer));
 	
 	if (sBuffer[0] == '\0') return;
 	
@@ -730,7 +730,7 @@ void ClientIdleMusicReset(int client)
 	g_iPlayerIdleMusicMaster[client] = -1;
 	g_iPlayerIdleMusicOldMaster[client] = -1;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -742,9 +742,9 @@ void ClientIdleMusicReset(int client)
 		{
 			if (IsValidClient(client))
 			{
-				NPCGetProfile(i, sProfile, sizeof(sProfile));
+				NPCGetProfile(i, profile, sizeof(profile));
 			
-				ClientStopAllSlenderSounds(client, sProfile, "sound_idle_music", MUSIC_CHAN);
+				ClientStopAllSlenderSounds(client, profile, "sound_idle_music", MUSIC_CHAN);
 			}
 		}
 	}
@@ -759,11 +759,11 @@ void ClientIdleMusicStart(int client,int iBossIndex)
 
 	g_iPlayerIdleMusicOldMaster[client] = iOldMaster;
 
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sBuffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_idle_music", sBuffer, sizeof(sBuffer));
+	GetRandomStringFromProfile(profile, "sound_idle_music", sBuffer, sizeof(sBuffer));
 	
 	if (sBuffer[0] == '\0') return;
 	
@@ -797,7 +797,7 @@ void ClientChaseMusicReset(int client)
 	g_iPlayerChaseMusicMaster[client] = -1;
 	g_iPlayerChaseMusicOldMaster[client] = -1;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -809,9 +809,9 @@ void ClientChaseMusicReset(int client)
 		{
 			if (IsValidClient(client))
 			{
-				NPCGetProfile(i, sProfile, sizeof(sProfile));
+				NPCGetProfile(i, profile, sizeof(profile));
 			
-				ClientStopAllSlenderSounds(client, sProfile, "sound_chase_music", MUSIC_CHAN);
+				ClientStopAllSlenderSounds(client, profile, "sound_chase_music", MUSIC_CHAN);
 			}
 		}
 	}
@@ -826,11 +826,11 @@ void ClientMusicChaseStart(int client,int iBossIndex)
 
 	g_iPlayerChaseMusicOldMaster[client] = iOldMaster;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sBuffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_chase_music", sBuffer, sizeof(sBuffer));
+	GetRandomStringFromProfile(profile, "sound_chase_music", sBuffer, sizeof(sBuffer));
 	
 	if (sBuffer[0] == '\0') return;
 	
@@ -866,7 +866,7 @@ void ClientChaseMusicSeeReset(int client)
 	g_iPlayerChaseMusicSeeMaster[client] = -1;
 	g_iPlayerChaseMusicSeeOldMaster[client] = -1;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -878,9 +878,9 @@ void ClientChaseMusicSeeReset(int client)
 		{
 			if (IsValidClient(client))
 			{
-				NPCGetProfile(i, sProfile, sizeof(sProfile));
+				NPCGetProfile(i, profile, sizeof(profile));
 			
-				ClientStopAllSlenderSounds(client, sProfile, "sound_chase_visible", MUSIC_CHAN);
+				ClientStopAllSlenderSounds(client, profile, "sound_chase_visible", MUSIC_CHAN);
 			}
 		}
 	}
@@ -895,11 +895,11 @@ void ClientMusicChaseSeeStart(int client,int iBossIndex)
 
 	g_iPlayerChaseMusicSeeOldMaster[client] = iOldMaster;
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	char sBuffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(sProfile, "sound_chase_visible", sBuffer, sizeof(sBuffer));
+	GetRandomStringFromProfile(profile, "sound_chase_visible", sBuffer, sizeof(sBuffer));
 	if (sBuffer[0] == '\0') return;
 	
 	g_iPlayerChaseMusicSeeMaster[client] = iBossIndex;

@@ -136,14 +136,14 @@ public void Hook_ClientPreThink(int client)
 					if (!bDanger)
 					{
 						float flCurTime = GetGameTime();
-						float flScareSprintDuration = 3.0;
-						if (TF2_GetPlayerClass(client) == TFClass_DemoMan) flScareSprintDuration *= 1.667;
+						float scareSprintDuration = 3.0;
+						if (TF2_GetPlayerClass(client) == TFClass_DemoMan) scareSprintDuration *= 1.667;
 						
 						for (int i = 0; i < MAX_BOSSES; i++)
 						{
 							if (NPCGetUniqueID(i) == -1) continue;
 							
-							if ((flCurTime - g_flPlayerScareLastTime[client][i]) <= flScareSprintDuration)
+							if ((flCurTime - g_flPlayerScareLastTime[client][i]) <= scareSprintDuration)
 							{
 								bDanger = true;
 								break;
@@ -189,9 +189,9 @@ public void Hook_ClientPreThink(int client)
 							}
 							case 775: // Escape Plan
 							{
-								float flHealth = float(GetEntProp(client, Prop_Send, "m_iHealth"));
+								float health = float(GetEntProp(client, Prop_Send, "m_iHealth"));
 								float flMaxHealth = float(SDKCall(g_hSDKGetMaxHealth, client));
-								float flPercentage = flHealth / flMaxHealth;
+								float flPercentage = health / flMaxHealth;
 
 								if (flPercentage < 0.805 && flPercentage >= 0.605) 
 								{
@@ -580,14 +580,14 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 			int iBossIndex = NPCGetFromEntIndex(slender);
 			if (iBossIndex != -1 && IsValidClient(victim))
 			{
-				int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+				int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 				if(g_sSlenderIceballImpactSound[iBossIndex][0] == '\0')
 				{
 					g_sSlenderIceballImpactSound[iBossIndex] = ICEBALL_IMPACT;
 				}
 				EmitSoundToClient(victim, g_sSlenderIceballImpactSound[iBossIndex], _, MUSIC_CHAN);
-				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
-				TF2_StunPlayer(victim, NPCChaserGetIceballSlowdownDuration(iBossIndex, iDifficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, victim);
+				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetProjectileDamage(iBossIndex, difficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				TF2_StunPlayer(victim, NPCChaserGetIceballSlowdownDuration(iBossIndex, difficulty), NPCChaserGetIceballSlowdownPercent(iBossIndex, difficulty), TF_STUNFLAG_SLOWDOWN, victim);
 			}
 		}
 	}
@@ -599,11 +599,11 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 			int iBossIndex = NPCGetFromEntIndex(slender);
 			if (iBossIndex != -1 && IsValidClient(victim))
 			{
-				int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-				int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+				int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+				int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
 				EmitSoundToClient(victim, ICEBALL_IMPACT, _, MUSIC_CHAN);
-				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
-				TF2_StunPlayer(victim, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, iAttackIndex, iDifficulty), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, iAttackIndex, iDifficulty), TF_STUNFLAG_SLOWDOWN, victim);
+				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetAttackProjectileDamage(iBossIndex, attackIndex, difficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				TF2_StunPlayer(victim, NPCChaserGetAttackProjectileIceSlowdownDuration(iBossIndex, attackIndex, difficulty), NPCChaserGetAttackProjectileIceSlowdownPercent(iBossIndex, attackIndex, difficulty), TF_STUNFLAG_SLOWDOWN, victim);
 			}
 		}
 	}
@@ -615,8 +615,8 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 			int iBossIndex = NPCGetFromEntIndex(slender);
 			if (iBossIndex != -1 && IsValidClient(victim))
 			{
-				int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetProjectileDamage(iBossIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetProjectileDamage(iBossIndex, difficulty), DMG_SHOCK|DMG_ALWAYSGIB);
 				TF2_IgnitePlayer(victim, victim);
 			}
 		}
@@ -630,9 +630,9 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 			int iBossIndex = NPCGetFromEntIndex(slender);
 			if (iBossIndex != -1 && IsValidClient(victim))
 			{
-				int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-				int iAttackIndex = NPCGetCurrentAttackIndex(iBossIndex);
-				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetAttackProjectileDamage(iBossIndex, iAttackIndex, iDifficulty), DMG_SHOCK|DMG_ALWAYSGIB);
+				int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+				int attackIndex = NPCGetCurrentAttackIndex(iBossIndex);
+				SDKHooks_TakeDamage(victim, inflictor, inflictor, NPCChaserGetAttackProjectileDamage(iBossIndex, attackIndex, difficulty), DMG_SHOCK|DMG_ALWAYSGIB);
 				TF2_IgnitePlayer(victim, victim);
 			}
 		}
@@ -746,13 +746,13 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				
 				if (g_bPlayerProxy[attacker])
 				{
-					char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 					int iMaxHealth = SDKCall(g_hSDKGetMaxHealth, victim);
 					int iMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[attacker]);
-					NPCGetProfile(iMaster, sProfile, sizeof(sProfile));
-					if (iMaster != -1 && sProfile[0] != '\0')
+					NPCGetProfile(iMaster, profile, sizeof(profile));
+					if (iMaster != -1 && profile[0] != '\0')
 					{
-						int iDifficulty = GetLocalGlobalDifficulty(iMaster);
+						int difficulty = GetLocalGlobalDifficulty(iMaster);
 						if (damagecustom == TF_CUSTOM_TAUNT_GRAND_SLAM ||
 							damagecustom == TF_CUSTOM_TAUNT_FENCING ||
 							damagecustom == TF_CUSTOM_TAUNT_ARROW_STAB ||
@@ -766,17 +766,17 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 						}
 						else if (damagecustom == TF_CUSTOM_BACKSTAB) // Modify backstab damage.
 						{
-							damage = float(iMaxHealth) * g_flSlenderProxyDamageVsBackstab[iMaster][iDifficulty];
+							damage = float(iMaxHealth) * g_flSlenderProxyDamageVsBackstab[iMaster][difficulty];
 							if (damagetype & DMG_ACID) damage /= 2.0;
 						}
 					
-						g_iPlayerProxyControl[attacker] += g_iSlenderProxyControlGainHitEnemy[iMaster][iDifficulty];
+						g_iPlayerProxyControl[attacker] += g_iSlenderProxyControlGainHitEnemy[iMaster][difficulty];
 						if (g_iPlayerProxyControl[attacker] > 100)
 						{
 							g_iPlayerProxyControl[attacker] = 100;
 						}
 
-						float flOriginalPercentage = g_flSlenderProxyDamageVsEnemy[iMaster][iDifficulty];
+						float flOriginalPercentage = g_flSlenderProxyDamageVsEnemy[iMaster][difficulty];
 						float flAdditionPercentage = 0.15;
 
 						if (TF2_GetPlayerClass(victim) == TFClass_Medic) damage *= (flOriginalPercentage + flAdditionPercentage);
@@ -786,19 +786,19 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				}
 				else if (g_bPlayerProxy[victim])
 				{
-					char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 					int iMaster = NPCGetFromUniqueID(g_iPlayerProxyMaster[victim]);
-					NPCGetProfile(iMaster, sProfile, sizeof(sProfile));
-					if (iMaster != -1 && sProfile[0] != '\0')
+					NPCGetProfile(iMaster, profile, sizeof(profile));
+					if (iMaster != -1 && profile[0] != '\0')
 					{
-						int iDifficulty = GetLocalGlobalDifficulty(iMaster);
-						g_iPlayerProxyControl[attacker] += g_iSlenderProxyControlGainHitByEnemy[iMaster][iDifficulty];
+						int difficulty = GetLocalGlobalDifficulty(iMaster);
+						g_iPlayerProxyControl[attacker] += g_iSlenderProxyControlGainHitByEnemy[iMaster][difficulty];
 						if (g_iPlayerProxyControl[attacker] > 100)
 						{
 							g_iPlayerProxyControl[attacker] = 100;
 						}
 						
-						damage *= g_flSlenderProxyDamageVsSelf[iMaster][iDifficulty];
+						damage *= g_flSlenderProxyDamageVsSelf[iMaster][difficulty];
 					}
 					if(TF2_IsPlayerInCondition(victim, view_as<TFCond>(87)))
 					{
@@ -812,13 +812,13 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 						TF2_GetClassName(TF2_GetPlayerClass(victim), sClassName, sizeof(sClassName));
 		
 						FormatEx(sSectionName, sizeof(sSectionName), "proxies_death_anim_%s", sClassName);
-						if ((GetProfileString(sProfile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0') ||
-						(GetProfileString(sProfile, "proxies_death_anim_all", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0'))
+						if ((GetProfileString(profile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0') ||
+						(GetProfileString(profile, "proxies_death_anim_all", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0'))
 						{
 							FormatEx(sSectionName, sizeof(sSectionName), "proxies_death_anim_frames_%s", sClassName);
-							g_iClientMaxFrameDeathAnim[victim]=GetProfileNum(sProfile, sSectionName, 0);
+							g_iClientMaxFrameDeathAnim[victim]=GetProfileNum(profile, sSectionName, 0);
 							if(g_iClientMaxFrameDeathAnim[victim]==0)
-								g_iClientMaxFrameDeathAnim[victim]=GetProfileNum(sProfile, "proxies_death_anim_frames_all", 0);
+								g_iClientMaxFrameDeathAnim[victim]=GetProfileNum(profile, "proxies_death_anim_frames_all", 0);
 							if(g_iClientMaxFrameDeathAnim[victim]>0)
 							{
 								// Cancel out any other taunts.
@@ -1409,12 +1409,12 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					}
 				}
 				
-				float flHealthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_hSDKGetMaxHealth, i));
+				float healthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_hSDKGetMaxHealth, i));
 				
 				int iColor[3];
 				for (int i2 = 0; i2 < 3; i2++)
 				{
-					iColor[i2] = RoundFloat(float(iHudColorHealthy[i2]) + (float(iHudColorCritical[i2] - iHudColorHealthy[i2]) * (1.0 - flHealthRatio)));
+					iColor[i2] = RoundFloat(float(iHudColorHealthy[i2]) + (float(iHudColorCritical[i2] - iHudColorHealthy[i2]) * (1.0 - healthRatio)));
 				}
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{

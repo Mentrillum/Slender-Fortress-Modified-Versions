@@ -8,26 +8,26 @@ stock bool SF_IsRenevantMap()
 	return view_as<bool>(g_bIsRenevantMap || (g_cvRenevantMap.IntValue == 1));
 }
 
-static bool Renevant_TryAddBossProfile(char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], int iProfileLen, char[] sName, int iNameLen, bool bPlaySpawnSound=true, bool bInvincible = false)
+static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int iProfileLen, char[] sName, int iNameLen, bool bPlaySpawnSound=true, bool bInvincible = false)
 {
-	if (!GetRandomRenevantBossProfile(sProfile, iProfileLen))
+	if (!GetRandomRenevantBossProfile(profile, iProfileLen))
 		return false;
 
-	NPCGetBossName(_, sName, iNameLen, sProfile);
-	if (sName[0] == '\0') strcopy(sName, iNameLen, sProfile);
-	AddProfile(sProfile, _, _, _, bPlaySpawnSound, bInvincible);
+	NPCGetBossName(_, sName, iNameLen, profile);
+	if (sName[0] == '\0') strcopy(sName, iNameLen, profile);
+	AddProfile(profile, _, _, _, bPlaySpawnSound, bInvincible);
 
 	return true;
 }
 
-static bool Renevant_TryAddSingleBossProfile(char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], char[] sName, int iNameLen, bool bPlaySpawnSound=true, bool bInvincible = false)
+static bool Renevant_TryAddSingleBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], char[] sName, int iNameLen, bool bPlaySpawnSound=true, bool bInvincible = false)
 {
-	if (!IsProfileValid(sProfile))
+	if (!IsProfileValid(profile))
 		return false;
 
-	NPCGetBossName(_, sName, iNameLen, sProfile);
-	if (sName[0] == '\0') strcopy(sName, iNameLen, sProfile);
-	AddProfile(sProfile, _, _, _, bPlaySpawnSound, bInvincible);
+	NPCGetBossName(_, sName, iNameLen, profile);
+	if (sName[0] == '\0') strcopy(sName, iNameLen, profile);
+	AddProfile(profile, _, _, _, bPlaySpawnSound, bInvincible);
 
 	return true;
 }
@@ -242,15 +242,15 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_MarkForDeath:
 		{
 			g_bRenevantMarkForDeath = true;
-			for (int iClient = 1; iClient < MaxClients; iClient++)
+			for (int client = 1; client < MaxClients; client++)
 			{
-				if (!IsValidClient(iClient)) continue;
-				if (!IsClientInGame(iClient) || 
-					!IsPlayerAlive(iClient) || 
-					g_bPlayerEliminated[iClient] || 
-					IsClientInGhostMode(iClient) || 
-					DidClientEscape(iClient)) continue;
-				TF2_AddCondition(iClient, TFCond_MarkedForDeathSilent, -1.0);
+				if (!IsValidClient(client)) continue;
+				if (!IsClientInGame(client) || 
+					!IsPlayerAlive(client) || 
+					g_bPlayerEliminated[client] || 
+					IsClientInGhostMode(client) || 
+					DidClientEscape(client)) continue;
+				TF2_AddCondition(client, TFCond_MarkedForDeathSilent, -1.0);
 			}
 			StrCat(sBroadcastMessage, sizeof(sBroadcastMessage), "\nEveryone is marked for death permanently.");
 			int iEraseWave = g_aRenevantWaveList.FindValue(RenevantWave_MarkForDeath);

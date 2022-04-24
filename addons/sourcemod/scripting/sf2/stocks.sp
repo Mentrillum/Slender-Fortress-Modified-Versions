@@ -216,13 +216,13 @@ stock int SetEntityTransmitState(int iEntity, int iNewFlags)
     return iFlags;
 }
 
-public Action NetworkHook_EntityTransmission(int iEntity, int iClient)
+public Action NetworkHook_EntityTransmission(int iEntity, int client)
 {
-	if (!Network_ClientHasSeenEntity(iClient, iEntity))
+	if (!Network_ClientHasSeenEntity(client, iEntity))
 	{
 		DataPack networkData = new DataPack();
 		networkData.WriteCell(EntIndexToEntRef(iEntity));
-		networkData.WriteCell(GetClientUserId(iClient));
+		networkData.WriteCell(GetClientUserId(client));
 		RequestFrame(Frame_UpdateClientEntityInfo, networkData);
 	}
 	return Plugin_Continue;
@@ -235,17 +235,17 @@ public void Frame_UpdateClientEntityInfo(DataPack networkData)
 	int userid = networkData.ReadCell();
 	delete networkData;
 	int iEntity = EntRefToEntIndex(iRef);
-	int iClient = GetClientOfUserId(userid);
+	int client = GetClientOfUserId(userid);
 	
-	if (iEntity > 0 && iClient > 0)
-		g_bClientAndEntityNetwork[iEntity][iClient] = true;
+	if (iEntity > 0 && client > 0)
+		g_bClientAndEntityNetwork[iEntity][client] = true;
 }
 
-stock void Network_ResetClient(int iClient)
+stock void Network_ResetClient(int client)
 {
 	for (int i = 0; i < 2049; i++)
 	{
-		g_bClientAndEntityNetwork[i][iClient] = false;
+		g_bClientAndEntityNetwork[i][client] = false;
 	}
 }
 
@@ -257,9 +257,9 @@ stock void Network_ResetEntity(int iEnt)
 	}
 }
 
-stock bool Network_ClientHasSeenEntity(int iClient, int iEnt)
+stock bool Network_ClientHasSeenEntity(int client, int iEnt)
 {
-	return g_bClientAndEntityNetwork[iEnt][iClient];
+	return g_bClientAndEntityNetwork[iEnt][client];
 }
 
 stock bool IsEntityClassname(int iEnt, const char[] classname, bool bCaseSensitive=true)
@@ -590,15 +590,15 @@ stock void DestroyAllActiveWeapons(int client)
 #define SF_NO_DISGUISED_SPY_HEALING	0x0008
 
 /* Hack around server code logic to call CTFPlayerShared::StopHealing */
-stock void SDK_StopHealing(int iHealer, int iClient)
+stock void SDK_StopHealing(int iHealer, int client)
 {
 	int iEntity = CreateEntityByName("obj_dispenser");
 	if(iEntity > MaxClients)
 	{
 		float vecPos[3];
-		GetClientEyePosition(iClient, vecPos);
+		GetClientEyePosition(client, vecPos);
 		TeleportEntity(iEntity, vecPos, NULL_VECTOR, NULL_VECTOR);
-		int iTeam = GetClientTeam(iClient);
+		int iTeam = GetClientTeam(client);
 		DispatchSpawn(iEntity);
 
 		char strTeam[5];
@@ -624,9 +624,9 @@ stock void SDK_StopHealing(int iHealer, int iClient)
 		SetEntProp(iEntity, Prop_Send, "m_fEffects", flags);*/
 		
 		//Start the healing
-		SDK_StartTouch(iEntity, iClient);
+		SDK_StartTouch(iEntity, client);
 		SetEntProp(iEntity, Prop_Send, "m_bCarryDeploy", true);
-		//SDK_EndTouch(iEntity, iClient);
+		//SDK_EndTouch(iEntity, client);
 		CreateTimer(10.0, Timer_KillEntity, EntIndexToEntRef(iEntity), TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
@@ -808,13 +808,13 @@ stock void TF2_DestroySpyWeapons(int client)
 	}
 }
 
-stock void TF2_ChangePlayerName(int iClient, const char[] sNewName, bool bPrintInChat = false)
+stock void TF2_ChangePlayerName(int client, const char[] sNewName, bool bPrintInChat = false)
 {
 	char sOldName[64];
-	GetEntPropString(iClient, Prop_Data, "m_szNetname", sOldName, sizeof(sOldName));
+	GetEntPropString(client, Prop_Data, "m_szNetname", sOldName, sizeof(sOldName));
 	
 	/*Event event_namechange = CreateEvent("player_changename");
-	event_namechange.SetInt("userid", GetClientUserId(iClient));
+	event_namechange.SetInt("userid", GetClientUserId(client));
 	event_namechange.SetString("oldname", sOldName);
 	event_namechange.SetString("newname", sNewName);
 	event_namechange.Fire();*/
@@ -826,18 +826,18 @@ stock void TF2_ChangePlayerName(int iClient, const char[] sNewName, bool bPrintI
 		if (!IsClientInGame(player)) continue;
 		players[playersNum++] = player;
 	}
-	UTIL_SayText2(players, playersNum, iClient, bPrintInChat, "#TF_Name_Change", sOldName, sNewName);
+	UTIL_SayText2(players, playersNum, client, bPrintInChat, "#TF_Name_Change", sOldName, sNewName);
 	
 	
-	SetEntPropString(iClient, Prop_Data, "m_szNetname", sNewName);
+	SetEntPropString(client, Prop_Data, "m_szNetname", sNewName);
 }
 
-stock int TF2_FindNoiseMaker(int iClient)
+stock int TF2_FindNoiseMaker(int client)
 {
 	int iEntity = MaxClients + 1;
 	while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable")) > MaxClients)
 	{
-		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient)
+		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
 		{
 			if (TF2_WeaponFindAttribute(iEntity, 196) > 0.0)
 			{
@@ -954,35 +954,35 @@ stock bool IsValidClient(int client)
 
 stock void PrintToSourceTV(const char[] Message)
 {
-	int iClient = GetClientOfUserId(g_iSourceTVUserID);
-	if (MaxClients >= iClient > 0 && IsClientInGame(iClient) && IsClientSourceTV(iClient))
+	int client = GetClientOfUserId(g_iSourceTVUserID);
+	if (MaxClients >= client > 0 && IsClientInGame(client) && IsClientSourceTV(client))
 	{
-		CPrintToChat(iClient, Message);
+		CPrintToChat(client, Message);
 	}
 }
 //	==========================================================
 //	TF2-SPECIFIC FUNCTIONS
 //	==========================================================
-stock bool TF2_IsMiniCritBuffed(int iClient)
+stock bool TF2_IsMiniCritBuffed(int client)
 {
-	return (TF2_IsPlayerInCondition(iClient, TFCond_CritCola)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritHype)
-        || TF2_IsPlayerInCondition(iClient, TFCond_Buffed)
+	return (TF2_IsPlayerInCondition(client, TFCond_CritCola)
+        || TF2_IsPlayerInCondition(client, TFCond_CritHype)
+        || TF2_IsPlayerInCondition(client, TFCond_Buffed)
     );
 }
 
-stock bool TF2_IsPlayerCritBuffed(int iClient)
+stock bool TF2_IsPlayerCritBuffed(int client)
 {
-    return (TF2_IsPlayerInCondition(iClient, TFCond_Kritzkrieged)
-        || TF2_IsPlayerInCondition(iClient, TFCond_HalloweenCritCandy)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritCanteen)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritDemoCharge)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnFirstBlood)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnWin)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnFlagCapture)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnKill)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritMmmph)
-		|| TF2_IsPlayerInCondition(iClient, TFCond_CritOnDamage)
+    return (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged)
+        || TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy)
+        || TF2_IsPlayerInCondition(client, TFCond_CritCanteen)
+        || TF2_IsPlayerInCondition(client, TFCond_CritDemoCharge)
+        || TF2_IsPlayerInCondition(client, TFCond_CritOnFirstBlood)
+        || TF2_IsPlayerInCondition(client, TFCond_CritOnWin)
+        || TF2_IsPlayerInCondition(client, TFCond_CritOnFlagCapture)
+        || TF2_IsPlayerInCondition(client, TFCond_CritOnKill)
+        || TF2_IsPlayerInCondition(client, TFCond_CritMmmph)
+		|| TF2_IsPlayerInCondition(client, TFCond_CritOnDamage)
     );
 }
 

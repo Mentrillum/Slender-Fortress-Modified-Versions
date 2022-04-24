@@ -43,8 +43,8 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 		return;
 	}
 	int slender = g_iSlenderHitboxOwner[victim];
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 
 	NPCGetEyePosition(iBossIndex, flTraceStartPos);
 
@@ -62,9 +62,9 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && (TF2_IsPlayerInCondition(attacker, TFCond_RegenBuffed)) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
 	{
 		int iHealth = GetClientHealth(attacker);
-		float flDamage = damage;
-		flDamage *= 0.475;
-		int iNewHealth = iHealth + RoundToCeil(flDamage);
+		float multipliedDamage = damage;
+		multipliedDamage *= 0.475;
+		int iNewHealth = iHealth + RoundToCeil(multipliedDamage);
 		if(iNewHealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))
 		{
 			SetEntityHealth(attacker, iNewHealth);
@@ -216,7 +216,7 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 			SubtractVectors(flTraceEndPos, flTraceStartPos, flBuffer);
 			GetVectorAngles(flBuffer, flBuffer);
 
-			if (FloatAbs(AngleDiff(flMyEyeAng[1], flBuffer[1])) >= (NPCGetBackstabFOV(iBossIndex) * 0.5) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && GetProfileFloat(sProfile, "backstab_damage_scale", 0.05) > 0.0)
+			if (FloatAbs(AngleDiff(flMyEyeAng[1], flBuffer[1])) >= (NPCGetBackstabFOV(iBossIndex) * 0.5) && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex] && GetProfileFloat(profile, "backstab_damage_scale", 0.05) > 0.0)
 			{
 				damagetype = DMG_CRIT;
 				EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
@@ -234,7 +234,7 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 						case 638: anim = 31;
 					}
 					SetEntProp(vm, Prop_Send, "m_nSequence", anim);
-					damage = NPCChaserGetStunInitialHealth(iBossIndex) * GetProfileFloat(sProfile, "backstab_damage_scale", 0.05);
+					damage = NPCChaserGetStunInitialHealth(iBossIndex) * GetProfileFloat(profile, "backstab_damage_scale", 0.05);
 					NPCSetAddSpeed(iBossIndex, 12.5);
 					NPCSetAddMaxSpeed(iBossIndex, 25.0);
 					NPCSetAddAcceleration(iBossIndex, 100.0);
@@ -300,7 +300,7 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 				NPCChaserAddStunHealth(iBossIndex, -damage);
 				if (NPCChaserGetStunHealth(iBossIndex) <= 0.0 && iState != STATE_STUN)
 				{
-					NPCBossTriggerStun(iBossIndex, slender, sProfile, flMyPos);
+					NPCBossTriggerStun(iBossIndex, slender, profile, flMyPos);
 					Call_StartForward(fOnBossStunned);
 					Call_PushCell(iBossIndex);
 					Call_PushCell(attacker);
@@ -308,8 +308,8 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 					if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
 					{
 						int iMaxHealth = SDKCall(g_hSDKGetMaxHealth, attacker);
-						float flHealthToRecover = float(iMaxHealth)/7.5;
-						int iHealthToRecover = RoundToNearest(flHealthToRecover) + GetEntProp(attacker, Prop_Send, "m_iHealth");
+						float healthToRecover = float(iMaxHealth)/7.5;
+						int iHealthToRecover = RoundToNearest(healthToRecover) + GetEntProp(attacker, Prop_Send, "m_iHealth");
 						SetEntityHealth(attacker, iHealthToRecover);
 					}
 				}
@@ -374,11 +374,11 @@ void UpdateHealthBar(int iBossIndex)
 	SetEntProp(g_ihealthBar, Prop_Send, "m_iBossHealthPercentageByte", healthPercent);
 }
 
-public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX_PROFILE_NAME_LENGTH], float position[3])
+public void NPCBossTriggerStun(int iBossIndex, int victim, char profile[SF2_MAX_PROFILE_NAME_LENGTH], float position[3])
 {
 	if (iBossIndex == -1) return;
 	if (!victim || victim == INVALID_ENT_REFERENCE) return;
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(victim);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	CBaseCombatCharacter overlay = CBaseCombatCharacter(victim);
@@ -498,7 +498,7 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 				FormatEx(sPlayer, sizeof(sPlayer), "%N", client);
 				char sBossName[SF2_MAX_NAME_LENGTH];
 				NPCGetBossName(iBossIndex, sBossName, sizeof(sBossName));
-				if (sBossName[0] == '\0') strcopy(sBossName, sizeof(sBossName), sProfile);
+				if (sBossName[0] == '\0') strcopy(sBossName, sizeof(sBossName), profile);
 				CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Boxing Win Message", sPlayer, sBossName);
 			}
 		}
@@ -526,14 +526,14 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 
 		g_bNPCHasCloaked[iBossIndex] = false;
 		SlenderToggleParticleEffects(victim, true);
-		GetProfileString(sProfile, "cloak_particle", sCloakParticle, sizeof(sCloakParticle));
+		GetProfileString(profile, "cloak_particle", sCloakParticle, sizeof(sCloakParticle));
 		if (sCloakParticle[0] == '\0')
 		{
 			sCloakParticle = "drg_cow_explosioncore_charged_blue";
 		}
 		SlenderCreateParticle(iBossIndex, sCloakParticle, 35.0);
 		EmitSoundToAll(g_sSlenderCloakOffSound[iBossIndex], victim, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-		g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, iDifficulty);
+		g_flSlenderNextCloakTime[iBossIndex] = GetGameTime() + NPCChaserGetCloakCooldown(iBossIndex, difficulty);
 		Call_StartForward(fOnBossDecloaked);
 		Call_PushCell(iBossIndex);
 		Call_Finish();
@@ -541,13 +541,13 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 				
 	if (!bDoChasePersistencyInit)
 	{
-		float flPersistencyTime = GetProfileFloat(sProfile, "search_chase_persistency_time_init_stun", -1.0);
+		float flPersistencyTime = GetProfileFloat(profile, "search_chase_persistency_time_init_stun", -1.0);
 		if (flPersistencyTime >= 0.0)
 		{
 			g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + flPersistencyTime;
 		}
 						
-		flPersistencyTime = GetProfileFloat(sProfile, "search_chase_persistency_time_add_stun", 2.0);
+		flPersistencyTime = GetProfileFloat(profile, "search_chase_persistency_time_add_stun", 2.0);
 		if (flPersistencyTime >= 0.0)
 		{
 			if (g_flSlenderTimeUntilNoPersistence[iBossIndex] < GetGameTime())g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime();
@@ -556,7 +556,7 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 	}
 	else
 	{
-		float flPersistencyTime = GetProfileFloat(sProfile, "search_chase_persistency_time_init", 5.0);
+		float flPersistencyTime = GetProfileFloat(profile, "search_chase_persistency_time_init", 5.0);
 		if (flPersistencyTime >= 0.0)
 		{
 			g_flSlenderTimeUntilNoPersistence[iBossIndex] = GetGameTime() + flPersistencyTime;
@@ -570,30 +570,30 @@ public void NPCBossTriggerStun(int iBossIndex, int victim, char sProfile[SF2_MAX
 	if (NPCChaserNormalSoundHookEnabled(iBossIndex))
 	{
 		char sStunSoundPath[PLATFORM_MAX_PATH];
-		GetRandomStringFromProfile(sProfile, "sound_stun", sStunSoundPath, sizeof(sStunSoundPath));
+		GetRandomStringFromProfile(profile, "sound_stun", sStunSoundPath, sizeof(sStunSoundPath));
 		if (sStunSoundPath[0] != '\0')
 		{
-			ClientStopAllSlenderSounds(victim, sProfile, "sound_alertofenemy", SNDCHAN_AUTO);
-			ClientStopAllSlenderSounds(victim, sProfile, "sound_chasingenemy", SNDCHAN_AUTO);
+			ClientStopAllSlenderSounds(victim, profile, "sound_alertofenemy", SNDCHAN_AUTO);
+			ClientStopAllSlenderSounds(victim, profile, "sound_chasingenemy", SNDCHAN_AUTO);
 			if (NPCChaserHasMultiAttackSounds(iBossIndex))
 			{
 				for (int i = 0; i < NPCChaserGetAttackCount(iBossIndex); i++)
 				{
-					if (i == 0) ClientStopAllSlenderSounds(victim, sProfile, "sound_attackenemy", SNDCHAN_AUTO);
+					if (i == 0) ClientStopAllSlenderSounds(victim, profile, "sound_attackenemy", SNDCHAN_AUTO);
 					else
 					{
 						char sAttackString[PLATFORM_MAX_PATH];
 						FormatEx(sAttackString, sizeof(sAttackString), "sound_attackenemy_%i", i+1);
-						ClientStopAllSlenderSounds(victim, sProfile, sAttackString, SNDCHAN_AUTO);
+						ClientStopAllSlenderSounds(victim, profile, sAttackString, SNDCHAN_AUTO);
 					}
 				}
 			}
 			else
 			{
-				ClientStopAllSlenderSounds(victim, sProfile, "sound_attackenemy", SNDCHAN_AUTO);
+				ClientStopAllSlenderSounds(victim, profile, "sound_attackenemy", SNDCHAN_AUTO);
 			}
-			ClientStopAllSlenderSounds(victim, sProfile, "sound_idle", SNDCHAN_AUTO);
-			ClientStopAllSlenderSounds(victim, sProfile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
+			ClientStopAllSlenderSounds(victim, profile, "sound_idle", SNDCHAN_AUTO);
+			ClientStopAllSlenderSounds(victim, profile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
 		}
 	}
 

@@ -33,9 +33,9 @@ methodmap SF2NPC_Statue < SF2NPC_BaseNPC
 	}
 }
 
-float NPCStatueChaseDuration(int iNPCIndex, int iDifficulty)
+float NPCStatueChaseDuration(int iNPCIndex, int difficulty)
 {
-	return g_flNPCStatueChaseDuration[iNPCIndex][iDifficulty];
+	return g_flNPCStatueChaseDuration[iNPCIndex][difficulty];
 }
 
 void NPCStatueSetTeleporter(int iBossIndex, int iTeleporterNumber, int iEntity)
@@ -51,14 +51,12 @@ int NPCStatueGetTeleporter(int iBossIndex, int iTeleporterNumber)
 int NPCStatueOnSelectProfile(int iNPCIndex)
 {
 	SF2StatueBossProfile profile = SF2StatueBossProfile(NPCGetProfileIndex(iNPCIndex));
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iNPCIndex, sProfile, sizeof(sProfile));
 
-	for (int iDifficulty = 0; iDifficulty < Difficulty_Max; iDifficulty++)
+	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_flNPCStatueChaseDuration[iNPCIndex][iDifficulty] = profile.GetChaseDuration(iDifficulty);
-		g_flNPCStatueChaseDurationAddMin[iNPCIndex][iDifficulty] = profile.GetChaseDurationAddVisibilityMin(iDifficulty);
-		g_flNPCStatueChaseDurationAddMax[iNPCIndex][iDifficulty] = profile.GetChaseDurationAddVisibilityMax(iDifficulty);
+		g_flNPCStatueChaseDuration[iNPCIndex][difficulty] = profile.GetChaseDuration(difficulty);
+		g_flNPCStatueChaseDurationAddMin[iNPCIndex][difficulty] = profile.GetChaseDurationAddVisibilityMin(difficulty);
+		g_flNPCStatueChaseDurationAddMax[iNPCIndex][difficulty] = profile.GetChaseDurationAddVisibilityMax(difficulty);
 	}
 }
 
@@ -95,7 +93,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 	char sSlenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(iBossIndex, sSlenderProfile, sizeof(sSlenderProfile));
 
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 	
 	float flMyPos[3], flMyEyeAng[3];
 	GetEntPropVector(iBoss, Prop_Data, "m_vecAbsOrigin", flMyPos);
@@ -104,7 +102,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 	int iState = g_iSlenderState[iBossIndex];
 	g_iSlenderOldState[iBossIndex] = iState;
 
-	float flOriginalSpeed = NPCGetSpeed(iBossIndex, iDifficulty) + NPCGetAddSpeed(iBossIndex);
+	float flOriginalSpeed = NPCGetSpeed(iBossIndex, difficulty) + NPCGetAddSpeed(iBossIndex);
 	float flSpeed = flOriginalSpeed;
 	flSpeed = flOriginalSpeed + ((flOriginalSpeed * g_flRoundDifficultyModifier) / 15.0) + (NPCGetAnger(iBossIndex) * g_flRoundDifficultyModifier);
 
@@ -220,7 +218,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 	else
 		g_bNPCVelocityCancel[iBossIndex] = false;
 
-	if (g_bNPCStatueMoving[iBossIndex] && !g_bSlenderInDeathcam[iBossIndex] && GetGameTime() < g_flNPCTimeUntilAbandon[iBossIndex] && (GetGameTime() - g_flSlenderLastKill[iBossIndex]) >= NPCGetInstantKillCooldown(iBossIndex, iDifficulty))
+	if (g_bNPCStatueMoving[iBossIndex] && !g_bSlenderInDeathcam[iBossIndex] && GetGameTime() < g_flNPCTimeUntilAbandon[iBossIndex] && (GetGameTime() - g_flSlenderLastKill[iBossIndex]) >= NPCGetInstantKillCooldown(iBossIndex, difficulty))
 	{
 		bool bRunUnstuck = true;
 		if (bRunUnstuck)
@@ -395,26 +393,26 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	INextBot bot = npc.GetBot();
 	
-	int iDifficulty = g_cvDifficulty.IntValue;
+	int difficulty = g_cvDifficulty.IntValue;
 
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	if (NPCGetType(iBossIndex) == SF2BossType_Statue)
 	{
-		float flChaseDurationTimeAddMin = g_flNPCStatueChaseDurationAddMin[iBossIndex][iDifficulty];
-		float flChaseDurationTimeAddMax = g_flNPCStatueChaseDurationAddMax[iBossIndex][iDifficulty];
+		float chaseDurationTimeAddMin = g_flNPCStatueChaseDurationAddMin[iBossIndex][difficulty];
+		float chaseDurationTimeAddMax = g_flNPCStatueChaseDurationAddMax[iBossIndex][difficulty];
 		bool bMove = false;
 		if (PeopleCanSeeSlender(iBossIndex, true, SlenderUsesBlink(iBossIndex)))
 		{
 			if (g_flNPCTimeUntilAbandon[iBossIndex] < GetGameTime())
 			{
-				g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, iDifficulty);
+				g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, difficulty);
 			}
-			g_flNPCTimeUntilAbandon[iBossIndex] += flChaseDurationTimeAddMin;
-			if (g_flNPCTimeUntilAbandon[iBossIndex] > (GetGameTime() + NPCStatueChaseDuration(iBossIndex, iDifficulty)))
+			g_flNPCTimeUntilAbandon[iBossIndex] += chaseDurationTimeAddMin;
+			if (g_flNPCTimeUntilAbandon[iBossIndex] > (GetGameTime() + NPCStatueChaseDuration(iBossIndex, difficulty)))
 			{
-				g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, iDifficulty);
+				g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, difficulty);
 			}
 			for (int i = 0; i < MAX_NPCTELEPORTER; i++)
 			{
@@ -447,22 +445,22 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 			float flTempDist = SquareFloat(16384.0);
 			for (int i = 0; i < hArray.Length; i++)
 			{
-				int iClient = hArray.Get(i);
-				GetClientAbsOrigin(iClient, flTempPos);
+				int client = hArray.Get(i);
+				GetClientAbsOrigin(client, flTempPos);
 				if (GetVectorSquareMagnitude(flTempPos, flSlenderPos) < flTempDist)
 				{
-					iTempPlayer = iClient;
+					iTempPlayer = client;
 					flTempDist = GetVectorSquareMagnitude(flTempPos, flSlenderPos);
 				}
 				if (SF_SpecialRound(SPECIALROUND_BOO) && GetVectorSquareMagnitude(flTempPos, flSlenderPos) < SquareFloat(SPECIALROUND_BOO_DISTANCE))
-					TF2_StunPlayer(iClient, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
+					TF2_StunPlayer(client, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
 			}
 					
 			iBestPlayer = iTempPlayer;
 			if (iBestPlayer != -1)
 			{
 				g_iSlenderTarget[iBossIndex] = EntIndexToEntRef(iBestPlayer);
-				if (g_flNPCTimeUntilAbandon[iBossIndex] < GetGameTime()) g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, iDifficulty);
+				if (g_flNPCTimeUntilAbandon[iBossIndex] < GetGameTime()) g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, difficulty);
 			}
 		}
 
@@ -471,7 +469,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 		if (!PeopleCanSeeSlender(iBossIndex, true, SlenderUsesBlink(iBossIndex)))
 		{
 			int iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
-			if (IsTargetValidForSlender(iTarget) && GetGameTime() < g_flNPCTimeUntilAbandon[iBossIndex] && (GetGameTime() - g_flSlenderLastKill[iBossIndex]) >= NPCGetInstantKillCooldown(iBossIndex, iDifficulty))
+			if (IsTargetValidForSlender(iTarget) && GetGameTime() < g_flNPCTimeUntilAbandon[iBossIndex] && (GetGameTime() - g_flSlenderLastKill[iBossIndex]) >= NPCGetInstantKillCooldown(iBossIndex, difficulty))
 			{
 				bMove = true;
 				float flSlenderPos[3], flPos[3];
@@ -485,7 +483,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 				}
 				g_pPath[iBossIndex].ComputeToPos(bot, flPos, 9999999999.0);
 					
-				float flMaxRange = g_flSlenderTeleportMaxRange[iBossIndex][iDifficulty];
+				float flMaxRange = g_flSlenderTeleportMaxRange[iBossIndex][difficulty];
 				float flDist = GetVectorSquareMagnitude(flSlenderPos, flPos);
 					
 				char sBuffer[PLATFORM_MAX_PATH];
@@ -512,14 +510,14 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 				{
 					float flDistRatio = (flDist / SquareFloat(flMaxRange));
 
-					float flChaseDurationAdd = flChaseDurationTimeAddMax - ((flChaseDurationTimeAddMax - flChaseDurationTimeAddMin) * flDistRatio);
+					float chaseDurationAdd = chaseDurationTimeAddMax - ((chaseDurationTimeAddMax - chaseDurationTimeAddMin) * flDistRatio);
 
-					if (flChaseDurationAdd > 0.0)
+					if (chaseDurationAdd > 0.0)
 					{
-						g_flNPCTimeUntilAbandon[iBossIndex] += flChaseDurationAdd;
-						if (g_flNPCTimeUntilAbandon[iBossIndex] > (GetGameTime() + NPCStatueChaseDuration(iBossIndex, iDifficulty)))
+						g_flNPCTimeUntilAbandon[iBossIndex] += chaseDurationAdd;
+						if (g_flNPCTimeUntilAbandon[iBossIndex] > (GetGameTime() + NPCStatueChaseDuration(iBossIndex, difficulty)))
 						{
-							g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, iDifficulty);
+							g_flNPCTimeUntilAbandon[iBossIndex] = GetGameTime() + NPCStatueChaseDuration(iBossIndex, difficulty);
 						}
 					}
 				}
@@ -535,8 +533,8 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 					{
 						g_flSlenderLastKill[iBossIndex] = GetGameTime();
 						ClientStartDeathCam(iTarget, iBossIndex, flPos);
-						g_flLastStuckTime[iBossIndex] = GetGameTime() + NPCGetInstantKillCooldown(iBossIndex, iDifficulty) + 0.1;
-						if (NPCGetInstantKillCooldown(iBossIndex, iDifficulty) > 0.0)
+						g_flLastStuckTime[iBossIndex] = GetGameTime() + NPCGetInstantKillCooldown(iBossIndex, difficulty) + 0.1;
+						if (NPCGetInstantKillCooldown(iBossIndex, difficulty) > 0.0)
 						{
 							g_bNPCStatueMoving[iBossIndex] = false;
 							loco.ClearStuckStatus();
@@ -557,16 +555,16 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 		if (bMove)
 		{
 			char sBuffer[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_move_single", sBuffer, sizeof(sBuffer));
+			GetRandomStringFromProfile(profile, "sound_move_single", sBuffer, sizeof(sBuffer));
 			if (sBuffer[0] != '\0') EmitSoundToAll(sBuffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 			
-			GetRandomStringFromProfile(sProfile, "sound_move", sBuffer, sizeof(sBuffer));
+			GetRandomStringFromProfile(profile, "sound_move", sBuffer, sizeof(sBuffer));
 			if (sBuffer[0] != '\0') EmitSoundToAll(sBuffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, SND_CHANGEVOL);
 		}
 		else
 		{
 			char sBuffer[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(sProfile, "sound_move", sBuffer, sizeof(sBuffer));
+			GetRandomStringFromProfile(profile, "sound_move", sBuffer, sizeof(sBuffer));
 			if (sBuffer[0] != '\0') StopSound(slender, SNDCHAN_AUTO, sBuffer);
 		}
 		g_bNPCStatueMoving[iBossIndex] = bMove;

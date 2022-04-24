@@ -105,18 +105,18 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 		int iBossIndex = NPCGetFromUniqueID(g_iPlayerProxyAskMaster[client]);
 		if (iBossIndex != -1)
 		{
-			int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+			int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(iBossIndex, profile, sizeof(profile));
 		
-			int iMaxProxies = g_iSlenderMaxProxies[iBossIndex][iDifficulty];
+			int iMaxProxies = g_iSlenderMaxProxies[iBossIndex][difficulty];
 			int iNumProxies = 0;
 			
-			for (int iClient = 1; iClient <= MaxClients; iClient++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsClientInGame(iClient) || !g_bPlayerEliminated[iClient]) continue;
-				if (!g_bPlayerProxy[iClient]) continue;
-				if (NPCGetFromUniqueID(g_iPlayerProxyMaster[iClient]) != iBossIndex) continue;
+				if (!IsClientInGame(i) || !g_bPlayerEliminated[i]) continue;
+				if (!g_bPlayerProxy[i]) continue;
+				if (NPCGetFromUniqueID(g_iPlayerProxyMaster[i]) != iBossIndex) continue;
 				
 				iNumProxies++;
 			}
@@ -185,18 +185,18 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 				int iBossIndex = NPCGetFromUniqueID(g_iPlayerProxyAskMaster[param1]);
 				if (iBossIndex != -1)
 				{
-					int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-					char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-					NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+					int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+					NPCGetProfile(iBossIndex, profile, sizeof(profile));
 				
-					int iMaxProxies = g_iSlenderMaxProxies[iBossIndex][iDifficulty];
+					int iMaxProxies = g_iSlenderMaxProxies[iBossIndex][difficulty];
 					int iNumProxies;
 				
-					for (int iClient = 1; iClient <= MaxClients; iClient++)
+					for (int client = 1; client <= MaxClients; client++)
 					{
-						if (!IsClientInGame(iClient) || !g_bPlayerEliminated[iClient]) continue;
-						if (!g_bPlayerProxy[iClient]) continue;
-						if (NPCGetFromUniqueID(g_iPlayerProxyMaster[iClient]) != iBossIndex) continue;
+						if (!IsClientInGame(client) || !g_bPlayerEliminated[client]) continue;
+						if (!g_bPlayerProxy[client]) continue;
+						if (NPCGetFromUniqueID(g_iPlayerProxyMaster[client]) != iBossIndex) continue;
 						
 						iNumProxies++;
 					}
@@ -272,10 +272,10 @@ void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSp
 
 	TF2_RemovePlayerDisguise(client);
 
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(iBossIndex, profile, sizeof(profile));
 	
 	ClientSetGhostModeState(client, false);
 	ClientDisableConstantGlow(client);
@@ -301,13 +301,13 @@ void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSp
 	g_bPlayerProxy[client] = true;
 	g_iPlayerProxyMaster[client] = NPCGetUniqueID(iBossIndex);
 	g_iPlayerProxyControl[client] = 100;
-	g_flPlayerProxyControlRate[client] = g_flSlenderProxyControlDrainRate[iBossIndex][iDifficulty];
+	g_flPlayerProxyControlRate[client] = g_flSlenderProxyControlDrainRate[iBossIndex][difficulty];
 	g_hPlayerProxyControlTimer[client] = CreateTimer(g_flPlayerProxyControlRate[client], Timer_ClientProxyControl, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	g_bPlayerProxyAvailable[client] = false;
 	g_hPlayerProxyAvailableTimer[client] = null;
 	
 	char sAllowedClasses[512];
-	GetProfileString(sProfile, "proxies_classes", sAllowedClasses, sizeof(sAllowedClasses));
+	GetProfileString(profile, "proxies_classes", sAllowedClasses, sizeof(sAllowedClasses));
 	
 	char sClassName[64];
 	TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
@@ -401,7 +401,7 @@ void ClientEnableProxy(int client, int iBossIndex, const float flPos[3], int iSp
 	if (NPCGetProxySpawnEffectState(iBossIndex))
 	{
 		char sSpawnEffect[PLATFORM_MAX_PATH];
-		GetProfileString(sProfile, "proxies_spawn_effect", sSpawnEffect, sizeof(sSpawnEffect));
+		GetProfileString(profile, "proxies_spawn_effect", sSpawnEffect, sizeof(sSpawnEffect));
 		CreateGeneralParticle(client, sSpawnEffect, NPCGetProxySpawnEffectZOffset(iBossIndex));
 	}
 
@@ -422,20 +422,20 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 	if (g_bPlayerProxy[client] && iBossIndex != -1)
 	{
 		if (!NPCHasProxyWeapons(iBossIndex)) return Plugin_Stop;
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(iBossIndex, profile, sizeof(profile));
 
 		int iWeaponIndex, iWeaponSlot;
 		char sWeaponName[PLATFORM_MAX_PATH], sWeaponStats[PLATFORM_MAX_PATH], sClassName[64], sSectionName[64];
 		TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
 		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_class_%s", sClassName);
-		GetProfileString(sProfile, sSectionName, sWeaponName, sizeof(sWeaponName));
+		GetProfileString(profile, sSectionName, sWeaponName, sizeof(sWeaponName));
 		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_stats_%s", sClassName);
-		GetProfileString(sProfile, sSectionName, sWeaponStats, sizeof(sWeaponStats));
+		GetProfileString(profile, sSectionName, sWeaponStats, sizeof(sWeaponStats));
 		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_index_%s", sClassName);
-		iWeaponIndex = GetProfileNum(sProfile, sSectionName, 0);
+		iWeaponIndex = GetProfileNum(profile, sSectionName, 0);
 		FormatEx(sSectionName, sizeof(sSectionName), "proxies_weapon_slot_%s", sClassName);
-		iWeaponSlot = GetProfileNum(sProfile, sSectionName, 0);
+		iWeaponSlot = GetProfileNum(profile, sSectionName, 0);
 
 		switch(iWeaponSlot)
 		{
@@ -514,8 +514,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 	
 	if (g_bPlayerProxy[client] && iMaster != -1)
 	{
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		NPCGetProfile(iMaster, sProfile, sizeof(sProfile));
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(iMaster, profile, sizeof(profile));
 		
 		// Set custom model, if any.
 		char sBuffer[PLATFORM_MAX_PATH], sBufferHard[PLATFORM_MAX_PATH], sBufferInsane[PLATFORM_MAX_PATH], sBufferNightmare[PLATFORM_MAX_PATH], sBufferApollyon[PLATFORM_MAX_PATH];
@@ -526,7 +526,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 		char sClassName[64];
 		TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
 
-		if (view_as<bool>(g_hConfig.GetNum("proxy_difficulty_models", 0)))
+		if (view_as<bool>(g_Config.GetNum("proxy_difficulty_models", 0)))
 		{
 			char sSectionNameHard[128], sSectionNameInsane[128], sSectionNameNightmare[128], sSectionNameApollyon[128];
 			
@@ -536,16 +536,16 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 			FormatEx(sSectionNameNightmare, sizeof(sSectionNameNightmare), "mod_proxy_%s_nightmare", sClassName);
 			FormatEx(sSectionNameApollyon, sizeof(sSectionNameApollyon), "mod_proxy_%s_apollyon", sClassName);
 			
-			if ((GetRandomStringFromProfile(sProfile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0') ||
-				(GetRandomStringFromProfile(sProfile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0'))
+			if ((GetRandomStringFromProfile(profile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0') ||
+				(GetRandomStringFromProfile(profile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0'))
 			{
 				SetVariantString(sBuffer);
 				AcceptEntityInput(client, "SetCustomModel");
 				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
 				strcopy(g_sClientProxyModel[client],sizeof(g_sClientProxyModel[]),sBuffer);
 				
-				if ((GetRandomStringFromProfile(sProfile, sSectionNameHard, sBufferHard, sizeof(sBufferHard)) && sBufferHard[0] != '\0') ||
-					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_hard", sBufferHard, sizeof(sBufferHard)) && sBufferHard[0] != '\0'))
+				if ((GetRandomStringFromProfile(profile, sSectionNameHard, sBufferHard, sizeof(sBufferHard)) && sBufferHard[0] != '\0') ||
+					(GetRandomStringFromProfile(profile, "mod_proxy_all_hard", sBufferHard, sizeof(sBufferHard)) && sBufferHard[0] != '\0'))
 				{
 					strcopy(g_sClientProxyModelHard[client],sizeof(g_sClientProxyModelHard[]),sBufferHard);
 				}
@@ -555,8 +555,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(g_sClientProxyModelHard[client],sizeof(g_sClientProxyModelHard[]),sBufferHard);
 				}
 				
-				if ((GetRandomStringFromProfile(sProfile, sSectionNameInsane, sBufferInsane, sizeof(sBufferInsane)) && sBufferInsane[0] != '\0') ||
-					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_insane", sBufferInsane, sizeof(sBufferInsane)) && sBufferInsane[0] != '\0'))
+				if ((GetRandomStringFromProfile(profile, sSectionNameInsane, sBufferInsane, sizeof(sBufferInsane)) && sBufferInsane[0] != '\0') ||
+					(GetRandomStringFromProfile(profile, "mod_proxy_all_insane", sBufferInsane, sizeof(sBufferInsane)) && sBufferInsane[0] != '\0'))
 				{
 					strcopy(g_sClientProxyModelInsane[client],sizeof(g_sClientProxyModelInsane[]),sBufferInsane);
 				}
@@ -566,8 +566,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(g_sClientProxyModelInsane[client],sizeof(g_sClientProxyModelInsane[]),sBufferInsane);
 				}
 				
-				if ((GetRandomStringFromProfile(sProfile, sSectionNameNightmare, sBufferNightmare, sizeof(sBufferNightmare)) && sBufferNightmare[0] != '\0') ||
-					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_nightmare", sBufferNightmare, sizeof(sBufferNightmare)) && sBufferNightmare[0] != '\0'))
+				if ((GetRandomStringFromProfile(profile, sSectionNameNightmare, sBufferNightmare, sizeof(sBufferNightmare)) && sBufferNightmare[0] != '\0') ||
+					(GetRandomStringFromProfile(profile, "mod_proxy_all_nightmare", sBufferNightmare, sizeof(sBufferNightmare)) && sBufferNightmare[0] != '\0'))
 				{
 					strcopy(g_sClientProxyModelNightmare[client],sizeof(g_sClientProxyModelNightmare[]),sBufferNightmare);
 				}
@@ -577,8 +577,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(g_sClientProxyModelNightmare[client],sizeof(g_sClientProxyModelNightmare[]),sBufferNightmare);
 				}
 				
-				if ((GetRandomStringFromProfile(sProfile, sSectionNameApollyon, sBufferApollyon, sizeof(sBufferApollyon)) && sBufferApollyon[0] != '\0') ||
-					(GetRandomStringFromProfile(sProfile, "mod_proxy_all_apollyon", sBufferApollyon, sizeof(sBufferApollyon)) && sBufferApollyon[0] != '\0'))
+				if ((GetRandomStringFromProfile(profile, sSectionNameApollyon, sBufferApollyon, sizeof(sBufferApollyon)) && sBufferApollyon[0] != '\0') ||
+					(GetRandomStringFromProfile(profile, "mod_proxy_all_apollyon", sBufferApollyon, sizeof(sBufferApollyon)) && sBufferApollyon[0] != '\0'))
 				{
 					strcopy(g_sClientProxyModelApollyon[client],sizeof(g_sClientProxyModelApollyon[]),sBufferApollyon);
 				}
@@ -594,8 +594,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 		else
 		{
 			FormatEx(sSectionName, sizeof(sSectionName), "mod_proxy_%s", sClassName);
-			if ((GetRandomStringFromProfile(sProfile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0') ||
-				(GetRandomStringFromProfile(sProfile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0'))
+			if ((GetRandomStringFromProfile(profile, sSectionName, sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0') ||
+				(GetRandomStringFromProfile(profile, "mod_proxy_all", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0'))
 			{
 				SetVariantString(sBuffer);
 				AcceptEntityInput(client, "SetCustomModel");
@@ -619,7 +619,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 		{
 			g_flPlayerProxyNextVoiceSound[client] = GetGameTime();
 			// Play any sounds, if any.
-			if (GetRandomStringFromProfile(sProfile, "sound_proxy_spawn", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0')
+			if (GetRandomStringFromProfile(profile, "sound_proxy_spawn", sBuffer, sizeof(sBuffer)) && sBuffer[0] != '\0')
 			{
 				int iChannel = g_iSlenderProxySpawnChannel[iMaster];
 				int iLevel = g_iSlenderProxySpawnLevel[iMaster];
@@ -630,7 +630,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				EmitSoundToAll(sBuffer, client, iChannel, iLevel, iFlags, flVolume, iPitch);
 			}
 			
-			bool Zombie = view_as<bool>(GetProfileNum(sProfile, "proxies_zombie", 0));
+			bool Zombie = view_as<bool>(GetProfileNum(profile, "proxies_zombie", 0));
 			if(Zombie)
 			{
 				int value = FindConVar("tf_forced_holiday").IntValue;
@@ -677,11 +677,11 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 	if(!IsValidClient(client)) return Plugin_Stop;
 	if(!IsPlayerAlive(client)) return Plugin_Stop;
 	if(!g_bPlayerProxy[client]) return Plugin_Stop;
-	int iDifficulty = g_cvDifficulty.IntValue;
+	int difficulty = g_cvDifficulty.IntValue;
 	
 	char sModel[PLATFORM_MAX_PATH];
 	GetEntPropString(client, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
-	switch (iDifficulty)
+	switch (difficulty)
 	{
 		case Difficulty_Normal:
 		{
@@ -1308,16 +1308,16 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 	}
 	
-	float flHealthFromPack = 1.0;
+	float healthFromPack = 1.0;
 	if (!g_bPlayerEliminated[client] && !SF_IsBoxingMap())
 	{
 		if (g_bPlayerHasRegenerationItem[client])
-			flHealthFromPack = 0.40;
+			healthFromPack = 0.40;
 		if (TF2_GetPlayerClass(client) == TFClass_Medic)
-			flHealthFromPack = 0.0;
+			healthFromPack = 0.0;
 	}
 	
-	TF2Attrib_SetByDefIndex(client, 109, flHealthFromPack);
+	TF2Attrib_SetByDefIndex(client, 109, healthFromPack);
 
 #if defined DEBUG
 	int iWeapon = INVALID_ENT_REFERENCE;
