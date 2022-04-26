@@ -1,6 +1,6 @@
 // sf2_boss_maker
 
-static const char g_sEntityClassname[] = "sf2_boss_maker"; // The custom classname of the entity. Should be prefixed with "sf2_"
+static const char g_EntityClassname[] = "sf2_boss_maker"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
 #define SF_SF2_BOSS_MAKER_NODROP 1
 #define SF_SF2_BOSS_MAKER_ADDONLY 2
@@ -11,7 +11,7 @@ static const char g_sEntityClassname[] = "sf2_boss_maker"; // The custom classna
 #define SF_SF2_BOSS_MAKER_NOSPAWNSOUND 64
 #define SF_SF2_BOSS_MAKER_NOCOPIES 128
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -25,17 +25,17 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		if (!CBaseEntity(this.index).IsValid())
 			return false;
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
-	public void GetBossProfile(char[] sBuffer, int iBufferLen)
+	public void GetBossProfile(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_szBossProfile", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_szBossProfile", buffer, bufferLen);
 	}
 
-	public void SetBossProfile(const char[] sBuffer)
+	public void SetBossProfile(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_szBossProfile", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_szBossProfile", buffer);
 	}
 
 	public static void Initialize()
@@ -73,24 +73,24 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		public set(int entity) { this.SetPropEnt(Prop_Data, "sf2_iDestinationEntity", IsValidEntity(entity) ? entity : INVALID_ENT_REFERENCE); }
 	}
 
-	public void GetSpawnDestinationName(char[] sBuffer, int iBufferLen)
+	public void GetSpawnDestinationName(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_szDestinationName", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_szDestinationName", buffer, bufferLen);
 	}
 
-	public void SetSpawnDestinationName(const char[] sBuffer)
+	public void SetSpawnDestinationName(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_szDestinationName", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_szDestinationName", buffer);
 	}
 
-	public void GetSpawnAnimation(char[] sBuffer, int iBufferLen)
+	public void GetSpawnAnimation(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_szSpawnAnim", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_szSpawnAnim", buffer, bufferLen);
 	}
 
-	public void SetSpawnAnimation(const char[] sBuffer)
+	public void SetSpawnAnimation(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_szSpawnAnim", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_szSpawnAnim", buffer);
 	}
 
 	property float SpawnAnimationPlaybackRate
@@ -112,95 +112,99 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 			// Prune the list of invalid IDs.
 			for (int i = this.Bosses.Length - 1; i >= 0; i--)
 			{
-				int iBossID = this.Bosses.Get(i);
-				int iBossIndex = NPCGetFromUniqueID(iBossID);
-				if (!NPCIsValid(iBossIndex))
+				int bossID = this.Bosses.Get(i);
+				int bossIndex = NPCGetFromUniqueID(bossID);
+				if (!NPCIsValid(bossIndex))
+				{
 					this.Bosses.Erase(i);
+				}
 			}
 
 			return this.Bosses.Length; 
 		}
 	}
 
-	public void SpawnBoss(int iBossIndex)
+	public void SpawnBoss(int bossIndex)
 	{
-		if (!NPCIsValid(iBossIndex))
+		if (!NPCIsValid(bossIndex))
+		{
 			return;
+		}
 		
-		float flPos[3]; float flAng[3];
+		float pos[3]; float ang[3];
 
 		CBaseEntity spawnDestination = CBaseEntity(this.SpawnDestination);
 		if (spawnDestination.IsValid())
 		{
-			spawnDestination.GetAbsOrigin(flPos);
-			spawnDestination.GetAbsAngles(flAng);
+			spawnDestination.GetAbsOrigin(pos);
+			spawnDestination.GetAbsAngles(ang);
 		}
 		else 
 		{
-			this.GetAbsOrigin(flPos);
-			this.GetAbsAngles(flAng);
+			this.GetAbsOrigin(pos);
+			this.GetAbsAngles(ang);
 		}
 
-		int iSpawnFlags = this.GetProp(Prop_Data, "m_spawnflags");
+		int spawnFlags = this.GetProp(Prop_Data, "m_spawnflags");
 
-		float flSpawnRadius = this.SpawnRadius;
-		if (flSpawnRadius > 0.0)
+		float spawnRadius = this.SpawnRadius;
+		if (spawnRadius > 0.0)
 		{
-			float flRad = GetRandomFloat(0.0, 2.0 * FLOAT_PI);
-			float flRadius = GetRandomFloat(0.0, flSpawnRadius);
-			float flVec[3];
-			flVec[0] = Cosine(flRad) * flRadius; 
-			flVec[1] = Sine(flRad) * flRadius;
+			float rad = GetRandomFloat(0.0, 2.0 * FLOAT_PI);
+			float radius = GetRandomFloat(0.0, spawnRadius);
+			float vec[3];
+			vec[0] = Cosine(rad) * radius; 
+			vec[1] = Sine(rad) * radius;
 
-			flPos[0] += flVec[0];
-			flPos[1] += flVec[1];
+			pos[0] += vec[0];
+			pos[1] += vec[1];
 		}
 
-		SpawnSlender(view_as<SF2NPC_BaseNPC>(iBossIndex), flPos);
+		SpawnSlender(view_as<SF2NPC_BaseNPC>(bossIndex), pos);
 
-		CBaseAnimating bossEntity = CBaseAnimating(NPCGetEntIndex(iBossIndex));
+		CBaseAnimating bossEntity = CBaseAnimating(NPCGetEntIndex(bossIndex));
 		if (bossEntity.IsValid())
 		{
-			if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_NODROP))
+			if (!(spawnFlags & SF_SF2_BOSS_MAKER_NODROP))
 			{
 				// Drop (teleport) it to the ground.
 
-				float flMins[3]; float flMaxs[3];
-				bossEntity.GetAbsOrigin(flPos);
-				bossEntity.GetPropVector(Prop_Send, "m_vecMins", flMins);
-				bossEntity.GetPropVector(Prop_Send, "m_vecMaxs", flMaxs);
+				float mins[3]; float maxs[3];
+				bossEntity.GetAbsOrigin(pos);
+				bossEntity.GetPropVector(Prop_Send, "m_vecMins", mins);
+				bossEntity.GetPropVector(Prop_Send, "m_vecMaxs", maxs);
 
-				float flEndPos[3];
-				flEndPos[0] = flPos[0];
-				flEndPos[1] = flPos[1];
-				flEndPos[2] = flPos[2] - 1024.0;
+				float endPos[3];
+				endPos[0] = pos[0];
+				endPos[1] = pos[1];
+				endPos[2] = pos[2] - 1024.0;
 
-				TR_TraceHullFilter(flPos, flEndPos, flMins, flMaxs, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitEntity, bossEntity.index);
-				bool bTraceHit = TR_DidHit();
-				TR_GetEndPosition(flEndPos);
+				TR_TraceHullFilter(pos, endPos, mins, maxs, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitEntity, bossEntity.index);
+				bool traceHit = TR_DidHit();
+				TR_GetEndPosition(endPos);
 
-				if (bTraceHit)
+				if (traceHit)
 				{
-					bossEntity.Teleport(flEndPos, NULL_VECTOR, NULL_VECTOR);
+					bossEntity.Teleport(endPos, NULL_VECTOR, NULL_VECTOR);
 				}
 			}
 
-			if (NPCGetType(iBossIndex) == SF2BossType_Chaser)
+			if (NPCGetType(bossIndex) == SF2BossType_Chaser)
 			{
-				char sSpawnAnim[64];
-				this.GetSpawnAnimation(sSpawnAnim, sizeof(sSpawnAnim));
+				char spawnAnim[64];
+				this.GetSpawnAnimation(spawnAnim, sizeof(spawnAnim));
 
-				if (sSpawnAnim[0] != '\0')
+				if (spawnAnim[0] != '\0')
 				{
-					float flPlaybackRate = this.SpawnAnimationPlaybackRate;
-					float flDuration = this.SpawnAnimationDuration;
+					float playbackRate = this.SpawnAnimationPlaybackRate;
+					float duration = this.SpawnAnimationDuration;
 
-					EntitySetAnimation(bossEntity.index, sSpawnAnim, flPlaybackRate);
-					EntitySetAnimation(bossEntity.index, sSpawnAnim, flPlaybackRate); //Fix an issue where an anim could start on the wrong frame.
+					EntitySetAnimation(bossEntity.index, spawnAnim, playbackRate);
+					EntitySetAnimation(bossEntity.index, spawnAnim, playbackRate); //Fix an issue where an anim could start on the wrong frame.
 
-					g_bSlenderSpawning[iBossIndex] = true;
-					g_hSlenderSpawnTimer[iBossIndex] = CreateTimer(flDuration, Timer_SlenderSpawnTimer, EntIndexToEntRef(bossEntity.index), TIMER_FLAG_NO_MAPCHANGE);
-					g_hSlenderEntityThink[iBossIndex] = null;
+					g_SlenderSpawning[bossIndex] = true;
+					g_SlenderSpawnTimer[bossIndex] = CreateTimer(duration, Timer_SlenderSpawnTimer, EntIndexToEntRef(bossEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+					g_SlenderEntityThink[bossIndex] = null;
 				}
 			}
 
@@ -212,15 +216,15 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 	{ 
 		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
-			int iBossID = this.Bosses.Get(i);
-			int iBossIndex = NPCGetFromUniqueID(iBossID);
-			if (!NPCIsValid(iBossIndex))
+			int bossID = this.Bosses.Get(i);
+			int bossIndex = NPCGetFromUniqueID(bossID);
+			if (!NPCIsValid(bossIndex))
 			{
 				this.Bosses.Erase(i);
 				continue;
 			}
 
-			this.SpawnBoss(iBossIndex);
+			this.SpawnBoss(bossIndex);
 		}
 	}
 
@@ -228,15 +232,15 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 	{
 		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
-			int iBossID = this.Bosses.Get(i);
-			int iBossIndex = NPCGetFromUniqueID(iBossID);
-			if (!NPCIsValid(iBossIndex))
+			int bossID = this.Bosses.Get(i);
+			int bossIndex = NPCGetFromUniqueID(bossID);
+			if (!NPCIsValid(bossIndex))
 			{
 				this.Bosses.Erase(i);
 				continue;
 			}
 
-			RemoveSlender(iBossIndex);
+			RemoveSlender(bossIndex);
 		}
 	}
 
@@ -244,12 +248,14 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 	{
 		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
-			int iBossID = this.Bosses.Get(i);
-			int iBossIndex = NPCGetFromUniqueID(iBossID);
-			if (!NPCIsValid(iBossIndex))
+			int bossID = this.Bosses.Get(i);
+			int bossIndex = NPCGetFromUniqueID(bossID);
+			if (!NPCIsValid(bossIndex))
+			{
 				continue;
+			}
 
-			RemoveProfile(iBossIndex);
+			RemoveProfile(bossIndex);
 		}
 
 		this.Bosses.Clear();
@@ -257,37 +263,41 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 	public void Spawn()
 	{
-		char sTargetProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		this.GetBossProfile(sTargetProfile, sizeof(sTargetProfile));
-		if (sTargetProfile[0] == '\0')
+		char targetProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetBossProfile(targetProfile, sizeof(targetProfile));
+		if (targetProfile[0] == '\0')
 		{
-			PrintToServer("%s tried to spawn with blank profile", g_sEntityClassname);
+			PrintToServer("%s tried to spawn with blank profile", g_EntityClassname);
 			return;
 		}
 
-		int iLiveCount = this.LiveCount;
+		int liveCount = this.LiveCount;
 
-		if (this.MaxLiveBosses != -1 && iLiveCount >= this.MaxLiveBosses)
+		if (this.MaxLiveBosses != -1 && liveCount >= this.MaxLiveBosses)
+		{
 			return; // Hit limit; don't spawn.
+		}
 
-		int iSpawnFlags = this.GetProp(Prop_Data, "m_spawnflags");
+		int spawnFlags = this.GetProp(Prop_Data, "m_spawnflags");
 
 		// Calculate the spawn destination.
-		if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_ADDONLY))
+		if (!(spawnFlags & SF_SF2_BOSS_MAKER_ADDONLY))
 		{
-			char sSpawnDestinationName[64];
-			this.GetSpawnDestinationName(sSpawnDestinationName, sizeof(sSpawnDestinationName));
-			if (sSpawnDestinationName[0] != '\0')
+			char spawnDestinationName[64];
+			this.GetSpawnDestinationName(spawnDestinationName, sizeof(spawnDestinationName));
+			if (spawnDestinationName[0] != '\0')
 			{
-				int iSpawnDestination = this.SpawnDestination;
-				if (!IsValidEntity(iSpawnDestination))
+				int spawnDestination = this.SpawnDestination;
+				if (!IsValidEntity(spawnDestination))
 				{
 					// Find the spawn destination entity and cache it.
 					int target = -1;
-					while ((target = SF2MapEntity_FindEntityByTargetname(target, sSpawnDestinationName, this.index, this.index, this.index)) != -1)
+					while ((target = SF2MapEntity_FindEntityByTargetname(target, spawnDestinationName, this.index, this.index, this.index)) != -1)
 					{
 						if (!IsValidEntity(target))
+						{
 							continue;
+						}
 						
 						this.SpawnDestination = target;
 
@@ -297,42 +307,56 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 			}
 		}
 
-		int iMaxCount = this.SpawnCount;
+		int maxCount = this.SpawnCount;
 		if (this.MaxLiveBosses != -1)
 		{
-			int iMaxCanSpawnCount = this.MaxLiveBosses - iLiveCount;
-			iMaxCount = iMaxCount > iMaxCanSpawnCount ? iMaxCanSpawnCount : iMaxCount;
+			int maxCanSpawnCount = this.MaxLiveBosses - liveCount;
+			maxCount = maxCount > maxCanSpawnCount ? maxCanSpawnCount : maxCount;
 		}
 
-		int iBossFlags = 0;
-		if (iSpawnFlags & SF_SF2_BOSS_MAKER_FAKE)
-			iBossFlags |= SFF_FAKE;
-		if (iSpawnFlags & SF_SF2_BOSS_MAKER_NOTELEPORT)
-			iBossFlags |= SFF_NOTELEPORT;
-		if (iSpawnFlags & SF_SF2_BOSS_MAKER_ATTACKWAITERS)
-			iBossFlags |= SFF_ATTACKWAITERS;
-
-		bool bSpawnCompanions = true;
-		bool bPlaySpawnSound = true;
-		if (iSpawnFlags & SF_SF2_BOSS_MAKER_NOCOMPANIONS)
-			bSpawnCompanions = false;
-		if (iSpawnFlags & SF_SF2_BOSS_MAKER_NOSPAWNSOUND)
-			bPlaySpawnSound = false;
-
-		for (int i = 0; i < iMaxCount; i++)
+		int bossFlags = 0;
+		if (spawnFlags & SF_SF2_BOSS_MAKER_FAKE)
 		{
-			int iBossIndex = view_as<int>(AddProfile(sTargetProfile, iBossFlags, _, bSpawnCompanions, bPlaySpawnSound));
-			if (!NPCIsValid(iBossIndex))
-				continue;
+			bossFlags |= SFF_FAKE;
+		}
+		if (spawnFlags & SF_SF2_BOSS_MAKER_NOTELEPORT)
+		{
+			bossFlags |= SFF_NOTELEPORT;
+		}
+		if (spawnFlags & SF_SF2_BOSS_MAKER_ATTACKWAITERS)
+		{
+			bossFlags |= SFF_ATTACKWAITERS;
+		}
 
-			this.Bosses.Push(NPCGetUniqueID(iBossIndex));
+		bool spawnCompanions = true;
+		bool playSpawnSound = true;
+		if (spawnFlags & SF_SF2_BOSS_MAKER_NOCOMPANIONS)
+		{
+			spawnCompanions = false;
+		}
+		if (spawnFlags & SF_SF2_BOSS_MAKER_NOSPAWNSOUND)
+		{
+			playSpawnSound = false;
+		}
 
-			if ((iSpawnFlags & SF_SF2_BOSS_MAKER_NOCOPIES))
-				NPCSetFlags(iBossIndex, NPCGetFlags(iBossIndex) & ~SFF_COPIES);
-
-			if (!(iSpawnFlags & SF_SF2_BOSS_MAKER_ADDONLY))
+		for (int i = 0; i < maxCount; i++)
+		{
+			int bossIndex = view_as<int>(AddProfile(targetProfile, bossFlags, _, spawnCompanions, playSpawnSound));
+			if (!NPCIsValid(bossIndex))
 			{
-				this.SpawnBoss(iBossIndex);
+				continue;
+			}
+
+			this.Bosses.Push(NPCGetUniqueID(bossIndex));
+
+			if ((spawnFlags & SF_SF2_BOSS_MAKER_NOCOPIES))
+			{
+				NPCSetFlags(bossIndex, NPCGetFlags(bossIndex) & ~SFF_COPIES);
+			}
+
+			if (!(spawnFlags & SF_SF2_BOSS_MAKER_ADDONLY))
+			{
+				this.SpawnBoss(bossIndex);
 			}
 		}
 	}
@@ -340,9 +364,9 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 static void Initialize() 
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
-	g_entityFactory.DeriveFromFactory(SF2BossMakerEntity.GetBaseFactory());
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
+	g_EntityFactory.DeriveFromFactory(SF2BossMakerEntity.GetBaseFactory());
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineStringField("sf2_szBossProfile", _, "profile")
 		.DefineIntField("sf2_iSpawnCount", _, "spawncount")
 		.DefineFloatField("sf2_flSpawnRadius", _, "spawnradius")
@@ -365,7 +389,7 @@ static void Initialize()
 		.DefineInputFunc("SetSpawnAnimationPlaybackRate", InputFuncValueType_Float, InputSetSpawnAnimationPlaybackRate)
 		.DefineInputFunc("SetSpawnAnimationDuration", InputFuncValueType_Float, InputSetSpawnAnimationDuration)
 		.EndDataMapDesc();
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
 static void OnCreated(int entity)

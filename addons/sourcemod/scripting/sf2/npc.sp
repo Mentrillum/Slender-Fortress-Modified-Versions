@@ -8,135 +8,133 @@
 
 #define SF2_BOSS_ATTACK_MELEE 0
 
-static int g_iNPCGlobalUniqueID = 0;
+static int g_NpcGlobalUniqueID = 0;
 
-static int g_iNPCUniqueID[MAX_BOSSES] = { -1, ... };
+static int g_NpcUniqueID[MAX_BOSSES] = { -1, ... };
 static char g_strSlenderProfile[MAX_BOSSES][SF2_MAX_PROFILE_NAME_LENGTH];
-static int g_iNPCProfileIndex[MAX_BOSSES] = { -1, ... };
-static int g_iNPCUniqueProfileIndex[MAX_BOSSES] = { -1, ... };
-static int g_iNPCType[MAX_BOSSES] = { SF2BossType_Unknown, ... };
-static int g_iNPCFlags[MAX_BOSSES] = { 0, ... };
-static float g_flNPCModelScale[MAX_BOSSES] = { 1.0, ... };
-static int g_iNPCHealth[MAX_BOSSES] = { 0, ... };
-static int g_iNPCModelSkin[MAX_BOSSES] = { 0, ... };
-static int g_iNPCModelSkinDifficulty[MAX_BOSSES][Difficulty_Max];
-static int g_iNPCModelSkinMax[MAX_BOSSES] = { 0, ... };
-static int g_iNPCModelBodyGroups[MAX_BOSSES] = { 0, ... };
-static int g_iNPCModelBodyGroupsDifficulty[MAX_BOSSES][Difficulty_Max];
-static int g_iNPCModelBodyGroupsMax[MAX_BOSSES] = { 0, ... };
-int g_iNPCRaidHitbox[MAX_BOSSES] = { 0, ... };
-int g_iNPCGlowEntity[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
-static int g_iNPCTauntGlowEntity[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
-static float g_flNPCSoundMusicLoop[MAX_BOSSES][Difficulty_Max];
-static int g_iNPCAllowMusicOnDifficulty[MAX_BOSSES];
-static char g_sNPCName[MAX_BOSSES][Difficulty_Max][SF2_MAX_PROFILE_NAME_LENGTH];
-static bool g_bNPCFakeCopiesEnabled[MAX_BOSSES];
-static float g_flNPCBlinkLookRate[MAX_BOSSES];
-static float g_flNPCBlinkStaticRate[MAX_BOSSES];
-static float g_flNPCStepSize[MAX_BOSSES];
+static int g_NpcProfileIndex[MAX_BOSSES] = { -1, ... };
+static int g_NpcUniqueProfileIndex[MAX_BOSSES] = { -1, ... };
+static int g_NpcType[MAX_BOSSES] = { SF2BossType_Unknown, ... };
+static int g_NpcFlags[MAX_BOSSES] = { 0, ... };
+static float g_NpcModelScale[MAX_BOSSES] = { 1.0, ... };
+static int g_NpcHealth[MAX_BOSSES] = { 0, ... };
+static int g_NpcModelSkin[MAX_BOSSES] = { 0, ... };
+static int g_NpcModelSkinDifficulty[MAX_BOSSES][Difficulty_Max];
+static int g_NpcModelSkinMax[MAX_BOSSES] = { 0, ... };
+static int g_NpcModelBodyGroups[MAX_BOSSES] = { 0, ... };
+static int g_NpcModelBodyGroupsDifficulty[MAX_BOSSES][Difficulty_Max];
+static int g_NpcModelBodyGroupsMax[MAX_BOSSES] = { 0, ... };
+int g_NpcRaidHitbox[MAX_BOSSES] = { 0, ... };
+int g_NpcGlowEntity[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+static int g_NpcTauntGlowEntity[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+static float g_NpcSoundMusicLoop[MAX_BOSSES][Difficulty_Max];
+static int g_NpcAllowMusicOnDifficulty[MAX_BOSSES];
+static char g_NpcName[MAX_BOSSES][Difficulty_Max][SF2_MAX_PROFILE_NAME_LENGTH];
+static bool g_NpcHasFakeCopiesEnabled[MAX_BOSSES];
+static float g_NpcBlinkLookRate[MAX_BOSSES];
+static float g_NpcBlinkStaticRate[MAX_BOSSES];
+static float g_NpcStepSize[MAX_BOSSES];
 
-static bool g_bNPCDiscoMode[MAX_BOSSES];
-static float g_flNPCDiscoRadiusMin[MAX_BOSSES];
-static float g_flNPCDiscoRadiusMax[MAX_BOSSES];
-static float g_flNPCDiscoModePos[MAX_BOSSES][3];
-static bool g_bNPCFestiveLights[MAX_BOSSES];
-static int g_iNPCFestiveLightBrightness[MAX_BOSSES];
-static float g_flNPCFestiveLightDistance[MAX_BOSSES];
-static float g_flNPCFestiveLightRadius[MAX_BOSSES];
-static float g_flNPCFestiveLightPos[MAX_BOSSES][3];
-static float g_flNPCFestiveLightAng[MAX_BOSSES][3];
+static bool g_NpcHasDiscoMode[MAX_BOSSES];
+static float g_NpcDiscoRadiusMin[MAX_BOSSES];
+static float g_NpcDiscoRadiusMax[MAX_BOSSES];
+static float g_NpcDiscoModePos[MAX_BOSSES][3];
+static bool g_NpcHasFestiveLights[MAX_BOSSES];
+static int g_NpcFestiveLightBrightness[MAX_BOSSES];
+static float g_NpcFestiveLightDistance[MAX_BOSSES];
+static float g_NpcFestiveLightRadius[MAX_BOSSES];
+static float g_NpcFestiveLightPos[MAX_BOSSES][3];
+static float g_NpcFestiveLightAng[MAX_BOSSES][3];
 
-static float g_flNPCFieldOfView[MAX_BOSSES] = { 0.0, ... };
-static float g_flNPCTurnRate[MAX_BOSSES] = { 0.0, ... };
-static float g_flNPCBackstabFOV[MAX_BOSSES] = { 0.0, ... };
+static float g_NpcFieldOfView[MAX_BOSSES] = { 0.0, ... };
+static float g_NpcTurnRate[MAX_BOSSES] = { 0.0, ... };
+static float g_NpcBackstabFOV[MAX_BOSSES] = { 0.0, ... };
 
-static bool g_bNPCTeleportAllowed[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTeleportTimeMin[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTeleportTimeMax[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTeleportRestPeriod[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTeleportStressMin[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTeleportStressMax[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTeleportPersistencyPeriod[MAX_BOSSES][Difficulty_Max];
+static bool g_NpcHasTeleportAllowed[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTeleportTimeMin[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTeleportTimeMax[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTeleportRestPeriod[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTeleportStressMin[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTeleportStressMax[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTeleportPersistencyPeriod[MAX_BOSSES][Difficulty_Max];
 
-static float g_flNPCJumpscareDistance[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCJumpscareDuration[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCJumpscareCooldown[MAX_BOSSES][Difficulty_Max];
-static bool g_bNPCJumpscareOnScare[MAX_BOSSES];
-bool g_bNPCIgnoreNonMarkedForChase[MAX_BOSSES];
+static float g_NpcJumpscareDistance[MAX_BOSSES][Difficulty_Max];
+static float g_NpcJumpscareDuration[MAX_BOSSES][Difficulty_Max];
+static float g_NpcJumpscareCooldown[MAX_BOSSES][Difficulty_Max];
+static bool g_NpcHasJumpscareOnScare[MAX_BOSSES];
+bool g_NpcIgnoreNonMarkedForChase[MAX_BOSSES];
 
-g_iSlender[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+g_SlenderEnt[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
-static float g_flNPCSpeed[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCMaxSpeed[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCAddSpeed[MAX_BOSSES];
-static float g_flNPCAddMaxSpeed[MAX_BOSSES];
-static float g_flNPCAddAcceleration[MAX_BOSSES];
-static float g_flNPCIdleLifetime[MAX_BOSSES][Difficulty_Max];
+static float g_NpcSpeed[MAX_BOSSES][Difficulty_Max];
+static float g_NpcMaxSpeed[MAX_BOSSES][Difficulty_Max];
+static float g_NpcAddSpeed[MAX_BOSSES];
+static float g_NpcAddMaxSpeed[MAX_BOSSES];
+static float g_NpcAddAcceleration[MAX_BOSSES];
+static float g_NpcIdleLifetime[MAX_BOSSES][Difficulty_Max];
 
-static float g_flNPCScareRadius[MAX_BOSSES];
-static float g_flNPCScareCooldown[MAX_BOSSES];
+static float g_NpcScareRadius[MAX_BOSSES];
+static float g_NpcScareCooldown[MAX_BOSSES];
 
-static bool g_bNPCPlayerScareSpeedBoost[MAX_BOSSES];
-static float g_flNPCPlayerSpeedBoostDuration[MAX_BOSSES];
+static bool g_NpcHasPlayerScareSpeedBoost[MAX_BOSSES];
+static float g_NpcPlayerSpeedBoostDuration[MAX_BOSSES];
 
-static bool g_bNPCPlayerScareReaction[MAX_BOSSES];
-static int g_iNPCPlayerScareReactionType[MAX_BOSSES];
+static bool g_NpcHasPlayerScareReaction[MAX_BOSSES];
+static int g_NpcPlayerScareReactionType[MAX_BOSSES];
 
-static bool g_bNPCPlayerScareReplenishSprint[MAX_BOSSES];
-static int g_iNPCPlayerScareReplenishSprintAmount[MAX_BOSSES];
+static bool g_NpcHasPlayerScareReplenishSprint[MAX_BOSSES];
+static int g_NpcPlayerScareReplenishSprintAmount[MAX_BOSSES];
 
-static int g_iNPCTeleportType[MAX_BOSSES] = { -1, ... };
+static int g_NpcTeleportType[MAX_BOSSES] = { -1, ... };
 
-static float g_flNPCAnger[MAX_BOSSES] = { 1.0, ... };
-static float g_flNPCAngerAddOnPageGrab[MAX_BOSSES] = { 0.0, ... };
-static float g_flNPCAngerAddOnPageGrabTimeDiff[MAX_BOSSES] = { 0.0, ... };
+static float g_NpcAnger[MAX_BOSSES] = { 1.0, ... };
+static float g_NpcAngerAddOnPageGrab[MAX_BOSSES] = { 0.0, ... };
+static float g_NpcAngerAddOnPageGrabTimeDiff[MAX_BOSSES] = { 0.0, ... };
 
-static float g_flNPCSearchRadius[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCHearingRadius[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCTauntAlertRange[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCInstantKillRadius[MAX_BOSSES] = { 0.0, ... };
-static float g_flNPCInstantKillCooldown[MAX_BOSSES][Difficulty_Max];
+static float g_NpcSearchRadius[MAX_BOSSES][Difficulty_Max];
+static float g_NpcHearingRadius[MAX_BOSSES][Difficulty_Max];
+static float g_NpcTauntAlertRange[MAX_BOSSES][Difficulty_Max];
+static float g_NpcInstantKillRadius[MAX_BOSSES] = { 0.0, ... };
+static float g_NpcInstantKillCooldown[MAX_BOSSES][Difficulty_Max];
 
-static bool g_bNPCDeathCamEnabled[MAX_BOSSES] = { false, ... };
+static bool g_NpcHasDeathCamEnabled[MAX_BOSSES] = { false, ... };
 
-static bool g_bNPCProxyWeaponsEnabled[MAX_BOSSES] = { false, ... };
+static bool g_NpcHasProxyWeaponsEnabled[MAX_BOSSES] = { false, ... };
 
-static bool g_bNPCHealthbarEnabled[MAX_BOSSES] = { false, ... };
+static bool g_NpcHasHealthbarEnabled[MAX_BOSSES] = { false, ... };
 
-static int g_iNPCEnemy[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+static int g_NpcEnemy[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
-static float g_flNPCProxySpawnChanceMin[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCProxySpawnChanceMax[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCProxySpawnChanceThreshold[MAX_BOSSES][Difficulty_Max];
-static int g_iNPCProxySpawnNumMin[MAX_BOSSES][Difficulty_Max];
-static int g_iNPCProxySpawnNumMax[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCProxySpawnCooldownMin[MAX_BOSSES][Difficulty_Max];
-static float g_flNPCProxySpawnCooldownMax[MAX_BOSSES][Difficulty_Max];
+static float g_NpcProxySpawnChanceMin[MAX_BOSSES][Difficulty_Max];
+static float g_NpcProxySpawnChanceMax[MAX_BOSSES][Difficulty_Max];
+static float g_NpcProxySpawnChanceThreshold[MAX_BOSSES][Difficulty_Max];
+static int g_NpcProxySpawnNumMin[MAX_BOSSES][Difficulty_Max];
+static int g_NpcProxySpawnNumMax[MAX_BOSSES][Difficulty_Max];
+static float g_NpcProxySpawnCooldownMin[MAX_BOSSES][Difficulty_Max];
+static float g_NpcProxySpawnCooldownMax[MAX_BOSSES][Difficulty_Max];
 
-static bool g_bNPCIgnoreNavPrefer[MAX_BOSSES];
+static bool g_NpcHasIgnoreNavPrefer[MAX_BOSSES];
 
-static int g_iNPCDeathMessageDifficultyIndexes[MAX_BOSSES];
+static int g_NpcDeathMessageDifficultyIndexes[MAX_BOSSES];
 
-static bool g_bNPCDrainCreditsState[MAX_BOSSES];
-static int g_iNPCDrainCreditAmount[MAX_BOSSES][Difficulty_Max];
+static bool g_NpcHasDrainCreditsState[MAX_BOSSES];
+static int g_NpcDrainCreditAmount[MAX_BOSSES][Difficulty_Max];
 
-static bool g_bNPCProxySpawnEffectEnabled[MAX_BOSSES];
-static float g_flNPCProxySpawnEffectZOffset[MAX_BOSSES];
+static bool g_NpcHasProxySpawnEffectEnabled[MAX_BOSSES];
+static float g_NpcProxySpawnEffectZOffset[MAX_BOSSES];
 
-NextBotActionFactory g_bNBActionFactory;
+NextBotActionFactory g_SlenderActionFactory;
 
-Handle hTimerMusic = null;//Planning to add a bosses array on.
+Handle timerMusic = null;//Planning to add a bosses array on.
 
-int g_iBossPathingColor[MAX_BOSSES][4];
-
-float g_flLastStuckTime[MAX_BOSSES] = {-1.0, ...};
-bool g_bNPCHasCloaked[MAX_BOSSES] = { false, ... };
-bool g_bNPCUsedRage1[MAX_BOSSES] = { false, ... };
-bool g_bNPCUsedRage2[MAX_BOSSES] = { false, ... };
-bool g_bNPCUsedRage3[MAX_BOSSES] = { false, ... };
-bool g_bNPCUsesRageAnimation1[MAX_BOSSES] = { false, ... };
-bool g_bNPCUsesRageAnimation2[MAX_BOSSES] = { false, ... };
-bool g_bNPCUsesRageAnimation3[MAX_BOSSES] = { false, ... };
+float g_LastStuckTime[MAX_BOSSES] = {-1.0, ...};
+bool g_NpcHasCloaked[MAX_BOSSES] = { false, ... };
+bool g_NpcUsedRage1[MAX_BOSSES] = { false, ... };
+bool g_NpcUsedRage2[MAX_BOSSES] = { false, ... };
+bool g_NpcHasUsedRage3[MAX_BOSSES] = { false, ... };
+bool g_NpcUsesRageAnimation1[MAX_BOSSES] = { false, ... };
+bool g_NpcUsesRageAnimation2[MAX_BOSSES] = { false, ... };
+bool g_NpcUsesRageAnimation3[MAX_BOSSES] = { false, ... };
 
 const SF2NPC_BaseNPC SF2_INVALID_NPC = view_as<SF2NPC_BaseNPC>(-1);
 
@@ -324,30 +322,54 @@ methodmap SF2NPC_BaseNPC
 	}
 }
 
-stock bool NPCGetBossName(int iNPCIndex = -1, char[] buffer,int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
+stock bool NPCGetBossName(int npcIndex = -1, char[] buffer,int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
 {
-	if (iNPCIndex == -1 && profile[0] == '\0') return false;
-	int difficulty = g_cvDifficulty.IntValue;
-	if (iNPCIndex != -1)
+	if (npcIndex == -1 && profile[0] == '\0')
+	{
+		return false;
+	}
+	int difficulty = g_DifficultyConVar.IntValue;
+	if (npcIndex != -1)
 	{
 		switch (difficulty)
 		{
-			case Difficulty_Normal: strcopy(buffer, bufferLen, g_sNPCName[iNPCIndex][1]);
-			case Difficulty_Hard: strcopy(buffer, bufferLen, g_sNPCName[iNPCIndex][2]);
-			case Difficulty_Insane: strcopy(buffer, bufferLen, g_sNPCName[iNPCIndex][3]);
-			case Difficulty_Nightmare: strcopy(buffer, bufferLen, g_sNPCName[iNPCIndex][4]);
-			case Difficulty_Apollyon: strcopy(buffer, bufferLen, g_sNPCName[iNPCIndex][5]);
+			case Difficulty_Normal:
+			{
+				strcopy(buffer, bufferLen, g_NpcName[npcIndex][1]);
+			}
+			case Difficulty_Hard:
+			{
+				strcopy(buffer, bufferLen, g_NpcName[npcIndex][2]);
+			}
+			case Difficulty_Insane:
+			{
+				strcopy(buffer, bufferLen, g_NpcName[npcIndex][3]);
+			}
+			case Difficulty_Nightmare:
+			{
+				strcopy(buffer, bufferLen, g_NpcName[npcIndex][4]);
+			}
+			case Difficulty_Apollyon:
+			{
+				strcopy(buffer, bufferLen, g_NpcName[npcIndex][5]);
+			}
 		}
 	}
 	else
 	{
 		switch (difficulty)
 		{
-			case Difficulty_Normal: GetProfileString(profile, "name", buffer, bufferLen);
+			case Difficulty_Normal:
+			{
+				GetProfileString(profile, "name", buffer, bufferLen);
+			}
 			case Difficulty_Hard:
 			{
 				GetProfileString(profile, "name_hard", buffer, bufferLen);
-				if (buffer[0] == '\0') GetProfileString(profile, "name", buffer, bufferLen);
+				if (buffer[0] == '\0')
+				{
+					GetProfileString(profile, "name", buffer, bufferLen);
+				}
 			}
 			case Difficulty_Insane:
 			{
@@ -355,7 +377,10 @@ stock bool NPCGetBossName(int iNPCIndex = -1, char[] buffer,int bufferLen, char 
 				if (buffer[0] == '\0')
 				{
 					GetProfileString(profile, "name_hard", buffer, bufferLen);
-					if (buffer[0] == '\0') GetProfileString(profile, "name", buffer, bufferLen);
+					if (buffer[0] == '\0')
+					{
+						GetProfileString(profile, "name", buffer, bufferLen);
+					}
 				}
 			}
 			case Difficulty_Nightmare:
@@ -367,7 +392,10 @@ stock bool NPCGetBossName(int iNPCIndex = -1, char[] buffer,int bufferLen, char 
 					if (buffer[0] == '\0')
 					{
 						GetProfileString(profile, "name_hard", buffer, bufferLen);
-						if (buffer[0] == '\0') GetProfileString(profile, "name", buffer, bufferLen);
+						if (buffer[0] == '\0')
+						{
+							GetProfileString(profile, "name", buffer, bufferLen);
+						}
 					}
 				}
 			}
@@ -383,7 +411,10 @@ stock bool NPCGetBossName(int iNPCIndex = -1, char[] buffer,int bufferLen, char 
 						if (buffer[0] == '\0')
 						{
 							GetProfileString(profile, "name_hard", buffer, bufferLen);
-							if (buffer[0] == '\0') GetProfileString(profile, "name", buffer, bufferLen);
+							if (buffer[0] == '\0')
+							{
+								GetProfileString(profile, "name", buffer, bufferLen);
+							}
 						}
 					}
 				}
@@ -393,19 +424,19 @@ stock bool NPCGetBossName(int iNPCIndex = -1, char[] buffer,int bufferLen, char 
 	return true;
 }
 
-bool NPCHasProxyWeapons(int iNPCIndex)
+bool NPCHasProxyWeapons(int npcIndex)
 {
-	return g_bNPCProxyWeaponsEnabled[iNPCIndex];
+	return g_NpcHasProxyWeaponsEnabled[npcIndex];
 }
 
-bool NPCHasDeathCamEnabled(int iNPCIndex)
+bool NPCHasDeathCamEnabled(int npcIndex)
 {
-	return g_bNPCDeathCamEnabled[iNPCIndex];
+	return g_NpcHasDeathCamEnabled[npcIndex];
 }
 
-void NPCSetDeathCamEnabled(int iNPCIndex, bool state)
+void NPCSetDeathCamEnabled(int npcIndex, bool state)
 {
-	g_bNPCDeathCamEnabled[iNPCIndex] = state;
+	g_NpcHasDeathCamEnabled[npcIndex] = state;
 }
 
 public void NPCInitialize()
@@ -415,22 +446,25 @@ public void NPCInitialize()
 
 public void NPCOnConfigsExecuted()
 {
-	g_iNPCGlobalUniqueID = 0;
+	g_NpcGlobalUniqueID = 0;
 }
 
-bool NPCIsValid(int iNPCIndex)
+bool NPCIsValid(int npcIndex)
 {
-	return view_as<bool>(iNPCIndex >= 0 && iNPCIndex < MAX_BOSSES && NPCGetUniqueID(iNPCIndex) != -1);
+	return view_as<bool>(npcIndex >= 0 && npcIndex < MAX_BOSSES && NPCGetUniqueID(npcIndex) != -1);
 }
 
-int NPCGetUniqueID(int iNPCIndex)
+int NPCGetUniqueID(int npcIndex)
 {
-	return g_iNPCUniqueID[iNPCIndex];
+	return g_NpcUniqueID[npcIndex];
 }
 
 int NPCGetFromUniqueID(int iNPCUniqueID)
 {
-	if (iNPCUniqueID == -1) return -1;
+	if (iNPCUniqueID == -1)
+	{
+		return -1;
+	}
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -443,19 +477,22 @@ int NPCGetFromUniqueID(int iNPCUniqueID)
 	return -1;
 }
 
-int NPCGetEntRef(int iNPCIndex)
+int NPCGetEntRef(int npcIndex)
 {
-	return g_iSlender[iNPCIndex];
+	return g_SlenderEnt[npcIndex];
 }
 
-int NPCGetEntIndex(int iNPCIndex)
+int NPCGetEntIndex(int npcIndex)
 {
-	return EntRefToEntIndex(NPCGetEntRef(iNPCIndex));
+	return EntRefToEntIndex(NPCGetEntRef(npcIndex));
 }
 
 int NPCGetFromEntIndex(int entity)
 {
-	if (!entity || !IsValidEntity(entity)) return -1;
+	if (!entity || !IsValidEntity(entity))
+	{
+		return -1;
+	}
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -473,8 +510,14 @@ int NPCGetCount()
 	int iCount;
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
-		if (NPCGetUniqueID(i) == -1) continue;
-		if (NPCGetFlags(i) & SFF_FAKE) continue;
+		if (NPCGetUniqueID(i) == -1)
+		{
+			continue;
+		}
+		if (NPCGetFlags(i) & SFF_FAKE)
+		{
+			continue;
+		}
 		
 		iCount++;
 	}
@@ -482,122 +525,149 @@ int NPCGetCount()
 	return iCount;
 }
 
-int NPCGetProfileIndex(int iNPCIndex)
+int NPCGetProfileIndex(int npcIndex)
 {
-	return g_iNPCProfileIndex[iNPCIndex];
+	return g_NpcProfileIndex[npcIndex];
 }
 
-int NPCGetUniqueProfileIndex(int iNPCIndex)
+int NPCGetUniqueProfileIndex(int npcIndex)
 {
-	return g_iNPCUniqueProfileIndex[iNPCIndex];
+	return g_NpcUniqueProfileIndex[npcIndex];
 }
 
-bool NPCGetProfile(int iNPCIndex, char[] buffer,int bufferLen)
+bool NPCGetProfile(int npcIndex, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferLen, g_strSlenderProfile[iNPCIndex]);
+	strcopy(buffer, bufferLen, g_strSlenderProfile[npcIndex]);
 	return true;
 }
 
-int NPCSetProfile(int iNPCIndex, const char[] profile)
+int NPCSetProfile(int npcIndex, const char[] profile)
 {
-	strcopy(g_strSlenderProfile[iNPCIndex], sizeof(g_strSlenderProfile[]), profile);
+	strcopy(g_strSlenderProfile[npcIndex], sizeof(g_strSlenderProfile[]), profile);
 }
 
-int NPCRemove(int iNPCIndex)
+int NPCRemove(int npcIndex)
 {
-	if (!NPCIsValid(iNPCIndex)) return;
+	if (!NPCIsValid(npcIndex))
+	{
+		return;
+	}
 	
-	RemoveProfile(iNPCIndex);
+	RemoveProfile(npcIndex);
 }
 void NPCStopMusic()
 {
 	//Stop the music timer
-	if(hTimerMusic != null)
+	if (timerMusic != null)
 	{
-		delete hTimerMusic;
+		delete timerMusic;
 	}
 	//Stop the music for all players.
 	for(int i = 1;i<=MaxClients;i++)
 	{
-		if(IsValidClient(i))
+		if (IsValidClient(i))
 		{
-			if (sCurrentMusicTrack[0] != '\0') StopSound(i, MUSIC_CHAN, sCurrentMusicTrack);
+			if (currentMusicTrack[0] != '\0')
+			{
+				StopSound(i, MUSIC_CHAN, currentMusicTrack);
+			}
 			ClientUpdateMusicSystem(i);
 		}
 	}
 }
 void CheckIfMusicValid()
 {
-	int difficulty = g_cvDifficulty.IntValue;
+	int difficulty = g_DifficultyConVar.IntValue;
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
-		if (NPCGetUniqueID(i) == -1) continue;
-		if (g_iNPCAllowMusicOnDifficulty[i] & difficulty)
+		if (NPCGetUniqueID(i) == -1)
+		{
+			continue;
+		}
+		if (g_NpcAllowMusicOnDifficulty[i] & difficulty)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(i, profile, sizeof(profile));
 			for(int client = 1;client <=MaxClients;client ++)
 			{
-				if(IsValidClient(client) && (!g_bPlayerEliminated[client] || IsClientInGhostMode(client)))
+				if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
 				{
-					GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackNormal,sizeof(sCurrentMusicTrackNormal));
+					GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackNormal,sizeof(currentMusicTrackNormal));
 				
-					GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackHard,sizeof(sCurrentMusicTrackHard));
-					if (sCurrentMusicTrackHard[0] == '\0') GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackHard,sizeof(sCurrentMusicTrackHard));
-					
-					GetRandomStringFromProfile(profile,"sound_music_insane",sCurrentMusicTrackInsane,sizeof(sCurrentMusicTrackInsane));
-					if (sCurrentMusicTrackInsane[0] == '\0')
+					GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackHard,sizeof(currentMusicTrackHard));
+					if (currentMusicTrackHard[0] == '\0')
 					{
-						GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackInsane,sizeof(sCurrentMusicTrackInsane));
-						if (sCurrentMusicTrackInsane[0] == '\0')
+						GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackHard,sizeof(currentMusicTrackHard));
+					}
+					
+					GetRandomStringFromProfile(profile,"sound_music_insane",currentMusicTrackInsane,sizeof(currentMusicTrackInsane));
+					if (currentMusicTrackInsane[0] == '\0')
+					{
+						GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackInsane,sizeof(currentMusicTrackInsane));
+						if (currentMusicTrackInsane[0] == '\0')
 						{
-							GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackInsane,sizeof(sCurrentMusicTrackInsane));
+							GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackInsane,sizeof(currentMusicTrackInsane));
 						}
 					}
 					
-					GetRandomStringFromProfile(profile,"sound_music_nightmare",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
-					if (sCurrentMusicTrackNightmare[0] == '\0')
+					GetRandomStringFromProfile(profile,"sound_music_nightmare",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
+					if (currentMusicTrackNightmare[0] == '\0')
 					{
-						GetRandomStringFromProfile(profile,"sound_music_insane",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
-						if (sCurrentMusicTrackNightmare[0] == '\0')
+						GetRandomStringFromProfile(profile,"sound_music_insane",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
+						if (currentMusicTrackNightmare[0] == '\0')
 						{
-							GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
-							if (sCurrentMusicTrackNightmare[0] == '\0')
+							GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
+							if (currentMusicTrackNightmare[0] == '\0')
 							{
-								GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
+								GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
 							}
 						}
 					}
 					
-					GetRandomStringFromProfile(profile,"sound_music_apollyon",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-					if (sCurrentMusicTrackApollyon[0] == '\0')
+					GetRandomStringFromProfile(profile,"sound_music_apollyon",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+					if (currentMusicTrackApollyon[0] == '\0')
 					{
-						GetRandomStringFromProfile(profile,"sound_music_nightmare",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-						if (sCurrentMusicTrackApollyon[0] == '\0')
+						GetRandomStringFromProfile(profile,"sound_music_nightmare",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+						if (currentMusicTrackApollyon[0] == '\0')
 						{
-							GetRandomStringFromProfile(profile,"sound_music_insane",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-							if (sCurrentMusicTrackApollyon[0] == '\0')
+							GetRandomStringFromProfile(profile,"sound_music_insane",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+							if (currentMusicTrackApollyon[0] == '\0')
 							{
-								GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-								if (sCurrentMusicTrackApollyon[0] == '\0')
+								GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+								if (currentMusicTrackApollyon[0] == '\0')
 								{
-									GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
+									GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
 								}
 							}
 						}
 					}
-					switch (g_cvDifficulty.IntValue)
+					switch (g_DifficultyConVar.IntValue)
 					{
-						case Difficulty_Normal, Difficulty_Easy: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNormal);
-						case Difficulty_Hard: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackHard);
-						case Difficulty_Insane: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackInsane);
-						case Difficulty_Nightmare: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNightmare);
-						case Difficulty_Apollyon: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackApollyon);
+						case Difficulty_Normal, Difficulty_Easy:
+						{
+							strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackNormal);
+						}
+						case Difficulty_Hard:
+						{
+							strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackHard);
+						}
+						case Difficulty_Insane:
+						{
+							strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackInsane);
+						}
+						case Difficulty_Nightmare:
+						{
+							strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackNightmare);
+						}
+						case Difficulty_Apollyon:
+						{
+							strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackApollyon);
+						}
 					}
-					if (sCurrentMusicTrack[0] != '\0')
+					if (currentMusicTrack[0] != '\0')
 					{
-						hTimerMusic = CreateTimer(NPCGetSoundMusicLoop(i, difficulty),BossMusic,i,TIMER_FLAG_NO_MAPCHANGE);
-						StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
+						timerMusic = CreateTimer(NPCGetSoundMusicLoop(i, difficulty),BossMusic,i,TIMER_FLAG_NO_MAPCHANGE);
+						StopSound(client, MUSIC_CHAN, currentMusicTrack);
 						ClientChaseMusicReset(client);
 						ClientChaseMusicSeeReset(client);
 						ClientAlertMusicReset(client);
@@ -605,8 +675,11 @@ void CheckIfMusicValid()
 						ClientStopAllSlenderSounds(client, profile, "sound_chase_music", SNDCHAN_AUTO);
 						ClientStopAllSlenderSounds(client, profile, "sound_alert_music", SNDCHAN_AUTO);
 						ClientStopAllSlenderSounds(client, profile, "sound_chase_visible", SNDCHAN_AUTO);
-						if (g_strPlayerMusic[client][0] != '\0') EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
-						ClientMusicStart(client, sCurrentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
+						if (g_PlayerMusicString[client][0] != '\0')
+						{
+							EmitSoundToClient(client, g_PlayerMusicString[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
+						}
+						ClientMusicStart(client, currentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
 						ClientUpdateMusicSystem(client);
 						break;
 					}
@@ -618,72 +691,157 @@ void CheckIfMusicValid()
 }
 stock bool MusicActive()
 {
-	if(hTimerMusic!=null)
+	if (timerMusic!=null)
+	{
 		return true;
+	}
 	return false;
 }
 stock bool BossHasMusic(char[] profile)
 {
-	int difficulty = g_cvDifficulty.IntValue;
-	char sTemp[512];
+	int difficulty = g_DifficultyConVar.IntValue;
+	char temp[512];
 	switch (difficulty)
 	{
 		case Difficulty_Normal:
 		{
-			if (GetRandomStringFromProfile(profile,"sound_music",sTemp,sizeof(sTemp))) return true;
-			else return false;
+			if (GetRandomStringFromProfile(profile,"sound_music",temp,sizeof(temp)))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 		case Difficulty_Hard:
 		{
-			if (GetRandomStringFromProfile(profile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
-			else 
-				if (GetRandomStringFromProfile(profile,"sound_music",sTemp,sizeof(sTemp))) return true;
-				else return false;
+			if (GetRandomStringFromProfile(profile,"sound_music_hard",temp,sizeof(temp)))
+			{
+				return true;
+			}
+			else
+			{
+				if (GetRandomStringFromProfile(profile,"sound_music",temp,sizeof(temp)))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
 		}
 		case Difficulty_Insane:
 		{
-			if (GetRandomStringFromProfile(profile,"sound_music_insane",sTemp,sizeof(sTemp))) return true;
+			if (GetRandomStringFromProfile(profile,"sound_music_insane",temp,sizeof(temp)))
+			{
+				return true;
+			}
 			else
-				if (GetRandomStringFromProfile(profile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+			{
+				if (GetRandomStringFromProfile(profile,"sound_music_hard",temp,sizeof(temp)))
+				{
+					return true;
+				}
 				else
-					if (GetRandomStringFromProfile(profile,"sound_music",sTemp,sizeof(sTemp))) return true;
-					else return false;
+				{
+					if (GetRandomStringFromProfile(profile,"sound_music",temp,sizeof(temp)))
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+			}
 		}
 		case Difficulty_Nightmare:
 		{
-			if (GetRandomStringFromProfile(profile,"sound_music_nightmare",sTemp,sizeof(sTemp))) return true;
+			if (GetRandomStringFromProfile(profile,"sound_music_nightmare",temp,sizeof(temp)))
+			{
+				return true;
+			}
 			else
-				if (GetRandomStringFromProfile(profile,"sound_music_insane",sTemp,sizeof(sTemp))) return true;
+			{
+				if (GetRandomStringFromProfile(profile,"sound_music_insane",temp,sizeof(temp)))
+				{
+					return true;
+				}
 				else
-					if (GetRandomStringFromProfile(profile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+				{
+					if (GetRandomStringFromProfile(profile,"sound_music_hard",temp,sizeof(temp)))
+					{
+						return true;
+					}
 					else
-						if (GetRandomStringFromProfile(profile,"sound_music",sTemp,sizeof(sTemp))) return true;
-						else return false;
+					{
+						if (GetRandomStringFromProfile(profile,"sound_music",temp,sizeof(temp)))
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+				}
+			}
 		}
 		case Difficulty_Apollyon:
 		{
-			if (GetRandomStringFromProfile(profile,"sound_music_apollyon",sTemp,sizeof(sTemp))) return true;
+			if (GetRandomStringFromProfile(profile,"sound_music_apollyon",temp,sizeof(temp)))
+			{
+				return true;
+			}
 			else
-				if (GetRandomStringFromProfile(profile,"sound_music_nightmare",sTemp,sizeof(sTemp))) return true;
+			{
+				if (GetRandomStringFromProfile(profile,"sound_music_nightmare",temp,sizeof(temp)))
+				{
+					return true;
+				}
 				else
-					if (GetRandomStringFromProfile(profile,"sound_music_insane",sTemp,sizeof(sTemp))) return true;
+				{
+					if (GetRandomStringFromProfile(profile,"sound_music_insane",temp,sizeof(temp)))
+					{
+						return true;
+					}
 					else
-						if (GetRandomStringFromProfile(profile,"sound_music_hard",sTemp,sizeof(sTemp))) return true;
+					{
+						if (GetRandomStringFromProfile(profile,"sound_music_hard",temp,sizeof(temp)))
+						{
+							return true;
+						}
 						else
-							if (GetRandomStringFromProfile(profile,"sound_music",sTemp,sizeof(sTemp))) return true;
-							else return false;
+						{
+							if (GetRandomStringFromProfile(profile,"sound_music",temp,sizeof(temp)))
+							{
+								return true;
+							}
+							else
+							{
+								return false;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	return false;
 }
 stock bool BossMatchesCurrentMusic(char[] profile)
 {
-	if (!IsProfileValid(profile)) return false;
+	if (!IsProfileValid(profile))
+	{
+		return false;
+	}
 	
-	char buffer[PLATFORM_MAX_PATH], sCurrentMusic[PLATFORM_MAX_PATH];
-	int difficulty = g_cvDifficulty.IntValue;
+	char buffer[PLATFORM_MAX_PATH], currentMusic[PLATFORM_MAX_PATH];
+	int difficulty = g_DifficultyConVar.IntValue;
 
-	GetBossMusic(sCurrentMusic, sizeof(sCurrentMusic));
+	GetBossMusic(currentMusic, sizeof(currentMusic));
 	
 	g_Config.Rewind();
 	if (g_Config.JumpToKey(profile))
@@ -700,9 +858,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -714,9 +878,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -727,9 +897,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -741,9 +917,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -756,7 +938,10 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 						g_Config.GetString(s, buffer, sizeof(buffer));
 						if (buffer[0] == '\0') break;
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -769,7 +954,10 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 						g_Config.GetString(s, buffer, sizeof(buffer));
 						if (buffer[0] == '\0') break;
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -781,9 +969,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -794,9 +988,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -807,9 +1007,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -820,9 +1026,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -834,9 +1046,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -847,9 +1065,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -860,9 +1084,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -873,9 +1103,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 				g_Config.Rewind();
@@ -886,9 +1122,15 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 					{
 						FormatEx(s, sizeof(s), "%d", i2);
 						g_Config.GetString(s, buffer, sizeof(buffer));
-						if (buffer[0] == '\0') break;
+						if (buffer[0] == '\0')
+						{
+							break;
+						}
 						
-						if (strcmp(buffer, sCurrentMusic, false) == 0) return true;
+						if (strcmp(buffer, currentMusic, false) == 0)
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -899,64 +1141,66 @@ stock bool BossMatchesCurrentMusic(char[] profile)
 }
 stock void GetBossMusic(char[] buffer,int bufferLen)
 {
-	int difficulty = g_cvDifficulty.IntValue;
+	int difficulty = g_DifficultyConVar.IntValue;
 	if (!SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))	
 	{
 		switch (difficulty)
 		{
 			case Difficulty_Normal: 
 			{
-				strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNormal);
-				strcopy(buffer,bufferLen,sCurrentMusicTrackNormal);
+				strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackNormal);
+				strcopy(buffer,bufferLen,currentMusicTrackNormal);
 			}
 			case Difficulty_Hard: 
 			{
-				strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackHard);
-				strcopy(buffer,bufferLen,sCurrentMusicTrackHard);
+				strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackHard);
+				strcopy(buffer,bufferLen,currentMusicTrackHard);
 			}
 			case Difficulty_Insane: 
 			{
-				strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackInsane);
-				strcopy(buffer,bufferLen,sCurrentMusicTrackInsane);
+				strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackInsane);
+				strcopy(buffer,bufferLen,currentMusicTrackInsane);
 			}
 			case Difficulty_Nightmare: 
 			{
-				strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNightmare);
-				strcopy(buffer,bufferLen,sCurrentMusicTrackNightmare);
+				strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackNightmare);
+				strcopy(buffer,bufferLen,currentMusicTrackNightmare);
 			}
 			case Difficulty_Apollyon: 
 			{
-				strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackApollyon);
-				strcopy(buffer,bufferLen,sCurrentMusicTrackApollyon);
+				strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackApollyon);
+				strcopy(buffer,bufferLen,currentMusicTrackApollyon);
 			}
 		}
 	}
 	else
-		strcopy(buffer,bufferLen,TRIPLEBOSSESMUSIC);
-}
-public Action BossMusic(Handle timer,any iBossIndex)
-{
-	int difficulty = g_cvDifficulty.IntValue;
-	float time = NPCGetSoundMusicLoop(iBossIndex, difficulty);
-	if (time > 0.0 && (g_iNPCAllowMusicOnDifficulty[iBossIndex] & difficulty))
 	{
-		if(iBossIndex > -1)
+		strcopy(buffer,bufferLen,TRIPLEBOSSESMUSIC);
+	}
+}
+public Action BossMusic(Handle timer,any bossIndex)
+{
+	int difficulty = g_DifficultyConVar.IntValue;
+	float time = NPCGetSoundMusicLoop(bossIndex, difficulty);
+	if (time > 0.0 && (g_NpcAllowMusicOnDifficulty[bossIndex] & difficulty))
+	{
+		if (bossIndex > -1)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iBossIndex, profile, sizeof(profile));
+			NPCGetProfile(bossIndex, profile, sizeof(profile));
 			for(int i = 1;i<=MaxClients;i++)
 			{
-				if(IsValidClient(i) && sCurrentMusicTrack[0] != '\0')
+				if (IsValidClient(i) && currentMusicTrack[0] != '\0')
 				{
-					StopSound(i, MUSIC_CHAN, sCurrentMusicTrack);
+					StopSound(i, MUSIC_CHAN, currentMusicTrack);
 				}
 			}
-			hTimerMusic = CreateTimer(time,BossMusic,iBossIndex,TIMER_FLAG_NO_MAPCHANGE);
+			timerMusic = CreateTimer(time,BossMusic,bossIndex,TIMER_FLAG_NO_MAPCHANGE);
 			return Plugin_Continue;
 		}
 		NPCStopMusic();
 	}
-	hTimerMusic = null;
+	timerMusic = null;
 	return Plugin_Continue;
 }
 void NPCRemoveAll()
@@ -967,486 +1211,494 @@ void NPCRemoveAll()
 	}
 }
 
-int NPCGetType(int iNPCIndex)
+int NPCGetType(int npcIndex)
 {
-	return g_iNPCType[iNPCIndex];
+	return g_NpcType[npcIndex];
 }
 
-int NPCGetFlags(int iNPCIndex)
+int NPCGetFlags(int npcIndex)
 {
-	return g_iNPCFlags[iNPCIndex];
+	return g_NpcFlags[npcIndex];
 }
 
-void NPCSetFlags(int iNPCIndex,int iFlags)
+void NPCSetFlags(int npcIndex,int flags)
 {
-	g_iNPCFlags[iNPCIndex] = iFlags;
+	g_NpcFlags[npcIndex] = flags;
 }
 
-float NPCGetSoundMusicLoop(int iNPCIndex, int difficulty)
+float NPCGetSoundMusicLoop(int npcIndex, int difficulty)
 {
-	return g_flNPCSoundMusicLoop[iNPCIndex][difficulty];
+	return g_NpcSoundMusicLoop[npcIndex][difficulty];
 }
 
-float NPCGetModelScale(int iNPCIndex)
+float NPCGetModelScale(int npcIndex)
 {
-	return g_flNPCModelScale[iNPCIndex];
+	return g_NpcModelScale[npcIndex];
 }
 
-int NPCGetHealth(int iNPCIndex)
+int NPCGetHealth(int npcIndex)
 {
-	return g_iNPCHealth[iNPCIndex];
+	return g_NpcHealth[npcIndex];
 }
 
-int NPCGetModelSkin(int iNPCIndex)
+int NPCGetModelSkin(int npcIndex)
 {
-	return g_iNPCModelSkin[iNPCIndex];
+	return g_NpcModelSkin[npcIndex];
 }
 
-int NPCGetModelSkinDifficulty(int iNPCIndex, int difficulty)
+int NPCGetModelSkinDifficulty(int npcIndex, int difficulty)
 {
-	return g_iNPCModelSkinDifficulty[iNPCIndex][difficulty];
+	return g_NpcModelSkinDifficulty[npcIndex][difficulty];
 }
 
-int NPCGetModelSkinMax(int iNPCIndex)
+int NPCGetModelSkinMax(int npcIndex)
 {
-	return g_iNPCModelSkinMax[iNPCIndex];
+	return g_NpcModelSkinMax[npcIndex];
 }
 
-int NPCGetModelBodyGroups(int iNPCIndex)
+int NPCGetModelBodyGroups(int npcIndex)
 {
-	return g_iNPCModelBodyGroups[iNPCIndex];
+	return g_NpcModelBodyGroups[npcIndex];
 }
 
-int NPCGetModelBodyGroupsDifficulty(int iNPCIndex, int difficulty)
+int NPCGetModelBodyGroupsDifficulty(int npcIndex, int difficulty)
 {
-	return g_iNPCModelBodyGroupsDifficulty[iNPCIndex][difficulty];
+	return g_NpcModelBodyGroupsDifficulty[npcIndex][difficulty];
 }
 
-int NPCGetModelBodyGroupsMax(int iNPCIndex)
+int NPCGetModelBodyGroupsMax(int npcIndex)
 {
-	return g_iNPCModelBodyGroupsMax[iNPCIndex];
+	return g_NpcModelBodyGroupsMax[npcIndex];
 }
 
-int NPCGetRaidHitbox(int iNPCIndex)
+int NPCGetRaidHitbox(int npcIndex)
 {
-	return g_iNPCRaidHitbox[iNPCIndex];
+	return g_NpcRaidHitbox[npcIndex];
 }
 
-float NPCGetBlinkLookRate(int iNPCIndex)
+float NPCGetBlinkLookRate(int npcIndex)
 {
-	return g_flNPCBlinkLookRate[iNPCIndex];
+	return g_NpcBlinkLookRate[npcIndex];
 }
 
-float NPCGetBlinkStaticRate(int iNPCIndex)
+float NPCGetBlinkStaticRate(int npcIndex)
 {
-	return g_flNPCBlinkStaticRate[iNPCIndex];
+	return g_NpcBlinkStaticRate[npcIndex];
 }
 
-bool NPCGetDiscoModeState(int iNPCIndex)
+bool NPCGetDiscoModeState(int npcIndex)
 {
-	return g_bNPCDiscoMode[iNPCIndex];
+	return g_NpcHasDiscoMode[npcIndex];
 }
 
-float NPCGetDiscoModeRadiusMin(int iNPCIndex)
+float NPCGetDiscoModeRadiusMin(int npcIndex)
 {
-	return g_flNPCDiscoRadiusMin[iNPCIndex];
+	return g_NpcDiscoRadiusMin[npcIndex];
 }
 
-float NPCGetDiscoModeRadiusMax(int iNPCIndex)
+float NPCGetDiscoModeRadiusMax(int npcIndex)
 {
-	return g_flNPCDiscoRadiusMax[iNPCIndex];
+	return g_NpcDiscoRadiusMax[npcIndex];
 }
 
-float[] NPCGetDiscoModePos(int iNPCIndex)
+float[] NPCGetDiscoModePos(int npcIndex)
 {
-	return g_flNPCDiscoModePos[iNPCIndex];
+	return g_NpcDiscoModePos[npcIndex];
 }
 
-bool NPCGetFestiveLightState(int iNPCIndex)
+bool NPCGetFestiveLightState(int npcIndex)
 {
-	return g_bNPCFestiveLights[iNPCIndex];
+	return g_NpcHasFestiveLights[npcIndex];
 }
 
-int NPCGetFestiveLightBrightness(int iNPCIndex)
+int NPCGetFestiveLightBrightness(int npcIndex)
 {
-	return g_iNPCFestiveLightBrightness[iNPCIndex];
+	return g_NpcFestiveLightBrightness[npcIndex];
 }
 
-float NPCGetFestiveLightDistance(int iNPCIndex)
+float NPCGetFestiveLightDistance(int npcIndex)
 {
-	return g_flNPCFestiveLightDistance[iNPCIndex];
+	return g_NpcFestiveLightDistance[npcIndex];
 }
 
-float NPCGetFestiveLightRadius(int iNPCIndex)
+float NPCGetFestiveLightRadius(int npcIndex)
 {
-	return g_flNPCFestiveLightRadius[iNPCIndex];
+	return g_NpcFestiveLightRadius[npcIndex];
 }
 
-float[] NPCGetFestiveLightPosition(int iNPCIndex)
+float[] NPCGetFestiveLightPosition(int npcIndex)
 {
-	return g_flNPCFestiveLightPos[iNPCIndex];
+	return g_NpcFestiveLightPos[npcIndex];
 }
 
-float[] NPCGetFestiveLightAngle(int iNPCIndex)
+float[] NPCGetFestiveLightAngle(int npcIndex)
 {
-	return g_flNPCFestiveLightAng[iNPCIndex];
+	return g_NpcFestiveLightAng[npcIndex];
 }
 
-bool NPCGetCustomOutlinesState(int iNPCIndex)
+bool NPCGetCustomOutlinesState(int npcIndex)
 {
-	return g_bSlenderUseCustomOutlines[iNPCIndex];
+	return g_SlenderUseCustomOutlines[npcIndex];
 }
 
-int NPCGetOutlineColorR(int iNPCIndex)
+int NPCGetOutlineColorR(int npcIndex)
 {
-	return g_iSlenderOutlineColorR[iNPCIndex];
+	return g_SlenderOutlineColorR[npcIndex];
 }
 
-int NPCGetOutlineColorG(int iNPCIndex)
+int NPCGetOutlineColorG(int npcIndex)
 {
-	return g_iSlenderOutlineColorG[iNPCIndex];
+	return g_SlenderOutlineColorG[npcIndex];
 }
 
-int NPCGetOutlineColorB(int iNPCIndex)
+int NPCGetOutlineColorB(int npcIndex)
 {
-	return g_iSlenderOutlineColorB[iNPCIndex];
+	return g_SlenderOutlineColorB[npcIndex];
 }
 
-int NPCGetOutlineTransparency(int iNPCIndex)
+int NPCGetOutlineTransparency(int npcIndex)
 {
-	return g_iSlenderOutlineTransparency[iNPCIndex];
+	return g_SlenderOutlineTransparency[npcIndex];
 }
 
-bool NPCGetRainbowOutlineState(int iNPCIndex)
+bool NPCGetRainbowOutlineState(int npcIndex)
 {
-	return g_bSlenderUseRainbowOutline[iNPCIndex];
+	return g_SlenderUseRainbowOutline[npcIndex];
 }
 
-float NPCGetRainbowOutlineCycleRate(int iNPCIndex)
+float NPCGetRainbowOutlineCycleRate(int npcIndex)
 {
-	return g_flSlenderRainbowCycleRate[iNPCIndex];
+	return g_SlenderRainbowCycleRate[npcIndex];
 }
 
-float NPCGetSpeed(int iNPCIndex,int difficulty)
+float NPCGetSpeed(int npcIndex,int difficulty)
 {
-	return g_flNPCSpeed[iNPCIndex][difficulty];
+	return g_NpcSpeed[npcIndex][difficulty];
 }
 
-float NPCGetMaxSpeed(int iNPCIndex,int difficulty)
+float NPCGetMaxSpeed(int npcIndex,int difficulty)
 {
-	return g_flNPCMaxSpeed[iNPCIndex][difficulty];
+	return g_NpcMaxSpeed[npcIndex][difficulty];
 }
 
-float NPCGetAcceleration(int iNPCIndex,int difficulty)
+float NPCGetAcceleration(int npcIndex,int difficulty)
 {
-	return g_flSlenderAcceleration[iNPCIndex][difficulty];
+	return g_SlenderAcceleration[npcIndex][difficulty];
 }
 
-float NPCSetAddSpeed(int iNPCIndex, float flAmount)
+float NPCSetAddSpeed(int npcIndex, float flAmount)
 {
-	g_flNPCAddSpeed[iNPCIndex] += flAmount;
+	g_NpcAddSpeed[npcIndex] += flAmount;
 }
 
-float NPCSetAddMaxSpeed(int iNPCIndex, float flAmount)
+float NPCSetAddMaxSpeed(int npcIndex, float flAmount)
 {
-	g_flNPCAddMaxSpeed[iNPCIndex] += flAmount;
+	g_NpcAddMaxSpeed[npcIndex] += flAmount;
 }
 
-float NPCSetAddAcceleration(int iNPCIndex, float flAmount)
+float NPCSetAddAcceleration(int npcIndex, float flAmount)
 {
-	g_flNPCAddAcceleration[iNPCIndex] += flAmount;
+	g_NpcAddAcceleration[npcIndex] += flAmount;
 }
 
-float NPCGetAddSpeed(int iNPCIndex)
+float NPCGetAddSpeed(int npcIndex)
 {
-	return g_flNPCAddSpeed[iNPCIndex];
+	return g_NpcAddSpeed[npcIndex];
 }
 
-float NPCGetAddMaxSpeed(int iNPCIndex)
+float NPCGetAddMaxSpeed(int npcIndex)
 {
-	return g_flNPCAddMaxSpeed[iNPCIndex];
+	return g_NpcAddMaxSpeed[npcIndex];
 }
 
-float NPCGetAddAcceleration(int iNPCIndex)
+float NPCGetAddAcceleration(int npcIndex)
 {
-	return g_flNPCAddAcceleration[iNPCIndex];
+	return g_NpcAddAcceleration[npcIndex];
 }
 
-bool NPCIsTeleportAllowed(int iNPCIndex, int difficulty)
+bool NPCIsTeleportAllowed(int npcIndex, int difficulty)
 {
-	return g_bNPCTeleportAllowed[iNPCIndex][difficulty];
+	return g_NpcHasTeleportAllowed[npcIndex][difficulty];
 }
 
-float NPCGetTeleportTimeMin(int iNPCIndex, int difficulty)
+float NPCGetTeleportTimeMin(int npcIndex, int difficulty)
 {
-	return g_flNPCTeleportTimeMin[iNPCIndex][difficulty];
+	return g_NpcTeleportTimeMin[npcIndex][difficulty];
 }
 
-float NPCGetTeleportTimeMax(int iNPCIndex, int difficulty)
+float NPCGetTeleportTimeMax(int npcIndex, int difficulty)
 {
-	return g_flNPCTeleportTimeMax[iNPCIndex][difficulty];
+	return g_NpcTeleportTimeMax[npcIndex][difficulty];
 }
 
-float NPCGetTeleportRestPeriod(int iNPCIndex, int difficulty)
+float NPCGetTeleportRestPeriod(int npcIndex, int difficulty)
 {
-	return g_flNPCTeleportRestPeriod[iNPCIndex][difficulty];
+	return g_NpcTeleportRestPeriod[npcIndex][difficulty];
 }
 
-float NPCGetTeleportStressMin(int iNPCIndex, int difficulty)
+float NPCGetTeleportStressMin(int npcIndex, int difficulty)
 {
-	return g_flNPCTeleportStressMin[iNPCIndex][difficulty];
+	return g_NpcTeleportStressMin[npcIndex][difficulty];
 }
 
-float NPCGetTeleportStressMax(int iNPCIndex, int difficulty)
+float NPCGetTeleportStressMax(int npcIndex, int difficulty)
 {
-	return g_flNPCTeleportStressMax[iNPCIndex][difficulty];
+	return g_NpcTeleportStressMax[npcIndex][difficulty];
 }
 
-float NPCGetTeleportPersistencyPeriod(int iNPCIndex, int difficulty)
+float NPCGetTeleportPersistencyPeriod(int npcIndex, int difficulty)
 {
-	return g_flNPCTeleportPersistencyPeriod[iNPCIndex][difficulty];
+	return g_NpcTeleportPersistencyPeriod[npcIndex][difficulty];
 }
 
-float NPCGetJumpscareDistance(int iNPCIndex, int difficulty)
+float NPCGetJumpscareDistance(int npcIndex, int difficulty)
 {
-	return g_flNPCJumpscareDistance[iNPCIndex][difficulty];
+	return g_NpcJumpscareDistance[npcIndex][difficulty];
 }
 
-float NPCGetJumpscareDuration(int iNPCIndex, int difficulty)
+float NPCGetJumpscareDuration(int npcIndex, int difficulty)
 {
-	return g_flNPCJumpscareDuration[iNPCIndex][difficulty];
+	return g_NpcJumpscareDuration[npcIndex][difficulty];
 }
 
-float NPCGetJumpscareCooldown(int iNPCIndex, int difficulty)
+float NPCGetJumpscareCooldown(int npcIndex, int difficulty)
 {
-	return g_flNPCJumpscareCooldown[iNPCIndex][difficulty];
+	return g_NpcJumpscareCooldown[npcIndex][difficulty];
 }
 
-bool NPCGetJumpscareOnScare(int iNPCIndex)
+bool NPCGetJumpscareOnScare(int npcIndex)
 {
-	return g_bNPCJumpscareOnScare[iNPCIndex];
+	return g_NpcHasJumpscareOnScare[npcIndex];
 }
 
-float NPCGetTurnRate(int iNPCIndex)
+float NPCGetTurnRate(int npcIndex)
 {
-	return g_flNPCTurnRate[iNPCIndex];
+	return g_NpcTurnRate[npcIndex];
 }
 
-float NPCGetFOV(int iNPCIndex)
+float NPCGetFOV(int npcIndex)
 {
-	return g_flNPCFieldOfView[iNPCIndex];
+	return g_NpcFieldOfView[npcIndex];
 }
 
-float NPCGetBackstabFOV(int iNPCIndex)
+float NPCGetBackstabFOV(int npcIndex)
 {
-	return g_flNPCBackstabFOV[iNPCIndex];
+	return g_NpcBackstabFOV[npcIndex];
 }
 
-float NPCGetIdleLifetime(int iNPCIndex,int difficulty)
+float NPCGetIdleLifetime(int npcIndex,int difficulty)
 {
-	return g_flNPCIdleLifetime[iNPCIndex][difficulty];
+	return g_NpcIdleLifetime[npcIndex][difficulty];
 }
 
-float NPCGetAnger(int iNPCIndex)
+float NPCGetAnger(int npcIndex)
 {
-	return g_flNPCAnger[iNPCIndex];
+	return g_NpcAnger[npcIndex];
 }
 
-void NPCSetAnger(int iNPCIndex, float flAnger)
+void NPCSetAnger(int npcIndex, float flAnger)
 {
-	g_flNPCAnger[iNPCIndex] = flAnger;
+	g_NpcAnger[npcIndex] = flAnger;
 }
 
-void NPCAddAnger(int iNPCIndex, float flAmount)
+void NPCAddAnger(int npcIndex, float flAmount)
 {
-	g_flNPCAnger[iNPCIndex] += flAmount;
+	g_NpcAnger[npcIndex] += flAmount;
 }
 
-float NPCGetAngerAddOnPageGrab(int iNPCIndex)
+float NPCGetAngerAddOnPageGrab(int npcIndex)
 {
-	return g_flNPCAngerAddOnPageGrab[iNPCIndex];
+	return g_NpcAngerAddOnPageGrab[npcIndex];
 }
 
-float NPCGetAngerAddOnPageGrabTimeDiff(int iNPCIndex)
+float NPCGetAngerAddOnPageGrabTimeDiff(int npcIndex)
 {
-	return g_flNPCAngerAddOnPageGrabTimeDiff[iNPCIndex];
+	return g_NpcAngerAddOnPageGrabTimeDiff[npcIndex];
 }
 
-float NPCGetEyePositionOffset(int iNPCIndex, float buffer[3])
+float NPCGetEyePositionOffset(int npcIndex, float buffer[3])
 {
-	buffer[0] = g_flSlenderEyePosOffset[iNPCIndex][0];
-	buffer[1] = g_flSlenderEyePosOffset[iNPCIndex][1];
-	buffer[2] = g_flSlenderEyePosOffset[iNPCIndex][2];
+	buffer[0] = g_SlenderEyePosOffset[npcIndex][0];
+	buffer[1] = g_SlenderEyePosOffset[npcIndex][1];
+	buffer[2] = g_SlenderEyePosOffset[npcIndex][2];
 }
 
-float NPCGetSearchRadius(int iNPCIndex, int difficulty)
+float NPCGetSearchRadius(int npcIndex, int difficulty)
 {
-	return g_flNPCSearchRadius[iNPCIndex][difficulty];
+	return g_NpcSearchRadius[npcIndex][difficulty];
 }
 
-float NPCGetHearingRadius(int iNPCIndex, int difficulty)
+float NPCGetHearingRadius(int npcIndex, int difficulty)
 {
-	return g_flNPCHearingRadius[iNPCIndex][difficulty];
+	return g_NpcHearingRadius[npcIndex][difficulty];
 }
 
-float NPCGetTauntAlertRange(int iNPCIndex, int difficulty)
+float NPCGetTauntAlertRange(int npcIndex, int difficulty)
 {
-	return g_flNPCTauntAlertRange[iNPCIndex][difficulty];
+	return g_NpcTauntAlertRange[npcIndex][difficulty];
 }
 
-float NPCGetScareRadius(int iNPCIndex)
+float NPCGetScareRadius(int npcIndex)
 {
-	return g_flNPCScareRadius[iNPCIndex];
+	return g_NpcScareRadius[npcIndex];
 }
 
-float NPCGetScareCooldown(int iNPCIndex)
+float NPCGetScareCooldown(int npcIndex)
 {
-	return g_flNPCScareCooldown[iNPCIndex];
+	return g_NpcScareCooldown[npcIndex];
 }
 
-bool NPCGetSpeedBoostOnScare(int iNPCIndex)
+bool NPCGetSpeedBoostOnScare(int npcIndex)
 {
-	return g_bNPCPlayerScareSpeedBoost[iNPCIndex];
+	return g_NpcHasPlayerScareSpeedBoost[npcIndex];
 }
 
-float NPCGetScareSpeedBoostDuration(int iNPCIndex)
+float NPCGetScareSpeedBoostDuration(int npcIndex)
 {
-	return g_flNPCPlayerSpeedBoostDuration[iNPCIndex];
+	return g_NpcPlayerSpeedBoostDuration[npcIndex];
 }
 
-bool NPCGetScareReactionState(int iNPCIndex)
+bool NPCGetScareReactionState(int npcIndex)
 {
-	return g_bNPCPlayerScareReaction[iNPCIndex];
+	return g_NpcHasPlayerScareReaction[npcIndex];
 }
 
-int NPCGetScareReactionType(int iNPCIndex)
+int NPCGetScareReactionType(int npcIndex)
 {
-	return g_iNPCPlayerScareReactionType[iNPCIndex];
+	return g_NpcPlayerScareReactionType[npcIndex];
 }
 
-bool NPCGetScareReplenishSprintState(int iNPCIndex)
+bool NPCGetScareReplenishSprintState(int npcIndex)
 {
-	return g_bNPCPlayerScareReplenishSprint[iNPCIndex];
+	return g_NpcHasPlayerScareReplenishSprint[npcIndex];
 }
 
-int NPCGetScareReplenishSprintAmount(int iNPCIndex)
+int NPCGetScareReplenishSprintAmount(int npcIndex)
 {
-	return g_iNPCPlayerScareReplenishSprintAmount[iNPCIndex];
+	return g_NpcPlayerScareReplenishSprintAmount[npcIndex];
 }
 
-float NPCGetInstantKillRadius(int iNPCIndex)
+float NPCGetInstantKillRadius(int npcIndex)
 {
-	return g_flNPCInstantKillRadius[iNPCIndex];
+	return g_NpcInstantKillRadius[npcIndex];
 }
 
-float NPCGetInstantKillCooldown(int iNPCIndex, int difficulty)
+float NPCGetInstantKillCooldown(int npcIndex, int difficulty)
 {
-	return g_flNPCInstantKillCooldown[iNPCIndex][difficulty];
+	return g_NpcInstantKillCooldown[npcIndex][difficulty];
 }
 
-int NPCGetTeleportType(int iNPCIndex)
+int NPCGetTeleportType(int npcIndex)
 {
-	return g_iNPCTeleportType[iNPCIndex];
+	return g_NpcTeleportType[npcIndex];
 }
 
-bool NPCGetHealthbarState(int iNPCIndex)
+bool NPCGetHealthbarState(int npcIndex)
 {
-	return g_bNPCHealthbarEnabled[iNPCIndex];
+	return g_NpcHasHealthbarEnabled[npcIndex];
 }
 
-bool NPCGetFakeCopyState(int iNPCIndex)
+bool NPCGetFakeCopyState(int npcIndex)
 {
-	return g_bNPCFakeCopiesEnabled[iNPCIndex];
+	return g_NpcHasFakeCopiesEnabled[npcIndex];
 }
 
 #if defined _store_included
-bool NPCGetDrainCreditState(int iNPCIndex)
+bool NPCGetDrainCreditState(int npcIndex)
 {
-	return g_bNPCDrainCreditsState[iNPCIndex];
+	return g_NpcHasDrainCreditsState[npcIndex];
 }
 
-int NPCGetDrainCreditAmount(int iNPCIndex, int difficulty)
+int NPCGetDrainCreditAmount(int npcIndex, int difficulty)
 {
-	return g_iNPCDrainCreditAmount[iNPCIndex][difficulty];
+	return g_NpcDrainCreditAmount[npcIndex][difficulty];
 }
 #endif
 
-bool NPCGetProxySpawnEffectState(int iNPCIndex)
+bool NPCGetProxySpawnEffectState(int npcIndex)
 {
-	return g_bNPCProxySpawnEffectEnabled[iNPCIndex];
+	return g_NpcHasProxySpawnEffectEnabled[npcIndex];
 }
 
-float NPCGetProxySpawnEffectZOffset(int iNPCIndex)
+float NPCGetProxySpawnEffectZOffset(int npcIndex)
 {
-	return g_flNPCProxySpawnEffectZOffset[iNPCIndex];
+	return g_NpcProxySpawnEffectZOffset[npcIndex];
 }
 
-float NPCGetProxySpawnChanceMin(int iNPCIndex, int difficulty)
+float NPCGetProxySpawnChanceMin(int npcIndex, int difficulty)
 {
-	return g_flNPCProxySpawnChanceMin[iNPCIndex][difficulty];
+	return g_NpcProxySpawnChanceMin[npcIndex][difficulty];
 }
 
-float NPCGetProxySpawnChanceMax(int iNPCIndex, int difficulty)
+float NPCGetProxySpawnChanceMax(int npcIndex, int difficulty)
 {
-	return g_flNPCProxySpawnChanceMax[iNPCIndex][difficulty];
+	return g_NpcProxySpawnChanceMax[npcIndex][difficulty];
 }
 
-float NPCGetProxySpawnChanceThreshold(int iNPCIndex, int difficulty)
+float NPCGetProxySpawnChanceThreshold(int npcIndex, int difficulty)
 {
-	return g_flNPCProxySpawnChanceThreshold[iNPCIndex][difficulty];
+	return g_NpcProxySpawnChanceThreshold[npcIndex][difficulty];
 }
 
-int NPCGetProxySpawnNumMin(int iNPCIndex, int difficulty)
+int NPCGetProxySpawnNumMin(int npcIndex, int difficulty)
 {
-	return g_iNPCProxySpawnNumMin[iNPCIndex][difficulty];
+	return g_NpcProxySpawnNumMin[npcIndex][difficulty];
 }
 
-int NPCGetProxySpawnNumMax(int iNPCIndex, int difficulty)
+int NPCGetProxySpawnNumMax(int npcIndex, int difficulty)
 {
-	return g_iNPCProxySpawnNumMax[iNPCIndex][difficulty];
+	return g_NpcProxySpawnNumMax[npcIndex][difficulty];
 }
 
-float NPCGetProxySpawnCooldownMin(int iNPCIndex, int difficulty)
+float NPCGetProxySpawnCooldownMin(int npcIndex, int difficulty)
 {
-	return g_flNPCProxySpawnCooldownMin[iNPCIndex][difficulty];
+	return g_NpcProxySpawnCooldownMin[npcIndex][difficulty];
 }
 
-float NPCGetProxySpawnCooldownMax(int iNPCIndex, int difficulty)
+float NPCGetProxySpawnCooldownMax(int npcIndex, int difficulty)
 {
-	return g_flNPCProxySpawnCooldownMax[iNPCIndex][difficulty];
+	return g_NpcProxySpawnCooldownMax[npcIndex][difficulty];
 }
 
-bool NPCShouldSeeEntity(int iNPCIndex, int entity)
+bool NPCShouldSeeEntity(int npcIndex, int entity)
 {
 	if (!IsValidEntity(entity))
+	{
 		return false;
+	}
 
 	Action result = Plugin_Continue;
-	Call_StartForward(fOnBossSeeEntity);
-	Call_PushCell(iNPCIndex);
+	Call_StartForward(g_OnBossSeeEntityFwd);
+	Call_PushCell(npcIndex);
 	Call_PushCell(entity);
 	Call_Finish(result);
 
 	if (result != Plugin_Continue)
+	{
 		return false;
+	}
 
 	return true;
 }
 
-bool NPCShouldHearEntity(int iNPCIndex, int entity, SoundType soundType)
+bool NPCShouldHearEntity(int npcIndex, int entity, SoundType soundType)
 {
 	if (!IsValidEntity(entity))
+	{
 		return false;
+	}
 
 	Action result = Plugin_Continue;
-	Call_StartForward(fOnBossHearEntity);
-	Call_PushCell(iNPCIndex);
+	Call_StartForward(g_OnBossHearEntityFwd);
+	Call_PushCell(npcIndex);
 	Call_PushCell(entity);
 	Call_PushCell(soundType);
 	Call_Finish(result);
 
 	if (result != Plugin_Continue)
+	{
 		return false;
+	}
 
 	return true;
 }
@@ -1456,8 +1708,10 @@ bool NPCAreAvailablePlayersAlive()
 	int number = 0;
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == TFTeam_Red && !g_bPlayerEliminated[i] && !DidClientEscape(i)) 
+		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == TFTeam_Red && !g_PlayerEliminated[i] && !DidClientEscape(i)) 
+		{
 			number++;
+		}
 	}
 	return number >= 1;
 }
@@ -1465,81 +1719,108 @@ bool NPCAreAvailablePlayersAlive()
 /**
  *	Returns the boss's eye position (eye pos offset + absorigin).
  */
-bool NPCGetEyePosition(int iNPCIndex, float buffer[3], const float flDefaultValue[3]={ 0.0, 0.0, 0.0 })
+bool NPCGetEyePosition(int npcIndex, float buffer[3], const float defaultValue[3]={ 0.0, 0.0, 0.0 })
 {
-	buffer[0] = flDefaultValue[0];
-	buffer[1] = flDefaultValue[1];
-	buffer[2] = flDefaultValue[2];
+	buffer[0] = defaultValue[0];
+	buffer[1] = defaultValue[1];
+	buffer[2] = defaultValue[2];
 	
-	if (!NPCIsValid(iNPCIndex)) return false;
+	if (!NPCIsValid(npcIndex))
+	{
+		return false;
+	}
 	
-	int iNPC = NPCGetEntIndex(iNPCIndex);
-	if (!iNPC || iNPC == INVALID_ENT_REFERENCE) return false;
+	int npcEnt = NPCGetEntIndex(npcIndex);
+	if (!npcEnt || npcEnt == INVALID_ENT_REFERENCE)
+	{
+
+	}
 	
 	// @TODO: Replace SlenderGetAbsOrigin with GetEntPropVector
-	float flPos[3], flEyePosOffset[3];
-	SlenderGetAbsOrigin(iNPCIndex, flPos);
-	NPCGetEyePositionOffset(iNPCIndex, flEyePosOffset);
+	float pos[3], eyePosOffset[3];
+	SlenderGetAbsOrigin(npcIndex, pos);
+	NPCGetEyePositionOffset(npcIndex, eyePosOffset);
 	
-	AddVectors(flPos, flEyePosOffset, buffer);
+	AddVectors(pos, eyePosOffset, buffer);
 	return true;
 }
 
-bool NPCHasAttribute(int iNPCIndex, const char[] sAttribute)
+bool NPCHasAttribute(int npcIndex, const char[] attribute)
 {
-	if (NPCGetUniqueID(iNPCIndex) == -1) return false;
+	if (NPCGetUniqueID(npcIndex) == -1)
+	{
+		return false;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iNPCIndex, profile, sizeof(profile));
+	NPCGetProfile(npcIndex, profile, sizeof(profile));
 	
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 	
-	if (!g_Config.JumpToKey("attributes")) return false;
+	if (!g_Config.JumpToKey("attributes"))
+	{
+		return false;
+	}
 	
-	return g_Config.JumpToKey(sAttribute);
+	return g_Config.JumpToKey(attribute);
 }
 
-float NPCGetAttributeValue(int iNPCIndex, const char[] sAttribute, float flDefaultValue=0.0)
+float NPCGetAttributeValue(int npcIndex, const char[] attribute, float defaultValue=0.0)
 {
-	if (!NPCHasAttribute(iNPCIndex, sAttribute)) return flDefaultValue;
-	return g_Config.GetFloat("value", flDefaultValue);
+	if (!NPCHasAttribute(npcIndex, attribute))
+	{
+		return defaultValue;
+	}
+	return g_Config.GetFloat("value", defaultValue);
 }
 
-bool SlenderCanRemove(int iBossIndex)
+bool SlenderCanRemove(int bossIndex)
 {
-	if (NPCGetUniqueID(iBossIndex) == -1) return false;
+	if (NPCGetUniqueID(bossIndex) == -1)
+	{
+		return false;
+	}
 	
-	if (PeopleCanSeeSlender(iBossIndex, _, false)) return false;
+	if (PeopleCanSeeSlender(bossIndex, _, false))
+	{
+		return false;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	int iTeleportType = NPCGetTeleportType(iBossIndex);
+	int teleportType = NPCGetTeleportType(bossIndex);
 
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	
-	switch (iTeleportType)
+	switch (teleportType)
 	{
 		case 0:
 		{
-			if (NPCGetFlags(iBossIndex) & SFF_STATICONRADIUS)
+			if (NPCGetFlags(bossIndex) & SFF_STATICONRADIUS)
 			{
-				float flSlenderPos[3], flBuffer[3];
-				SlenderGetAbsOrigin(iBossIndex, flSlenderPos);
+				float slenderPos[3], buffer[3];
+				SlenderGetAbsOrigin(bossIndex, slenderPos);
 			
 				for (int i = 1; i <= MaxClients; i++)
 				{
 					if (!IsClientInGame(i) || 
 						!IsPlayerAlive(i) || 
-						g_bPlayerEliminated[i] || 
+						g_PlayerEliminated[i] || 
 						IsClientInGhostMode(i) || 
-						IsClientInDeathCam(i)) continue;
+						IsClientInDeathCam(i))
+					{
+						continue;
+					}
 					
-					if (!IsPointVisibleToPlayer(i, flSlenderPos, false, false)) continue;
+					if (!IsPointVisibleToPlayer(i, slenderPos, false, false))
+					{
+						continue;
+					}
 					
-					GetClientAbsOrigin(i, flBuffer);
-					if (GetVectorSquareMagnitude(flBuffer, flSlenderPos) <= SquareFloat(g_flSlenderStaticRadius[iBossIndex][difficulty]))
+					GetClientAbsOrigin(i, buffer);
+					if (GetVectorSquareMagnitude(buffer, slenderPos) <= SquareFloat(g_SlenderStaticRadius[bossIndex][difficulty]))
 					{
 						return false;
 					}
@@ -1548,17 +1829,17 @@ bool SlenderCanRemove(int iBossIndex)
 		}
 		case 1:
 		{
-			if (PeopleCanSeeSlender(iBossIndex, _, SlenderUsesBlink(iBossIndex)) || PeopleCanSeeSlender(iBossIndex, false, false))
+			if (PeopleCanSeeSlender(bossIndex, _, SlenderUsesBlink(bossIndex)) || PeopleCanSeeSlender(bossIndex, false, false))
 			{
 				return false;
 			}
 		}
 		case 2:
 		{
-			int iState = g_iSlenderState[iBossIndex];
-			if (iState != STATE_ALERT && iState != STATE_CHASE && iState != STATE_ATTACK && iState != STATE_STUN)
+			int state = g_SlenderState[bossIndex];
+			if (state != STATE_ALERT && state != STATE_CHASE && state != STATE_ATTACK && state != STATE_STUN)
 			{
-				if (GetGameTime() < g_flSlenderTimeUntilKill[iBossIndex])
+				if (GetGameTime() < g_SlenderTimeUntilKill[bossIndex])
 				{
 					return false;
 				}
@@ -1573,36 +1854,45 @@ bool SlenderCanRemove(int iBossIndex)
 	return true;
 }
 
-bool SlenderGetAbsOrigin(int iBossIndex, float buffer[3], const float flDefaultValue[3]={ 0.0, 0.0, 0.0 })
+bool SlenderGetAbsOrigin(int bossIndex, float buffer[3], const float defaultValue[3]={ 0.0, 0.0, 0.0 })
 {
-	for (int i = 0; i < 3; i++) buffer[i] = flDefaultValue[i];
+	for (int i = 0; i < 3; i++)
+	{
+		buffer[i] = defaultValue[i];
+	}
 	
-	if (iBossIndex < 0 || NPCGetUniqueID(iBossIndex) == -1) return false;
+	if (bossIndex < 0 || NPCGetUniqueID(bossIndex) == -1)
+	{
+		return false;
+	}
 	
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return false;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return false;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	float flPos[3], flOffset[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flPos);
-	GetProfileVector(profile, "pos_offset", flOffset, flDefaultValue);
-	SubtractVectors(flPos, flOffset, buffer);
+	float pos[3], offset[3];
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", pos);
+	GetProfileVector(profile, "pos_offset", offset, defaultValue);
+	SubtractVectors(pos, offset, buffer);
 	
 	return true;
 }
 
-bool SlenderGetEyePosition(int iBossIndex, float buffer[3], const float flDefaultValue[3]={ 0.0, 0.0, 0.0 })
+bool SlenderGetEyePosition(int bossIndex, float buffer[3], const float defaultValue[3]={ 0.0, 0.0, 0.0 })
 {
-	return NPCGetEyePosition(iBossIndex, buffer, flDefaultValue);
+	return NPCGetEyePosition(bossIndex, buffer, defaultValue);
 }
 
 bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossFlags=0,SF2NPC_BaseNPC NpcCopyMaster=view_as<SF2NPC_BaseNPC>(SF2_INVALID_NPC), bool bSpawnCompanions=true, bool bPlaySpawnSound=true, bool bInvincible = false)
 {
 	if (!IsProfileValid(profile))
 	{
-		if(!NpcCopyMaster.IsValid())
+		if (!NpcCopyMaster.IsValid())
 		{
 			LogSF2Message("Could not select profile for boss %d: profile %s is invalid!", Npc.Index, profile);
 			return false;
@@ -1622,297 +1912,316 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	
 	Npc.SetProfile(profile);
 	
-	int iBossType = GetBossProfileType(profileIndex);
+	int bossType = GetBossProfileType(profileIndex);
 
-	g_iNPCProfileIndex[Npc.Index] = profileIndex;
-	g_iNPCUniqueProfileIndex[Npc.Index] = uniqueProfileIndex;
-	g_iNPCUniqueID[Npc.Index] = g_iNPCGlobalUniqueID++;
-	g_iNPCType[Npc.Index] = iBossType;
+	g_NpcProfileIndex[Npc.Index] = profileIndex;
+	g_NpcUniqueProfileIndex[Npc.Index] = uniqueProfileIndex;
+	g_NpcUniqueID[Npc.Index] = g_NpcGlobalUniqueID++;
+	g_NpcType[Npc.Index] = bossType;
 
-	g_flNPCModelScale[Npc.Index] = GetBossProfileModelScale(profileIndex);
+	g_NpcModelScale[Npc.Index] = GetBossProfileModelScale(profileIndex);
 	
-	g_iNPCHealth[Npc.Index] = GetBossProfileHealth(profileIndex);
+	g_NpcHealth[Npc.Index] = GetBossProfileHealth(profileIndex);
 	
-	g_iNPCModelSkin[Npc.Index] = GetBossProfileSkin(profileIndex);
+	g_NpcModelSkin[Npc.Index] = GetBossProfileSkin(profileIndex);
 	
-	g_iNPCModelSkinMax[Npc.Index] = GetBossProfileSkinMax(profileIndex);
+	g_NpcModelSkinMax[Npc.Index] = GetBossProfileSkinMax(profileIndex);
 	
-	g_iNPCModelBodyGroups[Npc.Index] = GetBossProfileBodyGroups(profileIndex);
+	g_NpcModelBodyGroups[Npc.Index] = GetBossProfileBodyGroups(profileIndex);
 	
-	g_iNPCModelBodyGroupsMax[Npc.Index] = GetBossProfileBodyGroupsMax(profileIndex);
+	g_NpcModelBodyGroupsMax[Npc.Index] = GetBossProfileBodyGroupsMax(profileIndex);
 
-	g_iNPCRaidHitbox[Npc.Index] = GetBossProfileRaidHitbox(profileIndex);
+	g_NpcRaidHitbox[Npc.Index] = GetBossProfileRaidHitbox(profileIndex);
 
-	g_bNPCIgnoreNavPrefer[Npc.Index] = GetBossProfileIgnoreNavPrefer(profileIndex);
+	g_NpcHasIgnoreNavPrefer[Npc.Index] = GetBossProfileIgnoreNavPrefer(profileIndex);
 
-	g_bNPCFakeCopiesEnabled[Npc.Index] = GetBossProfileFakeCopies(profileIndex);
+	g_NpcHasFakeCopiesEnabled[Npc.Index] = GetBossProfileFakeCopies(profileIndex);
 
-	g_flNPCBlinkLookRate[Npc.Index] = GetBossProfileBlinkLookRate(profileIndex);
-	g_flNPCBlinkStaticRate[Npc.Index] = GetBossProfileBlinkStaticRate(profileIndex);
+	g_NpcBlinkLookRate[Npc.Index] = GetBossProfileBlinkLookRate(profileIndex);
+	g_NpcBlinkStaticRate[Npc.Index] = GetBossProfileBlinkStaticRate(profileIndex);
 
-	g_flNPCStepSize[Npc.Index] = GetBossProfileStepSize(profileIndex);
+	g_NpcStepSize[Npc.Index] = GetBossProfileStepSize(profileIndex);
 
-	g_bNPCDiscoMode[Npc.Index] = GetBossProfileDiscoModeState(profileIndex);
-	g_flNPCDiscoRadiusMin[Npc.Index] = GetBossProfileDiscoRadiusMin(profileIndex);
-	g_flNPCDiscoRadiusMax[Npc.Index] = GetBossProfileDiscoRadiusMax(profileIndex);
+	g_NpcHasDiscoMode[Npc.Index] = GetBossProfileDiscoModeState(profileIndex);
+	g_NpcDiscoRadiusMin[Npc.Index] = GetBossProfileDiscoRadiusMin(profileIndex);
+	g_NpcDiscoRadiusMax[Npc.Index] = GetBossProfileDiscoRadiusMax(profileIndex);
 
-	g_bNPCFestiveLights[Npc.Index] = GetBossProfileFestiveLightState(profileIndex);
-	g_iNPCFestiveLightBrightness[Npc.Index] = GetBossProfileFestiveLightBrightness(profileIndex);
-	g_flNPCFestiveLightDistance[Npc.Index] = GetBossProfileFestiveLightDistance(profileIndex);
-	g_flNPCFestiveLightRadius[Npc.Index] = GetBossProfileFestiveLightRadius(profileIndex);
-	GetProfileVector(profile, "disco_mode_pos", g_flNPCDiscoModePos[Npc.Index]);
-	GetProfileVector(profile, "festive_lights_pos", g_flNPCFestiveLightPos[Npc.Index]);
-	GetProfileVector(profile, "festive_lights_ang", g_flNPCFestiveLightAng[Npc.Index]);
+	g_NpcHasFestiveLights[Npc.Index] = GetBossProfileFestiveLightState(profileIndex);
+	g_NpcFestiveLightBrightness[Npc.Index] = GetBossProfileFestiveLightBrightness(profileIndex);
+	g_NpcFestiveLightDistance[Npc.Index] = GetBossProfileFestiveLightDistance(profileIndex);
+	g_NpcFestiveLightRadius[Npc.Index] = GetBossProfileFestiveLightRadius(profileIndex);
+	GetProfileVector(profile, "disco_mode_pos", g_NpcDiscoModePos[Npc.Index]);
+	GetProfileVector(profile, "festive_lights_pos", g_NpcFestiveLightPos[Npc.Index]);
+	GetProfileVector(profile, "festive_lights_ang", g_NpcFestiveLightAng[Npc.Index]);
 	
-	g_bSlenderUseCustomOutlines[Npc.Index] = GetBossProfileCustomOutlinesState(profileIndex);
-	g_iSlenderOutlineColorR[Npc.Index] = GetBossProfileOutlineColorR(profileIndex);
-	g_iSlenderOutlineColorG[Npc.Index] = GetBossProfileOutlineColorG(profileIndex);
-	g_iSlenderOutlineColorB[Npc.Index] = GetBossProfileOutlineColorB(profileIndex);
-	g_iSlenderOutlineTransparency[Npc.Index] = GetBossProfileOutlineTransparency(profileIndex);
-	g_bSlenderUseRainbowOutline[Npc.Index] = GetBossProfileRainbowOutlineState(profileIndex);
-	g_flSlenderRainbowCycleRate[Npc.Index] = GetBossProfileRainbowCycleRate(profileIndex);
+	g_SlenderUseCustomOutlines[Npc.Index] = GetBossProfileCustomOutlinesState(profileIndex);
+	g_SlenderOutlineColorR[Npc.Index] = GetBossProfileOutlineColorR(profileIndex);
+	g_SlenderOutlineColorG[Npc.Index] = GetBossProfileOutlineColorG(profileIndex);
+	g_SlenderOutlineColorB[Npc.Index] = GetBossProfileOutlineColorB(profileIndex);
+	g_SlenderOutlineTransparency[Npc.Index] = GetBossProfileOutlineTransparency(profileIndex);
+	g_SlenderUseRainbowOutline[Npc.Index] = GetBossProfileRainbowOutlineState(profileIndex);
+	g_SlenderRainbowCycleRate[Npc.Index] = GetBossProfileRainbowCycleRate(profileIndex);
 
-	g_bNPCProxyWeaponsEnabled[Npc.Index] = GetBossProfileProxyWeapons(profileIndex);
+	g_NpcHasProxyWeaponsEnabled[Npc.Index] = GetBossProfileProxyWeapons(profileIndex);
 
-	g_bNPCDrainCreditsState[Npc.Index] = GetBossProfileDrainCreditState(profileIndex);
-	g_bNPCProxySpawnEffectEnabled[Npc.Index] = GetBossProfileProxySpawnEffectState(profileIndex);
-	g_flNPCProxySpawnEffectZOffset[Npc.Index] = GetBossProfileProxySpawnEffectZOffset(profileIndex);
+	g_NpcHasDrainCreditsState[Npc.Index] = GetBossProfileDrainCreditState(profileIndex);
+	g_NpcHasProxySpawnEffectEnabled[Npc.Index] = GetBossProfileProxySpawnEffectState(profileIndex);
+	g_NpcProxySpawnEffectZOffset[Npc.Index] = GetBossProfileProxySpawnEffectZOffset(profileIndex);
 	
-	if (SF_IsSlaughterRunMap()) NPCSetFlags(Npc.Index, GetBossProfileFlags(profileIndex) | iAdditionalBossFlags | SFF_NOTELEPORT);
-	else NPCSetFlags(Npc.Index, GetBossProfileFlags(profileIndex) | iAdditionalBossFlags);
+	if (SF_IsSlaughterRunMap())
+	{
+		NPCSetFlags(Npc.Index, GetBossProfileFlags(profileIndex) | iAdditionalBossFlags | SFF_NOTELEPORT);
+	}
+	else
+	{
+		NPCSetFlags(Npc.Index, GetBossProfileFlags(profileIndex) | iAdditionalBossFlags);
+	}
 	
-	GetBossProfileEyePositionOffset(profileIndex, g_flSlenderEyePosOffset[Npc.Index]);
-	GetBossProfileEyeAngleOffset(profileIndex, g_flSlenderEyeAngOffset[Npc.Index]);
+	GetBossProfileEyePositionOffset(profileIndex, g_SlenderEyePosOffset[Npc.Index]);
+	GetBossProfileEyeAngleOffset(profileIndex, g_SlenderEyeAngOffset[Npc.Index]);
 	
-	GetProfileVector(profile, "mins", g_flSlenderDetectMins[Npc.Index]);
-	GetProfileVector(profile, "maxs", g_flSlenderDetectMaxs[Npc.Index]);
+	GetProfileVector(profile, "mins", g_SlenderDetectMins[Npc.Index]);
+	GetProfileVector(profile, "maxs", g_SlenderDetectMaxs[Npc.Index]);
 
-	GetProfileColor(profile, "effect_rendercolor", g_iSlenderRenderColor[Npc.Index][0], g_iSlenderRenderColor[Npc.Index][1], g_iSlenderRenderColor[Npc.Index][2], g_iSlenderRenderColor[Npc.Index][3], 
+	GetProfileColor(profile, "effect_rendercolor", g_SlenderRenderColor[Npc.Index][0], g_SlenderRenderColor[Npc.Index][1], g_SlenderRenderColor[Npc.Index][2], g_SlenderRenderColor[Npc.Index][3], 
 					255, 255, 255, 255);
 
-	g_iSlenderRenderFX[Npc.Index] = GetProfileNum(profile, "effect_renderfx", view_as<int>(RENDERFX_NONE));
-	g_iSlenderRenderMode[Npc.Index] = GetProfileNum(profile, "effect_rendermode", view_as<int>(RENDER_NORMAL));
+	g_SlenderRenderFX[Npc.Index] = GetProfileNum(profile, "effect_renderfx", view_as<int>(RENDERFX_NONE));
+	g_SlenderRenderMode[Npc.Index] = GetProfileNum(profile, "effect_rendermode", view_as<int>(RENDER_NORMAL));
 	
 	//	NPCSetAnger(Npc.Index, GetBossProfileAngerStart(profileIndex));
 	Npc.Anger = GetBossProfileAngerStart(profileIndex);
 	
-	g_flNPCAngerAddOnPageGrab[Npc.Index] = GetBossProfileAngerAddOnPageGrab(profileIndex);
-	g_flNPCAngerAddOnPageGrabTimeDiff[Npc.Index] = GetBossProfileAngerPageGrabTimeDiff(profileIndex);
+	g_NpcAngerAddOnPageGrab[Npc.Index] = GetBossProfileAngerAddOnPageGrab(profileIndex);
+	g_NpcAngerAddOnPageGrabTimeDiff[Npc.Index] = GetBossProfileAngerPageGrabTimeDiff(profileIndex);
 
-	g_iSlenderCopyMaster[Npc.Index] = -1;
-	g_iSlenderCompanionMaster[Npc.Index] = -1;
+	g_SlenderCopyMaster[Npc.Index] = -1;
+	g_SlenderCompanionMaster[Npc.Index] = -1;
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_flNPCSoundMusicLoop[Npc.Index][difficulty] = GetBossProfileSoundMusicLoop(profileIndex, difficulty);
-		g_flNPCSpeed[Npc.Index][difficulty] = GetBossProfileSpeed(profileIndex, difficulty);
-		g_flNPCMaxSpeed[Npc.Index][difficulty] = GetBossProfileMaxSpeed(profileIndex, difficulty);
-		g_flSlenderAcceleration[Npc.Index][difficulty] = GetBossProfileAcceleration(profileIndex, difficulty);
-		g_flNPCIdleLifetime[Npc.Index][difficulty] = GetBossProfileIdleLifetime(profileIndex, difficulty);
-		g_flSlenderStaticRadius[Npc.Index][difficulty] = GetBossProfileStaticRadius(profileIndex, difficulty);
-		g_flSlenderStaticRate[Npc.Index][difficulty] = GetBossProfileStaticRate(profileIndex, difficulty);
-		g_flSlenderStaticRateDecay[Npc.Index][difficulty] = GetBossProfileStaticRateDecay(profileIndex, difficulty);
-		g_flSlenderStaticGraceTime[Npc.Index][difficulty] = GetBossProfileStaticGraceTime(profileIndex, difficulty);
-		g_flNPCSearchRadius[Npc.Index][difficulty] = GetBossProfileSearchRadius(profileIndex, difficulty);
-		g_flNPCHearingRadius[Npc.Index][difficulty] = GetBossProfileHearRadius(profileIndex, difficulty);
-		g_flNPCTauntAlertRange[Npc.Index][difficulty] = GetBossProfileTauntAlertRange(profileIndex, difficulty);
-		g_flSlenderTeleportMinRange[Npc.Index][difficulty] = GetBossProfileTeleportRangeMin(profileIndex, difficulty);
-		g_flSlenderTeleportMaxRange[Npc.Index][difficulty] = GetBossProfileTeleportRangeMax(profileIndex, difficulty);
-		g_bNPCTeleportAllowed[Npc.Index][difficulty] = GetBossProfileTeleportAllowed(profileIndex, difficulty);
-		g_flNPCTeleportTimeMin[Npc.Index][difficulty] = GetBossProfileTeleportTimeMin(profileIndex, difficulty);
-		g_flNPCTeleportTimeMax[Npc.Index][difficulty] = GetBossProfileTeleportTimeMax(profileIndex, difficulty);
-		g_flNPCTeleportRestPeriod[Npc.Index][difficulty] = GetBossProfileTeleportTargetRestPeriod(profileIndex, difficulty);
-		g_flNPCTeleportStressMin[Npc.Index][difficulty] = GetBossProfileTeleportTargetStressMin(profileIndex, difficulty);
-		g_flNPCTeleportStressMax[Npc.Index][difficulty] = GetBossProfileTeleportTargetStressMax(profileIndex, difficulty);
-		g_flNPCTeleportPersistencyPeriod[Npc.Index][difficulty] = GetBossProfileTeleportTargetPersistencyPeriod(profileIndex, difficulty);
-		g_flNPCJumpscareDistance[Npc.Index][difficulty] = GetBossProfileJumpscareDistance(profileIndex, difficulty);
-		g_flNPCJumpscareDuration[Npc.Index][difficulty] = GetBossProfileJumpscareDuration(profileIndex, difficulty);
-		g_flNPCJumpscareCooldown[Npc.Index][difficulty] = GetBossProfileJumpscareCooldown(profileIndex, difficulty);
-		g_iNPCModelSkinDifficulty[Npc.Index][difficulty] = GetBossProfileSkinDifficulty(profileIndex, difficulty);
-		g_iNPCModelBodyGroupsDifficulty[Npc.Index][difficulty] = GetBossProfileBodyGroupsDifficulty(profileIndex, difficulty);
-		g_iSlenderMaxCopies[Npc.Index][difficulty] = GetBossProfileMaxCopies(profileIndex, difficulty);
-		g_flNPCInstantKillCooldown[Npc.Index][difficulty] = GetBossProfileInstantKillCooldown(profileIndex, difficulty);
+		g_NpcSoundMusicLoop[Npc.Index][difficulty] = GetBossProfileSoundMusicLoop(profileIndex, difficulty);
+		g_NpcSpeed[Npc.Index][difficulty] = GetBossProfileSpeed(profileIndex, difficulty);
+		g_NpcMaxSpeed[Npc.Index][difficulty] = GetBossProfileMaxSpeed(profileIndex, difficulty);
+		g_SlenderAcceleration[Npc.Index][difficulty] = GetBossProfileAcceleration(profileIndex, difficulty);
+		g_NpcIdleLifetime[Npc.Index][difficulty] = GetBossProfileIdleLifetime(profileIndex, difficulty);
+		g_SlenderStaticRadius[Npc.Index][difficulty] = GetBossProfileStaticRadius(profileIndex, difficulty);
+		g_SlenderStaticRate[Npc.Index][difficulty] = GetBossProfileStaticRate(profileIndex, difficulty);
+		g_SlenderStaticRateDecay[Npc.Index][difficulty] = GetBossProfileStaticRateDecay(profileIndex, difficulty);
+		g_SlenderStaticGraceTime[Npc.Index][difficulty] = GetBossProfileStaticGraceTime(profileIndex, difficulty);
+		g_NpcSearchRadius[Npc.Index][difficulty] = GetBossProfileSearchRadius(profileIndex, difficulty);
+		g_NpcHearingRadius[Npc.Index][difficulty] = GetBossProfileHearRadius(profileIndex, difficulty);
+		g_NpcTauntAlertRange[Npc.Index][difficulty] = GetBossProfileTauntAlertRange(profileIndex, difficulty);
+		g_SlenderTeleportMinRange[Npc.Index][difficulty] = GetBossProfileTeleportRangeMin(profileIndex, difficulty);
+		g_SlenderTeleportMaxRange[Npc.Index][difficulty] = GetBossProfileTeleportRangeMax(profileIndex, difficulty);
+		g_NpcHasTeleportAllowed[Npc.Index][difficulty] = GetBossProfileTeleportAllowed(profileIndex, difficulty);
+		g_NpcTeleportTimeMin[Npc.Index][difficulty] = GetBossProfileTeleportTimeMin(profileIndex, difficulty);
+		g_NpcTeleportTimeMax[Npc.Index][difficulty] = GetBossProfileTeleportTimeMax(profileIndex, difficulty);
+		g_NpcTeleportRestPeriod[Npc.Index][difficulty] = GetBossProfileTeleportTargetRestPeriod(profileIndex, difficulty);
+		g_NpcTeleportStressMin[Npc.Index][difficulty] = GetBossProfileTeleportTargetStressMin(profileIndex, difficulty);
+		g_NpcTeleportStressMax[Npc.Index][difficulty] = GetBossProfileTeleportTargetStressMax(profileIndex, difficulty);
+		g_NpcTeleportPersistencyPeriod[Npc.Index][difficulty] = GetBossProfileTeleportTargetPersistencyPeriod(profileIndex, difficulty);
+		g_NpcJumpscareDistance[Npc.Index][difficulty] = GetBossProfileJumpscareDistance(profileIndex, difficulty);
+		g_NpcJumpscareDuration[Npc.Index][difficulty] = GetBossProfileJumpscareDuration(profileIndex, difficulty);
+		g_NpcJumpscareCooldown[Npc.Index][difficulty] = GetBossProfileJumpscareCooldown(profileIndex, difficulty);
+		g_NpcModelSkinDifficulty[Npc.Index][difficulty] = GetBossProfileSkinDifficulty(profileIndex, difficulty);
+		g_NpcModelBodyGroupsDifficulty[Npc.Index][difficulty] = GetBossProfileBodyGroupsDifficulty(profileIndex, difficulty);
+		g_SlenderMaxCopies[Npc.Index][difficulty] = GetBossProfileMaxCopies(profileIndex, difficulty);
+		g_NpcInstantKillCooldown[Npc.Index][difficulty] = GetBossProfileInstantKillCooldown(profileIndex, difficulty);
 
-		g_flSlenderProxyDamageVsEnemy[Npc.Index][difficulty] = GetBossProfileProxyDamageVsEnemy(profileIndex, difficulty);
-		g_flSlenderProxyDamageVsBackstab[Npc.Index][difficulty] = GetBossProfileProxyDamageVsBackstab(profileIndex, difficulty);
-		g_flSlenderProxyDamageVsSelf[Npc.Index][difficulty] = GetBossProfileProxyDamageVsSelf(profileIndex, difficulty);
-		g_iSlenderProxyControlGainHitEnemy[Npc.Index][difficulty] = GetBossProfileProxyControlGainHitEnemy(profileIndex, difficulty);
-		g_iSlenderProxyControlGainHitByEnemy[Npc.Index][difficulty] = GetBossProfileProxyControlGainHitByEnemy(profileIndex, difficulty);
-		g_flSlenderProxyControlDrainRate[Npc.Index][difficulty] = GetBossProfileProxyControlDrainRate(profileIndex, difficulty);
-		g_iSlenderMaxProxies[Npc.Index][difficulty] = GetBossProfileMaxProxies(profileIndex, difficulty);
-		g_flNPCProxySpawnChanceMin[Npc.Index][difficulty] = GetBossProfileProxySpawnChanceMin(profileIndex, difficulty);
-		g_flNPCProxySpawnChanceMax[Npc.Index][difficulty] = GetBossProfileProxySpawnChanceMax(profileIndex, difficulty);
-		g_flNPCProxySpawnChanceThreshold[Npc.Index][difficulty] = GetBossProfileProxySpawnChanceThreshold(profileIndex, difficulty);
-		g_iNPCProxySpawnNumMin[Npc.Index][difficulty] = GetBossProfileProxySpawnNumberMin(profileIndex, difficulty);
-		g_iNPCProxySpawnNumMax[Npc.Index][difficulty] = GetBossProfileProxySpawnNumberMax(profileIndex, difficulty);
-		g_flNPCProxySpawnCooldownMin[Npc.Index][difficulty] = GetBossProfileProxySpawnCooldownMin(profileIndex, difficulty);
-		g_flNPCProxySpawnCooldownMax[Npc.Index][difficulty] = GetBossProfileProxySpawnCooldownMax(profileIndex, difficulty);
-		g_flSlenderProxyTeleportMinRange[Npc.Index][difficulty] = GetBossProfileProxyTeleportRangeMin(profileIndex, difficulty);
-		g_flSlenderProxyTeleportMaxRange[Npc.Index][difficulty] = GetBossProfileProxyTeleportRangeMax(profileIndex, difficulty);
-		g_iNPCDrainCreditAmount[Npc.Index][difficulty] = GetBossProfileDrainCreditAmount(profileIndex, difficulty);
+		g_SlenderProxyDamageVsEnemy[Npc.Index][difficulty] = GetBossProfileProxyDamageVsEnemy(profileIndex, difficulty);
+		g_SlenderProxyDamageVsBackstab[Npc.Index][difficulty] = GetBossProfileProxyDamageVsBackstab(profileIndex, difficulty);
+		g_SlenderProxyDamageVsSelf[Npc.Index][difficulty] = GetBossProfileProxyDamageVsSelf(profileIndex, difficulty);
+		g_SlenderProxyControlGainHitEnemy[Npc.Index][difficulty] = GetBossProfileProxyControlGainHitEnemy(profileIndex, difficulty);
+		g_SlenderProxyControlGainHitByEnemy[Npc.Index][difficulty] = GetBossProfileProxyControlGainHitByEnemy(profileIndex, difficulty);
+		g_SlenderProxyControlDrainRate[Npc.Index][difficulty] = GetBossProfileProxyControlDrainRate(profileIndex, difficulty);
+		g_SlenderMaxProxies[Npc.Index][difficulty] = GetBossProfileMaxProxies(profileIndex, difficulty);
+		g_NpcProxySpawnChanceMin[Npc.Index][difficulty] = GetBossProfileProxySpawnChanceMin(profileIndex, difficulty);
+		g_NpcProxySpawnChanceMax[Npc.Index][difficulty] = GetBossProfileProxySpawnChanceMax(profileIndex, difficulty);
+		g_NpcProxySpawnChanceThreshold[Npc.Index][difficulty] = GetBossProfileProxySpawnChanceThreshold(profileIndex, difficulty);
+		g_NpcProxySpawnNumMin[Npc.Index][difficulty] = GetBossProfileProxySpawnNumberMin(profileIndex, difficulty);
+		g_NpcProxySpawnNumMax[Npc.Index][difficulty] = GetBossProfileProxySpawnNumberMax(profileIndex, difficulty);
+		g_NpcProxySpawnCooldownMin[Npc.Index][difficulty] = GetBossProfileProxySpawnCooldownMin(profileIndex, difficulty);
+		g_NpcProxySpawnCooldownMax[Npc.Index][difficulty] = GetBossProfileProxySpawnCooldownMax(profileIndex, difficulty);
+		g_SlenderProxyTeleportMinRange[Npc.Index][difficulty] = GetBossProfileProxyTeleportRangeMin(profileIndex, difficulty);
+		g_SlenderProxyTeleportMaxRange[Npc.Index][difficulty] = GetBossProfileProxyTeleportRangeMax(profileIndex, difficulty);
+		g_NpcDrainCreditAmount[Npc.Index][difficulty] = GetBossProfileDrainCreditAmount(profileIndex, difficulty);
 	}
 
-	GetProfileString(profile, "name", g_sNPCName[Npc.Index][1], sizeof(g_sNPCName[][]));
+	GetProfileString(profile, "name", g_NpcName[Npc.Index][1], sizeof(g_NpcName[][]));
 
-	strcopy(g_sNPCName[Npc.Index][0], sizeof(g_sNPCName[][]), g_sNPCName[Npc.Index][1]);
+	strcopy(g_NpcName[Npc.Index][0], sizeof(g_NpcName[][]), g_NpcName[Npc.Index][1]);
 
-	GetProfileString(profile, "name_hard",  g_sNPCName[Npc.Index][2], sizeof(g_sNPCName[][]));
-	if (g_sNPCName[Npc.Index][2][0] == '\0') GetProfileString(profile, "name", g_sNPCName[Npc.Index][2], sizeof(g_sNPCName[][]));
-
-	GetProfileString(profile, "name_insane", g_sNPCName[Npc.Index][3], sizeof(g_sNPCName[][]));
-	if (g_sNPCName[Npc.Index][3][0] == '\0')
+	GetProfileString(profile, "name_hard",  g_NpcName[Npc.Index][2], sizeof(g_NpcName[][]));
+	if (g_NpcName[Npc.Index][2][0] == '\0')
 	{
-		GetProfileString(profile, "name_hard", g_sNPCName[Npc.Index][3], sizeof(g_sNPCName[][]));
-		if (g_sNPCName[Npc.Index][3][0] == '\0') GetProfileString(profile, "name", g_sNPCName[Npc.Index][3], sizeof(g_sNPCName[][]));
+		GetProfileString(profile, "name", g_NpcName[Npc.Index][2], sizeof(g_NpcName[][]));
 	}
 
-	GetProfileString(profile, "name_nightmare", g_sNPCName[Npc.Index][4], sizeof(g_sNPCName[][]));
-	if (g_sNPCName[Npc.Index][4][0] == '\0')
+	GetProfileString(profile, "name_insane", g_NpcName[Npc.Index][3], sizeof(g_NpcName[][]));
+	if (g_NpcName[Npc.Index][3][0] == '\0')
 	{
-		GetProfileString(profile, "name_insane", g_sNPCName[Npc.Index][4], sizeof(g_sNPCName[][]));
-		if (g_sNPCName[Npc.Index][4][0] == '\0')
+		GetProfileString(profile, "name_hard", g_NpcName[Npc.Index][3], sizeof(g_NpcName[][]));
+		if (g_NpcName[Npc.Index][3][0] == '\0')
 		{
-			GetProfileString(profile, "name_hard", g_sNPCName[Npc.Index][4], sizeof(g_sNPCName[][]));
-			if (g_sNPCName[Npc.Index][4][0] == '\0') GetProfileString(profile, "name", g_sNPCName[Npc.Index][4], sizeof(g_sNPCName[][]));
+			GetProfileString(profile, "name", g_NpcName[Npc.Index][3], sizeof(g_NpcName[][]));
 		}
 	}
 
-	GetProfileString(profile, "name_apollyon", g_sNPCName[Npc.Index][5], sizeof(g_sNPCName[][]));
-	if (g_sNPCName[Npc.Index][5][0] == '\0')
+	GetProfileString(profile, "name_nightmare", g_NpcName[Npc.Index][4], sizeof(g_NpcName[][]));
+	if (g_NpcName[Npc.Index][4][0] == '\0')
 	{
-		GetProfileString(profile, "name_nightmare", g_sNPCName[Npc.Index][5], sizeof(g_sNPCName[][]));
-		if (g_sNPCName[Npc.Index][5][0] == '\0')
+		GetProfileString(profile, "name_insane", g_NpcName[Npc.Index][4], sizeof(g_NpcName[][]));
+		if (g_NpcName[Npc.Index][4][0] == '\0')
 		{
-			GetProfileString(profile, "name_insane", g_sNPCName[Npc.Index][5], sizeof(g_sNPCName[][]));	
-			if (g_sNPCName[Npc.Index][5][0] == '\0')
+			GetProfileString(profile, "name_hard", g_NpcName[Npc.Index][4], sizeof(g_NpcName[][]));
+			if (g_NpcName[Npc.Index][4][0] == '\0')
 			{
-				GetProfileString(profile, "name_hard", g_sNPCName[Npc.Index][5], sizeof(g_sNPCName[][]));
-				if (g_sNPCName[Npc.Index][5][0] == '\0') GetProfileString(profile, "name", g_sNPCName[Npc.Index][5], sizeof(g_sNPCName[][]));
+				GetProfileString(profile, "name", g_NpcName[Npc.Index][4], sizeof(g_NpcName[][]));
+			}
+		}
+	}
+
+	GetProfileString(profile, "name_apollyon", g_NpcName[Npc.Index][5], sizeof(g_NpcName[][]));
+	if (g_NpcName[Npc.Index][5][0] == '\0')
+	{
+		GetProfileString(profile, "name_nightmare", g_NpcName[Npc.Index][5], sizeof(g_NpcName[][]));
+		if (g_NpcName[Npc.Index][5][0] == '\0')
+		{
+			GetProfileString(profile, "name_insane", g_NpcName[Npc.Index][5], sizeof(g_NpcName[][]));	
+			if (g_NpcName[Npc.Index][5][0] == '\0')
+			{
+				GetProfileString(profile, "name_hard", g_NpcName[Npc.Index][5], sizeof(g_NpcName[][]));
+				if (g_NpcName[Npc.Index][5][0] == '\0')
+				{
+					GetProfileString(profile, "name", g_NpcName[Npc.Index][5], sizeof(g_NpcName[][]));
+				}
 			}
 		}
 	}
 	
-	g_bNPCJumpscareOnScare[Npc.Index] = GetBossProfileJumpscareOnScare(profileIndex);
+	g_NpcHasJumpscareOnScare[Npc.Index] = GetBossProfileJumpscareOnScare(profileIndex);
 	
-	g_flNPCTurnRate[Npc.Index] = GetBossProfileTurnRate(profileIndex);
-	if (!SF_IsSlaughterRunMap()) g_flNPCFieldOfView[Npc.Index] = GetBossProfileFOV(profileIndex);
-	else g_flNPCFieldOfView[Npc.Index] = 360.0;
-	g_flNPCBackstabFOV[Npc.Index] = 180.0;
+	g_NpcTurnRate[Npc.Index] = GetBossProfileTurnRate(profileIndex);
+	if (!SF_IsSlaughterRunMap())
+	{
+		g_NpcFieldOfView[Npc.Index] = GetBossProfileFOV(profileIndex);
+	}
+	else
+	{
+		g_NpcFieldOfView[Npc.Index] = 360.0;
+	}
+	g_NpcBackstabFOV[Npc.Index] = 180.0;
 	
-	g_flNPCScareRadius[Npc.Index] = GetBossProfileScareRadius(profileIndex);
-	g_flNPCScareCooldown[Npc.Index] = GetBossProfileScareCooldown(profileIndex);
+	g_NpcScareRadius[Npc.Index] = GetBossProfileScareRadius(profileIndex);
+	g_NpcScareCooldown[Npc.Index] = GetBossProfileScareCooldown(profileIndex);
 
-	g_bNPCPlayerScareSpeedBoost[Npc.Index] = GetBossProfileSpeedBoostOnScare(profileIndex);
-	g_flNPCPlayerSpeedBoostDuration[Npc.Index] = GetBossProfileScareSpeedBoostDuration(profileIndex);
+	g_NpcHasPlayerScareSpeedBoost[Npc.Index] = GetBossProfileSpeedBoostOnScare(profileIndex);
+	g_NpcPlayerSpeedBoostDuration[Npc.Index] = GetBossProfileScareSpeedBoostDuration(profileIndex);
 
-	g_bNPCPlayerScareReaction[Npc.Index] = GetBossProfileScareReactionState(profileIndex);
-	g_iNPCPlayerScareReactionType[Npc.Index] = GetBossProfileScareReactionType(profileIndex);
+	g_NpcHasPlayerScareReaction[Npc.Index] = GetBossProfileScareReactionState(profileIndex);
+	g_NpcPlayerScareReactionType[Npc.Index] = GetBossProfileScareReactionType(profileIndex);
 
-	g_bNPCPlayerScareReplenishSprint[Npc.Index] = GetBossProfileScareReplenishState(profileIndex);
-	g_iNPCPlayerScareReplenishSprintAmount[Npc.Index] = GetBossProfileScareReplenishAmount(profileIndex);
+	g_NpcHasPlayerScareReplenishSprint[Npc.Index] = GetBossProfileScareReplenishState(profileIndex);
+	g_NpcPlayerScareReplenishSprintAmount[Npc.Index] = GetBossProfileScareReplenishAmount(profileIndex);
 	
-	g_flNPCInstantKillRadius[Npc.Index] = GetBossProfileInstantKillRadius(profileIndex);
+	g_NpcInstantKillRadius[Npc.Index] = GetBossProfileInstantKillRadius(profileIndex);
 	
-	g_iNPCTeleportType[Npc.Index] = GetBossProfileTeleportType(profileIndex);
+	g_NpcTeleportType[Npc.Index] = GetBossProfileTeleportType(profileIndex);
 
 	g_bSlenderTeleportIgnoreChases[Npc.Index] = GetBossProfileTeleportIgnoreChases(profileIndex);
 
 	g_bSlenderTeleportIgnoreVis[Npc.Index] = GetBossProfileTeleportIgnoreVis(profileIndex);
 
-	g_bNPCHealthbarEnabled[Npc.Index] = GetBossProfileHealthbarState(profileIndex);
+	g_NpcHasHealthbarEnabled[Npc.Index] = GetBossProfileHealthbarState(profileIndex);
 
-	g_bSlenderProxiesAllowNormalVoices[Npc.Index] = GetBossProfileProxyAllowNormalVoices(profileIndex);
+	g_SlenderProxiesAllowNormalVoices[Npc.Index] = GetBossProfileProxyAllowNormalVoices(profileIndex);
 
-	g_iNPCDeathMessageDifficultyIndexes[Npc.Index] = GetBossProfileChatDeathMessageDifficultyIndexes(profileIndex);
+	g_NpcDeathMessageDifficultyIndexes[Npc.Index] = GetBossProfileChatDeathMessageDifficultyIndexes(profileIndex);
 	
-	g_flNPCAddSpeed[Npc.Index] = 0.0;
-	g_flNPCAddMaxSpeed[Npc.Index] = 0.0;
-	g_flNPCAddAcceleration[Npc.Index] = 0.0;
+	g_NpcAddSpeed[Npc.Index] = 0.0;
+	g_NpcAddMaxSpeed[Npc.Index] = 0.0;
+	g_NpcAddAcceleration[Npc.Index] = 0.0;
 	
-	g_iNPCEnemy[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_NpcEnemy[Npc.Index] = INVALID_ENT_REFERENCE;
 	
-	g_iNPCPlayerScareVictin[Npc.Index] = INVALID_ENT_REFERENCE;
-	g_bNPCChasingScareVictin[Npc.Index] = false;
-	g_bNPCLostChasingScareVictim[Npc.Index] = false;
+	g_NpcPlayerScareVictin[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_NpcChasingScareVictin[Npc.Index] = false;
+	g_NpcLostChasingScareVictim[Npc.Index] = false;
 
-	g_iSlenderProxyHurtChannel[Npc.Index] = GetBossProfileSoundProxyHurtChannel(profileIndex);
-	g_iSlenderProxyHurtLevel[Npc.Index] = GetBossProfileSoundProxyHurtLevel(profileIndex);
-	g_iSlenderProxyHurtFlags[Npc.Index] = GetBossProfileSoundProxyHurtFlags(profileIndex);
-	g_flSlenderProxyHurtVolume[Npc.Index] = GetBossProfileSoundProxyHurtVolume(profileIndex);
-	g_iSlenderProxyHurtPitch[Npc.Index] = GetBossProfileSoundProxyHurtPitch(profileIndex);
+	g_SlenderProxyHurtChannel[Npc.Index] = GetBossProfileSoundProxyHurtChannel(profileIndex);
+	g_SlenderProxyHurtLevel[Npc.Index] = GetBossProfileSoundProxyHurtLevel(profileIndex);
+	g_SlenderProxyHurtFlags[Npc.Index] = GetBossProfileSoundProxyHurtFlags(profileIndex);
+	g_SlenderProxyHurtVolume[Npc.Index] = GetBossProfileSoundProxyHurtVolume(profileIndex);
+	g_SlenderProxyHurtPitch[Npc.Index] = GetBossProfileSoundProxyHurtPitch(profileIndex);
 	g_iSlenderProxyDeathChannel[Npc.Index] = GetBossProfileSoundProxyDeathChannel(profileIndex);
 	g_iSlenderProxyDeathLevel[Npc.Index] = GetBossProfileSoundProxyDeathLevel(profileIndex);
 	g_iSlenderProxyDeathFlags[Npc.Index] = GetBossProfileSoundProxyDeathFlags(profileIndex);
-	g_flSlenderProxyDeathVolume[Npc.Index] = GetBossProfileSoundProxyDeathVolume(profileIndex);
+	g_SlenderProxyDeathVolume[Npc.Index] = GetBossProfileSoundProxyDeathVolume(profileIndex);
 	g_iSlenderProxyDeathPitch[Npc.Index] = GetBossProfileSoundProxyDeathPitch(profileIndex);
-	g_iSlenderProxyIdleChannel[Npc.Index] = GetBossProfileSoundProxyIdleChannel(profileIndex);
-	g_iSlenderProxyIdleLevel[Npc.Index] = GetBossProfileSoundProxyIdleLevel(profileIndex);
-	g_iSlenderProxyIdleFlags[Npc.Index] = GetBossProfileSoundProxyIdleFlags(profileIndex);
-	g_flSlenderProxyIdleVolume[Npc.Index] = GetBossProfileSoundProxyIdleVolume(profileIndex);
-	g_iSlenderProxyIdlePitch[Npc.Index] = GetBossProfileSoundProxyIdlePitch(profileIndex);
-	g_flSlenderProxyIdleCooldownMin[Npc.Index] = GetBossProfileSoundProxyIdleCooldownMin(profileIndex);
-	g_flSlenderProxyIdleCooldownMax[Npc.Index] = GetBossProfileSoundProxyIdleCooldownMax(profileIndex);
-	g_iSlenderProxySpawnChannel[Npc.Index] = GetBossProfileSoundProxySpawnChannel(profileIndex);
-	g_iSlenderProxySpawnLevel[Npc.Index] = GetBossProfileSoundProxySpawnLevel(profileIndex);
-	g_iSlenderProxySpawnFlags[Npc.Index] = GetBossProfileSoundProxySpawnFlags(profileIndex);
-	g_flSlenderProxySpawnVolume[Npc.Index] = GetBossProfileSoundProxySpawnVolume(profileIndex);
-	g_iSlenderProxySpawnPitch[Npc.Index] = GetBossProfileSoundProxySpawnPitch(profileIndex);
+	g_SlenderProxyIdleChannel[Npc.Index] = GetBossProfileSoundProxyIdleChannel(profileIndex);
+	g_SlenderProxyIdleLevel[Npc.Index] = GetBossProfileSoundProxyIdleLevel(profileIndex);
+	g_SlenderProxyIdleFlags[Npc.Index] = GetBossProfileSoundProxyIdleFlags(profileIndex);
+	g_SlenderProxyIdleVolume[Npc.Index] = GetBossProfileSoundProxyIdleVolume(profileIndex);
+	g_SlenderProxyIdlePitch[Npc.Index] = GetBossProfileSoundProxyIdlePitch(profileIndex);
+	g_SlenderProxyIdleCooldownMin[Npc.Index] = GetBossProfileSoundProxyIdleCooldownMin(profileIndex);
+	g_SlenderProxyIdleCooldownMax[Npc.Index] = GetBossProfileSoundProxyIdleCooldownMax(profileIndex);
+	g_SlenderProxySpawnChannel[Npc.Index] = GetBossProfileSoundProxySpawnChannel(profileIndex);
+	g_SlenderProxySpawnLevel[Npc.Index] = GetBossProfileSoundProxySpawnLevel(profileIndex);
+	g_SlenderProxySpawnFlags[Npc.Index] = GetBossProfileSoundProxySpawnFlags(profileIndex);
+	g_SlenderProxySpawnVolume[Npc.Index] = GetBossProfileSoundProxySpawnVolume(profileIndex);
+	g_SlenderProxySpawnPitch[Npc.Index] = GetBossProfileSoundProxySpawnPitch(profileIndex);
 	
 	// Deathcam values.
 	Npc.DeathCamEnabled = GetBossProfileDeathCamState(profileIndex);
-	g_bSlenderDeathCamScareSound[Npc.Index] = GetBossProfileDeathCamScareSound(profileIndex);
-	g_bSlenderPublicDeathCam[Npc.Index] = GetBossProfilePublicDeathCamState(profileIndex);
-	g_flSlenderPublicDeathCamSpeed[Npc.Index] = GetBossProfilePublicDeathCamSpeed(profileIndex);
-	g_flSlenderPublicDeathCamAcceleration[Npc.Index] = GetBossProfilePublicDeathCamAcceleration(profileIndex);
-	g_flSlenderPublicDeathCamDeceleration[Npc.Index] = GetBossProfilePublicDeathCamDeceleration(profileIndex);
-	g_flSlenderPublicDeathCamBackwardOffset[Npc.Index] = GetBossProfilePublicDeathCamBackwardOffset(profileIndex);
-	g_flSlenderPublicDeathCamDownwardOffset[Npc.Index] = GetBossProfilePublicDeathCamDownwardOffset(profileIndex);
-	g_bSlenderDeathCamOverlay[Npc.Index] = GetBossProfileDeathCamOverlayState(profileIndex);
-	g_flSlenderDeathCamOverlayTimeStart[Npc.Index] = GetBossProfileDeathCamOverlayStartTime(profileIndex);
-	g_flSlenderDeathCamTime[Npc.Index] = GetBossProfileDeathCamTime(profileIndex);
+	g_SlenderDeathCamScareSound[Npc.Index] = GetBossProfileDeathCamScareSound(profileIndex);
+	g_SlenderPublicDeathCam[Npc.Index] = GetBossProfilePublicDeathCamState(profileIndex);
+	g_SlenderPublicDeathCamSpeed[Npc.Index] = GetBossProfilePublicDeathCamSpeed(profileIndex);
+	g_SlenderPublicDeathCamAcceleration[Npc.Index] = GetBossProfilePublicDeathCamAcceleration(profileIndex);
+	g_SlenderPublicDeathCamDeceleration[Npc.Index] = GetBossProfilePublicDeathCamDeceleration(profileIndex);
+	g_SlenderPublicDeathCamBackwardOffset[Npc.Index] = GetBossProfilePublicDeathCamBackwardOffset(profileIndex);
+	g_SlenderPublicDeathCamDownwardOffset[Npc.Index] = GetBossProfilePublicDeathCamDownwardOffset(profileIndex);
+	g_SlenderDeathCamOverlay[Npc.Index] = GetBossProfileDeathCamOverlayState(profileIndex);
+	g_SlenderDeathCamOverlayTimeStart[Npc.Index] = GetBossProfileDeathCamOverlayStartTime(profileIndex);
+	g_SlenderDeathCamTime[Npc.Index] = GetBossProfileDeathCamTime(profileIndex);
 
-	g_hSlenderFakeTimer[Npc.Index] = null;
-	g_hSlenderEntityThink[Npc.Index] = null;
-	g_hSlenderAttackTimer[Npc.Index] = null;
-	g_hSlenderLaserTimer[Npc.Index] = null;
-	g_hSlenderBackupAtkTimer[Npc.Index] = null;
-	g_hSlenderChaseInitialTimer[Npc.Index] = null;
-	g_hSlenderRage1Timer[Npc.Index] = null;
-	g_hSlenderRage2Timer[Npc.Index] = null;
-	g_hSlenderRage3Timer[Npc.Index] = null;
-	g_hSlenderHealTimer[Npc.Index] = null;
-	g_hSlenderHealDelayTimer[Npc.Index] = null;
-	g_hSlenderHealEventTimer[Npc.Index] = null;
-	g_hSlenderStartFleeTimer[Npc.Index] = null;
-	g_hSlenderSpawnTimer[Npc.Index] = null;
-	g_hSlenderDeathCamTimer[Npc.Index] = null;
-	g_iSlenderDeathCamTarget[Npc.Index] = INVALID_ENT_REFERENCE;
-	g_flSlenderNextTeleportTime[Npc.Index] = 0.0;
-	g_flSlenderLastKill[Npc.Index] = 0.0;
-	g_flSlenderTimeUntilKill[Npc.Index] = -1.0;
-	g_flSlenderNextJumpScare[Npc.Index] = -1.0;
-	g_flSlenderNextStunTime[Npc.Index] = -1.0;
-	g_flSlenderNextCloakTime[Npc.Index] = -1.0;
-	g_bNPCHasCloaked[Npc.Index] = false;
-	g_bNPCUsedRage1[Npc.Index] = false;
-	g_bNPCUsedRage2[Npc.Index] = false;
-	g_bNPCUsedRage3[Npc.Index] = false;
-	g_flSlenderTimeUntilNextProxy[Npc.Index] = -1.0;
-	for (int iColor = 0; iColor < 4; iColor++)
-	{
-		if (iColor == 3) g_iBossPathingColor[Npc.Index][iColor] = 255;
-		else g_iBossPathingColor[Npc.Index][iColor] = GetRandomInt(0, 255);
-	}
-	g_bNPCVelocityCancel[Npc.Index] = false;
-	g_hSlenderBurnTimer[Npc.Index] = null;
-	g_hSlenderBleedTimer[Npc.Index] = null;
-	g_hSlenderMarkedTimer[Npc.Index] = null;
-	g_flSlenderStopBurning[Npc.Index] = 0.0;
-	g_flSlenderStopBleeding[Npc.Index] = 0.0;
-	g_bSlenderIsBurning[Npc.Index] = false;
-	g_bSlenderIsMarked[Npc.Index] = false;
-	g_iSlenderSoundTarget[Npc.Index] = INVALID_ENT_REFERENCE;
-	g_iSlenderSeeTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_SlenderFakeTimer[Npc.Index] = null;
+	g_SlenderEntityThink[Npc.Index] = null;
+	g_SlenderAttackTimer[Npc.Index] = null;
+	g_SlenderLaserTimer[Npc.Index] = null;
+	g_SlenderBackupAtkTimer[Npc.Index] = null;
+	g_SlenderChaseInitialTimer[Npc.Index] = null;
+	g_SlenderRage1Timer[Npc.Index] = null;
+	g_SlenderRage2Timer[Npc.Index] = null;
+	g_SlenderRage3Timer[Npc.Index] = null;
+	g_SlenderHealTimer[Npc.Index] = null;
+	g_SlenderHealDelayTimer[Npc.Index] = null;
+	g_SlenderHealEventTimer[Npc.Index] = null;
+	g_SlenderStartFleeTimer[Npc.Index] = null;
+	g_SlenderSpawnTimer[Npc.Index] = null;
+	g_SlenderDeathCamTimer[Npc.Index] = null;
+	g_SlenderDeathCamTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_SlenderNextTeleportTime[Npc.Index] = 0.0;
+	g_SlenderLastKill[Npc.Index] = 0.0;
+	g_SlenderTimeUntilKill[Npc.Index] = -1.0;
+	g_SlenderNextJumpScare[Npc.Index] = -1.0;
+	g_SlenderNextStunTime[Npc.Index] = -1.0;
+	g_SlenderNextCloakTime[Npc.Index] = -1.0;
+	g_NpcHasCloaked[Npc.Index] = false;
+	g_NpcUsedRage1[Npc.Index] = false;
+	g_NpcUsedRage2[Npc.Index] = false;
+	g_NpcHasUsedRage3[Npc.Index] = false;
+	g_SlenderTimeUntilNextProxy[Npc.Index] = -1.0;
+	g_NpcVelocityCancel[Npc.Index] = false;
+	g_SlenderBurnTimer[Npc.Index] = null;
+	g_SlenderBleedTimer[Npc.Index] = null;
+	g_SlenderMarkedTimer[Npc.Index] = null;
+	g_SlenderStopBurningTimer[Npc.Index] = 0.0;
+	g_SlenderStopBleedingTimer[Npc.Index] = 0.0;
+	g_SlenderIsBurning[Npc.Index] = false;
+	g_SlenderIsMarked[Npc.Index] = false;
+	g_SlenderSoundTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_SlenderSeeTarget[Npc.Index] = INVALID_ENT_REFERENCE;
 
 	g_bSlenderHasBurnKillEffect[Npc.Index] = GetBossProfileBurnRagdoll(profileIndex);
 	g_bSlenderHasCloakKillEffect[Npc.Index] = GetBossProfileCloakRagdoll(profileIndex);
@@ -1924,7 +2233,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	g_bSlenderHasAshKillEffect[Npc.Index] = GetBossProfileAshRagdoll(profileIndex);
 	g_bSlenderHasDeleteKillEffect[Npc.Index] = GetBossProfileDeleteRagdoll(profileIndex);
 	g_bSlenderHasPushRagdollOnKill[Npc.Index] = GetBossProfilePushRagdoll(profileIndex);
-	g_bSlenderCustomOutroSong[Npc.Index] = GetBossProfileOutroMusicState(profileIndex);
+	g_SlenderCustomOutroSong[Npc.Index] = GetBossProfileOutroMusicState(profileIndex);
 
 	g_bSlenderHasDissolveRagdollOnKill[Npc.Index] = GetBossProfileDissolveRagdoll(profileIndex);
 	g_iSlenderDissolveRagdollType[Npc.Index] = GetBossProfileDissolveRagdollType(profileIndex);
@@ -1932,9 +2241,9 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	g_bSlenderHasPlasmaRagdollOnKill[Npc.Index] = GetBossProfilePlasmaRagdoll(profileIndex);
 
 	g_bSlenderHasResizeRagdollOnKill[Npc.Index] = GetBossProfileResizeRagdoll(profileIndex);
-	g_flSlenderResizeRagdollHands[Npc.Index] = GetBossProfileResizeRagdollHead(profileIndex);
-	g_flSlenderResizeRagdollHead[Npc.Index] = GetBossProfileResizeRagdollHands(profileIndex);
-	g_flSlenderResizeRagdollTorso[Npc.Index] = GetBossProfileResizeRagdollTorso(profileIndex);
+	g_SlenderResizeRagdollHands[Npc.Index] = GetBossProfileResizeRagdollHead(profileIndex);
+	g_SlenderResizeRagdollHead[Npc.Index] = GetBossProfileResizeRagdollHands(profileIndex);
+	g_SlenderResizeRagdollTorso[Npc.Index] = GetBossProfileResizeRagdollTorso(profileIndex);
 
 	g_bSlenderHasDecapOrGibKillEffect[Npc.Index] = GetBossProfileDecapOrGibRagdoll(profileIndex);
 	g_bSlenderHasSilentKill[Npc.Index] = GetBossProfileSilentKill(profileIndex);
@@ -1945,19 +2254,19 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		g_flPlayerLastChaseBossEncounterTime[i][Npc.Index] = -1.0;
-		g_flSlenderTeleportPlayersRestTime[Npc.Index][i] = -1.0;
+		g_PlayerLastChaseBossEncounterTime[i][Npc.Index] = -1.0;
+		g_SlenderTeleportPlayersRestTime[Npc.Index][i] = -1.0;
 	}
 
-	g_iSlenderTeleportTarget[Npc.Index] = INVALID_ENT_REFERENCE;
-	g_iSlenderProxyTarget[Npc.Index] = INVALID_ENT_REFERENCE;
-	g_flSlenderTeleportMaxTargetStress[Npc.Index] = 9999.0;
-	g_flSlenderTeleportMaxTargetTime[Npc.Index] = -1.0;
-	g_flSlenderNextTeleportTime[Npc.Index] = -1.0;
-	g_flSlenderTeleportTargetTime[Npc.Index] = -1.0;
+	g_SlenderTeleportTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_SlenderProxyTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+	g_SlenderTeleportMaxTargetStress[Npc.Index] = 9999.0;
+	g_SlenderTeleportMaxTargetTime[Npc.Index] = -1.0;
+	g_SlenderNextTeleportTime[Npc.Index] = -1.0;
+	g_SlenderTeleportTargetTime[Npc.Index] = -1.0;
 
-	GetProfileString(profile, "cloak_on_sound", g_sSlenderCloakOnSound[Npc.Index], sizeof(g_sSlenderCloakOnSound[]), DEFAULT_CLOAKONSOUND);
-	GetProfileString(profile, "cloak_off_sound", g_sSlenderCloakOffSound[Npc.Index], sizeof(g_sSlenderCloakOffSound[]), DEFAULT_CLOAKOFFSOUND);
+	GetProfileString(profile, "cloak_on_sound", g_SlenderCloakOnSound[Npc.Index], sizeof(g_SlenderCloakOnSound[]), DEFAULT_CLOAKONSOUND);
+	GetProfileString(profile, "cloak_off_sound", g_SlenderCloakOffSound[Npc.Index], sizeof(g_SlenderCloakOffSound[]), DEFAULT_CLOAKOFFSOUND);
 	GetProfileString(profile, "rocket_shoot_sound", g_sSlenderRocketShootSound[Npc.Index], sizeof(g_sSlenderRocketShootSound[]), ROCKET_SHOOT);
 	GetProfileString(profile, "rocket_model", g_sSlenderRocketModel[Npc.Index], sizeof(g_sSlenderRocketModel[]), ROCKET_MODEL);
 	GetProfileString(profile, "sentryrocket_shoot_sound", g_sSlenderSentryRocketShootSound[Npc.Index], sizeof(g_sSlenderSentryRocketShootSound[]), SENTRYROCKET_SHOOT);
@@ -1966,34 +2275,34 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	GetProfileString(profile, "fire_trail", g_sSlenderFireballTrail[Npc.Index], sizeof(g_sSlenderFireballTrail[]), FIREBALL_TRAIL);
 	GetProfileString(profile, "rocket_trail_particle", g_sSlenderRocketTrailParticle[Npc.Index], sizeof(g_sSlenderRocketTrailParticle[]), ROCKET_TRAIL);
 	GetProfileString(profile, "rocket_explode_particle", g_sSlenderRocketExplodeParticle[Npc.Index], sizeof(g_sSlenderRocketExplodeParticle[]), ROCKET_EXPLODE_PARTICLE);
-	GetProfileString(profile, "fire_explode_sound", g_sSlenderFireballExplodeSound[Npc.Index], sizeof(g_sSlenderFireballExplodeSound[]), FIREBALL_IMPACT);
-	GetProfileString(profile, "fire_iceball_slow_sound", g_sSlenderIceballImpactSound[Npc.Index], sizeof(g_sSlenderIceballImpactSound[]), ICEBALL_IMPACT);
+	GetProfileString(profile, "fire_explode_sound", g_SlenderFireballExplodeSound[Npc.Index], sizeof(g_SlenderFireballExplodeSound[]), FIREBALL_IMPACT);
+	GetProfileString(profile, "fire_iceball_slow_sound", g_SlenderIceballImpactSound[Npc.Index], sizeof(g_SlenderIceballImpactSound[]), ICEBALL_IMPACT);
 	GetProfileString(profile, "fire_iceball_trail", g_sSlenderIceballTrail[Npc.Index], sizeof(g_sSlenderIceballTrail[]), ICEBALL_TRAIL);
 	GetProfileString(profile, "grenade_shoot_sound", g_sSlenderGrenadeShootSound[Npc.Index], sizeof(g_sSlenderGrenadeShootSound[]), GRENADE_SHOOT);
 	GetProfileString(profile, "arrow_shoot_sound", g_sSlenderArrowShootSound[Npc.Index], sizeof(g_sSlenderArrowShootSound[]), ARROW_SHOOT);
 	GetProfileString(profile, "mangler_shoot_sound", g_sSlenderManglerShootSound[Npc.Index], sizeof(g_sSlenderManglerShootSound[]), MANGLER_SHOOT);
 	GetProfileString(profile, "baseball_shoot_sound", g_sSlenderBaseballShootSound[Npc.Index], sizeof(g_sSlenderBaseballShootSound[]), BASEBALL_SHOOT);
-	GetProfileString(profile, "player_jarate_sound", g_sSlenderJarateHitSound[Npc.Index], sizeof(g_sSlenderJarateHitSound[]), JARATE_HITPLAYER);
-	GetProfileString(profile, "player_milk_sound", g_sSlenderMilkHitSound[Npc.Index], sizeof(g_sSlenderMilkHitSound[]), JARATE_HITPLAYER);
-	GetProfileString(profile, "player_gas_sound", g_sSlenderGasHitSound[Npc.Index], sizeof(g_sSlenderGasHitSound[]), JARATE_HITPLAYER);
-	GetProfileString(profile, "player_stun_sound", g_sSlenderStunHitSound[Npc.Index], sizeof(g_sSlenderStunHitSound[]), STUN_HITPLAYER);
+	GetProfileString(profile, "player_jarate_sound", g_SlenderJarateHitSound[Npc.Index], sizeof(g_SlenderJarateHitSound[]), JARATE_HITPLAYER);
+	GetProfileString(profile, "player_milk_sound", g_SlenderMilkHitSound[Npc.Index], sizeof(g_SlenderMilkHitSound[]), JARATE_HITPLAYER);
+	GetProfileString(profile, "player_gas_sound", g_SlenderGasHitSound[Npc.Index], sizeof(g_SlenderGasHitSound[]), JARATE_HITPLAYER);
+	GetProfileString(profile, "player_stun_sound", g_SlenderStunHitSound[Npc.Index], sizeof(g_SlenderStunHitSound[]), STUN_HITPLAYER);
 	GetProfileString(profile, "engine_sound", g_sSlenderEngineSound[Npc.Index], sizeof(g_sSlenderEngineSound[]));
 	GetProfileString(profile, "shockwave_beam_sprite", g_sSlenderShockwaveBeamSprite[Npc.Index], sizeof(g_sSlenderShockwaveBeamSprite[]), "sprites/laser.vmt");
 	GetProfileString(profile, "shockwave_halo_sprite", g_sSlenderShockwaveHaloSprite[Npc.Index], sizeof(g_sSlenderShockwaveHaloSprite[]), "sprites/halo01.vmt");
-	GetProfileString(profile, "player_smite_sound", g_sSlenderSmiteSound[Npc.Index], sizeof(g_sSlenderSmiteSound[]), SOUND_THUNDER);
+	GetProfileString(profile, "player_smite_sound", g_SlenderSmiteSound[Npc.Index], sizeof(g_SlenderSmiteSound[]), SOUND_THUNDER);
 	GetProfileString(profile, "trap_model", g_sSlenderTrapModel[Npc.Index], sizeof(g_sSlenderTrapModel[]), TRAP_MODEL);
-	GetProfileString(profile, "trap_deploy_sound", g_sSlenderTrapDeploySound[Npc.Index], sizeof(g_sSlenderTrapDeploySound[]), TRAP_DEPLOY);
-	GetProfileString(profile, "trap_miss_sound", g_sSlenderTrapMissSound[Npc.Index], sizeof(g_sSlenderTrapMissSound[]), TRAP_CLOSE);
-	GetProfileString(profile, "trap_catch_sound", g_sSlenderTrapHitSound[Npc.Index], sizeof(g_sSlenderTrapHitSound[]), TRAP_CLOSE);
-	GetProfileString(profile, "trap_animation_idle", g_sSlenderTrapAnimIdle[Npc.Index], sizeof(g_sSlenderTrapAnimIdle[]), "trapopened");
-	GetProfileString(profile, "trap_animation_closed", g_sSlenderTrapAnimClose[Npc.Index], sizeof(g_sSlenderTrapAnimClose[]), "trapclosed");
-	GetProfileString(profile, "trap_animation_open", g_sSlenderTrapAnimOpen[Npc.Index], sizeof(g_sSlenderTrapAnimOpen[]));
+	GetProfileString(profile, "trap_deploy_sound", g_SlenderTrapDeploySound[Npc.Index], sizeof(g_SlenderTrapDeploySound[]), TRAP_DEPLOY);
+	GetProfileString(profile, "trap_miss_sound", g_SlenderTrapMissSound[Npc.Index], sizeof(g_SlenderTrapMissSound[]), TRAP_CLOSE);
+	GetProfileString(profile, "trap_catch_sound", g_SlenderTrapHitSound[Npc.Index], sizeof(g_SlenderTrapHitSound[]), TRAP_CLOSE);
+	GetProfileString(profile, "trap_animation_idle", g_SlenderTrapAnimIdle[Npc.Index], sizeof(g_SlenderTrapAnimIdle[]), "trapopened");
+	GetProfileString(profile, "trap_animation_closed", g_SlenderTrapAnimClose[Npc.Index], sizeof(g_SlenderTrapAnimClose[]), "trapclosed");
+	GetProfileString(profile, "trap_animation_open", g_SlenderTrapAnimOpen[Npc.Index], sizeof(g_SlenderTrapAnimOpen[]));
 
-	g_hSlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	g_SlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	
 	SlenderRemoveTargetMemory(Npc.Index);
 	
-	switch (iBossType)
+	switch (bossType)
 	{
 		case SF2BossType_Chaser:
 		{
@@ -2009,8 +2318,8 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	
 	if (NpcCopyMaster.IsValid())
 	{
-		g_iSlenderCopyMaster[Npc.Index] = NpcCopyMaster.Index;
-		g_flSlenderNextJumpScare[Npc.Index] = g_flSlenderNextJumpScare[NpcCopyMaster.Index];
+		g_SlenderCopyMaster[Npc.Index] = NpcCopyMaster.Index;
+		g_SlenderNextJumpScare[Npc.Index] = g_SlenderNextJumpScare[NpcCopyMaster.Index];
 		
 		Npc.Anger = NpcCopyMaster.Anger;
 	}
@@ -2018,78 +2327,84 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	{
 		if (bPlaySpawnSound)
 		{
-			char sBuffer[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(profile, "sound_spawn_all", sBuffer, sizeof(sBuffer));
-			if (sBuffer[0] != '\0') EmitSoundToAll(sBuffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
+			char buffer[PLATFORM_MAX_PATH];
+			GetRandomStringFromProfile(profile, "sound_spawn_all", buffer, sizeof(buffer));
+			if (buffer[0] != '\0')
+			{
+				EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
+			}
 		}
-		if(hTimerMusic==null)
+		if (timerMusic==null)
 		{
-			bool bAllowMusic = false;
-			float flTime;
+			bool allowMusic = false;
+			float time;
 			for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 			{
-				if (g_flNPCSoundMusicLoop[Npc.Index][difficulty] > 0.0)
+				if (g_NpcSoundMusicLoop[Npc.Index][difficulty] > 0.0)
 				{
-					bAllowMusic = true;
-					g_iNPCAllowMusicOnDifficulty[Npc.Index] |= difficulty;
+					allowMusic = true;
+					g_NpcAllowMusicOnDifficulty[Npc.Index] |= difficulty;
 				}
 			}
-			if(bAllowMusic && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+			if (allowMusic && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
-				flTime = g_flNPCSoundMusicLoop[Npc.Index][g_cvDifficulty.IntValue];
+				time = g_NpcSoundMusicLoop[Npc.Index][g_DifficultyConVar.IntValue];
 
-				GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackNormal,sizeof(sCurrentMusicTrackNormal));
+				GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackNormal,sizeof(currentMusicTrackNormal));
 				
-				GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackHard,sizeof(sCurrentMusicTrackHard));
-				if (sCurrentMusicTrackHard[0] == '\0') GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackHard,sizeof(sCurrentMusicTrackHard));
-				
-				GetRandomStringFromProfile(profile,"sound_music_insane",sCurrentMusicTrackInsane,sizeof(sCurrentMusicTrackInsane));
-				if (sCurrentMusicTrackInsane[0] == '\0')
+				GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackHard,sizeof(currentMusicTrackHard));
+				if (currentMusicTrackHard[0] == '\0')
 				{
-					GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackInsane,sizeof(sCurrentMusicTrackInsane));
-					if (sCurrentMusicTrackInsane[0] == '\0')
+					GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackHard,sizeof(currentMusicTrackHard));
+				}
+				
+				GetRandomStringFromProfile(profile,"sound_music_insane",currentMusicTrackInsane,sizeof(currentMusicTrackInsane));
+				if (currentMusicTrackInsane[0] == '\0')
+				{
+					GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackInsane,sizeof(currentMusicTrackInsane));
+					if (currentMusicTrackInsane[0] == '\0')
 					{
-						GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackInsane,sizeof(sCurrentMusicTrackInsane));
+						GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackInsane,sizeof(currentMusicTrackInsane));
 					}
 				}
 				
-				GetRandomStringFromProfile(profile,"sound_music_nightmare",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
-				if (sCurrentMusicTrackNightmare[0] == '\0')
+				GetRandomStringFromProfile(profile,"sound_music_nightmare",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
+				if (currentMusicTrackNightmare[0] == '\0')
 				{
-					GetRandomStringFromProfile(profile,"sound_music_insane",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
-					if (sCurrentMusicTrackNightmare[0] == '\0')
+					GetRandomStringFromProfile(profile,"sound_music_insane",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
+					if (currentMusicTrackNightmare[0] == '\0')
 					{
-						GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
-						if (sCurrentMusicTrackNightmare[0] == '\0')
+						GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
+						if (currentMusicTrackNightmare[0] == '\0')
 						{
-							GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackNightmare,sizeof(sCurrentMusicTrackNightmare));
+							GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackNightmare,sizeof(currentMusicTrackNightmare));
 						}
 					}
 				}
 				
-				GetRandomStringFromProfile(profile,"sound_music_apollyon",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-				if (sCurrentMusicTrackApollyon[0] == '\0')
+				GetRandomStringFromProfile(profile,"sound_music_apollyon",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+				if (currentMusicTrackApollyon[0] == '\0')
 				{
-					GetRandomStringFromProfile(profile,"sound_music_nightmare",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-					if (sCurrentMusicTrackApollyon[0] == '\0')
+					GetRandomStringFromProfile(profile,"sound_music_nightmare",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+					if (currentMusicTrackApollyon[0] == '\0')
 					{
-						GetRandomStringFromProfile(profile,"sound_music_insane",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-						if (sCurrentMusicTrackApollyon[0] == '\0')
+						GetRandomStringFromProfile(profile,"sound_music_insane",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+						if (currentMusicTrackApollyon[0] == '\0')
 						{
-							GetRandomStringFromProfile(profile,"sound_music_hard",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
-							if (sCurrentMusicTrackApollyon[0] == '\0')
+							GetRandomStringFromProfile(profile,"sound_music_hard",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
+							if (currentMusicTrackApollyon[0] == '\0')
 							{
-								GetRandomStringFromProfile(profile,"sound_music",sCurrentMusicTrackApollyon,sizeof(sCurrentMusicTrackApollyon));
+								GetRandomStringFromProfile(profile,"sound_music",currentMusicTrackApollyon,sizeof(currentMusicTrackApollyon));
 							}
 						}
 					}
 				}
-				if ((g_iNPCAllowMusicOnDifficulty[Npc.Index] & g_cvDifficulty.IntValue) && flTime > 0.0)
+				if ((g_NpcAllowMusicOnDifficulty[Npc.Index] & g_DifficultyConVar.IntValue) && time > 0.0)
 				{
-					hTimerMusic = CreateTimer(flTime,BossMusic,Npc.Index,TIMER_FLAG_NO_MAPCHANGE);
+					timerMusic = CreateTimer(time,BossMusic,Npc.Index,TIMER_FLAG_NO_MAPCHANGE);
 					for(int client = 1;client <=MaxClients;client ++)
 					{
-						if(IsValidClient(client) && (!g_bPlayerEliminated[client] || IsClientInGhostMode(client)))
+						if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
 						{
 							ClientChaseMusicReset(client);
 							ClientChaseMusicSeeReset(client);
@@ -2098,17 +2413,35 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 							ClientStopAllSlenderSounds(client, profile, "sound_chase_music", SNDCHAN_AUTO);
 							ClientStopAllSlenderSounds(client, profile, "sound_alert_music", SNDCHAN_AUTO);
 							ClientStopAllSlenderSounds(client, profile, "sound_chase_visible", SNDCHAN_AUTO);
-							if (g_strPlayerMusic[client][0] != '\0') EmitSoundToClient(client, g_strPlayerMusic[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
-							switch (g_cvDifficulty.IntValue)
+							if (g_PlayerMusicString[client][0] != '\0') EmitSoundToClient(client, g_PlayerMusicString[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
+							switch (g_DifficultyConVar.IntValue)
 							{
-								case Difficulty_Normal, Difficulty_Easy: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNormal);
-								case Difficulty_Hard: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackHard);
-								case Difficulty_Insane: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackInsane);
-								case Difficulty_Nightmare: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackNightmare);
-								case Difficulty_Apollyon: strcopy(sCurrentMusicTrack,sizeof(sCurrentMusicTrack),sCurrentMusicTrackApollyon);
+								case Difficulty_Normal, Difficulty_Easy:
+								{
+									strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackNormal);
+								}
+								case Difficulty_Hard:
+								{
+									strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackHard);
+								}
+								case Difficulty_Insane:
+								{
+									strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackInsane);
+								}
+								case Difficulty_Nightmare:
+								{
+									strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackNightmare);
+								}
+								case Difficulty_Apollyon:
+								{
+									strcopy(currentMusicTrack,sizeof(currentMusicTrack),currentMusicTrackApollyon);
+								}
 							}
-							if (sCurrentMusicTrack[0] != '\0') StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
-							ClientMusicStart(client, sCurrentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
+							if (currentMusicTrack[0] != '\0')
+							{
+								StopSound(client, MUSIC_CHAN, currentMusicTrack);
+							}
+							ClientMusicStart(client, currentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
 							ClientUpdateMusicSystem(client);
 						}
 					}
@@ -2120,11 +2453,11 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 			g_Config.Rewind();
 			g_Config.JumpToKey(profile);
 			
-			char sCompProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList hCompanions = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
+			char compProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			ArrayList companions = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 
 			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hCompanions.", hCompanions);
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for companions.", companions);
 			#endif
 			
 			if (g_Config.JumpToKey("companions"))
@@ -2134,47 +2467,59 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 				for (int i = 1;;i++)
 				{
 					FormatEx(sNum, sizeof(sNum), "%d", i);
-					g_Config.GetString(sNum, sCompProfile, sizeof(sCompProfile));
-					if (sCompProfile[0] == '\0') break;
+					g_Config.GetString(sNum, compProfile, sizeof(compProfile));
+					if (compProfile[0] == '\0')
+					{
+						break;
+					}
 					
-					hCompanions.PushString(sCompProfile);
+					companions.PushString(compProfile);
 				}
 			}
 			
-			for (int i = 0, iSize = hCompanions.Length; i < iSize; i++)
+			for (int i = 0, iSize = companions.Length; i < iSize; i++)
 			{
-				hCompanions.GetString(i, sCompProfile, sizeof(sCompProfile));
-				if (IsProfileValid(sCompProfile))
+				companions.GetString(i, compProfile, sizeof(compProfile));
+				if (IsProfileValid(compProfile))
 				{
-					SF2NPC_BaseNPC NpcCompanion = AddProfile(sCompProfile, _, _, false, false);
-					if (NpcCompanion.IsValid()) g_iSlenderCompanionMaster[NpcCompanion.Index] = Npc.Index;
+					SF2NPC_BaseNPC NpcCompanion = AddProfile(compProfile, _, _, false, false);
+					if (NpcCompanion.IsValid())
+					{
+						g_SlenderCompanionMaster[NpcCompanion.Index] = Npc.Index;
+					}
 				}
 				else
 				{
-					LogSF2Message("Companion boss profile %s is invalid, skipping boss...", sCompProfile);
+					LogSF2Message("Companion boss profile %s is invalid, skipping boss...", compProfile);
 				}
 			}
 			
-			delete hCompanions;
+			delete companions;
 
 			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hCompanions..", hCompanions);
+			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for companions..", companions);
 			#endif
 		}
 	}
 	
-	Call_StartForward(fOnBossAdded);
+	Call_StartForward(g_OnBossAddedFwd);
 	Call_PushCell(Npc.Index);
 	Call_Finish();
 
-	if (g_iSlenderCopyMaster[Npc.Index] == -1) LogSF2Message("Boss profile %s has been added to the game.", profile);
+	if (g_SlenderCopyMaster[Npc.Index] == -1)
+	{
+		LogSF2Message("Boss profile %s has been added to the game.", profile);
+	}
 	
 	return true;
 }
 //SF2NPC_BaseNPC NpcCopyMaster=view_as<SF2NPC_BaseNPC>(SF2_INVALID_NPC) <= Bug?
 SF2NPC_BaseNPC AddProfile(const char[] strName,int iAdditionalBossFlags=0,SF2NPC_BaseNPC NpcCopyMaster=view_as<SF2NPC_BaseNPC>(SF2_INVALID_NPC), bool bSpawnCompanions=true, bool bPlaySpawnSound=true, bool bInvincible = false)
 {
-	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return SF2_INVALID_NPC; // Stop spawning bosses before all pages are picked up in Renevant.
+	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
+	{
+		return SF2_INVALID_NPC; // Stop spawning bosses before all pages are picked up in Renevant.
+	}
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
 		SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(i);
@@ -2192,62 +2537,80 @@ SF2NPC_BaseNPC AddProfile(const char[] strName,int iAdditionalBossFlags=0,SF2NPC
 	return SF2_INVALID_NPC;
 }
 
-stock bool GetSlenderModel(int iBossIndex, int iModelState = 0, char[] sBuffer, int bufferLen)
+stock bool GetSlenderModel(int bossIndex, int modelState = 0, char[] buffer, int bufferLen)
 {
-	if (NPCGetUniqueID(iBossIndex) == -1) return false;
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	if (NPCGetUniqueID(bossIndex) == -1)
+	{
+		return false;
+	}
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	sBuffer[0] = '\0';
+	buffer[0] = '\0';
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
-	switch (iModelState)
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	switch (modelState)
 	{
 		case 0:
 		{
 			switch (difficulty)
 			{
-				case Difficulty_Normal: GetProfileString(profile, "model", sBuffer, bufferLen);
+				case Difficulty_Normal:
+				{
+					GetProfileString(profile, "model", buffer, bufferLen);
+				}
 				case Difficulty_Hard:
 				{
-					GetProfileString(profile, "model_hard", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0') GetProfileString(profile, "model", sBuffer, bufferLen);
+					GetProfileString(profile, "model_hard", buffer, bufferLen);
+					if (buffer[0] == '\0')
+					{
+						GetProfileString(profile, "model", buffer, bufferLen);
+					}
 				}
 				case Difficulty_Insane:
 				{
-					GetProfileString(profile, "model_insane", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_insane", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_hard", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0') GetProfileString(profile, "model", sBuffer, bufferLen);
+						GetProfileString(profile, "model_hard", buffer, bufferLen);
+						if (buffer[0] == '\0')
+						{
+							GetProfileString(profile, "model", buffer, bufferLen);
+						}
 					}
 				}
 				case Difficulty_Nightmare:
 				{
-					GetProfileString(profile, "model_nightmare", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_nightmare", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_insane", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0')
+						GetProfileString(profile, "model_insane", buffer, bufferLen);
+						if (buffer[0] == '\0')
 						{
-							GetProfileString(profile, "model_hard", sBuffer, bufferLen);
-							if (sBuffer[0] == '\0') GetProfileString(profile, "model", sBuffer, bufferLen);
+							GetProfileString(profile, "model_hard", buffer, bufferLen);
+							if (buffer[0] == '\0')
+							{
+								GetProfileString(profile, "model", buffer, bufferLen);
+							}
 						}
 					}
 				}
 				case Difficulty_Apollyon:
 				{
-					GetProfileString(profile, "model_apollyon", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_apollyon", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_nightmare", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0')
+						GetProfileString(profile, "model_nightmare", buffer, bufferLen);
+						if (buffer[0] == '\0')
 						{
-							GetProfileString(profile, "model_insane", sBuffer, bufferLen);
-							if (sBuffer[0] == '\0')
+							GetProfileString(profile, "model_insane", buffer, bufferLen);
+							if (buffer[0] == '\0')
 							{
-								GetProfileString(profile, "model_hard", sBuffer, bufferLen);
-								if (sBuffer[0] == '\0') GetProfileString(profile, "model", sBuffer, bufferLen);
+								GetProfileString(profile, "model_hard", buffer, bufferLen);
+								if (buffer[0] == '\0')
+								{
+									GetProfileString(profile, "model", buffer, bufferLen);
+								}
 							}
 						}
 					}
@@ -2258,47 +2621,62 @@ stock bool GetSlenderModel(int iBossIndex, int iModelState = 0, char[] sBuffer, 
 		{
 			switch (difficulty)
 			{
-				case Difficulty_Normal: GetProfileString(profile, "model_averagedist", sBuffer, bufferLen);
+				case Difficulty_Normal:
+				{
+					GetProfileString(profile, "model_averagedist", buffer, bufferLen);
+				}
 				case Difficulty_Hard:
 				{
-					GetProfileString(profile, "model_averagedist_hard", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0') GetProfileString(profile, "model_averagedist", sBuffer, bufferLen);
+					GetProfileString(profile, "model_averagedist_hard", buffer, bufferLen);
+					if (buffer[0] == '\0')
+					{
+						GetProfileString(profile, "model_averagedist", buffer, bufferLen);
+					}
 				}
 				case Difficulty_Insane:
 				{
-					GetProfileString(profile, "model_averagedist_insane", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_averagedist_insane", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_averagedist_hard", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0') GetProfileString(profile, "model_averagedist", sBuffer, bufferLen);
+						GetProfileString(profile, "model_averagedist_hard", buffer, bufferLen);
+						if (buffer[0] == '\0')
+						{
+							GetProfileString(profile, "model_averagedist", buffer, bufferLen);
+						}
 					}
 				}
 				case Difficulty_Nightmare:
 				{
-					GetProfileString(profile, "model_averagedist_nightmare", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_averagedist_nightmare", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_averagedist_insane", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0')
+						GetProfileString(profile, "model_averagedist_insane", buffer, bufferLen);
+						if (buffer[0] == '\0')
 						{
-							GetProfileString(profile, "model_averagedist_hard", sBuffer, bufferLen);
-							if (sBuffer[0] == '\0') GetProfileString(profile, "model_averagedist", sBuffer, bufferLen);
+							GetProfileString(profile, "model_averagedist_hard", buffer, bufferLen);
+							if (buffer[0] == '\0')
+							{
+								GetProfileString(profile, "model_averagedist", buffer, bufferLen);
+							}
 						}
 					}
 				}
 				case Difficulty_Apollyon:
 				{
-					GetProfileString(profile, "model_averagedist_apollyon", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_averagedist_apollyon", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_averagedist_nightmare", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0')
+						GetProfileString(profile, "model_averagedist_nightmare", buffer, bufferLen);
+						if (buffer[0] == '\0')
 						{
-							GetProfileString(profile, "model_averagedist_insane", sBuffer, bufferLen);
-							if (sBuffer[0] == '\0')
+							GetProfileString(profile, "model_averagedist_insane", buffer, bufferLen);
+							if (buffer[0] == '\0')
 							{
-								GetProfileString(profile, "model_averagedist_hard", sBuffer, bufferLen);
-								if (sBuffer[0] == '\0') GetProfileString(profile, "model_averagedist", sBuffer, bufferLen);
+								GetProfileString(profile, "model_averagedist_hard", buffer, bufferLen);
+								if (buffer[0] == '\0')
+								{
+									GetProfileString(profile, "model_averagedist", buffer, bufferLen);
+								}
 							}
 						}
 					}
@@ -2309,47 +2687,62 @@ stock bool GetSlenderModel(int iBossIndex, int iModelState = 0, char[] sBuffer, 
 		{
 			switch (difficulty)
 			{
-				case Difficulty_Normal: GetProfileString(profile, "model_closedist", sBuffer, bufferLen);
+				case Difficulty_Normal:
+				{
+					GetProfileString(profile, "model_closedist", buffer, bufferLen);
+				}
 				case Difficulty_Hard:
 				{
-					GetProfileString(profile, "model_closedist_hard", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0') GetProfileString(profile, "model_closedist", sBuffer, bufferLen);
+					GetProfileString(profile, "model_closedist_hard", buffer, bufferLen);
+					if (buffer[0] == '\0')
+					{
+						GetProfileString(profile, "model_closedist", buffer, bufferLen);
+					}
 				}
 				case Difficulty_Insane:
 				{
-					GetProfileString(profile, "model_closedist_insane", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_closedist_insane", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_closedist_hard", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0') GetProfileString(profile, "model_closedist", sBuffer, bufferLen);
+						GetProfileString(profile, "model_closedist_hard", buffer, bufferLen);
+						if (buffer[0] == '\0')
+						{
+							GetProfileString(profile, "model_closedist", buffer, bufferLen);
+						}
 					}
 				}
 				case Difficulty_Nightmare:
 				{
-					GetProfileString(profile, "model_closedist_nightmare", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_closedist_nightmare", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_closedist_insane", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0')
+						GetProfileString(profile, "model_closedist_insane", buffer, bufferLen);
+						if (buffer[0] == '\0')
 						{
-							GetProfileString(profile, "model_closedist_hard", sBuffer, bufferLen);
-							if (sBuffer[0] == '\0') GetProfileString(profile, "model_closedist", sBuffer, bufferLen);
+							GetProfileString(profile, "model_closedist_hard", buffer, bufferLen);
+							if (buffer[0] == '\0')
+							{
+								GetProfileString(profile, "model_closedist", buffer, bufferLen);
+							}
 						}
 					}
 				}
 				case Difficulty_Apollyon:
 				{
-					GetProfileString(profile, "model_closedist_apollyon", sBuffer, bufferLen);
-					if (sBuffer[0] == '\0')
+					GetProfileString(profile, "model_closedist_apollyon", buffer, bufferLen);
+					if (buffer[0] == '\0')
 					{
-						GetProfileString(profile, "model_closedist_nightmare", sBuffer, bufferLen);
-						if (sBuffer[0] == '\0')
+						GetProfileString(profile, "model_closedist_nightmare", buffer, bufferLen);
+						if (buffer[0] == '\0')
 						{
-							GetProfileString(profile, "model_closedist_insane", sBuffer, bufferLen);
-							if (sBuffer[0] == '\0')
+							GetProfileString(profile, "model_closedist_insane", buffer, bufferLen);
+							if (buffer[0] == '\0')
 							{
-								GetProfileString(profile, "model_closedist_hard", sBuffer, bufferLen);
-								if (sBuffer[0] == '\0') GetProfileString(profile, "model_closedist", sBuffer, bufferLen);
+								GetProfileString(profile, "model_closedist_hard", buffer, bufferLen);
+								if (buffer[0] == '\0')
+								{
+									GetProfileString(profile, "model_closedist", buffer, bufferLen);
+								}
 							}
 						}
 					}
@@ -2362,61 +2755,79 @@ stock bool GetSlenderModel(int iBossIndex, int iModelState = 0, char[] sBuffer, 
 
 void ChangeAllSlenderModels()
 {
-	char sBuffer[PLATFORM_MAX_PATH];
-	for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
+	char buffer[PLATFORM_MAX_PATH];
+	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{	
-		if (NPCGetUniqueID(iNPCIndex) == -1) continue;
-		int difficulty = GetLocalGlobalDifficulty(iNPCIndex);
-		int slender = NPCGetEntIndex(iNPCIndex);
-		if (!IsValidEntity(slender)) continue;
+		if (NPCGetUniqueID(npcIndex) == -1)
+		{
+			continue;
+		}
+		int difficulty = GetLocalGlobalDifficulty(npcIndex);
+		int slender = NPCGetEntIndex(npcIndex);
+		if (!IsValidEntity(slender))
+		{
+			continue;
+		}
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-		NPCGetProfile(iNPCIndex, profile, sizeof(profile));
-		GetSlenderModel(iNPCIndex, _, sBuffer, sizeof(sBuffer));
-		SetEntityModel(slender, sBuffer);
-		SetEntityModel(EntRefToEntIndex(g_iNPCTauntGlowEntity[iNPCIndex]), sBuffer);
-		if (NPCGetModelSkinMax(iNPCIndex) > 0)
+		NPCGetProfile(npcIndex, profile, sizeof(profile));
+		GetSlenderModel(npcIndex, _, buffer, sizeof(buffer));
+		SetEntityModel(slender, buffer);
+		SetEntityModel(EntRefToEntIndex(g_NpcTauntGlowEntity[npcIndex]), buffer);
+		if (NPCGetModelSkinMax(npcIndex) > 0)
 		{
-			int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iNPCIndex));
-			SetEntProp(slender, Prop_Send, "m_nSkin", iRandomSkin);
+			int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(npcIndex));
+			SetEntProp(slender, Prop_Send, "m_nSkin", randomSkin);
 		}
 		else
 		{
-			if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0))) SetEntProp(slender, Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(iNPCIndex, difficulty));
-			else SetEntProp(slender, Prop_Send, "m_nSkin", NPCGetModelSkin(iNPCIndex));
-		}
-		if (NPCGetModelBodyGroupsMax(iNPCIndex) > 0)
-		{
-			int iRandomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(iNPCIndex));
-			SetEntProp(slender, Prop_Send, "m_nBody", iRandomBody);
-		}
-		else
-		{
-			if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0))) SetEntProp(slender, Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(iNPCIndex, difficulty));
-			else SetEntProp(slender, Prop_Send, "m_nBody", NPCGetModelBodyGroups(iNPCIndex));
-		}
-		if (NPCGetType(iNPCIndex) == SF2BossType_Chaser) 
-		{
-			float flTempHitboxMins[3];
-			NPCChaserUpdateBossAnimation(iNPCIndex, slender, g_iSlenderState[iNPCIndex]);
-			if (NPCGetRaidHitbox(iNPCIndex) == 1)
+			if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0)))
 			{
-				CopyVector(g_flSlenderDetectMins[iNPCIndex], flTempHitboxMins);
-				flTempHitboxMins[2] = 10.0;
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMins", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iNPCIndex]);
-				
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMinsPreScaled", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iNPCIndex]);
+				SetEntProp(slender, Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(npcIndex, difficulty));
 			}
-			else if (NPCGetRaidHitbox(iNPCIndex) == 0)
+			else
 			{
-				CopyVector(HULL_HUMAN_MINS, flTempHitboxMins);
-				flTempHitboxMins[2] = 10.0;
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMins", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
+				SetEntProp(slender, Prop_Send, "m_nSkin", NPCGetModelSkin(npcIndex));
+			}
+		}
+		if (NPCGetModelBodyGroupsMax(npcIndex) > 0)
+		{
+			int randomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(npcIndex));
+			SetEntProp(slender, Prop_Send, "m_nBody", randomBody);
+		}
+		else
+		{
+			if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0)))
+			{
+				SetEntProp(slender, Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(npcIndex, difficulty));
+			}
+			else
+			{
+				SetEntProp(slender, Prop_Send, "m_nBody", NPCGetModelBodyGroups(npcIndex));
+			}
+		}
+		if (NPCGetType(npcIndex) == SF2BossType_Chaser) 
+		{
+			float tempHitboxMins[3];
+			NPCChaserUpdateBossAnimation(npcIndex, slender, g_SlenderState[npcIndex]);
+			if (NPCGetRaidHitbox(npcIndex) == 1)
+			{
+				CopyVector(g_SlenderDetectMins[npcIndex], tempHitboxMins);
+				tempHitboxMins[2] = 10.0;
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMins", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMaxs", g_SlenderDetectMaxs[npcIndex]);
 				
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMinsPreScaled", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iNPCIndex], Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMinsPreScaled", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMaxsPreScaled", g_SlenderDetectMaxs[npcIndex]);
+			}
+			else if (NPCGetRaidHitbox(npcIndex) == 0)
+			{
+				CopyVector(HULL_HUMAN_MINS, tempHitboxMins);
+				tempHitboxMins[2] = 10.0;
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMins", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
+				
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMinsPreScaled", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[npcIndex], Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
 			}
 		}
 	}
@@ -2427,29 +2838,32 @@ public Address SF2_GetLocomotionInterface(int index)
 	return SDKCall(g_hSDKGetLocomotionInterface, SDKCall(g_hSDKGetNextBot, index)); 
 }
 
-void RemoveProfile(int iBossIndex)
+void RemoveProfile(int bossIndex)
 {
-	RemoveSlender(iBossIndex);
+	RemoveSlender(bossIndex);
 
 	// Call our forward.
-	Call_StartForward(fOnBossRemoved);
-	Call_PushCell(iBossIndex);
+	Call_StartForward(g_OnBossRemovedFwd);
+	Call_PushCell(bossIndex);
 	Call_Finish();
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	NPCChaserOnRemoveProfile(iBossIndex);
+	NPCChaserOnRemoveProfile(bossIndex);
 
 	// Remove all possible sounds, for emergencies.
 	if (!MusicActive())
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsClientInGame(i)) continue;
+			if (!IsClientInGame(i))
+			{
+				continue;
+			}
 
 			// Remove chase music.
-			if (g_iPlayerChaseMusicMaster[i] == iBossIndex)
+			if (g_PlayerChaseMusicMaster[i] == bossIndex)
 			{
 				ClientChaseMusicReset(i);
 				ClientAlertMusicReset(i);
@@ -2458,7 +2872,7 @@ void RemoveProfile(int iBossIndex)
 			}
 			
 			// Don't forget search theme
-			if(g_iPlayerAlertMusicMaster[i] == iBossIndex)
+			if (g_PlayerAlertMusicMaster[i] == bossIndex)
 			{
 				ClientChaseMusicReset(i);
 				ClientAlertMusicReset(i);
@@ -2466,7 +2880,7 @@ void RemoveProfile(int iBossIndex)
 				ClientChaseMusicSeeReset(i);
 			}
 			
-			if(g_iPlayerChaseMusicSeeMaster[i] == iBossIndex)
+			if (g_PlayerChaseMusicSeeMaster[i] == bossIndex)
 			{
 				ClientChaseMusicReset(i);
 				ClientAlertMusicReset(i);
@@ -2474,7 +2888,7 @@ void RemoveProfile(int iBossIndex)
 				ClientChaseMusicSeeReset(i);
 			}
 
-			if(g_iPlayerIdleMusicMaster[i] == iBossIndex)
+			if (g_PlayerIdleMusicMaster[i] == bossIndex)
 			{
 				ClientChaseMusicReset(i);
 				ClientAlertMusicReset(i);
@@ -2488,261 +2902,282 @@ void RemoveProfile(int iBossIndex)
 	// Clean up on the clients.
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		g_flSlenderLastFoundPlayer[iBossIndex][i] = -1.0;
-		g_flPlayerLastChaseBossEncounterTime[i][iBossIndex] = -1.0;
-		g_flSlenderTeleportPlayersRestTime[iBossIndex][i] = -1.0;
+		g_SlenderLastFoundPlayer[bossIndex][i] = -1.0;
+		g_PlayerLastChaseBossEncounterTime[i][bossIndex] = -1.0;
+		g_SlenderTeleportPlayersRestTime[bossIndex][i] = -1.0;
 		
 		for (int i2 = 0; i2 < 3; i2++)
 		{
-			g_flSlenderLastFoundPlayerPos[iBossIndex][i][i2] = 0.0;
+			g_SlenderLastFoundPlayerPos[bossIndex][i][i2] = 0.0;
 		}
 		
 		if (IsClientInGame(i))
 		{
-			if (NPCGetUniqueID(iBossIndex) == g_iPlayerStaticMaster[i])
+			if (NPCGetUniqueID(bossIndex) == g_PlayerStaticMaster[i])
 			{
-				g_iPlayerStaticMaster[i] = -1;
+				g_PlayerStaticMaster[i] = -1;
 				
 				// No one is the static master.
-				g_hPlayerStaticTimer[i] = CreateTimer(g_flPlayerStaticDecreaseRate[i], 
+				g_PlayerStaticTimer[i] = CreateTimer(g_flPlayerStaticDecreaseRate[i], 
 					Timer_ClientDecreaseStatic, 
 					GetClientUserId(i), 
 					TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 					
-				TriggerTimer(g_hPlayerStaticTimer[i], true);
+				TriggerTimer(g_PlayerStaticTimer[i], true);
 			}
 		}
 	}
 	
-	g_iNPCTeleportType[iBossIndex] = -1;
-	g_iSlenderTeleportTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_iSlenderProxyTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_flSlenderTeleportMaxTargetStress[iBossIndex] = 9999.0;
-	g_flSlenderTeleportMaxTargetTime[iBossIndex] = -1.0;
-	g_flSlenderNextTeleportTime[iBossIndex] = -1.0;
-	g_flSlenderTeleportTargetTime[iBossIndex] = -1.0;
-	g_flSlenderTimeUntilKill[iBossIndex] = -1.0;
-	g_bNPCHealthbarEnabled[iBossIndex] = false;
+	g_NpcTeleportType[bossIndex] = -1;
+	g_SlenderTeleportTarget[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderProxyTarget[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderTeleportMaxTargetStress[bossIndex] = 9999.0;
+	g_SlenderTeleportMaxTargetTime[bossIndex] = -1.0;
+	g_SlenderNextTeleportTime[bossIndex] = -1.0;
+	g_SlenderTeleportTargetTime[bossIndex] = -1.0;
+	g_SlenderTimeUntilKill[bossIndex] = -1.0;
+	g_NpcHasHealthbarEnabled[bossIndex] = false;
 
 	// Remove all copies associated with me.
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
-		if (i == iBossIndex || NPCGetUniqueID(i) == -1) continue;
-		
-		if (g_iSlenderCopyMaster[i] == iBossIndex)
+		if (i == bossIndex || NPCGetUniqueID(i) == -1)
 		{
-			LogMessage("Removed boss index %d because it is a copy of boss index %d", i, iBossIndex);
+			continue;
+		}
+		
+		if (g_SlenderCopyMaster[i] == bossIndex)
+		{
+			LogMessage("Removed boss index %d because it is a copy of boss index %d", i, bossIndex);
 			NPCRemove(i);
 		}
 	}
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_flNPCSearchRadius[iBossIndex][difficulty] = 0.0;
-		g_flNPCHearingRadius[iBossIndex][difficulty] = 0.0;
-		g_flNPCTauntAlertRange[iBossIndex][difficulty] = 0.0;
-		g_flNPCInstantKillCooldown[iBossIndex][difficulty] = 0.0;
-		g_flSlenderProxyTeleportMinRange[iBossIndex][difficulty] = 0.0;
-		g_flSlenderProxyTeleportMaxRange[iBossIndex][difficulty] = 0.0;
+		g_NpcSearchRadius[bossIndex][difficulty] = 0.0;
+		g_NpcHearingRadius[bossIndex][difficulty] = 0.0;
+		g_NpcTauntAlertRange[bossIndex][difficulty] = 0.0;
+		g_NpcInstantKillCooldown[bossIndex][difficulty] = 0.0;
+		g_SlenderProxyTeleportMinRange[bossIndex][difficulty] = 0.0;
+		g_SlenderProxyTeleportMaxRange[bossIndex][difficulty] = 0.0;
 	}
 	
-	NPCSetProfile(iBossIndex, "");
-	g_iNPCType[iBossIndex] = -1;
-	g_iNPCProfileIndex[iBossIndex] = -1;
-	g_iNPCUniqueProfileIndex[iBossIndex] = -1;
+	NPCSetProfile(bossIndex, "");
+	g_NpcType[bossIndex] = -1;
+	g_NpcProfileIndex[bossIndex] = -1;
+	g_NpcUniqueProfileIndex[bossIndex] = -1;
 	
-	NPCSetFlags(iBossIndex, 0);
+	NPCSetFlags(bossIndex, 0);
 	
-	NPCSetAnger(iBossIndex, 1.0);
+	NPCSetAnger(bossIndex, 1.0);
 	
-	g_flNPCFieldOfView[iBossIndex] = 0.0;
-	g_flNPCBackstabFOV[iBossIndex] = 0.0;
+	g_NpcFieldOfView[bossIndex] = 0.0;
+	g_NpcBackstabFOV[bossIndex] = 0.0;
 	
-	g_flNPCAddSpeed[iBossIndex] = 0.0;
-	g_flNPCAddMaxSpeed[iBossIndex] = 0.0;
-	g_flNPCAddAcceleration[iBossIndex] = 0.0;
-	g_flNPCStepSize[iBossIndex] = 0.0;
+	g_NpcAddSpeed[bossIndex] = 0.0;
+	g_NpcAddMaxSpeed[bossIndex] = 0.0;
+	g_NpcAddAcceleration[bossIndex] = 0.0;
+	g_NpcStepSize[bossIndex] = 0.0;
 
-	g_bNPCDiscoMode[iBossIndex] = false;
-	g_flNPCDiscoRadiusMin[iBossIndex] = 0.0;
-	g_flNPCDiscoRadiusMax[iBossIndex] = 0.0;
+	g_NpcHasDiscoMode[bossIndex] = false;
+	g_NpcDiscoRadiusMin[bossIndex] = 0.0;
+	g_NpcDiscoRadiusMax[bossIndex] = 0.0;
 
-	g_bNPCFestiveLights[iBossIndex] = false;
-	g_iNPCFestiveLightBrightness[iBossIndex] = 0;
-	g_flNPCFestiveLightDistance[iBossIndex] = 0.0;
-	g_flNPCFestiveLightRadius[iBossIndex] = 0.0;
+	g_NpcHasFestiveLights[bossIndex] = false;
+	g_NpcFestiveLightBrightness[bossIndex] = 0;
+	g_NpcFestiveLightDistance[bossIndex] = 0.0;
+	g_NpcFestiveLightRadius[bossIndex] = 0.0;
 	
-	g_iNPCEnemy[iBossIndex] = INVALID_ENT_REFERENCE;
+	g_NpcEnemy[bossIndex] = INVALID_ENT_REFERENCE;
 	
-	NPCSetDeathCamEnabled(iBossIndex, false);
+	NPCSetDeathCamEnabled(bossIndex, false);
 	
-	g_iSlenderCopyMaster[iBossIndex] = -1;
-	g_iSlenderCompanionMaster[iBossIndex] = -1;
-	g_iNPCUniqueID[iBossIndex] = -1;
-	g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_hSlenderAttackTimer[iBossIndex] = null;
-	g_hSlenderLaserTimer[iBossIndex] = null;
-	g_hSlenderBackupAtkTimer[iBossIndex] = null;
-	g_hSlenderChaseInitialTimer[iBossIndex] = null;
-	g_hSlenderRage1Timer[iBossIndex] = null;
-	g_hSlenderRage2Timer[iBossIndex] = null;
-	g_hSlenderRage3Timer[iBossIndex] = null;
-	g_hSlenderHealTimer[iBossIndex] = null;
-	g_hSlenderHealDelayTimer[iBossIndex] = null;
-	g_hSlenderHealEventTimer[iBossIndex] = null;
-	g_hSlenderStartFleeTimer[iBossIndex] = null;
-	g_hSlenderSpawnTimer[iBossIndex] = null;
-	g_hSlenderDeathCamTimer[iBossIndex] = null;
-	g_iSlenderDeathCamTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_hSlenderThink[iBossIndex] = null;
-	g_hSlenderEntityThink[iBossIndex] = null;
-	g_hSlenderBurnTimer[iBossIndex] = null;
-	g_hSlenderBleedTimer[iBossIndex] = null;
-	g_hSlenderMarkedTimer[iBossIndex] = null;
-	g_flSlenderStopBurning[iBossIndex] = 0.0;
-	g_flSlenderStopBleeding[iBossIndex] = 0.0;
-	g_bSlenderIsBurning[iBossIndex] = false;
-	g_bSlenderIsMarked[iBossIndex] = false;
-	g_iSlenderSoundTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_iSlenderSeeTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_bSlenderCustomOutroSong[iBossIndex] = false;
+	g_SlenderCopyMaster[bossIndex] = -1;
+	g_SlenderCompanionMaster[bossIndex] = -1;
+	g_NpcUniqueID[bossIndex] = -1;
+	g_SlenderEnt[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderAttackTimer[bossIndex] = null;
+	g_SlenderLaserTimer[bossIndex] = null;
+	g_SlenderBackupAtkTimer[bossIndex] = null;
+	g_SlenderChaseInitialTimer[bossIndex] = null;
+	g_SlenderRage1Timer[bossIndex] = null;
+	g_SlenderRage2Timer[bossIndex] = null;
+	g_SlenderRage3Timer[bossIndex] = null;
+	g_SlenderHealTimer[bossIndex] = null;
+	g_SlenderHealDelayTimer[bossIndex] = null;
+	g_SlenderHealEventTimer[bossIndex] = null;
+	g_SlenderStartFleeTimer[bossIndex] = null;
+	g_SlenderSpawnTimer[bossIndex] = null;
+	g_SlenderDeathCamTimer[bossIndex] = null;
+	g_SlenderDeathCamTarget[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderThink[bossIndex] = null;
+	g_SlenderEntityThink[bossIndex] = null;
+	g_SlenderBurnTimer[bossIndex] = null;
+	g_SlenderBleedTimer[bossIndex] = null;
+	g_SlenderMarkedTimer[bossIndex] = null;
+	g_SlenderStopBurningTimer[bossIndex] = 0.0;
+	g_SlenderStopBleedingTimer[bossIndex] = 0.0;
+	g_SlenderIsBurning[bossIndex] = false;
+	g_SlenderIsMarked[bossIndex] = false;
+	g_SlenderSoundTarget[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderSeeTarget[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderCustomOutroSong[bossIndex] = false;
 
-	g_hSlenderFakeTimer[iBossIndex] = null;
-	g_flSlenderLastKill[iBossIndex] = -1.0;
-	g_iSlenderState[iBossIndex] = STATE_IDLE;
-	g_iSlenderTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_bSlenderTargetIsVisible[iBossIndex] = false;
-	g_iSlenderModel[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_flNPCAnger[iBossIndex] = 0.0;
-	g_flNPCAngerAddOnPageGrab[iBossIndex] = 0.0;
-	g_flNPCAngerAddOnPageGrabTimeDiff[iBossIndex] = 0.0;
-	g_bSlenderBoxingBossIsKilled[iBossIndex] = false;
-	g_flSlenderTimeUntilNextProxy[iBossIndex] = -1.0;
-	g_flNPCInstantKillRadius[iBossIndex] = 0.0;
-	g_flNPCScareRadius[iBossIndex] = 0.0;
-	g_bNPCPlayerScareSpeedBoost[iBossIndex] = false;
-	g_flNPCPlayerSpeedBoostDuration[iBossIndex] = 0.0;
-	g_bNPCPlayerScareReaction[iBossIndex] = false;
-	g_iNPCPlayerScareReactionType[iBossIndex] = 0;
-	g_bNPCPlayerScareReplenishSprint[iBossIndex] = false;
-	g_iNPCPlayerScareReplenishSprintAmount[iBossIndex] = 0;
-	g_iNPCPlayerScareVictin[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_bNPCChasingScareVictin[iBossIndex] = false;
-	g_bNPCLostChasingScareVictim[iBossIndex] = false;
-	g_bNPCVelocityCancel[iBossIndex] = false;
-	g_iSlenderRenderFX[iBossIndex] = 0;
-	g_iSlenderRenderMode[iBossIndex] = 0;
+	g_SlenderFakeTimer[bossIndex] = null;
+	g_SlenderLastKill[bossIndex] = -1.0;
+	g_SlenderState[bossIndex] = STATE_IDLE;
+	g_SlenderTarget[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderTargetIsVisible[bossIndex] = false;
+	g_SlenderModel[bossIndex] = INVALID_ENT_REFERENCE;
+	g_NpcAnger[bossIndex] = 0.0;
+	g_NpcAngerAddOnPageGrab[bossIndex] = 0.0;
+	g_NpcAngerAddOnPageGrabTimeDiff[bossIndex] = 0.0;
+	g_SlenderBoxingBossIsKilled[bossIndex] = false;
+	g_SlenderTimeUntilNextProxy[bossIndex] = -1.0;
+	g_NpcInstantKillRadius[bossIndex] = 0.0;
+	g_NpcScareRadius[bossIndex] = 0.0;
+	g_NpcHasPlayerScareSpeedBoost[bossIndex] = false;
+	g_NpcPlayerSpeedBoostDuration[bossIndex] = 0.0;
+	g_NpcHasPlayerScareReaction[bossIndex] = false;
+	g_NpcPlayerScareReactionType[bossIndex] = 0;
+	g_NpcHasPlayerScareReplenishSprint[bossIndex] = false;
+	g_NpcPlayerScareReplenishSprintAmount[bossIndex] = 0;
+	g_NpcPlayerScareVictin[bossIndex] = INVALID_ENT_REFERENCE;
+	g_NpcChasingScareVictin[bossIndex] = false;
+	g_NpcLostChasingScareVictim[bossIndex] = false;
+	g_NpcVelocityCancel[bossIndex] = false;
+	g_SlenderRenderFX[bossIndex] = 0;
+	g_SlenderRenderMode[bossIndex] = 0;
 
 	for (int i = 0; i < 3; i++)
 	{
-		g_flSlenderDetectMins[iBossIndex][i] = 0.0;
-		g_flSlenderDetectMaxs[iBossIndex][i] = 0.0;
-		g_flSlenderEyePosOffset[iBossIndex][i] = 0.0;
-		g_flNPCDiscoModePos[iBossIndex][i] = 0.0;
-		g_flNPCFestiveLightPos[iBossIndex][i] = 0.0;
-		g_flNPCFestiveLightAng[iBossIndex][i] = 0.0;
+		g_SlenderDetectMins[bossIndex][i] = 0.0;
+		g_SlenderDetectMaxs[bossIndex][i] = 0.0;
+		g_SlenderEyePosOffset[bossIndex][i] = 0.0;
+		g_NpcDiscoModePos[bossIndex][i] = 0.0;
+		g_NpcFestiveLightPos[bossIndex][i] = 0.0;
+		g_NpcFestiveLightAng[bossIndex][i] = 0.0;
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
-		g_iSlenderRenderColor[iBossIndex][i] = 0;
+		g_SlenderRenderColor[bossIndex][i] = 0;
 	}
 	
-	SlenderRemoveTargetMemory(iBossIndex);
+	SlenderRemoveTargetMemory(bossIndex);
 }
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	if (!IsRoundPlaying()) return;
+	if (!IsRoundPlaying())
+	{
+		return;
+	}
 
-	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return; // Stop spawning bosses before all pages are picked up in Renevant.
+	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
+	{
+		return; // Stop spawning bosses before all pages are picked up in Renevant.
+	}
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	Npc.UnSpawn();
 	Npc.GetProfile(profile,sizeof(profile));
 	
-	float flTruePos[3], flVecAng[3];
-	flVecAng[1] = GetRandomFloat(0.0, 360.0);
-	AddVectors(flTruePos, pos, flTruePos);
+	float truePos[3], trueAng[3];
+	trueAng[1] = GetRandomFloat(0.0, 360.0);
+	AddVectors(truePos, pos, truePos);
 	
-	int iBossIndex = Npc.Index;
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int bossIndex = Npc.Index;
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	
-	char sBuffer[PLATFORM_MAX_PATH];
-	switch (NPCGetType(iBossIndex))
+	char buffer[PLATFORM_MAX_PATH];
+	switch (NPCGetType(bossIndex))
 	{
 		case SF2BossType_Statue:
 		{
-			GetSlenderModel(iBossIndex, _, sBuffer, sizeof(sBuffer));
+			GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
 
 			CBaseNPC npcBoss = new CBaseNPC();
 			CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npcBoss.GetEntity());
 			CBaseNPC_Locomotion locomotion = npcBoss.GetLocomotion();
 
-			npcEntity.Teleport(flTruePos, flVecAng);
-			npcEntity.SetModel(sBuffer);
-			npcEntity.SetRenderMode(view_as<RenderMode>(g_iSlenderRenderMode[iBossIndex]));
-			npcEntity.SetRenderFx(view_as<RenderFx>(g_iSlenderRenderFX[iBossIndex]));
-			npcEntity.SetRenderColor(g_iSlenderRenderColor[iBossIndex][0], g_iSlenderRenderColor[iBossIndex][1], g_iSlenderRenderColor[iBossIndex][2], g_iSlenderRenderColor[iBossIndex][3]);
+			npcEntity.Teleport(truePos, trueAng);
+			npcEntity.SetModel(buffer);
+			npcEntity.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[bossIndex]));
+			npcEntity.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[bossIndex]));
+			npcEntity.SetRenderColor(g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
 			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
-				float flScaleModel = NPCGetModelScale(iBossIndex) * 0.5;
-				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", flScaleModel);
+				float scaleModel = NPCGetModelScale(bossIndex) * 0.5;
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
 			}
 			else
 			{
-				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(iBossIndex));
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(bossIndex));
 			}
 			npcEntity.Spawn();
 			npcEntity.Activate();
 
 			npcBoss.flStepSize = 18.0;
-			npcBoss.flGravity = g_flGravity;
-			npcBoss.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
+			npcBoss.flGravity = g_Gravity;
+			npcBoss.flAcceleration = g_SlenderCalculatedAcceleration[bossIndex];
 			npcBoss.flDeathDropHeight = 99999.0;
 			npcBoss.flJumpHeight = 512.0;
-			npcBoss.flWalkSpeed = g_flSlenderCalculatedWalkSpeed[iBossIndex];
-			npcBoss.flRunSpeed = g_flSlenderCalculatedSpeed[iBossIndex];
+			npcBoss.flWalkSpeed = g_SlenderCalculatedWalkSpeed[bossIndex];
+			npcBoss.flRunSpeed = g_SlenderCalculatedSpeed[bossIndex];
 			npcBoss.flMaxYawRate = 0.0;
-			g_pPath[iBossIndex].SetMinLookAheadDistance(GetProfileFloat(profile, "search_node_dist_lookahead", 512.0));
+			g_BossPathFollower[bossIndex].SetMinLookAheadDistance(GetProfileFloat(profile, "search_node_dist_lookahead", 512.0));
 			locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
 			locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
 			locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
 			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
 			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
-			float flSlenderBoxMins[3], flSlenderBoxMaxs[3];
-			flSlenderBoxMins[0] = -11.0;
-			flSlenderBoxMins[1] = -11.0;
-			flSlenderBoxMaxs[0] = 11.0;
-			flSlenderBoxMaxs[1] = 11.0;
-			flSlenderBoxMaxs[2] = 55.0;
+			float slenderBoxMins[3], slenderBoxMaxs[3];
+			slenderBoxMins[0] = -11.0;
+			slenderBoxMins[1] = -11.0;
+			slenderBoxMaxs[0] = 11.0;
+			slenderBoxMaxs[1] = 11.0;
+			slenderBoxMaxs[2] = 55.0;
 
-			npcEntity.SetPropVector(Prop_Send, "m_vecMins", flSlenderBoxMins);
-			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", flSlenderBoxMaxs);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMins", slenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", slenderBoxMaxs);
 
-			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", flSlenderBoxMins);
-			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", flSlenderBoxMaxs);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", slenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", slenderBoxMaxs);
 
-			if (NPCGetModelSkinMax(iBossIndex) > 0)
+			if (NPCGetModelSkinMax(bossIndex) > 0)
 			{
-				int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iBossIndex));
-				npcEntity.SetProp(Prop_Send, "m_nSkin", iRandomSkin);
+				int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(bossIndex));
+				npcEntity.SetProp(Prop_Send, "m_nSkin", randomSkin);
 			}
 			else
 			{
-				if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(iBossIndex, difficulty));
-				else npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(iBossIndex));
+				if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0)))
+				{
+					npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(bossIndex, difficulty));
+				}
+				else
+				{
+					npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(bossIndex));
+				}
 			}
-			if (NPCGetModelBodyGroupsMax(iBossIndex) > 0)
+			if (NPCGetModelBodyGroupsMax(bossIndex) > 0)
 			{
-				int iRandomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(iBossIndex));
-				npcEntity.SetProp(Prop_Send, "m_nBody", iRandomBody);
+				int randomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(bossIndex));
+				npcEntity.SetProp(Prop_Send, "m_nBody", randomBody);
 			}
 			else
 			{
-				if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(iBossIndex, difficulty));
-				else npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(iBossIndex));
+				if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0)))
+				{
+					npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(bossIndex, difficulty));
+				}
+				else
+				{
+					npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(bossIndex));
+				}
 			}
 
 			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
@@ -2756,17 +3191,20 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			SDKHook(npcEntity.iEnt, SDKHook_ThinkPost, SlenderStatueSetNextThink);
 			SDKHook(npcEntity.iEnt, SDKHook_Think, SlenderStatueBossProcessMovement);
 
-			g_iSlender[iBossIndex] = EntIndexToEntRef(npcEntity.iEnt);
+			g_SlenderEnt[bossIndex] = EntIndexToEntRef(npcEntity.iEnt);
 
-			g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderBlinkBossThink, g_iSlender[iBossIndex], TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderBlinkBossThink, g_SlenderEnt[bossIndex], TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
-			Spawn_Statue(iBossIndex);
+			Spawn_Statue(bossIndex);
 
-			if (view_as<bool>(GetProfileNum(profile,"tp_effect_spawn",0))) SlenderCreateParticleSpawnEffect(iBossIndex, "tp_effect_spawn_particle", "tp_effect_spawn_sound", "tp_effect_origin");
+			if (view_as<bool>(GetProfileNum(profile,"tp_effect_spawn",0)))
+			{
+				SlenderCreateParticleSpawnEffect(bossIndex, "tp_effect_spawn_particle", "tp_effect_spawn_sound", "tp_effect_origin");
+			}
 		}
 		case SF2BossType_Chaser:
 		{
-			GetSlenderModel(iBossIndex, _, sBuffer, sizeof(sBuffer));
+			GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
 
 			CBaseNPC npcBoss = new CBaseNPC();
 			CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npcBoss.GetEntity());
@@ -2775,369 +3213,414 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			npcEntity.Hook_HandleAnimEvent(CBaseAnimating_HandleAnimEvent);
 			CBaseNPC_RemoveAllLayers(npcBoss.GetEntity());
 
-			npcEntity.Teleport(flTruePos, flVecAng);
-			npcEntity.SetModel(sBuffer);
-			npcEntity.SetRenderMode(view_as<RenderMode>(g_iSlenderRenderMode[iBossIndex]));
-			npcEntity.SetRenderFx(view_as<RenderFx>(g_iSlenderRenderFX[iBossIndex]));
-			npcEntity.SetRenderColor(g_iSlenderRenderColor[iBossIndex][0], g_iSlenderRenderColor[iBossIndex][1], g_iSlenderRenderColor[iBossIndex][2], g_iSlenderRenderColor[iBossIndex][3]);
+			npcEntity.Teleport(truePos, trueAng);
+			npcEntity.SetModel(buffer);
+			npcEntity.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[bossIndex]));
+			npcEntity.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[bossIndex]));
+			npcEntity.SetRenderColor(g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
 			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
-				float flScaleModel = NPCGetModelScale(iBossIndex) * 0.5;
-				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", flScaleModel);
+				float scaleModel = NPCGetModelScale(bossIndex) * 0.5;
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
 			}
 			else
 			{
-				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(iBossIndex));
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(bossIndex));
 			}
 			npcEntity.Spawn();
 			npcEntity.Activate();
 
 			npcBoss.flStepSize = 18.0;
-			npcBoss.flGravity = g_flGravity;
-			npcBoss.flAcceleration = g_flSlenderCalculatedAcceleration[iBossIndex];
+			npcBoss.flGravity = g_Gravity;
+			npcBoss.flAcceleration = g_SlenderCalculatedAcceleration[bossIndex];
 			npcBoss.flDeathDropHeight = 99999.0;
 			npcBoss.flJumpHeight = 512.0;
-			npcBoss.flWalkSpeed = g_flSlenderCalculatedWalkSpeed[iBossIndex];
-			npcBoss.flRunSpeed = g_flSlenderCalculatedSpeed[iBossIndex];
-			npcBoss.flMaxYawRate = NPCGetTurnRate(iBossIndex);
-			g_pPath[iBossIndex].SetMinLookAheadDistance(GetProfileFloat(profile, "search_node_dist_lookahead", 512.0));
+			npcBoss.flWalkSpeed = g_SlenderCalculatedWalkSpeed[bossIndex];
+			npcBoss.flRunSpeed = g_SlenderCalculatedSpeed[bossIndex];
+			npcBoss.flMaxYawRate = NPCGetTurnRate(bossIndex);
+			g_BossPathFollower[bossIndex].SetMinLookAheadDistance(GetProfileFloat(profile, "search_node_dist_lookahead", 512.0));
 			locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
 			locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
 			locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
 			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
 			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
-			float flSlenderBoxMins[3], flSlenderBoxMaxs[3];
-			flSlenderBoxMins[0] = -11.0;
-			flSlenderBoxMins[1] = -11.0;
-			flSlenderBoxMaxs[0] = 11.0;
-			flSlenderBoxMaxs[1] = 11.0;
-			flSlenderBoxMaxs[2] = 55.0;
-			if (NPCGetRaidHitbox(iBossIndex) == 1)
+			float slenderBoxMins[3], slenderBoxMaxs[3];
+			slenderBoxMins[0] = -11.0;
+			slenderBoxMins[1] = -11.0;
+			slenderBoxMaxs[0] = 11.0;
+			slenderBoxMaxs[1] = 11.0;
+			slenderBoxMaxs[2] = 55.0;
+			if (NPCGetRaidHitbox(bossIndex) == 1)
 			{
-				npcBoss.SetBodyMins(g_flSlenderDetectMins[iBossIndex]);
-				npcBoss.SetBodyMaxs(g_flSlenderDetectMaxs[iBossIndex]);
+				npcBoss.SetBodyMins(g_SlenderDetectMins[bossIndex]);
+				npcBoss.SetBodyMaxs(g_SlenderDetectMaxs[bossIndex]);
 			}
-			else if (NPCGetRaidHitbox(iBossIndex) == 0)
+			else if (NPCGetRaidHitbox(bossIndex) == 0)
 			{
 				npcBoss.SetBodyMins(HULL_HUMAN_MINS);
 				npcBoss.SetBodyMaxs(HULL_HUMAN_MAXS);	
 			}
 			
-			npcEntity.SetPropVector(Prop_Send, "m_vecMins", flSlenderBoxMins);
-			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", flSlenderBoxMaxs);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMins", slenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", slenderBoxMaxs);
 
-			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", flSlenderBoxMins);
-			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", flSlenderBoxMaxs);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", slenderBoxMins);
+			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", slenderBoxMaxs);
 
-			if (NPCGetModelSkinMax(iBossIndex) > 0)
+			if (NPCGetModelSkinMax(bossIndex) > 0)
 			{
-				int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iBossIndex));
-				npcEntity.SetProp(Prop_Send, "m_nSkin", iRandomSkin);
+				int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(bossIndex));
+				npcEntity.SetProp(Prop_Send, "m_nSkin", randomSkin);
 			}
 			else
 			{
-				if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(iBossIndex, difficulty));
-				else npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(iBossIndex));
+				if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0)))
+				{
+					npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(bossIndex, difficulty));
+				}
+				else
+				{
+					npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(bossIndex));
+				}
 			}
-			if (NPCGetModelBodyGroupsMax(iBossIndex) > 0)
+			if (NPCGetModelBodyGroupsMax(bossIndex) > 0)
 			{
-				int iRandomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(iBossIndex));
-				npcEntity.SetProp(Prop_Send, "m_nBody", iRandomBody);
+				int randomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(bossIndex));
+				npcEntity.SetProp(Prop_Send, "m_nBody", randomBody);
 			}
 			else
 			{
-				if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0))) npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(iBossIndex, difficulty));
-				else npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(iBossIndex));
+				if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0)))
+				{
+					npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(bossIndex, difficulty));
+				}
+				else
+				{
+					npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(bossIndex));
+				}
 			}
 
 			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
 			SetEntityFlags(npcEntity.iEnt, FL_NPC);
 			SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
 
-			//if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(iBoss, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
+			//if (!g_DisableBossCrushFixConVar.BoolValue) SetEntData(bossEnt, FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
 
 			SDKHook(npcEntity.iEnt, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamageOriginal);
 
 			// Reset stats.
-			g_bSlenderInBacon[iBossIndex] = false;
-			g_iSlender[iBossIndex] = EntIndexToEntRef(npcEntity.iEnt);
-			g_iSlenderTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-			g_bSlenderTargetIsVisible[iBossIndex] = false;
-			g_iSlenderState[iBossIndex] = STATE_IDLE;
-			g_bSlenderAttacking[iBossIndex] = false;
-			g_bSlenderGiveUp[iBossIndex] = false;
-			g_hSlenderAttackTimer[iBossIndex] = null;
-			g_hSlenderLaserTimer[iBossIndex] = null;
-			g_hSlenderBackupAtkTimer[iBossIndex] = null;
-			g_hSlenderChaseInitialTimer[iBossIndex] = null;
-			g_hSlenderRage1Timer[iBossIndex] = null;
-			g_hSlenderRage2Timer[iBossIndex] = null;
-			g_hSlenderRage3Timer[iBossIndex] = null;
-			g_hSlenderHealTimer[iBossIndex] = null;
-			g_hSlenderHealDelayTimer[iBossIndex] = null;
-			g_hSlenderHealEventTimer[iBossIndex] = null;
-			g_hSlenderStartFleeTimer[iBossIndex] = null;
-			g_flSlenderTargetSoundLastTime[iBossIndex] = -1.0;
-			g_flSlenderTargetSoundDiscardMasterPosTime[iBossIndex] = -1.0;
-			g_iSlenderTargetSoundType[iBossIndex] = SoundType_None;
-			g_bSlenderInvestigatingSound[iBossIndex] = false;
-			g_flSlenderNextStunTime[iBossIndex] = -1.0;
-			g_flSlenderNextCloakTime[iBossIndex] = -1.0;
-			g_bNPCHasCloaked[iBossIndex] = false;
-			g_flSlenderLastHeardFootstep[iBossIndex] = 0.0;
-			g_flSlenderLastHeardVoice[iBossIndex] = 0.0;
-			g_flSlenderLastHeardWeapon[iBossIndex] = 0.0;
-			g_flSlenderNextVoiceSound[iBossIndex] = 0.0;
-			g_flSlenderNextFootstepAttackSound[iBossIndex] = 0.0;
-			g_flSlenderNextFootstepIdleSound[iBossIndex] = 0.0;
-			g_flSlenderNextFootstepRunSound[iBossIndex] = 0.0;
-			g_flSlenderNextFootstepStunSound[iBossIndex] = 0.0;
-			g_flSlenderNextFootstepWalkSound[iBossIndex] = 0.0;
-			g_flSlenderNextMoanSound[iBossIndex] = 0.0;
-			g_iSlenderTauntAlertCount[iBossIndex] = 0;
+			g_SlenderInBacon[bossIndex] = false;
+			g_SlenderEnt[bossIndex] = EntIndexToEntRef(npcEntity.iEnt);
+			g_SlenderTarget[bossIndex] = INVALID_ENT_REFERENCE;
+			g_SlenderTargetIsVisible[bossIndex] = false;
+			g_SlenderState[bossIndex] = STATE_IDLE;
+			g_IsSlenderAttacking[bossIndex] = false;
+			g_SlenderGiveUp[bossIndex] = false;
+			g_SlenderAttackTimer[bossIndex] = null;
+			g_SlenderLaserTimer[bossIndex] = null;
+			g_SlenderBackupAtkTimer[bossIndex] = null;
+			g_SlenderChaseInitialTimer[bossIndex] = null;
+			g_SlenderRage1Timer[bossIndex] = null;
+			g_SlenderRage2Timer[bossIndex] = null;
+			g_SlenderRage3Timer[bossIndex] = null;
+			g_SlenderHealTimer[bossIndex] = null;
+			g_SlenderHealDelayTimer[bossIndex] = null;
+			g_SlenderHealEventTimer[bossIndex] = null;
+			g_SlenderStartFleeTimer[bossIndex] = null;
+			g_SlenderTargetSoundLastTime[bossIndex] = -1.0;
+			g_SlenderTargetSoundDiscardMasterPosTime[bossIndex] = -1.0;
+			g_SlenderTargetSoundType[bossIndex] = SoundType_None;
+			g_SlenderInvestigatingSound[bossIndex] = false;
+			g_SlenderNextStunTime[bossIndex] = -1.0;
+			g_SlenderNextCloakTime[bossIndex] = -1.0;
+			g_NpcHasCloaked[bossIndex] = false;
+			g_SlenderLastHeardFootstep[bossIndex] = 0.0;
+			g_SlenderLastHeardVoice[bossIndex] = 0.0;
+			g_SlenderLastHeardWeapon[bossIndex] = 0.0;
+			g_SlenderNextVoiceSound[bossIndex] = 0.0;
+			g_SlenderNextFootstepAttackSound[bossIndex] = 0.0;
+			g_SlenderNextFootstepIdleSound[bossIndex] = 0.0;
+			g_SlenderNextFootstepRunSound[bossIndex] = 0.0;
+			g_SlenderNextFootstepStunSound[bossIndex] = 0.0;
+			g_SlenderNextFootstepWalkSound[bossIndex] = 0.0;
+			g_SlenderNextMoanSound[bossIndex] = 0.0;
+			g_SlenderTauntAlertCount[bossIndex] = 0;
 
 			//Yes we have to do this, cause collisions are funny and damage numbers don't display properly
-			float flTempHitboxMins[3];
-			g_iSlenderHitbox[iBossIndex] = CreateEntityByName("base_boss");
-			Address aLocomotion = SF2_GetLocomotionInterface(g_iSlenderHitbox[iBossIndex]);
+			float tempHitboxMins[3];
+			g_SlenderHitbox[bossIndex] = CreateEntityByName("base_boss");
+			Address locomotionAddress = SF2_GetLocomotionInterface(g_SlenderHitbox[bossIndex]);
 
-			SetEntityModel(g_iSlenderHitbox[iBossIndex], sBuffer);
-			TeleportEntity(g_iSlenderHitbox[iBossIndex], flTruePos, flVecAng, NULL_VECTOR);
-			DispatchKeyValue(g_iSlenderHitbox[iBossIndex],"TeamNum","1");
-			DispatchSpawn(g_iSlenderHitbox[iBossIndex]);
-			ActivateEntity(g_iSlenderHitbox[iBossIndex]);
-			SetEntityMoveType(g_iSlenderHitbox[iBossIndex],MOVETYPE_NONE);
-			SetEntityRenderMode(g_iSlenderHitbox[iBossIndex], RENDER_TRANSCOLOR);
-			SetEntityRenderColor(g_iSlenderHitbox[iBossIndex], 0, 0, 0, 0);
+			SetEntityModel(g_SlenderHitbox[bossIndex], buffer);
+			TeleportEntity(g_SlenderHitbox[bossIndex], truePos, trueAng, NULL_VECTOR);
+			DispatchKeyValue(g_SlenderHitbox[bossIndex],"TeamNum","1");
+			DispatchSpawn(g_SlenderHitbox[bossIndex]);
+			ActivateEntity(g_SlenderHitbox[bossIndex]);
+			SetEntityMoveType(g_SlenderHitbox[bossIndex],MOVETYPE_NONE);
+			SetEntityRenderMode(g_SlenderHitbox[bossIndex], RENDER_TRANSCOLOR);
+			SetEntityRenderColor(g_SlenderHitbox[bossIndex], 0, 0, 0, 0);
 			SetVariantString("!activator");
-			AcceptEntityInput(g_iSlenderHitbox[iBossIndex], "SetParent", npcEntity.iEnt);
-			AcceptEntityInput(g_iSlenderHitbox[iBossIndex], "EnableShadow");
-			AcceptEntityInput(g_iSlenderHitbox[iBossIndex], "DisableShadow");
-			if (SF_IsBoxingMap()) SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+			AcceptEntityInput(g_SlenderHitbox[bossIndex], "SetParent", npcEntity.iEnt);
+			AcceptEntityInput(g_SlenderHitbox[bossIndex], "EnableShadow");
+			AcceptEntityInput(g_SlenderHitbox[bossIndex], "DisableShadow");
+			if (SF_IsBoxingMap()) SetEntProp(g_SlenderHitbox[bossIndex], Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
 			//Block base_boss's ai.
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data,"m_nNextThinkTick",-1);
-			g_iSlenderHitboxOwner[g_iSlenderHitbox[iBossIndex]] = npcEntity.iEnt;
-			SDKHook(g_iSlenderHitbox[iBossIndex], SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
-			//SDKHook(g_iSlenderHitbox[iBossIndex], SDKHook_ShouldCollide, Hook_HitBoxShouldCollide);
-			DHookRaw(g_hShouldCollide, true, aLocomotion);
+			SetEntProp(g_SlenderHitbox[bossIndex], Prop_Data,"m_nNextThinkTick",-1);
+			g_SlenderHitboxOwner[g_SlenderHitbox[bossIndex]] = npcEntity.iEnt;
+			SDKHook(g_SlenderHitbox[bossIndex], SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
+			//SDKHook(g_SlenderHitbox[bossIndex], SDKHook_ShouldCollide, Hook_HitBoxShouldCollide);
+			g_hShouldCollide.HookRaw(Hook_Pre, locomotionAddress, ShouldCollideWith);
 			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
-				float flScaleModel = NPCGetModelScale(iBossIndex) * 0.5;
-				SetEntPropFloat(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_flModelScale", flScaleModel);
+				float scaleModel = NPCGetModelScale(bossIndex) * 0.5;
+				SetEntPropFloat(g_SlenderHitbox[bossIndex], Prop_Send, "m_flModelScale", scaleModel);
 			}
 			else
 			{
-				SetEntPropFloat(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_flModelScale", NPCGetModelScale(iBossIndex));
+				SetEntPropFloat(g_SlenderHitbox[bossIndex], Prop_Send, "m_flModelScale", NPCGetModelScale(bossIndex));
 			}
-			if (NPCGetRaidHitbox(iBossIndex) == 1)
+			if (NPCGetRaidHitbox(bossIndex) == 1)
 			{
-				CopyVector(g_flSlenderDetectMins[iBossIndex], flTempHitboxMins);
-				flTempHitboxMins[2] = 10.0;
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMins", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMaxs", g_flSlenderDetectMaxs[iBossIndex]);
+				CopyVector(g_SlenderDetectMins[bossIndex], tempHitboxMins);
+				tempHitboxMins[2] = 10.0;
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMins", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMaxs", g_SlenderDetectMaxs[bossIndex]);
 				
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMinsPreScaled", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMaxsPreScaled", g_flSlenderDetectMaxs[iBossIndex]);
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMinsPreScaled", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMaxsPreScaled", g_SlenderDetectMaxs[bossIndex]);
 			}
-			else if (NPCGetRaidHitbox(iBossIndex) == 0)
+			else if (NPCGetRaidHitbox(bossIndex) == 0)
 			{
-				CopyVector(HULL_HUMAN_MINS, flTempHitboxMins);
-				flTempHitboxMins[2] = 10.0;
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMins", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
+				CopyVector(HULL_HUMAN_MINS, tempHitboxMins);
+				tempHitboxMins[2] = 10.0;
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMins", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
 				
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMinsPreScaled", flTempHitboxMins);
-				SetEntPropVector(g_iSlenderHitbox[iBossIndex], Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMinsPreScaled", tempHitboxMins);
+				SetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
 			}
-			if (!g_cvDisableBossCrushFix.BoolValue) SetEntData(g_iSlenderHitbox[iBossIndex], FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
+			if (!g_DisableBossCrushFixConVar.BoolValue)
+			{
+				SetEntData(g_SlenderHitbox[bossIndex], FindSendPropInfo("CTFBaseBoss", "m_lastHealthPercentage") + 28, false, 4, true);
+			}
 
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_iHealth", 2147483646);
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_iMaxHealth", 2147483646);
-			SetEntProp(g_iSlenderHitbox[iBossIndex], Prop_Data, "m_initialHealth", 2147483646);
+			SetEntProp(g_SlenderHitbox[bossIndex], Prop_Data, "m_iHealth", 2147483646);
+			SetEntProp(g_SlenderHitbox[bossIndex], Prop_Data, "m_iMaxHealth", 2147483646);
+			SetEntProp(g_SlenderHitbox[bossIndex], Prop_Data, "m_initialHealth", 2147483646);
 
 			for (int difficulty2 = 0; difficulty2 < Difficulty_Max; difficulty2++)
 			{
-				g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, difficulty2);
-				g_flSlenderNextWanderPos[iBossIndex][difficulty2] = GetGameTime() + GetRandomFloat(2.0, 4.0);
+				g_SlenderTimeUntilKill[bossIndex] = GetGameTime() + NPCGetIdleLifetime(bossIndex, difficulty2);
+				g_SlenderNextWanderPos[bossIndex][difficulty2] = GetGameTime() + GetRandomFloat(2.0, 4.0);
 			}
 			
-			g_flSlenderTimeUntilRecover[iBossIndex] = -1.0;
-			g_flSlenderTimeUntilAlert[iBossIndex] = -1.0;
-			g_flSlenderTimeUntilIdle[iBossIndex] = -1.0;
-			g_flSlenderTimeUntilChase[iBossIndex] = -1.0;
-			g_flSlenderTimeUntilNoPersistence[iBossIndex] = -1.0;
-			g_flSlenderTimeUntilAttackEnd[iBossIndex] = -1.0;
-			g_flSlenderNextPathTime[iBossIndex] = 0.0;
-			g_flSlenderLastCalculPathTime[iBossIndex] = -1.0;
-			g_flLastStuckTime[iBossIndex] = -1.0;
-			g_iSlenderInterruptConditions[iBossIndex] = 0;
-			g_bSlenderChaseDeathPosition[iBossIndex] = false;
-			g_iNPCPlayerScareVictin[iBossIndex] = INVALID_ENT_REFERENCE;
-			g_bNPCChasingScareVictin[iBossIndex] = false;
-			g_bNPCLostChasingScareVictim[iBossIndex] = false;
-			g_bNPCVelocityCancel[iBossIndex] = false;
-			g_hSlenderBurnTimer[iBossIndex] = null;
-			g_hSlenderBleedTimer[iBossIndex] = null;
-			g_hSlenderMarkedTimer[iBossIndex] = null;
-			g_hSlenderDeathCamTimer[iBossIndex] = null;
-			g_iSlenderDeathCamTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-			g_flSlenderStopBurning[iBossIndex] = 0.0;
-			g_flSlenderStopBleeding[iBossIndex] = 0.0;
-			g_bSlenderIsBurning[iBossIndex] = false;
-			g_bSlenderIsMarked[iBossIndex] = false;
-			g_flNPCAddSpeed[iBossIndex] = 0.0;
-			g_flNPCAddMaxSpeed[iBossIndex] = 0.0;
-			g_flNPCAddAcceleration[iBossIndex] = 0.0;
-			g_iSlenderAutoChaseCount[iBossIndex] = 0;
-			g_flSlenderAutoChaseCooldown[iBossIndex] = 0.0;
-			g_iSlenderSoundTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-			g_iSlenderSeeTarget[iBossIndex] = INVALID_ENT_REFERENCE;
-			g_bAutoChasingLoudPlayer[iBossIndex] = false;
-			g_bSlenderInDeathcam[iBossIndex] = false;
+			g_SlenderTimeUntilRecover[bossIndex] = -1.0;
+			g_SlenderTimeUntilAlert[bossIndex] = -1.0;
+			g_SlenderTimeUntilIdle[bossIndex] = -1.0;
+			g_SlenderTimeUntilChase[bossIndex] = -1.0;
+			g_SlenderTimeUntilNoPersistence[bossIndex] = -1.0;
+			g_SlenderTimeUntilAttackEnd[bossIndex] = -1.0;
+			g_SlenderNextPathTime[bossIndex] = 0.0;
+			g_SlenderLastCalculPathTime[bossIndex] = -1.0;
+			g_LastStuckTime[bossIndex] = -1.0;
+			g_SlenderInterruptConditions[bossIndex] = 0;
+			g_SlenderChaseDeathPositionBool[bossIndex] = false;
+			g_NpcPlayerScareVictin[bossIndex] = INVALID_ENT_REFERENCE;
+			g_NpcChasingScareVictin[bossIndex] = false;
+			g_NpcLostChasingScareVictim[bossIndex] = false;
+			g_NpcVelocityCancel[bossIndex] = false;
+			g_SlenderBurnTimer[bossIndex] = null;
+			g_SlenderBleedTimer[bossIndex] = null;
+			g_SlenderMarkedTimer[bossIndex] = null;
+			g_SlenderDeathCamTimer[bossIndex] = null;
+			g_SlenderDeathCamTarget[bossIndex] = INVALID_ENT_REFERENCE;
+			g_SlenderStopBurningTimer[bossIndex] = 0.0;
+			g_SlenderStopBleedingTimer[bossIndex] = 0.0;
+			g_SlenderIsBurning[bossIndex] = false;
+			g_SlenderIsMarked[bossIndex] = false;
+			g_NpcAddSpeed[bossIndex] = 0.0;
+			g_NpcAddMaxSpeed[bossIndex] = 0.0;
+			g_NpcAddAcceleration[bossIndex] = 0.0;
+			g_SlenderAutoChaseCount[bossIndex] = 0;
+			g_SlenderAutoChaseCooldown[bossIndex] = 0.0;
+			g_SlenderSoundTarget[bossIndex] = INVALID_ENT_REFERENCE;
+			g_SlenderSeeTarget[bossIndex] = INVALID_ENT_REFERENCE;
+			g_SlenderIsAutoChasingLoudPlayer[bossIndex] = false;
+			g_SlenderInDeathcam[bossIndex] = false;
 
-			Spawn_Chaser(iBossIndex);
+			Spawn_Chaser(bossIndex);
 			
-			NPCChaserResetAnimationInfo(iBossIndex, 0);
+			NPCChaserResetAnimationInfo(bossIndex, 0);
 
 			SDKHook(npcEntity.iEnt, SDKHook_ThinkPost, SlenderSetNextThink);
 			SDKHook(npcEntity.iEnt, SDKHook_Think, SlenderChaseBossProcessMovement);
 
-			SlenderPerformVoice(iBossIndex, "sound_spawn_local");
+			SlenderPerformVoice(bossIndex, "sound_spawn_local");
 			if (view_as<bool>(GetProfileNum(profile,"spawn_animation",0)) && !SF_IsSlaughterRunMap())
 			{
-				g_bSlenderSpawning[iBossIndex] = true;
-				g_hSlenderSpawnTimer[iBossIndex] = CreateTimer(GetProfileFloat(profile, "spawn_timer", 0.0), Timer_SlenderSpawnTimer, EntIndexToEntRef(npcEntity.iEnt), TIMER_FLAG_NO_MAPCHANGE);
-				NPCChaserUpdateBossAnimation(iBossIndex, npcEntity.iEnt, STATE_IDLE, true);
+				g_SlenderSpawning[bossIndex] = true;
+				g_SlenderSpawnTimer[bossIndex] = CreateTimer(GetProfileFloat(profile, "spawn_timer", 0.0), Timer_SlenderSpawnTimer, EntIndexToEntRef(npcEntity.iEnt), TIMER_FLAG_NO_MAPCHANGE);
+				NPCChaserUpdateBossAnimation(bossIndex, npcEntity.iEnt, STATE_IDLE, true);
 			}
 			else
 			{
-				g_bSlenderSpawning[iBossIndex] = false;
-				g_hSlenderEntityThink[iBossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(npcEntity.iEnt), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-				NPCChaserUpdateBossAnimation(iBossIndex, npcEntity.iEnt, STATE_IDLE);
+				g_SlenderSpawning[bossIndex] = false;
+				g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(npcEntity.iEnt), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				NPCChaserUpdateBossAnimation(bossIndex, npcEntity.iEnt, STATE_IDLE);
 			}
 			
 			for (int i = 0; i < 3; i++)
 			{
-				g_flSlenderGoalPos[iBossIndex][i] = 0.0;
-				g_flSlenderTargetSoundTempPos[iBossIndex][i] = 0.0;
-				g_flSlenderTargetSoundMasterPos[iBossIndex][i] = 0.0;
-				g_flSlenderChaseDeathPosition[iBossIndex][i] = 0.0;
+				g_SlenderGoalPos[bossIndex][i] = 0.0;
+				g_SlenderTargetSoundTempPos[bossIndex][i] = 0.0;
+				g_SlenderTargetSoundMasterPos[bossIndex][i] = 0.0;
+				g_SlenderChaseDeathPosition[bossIndex][i] = 0.0;
 			}
 			
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				g_flSlenderLastFoundPlayer[iBossIndex][i] = -1.0;
+				g_SlenderLastFoundPlayer[bossIndex][i] = -1.0;
 				
 				for (int i2 = 0; i2 < 3; i2++)
 				{
-					g_flSlenderLastFoundPlayerPos[iBossIndex][i][i2] = 0.0;
+					g_SlenderLastFoundPlayerPos[bossIndex][i][i2] = 0.0;
 				}
 			}
 			
-			SlenderClearTargetMemory(iBossIndex);
+			SlenderClearTargetMemory(bossIndex);
 
 			//(Experimental)
-			if (NPCGetHealthbarState(iBossIndex))
+			if (NPCGetHealthbarState(bossIndex))
 			{
 				//The boss spawned for the 1st time, block now its teleportation ability to prevent healthbar conflict.
-				NPCSetFlags(iBossIndex,NPCGetFlags(iBossIndex)|SFF_NOTELEPORT);
-				UpdateHealthBar(iBossIndex);
+				NPCSetFlags(bossIndex,NPCGetFlags(bossIndex)|SFF_NOTELEPORT);
+				UpdateHealthBar(bossIndex);
 			}
-			if(g_sSlenderEngineSound[iBossIndex][0] != '\0' && view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)))
+			if (g_sSlenderEngineSound[bossIndex][0] != '\0' && view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)))
 			{
-				EmitSoundToAll(g_sSlenderEngineSound[iBossIndex], npcEntity.iEnt, SNDCHAN_STATIC, GetProfileNum(profile, "engine_sound_level", 83), 
+				EmitSoundToAll(g_sSlenderEngineSound[bossIndex], npcEntity.iEnt, SNDCHAN_STATIC, GetProfileNum(profile, "engine_sound_level", 83), 
 				_, GetProfileFloat(profile, "engine_sound_volume", 0.8));
 			}
 			/*if (SF_BossesChaseEndlessly() || SF_IsRaidMap())
 			{
-				NPCSetFlags(iBossIndex,NPCGetFlags(iBossIndex)|SFF_NOTELEPORT);
+				NPCSetFlags(bossIndex,NPCGetFlags(bossIndex)|SFF_NOTELEPORT);
 			}*/
 
 			//Stun Health
-			float flMaxHealth = NPCChaserGetStunInitialHealth(iBossIndex);
-			int iHealth = 0;
+			float maxHealth = NPCChaserGetStunInitialHealth(bossIndex);
+			int health = 0;
 			for(int client=1; client<=MaxClients; client++)
 			{
-				if(IsValidClient(client) && !g_bPlayerEliminated[client] && IsPlayerAlive(client))
+				if (IsValidClient(client) && !g_PlayerEliminated[client] && IsPlayerAlive(client))
 				{
-					char sClassName[64], sSectionName[64];
-					TF2_GetClassName(TF2_GetPlayerClass(client), sClassName, sizeof(sClassName));
-					FormatEx(sSectionName, sizeof(sSectionName), "stun_health_per_%s", sClassName);
-					iHealth = GetProfileNum(profile, sSectionName, 0);
-					if(iHealth>0)
+					char className[64], sectionName[64];
+					TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
+					FormatEx(sectionName, sizeof(sectionName), "stun_health_per_%s", className);
+					health = GetProfileNum(profile, sectionName, 0);
+					if (health>0)
 					{
-						flMaxHealth += float(iHealth);
+						maxHealth += float(health);
 					}
 					else
 					{
-						iHealth = GetProfileNum(profile, "stun_health_per_player", 0);
-						flMaxHealth += float(iHealth);
+						health = GetProfileNum(profile, "stun_health_per_player", 0);
+						maxHealth += float(health);
 					}
-					if (SF_IsBoxingMap() && strcmp(sClassName, "scout", false) == 0)
+					if (SF_IsBoxingMap() && strcmp(className, "scout", false) == 0)
 					{
-						NPCSetAddSpeed(iBossIndex, 10.0);
-						NPCSetAddMaxSpeed(iBossIndex, 15.0);
+						NPCSetAddSpeed(bossIndex, 10.0);
+						NPCSetAddMaxSpeed(bossIndex, 15.0);
 					}
 				}
 			}
-			NPCChaserSetStunInitialHealth(iBossIndex, flMaxHealth);
-			NPCChaserSetStunHealth(iBossIndex, NPCChaserGetStunInitialHealth(iBossIndex));
-			if (view_as<bool>(GetProfileNum(profile,"tp_effect_spawn",0))) SlenderCreateParticleSpawnEffect(iBossIndex, "tp_effect_spawn_particle", "tp_effect_spawn_sound", "tp_effect_origin");
+			NPCChaserSetStunInitialHealth(bossIndex, maxHealth);
+			NPCChaserSetStunHealth(bossIndex, NPCChaserGetStunInitialHealth(bossIndex));
+			if (view_as<bool>(GetProfileNum(profile,"tp_effect_spawn",0)))
+			{
+				SlenderCreateParticleSpawnEffect(bossIndex, "tp_effect_spawn_particle", "tp_effect_spawn_sound", "tp_effect_origin");
+			}
 		}
 		/*
 		default:
 		{
-			g_iSlender[iBossIndex] = g_iSlenderModel[iBossIndex];
-			SDKHook(iSlenderModel, SDKHook_SetTransmit, Hook_SlenderSetTransmit);
+			g_SlenderEnt[bossIndex] = g_SlenderModel[bossIndex];
+			SDKHook(slenderModel, SDKHook_SetTransmit, Hook_SlenderSetTransmit);
 		}
 		*/
 	}
-	if (NPCGetCustomOutlinesState(iBossIndex))
+	if (NPCGetCustomOutlinesState(bossIndex))
 	{
-		if (!NPCGetRainbowOutlineState(iBossIndex))
+		if (!NPCGetRainbowOutlineState(bossIndex))
 		{
 			int color[4];
-			color[0] = NPCGetOutlineColorR(iBossIndex);
-			color[1] = NPCGetOutlineColorG(iBossIndex);
-			color[2] = NPCGetOutlineColorB(iBossIndex);
-			color[3] = NPCGetOutlineTransparency(iBossIndex);
-			if (color[0] < 0) color[0] = 0;
-			if (color[1] < 0) color[1] = 0;
-			if (color[2] < 0) color[2] = 0;
-			if (color[3] < 0) color[3] = 0;
-			if (color[0] > 255) color[0] = 255;
-			if (color[1] > 255) color[1] = 255;
-			if (color[2] > 255) color[2] = 255;
-			if (color[3] > 255) color[3] = 255;
-			SlenderAddGlow(iBossIndex,_,color);
+			color[0] = NPCGetOutlineColorR(bossIndex);
+			color[1] = NPCGetOutlineColorG(bossIndex);
+			color[2] = NPCGetOutlineColorB(bossIndex);
+			color[3] = NPCGetOutlineTransparency(bossIndex);
+			if (color[0] < 0)
+			{
+				color[0] = 0;
+			}
+			if (color[1] < 0)
+			{
+				color[1] = 0;
+			}
+			if (color[2] < 0)
+			{
+				color[2] = 0;
+			}
+			if (color[3] < 0)
+			{
+				color[3] = 0;
+			}
+			if (color[0] > 255)
+			{
+				color[0] = 255;
+			}
+			if (color[1] > 255)
+			{
+				color[1] = 255;
+			}
+			if (color[2] > 255)
+			{
+				color[2] = 255;
+			}
+			if (color[3] > 255)
+			{
+				color[3] = 255;
+			}
+			SlenderAddGlow(bossIndex,_,color);
 		}
-		else SlenderAddGlow(iBossIndex,_,view_as<int>({0, 0, 0, 0}));
+		else
+		{
+			SlenderAddGlow(bossIndex,_,view_as<int>({0, 0, 0, 0}));
+		}
 	}
 	else
 	{
-		int iPurple[4] = {150, 0, 255, 255};
-		SlenderAddGlow(iBossIndex,_,iPurple);
+		int purple[4] = {150, 0, 255, 255};
+		SlenderAddGlow(bossIndex,_,purple);
 	}
 	
-	int iMaster = g_iSlenderCopyMaster[iBossIndex];
-	int flags = NPCGetFlags(iBossIndex);
+	int master = g_SlenderCopyMaster[bossIndex];
+	int flags = NPCGetFlags(bossIndex);
 	
-	if (MAX_BOSSES > iMaster >= 0 && NPCGetFakeCopyState(iBossIndex))
+	if (MAX_BOSSES > master >= 0 && NPCGetFakeCopyState(bossIndex))
 	{
 		if (!SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES))
 		{
-			NPCSetFlags(iBossIndex, flags | SFF_FAKE);
+			NPCSetFlags(bossIndex, flags | SFF_FAKE);
 		}
 	}
 
-	SlenderSpawnEffects(iBossIndex);
+	SlenderSpawnEffects(bossIndex);
 	
-	if (EntRefToEntIndex(g_iSlender[iBossIndex]) > MaxClients)
+	if (EntRefToEntIndex(g_SlenderEnt[bossIndex]) > MaxClients)
 	{
 		// Call our forward.
-		Call_StartForward(fOnBossSpawn);
-		Call_PushCell(iBossIndex);
+		Call_StartForward(g_OnBossSpawnFwd);
+		Call_PushCell(bossIndex);
 		Call_Finish();
 	}
 }
@@ -3146,11 +3629,11 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 {
 	if (IsValidEntity(other))
 	{
-		char strClass[32];
-		GetEdictClassname(other, strClass, sizeof(strClass));
-		if (strcmp(strClass, "player") == 0)
+		char class[32];
+		GetEdictClassname(other, class, sizeof(class));
+		if (strcmp(class, "player") == 0)
 		{
-			if (!g_bPlayerProxy[other] && !IsClientInGhostMode(other) && GetClientTeam(other) != TFTeam_Blue && !IsClientInDeathCam(other))
+			if (!g_PlayerProxy[other] && !IsClientInGhostMode(other) && GetClientTeam(other) != TFTeam_Blue && !IsClientInDeathCam(other))
 			{
 				return true;
 			}
@@ -3174,137 +3657,155 @@ static bool ClimbUpCBase(CBaseNPC_Locomotion loco, const float vecGoal[3], const
 	return false;
 }
 
-void RemoveSlender(int iBossIndex)
+void RemoveSlender(int bossIndex)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	int iBoss = NPCGetEntIndex(iBossIndex);
+	int bossEnt = NPCGetEntIndex(bossIndex);
 
-	if (iBoss && iBoss != INVALID_ENT_REFERENCE)
+	if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 	{
-		Call_StartForward(fOnBossDespawn);
-		Call_PushCell(iBossIndex);
+		Call_StartForward(g_OnBossDespawnFwd);
+		Call_PushCell(bossIndex);
 		Call_Finish();
 	
 		//Turn off all slender's effects in order to prevent some bugs.
-		SlenderRemoveEffects(iBoss, true);
+		SlenderRemoveEffects(bossEnt, true);
 
-		if (NPCGetType(iBossIndex) == SF2BossType_Statue)
+		if (NPCGetType(bossIndex) == SF2BossType_Statue)
 		{
-			SDKUnhook(iBoss, SDKHook_Think, SlenderStatueBossProcessMovement);
+			SDKUnhook(bossEnt, SDKHook_Think, SlenderStatueBossProcessMovement);
 			// Stop all possible looping sounds.
-			ClientStopAllSlenderSounds(iBoss, profile, "sound_move", SNDCHAN_AUTO);
+			ClientStopAllSlenderSounds(bossEnt, profile, "sound_move", SNDCHAN_AUTO);
 		}
 		else
 		{
-			SDKUnhook(iBoss, SDKHook_Think, SlenderChaseBossProcessMovement);
-			SDKUnhook(iBoss, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamageOriginal);
+			SDKUnhook(bossEnt, SDKHook_Think, SlenderChaseBossProcessMovement);
+			SDKUnhook(bossEnt, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamageOriginal);
 		}
 
-		if (g_pPath[iBossIndex].IsValid())
+		if (g_BossPathFollower[bossIndex].IsValid())
 		{
-			g_pPath[iBossIndex].Invalidate();
+			g_BossPathFollower[bossIndex].Invalidate();
 		}
 
-		int iGlow = EntRefToEntIndex(g_iNPCGlowEntity[iBossIndex]);
-		if(iGlow != INVALID_ENT_REFERENCE)
-		{
-			RemoveEntity(iGlow);
-			g_iNPCGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
-		}
-		iGlow = EntRefToEntIndex(g_iNPCTauntGlowEntity[iBossIndex]);
+		int iGlow = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
 		if (iGlow != INVALID_ENT_REFERENCE)
 		{
 			RemoveEntity(iGlow);
-			g_iNPCTauntGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
+			g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
+		}
+		iGlow = EntRefToEntIndex(g_NpcTauntGlowEntity[bossIndex]);
+		if (iGlow != INVALID_ENT_REFERENCE)
+		{
+			RemoveEntity(iGlow);
+			g_NpcTauntGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
 		}
 
-		if (view_as<bool>(GetProfileNum(profile,"tp_effect_despawn",0))) SlenderCreateParticleSpawnEffect(iBossIndex, "tp_effect_despawn_particle", "tp_effect_despawn_sound", "tp_effect_origin");
-		
-		if(view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_sSlenderEngineSound[iBossIndex][0] != '\0')
+		if (view_as<bool>(GetProfileNum(profile,"tp_effect_despawn",0)))
 		{
-			StopSound(iBoss, SNDCHAN_STATIC, g_sSlenderEngineSound[iBossIndex]);
+			SlenderCreateParticleSpawnEffect(bossIndex, "tp_effect_despawn_particle", "tp_effect_despawn_sound", "tp_effect_origin");
 		}
 		
-		if (NPCGetFlags(iBossIndex) & SFF_HASSTATICLOOPLOCALSOUND)
+		if (view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_sSlenderEngineSound[bossIndex][0] != '\0')
 		{
-			char sLoopSound[PLATFORM_MAX_PATH];
-			GetRandomStringFromProfile(profile, "sound_static_loop_local", sLoopSound, sizeof(sLoopSound), 1);
+			StopSound(bossEnt, SNDCHAN_STATIC, g_sSlenderEngineSound[bossIndex]);
+		}
+		
+		if (NPCGetFlags(bossIndex) & SFF_HASSTATICLOOPLOCALSOUND)
+		{
+			char loopSound[PLATFORM_MAX_PATH];
+			GetRandomStringFromProfile(profile, "sound_static_loop_local", loopSound, sizeof(loopSound), 1);
 			
-			if (sLoopSound[0] != '\0')
+			if (loopSound[0] != '\0')
 			{
-				StopSound(iBoss, SNDCHAN_STATIC, sLoopSound);
+				StopSound(bossEnt, SNDCHAN_STATIC, loopSound);
 			}
 		}
-		int iBossFlags = NPCGetFlags(iBossIndex);
-		if (SF_IsRaidMap() || SF_BossesChaseEndlessly() && !NPCGetHealthbarState(iBossIndex))
+		int bossFlags = NPCGetFlags(bossIndex);
+		if (SF_IsRaidMap() || SF_BossesChaseEndlessly() && !NPCGetHealthbarState(bossIndex))
 		{
-			NPCSetFlags(iBossIndex, iBossFlags & ~SFF_NOTELEPORT);
+			NPCSetFlags(bossIndex, bossFlags & ~SFF_NOTELEPORT);
 		}
 		
-		g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
-		RemoveEntity(iBoss);
+		g_SlenderEnt[bossIndex] = INVALID_ENT_REFERENCE;
+		RemoveEntity(bossEnt);
 	}
 	else 
 	{
-		g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
-		g_iNPCGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
-		g_iNPCTauntGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
+		g_SlenderEnt[bossIndex] = INVALID_ENT_REFERENCE;
+		g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
+		g_NpcTauntGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
 	}
-	iBoss = g_iSlenderHitbox[iBossIndex];
-	if (iBoss && iBoss != INVALID_ENT_REFERENCE && IsValidEntity(iBoss))
+	bossEnt = g_SlenderHitbox[bossIndex];
+	if (bossEnt && bossEnt != INVALID_ENT_REFERENCE && IsValidEntity(bossEnt))
 	{
-		SDKUnhook(iBoss, SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
-		RemoveEntity(iBoss);
+		SDKUnhook(bossEnt, SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
+		RemoveEntity(bossEnt);
 	}
-	g_iSlenderHitbox[iBossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderHitbox[bossIndex] = INVALID_ENT_REFERENCE;
 }
 
 public Action Timer_BossBurn(Handle timer, any entref)
 {
-	if (!g_bEnabled) return Plugin_Stop;
+	if (!g_Enabled)
+	{
+		return Plugin_Stop;
+	}
 
 	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
-	
-	if (!SF_IsBoxingMap()) return Plugin_Stop;
-
-	int iBossIndex = NPCGetFromEntIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
-	
-	if (GetGameTime() >= g_flSlenderStopBurning[iBossIndex])
+	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
-		g_hSlenderBurnTimer[iBossIndex] = null;
-		g_bSlenderIsBurning[iBossIndex] = false;
+		return Plugin_Stop;
+	}
+	
+	if (!SF_IsBoxingMap())
+	{
+		return Plugin_Stop;
+	}
+
+	int bossIndex = NPCGetFromEntIndex(slender);
+	if (bossIndex == -1)
+	{
+		return Plugin_Stop;
+	}
+	
+	if (GetGameTime() >= g_SlenderStopBurningTimer[bossIndex])
+	{
+		g_SlenderBurnTimer[bossIndex] = null;
+		g_SlenderIsBurning[bossIndex] = false;
 		return Plugin_Stop;
 	}	
-	int iState = g_iSlenderState[iBossIndex];
+	int state = g_SlenderState[bossIndex];
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	if (timer != g_hSlenderBurnTimer[iBossIndex]) return Plugin_Stop;
-	if (NPCChaserIsStunEnabled(iBossIndex))
+	if (timer != g_SlenderBurnTimer[bossIndex])
 	{
-		if (!g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		return Plugin_Stop;
+	}
+	if (NPCChaserIsStunEnabled(bossIndex))
+	{
+		if (!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
 		{
-			float flBurnDamage = -4.0 * GetProfileFloat(profile,"fire_damage_multiplier", 1.0);
-			NPCChaserAddStunHealth(iBossIndex, flBurnDamage);
-			if (NPCChaserGetStunHealth(iBossIndex) <= 0.0 && iState != STATE_STUN)
+			float burnDamage = -4.0 * GetProfileFloat(profile,"fire_damage_multiplier", 1.0);
+			NPCChaserAddStunHealth(bossIndex, burnDamage);
+			if (NPCChaserGetStunHealth(bossIndex) <= 0.0 && state != STATE_STUN)
 			{
-				float flMyPos[3];
-				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flMyPos);
-				NPCBossTriggerStun(iBossIndex, slender, profile, flMyPos);
-				Call_StartForward(fOnBossStunned);
-				Call_PushCell(iBossIndex);
+				float myPos[3];
+				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
+				NPCBossTriggerStun(bossIndex, slender, profile, myPos);
+				Call_StartForward(g_OnBossStunnedFwd);
+				Call_PushCell(bossIndex);
 				Call_PushCell(-1);
 				Call_Finish();
 			}
 		}
-		if (NPCGetHealthbarState(iBossIndex) && iState != STATE_STUN && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		if (NPCGetHealthbarState(bossIndex) && state != STATE_STUN && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
 		{
-			UpdateHealthBar(iBossIndex);
+			UpdateHealthBar(bossIndex);
 		}
 	}
 	return Plugin_Continue;
@@ -3312,46 +3813,61 @@ public Action Timer_BossBurn(Handle timer, any entref)
 
 public Action Timer_BossBleed(Handle timer, any entref)
 {
-	if (!g_bEnabled) return Plugin_Stop;
+	if (!g_Enabled)
+	{
+		return Plugin_Stop;
+	}
 
 	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
-	
-	if (!SF_IsBoxingMap()) return Plugin_Stop;
-
-	int iBossIndex = NPCGetFromEntIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
-	
-	if (GetGameTime() >= g_flSlenderStopBleeding[iBossIndex])
+	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
-		g_hSlenderBleedTimer[iBossIndex] = null;
+		return Plugin_Stop;
+	}
+	
+	if (!SF_IsBoxingMap())
+	{
+		return Plugin_Stop;
+	}
+
+	int bossIndex = NPCGetFromEntIndex(slender);
+	if (bossIndex == -1)
+	{
+		return Plugin_Stop;
+	}
+	
+	if (GetGameTime() >= g_SlenderStopBleedingTimer[bossIndex])
+	{
+		g_SlenderBleedTimer[bossIndex] = null;
 		return Plugin_Stop;
 	}	
-	int iState = g_iSlenderState[iBossIndex];
+	int state = g_SlenderState[bossIndex];
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	if (timer != g_hSlenderBleedTimer[iBossIndex]) return Plugin_Stop;
-	if (NPCChaserIsStunEnabled(iBossIndex))
+	if (timer != g_SlenderBleedTimer[bossIndex])
 	{
-		if (!g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		return Plugin_Stop;
+	}
+	if (NPCChaserIsStunEnabled(bossIndex))
+	{
+		if (!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
 		{
-			NPCChaserAddStunHealth(iBossIndex, -4.0);
-			if (NPCChaserGetStunHealth(iBossIndex) <= 0.0 && iState != STATE_STUN)
+			NPCChaserAddStunHealth(bossIndex, -4.0);
+			if (NPCChaserGetStunHealth(bossIndex) <= 0.0 && state != STATE_STUN)
 			{
-				float flMyPos[3];
-				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flMyPos);
-				NPCBossTriggerStun(iBossIndex, slender, profile, flMyPos);
-				Call_StartForward(fOnBossStunned);
-				Call_PushCell(iBossIndex);
+				float myPos[3];
+				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
+				NPCBossTriggerStun(bossIndex, slender, profile, myPos);
+				Call_StartForward(g_OnBossStunnedFwd);
+				Call_PushCell(bossIndex);
 				Call_PushCell(-1);
 				Call_Finish();
 			}
 		}
-		if (NPCGetHealthbarState(iBossIndex) && iState != STATE_STUN && !g_bNPCUsesRageAnimation1[iBossIndex] && !g_bNPCUsesRageAnimation2[iBossIndex] && !g_bNPCUsesRageAnimation3[iBossIndex])
+		if (NPCGetHealthbarState(bossIndex) && state != STATE_STUN && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
 		{
-			UpdateHealthBar(iBossIndex);
+			UpdateHealthBar(bossIndex);
 		}
 	}
 	return Plugin_Continue;
@@ -3359,20 +3875,35 @@ public Action Timer_BossBleed(Handle timer, any entref)
 
 public Action Timer_BossMarked(Handle timer, any entref)
 {
-	if (!g_bEnabled) return Plugin_Stop;
+	if (!g_Enabled)
+	{
+		return Plugin_Stop;
+	}
 
 	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
 	
-	if (!SF_IsBoxingMap()) return Plugin_Stop;
+	if (!SF_IsBoxingMap())
+	{
+		return Plugin_Stop;
+	}
 
-	int iBossIndex = NPCGetFromEntIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
+	int bossIndex = NPCGetFromEntIndex(slender);
+	if (bossIndex == -1)
+	{
+		return Plugin_Stop;
+	}
 	
-	if (timer != g_hSlenderMarkedTimer[iBossIndex]) return Plugin_Stop;
+	if (timer != g_SlenderMarkedTimer[bossIndex])
+	{
+		return Plugin_Stop;
+	}
 	
-	g_hSlenderMarkedTimer[iBossIndex] = null;
-	g_bSlenderIsMarked[iBossIndex] = false;
+	g_SlenderMarkedTimer[bossIndex] = null;
+	g_SlenderIsMarked[bossIndex] = false;
 
 	return Plugin_Stop;
 }
@@ -3390,421 +3921,537 @@ public bool Hook_HitBoxShouldCollide(int slender,int collisiongroup,int contents
 public bool Hook_BossShouldCollide(int slender,int collisiongroup,int contentsmask, bool originalResult)
 {
 	if ((contentsmask & CONTENTS_MONSTERCLIP))
+	{
 		return false;
+	}
 	return originalResult;
 }
 
 public Action Hook_SlenderGlowSetTransmit(int entity,int other)
 {
-	if (!g_bEnabled) return Plugin_Continue;
-	if (g_bPlayerProxy[other]) return Plugin_Continue;
-	if (IsClientInGhostMode(other)) return Plugin_Continue;
-	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_cvEnableWallHax.BoolValue) && GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other]) return Plugin_Continue;
-	bool bNightVision = (g_cvNightvisionEnabled.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-	if (bNightVision && g_iNightvisionType == 2 && GetClientTeam(other) == TFTeam_Red && !g_bPlayerEscaped[other] && !g_bPlayerEliminated[other] && IsClientUsingFlashlight(other)) return Plugin_Continue;
-	if (g_bRestartSessionEnabled) return Plugin_Continue;
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+	if (g_PlayerProxy[other])
+	{
+		return Plugin_Continue;
+	}
+	if (IsClientInGhostMode(other))
+	{
+		return Plugin_Continue;
+	}
+	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && GetClientTeam(other) == TFTeam_Red && !g_PlayerEscaped[other] && !g_PlayerEliminated[other])
+	{
+		return Plugin_Continue;
+	}
+	bool bNightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
+	if (bNightVision && g_NightvisionType == 2 && GetClientTeam(other) == TFTeam_Red && !g_PlayerEscaped[other] && !g_PlayerEliminated[other] && IsClientUsingFlashlight(other))
+	{
+		return Plugin_Continue;
+	}
+	if (g_RestartSessionEnabled)
+	{
+		return Plugin_Continue;
+	}
 	return Plugin_Handled;
 }
 
-stock bool SlenderCanHearPlayer(int iBossIndex,int client, SoundType iSoundType)
+stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 {
-	if (!IsValidClient(client) || !IsPlayerAlive(client)) return false;
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
+	{
+		return false;
+	}
 
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	
-	int iSlender = NPCGetEntIndex(iBossIndex);
-	if (!iSlender || iSlender == INVALID_ENT_REFERENCE) return false;
+	int iSlender = NPCGetEntIndex(bossIndex);
+	if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
+	{
+		return false;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	float flHisPos[3], flMyPos[3];
-	GetClientAbsOrigin(client, flHisPos);
-	SlenderGetAbsOrigin(iBossIndex, flMyPos);
+	float hisPos[3], myPos[3];
+	GetClientAbsOrigin(client, hisPos);
+	SlenderGetAbsOrigin(bossIndex, myPos);
 	
-	float flHearRadius = NPCGetHearingRadius(iBossIndex, difficulty);
-	if (flHearRadius <= 0.0) return false;
+	float hearRadius = NPCGetHearingRadius(bossIndex, difficulty);
+	if (hearRadius <= 0.0)
+	{
+		return false;
+	}
 	
-	float flDistance = GetVectorSquareMagnitude(flHisPos, flMyPos);
+	float distance = GetVectorSquareMagnitude(hisPos, myPos);
 	
 	// Trace check.
-	Handle hTrace = null;
-	bool bTraceHit = false;
+	Handle trace = null;
+	bool traceHit = false;
 	
-	float flMyEyePos[3];
-	SlenderGetEyePosition(iBossIndex, flMyEyePos);
+	float myEyePos[3];
+	SlenderGetEyePosition(bossIndex, myEyePos);
 	
-	switch (iSoundType)
+	switch (soundType)
 	{
 		case SoundType_Footstep:
 		{
-			if (!(GetEntityFlags(client) & FL_ONGROUND)) return false;
+			if (!(GetEntityFlags(client) & FL_ONGROUND))
+			{
+				return false;
+			}
 		
-			if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) flDistance *= 1.85;
-			if (IsClientReallySprinting(client)) flDistance *= 0.66;
+			if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked"))
+			{
+				distance *= 1.85;
+			}
+			if (IsClientReallySprinting(client))
+			{
+				distance *= 0.66;
+			}
 			
-			hTrace = TR_TraceRayFilterEx(flMyPos, flHisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
-			bTraceHit = TR_DidHit(hTrace);
-			delete hTrace;
+			trace = TR_TraceRayFilterEx(myPos, hisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			traceHit = TR_DidHit(trace);
+			delete trace;
 		}
 		case SoundType_Voice, SoundType_Flashlight:
 		{
-			float flHisEyePos[3];
-			GetClientEyePosition(client, flHisEyePos);
+			float hisEyePos[3];
+			GetClientEyePosition(client, hisEyePos);
 			
-			hTrace = TR_TraceRayFilterEx(flMyEyePos, flHisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
-			bTraceHit = TR_DidHit(hTrace);
-			delete hTrace;
+			trace = TR_TraceRayFilterEx(myEyePos, hisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			traceHit = TR_DidHit(trace);
+			delete trace;
 			
-			flDistance *= 0.5;
+			distance *= 0.5;
 		}
 		case SoundType_Weapon:
 		{
-			float flHisMins[3], flHisMaxs[3];
-			GetEntPropVector(client, Prop_Send, "m_vecMins", flHisMins);
-			GetEntPropVector(client, Prop_Send, "m_vecMaxs", flHisMaxs);
+			float hisMins[3], hisMaxs[3];
+			GetEntPropVector(client, Prop_Send, "m_vecMins", hisMins);
+			GetEntPropVector(client, Prop_Send, "m_vecMaxs", hisMaxs);
 			
-			float flMiddle[3];
-			for (int i = 0; i < 2; i++) flMiddle[i] = (flHisMins[i] + flHisMaxs[i]) / 2.0;
+			float middle[3];
+			for (int i = 0; i < 2; i++) middle[i] = (hisMins[i] + hisMaxs[i]) / 2.0;
 			
-			float flEndPos[3];
-			GetClientAbsOrigin(client, flEndPos);
-			AddVectors(flHisPos, flMiddle, flEndPos);
+			float endPos[3];
+			GetClientAbsOrigin(client, endPos);
+			AddVectors(hisPos, middle, endPos);
 			
-			hTrace = TR_TraceRayFilterEx(flMyEyePos, flEndPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
-			bTraceHit = TR_DidHit(hTrace);
-			delete hTrace;
+			trace = TR_TraceRayFilterEx(myEyePos, endPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			traceHit = TR_DidHit(trace);
+			delete trace;
 			
-			flDistance *= 0.66;
+			distance *= 0.66;
 		}
 	}
 	
-	delete hTrace;
+	delete trace;
 	
-	if (bTraceHit) flDistance *= 1.66;
+	if (traceHit)
+	{
+		distance *= 1.66;
+	}
 	
-	if (TF2_GetPlayerClass(client) == TFClass_Spy) flDistance *= 1.3;
+	if (TF2_GetPlayerClass(client) == TFClass_Spy)
+	{
+		distance *= 1.3;
+	}
 
-	if (TF2_GetPlayerClass(client) == TFClass_Scout) flDistance *= 0.75;
+	if (TF2_GetPlayerClass(client) == TFClass_Scout)
+	{
+		distance *= 0.7;
+	}
 	
-	if (flDistance > SquareFloat(flHearRadius)) return false;
+	if (distance > SquareFloat(hearRadius))
+	{
+		return false;
+	}
 	
 	return true;
 }
 
-stock int SlenderArrayIndexToEntIndex(int iBossIndex)
+stock int SlenderArrayIndexToEntIndex(int bossIndex)
 {
-	return NPCGetEntIndex(iBossIndex);
+	return NPCGetEntIndex(bossIndex);
 }
 
-stock bool SlenderOnlyLooksIfNotSeen(int iBossIndex)
+stock bool SlenderOnlyLooksIfNotSeen(int bossIndex)
 {
-	if (NPCGetType(iBossIndex) == SF2BossType_Statue) return true;
+	if (NPCGetType(bossIndex) == SF2BossType_Statue)
+	{
+		return true;
+	}
 	return false;
 }
 
-stock bool SlenderUsesBlink(int iBossIndex)
+stock bool SlenderUsesBlink(int bossIndex)
 {
-	if (NPCGetType(iBossIndex) == SF2BossType_Statue) return true;
+	if (NPCGetType(bossIndex) == SF2BossType_Statue)
+	{
+		return true;
+	}
 	return false;
 }
 
-stock bool SlenderKillsOnNear(int iBossIndex)
+stock bool SlenderKillsOnNear(int bossIndex)
 {
-	if (NPCGetType(iBossIndex) == SF2BossType_Statue) return false;
+	if (NPCGetType(bossIndex) == SF2BossType_Statue)
+	{
+		return false;
+	}
 	return true;
 }
 
-stock void SlenderClearTargetMemory(int iBossIndex)
+stock void SlenderClearTargetMemory(int bossIndex)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 }
 
-stock bool SlenderCreateTargetMemory(int iBossIndex)
+stock bool SlenderCreateTargetMemory(int bossIndex)
 {
-	if (iBossIndex == -1) return false;
+	if (bossIndex == -1)
+	{
+		return false;
+	}
 
 	return true;
 }
 
-stock void SlenderRemoveTargetMemory(int iBossIndex)
+stock void SlenderRemoveTargetMemory(int bossIndex)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 }
 
-void SlenderPrintChatMessage(int iBossIndex, int iPlayer)
+void SlenderPrintChatMessage(int bossIndex, int player)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 	
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	int difficultyIndex = g_iNPCDeathMessageDifficultyIndexes[iBossIndex];
+	int difficultyIndex = g_NpcDeathMessageDifficultyIndexes[bossIndex];
 	
-	char sIndexes[8], sCurrentIndex[2];
-	FormatEx(sIndexes, sizeof(sIndexes), "%d", difficultyIndex);
-	FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", g_cvDifficulty.IntValue);
-	char sNumber = sCurrentIndex[0];
+	char indexes[8], currentIndex[2];
+	FormatEx(indexes, sizeof(indexes), "%d", difficultyIndex);
+	FormatEx(currentIndex, sizeof(currentIndex), "%d", g_DifficultyConVar.IntValue);
+	char sNumber = currentIndex[0];
 	int difficultyNumber = 0;
-	if (FindCharInString(sIndexes, sNumber) != -1)
+	if (FindCharInString(indexes, sNumber) != -1)
 	{
-		difficultyNumber += g_cvDifficulty.IntValue;
+		difficultyNumber += g_DifficultyConVar.IntValue;
 	}
-	if (sIndexes[0] != '\0' && sCurrentIndex[0] != '\0' && difficultyNumber != -1)
+	if (indexes[0] != '\0' && currentIndex[0] != '\0' && difficultyNumber != -1)
 	{
-		int iCurrentAtkIndex = StringToInt(sCurrentIndex);
-		if (difficultyNumber == iCurrentAtkIndex) //WHOA, legacy system actually won't be legacy.
+		int currentAtkIndex = StringToInt(currentIndex);
+		if (difficultyNumber == currentAtkIndex) //WHOA, legacy system actually won't be legacy.
 		{
-			char sBuffer[PLATFORM_MAX_PATH], sPrefix[PLATFORM_MAX_PATH], sName[SF2_MAX_NAME_LENGTH], sTime[PLATFORM_MAX_PATH];
-			int iRoundTime = RoundToNearest(g_flRoundTimeMessage);
-			int iRandomMessage;
-			GetRandomStringFromProfile(profile, "chat_message_upon_death", sBuffer, sizeof(sBuffer), _, _, iRandomMessage);
-			GetProfileString(profile, "chat_message_upon_death_prefix", sPrefix, sizeof(sPrefix));
-			NPCGetBossName(iBossIndex, sName, sizeof(sName));
-			FormatEx(sTime, sizeof(sTime), "%d", iRoundTime);
+			char buffer[PLATFORM_MAX_PATH], prefix[PLATFORM_MAX_PATH], name[SF2_MAX_NAME_LENGTH], time[PLATFORM_MAX_PATH];
+			int roundTime = RoundToNearest(g_RoundTimeMessage);
+			int randomMessage;
+			GetRandomStringFromProfile(profile, "chat_message_upon_death", buffer, sizeof(buffer), _, _, randomMessage);
+			GetProfileString(profile, "chat_message_upon_death_prefix", prefix, sizeof(prefix));
+			NPCGetBossName(bossIndex, name, sizeof(name));
+			FormatEx(time, sizeof(time), "%d", roundTime);
 			char sPlayer[32], sReplacePlayer[64];
-			FormatEx(sPlayer, sizeof(sPlayer), "%N", iPlayer);
-			if (sPrefix[0] == '\0')
+			FormatEx(sPlayer, sizeof(sPlayer), "%N", player);
+			if (prefix[0] == '\0')
 			{
-				sPrefix = "[SF2]";
+				prefix = "[SF2]";
 			}
-			if (sBuffer[0] != '\0' && GetClientTeam(iPlayer) == 2)
+			if (buffer[0] != '\0' && GetClientTeam(player) == 2)
 			{
 				Format(sPlayer, sizeof(sPlayer), "{red}%s", sPlayer);
-				if (StrContains(sBuffer, "[PLAYER]", true) != -1) 
+				if (StrContains(buffer, "[PLAYER]", true) != -1) 
 				{
 					FormatEx(sReplacePlayer, sizeof(sReplacePlayer), "%s{default}", sPlayer);
-					ReplaceString(sBuffer, sizeof(sBuffer), "[PLAYER]", sReplacePlayer, true);
+					ReplaceString(buffer, sizeof(buffer), "[PLAYER]", sReplacePlayer, true);
 				}
-				else Format(sBuffer, sizeof(sBuffer), "%s{default} %s", sPlayer, sBuffer);
-				if (StrContains(sBuffer, "[BOSS]", true) != -1) ReplaceString(sBuffer, sizeof(sBuffer), "[BOSS]", sName, true);
-				if (StrContains(sBuffer, "[ROUNDTIME]", true) != -1) ReplaceString(sBuffer, sizeof(sBuffer), "[ROUNDTIME]", sTime, true);
-				int iChatLength = strlen(sPrefix) + strlen(sBuffer);
-				if (iChatLength > 255)
+				else
 				{
-					LogSF2Message("WARNING! Death message %i has greater than 255 characters on boss index %i, shorten the length of this message.", iRandomMessage, iBossIndex);
+					Format(buffer, sizeof(buffer), "%s{default} %s", sPlayer, buffer);
 				}
-				else CPrintToChatAll("{royalblue}%s{default} %s", sPrefix, sBuffer);
+				if (StrContains(buffer, "[BOSS]", true) != -1)
+				{
+					ReplaceString(buffer, sizeof(buffer), "[BOSS]", name, true);
+				}
+				if (StrContains(buffer, "[ROUNDTIME]", true) != -1)
+				{
+					ReplaceString(buffer, sizeof(buffer), "[ROUNDTIME]", time, true);
+				}
+				int chatLength = strlen(prefix) + strlen(buffer);
+				if (chatLength > 255)
+				{
+					LogSF2Message("WARNING! Death message %i has greater than 255 characters on boss index %i, shorten the length of this message.", randomMessage, bossIndex);
+				}
+				else
+				{
+					CPrintToChatAll("{royalblue}%s{default} %s", prefix, buffer);
+				}
 			}
 		}
 	}
 }
 
-void SlenderPerformVoice(int iBossIndex, const char[] sSectionName,const int attackIndex=-1, int iDefaultChannel = SNDCHAN_AUTO)
+void SlenderPerformVoice(int bossIndex, const char[] sectionName,const int attackIndex=-1, int defaultChannel = SNDCHAN_AUTO)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	char sPath[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, sSectionName, sPath, sizeof(sPath),_,attackIndex);
+	char path[PLATFORM_MAX_PATH];
+	GetRandomStringFromProfile(profile, sectionName, path, sizeof(path),_,attackIndex);
 	
-	if (sPath[0] != '\0')
+	if (path[0] != '\0')
 	{
-		char sBuffer[512];
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_cooldown_min");
-		float flCooldownMin = GetProfileFloat(profile, sBuffer, 1.5);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_cooldown_max");
-		float flCooldownMax = GetProfileFloat(profile, sBuffer, 1.5);
-		float flCooldown = GetRandomFloat(flCooldownMin, flCooldownMax);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_volume");
-		float flVolume = GetProfileFloat(profile, sBuffer, 1.0);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_channel");
-		int iChannel = GetProfileNum(profile, sBuffer, iDefaultChannel);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_level");
-		int iLevel = GetProfileNum(profile, sBuffer, SNDLEVEL_SCREAMING);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
-		int iPitch = GetProfileNum(profile, sBuffer, 100);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch_random_min");
-		int iRandomPitchMin = GetProfileNum(profile, sBuffer, iPitch);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch_random_max");
-		int iRandomPitchMax = GetProfileNum(profile, sBuffer, iPitch);
-		if (iRandomPitchMin != iPitch && iRandomPitchMax != iPitch) iPitch = GetRandomInt(iRandomPitchMin, iRandomPitchMax);
+		char buffer[512];
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_cooldown_min");
+		float cooldownMin = GetProfileFloat(profile, buffer, 1.5);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_cooldown_max");
+		float cooldownMax = GetProfileFloat(profile, buffer, 1.5);
+		float cooldown = GetRandomFloat(cooldownMin, cooldownMax);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_volume");
+		float volume = GetProfileFloat(profile, buffer, 1.0);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_channel");
+		int channel = GetProfileNum(profile, buffer, defaultChannel);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_level");
+		int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_pitch");
+		int pitch = GetProfileNum(profile, buffer, 100);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_pitch_random_min");
+		int randomPitchMin = GetProfileNum(profile, buffer, pitch);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_pitch_random_max");
+		int randomPitchMax = GetProfileNum(profile, buffer, pitch);
+		if (randomPitchMin != pitch && randomPitchMax != pitch)
+		{
+			pitch = GetRandomInt(randomPitchMin, randomPitchMax);
+		}
 		
-		g_flSlenderNextVoiceSound[iBossIndex] = GetGameTime() + flCooldown;
+		g_SlenderNextVoiceSound[bossIndex] = GetGameTime() + cooldown;
 		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 		{
-			int iPitchSmall = iPitch + 25;
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitchSmall);
+			int pitchSmall = pitch + 25;
+			EmitSoundToAll(path, slender, channel, level, _, volume, pitchSmall);
 		}
 		else
 		{
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+			EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 		}
 	}
 }
 
-void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
+void SlenderCastFootstep(int bossIndex, const char[] sectionName)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 	//halloween_boss_foot_impact
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	int iState = g_iSlenderState[iBossIndex];
+	int state = g_SlenderState[bossIndex];
 	
-	char sPath[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, sSectionName, sPath, sizeof(sPath));
+	char path[PLATFORM_MAX_PATH];
+	GetRandomStringFromProfile(profile, sectionName, path, sizeof(path));
 
-	float flMyPos[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flMyPos);
+	float myPos[3];
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 	
-	if (sPath[0] != '\0')
+	if (path[0] != '\0')
 	{
-		char sBuffer[512];
-		float flCooldownIdle = g_flSlenderIdleFootstepTime[iBossIndex];
-		float flCooldownWalk = g_flSlenderWalkFootstepTime[iBossIndex];
-		float flCooldownRun = g_flSlenderRunFootstepTime[iBossIndex];
-		float flCooldownStun = g_flSlenderStunFootstepTime[iBossIndex];
-		float flCooldownAttack = g_flSlenderAttackFootstepTime[iBossIndex];
+		char buffer[512];
+		float cooldownIdle = g_SlenderIdleFootstepTime[bossIndex];
+		float cooldownWalk = g_SlenderWalkFootstepTime[bossIndex];
+		float cooldownRun = g_SlenderRunFootstepTime[bossIndex];
+		float cooldownStun = g_SlenderStunFootstepTime[bossIndex];
+		float cooldownAttack = g_SlenderAttackFootstepTime[bossIndex];
 		
-		if (g_flSlenderIdleFootstepTime[iBossIndex] <= 0.0) flCooldownIdle = GetProfileFloat(profile, "animation_idle_footstepinterval", 0.0);
-		if (g_flSlenderWalkFootstepTime[iBossIndex] <= 0.0) flCooldownWalk = GetProfileFloat(profile, "animation_walk_footstepinterval", 0.0);
-		if (g_flSlenderRunFootstepTime[iBossIndex] <= 0.0) flCooldownRun = GetProfileFloat(profile, "animation_run_footstepinterval", 0.0);
-		if (g_flSlenderStunFootstepTime[iBossIndex] <= 0.0) flCooldownStun = GetProfileFloat(profile, "animation_stun_footstepinterval", 0.0);
-		if (g_flSlenderAttackFootstepTime[iBossIndex] <= 0.0) flCooldownAttack = GetProfileFloat(profile, "animation_attack_footstepinterval", 0.0);
+		if (g_SlenderIdleFootstepTime[bossIndex] <= 0.0)
+		{
+			cooldownIdle = GetProfileFloat(profile, "animation_idle_footstepinterval", 0.0);
+		}
+		if (g_SlenderWalkFootstepTime[bossIndex] <= 0.0)
+		{
+			cooldownWalk = GetProfileFloat(profile, "animation_walk_footstepinterval", 0.0);
+		}
+		if (g_SlenderRunFootstepTime[bossIndex] <= 0.0)
+		{
+			cooldownRun = GetProfileFloat(profile, "animation_run_footstepinterval", 0.0);
+		}
+		if (g_SlenderStunFootstepTime[bossIndex] <= 0.0)
+		{
+			cooldownStun = GetProfileFloat(profile, "animation_stun_footstepinterval", 0.0);
+		}
+		if (g_SlenderAttackFootstepTime[bossIndex] <= 0.0)
+		{
+			cooldownAttack = GetProfileFloat(profile, "animation_attack_footstepinterval", 0.0);
+		}
 		//All of this is an emergency safety for bosses with the old system.
 		
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_volume");
-		float flVolume = GetProfileFloat(profile, sBuffer, 1.0);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_channel");
-		int iChannel = GetProfileNum(profile, sBuffer, SNDCHAN_AUTO);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_level");
-		int iLevel = GetProfileNum(profile, sBuffer, SNDLEVEL_SCREAMING);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
-		int iPitch = GetProfileNum(profile, sBuffer, 100);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_volume");
+		float volume = GetProfileFloat(profile, buffer, 1.0);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_channel");
+		int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_level");
+		int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_pitch");
+		int pitch = GetProfileNum(profile, buffer, 100);
 		
-		switch (iState)
+		switch (state)
 		{
 			case STATE_IDLE:
 			{
-				if (flCooldownIdle != 0.0)
+				if (cooldownIdle != 0.0)
 				{
-					float flCooldownIdle2 = flCooldownIdle;
-					g_flSlenderNextFootstepIdleSound[iBossIndex] = GetGameTime() + flCooldownIdle2;
-					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					float cooldownIdle2 = cooldownIdle;
+					g_SlenderNextFootstepIdleSound[bossIndex] = GetGameTime() + cooldownIdle2;
+					if (StrContains(path, "/", false) != -1 && StrContains(path, "\\", false) != -1) 
 					{
-						EmitGameSoundToAll(sPath, slender);
+						EmitGameSoundToAll(path, slender);
 					}
 					else
 					{
-						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
-					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
+					if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 					{
-						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsFrequency(iBossIndex), NPCChaserGetEarthquakeFootstepsDuration(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsRadius(iBossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(iBossIndex));
+						UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsFrequency(bossIndex), NPCChaserGetEarthquakeFootstepsDuration(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsRadius(bossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(bossIndex));
 					}
 				}
 			}
 			case STATE_WANDER, STATE_ALERT:
 			{
-				if (flCooldownWalk != 0.0)
+				if (cooldownWalk != 0.0)
 				{
-					float flCooldownWalk2 = flCooldownWalk;
-					g_flSlenderNextFootstepWalkSound[iBossIndex] = GetGameTime() + flCooldownWalk2;
-					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					float cooldownWalk2 = cooldownWalk;
+					g_SlenderNextFootstepWalkSound[bossIndex] = GetGameTime() + cooldownWalk2;
+					if (StrContains(path, "/", false) != -1 && StrContains(path, "\\", false) != -1) 
 					{
-						EmitGameSoundToAll(sPath, slender);
+						EmitGameSoundToAll(path, slender);
 					}
 					else
 					{
-						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
-					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
+					if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 					{
-						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsFrequency(iBossIndex), NPCChaserGetEarthquakeFootstepsDuration(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsRadius(iBossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(iBossIndex));
+						UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsFrequency(bossIndex), NPCChaserGetEarthquakeFootstepsDuration(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsRadius(bossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(bossIndex));
 					}
 				}
 			}
 			case STATE_CHASE:
 			{
-				if (flCooldownRun != 0.0)
+				if (cooldownRun != 0.0)
 				{
-					float flCooldownRun2 = flCooldownRun;
-					g_flSlenderNextFootstepRunSound[iBossIndex] = GetGameTime() + flCooldownRun2;
-					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					float cooldownRun2 = cooldownRun;
+					g_SlenderNextFootstepRunSound[bossIndex] = GetGameTime() + cooldownRun2;
+					if (StrContains(path, "/", false) != -1 && StrContains(path, "\\", false) != -1) 
 					{
-						EmitGameSoundToAll(sPath, slender);
+						EmitGameSoundToAll(path, slender);
 					}
 					else
 					{
-						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
-					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
+					if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 					{
-						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsFrequency(iBossIndex), NPCChaserGetEarthquakeFootstepsDuration(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsRadius(iBossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(iBossIndex));
+						UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsFrequency(bossIndex), NPCChaserGetEarthquakeFootstepsDuration(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsRadius(bossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(bossIndex));
 					}
 				}
 			}
 			case STATE_STUN:
 			{
-				if (flCooldownStun != 0.0)
+				if (cooldownStun != 0.0)
 				{
-					float flCooldownStun2 = flCooldownStun;
-					g_flSlenderNextFootstepStunSound[iBossIndex] = GetGameTime() + flCooldownStun2;
-					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					float cooldownStun2 = cooldownStun;
+					g_SlenderNextFootstepStunSound[bossIndex] = GetGameTime() + cooldownStun2;
+					if (StrContains(path, "/", false) != -1 && StrContains(path, "\\", false) != -1) 
 					{
-						EmitGameSoundToAll(sPath, slender);
+						EmitGameSoundToAll(path, slender);
 					}
 					else
 					{
-						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
-					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
+					if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 					{
-						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsFrequency(iBossIndex), NPCChaserGetEarthquakeFootstepsDuration(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsRadius(iBossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(iBossIndex));
+						UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsFrequency(bossIndex), NPCChaserGetEarthquakeFootstepsDuration(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsRadius(bossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(bossIndex));
 					}
 				}
 			}
 			case STATE_ATTACK:
 			{
-				if (flCooldownAttack != 0.0)
+				if (cooldownAttack != 0.0)
 				{
-					float flCooldownAttack2 = flCooldownAttack;
-					g_flSlenderNextFootstepAttackSound[iBossIndex] = GetGameTime() + flCooldownAttack2;
-					if (StrContains(sPath, "/", false) != -1 && StrContains(sPath, "\\", false) != -1) 
+					float cooldownAttack2 = cooldownAttack;
+					g_SlenderNextFootstepAttackSound[bossIndex] = GetGameTime() + cooldownAttack2;
+					if (StrContains(path, "/", false) != -1 && StrContains(path, "\\", false) != -1) 
 					{
-						EmitGameSoundToAll(sPath, slender);
+						EmitGameSoundToAll(path, slender);
 					}
 					else
 					{
-						EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
-					if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
+					if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 					{
-						UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsFrequency(iBossIndex), NPCChaserGetEarthquakeFootstepsDuration(iBossIndex), 
-						NPCChaserGetEarthquakeFootstepsRadius(iBossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(iBossIndex));
+						UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsFrequency(bossIndex), NPCChaserGetEarthquakeFootstepsDuration(bossIndex), 
+						NPCChaserGetEarthquakeFootstepsRadius(bossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(bossIndex));
 					}
 				}
 			}
@@ -3812,395 +4459,250 @@ void SlenderCastFootstep(int iBossIndex, const char[] sSectionName)
 	}
 }
 
-void SlenderCastFootstepAnimEvent(int iBossIndex, const char[] sSectionName)
+void SlenderCastFootstepAnimEvent(int bossIndex, const char[] sectionName)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	char sPath[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, sSectionName, sPath, sizeof(sPath));
+	char path[PLATFORM_MAX_PATH];
+	GetRandomStringFromProfile(profile, sectionName, path, sizeof(path));
 
-	float flMyPos[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flMyPos);
+	float myPos[3];
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 	
-	if (sPath[0] != '\0')
+	if (path[0] != '\0')
 	{
-		char sBuffer[512];
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_volume");
-		float flVolume = GetProfileFloat(profile, sBuffer, 1.0);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_channel");
-		int iChannel = GetProfileNum(profile, sBuffer, SNDCHAN_AUTO);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_level");
-		int iLevel = GetProfileNum(profile, sBuffer, SNDLEVEL_SCREAMING);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
-		int iPitch = GetProfileNum(profile, sBuffer, 100);
-		if (StrContains(sPath, "/", false) == -1 && StrContains(sPath, "\\", false) == -1) 
+		char buffer[512];
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_volume");
+		float volume = GetProfileFloat(profile, buffer, 1.0);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_channel");
+		int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_level");
+		int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_pitch");
+		int pitch = GetProfileNum(profile, buffer, 100);
+		if (StrContains(path, "/", false) == -1 && StrContains(path, "\\", false) == -1) 
 		{
-			EmitGameSoundToAll(sPath, slender);
+			EmitGameSoundToAll(path, slender);
 		}
 		else
 		{
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+			EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 		}
 	}
-	if (NPCChaserGetEarthquakeFootstepsState(iBossIndex))
+	if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 	{
-		UTIL_ScreenShake(flMyPos, NPCChaserGetEarthquakeFootstepsAmplitude(iBossIndex), 
-		NPCChaserGetEarthquakeFootstepsFrequency(iBossIndex), NPCChaserGetEarthquakeFootstepsDuration(iBossIndex), 
-		NPCChaserGetEarthquakeFootstepsRadius(iBossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(iBossIndex));
+		UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex), 
+		NPCChaserGetEarthquakeFootstepsFrequency(bossIndex), NPCChaserGetEarthquakeFootstepsDuration(bossIndex), 
+		NPCChaserGetEarthquakeFootstepsRadius(bossIndex), 0, NPCChaserGetEarthquakeFootstepsAirShakeState(bossIndex));
 	}
 }
 
-void SlenderCastAnimEvent(int iBossIndex, const char[] sSectionName)
+void SlenderCastAnimEvent(int bossIndex, const char[] sectionName)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	char sPath[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, sSectionName, sPath, sizeof(sPath));
+	char path[PLATFORM_MAX_PATH];
+	GetRandomStringFromProfile(profile, sectionName, path, sizeof(path));
 
-	if (sPath[0] != '\0')
+	if (path[0] != '\0')
 	{
-		char sBuffer[512];
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_volume");
-		float flVolume = GetProfileFloat(profile, sBuffer, 1.0);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_channel");
-		int iChannel = GetProfileNum(profile, sBuffer, SNDCHAN_AUTO);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_level");
-		int iLevel = GetProfileNum(profile, sBuffer, SNDLEVEL_SCREAMING);
-		strcopy(sBuffer, sizeof(sBuffer), sSectionName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
-		int iPitch = GetProfileNum(profile, sBuffer, 100);
-		if (StrContains(sPath, "/", false) == -1 && StrContains(sPath, "\\", false) == -1) 
+		char buffer[512];
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_volume");
+		float volume = GetProfileFloat(profile, buffer, 1.0);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_channel");
+		int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_level");
+		int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
+		strcopy(buffer, sizeof(buffer), sectionName);
+		StrCat(buffer, sizeof(buffer), "_pitch");
+		int pitch = GetProfileNum(profile, buffer, 100);
+		if (StrContains(path, "/", false) == -1 && StrContains(path, "\\", false) == -1) 
 		{
-			EmitGameSoundToAll(sPath, slender);
+			EmitGameSoundToAll(path, slender);
 		}
 		else
 		{
-			EmitSoundToAll(sPath, slender, iChannel, iLevel, _, flVolume, iPitch);
+			EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 		}
 	}
 }
 
-void SlenderCreateParticle(int iBossIndex, const char[] sSectionName, float flParticleZPos)
+void SlenderCreateParticle(int bossIndex, const char[] sectionName, float particleZPos)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	if (g_bRestartSessionEnabled) return;
+	if (g_RestartSessionEnabled)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 
-	float flSlenderPosition[3], flSlenderAngles[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flSlenderPosition);
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flSlenderAngles);
-	flSlenderPosition[2] += flParticleZPos;
+	float slenderPosition[3], slenderAngles[3];
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPosition);
+	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", slenderAngles);
+	slenderPosition[2] += particleZPos;
 
-	DispatchParticleEffect(slender, sSectionName, flSlenderPosition, flSlenderAngles, flSlenderPosition);
+	DispatchParticleEffect(slender, sectionName, slenderPosition, slenderAngles, slenderPosition);
 }
 
-void SlenderCreateParticleAttach(int iBossIndex, const char[] sSectionName, float flParticleZPos, int client)
+void SlenderCreateParticleAttach(int bossIndex, const char[] sectionName, float particleZPos, int client)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	if (g_bRestartSessionEnabled) return;
+	if (g_RestartSessionEnabled)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 
-	float flPlayerPosition[3], flPlayerAngles[3];
+	float playerPosition[3], playerAngles[3];
 	if (IsValidClient(client))
 	{
-		GetClientAbsOrigin(client, flPlayerPosition);
-		GetClientEyeAngles(client, flPlayerAngles);
+		GetClientAbsOrigin(client, playerPosition);
+		GetClientEyeAngles(client, playerAngles);
 	}
 	else
 	{
-		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flPlayerPosition);
-		GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flPlayerAngles);
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", playerPosition);
+		GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", playerAngles);
 	}
-	flPlayerPosition[2] += flParticleZPos;
+	playerPosition[2] += particleZPos;
 
-	DispatchParticleEffect(slender, sSectionName, flPlayerPosition, flPlayerAngles, flPlayerPosition);
+	DispatchParticleEffect(slender, sectionName, playerPosition, playerAngles, playerPosition);
 }
 
-void SlenderCreateParticleBeamClient(int iBossIndex, const char[] sSectionName, float flParticleZPos, int client)
+void SlenderCreateParticleBeamClient(int bossIndex, const char[] sectionName, float particleZPos, int client)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	if (g_bRestartSessionEnabled) return;
+	if (g_RestartSessionEnabled)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 
-	float flSlenderPosition[3], flSlenderAngles[3], flPlayerPosition[3];
+	float slenderPosition[3], slenderAngles[3], playerPosition[3];
 	if (IsValidClient(client))
 	{
-		GetClientAbsOrigin(client, flPlayerPosition);
+		GetClientAbsOrigin(client, playerPosition);
 	}
 	else
 	{
-		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flPlayerPosition);
+		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", playerPosition);
 	}
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flSlenderPosition);
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flSlenderAngles);
-	flSlenderPosition[2] += flParticleZPos;
-	flPlayerPosition[2] += flParticleZPos;
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPosition);
+	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", slenderAngles);
+	slenderPosition[2] += particleZPos;
+	playerPosition[2] += particleZPos;
 
-	DispatchParticleEffectBeam(slender, sSectionName, flSlenderPosition, flSlenderAngles, flPlayerPosition);
+	DispatchParticleEffectBeam(slender, sectionName, slenderPosition, slenderAngles, playerPosition);
 }
 
-void SlenderCreateParticleSpawnEffect(int iBossIndex, const char[] sSectionName, const char[] sSoundName, const char[] sVectorOffset)
+void SlenderCreateParticleSpawnEffect(int bossIndex, const char[] sectionName, const char[] soundName, const char[] sVectorOffset)
 {
-	if (iBossIndex == -1) return;
+	if (bossIndex == -1)
+	{
+		return;
+	}
 
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return;
+	}
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	char sParticle[PLATFORM_MAX_PATH], sSoundEffect[PLATFORM_MAX_PATH];
-	GetProfileString(profile, sSectionName, sParticle, sizeof(sParticle));
+	char particle[PLATFORM_MAX_PATH], soundEffect[PLATFORM_MAX_PATH];
+	GetProfileString(profile, sectionName, particle, sizeof(particle));
 	
-	float flSlenderPosition[3], flSlenderAngles[3], flOffsetPos[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", flSlenderPosition);
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", flSlenderAngles);
-	GetProfileVector(profile, sVectorOffset, flOffsetPos, view_as<float>( { 0.0, 0.0, 0.0 } ));
-	AddVectors(flOffsetPos, flSlenderPosition, flSlenderPosition);
+	float slenderPosition[3], slenderAngles[3], offsetPos[3];
+	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPosition);
+	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", slenderAngles);
+	GetProfileVector(profile, sVectorOffset, offsetPos, view_as<float>( { 0.0, 0.0, 0.0 } ));
+	AddVectors(offsetPos, slenderPosition, slenderPosition);
 
-	DispatchParticleEffect(slender, sParticle, flSlenderPosition, flSlenderAngles, flSlenderPosition);
+	DispatchParticleEffect(slender, particle, slenderPosition, slenderAngles, slenderPosition);
 
-	GetProfileString(profile, sSoundName, sSoundEffect, sizeof(sSoundEffect));
-	if (sSoundName[0] != '\0')
+	GetProfileString(profile, soundName, soundEffect, sizeof(soundEffect));
+	if (soundName[0] != '\0')
 	{
-		char sBuffer[PLATFORM_MAX_PATH];
-		strcopy(sBuffer, sizeof(sBuffer), sSoundName);
-		StrCat(sBuffer, sizeof(sBuffer), "_volume");
-		float flVolume = GetProfileFloat(profile, sBuffer, 1.0);
-		strcopy(sBuffer, sizeof(sBuffer), sSoundName);
-		StrCat(sBuffer, sizeof(sBuffer), "_pitch");
-		int iPitch = GetProfileNum(profile, sBuffer, 100);
-		EmitSoundToAll(sSoundEffect, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, flVolume, iPitch);
+		char buffer[PLATFORM_MAX_PATH];
+		strcopy(buffer, sizeof(buffer), soundName);
+		StrCat(buffer, sizeof(buffer), "_volume");
+		float volume = GetProfileFloat(profile, buffer, 1.0);
+		strcopy(buffer, sizeof(buffer), soundName);
+		StrCat(buffer, sizeof(buffer), "_pitch");
+		int pitch = GetProfileNum(profile, buffer, 100);
+		EmitSoundToAll(soundEffect, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, volume, pitch);
 	}
 }
-
-/*bool SlenderCalculateApproachToPlayer(int iBossIndex,int iBestPlayer, float buffer[3])
-{
-	if (!IsValidClient(iBestPlayer)) return false;
-	
-	int slender = NPCGetEntIndex(iBossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) return false;
-
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
-	
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
-	
-	float flSlenderPos[3], flPos[3], flReferenceAng[3], hisEyeAng[3], tempDir[3], tempPos[3];
-	GetClientEyePosition(iBestPlayer, flPos);
-	
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", hisEyeAng);
-	AddVectors(hisEyeAng, g_flSlenderEyeAngOffset[iBossIndex], hisEyeAng);
-	for (int i = 0; i < 3; i++) hisEyeAng[i] = AngleNormalize(hisEyeAng[i]);
-	
-	SlenderGetAbsOrigin(iBossIndex, flSlenderPos);
-	
-	SubtractVectors(flPos, flSlenderPos, flReferenceAng);
-	GetVectorAngles(flReferenceAng, flReferenceAng);
-	for (int i = 0; i < 3; i++) flReferenceAng[i] = AngleNormalize(flReferenceAng[i]);
-	float flDist = NPCGetSpeed(iBossIndex, difficulty) * g_flRoundDifficultyModifier;
-	if (flDist < NPCGetInstantKillRadius(iBossIndex)) flDist = NPCGetInstantKillRadius(iBossIndex) / 2.0;
-	float flWithinFOV = 45.0;
-	float flWithinFOVSide = 90.0;
-	
-	Handle hTrace = null;
-	int index;
-	float flHitNormal[3], tempPos2[3], flBuffer[3], flBuffer2[3];
-	ArrayList hArray = new ArrayList(6);
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hArray in SlenderCalculateApproachToPlayer.", hArray);
-	#endif
-	
-	float flCheckAng[3];
-	
-	int iRange = 0;
-	int iID = 1;
-	
-	for (float addAng = 0.0; addAng < 360.0; addAng += 7.5)
-	{
-		tempDir[0] = 0.0;
-		tempDir[1] = AngleNormalize(hisEyeAng[1] + addAng);
-		tempDir[2] = 0.0;
-		
-		GetAngleVectors(tempDir, tempDir, NULL_VECTOR, NULL_VECTOR);
-		NormalizeVector(tempDir, tempDir);
-		ScaleVector(tempDir, flDist);
-		AddVectors(tempDir, flSlenderPos, tempPos);
-		AddVectors(tempPos, g_flSlenderEyePosOffset[iBossIndex], tempPos);
-		AddVectors(flSlenderPos, g_flSlenderEyePosOffset[iBossIndex], tempPos2);
-		
-		flBuffer[0] = g_flSlenderDetectMins[iBossIndex][0];
-		flBuffer[1] = g_flSlenderDetectMins[iBossIndex][1];
-		flBuffer[2] = 0.0;
-		flBuffer2[0] = g_flSlenderDetectMaxs[iBossIndex][0];
-		flBuffer2[1] = g_flSlenderDetectMaxs[iBossIndex][1];
-		flBuffer2[2] = 0.0;
-		
-		// Get a good move position.
-		hTrace = TR_TraceHullFilterEx(tempPos2, tempPos, flBuffer, flBuffer2, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitCharactersOrEntity, slender);
-		TR_GetEndPosition(tempPos, hTrace);
-		delete hTrace;
-		
-		// Drop to the ground if we're above ground.
-		hTrace = TR_TraceRayFilterEx(tempPos, view_as<float>({ 90.0, 0.0, 0.0 }), MASK_PLAYERSOLID_BRUSHONLY, RayType_Infinite, TraceRayDontHitCharactersOrEntity, slender);
-		bool bHit = TR_DidHit(hTrace);
-		TR_GetEndPosition(tempPos2, hTrace);
-		delete hTrace;
-		
-		// Then calculate from there.
-		hTrace = TR_TraceHullFilterEx(tempPos, tempPos2, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitCharactersOrEntity, slender);
-		TR_GetEndPosition(tempPos, hTrace);
-		TR_GetPlaneNormal(hTrace, flHitNormal);
-		delete hTrace;
-		SubtractVectors(tempPos, flSlenderPos, flCheckAng);
-		GetVectorAngles(flCheckAng, flCheckAng);
-		GetVectorAngles(flHitNormal, flHitNormal);
-		for (int i = 0; i < 3; i++) 
-		{
-			flHitNormal[i] = AngleNormalize(flHitNormal[i]);
-			flCheckAng[i] = AngleNormalize(flCheckAng[i]);
-		}
-		
-		float diff = AngleDiff(flCheckAng[1], flReferenceAng[1]);
-		
-		bool bBackup = false;
-		
-		if (FloatAbs(diff) > flWithinFOV) bBackup = true;
-		
-		if (diff >= 0.0 && diff <= flWithinFOVSide) iRange = 1;
-		else if (diff < 0.0 && diff >= -flWithinFOVSide) iRange = 2;
-		else continue;
-		
-		if ((flHitNormal[0] >= 0.0 && flHitNormal[0] < 45.0)
-			|| (flHitNormal[0] < 0.0 && flHitNormal[0] > -45.0)
-			|| !bHit
-			|| TR_PointOutsideWorld(tempPos)
-			|| IsSpaceOccupiedNPC(tempPos, g_flSlenderDetectMins[iBossIndex], g_flSlenderDetectMaxs[iBossIndex], iBestPlayer))
-		{
-			continue;
-		}
-		
-		// Check from top to bottom of me.
-		
-		if (!IsPointVisibleToPlayer(iBestPlayer, tempPos, false, false)) continue;
-		
-		AddVectors(tempPos, g_flSlenderEyePosOffset[iBossIndex], tempPos);
-		
-		if (!IsPointVisibleToPlayer(iBestPlayer, tempPos, false, false)) continue;
-		
-		SubtractVectors(tempPos, g_flSlenderEyePosOffset[iBossIndex], tempPos);
-		
-		//	Insert the vector into our array.
-		index = hArray.Push(iID);
-		hArray.Set(index, tempPos[0], 1);
-		hArray.Set(index, tempPos[1], 2);
-		hArray.Set(index, tempPos[2], 3);
-		hArray.Set(index, iRange, 4);
-		hArray.Set(index, bBackup, 5);
-		
-		iID++;
-	}
-	
-	int size;
-	if ((size = hArray.Length) > 0)
-	{
-		float diff = AngleDiff(hisEyeAng[1], flReferenceAng[1]);
-		if (diff >= 0.0) iRange = 1;
-		else iRange = 2;
-		
-		bool bBackup = false;
-		
-		// Clean up any vectors that we don't need.
-		ArrayList hArray2 = hArray.Clone();
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Clone Array list %b has been created for hArray2 in SlenderCalculateApproachToPlayer.", hArray2);
-		#endif
-		for (int i = 0; i < size; i++)
-		{
-			if (hArray2.Get(i, 4) != iRange || view_as<bool>(hArray2.Get(i, 5) != bBackup))
-			{
-				int iIndex = hArray.FindValue(hArray2.Get(i));
-				if (iIndex != -1) hArray.Erase(iIndex);
-			}
-		}
-		
-		delete hArray2;
-
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Clone Array list %b has been deleted for hArray2 in SlenderCalculateApproachToPlayer.", hArray2);
-		#endif
-		
-		size = hArray.Length;
-		if (size)
-		{
-			index = GetRandomInt(0, size - 1);
-			buffer[0] = view_as<float>(hArray.Get(index, 1));
-			buffer[1] = view_as<float>(hArray.Get(index, 2));
-			buffer[2] = view_as<float>(hArray.Get(index, 3));
-		}
-		else
-		{
-			delete hArray;
-			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Deleted Array list %b due to no size for hArray.Length in SlenderCalculateApproachToPlayer.", hArray);
-			#endif
-			return false;
-		}
-	}
-	else
-	{
-		delete hArray;
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Deleted Array list %b due to no size for hArray.Length in SlenderCalculateApproachToPlayer but further out.", hArray);
-		#endif
-		return false;
-	}
-	
-	delete hArray;
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Deleted Array list %b anyways in SlenderCalculateApproachToPlayer.", hArray);
-	#endif
-	delete hTrace;
-	return true;
-}*/
 
 // This functor ensures that the proposed boss position is not too
 // close to other players that are within the distance defined by
-// flMinSearchDist.
+// minSearchDist.
 
 // Returning false on the functor will immediately discard the proposed position.
 
-public bool SlenderChaseBossPlaceFunctor(int iBossIndex, const float flActiveAreaCenterPos[3], const float flAreaPos[3], float flMinSearchDist, float flMaxSearchDist, bool bOriginalResult)
+public bool SlenderChaseBossPlaceFunctor(int bossIndex, const float activeAreaCenterPos[3], const float areaPos[3], float minSearchDist, float maxSearchDist, bool originalResult)
 {
-	if (FloatAbs(flActiveAreaCenterPos[2] - flAreaPos[2]) > 320.0)
+	if (FloatAbs(activeAreaCenterPos[2] - areaPos[2]) > 320.0)
 	{
 		return false;
 	}
@@ -4209,19 +4711,22 @@ public bool SlenderChaseBossPlaceFunctor(int iBossIndex, const float flActiveAre
 	{
 		if (!IsClientInGame(i) ||
 			!IsPlayerAlive(i) ||
-			g_bPlayerEliminated[i] ||
-			g_bPlayerEscaped[i]) continue;
+			g_PlayerEliminated[i] ||
+			g_PlayerEscaped[i])
+		{
+			continue;
+		}
 		
-		float flClientPos[3];
-		GetClientAbsOrigin(i, flClientPos);
+		float clientPos[3];
+		GetClientAbsOrigin(i, clientPos);
 		
-		if (GetVectorSquareMagnitude(flClientPos, flAreaPos) < SquareFloat(flMinSearchDist))
+		if (GetVectorSquareMagnitude(clientPos, areaPos) < SquareFloat(minSearchDist))
 		{
 			return false;
 		}
 	}
 	
-	return bOriginalResult;
+	return originalResult;
 }
 
 // As time passes on, we have to get more aggressive in order to successfully peak the target's
@@ -4231,65 +4736,89 @@ public bool SlenderChaseBossPlaceFunctor(int iBossIndex, const float flActiveAre
 // Teleport progressively closer as time passes in attempt to increase the target's stress level.
 // Maximum minimum range is capped by the boss's anger level.
 
-stock float CalculateTeleportMinRange(int iBossIndex, float flInitialMinRange, float flTeleportMaxRange)
+stock float CalculateTeleportMinRange(int bossIndex, float initialMinRange, float teleportMaxRange)
 {
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
-	float flTeleportTargetTimeLeft = g_flSlenderTeleportMaxTargetTime[iBossIndex] - GetGameTime();
-	float flTeleportTargetTimeInitial = g_flSlenderTeleportMaxTargetTime[iBossIndex] - g_flSlenderTeleportTargetTime[iBossIndex];
-	float flTeleportMinRange = flTeleportMaxRange - (1.0 - (flTeleportTargetTimeLeft / flTeleportTargetTimeInitial)) * (flTeleportMaxRange - flInitialMinRange);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+	float teleportTargetTimeLeft = g_SlenderTeleportMaxTargetTime[bossIndex] - GetGameTime();
+	float teleportTargetTimeInitial = g_SlenderTeleportMaxTargetTime[bossIndex] - g_SlenderTeleportTargetTime[bossIndex];
+	float teleportMinRange = teleportMaxRange - (1.0 - (teleportTargetTimeLeft / teleportTargetTimeInitial)) * (teleportMaxRange - initialMinRange);
 	
-	if (NPCGetAnger(iBossIndex) <= 1.0)
+	if (NPCGetAnger(bossIndex) <= 1.0)
 	{
-		flTeleportMinRange += (g_flSlenderTeleportMinRange[iBossIndex][difficulty] - flTeleportMaxRange) * Pow(0.0, 2.0 / g_flRoundDifficultyModifier);
+		teleportMinRange += (g_SlenderTeleportMinRange[bossIndex][difficulty] - teleportMaxRange) * Pow(0.0, 2.0 / g_RoundDifficultyModifier);
 	}
 	
-	if (flTeleportMinRange < flInitialMinRange) flTeleportMinRange = flInitialMinRange;
-	if (flTeleportMinRange > flTeleportMaxRange) flTeleportMinRange = flTeleportMaxRange;
+	if (teleportMinRange < initialMinRange)
+	{
+		teleportMinRange = initialMinRange;
+	}
+	if (teleportMinRange > teleportMaxRange)
+	{
+		teleportMinRange = teleportMaxRange;
+	}
 	
-	return flTeleportMinRange;
+	return teleportMinRange;
 }
 
-public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
+public Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 {
-	if (iBossIndex == -1) return Plugin_Stop;
-	if (timer != g_hSlenderThink[iBossIndex]) return Plugin_Stop;
+	if (bossIndex == -1)
+	{
+		return Plugin_Stop;
+	}
+	if (timer != g_SlenderThink[bossIndex])
+	{
+		return Plugin_Stop;
+	}
 
-	if (SF_IsBoxingMap()) return Plugin_Stop;
+	if (SF_IsBoxingMap())
+	{
+		return Plugin_Stop;
+	}
 
-	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape) return Plugin_Continue;
-
-	if (NPCGetFlags(iBossIndex) & SFF_NOTELEPORT) return Plugin_Continue;
-
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
-
-	if (!NPCIsTeleportAllowed(iBossIndex, difficulty)) return Plugin_Continue;
-	
-	// Check to see if anyone's looking at me before doing anything.
-	if (PeopleCanSeeSlender(iBossIndex, _, false))
+	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
 	{
 		return Plugin_Continue;
 	}
-	if (NPCGetTeleportType(iBossIndex) == 2)
+
+	if (NPCGetFlags(bossIndex) & SFF_NOTELEPORT)
 	{
-		int iBoss = NPCGetEntIndex(iBossIndex);
-		if (iBoss && iBoss != INVALID_ENT_REFERENCE)
+		return Plugin_Continue;
+	}
+
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	if (!NPCIsTeleportAllowed(bossIndex, difficulty))
+	{
+		return Plugin_Continue;
+	}
+	
+	// Check to see if anyone's looking at me before doing anything.
+	if (PeopleCanSeeSlender(bossIndex, _, false))
+	{
+		return Plugin_Continue;
+	}
+	if (NPCGetTeleportType(bossIndex) == 2)
+	{
+		int bossEnt = NPCGetEntIndex(bossIndex);
+		if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 		{
-			if (NPCGetType(iBossIndex) == SF2BossType_Chaser)
+			if (NPCGetType(bossIndex) == SF2BossType_Chaser)
 			{
 				// Check to see if it's a good time to teleport away.
-				int iState = g_iSlenderState[iBossIndex];
-				if (iState == STATE_IDLE || iState == STATE_WANDER)
+				int state = g_SlenderState[bossIndex];
+				if (state == STATE_IDLE || state == STATE_WANDER)
 				{
-					if (GetGameTime() < g_flSlenderTimeUntilKill[iBossIndex])
+					if (GetGameTime() < g_SlenderTimeUntilKill[bossIndex])
 					{
 						return Plugin_Continue;
 					}
 				}
 				else
 				{
-					if (GetGameTime() >= g_flSlenderTimeUntilKill[iBossIndex])
+					if (GetGameTime() >= g_SlenderTimeUntilKill[bossIndex])
 					{
-						g_flSlenderTimeUntilKill[iBossIndex] = GetGameTime() + NPCGetIdleLifetime(iBossIndex, difficulty);
+						g_SlenderTimeUntilKill[bossIndex] = GetGameTime() + NPCGetIdleLifetime(bossIndex, difficulty);
 					}
 					return Plugin_Continue;
 				}
@@ -4298,54 +4827,57 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
 	if (IsRoundPlaying())
 	{
-		if (GetGameTime() >= g_flSlenderNextTeleportTime[iBossIndex])
+		if (GetGameTime() >= g_SlenderNextTeleportTime[bossIndex])
 		{
-			float flTeleportTime = GetRandomFloat(NPCGetTeleportTimeMin(iBossIndex, difficulty), NPCGetTeleportTimeMax(iBossIndex, difficulty));
-			g_flSlenderNextTeleportTime[iBossIndex] = GetGameTime() + flTeleportTime;
-			bool bIgnoreFuncNavPrefer = g_bNPCIgnoreNavPrefer[iBossIndex];
+			float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
+			g_SlenderNextTeleportTime[bossIndex] = GetGameTime() + teleportTime;
+			bool ignoreFuncNavPrefer = g_NpcHasIgnoreNavPrefer[bossIndex];
 			
-			int iTeleportTarget = EntRefToEntIndex(g_iSlenderTeleportTarget[iBossIndex]);
+			int teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[bossIndex]);
 			
-			if (!iTeleportTarget || iTeleportTarget == INVALID_ENT_REFERENCE)
+			if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
 			{
 				// We don't have any good targets. Remove myself for now.
-				if (SlenderCanRemove(iBossIndex)) RemoveSlender(iBossIndex);
+				if (SlenderCanRemove(bossIndex))
+				{
+					RemoveSlender(bossIndex);
+				}
 				
 				#if defined DEBUG
-				SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: no good target, removing...", iBossIndex);
+				SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: no good target, removing...", bossIndex);
 				#endif
 			}
 			else
 			{
-				float flTeleportMinRange = CalculateTeleportMinRange(iBossIndex, g_flSlenderTeleportMinRange[iBossIndex][difficulty], g_flSlenderTeleportMaxRange[iBossIndex][difficulty]);
-				int iTeleportAreaIndex = -1;
-				float flTeleportPos[3];
+				float teleportMinRange = CalculateTeleportMinRange(bossIndex, g_SlenderTeleportMinRange[bossIndex][difficulty], g_SlenderTeleportMaxRange[bossIndex][difficulty]);
+				int teleportAreaIndex = -1;
+				float teleportPos[3];
 
 				// Search surrounding nav areas around target.
-				CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(iTeleportTarget);
-				CNavArea TargetArea = tempCharacter.GetLastKnownArea();
-				if (TargetArea != NULL_AREA)
+				CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(teleportTarget);
+				CNavArea targetArea = tempCharacter.GetLastKnownArea();
+				if (targetArea != NULL_AREA)
 				{
-					bool bShouldBeBehindObstruction = false;
-					if (NPCGetTeleportType(iBossIndex) == 2)
+					bool shouldBeBehindObstruction = false;
+					if (NPCGetTeleportType(bossIndex) == 2)
 					{
-						bShouldBeBehindObstruction = true;
+						shouldBeBehindObstruction = true;
 					}
 						
 					// Search outwards until travel distance is at maximum range.
-					ArrayList hAreaArray = new ArrayList(2);
+					ArrayList areaArray = new ArrayList(2);
 
-					SurroundingAreasCollector sCollector = TheNavMesh.CollectSurroundingAreas(TargetArea, g_flSlenderTeleportMaxRange[iBossIndex][difficulty], _, _);
+					SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(targetArea, g_SlenderTeleportMaxRange[bossIndex][difficulty], _, _);
 					{
-						int iPoppedAreas;
+						int poppedAreas;
 					
-						for (int iAreaIndex = 0, iMaxCount = sCollector.Count(); iAreaIndex < iMaxCount; iAreaIndex++)
+						for (int areaIndex = 0, maxCount = collector.Count(); areaIndex < maxCount; areaIndex++)
 						{
-							CNavArea Area = sCollector.Get(iAreaIndex);
+							CNavArea Area = collector.Get(areaIndex);
 								
 							// Check flags.
 							if (Area.GetAttributes() & NAV_MESH_NO_HOSTAGES)
@@ -4354,277 +4886,301 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 								continue;
 							}
 							// Check if the nav area has a func prefer on it.
-							if (bIgnoreFuncNavPrefer && NavHasFuncPrefer(Area))
+							if (ignoreFuncNavPrefer && NavHasFuncPrefer(Area))
+							{
 								continue;
+							}
 
-							int iIndex = hAreaArray.Push(Area);
-							hAreaArray.Set(iIndex, Area.GetCostSoFar(), 1);
-							iPoppedAreas++;
+							int index = areaArray.Push(Area);
+							areaArray.Set(index, Area.GetCostSoFar(), 1);
+							poppedAreas++;
 						}
 							
 						#if defined DEBUG
-						SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d areas", iBossIndex, iPoppedAreas);
+						SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d areas", bossIndex, poppedAreas);
 						#endif
-						delete sCollector;
+						delete collector;
 					}
 					
-					ArrayList hAreaArrayClose = new ArrayList(4);
-					ArrayList hAreaArrayAverage = new ArrayList(4);
-					ArrayList hAreaArrayFar = new ArrayList(4);
+					ArrayList areaArrayClose = new ArrayList(4);
+					ArrayList areaArrayAverage = new ArrayList(4);
+					ArrayList areaArrayFar = new ArrayList(4);
 					
 					for (int i = 1; i <= 3; i++)
 					{
-						float flRangeSectionMin = flTeleportMinRange + (g_flSlenderTeleportMaxRange[iBossIndex][difficulty] - flTeleportMinRange) * (float(i - 1) / 3.0);
-						float flRangeSectionMax = flTeleportMinRange + (g_flSlenderTeleportMaxRange[iBossIndex][difficulty] - flTeleportMinRange) * (float(i) / 3.0);
+						float rangeSectionMin = teleportMinRange + (g_SlenderTeleportMaxRange[bossIndex][difficulty] - teleportMinRange) * (float(i - 1) / 3.0);
+						float rangeSectionMax = teleportMinRange + (g_SlenderTeleportMaxRange[bossIndex][difficulty] - teleportMinRange) * (float(i) / 3.0);
 						
-						for (int i2 = 0, iSize = hAreaArray.Length; i2 < iSize; i2++)
+						for (int i2 = 0, iSize = areaArray.Length; i2 < iSize; i2++)
 						{
-							CNavArea area = hAreaArray.Get(i2);
+							CNavArea area = areaArray.Get(i2);
 							
-							float flAreaSpawnPoint[3];
-							area.GetCenter(flAreaSpawnPoint);
+							float areaSpawnPoint[3];
+							area.GetCenter(areaSpawnPoint);
 								
-							int iBoss = NPCGetEntIndex(iBossIndex);
+							int bossEnt = NPCGetEntIndex(bossIndex);
 							
 							// Check space. First raise to HalfHumanHeight * 2, then trace downwards to get ground level.
 							{
-								float flTraceStartPos[3];
-								flTraceStartPos[0] = flAreaSpawnPoint[0];
-								flTraceStartPos[1] = flAreaSpawnPoint[1];
-								flTraceStartPos[2] = flAreaSpawnPoint[2] + (HalfHumanHeight * 2.0);
+								float traceStartPos[3];
+								traceStartPos[0] = areaSpawnPoint[0];
+								traceStartPos[1] = areaSpawnPoint[1];
+								traceStartPos[2] = areaSpawnPoint[2] + (HalfHumanHeight * 2.0);
 								
-								float flTraceMins[3];
-								flTraceMins[0] = g_flSlenderDetectMins[iBossIndex][0];
-								flTraceMins[1] = g_flSlenderDetectMins[iBossIndex][1];
-								flTraceMins[2] = 0.0;
+								float traceMins[3];
+								traceMins[0] = g_SlenderDetectMins[bossIndex][0];
+								traceMins[1] = g_SlenderDetectMins[bossIndex][1];
+								traceMins[2] = 0.0;
 
 
-								float flTraceMaxs[3];
-								flTraceMaxs[0] = g_flSlenderDetectMaxs[iBossIndex][0];
-								flTraceMaxs[1] = g_flSlenderDetectMaxs[iBossIndex][1];
-								flTraceMaxs[2] = 0.0;
+								float traceMaxs[3];
+								traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0];
+								traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1];
+								traceMaxs[2] = 0.0;
 
-								Handle hTrace = TR_TraceHullFilterEx(flTraceStartPos,
-									flAreaSpawnPoint,
-									flTraceMins,
-									flTraceMaxs,
+								Handle trace = TR_TraceHullFilterEx(traceStartPos,
+									areaSpawnPoint,
+									traceMins,
+									traceMaxs,
 									MASK_NPCSOLID,
 									TraceRayDontHitEntity,
-									iBoss);
+									bossEnt);
 								
-								float flTraceHitPos[3];
-								TR_GetEndPosition(flTraceHitPos, hTrace);
-								flTraceHitPos[2] += 1.0;
-								delete hTrace;
+								float traceHitPos[3];
+								TR_GetEndPosition(traceHitPos, trace);
+								traceHitPos[2] += 1.0;
+								delete trace;
 								
-								if (IsSpaceOccupiedNPC(flTraceHitPos,
-									g_flSlenderDetectMins[iBossIndex],
-									g_flSlenderDetectMaxs[iBossIndex],
-									iBoss))
+								if (IsSpaceOccupiedNPC(traceHitPos,
+									g_SlenderDetectMins[bossIndex],
+									g_SlenderDetectMaxs[bossIndex],
+									bossEnt))
 								{
 									continue;
 								}
-								float flChangedMins[3] = {-20.0, -20.0, 0.0};
-								float flChangedMaxs[3] = {20.0, 20.0, 83.0};
-								if (IsSpaceOccupiedNPC(flTraceHitPos,
-									flChangedMins,
-									flChangedMaxs,
-									iBoss))
+								float changedMins[3] = {-20.0, -20.0, 0.0};
+								float changedMaxs[3] = {20.0, 20.0, 83.0};
+								if (IsSpaceOccupiedNPC(traceHitPos,
+									changedMins,
+									changedMaxs,
+									bossEnt))
 								{
 									// Can't let an NPC spawn here; too little space. If we let it spawn here it will be non solid!
 									continue;
 								}
 								
-								flAreaSpawnPoint[0] = flTraceHitPos[0];
-								flAreaSpawnPoint[1] = flTraceHitPos[1];
-								flAreaSpawnPoint[2] = flTraceHitPos[2];
+								areaSpawnPoint[0] = traceHitPos[0];
+								areaSpawnPoint[1] = traceHitPos[1];
+								areaSpawnPoint[2] = traceHitPos[2];
 							}
 								
 							// Check visibility.
-							if (!g_bSlenderTeleportIgnoreVis[iBossIndex] && IsPointVisibleToAPlayer(flAreaSpawnPoint, !bShouldBeBehindObstruction, false)) continue;
+							if (!g_bSlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(areaSpawnPoint, !shouldBeBehindObstruction, false))
+							{
+								continue;
+							}
 								
-							AddVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
+							AddVectors(areaSpawnPoint, g_SlenderEyePosOffset[bossIndex], areaSpawnPoint);
 								
-							if (!g_bSlenderTeleportIgnoreVis[iBossIndex] && IsPointVisibleToAPlayer(flAreaSpawnPoint, !bShouldBeBehindObstruction, false)) continue;
+							if (!g_bSlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(areaSpawnPoint, !shouldBeBehindObstruction, false))
+							{
+								continue;
+							}
 								
-							SubtractVectors(flAreaSpawnPoint, g_flSlenderEyePosOffset[iBossIndex], flAreaSpawnPoint);
+							SubtractVectors(areaSpawnPoint, g_SlenderEyePosOffset[bossIndex], areaSpawnPoint);
 								
-							bool bTooNear = false;
+							bool tooNear = false;
 								
 							// Check minimum range with players.
 							for (int client = 1; client <= MaxClients; client++)
 							{
 								if (!IsClientInGame(client) ||
 									!IsPlayerAlive(client) ||
-									g_bPlayerEliminated[client] ||
+									g_PlayerEliminated[client] ||
 									IsClientInGhostMode(client) || 
 									DidClientEscape(client))
 								{
 									continue;
 								}
 									
-								float flTempPos[3];
-								GetClientAbsOrigin(client, flTempPos);
+								float tempPos[3];
+								GetClientAbsOrigin(client, tempPos);
 									
-								if (GetVectorSquareMagnitude(flAreaSpawnPoint, flTempPos) <= SquareFloat(g_flSlenderTeleportMinRange[iBossIndex][difficulty]))
+								if (GetVectorSquareMagnitude(areaSpawnPoint, tempPos) <= SquareFloat(g_SlenderTeleportMinRange[bossIndex][difficulty]))
 								{
-									bTooNear = true;
+									tooNear = true;
 									break;
 								}
 							}
 								
-							if (bTooNear) continue;	// This area is not compatible.
+							if (tooNear)
+							{
+								continue;	// This area is not compatible.
+							}
 							
 							// Check minimum range with boss copies (if supported).
-							if (NPCGetFlags(iBossIndex) & SFF_COPIES)
+							if (NPCGetFlags(bossIndex) & SFF_COPIES)
 							{
-								float flMinDistBetweenBossesTemp = GetProfileFloat(profile, "copy_teleport_dist_from_others", SF2_BOSS_COPY_SPAWN_MIN_DISTANCE);
-								float flMinDistBetweenBosses = GetProfileFloat(profile, "teleport_distance_between_copies", flMinDistBetweenBossesTemp);
+								float minDistBetweenBossesTemp = GetProfileFloat(profile, "copy_teleport_dist_from_others", SF2_BOSS_COPY_SPAWN_MIN_DISTANCE);
+								float minDistBetweenBosses = GetProfileFloat(profile, "teleport_distance_between_copies", minDistBetweenBossesTemp);
 								
-								for (int iBossCheck = 0; iBossCheck < MAX_BOSSES; iBossCheck++)
+								for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
 								{
-									if (iBossCheck == iBossIndex ||
-										NPCGetUniqueID(iBossCheck) == -1 ||
-										(g_iSlenderCopyMaster[iBossIndex] != iBossCheck && g_iSlenderCopyMaster[iBossIndex] != g_iSlenderCopyMaster[iBossCheck]))
+									if (bossCheck == bossIndex ||
+										NPCGetUniqueID(bossCheck) == -1 ||
+										(g_SlenderCopyMaster[bossIndex] != bossCheck && g_SlenderCopyMaster[bossIndex] != g_SlenderCopyMaster[bossCheck]))
 									{
 										continue;
 									}
 										
-									int iBossEnt = NPCGetEntIndex(iBossCheck);
-									if (!iBossEnt || iBossEnt == INVALID_ENT_REFERENCE) continue;
-									
-									float flTempPos[3];
-									SlenderGetAbsOrigin(iBossCheck, flTempPos);
-									
-									if (GetVectorSquareMagnitude(flAreaSpawnPoint, flTempPos) <= SquareFloat(flMinDistBetweenBosses))
+									int bossEntCheck = NPCGetEntIndex(bossCheck);
+									if (!bossEntCheck || bossEntCheck == INVALID_ENT_REFERENCE)
 									{
-										bTooNear = true;
+										continue;
+									}
+									
+									float tempPos[3];
+									SlenderGetAbsOrigin(bossCheck, tempPos);
+									
+									if (GetVectorSquareMagnitude(areaSpawnPoint, tempPos) <= SquareFloat(minDistBetweenBosses))
+									{
+										tooNear = true;
 										break;
 									}
 								}
 							}
 							
-							if (bTooNear) continue;	// This area is not compatible.
+							if (tooNear)
+							{
+								continue;	// This area is not compatible.
+							}
 								
 							// Check travel distance and put in the appropriate arrays.
-							float flDist = view_as<float>(hAreaArray.Get(i2, 1));
-							if (flDist > flRangeSectionMin && flDist < flRangeSectionMax)
+							float dist = view_as<float>(areaArray.Get(i2, 1));
+							if (dist > rangeSectionMin && dist < rangeSectionMax)
 							{
-								int iIndex = -1;
-								ArrayList hTargetAreaArray = null;
+								int index = -1;
+								ArrayList targetAreaArray = null;
 								
 								switch (i)
 								{
 									case 1: 
 									{
-										iIndex = hAreaArrayClose.Push(area);
-										hTargetAreaArray = hAreaArrayClose;
+										index = areaArrayClose.Push(area);
+										targetAreaArray = areaArrayClose;
 									}
 									case 2: 
 									{
-										iIndex = hAreaArrayAverage.Push(area);
-										hTargetAreaArray = hAreaArrayAverage;
+										index = areaArrayAverage.Push(area);
+										targetAreaArray = areaArrayAverage;
 									}
 									case 3: 
 									{
-										iIndex = hAreaArrayFar.Push(area);
-										hTargetAreaArray = hAreaArrayFar;
+										index = areaArrayFar.Push(area);
+										targetAreaArray = areaArrayFar;
 									}
 								}
 									
-								if (hTargetAreaArray != null && iIndex != -1)
+								if (targetAreaArray != null && index != -1)
 								{
-									hTargetAreaArray.Set(iIndex, flAreaSpawnPoint[0], 1);
-									hTargetAreaArray.Set(iIndex, flAreaSpawnPoint[1], 2);
-									hTargetAreaArray.Set(iIndex, flAreaSpawnPoint[2], 3);
+									targetAreaArray.Set(index, areaSpawnPoint[0], 1);
+									targetAreaArray.Set(index, areaSpawnPoint[1], 2);
+									targetAreaArray.Set(index, areaSpawnPoint[2], 3);
 								}
 							}
 						}
 					}
 					
-					delete hAreaArray;
+					delete areaArray;
 					
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d close areas, %d average areas, %d far areas", iBossIndex, hAreaArrayClose.Length,
-						hAreaArrayAverage.Length,
-						hAreaArrayFar.Length);
+					SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: collected %d close areas, %d average areas, %d far areas", bossIndex, areaArrayClose.Length,
+						areaArrayAverage.Length,
+						areaArrayFar.Length);
 					#endif
 						
-					int iArrayIndex = -1;
+					int arrayIndex = -1;
 						
-					if (hAreaArrayClose.Length)
+					if (areaArrayClose.Length)
 					{
-						iArrayIndex = GetRandomInt(0, hAreaArrayClose.Length - 1);
-						iTeleportAreaIndex = hAreaArrayClose.Get(iArrayIndex);
-						flTeleportPos[0] = view_as<float>(hAreaArrayClose.Get(iArrayIndex, 1));
-						flTeleportPos[1] = view_as<float>(hAreaArrayClose.Get(iArrayIndex, 2));
-						flTeleportPos[2] = view_as<float>(hAreaArrayClose.Get(iArrayIndex, 3));
+						arrayIndex = GetRandomInt(0, areaArrayClose.Length - 1);
+						teleportAreaIndex = areaArrayClose.Get(arrayIndex);
+						teleportPos[0] = view_as<float>(areaArrayClose.Get(arrayIndex, 1));
+						teleportPos[1] = view_as<float>(areaArrayClose.Get(arrayIndex, 2));
+						teleportPos[2] = view_as<float>(areaArrayClose.Get(arrayIndex, 3));
 					}
-					else if (hAreaArrayAverage.Length)
+					else if (areaArrayAverage.Length)
 					{
-						iArrayIndex = GetRandomInt(0, hAreaArrayAverage.Length - 1);
-						iTeleportAreaIndex = hAreaArrayAverage.Get(iArrayIndex);
-						flTeleportPos[0] = view_as<float>(hAreaArrayAverage.Get(iArrayIndex, 1));
-						flTeleportPos[1] = view_as<float>(hAreaArrayAverage.Get(iArrayIndex, 2));
-						flTeleportPos[2] = view_as<float>(hAreaArrayAverage.Get(iArrayIndex, 3));
+						arrayIndex = GetRandomInt(0, areaArrayAverage.Length - 1);
+						teleportAreaIndex = areaArrayAverage.Get(arrayIndex);
+						teleportPos[0] = view_as<float>(areaArrayAverage.Get(arrayIndex, 1));
+						teleportPos[1] = view_as<float>(areaArrayAverage.Get(arrayIndex, 2));
+						teleportPos[2] = view_as<float>(areaArrayAverage.Get(arrayIndex, 3));
 					}
-					else if (hAreaArrayFar.Length)
+					else if (areaArrayFar.Length)
 					{
-						iArrayIndex = GetRandomInt(0, hAreaArrayFar.Length - 1);
-						iTeleportAreaIndex = hAreaArrayFar.Get(iArrayIndex);
-						flTeleportPos[0] = view_as<float>(hAreaArrayFar.Get(iArrayIndex, 1));
-						flTeleportPos[1] = view_as<float>(hAreaArrayFar.Get(iArrayIndex, 2));
-						flTeleportPos[2] = view_as<float>(hAreaArrayFar.Get(iArrayIndex, 3));
+						arrayIndex = GetRandomInt(0, areaArrayFar.Length - 1);
+						teleportAreaIndex = areaArrayFar.Get(arrayIndex);
+						teleportPos[0] = view_as<float>(areaArrayFar.Get(arrayIndex, 1));
+						teleportPos[1] = view_as<float>(areaArrayFar.Get(arrayIndex, 2));
+						teleportPos[2] = view_as<float>(areaArrayFar.Get(arrayIndex, 3));
 					}
 						
-					delete hAreaArrayClose;
-					delete hAreaArrayAverage;
-					delete hAreaArrayFar;
+					delete areaArrayClose;
+					delete areaArrayAverage;
+					delete areaArrayFar;
 				}
 				else
 				{
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: failed because target is not on nav mesh!", iBossIndex);
+					SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: failed because target is not on nav mesh!", bossIndex);
 					#endif
 				}
 
-				if (iTeleportAreaIndex == -1)
+				if (teleportAreaIndex == -1)
 				{
 					// We don't have any good areas. Remove myself for now.
-					if (SlenderCanRemove(iBossIndex)) RemoveSlender(iBossIndex);
+					if (SlenderCanRemove(bossIndex))
+					{
+						RemoveSlender(bossIndex);
+					}
 				}
 				else
 				{
-					SpawnSlender(iBossIndex, flTeleportPos);
+					SpawnSlender(bossIndex, teleportPos);
 					
-					if(g_bPlayerIsExitCamping[iTeleportTarget])
-						g_bSlenderTeleportTargetIsCamping[iBossIndex]=true;
-					else
-						g_bSlenderTeleportTargetIsCamping[iBossIndex]=false;
-					
-					if (NPCGetFlags(iBossIndex) & SFF_HASJUMPSCARE)
+					if (g_PlayerIsExitCamping[teleportTarget])
 					{
-						bool bDidJumpScare = false;
+						g_SlenderTeleportTargetIsCamping[bossIndex] = true;
+					}
+					else
+					{
+						g_SlenderTeleportTargetIsCamping[bossIndex] = false;
+					}
+					
+					if (NPCGetFlags(bossIndex) & SFF_HASJUMPSCARE)
+					{
+						bool didJumpScare = false;
 						
 						for (int i = 1; i <= MaxClients; i++)
 						{
-							if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_bPlayerEliminated[i] || IsClientInGhostMode(i)) continue;
+							if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i)) continue;
 							
-							if (PlayerCanSeeSlender(i, iBossIndex, false))
+							if (PlayerCanSeeSlender(i, bossIndex, false))
 							{
-								if ((NPCGetDistanceFromEntity(iBossIndex, i) <= SquareFloat(NPCGetJumpscareDistance(iBossIndex, difficulty)) && GetGameTime() >= g_flSlenderNextJumpScare[iBossIndex]) || (PlayerCanSeeSlender(i, iBossIndex) && !view_as<bool>(GetProfileNum(profile,"jumpscare_no_sight",0))))
+								if ((NPCGetDistanceFromEntity(bossIndex, i) <= SquareFloat(NPCGetJumpscareDistance(bossIndex, difficulty)) && GetGameTime() >= g_SlenderNextJumpScare[bossIndex]) || (PlayerCanSeeSlender(i, bossIndex) && !view_as<bool>(GetProfileNum(profile,"jumpscare_no_sight",0))))
 								{
-									bDidJumpScare = true;
+									didJumpScare = true;
 								
-									float flJumpScareDuration = NPCGetJumpscareDuration(iBossIndex, difficulty);
-									ClientDoJumpScare(i, iBossIndex, flJumpScareDuration);
+									float jumpScareDuration = NPCGetJumpscareDuration(bossIndex, difficulty);
+									ClientDoJumpScare(i, bossIndex, jumpScareDuration);
 								}
 							}
 						}
 						
-						if (bDidJumpScare)
+						if (didJumpScare)
 						{
-							g_flSlenderNextJumpScare[iBossIndex] = GetGameTime() + NPCGetJumpscareCooldown(iBossIndex, difficulty);
+							g_SlenderNextJumpScare[bossIndex] = GetGameTime() + NPCGetJumpscareCooldown(bossIndex, difficulty);
 						}
 					}
 				}
@@ -4633,7 +5189,7 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 		else
 		{
 			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: failed because of teleport time (curtime: %f, teletime: %f)", iBossIndex, GetGameTime(), g_flSlenderNextTeleportTime[iBossIndex]);
+			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: failed because of teleport time (curtime: %f, teletime: %f)", bossIndex, GetGameTime(), g_SlenderNextTeleportTime[bossIndex]);
 			#endif
 		}
 	}
@@ -4641,43 +5197,58 @@ public Action Timer_SlenderTeleportThink(Handle timer, any iBossIndex)
 	return Plugin_Continue;
 }
 
-bool SlenderMarkAsFake(int iBossIndex)
+bool SlenderMarkAsFake(int bossIndex)
 {
-	int iBossFlags = NPCGetFlags(iBossIndex);
-	if (iBossFlags & SFF_MARKEDASFAKE) return false;
+	int bossFlags = NPCGetFlags(bossIndex);
+	if (bossFlags & SFF_MARKEDASFAKE)
+	{
+		return false;
+	}
 	
-	int slender = NPCGetEntIndex(iBossIndex);
-	g_iSlender[iBossIndex] = INVALID_ENT_REFERENCE;
-	g_iSlenderModel[iBossIndex] = INVALID_ENT_REFERENCE;
+	int slender = NPCGetEntIndex(bossIndex);
+	g_SlenderEnt[bossIndex] = INVALID_ENT_REFERENCE;
+	g_SlenderModel[bossIndex] = INVALID_ENT_REFERENCE;
 	
-	NPCSetFlags(iBossIndex, iBossFlags | SFF_MARKEDASFAKE);
+	NPCSetFlags(bossIndex, bossFlags | SFF_MARKEDASFAKE);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	g_hSlenderFakeTimer[iBossIndex] = CreateTimer(3.0, Timer_SlenderMarkedAsFake, iBossIndex, TIMER_FLAG_NO_MAPCHANGE);
+	g_SlenderFakeTimer[bossIndex] = CreateTimer(3.0, Timer_SlenderMarkedAsFake, bossIndex, TIMER_FLAG_NO_MAPCHANGE);
 
 	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 	
 	if (slender && slender != INVALID_ENT_REFERENCE)
 	{
-		int hitbox = g_iSlenderHitbox[iBossIndex];
+		int hitbox = g_SlenderHitbox[bossIndex];
 		if (hitbox && hitbox != INVALID_ENT_REFERENCE && IsValidEntity(hitbox))
 		{
-			int iFlags = GetEntProp(hitbox, Prop_Send, "m_usSolidFlags");
-			if (!(iFlags & 0x0004)) iFlags |= 0x0004; // 	FSOLID_NOT_SOLID
-			if (!(iFlags & 0x0008)) iFlags |= 0x0008; // 	FSOLID_TRIGGER
-			SetEntProp(hitbox, Prop_Send, "m_usSolidFlags", iFlags);
+			int flags = GetEntProp(hitbox, Prop_Send, "m_usSolidFlags");
+			if (!(flags & 0x0004))
+			{
+				flags |= 0x0004; // 	FSOLID_NOT_SOLID
+			}
+			if (!(flags & 0x0008))
+			{
+				flags |= 0x0008; // 	FSOLID_TRIGGER
+			}
+			SetEntProp(hitbox, Prop_Send, "m_usSolidFlags", flags);
 		}
 
-		int iFlags = GetEntProp(slender, Prop_Send, "m_usSolidFlags");
-		if (!(iFlags & 0x0004)) iFlags |= 0x0004; // 	FSOLID_NOT_SOLID
-		if (!(iFlags & 0x0008)) iFlags |= 0x0008; // 	FSOLID_TRIGGER
-		SetEntProp(slender, Prop_Send, "m_usSolidFlags", iFlags);
-	
-		if(view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_sSlenderEngineSound[iBossIndex][0] != '\0')
+		int flags = GetEntProp(slender, Prop_Send, "m_usSolidFlags");
+		if (!(flags & 0x0004))
 		{
-			StopSound(slender, SNDCHAN_STATIC, g_sSlenderEngineSound[iBossIndex]);
+			flags |= 0x0004; // 	FSOLID_NOT_SOLID
+		}
+		if (!(flags & 0x0008))
+		{
+			flags |= 0x0008; // 	FSOLID_TRIGGER
+		}
+		SetEntProp(slender, Prop_Send, "m_usSolidFlags", flags);
+	
+		if (view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_sSlenderEngineSound[bossIndex][0] != '\0')
+		{
+			StopSound(slender, SNDCHAN_STATIC, g_sSlenderEngineSound[bossIndex]);
 		}
 
 		SetEntPropFloat(slender, Prop_Send, "m_flPlaybackRate", 0.0);
@@ -4689,143 +5260,161 @@ bool SlenderMarkAsFake(int iBossIndex)
 
 public Action Timer_SlenderMarkedAsFake(Handle timer, any data)
 {
-	if (timer != g_hSlenderFakeTimer[data]) return Plugin_Stop;
+	if (timer != g_SlenderFakeTimer[data])
+	{
+		return Plugin_Stop;
+	}
 	
 	NPCRemove(data);
 
 	return Plugin_Stop;
 }
 
-stock int SpawnSlenderModel(int iBossIndex, const float pos[3], bool deathCam = false)
+stock int SpawnSlenderModel(int bossIndex, const float pos[3], bool deathCam = false)
 {
-	if (NPCGetUniqueID(iBossIndex) == -1)
+	if (NPCGetUniqueID(bossIndex) == -1)
 	{
 		LogError("Could not spawn boss model: boss does not exist!");
 		return -1;
 	}
 	
-	int profileIndex = NPCGetProfileIndex(iBossIndex);
+	int profileIndex = NPCGetProfileIndex(bossIndex);
 	
 	char buffer[PLATFORM_MAX_PATH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
-	float flPlaybackRate, flTempFootsteps, flCycle;
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	float playbackRate, tempFootsteps, cycle;
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	GetSlenderModel(iBossIndex, _, buffer, sizeof(buffer));
+	GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
 	if (buffer[0] == '\0')
 	{
 		LogError("Could not spawn boss model: model is invalid!");
 		return -1;
 	}
-	float flModelScale = NPCGetModelScale(iBossIndex);
-	if (flModelScale <= 0.0)
+	float modelScale = NPCGetModelScale(bossIndex);
+	if (modelScale <= 0.0)
 	{
 		LogError("Could not spawn boss model: model scale is less than or equal to 0.0!");
 		return -1;
 	}
-	int iModelSkin = NPCGetModelSkin(iBossIndex);
-	if (iModelSkin < 0)
+	int modelSkin = NPCGetModelSkin(bossIndex);
+	if (modelSkin < 0)
 	{
 		LogError("Could not spawn boss model: model skin is less than 0!");
 		return -1;
 	}
 	
-	int iSlenderModel = CreateEntityByName("prop_dynamic_override");
-	if (iSlenderModel != -1)
+	int slenderModel = CreateEntityByName("prop_dynamic_override");
+	if (slenderModel != -1)
 	{
-		SetEntityModel(iSlenderModel, buffer);
+		SetEntityModel(slenderModel, buffer);
 		
-		TeleportEntity(iSlenderModel, pos, NULL_VECTOR, NULL_VECTOR);
-		DispatchSpawn(iSlenderModel);
-		ActivateEntity(iSlenderModel);
+		TeleportEntity(slenderModel, pos, NULL_VECTOR, NULL_VECTOR);
+		DispatchSpawn(slenderModel);
+		ActivateEntity(slenderModel);
 		if (!deathCam) 
 		{
-			GetProfileAnimation(iBossIndex, profile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), flPlaybackRate, difficulty, _, g_flSlenderIdleFootstepTime[iBossIndex], flCycle);
+			GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
 		}
 		else 
 		{
-			bool bAnimationFound = GetProfileAnimation(iBossIndex, profile, ChaserAnimation_DeathcamAnimations, buffer, sizeof(buffer), flPlaybackRate, 1, _, flTempFootsteps, flCycle);
-			if (!bAnimationFound || strcmp(buffer,"") <= 0)
+			bool animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_DeathcamAnimations, buffer, sizeof(buffer), playbackRate, 1, _, tempFootsteps, cycle);
+			if (!animationFound || strcmp(buffer,"") <= 0)
 			{
-				GetProfileAnimation(iBossIndex, profile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), flPlaybackRate, difficulty, _, g_flSlenderIdleFootstepTime[iBossIndex], flCycle);
+				GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, buffer, sizeof(buffer), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
 			}
 		}
 		if (buffer[0] != '\0')
 		{
 			SetVariantString(buffer);
-			AcceptEntityInput(iSlenderModel, "SetDefaultAnimation");
+			AcceptEntityInput(slenderModel, "SetDefaultAnimation");
 			SetVariantString(buffer);
-			AcceptEntityInput(iSlenderModel, "SetAnimation");
-			AcceptEntityInput(iSlenderModel, "DisableCollision");
+			AcceptEntityInput(slenderModel, "SetAnimation");
+			AcceptEntityInput(slenderModel, "DisableCollision");
 		}
 		
-		SetVariantFloat(flPlaybackRate);
-		AcceptEntityInput(iSlenderModel, "SetPlaybackRate");
-		SetEntPropFloat(iSlenderModel, Prop_Data, "m_flCycle", flCycle);
+		SetVariantFloat(playbackRate);
+		AcceptEntityInput(slenderModel, "SetPlaybackRate");
+		SetEntPropFloat(slenderModel, Prop_Data, "m_flCycle", cycle);
 		
 		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 		{
-			float flScaleModel = flModelScale * 0.5;
-			SetEntPropFloat(iSlenderModel, Prop_Send, "m_flModelScale", flScaleModel);
+			float scaleModel = modelScale * 0.5;
+			SetEntPropFloat(slenderModel, Prop_Send, "m_flModelScale", scaleModel);
 		}
 		else
 		{
-			SetEntPropFloat(iSlenderModel, Prop_Send, "m_flModelScale", flModelScale);
+			SetEntPropFloat(slenderModel, Prop_Send, "m_flModelScale", modelScale);
 		}
-		if (NPCGetModelSkinMax(iBossIndex) > 0)
+		if (NPCGetModelSkinMax(bossIndex) > 0)
 		{
-			int iRandomSkin = GetRandomInt(0, NPCGetModelSkinMax(iBossIndex));
-			SetEntProp(iSlenderModel, Prop_Send, "m_nSkin", iRandomSkin);
-		}
-		else
-		{
-			if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0))) SetEntProp(iSlenderModel, Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(iBossIndex, difficulty));
-			else SetEntProp(iSlenderModel, Prop_Send, "m_nSkin", iModelSkin);
-		}
-		if (NPCGetModelBodyGroupsMax(iBossIndex) > 0)
-		{
-			int iRandomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(iBossIndex));
-			SetEntProp(iSlenderModel, Prop_Send, "m_nBody", iRandomBody);
+			int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(bossIndex));
+			SetEntProp(slenderModel, Prop_Send, "m_nSkin", randomSkin);
 		}
 		else
 		{
-			if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0))) SetEntProp(iSlenderModel, Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(iBossIndex, difficulty));
-			else SetEntProp(iSlenderModel, Prop_Send, "m_nBody", NPCGetModelBodyGroups(iBossIndex));
+			if (view_as<bool>(GetProfileNum(profile,"skin_difficulty",0)))
+			{
+				SetEntProp(slenderModel, Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(bossIndex, difficulty));
+			}
+			else
+			{
+				SetEntProp(slenderModel, Prop_Send, "m_nSkin", modelSkin);
+			}
+		}
+		if (NPCGetModelBodyGroupsMax(bossIndex) > 0)
+		{
+			int randomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(bossIndex));
+			SetEntProp(slenderModel, Prop_Send, "m_nBody", randomBody);
+		}
+		else
+		{
+			if (view_as<bool>(GetProfileNum(profile,"body_difficulty",0)))
+			{
+				SetEntProp(slenderModel, Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(bossIndex, difficulty));
+			}
+			else
+			{
+				SetEntProp(slenderModel, Prop_Send, "m_nBody", NPCGetModelBodyGroups(bossIndex));
+			}
 		}
 
-		SetEntProp(iSlenderModel, Prop_Send, "m_nBody", GetBossProfileBodyGroups(profileIndex));
+		SetEntProp(slenderModel, Prop_Send, "m_nBody", GetBossProfileBodyGroups(profileIndex));
 
 		// Create special effects.
-		SetEntityRenderMode(iSlenderModel, view_as<RenderMode>(g_iSlenderRenderMode[iBossIndex]));
-		SetEntityRenderFx(iSlenderModel, view_as<RenderFx>(g_iSlenderRenderFX[iBossIndex]));
-		SetEntityRenderColor(iSlenderModel, g_iSlenderRenderColor[iBossIndex][0], g_iSlenderRenderColor[iBossIndex][1], g_iSlenderRenderColor[iBossIndex][2], g_iSlenderRenderColor[iBossIndex][3]);
+		SetEntityRenderMode(slenderModel, view_as<RenderMode>(g_SlenderRenderMode[bossIndex]));
+		SetEntityRenderFx(slenderModel, view_as<RenderFx>(g_SlenderRenderFX[bossIndex]));
+		SetEntityRenderColor(slenderModel, g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
 		
 		g_Config.Rewind();
 	}
 	
-	return iSlenderModel;
+	return slenderModel;
 }
 
-stock bool PlayerCanSeeSlender(int client,int iBossIndex, bool bCheckFOV=true, bool bCheckBlink=false, bool bCheckEliminated=true)
+stock bool PlayerCanSeeSlender(int client,int bossIndex, bool checkFOV=true, bool checkBlink=false, bool checkEliminated=true)
 {
-	return IsNPCVisibleToPlayer(iBossIndex, client, bCheckFOV, bCheckBlink, bCheckEliminated);
+	return IsNPCVisibleToPlayer(bossIndex, client, checkFOV, checkBlink, checkEliminated);
 }
 
-stock bool PeopleCanSeeSlender(int iBossIndex, bool bCheckFOV=true, bool bCheckBlink=false)
+stock bool PeopleCanSeeSlender(int bossIndex, bool checkFOV=true, bool checkBlink=false)
 {
-	return IsNPCVisibleToAPlayer(iBossIndex, bCheckFOV, bCheckBlink);
+	return IsNPCVisibleToAPlayer(bossIndex, checkFOV, checkBlink);
 }
 
-stock bool SlenderAddGlow(int iBossIndex, const char[] sAttachment="", int iColor[4] = {255, 255, 255, 255})
+stock bool SlenderAddGlow(int bossIndex, const char[] attachment="", int color[4] = {255, 255, 255, 255})
 {
-	int iEnt = NPCGetEntIndex(iBossIndex);
-	if (!iEnt || iEnt == INVALID_ENT_REFERENCE) return false;
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return false;
+	}
 	
-	char sBuffer[PLATFORM_MAX_PATH];
-	GetEntPropString(iEnt, Prop_Data, "m_ModelName", sBuffer, sizeof(sBuffer));
+	char buffer[PLATFORM_MAX_PATH];
+	GetEntPropString(slender, Prop_Data, "m_ModelName", buffer, sizeof(buffer));
 	
-	if (sBuffer[0] == '\0') 
+	if (buffer[0] == '\0') 
 	{
 		return false;
 	}
@@ -4833,40 +5422,40 @@ stock bool SlenderAddGlow(int iBossIndex, const char[] sAttachment="", int iColo
 	int ent = CreateEntityByName("tf_taunt_prop");
 	if (ent != -1)
 	{
-		float flModelScale = GetEntPropFloat(iEnt, Prop_Send, "m_flModelScale");
+		float modelScale = GetEntPropFloat(slender, Prop_Send, "m_flModelScale");
 		
-		SetEntityModel(ent, sBuffer);
+		SetEntityModel(ent, buffer);
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
 		SetEntityRenderMode(ent, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(ent, 0, 0, 0, 0);
-		SetEntPropFloat(ent, Prop_Send, "m_flModelScale", flModelScale);
+		SetEntPropFloat(ent, Prop_Send, "m_flModelScale", modelScale);
 		SetEdictFlags(ent, FL_EDICT_FULLCHECK | FL_EDICT_ALWAYS);
 		
-		int iFlags = GetEntProp(ent, Prop_Send, "m_fEffects");
-		SetEntProp(ent, Prop_Send, "m_fEffects", iFlags | (1 << 0));
+		int flags = GetEntProp(ent, Prop_Send, "m_fEffects");
+		SetEntProp(ent, Prop_Send, "m_fEffects", flags | (1 << 0));
 		
 		SetVariantString("!activator");
-		AcceptEntityInput(ent, "SetParent", iEnt);
+		AcceptEntityInput(ent, "SetParent", slender);
 		
-		if (sAttachment[0] != '\0')
+		if (attachment[0] != '\0')
 		{
-			SetVariantString(sAttachment);
+			SetVariantString(attachment);
 			AcceptEntityInput(ent, "SetParentAttachment");
 		}
 		
 		SDKHook(ent, SDKHook_SetTransmit, Hook_SlenderGlowSetTransmit);
 		
-		int iGlowManager = TF2_CreateGlow(ent);
-		g_iNPCGlowEntity[iBossIndex] = EntIndexToEntRef(iGlowManager);
+		int glowManager = TF2_CreateGlow(ent);
+		g_NpcGlowEntity[bossIndex] = EntIndexToEntRef(glowManager);
 		//Set our desired glow color
-		SetVariantColor(iColor);
-		AcceptEntityInput(iGlowManager, "SetGlowColor");
-		g_hSDKShouldTransmit.HookEntity(Hook_Pre, iGlowManager, Hook_EntityShouldTransmit);
+		SetVariantColor(color);
+		AcceptEntityInput(glowManager, "SetGlowColor");
+		g_hSDKShouldTransmit.HookEntity(Hook_Pre, glowManager, Hook_EntityShouldTransmit);
 		g_hSDKShouldTransmit.HookEntity(Hook_Pre, ent, Hook_EntityShouldTransmit);
-		SetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity", iGlowManager);
+		SetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity", glowManager);
 
-		g_iNPCTauntGlowEntity[iBossIndex] = EntIndexToEntRef(ent);
+		g_NpcTauntGlowEntity[bossIndex] = EntIndexToEntRef(ent);
 		
 		return true;
 	}
@@ -4874,51 +5463,57 @@ stock bool SlenderAddGlow(int iBossIndex, const char[] sAttachment="", int iColo
 	return false;
 }
 
-stock void SlenderRemoveGlow(int iBossIndex)
+stock void SlenderRemoveGlow(int bossIndex)
 {
-	int iEnt = NPCGetEntIndex(iBossIndex);
-	if (!iEnt || iEnt == INVALID_ENT_REFERENCE) return;
-	
-	int iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "tf_taunt_prop")) > MaxClients)
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
-		if(GetEntProp(iEffect,Prop_Send,"moveparent") == iEnt)
+		return;
+	}
+	
+	int effect = -1;
+	while((effect = FindEntityByClassname(effect, "tf_taunt_prop")) > MaxClients)
+	{
+		if (GetEntProp(effect,Prop_Send,"moveparent") == slender)
 		{
-			RemoveEntity(iEffect);
-			g_iNPCTauntGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
-			iEnt = GetEntPropEnt(iEffect, Prop_Send, "m_hOwnerEntity");
-			if (iEnt > MaxClients)
+			RemoveEntity(effect);
+			g_NpcTauntGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
+			slender = GetEntPropEnt(effect, Prop_Send, "m_hOwnerEntity");
+			if (slender > MaxClients)
 			{
-				RemoveEntity(iEnt);
-				g_iNPCGlowEntity[iBossIndex] = INVALID_ENT_REFERENCE;
+				RemoveEntity(slender);
+				g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
 			}
 			break;
 		}
 	}
 }
 
-// TODO: bCheckBlink and bCheckEliminated should NOT be function arguments!
-bool IsNPCVisibleToPlayer(int iNPCIndex,int client, bool bCheckFOV=true, bool bCheckBlink=false, bool bCheckEliminated=true)
+// TODO: checkBlink and checkEliminated should NOT be function arguments!
+bool IsNPCVisibleToPlayer(int npcIndex,int client, bool checkFOV=true, bool checkBlink=false, bool checkEliminated=true)
 {
-	if (!NPCIsValid(iNPCIndex)) return false;
-	
-	int iNPC = NPCGetEntIndex(iNPCIndex);
-	if (iNPC && iNPC != INVALID_ENT_REFERENCE)
+	if (!NPCIsValid(npcIndex))
 	{
-		float flEyePos[3];
-		NPCGetEyePosition(iNPCIndex, flEyePos);
-		return IsPointVisibleToPlayer(client, flEyePos, bCheckFOV, bCheckBlink, bCheckEliminated);
+		return false;
+	}
+	
+	int npcEnt = NPCGetEntIndex(npcIndex);
+	if (npcEnt && npcEnt != INVALID_ENT_REFERENCE)
+	{
+		float eyePos[3];
+		NPCGetEyePosition(npcIndex, eyePos);
+		return IsPointVisibleToPlayer(client, eyePos, checkFOV, checkBlink, checkEliminated);
 	}
 	
 	return false;
 }
 
-// TODO: bCheckBlink and bCheckEliminated should NOT be function arguments!
-bool IsNPCVisibleToAPlayer(int iNPCIndex, bool bCheckFOV=true, bool bCheckBlink=false, bool bCheckEliminated=true)
+// TODO: checkBlink and checkEliminated should NOT be function arguments!
+bool IsNPCVisibleToAPlayer(int npcIndex, bool checkFOV=true, bool checkBlink=false, bool checkEliminated=true)
 {
 	for (int client = 1; client <= MaxClients; client++)
 	{
-		if (IsNPCVisibleToPlayer(iNPCIndex, client, bCheckFOV, bCheckBlink, bCheckEliminated))
+		if (IsNPCVisibleToPlayer(npcIndex, client, checkFOV, checkBlink, checkEliminated))
 		{
 			return true;
 		}
@@ -4927,91 +5522,127 @@ bool IsNPCVisibleToAPlayer(int iNPCIndex, bool bCheckFOV=true, bool bCheckBlink=
 	return false;
 }
 
-bool CanNPCSeePlayerNonTransparent(int iNPCIndex, int client)
+bool CanNPCSeePlayerNonTransparent(int npcIndex, int client)
 {
-	if (!NPCIsValid(iNPCIndex)) return false;
-
-	if (!IsValidClient(client)) return false;
-
-	bool bAttackEliminated = view_as<bool>(NPCGetFlags(iNPCIndex) & SFF_ATTACKWAITERS);
-
-	if (!IsTargetValidForSlender(client, bAttackEliminated)) return false;
-
-	int iNPC = NPCGetEntIndex(iNPCIndex);
-	if (iNPC && iNPC != INVALID_ENT_REFERENCE)
+	if (!NPCIsValid(npcIndex))
 	{
-		float flEyePos[3], flClientPos[3];
-		NPCGetEyePosition(iNPCIndex, flEyePos);
-		GetClientEyePosition(client, flClientPos);
-		Handle hTrace = TR_TraceRayFilterEx(flEyePos,
-			flClientPos,
+		return false;
+	}
+
+	if (!IsValidClient(client))
+	{
+		return false;
+	}
+
+	bool attackEliminated = view_as<bool>(NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS);
+
+	if (!IsTargetValidForSlender(client, attackEliminated))
+	{
+		return false;
+	}
+
+	int npcEnt = NPCGetEntIndex(npcIndex);
+	if (npcEnt && npcEnt != INVALID_ENT_REFERENCE)
+	{
+		float eyePos[3], clientPos[3];
+		NPCGetEyePosition(npcIndex, eyePos);
+		GetClientEyePosition(client, clientPos);
+		Handle trace = TR_TraceRayFilterEx(eyePos,
+			clientPos,
 			MASK_NPCSOLID,
 			RayType_EndPoint,
 			TraceRayBossVisibility,
-			iNPC);
+			npcEnt);
 
-		bool bIsVisible = !TR_DidHit(hTrace);
-		delete hTrace;
+		bool bIsVisible = !TR_DidHit(trace);
+		delete trace;
 
 		return bIsVisible;
 	}
 	return false;
 }
 
-float NPCGetDistanceFromPoint(int iNPCIndex, const float flPoint[3])
+float NPCGetDistanceFromPoint(int npcIndex, const float point[3])
 {
-	int iNPC = NPCGetEntIndex(iNPCIndex);
-	if (iNPC && iNPC != INVALID_ENT_REFERENCE)
+	int npcEnt = NPCGetEntIndex(npcIndex);
+	if (npcEnt && npcEnt != INVALID_ENT_REFERENCE)
 	{
-		float flPos[3];
-		SlenderGetAbsOrigin(iNPCIndex, flPos);
+		float pos[3];
+		SlenderGetAbsOrigin(npcIndex, pos);
 		
-		return GetVectorSquareMagnitude(flPos, flPoint);
+		return GetVectorSquareMagnitude(pos, point);
 	}
 	
 	return -1.0;
 }
 
-float NPCGetDistanceFromEntity(int iNPCIndex,int ent)
+float NPCGetDistanceFromEntity(int npcIndex,int ent)
 {
-	if (!IsValidEntity(ent)) return -1.0;
+	if (!IsValidEntity(ent))
+	{
+		return -1.0;
+	}
 	
-	float flPos[3];
-	GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flPos);
+	float pos[3];
+	GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
 	
-	return NPCGetDistanceFromPoint(iNPCIndex, flPos);
+	return NPCGetDistanceFromPoint(npcIndex, pos);
 }
 
 public bool TraceRayBossVisibility(int entity,int mask, any data)
 {
-	if (entity == data || IsValidClient(entity)) return false;
+	if (entity == data || IsValidClient(entity))
+	{
+		return false;
+	}
 	if (entity > 0 && entity <= MaxClients)
 	{
-		if (g_bPlayerProxy[entity] || IsClientInGhostMode(entity)) return false;
+		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
+		{
+			return false;
+		}
 	}
-	int iBossIndex = NPCGetFromEntIndex(entity);
-	if (entity <= MAX_BOSSES) return false;
-	if (iBossIndex != -1) return false;
+	int bossIndex = NPCGetFromEntIndex(entity);
+	if (entity <= MAX_BOSSES)
+	{
+		return false;
+	}
+	if (bossIndex != -1)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_npc") == 0 || strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc") == 0 || strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	return true;
 }
 
 public bool TraceRayDontHitCharacters(int entity,int mask, any data)
 {
-	if (entity > 0 && entity <= MaxClients) return false;
+	if (entity > 0 && entity <= MaxClients)
+	{
+		return false;
+	}
 	
-	int iBossIndex = NPCGetFromEntIndex(entity);
-	if (iBossIndex != -1) return false;
+	int bossIndex = NPCGetFromEntIndex(entity);
+	if (bossIndex != -1)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	
 	return true;
@@ -5019,34 +5650,55 @@ public bool TraceRayDontHitCharacters(int entity,int mask, any data)
 
 public bool TraceRayDontHitEntityAndProxies(int entity,int mask,any data)
 {
-	if (entity == data) return false;
+	if (entity == data)
+	{
+		return false;
+	}
 	if (entity > 0 && entity <= MaxClients)
 	{
-		if (g_bPlayerProxy[entity] || IsClientInGhostMode(entity)) return false;
+		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
+		{
+			return false;
+		}
 	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	return true;
 }
 
 public bool TraceRayDontHitAnyEntity(int entity,int mask,any data)
 {
-	if (entity == data) return false;
+	if (entity == data)
+	{
+		return false;
+	}
 	if (entity > 0 && entity <= MaxClients)
 	{
-		if (g_bPlayerProxy[entity] || IsClientInGhostMode(entity)) return false;
+		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
+		{
+			return false;
+		}
 	}
-	int iBossIndex = NPCGetFromEntIndex(entity);
-	if (iBossIndex != -1) return false;
+	int bossIndex = NPCGetFromEntIndex(entity);
+	if (bossIndex != -1)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_npc") == 0 || strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc") == 0 || strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	return true;
 }
@@ -5055,31 +5707,52 @@ public bool TraceRayDontHitAnyEntity_Pathing(int entity, int contentsMask, int d
 {
 	if ((entity > 0 && entity <= MaxClients))
 	{
-		if (g_bPlayerProxy[entity] || IsClientInGhostMode(entity)) return false;
+		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
+		{
+			return false;
+		}
 	}
-	int iBossIndex = NPCGetFromEntIndex(entity);
-	if (iBossIndex != -1) return false;
+	int bossIndex = NPCGetFromEntIndex(entity);
+	if (bossIndex != -1)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_npc") == 0 || strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc") == 0 || strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	return true;
 }
 
 public bool TraceRayDontHitCharactersOrEntity(int entity,int mask, any data)
 {
-	if (entity == data) return false;
+	if (entity == data)
+	{
+		return false;
+	}
 
-	if (entity > 0 && entity <= MaxClients) return false;
-	int iBossIndex = NPCGetFromEntIndex(entity);
-	if (iBossIndex != -1) return false;
+	if (entity > 0 && entity <= MaxClients)
+	{
+		return false;
+	}
+	int bossIndex = NPCGetFromEntIndex(entity);
+	if (bossIndex != -1)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_npc") == 0 || strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc") == 0 || strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	
 	return true;
@@ -5087,13 +5760,19 @@ public bool TraceRayDontHitCharactersOrEntity(int entity,int mask, any data)
 
 public bool TraceRayDontHitBosses(int entity,int mask, any data)
 {
-	int iBossIndex = NPCGetFromEntIndex(entity);
-	if (iBossIndex != -1) return false;
+	int bossIndex = NPCGetFromEntIndex(entity);
+	if (bossIndex != -1)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_npc") == 0 || strcmp(sClass, "base_boss") == 0) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc") == 0 || strcmp(class, "base_boss") == 0)
+		{
+			return false;
+		}
 	}
 	
 	return true;
@@ -5102,35 +5781,44 @@ public bool TraceRayDontHitBosses(int entity,int mask, any data)
 /**
  *	Calculates the position and spawn point for a proxy.
  */
-bool SpawnProxy(int client, int iBossIndex, float flTeleportPos[3], int &iSpawnPoint=-1)
+bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPointEnt=-1)
 {
-	iSpawnPoint = -1;
+	spawnPointEnt = -1;
 
-	if (iBossIndex == -1 || client <= 0) 
+	if (bossIndex == -1 || client <= 0) 
+	{
 		return false;
+	}
 
 	if (!IsRoundPlaying())
+	{
 		return false;
+	}
 	
-	if (!(NPCGetFlags(iBossIndex) & SFF_PROXIES)) return false;
+	if (!(NPCGetFlags(bossIndex) & SFF_PROXIES))
+	{
+		return false;
+	}
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	
-	if (iBossIndex == -1) //Please don't ask why I did this; EDIT: Yes, I will! Why? DOUBLE EDIT: Stupid warnings that I couldn't fix IIRC...
+	if (bossIndex == -1) //Please don't ask why I did this; EDIT: Yes, I will! Why? DOUBLE EDIT: Stupid warnings that I couldn't fix IIRC...
+	{
 		return false;
+	}
 	
-	ArrayList hSpawnPoints = new ArrayList();
-	char sName[32];
+	ArrayList spawnPoints = new ArrayList();
+	char name[32];
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 	{
-		GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-		if (strcmp(sName, "sf2_proxy_spawnpoint") == 0)
+		GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
+		if (strcmp(name, "sf2_proxy_spawnpoint") == 0)
 		{
-			hSpawnPoints.Push(ent);
+			spawnPoints.Push(ent);
 		}
 	}
 
@@ -5141,47 +5829,49 @@ bool SpawnProxy(int client, int iBossIndex, float flTeleportPos[3], int &iSpawnP
 		if (!spawnPoint.IsValid() || !spawnPoint.Enabled)
 			continue;
 
-		hSpawnPoints.Push(ent);
+		spawnPoints.Push(ent);
 	}
 
 	ent = -1;
-	if (hSpawnPoints.Length > 0) 
+	if (spawnPoints.Length > 0) 
 	{
-		ent = hSpawnPoints.Get(GetRandomInt(0, hSpawnPoints.Length - 1));
+		ent = spawnPoints.Get(GetRandomInt(0, spawnPoints.Length - 1));
 	}
 	
-	delete hSpawnPoints;
+	delete spawnPoints;
 	
 	if (ent && ent != -1)
 	{
-		//SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport spawn point for boss(%i) proxy: %i", iBossIndex, ent);
-		iSpawnPoint = ent;
-		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flTeleportPos);
+		//SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport spawn point for boss(%i) proxy: %i", bossIndex, ent);
+		spawnPointEnt = ent;
+		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", teleportPos);
 		return true;
 	}
 
 	// If the map has no pre defined spawn points, search surrounding CNavAreas around target.
 
-	int iTeleportTarget = EntRefToEntIndex(g_iSlenderProxyTarget[iBossIndex]);
-	if (!iTeleportTarget || iTeleportTarget == INVALID_ENT_REFERENCE)
+	int teleportTarget = EntRefToEntIndex(g_SlenderProxyTarget[bossIndex]);
+	if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
+	{
 		return false;
+	}
 
-	float flTeleportMinRange = CalculateTeleportMinRange(iBossIndex, g_flSlenderProxyTeleportMinRange[iBossIndex][difficulty], g_flSlenderProxyTeleportMaxRange[iBossIndex][difficulty]);
-	CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(iTeleportTarget);
-	CNavArea TargetArea = tempCharacter.GetLastKnownArea();
-	int iTeleportAreaIndex = -1;
+	float teleportMinRange = CalculateTeleportMinRange(bossIndex, g_SlenderProxyTeleportMinRange[bossIndex][difficulty], g_SlenderProxyTeleportMaxRange[bossIndex][difficulty]);
+	CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(teleportTarget);
+	CNavArea targetArea = tempCharacter.GetLastKnownArea();
+	int teleportAreaIndex = -1;
 
-	if (TargetArea != NULL_AREA)
+	if (targetArea != NULL_AREA)
 	{
 		// Search outwards until travel distance is at maximum range.
-		ArrayList hAreaArray = new ArrayList(2);
-		SurroundingAreasCollector sCollector = TheNavMesh.CollectSurroundingAreas(TargetArea, g_flSlenderTeleportMaxRange[iBossIndex][difficulty], _, _);
+		ArrayList areaArray = new ArrayList(2);
+		SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(targetArea, g_SlenderTeleportMaxRange[bossIndex][difficulty], _, _);
 		{
-			int iPoppedAreas;
+			int poppedAreas;
 						
-			for (int iAreaIndex = 0, iMaxCount = sCollector.Count(); iAreaIndex < iMaxCount; iAreaIndex++)
+			for (int areaIndex = 0, maxCount = collector.Count(); areaIndex < maxCount; areaIndex++)
 			{
-				CNavArea Area = sCollector.Get(iAreaIndex);
+				CNavArea Area = collector.Get(areaIndex);
 									
 				// Check flags.
 				if (Area.GetAttributes() & NAV_MESH_NO_HOSTAGES)
@@ -5190,187 +5880,197 @@ bool SpawnProxy(int client, int iBossIndex, float flTeleportPos[3], int &iSpawnP
 					continue;
 				}
 
-				int iIndex = hAreaArray.Push(Area);
-				hAreaArray.Set(iIndex, Area.GetCostSoFar(), 1);
-				iPoppedAreas++;
+				int index = areaArray.Push(Area);
+				areaArray.Set(index, Area.GetCostSoFar(), 1);
+				poppedAreas++;
 			}
 							
 			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport for boss %d: collected %d areas", iBossIndex, iPoppedAreas);
+			SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport for boss %d: collected %d areas", bossIndex, poppedAreas);
 			#endif
-			delete sCollector;
+			delete collector;
 		}
 		
-		ArrayList hAreaArrayClose = new ArrayList(4);
-		ArrayList hAreaArrayAverage = new ArrayList(4);
-		ArrayList hAreaArrayFar = new ArrayList(4);
+		ArrayList areaArrayClose = new ArrayList(4);
+		ArrayList areaArrayAverage = new ArrayList(4);
+		ArrayList areaArrayFar = new ArrayList(4);
 		
 		for (int i = 1; i <= 3; i++)
 		{
-			float flRangeSectionMin = flTeleportMinRange + (g_flSlenderProxyTeleportMaxRange[iBossIndex][difficulty] - flTeleportMinRange) * (float(i - 1) / 3.0);
-			float flRangeSectionMax = flTeleportMinRange + (g_flSlenderProxyTeleportMaxRange[iBossIndex][difficulty] - flTeleportMinRange) * (float(i) / 3.0);
+			float rangeSectionMin = teleportMinRange + (g_SlenderProxyTeleportMaxRange[bossIndex][difficulty] - teleportMinRange) * (float(i - 1) / 3.0);
+			float rangeSectionMax = teleportMinRange + (g_SlenderProxyTeleportMaxRange[bossIndex][difficulty] - teleportMinRange) * (float(i) / 3.0);
 			
-			for (int i2 = 0, iSize = hAreaArray.Length; i2 < iSize; i2++)
+			for (int i2 = 0, iSize = areaArray.Length; i2 < iSize; i2++)
 			{
-				CNavArea area = hAreaArray.Get(i2);
+				CNavArea area = areaArray.Get(i2);
 		
-				float flAreaSpawnPoint[3];
-				area.GetCenter(flAreaSpawnPoint);
+				float areaSpawnPoint[3];
+				area.GetCenter(areaSpawnPoint);
 				
-				int iBoss = NPCGetEntIndex(iBossIndex);
+				int bossEnt = NPCGetEntIndex(bossIndex);
 			
 				// Check space. First raise to HalfHumanHeight * 2, then trace downwards to get ground level.
-				float flTraceStartPos[3];
-				flTraceStartPos[0] = flAreaSpawnPoint[0];
-				flTraceStartPos[1] = flAreaSpawnPoint[1];
-				flTraceStartPos[2] = flAreaSpawnPoint[2] + (HalfHumanHeight * 2.0);
+				float traceStartPos[3];
+				traceStartPos[0] = areaSpawnPoint[0];
+				traceStartPos[1] = areaSpawnPoint[1];
+				traceStartPos[2] = areaSpawnPoint[2] + (HalfHumanHeight * 2.0);
 			
-				float flTraceMins[3];
-				flTraceMins[0] = HULL_TF2PLAYER_MINS[0];
-				flTraceMins[1] = HULL_TF2PLAYER_MINS[1];
-				flTraceMins[2] = 0.0;
+				float traceMins[3];
+				traceMins[0] = HULL_TF2PLAYER_MINS[0];
+				traceMins[1] = HULL_TF2PLAYER_MINS[1];
+				traceMins[2] = 0.0;
 			
 				
-				float flTraceMaxs[3];
-				flTraceMaxs[0] = HULL_TF2PLAYER_MAXS[0];
-				flTraceMaxs[1] = HULL_TF2PLAYER_MAXS[1];
-				flTraceMaxs[2] = 0.0;
+				float traceMaxs[3];
+				traceMaxs[0] = HULL_TF2PLAYER_MAXS[0];
+				traceMaxs[1] = HULL_TF2PLAYER_MAXS[1];
+				traceMaxs[2] = 0.0;
 				
-				Handle hTrace = TR_TraceHullFilterEx(flTraceStartPos,
-					flAreaSpawnPoint,
-					flTraceMins,
-					flTraceMaxs,
+				Handle trace = TR_TraceHullFilterEx(traceStartPos,
+					areaSpawnPoint,
+					traceMins,
+					traceMaxs,
 					MASK_NPCSOLID,
 					TraceRayDontHitEntity,
-					iBoss);
+					bossEnt);
 				
-				float flTraceHitPos[3];
-				TR_GetEndPosition(flTraceHitPos, hTrace);
-				flTraceHitPos[2] += 1.0;
-				delete hTrace;
+				float traceHitPos[3];
+				TR_GetEndPosition(traceHitPos, trace);
+				traceHitPos[2] += 1.0;
+				delete trace;
 				
-				if (TR_PointOutsideWorld(flTraceHitPos))
+				if (TR_PointOutsideWorld(traceHitPos))
 				{
 					continue;
 				}
-				if(IsSpaceOccupiedPlayer(flTraceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
+				if (IsSpaceOccupiedPlayer(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
 				{
-					flTraceHitPos[2] +=5.0;
-					if(IsSpaceOccupiedPlayer(flTraceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
+					traceHitPos[2] +=5.0;
+					if (IsSpaceOccupiedPlayer(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
+					{
 						continue;
+					}
 				}
-				if (IsSpaceOccupiedNPC(flTraceHitPos,
+				if (IsSpaceOccupiedNPC(traceHitPos,
 					HULL_TF2PLAYER_MINS,
 					HULL_TF2PLAYER_MAXS,
-					iBoss))
+					bossEnt))
 				{
 					continue;
 				}
 			
-				flAreaSpawnPoint[0] = flTraceHitPos[0];
-				flAreaSpawnPoint[1] = flTraceHitPos[1];
-				flAreaSpawnPoint[2] = flTraceHitPos[2];
+				areaSpawnPoint[0] = traceHitPos[0];
+				areaSpawnPoint[1] = traceHitPos[1];
+				areaSpawnPoint[2] = traceHitPos[2];
 
 				// Check visibility.
-				if (IsPointVisibleToAPlayer(flAreaSpawnPoint, false, false) && !SF_IsBoxingMap() && !SF_IsRaidMap() && !SF_IsProxyMap() && !SF_BossesChaseEndlessly()) continue;
+				if (IsPointVisibleToAPlayer(areaSpawnPoint, false, false) && !SF_IsBoxingMap() && !SF_IsRaidMap() && !SF_IsProxyMap() && !SF_BossesChaseEndlessly())
+				{
+					continue;
+				}
 
-				bool bTooNear = false;
+				bool tooNear = false;
 				
 				// Check minimum range with players.
 				for (int teleportClient = 1; teleportClient <= MaxClients; teleportClient++)
 				{
 					if (!IsClientInGame(teleportClient) ||
 						!IsPlayerAlive(teleportClient) ||
-						g_bPlayerEliminated[teleportClient] ||
+						g_PlayerEliminated[teleportClient] ||
 						IsClientInGhostMode(teleportClient) || 
 						DidClientEscape(teleportClient))
 					{
 						continue;
 					}
 					
-					float flTempPos[3];
-					GetClientAbsOrigin(teleportClient, flTempPos);
+					float tempPos[3];
+					GetClientAbsOrigin(teleportClient, tempPos);
 					
-					if (GetVectorSquareMagnitude(flAreaSpawnPoint, flTempPos) <= SquareFloat(g_flSlenderProxyTeleportMinRange[iBossIndex][difficulty]))
+					if (GetVectorSquareMagnitude(areaSpawnPoint, tempPos) <= SquareFloat(g_SlenderProxyTeleportMinRange[bossIndex][difficulty]))
 					{
-						bTooNear = true;
+						tooNear = true;
 						break;
 					}
 				}
 				
-				if (bTooNear) continue;	// This area is not compatible.
+				if (tooNear)
+				{
+					continue;	// This area is not compatible.
+				}
 				
 				// Check travel distance and put in the appropriate arrays.
-				float flDist = view_as<float>(hAreaArray.Get(i2, 1));
-				if (flDist > flRangeSectionMin && flDist < flRangeSectionMax)
+				float dist = view_as<float>(areaArray.Get(i2, 1));
+				if (dist > rangeSectionMin && dist < rangeSectionMax)
 				{
-					int iIndex = -1;
-					ArrayList hTargetAreaArray = null;
+					int index = -1;
+					ArrayList targetAreaArray = null;
 					
 					switch (i)
 					{
 						case 1: 
 						{
-							iIndex = hAreaArrayClose.Push(area);
-							hTargetAreaArray = hAreaArrayClose;
+							index = areaArrayClose.Push(area);
+							targetAreaArray = areaArrayClose;
 						}
 						case 2: 
 						{
-							iIndex = hAreaArrayAverage.Push(area);
-							hTargetAreaArray = hAreaArrayAverage;
+							index = areaArrayAverage.Push(area);
+							targetAreaArray = areaArrayAverage;
 						}
 						case 3: 
 						{
-							iIndex = hAreaArrayFar.Push(area);
-							hTargetAreaArray = hAreaArrayFar;
+							index = areaArrayFar.Push(area);
+							targetAreaArray = areaArrayFar;
 						}
 					}
 					
-					if (hTargetAreaArray != null && iIndex != -1)
+					if (targetAreaArray != null && index != -1)
 					{
-						hTargetAreaArray.Set(iIndex, flAreaSpawnPoint[0], 1);
-						hTargetAreaArray.Set(iIndex, flAreaSpawnPoint[1], 2);
-						hTargetAreaArray.Set(iIndex, flAreaSpawnPoint[2], 3);
+						targetAreaArray.Set(index, areaSpawnPoint[0], 1);
+						targetAreaArray.Set(index, areaSpawnPoint[1], 2);
+						targetAreaArray.Set(index, areaSpawnPoint[2], 3);
 					}
 				}
 			}
 		}
 
-		delete hAreaArray;
+		delete areaArray;
 	
-		int iArrayIndex = -1;
+		int arrayIndex = -1;
 	
-		if (hAreaArrayClose.Length)
+		if (areaArrayClose.Length)
 		{
-			iArrayIndex = GetRandomInt(0, hAreaArrayClose.Length - 1);
-			iTeleportAreaIndex = hAreaArrayClose.Get(iArrayIndex);
-			flTeleportPos[0] = view_as<float>(hAreaArrayClose.Get(iArrayIndex, 1));
-			flTeleportPos[1] = view_as<float>(hAreaArrayClose.Get(iArrayIndex, 2));
-			flTeleportPos[2] = view_as<float>(hAreaArrayClose.Get(iArrayIndex, 3));
+			arrayIndex = GetRandomInt(0, areaArrayClose.Length - 1);
+			teleportAreaIndex = areaArrayClose.Get(arrayIndex);
+			teleportPos[0] = view_as<float>(areaArrayClose.Get(arrayIndex, 1));
+			teleportPos[1] = view_as<float>(areaArrayClose.Get(arrayIndex, 2));
+			teleportPos[2] = view_as<float>(areaArrayClose.Get(arrayIndex, 3));
 		}
-		else if (hAreaArrayAverage.Length)
+		else if (areaArrayAverage.Length)
 		{
-			iArrayIndex = GetRandomInt(0, hAreaArrayAverage.Length - 1);
-			iTeleportAreaIndex = hAreaArrayAverage.Get(iArrayIndex);
-			flTeleportPos[0] = view_as<float>(hAreaArrayAverage.Get(iArrayIndex, 1));
-			flTeleportPos[1] = view_as<float>(hAreaArrayAverage.Get(iArrayIndex, 2));
-			flTeleportPos[2] = view_as<float>(hAreaArrayAverage.Get(iArrayIndex, 3));
+			arrayIndex = GetRandomInt(0, areaArrayAverage.Length - 1);
+			teleportAreaIndex = areaArrayAverage.Get(arrayIndex);
+			teleportPos[0] = view_as<float>(areaArrayAverage.Get(arrayIndex, 1));
+			teleportPos[1] = view_as<float>(areaArrayAverage.Get(arrayIndex, 2));
+			teleportPos[2] = view_as<float>(areaArrayAverage.Get(arrayIndex, 3));
 		}
-		else if (hAreaArrayFar.Length)
+		else if (areaArrayFar.Length)
 		{
-			iArrayIndex = GetRandomInt(0, hAreaArrayFar.Length - 1);
-			iTeleportAreaIndex = hAreaArrayFar.Get(iArrayIndex);
-			flTeleportPos[0] = view_as<float>(hAreaArrayFar.Get(iArrayIndex, 1));
-			flTeleportPos[1] = view_as<float>(hAreaArrayFar.Get(iArrayIndex, 2));
-			flTeleportPos[2] = view_as<float>(hAreaArrayFar.Get(iArrayIndex, 3));
+			arrayIndex = GetRandomInt(0, areaArrayFar.Length - 1);
+			teleportAreaIndex = areaArrayFar.Get(arrayIndex);
+			teleportPos[0] = view_as<float>(areaArrayFar.Get(arrayIndex, 1));
+			teleportPos[1] = view_as<float>(areaArrayFar.Get(arrayIndex, 2));
+			teleportPos[2] = view_as<float>(areaArrayFar.Get(arrayIndex, 3));
 		}
-		delete hAreaArrayClose;
-		delete hAreaArrayAverage;
-		delete hAreaArrayFar;
+		delete areaArrayClose;
+		delete areaArrayAverage;
+		delete areaArrayFar;
 	}
 
-	if (iTeleportAreaIndex == -1)
+	if (teleportAreaIndex == -1)
+	{
 		return false;
+	}
 	
 	return true;
 }

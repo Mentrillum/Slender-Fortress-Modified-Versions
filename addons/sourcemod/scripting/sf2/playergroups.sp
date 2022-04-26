@@ -6,40 +6,46 @@
 #define SF2_MAX_PLAYER_GROUPS MAXPLAYERS
 #define SF2_MAX_PLAYER_GROUP_NAME_LENGTH 32
 
-static int g_iPlayerGroupGlobalID = -1;
-static int g_iPlayerCurrentGroup[MAXPLAYERS + 1] = { -1, ... };
-static bool g_bPlayerGroupActive[SF2_MAX_PLAYER_GROUPS] = { false, ... };
-static int g_iPlayerGroupLeader[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
-static int g_iPlayerGroupID[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
-static int g_iPlayerGroupQueuePoints[SF2_MAX_PLAYER_GROUPS];
-static int g_bPlayerGroupPlaying[SF2_MAX_PLAYER_GROUPS] = { false, ... };
-static StringMap g_hPlayerGroupNames;
-static bool g_bPlayerGroupInvitedPlayer[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
-static int g_iPlayerGroupInvitedPlayerCount[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
-static float g_flPlayerGroupInvitedPlayerTime[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
+static int g_PlayerGroupGlobalID = -1;
+static int g_PlayerCurrentGroup[MAXPLAYERS + 1] = { -1, ... };
+static bool g_PlayerGroupActive[SF2_MAX_PLAYER_GROUPS] = { false, ... };
+static int g_PlayerGroupLeader[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
+static int g_PlayerGroupID[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
+static int g_PlayerGroupQueuePoints[SF2_MAX_PLAYER_GROUPS];
+static int g_PlayerGroupPlaying[SF2_MAX_PLAYER_GROUPS] = { false, ... };
+static StringMap g_PlayerGroupNames;
+static bool g_PlayerGroupInvitedPlayer[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
+static int g_PlayerGroupInvitedPlayerCount[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
+static float g_PlayerGroupInvitedPlayerTime[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
 
 void SetupPlayerGroups()
 {
-	g_iPlayerGroupGlobalID = -1;
-	g_hPlayerGroupNames = new StringMap();
+	g_PlayerGroupGlobalID = -1;
+	g_PlayerGroupNames = new StringMap();
 }
 
-stock int GetPlayerGroupFromID(int iGroupID)
+stock int GetPlayerGroupFromID(int groupID)
 {
 	for (int i = 0; i < SF2_MAX_PLAYER_GROUPS; i++)
 	{
-		if (!IsPlayerGroupActive(i)) continue;
-		if (GetPlayerGroupID(i) == iGroupID) return i;
+		if (!IsPlayerGroupActive(i))
+		{
+			continue;
+		}
+		if (GetPlayerGroupID(i) == groupID)
+		{
+			return i;
+		}
 	}
 	
 	return -1;
 }
 
-void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
+void SendPlayerGroupInvitation(int client,int groupID,int inviter=-1)
 {
 	if (!IsValidClient(client) || !IsClientParticipating(client))
 	{
-		if (IsValidClient(iInviter))
+		if (IsValidClient(inviter))
 		{
 			// TODO: Send message to the inviter that the client is invalid!
 		}
@@ -47,9 +53,9 @@ void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
 		return;
 	}
 	
-	if (!g_bPlayerEliminated[client])
+	if (!g_PlayerEliminated[client])
 	{
-		if (IsValidClient(iInviter))
+		if (IsValidClient(inviter))
 		{
 			// TODO: Send message to the inviter that the client is currently in-game.
 		}
@@ -57,21 +63,21 @@ void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
 		return;
 	}
 	
-	int groupIndex = GetPlayerGroupFromID(iGroupID);
+	int groupIndex = GetPlayerGroupFromID(groupID);
 	if (groupIndex == -1) return;
 	
-	int iMyGroupIndex = ClientGetPlayerGroup(client);
-	if (IsPlayerGroupActive(iMyGroupIndex))
+	int myGroupIndex = ClientGetPlayerGroup(client);
+	if (IsPlayerGroupActive(myGroupIndex))
 	{
-		if (IsValidClient(iInviter))
+		if (IsValidClient(inviter))
 		{
-			if (iMyGroupIndex == groupIndex)
+			if (myGroupIndex == groupIndex)
 			{
-				CPrintToChat(iInviter, "%T", "SF2 Player In Group", iInviter);
+				CPrintToChat(inviter, "%T", "SF2 Player In Group", inviter);
 			}
 			else
 			{
-				CPrintToChat(iInviter, "%T", "SF2 Player In Another Group", iInviter);
+				CPrintToChat(inviter, "%T", "SF2 Player In Another Group", inviter);
 			}
 		}
 		
@@ -80,9 +86,9 @@ void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
 	
 	if (GetPlayerGroupMemberCount(groupIndex) >= GetMaxPlayersForRound())
 	{
-		if (IsValidClient(iInviter))
+		if (IsValidClient(inviter))
 		{
-			CPrintToChat(iInviter, "%T", "SF2 Group Is Full", iInviter);
+			CPrintToChat(inviter, "%T", "SF2 Group Is Full", inviter);
 		}
 		
 		return;
@@ -95,47 +101,53 @@ void SendPlayerGroupInvitation(int client,int iGroupID,int iInviter=-1)
 	}
 	
 	// Anti-spam.
-	char sName[MAX_NAME_LENGTH];
-	FormatEx(sName, sizeof(sName), "%N", client);
+	char name[MAX_NAME_LENGTH];
+	FormatEx(name, sizeof(name), "%N", client);
 	
-	if (IsValidClient(iInviter))
+	if (IsValidClient(inviter))
 	{
-		float flNextInviteTime = GetPlayerGroupInvitedPlayerTime(groupIndex, client) + (20.0 * GetPlayerGroupInvitedPlayerCount(groupIndex, client));
-		if (GetGameTime() < flNextInviteTime)
+		float nextInviteTime = GetPlayerGroupInvitedPlayerTime(groupIndex, client) + (20.0 * GetPlayerGroupInvitedPlayerCount(groupIndex, client));
+		if (GetGameTime() < nextInviteTime)
 		{
-			CPrintToChat(iInviter, "%T", "SF2 No Group Invite Spam", iInviter, RoundFloat(flNextInviteTime - GetGameTime()), sName);
+			CPrintToChat(inviter, "%T", "SF2 No Group Invite Spam", inviter, RoundFloat(nextInviteTime - GetGameTime()), name);
 			return;
 		}
 	}
 	
-	char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-	char sLeaderName[64];
-	GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
+	char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
+	char leaderName[64];
+	GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
 	
-	int iGroupLeader = GetPlayerGroupLeader(groupIndex);
-	if (IsValidClient(iGroupLeader)) FormatEx(sLeaderName, sizeof(sLeaderName), "%N", iGroupLeader);
-	else strcopy(sLeaderName, sizeof(sLeaderName), "nobody");
+	int groupLeader = GetPlayerGroupLeader(groupIndex);
+	if (IsValidClient(groupLeader))
+	{
+		FormatEx(leaderName, sizeof(leaderName), "%N", groupLeader);
+	}
+	else
+	{
+		strcopy(leaderName, sizeof(leaderName), "nobody");
+	}
 	
-	Handle hMenu = CreateMenu(Menu_GroupInvite);
-	SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, sLeaderName, sGroupName);
+	Handle menu = CreateMenu(Menu_GroupInvite);
+	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, leaderName, groupName);
 	
-	char sGroupID[64];
-	FormatEx(sGroupID, sizeof(sGroupID), "%d", iGroupID);
+	char groupIDString[64];
+	FormatEx(groupIDString, sizeof(groupIDString), "%d", groupID);
 	
-	char sBuffer[256];
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", client);
-	AddMenuItem(hMenu, sGroupID, sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", client);
-	AddMenuItem(hMenu, "0", sBuffer);
-	DisplayMenu(hMenu, client, 10);
+	char buffer[256];
+	FormatEx(buffer, sizeof(buffer), "%T", "Yes", client);
+	AddMenuItem(menu, groupIDString, buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "No", client);
+	AddMenuItem(menu, "0", buffer);
+	DisplayMenu(menu, client, 10);
 	
 	SetPlayerGroupInvitedPlayer(groupIndex, client, true);
 	SetPlayerGroupInvitedPlayerCount(groupIndex, client, GetPlayerGroupInvitedPlayerCount(groupIndex, client) + 1);
 	SetPlayerGroupInvitedPlayerTime(groupIndex, client, GetGameTime());
 	
-	if (IsValidClient(iInviter))
+	if (IsValidClient(inviter))
 	{
-		CPrintToChat(iInviter, "%T", "SF2 Group Invitation Sent", iInviter, sName);
+		CPrintToChat(inviter, "%T", "SF2 Group Invitation Sent", inviter, name);
 	}
 }
 
@@ -149,15 +161,15 @@ public int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2
 	{
 		if (param2 == 0)
 		{
-			char sGroupID[64];
-			GetMenuItem(menu, param2, sGroupID, sizeof(sGroupID));
-			int groupIndex = GetPlayerGroupFromID(StringToInt(sGroupID));
+			char groupID[64];
+			GetMenuItem(menu, param2, groupID, sizeof(groupID));
+			int groupIndex = GetPlayerGroupFromID(StringToInt(groupID));
 			if (IsPlayerGroupActive(groupIndex))
 			{
-				int iMyGroupIndex = ClientGetPlayerGroup(param1);
-				if (IsPlayerGroupActive(iMyGroupIndex))
+				int myGroupIndex = ClientGetPlayerGroup(param1);
+				if (IsPlayerGroupActive(myGroupIndex))
 				{
-					if (iMyGroupIndex == groupIndex)
+					if (myGroupIndex == groupIndex)
 					{
 						CPrintToChat(param1, "%T", "SF2 In Group", param1);
 					}
@@ -201,22 +213,25 @@ void DisplayResetGroupQueuePointsMenuToClient(int client)
 		return;
 	}
 	
-	Handle hMenu = CreateMenu(Menu_ResetGroupQueuePoints);
-	SetMenuTitle(hMenu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
+	Handle menu = CreateMenu(Menu_ResetGroupQueuePoints);
+	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
 	
-	char sBuffer[256];
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", client);
-	AddMenuItem(hMenu, "0", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", client);
-	AddMenuItem(hMenu, "0", sBuffer);
+	char buffer[256];
+	FormatEx(buffer, sizeof(buffer), "%T", "Yes", client);
+	AddMenuItem(menu, "0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "No", client);
+	AddMenuItem(menu, "0", buffer);
 	
-	SetMenuExitBackButton(hMenu, true);
-	DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+	SetMenuExitBackButton(menu, true);
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
 public int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,int param2)
 {
-	if (action == MenuAction_End) delete menu;
+	if (action == MenuAction_End)
+	{
+		delete menu;
+	}
 	else if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack) DisplayAdminGroupMenuToClient(param1);
@@ -232,7 +247,10 @@ public int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,
 				
 				for (int i = 1; i <= MaxClients; i++)
 				{
-					if (!IsValidClient(i)) continue;
+					if (!IsValidClient(i))
+					{
+						continue;
+					}
 					if (ClientGetPlayerGroup(i) == groupIndex)
 					{
 						CPrintToChat(i, "%T", "SF2 Group Queue Points Reset", i);
@@ -251,14 +269,20 @@ public int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,
 
 void CheckPlayerGroup(int groupIndex)
 {
-	if (!IsPlayerGroupActive(groupIndex)) return;
+	if (!IsPlayerGroupActive(groupIndex))
+	{
+		return;
+	}
 	
 #if defined DEBUG
-	if (g_cvDebugDetail.IntValue > 0) DebugMessage("START CheckPlayerGroup(%d)", groupIndex);
+	if (g_DebugDetailConVar.IntValue > 0)
+	{
+		DebugMessage("START CheckPlayerGroup(%d)", groupIndex);
+	}
 #endif
 	
-	int iMemberCount = GetPlayerGroupMemberCount(groupIndex);
-	if (iMemberCount <= 0)
+	int memberCount = GetPlayerGroupMemberCount(groupIndex);
+	if (memberCount <= 0)
 	{
 		RemovePlayerGroup(groupIndex);
 	}
@@ -272,7 +296,7 @@ void CheckPlayerGroup(int groupIndex)
 				if (!IsValidClient(i) || !IsClientParticipating(i))
 				{
 #if defined DEBUG
-					if (g_cvDebugDetail.IntValue > 0) DebugMessage("CheckPlayerGroup(%d): Invalid client detected (%d), removing from group", groupIndex, i);
+					if (g_DebugDetailConVar.IntValue > 0) DebugMessage("CheckPlayerGroup(%d): Invalid client detected (%d), removing from group", groupIndex, i);
 #endif
 					
 					ClientSetPlayerGroup(i, -1);
@@ -280,104 +304,122 @@ void CheckPlayerGroup(int groupIndex)
 			}
 		}
 		
-		iMemberCount = GetPlayerGroupMemberCount(groupIndex);
-		int iMaxPlayers = GetMaxPlayersForRound();
-		int iExcessMemberCount = (iMemberCount - iMaxPlayers);
+		memberCount = GetPlayerGroupMemberCount(groupIndex);
+		int maxPlayers = GetMaxPlayersForRound();
+		int excessMemberCount = (memberCount - maxPlayers);
 		
-		if (iExcessMemberCount > 0)
+		if (excessMemberCount > 0)
 		{
 #if defined DEBUG
-			if (g_cvDebugDetail.IntValue > 0) DebugMessage("CheckPlayerGroup(%d): Excess members detected", groupIndex);
+			if (g_DebugDetailConVar.IntValue > 0)
+			{
+				DebugMessage("CheckPlayerGroup(%d): Excess members detected", groupIndex);
+			}
 #endif
 
-			int iGroupLeader = GetPlayerGroupLeader(groupIndex);
-			if (IsValidClient(iGroupLeader))
+			int groupLeader = GetPlayerGroupLeader(groupIndex);
+			if (IsValidClient(groupLeader))
 			{
-				CPrintToChat(iGroupLeader, "%T", "SF2 Group Has Too Many Members", iGroupLeader);
+				CPrintToChat(groupLeader, "%T", "SF2 Group Has Too Many Members", groupLeader);
 			}
 			
-			for (int i = 1, iCount; i <= MaxClients && iCount < iExcessMemberCount; i++)
+			for (int i = 1, count; i <= MaxClients && count < excessMemberCount; i++)
 			{
-				if (!IsValidClient(i)) continue;
+				if (!IsValidClient(i))
+				{
+					continue;
+				}
 				
 				if (ClientGetPlayerGroup(i) == groupIndex)
 				{
-					if (i == iGroupLeader) continue; // Don't kick off the group leader.
+					if (i == groupLeader)
+					{
+						continue; // Don't kick off the group leader.
+					}
 					
 					ClientSetPlayerGroup(i, -1);
-					iCount++;
+					count++;
 				}
 			}
 		}
 	}
 	
 #if defined DEBUG
-	if (g_cvDebugDetail.IntValue > 0) DebugMessage("END CheckPlayerGroup(%d)", groupIndex);
+	if (g_DebugDetailConVar.IntValue > 0)
+	{
+		DebugMessage("END CheckPlayerGroup(%d)", groupIndex);
+	}
 #endif
 }
 
 stock int GetPlayerGroupCount()
 {
-	int iCount;
+	int count;
 	
 	for (int i = 0; i < SF2_MAX_PLAYER_GROUPS; i++)
 	{
-		if (IsPlayerGroupActive(i)) iCount++;
+		if (IsPlayerGroupActive(i)) count++;
 	}
 	
-	return iCount;
+	return count;
 }
 
 stock int CreatePlayerGroup()
 {
 	// Get an inactive group.
-	int iIndex = -1;
+	int index = -1;
 	for (int i = 0; i < SF2_MAX_PLAYER_GROUPS; i++)
 	{
 		if (!IsPlayerGroupActive(i))
 		{
-			iIndex = i;
+			index = i;
 			break;
 		}
 	}
 	
-	if (iIndex != -1)
+	if (index != -1)
 	{
-		g_bPlayerGroupActive[iIndex] = true;
-		g_iPlayerGroupGlobalID++;
-		SetPlayerGroupID(iIndex, g_iPlayerGroupGlobalID);
-		ClearPlayerGroupMembers(iIndex);
-		SetPlayerGroupQueuePoints(iIndex, 0);
-		SetPlayerGroupLeader(iIndex, -1);
-		SetPlayerGroupName(iIndex, "");
-		SetPlayerGroupPlaying(iIndex, false);
+		g_PlayerGroupActive[index] = true;
+		g_PlayerGroupGlobalID++;
+		SetPlayerGroupID(index, g_PlayerGroupGlobalID);
+		ClearPlayerGroupMembers(index);
+		SetPlayerGroupQueuePoints(index, 0);
+		SetPlayerGroupLeader(index, -1);
+		SetPlayerGroupName(index, "");
+		SetPlayerGroupPlaying(index, false);
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			SetPlayerGroupInvitedPlayer(iIndex, i, false);
-			SetPlayerGroupInvitedPlayerCount(iIndex, i, 0);
-			SetPlayerGroupInvitedPlayerTime(iIndex, i, 0.0);
+			SetPlayerGroupInvitedPlayer(index, i, false);
+			SetPlayerGroupInvitedPlayerCount(index, i, 0);
+			SetPlayerGroupInvitedPlayerTime(index, i, 0.0);
 		}
 	}
 	
-	return iIndex;
+	return index;
 }
 
 stock void RemovePlayerGroup(int groupIndex)
 {
-	if (!IsPlayerGroupActive(groupIndex)) return;
+	if (!IsPlayerGroupActive(groupIndex))
+	{
+		return;
+	}
 	
 	ClearPlayerGroupMembers(groupIndex);
 	SetPlayerGroupQueuePoints(groupIndex, 0);
 	SetPlayerGroupPlaying(groupIndex, false);
 	SetPlayerGroupLeader(groupIndex, -1);
-	g_bPlayerGroupActive[groupIndex] = false;
+	g_PlayerGroupActive[groupIndex] = false;
 	SetPlayerGroupID(groupIndex, -1);
 }
 
 stock void ClearPlayerGroupMembers(int groupIndex)
 {
-	if (!IsPlayerGroupValid(groupIndex)) return;
+	if (!IsPlayerGroupValid(groupIndex))
+	{
+		return;
+	}
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -388,33 +430,33 @@ stock void ClearPlayerGroupMembers(int groupIndex)
 	}
 }
 
-stock bool GetPlayerGroupName(int groupIndex, char[] sBuffer,int iBufferLen)
+stock bool GetPlayerGroupName(int groupIndex, char[] buffer,int iBufferLen)
 {
-	char sGroupIndex[32];
-	FormatEx(sGroupIndex, sizeof(sGroupIndex), "%d", groupIndex);
-	return g_hPlayerGroupNames.GetString(sGroupIndex, sBuffer, iBufferLen);
+	char groupIndexString[32];
+	FormatEx(groupIndexString, sizeof(groupIndexString), "%d", groupIndex);
+	return g_PlayerGroupNames.GetString(groupIndexString, buffer, iBufferLen);
 }
 
-stock void SetPlayerGroupName(int groupIndex, const char[] sGroupName)
+stock void SetPlayerGroupName(int groupIndex, const char[] groupName)
 {
-	char sGroupIndex[32];
-	FormatEx(sGroupIndex, sizeof(sGroupIndex), "%d", groupIndex);
-	g_hPlayerGroupNames.SetString(sGroupIndex, sGroupName);
+	char groupIndexString[32];
+	FormatEx(groupIndexString, sizeof(groupIndexString), "%d", groupIndex);
+	g_PlayerGroupNames.SetString(groupIndexString, groupName);
 }
 
 stock int GetPlayerGroupID(int groupIndex)
 {
-	return g_iPlayerGroupID[groupIndex];
+	return g_PlayerGroupID[groupIndex];
 }
 
 stock void SetPlayerGroupID(int groupIndex,int iID)
 {
-	g_iPlayerGroupID[groupIndex] = iID;
+	g_PlayerGroupID[groupIndex] = iID;
 }
 
 stock bool IsPlayerGroupActive(int groupIndex)
 {
-	return IsPlayerGroupValid(groupIndex) && g_bPlayerGroupActive[groupIndex];
+	return IsPlayerGroupValid(groupIndex) && g_PlayerGroupActive[groupIndex];
 }
 
 stock bool IsPlayerGroupValid(int groupIndex)
@@ -424,55 +466,61 @@ stock bool IsPlayerGroupValid(int groupIndex)
 
 stock int GetPlayerGroupMemberCount(int groupIndex)
 {
-	int iCount;
+	int count;
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i)) continue;
+		if (!IsValidClient(i))
+		{
+			continue;
+		}
 	
 		if (ClientGetPlayerGroup(i) == groupIndex)
 		{
-			iCount++;
+			count++;
 		}
 	}
 	
-	return iCount;
+	return count;
 }
 
 stock bool IsPlayerGroupPlaying(int groupIndex)
 {
-	return (IsPlayerGroupActive(groupIndex) && g_bPlayerGroupPlaying[groupIndex]);
+	return (IsPlayerGroupActive(groupIndex) && g_PlayerGroupPlaying[groupIndex]);
 }
 
-stock void SetPlayerGroupPlaying(int groupIndex, bool bToggle)
+stock void SetPlayerGroupPlaying(int groupIndex, bool toggle)
 {
-	g_bPlayerGroupPlaying[groupIndex] = bToggle;
+	g_PlayerGroupPlaying[groupIndex] = toggle;
 }
 
 stock int GetPlayerGroupLeader(int groupIndex)
 {
-	return g_iPlayerGroupLeader[groupIndex];
+	return g_PlayerGroupLeader[groupIndex];
 }
 
-stock void SetPlayerGroupLeader(int groupIndex,int iGroupLeader)
+stock void SetPlayerGroupLeader(int groupIndex,int groupLeader)
 {
-	g_iPlayerGroupLeader[groupIndex] = iGroupLeader;
+	g_PlayerGroupLeader[groupIndex] = groupLeader;
 	
-	if (IsValidClient(iGroupLeader))
+	if (IsValidClient(groupLeader))
 	{
-		char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-		GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
-		CPrintToChat(iGroupLeader, "%T", "SF2 New Group Leader", iGroupLeader, sGroupName);
+		char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
+		GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
+		CPrintToChat(groupLeader, "%T", "SF2 New Group Leader", groupLeader, groupName);
 		
-		char sName[MAX_NAME_LENGTH];
-		FormatEx(sName, sizeof(sName), "%N", iGroupLeader);
+		char name[MAX_NAME_LENGTH];
+		FormatEx(name, sizeof(name), "%N", groupLeader);
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (iGroupLeader == i || !IsValidClient(i)) continue;
+			if (groupLeader == i || !IsValidClient(i))
+			{
+				continue;
+			}
 			if (ClientGetPlayerGroup(i) == groupIndex)
 			{
-				CPrintToChat(i, "%T", "SF2 Player New Group Leader", i, sName);
+				CPrintToChat(i, "%T", "SF2 Player New Group Leader", i, name);
 			}
 		}
 	}
@@ -480,11 +528,17 @@ stock void SetPlayerGroupLeader(int groupIndex,int iGroupLeader)
 
 int PlayerGroupFindNewLeader(int groupIndex)
 {
-	if (!IsPlayerGroupActive(groupIndex)) return -1;
+	if (!IsPlayerGroupActive(groupIndex))
+	{
+		return -1;
+	}
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i)) continue;
+		if (!IsValidClient(i))
+		{
+			continue;
+		}
 		
 		if (ClientGetPlayerGroup(i) == groupIndex)
 		{
@@ -498,90 +552,96 @@ int PlayerGroupFindNewLeader(int groupIndex)
 
 stock int GetPlayerGroupQueuePoints(int groupIndex)
 {
-	return g_iPlayerGroupQueuePoints[groupIndex];
+	return g_PlayerGroupQueuePoints[groupIndex];
 }
 
-stock void SetPlayerGroupQueuePoints(int groupIndex,int iAmount)
+stock void SetPlayerGroupQueuePoints(int groupIndex,int amount)
 {
-	g_iPlayerGroupQueuePoints[groupIndex] = iAmount;
+	g_PlayerGroupQueuePoints[groupIndex] = amount;
 }
 
 stock bool HasPlayerGroupInvitedPlayer(int groupIndex,int client)
 {
-	return g_bPlayerGroupInvitedPlayer[groupIndex][client];
+	return g_PlayerGroupInvitedPlayer[groupIndex][client];
 }
 
-stock void SetPlayerGroupInvitedPlayer(int groupIndex,int client, bool bToggle)
+stock void SetPlayerGroupInvitedPlayer(int groupIndex,int client, bool toggle)
 {
-	g_bPlayerGroupInvitedPlayer[groupIndex][client] = bToggle;
+	g_PlayerGroupInvitedPlayer[groupIndex][client] = toggle;
 }
 
 stock int GetPlayerGroupInvitedPlayerCount(int groupIndex,int client)
 {
-	return g_iPlayerGroupInvitedPlayerCount[groupIndex][client];
+	return g_PlayerGroupInvitedPlayerCount[groupIndex][client];
 }
 
-stock int SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int iAmount)
+stock int SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int amount)
 {
-	g_iPlayerGroupInvitedPlayerCount[groupIndex][client] = iAmount;
+	g_PlayerGroupInvitedPlayerCount[groupIndex][client] = amount;
 }
 
 stock float GetPlayerGroupInvitedPlayerTime(int groupIndex,int client)
 {
-	return g_flPlayerGroupInvitedPlayerTime[groupIndex][client];
+	return g_PlayerGroupInvitedPlayerTime[groupIndex][client];
 }
 
 stock void SetPlayerGroupInvitedPlayerTime(int groupIndex,int client, float flTime)
 {
-	g_flPlayerGroupInvitedPlayerTime[groupIndex][client] = flTime;
+	g_PlayerGroupInvitedPlayerTime[groupIndex][client] = flTime;
 }
 
 stock int ClientGetPlayerGroup(int client)
 {
-	return g_iPlayerCurrentGroup[client];
+	return g_PlayerCurrentGroup[client];
 }
 
 stock void ClientSetPlayerGroup(int client,int groupIndex)
 {
-	int iOldPlayerGroup = ClientGetPlayerGroup(client);
-	if (iOldPlayerGroup == groupIndex) return; // No change.
-	
-	g_iPlayerCurrentGroup[client] = groupIndex;
-	
-	char sName[MAX_NAME_LENGTH];
-	FormatEx(sName, sizeof(sName), "%N", client);
-	
-	if (IsPlayerGroupActive(iOldPlayerGroup))
+	int oldPlayerGroup = ClientGetPlayerGroup(client);
+	if (oldPlayerGroup == groupIndex)
 	{
-		SetPlayerGroupInvitedPlayer(iOldPlayerGroup, client, false);
-		SetPlayerGroupInvitedPlayerCount(iOldPlayerGroup, client, 0);
-		SetPlayerGroupInvitedPlayerTime(iOldPlayerGroup, client, 0.0);
+		return; // No change.
+	}
+	
+	g_PlayerCurrentGroup[client] = groupIndex;
+	
+	char name[MAX_NAME_LENGTH];
+	FormatEx(name, sizeof(name), "%N", client);
+	
+	if (IsPlayerGroupActive(oldPlayerGroup))
+	{
+		SetPlayerGroupInvitedPlayer(oldPlayerGroup, client, false);
+		SetPlayerGroupInvitedPlayerCount(oldPlayerGroup, client, 0);
+		SetPlayerGroupInvitedPlayerTime(oldPlayerGroup, client, 0.0);
 		
-		char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-		GetPlayerGroupName(iOldPlayerGroup, sGroupName, sizeof(sGroupName));
-		CPrintToChat(client, "%T", "SF2 Left Group", client, sGroupName);
+		char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
+		GetPlayerGroupName(oldPlayerGroup, groupName, sizeof(groupName));
+		CPrintToChat(client, "%T", "SF2 Left Group", client, groupName);
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (i == client || !IsValidClient(i)) continue;
-			if (ClientGetPlayerGroup(i) == iOldPlayerGroup)
+			if (i == client || !IsValidClient(i))
 			{
-				CPrintToChat(i, "%T", "SF2 Player Left Group", i, sName);
+				continue;
+			}
+			if (ClientGetPlayerGroup(i) == oldPlayerGroup)
+			{
+				CPrintToChat(i, "%T", "SF2 Player Left Group", i, name);
 			}
 		}
 	
-		int iOldGroupLeader = GetPlayerGroupLeader(iOldPlayerGroup);
-		if (iOldGroupLeader == client)
+		int oldGroupLeader = GetPlayerGroupLeader(oldPlayerGroup);
+		if (oldGroupLeader == client)
 		{
-			int iOldGroupNewLeader = PlayerGroupFindNewLeader(iOldPlayerGroup);
-			if (iOldGroupNewLeader == -1)
+			int oldGroupNewLeader = PlayerGroupFindNewLeader(oldPlayerGroup);
+			if (oldGroupNewLeader == -1)
 			{
 				// Couldn't find a new leader. This group has no leader!
-				SetPlayerGroupLeader(iOldPlayerGroup, -1);
+				SetPlayerGroupLeader(oldPlayerGroup, -1);
 			}
 		}
 		
-		CheckPlayerGroup(iOldPlayerGroup);
+		CheckPlayerGroup(oldPlayerGroup);
 	}
 	
 	if (IsPlayerGroupPlaying(groupIndex))
@@ -598,16 +658,19 @@ stock void ClientSetPlayerGroup(int client,int groupIndex)
 		// Set the player's personal queue points to 0.
 		//ClientSetQueuePoints(client, 0);
 		
-		char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-		GetPlayerGroupName(groupIndex, sGroupName, sizeof(sGroupName));
-		CPrintToChat(client, "%T", "SF2 Joined Group", client, sGroupName);
+		char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
+		GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
+		CPrintToChat(client, "%T", "SF2 Joined Group", client, groupName);
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (i == client || !IsValidClient(i)) continue;
+			if (i == client || !IsValidClient(i))
+			{
+				continue;
+			}
 			if (ClientGetPlayerGroup(i) == groupIndex)
 			{
-				CPrintToChat(i, "%T", "SF2 Player Joined Group", i, sName);
+				CPrintToChat(i, "%T", "SF2 Player Joined Group", i, name);
 			}
 		}
 	}

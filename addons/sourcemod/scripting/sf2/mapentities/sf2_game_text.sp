@@ -5,9 +5,9 @@
 // Normally, game_text entities' messages get immediately replaced in-game due to the
 // constant displaying of HUD text by SF2, rendering the text unreadable and useless.
 
-static const char g_sEntityClassname[] = "sf2_game_text"; // The custom classname of the entity. Should be prefixed with "sf2_"
+static const char g_EntityClassname[] = "sf2_game_text"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -19,87 +19,89 @@ methodmap SF2GameTextEntity < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
-	public void GetMessage(char[] sBuffer, int iBufferSize)
+	public void GetMessage(char[] buffer, int bufferSize)
 	{
-		this.GetPropString(Prop_Data, "m_iszMessage", sBuffer, iBufferSize);
+		this.GetPropString(Prop_Data, "m_iszMessage", buffer, bufferSize);
 	}
 
-	public void SetMessage(const char[] sBuffer)
+	public void SetMessage(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "m_iszMessage", sBuffer);
+		this.SetPropString(Prop_Data, "m_iszMessage", buffer);
 	}
 
-	public bool ValidateMessageString(char[] sBuffer, int iBufferSize)
+	public bool ValidateMessageString(char[] buffer, int bufferSize)
 	{
-		if (StrContains(sBuffer, "%d") != -1)
+		if (StrContains(buffer, "%d") != -1)
 		{
 			char sName[64];
 			this.GetPropString(Prop_Data, "m_iName", sName, sizeof(sName));
-			char[] sMessage = new char[iBufferSize];
-			strcopy(sMessage, iBufferSize, sBuffer);
-			ReplaceString(sMessage, iBufferSize, "%d", "%%d");
-			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", sName, sMessage);
+			char[] message = new char[bufferSize];
+			strcopy(message, bufferSize, buffer);
+			ReplaceString(message, bufferSize, "%d", "%%d");
+			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", sName, message);
 			return false;
 		}
 
 		return true;
 	}
 
-	public void GetFormattedMessage(char[] sBuffer, int iBufferSize)
+	public void GetFormattedMessage(char[] buffer, int bufferSize)
 	{
-		this.GetMessage(sBuffer, iBufferSize);
+		this.GetMessage(buffer, bufferSize);
 
-		if (StrContains(sBuffer, "<br>") != -1)
+		if (StrContains(buffer, "<br>") != -1)
 		{
-			ReplaceString(sBuffer, iBufferSize, "<br>", "\n");
+			ReplaceString(buffer, bufferSize, "<br>", "\n");
 		}
 
-		if (StrContains(sBuffer, "<maxPages>") != -1)
+		if (StrContains(buffer, "<maxPages>") != -1)
 		{
-			char sArg[16]; IntToString(g_iPageMax, sArg, sizeof(sArg));
-			ReplaceString(sBuffer, iBufferSize, "<maxPages>", sArg);
+			char arg[16]; IntToString(g_PageMax, arg, sizeof(arg));
+			ReplaceString(buffer, bufferSize, "<maxPages>", arg);
 		}
 
-		if (StrContains(sBuffer, "<pageCount>") != -1)
+		if (StrContains(buffer, "<pageCount>") != -1)
 		{
-			char sArg[16]; IntToString(g_iPageCount, sArg, sizeof(sArg));
-			ReplaceString(sBuffer, iBufferSize, "<pageCount>", sArg);
+			char arg[16]; IntToString(g_PageCount, arg, sizeof(arg));
+			ReplaceString(buffer, bufferSize, "<pageCount>", arg);
 		}
 
-		if (StrContains(sBuffer, "<pagesLeft>") != -1)
+		if (StrContains(buffer, "<pagesLeft>") != -1)
 		{
-			char sArg[16]; IntToString(g_iPageMax - g_iPageCount, sArg, sizeof(sArg));
-			ReplaceString(sBuffer, iBufferSize, "<pagesLeft>", sArg);
+			char arg[16]; IntToString(g_PageMax - g_PageCount, arg, sizeof(arg));
+			ReplaceString(buffer, bufferSize, "<pagesLeft>", arg);
 		}
 	}
 
 	/**
 	 * Gets the message formatted as an intro message.
 	 */
-	public void GetIntroMessage(char[] sBuffer, int iBufferSize)
+	public void GetIntroMessage(char[] buffer, int bufferSize)
 	{
-		this.GetFormattedMessage(sBuffer, iBufferSize);
+		this.GetFormattedMessage(buffer, bufferSize);
 	}
 
 	/**
 	 * Gets the message formatted as an page collection message.
 	 */
-	public void GetPageMessage(char[] sBuffer, int iBufferSize)
+	public void GetPageMessage(char[] buffer, int bufferSize)
 	{
-		this.GetFormattedMessage(sBuffer, iBufferSize);
+		this.GetFormattedMessage(buffer, bufferSize);
 	}
 
 	/**
 	 * Gets the message formatted as an escape message.
 	 */
-	public void GetEscapeMessage(char[] sBuffer, int iBufferSize)
+	public void GetEscapeMessage(char[] buffer, int bufferSize)
 	{
-		this.GetPageMessage(sBuffer, iBufferSize);
+		this.GetPageMessage(buffer, bufferSize);
 	}
 
 	property float NextIntroTextDelay
@@ -108,27 +110,29 @@ methodmap SF2GameTextEntity < CBaseEntity
 		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay", value); }
 	}
 
-	public void GetNextIntroTextEntityName(char[] sBuffer, int iBufferSize)
+	public void GetNextIntroTextEntityName(char[] buffer, int bufferSize)
 	{
-		this.GetPropString(Prop_Data, "sf2_szNextIntroText", sBuffer, iBufferSize);
+		this.GetPropString(Prop_Data, "sf2_szNextIntroText", buffer, bufferSize);
 	}
 
-	public void SetNextIntroTextEntityName(const char[] sBuffer)
+	public void SetNextIntroTextEntityName(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_szNextIntroText", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_szNextIntroText", buffer);
 	}
 
 	property SF2GameTextEntity NextIntroTextEntity
 	{
 		public get() 
 		{  
-			char sIntroTextName[64];
-			this.GetNextIntroTextEntityName(sIntroTextName, sizeof(sIntroTextName));
+			char introTextName[64];
+			this.GetNextIntroTextEntityName(introTextName, sizeof(introTextName));
 
-			if (sIntroTextName[0] == '\0')
+			if (introTextName[0] == '\0')
+			{
 				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+			}
 
-			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, sIntroTextName, -1, -1, -1));
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, introTextName, -1, -1, -1));
 		}
 	}
 
@@ -140,14 +144,14 @@ methodmap SF2GameTextEntity < CBaseEntity
 
 static void Initialize() 
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
-	g_entityFactory.DeriveFromClass("game_text");
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
+	g_EntityFactory.DeriveFromClass("game_text");
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineFloatField("sf2_flNextIntroTextDelay", _, "nextintrotextdelay")
 		.DefineStringField("sf2_szNextIntroText", _, "nextintrotextname")
 		.DefineInputFunc("Display", InputFuncValueType_String, InputDisplay)
 		.EndDataMapDesc();
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
 static void OnCreated(int entity)
@@ -162,14 +166,16 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 {
 	SF2GameTextEntity thisEnt = SF2GameTextEntity(entity);
 
-	int iClients[MAXPLAYERS + 1];
-	int iClientsNum;
+	int clients[MAXPLAYERS + 1];
+	int clientsNum;
 	
-	char sMessage[512];
-	thisEnt.GetFormattedMessage(sMessage, sizeof(sMessage));
+	char message[512];
+	thisEnt.GetFormattedMessage(message, sizeof(message));
 
-	if (!thisEnt.ValidateMessageString(sMessage, sizeof(sMessage)))
+	if (!thisEnt.ValidateMessageString(message, sizeof(message)))
+	{
 		return;
+	}
 
 	if (value[0] != '\0')
 	{
@@ -178,24 +184,29 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 		int target = -1;
 		while ((target = SF2MapEntity_FindEntityByTargetname(target, value, caller, activator, caller)) != -1 && target > 0 && target <= MaxClients)
 		{
-			iClients[iClientsNum++] = target;
+			clients[clientsNum++] = target;
 		}
 	}
 	else 
 	{
-		int iSpawnFlags = thisEnt.GetProp(Prop_Data, "m_spawnflags");
+		int spawnFlags = thisEnt.GetProp(Prop_Data, "m_spawnflags");
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsClientInGame(i)) continue;
+			if (!IsClientInGame(i))
+			{
+				continue;
+			}
 			
 			// If 'All Players' not set, only show message to RED.
-			if ((iSpawnFlags & 1) == 0 && g_bPlayerEliminated[i] && !IsClientInGhostMode(i))
+			if ((spawnFlags & 1) == 0 && g_PlayerEliminated[i] && !IsClientInGhostMode(i))
+			{
 				continue;
+			}
 
-			iClients[iClientsNum++] = i;
+			clients[clientsNum++] = i;
 		}
 	}
 
-	ShowHudTextUsingTextEntity(iClients, iClientsNum, entity, g_hHudSync, sMessage);
+	ShowHudTextUsingTextEntity(clients, clientsNum, entity, g_HudSync, message);
 }

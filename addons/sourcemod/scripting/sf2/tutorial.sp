@@ -5,11 +5,11 @@
 //static Handle g_hSDKGamerulesIsInTraining;
 
 //Timer data
-static Handle g_hTimerTutorialMessage;
-static Handle g_hTimerHideTutorialMessage;
+static Handle g_TimerTutorialMessage;
+static Handle g_TimerHideTutorialMessage;
 
 //Client data
-static bool g_bClientTutorialEnabled[MAXPLAYERS + 1] =  {false, ...};
+static bool g_ClientTutorialEnabled[MAXPLAYERS + 1] =  {false, ...};
 
 public void Tutorial_Initialize()
 {
@@ -22,22 +22,24 @@ public void Tutorial_Initialize()
  */
 public void Tutorial_HandleClient(int client)
 {
-	if (GetRoundState() != SF2RoundState_Active && !g_bPlayerEliminated[client] && !g_bClientTutorialEnabled[client])
+	if (GetRoundState() != SF2RoundState_Active && !g_PlayerEliminated[client] && !g_ClientTutorialEnabled[client])
 	{
 		CPrintToChat(client, "{aqua}Sorry you can't use the tutorial command right now!");
 		return;
 	}
-	g_bClientTutorialEnabled[client] = !g_bClientTutorialEnabled[client];
-	if (g_bClientTutorialEnabled[client])
+	g_ClientTutorialEnabled[client] = !g_ClientTutorialEnabled[client];
+	if (g_ClientTutorialEnabled[client])
 	{
 		CPrintToChat(client, "{aqua}SF2 Tutorial enabled!");
-		if (GetRoundState() == SF2RoundState_Active && !g_bPlayerEliminated[client])
+		if (GetRoundState() == SF2RoundState_Active && !g_PlayerEliminated[client])
 		{
 			Tutorial_PrintMessageToClient(client, "Welcome!", "Welcome on Slender Fortress 2! This mod was coded by Benoist3012 & Kit o Rifty. Grace period is active you can change your class.\n To collect a page press %+attack%.\n To use your flashlight %+attack2%.\n To sprint press %+attack3% or %+sprint%.");
 		}
 	}
 	else
+	{
 		CPrintToChat(client, "{aqua}SF2 Tutorial disabled!");
+	}
 }
 
 /*
@@ -47,7 +49,7 @@ public void Tutorial_HandleClient(int client)
 public void Tutorial_OnRoundStateChange(SF2RoundState oldRoundState, SF2RoundState newRoundState)
 {
 	
-	g_hTimerTutorialMessage = null;
+	g_TimerTutorialMessage = null;
 	switch (newRoundState)
 	{
 		case SF2RoundState_Active:
@@ -71,29 +73,35 @@ public void Tutorial_OnRoundStateChange(SF2RoundState oldRoundState, SF2RoundSta
 		case SF2RoundState_Active:
 		{
 			Tutorial_PrintMessage("Page Finding?", "The grace period ended, now starts the serious things! While you were in grace period the monster couldn't spawn on the map, but now he can! In order to survive you have to collect the objective (pages, gas cans,ect...)", 8.0);
-			g_hTimerTutorialMessage = CreateTimer(9.0, Timer_TutorialGraceEnd2ndMessage, _, TIMER_FLAG_NO_MAPCHANGE);
+			g_TimerTutorialMessage = CreateTimer(9.0, Timer_TutorialGraceEnd2ndMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 }
 
 public Action Timer_TutorialGraceEnd2ndMessage(Handle timer)
 {
-	if (g_hTimerTutorialMessage != timer) return Plugin_Stop;
+	if (g_TimerTutorialMessage != timer)
+	{
+		return Plugin_Stop;
+	}
 	
-	g_hTimerTutorialMessage = null;
+	g_TimerTutorialMessage = null;
 	
 	Tutorial_PrintMessage("The boss is near help!", "If you can hear the monster, don't move or use voice commands, the monster can hear you! If you really need to move, move slowly, the monster is only attracted by suspicious sounds!", 7.0);
 	
-	g_hTimerTutorialMessage = CreateTimer(8.0, Timer_TutorialGraceEnd3rdMessage, _, TIMER_FLAG_NO_MAPCHANGE);
+	g_TimerTutorialMessage = CreateTimer(8.0, Timer_TutorialGraceEnd3rdMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 	
 	return Plugin_Stop;
 }
 
 public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 {
-	if (g_hTimerTutorialMessage != timer) return Plugin_Stop;
+	if (g_TimerTutorialMessage != timer)
+	{
+		return Plugin_Stop;
+	}
 	
-	g_hTimerTutorialMessage = null;
+	g_TimerTutorialMessage = null;
 	
 	Tutorial_PrintMessage("Playing in a group?", "While you are looking for the objectives, don't stay in a group, try to go where your team doesn't, you will increase everyone's chance of surviving!", 7.0);
 
@@ -107,7 +115,7 @@ public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 
 void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const float flLifeTime=5.0)
 {
-	g_hTimerHideTutorialMessage = null;
+	g_TimerHideTutorialMessage = null;
 	
 	PrintToChatAll("called1");
 	//Tell the client, to print the training message.
@@ -116,7 +124,7 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 	
 	for (int client = 1; client <= MaxClients; client++)
 	{
-		if (IsClientInGame(client) && !g_bPlayerEliminated[client] && g_bClientTutorialEnabled[client])
+		if (IsClientInGame(client) && !g_PlayerEliminated[client] && g_ClientTutorialEnabled[client])
 		{
 			Handle hMessage = StartMessageOne("TrainingObjective", client);
 			BfWriteString(hMessage, sTitle);
@@ -129,7 +137,7 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 			EndMessage();
 		}
 	}
-	g_hTimerHideTutorialMessage = CreateTimer(flLifeTime, Timer_TutorialHideMessage, _, TIMER_FLAG_NO_MAPCHANGE);
+	g_TimerHideTutorialMessage = CreateTimer(flLifeTime, Timer_TutorialHideMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void Tutorial_PrintMessageToClient(int client, const char[] sTitle, const char[] sMessage)
@@ -149,12 +157,15 @@ void Tutorial_PrintMessageToClient(int client, const char[] sTitle, const char[]
 
 public Action Timer_TutorialHideMessage(Handle timer)
 {
-	if (g_hTimerHideTutorialMessage != timer) return Plugin_Stop;
+	if (g_TimerHideTutorialMessage != timer)
+	{
+		return Plugin_Stop;
+	}
 	
 	//Tell the client to hide the message
 	GameRules_SetProp("m_bIsTrainingHUDVisible", false, 1, _, true);
 	
-	g_hTimerHideTutorialMessage = null;
+	g_TimerHideTutorialMessage = null;
 
 	return Plugin_Stop;
 }

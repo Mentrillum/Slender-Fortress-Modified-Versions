@@ -1,8 +1,8 @@
 // sf2_logic_arena
 
-static const char g_sEntityClassname[] = "sf2_logic_arena"; // The custom classname of the entity. Should be prefixed with "sf2_"
+static const char g_EntityClassname[] = "sf2_logic_arena"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -14,9 +14,11 @@ methodmap SF2LogicRenevantEntity < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	property int FinaleTime
@@ -34,11 +36,13 @@ methodmap SF2LogicRenevantEntity < CBaseEntity
 SF2LogicRenevantEntity FindLogicRenevantEntity()
 {
 	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, g_sEntityClassname)) != -1)
+	while ((ent = FindEntityByClassname(ent, g_EntityClassname)) != -1)
 	{
 		SF2LogicRenevantEntity renevantLogic = SF2LogicRenevantEntity(ent);
 		if (!renevantLogic.IsValid())
+		{
 			continue;
+		}
 
 		return renevantLogic;
 	}
@@ -48,9 +52,9 @@ SF2LogicRenevantEntity FindLogicRenevantEntity()
 
 static void Initialize() 
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreate);
-	g_entityFactory.DeriveFromBaseEntity(true);
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreate);
+	g_EntityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineIntField("sf2_iFinaleTime", _, "finaletime")
 		.DefineInputFunc("SetWave", InputFuncValueType_Integer, InputSetWave)
 		.DefineInputFunc("SetWaveResetTimer", InputFuncValueType_Integer, InputSetWaveResetTimer)
@@ -59,7 +63,7 @@ static void Initialize()
 		.DefineOutput("OnWaveTriggered")
 	.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnRenevantWaveTriggered, OnRenevantWaveTriggered);
 }
@@ -70,37 +74,48 @@ static void OnCreate(int entity)
 	thisEnt.FinaleTime = 60;
 }
 
-static void OnRenevantWaveTriggered(int iWave)
+static void OnRenevantWaveTriggered(int wave)
 {
 	SF2LogicRenevantEntity logicEnt = FindLogicRenevantEntity();
-	if (!logicEnt.IsValid()) return;
+	if (!logicEnt.IsValid())
+	{
+		return;
+	}
 
-	SetVariantInt(iWave);
+	SetVariantInt(wave);
 	logicEnt.FireOutput("OnWaveTriggered");
 }
 
-static void InputSetWave(int entity, int activator, int caller, int iWave)
+static void InputSetWave(int entity, int activator, int caller, int wave)
 {
-	if (iWave < 0)
-		iWave = 0;
-	if (iWave > RENEVANT_MAXWAVES)
-		iWave = RENEVANT_MAXWAVES;
+	if (wave < 0)
+	{
+		wave = 0;
+	}
+	if (wave > RENEVANT_MAXWAVES)
+	{
+		wave = RENEVANT_MAXWAVES;
+	}
 	
-	Renevant_SetWave(iWave);
+	Renevant_SetWave(wave);
 }
 
-static void InputSetWaveResetTimer(int entity, int activator, int caller, int iWave)
+static void InputSetWaveResetTimer(int entity, int activator, int caller, int wave)
 {
-	if (iWave < 0)
-		iWave = 0;
-	if (iWave > RENEVANT_MAXWAVES)
-		iWave = RENEVANT_MAXWAVES;
+	if (wave < 0)
+	{
+		wave = 0;
+	}
+	if (wave > RENEVANT_MAXWAVES)
+	{
+		wave = RENEVANT_MAXWAVES;
+	}
 	
-	Renevant_SetWave(iWave, true);
+	Renevant_SetWave(wave, true);
 }
 
 static void InputRequestWave(int entity, int activator, int caller)
 {
-	SetVariantInt(g_iRenevantWaveNumber);
+	SetVariantInt(g_RenevantWaveNumber);
 	SF2LogicRenevantEntity(entity).FireOutput("OnRequestWave", activator);
 }

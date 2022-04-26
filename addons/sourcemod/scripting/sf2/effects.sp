@@ -25,21 +25,21 @@ enum EffectType
 
 EffectEvent g_iEntityEffectType[2049];
 
-void SlenderSpawnEffects(int iBossIndex)
+void SlenderSpawnEffects(int bossIndex)
 {
-	if (iBossIndex < 0 || iBossIndex >= MAX_BOSSES) return;
+	if (bossIndex < 0 || bossIndex >= MAX_BOSSES) return;
 	
-	int iBossID = NPCGetUniqueID(iBossIndex);
+	int iBossID = NPCGetUniqueID(bossIndex);
 	if (iBossID == -1) return;
 	
-	int difficulty = GetLocalGlobalDifficulty(iBossIndex);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	int iSlender = NPCGetEntIndex(iBossIndex);
+	int iSlender = NPCGetEntIndex(bossIndex);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, profile, sizeof(profile));
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	if (NPCGetDiscoModeState(iBossIndex))
+	if (NPCGetDiscoModeState(bossIndex))
 	{
 		int iLight = CreateEntityByName("light_dynamic");
 		int iParticle = CreateEntityByName("info_particle_system");
@@ -54,9 +54,9 @@ void SlenderSpawnEffects(int iBossIndex)
 			TeleportEntity(iLight, flEffectPos, flEffectAng, NULL_VECTOR);
 			SetVariantInt(5);
 			AcceptEntityInput(iLight, "Brightness");
-			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(iBossIndex), NPCGetDiscoModeRadiusMax(iBossIndex)));
+			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(bossIndex), NPCGetDiscoModeRadiusMax(bossIndex)));
 			AcceptEntityInput(iLight, "Distance");
-			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(iBossIndex), NPCGetDiscoModeRadiusMax(iBossIndex)));
+			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(bossIndex), NPCGetDiscoModeRadiusMax(bossIndex)));
 			AcceptEntityInput(iLight, "spotlight_radius");
 			SetVariantInt(1);
 			AcceptEntityInput(iLight, "cone");
@@ -79,7 +79,7 @@ void SlenderSpawnEffects(int iBossIndex)
 			float flEffectPos[3], flEffectAng[3], flBasePosX[3], flBaseAngX[3];
 			GetEntPropVector(iSlender, Prop_Data, "m_vecAbsOrigin", flBasePosX);
 			GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAngX);
-			CopyVector(NPCGetDiscoModePos(iBossIndex), flEffectPos);
+			CopyVector(NPCGetDiscoModePos(bossIndex), flEffectPos);
 			VectorTransform(flEffectPos, flBasePosX, flBaseAngX, flEffectPos);
 			AddVectors(flEffectAng, flBaseAngX, flEffectAng);
 			TeleportEntity(iParticle, flEffectPos, flEffectAng, NULL_VECTOR);
@@ -93,7 +93,7 @@ void SlenderSpawnEffects(int iBossIndex)
 			SDKHook(iParticle, SDKHook_SetTransmit, Hook_EffectTransmitX);
 		}
 	}
-	if (NPCGetFestiveLightState(iBossIndex))
+	if (NPCGetFestiveLightState(bossIndex))
 	{
 		int iLight = CreateEntityByName("light_dynamic");
 		if (iLight != -1)
@@ -101,16 +101,16 @@ void SlenderSpawnEffects(int iBossIndex)
 			float flEffectPos[3], flEffectAng[3], flBasePosX[3], flBaseAngX[3];
 			GetEntPropVector(iSlender, Prop_Data, "m_vecAbsOrigin", flBasePosX);
 			GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAngX);
-			CopyVector(NPCGetFestiveLightPosition(iBossIndex), flEffectPos);
-			CopyVector(NPCGetFestiveLightAngle(iBossIndex), flEffectAng);
+			CopyVector(NPCGetFestiveLightPosition(bossIndex), flEffectPos);
+			CopyVector(NPCGetFestiveLightAngle(bossIndex), flEffectAng);
 			VectorTransform(flEffectPos, flBasePosX, flBaseAngX, flEffectPos);
 			AddVectors(flEffectAng, flBaseAngX, flEffectAng);
 			TeleportEntity(iLight, flEffectPos, flEffectAng, NULL_VECTOR);
-			SetVariantInt(NPCGetFestiveLightBrightness(iBossIndex));
+			SetVariantInt(NPCGetFestiveLightBrightness(bossIndex));
 			AcceptEntityInput(iLight, "Brightness");
-			SetVariantFloat(NPCGetFestiveLightDistance(iBossIndex));
+			SetVariantFloat(NPCGetFestiveLightDistance(bossIndex));
 			AcceptEntityInput(iLight, "Distance");
-			SetVariantFloat(NPCGetFestiveLightRadius(iBossIndex));
+			SetVariantFloat(NPCGetFestiveLightRadius(bossIndex));
 			AcceptEntityInput(iLight, "spotlight_radius");
 			SetVariantInt(1);
 			AcceptEntityInput(iLight, "cone");
@@ -194,7 +194,7 @@ void SlenderSpawnEffects(int iBossIndex)
 				g_Config.GetString("origin_custom", sBasePosCustom, sizeof(sBasePosCustom));
 				if (strcmp(sBasePosCustom, "&CURRENTTARGET&", false) == 0)
 				{
-					int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
+					int  iTarget = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 					if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
 					{
 						LogError("Could not spawn effect %s for boss %d: unable to read position of target due to no target!");
@@ -220,7 +220,7 @@ void SlenderSpawnEffects(int iBossIndex)
 				g_Config.GetString("angles_custom", sBaseAngCustom, sizeof(sBaseAngCustom));
 				if (strcmp(sBaseAngCustom, "&CURRENTTARGET&", false) == 0)
 				{
-					int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
+					int  iTarget = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 					if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
 					{
 						LogError("Could not spawn effect %s for boss %d: unable to read angles of target due to no target!");
@@ -245,12 +245,12 @@ void SlenderSpawnEffects(int iBossIndex)
 				int difficultyIndex = g_Config.GetNum("difficulty_indexes", 123456);
 				char sIndexes[8], sCurrentIndex[2];
 				FormatEx(sIndexes, sizeof(sIndexes), "%d", difficultyIndex);
-				FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", g_cvDifficulty.IntValue);
+				FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", g_DifficultyConVar.IntValue);
 				char sNumber = sCurrentIndex[0];
 				int difficultyNumber = 0;
 				if (FindCharInString(sIndexes, sNumber) != -1)
 				{
-					difficultyNumber += g_cvDifficulty.IntValue;
+					difficultyNumber += g_DifficultyConVar.IntValue;
 				}
 				if (sIndexes[0] != '\0' && sCurrentIndex[0] != '\0' && difficultyNumber != -1)
 				{
@@ -666,10 +666,10 @@ void SlenderSpawnEffects(int iBossIndex)
 					g_Config.GetString("parent_custom", sParentCustom, sizeof(sParentCustom));
 					if (strcmp(sParentCustom, "&CURRENTTARGET&", false) == 0)
 					{
-						int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
+						int  iTarget = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 						if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
 						{
-							LogError("Could not parent effect %s of boss %d to current target: target does not exist!", sSectionName, iBossIndex);
+							LogError("Could not parent effect %s of boss %d to current target: target does not exist!", sSectionName, bossIndex);
 							g_Config.GoBack();
 							continue;
 						}
@@ -692,7 +692,7 @@ void SlenderSpawnEffects(int iBossIndex)
 					{
 						if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
 						{
-							LogError("Could not parent effect %s of boss %d to itself: boss entity does not exist!", sSectionName, iBossIndex);
+							LogError("Could not parent effect %s of boss %d to itself: boss entity does not exist!", sSectionName, bossIndex);
 							g_Config.GoBack();
 							continue;
 						}
@@ -755,7 +755,7 @@ void SlenderSpawnEffects(int iBossIndex)
 			}
 			else
 			{
-				LogError("Could not spawn effect %s for boss %d: invalid type!", sSectionName, iBossIndex);
+				LogError("Could not spawn effect %s for boss %d: invalid type!", sSectionName, bossIndex);
 			}
 		}
 		
@@ -769,25 +769,25 @@ void SlenderSpawnEffects(int iBossIndex)
 }
 public Action Hook_EffectTransmit(int ent,int other)
 {
-	if (!g_bEnabled) return Plugin_Continue;
+	if (!g_Enabled) return Plugin_Continue;
 
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	int iBossIndex = NPCGetFromEntIndex(slender);
+	int bossIndex = NPCGetFromEntIndex(slender);
 
-	if (iBossIndex != -1 && NPCChaserIsCloaked(iBossIndex)) return Plugin_Handled;
-	if (g_iEntityEffectType[ent] == EffectEvent_PlayerSeesBoss && IsValidClient(other) && iBossIndex != -1 && !g_bPlayerEliminated[other] && !IsClientInGhostMode(other) && 
-	!DidClientEscape(other) && !PlayerCanSeeSlender(other, iBossIndex, true)) return Plugin_Handled;
+	if (bossIndex != -1 && NPCChaserIsCloaked(bossIndex)) return Plugin_Handled;
+	if (g_iEntityEffectType[ent] == EffectEvent_PlayerSeesBoss && IsValidClient(other) && bossIndex != -1 && !g_PlayerEliminated[other] && !IsClientInGhostMode(other) && 
+	!DidClientEscape(other) && !PlayerCanSeeSlender(other, bossIndex, true)) return Plugin_Handled;
 
 	return Plugin_Continue;
 }
 public Action Hook_EffectTransmitX(int ent,int other)
 {
-	if (!g_bEnabled) return Plugin_Continue;
+	if (!g_Enabled) return Plugin_Continue;
 
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	int iBossIndex = NPCGetFromEntIndex(slender);
+	int bossIndex = NPCGetFromEntIndex(slender);
 
-	if (iBossIndex != -1 && NPCChaserIsCloaked(iBossIndex)) return Plugin_Handled;
+	if (bossIndex != -1 && NPCChaserIsCloaked(bossIndex)) return Plugin_Handled;
 
 	return Plugin_Continue;
 }
@@ -796,7 +796,7 @@ void SlenderToggleParticleEffects(int iSlender,bool bReverse=false)
 	int iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "info_particle_system")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
 		{
 			if (!bReverse)
 			{
@@ -816,10 +816,10 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 	int iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "light_dynamic")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
 		{
 			AcceptEntityInput(iEffect, "TurnOff");
-			if(bKill)
+			if (bKill)
 				RemoveEntity(iEffect);
 		}
 	}
@@ -827,10 +827,10 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 	iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "env_steam")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
 		{
 			AcceptEntityInput(iEffect, "TurnOff");
-			if(bKill)
+			if (bKill)
 				RemoveEntity(iEffect);
 		}
 	}
@@ -838,10 +838,10 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 	iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "info_particle_system")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
 		{
 			AcceptEntityInput(iEffect, "stop");
-			if(bKill)
+			if (bKill)
 				RemoveEntity(iEffect);
 		}
 	}
@@ -849,10 +849,10 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 	iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "env_spritetrail")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
 		{
 			AcceptEntityInput(iEffect, "hidesprite");
-			if(bKill)
+			if (bKill)
 				RemoveEntity(iEffect);
 		}
 	}
@@ -860,7 +860,7 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 	iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "prop_dynamic")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender && bKill)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender && bKill)
 		{
 			RemoveEntity(iEffect);
 		}
@@ -869,10 +869,10 @@ void SlenderRemoveEffects(int iSlender,bool bKill=false)
 	iEffect = -1;
 	while((iEffect = FindEntityByClassname(iEffect, "point_spotlight")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		if (GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
 		{
 			AcceptEntityInput(iEffect, "LightOff");
-			if(bKill)
+			if (bKill)
 			{
 				int iOffset = FindDataMapInfo(iEffect, "m_nHaloSprite");
 				if (iOffset != -1)
@@ -937,15 +937,15 @@ static Action Timer_DiscoLight(Handle timer, any iEffect)
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
 	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
 
-	int iBossIndex = NPCGetFromEntIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
+	int bossIndex = NPCGetFromEntIndex(slender);
+	if (bossIndex == -1) return Plugin_Stop;
 	
 	int rChase = GetRandomInt(75, 250);
 	int gChase = GetRandomInt(75, 250);
 	int bChase = GetRandomInt(75, 250);
 	SetEntityRenderColor(iEffect, rChase, gChase, bChase, 255);
 
-	float DistanceRNG = GetRandomFloat(NPCGetDiscoModeRadiusMin(iBossIndex), NPCGetDiscoModeRadiusMax(iBossIndex));
+	float DistanceRNG = GetRandomFloat(NPCGetDiscoModeRadiusMin(bossIndex), NPCGetDiscoModeRadiusMax(bossIndex));
 
 	SetVariantFloat(DistanceRNG);
 	AcceptEntityInput(iEffect, "Distance");
@@ -965,8 +965,8 @@ static Action Timer_FestiveLight(Handle timer, any iEffect)
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
 	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
 
-	int iBossIndex = SF2_EntIndexToBossIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
+	int bossIndex = SF2_EntIndexToBossIndex(slender);
+	if (bossIndex == -1) return Plugin_Stop;
 
 	int iFunnyFestive = GetRandomInt(1, 3);
 	switch (iFunnyFestive)

@@ -1,8 +1,8 @@
 // sf2_info_page_music
 
-static const char g_sEntityClassname[] = "sf2_info_page_music"; // The custom classname of the entity. Should be prefixed with "sf2_"
+static const char g_EntityClassname[] = "sf2_info_page_music"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 #define SF2MAPENTITES_PAGE_MUSIC_MAXRANGES 16
 
@@ -23,9 +23,11 @@ methodmap SF2PageMusicEntity < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	property bool Layered
@@ -40,20 +42,20 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hRanges", value); }
 	}
 
-	public void GetRangeKeyValue(int index, char[] sBuffer, int iBufferLen)
+	public void GetRangeKeyValue(int index, char[] buffer, int iBufferLen)
 	{
-		char sFieldName[64];
-		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRange%d", index);
+		char fieldName[64];
+		FormatEx(fieldName, sizeof(fieldName), "sf2_szRange%d", index);
 
-		this.GetPropString(Prop_Data, sFieldName, sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, fieldName, buffer, iBufferLen);
 	}
 
-	public void GetRangeMusicKeyValue(int index, char[] sBuffer, int iBufferLen)
+	public void GetRangeMusicKeyValue(int index, char[] buffer, int iBufferLen)
 	{
-		char sFieldName[64];
-		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRangeMusic%d", index);
+		char fieldName[64];
+		FormatEx(fieldName, sizeof(fieldName), "sf2_szRangeMusic%d", index);
 
-		this.GetPropString(Prop_Data, sFieldName, sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, fieldName, buffer, iBufferLen);
 	}
 
 	public void GetRange(int index, SF2PageMusicEntityRangeData rangeData)
@@ -73,19 +75,21 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		return rangeData.Music[0] != '\0';
 	}
 
-	public bool GetRangeMusic(int num, char[] sBuffer, int iBufferLen)
+	public bool GetRangeMusic(int num, char[] buffer, int iBufferLen)
 	{
 		SF2PageMusicEntityRangeData rangeData;
 
 		for (int i = 0; i < this.Ranges.Length; i++)
 		{
 			if (!this.IsRangeSet(i))
+			{
 				continue;
+			}
 
 			this.GetRange(i, rangeData);
 			if (num >= rangeData.Min && num <= rangeData.Max)
 			{
-				strcopy(sBuffer, iBufferLen, rangeData.Music);
+				strcopy(buffer, iBufferLen, rangeData.Music);
 				return true;
 			}
 		}
@@ -100,7 +104,9 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		for (int i = 0; i < this.Ranges.Length; i++)
 		{
 			if (!this.IsRangeSet(i))
+			{
 				continue;
+			}
 
 			this.GetRange(i, rangeData);
 			if (num >= rangeData.Min && num <= rangeData.Max)
@@ -114,7 +120,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		return false;
 	}
 
-	public void InsertRanges(ArrayList hRanges)
+	public void InsertRanges(ArrayList ranges)
 	{
 		SF2PageMusicEntityRangeData rangeData;
 
@@ -123,9 +129,9 @@ methodmap SF2PageMusicEntity < CBaseEntity
 			this.GetRange(i, rangeData);
 			if (rangeData.Music[0] != '\0')
 			{
-				int index = hRanges.Push(EnsureEntRef(this.index));
-				hRanges.Set(index, rangeData.Min, 1);
-				hRanges.Set(index, rangeData.Max, 2);
+				int index = ranges.Push(EnsureEntRef(this.index));
+				ranges.Set(index, rangeData.Min, 1);
+				ranges.Set(index, rangeData.Max, 2);
 			}
 		}
 	}
@@ -138,28 +144,28 @@ methodmap SF2PageMusicEntity < CBaseEntity
 
 static void Initialize() 
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
-	g_entityFactory.DeriveFromBaseEntity(true);
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
+	g_EntityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineBoolField("sf2_bLayered", _, "layered")
 		.DefineIntField("sf2_hRanges");
 
-	char sFieldName[64];
-	char sKeyName[64];
+	char fieldName[64];
+	char keyName[64];
 
 	for (int i = 0; i < SF2MAPENTITES_PAGE_MUSIC_MAXRANGES; i++)
 	{
-		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRange%d", (i + 1));
-		FormatEx(sKeyName, sizeof(sKeyName), "range%d", (i + 1));
-		g_entityFactory.DefineStringField(sFieldName, _, sKeyName);
+		FormatEx(fieldName, sizeof(fieldName), "sf2_szRange%d", (i + 1));
+		FormatEx(keyName, sizeof(keyName), "range%d", (i + 1));
+		g_EntityFactory.DefineStringField(fieldName, _, keyName);
 
-		FormatEx(sFieldName, sizeof(sFieldName), "sf2_szRangeMusic%d", (i + 1));
-		FormatEx(sKeyName, sizeof(sKeyName), "music%d", (i + 1));
-		g_entityFactory.DefineStringField(sFieldName, _, sKeyName);
+		FormatEx(fieldName, sizeof(fieldName), "sf2_szRangeMusic%d", (i + 1));
+		FormatEx(keyName, sizeof(keyName), "music%d", (i + 1));
+		g_EntityFactory.DefineStringField(fieldName, _, keyName);
 	}
 
-	g_entityFactory.EndDataMapDesc();
-	g_entityFactory.Install();
+	g_EntityFactory.EndDataMapDesc();
+	g_EntityFactory.Install();
 }
 
 static void OnCreated(int entity)
@@ -188,10 +194,10 @@ static void OnRemoved(int entity)
 {
 	SF2PageMusicEntity thisEnt = SF2PageMusicEntity(entity);
 
-	ArrayList hRanges = thisEnt.Ranges;
-	if (hRanges != null)
+	ArrayList ranges = thisEnt.Ranges;
+	if (ranges != null)
 	{
-		delete hRanges;
+		delete ranges;
 	}
 
 	SDKUnhook(entity, SDKHook_SpawnPost, OnSpawn);
@@ -201,8 +207,8 @@ static void OnSpawn(int entity)
 {
 	SF2PageMusicEntity thisEnt = SF2PageMusicEntity(entity);
 
-	char sBuffer[PLATFORM_MAX_PATH];
-	char sTokens[2][16];
+	char buffer[PLATFORM_MAX_PATH];
+	char tokens[2][16];
 
 	for (int i = 0; i < SF2MAPENTITES_PAGE_MUSIC_MAXRANGES; i++)
 	{
@@ -210,27 +216,29 @@ static void OnSpawn(int entity)
 		thisEnt.GetRange(i, rangeData);
 
 		// Get the range from keyvalue.
-		thisEnt.GetRangeKeyValue((i + 1), sBuffer, sizeof(sBuffer));
-		int iNumTokens = ExplodeString(sBuffer, ",", sTokens, 2, 16);
+		thisEnt.GetRangeKeyValue((i + 1), buffer, sizeof(buffer));
+		int numTokens = ExplodeString(buffer, ",", tokens, 2, 16);
 
-		if (iNumTokens == 1)
+		if (numTokens == 1)
 		{
-			rangeData.Min = StringToInt(sTokens[0]);
+			rangeData.Min = StringToInt(tokens[0]);
 			rangeData.Max = rangeData.Min;
 		}
 		else 
 		{
-			rangeData.Min = StringToInt(sTokens[0]);
-			rangeData.Max = StringToInt(sTokens[1]);
+			rangeData.Min = StringToInt(tokens[0]);
+			rangeData.Max = StringToInt(tokens[1]);
 		}
 
 		// Get the range music from keyvalue.
-		thisEnt.GetRangeMusicKeyValue((i + 1), sBuffer, sizeof(sBuffer));
-		strcopy(rangeData.Music, PLATFORM_MAX_PATH, sBuffer);
+		thisEnt.GetRangeMusicKeyValue((i + 1), buffer, sizeof(buffer));
+		strcopy(rangeData.Music, PLATFORM_MAX_PATH, buffer);
 
 		// Precache, or else...
 		if (rangeData.Music[0] != '\0')
+		{
 			PrecacheSound(rangeData.Music);
+		}
 
 		thisEnt.SetRange(i, rangeData);
 	}

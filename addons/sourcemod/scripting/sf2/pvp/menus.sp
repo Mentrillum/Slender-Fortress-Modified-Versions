@@ -4,7 +4,7 @@
 
 #define _sf2_pvp_menus
 
-Handle g_hMenuSettingsPvP;
+Handle g_MenuSettingsPvP;
 
 public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
 {
@@ -14,33 +14,33 @@ public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param
 		{
 			case 0:
 			{
-				char sBuffer[512];
-				Format(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings PvP Spawn Menu Title", param1);
+				char buffer[512];
+				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings PvP Spawn Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				Format(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
-				DrawPanelItem(hPanel, sBuffer);
-				Format(sBuffer, sizeof(sBuffer), "%T", "No", param1);
-				DrawPanelItem(hPanel, sBuffer);
+				Format(buffer, sizeof(buffer), "%T", "Yes", param1);
+				DrawPanelItem(panel, buffer);
+				Format(buffer, sizeof(buffer), "%T", "No", param1);
+				DrawPanelItem(panel, buffer);
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsPvPSpawn, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsPvPSpawn, 30);
+				delete panel;
 			}
 			case 1:
 			{
-				char sBuffer[512];
-				Format(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings PvP Spawn Protection Title", param1);
+				char buffer[512];
+				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings PvP Spawn Protection Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 
-				DrawPanelItem(hPanel, "On");
-				DrawPanelItem(hPanel, "Off");
+				DrawPanelItem(panel, "On");
+				DrawPanelItem(panel, "Off");
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsPvPProtection, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsPvPProtection, 30);
+				delete panel;
 			}
 		}
 	}
@@ -48,7 +48,7 @@ public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_hMenuSettings, param1, 30);
+			DisplayMenu(g_MenuSettings, param1, 30);
 		}
 	}
 }
@@ -61,17 +61,17 @@ public int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_PvPAutoSpawn = true;
+				g_PlayerPreferences[param1].PlayerPreference_PvPAutoSpawn = true;
 				CPrintToChat(param1, "%T", "SF2 PvP Spawn Accept", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_PvPAutoSpawn = false;
+				g_PlayerPreferences[param1].PlayerPreference_PvPAutoSpawn = false;
 				CPrintToChat(param1, "%T", "SF2 PvP Spawn Decline", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -83,16 +83,16 @@ public int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_PvPSpawnProtection = true;
+				g_PlayerPreferences[param1].PlayerPreference_PvPSpawnProtection = true;
 				CPrintToChat(param1, "%T", "SF2 PvP Protection On", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_PvPSpawnProtection = false;
+				g_PlayerPreferences[param1].PlayerPreference_PvPSpawnProtection = false;
 				CPrintToChat(param1, "%T", "SF2 PvP Protection Off", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }

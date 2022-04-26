@@ -3,7 +3,7 @@
 // A trigger that when touched by a player on RED will let the player escape.
 // Escaping can only occur during the Escape phase.
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -15,9 +15,11 @@ methodmap SF2TriggerEscapeEntity < SF2TriggerMapEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -28,42 +30,42 @@ methodmap SF2TriggerEscapeEntity < SF2TriggerMapEntity
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("sf2_trigger_escape", OnCreate);
-	g_entityFactory.DeriveFromClass("trigger_multiple");
+	g_EntityFactory = new CEntityFactory("sf2_trigger_escape", OnCreate);
+	g_EntityFactory.DeriveFromClass("trigger_multiple");
 
-	//g_entityFactory.BeginDataMapDesc()
+	//g_EntityFactory.BeginDataMapDesc()
 	//.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
-static void OnCreate(int iEntity)
+static void OnCreate(int entity)
 {
-	SDKHook(iEntity, SDKHook_SpawnPost, OnSpawn);
-	SDKHook(iEntity, SDKHook_StartTouchPost, OnStartTouchPost);
+	SDKHook(entity, SDKHook_SpawnPost, OnSpawn);
+	SDKHook(entity, SDKHook_StartTouchPost, OnStartTouchPost);
 }
 
-static void OnSpawn(int iEntity) 
+static void OnSpawn(int entity) 
 {
-	int iSpawnFlags = GetEntProp(iEntity, Prop_Data, "m_spawnflags");
-	SetEntProp(iEntity, Prop_Data, "m_spawnflags", iSpawnFlags | TRIGGER_CLIENTS);
+	int spawnFlags = GetEntProp(entity, Prop_Data, "m_spawnflags");
+	SetEntProp(entity, Prop_Data, "m_spawnflags", spawnFlags | TRIGGER_CLIENTS);
 }
 
-static void OnStartTouchPost(int iEntity, int iToucher)
+static void OnStartTouchPost(int entity, int toucher)
 {
-	if (!g_bEnabled)
+	if (!g_Enabled)
 	{
 		return;
 	}
 
-	SF2TriggerMapEntity trigger = SF2TriggerMapEntity(iEntity);
+	SF2TriggerMapEntity trigger = SF2TriggerMapEntity(entity);
 
-	if (IsRoundInEscapeObjective() && trigger.PassesTriggerFilters(iToucher))
+	if (IsRoundInEscapeObjective() && trigger.PassesTriggerFilters(toucher))
 	{
-		if (IsValidClient(iToucher) && IsPlayerAlive(iToucher) && !IsClientInDeathCam(iToucher) && !g_bPlayerEliminated[iToucher] && !DidClientEscape(iToucher))
+		if (IsValidClient(toucher) && IsPlayerAlive(toucher) && !IsClientInDeathCam(toucher) && !g_PlayerEliminated[toucher] && !DidClientEscape(toucher))
 		{
-			ClientEscape(iToucher);
-			TeleportClientToEscapePoint(iToucher);
+			ClientEscape(toucher);
+			TeleportClientToEscapePoint(toucher);
 		}
 	}
 }

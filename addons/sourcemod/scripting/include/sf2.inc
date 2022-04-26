@@ -198,106 +198,106 @@ enum ParticleAttachment
 /**
  * Called when a boss is added into the game.
  *
- * @param iBossIndex	The index of the newly created boss.
+ * @param bossIndex	The index of the newly created boss.
  */
-forward void SF2_OnBossAdded(int iBossIndex);
+forward void SF2_OnBossAdded(int bossIndex);
 
 /**
  * Called when the boss spawns into the map.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnBossSpawn(int iBossIndex);
+forward void SF2_OnBossSpawn(int bossIndex);
 
 /**
  * Called when the boss despawns from the map.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnBossDespawn(int iBossIndex);
+forward void SF2_OnBossDespawn(int bossIndex);
 
 /**
  * Called when the boss changes states. Currently only used for Chaser bosses.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param iOldState		The old state.
  * @param iNewState		The new state.
  */
-forward void SF2_OnBossChangeState(int iBossIndex, int iOldState, int iNewState);
+forward void SF2_OnBossChangeState(int bossIndex, int iOldState, int iNewState);
 
 /**
  * Called when the boss updates its animation.
  *
- * @param iBossIndex	Boss index. 
+ * @param bossIndex	Boss index. 
  * @return				If Plugin_Handled, animation change will be blocked.
  */
-forward Action SF2_OnBossAnimationUpdate(int iBossIndex);
+forward Action SF2_OnBossAnimationUpdate(int bossIndex);
 
 /**
  * Called to determine the boss's run speed.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param flSpeed		The boss's run speed.
  * @return				If Plugin_Changed, flSpeed is used as the boss's run speed.
  */
-forward Action SF2_OnBossGetSpeed(int iBossIndex, float &flSpeed);
+forward Action SF2_OnBossGetSpeed(int bossIndex, float &flSpeed);
 
 /**
  * Called to determine the boss's walk speed.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param flSpeed		The boss's walk speed.
  * @return				If Plugin_Changed, flSpeed is used as the boss's walk speed.
  */
-forward Action SF2_OnBossGetWalkSpeed(int iBossIndex, float &flWalkSpeed);
+forward Action SF2_OnBossGetWalkSpeed(int bossIndex, float &flWalkSpeed);
 
 /**
  * Called after the boss has determined it can hear the entity.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param entity		Entity index.
  * @param soundType			The type of sound to check.
  * @return				Returning a value other than Plugin_Continue will block hearing to the entity.
  */
-forward Action SF2_OnBossHearEntity(int iBossIndex, int entity, SoundType soundType);
+forward Action SF2_OnBossHearEntity(int bossIndex, int entity, SoundType soundType);
 
 /**
  * Called after the boss has determined it can see the entity.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param entity		Entity index.
  * @return				Returning a value other than Plugin_Continue will block vision to the entity.
  */
-forward Action SF2_OnBossSeeEntity(int iBossIndex, int entity);
+forward Action SF2_OnBossSeeEntity(int bossIndex, int entity);
 
 /**
  * Called when a boss is removed from the game.
  *
- * @param iBossIndex	The index of the boss to be removed.
+ * @param bossIndex	The index of the boss to be removed.
  */
-forward void SF2_OnBossRemoved(int iBossIndex);
+forward void SF2_OnBossRemoved(int bossIndex);
 
 /**
  * Called when the boss gets stun by a player.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param client		The client who stunned the boss, will return -1 if the stun was a flashlight stun.
  */
-forward void SF2_OnBossStunned(int iBossIndex, int client);
+forward void SF2_OnBossStunned(int bossIndex, int client);
 
 /**
  * Called when the boss cloaks.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnBossCloaked(int iBossIndex);
+forward void SF2_OnBossCloaked(int bossIndex);
 
 /**
  * Called when the boss decloaks
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnBossDecloaked(int iBossIndex);
+forward void SF2_OnBossDecloaked(int bossIndex);
 
 /**
  * Called when pages have spawned into the map.
@@ -331,18 +331,18 @@ forward void SF2_OnClientBlink(int client);
  * Called when a player gets scared from a boss.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnClientScare(int client, int iBossIndex);
+forward void SF2_OnClientScare(int client, int bossIndex);
 
 /**
  * Called when the player gets caught by a boss, either from too much static, being within
  * a boss's kill radius, or dies from too much camping. This is also called for fake bosses.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnClientCaughtByBoss(int client, int iBossIndex);
+forward void SF2_OnClientCaughtByBoss(int client, int bossIndex);
 
 /**
  * Called when giving queue points to the player at the end of the round.
@@ -399,33 +399,33 @@ forward void SF2_OnClientEscape(int client);
  * Called when the player looks at the boss.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss the client is looking at.
+ * @param bossIndex	Boss the client is looking at.
  */
-forward void SF2_OnClientLooksAtBoss(int client, int iBossIndex);
+forward void SF2_OnClientLooksAtBoss(int client, int bossIndex);
 
 /**
  * Called when the player looks away from the boss.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss the client is no longer looking at.
+ * @param bossIndex	Boss the client is no longer looking at.
  */
-forward void SF2_OnClientLooksAwayFromBoss(int client, int iBossIndex);
+forward void SF2_OnClientLooksAwayFromBoss(int client, int bossIndex);
 
 /**
  * Called when the player gets caught in a boss's deathcam.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnClientStartDeathCam(int client, int iBossIndex);
+forward void SF2_OnClientStartDeathCam(int client, int bossIndex);
 
 /**
  * Called when the player gets exits a boss's deathcam.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-forward void SF2_OnClientEndDeathCam(int client, int iBossIndex);
+forward void SF2_OnClientEndDeathCam(int client, int bossIndex);
 
 /**
  * Called to determine a player's default walk speed.
@@ -468,12 +468,12 @@ forward Action SF2_OnGroupGiveQueuePoints(int groupIndex, int &iAddAmount);
  * Called when a player gets damaged by the boss.
  *
  * @param client		The player who got damaged.
- * @param iBossIndex	Boss that damaged the player.
+ * @param bossIndex	Boss that damaged the player.
  * @param inflictor		The inflictor of the damage.
  * @param damage		The amount of damage taken.
  * @param damageType	The damage type.
  */
-forward void SF2_OnClientDamagedByBoss(int client, int iBossIndex, int inflictor, float damage, int damageType);
+forward void SF2_OnClientDamagedByBoss(int client, int bossIndex, int inflictor, float damage, int damageType);
 
 /**
  * Called when a player spawns as a proxy.
@@ -493,7 +493,7 @@ forward void SF2_OnBossPackVoteStart();
 /**
  * Called whenever the difficulty changes
  *
- * @param iBossIndex	The index of the newly created boss.
+ * @param bossIndex	The index of the newly created boss.
  */
 forward void SF2_OnDifficultyChanged(int difficulty);
 
@@ -583,10 +583,10 @@ native bool SF2_IsClientProxy(int client);
  * Tells whether or not the client is looking at the boss.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @return				True if the player is looking at a boss, false if not.
  */
-native bool SF2_IsClientLookingAtBoss(int client, int iBossIndex);
+native bool SF2_IsClientLookingAtBoss(int client, int bossIndex);
 
 /**
  * Gives the amount of times the client has blinked in one life. This count will reset upon spawn.
@@ -630,9 +630,9 @@ native int SF2_GetClientProxyMaster(int client);
  * If the client is a Proxy, then this sets the boss index that the client is associated with.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-native void SF2_SetClientProxyMaster(int client, int iBossIndex);
+native void SF2_SetClientProxyMaster(int client, int bossIndex);
 
 /**
  * If the client is a Proxy, then this returns the amount of Control points the client has left.
@@ -749,21 +749,21 @@ native bool SF2_IsClientTrapped(int client);
  * Returns whether or not a proxy can be spawned, returns a teleport position or spawn point if defined and the result is true, works well with SF2_ClientForceProxy.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param flTeleportPos	Position to return
  * @param iSpawnPoint	Spawn point to return, defaults to -1.
  */
-native bool SF2_ClientSpawnProxy(int client, int iBossIndex, float flTeleportPos[3], int &iSpawnPoint = -1);
+native bool SF2_ClientSpawnProxy(int client, int bossIndex, float flTeleportPos[3], int &iSpawnPoint = -1);
 
 /**
  * Spawns a player as a proxy at a given position or spawn point.
  *
  * @param client		Client index.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param flTeleportPos	Position to return
  * @param iSpawnPoint	Spawn point to return, defaults to -1.
  */
-native bool SF2_ClientForceProxy(int client, int iBossIndex, const float flTeleportPos[3], int iSpawnPoint);
+native bool SF2_ClientForceProxy(int client, int bossIndex, const float flTeleportPos[3], int iSpawnPoint);
 
 /**
  * Collects the given entity as a page.
@@ -791,19 +791,19 @@ native int SF2_EntIndexToBossIndex(int iEntIndex);
 /**
  * Returns the entity index of a boss using EntRefToEntIndex().
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @return				Entity index, or -1 if the boss has not spawned.
  */
-native int SF2_BossIndexToEntIndex(int iBossIndex);
+native int SF2_BossIndexToEntIndex(int bossIndex);
 
 
 /**
  * Returns the entity index of a boss using NPCGetEntIndex() rather than EntRefToEntIndex().
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @return				Entity index, or -1 if the boss has not spawned.
  */
-native int SF2_BossIndexToEntIndexEx(int iBossIndex);
+native int SF2_BossIndexToEntIndexEx(int bossIndex);
 
 /**
  * Converts a boss unique ID to a boss index.
@@ -816,10 +816,10 @@ native int SF2_BossIDToBossIndex(int iBossID);
 /**
  * Returns the unique ID of a boss. A unique ID to a boss index is the equivalent of an entity reference to an entity index.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Unique id.
  */
-native int SF2_BossIndexToBossID(int iBossIndex);
+native int SF2_BossIndexToBossID(int bossIndex);
 
 /**
  * Adds a boss into the game.
@@ -835,254 +835,254 @@ native int SF2_AddBoss(const char[] profile, int flags=0, bool spawnCompanions=t
 /**
  * Removes a boss from the game.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  */
-native void SF2_RemoveBoss(int iBossIndex);
+native void SF2_RemoveBoss(int bossIndex);
 
 /**
  * Retrieves the profile name of the boss.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param sBuffer			Buffer to store the profile name.
  * @param iBufferLen		Max length of sBuffer.
  */
-native void SF2_GetBossName(int iBossIndex, char[] sBuffer, int iBufferLen);
+native void SF2_GetBossName(int bossIndex, char[] sBuffer, int iBufferLen);
 
 /**
  * Returns the type of the boss. See the SF2BossType enumeration for possible values.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Entity index.
  */
-native int SF2_GetBossType(int iBossIndex);
+native int SF2_GetBossType(int bossIndex);
 
 /**
  * Returns the flags of the boss.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Flags.
  */
-native int SF2_GetBossFlags(int iBossIndex);
+native int SF2_GetBossFlags(int bossIndex);
 
 /**
  * Sets the flags of the boss.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param flags				Flags.
  */
-native void SF2_SetBossFlags(int iBossIndex, int flags);
+native void SF2_SetBossFlags(int bossIndex, int flags);
 
 /**
  * Spawns the boss into the map.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  */
-native void SF2_SpawnBoss(int iBossIndex, const float position[3]);
+native void SF2_SpawnBoss(int bossIndex, const float position[3]);
 
 /**
  * Despawns the boss from the map.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  */
-native void SF2_DespawnBoss(int iBossIndex);
+native void SF2_DespawnBoss(int bossIndex);
 
 /**
  * Returns the entity index of the boss's model.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Entity index.
  */
-native int SF2_GetBossModelEntity(int iBossIndex);
+native int SF2_GetBossModelEntity(int bossIndex);
 
 /**
  * Returns the boss's current target.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Entity index.
  */
-native int SF2_GetBossTarget(int iBossIndex);
+native int SF2_GetBossTarget(int bossIndex);
 
 /**
  * If the boss is in a chase state, sets the target for the boss.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param client			The new target.
  */
-native void SF2_SetBossTarget(int iBossIndex, int client);
+native void SF2_SetBossTarget(int bossIndex, int client);
 
 /**
  * If the boss is a copy, this returns the boss that this copy is associated with.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Boss index of master boss.
  */
-native int SF2_GetBossMaster(int iBossIndex);
+native int SF2_GetBossMaster(int bossIndex);
 
 /**
  * Returns the boss's current state.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					The boss's state.
  */
-native int SF2_GetBossState(int iBossIndex);
+native int SF2_GetBossState(int bossIndex);
 
 /**
  * Returns the boss's eye position in the world. Used for visibility checks.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param eyePos			Buffer to store result.
  */
-native void SF2_GetBossEyePosition(int iBossIndex, float eyePos[3]);
+native void SF2_GetBossEyePosition(int bossIndex, float eyePos[3]);
 
 /**
  * Returns the boss's eye position offset. This is a local offset vector.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param eyePosOffset		Buffer to store result.
  */
-native void SF2_GetBossEyePositionOffset(int iBossIndex, float eyePosOffset[3]);
+native void SF2_GetBossEyePositionOffset(int bossIndex, float eyePosOffset[3]);
 
 /**
  * Returns the boss's field of view.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Field of view.
  */
-native float SF2_GetBossFOV(int iBossIndex);
+native float SF2_GetBossFOV(int bossIndex);
 
 /**
  * If the boss is in a chase state, returns the time which the boss's persistency on the target ends.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Time where persistency ends.
  */
-native float SF2_GetBossTimeUntilNoPersistence(int iBossIndex);
+native float SF2_GetBossTimeUntilNoPersistence(int bossIndex);
 
 /**
  * If the boss is in a chase state, sets the time which the boss's persistency on the target ends.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param time				Time where persistency ends.
  */
-native void SF2_SetBossTimeUntilNoPersistence(int iBossIndex, float time);
+native void SF2_SetBossTimeUntilNoPersistence(int bossIndex, float time);
 
 /**
  * If the boss is in an alert state, returns the time which the boss should revert to idle state.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Time where chase state should revert to idle state.
  */
-native float SF2_GetBossTimeUntilIdle(int iBossIndex);
+native float SF2_GetBossTimeUntilIdle(int bossIndex);
 
 /**
  * If the boss is in an alert state, sets the time which the boss should revert to idle state.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param time				Time where chase state should revert to idle state.
  */
-native void SF2_SetBossTimeUntilIdle(int iBossIndex, float time);
+native void SF2_SetBossTimeUntilIdle(int bossIndex, float time);
 
 /**
  * If the boss is in a chase state, returns the time which the boss should revert to alert state.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Time where chase state should revert to alert state.
  */
-native float SF2_GetBossTimeUntilAlert(int iBossIndex);
+native float SF2_GetBossTimeUntilAlert(int bossIndex);
 
 /**
  * If the boss is in a chase state, sets the time which the boss should revert to alert state.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param time				Time where chase state should revert to alert state.
  */
-native void SF2_SetBossTimeUntilAlert(int iBossIndex, float time);
+native void SF2_SetBossTimeUntilAlert(int bossIndex, float time);
 
 /**
  * Returns whether or not the boss is stunnable.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					True if stunnable, false otherwise.
  */
-native bool SF2_IsBossStunnable(int iBossIndex);
+native bool SF2_IsBossStunnable(int bossIndex);
 
 /**
  * Returns whether or not the boss is stunnable by flashlight.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					True if stunnable by flashlight, false otherwise.
  */
-native bool SF2_IsBossStunnableByFlashlight(int iBossIndex);
+native bool SF2_IsBossStunnableByFlashlight(int bossIndex);
 
 /**
  * Returns whether or not the boss is cloaked.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					True if cloaked, false otherwise.
  */
-native bool SF2_IsBossCloaked(int iBossIndex);
+native bool SF2_IsBossCloaked(int bossIndex);
 
 /**
  * Returns the amount of health the boss has before stun.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					The health amount.
  */
-native float SF2_GetBossStunHealth(int iBossIndex);
+native float SF2_GetBossStunHealth(int bossIndex);
 
 /**
  * Sets the amount of health the boss has before stun.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param health			The health amount.
  */
-native void SF2_SetBossStunHealth(int iBossIndex, float health);
+native void SF2_SetBossStunHealth(int bossIndex, float health);
 
 /**
  * Returns the time where the boss is not under stun cooldown.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @return					Time when boss is not under stun cooldown.
  */
-native float SF2_GetBossNextStunTime(int iBossIndex);
+native float SF2_GetBossNextStunTime(int bossIndex);
 
 /**
  * Sets the time where the boss is not under stun cooldown.
  * 
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param time				Time when boss is not under stun cooldown.
  */
-native float SF2_SetBossNextStunTime(int iBossIndex, float time);
+native float SF2_SetBossNextStunTime(int bossIndex, float time);
 
 /**
  * Forces the boss to stop chasing.
@@ -1091,43 +1091,43 @@ native float SF2_SetBossNextStunTime(int iBossIndex, float time);
  *
  * Note: If the boss is set to chase endlessly then this will not do anything.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  */
-native void SF2_ForceBossGiveUp(int iBossIndex);
+native void SF2_ForceBossGiveUp(int bossIndex);
 
 /**
  * Gets the current goal position of the boss.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param position			Buffer to store position.
  */
-native void SF2_GetBossGoalPosition(int iBossIndex, float position[3]);
+native void SF2_GetBossGoalPosition(int bossIndex, float position[3]);
 
 /**
  * Returns whether or not the boss is able to hear the player given sound type.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param client			Client index.
  * @param soundType			The type of sound to check.
  * @return					True if boss can hear, false otherwise.
  */
-native bool SF2_CanBossHearClient(int iBossIndex, int client, SoundType soundType);
+native bool SF2_CanBossHearClient(int bossIndex, int client, SoundType soundType);
 
 /**
  * Creates a sound hint for the boss to follow.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex		Boss index.
+ * @param bossIndex		Boss index.
  * @param soundType			The type of sound hint to create.
  * @param position			The position of the sound.
  * @param difficulty		The difficulty.
  */
-native void SF2_CreateBossSoundHint(int iBossIndex, SoundType soundType, const float position[3], int difficulty);
+native void SF2_CreateBossSoundHint(int bossIndex, SoundType soundType, const float position[3], int difficulty);
 
 /**
  * Returns if the given profile is loaded or not.
@@ -1254,67 +1254,67 @@ native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[
 
 /**
  * Returns an attribute name if one exists
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param sAttribute	Name of attribute.
 */
-native bool SF2_GetBossAttributeName(int iBossIndex, const char[] sAttribute);
+native bool SF2_GetBossAttributeName(int bossIndex, const char[] sAttribute);
 
 /**
  * Returns the value of an attribute.
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param sAttribute	Name of attribute.
  * @param flDefaultValue	Default value of attribute.
 */
-native float SF2_GetBossAttributeValue(int iBossIndex, const char[] sAttribute, float flDefaultValue = 0.0);
+native float SF2_GetBossAttributeValue(int bossIndex, const char[] sAttribute, float flDefaultValue = 0.0);
 
 /**
  * Returns the projectile type a boss uses.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
 */
-native int SF2_GetBossProjectileType(int iBossIndex);
+native int SF2_GetBossProjectileType(int bossIndex);
 
 /**
  * Returns the current attack index of the boss.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
 */
-native int SF2_GetBossCurrentAttackIndex(int iBossIndex);
+native int SF2_GetBossCurrentAttackIndex(int bossIndex);
 
 /**
  * Returns the damage type of a set attack index.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param attackIndex	Attack index.
 */
-native int SF2_GetBossAttackIndexDamageType(int iBossIndex, int attackIndex);
+native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
 
 /**
  * Returns the damage of a set attack index.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param attackIndex	Attack index.
  * @param difficulty	The difficulty.
 */
-native float SF2_GetBossAttackIndexDamage(int iBossIndex, int attackIndex, int difficulty);
+native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int difficulty);
 
 /**
  * Returns the attack type of a set attack index.
  *
  * Only used with Chaser bosses.
  *
- * @param iBossIndex	Boss index.
+ * @param bossIndex	Boss index.
  * @param attackIndex	Attack index.
 */
-native int SF2_GetBossAttackIndexType(int iBossIndex, int attackIndex);
+native int SF2_GetBossAttackIndexType(int bossIndex, int attackIndex);
 
 /**
  * Returns the distance of 2 vectors without utilizing the square root function and converting the values properly.

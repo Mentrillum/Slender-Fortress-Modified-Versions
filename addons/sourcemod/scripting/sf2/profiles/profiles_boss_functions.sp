@@ -1728,14 +1728,14 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	TryPrecacheBossProfileSoundPath(sTrapHitSound);
 	if (strcmp(sRocketModel, ROCKET_MODEL, true) != 0)
 	{
-		if(!PrecacheModel(sRocketModel, true))
+		if (!PrecacheModel(sRocketModel, true))
 		{
 			LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", sRocketModel);
 		}
 	}
 	if (strcmp(sTrapModel, TRAP_MODEL, true) != 0)
 	{
-		if(!PrecacheModel(sTrapModel, true))
+		if (!PrecacheModel(sTrapModel, true))
 		{
 			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", sTrapModel);
 		}
@@ -1853,7 +1853,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					kv.GetString(s3, s4, sizeof(s4));
 					if (s4[0] == '\0') break;
 					
-					if(FileExists(s4) || FileExists(s4, true))
+					if (FileExists(s4) || FileExists(s4, true))
 					{
 						AddFileToDownloadsTable(s4);
 					}
@@ -1871,7 +1871,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					kv.GetString(s3, s4, sizeof(s4));
 					if (s4[0] == '\0') break;
 					
-					if(!PrecacheModel(s4, true))
+					if (!PrecacheModel(s4, true))
 					{
 						LogSF2Message("Model file %s failed to be precached, likely does not exist. This will crash the server if not fixed.", s4);
 					}
@@ -1886,7 +1886,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					if (s4[0] == '\0') break;
 					
 					FormatEx(s5, sizeof(s5), "%s.vtf", s4);
-					if(FileExists(s5) || FileExists(s5, true))
+					if (FileExists(s5) || FileExists(s5, true))
 					{
 						AddFileToDownloadsTable(s5);
 					}
@@ -1896,7 +1896,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					}
 
 					FormatEx(s5, sizeof(s5), "%s.vmt", s4);
-					if(FileExists(s5) || FileExists(s5, true))
+					if (FileExists(s5) || FileExists(s5, true))
 					{
 						AddFileToDownloadsTable(s5);
 					}
@@ -1919,7 +1919,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					for (int is = 0; is < sizeof(extensions); is++)
 					{
 						FormatEx(s5, sizeof(s5), "%s%s", s4, extensions[is]);
-						if(FileExists(s5) || FileExists(s5, true))
+						if (FileExists(s5) || FileExists(s5, true))
 						{
 							AddFileToDownloadsTable(s5);
 						}

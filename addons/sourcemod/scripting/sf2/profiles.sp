@@ -24,15 +24,15 @@ static ArrayList g_hSelectableBossProfileQueueList = null;
 StringMap g_BossProfileNames = null;
 ArrayList g_BossProfileData = null;
 
-ConVar g_BossProfilePack = null;
-ConVar g_BossProfilePackDefault = null;
+ConVar g_BossProfilePackConVar = null;
+ConVar g_BossProfilePackDefaultConVar = null;
 
 KeyValues g_BossPackConfig = null;
 
-ConVar g_BossPackEndOfMapVote;
-ConVar g_BossPackVoteStartTime;
-ConVar g_BossPackVoteStartRound;
-ConVar g_BossPackVoteShuffle;
+ConVar g_BossPackEndOfMapVoteConVar;
+ConVar g_BossPackVoteStartTimeConVar;
+ConVar g_BossPackVoteStartRoundConVar;
+ConVar g_BossPackVoteShuffleConVar;
 
 static bool g_BossPackVoteEnabled = false;
 
@@ -47,12 +47,12 @@ void InitializeBossProfiles()
 	g_BossProfileNames = new StringMap();
 	g_BossProfileData = new ArrayList(BossProfileData_MaxStats);
 	
-	g_BossProfilePack = CreateConVar("sf2_boss_profile_pack", "", "The boss pack referenced in profiles_packs.cfg that should be loaded.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
-	g_BossProfilePackDefault = CreateConVar("sf2_boss_profile_pack_default", "", "If the boss pack defined in sf2_boss_profile_pack is blank or could not be loaded, this pack will be used instead.", FCVAR_NOTIFY);
-	g_BossPackEndOfMapVote = CreateConVar("sf2_boss_profile_pack_endvote", "0", "Enables/Disables a boss pack vote at the end of the map.");
-	g_BossPackVoteStartTime = CreateConVar("sf2_boss_profile_pack_endvote_start", "4", "Specifies when to start the vote based on time remaining on the map, in minutes.", FCVAR_NOTIFY);
-	g_BossPackVoteStartRound = CreateConVar("sf2_boss_profile_pack_endvote_startround", "2", "Specifies when to start the vote based on rounds remaining on the map.", FCVAR_NOTIFY);
-	g_BossPackVoteShuffle = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
+	g_BossProfilePackConVar = CreateConVar("sf2_boss_profile_pack", "", "The boss pack referenced in profiles_packs.cfg that should be loaded.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	g_BossProfilePackDefaultConVar = CreateConVar("sf2_boss_profile_pack_default", "", "If the boss pack defined in sf2_boss_profile_pack is blank or could not be loaded, this pack will be used instead.", FCVAR_NOTIFY);
+	g_BossPackEndOfMapVoteConVar = CreateConVar("sf2_boss_profile_pack_endvote", "0", "Enables/Disables a boss pack vote at the end of the map.");
+	g_BossPackVoteStartTimeConVar = CreateConVar("sf2_boss_profile_pack_endvote_start", "4", "Specifies when to start the vote based on time remaining on the map, in minutes.", FCVAR_NOTIFY);
+	g_BossPackVoteStartRoundConVar = CreateConVar("sf2_boss_profile_pack_endvote_startround", "2", "Specifies when to start the vote based on rounds remaining on the map.", FCVAR_NOTIFY);
+	g_BossPackVoteShuffleConVar = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
 	
 	InitializeStatueProfiles();
 	InitializeChaserProfiles();
@@ -62,23 +62,23 @@ Command
 */
 public Action Command_Pack(int client,int args)
 {
-	if (!g_BossPackEndOfMapVote.BoolValue || !g_BossPackVoteEnabled)
+	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
 		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
 		return Plugin_Handled;
 	}
 	g_BossPackConfig.Rewind();
-	if(!g_BossPackConfig.JumpToKey("packs"))
+	if (!g_BossPackConfig.JumpToKey("packs"))
 	{
 		return Plugin_Handled;
 	}
-	if(!g_BossPackConfig.JumpToKey(mapBossPack))
+	if (!g_BossPackConfig.JumpToKey(mapBossPack))
 	{
 		return Plugin_Handled;
 	}
 	char bossPackName[64];
 	g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), mapBossPack);
-	if(bossPackName[0] == '\0')
+	if (bossPackName[0] == '\0')
 	{
 		FormatEx(bossPackName,sizeof(bossPackName),"Core Pack");
 	}
@@ -88,14 +88,14 @@ public Action Command_Pack(int client,int args)
 
 public Action Command_NextPack(int client,int args)
 {
-	if (!g_BossPackEndOfMapVote.BoolValue || !g_BossPackVoteEnabled)
+	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
 		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
 		return Plugin_Handled;
 	}
 
 	char nextpack[128];
-	g_BossProfilePack.GetString(nextpack, sizeof(nextpack));
+	g_BossProfilePackConVar.GetString(nextpack, sizeof(nextpack));
 
 	if (strcmp(nextpack, "") == 0)
 	{
@@ -104,17 +104,17 @@ public Action Command_NextPack(int client,int args)
 	}
 	
 	g_BossPackConfig.Rewind();
-	if(!g_BossPackConfig.JumpToKey("packs"))
+	if (!g_BossPackConfig.JumpToKey("packs"))
 	{
 		return Plugin_Handled;
 	}
-	if(!g_BossPackConfig.JumpToKey(nextpack))
+	if (!g_BossPackConfig.JumpToKey(nextpack))
 	{
 		return Plugin_Handled;
 	}
 	char bossPackName[64];
 	g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), nextpack);
-	if(bossPackName[0] == '\0')
+	if (bossPackName[0] == '\0')
 	{
 		FormatEx(bossPackName,sizeof(bossPackName),"Core Pack");
 	}
@@ -225,7 +225,7 @@ void ReloadBossProfiles()
 	char configPath[PLATFORM_MAX_PATH];
 	
 	// First load from configs/sf2/profiles.cfg or data/sf2/profiles.cfg
-	if (!g_cvUseAlternateConfigDirectory.BoolValue)
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 	{
 		BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES);
 	}
@@ -236,7 +236,7 @@ void ReloadBossProfiles()
 	LoadProfilesFromFile(configPath);
 	
 	// Then, load profiles individually from configs/sf2/profiles or data/sf2/profiles directory.
-	if (!g_cvUseAlternateConfigDirectory.BoolValue)
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 	{
 		LoadProfilesFromDirectory(FILE_PROFILES_DIR);
 	}
@@ -245,7 +245,7 @@ void ReloadBossProfiles()
 		LoadProfilesFromDirectory(FILE_PROFILES_DIR_DATA);
 	}
 
-	if (!g_cvUseAlternateConfigDirectory.BoolValue)
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 	{
 		BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_PACKS);
 	}
@@ -265,7 +265,7 @@ void ReloadBossProfiles()
 		{
 			int endVoteItemCount = 0;
 		
-			g_BossProfilePack.GetString(mapBossPack, sizeof(mapBossPack));
+			g_BossProfilePackConVar.GetString(mapBossPack, sizeof(mapBossPack));
 			
 			bool voteBossPackLoaded = false;
 			
@@ -282,7 +282,7 @@ void ReloadBossProfiles()
 					g_BossPackConfig.GetString("file", packConfigFile, sizeof(packConfigFile));
 					
 					char packConfigFilePath[PLATFORM_MAX_PATH];
-					if (!g_cvUseAlternateConfigDirectory.BoolValue)
+					if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 					{
 						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
 					}
@@ -295,7 +295,7 @@ void ReloadBossProfiles()
 
 					if (DirExists(configPath))
 					{
-						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_cvUseAlternateConfigDirectory.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
+						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 						LoadProfilesFromDirectory(packConfigFilePath);
 					}
 					else if (FileExists(configPath))
@@ -323,7 +323,7 @@ void ReloadBossProfiles()
 			
 			if (!voteBossPackLoaded)
 			{
-				g_BossProfilePackDefault.GetString(mapBossPack, sizeof(mapBossPack));
+				g_BossProfilePackDefaultConVar.GetString(mapBossPack, sizeof(mapBossPack));
 				if (mapBossPack[0] != '\0')
 				{
 					if (g_BossPackConfig.JumpToKey(mapBossPack))
@@ -332,7 +332,7 @@ void ReloadBossProfiles()
 						g_BossPackConfig.GetString("file", packConfigFile, sizeof(packConfigFile));
 						
 						char packConfigFilePath[PLATFORM_MAX_PATH];
-						if (!g_cvUseAlternateConfigDirectory.BoolValue)
+						if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 						{
 							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", FILE_PROFILES_PACKS_DIR, packConfigFile);
 						}
@@ -345,7 +345,7 @@ void ReloadBossProfiles()
 
 						if (DirExists(configPath))
 						{
-							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_cvUseAlternateConfigDirectory.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
+							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 							LoadProfilesFromDirectory(packConfigFilePath);
 						}
 						else if (FileExists(configPath))
@@ -372,7 +372,7 @@ void ReloadBossProfiles()
 	}
 	g_hSelectableBossProfileQueueList = g_SelectableBossProfileList.Clone();
 	
-	g_BossProfilePack.SetString("");
+	g_BossProfilePackConVar.SetString("");
 }
 
 static void LoadProfilesFromFile(const char[] configPath)
@@ -555,9 +555,9 @@ void SetupTimeLimitTimerForBossPackVote()
 	int time;
 	if (GetMapTimeLeft(time) && time > 0)
 	{
-		if (g_BossPackEndOfMapVote.BoolValue && g_BossPackVoteEnabled && !g_BossPackVoteCompleted && !g_BossPackVoteStarted)
+		if (g_BossPackEndOfMapVoteConVar.BoolValue && g_BossPackVoteEnabled && !g_BossPackVoteCompleted && !g_BossPackVoteStarted)
 		{
-			int startTime = g_BossPackVoteStartTime.IntValue * 60;
+			int startTime = g_BossPackVoteStartTimeConVar.IntValue * 60;
 			if ((time - startTime) <= 0)
 			{
 				if (!NativeVotes_IsVoteInProgress())
@@ -587,19 +587,19 @@ void SetupTimeLimitTimerForBossPackVote()
 
 void CheckRoundLimitForBossPackVote(int roundCount)
 {
-	if (!g_BossPackEndOfMapVote.BoolValue || !g_BossPackVoteEnabled || g_BossPackVoteStarted || g_BossPackVoteCompleted)
+	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled || g_BossPackVoteStarted || g_BossPackVoteCompleted)
 	{
 		return;
 	}
 	
-	if (g_MaxRounds == null)
+	if (g_MaxRoundsConVar == null)
 	{
 		return;
 	}
 	
-	if (g_MaxRounds.IntValue > 0)
+	if (g_MaxRoundsConVar.IntValue > 0)
 	{
-		if (roundCount >= (g_MaxRounds.IntValue - g_BossPackVoteStartRound.IntValue))
+		if (roundCount >= (g_MaxRoundsConVar.IntValue - g_BossPackVoteStartRoundConVar.IntValue))
 		{
 			if (!NativeVotes_IsVoteInProgress())
 			{
@@ -612,12 +612,12 @@ void CheckRoundLimitForBossPackVote(int roundCount)
 		}
 	}
 	
-	// CloseHandle(g_MaxRounds);
+	//delete g_MaxRoundsConVar;
 }
 
 void InitiateBossPackVote(int initiator)
 {
-	if(initiator<33)//A admin called the command, it's probably for a good reason
+	if (initiator<33)//A admin called the command, it's probably for a good reason
 	{
 		g_BossPackVoteCompleted = false;
 	}
@@ -656,7 +656,7 @@ void InitiateBossPackVote(int initiator)
 			
 			char bossPack[128];
 			g_BossPackConfig.GetSectionName(bossPack, sizeof(bossPack));
-			if(strcmp(bossPack,mapBossPack) != 0)
+			if (strcmp(bossPack,mapBossPack) != 0)
 			{
 				char bossPackName[64];
 				g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), bossPack);
@@ -676,14 +676,14 @@ void InitiateBossPackVote(int initiator)
 		return;
 	}
 	
-	if (g_BossPackVoteShuffle.BoolValue)
+	if (g_BossPackVoteShuffleConVar.BoolValue)
 	{
 		menuOptionsInfo.Sort(Sort_Random, Sort_String);
 	}
 	
 	for (int i = 0; i < menuOptionsInfo.Length; i++)
 	{
-		if(i<=5)
+		if (i<=5)
 		{
 			char bossPack[128], bossPackName[64];
 			menuOptionsInfo.GetString(i, bossPack, sizeof(bossPack));
@@ -708,7 +708,7 @@ void InitiateBossPackVote(int initiator)
 	
 	NativeVotes_DisplayToAll(voteMenu, 20);
 
-	Call_StartForward(fOnBossPackVoteStart);
+	Call_StartForward(g_OnBossPackVoteStartFwd);
 	Call_Finish();
 }
 public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param2)
@@ -722,15 +722,15 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 			{
 				NativeVotes_DisplayFail(menu, NativeVotesFail_NotEnoughVotes);
 				char defaultPack[128];
-				g_BossProfilePackDefault.GetString(defaultPack, sizeof(defaultPack));
-				g_BossProfilePack.SetString(defaultPack);
+				g_BossProfilePackDefaultConVar.GetString(defaultPack, sizeof(defaultPack));
+				g_BossProfilePackConVar.SetString(defaultPack);
 				//CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Boss Pack No Vote");
 			}
 			else
 			{
 				char defaultPack[128];
-				g_BossProfilePackDefault.GetString(defaultPack, sizeof(defaultPack));
-				g_BossProfilePack.SetString(defaultPack);
+				g_BossProfilePackDefaultConVar.GetString(defaultPack, sizeof(defaultPack));
+				g_BossProfilePackConVar.SetString(defaultPack);
 				NativeVotes_DisplayFail(menu, NativeVotesFail_Generic);
 			}
 			g_BossPackVoteStarted = false;
@@ -746,7 +746,7 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 			char bossPack[64], bossPackName[64], display[120];
 			NativeVotes_GetItem(menu, param1, bossPack, sizeof(bossPack), bossPackName, sizeof(bossPackName));
 			
-			g_BossProfilePack.SetString(bossPack);
+			g_BossProfilePackConVar.SetString(bossPack);
 			
 			CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Boss Pack Vote Successful", bossPackName);
 			FormatEx(display,120,"%t","SF2 Boss Pack Vote Successful", bossPackName);
