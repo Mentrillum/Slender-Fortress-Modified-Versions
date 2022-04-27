@@ -3,48 +3,51 @@
 #endif
 #define _sf2_adminmenu_included
 
-static Handle g_hTopMenu = null;
-static int g_iPlayerAdminMenuTargetUserId[MAXPLAYERS + 1] = { -1, ... };
+static Handle g_TopMenu = null;
+static int g_PlayerAdminMenuTargetUserId[MAXPLAYERS + 1] = { -1, ... };
 
 void SetupAdminMenu()
 {
 	/* Account for late loading */
-	Handle hTopMenu = null;
-	if (LibraryExists("adminmenu") && ((hTopMenu = GetAdminTopMenu()) != null))
+	Handle topMenu = null;
+	if (LibraryExists("adminmenu") && ((topMenu = GetAdminTopMenu()) != null))
 	{
-		OnAdminMenuReady(hTopMenu);
+		OnAdminMenuReady(topMenu);
 	}
 }
 
 
-public void OnAdminMenuReady(Handle hTopMenu)
+public void OnAdminMenuReady(Handle topMenu)
 {
-	if (hTopMenu == g_hTopMenu) return;
+	if (topMenu == g_TopMenu)
+	{
+		return;
+	}
 	
-	g_hTopMenu = hTopMenu;
+	g_TopMenu = topMenu;
 	
-	TopMenuObject hServerCommands = FindTopMenuCategory(hTopMenu, ADMINMENU_SERVERCOMMANDS);
+	TopMenuObject hServerCommands = FindTopMenuCategory(topMenu, ADMINMENU_SERVERCOMMANDS);
 	if (hServerCommands != INVALID_TOPMENUOBJECT)
 	{
-		AddToTopMenu(hTopMenu, "sf2_boss_admin_main", TopMenuObject_Item, AdminTopMenu_BossMain, hServerCommands, "sm_sf2_add_boss", ADMFLAG_SLAY);
+		AddToTopMenu(topMenu, "sf2_boss_admin_main", TopMenuObject_Item, AdminTopMenu_BossMain, hServerCommands, "sm_sf2_add_boss", ADMFLAG_SLAY);
 	}
 	
-	TopMenuObject hPlayerCommands = FindTopMenuCategory(hTopMenu, ADMINMENU_PLAYERCOMMANDS);
+	TopMenuObject hPlayerCommands = FindTopMenuCategory(topMenu, ADMINMENU_PLAYERCOMMANDS);
 	if (hPlayerCommands != INVALID_TOPMENUOBJECT)
 	{
-		AddToTopMenu(hTopMenu, "sf2_player_setplaystate", TopMenuObject_Item, AdminTopMenu_PlayerSetPlayState, hPlayerCommands, "sm_sf2_setplaystate", ADMFLAG_SLAY);
-		AddToTopMenu(hTopMenu, "sf2_player_force_proxy", TopMenuObject_Item, AdminTopMenu_PlayerForceProxy, hPlayerCommands, "sm_sf2_force_proxy", ADMFLAG_SLAY);
+		AddToTopMenu(topMenu, "sf2_player_setplaystate", TopMenuObject_Item, AdminTopMenu_PlayerSetPlayState, hPlayerCommands, "sm_sf2_setplaystate", ADMFLAG_SLAY);
+		AddToTopMenu(topMenu, "sf2_player_force_proxy", TopMenuObject_Item, AdminTopMenu_PlayerForceProxy, hPlayerCommands, "sm_sf2_force_proxy", ADMFLAG_SLAY);
 	}
-	delete hTopMenu;
+	delete topMenu;
 }
 
 static void DisplayPlayerForceProxyAdminMenu(int client)
 {
-	Handle hMenu = CreateMenu(AdminMenu_PlayerForceProxy);
-	SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Force Proxy", client);
-	AddTargetsToMenu(hMenu, client);
-	SetMenuExitBackButton(hMenu, true);
-	DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+	Handle menuHandle = CreateMenu(AdminMenu_PlayerForceProxy);
+	SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Force Proxy", client);
+	AddTargetsToMenu(menuHandle, client);
+	SetMenuExitBackButton(menuHandle, true);
+	DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 }
 
 public int AdminTopMenu_PlayerForceProxy(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
@@ -63,21 +66,21 @@ public int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack && g_hTopMenu != null)
+		if (param2 == MenuCancel_ExitBack && g_TopMenu != null)
 		{
-			DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
+			DisplayTopMenu(g_TopMenu, param1, TopMenuPosition_LastCategory);
 		}
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sUserId[64];
-		GetMenuItem(menu, param2, sUserId, sizeof(sUserId));
+		char userId[64];
+		GetMenuItem(menu, param2, userId, sizeof(userId));
 		
-		int client = GetClientOfUserId(StringToInt(sUserId));
+		int client = GetClientOfUserId(StringToInt(userId));
 		if (client <= 0)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
@@ -85,23 +88,23 @@ public int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 		}
 		else
 		{
-			g_iPlayerAdminMenuTargetUserId[param1] = StringToInt(sUserId);
+			g_PlayerAdminMenuTargetUserId[param1] = StringToInt(userId);
 		
-			char sName[MAX_NAME_LENGTH];
-			FormatEx(sName, sizeof(sName), "%N", client);
+			char name[MAX_NAME_LENGTH];
+			FormatEx(name, sizeof(name), "%N", client);
 			
-			Handle hMenu = CreateMenu(AdminMenu_PlayerForceProxyBoss);
-			if (!AddBossTargetsToMenu(hMenu))
+			Handle menuHandle = CreateMenu(AdminMenu_PlayerForceProxyBoss);
+			if (!AddBossTargetsToMenu(menuHandle))
 			{
-				CloseHandle(hMenu);
-				DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
+				delete menuHandle;
+				DisplayTopMenu(g_TopMenu, param1, TopMenuPosition_LastCategory);
 				CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", param1);
 			}
 			else
 			{
-				SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Force Proxy Boss", param1, sName);
-				SetMenuExitBackButton(hMenu, true);
-				DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
+				SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Force Proxy Boss", param1, name);
+				SetMenuExitBackButton(menuHandle, true);
+				DisplayMenu(menuHandle, param1, MENU_TIME_FOREVER);
 			}
 		}
 	}
@@ -111,7 +114,7 @@ public int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int par
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -122,38 +125,38 @@ public int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int par
 	}
 	else if (action == MenuAction_Select)
 	{
-		int client = GetClientOfUserId(g_iPlayerAdminMenuTargetUserId[param1]);
+		int client = GetClientOfUserId(g_PlayerAdminMenuTargetUserId[param1]);
 		if (client <= 0)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
 		}
 		else
 		{
-			char sID[64];
-			GetMenuItem(menu, param2, sID, sizeof(sID));
-			int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-			if (iIndex == -1)
+			char id[64];
+			GetMenuItem(menu, param2, id, sizeof(id));
+			int index = NPCGetFromUniqueID(StringToInt(id));
+			if (index == -1)
 			{
 				CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 			}
 			else
 			{
-				if (!(NPCGetFlags(iIndex) & SFF_PROXIES) ||
-					g_iSlenderCopyMaster[iIndex] != -1)
+				if (!(NPCGetFlags(index) & SFF_PROXIES) ||
+					g_SlenderCopyMaster[index] != -1)
 				{
 					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Not Allowed To Have Proxies", param1);
 				}
-				else if (!g_bPlayerEliminated[client])
+				else if (!g_PlayerEliminated[client])
 				{
 					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player In Game", param1);
 				}
-				else if (g_bPlayerProxy[param1])
+				else if (g_PlayerProxy[param1])
 				{
 					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Already A Proxy", param1);
 				}
 				else
 				{
-					FakeClientCommand(param1, "sm_sf2_force_proxy #%d %d", g_iPlayerAdminMenuTargetUserId[param1], iIndex);
+					FakeClientCommand(param1, "sm_sf2_force_proxy #%d %d", g_PlayerAdminMenuTargetUserId[param1], index);
 				}
 			}
 		}
@@ -164,11 +167,11 @@ public int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int par
 
 static void DisplayPlayerSetPlayStateAdminMenu(int client)
 {
-	Handle hMenu = CreateMenu(AdminMenu_PlayerSetPlayState);
-	SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Set Play State", client);
-	AddTargetsToMenu(hMenu, client);
-	SetMenuExitBackButton(hMenu, true);
-	DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+	Handle menuHandle = CreateMenu(AdminMenu_PlayerSetPlayState);
+	SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Set Play State", client);
+	AddTargetsToMenu(menuHandle, client);
+	SetMenuExitBackButton(menuHandle, true);
+	DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 }
 
 public int AdminTopMenu_PlayerSetPlayState(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
@@ -187,20 +190,20 @@ public int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack && g_hTopMenu != null)
+		if (param2 == MenuCancel_ExitBack && g_TopMenu != null)
 		{
-			DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
+			DisplayTopMenu(g_TopMenu, param1, TopMenuPosition_LastCategory);
 		}
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sUserId[64];
-		GetMenuItem(menu, param2, sUserId, sizeof(sUserId));
-		int client = GetClientOfUserId(StringToInt(sUserId));
+		char userId[64];
+		GetMenuItem(menu, param2, userId, sizeof(userId));
+		int client = GetClientOfUserId(StringToInt(userId));
 		if (client <= 0)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
@@ -208,18 +211,18 @@ public int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param
 		}
 		else
 		{
-			char sName[MAX_NAME_LENGTH];
-			FormatEx(sName, sizeof(sName), "%N", client);
+			char name[MAX_NAME_LENGTH];
+			FormatEx(name, sizeof(name), "%N", client);
 			
-			Handle hMenu = CreateMenu(AdminMenu_PlayerSetPlayStateConfirm);
-			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Set Play State Confirm", param1, sName);
-			char sBuffer[256];
-			FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 In", param1);
-			AddMenuItem(hMenu, sUserId, sBuffer);
-			FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Out", param1);
-			AddMenuItem(hMenu, sUserId, sBuffer);
-			SetMenuExitBackButton(hMenu, true);
-			DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
+			Handle menuHandle = CreateMenu(AdminMenu_PlayerSetPlayStateConfirm);
+			SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Player Set Play State Confirm", param1, name);
+			char buffer[256];
+			FormatEx(buffer, sizeof(buffer), "%T", "SF2 In", param1);
+			AddMenuItem(menuHandle, userId, buffer);
+			FormatEx(buffer, sizeof(buffer), "%T", "SF2 Out", param1);
+			AddMenuItem(menuHandle, userId, buffer);
+			SetMenuExitBackButton(menuHandle, true);
+			DisplayMenu(menuHandle, param1, MENU_TIME_FOREVER);
 		}
 	}
 }
@@ -228,7 +231,7 @@ public int AdminMenu_PlayerSetPlayStateConfirm(Handle menu, MenuAction action,in
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -239,20 +242,26 @@ public int AdminMenu_PlayerSetPlayStateConfirm(Handle menu, MenuAction action,in
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sUserId[64];
-		GetMenuItem(menu, param2, sUserId, sizeof(sUserId));
-		int client = GetClientOfUserId(StringToInt(sUserId));
+		char userId[64];
+		GetMenuItem(menu, param2, userId, sizeof(userId));
+		int client = GetClientOfUserId(StringToInt(userId));
 		if (client <= 0)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
 		}
 		else
 		{
-			int iUserId = StringToInt(sUserId);
+			int userIdInt = StringToInt(userId);
 			switch (param2)
 			{
-				case 0: FakeClientCommand(param1, "sm_sf2_setplaystate #%d 1", iUserId);
-				case 1: FakeClientCommand(param1, "sm_sf2_setplaystate #%d 0", iUserId);
+				case 0:
+				{
+					FakeClientCommand(param1, "sm_sf2_setplaystate #%d 1", userIdInt);
+				}
+				case 1:
+				{
+					FakeClientCommand(param1, "sm_sf2_setplaystate #%d 0", userIdInt);
+				}
 			}
 		}
 		
@@ -262,72 +271,72 @@ public int AdminMenu_PlayerSetPlayStateConfirm(Handle menu, MenuAction action,in
 
 static void DisplayBossMainAdminMenu(int client)
 {
-	Handle hMenu = CreateMenu(AdminMenu_BossMain);
-	SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Main", client);
+	Handle menuHandle = CreateMenu(AdminMenu_BossMain);
+	SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Main", client);
 	
-	char sBuffer[512];
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Add Boss", client);
-	AddMenuItem(hMenu, "add_boss", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Add Fake Boss", client);
-	AddMenuItem(hMenu, "add_boss_fake", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Remove Boss", client);
-	AddMenuItem(hMenu, "remove_boss", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Spawn Boss", client);
-	AddMenuItem(hMenu, "spawn_boss", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Boss Attack Waiters", client);
-	AddMenuItem(hMenu, "boss_attack_waiters", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Boss Teleport", client);
-	AddMenuItem(hMenu, "boss_no_teleport", sBuffer);
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SF2 Admin Menu Override Boss", client);
-	AddMenuItem(hMenu, "override_boss", sBuffer);
+	char buffer[512];
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Add Boss", client);
+	AddMenuItem(menuHandle, "add_boss", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Add Fake Boss", client);
+	AddMenuItem(menuHandle, "add_boss_fake", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Remove Boss", client);
+	AddMenuItem(menuHandle, "remove_boss", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Spawn Boss", client);
+	AddMenuItem(menuHandle, "spawn_boss", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Boss Attack Waiters", client);
+	AddMenuItem(menuHandle, "boss_attack_waiters", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Boss Teleport", client);
+	AddMenuItem(menuHandle, "boss_no_teleport", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Override Boss", client);
+	AddMenuItem(menuHandle, "override_boss", buffer);
 	
 	
-	SetMenuExitBackButton(hMenu, true);
-	DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+	SetMenuExitBackButton(menuHandle, true);
+	DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 }
 
 public int AdminMenu_BossMain(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack && g_hTopMenu != null)
+		if (param2 == MenuCancel_ExitBack && g_TopMenu != null)
 		{
-			DisplayTopMenu(g_hTopMenu, param1, TopMenuPosition_LastCategory);
+			DisplayTopMenu(g_TopMenu, param1, TopMenuPosition_LastCategory);
 		}
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sInfo[64];
-		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
-		if (strcmp(sInfo, "add_boss") == 0)
+		char info[64];
+		GetMenuItem(menu, param2, info, sizeof(info));
+		if (strcmp(info, "add_boss") == 0)
 		{
 			DisplayAddBossAdminMenu(param1);
 		}
-		else if (strcmp(sInfo, "add_boss_fake") == 0)
+		else if (strcmp(info, "add_boss_fake") == 0)
 		{
 			DisplayAddFakeBossAdminMenu(param1);
 		}
-		else if (strcmp(sInfo, "remove_boss") == 0)
+		else if (strcmp(info, "remove_boss") == 0)
 		{
 			DisplayRemoveBossAdminMenu(param1);
 		}
-		else if (strcmp(sInfo, "spawn_boss") == 0)
+		else if (strcmp(info, "spawn_boss") == 0)
 		{
 			DisplaySpawnBossAdminMenu(param1);
 		}
-		else if (strcmp(sInfo, "boss_attack_waiters") == 0)
+		else if (strcmp(info, "boss_attack_waiters") == 0)
 		{
 			DisplayBossAttackWaitersAdminMenu(param1);
 		}
-		else if (strcmp(sInfo, "boss_no_teleport") == 0)
+		else if (strcmp(info, "boss_no_teleport") == 0)
 		{
 			DisplayBossTeleportAdminMenu(param1);
 		}
-		else if (strcmp(sInfo, "override_boss") == 0)
+		else if (strcmp(info, "override_boss") == 0)
 		{
 			DisplayOverrideBossAdminMenu(param1);
 		}
@@ -348,29 +357,32 @@ public int AdminTopMenu_BossMain(Handle topmenu, TopMenuAction action, TopMenuOb
 
 static bool DisplayAddBossAdminMenu(int client) //Use for view boss list
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_AddBoss);
-			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Boss", client);
+			Handle menuHandle = CreateMenu(AdminMenu_AddBoss);
+			SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Boss", client);
 			
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			char sDisplayName[SF2_MAX_NAME_LENGTH];
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char displayName[SF2_MAX_NAME_LENGTH];
 			
 			do
 			{
-				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
-				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
-				if (!sDisplayName[0]) strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
-				AddMenuItem(hMenu, sProfile, sDisplayName);
+				g_Config.GetSectionName(profile, sizeof(profile));
+				NPCGetBossName(_, displayName, sizeof(displayName), profile);
+				if (displayName[0] == '\0')
+				{
+					strcopy(displayName, sizeof(displayName), profile);
+				}
+				AddMenuItem(menuHandle, profile, displayName);
 			}
-			while (g_hConfig.GotoNextKey());
+			while (g_Config.GotoNextKey());
 			
-			SetMenuExitBackButton(hMenu, true);
+			SetMenuExitBackButton(menuHandle, true);
 			
-			DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+			DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 			
 			return true;
 		}
@@ -384,7 +396,7 @@ public int AdminMenu_AddBoss(Handle menu, MenuAction action,int param1,int param
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -395,10 +407,10 @@ public int AdminMenu_AddBoss(Handle menu, MenuAction action,int param1,int param
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		GetMenuItem(menu, param2, sProfile, sizeof(sProfile));
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		GetMenuItem(menu, param2, profile, sizeof(profile));
 		
-		FakeClientCommand(param1, "sm_sf2_add_boss %s", sProfile);
+		FakeClientCommand(param1, "sm_sf2_add_boss %s", profile);
 		
 		DisplayAddBossAdminMenu(param1);
 	}
@@ -406,29 +418,32 @@ public int AdminMenu_AddBoss(Handle menu, MenuAction action,int param1,int param
 
 static bool DisplayAddFakeBossAdminMenu(int client)
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_AddFakeBoss);
-			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Fake Boss", client);
+			Handle menuHandle = CreateMenu(AdminMenu_AddFakeBoss);
+			SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Fake Boss", client);
 			
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			char sDisplayName[SF2_MAX_NAME_LENGTH];
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char displayName[SF2_MAX_NAME_LENGTH];
 			
 			do
 			{
-				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
-				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
-				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
-				AddMenuItem(hMenu, sProfile, sDisplayName);
+				g_Config.GetSectionName(profile, sizeof(profile));
+				NPCGetBossName(_, displayName, sizeof(displayName), profile);
+				if (displayName[0] == '\0')
+				{
+					strcopy(displayName, sizeof(displayName), profile);
+				}
+				AddMenuItem(menuHandle, profile, displayName);
 			}
-			while (g_hConfig.GotoNextKey());
+			while (g_Config.GotoNextKey());
 			
-			SetMenuExitBackButton(hMenu, true);
+			SetMenuExitBackButton(menuHandle, true);
 			
-			DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+			DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 			
 			return true;
 		}
@@ -442,7 +457,7 @@ public int AdminMenu_AddFakeBoss(Handle menu, MenuAction action,int param1,int p
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -453,77 +468,89 @@ public int AdminMenu_AddFakeBoss(Handle menu, MenuAction action,int param1,int p
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		GetMenuItem(menu, param2, sProfile, sizeof(sProfile));
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		GetMenuItem(menu, param2, profile, sizeof(profile));
 		
-		FakeClientCommand(param1, "sm_sf2_add_boss_fake %s", sProfile);
+		FakeClientCommand(param1, "sm_sf2_add_boss_fake %s", profile);
 		
 		DisplayAddFakeBossAdminMenu(param1);
 	}
 }
 
-static int AddBossTargetsToMenu(Handle hMenu)
+static int AddBossTargetsToMenu(Handle menuHandle)
 {
-	if (g_hConfig == null) return 0;
+	if (g_Config == null)
+	{
+		return 0;
+	}
 	
-	g_hConfig.Rewind();
-	if (!g_hConfig.GotoFirstSubKey()) return 0;
+	g_Config.Rewind();
+	if (!g_Config.GotoFirstSubKey())
+	{
+		return 0;
+	}
 	
-	char sBuffer[512];
-	char sDisplay[512], sInfo[64];
+	char buffer[512];
+	char display[512], info[64];
 	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	int iCount;
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	int count;
 	
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
-		int iUniqueID = NPCGetUniqueID(i);
-		if (iUniqueID == -1) continue;
-		
-		NPCGetProfile(i, sProfile, sizeof(sProfile));
-		
-		NPCGetBossName(_, sBuffer, sizeof(sBuffer), sProfile);
-		if (sBuffer[0] == '\0') strcopy(sBuffer, sizeof(sBuffer), sProfile);
-		
-		FormatEx(sDisplay, sizeof(sDisplay), "%d - %s", i, sBuffer);
-		if (g_iSlenderCopyMaster[i] != -1)
+		int uniqueID = NPCGetUniqueID(i);
+		if (uniqueID == -1)
 		{
-			FormatEx(sBuffer, sizeof(sBuffer), " (copy of boss %d)", g_iSlenderCopyMaster[i]);
-			StrCat(sDisplay, sizeof(sDisplay), sBuffer);
+			continue;
+		}
+		
+		NPCGetProfile(i, profile, sizeof(profile));
+		
+		NPCGetBossName(_, buffer, sizeof(buffer), profile);
+		if (buffer[0] == '\0')
+		{
+			strcopy(buffer, sizeof(buffer), profile);
+		}
+		
+		FormatEx(display, sizeof(display), "%d - %s", i, buffer);
+		if (g_SlenderCopyMaster[i] != -1)
+		{
+			FormatEx(buffer, sizeof(buffer), " (copy of boss %d)", g_SlenderCopyMaster[i]);
+			StrCat(display, sizeof(display), buffer);
 		}
 
 		if (NPCGetFlags(i) & SFF_FAKE)
 		{
-			StrCat(sDisplay, sizeof(sDisplay), " (fake)");
+			StrCat(display, sizeof(display), " (fake)");
 		}
 		
-		FormatEx(sInfo, sizeof(sInfo), "%d", iUniqueID);
+		FormatEx(info, sizeof(info), "%d", uniqueID);
 		
-		AddMenuItem(hMenu, sInfo, sDisplay);
-		iCount++;
+		AddMenuItem(menuHandle, info, display);
+		count++;
 	}
 	
-	return iCount;
+	return count;
 }
 
 static bool DisplayRemoveBossAdminMenu(int client)
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_RemoveBoss);
-			if (!AddBossTargetsToMenu(hMenu))
+			Handle menuHandle = CreateMenu(AdminMenu_RemoveBoss);
+			if (!AddBossTargetsToMenu(menuHandle))
 			{
-				CloseHandle(hMenu);
+				delete menuHandle;
 				CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 			}
 			else
 			{
-				SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Remove Boss", client);
-				SetMenuExitBackButton(hMenu, true);
-				DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+				SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Remove Boss", client);
+				SetMenuExitBackButton(menuHandle, true);
+				DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 				return true;
 			}
 		}
@@ -537,7 +564,7 @@ public int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int pa
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -548,16 +575,16 @@ public int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int pa
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sID[64];
-		GetMenuItem(menu, param2, sID, sizeof(sID));
-		int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-		if (iIndex == -1)
+		char id[64];
+		GetMenuItem(menu, param2, id, sizeof(id));
+		int index = NPCGetFromUniqueID(StringToInt(id));
+		if (index == -1)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
 		else
 		{
-			FakeClientCommand(param1, "sm_sf2_remove_boss %d", iIndex);
+			FakeClientCommand(param1, "sm_sf2_remove_boss %d", index);
 		}
 		
 		DisplayRemoveBossAdminMenu(param1);
@@ -566,22 +593,22 @@ public int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int pa
 
 static bool DisplaySpawnBossAdminMenu(int client)
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_SpawnBoss);
-			if (!AddBossTargetsToMenu(hMenu))
+			Handle menuHandle = CreateMenu(AdminMenu_SpawnBoss);
+			if (!AddBossTargetsToMenu(menuHandle))
 			{
-				CloseHandle(hMenu);
+				delete menuHandle;
 				CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 			}
 			else
 			{
-				SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Spawn Boss", client);
-				SetMenuExitBackButton(hMenu, true);
-				DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+				SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Spawn Boss", client);
+				SetMenuExitBackButton(menuHandle, true);
+				DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 				return true;
 			}
 		}
@@ -595,7 +622,7 @@ public int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int par
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -606,16 +633,16 @@ public int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int par
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sID[64];
-		GetMenuItem(menu, param2, sID, sizeof(sID));
-		int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-		if (iIndex == -1)
+		char id[64];
+		GetMenuItem(menu, param2, id, sizeof(id));
+		int index = NPCGetFromUniqueID(StringToInt(id));
+		if (index == -1)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
 		else
 		{
-			FakeClientCommand(param1, "sm_sf2_spawn_boss %d", iIndex);
+			FakeClientCommand(param1, "sm_sf2_spawn_boss %d", index);
 		}
 		
 		DisplaySpawnBossAdminMenu(param1);
@@ -624,22 +651,22 @@ public int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int par
 
 static bool DisplayBossAttackWaitersAdminMenu(int client)
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_BossAttackWaiters);
-			if (!AddBossTargetsToMenu(hMenu))
+			Handle menuHandle = CreateMenu(AdminMenu_BossAttackWaiters);
+			if (!AddBossTargetsToMenu(menuHandle))
 			{
-				CloseHandle(hMenu);
+				delete menuHandle;
 				CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 			}
 			else
 			{
-				SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Attack Waiters", client);
-				SetMenuExitBackButton(hMenu, true);
-				DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+				SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Attack Waiters", client);
+				SetMenuExitBackButton(menuHandle, true);
+				DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 				return true;
 			}
 		}
@@ -653,7 +680,7 @@ public int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -664,32 +691,35 @@ public int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sID[64];
-		GetMenuItem(menu, param2, sID, sizeof(sID));
-		int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-		if (iIndex == -1)
+		char id[64];
+		GetMenuItem(menu, param2, id, sizeof(id));
+		int index = NPCGetFromUniqueID(StringToInt(id));
+		if (index == -1)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 			DisplayBossAttackWaitersAdminMenu(param1);
 		}
 		else
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iIndex, sProfile, sizeof(sProfile));
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(index, profile, sizeof(profile));
 		
-			char sName[SF2_MAX_NAME_LENGTH];
-			NPCGetBossName(_, sName, sizeof(sName), sProfile);
-			if (sName[0] == '\0') strcopy(sName, sizeof(sName), sProfile);
+			char name[SF2_MAX_NAME_LENGTH];
+			NPCGetBossName(_, name, sizeof(name), profile);
+			if (name[0] == '\0')
+			{
+				strcopy(name, sizeof(name), profile);
+			}
 			
-			Handle hMenu = CreateMenu(AdminMenu_BossAttackWaitersConfirm);
-			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Attack Waiters Confirm", param1, sName);
-			char sBuffer[256];
-			FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
-			AddMenuItem(hMenu, sID, sBuffer);
-			FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
-			AddMenuItem(hMenu, sID, sBuffer);
-			SetMenuExitBackButton(hMenu, true);
-			DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
+			Handle menuHandle = CreateMenu(AdminMenu_BossAttackWaitersConfirm);
+			SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Attack Waiters Confirm", param1, name);
+			char buffer[256];
+			FormatEx(buffer, sizeof(buffer), "%T", "Yes", param1);
+			AddMenuItem(menuHandle, id, buffer);
+			FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
+			AddMenuItem(menuHandle, id, buffer);
+			SetMenuExitBackButton(menuHandle, true);
+			DisplayMenu(menuHandle, param1, MENU_TIME_FOREVER);
 		}
 	}
 }
@@ -698,7 +728,7 @@ public int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -709,10 +739,10 @@ public int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sID[64];
-		GetMenuItem(menu, param2, sID, sizeof(sID));
-		int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-		if (iIndex == -1)
+		char id[64];
+		GetMenuItem(menu, param2, id, sizeof(id));
+		int index = NPCGetFromUniqueID(StringToInt(id));
+		if (index == -1)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
@@ -720,8 +750,14 @@ public int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int
 		{
 			switch (param2)
 			{
-				case 0: FakeClientCommand(param1, "sm_sf2_boss_attack_waiters %d 1", iIndex);
-				case 1: FakeClientCommand(param1, "sm_sf2_boss_attack_waiters %d 0", iIndex);
+				case 0:
+				{
+					FakeClientCommand(param1, "sm_sf2_boss_attack_waiters %d 1", index);
+				}
+				case 1:
+				{
+					FakeClientCommand(param1, "sm_sf2_boss_attack_waiters %d 0", index);
+				}
 			}
 		}
 		
@@ -731,22 +767,22 @@ public int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int
 
 static bool DisplayBossTeleportAdminMenu(int client)
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_BossTeleport);
-			if (!AddBossTargetsToMenu(hMenu))
+			Handle menuHandle = CreateMenu(AdminMenu_BossTeleport);
+			if (!AddBossTargetsToMenu(menuHandle))
 			{
-				CloseHandle(hMenu);
+				delete menuHandle;
 				CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 			}
 			else
 			{
-				SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Teleport", client);
-				SetMenuExitBackButton(hMenu, true);
-				DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+				SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Teleport", client);
+				SetMenuExitBackButton(menuHandle, true);
+				DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 				return true;
 			}
 		}
@@ -760,7 +796,7 @@ public int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int 
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -771,32 +807,35 @@ public int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int 
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sID[64];
-		GetMenuItem(menu, param2, sID, sizeof(sID));
-		int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-		if (iIndex == -1)
+		char id[64];
+		GetMenuItem(menu, param2, id, sizeof(id));
+		int index = NPCGetFromUniqueID(StringToInt(id));
+		if (index == -1)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 			DisplayBossTeleportAdminMenu(param1);
 		}
 		else
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(iIndex, sProfile, sizeof(sProfile));
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			NPCGetProfile(index, profile, sizeof(profile));
 		
-			char sName[SF2_MAX_NAME_LENGTH];
-			NPCGetBossName(_, sName, sizeof(sName), sProfile);
-			if (sName[0] == '\0') strcopy(sName, sizeof(sName), sProfile);
+			char name[SF2_MAX_NAME_LENGTH];
+			NPCGetBossName(_, name, sizeof(name), profile);
+			if (name[0] == '\0')
+			{
+				strcopy(name, sizeof(name), profile);
+			}
 			
-			Handle hMenu = CreateMenu(AdminMenu_BossTeleportConfirm);
-			SetMenuTitle(hMenu, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Teleport Confirm", param1, sName);
-			char sBuffer[256];
-			FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
-			AddMenuItem(hMenu, sID, sBuffer);
-			FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
-			AddMenuItem(hMenu, sID, sBuffer);
-			SetMenuExitBackButton(hMenu, true);
-			DisplayMenu(hMenu, param1, MENU_TIME_FOREVER);
+			Handle menuHandle = CreateMenu(AdminMenu_BossTeleportConfirm);
+			SetMenuTitle(menuHandle, "%t%T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Teleport Confirm", param1, name);
+			char buffer[256];
+			FormatEx(buffer, sizeof(buffer), "%T", "Yes", param1);
+			AddMenuItem(menuHandle, id, buffer);
+			FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
+			AddMenuItem(menuHandle, id, buffer);
+			SetMenuExitBackButton(menuHandle, true);
+			DisplayMenu(menuHandle, param1, MENU_TIME_FOREVER);
 		}
 	}
 }
@@ -805,7 +844,7 @@ public int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int para
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -816,10 +855,10 @@ public int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int para
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sID[64];
-		GetMenuItem(menu, param2, sID, sizeof(sID));
-		int iIndex = NPCGetFromUniqueID(StringToInt(sID));
-		if (iIndex == -1)
+		char id[64];
+		GetMenuItem(menu, param2, id, sizeof(id));
+		int index = NPCGetFromUniqueID(StringToInt(id));
+		if (index == -1)
 		{
 			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
@@ -827,8 +866,14 @@ public int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int para
 		{
 			switch (param2)
 			{
-				case 0: FakeClientCommand(param1, "sm_sf2_boss_no_teleport %d 0", iIndex);
-				case 1: FakeClientCommand(param1, "sm_sf2_boss_no_teleport %d 1", iIndex);
+				case 0:
+				{
+					FakeClientCommand(param1, "sm_sf2_boss_no_teleport %d 0", index);
+				}
+				case 1:
+				{
+					FakeClientCommand(param1, "sm_sf2_boss_no_teleport %d 1", index);
+				}
 			}
 		}
 		
@@ -838,43 +883,50 @@ public int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int para
 
 static bool DisplayOverrideBossAdminMenu(int client)
 {
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			Handle hMenu = CreateMenu(AdminMenu_OverrideBoss);
+			Handle menuHandle = CreateMenu(AdminMenu_OverrideBoss);
 			
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			char sDisplayName[SF2_MAX_NAME_LENGTH];
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char displayName[SF2_MAX_NAME_LENGTH];
 			
 			do
 			{
-				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
-				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
-				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
-				AddMenuItem(hMenu, sProfile, sDisplayName);
+				g_Config.GetSectionName(profile, sizeof(profile));
+				NPCGetBossName(_, displayName, sizeof(displayName), profile);
+				if (displayName[0] == '\0')
+				{
+					strcopy(displayName, sizeof(displayName), profile);
+				}
+				AddMenuItem(menuHandle, profile, displayName);
 			}
-			while (g_hConfig.GotoNextKey());
+			while (g_Config.GotoNextKey());
 			
-			SetMenuExitBackButton(hMenu, true);
+			SetMenuExitBackButton(menuHandle, true);
 			
-			char sProfileOverride[SF2_MAX_PROFILE_NAME_LENGTH], sProfileDisplayName[SF2_MAX_PROFILE_NAME_LENGTH];
-			g_cvBossProfileOverride.GetString(sProfileOverride, sizeof(sProfileOverride));
+			char profileOverride[SF2_MAX_PROFILE_NAME_LENGTH], profileDisplayName[SF2_MAX_PROFILE_NAME_LENGTH];
+			g_BossProfileOverrideConVar.GetString(profileOverride, sizeof(profileOverride));
 			
-			if (sProfileOverride[0] != '\0' && IsProfileValid(sProfileOverride))
+			if (profileOverride[0] != '\0' && IsProfileValid(profileOverride))
 			{
-				NPCGetBossName(_, sProfileDisplayName, sizeof(sProfileDisplayName), sProfileOverride);
+				NPCGetBossName(_, profileDisplayName, sizeof(profileDisplayName), profileOverride);
 				
-				if (sProfileDisplayName[0] == '\0')
-					strcopy(sProfileDisplayName, sizeof(sProfileDisplayName), sProfileOverride);
+				if (profileDisplayName[0] == '\0')
+				{
+					strcopy(profileDisplayName, sizeof(profileDisplayName), profileOverride);
+				}
 			}
 			else
-				strcopy(sProfileDisplayName, sizeof(sProfileDisplayName), "---");
+			{
+				strcopy(profileDisplayName, sizeof(profileDisplayName), "---");
+			}
 			
-			SetMenuTitle(hMenu, "%t%T\n%T\n \n", "SF2 Prefix", "SF2 Admin Menu Override Boss", client, "SF2 Admin Menu Current Boss Override", client, sProfileDisplayName);
+			SetMenuTitle(menuHandle, "%t%T\n%T\n \n", "SF2 Prefix", "SF2 Admin Menu Override Boss", client, "SF2 Admin Menu Current Boss Override", client, profileDisplayName);
 			
-			DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+			DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 			
 			return true;
 		}
@@ -888,7 +940,7 @@ public int AdminMenu_OverrideBoss(Handle menu, MenuAction action,int param1,int 
 {
 	if (action == MenuAction_End)
 	{
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -899,10 +951,10 @@ public int AdminMenu_OverrideBoss(Handle menu, MenuAction action,int param1,int 
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		GetMenuItem(menu, param2, sProfile, sizeof(sProfile));
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		GetMenuItem(menu, param2, profile, sizeof(profile));
 		
-		FakeClientCommand(param1, "sm_cvar sf2_boss_profile_override %s", sProfile);
+		FakeClientCommand(param1, "sm_cvar sf2_boss_profile_override %s", profile);
 		
 		DisplayOverrideBossAdminMenu(param1);
 	}

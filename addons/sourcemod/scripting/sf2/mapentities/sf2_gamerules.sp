@@ -1,8 +1,8 @@
 // sf2_gamerules
 
-static const char g_sEntityClassname[] = "sf2_gamerules";
+static const char g_EntityClassname[] = "sf2_gamerules";
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 methodmap SF2GamerulesEntity < CBaseEntity
 {
@@ -14,9 +14,11 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -50,13 +52,15 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get() 
 		{  
-			char sPageTextEntityName[64];
-			this.GetPageTextEntityName(sPageTextEntityName, sizeof(sPageTextEntityName));
+			char pageTextEntityName[64];
+			this.GetPageTextEntityName(pageTextEntityName, sizeof(pageTextEntityName));
 
-			if (sPageTextEntityName[0] == '\0')
+			if (pageTextEntityName[0] == '\0')
+			{
 				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+			}
 
-			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, sPageTextEntityName, -1, -1, -1));
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, pageTextEntityName, -1, -1, -1));
 		}
 	}
 
@@ -138,13 +142,15 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get() 
 		{
-			char sTextName[64];
-			this.GetEscapeTextEntityName(sTextName, sizeof(sTextName));
+			char textName[64];
+			this.GetEscapeTextEntityName(textName, sizeof(textName));
 
-			if (sTextName[0] == '\0')
+			if (textName[0] == '\0')
+			{
 				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+			}
 
-			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, sTextName, -1, -1, -1));
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, textName, -1, -1, -1));
 		}
 	}
 
@@ -222,13 +228,15 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get() 
 		{  
-			char sTextName[64];
-			this.GetIntroTextEntityName(sTextName, sizeof(sTextName));
+			char textName[64];
+			this.GetIntroTextEntityName(textName, sizeof(textName));
 
-			if (sTextName[0] == '\0')
+			if (textName[0] == '\0')
+			{
 				return SF2GameTextEntity(INVALID_ENT_REFERENCE);
+			}
 
-			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, sTextName, -1, -1, -1));
+			return SF2GameTextEntity(SF2MapEntity_FindEntityByTargetname(-1, textName, -1, -1, -1));
 		}
 	}
 
@@ -243,14 +251,14 @@ SF2GamerulesEntity g_GamerulesEntity = view_as<SF2GamerulesEntity>(-1);
 
 SF2GamerulesEntity FindSF2GamerulesEntity()
 {
-	return SF2GamerulesEntity(FindEntityByClassname(-1, g_sEntityClassname));
+	return SF2GamerulesEntity(FindEntityByClassname(-1, g_EntityClassname));
 }
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
-	g_entityFactory.DeriveFromBaseEntity();
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
+	g_EntityFactory.DeriveFromBaseEntity();
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineIntField("sf2_iMaxPlayers", _, "maxplayers")
 		.DefineIntField("sf2_iMaxPages", _, "maxpages")
 		.DefineStringField("sf2_szPageTextName", _, "pagetextname")
@@ -326,19 +334,19 @@ static void Initialize()
 	for (int iPageCount = 1; iPageCount <= 32; iPageCount++)
 	{
 		FormatEx(sOutputName, sizeof(sOutputName), iPageCount == 1 ? "OnCollected%dPage" : "OnCollected%dPages", iPageCount);
-		g_entityFactory.DefineOutput(sOutputName);
+		g_EntityFactory.DefineOutput(sOutputName);
 	}
 
 	// OnDifficultyX output
-	for (int iDifficulty = 0; iDifficulty <= Difficulty_Max; iDifficulty++)
+	for (int difficulty = 0; difficulty <= Difficulty_Max; difficulty++)
 	{
-		FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", iDifficulty);
-		g_entityFactory.DefineOutput(sOutputName);
+		FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", difficulty);
+		g_EntityFactory.DefineOutput(sOutputName);
 	}
 
-	g_entityFactory.EndDataMapDesc();
+	g_EntityFactory.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnRoundStateChanged, OnRoundStateChanged);
 	SF2MapEntity_AddHook(SF2MapEntityHook_OnPageCountChanged, OnPageCountChanged);
@@ -357,7 +365,7 @@ static void OnCreated(int entity)
 
 	if (sBossName[0] != '\0')
 	{
-		g_cvBossMain.GetString(sBossName, sizeof(sBossName));
+		g_BossMainConVar.GetString(sBossName, sizeof(sBossName));
 		thisEnt.SetBossName(sBossName);
 	}
 
@@ -365,17 +373,17 @@ static void OnCreated(int entity)
 	thisEnt.MaxPages = 1;
 	thisEnt.SetPageTextEntityName("");
 
-	thisEnt.InitialTimeLimit = g_cvTimeLimit.IntValue;
-	thisEnt.PageCollectAddTime = g_cvTimeGainFromPageGrab.IntValue;
+	thisEnt.InitialTimeLimit = g_TimeLimitConVar.IntValue;
+	thisEnt.PageCollectAddTime = g_TimeGainFromPageGrabConVar.IntValue;
 	thisEnt.SetPageCollectSoundPath(PAGE_GRABSOUND);
 	thisEnt.PageCollectSoundPitch = 100;
 
 	thisEnt.HasEscapeObjective = false;
-	thisEnt.EscapeTimeLimit = g_cvTimeLimitEscape.IntValue;
+	thisEnt.EscapeTimeLimit = g_TimeLimitEscapeConVar.IntValue;
 	thisEnt.SetEscapeTextEntityName("");
 	thisEnt.StopPageMusicOnEscape = false;
-	thisEnt.Survive = g_cvSurvivalMap.BoolValue;
-	thisEnt.SurviveUntilTime = g_cvTimeEscapeSurvival.IntValue;
+	thisEnt.Survive = g_SurvivalMapConVar.BoolValue;
+	thisEnt.SurviveUntilTime = g_TimeEscapeSurvivalConVar.IntValue;
 
 	thisEnt.InfiniteFlashlight = false;
 	thisEnt.InfiniteSprint = false;
@@ -385,8 +393,8 @@ static void OnCreated(int entity)
 
 	thisEnt.SetIntroMusicPath(SF2_INTRO_DEFAULT_MUSIC);
 	thisEnt.SetIntroFadeColor({0, 0, 0, 255});
-	thisEnt.IntroFadeHoldTime = g_cvIntroDefaultHoldTime.FloatValue;
-	thisEnt.IntroFadeTime = g_cvIntroDefaultFadeTime.FloatValue;
+	thisEnt.IntroFadeHoldTime = g_IntroDefaultHoldTimeConVar.FloatValue;
+	thisEnt.IntroFadeTime = g_IntroDefaultFadeTimeConVar.FloatValue;
 	thisEnt.SetIntroTextEntityName("");
 	thisEnt.IntroTextDelay = 0.0;
 
@@ -475,16 +483,16 @@ static void OnPageCountChanged(int iPageCount, int iOldPageCount)
 		gameRules.FireOutput(sOutputName);
 }
 
-static void OnDifficultyChanged(int iDifficulty, int iOldDifficulty)
+static void OnDifficultyChanged(int difficulty, int iOldDifficulty)
 {
 	SF2GamerulesEntity gameRules = FindSF2GamerulesEntity();
 	if (!gameRules.IsValid())
 		return;
 
 	char sOutputName[64];
-	FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", iDifficulty);
+	FormatEx(sOutputName, sizeof(sOutputName), "OnDifficulty%d", difficulty);
 
-	SetVariantInt(iDifficulty);
+	SetVariantInt(difficulty);
 	gameRules.FireOutput("OnDifficultyChanged");
 	gameRules.FireOutput(sOutputName);
 }
@@ -495,7 +503,7 @@ static void InputSetTimeLimit(int entity, int activator, int caller, int value)
 	if (value < 0)
 		value = 0;
 
-	g_iRoundTimeLimit = value;
+	g_RoundTimeLimit = value;
 }
 
 static void InputSetSurviveUntilTime(int entity, int activator, int caller, int value)
@@ -503,7 +511,7 @@ static void InputSetSurviveUntilTime(int entity, int activator, int caller, int 
 	if (value < 0)
 		value = 0;
 
-	g_iTimeEscape = value;
+	g_TimeEscape = value;
 }
 
 static void InputSetEscapeTimeLimit(int entity, int activator, int caller, int value)
@@ -511,7 +519,7 @@ static void InputSetEscapeTimeLimit(int entity, int activator, int caller, int v
 	if (value < 0)
 		value = 0;
 
-	g_iRoundEscapeTimeLimit = value;
+	g_RoundEscapeTimeLimit = value;
 }
 
 static void InputSetTime(int entity, int activator, int caller, int value)
@@ -524,7 +532,7 @@ static void InputSetTime(int entity, int activator, int caller, int value)
 
 static void InputAddTime(int entity, int activator, int caller, int value)
 {
-	value = g_iRoundTime + value;
+	value = g_RoundTime + value;
 	if (value < 0)
 		value = 0;
 
@@ -533,7 +541,7 @@ static void InputAddTime(int entity, int activator, int caller, int value)
 
 static void InputSetTimeToAddOnCollectPage(int entity, int activator, int caller, int value)
 {
-	g_iRoundTimeGainFromPage = value;
+	g_RoundTimeGainFromPage = value;
 }
 
 static void InputSetCollectedPages(int entity, int activator, int caller, int value)
@@ -546,7 +554,7 @@ static void InputSetCollectedPages(int entity, int activator, int caller, int va
 
 static void InputAddCollectedPages(int entity, int activator, int caller, int value)
 {
-	value = g_iPageCount + value;
+	value = g_PageCount + value;
 	if (value < 0)
 		value = 0;
 
@@ -555,7 +563,7 @@ static void InputAddCollectedPages(int entity, int activator, int caller, int va
 
 static void InputSubtractCollectedPages(int entity, int activator, int caller, int value)
 {
-	value = g_iPageCount - value;
+	value = g_PageCount - value;
 	if (value < 0)
 		value = 0;
 
@@ -574,71 +582,79 @@ static void InputSetEscapeTextEntity(int entity, int activator, int caller, cons
 
 static void InputEnableInfiniteFlashlight(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteFlashlight = true;
+	g_RoundInfiniteFlashlight = true;
 }
 
 static void InputDisableInfiniteFlashlight(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteFlashlight = false;
+	g_RoundInfiniteFlashlight = false;
 }
 
 static void InputEnableInfiniteSprint(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteSprint = true;
+	g_IsRoundInfiniteSprint = true;
 }
 
 static void InputDisableInfiniteSprint(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteSprint = false;
+	g_IsRoundInfiniteSprint = false;
 }
 
 static void InputEnableInfiniteBlink(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteBlink = true;
+	g_RoundInfiniteBlink = true;
 }
 
 static void InputDisableInfiniteBlink(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteBlink = false;
+	g_RoundInfiniteBlink = false;
 }
 
 static void InputEnableBossesChaseEndlessly(int entity, int activator, int caller)
 {
-	g_bBossesChaseEndlessly = true;
+	g_BossesChaseEndlessly = true;
 }
 
 static void InputDisableBossesChaseEndlessly(int entity, int activator, int caller)
 {
-	g_bBossesChaseEndlessly = false;
+	g_BossesChaseEndlessly = false;
 }
 
 static void InputSetBoss(int entity, int activator, int caller, const char[] value)
 {
-	g_cvBossMain.SetString(value);
+	g_BossMainConVar.SetString(value);
 }
 
 static void InputSetBossOverride(int entity, int activator, int caller, const char[] value)
 {
-	g_cvBossProfileOverride.SetString(value);
+	g_BossProfileOverrideConVar.SetString(value);
 }
 
 static void InputClearBossOverride(int entity, int activator, int caller)
 {
-	g_cvBossProfileOverride.SetString("");
+	g_BossProfileOverrideConVar.SetString("");
 }
 
 static void InputSetDifficulty(int entity, int activator, int caller, int value)
 {
-	if (value < 0) value = 0;
-	else if (value >= Difficulty_Max) value = Difficulty_Max - 1;
+	if (value < 0)
+	{
+		value = 0;
+	}
+	else if (value >= Difficulty_Max)
+	{
+		value = Difficulty_Max - 1;
+	}
 
-	g_cvDifficulty.SetInt(value);
+	g_DifficultyConVar.SetInt(value);
 }
 
 static void InputEndGracePeriod(int entity, int activator, int caller)
 {
-	if (GetRoundState() == SF2RoundState_Grace && g_hRoundGraceTimer != null) 
-		TriggerTimer(g_hRoundGraceTimer);
+	if (GetRoundState() == SF2RoundState_Grace && g_RoundGraceTimer != null) 
+	{
+		TriggerTimer(g_RoundGraceTimer);
+	}
 }
 
 static void InputPauseTimer(int entity, int activator, int caller)

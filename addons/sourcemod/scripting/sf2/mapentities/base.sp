@@ -5,9 +5,9 @@
 
 // To initialize, call the SF2MapEntityBase.Initialize() function from SetupCustomMapEntities().
 
-static const char g_sEntityClassname[] = ""; // The custom classname of the entity. Should be prefixed with "sf2_"
+static const char g_EntityClassname[] = ""; // The custom classname of the entity. Should be prefixed with "sf2_"
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -19,9 +19,11 @@ methodmap SF2MapEntityBase < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -32,13 +34,13 @@ methodmap SF2MapEntityBase < CBaseEntity
 
 static void Initialize() 
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
-	g_entityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
+	g_EntityFactory.DeriveFromBaseEntity(true);
 	/*
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory.BeginDataMapDesc()
 		.EndDataMapDesc();
 	*/
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
 static void OnCreated(int entity)

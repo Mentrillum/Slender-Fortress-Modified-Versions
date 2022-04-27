@@ -1,8 +1,8 @@
 // sf2_info_boss_spawn
 
-static const char g_sEntityClassname[] = "sf2_info_boss_spawn"; // The custom classname of the entity. Should be prefixed with "sf2_"
+static const char g_EntityClassname[] = "sf2_info_boss_spawn"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -14,9 +14,11 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public void GetBossProfile(char[] sBuffer, int iBufferLen)
@@ -37,39 +39,41 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 
 	public void Spawn()
 	{
-		char sTargetProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		this.GetBossProfile(sTargetProfile, sizeof(sTargetProfile));
-		if (sTargetProfile[0] == '\0')
+		char targetProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetBossProfile(targetProfile, sizeof(targetProfile));
+		if (targetProfile[0] == '\0')
 		{
-			PrintToServer("%s tried to spawn with blank profile", g_sEntityClassname);
+			PrintToServer("%s tried to spawn with blank profile", g_EntityClassname);
 			return;
 		}
 
-		char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 
-		float flPos[3]; float flAng[3];
-		this.GetAbsOrigin(flPos);
-		this.GetAbsAngles(flAng);
+		float pos[3]; float ang[3];
+		this.GetAbsOrigin(pos);
+		this.GetAbsAngles(ang);
 
-		int iCount = 0;
-		int iMaxCount = this.MaxBosses;
+		int count = 0;
+		int maxCount = this.MaxBosses;
 
-		for (int iBossIndex = 0; iBossIndex < MAX_BOSSES && iCount < iMaxCount; iBossIndex++)
+		for (int bossIndex = 0; bossIndex < MAX_BOSSES && count < maxCount; bossIndex++)
 		{
-			if (!NPCIsValid(iBossIndex))
-				continue;
-
-			NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-			if (strcmp(sProfile, sTargetProfile) == 0)
+			if (!NPCIsValid(bossIndex))
 			{
-				SpawnSlender(view_as<SF2NPC_BaseNPC>(iBossIndex), flPos);
-				iCount++;
+				continue;
+			}
 
-				int iBossEntIndex = NPCGetEntIndex(iBossIndex);
-				if (IsValidEntity(iBossEntIndex))
+			NPCGetProfile(bossIndex, profile, sizeof(profile));
+			if (strcmp(profile, targetProfile) == 0)
+			{
+				SpawnSlender(view_as<SF2NPC_BaseNPC>(bossIndex), pos);
+				count++;
+
+				int bossEntIndex = NPCGetEntIndex(bossIndex);
+				if (IsValidEntity(bossEntIndex))
 				{
-					TeleportEntity(iBossEntIndex, NULL_VECTOR, flAng, NULL_VECTOR);
-					this.FireOutput("OnSpawn", iBossEntIndex);
+					TeleportEntity(bossEntIndex, NULL_VECTOR, ang, NULL_VECTOR);
+					this.FireOutput("OnSpawn", bossEntIndex);
 				}
 			}
 		}
@@ -83,15 +87,15 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 
 static void Initialize() 
 {
-	g_entityFactory = new CEntityFactory(g_sEntityClassname, OnCreated, OnRemoved);
-	g_entityFactory.DeriveFromFactory(SF2BossSpawnEntity.GetBaseFactory());
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
+	g_EntityFactory.DeriveFromFactory(SF2BossSpawnEntity.GetBaseFactory());
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineStringField("sf2_szBossProfile", _, "profile")
 		.DefineIntField("sf2_iMaxBosses", _, "max")
 		.DefineInputFunc("Spawn", InputFuncValueType_Void, InputSpawn)
 		.DefineInputFunc("SetBossProfile", InputFuncValueType_String, InputSetBossProfile)
 		.EndDataMapDesc();
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
 static void OnCreated(int entity)

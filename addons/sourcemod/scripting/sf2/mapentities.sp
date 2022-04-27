@@ -32,7 +32,7 @@ methodmap SF2TriggerMapEntity < CBaseEntity
 
 	public bool PassesTriggerFilters(int entity)
 	{
-		return !!SDKCall(g_hSDKPassesTriggerFilters, this.index, entity);
+		return !!SDKCall(g_SDKPassesTriggerFilters, this.index, entity);
 	}
 
 	property bool IsDisabled
@@ -57,19 +57,29 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 	switch (hookType)
 	{
 		case SF2MapEntityHook_OnMapStart:
+		{
 			g_CustomEntityOnMapStart.AddFunction(null, hookFunc);
+		}
 		case SF2MapEntityHook_OnRoundStateChanged:
+		{
 			g_CustomEntityOnRoundStateChanged.AddFunction(null, hookFunc);
+		}
 		case SF2MapEntityHook_OnDifficultyChanged:
+		{
 			g_CustomEntityOnDifficultyChanged.AddFunction(null, hookFunc);
+		}
 		case SF2MapEntityHook_OnPageCountChanged:
+		{
 			g_CustomEntityOnPageCountChanged.AddFunction(null, hookFunc);
-		
+		}
 		case SF2MapEntityHook_OnRenevantWaveTriggered:
+		{
 			g_CustomEntityOnRenevantWaveTriggered.AddFunction(null, hookFunc);
-		
+		}
 		default:
+		{
 			ThrowError("Unhandled hooktype %i", hookType);
+		}
 	}
 }
 
@@ -103,7 +113,7 @@ void SetupCustomMapEntities()
 
 	g_CustomEntityOnRenevantWaveTriggered = new PrivateForward(ET_Ignore, Param_Cell);
 
-	g_cvDifficulty.AddChangeHook(SF2MapEntity_OnDifficultyChanged);
+	g_DifficultyConVar.AddChangeHook(SF2MapEntity_OnDifficultyChanged);
 
 	// Initialize static entity data.
 	// Unfortunately, there's no better way to do it other than sticking the initialization functions here.
@@ -170,50 +180,54 @@ void SF2MapEntity_OnMapStart()
 	Call_Finish();
 }
 
-static int FindProceduralTarget(const char[] sName, int searchingEntity, int activator, int caller)
+static int FindProceduralTarget(const char[] name, int searchingEntity, int activator, int caller)
 {
-	if (sName[0] != '!')
+	if (name[0] != '!')
+	{
 		return -1;
+	}
 	
-	if ( strcmp( sName, "!activator" ) == 0 )
+	if ( strcmp( name, "!activator" ) == 0 )
 	{
 		return activator;
 	}
-	else if ( strcmp( sName, "!caller" ) == 0)
+	else if ( strcmp( name, "!caller" ) == 0)
 	{
 		return caller;
 	}
-	else if ( strcmp( sName, "!self" ) == 0)
+	else if ( strcmp( name, "!self" ) == 0)
 	{
 		return searchingEntity;
 	}
 	else 
 	{
-		char sClass[PLATFORM_MAX_PATH];
+		char class[PLATFORM_MAX_PATH];
 		if (IsValidEntity(searchingEntity))
-			GetEntPropString(searchingEntity, Prop_Data, "m_iClassname", sClass, sizeof(sClass));
+		{
+			GetEntPropString(searchingEntity, Prop_Data, "m_iClassname", class, sizeof(class));
+		}
 		else
 		{
-			strcopy(sClass, sizeof(sClass), "NULL Entity");
+			strcopy(class, sizeof(class), "NULL Entity");
 		}
 
 		// Normally if you enter an invalid procedural name the game would just crash.
 		// For custom entities we'll just spit out a message in console instead.
 		// So much nicer, don't you think?
 
-		LogSF2Message("%i (%s): Invalid entity search name %s", searchingEntity, sClass, sName);
+		LogSF2Message("%i (%s): Invalid entity search name %s", searchingEntity, class, name);
 	}
 	
 	return -1;
 }
 
-int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] sName, int searchingEntity, int activator, int caller)
+int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] name, int searchingEntity, int activator, int caller)
 {
-	if (sName[0] == '!')
+	if (name[0] == '!')
 	{
 		if (startEnt == -1)
 		{
-			int target = FindProceduralTarget(sName, searchingEntity, activator, caller);
+			int target = FindProceduralTarget(name, searchingEntity, activator, caller);
 			if (IsValidEntity(target)) 
 			{
 				return target;
@@ -225,12 +239,12 @@ int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] sName, int se
 
 	// dear god
 
-	char sTargetName[PLATFORM_MAX_PATH];
+	char targetName[PLATFORM_MAX_PATH];
 	int ent = startEnt;
 	while ((ent = FindEntityByClassname(ent, "*")) != -1)
 	{
-		GetEntPropString(ent, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
-		if (strcmp(sTargetName, sName) == 0) 
+		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+		if (strcmp(targetName, name) == 0) 
 		{
 			return ent;
 		}
@@ -239,37 +253,37 @@ int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] sName, int se
 	return -1;
 }
 
-void SF2MapEntity_OnRoundStateChanged(SF2RoundState iRoundState, SF2RoundState iOldRoundState)
+void SF2MapEntity_OnRoundStateChanged(SF2RoundState roundState, SF2RoundState oldRoundState)
 {
 	Call_StartForward(g_CustomEntityOnRoundStateChanged);
-	Call_PushCell(iRoundState);
-	Call_PushCell(iOldRoundState);
+	Call_PushCell(roundState);
+	Call_PushCell(oldRoundState);
 	Call_Finish();
 }
 
-static void SF2MapEntity_OnDifficultyChanged(ConVar cvar, const char[] sOldValue, const char[] sNewValue)
+static void SF2MapEntity_OnDifficultyChanged(ConVar cvar, const char[] oldValue, const char[] newValue)
 {
-	int iOldDifficulty = StringToInt(sOldValue);
-	int iDifficulty = StringToInt(sNewValue);
+	int oldDifficulty = StringToInt(oldValue);
+	int difficulty = StringToInt(newValue);
 
 	Call_StartForward(g_CustomEntityOnDifficultyChanged);
-	Call_PushCell(iDifficulty);
-	Call_PushCell(iOldDifficulty);
+	Call_PushCell(difficulty);
+	Call_PushCell(oldDifficulty);
 	Call_Finish();
 }
 
-void SF2MapEntity_OnPageCountChanged(int iPageCount, int iOldPageCount)
+void SF2MapEntity_OnPageCountChanged(int pageCount, int oldPageCount)
 {
 	Call_StartForward(g_CustomEntityOnPageCountChanged);
-	Call_PushCell(iPageCount);
-	Call_PushCell(iOldPageCount);
+	Call_PushCell(pageCount);
+	Call_PushCell(oldPageCount);
 	Call_Finish();
 }
 
-void SF2MapEntity_OnRenevantWaveTriggered(int iWave)
+void SF2MapEntity_OnRenevantWaveTriggered(int wave)
 {
 	Call_StartForward(g_CustomEntityOnRenevantWaveTriggered);
-	Call_PushCell(iWave);
+	Call_PushCell(wave);
 	Call_Finish();
 }
 

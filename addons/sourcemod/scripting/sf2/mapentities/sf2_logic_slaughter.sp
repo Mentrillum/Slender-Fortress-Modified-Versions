@@ -1,6 +1,6 @@
 // sf2_logic_slaughter
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -12,9 +12,11 @@ methodmap SF2LogicSlaughterEntity < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -30,7 +32,9 @@ SF2LogicSlaughterEntity FindLogicSlaughterEntity()
 	{
 		SF2LogicSlaughterEntity logicEnt = SF2LogicSlaughterEntity(ent);
 		if (!logicEnt.IsValid())
+		{
 			continue;
+		}
 
 		return logicEnt;
 	}
@@ -40,11 +44,11 @@ SF2LogicSlaughterEntity FindLogicSlaughterEntity()
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("sf2_logic_slaughter");
-	g_entityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory = new CEntityFactory("sf2_logic_slaughter");
+	g_EntityFactory.DeriveFromBaseEntity(true);
 
-	//g_entityFactory.BeginDataMapDesc()
+	//g_EntityFactory.BeginDataMapDesc()
 	//.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }

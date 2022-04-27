@@ -1,6 +1,6 @@
 // sf2_logic_proxy
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -12,9 +12,11 @@ methodmap SF2LogicProxyEntity < CBaseEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -25,13 +27,13 @@ methodmap SF2LogicProxyEntity < CBaseEntity
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("sf2_logic_proxy");
-	g_entityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory = new CEntityFactory("sf2_logic_proxy");
+	g_EntityFactory.DeriveFromBaseEntity(true);
 
-	//g_entityFactory.BeginDataMapDesc()
+	//g_EntityFactory.BeginDataMapDesc()
 	//.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
 SF2LogicProxyEntity FindLogicProxyEntity()
@@ -41,7 +43,9 @@ SF2LogicProxyEntity FindLogicProxyEntity()
 	{
 		SF2LogicProxyEntity raidLogic = SF2LogicProxyEntity(ent);
 		if (!raidLogic.IsValid())
+		{
 			continue;
+		}
 
 		return raidLogic;
 	}

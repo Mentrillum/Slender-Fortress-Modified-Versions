@@ -4,25 +4,25 @@
 
 #define _sf2_menus
 
-Handle g_hMenuMain;
-Handle g_hMenuVoteDifficulty;
-Handle g_hMenuHelp;
-Handle g_hMenuHelpObjective;
-Handle g_hMenuHelpObjective2;
-Handle g_hMenuHelpCommands;
-Handle g_hMenuHelpSprinting;
-Handle g_hMenuHelpControls;
-Handle g_hMenuHelpClassInfo;
-Handle g_hMenuHelpGhostMode;
-Handle g_hMenuSettings;
-Handle g_hMenuSettingsFlashlightTemp1;
-Handle g_hMenuCredits;
-Handle g_hMenuCredits1;
-Handle g_hMenuCredits2;
-Handle g_hMenuCredits3;
-Handle g_hMenuCredits4;
-Handle g_hMenuCredits5;
-Handle g_hMenuUpdate;
+Handle g_MenuMain;
+Handle g_MenuVoteDifficulty;
+Handle g_MenuHelp;
+Handle g_MenuHelpObjective;
+Handle g_MenuHelpObjective2;
+Handle g_MenuHelpCommands;
+Handle g_MenuHelpSprinting;
+Handle g_MenuHelpControls;
+Handle g_MenuHelpClasinfo;
+Handle g_MenuHelpGhostMode;
+Handle g_MenuSettings;
+Handle g_MenuSettingsFlashlightTemp1;
+Handle g_MenuCredits;
+Handle g_MenuCredits1;
+Handle g_MenuCredits2;
+Handle g_MenuCredits3;
+Handle g_MenuCredits4;
+Handle g_MenuCredits5;
+Handle g_MenuUpdate;
 
 #include "sf2/playergroups/menus.sp"
 #include "sf2/pvp/menus.sp"
@@ -32,138 +32,138 @@ void SetupMenus()
 	char buffer[512];
 	
 	// Create menus.
-	g_hMenuMain = CreateMenu(Menu_Main);
-	SetMenuTitle(g_hMenuMain, "%t%t\n \n", "SF2 Prefix", "SF2 Main Menu Title");
+	g_MenuMain = CreateMenu(Menu_Main);
+	SetMenuTitle(g_MenuMain, "%t%t\n \n", "SF2 Prefix", "SF2 Main Menu Title");
 	FormatEx(buffer, sizeof(buffer), "%t (!slhelp)", "SF2 Help Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slnext)", "SF2 Queue Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slgroup)", "SF2 Group Main Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slghost)", "SF2 Ghost Mode Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slpack)", "SF2 Boss Pack Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slnextpack)", "SF2 Boss Next Pack Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slsettings)", "SF2 Settings Menu Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	strcopy(buffer, sizeof(buffer), "Credits (!slcredits)");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t (!slbosslist)", "SF2 Boss View On List Title");
-	AddMenuItem(g_hMenuMain, "0", buffer);
+	AddMenuItem(g_MenuMain, "0", buffer);
 	
-	g_hMenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
-	SetMenuTitle(g_hMenuVoteDifficulty, "%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+	g_MenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
+	SetMenuTitle(g_MenuVoteDifficulty, "%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-	AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+	AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-	AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+	AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-	AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+	AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 	
-	g_hMenuHelp = CreateMenu(Menu_Help);
-	SetMenuTitle(g_hMenuHelp, "%t%t\n \n", "SF2 Prefix", "SF2 Help Menu Title");
+	g_MenuHelp = CreateMenu(Menu_Help);
+	SetMenuTitle(g_MenuHelp, "%t%t\n \n", "SF2 Prefix", "SF2 Help Menu Title");
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Objective Menu Title");
-	AddMenuItem(g_hMenuHelp, "0", buffer);
+	AddMenuItem(g_MenuHelp, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Commands Menu Title");
-	AddMenuItem(g_hMenuHelp, "1", buffer);
+	AddMenuItem(g_MenuHelp, "1", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Class Info Menu Title");
-	AddMenuItem(g_hMenuHelp, "2", buffer);
+	AddMenuItem(g_MenuHelp, "2", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Ghost Mode Menu Title");
-	AddMenuItem(g_hMenuHelp, "3", buffer);
+	AddMenuItem(g_MenuHelp, "3", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Sprinting And Stamina Menu Title");
-	AddMenuItem(g_hMenuHelp, "4", buffer);
+	AddMenuItem(g_MenuHelp, "4", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Controls Menu Title");
-	AddMenuItem(g_hMenuHelp, "5", buffer);
-	SetMenuExitBackButton(g_hMenuHelp, true);
+	AddMenuItem(g_MenuHelp, "5", buffer);
+	SetMenuExitBackButton(g_MenuHelp, true);
 	
-	g_hMenuHelpObjective = CreateMenu(Menu_HelpObjective);
-	SetMenuTitle(g_hMenuHelpObjective, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Objective Menu Title", "SF2 Help Objective Description");
-	AddMenuItem(g_hMenuHelpObjective, "0", "Next");
-	AddMenuItem(g_hMenuHelpObjective, "1", "Back");
+	g_MenuHelpObjective = CreateMenu(Menu_HelpObjective);
+	SetMenuTitle(g_MenuHelpObjective, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Objective Menu Title", "SF2 Help Objective Description");
+	AddMenuItem(g_MenuHelpObjective, "0", "Next");
+	AddMenuItem(g_MenuHelpObjective, "1", "Back");
 	
-	g_hMenuHelpObjective2 = CreateMenu(Menu_HelpObjective2);
-	SetMenuTitle(g_hMenuHelpObjective2, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Objective Menu Title", "SF2 Help Objective Description 2");
-	AddMenuItem(g_hMenuHelpObjective2, "0", "Back");
+	g_MenuHelpObjective2 = CreateMenu(Menu_HelpObjective2);
+	SetMenuTitle(g_MenuHelpObjective2, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Objective Menu Title", "SF2 Help Objective Description 2");
+	AddMenuItem(g_MenuHelpObjective2, "0", "Back");
 	
-	g_hMenuHelpCommands = CreateMenu(Menu_BackButtonOnly);
-	SetMenuTitle(g_hMenuHelpCommands, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Commands Menu Title", "SF2 Help Commands Description");
-	AddMenuItem(g_hMenuHelpCommands, "0", "Back");
+	g_MenuHelpCommands = CreateMenu(Menu_BackButtonOnly);
+	SetMenuTitle(g_MenuHelpCommands, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Commands Menu Title", "SF2 Help Commands Description");
+	AddMenuItem(g_MenuHelpCommands, "0", "Back");
 	
-	g_hMenuHelpGhostMode = CreateMenu(Menu_BackButtonOnly);
-	SetMenuTitle(g_hMenuHelpGhostMode, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Ghost Mode Menu Title", "SF2 Help Ghost Mode Description");
-	AddMenuItem(g_hMenuHelpGhostMode, "0", "Back");
+	g_MenuHelpGhostMode = CreateMenu(Menu_BackButtonOnly);
+	SetMenuTitle(g_MenuHelpGhostMode, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Ghost Mode Menu Title", "SF2 Help Ghost Mode Description");
+	AddMenuItem(g_MenuHelpGhostMode, "0", "Back");
 	
-	g_hMenuHelpSprinting = CreateMenu(Menu_BackButtonOnly);
-	SetMenuTitle(g_hMenuHelpSprinting, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Sprinting And Stamina Menu Title", "SF2 Help Sprinting And Stamina Description");
-	AddMenuItem(g_hMenuHelpSprinting, "0", "Back");
+	g_MenuHelpSprinting = CreateMenu(Menu_BackButtonOnly);
+	SetMenuTitle(g_MenuHelpSprinting, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Sprinting And Stamina Menu Title", "SF2 Help Sprinting And Stamina Description");
+	AddMenuItem(g_MenuHelpSprinting, "0", "Back");
 	
-	g_hMenuHelpControls = CreateMenu(Menu_BackButtonOnly);
-	SetMenuTitle(g_hMenuHelpControls, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Controls Menu Title", "SF2 Help Controls Description");
-	AddMenuItem(g_hMenuHelpControls, "0", "Back");
+	g_MenuHelpControls = CreateMenu(Menu_BackButtonOnly);
+	SetMenuTitle(g_MenuHelpControls, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Controls Menu Title", "SF2 Help Controls Description");
+	AddMenuItem(g_MenuHelpControls, "0", "Back");
 	
-	g_hMenuHelpClassInfo = CreateMenu(Menu_ClassInfo);
-	SetMenuTitle(g_hMenuHelpClassInfo, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Class Info Menu Title", "SF2 Help Class Info Description");
+	g_MenuHelpClasinfo = CreateMenu(Menu_Clasinfo);
+	SetMenuTitle(g_MenuHelpClasinfo, "%t%t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Class Info Menu Title", "SF2 Help Class Info Description");
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Scout Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Scout", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Scout", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Sniper Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Sniper", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Sniper", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Soldier Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Soldier", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Soldier", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Demoman Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Demoman", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Demoman", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Heavy Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Heavy", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Heavy", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Medic Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Medic", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Medic", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Pyro Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Pyro", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Pyro", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Spy Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Spy", buffer);
+	AddMenuItem(g_MenuHelpClasinfo, "Spy", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Engineer Class Info Menu Title");
-	AddMenuItem(g_hMenuHelpClassInfo, "Engineer", buffer);
-	SetMenuExitBackButton(g_hMenuHelpClassInfo, true);
+	AddMenuItem(g_MenuHelpClasinfo, "Engineer", buffer);
+	SetMenuExitBackButton(g_MenuHelpClasinfo, true);
 
-	g_hMenuSettings = CreateMenu(Menu_Settings);
-	SetMenuTitle(g_hMenuSettings, "%t%t\n \n", "SF2 Prefix", "SF2 Settings Menu Title");
+	g_MenuSettings = CreateMenu(Menu_Settings);
+	SetMenuTitle(g_MenuSettings, "%t%t\n \n", "SF2 Prefix", "SF2 Settings Menu Title");
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings PvP Menu Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Hints Menu Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Mute Mode Menu Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Film Grain Menu Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Proxy Menu Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlight Temperature Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Ghost Mode Teleport Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Ghost Mode Toggle State Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Proxy Ask Menu Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Hud Version Title");
-	AddMenuItem(g_hMenuSettings, "0", buffer);
-	SetMenuExitBackButton(g_hMenuSettings, true);
+	AddMenuItem(g_MenuSettings, "0", buffer);
+	SetMenuExitBackButton(g_MenuSettings, true);
 	
-	g_hMenuSettingsFlashlightTemp1 = CreateMenu(Menu_Settings_Flashlighttemp1);
-	SetMenuTitle(g_hMenuSettingsFlashlightTemp1, buffer);
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "0", "1000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "1", "2000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "2", "3000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "3", "4000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "4", "5000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "5", "6000 Kelvin (Default)");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "6", "7000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "7", "8000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "8", "9000 Kelvin");
-	AddMenuItem(g_hMenuSettingsFlashlightTemp1, "9", "10000 Kelvin");
-	SetMenuExitBackButton(g_hMenuSettingsFlashlightTemp1, true);
+	g_MenuSettingsFlashlightTemp1 = CreateMenu(Menu_Settings_Flashlighttemp1);
+	SetMenuTitle(g_MenuSettingsFlashlightTemp1, buffer);
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "0", "1000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "1", "2000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "2", "3000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "3", "4000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "4", "5000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "5", "6000 Kelvin (Default)");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "6", "7000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "7", "8000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "8", "9000 Kelvin");
+	AddMenuItem(g_MenuSettingsFlashlightTemp1, "9", "10000 Kelvin");
+	SetMenuExitBackButton(g_MenuSettingsFlashlightTemp1, true);
 
-	g_hMenuCredits = CreateMenu(Menu_Credits);
+	g_MenuCredits = CreateMenu(Menu_Credits);
 	
 	FormatEx(buffer, sizeof(buffer), "Credits\n");
 	StrCat(buffer, sizeof(buffer), "Coders: KitRifty, Kenzzer, Mentrillum, The Gaben\n");
@@ -173,11 +173,11 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Mammoth Mogul - For being a GREAT test subject\n");
 	StrCat(buffer, sizeof(buffer), "Egosins - For offering to host this publicly\n");
 	
-	SetMenuTitle(g_hMenuCredits, buffer);
-	AddMenuItem(g_hMenuCredits, "0", "Next");
-	AddMenuItem(g_hMenuCredits, "1", "Back");
+	SetMenuTitle(g_MenuCredits, buffer);
+	AddMenuItem(g_MenuCredits, "0", "Next");
+	AddMenuItem(g_MenuCredits, "1", "Back");
 
-	g_hMenuCredits1 = CreateMenu(Menu_Credits1);
+	g_MenuCredits1 = CreateMenu(Menu_Credits1);
 	
 	FormatEx(buffer, sizeof(buffer), "Credits\n");
 	StrCat(buffer, sizeof(buffer), "Glubbable - For working on a ton of maps\n");
@@ -189,11 +189,11 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Hydra X9K Music - Triple Bosses Music composer (Never Let Up Remix)\n");
 	StrCat(buffer, sizeof(buffer), "Dj-Rec0il - Running In the 90s Remix composer\n");
 	
-	SetMenuTitle(g_hMenuCredits1, buffer);
-	AddMenuItem(g_hMenuCredits1, "0", "Next");
-	AddMenuItem(g_hMenuCredits1, "1", "Back");
+	SetMenuTitle(g_MenuCredits1, buffer);
+	AddMenuItem(g_MenuCredits1, "0", "Next");
+	AddMenuItem(g_MenuCredits1, "1", "Back");
 	
-	g_hMenuCredits2 = CreateMenu(Menu_Credits2);
+	g_MenuCredits2 = CreateMenu(Menu_Credits2);
 	
 	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "To all the peeps who alpha-tested this thing!\n \n");
@@ -208,11 +208,11 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Pinkle D Lies\n");
 	StrCat(buffer, sizeof(buffer), "Ultimatefry\n \n");
 	
-	SetMenuTitle(g_hMenuCredits2, buffer);
-	AddMenuItem(g_hMenuCredits2, "0", "Next");
-	AddMenuItem(g_hMenuCredits2, "1", "Back");
+	SetMenuTitle(g_MenuCredits2, buffer);
+	AddMenuItem(g_MenuCredits2, "0", "Next");
+	AddMenuItem(g_MenuCredits2, "1", "Back");
 	
-	g_hMenuCredits3 = CreateMenu(Menu_Credits3);
+	g_MenuCredits3 = CreateMenu(Menu_Credits3);
 	
 	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Credits to all peeps who gave special round suggestions!\n \n");
@@ -227,11 +227,11 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Spooky Pyro\n");
 	StrCat(buffer, sizeof(buffer), "Firedudeet\n \n");
 	
-	SetMenuTitle(g_hMenuCredits3, buffer);
-	AddMenuItem(g_hMenuCredits3, "0", "Next");
-	AddMenuItem(g_hMenuCredits3, "1", "Back");
+	SetMenuTitle(g_MenuCredits3, buffer);
+	AddMenuItem(g_MenuCredits3, "0", "Next");
+	AddMenuItem(g_MenuCredits3, "1", "Back");
 	
-	g_hMenuCredits4 = CreateMenu(Menu_Credits4);
+	g_MenuCredits4 = CreateMenu(Menu_Credits4);
 	
 	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Major special thanks to all official Modified server owners!\n \n");
@@ -244,11 +244,11 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Diviously\n");
 	StrCat(buffer, sizeof(buffer), "Astolfo Alter\n");
 
-	SetMenuTitle(g_hMenuCredits4, buffer);
-	AddMenuItem(g_hMenuCredits4, "0", "Next");
-	AddMenuItem(g_hMenuCredits4, "1", "Back");
+	SetMenuTitle(g_MenuCredits4, buffer);
+	AddMenuItem(g_MenuCredits4, "0", "Next");
+	AddMenuItem(g_MenuCredits4, "1", "Back");
 
-	g_hMenuCredits5 = CreateMenu(Menu_Credits5);
+	g_MenuCredits5 = CreateMenu(Menu_Credits5);
 	
 	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "And finally to all of these people that helped out this version one way or another!\n \n");
@@ -261,10 +261,10 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Basically everyone at District: Zen\n");
 	StrCat(buffer, sizeof(buffer), "And you for playing this new way of SF2!\n \n");
 
-	SetMenuTitle(g_hMenuCredits5, buffer);
-	AddMenuItem(g_hMenuCredits5, "0", "Back");
+	SetMenuTitle(g_MenuCredits5, buffer);
+	AddMenuItem(g_MenuCredits5, "0", "Back");
 	
-	g_hMenuUpdate = CreateMenu(Menu_Update);
+	g_MenuUpdate = CreateMenu(Menu_Update);
 	FormatEx(buffer, sizeof(buffer), "%tSlender Fortress\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Coders: KitRifty, Kenzzer, Mentrillum, The Gaben\n");
 	StrCat(buffer, sizeof(buffer), "Version: ");
@@ -274,9 +274,9 @@ void SetupMenus()
 	Format(buffer, sizeof(buffer), "%s%t\n",buffer,"SF2 Change Log");
 	StrCat(buffer, sizeof(buffer), "\n \n");
 	
-	SetMenuTitle(g_hMenuUpdate, buffer);
+	SetMenuTitle(g_MenuUpdate, buffer);
 	
-	AddMenuItem(g_hMenuUpdate, "0", "Display main menu");
+	AddMenuItem(g_MenuUpdate, "0", "Display main menu");
 
 	PvP_SetupMenus();
 }
@@ -285,66 +285,69 @@ void RandomizeVoteMenu()
 {
 	char buffer[512];
 	
-	if (g_hMenuVoteDifficulty != null) delete g_hMenuVoteDifficulty;
+	if (g_MenuVoteDifficulty != null)
+	{
+		delete g_MenuVoteDifficulty;
+	}
 	
-	g_hMenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
-	SetMenuTitle(g_hMenuVoteDifficulty, "%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+	g_MenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
+	SetMenuTitle(g_MenuVoteDifficulty, "%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
 	
 	switch (GetRandomInt(1,6))//There's probably a better way to do this but I was tired.
 	{
 		case 1:
 		{
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 		}
 		case 2:
 		{
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 		}
 		case 3:
 		{
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 		}
 		case 4:
 		{
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 		}
 		case 5:
 		{
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 		}
 		case 6:
 		{
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "3", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "2", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
 			FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-			AddMenuItem(g_hMenuVoteDifficulty, "1", buffer);
+			AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
 		}
 	}
 }
@@ -355,98 +358,132 @@ public int Menu_Main(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuHelp, param1, 30);
-			case 1: DisplayQueuePointsMenu(param1);
-			case 2:	DisplayGroupMainMenuToClient(param1);
-			case 3: FakeClientCommand(param1, "sm_slghost");
-			case 4: FakeClientCommand(param1, "sm_slpack");
-			case 5: FakeClientCommand(param1, "sm_slnextpack");
-			case 6: DisplayMenu(g_hMenuSettings, param1, 30);
-			case 7: DisplayMenu(g_hMenuCredits, param1, MENU_TIME_FOREVER);
-			case 8: DisplayBossList(param1);
+			case 0:
+			{
+				DisplayMenu(g_MenuHelp, param1, 30);
+			}
+			case 1:
+			{
+				DisplayQueuePointsMenu(param1);
+			}
+			case 2:
+			{
+				DisplayGroupMainMenuToClient(param1);
+			}
+			case 3:
+			{
+				FakeClientCommand(param1, "sm_slghost");
+			}
+			case 4:
+			{
+				FakeClientCommand(param1, "sm_slpack");
+			}
+			case 5:
+			{
+				FakeClientCommand(param1, "sm_slnextpack");
+			}
+			case 6:
+			{
+				DisplayMenu(g_MenuSettings, param1, 30);
+			}
+			case 7:
+			{
+				DisplayMenu(g_MenuCredits, param1, MENU_TIME_FOREVER);
+			}
+			case 8:
+			{
+				DisplayBossList(param1);
+			}
 		}
 	}
 }
 
 public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int param2)
 {
-	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_cvRestartSession.BoolValue)
+	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_RestartSessionConVar.BoolValue)
 	{
-		int iClientInGame = 0, iClientCallingForNightmare = 0;
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		int clientInGame = 0, clientCallingForNightmare = 0;
+		for (int client = 1; client <= MaxClients; client++)
 		{
-			if (IsClientInGame(iClient) && !g_bPlayerEliminated[iClient])
+			if (IsClientInGame(client) && !g_PlayerEliminated[client])
 			{
-				iClientInGame++;
-				if (g_bPlayerCalledForNightmare[iClient]) iClientCallingForNightmare++;
+				clientInGame++;
+				if (g_PlayerCalledForNightmare[client])
+				{
+					clientCallingForNightmare++;
+				}
 			}
 		}
-		bool bPlayersCalledForNightmare = (iClientInGame == iClientCallingForNightmare);
+		bool playersCalledForNightmare = (clientInGame == clientCallingForNightmare);
 		
-		char sInfo[64], sDisplay[256], sColor[32], sNightmareDisplay[256];
-		GetMenuItem(menu, param1, sInfo, sizeof(sInfo), _, sDisplay, sizeof(sDisplay));
+		char info[64], display[256], color[32], nightmareDisplay[256];
+		GetMenuItem(menu, param1, info, sizeof(info), _, display, sizeof(display));
 		
 		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_WALLHAX) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS)))
 		{
-			g_cvDifficulty.SetInt(Difficulty_Insane);
+			g_DifficultyConVar.SetInt(Difficulty_Insane);
 		}
-		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || bPlayersCalledForNightmare))
+		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && (GetRandomInt(1, 200) <= 2 || playersCalledForNightmare))
 		{
 			if (GetRandomInt(1, 20) <= 1)
 			{
-				g_cvDifficulty.SetInt(Difficulty_Apollyon);
+				g_DifficultyConVar.SetInt(Difficulty_Apollyon);
 			}
 			else
 			{
-				g_cvDifficulty.SetInt(Difficulty_Nightmare);
+				g_DifficultyConVar.SetInt(Difficulty_Nightmare);
 			}
 		}
 		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM)))
 		{
-			g_cvDifficulty.SetInt(Difficulty_Hard);
+			g_DifficultyConVar.SetInt(Difficulty_Hard);
 		}
 		else
 		{
-			g_cvDifficulty.SetString(sInfo);
+			g_DifficultyConVar.SetString(info);
 		}
 		
-		int iDifficulty = g_cvDifficulty.IntValue;
-		switch (iDifficulty)
+		int difficulty = g_DifficultyConVar.IntValue;
+		switch (difficulty)
 		{
 			case Difficulty_Easy:
 			{
-				FormatEx(sDisplay, sizeof(sDisplay), "%t", "SF2 Easy Difficulty");
-				strcopy(sColor, sizeof(sColor), "{green}");
+				FormatEx(display, sizeof(display), "%t", "SF2 Easy Difficulty");
+				strcopy(color, sizeof(color), "{green}");
 			}
 			case Difficulty_Hard:
 			{
-				FormatEx(sDisplay, sizeof(sDisplay), "%t", "SF2 Hard Difficulty");
-				strcopy(sColor, sizeof(sColor), "{orange}");
+				FormatEx(display, sizeof(display), "%t", "SF2 Hard Difficulty");
+				strcopy(color, sizeof(color), "{orange}");
 			}
 			case Difficulty_Insane:
 			{
-				FormatEx(sDisplay, sizeof(sDisplay), "%t", "SF2 Insane Difficulty");
-				strcopy(sColor, sizeof(sColor), "{red}");
+				FormatEx(display, sizeof(display), "%t", "SF2 Insane Difficulty");
+				strcopy(color, sizeof(color), "{red}");
 			}
 			case Difficulty_Nightmare:
 			{
-				FormatEx(sDisplay, sizeof(sDisplay), "%t!", "SF2 Nightmare Difficulty");
-				FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
-				strcopy(sColor, sizeof(sColor), "{valve}");
-				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-					EmitSoundToAll(g_strSoundNightmareMode[i]);
-				SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
+				FormatEx(display, sizeof(display), "%t!", "SF2 Nightmare Difficulty");
+				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
+				strcopy(color, sizeof(color), "{valve}");
+				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+				{
+					EmitSoundToAll(g_SoundNightmareMode[i]);
+				}
+				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 			}
 			case Difficulty_Apollyon:
 			{
-				FormatEx(sDisplay, sizeof(sDisplay), "%t!", "SF2 Apollyon Difficulty");
-				FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
-				strcopy(sColor, sizeof(sColor), "{darkgray}");
-				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-					EmitSoundToAll(g_strSoundNightmareMode[i]);
-				SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
-				int iRandomQuote = GetRandomInt(1, 8);
-				switch (iRandomQuote)
+				FormatEx(display, sizeof(display), "%t!", "SF2 Apollyon Difficulty");
+				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
+				strcopy(color, sizeof(color), "{darkgray}");
+				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+				{
+					EmitSoundToAll(g_SoundNightmareMode[i]);
+				}
+				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
+				int randomQuote = GetRandomInt(1, 8);
+				switch (randomQuote)
 				{
 					case 1:
 					{
@@ -492,12 +529,12 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 			}
 			default:
 			{
-				FormatEx(sDisplay, sizeof(sDisplay), "%t", "SF2 Normal Difficulty");
-				strcopy(sColor, sizeof(sColor), "{yellow}");
+				FormatEx(display, sizeof(display), "%t", "SF2 Normal Difficulty");
+				strcopy(color, sizeof(color), "{yellow}");
 			}
 		}
 		
-		CPrintToChatAll("%t %s%s", "SF2 Difficulty Vote Finished", sColor, sDisplay);
+		CPrintToChatAll("%t %s%s", "SF2 Difficulty Vote Finished", color, display);
 	}
 }
 
@@ -507,9 +544,9 @@ public int Menu_GhostMode(Handle menu, MenuAction action,int param1,int param2)
 	{
 		if (IsRoundEnding() ||
 			IsRoundInWarmup() ||
-			!g_bPlayerEliminated[param1] ||
+			!g_PlayerEliminated[param1] ||
 			!IsClientParticipating(param1) ||
-			g_bPlayerProxy[param1])
+			g_PlayerProxy[param1])
 		{
 			CPrintToChat(param1, "{red}%T", "SF2 Ghost Mode Not Allowed", param1);
 		}
@@ -519,7 +556,10 @@ public int Menu_GhostMode(Handle menu, MenuAction action,int param1,int param2)
 			{
 				case 0:
 				{
-					if (IsClientInGhostMode(param1)) CPrintToChat(param1, "{red}%T", "SF2 Ghost Mode Enabled Already", param1);
+					if (IsClientInGhostMode(param1))
+					{
+						CPrintToChat(param1, "{red}%T", "SF2 Ghost Mode Enabled Already", param1);
+					}
 					else
 					{
 						TF2_RespawnPlayer(param1);
@@ -531,7 +571,10 @@ public int Menu_GhostMode(Handle menu, MenuAction action,int param1,int param2)
 				}
 				case 1:
 				{
-					if (!IsClientInGhostMode(param1)) CPrintToChat(param1, "{red}%T", "SF2 Ghost Mode Disabled Already", param1);
+					if (!IsClientInGhostMode(param1))
+					{
+						CPrintToChat(param1, "{red}%T", "SF2 Ghost Mode Disabled Already", param1);
+					}
 					else
 					{
 						ClientSetGhostModeState(param1, false);
@@ -551,19 +594,37 @@ public int Menu_Help(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuHelpObjective, param1, 30);
-			case 1: DisplayMenu(g_hMenuHelpCommands, param1, 30);
-			case 2: DisplayMenu(g_hMenuHelpClassInfo, param1, 30);
-			case 3: DisplayMenu(g_hMenuHelpGhostMode, param1, 30);
-			case 4: DisplayMenu(g_hMenuHelpSprinting, param1, 30);
-			case 5: DisplayMenu(g_hMenuHelpControls, param1, 30);
+			case 0:
+			{
+				DisplayMenu(g_MenuHelpObjective, param1, 30);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuHelpCommands, param1, 30);
+			}
+			case 2:
+			{
+				DisplayMenu(g_MenuHelpClasinfo, param1, 30);
+			}
+			case 3:
+			{
+				DisplayMenu(g_MenuHelpGhostMode, param1, 30);
+			}
+			case 4:
+			{
+				DisplayMenu(g_MenuHelpSprinting, param1, 30);
+			}
+			case 5:
+			{
+				DisplayMenu(g_MenuHelpControls, param1, 30);
+			}
 		}
 	}
 	else if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_hMenuMain, param1, 30);
+			DisplayMenu(g_MenuMain, param1, 30);
 		}
 	}
 }
@@ -574,8 +635,14 @@ public int Menu_HelpObjective(Handle menu, MenuAction action,int param1,int para
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuHelpObjective2, param1, 30);
-			case 1: DisplayMenu(g_hMenuHelp, param1, 30);
+			case 0:
+			{
+				DisplayMenu(g_MenuHelpObjective2, param1, 30);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuHelp, param1, 30);
+			}
 		}
 	}
 }
@@ -586,7 +653,10 @@ public int Menu_HelpObjective2(Handle menu, MenuAction action,int param1,int par
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuHelpObjective, param1, 30);
+			case 0:
+			{
+				DisplayMenu(g_MenuHelpObjective, param1, 30);
+			}
 		}
 	}
 }
@@ -597,7 +667,10 @@ public int Menu_BackButtonOnly(Handle menu, MenuAction action,int param1,int par
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuHelp, param1, 30);
+			case 0:
+			{
+				DisplayMenu(g_MenuHelp, param1, 30);
+			}
 		}
 	}
 }
@@ -608,8 +681,14 @@ public int Menu_Credits(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits1, param1, MENU_TIME_FOREVER);
-			case 1: DisplayMenu(g_hMenuMain, param1, 30);
+			case 0:
+			{
+				DisplayMenu(g_MenuCredits1, param1, MENU_TIME_FOREVER);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuMain, param1, 30);
+			}
 		}
 	}
 }
@@ -620,39 +699,45 @@ public int Menu_Credits1(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits2, param1, MENU_TIME_FOREVER);
-			case 1: DisplayMenu(g_hMenuCredits, param1, MENU_TIME_FOREVER);
+			case 0:
+			{
+				DisplayMenu(g_MenuCredits2, param1, MENU_TIME_FOREVER);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuCredits, param1, MENU_TIME_FOREVER);
+			}
 		}
 	}
 }
 
-public int Menu_ClassInfo(Handle menu, MenuAction action,int param1,int param2)
+public int Menu_Clasinfo(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_hMenuHelp, param1, 30);
+			DisplayMenu(g_MenuHelp, param1, 30);
 		}
 	}
 	else if (action == MenuAction_Select)
 	{
-		char sInfo[64];
-		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
+		char info[64];
+		GetMenuItem(menu, param2, info, sizeof(info));
 		
-		Handle hMenu = CreateMenu(Menu_ClassInfoBackOnly);
+		Handle menuHandle = CreateMenu(Menu_ClasinfoBackOnly);
 		
-		char sTitle[64], sDescription[64];
-		FormatEx(sTitle, sizeof(sTitle), "SF2 Help %s Class Info Menu Title", sInfo);
-		FormatEx(sDescription, sizeof(sDescription), "SF2 Help %s Class Info Description", sInfo);
+		char title[64], description[64];
+		FormatEx(title, sizeof(title), "SF2 Help %s Class Info Menu Title", info);
+		FormatEx(description, sizeof(description), "SF2 Help %s Class Info Description", info);
 		
-		SetMenuTitle(hMenu, "%t%t\n \n%t\n \n", "SF2 Prefix", sTitle, sDescription);
-		AddMenuItem(hMenu, "0", "Back");
-		DisplayMenu(hMenu, param1, 30);
+		SetMenuTitle(menuHandle, "%t%t\n \n%t\n \n", "SF2 Prefix", title, description);
+		AddMenuItem(menuHandle, "0", "Back");
+		DisplayMenu(menuHandle, param1, 30);
 	}
 }
 
-public int Menu_ClassInfoBackOnly(Handle menu, MenuAction action,int param1,int param2)
+public int Menu_ClasinfoBackOnly(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -660,7 +745,7 @@ public int Menu_ClassInfoBackOnly(Handle menu, MenuAction action,int param1,int 
 	}
 	else if (action == MenuAction_Select)
 	{
-		DisplayMenu(g_hMenuHelpClassInfo, param1, 30);
+		DisplayMenu(g_MenuHelpClasinfo, param1, 30);
 	}
 }
 
@@ -670,127 +755,133 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuSettingsPvP, param1, 30);
+			case 0:
+			{
+				DisplayMenu(g_MenuSettingsPvP, param1, 30);
+			}
 			case 1:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Hints Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Hints Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
-				DrawPanelItem(hPanel, sBuffer);
-				FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
-				DrawPanelItem(hPanel, sBuffer);
+				FormatEx(buffer, sizeof(buffer), "%T", "Yes", param1);
+				DrawPanelItem(panel, buffer);
+				FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
+				DrawPanelItem(panel, buffer);
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsHints, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsHints, 30);
+				delete panel;
 			}
 			case 2:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Mute Mode Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Mute Mode Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				DrawPanelItem(hPanel, "Normal");
-				DrawPanelItem(hPanel, "Mute opposing team");
-				DrawPanelItem(hPanel, "Mute opposing team except when I'm a proxy");
+				DrawPanelItem(panel, "Normal");
+				DrawPanelItem(panel, "Mute opposing team");
+				DrawPanelItem(panel, "Mute opposing team except when I'm a proxy");
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsMuteMode, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsMuteMode, 30);
+				delete panel;
 			}
 			case 3:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Film Grain Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Film Grain Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
-				DrawPanelItem(hPanel, sBuffer);
-				FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
-				DrawPanelItem(hPanel, sBuffer);
+				FormatEx(buffer, sizeof(buffer), "%T", "Yes", param1);
+				DrawPanelItem(panel, buffer);
+				FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
+				DrawPanelItem(panel, buffer);
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsFilmGrain, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsFilmGrain, 30);
+				delete panel;
 			}
 			case 4:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Proxy Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Proxy Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Yes", param1);
-				DrawPanelItem(hPanel, sBuffer);
-				FormatEx(sBuffer, sizeof(sBuffer), "%T", "No", param1);
-				DrawPanelItem(hPanel, sBuffer);
+				FormatEx(buffer, sizeof(buffer), "%T", "Yes", param1);
+				DrawPanelItem(panel, buffer);
+				FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
+				DrawPanelItem(panel, buffer);
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsProxy, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsProxy, 30);
+				delete panel;
 			}
-			case 5: DisplayMenu(g_hMenuSettingsFlashlightTemp1, param1, 30);
+			case 5:
+			{
+				DisplayMenu(g_MenuSettingsFlashlightTemp1, param1, 30);
+			}
 			case 6:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Ghost Mode Teleport Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Ghost Mode Teleport Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				DrawPanelItem(hPanel, "Teleport to only players");
-				DrawPanelItem(hPanel, "Teleport to only bosses");
+				DrawPanelItem(panel, "Teleport to only players");
+				DrawPanelItem(panel, "Teleport to only bosses");
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsGhostModeTeleport, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsGhostModeTeleport, 30);
+				delete panel;
 			}
 			case 7:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Ghost Mode Toggle State Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Ghost Mode Toggle State Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				DrawPanelItem(hPanel, "Default state");
-				DrawPanelItem(hPanel, "Enable ghost mode upon grace period ends");
-				DrawPanelItem(hPanel, "Enable ghost mode upon death on RED");
+				DrawPanelItem(panel, "Default state");
+				DrawPanelItem(panel, "Enable ghost mode upon grace period ends");
+				DrawPanelItem(panel, "Enable ghost mode upon death on RED");
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsGhostModeToggleState, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsGhostModeToggleState, 30);
+				delete panel;
 			}
 			case 8:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Proxy Menu Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Proxy Menu Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				DrawPanelItem(hPanel, "Enable Ask Message");
-				DrawPanelItem(hPanel, "Disable Ask Message");
+				DrawPanelItem(panel, "Enable Ask Message");
+				DrawPanelItem(panel, "Disable Ask Message");
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsProxyAskMenu, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsProxyAskMenu, 30);
+				delete panel;
 			}
 			case 9:
 			{
-				char sBuffer[512];
-				FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Settings Hud Version Title", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Hud Version Title", param1);
 				
-				Handle hPanel = CreatePanel();
-				SetPanelTitle(hPanel, sBuffer);
+				Handle panel = CreatePanel();
+				SetPanelTitle(panel, buffer);
 				
-				DrawPanelItem(hPanel, "Use the new HUD");
-				DrawPanelItem(hPanel, "Use the legacy HUD");
+				DrawPanelItem(panel, "Use the new HUD");
+				DrawPanelItem(panel, "Use the legacy HUD");
 				
-				SendPanelToClient(hPanel, param1, Panel_SettingsHudVersion, 30);
-				delete hPanel;
+				SendPanelToClient(panel, param1, Panel_SettingsHudVersion, 30);
+				delete panel;
 			}
 		}
 	}
@@ -798,7 +889,7 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_hMenuMain, param1, 30);
+			DisplayMenu(g_MenuMain, param1, 30);
 		}
 	}
 }
@@ -811,52 +902,52 @@ public int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action,int para
 		{
 			case 0:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 1;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 1;
 				ClientSaveCookies(param1);
 			}
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 2;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 2;
 				ClientSaveCookies(param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 3;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 3;
 				ClientSaveCookies(param1);
 			}
 			case 3:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 4;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 4;
 				ClientSaveCookies(param1);
 			}
 			case 4:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 5;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 5;
 				ClientSaveCookies(param1);
 			}
 			case 5:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 6;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 6;
 				ClientSaveCookies(param1);
 			}
 			case 6:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 7;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 7;
 				ClientSaveCookies(param1);
 			}
 			case 7:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 8;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 8;
 				ClientSaveCookies(param1);
 			}
 			case 8:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 9;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 9;
 				ClientSaveCookies(param1);
 			}
 			case 9:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 10;
+				g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature = 10;
 				ClientSaveCookies(param1);
 			}
 		}
@@ -865,7 +956,7 @@ public int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action,int para
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_hMenuMain, param1, 30);
+			DisplayMenu(g_MenuMain, param1, 30);
 		}
 	}
 }
@@ -878,19 +969,19 @@ public int Panel_SettingsFilmGrain(Handle menu, MenuAction action,int param1,int
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FilmGrain = true;
+				g_PlayerPreferences[param1].PlayerPreference_FilmGrain = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Film Grain", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_FilmGrain = false;
+				g_PlayerPreferences[param1].PlayerPreference_FilmGrain = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Film Grain", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -902,19 +993,19 @@ public int Panel_SettingsHints(Handle menu, MenuAction action,int param1,int par
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_ShowHints = true;
+				g_PlayerPreferences[param1].PlayerPreference_ShowHints = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Hints", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_ShowHints = false;
+				g_PlayerPreferences[param1].PlayerPreference_ShowHints = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Hints", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -926,19 +1017,19 @@ public int Panel_SettingsProxy(Handle menu, MenuAction action,int param1,int par
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_EnableProxySelection = true;
+				g_PlayerPreferences[param1].PlayerPreference_EnableProxySelection = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Proxy", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_EnableProxySelection = false;
+				g_PlayerPreferences[param1].PlayerPreference_EnableProxySelection = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Proxy", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -950,19 +1041,19 @@ public int Panel_SettingsProxyAskMenu(Handle menu, MenuAction action,int param1,
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_ProxyShowMessage = true;
+				g_PlayerPreferences[param1].PlayerPreference_ProxyShowMessage = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Enabled Ask Message Proxy", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_ProxyShowMessage = false;
+				g_PlayerPreferences[param1].PlayerPreference_ProxyShowMessage = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Disabled Ask Message Proxy", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -974,28 +1065,28 @@ public int Panel_SettingsMuteMode(Handle menu, MenuAction action,int param1,int 
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 0;
+				g_PlayerPreferences[param1].PlayerPreference_MuteMode = 0;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Normal", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 1;
+				g_PlayerPreferences[param1].PlayerPreference_MuteMode = 1;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Opposing", param1);
 			}
 			case 3:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_MuteMode = 2;
+				g_PlayerPreferences[param1].PlayerPreference_MuteMode = 2;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Mute Mode Proxy", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -1007,21 +1098,21 @@ public int Panel_SettingsGhostModeTeleport(Handle menu, MenuAction action,int pa
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 0;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 0;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Teleport Ghost Players", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 1;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 1;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Teleport Ghost Bosses", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -1033,28 +1124,28 @@ public int Panel_SettingsGhostModeToggleState(Handle menu, MenuAction action,int
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_GhostModeToggleState = 0;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeToggleState = 0;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Toggle Ghost Default", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_GhostModeToggleState = 1;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeToggleState = 1;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Toggle Ghost On Grace", param1);
 			}
 			case 3:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_GhostModeToggleState = 2;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeToggleState = 2;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Toggle Ghost On Death", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -1066,19 +1157,19 @@ public int Panel_SettingsHudVersion(Handle menu, MenuAction action,int param1,in
 		{
 			case 1:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_LegacyHud = false;
+				g_PlayerPreferences[param1].PlayerPreference_LegacyHud = false;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 New Hud Use", param1);
 			}
 			case 2:
 			{
-				g_iPlayerPreferences[param1].PlayerPreference_LegacyHud = true;
+				g_PlayerPreferences[param1].PlayerPreference_LegacyHud = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Legacy Hud Use", param1);
 			}
 		}
 		
-		DisplayMenu(g_hMenuSettings, param1, 30);
+		DisplayMenu(g_MenuSettings, param1, 30);
 	}
 }
 
@@ -1088,8 +1179,14 @@ public int Menu_Credits2(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits3, param1, MENU_TIME_FOREVER);
-			case 1: DisplayMenu(g_hMenuCredits1, param1, MENU_TIME_FOREVER);
+			case 0:
+			{
+				DisplayMenu(g_MenuCredits3, param1, MENU_TIME_FOREVER);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuCredits1, param1, MENU_TIME_FOREVER);
+			}
 		}
 	}
 }
@@ -1099,8 +1196,14 @@ public int Menu_Credits3(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits4, param1, MENU_TIME_FOREVER);
-			case 1: DisplayMenu(g_hMenuCredits2, param1, MENU_TIME_FOREVER);
+			case 0:
+			{
+				DisplayMenu(g_MenuCredits4, param1, MENU_TIME_FOREVER);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuCredits2, param1, MENU_TIME_FOREVER);
+			}
 		}
 	}
 }
@@ -1110,8 +1213,14 @@ public int Menu_Credits4(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits5, param1, MENU_TIME_FOREVER);
-			case 1: DisplayMenu(g_hMenuCredits3, param1, MENU_TIME_FOREVER);
+			case 0:
+			{
+				DisplayMenu(g_MenuCredits5, param1, MENU_TIME_FOREVER);
+			}
+			case 1:
+			{
+				DisplayMenu(g_MenuCredits3, param1, MENU_TIME_FOREVER);
+			}
 		}
 	}
 }
@@ -1121,7 +1230,7 @@ public int Menu_Credits5(Handle menu, MenuAction action,int param1,int param2)
 	{
 		switch (param2)
 		{
-			case 0: DisplayMenu(g_hMenuCredits4, param1, MENU_TIME_FOREVER);
+			case 0: DisplayMenu(g_MenuCredits4, param1, MENU_TIME_FOREVER);
 		}
 	}
 }
@@ -1129,58 +1238,63 @@ public int Menu_Update(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_Select)
 	{
-		if( param2 == 0 )
-			DisplayMenu(g_hMenuMain, param1, 30);
+		if (param2 == 0)
+		{
+			DisplayMenu(g_MenuMain, param1, 30);
+		}
 	}
 	return;
 }
 void DisplayQueuePointsMenu(int client)
 {
 	Handle menu = CreateMenu(Menu_QueuePoints);
-	ArrayList hQueueList = GetQueueList();
+	ArrayList queueList = GetQueueList();
 	
-	char sBuffer[256];
+	char buffer[256];
 	
-	if (hQueueList.Length)
+	if (queueList.Length)
 	{
-		FormatEx(sBuffer, sizeof(sBuffer), "%T\n \n", "SF2 Reset Queue Points Option", client, g_iPlayerQueuePoints[client]);
-		AddMenuItem(menu, "ponyponypony", sBuffer);
+		FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Reset Queue Points Option", client, g_PlayerQueuePoints[client]);
+		AddMenuItem(menu, "ponyponypony", buffer);
 		
-		int iIndex;
-		char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-		char sInfo[256];
+		int index;
+		char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
+		char info[256];
 		
-		for (int i = 0, iSize = hQueueList.Length; i < iSize; i++)
+		for (int i = 0, iSize = queueList.Length; i < iSize; i++)
 		{
-			if (!hQueueList.Get(i, 2))
+			if (!queueList.Get(i, 2))
 			{
-				iIndex = hQueueList.Get(i);
+				index = queueList.Get(i);
 				
-				FormatEx(sBuffer, sizeof(sBuffer), "%N - %d", iIndex, g_iPlayerQueuePoints[iIndex]);
-				FormatEx(sInfo, sizeof(sInfo), "player_%d", GetClientUserId(iIndex));
-				AddMenuItem(menu, sInfo, sBuffer, g_bPlayerPlaying[iIndex] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+				FormatEx(buffer, sizeof(buffer), "%N - %d", index, g_PlayerQueuePoints[index]);
+				FormatEx(info, sizeof(info), "player_%d", GetClientUserId(index));
+				AddMenuItem(menu, info, buffer, g_PlayerPlaying[index] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 			}
 			else
 			{
-				iIndex = hQueueList.Get(i);
-				if (GetPlayerGroupMemberCount(iIndex) > 1)
+				index = queueList.Get(i);
+				if (GetPlayerGroupMemberCount(index) > 1)
 				{
-					GetPlayerGroupName(iIndex, sGroupName, sizeof(sGroupName));
+					GetPlayerGroupName(index, groupName, sizeof(groupName));
 					
-					FormatEx(sBuffer, sizeof(sBuffer), "[GROUP] %s - %d", sGroupName, GetPlayerGroupQueuePoints(iIndex));
-					FormatEx(sInfo, sizeof(sInfo), "group_%d", iIndex);
-					AddMenuItem(menu, sInfo, sBuffer, IsPlayerGroupPlaying(iIndex) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+					FormatEx(buffer, sizeof(buffer), "[GROUP] %s - %d", groupName, GetPlayerGroupQueuePoints(index));
+					FormatEx(info, sizeof(info), "group_%d", index);
+					AddMenuItem(menu, info, buffer, IsPlayerGroupPlaying(index) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 				}
 				else
 				{
-					for (int iClient = 1; iClient <= MaxClients; iClient++)
+					for (int i2 = 1; i2 <= MaxClients; i2++)
 					{
-						if (!IsValidClient(iClient)) continue;
-						if (ClientGetPlayerGroup(iClient) == iIndex)
+						if (!IsValidClient(i2))
 						{
-							FormatEx(sBuffer, sizeof(sBuffer), "%N - %d", iClient, g_iPlayerQueuePoints[iClient]);
-							FormatEx(sInfo, sizeof(sInfo), "player_%d", GetClientUserId(iClient));
-							AddMenuItem(menu, "player", sBuffer, g_bPlayerPlaying[iClient] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+							continue;
+						}
+						if (ClientGetPlayerGroup(i2) == index)
+						{
+							FormatEx(buffer, sizeof(buffer), "%N - %d", i2, g_PlayerQueuePoints[i2]);
+							FormatEx(info, sizeof(info), "player_%d", GetClientUserId(i2));
+							AddMenuItem(menu, "player", buffer, g_PlayerPlaying[i2] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 							break;
 						}
 					}
@@ -1189,16 +1303,16 @@ void DisplayQueuePointsMenu(int client)
 		}
 	}
 	
-	delete hQueueList;
+	delete queueList;
 	
 	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Queue Menu Title", client);
 	SetMenuExitBackButton(menu, true);
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
+void DisplayViewGroupMembersQueueMenu(int client,int groupIndex)
 {
-	if (!IsPlayerGroupActive(iGroupIndex))
+	if (!IsPlayerGroupActive(groupIndex))
 	{
 		// The group isn't valid anymore. Take him back to the main menu.
 		DisplayQueuePointsMenu(client);
@@ -1206,44 +1320,53 @@ void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
 		return;
 	}
 	
-	ArrayList hPlayers = new ArrayList();
+	ArrayList playersArray = new ArrayList();
 	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hPlayers in DisplayViewGroupMembersQueueMenu.", hPlayers);
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersArray in DisplayViewGroupMembersQueueMenu.", playersArray);
 	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i)) continue;
-		
-		int iTempGroup = ClientGetPlayerGroup(i);
-		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != iGroupIndex) continue;
-		
-		hPlayers.Push(i);
-	}
-	
-	int iPlayerCount = hPlayers.Length;
-	if (iPlayerCount)
-	{
-		char sGroupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
-		GetPlayerGroupName(iGroupIndex, sGroupName, sizeof(sGroupName));
-		
-		Handle hMenu = CreateMenu(Menu_ViewGroupMembersQueue);
-		SetMenuTitle(hMenu, "%t%T (%s)\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, sGroupName);
-		
-		char sUserId[32];
-		char sName[MAX_NAME_LENGTH * 2];
-		
-		for (int i = 0; i < iPlayerCount; i++)
+		if (!IsValidClient(i))
 		{
-			int iClient = hPlayers.Get(i);
-			FormatEx(sUserId, sizeof(sUserId), "%d", GetClientUserId(iClient));
-			FormatEx(sName, sizeof(sName), "%N", iClient);
-			if (GetPlayerGroupLeader(iGroupIndex) == iClient) StrCat(sName, sizeof(sName), " (LEADER)");
-			
-			AddMenuItem(hMenu, sUserId, sName);
+			continue;
 		}
 		
-		SetMenuExitBackButton(hMenu, true);
-		DisplayMenu(hMenu, client, MENU_TIME_FOREVER);
+		int iTempGroup = ClientGetPlayerGroup(i);
+		if (!IsPlayerGroupActive(iTempGroup) || iTempGroup != groupIndex)
+		{
+			continue;
+		}
+		
+		playersArray.Push(i);
+	}
+	
+	int playerCount = playersArray.Length;
+	if (playerCount)
+	{
+		char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
+		GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
+		
+		Handle menuHandle = CreateMenu(Menu_ViewGroupMembersQueue);
+		SetMenuTitle(menuHandle, "%t%T (%s)\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, groupName);
+		
+		char userId[32];
+		char name[MAX_NAME_LENGTH * 2];
+		
+		for (int i = 0; i < playerCount; i++)
+		{
+			int clientArray = playersArray.Get(i);
+			FormatEx(userId, sizeof(userId), "%d", GetClientUserId(clientArray));
+			FormatEx(name, sizeof(name), "%N", clientArray);
+			if (GetPlayerGroupLeader(groupIndex) == clientArray)
+			{
+				StrCat(name, sizeof(name), " (LEADER)");
+			}
+			
+			AddMenuItem(menuHandle, userId, name);
+		}
+		
+		SetMenuExitBackButton(menuHandle, true);
+		DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 	}
 	else
 	{
@@ -1251,9 +1374,9 @@ void DisplayViewGroupMembersQueueMenu(int client,int iGroupIndex)
 		DisplayQueuePointsMenu(client);
 	}
 	
-	delete hPlayers;
+	delete playersArray;
 	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hPlayers in DisplayViewGroupMembersQueueMenu.", hPlayers);
+	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for playersArray in DisplayViewGroupMembersQueueMenu.", playersArray);
 	#endif
 }
 
@@ -1261,11 +1384,20 @@ public int Menu_ViewGroupMembersQueue(Handle menu, MenuAction action,int param1,
 {
 	switch (action)
 	{
-		case MenuAction_End: delete menu;
-		case MenuAction_Select: DisplayQueuePointsMenu(param1);
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+		case MenuAction_Select:
+		{
+			DisplayQueuePointsMenu(param1);
+		}
 		case MenuAction_Cancel:
 		{
-			if (param2 == MenuCancel_ExitBack) DisplayQueuePointsMenu(param1);
+			if (param2 == MenuCancel_ExitBack)
+			{
+				DisplayQueuePointsMenu(param1);
+			}
 		}
 	}
 }
@@ -1289,17 +1421,20 @@ public int Menu_QueuePoints(Handle menu, MenuAction action,int param1,int param2
 	{
 		case MenuAction_Select:
 		{
-			char sInfo[64];
-			GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
+			char info[64];
+			GetMenuItem(menu, param2, info, sizeof(info));
 			
-			if (strcmp(sInfo, "ponyponypony", false) == 0) DisplayResetQueuePointsMenu(param1);
-			else if (!StrContains(sInfo, "player_"))
+			if (strcmp(info, "ponyponypony", false) == 0)
+			{
+				DisplayResetQueuePointsMenu(param1);
+			}
+			else if (!StrContains(info, "player_"))
 			{
 			}
-			else if (!StrContains(sInfo, "group_"))
+			else if (!StrContains(info, "group_"))
 			{
 				char sIndex[64];
-				strcopy(sIndex, sizeof(sIndex), sInfo);
+				strcopy(sIndex, sizeof(sIndex), info);
 				ReplaceString(sIndex, sizeof(sIndex), "group_", "");
 				DisplayViewGroupMembersQueueMenu(param1, StringToInt(sIndex));
 			}
@@ -1308,10 +1443,13 @@ public int Menu_QueuePoints(Handle menu, MenuAction action,int param1,int param2
 		{
 			if (param2 == MenuCancel_ExitBack)
 			{
-				DisplayMenu(g_hMenuMain, param1, 30);
+				DisplayMenu(g_MenuMain, param1, 30);
 			}
 		}
-		case MenuAction_End: delete menu;
+		case MenuAction_End:
+		{
+			delete menu;
+		}
 	}
 }
 
@@ -1346,7 +1484,10 @@ public int Menu_ResetQueuePoints(Handle menu, MenuAction action,int param1,int p
 			DisplayQueuePointsMenu(param1);
 		}
 		
-		case MenuAction_End: delete menu;
+		case MenuAction_End:
+		{
+			delete menu;
+		}
 	}
 }
 
@@ -1354,22 +1495,25 @@ void DisplayBossList(int client)
 {
 	Handle menu = CreateMenu(Menu_BossList);
 	
-	if (g_hConfig != null)
+	if (g_Config != null)
 	{
-		g_hConfig.Rewind();
-		if (g_hConfig.GotoFirstSubKey())
+		g_Config.Rewind();
+		if (g_Config.GotoFirstSubKey())
 		{
-			char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-			char sDisplayName[SF2_MAX_NAME_LENGTH];
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char displayName[SF2_MAX_NAME_LENGTH];
 			
 			do
 			{
-				g_hConfig.GetSectionName(sProfile, sizeof(sProfile));
-				NPCGetBossName(_, sDisplayName, sizeof(sDisplayName), sProfile);
-				if (sDisplayName[0] == '\0') strcopy(sDisplayName, sizeof(sDisplayName), sProfile);
-				AddMenuItem(menu, sProfile, sDisplayName);
+				g_Config.GetSectionName(profile, sizeof(profile));
+				NPCGetBossName(_, displayName, sizeof(displayName), profile);
+				if (displayName[0] == '\0')
+				{
+					strcopy(displayName, sizeof(displayName), profile);
+				}
+				AddMenuItem(menu, profile, displayName);
 			}
-			while (g_hConfig.GotoNextKey());
+			while (g_Config.GotoNextKey());
 		}
 	}
 	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Boss List Menu Title", client);
@@ -1385,9 +1529,12 @@ public int Menu_BossList(Handle menu, MenuAction action,int param1,int param2)
 		{
 			if (param2 == MenuCancel_ExitBack)
 			{
-				DisplayMenu(g_hMenuMain, param1, 30);
+				DisplayMenu(g_MenuMain, param1, 30);
 			}
 		}
-		case MenuAction_End: delete menu;
+		case MenuAction_End:
+		{
+			delete menu;
+		}
 	}
 }

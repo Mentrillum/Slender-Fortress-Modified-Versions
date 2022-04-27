@@ -1,6 +1,6 @@
 // sf2_trigger_pvp
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
@@ -12,9 +12,11 @@ methodmap SF2TriggerPvPEntity < SF2TriggerMapEntity
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -25,34 +27,34 @@ methodmap SF2TriggerPvPEntity < SF2TriggerMapEntity
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("sf2_trigger_pvp", OnCreate);
-	g_entityFactory.DeriveFromClass("trigger_multiple");
+	g_EntityFactory = new CEntityFactory("sf2_trigger_pvp", OnCreate);
+	g_EntityFactory.DeriveFromClass("trigger_multiple");
 
-	//g_entityFactory.BeginDataMapDesc()
+	//g_EntityFactory.BeginDataMapDesc()
 	//.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
-static void OnCreate(int iEntity)
+static void OnCreate(int entity)
 {
-	SDKHook(iEntity, SDKHook_SpawnPost, OnSpawn);
-	SDKHook(iEntity, SDKHook_StartTouchPost, OnStartTouchPost);
-	SDKHook(iEntity, SDKHook_EndTouchPost, OnEndTouchPost);
+	SDKHook(entity, SDKHook_SpawnPost, OnSpawn);
+	SDKHook(entity, SDKHook_StartTouchPost, OnStartTouchPost);
+	SDKHook(entity, SDKHook_EndTouchPost, OnEndTouchPost);
 }
 
-static void OnSpawn(int iEntity)
+static void OnSpawn(int entity)
 {
-	int iSpawnFlags = GetEntProp(iEntity, Prop_Data, "m_spawnflags");
-	SetEntProp(iEntity, Prop_Data, "m_spawnflags", iSpawnFlags | TRIGGER_CLIENTS);
+	int spawnFlags = GetEntProp(entity, Prop_Data, "m_spawnflags");
+	SetEntProp(entity, Prop_Data, "m_spawnflags", spawnFlags | TRIGGER_CLIENTS);
 }
 
-static void OnStartTouchPost(int iEntity, int iToucher)
+static void OnStartTouchPost(int entity, int toucher)
 {
-	PvP_OnTriggerStartTouch(iEntity, iToucher);
+	PvP_OnTriggerStartTouch(entity, toucher);
 }
 
-static void OnEndTouchPost(int iEntity, int iToucher)
+static void OnEndTouchPost(int entity, int toucher)
 {
-	PvP_OnTriggerEndTouch(iEntity, iToucher);
+	PvP_OnTriggerEndTouch(entity, toucher);
 }
