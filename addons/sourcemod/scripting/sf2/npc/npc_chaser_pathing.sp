@@ -341,7 +341,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 		{
 			bot.Update();
 		}
-		if (loco.IsOnGround() && !loco.IsClimbingOrJumping() && (state == STATE_ALERT || state == STATE_CHASE || state == STATE_WANDER || state == STATE_ATTACK) && 
+		if (!SF_IsBoxingMap() && loco.IsOnGround() && !loco.IsClimbingOrJumping() && (state == STATE_ALERT || state == STATE_CHASE || state == STATE_WANDER || state == STATE_ATTACK) && 
 		!g_NpcUsesChaseInitialAnimation[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && 
 		!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 		{
@@ -1021,71 +1021,6 @@ public void SlenderSetNextThink(int bossEnt)
 	}
 	
 	return;
-}
-
-public float CBaseNPC_PathCost(INextBot bot, CNavArea area, CNavArea fromArea, CNavLadder ladder, int iElevator, float length)
-{
-	if (fromArea == NULL_AREA || area == NULL_AREA)
-	{
-		return 0.0;
-	}
-	else
-	{
-		ILocomotion loco = bot.GetLocomotionInterface();
-		float dist;
-		float areaCenter[3], fromAreaCenter[3];
-		area.GetCenter(areaCenter);
-		fromArea.GetCenter(fromAreaCenter);
-		
-		if (ladder != NULL_LADDER_AREA)
-		{
-			dist = ladder.length;
-		}
-		else if (length > 0.0)
-		{
-			dist = length;
-		}
-		else
-		{
-			dist = GetVectorSquareMagnitude(areaCenter, fromAreaCenter);
-		}
-		
-		float cost = (dist + SquareFloat(fromArea.GetCostSoFar()));
-
-		int attributes = area.GetAttributes();
-		if (attributes & NAV_MESH_CROUCH)
-		{
-			cost += SquareFloat(20.0);
-		}
-		if (attributes & NAV_MESH_JUMP)
-		{
-			cost += SquareFloat(5.0 * dist);
-		}
-		
-		if ((areaCenter[2] - fromAreaCenter[2]) > loco.GetStepHeight())
-		{
-			cost += SquareFloat(loco.GetStepHeight());
-		}
-
-		float multiplier = 1.0;
-
-		int seed = RoundToFloor(GetGameTime() * 0.1) + 1;
-
-		seed *= area.GetID();
-		seed *= bot.GetEntity();
-		multiplier += (Cosine(float(seed)) + 1.0) * 50.0;
-
-		cost += dist * multiplier;
-		
-		float returnFloat = cost;
-
-		if (returnFloat > 2.0)
-		{
-			returnFloat = 2.0;
-		}
-
-		return returnFloat;
-	}
 }
 
 public void CBaseNPC_Jump(NextBotGroundLocomotion nextbotLocomotion, float startPos[3], float endPos[3])

@@ -160,27 +160,27 @@ stock bool SF_IsSlaughterRunMap()
 /*
 int SDK_StartTouch(int entity, int iOther)
 {
-	if (g_hSDKStartTouch != null)
+	if (g_SDKStartTouch != null)
 	{
-		return SDKCall(g_hSDKStartTouch, entity, iOther);
+		return SDKCall(g_SDKStartTouch, entity, iOther);
 	}
 	return -1;
 }
 
 int SDK_EndTouch(int entity, int iOther)
 {
-	if (g_hSDKEndTouch != null)
+	if (g_SDKEndTouch != null)
 	{
-		return SDKCall(g_hSDKEndTouch, entity, iOther);
+		return SDKCall(g_SDKEndTouch, entity, iOther);
 	}
 	return -1;
 }
 */
 bool SDK_PointIsWithin(int func, float pos[3])
 {
-	if (g_hSDKPointIsWithin != null)
+	if (g_SDKPointIsWithin != null)
 	{
-		return view_as<bool>(SDKCall(g_hSDKPointIsWithin, func, pos));
+		return view_as<bool>(SDKCall(g_SDKPointIsWithin, func, pos));
 	}
 
 	return false;
@@ -479,21 +479,21 @@ stock void CBaseNPC_RemoveAllLayers(int entity)
 }
 stock void SDK_GetVectors(int entity, float vecForward[3], float vecRight[3], float vecUp[3])
 {
-	if (g_hSDKGetVectors != null)
+	if (g_SDKGetVectors != null)
 	{
-		SDKCall(g_hSDKGetVectors, entity, vecForward, vecRight, vecUp);
+		SDKCall(g_SDKGetVectors, entity, vecForward, vecRight, vecUp);
 		return;
 	}
 }
 
 stock void SDK_GetSmoothedVelocity(int entity, float vector[3])
 {
-	if (g_hSDKGetSmoothedVelocity == null)
+	if (g_SDKGetSmoothedVelocity == null)
 	{
 		LogError("SDKCall for GetSmoothedVelocity is invalid!");
 		return;
 	}
-	SDKCall(g_hSDKGetSmoothedVelocity, entity, vector);
+	SDKCall(g_SDKGetSmoothedVelocity, entity, vector);
 }
 
 stock void NavCollectFuncNavPrefer()
@@ -567,7 +567,7 @@ stock int TF2_CreateGlow(int entIndex)
 //Credits to Linux_lover for this stock and signature.
 stock void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 {
-	if (g_hSDKPlaySpecificSequence != null)
+	if (g_SDKPlaySpecificSequence != null)
 	{
 #if defined DEBUG
 		static bool once = true;
@@ -577,15 +577,15 @@ stock void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 			once = false;
 		}
 #endif
-		SDKCall(g_hSDKPlaySpecificSequence, client, strSequence);
+		SDKCall(g_SDKPlaySpecificSequence, client, strSequence);
 	}
 }
 
 stock void SDK_EquipWearable(int client, int entity)
 {
-	if (g_hSDKEquipWearable != null)
+	if (g_SDKEquipWearable != null)
 	{
-		SDKCall( g_hSDKEquipWearable, client, entity );
+		SDKCall( g_SDKEquipWearable, client, entity );
 	}
 }
 
@@ -675,9 +675,9 @@ stock void SDK_StopHealing(int healer, int client)
 
 int SDK_SwitchWeapon(int client, int weapon)
 {
-	if (g_hSDKWeaponSwitch != null)
+	if (g_SDKWeaponSwitch != null)
 	{
-		return SDKCall(g_hSDKWeaponSwitch, client, weapon, 0);
+		return SDKCall(g_SDKWeaponSwitch, client, weapon, 0);
 	}
 
 	return -1;
@@ -1845,7 +1845,7 @@ public Action Timer_KillSlender(Handle timer, any data)
 //	==========================================================
 stock bool IsInfiniteFlashlightEnabled()
 {
-	return view_as<bool>(g_bRoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
+	return view_as<bool>(g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
 }
 
 int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];

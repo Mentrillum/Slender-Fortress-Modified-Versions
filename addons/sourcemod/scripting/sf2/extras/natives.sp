@@ -176,7 +176,7 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "GetMaxHealth");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-	if ((g_hSDKGetMaxHealth = EndPrepSDKCall()) == null)
+	if ((g_SDKGetMaxHealth = EndPrepSDKCall()) == null)
 	{
 		SetFailState("Failed to retrieve GetMaxHealth offset from SDKHooks gamedata!");
 	}
@@ -184,8 +184,8 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "StartTouch");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-	g_hSDKStartTouch = EndPrepSDKCall();
-	if (g_hSDKStartTouch == null)
+	g_SDKStartTouch = EndPrepSDKCall();
+	if (g_SDKStartTouch == null)
 	{
 		SetFailState("Failed to retrieve StartTouch offset from SDKHooks gamedata!");
 	}
@@ -193,8 +193,8 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "EndTouch");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-	g_hSDKEndTouch = EndPrepSDKCall();
-	if (g_hSDKEndTouch == null)
+	g_SDKEndTouch = EndPrepSDKCall();
+	if (g_SDKEndTouch == null)
 	{
 		SetFailState("Failed to retrieve EndTouch offset from SDKHooks gamedata!");
 	}
@@ -203,8 +203,8 @@ void SDK_Init()
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "Weapon_Switch");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	g_hSDKWeaponSwitch = EndPrepSDKCall();
-	if (g_hSDKWeaponSwitch == null)
+	g_SDKWeaponSwitch = EndPrepSDKCall();
+	if (g_SDKWeaponSwitch == null)
 	{
 		SetFailState("Failed to retrieve Weapon_Switch offset from SDKHooks gamedata!");
 	}
@@ -222,8 +222,8 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFPlayer::EquipWearable");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-	g_hSDKEquipWearable = EndPrepSDKCall();
-	if (g_hSDKEquipWearable == null)//In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
+	g_SDKEquipWearable = EndPrepSDKCall();
+	if (g_SDKEquipWearable == null)//In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
 	{
 		char strFilePath[PLATFORM_MAX_PATH];
 		BuildPath(Path_SM, strFilePath, sizeof(strFilePath), "gamedata/tf2items.randomizer.txt");
@@ -235,20 +235,20 @@ void SDK_Init()
 				StartPrepSDKCall(SDKCall_Player);
 				PrepSDKCall_SetFromConf(hGameConf, SDKConf_Virtual, "CTFPlayer::EquipWearable");
 				PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer );
-				g_hSDKEquipWearable = EndPrepSDKCall();
-				if (g_hSDKEquipWearable == null)
+				g_SDKEquipWearable = EndPrepSDKCall();
+				if (g_SDKEquipWearable == null)
 				{
 					// Old gamedata
 					StartPrepSDKCall(SDKCall_Player);
 					PrepSDKCall_SetFromConf(hGameConf, SDKConf_Virtual, "EquipWearable");
 					PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-					g_hSDKEquipWearable = EndPrepSDKCall();
+					g_SDKEquipWearable = EndPrepSDKCall();
 				}
 			}
 			delete hGameConf;
 		}
 	}
-	if (g_hSDKEquipWearable == null)
+	if (g_SDKEquipWearable == null)
 	{
 		SetFailState("Failed to retrieve CTFPlayer::EquipWearable offset from SF2 gamedata!");
 	}
@@ -256,16 +256,16 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseCombatCharacter::GetLastKnownArea");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
-	g_hSDKGetLastKnownArea = EndPrepSDKCall();
-	if (g_hSDKGetLastKnownArea == null)
+	g_SDKGetLastKnownArea = EndPrepSDKCall();
+	if (g_SDKGetLastKnownArea == null)
 	{
 		PrintToServer("Failed to retrieve CBaseCombatCharacter::GetLastKnownArea offset from SF2 gamedata!");
 	}
 	
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseCombatCharacter::UpdateLastKnownArea");
-	g_hSDKUpdateLastKnownArea = EndPrepSDKCall();
-	if (g_hSDKUpdateLastKnownArea == null)
+	g_SDKUpdateLastKnownArea = EndPrepSDKCall();
+	if (g_SDKUpdateLastKnownArea == null)
 	{
 		PrintToServer("Failed to retrieve CBaseCombatCharacter::UpdateLastKnownArea offset from SF2 gamedata!");
 	}
@@ -273,8 +273,8 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::PlaySpecificSequence");
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
-	g_hSDKPlaySpecificSequence = EndPrepSDKCall();
-	if (g_hSDKPlaySpecificSequence == null)
+	g_SDKPlaySpecificSequence = EndPrepSDKCall();
+	if (g_SDKPlaySpecificSequence == null)
 	{
 		PrintToServer("Failed to retrieve CTFPlayer::PlaySpecificSequence signature from SF2 gamedata!");
 		//Don't have to call SetFailState, since this function is used in a minor part of the code.
@@ -284,8 +284,8 @@ void SDK_Init()
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CBaseTrigger::PointIsWithin");
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Plain);
 	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
-	g_hSDKPointIsWithin = EndPrepSDKCall();
-	if (g_hSDKPointIsWithin == null)
+	g_SDKPointIsWithin = EndPrepSDKCall();
+	if (g_SDKPointIsWithin == null)
 	{
 		PrintToServer("Failed to retrieve CBaseTrigger::PointIsWithin signature from SF2 gamedata!");
 		//Don't have to call SetFailState, since this function is used in a minor part of the code.
@@ -295,13 +295,13 @@ void SDK_Init()
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseTrigger::PassesTriggerFilters");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-	if ((g_hSDKPassesTriggerFilters = EndPrepSDKCall()) == INVALID_HANDLE)
+	if ((g_SDKPassesTriggerFilters = EndPrepSDKCall()) == INVALID_HANDLE)
 		SetFailState("Failed to setup CBaseTrigger::PassesTriggerFilters call from gamedata!");
 	
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseEntity::GetSmoothedVelocity");
 	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_ByValue);
-	if ((g_hSDKGetSmoothedVelocity = EndPrepSDKCall()) == null)
+	if ((g_SDKGetSmoothedVelocity = EndPrepSDKCall()) == null)
 	{
 		SetFailState("Couldn't find CBaseEntity::GetSmoothedVelocity offset from SF2 gamedata!");
 	}
@@ -311,8 +311,8 @@ void SDK_Init()
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
 	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
-	g_hSDKGetVectors = EndPrepSDKCall();
-	if (g_hSDKGetVectors == null)
+	g_SDKGetVectors = EndPrepSDKCall();
+	if (g_SDKGetVectors == null)
 	{
 		PrintToServer("Failed to retrieve CBaseEntity::GetVectors signature from SF2 gamedata!");
 	}
@@ -320,8 +320,8 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CBaseAnimating::ResetSequence");
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_ByValue);
-	g_hSDKResetSequence = EndPrepSDKCall();
-	if (g_hSDKResetSequence == null)
+	g_SDKResetSequence = EndPrepSDKCall();
+	if (g_SDKResetSequence == null)
 	{
 		SetFailState("Failed to retrieve CBaseAnimating::ResetSequence signature from SF2 gamedata!");
 	}
@@ -329,8 +329,8 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseEntity::MyNextBotPointer");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
-	g_hSDKGetNextBot = EndPrepSDKCall();
-	if (g_hSDKGetNextBot == null)
+	g_SDKGetNextBot = EndPrepSDKCall();
+	if (g_SDKGetNextBot == null)
 	{
 		PrintToServer("Failed to retrieve CBaseEntity::MyNextBotPointer offset from SF2 gamedata!");
 	}
@@ -338,59 +338,59 @@ void SDK_Init()
 	StartPrepSDKCall(SDKCall_Raw);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "INextBot::GetLocomotionInterface");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
-	g_hSDKGetLocomotionInterface = EndPrepSDKCall();
-	if (g_hSDKGetLocomotionInterface == null)
+	g_SDKGetLocomotionInterface = EndPrepSDKCall();
+	if (g_SDKGetLocomotionInterface == null)
 	{
 		PrintToServer("Failed to retrieve INextBot::GetLocomotionInterface offset from SF2 gamedata!");
 	}
 	//Hook_ClientWantsLagCompensationOnEntity
 	int iOffset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
-	g_hSDKWantsLagCompensationOnEntity = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity); 
-	if (g_hSDKWantsLagCompensationOnEntity == null)
+	g_DHookWantsLagCompensationOnEntity = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity); 
+	if (g_DHookWantsLagCompensationOnEntity == null)
 	{
 		SetFailState("Failed to create hook CTFPlayer::WantsLagCompensationOnEntity offset from SF2 gamedata!");
 	}
 
-	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
-	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
-	DHookAddParam(g_hSDKWantsLagCompensationOnEntity, HookParamType_Unknown);
+	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
+	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
+	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_Unknown);
 	//Hook_EntityShouldTransmit
 	iOffset = gameData.GetOffset("CBaseEntity::ShouldTransmit");
-	g_hSDKShouldTransmit = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
-	if (g_hSDKShouldTransmit == null)
+	g_DHookShouldTransmit = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	if (g_DHookShouldTransmit == null)
 	{
 		SetFailState("Failed to create hook CBaseEntity::ShouldTransmit offset from SF2 gamedata!");
 	}
-	DHookAddParam(g_hSDKShouldTransmit, HookParamType_ObjectPtr);
+	DHookAddParam(g_DHookShouldTransmit, HookParamType_ObjectPtr);
 
 	iOffset = gameData.GetOffset("CBaseEntity::UpdateTransmitState");
-	g_hSDKUpdateTransmitState = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
-	if (!g_hSDKUpdateTransmitState)
+	g_DHookUpdateTransmitState = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	if (!g_DHookUpdateTransmitState)
 	{
 		SetFailState("Failed to create hook CBaseEntity::UpdateTransmitState offset from SF2 gamedata!");
 	}
 	//Hook_WeaponGetCustomDamageType
 	iOffset = gameData.GetOffset("CTFWeaponBase::GetCustomDamageType");
-	g_hSDKWeaponGetCustomDamageType = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
-	if (g_hSDKWeaponGetCustomDamageType == null)
+	g_DHookWeaponGetCustomDamageType = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	if (g_DHookWeaponGetCustomDamageType == null)
 	{
 		SetFailState("Failed to create hook CTFWeaponBase::GetCustomDamageType offset from SF2 gamedata!");
 	}
 
 	iOffset = gameData.GetOffset("CBaseProjectile::CanCollideWithTeammates");
-	g_hSDKProjectileCanCollideWithTeammates = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
-	if (g_hSDKProjectileCanCollideWithTeammates == null)
+	g_DHookProjectileCanCollideWithTeammates = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	if (g_DHookProjectileCanCollideWithTeammates == null)
 	{
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
 	//ShouldCollideWith
 	iOffset = gameData.GetOffset("ILocomotion::ShouldCollideWith");
-	g_hShouldCollide = new DynamicHook(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address);
-	if (g_hShouldCollide == null)
+	g_DHookShouldCollide = new DynamicHook(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address);
+	if (g_DHookShouldCollide == null)
 	{
 		SetFailState("Failed to create hook for ILocomotion::ShouldCollideWith!");
 	}
-	DHookAddParam(g_hShouldCollide, HookParamType_CBaseEntity);
+	DHookAddParam(g_DHookShouldCollide, HookParamType_CBaseEntity);
 
 	//Initialize tutorial detours & calls
 	//Tutorial_SetupSDK(gameData);
@@ -409,7 +409,7 @@ public int Native_IsRunning(Handle plugin,int numParams)
 
 public int Native_GetRoundState(Handle plugin,int numParams)
 {
-	return view_as<int>(g_iRoundState);
+	return view_as<int>(g_RoundState);
 }
 
 public int Native_IsRoundInGracePeriod(Handle plugin, int numParams)

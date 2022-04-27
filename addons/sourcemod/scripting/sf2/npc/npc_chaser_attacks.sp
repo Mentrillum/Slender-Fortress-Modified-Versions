@@ -484,8 +484,8 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							color2[2] = RoundToNearest(haloColor[2]);
 							color2[3] = GetProfileNum(profile, "shockwave_alpha_2", 255);
 							int modelBeam, modelHalo;
-							modelBeam = PrecacheModel(g_sSlenderShockwaveBeamSprite[bossIndex], true);
-							modelHalo = PrecacheModel(g_sSlenderShockwaveHaloSprite[bossIndex], true);
+							modelBeam = PrecacheModel(g_SlenderShockwaveBeamSprite[bossIndex], true);
+							modelHalo = PrecacheModel(g_SlenderShockwaveHaloSprite[bossIndex], true);
 				
 							TE_SetupBeamRingPoint(myShockPos, 10.0, NPCChaserGetShockwaveRange(bossIndex,difficulty), modelBeam, modelHalo, 0, 30, 0.2, NPCChaserGetShockwaveWidth(bossIndex,1), NPCChaserGetShockwaveAmplitude(bossIndex), color2, 15, 0); //Inner
 							TE_SendToAll();
@@ -530,8 +530,8 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							color2[2] = RoundToNearest(haloColor[2]);
 							color2[3] = GetProfileNum(profile, "shockwave_alpha_2", 255);
 							int modelBeam, modelHalo;
-							modelBeam = PrecacheModel(g_sSlenderShockwaveBeamSprite[bossIndex], true);
-							modelHalo = PrecacheModel(g_sSlenderShockwaveHaloSprite[bossIndex], true);
+							modelBeam = PrecacheModel(g_SlenderShockwaveBeamSprite[bossIndex], true);
+							modelHalo = PrecacheModel(g_SlenderShockwaveHaloSprite[bossIndex], true);
 				
 							TE_SetupBeamRingPoint(myShockPos, 10.0, NPCChaserGetShockwaveRange(bossIndex,difficulty), modelBeam, modelHalo, 0, 30, 0.2, NPCChaserGetShockwaveWidth(bossIndex,1), NPCChaserGetShockwaveAmplitude(bossIndex), color2, 15, 0); //Inner
 							TE_SendToAll();

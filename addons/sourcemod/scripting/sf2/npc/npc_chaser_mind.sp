@@ -683,22 +683,22 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		{
 			if (state != STATE_CHASE && state != STATE_ATTACK && state != STATE_STUN && NPCAreAvailablePlayersAlive())
 			{
-				int iRaidClient;
+				int raidClient;
 				do
 				{
-					iRaidClient = GetRandomInt(1, MaxClients);
+					raidClient = GetRandomInt(1, MaxClients);
 				}
-				while (!IsClientInGame(iRaidClient) || 
-					!IsPlayerAlive(iRaidClient) || 
-					g_PlayerEliminated[iRaidClient] || 
-					IsClientInGhostMode(iRaidClient) || 
-					DidClientEscape(iRaidClient));
+				while (!IsClientInGame(raidClient) || 
+					!IsPlayerAlive(raidClient) || 
+					g_PlayerEliminated[raidClient] || 
+					IsClientInGhostMode(raidClient) || 
+					DidClientEscape(raidClient));
 				
 				for (int i = 1; i <= MaxClients; i++)
 				{
-					if (i == iRaidClient && IsValidClient(iRaidClient) && !g_PlayerEliminated[iRaidClient])
+					if (i == raidClient && IsValidClient(raidClient) && !g_PlayerEliminated[raidClient])
 					{
-						bestNewTarget = iRaidClient;
+						bestNewTarget = raidClient;
 						g_SlenderTarget[bossIndex] = EntIndexToEntRef(bestNewTarget);
 						g_SlenderTimeUntilNoPersistence[bossIndex] = GetGameTime() + NPCChaserGetChaseDuration(bossIndex, difficulty);
 						state = STATE_CHASE;
@@ -1312,10 +1312,6 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				}
 				if (!IsValidEntity(target) || (!building && DidClientEscape(target)) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 				{
-					if (g_BossFailSafeTimer[bossIndex] == null)
-					{
-						g_BossFailSafeTimer[bossIndex] = CreateTimer(0.1, Timer_DeathPosChaseStop, bossIndex, TIMER_FLAG_NO_MAPCHANGE); //Setup a fail safe timer in case we can't finish our path.
-					}
 					// Even if the target isn't valid anymore, see if I still have some ways to go on my current path,
 					// because I shouldn't actually know that the target has died until I see it.
 					if (!g_BossPathFollower[bossIndex].IsValid())
@@ -2273,7 +2269,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				}
 			}
 		}*/
-		if (NPCChaserNormalSoundHookEnabled(bossIndex) && state != STATE_WANDER && oldState != STATE_IDLE)
+		if (NPCChaserNormalSoundHookEnabled(bossIndex) && state != STATE_WANDER && oldState != STATE_IDLE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 		{
 			g_SlenderNextVoiceSound[bossIndex] = 0.0;
 		}

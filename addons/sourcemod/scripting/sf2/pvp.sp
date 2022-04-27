@@ -450,7 +450,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				if (IsValidEntity(ent) && strcmp(class, fixWeaponNotCollidingWithTeammates[i], false) == 0)
 				{
-					DHookEntity(g_hSDKProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
+					DHookEntity(g_DHookProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
 					break;
 				}
 			}
@@ -1006,7 +1006,7 @@ public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 	
 	g_PlayerPvPTimerCount[client]--;
 	
-	//if (!g_bPlayerProxyAvailableInForce[client])
+	//if (!g_PlayerProxyAvailableInForce[client])
 	{
 		SetHudTextParams(-1.0, 0.75, 
 			1.0,
@@ -1135,13 +1135,14 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 	return MRES_Ignored;
 }
 
-public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, Handle hReturn, Handle hParams)
+public MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHookReturn returnHandle, DHookParam params)
 {
 	if (!IsValidEdict(projectile) || !IsValidEntity(projectile))
 	{
 		return MRES_Ignored;
 	}
-	DHookSetReturn(hReturn, true);
+
+	returnHandle.Value = true;
 	return MRES_Supercede;
 }
 

@@ -154,7 +154,6 @@ static float g_NpcTimeUntilChaseAfterInitial[MAX_BOSSES];
 float g_NpcCurrentAnimationSequencePlaybackRate[MAX_BOSSES] = { 1.0, ... };
 static char g_sNPCurrentAnimationSequenceName[MAX_BOSSES][256];
 bool g_NpcAlreadyAttacked[MAX_BOSSES];
-Handle g_BossFailSafeTimer[MAX_BOSSES];
 
 bool g_NpcCopyAlerted[MAX_BOSSES];
 
@@ -563,17 +562,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	{
 		public get() { return NPCChaserHasCriticalRockets(this.Index); }
 	}
-	
-	public int GetTeleporter(int iTeleporterNumber)
-	{
-		return NPCChaserGetTeleporter(this.Index, iTeleporterNumber);
-	}
-	
-	public void SetTeleporter(int iTeleporterNumber, int entity)
-	{
-		NPCChaserSetTeleporter(this.Index, iTeleporterNumber, entity);
-	}
-	
+
 	public float GetWalkSpeed(int difficulty)
 	{
 		return NPCChaserGetWalkSpeed(this.Index, difficulty);
@@ -1929,7 +1918,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
 	g_NpcHasCanUseChaseInitialAnimation[npcIndex] = profile.UseChaseInitialAnimation;
 	g_NpcHasOldAnimationAIState[npcIndex] = profile.HasOldAnimationAI;
 	g_NpcHasCanUseAlertWalkingAnimation[npcIndex] = profile.UseAlertWalkingAnimation;
-	g_bSlenderDifficultyAnimations[npcIndex] = profile.DifficultyAffectsAnimations;
+	g_SlenderDifficultyAnimations[npcIndex] = profile.DifficultyAffectsAnimations;
 
 	g_NpcHasUsesMultiAttackSounds[npcIndex] = profile.MultiAttackSounds;
 	g_NpcHasUsesMultiHitSounds[npcIndex] = profile.MultiHitSounds;
@@ -2229,7 +2218,7 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcStunInitialHealth[npcIndex] = 0.0;
 	g_NpcStunAddHealth[npcIndex] = 0.0;
 	g_NpcChaseInitialOnStun[npcIndex] = false;
-	g_bSlenderDifficultyAnimations[npcIndex] = false;
+	g_SlenderDifficultyAnimations[npcIndex] = false;
 	
 	g_NpcCloakEnabled[npcIndex] = false;
 	g_NpcNextDecloakTime[npcIndex] = -1.0;
@@ -2237,7 +2226,6 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcVelocityCancel[npcIndex] = false;
 	g_NpcStealingLife[npcIndex] = false;
 	g_NpcLifeStealTimer[npcIndex] = null;
-	g_BossFailSafeTimer[npcIndex] = null;
 	g_NpcChaseOnLook[npcIndex] = false;
 	if (g_NpcChaseOnLookTarget[npcIndex] != null)
 	{
@@ -2355,7 +2343,6 @@ static void NPCChaserResetValues(int npcIndex)
 
 void Spawn_Chaser(int bossIndex)
 {
-	g_BossFailSafeTimer[bossIndex] = null;
 	g_LastStuckTime[bossIndex] = 0.0;
 	g_SlenderOldState[bossIndex] = STATE_IDLE;
 	g_NpcCopyAlerted[bossIndex] = false;
@@ -2398,62 +2385,6 @@ stock bool IsTargetValidForSlender(int target, bool bIncludeEliminated = false)
 	}
 	
 	return true;
-}
-
-public Action Timer_DeathPosChaseStop(Handle timer, int bossIndex)
-{
-	if (!g_Enabled)
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		return Plugin_Stop;
-	}
-	
-	if (timer != g_BossFailSafeTimer[bossIndex])
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		return Plugin_Stop;
-	}
-	
-	if (g_NpcInAutoChase[bossIndex])
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		g_NpcInAutoChase[bossIndex] = false;
-		g_NpcAutoChaseSprinterCooldown[bossIndex] = NPCChaserGetAlertDuration(bossIndex, g_DifficultyConVar.IntValue);
-		return Plugin_Stop;
-	}
-
-	if (g_NpcCopyAlerted[bossIndex])
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		g_NpcCopyAlerted[bossIndex] = false;
-		return Plugin_Stop;
-	}
-	
-	if ((g_SlenderIsAutoChasingLoudPlayer[bossIndex] && g_SlenderState[bossIndex] != STATE_CHASE && g_SlenderState[bossIndex] != STATE_ATTACK && g_SlenderState[bossIndex] != STATE_STUN)
-		|| (g_NpcIgnoreNonMarkedForChase[bossIndex] && g_NpcChaseOnLookTarget[bossIndex].Length <= 0 && g_SlenderState[bossIndex] != STATE_CHASE && g_SlenderState[bossIndex] != STATE_ATTACK && g_SlenderState[bossIndex] != STATE_STUN))
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		g_SlenderIsAutoChasingLoudPlayer[bossIndex] = false;
-		return Plugin_Stop;
-	}
-	
-	if (!g_SlenderChaseDeathPosition[bossIndex])
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		g_SlenderGiveUp[bossIndex] = true;
-		return Plugin_Stop;
-	}
-	
-	if (g_SlenderState[bossIndex] == STATE_CHASE || g_SlenderState[bossIndex] == STATE_ATTACK || g_SlenderState[bossIndex] == STATE_STUN)
-	{
-		g_BossFailSafeTimer[bossIndex] = null;
-		return Plugin_Stop;
-	}
-	
-	g_SlenderChaseDeathPositionBool[bossIndex] = false;
-	g_SlenderGiveUp[bossIndex] = true;
-	g_BossFailSafeTimer[bossIndex] = null;
-	return Plugin_Stop;
 }
 
 public int NPCChaserGetClosestPlayer(int slender)
@@ -4193,49 +4124,49 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	
 	return Plugin_Stop;
 }
-public MRESReturn ShouldCollideWith(Address thisAddress, Handle returnHandle, Handle params)
+public MRESReturn ShouldCollideWith(Address thisAddress, DHookReturn returnHandle, DHookParam params)
 {
-	int entity = DHookGetParam(params, 1);
+	int entity = params.Get(1);
 	if (IsValidEntity(entity))
 	{
-		char strClass[32];
-		GetEdictClassname(entity, strClass, sizeof(strClass));
-		if (strcmp(strClass, "tf_zombie") == 0)
+		char class[32];
+		GetEdictClassname(entity, class, sizeof(class));
+		if (strcmp(class, "tf_zombie") == 0)
 		{
-			DHookSetReturn(returnHandle, false);
+			returnHandle.Value = false;
 			return MRES_Supercede;
 		}
-		else if (strcmp(strClass, "base_boss") == 0)
+		else if (strcmp(class, "base_boss") == 0)
 		{
-			DHookSetReturn(returnHandle, false);
+			returnHandle.Value = false;
 			return MRES_Supercede;
 		}
-		else if (strcmp(strClass, "base_npc") == 0)
+		else if (strcmp(class, "base_npc") == 0)
 		{
-			DHookSetReturn(returnHandle, false);
+			returnHandle.Value = false;
 			return MRES_Supercede;
 		}
-		else if (strcmp(strClass, "player") == 0)
+		else if (strcmp(class, "player") == 0)
 		{
-			if (g_PlayerProxy[entity] || IsClientInGhostMode(entity) || IsClientInDeathCam(entity))
+			if (g_PlayerProxy[entity] || IsClientInGhostMode(entity) || IsClientInDeathCam(entity) || GetClientTeam(entity) == TFTeam_Blue || IsClientInDeathCam(entity))
 			{
-				DHookSetReturn(returnHandle, false);
+				returnHandle.Value = false;
 				return MRES_Supercede;
 			}
 		}
 		else if (IsEntityAProjectile(entity))
 		{
-			DHookSetReturn(returnHandle, false);
+			returnHandle.Value = false;
 			return MRES_Supercede;
 		}
 	}
 	return MRES_Ignored;
 }
 
-public MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, Handle params)
+public MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, DHookParam params)
 {
 	int bossIndex = NPCGetFromEntIndex(thisInt);
-	int event = DHookGetParamObjectPtrVar(params, 1, 0, ObjectValueType_Int);
+	int event = params.GetObjectVar(1, 0, ObjectValueType_Int);
 	if (event > 0 && NPCGetUniqueID(bossIndex) != -1)
 	{
 		char keyValue[256];
@@ -4254,6 +4185,17 @@ public MRESReturn Hook_BossUpdateTransmitState(int bossEntity, DHookReturn hookR
     }
 
     hookReturn.Value = SetEntityTransmitState(bossEntity, FL_EDICT_ALWAYS);
+    return MRES_Supercede;
+}
+
+public MRESReturn Hook_BossUpdateHitboxTransmitState(int bossEntity, DHookReturn hookReturn)
+{
+    if (!g_Enabled || !IsValidEntity(bossEntity))
+    {
+        return MRES_Ignored;
+    }
+
+    hookReturn.Value = SetEntityTransmitState(bossEntity, FL_EDICT_DONTSEND);
     return MRES_Supercede;
 }
 

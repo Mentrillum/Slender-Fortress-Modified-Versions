@@ -2,7 +2,7 @@
 //Handle g_hCvarEnableTutorial;
 
 //Detours
-//static Handle g_hSDKGamerulesIsInTraining;
+//static Handle g_SDKGamerulesIsInTraining;
 
 //Timer data
 static Handle g_TimerTutorialMessage;
@@ -126,14 +126,14 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 	{
 		if (IsClientInGame(client) && !g_PlayerEliminated[client] && g_ClientTutorialEnabled[client])
 		{
-			Handle hMessage = StartMessageOne("TrainingObjective", client);
-			BfWriteString(hMessage, sTitle);
-			delete hMessage;
+			Handle message = StartMessageOne("TrainingObjective", client);
+			BfWriteString(message, sTitle);
+			delete message;
 			EndMessage();
 			
-			hMessage = StartMessageOne("TrainingMsg", client);
-			BfWriteString(hMessage, sMessage);
-			delete hMessage;
+			message = StartMessageOne("TrainingMsg", client);
+			BfWriteString(message, sMessage);
+			delete message;
 			EndMessage();
 		}
 	}
@@ -144,14 +144,14 @@ void Tutorial_PrintMessageToClient(int client, const char[] sTitle, const char[]
 {
 	//Tell the client, to print the training message.
 	GameRules_SetProp("m_bIsTrainingHUDVisible", true, 1, _, true);
-	Handle hMessage = StartMessageOne("TrainingObjective", client);
-	BfWriteString(hMessage, sTitle);
-	delete hMessage;
+	Handle message = StartMessageOne("TrainingObjective", client);
+	BfWriteString(message, sTitle);
+	delete message;
 	EndMessage();
 	
-	hMessage = StartMessageOne("TrainingMsg", client);
-	BfWriteString(hMessage, sMessage);
-	delete hMessage;
+	message = StartMessageOne("TrainingMsg", client);
+	BfWriteString(message, sMessage);
+	delete message;
 	EndMessage();
 }
 
@@ -184,34 +184,35 @@ void Tutorial_OnMapEnd()
 void Tutorial_SetupSDK(Handle hConfig)
 {
 	int iOffset = GameConfGetOffset(hConfig, "CTFGameRules::IsInTraining"); 
-	g_hSDKGamerulesIsInTraining = DHookCreate(iOffset, HookType_GameRules, ReturnType_Bool, ThisPointer_Address, CTFGameRules_IsInTraining);
-	if (g_hSDKGamerulesIsInTraining == null) SetFailState("Failed to create hook for CTFGameRules::IsInTraining!");
+	g_SDKGamerulesIsInTraining = DHookCreate(iOffset, HookType_GameRules, ReturnType_Bool, ThisPointer_Address, CTFGameRules_IsInTraining);
+	if (g_SDKGamerulesIsInTraining == null) SetFailState("Failed to create hook for CTFGameRules::IsInTraining!");
 	
 	iOffset = GameConfGetOffset(hConfig, "CTFGameRules::GetGameType"); 
-	g_hSDKGamerulesIsInTraining = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Address, CTFGameRules_GetGameType);
-	if (g_hSDKGamerulesIsInTraining == null) SetFailState("Failed to create hook for CTFGameRules::GetGameType!");
+	g_SDKGamerulesIsInTraining = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Address, CTFGameRules_GetGameType);
+	if (g_SDKGamerulesIsInTraining == null) SetFailState("Failed to create hook for CTFGameRules::GetGameType!");
 }
 
 void Tutorial_EnableHooks()
 {
-	DHookGamerules(g_hSDKGamerulesIsInTraining, false);
-	DHookGamerules(g_hSDKGamerulesIsInTraining, true);
+	DHookGamerules(g_SDKGamerulesIsInTraining, false);
+	DHookGamerules(g_SDKGamerulesIsInTraining, true);
 }
 */
 /*
  * Detour functions
  */
 
-public MRESReturn CTFGameRules_IsInTraining(Address pThis, Handle hReturn)
+public MRESReturn CTFGameRules_IsInTraining(Address pThis, DHookReturn returnHandle)
 {
 	//Trick the client into thinking the training mode is enabled.
-	DHookSetReturn(hReturn, false);
+	DHookSetReturn(returnHandle, false);
+	returnHandle.Value = false;
 	return MRES_Supercede;
 }
 
-public MRESReturn CTFGameRules_GetGameType(Address pThis, Handle hReturn)
+public MRESReturn CTFGameRules_GetGameType(Address pThis, DHookReturn returnHandle)
 {
-	int iGameType = DHookGetReturn(hReturn);
-	PrintToChatAll("%i", iGameType);
+	int gameType = returnHandle.Value;
+	PrintToChatAll("%i", gameType);
 	return MRES_Supercede;
 }

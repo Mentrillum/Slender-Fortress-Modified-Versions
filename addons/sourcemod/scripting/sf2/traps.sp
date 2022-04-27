@@ -47,7 +47,7 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 			if (trapEntity != -1)
 			{
 				TeleportEntity(trapEntity, newPos, newAngles, NULL_VECTOR);
-				SetEntityModel(trapEntity, g_sSlenderTrapModel[bossIndex]);
+				SetEntityModel(trapEntity, g_SlenderTrapModel[bossIndex]);
 				DispatchSpawn(trapEntity);
 				ActivateEntity(trapEntity);
 

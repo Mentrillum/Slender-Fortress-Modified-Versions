@@ -75,7 +75,7 @@ void DisplayCreateGroupMenuToClient(int client)
 	}
 	
 	Handle menu = CreateMenu(Menu_CreateGroup);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Create Group Menu Title", client, "SF2 Create Group Menu Description", client, GetMaxPlayersForRound(), g_iPlayerQueuePoints[client]);
+	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Create Group Menu Title", client, "SF2 Create Group Menu Description", client, GetMaxPlayersForRound(), g_PlayerQueuePoints[client]);
 	
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Yes", client);
@@ -106,7 +106,7 @@ public int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2
 				groupIndex = CreatePlayerGroup();
 				if (groupIndex != -1)
 				{
-					int queuePoints = g_iPlayerQueuePoints[param1];
+					int queuePoints = g_PlayerQueuePoints[param1];
 				
 					char groupName[64];
 					Format(groupName, sizeof(groupName), "Group %d", groupIndex);

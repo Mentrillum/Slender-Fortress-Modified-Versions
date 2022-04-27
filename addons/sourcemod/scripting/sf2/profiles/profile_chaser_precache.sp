@@ -1938,7 +1938,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserAnimation_IdleAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "idle");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
@@ -1990,7 +1990,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserAnimation_WalkAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "walk");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
@@ -2042,7 +2042,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserAnimation_WalkAlertAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "walkalert");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
@@ -2110,7 +2110,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserAnimation_RunAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
@@ -2162,7 +2162,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserAnimation_RunAltAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
@@ -2292,7 +2292,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserAnimation_CrawlWalkAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "crawlwalk");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
@@ -2344,7 +2344,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimati
 		case ChaserANimation_CrawlRunAnimations:
 		{
 			strcopy(sAnimationSection, sizeof(sAnimationSection), "crawlrun");
-			if (g_bSlenderDifficultyAnimations[bossIndex])
+			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{

@@ -138,9 +138,9 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 					CPrintToChatAll("The difficulty has been set to: {darkgray}%t{default}!", "SF2 Apollyon Difficulty");
 					
-					for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+					for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 					{
-						EmitSoundToAll(g_strSoundNightmareMode[i]);
+						EmitSoundToAll(g_SoundNightmareMode[i]);
 					}
 					
 					FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");

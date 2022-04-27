@@ -63,7 +63,7 @@ void ClientResetProxy(int client, bool resetFull=true)
 
 void ClientStartProxyAvailableTimer(int client)
 {
-	g_bPlayerProxyAvailable[client] = false;
+	g_PlayerProxyAvailable[client] = false;
 	float cooldown = g_PlayerProxyWaitTimeConVar.FloatValue;
 	if (g_InProxySurvivalRageMode)
 	{
@@ -74,7 +74,7 @@ void ClientStartProxyAvailableTimer(int client)
 		cooldown = 0.0;
 	}
 	
-	g_hPlayerProxyAvailableTimer[client] = CreateTimer(cooldown, Timer_ClientProxyAvailable, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	g_PlayerProxyAvailableTimer[client] = CreateTimer(cooldown, Timer_ClientProxyAvailable, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void ClientStartProxyForce(int client, int slenderID, const float pos[3], int spawnPoint)
@@ -94,9 +94,9 @@ void ClientStartProxyForce(int client, int slenderID, const float pos[3], int sp
 	g_PlayerProxyAskSpawnPoint[client] = EnsureEntRef(spawnPoint);
 
 	g_PlayerProxyAvailableCount[client] = 0;
-	g_bPlayerProxyAvailableInForce[client] = true;
-	g_hPlayerProxyAvailableTimer[client] = CreateTimer(1.0, Timer_ClientForceProxy, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	TriggerTimer(g_hPlayerProxyAvailableTimer[client], true);
+	g_PlayerProxyAvailableInForce[client] = true;
+	g_PlayerProxyAvailableTimer[client] = CreateTimer(1.0, Timer_ClientForceProxy, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	TriggerTimer(g_PlayerProxyAvailableTimer[client], true);
 	
 #if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
@@ -109,8 +109,8 @@ void ClientStartProxyForce(int client, int slenderID, const float pos[3], int sp
 void ClientStopProxyForce(int client)
 {
 	g_PlayerProxyAvailableCount[client] = 0;
-	g_bPlayerProxyAvailableInForce[client] = false;
-	g_hPlayerProxyAvailableTimer[client] = null;
+	g_PlayerProxyAvailableInForce[client] = false;
+	g_PlayerProxyAvailableTimer[client] = null;
 }
 
 public Action Timer_ClientForceProxy(Handle timer, any userid)
@@ -121,7 +121,7 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 	
-	if (timer != g_hPlayerProxyAvailableTimer[client])
+	if (timer != g_PlayerProxyAvailableTimer[client])
 	{
 		return Plugin_Stop;
 	}
@@ -312,13 +312,13 @@ public Action Timer_ClientProxyAvailable(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 	
-	if (timer != g_hPlayerProxyAvailableTimer[client])
+	if (timer != g_PlayerProxyAvailableTimer[client])
 	{
 		return Plugin_Stop;
 	}
 	
-	g_bPlayerProxyAvailable[client] = true;
-	g_hPlayerProxyAvailableTimer[client] = null;
+	g_PlayerProxyAvailable[client] = true;
+	g_PlayerProxyAvailableTimer[client] = null;
 
 	return Plugin_Stop;
 }
@@ -380,8 +380,8 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	g_PlayerProxyControl[client] = 100;
 	g_PlayerProxyControlRate[client] = g_SlenderProxyControlDrainRate[bossIndex][difficulty];
 	g_PlayerProxyControlTimer[client] = CreateTimer(g_PlayerProxyControlRate[client], Timer_ClientProxyControl, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	g_bPlayerProxyAvailable[client] = false;
-	g_hPlayerProxyAvailableTimer[client] = null;
+	g_PlayerProxyAvailable[client] = false;
+	g_PlayerProxyAvailableTimer[client] = null;
 	
 	char allowedClasses[512];
 	GetProfileString(profile, "proxies_classes", allowedClasses, sizeof(allowedClasses));
@@ -925,7 +925,7 @@ void SF2_RefreshRestrictions()
 		if (IsValidClient(client) && (!g_PlayerEliminated[client] || !IsClientInPvP(client)))
 		{
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-			g_hPlayerPostWeaponsTimer[client]=CreateTimer(1.0,Timer_ClientPostWeapons,GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			g_PlayerPostWeaponsTimer[client]=CreateTimer(1.0,Timer_ClientPostWeapons,GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 }
@@ -947,7 +947,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 	
-	if (timer != g_hPlayerPostWeaponsTimer[client])
+	if (timer != g_PlayerPostWeaponsTimer[client])
 	{
 		return Plugin_Stop;
 	}
@@ -1347,7 +1347,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 		
 		// Fixes the Pretty Boy's Pocket Pistol glitch.
-		int maxHealth = SDKCall(g_hSDKGetMaxHealth, client);
+		int maxHealth = SDKCall(g_SDKGetMaxHealth, client);
 		if (health > maxHealth)
 		{
 			SetEntProp(client, Prop_Data, "m_iHealth", maxHealth);

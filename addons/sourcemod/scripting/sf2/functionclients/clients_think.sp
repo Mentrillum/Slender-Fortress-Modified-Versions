@@ -173,7 +173,7 @@ public void Hook_ClientPreThink(int client)
 								continue;
 							}
 							
-							if ((flCurTime - g_flPlayerScareLastTime[client][i]) <= scareSprintDuration)
+							if ((flCurTime - g_PlayerScareLastTime[client][i]) <= scareSprintDuration)
 							{
 								inDanger = true;
 								break;
@@ -223,7 +223,7 @@ public void Hook_ClientPreThink(int client)
 							case 775: // Escape Plan
 							{
 								float health = float(GetEntProp(client, Prop_Send, "m_iHealth"));
-								float flMaxHealth = float(SDKCall(g_hSDKGetMaxHealth, client));
+								float flMaxHealth = float(SDKCall(g_SDKGetMaxHealth, client));
 								float flPercentage = health / flMaxHealth;
 
 								if (flPercentage < 0.805 && flPercentage >= 0.605) 
@@ -772,7 +772,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				if (g_PlayerProxy[attacker])
 				{
 					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-					int maxHealth = SDKCall(g_hSDKGetMaxHealth, victim);
+					int maxHealth = SDKCall(g_SDKGetMaxHealth, victim);
 					int master = NPCGetFromUniqueID(g_PlayerProxyMaster[attacker]);
 					NPCGetProfile(master, profile, sizeof(profile));
 					if (master != -1 && profile[0] != '\0')
@@ -1543,7 +1543,7 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					}
 				}
 				
-				float healthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_hSDKGetMaxHealth, i));
+				float healthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_SDKGetMaxHealth, i));
 				
 				int color[3];
 				for (int i2 = 0; i2 < 3; i2++)

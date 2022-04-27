@@ -321,7 +321,7 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 					Call_Finish();
 					if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
 					{
-						int maxHealth = SDKCall(g_hSDKGetMaxHealth, attacker);
+						int maxHealth = SDKCall(g_SDKGetMaxHealth, attacker);
 						float healthToRecover = float(maxHealth)/7.5;
 						int _healthToRecover = RoundToNearest(healthToRecover) + GetEntProp(attacker, Prop_Send, "m_iHealth");
 						SetEntityHealth(attacker, _healthToRecover);

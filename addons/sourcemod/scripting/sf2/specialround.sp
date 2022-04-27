@@ -284,7 +284,7 @@ public Action Timer_SpecialRoundAttribute(Handle timer)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || g_bPlayerGhostMode[i]) continue;
+			if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || g_PlayerInGhostMode[i]) continue;
 			
 			TF2_AddCondition(i, view_as<TFCond>(iCond), 0.8);
 		}
@@ -419,7 +419,7 @@ ArrayList SpecialEnabledList()
 		{
 			enabledRounds.Push(SPECIALROUND_BEACON);
 		}
-		if (!SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_IsBoxingMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && GetRoundState() != SF2RoundState_Intro && g_hRoundGraceTimer != null)
+		if (!SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_IsBoxingMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && GetRoundState() != SF2RoundState_Intro && g_RoundGraceTimer != null)
 		{
 			enabledRounds.Push(SPECIALROUND_NOGRACE);
 		}
@@ -431,7 +431,7 @@ ArrayList SpecialEnabledList()
 		{
 			enabledRounds.Push(SPECIALROUND_DOUBLEROULETTE);
 		}
-		if (!SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_NightvisionEnabledConVar.BoolValue && !SF_IsBoxingMap() && !g_bRoundInfiniteFlashlight)
+		if (!SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_NightvisionEnabledConVar.BoolValue && !SF_IsBoxingMap() && !g_RoundInfiniteFlashlight)
 		{
 			enabledRounds.Push(SPECIALROUND_INFINITEFLASHLIGHT);
 		}	
@@ -716,9 +716,9 @@ void SpecialRoundStart()
 			{
 				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
 			}
-			if (g_hRoundGraceTimer != null)
+			if (g_RoundGraceTimer != null)
 			{
-				TriggerTimer(g_hRoundGraceTimer);
+				TriggerTimer(g_RoundGraceTimer);
 			}
 			SF_AddSpecialRound(SPECIALROUND_NOGRACE);
 		}
@@ -728,9 +728,9 @@ void SpecialRoundStart()
 			{
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
 			}
-			if (g_hRoundGraceTimer != null)
+			if (g_RoundGraceTimer != null)
 			{
-				TriggerTimer(g_hRoundGraceTimer);
+				TriggerTimer(g_RoundGraceTimer);
 			}
 			SF_AddSpecialRound(SPECIALROUND_ESCAPETICKETS);
 		}
@@ -825,9 +825,9 @@ void SpecialRoundStart()
 						}
 						case 4:
 						{
-							for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+							for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 							{
-								EmitSoundToAll(g_strSoundNightmareMode[i]);
+								EmitSoundToAll(g_SoundNightmareMode[i]);
 							}
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
@@ -836,9 +836,9 @@ void SpecialRoundStart()
 						}
 						case 5:
 						{
-							for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+							for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 							{
-								EmitSoundToAll(g_strSoundNightmareMode[i]);
+								EmitSoundToAll(g_SoundNightmareMode[i]);
 							}
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
@@ -914,9 +914,9 @@ void SpecialRoundStart()
 							}
 							case 4:
 							{
-								for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+								for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 								{
-									EmitSoundToAll(g_strSoundNightmareMode[i]);
+									EmitSoundToAll(g_SoundNightmareMode[i]);
 								}
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
@@ -925,9 +925,9 @@ void SpecialRoundStart()
 							}
 							case 5:
 							{
-								for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+								for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 								{
-									EmitSoundToAll(g_strSoundNightmareMode[i]);
+									EmitSoundToAll(g_SoundNightmareMode[i]);
 								}
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
@@ -1110,7 +1110,10 @@ void SpecialRoundStart()
 						}
 						SlenderAddGlow(npcIndex,_,color);
 					}
-					else SlenderAddGlow(npcIndex,_,view_as<int>({0, 0, 0, 0}));
+					else
+					{
+						SlenderAddGlow(npcIndex,_,view_as<int>({0, 0, 0, 0}));
+					}
 				}
 				else
 				{
@@ -1180,7 +1183,7 @@ void SpecialRoundStart()
 				{
 					g_PlayerDied1Up[i] = false;
 					g_PlayerIn1UpCondition[i] = true;
-					g_bPlayerFullyDied1Up[i] = false;
+					g_PlayerFullyDied1Up[i] = false;
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_1UP);
@@ -1228,7 +1231,7 @@ void SpecialRoundStart()
 		case SPECIALROUND_REVOLUTION:
 		{
 			SF_AddSpecialRound(SPECIALROUND_REVOLUTION);
-			g_iSpecialRoundTime = 0;
+			g_SpecialRoundTime = 0;
 		}
 		case SPECIALROUND_VOTE:
 		{

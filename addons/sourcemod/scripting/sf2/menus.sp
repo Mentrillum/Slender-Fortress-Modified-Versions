@@ -466,9 +466,9 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				FormatEx(display, sizeof(display), "%t!", "SF2 Nightmare Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 				strcopy(color, sizeof(color), "{valve}");
-				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 				{
-					EmitSoundToAll(g_strSoundNightmareMode[i]);
+					EmitSoundToAll(g_SoundNightmareMode[i]);
 				}
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 			}
@@ -477,9 +477,9 @@ public int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				FormatEx(display, sizeof(display), "%t!", "SF2 Apollyon Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 				strcopy(color, sizeof(color), "{darkgray}");
-				for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
+				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 				{
-					EmitSoundToAll(g_strSoundNightmareMode[i]);
+					EmitSoundToAll(g_SoundNightmareMode[i]);
 				}
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 				int randomQuote = GetRandomInt(1, 8);
@@ -1254,7 +1254,7 @@ void DisplayQueuePointsMenu(int client)
 	
 	if (queueList.Length)
 	{
-		FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Reset Queue Points Option", client, g_iPlayerQueuePoints[client]);
+		FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Reset Queue Points Option", client, g_PlayerQueuePoints[client]);
 		AddMenuItem(menu, "ponyponypony", buffer);
 		
 		int index;
@@ -1267,9 +1267,9 @@ void DisplayQueuePointsMenu(int client)
 			{
 				index = queueList.Get(i);
 				
-				FormatEx(buffer, sizeof(buffer), "%N - %d", index, g_iPlayerQueuePoints[index]);
+				FormatEx(buffer, sizeof(buffer), "%N - %d", index, g_PlayerQueuePoints[index]);
 				FormatEx(info, sizeof(info), "player_%d", GetClientUserId(index));
-				AddMenuItem(menu, info, buffer, g_bPlayerPlaying[index] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+				AddMenuItem(menu, info, buffer, g_PlayerPlaying[index] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 			}
 			else
 			{
@@ -1292,9 +1292,9 @@ void DisplayQueuePointsMenu(int client)
 						}
 						if (ClientGetPlayerGroup(i2) == index)
 						{
-							FormatEx(buffer, sizeof(buffer), "%N - %d", i2, g_iPlayerQueuePoints[i2]);
+							FormatEx(buffer, sizeof(buffer), "%N - %d", i2, g_PlayerQueuePoints[i2]);
 							FormatEx(info, sizeof(info), "player_%d", GetClientUserId(i2));
-							AddMenuItem(menu, "player", buffer, g_bPlayerPlaying[i2] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+							AddMenuItem(menu, "player", buffer, g_PlayerPlaying[i2] ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 							break;
 						}
 					}

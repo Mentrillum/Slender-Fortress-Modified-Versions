@@ -11,7 +11,7 @@
 static int g_NpcGlobalUniqueID = 0;
 
 static int g_NpcUniqueID[MAX_BOSSES] = { -1, ... };
-static char g_strSlenderProfile[MAX_BOSSES][SF2_MAX_PROFILE_NAME_LENGTH];
+static char g_SlenderProfile[MAX_BOSSES][SF2_MAX_PROFILE_NAME_LENGTH];
 static int g_NpcProfileIndex[MAX_BOSSES] = { -1, ... };
 static int g_NpcUniqueProfileIndex[MAX_BOSSES] = { -1, ... };
 static int g_NpcType[MAX_BOSSES] = { SF2BossType_Unknown, ... };
@@ -122,8 +122,6 @@ static int g_NpcDrainCreditAmount[MAX_BOSSES][Difficulty_Max];
 
 static bool g_NpcHasProxySpawnEffectEnabled[MAX_BOSSES];
 static float g_NpcProxySpawnEffectZOffset[MAX_BOSSES];
-
-NextBotActionFactory g_SlenderActionFactory;
 
 Handle timerMusic = null;//Planning to add a bosses array on.
 
@@ -319,6 +317,16 @@ methodmap SF2NPC_BaseNPC
 	public float GetAttributeValue(const char[] attributeName, float defaultValue = 0.0)
 	{
 		return NPCGetAttributeValue(this.Index, attributeName, defaultValue);
+	}
+
+	public int GetTeleporter(int iTeleporterNumber)
+	{
+		return NPCStatueGetTeleporter(this.Index, iTeleporterNumber);
+	}
+	
+	public void SetTeleporter(int iTeleporterNumber, int iEntity)
+	{
+		NPCStatueSetTeleporter(this.Index, iTeleporterNumber, iEntity);
 	}
 }
 
@@ -537,13 +545,13 @@ int NPCGetUniqueProfileIndex(int npcIndex)
 
 bool NPCGetProfile(int npcIndex, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferLen, g_strSlenderProfile[npcIndex]);
+	strcopy(buffer, bufferLen, g_SlenderProfile[npcIndex]);
 	return true;
 }
 
 int NPCSetProfile(int npcIndex, const char[] profile)
 {
-	strcopy(g_strSlenderProfile[npcIndex], sizeof(g_strSlenderProfile[]), profile);
+	strcopy(g_SlenderProfile[npcIndex], sizeof(g_SlenderProfile[]), profile);
 }
 
 int NPCRemove(int npcIndex)
@@ -2129,9 +2137,9 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	
 	g_NpcTeleportType[Npc.Index] = GetBossProfileTeleportType(profileIndex);
 
-	g_bSlenderTeleportIgnoreChases[Npc.Index] = GetBossProfileTeleportIgnoreChases(profileIndex);
+	g_SlenderTeleportIgnoreChases[Npc.Index] = GetBossProfileTeleportIgnoreChases(profileIndex);
 
-	g_bSlenderTeleportIgnoreVis[Npc.Index] = GetBossProfileTeleportIgnoreVis(profileIndex);
+	g_SlenderTeleportIgnoreVis[Npc.Index] = GetBossProfileTeleportIgnoreVis(profileIndex);
 
 	g_NpcHasHealthbarEnabled[Npc.Index] = GetBossProfileHealthbarState(profileIndex);
 
@@ -2154,11 +2162,11 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	g_SlenderProxyHurtFlags[Npc.Index] = GetBossProfileSoundProxyHurtFlags(profileIndex);
 	g_SlenderProxyHurtVolume[Npc.Index] = GetBossProfileSoundProxyHurtVolume(profileIndex);
 	g_SlenderProxyHurtPitch[Npc.Index] = GetBossProfileSoundProxyHurtPitch(profileIndex);
-	g_iSlenderProxyDeathChannel[Npc.Index] = GetBossProfileSoundProxyDeathChannel(profileIndex);
-	g_iSlenderProxyDeathLevel[Npc.Index] = GetBossProfileSoundProxyDeathLevel(profileIndex);
-	g_iSlenderProxyDeathFlags[Npc.Index] = GetBossProfileSoundProxyDeathFlags(profileIndex);
+	g_SlenderProxyDeathChannel[Npc.Index] = GetBossProfileSoundProxyDeathChannel(profileIndex);
+	g_SlenderProxyDeathLevel[Npc.Index] = GetBossProfileSoundProxyDeathLevel(profileIndex);
+	g_SlenderProxyDeathFlags[Npc.Index] = GetBossProfileSoundProxyDeathFlags(profileIndex);
 	g_SlenderProxyDeathVolume[Npc.Index] = GetBossProfileSoundProxyDeathVolume(profileIndex);
-	g_iSlenderProxyDeathPitch[Npc.Index] = GetBossProfileSoundProxyDeathPitch(profileIndex);
+	g_SlenderProxyDeathPitch[Npc.Index] = GetBossProfileSoundProxyDeathPitch(profileIndex);
 	g_SlenderProxyIdleChannel[Npc.Index] = GetBossProfileSoundProxyIdleChannel(profileIndex);
 	g_SlenderProxyIdleLevel[Npc.Index] = GetBossProfileSoundProxyIdleLevel(profileIndex);
 	g_SlenderProxyIdleFlags[Npc.Index] = GetBossProfileSoundProxyIdleFlags(profileIndex);
@@ -2223,34 +2231,34 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 	g_SlenderSoundTarget[Npc.Index] = INVALID_ENT_REFERENCE;
 	g_SlenderSeeTarget[Npc.Index] = INVALID_ENT_REFERENCE;
 
-	g_bSlenderHasBurnKillEffect[Npc.Index] = GetBossProfileBurnRagdoll(profileIndex);
-	g_bSlenderHasCloakKillEffect[Npc.Index] = GetBossProfileCloakRagdoll(profileIndex);
-	g_bSlenderHasDecapKillEffect[Npc.Index] = GetBossProfileDecapRagdoll(profileIndex);
-	g_bSlenderHasGibKillEffect[Npc.Index] = GetBossProfileGibRagdoll(profileIndex);
-	g_bSlenderHasGoldKillEffect[Npc.Index] = GetBossProfileGoldRagdoll(profileIndex);
-	g_bSlenderHasIceKillEffect[Npc.Index] = GetBossProfileIceRagdoll(profileIndex);
-	g_bSlenderHasElectrocuteKillEffect[Npc.Index] = GetBossProfileElectrocuteRagdoll(profileIndex);
-	g_bSlenderHasAshKillEffect[Npc.Index] = GetBossProfileAshRagdoll(profileIndex);
-	g_bSlenderHasDeleteKillEffect[Npc.Index] = GetBossProfileDeleteRagdoll(profileIndex);
-	g_bSlenderHasPushRagdollOnKill[Npc.Index] = GetBossProfilePushRagdoll(profileIndex);
+	g_SlenderHasBurnKillEffect[Npc.Index] = GetBossProfileBurnRagdoll(profileIndex);
+	g_SlenderHasCloakKillEffect[Npc.Index] = GetBossProfileCloakRagdoll(profileIndex);
+	g_SlenderHasDecapKillEffect[Npc.Index] = GetBossProfileDecapRagdoll(profileIndex);
+	g_SlenderHasGibKillEffect[Npc.Index] = GetBossProfileGibRagdoll(profileIndex);
+	g_SlenderHasGoldKillEffect[Npc.Index] = GetBossProfileGoldRagdoll(profileIndex);
+	g_SlenderHasIceKillEffect[Npc.Index] = GetBossProfileIceRagdoll(profileIndex);
+	g_SlenderHasElectrocuteKillEffect[Npc.Index] = GetBossProfileElectrocuteRagdoll(profileIndex);
+	g_SlenderHasAshKillEffect[Npc.Index] = GetBossProfileAshRagdoll(profileIndex);
+	g_SlenderHasDeleteKillEffect[Npc.Index] = GetBossProfileDeleteRagdoll(profileIndex);
+	g_SlenderHasPushRagdollOnKill[Npc.Index] = GetBossProfilePushRagdoll(profileIndex);
 	g_SlenderCustomOutroSong[Npc.Index] = GetBossProfileOutroMusicState(profileIndex);
 
-	g_bSlenderHasDissolveRagdollOnKill[Npc.Index] = GetBossProfileDissolveRagdoll(profileIndex);
-	g_iSlenderDissolveRagdollType[Npc.Index] = GetBossProfileDissolveRagdollType(profileIndex);
+	g_SlenderHasDissolveRagdollOnKill[Npc.Index] = GetBossProfileDissolveRagdoll(profileIndex);
+	g_SlenderDissolveRagdollType[Npc.Index] = GetBossProfileDissolveRagdollType(profileIndex);
 
-	g_bSlenderHasPlasmaRagdollOnKill[Npc.Index] = GetBossProfilePlasmaRagdoll(profileIndex);
+	g_SlenderHasPlasmaRagdollOnKill[Npc.Index] = GetBossProfilePlasmaRagdoll(profileIndex);
 
-	g_bSlenderHasResizeRagdollOnKill[Npc.Index] = GetBossProfileResizeRagdoll(profileIndex);
+	g_SlenderHasResizeRagdollOnKill[Npc.Index] = GetBossProfileResizeRagdoll(profileIndex);
 	g_SlenderResizeRagdollHands[Npc.Index] = GetBossProfileResizeRagdollHead(profileIndex);
 	g_SlenderResizeRagdollHead[Npc.Index] = GetBossProfileResizeRagdollHands(profileIndex);
 	g_SlenderResizeRagdollTorso[Npc.Index] = GetBossProfileResizeRagdollTorso(profileIndex);
 
-	g_bSlenderHasDecapOrGibKillEffect[Npc.Index] = GetBossProfileDecapOrGibRagdoll(profileIndex);
-	g_bSlenderHasSilentKill[Npc.Index] = GetBossProfileSilentKill(profileIndex);
-	g_bSlenderHasMultiKillEffect[Npc.Index] = GetBossProfileMultieffectRagdoll(profileIndex);
+	g_SlenderHasDecapOrGibKillEffect[Npc.Index] = GetBossProfileDecapOrGibRagdoll(profileIndex);
+	g_SlenderHasSilentKill[Npc.Index] = GetBossProfileSilentKill(profileIndex);
+	g_SlenderHasMultiKillEffect[Npc.Index] = GetBossProfileMultieffectRagdoll(profileIndex);
 
-	g_bSlenderPlayerCustomDeathFlag[Npc.Index] = GetBossProfileCustomDeathFlag(profileIndex);
-	g_iSlenderPlayerSetDeathFlag[Npc.Index] = GetBossProfileCustomDeathFlagType(profileIndex);
+	g_SlenderPlayerCustomDeathFlag[Npc.Index] = GetBossProfileCustomDeathFlag(profileIndex);
+	g_SlenderPlayerSetDeathFlag[Npc.Index] = GetBossProfileCustomDeathFlagType(profileIndex);
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -2267,30 +2275,30 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int iAdditionalBossF
 
 	GetProfileString(profile, "cloak_on_sound", g_SlenderCloakOnSound[Npc.Index], sizeof(g_SlenderCloakOnSound[]), DEFAULT_CLOAKONSOUND);
 	GetProfileString(profile, "cloak_off_sound", g_SlenderCloakOffSound[Npc.Index], sizeof(g_SlenderCloakOffSound[]), DEFAULT_CLOAKOFFSOUND);
-	GetProfileString(profile, "rocket_shoot_sound", g_sSlenderRocketShootSound[Npc.Index], sizeof(g_sSlenderRocketShootSound[]), ROCKET_SHOOT);
-	GetProfileString(profile, "rocket_model", g_sSlenderRocketModel[Npc.Index], sizeof(g_sSlenderRocketModel[]), ROCKET_MODEL);
-	GetProfileString(profile, "sentryrocket_shoot_sound", g_sSlenderSentryRocketShootSound[Npc.Index], sizeof(g_sSlenderSentryRocketShootSound[]), SENTRYROCKET_SHOOT);
-	GetProfileString(profile, "fire_shoot_sound", g_sSlenderFireballShootSound[Npc.Index], sizeof(g_sSlenderFireballShootSound[]), FIREBALL_SHOOT);
-	GetProfileString(profile, "rocket_explode_sound", g_sSlenderRocketExplodeSound[Npc.Index], sizeof(g_sSlenderRocketExplodeSound[]), FIREBALL_IMPACT);
-	GetProfileString(profile, "fire_trail", g_sSlenderFireballTrail[Npc.Index], sizeof(g_sSlenderFireballTrail[]), FIREBALL_TRAIL);
-	GetProfileString(profile, "rocket_trail_particle", g_sSlenderRocketTrailParticle[Npc.Index], sizeof(g_sSlenderRocketTrailParticle[]), ROCKET_TRAIL);
-	GetProfileString(profile, "rocket_explode_particle", g_sSlenderRocketExplodeParticle[Npc.Index], sizeof(g_sSlenderRocketExplodeParticle[]), ROCKET_EXPLODE_PARTICLE);
+	GetProfileString(profile, "rocket_shoot_sound", g_SlenderRocketShootSound[Npc.Index], sizeof(g_SlenderRocketShootSound[]), ROCKET_SHOOT);
+	GetProfileString(profile, "rocket_model", g_SlenderRocketModel[Npc.Index], sizeof(g_SlenderRocketModel[]), ROCKET_MODEL);
+	GetProfileString(profile, "sentryrocket_shoot_sound", g_SlenderSentryRocketShootSound[Npc.Index], sizeof(g_SlenderSentryRocketShootSound[]), SENTRYROCKET_SHOOT);
+	GetProfileString(profile, "fire_shoot_sound", g_SlenderFireballShootSound[Npc.Index], sizeof(g_SlenderFireballShootSound[]), FIREBALL_SHOOT);
+	GetProfileString(profile, "rocket_explode_sound", g_SlenderRocketExplodeSound[Npc.Index], sizeof(g_SlenderRocketExplodeSound[]), FIREBALL_IMPACT);
+	GetProfileString(profile, "fire_trail", g_SlenderFireballTrail[Npc.Index], sizeof(g_SlenderFireballTrail[]), FIREBALL_TRAIL);
+	GetProfileString(profile, "rocket_trail_particle", g_SlenderRocketTrailParticle[Npc.Index], sizeof(g_SlenderRocketTrailParticle[]), ROCKET_TRAIL);
+	GetProfileString(profile, "rocket_explode_particle", g_SlenderRocketExplodeParticle[Npc.Index], sizeof(g_SlenderRocketExplodeParticle[]), ROCKET_EXPLODE_PARTICLE);
 	GetProfileString(profile, "fire_explode_sound", g_SlenderFireballExplodeSound[Npc.Index], sizeof(g_SlenderFireballExplodeSound[]), FIREBALL_IMPACT);
 	GetProfileString(profile, "fire_iceball_slow_sound", g_SlenderIceballImpactSound[Npc.Index], sizeof(g_SlenderIceballImpactSound[]), ICEBALL_IMPACT);
-	GetProfileString(profile, "fire_iceball_trail", g_sSlenderIceballTrail[Npc.Index], sizeof(g_sSlenderIceballTrail[]), ICEBALL_TRAIL);
-	GetProfileString(profile, "grenade_shoot_sound", g_sSlenderGrenadeShootSound[Npc.Index], sizeof(g_sSlenderGrenadeShootSound[]), GRENADE_SHOOT);
-	GetProfileString(profile, "arrow_shoot_sound", g_sSlenderArrowShootSound[Npc.Index], sizeof(g_sSlenderArrowShootSound[]), ARROW_SHOOT);
-	GetProfileString(profile, "mangler_shoot_sound", g_sSlenderManglerShootSound[Npc.Index], sizeof(g_sSlenderManglerShootSound[]), MANGLER_SHOOT);
-	GetProfileString(profile, "baseball_shoot_sound", g_sSlenderBaseballShootSound[Npc.Index], sizeof(g_sSlenderBaseballShootSound[]), BASEBALL_SHOOT);
+	GetProfileString(profile, "fire_iceball_trail", g_SlenderIceballTrail[Npc.Index], sizeof(g_SlenderIceballTrail[]), ICEBALL_TRAIL);
+	GetProfileString(profile, "grenade_shoot_sound", g_SlenderGrenadeShootSound[Npc.Index], sizeof(g_SlenderGrenadeShootSound[]), GRENADE_SHOOT);
+	GetProfileString(profile, "arrow_shoot_sound", g_SlenderArrowShootSound[Npc.Index], sizeof(g_SlenderArrowShootSound[]), ARROW_SHOOT);
+	GetProfileString(profile, "mangler_shoot_sound", g_SlenderManglerShootSound[Npc.Index], sizeof(g_SlenderManglerShootSound[]), MANGLER_SHOOT);
+	GetProfileString(profile, "baseball_shoot_sound", g_SlenderBaseballShootSound[Npc.Index], sizeof(g_SlenderBaseballShootSound[]), BASEBALL_SHOOT);
 	GetProfileString(profile, "player_jarate_sound", g_SlenderJarateHitSound[Npc.Index], sizeof(g_SlenderJarateHitSound[]), JARATE_HITPLAYER);
 	GetProfileString(profile, "player_milk_sound", g_SlenderMilkHitSound[Npc.Index], sizeof(g_SlenderMilkHitSound[]), JARATE_HITPLAYER);
 	GetProfileString(profile, "player_gas_sound", g_SlenderGasHitSound[Npc.Index], sizeof(g_SlenderGasHitSound[]), JARATE_HITPLAYER);
 	GetProfileString(profile, "player_stun_sound", g_SlenderStunHitSound[Npc.Index], sizeof(g_SlenderStunHitSound[]), STUN_HITPLAYER);
-	GetProfileString(profile, "engine_sound", g_sSlenderEngineSound[Npc.Index], sizeof(g_sSlenderEngineSound[]));
-	GetProfileString(profile, "shockwave_beam_sprite", g_sSlenderShockwaveBeamSprite[Npc.Index], sizeof(g_sSlenderShockwaveBeamSprite[]), "sprites/laser.vmt");
-	GetProfileString(profile, "shockwave_halo_sprite", g_sSlenderShockwaveHaloSprite[Npc.Index], sizeof(g_sSlenderShockwaveHaloSprite[]), "sprites/halo01.vmt");
+	GetProfileString(profile, "engine_sound", g_SlenderEngineSound[Npc.Index], sizeof(g_SlenderEngineSound[]));
+	GetProfileString(profile, "shockwave_beam_sprite", g_SlenderShockwaveBeamSprite[Npc.Index], sizeof(g_SlenderShockwaveBeamSprite[]), "sprites/laser.vmt");
+	GetProfileString(profile, "shockwave_halo_sprite", g_SlenderShockwaveHaloSprite[Npc.Index], sizeof(g_SlenderShockwaveHaloSprite[]), "sprites/halo01.vmt");
 	GetProfileString(profile, "player_smite_sound", g_SlenderSmiteSound[Npc.Index], sizeof(g_SlenderSmiteSound[]), SOUND_THUNDER);
-	GetProfileString(profile, "trap_model", g_sSlenderTrapModel[Npc.Index], sizeof(g_sSlenderTrapModel[]), TRAP_MODEL);
+	GetProfileString(profile, "trap_model", g_SlenderTrapModel[Npc.Index], sizeof(g_SlenderTrapModel[]), TRAP_MODEL);
 	GetProfileString(profile, "trap_deploy_sound", g_SlenderTrapDeploySound[Npc.Index], sizeof(g_SlenderTrapDeploySound[]), TRAP_DEPLOY);
 	GetProfileString(profile, "trap_miss_sound", g_SlenderTrapMissSound[Npc.Index], sizeof(g_SlenderTrapMissSound[]), TRAP_CLOSE);
 	GetProfileString(profile, "trap_catch_sound", g_SlenderTrapHitSound[Npc.Index], sizeof(g_SlenderTrapHitSound[]), TRAP_CLOSE);
@@ -2835,7 +2843,7 @@ void ChangeAllSlenderModels()
 
 public Address SF2_GetLocomotionInterface(int index) 
 { 
-	return SDKCall(g_hSDKGetLocomotionInterface, SDKCall(g_hSDKGetNextBot, index)); 
+	return SDKCall(g_SDKGetLocomotionInterface, SDKCall(g_SDKGetNextBot, index)); 
 }
 
 void RemoveProfile(int bossIndex)
@@ -2918,7 +2926,7 @@ void RemoveProfile(int bossIndex)
 				g_PlayerStaticMaster[i] = -1;
 				
 				// No one is the static master.
-				g_PlayerStaticTimer[i] = CreateTimer(g_flPlayerStaticDecreaseRate[i], 
+				g_PlayerStaticTimer[i] = CreateTimer(g_PlayerStaticDecreaseRate[i], 
 					Timer_ClientDecreaseStatic, 
 					GetClientUserId(i), 
 					TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -3180,11 +3188,10 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				}
 			}
 
-			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
+			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
 			SetEntityFlags(npcEntity.iEnt, FL_NPC);
 			SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
 
-			npcEntity.SetProp(Prop_Send, "m_usSolidFlags", FSOLID_TRIGGER|FSOLID_NOT_SOLID);
 			npcEntity.SetProp(Prop_Data, "m_nSolidType", SOLID_BBOX);
 			npcEntity.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
 
@@ -3240,10 +3247,13 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			npcBoss.flMaxYawRate = NPCGetTurnRate(bossIndex);
 			g_BossPathFollower[bossIndex].SetMinLookAheadDistance(GetProfileFloat(profile, "search_node_dist_lookahead", 512.0));
 			locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
-			locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
-			locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
-			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
-			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
+			if (!SF_IsBoxingMap())
+			{
+				locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
+				locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
+				locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
+				locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
+			}
 
 			float slenderBoxMins[3], slenderBoxMaxs[3];
 			slenderBoxMins[0] = -11.0;
@@ -3267,6 +3277,9 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 
 			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", slenderBoxMins);
 			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", slenderBoxMaxs);
+
+			npcEntity.SetProp(Prop_Data, "m_nSolidType", SOLID_BBOX);
+			npcEntity.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
 
 			if (NPCGetModelSkinMax(bossIndex) > 0)
 			{
@@ -3301,7 +3314,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				}
 			}
 
-			g_hSDKUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
+			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
 			SetEntityFlags(npcEntity.iEnt, FL_NPC);
 			SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
 
@@ -3364,13 +3377,18 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			AcceptEntityInput(g_SlenderHitbox[bossIndex], "SetParent", npcEntity.iEnt);
 			AcceptEntityInput(g_SlenderHitbox[bossIndex], "EnableShadow");
 			AcceptEntityInput(g_SlenderHitbox[bossIndex], "DisableShadow");
-			if (SF_IsBoxingMap()) SetEntProp(g_SlenderHitbox[bossIndex], Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+			if (SF_IsBoxingMap())
+			{
+				SetEntProp(g_SlenderHitbox[bossIndex], Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+			}
 			//Block base_boss's ai.
 			SetEntProp(g_SlenderHitbox[bossIndex], Prop_Data,"m_nNextThinkTick",-1);
 			g_SlenderHitboxOwner[g_SlenderHitbox[bossIndex]] = npcEntity.iEnt;
 			SDKHook(g_SlenderHitbox[bossIndex], SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
 			//SDKHook(g_SlenderHitbox[bossIndex], SDKHook_ShouldCollide, Hook_HitBoxShouldCollide);
-			g_hShouldCollide.HookRaw(Hook_Pre, locomotionAddress, ShouldCollideWith);
+			g_DHookShouldCollide.HookRaw(Hook_Pre, locomotionAddress, ShouldCollideWith);
+			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, g_SlenderHitbox[bossIndex], Hook_BossUpdateHitboxTransmitState);
+			SetEntityTransmitState(g_SlenderHitbox[bossIndex], FL_EDICT_DONTSEND);
 			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES)) 
 			{
 				float scaleModel = NPCGetModelScale(bossIndex) * 0.5;
@@ -3497,9 +3515,9 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				NPCSetFlags(bossIndex,NPCGetFlags(bossIndex)|SFF_NOTELEPORT);
 				UpdateHealthBar(bossIndex);
 			}
-			if (g_sSlenderEngineSound[bossIndex][0] != '\0' && view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)))
+			if (g_SlenderEngineSound[bossIndex][0] != '\0' && view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)))
 			{
-				EmitSoundToAll(g_sSlenderEngineSound[bossIndex], npcEntity.iEnt, SNDCHAN_STATIC, GetProfileNum(profile, "engine_sound_level", 83), 
+				EmitSoundToAll(g_SlenderEngineSound[bossIndex], npcEntity.iEnt, SNDCHAN_STATIC, GetProfileNum(profile, "engine_sound_level", 83), 
 				_, GetProfileFloat(profile, "engine_sound_volume", 0.8));
 			}
 			/*if (SF_BossesChaseEndlessly() || SF_IsRaidMap())
@@ -3633,13 +3651,17 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 		GetEdictClassname(other, class, sizeof(class));
 		if (strcmp(class, "player") == 0)
 		{
-			if (!g_PlayerProxy[other] && !IsClientInGhostMode(other) && GetClientTeam(other) != TFTeam_Blue && !IsClientInDeathCam(other))
+			if (!SF_IsBoxingMap() && !g_PlayerProxy[other] && !IsClientInGhostMode(other) && GetClientTeam(other) != TFTeam_Blue && !IsClientInDeathCam(other))
 			{
 				return true;
 			}
 		}
+		if (IsEntityAProjectile(other))
+		{
+			return false;
+		}
 	}
-	return false;
+	return loco.CallBaseFunction(other);
 }
 
 static bool CanJumpAcrossGaps(CBaseNPC_Locomotion loco)
@@ -3708,9 +3730,9 @@ void RemoveSlender(int bossIndex)
 			SlenderCreateParticleSpawnEffect(bossIndex, "tp_effect_despawn_particle", "tp_effect_despawn_sound", "tp_effect_origin");
 		}
 		
-		if (view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_sSlenderEngineSound[bossIndex][0] != '\0')
+		if (view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_SlenderEngineSound[bossIndex][0] != '\0')
 		{
-			StopSound(bossEnt, SNDCHAN_STATIC, g_sSlenderEngineSound[bossIndex]);
+			StopSound(bossEnt, SNDCHAN_STATIC, g_SlenderEngineSound[bossIndex]);
 		}
 		
 		if (NPCGetFlags(bossIndex) & SFF_HASSTATICLOOPLOCALSOUND)
@@ -4975,14 +4997,14 @@ public Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 							}
 								
 							// Check visibility.
-							if (!g_bSlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(areaSpawnPoint, !shouldBeBehindObstruction, false))
+							if (!g_SlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(areaSpawnPoint, !shouldBeBehindObstruction, false))
 							{
 								continue;
 							}
 								
 							AddVectors(areaSpawnPoint, g_SlenderEyePosOffset[bossIndex], areaSpawnPoint);
 								
-							if (!g_bSlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(areaSpawnPoint, !shouldBeBehindObstruction, false))
+							if (!g_SlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(areaSpawnPoint, !shouldBeBehindObstruction, false))
 							{
 								continue;
 							}
@@ -5246,9 +5268,9 @@ bool SlenderMarkAsFake(int bossIndex)
 		}
 		SetEntProp(slender, Prop_Send, "m_usSolidFlags", flags);
 	
-		if (view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_sSlenderEngineSound[bossIndex][0] != '\0')
+		if (view_as<bool>(GetProfileNum(profile,"use_engine_sounds",0)) && g_SlenderEngineSound[bossIndex][0] != '\0')
 		{
-			StopSound(slender, SNDCHAN_STATIC, g_sSlenderEngineSound[bossIndex]);
+			StopSound(slender, SNDCHAN_STATIC, g_SlenderEngineSound[bossIndex]);
 		}
 
 		SetEntPropFloat(slender, Prop_Send, "m_flPlaybackRate", 0.0);
@@ -5451,8 +5473,8 @@ stock bool SlenderAddGlow(int bossIndex, const char[] attachment="", int color[4
 		//Set our desired glow color
 		SetVariantColor(color);
 		AcceptEntityInput(glowManager, "SetGlowColor");
-		g_hSDKShouldTransmit.HookEntity(Hook_Pre, glowManager, Hook_EntityShouldTransmit);
-		g_hSDKShouldTransmit.HookEntity(Hook_Pre, ent, Hook_EntityShouldTransmit);
+		g_DHookShouldTransmit.HookEntity(Hook_Pre, glowManager, Hook_EntityShouldTransmit);
+		g_DHookShouldTransmit.HookEntity(Hook_Pre, ent, Hook_EntityShouldTransmit);
 		SetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity", glowManager);
 
 		g_NpcTauntGlowEntity[bossIndex] = EntIndexToEntRef(ent);

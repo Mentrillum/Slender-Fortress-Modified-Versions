@@ -220,10 +220,10 @@ forward void SF2_OnBossDespawn(int bossIndex);
  * Called when the boss changes states. Currently only used for Chaser bosses.
  *
  * @param bossIndex	Boss index.
- * @param iOldState		The old state.
- * @param iNewState		The new state.
+ * @param oldState		The old state.
+ * @param newState		The new state.
  */
-forward void SF2_OnBossChangeState(int bossIndex, int iOldState, int iNewState);
+forward void SF2_OnBossChangeState(int bossIndex, int oldState, int newState);
 
 /**
  * Called when the boss updates its animation.
@@ -237,19 +237,19 @@ forward Action SF2_OnBossAnimationUpdate(int bossIndex);
  * Called to determine the boss's run speed.
  *
  * @param bossIndex	Boss index.
- * @param flSpeed		The boss's run speed.
- * @return				If Plugin_Changed, flSpeed is used as the boss's run speed.
+ * @param speed		The boss's run speed.
+ * @return				If Plugin_Changed, speed is used as the boss's run speed.
  */
-forward Action SF2_OnBossGetSpeed(int bossIndex, float &flSpeed);
+forward Action SF2_OnBossGetSpeed(int bossIndex, float &speed);
 
 /**
  * Called to determine the boss's walk speed.
  *
  * @param bossIndex	Boss index.
- * @param flSpeed		The boss's walk speed.
- * @return				If Plugin_Changed, flSpeed is used as the boss's walk speed.
+ * @param walkSpeed		The boss's walk speed.
+ * @return				If Plugin_Changed, speed is used as the boss's walk speed.
  */
-forward Action SF2_OnBossGetWalkSpeed(int bossIndex, float &flWalkSpeed);
+forward Action SF2_OnBossGetWalkSpeed(int bossIndex, float &walkSpeed);
 
 /**
  * Called after the boss has determined it can hear the entity.
@@ -307,10 +307,10 @@ forward void SF2_OnPagesSpawned();
 /**
  * Called when the round state changes.
  * 
- * @param iOldState		Old state.
- * @param iNewState		New state.
+ * @param oldState		Old state.
+ * @param newState		New state.
  */
-forward void SF2_OnRoundStateChange(SF2RoundState iOldState, SF2RoundState iNewState);
+forward void SF2_OnRoundStateChange(SF2RoundState oldState, SF2RoundState newState);
 
 /**
  * Called when a player collects a page.
@@ -348,10 +348,10 @@ forward void SF2_OnClientCaughtByBoss(int client, int bossIndex);
  * Called when giving queue points to the player at the end of the round.
  *
  * @param client		Client index.
- * @param iAddAmount	The amount of queue points to give.
- * @return				If Plugin_Changed, iAddAmount will be used as the amount to give.
+ * @param addAmount	The amount of queue points to give.
+ * @return				If Plugin_Changed, addAmount will be used as the amount to give.
  */
-forward Action SF2_OnClientGiveQueuePoints(int client, int &iAddAmount);
+forward Action SF2_OnClientGiveQueuePoints(int client, int &addAmount);
 
 /**
  * Called when the player turns on their flashlight.
@@ -459,10 +459,10 @@ forward Action SF2_OnClientTakeDamage(int victim, int attacker, float &damage);
  * Called when giving queue points to the group at the end of the round.
  *
  * @param groupIndex		Group index.
- * @param iAddAmount		The amount of queue points to give.
- * @return					If Plugin_Changed, iAddAmount will be used as the amount to give.
+ * @param addAmount		The amount of queue points to give.
+ * @return					If Plugin_Changed, addAmount will be used as the amount to give.
  */
-forward Action SF2_OnGroupGiveQueuePoints(int groupIndex, int &iAddAmount);
+forward Action SF2_OnGroupGiveQueuePoints(int groupIndex, int &addAmount);
 
 /**
  * Called when a player gets damaged by the boss.
@@ -482,8 +482,10 @@ forward void SF2_OnClientSpawnedAsProxy(int client);
 
 /**
  * Called whenever the Renevant gamemode triggers a new wave.
+ *
+ * @param wave		The wave number that got triggered.
  */
-forward void SF2_OnRenevantWaveTrigger(int iWave);
+forward void SF2_OnRenevantWaveTrigger(int wave);
 
 /**
  * Called whenever the boss pack vote starts
@@ -646,9 +648,9 @@ native int SF2_GetClientProxyControlAmount(int client);
  * If the client is a Proxy, then this sets the amount of Control points the client has left.
  *
  * @param client		Client index.
- * @param iAmount		The amount of Control points. Must be between 0-100.
+ * @param amount		The amount of Control points. Must be between 0-100.
  */
-native void SF2_SetClientProxyControlAmount(int client, int iAmount);
+native void SF2_SetClientProxyControlAmount(int client, int amount);
 
 /**
  * If the client is a Proxy, then this returns the interval which each Control point will drain for the client.
@@ -662,9 +664,9 @@ native float SF2_GetClientProxyControlRate(int client);
  * If the client is a Proxy, then this sets the interval which each Control point will drain for the client.
  *
  * @param client		Client index.
- * @param flInterval	Interval to subtract one Control point from the client.
+ * @param interval	Interval to subtract one Control point from the client.
  */
-native float SF2_SetClientProxyControlRate(int client, float flInterval);
+native float SF2_SetClientProxyControlRate(int client, float interval);
 
 /**
  * Tells whether or not the client escaped from the map.
@@ -750,20 +752,20 @@ native bool SF2_IsClientTrapped(int client);
  *
  * @param client		Client index.
  * @param bossIndex	Boss index.
- * @param flTeleportPos	Position to return
- * @param iSpawnPoint	Spawn point to return, defaults to -1.
+ * @param teleportPos	Position to return
+ * @param spawnPoint	Spawn point to return, defaults to -1.
  */
-native bool SF2_ClientSpawnProxy(int client, int bossIndex, float flTeleportPos[3], int &iSpawnPoint = -1);
+native bool SF2_ClientSpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint = -1);
 
 /**
  * Spawns a player as a proxy at a given position or spawn point.
  *
  * @param client		Client index.
  * @param bossIndex	Boss index.
- * @param flTeleportPos	Position to return
- * @param iSpawnPoint	Spawn point to return, defaults to -1.
+ * @param teleportPos	Position to return
+ * @param spawnPoint	Spawn point to return, defaults to -1.
  */
-native bool SF2_ClientForceProxy(int client, int bossIndex, const float flTeleportPos[3], int iSpawnPoint);
+native bool SF2_ClientForceProxy(int client, int bossIndex, const float teleportPos[3], int spawnPoint);
 
 /**
  * Collects the given entity as a page.
@@ -783,10 +785,10 @@ native int SF2_GetMaxBossCount();
 /**
  * Converts the entity index into a boss index.
  *
- * @param iEntIndex		Entity index.
+ * @param entIndex		Entity index.
  * @return				Boss index, or -1 if entity index is not a boss.
  */
-native int SF2_EntIndexToBossIndex(int iEntIndex);
+native int SF2_EntIndexToBossIndex(int entIndex);
 
 /**
  * Returns the entity index of a boss using EntRefToEntIndex().
@@ -808,10 +810,10 @@ native int SF2_BossIndexToEntIndexEx(int bossIndex);
 /**
  * Converts a boss unique ID to a boss index.
  *
- * @param iBossID		Unique id.
+ * @param bossID		Unique id.
  * @return				Boss index, or -1 if no boss has the unique id.
  */
-native int SF2_BossIDToBossIndex(int iBossID);
+native int SF2_BossIDToBossIndex(int bossID);
 
 /**
  * Returns the unique ID of a boss. A unique ID to a boss index is the equivalent of an entity reference to an entity index.
@@ -843,10 +845,10 @@ native void SF2_RemoveBoss(int bossIndex);
  * Retrieves the profile name of the boss.
  *
  * @param bossIndex		Boss index.
- * @param sBuffer			Buffer to store the profile name.
- * @param iBufferLen		Max length of sBuffer.
+ * @param buffer			Buffer to store the profile name.
+ * @param bufferLen		Max length of buffer.
  */
-native void SF2_GetBossName(int bossIndex, char[] sBuffer, int iBufferLen);
+native void SF2_GetBossName(int bossIndex, char[] buffer, int bufferLen);
 
 /**
  * Returns the type of the boss. See the SF2BossType enumeration for possible values.
@@ -1141,91 +1143,91 @@ native bool SF2_IsBossProfileValid(const char[] profile);
  * Retrieves an integer keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param iDefaultValue		Fallback value.
- * @return					The value, or iDefaultValue if the key doesn't exist.
+ * @param key				Name of the key.
+ * @param defaultValue		Fallback value.
+ * @return					The value, or defaultValue if the key doesn't exist.
  */
-native int SF2_GetBossProfileNum(const char[] profile, const char[] sKey, int iDefaultValue=0);
+native int SF2_GetBossProfileNum(const char[] profile, const char[] key, int defaultValue=0);
 
 /**
  * Retrieves a float keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param flDefaultValue	Fallback value.
- * @return					The value, or flDefaultValue if the key doesn't exist.
+ * @param key				Name of the key.
+ * @param defaultValue	Fallback value.
+ * @return					The value, or defaultValue if the key doesn't exist.
  */
-native float SF2_GetBossProfileFloat(const char[] profile, const char[] sKey, float flDefaultValue=0.0);
+native float SF2_GetBossProfileFloat(const char[] profile, const char[] key, float defaultValue=0.0);
 
 /**
  * Retrieves a string keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param sBuffer			Buffer to store the value.
- * @param iBufferLen		Max length of sBuffer.
- * @param sDefaultValue		Fallback value.
- * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ * @param key				Name of the key.
+ * @param buffer			Buffer to store the value.
+ * @param bufferLen		Max length of buffer.
+ * @param defaultValue		Fallback value.
+ * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
  */
-native bool SF2_GetBossProfileString(const char[] profile, const char[] sKey, char[] sBuffer, int iBufferLen, const char[] sDefaultValue="");
+native bool SF2_GetBossProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue="");
 
 /**
  * Retrieves a vector keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param flBuffer			Buffer to store the value.
- * @param flDefaultValue	Fallback value.
- * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ * @param key				Name of the key.
+ * @param buffer			Buffer to store the value.
+ * @param defaultValue	Fallback value.
+ * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
  */
-native bool SF2_GetBossProfileVector(const char[] profile, const char[] sKey, float flBuffer[3], const float flDefaultValue[3]=NULL_VECTOR);
+native bool SF2_GetBossProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR);
 
 /**
  * Retrieves an integer keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param iDefaultValue		Fallback value.
+ * @param key				Name of the key.
+ * @param defaultValue		Fallback value.
  * @param attackIndex		Attack Index to use.
- * @return					The value, or iDefaultValue if the key doesn't exist.
+ * @return					The value, or defaultValue if the key doesn't exist.
  */
-native int SF2_GetBossAttackProfileNum(const char[] profile, const char[] sKey, int iDefaultValue=0, const int attackIndex);
+native int SF2_GetBossAttackProfileNum(const char[] profile, const char[] key, int defaultValue=0, const int attackIndex);
 
 /**
  * Retrieves a float keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param flDefaultValue	Fallback value.
+ * @param key				Name of the key.
+ * @param defaultValue	Fallback value.
  * @param attackIndex		Attack Index to use.
- * @return					The value, or flDefaultValue if the key doesn't exist.
+ * @return					The value, or defaultValue if the key doesn't exist.
  */
-native float SF2_GetBossAttackProfileFloat(const char[] profile, const char[] sKey, float flDefaultValue=0.0, const int attackIndex);
+native float SF2_GetBossAttackProfileFloat(const char[] profile, const char[] key, float defaultValue=0.0, const int attackIndex);
 
 /**
  * Retrieves a string keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param sBuffer			Buffer to store the value.
- * @param iBufferLen		Max length of sBuffer.
- * @param sDefaultValue		Fallback value.
+ * @param key				Name of the key.
+ * @param buffer			Buffer to store the value.
+ * @param bufferLen		Max length of buffer.
+ * @param defaultValue		Fallback value.
  * @param attackIndex		Attack Index to use.
- * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
  */
-native bool SF2_GetBossAttackProfileString(const char[] profile, const char[] sKey, char[] sBuffer, int iBufferLen, const char[] sDefaultValue="", const int attackIndex);
+native bool SF2_GetBossAttackProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue="", const int attackIndex);
 
 /**
  * Retrieves a vector keyvalue from the profile.
  *
  * @param profile			Profile name.
- * @param sKey				Name of the key.
- * @param flBuffer			Buffer to store the value.
- * @param flDefaultValue	Fallback value.
+ * @param key				Name of the key.
+ * @param buffer			Buffer to store the value.
+ * @param defaultValue	Fallback value.
  * @param attackIndex		Attack Index to use.
- * @return					True if key exists; false otherwise. If false, sBuffer is set to sDefaultValue.
+ * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
  */
-native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] sKey, float flBuffer[3], const float flDefaultValue[3]=NULL_VECTOR, const int attackIndex);
+native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int attackIndex);
 
 /**
  * Retrieves a random string keyvalue from a section within the profile.
@@ -1241,31 +1243,31 @@ native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] sK
  *   }
  * }
  *
- * This function will randomly choose a string value within "section" if sKey = "section".
+ * This function will randomly choose a string value within "section" if key = "section".
  * 
  * @param profile			Profile name.
- * @param sKey				Name of the key. Must be a section.
- * @param sBuffer			Buffer to store the value.
- * @param iBufferLen		Max length of sBuffer.
- * @param iIndex			Mainly used for attack indexes, selects a random sound from an array that is iIndex.
+ * @param key				Name of the key. Must be a section.
+ * @param buffer			Buffer to store the value.
+ * @param bufferLen		Max length of buffer.
+ * @param index			Mainly used for attack indexes, selects a random sound from an array that is index.
  * @return					True if profile exists and key is set; false otherwise.
  */
-native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[] sKey, char[] sBuffer, int iBufferLen, int iIndex=-1);
+native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[] key, char[] buffer, int bufferLen, int index=-1);
 
 /**
  * Returns an attribute name if one exists
  * @param bossIndex	Boss index.
- * @param sAttribute	Name of attribute.
+ * @param attribute	Name of attribute.
 */
-native bool SF2_GetBossAttributeName(int bossIndex, const char[] sAttribute);
+native bool SF2_GetBossAttributeName(int bossIndex, const char[] attribute);
 
 /**
  * Returns the value of an attribute.
  * @param bossIndex	Boss index.
- * @param sAttribute	Name of attribute.
- * @param flDefaultValue	Default value of attribute.
+ * @param attribute	Name of attribute.
+ * @param defaultValue	Default value of attribute.
 */
-native float SF2_GetBossAttributeValue(int bossIndex, const char[] sAttribute, float flDefaultValue = 0.0);
+native float SF2_GetBossAttributeValue(int bossIndex, const char[] attribute, float defaultValue = 0.0);
 
 /**
  * Returns the projectile type a boss uses.
@@ -1327,9 +1329,9 @@ native float SF2_GetVectorSquareMagnitude(const float vec1[3], const float vec2[
 /**
  * Starts a boss pack vote
  *
- * @param iInitiator	Whoever started the vote, keep above 33 for non-clients
+ * @param initiator	Whoever started the vote, keep above 33 for non-clients
 */
-native void SF2_InitiateBossPackVote(int iInitiator);
+native void SF2_InitiateBossPackVote(int initiator);
 
 /**
  * Returns the flags of the projectile.

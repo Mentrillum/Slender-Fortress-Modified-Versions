@@ -21,16 +21,6 @@ methodmap SF2NPC_Statue < SF2NPC_BaseNPC
 	{
 		return view_as<SF2NPC_Statue>(SF2NPC_BaseNPC(index));
 	}
-
-	public int GetTeleporter(int iTeleporterNumber)
-	{
-		return NPCStatueGetTeleporter(this.Index, iTeleporterNumber);
-	}
-	
-	public void SetTeleporter(int iTeleporterNumber, int iEntity)
-	{
-		NPCStatueSetTeleporter(this.Index, iTeleporterNumber, iEntity);
-	}
 }
 
 float NPCStatueChaseDuration(int npcIndex, int difficulty)

@@ -176,7 +176,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 					velocity[0] = bufferProj[0]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 					velocity[1] = bufferProj[1]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 					velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
-					AttachParticle(projectileEnt, g_sSlenderFireballTrail[bossIndex]);
+					AttachParticle(projectileEnt, g_SlenderFireballTrail[bossIndex]);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 					SetEntPropFloat(projectileEnt, Prop_Data, "m_flModelScale", 1.0);
@@ -207,7 +207,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (i == 0)
 					{
-						EmitSoundToAll(g_sSlenderFireballShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+						EmitSoundToAll(g_SlenderFireballShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
@@ -225,7 +225,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 					velocity[0] = bufferProj[0]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 					velocity[1] = bufferProj[1]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 					velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
-					AttachParticle(projectileEnt, g_sSlenderIceballTrail[bossIndex]);
+					AttachParticle(projectileEnt, g_SlenderIceballTrail[bossIndex]);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
 					SetEntPropFloat(projectileEnt, Prop_Data, "m_flModelScale", 1.0);
@@ -256,7 +256,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (i == 0)
 					{
-						EmitSoundToAll(g_sSlenderFireballShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+						EmitSoundToAll(g_SlenderFireballShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
@@ -279,7 +279,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 					if (NPCChaserHasCriticalRockets(bossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
 					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(bossIndex, difficulty), true); // set damage
 					ProjectileSetFlags(projectileEnt, PROJ_ROCKET);
-					SetEntityModel(projectileEnt, g_sSlenderRocketModel[bossIndex]);
+					SetEntityModel(projectileEnt, g_SlenderRocketModel[bossIndex]);
 
 					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     team, 1);
 					TeleportEntity(projectileEnt, effectPos, shootAng, velocity);
@@ -298,7 +298,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (i == 0)
 					{
-						EmitSoundToAll(g_sSlenderRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+						EmitSoundToAll(g_SlenderRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
@@ -348,7 +348,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
 					}
 
-					if (i == 0) EmitSoundToAll(g_sSlenderRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+					if (i == 0) EmitSoundToAll(g_SlenderRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
 			}*/
@@ -393,7 +393,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 						if (i == 0)
 						{
-							EmitSoundToAll(g_sSlenderGrenadeShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+							EmitSoundToAll(g_SlenderGrenadeShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 						}
 						g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 					}
@@ -435,7 +435,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (i == 0)
 					{
-						EmitSoundToAll(g_sSlenderSentryRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+						EmitSoundToAll(g_SlenderSentryRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
@@ -484,7 +484,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 						CreateTimer(5.0, Timer_KillEntity, EntIndexToEntRef(projectileEnt), TIMER_FLAG_NO_MAPCHANGE);
 						if (i == 0)
 						{
-							EmitSoundToAll(g_sSlenderArrowShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+							EmitSoundToAll(g_SlenderArrowShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 						}
 						g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 					}
@@ -528,7 +528,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (i == 0)
 					{
-						EmitSoundToAll(g_sSlenderManglerShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+						EmitSoundToAll(g_SlenderManglerShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
@@ -575,7 +575,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (i == 0)
 					{
-						EmitSoundToAll(g_sSlenderBaseballShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+						EmitSoundToAll(g_SlenderBaseballShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}

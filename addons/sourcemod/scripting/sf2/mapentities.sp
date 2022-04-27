@@ -32,7 +32,7 @@ methodmap SF2TriggerMapEntity < CBaseEntity
 
 	public bool PassesTriggerFilters(int entity)
 	{
-		return !!SDKCall(g_hSDKPassesTriggerFilters, this.index, entity);
+		return !!SDKCall(g_SDKPassesTriggerFilters, this.index, entity);
 	}
 
 	property bool IsDisabled

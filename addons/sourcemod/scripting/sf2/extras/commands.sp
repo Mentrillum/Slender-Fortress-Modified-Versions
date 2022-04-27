@@ -14,14 +14,6 @@ public void OnPluginStart()
 	AddTempEntHook("Entity Decal", Hook_BlockDecals);
 	//AddTempEntHook("TFExplosion", Hook_DebugExplosion);
 
-	g_SlenderActionFactory = new NextBotActionFactory("SlenderBossAction");
-	g_SlenderActionFactory.SetEventCallback(EventResponderType_OnStuck, CBaseNPC_OnStuck);
-
-	for (int i = 0; i < MAX_BOSSES; i++)
-	{
-		g_BossPathFollower[i] = PathFollower(_, TraceRayDontHitAnyEntity_Pathing, Path_FilterOnlyActors);
-	}
-
 	// Get offsets.
 	g_PlayerFOVOffset = FindSendPropInfo("CBasePlayer", "m_iFOV");
 	if (g_PlayerFOVOffset == -1)
@@ -1511,9 +1503,9 @@ public Action Command_ForceEndGrace(int client,int args)
 		return Plugin_Continue;
 	}
 
-	if (g_hRoundGraceTimer != null)
+	if (g_RoundGraceTimer != null)
 	{
-		TriggerTimer(g_hRoundGraceTimer);
+		TriggerTimer(g_RoundGraceTimer);
 	}
 
 	return Plugin_Handled;

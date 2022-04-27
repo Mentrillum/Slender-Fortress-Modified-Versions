@@ -511,7 +511,7 @@ static void InputSetSurviveUntilTime(int entity, int activator, int caller, int 
 	if (value < 0)
 		value = 0;
 
-	g_iTimeEscape = value;
+	g_TimeEscape = value;
 }
 
 static void InputSetEscapeTimeLimit(int entity, int activator, int caller, int value)
@@ -582,12 +582,12 @@ static void InputSetEscapeTextEntity(int entity, int activator, int caller, cons
 
 static void InputEnableInfiniteFlashlight(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteFlashlight = true;
+	g_RoundInfiniteFlashlight = true;
 }
 
 static void InputDisableInfiniteFlashlight(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteFlashlight = false;
+	g_RoundInfiniteFlashlight = false;
 }
 
 static void InputEnableInfiniteSprint(int entity, int activator, int caller)
@@ -602,12 +602,12 @@ static void InputDisableInfiniteSprint(int entity, int activator, int caller)
 
 static void InputEnableInfiniteBlink(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteBlink = true;
+	g_RoundInfiniteBlink = true;
 }
 
 static void InputDisableInfiniteBlink(int entity, int activator, int caller)
 {
-	g_bRoundInfiniteBlink = false;
+	g_RoundInfiniteBlink = false;
 }
 
 static void InputEnableBossesChaseEndlessly(int entity, int activator, int caller)
@@ -651,9 +651,9 @@ static void InputSetDifficulty(int entity, int activator, int caller, int value)
 
 static void InputEndGracePeriod(int entity, int activator, int caller)
 {
-	if (GetRoundState() == SF2RoundState_Grace && g_hRoundGraceTimer != null) 
+	if (GetRoundState() == SF2RoundState_Grace && g_RoundGraceTimer != null) 
 	{
-		TriggerTimer(g_hRoundGraceTimer);
+		TriggerTimer(g_RoundGraceTimer);
 	}
 }
 
