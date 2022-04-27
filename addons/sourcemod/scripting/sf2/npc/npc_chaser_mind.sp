@@ -1310,8 +1310,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						}
 					}
 				}
-				if (!IsValidEntity(target) || (!building && DidClientEscape(target)) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
+				if (!IsValidEntity(target) || (!building && !IsTargetValidForSlender(target)) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 				{
+					g_SlenderGiveUp[bossIndex] = true;
 					// Even if the target isn't valid anymore, see if I still have some ways to go on my current path,
 					// because I shouldn't actually know that the target has died until I see it.
 					if (!g_BossPathFollower[bossIndex].IsValid())
@@ -2643,7 +2644,7 @@ public Action Timer_SlenderPublicDeathCamThink(Handle timer, any entref)
 
 	int client = EntRefToEntIndex(g_SlenderDeathCamTarget[bossIndex]);
 
-	if (!IsValidClient(client) || (IsValidClient(client) && (!IsPlayerAlive(client) || g_PlayerEliminated[client] || GetClientTeam(client) == TFTeam_Blue)))
+	if (!IsValidClient(client) || (IsValidClient(client) && (!IsPlayerAlive(client) || GetClientTeam(client) == TFTeam_Blue)))
 	{
 		if (g_SlenderDeathCamTimer[bossIndex] != null)
 		{
@@ -2665,6 +2666,10 @@ public Action Timer_SlenderPublicDeathCamThink(Handle timer, any entref)
 				if (!NPCChaserIsCloaked(bossIndex))
 				{
 					SetEntityRenderColor(slender, g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
+				}
+				if (g_SlenderEntityThink[bossIndex] != null)
+				{
+					KillTimer(g_SlenderEntityThink[bossIndex]);
 				}
 				g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 				g_SlenderInDeathcam[bossIndex] = false;

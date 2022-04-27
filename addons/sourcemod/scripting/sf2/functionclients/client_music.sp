@@ -1252,14 +1252,14 @@ public Action Timer_PlayerFadeIn20DollarsMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	int oldBoss = g_Player20DollarsMusicOldMaster[client];
+	/*int oldBoss = g_Player20DollarsMusicOldMaster[client];
 
 	if (oldBoss != -1 && bossIndex != oldBoss && strcmp(g_Player20DollarsMusicString[client][bossIndex], g_Player20DollarsMusicString[client][oldBoss], false) == 0)
 	{
 		g_Player20DollarsMusicTimer[client][bossIndex] = null;
 		g_Player20DollarsMusicVolumes[client][bossIndex] = 1.0;
 		return Plugin_Stop;
-	}
+	}*/
 	
 	g_Player20DollarsMusicVolumes[client][bossIndex] += 0.07;
 	if (g_Player20DollarsMusicVolumes[client][bossIndex] > 1.0)
@@ -1361,14 +1361,14 @@ public Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	int oldBoss = g_PlayerAlertMusicOldMaster[client];
+	/*int oldBoss = g_PlayerAlertMusicOldMaster[client];
 
 	if (oldBoss != -1 && bossIndex != oldBoss && strcmp(g_PlayerAlertMusicString[client][bossIndex], g_PlayerAlertMusicString[client][oldBoss], false) == 0)
 	{
 		g_PlayerAlertMusicTimer[client][bossIndex] = null;
 		g_PlayerAlertMusicVolumes[client][bossIndex] = 1.0;
 		return Plugin_Stop;
-	}
+	}*/
 	
 	g_PlayerAlertMusicVolumes[client][bossIndex] += 0.07;
 	if (g_PlayerAlertMusicVolumes[client][bossIndex] > 1.0)
@@ -1470,14 +1470,14 @@ public Action Timer_PlayerFadeInIdleMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	int oldBoss = g_PlayerIdleMusicOldMaster[client];
+	/*int oldBoss = g_PlayerIdleMusicOldMaster[client];
 
 	if (oldBoss != -1 && bossIndex != oldBoss && strcmp(g_PlayerIdleMusicString[client][bossIndex], g_PlayerIdleMusicString[client][oldBoss], false) == 0)
 	{
 		g_PlayerIdleMusicTimer[client][bossIndex] = null;
 		g_PlayerIdleMusicVolumes[client][bossIndex] = 1.0;
 		return Plugin_Stop;
-	}
+	}*/
 	
 	g_PlayerIdleMusicVolumes[client][bossIndex] += 0.07;
 	if (g_PlayerIdleMusicVolumes[client][bossIndex] > 1.0)
@@ -1579,14 +1579,14 @@ public Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	int oldBoss = g_PlayerChaseMusicOldMaster[client];
+	/*int oldBoss = g_PlayerChaseMusicOldMaster[client];
 
 	if (oldBoss != -1 && bossIndex != oldBoss && strcmp(g_PlayerChaseMusicString[client][bossIndex], g_PlayerChaseMusicString[client][oldBoss], false) == 0)
 	{
 		g_PlayerChaseMusicTimer[client][bossIndex] = null;
 		g_PlayerChaseMusicVolumes[client][bossIndex] = 1.0;
 		return Plugin_Stop;
-	}
+	}*/
 	
 	g_PlayerChaseMusicVolumes[client][bossIndex] += 0.07;
 	if (g_PlayerChaseMusicVolumes[client][bossIndex] > 1.0)
@@ -1631,14 +1631,14 @@ public Action Timer_PlayerFadeInChaseMusicSee(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	int oldBoss = g_PlayerChaseMusicSeeOldMaster[client];
+	/*int oldBoss = g_PlayerChaseMusicSeeOldMaster[client];
 
 	if (oldBoss != -1 && bossIndex != oldBoss && strcmp(g_PlayerChaseMusicSeeString[client][bossIndex], g_PlayerChaseMusicSeeString[client][oldBoss], false) == 0)
 	{
 		g_PlayerChaseMusicSeeTimer[client][bossIndex] = null;
 		g_PlayerChaseMusicSeeVolumes[client][bossIndex] = 1.0;
 		return Plugin_Stop;
-	}
+	}*/
 	
 	g_PlayerChaseMusicSeeVolumes[client][bossIndex] += 0.07;
 	if (g_PlayerChaseMusicSeeVolumes[client][bossIndex] > 1.0)

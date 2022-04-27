@@ -2485,6 +2485,21 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 		return;
 	}
 
+	for (int npcIndex; npcIndex < MAX_BOSSES; npcIndex++)
+	{
+		if (NPCGetUniqueID(npcIndex) == -1) continue;
+		switch (NPCGetType(npcIndex))
+		{
+			case SF2BossType_Chaser:
+			{
+				if (g_SlenderState[npcIndex] == STATE_CHASE && EntRefToEntIndex(g_SlenderTarget[npcIndex]) == client)
+				{
+					g_SlenderGiveUp[npcIndex] = true;
+				}
+			}
+		}
+	}
+
 	GetClientAbsOrigin(client, g_vecPlayerOriginalDeathcamPosition[client]);
 	
 	char buffer[PLATFORM_MAX_PATH];
@@ -2624,6 +2639,10 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 				SetEntityRenderColor(slenderEnt, g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], 0);
 				NPCChaserUpdateBossAnimation(bossIndex, slenderEnt, STATE_DEATHCAM);
 				g_SlenderDeathCamTarget[bossIndex] = EntIndexToEntRef(client);
+				if (g_SlenderEntityThink[bossIndex] != null)
+				{
+					KillTimer(g_SlenderEntityThink[bossIndex]);
+				}
 				g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderPublicDeathCamThink, EntIndexToEntRef(slenderEnt), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
@@ -2696,6 +2715,7 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 		g_CameraInDeathCamAdvanced[camera] = true;
 		g_CameraPlayerOffsetBackward[camera] = g_SlenderPublicDeathCamBackwardOffset[bossIndex];
 		g_CameraPlayerOffsetDownward[camera] = g_SlenderPublicDeathCamDownwardOffset[bossIndex];
+		RequestFrame(Frame_PublicDeathCam, camera); //Resend taunt sound to eliminated players only
 	}
 	
 	if (g_SlenderDeathCamOverlay[bossIndex] && g_SlenderDeathCamOverlayTimeStart[bossIndex] >= 0.0)
@@ -2729,6 +2749,29 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 	Call_PushCell(client);
 	Call_PushCell(bossIndex);
 	Call_Finish();
+}
+
+void Frame_PublicDeathCam(int cameraRef)
+{
+	int camera = EntRefToEntIndex(cameraRef);
+	if (IsValidEntity(camera))
+	{
+		int slender = GetEntPropEnt(camera, Prop_Data, "m_hOwnerEntity");
+		int client = GetEntPropEnt(camera, Prop_Data, "m_hPlayer");
+		if (IsValidEntity(slender) && IsValidClient(client))
+		{
+			float camPos[3], camAngs[3];
+			GetEntPropVector(camera, Prop_Data, "m_angAbsRotation", camAngs);
+			GetEntPropVector(camera, Prop_Data, "m_vecAbsOrigin", camPos);
+			
+			camPos[0] -= g_CameraPlayerOffsetBackward[camera];
+			camPos[2] -= g_CameraPlayerOffsetDownward[camera];
+	
+			TeleportEntity(client, camPos, camAngs, NULL_VECTOR);
+
+			RequestFrame(Frame_PublicDeathCam, EntIndexToEntRef(cameraRef));
+		}
+	}
 }
 
 public Action Timer_ClientResetDeathCam1(Handle timer, any userid)

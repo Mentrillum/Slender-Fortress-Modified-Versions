@@ -197,7 +197,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 	// Process angles.
 	bool changeAngle = false;
 	float posToAt[3];
-	if (state != STATE_STUN && !g_SlenderSpawning[bossIndex])
+	if (state != STATE_STUN && !g_SlenderSpawning[bossIndex] && !g_SlenderInDeathcam[bossIndex])
 	{
 		int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 		
