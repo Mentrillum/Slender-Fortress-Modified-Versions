@@ -640,50 +640,76 @@ void SpecialRoundStart()
 				{
 					continue;
 				}
-				
-				if (TF2_GetPlayerClass(client) == TFClass_Medic)
+				TFClassType class = TF2_GetPlayerClass(client);
+				int classToInt = view_as<int>(class);
+				if (!IsClassConfigsValid())
 				{
-					TFClassType newClass;
-					int random = GetRandomInt(1,8);
-					switch (random)
+					if (class == TFClass_Medic)
 					{
-						case 1:
+						TFClassType newClass;
+						int random = GetRandomInt(1,8);
+						switch (random)
 						{
-							newClass = TFClass_Scout;
+							case 1:
+							{
+								newClass = TFClass_Scout;
+							}
+							case 2:
+							{
+								newClass = TFClass_Soldier;
+							}
+							case 3:
+							{
+								newClass = TFClass_Pyro;
+							}
+							case 4:
+							{
+								newClass = TFClass_DemoMan;
+							}
+							case 5:
+							{
+								newClass = TFClass_Heavy;
+							}
+							case 6:
+							{
+								newClass = TFClass_Engineer;
+							}
+							case 7:
+							{
+								newClass = TFClass_Sniper;
+							}
+							case 8:
+							{
+								newClass = TFClass_Spy;
+							}
+							case 9:
+							{
+								newClass = TFClass_Medic;
+							}
 						}
-						case 2:
-						{
-							newClass = TFClass_Soldier;
-						}
-						case 3:
-						{
-							newClass = TFClass_Pyro;
-						}
-						case 4:
-						{
-							newClass = TFClass_DemoMan;
-						}
-						case 5:
-						{
-							newClass = TFClass_Heavy;
-						}
-						case 6:
-						{
-							newClass = TFClass_Engineer;
-						}
-						case 7:
-						{
-							newClass = TFClass_Sniper;
-						}
-						case 8:
-						{
-							newClass = TFClass_Spy;
-						}
+						TF2_SetPlayerClass(client, newClass);
+						TF2_RegeneratePlayer(client);
 					}
-					TF2_SetPlayerClass(client, newClass);
-					TF2_RegeneratePlayer(client);
 				}
-				else if (TF2_GetPlayerClass(client) == TFClass_Sniper)
+				else
+				{
+					if (g_ClassBlockedOnThanatophobia[classToInt])
+					{
+						ArrayList classArrays = new ArrayList();
+						for (int i = 0; i < MAX_CLASSES; i++)
+						{
+							if (!g_ClassBlockedOnThanatophobia[classToInt])
+							{
+								classArrays.Push(view_as<TFClassType>(i + 1));
+							}
+						}
+						TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
+						TF2_SetPlayerClass(client, newClass);
+						TF2_RegeneratePlayer(client);
+						delete classArrays;
+					}
+				}
+				if (TF2_GetPlayerClass(client) == TFClass_Sniper)
 				{
 					int ent = -1;
 					while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
@@ -1220,7 +1246,7 @@ void SpecialRoundStart()
 				GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
 				if (model[0] != '\0')
 				{
-					if ((strcmp(model, g_PageRefModelName) == 0 || strcmp(model, PAGE_MODEL) == 0) && StrContains(targetName, "sf2_page_ex", false) != -1)
+					if ((strcmp(model, g_PageRefModelName) == 0 || strcmp(model, PAGE_MODEL) == 0) && StrContains(targetName, "sf2_page_", false) != -1)
 					{
 						SetEntityModel(ent, "models/workshop/player/items/pyro/eotl_ducky/eotl_bonus_duck.mdl");
 					}

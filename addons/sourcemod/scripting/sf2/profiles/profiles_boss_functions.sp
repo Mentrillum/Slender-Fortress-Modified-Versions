@@ -1723,9 +1723,9 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	TryPrecacheBossProfileSoundPath(sSpawnParticleSound);
 	TryPrecacheBossProfileSoundPath(sDespawnParticleSound);
 	TryPrecacheBossProfileSoundPath(sSmiteSound);
-	TryPrecacheBossProfileSoundPath(sTrapDeploySound);
-	TryPrecacheBossProfileSoundPath(sTrapMissSound);
-	TryPrecacheBossProfileSoundPath(sTrapHitSound);
+	TryPrecacheBossProfileSoundPath(sTrapDeploySound, true);
+	TryPrecacheBossProfileSoundPath(sTrapMissSound, true);
+	TryPrecacheBossProfileSoundPath(sTrapHitSound, true);
 	if (strcmp(sRocketModel, ROCKET_MODEL, true) != 0)
 	{
 		if (!PrecacheModel(sRocketModel, true))

@@ -140,6 +140,7 @@ public void OnPluginStart()
 	g_BossProfileOverrideConVar = CreateConVar("sf2_boss_profile_override", "", "Overrides which boss will be chosen next. Only applies to the first boss being chosen.");
 	g_DifficultyConVar = CreateConVar("sf2_difficulty", "1", "Difficulty of the game. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon.", _, true, 1.0, true, 5.0);
 	g_DifficultyConVar.AddChangeHook(OnConVarChanged);
+	g_DifficultyConVar.AddChangeHook(OnDifficultyConVarChangedForward);
 
 	g_CameraOverlayConVar = CreateConVar("sf2_camera_overlay", SF2_OVERLAY_DEFAULT, "The overlay directory for what RED players will see with No Filmgrain off. This value shouldn't be updated in realtime and should be set before a map changes fully.");
 	g_OverlayNoGrainConVar = CreateConVar("sf2_camera_overlay_nograin", SF2_OVERLAY_DEFAULT_NO_FILMGRAIN, "The overlay directory for what RED players will see with No Filmgrain on. This value shouldn't be updated in realtime and should be set before a map changes fully.");
@@ -396,9 +397,22 @@ public void OnPluginStart()
 #endif
 }
 
-public Action Hook_BlockDecals(const char[] te_name, const int[] Players, int numClients, float delay)
+static Action Hook_BlockDecals(const char[] te_name, const int[] Players, int numClients, float delay)
 {
 	return Plugin_Stop;
+}
+
+static void OnDifficultyConVarChangedForward(ConVar cvar, const char[] oldValue, const char[] newValue)
+{
+	if (!g_Enabled) return;
+
+	int oldDifficulty = StringToInt(oldValue);
+	int difficulty = StringToInt(newValue);
+
+	Call_StartForward(g_OnDifficultyChangeFwd);
+	Call_PushCell(difficulty);
+	Call_PushCell(oldDifficulty);
+	Call_Finish();
 }
 
 //	==========================================================
@@ -1521,6 +1535,7 @@ public Action Command_ReloadProfiles(int client, int args)
 	ReloadBossProfiles();
 	ReloadRestrictedWeapons();
 	ReloadSpecialRounds();
+	ReloadClassConfigs();
 	CPrintToChatAll("{royalblue}%t{default} Reloaded all profiles successfully.", "SF2 Prefix");
 
 	return Plugin_Handled;

@@ -203,7 +203,6 @@ int g_SlenderDamageClientSoundPitch[MAX_BOSSES];
 char damageEffectParticle[PLATFORM_MAX_PATH];
 char damageEffectSound[PLATFORM_MAX_PATH];
 
-static bool g_NpcHasAutoChaseEnabled[MAX_BOSSES] = { false, ... };
 static int g_NpcAutoChaseThreshold[MAX_BOSSES][Difficulty_Max];
 static int g_NpcAutoChaseAddGeneral[MAX_BOSSES][Difficulty_Max];
 static int g_NpcAutoChaseAddFootstep[MAX_BOSSES][Difficulty_Max];
@@ -213,8 +212,6 @@ static bool g_NpcHasAutoChaseSprinters[MAX_BOSSES] = { false, ... };
 float g_NpcAutoChaseSprinterCooldown[MAX_BOSSES];
 
 bool g_NpcInAutoChase[MAX_BOSSES];
-
-bool g_NpcChasesEndlessly[MAX_BOSSES] = { false, ... };
 
 float g_NpcLaserTimer[MAX_BOSSES];
 
@@ -310,291 +307,6 @@ BaseAttackStructure g_NpcBaseAttacks[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS][Di
 static int g_NpcCurrentAttackIndex[MAX_BOSSES];
 float g_NpcBaseAttackRunDurationTime[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS];
 float g_NpcBaseAttackRunDelayTime[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS];
-
-const SF2NPC_Chaser SF2_INVALID_NPC_CHASER = view_as<SF2NPC_Chaser>(-1);
-
-methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
-{
-	property float WakeRadius
-	{
-		public get() { return NPCChaserGetWakeRadius(this.Index); }
-	}
-
-	property bool StunEnabled
-	{
-		public get() { return NPCChaserIsStunEnabled(this.Index); }
-	}
-	
-	property bool StunByFlashlightEnabled
-	{
-		public get() { return NPCChaserIsStunByFlashlightEnabled(this.Index); }
-	}
-	
-	property float StunFlashlightDamage
-	{
-		public get() { return NPCChaserGetStunFlashlightDamage(this.Index); }
-	}
-	
-	property float StunDuration
-	{
-		public get() { return NPCChaserGetStunDuration(this.Index); }
-	}
-	
-	property float StunCooldown
-	{
-		public get() { return NPCChaserGetStunCooldown(this.Index); }
-	}
-	
-	property float StunHealth
-	{
-		public get() { return NPCChaserGetStunHealth(this.Index); }
-		public set(float amount) { NPCChaserSetStunHealth(this.Index, amount); }
-	}
-	
-	property float StunInitialHealth
-	{
-		public get() { return NPCChaserGetStunInitialHealth(this.Index); }
-		public set(float amount) { NPCChaserSetStunInitialHealth(this.Index, amount); }
-	}
-	
-	property bool HasDamageParticles
-	{
-		public get() { return NPCChaserDamageParticlesEnabled(this.Index); }
-	}
-	
-	property bool UseShootGesture
-	{
-		public get() { return NPCChaserUseShootGesture(this.Index); }
-	}
-	
-	property bool CloakEnabled
-	{
-		public get() { return NPCChaserIsCloakEnabled(this.Index); }
-	}
-	
-	public float GetCloakCooldown(int difficulty)
-	{
-		return NPCChaserGetCloakCooldown(this.Index, difficulty);
-	}
-	
-	public float GetCloakRange(int difficulty)
-	{
-		return NPCChaserGetCloakRange(this.Index, difficulty);
-	}
-	
-	property bool HasKeyDrop
-	{
-		public get() { return NPCChaseHasKeyDrop(this.Index); }
-	}
-	
-	property bool ProjectileEnabled
-	{
-		public get() { return NPCChaserIsProjectileEnabled(this.Index); }
-	}
-	
-	property bool ProjectileUsesAmmo
-	{
-		public get() { return NPCChaserUseProjectileAmmo(this.Index); }
-	}
-	
-	property int ProjectileType
-	{
-		public get() { return NPCChaserGetProjectileType(this.Index); }
-	}
-	
-	public float GetProjectileCooldownMin(int difficulty)
-	{
-		return NPCChaserGetProjectileCooldownMin(this.Index, difficulty);
-	}
-	
-	public float GetProjectileCooldownMax(int difficulty)
-	{
-		return NPCChaserGetProjectileCooldownMax(this.Index, difficulty);
-	}
-	
-	public float GetProjectileSpeed(int difficulty)
-	{
-		return NPCChaserGetProjectileSpeed(this.Index, difficulty);
-	}
-	
-	public float GetProjectileDamage(int difficulty)
-	{
-		return NPCChaserGetProjectileDamage(this.Index, difficulty);
-	}
-	
-	public float GetProjectileRadius(int difficulty)
-	{
-		return NPCChaserGetProjectileRadius(this.Index, difficulty);
-	}
-	
-	public float GetProjectileReloadTime(int difficulty)
-	{
-		return NPCChaserGetProjectileReloadTime(this.Index, difficulty);
-	}
-	
-	property bool AdvancedDamageEffectsEnabled
-	{
-		public get() { return NPCChaserUseAdvancedDamageEffects(this.Index); }
-	}
-	
-	property bool AttachDamageEffectsParticle
-	{
-		public get() { return NPCChaserAttachDamageParticle(this.Index); }
-	}
-	
-	property bool JaratePlayerOnHit
-	{
-		public get() { return NPCChaserJaratePlayerOnHit(this.Index); }
-	}
-	
-	public float GetJarateDuration(int difficulty)
-	{
-		return NPCChaserGetJarateDuration(this.Index, difficulty);
-	}
-	
-	property bool MilkPlayerOnHit
-	{
-		public get() { return NPCChaserMilkPlayerOnHit(this.Index); }
-	}
-	
-	public float GetMilkDuration(int difficulty)
-	{
-		return NPCChaserGetMilkDuration(this.Index, difficulty);
-	}
-	
-	property bool GasPlayerOnHit
-	{
-		public get() { return NPCChaserGasPlayerOnHit(this.Index); }
-	}
-	
-	public float GetGasDuration(int difficulty)
-	{
-		return NPCChaserGetGasDuration(this.Index, difficulty);
-	}
-	
-	property bool MarkPlayerOnHit
-	{
-		public get() { return NPCChaserMarkPlayerOnHit(this.Index); }
-	}
-	
-	public float GetMarkDuration(int difficulty)
-	{
-		return NPCChaserGetMarkDuration(this.Index, difficulty);
-	}
-	
-	property bool IgnitePlayerOnHit
-	{
-		public get() { return NPCChaserIgnitePlayerOnHit(this.Index); }
-	}
-	
-	public float GetIgniteDelay(int difficulty)
-	{
-		return NPCChaserGetIgniteDelay(this.Index, difficulty);
-	}
-	
-	property bool StunPlayerOnHit
-	{
-		public get() { return NPCChaserStunPlayerOnHit(this.Index); }
-	}
-	
-	public float GetStunAttackDuration(int difficulty)
-	{
-		return NPCChaserGetStunAttackDuration(this.Index, difficulty);
-	}
-	
-	public float GetStunAttackSlowdown(int difficulty)
-	{
-		return NPCChaserGetStunAttackSlowdown(this.Index, difficulty);
-	}
-	
-	property bool BleedPlayerOnHit
-	{
-		public get() { return NPCChaserBleedPlayerOnHit(this.Index); }
-	}
-	
-	public float GetBleedDuration(int difficulty)
-	{
-		return NPCChaserGetBleedDuration(this.Index, difficulty);
-	}
-	
-	property bool ElectricPlayerOnHit
-	{
-		public get() { return NPCChaserElectricPlayerOnHit(this.Index); }
-	}
-	
-	public float GetElectricDuration(int difficulty)
-	{
-		return NPCChaserGetElectricDuration(this.Index, difficulty);
-	}
-	
-	public float GetElectricSlowdown(int difficulty)
-	{
-		return NPCChaserGetElectricSlowdown(this.Index, difficulty);
-	}
-	
-	property bool SmitePlayerOnHit
-	{
-		public get() { return NPCChaserSmitePlayerOnHit(this.Index); }
-	}
-	
-	property int State
-	{
-		public get() { return NPCChaserGetState(this.Index); }
-		public set(int state) { NPCChaserSetState(this.Index, state); }
-	}
-	
-	property bool HasTraps
-	{
-		public get() { return NPCChaserGetTrapState(this.Index); }
-	}
-	
-	property int TrapType
-	{
-		public get() { return NPCChaserGetTrapType(this.Index); }
-	}
-	
-	public float GetTrapCooldown(int difficulty)
-	{
-		return NPCChaserGetTrapSpawnTime(this.Index, difficulty);
-	}
-	
-	property bool HasCriticalRockets
-	{
-		public get() { return NPCChaserHasCriticalRockets(this.Index); }
-	}
-
-	public float GetWalkSpeed(int difficulty)
-	{
-		return NPCChaserGetWalkSpeed(this.Index, difficulty);
-	}
-	
-	public float GetMaxWalkSpeed(int difficulty)
-	{
-		return NPCChaserGetMaxWalkSpeed(this.Index, difficulty);
-	}
-	
-	public void AddStunHealth(float amount)
-	{
-		NPCChaserAddStunHealth(this.Index, amount);
-	}
-	
-	property bool AutoChaseEnabled
-	{
-		public get() { return g_NpcHasAutoChaseEnabled[this.Index]; }
-		public set(bool autoChase) { g_NpcHasAutoChaseEnabled[this.Index] = autoChase; }
-	}
-	
-	property bool ChasesEndlessly
-	{
-		public get() { return g_NpcChasesEndlessly[this.Index]; }
-		public set(bool chaseEndlessly) { g_NpcChasesEndlessly[this.Index] = chaseEndlessly; }
-	}
-	
-	public SF2NPC_Chaser(int index)
-	{
-		return view_as<SF2NPC_Chaser>(SF2NPC_BaseNPC(index));
-	}
-}
 
 #include "sf2/npc/npc_chaser_mind.sp"
 #include "sf2/npc/npc_chaser_attacks.sp"
@@ -1482,7 +1194,7 @@ float NPCChaserGetSelfHealPercentageThree(int npcIndex)
 
 bool NPCChaserIsAutoChaseEnabled(int npcIndex)
 {
-	return g_NpcHasAutoChaseEnabled[npcIndex];
+	return g_SlenderHasAutoChaseEnabled[npcIndex];
 }
 
 int NPCChaserAutoChaseThreshold(int npcIndex, int difficulty)
@@ -2019,13 +1731,13 @@ int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
 	g_NpcHasTrapsEnabled[npcIndex] = profile.HasTraps;
 	g_NpcTrapType[npcIndex] = profile.TrapType;
 	
-	g_NpcHasAutoChaseEnabled[npcIndex] = profile.AutoChaseEnabled;
+	g_SlenderHasAutoChaseEnabled[npcIndex] = profile.AutoChaseEnabled;
 	g_NpcHasAutoChaseSprinters[npcIndex] = profile.AutoChaseSprinters;
 	g_NpcAutoChaseSprinterCooldown[npcIndex] = 0.0;
 	g_NpcInAutoChase[npcIndex] = false;
 	g_SlenderIsAutoChasingLoudPlayer[npcIndex] = false;
 	
-	g_NpcChasesEndlessly[npcIndex] = profile.ChasesEndlessly;
+	g_SlenderChasesEndlessly[npcIndex] = profile.ChasesEndlessly;
 	
 	g_NpcLaserTimer[npcIndex] = 0.0;
 	
@@ -2304,13 +2016,13 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcHasTrapsEnabled[npcIndex] = false;
 	g_NpcTrapType[npcIndex] = 0;
 	
-	g_NpcHasAutoChaseEnabled[npcIndex] = false;
+	g_SlenderHasAutoChaseEnabled[npcIndex] = false;
 	g_NpcInAutoChase[npcIndex] = false;
 	g_NpcHasAutoChaseSprinters[npcIndex] = false;
 	g_NpcAutoChaseSprinterCooldown[npcIndex] = 0.0;
 	g_SlenderIsAutoChasingLoudPlayer[npcIndex] = false;
 	
-	g_NpcChasesEndlessly[npcIndex] = false;
+	g_SlenderChasesEndlessly[npcIndex] = false;
 	
 	NPCSetAddSpeed(npcIndex, -NPCGetAddSpeed(npcIndex));
 	NPCSetAddMaxSpeed(npcIndex, -NPCGetAddMaxSpeed(npcIndex));

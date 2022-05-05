@@ -43,13 +43,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	g_OnClientEndDeathCamFwd = new GlobalForward("SF2_OnClientEndDeathCam", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnClientGetDefaultWalkSpeedFwd = new GlobalForward("SF2_OnClientGetDefaultWalkSpeed", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnClientGetDefaultSprintSpeedFwd = new GlobalForward("SF2_OnClientGetDefaultSprintSpeed", ET_Hook, Param_Cell, Param_CellByRef);
-	g_OnClientTakeDamageFwd = new GlobalForward("SF2_OnClientTakeDamage", ET_Hook, Param_Cell, Param_Cell, Param_FloatByRef);
+	g_OnClientTakeDamageFwd = new GlobalForward("SF2_OnClientTakeDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef);
 	g_OnClientSpawnedAsProxyFwd = new GlobalForward("SF2_OnClientSpawnedAsProxy", ET_Ignore, Param_Cell);
 	g_OnClientDamagedByBossFwd = new GlobalForward("SF2_OnClientDamagedByBoss", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Cell);
 	g_OnGroupGiveQueuePointsFwd = new GlobalForward("SF2_OnGroupGiveQueuePoints", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnRenevantTriggerWaveFwd = new GlobalForward("SF2_OnRenevantWaveTrigger", ET_Ignore, Param_Cell);
 	g_OnBossPackVoteStartFwd = new GlobalForward("SF2_OnBossPackVoteStart", ET_Ignore);
-	g_OnDifficultyChangeFwd = new GlobalForward("SF2_OnDifficultyChange", ET_Ignore, Param_Cell);
+	g_OnDifficultyChangeFwd = new GlobalForward("SF2_OnDifficultyChanged", ET_Ignore, Param_Cell, Param_Cell);
 	
 	CreateNative("SF2_IsRunning", Native_IsRunning);
 	CreateNative("SF2_GetRoundState", Native_GetRoundState);
@@ -79,7 +79,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	CreateNative("SF2_SetClientSprintPoints", Native_SetClientSprintPoints);
 	CreateNative("SF2_IsClientSprinting", Native_IsClientSprinting);
 	CreateNative("SF2_IsClientReallySprinting", Native_IsClientReallySprinting);
+	CreateNative("SF2_SetClientSprintState", Native_SetClientSprintState);
 	CreateNative("SF2_IsClientTrapped", Native_IsClientTrapped);
+	CreateNative("SF2_IsClientInDeathCam", Native_IsClientInDeathCam);
 	CreateNative("SF2_ClientSpawnProxy", Native_ClientSpawnProxy);
 	CreateNative("SF2_ClientForceProxy", Native_ClientForceProxy);
 	CreateNative("SF2_CollectAsPage", Native_CollectAsPage);
@@ -576,9 +578,19 @@ public int Native_IsClientReallySprinting(Handle plugin, int numParams)
 	return IsClientReallySprinting(GetNativeCell(1));
 }
 
+public int Native_SetClientSprintState(Handle plugin, int numParams)
+{
+	ClientHandleSprint(GetNativeCell(1), GetNativeCell(2));
+}
+
 public int Native_IsClientTrapped(Handle plugin, int numParams)
 {
 	return g_PlayerTrapped[GetNativeCell(1)];
+}
+
+public int Native_IsClientInDeathCam(Handle plugin, int numParams)
+{
+	return IsClientInDeathCam(GetNativeCell(1));
 }
 
 public int Native_ClientSpawnProxy(Handle plugin, int numParams)

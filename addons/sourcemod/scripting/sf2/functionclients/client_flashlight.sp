@@ -387,6 +387,9 @@ void ClientTurnOnFlashlight(int client)
 	float doubleRadius = SF2_FLASHLIGHT_WIDTH*2.0;
 	GetClientEyePosition(client, eyePos);
 
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
+
 	if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
 	{
 		// If the player is using the projected flashlight, just set effect flags.
@@ -444,25 +447,49 @@ void ClientTurnOnFlashlight(int client)
 			{
 				DispatchKeyValue(ent, "rendercolor", "125 255 255");
 			}
-			if (TF2_GetPlayerClass(client) != TFClass_Engineer)
+			if (!IsClassConfigsValid())
 			{
-				SetVariantFloat(radius);
+				if (class != TFClass_Engineer)
+				{
+					SetVariantFloat(radius);
+				}
+				else
+				{
+					SetVariantFloat(doubleRadius);
+				}
 			}
 			else
 			{
-				SetVariantFloat(doubleRadius);
+				float customRadius = radius * g_ClassFlashlightRadius[classToInt];
+				SetVariantFloat(customRadius);
 			}
 			AcceptEntityInput(ent, "spotlight_radius");
-			if (TF2_GetPlayerClass(client) != TFClass_Engineer)
+			if (!IsClassConfigsValid())
 			{
-				SetVariantFloat(length);
+				if (class != TFClass_Engineer)
+				{
+					SetVariantFloat(length);
+				}
+				else
+				{
+					SetVariantFloat(doubleLength);
+				}
 			}
 			else
 			{
-				SetVariantFloat(doubleLength);
+				float customLength = length * g_ClassFlashlightLength[classToInt];
+				SetVariantFloat(customLength);
 			}
 			AcceptEntityInput(ent, "distance");
-			SetVariantInt(SF2_FLASHLIGHT_BRIGHTNESS);
+			if (!IsClassConfigsValid())
+			{
+				SetVariantInt(SF2_FLASHLIGHT_BRIGHTNESS);
+			}
+			else
+			{
+				int customBrightness = SF2_FLASHLIGHT_BRIGHTNESS + g_ClassFlashlightBrightness[classToInt];
+				SetVariantInt(customBrightness);
+			}
 			AcceptEntityInput(ent, "brightness");
 			
 			// Convert WU to inches.
@@ -492,22 +519,36 @@ void ClientTurnOnFlashlight(int client)
 		TeleportEntity(ent, eyePos, NULL_VECTOR, NULL_VECTOR);
 		
 		char buffer[256];
-		if (TF2_GetPlayerClass(client) != TFClass_Engineer)
+		if (!IsClassConfigsValid())
 		{
-			FloatToString(length, buffer, sizeof(buffer));
+			if (class != TFClass_Engineer)
+			{
+				FloatToString(length, buffer, sizeof(buffer));
+			}
+			else
+			{
+				FloatToString(doubleLength, buffer, sizeof(buffer));
+			}
 		}
 		else
 		{
-			FloatToString(doubleLength, buffer, sizeof(buffer));
+			FloatToString(length * g_ClassFlashlightLength[classToInt], buffer, sizeof(buffer));
 		}
 		DispatchKeyValue(ent, "spotlightlength", buffer);
-		if (TF2_GetPlayerClass(client) != TFClass_Engineer)
+		if (!IsClassConfigsValid())
 		{
-			FloatToString(radius, buffer, sizeof(buffer));
+			if (class != TFClass_Engineer)
+			{
+				FloatToString(radius, buffer, sizeof(buffer));
+			}
+			else
+			{
+				FloatToString(doubleRadius, buffer, sizeof(buffer));
+			}
 		}
 		else
 		{
-			FloatToString(doubleRadius, buffer, sizeof(buffer));
+			FloatToString(radius * g_ClassFlashlightRadius[classToInt], buffer, sizeof(buffer));
 		}
 		DispatchKeyValue(ent, "spotlightwidth", buffer);
 		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 1)
@@ -624,6 +665,9 @@ void ClientStartDrainingFlashlightBattery(int client)
 	float rechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
 	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
 	int difficulty = g_DifficultyConVar.IntValue;
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	
 	if (nightVision && g_NightvisionType == 2) //Blue nightvision
 	{
@@ -651,13 +695,19 @@ void ClientStartDrainingFlashlightBattery(int client)
 			}
 		}
 	}
-	
-	if (TF2_GetPlayerClass(client) == TFClass_Engineer) 
+	if (!IsClassConfigsValid())
 	{
-		// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
-		// TODO: Make this value customizable via cvar.
-		drainRate *= 1.5;
-		rechargeRate *= 0.8;
+		if (class == TFClass_Engineer) 
+		{
+			// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
+			drainRate *= 1.5;
+			rechargeRate *= 0.8;
+		}
+	}
+	else
+	{
+		drainRate *= g_ClassFlashlightDrainRate[classToInt];
+		rechargeRate *= g_ClassFlashlightRechargeRate[classToInt];
 	}
 	
 	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(drainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -746,6 +796,9 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		DebugMessage("START ClientActivateUltravision(%d)", client);
 	}
 #endif
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	
 	g_PlayerHasUltravision[client] = true;
 	g_PlayerHasFlashlight[client] = nightVision;
@@ -791,10 +844,22 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 			if (nightVision)
 			{
 				radius = g_NightvisionRadiusConVar.FloatValue;
+				if (!IsClassConfigsValid())
+				{
+					radius = g_NightvisionRadiusConVar.FloatValue;
+				}
+				else
+				{
+					radius = g_NightvisionRadiusConVar.FloatValue * g_ClassNightvisionRadiusMultiplier[classToInt];
+				}
 			}
-			if (!nightVision && TF2_GetPlayerClass(client) == TFClass_Sniper)
+			if (!nightVision && class == TFClass_Sniper && !IsClassConfigsValid())
 			{
 				radius *= 2.0;
+			}
+			else if (!nightVision && IsClassConfigsValid())
+			{
+				radius *= g_ClassUltravisionRadiusMultiplier[classToInt];
 			}
 		}
 		
@@ -807,9 +872,18 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		AcceptEntityInput(ent, "brightness");
 		if (nightVision && !g_PlayerEliminated[client])
 		{
-			SetVariantInt(5);
-			AcceptEntityInput(ent, "brightness");
-		}
+			if (!IsClassConfigsValid())
+			{
+				SetVariantInt(5);
+				AcceptEntityInput(ent, "brightness");
+			}
+			else
+			{
+				int roundedBrightness = RoundToNearest(5.0 * g_ClassNightvisionBrightnessMultiplier[classToInt]);
+				SetVariantInt(roundedBrightness);
+				AcceptEntityInput(ent, "brightness");
+			}
+		}	
 		
 		// Convert WU to inches.
 		float cone = SF2_ULTRAVISION_CONE;
@@ -850,13 +924,20 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		SDKHook(ent, SDKHook_SetTransmit, Hook_UltravisionSetTransmit);
 		
 		// Fade in effect.
-		if (TF2_GetPlayerClass(client) != TFClass_Engineer || IsClientInGhostMode(client))
+		if (!IsClassConfigsValid())
 		{
-			CreateTimer(0.0, Timer_UltravisionFadeInEffect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			if (class != TFClass_Engineer || IsClientInGhostMode(client))
+			{
+				CreateTimer(0.0, Timer_UltravisionFadeInEffect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			}
+			else if (class == TFClass_Engineer && !IsClientInGhostMode(client))
+			{
+				CreateTimer(0.15, Timer_UltravisionFadeInEffect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			}
 		}
-		else if (TF2_GetPlayerClass(client) == TFClass_Engineer && !IsClientInGhostMode(client))
+		else
 		{
-			CreateTimer(0.15, Timer_UltravisionFadeInEffect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(g_ClassUltravisionFadeInTimer[classToInt], Timer_UltravisionFadeInEffect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 
@@ -881,10 +962,23 @@ public Action Timer_UltravisionFadeInEffect(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	
 	int brightness = GetEntProp(ent, Prop_Send, "m_Exponent");
 	int maxBrightness = g_UltravisionBrightnessConVar.IntValue;
-	if (TF2_GetPlayerClass(client) == TFClass_Sniper) maxBrightness = RoundToNearest(float(maxBrightness) * 0.75);
+	if (!IsClassConfigsValid())
+	{
+		if (class == TFClass_Sniper)
+		{
+			maxBrightness = RoundToNearest(float(maxBrightness) * 0.75);
+		}
+	}
+	else
+	{
+		maxBrightness = RoundToNearest(float(maxBrightness) * g_ClassUltravisionBrightnessMultiplier[classToInt]);
+	}
 	if (brightness >= maxBrightness)
 	{
 		return Plugin_Stop;

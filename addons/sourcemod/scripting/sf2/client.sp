@@ -198,11 +198,23 @@ public Action Hook_HealthKitOnTouch(int healthKit, int client)
 {
 	if (MaxClients >= client > 0 && IsClientInGame(client))
 	{
+		TFClassType class = TF2_GetPlayerClass(client);
+		int classToInt = view_as<int>(class);
 		if (!SF_IsBoxingMap())
 		{
-			if (!g_PlayerEliminated[client] && TF2_GetPlayerClass(client) == TFClass_Medic)
+			if (!IsClassConfigsValid())
 			{
-				return Plugin_Handled;
+				if (!g_PlayerEliminated[client] && TF2_GetPlayerClass(client) == TFClass_Medic)
+				{
+					return Plugin_Handled;
+				}
+			}
+			else
+			{
+				if (!g_ClassCanPickUpHealth[classToInt])
+				{
+					return Plugin_Handled;
+				}
 			}
 		}
 		if (IsClientInGhostMode(client))
@@ -515,12 +527,15 @@ stock float ClientGetDistanceFromEntity(int client,int entity)
 	return GetVectorSquareMagnitude(startPos, endPos);
 }
 
-float ClientGetDefaultWalkSpeed(int client)
+float ClientGetDefaultWalkSpeed(int client, TFClassType class = TFClass_Unknown)
 {
 	float returnFloat = 190.0;
 	float returnFloat2 = returnFloat;
 	Action action = Plugin_Continue;
-	/*TFClassType class = TF2_GetPlayerClass(client);
+	if (IsValidClient(client))
+	{
+		class = TF2_GetPlayerClass(client);
+	}
 	
 	switch (class)
 	{
@@ -530,44 +545,46 @@ float ClientGetDefaultWalkSpeed(int client)
 		}
 		case TFClass_Sniper:
 		{
-			returnFloat = 180.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_Soldier:
 		{
-			returnFloat = 170.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_DemoMan:
 		{
-			returnFloat = 175.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_Heavy:
 		{
-			returnFloat = 170.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_Medic:
 		{
-			returnFloat = 185.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_Pyro:
 		{
-			returnFloat = 180.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_Spy:
 		{
-			returnFloat = 185.0;
+			returnFloat = 190.0;
 		}
 		case TFClass_Engineer:
 		{
-			returnFloat = 180.0;
+			returnFloat = 190.0;
 		}
-	}*/
-	//Psyche, everyone walks the same.
-	
-	// Call our forward.
-	Call_StartForward(g_OnClientGetDefaultWalkSpeedFwd);
-	Call_PushCell(client);
-	Call_PushCellRef(returnFloat2);
-	Call_Finish(action);
+	}
+
+	if (IsValidClient(client))
+	{
+		// Call our forward.
+		Call_StartForward(g_OnClientGetDefaultWalkSpeedFwd);
+		Call_PushCell(client);
+		Call_PushCellRef(returnFloat2);
+		Call_Finish(action);
+	}
 	
 	if (action == Plugin_Changed)
 	{
@@ -577,12 +594,15 @@ float ClientGetDefaultWalkSpeed(int client)
 	return returnFloat;
 }
 
-float ClientGetDefaultSprintSpeed(int client)
+float ClientGetDefaultSprintSpeed(int client, TFClassType class = TFClass_Unknown)
 {
 	float returnFloat = 340.0;
 	float returnFloat2 = returnFloat;
 	Action action = Plugin_Continue;
-	TFClassType class = TF2_GetPlayerClass(client);
+	if (IsValidClient(client))
+	{
+		class = TF2_GetPlayerClass(client);
+	}
 	
 	switch (class)
 	{
@@ -624,11 +644,14 @@ float ClientGetDefaultSprintSpeed(int client)
 		}
 	}
 	
-	// Call our forward.
-	Call_StartForward(g_OnClientGetDefaultSprintSpeedFwd);
-	Call_PushCell(client);
-	Call_PushCellRef(returnFloat2);
-	Call_Finish(action);
+	if (IsValidClient(client))
+	{
+		// Call our forward.
+		Call_StartForward(g_OnClientGetDefaultSprintSpeedFwd);
+		Call_PushCell(client);
+		Call_PushCellRef(returnFloat2);
+		Call_Finish(action);
+	}
 	
 	if (action == Plugin_Changed)
 	{
@@ -828,6 +851,9 @@ void ClientProcessVisibility(int client)
 	{
 		return;
 	}
+	
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH], masterProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
@@ -1254,30 +1280,37 @@ void ClientProcessVisibility(int client)
 			// Start up our own static timer.
 			float staticIncreaseRate = (g_SlenderStaticRate[bossNewStatic][difficulty] - (g_SlenderStaticRate[bossNewStatic][difficulty] * g_RoundDifficultyModifier)/10);
 			float staticDecreaseRate = (g_SlenderStaticRateDecay[bossNewStatic][difficulty] + (g_SlenderStaticRateDecay[bossNewStatic][difficulty] * g_RoundDifficultyModifier)/10);
-			if (TF2_GetPlayerClass(client) == TFClass_Heavy)
+			if (!IsClassConfigsValid())
 			{
-				staticIncreaseRate *= 1.15;
-				staticDecreaseRate *= 0.85;
-			}
-			else if (TF2_GetPlayerClass(client) == TFClass_Sniper && g_PlayerSeesSlender[client][bossNewStatic])
-			{
-				if (g_PlayerSeesSlender[client][bossNewStatic])
+				if (class == TFClass_Heavy)
 				{
-					staticIncreaseRate *= 1.05;
+					staticIncreaseRate *= 1.15;
+					staticDecreaseRate *= 0.85;
 				}
-				else
+				else if (class == TFClass_Sniper)
+				{
+					staticDecreaseRate *= 1.05;
+					staticDecreaseRate *= 0.9;
+				}
+				else if (class == TFClass_Engineer)
 				{
 					staticIncreaseRate *= 0.9;
 				}
-				staticDecreaseRate *= 0.9;
+				else if (class == TFClass_Scout)
+				{
+					staticIncreaseRate *= 0.85;
+					staticDecreaseRate *= 1.15;
+				}
+				else if (class == TFClass_Soldier)
+				{
+					staticIncreaseRate *= 1.05;
+					staticDecreaseRate *= 0.95;
+				}
 			}
-			else if (TF2_GetPlayerClass(client) == TFClass_Engineer)
+			else
 			{
-				staticIncreaseRate *= 0.9;
-			}
-			else if (TF2_GetPlayerClass(client) == TFClass_Scout)
-			{
-				staticIncreaseRate *= 0.95;
+				staticIncreaseRate *= g_ClassResistanceStaticIncrease[classToInt];
+				staticDecreaseRate *= g_ClassResistanceStaticDecrease[classToInt];
 			}
 			
 			g_PlayerStaticIncreaseRate[client] = staticIncreaseRate;
@@ -1558,7 +1591,8 @@ public Action Timer_ClientPageDetector(Handle timer, int userid)
 		return Plugin_Stop;
 	}
 	
-	float distance = 99999.0, clientPos[3], pagePos[3];
+	float distance = SquareFloat(99999.0);
+	float clientPos[3], pagePos[3];
 	GetClientAbsOrigin(client, clientPos);
 	
 	char model[255], targetName[64];
@@ -1575,17 +1609,17 @@ public Action Timer_ClientPageDetector(Handle timer, int userid)
 		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
 		if (model[0] != '\0')
 		{
-			if ((strcmp(model, g_PageRefModelName) == 0 || strcmp(model, PAGE_MODEL) == 0) && StrContains(targetName, "sf2_page_ex", false) != -1)
+			if ((strcmp(model, g_PageRefModelName) == 0 || strcmp(model, PAGE_MODEL) == 0) && StrContains(targetName, "sf2_page_", false) != -1)
 			{
 				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pagePos);
-				if (GetVectorDistance(clientPos, pagePos, false) < distance)
+				if (GetVectorSquareMagnitude(clientPos, pagePos) < distance)
 				{
-					distance = GetVectorDistance(clientPos, pagePos, false);
+					distance = GetVectorSquareMagnitude(clientPos, pagePos);
 				}
 			}
 		}
 	}
-	float nextBeepTime = distance/800.0;
+	float nextBeepTime = distance/SquareFloat(800.0);
 	
 	if (nextBeepTime > 5.0)
 	{
@@ -1938,6 +1972,9 @@ void ClientSprintTimer(int client, bool recharge=false)
 	{
 		rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 1.4 : 0.8;
 	}
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	
 	float velocity[3];
 	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", velocity);
@@ -1962,13 +1999,20 @@ void ClientSprintTimer(int client, bool recharge=false)
 	}
 	else
 	{
-		if (TF2_GetPlayerClass(client) == TFClass_DemoMan)
+		if (!IsClassConfigsValid())
 		{
-			rate *= 1.15;
+			if (class == TFClass_DemoMan)
+			{
+				rate *= 1.15;
+			}
+			else if (class == TFClass_Medic || class == TFClass_Spy)
+			{
+				rate *= 1.05;
+			}
 		}
-		else if (TF2_GetPlayerClass(client) == TFClass_Medic || TF2_GetPlayerClass(client) == TFClass_Spy)
+		else
 		{
-			rate *= 1.05;
+			rate *= g_ClassSprintDurationMultipler[classToInt];
 		}
 	}
 	
@@ -2487,7 +2531,10 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 
 	for (int npcIndex; npcIndex < MAX_BOSSES; npcIndex++)
 	{
-		if (NPCGetUniqueID(npcIndex) == -1) continue;
+		if (NPCGetUniqueID(npcIndex) == -1)
+		{
+			continue;
+		}
 		switch (NPCGetType(npcIndex))
 		{
 			case SF2BossType_Chaser:
@@ -2814,17 +2861,17 @@ public Action Timer_BossDeathCamDelay(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	int bossIndex = NPCGetFromEntIndex(slender);
+	SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromEntIndex(slender));
 	
-	if (timer != g_SlenderDeathCamTimer[bossIndex])
+	if (timer != g_SlenderDeathCamTimer[Npc.Index])
 	{
 		return Plugin_Stop;
 	}
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	Npc.GetProfile(profile, sizeof(profile));
 
-	g_SlenderDeathCamTimer[bossIndex] = CreateTimer(g_SlenderDeathCamTime[bossIndex], Timer_BossDeathCamDuration, slender, TIMER_FLAG_NO_MAPCHANGE);
+	g_SlenderDeathCamTimer[Npc.Index] = CreateTimer(g_SlenderDeathCamTime[Npc.Index], Timer_BossDeathCamDuration, slender, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Stop;
 }
@@ -2837,36 +2884,36 @@ public Action Timer_BossDeathCamDuration(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	int bossIndex = NPCGetFromEntIndex(slender);
+	SF2NPC_Chaser Npc = SF2NPC_Chaser(NPCGetFromEntIndex(slender));
 
-	if (timer != g_SlenderDeathCamTimer[bossIndex])
+	if (timer != g_SlenderDeathCamTimer[Npc.Index])
 	{
 		return Plugin_Stop;
 	}
 
-	if (g_SlenderInDeathcam[bossIndex])
+	if (g_SlenderInDeathcam[Npc.Index])
 	{
 		SetEntityRenderMode(slender, RENDER_NORMAL);
-		if (!NPCChaserIsCloaked(bossIndex))
+		if (!Npc.CloakEnabled)
 		{
-			SetEntityRenderColor(slender, g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
+			SetEntityRenderColor(slender, Npc.GetRenderColor(0), Npc.GetRenderColor(1), Npc.GetRenderColor(2), Npc.GetRenderColor(3));
 		}
-		g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-		if (!(NPCGetFlags(bossIndex) & SFF_FAKE))
+		g_SlenderEntityThink[Npc.Index] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		if (!(Npc.Flags & SFF_FAKE))
 		{
-			g_SlenderInDeathcam[bossIndex] = false;
+			g_SlenderInDeathcam[Npc.Index] = false;
 		}
-		NPCChaserUpdateBossAnimation(bossIndex, slender, g_SlenderState[bossIndex]);
+		Npc.UpdateAnimation(slender, Npc.State);
 	}
-	if ((NPCGetFlags(bossIndex) & SFF_FAKE))
+	if ((Npc.Flags & SFF_FAKE))
 	{
-		if (g_SlenderInDeathcam[bossIndex])
+		if (g_SlenderInDeathcam[Npc.Index])
 		{
-			g_SlenderInDeathcam[bossIndex] = false;
+			g_SlenderInDeathcam[Npc.Index] = false;
 		}
-		SlenderMarkAsFake(bossIndex);
+		Npc.MarkAsFake();
 	}
-	g_SlenderDeathCamTimer[bossIndex] = null;
+	g_SlenderDeathCamTimer[Npc.Index] = null;
 
 	return Plugin_Stop;
 }
@@ -2886,20 +2933,20 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 	
 	SetEntProp(client, Prop_Data, "m_takedamage", 2); // We do this because the point_viewcontrol entity changes our damage state.
 	
-	int deathCamBoss = NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]);
-	if (deathCamBoss != -1)
+	SF2NPC_BaseNPC deathCamBoss = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]));
+	if (deathCamBoss != SF2_INVALID_NPC)
 	{
-		if (NPCHasAttribute(deathCamBoss, "ignite player on death"))
+		if (deathCamBoss.HasAttribute("ignite player on death"))
 		{
-			float value = NPCGetAttributeValue(deathCamBoss, "ignite player on death");
+			float value = deathCamBoss.GetAttributeValue("ignite player on death");
 			if (value > 0.0)
 			{
 				TF2_IgnitePlayer(client, client);
 			}
 		}
-		if (!(NPCGetFlags(deathCamBoss) & SFF_FAKE))
+		if (!(deathCamBoss.Flags & SFF_FAKE))
 		{
-			int slenderEnt = NPCGetEntIndex(deathCamBoss);
+			int slenderEnt = deathCamBoss.EntIndex;
 			if (slenderEnt > MaxClients)
 			{
 				SDKHooks_TakeDamage(client, slenderEnt, slenderEnt, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
@@ -3694,6 +3741,8 @@ public Action Timer_BlinkTimer2(Handle timer, any userid)
 float ClientGetBlinkRate(int client)
 {
 	float value = g_PlayerBlinkRateConVar.FloatValue;
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	if (GetEntProp(client, Prop_Send, "m_nWaterLevel") >= 3) 
 	{
 		// Being underwater makes you blink faster, obviously.
@@ -3718,9 +3767,16 @@ float ClientGetBlinkRate(int client)
 		}
 	}
 	
-	if (TF2_GetPlayerClass(client) == TFClass_Sniper)
+	if (!IsClassConfigsValid())
 	{
-		value *= 2.0;
+		if (class == TFClass_Sniper)
+		{
+			value *= 2.0;
+		}
+	}
+	else
+	{
+		value *= g_ClassBlinkRateMultiplier[classToInt];
 	}
 	
 	if (IsClientUsingFlashlight(client))

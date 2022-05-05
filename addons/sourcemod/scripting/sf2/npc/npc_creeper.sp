@@ -13,16 +13,6 @@ static float g_NpcTimeUntilAbandon[MAX_BOSSES] = { -1.0, ... };
 
 static int g_NpcStatueTeleporter[MAX_BOSSES][MAX_NPCTELEPORTER];
 
-const SF2NPC_Statue SF2_INVALID_NPC_STATUE = view_as<SF2NPC_Statue>(-1);
-
-methodmap SF2NPC_Statue < SF2NPC_BaseNPC
-{
-	public SF2NPC_Statue(int index)
-	{
-		return view_as<SF2NPC_Statue>(SF2NPC_BaseNPC(index));
-	}
-}
-
 float NPCStatueChaseDuration(int npcIndex, int difficulty)
 {
 	return g_NpcStatueChaseDuration[npcIndex][difficulty];

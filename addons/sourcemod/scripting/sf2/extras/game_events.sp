@@ -258,7 +258,10 @@ public Action Event_PlayerTeamPre(Handle event, const char[] name, bool dB)
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client > 0)
 	{
-		if (GetEventInt(event, "team") > 1 || GetEventInt(event, "oldteam") > 1) SetEventBroadcast(event, true);
+		if (GetEventInt(event, "team") > 1 || GetEventInt(event, "oldteam") > 1)
+		{
+			SetEventBroadcast(event, true);
+		}
 	}
 	
 	#if defined DEBUG
@@ -290,8 +293,8 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client > 0)
 	{
-		int iintTeam = GetEventInt(event, "team");
-		if (iintTeam <= TFTeam_Spectator)
+		int teamNum = GetEventInt(event, "team");
+		if (teamNum <= TFTeam_Spectator)
 		{
 			if (!IsRoundPlaying())
 			{
@@ -320,12 +323,21 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			}
 			
 			// Special round.
-			if (g_IsSpecialRound) g_PlayerPlayedSpecialRound[client] = true;
+			if (g_IsSpecialRound)
+			{
+				g_PlayerPlayedSpecialRound[client] = true;
+			}
 			
 			// Boss round.
-			if (g_NewBossRound) g_PlayerPlayedNewBossRound[client] = true;
+			if (g_NewBossRound)
+			{
+				g_PlayerPlayedNewBossRound[client] = true;
+			}
 			
-			if (!g_FullyEnableSpectatorConVar.BoolValue) g_PlayerSwitchBlueTimer[client] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			if (!g_FullyEnableSpectatorConVar.BoolValue)
+			{
+				g_PlayerSwitchBlueTimer[client] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			}
 		}
 		else
 		{
@@ -345,50 +357,116 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 				
 				CreateTimer(5.0, Timer_WelcomeMessage, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 			}
-			if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] && iintTeam == TFTeam_Red && 
-				TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
+			if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] && teamNum == TFTeam_Red && 
+				!DidClientEscape(client))
 			{
-				ShowVGUIPanel(client, "class_red");
-				EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
-				TFClassType newClass;
-				int iRandom = GetRandomInt(1, 8);
-				switch (iRandom)
+				TFClassType class = TF2_GetPlayerClass(client);
+				int classToInt = view_as<int>(class);
+				if (!IsClassConfigsValid())
 				{
-					case 1:
+					if (class == TFClass_Medic)
 					{
-						newClass = TFClass_Scout;
-					}
-					case 2:
-					{
-						newClass = TFClass_Soldier;
-					}
-					case 3:
-					{
-						newClass = TFClass_Pyro;
-					}
-					case 4:
-					{
-						newClass = TFClass_DemoMan;
-					}
-					case 5:
-					{
-						newClass = TFClass_Heavy;
-					}
-					case 6:
-					{
-						newClass = TFClass_Engineer;
-					}
-					case 7:
-					{
-						newClass = TFClass_Sniper;
-					}
-					case 8:
-					{
-						newClass = TFClass_Spy;
+						ShowVGUIPanel(client, "class_red");
+						EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
+						TFClassType newClass;
+						int random = GetRandomInt(1, 8);
+						switch (random)
+						{
+							case 1:
+							{
+								newClass = TFClass_Scout;
+							}
+							case 2:
+							{
+								newClass = TFClass_Soldier;
+							}
+							case 3:
+							{
+								newClass = TFClass_Pyro;
+							}
+							case 4:
+							{
+								newClass = TFClass_DemoMan;
+							}
+							case 5:
+							{
+								newClass = TFClass_Heavy;
+							}
+							case 6:
+							{
+								newClass = TFClass_Engineer;
+							}
+							case 7:
+							{
+								newClass = TFClass_Sniper;
+							}
+							case 8:
+							{
+								newClass = TFClass_Spy;
+							}
+						}
+						TF2_SetPlayerClass(client, newClass);
+						TF2_RegeneratePlayer(client);
 					}
 				}
-				TF2_SetPlayerClass(client, newClass);
-				TF2_RegeneratePlayer(client);
+				else
+				{
+					if (g_ClassBlockedOnThanatophobia[classToInt])
+					{
+						ShowVGUIPanel(client, "class_red");
+						switch (class)
+						{
+							case TFClass_Scout:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_SCOUTNO);
+							}
+							case TFClass_Soldier:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_SOLDIERNO);
+							}
+							case TFClass_Pyro:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_PYRONO);
+							}
+							case TFClass_DemoMan:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_DEMOMANNO);
+							}
+							case TFClass_Heavy:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_HEAVYNO);
+							}
+							case TFClass_Engineer:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_ENGINEERNO);
+							}
+							case TFClass_Medic:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
+							}
+							case TFClass_Sniper:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_SNIPERNO);
+							}
+							case TFClass_Spy:
+							{
+								EmitSoundToClient(client, THANATOPHOBIA_SPYNO);
+							}
+						}
+						ArrayList classArrays = new ArrayList();
+						for (int i = 1; i < MAX_CLASSES + 1; i++)
+						{
+							if (!g_ClassBlockedOnThanatophobia[i])
+							{
+								classArrays.Push(view_as<TFClassType>(i));
+							}
+						}
+						TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
+						TF2_SetPlayerClass(client, newClass);
+						TF2_RegeneratePlayer(client);
+						delete classArrays;
+					}
+				}
 			}
 		}
 	}
@@ -634,7 +712,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				
 				if (IsFakeClient(client))
 				{
-					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+					//CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 				
 				// screen overlay timer
@@ -671,49 +749,115 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					ClientSetSpecialRoundTimer(client, 0.0, Timer_ClientPageDetector, GetClientUserId(client));
 				}
 
-				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
+				if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !DidClientEscape(client))
 				{
-					ShowVGUIPanel(client, "class_red");
-					EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
-					TFClassType newClass;
-					int iRandom = GetRandomInt(1, 8);
-					switch (iRandom)
+					TFClassType class = TF2_GetPlayerClass(client);
+					int classToInt = view_as<int>(class);
+					if (!IsClassConfigsValid())
 					{
-						case 1:
+						if (class == TFClass_Medic)
 						{
-							newClass = TFClass_Scout;
-						}
-						case 2:
-						{
-							newClass = TFClass_Soldier;
-						}
-						case 3:
-						{
-							newClass = TFClass_Pyro;
-						}
-						case 4:
-						{
-							newClass = TFClass_DemoMan;
-						}
-						case 5:
-						{
-							newClass = TFClass_Heavy;
-						}
-						case 6:
-						{
-							newClass = TFClass_Engineer;
-						}
-						case 7:
-						{
-							newClass = TFClass_Sniper;
-						}
-						case 8:
-						{
-							newClass = TFClass_Spy;
+							ShowVGUIPanel(client, "class_red");
+							EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
+							TFClassType newClass;
+							int random = GetRandomInt(1, 8);
+							switch (random)
+							{
+								case 1:
+								{
+									newClass = TFClass_Scout;
+								}
+								case 2:
+								{
+									newClass = TFClass_Soldier;
+								}
+								case 3:
+								{
+									newClass = TFClass_Pyro;
+								}
+								case 4:
+								{
+									newClass = TFClass_DemoMan;
+								}
+								case 5:
+								{
+									newClass = TFClass_Heavy;
+								}
+								case 6:
+								{
+									newClass = TFClass_Engineer;
+								}
+								case 7:
+								{
+									newClass = TFClass_Sniper;
+								}
+								case 8:
+								{
+									newClass = TFClass_Spy;
+								}
+							}
+							TF2_SetPlayerClass(client, newClass);
+							TF2_RegeneratePlayer(client);
 						}
 					}
-					TF2_SetPlayerClass(client, newClass);
-					TF2_RegeneratePlayer(client);
+					else
+					{
+						if (g_ClassBlockedOnThanatophobia[classToInt])
+						{
+							ShowVGUIPanel(client, "class_red");
+							switch (class)
+							{
+								case TFClass_Scout:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_SCOUTNO);
+								}
+								case TFClass_Soldier:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_SOLDIERNO);
+								}
+								case TFClass_Pyro:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_PYRONO);
+								}
+								case TFClass_DemoMan:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_DEMOMANNO);
+								}
+								case TFClass_Heavy:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_HEAVYNO);
+								}
+								case TFClass_Engineer:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_ENGINEERNO);
+								}
+								case TFClass_Medic:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
+								}
+								case TFClass_Sniper:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_SNIPERNO);
+								}
+								case TFClass_Spy:
+								{
+									EmitSoundToClient(client, THANATOPHOBIA_SPYNO);
+								}
+							}
+							ArrayList classArrays = new ArrayList();
+							for (int i = 1; i < MAX_CLASSES + 1; i++)
+							{
+								if (!g_ClassBlockedOnThanatophobia[i])
+								{
+									classArrays.Push(view_as<TFClassType>(i));
+								}
+							}
+							TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
+							TF2_SetPlayerClass(client, newClass);
+							TF2_RegeneratePlayer(client);
+							delete classArrays;
+						}
+					}
 				}
 			}
 			else
@@ -753,52 +897,118 @@ public void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast
 		return;
 	}
 	
-	int iTeam = GetClientTeam(client);
+	int teamNum = GetClientTeam(client);
 	
 	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] && 
-		iTeam == TFTeam_Red && TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
+		teamNum == TFTeam_Red && TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
 	{
-		ShowVGUIPanel(client, "class_red");
-		EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
-		TFClassType newClass;
-		int iRandom = GetRandomInt(1, 8);
-		switch (iRandom)
+		TFClassType class = TF2_GetPlayerClass(client);
+		int classToInt = view_as<int>(class);
+		if (!IsClassConfigsValid())
 		{
-			case 1:
+			if (class == TFClass_Medic)
 			{
-				newClass = TFClass_Scout;
-			}
-			case 2:
-			{
-				newClass = TFClass_Soldier;
-			}
-			case 3:
-			{
-				newClass = TFClass_Pyro;
-			}
-			case 4:
-			{
-				newClass = TFClass_DemoMan;
-			}
-			case 5:
-			{
-				newClass = TFClass_Heavy;
-			}
-			case 6:
-			{
-				newClass = TFClass_Engineer;
-			}
-			case 7:
-			{
-				newClass = TFClass_Sniper;
-			}
-			case 8:
-			{
-				newClass = TFClass_Spy;
+				ShowVGUIPanel(client, "class_red");
+				EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
+				TFClassType newClass;
+				int random = GetRandomInt(1, 8);
+				switch (random)
+				{
+					case 1:
+					{
+						newClass = TFClass_Scout;
+					}
+					case 2:
+					{
+						newClass = TFClass_Soldier;
+					}
+					case 3:
+					{
+						newClass = TFClass_Pyro;
+					}
+					case 4:
+					{
+						newClass = TFClass_DemoMan;
+					}
+					case 5:
+					{
+						newClass = TFClass_Heavy;
+					}
+					case 6:
+					{
+						newClass = TFClass_Engineer;
+					}
+					case 7:
+					{
+						newClass = TFClass_Sniper;
+					}
+					case 8:
+					{
+						newClass = TFClass_Spy;
+					}
+				}
+				TF2_SetPlayerClass(client, newClass);
+				TF2_RegeneratePlayer(client);
 			}
 		}
-		TF2_SetPlayerClass(client, newClass);
-		TF2_RegeneratePlayer(client);
+		else
+		{
+			if (g_ClassBlockedOnThanatophobia[classToInt])
+			{
+				ShowVGUIPanel(client, "class_red");
+				switch (class)
+				{
+					case TFClass_Scout:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_SCOUTNO);
+					}
+					case TFClass_Soldier:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_SOLDIERNO);
+					}
+					case TFClass_Pyro:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_PYRONO);
+					}
+					case TFClass_DemoMan:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_DEMOMANNO);
+					}
+					case TFClass_Heavy:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_HEAVYNO);
+					}
+					case TFClass_Engineer:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_ENGINEERNO);
+					}
+					case TFClass_Medic:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_MEDICNO);
+					}
+					case TFClass_Sniper:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_SNIPERNO);
+					}
+					case TFClass_Spy:
+					{
+						EmitSoundToClient(client, THANATOPHOBIA_SPYNO);
+					}
+				}
+				ArrayList classArrays = new ArrayList();
+				for (int i = 1; i < MAX_CLASSES + 1; i++)
+				{
+					if (!g_ClassBlockedOnThanatophobia[i])
+					{
+						classArrays.Push(view_as<TFClassType>(i));
+					}
+				}
+				TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
+				TF2_SetPlayerClass(client, newClass);
+				TF2_RegeneratePlayer(client);
+				delete classArrays;
+			}
+		}
 	}
 }
 
@@ -1346,7 +1556,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			{
 				if (IsFakeClient(client))
 				{
-					TF2_SetPlayerClass(client, TFClass_Sniper);
+					//TF2_SetPlayerClass(client, TFClass_Sniper);
 				}
 				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT) || g_RenevantMultiEffect)
 				{
@@ -1524,7 +1734,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				}
 			}
 			
-			if (g_IgnoreRedPlayerDeathSwapConVar.BoolValue)
+			if (g_IgnoreRedPlayerDeathSwapConVar.BoolValue && GetClientTeam(client) == TFTeam_Red)
 			{
 				g_PlayerEliminated[client] = false;
 				g_PlayerEscaped[client] = false;

@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.3.2 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.3.2 M"
+#define PLUGIN_VERSION "1.7.3.3 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.3.3 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
@@ -60,6 +60,9 @@ public Plugin myinfo =
 
 #define FILE_RESTRICTEDWEAPONS "configs/sf2/restrictedweapons.cfg"
 #define FILE_RESTRICTEDWEAPONS_DATA "data/sf2/restrictedweapons.cfg"
+
+#define FILE_CLASSCONFIGS "configs/sf2/class_stats.cfg"
+#define FILE_CLASSCONFIGS_DATA "data/sf2/class_stats.cfg"
 
 #define BOSS_THINKRATE 0.1 // doesn't really matter much since timers go at a minimum of 0.1 seconds anyways
 
@@ -182,7 +185,15 @@ public Plugin myinfo =
 #define LASER_MODEL "sprites/laser.vmt"
 int g_LaserIndex;
 
+#define THANATOPHOBIA_SCOUTNO "vo/scout_no03.mp3"
+#define THANATOPHOBIA_SOLDIERNO "vo/soldier_no01.mp3"
+#define THANATOPHOBIA_PYRONO "vo/pyro_no01.mp3"
+#define THANATOPHOBIA_DEMOMANNO "vo/demoman_no03.mp3"
+#define THANATOPHOBIA_HEAVYNO "vo/heavy_no02.mp3"
+#define THANATOPHOBIA_ENGINEERNO "vo/engineer_no01.mp3"
 #define THANATOPHOBIA_MEDICNO "vo/medic_no03.mp3"
+#define THANATOPHOBIA_SNIPERNO "vo/sniper_no01.mp3"
+#define THANATOPHOBIA_SPYNO "vo/spy_no02.mp3"
 
 #define SF2_HUD_TEXT_COLOR_R 127
 #define SF2_HUD_TEXT_COLOR_G 167
@@ -257,6 +268,7 @@ bool g_Enabled;
 KeyValues g_Config;
 KeyValues g_RestrictedWeaponsConfig;
 KeyValues g_SpecialRoundsConfig;
+KeyValues g_ClassStatsConfig;
 
 ArrayList g_PageMusicRanges;
 int g_PageMusicActiveIndex[MAXPLAYERS + 1] = { -1, ... };
@@ -292,6 +304,8 @@ float g_SlenderStaticRateDecay[MAX_BOSSES][Difficulty_Max];
 float g_SlenderStaticGraceTime[MAX_BOSSES][Difficulty_Max];
 float g_SlenderChaseDeathPosition[MAX_BOSSES][3];
 bool g_SlenderChaseDeathPositionBool[MAX_BOSSES];
+bool g_SlenderHasAutoChaseEnabled[MAX_BOSSES];
+bool g_SlenderChasesEndlessly[MAX_BOSSES] = { false, ... };
 
 bool g_SlenderDeathCamScareSound[MAX_BOSSES];
 bool g_SlenderPublicDeathCam[MAX_BOSSES];
@@ -1021,6 +1035,8 @@ stock ArrayList g_FuncNavPrefer;
 #endif
 #include "sf2/stocks.sp"
 #include "sf2/logging.sp"
+#include "sf2/methodmaps.sp"
+#include "sf2/classconfigs.sp"
 #include "sf2/profiles.sp"
 //#include "sf2/nav.sp"
 #include "sf2/effects.sp"
@@ -1271,6 +1287,7 @@ static void StartPlugin()
 	ReloadBossProfiles();
 	ReloadRestrictedWeapons();
 	ReloadSpecialRounds();
+	ReloadClassConfigs();
 	
 	NPCOnConfigsExecuted();
 	
@@ -1365,7 +1382,15 @@ static void PrecacheStuff()
 	PrecacheSound(MANGLER_SHOOT);
 	PrecacheSound(BASEBALL_SHOOT);
 	
+	PrecacheSound(THANATOPHOBIA_SCOUTNO);
+	PrecacheSound(THANATOPHOBIA_SOLDIERNO);
+	PrecacheSound(THANATOPHOBIA_PYRONO);
+	PrecacheSound(THANATOPHOBIA_DEMOMANNO);
+	PrecacheSound(THANATOPHOBIA_HEAVYNO);
+	PrecacheSound(THANATOPHOBIA_ENGINEERNO);
 	PrecacheSound(THANATOPHOBIA_MEDICNO);
+	PrecacheSound(THANATOPHOBIA_SNIPERNO);
+	PrecacheSound(THANATOPHOBIA_SPYNO);
 	
 	PrecacheModel(ROCKET_MODEL, true);
 	PrecacheModel(GRENADE_MODEL, true);
@@ -1909,7 +1934,7 @@ public Action Timer_GlobalGameFrame(Handle timer)
 						continue;
 					}
 					
-					if (!g_PlayerPreferences[client].PlayerPreference_EnableProxySelection)
+					if (!g_PlayerPreferences[client].PlayerPreference_EnableProxySelection && !IsFakeClient(client))
 					{
 #if defined DEBUG
 						SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because of your preferences.", bossIndex);
@@ -1975,10 +2000,6 @@ public Action Timer_GlobalGameFrame(Handle timer)
 
 					if (!SpawnProxy(client, bossIndex, destinationPos, spawnPointEnt))
 					{
-#if defined DEBUG
-						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not find any areas to place proxies (spawned %d)!", bossIndex, num);
-						//PrintToChatAll("[PROXIES] Boss %d could not find any areas to place proxies (spawned %d)!", bossIndex, num);
-#endif
 						break;
 					}
 					cooldown = true;
@@ -2509,9 +2530,6 @@ public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] int
 			}
 		}
 		ChangeAllSlenderModels();
-		Call_StartForward(g_OnDifficultyChangeFwd);
-		Call_PushCell(StringToInt(intValue));
-		Call_Finish();
 	}
 	else if (cvar == g_MaxPlayersConVar || cvar == g_MaxPlayersOverrideConVar)
 	{
@@ -3134,20 +3152,7 @@ public Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLA
 			}
 		}
 	}
-	
-	if (IsValidEntity(entity))
-	{
-		char classname[64];
-		if (GetEntityClassname(entity, classname, sizeof(classname)) && strcmp(classname, "tf_projectile_rocket") == 0 && ((ProjectileGetFlags(entity) & PROJ_ICEBALL) || (ProjectileGetFlags(entity) & PROJ_FIREBALL) || (ProjectileGetFlags(entity) & PROJ_ICEBALL_ATTACK) || (ProjectileGetFlags(entity) & PROJ_FIREBALL_ATTACK)))
-		{
-			if (strcmp(sample, EXPLOSIVEDANCE_EXPLOSION1, false) == 0 || strcmp(sample, EXPLOSIVEDANCE_EXPLOSION2, false) == 0 || strcmp(sample, EXPLOSIVEDANCE_EXPLOSION3, false) == 0)
-			{
-				sample = NULLSOUND;
-				return Plugin_Changed;
-			}
-		}
-	}
-	
+
 	bool modified = false;
 	
 	/*for (int i = 0; i < numClients; i++)
@@ -3491,7 +3496,7 @@ void CollectPage(int page, int activator)
 	if (SF_SpecialRound(SPECIALROUND_BOSSROULETTE))
 	{
 		char buffer[SF2_MAX_PROFILE_NAME_LENGTH], bossName[SF2_MAX_NAME_LENGTH];
-		if (NPCGetCount() < 31)
+		if (NPCGetCount() < 63)
 		{
 			if (g_DifficultyConVar.IntValue < 4 || GetSelectableAdminBossProfileList().Length <= 0)
 			{
@@ -3503,6 +3508,7 @@ void CollectPage(int page, int activator)
 					NPCGetBossName(_, bossName, sizeof(bossName), buffer);
 					EmitSoundToAll(SR_SOUND_SELECT_BR, _, SNDCHAN_AUTO, _, _, 0.75);
 					SpecialRoundGameText(bossName, "d_purgatory");
+					CPrintToChatAll("{royalblue}%T{default}Next on the roulette: {valve}%s", "SF2 Prefix", bossName); //Minimized HUD
 				}
 				delete selectableBosses;
 			}
@@ -3516,6 +3522,7 @@ void CollectPage(int page, int activator)
 					NPCGetBossName(_, bossName, sizeof(bossName), buffer);
 					EmitSoundToAll(SR_SOUND_SELECT_BR, _, SNDCHAN_AUTO, _, _, 0.75);
 					SpecialRoundGameText(bossName, "d_purgatory");
+					CPrintToChatAll("{royalblue}%T{default}Next on the roulette: {valve}%s", bossName);
 				}
 				delete selectableBosses;
 			}
@@ -3523,6 +3530,7 @@ void CollectPage(int page, int activator)
 		else
 		{
 			SpecialRoundGameText("You got lucky, no boss can be added.", "cappoint_progressbar_blocked");
+			CPrintToChatAll("{royalblue}%T{default}You got lucky, no boss can be added.");
 		}
 	}
 	
@@ -5401,9 +5409,30 @@ void SlenderOnClientStressUpdate(int client)
 		}
 		
 		int bossFlags = NPCGetFlags(bossIndex);
-		if (bossFlags & SFF_MARKEDASFAKE || 
-			bossFlags & SFF_NOTELEPORT)
+		if (bossFlags & SFF_MARKEDASFAKE)
 		{
+			continue;
+		}
+		if ((bossFlags & SFF_NOTELEPORT) && (bossFlags & SFF_PROXIES) && g_SlenderCopyMaster[bossIndex] == -1)
+		{
+			//Go get a proxy target anyways
+			ArrayList proxyArray = new ArrayList();
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (IsClientInGame(i) && IsPlayerAlive(i) && !g_PlayerEliminated[i] && !IsClientInGhostMode(i) && !DidClientEscape(i))
+				{
+					proxyArray.Push(i);
+				}
+			}
+			if (proxyArray.Length > 0)
+			{
+				int proxyClient = proxyArray.Get(GetRandomInt(0, proxyArray.Length - 1));
+				if (IsValidClient(proxyClient) && !g_PlayerEliminated[proxyClient])
+				{
+					g_SlenderProxyTarget[bossIndex] = EntIndexToEntRef(proxyClient);
+				}
+			}
+			delete proxyArray;
 			continue;
 		}
 		
@@ -5443,43 +5472,44 @@ void SlenderOnClientStressUpdate(int client)
 			
 			float preferredTeleportTargetStress = targetStress;
 			
-			int raidClient;
-			if (NPCAreAvailablePlayersAlive())
-			{
-				do
-				{
-					raidClient = GetRandomInt(1, MaxClients);
-				}
-				while (!IsClientInGame(raidClient) || 
-					!IsPlayerAlive(raidClient) || 
-					g_PlayerEliminated[raidClient] || 
-					IsClientInGhostMode(raidClient) || 
-					DidClientEscape(raidClient));
-			}
-			
+			ArrayList raidArrays = new ArrayList();
+
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (g_PlayerIsExitCamping[i])
+				if (IsClientInGame(i) && IsPlayerAlive(i) && !g_PlayerEliminated[i] && !IsClientInGhostMode(i) && !DidClientEscape(i))
 				{
-					if (IsValidClient(teleportTarget) && !g_PlayerIsExitCamping[teleportTarget])
+					if (g_PlayerIsExitCamping[i])
 					{
-						preferredTeleportTarget = i;
-						break;
+						if (IsValidClient(teleportTarget) && !g_PlayerIsExitCamping[teleportTarget])
+						{
+							preferredTeleportTarget = i;
+							delete raidArrays;
+							break;
+						}
+					}
+					if (g_PlayerStressAmount[i] < preferredTeleportTargetStress || g_RestartSessionEnabled)
+					{
+						if (g_SlenderTeleportPlayersRestTime[bossIndex][i] <= GetGameTime())
+						{
+							preferredTeleportTargetStress = g_PlayerStressAmount[i];
+							raidArrays.Push(i);
+						}
 					}
 				}
-				if (g_PlayerStressAmount[i] < preferredTeleportTargetStress || g_RestartSessionEnabled)
-				{
-					if (g_SlenderTeleportPlayersRestTime[bossIndex][i] <= GetGameTime())
-					{
-						preferredTeleportTarget = i;
-						preferredTeleportTargetStress = g_PlayerStressAmount[i];
-					}
-				}
-				if (i == raidClient && IsValidClient(raidClient))
+			}
+			if (raidArrays!= null && raidArrays.Length > 0)
+			{
+				int raidClient = raidArrays.Get(GetRandomInt(0, raidArrays.Length - 1));
+				if (IsValidClient(raidClient) && !g_PlayerEliminated[raidClient])
 				{
 					g_SlenderProxyTarget[bossIndex] = EntIndexToEntRef(raidClient);
 					preferredTeleportTarget = raidClient;
 				}
+			}
+
+			if (raidArrays != null)
+			{
+				delete raidArrays;
 			}
 			
 			if (IsValidClient(preferredTeleportTarget))
@@ -8340,61 +8370,12 @@ void SpawnPages()
 					AcceptEntityInput(page2, "SetAnimation");
 				}
 			}
-			else
-			{
-				LogSF2Message("WARNING, fake page index %i has failed to be created, recreating a new fake page", page);
-				int attempts = 1;
-				int newPage = -1;
-				while (newPage == -1)
-				{
-					newPage = CreateEntityByName("prop_dynamic_override");
-					if (newPage == -1)
-					{
-						attempts++;
-						continue;
-					}
-					else
-					{
-						page2 = newPage;
-						DispatchKeyValue(page2, "targetname", "sf2_page_ex");
-						DispatchKeyValue(page2, "parentname", pageParentName);
-						DispatchKeyValue(page2, "solid", "0");
-						SetEntityModel(page2, pageModel);
-						TeleportEntity(page2, vecPos, vecAng, NULL_VECTOR);
-						DispatchSpawn(page2);
-						ActivateEntity(page2);
-						SetVariantInt(pageSkin);
-						AcceptEntityInput(page2, "Skin");
-						SetVariantInt(pageBodygroup);
-						AcceptEntityInput(page2, "SetBodyGroup");
-						AcceptEntityInput(page2, "DisableCollision");
-						SetEntPropFloat(page2, Prop_Send, "m_flModelScale", pageModelScale);
-						SetEntityRenderMode(page2, pageRenderMode);
-						SetEntityRenderFx(page2, pageRenderFx);
-						SetEntityRenderColor(page2, pageRenderColor[0], pageRenderColor[1], pageRenderColor[2], pageRenderColor[3]);
 
-						SetEntityTransmitState(page2, FL_EDICT_ALWAYS);
-						CreateTimer(1.0, Page_RemoveAlwaysTransmit, EntIndexToEntRef(page2), TIMER_FLAG_NO_MAPCHANGE);
-						SDKHook(page2, SDKHook_SetTransmit, Hook_SlenderObjectSetTransmitEx);
-						
-						if (pageAnimation[0] != '\0')
-						{
-							SetVariantString(pageAnimation);
-							AcceptEntityInput(page2, "SetDefaultAnimation");
-							SetVariantString(pageAnimation);
-							AcceptEntityInput(page2, "SetAnimation");
-						}
-						LogSF2Message("Successfully created fake page index %i, took %i attempts", page2, attempts);
-						break;
-					}
-				}
-			}
-			
 			// Create actual page entity
 			page = CreateEntityByName("prop_dynamic_override");
 			if (page != -1)
 			{
-				FormatEx(pageName, sizeof(pageName), "sf2_page_ex_%d", i);
+				FormatEx(pageName, sizeof(pageName), "sf2_page_%d", i);
 				DispatchKeyValue(page, "targetname", pageName);
 				DispatchKeyValue(page, "parentname", pageParentName);
 				DispatchKeyValue(page, "solid", "2");
@@ -8441,70 +8422,6 @@ void SpawnPages()
 				}
 				
 				g_Pages.PushArray(pageData, sizeof(pageData));
-			}
-			else
-			{
-				LogSF2Message("WARNING, real page index %i has failed to be created, recreating a new page", page);
-				int attempts = 1;
-				int newPage = -1;
-				while (newPage == -1)
-				{
-					newPage = CreateEntityByName("prop_dynamic_override");
-					if (newPage == -1)
-					{
-						attempts++;
-						continue;
-					}
-					FormatEx(pageName, sizeof(pageName), "sf2_page_ex_%d", i);
-					DispatchKeyValue(newPage, "targetname", pageName);
-					DispatchKeyValue(newPage, "parentname", pageParentName);
-					DispatchKeyValue(newPage, "solid", "2");
-					SetEntityModel(newPage, pageModel);
-					TeleportEntity(newPage, vecPos, vecAng, NULL_VECTOR);
-					DispatchSpawn(newPage);
-					ActivateEntity(newPage);
-					SetVariantInt(pageSkin);
-					AcceptEntityInput(newPage, "Skin");
-					SetVariantInt(pageBodygroup);
-					AcceptEntityInput(newPage, "SetBodyGroup");
-					AcceptEntityInput(newPage, "EnableCollision");
-					SetEntPropFloat(newPage, Prop_Send, "m_flModelScale", pageModelScale);
-					SetEntPropEnt(newPage, Prop_Send, "m_hOwnerEntity", page2);
-					SetEntPropEnt(newPage, Prop_Send, "m_hEffectEntity", page2);
-					SetEntProp(newPage, Prop_Send, "m_fEffects", EF_ITEM_BLINK);
-					SetEntityRenderMode(newPage, pageRenderMode);
-					SetEntityRenderFx(newPage, pageRenderFx);
-					SetEntityRenderColor(newPage, pageRenderColor[0], pageRenderColor[1], pageRenderColor[2], pageRenderColor[3]);
-
-					SDKHook(newPage, SDKHook_OnTakeDamage, Hook_PageOnTakeDamage);
-					SDKHook(newPage, SDKHook_SetTransmit, Hook_SlenderObjectSetTransmit);
-					
-					if (pageAnimation[0] != '\0')
-					{
-						SetVariantString(pageAnimation);
-						AcceptEntityInput(newPage, "SetDefaultAnimation");
-						SetVariantString(pageAnimation);
-						AcceptEntityInput(newPage, "SetAnimation");
-					}
-					
-					SF2PageEntityData pageData;
-					pageData.EntRef = EnsureEntRef(newPage);
-					
-					if (spawnPoint.IsValid())
-					{
-						spawnPoint.GetPageCollectSound(pageData.CollectSound, PLATFORM_MAX_PATH);
-						pageData.CollectSoundPitch = spawnPoint.PageCollectSoundPitch;
-					}
-					else
-					{
-						pageData.CollectSound[0] = '\0';
-						pageData.CollectSoundPitch = 0;
-					}
-					
-					g_Pages.PushArray(pageData, sizeof(pageData));
-					LogSF2Message("Successfully created real page index %i, took %i attempts", newPage, attempts);
-					break;
-				}
 			}
 		}
 		
