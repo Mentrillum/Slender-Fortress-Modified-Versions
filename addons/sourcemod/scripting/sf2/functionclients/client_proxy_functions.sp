@@ -780,7 +780,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					FindConVar("tf_forced_holiday").SetInt(9);//Full-Moon
 				}
 				int index;
-				TFClassType class = TF2_GetPlayerClass( client );
+				TFClassType class = TF2_GetPlayerClass(client);
 				switch (class)
 				{
 					case TFClass_Scout:
@@ -951,7 +951,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	g_PlayerHasRegenerationItem[client] = false;
 
 #if defined DEBUG
@@ -1129,6 +1129,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 	
 	TFClassType playerClass = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(playerClass);
 
 	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
 	{
@@ -1611,15 +1612,33 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 	
 	float healthFromPack = 1.0;
-	if (!g_PlayerEliminated[client] && !SF_IsBoxingMap())
+	if (!IsClassConfigsValid())
 	{
-		if (g_PlayerHasRegenerationItem[client])
+		if (!g_PlayerEliminated[client] && !SF_IsBoxingMap())
 		{
-			healthFromPack = 0.40;
+			if (g_PlayerHasRegenerationItem[client])
+			{
+				healthFromPack = 0.40;
+			}
+			if (TF2_GetPlayerClass(client) == TFClass_Medic)
+			{
+				healthFromPack = 0.0;
+			}
 		}
-		if (TF2_GetPlayerClass(client) == TFClass_Medic)
+	}
+	else
+	{
+		if (!g_PlayerEliminated[client] && !SF_IsBoxingMap())
 		{
-			healthFromPack = 0.0;
+			healthFromPack = g_ClassHealthPickupMultiplier[classToInt];
+			if (g_PlayerHasRegenerationItem[client])
+			{
+				healthFromPack -= 0.6;
+			}
+			if (healthFromPack <= 0.0)
+			{
+				healthFromPack = 0.0;
+			}
 		}
 	}
 	

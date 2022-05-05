@@ -1861,10 +1861,16 @@ bool ClientHasMusicFlag2(int iValue,int flag)
 
 void ClientAddMusicFlag(int client,int flag)
 {
-	if (!ClientHasMusicFlag(client, flag)) g_PlayerMusicFlags[client] |= flag;
+	if (!ClientHasMusicFlag(client, flag))
+	{
+		g_PlayerMusicFlags[client] |= flag;
+	}
 }
 
 void ClientRemoveMusicFlag(int client,int flag)
 {
-	if (ClientHasMusicFlag(client, flag)) g_PlayerMusicFlags[client] &= ~flag;
+	if (ClientHasMusicFlag(client, flag))
+	{
+		g_PlayerMusicFlags[client] &= ~flag;
+	}
 }

@@ -287,6 +287,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	
 	bool inFlashlight = false;
 	bool doubleFlashlightDamage = false;
+	float customFlashlightDamage = 1.0;
 
 	// Gather data about the players around me and get the best new target, in case my old target is invalidated.
 	int ent = -1;
@@ -296,6 +297,9 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		{
 			continue;
 		}
+		TFClassType classType = TF2_GetPlayerClass(ent);
+		int classToInt = view_as<int>(classType);
+
 		float traceStartPos[3], traceEndPos[3];
 		NPCGetEyePosition(bossIndex, traceStartPos);
 		GetClientEyePosition(ent, traceEndPos);
@@ -360,19 +364,30 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			playerInFOV[ent] = true;
 		}
 		
-		if (!SF_IsRaidMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_IsBoxingMap() && !SF_IsSlaughterRunMap() && !g_NpcChasesEndlessly[bossIndex])
+		if (!SF_IsRaidMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_IsBoxingMap() && !SF_IsSlaughterRunMap() && !g_SlenderChasesEndlessly[bossIndex])
 		{
 			priorityValue = g_PageMax > 0 ? ((float(g_PlayerPageCount[ent]) / float(g_PageMax))/4.0) : 0.0;
 		}
 		
-		if ((TF2_GetPlayerClass(ent) == TFClass_Medic || g_PlayerHasRegenerationItem[ent]) && !SF_IsBoxingMap())
+		if (!IsClassConfigsValid())
 		{
-			priorityValue += 0.2;
+			if ((classType == TFClass_Medic || g_PlayerHasRegenerationItem[ent]) && !SF_IsBoxingMap())
+			{
+				priorityValue += 0.2;
+			}
+			
+			if (classType == TFClass_Spy)
+			{
+				priorityValue += 0.1;
+			}
 		}
-		
-		if (TF2_GetPlayerClass(ent) == TFClass_Spy)
+		else
 		{
-			priorityValue += 0.1;
+			if (!SF_IsBoxingMap() && g_PlayerHasRegenerationItem[ent])
+			{
+				priorityValue += 0.2;
+			}
+			priorityValue += g_ClassBossPriorityMultiplier[classToInt];
 		}
 		
 		//Taunt alerts
@@ -525,9 +540,16 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 					if (playerVisible[ent])
 					{
 						inFlashlight = true;
-						if (TF2_GetPlayerClass(ent) == TFClass_Engineer)
+						if (!IsClassConfigsValid())
 						{
-							doubleFlashlightDamage = true;
+							if (classType == TFClass_Engineer)
+							{
+								doubleFlashlightDamage = true;
+							}
+						}
+						else
+						{
+							customFlashlightDamage = g_ClassFlashlightDamageMultiplier[classToInt];
 						}
 					}
 				}
@@ -592,13 +614,20 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 			{
 				if (NPCChaserGetStunHealth(bossIndex) > 0)
 				{
-					if (!doubleFlashlightDamage)
+					if (!IsClassConfigsValid())
 					{
-						NPCChaserAddStunHealth(bossIndex, -NPCChaserGetStunFlashlightDamage(bossIndex));
+						if (!doubleFlashlightDamage)
+						{
+							NPCChaserAddStunHealth(bossIndex, -NPCChaserGetStunFlashlightDamage(bossIndex));
+						}
+						else
+						{
+							NPCChaserAddStunHealth(bossIndex, -NPCChaserGetStunFlashlightDamage(bossIndex) * 1.5);
+						}
 					}
 					else
 					{
-						NPCChaserAddStunHealth(bossIndex, -NPCChaserGetStunFlashlightDamage(bossIndex) * 1.5);
+						NPCChaserAddStunHealth(bossIndex, -NPCChaserGetStunFlashlightDamage(bossIndex) * customFlashlightDamage);
 					}
 					if (NPCChaserGetStunHealth(bossIndex) <= 0.0 && state != STATE_STUN)
 					{
@@ -656,14 +685,14 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	if (g_SlenderGiveUp[bossIndex])
 	{
 		//Damit our target is unreachable for some unexplained reasons, haaaaaaaaaaaa!
-		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !g_NpcChasesEndlessly[bossIndex] || !SF_IsBoxingMap() || !SF_IsSlaughterRunMap())
+		if (!SF_IsRaidMap() || !SF_BossesChaseEndlessly() || !SF_IsProxyMap() || !g_SlenderChasesEndlessly[bossIndex] || !SF_IsBoxingMap() || !SF_IsSlaughterRunMap())
 		{
 			state = STATE_IDLE;
 			g_NpcAutoChaseSprinterCooldown[bossIndex] = GetGameTime() + 5.0;
 			g_SlenderGiveUp[bossIndex] = false;
 		}
 		
-		if ((SF_BossesChaseEndlessly() || g_NpcChasesEndlessly[bossIndex] || SF_IsSlaughterRunMap() || SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap()) && !(NPCGetFlags(bossIndex) & SFF_NOTELEPORT))
+		if ((SF_BossesChaseEndlessly() || g_SlenderChasesEndlessly[bossIndex] || SF_IsSlaughterRunMap() || SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap()) && !(NPCGetFlags(bossIndex) & SFF_NOTELEPORT))
 		{
 			//RemoveSlender(bossIndex);
 		}
@@ -677,7 +706,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 	
 	int interruptConditions = g_SlenderInterruptConditions[bossIndex];
 
-	if ((SF_IsRaidMap() || (SF_BossesChaseEndlessly() || g_NpcChasesEndlessly[bossIndex]) || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap()) && !g_SlenderGiveUp[bossIndex] && !building && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex])
+	if ((SF_IsRaidMap() || (SF_BossesChaseEndlessly() || g_SlenderChasesEndlessly[bossIndex]) || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap()) && !g_SlenderGiveUp[bossIndex] && !building && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex])
 	{
 		if (!IsValidClient(target) || (IsValidClient(target) && g_PlayerEliminated[target]))
 		{
@@ -1310,9 +1339,8 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 						}
 					}
 				}
-				if (!IsValidEntity(target) || (!building && !IsTargetValidForSlender(target)) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
+				if ((!IsValidEntity(target) && !IsValidEntity(bestNewTarget)) || (!building && !IsTargetValidForSlender(target, attackEliminated)) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 				{
-					g_SlenderGiveUp[bossIndex] = true;
 					// Even if the target isn't valid anymore, see if I still have some ways to go on my current path,
 					// because I shouldn't actually know that the target has died until I see it.
 					if (!g_BossPathFollower[bossIndex].IsValid())
@@ -1935,7 +1963,7 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 		state = STATE_CHASE;
 		GetClientAbsOrigin(target, g_SlenderGoalPos[bossIndex]);
 	}
-	if ((SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_BossesChaseEndlessly() || g_NpcChasesEndlessly[bossIndex] || SF_IsSlaughterRunMap()) && state != STATE_ATTACK && state != STATE_STUN && IsValidClient(target) && !g_SlenderGiveUp[bossIndex])
+	if ((SF_IsRaidMap() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_BossesChaseEndlessly() || g_SlenderChasesEndlessly[bossIndex] || SF_IsSlaughterRunMap()) && state != STATE_ATTACK && state != STATE_STUN && IsValidClient(target) && !g_SlenderGiveUp[bossIndex])
 	{
 		g_SlenderTimeUntilNoPersistence[bossIndex] = GetGameTime() + NPCChaserGetChaseDuration(bossIndex, difficulty);
 		g_SlenderTimeUntilAlert[bossIndex] = GetGameTime() + NPCChaserGetChaseDuration(bossIndex, difficulty);
@@ -2270,9 +2298,22 @@ public Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn y
 				}
 			}
 		}*/
-		if (NPCChaserNormalSoundHookEnabled(bossIndex) && state != STATE_WANDER && oldState != STATE_IDLE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
+		if (NPCChaserNormalSoundHookEnabled(bossIndex) && state != STATE_WANDER && 
+		!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 		{
-			g_SlenderNextVoiceSound[bossIndex] = 0.0;
+			if (state == STATE_CHASE)
+			{
+				char sChaseSoundPath[PLATFORM_MAX_PATH];
+				GetRandomStringFromProfile(slenderProfile, "sound_chaseenemyinitial", sChaseSoundPath, sizeof(sChaseSoundPath));
+				if (sChaseSoundPath[0] == '\0')
+				{
+					g_SlenderNextVoiceSound[bossIndex] = 0.0;
+				}
+			}
+			else
+			{
+				g_SlenderNextVoiceSound[bossIndex] = 0.0;
+			}
 		}
 	}
 	

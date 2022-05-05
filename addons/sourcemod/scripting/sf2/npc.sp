@@ -134,202 +134,6 @@ bool g_NpcUsesRageAnimation1[MAX_BOSSES] = { false, ... };
 bool g_NpcUsesRageAnimation2[MAX_BOSSES] = { false, ... };
 bool g_NpcUsesRageAnimation3[MAX_BOSSES] = { false, ... };
 
-const SF2NPC_BaseNPC SF2_INVALID_NPC = view_as<SF2NPC_BaseNPC>(-1);
-
-methodmap SF2NPC_BaseNPC
-{
-	property int Index
-	{
-		public get() { return view_as<int>(this); }
-	}
-	
-	property int Type
-	{
-		public get() { return NPCGetType(this.Index); }
-	}
-	
-	property int ProfileIndex
-	{
-		public get() { return NPCGetProfileIndex(this.Index); }
-	}
-	
-	property int uniqueProfileIndex
-	{
-		public get() { return NPCGetUniqueProfileIndex(this.Index); }
-	}
-	
-	property int EntRef
-	{
-		public get() { return NPCGetEntRef(this.Index); }
-	}
-	
-	property int EntIndex
-	{
-		public get() { return NPCGetEntIndex(this.Index); }
-	}
-	
-	property int Flags
-	{
-		public get() { return NPCGetFlags(this.Index); }
-		public set(int flags)
-		{
-			NPCSetFlags(this.Index, flags);
-		}
-	}
-	
-	property float ModelScale
-	{
-		public get() { return NPCGetModelScale(this.Index); }
-	}
-	
-	property int Health
-	{
-		public get() { return NPCGetHealth(this.Index); }
-	}
-
-	property int Skin
-	{
-		public get() { return NPCGetModelSkin(this.Index); }
-	}
-	
-	property int RaidHitbox
-	{
-		public get() { return NPCGetRaidHitbox(this.Index); }
-	}
-	
-	property float TurnRate
-	{
-		public get() { return NPCGetTurnRate(this.Index); }
-	}
-	
-	property float FOV
-	{
-		public get() { return NPCGetFOV(this.Index); }
-	}
-	
-	property float Anger
-	{
-		public get() { return NPCGetAnger(this.Index); }
-		public set(float amount) { NPCSetAnger(this.Index, amount); }
-	}
-	
-	property float AngerAddOnPageGrab
-	{
-		public get() { return NPCGetAngerAddOnPageGrab(this.Index); }
-	}
-	
-	property float AngerAddOnPageGrabTimeDiff
-	{
-		public get() { return NPCGetAngerAddOnPageGrabTimeDiff(this.Index); }
-	}
-
-	property float ScareRadius
-	{
-		public get() { return NPCGetScareRadius(this.Index); }
-	}
-	
-	property float ScareCooldown
-	{
-		public get() { return NPCGetScareCooldown(this.Index); }
-	}
-	
-	property float InstantKillRadius
-	{
-		public get() { return NPCGetInstantKillRadius(this.Index); }
-	}
-	
-	property int TeleportType
-	{
-		public get() { return NPCGetTeleportType(this.Index); }
-	}
-
-	property bool DeathCamEnabled
-	{
-		public get() { return NPCHasDeathCamEnabled(this.Index); }
-		public set(bool state) { NPCSetDeathCamEnabled(this.Index, state); }
-	}
-	
-	public SF2NPC_BaseNPC(int index)
-	{
-		return view_as<SF2NPC_BaseNPC>(index);
-	}
-
-	public void Spawn(float pos[3])
-	{
-		SpawnSlender(this, pos);
-	}
-	
-	public void UnSpawn()
-	{
-		RemoveSlender(this.Index);
-	}
-	
-	public void Remove()
-	{
-		NPCRemove(this.Index);
-	}
-	
-	public bool IsValid()
-	{
-		return NPCIsValid(this.Index);
-	}
-	
-	public void GetProfile(char[] buffer, int bufferLen) 
-	{
-		NPCGetProfile(this.Index, buffer, bufferLen);
-	}
-	
-	public void SetProfile(const char[] profileName)
-	{
-		NPCSetProfile(this.Index, profileName);
-	}
-	
-	public float GetSpeed(int difficulty)
-	{
-		return NPCGetSpeed(this.Index, difficulty);
-	}
-	
-	public float GetMaxSpeed(int difficulty)
-	{
-		return NPCGetMaxSpeed(this.Index, difficulty);
-	}
-	
-	public void GetEyePosition(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
-	{
-		NPCGetEyePosition(this.Index, buffer, defaultValue);
-	}
-	
-	public void GetEyePositionOffset(float buffer[3])
-	{
-		NPCGetEyePositionOffset(this.Index, buffer);
-	}
-	
-	public void AddAnger(float amount)
-	{
-		NPCAddAnger(this.Index, amount);
-	}
-	
-	public bool HasAttribute(const char[] attributeName)
-	{
-		return NPCHasAttribute(this.Index, attributeName);
-	}
-	
-	public float GetAttributeValue(const char[] attributeName, float defaultValue = 0.0)
-	{
-		return NPCGetAttributeValue(this.Index, attributeName, defaultValue);
-	}
-
-	public int GetTeleporter(int iTeleporterNumber)
-	{
-		return NPCStatueGetTeleporter(this.Index, iTeleporterNumber);
-	}
-	
-	public void SetTeleporter(int iTeleporterNumber, int iEntity)
-	{
-		NPCStatueSetTeleporter(this.Index, iTeleporterNumber, iEntity);
-	}
-}
-
 stock bool NPCGetBossName(int npcIndex = -1, char[] buffer,int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
 {
 	if (npcIndex == -1 && profile[0] == '\0')
@@ -3993,6 +3797,9 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 	{
 		return false;
 	}
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -4077,14 +3884,21 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 		distance *= 1.66;
 	}
 	
-	if (TF2_GetPlayerClass(client) == TFClass_Spy)
+	if (!IsClassConfigsValid())
 	{
-		distance *= 1.3;
-	}
+		if (TF2_GetPlayerClass(client) == TFClass_Spy)
+		{
+			distance *= 1.3;
+		}
 
-	if (TF2_GetPlayerClass(client) == TFClass_Scout)
+		if (TF2_GetPlayerClass(client) == TFClass_Scout)
+		{
+			distance *= 0.7;
+		}
+	}
+	else
 	{
-		distance *= 0.7;
+		distance *= g_ClassBossHearingSensitivity[classToInt];
 	}
 	
 	if (distance > SquareFloat(hearRadius))
@@ -4518,7 +4332,7 @@ void SlenderCastFootstepAnimEvent(int bossIndex, const char[] sectionName)
 		strcopy(buffer, sizeof(buffer), sectionName);
 		StrCat(buffer, sizeof(buffer), "_pitch");
 		int pitch = GetProfileNum(profile, buffer, 100);
-		if (StrContains(path, "/", false) == -1 && StrContains(path, "\\", false) == -1) 
+		if (StrContains(path, "/", false) == -1) 
 		{
 			EmitGameSoundToAll(path, slender);
 		}
@@ -4569,7 +4383,7 @@ void SlenderCastAnimEvent(int bossIndex, const char[] sectionName)
 		strcopy(buffer, sizeof(buffer), sectionName);
 		StrCat(buffer, sizeof(buffer), "_pitch");
 		int pitch = GetProfileNum(profile, buffer, 100);
-		if (StrContains(path, "/", false) == -1 && StrContains(path, "\\", false) == -1) 
+		if (StrContains(path, "/", false) == -1) 
 		{
 			EmitGameSoundToAll(path, slender);
 		}
@@ -5809,16 +5623,25 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 
 	if (bossIndex == -1 || client <= 0) 
 	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss index and or client are not valid!");
+		#endif
 		return false;
 	}
 
 	if (!IsRoundPlaying())
 	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxies because the round is not playing!", bossIndex);
+		#endif
 		return false;
 	}
 	
 	if (!(NPCGetFlags(bossIndex) & SFF_PROXIES))
 	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d cannot spawn proxies!");
+		#endif
 		return false;
 	}
 
@@ -5826,12 +5649,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
-	if (bossIndex == -1) //Please don't ask why I did this; EDIT: Yes, I will! Why? DOUBLE EDIT: Stupid warnings that I couldn't fix IIRC...
-	{
-		return false;
-	}
-	
+
 	ArrayList spawnPoints = new ArrayList();
 	char name[32];
 	int ent = -1;
@@ -5849,7 +5667,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	{
 		SF2PlayerProxySpawnEntity spawnPoint = SF2PlayerProxySpawnEntity(ent);
 		if (!spawnPoint.IsValid() || !spawnPoint.Enabled)
+		{
 			continue;
+		}
 
 		spawnPoints.Push(ent);
 	}
@@ -5864,7 +5684,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	
 	if (ent && ent != -1)
 	{
-		//SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport spawn point for boss(%i) proxy: %i", bossIndex, ent);
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d found a spawnpoint entity %d.", bossIndex, ent);
+		#endif
 		spawnPointEnt = ent;
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", teleportPos);
 		return true;
@@ -5875,6 +5697,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	int teleportTarget = EntRefToEntIndex(g_SlenderProxyTarget[bossIndex]);
 	if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
 	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d has no proxy target, aborting!", bossIndex);
+		#endif
 		return false;
 	}
 
@@ -5887,7 +5712,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	{
 		// Search outwards until travel distance is at maximum range.
 		ArrayList areaArray = new ArrayList(2);
-		SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(targetArea, g_SlenderTeleportMaxRange[bossIndex][difficulty], _, _);
+		SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(targetArea, g_SlenderProxyTeleportMaxRange[bossIndex][difficulty], _, _);
 		{
 			int poppedAreas;
 						
@@ -5928,9 +5753,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 		
 				float areaSpawnPoint[3];
 				area.GetCenter(areaSpawnPoint);
-				
-				int bossEnt = NPCGetEntIndex(bossIndex);
-			
+
 				// Check space. First raise to HalfHumanHeight * 2, then trace downwards to get ground level.
 				float traceStartPos[3];
 				traceStartPos[0] = areaSpawnPoint[0];
@@ -5954,7 +5777,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 					traceMaxs,
 					MASK_NPCSOLID,
 					TraceRayDontHitEntity,
-					bossEnt);
+					teleportTarget);
 				
 				float traceHitPos[3];
 				TR_GetEndPosition(traceHitPos, trace);
@@ -5963,6 +5786,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				
 				if (TR_PointOutsideWorld(traceHitPos))
 				{
+					#if defined DEBUG
+					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d spawn proxy %d because the position is outside the world!", bossIndex, client);
+					#endif
 					continue;
 				}
 				if (IsSpaceOccupiedPlayer(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
@@ -5970,14 +5796,20 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 					traceHitPos[2] +=5.0;
 					if (IsSpaceOccupiedPlayer(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
 					{
+						#if defined DEBUG
+						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because the space is occupied!", bossIndex, client);
+						#endif
 						continue;
 					}
 				}
 				if (IsSpaceOccupiedNPC(traceHitPos,
 					HULL_TF2PLAYER_MINS,
 					HULL_TF2PLAYER_MAXS,
-					bossEnt))
+					client))
 				{
+					#if defined DEBUG
+					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because the space is occupied by another boss!", bossIndex, client);
+					#endif
 					continue;
 				}
 			
@@ -5988,6 +5820,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				// Check visibility.
 				if (IsPointVisibleToAPlayer(areaSpawnPoint, false, false) && !SF_IsBoxingMap() && !SF_IsRaidMap() && !SF_IsProxyMap() && !SF_BossesChaseEndlessly())
 				{
+					#if defined DEBUG
+					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because a player sees the spawn position!", bossIndex, client);
+					#endif
 					continue;
 				}
 
@@ -6010,6 +5845,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 					
 					if (GetVectorSquareMagnitude(areaSpawnPoint, tempPos) <= SquareFloat(g_SlenderProxyTeleportMinRange[bossIndex][difficulty]))
 					{
+						#if defined DEBUG
+						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because player %d is too close!", bossIndex, client, teleportClient);
+						#endif
 						tooNear = true;
 						break;
 					}
@@ -6091,6 +5929,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 
 	if (teleportAreaIndex == -1)
 	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not find any areas to place proxy %d!", bossIndex, client);
+		#endif
 		return false;
 	}
 	

@@ -45,6 +45,8 @@ public void Hook_ClientPreThink(int client)
 			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 		
 			int roundState = view_as<int>(GameRules_GetRoundState());
+			TFClassType class = TF2_GetPlayerClass(client);
+			int classToInt = view_as<int>(class);
 
 			if (!g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Red)
 			{
@@ -58,7 +60,7 @@ public void Hook_ClientPreThink(int client)
 					TF2_RemoveCondition(client,TFCond_Taunting);
 				}
 
-				if (TF2_IsPlayerInCondition(client,TFCond_Taunting) && TF2_GetPlayerClass(client) == TFClass_Soldier)
+				if (TF2_IsPlayerInCondition(client,TFCond_Taunting) && class == TFClass_Soldier)
 				{
 					int weaponEnt = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 					if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
@@ -159,11 +161,18 @@ public void Hook_ClientPreThink(int client)
 					
 					if (!inDanger)
 					{
-						float flCurTime = GetGameTime();
+						float curTime = GetGameTime();
 						float scareSprintDuration = 3.0;
-						if (TF2_GetPlayerClass(client) == TFClass_DemoMan)
+						if (!IsClassConfigsValid())
 						{
-							scareSprintDuration *= 1.667;
+							if (class == TFClass_DemoMan)
+							{
+								scareSprintDuration *= 1.667;
+							}
+						}
+						else
+						{
+							scareSprintDuration *= g_ClassScareSprintDurationMultipler[classToInt];
 						}
 						
 						for (int i = 0; i < MAX_BOSSES; i++)
@@ -173,7 +182,7 @@ public void Hook_ClientPreThink(int client)
 								continue;
 							}
 							
-							if ((flCurTime - g_PlayerScareLastTime[client][i]) <= scareSprintDuration)
+							if ((curTime - g_PlayerScareLastTime[client][i]) <= scareSprintDuration)
 							{
 								inDanger = true;
 								break;
@@ -181,8 +190,17 @@ public void Hook_ClientPreThink(int client)
 						}
 					}
 					
-					float flWalkSpeed = ClientGetDefaultWalkSpeed(client);
-					float flSprintSpeed = ClientGetDefaultSprintSpeed(client);
+					float walkSpeed, sprintSpeed;
+					if (!IsClassConfigsValid())
+					{
+						walkSpeed = ClientGetDefaultWalkSpeed(client);
+						sprintSpeed = ClientGetDefaultSprintSpeed(client);
+					}
+					else
+					{
+						walkSpeed = g_ClassWalkSpeed[classToInt];
+						sprintSpeed = g_ClassRunSpeed[classToInt];
+					}
 					
 					// Check for weapon speed changes.
 					int weaponEnt = INVALID_ENT_REFERENCE;
@@ -202,49 +220,49 @@ public void Hook_ClientPreThink(int client)
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
 								{
-									flSprintSpeed -= (flSprintSpeed * 0.05);
-									flWalkSpeed -= (flWalkSpeed * 0.05);
+									sprintSpeed -= (sprintSpeed * 0.05);
+									walkSpeed -= (walkSpeed * 0.05);
 								}
 							}
 							case 214: // The Powerjack
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
 								{
-									flSprintSpeed += (flSprintSpeed * 0.03);
+									sprintSpeed += (sprintSpeed * 0.03);
 								}
 							}
 							case 239: // Gloves of Running Urgently
 							{
 								if (GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
 								{
-									flSprintSpeed += (flSprintSpeed * 0.075);
+									sprintSpeed += (sprintSpeed * 0.075);
 								}
 							}
 							case 775: // Escape Plan
 							{
 								float health = float(GetEntProp(client, Prop_Send, "m_iHealth"));
-								float flMaxHealth = float(SDKCall(g_SDKGetMaxHealth, client));
-								float flPercentage = health / flMaxHealth;
+								float maxHealth = float(SDKCall(g_SDKGetMaxHealth, client));
+								float percentage = health / maxHealth;
 
-								if (flPercentage < 0.805 && flPercentage >= 0.605) 
+								if (percentage < 0.805 && percentage >= 0.605) 
 								{
-									flWalkSpeed += (flWalkSpeed * 0.05);
-									flSprintSpeed += (flSprintSpeed * 0.05);
+									walkSpeed += (walkSpeed * 0.05);
+									sprintSpeed += (sprintSpeed * 0.05);
 								}
-								else if (flPercentage < 0.605 && flPercentage >= 0.405) 
+								else if (percentage < 0.605 && percentage >= 0.405) 
 								{
-									flWalkSpeed += (flWalkSpeed * 0.1);
-									flSprintSpeed += (flSprintSpeed * 0.1);
+									walkSpeed += (walkSpeed * 0.1);
+									sprintSpeed += (sprintSpeed * 0.1);
 								}
-								else if (flPercentage < 0.405 && flPercentage >= 0.205)
+								else if (percentage < 0.405 && percentage >= 0.205)
 								{
-									flWalkSpeed += (flWalkSpeed * 0.15);
-									flSprintSpeed += (flSprintSpeed * 0.15);
+									walkSpeed += (walkSpeed * 0.15);
+									sprintSpeed += (sprintSpeed * 0.15);
 								}
-								else if (flPercentage < 0.205)
+								else if (percentage < 0.205)
 								{
-									flWalkSpeed += (flWalkSpeed * 0.2);
-									flSprintSpeed += (flSprintSpeed * 0.2);
+									walkSpeed += (walkSpeed * 0.2);
+									sprintSpeed += (sprintSpeed * 0.2);
 								}
 							}
 						}
@@ -255,34 +273,65 @@ public void Hook_ClientPreThink(int client)
 					{
 						if (TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly))
 						{
-							flWalkSpeed += (flWalkSpeed * 0.115);
-							flSprintSpeed += (flSprintSpeed * 0.165);
+							walkSpeed += (walkSpeed * 0.115);
+							sprintSpeed += (sprintSpeed * 0.165);
 						}
 					}
 					else
 					{
 						if (TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly))
 						{
-							flWalkSpeed += (flWalkSpeed * 0.105);
-							flSprintSpeed += (flSprintSpeed * 0.14);
+							walkSpeed += (walkSpeed * 0.105);
+							sprintSpeed += (sprintSpeed * 0.14);
 						}
 					}
 					
 					if (inDanger)
 					{
-						if (TF2_GetPlayerClass(client) != TFClass_Spy && TF2_GetPlayerClass(client) != TFClass_Pyro)
+						if (!IsClassConfigsValid())
 						{
-							flWalkSpeed *= 1.34;
-							flSprintSpeed *= 1.34;
+							if (class != TFClass_Spy && class != TFClass_Pyro)
+							{
+								walkSpeed *= 1.34;
+								sprintSpeed *= 1.34;
+							}
+							else
+							{
+								if (class == TFClass_Spy)
+								{
+									walkSpeed *= 1.28;
+									sprintSpeed *= 1.28;
+								}
+								else
+								{
+									weaponEnt = INVALID_ENT_REFERENCE;
+									for (int iSlot = 0; iSlot <= 5; iSlot++)
+									{
+										weaponEnt = GetPlayerWeaponSlot(client, iSlot);
+										if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
+										{
+											continue;
+										}
+										
+										int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+										if (itemDefInt == 214 && GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
+										{
+											walkSpeed *= 1.32;
+											sprintSpeed *= 1.32;
+										}
+										else
+										{
+											walkSpeed *= 1.34;
+											sprintSpeed *= 1.34;
+										}
+									}
+								}
+							}
 						}
 						else
 						{
-							if (TF2_GetPlayerClass(client) == TFClass_Spy)
-							{
-								flWalkSpeed *= 1.28;
-								flSprintSpeed *= 1.28;
-							}
-							else
+							float multiplier = g_ClassDangerSpeedMultipler[classToInt];
+							if (class == TFClass_Pyro)
 							{
 								weaponEnt = INVALID_ENT_REFERENCE;
 								for (int iSlot = 0; iSlot <= 5; iSlot++)
@@ -292,20 +341,16 @@ public void Hook_ClientPreThink(int client)
 									{
 										continue;
 									}
-									
+										
 									int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 									if (itemDefInt == 214 && GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
 									{
-										flWalkSpeed *= 1.32;
-										flSprintSpeed *= 1.32;
-									}
-									else
-									{
-										flWalkSpeed *= 1.34;
-										flSprintSpeed *= 1.34;
+										multiplier -= 0.02;
 									}
 								}
 							}
+							walkSpeed *= multiplier;
+							sprintSpeed *= multiplier;
 						}
 						
 						if (!g_PlayerHints[client][PlayerHint_Sprint])
@@ -314,19 +359,19 @@ public void Hook_ClientPreThink(int client)
 						}
 					}
 					
-					float flSprintSpeedSubtract = ((flSprintSpeed - flWalkSpeed) * 0.5);
-					float flWalkSpeedSubtract = ((flSprintSpeed - flWalkSpeed) * 0.35);
+					float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.5);
+					float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.35);
 					if (g_PlayerSprintPoints[client] > 7)
 					{
-						flSprintSpeedSubtract -= flSprintSpeedSubtract * (g_PlayerSprintPoints[client] != 0 ? (float(g_PlayerSprintPoints[client]) / 100.0) : 0.0);
-						flSprintSpeed -= flSprintSpeedSubtract;
+						sprintSpeedSubtract -= sprintSpeedSubtract * (g_PlayerSprintPoints[client] != 0 ? (float(g_PlayerSprintPoints[client]) / 100.0) : 0.0);
+						sprintSpeed -= sprintSpeedSubtract;
 					}
 					else
 					{
-						flSprintSpeedSubtract += 25;
-						flSprintSpeed -= flSprintSpeedSubtract;
-						flWalkSpeedSubtract += 15;
-						flWalkSpeed -= flWalkSpeedSubtract;
+						sprintSpeedSubtract += 25;
+						sprintSpeed -= sprintSpeedSubtract;
+						walkSpeedSubtract += 15;
+						walkSpeed -= walkSpeedSubtract;
 					}
 					
 					if (IsClientSprinting(client)) 
@@ -337,25 +382,25 @@ public void Hook_ClientPreThink(int client)
 							{
 								if (!TF2_IsPlayerInCondition(client, TFCond_Charging))
 								{
-									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed);
+									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", sprintSpeed);
 								}
 								else
 								{
 									if (SF_IsBoxingMap() || SF_IsRaidMap())
 									{
-										SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed*2.5);
+										SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", sprintSpeed*2.5);
 									}
 									else
 									{
-										SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flSprintSpeed/2.5);
+										SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", sprintSpeed/2.5);
 									}
 								}
-								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-170.0);
+								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed-170.0);
 							}
 							else
 							{
 								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
-								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flSprintSpeed-170.0);
+								SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed-170.0);
 							}
 						}
 						else
@@ -370,20 +415,20 @@ public void Hook_ClientPreThink(int client)
 						{
 							if (!TF2_IsPlayerInCondition(client, TFCond_Charging))
 							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed);
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", walkSpeed);
 							}
 							else
 							{
 								if (SF_IsBoxingMap() || SF_IsRaidMap())
 								{
-									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed*2.5);
+									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", walkSpeed*2.5);
 								}
 								else
 								{
-									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flWalkSpeed/2.5);
+									SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", walkSpeed/2.5);
 								}
 							}
-							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", flWalkSpeed-20.0);
+							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", walkSpeed-20.0);
 						}
 						else
 						{
@@ -409,7 +454,6 @@ public void Hook_ClientPreThink(int client)
 			}
 			else if (g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Blue)
 			{
-				TFClassType class = TF2_GetPlayerClass(client);
 				bool speedup = TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly);
 			
 				switch (class)
@@ -554,20 +598,24 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		return Plugin_Continue;
 	}
 
-	Action iAction = Plugin_Continue;
+	Action action = Plugin_Continue;
 
 	float damage2 = damage;
 	Call_StartForward(g_OnClientTakeDamageFwd);
 	Call_PushCell(victim);
-	Call_PushCell(attacker);
+	Call_PushCellRef(attacker);
+	Call_PushCellRef(inflictor);
 	Call_PushFloatRef(damage2);
-	Call_Finish(iAction);
+	Call_Finish(action);
 	
-	if (iAction == Plugin_Changed) 
+	if (action == Plugin_Changed) 
 	{
 		damage = damage2;
 		return Plugin_Changed;
 	}
+
+	TFClassType class = TF2_GetPlayerClass(victim);
+	int classToInt = view_as<int>(class);
 
 	if (IsRoundInWarmup() && IsValidClient(attacker))
 	{
@@ -676,7 +724,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 							MakeVectorFromPoints(myPos, myDirection, s);
 							if (GetVectorDotProduct(p, s) <= 0.0)//We can backstab him m8
 							{
-								if (GetClientTeam(victim) == GetClientTeam(attacker) && TF2_GetPlayerClass(victim) == TFClass_Sniper)
+								if (GetClientTeam(victim) == GetClientTeam(attacker) && class == TFClass_Sniper)
 								{
 									//look if the player has a razorback
 									int wearableEnt = INVALID_ENT_REFERENCE;
@@ -771,11 +819,9 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				
 				if (g_PlayerProxy[attacker])
 				{
-					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 					int maxHealth = SDKCall(g_SDKGetMaxHealth, victim);
 					int master = NPCGetFromUniqueID(g_PlayerProxyMaster[attacker]);
-					NPCGetProfile(master, profile, sizeof(profile));
-					if (master != -1 && profile[0] != '\0')
+					if (master != -1)
 					{
 						int difficulty = GetLocalGlobalDifficulty(master);
 						if (damagecustom == TF_CUSTOM_TAUNT_GRAND_SLAM ||
@@ -812,14 +858,20 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 
 						float originalPercentage = g_SlenderProxyDamageVsEnemy[master][difficulty];
 						float additionPercentage = 0.15;
-
-						if (TF2_GetPlayerClass(victim) == TFClass_Medic)
+						if (!IsClassConfigsValid())
 						{
-							damage *= (originalPercentage + additionPercentage);
+							if (class == TFClass_Medic)
+							{
+								damage *= (originalPercentage + additionPercentage);
+							}
+							else
+							{
+								damage *= originalPercentage;
+							}
 						}
 						else
 						{
-							damage *= originalPercentage;
+							damage *= originalPercentage + g_ClassProxyDamageVulnerability[classToInt];
 						}
 					}
 					return Plugin_Changed;
@@ -828,9 +880,9 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				{
 					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 					int master = NPCGetFromUniqueID(g_PlayerProxyMaster[victim]);
-					NPCGetProfile(master, profile, sizeof(profile));
-					if (master != -1 && profile[0] != '\0')
+					if (master != -1)
 					{
+						NPCGetProfile(master, profile, sizeof(profile));
 						int difficulty = GetLocalGlobalDifficulty(master);
 						g_PlayerProxyControl[attacker] += g_SlenderProxyControlGainHitByEnemy[master][difficulty];
 						if (g_PlayerProxyControl[attacker] > 100)

@@ -873,7 +873,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										checkDamage *= 3;
 									}
-									else if ((damageType == 1327104 || TF2_IsPlayerInCondition(i, TFCond_Jarated) || TF2_IsPlayerInCondition(i, TFCond_MarkedForDeath)) && !TF2_IsPlayerInCondition(i, TFCond_DefenseBuffed))
+									else if ((damageType == 1327104 || TF2_IsPlayerInCondition(i, TFCond_Jarated) || TF2_IsPlayerInCondition(i, TFCond_MarkedForDeath) || TF2_IsPlayerInCondition(i, TFCond_MarkedForDeathSilent)) && !TF2_IsPlayerInCondition(i, TFCond_DefenseBuffed))
 									{
 										checkDamage *= 1.35;
 									}

@@ -515,8 +515,9 @@ static void LoadProfilesFromDirectory(const char[] relDirPath)
  * If the sound file exists within the server files, the file is added to the downloads table.
  *
  * @param soundPath		Path to sound, relative to sound/ folder.
+ * @param disableWarning	Disables the warning if a file doesn't exist.
  */
-void TryPrecacheBossProfileSoundPath(const char[] soundPath)
+void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning = false)
 {
 	if (soundPath[0] == '\0')
 	{
@@ -532,7 +533,10 @@ void TryPrecacheBossProfileSoundPath(const char[] soundPath)
 	}
 	else
 	{
-		LogSF2Message("Sound file %s does not exist, excluding from downloads!", fullPath);
+		if (!disableWarning)
+		{
+			LogSF2Message("Sound file %s does not exist, excluding from downloads!", fullPath);
+		}
 		PrecacheSound(soundPath);
 	}
 }

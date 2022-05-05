@@ -7,10 +7,11 @@
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
 #define SF2_MAX_NAME_LENGTH 32
 
-#define MAX_BOSSES 32
+#define MAX_BOSSES 64
 #define MAX_NPCTELEPORTER 5
 #define MAX_NODES -1
 #define MAX_TRAPS 64
+#define MAX_CLASSES 9
 
 // Difficulty modifiers.
 #define DIFFICULTYMODIFIER_EASY 0.75
@@ -431,29 +432,30 @@ forward void SF2_OnClientEndDeathCam(int client, int bossIndex);
  * Called to determine a player's default walk speed.
  *
  * @param client		Client index.
- * @param flDefault		The default walk speed.
- * @return				If Plugin_Changed, flDefault is used as player's default walk speed.
+ * @param defaultFloat		The default walk speed.
+ * @return				If Plugin_Changed, defaultFloat is used as player's default walk speed.
  */
-forward Action SF2_OnClientGetDefaultWalkSpeed(int client, float &flDefault);
+forward Action SF2_OnClientGetDefaultWalkSpeed(int client, float &defaultFloat);
 
 /**
  * Called to determine a player's default sprint speed.
  *
  * @param client		Client index.
- * @param flDefault		The default sprint speed.
- * @return				If Plugin_Changed, flDefault is used as player's default sprint speed.
+ * @param defaultFloat		The default sprint speed.
+ * @return				If Plugin_Changed, defaultFloat is used as player's default sprint speed.
  */
-forward Action SF2_OnClientGetDefaultSprintSpeed(int client, float &flDefault);
+forward Action SF2_OnClientGetDefaultSprintSpeed(int client, float &defaultFloat);
 
 /**
  * Called when a player gets damaged.
  *
  * @param victim		The player who got damaged.
  * @param attacker		The damage source.
+ * @param inflictor		Similar damage source for attacker.
  * @param damage		The amount of damage to take.
  * @return				If Plugin_Changed, damage is overrided.
  */
-forward Action SF2_OnClientTakeDamage(int victim, int attacker, float &damage);
+forward Action SF2_OnClientTakeDamage(int victim, int &attacker, int &inflictor, float &damage);
 
 /**
  * Called when giving queue points to the group at the end of the round.
@@ -495,9 +497,10 @@ forward void SF2_OnBossPackVoteStart();
 /**
  * Called whenever the difficulty changes
  *
- * @param bossIndex	The index of the newly created boss.
+ * @param difficulty	The new difficulty changed into.
+ * @param difficulty	The old difficulty before it was changed.
  */
-forward void SF2_OnDifficultyChanged(int difficulty);
+forward void SF2_OnDifficultyChanged(int difficulty, int oldDifficulty);
 
 /**
  * Returns a bool about the gamemode's state.
@@ -732,6 +735,14 @@ native int SF2_SetClientSprintPoints(int client, int sprintPoints);
 native bool SF2_IsClientSprinting(int client);
 
 /**
+ * Sets the sprint state for a client.
+ *
+ * @param client			Client index.
+ * @param sprint			True if the player should sprint, false if otherwise.
+ */
+native bool SF2_SetClientSprintState(int client, bool sprint);
+
+/**
  * Returns whether or not the client is actually in sprint state.
  *
  * @param client			Client index.
@@ -746,6 +757,14 @@ native bool SF2_IsClientReallySprinting(int client);
  * @return					True if trapped, false otherwise.
  */
 native bool SF2_IsClientTrapped(int client);
+
+/**
+ * Returns whether or not the client is in a death cam.
+ *
+ * @param client			Client index.
+ * @return					True in in a death cam, false otherwise. 
+ */
+native bool SF2_IsClientInDeathCam(int client);
 
 /**
  * Returns whether or not a proxy can be spawned, returns a teleport position or spawn point if defined and the result is true, works well with SF2_ClientForceProxy.
