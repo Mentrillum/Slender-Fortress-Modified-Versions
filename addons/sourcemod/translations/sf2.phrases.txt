@@ -1,4 +1,4 @@
-﻿﻿"Phrases"
+﻿"Phrases"
 {
 	"SF2 Difficulty Vote Menu Title"
 	{
@@ -1399,7 +1399,7 @@
 	{
 		"en"	"You cannot perform this command because the player is currently playing on RED."
 	}
-	
+
 	"SF2 Create Group Menu Title"
 	{
 		"en"	"Create new group"
@@ -1772,3 +1772,4 @@
 		"chi"			"{red}{1}{default} 击败了 {valve}{2}。"
 	}
 }
+
