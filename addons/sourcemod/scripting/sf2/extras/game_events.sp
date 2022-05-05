@@ -712,7 +712,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				
 				if (IsFakeClient(client))
 				{
-					//CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 				
 				// screen overlay timer
@@ -1556,7 +1556,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			{
 				if (IsFakeClient(client))
 				{
-					//TF2_SetPlayerClass(client, TFClass_Sniper);
+					TF2_SetPlayerClass(client, TFClass_Sniper);
 				}
 				if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT) || g_RenevantMultiEffect)
 				{
