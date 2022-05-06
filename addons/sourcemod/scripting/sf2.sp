@@ -3508,7 +3508,7 @@ void CollectPage(int page, int activator)
 					NPCGetBossName(_, bossName, sizeof(bossName), buffer);
 					EmitSoundToAll(SR_SOUND_SELECT_BR, _, SNDCHAN_AUTO, _, _, 0.75);
 					SpecialRoundGameText(bossName, "d_purgatory");
-					CPrintToChatAll("{royalblue}%T{default}Next on the roulette: {valve}%s", "SF2 Prefix", bossName); //Minimized HUD
+					CPrintToChatAll("{royalblue}%t{default}Next on the roulette: {valve}%s", "SF2 Prefix", bossName); //Minimized HUD
 				}
 				delete selectableBosses;
 			}
@@ -3522,7 +3522,7 @@ void CollectPage(int page, int activator)
 					NPCGetBossName(_, bossName, sizeof(bossName), buffer);
 					EmitSoundToAll(SR_SOUND_SELECT_BR, _, SNDCHAN_AUTO, _, _, 0.75);
 					SpecialRoundGameText(bossName, "d_purgatory");
-					CPrintToChatAll("{royalblue}%T{default}Next on the roulette: {valve}%s", bossName);
+					CPrintToChatAll("{royalblue}%t{default}Next on the roulette: {valve}%s", "SF2 Prefix", bossName);
 				}
 				delete selectableBosses;
 			}
@@ -3530,7 +3530,7 @@ void CollectPage(int page, int activator)
 		else
 		{
 			SpecialRoundGameText("You got lucky, no boss can be added.", "cappoint_progressbar_blocked");
-			CPrintToChatAll("{royalblue}%T{default}You got lucky, no boss can be added.");
+			CPrintToChatAll("{royalblue}%t{default}You got lucky, no boss can be added.", "SF2 Prefix");
 		}
 	}
 	
