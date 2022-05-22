@@ -3,6 +3,8 @@
 #endif
 #define _sf2_npc_chaser_included
 
+bool g_NpcOriginalVisibility[MAX_BOSSES];
+
 static float g_NpcWalkSpeed[MAX_BOSSES][Difficulty_Max];
 static float g_NpcMaxWalkSpeed[MAX_BOSSES][Difficulty_Max];
 
@@ -141,7 +143,6 @@ static float g_NpcShockwaveWidth[MAX_BOSSES][2];
 static float g_NpcShockwaveAmplitude[MAX_BOSSES];
 
 static int g_NpcState[MAX_BOSSES] = { -1, ... };
-static int g_NpcTeleporter[MAX_BOSSES][MAX_NPCTELEPORTER];
 static int g_NpcCurrentAnimationSequence[MAX_BOSSES] = { -1, ... };
 static bool g_NpcHasCurrentAnimationSequenceIsLooped[MAX_BOSSES] = { false, ... };
 bool g_NpcUsesChaseInitialAnimation[MAX_BOSSES] = { false, ... };
@@ -313,16 +314,7 @@ float g_NpcBaseAttackRunDelayTime[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS];
 #include "sf2/npc/npc_chaser_pathing.sp"
 #include "sf2/npc/npc_chaser_projectiles.sp"
 #include "sf2/npc/npc_creeper.sp"
-
-public void NPCChaserSetTeleporter(int bossIndex, int iTeleporterNumber, int entity)
-{
-	g_NpcTeleporter[bossIndex][iTeleporterNumber] = entity;
-}
-
-public int NPCChaserGetTeleporter(int bossIndex, int iTeleporterNumber)
-{
-	return g_NpcTeleporter[bossIndex][iTeleporterNumber];
-}
+#include "sf2/methodmaps.sp"
 
 public void NPCChaserInitialize()
 {
@@ -1422,7 +1414,7 @@ bool NPCChaserCanChaseOnLook(int npcIndex)
 	return g_NpcChaseOnLook[npcIndex];
 }
 
-int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
+int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 {
 	SF2ChaserBossProfile profile = SF2ChaserBossProfile(NPCGetProfileIndex(npcIndex));
 	char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -1499,22 +1491,22 @@ int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
 	for (int i = 0; i < g_NpcBaseAttacksCount[npcIndex]; i++)
 	{
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackType = profile.GetAttackType(i);
-		for (int iDiffAtk = 0; iDiffAtk < Difficulty_Max; iDiffAtk++)
+		for (int diffAtk = 0; diffAtk < Difficulty_Max; diffAtk++)
 		{
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackDamage = profile.GetAttackDamage(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackRunSpeed = profile.GetAttackRunSpeed(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackCooldown = profile.GetAttackCooldown(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileDamage = profile.GetAttackProjectileDamage(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileSpeed = profile.GetAttackProjectileSpeed(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileRadius = profile.GetAttackProjectileRadius(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileDeviation = profile.GetAttackProjectileDeviation(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileCount = profile.GetAttackProjectileCount(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileIceSlowdownPercent = profile.GetAttackProjectileIceSlowdownPercent(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileIceSlowdownDuration = profile.GetAttackProjectileIceSlowdownDuration(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackBulletCount = profile.GetAttackBulletCount(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackBulletDamage = profile.GetAttackBulletDamage(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackBulletSpread = profile.GetAttackBulletSpread(i, iDiffAtk);
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackLaserDamage = profile.GetAttackLaserDamage(i, iDiffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamage = profile.GetAttackDamage(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunSpeed = profile.GetAttackRunSpeed(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackCooldown = profile.GetAttackCooldown(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDamage = profile.GetAttackProjectileDamage(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileSpeed = profile.GetAttackProjectileSpeed(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileRadius = profile.GetAttackProjectileRadius(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDeviation = profile.GetAttackProjectileDeviation(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileCount = profile.GetAttackProjectileCount(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownPercent = profile.GetAttackProjectileIceSlowdownPercent(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownDuration = profile.GetAttackProjectileIceSlowdownDuration(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletCount = profile.GetAttackBulletCount(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletDamage = profile.GetAttackBulletDamage(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletSpread = profile.GetAttackBulletSpread(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDamage = profile.GetAttackLaserDamage(i, diffAtk);
 		}
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageVsProps = profile.GetAttackDamageVsProps(i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageForce = profile.GetAttackDamageForce(i);
@@ -1543,11 +1535,11 @@ int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackExplosiveDanceRadius = profile.GetAttackExplosiveDanceRadius(i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWeaponTypeInt = profile.GetAttackWeaponTypeInt(i);
 		
-		int iLaserColor[3];
-		profile.GetAttackLaserColor(iLaserColor, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[0] = iLaserColor[0];
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[1] = iLaserColor[1];
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[2] = iLaserColor[2];
+		int laserColor[3];
+		profile.GetAttackLaserColor(laserColor, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[0] = laserColor[0];
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[1] = laserColor[1];
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[2] = laserColor[2];
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserAttachment = profile.IsLaserOnAttachment(i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserDuration = profile.GetAttackLaserDuration(i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserNoise = profile.GetAttackLaserNoise(i);
@@ -1560,7 +1552,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
 	}
 	
 	// Get stun data.
-	if (!bInvincible)
+	if (!invincible)
 	{
 		g_NpcHasStunEnabled[npcIndex] = profile.StunEnabled;
 	}
@@ -1631,14 +1623,13 @@ int NPCChaserOnSelectProfile(int npcIndex, bool bInvincible)
 	g_NpcHasOldAnimationAIState[npcIndex] = profile.HasOldAnimationAI;
 	g_NpcHasCanUseAlertWalkingAnimation[npcIndex] = profile.UseAlertWalkingAnimation;
 	g_SlenderDifficultyAnimations[npcIndex] = profile.DifficultyAffectsAnimations;
+	g_NpcOriginalVisibility[npcIndex] = profile.UnnerfedVisibility;
 
 	g_NpcHasUsesMultiAttackSounds[npcIndex] = profile.MultiAttackSounds;
 	g_NpcHasUsesMultiHitSounds[npcIndex] = profile.MultiHitSounds;
 	g_NpcHasUsesMultiMissSounds[npcIndex] = profile.MultiMissSounds;
 
 	g_NpcHasHasCrawling[npcIndex] = profile.IsCrawlingEnabled;
-	g_NpcIsCrawling[npcIndex] = false;
-	g_NpcChangeToCrawl[npcIndex] = false;
 	GetProfileVector(npcProfile, "crawl_detect_mins", g_NpcCrawlDetectMins[npcIndex], view_as<float>( {0.0, 0.0, 0.0} ));
 	GetProfileVector(npcProfile, "crawl_detect_maxs", g_NpcCrawlDetectMaxs[npcIndex], view_as<float>( {0.0, 0.0, 0.0} ));
 
@@ -1839,22 +1830,22 @@ static void NPCChaserResetValues(int npcIndex)
 	{
 		// Base attack data.
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackType = SF2BossAttackType_Invalid;
-		for (int iDiffAtk = 0; iDiffAtk < Difficulty_Max; iDiffAtk++)
+		for (int diffAtk = 0; diffAtk < Difficulty_Max; diffAtk++)
 		{
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackDamage = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackRunSpeed = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackCooldown = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileDamage = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileSpeed = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileRadius = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileDeviation = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileCount = 0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileIceSlowdownPercent = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackProjectileIceSlowdownDuration = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackBulletCount = 0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackBulletDamage = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackBulletSpread = 0.0;
-			g_NpcBaseAttacks[npcIndex][i][iDiffAtk].baseAttackLaserDamage = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamage = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunSpeed = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackCooldown = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDamage = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileSpeed = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileRadius = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDeviation = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileCount = 0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownPercent = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownDuration = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletCount = 0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletDamage = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletSpread = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDamage = 0.0;
 		}
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageVsProps = 0.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageForce = 0.0;
@@ -1931,6 +1922,7 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcStunAddHealth[npcIndex] = 0.0;
 	g_NpcChaseInitialOnStun[npcIndex] = false;
 	g_SlenderDifficultyAnimations[npcIndex] = false;
+	g_NpcOriginalVisibility[npcIndex] = false;
 	
 	g_NpcCloakEnabled[npcIndex] = false;
 	g_NpcNextDecloakTime[npcIndex] = -1.0;
@@ -2061,6 +2053,12 @@ void Spawn_Chaser(int bossIndex)
 	g_NpcNextDecloakTime[bossIndex] = -1.0;
 	g_NpcIsCrawling[bossIndex] = false;
 	g_NpcChangeToCrawl[bossIndex] = false;
+
+	NPCSetAddSpeed(bossIndex, -NPCGetAddSpeed(bossIndex));
+	NPCSetAddMaxSpeed(bossIndex, -NPCGetAddMaxSpeed(bossIndex));
+	NPCSetAddAcceleration(bossIndex, -NPCGetAddAcceleration(bossIndex));
+	NPCChaserSetAddStunHealth(bossIndex, -NPCChaserGetAddStunHealth(bossIndex));
+
 }
 
 //	So this is how the thought process of the bosses should go.
@@ -3118,18 +3116,18 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 				g_NpcCurrentAnimationSequence[bossIndex] = 0;
 				//SendDebugMessageToPlayers(DEBUG_BOSS_ANIMATION, 0, "INVALID ANIMATION %s", animation);
 			}
-			bool bAnimationLoop = (state == STATE_IDLE || state == STATE_ALERT || 
+			bool animationLoop = (state == STATE_IDLE || state == STATE_ALERT || 
 			(state == STATE_CHASE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex]) 
 			|| state == STATE_WANDER);
 			if (state == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
 			{
-				bAnimationLoop = view_as<bool>(GetProfileAttackNum(profile, "attack_override_loop", GetEntProp(ent, Prop_Data, "m_bSequenceLoops"), NPCGetCurrentAttackIndex(bossIndex)));
+				animationLoop = view_as<bool>(GetProfileAttackNum(profile, "attack_override_loop", GetEntProp(ent, Prop_Data, "m_bSequenceLoops"), NPCGetCurrentAttackIndex(bossIndex)));
 			}
 			if (state == STATE_CHASE && g_NpcUsesChaseInitialAnimation[bossIndex])
 			{
-				bAnimationLoop = view_as<bool>(GetProfileNum(profile, "chase_initial_override_loop", GetEntProp(ent, Prop_Data, "m_bSequenceLoops")));
+				animationLoop = view_as<bool>(GetProfileNum(profile, "chase_initial_override_loop", GetEntProp(ent, Prop_Data, "m_bSequenceLoops")));
 			}
-			SetEntProp(ent, Prop_Data, "m_bSequenceLoops", bAnimationLoop);
+			SetEntProp(ent, Prop_Data, "m_bSequenceLoops", animationLoop);
 		}
 	}
 	if (state == STATE_ATTACK && NPCChaserGetAttackGestureState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
@@ -3351,7 +3349,6 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 		NPCChaserUpdateBossAnimation(bossIndex, slender, state);
 	}
 	g_SlenderChaseInitialTimer[bossIndex] = null;
-	//if (NPCChaserNormalSoundHookEnabled(bossIndex)) g_SlenderNextVoiceSound[bossIndex] = 0.0;
 	return Plugin_Stop;
 }
 
@@ -3875,31 +3872,7 @@ public MRESReturn ShouldCollideWith(Address thisAddress, DHookReturn returnHandl
 	return MRES_Ignored;
 }
 
-public MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, DHookParam params)
-{
-	int bossIndex = NPCGetFromEntIndex(thisInt);
-	int event = params.GetObjectVar(1, 0, ObjectValueType_Int);
-	if (event > 0 && NPCGetUniqueID(bossIndex) != -1)
-	{
-		char keyValue[256];
-		FormatEx(keyValue, sizeof(keyValue), "sound_footsteps_event_%i", event);
-		SlenderCastFootstepAnimEvent(bossIndex, keyValue);
-		FormatEx(keyValue, sizeof(keyValue), "sound_event_%i", event);
-		SlenderCastAnimEvent(bossIndex, keyValue);
-	}
-}
-
-public MRESReturn Hook_BossUpdateTransmitState(int bossEntity, DHookReturn hookReturn)
-{
-    if (!g_Enabled || !IsValidEntity(bossEntity) || NPCGetFromEntIndex(bossEntity) == -1)
-    {
-        return MRES_Ignored;
-    }
-
-    hookReturn.Value = SetEntityTransmitState(bossEntity, FL_EDICT_ALWAYS);
-    return MRES_Supercede;
-}
-
+//TODO: Fix hitbox damage numbers for this.
 public MRESReturn Hook_BossUpdateHitboxTransmitState(int bossEntity, DHookReturn hookReturn)
 {
     if (!g_Enabled || !IsValidEntity(bossEntity))
@@ -5005,7 +4978,6 @@ stock void NPC_DropKey(int bossIndex)
 		}
 		
 		int key = CreateEntityByName("tf_halloween_pickup");
-		//To do: allow the cfg maker to change the model.
 		DispatchKeyValue(key, "targetname", buffer);
 		DispatchKeyValue(key, "powerup_model", PAGE_MODEL);
 		DispatchKeyValue(key, "modelscale", "2.0");
@@ -5022,7 +4994,6 @@ stock void NPC_DropKey(int bossIndex)
 		SetEntityRenderColor(key, 0, 0, 0, 1);
 		
 		int glow = CreateEntityByName("tf_taunt_prop");
-		//To do: allow the cfg maker to change the model.
 		DispatchKeyValue(glow, "targetname", buffer);
 		if (keyModel[0] == '\0')
 		{

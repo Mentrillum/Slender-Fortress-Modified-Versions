@@ -28,7 +28,6 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 	INextBot bot = npc.GetBot();
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	CBaseCombatCharacter combatChar = CBaseCombatCharacter(bossEnt);
-	combatChar.DispatchAnimEvents(combatChar);
 
 	char slenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
@@ -875,7 +874,10 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 													float origin[3];
 													loco.SetVelocity(origin);
 												}
-												else RemoveSlender(bossIndex);
+												else
+												{
+													RemoveSlender(bossIndex);
+												}
 											}
 										}
 									}

@@ -432,8 +432,8 @@ public void Hook_ClientPreThink(int client)
 						}
 						else
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 0.1);
-							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", 0.1);
+							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 0.01);
+							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", 0.01);
 						}
 					}
 					
@@ -619,18 +619,18 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 
 	if (IsRoundInWarmup() && IsValidClient(attacker))
 	{
-		float flModelScale = GetEntPropFloat(attacker, Prop_Send, "m_flModelScale");
-		float flHeadScale = GetEntPropFloat(attacker, Prop_Send, "m_flHeadScale");
-		float flTorsoScale = GetEntPropFloat(attacker, Prop_Send, "m_flTorsoScale");
-		float flHandScale = GetEntPropFloat(attacker, Prop_Send, "m_flHandScale");
-		if (flModelScale < 1.0 || flModelScale > 1.0 || flHeadScale < 1.0 || flHeadScale > 1.0 || flTorsoScale < 1.0 || flTorsoScale > 1.0 || flHandScale < 1.0 || flHandScale > 1.0)
+		float modelScale = GetEntPropFloat(attacker, Prop_Send, "m_flModelScale");
+		float headScale = GetEntPropFloat(attacker, Prop_Send, "m_flHeadScale");
+		float torsoScale = GetEntPropFloat(attacker, Prop_Send, "m_flTorsoScale");
+		float handScale = GetEntPropFloat(attacker, Prop_Send, "m_flHandScale");
+		if (modelScale < 1.0 || modelScale > 1.0 || headScale < 1.0 || headScale > 1.0 || torsoScale < 1.0 || torsoScale > 1.0 || handScale < 1.0 || handScale > 1.0)
 		{
 			damage = 0.0; //So how does it feel?
 			return Plugin_Changed;
 		}
 	}
 	
-	if (IsClientInKart(victim) && (attacker == 0 || inflictor == 0))
+	if (IsClientInKart(victim) && (attacker == -1 || inflictor == -1))
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -667,6 +667,21 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		}
 	}
 
+	if (IsValidClient(attacker) && !g_PlayerEliminated[attacker] && !DidClientEscape(attacker) && class == TFClass_Soldier && !(GetEntityFlags(attacker) & FL_ONGROUND))
+	{
+		int weaponEnt = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+		if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
+		{
+			int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+			float zVelocity[3];
+			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", zVelocity);
+			if (itemDefInt == 416 && zVelocity[2] < 0.0 && weaponEnt == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon")) //A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
+			{
+				damagetype |= DMG_ACID;
+			}
+		}
+	}
+
 	if (IsEntityAProjectile(inflictor))
 	{
 		int npcIndex = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
@@ -684,11 +699,11 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	// Prevent telefrags
 	if ((damagetype & DMG_CRUSH) && damage > 500.0)
 	{
-		int bossIndex = NPCGetFromEntIndex(attacker);
-		if (bossIndex != -1 && IsValidClient(victim))
+		SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromEntIndex(attacker));
+		if (Npc != SF2_INVALID_NPC && IsValidClient(victim))
 		{
 			damage = 0.0;
-			RemoveSlender(bossIndex);
+			Npc.UnSpawn();
 			return Plugin_Changed;
 		}
 	}
@@ -771,8 +786,8 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 									}
 								}
 								
-								ConVar hCvar = FindConVar("tf_weapon_criticals");
-								if (hCvar != null && hCvar.BoolValue)
+								ConVar cvar = FindConVar("tf_weapon_criticals");
+								if (cvar != null && cvar.BoolValue)
 								{
 									damagetype |= DMG_ACID;
 								}
@@ -1244,7 +1259,24 @@ void ClientOnJump(int client)
 			{
 				if (g_PlayerSprintPoints[client] >= 2)
 				{
-					g_PlayerSprintPoints[client] -= 7;
+					TFClassType classType = TF2_GetPlayerClass(client);
+					int classToInt = view_as<int>(classType);
+					if (!IsClassConfigsValid())
+					{
+						if (classType != TFClass_Soldier || g_PlayerSprintPoints[client] <= 10 || IsClientSprinting(client))
+						{
+							g_PlayerSprintPoints[client] -= 7;
+						}
+					}
+					else
+					{
+						int sprintPointsLoss = g_ClassSprintPointLossJumping[classToInt];
+						if (g_PlayerSprintPoints[client] <= 10 || IsClientSprinting(client))
+						{
+							sprintPointsLoss = 7;
+						}
+						g_PlayerSprintPoints[client] -= sprintPointsLoss;
+					}
 					if (g_PlayerSprintPoints[client] <= 0)
 					{
 						g_PlayerSprintPoints[client] = 0;

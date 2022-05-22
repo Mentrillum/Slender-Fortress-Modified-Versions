@@ -62,11 +62,11 @@ static void OnStartTouchPost(int entity, int toucher)
 
 	if (thisEnt.PassesTriggerFilters(toucher))
 	{
-		int bossIndex = NPCGetFromEntIndex(toucher);
-		if (bossIndex != -1) 
+		SF2NPC_BaseNPC boss = SF2NPC_BaseNPC(NPCGetFromEntIndex(toucher));
+		if (boss != SF2_INVALID_NPC) 
 		{
 			thisEnt.FireOutput("OnDespawn", toucher);
-			RemoveSlender(bossIndex);
+			boss.UnSpawn();
 		}
 	}
 }

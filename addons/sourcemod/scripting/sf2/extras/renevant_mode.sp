@@ -423,7 +423,7 @@ void Renevant_SetWave(int wave, bool resetTimer=false)
 	Call_Finish();
 }
 
-public Action Timer_RenevantWave(Handle timer, any data)
+static Action Timer_RenevantWave(Handle timer, any data)
 {
 	if (timer != g_RenevantWaveTimer || IsRoundEnding())
 	{

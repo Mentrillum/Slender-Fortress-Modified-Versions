@@ -11,21 +11,9 @@ static float g_NpcStatueChaseDurationAddMax[MAX_BOSSES][Difficulty_Max];
 
 static float g_NpcTimeUntilAbandon[MAX_BOSSES] = { -1.0, ... };
 
-static int g_NpcStatueTeleporter[MAX_BOSSES][MAX_NPCTELEPORTER];
-
 float NPCStatueChaseDuration(int npcIndex, int difficulty)
 {
 	return g_NpcStatueChaseDuration[npcIndex][difficulty];
-}
-
-void NPCStatueSetTeleporter(int bossIndex, int iTeleporterNumber, int iEntity)
-{
-	g_NpcStatueTeleporter[bossIndex][iTeleporterNumber] = iEntity;
-}
-
-int NPCStatueGetTeleporter(int bossIndex, int iTeleporterNumber)
-{
-	return g_NpcStatueTeleporter[bossIndex][iTeleporterNumber];
 }
 
 int NPCStatueOnSelectProfile(int npcIndex)
@@ -70,8 +58,6 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 
 	INextBot bot = npc.GetBot();
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	CBaseCombatCharacter combatChar = CBaseCombatCharacter(iBoss);
-	combatChar.DispatchAnimEvents(combatChar);
 
 	char slenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
@@ -199,7 +185,9 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 		}
 	}
 	else
+	{
 		g_NpcVelocityCancel[bossIndex] = false;
+	}
 
 	if (g_NpcStatueMoving[bossIndex] && !g_SlenderInDeathcam[bossIndex] && GetGameTime() < g_NpcTimeUntilAbandon[bossIndex] && (GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
 	{
@@ -328,7 +316,10 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 												float origin[3];
 												loco.SetVelocity(origin);
 											}
-											else RemoveSlender(bossIndex);
+											else
+											{
+												RemoveSlender(bossIndex);
+											}
 										}
 									}
 								}
@@ -417,9 +408,9 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 			}
 			for (int i = 0; i < MAX_NPCTELEPORTER; i++)
 			{
-				if (NPCStatueGetTeleporter(bossIndex, i) != INVALID_ENT_REFERENCE)
+				if (NPCGetTeleporter(bossIndex, i) != INVALID_ENT_REFERENCE)
 				{
-					NPCStatueSetTeleporter(bossIndex, i, INVALID_ENT_REFERENCE);
+					NPCSetTeleporter(bossIndex, i, INVALID_ENT_REFERENCE);
 				}
 			}
 		}
@@ -487,9 +478,9 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 				float slenderPos[3], pos[3];
 				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPos);
 				GetClientAbsOrigin(target, pos);
-				if (NPCStatueGetTeleporter(bossIndex, 0) != INVALID_ENT_REFERENCE)
+				if (NPCGetTeleporter(bossIndex, 0) != INVALID_ENT_REFERENCE)
 				{
-					int iTeleporter = EntRefToEntIndex(NPCStatueGetTeleporter(bossIndex, 0));
+					int iTeleporter = EntRefToEntIndex(NPCGetTeleporter(bossIndex, 0));
 					if (IsValidEntity(iTeleporter) && iTeleporter > MaxClients)
 					{
 						GetEntPropVector(iTeleporter, Prop_Data, "m_vecAbsOrigin", pos);

@@ -53,12 +53,12 @@ void ClientResetProxy(int client, bool resetFull=true)
 		}
 	}
 	
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetProxy(%d)", client);
 	}
-#endif
+	#endif
 }
 
 void ClientStartProxyAvailableTimer(int client)
@@ -355,8 +355,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	
 	ClientSetGhostModeState(client, false);
-	ClientDisableConstantGlow(client);
-	
+
 	ClientStopProxyForce(client);
 
 	if (IsClientInKart(client))
@@ -388,12 +387,12 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	
 	char className[64];
 	TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
-	if (allowedClasses[0] && className[0] && StrContains(allowedClasses, className, false) == -1)
+	if (allowedClasses[0] != '\0' && className[0] != '\0' && StrContains(allowedClasses, className, false) == -1)
 	{
 		// Pick the first class that's allowed.
 		char allowedClassesList[32][32];
-		int iClassCount = ExplodeString(allowedClasses, " ", allowedClassesList, 32, 32);
-		if (iClassCount)
+		int classCount = ExplodeString(allowedClasses, " ", allowedClassesList, 32, 32);
+		if (classCount)
 		{
 			TF2_SetPlayerClass(client, TF2_GetClass(allowedClassesList[0]), _, false);
 			
@@ -407,12 +406,17 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	UTIL_ScreenFade(client, 200, 1, FFADE_IN, 255, 255, 255, 100);
 	EmitSoundToClient(client, "weapons/teleporter_send.wav", _, SNDCHAN_STATIC);
 	
-	ClientActivateUltravision(client);
 	ClientDisableConstantGlow(client);
-	
+	ClientActivateUltravision(client);
+
+	TF2Attrib_SetByDefIndex(client, 28, 1.0);
+
 	CreateTimer(0.33, Timer_ApplyCustomModel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
-	if (NPCHasProxyWeapons(bossIndex)) CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	if (NPCHasProxyWeapons(bossIndex))
+	{
+		CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	}
 	
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{	
@@ -470,25 +474,6 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		{
 			int purple[4] = {150, 0, 255, 255};
 			SlenderAddGlow(npcIndex,_,purple);
-		}
-	}
-	
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsValidClient(i))
-		{
-			continue;
-		}
-		ClientDisableConstantGlow(i);
-		if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
-		{
-			int iRed[4] = {184, 56, 59, 255};
-			ClientEnableConstantGlow(i, "head", iRed);
-		}
-		else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
-		{
-			int yellow[4] = {255, 208, 0, 255};
-			ClientEnableConstantGlow(i, "head", yellow);
 		}
 	}
 	
@@ -571,7 +556,7 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
 			}
 		}
-		Handle weaponHandle = PrepareItemHandle(weaponName, weaponIndex, 0, 0, weaponStats, true);
+		Handle weaponHandle = PrepareItemHandle(weaponName, weaponIndex, 0, 0, weaponStats);
 		int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 		delete weaponHandle;
 		weaponHandle = null;
@@ -650,6 +635,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
+
+	SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
 
 	int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 	
@@ -751,11 +738,26 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				//PrintToChatAll("Proxy model:%s",g_ClientProxyModel[client]);
 			}
 		}
-		
-		ClientDisableConstantGlow(client);
-		int yellow[4] = {255, 208, 0, 255};
-		ClientEnableConstantGlow(client, "head", yellow);
-		
+
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!IsValidClient(i))
+			{
+				continue;
+			}
+			ClientDisableConstantGlow(i);
+			if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
+			{
+				int red[4] = {184, 56, 59, 255};
+				ClientEnableConstantGlow(i, red);
+			}
+			else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+			{
+				int yellow[4] = {255, 208, 0, 255};
+				ClientEnableConstantGlow(i, yellow);
+			}
+		}
+
 		if (IsPlayerAlive(client))
 		{
 			g_PlayerProxyNextVoiceSound[client] = GetGameTime();
@@ -1279,31 +1281,31 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 								{
 									case TFClass_Scout:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_bat", 0, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_bat", 0, 0, 0, "");
 									}
 									case TFClass_Sniper:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_club", 3, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_club", 3, 0, 0, "");
 									}
 									case TFClass_Soldier:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_shovel", 6, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_shovel", 6, 0, 0, "");
 									}
 									case TFClass_DemoMan:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_bottle", 1, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_bottle", 1, 0, 0, "");
 									}
 									case TFClass_Heavy:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_fists", 5, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_fists", 5, 0, 0, "");
 									}
 									case TFClass_Medic:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_bonesaw", 8, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_bonesaw", 8, 0, 0, "");
 									}
 									case TFClass_Pyro:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_fireaxe", 2, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_fireaxe", 2, 0, 0, "");
 									}
 									case TFClass_Spy:
 									{
@@ -1311,7 +1313,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 									}
 									case TFClass_Engineer:
 									{
-										itemHandle = PrepareItemHandle("tf_weapon_wrench", 7, 0, 0, "", g_PlayerProxy[client]);
+										itemHandle = PrepareItemHandle("tf_weapon_wrench", 7, 0, 0, "");
 									}
 								}
 							}
@@ -1406,7 +1408,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				{
 					TF2_RemoveWeaponSlot(client, slot);
 					
-					weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
+					if (!SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
+					{
+						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
+					}
+					else
+					{
+						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "1 ; 0.8");
+					}
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
 					weaponHandle = null;
@@ -1421,6 +1430,10 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					delete weaponHandle;
 					weaponHandle = null;
 					EquipPlayerWeapon(client, entity);
+					if (!IsRoundPlaying())
+					{
+						SetEntityHealth(client, 300);
+					}
 				}
 				case 1100: //Bread Bite
 				{
@@ -1441,6 +1454,10 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 					delete weaponHandle;
 					weaponHandle = null;
 					EquipPlayerWeapon(client, entity);
+					if (!IsRoundPlaying())
+					{
+						SetEntityHealth(client, 300);
+					}
 				}
 				case 775: //The Escape Plan (Its like, real buggy on wearer)
 				{

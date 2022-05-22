@@ -1735,7 +1735,7 @@
 	
 	"SF2 Change Log"
 	{
-		"en"	"-Alert copies and companions are more consistnet\n-Added chase upon look\n-All class walk speeds are now what version 1.0.0/1.5.0 had (190)\n-Reworked the statue boss base\n-Decreased difficulty modifiers\n-General bug fixes"
+		"en"	"-Added a random companion system\n-Entity optimization\n-Re-added the special round Single Player\n-General fixes\n-Made the new statue base easier to deal with by default\n-Created a new boss hitbox"
 	}
 
 	"SF2 Smite player"

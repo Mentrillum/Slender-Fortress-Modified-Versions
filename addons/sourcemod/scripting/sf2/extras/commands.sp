@@ -160,7 +160,7 @@ public void OnPluginStart()
 	g_IgnoreRedPlayerDeathSwapConVar = CreateConVar("sf2_ignore_red_player_death_team_switch", "0", "If set to 1, RED players will not switch back to the BLU team.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_IgnoreRedPlayerDeathSwapConVar.AddChangeHook(OnConVarChanged);
 	
-	g_DisableBossCrushFixConVar = CreateConVar("sf2_disable_boss_crush_fix", "1", "Enables/disables the boss crushing patch from Secret Update 4, should only be off if absolutely necessary.", _, true, 0.0, true, 1.0);
+	g_DefaultBossVisibilityStateConVar = CreateConVar("sf2_default_boss_visibility", "0", "Sets the default visibility state for bosses before the CBaseNPC update to allow for easier/harder peeking, this does not affect bosses seeing through transparent surfaces like glass however. Keep in mind creators can override this value for specific bosses only.", _, true, 0.0, true, 1.0);
 
 	g_EnableWallHaxConVar = CreateConVar("sf2_enable_wall_hax", "0", "Enables/disables the Wall Hax special round without needing to turn on Wall Hax. This will not force the difficulty to Insane and will show player + boss outlines.", _, true, 0.0, true, 1.0);
 	
@@ -404,7 +404,10 @@ static Action Hook_BlockDecals(const char[] te_name, const int[] Players, int nu
 
 static void OnDifficultyConVarChangedForward(ConVar cvar, const char[] oldValue, const char[] newValue)
 {
-	if (!g_Enabled) return;
+	if (!g_Enabled)
+	{
+		return;
+	}
 
 	int oldDifficulty = StringToInt(oldValue);
 	int difficulty = StringToInt(newValue);
@@ -419,7 +422,7 @@ static void OnDifficultyConVarChangedForward(ConVar cvar, const char[] oldValue,
 //	COMMANDS AND COMMAND HOOK FUNCTIONS
 //	==========================================================
 
-public Action Command_Help(int client,int args)
+static Action Command_Help(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -430,7 +433,7 @@ public Action Command_Help(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_Settings(int client,int args)
+static Action Command_Settings(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -441,7 +444,7 @@ public Action Command_Settings(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_MenuSwitchHud(int client,int args)
+static Action Command_MenuSwitchHud(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -462,7 +465,7 @@ public Action Command_MenuSwitchHud(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_Credits(int client,int args)
+static Action Command_Credits(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -473,7 +476,7 @@ public Action Command_Credits(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_BossList(int client,int args)
+static Action Command_BossList(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -484,7 +487,7 @@ public Action Command_BossList(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_NoPoints(int client,int args)
+static Action Command_NoPoints(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -505,7 +508,7 @@ public Action Command_NoPoints(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ToggleFlashlight(int client,int args)
+static Action Command_ToggleFlashlight(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -528,7 +531,7 @@ public Action Command_ToggleFlashlight(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SprintOn(int client,int args)
+static Action Command_SprintOn(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -543,7 +546,7 @@ public Action Command_SprintOn(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SprintOff(int client,int args)
+static Action Command_SprintOff(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -558,7 +561,7 @@ public Action Command_SprintOff(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_BlinkOn(int client, int iArgs)
+static Action Command_BlinkOn(int client, int iArgs)
 {
 	if (!g_Enabled)
 	{
@@ -577,7 +580,7 @@ public Action Command_BlinkOn(int client, int iArgs)
 	return Plugin_Handled;
 }
 
-public Action Command_BlinkOff(int client, int iArgs)
+static Action Command_BlinkOff(int client, int iArgs)
 {
 	if (!g_Enabled)
 	{
@@ -595,12 +598,7 @@ public Action Command_BlinkOff(int client, int iArgs)
 	return Plugin_Handled;
 }
 
-public Action Command_BlockItemPreset(int client, int args)
-{    
-	return Plugin_Stop;
-} 
-
-public Action DevCommand_BossPackVote(int client,int args)
+static Action DevCommand_BossPackVote(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -610,7 +608,7 @@ public Action DevCommand_BossPackVote(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_NoPointsAdmin(int client,int args)
+static Action Command_NoPointsAdmin(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -676,7 +674,7 @@ public Action Command_NoPointsAdmin(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_MainMenu(int client,int args)
+static Action Command_MainMenu(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -686,7 +684,7 @@ public Action Command_MainMenu(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_Tutorial(int client,int args)
+static Action Command_Tutorial(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -696,7 +694,7 @@ public Action Command_Tutorial(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_Update(int client, int args)
+static Action Command_Update(int client, int args)
 {
 	if (!g_Enabled)
 	{
@@ -706,7 +704,7 @@ public Action Command_Update(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_Next(int client,int args)
+static Action Command_Next(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -718,7 +716,7 @@ public Action Command_Next(int client,int args)
 }
 
 
-public Action Command_Group(int client,int args)
+static Action Command_Group(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -729,7 +727,7 @@ public Action Command_Group(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_GroupName(int client,int args)
+static Action Command_GroupName(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -782,7 +780,7 @@ public Action Command_GroupName(int client,int args)
 	
 	return Plugin_Handled;
 }
-public Action Command_GhostMode(int client,int args)
+static Action Command_GhostMode(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -861,6 +859,13 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 				return Plugin_Stop;
 			}
 		}
+		else
+		{
+			if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+			{
+				return Plugin_Stop;
+			}
+		}
 
 		if (!sayTeam) 
 		{
@@ -873,7 +878,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	
 	return Plugin_Continue;
 }
-public Action Hook_CommandSuicideAttempt(int client, const char[] command,int argc)
+static Action Hook_CommandSuicideAttempt(int client, const char[] command,int argc)
 {
 	if (!g_Enabled)
 	{
@@ -913,7 +918,7 @@ public Action Hook_CommandSuicideAttempt(int client, const char[] command,int ar
 	
 	return Plugin_Continue;
 }
-public Action Hook_CommandPreventJoinTeam(int client, const char[] command,int argc)
+static Action Hook_CommandPreventJoinTeam(int client, const char[] command,int argc)
 {
 	if (!g_Enabled)
 	{
@@ -954,7 +959,7 @@ public Action Hook_CommandPreventJoinTeam(int client, const char[] command,int a
 	return Plugin_Continue;
 }
 
-public Action Hook_BlockCommand(int client, const char[] command,int argc) 
+static Action Hook_BlockCommand(int client, const char[] command,int argc) 
 {
 	if (!g_Enabled)
 	{
@@ -963,38 +968,7 @@ public Action Hook_BlockCommand(int client, const char[] command,int argc)
 	return Plugin_Handled;
 }
 
-public Action Hook_BlockLoadout(int client, const char[] command,int argc) 
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-	if (IsRoundPlaying() && !g_PlayerEliminated[client] && !DidClientEscape(client))
-	{
-		return Plugin_Handled;
-	}
-	return Plugin_Continue;
-}
-
-public Action Hook_CommandBlockInGhostMode(int client, const char[] command,int argc)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-	if (IsClientInGhostMode(client))
-	{
-		return Plugin_Handled;
-	}
-	if (IsRoundInIntro() && !g_PlayerEliminated[client])
-	{
-		return Plugin_Handled;
-	}
-	
-	return Plugin_Continue;
-}
-
-public Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
+static Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
 {
 	if (!g_Enabled)
 	{
@@ -1036,7 +1010,7 @@ public Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
 	return Plugin_Continue;
 }
 
-public Action Command_ClientKillDeathcam(int client,int args)
+static Action Command_ClientKillDeathcam(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1088,7 +1062,7 @@ public Action Command_ClientKillDeathcam(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ClientPerformScare(int client,int args)
+static Action Command_ClientPerformScare(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1132,7 +1106,7 @@ public Action Command_ClientPerformScare(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SpawnSlender(int client,int args)
+static Action Command_SpawnSlender(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1169,7 +1143,7 @@ public Action Command_SpawnSlender(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SpawnAllSlenders(int client,int args)
+static Action Command_SpawnAllSlenders(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1196,7 +1170,7 @@ public Action Command_SpawnAllSlenders(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_RemoveSlender(int client,int args)
+static Action Command_RemoveSlender(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1238,7 +1212,7 @@ public Action Command_RemoveSlender(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_RemoveAllSlenders(int client,int args)
+static Action Command_RemoveAllSlenders(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1267,7 +1241,7 @@ public Action Command_RemoveAllSlenders(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_GetBossIndexes(int client,int args)
+static Action Command_GetBossIndexes(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1333,7 +1307,7 @@ public Action Command_GetBossIndexes(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SlenderAttackWaiters(int client,int args)
+static Action Command_SlenderAttackWaiters(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1386,7 +1360,7 @@ public Action Command_SlenderAttackWaiters(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_SlenderNoTeleport(int client,int args)
+static Action Command_SlenderNoTeleport(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1439,7 +1413,7 @@ public Action Command_SlenderNoTeleport(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ToggleAllBossTeleports(int client,int args)
+static Action Command_ToggleAllBossTeleports(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1476,7 +1450,7 @@ public Action Command_ToggleAllBossTeleports(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugLogicEscape(int client,int args)
+static Action Command_DebugLogicEscape(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1510,7 +1484,7 @@ public Action Command_DebugLogicEscape(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ForceEndGrace(int client,int args)
+static Action Command_ForceEndGrace(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1525,7 +1499,7 @@ public Action Command_ForceEndGrace(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ReloadProfiles(int client, int args)
+static Action Command_ReloadProfiles(int client, int args)
 {
 	if (!g_Enabled)
 	{
@@ -1541,7 +1515,7 @@ public Action Command_ReloadProfiles(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ToggleAllAttackWaiters(int client,int args)
+static Action Command_ToggleAllAttackWaiters(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1578,7 +1552,7 @@ public Action Command_ToggleAllAttackWaiters(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ForceProxy(int client,int args)
+static Action Command_ForceProxy(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1671,7 +1645,7 @@ public Action Command_ForceProxy(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ForceEscape(int client,int args)
+static Action Command_ForceEscape(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1717,7 +1691,7 @@ public Action Command_ForceEscape(int client,int args)
 	
 	return Plugin_Handled;
 }
-public Action Command_ForceDifficulty(int client,int args)
+static Action Command_ForceDifficulty(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1781,7 +1755,7 @@ public Action Command_ForceDifficulty(int client,int args)
 
 	return Plugin_Handled;
 }
-public Action Command_ForceSpecialRound(int client,int args)
+static Action Command_ForceSpecialRound(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -1803,9 +1777,9 @@ public Action Command_ForceSpecialRound(int client,int args)
 	{
 		iSpecialRound = 1;
 	}
-	else if (iSpecialRound > 39)
+	else if (iSpecialRound > 40)
 	{
-		iSpecialRound = 39;
+		iSpecialRound = 40;
 	}
 	else if (iSpecialRound > 0 && iSpecialRound < 40)
 	{
@@ -1966,12 +1940,16 @@ public Action Command_ForceSpecialRound(int client,int args)
 		{
 			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", client);
 		}
+		case SPECIALROUND_SINGLEPLAYER:
+		{
+			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Single Player.", "SF2 Prefix", client);
+		}
 	}
 
 	return Plugin_Handled;
 }
 
-public Action Command_AddSlender(int client,int args)
+static Action Command_AddSlender(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -2015,7 +1993,7 @@ public Action Command_AddSlender(int client,int args)
 	
 	return Plugin_Handled;
 }
-public void NPCSpawn(const char[] output,int ent,int activator, float delay)
+static void NPCSpawn(const char[] output,int ent,int activator, float delay)
 {
 	if (!g_Enabled)
 	{
@@ -2091,7 +2069,7 @@ public void NPCSpawn(const char[] output,int ent,int activator, float delay)
 	return;
 }
 
-public Action Command_AddSlenderFake(int client,int args)
+static Action Command_AddSlenderFake(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -2131,7 +2109,7 @@ public Action Command_AddSlenderFake(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ForceState(int client,int args)
+static Action Command_ForceState(int client,int args)
 {
 	if (!g_Enabled)
 	{
@@ -2222,7 +2200,7 @@ public Action Command_ForceState(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Timer_ForcePlayer(Handle timer, any userid)
+Action Timer_ForcePlayer(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -2238,7 +2216,7 @@ public Action Timer_ForcePlayer(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public Action Command_AllTalkToggle(int client, int args)
+static Action Command_AllTalkToggle(int client, int args)
 {
 	g_AdminAllTalk[client] = !g_AdminAllTalk[client];
 	CPrintToChat(client, "{royalblue}%t{default}You will %s hear and speak to all players.", "SF2 Prefix", g_AdminAllTalk[client] ? "now" : "no longer");
@@ -2250,7 +2228,7 @@ public Action Command_AllTalkToggle(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_AllTalkOn(int client, int args)
+static Action Command_AllTalkOn(int client, int args)
 {
 	g_AdminAllTalk[client] = true;
 
@@ -2261,7 +2239,7 @@ public Action Command_AllTalkOn(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_AllTalkOff(int client, int args)
+static Action Command_AllTalkOff(int client, int args)
 {
 	g_AdminAllTalk[client] = false;
 
@@ -2272,7 +2250,7 @@ public Action Command_AllTalkOff(int client, int args)
 	return Plugin_Handled;
 } 
 
-public Action Command_ConditionToggle(int client, int args)
+static Action Command_ConditionToggle(int client, int args)
 {
 	g_IgnoreRoundWinConditionsConVar.BoolValue = !g_IgnoreRoundWinConditionsConVar.BoolValue;
 	CPrintToChat(client, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_IgnoreRoundWinConditionsConVar.BoolValue ? "dis" : "en");

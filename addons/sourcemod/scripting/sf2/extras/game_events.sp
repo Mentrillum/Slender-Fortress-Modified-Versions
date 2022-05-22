@@ -532,7 +532,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	{
 		TF2Attrib_SetByName(client, "increased jump height", 1.0);
 		TF2Attrib_RemoveByDefIndex(client, 10);
-		
+
 		ClientSetGhostModeState(client, false);
 		SetEntityGravity(client, 1.0);
 		g_PlayerPageCount[client] = 0;
@@ -563,7 +563,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientResetBlink(client);
 		ClientResetInteractiveGlow(client);
 		ClientDisableConstantGlow(client);
-		
+
 		ClientHandleGhostMode(client);
 
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
@@ -668,7 +668,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientResetBlink(client);
 			ClientResetInteractiveGlow(client);
 			ClientDisableConstantGlow(client);
-			
+
 			ClientHandleGhostMode(client);
 
 			for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
@@ -701,7 +701,16 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					TF2Attrib_RemoveByDefIndex(client, 10);
 				}
 				
-				TF2Attrib_SetByDefIndex(client, 49, 1.0);
+				if (!DidClientEscape(client))
+				{
+					TF2Attrib_SetByDefIndex(client, 49, 1.0);
+					CreateTimer(0.1, Timer_StopAirDash, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+				}
+
+				if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+				{
+					TF2_StripContrackerOnly(client);
+				}
 				
 				ClientStartDrainingBlinkMeter(client);
 				ClientSetScareBoostEndTime(client, -1.0);
@@ -727,8 +736,8 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				}
 				else
 				{
-					int iRed[4] = { 184, 56, 59, 255 };
-					ClientEnableConstantGlow(client, "head", iRed);
+					int red[4] = { 184, 56, 59, 255 };
+					ClientEnableConstantGlow(client, red);
 					ClientActivateUltravision(client);
 				}
 
@@ -865,6 +874,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				g_PlayerOverlayCheck[client] = null;
 				TF2Attrib_RemoveByDefIndex(client, 10);
 				TF2Attrib_RemoveByDefIndex(client, 49);
+				TF2Attrib_RemoveByDefIndex(client, 28);
 			}
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_PlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -1071,6 +1081,12 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	}
 	#endif
 	int client = GetClientOfUserId(event.GetInt("userid"));
+
+	bool fake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
+	if (!fake)
+	{
+		ClientDisableConstantGlow(client);
+	}
 	
 	int inflictor = event.GetInt("inflictor_entindex");
 	
@@ -1499,7 +1515,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		ClientResetOverlay(client);
 		ClientResetJumpScare(client);
 		ClientResetInteractiveGlow(client);
-		ClientDisableConstantGlow(client);
 		ClientChaseMusicReset(client);
 		ClientChaseMusicSeeReset(client);
 		ClientAlertMusicReset(client);
@@ -1765,7 +1780,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			}
 		}
 		
-		ClientResetProxy(client, false);
+		ClientResetProxy(client, true);
 		ClientUpdateListeningFlags(client);
 		
 		// Half-Zatoichi nerf code.

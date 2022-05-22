@@ -5,119 +5,497 @@
 
 methodmap SF2BaseBossProfile
 {
+	public SF2BaseBossProfile(const char[] profile)
+	{
+		return view_as<SF2BaseBossProfile>(GetBossProfileIndexFromName(profile));
+	}
 	property int Index
 	{
-		public get() { return view_as<int>(this); }
+		public get()
+		{
+			return view_as<int>(this);
+		}
 	}
 	
 	property int uniqueProfileIndex
 	{
-		public get() { return GetBossProfileUniqueProfileIndex(this.Index); }
+		public get()
+		{
+			return GetBossProfileUniqueProfileIndex(this.Index);
+		}
 	}
 
 	property int Skin
 	{
-		public get() { return GetBossProfileSkin(this.Index); }
+		public get()
+		{
+			return GetBossProfileSkin(this.Index);
+		}
 	}
 	
 	property int SkinMax
 	{
-		public get() { return GetBossProfileSkinMax(this.Index); }
+		public get()
+		{
+			return GetBossProfileSkinMax(this.Index);
+		}
 	}
-	
+
+	public int GetSkinOnDifficulty(int difficulty)
+	{
+		return GetBossProfileSkinDifficulty(this.Index, difficulty);
+	}
+
 	property int BodyGroups
 	{
-		public get() { return GetBossProfileBodyGroups(this.Index); }
+		public get()
+		{
+			return GetBossProfileBodyGroups(this.Index);
+		}
 	}
 	
 	property int BodyGroupsMax
 	{
-		public get() { return GetBossProfileBodyGroupsMax(this.Index); }
+		public get()
+		{
+			return GetBossProfileBodyGroupsMax(this.Index);
+		}
 	}
-	
+
+	public int GetBodyGroupsOnDifficulty(int difficulty)
+	{
+		return GetBossProfileBodyGroupsDifficulty(this.Index, difficulty);
+	}
+
 	property float ModelScale
 	{
-		public get() { return GetBossProfileModelScale(this.Index); }
+		public get()
+		{
+			return GetBossProfileModelScale(this.Index);
+		}
 	}
 	
 	property int Type
 	{
-		public get() { return GetBossProfileType(this.Index); }
+		public get()
+		{
+			return GetBossProfileType(this.Index);
+		}
 	}
 	
 	property int Flags
 	{
-		public get() { return GetBossProfileFlags(this.Index); }
+		public get()
+		{
+			return GetBossProfileFlags(this.Index);
+		}
 	}
 	
 	property int UseRaidHitbox
 	{
-		public get() { return GetBossProfileRaidHitbox(this.Index); }
+		public get()
+		{
+			return GetBossProfileRaidHitbox(this.Index);
+		}
+	}
+
+	property bool HealthBarState
+	{
+		public get()
+		{
+			return GetBossProfileHealthbarState(this.Index);
+		}
+	}
+
+	property float StepSize
+	{
+		public get()
+		{
+			return GetBossProfileStepSize(this.Index);
+		}
+	}
+
+	property bool HasCustomOutlines
+	{
+		public get()
+		{
+			return GetBossProfileCustomOutlinesState(this.Index);
+		}
 	}
 	
 	property int OutlineColorR
 	{
-		public get() { return GetBossProfileOutlineColorR(this.Index); }
+		public get()
+		{
+			return GetBossProfileOutlineColorR(this.Index);
+		}
 	}
 	
 	property int OutlineColorG
 	{
-		public get() { return GetBossProfileOutlineColorG(this.Index); }
+		public get()
+		{
+			return GetBossProfileOutlineColorG(this.Index);
+		}
 	}
 	
 	property int OutlineColorB
 	{
-		public get() { return GetBossProfileOutlineColorB(this.Index); }
+		public get()
+		{
+			return GetBossProfileOutlineColorB(this.Index);
+		}
 	}
 	
 	property int OutlineTransparency
 	{
-		public get() { return GetBossProfileOutlineTransparency(this.Index); }
+		public get()
+		{
+			return GetBossProfileOutlineTransparency(this.Index);
+		}
+	}
+
+	property bool HasRainbowOutlines
+	{
+		public get()
+		{
+			return GetBossProfileRainbowOutlineState(this.Index);
+		}
+	}
+
+	property float RainbowOutlineCycleRate
+	{
+		public get()
+		{
+			return GetBossProfileRainbowCycleRate(this.Index);
+		}
+	}
+
+	property int ChatDeathMessageDifficultyIndexes
+	{
+		public get()
+		{
+			return GetBossProfileChatDeathMessageDifficultyIndexes(this.Index);
+		}
 	}
 
 	property float FOV
 	{
-		public get() { return GetBossProfileFOV(this.Index); }
+		public get()
+		{
+			return GetBossProfileFOV(this.Index);
+		}
 	}
 	
 	property float TurnRate
 	{
-		public get() { return GetBossProfileTurnRate(this.Index); }
+		public get()
+		{
+			return GetBossProfileTurnRate(this.Index);
+		}
 	}
 	
 	property float AngerStart
 	{
-		public get() { return GetBossProfileAngerStart(this.Index); }
+		public get()
+		{
+			return GetBossProfileAngerStart(this.Index);
+		}
 	}
 	
 	property float AngerAddOnPageGrab
 	{
-		public get() { return GetBossProfileAngerAddOnPageGrab(this.Index); }
+		public get()
+		{
+			return GetBossProfileAngerAddOnPageGrab(this.Index);
+		}
 	}
 	
 	property float AngerAddOnPageGrabTimeDiff
 	{
-		public get() { return GetBossProfileAngerPageGrabTimeDiff(this.Index); }
+		public get()
+		{
+			return GetBossProfileAngerPageGrabTimeDiff(this.Index);
+		}
 	}
 	
 	property float InstantKillRadius
 	{
-		public get() { return GetBossProfileInstantKillRadius(this.Index); }
+		public get()
+		{
+			return GetBossProfileInstantKillRadius(this.Index);
+		}
+	}
+
+	public float GetInstantKillCooldown(int difficulty)
+	{
+		return GetBossProfileInstantKillCooldown(this.Index, difficulty);
 	}
 	
 	property float ScareRadius
 	{
-		public get() { return GetBossProfileScareRadius(this.Index); }
+		public get()
+		{
+			return GetBossProfileScareRadius(this.Index);
+		}
 	}
 	
 	property float ScareCooldown
 	{
-		public get() { return GetBossProfileScareCooldown(this.Index); }
+		public get()
+		{
+			return GetBossProfileScareCooldown(this.Index);
+		}
+	}
+
+	property bool SpeedBoostOnScare
+	{
+		public get()
+		{
+			return GetBossProfileSpeedBoostOnScare(this.Index);
+		}
+	}
+
+	property float ScareSpeedBoostDuration
+	{
+		public get()
+		{
+			return GetBossProfileScareSpeedBoostDuration(this.Index);
+		}
+	}
+
+	property bool ScareReactionState
+	{
+		public get()
+		{
+			return GetBossProfileScareReactionState(this.Index);
+		}
+	}
+
+	property int ScareReactionType
+	{
+		public get()
+		{
+			return GetBossProfileScareReactionType(this.Index);
+		}
+	}
+
+	property bool ScareReplenishSprintState
+	{
+		public get()
+		{
+			return GetBossProfileScareReplenishState(this.Index);
+		}
+	}
+
+	property int ScareReplenishSprintAmount
+	{
+		public get()
+		{
+			return GetBossProfileScareReplenishAmount(this.Index);
+		}
+	}
+
+	property bool HasDeathCam
+	{
+		public get()
+		{
+			return GetBossProfileDeathCamState(this.Index);
+		}
+	}
+
+	property bool HasDeathCamScareSound
+	{
+		public get()
+		{
+			return GetBossProfileDeathCamScareSound(this.Index);
+		}
+	}
+
+	property bool HasPublicDeathCam
+	{
+		public get()
+		{
+			return GetBossProfilePublicDeathCamState(this.Index);
+		}
+	}
+
+	property float PublicDeathCamSpeed
+	{
+		public get()
+		{
+			return GetBossProfilePublicDeathCamSpeed(this.Index);
+		}
+	}
+	
+	property float PublicDeathCamAcceleration
+	{
+		public get()
+		{
+			return GetBossProfilePublicDeathCamAcceleration(this.Index);
+		}
+	}
+	
+	property float PublicDeathCamDeceleration
+	{
+		public get()
+		{
+			return GetBossProfilePublicDeathCamDeceleration(this.Index);
+		}
+	}
+	
+	property float PublicDeathCamBackwardOffset
+	{
+		public get()
+		{
+			return GetBossProfilePublicDeathCamBackwardOffset(this.Index);
+		}
+	}
+	
+	property float PublicDeathCamDownwardOffset
+	{
+		public get()
+		{
+			return GetBossProfilePublicDeathCamDownwardOffset(this.Index);
+		}
+	}
+	
+	property bool HasDeathCamOverlay
+	{
+		public get()
+		{
+			return GetBossProfileDeathCamOverlayState(this.Index);
+		}
+	}
+
+	property float DeathCamOverlayStartTime
+	{
+		public get()
+		{
+			return GetBossProfileDeathCamOverlayStartTime(this.Index);
+		}
+	}
+	
+	property float DeathCamDuration
+	{
+		public get()
+		{
+			return GetBossProfileDeathCamTime(this.Index);
+		}
 	}
 	
 	property int TeleportType
 	{
-		public get() { return GetBossProfileTeleportType(this.Index); }
+		public get()
+		{
+			return GetBossProfileTeleportType(this.Index);
+		}
+	}
+
+	property bool IgnoreNavPrefer
+	{
+		public get()
+		{
+			return GetBossProfileIgnoreNavPrefer(this.Index);
+		}
+	}
+
+	property bool FakeCopiesState
+	{
+		public get()
+		{
+			return GetBossProfileFakeCopies(this.Index);
+		}
+	}
+
+	property float BlinkLookRate
+	{
+		public get()
+		{
+			return GetBossProfileBlinkLookRate(this.Index);
+		}
+	}
+
+	property float BlinkStaticRate
+	{
+		public get()
+		{
+			return GetBossProfileBlinkStaticRate(this.Index);
+		}
+	}
+
+	property bool HasDiscoMode
+	{
+		public get()
+		{
+			return GetBossProfileDiscoModeState(this.Index);
+		}
+	}
+
+	property float DiscoModeRadiusMin
+	{
+		public get()
+		{
+			return GetBossProfileDiscoRadiusMin(this.Index);
+		}
+	}
+
+	property float DiscoModeRadiusMax
+	{
+		public get()
+		{
+			return GetBossProfileDiscoRadiusMax(this.Index);
+		}
+	}
+
+	property bool HasFestiveLights
+	{
+		public get()
+		{
+			return GetBossProfileFestiveLightState(this.Index);
+		}
+	}
+
+	property int FestiveLightBrightness
+	{
+		public get()
+		{
+			return GetBossProfileFestiveLightBrightness(this.Index);
+		}
+	}
+
+	property float FestiveLightDistance
+	{
+		public get()
+		{
+			return GetBossProfileFestiveLightDistance(this.Index);
+		}
+	}
+
+	property float FestiveLightRadius
+	{
+		public get()
+		{
+			return GetBossProfileFestiveLightRadius(this.Index);
+		}
+	}
+
+	property bool CanDrainCredits
+	{
+		public get()
+		{
+			return GetBossProfileDrainCreditState(this.Index);
+		}
+	}
+
+	public int GetCreditDrainAmount(int difficulty)
+	{
+		return GetBossProfileDrainCreditAmount(this.Index, difficulty);
+	}
+
+	public float GetMusicLoopTime(int difficulty)
+	{
+		return GetBossProfileSoundMusicLoop(this.Index, difficulty);
 	}
 	
 	public float GetSpeed(int difficulty)
@@ -129,7 +507,429 @@ methodmap SF2BaseBossProfile
 	{
 		return GetBossProfileMaxSpeed(this.Index, difficulty);
 	}
+
+	public float GetAcceleration(int difficulty)
+	{
+		return GetBossProfileAcceleration(this.Index, difficulty);
+	}
+
+	public float GetIdleLifetime(int difficulty)
+	{
+		return GetBossProfileIdleLifetime(this.Index, difficulty);
+	}
+
+	public float GetStaticRadius(int difficulty)
+	{
+		return GetBossProfileStaticRadius(this.Index, difficulty);
+	}
+
+	public float GetStaticRate(int difficulty)
+	{
+		return GetBossProfileStaticRate(this.Index, difficulty);
+	}
+
+	public float GetStaticDecayRate(int difficulty)
+	{
+		return GetBossProfileStaticRateDecay(this.Index, difficulty);
+	}
+
+	public float GetStaticGraceTime(int difficulty)
+	{
+		return GetBossProfileStaticGraceTime(this.Index, difficulty);
+	}
+
+	public float GetSearchRadius(int difficulty)
+	{
+		return GetBossProfileSearchRadius(this.Index, difficulty);
+	}
+
+	public float GetHearingRadius(int difficulty)
+	{
+		return GetBossProfileHearRadius(this.Index, difficulty);
+	}
+
+	public float GetTauntAlertRange(int difficulty)
+	{
+		return GetBossProfileTauntAlertRange(this.Index, difficulty);
+	}
+
+	property bool TeleportIgnoreChases
+	{
+		public get()
+		{
+			return GetBossProfileTeleportIgnoreChases(this.Index);
+		}
+	}
+
+	property bool TeleportIgnoreVis
+	{
+		public get()
+		{
+			return GetBossProfileTeleportIgnoreVis(this.Index);
+		}
+	}
+
+	public bool IsTeleportAllowed(int difficulty)
+	{
+		return GetBossProfileTeleportAllowed(this.Index, difficulty);
+	}
 	
+	public float GetTeleportRangeMin(int difficulty)
+	{
+		return GetBossProfileTeleportRangeMin(this.Index, difficulty);
+	}
+	
+	public float GetTeleportRangeMax(int difficulty)
+	{
+		return GetBossProfileTeleportRangeMax(this.Index, difficulty);
+	}
+
+	public float GetTeleportTimeMin(int difficulty)
+	{
+		return GetBossProfileTeleportTimeMin(this.Index, difficulty);
+	}
+
+	public float GetTeleportTimeMax(int difficulty)
+	{
+		return GetBossProfileTeleportTimeMax(this.Index, difficulty);
+	}
+
+	public float GetTeleportRestPeriod(int difficulty)
+	{
+		return GetBossProfileTeleportTargetRestPeriod(this.Index, difficulty);
+	}
+
+	public float GetTeleportTargetStressMin(int difficulty)
+	{
+		return GetBossProfileTeleportTargetStressMin(this.Index, difficulty);
+	}
+
+	public float GetTeleportTargetStressMax(int difficulty)
+	{
+		return GetBossProfileTeleportTargetStressMax(this.Index, difficulty);
+	}
+
+	public float GetTeleportPersistencyPeriod(int difficulty)
+	{
+		return GetBossProfileTeleportTargetPersistencyPeriod(this.Index, difficulty);
+	}
+
+	property bool JumpscareOnScare
+	{
+		public get()
+		{
+			return GetBossProfileJumpscareOnScare(this.Index);
+		}
+	}
+
+	public float GetJumpscareDistance(int difficulty)
+	{
+		return GetBossProfileJumpscareDistance(this.Index, difficulty);
+	}
+
+	public float GetJumpscareDuration(int difficulty)
+	{
+		return GetBossProfileJumpscareDuration(this.Index, difficulty);
+	}
+
+	public float GetJumpscareCooldown(int difficulty)
+	{
+		return GetBossProfileJumpscareCooldown(this.Index, difficulty);
+	}
+
+	public int GetMaxCopies(int difficulty)
+	{
+		return GetBossProfileMaxCopies(this.Index, difficulty);
+	}
+
+	property bool HasProxyWeapons
+	{
+		public get()
+		{
+			return GetBossProfileProxyWeapons(this.Index);
+		}
+	}
+
+	property bool HasProxySpawnEffects
+	{
+		public get()
+		{
+			return GetBossProfileProxySpawnEffectState(this.Index);
+		}
+	}
+
+	property float ProxySpawnEffectZOffset
+	{
+		public get()
+		{
+			return GetBossProfileProxySpawnEffectZOffset(this.Index);
+		}
+	}
+
+	property bool ProxyAllowNormalVoices
+	{
+		public get()
+		{
+			return GetBossProfileProxyAllowNormalVoices(this.Index);
+		}
+	}
+
+	property int ProxyHurtChannel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyHurtChannel(this.Index);
+		}
+	}
+
+	property int ProxyHurtLevel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyHurtLevel(this.Index);
+		}
+	}
+
+	property int ProxyHurtFlags
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyHurtFlags(this.Index);
+		}
+	}
+
+	property float ProxyHurtVolume
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyHurtVolume(this.Index);
+		}
+	}
+
+	property int ProxyHurtPitch
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyHurtPitch(this.Index);
+		}
+	}
+
+	property int ProxyDeathChannel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyDeathChannel(this.Index);
+		}
+	}
+
+	property int ProxyDeathLevel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyDeathLevel(this.Index);
+		}
+	}
+
+	property int ProxyDeathFlags
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyDeathFlags(this.Index);
+		}
+	}
+
+	property float ProxyDeathVolume
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyDeathVolume(this.Index);
+		}
+	}
+
+	property int ProxyDeathPitch
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyDeathPitch(this.Index);
+		}
+	}
+
+	property int ProxyIdleChannel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdleChannel(this.Index);
+		}
+	}
+
+	property int ProxyIdleLevel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdleLevel(this.Index);
+		}
+	}
+
+	property int ProxyIdleFlags
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdleFlags(this.Index);
+		}
+	}
+
+	property float ProxyIdleVolume
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdleVolume(this.Index);
+		}
+	}
+
+	property int ProxyIdlePitch
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdlePitch(this.Index);
+		}
+	}
+
+	property float ProxyIdleCooldownMin
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdleCooldownMin(this.Index);
+		}
+	}
+
+	property float ProxyIdleCooldownMax
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxyIdleCooldownMax(this.Index);
+		}
+	}
+
+	property int ProxySpawnChannel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxySpawnChannel(this.Index);
+		}
+	}
+
+	property int ProxySpawnLevel
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxySpawnLevel(this.Index);
+		}
+	}
+
+	property int ProxySpawnFlags
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxySpawnFlags(this.Index);
+		}
+	}
+
+	property float ProxySpawnVolume
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxySpawnVolume(this.Index);
+		}
+	}
+
+	property int ProxySpawnPitch
+	{
+		public get()
+		{
+			return GetBossProfileSoundProxySpawnPitch(this.Index);
+		}
+	}
+
+	public float GetProxyDamageVsEnemy(int difficulty)
+	{
+		return GetBossProfileProxyDamageVsEnemy(this.Index, difficulty);
+	}
+
+	public float GetProxyDamageVsBackstab(int difficulty)
+	{
+		return GetBossProfileProxyDamageVsBackstab(this.Index, difficulty);
+	}
+
+	public float GetProxyDamageVsSelf(int difficulty)
+	{
+		return GetBossProfileProxyDamageVsSelf(this.Index, difficulty);
+	}
+
+	public int GetProxyControlGainHitEnemy(int difficulty)
+	{
+		return GetBossProfileProxyControlGainHitEnemy(this.Index, difficulty);
+	}
+
+	public int GetProxyControlGainHitByEnemy(int difficulty)
+	{
+		return GetBossProfileProxyControlGainHitByEnemy(this.Index, difficulty);
+	}
+
+	public float GetProxyControlDrainRate(int difficulty)
+	{
+		return GetBossProfileProxyControlDrainRate(this.Index, difficulty);
+	}
+
+	public int GetMaxProxies(int difficulty)
+	{
+		return GetBossProfileMaxProxies(this.Index, difficulty);
+	}
+
+	public float GetProxySpawnChanceMin(int difficulty)
+	{
+		return GetBossProfileProxySpawnChanceMin(this.Index, difficulty);
+	}
+
+	public float GetProxySpawnChanceMax(int difficulty)
+	{
+		return GetBossProfileProxySpawnChanceMax(this.Index, difficulty);
+	}
+
+	public float GetProxySpawnChanceThreshold(int difficulty)
+	{
+		return GetBossProfileProxySpawnChanceThreshold(this.Index, difficulty);
+	}
+
+	public int GetProxySpawnNumberMin(int difficulty)
+	{
+		return GetBossProfileProxySpawnNumberMin(this.Index, difficulty);
+	}
+
+	public int GetProxySpawnNumberMax(int difficulty)
+	{
+		return GetBossProfileProxySpawnNumberMax(this.Index, difficulty);
+	}
+
+	public float GetProxySpawnCooldownMin(int difficulty)
+	{
+		return GetBossProfileProxySpawnCooldownMin(this.Index, difficulty);
+	}
+
+	public float GetProxySpawnCooldownMax(int difficulty)
+	{
+		return GetBossProfileProxySpawnCooldownMax(this.Index, difficulty);
+	}
+
+	public float GetProxyTeleportRangeMin(int difficulty)
+	{
+		return GetBossProfileProxyTeleportRangeMin(this.Index, difficulty);
+	}
+
+	public float GetProxyTeleportRangeMax(int difficulty)
+	{
+		return GetBossProfileProxyTeleportRangeMax(this.Index, difficulty);
+	}
+
 	public void GetEyePositionOffset(float buffer[3])
 	{
 		GetBossProfileEyePositionOffset(this.Index, buffer);
@@ -140,6 +940,190 @@ methodmap SF2BaseBossProfile
 		GetBossProfileEyeAngleOffset(this.Index, buffer);
 	}
 
+	property bool CanBurnRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileBurnRagdoll(this.Index);
+		}
+	}
+
+	property bool CanCloakRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileCloakRagdoll(this.Index);
+		}
+	}
+
+	property bool CanDecapRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileDecapRagdoll(this.Index);
+		}
+	}
+
+	property bool CanGibRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileGibRagdoll(this.Index);
+		}
+	}
+
+	property bool CanGoldRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileGoldRagdoll(this.Index);
+		}
+	}
+
+	property bool CanIceRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileIceRagdoll(this.Index);
+		}
+	}
+
+	property bool CanElectrocuteRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileElectrocuteRagdoll(this.Index);
+		}
+	}
+
+	property bool CanAshRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileAshRagdoll(this.Index);
+		}
+	}
+
+	property bool CanDeleteRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileDeleteRagdoll(this.Index);
+		}
+	}
+
+	property bool CanPushRagdoll
+	{
+		public get()
+		{
+			return GetBossProfilePushRagdoll(this.Index);
+		}
+	}
+
+	property bool CanDissolveRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileDissolveRagdoll(this.Index);
+		}
+	}
+
+	property int DissolveRagdollType
+	{
+		public get()
+		{
+			return GetBossProfileDissolveRagdollType(this.Index);
+		}
+	}
+
+	property bool CanPlasmaRagdoll
+	{
+		public get()
+		{
+			return GetBossProfilePlasmaRagdoll(this.Index);
+		}
+	}
+
+	property bool CanResizeRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileResizeRagdoll(this.Index);
+		}
+	}
+
+	property float ResizeRagdollHeadScale
+	{
+		public get()
+		{
+			return GetBossProfileResizeRagdollHead(this.Index);
+		}
+	}
+
+	property float ResizeRagdollHandsScale
+	{
+		public get()
+		{
+			return GetBossProfileResizeRagdollHands(this.Index);
+		}
+	}
+
+	property float ResizeRagdollTorsoScale
+	{
+		public get()
+		{
+			return GetBossProfileResizeRagdollTorso(this.Index);
+		}
+	}
+
+	property bool CanDecapOrGibRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileDecapOrGibRagdoll(this.Index);
+		}
+	}
+
+	property bool CanMultieffectRagdoll
+	{
+		public get()
+		{
+			return GetBossProfileMultieffectRagdoll(this.Index);
+		}
+	}
+
+	property bool CanSilentKill
+	{
+		public get()
+		{
+			return GetBossProfileSilentKill(this.Index);
+		}
+	}
+
+	property bool HasDeathFlag
+	{
+		public get()
+		{
+			return GetBossProfileCustomDeathFlag(this.Index);
+		}
+	}
+
+	property int DeathFlagType
+	{
+		public get()
+		{
+			return GetBossProfileCustomDeathFlagType(this.Index);
+		}
+	}
+
+	property bool HasOutroMusic
+	{
+		public get()
+		{
+			return GetBossProfileOutroMusicState(this.Index);
+		}
+	}
+
 }
 
 enum
@@ -147,7 +1131,6 @@ enum
 	BossProfileData_UniqueProfileIndex,
 	BossProfileData_Type,
 	BossProfileData_ModelScale,
-	BossProfileData_Health,
 	BossProfileData_Skin,
 	BossProfileData_SkinEasy,
 	BossProfileData_SkinHard,
@@ -619,14 +1602,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "model_scale must be a value greater than 0!");
 		return false;
 	}
-	
-	int bossHealth = kv.GetNum("health", 30000);
-	if (bossHealth < 1)
-	{
-		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "health must be a value that is at least 1!");
-		return false;
-	}
-	
+
 	int bossSkin = kv.GetNum("skin", 0);
 	if (bossSkin < 0)
 	{
@@ -1157,20 +2133,62 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 	// Parse through flags.
 	int bossFlags = 0;
-	if (kv.GetNum("static_shake")) bossFlags |= SFF_HASSTATICSHAKE;
-	if (kv.GetNum("static_on_look")) bossFlags |= SFF_STATICONLOOK;
-	if (kv.GetNum("static_on_radius")) bossFlags |= SFF_STATICONRADIUS;
-	if (kv.GetNum("proxies")) bossFlags |= SFF_PROXIES;
-	if (kv.GetNum("jumpscare")) bossFlags |= SFF_HASJUMPSCARE;
-	if (kv.GetNum("sound_sight_enabled")) bossFlags |= SFF_HASSIGHTSOUNDS;
-	if (kv.GetNum("sound_static_loop_local_enabled")) bossFlags |= SFF_HASSTATICLOOPLOCALSOUND;
-	if (kv.GetNum("view_shake", 1)) bossFlags |= SFF_HASVIEWSHAKE;
-	if (kv.GetNum("copy")) bossFlags |= SFF_COPIES;
-	if (kv.GetNum("wander_move", 1)) bossFlags |= SFF_WANDERMOVE;
-	if (kv.GetNum("attack_props", 0)) bossFlags |= SFF_ATTACKPROPS;
-	if (kv.GetNum("attack_weaponsenable", 0)) bossFlags |= SFF_WEAPONKILLS;
-	if (kv.GetNum("kill_weaponsenable", 0)) bossFlags |= SFF_WEAPONKILLSONRADIUS;
-	if (kv.GetNum("random_attacks", 0)) bossFlags |= SFF_RANDOMATTACKS;
+	if (kv.GetNum("static_shake"))
+	{
+		bossFlags |= SFF_HASSTATICSHAKE;
+	}
+	if (kv.GetNum("static_on_look"))
+	{
+		bossFlags |= SFF_STATICONLOOK;
+	}
+	if (kv.GetNum("static_on_radius"))
+	{
+		bossFlags |= SFF_STATICONRADIUS;
+	}
+	if (kv.GetNum("proxies"))
+	{
+		bossFlags |= SFF_PROXIES;
+	}
+	if (kv.GetNum("jumpscare"))
+	{
+		bossFlags |= SFF_HASJUMPSCARE;
+	}
+	if (kv.GetNum("sound_sight_enabled"))
+	{
+		bossFlags |= SFF_HASSIGHTSOUNDS;
+	}
+	if (kv.GetNum("sound_static_loop_local_enabled"))
+	{
+		bossFlags |= SFF_HASSTATICLOOPLOCALSOUND;
+	}
+	if (kv.GetNum("view_shake", 1))
+	{
+		bossFlags |= SFF_HASVIEWSHAKE;
+	}
+	if (kv.GetNum("copy"))
+	{
+		bossFlags |= SFF_COPIES;
+	}
+	if (kv.GetNum("wander_move", 1))
+	{
+		bossFlags |= SFF_WANDERMOVE;
+	}
+	if (kv.GetNum("attack_props", 0))
+	{
+		bossFlags |= SFF_ATTACKPROPS;
+	}
+	if (kv.GetNum("attack_weaponsenable", 0))
+	{
+		bossFlags |= SFF_WEAPONKILLS;
+	}
+	if (kv.GetNum("kill_weaponsenable", 0))
+	{
+		bossFlags |= SFF_WEAPONKILLSONRADIUS;
+	}
+	if (kv.GetNum("random_attacks", 0))
+	{
+		bossFlags |= SFF_RANDOMATTACKS;
+	}
 	
 	// Try validating unique profile type.
 	// The unique profile index specifies the location of a boss's type-specific data in another array.
@@ -1201,8 +2219,8 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	KvCopySubkeys(kv, g_Config);
 	
 	bool createNewBoss = false;
-	int iIndex = GetBossProfileList().FindString(profile);
-	if (iIndex == -1)
+	int index = GetBossProfileList().FindString(profile);
+	if (index == -1)
 	{
 		createNewBoss = true;
 	}
@@ -1212,532 +2230,534 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 	if (createNewBoss)
 	{
-		iIndex = g_BossProfileData.Push(-1);
-		g_BossProfileNames.SetValue(profile, iIndex);
+		index = g_BossProfileData.Push(-1);
+		g_BossProfileNames.SetValue(profile, index);
 		
 		// Add to the boss list since it's not there already.
 		GetBossProfileList().PushString(profile);
 	}
 
-	g_BossProfileData.Set(iIndex, uniqueProfileIndex, BossProfileData_UniqueProfileIndex);
-	g_BossProfileData.Set(iIndex, bossType, BossProfileData_Type);
-	g_BossProfileData.Set(iIndex, bossModelScale, BossProfileData_ModelScale);
-	g_BossProfileData.Set(iIndex, bossHealth, BossProfileData_Health);
-	g_BossProfileData.Set(iIndex, bossSkin, BossProfileData_Skin);
-	g_BossProfileData.Set(iIndex, bossSkinEasy, BossProfileData_SkinEasy);
-	g_BossProfileData.Set(iIndex, bossSkinHard, BossProfileData_SkinHard);
-	g_BossProfileData.Set(iIndex, bossSkinInsane, BossProfileData_SkinInsane);
-	g_BossProfileData.Set(iIndex, bossSkinNightmare, BossProfileData_SkinNightmare);
-	g_BossProfileData.Set(iIndex, bossSkinApollyon, BossProfileData_SkinApollyon);
-	g_BossProfileData.Set(iIndex, bossSkinMax, BossProfileData_SkinMax);
-	g_BossProfileData.Set(iIndex, bossBodyGroups, BossProfileData_Body);
-	g_BossProfileData.Set(iIndex, bossBodyGroupsEasy, BossProfileData_BodyEasy);
-	g_BossProfileData.Set(iIndex, bossBodyGroupsHard, BossProfileData_BodyHard);
-	g_BossProfileData.Set(iIndex, bossBodyGroupsInsane, BossProfileData_BodyInsane);
-	g_BossProfileData.Set(iIndex, bossBodyGroupsNightmare, BossProfileData_BodyNightmare);
-	g_BossProfileData.Set(iIndex, bossBodyGroupsApollyon, BossProfileData_BodyApollyon);
-	g_BossProfileData.Set(iIndex, bossBodyGroupsMax, BossProfileData_BodyMax);
-	g_BossProfileData.Set(iIndex, useRaidHitbox, BossProfileData_UseRaidHitbox);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("ignore_nav_prefer", 1)), BossProfileData_IgnoreNavPrefer);
-	g_BossProfileData.Set(iIndex, blinkLookRateMultiplier, BossProfileData_BlinkLookRateMultipler);
-	g_BossProfileData.Set(iIndex, blinkStaticRateMultiplier, BossProfileData_BlinkStaticRateMultiplier);
-	g_BossProfileData.Set(iIndex, bossStepSize, BossProfileData_StepSize);
+	g_BossProfileData.Set(index, uniqueProfileIndex, BossProfileData_UniqueProfileIndex);
+	g_BossProfileData.Set(index, bossType, BossProfileData_Type);
+	g_BossProfileData.Set(index, bossModelScale, BossProfileData_ModelScale);
+	g_BossProfileData.Set(index, bossSkin, BossProfileData_Skin);
+	g_BossProfileData.Set(index, bossSkinEasy, BossProfileData_SkinEasy);
+	g_BossProfileData.Set(index, bossSkinHard, BossProfileData_SkinHard);
+	g_BossProfileData.Set(index, bossSkinInsane, BossProfileData_SkinInsane);
+	g_BossProfileData.Set(index, bossSkinNightmare, BossProfileData_SkinNightmare);
+	g_BossProfileData.Set(index, bossSkinApollyon, BossProfileData_SkinApollyon);
+	g_BossProfileData.Set(index, bossSkinMax, BossProfileData_SkinMax);
+	g_BossProfileData.Set(index, bossBodyGroups, BossProfileData_Body);
+	g_BossProfileData.Set(index, bossBodyGroupsEasy, BossProfileData_BodyEasy);
+	g_BossProfileData.Set(index, bossBodyGroupsHard, BossProfileData_BodyHard);
+	g_BossProfileData.Set(index, bossBodyGroupsInsane, BossProfileData_BodyInsane);
+	g_BossProfileData.Set(index, bossBodyGroupsNightmare, BossProfileData_BodyNightmare);
+	g_BossProfileData.Set(index, bossBodyGroupsApollyon, BossProfileData_BodyApollyon);
+	g_BossProfileData.Set(index, bossBodyGroupsMax, BossProfileData_BodyMax);
+	g_BossProfileData.Set(index, useRaidHitbox, BossProfileData_UseRaidHitbox);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("ignore_nav_prefer", 1)), BossProfileData_IgnoreNavPrefer);
+	g_BossProfileData.Set(index, blinkLookRateMultiplier, BossProfileData_BlinkLookRateMultipler);
+	g_BossProfileData.Set(index, blinkStaticRateMultiplier, BossProfileData_BlinkStaticRateMultiplier);
+	g_BossProfileData.Set(index, bossStepSize, BossProfileData_StepSize);
 
-	g_BossProfileData.Set(iIndex, discoMode, BossProfileData_DiscoMode);
-	g_BossProfileData.Set(iIndex, discoModeRangeMin, BossProfileData_DiscoDistanceMin);
-	g_BossProfileData.Set(iIndex, discoModeRangeMax, BossProfileData_DiscoDistanceMax);
+	g_BossProfileData.Set(index, discoMode, BossProfileData_DiscoMode);
+	g_BossProfileData.Set(index, discoModeRangeMin, BossProfileData_DiscoDistanceMin);
+	g_BossProfileData.Set(index, discoModeRangeMax, BossProfileData_DiscoDistanceMax);
 
-	g_BossProfileData.Set(iIndex, festiveLights, BossProfileData_FestiveLights);
-	g_BossProfileData.Set(iIndex, festiveLightBrightness, BossProfileData_FestiveLightBrightness);
-	g_BossProfileData.Set(iIndex, festiveLightDistance, BossProfileData_FestiveLightDistance);
-	g_BossProfileData.Set(iIndex, festiveLightRadius, BossProfileData_FestiveLightRadius);
+	g_BossProfileData.Set(index, festiveLights, BossProfileData_FestiveLights);
+	g_BossProfileData.Set(index, festiveLightBrightness, BossProfileData_FestiveLightBrightness);
+	g_BossProfileData.Set(index, festiveLightDistance, BossProfileData_FestiveLightDistance);
+	g_BossProfileData.Set(index, festiveLightRadius, BossProfileData_FestiveLightRadius);
 
-	g_BossProfileData.Set(iIndex, deathCam, BossProfileData_HasDeathCam);
-	g_BossProfileData.Set(iIndex, deathCamScareSound, BossProfileData_DeathCamPlayScareSound);
-	g_BossProfileData.Set(iIndex, deathCamPublic, BossProfileData_PublicDeathCam);
-	g_BossProfileData.Set(iIndex, deathCamPublicSpeed, BossProfileData_PublicDeathCamSpeed);
-	g_BossProfileData.Set(iIndex, deathCamPublicAcceleration, BossProfileData_PublicDeathCamAcceleration);
-	g_BossProfileData.Set(iIndex, deathCamPublicDeceleration, BossProfileData_PublicDeathCamDeceleration);
-	g_BossProfileData.Set(iIndex, deathCamBackwardOffset, BossProfileData_PublicDeathCamBackwardOffset);
-	g_BossProfileData.Set(iIndex, deathCamDownwardOffset, BossProfileData_PublicDeathCamDownwardOffset);
-	g_BossProfileData.Set(iIndex, deathCamOverlay, BossProfileData_DeathCamOverlay);
-	g_BossProfileData.Set(iIndex, deathCamOverlayTimeStart, BossProfileData_DeathCamOverlayStartTime);
-	g_BossProfileData.Set(iIndex, deathCamTime, BossProfileData_DeathCamTime);
+	g_BossProfileData.Set(index, deathCam, BossProfileData_HasDeathCam);
+	g_BossProfileData.Set(index, deathCamScareSound, BossProfileData_DeathCamPlayScareSound);
+	g_BossProfileData.Set(index, deathCamPublic, BossProfileData_PublicDeathCam);
+	g_BossProfileData.Set(index, deathCamPublicSpeed, BossProfileData_PublicDeathCamSpeed);
+	g_BossProfileData.Set(index, deathCamPublicAcceleration, BossProfileData_PublicDeathCamAcceleration);
+	g_BossProfileData.Set(index, deathCamPublicDeceleration, BossProfileData_PublicDeathCamDeceleration);
+	g_BossProfileData.Set(index, deathCamBackwardOffset, BossProfileData_PublicDeathCamBackwardOffset);
+	g_BossProfileData.Set(index, deathCamDownwardOffset, BossProfileData_PublicDeathCamDownwardOffset);
+	g_BossProfileData.Set(index, deathCamOverlay, BossProfileData_DeathCamOverlay);
+	g_BossProfileData.Set(index, deathCamOverlayTimeStart, BossProfileData_DeathCamOverlayStartTime);
+	g_BossProfileData.Set(index, deathCamTime, BossProfileData_DeathCamTime);
 
-	g_BossProfileData.Set(iIndex, soundMusicLoop, BossProfileData_SoundMusicLoopNormal);
-	g_BossProfileData.Set(iIndex, soundMusicLoopEasy, BossProfileData_SoundMusicLoopEasy);
-	g_BossProfileData.Set(iIndex, soundMusicLoopHard, BossProfileData_SoundMusicLoopHard);
-	g_BossProfileData.Set(iIndex, soundMusicLoopInsane, BossProfileData_SoundMusicLoopInsane);
-	g_BossProfileData.Set(iIndex, soundMusicLoopNightmare, BossProfileData_SoundMusicLoopNightmare);
-	g_BossProfileData.Set(iIndex, soundMusicLoopApollyon, BossProfileData_SoundMusicLoopApollyon);
+	g_BossProfileData.Set(index, soundMusicLoop, BossProfileData_SoundMusicLoopNormal);
+	g_BossProfileData.Set(index, soundMusicLoopEasy, BossProfileData_SoundMusicLoopEasy);
+	g_BossProfileData.Set(index, soundMusicLoopHard, BossProfileData_SoundMusicLoopHard);
+	g_BossProfileData.Set(index, soundMusicLoopInsane, BossProfileData_SoundMusicLoopInsane);
+	g_BossProfileData.Set(index, soundMusicLoopNightmare, BossProfileData_SoundMusicLoopNightmare);
+	g_BossProfileData.Set(index, soundMusicLoopApollyon, BossProfileData_SoundMusicLoopApollyon);
 	
-	g_BossProfileData.Set(iIndex, copyMax, BossProfileData_CopyNormal);
-	g_BossProfileData.Set(iIndex, copyMaxEasy, BossProfileData_CopyEasy);
-	g_BossProfileData.Set(iIndex, copyMaxHard, BossProfileData_CopyHard);
-	g_BossProfileData.Set(iIndex, copyMaxInsane, BossProfileData_CopyInsane);
-	g_BossProfileData.Set(iIndex, copyMaxNightmare, BossProfileData_CopyNightmare);
-	g_BossProfileData.Set(iIndex, copyMaxApollyon, BossProfileData_CopyApollyon);
+	g_BossProfileData.Set(index, copyMax, BossProfileData_CopyNormal);
+	g_BossProfileData.Set(index, copyMaxEasy, BossProfileData_CopyEasy);
+	g_BossProfileData.Set(index, copyMaxHard, BossProfileData_CopyHard);
+	g_BossProfileData.Set(index, copyMaxInsane, BossProfileData_CopyInsane);
+	g_BossProfileData.Set(index, copyMaxNightmare, BossProfileData_CopyNightmare);
+	g_BossProfileData.Set(index, copyMaxApollyon, BossProfileData_CopyApollyon);
 	
-	g_BossProfileData.Set(iIndex, bossFlags, BossProfileData_Flags);
+	g_BossProfileData.Set(index, bossFlags, BossProfileData_Flags);
 	
-	g_BossProfileData.Set(iIndex, bossDefaultSpeed, BossProfileData_SpeedNormal);
-	g_BossProfileData.Set(iIndex, bossSpeedEasy, BossProfileData_SpeedEasy);
-	g_BossProfileData.Set(iIndex, bossSpeedHard, BossProfileData_SpeedHard);
-	g_BossProfileData.Set(iIndex, bossSpeedInsane, BossProfileData_SpeedInsane);
-	g_BossProfileData.Set(iIndex, bossSpeedNightmare, BossProfileData_SpeedNightmare);
-	g_BossProfileData.Set(iIndex, bossSpeedApollyon, BossProfileData_SpeedApollyon);
+	g_BossProfileData.Set(index, bossDefaultSpeed, BossProfileData_SpeedNormal);
+	g_BossProfileData.Set(index, bossSpeedEasy, BossProfileData_SpeedEasy);
+	g_BossProfileData.Set(index, bossSpeedHard, BossProfileData_SpeedHard);
+	g_BossProfileData.Set(index, bossSpeedInsane, BossProfileData_SpeedInsane);
+	g_BossProfileData.Set(index, bossSpeedNightmare, BossProfileData_SpeedNightmare);
+	g_BossProfileData.Set(index, bossSpeedApollyon, BossProfileData_SpeedApollyon);
 	
-	g_BossProfileData.Set(iIndex, bossDefaultMaxSpeed, BossProfileData_MaxSpeedNormal);
-	g_BossProfileData.Set(iIndex, bossMaxSpeedEasy, BossProfileData_MaxSpeedEasy);
-	g_BossProfileData.Set(iIndex, bossMaxSpeedHard, BossProfileData_MaxSpeedHard);
-	g_BossProfileData.Set(iIndex, bossMaxSpeedInsane, BossProfileData_MaxSpeedInsane);
-	g_BossProfileData.Set(iIndex, bossMaxSpeedNightmare, BossProfileData_MaxSpeedNightmare);
-	g_BossProfileData.Set(iIndex, bossMaxSpeedApollyon, BossProfileData_MaxSpeedApollyon);
+	g_BossProfileData.Set(index, bossDefaultMaxSpeed, BossProfileData_MaxSpeedNormal);
+	g_BossProfileData.Set(index, bossMaxSpeedEasy, BossProfileData_MaxSpeedEasy);
+	g_BossProfileData.Set(index, bossMaxSpeedHard, BossProfileData_MaxSpeedHard);
+	g_BossProfileData.Set(index, bossMaxSpeedInsane, BossProfileData_MaxSpeedInsane);
+	g_BossProfileData.Set(index, bossMaxSpeedNightmare, BossProfileData_MaxSpeedNightmare);
+	g_BossProfileData.Set(index, bossMaxSpeedApollyon, BossProfileData_MaxSpeedApollyon);
 
-	g_BossProfileData.Set(iIndex, bossDefaultAcceleration, BossProfileData_AccelerationNormal);
-	g_BossProfileData.Set(iIndex, bossAccelerationEasy, BossProfileData_AccelerationEasy);
-	g_BossProfileData.Set(iIndex, bossAccelerationHard, BossProfileData_AccelerationHard);
-	g_BossProfileData.Set(iIndex, bossAccelerationInsane, BossProfileData_AccelerationInsane);
-	g_BossProfileData.Set(iIndex, bossAccelerationNightmare, BossProfileData_AccelerationNightmare);
-	g_BossProfileData.Set(iIndex, bossAccelerationApollyon, BossProfileData_AccelerationApollyon);
+	g_BossProfileData.Set(index, bossDefaultAcceleration, BossProfileData_AccelerationNormal);
+	g_BossProfileData.Set(index, bossAccelerationEasy, BossProfileData_AccelerationEasy);
+	g_BossProfileData.Set(index, bossAccelerationHard, BossProfileData_AccelerationHard);
+	g_BossProfileData.Set(index, bossAccelerationInsane, BossProfileData_AccelerationInsane);
+	g_BossProfileData.Set(index, bossAccelerationNightmare, BossProfileData_AccelerationNightmare);
+	g_BossProfileData.Set(index, bossAccelerationApollyon, BossProfileData_AccelerationApollyon);
 
-	g_BossProfileData.Set(iIndex, bossDefaultIdleLifetime, BossProfileData_IdleLifetimeNormal);
-	g_BossProfileData.Set(iIndex, bossIdleLifetimeEasy, BossProfileData_IdleLifetimeEasy);
-	g_BossProfileData.Set(iIndex, bossIdleLifetimeHard, BossProfileData_IdleLifetimeHard);
-	g_BossProfileData.Set(iIndex, bossIdleLifetimeInsane, BossProfileData_IdleLifetimeInsane);
-	g_BossProfileData.Set(iIndex, bossIdleLifetimeNightmare, BossProfileData_IdleLifetimeNightmare);
-	g_BossProfileData.Set(iIndex, bossIdleLifetimeApollyon, BossProfileData_IdleLifetimeApollyon);
+	g_BossProfileData.Set(index, bossDefaultIdleLifetime, BossProfileData_IdleLifetimeNormal);
+	g_BossProfileData.Set(index, bossIdleLifetimeEasy, BossProfileData_IdleLifetimeEasy);
+	g_BossProfileData.Set(index, bossIdleLifetimeHard, BossProfileData_IdleLifetimeHard);
+	g_BossProfileData.Set(index, bossIdleLifetimeInsane, BossProfileData_IdleLifetimeInsane);
+	g_BossProfileData.Set(index, bossIdleLifetimeNightmare, BossProfileData_IdleLifetimeNightmare);
+	g_BossProfileData.Set(index, bossIdleLifetimeApollyon, BossProfileData_IdleLifetimeApollyon);
 	
-	g_BossProfileData.Set(iIndex, bossEyePosOffset[0], BossProfileData_EyePosOffsetX);
-	g_BossProfileData.Set(iIndex, bossEyePosOffset[1], BossProfileData_EyePosOffsetY);
-	g_BossProfileData.Set(iIndex, bossEyePosOffset[2], BossProfileData_EyePosOffsetZ);
+	g_BossProfileData.Set(index, bossEyePosOffset[0], BossProfileData_EyePosOffsetX);
+	g_BossProfileData.Set(index, bossEyePosOffset[1], BossProfileData_EyePosOffsetY);
+	g_BossProfileData.Set(index, bossEyePosOffset[2], BossProfileData_EyePosOffsetZ);
 	
-	g_BossProfileData.Set(iIndex, bossEyeAngOffset[0], BossProfileData_EyeAngOffsetX);
-	g_BossProfileData.Set(iIndex, bossEyeAngOffset[1], BossProfileData_EyeAngOffsetY);
-	g_BossProfileData.Set(iIndex, bossEyeAngOffset[2], BossProfileData_EyeAngOffsetZ);
+	g_BossProfileData.Set(index, bossEyeAngOffset[0], BossProfileData_EyeAngOffsetX);
+	g_BossProfileData.Set(index, bossEyeAngOffset[1], BossProfileData_EyeAngOffsetY);
+	g_BossProfileData.Set(index, bossEyeAngOffset[2], BossProfileData_EyeAngOffsetZ);
 	
-	g_BossProfileData.Set(iIndex, bossAngerStart, BossProfileData_AngerStart);
-	g_BossProfileData.Set(iIndex, bossAngerAddOnPageGrab, BossProfileData_AngerAddOnPageGrab);
-	g_BossProfileData.Set(iIndex, bossAngerPageGrabTimeDiffReq, BossProfileData_AngerPageGrabTimeDiffReq);
+	g_BossProfileData.Set(index, bossAngerStart, BossProfileData_AngerStart);
+	g_BossProfileData.Set(index, bossAngerAddOnPageGrab, BossProfileData_AngerAddOnPageGrab);
+	g_BossProfileData.Set(index, bossAngerPageGrabTimeDiffReq, BossProfileData_AngerPageGrabTimeDiffReq);
 	
-	g_BossProfileData.Set(iIndex, bossInstantKillRadius, BossProfileData_InstantKillRadius);
+	g_BossProfileData.Set(index, bossInstantKillRadius, BossProfileData_InstantKillRadius);
 
-	g_BossProfileData.Set(iIndex, instantKillCooldown, BossProfileData_InstantKillCooldownNormal);
-	g_BossProfileData.Set(iIndex, instantKillCooldownEasy, BossProfileData_InstantKillCooldownEasy);
-	g_BossProfileData.Set(iIndex, instantKillCooldownHard, BossProfileData_InstantKillCooldownHard);
-	g_BossProfileData.Set(iIndex, instantKillCooldownInsane, BossProfileData_InstantKillCooldownInsane);
-	g_BossProfileData.Set(iIndex, instantKillCooldownNightmare, BossProfileData_InstantKillCooldownNightmare);
-	g_BossProfileData.Set(iIndex, instantKillCooldownApollyon, BossProfileData_InstantKillCooldownApollyon);
+	g_BossProfileData.Set(index, instantKillCooldown, BossProfileData_InstantKillCooldownNormal);
+	g_BossProfileData.Set(index, instantKillCooldownEasy, BossProfileData_InstantKillCooldownEasy);
+	g_BossProfileData.Set(index, instantKillCooldownHard, BossProfileData_InstantKillCooldownHard);
+	g_BossProfileData.Set(index, instantKillCooldownInsane, BossProfileData_InstantKillCooldownInsane);
+	g_BossProfileData.Set(index, instantKillCooldownNightmare, BossProfileData_InstantKillCooldownNightmare);
+	g_BossProfileData.Set(index, instantKillCooldownApollyon, BossProfileData_InstantKillCooldownApollyon);
 	
-	g_BossProfileData.Set(iIndex, bossScareRadius, BossProfileData_ScareRadius);
-	g_BossProfileData.Set(iIndex, bossScareCooldown, BossProfileData_ScareCooldown);
+	g_BossProfileData.Set(index, bossScareRadius, BossProfileData_ScareRadius);
+	g_BossProfileData.Set(index, bossScareCooldown, BossProfileData_ScareCooldown);
 
-	g_BossProfileData.Set(iIndex, speedBoostOnScare, BossProfileData_SpeedBoostOnScare);
-	g_BossProfileData.Set(iIndex, scareSpeedBoostDuration, BossProfileData_ScareSpeedBoostDuration);
+	g_BossProfileData.Set(index, speedBoostOnScare, BossProfileData_SpeedBoostOnScare);
+	g_BossProfileData.Set(index, scareSpeedBoostDuration, BossProfileData_ScareSpeedBoostDuration);
 
-	g_BossProfileData.Set(iIndex, scareReaction, BossProfileData_ScareReaction);
-	g_BossProfileData.Set(iIndex, scareReactionType, BossProfileData_ScareReactionType);
+	g_BossProfileData.Set(index, scareReaction, BossProfileData_ScareReaction);
+	g_BossProfileData.Set(index, scareReactionType, BossProfileData_ScareReactionType);
 
-	g_BossProfileData.Set(iIndex, scareReplenishSprint, BossProfileData_ScareReplenishSprint);
-	g_BossProfileData.Set(iIndex, scareReplenishSprintAmount, BossProfileData_ScareReplenishSprintAmount);
+	g_BossProfileData.Set(index, scareReplenishSprint, BossProfileData_ScareReplenishSprint);
+	g_BossProfileData.Set(index, scareReplenishSprintAmount, BossProfileData_ScareReplenishSprintAmount);
 	
-	g_BossProfileData.Set(iIndex, bossTeleportType, BossProfileData_TeleportType);
+	g_BossProfileData.Set(index, bossTeleportType, BossProfileData_TeleportType);
 	
-	g_BossProfileData.Set(iIndex, useCustomOutlines, BossProfileData_EnableCustomizableOutlines);
-	g_BossProfileData.Set(iIndex, outlineColorR, BossProfileData_OutlineColorR);
-	g_BossProfileData.Set(iIndex, outlineColorG, BossProfileData_OutlineColorG);
-	g_BossProfileData.Set(iIndex, outlineColorB, BossProfileData_OutlineColorB);
-	g_BossProfileData.Set(iIndex, outlineColorTrans, BossProfileData_OutlineColorTrans);
-	g_BossProfileData.Set(iIndex, rainbowOutline, BossProfileData_RainbowOutline);
-	g_BossProfileData.Set(iIndex, rainbowCycleTime, BossProfileData_RainbowOutlineCycle);
+	g_BossProfileData.Set(index, useCustomOutlines, BossProfileData_EnableCustomizableOutlines);
+	g_BossProfileData.Set(index, outlineColorR, BossProfileData_OutlineColorR);
+	g_BossProfileData.Set(index, outlineColorG, BossProfileData_OutlineColorG);
+	g_BossProfileData.Set(index, outlineColorB, BossProfileData_OutlineColorB);
+	g_BossProfileData.Set(index, outlineColorTrans, BossProfileData_OutlineColorTrans);
+	g_BossProfileData.Set(index, rainbowOutline, BossProfileData_RainbowOutline);
+	g_BossProfileData.Set(index, rainbowCycleTime, BossProfileData_RainbowOutlineCycle);
 
-	g_BossProfileData.Set(iIndex, staticRadius, BossProfileData_StaticRadiusNormal);
-	g_BossProfileData.Set(iIndex, staticRadiusEasy, BossProfileData_StaticRadiusEasy);
-	g_BossProfileData.Set(iIndex, staticRadiusHard, BossProfileData_StaticRadiusHard);
-	g_BossProfileData.Set(iIndex, staticRadiusInsane, BossProfileData_StaticRadiusInsane);
-	g_BossProfileData.Set(iIndex, staticRadiusNightmare, BossProfileData_StaticRadiusNightmare);
-	g_BossProfileData.Set(iIndex, staticRadiusApollyon, BossProfileData_StaticRadiusApollyon);
+	g_BossProfileData.Set(index, staticRadius, BossProfileData_StaticRadiusNormal);
+	g_BossProfileData.Set(index, staticRadiusEasy, BossProfileData_StaticRadiusEasy);
+	g_BossProfileData.Set(index, staticRadiusHard, BossProfileData_StaticRadiusHard);
+	g_BossProfileData.Set(index, staticRadiusInsane, BossProfileData_StaticRadiusInsane);
+	g_BossProfileData.Set(index, staticRadiusNightmare, BossProfileData_StaticRadiusNightmare);
+	g_BossProfileData.Set(index, staticRadiusApollyon, BossProfileData_StaticRadiusApollyon);
 
-	g_BossProfileData.Set(iIndex, staticRate, BossProfileData_StaticRateNormal);
-	g_BossProfileData.Set(iIndex, staticRateEasy, BossProfileData_StaticRateEasy);
-	g_BossProfileData.Set(iIndex, staticRateHard, BossProfileData_StaticRateHard);
-	g_BossProfileData.Set(iIndex, staticRateInsane, BossProfileData_StaticRateInsane);
-	g_BossProfileData.Set(iIndex, staticRateNightmare, BossProfileData_StaticRateNightmare);
-	g_BossProfileData.Set(iIndex, staticRateApollyon, BossProfileData_StaticRateApollyon);
+	g_BossProfileData.Set(index, staticRate, BossProfileData_StaticRateNormal);
+	g_BossProfileData.Set(index, staticRateEasy, BossProfileData_StaticRateEasy);
+	g_BossProfileData.Set(index, staticRateHard, BossProfileData_StaticRateHard);
+	g_BossProfileData.Set(index, staticRateInsane, BossProfileData_StaticRateInsane);
+	g_BossProfileData.Set(index, staticRateNightmare, BossProfileData_StaticRateNightmare);
+	g_BossProfileData.Set(index, staticRateApollyon, BossProfileData_StaticRateApollyon);
 
-	g_BossProfileData.Set(iIndex, staticRateDecay, BossProfileData_StaticRateDecayNormal);
-	g_BossProfileData.Set(iIndex, staticRateDecayEasy, BossProfileData_StaticRateDecayEasy);
-	g_BossProfileData.Set(iIndex, staticRateDecayHard, BossProfileData_StaticRateDecayHard);
-	g_BossProfileData.Set(iIndex, staticRateDecayInsane, BossProfileData_StaticRateDecayInsane);
-	g_BossProfileData.Set(iIndex, staticRateDecayNightmare, BossProfileData_StaticRateDecayNightmare);
-	g_BossProfileData.Set(iIndex, staticRateDecayApollyon, BossProfileData_StaticRateDecayApollyon);
+	g_BossProfileData.Set(index, staticRateDecay, BossProfileData_StaticRateDecayNormal);
+	g_BossProfileData.Set(index, staticRateDecayEasy, BossProfileData_StaticRateDecayEasy);
+	g_BossProfileData.Set(index, staticRateDecayHard, BossProfileData_StaticRateDecayHard);
+	g_BossProfileData.Set(index, staticRateDecayInsane, BossProfileData_StaticRateDecayInsane);
+	g_BossProfileData.Set(index, staticRateDecayNightmare, BossProfileData_StaticRateDecayNightmare);
+	g_BossProfileData.Set(index, staticRateDecayApollyon, BossProfileData_StaticRateDecayApollyon);
 
-	g_BossProfileData.Set(iIndex, staticGraceTime, BossProfileData_StaticGraceTimeNormal);
-	g_BossProfileData.Set(iIndex, staticGraceTimeEasy, BossProfileData_StaticGraceTimeEasy);
-	g_BossProfileData.Set(iIndex, staticGraceTimeHard, BossProfileData_StaticGraceTimeHard);
-	g_BossProfileData.Set(iIndex, staticGraceTimeInsane, BossProfileData_StaticGraceTimeInsane);
-	g_BossProfileData.Set(iIndex, staticGraceTimeNightmare, BossProfileData_StaticGraceTimeNightmare);
-	g_BossProfileData.Set(iIndex, staticGraceTimeApollyon, BossProfileData_StaticGraceTimeApollyon);
+	g_BossProfileData.Set(index, staticGraceTime, BossProfileData_StaticGraceTimeNormal);
+	g_BossProfileData.Set(index, staticGraceTimeEasy, BossProfileData_StaticGraceTimeEasy);
+	g_BossProfileData.Set(index, staticGraceTimeHard, BossProfileData_StaticGraceTimeHard);
+	g_BossProfileData.Set(index, staticGraceTimeInsane, BossProfileData_StaticGraceTimeInsane);
+	g_BossProfileData.Set(index, staticGraceTimeNightmare, BossProfileData_StaticGraceTimeNightmare);
+	g_BossProfileData.Set(index, staticGraceTimeApollyon, BossProfileData_StaticGraceTimeApollyon);
 
-	g_BossProfileData.Set(iIndex, bBossTeleportAllowed, BossProfileData_TeleportAllowedNormal);
-	g_BossProfileData.Set(iIndex, bBossTeleportAllowedEasy, BossProfileData_TeleportAllowedEasy);
-	g_BossProfileData.Set(iIndex, bBossTeleportAllowedHard, BossProfileData_TeleportAllowedHard);
-	g_BossProfileData.Set(iIndex, bBossTeleportAllowedInsane, BossProfileData_TeleportAllowedInsane);
-	g_BossProfileData.Set(iIndex, bBossTeleportAllowedNightmare, BossProfileData_TeleportAllowedNightmare);
-	g_BossProfileData.Set(iIndex, bBossTeleportAllowedApollyon, BossProfileData_TeleportAllowedApollyon);
+	g_BossProfileData.Set(index, bBossTeleportAllowed, BossProfileData_TeleportAllowedNormal);
+	g_BossProfileData.Set(index, bBossTeleportAllowedEasy, BossProfileData_TeleportAllowedEasy);
+	g_BossProfileData.Set(index, bBossTeleportAllowedHard, BossProfileData_TeleportAllowedHard);
+	g_BossProfileData.Set(index, bBossTeleportAllowedInsane, BossProfileData_TeleportAllowedInsane);
+	g_BossProfileData.Set(index, bBossTeleportAllowedNightmare, BossProfileData_TeleportAllowedNightmare);
+	g_BossProfileData.Set(index, bBossTeleportAllowedApollyon, BossProfileData_TeleportAllowedApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMin, BossProfileData_TeleportTimeMinNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMinEasy, BossProfileData_TeleportTimeMinEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMinHard, BossProfileData_TeleportTimeMinHard);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMinInsane, BossProfileData_TeleportTimeMinInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMinNightmare, BossProfileData_TeleportTimeMinNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMinApollyon, BossProfileData_TeleportTimeMinApollyon);
+	g_BossProfileData.Set(index, bossTeleportTimeMin, BossProfileData_TeleportTimeMinNormal);
+	g_BossProfileData.Set(index, bossTeleportTimeMinEasy, BossProfileData_TeleportTimeMinEasy);
+	g_BossProfileData.Set(index, bossTeleportTimeMinHard, BossProfileData_TeleportTimeMinHard);
+	g_BossProfileData.Set(index, bossTeleportTimeMinInsane, BossProfileData_TeleportTimeMinInsane);
+	g_BossProfileData.Set(index, bossTeleportTimeMinNightmare, BossProfileData_TeleportTimeMinNightmare);
+	g_BossProfileData.Set(index, bossTeleportTimeMinApollyon, BossProfileData_TeleportTimeMinApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMax, BossProfileData_TeleportTimeMaxNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMaxEasy, BossProfileData_TeleportTimeMaxEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMaxHard, BossProfileData_TeleportTimeMaxHard);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMaxInsane, BossProfileData_TeleportTimeMaxInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMaxNightmare, BossProfileData_TeleportTimeMaxNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportTimeMaxApollyon, BossProfileData_TeleportTimeMaxApollyon);
+	g_BossProfileData.Set(index, bossTeleportTimeMax, BossProfileData_TeleportTimeMaxNormal);
+	g_BossProfileData.Set(index, bossTeleportTimeMaxEasy, BossProfileData_TeleportTimeMaxEasy);
+	g_BossProfileData.Set(index, bossTeleportTimeMaxHard, BossProfileData_TeleportTimeMaxHard);
+	g_BossProfileData.Set(index, bossTeleportTimeMaxInsane, BossProfileData_TeleportTimeMaxInsane);
+	g_BossProfileData.Set(index, bossTeleportTimeMaxNightmare, BossProfileData_TeleportTimeMaxNightmare);
+	g_BossProfileData.Set(index, bossTeleportTimeMaxApollyon, BossProfileData_TeleportTimeMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportRestPeriod, BossProfileData_TeleportRestPeriodNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportRestPeriodEasy, BossProfileData_TeleportRestPeriodEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportRestPeriodHard, BossProfileData_TeleportRestPeriodHard);
-	g_BossProfileData.Set(iIndex, bossTeleportRestPeriodInsane, BossProfileData_TeleportRestPeriodInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportRestPeriodNightmare, BossProfileData_TeleportRestPeriodNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportRestPeriodApollyon, BossProfileData_TeleportRestPeriodApollyon);
+	g_BossProfileData.Set(index, bossTeleportRestPeriod, BossProfileData_TeleportRestPeriodNormal);
+	g_BossProfileData.Set(index, bossTeleportRestPeriodEasy, BossProfileData_TeleportRestPeriodEasy);
+	g_BossProfileData.Set(index, bossTeleportRestPeriodHard, BossProfileData_TeleportRestPeriodHard);
+	g_BossProfileData.Set(index, bossTeleportRestPeriodInsane, BossProfileData_TeleportRestPeriodInsane);
+	g_BossProfileData.Set(index, bossTeleportRestPeriodNightmare, BossProfileData_TeleportRestPeriodNightmare);
+	g_BossProfileData.Set(index, bossTeleportRestPeriodApollyon, BossProfileData_TeleportRestPeriodApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportStressMin, BossProfileData_TeleportStressMinNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMinEasy, BossProfileData_TeleportStressMinEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMinHard, BossProfileData_TeleportStressMinHard);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMinInsane, BossProfileData_TeleportStressMinInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMinNightmare, BossProfileData_TeleportStressMinNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMinApollyon, BossProfileData_TeleportStressMinApollyon);
+	g_BossProfileData.Set(index, bossTeleportStressMin, BossProfileData_TeleportStressMinNormal);
+	g_BossProfileData.Set(index, bossTeleportStressMinEasy, BossProfileData_TeleportStressMinEasy);
+	g_BossProfileData.Set(index, bossTeleportStressMinHard, BossProfileData_TeleportStressMinHard);
+	g_BossProfileData.Set(index, bossTeleportStressMinInsane, BossProfileData_TeleportStressMinInsane);
+	g_BossProfileData.Set(index, bossTeleportStressMinNightmare, BossProfileData_TeleportStressMinNightmare);
+	g_BossProfileData.Set(index, bossTeleportStressMinApollyon, BossProfileData_TeleportStressMinApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportStressMax, BossProfileData_TeleportStressMaxNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMaxEasy, BossProfileData_TeleportStressMaxEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMaxHard, BossProfileData_TeleportStressMaxHard);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMaxInsane, BossProfileData_TeleportStressMaxInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMaxNightmare, BossProfileData_TeleportStressMaxNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportStressMaxApollyon, BossProfileData_TeleportStressMaxApollyon);
+	g_BossProfileData.Set(index, bossTeleportStressMax, BossProfileData_TeleportStressMaxNormal);
+	g_BossProfileData.Set(index, bossTeleportStressMaxEasy, BossProfileData_TeleportStressMaxEasy);
+	g_BossProfileData.Set(index, bossTeleportStressMaxHard, BossProfileData_TeleportStressMaxHard);
+	g_BossProfileData.Set(index, bossTeleportStressMaxInsane, BossProfileData_TeleportStressMaxInsane);
+	g_BossProfileData.Set(index, bossTeleportStressMaxNightmare, BossProfileData_TeleportStressMaxNightmare);
+	g_BossProfileData.Set(index, bossTeleportStressMaxApollyon, BossProfileData_TeleportStressMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportPersistencyPeriod, BossProfileData_TeleportPersistencyPeriodNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportPersistencyPeriodEasy, BossProfileData_TeleportPersistencyPeriodEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportPersistencyPeriodHard, BossProfileData_TeleportPersistencyPeriodHard);
-	g_BossProfileData.Set(iIndex, bossTeleportPersistencyPeriodInsane, BossProfileData_TeleportPersistencyPeriodInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportPersistencyPeriodNightmare, BossProfileData_TeleportPersistencyPeriodNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportPersistencyPeriodApollyon, BossProfileData_TeleportPersistencyPeriodApollyon);
+	g_BossProfileData.Set(index, bossTeleportPersistencyPeriod, BossProfileData_TeleportPersistencyPeriodNormal);
+	g_BossProfileData.Set(index, bossTeleportPersistencyPeriodEasy, BossProfileData_TeleportPersistencyPeriodEasy);
+	g_BossProfileData.Set(index, bossTeleportPersistencyPeriodHard, BossProfileData_TeleportPersistencyPeriodHard);
+	g_BossProfileData.Set(index, bossTeleportPersistencyPeriodInsane, BossProfileData_TeleportPersistencyPeriodInsane);
+	g_BossProfileData.Set(index, bossTeleportPersistencyPeriodNightmare, BossProfileData_TeleportPersistencyPeriodNightmare);
+	g_BossProfileData.Set(index, bossTeleportPersistencyPeriodApollyon, BossProfileData_TeleportPersistencyPeriodApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMin, BossProfileData_TeleportRangeMinNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMinEasy, BossProfileData_TeleportRangeMinEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMinHard, BossProfileData_TeleportRangeMinHard);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMinInsane, BossProfileData_TeleportRangeMinInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMinNightmare, BossProfileData_TeleportRangeMinNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMinApollyon, BossProfileData_TeleportRangeMinApollyon);
+	g_BossProfileData.Set(index, bossTeleportRangeMin, BossProfileData_TeleportRangeMinNormal);
+	g_BossProfileData.Set(index, bossTeleportRangeMinEasy, BossProfileData_TeleportRangeMinEasy);
+	g_BossProfileData.Set(index, bossTeleportRangeMinHard, BossProfileData_TeleportRangeMinHard);
+	g_BossProfileData.Set(index, bossTeleportRangeMinInsane, BossProfileData_TeleportRangeMinInsane);
+	g_BossProfileData.Set(index, bossTeleportRangeMinNightmare, BossProfileData_TeleportRangeMinNightmare);
+	g_BossProfileData.Set(index, bossTeleportRangeMinApollyon, BossProfileData_TeleportRangeMinApollyon);
 
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMax, BossProfileData_TeleportRangeMaxNormal);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMaxEasy, BossProfileData_TeleportRangeMaxEasy);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMaxHard, BossProfileData_TeleportRangeMaxHard);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMaxInsane, BossProfileData_TeleportRangeMaxInsane);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMaxNightmare, BossProfileData_TeleportRangeMaxNightmare);
-	g_BossProfileData.Set(iIndex, bossTeleportRangeMaxApollyon, BossProfileData_TeleportRangeMaxApollyon);
+	g_BossProfileData.Set(index, bossTeleportRangeMax, BossProfileData_TeleportRangeMaxNormal);
+	g_BossProfileData.Set(index, bossTeleportRangeMaxEasy, BossProfileData_TeleportRangeMaxEasy);
+	g_BossProfileData.Set(index, bossTeleportRangeMaxHard, BossProfileData_TeleportRangeMaxHard);
+	g_BossProfileData.Set(index, bossTeleportRangeMaxInsane, BossProfileData_TeleportRangeMaxInsane);
+	g_BossProfileData.Set(index, bossTeleportRangeMaxNightmare, BossProfileData_TeleportRangeMaxNightmare);
+	g_BossProfileData.Set(index, bossTeleportRangeMaxApollyon, BossProfileData_TeleportRangeMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("teleport_target_ignore_chases")), BossProfileData_TeleportIgnoreChases);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("teleport_target_ignore_visibility")), BossProfileData_TeleportIgnoreVis);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("teleport_target_ignore_chases")), BossProfileData_TeleportIgnoreChases);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("teleport_target_ignore_visibility")), BossProfileData_TeleportIgnoreVis);
 
-	g_BossProfileData.Set(iIndex, bossJumpscareDistance, BossProfileData_JumpscareDistanceNormal);
-	g_BossProfileData.Set(iIndex, bossJumpscareDistanceEasy, BossProfileData_JumpscareDistanceEasy);
-	g_BossProfileData.Set(iIndex, bossJumpscareDistanceHard, BossProfileData_JumpscareDistanceHard);
-	g_BossProfileData.Set(iIndex, bossJumpscareDistanceInsane, BossProfileData_JumpscareDistanceInsane);
-	g_BossProfileData.Set(iIndex, bossJumpscareDistanceNightmare, BossProfileData_JumpscareDistanceNightmare);
-	g_BossProfileData.Set(iIndex, bossJumpscareDistanceApollyon, BossProfileData_JumpscareDistanceApollyon);
+	g_BossProfileData.Set(index, bossJumpscareDistance, BossProfileData_JumpscareDistanceNormal);
+	g_BossProfileData.Set(index, bossJumpscareDistanceEasy, BossProfileData_JumpscareDistanceEasy);
+	g_BossProfileData.Set(index, bossJumpscareDistanceHard, BossProfileData_JumpscareDistanceHard);
+	g_BossProfileData.Set(index, bossJumpscareDistanceInsane, BossProfileData_JumpscareDistanceInsane);
+	g_BossProfileData.Set(index, bossJumpscareDistanceNightmare, BossProfileData_JumpscareDistanceNightmare);
+	g_BossProfileData.Set(index, bossJumpscareDistanceApollyon, BossProfileData_JumpscareDistanceApollyon);
 
-	g_BossProfileData.Set(iIndex, bossJumpscareDuration, BossProfileData_JumpscareDurationNormal);
-	g_BossProfileData.Set(iIndex, bossJumpscareDurationEasy, BossProfileData_JumpscareDurationEasy);
-	g_BossProfileData.Set(iIndex, bossJumpscareDurationHard, BossProfileData_JumpscareDurationHard);
-	g_BossProfileData.Set(iIndex, bossJumpscareDurationInsane, BossProfileData_JumpscareDurationInsane);
-	g_BossProfileData.Set(iIndex, bossJumpscareDurationNightmare, BossProfileData_JumpscareDurationNightmare);
-	g_BossProfileData.Set(iIndex, bossJumpscareDurationApollyon, BossProfileData_JumpscareDurationApollyon);
+	g_BossProfileData.Set(index, bossJumpscareDuration, BossProfileData_JumpscareDurationNormal);
+	g_BossProfileData.Set(index, bossJumpscareDurationEasy, BossProfileData_JumpscareDurationEasy);
+	g_BossProfileData.Set(index, bossJumpscareDurationHard, BossProfileData_JumpscareDurationHard);
+	g_BossProfileData.Set(index, bossJumpscareDurationInsane, BossProfileData_JumpscareDurationInsane);
+	g_BossProfileData.Set(index, bossJumpscareDurationNightmare, BossProfileData_JumpscareDurationNightmare);
+	g_BossProfileData.Set(index, bossJumpscareDurationApollyon, BossProfileData_JumpscareDurationApollyon);
 
-	g_BossProfileData.Set(iIndex, bossJumpscareCooldown, BossProfileData_JumpscareCooldownNormal);
-	g_BossProfileData.Set(iIndex, bossJumpscareCooldownEasy, BossProfileData_JumpscareCooldownEasy);
-	g_BossProfileData.Set(iIndex, bossJumpscareCooldownHard, BossProfileData_JumpscareCooldownHard);
-	g_BossProfileData.Set(iIndex, bossJumpscareCooldownInsane, BossProfileData_JumpscareCooldownInsane);
-	g_BossProfileData.Set(iIndex, bossJumpscareCooldownNightmare, BossProfileData_JumpscareCooldownNightmare);
-	g_BossProfileData.Set(iIndex, bossJumpscareCooldownApollyon, BossProfileData_JumpscareCooldownApollyon);
+	g_BossProfileData.Set(index, bossJumpscareCooldown, BossProfileData_JumpscareCooldownNormal);
+	g_BossProfileData.Set(index, bossJumpscareCooldownEasy, BossProfileData_JumpscareCooldownEasy);
+	g_BossProfileData.Set(index, bossJumpscareCooldownHard, BossProfileData_JumpscareCooldownHard);
+	g_BossProfileData.Set(index, bossJumpscareCooldownInsane, BossProfileData_JumpscareCooldownInsane);
+	g_BossProfileData.Set(index, bossJumpscareCooldownNightmare, BossProfileData_JumpscareCooldownNightmare);
+	g_BossProfileData.Set(index, bossJumpscareCooldownApollyon, BossProfileData_JumpscareCooldownApollyon);
 
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("jumpscare_on_scare")), BossProfileData_JumpscareOnScare);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("jumpscare_on_scare")), BossProfileData_JumpscareOnScare);
 
-	g_BossProfileData.Set(iIndex, bossSearchRadius, BossProfileData_SearchRange);
-	g_BossProfileData.Set(iIndex, bossSearchRadiusEasy, BossProfileData_SearchRangeEasy);
-	g_BossProfileData.Set(iIndex, bossSearchRadiusHard, BossProfileData_SearchRangeHard);
-	g_BossProfileData.Set(iIndex, bossSearchRadiusInsane, BossProfileData_SearchRangeInsane);
-	g_BossProfileData.Set(iIndex, bossSearchRadiusNightmare, BossProfileData_SearchRangeNightmare);
-	g_BossProfileData.Set(iIndex, bossSearchRadiusApollyon, BossProfileData_SearchRangeApollyon);
+	g_BossProfileData.Set(index, bossSearchRadius, BossProfileData_SearchRange);
+	g_BossProfileData.Set(index, bossSearchRadiusEasy, BossProfileData_SearchRangeEasy);
+	g_BossProfileData.Set(index, bossSearchRadiusHard, BossProfileData_SearchRangeHard);
+	g_BossProfileData.Set(index, bossSearchRadiusInsane, BossProfileData_SearchRangeInsane);
+	g_BossProfileData.Set(index, bossSearchRadiusNightmare, BossProfileData_SearchRangeNightmare);
+	g_BossProfileData.Set(index, bossSearchRadiusApollyon, BossProfileData_SearchRangeApollyon);
 
-	g_BossProfileData.Set(iIndex, flTauntAlertRange, BossProfileData_TauntAlertRange);
-	g_BossProfileData.Set(iIndex, flTauntAlertRangeEasy, BossProfileData_TauntAlertRangeEasy);
-	g_BossProfileData.Set(iIndex, flTauntAlertRangeHard, BossProfileData_TauntAlertRangeHard);
-	g_BossProfileData.Set(iIndex, flTauntAlertRangeInsane, BossProfileData_TauntAlertRangeInsane);
-	g_BossProfileData.Set(iIndex, flTauntAlertRangeNightmare, BossProfileData_TauntAlertRangeNightmare);
-	g_BossProfileData.Set(iIndex, flTauntAlertRangeApollyon, BossProfileData_TauntAlertRangeApollyon);
+	g_BossProfileData.Set(index, flTauntAlertRange, BossProfileData_TauntAlertRange);
+	g_BossProfileData.Set(index, flTauntAlertRangeEasy, BossProfileData_TauntAlertRangeEasy);
+	g_BossProfileData.Set(index, flTauntAlertRangeHard, BossProfileData_TauntAlertRangeHard);
+	g_BossProfileData.Set(index, flTauntAlertRangeInsane, BossProfileData_TauntAlertRangeInsane);
+	g_BossProfileData.Set(index, flTauntAlertRangeNightmare, BossProfileData_TauntAlertRangeNightmare);
+	g_BossProfileData.Set(index, flTauntAlertRangeApollyon, BossProfileData_TauntAlertRangeApollyon);
 
-	g_BossProfileData.Set(iIndex, bossSearchSoundRadius, BossProfileData_SearchSoundRange);
-	g_BossProfileData.Set(iIndex, bossSearchSoundRadiusEasy, BossProfileData_SearchSoundRangeEasy);
-	g_BossProfileData.Set(iIndex, bossSearchSoundRadiusHard, BossProfileData_SearchSoundRangeHard);
-	g_BossProfileData.Set(iIndex, bossSearchSoundRadiusInsane, BossProfileData_SearchSoundRangeInsane);
-	g_BossProfileData.Set(iIndex, bossSearchSoundRadiusNightmare, BossProfileData_SearchSoundRangeNightmare);
-	g_BossProfileData.Set(iIndex, bossSearchSoundRadiusApollyon, BossProfileData_SearchSoundRangeApollyon);
+	g_BossProfileData.Set(index, bossSearchSoundRadius, BossProfileData_SearchSoundRange);
+	g_BossProfileData.Set(index, bossSearchSoundRadiusEasy, BossProfileData_SearchSoundRangeEasy);
+	g_BossProfileData.Set(index, bossSearchSoundRadiusHard, BossProfileData_SearchSoundRangeHard);
+	g_BossProfileData.Set(index, bossSearchSoundRadiusInsane, BossProfileData_SearchSoundRangeInsane);
+	g_BossProfileData.Set(index, bossSearchSoundRadiusNightmare, BossProfileData_SearchSoundRangeNightmare);
+	g_BossProfileData.Set(index, bossSearchSoundRadiusApollyon, BossProfileData_SearchSoundRangeApollyon);
 
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("healthbar")), BossProfileData_UseHealthbar);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("healthbar")), BossProfileData_UseHealthbar);
 
-	g_BossProfileData.Set(iIndex, proxyDamageVsEnemy, BossProfileData_ProxyDamageVsEnemyNormal);
-	g_BossProfileData.Set(iIndex, proxyDamageVsEnemyEasy, BossProfileData_ProxyDamageVsEnemyEasy);
-	g_BossProfileData.Set(iIndex, proxyDamageVsEnemyHard, BossProfileData_ProxyDamageVsEnemyHard);
-	g_BossProfileData.Set(iIndex, proxyDamageVsEnemyInsane, BossProfileData_ProxyDamageVsEnemyInsane);
-	g_BossProfileData.Set(iIndex, proxyDamageVsEnemyNightmare, BossProfileData_ProxyDamageVsEnemyNightmare);
-	g_BossProfileData.Set(iIndex, proxyDamageVsEnemyApollyon, BossProfileData_ProxyDamageVsEnemyApollyon);
+	g_BossProfileData.Set(index, proxyDamageVsEnemy, BossProfileData_ProxyDamageVsEnemyNormal);
+	g_BossProfileData.Set(index, proxyDamageVsEnemyEasy, BossProfileData_ProxyDamageVsEnemyEasy);
+	g_BossProfileData.Set(index, proxyDamageVsEnemyHard, BossProfileData_ProxyDamageVsEnemyHard);
+	g_BossProfileData.Set(index, proxyDamageVsEnemyInsane, BossProfileData_ProxyDamageVsEnemyInsane);
+	g_BossProfileData.Set(index, proxyDamageVsEnemyNightmare, BossProfileData_ProxyDamageVsEnemyNightmare);
+	g_BossProfileData.Set(index, proxyDamageVsEnemyApollyon, BossProfileData_ProxyDamageVsEnemyApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyDamageVsBackstab, BossProfileData_ProxyDamageVsBackstabNormal);
-	g_BossProfileData.Set(iIndex, proxyDamageVsBackstabEasy, BossProfileData_ProxyDamageVsBackstabEasy);
-	g_BossProfileData.Set(iIndex, proxyDamageVsBackstabHard, BossProfileData_ProxyDamageVsBackstabHard);
-	g_BossProfileData.Set(iIndex, proxyDamageVsBackstabInsane, BossProfileData_ProxyDamageVsBackstabInsane);
-	g_BossProfileData.Set(iIndex, proxyDamageVsBackstabNightmare, BossProfileData_ProxyDamageVsBackstabNightmare);
-	g_BossProfileData.Set(iIndex, proxyDamageVsBackstabApollyon, BossProfileData_ProxyDamageVsBackstabApollyon);
+	g_BossProfileData.Set(index, proxyDamageVsBackstab, BossProfileData_ProxyDamageVsBackstabNormal);
+	g_BossProfileData.Set(index, proxyDamageVsBackstabEasy, BossProfileData_ProxyDamageVsBackstabEasy);
+	g_BossProfileData.Set(index, proxyDamageVsBackstabHard, BossProfileData_ProxyDamageVsBackstabHard);
+	g_BossProfileData.Set(index, proxyDamageVsBackstabInsane, BossProfileData_ProxyDamageVsBackstabInsane);
+	g_BossProfileData.Set(index, proxyDamageVsBackstabNightmare, BossProfileData_ProxyDamageVsBackstabNightmare);
+	g_BossProfileData.Set(index, proxyDamageVsBackstabApollyon, BossProfileData_ProxyDamageVsBackstabApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyDamageVsSelf, BossProfileData_ProxyDamageVsSelfNormal);
-	g_BossProfileData.Set(iIndex, proxyDamageVsSelfEasy, BossProfileData_ProxyDamageVsSelfEasy);
-	g_BossProfileData.Set(iIndex, proxyDamageVsSelfHard, BossProfileData_ProxyDamageVsSelfHard);
-	g_BossProfileData.Set(iIndex, proxyDamageVsSelfInsane, BossProfileData_ProxyDamageVsSelfInsane);
-	g_BossProfileData.Set(iIndex, proxyDamageVsSelfNightmare, BossProfileData_ProxyDamageVsSelfNightmare);
-	g_BossProfileData.Set(iIndex, proxyDamageVsSelfApollyon, BossProfileData_ProxyDamageVsSelfApollyon);
+	g_BossProfileData.Set(index, proxyDamageVsSelf, BossProfileData_ProxyDamageVsSelfNormal);
+	g_BossProfileData.Set(index, proxyDamageVsSelfEasy, BossProfileData_ProxyDamageVsSelfEasy);
+	g_BossProfileData.Set(index, proxyDamageVsSelfHard, BossProfileData_ProxyDamageVsSelfHard);
+	g_BossProfileData.Set(index, proxyDamageVsSelfInsane, BossProfileData_ProxyDamageVsSelfInsane);
+	g_BossProfileData.Set(index, proxyDamageVsSelfNightmare, BossProfileData_ProxyDamageVsSelfNightmare);
+	g_BossProfileData.Set(index, proxyDamageVsSelfApollyon, BossProfileData_ProxyDamageVsSelfApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyControlGainHitEnemy, BossProfileData_ProxyControlGainHitEnemyNormal);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitEnemyEasy, BossProfileData_ProxyControlGainHitEnemyEasy);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitEnemyHard, BossProfileData_ProxyControlGainHitEnemyHard);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitEnemyInsane, BossProfileData_ProxyControlGainHitEnemyInsane);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitEnemyNightmare, BossProfileData_ProxyControlGainHitEnemyNightmare);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitEnemyApollyon, BossProfileData_ProxyControlGainHitEnemyApollyon);
+	g_BossProfileData.Set(index, proxyControlGainHitEnemy, BossProfileData_ProxyControlGainHitEnemyNormal);
+	g_BossProfileData.Set(index, proxyControlGainHitEnemyEasy, BossProfileData_ProxyControlGainHitEnemyEasy);
+	g_BossProfileData.Set(index, proxyControlGainHitEnemyHard, BossProfileData_ProxyControlGainHitEnemyHard);
+	g_BossProfileData.Set(index, proxyControlGainHitEnemyInsane, BossProfileData_ProxyControlGainHitEnemyInsane);
+	g_BossProfileData.Set(index, proxyControlGainHitEnemyNightmare, BossProfileData_ProxyControlGainHitEnemyNightmare);
+	g_BossProfileData.Set(index, proxyControlGainHitEnemyApollyon, BossProfileData_ProxyControlGainHitEnemyApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyControlGainHitByEnemy, BossProfileData_ProxyControlGainHitByEnemyNormal);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitByEnemyEasy, BossProfileData_ProxyControlGainHitByEnemyEasy);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitByEnemyHard, BossProfileData_ProxyControlGainHitByEnemyHard);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitByEnemyInsane, BossProfileData_ProxyControlGainHitByEnemyInsane);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitByEnemyNightmare, BossProfileData_ProxyControlGainHitByEnemyNightmare);
-	g_BossProfileData.Set(iIndex, proxyControlGainHitByEnemyApollyon, BossProfileData_ProxyControlGainHitByEnemyApollyon);
+	g_BossProfileData.Set(index, proxyControlGainHitByEnemy, BossProfileData_ProxyControlGainHitByEnemyNormal);
+	g_BossProfileData.Set(index, proxyControlGainHitByEnemyEasy, BossProfileData_ProxyControlGainHitByEnemyEasy);
+	g_BossProfileData.Set(index, proxyControlGainHitByEnemyHard, BossProfileData_ProxyControlGainHitByEnemyHard);
+	g_BossProfileData.Set(index, proxyControlGainHitByEnemyInsane, BossProfileData_ProxyControlGainHitByEnemyInsane);
+	g_BossProfileData.Set(index, proxyControlGainHitByEnemyNightmare, BossProfileData_ProxyControlGainHitByEnemyNightmare);
+	g_BossProfileData.Set(index, proxyControlGainHitByEnemyApollyon, BossProfileData_ProxyControlGainHitByEnemyApollyon);
 	
-	g_BossProfileData.Set(iIndex, proxyControlDrainRate, BossProfileData_ProxyControlDrainRateNormal);
-	g_BossProfileData.Set(iIndex, proxyControlDrainRateEasy, BossProfileData_ProxyControlDrainRateEasy);
-	g_BossProfileData.Set(iIndex, proxyControlDrainRateHard, BossProfileData_ProxyControlDrainRateHard);
-	g_BossProfileData.Set(iIndex, proxyControlDrainRateInsane, BossProfileData_ProxyControlDrainRateInsane);
-	g_BossProfileData.Set(iIndex, proxyControlDrainRateNightmare, BossProfileData_ProxyControlDrainRateNightmare);
-	g_BossProfileData.Set(iIndex, proxyControlDrainRateApollyon, BossProfileData_ProxyControlDrainRateApollyon);
+	g_BossProfileData.Set(index, proxyControlDrainRate, BossProfileData_ProxyControlDrainRateNormal);
+	g_BossProfileData.Set(index, proxyControlDrainRateEasy, BossProfileData_ProxyControlDrainRateEasy);
+	g_BossProfileData.Set(index, proxyControlDrainRateHard, BossProfileData_ProxyControlDrainRateHard);
+	g_BossProfileData.Set(index, proxyControlDrainRateInsane, BossProfileData_ProxyControlDrainRateInsane);
+	g_BossProfileData.Set(index, proxyControlDrainRateNightmare, BossProfileData_ProxyControlDrainRateNightmare);
+	g_BossProfileData.Set(index, proxyControlDrainRateApollyon, BossProfileData_ProxyControlDrainRateApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMin, BossProfileData_ProxySpawnChanceMinNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMinEasy, BossProfileData_ProxySpawnChanceMinEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMinHard, BossProfileData_ProxySpawnChanceMinHard);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMinInsane, BossProfileData_ProxySpawnChanceMinInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMinNightmare, BossProfileData_ProxySpawnChanceMinNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMinApollyon, BossProfileData_ProxySpawnChanceMinApollyon);
+	g_BossProfileData.Set(index, proxySpawnChanceMin, BossProfileData_ProxySpawnChanceMinNormal);
+	g_BossProfileData.Set(index, proxySpawnChanceMinEasy, BossProfileData_ProxySpawnChanceMinEasy);
+	g_BossProfileData.Set(index, proxySpawnChanceMinHard, BossProfileData_ProxySpawnChanceMinHard);
+	g_BossProfileData.Set(index, proxySpawnChanceMinInsane, BossProfileData_ProxySpawnChanceMinInsane);
+	g_BossProfileData.Set(index, proxySpawnChanceMinNightmare, BossProfileData_ProxySpawnChanceMinNightmare);
+	g_BossProfileData.Set(index, proxySpawnChanceMinApollyon, BossProfileData_ProxySpawnChanceMinApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMax, BossProfileData_ProxySpawnChanceMaxNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMaxEasy, BossProfileData_ProxySpawnChanceMaxEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMaxHard, BossProfileData_ProxySpawnChanceMaxHard);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMaxInsane, BossProfileData_ProxySpawnChanceMaxInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMaxNightmare, BossProfileData_ProxySpawnChanceMaxNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceMaxApollyon, BossProfileData_ProxySpawnChanceMaxApollyon);
+	g_BossProfileData.Set(index, proxySpawnChanceMax, BossProfileData_ProxySpawnChanceMaxNormal);
+	g_BossProfileData.Set(index, proxySpawnChanceMaxEasy, BossProfileData_ProxySpawnChanceMaxEasy);
+	g_BossProfileData.Set(index, proxySpawnChanceMaxHard, BossProfileData_ProxySpawnChanceMaxHard);
+	g_BossProfileData.Set(index, proxySpawnChanceMaxInsane, BossProfileData_ProxySpawnChanceMaxInsane);
+	g_BossProfileData.Set(index, proxySpawnChanceMaxNightmare, BossProfileData_ProxySpawnChanceMaxNightmare);
+	g_BossProfileData.Set(index, proxySpawnChanceMaxApollyon, BossProfileData_ProxySpawnChanceMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnChanceThreshold, BossProfileData_ProxySpawnChanceThresholdNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceThresholdEasy, BossProfileData_ProxySpawnChanceThresholdEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceThresholdHard, BossProfileData_ProxySpawnChanceThresholdHard);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceThresholdInsane, BossProfileData_ProxySpawnChanceThresholdInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceThresholdNightmare, BossProfileData_ProxySpawnChanceThresholdNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnChanceThresholdApollyon, BossProfileData_ProxySpawnChanceThresholdApollyon);
+	g_BossProfileData.Set(index, proxySpawnChanceThreshold, BossProfileData_ProxySpawnChanceThresholdNormal);
+	g_BossProfileData.Set(index, proxySpawnChanceThresholdEasy, BossProfileData_ProxySpawnChanceThresholdEasy);
+	g_BossProfileData.Set(index, proxySpawnChanceThresholdHard, BossProfileData_ProxySpawnChanceThresholdHard);
+	g_BossProfileData.Set(index, proxySpawnChanceThresholdInsane, BossProfileData_ProxySpawnChanceThresholdInsane);
+	g_BossProfileData.Set(index, proxySpawnChanceThresholdNightmare, BossProfileData_ProxySpawnChanceThresholdNightmare);
+	g_BossProfileData.Set(index, proxySpawnChanceThresholdApollyon, BossProfileData_ProxySpawnChanceThresholdApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnNumMin, BossProfileData_ProxySpawnNumMinNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMinEasy, BossProfileData_ProxySpawnNumMinEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMinHard, BossProfileData_ProxySpawnNumMinHard);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMinInsane, BossProfileData_ProxySpawnNumMinInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMinNightmare, BossProfileData_ProxySpawnNumMinNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMinApollyon, BossProfileData_ProxySpawnNumMinApollyon);
+	g_BossProfileData.Set(index, proxySpawnNumMin, BossProfileData_ProxySpawnNumMinNormal);
+	g_BossProfileData.Set(index, proxySpawnNumMinEasy, BossProfileData_ProxySpawnNumMinEasy);
+	g_BossProfileData.Set(index, proxySpawnNumMinHard, BossProfileData_ProxySpawnNumMinHard);
+	g_BossProfileData.Set(index, proxySpawnNumMinInsane, BossProfileData_ProxySpawnNumMinInsane);
+	g_BossProfileData.Set(index, proxySpawnNumMinNightmare, BossProfileData_ProxySpawnNumMinNightmare);
+	g_BossProfileData.Set(index, proxySpawnNumMinApollyon, BossProfileData_ProxySpawnNumMinApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnNumMax, BossProfileData_ProxySpawnNumMaxNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMaxEasy, BossProfileData_ProxySpawnNumMaxEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMaxHard, BossProfileData_ProxySpawnNumMaxHard);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMaxInsane, BossProfileData_ProxySpawnNumMaxInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMaxNightmare, BossProfileData_ProxySpawnNumMaxNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnNumMaxApollyon, BossProfileData_ProxySpawnNumMaxApollyon);
+	g_BossProfileData.Set(index, proxySpawnNumMax, BossProfileData_ProxySpawnNumMaxNormal);
+	g_BossProfileData.Set(index, proxySpawnNumMaxEasy, BossProfileData_ProxySpawnNumMaxEasy);
+	g_BossProfileData.Set(index, proxySpawnNumMaxHard, BossProfileData_ProxySpawnNumMaxHard);
+	g_BossProfileData.Set(index, proxySpawnNumMaxInsane, BossProfileData_ProxySpawnNumMaxInsane);
+	g_BossProfileData.Set(index, proxySpawnNumMaxNightmare, BossProfileData_ProxySpawnNumMaxNightmare);
+	g_BossProfileData.Set(index, proxySpawnNumMaxApollyon, BossProfileData_ProxySpawnNumMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMin, BossProfileData_ProxySpawnCooldownMinNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMinEasy, BossProfileData_ProxySpawnCooldownMinEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMinHard, BossProfileData_ProxySpawnCooldownMinHard);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMinInsane, BossProfileData_ProxySpawnCooldownMinInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMinNightmare, BossProfileData_ProxySpawnCooldownMinNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMinApollyon, BossProfileData_ProxySpawnCooldownMinApollyon);
+	g_BossProfileData.Set(index, proxySpawnCooldownMin, BossProfileData_ProxySpawnCooldownMinNormal);
+	g_BossProfileData.Set(index, proxySpawnCooldownMinEasy, BossProfileData_ProxySpawnCooldownMinEasy);
+	g_BossProfileData.Set(index, proxySpawnCooldownMinHard, BossProfileData_ProxySpawnCooldownMinHard);
+	g_BossProfileData.Set(index, proxySpawnCooldownMinInsane, BossProfileData_ProxySpawnCooldownMinInsane);
+	g_BossProfileData.Set(index, proxySpawnCooldownMinNightmare, BossProfileData_ProxySpawnCooldownMinNightmare);
+	g_BossProfileData.Set(index, proxySpawnCooldownMinApollyon, BossProfileData_ProxySpawnCooldownMinApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMax, BossProfileData_ProxySpawnCooldownMaxNormal);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMaxEasy, BossProfileData_ProxySpawnCooldownMaxEasy);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMaxHard, BossProfileData_ProxySpawnCooldownMaxHard);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMaxInsane, BossProfileData_ProxySpawnCooldownMaxInsane);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMaxNightmare, BossProfileData_ProxySpawnCooldownMaxNightmare);
-	g_BossProfileData.Set(iIndex, proxySpawnCooldownMaxApollyon, BossProfileData_ProxySpawnCooldownMaxApollyon);
+	g_BossProfileData.Set(index, proxySpawnCooldownMax, BossProfileData_ProxySpawnCooldownMaxNormal);
+	g_BossProfileData.Set(index, proxySpawnCooldownMaxEasy, BossProfileData_ProxySpawnCooldownMaxEasy);
+	g_BossProfileData.Set(index, proxySpawnCooldownMaxHard, BossProfileData_ProxySpawnCooldownMaxHard);
+	g_BossProfileData.Set(index, proxySpawnCooldownMaxInsane, BossProfileData_ProxySpawnCooldownMaxInsane);
+	g_BossProfileData.Set(index, proxySpawnCooldownMaxNightmare, BossProfileData_ProxySpawnCooldownMaxNightmare);
+	g_BossProfileData.Set(index, proxySpawnCooldownMaxApollyon, BossProfileData_ProxySpawnCooldownMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyMax, BossProfileData_ProxyMaxNormal);
-	g_BossProfileData.Set(iIndex, proxyMaxEasy, BossProfileData_ProxyMaxEasy);
-	g_BossProfileData.Set(iIndex, proxyMaxHard, BossProfileData_ProxyMaxHard);
-	g_BossProfileData.Set(iIndex, proxyMaxInsane, BossProfileData_ProxyMaxInsane);
-	g_BossProfileData.Set(iIndex, proxyMaxNightmare, BossProfileData_ProxyMaxNightmare);
-	g_BossProfileData.Set(iIndex, proxyMaxApollyon, BossProfileData_ProxyMaxApollyon);
+	g_BossProfileData.Set(index, proxyMax, BossProfileData_ProxyMaxNormal);
+	g_BossProfileData.Set(index, proxyMaxEasy, BossProfileData_ProxyMaxEasy);
+	g_BossProfileData.Set(index, proxyMaxHard, BossProfileData_ProxyMaxHard);
+	g_BossProfileData.Set(index, proxyMaxInsane, BossProfileData_ProxyMaxInsane);
+	g_BossProfileData.Set(index, proxyMaxNightmare, BossProfileData_ProxyMaxNightmare);
+	g_BossProfileData.Set(index, proxyMaxApollyon, BossProfileData_ProxyMaxApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMin, BossProfileData_ProxyTeleportRangeMinNormal);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMinEasy, BossProfileData_ProxyTeleportRangeMinEasy);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMinHard, BossProfileData_ProxyTeleportRangeMinHard);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMinInsane, BossProfileData_ProxyTeleportRangeMinInsane);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMinNightmare, BossProfileData_ProxyTeleportRangeMinNightmare);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMinApollyon, BossProfileData_ProxyTeleportRangeMinApollyon);
+	g_BossProfileData.Set(index, proxyTeleportRangeMin, BossProfileData_ProxyTeleportRangeMinNormal);
+	g_BossProfileData.Set(index, proxyTeleportRangeMinEasy, BossProfileData_ProxyTeleportRangeMinEasy);
+	g_BossProfileData.Set(index, proxyTeleportRangeMinHard, BossProfileData_ProxyTeleportRangeMinHard);
+	g_BossProfileData.Set(index, proxyTeleportRangeMinInsane, BossProfileData_ProxyTeleportRangeMinInsane);
+	g_BossProfileData.Set(index, proxyTeleportRangeMinNightmare, BossProfileData_ProxyTeleportRangeMinNightmare);
+	g_BossProfileData.Set(index, proxyTeleportRangeMinApollyon, BossProfileData_ProxyTeleportRangeMinApollyon);
 
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMax, BossProfileData_ProxyTeleportRangeMaxNormal);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMaxEasy, BossProfileData_ProxyTeleportRangeMaxEasy);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMaxHard, BossProfileData_ProxyTeleportRangeMaxHard);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMaxInsane, BossProfileData_ProxyTeleportRangeMaxInsane);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMaxNightmare, BossProfileData_ProxyTeleportRangeMaxNightmare);
-	g_BossProfileData.Set(iIndex, proxyTeleportRangeMaxApollyon, BossProfileData_ProxyTeleportRangeMaxApollyon);
+	g_BossProfileData.Set(index, proxyTeleportRangeMax, BossProfileData_ProxyTeleportRangeMaxNormal);
+	g_BossProfileData.Set(index, proxyTeleportRangeMaxEasy, BossProfileData_ProxyTeleportRangeMaxEasy);
+	g_BossProfileData.Set(index, proxyTeleportRangeMaxHard, BossProfileData_ProxyTeleportRangeMaxHard);
+	g_BossProfileData.Set(index, proxyTeleportRangeMaxInsane, BossProfileData_ProxyTeleportRangeMaxInsane);
+	g_BossProfileData.Set(index, proxyTeleportRangeMaxNightmare, BossProfileData_ProxyTeleportRangeMaxNightmare);
+	g_BossProfileData.Set(index, proxyTeleportRangeMaxApollyon, BossProfileData_ProxyTeleportRangeMaxApollyon);
 	
-	g_BossProfileData.Set(iIndex, proxyHurtChannel, BossProfileData_ProxyHurtChannel);
-	g_BossProfileData.Set(iIndex, proxyHurtLevel, BossProfileData_ProxyHurtLevel);
-	g_BossProfileData.Set(iIndex, proxyHurtFlags, BossProfileData_ProxyHurtFlags);
-	g_BossProfileData.Set(iIndex, proxyHurtVolume, BossProfileData_ProxyHurtVolume);
-	g_BossProfileData.Set(iIndex, proxyHurtPitch, BossProfileData_ProxyHurtPitch);
+	g_BossProfileData.Set(index, proxyHurtChannel, BossProfileData_ProxyHurtChannel);
+	g_BossProfileData.Set(index, proxyHurtLevel, BossProfileData_ProxyHurtLevel);
+	g_BossProfileData.Set(index, proxyHurtFlags, BossProfileData_ProxyHurtFlags);
+	g_BossProfileData.Set(index, proxyHurtVolume, BossProfileData_ProxyHurtVolume);
+	g_BossProfileData.Set(index, proxyHurtPitch, BossProfileData_ProxyHurtPitch);
 
-	g_BossProfileData.Set(iIndex, proxyDeathChannel, BossProfileData_ProxyDeathChannel);
-	g_BossProfileData.Set(iIndex, proxyDeathLevel, BossProfileData_ProxyDeathLevel);
-	g_BossProfileData.Set(iIndex, proxyDeathFlags, BossProfileData_ProxyDeathFlags);
-	g_BossProfileData.Set(iIndex, proxyDeathVolume, BossProfileData_ProxyDeathVolume);
-	g_BossProfileData.Set(iIndex, proxyDeathPitch, BossProfileData_ProxyDeathPitch);
+	g_BossProfileData.Set(index, proxyDeathChannel, BossProfileData_ProxyDeathChannel);
+	g_BossProfileData.Set(index, proxyDeathLevel, BossProfileData_ProxyDeathLevel);
+	g_BossProfileData.Set(index, proxyDeathFlags, BossProfileData_ProxyDeathFlags);
+	g_BossProfileData.Set(index, proxyDeathVolume, BossProfileData_ProxyDeathVolume);
+	g_BossProfileData.Set(index, proxyDeathPitch, BossProfileData_ProxyDeathPitch);
 
-	g_BossProfileData.Set(iIndex, proxyIdleChannel, BossProfileData_ProxyIdleChannel);
-	g_BossProfileData.Set(iIndex, proxyIdleLevel, BossProfileData_ProxyIdleLevel);
-	g_BossProfileData.Set(iIndex, proxyIdleFlags, BossProfileData_ProxyIdleFlags);
-	g_BossProfileData.Set(iIndex, proxyIdleVolume, BossProfileData_ProxyIdleVolume);
-	g_BossProfileData.Set(iIndex, proxyIdlePitch, BossProfileData_ProxyIdlePitch);
-	g_BossProfileData.Set(iIndex, proxyIdleCooldownMin, BossProfileData_ProxyIdleCooldownMin);
-	g_BossProfileData.Set(iIndex, proxyIdleCooldownMax, BossProfileData_ProxyIdleCooldownMax);
+	g_BossProfileData.Set(index, proxyIdleChannel, BossProfileData_ProxyIdleChannel);
+	g_BossProfileData.Set(index, proxyIdleLevel, BossProfileData_ProxyIdleLevel);
+	g_BossProfileData.Set(index, proxyIdleFlags, BossProfileData_ProxyIdleFlags);
+	g_BossProfileData.Set(index, proxyIdleVolume, BossProfileData_ProxyIdleVolume);
+	g_BossProfileData.Set(index, proxyIdlePitch, BossProfileData_ProxyIdlePitch);
+	g_BossProfileData.Set(index, proxyIdleCooldownMin, BossProfileData_ProxyIdleCooldownMin);
+	g_BossProfileData.Set(index, proxyIdleCooldownMax, BossProfileData_ProxyIdleCooldownMax);
 
-	g_BossProfileData.Set(iIndex, proxySpawnChannel, BossProfileData_ProxySpawnChannel);
-	g_BossProfileData.Set(iIndex, proxySpawnLevel, BossProfileData_ProxySpawnLevel);
-	g_BossProfileData.Set(iIndex, proxySpawnFlags, BossProfileData_ProxySpawnFlags);
-	g_BossProfileData.Set(iIndex, proxySpawnVolume, BossProfileData_ProxySpawnVolume);
-	g_BossProfileData.Set(iIndex, proxySpawnPitch, BossProfileData_ProxySpawnPitch);
+	g_BossProfileData.Set(index, proxySpawnChannel, BossProfileData_ProxySpawnChannel);
+	g_BossProfileData.Set(index, proxySpawnLevel, BossProfileData_ProxySpawnLevel);
+	g_BossProfileData.Set(index, proxySpawnFlags, BossProfileData_ProxySpawnFlags);
+	g_BossProfileData.Set(index, proxySpawnVolume, BossProfileData_ProxySpawnVolume);
+	g_BossProfileData.Set(index, proxySpawnPitch, BossProfileData_ProxySpawnPitch);
 
-	g_BossProfileData.Set(iIndex, fakeCopies, BossProfileData_FakeCopyEnabled);
+	g_BossProfileData.Set(index, fakeCopies, BossProfileData_FakeCopyEnabled);
 
-	g_BossProfileData.Set(iIndex, drainCreditsOnKill, BossProfileData_DrainCreditEnabled);
-	g_BossProfileData.Set(iIndex, creditDrainAmountEasy, BossProfileData_DrainCreditAmountEasy);
-	g_BossProfileData.Set(iIndex, creditDrainAmount, BossProfileData_DrainCreditAmountNormal);
-	g_BossProfileData.Set(iIndex, creditDrainAmountHard, BossProfileData_DrainCreditAmountHard);
-	g_BossProfileData.Set(iIndex, creditDrainAmountInsane, BossProfileData_DrainCreditAmountInsane);
-	g_BossProfileData.Set(iIndex, creditDrainAmountNightmare, BossProfileData_DrainCreditAmountNightmare);
-	g_BossProfileData.Set(iIndex, creditDrainAmountApollyon, BossProfileData_DrainCreditAmountApollyon);
+	g_BossProfileData.Set(index, drainCreditsOnKill, BossProfileData_DrainCreditEnabled);
+	g_BossProfileData.Set(index, creditDrainAmountEasy, BossProfileData_DrainCreditAmountEasy);
+	g_BossProfileData.Set(index, creditDrainAmount, BossProfileData_DrainCreditAmountNormal);
+	g_BossProfileData.Set(index, creditDrainAmountHard, BossProfileData_DrainCreditAmountHard);
+	g_BossProfileData.Set(index, creditDrainAmountInsane, BossProfileData_DrainCreditAmountInsane);
+	g_BossProfileData.Set(index, creditDrainAmountNightmare, BossProfileData_DrainCreditAmountNightmare);
+	g_BossProfileData.Set(index, creditDrainAmountApollyon, BossProfileData_DrainCreditAmountApollyon);
 
-	g_BossProfileData.Set(iIndex, proxySpawnEffects, BossProfileData_ProxySpawnEffectEnabled);
-	g_BossProfileData.Set(iIndex, proxySpawnEffectZOffset, BossProfileData_ProxySpawnEffectZPosOffset);
+	g_BossProfileData.Set(index, proxySpawnEffects, BossProfileData_ProxySpawnEffectEnabled);
+	g_BossProfileData.Set(index, proxySpawnEffectZOffset, BossProfileData_ProxySpawnEffectZPosOffset);
 
-	g_BossProfileData.Set(iIndex, proxyWeaponsEnabled, BossProfileData_ProxyWeapons);
+	g_BossProfileData.Set(index, proxyWeaponsEnabled, BossProfileData_ProxyWeapons);
 
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("proxies_allownormalvoices", 1)), BossProfileData_ProxyAllowNormalVoices);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("proxies_allownormalvoices", 1)), BossProfileData_ProxyAllowNormalVoices);
 
-	g_BossProfileData.Set(iIndex, kv.GetNum("chat_message_upon_death_difficulty_indexes", 123456), BossProfileData_DeathMessageDifficultyIndexes);
+	g_BossProfileData.Set(index, kv.GetNum("chat_message_upon_death_difficulty_indexes", 123456), BossProfileData_DeathMessageDifficultyIndexes);
 
-	g_BossProfileData.Set(iIndex, bossFOV, BossProfileData_FieldOfView);
-	g_BossProfileData.Set(iIndex, bossMaxTurnRate, BossProfileData_TurnRate);
+	g_BossProfileData.Set(index, bossFOV, BossProfileData_FieldOfView);
+	g_BossProfileData.Set(index, bossMaxTurnRate, BossProfileData_TurnRate);
 
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("burn_ragdoll_on_kill")), BossProfileData_BurnRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("cloak_ragdoll_on_kill")), BossProfileData_CloakRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("decap_ragdoll_on_kill")), BossProfileData_DecapRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("gib_ragdoll_on_kill")), BossProfileData_GibRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("gold_ragdoll_on_kill")), BossProfileData_GoldRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("ice_ragdoll_on_kill")), BossProfileData_IceRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("electrocute_ragdoll_on_kill")), BossProfileData_ElectrocuteRagdoll);
-	g_BossProfileData.Set(iIndex, ashRagdoll, BossProfileData_AshRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("delete_ragdoll_on_kill")), BossProfileData_DeleteRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("push_ragdoll_on_kill")), BossProfileData_PushRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("dissolve_ragdoll_on_kill")), BossProfileData_DissolveRagdoll);
-	g_BossProfileData.Set(iIndex, kv.GetNum("dissolve_ragdoll_type"), BossProfileData_DissolveKillType);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("plasma_ragdoll_on_kill")), BossProfileData_PlasmaRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("resize_ragdoll_on_kill")), BossProfileData_ResizeRagdoll);
-	g_BossProfileData.Set(iIndex, kv.GetFloat("resize_ragdoll_head", 1.0), BossProfileData_ResizeRagdollHead);
-	g_BossProfileData.Set(iIndex, kv.GetFloat("resize_ragdoll_hands", 1.0), BossProfileData_ResizeRagdollHands);
-	g_BossProfileData.Set(iIndex, kv.GetFloat("resize_ragdoll_torso", 1.0), BossProfileData_ResizeRagdollTorso);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("decap_or_gib_ragdoll_on_kill")), BossProfileData_DecapOrGipRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("silent_kill")), BossProfileData_SilentKill);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("multieffect_ragdoll_on_kill")), BossProfileData_MultieffectRagdoll);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("attack_custom_deathflag_enabled")), BossProfileData_CustomDeathFlag);
-	g_BossProfileData.Set(iIndex, kv.GetNum("attack_custom_deathflag"), BossProfileData_CustomDeathFlagType);
-	g_BossProfileData.Set(iIndex, view_as<bool>(kv.GetNum("sound_music_outro_enabled")), BossProfileData_OutroMusicEnabled);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("burn_ragdoll_on_kill")), BossProfileData_BurnRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("cloak_ragdoll_on_kill")), BossProfileData_CloakRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("decap_ragdoll_on_kill")), BossProfileData_DecapRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("gib_ragdoll_on_kill")), BossProfileData_GibRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("gold_ragdoll_on_kill")), BossProfileData_GoldRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("ice_ragdoll_on_kill")), BossProfileData_IceRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("electrocute_ragdoll_on_kill")), BossProfileData_ElectrocuteRagdoll);
+	g_BossProfileData.Set(index, ashRagdoll, BossProfileData_AshRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("delete_ragdoll_on_kill")), BossProfileData_DeleteRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("push_ragdoll_on_kill")), BossProfileData_PushRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("dissolve_ragdoll_on_kill")), BossProfileData_DissolveRagdoll);
+	g_BossProfileData.Set(index, kv.GetNum("dissolve_ragdoll_type"), BossProfileData_DissolveKillType);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("plasma_ragdoll_on_kill")), BossProfileData_PlasmaRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("resize_ragdoll_on_kill")), BossProfileData_ResizeRagdoll);
+	g_BossProfileData.Set(index, kv.GetFloat("resize_ragdoll_head", 1.0), BossProfileData_ResizeRagdollHead);
+	g_BossProfileData.Set(index, kv.GetFloat("resize_ragdoll_hands", 1.0), BossProfileData_ResizeRagdollHands);
+	g_BossProfileData.Set(index, kv.GetFloat("resize_ragdoll_torso", 1.0), BossProfileData_ResizeRagdollTorso);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("decap_or_gib_ragdoll_on_kill")), BossProfileData_DecapOrGipRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("silent_kill")), BossProfileData_SilentKill);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("multieffect_ragdoll_on_kill")), BossProfileData_MultieffectRagdoll);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("attack_custom_deathflag_enabled")), BossProfileData_CustomDeathFlag);
+	g_BossProfileData.Set(index, kv.GetNum("attack_custom_deathflag"), BossProfileData_CustomDeathFlagType);
+	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("sound_music_outro_enabled")), BossProfileData_OutroMusicEnabled);
 	
-	char sCOn[PLATFORM_MAX_PATH], sCOff[PLATFORM_MAX_PATH], sJ[PLATFORM_MAX_PATH], sM[PLATFORM_MAX_PATH], sG[PLATFORM_MAX_PATH], sS[PLATFORM_MAX_PATH], sFE[PLATFORM_MAX_PATH], sFS[PLATFORM_MAX_PATH], sFIS[PLATFORM_MAX_PATH], sRE[PLATFORM_MAX_PATH], sRS[PLATFORM_MAX_PATH], sEngineSound[PLATFORM_MAX_PATH], sGrenadeShoot[PLATFORM_MAX_PATH], sSentryrocketShoot[PLATFORM_MAX_PATH], sArrowShoot[PLATFORM_MAX_PATH], sManglerShoot[PLATFORM_MAX_PATH], sBaseballShoot[PLATFORM_MAX_PATH], sSpawnParticleSound[PLATFORM_MAX_PATH], sDespawnParticleSound[PLATFORM_MAX_PATH];
-	char sSmiteSound[PLATFORM_MAX_PATH], sRocketModel[PLATFORM_MAX_PATH], sTrapModel[PLATFORM_MAX_PATH], sTrapDeploySound[PLATFORM_MAX_PATH], sTrapMissSound[PLATFORM_MAX_PATH], sTrapHitSound[PLATFORM_MAX_PATH];
-	kv.GetString("cloak_on_sound", sCOn, sizeof(sCOn), DEFAULT_CLOAKONSOUND);
-	kv.GetString("cloak_off_sound", sCOff, sizeof(sCOff), DEFAULT_CLOAKOFFSOUND);
-	kv.GetString("player_jarate_sound", sJ, sizeof(sJ), JARATE_HITPLAYER);
-	kv.GetString("player_milk_sound", sM, sizeof(sM), JARATE_HITPLAYER);
-	kv.GetString("player_gas_sound", sG, sizeof(sG), JARATE_HITPLAYER);
-	kv.GetString("player_stun_sound", sS, sizeof(sS), STUN_HITPLAYER);
-	kv.GetString("fire_explode_sound", sFE, sizeof(sFE), FIREBALL_IMPACT);
-	kv.GetString("fire_shoot_sound", sFS, sizeof(sFS), FIREBALL_SHOOT);
-	kv.GetString("fire_iceball_slow_sound", sFIS, sizeof(sFIS), ICEBALL_IMPACT);
-	kv.GetString("rocket_explode_sound", sRE, sizeof(sRE), ROCKET_IMPACT);
-	kv.GetString("rocket_shoot_sound", sRS, sizeof(sRS), ROCKET_SHOOT);
-	kv.GetString("grenade_shoot_sound", sGrenadeShoot, sizeof(sGrenadeShoot), GRENADE_SHOOT);
-	kv.GetString("sentryrocket_shoot_sound", sSentryrocketShoot, sizeof(sSentryrocketShoot), SENTRYROCKET_SHOOT);
-	kv.GetString("arrow_shoot_sound", sArrowShoot, sizeof(sArrowShoot), ARROW_SHOOT);
-	kv.GetString("mangler_shoot_sound", sManglerShoot, sizeof(sManglerShoot), MANGLER_SHOOT);
-	kv.GetString("baseball_shoot_sound", sBaseballShoot, sizeof(sBaseballShoot), BASEBALL_SHOOT);
-	kv.GetString("engine_sound", sEngineSound, sizeof(sEngineSound));
-	kv.GetString("tp_effect_spawn_sound", sSpawnParticleSound, sizeof(sSpawnParticleSound));
-	kv.GetString("tp_effect_despawn_sound", sDespawnParticleSound, sizeof(sDespawnParticleSound));
-	kv.GetString("player_smite_sound", sSmiteSound, sizeof(sSmiteSound));
-	kv.GetString("rocket_model", sRocketModel, sizeof(sRocketModel), ROCKET_MODEL);
-	kv.GetString("trap_model", sTrapModel, sizeof(sTrapModel), TRAP_MODEL);
-	kv.GetString("trap_deploy_sound", sTrapDeploySound, sizeof(sTrapDeploySound), TRAP_DEPLOY);
-	kv.GetString("trap_miss_sound", sTrapMissSound, sizeof(sTrapMissSound), TRAP_CLOSE);
-	kv.GetString("trap_catch_sound", sTrapHitSound, sizeof(sTrapHitSound), TRAP_CLOSE);
+	char cloakOn[PLATFORM_MAX_PATH], cloakOff[PLATFORM_MAX_PATH], jarateHit[PLATFORM_MAX_PATH], milkHit[PLATFORM_MAX_PATH], gasHit[PLATFORM_MAX_PATH], stunHit[PLATFORM_MAX_PATH];
+	char fireballExplode[PLATFORM_MAX_PATH], fireballShoot[PLATFORM_MAX_PATH], fireIceballSlow[PLATFORM_MAX_PATH], rocketExplode[PLATFORM_MAX_PATH], rocketShoot[PLATFORM_MAX_PATH];
+	char engineSound[PLATFORM_MAX_PATH], grenadeShoot[PLATFORM_MAX_PATH], sentryrocketShoot[PLATFORM_MAX_PATH], arrowShoot[PLATFORM_MAX_PATH], manglerShoot[PLATFORM_MAX_PATH], baseballShoot[PLATFORM_MAX_PATH];
+	char spawnParticleSound[PLATFORM_MAX_PATH], despawnParticleSound[PLATFORM_MAX_PATH];
+	char smiteSound[PLATFORM_MAX_PATH], rocketModel[PLATFORM_MAX_PATH], trapModel[PLATFORM_MAX_PATH], trapDeploySound[PLATFORM_MAX_PATH], trapMissSound[PLATFORM_MAX_PATH], trapHitSound[PLATFORM_MAX_PATH];
+	kv.GetString("cloak_on_sound", cloakOn, sizeof(cloakOn), DEFAULT_CLOAKONSOUND);
+	kv.GetString("cloak_off_sound", cloakOff, sizeof(cloakOff), DEFAULT_CLOAKOFFSOUND);
+	kv.GetString("player_jarate_sound", jarateHit, sizeof(jarateHit), JARATE_HITPLAYER);
+	kv.GetString("player_milk_sound", milkHit, sizeof(milkHit), JARATE_HITPLAYER);
+	kv.GetString("player_gas_sound", gasHit, sizeof(gasHit), JARATE_HITPLAYER);
+	kv.GetString("player_stun_sound", stunHit, sizeof(stunHit), STUN_HITPLAYER);
+	kv.GetString("fire_explode_sound", fireballExplode, sizeof(fireballExplode), FIREBALL_IMPACT);
+	kv.GetString("fire_shoot_sound", fireballShoot, sizeof(fireballShoot), FIREBALL_SHOOT);
+	kv.GetString("fire_iceball_slow_sound", fireIceballSlow, sizeof(fireIceballSlow), ICEBALL_IMPACT);
+	kv.GetString("rocket_explode_sound", rocketExplode, sizeof(rocketExplode), ROCKET_IMPACT);
+	kv.GetString("rocket_shoot_sound", rocketShoot, sizeof(rocketShoot), ROCKET_SHOOT);
+	kv.GetString("grenade_shoot_sound", grenadeShoot, sizeof(grenadeShoot), GRENADE_SHOOT);
+	kv.GetString("sentryrocket_shoot_sound", sentryrocketShoot, sizeof(sentryrocketShoot), SENTRYROCKET_SHOOT);
+	kv.GetString("arrow_shoot_sound", arrowShoot, sizeof(arrowShoot), ARROW_SHOOT);
+	kv.GetString("mangler_shoot_sound", manglerShoot, sizeof(manglerShoot), MANGLER_SHOOT);
+	kv.GetString("baseball_shoot_sound", baseballShoot, sizeof(baseballShoot), BASEBALL_SHOOT);
+	kv.GetString("engine_sound", engineSound, sizeof(engineSound));
+	kv.GetString("tp_effect_spawn_sound", spawnParticleSound, sizeof(spawnParticleSound));
+	kv.GetString("tp_effect_despawn_sound", despawnParticleSound, sizeof(despawnParticleSound));
+	kv.GetString("player_smite_sound", smiteSound, sizeof(smiteSound));
+	kv.GetString("rocket_model", rocketModel, sizeof(rocketModel), ROCKET_MODEL);
+	kv.GetString("trap_model", trapModel, sizeof(trapModel), TRAP_MODEL);
+	kv.GetString("trap_deploy_sound", trapDeploySound, sizeof(trapDeploySound), TRAP_DEPLOY);
+	kv.GetString("trap_miss_sound", trapMissSound, sizeof(trapMissSound), TRAP_CLOSE);
+	kv.GetString("trap_catch_sound", trapHitSound, sizeof(trapHitSound), TRAP_CLOSE);
 
-	TryPrecacheBossProfileSoundPath(sCOn);
-	TryPrecacheBossProfileSoundPath(sCOff);
-	TryPrecacheBossProfileSoundPath(sJ);
-	TryPrecacheBossProfileSoundPath(sM);
-	TryPrecacheBossProfileSoundPath(sG);
-	TryPrecacheBossProfileSoundPath(sS);
-	TryPrecacheBossProfileSoundPath(sFE);
-	TryPrecacheBossProfileSoundPath(sFS);
-	TryPrecacheBossProfileSoundPath(sFIS);
-	TryPrecacheBossProfileSoundPath(sRE);
-	TryPrecacheBossProfileSoundPath(sRS);
-	TryPrecacheBossProfileSoundPath(sGrenadeShoot);
-	TryPrecacheBossProfileSoundPath(sSentryrocketShoot);
-	TryPrecacheBossProfileSoundPath(sArrowShoot);
-	TryPrecacheBossProfileSoundPath(sManglerShoot);
-	TryPrecacheBossProfileSoundPath(sBaseballShoot);
-	TryPrecacheBossProfileSoundPath(sEngineSound);
-	TryPrecacheBossProfileSoundPath(sSpawnParticleSound);
-	TryPrecacheBossProfileSoundPath(sDespawnParticleSound);
-	TryPrecacheBossProfileSoundPath(sSmiteSound);
-	TryPrecacheBossProfileSoundPath(sTrapDeploySound, true);
-	TryPrecacheBossProfileSoundPath(sTrapMissSound, true);
-	TryPrecacheBossProfileSoundPath(sTrapHitSound, true);
-	if (strcmp(sRocketModel, ROCKET_MODEL, true) != 0)
+	TryPrecacheBossProfileSoundPath(cloakOn);
+	TryPrecacheBossProfileSoundPath(cloakOff);
+	TryPrecacheBossProfileSoundPath(jarateHit);
+	TryPrecacheBossProfileSoundPath(milkHit);
+	TryPrecacheBossProfileSoundPath(gasHit);
+	TryPrecacheBossProfileSoundPath(stunHit);
+	TryPrecacheBossProfileSoundPath(fireballExplode);
+	TryPrecacheBossProfileSoundPath(fireballShoot);
+	TryPrecacheBossProfileSoundPath(fireIceballSlow);
+	TryPrecacheBossProfileSoundPath(rocketExplode);
+	TryPrecacheBossProfileSoundPath(rocketShoot);
+	TryPrecacheBossProfileSoundPath(grenadeShoot);
+	TryPrecacheBossProfileSoundPath(sentryrocketShoot);
+	TryPrecacheBossProfileSoundPath(arrowShoot);
+	TryPrecacheBossProfileSoundPath(manglerShoot);
+	TryPrecacheBossProfileSoundPath(baseballShoot);
+	TryPrecacheBossProfileSoundPath(engineSound);
+	TryPrecacheBossProfileSoundPath(spawnParticleSound);
+	TryPrecacheBossProfileSoundPath(despawnParticleSound);
+	TryPrecacheBossProfileSoundPath(smiteSound);
+	TryPrecacheBossProfileSoundPath(trapDeploySound, true);
+	TryPrecacheBossProfileSoundPath(trapMissSound, true);
+	TryPrecacheBossProfileSoundPath(trapHitSound, true);
+	if (strcmp(rocketModel, ROCKET_MODEL, true) != 0)
 	{
-		if (!PrecacheModel(sRocketModel, true))
+		if (!PrecacheModel(rocketModel, true))
 		{
-			LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", sRocketModel);
+			LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", rocketModel);
 		}
 	}
-	if (strcmp(sTrapModel, TRAP_MODEL, true) != 0)
+	if (strcmp(trapModel, TRAP_MODEL, true) != 0)
 	{
-		if (!PrecacheModel(sTrapModel, true))
+		if (!PrecacheModel(trapModel, true))
 		{
-			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", sTrapModel);
+			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", trapModel);
 		}
 	}
 	
@@ -1941,9 +2961,9 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 int GetBossProfileIndexFromName(const char[] profile)
 {
-	int iReturn = -1;
-	g_BossProfileNames.GetValue(profile, iReturn);
-	return iReturn;
+	int returnIndex = -1;
+	g_BossProfileNames.GetValue(profile, returnIndex);
+	return returnIndex;
 }
 
 int GetBossProfileUniqueProfileIndex(int profileIndex)
@@ -2080,11 +3100,6 @@ float GetBossProfileFestiveLightDistance(int profileIndex)
 float GetBossProfileFestiveLightRadius(int profileIndex)
 {
 	return g_BossProfileData.Get(profileIndex, BossProfileData_FestiveLightRadius);
-}
-
-int GetBossProfileHealth(int profileIndex)
-{
-	return g_BossProfileData.Get(profileIndex, BossProfileData_Health);
 }
 
 int GetBossProfileType(int profileIndex)

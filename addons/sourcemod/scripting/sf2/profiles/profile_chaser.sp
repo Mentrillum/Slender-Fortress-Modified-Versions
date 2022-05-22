@@ -534,6 +534,8 @@ enum
 
 	ChaserProfileData_ChaseOnLook,
 
+	ChaserProfileData_UnnerfedVisibility,
+
 	ChaserProfileData_MaxStats
 };
 
@@ -722,352 +724,570 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 {
 	property int AttackCount
 	{
-		public get() { return GetChaserProfileAttackCount(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileAttackCount(this.uniqueProfileIndex);
+		}
+	}
+
+	property bool UnnerfedVisibility
+	{
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_UnnerfedVisibility);
+		}
 	}
 
 	property bool DifficultyAffectsAnimations
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_DifficultyAffectsAnimations); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_DifficultyAffectsAnimations);
+		}
 	}
 
 	property float WakeRadius
 	{
-		public get() { return GetChaserProfileWakeRadius(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileWakeRadius(this.uniqueProfileIndex);
+		}
 	}
 
 	property int SmiteDamageType
 	{
-		public get() { return GetChaserProfileSmiteDamageType(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSmiteDamageType(this.uniqueProfileIndex);
+		}
 	}
 
 	property float SmiteDamage
 	{
-		public get() { return GetChaserProfileSmiteDamage(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSmiteDamage(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool AdvancedDamageEffectsEnabled
 	{
-		public get() { return GetChaserProfileEnableAdvancedDamageEffects(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileEnableAdvancedDamageEffects(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool AdvancedDamageEffectsRandom
 	{
-		public get() { return GetChaserProfileEnableAdvancedDamageEffectsRandom(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileEnableAdvancedDamageEffectsRandom(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool AttachDamageEffectsParticle
 	{
-		public get() { return GetChaserProfileEnableAdvancedDamageParticles(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileEnableAdvancedDamageParticles(this.uniqueProfileIndex);
+		}
 	}
 	
 	property int RandomAttackIndexes
 	{
-		public get() { return GetChaserProfileRandomAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileRandomAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 		
 	property int RandomAttackStunType
 	{
-		public get() { return GetChaserProfileRandomStunType(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileRandomStunType(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool JaratePlayerOnHit
 	{
-		public get() { return GetChaserProfileJarateState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileJarateState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int JarateAttackIndexes
 	{
-		public get() { return GetChaserProfileJarateAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileJarateAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool JaratePlayerBeamParticle
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_JarateAdvancedBeamParticle); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_JarateAdvancedBeamParticle);
+		}
 	}
 
 	property bool MilkPlayerOnHit
 	{
-		public get() { return GetChaserProfileMilkState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileMilkState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int MilkAttackIndexes
 	{
-		public get() { return GetChaserProfileMilkAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileMilkAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool MilkPlayerBeamParticle
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MilkAdvancedBeamParticle); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MilkAdvancedBeamParticle);
+		}
 	}
 
 	property bool GasPlayerOnHit
 	{
-		public get() { return GetChaserProfileGasState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileGasState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int GasAttackIndexes
 	{
-		public get() { return GetChaserProfileGasAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileGasAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool GasPlayerBeamParticle
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_GasAdvancedBeamParticle); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_GasAdvancedBeamParticle);
+		}
 	}
 
 	property bool MarkPlayerOnHit
 	{
-		public get() { return GetChaserProfileMarkState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileMarkState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int MarkAttackIndexes
 	{
-		public get() { return GetChaserProfileMarkAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileMarkAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool SilentMarkPlayerOnHit
 	{
-		public get() { return GetChaserProfileSilentMarkState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSilentMarkState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int SilentMarkAttackIndexes
 	{
-		public get() { return GetChaserProfileSilentMarkAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSilentMarkAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool IgnitePlayerOnHit
 	{
-		public get() { return GetChaserProfileIgniteState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileIgniteState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int IgniteAttackIndexes
 	{
-		public get() { return GetChaserProfileIgniteAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileIgniteAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool StunPlayerOnHit
 	{
-		public get() { return GetChaserProfileStunAttackState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunAttackState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int StunAttackIndexes
 	{
-		public get() { return GetChaserProfileStunAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property int StunAttackType
 	{
-		public get() { return GetChaserProfileStunDamageType(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunDamageType(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool StunPlayerBeamParticle
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_StunAdvancedBeamParticle); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_StunAdvancedBeamParticle);
+		}
 	}
 
 	property bool BleedPlayerOnHit
 	{
-		public get() { return GetChaserProfileBleedState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileBleedState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int BleedAttackIndexes
 	{
-		public get() { return GetChaserProfileBleedAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileBleedAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ElectricPlayerOnHit
 	{
-		public get() { return GetChaserProfileEletricAttackState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileEletricAttackState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int ElectricAttackIndexes
 	{
-		public get() { return GetChaserProfileEletricAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileEletricAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ElectricPlayerBeamParticle
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EletricAdvancedBeamParticle); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EletricAdvancedBeamParticle);
+		}
 	}
 
 	property bool SmitePlayerOnHit
 	{
-		public get() { return GetChaserProfileSmiteState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSmiteState(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool SmiteMessage
 	{
-		public get() { return GetChaserProfileSmiteMessage(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSmiteMessage(this.uniqueProfileIndex);
+		}
 	}
 
 	property int SmiteAttackIndexes
 	{
-		public get() { return GetChaserProfileSmiteAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSmiteAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool XenobladeCombo
 	{
-		public get() { return GetChaserProfileXenobladeCombo(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileXenobladeCombo(this.uniqueProfileIndex);
+		}
 	}
 
 	property float XenobladeBreakDuration
 	{
-		public get() { return GetChaserProfileXenobladeBreakDuration(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileXenobladeBreakDuration(this.uniqueProfileIndex);
+		}
 	}
 
 	property float XenobladeToppleDuration
 	{
-		public get() { return GetChaserProfileXenobladeToppleDuration(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileXenobladeToppleDuration(this.uniqueProfileIndex);
+		}
 	}
 
 	property float XenobladeToppleSlowdown
 	{
-		public get() { return GetChaserProfileXenobladeToppleSlowdown(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileXenobladeToppleSlowdown(this.uniqueProfileIndex);
+		}
 	}
 
 	property float XenobladeDazeDuration
 	{
-		public get() { return GetChaserProfileXenobladeDazeDuration(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileXenobladeDazeDuration(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool CloakEnabled
 	{
-		public get() { return GetChaserProfileCloakState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileCloakState(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool HasKeyDrop
 	{
-		public get() { return GetChaserProfileKeyDrop(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileKeyDrop(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool HasDamageParticles
 	{
-		public get() { return GetChaserProfileDamageParticleState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileDamageParticleState(this.uniqueProfileIndex);
+		}
 	}
 
 	property float DamageParticleVolume
 	{
-		public get() { return GetChaserProfileDamageParticleVolume(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileDamageParticleVolume(this.uniqueProfileIndex);
+		}
 	}
 
 	property int DamageParticlePitch
 	{
-		public get() { return GetChaserProfileDamageParticlePitch(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileDamageParticlePitch(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool StunEnabled
 	{
-		public get() { return GetChaserProfileStunState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunState(this.uniqueProfileIndex);
+		}
 	}
 
 	property float StunDuration
 	{
-		public get() { return GetChaserProfileStunDuration(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunDuration(this.uniqueProfileIndex);
+		}
 	}
 
 	property float StunCooldown
 	{
-		public get() { return GetChaserProfileStunCooldown(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunCooldown(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool StunByFlashlightEnabled
 	{
-		public get() { return GetChaserProfileStunFlashlightState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunFlashlightState(this.uniqueProfileIndex);
+		}
 	}
 
 	property float StunFlashlightDamage
 	{
-		public get() { return GetChaserProfileStunFlashlightDamage(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunFlashlightDamage(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ChaseInitialOnStun
 	{
-		public get() { return GetChaserProfileStunOnChaseInitial(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunOnChaseInitial(this.uniqueProfileIndex);
+		}
 	}
 
 	property float StunHealth
 	{
-		public get() { return GetChaserProfileStunHealth(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunHealth(this.uniqueProfileIndex);
+		}
 	}
 
 	property float StunHealthPerPlayer
 	{
-		public get() { return GetChaserProfileStunHealthPerPlayer(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileStunHealthPerPlayer(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool HasShockwaves
 	{
-		public get() { return GetChaserProfileShockwaveState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileShockwaveState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int ShockwaveAttackIndexes
 	{
-		public get() { return GetChaserProfileShockwaveAttackIndexes(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileShockwaveAttackIndexes(this.uniqueProfileIndex);
+		}
 	}
 
 	property float ShockwaveWidth1
 	{
-		public get() { return GetChaserProfileShockwaveWidth1(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileShockwaveWidth1(this.uniqueProfileIndex);
+		}
 	}
 
 	property float ShockwaveWidth2
 	{
-		public get() { return GetChaserProfileShockwaveWidth2(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileShockwaveWidth2(this.uniqueProfileIndex);
+		}
 	}
 
 	property float ShockwaveAmplitude
 	{
-		public get() { return GetChaserProfileShockwaveAmplitude(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileShockwaveAmplitude(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ShockwaveStunEnabled
 	{
-		public get() { return GetChaserProfileShockwaveStunState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileShockwaveStunState(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool HasTraps
 	{
-		public get() { return GetChaserProfileTrapState(this.uniqueProfileIndex); }
+		public get() 
+		{
+			return GetChaserProfileTrapState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int TrapType
 	{
-		public get() { return GetChaserProfileTrapType(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileTrapType(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ProjectileEnabled
 	{
-		public get() { return GetChaserProfileProjectileState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileProjectileState(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool HasCriticalRockets
 	{
-		public get() { return GetChaserProfileCriticalRockets(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileCriticalRockets(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool UseShootGesture
 	{
-		public get() { return GetChaserProfileGestureShoot(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileGestureShoot(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ProjectileUsesAmmo
 	{
-		public get() { return GetChaserProfileProjectileAmmoState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileProjectileAmmoState(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool ChargeUpProjectiles
 	{
-		public get() { return GetChaserProfileChargeUpProjectilesState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileChargeUpProjectilesState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int ProjectileType
 	{
-		public get() { return GetChaserProfileProjectileType(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileProjectileType(this.uniqueProfileIndex);
+		}
 	}
 
 	property bool AutoChaseEnabled
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_AutoChaseEnabled); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_AutoChaseEnabled);
+		}
 	}
 
 	public int AutoChaseThreshold(int difficulty)
@@ -1097,132 +1317,210 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 
 	property bool AutoChaseSprinters
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_AutoChaseSprinters); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_AutoChaseSprinters);
+		}
 	}
 
 	property bool EarthquakeFootstepsEnabled
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsEnabled); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsEnabled);
+		}
 	}
 
 	property float EarthquakeFootstepsAmplitude
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsAmplitude); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsAmplitude);
+		}
 	}
 
 	property float EarthquakeFootstepsFrequency
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsFrequency); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsFrequency);
+		}
 	}
 
 	property float EarthquakeFootstepsDuration
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsDuration); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsDuration);
+		}
 	}
 
 	property float EarthquakeFootstepsRadius
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsRadius); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsRadius);
+		}
 	}
 
 	property bool EarthquakeFootstepsAirShake
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsCanAirShake); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsCanAirShake);
+		}
 	}
 
 	property bool ChasesEndlessly
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ChasesEndlessly); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ChasesEndlessly);
+		}
 	}
 	
 	property bool SelfHealState
 	{
-		public get() { return GetChaserProfileSelfHealState(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSelfHealState(this.uniqueProfileIndex);
+		}
 	}
 
 	property int SoundCountToAlert
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_SoundCountToAlert); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_SoundCountToAlert);
+		}
 	}
 
 	property bool CanDisappearOnStun
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_DisappearOnStun); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_DisappearOnStun);
+		}
 	}
 
 	property bool DropItemOnStun
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ItemDropOnStun); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ItemDropOnStun);
+		}
 	}
 
 	property int DropItemType
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ItemDropTypeStun); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ItemDropTypeStun);
+		}
 	}
 
 	property bool IsBoxingBoss
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_BoxingBoss); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_BoxingBoss);
+		}
 	}
 
 	property bool NormalSoundHook
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_NormalSoundHook); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_NormalSoundHook);
+		}
 	}
 
 	property bool CanCloakToHeal
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_CloakToHeal); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_CloakToHeal);
+		}
 	}
 
 	property bool UseChaseInitialAnimation
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ChaseInitialAnimationUse); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ChaseInitialAnimationUse);
+		}
 	}
 
 	property bool HasOldAnimationAI
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_OldAnimationAI); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_OldAnimationAI);
+		}
 	}
 
 	property bool UseAlertWalkingAnimation
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_AlertWalkingAnimation); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_AlertWalkingAnimation);
+		}
 	}
 
 	property bool MultiAttackSounds
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MultiAttackSounds); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MultiAttackSounds);
+		}
 	}
 
 	property bool MultiHitSounds
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MultiHitSounds); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MultiHitSounds);
+		}
 	}
 
 	property bool MultiMissSounds
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MultiMissSounds); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_MultiMissSounds);
+		}
 	}
 
 	property float SelfHealStartPercentage
 	{
-		public get() { return GetChaserProfileSelfHealStartPercentage(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSelfHealStartPercentage(this.uniqueProfileIndex);
+		}
 	}
 	
 	property float SelfHealPercentageOne
 	{
-		public get() { return GetChaserProfileSelfHealPercentageOne(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSelfHealPercentageOne(this.uniqueProfileIndex);
+		}
 	}
 	
 	property float SelfHealPercentageTwo
 	{
-		public get() { return GetChaserProfileSelfHealPercentageTwo(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSelfHealPercentageTwo(this.uniqueProfileIndex);
+		}
 	}
 	
 	property float SelfHealPercentageThree
 	{
-		public get() { return GetChaserProfileSelfHealPercentageThree(this.uniqueProfileIndex); }
+		public get()
+		{
+			return GetChaserProfileSelfHealPercentageThree(this.uniqueProfileIndex);
+		}
 	}
 
 	public SF2ChaserBossProfile(int profileIndex)
@@ -1727,7 +2025,10 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 
 	property bool IsCrawlingEnabled
 	{
-		public get() { g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_CrawlingEnabled); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_CrawlingEnabled);
+		}
 	}
 
 	public float GetCrawlingSpeedMultiplier(int difficulty)
@@ -1737,7 +2038,10 @@ methodmap SF2ChaserBossProfile < SF2BaseBossProfile
 
 	property bool CanChaseOnLook
 	{
-		public get() { return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ChaseOnLook); }
+		public get()
+		{
+			return g_ChaserProfileData.Get(this.uniqueProfileIndex, ChaserProfileData_ChaseOnLook);
+		}
 	}
 }
 
@@ -1756,10 +2060,10 @@ void ClearChaserProfiles()
 {
 	for (int i = 0; i < g_ChaserProfileData.Length; i++)
 	{
-		ArrayList hHandle = g_ChaserProfileData.Get(i, ChaserProfileData_Attacks);
-		if (hHandle != null)
+		ArrayList array = g_ChaserProfileData.Get(i, ChaserProfileData_Attacks);
+		if (array != null)
 		{
-			delete hHandle;
+			delete array;
 		}
 	}
 	
@@ -3375,56 +3679,71 @@ stock float GetChaserProfileAwarenessDecreaseRate(int chaserProfileIndex,int dif
 
 stock int GetProfileAttackNum(const char[] profile, const char[] keyValue,int defaultValue=0, const int attackIndex)
 {
-	if (!IsProfileValid(profile)) return defaultValue;
+	if (!IsProfileValid(profile))
+	{
+		return defaultValue;
+	}
 	
-	char sKey[4];
+	char key[4];
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 	g_Config.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", attackIndex);
-	g_Config.JumpToKey(sKey);
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
 	return g_Config.GetNum(keyValue, defaultValue);
 }
 
 stock float GetProfileAttackFloat(const char[] profile, const char[] keyValue,float defaultValue=0.0, const int attackIndex)
 {
-	if (!IsProfileValid(profile)) return defaultValue;
+	if (!IsProfileValid(profile))
+	{
+		return defaultValue;
+	}
 	
-	char sKey[4];
+	char key[4];
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 	g_Config.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", attackIndex);
-	g_Config.JumpToKey(sKey);
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
 	return g_Config.GetFloat(keyValue, defaultValue);
 }
 
 stock bool GetProfileAttackString(const char[] profile, const char[] keyValue, char[] sBuffer, int iLenght, const char[] sDefaultValue = "", const int attackIndex)
 {
-	if (!IsProfileValid(profile)) return false;
+	if (!IsProfileValid(profile))
+	{
+		return false;
+	}
 	
-	char sKey[4];
+	char key[4];
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 	g_Config.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", attackIndex);
-	g_Config.JumpToKey(sKey);
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
 	g_Config.GetString(keyValue, sBuffer, iLenght, sDefaultValue);
 	return true;
 }
 
 stock bool GetProfileAttackVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int attackIndex)
 {
-	for (int i = 0; i < 3; i++) buffer[i] = defaultValue[i];
+	for (int i = 0; i < 3; i++)
+	{
+		buffer[i] = defaultValue[i];
+	}
 	
-	if (!IsProfileValid(profile)) return false;
+	if (!IsProfileValid(profile))
+	{
+		return false;
+	}
 	
-	char sKey[4];
+	char key[4];
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 	g_Config.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", attackIndex);
-	g_Config.JumpToKey(sKey);
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
 	g_Config.GetVector(keyValue, buffer, defaultValue);
 	return true;
 }

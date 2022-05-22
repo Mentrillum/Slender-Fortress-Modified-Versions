@@ -607,6 +607,7 @@ void ClientMusicReset(int client)
 	g_PlayerMusicFlags[client] = 0;
 	g_PlayerMusicVolume[client] = 0.0;
 	g_PlayerMusicTargetVolume[client] = 0.0;
+	
 	g_PlayerMusicTimer[client] = null;
 	g_PlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
 	g_PageMusicActiveIndex[client] = -1;
@@ -670,6 +671,7 @@ void Client20DollarsMusicReset(int client)
 {
 	g_Player20DollarsMusicMaster[client] = -1;
 	g_Player20DollarsMusicOldMaster[client] = -1;
+	ClientRemoveMusicFlag(client, MUSICF_20DOLLARS);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 
@@ -765,6 +767,7 @@ void ClientAlertMusicReset(int client)
 {
 	g_PlayerAlertMusicMaster[client] = -1;
 	g_PlayerAlertMusicOldMaster[client] = -1;
+	ClientRemoveMusicFlag(client, MUSICF_ALERT);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
@@ -850,6 +853,7 @@ void ClientIdleMusicReset(int client)
 {
 	g_PlayerIdleMusicMaster[client] = -1;
 	g_PlayerIdleMusicOldMaster[client] = -1;
+	ClientRemoveMusicFlag(client, MUSICF_IDLE);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
@@ -935,6 +939,7 @@ void ClientChaseMusicReset(int client)
 {
 	g_PlayerChaseMusicMaster[client] = -1;
 	g_PlayerChaseMusicOldMaster[client] = -1;
+	ClientRemoveMusicFlag(client, MUSICF_CHASE);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	
@@ -1024,6 +1029,7 @@ void ClientChaseMusicSeeReset(int client)
 {
 	g_PlayerChaseMusicSeeMaster[client] = -1;
 	g_PlayerChaseMusicSeeOldMaster[client] = -1;
+	ClientRemoveMusicFlag(client, MUSICF_CHASEVISIBLE);
 	
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	

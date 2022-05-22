@@ -233,14 +233,14 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
 			int bossID = this.Bosses.Get(i);
-			int bossIndex = NPCGetFromUniqueID(bossID);
-			if (!NPCIsValid(bossIndex))
+			SF2NPC_BaseNPC boss = SF2NPC_BaseNPC(NPCGetFromUniqueID(bossID));
+			if (!boss.IsValid())
 			{
 				this.Bosses.Erase(i);
 				continue;
 			}
 
-			RemoveSlender(bossIndex);
+			boss.UnSpawn();
 		}
 	}
 
@@ -249,13 +249,13 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
 			int bossID = this.Bosses.Get(i);
-			int bossIndex = NPCGetFromUniqueID(bossID);
-			if (!NPCIsValid(bossIndex))
+			SF2NPC_BaseNPC boss = SF2NPC_BaseNPC(NPCGetFromUniqueID(bossID));
+			if (!boss.IsValid())
 			{
 				continue;
 			}
 
-			RemoveProfile(bossIndex);
+			boss.RemoveFromGame();
 		}
 
 		this.Bosses.Clear();

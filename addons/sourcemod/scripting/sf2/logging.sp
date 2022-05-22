@@ -9,7 +9,9 @@ void InitializeLogging()
 {
 	BuildPath(Path_SM, g_LogFilePath, sizeof(g_LogFilePath), "logs/sf2");
 	if (!DirExists(g_LogFilePath))
+	{
 		CreateDirectory(g_LogFilePath, FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC);
+	}
 	
 	char dateSuffix[256];
 	FormatTime(dateSuffix, sizeof(dateSuffix), "%Y-%m-%d.log", GetTime());

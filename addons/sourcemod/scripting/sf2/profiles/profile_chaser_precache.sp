@@ -14,6 +14,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	
 	uniqueProfileIndex = g_ChaserProfileData.Push(-1);
 	g_ChaserProfileNames.SetValue(profile, uniqueProfileIndex);
+
+	bool unnerfedVisibility = view_as<bool>(kv.GetNum("old_boss_visibility", g_DefaultBossVisibilityStateConVar.IntValue));
 	
 	float bossDefaultWalkSpeed = kv.GetFloat("walkspeed", 30.0);
 	float bossWalkSpeedEasy = kv.GetFloat("walkspeed_easy", bossDefaultWalkSpeed);
@@ -1443,6 +1445,8 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 
 	g_ChaserProfileData.Set(uniqueProfileIndex, chaseOnLook, ChaserProfileData_ChaseOnLook);
 
+	g_ChaserProfileData.Set(uniqueProfileIndex, unnerfedVisibility, ChaserProfileData_UnnerfedVisibility);
+
 	ParseChaserProfileAttacks(kv, uniqueProfileIndex);
 	
 	return true;
@@ -1451,1092 +1455,1348 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 {
 	// Create the array.
-	ArrayList hAttacks = new ArrayList(ChaserProfileAttackData_MaxStats);
-	g_ChaserProfileData.Set(uniqueProfileIndex, hAttacks, ChaserProfileData_Attacks);
+	ArrayList attacks = new ArrayList(ChaserProfileAttackData_MaxStats);
+	g_ChaserProfileData.Set(uniqueProfileIndex, attacks, ChaserProfileData_Attacks);
 	
-	int iMaxAttacks = -1;
+	int maxAttacks = -1;
 	if (kv.JumpToKey("attacks"))
 	{
-		iMaxAttacks = 0;
-		char sNum[3];
+		maxAttacks = 0;
+		char num[3];
 		for (int i = 1; i <= SF2_CHASER_BOSS_MAX_ATTACKS; i++)
 		{
-			FormatEx(sNum, sizeof(sNum), "%d", i);
-			if (kv.JumpToKey(sNum))
+			FormatEx(num, sizeof(num), "%d", i);
+			if (kv.JumpToKey(num))
 			{
-				iMaxAttacks++;
+				maxAttacks++;
 				kv.GoBack();
 			}
 		}
-		if (iMaxAttacks == 0)
+		if (maxAttacks == 0)
 		{
 			LogSF2Message("[SF2 PROFILES PARSER] Critical error, found \"attacks\" section with no attacks inside of it!");
 		}
 	}
-	for (int iAttackNum = -1; iAttackNum <=iMaxAttacks; iAttackNum++)
+	for (int attackNum = -1; attackNum <=maxAttacks; attackNum++)
 	{
-		if (iAttackNum < 1) iAttackNum = 1;
-		if (iMaxAttacks > 0) //Backward compatibility
+		if (attackNum < 1)
 		{
-			char sNum[3];
-			FormatEx(sNum, sizeof(sNum), "%d", iAttackNum);
-			kv.JumpToKey(sNum);
+			attackNum = 1;
 		}
-		int iAttackType = kv.GetNum("attack_type", SF2BossAttackType_Melee);
-		//int iAttackType = SF2BossAttackType_Melee;
-		
-		float flAttackRange = kv.GetFloat("attack_range");
-		if (flAttackRange < 0.0) flAttackRange = 0.0;
-		
-		float flAttackDamage = kv.GetFloat("attack_damage");
-		float flAttackDamageEasy = kv.GetFloat("attack_damage_easy", flAttackDamage);
-		float flAttackDamageHard = kv.GetFloat("attack_damage_hard", flAttackDamage);
-		float flAttackDamageInsane = kv.GetFloat("attack_damage_insane", flAttackDamageHard);
-		float flAttackDamageNightmare = kv.GetFloat("attack_damage_nightmare", flAttackDamageInsane);
-		float flAttackDamageApollyon = kv.GetFloat("attack_damage_apollyon", flAttackDamageNightmare);
-		
-		float flAttackDamageVsProps = kv.GetFloat("attack_damage_vs_props", flAttackDamage);
-		float flAttackDamageForce = kv.GetFloat("attack_damageforce");
-		
-		int iAttackDamageType = kv.GetNum("attack_damagetype");
-		if (iAttackDamageType < 0) iAttackDamageType = 0;
-		
-		float flAttackDamageDelay = kv.GetFloat("attack_delay");
-		if (flAttackDamageDelay < 0.0) flAttackDamageDelay = 0.0;
-		
-		float flAttackDuration = kv.GetFloat("attack_duration", 0.0);
-		if (flAttackDuration <= 0.0)//Backward compatibility
+		if (maxAttacks > 0) //Backward compatibility
 		{
-			if (flAttackDuration < 0.0) flAttackDuration = 0.0;
-			flAttackDuration = flAttackDamageDelay+kv.GetFloat("attack_endafter", 0.0);
+			char num[3];
+			FormatEx(num, sizeof(num), "%d", attackNum);
+			kv.JumpToKey(num);
+		}
+		int attackType = kv.GetNum("attack_type", SF2BossAttackType_Melee);
+		//int attackType = SF2BossAttackType_Melee;
+		
+		float attackRange = kv.GetFloat("attack_range");
+		if (attackRange < 0.0)
+		{
+			attackRange = 0.0;
 		}
 		
-		bool bAttackProps = view_as<bool>(kv.GetNum("attack_props", 0));
+		float attackDamage = kv.GetFloat("attack_damage");
+		float attackDamageEasy = kv.GetFloat("attack_damage_easy", attackDamage);
+		float attackDamageHard = kv.GetFloat("attack_damage_hard", attackDamage);
+		float attackDamageInsane = kv.GetFloat("attack_damage_insane", attackDamageHard);
+		float attackDamageNightmare = kv.GetFloat("attack_damage_nightmare", attackDamageInsane);
+		float attackDamageApollyon = kv.GetFloat("attack_damage_apollyon", attackDamageNightmare);
 		
-		float flAttackSpreadOld = kv.GetFloat("attack_fov", 45.0);
-		float flAttackSpread = kv.GetFloat("attack_spread", flAttackSpreadOld);
+		float attackDamageVsProps = kv.GetFloat("attack_damage_vs_props", attackDamage);
+		float attackDamageForce = kv.GetFloat("attack_damageforce");
 		
-		if (flAttackSpread < 0.0) flAttackSpread = 0.0;
-		else if (flAttackSpread > 360.0) flAttackSpread = 360.0;
+		int attackDamageType = kv.GetNum("attack_damagetype");
+		if (attackDamageType < 0)
+		{
+			attackDamageType = 0;
+		}
 		
-		float flAttackBeginRange = kv.GetFloat("attack_begin_range", flAttackRange);
-		if (flAttackBeginRange < 0.0) flAttackBeginRange = 0.0;
+		float attackDamageDelay = kv.GetFloat("attack_delay");
+		if (attackDamageDelay < 0.0)
+		{
+			attackDamageDelay = 0.0;
+		}
 		
-		float flAttackBeginFOV = kv.GetFloat("attack_begin_fov", flAttackSpread);
-		if (flAttackBeginFOV < 0.0) flAttackBeginFOV = 0.0;
-		else if (flAttackBeginFOV > 360.0) flAttackBeginFOV = 360.0;
+		float attackDuration = kv.GetFloat("attack_duration", 0.0);
+		if (attackDuration <= 0.0)//Backward compatibility
+		{
+			if (attackDuration < 0.0)
+			{
+				attackDuration = 0.0;
+			}
+			attackDuration = attackDamageDelay+kv.GetFloat("attack_endafter", 0.0);
+		}
 		
-		float flAttackCooldown = kv.GetFloat("attack_cooldown");
-		if (flAttackCooldown < 0.0) flAttackCooldown = 0.0;
-		float flAttackCooldownEasy = kv.GetFloat("attack_cooldown_easy", flAttackCooldown);
-		if (flAttackCooldownEasy < 0.0) flAttackCooldownEasy = 0.0;
-		float flAttackCooldownHard = kv.GetFloat("attack_cooldown_hard", flAttackCooldown);
-		if (flAttackCooldownHard < 0.0) flAttackCooldownHard = 0.0;
-		float flAttackCooldownInsane = kv.GetFloat("attack_cooldown_insane", flAttackCooldownHard);
-		if (flAttackCooldownInsane < 0.0) flAttackCooldownInsane = 0.0;
-		float flAttackCooldownNightmare = kv.GetFloat("attack_cooldown_nightmare", flAttackCooldownInsane);
-		if (flAttackCooldownNightmare < 0.0) flAttackCooldownNightmare = 0.0;
-		float flAttackCooldownApollyon = kv.GetFloat("attack_cooldown_apollyon", flAttackCooldownNightmare);
-		if (flAttackCooldownApollyon < 0.0) flAttackCooldownApollyon = 0.0;
+		bool attackProps = view_as<bool>(kv.GetNum("attack_props", 0));
 		
-		int bAttackDisappear = view_as<bool>(kv.GetNum("attack_disappear_upon_damaging"));
+		float attackSpreadOld = kv.GetFloat("attack_fov", 45.0);
+		float attackSpread = kv.GetFloat("attack_spread", attackSpreadOld);
 		
-		int iAttackRepeat = kv.GetNum("attack_repeat");
-		if (iAttackRepeat < 0) iAttackRepeat = 0;
-		else if (iAttackRepeat > 2) iAttackRepeat = 2;
+		if (attackSpread < 0.0)
+		{
+			attackSpread = 0.0;
+		}
+		else if (attackSpread > 360.0)
+		{
+			attackSpread = 360.0;
+		}
+		
+		float attackBeginRange = kv.GetFloat("attack_begin_range", attackRange);
+		if (attackBeginRange < 0.0)
+		{
+			attackBeginRange = 0.0;
+		}
+		
+		float attackBeginFOV = kv.GetFloat("attack_begin_fov", attackSpread);
+		if (attackBeginFOV < 0.0)
+		{
+			attackBeginFOV = 0.0;
+		}
+		else if (attackBeginFOV > 360.0)
+		{
+			attackBeginFOV = 360.0;
+		}
+		
+		float attackCooldown = kv.GetFloat("attack_cooldown");
+		if (attackCooldown < 0.0)
+		{
+			attackCooldown = 0.0;
+		}
+		float attackCooldownEasy = kv.GetFloat("attack_cooldown_easy", attackCooldown);
+		if (attackCooldownEasy < 0.0)
+		{
+			attackCooldownEasy = 0.0;
+		}
+		float attackCooldownHard = kv.GetFloat("attack_cooldown_hard", attackCooldown);
+		if (attackCooldownHard < 0.0)
+		{
+			attackCooldownHard = 0.0;
+		}
+		float attackCooldownInsane = kv.GetFloat("attack_cooldown_insane", attackCooldownHard);
+		if (attackCooldownInsane < 0.0)
+		{
+			attackCooldownInsane = 0.0;
+		}
+		float attackCooldownNightmare = kv.GetFloat("attack_cooldown_nightmare", attackCooldownInsane);
+		if (attackCooldownNightmare < 0.0)
+		{
+			attackCooldownNightmare = 0.0;
+		}
+		float attackCooldownApollyon = kv.GetFloat("attack_cooldown_apollyon", attackCooldownNightmare);
+		if (attackCooldownApollyon < 0.0)
+		{
+			attackCooldownApollyon = 0.0;
+		}
+		
+		int attackDisappear = view_as<bool>(kv.GetNum("attack_disappear_upon_damaging"));
+		
+		int attackRepeat = kv.GetNum("attack_repeat");
+		if (attackRepeat < 0)
+		{
+			attackRepeat = 0;
+		}
+		else if (attackRepeat > 2)
+		{
+			attackRepeat = 2;
+		}
 
 		int iMaxAttackRepeat = kv.GetNum("attack_max_repeats");
-		if (iMaxAttackRepeat < 0) iMaxAttackRepeat = 0;
+		if (iMaxAttackRepeat < 0)
+		{
+			iMaxAttackRepeat = 0;
+		}
 
-		bool bAttackIgnoreAlwaysLooking = view_as<bool>(kv.GetNum("attack_ignore_always_looking"));
+		bool attackIgnoreAlwaysLooking = view_as<bool>(kv.GetNum("attack_ignore_always_looking"));
 		
-		bool bAttackWeapons = view_as<bool>(kv.GetNum("attack_weaponsenable", 0));
+		bool attackWeapons = view_as<bool>(kv.GetNum("attack_weaponsenable", 0));
 		
-		int iAttackWeaponInt = kv.GetNum("attack_weapontypeint");
-		if (iAttackWeaponInt < 1) iAttackWeaponInt = 0;
+		int attackWeaponInt = kv.GetNum("attack_weapontypeint");
+		if (attackWeaponInt < 1)
+		{
+			attackWeaponInt = 0;
+		}
 		
-		bool bAttackLifeSteal = view_as<bool>(kv.GetNum("attack_lifesteal", 0));
+		bool attackLifeSteal = view_as<bool>(kv.GetNum("attack_lifesteal", 0));
 		
-		float flAttackLifeStealDuration = kv.GetFloat("attack_lifesteal_duration", 0.0);
-		if (flAttackLifeStealDuration < 0.0) flAttackLifeStealDuration = 0.0;
+		float attackLifeStealDuration = kv.GetFloat("attack_lifesteal_duration", 0.0);
+		if (attackLifeStealDuration < 0.0)
+		{
+			attackLifeStealDuration = 0.0;
+		}
 		
-		float flAttackProjectileDamage = kv.GetFloat("attack_projectile_damage", 20.0);
-		if (flAttackProjectileDamage < 0.0) flAttackProjectileDamage = 0.0;
-		float flAttackProjectileDamageEasy = kv.GetFloat("attack_projectile_damage_easy", flAttackProjectileDamage);
-		if (flAttackProjectileDamageEasy < 0.0) flAttackProjectileDamageEasy = 0.0;
-		float flAttackProjectileDamageHard = kv.GetFloat("attack_projectile_damage_hard", flAttackProjectileDamage);
-		if (flAttackProjectileDamageHard < 0.0) flAttackProjectileDamageHard = 0.0;
-		float flAttackProjectileDamageInsane = kv.GetFloat("attack_projectile_damage_insane", flAttackProjectileDamageHard);
-		if (flAttackProjectileDamageInsane < 0.0) flAttackProjectileDamageInsane = 0.0;
-		float flAttackProjectileDamageNightmare = kv.GetFloat("attack_projectile_damage_nightmare", flAttackProjectileDamageInsane);
-		if (flAttackProjectileDamageNightmare < 0.0) flAttackProjectileDamageNightmare = 0.0;
-		float flAttackProjectileDamageApollyon = kv.GetFloat("attack_projectile_damage_apollyon", flAttackProjectileDamageNightmare);
-		if (flAttackProjectileDamageApollyon < 0.0) flAttackProjectileDamageApollyon = 0.0;
+		float attackProjectileDamage = kv.GetFloat("attack_projectile_damage", 20.0);
+		if (attackProjectileDamage < 0.0)
+		{
+			attackProjectileDamage = 0.0;
+		}
+		float attackProjectileDamageEasy = kv.GetFloat("attack_projectile_damage_easy", attackProjectileDamage);
+		if (attackProjectileDamageEasy < 0.0)
+		{
+			attackProjectileDamageEasy = 0.0;
+		}
+		float attackProjectileDamageHard = kv.GetFloat("attack_projectile_damage_hard", attackProjectileDamage);
+		if (attackProjectileDamageHard < 0.0)
+		{
+			attackProjectileDamageHard = 0.0;
+		}
+		float attackProjectileDamageInsane = kv.GetFloat("attack_projectile_damage_insane", attackProjectileDamageHard);
+		if (attackProjectileDamageInsane < 0.0)
+		{
+			attackProjectileDamageInsane = 0.0;
+		}
+		float attackProjectileDamageNightmare = kv.GetFloat("attack_projectile_damage_nightmare", attackProjectileDamageInsane);
+		if (attackProjectileDamageNightmare < 0.0)
+		{
+			attackProjectileDamageNightmare = 0.0;
+		}
+		float attackProjectileDamageApollyon = kv.GetFloat("attack_projectile_damage_apollyon", attackProjectileDamageNightmare);
+		if (attackProjectileDamageApollyon < 0.0)
+		{
+			attackProjectileDamageApollyon = 0.0;
+		}
 		
-		float flAttackProjectileSpeed = kv.GetFloat("attack_projectile_speed", 1100.0);
-		if (flAttackProjectileSpeed < 0.0) flAttackProjectileSpeed = 0.0;
-		float flAttackProjectileSpeedEasy = kv.GetFloat("attack_projectile_speed_easy", flAttackProjectileSpeed);
-		if (flAttackProjectileSpeedEasy < 0.0) flAttackProjectileSpeedEasy = 0.0;
-		float flAttackProjectileSpeedHard = kv.GetFloat("attack_projectile_speed_hard", flAttackProjectileSpeed);
-		if (flAttackProjectileSpeedHard < 0.0) flAttackProjectileSpeedHard = 0.0;
-		float flAttackProjectileSpeedInsane = kv.GetFloat("attack_projectile_speed_insane", flAttackProjectileSpeedHard);
-		if (flAttackProjectileSpeedInsane < 0.0) flAttackProjectileSpeedInsane = 0.0;
-		float flAttackProjectileSpeedNightmare = kv.GetFloat("attack_projectile_speed_nightmare", flAttackProjectileSpeedInsane);
-		if (flAttackProjectileSpeedNightmare < 0.0) flAttackProjectileSpeedNightmare = 0.0;
-		float flAttackProjectileSpeedApollyon = kv.GetFloat("attack_projectile_speed_apollyon", flAttackProjectileSpeedNightmare);
-		if (flAttackProjectileSpeedApollyon < 0.0) flAttackProjectileSpeedApollyon = 0.0;
+		float attackProjectileSpeed = kv.GetFloat("attack_projectile_speed", 1100.0);
+		if (attackProjectileSpeed < 0.0)
+		{
+			attackProjectileSpeed = 0.0;
+		}
+		float attackProjectileSpeedEasy = kv.GetFloat("attack_projectile_speed_easy", attackProjectileSpeed);
+		if (attackProjectileSpeedEasy < 0.0)
+		{
+			attackProjectileSpeedEasy = 0.0;
+		}
+		float attackProjectileSpeedHard = kv.GetFloat("attack_projectile_speed_hard", attackProjectileSpeed);
+		if (attackProjectileSpeedHard < 0.0)
+		{
+			attackProjectileSpeedHard = 0.0;
+		}
+		float attackProjectileSpeedInsane = kv.GetFloat("attack_projectile_speed_insane", attackProjectileSpeedHard);
+		if (attackProjectileSpeedInsane < 0.0)
+		{
+			attackProjectileSpeedInsane = 0.0;
+		}
+		float attackProjectileSpeedNightmare = kv.GetFloat("attack_projectile_speed_nightmare", attackProjectileSpeedInsane);
+		if (attackProjectileSpeedNightmare < 0.0)
+		{
+			attackProjectileSpeedNightmare = 0.0;
+		}
+		float attackProjectileSpeedApollyon = kv.GetFloat("attack_projectile_speed_apollyon", attackProjectileSpeedNightmare);
+		if (attackProjectileSpeedApollyon < 0.0)
+		{
+			attackProjectileSpeedApollyon = 0.0;
+		}
 		
-		float flAttackProjectileRadius = kv.GetFloat("attack_projectile_radius", 128.0);
-		if (flAttackProjectileRadius < 0.0) flAttackProjectileRadius = 0.0;
-		float flAttackProjectileRadiusEasy = kv.GetFloat("attack_projectile_radius_easy", flAttackProjectileRadius);
-		if (flAttackProjectileRadiusEasy < 0.0) flAttackProjectileRadiusEasy = 0.0;
-		float flAttackProjectileRadiusHard = kv.GetFloat("attack_projectile_radius_hard", flAttackProjectileRadius);
-		if (flAttackProjectileRadiusHard < 0.0) flAttackProjectileRadiusHard = 0.0;
-		float flAttackProjectileRadiusInsane = kv.GetFloat("attack_projectile_radius_insane", flAttackProjectileRadiusHard);
-		if (flAttackProjectileRadiusInsane < 0.0) flAttackProjectileRadiusInsane = 0.0;
-		float flAttackProjectileRadiusNightmare = kv.GetFloat("attack_projectile_radius_nightmare", flAttackProjectileRadiusInsane);
-		if (flAttackProjectileRadiusNightmare < 0.0) flAttackProjectileRadiusNightmare = 0.0;
-		float flAttackProjectileRadiusApollyon = kv.GetFloat("attack_projectile_radius_apollyon", flAttackProjectileRadiusNightmare);
-		if (flAttackProjectileRadiusApollyon < 0.0) flAttackProjectileRadiusApollyon = 0.0;
+		float attackProjectileRadius = kv.GetFloat("attack_projectile_radius", 128.0);
+		if (attackProjectileRadius < 0.0)
+		{
+			attackProjectileRadius = 0.0;
+		}
+		float attackProjectileRadiusEasy = kv.GetFloat("attack_projectile_radius_easy", attackProjectileRadius);
+		if (attackProjectileRadiusEasy < 0.0)
+		{
+			attackProjectileRadiusEasy = 0.0;
+		}
+		float attackProjectileRadiusHard = kv.GetFloat("attack_projectile_radius_hard", attackProjectileRadius);
+		if (attackProjectileRadiusHard < 0.0)
+		{
+			attackProjectileRadiusHard = 0.0;
+		}
+		float attackProjectileRadiusInsane = kv.GetFloat("attack_projectile_radius_insane", attackProjectileRadiusHard);
+		if (attackProjectileRadiusInsane < 0.0)
+		{
+			attackProjectileRadiusInsane = 0.0;
+		}
+		float attackProjectileRadiusNightmare = kv.GetFloat("attack_projectile_radius_nightmare", attackProjectileRadiusInsane);
+		if (attackProjectileRadiusNightmare < 0.0)
+		{
+			attackProjectileRadiusNightmare = 0.0;
+		}
+		float attackProjectileRadiusApollyon = kv.GetFloat("attack_projectile_radius_apollyon", attackProjectileRadiusNightmare);
+		if (attackProjectileRadiusApollyon < 0.0)
+		{
+			attackProjectileRadiusApollyon = 0.0;
+		}
 
-		float flAttackProjectileDeviation = kv.GetFloat("attack_projectile_deviation", 0.0);
-		float flAttackProjectileDeviationEasy = kv.GetFloat("attack_projectile_deviation_easy", flAttackProjectileDeviation);
-		float flAttackProjectileDeviationHard = kv.GetFloat("attack_projectile_deviation_hard", flAttackProjectileDeviation);
-		float flAttackProjectileDeviationInsane = kv.GetFloat("attack_projectile_deviation_insane", flAttackProjectileDeviationHard);
-		float flAttackProjectileDeviationNightmare = kv.GetFloat("attack_projectile_deviation_nightmare", flAttackProjectileDeviationInsane);
-		float flAttackProjectileDeviationApollyon = kv.GetFloat("attack_projectile_deviation_apollyon", flAttackProjectileDeviationNightmare);
+		float attackProjectileDeviation = kv.GetFloat("attack_projectile_deviation", 0.0);
+		float attackProjectileDeviationEasy = kv.GetFloat("attack_projectile_deviation_easy", attackProjectileDeviation);
+		float attackProjectileDeviationHard = kv.GetFloat("attack_projectile_deviation_hard", attackProjectileDeviation);
+		float attackProjectileDeviationInsane = kv.GetFloat("attack_projectile_deviation_insane", attackProjectileDeviationHard);
+		float attackProjectileDeviationNightmare = kv.GetFloat("attack_projectile_deviation_nightmare", attackProjectileDeviationInsane);
+		float attackProjectileDeviationApollyon = kv.GetFloat("attack_projectile_deviation_apollyon", attackProjectileDeviationNightmare);
 		
-		bool bAttackCritProjectiles = view_as<bool>(kv.GetNum("attack_projectile_crits", 0));
+		bool attackCritProjectiles = view_as<bool>(kv.GetNum("attack_projectile_crits", 0));
 		
-		float flAttackProjectileIceSlowdownPercent = kv.GetFloat("attack_projectile_iceslow_percent", 0.55);
-		if (flAttackProjectileIceSlowdownPercent < 0.0) flAttackProjectileIceSlowdownPercent = 0.0;
-		float flAttackProjectileIceSlowdownPercentEasy = kv.GetFloat("attack_projectile_iceslow_percent_easy", flAttackProjectileIceSlowdownPercent);
-		if (flAttackProjectileIceSlowdownPercentEasy < 0.0) flAttackProjectileIceSlowdownPercentEasy = 0.0;
-		float flAttackProjectileIceSlowdownPercentHard = kv.GetFloat("attack_projectile_iceslow_percent_hard", flAttackProjectileIceSlowdownPercent);
-		if (flAttackProjectileIceSlowdownPercentHard < 0.0) flAttackProjectileIceSlowdownPercentHard = 0.0;
-		float flAttackProjectileIceSlowdownPercentInsane = kv.GetFloat("attack_projectile_iceslow_percent_insane", flAttackProjectileIceSlowdownPercentHard);
-		if (flAttackProjectileIceSlowdownPercentInsane < 0.0) flAttackProjectileIceSlowdownPercentInsane = 0.0;
-		float flAttackProjectileIceSlowdownPercentNightmare = kv.GetFloat("attack_projectile_iceslow_percent_nightmare", flAttackProjectileIceSlowdownPercentInsane);
-		if (flAttackProjectileIceSlowdownPercentNightmare < 0.0) flAttackProjectileIceSlowdownPercentNightmare = 0.0;
-		float flAttackProjectileIceSlowdownPercentApollyon = kv.GetFloat("attack_projectile_iceslow_percent_apollyon", flAttackProjectileIceSlowdownPercentNightmare);
-		if (flAttackProjectileIceSlowdownPercentApollyon < 0.0) flAttackProjectileIceSlowdownPercentApollyon = 0.0;
+		float attackProjectileIceSlowdownPercent = kv.GetFloat("attack_projectile_iceslow_percent", 0.55);
+		if (attackProjectileIceSlowdownPercent < 0.0)
+		{
+			attackProjectileIceSlowdownPercent = 0.0;
+		}
+		float attackProjectileIceSlowdownPercentEasy = kv.GetFloat("attack_projectile_iceslow_percent_easy", attackProjectileIceSlowdownPercent);
+		if (attackProjectileIceSlowdownPercentEasy < 0.0)
+		{
+			attackProjectileIceSlowdownPercentEasy = 0.0;
+		}
+		float attackProjectileIceSlowdownPercentHard = kv.GetFloat("attack_projectile_iceslow_percent_hard", attackProjectileIceSlowdownPercent);
+		if (attackProjectileIceSlowdownPercentHard < 0.0)
+		{
+			attackProjectileIceSlowdownPercentHard = 0.0;
+		}
+		float attackProjectileIceSlowdownPercentInsane = kv.GetFloat("attack_projectile_iceslow_percent_insane", attackProjectileIceSlowdownPercentHard);
+		if (attackProjectileIceSlowdownPercentInsane < 0.0)
+		{
+			attackProjectileIceSlowdownPercentInsane = 0.0;
+		}
+		float attackProjectileIceSlowdownPercentNightmare = kv.GetFloat("attack_projectile_iceslow_percent_nightmare", attackProjectileIceSlowdownPercentInsane);
+		if (attackProjectileIceSlowdownPercentNightmare < 0.0)
+		{
+			attackProjectileIceSlowdownPercentNightmare = 0.0;
+		}
+		float attackProjectileIceSlowdownPercentApollyon = kv.GetFloat("attack_projectile_iceslow_percent_apollyon", attackProjectileIceSlowdownPercentNightmare);
+		if (attackProjectileIceSlowdownPercentApollyon < 0.0)
+		{
+			attackProjectileIceSlowdownPercentApollyon = 0.0;
+		}
 		
-		float flAttackProjectileIceSlowdownDuration = kv.GetFloat("attack_projectile_iceslow_duration", 2.0);
-		if (flAttackProjectileIceSlowdownDuration < 0.0) flAttackProjectileIceSlowdownDuration = 0.0;
-		float flAttackProjectileIceSlowdownDurationEasy = kv.GetFloat("attack_projectile_iceslow_duration_easy", flAttackProjectileIceSlowdownDuration);
-		if (flAttackProjectileIceSlowdownDurationEasy < 0.0) flAttackProjectileIceSlowdownDurationEasy = 0.0;
-		float flAttackProjectileIceSlowdownDurationHard = kv.GetFloat("attack_projectile_iceslow_duration_hard", flAttackProjectileIceSlowdownDuration);
-		if (flAttackProjectileIceSlowdownDurationHard < 0.0) flAttackProjectileIceSlowdownDurationHard = 0.0;
-		float flAttackProjectileIceSlowdownDurationInsane = kv.GetFloat("attack_projectile_iceslow_duration_insane", flAttackProjectileIceSlowdownDurationHard);
-		if (flAttackProjectileIceSlowdownDurationInsane < 0.0) flAttackProjectileIceSlowdownDurationInsane = 0.0;
-		float flAttackProjectileIceSlowdownDurationNightmare = kv.GetFloat("attack_projectile_iceslow_duration_nightmare", flAttackProjectileIceSlowdownDurationInsane);
-		if (flAttackProjectileIceSlowdownDurationNightmare < 0.0) flAttackProjectileIceSlowdownDurationNightmare = 0.0;
-		float flAttackProjectileIceSlowdownDurationApollyon = kv.GetFloat("attack_projectile_iceslow_duration_apollyon", flAttackProjectileIceSlowdownDurationNightmare);
-		if (flAttackProjectileIceSlowdownDurationApollyon < 0.0) flAttackProjectileIceSlowdownDurationApollyon = 0.0;
+		float attackProjectileIceSlowdownDuration = kv.GetFloat("attack_projectile_iceslow_duration", 2.0);
+		if (attackProjectileIceSlowdownDuration < 0.0)
+		{
+			attackProjectileIceSlowdownDuration = 0.0;
+		}
+		float attackProjectileIceSlowdownDurationEasy = kv.GetFloat("attack_projectile_iceslow_duration_easy", attackProjectileIceSlowdownDuration);
+		if (attackProjectileIceSlowdownDurationEasy < 0.0)
+		{
+			attackProjectileIceSlowdownDurationEasy = 0.0;
+		}
+		float attackProjectileIceSlowdownDurationHard = kv.GetFloat("attack_projectile_iceslow_duration_hard", attackProjectileIceSlowdownDuration);
+		if (attackProjectileIceSlowdownDurationHard < 0.0)
+		{
+			attackProjectileIceSlowdownDurationHard = 0.0;
+		}
+		float attackProjectileIceSlowdownDurationInsane = kv.GetFloat("attack_projectile_iceslow_duration_insane", attackProjectileIceSlowdownDurationHard);
+		if (attackProjectileIceSlowdownDurationInsane < 0.0)
+		{
+			attackProjectileIceSlowdownDurationInsane = 0.0;
+		}
+		float attackProjectileIceSlowdownDurationNightmare = kv.GetFloat("attack_projectile_iceslow_duration_nightmare", attackProjectileIceSlowdownDurationInsane);
+		if (attackProjectileIceSlowdownDurationNightmare < 0.0)
+		{
+			attackProjectileIceSlowdownDurationNightmare = 0.0;
+		}
+		float attackProjectileIceSlowdownDurationApollyon = kv.GetFloat("attack_projectile_iceslow_duration_apollyon", attackProjectileIceSlowdownDurationNightmare);
+		if (attackProjectileIceSlowdownDurationApollyon < 0.0)
+		{
+			attackProjectileIceSlowdownDurationApollyon = 0.0;
+		}
 
-		int iAttackProjectileCount = kv.GetNum("attack_projectile_count", 1);
-		if (iAttackProjectileCount < 1) iAttackProjectileCount = 1;
-		int iAttackProjectileCountEasy = kv.GetNum("attack_projectile_count_easy", iAttackProjectileCount);
-		if (iAttackProjectileCountEasy < 1) iAttackProjectileCountEasy = 1;
-		int iAttackProjectileCountHard = kv.GetNum("attack_projectile_count_hard", iAttackProjectileCount);
-		if (iAttackProjectileCountHard < 1) iAttackProjectileCountHard = 1;
-		int iAttackProjectileCountInsane = kv.GetNum("attack_projectile_count_insane", iAttackProjectileCountHard);
-		if (iAttackProjectileCountInsane < 1) iAttackProjectileCountInsane = 1;
-		int iAttackProjectileCountNightmare = kv.GetNum("attack_projectile_count_nightmare", iAttackProjectileCountInsane);
-		if (iAttackProjectileCountNightmare < 1) iAttackProjectileCountNightmare = 1;
-		int iAttackProjectileCountApollyon = kv.GetNum("attack_projectile_count_apollyon", iAttackProjectileCountNightmare);
-		if (iAttackProjectileCountApollyon < 1) iAttackProjectileCountApollyon = 1;
+		int attackProjectileCount = kv.GetNum("attack_projectile_count", 1);
+		if (attackProjectileCount < 1)
+		{
+			attackProjectileCount = 1;
+		}
+		int attackProjectileCountEasy = kv.GetNum("attack_projectile_count_easy", attackProjectileCount);
+		if (attackProjectileCountEasy < 1)
+		{
+			attackProjectileCountEasy = 1;
+		}
+		int attackProjectileCountHard = kv.GetNum("attack_projectile_count_hard", attackProjectileCount);
+		if (attackProjectileCountHard < 1)
+		{
+			attackProjectileCountHard = 1;
+		}
+		int attackProjectileCountInsane = kv.GetNum("attack_projectile_count_insane", attackProjectileCountHard);
+		if (attackProjectileCountInsane < 1)
+		{
+			attackProjectileCountInsane = 1;
+		}
+		int attackProjectileCountNightmare = kv.GetNum("attack_projectile_count_nightmare", attackProjectileCountInsane);
+		if (attackProjectileCountNightmare < 1)
+		{
+			attackProjectileCountNightmare = 1;
+		}
+		int attackProjectileCountApollyon = kv.GetNum("attack_projectile_count_apollyon", attackProjectileCountNightmare);
+		if (attackProjectileCountApollyon < 1)
+		{
+			attackProjectileCountApollyon = 1;
+		}
 
-		int iAttackProjectileType = kv.GetNum("attack_projectiletype");
+		int attackProjectileType = kv.GetNum("attack_projectiletype");
 		
-		int iAttackBulletCount = kv.GetNum("attack_bullet_count", 4);
-		if (iAttackBulletCount < 1) iAttackBulletCount = 1;
-		int iAttackBulletCountEasy = kv.GetNum("attack_bullet_count_easy", iAttackBulletCount);
-		if (iAttackBulletCountEasy < 1) iAttackBulletCountEasy = 1;
-		int iAttackBulletCountHard = kv.GetNum("attack_bullet_count_hard", iAttackBulletCount);
-		if (iAttackBulletCountHard < 1) iAttackBulletCountHard = 1;
-		int iAttackBulletCountInsane = kv.GetNum("attack_bullet_count_insane", iAttackBulletCountHard);
-		if (iAttackBulletCountInsane < 1) iAttackBulletCountInsane = 1;
-		int iAttackBulletCountNightmare = kv.GetNum("attack_bullet_count_nightmare", iAttackBulletCountInsane);
-		if (iAttackBulletCountNightmare < 1) iAttackBulletCountNightmare = 1;
-		int iAttackBulletCountApollyon = kv.GetNum("attack_bullet_count_apollyon", iAttackBulletCountNightmare);
-		if (iAttackBulletCountApollyon < 1) iAttackBulletCountApollyon = 1;
+		int attackBulletCount = kv.GetNum("attack_bullet_count", 4);
+		if (attackBulletCount < 1)
+		{
+			attackBulletCount = 1;
+		}
+		int attackBulletCountEasy = kv.GetNum("attack_bullet_count_easy", attackBulletCount);
+		if (attackBulletCountEasy < 1)
+		{
+			attackBulletCountEasy = 1;
+		}
+		int attackBulletCountHard = kv.GetNum("attack_bullet_count_hard", attackBulletCount);
+		if (attackBulletCountHard < 1)
+		{
+			attackBulletCountHard = 1;
+		}
+		int attackBulletCountInsane = kv.GetNum("attack_bullet_count_insane", attackBulletCountHard);
+		if (attackBulletCountInsane < 1)
+		{
+			attackBulletCountInsane = 1;
+		}
+		int attackBulletCountNightmare = kv.GetNum("attack_bullet_count_nightmare", attackBulletCountInsane);
+		if (attackBulletCountNightmare < 1)
+		{
+			attackBulletCountNightmare = 1;
+		}
+		int attackBulletCountApollyon = kv.GetNum("attack_bullet_count_apollyon", attackBulletCountNightmare);
+		if (attackBulletCountApollyon < 1)
+		{
+			attackBulletCountApollyon = 1;
+		}
 		
-		float flAttackBulletDamage = kv.GetFloat("attack_bullet_damage", 8.0);
-		if (flAttackBulletDamage < 0.0) flAttackBulletDamage = 0.0;
-		float flAttackBulletDamageEasy = kv.GetFloat("attack_bullet_damage_easy", flAttackBulletDamage);
-		if (flAttackBulletDamageEasy < 0.0) flAttackBulletDamageEasy = 0.0;
-		float flAttackBulletDamageHard = kv.GetFloat("attack_bullet_damage_hard", flAttackBulletDamage);
-		if (flAttackBulletDamageHard < 0.0) flAttackBulletDamageHard = 0.0;
-		float flAttackBulletDamageInsane = kv.GetFloat("attack_bullet_damage_insane", flAttackBulletDamageHard);
-		if (flAttackBulletDamageInsane < 0.0) flAttackBulletDamageInsane = 0.0;
-		float flAttackBulletDamageNightmare = kv.GetFloat("attack_bullet_damage_nightmare", flAttackBulletDamageInsane);
-		if (flAttackBulletDamageNightmare < 0.0) flAttackBulletDamageNightmare = 0.0;
-		float flAttackBulletDamageApollyon = kv.GetFloat("attack_bullet_damage_apollyon", flAttackBulletDamageNightmare);
-		if (flAttackBulletDamageApollyon < 0.0) flAttackBulletDamageApollyon = 0.0;
+		float attackBulletDamage = kv.GetFloat("attack_bullet_damage", 8.0);
+		if (attackBulletDamage < 0.0)
+		{
+			attackBulletDamage = 0.0;
+		}
+		float attackBulletDamageEasy = kv.GetFloat("attack_bullet_damage_easy", attackBulletDamage);
+		if (attackBulletDamageEasy < 0.0)
+		{
+			attackBulletDamageEasy = 0.0;
+		}
+		float attackBulletDamageHard = kv.GetFloat("attack_bullet_damage_hard", attackBulletDamage);
+		if (attackBulletDamageHard < 0.0)
+		{
+			attackBulletDamageHard = 0.0;
+		}
+		float attackBulletDamageInsane = kv.GetFloat("attack_bullet_damage_insane", attackBulletDamageHard);
+		if (attackBulletDamageInsane < 0.0)
+		{
+			attackBulletDamageInsane = 0.0;
+		}
+		float attackBulletDamageNightmare = kv.GetFloat("attack_bullet_damage_nightmare", attackBulletDamageInsane);
+		if (attackBulletDamageNightmare < 0.0)
+		{
+			attackBulletDamageNightmare = 0.0;
+		}
+		float attackBulletDamageApollyon = kv.GetFloat("attack_bullet_damage_apollyon", attackBulletDamageNightmare);
+		if (attackBulletDamageApollyon < 0.0)
+		{
+			attackBulletDamageApollyon = 0.0;
+		}
 		
-		float flAttackBulletSpread = kv.GetFloat("attack_bullet_spread", 0.1);
-		if (flAttackBulletSpread < 0.0) flAttackBulletSpread = 0.0;
-		float flAttackBulletSpreadEasy = kv.GetFloat("attack_bullet_spread_easy", flAttackBulletSpread);
-		if (flAttackBulletSpreadEasy < 0.0) flAttackBulletSpreadEasy = 0.0;
-		float flAttackBulletSpreadHard = kv.GetFloat("attack_bullet_spread_hard", flAttackBulletSpread);
-		if (flAttackBulletSpreadHard < 0.0) flAttackBulletSpreadHard = 0.0;
-		float flAttackBulletSpreadInsane = kv.GetFloat("attack_bullet_spread_insane", flAttackBulletSpreadHard);
-		if (flAttackBulletSpreadInsane < 0.0) flAttackBulletSpreadInsane = 0.0;
-		float flAttackBulletSpreadNightmare = kv.GetFloat("attack_bullet_spread_nightmare", flAttackBulletSpreadInsane);
-		if (flAttackBulletSpreadNightmare < 0.0) flAttackBulletSpreadNightmare = 0.0;
-		float flAttackBulletSpreadApollyon = kv.GetFloat("attack_bullet_spread_apollyon", flAttackBulletSpreadNightmare);
-		if (flAttackBulletSpreadApollyon < 0.0) flAttackBulletSpreadApollyon = 0.0;
+		float attackBulletSpread = kv.GetFloat("attack_bullet_spread", 0.1);
+		if (attackBulletSpread < 0.0)
+		{
+			attackBulletSpread = 0.0;
+		}
+		float attackBulletSpreadEasy = kv.GetFloat("attack_bullet_spread_easy", attackBulletSpread);
+		if (attackBulletSpreadEasy < 0.0)
+		{
+			attackBulletSpreadEasy = 0.0;
+		}
+		float attackBulletSpreadHard = kv.GetFloat("attack_bullet_spread_hard", attackBulletSpread);
+		if (attackBulletSpreadHard < 0.0)
+		{
+			attackBulletSpreadHard = 0.0;
+		}
+		float attackBulletSpreadInsane = kv.GetFloat("attack_bullet_spread_insane", attackBulletSpreadHard);
+		if (attackBulletSpreadInsane < 0.0)
+		{
+			attackBulletSpreadInsane = 0.0;
+		}
+		float attackBulletSpreadNightmare = kv.GetFloat("attack_bullet_spread_nightmare", attackBulletSpreadInsane);
+		if (attackBulletSpreadNightmare < 0.0)
+		{
+			attackBulletSpreadNightmare = 0.0;
+		}
+		float attackBulletSpreadApollyon = kv.GetFloat("attack_bullet_spread_apollyon", attackBulletSpreadNightmare);
+		if (attackBulletSpreadApollyon < 0.0)
+		{
+			attackBulletSpreadApollyon = 0.0;
+		}
 		
-		float flAttackLaserDamage = kv.GetFloat("attack_laser_damage", 25.0);
-		if (flAttackLaserDamage < 0.0) flAttackLaserDamage = 0.0;
-		float flAttackLaserDamageEasy = kv.GetFloat("attack_laser_damage_easy", flAttackLaserDamage);
-		if (flAttackLaserDamageEasy < 0.0) flAttackLaserDamageEasy = 0.0;
-		float flAttackLaserDamageHard = kv.GetFloat("attack_laser_damage_hard", flAttackLaserDamage);
-		if (flAttackLaserDamageHard < 0.0) flAttackLaserDamageHard = 0.0;
-		float flAttackLaserDamageInsane = kv.GetFloat("attack_laser_damage_insane", flAttackLaserDamageHard);
-		if (flAttackLaserDamageInsane < 0.0) flAttackLaserDamageInsane = 0.0;
-		float flAttackLaserDamageNightmare = kv.GetFloat("attack_laser_damage_nightmare", flAttackLaserDamageInsane);
-		if (flAttackLaserDamageNightmare < 0.0) flAttackLaserDamageNightmare = 0.0;
-		float flAttackLaserDamageApollyon = kv.GetFloat("attack_laser_damage_apollyon", flAttackLaserDamageNightmare);
-		if (flAttackLaserDamageApollyon < 0.0) flAttackLaserDamageApollyon = 0.0;
+		float attackLaserDamage = kv.GetFloat("attack_laser_damage", 25.0);
+		if (attackLaserDamage < 0.0)
+		{
+			attackLaserDamage = 0.0;
+		}
+		float attackLaserDamageEasy = kv.GetFloat("attack_laser_damage_easy", attackLaserDamage);
+		if (attackLaserDamageEasy < 0.0)
+		{
+			attackLaserDamageEasy = 0.0;
+		}
+		float attackLaserDamageHard = kv.GetFloat("attack_laser_damage_hard", attackLaserDamage);
+		if (attackLaserDamageHard < 0.0)
+		{
+			attackLaserDamageHard = 0.0;
+		}
+		float attackLaserDamageInsane = kv.GetFloat("attack_laser_damage_insane", attackLaserDamageHard);
+		if (attackLaserDamageInsane < 0.0)
+		{
+			attackLaserDamageInsane = 0.0;
+		}
+		float attackLaserDamageNightmare = kv.GetFloat("attack_laser_damage_nightmare", attackLaserDamageInsane);
+		if (attackLaserDamageNightmare < 0.0)
+		{
+			attackLaserDamageNightmare = 0.0;
+		}
+		float attackLaserDamageApollyon = kv.GetFloat("attack_laser_damage_apollyon", attackLaserDamageNightmare);
+		if (attackLaserDamageApollyon < 0.0)
+		{
+			attackLaserDamageApollyon = 0.0;
+		}
 		
-		float flAttackLaserSize = kv.GetFloat("attack_laser_size", 12.0);
-		if (flAttackLaserSize < 0.0) flAttackLaserSize = 0.0;
+		float attackLaserSize = kv.GetFloat("attack_laser_size", 12.0);
+		if (attackLaserSize < 0.0)
+		{
+			attackLaserSize = 0.0;
+		}
 
-		int iAttackLaserColorR = kv.GetNum("attack_laser_color_r", 255);
-		int iAttackLaserColorG = kv.GetNum("attack_laser_color_g", 255);
-		int iAttackLaserColorB = kv.GetNum("attack_laser_color_b", 255);
+		int attackLaserColorR = kv.GetNum("attack_laser_color_r", 255);
+		int attackLaserColorG = kv.GetNum("attack_laser_color_g", 255);
+		int attackLaserColorB = kv.GetNum("attack_laser_color_b", 255);
 		
-		bool bAttackLaserAttachment = view_as<bool>(kv.GetNum("attack_laser_attachment", 0));
+		bool attackLaserAttachment = view_as<bool>(kv.GetNum("attack_laser_attachment", 0));
 		
-		float flAttackLaserDuration = kv.GetFloat("attack_laser_duration", flAttackDuration);
+		float attackLaserDuration = kv.GetFloat("attack_laser_duration", attackDuration);
 
-		float flAttackLaserNoise = kv.GetFloat("attack_laser_noise", 1.0);
+		float attackLaserNoise = kv.GetFloat("attack_laser_noise", 1.0);
 		
-		bool bAttackPullIn = view_as<bool>(kv.GetNum("attack_pull_player_in", 0));
+		bool attackPullIn = view_as<bool>(kv.GetNum("attack_pull_player_in", 0));
 		
-		bool bAttackWhileRunning = view_as<bool>(kv.GetNum("attack_while_running", 0));
+		bool attackWhileRunning = view_as<bool>(kv.GetNum("attack_while_running", 0));
 
-		float flAttackRunSpeed = kv.GetFloat("attack_run_speed");
-		float flAttackRunSpeedEasy = kv.GetFloat("attack_run_speed_easy", flAttackRunSpeed);
-		float flAttackRunSpeedHard = kv.GetFloat("attack_run_speed_hard", flAttackRunSpeed);
-		float flAttackRunSpeedInsane = kv.GetFloat("attack_run_speed_insane", flAttackRunSpeedHard);
-		float flAttackRunSpeedNightmare = kv.GetFloat("attack_run_speed_nightmare", flAttackRunSpeedInsane);
-		float flAttackRunSpeedApollyon = kv.GetFloat("attack_run_speed_apollyon", flAttackRunSpeedNightmare);
+		float attackRunSpeed = kv.GetFloat("attack_run_speed");
+		float attackRunSpeedEasy = kv.GetFloat("attack_run_speed_easy", attackRunSpeed);
+		float attackRunSpeedHard = kv.GetFloat("attack_run_speed_hard", attackRunSpeed);
+		float attackRunSpeedInsane = kv.GetFloat("attack_run_speed_insane", attackRunSpeedHard);
+		float attackRunSpeedNightmare = kv.GetFloat("attack_run_speed_nightmare", attackRunSpeedInsane);
+		float attackRunSpeedApollyon = kv.GetFloat("attack_run_speed_apollyon", attackRunSpeedNightmare);
 
-		float flAttackRunDuration = kv.GetFloat("attack_run_duration");
+		float attackRunDuration = kv.GetFloat("attack_run_duration");
 
-		float flAttackRunDelay = kv.GetFloat("attack_run_delay");
+		float attackRunDelay = kv.GetFloat("attack_run_delay");
 
-		int iAttackUseOnDifficulty = kv.GetNum("attack_use_on_difficulty");
-		int iAttackBlockOnDifficulty = kv.GetNum("attack_block_on_difficulty", 6);
+		int attackUseOnDifficulty = kv.GetNum("attack_use_on_difficulty");
+		int attackBlockOnDifficulty = kv.GetNum("attack_block_on_difficulty", 6);
 
-		int iAttackExplosiveDanceRadius = kv.GetNum("attack_explosivedance_radius", 350);
+		int attackExplosiveDanceRadius = kv.GetNum("attack_explosivedance_radius", 350);
 
-		bool bAttackGestures = view_as<bool>(kv.GetNum("attack_gestures", 0));
+		bool attackGestures = view_as<bool>(kv.GetNum("attack_gestures", 0));
 
-		bool bAttackDeathCamLowHealth = view_as<bool>(kv.GetNum("attack_deathcam_on_low_health"));
+		bool attackDeathCamLowHealth = view_as<bool>(kv.GetNum("attack_deathcam_on_low_health"));
 
-		float flAttackUseOnHealth = kv.GetFloat("attack_use_on_health", -1.0);
-		float flAttackBlockOnHealth = kv.GetFloat("attack_block_on_health", -1.0);
+		float attackUseOnHealth = kv.GetFloat("attack_use_on_health", -1.0);
+		float attackBlockOnHealth = kv.GetFloat("attack_block_on_health", -1.0);
 
-		int attackIndex = hAttacks.Push(-1);
+		int attackIndex = attacks.Push(-1);
 		
-		hAttacks.Set(attackIndex, iAttackType, ChaserProfileAttackData_Type);
-		hAttacks.Set(attackIndex, bAttackProps, ChaserProfileAttackData_CanUseAgainstProps);
-		hAttacks.Set(attackIndex, flAttackRange, ChaserProfileAttackData_Range);
-		hAttacks.Set(attackIndex, flAttackDamage, ChaserProfileAttackData_Damage);
-		hAttacks.Set(attackIndex, flAttackDamageEasy, ChaserProfileAttackData_DamageEasy);
-		hAttacks.Set(attackIndex, flAttackDamageHard, ChaserProfileAttackData_DamageHard);
-		hAttacks.Set(attackIndex, flAttackDamageInsane, ChaserProfileAttackData_DamageInsane);
-		hAttacks.Set(attackIndex, flAttackDamageNightmare, ChaserProfileAttackData_DamageNightmare);
-		hAttacks.Set(attackIndex, flAttackDamageApollyon, ChaserProfileAttackData_DamageApollyon);
-		hAttacks.Set(attackIndex, flAttackDamageVsProps, ChaserProfileAttackData_DamageVsProps);
-		hAttacks.Set(attackIndex, flAttackDamageForce, ChaserProfileAttackData_DamageForce);
-		hAttacks.Set(attackIndex, iAttackDamageType, ChaserProfileAttackData_DamageType);
-		hAttacks.Set(attackIndex, flAttackDamageDelay, ChaserProfileAttackData_DamageDelay);
-		hAttacks.Set(attackIndex, flAttackDuration, ChaserProfileAttackData_Duration);
-		hAttacks.Set(attackIndex, flAttackSpread, ChaserProfileAttackData_Spread);
-		hAttacks.Set(attackIndex, flAttackBeginRange, ChaserProfileAttackData_BeginRange);
-		hAttacks.Set(attackIndex, flAttackBeginFOV, ChaserProfileAttackData_BeginFOV);
-		hAttacks.Set(attackIndex, flAttackCooldown, ChaserProfileAttackData_Cooldown);
-		hAttacks.Set(attackIndex, flAttackCooldownEasy, ChaserProfileAttackData_CooldownEasy);
-		hAttacks.Set(attackIndex, flAttackCooldownHard, ChaserProfileAttackData_CooldownHard);
-		hAttacks.Set(attackIndex, flAttackCooldownInsane, ChaserProfileAttackData_CooldownInsane);
-		hAttacks.Set(attackIndex, flAttackCooldownNightmare, ChaserProfileAttackData_CooldownNightmare);
-		hAttacks.Set(attackIndex, flAttackCooldownApollyon, ChaserProfileAttackData_CooldownApollyon);
-		hAttacks.Set(attackIndex, bAttackDisappear, ChaserProfileAttackData_Disappear);
-		hAttacks.Set(attackIndex, iAttackRepeat, ChaserProfileAttackData_Repeat);
-		hAttacks.Set(attackIndex, iMaxAttackRepeat, ChaserProfileAttackData_MaxAttackRepeat);
-		hAttacks.Set(attackIndex, bAttackIgnoreAlwaysLooking, ChaserProfileAttackData_IgnoreAlwaysLooking);
-		hAttacks.Set(attackIndex, iAttackWeaponInt, ChaserProfileAttackData_WeaponInt);
-		hAttacks.Set(attackIndex, bAttackWeapons, ChaserProfileAttackData_CanUseWeaponTypes);
-		hAttacks.Set(attackIndex, bAttackLifeSteal, ChaserProfileAttackData_LifeStealEnabled);
-		hAttacks.Set(attackIndex, flAttackLifeStealDuration, ChaserProfileAttackData_LifeStealDuration);
-		hAttacks.Set(attackIndex, flAttackProjectileDamage, ChaserProfileAttackData_ProjectileDamage);
-		hAttacks.Set(attackIndex, flAttackProjectileDamageEasy, ChaserProfileAttackData_ProjectileDamageEasy);
-		hAttacks.Set(attackIndex, flAttackProjectileDamageHard, ChaserProfileAttackData_ProjectileDamageHard);
-		hAttacks.Set(attackIndex, flAttackProjectileDamageInsane, ChaserProfileAttackData_ProjectileDamageInsane);
-		hAttacks.Set(attackIndex, flAttackProjectileDamageNightmare, ChaserProfileAttackData_ProjectileDamageNightmare);
-		hAttacks.Set(attackIndex, flAttackProjectileDamageApollyon, ChaserProfileAttackData_ProjectileDamageApollyon);
-		hAttacks.Set(attackIndex, flAttackProjectileSpeed, ChaserProfileAttackData_ProjectileSpeed);
-		hAttacks.Set(attackIndex, flAttackProjectileSpeedEasy, ChaserProfileAttackData_ProjectileSpeedEasy);
-		hAttacks.Set(attackIndex, flAttackProjectileSpeedHard, ChaserProfileAttackData_ProjectileSpeedHard);
-		hAttacks.Set(attackIndex, flAttackProjectileSpeedInsane, ChaserProfileAttackData_ProjectileSpeedInsane);
-		hAttacks.Set(attackIndex, flAttackProjectileSpeedNightmare, ChaserProfileAttackData_ProjectileSpeedNightmare);
-		hAttacks.Set(attackIndex, flAttackProjectileSpeedApollyon, ChaserProfileAttackData_ProjectileSpeedApollyon);
-		hAttacks.Set(attackIndex, flAttackProjectileRadius, ChaserProfileAttackData_ProjectileRadius);
-		hAttacks.Set(attackIndex, flAttackProjectileRadiusEasy, ChaserProfileAttackData_ProjectileRadiusEasy);
-		hAttacks.Set(attackIndex, flAttackProjectileRadiusHard, ChaserProfileAttackData_ProjectileRadiusHard);
-		hAttacks.Set(attackIndex, flAttackProjectileRadiusInsane, ChaserProfileAttackData_ProjectileRadiusInsane);
-		hAttacks.Set(attackIndex, flAttackProjectileRadiusNightmare, ChaserProfileAttackData_ProjectileRadiusNightmare);
-		hAttacks.Set(attackIndex, flAttackProjectileRadiusApollyon, ChaserProfileAttackData_ProjectileRadiusApollyon);
-		hAttacks.Set(attackIndex, flAttackProjectileDeviation, ChaserProfileAttackData_ProjectileDeviation);
-		hAttacks.Set(attackIndex, flAttackProjectileDeviationEasy, ChaserProfileAttackData_ProjectileDeviationEasy);
-		hAttacks.Set(attackIndex, flAttackProjectileDeviationHard, ChaserProfileAttackData_ProjectileDeviationHard);
-		hAttacks.Set(attackIndex, flAttackProjectileDeviationInsane, ChaserProfileAttackData_ProjectileDeviationInsane);
-		hAttacks.Set(attackIndex, flAttackProjectileDeviationNightmare, ChaserProfileAttackData_ProjectileDeviationNightmare);
-		hAttacks.Set(attackIndex, flAttackProjectileDeviationApollyon, ChaserProfileAttackData_ProjectileDeviationApollyon);
-		hAttacks.Set(attackIndex, bAttackCritProjectiles, ChaserProfileAttackData_ProjectileCrits);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownPercent, ChaserProfileAttackData_ProjectileIceSlowdownPercent);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownPercentEasy, ChaserProfileAttackData_ProjectileIceSlowdownPercentEasy);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownPercentHard, ChaserProfileAttackData_ProjectileIceSlowdownPercentHard);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownPercentInsane, ChaserProfileAttackData_ProjectileIceSlowdownPercentInsane);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownPercentNightmare, ChaserProfileAttackData_ProjectileIceSlowdownPercentNightmare);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownPercentApollyon, ChaserProfileAttackData_ProjectileIceSlowdownPercentApollyon);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownDuration, ChaserProfileAttackData_ProjectileIceSlowdownDuration);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownDurationEasy, ChaserProfileAttackData_ProjectileIceSlowdownDurationEasy);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownDurationHard, ChaserProfileAttackData_ProjectileIceSlowdownDurationHard);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownDurationInsane, ChaserProfileAttackData_ProjectileIceSlowdownDurationInsane);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownDurationNightmare, ChaserProfileAttackData_ProjectileIceSlowdownDurationNightmare);
-		hAttacks.Set(attackIndex, flAttackProjectileIceSlowdownDurationApollyon, ChaserProfileAttackData_ProjectileIceSlowdownDurationApollyon);
-		hAttacks.Set(attackIndex, iAttackProjectileCount, ChaserProfileAttackData_ProjectileCount);
-		hAttacks.Set(attackIndex, iAttackProjectileCountEasy, ChaserProfileAttackData_ProjectileCountEasy);
-		hAttacks.Set(attackIndex, iAttackProjectileCountHard, ChaserProfileAttackData_ProjectileCountHard);
-		hAttacks.Set(attackIndex, iAttackProjectileCountInsane, ChaserProfileAttackData_ProjectileCountInsane);
-		hAttacks.Set(attackIndex, iAttackProjectileCountNightmare, ChaserProfileAttackData_ProjectileCountNightmare);
-		hAttacks.Set(attackIndex, iAttackProjectileCountApollyon, ChaserProfileAttackData_ProjectileCountApollyon);
-		hAttacks.Set(attackIndex, iAttackProjectileType, ChaserProfileAttackData_ProjectileType);
-		hAttacks.Set(attackIndex, iAttackBulletCount, ChaserProfileAttackData_BulletCount);
-		hAttacks.Set(attackIndex, iAttackBulletCountEasy, ChaserProfileAttackData_BulletCountEasy);
-		hAttacks.Set(attackIndex, iAttackBulletCountHard, ChaserProfileAttackData_BulletCountHard);
-		hAttacks.Set(attackIndex, iAttackBulletCountInsane, ChaserProfileAttackData_BulletCountInsane);
-		hAttacks.Set(attackIndex, iAttackBulletCountNightmare, ChaserProfileAttackData_BulletCountNightmare);
-		hAttacks.Set(attackIndex, iAttackBulletCountApollyon, ChaserProfileAttackData_BulletCountApollyon);
-		hAttacks.Set(attackIndex, flAttackBulletDamage, ChaserProfileAttackData_BulletDamage);
-		hAttacks.Set(attackIndex, flAttackBulletDamageEasy, ChaserProfileAttackData_BulletDamageEasy);
-		hAttacks.Set(attackIndex, flAttackBulletDamageHard, ChaserProfileAttackData_BulletDamageHard);
-		hAttacks.Set(attackIndex, flAttackBulletDamageInsane, ChaserProfileAttackData_BulletDamageInsane);
-		hAttacks.Set(attackIndex, flAttackBulletDamageNightmare, ChaserProfileAttackData_BulletDamageNightmare);
-		hAttacks.Set(attackIndex, flAttackBulletDamageApollyon, ChaserProfileAttackData_BulletDamageApollyon);
-		hAttacks.Set(attackIndex, flAttackBulletSpread, ChaserProfileAttackData_BulletSpread);
-		hAttacks.Set(attackIndex, flAttackBulletSpreadEasy, ChaserProfileAttackData_BulletSpreadEasy);
-		hAttacks.Set(attackIndex, flAttackBulletSpreadHard, ChaserProfileAttackData_BulletSpreadHard);
-		hAttacks.Set(attackIndex, flAttackBulletSpreadInsane, ChaserProfileAttackData_BulletSpreadInsane);
-		hAttacks.Set(attackIndex, flAttackBulletSpreadNightmare, ChaserProfileAttackData_BulletSpreadNightmare);
-		hAttacks.Set(attackIndex, flAttackBulletSpreadApollyon, ChaserProfileAttackData_BulletSpreadApollyon);
-		hAttacks.Set(attackIndex, flAttackLaserDamage, ChaserProfileAttackData_LaserDamage);
-		hAttacks.Set(attackIndex, flAttackLaserDamageEasy, ChaserProfileAttackData_LaserDamageEasy);
-		hAttacks.Set(attackIndex, flAttackLaserDamageHard, ChaserProfileAttackData_LaserDamageHard);
-		hAttacks.Set(attackIndex, flAttackLaserDamageInsane, ChaserProfileAttackData_LaserDamageInsane);
-		hAttacks.Set(attackIndex, flAttackLaserDamageNightmare, ChaserProfileAttackData_LaserDamageNightmare);
-		hAttacks.Set(attackIndex, flAttackLaserDamageApollyon, ChaserProfileAttackData_LaserDamageApollyon);
-		hAttacks.Set(attackIndex, flAttackLaserSize, ChaserProfileAttackData_LaserSize);
-		hAttacks.Set(attackIndex, iAttackLaserColorR, ChaserProfileAttackData_LaserColorR);
-		hAttacks.Set(attackIndex, iAttackLaserColorG, ChaserProfileAttackData_LaserColorG);
-		hAttacks.Set(attackIndex, iAttackLaserColorB, ChaserProfileAttackData_LaserColorB);
-		hAttacks.Set(attackIndex, bAttackLaserAttachment, ChaserProfileAttackData_LaserAttachment);
-		hAttacks.Set(attackIndex, flAttackLaserDuration, ChaserProfileAttackData_LaserDuration);
-		hAttacks.Set(attackIndex, flAttackLaserNoise, ChaserProfileAttackData_LaserNoise);
-		hAttacks.Set(attackIndex, bAttackPullIn, ChaserProfileAttackData_PullIn);
-		hAttacks.Set(attackIndex, bAttackWhileRunning, ChaserProfileAttackData_CanAttackWhileRunning);
-		hAttacks.Set(attackIndex, flAttackRunSpeed, ChaserProfileAttackData_RunSpeed);
-		hAttacks.Set(attackIndex, flAttackRunSpeedEasy, ChaserProfileAttackData_RunSpeedEasy);
-		hAttacks.Set(attackIndex, flAttackRunSpeedHard, ChaserProfileAttackData_RunSpeedHard);
-		hAttacks.Set(attackIndex, flAttackRunSpeedInsane, ChaserProfileAttackData_RunSpeedInsane);
-		hAttacks.Set(attackIndex, flAttackRunSpeedNightmare, ChaserProfileAttackData_RunSpeedNightmare);
-		hAttacks.Set(attackIndex, flAttackRunSpeedApollyon, ChaserProfileAttackData_RunSpeedApollyon);	
-		hAttacks.Set(attackIndex, flAttackRunDuration, ChaserProfileAttackData_RunDuration);
-		hAttacks.Set(attackIndex, flAttackRunDelay, ChaserProfileAttackData_RunDelay);
-		hAttacks.Set(attackIndex, iAttackUseOnDifficulty, ChaserProfileAttackData_UseOnDifficulty);
-		hAttacks.Set(attackIndex, iAttackBlockOnDifficulty, ChaserProfileAttackData_BlockOnDifficulty);
-		hAttacks.Set(attackIndex, iAttackExplosiveDanceRadius, ChaserProfileAttackData_ExplosiveDanceRadius);
-		hAttacks.Set(attackIndex, bAttackGestures, ChaserProfileAttackData_Gestures);
-		hAttacks.Set(attackIndex, bAttackDeathCamLowHealth, ChaserProfileAttackData_DeathCamLowHealth);
-		hAttacks.Set(attackIndex, flAttackUseOnHealth, ChaserProfileAttackData_UseOnHealth);
-		hAttacks.Set(attackIndex, flAttackBlockOnHealth, ChaserProfileAttackData_BlockOnHealth);
+		attacks.Set(attackIndex, attackType, ChaserProfileAttackData_Type);
+		attacks.Set(attackIndex, attackProps, ChaserProfileAttackData_CanUseAgainstProps);
+		attacks.Set(attackIndex, attackRange, ChaserProfileAttackData_Range);
+		attacks.Set(attackIndex, attackDamage, ChaserProfileAttackData_Damage);
+		attacks.Set(attackIndex, attackDamageEasy, ChaserProfileAttackData_DamageEasy);
+		attacks.Set(attackIndex, attackDamageHard, ChaserProfileAttackData_DamageHard);
+		attacks.Set(attackIndex, attackDamageInsane, ChaserProfileAttackData_DamageInsane);
+		attacks.Set(attackIndex, attackDamageNightmare, ChaserProfileAttackData_DamageNightmare);
+		attacks.Set(attackIndex, attackDamageApollyon, ChaserProfileAttackData_DamageApollyon);
+		attacks.Set(attackIndex, attackDamageVsProps, ChaserProfileAttackData_DamageVsProps);
+		attacks.Set(attackIndex, attackDamageForce, ChaserProfileAttackData_DamageForce);
+		attacks.Set(attackIndex, attackDamageType, ChaserProfileAttackData_DamageType);
+		attacks.Set(attackIndex, attackDamageDelay, ChaserProfileAttackData_DamageDelay);
+		attacks.Set(attackIndex, attackDuration, ChaserProfileAttackData_Duration);
+		attacks.Set(attackIndex, attackSpread, ChaserProfileAttackData_Spread);
+		attacks.Set(attackIndex, attackBeginRange, ChaserProfileAttackData_BeginRange);
+		attacks.Set(attackIndex, attackBeginFOV, ChaserProfileAttackData_BeginFOV);
+		attacks.Set(attackIndex, attackCooldown, ChaserProfileAttackData_Cooldown);
+		attacks.Set(attackIndex, attackCooldownEasy, ChaserProfileAttackData_CooldownEasy);
+		attacks.Set(attackIndex, attackCooldownHard, ChaserProfileAttackData_CooldownHard);
+		attacks.Set(attackIndex, attackCooldownInsane, ChaserProfileAttackData_CooldownInsane);
+		attacks.Set(attackIndex, attackCooldownNightmare, ChaserProfileAttackData_CooldownNightmare);
+		attacks.Set(attackIndex, attackCooldownApollyon, ChaserProfileAttackData_CooldownApollyon);
+		attacks.Set(attackIndex, attackDisappear, ChaserProfileAttackData_Disappear);
+		attacks.Set(attackIndex, attackRepeat, ChaserProfileAttackData_Repeat);
+		attacks.Set(attackIndex, iMaxAttackRepeat, ChaserProfileAttackData_MaxAttackRepeat);
+		attacks.Set(attackIndex, attackIgnoreAlwaysLooking, ChaserProfileAttackData_IgnoreAlwaysLooking);
+		attacks.Set(attackIndex, attackWeaponInt, ChaserProfileAttackData_WeaponInt);
+		attacks.Set(attackIndex, attackWeapons, ChaserProfileAttackData_CanUseWeaponTypes);
+		attacks.Set(attackIndex, attackLifeSteal, ChaserProfileAttackData_LifeStealEnabled);
+		attacks.Set(attackIndex, attackLifeStealDuration, ChaserProfileAttackData_LifeStealDuration);
+		attacks.Set(attackIndex, attackProjectileDamage, ChaserProfileAttackData_ProjectileDamage);
+		attacks.Set(attackIndex, attackProjectileDamageEasy, ChaserProfileAttackData_ProjectileDamageEasy);
+		attacks.Set(attackIndex, attackProjectileDamageHard, ChaserProfileAttackData_ProjectileDamageHard);
+		attacks.Set(attackIndex, attackProjectileDamageInsane, ChaserProfileAttackData_ProjectileDamageInsane);
+		attacks.Set(attackIndex, attackProjectileDamageNightmare, ChaserProfileAttackData_ProjectileDamageNightmare);
+		attacks.Set(attackIndex, attackProjectileDamageApollyon, ChaserProfileAttackData_ProjectileDamageApollyon);
+		attacks.Set(attackIndex, attackProjectileSpeed, ChaserProfileAttackData_ProjectileSpeed);
+		attacks.Set(attackIndex, attackProjectileSpeedEasy, ChaserProfileAttackData_ProjectileSpeedEasy);
+		attacks.Set(attackIndex, attackProjectileSpeedHard, ChaserProfileAttackData_ProjectileSpeedHard);
+		attacks.Set(attackIndex, attackProjectileSpeedInsane, ChaserProfileAttackData_ProjectileSpeedInsane);
+		attacks.Set(attackIndex, attackProjectileSpeedNightmare, ChaserProfileAttackData_ProjectileSpeedNightmare);
+		attacks.Set(attackIndex, attackProjectileSpeedApollyon, ChaserProfileAttackData_ProjectileSpeedApollyon);
+		attacks.Set(attackIndex, attackProjectileRadius, ChaserProfileAttackData_ProjectileRadius);
+		attacks.Set(attackIndex, attackProjectileRadiusEasy, ChaserProfileAttackData_ProjectileRadiusEasy);
+		attacks.Set(attackIndex, attackProjectileRadiusHard, ChaserProfileAttackData_ProjectileRadiusHard);
+		attacks.Set(attackIndex, attackProjectileRadiusInsane, ChaserProfileAttackData_ProjectileRadiusInsane);
+		attacks.Set(attackIndex, attackProjectileRadiusNightmare, ChaserProfileAttackData_ProjectileRadiusNightmare);
+		attacks.Set(attackIndex, attackProjectileRadiusApollyon, ChaserProfileAttackData_ProjectileRadiusApollyon);
+		attacks.Set(attackIndex, attackProjectileDeviation, ChaserProfileAttackData_ProjectileDeviation);
+		attacks.Set(attackIndex, attackProjectileDeviationEasy, ChaserProfileAttackData_ProjectileDeviationEasy);
+		attacks.Set(attackIndex, attackProjectileDeviationHard, ChaserProfileAttackData_ProjectileDeviationHard);
+		attacks.Set(attackIndex, attackProjectileDeviationInsane, ChaserProfileAttackData_ProjectileDeviationInsane);
+		attacks.Set(attackIndex, attackProjectileDeviationNightmare, ChaserProfileAttackData_ProjectileDeviationNightmare);
+		attacks.Set(attackIndex, attackProjectileDeviationApollyon, ChaserProfileAttackData_ProjectileDeviationApollyon);
+		attacks.Set(attackIndex, attackCritProjectiles, ChaserProfileAttackData_ProjectileCrits);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownPercent, ChaserProfileAttackData_ProjectileIceSlowdownPercent);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownPercentEasy, ChaserProfileAttackData_ProjectileIceSlowdownPercentEasy);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownPercentHard, ChaserProfileAttackData_ProjectileIceSlowdownPercentHard);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownPercentInsane, ChaserProfileAttackData_ProjectileIceSlowdownPercentInsane);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownPercentNightmare, ChaserProfileAttackData_ProjectileIceSlowdownPercentNightmare);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownPercentApollyon, ChaserProfileAttackData_ProjectileIceSlowdownPercentApollyon);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownDuration, ChaserProfileAttackData_ProjectileIceSlowdownDuration);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownDurationEasy, ChaserProfileAttackData_ProjectileIceSlowdownDurationEasy);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownDurationHard, ChaserProfileAttackData_ProjectileIceSlowdownDurationHard);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownDurationInsane, ChaserProfileAttackData_ProjectileIceSlowdownDurationInsane);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownDurationNightmare, ChaserProfileAttackData_ProjectileIceSlowdownDurationNightmare);
+		attacks.Set(attackIndex, attackProjectileIceSlowdownDurationApollyon, ChaserProfileAttackData_ProjectileIceSlowdownDurationApollyon);
+		attacks.Set(attackIndex, attackProjectileCount, ChaserProfileAttackData_ProjectileCount);
+		attacks.Set(attackIndex, attackProjectileCountEasy, ChaserProfileAttackData_ProjectileCountEasy);
+		attacks.Set(attackIndex, attackProjectileCountHard, ChaserProfileAttackData_ProjectileCountHard);
+		attacks.Set(attackIndex, attackProjectileCountInsane, ChaserProfileAttackData_ProjectileCountInsane);
+		attacks.Set(attackIndex, attackProjectileCountNightmare, ChaserProfileAttackData_ProjectileCountNightmare);
+		attacks.Set(attackIndex, attackProjectileCountApollyon, ChaserProfileAttackData_ProjectileCountApollyon);
+		attacks.Set(attackIndex, attackProjectileType, ChaserProfileAttackData_ProjectileType);
+		attacks.Set(attackIndex, attackBulletCount, ChaserProfileAttackData_BulletCount);
+		attacks.Set(attackIndex, attackBulletCountEasy, ChaserProfileAttackData_BulletCountEasy);
+		attacks.Set(attackIndex, attackBulletCountHard, ChaserProfileAttackData_BulletCountHard);
+		attacks.Set(attackIndex, attackBulletCountInsane, ChaserProfileAttackData_BulletCountInsane);
+		attacks.Set(attackIndex, attackBulletCountNightmare, ChaserProfileAttackData_BulletCountNightmare);
+		attacks.Set(attackIndex, attackBulletCountApollyon, ChaserProfileAttackData_BulletCountApollyon);
+		attacks.Set(attackIndex, attackBulletDamage, ChaserProfileAttackData_BulletDamage);
+		attacks.Set(attackIndex, attackBulletDamageEasy, ChaserProfileAttackData_BulletDamageEasy);
+		attacks.Set(attackIndex, attackBulletDamageHard, ChaserProfileAttackData_BulletDamageHard);
+		attacks.Set(attackIndex, attackBulletDamageInsane, ChaserProfileAttackData_BulletDamageInsane);
+		attacks.Set(attackIndex, attackBulletDamageNightmare, ChaserProfileAttackData_BulletDamageNightmare);
+		attacks.Set(attackIndex, attackBulletDamageApollyon, ChaserProfileAttackData_BulletDamageApollyon);
+		attacks.Set(attackIndex, attackBulletSpread, ChaserProfileAttackData_BulletSpread);
+		attacks.Set(attackIndex, attackBulletSpreadEasy, ChaserProfileAttackData_BulletSpreadEasy);
+		attacks.Set(attackIndex, attackBulletSpreadHard, ChaserProfileAttackData_BulletSpreadHard);
+		attacks.Set(attackIndex, attackBulletSpreadInsane, ChaserProfileAttackData_BulletSpreadInsane);
+		attacks.Set(attackIndex, attackBulletSpreadNightmare, ChaserProfileAttackData_BulletSpreadNightmare);
+		attacks.Set(attackIndex, attackBulletSpreadApollyon, ChaserProfileAttackData_BulletSpreadApollyon);
+		attacks.Set(attackIndex, attackLaserDamage, ChaserProfileAttackData_LaserDamage);
+		attacks.Set(attackIndex, attackLaserDamageEasy, ChaserProfileAttackData_LaserDamageEasy);
+		attacks.Set(attackIndex, attackLaserDamageHard, ChaserProfileAttackData_LaserDamageHard);
+		attacks.Set(attackIndex, attackLaserDamageInsane, ChaserProfileAttackData_LaserDamageInsane);
+		attacks.Set(attackIndex, attackLaserDamageNightmare, ChaserProfileAttackData_LaserDamageNightmare);
+		attacks.Set(attackIndex, attackLaserDamageApollyon, ChaserProfileAttackData_LaserDamageApollyon);
+		attacks.Set(attackIndex, attackLaserSize, ChaserProfileAttackData_LaserSize);
+		attacks.Set(attackIndex, attackLaserColorR, ChaserProfileAttackData_LaserColorR);
+		attacks.Set(attackIndex, attackLaserColorG, ChaserProfileAttackData_LaserColorG);
+		attacks.Set(attackIndex, attackLaserColorB, ChaserProfileAttackData_LaserColorB);
+		attacks.Set(attackIndex, attackLaserAttachment, ChaserProfileAttackData_LaserAttachment);
+		attacks.Set(attackIndex, attackLaserDuration, ChaserProfileAttackData_LaserDuration);
+		attacks.Set(attackIndex, attackLaserNoise, ChaserProfileAttackData_LaserNoise);
+		attacks.Set(attackIndex, attackPullIn, ChaserProfileAttackData_PullIn);
+		attacks.Set(attackIndex, attackWhileRunning, ChaserProfileAttackData_CanAttackWhileRunning);
+		attacks.Set(attackIndex, attackRunSpeed, ChaserProfileAttackData_RunSpeed);
+		attacks.Set(attackIndex, attackRunSpeedEasy, ChaserProfileAttackData_RunSpeedEasy);
+		attacks.Set(attackIndex, attackRunSpeedHard, ChaserProfileAttackData_RunSpeedHard);
+		attacks.Set(attackIndex, attackRunSpeedInsane, ChaserProfileAttackData_RunSpeedInsane);
+		attacks.Set(attackIndex, attackRunSpeedNightmare, ChaserProfileAttackData_RunSpeedNightmare);
+		attacks.Set(attackIndex, attackRunSpeedApollyon, ChaserProfileAttackData_RunSpeedApollyon);	
+		attacks.Set(attackIndex, attackRunDuration, ChaserProfileAttackData_RunDuration);
+		attacks.Set(attackIndex, attackRunDelay, ChaserProfileAttackData_RunDelay);
+		attacks.Set(attackIndex, attackUseOnDifficulty, ChaserProfileAttackData_UseOnDifficulty);
+		attacks.Set(attackIndex, attackBlockOnDifficulty, ChaserProfileAttackData_BlockOnDifficulty);
+		attacks.Set(attackIndex, attackExplosiveDanceRadius, ChaserProfileAttackData_ExplosiveDanceRadius);
+		attacks.Set(attackIndex, attackGestures, ChaserProfileAttackData_Gestures);
+		attacks.Set(attackIndex, attackDeathCamLowHealth, ChaserProfileAttackData_DeathCamLowHealth);
+		attacks.Set(attackIndex, attackUseOnHealth, ChaserProfileAttackData_UseOnHealth);
+		attacks.Set(attackIndex, attackBlockOnHealth, ChaserProfileAttackData_BlockOnHealth);
 
-		if (iMaxAttacks > 0)//Backward compatibility
+		if (maxAttacks > 0)//Backward compatibility
 		{
 			kv.GoBack();
 		}
 		else
+		{
 			break;
+		}
 	}
-	if (iMaxAttacks > 0)
+	if (maxAttacks > 0)
+	{
 		kv.GoBack();
-	return iMaxAttacks;
+	}
+	return maxAttacks;
 }
 
-stock bool GetProfileGesture(int bossIndex, const char[] profile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, float &flCycle, int iAnimationIndex = -1)
+stock bool GetProfileGesture(int bossIndex, const char[] profile, int animationSection, char[] animation, int length, float &playbackRate, float &cycle, int animationIndex = -1)
 {
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
-	char sAnimationSection[40], sKeyGestureName[65], sKeyGesturePlayBackRate[65], sKeyGestureCycle[65];
-	switch (iAnimationSection)
+	char animationSectionName[40], keyGestureName[65], keyGesturePlayBackRate[65], keyGestureCycle[65];
+	switch (animationSection)
 	{
 		case ChaserAnimation_AttackAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
-			strcopy(sKeyGestureName, sizeof(sKeyGestureName), "gesture_attack");
-			strcopy(sKeyGesturePlayBackRate, sizeof(sKeyGesturePlayBackRate), "gesture_attack_playbackrate");
-			strcopy(sKeyGestureCycle, sizeof(sKeyGestureCycle), "gesture_attack_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "attack");
+			strcopy(keyGestureName, sizeof(keyGestureName), "gesture_attack");
+			strcopy(keyGesturePlayBackRate, sizeof(keyGesturePlayBackRate), "gesture_attack_playbackrate");
+			strcopy(keyGestureCycle, sizeof(keyGestureCycle), "gesture_attack_cycle");
 		}
 	}
 	if (g_Config.JumpToKey("animations"))
 	{
-		if (g_Config.JumpToKey(sAnimationSection))
+		if (g_Config.JumpToKey(animationSectionName))
 		{
-			char sNum[3];
-			if (iAnimationIndex == -1)
+			char num[3];
+			if (animationIndex == -1)
 			{
-				int iTotalAnimation;
-				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
+				int totalAnimation;
+				for (animationIndex = 1; animationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; animationIndex++)
 				{
-					FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
-					if (g_Config.JumpToKey(sNum))
+					FormatEx(num, sizeof(num), "%d", animationIndex);
+					if (g_Config.JumpToKey(num))
 					{
-						iTotalAnimation++;
+						totalAnimation++;
 						g_Config.GoBack();
 					}
 				}
-				iAnimationIndex = GetRandomInt(1, iTotalAnimation);
+				animationIndex = GetRandomInt(1, totalAnimation);
 			}
-			FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
-			if (!g_Config.JumpToKey(sNum))
+			FormatEx(num, sizeof(num), "%d", animationIndex);
+			if (!g_Config.JumpToKey(num))
 			{
 				return false;
 			}
 		}
 		else
+		{
 			return false;
+		}
 	}
-	g_Config.GetString(sKeyGestureName, sAnimation, iLenght);
-	flPlaybackRate = g_Config.GetFloat(sKeyGesturePlayBackRate, 1.0);
-	flCycle = g_Config.GetFloat(sKeyGestureCycle, 0.0);
+	g_Config.GetString(keyGestureName, animation, length);
+	playbackRate = g_Config.GetFloat(keyGesturePlayBackRate, 1.0);
+	cycle = g_Config.GetFloat(keyGestureCycle, 0.0);
 	return true;
 }
 
-stock bool GetProfileAnimation(int bossIndex, const char[] profile, int iAnimationSection, char[] sAnimation, int iLenght, float &flPlaybackRate, int difficulty, int iAnimationIndex = -1, float &flFootstepInterval, float &flCycle = 0.0)
+stock bool GetProfileAnimation(int bossIndex, const char[] profile, int animationSection, char[] animation, int length, float &playbackRate, int difficulty, int animationIndex = -1, float &footstepInterval, float &cycle = 0.0)
 {
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
-	char sAnimationSection[40], sKeyAnimationName[65], sKeyAnimationPlayBackRate[65], sKeyAnimationFootstepInt[65], sKeyAnimationCycle[65];
-	switch (iAnimationSection)
+	char animationSectionName[40], keyAnimationName[65], keyAnimationPlayBackRate[65], keyAnimationFootstepInt[65], keyAnimationCycle[65];
+	switch (animationSection)
 	{
 		case ChaserAnimation_IdleAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "idle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "idle");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_idle");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_idle_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_idle_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_idle");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_idle_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_idle_footstepinterval");
 			}
 		}
 		case ChaserAnimation_WalkAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "walk");
+			strcopy(animationSectionName, sizeof(animationSectionName), "walk");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walk");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walk_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walk");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walk_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_footstepinterval");
 			}
 		}
 		case ChaserAnimation_WalkAlertAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "walkalert");
+			strcopy(animationSectionName, sizeof(animationSectionName), "walkalert");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_walkalert");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_walkalert_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_walkalert");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_walkalert_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_footstepinterval");
 			}
 		}
 		case ChaserAnimation_AttackAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_attack");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_attack_playbackrate");
-			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_attack_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "attack");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_attack");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_attack_playbackrate");
+			strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_attack_footstepinterval");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_attack_cycle");
 		}
 		case ChaserAnimation_ShootAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "shoot");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_shoot");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_shoot_playbackrate");
-			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_attack_footstepinterval");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_shoot_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "shoot");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_shoot");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_shoot_playbackrate");
+			strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_attack_footstepinterval");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_shoot_cycle");
 		}
 		case ChaserAnimation_RunAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
+			strcopy(animationSectionName, sizeof(animationSectionName), "run");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_run");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_run_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_run");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_run_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_footstepinterval");
 			}
 		}
 		case ChaserAnimation_RunAltAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
+			strcopy(animationSectionName, sizeof(animationSectionName), "run");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_runalt");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_runalt_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_runalt_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_runalt");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_runalt_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_runalt_footstepinterval");
 			}
 		}
 		case ChaserAnimation_ChaseInitialAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "chaseinitial");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_chaseinitial");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_chaseinitial_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_chaseinitial_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "chaseinitial");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_chaseinitial");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_chaseinitial_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_chaseinitial_cycle");
 		}
 		case ChaserAnimation_RageAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "rage");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_rage");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_rage_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_rage_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "rage");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_rage");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_rage_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_rage_cycle");
 		}
 		case ChaserAnimation_StunAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "stun");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_stun");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_stun_playbackrate");
-			strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_stun_footstepinterval");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_stun_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "stun");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_stun");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_stun_playbackrate");
+			strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_stun_footstepinterval");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_stun_cycle");
 		}
 		case ChaserAnimation_DeathAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "death");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_death");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_death_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_death_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "death");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_death");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_death_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_death_cycle");
 		}
 		case ChaserAnimation_JumpAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "jump");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_jump");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_jump_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_jump_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "jump");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_jump");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_jump_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_jump_cycle");
 		}
 		case ChaserAnimation_SpawnAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "spawn");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_spawn");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_spawn_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_spawn_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "spawn");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_spawn");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_spawn_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_spawn_cycle");
 		}
 		case ChaserAnimation_FleeInitialAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "fleestart");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_fleestart");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_fleestart_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_fleestart_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "fleestart");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_fleestart");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_fleestart_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_fleestart_cycle");
 		}
 		case ChaserAnimation_HealAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "heal");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_heal");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_heal_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_heal_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "heal");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_heal");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_heal_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_heal_cycle");
 		}
 		case ChaserAnimation_DeathcamAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_deathcam");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_deathcam_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_deathcam_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "deathcam");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_deathcam");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_deathcam_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_deathcam_cycle");
 		}
 		case ChaserAnimation_CloakStartAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "cloakstart");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_cloakstart");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_cloakstart_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_cloakstart_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "cloakstart");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_cloakstart");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_cloakstart_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_cloakstart_cycle");
 		}
 		case ChaserAnimation_CloakEndAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "cloakend");
-			strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_cloakend");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_cloakend_playbackrate");
-			strcopy(sKeyAnimationCycle, sizeof(sKeyAnimationCycle), "animation_cloakend_cycle");
+			strcopy(animationSectionName, sizeof(animationSectionName), "cloakend");
+			strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_cloakend");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_cloakend_playbackrate");
+			strcopy(keyAnimationCycle, sizeof(keyAnimationCycle), "animation_cloakend_cycle");
 		}
 		case ChaserAnimation_CrawlWalkAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "crawlwalk");
+			strcopy(animationSectionName, sizeof(animationSectionName), "crawlwalk");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlwalk");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlwalk_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_walk_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlwalk");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlwalk_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_walk_footstepinterval");
 			}
 		}
 		case ChaserANimation_CrawlRunAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "crawlrun");
+			strcopy(animationSectionName, sizeof(animationSectionName), "crawlrun");
 			if (g_SlenderDifficultyAnimations[bossIndex])
 			{
 				switch (difficulty)
 				{
 					case Difficulty_Easy:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun_easy");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_easy_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_easy_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun_easy");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_easy_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_easy_footstepinterval");
 					}
 					case Difficulty_Normal:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_footstepinterval");
 					}
 					case Difficulty_Hard:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun_hard");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_hard_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_hard_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun_hard");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_hard_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_hard_footstepinterval");
 					}
 					case Difficulty_Insane:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun_insane");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_insane_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_insane_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun_insane");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_insane_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_insane_footstepinterval");
 					}
 					case Difficulty_Nightmare:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun_nightmare");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_nightmare_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_nightmare_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun_nightmare");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_nightmare_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_nightmare_footstepinterval");
 					}
 					case Difficulty_Apollyon:
 					{
-						strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun_apollyon");
-						strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_apollyon_playbackrate");
-						strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_apollyon_footstepinterval");
+						strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun_apollyon");
+						strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_apollyon_playbackrate");
+						strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_apollyon_footstepinterval");
 					}
 				}
 			}
 			else
 			{
-				strcopy(sKeyAnimationName, sizeof(sKeyAnimationName), "animation_crawlrun");
-				strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "animation_crawlrun_playbackrate");
-				strcopy(sKeyAnimationFootstepInt, sizeof(sKeyAnimationFootstepInt), "animation_run_footstepinterval");
+				strcopy(keyAnimationName, sizeof(keyAnimationName), "animation_crawlrun");
+				strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "animation_crawlrun_playbackrate");
+				strcopy(keyAnimationFootstepInt, sizeof(keyAnimationFootstepInt), "animation_run_footstepinterval");
 			}
 		}
 	}
 	
 	if (g_Config.JumpToKey("animations"))
 	{
-		if (g_Config.JumpToKey(sAnimationSection))
+		if (g_Config.JumpToKey(animationSectionName))
 		{
-			char sNum[3];
-			if (iAnimationIndex == -1)
+			char num[3];
+			if (animationIndex == -1)
 			{
-				int iTotalAnimation;
-				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
+				int totalAnimation;
+				for (animationIndex = 1; animationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; animationIndex++)
 				{
-					FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
-					if (g_Config.JumpToKey(sNum))
+					FormatEx(num, sizeof(num), "%d", animationIndex);
+					if (g_Config.JumpToKey(num))
 					{
-						iTotalAnimation++;
+						totalAnimation++;
 						g_Config.GoBack();
 					}
 				}
-				iAnimationIndex = GetRandomInt(1, iTotalAnimation);
+				animationIndex = GetRandomInt(1, totalAnimation);
 			}
-			FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
-			if (!g_Config.JumpToKey(sNum))
+			FormatEx(num, sizeof(num), "%d", animationIndex);
+			if (!g_Config.JumpToKey(num))
 			{
 				return false;
 			}
 		}
 		else
+		{
 			return false;
+		}
 	}
-	g_Config.GetString(sKeyAnimationName, sAnimation, iLenght);
-	flPlaybackRate = g_Config.GetFloat(sKeyAnimationPlayBackRate, 1.0);
-	flFootstepInterval = g_Config.GetFloat(sKeyAnimationFootstepInt);
-	flCycle = g_Config.GetFloat(sKeyAnimationCycle);
+	g_Config.GetString(keyAnimationName, animation, length);
+	playbackRate = g_Config.GetFloat(keyAnimationPlayBackRate, 1.0);
+	footstepInterval = g_Config.GetFloat(keyAnimationFootstepInt);
+	cycle = g_Config.GetFloat(keyAnimationCycle);
 	return true;
 }
 
-stock bool GetProfileBlendAnimationSpeed(const char[] profile, int iAnimationSection, float &flPlaybackRate, int iAnimationIndex = -1)
+stock bool GetProfileBlendAnimationSpeed(const char[] profile, int animationSection, float &playbackRate, int animationIndex = -1)
 {
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
-	char sAnimationSection[20], sKeyAnimationPlayBackRate[65];
-	switch (iAnimationSection)
+	char animationSectionName[20], keyAnimationPlayBackRate[65];
+	switch (animationSection)
 	{
 		case ChaserAnimation_IdleAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "idle");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_idle_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "idle");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_idle_playbackrate");
 		}
 		case ChaserAnimation_WalkAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "walk");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_walk_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "walk");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_walk_playbackrate");
 		}
 		case ChaserAnimation_WalkAlertAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "walkalert");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_walkalert_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "walkalert");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_walkalert_playbackrate");
 		}
 		case ChaserAnimation_AttackAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "attack");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_attack_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "attack");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_attack_playbackrate");
 		}
 		case ChaserAnimation_ShootAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "shoot");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_shoot_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "shoot");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_shoot_playbackrate");
 		}
 		case ChaserAnimation_RunAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "run");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_run_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "run");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_run_playbackrate");
 		}
 		case ChaserAnimation_ChaseInitialAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "chaseinitial");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_chaseinitial_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "chaseinitial");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_chaseinitial_playbackrate");
 		}
 		case ChaserAnimation_RageAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "rage");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_rage_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "rage");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_rage_playbackrate");
 		}
 		case ChaserAnimation_StunAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "stun");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_stun_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "stun");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_stun_playbackrate");
 		}
 		case ChaserAnimation_DeathAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "death");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_death_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "death");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_death_playbackrate");
 		}
 		case ChaserAnimation_JumpAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "jump");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_jump_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "jump");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_jump_playbackrate");
 		}
 		case ChaserAnimation_SpawnAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "spawn");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_spawn_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "spawn");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_spawn_playbackrate");
 		}
 		case ChaserAnimation_HealAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "heal");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_heal_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "heal");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_heal_playbackrate");
 		}
 		case ChaserAnimation_DeathcamAnimations:
 		{
-			strcopy(sAnimationSection, sizeof(sAnimationSection), "deathcam");
-			strcopy(sKeyAnimationPlayBackRate, sizeof(sKeyAnimationPlayBackRate), "blend_animation_deathcam_playbackrate");
+			strcopy(animationSectionName, sizeof(animationSectionName), "deathcam");
+			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_deathcam_playbackrate");
 		}
 	}
 	
 	if (g_Config.JumpToKey("animations"))
 	{
-		if (g_Config.JumpToKey(sAnimationSection))
+		if (g_Config.JumpToKey(animationSectionName))
 		{
-			char sNum[3];
-			if (iAnimationIndex == -1)
+			char num[3];
+			if (animationIndex == -1)
 			{
-				int iTotalAnimation;
-				for (iAnimationIndex = 1; iAnimationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; iAnimationIndex++)
+				int totalAnimation;
+				for (animationIndex = 1; animationIndex <= SF2_CHASER_BOSS_MAX_ANIMATIONS; animationIndex++)
 				{
-					FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
-					if (g_Config.JumpToKey(sNum))
+					FormatEx(num, sizeof(num), "%d", animationIndex);
+					if (g_Config.JumpToKey(num))
 					{
-						iTotalAnimation++;
+						totalAnimation++;
 						g_Config.GoBack();
 					}
 				}
-				iAnimationIndex = GetRandomInt(1, iTotalAnimation);
+				animationIndex = GetRandomInt(1, totalAnimation);
 			}
-			FormatEx(sNum, sizeof(sNum), "%d", iAnimationIndex);
-			if (!g_Config.JumpToKey(sNum))
+			FormatEx(num, sizeof(num), "%d", animationIndex);
+			if (!g_Config.JumpToKey(num))
 			{
 				return false;
 			}
 		}
 		else
+		{
 			return false;
+		}
 	}
-	flPlaybackRate = g_Config.GetFloat(sKeyAnimationPlayBackRate, 1.0);
+	playbackRate = g_Config.GetFloat(keyAnimationPlayBackRate, 1.0);
 	return true;
 }

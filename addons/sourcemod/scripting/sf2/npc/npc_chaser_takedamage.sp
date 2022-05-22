@@ -23,26 +23,32 @@
     }
 */
 
-public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype)
+public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	if (!IsValidEntity(victim))
 	{
 		//Theres no boss, what?
-		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
-		return;
+		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamage);
+		return Plugin_Stop;
 	}
 
 	float myPos[3], myEyeAng[3], clientPos[3], buffer[3], traceStartPos[3], traceEndPos[3];
 	GetEntPropVector(victim, Prop_Data, "m_vecAbsOrigin", myPos);
 
-	int bossIndex = NPCGetFromEntIndex(g_SlenderHitboxOwner[victim]);
+	int maxHealth = GetEntProp(victim, Prop_Data, "m_iMaxHealth");
+	if (GetEntProp(victim, Prop_Data, "m_iHealth") != maxHealth)
+	{
+		SetEntProp(victim, Prop_Data, "m_iHealth", maxHealth);
+	}
+
+	int bossIndex = NPCGetFromEntIndex(victim);
 	if (bossIndex == -1)
 	{
 		//Theres still no boss, how did this happen?
-		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_HitboxOnTakeDamage);
-		return;
+		SDKUnhook(victim, SDKHook_OnTakeDamageAlive, Hook_SlenderOnTakeDamage);
+		return Plugin_Stop;
 	}
-	int slender = g_SlenderHitboxOwner[victim];
+	int slender = victim;
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
@@ -71,8 +77,8 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 		}
 		else
 		{
-			int maxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
-			SetEntityHealth(attacker, maxHealth);
+			int clientMaxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
+			SetEntityHealth(attacker, clientMaxHealth);
 		}
 	}
 
@@ -145,6 +151,16 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 		if (IsValidEntity(whip) && GetEntProp(whip, Prop_Send, "m_iItemDefinitionIndex") == 447 && whip == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
 		{
 			TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
+		}
+		else if (IsValidEntity(whip) && GetEntProp(whip, Prop_Send, "m_iItemDefinitionIndex") == 416 && whip == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
+		{
+			float zVelocity[3];
+			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", zVelocity);
+			if (zVelocity[2] < 0.0) //A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
+			{
+				damagetype |= DMG_CRIT;
+				damage *= 3.0;
+			}
 		}
 	}
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && TF2_GetPlayerClass(attacker) == TFClass_Heavy)
@@ -296,9 +312,9 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 	{
 		damage = 0.0;
 	}
-	bool bAttackEliminated = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+	bool attackEliminated = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 
-	if (SF_IsBoxingMap() && IsValidClient(attacker) && !bAttackEliminated && (GetClientTeam(attacker) == TFTeam_Blue))
+	if (SF_IsBoxingMap() && IsValidClient(attacker) && !attackEliminated && (GetClientTeam(attacker) == TFTeam_Blue))
 	{
 		damage = 0.0;
 	}
@@ -321,11 +337,59 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 					Call_Finish();
 					if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
 					{
-						int maxHealth = SDKCall(g_SDKGetMaxHealth, attacker);
-						float healthToRecover = float(maxHealth)/7.5;
+						int clientMaxHealth = SDKCall(g_SDKGetMaxHealth, attacker);
+						float healthToRecover = float(clientMaxHealth)/7.5;
 						int _healthToRecover = RoundToNearest(healthToRecover) + GetEntProp(attacker, Prop_Send, "m_iHealth");
 						SetEntityHealth(attacker, _healthToRecover);
 					}
+				}
+				Event event = CreateEvent("npc_hurt");
+				if (event)
+				{
+					event.SetInt("entindex", slender);
+					event.SetInt("health", 2147483646);
+					event.SetInt("damageamount", RoundToFloor(damage));
+					event.SetBool("crit", (damagetype & DMG_CRIT) ? true : false);
+
+					if (IsValidClient(attacker))
+					{
+						event.SetInt("attacker_player", GetClientUserId(attacker));
+						event.SetInt("weaponid", 0);
+					}
+					else 
+					{
+						event.SetInt("attacker_player", 0);
+						event.SetInt("weaponid", 0);
+					}
+
+					event.Fire();
+				}
+				
+				if ((damagetype & DMG_CRIT) && !miniCrit)
+				{
+					float myEyePos[3];
+					SlenderGetAbsOrigin(bossIndex, myEyePos);
+					float myEyePosEx[3];
+					GetEntPropVector(slender, Prop_Send, "m_vecMaxs", myEyePosEx);
+					myEyePos[2] += myEyePosEx[2];
+						
+					TE_Particle(g_Particles[CriticalHit], myEyePos, myEyePos);
+					TE_SendToAll();
+						
+					EmitSoundToAll(CRIT_SOUND, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				}
+				else if (miniCrit)
+				{
+					float myEyePos[3];
+					SlenderGetAbsOrigin(bossIndex, myEyePos);
+					float myEyePosEx[3];
+					GetEntPropVector(slender, Prop_Send, "m_vecMaxs", myEyePosEx);
+					myEyePos[2]+=myEyePosEx[2];
+						
+					TE_Particle(g_Particles[MiniCritHit], myEyePos, myEyePos);
+					TE_SendToAll();
+						
+					EmitSoundToAll(MINICRIT_SOUND, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 				}
 			}
 				
@@ -335,38 +399,12 @@ public void Hook_SlenderOnTakeDamage(int victim, int attacker, int inflictor, fl
 				UpdateHealthBar(bossIndex);
 			}
 		}
-		if ((damagetype & DMG_CRIT) && !miniCrit)
-		{
-			float myEyePos[3];
-			SlenderGetAbsOrigin(bossIndex, myEyePos);
-			float myEyePosEx[3];
-			GetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMaxs", myEyePosEx);
-			myEyePos[2] += myEyePosEx[2];
-				
-			TE_Particle(g_Particles[CriticalHit], myEyePos, myEyePos);
-			TE_SendToAll();
-				
-			EmitSoundToAll(CRIT_SOUND, g_SlenderHitbox[bossIndex], SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-		}
-		else if (miniCrit)
-		{
-			float myEyePos[3];
-			SlenderGetAbsOrigin(bossIndex, myEyePos);
-			float myEyePosEx[3];
-			GetEntPropVector(g_SlenderHitbox[bossIndex], Prop_Send, "m_vecMaxs", myEyePosEx);
-			myEyePos[2]+=myEyePosEx[2];
-				
-			TE_Particle(g_Particles[MiniCritHit], myEyePos, myEyePos);
-			TE_SendToAll();
-				
-			EmitSoundToAll(MINICRIT_SOUND, g_SlenderHitbox[bossIndex], SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-		}
 	}
 
-	return;
+	return Plugin_Changed;
 }
 
-void UpdateHealthBar(int bossIndex)
+void UpdateHealthBar(int bossIndex, int optionalSetPercent = -1)
 {
 	float maxHealth = NPCChaserGetStunInitialHealth(bossIndex);
 	float health = NPCChaserGetStunHealth(bossIndex);
@@ -384,6 +422,10 @@ void UpdateHealthBar(int bossIndex)
 	else if (healthPercent<=0)
 	{
 		healthPercent=0;
+	}
+	if (optionalSetPercent > -1)
+	{
+		healthPercent = optionalSetPercent;
 	}
 	SetEntProp(g_HealthBar, Prop_Send, "m_iBossHealthPercentageByte", healthPercent);
 }
@@ -639,55 +681,4 @@ public void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_P
 	}
 
 	NPCChaserUpdateBossAnimation(bossIndex, victim, g_SlenderState[bossIndex]);
-}
-
-public Action Hook_HitboxOnTakeDamage(int hitbox,int &attacker,int &inflictor,float &damage,int &damagetype)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	int bossIndex = NPCGetFromEntIndex(g_SlenderHitboxOwner[hitbox]);
-	if (bossIndex != -1 && NPCGetUniqueID(bossIndex) != -1 && NPCChaserGetState(bossIndex) == STATE_STUN)
-	{
-		damage = 0.0;
-	}
-	if (!IsValidClient(attacker))
-	{
-		damage = 0.0;
-	}
-	Hook_SlenderOnTakeDamage(hitbox, attacker, inflictor, damage, damagetype);
-	int iBossHealth = GetEntProp(hitbox, Prop_Data, "m_iHealth");
-
-	if (damage >= float(iBossHealth))
-	{	
-		RemoveSlender(bossIndex);
-	}
-	
-	return Plugin_Changed;
-}
-
-public Action Hook_SlenderOnTakeDamageOriginal(int slender,int &attacker,int &inflictor,float &damage,int &damagetype)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-	
-	int bossIndex = NPCGetFromEntIndex(slender);
-	if (bossIndex == -1)
-	{
-		return Plugin_Continue;
-	}
-	if (IsValidEntity(attacker) && IsValidEntity(g_SlenderHitbox[bossIndex]))
-	{
-		if (attacker <= MaxClients && !IsValidClient(attacker))
-		{
-			return Plugin_Continue;
-		}
-		SDKHooks_TakeDamage(g_SlenderHitbox[bossIndex], attacker, attacker, damage, damagetype);
-		Hook_SlenderOnTakeDamage(slender, attacker, inflictor, damage, damagetype);
-	}
-	return Plugin_Changed;
 }

@@ -432,7 +432,10 @@ int EntitySetAnimation(int entity, const char[] name, float playbackRate = 1.0, 
 	if (sequence != -1)
 	{
 		animationEntity.ResetSequence(sequence);
-		SetEntPropFloat(entity, Prop_Data, "m_flCycle", cycle);
+		if (cycle > 0.0)
+		{
+			SetEntPropFloat(entity, Prop_Data, "m_flCycle", cycle);
+		}
 	}
 
 	if (playbackRate<-12.0)
@@ -1183,7 +1186,7 @@ stock float TF2_GetClassBaseSpeed(TFClassType class)
 	return 0.0;
 }
 
-stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att, bool disableCrits = false)
+stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att)
 {
 	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
 	TF2Items_SetClassname(item, classname);
@@ -1191,50 +1194,22 @@ stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality,
 	TF2Items_SetLevel(item, level);
 	TF2Items_SetQuality(item, quality);
 
-	if (disableCrits)
+	// Set attributes.
+	char atts[32][32];
+	int count = ExplodeString(att, " ; ", atts, 32, 32);
+	if (count > 1)
 	{
-		// Set attributes.
-		char atts[32][32];
-		int count = ExplodeString(att, " ; ", atts, 32, 32);
-		if (count > 1)
+		TF2Items_SetNumAttributes(item, count / 2);
+		int i2 = 0;
+		for (int i = 0; i < count; i+= 2)
 		{
-			TF2Items_SetNumAttributes(item, count / 2);
-			int i2 = 0;
-			for (int i = 0; i < count + 2; i+= 2)
-			{
-				if (i == count)
-				{
-					TF2Items_SetAttribute(item, i2, 28, 0.0);
-				}
-				else TF2Items_SetAttribute(item, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
-				i2++;
-			}
-		}
-		else
-		{
-			TF2Items_SetNumAttributes(item, 1);
-			TF2Items_SetAttribute(item, 0, 28, 0.0);
+			TF2Items_SetAttribute(item, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
+			i2++;
 		}
 	}
 	else
 	{
-		// Set attributes.
-		char atts[32][32];
-		int count = ExplodeString(att, " ; ", atts, 32, 32);
-		if (count > 1)
-		{
-			TF2Items_SetNumAttributes(item, count / 2);
-			int i2 = 0;
-			for (int i = 0; i < count; i+= 2)
-			{
-				TF2Items_SetAttribute(item, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
-				i2++;
-			}
-		}
-		else
-		{
-			TF2Items_SetNumAttributes(item, 0);
-		}	
+		TF2Items_SetNumAttributes(item, 0);
 	}
 	
 	return item;
@@ -1295,6 +1270,19 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
 	}
 	
 	TF2_RemoveWeaponSlot(client, slot);
+}
+
+stock void TF2_StripContrackerOnly(int client)
+{
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "tf_wearable_campaign_item")) > MaxClients)
+	{
+		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
+		{
+			RemoveEntity(ent);
+			break;
+		}
+	}
 }
 
 void TE_Particle(int particleIndex, float origin[3]=NULL_VECTOR, float start[3]=NULL_VECTOR, float angles[3]=NULL_VECTOR, int entindex=-1, int attachtype=-1, int attachpoint=-1, bool resetParticles=true)
@@ -1828,17 +1816,6 @@ public Action Timer_KillEdict(Handle timer, any entref)
 
 	return Plugin_Stop;
 }
-public Action Timer_KillSlender(Handle timer, any data)
-{
-	if (data == -1 || NPCGetUniqueID(data) == -1)
-	{
-		return Plugin_Stop;
-	}
-	
-	RemoveSlender(data);
-
-	return Plugin_Stop;
-}
 
 //	==========================================================
 //	SPECIAL ROUND FUNCTIONS
@@ -2088,4 +2065,14 @@ void DispatchParticleEffectBeam(int entity, const char[] particle, float startPo
 		LogError("There is no valid particle to use for effects.");
 		return;
 	}
+}
+
+MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
+{
+	if (!IsValidEntity(glow))
+	{
+		return MRES_Ignored;
+	}
+	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
+	return MRES_Supercede;
 }

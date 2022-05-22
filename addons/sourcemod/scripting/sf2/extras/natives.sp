@@ -346,8 +346,8 @@ void SDK_Init()
 		PrintToServer("Failed to retrieve INextBot::GetLocomotionInterface offset from SF2 gamedata!");
 	}
 	//Hook_ClientWantsLagCompensationOnEntity
-	int iOffset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
-	g_DHookWantsLagCompensationOnEntity = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity); 
+	int offset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
+	g_DHookWantsLagCompensationOnEntity = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity); 
 	if (g_DHookWantsLagCompensationOnEntity == null)
 	{
 		SetFailState("Failed to create hook CTFPlayer::WantsLagCompensationOnEntity offset from SF2 gamedata!");
@@ -357,37 +357,37 @@ void SDK_Init()
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_Unknown);
 	//Hook_EntityShouldTransmit
-	iOffset = gameData.GetOffset("CBaseEntity::ShouldTransmit");
-	g_DHookShouldTransmit = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	offset = gameData.GetOffset("CBaseEntity::ShouldTransmit");
+	g_DHookShouldTransmit = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_DHookShouldTransmit == null)
 	{
 		SetFailState("Failed to create hook CBaseEntity::ShouldTransmit offset from SF2 gamedata!");
 	}
 	DHookAddParam(g_DHookShouldTransmit, HookParamType_ObjectPtr);
 
-	iOffset = gameData.GetOffset("CBaseEntity::UpdateTransmitState");
-	g_DHookUpdateTransmitState = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	offset = gameData.GetOffset("CBaseEntity::UpdateTransmitState");
+	g_DHookUpdateTransmitState = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (!g_DHookUpdateTransmitState)
 	{
 		SetFailState("Failed to create hook CBaseEntity::UpdateTransmitState offset from SF2 gamedata!");
 	}
 	//Hook_WeaponGetCustomDamageType
-	iOffset = gameData.GetOffset("CTFWeaponBase::GetCustomDamageType");
-	g_DHookWeaponGetCustomDamageType = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	offset = gameData.GetOffset("CTFWeaponBase::GetCustomDamageType");
+	g_DHookWeaponGetCustomDamageType = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_DHookWeaponGetCustomDamageType == null)
 	{
 		SetFailState("Failed to create hook CTFWeaponBase::GetCustomDamageType offset from SF2 gamedata!");
 	}
 
-	iOffset = gameData.GetOffset("CBaseProjectile::CanCollideWithTeammates");
-	g_DHookProjectileCanCollideWithTeammates = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	offset = gameData.GetOffset("CBaseProjectile::CanCollideWithTeammates");
+	g_DHookProjectileCanCollideWithTeammates = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	if (g_DHookProjectileCanCollideWithTeammates == null)
 	{
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
 	//ShouldCollideWith
-	iOffset = gameData.GetOffset("ILocomotion::ShouldCollideWith");
-	g_DHookShouldCollide = new DynamicHook(iOffset, HookType_Raw, ReturnType_Bool, ThisPointer_Address);
+	offset = gameData.GetOffset("ILocomotion::ShouldCollideWith");
+	g_DHookShouldCollide = new DynamicHook(offset, HookType_Raw, ReturnType_Bool, ThisPointer_Address);
 	if (g_DHookShouldCollide == null)
 	{
 		SetFailState("Failed to create hook for ILocomotion::ShouldCollideWith!");
@@ -711,7 +711,7 @@ public int Native_DespawnBoss(Handle plugin, int numParams)
 		return;
 	}
 
-	RemoveSlender(boss.Index);
+	boss.UnSpawn();
 }
 
 public int Native_GetBossModelEntity(Handle plugin,int numParams)

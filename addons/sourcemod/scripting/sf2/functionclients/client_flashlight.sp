@@ -5,7 +5,7 @@
 
 #define SF2_ULTRAVISION_CONE 180.0
 
-public Action Timer_DrainFlashlight(Handle timer, any userid)
+static Action Timer_DrainFlashlight(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -39,7 +39,7 @@ public Action Timer_DrainFlashlight(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_RechargeFlashlight(Handle timer, any userid)
+static Action Timer_RechargeFlashlight(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -226,7 +226,7 @@ void ClientResetFlashlight(int client)
 #endif
 }
 
-public Action Hook_FlashlightSetTransmit(int ent,int other)
+static Action Hook_FlashlightSetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -247,21 +247,38 @@ public Action Hook_FlashlightSetTransmit(int ent,int other)
 	return Plugin_Continue;
 }
 
-public Action Hook_Flashlight2SetTransmit(int ent,int other)
+static Action Hook_Flashlight2SetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
 		return Plugin_Continue;
 	}
 
-	if (EntRefToEntIndex(g_PlayerFlashlightEntAng[other]) == ent)
+	int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
+	if (!IsValidClient(ownerEntity))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
+	}
+
+	if (ownerEntity != other)
+	{
+		if (GetEntPropEnt(other, Prop_Send, "m_hObserverTarget") == ownerEntity && GetEntProp(other, Prop_Send, "m_iObserverMode") == 4)
+		{
+			return Plugin_Handled;
+		}
+
+		if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+		{
+			if (!g_PlayerEliminated[other] && !DidClientEscape(other))
+			{
+				return Plugin_Handled;
+			}
+		}
 	}
 	return Plugin_Continue;
 }
 
-public void Hook_FlashlightEndSpawnPost(int ent)
+void Hook_FlashlightEndSpawnPost(int ent)
 {
 	if (!g_Enabled)
 	{
@@ -272,7 +289,7 @@ public void Hook_FlashlightEndSpawnPost(int ent)
 	SDKUnhook(ent, SDKHook_SpawnPost, Hook_FlashlightEndSpawnPost);
 }
 
-public Action Hook_FlashlightBeamSetTransmit(int ent,int other)
+Action Hook_FlashlightBeamSetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -317,7 +334,7 @@ public Action Hook_FlashlightBeamSetTransmit(int ent,int other)
 	return Plugin_Continue;
 }
 
-public Action Hook_FlashlightEndSetTransmit(int ent,int other)
+static Action Hook_FlashlightEndSetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -598,6 +615,26 @@ void ClientTurnOnFlashlight(int client)
 		AcceptEntityInput(ent, "LightOn");
 		
 		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(ent);
+
+		SDKHook(ent, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
+
+		int offset = FindDataMapInfo(ent, "m_nHaloSprite");
+		if (offset != -1)
+		{
+			// m_hSpotlight
+			int spotlight = GetEntDataEnt2(ent, offset + 4);
+			if (IsValidEntity(spotlight))
+			{
+				SDKHook(spotlight, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
+			}
+
+			// m_hSpotlightTarget
+			spotlight = GetEntDataEnt2(ent, offset + 8);
+			if (IsValidEntity(spotlight))
+			{
+				SDKHook(spotlight, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
+			}
+		}
 	}
 	
 	Call_StartForward(g_OnClientActivateFlashlightFwd);
@@ -733,7 +770,14 @@ void ClientHandleFlashlight(int client)
 		
 		if (!nightVision)
 		{
-			EmitSoundToAll(FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+			if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+			{
+				EmitSoundToAll(FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+			}
+			else
+			{
+				EmitSoundToClient(client, FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+			}
 		}
 	}
 	else
@@ -762,8 +806,14 @@ void ClientHandleFlashlight(int client)
 				ClientStartDrainingFlashlightBattery(client);
 				
 				g_PlayerFlashlightNextInputTime[client] = GetGameTime();
-				
-				EmitSoundToAll((nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+				if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+				{
+					EmitSoundToAll((nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+				}
+				else
+				{
+					EmitSoundToClient(client, (nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+				}
 			}
 			else
 			{
@@ -949,7 +999,7 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 #endif
 }
 
-public Action Timer_UltravisionFadeInEffect(Handle timer, any userid)
+static Action Timer_UltravisionFadeInEffect(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1010,7 +1060,7 @@ void ClientDeactivateUltravision(int client)
 	g_PlayerUltravisionEnt[client] = INVALID_ENT_REFERENCE;
 }
 
-public Action Hook_UltravisionSetTransmit(int ent,int other)
+static Action Hook_UltravisionSetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{

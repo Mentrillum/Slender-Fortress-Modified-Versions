@@ -535,6 +535,10 @@ ArrayList SpecialEnabledList()
 		{
 			enabledRounds.Push(SPECIALROUND_WALLHAX);
 		}
+		if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER) && players > 1 && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_IsProxyMap())
+		{
+			enabledRounds.Push(SPECIALROUND_SINGLEPLAYER);
+		}
 		//Always keep this special round push at the bottom, we need the array length.
 		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && enabledRounds.Length > 5 && !SF_IsBoxingMap())
 		{
@@ -696,11 +700,11 @@ void SpecialRoundStart()
 					if (g_ClassBlockedOnThanatophobia[classToInt])
 					{
 						ArrayList classArrays = new ArrayList();
-						for (int i = 0; i < MAX_CLASSES; i++)
+						for (int i = 1; i < MAX_CLASSES + 1; i++)
 						{
-							if (!g_ClassBlockedOnThanatophobia[classToInt])
+							if (!g_ClassBlockedOnThanatophobia[i])
 							{
-								classArrays.Push(view_as<TFClassType>(i + 1));
+								classArrays.Push(view_as<TFClassType>(i));
 							}
 						}
 						TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
@@ -726,6 +730,7 @@ void SpecialRoundStart()
 					}
 				}
 			}
+			SF2_RefreshRestrictions();
 			SF_AddSpecialRound(SPECIALROUND_THANATOPHOBIA);
 		}
 		case SPECIALROUND_INSANEDIFFICULTY:
@@ -1024,6 +1029,7 @@ void SpecialRoundStart()
 					ClientChaseMusicSeeReset(client);
 					ClientAlertMusicReset(client);
 					ClientIdleMusicReset(client);
+					Client20DollarsMusicReset(client);
 					if (currentMusicTrack[0] != '\0')
 					{
 						StopSound(client, MUSIC_CHAN, currentMusicTrack);
@@ -1157,12 +1163,12 @@ void SpecialRoundStart()
 				if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
 				{
 					int red[4] = {184, 56, 59, 255};
-					ClientEnableConstantGlow(i, "head", red);
+					ClientEnableConstantGlow(i, red);
 				}
 				else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
 				{
 					int yellow[4] = {255, 208, 0, 255};
-					ClientEnableConstantGlow(i, "head", yellow);
+					ClientEnableConstantGlow(i, yellow);
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_WALLHAX);
@@ -1307,6 +1313,17 @@ void SpecialRoundStart()
 			}
 			delete selectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_2DOOM);
+		}
+		case SPECIALROUND_SINGLEPLAYER:
+		{
+			for (int client = 1; client < MaxClients; client++)
+			{
+				if (IsValidClient(client) && IsClientInGame(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
+				{
+					TF2_StripContrackerOnly(client);
+				}
+			}
+			SF_AddSpecialRound(SPECIALROUND_SINGLEPLAYER);
 		}
 		default:
 		{

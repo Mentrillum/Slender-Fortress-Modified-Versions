@@ -52,7 +52,7 @@ public bool LoadStatueBossProfile(KeyValues kv, const char[] profile, int& uniqu
 	uniqueProfileIndex = g_StatueProfileData.Push(-1);
 	g_StatueProfileNames.SetValue(profile, uniqueProfileIndex);
 
-	float chaseDuration = kv.GetFloat("statue_chase_duration", 5.0);
+	float chaseDuration = kv.GetFloat("statue_chase_duration", 2.5);
 	float chaseDurationEasy = kv.GetFloat("statue_chase_duration_easy", chaseDuration);
 	float chaseDurationHard = kv.GetFloat("statue_chase_duration_hard", chaseDuration);
 	float chaseDurationInsane = kv.GetFloat("statue_chase_duration_insane", chaseDurationHard);
@@ -99,7 +99,6 @@ public bool LoadStatueBossProfile(KeyValues kv, const char[] profile, int& uniqu
 
 methodmap SF2StatueBossProfile < SF2BaseBossProfile
 {
-
 	public SF2StatueBossProfile(int profileIndex)
 	{
 		return view_as<SF2StatueBossProfile>(profileIndex);
@@ -125,11 +124,26 @@ float GetStatueBossProfileChaseDuration(int statueProfileIndex, int difficulty)
 {
 	switch (difficulty)
 	{
-		case Difficulty_Easy: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationEasy);
-		case Difficulty_Hard: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationHard);
-		case Difficulty_Insane: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationInsane);
-		case Difficulty_Nightmare: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationNightmare);
-		case Difficulty_Apollyon: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationApollyon);
+		case Difficulty_Easy:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationEasy);
+		}
+		case Difficulty_Hard:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationHard);
+		}
+		case Difficulty_Insane:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationInsane);
+		}
+		case Difficulty_Nightmare:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationNightmare);
+		}
+		case Difficulty_Apollyon:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationApollyon);
+		}
 	}
 
 	return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationNormal);
@@ -139,11 +153,26 @@ float GetStatueBossProfileAddChaseDurationMin(int statueProfileIndex, int diffic
 {
 	switch (difficulty)
 	{
-		case Difficulty_Easy: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinEasy);
-		case Difficulty_Hard: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinHard);
-		case Difficulty_Insane: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinInsane);
-		case Difficulty_Nightmare: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinNightmare);
-		case Difficulty_Apollyon: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinApollyon);
+		case Difficulty_Easy:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinEasy);
+		}
+		case Difficulty_Hard:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinHard);
+		}
+		case Difficulty_Insane:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinInsane);
+		}
+		case Difficulty_Nightmare:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinNightmare);
+		}
+		case Difficulty_Apollyon:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinApollyon);
+		}
 	}
 
 	return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMinNormal);
@@ -153,11 +182,26 @@ float GetStatueBossProfileAddChaseDurationMax(int statueProfileIndex, int diffic
 {
 	switch (difficulty)
 	{
-		case Difficulty_Easy: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxEasy);
-		case Difficulty_Hard: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxHard);
-		case Difficulty_Insane: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxInsane);
-		case Difficulty_Nightmare: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxNightmare);
-		case Difficulty_Apollyon: return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxApollyon);
+		case Difficulty_Easy:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxEasy);
+		}
+		case Difficulty_Hard:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxHard);
+		}
+		case Difficulty_Insane:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxInsane);
+		}
+		case Difficulty_Nightmare:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxNightmare);
+		}
+		case Difficulty_Apollyon:
+		{
+			return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxApollyon);
+		}
 	}
 
 	return g_StatueProfileData.Get(statueProfileIndex, StatueProfileData_ChaseDurationAddVisibilityMaxNormal);

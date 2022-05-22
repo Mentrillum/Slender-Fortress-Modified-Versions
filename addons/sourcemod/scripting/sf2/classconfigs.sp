@@ -8,6 +8,7 @@ float g_ClassWalkSpeed[MAX_CLASSES + 1];
 float g_ClassDangerSpeedMultipler[MAX_CLASSES + 1];
 float g_ClassSprintDurationMultipler[MAX_CLASSES + 1];
 float g_ClassScareSprintDurationMultipler[MAX_CLASSES + 1];
+int g_ClassSprintPointLossJumping[MAX_CLASSES + 1];
 
 float g_ClassProxyDamageVulnerability[MAX_CLASSES + 1];
 bool g_ClassCanPickUpHealth[MAX_CLASSES + 1];
@@ -34,8 +35,11 @@ float g_ClassFlashlightLength[MAX_CLASSES + 1];
 float g_ClassFlashlightDamageMultiplier[MAX_CLASSES + 1];
 float g_ClassFlashlightDrainRate[MAX_CLASSES + 1];
 float g_ClassFlashlightRechargeRate[MAX_CLASSES + 1];
+float g_ClassFlashlightSoundRadius[MAX_CLASSES + 1];
 
 bool g_ClassBlockedOnThanatophobia[MAX_CLASSES + 1];
+
+bool g_ClassInvulnerableToTraps[MAX_CLASSES + 1];
 
 void ReloadClassConfigs()
 {
@@ -236,6 +240,7 @@ void PrecacheClassProfiles()
 		g_ClassDangerSpeedMultipler[i] = GetClassStatFloat(className, "danger_speed_multiplier", 1.34);
 		g_ClassSprintDurationMultipler[i] = GetClassStatFloat(className, "sprint_multiplier", 1.0);
 		g_ClassScareSprintDurationMultipler[i] = GetClassStatFloat(className, "scare_sprint_multiplier", 1.0);
+		g_ClassSprintPointLossJumping[i] = GetClassStatNum(className, "sprint_loss_while_jumping", 7);
 
 		g_ClassProxyDamageVulnerability[i] = GetClassStatFloat(className, "proxy_damage_vulnerability");
 		g_ClassCanPickUpHealth[i] = view_as<bool>(GetClassStatNum(className, "can_pickup_health", 1));
@@ -262,7 +267,10 @@ void PrecacheClassProfiles()
 		g_ClassFlashlightDamageMultiplier[i] = GetClassStatFloat(className, "flashlight_damage_multiplier", 1.0);
 		g_ClassFlashlightDrainRate[i] = GetClassStatFloat(className, "flashlight_drain_rate", 1.0);
 		g_ClassFlashlightRechargeRate[i] = GetClassStatFloat(className, "flashlight_recharge_rate", 1.0);
+		g_ClassFlashlightSoundRadius[i] = GetClassStatFloat(className, "flashlight_sound_radius", 0.5);
 
 		g_ClassBlockedOnThanatophobia[i] = view_as<bool>(GetClassStatNum(className, "blocked_on_thanatophobia"));
+
+		g_ClassInvulnerableToTraps[i] = view_as<bool>(GetClassStatNum(className, "immune_to_traps"));
 	}
 }

@@ -145,13 +145,30 @@ Action Timer_TrapThink(Handle timer, any entref)
 			float distance = GetVectorSquareMagnitude(otherPos, entPos);
 			if (distance <= SquareFloat(50.0) && (zPos <= 25.0 && zPos >= -25.0))
 			{
-				g_PlayerTrapped[i] = true;
+				TFClassType classType = TF2_GetPlayerClass(i);
+				int classToInt = view_as<int>(classType);
+
+				if (!IsClassConfigsValid())
+				{
+					if (classType != TFClass_Heavy)
+					{
+						g_PlayerTrapped[i] = true;
+						g_PlayerTrapCount[i] = GetRandomInt(2, 4);
+					}
+				}
+				else
+				{
+					if (!g_ClassInvulnerableToTraps[classToInt])
+					{
+						g_PlayerTrapped[i] = true;
+						g_PlayerTrapCount[i] = GetRandomInt(2, 4);
+					}
+				}
 				if (!g_PlayerHints[i][PlayerHint_Trap])
 				{
 					ClientShowHint(i, PlayerHint_Trap);
 				}
 				SDKHooks_TakeDamage(i, i, i, 10.0, 128);
-				g_PlayerTrapCount[i] = GetRandomInt(2, 4);
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
 				int bossIndex = g_TrapMaster[trapEntity];

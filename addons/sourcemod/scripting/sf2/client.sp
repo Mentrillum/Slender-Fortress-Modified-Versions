@@ -73,7 +73,7 @@ static int g_PlayerInteractiveGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFEREN
 static int g_PlayerInteractiveGlowTargetEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 
 // Constant glow data.
-static int g_PlayerConstantGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 static bool g_PlayerConstantGlowEnabled[MAXPLAYERS + 1] = { false, ... };
 Handle g_ClientGlowTimer[MAXPLAYERS + 1];
 
@@ -92,9 +92,6 @@ bool g_IsPlayerCampingFirstTime[MAXPLAYERS + 1];
 // Frame data
 int g_ClientMaxFrameDeathAnim[MAXPLAYERS + 1];
 int g_ClientFrame[MAXPLAYERS + 1];
-
-// Client model
-static char g_OldClientModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 //Proxy model
 char g_ClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
@@ -253,6 +250,17 @@ public Action Hook_ClientSetTransmit(int client,int other)
 					!TF2_IsPlayerInCondition(client, TFCond_Milked) &&
 					!TF2_IsPlayerInCondition(client, TFCond_OnFire) &&
 					(GetGameTime() > GetEntPropFloat(client, Prop_Send, "m_flInvisChangeCompleteTime")))
+				{
+					return Plugin_Handled;
+				}
+			}
+		}
+
+		if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+		{
+			if (!g_PlayerEliminated[client])
+			{
+				if (!g_PlayerEliminated[other] && !DidClientEscape(other))
 				{
 					return Plugin_Handled;
 				}
@@ -471,6 +479,8 @@ void ClientEscape(int client)
 	
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
+	TF2Attrib_RemoveByDefIndex(client, 49);
+	SetEntProp(client, Prop_Send, "m_iAirDash", 0);
 	
 	HandlePlayerHUD(client);
 	if (!SF_IsBoxingMap())
@@ -2130,213 +2140,53 @@ void ClientDisableConstantGlow(int client)
 	{
 		return;
 	}
-	
-#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 2)
+
+	int glow = EntRefToEntIndex(g_PlayerGlowEntity[client]);
+	if (glow != INVALID_ENT_REFERENCE)
 	{
-		DebugMessage("START ClientDisableConstantGlow(%d)", client);
-	}
-#endif
-	
-	g_PlayerConstantGlowEnabled[client] = false;
-	
-	int glow = EntRefToEntIndex(g_PlayerConstantGlowEntity[client]);
-	if (glow && glow != INVALID_ENT_REFERENCE) 
-	{
-		int glowManager = GetEntPropEnt(glow, Prop_Send, "m_hOwnerEntity");
 		RemoveEntity(glow);
-		if (glowManager > MaxClients)
-		{
-			RemoveEntity(glowManager);
-		}
+		g_PlayerGlowEntity[client] = INVALID_ENT_REFERENCE;
 	}
-	
-	g_PlayerConstantGlowEntity[client] = INVALID_ENT_REFERENCE;
-	
-#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 2)
-	{
-		DebugMessage("END ClientDisableConstantGlow(%d)", client);
-	}
-#endif
+
+	g_PlayerConstantGlowEnabled[client] = false;
 }
 
-bool ClientEnableConstantGlow(int client, const char[] attachment="", int color[4] = {255, 255, 255, 255})
+void ClientEnableConstantGlow(int client, int color[4] = {255, 255, 255, 255})
 {
-	if (DoesClientHaveConstantGlow(client))
+	if (!IsValidClient(client))
 	{
-		return true;
+		return;
 	}
-	
-	/*if (g_ClientGlowTimer[client] == null)
+
+	if (DoesClientHaveConstantGlow(client) || g_PlayerGlowEntity[client] != INVALID_ENT_REFERENCE)
 	{
-		g_ClientGlowTimer[client] = CreateTimer(0.5, Timer_UpdateClientGlow, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-		GetEntPropString(client, Prop_Data, "m_ModelName", g_OldClientModel[client], sizeof(g_OldClientModel[]));
-	}*/
-	
-#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 2)
-	{
-		DebugMessage("START ClientEnableConstantGlow(%d)", client);
+		return;
 	}
-#endif
-	
+
 	char model[PLATFORM_MAX_PATH];
 	GetEntPropString(client, Prop_Data, "m_ModelName", model, sizeof(model));
 	
 	if (model[0] == '\0') 
 	{
 		// For some reason the model couldn't be found, so no.
-		
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("END ClientEnableConstantGlow(%d) -> false (no model specified)", client);
-		}
-#endif
-		
-		return false;
+		return;
 	}
 	
-	int glow = CreateEntityByName("tf_taunt_prop");
-	if (glow != -1)
+	int glow = TF2_CreateGlow(client);
+	if (IsValidEntity(glow))
 	{
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("tf_taunt_prop -> created");
-		}
-#endif
-	
 		g_PlayerConstantGlowEnabled[client] = true;
-		g_PlayerConstantGlowEntity[client] = EntIndexToEntRef(glow);
 
-#if defined DEBUG
-		float modelScale = GetEntPropFloat(client, Prop_Send, "m_flModelScale");
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("tf_taunt_prop -> get model and model scale (%s, %f, player class: %d)", model, modelScale, TF2_GetPlayerClass(client));
-		}
-#endif
-		
-		SetEntityModel(glow, model);
-		DispatchSpawn(glow);
-		ActivateEntity(glow);
-		SetEntityRenderMode(glow, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(glow, 0, 0, 0, 0);
-		int glowManager = TF2_CreateGlow(glow);
-		g_DHookShouldTransmit.HookEntity(Hook_Pre, glowManager, Hook_EntityShouldTransmit);
-		g_DHookShouldTransmit.HookEntity(Hook_Pre, glow, Hook_EntityShouldTransmit);
+		SDKHook(glow, SDKHook_SetTransmit, Hook_ConstantGlowSetTransmitVersion2);
+
+		g_PlayerGlowEntity[client] = EntIndexToEntRef(glow);
 		//Set our desired glow color
 		SetVariantColor(color);
-		AcceptEntityInput(glowManager, "SetGlowColor");
-		
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("tf_taunt_prop -> set model and model scale");
-		}
-#endif
-		
-		// Set effect flags.
-		int flags = GetEntProp(glow, Prop_Send, "m_fEffects");
-		SetEntProp(glow, Prop_Send, "m_fEffects", flags | (1 << 0)); // EF_BONEMERGE
-		
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("tf_taunt_prop -> set bonemerge flags");
-		}
-#endif
-		
-		SetVariantString("!activator");
-		AcceptEntityInput(glow, "SetParent", client);
-		
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("tf_taunt_prop -> set parent to client");
-		}
-#endif
-		
-		if (attachment[0] != '\0')
-		{
-			SetVariantString(attachment);
-			AcceptEntityInput(glow, "SetParentAttachment");
-		}
-		
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("tf_taunt_prop -> set parent attachment to %s", attachment);
-		}
-#endif
-		
-		SetEntPropEnt(glow, Prop_Send, "m_hOwnerEntity", glowManager);
-		
-		Network_HookEntity(glow);
-		SDKHook(glow, SDKHook_SetTransmit, Hook_ConstantGlowSetTransmitVersion2);
-		
-#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("END ClientEnableConstantGlow(%d) -> true", client);
-		}
-#endif
-		
-		return true;
+		AcceptEntityInput(glow, "SetGlowColor");
+		g_DHookShouldTransmit.HookEntity(Hook_Pre, glow, Hook_EntityShouldTransmit);
+		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, glow, Hook_GlowUpdateTransmitState);
+		SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
 	}
-	
-#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 2)
-	{
-		DebugMessage("END ClientEnableConstantGlow(%d) -> false", client);
-	}
-#endif
-	
-	return false;
-}
-
-public Action Timer_UpdateClientGlow(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (client <= 0 || client > MaxClients)
-	{
-		for (int i = 1; i <= MaxClients; i++)//Find the previous client index owning that timer and reset it. 
-		{
-			if (g_ClientGlowTimer[i] == timer)
-			{
-				g_ClientGlowTimer[i] = null;
-				break;
-			}
-		}
-		return Plugin_Stop;
-	}
-	if (!IsClientInGame(client) || !IsPlayerAlive(client) || !DoesClientHaveConstantGlow(client))
-	{
-		g_ClientGlowTimer[client] = null;
-		return Plugin_Stop;
-	}
-	
-	char clientModel[128];
-	GetEntPropString(client, Prop_Data, "m_ModelName", clientModel, sizeof(clientModel));
-	
-	if (strcmp(clientModel, g_OldClientModel[client]) != 0)
-	{
-		ClientDisableConstantGlow(client);
-		ClientEnableConstantGlow(client);
-		strcopy(g_OldClientModel[client], sizeof(g_OldClientModel[]), clientModel);
-	}
-	return Plugin_Continue;
-}
-
-public bool ClientGlowFilter(int client)
-{
-	if (g_PlayerEliminated[client])
-	{
-		return false;
-	}
-	return true;
 }
 
 void ClientResetJumpScare(int client)
@@ -3071,91 +2921,6 @@ void ClientSetGhostModeState(int client, bool state)
 			g_PlayerGhostModeConnectionTimeOutTime[client] = -1.0;
 			g_PlayerGhostModeConnectionBootTime[client] = -1.0;
 		}
-		
-		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
-		{	
-			if (NPCGetUniqueID(npcIndex) == -1)
-			{
-				continue;
-			}
-			if (g_SlenderInDeathcam[npcIndex])
-			{
-				continue;
-			}
-			SlenderRemoveGlow(npcIndex);
-			if (NPCGetCustomOutlinesState(npcIndex))
-			{
-				if (!NPCGetRainbowOutlineState(npcIndex))
-				{
-					int color[4];
-					color[0] = NPCGetOutlineColorR(npcIndex);
-					color[1] = NPCGetOutlineColorG(npcIndex);
-					color[2] = NPCGetOutlineColorB(npcIndex);
-					color[3] = NPCGetOutlineTransparency(npcIndex);
-					if (color[0] < 0)
-					{
-						color[0] = 0;
-					}
-					if (color[1] < 0)
-					{
-						color[1] = 0;
-					}
-					if (color[2] < 0)
-					{
-						color[2] = 0;
-					}
-					if (color[3] < 0)
-					{
-						color[3] = 0;
-					}
-					if (color[0] > 255)
-					{
-						color[0] = 255;
-					}
-					if (color[1] > 255)
-					{
-						color[1] = 255;
-					}
-					if (color[2] > 255)
-					{
-						color[2] = 255;
-					}
-					if (color[3] > 255)
-					{
-						color[3] = 255;
-					}
-					SlenderAddGlow(npcIndex,_,color);
-				}
-				else
-				{
-					SlenderAddGlow(npcIndex,_,view_as<int>({0, 0, 0, 0}));
-				}
-			}
-			else
-			{
-				int purple[4] = {150, 0, 255, 255};
-				SlenderAddGlow(npcIndex,_,purple);
-			}
-		}
-		
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsValidClient(i))
-			{
-				continue;
-			}
-			ClientDisableConstantGlow(i);
-			if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
-			{
-				int red[4] = {184, 56, 59, 255};
-				ClientEnableConstantGlow(i, "head", red);
-			}
-			else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
-			{
-				int yellow[4] = {255, 208, 0, 255};
-				ClientEnableConstantGlow(i, "head", yellow);
-			}
-		}
 
 		PvP_OnClientGhostModeEnable(client);
 	}
@@ -3186,6 +2951,90 @@ void ClientSetGhostModeState(int client, bool state)
 			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 			SetEntityRenderMode(client, RENDER_NORMAL);
 			SetEntityRenderColor(client, _, _, _, 255);
+		}
+	}
+	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
+	{	
+		if (NPCGetUniqueID(npcIndex) == -1)
+		{
+			continue;
+		}
+		if (g_SlenderInDeathcam[npcIndex])
+		{
+			continue;
+		}
+		SlenderRemoveGlow(npcIndex);
+		if (NPCGetCustomOutlinesState(npcIndex))
+		{
+			if (!NPCGetRainbowOutlineState(npcIndex))
+			{
+				int color[4];
+				color[0] = NPCGetOutlineColorR(npcIndex);
+				color[1] = NPCGetOutlineColorG(npcIndex);
+				color[2] = NPCGetOutlineColorB(npcIndex);
+				color[3] = NPCGetOutlineTransparency(npcIndex);
+				if (color[0] < 0)
+				{
+					color[0] = 0;
+				}
+				if (color[1] < 0)
+				{
+					color[1] = 0;
+				}
+				if (color[2] < 0)
+				{
+					color[2] = 0;
+				}
+				if (color[3] < 0)
+				{
+					color[3] = 0;
+				}
+				if (color[0] > 255)
+				{
+					color[0] = 255;
+				}
+				if (color[1] > 255)
+				{
+					color[1] = 255;
+				}
+				if (color[2] > 255)
+				{
+					color[2] = 255;
+				}
+				if (color[3] > 255)
+				{
+					color[3] = 255;
+				}
+				SlenderAddGlow(npcIndex,_,color);
+			}
+			else
+			{
+				SlenderAddGlow(npcIndex,_,view_as<int>({0, 0, 0, 0}));
+			}
+		}
+		else
+		{
+			int purple[4] = {150, 0, 255, 255};
+			SlenderAddGlow(npcIndex,_,purple);
+		}
+	}
+		
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i))
+		{
+			continue;
+		}
+		ClientDisableConstantGlow(i);
+		if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
+		{
+			int red[4] = {184, 56, 59, 255};
+			ClientEnableConstantGlow(i, red);
+		}
+		else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+		{
+			int yellow[4] = {255, 208, 0, 255};
+			ClientEnableConstantGlow(i, yellow);
 		}
 	}
 }
@@ -4011,53 +3860,82 @@ stock void ClientUpdateListeningFlags(int client, bool reset=false)
 			if (!g_PlayerEliminated[i])
 			{
 				bool canHear = false;
-				if (g_PlayerVoiceDistanceConVar.FloatValue <= 0.0)
+
+				if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
 				{
-					canHear = true;
-				}
-					
-				if (!canHear)
-				{
-					float myPos[3], flHisPos[3];
-					GetClientEyePosition(client, myPos);
-					GetClientEyePosition(i, flHisPos);
-						
-					float dist = GetVectorSquareMagnitude(myPos, flHisPos);
-						
-					if (g_PlayerVoiceWallScaleConVar.FloatValue > 0.0)
+					if (!DidClientEscape(i))
 					{
-						Handle trace = TR_TraceRayFilterEx(myPos, flHisPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitCharacters);
-						bool didHit = TR_DidHit(trace);
-						delete trace;
-							
-						if (didHit)
+						if (!DidClientEscape(client))
 						{
-							dist *= SquareFloat(g_PlayerVoiceWallScaleConVar.FloatValue);
+							SetListenOverride(client, i, Listen_No);
+						}
+						else
+						{
+							SetListenOverride(client, i, Listen_Default);
 						}
 					}
-						
-					if (dist <= SquareFloat(g_PlayerVoiceDistanceConVar.FloatValue))
+					else
 					{
-						canHear = true;
+						if (!DidClientEscape(client))
+						{
+							SetListenOverride(client, i, Listen_No);
+						}
+						else
+						{
+							SetListenOverride(client, i, Listen_Default);
+						}
 					}
-				}
-					
-				if (canHear)
-				{
-					if (IsClientInGhostMode(i) != IsClientInGhostMode(client) &&
-						DidClientEscape(i) != DidClientEscape(client))
-					{
-						canHear = false;
-					}
-				}
-					
-				if (canHear)
-				{
-					SetListenOverride(client, i, Listen_Default);
 				}
 				else
 				{
-					SetListenOverride(client, i, Listen_No);
+					if (g_PlayerVoiceDistanceConVar.FloatValue <= 0.0)
+					{
+						canHear = true;
+					}
+						
+					if (!canHear)
+					{
+						float myPos[3], flHisPos[3];
+						GetClientEyePosition(client, myPos);
+						GetClientEyePosition(i, flHisPos);
+							
+						float dist = GetVectorSquareMagnitude(myPos, flHisPos);
+							
+						if (g_PlayerVoiceWallScaleConVar.FloatValue > 0.0)
+						{
+							Handle trace = TR_TraceRayFilterEx(myPos, flHisPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitCharacters);
+							bool didHit = TR_DidHit(trace);
+							delete trace;
+								
+							if (didHit)
+							{
+								dist *= SquareFloat(g_PlayerVoiceWallScaleConVar.FloatValue);
+							}
+						}
+							
+						if (dist <= SquareFloat(g_PlayerVoiceDistanceConVar.FloatValue))
+						{
+							canHear = true;
+						}
+					}
+						
+					if (canHear)
+					{
+						if (IsClientInGhostMode(i) != IsClientInGhostMode(client) &&
+							DidClientEscape(i) != DidClientEscape(client))
+						{
+							canHear = false;
+						}
+					}
+						
+					if (canHear)
+					{
+						SetListenOverride(client, i, Listen_Default);
+					}
+					else
+					{
+						SetListenOverride(client, i, Listen_No);
+					}
 				}
 			}
 			else
