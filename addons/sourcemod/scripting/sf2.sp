@@ -35,8 +35,8 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.4 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.4 M"
+#define PLUGIN_VERSION "1.7.4.1 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.4.1 M"
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2

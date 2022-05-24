@@ -3014,10 +3014,10 @@ void RemoveProfile(int bossIndex)
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	/*if (!IsRoundPlaying())
+	if (!IsRoundPlaying())
 	{
 		return;
-	}*/
+	}
 
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
 	{
