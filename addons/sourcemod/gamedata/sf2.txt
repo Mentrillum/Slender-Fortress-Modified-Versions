@@ -81,8 +81,8 @@
 			}
 			"CTFPlayer::EquipWearable"
 			{
-				"windows"	"434"
-				"linux"		"435"
+				"windows"	"435"
+				"linux"		"436"
 			}
 			"INextBotComponent::GetBot"
 			{
