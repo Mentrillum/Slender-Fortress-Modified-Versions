@@ -46,7 +46,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 	property ArrayList Bosses
 	{
 		public get() { return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hBosses")); }
-		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hBosses", value); } 
+		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hBosses", value); }
 	}
 
 	property int SpawnCount
@@ -107,8 +107,8 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 	property int LiveCount
 	{
-		public get() 
-		{ 
+		public get()
+		{
 			// Prune the list of invalid IDs.
 			for (int i = this.Bosses.Length - 1; i >= 0; i--)
 			{
@@ -120,7 +120,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				}
 			}
 
-			return this.Bosses.Length; 
+			return this.Bosses.Length;
 		}
 	}
 
@@ -130,7 +130,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return;
 		}
-		
+
 		float pos[3]; float ang[3];
 
 		CBaseEntity spawnDestination = CBaseEntity(this.SpawnDestination);
@@ -139,7 +139,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 			spawnDestination.GetAbsOrigin(pos);
 			spawnDestination.GetAbsAngles(ang);
 		}
-		else 
+		else
 		{
 			this.GetAbsOrigin(pos);
 			this.GetAbsAngles(ang);
@@ -153,7 +153,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 			float rad = GetRandomFloat(0.0, 2.0 * FLOAT_PI);
 			float radius = GetRandomFloat(0.0, spawnRadius);
 			float vec[3];
-			vec[0] = Cosine(rad) * radius; 
+			vec[0] = Cosine(rad) * radius;
 			vec[1] = Sine(rad) * radius;
 
 			pos[0] += vec[0];
@@ -213,7 +213,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 	}
 
 	public void RespawnAllChildren()
-	{ 
+	{
 		for (int i = this.Bosses.Length - 1; i >= 0; i--)
 		{
 			int bossID = this.Bosses.Get(i);
@@ -298,7 +298,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 						{
 							continue;
 						}
-						
+
 						this.SpawnDestination = target;
 
 						break;
@@ -362,7 +362,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 	}
 }
 
-static void Initialize() 
+static void Initialize()
 {
 	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
 	g_EntityFactory.DeriveFromFactory(SF2BossMakerEntity.GetBaseFactory());

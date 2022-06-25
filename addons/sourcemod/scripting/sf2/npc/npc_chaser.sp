@@ -1419,7 +1419,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	SF2ChaserBossProfile profile = SF2ChaserBossProfile(NPCGetProfileIndex(npcIndex));
 	char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
-	
+
 	g_NpcWakeRadius[npcIndex] = profile.WakeRadius;
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
@@ -1430,13 +1430,13 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcAlertGracetime[npcIndex][difficulty] = profile.GetAlertStateGraceTime(difficulty);
 		g_NpcAlertDuration[npcIndex][difficulty] = profile.GetAlertStateDuration(difficulty);
 		g_NpcChaseDuration[npcIndex][difficulty] = profile.GetChaseStateDuration(difficulty);
-		
+
 		g_NpcCloakCooldown[npcIndex][difficulty] = profile.GetCloakCooldown(difficulty);
 		g_NpcCloakRange[npcIndex][difficulty] = profile.GetCloakRange(difficulty);
 		g_NpcDecloakRange[npcIndex][difficulty] = profile.GetDecloakRange(difficulty);
 		g_NpcCloakDuration[npcIndex][difficulty] = profile.GetCloakDuration(difficulty);
 		g_NpcCloakSpeedMultiplier[npcIndex][difficulty] = profile.GetCloakSpeedMultiplier(difficulty);
-		
+
 		g_NpcProjectileCooldownMin[npcIndex][difficulty] = profile.GetProjectileCooldownMin(difficulty);
 		g_NpcProjectileCooldownMax[npcIndex][difficulty] = profile.GetProjectileCooldownMax(difficulty);
 		g_NpcProjectileSpeed[npcIndex][difficulty] = profile.GetProjectileSpeed(difficulty);
@@ -1451,7 +1451,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcProjectileChargeUpTime[npcIndex][difficulty] = profile.GetProjectileChargeUpTime(difficulty);
 		g_NpcProjectileAmmo[npcIndex] = g_NpcProjectileLoadedAmmo[npcIndex][difficulty];
 		g_NpcProjectileTimeToReload[npcIndex] = g_NpcProjectileReloadTime[npcIndex][difficulty];
-		
+
 		g_NpcRandomDuration[npcIndex][difficulty] = profile.GetRandomDuration(difficulty);
 		g_NpcRandomSlowdown[npcIndex][difficulty] = profile.GetRandomSlowdown(difficulty);
 		g_NpcJarateDuration[npcIndex][difficulty] = profile.GetJarateDuration(difficulty);
@@ -1464,20 +1464,20 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcBleedDuration[npcIndex][difficulty] = profile.GetBleedDuration(difficulty);
 		g_NpcElectricDuration[npcIndex][difficulty] = profile.GetElectricDuration(difficulty);
 		g_NpcElectricSlowdown[npcIndex][difficulty] = profile.GetElectricSlowdown(difficulty);
-		
+
 		g_NpcShockwaveDrain[npcIndex][difficulty] = profile.GetShockwaveDrain(difficulty);
 		g_NpcShockwaveForce[npcIndex][difficulty] = profile.GetShockwaveForce(difficulty);
 		g_NpcShockwaveHeight[npcIndex][difficulty] = profile.GetShockwaveHeight(difficulty);
 		g_NpcShockwaveRange[npcIndex][difficulty] = profile.GetShockwaveRange(difficulty);
 		g_NpcShockwaveStunDuration[npcIndex][difficulty] = profile.GetShockwaveStunDuration(difficulty);
 		g_NpcShockwaveStunSlowdown[npcIndex][difficulty] = profile.GetShockwaveStunSlowdown(difficulty);
-		
+
 		g_NpcNextTrapSpawn[npcIndex][difficulty] = profile.GetTrapCooldown(difficulty);
 		g_SlenderNextTrapPlacement[npcIndex] = GetGameTime() + g_NpcNextTrapSpawn[npcIndex][difficulty];
-		
+
 		g_NpcSearchWanderRangeMin[npcIndex][difficulty] = profile.GetWanderRangeMin(difficulty);
 		g_NpcSearchWanderRangeMax[npcIndex][difficulty] = profile.GetWanderRangeMax(difficulty);
-		
+
 		g_NpcAutoChaseThreshold[npcIndex][difficulty] = profile.AutoChaseThreshold(difficulty);
 		g_NpcAutoChaseAddGeneral[npcIndex][difficulty] = profile.AutoChaseAddGeneral(difficulty);
 		g_NpcAutoChaseAddFootstep[npcIndex][difficulty] = profile.AutoChaseAddFootstep(difficulty);
@@ -1485,7 +1485,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcAutoChaseAddWeapon[npcIndex][difficulty] = profile.AutoChaseAddWeapon(difficulty);
 		g_NpcCrawlSpeedMultiplier[npcIndex][difficulty] = profile.GetCrawlingSpeedMultiplier(difficulty);
 	}
-	
+
 	g_NpcBaseAttacksCount[npcIndex] = profile.AttackCount;
 	// Get attack data.
 	for (int i = 0; i < g_NpcBaseAttacksCount[npcIndex]; i++)
@@ -1534,7 +1534,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnDifficulty = profile.GetAttackBlockOnDifficulty(i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackExplosiveDanceRadius = profile.GetAttackExplosiveDanceRadius(i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWeaponTypeInt = profile.GetAttackWeaponTypeInt(i);
-		
+
 		int laserColor[3];
 		profile.GetAttackLaserColor(laserColor, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[0] = laserColor[0];
@@ -1550,7 +1550,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnHealth = profile.GetAttackBlockOnHealth(i);
 		g_NpcBaseAttacks[npcIndex][i][1].currentAttackRepeat = 0;
 	}
-	
+
 	// Get stun data.
 	if (!invincible)
 	{
@@ -1566,14 +1566,14 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcStunFlashlightDamage[npcIndex] = profile.StunFlashlightDamage;
 	g_NpcStunInitialHealth[npcIndex] = profile.StunHealth;
 	g_NpcChaseInitialOnStun[npcIndex] = profile.ChaseInitialOnStun;
-	
+
 	//Get key Data
 	g_NpcHasKeyDrop[npcIndex] = profile.HasKeyDrop;
-	
+
 	//Get Cloak Data
 	g_NpcCloakEnabled[npcIndex] = profile.CloakEnabled;
 	g_NpcNextDecloakTime[npcIndex] = -1.0;
-	
+
 	float stunHealthPerPlayer = profile.StunHealthPerPlayer;
 	int count;
 	for (int client; client <= MaxClients; client++)
@@ -1583,7 +1583,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 			count++;
 		}
 	}
-	
+
 	stunHealthPerPlayer *= float(count);
 	g_NpcStunInitialHealth[npcIndex] += stunHealthPerPlayer;
 
@@ -1597,9 +1597,9 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	{
 		g_NpcChaseOnLookTarget[npcIndex] = new ArrayList();
 	}
-	
+
 	NPCChaserSetStunHealth(npcIndex, NPCChaserGetStunInitialHealth(npcIndex));
-	
+
 	NPCSetAddSpeed(npcIndex, -NPCGetAddSpeed(npcIndex));
 	NPCSetAddMaxSpeed(npcIndex, -NPCGetAddMaxSpeed(npcIndex));
 	NPCSetAddAcceleration(npcIndex, -NPCGetAddAcceleration(npcIndex));
@@ -1611,7 +1611,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcEarthquakeFootstepsDuration[npcIndex] = profile.EarthquakeFootstepsDuration;
 	g_NpcEarthquakeFootstepsRadius[npcIndex] = profile.EarthquakeFootstepsRadius;
 	g_NpcHasEarthquakeFootstepsAirShake[npcIndex] = profile.EarthquakeFootstepsAirShake;
-	
+
 	g_NpcSoundCountToAlert[npcIndex] = profile.SoundCountToAlert;
 	g_NpcHasDisappearOnStun[npcIndex] = profile.CanDisappearOnStun;
 	g_NpcHasDropItemOnStun[npcIndex] = profile.DropItemOnStun;
@@ -1642,15 +1642,15 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcCrawlDetectMaxs[npcIndex][1] /= 2.0;
 		g_NpcCrawlDetectMaxs[npcIndex][2] /= 2.0;
 	}
-	
+
 	g_NpcAlreadyAttacked[npcIndex] = false;
 	g_NpcVelocityCancel[npcIndex] = false;
-	
+
 	g_NpcStealingLife[npcIndex] = false;
 	g_NpcLifeStealTimer[npcIndex] = null;
-	
+
 	g_NpcHasCloaked[npcIndex] = false;
-	
+
 	//Get Projectile Data
 	g_NpcHasProjectileEnabled[npcIndex] = profile.ProjectileEnabled;
 	g_NpcProjectileType[npcIndex] = profile.ProjectileType;
@@ -1660,7 +1660,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcHasUseChargeUpProjectiles[npcIndex] = profile.ChargeUpProjectiles;
 	g_NpcProjectileCooldown[npcIndex] = 0.0;
 	g_NpcReloadingProjectiles[npcIndex] = false;
-	
+
 	g_NpcHasUseAdvancedDamageEffects[npcIndex] = profile.AdvancedDamageEffectsEnabled;
 	g_NpcHasAdvancedDamageEffectsRandom[npcIndex] = profile.AdvancedDamageEffectsRandom;
 	g_NpcHasAttachDamageParticle[npcIndex] = profile.AttachDamageEffectsParticle;
@@ -1700,10 +1700,10 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcXenobladeToppleDuration[npcIndex] = profile.XenobladeToppleDuration;
 	g_NpcXenobladeToppleSlowdown[npcIndex] = profile.XenobladeToppleSlowdown;
 	g_NpcXenobladeDazeDuration[npcIndex] = profile.XenobladeDazeDuration;
-	
+
 	int smiteColor[4];
 	profile.GetSmiteColor(smiteColor);
-	
+
 	g_NpcSmiteColorR[npcIndex] = smiteColor[0];
 	g_NpcSmiteColorG[npcIndex] = smiteColor[1];
 	g_NpcSmiteColorB[npcIndex] = smiteColor[2];
@@ -1711,27 +1711,27 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_SlenderHasDamageParticleEffect[npcIndex] = profile.HasDamageParticles;
 	g_SlenderDamageClientSoundVolume[npcIndex] = profile.DamageParticleVolume;
 	g_SlenderDamageClientSoundPitch[npcIndex] = profile.DamageParticlePitch;
-	
+
 	g_NpcHasShockwaveEnabled[npcIndex] = profile.HasShockwaves;
 	g_NpcHasShockwaveStunEnabled[npcIndex] = profile.ShockwaveStunEnabled;
 	g_NpcShockwaveAttackIndexes[npcIndex] = profile.ShockwaveAttackIndexes;
 	g_NpcShockwaveWidth[npcIndex][0] = profile.ShockwaveWidth1;
 	g_NpcShockwaveWidth[npcIndex][1] = profile.ShockwaveWidth2;
 	g_NpcShockwaveAmplitude[npcIndex] = profile.ShockwaveAmplitude;
-	
+
 	g_NpcHasTrapsEnabled[npcIndex] = profile.HasTraps;
 	g_NpcTrapType[npcIndex] = profile.TrapType;
-	
+
 	g_SlenderHasAutoChaseEnabled[npcIndex] = profile.AutoChaseEnabled;
 	g_NpcHasAutoChaseSprinters[npcIndex] = profile.AutoChaseSprinters;
 	g_NpcAutoChaseSprinterCooldown[npcIndex] = 0.0;
 	g_NpcInAutoChase[npcIndex] = false;
 	g_SlenderIsAutoChasingLoudPlayer[npcIndex] = false;
-	
+
 	g_SlenderChasesEndlessly[npcIndex] = profile.ChasesEndlessly;
-	
+
 	g_NpcLaserTimer[npcIndex] = 0.0;
-	
+
 	g_NpcHasCanSelfHeal[npcIndex] = profile.SelfHealState;
 	g_NpcStartSelfHealPercentage[npcIndex] = profile.SelfHealStartPercentage;
 	g_NpcSelfHealPercentageOne[npcIndex] = profile.SelfHealPercentageOne;
@@ -1746,7 +1746,7 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 
 	g_NpcBoxingCurrentDifficulty[npcIndex] = 1;
 	g_NpcBoxingRagePhase[npcIndex] = 0;
-	
+
 	g_NpcCopyAlerted[npcIndex] = false;
 }
 
@@ -1761,7 +1761,7 @@ void NPCChaserOnRemoveProfile(int npcIndex)
 static void NPCChaserResetValues(int npcIndex)
 {
 	g_NpcWakeRadius[npcIndex] = 0.0;
-	
+
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
 		g_NpcWalkSpeed[npcIndex][difficulty] = 0.0;
@@ -1770,13 +1770,13 @@ static void NPCChaserResetValues(int npcIndex)
 		g_NpcAlertGracetime[npcIndex][difficulty] = 0.0;
 		g_NpcAlertDuration[npcIndex][difficulty] = 0.0;
 		g_NpcChaseDuration[npcIndex][difficulty] = 0.0;
-		
+
 		g_NpcCloakCooldown[npcIndex][difficulty] = 0.0;
 		g_NpcCloakRange[npcIndex][difficulty] = 0.0;
 		g_NpcDecloakRange[npcIndex][difficulty] = 0.0;
 		g_NpcCloakDuration[npcIndex][difficulty] = 0.0;
 		g_NpcCloakSpeedMultiplier[npcIndex][difficulty] = 0.0;
-		
+
 		g_NpcProjectileCooldownMin[npcIndex][difficulty] = 0.0;
 		g_NpcProjectileCooldownMax[npcIndex][difficulty] = 0.0;
 		g_NpcProjectileSpeed[npcIndex][difficulty] = 0.0;
@@ -1789,7 +1789,7 @@ static void NPCChaserResetValues(int npcIndex)
 		g_NpcProjectileLoadedAmmo[npcIndex][difficulty] = 0;
 		g_NpcProjectileReloadTime[npcIndex][difficulty] = 0.0;
 		g_NpcProjectileChargeUpTime[npcIndex][difficulty] = 0.0;
-		
+
 		g_NpcRandomDuration[npcIndex][difficulty] = 0.0;
 		g_NpcRandomSlowdown[npcIndex][difficulty] = 0.0;
 		g_NpcJarateDuration[npcIndex][difficulty] = 0.0;
@@ -1802,20 +1802,20 @@ static void NPCChaserResetValues(int npcIndex)
 		g_NpcBleedDuration[npcIndex][difficulty] = 0.0;
 		g_NpcElectricDuration[npcIndex][difficulty] = 0.0;
 		g_NpcElectricSlowdown[npcIndex][difficulty] = 0.0;
-		
+
 		g_NpcShockwaveDrain[npcIndex][difficulty] = 0.0;
 		g_NpcShockwaveForce[npcIndex][difficulty] = 0.0;
 		g_NpcShockwaveHeight[npcIndex][difficulty] = 0.0;
 		g_NpcShockwaveRange[npcIndex][difficulty] = 0.0;
 		g_NpcShockwaveStunDuration[npcIndex][difficulty] = 0.0;
 		g_NpcShockwaveStunSlowdown[npcIndex][difficulty] = 0.0;
-		
+
 		g_NpcNextTrapSpawn[npcIndex][difficulty] = 0.0;
 		g_SlenderNextTrapPlacement[npcIndex] = 0.0;
-		
+
 		g_NpcSearchWanderRangeMin[npcIndex][difficulty] = 0.0;
 		g_NpcSearchWanderRangeMax[npcIndex][difficulty] = 0.0;
-		
+
 		g_NpcAutoChaseThreshold[npcIndex][difficulty] = 0;
 		g_NpcAutoChaseAddGeneral[npcIndex][difficulty] = 0;
 		g_NpcAutoChaseAddFootstep[npcIndex][difficulty] = 0;
@@ -1824,7 +1824,7 @@ static void NPCChaserResetValues(int npcIndex)
 
 		g_NpcCrawlSpeedMultiplier[npcIndex][difficulty] = 0.0;
 	}
-	
+
 	// Clear attack data.
 	for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS - 1; i++)
 	{
@@ -1894,7 +1894,7 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcEarthquakeFootstepsDuration[npcIndex] = 0.0;
 	g_NpcEarthquakeFootstepsRadius[npcIndex] = 0.0;
 	g_NpcHasEarthquakeFootstepsAirShake[npcIndex] = false;
-	
+
 	g_NpcSoundCountToAlert[npcIndex] = 0;
 	g_NpcHasDisappearOnStun[npcIndex] = false;
 	g_NpcHasDropItemOnStun[npcIndex] = false;
@@ -1912,7 +1912,7 @@ static void NPCChaserResetValues(int npcIndex)
 
 	g_NpcHasHasCrawling[npcIndex] = false;
 	g_NpcIsCrawling[npcIndex] = false;
-	
+
 	g_NpcHasStunEnabled[npcIndex] = false;
 	g_NpcAlreadyAttacked[npcIndex] = false;
 	g_NpcStunDuration[npcIndex] = 0.0;
@@ -1923,7 +1923,7 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcChaseInitialOnStun[npcIndex] = false;
 	g_SlenderDifficultyAnimations[npcIndex] = false;
 	g_NpcOriginalVisibility[npcIndex] = false;
-	
+
 	g_NpcCloakEnabled[npcIndex] = false;
 	g_NpcNextDecloakTime[npcIndex] = -1.0;
 	g_NpcHasCloaked[npcIndex] = false;
@@ -1941,11 +1941,11 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcHasAlwaysLookAtTargetWhileAttacking[npcIndex] = false;
 	g_NpcHasAlwaysLookAtTargetWhileChasing[npcIndex] = false;
 	g_NpcIgnoreNonMarkedForChase[npcIndex] = false;
-	
+
 	g_NpcUsedRage1[npcIndex] = false;
 	g_NpcUsedRage2[npcIndex] = false;
 	g_NpcHasUsedRage3[npcIndex] = false;
-	
+
 	g_NpcHasProjectileEnabled[npcIndex] = false;
 	g_NpcProjectileType[npcIndex] = SF2BossProjectileType_Invalid;
 	g_NpcHasCriticalRockets[npcIndex] = false;
@@ -1956,7 +1956,7 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcProjectileCooldown[npcIndex] = 0.0;
 	g_NpcProjectileTimeToReload[npcIndex] = 0.0;
 	g_NpcReloadingProjectiles[npcIndex] = false;
-	
+
 	g_NpcHasUseAdvancedDamageEffects[npcIndex] = false;
 	g_NpcHasAdvancedDamageEffectsRandom[npcIndex] = false;
 	g_NpcHasAttachDamageParticle[npcIndex] = false;
@@ -2004,29 +2004,29 @@ static void NPCChaserResetValues(int npcIndex)
 	g_SlenderHasDamageParticleEffect[npcIndex] = false;
 	g_SlenderDamageClientSoundVolume[npcIndex] = 0.0;
 	g_SlenderDamageClientSoundPitch[npcIndex] = 0;
-	
+
 	g_NpcHasTrapsEnabled[npcIndex] = false;
 	g_NpcTrapType[npcIndex] = 0;
-	
+
 	g_SlenderHasAutoChaseEnabled[npcIndex] = false;
 	g_NpcInAutoChase[npcIndex] = false;
 	g_NpcHasAutoChaseSprinters[npcIndex] = false;
 	g_NpcAutoChaseSprinterCooldown[npcIndex] = 0.0;
 	g_SlenderIsAutoChasingLoudPlayer[npcIndex] = false;
-	
+
 	g_SlenderChasesEndlessly[npcIndex] = false;
-	
+
 	NPCSetAddSpeed(npcIndex, -NPCGetAddSpeed(npcIndex));
 	NPCSetAddMaxSpeed(npcIndex, -NPCGetAddMaxSpeed(npcIndex));
 	NPCSetAddAcceleration(npcIndex, -NPCGetAddAcceleration(npcIndex));
 	NPCChaserSetAddStunHealth(npcIndex, -NPCChaserGetAddStunHealth(npcIndex));
-	
+
 	NPCChaserSetStunHealth(npcIndex, 0.0);
-	
+
 	g_NpcState[npcIndex] = -1;
-	
+
 	g_NpcLaserTimer[npcIndex] = 0.0;
-	
+
 	g_NpcHasCanSelfHeal[npcIndex] = false;
 	g_NpcStartSelfHealPercentage[npcIndex] = 0.0;
 	g_NpcSelfHealPercentageOne[npcIndex] = 0.0;
@@ -2041,7 +2041,7 @@ static void NPCChaserResetValues(int npcIndex)
 
 	g_NpcBoxingCurrentDifficulty[npcIndex] = 0;
 	g_NpcBoxingRagePhase[npcIndex] = 0;
-	
+
 	g_NpcCopyAlerted[npcIndex] = false;
 }
 
@@ -2080,20 +2080,20 @@ stock bool IsTargetValidForSlender(int target, bool bIncludeEliminated = false)
 	{
 		return false;
 	}
-	
+
 	if (IsValidClient(target))
 	{
-		if (!IsClientInGame(target) || 
-			!IsPlayerAlive(target) || 
-			IsClientInDeathCam(target) || 
-			(!bIncludeEliminated && g_PlayerEliminated[target]) || 
-			IsClientInGhostMode(target) || 
+		if (!IsClientInGame(target) ||
+			!IsPlayerAlive(target) ||
+			IsClientInDeathCam(target) ||
+			(!bIncludeEliminated && g_PlayerEliminated[target]) ||
+			IsClientInGhostMode(target) ||
 			DidClientEscape(target))
 		{
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -2115,37 +2115,37 @@ public int NPCChaserGetClosestPlayer(int slender)
 	}
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float position[3];
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", position);
-	
+
 	int closestTarget = -1;
 	float searchRadius = NPCGetSearchRadius(bossIndex, difficulty);
-	
+
 	for (int i = 0; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i) || !IsClientInGame(i) || IsClientInGhostMode(i) || g_PlayerProxy[i] || !IsPlayerAlive(i) || g_PlayerEliminated[i])
 		{
 			continue;
 		}
-		
+
 		float clientPos[3];
 		GetClientAbsOrigin(i, clientPos);
-		
+
 		float distance = GetVectorSquareMagnitude(position, clientPos);
-		
+
 		if (distance < SquareFloat(searchRadius))
 		{
 			closestTarget = i;
 			searchRadius = distance;
 		}
 	}
-	
+
 	if (IsValidClient(closestTarget))
 	{
 		return closestTarget;
 	}
-	
+
 	return -1;
 }
 
@@ -2156,12 +2156,12 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 	bool animationFound = false;
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	bool clearLayers = view_as<bool>(GetProfileNum(profile, "animation_clear_layers_on_update", 1));
-	
+
 	switch (state)
 	{
 		case STATE_IDLE:
@@ -2821,9 +2821,9 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		}
 		case STATE_CHASE:
 		{
-			if (!g_NpcUsesChaseInitialAnimation[bossIndex] && 
-			!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && 
-			!g_NpcUsesHealAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] && 
+			if (!g_NpcUsesChaseInitialAnimation[bossIndex] &&
+			!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] &&
+			!g_NpcUsesHealAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] &&
 			!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] && !g_NpcIsCrawling[bossIndex])
 			{
 				switch (difficulty)
@@ -2946,7 +2946,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			{
 				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CloakEndAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
 			}
-			else if (g_NpcIsCrawling[bossIndex] && !g_NpcUsesChaseInitialAnimation[bossIndex] && 
+			else if (g_NpcIsCrawling[bossIndex] && !g_NpcUsesChaseInitialAnimation[bossIndex] &&
 			!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] &&
 			!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
 			{
@@ -3089,7 +3089,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			}
 		}
 	}
-	
+
 	if (playbackRate < -12.0)
 	{
 		playbackRate = -12.0;
@@ -3098,7 +3098,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 	{
 		playbackRate = 12.0;
 	}
-	
+
 	if (animationFound && strcmp(animation, "") != 0)
 	{
 		Action action = Plugin_Continue;
@@ -3116,8 +3116,8 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 				g_NpcCurrentAnimationSequence[bossIndex] = 0;
 				//SendDebugMessageToPlayers(DEBUG_BOSS_ANIMATION, 0, "INVALID ANIMATION %s", animation);
 			}
-			bool animationLoop = (state == STATE_IDLE || state == STATE_ALERT || 
-			(state == STATE_CHASE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex]) 
+			bool animationLoop = (state == STATE_IDLE || state == STATE_ALERT ||
+			(state == STATE_CHASE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex])
 			|| state == STATE_WANDER);
 			if (state == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
 			{
@@ -3169,9 +3169,9 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 	{
 		for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
 		{
-			if (NPCGetUniqueID(bossCheck) != -1 && !g_SlenderSpawning[bossCheck] && 
-			g_SlenderState[bossCheck] != STATE_ATTACK && g_SlenderState[bossCheck] != STATE_STUN && g_SlenderState[bossCheck] != STATE_CHASE && 
-			(g_SlenderCopyMaster[bossCheck] == bossIndex || g_SlenderCopyMaster[bossIndex] == bossCheck || 
+			if (NPCGetUniqueID(bossCheck) != -1 && !g_SlenderSpawning[bossCheck] &&
+			g_SlenderState[bossCheck] != STATE_ATTACK && g_SlenderState[bossCheck] != STATE_STUN && g_SlenderState[bossCheck] != STATE_CHASE &&
+			(g_SlenderCopyMaster[bossCheck] == bossIndex || g_SlenderCopyMaster[bossIndex] == bossCheck ||
 			(g_SlenderCopyMaster[bossIndex] == g_SlenderCopyMaster[bossCheck] && g_SlenderCopyMaster[bossIndex] != -1 && g_SlenderCopyMaster[bossCheck] != -1)))
 			{
 				int bossEnt = NPCGetEntIndex(bossCheck);
@@ -3229,8 +3229,8 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 	{
 		for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
 		{
-			if (NPCGetUniqueID(bossCheck) != -1 && !g_SlenderSpawning[bossCheck] && 
-			g_SlenderState[bossCheck] != STATE_ATTACK && g_SlenderState[bossCheck] != STATE_STUN && g_SlenderState[bossCheck] != STATE_CHASE && 
+			if (NPCGetUniqueID(bossCheck) != -1 && !g_SlenderSpawning[bossCheck] &&
+			g_SlenderState[bossCheck] != STATE_ATTACK && g_SlenderState[bossCheck] != STATE_STUN && g_SlenderState[bossCheck] != STATE_CHASE &&
 			(g_SlenderCompanionMaster[bossCheck] == bossIndex || g_SlenderCompanionMaster[bossIndex] == bossCheck ||
 			((g_SlenderCompanionMaster[bossIndex] == g_SlenderCompanionMaster[bossCheck] && g_SlenderCompanionMaster[bossIndex] != -1 && g_SlenderCompanionMaster[bossCheck] != -1))))
 			{
@@ -3239,7 +3239,7 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 				{
 					continue;
 				}
-										
+
 				float copyPos[3];
 				GetEntPropVector(bossEnt, Prop_Data, "m_vecAbsOrigin", copyPos);
 
@@ -3293,24 +3293,24 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderChaseInitialTimer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_NpcUsesChaseInitialAnimation[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3321,11 +3321,11 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 
 	int oldState = g_SlenderState[bossIndex];
 	int state = oldState;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float originalSpeed;
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_Renevant90sEffect)
 	{
 		originalSpeed = NPCGetSpeed(bossIndex, difficulty) + NPCGetAddSpeed(bossIndex);
@@ -3340,7 +3340,7 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 	}
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
-	
+
 	g_NpcUsesChaseInitialAnimation[bossIndex] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
@@ -3358,24 +3358,24 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderRage1Timer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_NpcUsesRageAnimation1[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3383,14 +3383,14 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	
+
 	int oldState = g_SlenderState[bossIndex];
 	int state = oldState;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float originalSpeed;
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_Renevant90sEffect)
 	{
 		originalSpeed = NPCGetSpeed(bossIndex, difficulty) + NPCGetAddSpeed(bossIndex);
@@ -3405,7 +3405,7 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	}
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
-	
+
 	g_NpcUsesRageAnimation1[bossIndex] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
@@ -3422,24 +3422,24 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderRage2Timer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_NpcUsesRageAnimation2[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3447,14 +3447,14 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	
+
 	int oldState = g_SlenderState[bossIndex];
 	int state = oldState;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float originalSpeed;
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_Renevant90sEffect)
 	{
 		originalSpeed = NPCGetSpeed(bossIndex, difficulty) + NPCGetAddSpeed(bossIndex);
@@ -3469,7 +3469,7 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	}
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
-	
+
 	g_NpcUsesRageAnimation2[bossIndex] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
@@ -3486,24 +3486,24 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderRage3Timer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_NpcUsesRageAnimation3[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3511,14 +3511,14 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	
+
 	int oldState = g_SlenderState[bossIndex];
 	int state = oldState;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float originalSpeed;
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_Renevant90sEffect)
 	{
 		originalSpeed = NPCGetSpeed(bossIndex, difficulty) + NPCGetAddSpeed(bossIndex);
@@ -3533,7 +3533,7 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	}
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
-	
+
 	g_NpcUsesRageAnimation3[bossIndex] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
@@ -3550,24 +3550,24 @@ public Action Timer_SlenderSpawnTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderSpawnTimer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_SlenderSpawning[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3591,19 +3591,19 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderHealTimer[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3611,14 +3611,14 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	
+
 	int oldState = g_SlenderState[bossIndex];
 	int state = oldState;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float originalSpeed;
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_Renevant90sEffect)
 	{
 		originalSpeed = NPCGetSpeed(bossIndex, difficulty) + NPCGetAddSpeed(bossIndex);
@@ -3633,7 +3633,7 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 	}
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
-	
+
 	g_NpcSetHealDestination[bossIndex] = false;
 	g_NpcIsRunningToHeal[bossIndex] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
@@ -3648,6 +3648,7 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 	g_SlenderHealDelayTimer[bossIndex] = null;
 	g_SlenderStartFleeTimer[bossIndex] = null;
 	g_SlenderHealTimer[bossIndex] = null;
+	g_BossPathFollower[bossIndex].Invalidate();
 	return Plugin_Stop;
 }
 
@@ -3657,28 +3658,28 @@ public Action Timer_SlenderHealDelayTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderHealDelayTimer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	SlenderPerformVoice(bossIndex, "sound_heal_self", _, NPCChaserNormalSoundHookEnabled(bossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
-	
+
 	g_NpcHealCount[bossIndex] = 0;
-	
+
 	g_SlenderHealEventTimer[bossIndex] = CreateTimer(0.05, Timer_SlenderHealEventTimer, EntIndexToEntRef(slender), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Stop;
 }
@@ -3689,24 +3690,24 @@ public Action Timer_SlenderHealEventTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderHealEventTimer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_NpcIsHealing[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3716,10 +3717,10 @@ public Action Timer_SlenderHealEventTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	
+
 	float checkPercentage;
 	switch (g_NpcSelfHealStage[bossIndex])
 	{
@@ -3737,7 +3738,7 @@ public Action Timer_SlenderHealEventTimer(Handle timer, any entref)
 		}
 	}
 	float regenHealth = checkPercentage / 10.0;
-	
+
 	if (NPCChaserGetStunHealth(bossIndex) + regenHealth < NPCChaserGetStunInitialHealth(bossIndex))
 	{
 		NPCChaserAddStunHealth(bossIndex, regenHealth);
@@ -3759,14 +3760,14 @@ public Action Timer_SlenderHealEventTimer(Handle timer, any entref)
 		g_NpcHealCount[bossIndex] = 0;
 		return Plugin_Stop;
 	}
-	
+
 	if (g_NpcHealCount[bossIndex] >= 10)
 	{
 		g_NpcIsHealing[bossIndex] = false;
 		g_NpcHealCount[bossIndex] = 0;
 		return Plugin_Stop;
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -3776,24 +3777,24 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderStartFleeTimer[bossIndex])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_NpcUseStartFleeAnimation[bossIndex])
 	{
 		return Plugin_Stop;
@@ -3801,14 +3802,14 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	
+
 	int oldState = g_SlenderState[bossIndex];
 	int state = oldState;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float originalSpeed;
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !g_Renevant90sEffect)
 	{
 		originalSpeed = NPCGetSpeed(bossIndex, difficulty) + NPCGetAddSpeed(bossIndex);
@@ -3824,13 +3825,13 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
 	g_SlenderTarget[bossIndex] = INVALID_ENT_REFERENCE;
-	
+
 	g_NpcUseStartFleeAnimation[bossIndex] = false;
 	g_NpcIsRunningToHeal[bossIndex] = true;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
 	NPCChaserUpdateBossAnimation(bossIndex, slender, state);
-	
+
 	return Plugin_Stop;
 }
 public MRESReturn ShouldCollideWith(Address thisAddress, DHookReturn returnHandle, DHookParam params)
@@ -3892,7 +3893,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 	}
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	int slender = NPCGetEntIndex(bossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE) 
+	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return;
 	}
@@ -4053,7 +4054,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		GetProfileString(profile, "player_jarate_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
-		
+
 		int count = ExplodeString(allowedIndexes, " ", allowedIndexesList, 33, 3);
 		if (count > 1)
 		{
@@ -4835,7 +4836,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 						{
 							char player[32];
 							FormatEx(player, sizeof(player), "%N", client);
-							
+
 							char name[SF2_MAX_NAME_LENGTH];
 							NPCGetBossName(bossIndex, name, sizeof(name));
 							if (name[0] == '\0')
@@ -4874,7 +4875,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 						{
 							char player[32];
 							FormatEx(player, sizeof(player), "%N", client);
-							
+
 							char name[SF2_MAX_NAME_LENGTH];
 							NPCGetBossName(bossIndex, name, sizeof(name));
 							if (name[0] == '\0')
@@ -4938,7 +4939,7 @@ stock void NPC_DropKey(int bossIndex)
 		int boss = NPCGetEntIndex(bossIndex);
 		GetEntPropVector(boss, Prop_Data, "m_vecAbsOrigin", myPos);
 		Format(buffer, PLATFORM_MAX_PATH, "sf2_key_%s", buffer);
-		
+
 		int touchBox = CreateEntityByName("tf_halloween_pickup");
 		//To do: allow the cfg maker to change the model.
 		DispatchKeyValue(touchBox, "targetname", buffer);
@@ -4976,7 +4977,7 @@ stock void NPC_DropKey(int bossIndex)
 		{
 			SetEntityModel(touchBox, keyModel);
 		}
-		
+
 		int key = CreateEntityByName("tf_halloween_pickup");
 		DispatchKeyValue(key, "targetname", buffer);
 		DispatchKeyValue(key, "powerup_model", PAGE_MODEL);
@@ -4989,10 +4990,10 @@ stock void NPC_DropKey(int bossIndex)
 		SetEntProp(key, Prop_Data, "m_iEFlags", 12845056);
 		DispatchSpawn(key);
 		ActivateEntity(key);
-		
+
 		SetEntityRenderMode(key, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(key, 0, 0, 0, 1);
-		
+
 		int glow = CreateEntityByName("tf_taunt_prop");
 		DispatchKeyValue(glow, "targetname", buffer);
 		if (keyModel[0] == '\0')
@@ -5014,38 +5015,38 @@ stock void NPC_DropKey(int bossIndex)
 		{
 			SetEntityModel(glow, keyModel);
 		}
-		
+
 		SetEntProp(glow, Prop_Send, "m_bGlowEnabled", 1);
 		SetEntPropFloat(glow, Prop_Send, "m_flModelScale", 2.0);
 		SetEntityRenderMode(glow, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(glow, 0, 0, 0, 1);
-		
+
 		SetVariantString("!activator");
 		AcceptEntityInput(touchBox, "SetParent", key);
-		
+
 		SetVariantString("!activator");
 		AcceptEntityInput(glow, "SetParent", key);
-		
+
 		SetEntityModel(key, PAGE_MODEL);
 		SetEntityMoveType(key, MOVETYPE_FLYGRAVITY);
-		
+
 		HookSingleEntityOutput(touchBox, "OnRedPickup", KeyTrigger);
-		
+
 		vel[0] = GetRandomFloat(-300.0, 300.0);
 		vel[1] = GetRandomFloat(-300.0, 300.0);
 		vel[2] = GetRandomFloat(700.0, 900.0);
-		
+
 		SetEntProp(key, Prop_Data, "m_iEFlags", 12845056);
-		
+
 		TeleportEntity(key, myPos, NULL_VECTOR, vel);
 		SetEntPropFloat(key, Prop_Send, "m_flModelScale", 2.0);
 		SetEntProp(key, Prop_Data, "m_iEFlags", 12845056);
 		SetEntProp(key, Prop_Data, "m_MoveCollide", 1);
-		
+
 		SDKHook(key, SDKHook_SetTransmit, Hook_KeySetTransmit);
 		SDKHook(glow, SDKHook_SetTransmit, Hook_KeySetTransmit);
 		SDKHook(touchBox, SDKHook_SetTransmit, Hook_KeySetTransmit);
-		
+
 		//The key can be stuck somewhere to prevent that, make an auto collect.
 		float timeLeft = float(g_RoundTime);
 		if (timeLeft > 60.0)
@@ -5070,17 +5071,17 @@ public Action Hook_KeySetTransmit(int entity, int iOther)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	if (g_PlayerEliminated[iOther] && IsClientInGhostMode(iOther))
 	{
 		return Plugin_Continue;
 	}
-	
+
 	if (!g_PlayerEliminated[iOther])
 	{
 		return Plugin_Continue;
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -5097,17 +5098,16 @@ public Action CollectKey(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	TriggerKey(ent);
 	return Plugin_Stop;
 }
-
 
 stock void TriggerKey(int caller)
 {
 	char targetName[PLATFORM_MAX_PATH];
 	GetEntPropString(caller, Prop_Data, "m_iName", targetName, sizeof(targetName));
-	
+
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "tf_halloween_pickup")) != -1)
 	{
@@ -5118,7 +5118,7 @@ stock void TriggerKey(int caller)
 			AcceptEntityInput(ent, "KillHierarchy");
 		}
 	}
-	
+
 	ReplaceString(targetName, sizeof(targetName), "sf2_key_", "", false);
 	float myPos[3];
 	GetEntPropVector(caller, Prop_Data, "m_vecAbsOrigin", myPos);

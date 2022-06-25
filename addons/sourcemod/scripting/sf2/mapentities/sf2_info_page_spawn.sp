@@ -124,7 +124,7 @@ static void OnCreate(int entity)
 	SDKHook(entity, SDKHook_SpawnPost, OnSpawn);
 }
 
-static void OnSpawn(int entity) 
+static void OnSpawn(int entity)
 {
 	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(entity);
 

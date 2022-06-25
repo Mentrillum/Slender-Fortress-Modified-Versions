@@ -45,7 +45,7 @@ static void OnCreate(int entity)
 	SDKHook(entity, SDKHook_StartTouchPost, OnStartTouchPost);
 }
 
-static void OnSpawn(int entity) 
+static void OnSpawn(int entity)
 {
 	int spawnFlags = GetEntProp(entity, Prop_Data, "m_spawnflags");
 	SetEntProp(entity, Prop_Data, "m_spawnflags", spawnFlags | TRIGGER_CLIENTS);

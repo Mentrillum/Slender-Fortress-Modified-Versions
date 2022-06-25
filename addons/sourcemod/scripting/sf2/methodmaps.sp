@@ -17,15 +17,15 @@ methodmap SF2NPC_BaseNPC
 			return view_as<int>(this);
 		}
 	}
-	
+
 	property int Type
 	{
 		public get()
 		{
-			return NPCGetType(this.Index); 
+			return NPCGetType(this.Index);
 		}
 	}
-	
+
 	property int ProfileIndex
 	{
 		public get()
@@ -33,7 +33,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetProfileIndex(this.Index);
 		}
 	}
-	
+
 	property int uniqueProfileIndex
 	{
 		public get()
@@ -49,7 +49,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetUniqueID(this.Index);
 		}
 	}
-	
+
 	property int EntRef
 	{
 		public get()
@@ -57,7 +57,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetEntRef(this.Index);
 		}
 	}
-	
+
 	property int EntIndex
 	{
 		public get()
@@ -65,11 +65,11 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetEntIndex(this.Index);
 		}
 	}
-	
+
 	property int Flags
 	{
 		public get()
-        { 
+        {
             return NPCGetFlags(this.Index);
         }
 		public set(int flags)
@@ -77,11 +77,11 @@ methodmap SF2NPC_BaseNPC
 			NPCSetFlags(this.Index, flags);
 		}
 	}
-	
+
 	property float ModelScale
 	{
 		public get()
-        { 
+        {
             return NPCGetModelScale(this.Index);
         }
 	}
@@ -93,7 +93,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetModelSkin(this.Index);
 		}
 	}
-	
+
 	property int RaidHitbox
 	{
 		public get()
@@ -101,7 +101,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetRaidHitbox(this.Index);
 		}
 	}
-	
+
 	property float TurnRate
 	{
 		public get()
@@ -109,7 +109,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetTurnRate(this.Index);
 		}
 	}
-	
+
 	property float FOV
 	{
 		public get()
@@ -117,7 +117,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetFOV(this.Index);
 		}
 	}
-	
+
 	property float Anger
 	{
 		public get()
@@ -129,7 +129,7 @@ methodmap SF2NPC_BaseNPC
 			NPCSetAnger(this.Index, amount);
 		}
 	}
-	
+
 	property float AngerAddOnPageGrab
 	{
 		public get()
@@ -137,7 +137,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetAngerAddOnPageGrab(this.Index);
 		}
 	}
-	
+
 	property float AngerAddOnPageGrabTimeDiff
 	{
 		public get()
@@ -153,7 +153,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetScareRadius(this.Index);
 		}
 	}
-	
+
 	property float ScareCooldown
 	{
 		public get()
@@ -161,7 +161,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetScareCooldown(this.Index);
 		}
 	}
-	
+
 	property float InstantKillRadius
 	{
 		public get()
@@ -169,7 +169,7 @@ methodmap SF2NPC_BaseNPC
 			return NPCGetInstantKillRadius(this.Index);
 		}
 	}
-	
+
 	property int TeleportType
 	{
 		public get()
@@ -202,7 +202,7 @@ methodmap SF2NPC_BaseNPC
 	{
 		return NPCGetTeleporter(this.Index, teleporterNumber);
 	}
-	
+
 	public void SetTeleporter(int teleporterNumber, int entity)
 	{
 		NPCSetTeleporter(this.Index, teleporterNumber, entity);
@@ -219,7 +219,7 @@ methodmap SF2NPC_BaseNPC
 			NPCSetDeathCamEnabled(this.Index, state);
 		}
 	}
-	
+
 	public SF2NPC_BaseNPC(int index)
 	{
 		return view_as<SF2NPC_BaseNPC>(index);
@@ -229,12 +229,12 @@ methodmap SF2NPC_BaseNPC
 	{
 		SpawnSlender(this, pos);
 	}
-	
+
 	public void UnSpawn()
 	{
 		RemoveSlender(this.Index);
 	}
-	
+
 	public void Remove()
 	{
 		NPCRemove(this.Index);
@@ -252,17 +252,17 @@ methodmap SF2NPC_BaseNPC
     {
         SlenderMarkAsFake(this.Index);
     }
-	
+
 	public bool IsValid()
 	{
 		return NPCIsValid(this.Index);
 	}
-	
-	public void GetProfile(char[] buffer, int bufferLen) 
+
+	public void GetProfile(char[] buffer, int bufferLen)
 	{
 		NPCGetProfile(this.Index, buffer, bufferLen);
 	}
-	
+
 	public void SetProfile(const char[] profileName)
 	{
 		NPCSetProfile(this.Index, profileName);
@@ -277,17 +277,17 @@ methodmap SF2NPC_BaseNPC
 	{
 		NPCGetDistanceFromEntity(this.Index, entity);
 	}
-	
+
 	public float GetSpeed(int difficulty)
 	{
 		return NPCGetSpeed(this.Index, difficulty);
 	}
-	
+
 	public float GetMaxSpeed(int difficulty)
 	{
 		return NPCGetMaxSpeed(this.Index, difficulty);
 	}
-		
+
 	public float GetAddSpeed()
 	{
 		return NPCGetAddSpeed(this.Index);
@@ -316,12 +316,12 @@ methodmap SF2NPC_BaseNPC
 			NPCSetAddMaxSpeed(this.Index, amount);
 		}
 	}
-		
+
 	public float GetAcceleration(int difficulty)
 	{
 		return NPCGetAcceleration(this.Index, difficulty);
 	}
-	
+
 	property float AddAcceleration
 	{
 		public get()
@@ -333,22 +333,22 @@ methodmap SF2NPC_BaseNPC
 			NPCSetAddAcceleration(this.Index, amount);
 		}
 	}
-		
+
 	public void GetEyePosition(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
 	{
 		NPCGetEyePosition(this.Index, buffer, defaultValue);
 	}
-	
+
 	public void GetEyePositionOffset(float buffer[3])
 	{
 		NPCGetEyePositionOffset(this.Index, buffer);
 	}
-	    
+
     public int GetRenderColor(int cell)
     {
         return g_SlenderRenderColor[this.Index][cell];
     }
-	
+
     property int GetRenderMode
     {
         public get()
@@ -356,7 +356,7 @@ methodmap SF2NPC_BaseNPC
             return g_SlenderRenderMode[this.Index];
         }
     }
-	
+
     property int GetRenderFX
     {
         public get()
@@ -364,17 +364,17 @@ methodmap SF2NPC_BaseNPC
             return g_SlenderRenderFX[this.Index];
         }
     }
-	
+
 	public void AddAnger(float amount)
 	{
 		NPCAddAnger(this.Index, amount);
 	}
-	
+
 	public bool HasAttribute(const char[] attributeName)
 	{
 		return NPCHasAttribute(this.Index, attributeName);
 	}
-	
+
 	public float GetAttributeValue(const char[] attributeName, float defaultValue = 0.0)
 	{
 		return NPCGetAttributeValue(this.Index, attributeName, defaultValue);
@@ -408,7 +408,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserIsStunEnabled(this.Index);
 		}
 	}
-	
+
 	property bool StunByFlashlightEnabled
 	{
 		public get()
@@ -416,7 +416,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserIsStunByFlashlightEnabled(this.Index);
 		}
 	}
-	
+
 	property float StunFlashlightDamage
 	{
 		public get()
@@ -424,7 +424,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGetStunFlashlightDamage(this.Index);
 		}
 	}
-	
+
 	property float StunDuration
 	{
 		public get()
@@ -432,7 +432,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGetStunDuration(this.Index);
 		}
 	}
-	
+
 	property float StunCooldown
 	{
 		public get()
@@ -440,7 +440,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGetStunCooldown(this.Index);
 		}
 	}
-	
+
 	property float StunHealth
 	{
 		public get()
@@ -452,7 +452,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			NPCChaserSetStunHealth(this.Index, amount);
 		}
 	}
-	
+
 	property float StunInitialHealth
 	{
 		public get()
@@ -469,7 +469,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	{
 		NPCBossTriggerStun(this.Index, entity, profile, pos);
 	}
-	
+
 	property bool HasDamageParticles
 	{
 		public get()
@@ -477,7 +477,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserDamageParticlesEnabled(this.Index);
 		}
 	}
-	
+
 	property bool UseShootGesture
 	{
 		public get()
@@ -485,7 +485,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserUseShootGesture(this.Index);
 		}
 	}
-	
+
 	property bool CloakEnabled
 	{
 		public get()
@@ -498,7 +498,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	{
 		return NPCChaserGetCloakCooldown(this.Index, difficulty);
 	}
-	
+
 	public float GetCloakRange(int difficulty)
 	{
 		return NPCChaserGetCloakRange(this.Index, difficulty);
@@ -513,7 +513,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	{
 		return NPCChaserGetCrawlSpeedMultiplier(this.Index, difficulty);
 	}
-	
+
 	property bool HasKeyDrop
 	{
 		public get()
@@ -521,7 +521,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaseHasKeyDrop(this.Index);
 		}
 	}
-	
+
 	property bool ProjectileEnabled
 	{
 		public get()
@@ -529,7 +529,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserIsProjectileEnabled(this.Index);
 		}
 	}
-	
+
 	property bool ProjectileUsesAmmo
 	{
 		public get()
@@ -537,7 +537,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserUseProjectileAmmo(this.Index);
 		}
 	}
-	
+
 	property int ProjectileType
 	{
 		public get()
@@ -545,37 +545,37 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGetProjectileType(this.Index);
 		}
 	}
-	
+
 	public float GetProjectileCooldownMin(int difficulty)
 	{
 		return NPCChaserGetProjectileCooldownMin(this.Index, difficulty);
 	}
-	
+
 	public float GetProjectileCooldownMax(int difficulty)
 	{
 		return NPCChaserGetProjectileCooldownMax(this.Index, difficulty);
 	}
-	
+
 	public float GetProjectileSpeed(int difficulty)
 	{
 		return NPCChaserGetProjectileSpeed(this.Index, difficulty);
 	}
-	
+
 	public float GetProjectileDamage(int difficulty)
 	{
 		return NPCChaserGetProjectileDamage(this.Index, difficulty);
 	}
-	
+
 	public float GetProjectileRadius(int difficulty)
 	{
 		return NPCChaserGetProjectileRadius(this.Index, difficulty);
 	}
-	
+
 	public float GetProjectileReloadTime(int difficulty)
 	{
 		return NPCChaserGetProjectileReloadTime(this.Index, difficulty);
 	}
-	
+
 	property bool AdvancedDamageEffectsEnabled
 	{
 		public get()
@@ -583,7 +583,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserUseAdvancedDamageEffects(this.Index);
 		}
 	}
-	
+
 	property bool AttachDamageEffectsParticle
 	{
 		public get()
@@ -591,7 +591,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserAttachDamageParticle(this.Index);
 		}
 	}
-	
+
 	property bool JaratePlayerOnHit
 	{
 		public get()
@@ -599,12 +599,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserJaratePlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetJarateDuration(int difficulty)
 	{
 		return NPCChaserGetJarateDuration(this.Index, difficulty);
 	}
-	
+
 	property bool MilkPlayerOnHit
 	{
 		public get()
@@ -612,12 +612,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserMilkPlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetMilkDuration(int difficulty)
 	{
 		return NPCChaserGetMilkDuration(this.Index, difficulty);
 	}
-	
+
 	property bool GasPlayerOnHit
 	{
 		public get()
@@ -625,12 +625,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGasPlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetGasDuration(int difficulty)
 	{
 		return NPCChaserGetGasDuration(this.Index, difficulty);
 	}
-	
+
 	property bool MarkPlayerOnHit
 	{
 		public get()
@@ -638,12 +638,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserMarkPlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetMarkDuration(int difficulty)
 	{
 		return NPCChaserGetMarkDuration(this.Index, difficulty);
 	}
-	
+
 	property bool IgnitePlayerOnHit
 	{
 		public get()
@@ -651,12 +651,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserIgnitePlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetIgniteDelay(int difficulty)
 	{
 		return NPCChaserGetIgniteDelay(this.Index, difficulty);
 	}
-	
+
 	property bool StunPlayerOnHit
 	{
 		public get()
@@ -664,17 +664,17 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserStunPlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetStunAttackDuration(int difficulty)
 	{
 		return NPCChaserGetStunAttackDuration(this.Index, difficulty);
 	}
-	
+
 	public float GetStunAttackSlowdown(int difficulty)
 	{
 		return NPCChaserGetStunAttackSlowdown(this.Index, difficulty);
 	}
-	
+
 	property bool BleedPlayerOnHit
 	{
 		public get()
@@ -682,12 +682,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserBleedPlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetBleedDuration(int difficulty)
 	{
 		return NPCChaserGetBleedDuration(this.Index, difficulty);
 	}
-	
+
 	property bool ElectricPlayerOnHit
 	{
 		public get()
@@ -695,17 +695,17 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserElectricPlayerOnHit(this.Index);
 		}
 	}
-	
+
 	public float GetElectricDuration(int difficulty)
 	{
 		return NPCChaserGetElectricDuration(this.Index, difficulty);
 	}
-	
+
 	public float GetElectricSlowdown(int difficulty)
 	{
 		return NPCChaserGetElectricSlowdown(this.Index, difficulty);
 	}
-	
+
 	property bool SmitePlayerOnHit
 	{
 		public get()
@@ -713,7 +713,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserSmitePlayerOnHit(this.Index);
 		}
 	}
-	
+
 	property int State
 	{
 		public get()
@@ -725,7 +725,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			NPCChaserSetState(this.Index, state);
 		}
 	}
-	
+
 	property bool HasTraps
 	{
 		public get()
@@ -733,7 +733,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGetTrapState(this.Index);
 		}
 	}
-	
+
 	property int TrapType
 	{
 		public get()
@@ -741,12 +741,12 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			return NPCChaserGetTrapType(this.Index);
 		}
 	}
-	
+
 	public float GetTrapCooldown(int difficulty)
 	{
 		return NPCChaserGetTrapSpawnTime(this.Index, difficulty);
 	}
-	
+
 	property bool HasCriticalRockets
 	{
 		public get()
@@ -759,17 +759,17 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	{
 		return NPCChaserGetWalkSpeed(this.Index, difficulty);
 	}
-	
+
 	public float GetMaxWalkSpeed(int difficulty)
 	{
 		return NPCChaserGetMaxWalkSpeed(this.Index, difficulty);
 	}
-	
+
 	public void AddStunHealth(float amount)
 	{
 		NPCChaserAddStunHealth(this.Index, amount);
 	}
-	
+
 	property bool AutoChaseEnabled
 	{
 		public get()
@@ -781,7 +781,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 			g_SlenderHasAutoChaseEnabled[this.Index] = autoChase;
 		}
 	}
-	
+
 	property bool ChasesEndlessly
 	{
 		public get()

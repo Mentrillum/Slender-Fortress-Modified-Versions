@@ -45,7 +45,7 @@ static void OnCreate(int entity)
 	SDKHook(entity, SDKHook_StartTouchPost, OnStartTouchPost);
 }
 
-static void OnSpawn(int entity) 
+static void OnSpawn(int entity)
 {
 	int spawnFlags = GetEntProp(entity, Prop_Data, "m_spawnflags");
 	SetEntProp(entity, Prop_Data, "m_spawnflags", spawnFlags | TRIGGER_NPCS);
@@ -63,7 +63,7 @@ static void OnStartTouchPost(int entity, int toucher)
 	if (thisEnt.PassesTriggerFilters(toucher))
 	{
 		SF2NPC_BaseNPC boss = SF2NPC_BaseNPC(NPCGetFromEntIndex(toucher));
-		if (boss != SF2_INVALID_NPC) 
+		if (boss != SF2_INVALID_NPC)
 		{
 			thisEnt.FireOutput("OnDespawn", toucher);
 			boss.UnSpawn();

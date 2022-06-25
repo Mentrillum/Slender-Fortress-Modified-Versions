@@ -9,29 +9,29 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	{
 		return;
 	}
-	
+
 	#if defined DEBUG
 	Handle hProf = CreateProfiler();
 	StartProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_RoundStart) Started profiling...");
-	
+
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_RoundStart");
 	}
 	#endif
-	
+
 	// Reset some global variables.
 	g_RoundCount++;
 	g_RoundTimer = null;
 	g_RoundTimerPaused = false;
-	
+
 	SetRoundState(SF2RoundState_Invalid);
-	
+
 	SetPageCount(0);
 	g_PageMax = 0;
 	g_PageFoundLastTime = GetGameTime();
-	
+
 	g_VoteTimer = null;
 	//Stop the music if needed.
 	NPCStopMusic();
@@ -45,12 +45,12 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 		SetPlayerGroupPlaying(i, false);
 		CheckPlayerGroup(i);
 	}
-	
+
 	// Refresh players.
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		ClientSetGhostModeState(i, false);
-		
+
 		g_PlayerPlaying[i] = false;
 		g_PlayerEliminated[i] = true;
 		g_PlayerEscaped[i] = false;
@@ -73,32 +73,32 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 		{
 			AcceptEntityInput(ent, "Disable");
 		}
-		
+
 		g_RoundWarmupRoundCount++;
-		
+
 		SetRoundState(SF2RoundState_Waiting);
-		
+
 		ServerCommand("mp_restartgame 15");
 		PrintCenterTextAll("Round restarting in 15 seconds");
 	}
 	else
 	{
 		g_RoundActiveCount++;
-		
+
 		InitializeNewGame();
 	}
-	
+
 	PvP_OnRoundStart();
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT END: Event_RoundStart");
 	}
-	
+
 	StopProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_RoundStart) Stopped profiling, total execution time: %f", GetProfilerTime(hProf));
 	delete hProf;
-	
+
 	#endif
 	//Nextbot doesn't trigger the triggers with npc flags, for map backward compatibility we are going to change the trigger filter and force a custom one.
 	/*int iEnt = -1;
@@ -125,7 +125,7 @@ public Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	char cappers[7];
 	int i = 0;
 	for (int client; client <= MaxClients; client++)
@@ -144,7 +144,7 @@ public Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 public Action Event_Audio(Event event, const char[] name, bool dB)
 {
 	char strAudio[PLATFORM_MAX_PATH];
-	
+
 	GetEventString(event, "sound", strAudio, sizeof(strAudio));
 	if (strncmp(strAudio, "Game.Your", 9) == 0 || strcmp(strAudio, "Game.Stalemate") == 0)
 	{
@@ -158,7 +158,7 @@ public Action Event_Audio(Event event, const char[] name, bool dB)
 			{
 				continue;
 			}
-			
+
 			return Plugin_Handled;
 		}
 	}
@@ -171,18 +171,18 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 	{
 		return;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_RoundEnd");
 	}
 	#endif
-	
+
 	SF_FailEnd();
 
 	if (SF_IsRenevantMap() && g_RenevantWaveTimer != null) KillTimer(g_RenevantWaveTimer);
-	
+
 	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
@@ -193,17 +193,17 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		g_PlayerIn1UpCondition[i] = false;
 		g_PlayerFullyDied1Up[i] = true;
 	}
-	
+
 	ArrayList randomBosses = new ArrayList();
 	char sMusic[MAX_BOSSES][PLATFORM_MAX_PATH];
-	
+
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
 		if (NPCGetUniqueID(npcIndex) == -1)
 		{
 			continue;
 		}
-		
+
 		if (g_SlenderCustomOutroSong[npcIndex])
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -220,18 +220,18 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 			EmitSoundToAll(sMusic[newBossIndex], _, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 		}
 	}
-	
+
 	delete randomBosses;
-	
+
 	SpecialRound_RoundEnd();
-	
+
 	SetRoundState(SF2RoundState_Outro);
-	
+
 	DistributeQueuePointsToPlayers();
-	
+
 	g_RoundEndCount++;
 	CheckRoundLimitForBossPackVote(g_RoundEndCount);
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
@@ -247,14 +247,14 @@ public Action Event_PlayerTeamPre(Handle event, const char[] name, bool dB)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 1)
 	{
 		DebugMessage("EVENT START: Event_PlayerTeamPre");
 	}
 	#endif
-	
+
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client > 0)
 	{
@@ -263,16 +263,16 @@ public Action Event_PlayerTeamPre(Handle event, const char[] name, bool dB)
 			SetEventBroadcast(event, true);
 		}
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 1)
 	{
 		DebugMessage("EVENT END: Event_PlayerTeamPre");
 	}
 	#endif
-	
+
 	delete event;
-	
+
 	return Plugin_Continue;
 }
 
@@ -282,14 +282,14 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 	{
 		return;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_PlayerTeam");
 	}
 	#endif
-	
+
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client > 0)
 	{
@@ -303,37 +303,37 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 					ForceInNextPlayersInQueue(1, true);
 				}
 			}
-			
+
 			// You're not playing anymore.
 			if (g_PlayerPlaying[client])
 			{
 				ClientSetQueuePoints(client, 0);
 			}
-			
+
 			g_PlayerPlaying[client] = false;
 			g_PlayerEliminated[client] = true;
 			g_PlayerEscaped[client] = false;
-			
+
 			ClientSetGhostModeState(client, false);
-			
+
 			if (!view_as<bool>(GetEntProp(client, Prop_Send, "m_bIsCoaching")))
 			{
 				// This is to prevent player spawn spam when someone is coaching. Who coaches in SF2, anyway?
 				TF2_RespawnPlayer(client);
 			}
-			
+
 			// Special round.
 			if (g_IsSpecialRound)
 			{
 				g_PlayerPlayedSpecialRound[client] = true;
 			}
-			
+
 			// Boss round.
 			if (g_NewBossRound)
 			{
 				g_PlayerPlayedNewBossRound[client] = true;
 			}
-			
+
 			if (!g_FullyEnableSpectatorConVar.BoolValue)
 			{
 				g_PlayerSwitchBlueTimer[client] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -344,7 +344,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			if (!g_PlayerChoseTeam[client])
 			{
 				g_PlayerChoseTeam[client] = true;
-				
+
 				if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
 				{
 					EmitSoundToClient(client, SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND);
@@ -354,10 +354,10 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 				{
 					CPrintToChat(client, "%T", "SF2 Normal Flashlight", client);
 				}
-				
+
 				CreateTimer(5.0, Timer_WelcomeMessage, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 			}
-			if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] && teamNum == TFTeam_Red && 
+			if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] && teamNum == TFTeam_Red &&
 				!DidClientEscape(client))
 			{
 				TFClassType class = TF2_GetPlayerClass(client);
@@ -470,7 +470,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			}
 		}
 	}
-	
+
 	// Check groups.
 	if (!IsRoundEnding())
 	{
@@ -483,7 +483,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			CheckPlayerGroup(i);
 		}
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
@@ -499,14 +499,14 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	{
 		return;
 	}
-	
+
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0)
 	{
 		return;
 	}
 	#if defined DEBUG
-	
+
 	Handle hProf = CreateProfiler();
 	StartProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Started profiling...");
@@ -517,7 +517,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		DebugMessage("EVENT START: Event_PlayerSpawn(%d)", client);
 	}
 	#endif
-	
+
 	if (GetClientTeam(client) > 1)
 	{
 		g_LastVisibilityProcess[client] = GetGameTime();
@@ -536,7 +536,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientSetGhostModeState(client, false);
 		SetEntityGravity(client, 1.0);
 		g_PlayerPageCount[client] = 0;
-		
+
 		ClientResetStatic(client);
 		ClientResetSlenderStats(client);
 		ClientResetCampingStats(client);
@@ -554,7 +554,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientResetProxy(client);
 		ClientResetHints(client);
 		ClientResetScare(client);
-		
+
 		ClientResetDeathCam(client);
 		ClientResetFlashlight(client);
 		ClientDeactivateUltravision(client);
@@ -583,12 +583,12 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			}
 		}
 	}
-	
+
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
 	{
 		CreateTimer(0.2, Timer_CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
+
 	g_PlayerPostWeaponsTimer[client] = null;
 	g_PlayerIgniteTimer[client] = null;
 	g_PlayerResetIgnite[client] = null;
@@ -597,16 +597,16 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	g_PlayerFireworkTimer[client] = null;
 
 	g_PlayerBossKillSubject[client] = INVALID_ENT_REFERENCE;
-	
+
 	g_PlayerGettingPageReward[client] = false;
 	g_PlayerHitsToCrits[client] = 0;
 	g_PlayerHitsToHeads[client] = 0;
-	
+
 	g_PlayerTrapped[client] = false;
 	g_PlayerTrapCount[client] = 0;
-	
+
 	g_PlayerRandomClassNumber[client] = 1;
-	
+
 	if (IsPlayerAlive(client) && IsClientParticipating(client))
 	{
 		if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES)) //A boss is overriding the music.
@@ -628,7 +628,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
 		TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
 		TF2_RemoveCondition(client, TFCond_SpawnOutline);
-		
+
 		if (HandlePlayerTeam(client))
 		{
 			#if defined DEBUG
@@ -641,7 +641,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		else
 		{
 			g_PlayerPageCount[client] = 0;
-			
+
 			ClientResetStatic(client);
 			ClientResetSlenderStats(client);
 			ClientResetCampingStats(client);
@@ -659,7 +659,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientResetProxy(client);
 			ClientResetHints(client);
 			ClientResetScare(client);
-			
+
 			ClientResetDeathCam(client);
 			ClientResetFlashlight(client);
 			ClientDeactivateUltravision(client);
@@ -687,9 +687,9 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					g_NpcChaseOnLookTarget[npcIndex].Erase(foundClient);
 				}
 			}
-			
+
 			TF2Attrib_SetByName(client, "increased jump height", 1.0);
-			
+
 			if (!g_PlayerEliminated[client])
 			{
 				if ((SF_IsRaidMap() || SF_IsBoxingMap()) && !IsRoundPlaying())
@@ -700,7 +700,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				{
 					TF2Attrib_RemoveByDefIndex(client, 10);
 				}
-				
+
 				if (!DidClientEscape(client))
 				{
 					TF2Attrib_SetByDefIndex(client, 49, 1.0);
@@ -711,19 +711,19 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				{
 					TF2_StripContrackerOnly(client);
 				}
-				
+
 				ClientStartDrainingBlinkMeter(client);
 				ClientSetScareBoostEndTime(client, -1.0);
-				
+
 				ClientStartCampingTimer(client);
-				
+
 				HandlePlayerIntroState(client);
-				
+
 				if (IsFakeClient(client))
 				{
 					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
-				
+
 				// screen overlay timer
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
@@ -745,14 +745,14 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				{
 					TF2_AddCondition(client, TFCond_MarkedForDeathSilent, -1.0);
 				}
-				
+
 				if (SF_SpecialRound(SPECIALROUND_1UP) && !g_PlayerIn1UpCondition[client] && !g_PlayerDied1Up[client])
 				{
 					g_PlayerDied1Up[client] = false;
 					g_PlayerIn1UpCondition[client] = true;
 					g_PlayerFullyDied1Up[client] = false;
 				}
-				
+
 				if (SF_SpecialRound(SPECIALROUND_PAGEDETECTOR))
 				{
 					ClientSetSpecialRoundTimer(client, 0.0, Timer_ClientPageDetector, GetClientUserId(client));
@@ -878,24 +878,24 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			}
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_PlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-			
+
 			HandlePlayerHUD(client);
 		}
 	}
-	
+
 	PvP_OnPlayerSpawn(client);
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT END: Event_PlayerSpawn(%d)", client);
 	}
-	
+
 	StopProfiling(hProf);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Stopped profiling, function executed in %f", GetProfilerTime(hProf));
 	delete hProf;
 	#endif
-	
+
 	delete event;
 }
 
@@ -906,10 +906,10 @@ public void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast
 	{
 		return;
 	}
-	
+
 	int teamNum = GetClientTeam(client);
-	
-	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] && 
+
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !g_PlayerEliminated[client] &&
 		teamNum == TFTeam_Red && TF2_GetPlayerClass(client) == TFClass_Medic && !DidClientEscape(client))
 	{
 		TFClassType class = TF2_GetPlayerClass(client);
@@ -1028,21 +1028,21 @@ public Action Event_PostInventoryApplication(Handle event, const char[] name, bo
 	{
 		return;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_PostInventoryApplication");
 	}
 	#endif
-	
+
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client > 0)
 	{
 		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 		g_PlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
@@ -1061,7 +1061,7 @@ public Action Event_DontBroadcastToClients(Handle event, const char[] name, bool
 	{
 		return Plugin_Continue;
 	}
-	
+
 	SetEventBroadcast(event, true);
 	delete event;
 	return Plugin_Continue;
@@ -1073,7 +1073,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 1)
 	{
@@ -1087,9 +1087,9 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	{
 		ClientDisableConstantGlow(client);
 	}
-	
+
 	int inflictor = event.GetInt("inflictor_entindex");
-	
+
 	// If this player was killed by a boss, play a sound.
 	int npcIndex = NPCGetFromEntIndex(inflictor);
 	if (npcIndex != -1 && !IsEntityAProjectile(inflictor))
@@ -1107,19 +1107,19 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			{
 				KillTimer(g_TimerChangeClientName[iTarget]);
 			}
-			else 
+			else
 			{
 				GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_OldClientName[iTarget], sizeof(g_OldClientName[]));
 			}
-			
+
 			char bossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(npcIndex, profile, sizeof(profile));
 			NPCGetBossName(npcIndex, bossName, sizeof(bossName));
-			
+
 			//TF2_ChangePlayerName(iTarget, bossName, true);
 			SetClientName(iTarget, bossName);
 			SetEntPropString(iTarget, Prop_Data, "m_szNetname", bossName);
-			
+
 			event.SetString("assister_fallback", "");
 			if ((NPCGetFlags(npcIndex) & SFF_WEAPONKILLS) || (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS))
 			{
@@ -1147,7 +1147,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				event.SetString("weapon", "");
 				event.SetString("weapon_logclassname", "");
 			}
-			
+
 			int userid = GetClientUserId(iTarget);
 			event.SetInt("attacker", userid);
 			g_TimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
@@ -1164,7 +1164,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 					{
 						KillTimer(g_TimerChangeClientName[iTarget]);
 					}
-					else 
+					else
 					{
 						GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_OldClientName[iTarget], sizeof(g_OldClientName[]));
 					}
@@ -1218,7 +1218,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	event.GetString("weapon", stringName, sizeof(stringName));
 	SendDebugMessageToPlayers(DEBUG_KILLICONS, 0, "String kill icon is %s, integer kill icon is %i.", stringName, event.GetInt("customkill"));
 	#endif
-	
+
 	if (IsEntityAProjectile(inflictor))
 	{
 		int npcIndex2 = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
@@ -1240,17 +1240,17 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				{
 					GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_OldClientName[iTarget], sizeof(g_OldClientName[]));
 				}
-				
+
 				char bossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 				NPCGetProfile(npcIndex2, profile, sizeof(profile));
 				NPCGetBossName(npcIndex2, bossName, sizeof(bossName));
-				
+
 				//TF2_ChangePlayerName(iTarget, bossName, true);
 				SetClientName(iTarget, bossName);
 				SetEntPropString(iTarget, Prop_Data, "m_szNetname", bossName);
-				
+
 				event.SetString("assister_fallback", "");
-				
+
 				switch (ProjectileGetFlags(inflictor))
 				{
 					case PROJ_ROCKET:
@@ -1279,7 +1279,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 						event.SetString("weapon", "obj_sentrygun3");
 					}
 				}
-				
+
 				int userid = GetClientUserId(iTarget);
 				event.SetInt("attacker", userid);
 				g_TimerChangeClientName[iTarget] = CreateTimer(0.6, Timer_RevertClientName, iTarget, TIMER_FLAG_NO_MAPCHANGE);
@@ -1296,7 +1296,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 						{
 							KillTimer(g_TimerChangeClientName[iTarget]);
 						}
-						else 
+						else
 						{
 							GetEntPropString(iTarget, Prop_Data, "m_szNetname", g_OldClientName[iTarget], sizeof(g_OldClientName[]));
 						}
@@ -1345,7 +1345,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			}
 		}
 	}
-	
+
 	if (!IsRoundInWarmup())
 	{
 		if (client > 0)
@@ -1423,20 +1423,20 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 	{
 		return;
 	}
-	
+
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0)
 	{
 		return;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_PlayerHurt");
 	}
 	#endif
-	
+
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	if (attacker > 0)
 	{
@@ -1445,7 +1445,7 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 			g_PlayerProxyControl[attacker] = 100;
 		}
 	}
-	
+
 	// Play any sounds, if any.
 	if (g_PlayerProxy[client])
 	{
@@ -1454,7 +1454,7 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(proxyMaster, profile, sizeof(profile));
-			
+
 			char buffer[PLATFORM_MAX_PATH];
 			if (GetRandomStringFromProfile(profile, "sound_proxy_hurt", buffer, sizeof(buffer)) && buffer[0] != '\0')
 			{
@@ -1463,7 +1463,7 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 				int flags = g_SlenderProxyHurtFlags[proxyMaster];
 				float volume = g_SlenderProxyHurtVolume[proxyMaster];
 				int pitch = g_SlenderProxyHurtPitch[proxyMaster];
-				
+
 				EmitSoundToAll(buffer, client, channel, level, flags, volume, pitch);
 			}
 		}
@@ -1489,24 +1489,24 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 	{
 		return;
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_PlayerDeath(%d)", client);
 	}
 	#endif
-	
+
 	bool fake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
 	int inflictor = event.GetInt("inflictor_entindex");
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("inflictor = %d", inflictor);
 	}
 	#endif
-	
+
 	if (!fake)
 	{
 		ClientResetStatic(client);
@@ -1522,14 +1522,14 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		Client20DollarsMusicReset(client);
 		Client90sMusicReset(client);
 		ClientMusicReset(client);
-		
+
 		ClientResetFlashlight(client);
 		ClientDeactivateUltravision(client);
 		ClientResetSprint(client);
 		ClientResetBreathing(client);
 		ClientResetBlink(client);
 		ClientResetDeathCam(client);
-		
+
 		ClientUpdateMusicSystem(client);
 
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
@@ -1558,9 +1558,9 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				}
 			}
 		}
-		
+
 		PvP_SetPlayerPvPState(client, false, false, false);
-		
+
 		if (IsRoundInWarmup())
 		{
 			CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -1596,10 +1596,10 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				{
 					for (int reds = 1; reds <= MaxClients; reds++)
 					{
-						if (!IsValidClient(reds) || 
-							g_PlayerEliminated[reds] || 
-							DidClientEscape(reds) || 
-							GetClientTeam(reds) != TFTeam_Red || 
+						if (!IsValidClient(reds) ||
+							g_PlayerEliminated[reds] ||
+							DidClientEscape(reds) ||
+							GetClientTeam(reds) != TFTeam_Red ||
 							!IsPlayerAlive(reds))
 						{
 							continue;
@@ -1639,8 +1639,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			else
 			{
 			}
-			
-			
+
 			// If this player was killed by a boss, play a sound, or print a message.
 			int npcIndex = NPCGetFromEntIndex(inflictor);
 			if (npcIndex != -1)
@@ -1650,7 +1649,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				{
 					g_PlayerBossKillSubject[client] = EntIndexToEntRef(slender);
 				}
-				
+
 				char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH], bossName[SF2_MAX_NAME_LENGTH];
 				NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
 				NPCGetBossName(npcIndex, bossName, sizeof(bossName));
@@ -1663,7 +1662,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 					CPrintToChat(client, "{valve}%s{default} has stolen {green}%i credits{default} from you.", bossName, NPCGetDrainCreditAmount(npcIndex, difficulty));
 				}
 				#endif
-				
+
 				if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_client", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
 					if (g_PlayerEliminated[client])
@@ -1671,7 +1670,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 						EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 					}
 				}
-				
+
 				if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
 					if (g_PlayerEliminated[client])
@@ -1679,12 +1678,12 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 						EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 					}
 				}
-				
+
 				SlenderPrintChatMessage(npcIndex, client);
-				
+
 				SlenderPerformVoice(npcIndex, "sound_attack_killed");
 			}
-			
+
 			if (IsEntityAProjectile(inflictor))
 			{
 				int npcIndex2 = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
@@ -1695,7 +1694,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 					{
 						g_PlayerBossKillSubject[client] = EntIndexToEntRef(slender);
 					}
-					
+
 					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH], bossName[SF2_MAX_NAME_LENGTH];
 					NPCGetProfile(npcIndex2, npcProfile, sizeof(npcProfile));
 					NPCGetBossName(npcIndex2, bossName, sizeof(bossName));
@@ -1708,8 +1707,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 						CPrintToChat(client, "{valve}%s{default} has stolen {green}%i credits{default} from you.", bossName, NPCGetDrainCreditAmount(npcIndex2, difficulty));
 					}
 					#endif
-					
-					
+
 					if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_client", buffer, sizeof(buffer)) && buffer[0] != '\0')
 					{
 						if (g_PlayerEliminated[client])
@@ -1717,7 +1715,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 							EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC);
 						}
 					}
-					
+
 					if (GetRandomStringFromProfile(npcProfile, "sound_attack_killed_all", buffer, sizeof(buffer)) && buffer[0] != '\0')
 					{
 						if (g_PlayerEliminated[client])
@@ -1725,15 +1723,15 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 							EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 						}
 					}
-					
+
 					SlenderPrintChatMessage(npcIndex2, client);
-					
+
 					SlenderPerformVoice(npcIndex2, "sound_attack_killed");
 				}
 			}
-			
+
 			CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
-			
+
 			// Notify to other bosses that this player has died.
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
@@ -1741,31 +1739,31 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				{
 					continue;
 				}
-				
+
 				if (EntRefToEntIndex(g_SlenderTarget[i]) == client)
 				{
 					g_SlenderInterruptConditions[i] |= COND_CHASETARGETINVALIDATED;
 					GetClientAbsOrigin(client, g_SlenderChaseDeathPosition[i]);
 				}
 			}
-			
+
 			if (g_IgnoreRedPlayerDeathSwapConVar.BoolValue && GetClientTeam(client) == TFTeam_Red)
 			{
 				g_PlayerEliminated[client] = false;
 				g_PlayerEscaped[client] = false;
 			}
 		}
-		
+
 		if (g_PlayerProxy[client])
 		{
 			// We're a proxy, so play some sounds.
-			
+
 			int proxyMaster = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 			if (proxyMaster != -1)
 			{
 				char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 				NPCGetProfile(proxyMaster, profile, sizeof(profile));
-				
+
 				char buffer[PLATFORM_MAX_PATH];
 				if (GetRandomStringFromProfile(profile, "sound_proxy_death", buffer, sizeof(buffer)) && buffer[0] != '\0')
 				{
@@ -1774,15 +1772,15 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 					int flags = g_SlenderProxyDeathFlags[proxyMaster];
 					float volume = g_SlenderProxyDeathVolume[proxyMaster];
 					int pitch = g_SlenderProxyDeathPitch[proxyMaster];
-					
+
 					EmitSoundToAll(buffer, client, channel, level, flags, volume, pitch);
 				}
 			}
 		}
-		
+
 		ClientResetProxy(client, true);
 		ClientUpdateListeningFlags(client);
-		
+
 		// Half-Zatoichi nerf code.
 		int katanaHealthGain = 10;
 		if (katanaHealthGain >= 0)
@@ -1794,34 +1792,34 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				{
 					char weaponClass[64];
 					event.GetString("weapon", weaponClass, sizeof(weaponClass));
-					
+
 					if (strcmp(weaponClass, "demokatana") == 0)
 					{
 						int attackerPreHealth = GetEntProp(attacker, Prop_Send, "m_iHealth");
 						Handle pack = CreateDataPack();
 						WritePackCell(pack, GetClientUserId(attacker));
 						WritePackCell(pack, attackerPreHealth + katanaHealthGain);
-						
+
 						CreateTimer(0.0, Timer_SetPlayerHealth, pack, TIMER_FLAG_NO_MAPCHANGE);
 					}
 				}
 			}
 		}
-		
+
 		g_PlayerPostWeaponsTimer[client] = null;
 		g_PlayerIgniteTimer[client] = null;
 		g_PlayerResetIgnite[client] = null;
 		g_PlayerPageRewardTimer[client] = null;
 		g_PlayerPageRewardCycleTimer[client] = null;
 		g_PlayerFireworkTimer[client] = null;
-		
+
 		g_PlayerGettingPageReward[client] = false;
 		g_PlayerHitsToCrits[client] = 0;
 		g_PlayerHitsToHeads[client] = 0;
-		
+
 		g_PlayerTrapped[client] = false;
 		g_PlayerTrapCount[client] = 0;
-		
+
 		g_PlayerRandomClassNumber[client] = 1;
 	}
 	if (!IsRoundEnding() && !g_RoundWaitingForPlayers)
@@ -1870,7 +1868,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		CreateTimer(0.2, Timer_CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	PvP_OnPlayerDeath(client, fake);
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{

@@ -3,16 +3,15 @@
 #endif
 #define _sf2_pvp_included
 
-
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 #define FLAME_HIT_DELAY 0.05
 
 ConVar g_PvPArenaLeaveTimeConVar = null;
 ConVar g_PvPArenaProjectileZapConVar = null;
 
-static const char g_PvPProjectileClasses[][] = 
+static const char g_PvPProjectileClasses[][] =
 {
-	"tf_projectile_rocket", 
+	"tf_projectile_rocket",
 	"tf_projectile_sentryrocket",
 	"tf_projectile_stun_ball",
 	"tf_projectile_ball_ornament",
@@ -34,7 +33,7 @@ static const char g_PvPProjectileClasses[][] =
 	"tf_projectile_energy_ring",
 	"tf_projectile_syringe"
 };
-static const char g_PvPProjectileClassesNoTouch[][] = 
+static const char g_PvPProjectileClassesNoTouch[][] =
 {
 	"tf_projectile_flare"
 };
@@ -76,7 +75,7 @@ enum struct PvPProjectile_BallOfFire
 		{
 			return;
 		}
-		
+
 		if (IsValidEntity(otherEntity))
 		{
 			if (this.TouchedEntities.FindValue(otherEntity) == -1)
@@ -113,7 +112,7 @@ public void PvP_Initialize()
 {
 	g_PvPArenaLeaveTimeConVar = CreateConVar("sf2_player_pvparena_leavetime", "5");
 	g_PvPArenaProjectileZapConVar = CreateConVar("sf2_pvp_projectile_removal", "0", "This is an experimental code! It could make your server crash, if you get any crash disable this cvar");
-	
+
 	g_PvPBallsOfFire = new ArrayList(sizeof(PvPProjectile_BallOfFire));
 
 	AddTempEntHook("TFBlood", TempEntHook_PvPBlood);
@@ -232,7 +231,7 @@ public void PvP_OnGameFrame()
 		{
 			int throwerOffset = FindDataMapInfo(ent, "m_hThrower");
 			bool changeProjectileTeam = false;
-			
+
 			int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
 			if (IsValidClient(ownerEntity) && IsClientInPvP(ownerEntity) && GetClientTeam(ownerEntity) != TFTeam_Red)
 			{
@@ -246,7 +245,7 @@ public void PvP_OnGameFrame()
 					changeProjectileTeam = true;
 				}
 			}
-			
+
 			if (changeProjectileTeam)
 			{
 				SetEntProp(ent, Prop_Data, "m_iInitialTeamNum", 0);
@@ -259,34 +258,34 @@ public void PvP_OnGameFrame()
 	{
 		static float mins[3] = { -6.0, ... };
 		static float maxs[3] = { 6.0, ... };
-		
+
 		float flOrigin[3];
-		
+
 		Handle trace = null;
 		int ent = -1;
-		int ownerEntity = INVALID_ENT_REFERENCE; 
+		int ownerEntity = INVALID_ENT_REFERENCE;
 		int hitEntity = INVALID_ENT_REFERENCE;
-		
+
 		while ((ent = FindEntityByClassname(ent, "tf_flame_manager")) != -1)
 		{
 			ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-			
+
 			if (IsValidEdict(ownerEntity))
 			{
 				// tf_flame's initial owner SHOULD be the flamethrower that it originates from.
 				// If not, then something's completely bogus.
-				
+
 				ownerEntity = GetEntPropEnt(ownerEntity, Prop_Data, "m_hOwnerEntity");
 			}
-			
+
 			if (IsValidClient(ownerEntity) && (IsRoundInWarmup() || IsClientInPvP(ownerEntity)))
 			{
 				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flOrigin);
-				
+
 				trace = TR_TraceHullFilterEx(flOrigin, flOrigin, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, ownerEntity);
 				hitEntity = TR_GetEntityIndex(trace);
 				delete trace;
-				
+
 				if (IsValidEntity(hitEntity))
 				{
 					PvP_OnFlameEntityStartTouchPost(ent, hitEntity);
@@ -349,14 +348,14 @@ public Action Hook_PvPProjectile_OnTouch(int projectile, int client)
 		RemoveEntity(projectile);
 		return Plugin_Handled;
 	}
-	
+
 	int throwerOffset = FindDataMapInfo(projectile, "m_hThrower");
 	int ownerEntity = GetEntPropEnt(projectile, Prop_Data, "m_hOwnerEntity");
 	if (ownerEntity != client && throwerOffset != -1)
 	{
 		ownerEntity = GetEntDataEnt2(projectile, throwerOffset);
 	}
-	
+
 	if (ownerEntity == client)
 	{
 		RemoveEntity(projectile);
@@ -387,10 +386,10 @@ public Action Hook_PvPProjectileSpawn(int ent)
 {
 	char class[64];
 	GetEntityClassname(ent, class, sizeof(class));
-	
+
 	int throwerOffset = FindDataMapInfo(ent, "m_hThrower");
 	int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-	
+
 	if (ownerEntity == -1 && throwerOffset != -1)
 	{
 		ownerEntity = GetEntDataEnt2(ent, throwerOffset);
@@ -423,13 +422,13 @@ public Action PvP_EntitySpawnPost(Handle timer,any ent)
 public void Hook_PvPProjectileSpawnPost(int ent)
 {
 	if (!IsValidEntity(ent)) return;
-	
+
 	char class[64];
 	GetEntityClassname(ent, class, sizeof(class));
-	
+
 	int throwerOffset = FindDataMapInfo(ent, "m_hThrower");
 	int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-	
+
 	if (ownerEntity == -1 && throwerOffset != -1)
 	{
 		ownerEntity = GetEntDataEnt2(ent, throwerOffset);
@@ -439,7 +438,7 @@ public void Hook_PvPProjectileSpawnPost(int ent)
 	{
 		if (IsClientInPvP(ownerEntity))
 		{
-			static const char fixWeaponNotCollidingWithTeammates[][] = 
+			static const char fixWeaponNotCollidingWithTeammates[][] =
 			{
 				"tf_projectile_rocket",
 				"tf_projectile_sentryrocket",
@@ -515,7 +514,7 @@ public void PvP_OnPlayerSpawn(int client)
 	{
 		return;
 	}
-	
+
 	PvP_SetPlayerPvPState(client, false, false, false);
 
 	g_PlayerIsLeavingPvP[client] = false;
@@ -527,7 +526,7 @@ public void PvP_OnPlayerSpawn(int client)
 			if (g_PlayerEliminated[client] || g_PlayerEscaped[client])
 			{
 				bool autoSpawn = g_PlayerPreferences[client].PlayerPreference_PvPAutoSpawn;
-				
+
 				if (autoSpawn)
 				{
 					g_PlayerPvPRespawnTimer[client] = CreateTimer(0.12, Timer_TeleportPlayerToPvP, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -544,8 +543,8 @@ public void PvP_OnPlayerSpawn(int client)
 void PvP_ZapProjectile(int projectile,bool bEffects=true)
 {
 	if (!IsValidEntity(projectile))
-		return;								 
-	
+		return;
+
 	//Add zap effects
 	if (bEffects)
 	{
@@ -574,7 +573,7 @@ public void PvP_OnPlayerDeath(int client, bool fake)
 		if (!IsClientInGhostMode(client) && !g_PlayerProxy[client])
 		{
 			bool autoSpawn = g_PlayerPreferences[client].PlayerPreference_PvPAutoSpawn;
-			
+
 			if (autoSpawn)
 			{
 				if (g_PlayerEliminated[client] || g_PlayerEscaped[client])
@@ -621,7 +620,7 @@ public void PvP_OnTriggerStartTouch(int trigger,int other)
 {
 	char name[64];
 	GetEntPropString(trigger, Prop_Data, "m_iName", name, sizeof(name));
-	
+
 	if (StrContains(name, "sf2_pvp_trigger", false) == 0 || SF2TriggerPvPEntity(trigger).IsValid())
 	{
 		if (IsValidClient(other) && IsPlayerAlive(other) && !IsClientInGhostMode(other))
@@ -636,13 +635,13 @@ public void PvP_OnTriggerStartTouch(int trigger,int other)
 			SetEntPropFloat(other, Prop_Send, "m_flHeadScale", 1.0);
 			SetEntPropFloat(other, Prop_Send, "m_flTorsoScale", 1.0);
 			SetEntPropFloat(other, Prop_Send, "m_flHandScale", 1.0);
-			
+
 			int entRef = EnsureEntRef(trigger);
 			if (g_PlayerEnteredPvPTriggers[other].FindValue(entRef) == -1)
 			{
 				g_PlayerEnteredPvPTriggers[other].Push(entRef);
 			}
-			
+
 			if (IsClientInPvP(other))
 			{
 				if (g_PlayerIsLeavingPvP[other])
@@ -681,7 +680,7 @@ public Action PvP_OnTriggerEndTouch(int trigger,int other)
 				}
 			}
 		}
-		
+
 		if (IsClientInPvP(other))
 		{
 			if (g_PlayerEnteredPvPTriggers[other].Length == 0)
@@ -762,24 +761,24 @@ void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles=true,
 	{
 		return;
 	}
-	
+
 	bool oldInPvP = g_PlayerInPvP[client];
 	if (status == oldInPvP)
 	{
 		return; // no change
 	}
-	
+
 	g_PlayerInPvP[client] = status;
 	g_PlayerPvPTimer[client] = null;
 	g_PlayerPvPRespawnTimer[client] = null;
 	g_PlayerPvPTimerCount[client] = 0;
-	
+
 	if (removeProjectiles)
 	{
 		// Remove previous projectiles.
 		PvP_RemovePlayerProjectiles(client);
 	}
-	
+
 	if (regenerate)
 	{
 		// Regenerate player but keep health the same.
@@ -802,7 +801,7 @@ static void PvP_OnFlameEntityStartTouchPost(int flame,int other) //Thanks Fire
 		if (flasthit[other] < time)
 		{
 			flasthit[other] = time + FLAME_HIT_DELAY;
-				
+
 			if ((IsRoundInWarmup() || IsClientInPvP(other)) && !IsRoundEnding())
 			{
 				int iFlamethrower = GetEntPropEnt(flame, Prop_Data, "m_hOwnerEntity");
@@ -817,7 +816,7 @@ static void PvP_OnFlameEntityStartTouchPost(int flame,int other) //Thanks Fire
 							{
 								//TF2_MakeBleed(other, ownerEntity, 4.0);
 								TF2_IgnitePlayer(other, ownerEntity);
-								SDKHooks_TakeDamage(other, ownerEntity, ownerEntity, 10.0, IsClientCritBoosted(ownerEntity) ? (DMG_BURN | DMG_PREVENT_PHYSICS_FORCE | DMG_ACID) : DMG_BURN | DMG_PREVENT_PHYSICS_FORCE); 
+								SDKHooks_TakeDamage(other, ownerEntity, ownerEntity, 10.0, IsClientCritBoosted(ownerEntity) ? (DMG_BURN | DMG_PREVENT_PHYSICS_FORCE | DMG_ACID) : DMG_BURN | DMG_PREVENT_PHYSICS_FORCE);
 							}
 						}
 					}
@@ -853,7 +852,7 @@ static void PvP_RemovePlayerProjectiles(int client)
 		{
 			int throwerOffset = FindDataMapInfo(ent, "m_hThrower");
 			bool mine = false;
-		
+
 			int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
 			if (ownerEntity == client)
 			{
@@ -867,7 +866,7 @@ static void PvP_RemovePlayerProjectiles(int client)
 					mine = true;
 				}
 			}
-			
+
 			if (mine)
 			{
 				RemoveEntity(ent);
@@ -883,18 +882,18 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 	{
 		return;
 	}
-	
+
 	if (g_PlayerProxy[client])
 	{
 		return;
 	}
-	
+
 	if (timer != g_PlayerPvPRespawnTimer[client])
 	{
 		return;
 	}
 	g_PlayerPvPRespawnTimer[client] = null;
-	
+
 	ArrayList spawnPointList = new ArrayList();
 	ArrayList clearSpawnPointList = new ArrayList();
 
@@ -943,7 +942,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 			}
 		}
 	}
-	
+
 	int num;
 	if ((num = clearSpawnPointList.Length) > 0)
 	{
@@ -956,14 +955,14 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 
 	delete spawnPointList;
 	delete clearSpawnPointList;
-	
+
 	if (num > 0)
 	{
 		float pos[3], ang[3];
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
 		GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", ang);
 		TeleportEntity(client, pos, ang, view_as<float>({ 0.0, 0.0, 0.0 }));
-		
+
 		EmitAmbientSound(SF2_PVP_SPAWN_SOUND, pos, _, SNDLEVEL_NORMAL, _, 1.0);
 		if (g_PlayerPreferences[client].PlayerPreference_PvPSpawnProtection) TF2_AddCondition(client, TFCond_UberchargedCanteen, 1.5);
 
@@ -982,17 +981,17 @@ public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerPvPTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!IsClientInPvP(client))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (g_PlayerPvPTimerCount[client] <= 0)
 	{
 		PvP_SetPlayerPvPState(client, false);
@@ -1003,21 +1002,21 @@ public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 		TF2_RemoveCondition(client, TFCond_Taunting);
 		return Plugin_Stop;
 	}
-	
+
 	g_PlayerPvPTimerCount[client]--;
-	
+
 	//if (!g_PlayerProxyAvailableInForce[client])
 	{
-		SetHudTextParams(-1.0, 0.75, 
+		SetHudTextParams(-1.0, 0.75,
 			1.0,
 			255, 255, 255, 255,
 			_,
 			_,
 			0.25, 1.25);
-		
+
 		ShowSyncHudText(client, g_HudSync, "%T", "SF2 Exiting PvP Arena", client, g_PlayerPvPTimerCount[client]);
 	}
-	
+
 	return Plugin_Continue;
 }
 bool IsClientInPvP(int client)
@@ -1052,7 +1051,7 @@ public Action Hook_PvPPlayerTraceAttack(int victim, int &attacker, int &inflicto
 	{
 		return Plugin_Continue;
 	}
-	
+
 	if (IsValidClient(victim))
 	{
 		g_PvPUserIdLastTrace = GetClientUserId(victim);
@@ -1087,7 +1086,7 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 {
 	if (IsValidClient(client) && IsClientInPvP(client) && IsValidEntity(weapon) && IsValidEdict(weapon) && IsValidEntity(client))
 	{
-		static const char fixWeaponPenetrationClasses[][] = 
+		static const char fixWeaponPenetrationClasses[][] =
 		{
 			"tf_weapon_sniperrifle",
 			"tf_weapon_sniperrifle_decap",
@@ -1099,15 +1098,15 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 
 		/*
 		 * Fixes the sniper rifle not damaging teammates.
-		 * 
+		 *
 		 * WHY? For every other hitscan weapon in the game, simply enforcing lag compensation in CTFPlayer::WantsLagCompensationOnEntity()
 		 * works. However, when it comes to weapons that penetrate teammates, the bullet trace will not iterate through teammates. This is
-		 * the case with all sniper rifles, and is the reason why damage is never normally dealt to teammates despite having friendly fire 
+		 * the case with all sniper rifles, and is the reason why damage is never normally dealt to teammates despite having friendly fire
 		 * on and lag compensation.
 		 *
-		 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is 
-		 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies 
-		 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at 
+		 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is
+		 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies
+		 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at
 		 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
 		 *
 		 */

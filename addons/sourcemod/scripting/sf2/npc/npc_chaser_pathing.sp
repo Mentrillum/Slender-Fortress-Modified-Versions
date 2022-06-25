@@ -31,7 +31,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 
 	char slenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
-	
+
 	float myPos[3], myEyeAng[3];
 	GetEntPropVector(bossEnt, Prop_Data, "m_vecAbsOrigin", myPos);
 	GetEntPropVector(bossEnt, Prop_Data, "m_angAbsRotation", myEyeAng);
@@ -39,9 +39,9 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 	int state = g_SlenderState[bossIndex];
 	int oldState = g_SlenderOldState[bossIndex];
 	g_SlenderOldState[bossIndex] = state;
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	if (!g_SlenderInDeathcam[bossIndex])
 	{
 		switch (state)
@@ -80,8 +80,8 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 			case STATE_ATTACK:
 			{
 				int currentAttackIndex = NPCGetCurrentAttackIndex(bossIndex);
-				if (NPCChaserGetAttackWhileRunningState(bossIndex, currentAttackIndex) && 
-					!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && 
+				if (NPCChaserGetAttackWhileRunningState(bossIndex, currentAttackIndex) &&
+					!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] &&
 					!g_NpcUsesRageAnimation3[bossIndex] && GetGameTime() >= g_NpcBaseAttackRunDelayTime[bossIndex][currentAttackIndex])
 				{
 					if (NPCChaserGetAttackRunDuration(bossIndex, currentAttackIndex) > 0.0)
@@ -185,21 +185,21 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 		color[0] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 0) * 127.5 + 127.5);
 		color[1] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 2) * 127.5 + 127.5);
 		color[2] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 4) * 127.5 + 127.5);
-		color[3] = 255; 
+		color[3] = 255;
 		if (IsValidEntity(glow))
 		{
 			SetVariantColor(color);
 			AcceptEntityInput(glow, "SetGlowColor");
 		}
 	}
-	
+
 	// Process angles.
 	bool changeAngle = false;
 	float posToAt[3];
 	if (state != STATE_STUN && !g_SlenderSpawning[bossIndex] && !g_SlenderInDeathcam[bossIndex])
 	{
 		int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
-		
+
 		if (g_NpcHasAlwaysLookAtTarget[bossIndex])
 		{
 			if (target && target != INVALID_ENT_REFERENCE)
@@ -232,7 +232,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 					{
 						canSeeTarget = NPCShouldSeeEntity(bossIndex, target);
 					}
-					
+
 					if (g_NpcHasAlwaysLookAtTargetWhileChasing[bossIndex] || canSeeTarget)
 					{
 						if (target && target != INVALID_ENT_REFERENCE)
@@ -242,7 +242,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 
 						}
 					}
-					
+
 					if (g_NpcUsesChaseInitialAnimation[bossIndex] || g_NpcUsesRageAnimation1[bossIndex] || g_NpcUsesRageAnimation2[bossIndex] || g_NpcUsesRageAnimation3[bossIndex] || g_NpcUseStartFleeAnimation[bossIndex])
 					{
 						if (target && target != INVALID_ENT_REFERENCE)
@@ -289,7 +289,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 			}
 		}
 	}
-	
+
 	if (changeAngle)
 	{
 		loco.FaceTowards(posToAt);
@@ -340,8 +340,8 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 		{
 			bot.Update();
 		}
-		if (!SF_IsBoxingMap() && loco.IsOnGround() && !loco.IsClimbingOrJumping() && (state == STATE_ALERT || state == STATE_CHASE || state == STATE_WANDER || state == STATE_ATTACK) && 
-		!g_NpcUsesChaseInitialAnimation[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && 
+		if (!SF_IsBoxingMap() && loco.IsOnGround() && !loco.IsClimbingOrJumping() && (state == STATE_ALERT || state == STATE_CHASE || state == STATE_WANDER || state == STATE_ATTACK) &&
+		!g_NpcUsesChaseInitialAnimation[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] &&
 		!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 		{
 			float pathNodePos[3], pathEndPos[3];
@@ -366,20 +366,20 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 					vecMyPos2D[2] = 0.0;
 					vecGoalPos2D = pathEndPos;
 					vecGoalPos2D[2] = 0.0;
-	
+
 					float fl2DDist = GetVectorSquareMagnitude(vecMyPos2D, vecGoalPos2D);
 					if (fl2DDist <= SquareFloat(200.0))
 					{
 						//Before we actually jump like freaking retards, let's check first if we aren't actually on a slope...
 						bool bJump = false;
-							
+
 						float vecGoal[3], goalAng[3], forwadPos[3];
 						MakeVectorFromPoints(myPos, pathEndPos, vecGoal);
-							
+
 						GetVectorAngles(vecGoal, goalAng);
 						goalAng[0] = 0.0;
 						goalAng[2] = 0.0;
-							
+
 						float vecTracePos[3];
 						vecTracePos = myPos;
 						vecTracePos[2] += 1.0;
@@ -387,21 +387,21 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 
 						Handle hTrace = null;
 						hTrace = TR_TraceRayFilterEx(vecTracePos, forwadPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceRayDontHitAnyEntity, bossEnt);
-							
+
 						bool bClear = !TR_DidHit(hTrace);
 						delete hTrace;
-							
+
 						if (!bClear)
 						{
-								
+
 							forwadPos[2] += loco.GetStepHeight() + vecTracePos[2];
-								
+
 							hTrace = null;
 							hTrace = TR_TraceRayFilterEx(vecTracePos, forwadPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceRayDontHitAnyEntity, bossEnt);
-								
+
 							bClear = !TR_DidHit(hTrace);
 							delete hTrace;
-								
+
 							if (!bClear) //we have a wall
 							{
 								bJump = true;
@@ -437,13 +437,13 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 		}
 		hullCheckMins[0] -= 20.0;
 		hullCheckMins[1] -= 20.0;
-		
+
 		hullCheckMaxs[0] += 20.0;
 		hullCheckMaxs[1] += 20.0;
-		
+
 		hullCheckMins[2] += loco.GetStepHeight();
 		hullCheckMaxs[2] += 5.0;
-		
+
 		if (!g_NpcVelocityCancel[bossIndex] && IsSpaceOccupiedIgnorePlayersAndEnts(myPos, hullCheckMins, hullCheckMaxs, bossEnt))//The boss will start to merge with shits, cancel out velocity.
 		{
 			float origin[3];
@@ -454,7 +454,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 	else
 		g_NpcVelocityCancel[bossIndex] = false;
 
-	if (NPCChaserCanCrawl(bossIndex) && !g_SlenderSpawning[bossIndex] && 
+	if (NPCChaserCanCrawl(bossIndex) && !g_SlenderSpawning[bossIndex] &&
 	state != STATE_ATTACK && state != STATE_STUN && state != STATE_IDLE && loco.IsOnGround() && !loco.IsClimbingOrJumping())
 	{
 		float crawlDetectMins[3], crawlDetectMaxs[3];
@@ -481,10 +481,10 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 		int yaw = combatChar.LookupPoseParameter("body_yaw");
 		float dir[3], ang[3], npcCenter[3];
 		combatChar.WorldSpaceCenter(npcCenter);
-		SubtractVectors(npcCenter, g_SlenderGoalPos[bossIndex], dir); 
+		SubtractVectors(npcCenter, g_SlenderGoalPos[bossIndex], dir);
 		NormalizeVector(dir, dir);
-		GetVectorAngles(dir, ang); 
-	
+		GetVectorAngles(dir, ang);
+
 		float pitchPose = combatChar.GetPoseParameter(pitch);
 		float yawPose = combatChar.GetPoseParameter(yaw);
 
@@ -492,7 +492,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 		combatChar.SetPoseParameter(pitch, UTIL_ApproachAngle(state == STATE_CHASE && g_SlenderTargetIsVisible[bossIndex] ? ang[0] : 0.0, pitchPose, (NPCGetTurnRate(bossIndex)/1000.0) * 16.0));
 		ang[1] = UTIL_Clamp(-UTIL_AngleNormalize(UTIL_AngleDiff(UTIL_AngleNormalize(ang[1]), UTIL_AngleNormalize(myEyeAng[1]+180.0))), -44.0,  44.0);
 		combatChar.SetPoseParameter(yaw, UTIL_ApproachAngle(state == STATE_CHASE && g_SlenderTargetIsVisible[bossIndex] ? ang[1] : 0.0, yawPose, (NPCGetTurnRate(bossIndex)/1000.0) * 16.0));
-		
+
 		int moveX = combatChar.LookupPoseParameter("move_x");
 		int moveY = combatChar.LookupPoseParameter("move_y");
 
@@ -504,7 +504,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 				float forwardVector[3], rightVector[3], upVector[3], motionVector[3];
 				combatChar.GetVectors(forwardVector, rightVector, upVector);
 				loco.GetGroundMotionVector(motionVector);
-				
+
 				if (moveX >= 0)
 				{
 					combatChar.SetPoseParameter(moveX, GetVectorDotProduct(motionVector,forwardVector));
@@ -537,7 +537,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 				{
 					returnValue = 12.0;
 				}
-					
+
 				SetEntPropFloat(bossEnt, Prop_Send, "m_flPlaybackRate", returnValue);
 			}
 		}
@@ -582,8 +582,8 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 						g_LastStuckTime[bossIndex] = GetGameTime();
 					}
 
-					if ((g_LastStuckTime[bossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && 
-					g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT && 
+					if ((g_LastStuckTime[bossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] &&
+					g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT &&
 					g_BossPathFollower[bossIndex].NextSegment(g_BossPathFollower[bossIndex].FirstSegment()) != NULL_PATH_SEGMENT)
 					{
 						float movePos[3];
@@ -709,7 +709,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 												}
 												ent = -1;
 												if (respawnPoint.Length > 0) ent = respawnPoint.Get(GetRandomInt(0,respawnPoint.Length-1));
-												
+
 												delete respawnPoint;
 												if (IsValidEntity(ent))
 												{
@@ -731,7 +731,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 												while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
 												{
 													spawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
-													if (spawnTeam == TFTeam_Red) 
+													if (spawnTeam == TFTeam_Red)
 													{
 														spawnPoint.Push(ent);
 													}
@@ -831,7 +831,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 												{
 													ent = respawnPoint.Get(GetRandomInt(0,respawnPoint.Length-1));
 												}
-														
+
 												delete respawnPoint;
 												if (IsValidEntity(ent))
 												{
@@ -853,7 +853,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 												while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
 												{
 													spawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
-													if (spawnTeam == TFTeam_Red) 
+													if (spawnTeam == TFTeam_Red)
 													{
 														spawnPoint.Push(ent);
 													}
@@ -900,7 +900,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 			}
 		}
 	}
-	
+
 	return;
 }
 
@@ -924,7 +924,7 @@ public void SlenderSetNextThink(int bossEnt)
 		if (state != STATE_STUN && !g_SlenderSpawning[bossIndex])
 		{
 			int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
-			
+
 			if (g_NpcHasAlwaysLookAtTarget[bossIndex])
 			{
 				if (target && target != INVALID_ENT_REFERENCE)
@@ -957,7 +957,7 @@ public void SlenderSetNextThink(int bossEnt)
 						{
 							canSeeTarget = NPCShouldSeeEntity(bossIndex, target);
 						}
-						
+
 						if (g_NpcHasAlwaysLookAtTargetWhileChasing[bossIndex] || canSeeTarget)
 						{
 							if (target && target != INVALID_ENT_REFERENCE)
@@ -967,7 +967,7 @@ public void SlenderSetNextThink(int bossEnt)
 
 							}
 						}
-						
+
 						if (g_NpcUsesChaseInitialAnimation[bossIndex] || g_NpcUsesRageAnimation1[bossIndex] || g_NpcUsesRageAnimation2[bossIndex] || g_NpcUsesRageAnimation3[bossIndex] || g_NpcUseStartFleeAnimation[bossIndex])
 						{
 							if (target && target != INVALID_ENT_REFERENCE)
@@ -1014,14 +1014,14 @@ public void SlenderSetNextThink(int bossEnt)
 				}
 			}
 		}
-		
+
 		if (changeAngle)
 		{
 			loco.FaceTowards(posToAt);
 		}
 
 	}
-	
+
 	return;
 }
 
@@ -1034,29 +1034,29 @@ public void CBaseNPC_Jump(NextBotGroundLocomotion nextbotLocomotion, float start
 	{
 		height = 16.0;
 	}
-	
+
 	float additionalHeight = 20.0;
 	if (height < 32.0)
 	{
 		additionalHeight += 8.0;
 	}
 	float flGravity = nextbotLocomotion.GetGravity();
-	
+
 	height += additionalHeight;
-	
+
 	float speed = SquareRoot(2.0 * flGravity * height);
 	float time = (speed / flGravity);
-	
+
 	time += SquareRoot((2.0 * additionalHeight) / flGravity);
-	
+
 	SubtractVectors(endPos, startPos, jumpVel);
 	jumpVel[0] /= time;
 	jumpVel[1] /= time;
 	jumpVel[2] /= time;
-	
+
 	jumpVel[2] = speed;
 	jumpVel[2] += height+additionalHeight;
-		
+
 	float flJumpSpeed = GetVectorLength(jumpVel, true);
 	float flMaxSpeed = SquareFloat(650.0);
 	if (flJumpSpeed > flMaxSpeed)
@@ -1089,7 +1089,7 @@ stock bool SlenderChaseBoss_OnStuckResolvePath(int slender, float myPos[3], floa
 			yawMax = -10.0;
 			yawInc = 5.0;
 		}
-		//Note: Actually there's no right and left, it's just to give you an idea on how this will be done. 
+		//Note: Actually there's no right and left, it's just to give you an idea on how this will be done.
 		for(int y=RoundToNearest(yawMin); y<=RoundToNearest(yawMax); y+=RoundToNearest(yawInc))
 		{
 			myAng[1] += float(y);
@@ -1108,7 +1108,7 @@ stock bool SlenderChaseBoss_OnStuckResolvePath(int slender, float myPos[3], floa
 					if (!TR_DidHit())
 					{
 						TR_TraceHullFilter(myPos, flFreePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_MONSTERCLIP, TraceRayDontHitAnyEntity, slender);
-					
+
 						if (!TR_DidHit())
 						{
 							returnFloat = flFreePos;

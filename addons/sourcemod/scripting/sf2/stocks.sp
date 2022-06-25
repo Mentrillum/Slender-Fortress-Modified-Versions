@@ -234,13 +234,13 @@ public Action NetworkHook_EntityTransmission(int entity, int client)
 
 public void Frame_UpdateClientEntityInfo(DataPack networkData)
 {
-	networkData.Reset(); 
+	networkData.Reset();
 	int ref = networkData.ReadCell();
 	int userid = networkData.ReadCell();
 	delete networkData;
 	int entity = EntRefToEntIndex(ref);
 	int client = GetClientOfUserId(userid);
-	
+
 	if (entity > 0 && client > 0)
 	{
 		g_ClientAndEntityNetwork[entity][client] = true;
@@ -274,10 +274,10 @@ stock bool IsEntityClassname(int entIndex, const char[] classname, bool caseSens
 	{
 		return false;
 	}
-	
+
 	char buffer[256];
 	GetEntityClassname(entIndex, buffer, sizeof(buffer));
-	
+
 	return strcmp(buffer, classname, caseSensitive) == 0;
 }
 
@@ -293,7 +293,7 @@ stock int FindEntityByTargetname(const char[] targetName, const char[] className
 			return ent;
 		}
 	}
-	
+
 	return INVALID_ENT_REFERENCE;
 }
 
@@ -327,17 +327,17 @@ stock float Math_Min(float value, float min)
 	{
 		value = min;
 	}
-	
+
 	return value;
 }
 
 stock float Math_Max(float value, float max)
-{	
+{
 	if (value > max)
 	{
 		value = max;
 	}
-	
+
 	return value;
 }
 
@@ -355,7 +355,7 @@ stock float EntityDistanceFromEntity(int ent1, int ent2)
 	{
 		return -1.0;
 	}
-	
+
 	float myPos[3],hisPos[3];
 	GetEntPropVector(ent1, Prop_Data, "m_vecAbsOrigin", myPos);
 	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", hisPos);
@@ -368,7 +368,7 @@ stock void GetEntityOBBCenterPosition(int ent, float buffer)
 	GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
 	GetEntPropVector(ent, Prop_Send, "m_vecMins", mins);
 	GetEntPropVector(ent, Prop_Send, "m_vecMaxs", maxs);
-	
+
 	for (new i = 0; i < 3; i++)
 	{
 		buffer[i] = pos[i] + ((mins[i] + maxs[i]) / 2.0);
@@ -428,7 +428,7 @@ int EntitySetAnimation(int entity, const char[] name, float playbackRate = 1.0, 
 	{
 		sequence = animationEntity.LookupSequence(name);
 	}
-	
+
 	if (sequence != -1)
 	{
 		animationEntity.ResetSequence(sequence);
@@ -470,12 +470,12 @@ stock void CBaseNPC_RemoveAllLayers(int entity)
 	}
 	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(entity);
 	int count = animationEntity.GetNumAnimOverlays();
-	for(int i = 0; i < count; i++) 
+	for(int i = 0; i < count; i++)
 	{
-		CAnimationLayer overlay = animationEntity.GetAnimOverlay(i); 
-		if (!overlay.IsAlive()) 
+		CAnimationLayer overlay = animationEntity.GetAnimOverlay(i);
+		if (!overlay.IsAlive())
 		{
-			continue; 
+			continue;
 		}
 		overlay.KillMe();
 	}
@@ -538,7 +538,7 @@ stock bool NavHasFuncPrefer(CNavArea area)
 //  =========================================================
 //  GLOW FUNCTIONS
 //  =========================================================
-//I borrowed this glow creation code from Pelipoika, cause It's efficient and clean 
+//I borrowed this glow creation code from Pelipoika, cause It's efficient and clean
 stock int TF2_CreateGlow(int entIndex)
 {
 	char oldEntName[64];
@@ -548,16 +548,16 @@ stock int TF2_CreateGlow(int entIndex)
 	GetEntityClassname(entIndex, strClass, sizeof(strClass));
 	FormatEx(strName, sizeof(strName), "%s%i", strClass, entIndex);
 	DispatchKeyValue(entIndex, "targetname", strName);
-	
+
 	int ent = CreateEntityByName("tf_glow");
 	DispatchKeyValue(ent, "target", strName);
 	FormatEx(strName, sizeof(strName), "tf_glow_%i", entIndex);
 	DispatchKeyValue(ent, "targetname", strName);
 	DispatchKeyValue(ent, "Mode", "0");
 	DispatchSpawn(ent);
-	
+
 	AcceptEntityInput(ent, "Enable");
-	
+
 	//Change name back to old name because we don't need it anymore.
 	SetEntPropString(entIndex, Prop_Data, "m_iName", oldEntName);
 
@@ -606,11 +606,11 @@ stock void KillClient(int client)
 stock bool IsEntityAProjectile(int entity)
 {
 	char classname[64];
-	if (IsValidEntity(entity) && GetEntityClassname(entity, classname, sizeof(classname)) && 
-	(strcmp(classname, "env_explosion") == 0 || 
-	strcmp(classname, "tf_projectile_sentryrocket") == 0 || 
-	strcmp(classname, "tf_projectile_rocket") == 0 || 
-	strcmp(classname, "tf_projectile_pipe") == 0 || 
+	if (IsValidEntity(entity) && GetEntityClassname(entity, classname, sizeof(classname)) &&
+	(strcmp(classname, "env_explosion") == 0 ||
+	strcmp(classname, "tf_projectile_sentryrocket") == 0 ||
+	strcmp(classname, "tf_projectile_rocket") == 0 ||
+	strcmp(classname, "tf_projectile_pipe") == 0 ||
 	strcmp(classname, "tf_projectile_arrow") == 0))
 	{
 		return true;
@@ -662,12 +662,12 @@ stock void SDK_StopHealing(int healer, int client)
 		SetEntProp(entity, Prop_Send, "m_bBuilding", false);
 		SetEntProp(entity, Prop_Send, "m_bDisabled", false);
 		SetEntProp(entity, Prop_Send, "m_bCarryDeploy", false);
-		
+
 		// Remove the team glow outline.
 		/*int flags = GetEntProp(entity, Prop_Send, "m_fEffects");
 		flags |= EF_NODRAW;
 		SetEntProp(entity, Prop_Send, "m_fEffects", flags);*/
-		
+
 		//Start the healing
 		SDK_StartTouch(entity, client);
 		SetEntProp(entity, Prop_Send, "m_bCarryDeploy", true);
@@ -725,20 +725,20 @@ stock bool IsClientCritBoosted(int client)
 	{
 		return true;
 	}
-	
+
 	int activeWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 	if (IsValidEdict(activeWeapon))
 	{
 		char netClass[64];
 		GetEntityNetClass(activeWeapon, netClass, sizeof(netClass));
-		
+
 		if (strcmp(netClass, "CTFFlameThrower") == 0)
 		{
 			if (GetEntProp(activeWeapon, Prop_Send, "m_bCritFire"))
 			{
 				return true;
 			}
-		
+
 			int iItemDef = GetEntProp(activeWeapon, Prop_Send, "m_iItemDefinitionIndex");
 			if (iItemDef == 594 && TF2_IsPlayerInCondition(client, TFCond_CritMmmph))
 			{
@@ -753,7 +753,7 @@ stock bool IsClientCritBoosted(int client)
 			}
 		}
 	}
-	
+
 	return false;
 }
 
@@ -866,13 +866,13 @@ stock void TF2_ChangePlayerName(int client, const char[] newName, bool printInCh
 {
 	char oldName[64];
 	GetEntPropString(client, Prop_Data, "m_szNetname", oldName, sizeof(oldName));
-	
+
 	/*Event event_namechange = CreateEvent("player_changename");
 	event_namechange.SetInt("userid", GetClientUserId(client));
 	event_namechange.SetString("oldname", oldName);
 	event_namechange.SetString("newname", newName);
 	event_namechange.Fire();*/
-	
+
 	int players[MAXPLAYERS+1];
 	int playersNum;
 	for (int player = 1; player <= MaxClients; player++)
@@ -884,8 +884,7 @@ stock void TF2_ChangePlayerName(int client, const char[] newName, bool printInCh
 		players[playersNum++] = player;
 	}
 	UTIL_SayText2(players, playersNum, client, printInChat, "#TF_Name_Change", oldName, newName);
-	
-	
+
 	SetEntPropString(client, Prop_Data, "m_szNetname", newName);
 }
 
@@ -902,7 +901,7 @@ stock int TF2_FindNoiseMaker(int client)
 			}
 		}
 	}
-	
+
 	return -1;
 }
 
@@ -914,7 +913,7 @@ stock float TF2_WeaponFindAttribute(int weaponEnt, int attrib)
 		int itemDefIndex = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 		int attributes[16];
 		float attribValues[16];
-		
+
 		int maxAttrib = TF2Attrib_GetStaticAttribs(itemDefIndex, attributes, attribValues);
 		for (int i = 0; i < maxAttrib; i++)
 		{
@@ -923,10 +922,10 @@ stock float TF2_WeaponFindAttribute(int weaponEnt, int attrib)
 				return attribValues[i];
 			}
 		}
-		
+
 		return 0.0;
 	}
-	
+
 	return TF2Attrib_GetValue(addAttrib);
 }
 
@@ -937,7 +936,7 @@ stock void ClientSwitchToWeaponSlot(int client,int slot)
 	{
 		return;
 	}
-	
+
 	SDK_SwitchWeapon(client, weaponEnt);
 }
 
@@ -947,7 +946,7 @@ stock void ChangeClientTeamNoSuicide(int client,int team, bool respawn=true)
 	{
 		return;
 	}
-	
+
 	if (GetClientTeam(client) != team)
 	{
 		SetEntProp(client, Prop_Send, "m_lifeState", 2);
@@ -962,18 +961,18 @@ stock void ChangeClientTeamNoSuicide(int client,int team, bool respawn=true)
 
 stock void UTIL_SayText2(int[] players, int playersNum, int entity, bool chat, const char[] msg_name, const char[] param1="", const char[] param2="", const char[] param3="", const char[] param4="")
 {
-	BfWrite message = UserMessageToBfWrite(StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS)); 
-	
+	BfWrite message = UserMessageToBfWrite(StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS));
+
 	message.WriteByte(entity);
-	
+
 	message.WriteByte(chat);
 
-	message.WriteString(msg_name); 
-	
-	message.WriteString(param1); 
-	
-	message.WriteString(param2); 
-	
+	message.WriteString(msg_name);
+
+	message.WriteString(param1);
+
+	message.WriteString(param2);
+
 	message.WriteString(param3);
 
 	message.WriteString(param4);
@@ -1000,7 +999,7 @@ public void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int
 	int clients[1];
 	Handle bf;
 	clients[0] = client;
-	
+
 	bf = StartMessage("Fade", clients, 1);
 	BfWriteShort(bf, duration);
 	BfWriteShort(bf, time);
@@ -1065,7 +1064,7 @@ stock bool IsTauntWep(int weaponEnt)
 stock void FindHealthBar()
 {
 	g_HealthBar = FindEntityByClassname(-1, "monster_resource");
-	
+
 	if (g_HealthBar == -1)
 	{
 		g_HealthBar = CreateEntityByName("monster_resource");
@@ -1085,7 +1084,7 @@ stock void ForceTeamWin(int team)
 		DispatchSpawn(ent);
 		AcceptEntityInput(ent, "Enable");
 	}
-	
+
 	SetVariantInt(team);
 	AcceptEntityInput(ent, "SetWinner");
 }
@@ -1111,10 +1110,10 @@ stock int BuildAnnotationBitString(const int[] clients,int maxClients)
 		{
 			continue;
 		}
-	
+
 		bitString |= RoundFloat(Pow(2.0, float(client)));
 	}
-	
+
 	return bitString;
 }
 
@@ -1137,7 +1136,7 @@ stock void SpawnAnnotation(int client,int entity, const float pos[3], const char
 			FireEvent(event);
 			KillTimer(event);
 		}
-		
+
 	}
 }
 
@@ -1182,7 +1181,7 @@ stock float TF2_GetClassBaseSpeed(TFClassType class)
 			return 320.0;
 		}
 	}
-	
+
 	return 0.0;
 }
 
@@ -1211,11 +1210,11 @@ stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality,
 	{
 		TF2Items_SetNumAttributes(item, 0);
 	}
-	
+
 	return item;
 }
 
-stock void SpeakResponseConcept(int client, const char[] concept) //Thanks The Gaben 
+stock void SpeakResponseConcept(int client, const char[] concept) //Thanks The Gaben
 {
 	SetVariantString(concept);
 	AcceptEntityInput(client, "SpeakResponseConcept");
@@ -1238,7 +1237,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
 {
 	int weaponEnt = GetPlayerWeaponSlot(client, slot);
 	if (!IsValidEntity(weaponEnt)) return;
-	
+
 	int wearable = INVALID_ENT_REFERENCE;
 	while ((wearable = FindEntityByClassname(wearable, "tf_wearable")) != -1)
 	{
@@ -1248,7 +1247,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
 			RemoveEntity(wearable);
 		}
 	}
-	
+
 	wearable = INVALID_ENT_REFERENCE;
 	while ((wearable = FindEntityByClassname(wearable, "tf_wearable_vm")) != -1)
 	{
@@ -1258,7 +1257,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
 			RemoveEntity(wearable);
 		}
 	}
-	
+
 	wearable = INVALID_ENT_REFERENCE;
 	while ((wearable = FindEntityByClassname(wearable, "tf_wearable_campaign_item")) != -1)
 	{
@@ -1268,7 +1267,7 @@ stock void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
 			RemoveEntity(wearable);
 		}
 	}
-	
+
 	TF2_RemoveWeaponSlot(client, slot);
 }
 
@@ -1387,19 +1386,19 @@ stock void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
 stock int FixedUnsigned16(float value,int scale)
 {
 	int output;
-	
+
 	output = RoundToFloor(value * float(scale));
-	
+
 	if (output < 0)
 	{
 		output = 0;
 	}
-	
+
 	if (output > 0xFFFF)
 	{
 		output = 0xFFFF;
 	}
-	
+
 	return output;
 }
 
@@ -1434,7 +1433,7 @@ stock float LerpFloats(const float a, const float b, float t)
 	{
 		t = 1.0;
 	}
-    
+
     return a + (b - a) * t;
 }
 
@@ -1462,7 +1461,7 @@ stock void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
 	{
 		t = 1.0;
 	}
-    
+
     c[0] = a[0] + (b[0] - a[0]) * t;
     c[1] = a[1] + (b[1] - a[1]) * t;
     c[2] = a[2] + (b[2] - a[2]) * t;
@@ -1475,15 +1474,15 @@ stock void VectorTransform(const float offset[3], const float worldpos[3], const
 {
 	float fwd[3],right[3], up[3];
 	GetAngleVectors(ang, fwd, right, up);
-	
+
 	NormalizeVector(fwd, fwd);
 	NormalizeVector(right, right);
 	NormalizeVector(up, up);
-	
+
 	ScaleVector(right, offset[1]);
 	ScaleVector(fwd, offset[0]);
 	ScaleVector(up, offset[2]);
-	
+
 	buffer[0] = worldpos[0] + right[0] + fwd[0] + up[0];
 	buffer[1] = worldpos[1] + right[1] + fwd[1] + up[1];
 	buffer[2] = worldpos[2] + right[2] + fwd[2] + up[2];
@@ -1505,12 +1504,12 @@ stock void GetPositionForward(float vPos[3], float vAng[3], float vReturn[3], fl
 stock float ApproachAngle(float target, float value, float speed)
 {
 	float delta = AngleDiff(value, target);
-	
+
 	if (speed < 0.0)
 	{
 		speed = -speed;
 	}
-	
+
 	if (delta > speed)
 	{
 		value += speed;
@@ -1523,7 +1522,7 @@ stock float ApproachAngle(float target, float value, float speed)
 	{
 		value = target;
 	}
-	
+
 	return AngleNormalize(value);
 }
 
@@ -1554,7 +1553,7 @@ stock float GetAngleBetweenVectors(const float vector1[3], const float vector2[3
     NormalizeVector(vector2, vector2_n);
     float degree = ArcCosine(GetVectorDotProduct( vector1_n, vector2_n )) * 57.29577951;
     GetVectorCrossProduct(vector1_n, vector2_n, cross);
-    
+
     if (GetVectorDotProduct(cross, direction_n) < 0.0)
     {
         degree *= -1.0;
@@ -1567,7 +1566,7 @@ stock void RotateYaw(float angles[3], float degree)
 {
     float direction[3], normal[3];
     GetAngleVectors(angles, direction, NULL_VECTOR, normal);
-    
+
     float sin = Sine(degree * 0.01745328);
     float cos = Cosine(degree * 0.01745328);
     float a = normal[0] * sin;
@@ -1579,7 +1578,7 @@ stock void RotateYaw(float angles[3], float degree)
     direction[0] = x;
     direction[1] = y;
     direction[2] = z;
-    
+
     GetVectorAngles(direction, angles);
 
     float up[3];
@@ -1626,27 +1625,27 @@ stock int PrecacheParticleSystem(const char[] particleSystem)
 		if (numStrings >= GetStringTableMaxStrings(particleEffectNames)) {
 			return INVALID_STRING_INDEX;
 		}
-		
+
 		AddToStringTable(particleEffectNames, particleSystem);
 		index = numStrings;
 	}
-	
+
 	return index;
 }
 
 stock int FindStringIndex2(int tableidx, const char[] str)
 {
 	char buf[1024];
-	
+
 	int numStrings = GetStringTableNumStrings(tableidx);
 	for (int i=0; i < numStrings; i++) {
 		ReadStringTable(tableidx, i, buf, sizeof(buf));
-		
+
 		if (strcmp(buf, str) == 0) {
 			return i;
 		}
 	}
-	
+
 	return INVALID_STRING_INDEX;
 }
 
@@ -1656,37 +1655,37 @@ stock void InsertNodesAroundPoint(ArrayList array, const float origin[3], float 
 	{
 		return;
 	}
-	
+
 	float direction[3];
 	float pos[3];
-	
+
 	for (float ang = 0.0; ang < 360.0; ang += addAng)
 	{
 		direction[0] = 0.0;
 		direction[1] = ang;
 		direction[2] = 0.0;
-		
+
 		GetAngleVectors(direction, direction, NULL_VECTOR, NULL_VECTOR);
 		NormalizeVector(direction, direction);
 		ScaleVector(direction, dist);
 		AddVectors(direction, origin, pos);
-		
+
 		float pos2[3];
 		for (int i = 0; i < 2; i++)
 		{
 			pos2[i] = pos[i];
 		}
-		
+
 		if (callback != INVALID_FUNCTION)
 		{
 			Action action = Plugin_Continue;
-			
+
 			Call_StartFunction(null, callback);
 			Call_PushArray(origin, 3);
 			Call_PushArrayEx(pos2, 3, SM_PARAM_COPYBACK);
 			Call_PushCell(data);
 			Call_Finish(action);
-			
+
 			if (action == Plugin_Stop || action == Plugin_Handled)
 			{
 				continue;
@@ -1699,7 +1698,7 @@ stock void InsertNodesAroundPoint(ArrayList array, const float origin[3], float 
 				}
 			}
 		}
-		
+
 		array.PushArray(pos, 3);
 	}
 }
@@ -1763,7 +1762,7 @@ public bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -1799,7 +1798,7 @@ public Action Timer_KillEntity(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	RemoveEntity(ent);
 
 	return Plugin_Stop;
@@ -1811,7 +1810,7 @@ public Action Timer_KillEdict(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	RemoveEdict(ent);
 
 	return Plugin_Stop;
@@ -1954,10 +1953,10 @@ stock void DrawBox(float origin[3], float mins[3], float maxs[3], bool shouldBeR
 
 		TE_SetupBeamPoints(start, end, g_LaserIndex, 0, 0, 15, 0.1, 1.0, 5.0, 5, 0.1, color, 1);
 		TE_SendToAll();
-	}	
+	}
 }
 
-void DispatchParticleEffect(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3], 
+void DispatchParticleEffect(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
 									   int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
 {
 	char particleReal[PLATFORM_MAX_PATH];
@@ -1965,7 +1964,7 @@ void DispatchParticleEffect(int entity, const char[] particle, float startPos[3]
 	if (particle[0] != '\0')
 	{
 		int tblidx = FindStringTable("ParticleEffectNames");
-		if (tblidx == INVALID_STRING_TABLE) 
+		if (tblidx == INVALID_STRING_TABLE)
 		{
 			LogError("Could not find string table: ParticleEffectNames");
 			return;
@@ -1997,9 +1996,9 @@ void DispatchParticleEffect(int entity, const char[] particle, float startPos[3]
 		TE_WriteNum("entindex", entity);
 		TE_WriteNum("m_iAttachType", view_as<int>(attachType));
 		TE_WriteNum("m_iAttachmentPointIndex", attachmentPointIndex);
-		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);    
-		TE_WriteNum("m_bControlPoint1", 0);    
-		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 0);  
+		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);
+		TE_WriteNum("m_bControlPoint1", 0);
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 0);
 		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
 		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
 		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);
@@ -2012,7 +2011,7 @@ void DispatchParticleEffect(int entity, const char[] particle, float startPos[3]
 	}
 }
 
-void DispatchParticleEffectBeam(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3], 
+void DispatchParticleEffectBeam(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
 									   int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
 {
 	char particleReal[PLATFORM_MAX_PATH];
@@ -2020,7 +2019,7 @@ void DispatchParticleEffectBeam(int entity, const char[] particle, float startPo
 	if (particle[0] != '\0')
 	{
 		int tblidx = FindStringTable("ParticleEffectNames");
-		if (tblidx == INVALID_STRING_TABLE) 
+		if (tblidx == INVALID_STRING_TABLE)
 		{
 			LogError("Could not find string table: ParticleEffectNames");
 			return;
@@ -2042,7 +2041,7 @@ void DispatchParticleEffectBeam(int entity, const char[] particle, float startPo
 			LogError("Could not find particle: %s", particleReal);
 			return;
 		}
-		
+
 		TE_Start("TFParticleEffect");
 		TE_WriteFloat("m_vecOrigin[0]", startPos[0]);
 		TE_WriteFloat("m_vecOrigin[1]", startPos[1]);
@@ -2052,9 +2051,9 @@ void DispatchParticleEffectBeam(int entity, const char[] particle, float startPo
 		TE_WriteNum("entindex", entity);
 		TE_WriteNum("m_iAttachType", view_as<int>(attachType));
 		TE_WriteNum("m_iAttachmentPointIndex", attachmentPointIndex);
-		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);    
-		TE_WriteNum("m_bControlPoint1", 1);    
-		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 5);  
+		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);
+		TE_WriteNum("m_bControlPoint1", 1);
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 5);
 		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
 		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
 		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);

@@ -26,7 +26,7 @@ void ReloadSpecialRounds()
 	{
 		g_SpecialRoundCycleNames = new ArrayList(128);
 	}
-	
+
 	g_SpecialRoundCycleNames.Clear();
 
 	if (g_SpecialRoundsConfig != null)
@@ -34,7 +34,7 @@ void ReloadSpecialRounds()
 		delete g_SpecialRoundsConfig;
 		g_SpecialRoundsConfig = null;
 	}
-	
+
 	char buffer[PLATFORM_MAX_PATH];
 	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 	{
@@ -54,7 +54,7 @@ void ReloadSpecialRounds()
 	{
 		g_SpecialRoundsConfig = kv;
 		LogMessage("Loaded special rounds file!");
-		
+
 		// Load names for the cycle.
 		char buffer2[128];
 		for (int specialRound = SPECIALROUND_DOUBLETROUBLE; specialRound < SPECIALROUND_MAXROUNDS; specialRound++)
@@ -62,7 +62,7 @@ void ReloadSpecialRounds()
 			SpecialRoundGetDescriptionHud(specialRound, buffer2, sizeof(buffer2));
 			g_SpecialRoundCycleNames.PushString(buffer2);
 		}
-		
+
 		kv.Rewind();
 		if (kv.JumpToKey("jokes"))
 		{
@@ -79,7 +79,7 @@ void ReloadSpecialRounds()
 				while (kv.GotoNextKey(false));
 			}
 		}
-		
+
 		g_SpecialRoundCycleNames.Sort(Sort_Random, Sort_String);
 	}
 }
@@ -92,16 +92,16 @@ stock void SpecialRoundGetDescriptionHud(int specialRound, char[] buffer,int buf
 	{
 		return;
 	}
-	
+
 	g_SpecialRoundsConfig.Rewind();
 	char specialRoundString[32];
 	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
-	
+
 	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
 	{
 		return;
 	}
-	
+
 	g_SpecialRoundsConfig.GetString("display_text_hud", buffer, bufferLen);
 }
 
@@ -113,16 +113,16 @@ stock void SpecialRoundGetDescriptionChat(int specialRound, char[] buffer,int bu
 	{
 		return;
 	}
-	
+
 	g_SpecialRoundsConfig.Rewind();
 	char specialRoundString[64];
 	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
-	
+
 	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
 	{
 		return;
 	}
-	
+
 	g_SpecialRoundsConfig.GetString("display_text_chat", buffer, bufferLen);
 }
 
@@ -134,16 +134,16 @@ stock void SpecialRoundGetIconHud(int specialRound, char[] buffer,int bufferLen)
 	{
 		return;
 	}
-	
+
 	g_SpecialRoundsConfig.Rewind();
 	char specialRoundString[32];
 	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
-	
+
 	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
 	{
 		return;
 	}
-	
+
 	g_SpecialRoundsConfig.GetString("display_icon_hud", buffer, bufferLen);
 }
 
@@ -153,16 +153,16 @@ stock bool SpecialRoundCanBeSelected(int specialRound)
 	{
 		return false;
 	}
-	
+
 	g_SpecialRoundsConfig.Rewind();
 	char specialRoundString[32];
 	FormatEx(specialRound, sizeof(specialRoundString), "%d", specialRound);
-	
+
 	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
 	{
 		return false;
 	}
-	
+
 	return view_as<bool>(g_SpecialRoundsConfig.GetNum("enabled", 1));
 }
 
@@ -172,27 +172,27 @@ public Action Timer_SpecialRoundCycle(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (GetGameTime() >= g_SpecialRoundCycleEndTime)
 	{
 		SpecialRoundCycleFinish();
 		return Plugin_Stop;
 	}
-	
+
 	char buffer[128];
 	g_SpecialRoundCycleNames.GetString(g_SpecialRoundCycleNum, buffer, sizeof(buffer));
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_SUPRISE))
 	{
 		SpecialRoundGameText(buffer);
 	}
-	
+
 	g_SpecialRoundCycleNum++;
 	if (g_SpecialRoundCycleNum >= g_SpecialRoundCycleNames.Length)
 	{
 		g_SpecialRoundCycleNum = 0;
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -206,7 +206,7 @@ public Action Timer_SpecialRoundStart(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	SpecialRoundStart();
 
 	return Plugin_Stop;
@@ -265,31 +265,31 @@ public Action Timer_SpecialRoundFakeBosses(Handle timer)
 	//PrintToChatAll("Fake count: %i",fakeBossCount);
 	return Plugin_Continue;
 }
-	
+
 /*
 public Action Timer_SpecialRoundAttribute(Handle timer)
 {
 	if (timer != g_SpecialRoundTimer) return Plugin_Stop;
 	if (!g_IsSpecialRound) return Plugin_Stop;
-	
+
 	int iCond = -1;
-	
+
 	switch (g_SpecialRoundType)
 	{
 		case SPECIALROUND_DEFENSEBUFF: iCond = _:TFCond_DefenseBuffed;
 		case SPECIALROUND_MARKEDFORDEATH: iCond = _:TFCond_MarkedForDeath;
 	}
-	
+
 	if (iCond != -1)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || g_PlayerInGhostMode[i]) continue;
-			
+
 			TF2_AddCondition(i, view_as<TFCond>(iCond), 0.8);
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 */
@@ -304,7 +304,7 @@ void SpecialRoundCycleStart()
 	{
 		return;
 	}
-	
+
 	g_Started = true;
 	EmitSoundToAll(SR_MUSIC, _, MUSIC_CHAN);
 	g_SpecialRoundType = 0;
@@ -324,28 +324,28 @@ void SpecialRoundCycleFinish()
 	else
 	{
 		ArrayList enabledRounds = SpecialEnabledList();
-		
+
 		g_SpecialRoundType = enabledRounds.Get(GetRandomInt(0, enabledRounds.Length-1));
-		
+
 		delete enabledRounds;
 	}
 	g_SpecialRoundOverrideConVar.SetInt(-1);
-	
+
 	if (!SF_SpecialRound(SPECIALROUND_SUPRISE))
 	{
 		char descHud[64];
 		SpecialRoundGetDescriptionHud(g_SpecialRoundType, descHud, sizeof(descHud));
-				
+
 		char iconHud[64];
 		SpecialRoundGetIconHud(g_SpecialRoundType, iconHud, sizeof(iconHud));
-				
+
 		char descChat[64];
 		SpecialRoundGetDescriptionChat(g_SpecialRoundType, descChat, sizeof(descChat));
-				
+
 		SpecialRoundGameText(descHud, iconHud);
 		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", descChat); // For those who are using minimized HUD...
 	}
-		
+
 	g_SpecialRoundTimer = CreateTimer(SR_STARTDELAY, Timer_SpecialRoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -355,7 +355,7 @@ ArrayList SpecialEnabledList()
 	{
 		ArrayList enabledRounds = new ArrayList();
 		char snatcher[64] = "hypersnatcher_nerfed";
-		
+
 		int players;
 		for (int client = 1; client <= MaxClients; client++)
 		{
@@ -381,7 +381,7 @@ ArrayList SpecialEnabledList()
 				enabledRounds.Push(SPECIALROUND_DOOMBOX);
 			}
 		}
-		
+
 		if (GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2 && g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_DOUBLEMAXPLAYERS);
@@ -426,7 +426,7 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_NightvisionEnabledConVar.BoolValue && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_NIGHTVISION);
-		}	
+		}
 		if (!SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_DOUBLEROULETTE);
@@ -434,11 +434,11 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_NightvisionEnabledConVar.BoolValue && !SF_IsBoxingMap() && !g_RoundInfiniteFlashlight)
 		{
 			enabledRounds.Push(SPECIALROUND_INFINITEFLASHLIGHT);
-		}	
+		}
 		if (!SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES) && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_DREAMFAKEBOSSES);
-		}		
+		}
 		if (!SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK) && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_EYESONTHECLOACK);
@@ -466,11 +466,11 @@ ArrayList SpecialEnabledList()
 		if (!SF_SpecialRound(SPECIALROUND_LASTRESORT) && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap() && g_PageMax > 1)
 		{
 			enabledRounds.Push(SPECIALROUND_LASTRESORT);
-		}		
+		}
 		if (!SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && g_PageMax > 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_ESCAPETICKETS);
-		}	
+		}
 		if (!SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
 		{
 			enabledRounds.Push(SPECIALROUND_REVOLUTION);
@@ -544,7 +544,7 @@ ArrayList SpecialEnabledList()
 		{
 			enabledRounds.Push(SPECIALROUND_VOTE);
 		}
-		
+
 		return enabledRounds;
 	}
 	return null;
@@ -573,7 +573,7 @@ void SpecialRoundStart()
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
 			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
 			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
-			
+
 			if (!SF_IsBoxingMap())
 			{
 				if (selectableBosses.Length > 0)
@@ -599,7 +599,7 @@ void SpecialRoundStart()
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
 			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
 			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
-			
+
 			if (!SF_IsBoxingMap())
 			{
 				if (selectableBosses.Length > 0)
@@ -1077,7 +1077,7 @@ void SpecialRoundStart()
 				{
 					continue;
 				}
-				
+
 				if (!g_PlayerEliminated[i])
 				{
 					ClientDeactivateUltravision(i);
@@ -1093,7 +1093,7 @@ void SpecialRoundStart()
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Hardcore.
 			}
 			for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
-			{	
+			{
 				if (NPCGetUniqueID(npcIndex) == -1)
 				{
 					continue;
@@ -1186,7 +1186,7 @@ void SpecialRoundStart()
 					{
 						continue;
 					}
-					
+
 					if (!g_PlayerEliminated[i])
 					{
 						ClientDeactivateUltravision(i);
@@ -1210,7 +1210,7 @@ void SpecialRoundStart()
 				{
 					continue;
 				}
-				
+
 				if (!g_PlayerEliminated[i])
 				{
 					g_PlayerDied1Up[i] = false;
@@ -1229,7 +1229,7 @@ void SpecialRoundStart()
 				{
 					continue;
 				}
-				
+
 				if (!g_PlayerEliminated[i])
 				{
 					ClientDeactivateUltravision(i);
@@ -1247,7 +1247,7 @@ void SpecialRoundStart()
 				{
 					continue;
 				}
-				
+
 				GetEntPropString(ent, Prop_Data, "m_ModelName", model, sizeof(model));
 				GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
 				if (model[0] != '\0')
@@ -1285,7 +1285,7 @@ void SpecialRoundStart()
 				{
 					continue;
 				}
-				
+
 				if (!g_PlayerEliminated[i])
 				{
 					ClientSetSpecialRoundTimer(i, 0.0, Timer_ClientPageDetector, GetClientUserId(i));
@@ -1357,7 +1357,7 @@ public Action Timer_SpecialRoundVoteLoop(Handle timer)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	SpecialCreateVote();
 	return Plugin_Stop;
 }
@@ -1366,13 +1366,13 @@ public Action Timer_DisplaySpecialRound(Handle timer)
 {
 	char descHud[64];
 	SpecialRoundGetDescriptionHud(g_SpecialRoundType, descHud, sizeof(descHud));
-		
+
 	char iconHud[64];
 	SpecialRoundGetIconHud(g_SpecialRoundType, iconHud, sizeof(iconHud));
-		
+
 	char descChat[64];
 	SpecialRoundGetDescriptionChat(g_SpecialRoundType, descChat, sizeof(descChat));
-		
+
 	SpecialRoundGameText(descHud, iconHud);
 	if (strcmp(descChat, "") != 0)
 	{
@@ -1390,11 +1390,11 @@ void SpecialCreateVote()
 {
 	Handle voteMenu = NativeVotes_Create(Menu_SpecialVote, NativeVotesType_Custom_Mult);
 	NativeVotes_SetInitiator(voteMenu, NATIVEVOTES_SERVER_INDEX);
-	
+
 	char title[255];
 	FormatEx(title,255,"%t%t","SF2 Prefix","SF2 Special Round Vote Menu Title");
 	NativeVotes_SetDetails(voteMenu,title);
-	
+
 	ArrayList enabledRounds = SpecialEnabledList().Clone();
 
 	int eraseVoteRound = enabledRounds.FindValue(SPECIALROUND_VOTE);
@@ -1579,38 +1579,38 @@ void SpecialCreateVote()
 		FormatEx(item, sizeof(item), "%d", round);
 		NativeVotes_AddItem(voteMenu, item, itemOutPut);
 	}
-	
+
 	delete enabledRounds;
-	
+
 	int total = 0;
 	int[] players = new int[MaxClients];
-	
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i))
 		{
 			continue;
 		}
-		
+
 		if (!g_PlayerEliminated[i])
 		{
 			players[total++] = i;
 		}
 	}
-	
+
 	NativeVotes_Display(voteMenu, players, total, 20);
 }
 
 public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2)
 {
 	switch (action)
-	{	
+	{
 		case MenuAction_VoteCancel:
 		{
 			if (param1 == VoteCancel_NoVotes)
 			{
 				NativeVotes_DisplayFail(menu, NativeVotesFail_NotEnoughVotes);
-				
+
 				ArrayList enabledRounds = SpecialEnabledList();
 				g_SpecialRoundType = enabledRounds.Get(GetRandomInt(0, enabledRounds.Length-1));
 				g_SpecialRoundOverrideConVar.SetInt(g_SpecialRoundType);
@@ -1626,14 +1626,14 @@ public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 		{
 			char specialRound[64], specialRoundName[64], display[120];
 			NativeVotes_GetItem(menu, param1, specialRound, sizeof(specialRound), specialRoundName, sizeof(specialRoundName));
-			
+
 			CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", specialRoundName);
 			FormatEx(display,120,"%t","SF2 Special Round Vote Successful", specialRoundName);
-			
+
 			g_SpecialRoundType = StringToInt(specialRound);
 			g_SpecialRoundOverrideConVar.SetInt(g_SpecialRoundType);
 			SpecialRoundCycleFinish();
-			
+
 			NativeVotes_DisplayPass(menu, display);
 		}
 		case MenuAction_End:

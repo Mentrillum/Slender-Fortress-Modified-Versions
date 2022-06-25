@@ -16,7 +16,6 @@ public void Tutorial_Initialize()
 	//g_hCvarEnableTutorial = CreateConVar("sf2_enable_tutorial", "1", "Enable the tutorial interface for new players");
 }
 
-
 /*
  * Tutorial clients handling.
  */
@@ -48,7 +47,7 @@ public void Tutorial_HandleClient(int client)
 
 public void Tutorial_OnRoundStateChange(SF2RoundState oldRoundState, SF2RoundState newRoundState)
 {
-	
+
 	g_TimerTutorialMessage = null;
 	switch (newRoundState)
 	{
@@ -84,13 +83,13 @@ public Action Timer_TutorialGraceEnd2ndMessage(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	g_TimerTutorialMessage = null;
-	
+
 	Tutorial_PrintMessage("The boss is near help!", "If you can hear the monster, don't move or use voice commands, the monster can hear you! If you really need to move, move slowly, the monster is only attracted by suspicious sounds!", 7.0);
-	
+
 	g_TimerTutorialMessage = CreateTimer(8.0, Timer_TutorialGraceEnd3rdMessage, _, TIMER_FLAG_NO_MAPCHANGE);
-	
+
 	return Plugin_Stop;
 }
 
@@ -100,14 +99,13 @@ public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	g_TimerTutorialMessage = null;
-	
+
 	Tutorial_PrintMessage("Playing in a group?", "While you are looking for the objectives, don't stay in a group, try to go where your team doesn't, you will increase everyone's chance of surviving!", 7.0);
 
 	return Plugin_Stop;
 }
-
 
 /*
  * Messages functions
@@ -116,12 +114,12 @@ public Action Timer_TutorialGraceEnd3rdMessage(Handle timer)
 void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const float flLifeTime=5.0)
 {
 	g_TimerHideTutorialMessage = null;
-	
+
 	PrintToChatAll("called1");
 	//Tell the client, to print the training message.
 	GameRules_SetProp("m_bIsInTraining", true, 1, _, true);
 	GameRules_SetProp("m_bIsTrainingHUDVisible", true, 1, _, true);
-	
+
 	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (IsClientInGame(client) && !g_PlayerEliminated[client] && g_ClientTutorialEnabled[client])
@@ -130,7 +128,7 @@ void Tutorial_PrintMessage(const char[] sTitle, const char[] sMessage, const flo
 			BfWriteString(message, sTitle);
 			delete message;
 			EndMessage();
-			
+
 			message = StartMessageOne("TrainingMsg", client);
 			BfWriteString(message, sMessage);
 			delete message;
@@ -148,7 +146,7 @@ void Tutorial_PrintMessageToClient(int client, const char[] sTitle, const char[]
 	BfWriteString(message, sTitle);
 	delete message;
 	EndMessage();
-	
+
 	message = StartMessageOne("TrainingMsg", client);
 	BfWriteString(message, sMessage);
 	delete message;
@@ -161,10 +159,10 @@ public Action Timer_TutorialHideMessage(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	//Tell the client to hide the message
 	GameRules_SetProp("m_bIsTrainingHUDVisible", false, 1, _, true);
-	
+
 	g_TimerHideTutorialMessage = null;
 
 	return Plugin_Stop;
@@ -183,11 +181,11 @@ void Tutorial_OnMapEnd()
 /*
 void Tutorial_SetupSDK(Handle hConfig)
 {
-	int iOffset = GameConfGetOffset(hConfig, "CTFGameRules::IsInTraining"); 
+	int iOffset = GameConfGetOffset(hConfig, "CTFGameRules::IsInTraining");
 	g_SDKGamerulesIsInTraining = DHookCreate(iOffset, HookType_GameRules, ReturnType_Bool, ThisPointer_Address, CTFGameRules_IsInTraining);
 	if (g_SDKGamerulesIsInTraining == null) SetFailState("Failed to create hook for CTFGameRules::IsInTraining!");
-	
-	iOffset = GameConfGetOffset(hConfig, "CTFGameRules::GetGameType"); 
+
+	iOffset = GameConfGetOffset(hConfig, "CTFGameRules::GetGameType");
 	g_SDKGamerulesIsInTraining = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Address, CTFGameRules_GetGameType);
 	if (g_SDKGamerulesIsInTraining == null) SetFailState("Failed to create hook for CTFGameRules::GetGameType!");
 }

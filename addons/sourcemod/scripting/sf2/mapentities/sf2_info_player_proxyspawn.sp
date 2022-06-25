@@ -5,7 +5,7 @@ static CEntityFactory g_EntityFactory;
 methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 {
 	public SF2PlayerProxySpawnEntity(int entIndex) { return view_as<SF2PlayerProxySpawnEntity>(SF2SpawnPointBaseEntity(entIndex)); }
-	
+
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())

@@ -11,19 +11,19 @@
 public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqueProfileIndex, char[] loadFailReasonBuffer)
 {
 	loadFailReasonBuffer[0] = '\0';
-	
+
 	uniqueProfileIndex = g_ChaserProfileData.Push(-1);
 	g_ChaserProfileNames.SetValue(profile, uniqueProfileIndex);
 
 	bool unnerfedVisibility = view_as<bool>(kv.GetNum("old_boss_visibility", g_DefaultBossVisibilityStateConVar.IntValue));
-	
+
 	float bossDefaultWalkSpeed = kv.GetFloat("walkspeed", 30.0);
 	float bossWalkSpeedEasy = kv.GetFloat("walkspeed_easy", bossDefaultWalkSpeed);
 	float bossWalkSpeedHard = kv.GetFloat("walkspeed_hard", bossDefaultWalkSpeed);
 	float bossWalkSpeedInsane = kv.GetFloat("walkspeed_insane", bossWalkSpeedHard);
 	float bossWalkSpeedNightmare = kv.GetFloat("walkspeed_nightmare", bossWalkSpeedInsane);
 	float bossWalkSpeedApollyon = kv.GetFloat("walkspeed_apollyon", bossWalkSpeedNightmare);
-	
+
 	float bossDefaultMaxWalkSpeed = kv.GetFloat("walkspeed_max", 30.0);
 	float bossMaxWalkSpeedEasy = kv.GetFloat("walkspeed_max_easy", bossDefaultMaxWalkSpeed);
 	float bossMaxWalkSpeedHard = kv.GetFloat("walkspeed_max_hard", bossDefaultMaxWalkSpeed);
@@ -36,21 +36,21 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		wakeRange = 0.0;
 	}
-	
+
 	float alertGracetime = kv.GetFloat("search_alert_gracetime", 0.5);
 	float alertGracetimeEasy = kv.GetFloat("search_alert_gracetime_easy", alertGracetime);
 	float alertGracetimeHard = kv.GetFloat("search_alert_gracetime_hard", alertGracetime);
 	float alertGracetimeInsane = kv.GetFloat("search_alert_gracetime_insane", alertGracetimeHard);
 	float alertGracetimeNightmare = kv.GetFloat("search_alert_gracetime_nightmare", alertGracetimeInsane);
 	float alertGracetimeApollyon = kv.GetFloat("search_alert_gracetime_apollyon", alertGracetimeNightmare);
-	
+
 	float alertDuration = kv.GetFloat("search_alert_duration", 5.0);
 	float alertDurationEasy = kv.GetFloat("search_alert_duration_easy", alertDuration);
 	float alertDurationHard = kv.GetFloat("search_alert_duration_hard", alertDuration);
 	float alertDurationInsane = kv.GetFloat("search_alert_duration_insane", alertDurationHard);
 	float alertDurationNightmare = kv.GetFloat("search_alert_duration_nightmare", alertDurationInsane);
 	float alertDurationApollyon = kv.GetFloat("search_alert_duration_apollyon", alertDurationNightmare);
-	
+
 	float chaseDuration = kv.GetFloat("search_chase_duration", 10.0);
 	float chaseDurationEasy = kv.GetFloat("search_chase_duration_easy", chaseDuration);
 	float chaseDurationHard = kv.GetFloat("search_chase_duration_hard", chaseDuration);
@@ -87,19 +87,19 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float wanderTimeMaxApollyon = kv.GetFloat("search_wander_time_max_apollyon", wanderTimeMaxNightmare);
 
 	bool canBeStunned = view_as<bool>(kv.GetNum("stun_enabled"));
-	
+
 	float stunDuration = kv.GetFloat("stun_duration");
 	if (stunDuration < 0.0)
 	{
 		stunDuration = 0.0;
 	}
-	
+
 	float stunCooldown = kv.GetFloat("stun_cooldown", 3.5);
 	if (stunCooldown < 0.0)
 	{
 		stunCooldown = 0.0;
 	}
-	
+
 	float stunHealth = kv.GetFloat("stun_health");
 	if (stunHealth < 0.0)
 	{
@@ -110,9 +110,9 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		stunHealthPerPlayer = 0.0;
 	}
-	
+
 	bool stunTakeDamageFromFlashlight = view_as<bool>(kv.GetNum("stun_damage_flashlight_enabled"));
-	
+
 	float stunFlashlightDamage = kv.GetFloat("stun_damage_flashlight");
 
 	bool itemDrop = view_as<bool>(kv.GetNum("drop_item_on_stun"));
@@ -125,18 +125,18 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		itemDropType = 7;
 	}
-	
+
 	bool keyDrop = view_as<bool>(kv.GetNum("keydrop_enabled"));
-	
+
 	bool canCloak = view_as<bool>(kv.GetNum("cloak_enable"));
-	
+
 	float bossDefaultCloakCooldown = kv.GetFloat("cloak_cooldown", 8.0);
 	float bossCloakCooldownEasy = kv.GetFloat("cloak_cooldown_easy", bossDefaultCloakCooldown);
 	float bossCloakCooldownHard = kv.GetFloat("cloak_cooldown_hard", bossDefaultCloakCooldown);
 	float bossCloakCooldownInsane = kv.GetFloat("cloak_cooldown_insane", bossCloakCooldownHard);
 	float bossCloakCooldownNightmare = kv.GetFloat("cloak_cooldown_nightmare", bossCloakCooldownInsane);
 	float bossCloakCooldownApollyon = kv.GetFloat("cloak_cooldown_apollyon", bossCloakCooldownNightmare);
-	
+
 	float bossDefaultCloakRange = kv.GetFloat("cloak_range", 350.0);
 	float bossCloakRangeEasy = kv.GetFloat("cloak_range_easy", bossDefaultCloakRange);
 	float bossCloakRangeHard = kv.GetFloat("cloak_range_hard", bossDefaultCloakRange);
@@ -164,30 +164,30 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float bossCloakSpeedMultiplierInsane = kv.GetFloat("cloak_speed_multiplier_insane", bossCloakSpeedMultiplierHard);
 	float bossCloakSpeedMultiplierNightmare = kv.GetFloat("cloak_speed_multiplier_nightmare", bossCloakSpeedMultiplierInsane);
 	float bossCloakSpeedMultiplierApollyon = kv.GetFloat("cloak_speed_multiplier_apollyon", bossCloakSpeedMultiplierNightmare);
-	
+
 	bool projectileEnable = view_as<bool>(kv.GetNum("projectile_enable"));
-	
+
 	float projectileCooldownMin = kv.GetFloat("projectile_cooldown_min", 1.0);
 	float projectileCooldownMinEasy = kv.GetFloat("projectile_cooldown_min_easy", projectileCooldownMin);
 	float projectileCooldownMinHard = kv.GetFloat("projectile_cooldown_min_hard", projectileCooldownMin);
 	float projectileCooldownMinInsane = kv.GetFloat("projectile_cooldown_min_insane", projectileCooldownMinHard);
 	float projectileCooldownMinNightmare = kv.GetFloat("projectile_cooldown_min_nightmare", projectileCooldownMinInsane);
 	float projectileCooldownMinApollyon = kv.GetFloat("projectile_cooldown_min_apollyon", projectileCooldownMinNightmare);
-	
+
 	float projectileCooldownMax = kv.GetFloat("projectile_cooldown_max", 2.0);
 	float projectileCooldownMaxEasy = kv.GetFloat("projectile_cooldown_max_easy", projectileCooldownMax);
 	float projectileCooldownMaxHard = kv.GetFloat("projectile_cooldown_max_hard", projectileCooldownMax);
 	float projectileCooldownMaxInsane = kv.GetFloat("projectile_cooldown_max_insane", projectileCooldownMaxHard);
 	float projectileCooldownMaxNightmare = kv.GetFloat("projectile_cooldown_max_nightmare", projectileCooldownMaxInsane);
 	float projectileCooldownMaxApollyon = kv.GetFloat("projectile_cooldown_max_apollyon", projectileCooldownMaxNightmare);
-	
+
 	float iceballSlowdownDuration = kv.GetFloat("projectile_iceslow_duration", 2.0);
 	float iceballSlowdownDurationEasy = kv.GetFloat("projectile_iceslow_duration_easy", iceballSlowdownDuration);
 	float iceballSlowdownDurationHard = kv.GetFloat("projectile_iceslow_duration_hard", iceballSlowdownDuration);
 	float iceballSlowdownDurationInsane = kv.GetFloat("projectile_iceslow_duration_insane", iceballSlowdownDurationHard);
 	float iceballSlowdownDurationNightmare = kv.GetFloat("projectile_iceslow_duration_nightmare", iceballSlowdownDurationInsane);
 	float iceballSlowdownDurationApollyon = kv.GetFloat("projectile_iceslow_duration_apollyon", iceballSlowdownDurationNightmare);
-	
+
 	float iceballSlowdownPercent = kv.GetFloat("projectile_iceslow_percent", 0.55);
 	float iceballSlowdownPercentEasy = kv.GetFloat("projectile_iceslow_percent_easy", iceballSlowdownPercent);
 	float iceballSlowdownPercentHard = kv.GetFloat("projectile_iceslow_percent_hard", iceballSlowdownPercent);
@@ -253,49 +253,49 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		projectileCountApollyon = 1;
 	}
-	
+
 	bool rocketCritical = view_as<bool>(kv.GetNum("enable_crit_rockets"));
 	bool useShootGesture = view_as<bool>(kv.GetNum("use_gesture_shoot"));
-	
+
 	bool enableProjectileClips = view_as<bool>(kv.GetNum("projectile_clips_enable"));
-	
+
 	int projectileClips = kv.GetNum("projectile_ammo_loaded", 3);
 	int projectileClipsEasy = kv.GetNum("projectile_ammo_loaded_easy", projectileClips);
 	int projectileClipsHard = kv.GetNum("projectile_ammo_loaded_hard", projectileClips);
 	int projectileClipsInsane = kv.GetNum("projectile_ammo_loaded_insane", projectileClipsHard);
 	int projectileClipsNightmare = kv.GetNum("projectile_ammo_loaded_nightmare", projectileClipsInsane);
 	int projectileClipsApollyon = kv.GetNum("projectile_ammo_loaded_apollyon", projectileClipsNightmare);
-	
+
 	float projectilesReload = kv.GetFloat("projectile_reload_time", 2.0);
 	float projectilesReloadEasy = kv.GetFloat("projectile_reload_time_easy", projectilesReload);
 	float projectilesReloadHard = kv.GetFloat("projectile_reload_time_hard", projectilesReload);
 	float projectilesReloadInsane = kv.GetFloat("projectile_reload_time_insane", projectilesReloadHard);
 	float projectilesReloadNightmare = kv.GetFloat("projectile_reload_time_nightmare", projectilesReloadInsane);
 	float projectilesReloadApollyon = kv.GetFloat("projectile_reload_time_apollyon", projectilesReloadNightmare);
-	
+
 	bool enableChargeUpProjectiles = view_as<bool>(kv.GetNum("projectile_chargeup_enable"));
-	
+
 	float projectileChargeUpDuration = kv.GetFloat("projectile_chargeup_duration", 5.0);
 	float projectileChargeUpDurationEasy = kv.GetFloat("projectile_chargeup_duration_easy", projectileChargeUpDuration);
 	float projectileChargeUpDurationHard = kv.GetFloat("projectile_chargeup_duration_hard", projectileChargeUpDuration);
 	float projectileChargeUpDurationInsane = kv.GetFloat("projectile_chargeup_duration_insane", projectileChargeUpDurationHard);
 	float projectileChargeUpDurationNightmare = kv.GetFloat("projectile_chargeup_duration_nightmare", projectileChargeUpDurationInsane);
 	float projectileChargeUpDurationApollyon = kv.GetFloat("projectile_chargeup_duration_apollyon", projectileChargeUpDurationNightmare);
-	
+
 	bool advancedDamageEffectsEnabled = view_as<bool>(kv.GetNum("player_damage_effects"));
 	bool advancedDamageEffectsRandom = view_as<bool>(kv.GetNum("player_damage_random_effects"));
 	bool advancedDamageEffectsParticles = view_as<bool>(kv.GetNum("player_attach_particle", 1));
-	
+
 	int randomEffectAttackIndexes = kv.GetNum("player_random_attack_indexes", 1);
 	if (randomEffectAttackIndexes < 0) randomEffectAttackIndexes = 1;
-	
+
 	float randomEffectDurationNormal = kv.GetFloat("player_random_duration");
 	float randomEffectDurationEasy = kv.GetFloat("player_random_duration_easy", randomEffectDurationNormal);
 	float randomEffectDurationHard = kv.GetFloat("player_random_duration_hard", randomEffectDurationNormal);
 	float randomEffectDurationInsane = kv.GetFloat("player_random_duration_insane", randomEffectDurationHard);
 	float randomEffectDurationNightmare = kv.GetFloat("player_random_duration_nightmare", randomEffectDurationInsane);
 	float randomEffectDurationApollyon = kv.GetFloat("player_random_duration_apollyon", randomEffectDurationNightmare);
-	
+
 	float randomEffectSlowdownNormal = kv.GetFloat("player_random_slowdown");
 	if (randomEffectSlowdownNormal > 1.0)
 	{
@@ -350,7 +350,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		randomEffectSlowdownApollyon = 0.0;
 	}
-	
+
 	int randomStunType = kv.GetNum("player_random_stun_type");
 	if (randomStunType < 0)
 	{
@@ -360,15 +360,15 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		randomStunType = 3;
 	}
-	
+
 	bool jaratePlayerAdvanced = view_as<bool>(kv.GetNum("player_jarate_on_hit"));
-	
+
 	int jaratePlayerAttackIndexes = kv.GetNum("player_jarate_attack_indexs", 1);
 	if (jaratePlayerAttackIndexes < 0)
 	{
 		jaratePlayerAttackIndexes = 1;
 	}
-	
+
 	float jaratePlayerDurationNormal = kv.GetFloat("player_jarate_duration");
 	float jaratePlayerDurationEasy = kv.GetFloat("player_jarate_duration_easy", jaratePlayerDurationNormal);
 	float jaratePlayerDurationHard = kv.GetFloat("player_jarate_duration_hard", jaratePlayerDurationNormal);
@@ -379,13 +379,13 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	bool jaratePlayerParticleBeam = view_as<bool>(kv.GetNum("player_jarate_beam_particle"));
 
 	bool milkPlayerAdvanced = view_as<bool>(kv.GetNum("player_milk_on_hit"));
-	
+
 	int milkPlayerAttackIndexes = kv.GetNum("player_milk_attack_indexs", 1);
 	if (milkPlayerAttackIndexes < 0)
 	{
 		milkPlayerAttackIndexes = 1;
 	}
-	
+
 	float milkPlayerDurationNormal = kv.GetFloat("player_milk_duration");
 	float milkPlayerDurationEasy = kv.GetFloat("player_milk_duration_easy", milkPlayerDurationNormal);
 	float milkPlayerDurationHard = kv.GetFloat("player_milk_duration_hard", milkPlayerDurationNormal);
@@ -396,13 +396,13 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	bool milkPlayerParticleBeam = view_as<bool>(kv.GetNum("player_milk_beam_particle"));
 
 	bool gasPlayerAdvanced = view_as<bool>(kv.GetNum("player_gas_on_hit"));
-	
+
 	int gasPlayerAttackIndexes = kv.GetNum("player_gas_attack_indexs", 1);
 	if (gasPlayerAttackIndexes < 0)
 	{
 		gasPlayerAttackIndexes = 1;
 	}
-	
+
 	float gasPlayerDurationNormal = kv.GetFloat("player_gas_duration");
 	float gasPlayerDurationEasy = kv.GetFloat("player_gas_duration_easy", gasPlayerDurationNormal);
 	float gasPlayerDurationHard = kv.GetFloat("player_gas_duration_hard", gasPlayerDurationNormal);
@@ -413,13 +413,13 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	bool gasPlayerParticleBeam = view_as<bool>(kv.GetNum("player_gas_beam_particle"));
 
 	bool markPlayerAdvanced = view_as<bool>(kv.GetNum("player_mark_on_hit"));
-	
+
 	int markPlayerAttackIndexes = kv.GetNum("player_mark_attack_indexs", 1);
 	if (markPlayerAttackIndexes < 0)
 	{
 		markPlayerAttackIndexes = 1;
 	}
-	
+
 	float markPlayerDurationNormal = kv.GetFloat("player_mark_duration");
 	float markPlayerDurationEasy = kv.GetFloat("player_mark_duration_easy", markPlayerDurationNormal);
 	float markPlayerDurationHard = kv.GetFloat("player_mark_duration_hard", markPlayerDurationNormal);
@@ -428,13 +428,13 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float markPlayerDurationApollyon = kv.GetFloat("player_mark_duration_apollyon", markPlayerDurationNightmare);
 
 	bool silentMarkPlayerAdvanced = view_as<bool>(kv.GetNum("player_silent_mark_on_hit"));
-	
+
 	int silentMarkPlayerAttackIndexes = kv.GetNum("player_silent_mark_attack_indexs", 1);
 	if (silentMarkPlayerAttackIndexes < 0)
 	{
 		silentMarkPlayerAttackIndexes = 1;
 	}
-	
+
 	float silentMarkPlayerDurationNormal = kv.GetFloat("player_silent_mark_duration");
 	float silentMarkPlayerDurationEasy = kv.GetFloat("player_silent_mark_duration_easy", silentMarkPlayerDurationNormal);
 	float silentMarkPlayerDurationHard = kv.GetFloat("player_silent_mark_duration_hard", silentMarkPlayerDurationNormal);
@@ -443,13 +443,13 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float silentMarkPlayerDurationApollyon = kv.GetFloat("player_silent_mark_duration_apollyon", silentMarkPlayerDurationNightmare);
 
 	bool ignitePlayerAdvanced = view_as<bool>(kv.GetNum("player_ignite_on_hit"));
-	
+
 	int ignitePlayerAttackIndexes = kv.GetNum("player_ignite_attack_indexs", 1);
 	if (ignitePlayerAttackIndexes < 0)
 	{
 		ignitePlayerAttackIndexes = 1;
 	}
-	
+
 	float ignitePlayerDelayNormal = kv.GetFloat("player_ignite_delay");
 	float ignitePlayerDelayEasy = kv.GetFloat("player_ignite_delay_easy", ignitePlayerDelayNormal);
 	float ignitePlayerDelayHard = kv.GetFloat("player_ignite_delay_hard", ignitePlayerDelayNormal);
@@ -458,7 +458,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float ignitePlayerDelayApollyon = kv.GetFloat("player_ignite_delay_apollyon", ignitePlayerDelayNightmare);
 
 	bool stunPlayerAdvanced = view_as<bool>(kv.GetNum("player_stun_on_hit"));
-	
+
 	int stunPlayerType = kv.GetNum("player_stun_type");
 	if (stunPlayerType < 0)
 	{
@@ -468,20 +468,20 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		stunPlayerType = 3;
 	}
-	
+
 	int stunPlayerAttackIndexes = kv.GetNum("player_stun_attack_indexs", 1);
 	if (stunPlayerAttackIndexes < 0)
 	{
 		stunPlayerAttackIndexes = 1;
 	}
-	
+
 	float stunPlayerDurationNormal = kv.GetFloat("player_stun_duration");
 	float stunPlayerDurationEasy = kv.GetFloat("player_stun_duration_easy", stunPlayerDurationNormal);
 	float stunPlayerDurationHard = kv.GetFloat("player_stun_duration_hard", stunPlayerDurationNormal);
 	float stunPlayerDurationInsane = kv.GetFloat("player_stun_duration_insane", stunPlayerDurationHard);
 	float stunPlayerDurationNightmare = kv.GetFloat("player_stun_duration_nightmare", stunPlayerDurationInsane);
 	float stunPlayerDurationApollyon = kv.GetFloat("player_stun_duration_apollyon", stunPlayerDurationNightmare);
-	
+
 	float stunPlayerSlowdownNormal = kv.GetFloat("player_stun_slowdown");
 	if (stunPlayerSlowdownNormal > 1.0)
 	{
@@ -540,13 +540,13 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	bool stunPlayerParticleBeam = view_as<bool>(kv.GetNum("player_stun_beam_particle"));
 
 	bool bleedPlayerAdvanced = view_as<bool>(kv.GetNum("player_bleed_on_hit"));
-	
+
 	int bleedPlayerAttackIndexes = kv.GetNum("player_bleed_attack_indexs", 1);
 	if (bleedPlayerAttackIndexes < 0)
 	{
 		bleedPlayerAttackIndexes = 1;
 	}
-	
+
 	float bleedPlayerDurationNormal = kv.GetFloat("player_bleed_duration");
 	float bleedPlayerDurationEasy = kv.GetFloat("player_bleed_duration_easy", bleedPlayerDurationNormal);
 	float bleedPlayerDurationHard = kv.GetFloat("player_bleed_duration_hard", bleedPlayerDurationNormal);
@@ -555,20 +555,20 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float bleedPlayerDurationApollyon = kv.GetFloat("player_bleed_duration_apollyon", bleedPlayerDurationNightmare);
 
 	bool eletricPlayerAdvanced = view_as<bool>(kv.GetNum("player_electric_slow_on_hit"));
-	
+
 	int eletricPlayerAttackIndexes = kv.GetNum("player_electrocute_attack_indexs", 1);
 	if (eletricPlayerAttackIndexes < 0)
 	{
 		eletricPlayerAttackIndexes = 1;
 	}
-	
+
 	float eletricPlayerDurationNormal = kv.GetFloat("player_electric_slow_duration");
 	float eletricPlayerDurationEasy = kv.GetFloat("player_electric_slow_duration_easy", eletricPlayerDurationNormal);
 	float eletricPlayerDurationHard = kv.GetFloat("player_electric_slow_duration_hard", eletricPlayerDurationNormal);
 	float eletricPlayerDurationInsane = kv.GetFloat("player_electric_slow_duration_insane", eletricPlayerDurationHard);
 	float eletricPlayerDurationNightmare = kv.GetFloat("player_electric_slow_duration_nightmare", eletricPlayerDurationInsane);
 	float eletricPlayerDurationApollyon = kv.GetFloat("player_electric_slow_duration_apollyon", eletricPlayerDurationNightmare);
-	
+
 	float eletricPlayerSlowdownNormal = kv.GetFloat("player_electric_slow_slowdown");
 	if (eletricPlayerSlowdownNormal > 1.0)
 	{
@@ -625,9 +625,9 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	}
 
 	bool electricPlayerParticleBeam = view_as<bool>(kv.GetNum("player_electric_beam_particle"));
-	
+
 	bool smitePlayerAdvanced = view_as<bool>(kv.GetNum("player_smite_on_hit"));
-	
+
 	int smiteAttackIndexes = kv.GetNum("player_smite_attack_indexs", 1);
 	if (smiteAttackIndexes < 0)
 	{
@@ -650,7 +650,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float xenobladeDazeDuration = kv.GetFloat("xenoblade_daze_duration");
 
 	int projectileType = kv.GetNum("projectile_type", SF2BossProjectileType_Fireball);
-	
+
 	bool damageParticlesEnabled = view_as<bool>(kv.GetNum("damage_particle_effect_enabled"));
 	float damageParticleVolume = kv.GetFloat("damage_particle_effect_volume");
 	int damageParticlePitch = kv.GetNum("damage_particle_effect_pitch");
@@ -662,23 +662,23 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	{
 		damageParticlePitch = 255;
 	}
-	
+
 	bool shockwaveEnabled = view_as<bool>(kv.GetNum("shockwave"));
-	
+
 	float shockwaveHeight = kv.GetFloat("shockwave_height", 64.0);
 	float shockwaveHeightEasy = kv.GetFloat("shockwave_height_easy", shockwaveHeight);
 	float shockwaveHeightHard = kv.GetFloat("shockwave_height_hard", shockwaveHeight);
 	float shockwaveHeightInsane = kv.GetFloat("shockwave_height_insane", shockwaveHeightHard);
 	float shockwaveHeightNightmare = kv.GetFloat("shockwave_height_nightmare", shockwaveHeightInsane);
 	float shockwaveHeightApollyon = kv.GetFloat("shockwave_height_apollyon", shockwaveHeightNightmare);
-	
+
 	float shockwaveRange = kv.GetFloat("shockwave_range", 200.0);
 	float shockwaveRangeEasy = kv.GetFloat("shockwave_range_easy", shockwaveRange);
 	float shockwaveRangeHard = kv.GetFloat("shockwave_range_hard", shockwaveRange);
 	float shockwaveRangeInsane = kv.GetFloat("shockwave_range_insane", shockwaveRangeHard);
 	float shockwaveRangeNightmare = kv.GetFloat("shockwave_range_nightmare", shockwaveRangeInsane);
 	float shockwaveRangeApollyon = kv.GetFloat("shockwave_range_apollyon", shockwaveRangeNightmare);
-	
+
 	float shockwaveDrain = kv.GetFloat("shockwave_drain", 0.2);
 	float shockwaveDrainEasy = kv.GetFloat("shockwave_drain_easy", shockwaveDrain);
 	float shockwaveDrainHard = kv.GetFloat("shockwave_drain_hard", shockwaveDrain);
@@ -692,23 +692,23 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float shockwaveForceInsane = kv.GetFloat("shockwave_force_insane", shockwaveForceHard);
 	float shockwaveForceNightmare = kv.GetFloat("shockwave_force_nightmare", shockwaveForceInsane);
 	float shockwaveForceApollyon = kv.GetFloat("shockwave_force_apollyon", shockwaveForceNightmare);
-	
+
 	bool shockwaveStunEnabled = view_as<bool>(kv.GetNum("shockwave_stun"));
-	
+
 	float shockwaveStunDuration = kv.GetFloat("shockwave_stun_duration", 2.0);
 	float shockwaveStunDurationEasy = kv.GetFloat("shockwave_stun_duration_easy", shockwaveStunDuration);
 	float shockwaveStunDurationHard = kv.GetFloat("shockwave_stun_duration_hard", shockwaveStunDuration);
 	float shockwaveStunDurationInsane = kv.GetFloat("shockwave_stun_duration_insane", shockwaveStunDurationHard);
 	float shockwaveStunDurationNightmare = kv.GetFloat("shockwave_stun_duration_nightmare", shockwaveStunDurationInsane);
 	float shockwaveStunDurationApollyon = kv.GetFloat("shockwave_stun_duration_apollyon", shockwaveStunDurationNightmare);
-	
+
 	float shockwaveStunSlowdown = kv.GetFloat("shockwave_stun_slowdown", 0.7);
 	float shockwaveStunSlowdownEasy = kv.GetFloat("shockwave_stun_slowdown_easy", shockwaveStunSlowdown);
 	float shockwaveStunSlowdownHard = kv.GetFloat("shockwave_stun_slowdown_hard", shockwaveStunSlowdown);
 	float shockwaveStunSlowdownInsane = kv.GetFloat("shockwave_stun_slowdown_insane", shockwaveStunSlowdownHard);
 	float shockwaveStunSlowdownNightmare = kv.GetFloat("shockwave_stun_slowdown_nightmare", shockwaveStunSlowdownInsane);
 	float shockwaveStunSlowdownApollyon = kv.GetFloat("shockwave_stun_slowdown_apollyon", shockwaveStunSlowdownNightmare);
-	
+
 	int shockwaveAttackIndexes = kv.GetNum("shockwave_attack_index", 1);
 	if (shockwaveAttackIndexes < 1)
 	{
@@ -726,11 +726,11 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	float earthquakeFootstepsDuration = kv.GetFloat("earthquake_footsteps_duration", 1.0);
 	float earthquakeFootstepsRadius = kv.GetFloat("earthquake_footsteps_radius", 1000.0);
 	bool earthquakeFootstepsAirShake = view_as<bool>(kv.GetNum("earthquake_footsteps_airshake"));
-	
+
 	bool trapsEnabled = view_as<bool>(kv.GetNum("traps_enabled"));
-	
+
 	int trapType = kv.GetNum("trap_type", 0);
-	
+
 	float trapSpawnCooldown = kv.GetFloat("trap_spawn_cooldown", 8.0);
 	float trapSpawnCooldownEasy = kv.GetFloat("trap_spawn_cooldown_easy", trapSpawnCooldown);
 	float trapSpawnCooldownHard = kv.GetFloat("trap_spawn_cooldown_hard", trapSpawnCooldown);
@@ -898,7 +898,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	bool autoChaseSprinters = view_as<bool>(kv.GetNum("auto_chase_sprinters", 0));
 
 	bool chasesEndlessly = view_as<bool>(KvGetNum(kv,"boss_chases_endlessly", 0));
-	
+
 	bool bSelfHeal = view_as<bool>(kv.GetNum("self_heal_enabled", 0));
 	float healthPercentageToHeal = kv.GetFloat("health_percentage_to_heal", 0.35);
 	if (healthPercentageToHeal < 0.0)
@@ -948,28 +948,28 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	bool chaseOnLook = view_as<bool>(kv.GetNum("chase_upon_look"));
 
 	g_ChaserProfileData.Set(uniqueProfileIndex, view_as<bool>(kv.GetNum("difficulty_affects_animations")), ChaserProfileData_DifficultyAffectsAnimations);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossDefaultWalkSpeed, ChaserProfileData_WalkSpeedNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossWalkSpeedEasy, ChaserProfileData_WalkSpeedEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossWalkSpeedHard, ChaserProfileData_WalkSpeedHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossWalkSpeedInsane, ChaserProfileData_WalkSpeedInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossWalkSpeedNightmare, ChaserProfileData_WalkSpeedNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossWalkSpeedApollyon, ChaserProfileData_WalkSpeedApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossDefaultMaxWalkSpeed, ChaserProfileData_MaxWalkSpeedNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossMaxWalkSpeedEasy, ChaserProfileData_MaxWalkSpeedEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossMaxWalkSpeedHard, ChaserProfileData_MaxWalkSpeedHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossMaxWalkSpeedInsane, ChaserProfileData_MaxWalkSpeedInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossMaxWalkSpeedNightmare, ChaserProfileData_MaxWalkSpeedNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossMaxWalkSpeedApollyon, ChaserProfileData_MaxWalkSpeedApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertGracetime, ChaserProfileData_SearchAlertGracetime);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertGracetimeEasy, ChaserProfileData_SearchAlertGracetimeEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertGracetimeHard, ChaserProfileData_SearchAlertGracetimeHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertGracetimeInsane, ChaserProfileData_SearchAlertGracetimeInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertGracetimeNightmare, ChaserProfileData_SearchAlertGracetimeNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertGracetimeApollyon, ChaserProfileData_SearchAlertGracetimeApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertDuration, ChaserProfileData_SearchAlertDuration);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertDurationEasy, ChaserProfileData_SearchAlertDurationEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, alertDurationHard, ChaserProfileData_SearchAlertDurationHard);
@@ -997,7 +997,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderRangeMaxInsane, ChaserProfileData_SearchWanderRangeMaxInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderRangeMaxNightmare, ChaserProfileData_SearchWanderRangeMaxNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderRangeMaxApollyon, ChaserProfileData_SearchWanderRangeMaxApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderTimeMin, ChaserProfileData_SearchWanderTimeMin);
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderTimeMinEasy, ChaserProfileData_SearchWanderTimeMinEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderTimeMinHard, ChaserProfileData_SearchWanderTimeMinHard);
@@ -1011,9 +1011,9 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderTimeMaxInsane, ChaserProfileData_SearchWanderTimeMaxInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderTimeMaxNightmare, ChaserProfileData_SearchWanderTimeMaxNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, wanderTimeMaxApollyon, ChaserProfileData_SearchWanderTimeMaxApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, wakeRange, ChaserProfileData_WakeRadius);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, canBeStunned, ChaserProfileData_CanBeStunned);
 	g_ChaserProfileData.Set(uniqueProfileIndex, stunDuration, ChaserProfileData_StunDuration);
 	g_ChaserProfileData.Set(uniqueProfileIndex, stunCooldown, ChaserProfileData_StunCooldown);
@@ -1024,18 +1024,18 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, itemDrop, ChaserProfileData_ItemDropOnStun);
 	g_ChaserProfileData.Set(uniqueProfileIndex, itemDropType, ChaserProfileData_ItemDropTypeStun);
 	g_ChaserProfileData.Set(uniqueProfileIndex, view_as<bool>(kv.GetNum("chase_initial_on_stun")), ChaserProfileData_ChaseInitialOnStun);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, keyDrop, ChaserProfileData_KeyDrop);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, canCloak, ChaserProfileData_CanCloak);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossDefaultCloakCooldown, ChaserProfileData_CloakCooldownNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakCooldownEasy, ChaserProfileData_CloakCooldownEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakCooldownHard, ChaserProfileData_CloakCooldownHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakCooldownInsane, ChaserProfileData_CloakCooldownInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakCooldownNightmare, ChaserProfileData_CloakCooldownNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakCooldownApollyon, ChaserProfileData_CloakCooldownApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossDefaultCloakRange, ChaserProfileData_CloakRangeNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakRangeEasy, ChaserProfileData_CloakRangeEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakRangeHard, ChaserProfileData_CloakRangeHard);
@@ -1056,22 +1056,22 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakDurationInsane, ChaserProfileData_CloakDurationInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakDurationNightmare, ChaserProfileData_CloakDurationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakDurationApollyon, ChaserProfileData_CloakDurationApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossDefaultCloakSpeedMultiplier, ChaserProfileData_CloakSpeedMultiplierNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakSpeedMultiplierEasy, ChaserProfileData_CloakSpeedMultiplierEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakSpeedMultiplierHard, ChaserProfileData_CloakSpeedMultiplierHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakSpeedMultiplierInsane, ChaserProfileData_CloakSpeedMultiplierInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakSpeedMultiplierNightmare, ChaserProfileData_CloakSpeedMultiplierNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bossCloakSpeedMultiplierApollyon, ChaserProfileData_CloakSpeedMultiplierApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileEnable, ChaserProfileData_ProjectileEnable);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, rocketCritical, ChaserProfileData_CriticlaRockets);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, useShootGesture, ChaserProfileData_UseShootGesture);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, enableProjectileClips, ChaserProfileData_ProjectileClipEnable);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, enableChargeUpProjectiles, ChaserProfileData_UseChargeUpProjectiles);
 
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMin, ChaserProfileData_ProjectileCooldownMinNormal);
@@ -1080,7 +1080,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMinInsane, ChaserProfileData_ProjectileCooldownMinInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMinNightmare, ChaserProfileData_ProjectileCooldownMinNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMinApollyon, ChaserProfileData_ProjectileCooldownMinApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMax, ChaserProfileData_ProjectileCooldownMaxNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMaxEasy, ChaserProfileData_ProjectileCooldownMaxEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCooldownMaxHard, ChaserProfileData_ProjectileCooldownMaxHard);
@@ -1094,35 +1094,35 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCountInsane, ChaserProfileData_ProjectileCountInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCountNightmare, ChaserProfileData_ProjectileCountNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileCountApollyon, ChaserProfileData_ProjectileCountApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownDuration, ChaserProfileData_IceballSlowdownDurationNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownDurationEasy, ChaserProfileData_IceballSlowdownDurationEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownDurationHard, ChaserProfileData_IceballSlowdownDurationHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownDurationInsane, ChaserProfileData_IceballSlowdownDurationInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownDurationNightmare, ChaserProfileData_IceballSlowdownDurationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownDurationApollyon, ChaserProfileData_IceballSlowdownDurationApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownPercent, ChaserProfileData_IceballSlowdownPercentNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownPercentEasy, ChaserProfileData_IceballSlowdownPercentEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownPercentHard, ChaserProfileData_IceballSlowdownPercentHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownPercentInsane, ChaserProfileData_IceballSlowdownPercentInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownPercentNightmare, ChaserProfileData_IceballSlowdownPercentNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, iceballSlowdownPercentApollyon, ChaserProfileData_IceballSlowdownPercentApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileSpeed, ChaserProfileData_ProjectileSpeedNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileSpeedEasy, ChaserProfileData_ProjectileSpeedEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileSpeedHard, ChaserProfileData_ProjectileSpeedHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileSpeedInsane, ChaserProfileData_ProjectileSpeedInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileSpeedNightmare, ChaserProfileData_ProjectileSpeedNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileSpeedApollyon, ChaserProfileData_ProjectileSpeedApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDamage, ChaserProfileData_ProjectileDamageNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDamageEasy, ChaserProfileData_ProjectileDamageEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDamageHard, ChaserProfileData_ProjectileDamageHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDamageInsane, ChaserProfileData_ProjectileDamageInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDamageNightmare, ChaserProfileData_ProjectileDamageNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDamageApollyon, ChaserProfileData_ProjectileDamageApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileRadius, ChaserProfileData_ProjectileRadiusNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileRadiusEasy, ChaserProfileData_ProjectileRadiusEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileRadiusHard, ChaserProfileData_ProjectileRadiusHard);
@@ -1136,34 +1136,34 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDeviationInsane, ChaserProfileData_ProjectileDeviationInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDeviationNightmare, ChaserProfileData_ProjectileDeviationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileDeviationApollyon, ChaserProfileData_ProjectileDeviationApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileType, ChaserProfileData_ProjectileType);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileClips, ChaserProfileData_ProjectileClipNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileClipsEasy, ChaserProfileData_ProjectileClipEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileClipsHard, ChaserProfileData_ProjectileClipHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileClipsInsane, ChaserProfileData_ProjectileClipInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileClipsNightmare, ChaserProfileData_ProjectileClipNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileClipsApollyon, ChaserProfileData_ProjectileClipApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectilesReload, ChaserProfileData_ProjectileReloadTimeNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectilesReloadEasy, ChaserProfileData_ProjectileReloadTimeEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectilesReloadHard, ChaserProfileData_ProjectileReloadTimeHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectilesReloadInsane, ChaserProfileData_ProjectileReloadTimeInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectilesReloadNightmare, ChaserProfileData_ProjectileReloadTimeNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectilesReloadApollyon, ChaserProfileData_ProjectileReloadTimeApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileChargeUpDuration, ChaserProfileData_ProjectileChargeUpNormal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileChargeUpDurationEasy, ChaserProfileData_ProjectileChargeUpEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileChargeUpDurationHard, ChaserProfileData_ProjectileChargeUpHard);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileChargeUpDurationInsane, ChaserProfileData_ProjectileChargeUpInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileChargeUpDurationNightmare, ChaserProfileData_ProjectileChargeUpNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, projectileChargeUpDurationApollyon, ChaserProfileData_ProjectileChargeUpApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, advancedDamageEffectsEnabled, ChaserProfileData_AdvancedDamageEffectsEnabled);
 	g_ChaserProfileData.Set(uniqueProfileIndex, advancedDamageEffectsRandom, ChaserProfileData_AdvancedDamageEffectsRandom);
 	g_ChaserProfileData.Set(uniqueProfileIndex, advancedDamageEffectsParticles, ChaserProfileData_AdvancedDamageEffectsParticles);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, randomEffectAttackIndexes, ChaserProfileData_RandomAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, randomEffectDurationEasy, ChaserProfileData_RandomAdvancedDurationEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, randomEffectDurationNormal, ChaserProfileData_RandomAdvancedDurationNormal);
@@ -1178,7 +1178,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, randomEffectSlowdownNightmare, ChaserProfileData_RandomAdvancedSlowdownNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, randomEffectSlowdownApollyon, ChaserProfileData_RandomAdvancedSlowdownApollyon);
 	g_ChaserProfileData.Set(uniqueProfileIndex, randomStunType, ChaserProfileData_RandomAdvancedStunType);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, jaratePlayerAdvanced, ChaserProfileData_EnableJarateAdvanced);
 	g_ChaserProfileData.Set(uniqueProfileIndex, jaratePlayerAttackIndexes, ChaserProfileData_JarateAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, jaratePlayerDurationEasy, ChaserProfileData_JarateAdvancedDurationEasy);
@@ -1188,7 +1188,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, jaratePlayerDurationNightmare, ChaserProfileData_JarateAdvancedDurationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, jaratePlayerDurationApollyon, ChaserProfileData_JarateAdvancedDurationApollyon);
 	g_ChaserProfileData.Set(uniqueProfileIndex, jaratePlayerParticleBeam, ChaserProfileData_JarateAdvancedBeamParticle);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, milkPlayerAdvanced, ChaserProfileData_EnableMilkAdvanced);
 	g_ChaserProfileData.Set(uniqueProfileIndex, milkPlayerAttackIndexes, ChaserProfileData_MilkAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, milkPlayerDurationEasy, ChaserProfileData_MilkAdvancedDurationEasy);
@@ -1198,7 +1198,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, milkPlayerDurationNightmare, ChaserProfileData_MilkAdvancedDurationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, milkPlayerDurationApollyon, ChaserProfileData_MilkAdvancedDurationApollyon);
 	g_ChaserProfileData.Set(uniqueProfileIndex, milkPlayerParticleBeam, ChaserProfileData_MilkAdvancedBeamParticle);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, gasPlayerAdvanced, ChaserProfileData_EnableGasAdvanced);
 	g_ChaserProfileData.Set(uniqueProfileIndex, gasPlayerAttackIndexes, ChaserProfileData_GasAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, gasPlayerDurationEasy, ChaserProfileData_GasAdvancedDurationEasy);
@@ -1226,7 +1226,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, silentMarkPlayerDurationInsane, ChaserProfileData_SilentMarkAdvancedDurationInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, silentMarkPlayerDurationNightmare, ChaserProfileData_SilentMarkAdvancedDurationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, silentMarkPlayerDurationApollyon, ChaserProfileData_SilentMarkAdvancedDurationApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, ignitePlayerAdvanced, ChaserProfileData_EnableIgniteAdvanced);
 	g_ChaserProfileData.Set(uniqueProfileIndex, ignitePlayerAttackIndexes, ChaserProfileData_IgniteAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, ignitePlayerDelayEasy, ChaserProfileData_IgniteAdvancedDelayEasy);
@@ -1261,7 +1261,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, bleedPlayerDurationInsane, ChaserProfileData_BleedAdvancedDurationInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bleedPlayerDurationNightmare, ChaserProfileData_BleedAdvancedDurationNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, bleedPlayerDurationApollyon, ChaserProfileData_BleedAdvancedDurationApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, eletricPlayerAdvanced, ChaserProfileData_EnableEletricAdvanced);
 	g_ChaserProfileData.Set(uniqueProfileIndex, eletricPlayerAttackIndexes, ChaserProfileData_EletricAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, eletricPlayerDurationEasy, ChaserProfileData_EletricAdvancedDurationEasy);
@@ -1277,7 +1277,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, eletricPlayerSlowdownNightmare, ChaserProfileData_EletricAdvancedSlowdownNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, eletricPlayerSlowdownApollyon, ChaserProfileData_EletricAdvancedSlowdownApollyon);
 	g_ChaserProfileData.Set(uniqueProfileIndex, electricPlayerParticleBeam, ChaserProfileData_EletricAdvancedBeamParticle);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, smitePlayerAdvanced, ChaserProfileData_EnableSmiteAdvanced);
 	g_ChaserProfileData.Set(uniqueProfileIndex, smiteAttackIndexes, ChaserProfileData_SmiteAdvancedIndexes);
 	g_ChaserProfileData.Set(uniqueProfileIndex, smiteDamage, ChaserProfileData_SmiteAdvancedDamage);
@@ -1293,11 +1293,11 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, xenobladeToppleDuration, ChaserProfileData_XenobladeToppleDuration);
 	g_ChaserProfileData.Set(uniqueProfileIndex, xenobladeToppleSlowdown, ChaserProfileData_XenobladeToppleSlowdown);
 	g_ChaserProfileData.Set(uniqueProfileIndex, xenobladeDazeDuration, ChaserProfileData_XenobladeDazeDuration);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, damageParticlesEnabled, ChaserProfileData_EnableDamageParticles);
 	g_ChaserProfileData.Set(uniqueProfileIndex, damageParticleVolume, ChaserProfileData_DamageParticleVolume);
 	g_ChaserProfileData.Set(uniqueProfileIndex, damageParticlePitch, ChaserProfileData_DamageParticlePitch);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, shockwaveEnabled, ChaserProfileData_ShockwavesEnable);
 	g_ChaserProfileData.Set(uniqueProfileIndex, shockwaveHeightEasy, ChaserProfileData_ShockwaveHeightEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, shockwaveHeight, ChaserProfileData_ShockwaveHeightNormal);
@@ -1347,7 +1347,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, earthquakeFootstepsDuration, ChaserProfileData_EarthquakeFootstepsDuration);
 	g_ChaserProfileData.Set(uniqueProfileIndex, earthquakeFootstepsRadius, ChaserProfileData_EarthquakeFootstepsRadius);
 	g_ChaserProfileData.Set(uniqueProfileIndex, earthquakeFootstepsAirShake, ChaserProfileData_EarthquakeFootstepsCanAirShake);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, trapsEnabled, ChaserProfileData_TrapsEnabled);
 	g_ChaserProfileData.Set(uniqueProfileIndex, trapType, ChaserProfileData_TrapType);
 	g_ChaserProfileData.Set(uniqueProfileIndex, trapSpawnCooldown, ChaserProfileData_TrapSpawnCooldownNormal);
@@ -1356,7 +1356,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, trapSpawnCooldownInsane, ChaserProfileData_TrapSpawnCooldownInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, trapSpawnCooldownNightmare, ChaserProfileData_TrapSpawnCooldownNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, trapSpawnCooldownApollyon, ChaserProfileData_TrapSpawnCooldownApollyon);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, bSelfHeal, ChaserProfileData_CanSelfHeal);
 	g_ChaserProfileData.Set(uniqueProfileIndex, healthPercentageToHeal, ChaserProfileData_HealStartHealthPercentage);
 	g_ChaserProfileData.Set(uniqueProfileIndex, healPercentageOne, ChaserProfileData_HealPercentageOne);
@@ -1364,7 +1364,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, healPercentageThree, ChaserProfileData_HealPercentageThree);
 
 	g_ChaserProfileData.Set(uniqueProfileIndex, kv.GetFloat("memory_lifetime", 10.0), ChaserProfileData_MemoryLifeTime);
-	
+
 	float flDefaultAwarenessIncreaseRate = kv.GetFloat("awareness_rate_increase", 75.0);
 	g_ChaserProfileData.Set(uniqueProfileIndex, kv.GetFloat("awareness_rate_increase_easy", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, flDefaultAwarenessIncreaseRate, ChaserProfileData_AwarenessIncreaseRateNormal);
@@ -1372,7 +1372,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, kv.GetFloat("awareness_rate_increase_insane", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateInsane);
 	g_ChaserProfileData.Set(uniqueProfileIndex, kv.GetFloat("awareness_rate_increase_nightmare", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateNightmare);
 	g_ChaserProfileData.Set(uniqueProfileIndex, kv.GetFloat("awareness_rate_increase_apollyon", flDefaultAwarenessIncreaseRate), ChaserProfileData_AwarenessIncreaseRateApollyon);
-	
+
 	float flDefaultAwarenessDecreaseRate = kv.GetFloat("awareness_rate_decrease", 150.0);
 	g_ChaserProfileData.Set(uniqueProfileIndex, kv.GetFloat("awareness_rate_decrease_easy", flDefaultAwarenessDecreaseRate), ChaserProfileData_AwarenessDecreaseRateEasy);
 	g_ChaserProfileData.Set(uniqueProfileIndex, flDefaultAwarenessDecreaseRate, ChaserProfileData_AwarenessDecreaseRateNormal);
@@ -1389,7 +1389,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, view_as<bool>(kv.GetNum("use_chase_initial_animation")), ChaserProfileData_ChaseInitialAnimationUse);
 	g_ChaserProfileData.Set(uniqueProfileIndex, view_as<bool>(kv.GetNum("old_animation_ai")), ChaserProfileData_OldAnimationAI);
 	g_ChaserProfileData.Set(uniqueProfileIndex, view_as<bool>(kv.GetNum("use_alert_walking_animation")), ChaserProfileData_AlertWalkingAnimation);
-	
+
 	g_ChaserProfileData.Set(uniqueProfileIndex, autoChaseEnabled, ChaserProfileData_AutoChaseEnabled);
 
 	g_ChaserProfileData.Set(uniqueProfileIndex, autoChaseCount, ChaserProfileData_AutoChaseCount);
@@ -1448,7 +1448,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, int &uniqu
 	g_ChaserProfileData.Set(uniqueProfileIndex, unnerfedVisibility, ChaserProfileData_UnnerfedVisibility);
 
 	ParseChaserProfileAttacks(kv, uniqueProfileIndex);
-	
+
 	return true;
 }
 
@@ -1457,7 +1457,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 	// Create the array.
 	ArrayList attacks = new ArrayList(ChaserProfileAttackData_MaxStats);
 	g_ChaserProfileData.Set(uniqueProfileIndex, attacks, ChaserProfileData_Attacks);
-	
+
 	int maxAttacks = -1;
 	if (kv.JumpToKey("attacks"))
 	{
@@ -1491,35 +1491,35 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		}
 		int attackType = kv.GetNum("attack_type", SF2BossAttackType_Melee);
 		//int attackType = SF2BossAttackType_Melee;
-		
+
 		float attackRange = kv.GetFloat("attack_range");
 		if (attackRange < 0.0)
 		{
 			attackRange = 0.0;
 		}
-		
+
 		float attackDamage = kv.GetFloat("attack_damage");
 		float attackDamageEasy = kv.GetFloat("attack_damage_easy", attackDamage);
 		float attackDamageHard = kv.GetFloat("attack_damage_hard", attackDamage);
 		float attackDamageInsane = kv.GetFloat("attack_damage_insane", attackDamageHard);
 		float attackDamageNightmare = kv.GetFloat("attack_damage_nightmare", attackDamageInsane);
 		float attackDamageApollyon = kv.GetFloat("attack_damage_apollyon", attackDamageNightmare);
-		
+
 		float attackDamageVsProps = kv.GetFloat("attack_damage_vs_props", attackDamage);
 		float attackDamageForce = kv.GetFloat("attack_damageforce");
-		
+
 		int attackDamageType = kv.GetNum("attack_damagetype");
 		if (attackDamageType < 0)
 		{
 			attackDamageType = 0;
 		}
-		
+
 		float attackDamageDelay = kv.GetFloat("attack_delay");
 		if (attackDamageDelay < 0.0)
 		{
 			attackDamageDelay = 0.0;
 		}
-		
+
 		float attackDuration = kv.GetFloat("attack_duration", 0.0);
 		if (attackDuration <= 0.0)//Backward compatibility
 		{
@@ -1529,12 +1529,12 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 			}
 			attackDuration = attackDamageDelay+kv.GetFloat("attack_endafter", 0.0);
 		}
-		
+
 		bool attackProps = view_as<bool>(kv.GetNum("attack_props", 0));
-		
+
 		float attackSpreadOld = kv.GetFloat("attack_fov", 45.0);
 		float attackSpread = kv.GetFloat("attack_spread", attackSpreadOld);
-		
+
 		if (attackSpread < 0.0)
 		{
 			attackSpread = 0.0;
@@ -1543,13 +1543,13 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackSpread = 360.0;
 		}
-		
+
 		float attackBeginRange = kv.GetFloat("attack_begin_range", attackRange);
 		if (attackBeginRange < 0.0)
 		{
 			attackBeginRange = 0.0;
 		}
-		
+
 		float attackBeginFOV = kv.GetFloat("attack_begin_fov", attackSpread);
 		if (attackBeginFOV < 0.0)
 		{
@@ -1559,7 +1559,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackBeginFOV = 360.0;
 		}
-		
+
 		float attackCooldown = kv.GetFloat("attack_cooldown");
 		if (attackCooldown < 0.0)
 		{
@@ -1590,9 +1590,9 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackCooldownApollyon = 0.0;
 		}
-		
+
 		int attackDisappear = view_as<bool>(kv.GetNum("attack_disappear_upon_damaging"));
-		
+
 		int attackRepeat = kv.GetNum("attack_repeat");
 		if (attackRepeat < 0)
 		{
@@ -1610,23 +1610,23 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		}
 
 		bool attackIgnoreAlwaysLooking = view_as<bool>(kv.GetNum("attack_ignore_always_looking"));
-		
+
 		bool attackWeapons = view_as<bool>(kv.GetNum("attack_weaponsenable", 0));
-		
+
 		int attackWeaponInt = kv.GetNum("attack_weapontypeint");
 		if (attackWeaponInt < 1)
 		{
 			attackWeaponInt = 0;
 		}
-		
+
 		bool attackLifeSteal = view_as<bool>(kv.GetNum("attack_lifesteal", 0));
-		
+
 		float attackLifeStealDuration = kv.GetFloat("attack_lifesteal_duration", 0.0);
 		if (attackLifeStealDuration < 0.0)
 		{
 			attackLifeStealDuration = 0.0;
 		}
-		
+
 		float attackProjectileDamage = kv.GetFloat("attack_projectile_damage", 20.0);
 		if (attackProjectileDamage < 0.0)
 		{
@@ -1657,7 +1657,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackProjectileDamageApollyon = 0.0;
 		}
-		
+
 		float attackProjectileSpeed = kv.GetFloat("attack_projectile_speed", 1100.0);
 		if (attackProjectileSpeed < 0.0)
 		{
@@ -1688,7 +1688,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackProjectileSpeedApollyon = 0.0;
 		}
-		
+
 		float attackProjectileRadius = kv.GetFloat("attack_projectile_radius", 128.0);
 		if (attackProjectileRadius < 0.0)
 		{
@@ -1726,9 +1726,9 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		float attackProjectileDeviationInsane = kv.GetFloat("attack_projectile_deviation_insane", attackProjectileDeviationHard);
 		float attackProjectileDeviationNightmare = kv.GetFloat("attack_projectile_deviation_nightmare", attackProjectileDeviationInsane);
 		float attackProjectileDeviationApollyon = kv.GetFloat("attack_projectile_deviation_apollyon", attackProjectileDeviationNightmare);
-		
+
 		bool attackCritProjectiles = view_as<bool>(kv.GetNum("attack_projectile_crits", 0));
-		
+
 		float attackProjectileIceSlowdownPercent = kv.GetFloat("attack_projectile_iceslow_percent", 0.55);
 		if (attackProjectileIceSlowdownPercent < 0.0)
 		{
@@ -1759,7 +1759,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackProjectileIceSlowdownPercentApollyon = 0.0;
 		}
-		
+
 		float attackProjectileIceSlowdownDuration = kv.GetFloat("attack_projectile_iceslow_duration", 2.0);
 		if (attackProjectileIceSlowdownDuration < 0.0)
 		{
@@ -1823,7 +1823,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		}
 
 		int attackProjectileType = kv.GetNum("attack_projectiletype");
-		
+
 		int attackBulletCount = kv.GetNum("attack_bullet_count", 4);
 		if (attackBulletCount < 1)
 		{
@@ -1854,7 +1854,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackBulletCountApollyon = 1;
 		}
-		
+
 		float attackBulletDamage = kv.GetFloat("attack_bullet_damage", 8.0);
 		if (attackBulletDamage < 0.0)
 		{
@@ -1885,7 +1885,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackBulletDamageApollyon = 0.0;
 		}
-		
+
 		float attackBulletSpread = kv.GetFloat("attack_bullet_spread", 0.1);
 		if (attackBulletSpread < 0.0)
 		{
@@ -1916,7 +1916,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackBulletSpreadApollyon = 0.0;
 		}
-		
+
 		float attackLaserDamage = kv.GetFloat("attack_laser_damage", 25.0);
 		if (attackLaserDamage < 0.0)
 		{
@@ -1947,7 +1947,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		{
 			attackLaserDamageApollyon = 0.0;
 		}
-		
+
 		float attackLaserSize = kv.GetFloat("attack_laser_size", 12.0);
 		if (attackLaserSize < 0.0)
 		{
@@ -1957,15 +1957,15 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		int attackLaserColorR = kv.GetNum("attack_laser_color_r", 255);
 		int attackLaserColorG = kv.GetNum("attack_laser_color_g", 255);
 		int attackLaserColorB = kv.GetNum("attack_laser_color_b", 255);
-		
+
 		bool attackLaserAttachment = view_as<bool>(kv.GetNum("attack_laser_attachment", 0));
-		
+
 		float attackLaserDuration = kv.GetFloat("attack_laser_duration", attackDuration);
 
 		float attackLaserNoise = kv.GetFloat("attack_laser_noise", 1.0);
-		
+
 		bool attackPullIn = view_as<bool>(kv.GetNum("attack_pull_player_in", 0));
-		
+
 		bool attackWhileRunning = view_as<bool>(kv.GetNum("attack_while_running", 0));
 
 		float attackRunSpeed = kv.GetFloat("attack_run_speed");
@@ -1992,7 +1992,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		float attackBlockOnHealth = kv.GetFloat("attack_block_on_health", -1.0);
 
 		int attackIndex = attacks.Push(-1);
-		
+
 		attacks.Set(attackIndex, attackType, ChaserProfileAttackData_Type);
 		attacks.Set(attackIndex, attackProps, ChaserProfileAttackData_CanUseAgainstProps);
 		attacks.Set(attackIndex, attackRange, ChaserProfileAttackData_Range);
@@ -2106,7 +2106,7 @@ public int ParseChaserProfileAttacks(KeyValues kv,int uniqueProfileIndex)
 		attacks.Set(attackIndex, attackRunSpeedHard, ChaserProfileAttackData_RunSpeedHard);
 		attacks.Set(attackIndex, attackRunSpeedInsane, ChaserProfileAttackData_RunSpeedInsane);
 		attacks.Set(attackIndex, attackRunSpeedNightmare, ChaserProfileAttackData_RunSpeedNightmare);
-		attacks.Set(attackIndex, attackRunSpeedApollyon, ChaserProfileAttackData_RunSpeedApollyon);	
+		attacks.Set(attackIndex, attackRunSpeedApollyon, ChaserProfileAttackData_RunSpeedApollyon);
 		attacks.Set(attackIndex, attackRunDuration, ChaserProfileAttackData_RunDuration);
 		attacks.Set(attackIndex, attackRunDelay, ChaserProfileAttackData_RunDelay);
 		attacks.Set(attackIndex, attackUseOnDifficulty, ChaserProfileAttackData_UseOnDifficulty);
@@ -2650,7 +2650,7 @@ stock bool GetProfileAnimation(int bossIndex, const char[] profile, int animatio
 			}
 		}
 	}
-	
+
 	if (g_Config.JumpToKey("animations"))
 	{
 		if (g_Config.JumpToKey(animationSectionName))
@@ -2766,7 +2766,7 @@ stock bool GetProfileBlendAnimationSpeed(const char[] profile, int animationSect
 			strcopy(keyAnimationPlayBackRate, sizeof(keyAnimationPlayBackRate), "blend_animation_deathcam_playbackrate");
 		}
 	}
-	
+
 	if (g_Config.JumpToKey("animations"))
 	{
 		if (g_Config.JumpToKey(animationSectionName))

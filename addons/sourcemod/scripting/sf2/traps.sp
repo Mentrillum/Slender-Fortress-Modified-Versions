@@ -53,7 +53,7 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 
 				SetEntProp(trapEntity, Prop_Send, "m_usSolidFlags", FSOLID_TRIGGER_TOUCH_DEBRIS|FSOLID_TRIGGER|FSOLID_NOT_SOLID|FSOLID_CUSTOMBOXTEST);
 				SetEntProp(trapEntity, Prop_Data, "m_nSolidType", SOLID_BBOX);
-				SetEntProp(trapEntity, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER); // COLLISION_GROUP_DEBRIS 
+				SetEntProp(trapEntity, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER); // COLLISION_GROUP_DEBRIS
 
 				float mins[3], maxs[3];
 				mins[0] = -25.0;
@@ -87,12 +87,12 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 					SetVariantString(g_SlenderTrapAnimIdle[bossIndex]);
 					AcceptEntityInput(trapEntity, "SetAnimation");
 				}
-				
+
 				g_TrapEntityCount++;
-				
+
 				g_TrapDespawnTimer[trapEntity] = GetGameTime() + GetRandomFloat(20.0, 40.0);
 				g_TrapState[trapEntity] = 0;
-				
+
 				EmitSoundToAll(g_SlenderTrapDeploySound[bossIndex], trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 
 				SDKHook(trapEntity, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
@@ -137,7 +137,7 @@ Action Timer_TrapThink(Handle timer, any entref)
 			{
 				continue;
 			}
-			
+
 			float entPos[3], otherPos[3];
 			GetEntPropVector(i, Prop_Data, "m_vecAbsOrigin", otherPos);
 			GetEntPropVector(trapEntity, Prop_Data, "m_vecAbsOrigin", entPos);
@@ -282,7 +282,7 @@ public Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,
 			}
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 

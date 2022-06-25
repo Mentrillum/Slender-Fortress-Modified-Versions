@@ -85,7 +85,7 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 	}
 }
 
-static void Initialize() 
+static void Initialize()
 {
 	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
 	g_EntityFactory.DeriveFromFactory(SF2BossSpawnEntity.GetBaseFactory());

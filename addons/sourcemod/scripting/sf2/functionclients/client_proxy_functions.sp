@@ -18,32 +18,32 @@ void ClientResetProxy(int client, bool resetFull=true)
 	{
 		NPCGetProfile(oldMaster, oldProfileName, sizeof(oldProfileName));
 	}
-	
+
 	bool oldProxy = g_PlayerProxy[client];
-	if (resetFull) 
+	if (resetFull)
 	{
 		g_PlayerProxy[client] = false;
 		g_PlayerProxyMaster[client] = -1;
 	}
-	
+
 	g_PlayerProxyControl[client] = 0;
 	g_PlayerProxyControlTimer[client] = null;
 	g_PlayerProxyControlRate[client] = 0.0;
 	g_PlayerProxyVoiceTimer[client] = null;
-	
+
 	if (IsClientInGame(client))
 	{
 		if (oldProxy)
 		{
 			ClientStartProxyAvailableTimer(client);
-		
+
 			if (resetFull)
 			{
 				ClientDisableConstantGlow(client);
 				SetVariantString("");
 				AcceptEntityInput(client, "SetCustomModel");
 			}
-			
+
 			if (oldProfileName[0] != '\0')
 			{
 				ClientStopAllSlenderSounds(client, oldProfileName, "sound_proxy_spawn", g_SlenderProxySpawnChannel[oldMaster]);
@@ -52,7 +52,7 @@ void ClientResetProxy(int client, bool resetFull=true)
 			}
 		}
 	}
-	
+
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
@@ -73,7 +73,7 @@ void ClientStartProxyAvailableTimer(int client)
 	{
 		cooldown = 0.0;
 	}
-	
+
 	g_PlayerProxyAvailableTimer[client] = CreateTimer(cooldown, Timer_ClientProxyAvailable, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -97,7 +97,7 @@ void ClientStartProxyForce(int client, int slenderID, const float pos[3], int sp
 	g_PlayerProxyAvailableInForce[client] = true;
 	g_PlayerProxyAvailableTimer[client] = CreateTimer(1.0, Timer_ClientForceProxy, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_PlayerProxyAvailableTimer[client], true);
-	
+
 #if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
@@ -120,7 +120,7 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerProxyAvailableTimer[client])
 	{
 		return Plugin_Stop;
@@ -134,10 +134,10 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 			int difficulty = GetLocalGlobalDifficulty(bossIndex);
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(bossIndex, profile, sizeof(profile));
-		
+
 			int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
 			int numProxies = 0;
-			
+
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i) || !g_PlayerEliminated[i])
@@ -152,25 +152,25 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 				{
 					continue;
 				}
-				
+
 				numProxies++;
 			}
-			
+
 			if (numProxies < maxProxies)
 			{
 				if (g_PlayerProxyAvailableCount[client] > 0)
 				{
 					g_PlayerProxyAvailableCount[client]--;
-					
-					SetHudTextParams(-1.0, 0.25, 
+
+					SetHudTextParams(-1.0, 0.25,
 						1.0,
 						255, 255, 255, 255,
 						_,
 						_,
 						0.25, 1.25);
-					
+
 					ShowSyncHudText(client, g_HudSync, "%T", "SF2 Proxy Force Message", client, g_PlayerProxyAvailableCount[client]);
-					
+
 					return Plugin_Continue;
 				}
 				else
@@ -184,7 +184,7 @@ public Action Timer_ClientForceProxy(Handle timer, any userid)
 			}
 		}
 	}
-	
+
 	ClientStopProxyForce(client);
 	return Plugin_Stop;
 }
@@ -198,12 +198,12 @@ void DisplayProxyAskMenu(int client, int askMaster, const float pos[3], int spaw
 	char buffer[512];
 	Handle menu = CreateMenu(Menu_ProxyAsk);
 	SetMenuTitle(menu, "%T\n \n%T\n \n", "SF2 Proxy Ask Menu Title", client, "SF2 Proxy Ask Menu Description", client);
-	
+
 	FormatEx(buffer, sizeof(buffer), "%T", "Yes", client);
 	AddMenuItem(menu, "1", buffer);
 	FormatEx(buffer, sizeof(buffer), "%T", "No", client);
 	AddMenuItem(menu, "0", buffer);
-	
+
 	g_PlayerProxyAskMaster[client] = askMaster;
 	for (int i = 0; i < 3; i++)
 	{
@@ -232,10 +232,10 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 					int difficulty = GetLocalGlobalDifficulty(bossIndex);
 					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 					NPCGetProfile(bossIndex, profile, sizeof(profile));
-				
+
 					int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
 					int numProxies;
-				
+
 					for (int client = 1; client <= MaxClients; client++)
 					{
 						if (!IsClientInGame(client) || !g_PlayerEliminated[client])
@@ -250,10 +250,10 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 						{
 							continue;
 						}
-						
+
 						numProxies++;
 					}
-					
+
 					if (numProxies < maxProxies)
 					{
 						if (param2 == 0)
@@ -272,7 +272,7 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 									ignoreVisibility = spawnPoint.IgnoreVisibility;
 								}
 							}
-							else 
+							else
 							{
 								for (int i = 0; i < 3; i++)
 								{
@@ -311,12 +311,12 @@ public Action Timer_ClientProxyAvailable(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerProxyAvailableTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	g_PlayerProxyAvailable[client] = true;
 	g_PlayerProxyAvailableTimer[client] = null;
 
@@ -350,10 +350,10 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	TF2_RemovePlayerDisguise(client);
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	
+
 	ClientSetGhostModeState(client, false);
 
 	ClientStopProxyForce(client);
@@ -373,7 +373,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
-	
+
 	g_PlayerProxy[client] = true;
 	g_PlayerProxyMaster[client] = NPCGetUniqueID(bossIndex);
 	g_PlayerProxyControl[client] = 100;
@@ -381,10 +381,10 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	g_PlayerProxyControlTimer[client] = CreateTimer(g_PlayerProxyControlRate[client], Timer_ClientProxyControl, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	g_PlayerProxyAvailable[client] = false;
 	g_PlayerProxyAvailableTimer[client] = null;
-	
+
 	char allowedClasses[512];
 	GetProfileString(profile, "proxies_classes", allowedClasses, sizeof(allowedClasses));
-	
+
 	char className[64];
 	TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
 	if (allowedClasses[0] != '\0' && className[0] != '\0' && StrContains(allowedClasses, className, false) == -1)
@@ -395,17 +395,17 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		if (classCount)
 		{
 			TF2_SetPlayerClass(client, TF2_GetClass(allowedClassesList[0]), _, false);
-			
+
 			int maxHealth = GetEntProp(client, Prop_Send, "m_iHealth");
 			TF2_RegeneratePlayer(client);
 			SetEntProp(client, Prop_Data, "m_iHealth", maxHealth);
 			SetEntProp(client, Prop_Send, "m_iHealth", maxHealth);
 		}
 	}
-	
+
 	UTIL_ScreenFade(client, 200, 1, FFADE_IN, 255, 255, 255, 100);
 	EmitSoundToClient(client, "weapons/teleporter_send.wav", _, SNDCHAN_STATIC);
-	
+
 	ClientDisableConstantGlow(client);
 	ClientActivateUltravision(client);
 
@@ -417,9 +417,9 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	{
 		CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
+
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
-	{	
+	{
 		if (NPCGetUniqueID(npcIndex) == -1)
 		{
 			continue;
@@ -476,9 +476,9 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 			SlenderAddGlow(npcIndex,_,purple);
 		}
 	}
-	
+
 	//SDKHook(client, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
-	
+
 	SF2PlayerProxySpawnEntity spawnPoint = SF2PlayerProxySpawnEntity(spawnPointEnt);
 	if (spawnPoint.IsValid())
 	{
@@ -488,7 +488,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		TeleportEntity(client, spawnPos, ang, view_as<float>({ 0.0, 0.0, 0.0 }));
 		spawnPoint.FireOutput("OnSpawn", client);
 	}
-	else 
+	else
 	{
 		TeleportEntity(client, pos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 	}
@@ -519,7 +519,7 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 	}
 
 	int bossIndex = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
-	
+
 	if (g_PlayerProxy[client] && bossIndex != -1)
 	{
 		if (!NPCHasProxyWeapons(bossIndex))
@@ -594,10 +594,10 @@ public void ProxyDeathAnimation(any client)
 		{
 			g_ClientFrame[client]+=1;
 			RequestFrame(ProxyDeathAnimation,client);
-		}	
+		}
 	}
 }
-	
+
 public Action Timer_ClientProxyControl(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
@@ -605,12 +605,12 @@ public Action Timer_ClientProxyControl(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerProxyControlTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	g_PlayerProxyControl[client]--;
 	if (TF2_IsPlayerInCondition(client, TFCond_Taunting))
 	{
@@ -622,7 +622,7 @@ public Action Timer_ClientProxyControl(Handle timer, any userid)
 		SDKHooks_TakeDamage(client, client, client, 9001.0, DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
 		return Plugin_Stop;
 	}
-	
+
 	g_PlayerProxyControlTimer[client] = CreateTimer(g_PlayerProxyControlRate[client], Timer_ClientProxyControl, userid, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Stop;
@@ -639,31 +639,31 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 	SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
 
 	int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
-	
+
 	if (g_PlayerProxy[client] && master != -1)
 	{
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(master, profile, sizeof(profile));
-		
+
 		// Set custom model, if any.
 		char buffer[PLATFORM_MAX_PATH], bufferHard[PLATFORM_MAX_PATH], bufferInsane[PLATFORM_MAX_PATH], bufferNightmare[PLATFORM_MAX_PATH], bufferApollyon[PLATFORM_MAX_PATH];
 		char sectionName[64];
-		
+
 		TF2_RegeneratePlayer(client);
-		
+
 		char className[64];
 		TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
 
 		if (view_as<bool>(g_Config.GetNum("proxy_difficulty_models", 0)))
 		{
 			char sectionNameHard[128], sectionNameInsane[128], sectionNameNightmare[128], sectionNameApollyon[128];
-			
+
 			FormatEx(sectionName, sizeof(sectionName), "mod_proxy_%s", className);
 			FormatEx(sectionNameHard, sizeof(sectionNameHard), "mod_proxy_%s_hard", className);
 			FormatEx(sectionNameInsane, sizeof(sectionNameInsane), "mod_proxy_%s_insane", className);
 			FormatEx(sectionNameNightmare, sizeof(sectionNameNightmare), "mod_proxy_%s_nightmare", className);
 			FormatEx(sectionNameApollyon, sizeof(sectionNameApollyon), "mod_proxy_%s_apollyon", className);
-			
+
 			if ((GetRandomStringFromProfile(profile, sectionName, buffer, sizeof(buffer)) && buffer[0] != '\0') ||
 				(GetRandomStringFromProfile(profile, "mod_proxy_all", buffer, sizeof(buffer)) && buffer[0] != '\0'))
 			{
@@ -671,7 +671,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				AcceptEntityInput(client, "SetCustomModel");
 				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
 				strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
-				
+
 				if ((GetRandomStringFromProfile(profile, sectionNameHard, bufferHard, sizeof(bufferHard)) && bufferHard[0] != '\0') ||
 					(GetRandomStringFromProfile(profile, "mod_proxy_all_hard", bufferHard, sizeof(bufferHard)) && bufferHard[0] != '\0'))
 				{
@@ -682,7 +682,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(bufferHard,sizeof(bufferHard),buffer);
 					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),bufferHard);
 				}
-				
+
 				if ((GetRandomStringFromProfile(profile, sectionNameInsane, bufferInsane, sizeof(bufferInsane)) && bufferInsane[0] != '\0') ||
 					(GetRandomStringFromProfile(profile, "mod_proxy_all_insane", bufferInsane, sizeof(bufferInsane)) && bufferInsane[0] != '\0'))
 				{
@@ -693,7 +693,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(bufferInsane,sizeof(bufferInsane),bufferHard);
 					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),bufferInsane);
 				}
-				
+
 				if ((GetRandomStringFromProfile(profile, sectionNameNightmare, bufferNightmare, sizeof(bufferNightmare)) && bufferNightmare[0] != '\0') ||
 					(GetRandomStringFromProfile(profile, "mod_proxy_all_nightmare", bufferNightmare, sizeof(bufferNightmare)) && bufferNightmare[0] != '\0'))
 				{
@@ -704,7 +704,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(bufferNightmare,sizeof(bufferNightmare),bufferInsane);
 					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),bufferNightmare);
 				}
-				
+
 				if ((GetRandomStringFromProfile(profile, sectionNameApollyon, bufferApollyon, sizeof(bufferApollyon)) && bufferApollyon[0] != '\0') ||
 					(GetRandomStringFromProfile(profile, "mod_proxy_all_apollyon", bufferApollyon, sizeof(bufferApollyon)) && bufferApollyon[0] != '\0'))
 				{
@@ -715,7 +715,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 					strcopy(bufferApollyon,sizeof(bufferApollyon),bufferNightmare);
 					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),bufferApollyon);
 				}
-				
+
 				CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
@@ -769,10 +769,10 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				int flags = g_SlenderProxySpawnFlags[master];
 				float volume = g_SlenderProxySpawnVolume[master];
 				int pitch = g_SlenderProxySpawnPitch[master];
-				
+
 				EmitSoundToAll(buffer, client, channel, level, flags, volume, pitch);
 			}
-			
+
 			bool zombie = view_as<bool>(GetProfileNum(profile, "proxies_zombie", 0));
 			if (zombie)
 			{
@@ -838,8 +838,8 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 				{
 					SetEntProp(client, Prop_Send, "m_nForcedSkin", 5);
 				}
-			}	
-			
+			}
+
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 		}
 	}
@@ -866,7 +866,7 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 	int difficulty = g_DifficultyConVar.IntValue;
-	
+
 	char model[PLATFORM_MAX_PATH];
 	GetEntPropString(client, Prop_Data, "m_ModelName", model, sizeof(model));
 	switch (difficulty)
@@ -938,17 +938,17 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (IsClientInGame(client) && !IsPlayerAlive(client))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!IsValidClient(client))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerPostWeaponsTimer[client])
 	{
 		return Plugin_Stop;
@@ -957,14 +957,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	g_PlayerHasRegenerationItem[client] = false;
 
 #if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 0) 
+	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("START Timer_ClientPostWeapons(%d)", client);
 	}
-	
+
 	int oldWeaponItemIndexes[6] = { -1, ... };
 	int newWeaponItemIndexes[6] = { -1, ... };
-	
+
 	for (int i = 0; i <= 5; i++)
 	{
 		if (IsClientInGame(client) && IsValidClient(client))
@@ -974,22 +974,22 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			{
 				continue;
 			}
-			
+
 			oldWeaponItemIndexes[i] = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 		}
 	}
 #endif
-	
+
 	bool removeWeapons = true;
 	bool keepUtilityItems = false;
 	bool restrictWeapons = true;
 	bool useStock = false;
 	bool removeWearables = false;
 	bool preventAttack = false;
-	
+
 	if (IsRoundEnding())
 	{
-		if (!g_PlayerEliminated[client]) 
+		if (!g_PlayerEliminated[client])
 		{
 			removeWeapons = false;
 			restrictWeapons = false;
@@ -1004,16 +1004,16 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		keepUtilityItems = false;
 		preventAttack = true;
 	}
-	
+
 	// pvp
-	if (IsClientInPvP(client)) 
+	if (IsClientInPvP(client))
 	{
 		removeWeapons = false;
 		restrictWeapons = false;
 		keepUtilityItems = false;
 		preventAttack = false;
 	}
-	
+
 	if (g_PlayerProxy[client])
 	{
 		restrictWeapons = true;
@@ -1022,20 +1022,20 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		removeWearables = true;
 		keepUtilityItems = false;
 	}
-	
-	if (IsRoundInWarmup()) 
+
+	if (IsRoundInWarmup())
 	{
 		removeWeapons = false;
 		restrictWeapons = false;
 		keepUtilityItems = false;
 		preventAttack = false;
 	}
-	
-	if (IsClientInGhostMode(client)) 
+
+	if (IsClientInGhostMode(client))
 	{
 		removeWeapons = true;
 	}
-	
+
 	if (SF_IsRaidMap() && !g_PlayerEliminated[client])
 	{
 		removeWeapons = false;
@@ -1043,7 +1043,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		keepUtilityItems = false;
 		preventAttack = false;
 	}
-	
+
 	if (SF_IsBoxingMap() && !g_PlayerEliminated[client] && !IsRoundEnding())
 	{
 		restrictWeapons = false;
@@ -1061,7 +1061,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			}
 			TF2_RemoveWeaponSlotAndWearables(client, i);
 		}
-		
+
 		int ent = -1;
 		while ((ent = FindEntityByClassname(ent, "tf_weapon_builder")) != -1)
 		{
@@ -1070,7 +1070,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				RemoveEntity(ent);
 			}
 		}
-		
+
 		ent = -1;
 		while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
 		{
@@ -1082,7 +1082,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 	}
-	
+
 	if (keepUtilityItems)
 	{
 		for (int i = 0; i <= 5; i++)
@@ -1093,7 +1093,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			}
 			TF2_RemoveWeaponSlotAndWearables(client, i);
 		}
-		
+
 		int ent = -1;
 		while ((ent = FindEntityByClassname(ent, "tf_weapon_builder")) != -1)
 		{
@@ -1102,7 +1102,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				RemoveEntity(ent);
 			}
 		}
-		
+
 		int weaponEnt = INVALID_ENT_REFERENCE;
 		weaponEnt = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
 
@@ -1124,12 +1124,12 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 	}
-	
+
 	if (removeWearables)
 	{
 		TF2_StripWearables(client);
 	}
-	
+
 	TFClassType playerClass = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(playerClass);
 
@@ -1149,16 +1149,16 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			}
 		}
 	}
-	
+
 	if (restrictWeapons)
 	{
 		int health = GetEntProp(client, Prop_Send, "m_iHealth");
-		
+
 		int ent = -1;
 		while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
 		{
 			int itemIndex = GetEntProp(ent, Prop_Send, "m_iItemDefinitionIndex");
-			
+
 			for (int i = 0; i < sizeof(g_ActionItemIndexes); i++)
 			{
 				if (g_ActionItemIndexes[i] == itemIndex)
@@ -1170,7 +1170,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				}
 			}
 		}
-		
+
 		ent = -1;
 		while ((ent = FindEntityByClassname(ent, "tf_wearable_razorback")) != -1)
 		{
@@ -1179,7 +1179,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				RemoveEntity(ent);
 			}
 		}
-		
+
 		if (g_RestrictedWeaponsConfig != null)
 		{
 			int weaponEnt = INVALID_ENT_REFERENCE;
@@ -1187,7 +1187,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			{
 				Handle itemHandle = null;
 				weaponEnt = GetPlayerWeaponSlot(client, slot);
-				
+
 				if (IsValidEdict(weaponEnt))
 				{
 					if (useStock || IsWeaponRestricted(playerClass, GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex")))
@@ -1328,11 +1328,11 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 								}
 							}
 						}
-						
+
 						if (itemHandle != null)
 						{
 							int newWeapon = TF2Items_GiveNamedItem(client, itemHandle);
-							if (IsValidEntity(newWeapon)) 
+							if (IsValidEntity(newWeapon))
 							{
 								EquipPlayerWeapon(client, newWeapon);
 							}
@@ -1348,7 +1348,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				itemHandle = null;
 			}
 		}
-		
+
 		// Fixes the Pretty Boy's Pocket Pistol glitch.
 		int maxHealth = SDKCall(g_SDKGetMaxHealth, client);
 		if (health > maxHealth)
@@ -1357,7 +1357,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			SetEntProp(client, Prop_Send, "m_iHealth", maxHealth);
 		}
 	}
-	
+
 	// Change stats on some weapons.
 	if (!g_PlayerEliminated[client] || g_PlayerProxy[client])
 	{
@@ -1370,14 +1370,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			{
 				continue;
 			}
-			
+
 			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 			switch (itemDef)
 			{
 				case 214: // Powerjack
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 12.0 ; 412 ; 1.2");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1407,7 +1407,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 304: // Amputator
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					if (!SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
 					{
 						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
@@ -1424,7 +1424,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 239: //GRU
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1438,7 +1438,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 1100: //Bread Bite
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1448,7 +1448,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 426: //Eviction Notice
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1462,7 +1462,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 775: //The Escape Plan (Its like, real buggy on wearer)
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_shovel", 775, 0, 0, "414 ; 1 ; 734 ; 0.1");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1472,7 +1472,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 452: //Three Rune Blade
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_bat", 452, 0, 0, "");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1482,7 +1482,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 325: //Boston Basher
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_bat", 325, 0, 0, "");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1492,7 +1492,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 450: //Atomizer
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_bat", 450, 0, 0, "");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1502,7 +1502,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 225: //Your Eternal Reward
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_knife", 225, 0, 0, "");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1512,7 +1512,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 649: //Spy-cicle
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_knife", 649, 0, 0, "");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1522,7 +1522,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 				case 574: //Spy-cicle
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_knife", 574, 0, 0, "");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1533,7 +1533,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 		delete weaponHandle;
 	}
-	
+
 	if (preventAttack)
 	{
 		int weaponEnt = INVALID_ENT_REFERENCE;
@@ -1586,14 +1586,14 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			{
 				continue;
 			}
-			
+
 			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 			switch (itemDef)
 			{
 				case 589: // Eureka Effect
 				{
 					TF2_RemoveWeaponSlot(client, slot);
-					
+
 					weaponHandle = PrepareItemHandle("tf_weapon_wrench", 589, 0, 0, "93 ; 0.5 ; 732 ; 0.5");
 					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 					delete weaponHandle;
@@ -1606,7 +1606,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 	//Force them to take their melee wep, it prevents the civilian bug.
 	ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-	
+
 	// Remove all hats.
 	if (IsClientInGhostMode(client))
 	{
@@ -1627,7 +1627,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			}
 		}
 	}
-	
+
 	float healthFromPack = 1.0;
 	if (!IsClassConfigsValid())
 	{
@@ -1658,12 +1658,12 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			}
 		}
 	}
-	
+
 	TF2Attrib_SetByDefIndex(client, 109, healthFromPack);
 
 #if defined DEBUG
 	int weaponEnt = INVALID_ENT_REFERENCE;
-	
+
 	for (int i = 0; i <= 5; i++)
 	{
 		weaponEnt = GetPlayerWeaponSlot(client, i);
@@ -1671,17 +1671,17 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 		{
 			continue;
 		}
-		
+
 		newWeaponItemIndexes[i] = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 	}
 
-	if (g_DebugDetailConVar.IntValue > 0) 
+	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		for (int i = 0; i <= 5; i++)
 		{
 			DebugMessage("-> slot %d: %d (old: %d)", i, newWeaponItemIndexes[i], oldWeaponItemIndexes[i]);
 		}
-	
+
 		DebugMessage("END Timer_ClientPostWeapons(%d) -> remove = %d, restrict = %d", client, removeWeapons, restrictWeapons);
 	}
 #endif
@@ -1694,7 +1694,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDef
 	{
 		return Plugin_Continue;
 	}
-	
+
 	/*if (itemDefinitionIndex == 649)
 	{
 		RequestFrame(Frame_ReplaceSpyCicle, client);
@@ -1705,7 +1705,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDef
 		case 642:
 		{
 			Handle itemOverride = PrepareItemHandle("tf_wearable", 642, 0, 0, "376 ; 1.0 ; 377 ; 0.2 ; 57 ; 2 ; 412 ; 1.10");
-			
+
 			if (itemOverride != null)
 			{
 				itemHandle = itemOverride;
@@ -1716,7 +1716,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDef
 			itemOverride = null;
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -1797,12 +1797,12 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 	{
 		return false;
 	}
-	
+
 	bool returnBool = false;
-	
+
 	char itemDef[32];
 	FormatEx(itemDef, sizeof(itemDef), "%d", itemDefInt);
-	
+
 	g_RestrictedWeaponsConfig.Rewind();
 	bool proxyBoss = false;
 	for (int i = 0; i < MAX_BOSSES; i++)
@@ -1835,10 +1835,10 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 			}
 		}
 	}
-	
+
 	bool bFoundSection = false;
 	g_RestrictedWeaponsConfig.Rewind();
-	
+
 	switch (class)
 	{
 		case TFClass_Scout:
@@ -1857,10 +1857,10 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 		{
 			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("demoman");
 		}
-		case TFClass_Heavy: 
+		case TFClass_Heavy:
 		{
 			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("heavy");
-		
+
 			if (!bFoundSection)
 			{
 				g_RestrictedWeaponsConfig.Rewind();
@@ -1884,7 +1884,7 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("engineer");
 		}
 	}
-	
+
 	if (bFoundSection)
 	{
 		//returnBool = view_as<bool>(g_RestrictedWeaponsConfig.GetNum(itemDef, returnBool));
@@ -1901,6 +1901,6 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 			}
 		}
 	}
-	
+
 	return returnBool;
 }

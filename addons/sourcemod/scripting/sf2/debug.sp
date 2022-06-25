@@ -5,7 +5,6 @@
 
 #include <profiler>
 
-
 #define DEBUG_BOSS_TELEPORTATION (1 << 0)
 #define DEBUG_BOSS_CHASE (1 << 1)
 #define DEBUG_PLAYER_STRESS (1 << 2)
@@ -31,7 +30,7 @@ ConVar g_DebugDetailConVar = null;
 void InitializeDebug()
 {
 	g_DebugDetailConVar = CreateConVar("sf2_debug_detail", "0", "0 = off, 1 = debug only large, expensive functions, 2 = debug more events, 3 = debug client functions");
-	
+
 	RegAdminCmd("sm_sf2_debug_boss_teleport", Command_DebugBossTeleport, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_boss_chase", Command_DebugBossChase, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_boss_nextbot", Command_DebugNextbot, ADMFLAG_CHEATS);
@@ -52,12 +51,12 @@ void InitializeDebugLogging()
 {
 	char dateSuffix[256];
 	FormatTime(dateSuffix, sizeof(dateSuffix), "sf2-debug-%Y-%m-%d.log", GetTime());
-	
+
 	BuildPath(Path_SM, g_DebugLogFilePath, sizeof(g_DebugLogFilePath), "logs/%s", dateSuffix);
-	
+
 	char map[64];
 	GetCurrentMap(map, sizeof(map));
-	
+
 	DebugMessage("-------- Mapchange to %s -------", map);
 }
 
@@ -79,7 +78,7 @@ stock void SendDebugMessageToPlayer(int client,int debugFlags,int type, const ch
 
 	char msg[1024];
 	VFormat(msg, sizeof(msg), message, 5);
-	
+
 	if (g_PlayerDebugFlags[client] & debugFlags)
 	{
 		switch (type)
@@ -107,11 +106,11 @@ stock void SendDebugMessageToPlayers(int debugFlags,int type, const char[] messa
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i) || IsFakeClient(i)) 
+		if (!IsClientInGame(i) || IsFakeClient(i))
 		{
 			continue;
 		}
-		
+
 		if (g_PlayerDebugFlags[i] & debugFlags)
 		{
 			switch (type)
@@ -144,7 +143,7 @@ stock void SendDebugMessageToPlayersSpecialRound(const char[] message, any ...)
 		{
 			continue;
 		}
-		
+
 		PrintCenterText(i, msg);
 	}
 }
@@ -155,7 +154,7 @@ public Action Command_DebugBossTeleport(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_TELEPORTATION);
 	if (!inMode)
 	{
@@ -167,7 +166,7 @@ public Action Command_DebugBossTeleport(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_TELEPORTATION;
 		PrintToChat(client, "Disabled debugging boss teleportation.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -177,7 +176,7 @@ public Action Command_DebugBossChase(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_CHASE);
 	if (!inMode)
 	{
@@ -189,7 +188,7 @@ public Action Command_DebugBossChase(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_CHASE;
 		PrintToChat(client, "Disabled debugging boss chasing.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -199,7 +198,7 @@ public Action Command_DebugBossIdle(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_IDLE);
 	if (!inMode)
 	{
@@ -211,7 +210,7 @@ public Action Command_DebugBossIdle(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_IDLE;
 		PrintToChat(client, "Disabled debugging boss idling.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -221,7 +220,7 @@ public Action Command_DebugBossAnimation(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_ANIMATION);
 	if (!inMode)
 	{
@@ -233,7 +232,7 @@ public Action Command_DebugBossAnimation(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_ANIMATION;
 		PrintToChat(client, "Disabled debugging boss animation.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -243,7 +242,7 @@ public Action Command_DebugNextbot(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_NEXTBOT);
 	if (!inMode)
 	{
@@ -255,7 +254,7 @@ public Action Command_DebugNextbot(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_NEXTBOT;
 		PrintToChat(client, "Disabled debugging nextbot.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -265,7 +264,7 @@ public Action Command_DebugPlayerStress(int client, int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_PLAYER_STRESS);
 	if (!inMode)
 	{
@@ -277,7 +276,7 @@ public Action Command_DebugPlayerStress(int client, int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_PLAYER_STRESS;
 		PrintToChat(client, "Disabled debugging player stress.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -287,7 +286,7 @@ public Action Command_DebugBossProxies(int client, int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_PROXIES);
 	if (!inMode)
 	{
@@ -299,7 +298,7 @@ public Action Command_DebugBossProxies(int client, int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_PROXIES;
 		PrintToChat(client, "Disabled debugging boss proxies.");
 	}
-	
+
 	return Plugin_Handled;
 }
 public Action Command_DebugHitbox(int client, int args)
@@ -308,7 +307,7 @@ public Action Command_DebugHitbox(int client, int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_HITBOX);
 	if (!inMode)
 	{
@@ -320,7 +319,7 @@ public Action Command_DebugHitbox(int client, int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_HITBOX;
 		PrintToChat(client, "Disabled debugging boss's hitbox.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -330,7 +329,7 @@ public Action Command_DebugStun(int client, int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_STUN);
 	if (!inMode)
 	{
@@ -342,7 +341,7 @@ public Action Command_DebugStun(int client, int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_STUN;
 		PrintToChat(client, "Disabled debugging boss's stun.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -352,7 +351,7 @@ public Action Command_DebugGhostMode(int client, int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_GHOSTMODE);
 	if (!inMode)
 	{
@@ -364,7 +363,7 @@ public Action Command_DebugGhostMode(int client, int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_GHOSTMODE;
 		PrintToChat(client, "Disabled debugging ghost mode.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -374,7 +373,7 @@ public Action Command_DebugEntity(int client, int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_ENTITIES);
 	if (!inMode)
 	{
@@ -386,7 +385,7 @@ public Action Command_DebugEntity(int client, int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_ENTITIES;
 		PrintToChat(client, "Disabled debugging entities.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -396,7 +395,7 @@ public Action Command_DebugEvent(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_EVENT);
 	if (!inMode)
 	{
@@ -408,7 +407,7 @@ public Action Command_DebugEvent(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_EVENT;
 		PrintToChat(client, "Disabled debugging events.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -418,7 +417,7 @@ public Action Command_DebugKillIcons(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_KILLICONS);
 	if (!inMode)
 	{
@@ -430,7 +429,7 @@ public Action Command_DebugKillIcons(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_KILLICONS;
 		PrintToChat(client, "Disabled debugging kill icons.");
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -440,7 +439,7 @@ public Action Command_DebugArrayLists(int client,int args)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_ARRAYLIST);
 	if (!inMode)
 	{
@@ -452,6 +451,6 @@ public Action Command_DebugArrayLists(int client,int args)
 		g_PlayerDebugFlags[client] &= ~DEBUG_ARRAYLIST;
 		PrintToChat(client, "Disabled debugging array lists.");
 	}
-	
+
 	return Plugin_Handled;
 }

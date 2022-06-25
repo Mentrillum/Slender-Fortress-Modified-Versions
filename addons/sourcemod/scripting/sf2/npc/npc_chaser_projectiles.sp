@@ -55,15 +55,15 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 	}
 
 	CBaseCombatCharacter combatChar = CBaseCombatCharacter(slender);
-	
+
 	int projectileType = NPCChaserGetProjectileType(bossIndex);
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	int projectileEnt;
 	float shootDist = GetVectorSquareMagnitude(g_SlenderGoalPos[bossIndex], myPos);
-	
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	
+
 	char projectileName[45];
 	float clientPos[3];
 	float slenderPosition[3];
@@ -109,10 +109,10 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 	float effectPos[3], tempEffectPos[3];
 	float effectAng[3] = {0.0, 0.0, 0.0};
-	
+
 	int randomPosMin = GetProfileNum(profile, "projectile_pos_number_min", 1);
 	int randomPosMax = GetProfileNum(profile, "projectile_pos_number_max", 1);
-	
+
 	if (randomPosMin == 1 && randomPosMax == 1)
 	{
 		g_Config.GetVector("projectile_pos_offset", tempEffectPos);
@@ -135,7 +135,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 	float min = NPCChaserGetProjectileCooldownMin(bossIndex, difficulty);
 	float max = NPCChaserGetProjectileCooldownMax(bossIndex, difficulty);
-	
+
 	for (int i = 0; i < NPCChaserGetProjectileCount(bossIndex, difficulty); i++)
 	{
 		if (NPCChaserGetProjectileCount(bossIndex, difficulty) != 1)
@@ -163,7 +163,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 		switch (projectileType)
 		{
-			case SF2BossProjectileType_Fireball:		
+			case SF2BossProjectileType_Fireball:
 			{
 				projectileName = "tf_projectile_rocket";
 				projectileEnt = CreateEntityByName(projectileName);
@@ -367,7 +367,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 						velocity[0] = bufferProj[0]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 						velocity[1] = bufferProj[1]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 						velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
-						
+
 						TeleportEntity(projectileEnt, effectPos, shootAng, NULL_VECTOR);
 						DispatchSpawn(projectileEnt);
 						if (NPCChaserHasCriticalRockets(bossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
@@ -613,7 +613,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 
 	float effectPos[3], tempEffectPos[3];
 	float effectAng[3] = {0.0, 0.0, 0.0};
-	
+
 	GetProfileAttackVector(slenderProfile, "attack_projectile_offset", tempEffectPos, view_as<float>({0.0, 0.0, 0.0}), attackIndex+1);
 	VectorTransform(tempEffectPos, basePos, baseAng, tempEffectPos);
 	AddVectors(effectAng, baseAng, effectAng);
@@ -650,7 +650,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 
 		switch (projectileType)
 		{
-			case 0:		
+			case 0:
 			{
 				projectileName = "tf_projectile_rocket";
 				projectileEnt = CreateEntityByName(projectileName);
@@ -681,10 +681,10 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					DispatchSpawn(projectileEnt);
 					ProjectileSetFlags(projectileEnt, PROJ_FIREBALL_ATTACK);
 					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
-					
+
 					char path[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-					
+
 					if (path[0] != '\0')
 					{
 						char buffer[512];
@@ -700,7 +700,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 						strcopy(buffer, sizeof(buffer), sectionName);
 						StrCat(buffer, sizeof(buffer), "_pitch");
 						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-						
+
 						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
 				}
@@ -741,7 +741,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 
 					char path[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-					
+
 					if (path[0] != '\0' && i == 0)
 					{
 						char buffer[512];
@@ -757,7 +757,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 						strcopy(buffer, sizeof(buffer), sectionName);
 						StrCat(buffer, sizeof(buffer), "_pitch");
 						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-						
+
 						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
 				}
@@ -797,7 +797,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 
 					char path[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-					
+
 					if (path[0] != '\0' && i == 0)
 					{
 						char buffer[512];
@@ -813,7 +813,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 						strcopy(buffer, sizeof(buffer), sectionName);
 						StrCat(buffer, sizeof(buffer), "_pitch");
 						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-						
+
 						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
 				}
@@ -831,7 +831,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					velocity[0] = bufferProj[0]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 					velocity[1] = bufferProj[1]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 					velocity[2] = bufferProj[2]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
-						
+
 					TeleportEntity(projectileEnt, effectPos, shootAng, NULL_VECTOR);
 					DispatchSpawn(projectileEnt);
 					if (NPCChaserGetAttackProjectileCrits(bossIndex, attackIndex))
@@ -851,7 +851,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 
 					char path[PLATFORM_MAX_PATH];
 					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-					
+
 					if (path[0] != '\0' && i == 0)
 					{
 						char buffer[512];
@@ -867,7 +867,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 						strcopy(buffer, sizeof(buffer), sectionName);
 						StrCat(buffer, sizeof(buffer), "_pitch");
 						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-						
+
 						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
 					}
 				}
@@ -943,11 +943,11 @@ public Action Hook_ProjectileAttackTouch(int entity, int other)
 						float targetPos[3];
 						GetClientEyePosition(client, targetPos);
 
-						Handle trace = TR_TraceRayFilterEx(entPos, 
-							targetPos, 
-							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
-							RayType_EndPoint, 
-							TraceRayBossVisibility, 
+						Handle trace = TR_TraceRayFilterEx(entPos,
+							targetPos,
+							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+							RayType_EndPoint,
+							TraceRayBossVisibility,
 							entity);
 
 						bool isVisible = !TR_DidHit(trace);
@@ -955,7 +955,7 @@ public Action Hook_ProjectileAttackTouch(int entity, int other)
 						delete trace;
 
 						if (!isVisible && traceHitEntity == client) isVisible = true;
-	
+
 						if (isVisible)
 						{
 							float distance = GetVectorSquareMagnitude(entPos, targetPos);
@@ -984,7 +984,7 @@ public Action Hook_ProjectileAttackTouch(int entity, int other)
 			}
 		}
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -1073,11 +1073,11 @@ public Action Hook_ProjectileTouch(int entity, int other)
 						float targetPos[3];
 						GetClientEyePosition(client, targetPos);
 
-						Handle trace = TR_TraceRayFilterEx(entPos, 
-							targetPos, 
-							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, 
-							RayType_EndPoint, 
-							TraceRayBossVisibility, 
+						Handle trace = TR_TraceRayFilterEx(entPos,
+							targetPos,
+							CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE,
+							RayType_EndPoint,
+							TraceRayBossVisibility,
 							entity);
 
 						bool isVisible = !TR_DidHit(trace);
@@ -1085,7 +1085,7 @@ public Action Hook_ProjectileTouch(int entity, int other)
 						delete trace;
 
 						if (!isVisible && traceHitEntity == client) isVisible = true;
-	
+
 						if (isVisible)
 						{
 							float distance = GetVectorSquareMagnitude(entPos, targetPos);
@@ -1150,7 +1150,7 @@ public Action Hook_ProjectileTouch(int entity, int other)
 			}
 		}
 	}
-	
+
 	return Plugin_Handled;
 }
 

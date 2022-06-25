@@ -63,7 +63,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	
+
 	float myPos[3], myEyeAng[3];
 	GetEntPropVector(iBoss, Prop_Data, "m_vecAbsOrigin", myPos);
 	GetEntPropVector(iBoss, Prop_Data, "m_angAbsRotation", myEyeAng);
@@ -95,14 +95,14 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 		color[0] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 0) * 127.5 + 127.5);
 		color[1] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 2) * 127.5 + 127.5);
 		color[2] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 4) * 127.5 + 127.5);
-		color[3] = 255; 
+		color[3] = 255;
 		if (IsValidEntity(glow))
 		{
 			SetVariantColor(color);
 			AcceptEntityInput(glow, "SetGlowColor");
 		}
 	}
-	
+
 	// Process angles.
 	bool changeAngle = false;
 	float posToAt[3];
@@ -115,7 +115,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 			GetEntPropVector(target, Prop_Data, "m_vecAbsOrigin", posToAt);
 		}
 	}
-	
+
 	if (changeAngle)
 	{
 		float ang[3];
@@ -170,13 +170,13 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 
 		hullcheckmins[0] -= 20.0;
 		hullcheckmins[1] -= 20.0;
-		
+
 		hullcheckmaxs[0] += 20.0;
 		hullcheckmaxs[1] += 20.0;
-		
+
 		hullcheckmins[2] += loco.GetStepHeight();
 		hullcheckmaxs[2] += 5.0;
-		
+
 		if (!g_NpcVelocityCancel[bossIndex] && IsSpaceOccupiedIgnorePlayersAndEnts(myPos, hullcheckmins, hullcheckmaxs, iBoss))//The boss will start to merge with shits, cancel out velocity.
 		{
 			float origin[3];
@@ -202,8 +202,8 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 				{
 					if (g_LastStuckTime[bossIndex] == 0.0) g_LastStuckTime[bossIndex] = GetGameTime();
 
-					if ((g_LastStuckTime[bossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && 
-					g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT && 
+					if ((g_LastStuckTime[bossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) && !g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] &&
+					g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT &&
 					g_BossPathFollower[bossIndex].NextSegment(g_BossPathFollower[bossIndex].FirstSegment()) != NULL_PATH_SEGMENT)
 					{
 						float movePos[3];
@@ -295,7 +295,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 											while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
 											{
 												spawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
-												if (spawnTeam == TFTeam_Red) 
+												if (spawnTeam == TFTeam_Red)
 												{
 													spawnPoint.Push(ent);
 												}
@@ -341,7 +341,7 @@ public void SlenderStatueBossProcessMovement(int iBoss)
 			}
 		}
 	}
-	
+
 	return;
 }
 
@@ -353,7 +353,7 @@ public void SlenderStatueSetNextThink(int iBoss)
 	}
 
 	CBaseCombatCharacter(iBoss).SetNextThink(GetGameTime() + 0.01);
-	
+
 	return;
 }
 
@@ -364,13 +364,13 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_SlenderEntityThink[bossIndex])
 	{
 		return Plugin_Stop;
@@ -384,12 +384,12 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	INextBot bot = npc.GetBot();
-	
+
 	int difficulty = g_DifficultyConVar.IntValue;
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	
+
 	if (NPCGetType(bossIndex) == SF2BossType_Statue)
 	{
 		float chaseDurationTimeAddMin = g_NpcStatueChaseDurationAddMin[bossIndex][difficulty];
@@ -432,12 +432,12 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 
 			array.Push(i);
 		}
-			
+
 		if (array.Length)
 		{
 			float slenderPos[3];
 			SlenderGetAbsOrigin(bossIndex, slenderPos);
-			
+
 			float tempPos[3];
 			int tempPlayer = -1;
 			float tempDist = SquareFloat(16384.0);
@@ -455,7 +455,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 					TF2_StunPlayer(client, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
 				}
 			}
-					
+
 			bestPlayer = tempPlayer;
 			if (bestPlayer != -1)
 			{
@@ -487,12 +487,12 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 					}
 				}
 				g_BossPathFollower[bossIndex].ComputeToPos(bot, pos);
-					
+
 				float maxRange = g_SlenderTeleportMaxRange[bossIndex][difficulty];
 				float dist = GetVectorSquareMagnitude(slenderPos, pos);
-					
+
 				char buffer[PLATFORM_MAX_PATH];
-					
+
 				if (dist < SquareFloat(maxRange * 0.33))
 				{
 					GetSlenderModel(bossIndex, 2, buffer, sizeof(buffer));
@@ -505,7 +505,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 				{
 					GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
 				}
-					
+
 				// Fallback if error.
 				if (buffer[0] == '\0')
 				{
@@ -529,7 +529,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 						}
 					}
 				}
-					
+
 				if (dist <= SquareFloat(NPCGetInstantKillRadius(bossIndex)))
 				{
 					if (NPCGetFlags(bossIndex) & SFF_FAKE)
@@ -559,7 +559,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 				g_LastPos[bossIndex] = origin;
 			}
 		}
-		
+
 		if (move)
 		{
 			char buffer[PLATFORM_MAX_PATH];
@@ -568,7 +568,7 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 			{
 				EmitSoundToAll(buffer, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 			}
-			
+
 			GetRandomStringFromProfile(profile, "sound_move", buffer, sizeof(buffer));
 			if (buffer[0] != '\0')
 			{
@@ -586,6 +586,6 @@ public Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 		}
 		g_NpcStatueMoving[bossIndex] = move;
 	}
-	
+
 	return Plugin_Continue;
 }

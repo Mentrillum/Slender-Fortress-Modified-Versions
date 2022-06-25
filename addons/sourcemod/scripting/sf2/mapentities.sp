@@ -17,7 +17,7 @@ static PrivateForward g_CustomEntityOnRenevantWaveTriggered;
  */
 methodmap SF2MapEntity < CBaseEntity
 {
-	public SF2MapEntity(int entIndex) 
+	public SF2MapEntity(int entIndex)
 	{
 		return view_as<SF2MapEntity>(EnsureEntRef(entIndex));
 	}
@@ -163,7 +163,7 @@ void SetupCustomMapEntities()
 	SF2TriggerBossDespawnEntity.Initialize();
 
 	// Modified
-	
+
 	// sf2_logic_renevant
 	SF2LogicRenevantEntity.Initialize();
 
@@ -186,7 +186,7 @@ static int FindProceduralTarget(const char[] name, int searchingEntity, int acti
 	{
 		return -1;
 	}
-	
+
 	if ( strcmp( name, "!activator" ) == 0 )
 	{
 		return activator;
@@ -199,7 +199,7 @@ static int FindProceduralTarget(const char[] name, int searchingEntity, int acti
 	{
 		return searchingEntity;
 	}
-	else 
+	else
 	{
 		char class[PLATFORM_MAX_PATH];
 		if (IsValidEntity(searchingEntity))
@@ -217,7 +217,7 @@ static int FindProceduralTarget(const char[] name, int searchingEntity, int acti
 
 		LogSF2Message("%i (%s): Invalid entity search name %s", searchingEntity, class, name);
 	}
-	
+
 	return -1;
 }
 
@@ -228,7 +228,7 @@ int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] name, int sea
 		if (startEnt == -1)
 		{
 			int target = FindProceduralTarget(name, searchingEntity, activator, caller);
-			if (IsValidEntity(target)) 
+			if (IsValidEntity(target))
 			{
 				return target;
 			}
@@ -244,7 +244,7 @@ int SF2MapEntity_FindEntityByTargetname(int startEnt, const char[] name, int sea
 	while ((ent = FindEntityByClassname(ent, "*")) != -1)
 	{
 		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
-		if (strcmp(targetName, name) == 0) 
+		if (strcmp(targetName, name) == 0)
 		{
 			return ent;
 		}
@@ -288,7 +288,7 @@ void SF2MapEntity_OnRenevantWaveTriggered(int wave)
 }
 
 /*
-void SF2MapEntity_InitGameData(GameData hConfig) 
+void SF2MapEntity_InitGameData(GameData hConfig)
 {
 }
 */

@@ -33,17 +33,17 @@ void SlenderSpawnEffects(int bossIndex)
 	{
 		return;
 	}
-	
+
 	int bossID = NPCGetUniqueID(bossIndex);
 	if (bossID == -1)
 	{
 		return;
 	}
-	
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
 	int slenderEnt = NPCGetEntIndex(bossIndex);
-	
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
@@ -159,26 +159,26 @@ void SlenderSpawnEffects(int bossIndex)
 			g_NpcEffectsArray[bossIndex].Push(light);
 		}
 	}
-	
+
 	g_Config.Rewind();
 	if (!g_Config.JumpToKey(profile) || !g_Config.JumpToKey("effects") || !g_Config.GotoFirstSubKey())
 	{
 		return;
 	}
-	
+
 	ArrayList array = new ArrayList(64);
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for array in SlenderSpawnEffects.", array);
 	#endif
 	char sSectionName[64];
-	
+
 	do
 	{
 		g_Config.GetSectionName(sSectionName, sizeof(sSectionName));
 		array.PushString(sSectionName);
 	}
 	while (g_Config.GotoNextKey());
-	
+
 	if (array.Length == 0)
 	{
 		delete array;
@@ -189,26 +189,26 @@ void SlenderSpawnEffects(int bossIndex)
 	}
 
 	float basePos[3], baseAng[3];
-	
+
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 	g_Config.JumpToKey("effects");
-	
+
 	for (int  i = 0, iSize = array.Length; i < iSize; i++)
 	{
 		array.GetString(i, sSectionName, sizeof(sSectionName));
 		g_Config.JumpToKey(sSectionName);
-		
+
 		// Validate effect event. Check to see if it matches with ours.
 		char effectEvent[64];
 		g_Config.GetString("event", effectEvent, sizeof(effectEvent));
-		if (strcmp(effectEvent, "constant", false) == 0 || strcmp(effectEvent, "boss_hitplayer", false) == 0 || strcmp(effectEvent, "boss_seenbyplayer", false) == 0) 
+		if (strcmp(effectEvent, "constant", false) == 0 || strcmp(effectEvent, "boss_hitplayer", false) == 0 || strcmp(effectEvent, "boss_seenbyplayer", false) == 0)
 		{
 			// Validate effect type.
 			char effectTypeString[64];
 			g_Config.GetString("type", effectTypeString, sizeof(effectTypeString));
 			EffectType effectType = GetEffectTypeFromString(effectTypeString);
-			
+
 			if (effectType != EffectType_Invalid)
 			{
 				// Check base position behavior.
@@ -223,7 +223,7 @@ void SlenderSpawnEffects(int bossIndex)
 						g_Config.GoBack();
 						continue;
 					}
-					
+
 					GetEntPropVector(target, Prop_Data, "m_vecAbsOrigin", basePos);
 				}
 				else
@@ -234,10 +234,10 @@ void SlenderSpawnEffects(int bossIndex)
 						g_Config.GoBack();
 						continue;
 					}
-					
+
 					GetEntPropVector(slenderEnt, Prop_Data, "m_vecAbsOrigin", basePos);
 				}
-				
+
 				char baseAngCustom[64];
 				g_Config.GetString("angles_custom", baseAngCustom, sizeof(baseAngCustom));
 				if (strcmp(baseAngCustom, "&CURRENTTARGET&", false) == 0)
@@ -249,7 +249,7 @@ void SlenderSpawnEffects(int bossIndex)
 						g_Config.GoBack();
 						continue;
 					}
-					
+
 					GetEntPropVector(target, Prop_Data, "m_angAbsRotation", baseAng);
 				}
 				else
@@ -260,7 +260,7 @@ void SlenderSpawnEffects(int bossIndex)
 						g_Config.GoBack();
 						continue;
 					}
-					
+
 					GetEntPropVector(slenderEnt, Prop_Data, "m_angAbsRotation", baseAng);
 				}
 
@@ -285,7 +285,7 @@ void SlenderSpawnEffects(int bossIndex)
 				}
 
 				int  entity = -1;
-				
+
 				switch (effectType)
 				{
 					case EffectType_Steam:
@@ -317,7 +317,7 @@ void SlenderSpawnEffects(int bossIndex)
 						entity = CreateEntityByName("env_sprite");
 					}
 				}
-				
+
 				if (entity != -1)
 				{
 					char value[PLATFORM_MAX_PATH];
@@ -331,13 +331,13 @@ void SlenderSpawnEffects(int bossIndex)
 					DispatchKeyValue(entity, "spawnflags", value);
 
 					float effectPos[3], effectAng[3];
-					
+
 					g_Config.GetVector("origin", effectPos);
 					g_Config.GetVector("angles", effectAng);
 					VectorTransform(effectPos, basePos, baseAng, effectPos);
 					AddVectors(effectAng, baseAng, effectAng);
 					TeleportEntity(entity, effectPos, effectAng, NULL_VECTOR);
-					
+
 					switch (effectType)
 					{
 						case EffectType_Steam:
@@ -373,7 +373,7 @@ void SlenderSpawnEffects(int bossIndex)
 							AcceptEntityInput(entity, "cone");
 							DispatchSpawn(entity);
 							ActivateEntity(entity);
-							
+
 							int r, g, b, a;
 							if (view_as<bool>(g_Config.GetNum("difficulty_lights", 0)) || view_as<bool>(g_Config.GetNum("difficulty_rendercolor", 0)))
 							{
@@ -419,7 +419,7 @@ void SlenderSpawnEffects(int bossIndex)
 											}
 										}
 									}
-									case Difficulty_Apollyon: 
+									case Difficulty_Apollyon:
 									{
 										g_Config.GetColor("rendercolor_apollyon", r, g, b, a);
 										if (r == 0 && g == 0 && b == 0 && a == 0)
@@ -508,7 +508,7 @@ void SlenderSpawnEffects(int bossIndex)
 											}
 										}
 									}
-									case Difficulty_Apollyon: 
+									case Difficulty_Apollyon:
 									{
 										g_Config.GetColor("rendercolor_apollyon", r, g, b, a);
 										if (r == 0 && g == 0 && b == 0 && a == 0)
@@ -601,7 +601,7 @@ void SlenderSpawnEffects(int bossIndex)
 											}
 										}
 									}
-									case Difficulty_Apollyon: 
+									case Difficulty_Apollyon:
 									{
 										g_Config.GetColor("rendercolor_apollyon", r, g, b, a);
 										if (r == 0 && g == 0 && b == 0 && a == 0)
@@ -639,7 +639,7 @@ void SlenderSpawnEffects(int bossIndex)
 							DispatchKeyValue(entity, "spotlightlength", value);
 							DispatchSpawn(entity);
 							ActivateEntity(entity);
-							
+
 							int r, g, b, a;
 							if (view_as<bool>(g_Config.GetNum("difficulty_lights", 0)) || view_as<bool>(g_Config.GetNum("difficulty_rendercolor", 0)))
 							{
@@ -685,7 +685,7 @@ void SlenderSpawnEffects(int bossIndex)
 											}
 										}
 									}
-									case Difficulty_Apollyon: 
+									case Difficulty_Apollyon:
 									{
 										g_Config.GetColor("rendercolor_apollyon", r, g, b, a);
 										if (r == 0 && g == 0 && b == 0 && a == 0)
@@ -765,7 +765,7 @@ void SlenderSpawnEffects(int bossIndex)
 											}
 										}
 									}
-									case Difficulty_Apollyon: 
+									case Difficulty_Apollyon:
 									{
 										g_Config.GetColor("rendercolor_apollyon", r, g, b, a);
 										if (r == 0 && g == 0 && b == 0 && a == 0)
@@ -794,13 +794,13 @@ void SlenderSpawnEffects(int bossIndex)
 							SetEntityRenderColor(entity, r, g, b, a);
 						}
 					}
-					
+
 					float lifeTime = g_Config.GetFloat("lifetime");
 					if (lifeTime > 0.0)
 					{
 						CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 					}
-					
+
 					char parentCustom[64];
 					g_Config.GetString("parent_custom", parentCustom, sizeof(parentCustom));
 					if (strcmp(parentCustom, "&CURRENTTARGET&", false) == 0)
@@ -812,7 +812,7 @@ void SlenderSpawnEffects(int bossIndex)
 							g_Config.GoBack();
 							continue;
 						}
-					
+
 						SetVariantString("!activator");
 						AcceptEntityInput(entity, "SetParent", target);
 						if (view_as<bool>(g_Config.GetNum("attach_point", 0)))
@@ -841,7 +841,7 @@ void SlenderSpawnEffects(int bossIndex)
 							g_Config.GoBack();
 							continue;
 						}
-						
+
 						SetVariantString("!activator");
 						AcceptEntityInput(entity, "SetParent", slenderEnt);
 						if (view_as<bool>(g_Config.GetNum("attach_point", 0)))
@@ -862,11 +862,11 @@ void SlenderSpawnEffects(int bossIndex)
 							}
 						}
 					}
-					
+
 					switch (effectType)
 					{
 						case EffectType_Steam,
-							EffectType_DynamicLight: 
+							EffectType_DynamicLight:
 						{
 							AcceptEntityInput(entity, "TurnOn");
 						}
@@ -911,10 +911,10 @@ void SlenderSpawnEffects(int bossIndex)
 				LogError("Could not spawn effect %s for boss %d: invalid type!", sSectionName, bossIndex);
 			}
 		}
-		
+
 		g_Config.GoBack();
 	}
-	
+
 	delete array;
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for array in SlenderSpawnEffects.", array);
@@ -934,7 +934,7 @@ public Action Hook_EffectTransmit(int ent,int other)
 	{
 		return Plugin_Handled;
 	}
-	if (g_EntityEffectEvent[ent] == EffectEvent_PlayerSeesBoss && IsValidClient(other) && bossIndex != -1 && !g_PlayerEliminated[other] && !IsClientInGhostMode(other) && 
+	if (g_EntityEffectEvent[ent] == EffectEvent_PlayerSeesBoss && IsValidClient(other) && bossIndex != -1 && !g_PlayerEliminated[other] && !IsClientInGhostMode(other) &&
 	!DidClientEscape(other) && !PlayerCanSeeSlender(other, bossIndex, true))
 	{
 		return Plugin_Handled;
@@ -1134,13 +1134,13 @@ static Action Timer_DiscoLight(Handle timer, any effect)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int ent = EntRefToEntIndex(effect);
 	if (!IsValidEntity(ent))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
@@ -1152,7 +1152,7 @@ static Action Timer_DiscoLight(Handle timer, any effect)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int rChase = GetRandomInt(75, 250);
 	int gChase = GetRandomInt(75, 250);
 	int bChase = GetRandomInt(75, 250);
@@ -1174,13 +1174,13 @@ static Action Timer_FestiveLight(Handle timer, any effect)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int ent = EntRefToEntIndex(effect);
 	if (!IsValidEntity(ent))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{

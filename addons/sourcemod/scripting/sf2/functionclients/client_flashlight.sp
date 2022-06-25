@@ -12,17 +12,17 @@ static Action Timer_DrainFlashlight(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerFlashlightBatteryTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!IsInfiniteFlashlightEnabled())
 	{
 		ClientSetFlashlightBatteryLife(client, ClientGetFlashlightBatteryLife(client) - 0.01);
 	}
-	
+
 	if (ClientGetFlashlightBatteryLife(client) <= 0.0)
 	{
 		// Break the player's flashlight, but also start recharging.
@@ -35,7 +35,7 @@ static Action Timer_DrainFlashlight(Handle timer, any userid)
 	{
 		ClientHandleFlashlightFlickerState(client);
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -46,29 +46,29 @@ static Action Timer_RechargeFlashlight(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerFlashlightBatteryTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	ClientSetFlashlightBatteryLife(client, ClientGetFlashlightBatteryLife(client) + 0.01);
-	
+
 	if (IsClientFlashlightBroken(client) && ClientGetFlashlightBatteryLife(client) >= SF2_FLASHLIGHT_ENABLEAT)
 	{
 		// Repair the flashlight.
 		g_PlayerFlashlightBroken[client] = false;
 	}
-	
+
 	if (ClientGetFlashlightBatteryLife(client) >= 1.0)
 	{
 		// I am fully charged!
 		ClientSetFlashlightBatteryLife(client, 1.0);
 		g_PlayerFlashlightBatteryTimer[client] = null;
-		
+
 		return Plugin_Stop;
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -96,12 +96,12 @@ void ClientProcessFlashlightAngles(int client)
 	{
 		return;
 	}
-	
+
 	if (IsPlayerAlive(client))
 	{
 		int fl;
 		float eyeAng[3], ang2[3];
-		
+
 		if (IsClientUsingFlashlight(client))
 		{
 			fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
@@ -109,7 +109,7 @@ void ClientProcessFlashlightAngles(int client)
 			{
 				TeleportEntity(fl, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }), NULL_VECTOR);
 			}
-			
+
 			fl = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
 			if (fl && fl != INVALID_ENT_REFERENCE)
 			{
@@ -131,11 +131,11 @@ void ClientHandleFlashlightFlickerState(int client)
 	{
 		return;
 	}
-	
+
 	if (IsClientUsingFlashlight(client))
 	{
 		bool flicker = view_as<bool>(ClientGetFlashlightBatteryLife(client) <= SF2_FLASHLIGHT_FLICKERAT);
-	
+
 		int fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
 		if (fl && fl != INVALID_ENT_REFERENCE)
 		{
@@ -148,15 +148,15 @@ void ClientHandleFlashlightFlickerState(int client)
 				SetEntProp(fl, Prop_Data, "m_LightStyle", 0);
 			}
 		}
-		
+
 		fl = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
 		if (fl && fl != INVALID_ENT_REFERENCE)
 		{
-			if (flicker) 
+			if (flicker)
 			{
 				SetEntityRenderFx(fl, view_as<RenderFx>(13));
 			}
-			else 
+			else
 			{
 				SetEntityRenderFx(fl, view_as<RenderFx>(0));
 			}
@@ -183,18 +183,18 @@ void ClientBreakFlashlight(int client)
 	{
 		return;
 	}
-	
+
 	ClientDeactivateUltravision(client);
-	
+
 	g_PlayerFlashlightBroken[client] = true;
-	
+
 	ClientSetFlashlightBatteryLife(client, 0.0);
 	ClientTurnOffFlashlight(client);
-	
+
 	ClientAddStress(client, 0.2);
-	
+
 	EmitSoundToAll(FLASHLIGHT_BREAKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
-	
+
 	Call_StartForward(g_OnClientBreakFlashlightFwd);
 	Call_PushCell(client);
 	Call_Finish();
@@ -211,13 +211,13 @@ void ClientResetFlashlight(int client)
 		DebugMessage("START ClientResetFlashlight(%d)", client);
 	}
 #endif
-	
+
 	ClientTurnOffFlashlight(client);
 	ClientSetFlashlightBatteryLife(client, 1.0);
 	g_PlayerFlashlightBroken[client] = false;
 	g_PlayerFlashlightBatteryTimer[client] = null;
 	g_PlayerFlashlightNextInputTime[client] = -1.0;
-	
+
 #if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
@@ -232,18 +232,18 @@ static Action Hook_FlashlightSetTransmit(int ent,int other)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	if (EntRefToEntIndex(g_PlayerFlashlightEnt[other]) != ent)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	// We've already checked for flashlight ownership in the last statement. So we can do just this.
 	if (g_PlayerPreferences[other].PlayerPreference_ProjectedFlashlight)
 	{
 		return Plugin_Handled;
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -297,12 +297,12 @@ Action Hook_FlashlightBeamSetTransmit(int ent,int other)
 	}
 
 	int owner = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-	
+
 	if (owner == -1)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	int client = -1;
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -310,19 +310,19 @@ Action Hook_FlashlightBeamSetTransmit(int ent,int other)
 		{
 			continue;
 		}
-		
+
 		if (EntRefToEntIndex(g_PlayerFlashlightEntAng[i]) == owner)
 		{
 			client = i;
 			break;
 		}
 	}
-	
+
 	if (client == -1)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	if (client == other)
 	{
 		if (!GetEntProp(client, Prop_Send, "m_nForceTauntCam") || !GetEntProp(client, Prop_Send, "m_iObserverMode"))
@@ -330,7 +330,7 @@ Action Hook_FlashlightBeamSetTransmit(int ent,int other)
 			return Plugin_Handled;
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -342,12 +342,12 @@ static Action Hook_FlashlightEndSetTransmit(int ent,int other)
 	}
 
 	int owner = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-	
+
 	if (owner == -1)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	int client = -1;
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -355,19 +355,19 @@ static Action Hook_FlashlightEndSetTransmit(int ent,int other)
 		{
 			continue;
 		}
-		
+
 		if (EntRefToEntIndex(g_PlayerFlashlightEntAng[i]) == owner)
 		{
 			client = i;
 			break;
 		}
 	}
-	
+
 	if (client == -1)
 	{
 		return Plugin_Continue;
 	}
-	
+
 	if (client == other)
 	{
 		if (!GetEntProp(client, Prop_Send, "m_nForceTauntCam") || !GetEntProp(client, Prop_Send, "m_iObserverMode"))
@@ -375,7 +375,7 @@ static Action Hook_FlashlightEndSetTransmit(int ent,int other)
 			return Plugin_Handled;
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -388,14 +388,14 @@ void ClientTurnOnFlashlight(int client)
 	{
 		return;
 	}
-	
+
 	if (IsClientUsingFlashlight(client))
 	{
 		return;
 	}
-	
+
 	g_PlayerHasFlashlight[client] = true;
-	
+
 	float eyePos[3];
 
 	float length = SF2_FLASHLIGHT_LENGTH;
@@ -508,11 +508,11 @@ void ClientTurnOnFlashlight(int client)
 				SetVariantInt(customBrightness);
 			}
 			AcceptEntityInput(ent, "brightness");
-			
+
 			// Convert WU to inches.
 			float cone = 55.0;
 			cone *= 0.75;
-			
+
 			SetVariantInt(RoundToFloor(cone));
 			AcceptEntityInput(ent, "_inner_cone");
 			SetVariantInt(RoundToFloor(cone));
@@ -522,19 +522,19 @@ void ClientTurnOnFlashlight(int client)
 			SetVariantString("!activator");
 			AcceptEntityInput(ent, "SetParent", client);
 			AcceptEntityInput(ent, "TurnOn");
-			
+
 			g_PlayerFlashlightEnt[client] = EntIndexToEntRef(ent);
-			
+
 			SDKHook(ent, SDKHook_SetTransmit, Hook_FlashlightSetTransmit);
 		}
 	}
-	
+
 	// Spawn the light that only everyone else will see.
 	int ent = CreateEntityByName("point_spotlight");
 	if (ent != -1)
 	{
 		TeleportEntity(ent, eyePos, NULL_VECTOR, NULL_VECTOR);
-		
+
 		char buffer[256];
 		if (!IsClassConfigsValid())
 		{
@@ -613,7 +613,7 @@ void ClientTurnOnFlashlight(int client)
 		SetVariantString("!activator");
 		AcceptEntityInput(ent, "SetParent", client);
 		AcceptEntityInput(ent, "LightOn");
-		
+
 		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(ent);
 
 		SDKHook(ent, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
@@ -636,7 +636,7 @@ void ClientTurnOnFlashlight(int client)
 			}
 		}
 	}
-	
+
 	Call_StartForward(g_OnClientActivateFlashlightFwd);
 	Call_PushCell(client);
 	Call_Finish();
@@ -651,29 +651,29 @@ void ClientTurnOffFlashlight(int client)
 	{
 		return;
 	}
-	
+
 	g_PlayerHasFlashlight[client] = false;
 	g_PlayerFlashlightBatteryTimer[client] = null;
-	
+
 	// Remove user-only light.
 	int ent = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
-	if (ent && ent != INVALID_ENT_REFERENCE) 
+	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(ent, "TurnOff");
 		RemoveEntity(ent);
 	}
-	
+
 	// Remove everyone-else-only light.
 	ent = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
-	if (ent && ent != INVALID_ENT_REFERENCE) 
+	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(ent, "LightOff");
 		CreateTimer(0.1, Timer_KillEntity, g_PlayerFlashlightEntAng[client], TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
+
 	g_PlayerFlashlightEnt[client] = INVALID_ENT_REFERENCE;
 	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
-	
+
 	if (IsClientInGame(client))
 	{
 		if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
@@ -685,7 +685,7 @@ void ClientTurnOffFlashlight(int client)
 			}
 		}
 	}
-	
+
 	Call_StartForward(g_OnClientDeactivateFlashlightFwd);
 	Call_PushCell(client);
 	Call_Finish();
@@ -705,7 +705,7 @@ void ClientStartDrainingFlashlightBattery(int client)
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
-	
+
 	if (nightVision && g_NightvisionType == 2) //Blue nightvision
 	{
 		switch (difficulty)
@@ -734,7 +734,7 @@ void ClientStartDrainingFlashlightBattery(int client)
 	}
 	if (!IsClassConfigsValid())
 	{
-		if (class == TFClass_Engineer) 
+		if (class == TFClass_Engineer)
 		{
 			// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
 			drainRate *= 1.5;
@@ -746,7 +746,7 @@ void ClientStartDrainingFlashlightBattery(int client)
 		drainRate *= g_ClassFlashlightDrainRate[classToInt];
 		rechargeRate *= g_ClassFlashlightRechargeRate[classToInt];
 	}
-	
+
 	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(drainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -756,18 +756,18 @@ void ClientHandleFlashlight(int client)
 	{
 		return;
 	}
-	
+
 	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-	
-	if (IsClientUsingFlashlight(client)) 
+
+	if (IsClientUsingFlashlight(client))
 	{
 		ClientTurnOffFlashlight(client);
 		ClientStartRechargingFlashlightBattery(client);
 		ClientDeactivateUltravision(client);
 		ClientActivateUltravision(client);
-		
+
 		g_PlayerFlashlightNextInputTime[client] = GetGameTime() + SF2_FLASHLIGHT_COOLDOWN;
-		
+
 		if (!nightVision)
 		{
 			if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
@@ -791,7 +791,7 @@ void ClientHandleFlashlight(int client)
 				// Unequip the flashlight please.
 				canUseFlashlight = false;
 			}
-			
+
 			if (!IsClientFlashlightBroken(client) && canUseFlashlight)
 			{
 				ClientDeactivateUltravision(client);
@@ -804,7 +804,7 @@ void ClientHandleFlashlight(int client)
 					ClientTurnOnFlashlight(client);
 				}
 				ClientStartDrainingFlashlightBattery(client);
-				
+
 				g_PlayerFlashlightNextInputTime[client] = GetGameTime();
 				if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
 				{
@@ -834,12 +834,12 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 	{
 		return;
 	}
-	
+
 	if (!g_PlayerEliminated[client] && (SF_SpecialRound(SPECIALROUND_NOULTRAVISION) && !nightVision))
 	{
 		return;
 	}
-	
+
 #if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
@@ -849,16 +849,16 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
-	
+
 	g_PlayerHasUltravision[client] = true;
 	g_PlayerHasFlashlight[client] = nightVision;
-	
+
 	int ent = CreateEntityByName("light_dynamic");
 	if (ent != -1)
 	{
 		float eyePos[3];
 		GetClientEyePosition(client, eyePos);
-		
+
 		TeleportEntity(ent, eyePos, view_as<float>({ 90.0, 0.0, 0.0 }), NULL_VECTOR);
 		if (nightVision && !g_PlayerEliminated[client])
 		{
@@ -882,7 +882,7 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		{
 			DispatchKeyValue(ent, "rendercolor", "100 200 255");
 		}
-		
+
 		float radius = 0.0;
 		if (g_PlayerEliminated[client])
 		{
@@ -912,12 +912,12 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 				radius *= g_ClassUltravisionRadiusMultiplier[classToInt];
 			}
 		}
-		
+
 		SetVariantFloat(radius);
 		AcceptEntityInput(ent, "spotlight_radius");
 		SetVariantFloat(radius);
 		AcceptEntityInput(ent, "distance");
-		
+
 		SetVariantInt(-15); // Start dark, then fade in via the Timer_UltravisionFadeInEffect timer func.
 		AcceptEntityInput(ent, "brightness");
 		if (nightVision && !g_PlayerEliminated[client])
@@ -933,12 +933,12 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 				SetVariantInt(roundedBrightness);
 				AcceptEntityInput(ent, "brightness");
 			}
-		}	
-		
+		}
+
 		// Convert WU to inches.
 		float cone = SF2_ULTRAVISION_CONE;
 		cone *= 0.75;
-		
+
 		SetVariantInt(RoundToFloor(cone));
 		AcceptEntityInput(ent, "_inner_cone");
 		SetVariantInt(0);
@@ -968,11 +968,11 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 				}
 			}
 		}
-		
+
 		g_PlayerUltravisionEnt[client] = EntIndexToEntRef(ent);
-		
+
 		SDKHook(ent, SDKHook_SetTransmit, Hook_UltravisionSetTransmit);
-		
+
 		// Fade in effect.
 		if (!IsClassConfigsValid())
 		{
@@ -1015,7 +1015,7 @@ static Action Timer_UltravisionFadeInEffect(Handle timer, any userid)
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
-	
+
 	int brightness = GetEntProp(ent, Prop_Send, "m_Exponent");
 	int maxBrightness = g_UltravisionBrightnessConVar.IntValue;
 	if (!IsClassConfigsValid())
@@ -1033,11 +1033,11 @@ static Action Timer_UltravisionFadeInEffect(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	brightness++;
 	SetVariantInt(brightness);
 	AcceptEntityInput(ent, "brightness");
-	
+
 	return Plugin_Continue;
 }
 
@@ -1047,16 +1047,16 @@ void ClientDeactivateUltravision(int client)
 	{
 		return;
 	}
-	
+
 	g_PlayerHasUltravision[client] = false;
-	
+
 	int ent = EntRefToEntIndex(g_PlayerUltravisionEnt[client]);
 	if (ent != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(ent, "TurnOff");
 		RemoveEntity(ent);
 	}
-	
+
 	g_PlayerUltravisionEnt[client] = INVALID_ENT_REFERENCE;
 }
 
@@ -1080,7 +1080,7 @@ stock void ClientSDKFlashlightTurnOn(int client)
 	{
 		return;
 	}
-	
+
 	int effects = GetEntProp(client, Prop_Send, "m_fEffects");
 	if (effects & EF_DIMLIGHT)
 	{
@@ -1088,7 +1088,7 @@ stock void ClientSDKFlashlightTurnOn(int client)
 	}
 
 	effects |= EF_DIMLIGHT;
-	
+
 	SetEntProp(client, Prop_Send, "m_fEffects", effects);
 }
 
@@ -1098,7 +1098,7 @@ stock void ClientSDKFlashlightTurnOff(int client)
 	{
 		return;
 	}
-	
+
 	int effects = GetEntProp(client, Prop_Send, "m_fEffects");
 	if (!(effects & EF_DIMLIGHT))
 	{
@@ -1106,6 +1106,6 @@ stock void ClientSDKFlashlightTurnOff(int client)
 	}
 
 	effects &= ~EF_DIMLIGHT;
-	
+
 	SetEntProp(client, Prop_Send, "m_fEffects", effects);
 }

@@ -16,7 +16,7 @@ methodmap SF2BaseBossProfile
 			return view_as<int>(this);
 		}
 	}
-	
+
 	property int uniqueProfileIndex
 	{
 		public get()
@@ -32,7 +32,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileSkin(this.Index);
 		}
 	}
-	
+
 	property int SkinMax
 	{
 		public get()
@@ -53,7 +53,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileBodyGroups(this.Index);
 		}
 	}
-	
+
 	property int BodyGroupsMax
 	{
 		public get()
@@ -74,7 +74,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileModelScale(this.Index);
 		}
 	}
-	
+
 	property int Type
 	{
 		public get()
@@ -82,7 +82,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileType(this.Index);
 		}
 	}
-	
+
 	property int Flags
 	{
 		public get()
@@ -90,7 +90,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileFlags(this.Index);
 		}
 	}
-	
+
 	property int UseRaidHitbox
 	{
 		public get()
@@ -122,7 +122,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileCustomOutlinesState(this.Index);
 		}
 	}
-	
+
 	property int OutlineColorR
 	{
 		public get()
@@ -130,7 +130,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileOutlineColorR(this.Index);
 		}
 	}
-	
+
 	property int OutlineColorG
 	{
 		public get()
@@ -138,7 +138,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileOutlineColorG(this.Index);
 		}
 	}
-	
+
 	property int OutlineColorB
 	{
 		public get()
@@ -146,7 +146,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileOutlineColorB(this.Index);
 		}
 	}
-	
+
 	property int OutlineTransparency
 	{
 		public get()
@@ -186,7 +186,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileFOV(this.Index);
 		}
 	}
-	
+
 	property float TurnRate
 	{
 		public get()
@@ -194,7 +194,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileTurnRate(this.Index);
 		}
 	}
-	
+
 	property float AngerStart
 	{
 		public get()
@@ -202,7 +202,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileAngerStart(this.Index);
 		}
 	}
-	
+
 	property float AngerAddOnPageGrab
 	{
 		public get()
@@ -210,7 +210,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileAngerAddOnPageGrab(this.Index);
 		}
 	}
-	
+
 	property float AngerAddOnPageGrabTimeDiff
 	{
 		public get()
@@ -218,7 +218,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileAngerPageGrabTimeDiff(this.Index);
 		}
 	}
-	
+
 	property float InstantKillRadius
 	{
 		public get()
@@ -231,7 +231,7 @@ methodmap SF2BaseBossProfile
 	{
 		return GetBossProfileInstantKillCooldown(this.Index, difficulty);
 	}
-	
+
 	property float ScareRadius
 	{
 		public get()
@@ -239,7 +239,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileScareRadius(this.Index);
 		}
 	}
-	
+
 	property float ScareCooldown
 	{
 		public get()
@@ -327,7 +327,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfilePublicDeathCamSpeed(this.Index);
 		}
 	}
-	
+
 	property float PublicDeathCamAcceleration
 	{
 		public get()
@@ -335,7 +335,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfilePublicDeathCamAcceleration(this.Index);
 		}
 	}
-	
+
 	property float PublicDeathCamDeceleration
 	{
 		public get()
@@ -343,7 +343,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfilePublicDeathCamDeceleration(this.Index);
 		}
 	}
-	
+
 	property float PublicDeathCamBackwardOffset
 	{
 		public get()
@@ -351,7 +351,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfilePublicDeathCamBackwardOffset(this.Index);
 		}
 	}
-	
+
 	property float PublicDeathCamDownwardOffset
 	{
 		public get()
@@ -359,7 +359,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfilePublicDeathCamDownwardOffset(this.Index);
 		}
 	}
-	
+
 	property bool HasDeathCamOverlay
 	{
 		public get()
@@ -375,7 +375,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileDeathCamOverlayStartTime(this.Index);
 		}
 	}
-	
+
 	property float DeathCamDuration
 	{
 		public get()
@@ -383,7 +383,7 @@ methodmap SF2BaseBossProfile
 			return GetBossProfileDeathCamTime(this.Index);
 		}
 	}
-	
+
 	property int TeleportType
 	{
 		public get()
@@ -497,12 +497,12 @@ methodmap SF2BaseBossProfile
 	{
 		return GetBossProfileSoundMusicLoop(this.Index, difficulty);
 	}
-	
+
 	public float GetSpeed(int difficulty)
 	{
 		return GetBossProfileSpeed(this.Index, difficulty);
 	}
-	
+
 	public float GetMaxSpeed(int difficulty)
 	{
 		return GetBossProfileMaxSpeed(this.Index, difficulty);
@@ -573,12 +573,12 @@ methodmap SF2BaseBossProfile
 	{
 		return GetBossProfileTeleportAllowed(this.Index, difficulty);
 	}
-	
+
 	public float GetTeleportRangeMin(int difficulty)
 	{
 		return GetBossProfileTeleportRangeMin(this.Index, difficulty);
 	}
-	
+
 	public float GetTeleportRangeMax(int difficulty)
 	{
 		return GetBossProfileTeleportRangeMax(this.Index, difficulty);
@@ -934,7 +934,7 @@ methodmap SF2BaseBossProfile
 	{
 		GetBossProfileEyePositionOffset(this.Index, buffer);
 	}
-	
+
 	public void GetEyeAngleOffset(float buffer[3])
 	{
 		GetBossProfileEyeAngleOffset(this.Index, buffer);
@@ -1187,7 +1187,7 @@ enum
 	BossProfileData_CopyInsane,
 	BossProfileData_CopyNightmare,
 	BossProfileData_CopyApollyon,
-	
+
 	BossProfileData_SpeedEasy,
 	BossProfileData_SpeedNormal,
 	BossProfileData_SpeedHard,
@@ -1208,7 +1208,7 @@ enum
 	BossProfileData_AccelerationInsane,
 	BossProfileData_AccelerationNightmare,
 	BossProfileData_AccelerationApollyon,
-	
+
 	BossProfileData_IdleLifetimeEasy,
 	BossProfileData_IdleLifetimeNormal,
 	BossProfileData_IdleLifetimeHard,
@@ -1235,8 +1235,8 @@ enum
 	BossProfileData_TauntAlertRangeHard,
 	BossProfileData_TauntAlertRangeInsane,
 	BossProfileData_TauntAlertRangeNightmare,
-	BossProfileData_TauntAlertRangeApollyon,	
-	
+	BossProfileData_TauntAlertRangeApollyon,
+
 	BossProfileData_FieldOfView,
 	BossProfileData_TurnRate,
 	BossProfileData_EyePosOffsetX,
@@ -1256,7 +1256,7 @@ enum
 	BossProfileData_InstantKillCooldownInsane,
 	BossProfileData_InstantKillCooldownNightmare,
 	BossProfileData_InstantKillCooldownApollyon,
-	
+
 	BossProfileData_EnableCustomizableOutlines,
 	BossProfileData_OutlineColorR,
 	BossProfileData_OutlineColorG,
@@ -1332,7 +1332,7 @@ enum
 	BossProfileData_TeleportTimeMinInsane,
 	BossProfileData_TeleportTimeMinNightmare,
 	BossProfileData_TeleportTimeMinApollyon,
-	
+
 	BossProfileData_TeleportTimeMaxEasy,
 	BossProfileData_TeleportTimeMaxNormal,
 	BossProfileData_TeleportTimeMaxHard,
@@ -1369,7 +1369,7 @@ enum
 	BossProfileData_TeleportPersistencyPeriodApollyon,
 
 	BossProfileData_TeleportIgnoreChases,
-	
+
 	BossProfileData_TeleportIgnoreVis,
 
 	BossProfileData_JumpscareDistanceEasy,
@@ -1422,7 +1422,7 @@ enum
 	BossProfileData_ProxyControlGainHitEnemyInsane,
 	BossProfileData_ProxyControlGainHitEnemyNightmare,
 	BossProfileData_ProxyControlGainHitEnemyApollyon,
-	
+
 	BossProfileData_ProxyControlGainHitByEnemyEasy,
 	BossProfileData_ProxyControlGainHitByEnemyNormal,
 	BossProfileData_ProxyControlGainHitByEnemyHard,
@@ -1590,12 +1590,12 @@ enum
 public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int iLoadFailReasonBufferLen)
 {
 	int bossType = kv.GetNum("type", SF2BossType_Unknown);
-	if (bossType == SF2BossType_Unknown || bossType >= SF2BossType_MaxTypes) 
+	if (bossType == SF2BossType_Unknown || bossType >= SF2BossType_MaxTypes)
 	{
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "boss type is unknown!");
 		return false;
 	}
-	
+
 	float bossModelScale = kv.GetFloat("model_scale", 1.0);
 	if (bossModelScale <= 0.0)
 	{
@@ -1614,14 +1614,14 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	int bossSkinInsane = kv.GetNum("skin_insane", bossSkinHard);
 	int bossSkinNightmare = kv.GetNum("skin_nightmare", bossSkinInsane);
 	int bossSkinApollyon = kv.GetNum("skin_apollyon", bossSkinNightmare);
-	
+
 	int bossSkinMax = kv.GetNum("skin_max", 0);
 	if (bossSkinMax < 0)
 	{
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "skin_max must be a value that is at least 0!");
 		return false;
 	}
-	
+
 	int bossBodyGroups = kv.GetNum("body");
 	if (bossBodyGroups < 0)
 	{
@@ -1641,7 +1641,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "body_max must be a value that is at least 0!");
 		return false;
 	}
-	
+
 	int useRaidHitbox = kv.GetNum("use_raid_hitbox");
 	if (useRaidHitbox < 0)
 	{
@@ -1658,14 +1658,14 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "anger_start must be a value that is at least 0!");
 		return false;
 	}
-	
+
 	float bossInstantKillRadius = kv.GetFloat("kill_radius");
 	if (bossInstantKillRadius < 0.0)
 	{
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "kill_radius must be a value that is at least 0!");
 		return false;
 	}
-	
+
 	float bossScareRadius = kv.GetFloat("scare_radius");
 	if (bossScareRadius < 0.0)
 	{
@@ -1679,9 +1679,9 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 		FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "unknown teleport type!");
 		return false;
 	}
-	
+
 	FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "unknown!");
-	
+
 	float bossFOV = kv.GetFloat("fov", 90.0);
 	if (bossFOV < 0.0)
 	{
@@ -1691,16 +1691,16 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	{
 		bossFOV = 360.0;
 	}
-	
+
 	float bossMaxTurnRate = kv.GetFloat("maxyawrate", 250.0);
 
 	float bossScareCooldown = kv.GetFloat("scare_cooldown");
 	if (bossScareCooldown < 0.0)
 	{
-		// clamp value 
+		// clamp value
 		bossScareCooldown = 0.0;
 	}
-	
+
 	float bossAngerAddOnPageGrab = kv.GetFloat("anger_add_on_page_grab", -1.0);
 	if (bossAngerAddOnPageGrab < 0.0)
 	{
@@ -1710,7 +1710,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			bossAngerAddOnPageGrab = 0.0;
 		}
 	}
-	
+
 	float bossAngerPageGrabTimeDiffReq = kv.GetFloat("anger_req_page_grab_time_diff", -1.0);
 	if (bossAngerPageGrabTimeDiffReq < 0.0)
 	{
@@ -1734,7 +1734,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 	float blinkLookRateMultiplier = kv.GetFloat("blink_look_rate_multiply", 1.0);
 	float blinkStaticRateMultiplier = kv.GetFloat("blink_static_rate_multiply", 1.0);
-	
+
 	bool deathCam = view_as<bool>(kv.GetNum("death_cam"));
 	bool deathCamScareSound = view_as<bool>(kv.GetNum("death_cam_play_scare_sound"));
 	bool deathCamPublic = view_as<bool>(kv.GetNum("death_cam_public"));
@@ -1775,7 +1775,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	int copyMaxInsane = kv.GetNum("copy_max_insane", copyMaxHard);
 	int copyMaxNightmare = kv.GetNum("copy_max_nightmare", copyMaxInsane);
 	int copyMaxApollyon = kv.GetNum("copy_max_apollyon", copyMaxNightmare);
-	
+
 	float bossSearchRadius = kv.GetFloat("search_range", 1024.0);
 	float bossSearchRadiusEasy = kv.GetFloat("search_range_easy", bossSearchRadius);
 	float bossSearchRadiusHard = kv.GetFloat("search_range_hard", bossSearchRadius);
@@ -1887,7 +1887,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	float bossSpeedInsane = kv.GetFloat("speed_insane", bossSpeedHard);
 	float bossSpeedNightmare = kv.GetFloat("speed_nightmare", bossSpeedInsane);
 	float bossSpeedApollyon = kv.GetFloat("speed_apollyon", bossSpeedNightmare);
-	
+
 	float bossDefaultMaxSpeed = kv.GetFloat("speed_max", 150.0);
 	float bossMaxSpeedEasy = kv.GetFloat("speed_max_easy", bossDefaultMaxSpeed);
 	float bossMaxSpeedHard = kv.GetFloat("speed_max_hard", bossDefaultMaxSpeed);
@@ -1901,14 +1901,14 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	float bossAccelerationInsane = kv.GetFloat("acceleration_insane",bossAccelerationHard);
 	float bossAccelerationNightmare = kv.GetFloat("acceleration_nightmare",bossAccelerationInsane);
 	float bossAccelerationApollyon = kv.GetFloat("acceleration_apollyon",bossAccelerationNightmare);
-	
+
 	float bossDefaultIdleLifetime = kv.GetFloat("idle_lifetime", 10.0);
 	float bossIdleLifetimeEasy = kv.GetFloat("idle_lifetime_easy", bossDefaultIdleLifetime);
 	float bossIdleLifetimeHard = kv.GetFloat("idle_lifetime_hard", bossDefaultIdleLifetime);
 	float bossIdleLifetimeInsane = kv.GetFloat("idle_lifetime_insane", bossIdleLifetimeHard);
 	float bossIdleLifetimeNightmare = kv.GetFloat("idle_lifetime_nightmare", bossIdleLifetimeInsane);
 	float bossIdleLifetimeApollyon = kv.GetFloat("idle_lifetime_apollyon", bossIdleLifetimeNightmare);
-	
+
 	bool useCustomOutlines = view_as<bool>(kv.GetNum("customizable_outlines"));
 	int outlineColorR = kv.GetNum("outline_color_r", 255);
 	int outlineColorG = kv.GetNum("outline_color_g", 255);
@@ -1934,7 +1934,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	{
 		scareReactionType = 3;
 	}
-	
+
 	bool scareReplenishSprint = view_as<bool>(kv.GetNum("scare_player_replenish_sprint"));
 	int scareReplenishSprintAmount = kv.GetNum("scare_player_replenish_sprint_amount");
 
@@ -2127,7 +2127,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 	float bossEyePosOffset[3];
 	kv.GetVector("eye_pos", bossEyePosOffset);
-	
+
 	float bossEyeAngOffset[3];
 	kv.GetVector("eye_ang_offset", bossEyeAngOffset);
 
@@ -2189,12 +2189,12 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	{
 		bossFlags |= SFF_RANDOMATTACKS;
 	}
-	
+
 	// Try validating unique profile type.
 	// The unique profile index specifies the location of a boss's type-specific data in another array.
 
 	int uniqueProfileIndex = -1;
-	
+
 	switch (bossType)
 	{
 		case SF2BossType_Statue:
@@ -2212,19 +2212,19 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			}
 		}
 	}
-	
+
 	// Add the section to our config.
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile, true);
 	KvCopySubkeys(kv, g_Config);
-	
+
 	bool createNewBoss = false;
 	int index = GetBossProfileList().FindString(profile);
 	if (index == -1)
 	{
 		createNewBoss = true;
 	}
-	
+
 	// Add to/Modify our array.
 	// Cache values into g_BossProfileData, because traversing a KeyValues object is expensive.
 
@@ -2232,7 +2232,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	{
 		index = g_BossProfileData.Push(-1);
 		g_BossProfileNames.SetValue(profile, index);
-		
+
 		// Add to the boss list since it's not there already.
 		GetBossProfileList().PushString(profile);
 	}
@@ -2287,23 +2287,23 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	g_BossProfileData.Set(index, soundMusicLoopInsane, BossProfileData_SoundMusicLoopInsane);
 	g_BossProfileData.Set(index, soundMusicLoopNightmare, BossProfileData_SoundMusicLoopNightmare);
 	g_BossProfileData.Set(index, soundMusicLoopApollyon, BossProfileData_SoundMusicLoopApollyon);
-	
+
 	g_BossProfileData.Set(index, copyMax, BossProfileData_CopyNormal);
 	g_BossProfileData.Set(index, copyMaxEasy, BossProfileData_CopyEasy);
 	g_BossProfileData.Set(index, copyMaxHard, BossProfileData_CopyHard);
 	g_BossProfileData.Set(index, copyMaxInsane, BossProfileData_CopyInsane);
 	g_BossProfileData.Set(index, copyMaxNightmare, BossProfileData_CopyNightmare);
 	g_BossProfileData.Set(index, copyMaxApollyon, BossProfileData_CopyApollyon);
-	
+
 	g_BossProfileData.Set(index, bossFlags, BossProfileData_Flags);
-	
+
 	g_BossProfileData.Set(index, bossDefaultSpeed, BossProfileData_SpeedNormal);
 	g_BossProfileData.Set(index, bossSpeedEasy, BossProfileData_SpeedEasy);
 	g_BossProfileData.Set(index, bossSpeedHard, BossProfileData_SpeedHard);
 	g_BossProfileData.Set(index, bossSpeedInsane, BossProfileData_SpeedInsane);
 	g_BossProfileData.Set(index, bossSpeedNightmare, BossProfileData_SpeedNightmare);
 	g_BossProfileData.Set(index, bossSpeedApollyon, BossProfileData_SpeedApollyon);
-	
+
 	g_BossProfileData.Set(index, bossDefaultMaxSpeed, BossProfileData_MaxSpeedNormal);
 	g_BossProfileData.Set(index, bossMaxSpeedEasy, BossProfileData_MaxSpeedEasy);
 	g_BossProfileData.Set(index, bossMaxSpeedHard, BossProfileData_MaxSpeedHard);
@@ -2324,19 +2324,19 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	g_BossProfileData.Set(index, bossIdleLifetimeInsane, BossProfileData_IdleLifetimeInsane);
 	g_BossProfileData.Set(index, bossIdleLifetimeNightmare, BossProfileData_IdleLifetimeNightmare);
 	g_BossProfileData.Set(index, bossIdleLifetimeApollyon, BossProfileData_IdleLifetimeApollyon);
-	
+
 	g_BossProfileData.Set(index, bossEyePosOffset[0], BossProfileData_EyePosOffsetX);
 	g_BossProfileData.Set(index, bossEyePosOffset[1], BossProfileData_EyePosOffsetY);
 	g_BossProfileData.Set(index, bossEyePosOffset[2], BossProfileData_EyePosOffsetZ);
-	
+
 	g_BossProfileData.Set(index, bossEyeAngOffset[0], BossProfileData_EyeAngOffsetX);
 	g_BossProfileData.Set(index, bossEyeAngOffset[1], BossProfileData_EyeAngOffsetY);
 	g_BossProfileData.Set(index, bossEyeAngOffset[2], BossProfileData_EyeAngOffsetZ);
-	
+
 	g_BossProfileData.Set(index, bossAngerStart, BossProfileData_AngerStart);
 	g_BossProfileData.Set(index, bossAngerAddOnPageGrab, BossProfileData_AngerAddOnPageGrab);
 	g_BossProfileData.Set(index, bossAngerPageGrabTimeDiffReq, BossProfileData_AngerPageGrabTimeDiffReq);
-	
+
 	g_BossProfileData.Set(index, bossInstantKillRadius, BossProfileData_InstantKillRadius);
 
 	g_BossProfileData.Set(index, instantKillCooldown, BossProfileData_InstantKillCooldownNormal);
@@ -2345,7 +2345,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	g_BossProfileData.Set(index, instantKillCooldownInsane, BossProfileData_InstantKillCooldownInsane);
 	g_BossProfileData.Set(index, instantKillCooldownNightmare, BossProfileData_InstantKillCooldownNightmare);
 	g_BossProfileData.Set(index, instantKillCooldownApollyon, BossProfileData_InstantKillCooldownApollyon);
-	
+
 	g_BossProfileData.Set(index, bossScareRadius, BossProfileData_ScareRadius);
 	g_BossProfileData.Set(index, bossScareCooldown, BossProfileData_ScareCooldown);
 
@@ -2357,9 +2357,9 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 	g_BossProfileData.Set(index, scareReplenishSprint, BossProfileData_ScareReplenishSprint);
 	g_BossProfileData.Set(index, scareReplenishSprintAmount, BossProfileData_ScareReplenishSprintAmount);
-	
+
 	g_BossProfileData.Set(index, bossTeleportType, BossProfileData_TeleportType);
-	
+
 	g_BossProfileData.Set(index, useCustomOutlines, BossProfileData_EnableCustomizableOutlines);
 	g_BossProfileData.Set(index, outlineColorR, BossProfileData_OutlineColorR);
 	g_BossProfileData.Set(index, outlineColorG, BossProfileData_OutlineColorG);
@@ -2542,7 +2542,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	g_BossProfileData.Set(index, proxyControlGainHitByEnemyInsane, BossProfileData_ProxyControlGainHitByEnemyInsane);
 	g_BossProfileData.Set(index, proxyControlGainHitByEnemyNightmare, BossProfileData_ProxyControlGainHitByEnemyNightmare);
 	g_BossProfileData.Set(index, proxyControlGainHitByEnemyApollyon, BossProfileData_ProxyControlGainHitByEnemyApollyon);
-	
+
 	g_BossProfileData.Set(index, proxyControlDrainRate, BossProfileData_ProxyControlDrainRateNormal);
 	g_BossProfileData.Set(index, proxyControlDrainRateEasy, BossProfileData_ProxyControlDrainRateEasy);
 	g_BossProfileData.Set(index, proxyControlDrainRateHard, BossProfileData_ProxyControlDrainRateHard);
@@ -2619,7 +2619,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	g_BossProfileData.Set(index, proxyTeleportRangeMaxInsane, BossProfileData_ProxyTeleportRangeMaxInsane);
 	g_BossProfileData.Set(index, proxyTeleportRangeMaxNightmare, BossProfileData_ProxyTeleportRangeMaxNightmare);
 	g_BossProfileData.Set(index, proxyTeleportRangeMaxApollyon, BossProfileData_ProxyTeleportRangeMaxApollyon);
-	
+
 	g_BossProfileData.Set(index, proxyHurtChannel, BossProfileData_ProxyHurtChannel);
 	g_BossProfileData.Set(index, proxyHurtLevel, BossProfileData_ProxyHurtLevel);
 	g_BossProfileData.Set(index, proxyHurtFlags, BossProfileData_ProxyHurtFlags);
@@ -2691,7 +2691,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("attack_custom_deathflag_enabled")), BossProfileData_CustomDeathFlag);
 	g_BossProfileData.Set(index, kv.GetNum("attack_custom_deathflag"), BossProfileData_CustomDeathFlagType);
 	g_BossProfileData.Set(index, view_as<bool>(kv.GetNum("sound_music_outro_enabled")), BossProfileData_OutroMusicEnabled);
-	
+
 	char cloakOn[PLATFORM_MAX_PATH], cloakOff[PLATFORM_MAX_PATH], jarateHit[PLATFORM_MAX_PATH], milkHit[PLATFORM_MAX_PATH], gasHit[PLATFORM_MAX_PATH], stunHit[PLATFORM_MAX_PATH];
 	char fireballExplode[PLATFORM_MAX_PATH], fireballShoot[PLATFORM_MAX_PATH], fireIceballSlow[PLATFORM_MAX_PATH], rocketExplode[PLATFORM_MAX_PATH], rocketShoot[PLATFORM_MAX_PATH];
 	char engineSound[PLATFORM_MAX_PATH], grenadeShoot[PLATFORM_MAX_PATH], sentryrocketShoot[PLATFORM_MAX_PATH], arrowShoot[PLATFORM_MAX_PATH], manglerShoot[PLATFORM_MAX_PATH], baseballShoot[PLATFORM_MAX_PATH];
@@ -2760,7 +2760,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", trapModel);
 		}
 	}
-	
+
 	if (view_as<bool>(kv.GetNum("enable_random_selection", 1)))
 	{
 		if (GetSelectableBossProfileList().FindString(profile) == -1)
@@ -2775,9 +2775,9 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 		if (selectIndex != -1)
 		{
 			GetSelectableBossProfileList().Erase(selectIndex);
-		}	
+		}
 	}
-	
+
 	if (view_as<bool>(kv.GetNum("admin_only", 0)))
 	{
 		if (GetSelectableAdminBossProfileList().FindString(profile) == -1)
@@ -2794,7 +2794,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			GetSelectableAdminBossProfileList().Erase(selectIndex);
 		}
 	}
-	
+
 	if (view_as<bool>(kv.GetNum("enable_random_selection_boxing", 0)))
 	{
 		if (GetSelectableBoxingBossProfileList().FindString(profile) == -1)
@@ -2811,7 +2811,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			GetSelectableBoxingBossProfileList().Erase(selectIndex);
 		}
 	}
-	
+
 	if (view_as<bool>(kv.GetNum("enable_random_selection_renevant", 0)))
 	{
 		if (GetSelectableRenevantBossProfileList().FindString(profile) == -1)
@@ -2828,7 +2828,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			GetSelectableRenevantBossProfileList().Erase(selectIndex);
 		}
 	}
-	
+
 	if (view_as<bool>(kv.GetNum("enable_random_selection_renevant_admin", 0)))
 	{
 		if (GetSelectableRenevantBossAdminProfileList().FindString(profile) == -1)
@@ -2845,15 +2845,15 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			GetSelectableRenevantBossAdminProfileList().Erase(selectIndex);
 		}
 	}
-	
+
 	if (KvGotoFirstSubKey(kv)) //Special thanks to Fire for modifying the code for download errors.
 	{
 		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH];
-		
+
 		do
 		{
 			kv.GetSectionName(s2, sizeof(s2));
-			
+
 			if (!StrContains(s2, "sound_"))
 			{
 				for (int i = 1;; i++)
@@ -2872,7 +2872,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					FormatEx(s3, sizeof(s3), "%d", i);
 					kv.GetString(s3, s4, sizeof(s4));
 					if (s4[0] == '\0') break;
-					
+
 					if (FileExists(s4) || FileExists(s4, true))
 					{
 						AddFileToDownloadsTable(s4);
@@ -2890,7 +2890,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					FormatEx(s3, sizeof(s3), "%d", i);
 					kv.GetString(s3, s4, sizeof(s4));
 					if (s4[0] == '\0') break;
-					
+
 					if (!PrecacheModel(s4, true))
 					{
 						LogSF2Message("Model file %s failed to be precached, likely does not exist. This will crash the server if not fixed.", s4);
@@ -2898,13 +2898,13 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 				}
 			}
 			else if (strcmp(s2, "mat_download") == 0)
-			{	
+			{
 				for (int i = 1;; i++)
 				{
 					FormatEx(s3, sizeof(s3), "%d", i);
 					kv.GetString(s3, s4, sizeof(s4));
 					if (s4[0] == '\0') break;
-					
+
 					FormatEx(s5, sizeof(s5), "%s.vtf", s4);
 					if (FileExists(s5) || FileExists(s5, true))
 					{
@@ -2929,13 +2929,13 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			else if (strcmp(s2, "mod_download") == 0)
 			{
 				static const char extensions[][] = { ".mdl", ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
-				
+
 				for (int i = 1;; i++)
 				{
 					FormatEx(s3, sizeof(s3), "%d", i);
 					kv.GetString(s3, s4, sizeof(s4));
 					if (s4[0] == '\0') break;
-					
+
 					for (int is = 0; is < sizeof(extensions); is++)
 					{
 						FormatEx(s5, sizeof(s5), "%s%s", s4, extensions[is]);
@@ -2952,10 +2952,10 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 			}
 		}
 		while (kv.GotoNextKey());
-		
+
 		kv.GoBack();
 	}
-	
+
 	return true;
 }
 
@@ -2986,7 +2986,7 @@ int GetBossProfileSkinDifficulty(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_SkinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_SkinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_Skin);
 }
 
@@ -3010,7 +3010,7 @@ int GetBossProfileBodyGroupsDifficulty(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_BodyNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_BodyApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_Body);
 }
 
@@ -3039,7 +3039,7 @@ float GetBossProfileSoundMusicLoop(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_SoundMusicLoopNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_SoundMusicLoopApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_SoundMusicLoopNormal);
 }
 
@@ -3053,7 +3053,7 @@ int GetBossProfileMaxCopies(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_CopyNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_CopyApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_CopyNormal);
 }
 
@@ -3187,7 +3187,7 @@ float GetBossProfileSpeed(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_SpeedNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_SpeedApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_SpeedNormal);
 }
 
@@ -3201,7 +3201,7 @@ float GetBossProfileMaxSpeed(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_MaxSpeedNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_MaxSpeedApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_MaxSpeedNormal);
 }
 
@@ -3215,7 +3215,7 @@ float GetBossProfileAcceleration(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_AccelerationNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_AccelerationApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_AccelerationNormal);
 }
 
@@ -3229,7 +3229,7 @@ float GetBossProfileIdleLifetime(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_IdleLifetimeNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_IdleLifetimeApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_IdleLifetimeNormal);
 }
 
@@ -3243,7 +3243,7 @@ float GetBossProfileStaticRadius(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRadiusNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRadiusApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRadiusNormal);
 }
 
@@ -3257,7 +3257,7 @@ float GetBossProfileStaticRate(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRateNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRateApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRateNormal);
 }
 
@@ -3271,7 +3271,7 @@ float GetBossProfileStaticRateDecay(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRateDecayNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRateDecayApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_StaticRateDecayNormal);
 }
 
@@ -3285,7 +3285,7 @@ float GetBossProfileStaticGraceTime(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticGraceTimeNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_StaticGraceTimeApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_StaticGraceTimeNormal);
 }
 
@@ -3299,7 +3299,7 @@ float GetBossProfileSearchRadius(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_SearchRangeNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_SearchRangeApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_SearchRange);
 }
 
@@ -3313,7 +3313,7 @@ float GetBossProfileHearRadius(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_SearchSoundRangeNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_SearchSoundRangeApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_SearchSoundRange);
 }
 
@@ -3341,7 +3341,7 @@ float GetBossProfileTauntAlertRange(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TauntAlertRangeNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TauntAlertRangeApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TauntAlertRange);
 }
 
@@ -3355,7 +3355,7 @@ float GetBossProfileTeleportTimeMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportTimeMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportTimeMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportTimeMinNormal);
 }
 
@@ -3369,7 +3369,7 @@ float GetBossProfileTeleportTimeMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportTimeMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportTimeMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportTimeMaxNormal);
 }
 
@@ -3383,7 +3383,7 @@ float GetBossProfileTeleportTargetRestPeriod(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRestPeriodNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRestPeriodApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRestPeriodNormal);
 }
 
@@ -3397,7 +3397,7 @@ float GetBossProfileTeleportTargetStressMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportStressMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportStressMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportStressMinNormal);
 }
 
@@ -3411,7 +3411,7 @@ float GetBossProfileTeleportTargetStressMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportStressMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportStressMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportStressMaxNormal);
 }
 
@@ -3425,7 +3425,7 @@ float GetBossProfileTeleportTargetPersistencyPeriod(int profileIndex, int diffic
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportPersistencyPeriodNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportPersistencyPeriodApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportPersistencyPeriodNormal);
 }
 
@@ -3439,7 +3439,7 @@ float GetBossProfileTeleportRangeMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRangeMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRangeMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRangeMinNormal);
 }
 
@@ -3453,7 +3453,7 @@ float GetBossProfileTeleportRangeMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRangeMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRangeMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_TeleportRangeMaxNormal);
 }
 
@@ -3477,7 +3477,7 @@ float GetBossProfileJumpscareDistance(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareDistanceNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareDistanceApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareDistanceNormal);
 }
 
@@ -3491,7 +3491,7 @@ float GetBossProfileJumpscareDuration(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareDurationNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareDurationApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareDurationNormal);
 }
 
@@ -3505,7 +3505,7 @@ float GetBossProfileJumpscareCooldown(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareCooldownNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareCooldownApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_JumpscareCooldownNormal);
 }
 
@@ -3519,7 +3519,7 @@ float GetBossProfileProxyDamageVsEnemy(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsEnemyNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsEnemyApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsEnemyNormal);
 }
 
@@ -3533,7 +3533,7 @@ float GetBossProfileProxyDamageVsBackstab(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsBackstabNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsBackstabApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsBackstabNormal);
 }
 
@@ -3547,7 +3547,7 @@ float GetBossProfileProxyDamageVsSelf(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsSelfNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsSelfApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyDamageVsSelfNormal);
 }
 
@@ -3561,7 +3561,7 @@ int GetBossProfileProxyControlGainHitEnemy(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlGainHitEnemyNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlGainHitEnemyApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlGainHitEnemyNormal);
 }
 
@@ -3575,7 +3575,7 @@ int GetBossProfileProxyControlGainHitByEnemy(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlGainHitByEnemyNightmare);
 		case Difficulty_Apollyon: g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlGainHitByEnemyApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlGainHitByEnemyNormal);
 }
 
@@ -3589,7 +3589,7 @@ float GetBossProfileProxyControlDrainRate(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlDrainRateNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlDrainRateApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyControlDrainRateNormal);
 }
 
@@ -3603,7 +3603,7 @@ float GetBossProfileProxySpawnChanceMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceMinNormal);
 }
 
@@ -3617,7 +3617,7 @@ float GetBossProfileProxySpawnChanceMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceMaxNormal);
 }
 
@@ -3631,7 +3631,7 @@ float GetBossProfileProxySpawnChanceThreshold(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceThresholdNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceThresholdApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnChanceThresholdNormal);
 }
 
@@ -3645,7 +3645,7 @@ int GetBossProfileProxySpawnNumberMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnNumMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnNumMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnNumMinNormal);
 }
 
@@ -3659,7 +3659,7 @@ int GetBossProfileProxySpawnNumberMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnNumMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnNumMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnNumMaxNormal);
 }
 
@@ -3673,7 +3673,7 @@ float GetBossProfileProxySpawnCooldownMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnCooldownMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnCooldownMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnCooldownMinNormal);
 }
 
@@ -3687,7 +3687,7 @@ float GetBossProfileProxySpawnCooldownMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnCooldownMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnCooldownMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxySpawnCooldownMaxNormal);
 }
 
@@ -3701,7 +3701,7 @@ float GetBossProfileProxyTeleportRangeMin(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyTeleportRangeMinNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyTeleportRangeMinApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyTeleportRangeMinNormal);
 }
 
@@ -3715,7 +3715,7 @@ float GetBossProfileProxyTeleportRangeMax(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyTeleportRangeMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyTeleportRangeMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyTeleportRangeMaxNormal);
 }
 
@@ -3839,7 +3839,7 @@ int GetBossProfileMaxProxies(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyMaxNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyMaxApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_ProxyMaxNormal);
 }
 
@@ -3863,7 +3863,7 @@ int GetBossProfileDrainCreditAmount(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_DrainCreditAmountNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_DrainCreditAmountApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_DrainCreditAmountNormal);
 }
 
@@ -3931,7 +3931,7 @@ float GetBossProfileInstantKillCooldown(int profileIndex, int difficulty)
 		case Difficulty_Nightmare: return g_BossProfileData.Get(profileIndex, BossProfileData_InstantKillCooldownNightmare);
 		case Difficulty_Apollyon: return g_BossProfileData.Get(profileIndex, BossProfileData_InstantKillCooldownApollyon);
 	}
-	
+
 	return g_BossProfileData.Get(profileIndex, BossProfileData_InstantKillCooldownNormal);
 }
 

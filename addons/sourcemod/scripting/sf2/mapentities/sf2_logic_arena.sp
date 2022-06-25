@@ -50,7 +50,7 @@ SF2LogicRenevantEntity FindLogicRenevantEntity()
 	return SF2LogicRenevantEntity(-1);
 }
 
-static void Initialize() 
+static void Initialize()
 {
 	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreate);
 	g_EntityFactory.DeriveFromBaseEntity(true);
@@ -96,7 +96,7 @@ static void InputSetWave(int entity, int activator, int caller, int wave)
 	{
 		wave = RENEVANT_MAXWAVES;
 	}
-	
+
 	Renevant_SetWave(wave);
 }
 
@@ -110,7 +110,7 @@ static void InputSetWaveResetTimer(int entity, int activator, int caller, int wa
 	{
 		wave = RENEVANT_MAXWAVES;
 	}
-	
+
 	Renevant_SetWave(wave, true);
 }
 

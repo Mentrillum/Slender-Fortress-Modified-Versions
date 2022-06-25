@@ -248,7 +248,7 @@ void PrecacheClassProfiles()
 
 		g_ClassBossPriorityMultiplier[i] = GetClassStatFloat(className, "boss_priority");
 		g_ClassBossHearingSensitivity[i] = GetClassStatFloat(className, "boss_hearing_multiplier", 1.0);
-		
+
 		g_ClassBlinkRateMultiplier[i] = GetClassStatFloat(className, "blink_rate_multiplier", 1.0);
 
 		g_ClassResistanceStaticIncrease[i] = GetClassStatFloat(className, "static_resistance_increase", 1.0);

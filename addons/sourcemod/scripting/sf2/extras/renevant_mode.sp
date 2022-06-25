@@ -58,7 +58,7 @@ static void Renevant_BroadcastMessage(const char[] message, int params, ...)
 	}
 }
 
-enum RenevantWave 
+enum RenevantWave
 {
 	RenevantWave_Normal = 0,
 	RenevantWave_IncreaseDifficulty,
@@ -91,7 +91,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 	if (addedBossCount == 1 && action != RenevantWave_DoubleTrouble && action != RenevantWave_DoomBox && action != RenevantWave_SingleBoss && action != RenevantWave_AdminBoss)
 	{
-		FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name); 
+		FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
 		StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 	}
 
@@ -108,21 +108,21 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Hard;
 
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Hard Difficulty"); 
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Hard Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Hard:
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Insane;
 
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Insane Difficulty"); 
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Insane Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Insane:
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Nightmare;
 
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Nightmare Difficulty"); 
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Nightmare Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Nightmare:
@@ -133,18 +133,18 @@ static void Renevant_DoWaveAction(RenevantWave action)
 					g_IsRoundInfiniteSprint = true;
 
 					char nightmareDisplay[256];
-					
+
 					Renevant_SpawnApollyon();
 
 					CPrintToChatAll("The difficulty has been set to: {darkgray}%t{default}!", "SF2 Apollyon Difficulty");
-					
+
 					for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
 					{
 						EmitSoundToAll(g_SoundNightmareMode[i]);
 					}
-					
+
 					FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
-					
+
 					SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 
 					int randomQuote = GetRandomInt(1, 8);
@@ -223,12 +223,12 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 			if (addedBossCount == 1)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name); 
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			else if (addedBossCount == 2)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s and %s", name, name2); 
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s and %s", name, name2);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 		}
@@ -245,17 +245,17 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 			if (addedBossCount == 1)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name); 
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			else if (addedBossCount == 2)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s and %s", name, name2); 
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s and %s", name, name2);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			else if (addedBossCount == 3)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s, %s, and %s", name, name2, name3); 
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s, %s, and %s", name, name2, name3);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_DoomBox);
@@ -283,10 +283,10 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				{
 					continue;
 				}
-				if (!IsClientInGame(client) || 
-					!IsPlayerAlive(client) || 
-					g_PlayerEliminated[client] || 
-					IsClientInGhostMode(client) || 
+				if (!IsClientInGame(client) ||
+					!IsPlayerAlive(client) ||
+					g_PlayerEliminated[client] ||
+					IsClientInGhostMode(client) ||
 					DidClientEscape(client))
 				{
 					continue;
@@ -330,7 +330,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 					{
 						strcopy(name, sizeof(name), buffer);
 					}
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name); 
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 			}
@@ -338,7 +338,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			{
 				if (Renevant_TryAddBossProfile(buffer, sizeof(buffer), name, sizeof(name), false))
 				{
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name); 
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 			}
@@ -360,7 +360,7 @@ void Renevant_SetWave(int wave, bool resetTimer=false)
 	{
 		return;
 	}
-	
+
 	g_RenevantWaveNumber = wave;
 
 	if (resetTimer && wave < RENEVANT_MAXWAVES && wave != 0)
@@ -431,15 +431,14 @@ static Action Timer_RenevantWave(Handle timer, any data)
 	}
 
 	Renevant_SetWave(g_RenevantWaveNumber + 1);
-	
+
 	if (g_RenevantWaveNumber == RENEVANT_MAXWAVES)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	return Plugin_Continue;
 }
-
 
 static void Renevant_SpawnApollyon()
 {
@@ -449,7 +448,7 @@ static void Renevant_SpawnApollyon()
 	while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
 	{
 		spawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
-		if (spawnTeam == TFTeam_Red) 
+		if (spawnTeam == TFTeam_Red)
 		{
 			spawnPoint.Push(ent);
 		}

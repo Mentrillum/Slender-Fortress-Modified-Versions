@@ -32,7 +32,7 @@ methodmap SF2MapEntityBase < CBaseEntity
 	}
 }
 
-static void Initialize() 
+static void Initialize()
 {
 	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
 	g_EntityFactory.DeriveFromBaseEntity(true);

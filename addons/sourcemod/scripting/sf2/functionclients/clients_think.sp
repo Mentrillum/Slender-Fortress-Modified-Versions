@@ -14,7 +14,7 @@ public void Hook_ClientPreThink(int client)
 	ClientProcessInteractiveGlow(client);
 	ClientProcessStaticShake(client);
 	ClientProcessViewAngles(client);
-	
+
 	if (IsClientInGhostMode(client))
 	{
 		SetEntityFlags(client,GetEntityFlags(client)^FL_EDICT_ALWAYS);
@@ -43,7 +43,7 @@ public void Hook_ClientPreThink(int client)
 			SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 			SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
 			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-		
+
 			int roundState = view_as<int>(GameRules_GetRoundState());
 			TFClassType class = TF2_GetPlayerClass(client);
 			int classToInt = view_as<int>(class);
@@ -83,49 +83,49 @@ public void Hook_ClientPreThink(int client)
 							float camPos[3], camAngs[3];
 							GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", camAngs);
 							GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", camPos);
-							
+
 							camPos[0] -= g_CameraPlayerOffsetBackward[ent];
 							camPos[2] -= g_CameraPlayerOffsetDownward[ent];
-							
+
 							TeleportEntity(client, camPos, camAngs, NULL_VECTOR);
 						}
 					}
 					bool inDanger = false;
-					
+
 					if (!inDanger)
 					{
 						int state;
 						int bossTarget;
-						
+
 						for (int i = 0; i < MAX_BOSSES; i++)
 						{
 							if (NPCGetUniqueID(i) == -1)
 							{
 								continue;
 							}
-							
+
 							if (NPCGetType(i) == SF2BossType_Chaser)
 							{
 								bossTarget = EntRefToEntIndex(g_SlenderTarget[i]);
 								state = g_SlenderState[i];
-								
+
 								if ((state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN) &&
 									((bossTarget && bossTarget != INVALID_ENT_REFERENCE && (bossTarget == client || ClientGetDistanceFromEntity(client, bossTarget) < SquareFloat(512.0))) || NPCGetDistanceFromEntity(i, client) < SquareFloat(512.0) || PlayerCanSeeSlender(client, i, false)))
 								{
 									inDanger = true;
 									ClientSetScareBoostEndTime(client, GetGameTime() + 5.0);
-									
+
 									// Induce client stress levels.
 									float flUnComfortZoneDist = 512.0;
 									float flStressScalar = ((SquareFloat(flUnComfortZoneDist) / NPCGetDistanceFromEntity(i, client)));
 									ClientAddStress(client, 0.025 * flStressScalar);
-									
+
 									break;
 								}
 							}
 						}
 					}
-					
+
 					if (g_PlayerStaticAmount[client] > 0.4)
 					{
 						inDanger = true;
@@ -134,7 +134,7 @@ public void Hook_ClientPreThink(int client)
 					{
 						inDanger = true;
 					}
-					
+
 					if (!inDanger)
 					{
 						int state;
@@ -144,7 +144,7 @@ public void Hook_ClientPreThink(int client)
 							{
 								continue;
 							}
-							
+
 							if (NPCGetType(i) == SF2BossType_Chaser)
 							{
 								if (state == STATE_ALERT)
@@ -158,7 +158,7 @@ public void Hook_ClientPreThink(int client)
 							}
 						}
 					}
-					
+
 					if (!inDanger)
 					{
 						float curTime = GetGameTime();
@@ -174,14 +174,14 @@ public void Hook_ClientPreThink(int client)
 						{
 							scareSprintDuration *= g_ClassScareSprintDurationMultipler[classToInt];
 						}
-						
+
 						for (int i = 0; i < MAX_BOSSES; i++)
 						{
 							if (NPCGetUniqueID(i) == -1)
 							{
 								continue;
 							}
-							
+
 							if ((curTime - g_PlayerScareLastTime[client][i]) <= scareSprintDuration)
 							{
 								inDanger = true;
@@ -189,7 +189,7 @@ public void Hook_ClientPreThink(int client)
 							}
 						}
 					}
-					
+
 					float walkSpeed, sprintSpeed;
 					if (!IsClassConfigsValid())
 					{
@@ -201,10 +201,10 @@ public void Hook_ClientPreThink(int client)
 						walkSpeed = g_ClassWalkSpeed[classToInt];
 						sprintSpeed = g_ClassRunSpeed[classToInt];
 					}
-					
+
 					// Check for weapon speed changes.
 					int weaponEnt = INVALID_ENT_REFERENCE;
-					
+
 					for (int iSlot = 0; iSlot <= 5; iSlot++)
 					{
 						weaponEnt = GetPlayerWeaponSlot(client, iSlot);
@@ -212,7 +212,7 @@ public void Hook_ClientPreThink(int client)
 						{
 							continue;
 						}
-						
+
 						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 						switch (itemDefInt)
 						{
@@ -244,12 +244,12 @@ public void Hook_ClientPreThink(int client)
 								float maxHealth = float(SDKCall(g_SDKGetMaxHealth, client));
 								float percentage = health / maxHealth;
 
-								if (percentage < 0.805 && percentage >= 0.605) 
+								if (percentage < 0.805 && percentage >= 0.605)
 								{
 									walkSpeed += (walkSpeed * 0.05);
 									sprintSpeed += (sprintSpeed * 0.05);
 								}
-								else if (percentage < 0.605 && percentage >= 0.405) 
+								else if (percentage < 0.605 && percentage >= 0.405)
 								{
 									walkSpeed += (walkSpeed * 0.1);
 									sprintSpeed += (sprintSpeed * 0.1);
@@ -267,7 +267,7 @@ public void Hook_ClientPreThink(int client)
 							}
 						}
 					}
-					
+
 					// Speed buff
 					if (!SF_IsSlaughterRunMap())
 					{
@@ -285,7 +285,7 @@ public void Hook_ClientPreThink(int client)
 							sprintSpeed += (sprintSpeed * 0.14);
 						}
 					}
-					
+
 					if (inDanger)
 					{
 						if (!IsClassConfigsValid())
@@ -312,7 +312,7 @@ public void Hook_ClientPreThink(int client)
 										{
 											continue;
 										}
-										
+
 										int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 										if (itemDefInt == 214 && GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
 										{
@@ -341,7 +341,7 @@ public void Hook_ClientPreThink(int client)
 									{
 										continue;
 									}
-										
+
 									int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 									if (itemDefInt == 214 && GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon") == weaponEnt)
 									{
@@ -352,13 +352,13 @@ public void Hook_ClientPreThink(int client)
 							walkSpeed *= multiplier;
 							sprintSpeed *= multiplier;
 						}
-						
+
 						if (!g_PlayerHints[client][PlayerHint_Sprint])
 						{
 							ClientShowHint(client, PlayerHint_Sprint);
 						}
 					}
-					
+
 					float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.5);
 					float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.35);
 					if (g_PlayerSprintPoints[client] > 7)
@@ -373,8 +373,8 @@ public void Hook_ClientPreThink(int client)
 						walkSpeedSubtract += 15;
 						walkSpeed -= walkSpeedSubtract;
 					}
-					
-					if (IsClientSprinting(client)) 
+
+					if (IsClientSprinting(client))
 					{
 						if (!g_PlayerTrapped[client])
 						{
@@ -409,7 +409,7 @@ public void Hook_ClientPreThink(int client)
 							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", 0.1);
 						}
 					}
-					else 
+					else
 					{
 						if (!g_PlayerTrapped[client])
 						{
@@ -436,12 +436,12 @@ public void Hook_ClientPreThink(int client)
 							SetEntPropFloat(client, Prop_Send, "m_flCurrentTauntMoveSpeed", 0.01);
 						}
 					}
-					
+
 					if (ClientCanBreath(client) && !g_PlayerBreath[client])
 					{
 						ClientStartBreathing(client);
 					}
-					
+
 					if (g_PlayerTrapped[client])
 					{
 						TF2Attrib_SetByName(client, "increased jump height", 0.0);
@@ -455,7 +455,7 @@ public void Hook_ClientPreThink(int client)
 			else if (g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Blue)
 			{
 				bool speedup = TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly);
-			
+
 				switch (class)
 				{
 					case TFClass_Scout:
@@ -527,26 +527,26 @@ public void Hook_ClientPreThink(int client)
 			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
 		}
 	}
-	
+
 	// Calculate player stress levels.
 	if (GetGameTime() >= g_PlayerStressNextUpdateTime[client])
 	{
 		//float flPagePercent = g_PageMax != 0 ? float(g_PageCount) / float(g_PageMax) : 0.0;
 		//float flPageCountPercent = g_PageMax != 0? float(g_PlayerPageCount[client]) / float(g_PageMax) : 0.0;
-		
+
 		g_PlayerStressNextUpdateTime[client] = GetGameTime() + 0.33;
 		ClientAddStress(client, -0.01);
-		
+
 #if defined DEBUG
 		SendDebugMessageToPlayer(client, DEBUG_PLAYER_STRESS, 1, "g_PlayerStressAmount[%d]: %0.1f", client, g_PlayerStressAmount[client]);
 #endif
 	}
-	
+
 	// Process screen shake, if enabled.
 	if (g_IsPlayerShakeEnabled)
 	{
 		bool doShake = false;
-		
+
 		if (IsPlayerAlive(client))
 		{
 			int staticMaster = NPCGetFromUniqueID(g_PlayerStaticMaster[client]);
@@ -555,26 +555,25 @@ public void Hook_ClientPreThink(int client)
 				doShake = true;
 			}
 		}
-		
+
 		if (doShake)
 		{
 			float percent = g_PlayerStaticAmount[client];
-			
+
 			float amplitudeMax = g_PlayerShakeAmplitudeMaxConVar.FloatValue;
 			float amplitude = amplitudeMax * percent;
-			
+
 			float frequencyMax = g_PlayerShakeFrequencyMaxConVar.FloatValue;
 			float frequency = frequencyMax * percent;
-			
+
 			UTIL_ClientScreenShake(client, amplitude, 0.5, frequency);
 		}
 	}
-	
+
 	if (g_LastVisibilityProcess[client] + 0.30 >= GetGameTime())
 	{
 		return;
 	}
-	
 
 	/*if (!g_PlayerEliminated[client])
 	{
@@ -585,9 +584,9 @@ public void Hook_ClientPreThink(int client)
 			g_lastNavArea[client] = targetArea;
 		}
 	}*/
-	
+
 	g_LastVisibilityProcess[client] = GetGameTime();
-	
+
 	ClientProcessVisibility(client);
 }
 
@@ -607,8 +606,8 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	Call_PushCellRef(inflictor);
 	Call_PushFloatRef(damage2);
 	Call_Finish(action);
-	
-	if (action == Plugin_Changed) 
+
+	if (action == Plugin_Changed)
 	{
 		damage = damage2;
 		return Plugin_Changed;
@@ -629,13 +628,13 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 			return Plugin_Changed;
 		}
 	}
-	
+
 	if (IsClientInKart(victim) && (attacker == -1 || inflictor == -1))
 	{
 		damage = 0.0;
 		return Plugin_Changed;
 	}
-	
+
 	char inflictorClass[32];
 	if (inflictor >= 0)
 	{
@@ -653,7 +652,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 		damage = 0.0;
 		return Plugin_Changed;
 	}
-	
+
 	if (IsValidClient(attacker) && IsValidClient(victim) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && g_PlayerTrapped[victim])
 	{
 		if (!g_PlayerEliminated[attacker] && !g_PlayerEliminated[victim])
@@ -720,7 +719,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 					{
 						char weaponClass[64];
 						GetEdictClassname(weapon, weaponClass, sizeof(weaponClass));
-						
+
 						// Backstab check!
 						if ((strcmp(weaponClass, "tf_weapon_knife") == 0 || (TF2_GetPlayerClass(attacker) == TFClass_Spy && strcmp(weaponClass, "saxxy") == 0)) &&
 							(damagecustom != TF_CUSTOM_TAUNT_FENCING))
@@ -785,13 +784,13 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 										damage = 120.0;
 									}
 								}
-								
+
 								ConVar cvar = FindConVar("tf_weapon_criticals");
 								if (cvar != null && cvar.BoolValue)
 								{
 									damagetype |= DMG_ACID;
 								}
-								
+
 								if (!IsClientCritUbercharged(victim))
 								{
 									if (GetClientTeam(victim) == GetClientTeam(attacker))
@@ -826,12 +825,12 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 					damage = 0.0;
 					return Plugin_Changed;
 				}
-				
+
 				if (attacker == victim)//Don't allow proxy to self regenerate control.
 				{
 					return Plugin_Continue;
 				}
-				
+
 				if (g_PlayerProxy[attacker])
 				{
 					int maxHealth = SDKCall(g_SDKGetMaxHealth, victim);
@@ -864,7 +863,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 								damage /= 2.0;
 							}
 						}
-					
+
 						g_PlayerProxyControl[attacker] += g_SlenderProxyControlGainHitEnemy[master][difficulty];
 						if (g_PlayerProxyControl[attacker] > 100)
 						{
@@ -904,7 +903,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 						{
 							g_PlayerProxyControl[attacker] = 100;
 						}
-						
+
 						damage *= g_SlenderProxyDamageVsSelf[master][difficulty];
 					}
 					if (TF2_IsPlayerInCondition(victim, view_as<TFCond>(87)))
@@ -917,7 +916,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 						char sectionName[64];
 						char buffer[PLATFORM_MAX_PATH];
 						TF2_GetClassName(TF2_GetPlayerClass(victim), className, sizeof(className));
-		
+
 						FormatEx(sectionName, sizeof(sectionName), "proxies_death_anim_%s", className);
 						if ((GetProfileString(profile, sectionName, buffer, sizeof(buffer)) && buffer[0] != '\0') ||
 						(GetProfileString(profile, "proxies_death_anim_all", buffer, sizeof(buffer)) && buffer[0] != '\0'))
@@ -964,14 +963,14 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 				return Plugin_Changed;
 			}
 		}
-		
+
 		if (IsClientInGhostMode(victim))
 		{
 			damage = 0.0;
 			return Plugin_Changed;
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -982,17 +981,17 @@ public Action Timer_ClientSprinting(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerSprintTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!IsClientSprinting(client))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (g_PlayerSprintPoints[client] <= 0)
 	{
 		ClientStopSprint(client);
@@ -1000,7 +999,7 @@ public Action Timer_ClientSprinting(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	if (IsClientReallySprinting(client)) 
+	if (IsClientReallySprinting(client))
 	{
 		int override = g_PlayerInfiniteSprintOverrideConVar.IntValue;
 		if ((!g_IsRoundInfiniteSprint && override != 1) || override == 0)
@@ -1008,7 +1007,7 @@ public Action Timer_ClientSprinting(Handle timer, any userid)
 			g_PlayerSprintPoints[client]--;
 		}
 	}
-	
+
 	ClientSprintTimer(client);
 
 	return Plugin_Stop;
@@ -1022,11 +1021,11 @@ public void Hook_ClientSprintingPreThink(int client)
 		SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
 		return;
 	}
-	
+
 	int fov = GetEntData(client, g_PlayerDefaultFOVOffset);
-	
+
 	int targetFov = g_PlayerDesiredFOV[client] + 10;
-	
+
 	if (fov < targetFov)
 	{
 		int diff = RoundFloat(FloatAbs(float(fov - targetFov)));
@@ -1054,7 +1053,7 @@ public void Hook_ClientRechargeSprintPreThink(int client)
 		SDKHook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
 		return;
 	}
-	
+
 	int fov = GetEntData(client, g_PlayerDefaultFOVOffset);
 	if (fov > g_PlayerDesiredFOV[client])
 	{
@@ -1081,22 +1080,22 @@ public Action Timer_ClientRechargeSprint(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	float velSpeed[3];
 	GetEntPropVector(client, Prop_Data, "m_vecBaseVelocity", velSpeed);
 	float speed = GetVectorLength(velSpeed, true);
-	
+
 	if (timer != g_PlayerSprintTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
-	if (IsClientSprinting(client)) 
+
+	if (IsClientSprinting(client))
 	{
 		g_PlayerSprintTimer[client] = null;
 		return Plugin_Stop;
 	}
-	
+
 	if (g_PlayerSprintPoints[client] >= 100)
 	{
 		g_PlayerSprintPoints[client] = 100;
@@ -1132,7 +1131,7 @@ void ClientOnButtonPress(int client,int button)
 			{
 				if (!IsRoundInWarmup() &&
 					!IsRoundInIntro() &&
-					!IsRoundEnding() && 
+					!IsRoundEnding() &&
 					!DidClientEscape(client))
 				{
 					if (GetGameTime() >= ClientGetFlashlightNextInputTime(client))
@@ -1152,7 +1151,7 @@ void ClientOnButtonPress(int client,int button)
 			{
 				if (!g_PlayerEliminated[client])
 				{
-					if (!IsRoundEnding() && 
+					if (!IsRoundEnding() &&
 						!IsRoundInWarmup() &&
 						!IsRoundInIntro() &&
 						!DidClientEscape(client))
@@ -1167,7 +1166,7 @@ void ClientOnButtonPress(int client,int button)
 		{
 			if (IsPlayerAlive(client) && !(GetEntityFlags(client) & FL_FROZEN))
 			{
-				if (!view_as<bool>(GetEntProp(client, Prop_Send, "m_bDucked")) && 
+				if (!view_as<bool>(GetEntProp(client, Prop_Send, "m_bDucked")) &&
 					(GetEntityFlags(client) & FL_ONGROUND) &&
 					GetEntProp(client, Prop_Send, "m_nWaterLevel") < 2)
 				{
@@ -1208,7 +1207,7 @@ void ClientOnButtonRelease(int client,int button)
 		case IN_DUCK:
 		{
 			ClientEndPeeking(client);
-			
+
 			if (IsClientInGhostMode(client))
 			{
 				SetEntityGravity(client, 0.5);
@@ -1235,7 +1234,7 @@ void ClientOnButtonRelease(int client,int button)
 			{
 				if (!g_PlayerEliminated[client])
 				{
-					if (!IsRoundEnding() && 
+					if (!IsRoundEnding() &&
 						!IsRoundInWarmup() &&
 						!IsRoundInIntro() &&
 						!DidClientEscape(client))
@@ -1283,7 +1282,7 @@ void ClientOnJump(int client)
 					}
 				}
 			}
-			
+
 			if (!IsClientSprinting(client))
 			{
 				if (g_PlayerSprintTimer[client] == null)
@@ -1312,12 +1311,12 @@ public Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerGhostModeConnectionCheckTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!IsFakeClient(client) && IsClientTimingOut(client))
 	{
 		float bootTime = g_PlayerGhostModeConnectionBootTime[client];
@@ -1328,20 +1327,20 @@ public Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
 			g_PlayerGhostModeConnectionBootTime[client] = bootTime;
 			g_PlayerGhostModeConnectionTimeOutTime[client] = GetGameTime();
 		}
-		
+
 		if (GetGameTime() >= bootTime || checkBool)
 		{
 			ClientSetGhostModeState(client, false);
 			TF2_RespawnPlayer(client);
-			
+
 			char authString[128];
 			GetClientAuthId(client,AuthId_Engine, authString, sizeof(authString));
-			
+
 			LogSF2Message("Removed %N (%s) from ghost mode due to timing out for %f seconds", client, authString, g_GhostModeConnectionToleranceConVar.FloatValue);
-			
+
 			float timeOutTime = g_PlayerGhostModeConnectionTimeOutTime[client];
 			CPrintToChat(client, "\x08FF4040FF%T", "SF2 Ghost Mode Bad Connection", client, RoundFloat(bootTime - timeOutTime));
-			
+
 			return Plugin_Stop;
 		}
 	}
@@ -1350,7 +1349,7 @@ public Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
 		// Player regained connection; reset.
 		g_PlayerGhostModeConnectionBootTime[client] = -1.0;
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -1366,17 +1365,17 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (timer != g_PlayerCampingTimer[client])
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (IsRoundEnding() || !IsPlayerAlive(client) || g_PlayerEliminated[client] || DidClientEscape(client))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_IsPlayerCampingFirstTime[client])
 	{
 		bool isCamping = false;
@@ -1384,28 +1383,28 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 		GetClientAbsOrigin(client, pos);
 		GetEntPropVector(client, Prop_Send, "m_vecMins", mins);
 		GetEntPropVector(client, Prop_Send, "m_vecMaxs", maxs);
-		
+
 		// Only do something if the player is NOT stuck.
 		float distFromLastPosition = GetVectorSquareMagnitude(g_PlayerCampingLastPosition[client], pos);
 		float distFromClosestBoss = 9999999.0;
 		int closestBoss = -1;
-		
+
 		for (int i = 0; i < MAX_BOSSES; i++)
 		{
 			if (NPCGetUniqueID(i) == -1)
 			{
 				continue;
 			}
-			
+
 			int slender = NPCGetEntIndex(i);
 			if (!slender || slender == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
-			
+
 			float slenderPos[3];
 			SlenderGetAbsOrigin(i, slenderPos);
-			
+
 			float flDist = GetVectorSquareMagnitude(slenderPos, pos);
 			if (flDist < distFromClosestBoss)
 			{
@@ -1415,9 +1414,9 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 		}
 		/*if (IsSpaceOccupiedIgnorePlayers(pos, mins, maxs, client))
 			//LogSF2Message("[SF2 AFK TIMER] Client %i (%N) is stuck, no actions taken", client, client);*/
-		if (!SF_IsBoxingMap() && g_CampingEnabledConVar.BoolValue && 
+		if (!SF_IsBoxingMap() && g_CampingEnabledConVar.BoolValue &&
 		IsRoundPlaying() &&
-			g_PlayerStaticAmount[client] <= g_CampingNoStrikeSanityConVar.FloatValue && 
+			g_PlayerStaticAmount[client] <= g_CampingNoStrikeSanityConVar.FloatValue &&
 			(closestBoss == -1 || distFromClosestBoss >= g_CampingNoStrikeBossDistanceConVar.FloatValue) &&
 			distFromLastPosition <= SquareFloat(g_CampingMinDistanceConVar.FloatValue))
 		{
@@ -1449,7 +1448,7 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 				g_PlayerCampingStrikes[client]--;
 			}
 		}
-		
+
 		g_PlayerCampingLastPosition[client][0] = pos[0];
 		g_PlayerCampingLastPosition[client][1] = pos[1];
 		g_PlayerCampingLastPosition[client][2] = pos[2];
@@ -1459,7 +1458,7 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 		g_IsPlayerCampingFirstTime[client] = false;
 		//LogSF2Message("[SF2 AFK TIMER] Client %i (%N) is afk/camping for the 1st time since the reset, don't take any actions for now.....", client, client);
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -1480,12 +1479,12 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (!g_Enabled)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (IsRoundInWarmup() || IsRoundEnding())
 	{
 		return Plugin_Continue;
@@ -1493,10 +1492,10 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 
 	// First, process through HUD stuff.
 	char buffer[256];
-	
+
 	static hudColorHealthy[3];
 	static hudColorCritical[3] = { 255, 10, 10 };
-	
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i))
@@ -1511,7 +1510,7 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 		{
 			hudColorHealthy = { 150, 255, 150 };
 		}
-		
+
 		if (IsPlayerAlive(i) && !IsClientInDeathCam(i))
 		{
 			if (!g_PlayerEliminated[i])
@@ -1520,7 +1519,7 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 				{
 					continue;
 				}
-				
+
 				int maxBars = 12;
 				int bars;
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
@@ -1530,7 +1529,7 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						bars = maxBars;
 					}
-					
+
 					if (!g_PlayerPreferences[i].PlayerPreference_LegacyHud)
 					{
 						if (bars != 0)
@@ -1546,7 +1545,7 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
 					}
-					
+
 					if (IsInfiniteBlinkEnabled())
 					{
 						StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
@@ -1573,11 +1572,11 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						bars = maxBars;
 					}
-					
+
 					char buffer2[64];
 					FormatEx(buffer2, sizeof(buffer2), "\n%s  ", SF2_PLAYER_HUD_FLASHLIGHT_SYMBOL);
 					StrCat(buffer, sizeof(buffer), buffer2);
-					
+
 					if (IsInfiniteFlashlightEnabled())
 					{
 						StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
@@ -1597,17 +1596,17 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 						}
 					}
 				}
-				
+
 				bars = RoundToCeil(float(maxBars) * (float(ClientGetSprintPoints(i)) / 100.0));
 				if (bars > maxBars)
 				{
 					bars = maxBars;
 				}
-				
+
 				char buffer2[64];
 				FormatEx(buffer2, sizeof(buffer2), "\n%s  ", SF2_PLAYER_HUD_SPRINT_SYMBOL);
 				StrCat(buffer, sizeof(buffer), buffer2);
-				
+
 				if (IsInfiniteSprintEnabled())
 				{
 					StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
@@ -1626,9 +1625,9 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 						}
 					}
 				}
-				
+
 				float healthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_SDKGetMaxHealth, i));
-				
+
 				int color[3];
 				for (int i2 = 0; i2 < 3; i2++)
 				{
@@ -1636,28 +1635,28 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 				}
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					SetHudTextParams(0.035, 0.83, 
-						0.3, 
-						color[0], 
-						color[1], 
-						color[2], 
-						40, 
-						_, 
-						1.0, 
-						0.07, 
+					SetHudTextParams(0.035, 0.83,
+						0.3,
+						color[0],
+						color[1],
+						color[2],
+						40,
+						_,
+						1.0,
+						0.07,
 						0.5);
 				}
 				else if (SF_IsRaidMap() || SF_IsBoxingMap())
 				{
-					SetHudTextParams(0.035, 0.43, 
-						0.3, 
-						color[0], 
-						color[1], 
-						color[2], 
-						40, 
-						_, 
-						1.0, 
-						0.07, 
+					SetHudTextParams(0.035, 0.43,
+						0.3,
+						color[0],
+						color[1],
+						color[2],
+						40,
+						_,
+						1.0,
+						0.07,
 						0.5);
 				}
 				ShowSyncHudText(i, g_HudSync2, buffer);
@@ -1673,9 +1672,9 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						bars = maxBars;
 					}
-					
+
 					strcopy(buffer, sizeof(buffer), "CONTROL\n");
-					
+
 					for (int i2 = 0; i2 < maxBars; i2++)
 					{
 						if (i2 < bars)
@@ -1687,16 +1686,16 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 						}
 					}
-					
-					SetHudTextParams(-1.0, 0.83, 
-						0.3, 
-						SF2_HUD_TEXT_COLOR_R, 
-						SF2_HUD_TEXT_COLOR_G, 
-						SF2_HUD_TEXT_COLOR_B, 
-						40, 
-						_, 
-						1.0, 
-						0.07, 
+
+					SetHudTextParams(-1.0, 0.83,
+						0.3,
+						SF2_HUD_TEXT_COLOR_R,
+						SF2_HUD_TEXT_COLOR_G,
+						SF2_HUD_TEXT_COLOR_B,
+						40,
+						_,
+						1.0,
+						0.07,
 						0.5);
 					ShowSyncHudText(i, g_HudSync2, buffer);
 				}
@@ -1705,6 +1704,6 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 		ClientUpdateListeningFlags(i);
 		ClientUpdateMusicSystem(i);
 	}
-	
+
 	return Plugin_Continue;
 }

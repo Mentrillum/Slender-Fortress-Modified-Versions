@@ -50,8 +50,8 @@ methodmap SF2GamerulesEntity < CBaseEntity
 
 	property SF2GameTextEntity PageTextEntity
 	{
-		public get() 
-		{  
+		public get()
+		{
 			char pageTextEntityName[64];
 			this.GetPageTextEntityName(pageTextEntityName, sizeof(pageTextEntityName));
 
@@ -140,7 +140,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 
 	property SF2GameTextEntity EscapeTextEntity
 	{
-		public get() 
+		public get()
 		{
 			char textName[64];
 			this.GetEscapeTextEntityName(textName, sizeof(textName));
@@ -226,8 +226,8 @@ methodmap SF2GamerulesEntity < CBaseEntity
 
 	property SF2GameTextEntity IntroTextEntity
 	{
-		public get() 
-		{  
+		public get()
+		{
 			char textName[64];
 			this.GetIntroTextEntityName(textName, sizeof(textName));
 
@@ -327,7 +327,7 @@ static void Initialize()
 		.DefineOutput("OnStateExitOutro")
 		.DefineOutput("OnCollectedPagesChanged")
 		.DefineOutput("OnSurvivalComplete");
-	
+
 	char sOutputName[64];
 
 	// OnCollectedXPages output
@@ -415,7 +415,7 @@ static void OnSpawn(int entity)
 	thisEnt.GetPageCollectSoundPath(sPath, sizeof(sPath));
 	if (sPath[0] != '\0')
 		PrecacheSound(sPath);
-	
+
 	thisEnt.GetIntroMusicPath(sPath, sizeof(sPath));
 	if (sPath[0] != '\0')
 		PrecacheSound(sPath);
@@ -496,7 +496,6 @@ static void OnDifficultyChanged(int difficulty, int iOldDifficulty)
 	gameRules.FireOutput("OnDifficultyChanged");
 	gameRules.FireOutput(sOutputName);
 }
-
 
 static void InputSetTimeLimit(int entity, int activator, int caller, int value)
 {
@@ -651,7 +650,7 @@ static void InputSetDifficulty(int entity, int activator, int caller, int value)
 
 static void InputEndGracePeriod(int entity, int activator, int caller)
 {
-	if (GetRoundState() == SF2RoundState_Grace && g_RoundGraceTimer != null) 
+	if (GetRoundState() == SF2RoundState_Grace && g_RoundGraceTimer != null)
 	{
 		TriggerTimer(g_RoundGraceTimer);
 	}

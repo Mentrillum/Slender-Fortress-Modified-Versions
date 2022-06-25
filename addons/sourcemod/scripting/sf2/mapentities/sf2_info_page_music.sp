@@ -142,7 +142,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 	}
 }
 
-static void Initialize() 
+static void Initialize()
 {
 	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
 	g_EntityFactory.DeriveFromBaseEntity(true);
@@ -224,7 +224,7 @@ static void OnSpawn(int entity)
 			rangeData.Min = StringToInt(tokens[0]);
 			rangeData.Max = rangeData.Min;
 		}
-		else 
+		else
 		{
 			rangeData.Min = StringToInt(tokens[0]);
 			rangeData.Max = StringToInt(tokens[1]);

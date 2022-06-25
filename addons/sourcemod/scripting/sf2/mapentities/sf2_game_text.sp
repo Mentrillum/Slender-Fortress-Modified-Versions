@@ -122,8 +122,8 @@ methodmap SF2GameTextEntity < CBaseEntity
 
 	property SF2GameTextEntity NextIntroTextEntity
 	{
-		public get() 
-		{  
+		public get()
+		{
 			char introTextName[64];
 			this.GetNextIntroTextEntityName(introTextName, sizeof(introTextName));
 
@@ -142,7 +142,7 @@ methodmap SF2GameTextEntity < CBaseEntity
 	}
 }
 
-static void Initialize() 
+static void Initialize()
 {
 	g_EntityFactory = new CEntityFactory(g_EntityClassname, OnCreated, OnRemoved);
 	g_EntityFactory.DeriveFromClass("game_text");
@@ -168,7 +168,7 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 
 	int clients[MAXPLAYERS + 1];
 	int clientsNum;
-	
+
 	char message[512];
 	thisEnt.GetFormattedMessage(message, sizeof(message));
 
@@ -187,7 +187,7 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 			clients[clientsNum++] = target;
 		}
 	}
-	else 
+	else
 	{
 		int spawnFlags = thisEnt.GetProp(Prop_Data, "m_spawnflags");
 
@@ -197,7 +197,7 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 			{
 				continue;
 			}
-			
+
 			// If 'All Players' not set, only show message to RED.
 			if ((spawnFlags & 1) == 0 && g_PlayerEliminated[i] && !IsClientInGhostMode(i))
 			{
