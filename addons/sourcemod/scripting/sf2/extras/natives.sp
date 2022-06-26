@@ -50,12 +50,15 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	g_OnRenevantTriggerWaveFwd = new GlobalForward("SF2_OnRenevantWaveTrigger", ET_Ignore, Param_Cell);
 	g_OnBossPackVoteStartFwd = new GlobalForward("SF2_OnBossPackVoteStart", ET_Ignore);
 	g_OnDifficultyChangeFwd = new GlobalForward("SF2_OnDifficultyChanged", ET_Ignore, Param_Cell, Param_Cell);
+	g_OnClientEnterGameFwd = new GlobalForward("SF2_OnClientEnterGame", ET_Hook, Param_Cell);
+	g_OnGroupEnterGameFwd = new GlobalForward("SF2_OnGroupEnterGame", ET_Hook, Param_Cell);
 
 	CreateNative("SF2_IsRunning", Native_IsRunning);
 	CreateNative("SF2_GetRoundState", Native_GetRoundState);
 	CreateNative("SF2_IsRoundInGracePeriod", Native_IsRoundInGracePeriod);
 	CreateNative("SF2_GetCurrentDifficulty", Native_GetCurrentDifficulty);
 	CreateNative("SF2_GetDifficultyModifier", Native_GetDifficultyModifier);
+	CreateNative("SF2_GetClientGroup", Native_GetClientGroup);
 	CreateNative("SF2_IsClientEliminated", Native_IsClientEliminated);
 	CreateNative("SF2_IsClientInGhostMode", Native_IsClientInGhostMode);
 	CreateNative("SF2_IsClientProxy", Native_IsClientProxy);
@@ -457,6 +460,11 @@ public int Native_GetDifficultyModifier(Handle plugin,int numParams)
 	}
 
 	return view_as<int>(DIFFICULTYMODIFIER_NORMAL);
+}
+
+public int Native_GetClientGroup(Handle plugin,int numParams)
+{
+	return ClientGetPlayerGroup(GetNativeCell(1));
 }
 
 public int Native_IsClientEliminated(Handle plugin,int numParams)

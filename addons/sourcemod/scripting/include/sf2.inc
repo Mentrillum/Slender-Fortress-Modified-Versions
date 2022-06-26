@@ -504,6 +504,22 @@ forward void SF2_OnBossPackVoteStart();
 forward void SF2_OnDifficultyChanged(int difficulty, int oldDifficulty);
 
 /**
+ * Called when a player is choosen to play
+ *
+ * @param client	Client index.
+ * @return		If Plugin_Handled, player is blocked from playing.
+ */
+forward Action SF2_OnClientEnterGame(int client);
+
+/**
+ * Called when a player is choosen to play
+ *
+ * @param groupIndex	Group index.
+ * @return		If Plugin_Handled, group is blocked from playing.
+ */
+forward Action SF2_OnGroupEnterGame(int groupIndex);
+
+/**
  * Returns a bool about the gamemode's state.
  *
  * @return				True if the gamemode is running, false if not.
@@ -552,6 +568,14 @@ native bool SF2_IsSpecialRoundRunning();
  * @return				Special round type.
  */
 native int SF2_GetSpecialRoundType();
+
+/**
+ * Returns the current group a player is in.
+ *
+ * @param client	Client index.
+ * @return		Group index the player is in, -1 otherwise.
+ */
+native int SF2_GetClientGroup(int client);
 
 /**
  * Returns a bool about the client's elimination state.
