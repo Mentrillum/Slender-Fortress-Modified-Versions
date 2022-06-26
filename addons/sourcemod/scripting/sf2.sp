@@ -908,7 +908,8 @@ ConVar g_FullyEnableSpectatorConVar;
 ConVar g_AllowPlayerPeekingConVar;
 ConVar g_UsePlayersForKillFeedConVar;
 ConVar g_DefaultLegacyHudConVar;
-ConVar g_NightmareApollyonVoteStatesConVar;
+ConVar g_DifficultyVoteOptionsConVar;
+ConVar g_DifficultyVoteRandomConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -7836,6 +7837,13 @@ static Action Timer_VoteDifficulty(Handle timer, any data)
 
 	RandomizeVoteMenu();
 	VoteMenu(g_MenuVoteDifficulty, clients, clientsNum, 15);
+	if (GetMenuItemCount(g_MenuVoteDifficulty) == 1)
+	{
+		for (int i = 0; i < clientsNum; i++)
+		{
+			FakeClientCommand(clients[i], "menuselect 1");
+		}
+	}
 
 	return Plugin_Stop;
 }
