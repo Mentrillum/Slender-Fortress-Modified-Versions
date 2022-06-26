@@ -980,6 +980,8 @@ GlobalForward g_OnGroupGiveQueuePointsFwd;
 GlobalForward g_OnRenevantTriggerWaveFwd;
 GlobalForward g_OnBossPackVoteStartFwd;
 GlobalForward g_OnDifficultyChangeFwd;
+GlobalForward g_OnClientEnterGameFwd;
+GlobalForward g_OnGroupEnterGameFwd;
 
 Handle g_SDKGetMaxHealth;
 Handle g_SDKGetLastKnownArea;
@@ -5256,6 +5258,16 @@ void ForceInNextPlayersInQueue(int amount, bool showMessage = false)
 				continue;
 			}
 
+			Action action;
+			Call_StartForward(g_OnClientEnterGameFwd);
+			Call_PushCell(client);
+			Call_PushCell(-1);
+			Call_Finish(action);
+			if (action >= Plugin_Handled)
+			{
+				continue;
+			}
+
 			players.Push(client);
 			amountLeft -= 1;
 		}
@@ -5270,6 +5282,15 @@ void ForceInNextPlayersInQueue(int amount, bool showMessage = false)
 			int iMemberCount = GetPlayerGroupMemberCount(groupIndex);
 			if (iMemberCount <= amountLeft)
 			{
+				Action action;
+				Call_StartForward(g_OnGroupEnterGameFwd);
+				Call_PushCell(groupIndex);
+				Call_Finish(action);
+				if (action >= Plugin_Handled)
+				{
+					continue;
+				}
+
 				for (int client = 1; client <= MaxClients; client++)
 				{
 					if (!IsValidClient(client) || g_PlayerPlaying[client] || !g_PlayerEliminated[client] || !IsClientParticipating(client))
