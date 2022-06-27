@@ -5262,7 +5262,6 @@ void ForceInNextPlayersInQueue(int amount, bool showMessage = false)
 			Action action;
 			Call_StartForward(g_OnClientEnterGameFwd);
 			Call_PushCell(client);
-			Call_PushCell(-1);
 			Call_Finish(action);
 			if (action >= Plugin_Handled)
 			{
