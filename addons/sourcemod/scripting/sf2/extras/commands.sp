@@ -214,7 +214,8 @@ public void OnPluginStart()
 
 	g_DefaultLegacyHudConVar = CreateConVar("sf2_default_legacy_hud", "0", "Set to 1 if the server should enable the legacy hud by default in their settings.");
 
-	g_NightmareApollyonVoteStatesConVar = CreateConVar("sf2_nightmare_apollyon_votes", "0", "Determines if Nightmare and or Apollyon should be in the votes. 0 leaves the votes unchanged, 1 adds Nightmare only, 2 adds Apollyon only, and 3 adds both of them", _, true, 0.0, true, 3.0);
+	g_DifficultyVoteOptionsConVar = CreateConVar("sf2_difficulty_vote_options", "1,2,3", "What vote options will appear on the Difficulty vote. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon, 6 = Random");
+	g_DifficultyVoteRandomConVar = CreateConVar("sf2_difficulty_random_vote", "1", "If random vote will use a random vote option instead of a random difficulty.", _, true, 0.0, true, 1.0);
 
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
