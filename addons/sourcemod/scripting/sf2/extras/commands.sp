@@ -317,6 +317,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_slalltalk", Command_AllTalkToggle, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("sm_sf2_eventmode", Command_ConditionToggle, ADMFLAG_CONVARS);
 	RegAdminCmd("sm_sleventmode", Command_ConditionToggle, ADMFLAG_CONVARS, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("sm_sf2_set_queue", Command_SetQueuePoints, ADMFLAG_CHEATS);
 	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
 	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
 	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
@@ -2263,5 +2264,64 @@ static Action Command_ConditionToggle(int client, int args)
 {
 	g_IgnoreRoundWinConditionsConVar.BoolValue = !g_IgnoreRoundWinConditionsConVar.BoolValue;
 	CPrintToChat(client, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_IgnoreRoundWinConditionsConVar.BoolValue ? "dis" : "en");
+	return Plugin_Handled;
+}
+
+public Action Command_SetQueuePoints(int client, int args)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	if (args < 2)
+	{
+		ReplyToCommand(client, "Usage: sm_sf2_set_queue <name|#userid> <amount>");
+		return Plugin_Handled;
+	}
+
+	char arg1[32];
+	GetCmdArg(1, arg1, sizeof(arg1));
+
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+
+	if ((target_count = ProcessTargetString(
+			arg1,
+			client,
+			target_list,
+			MAXPLAYERS,
+			0,
+			target_name,
+			sizeof(target_name),
+			tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+
+	char arg2[32];
+	GetCmdArg(2, arg2, sizeof(arg2));
+
+	int amount = StringToInt(arg2);
+
+	char name[MAX_NAME_LENGTH];
+
+	for (int i = 0; i < target_count; i++)
+	{
+		int target = target_list[i];
+
+		if (IsClientSourceTV(target))
+		{
+			continue;//Exclude the sourcetv bot
+		}
+
+		FormatEx(name, sizeof(name), "%N", target);
+
+		ClientSetQueuePoints(target, amount);
+		CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", client, "SF2 Set Queue Points", name);
+	}
+
 	return Plugin_Handled;
 }

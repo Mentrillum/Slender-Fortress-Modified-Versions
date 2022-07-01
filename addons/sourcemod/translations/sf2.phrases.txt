@@ -1104,6 +1104,12 @@
 		"chi"	"强制 {red}{1}{default} 离开游戏。"
 	}
 
+	"SF2 Set Queue Points"
+	{
+		"#format"	"{1:s}"
+		"en"	"Changed {blue}{1}{default} queue points."
+	}
+
 	"SF2 Cannot Use Command"
 	{
 		"en"	"This command cannot be used at this time."

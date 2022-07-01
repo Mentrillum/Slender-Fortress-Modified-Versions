@@ -570,6 +570,22 @@ native bool SF2_IsSpecialRoundRunning();
 native int SF2_GetSpecialRoundType();
 
 /**
+ * Returns the amount of a queue points a player has.
+ *
+ * @param client	Client index.
+ * @return		Amount of queue points.
+ */
+native int SF2_GetClientQueuePoints(int client);
+
+/**
+ * Returns the amount of a queue points a player has.
+ *
+ * @param client	Client index.
+ * @param amount	Amount of queue points.
+ */
+native void SF2_SetClientQueuePoints(int client, int amount);
+
+/**
  * Returns the current group a player is in.
  *
  * @param client	Client index.

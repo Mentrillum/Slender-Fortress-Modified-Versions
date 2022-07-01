@@ -58,6 +58,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	CreateNative("SF2_IsRoundInGracePeriod", Native_IsRoundInGracePeriod);
 	CreateNative("SF2_GetCurrentDifficulty", Native_GetCurrentDifficulty);
 	CreateNative("SF2_GetDifficultyModifier", Native_GetDifficultyModifier);
+	CreateNative("SF2_GetClientQueuePoints", Native_GetClientQueuePoints);
+	CreateNative("SF2_SetClientQueuePoints", Native_SetClientQueuePoints);
 	CreateNative("SF2_GetClientGroup", Native_GetClientGroup);
 	CreateNative("SF2_IsClientEliminated", Native_IsClientEliminated);
 	CreateNative("SF2_IsClientInGhostMode", Native_IsClientInGhostMode);
@@ -460,6 +462,16 @@ public int Native_GetDifficultyModifier(Handle plugin,int numParams)
 	}
 
 	return view_as<int>(DIFFICULTYMODIFIER_NORMAL);
+}
+
+public int Native_GetClientQueuePoints(Handle plugin,int numParams)
+{
+	return g_PlayerQueuePoints[GetNativeCell(1)];
+}
+
+public int Native_SetClientQueuePoints(Handle plugin,int numParams)
+{
+	g_PlayerQueuePoints[GetNativeCell(1)] = GetNativeCell(2);
 }
 
 public int Native_GetClientGroup(Handle plugin,int numParams)
