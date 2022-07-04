@@ -500,6 +500,12 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		CreateGeneralParticle(client, spawnEffect, NPCGetProxySpawnEffectZOffset(bossIndex));
 	}
 
+	float resize = GetProfileFloat(profile, "proxies_resize");
+	if (resize > 0.0)
+	{
+		SetEntPropFloat(client, Prop_Send, "m_flModelScale", resize);
+	}
+
 	Call_StartForward(g_OnClientSpawnedAsProxyFwd);
 	Call_PushCell(client);
 	Call_Finish();
