@@ -318,7 +318,7 @@ void SlenderSpawnEffects(int bossIndex)
 					}
 				}
 
-				if (entity != -1)
+				if (entity > -1)
 				{
 					char value[PLATFORM_MAX_PATH];
 					g_Config.GetString("renderamt", value, sizeof(value), "255");
