@@ -531,7 +531,7 @@ void ClientTurnOnFlashlight(int client)
 
 	// Spawn the light that only everyone else will see.
 	int ent = CreateEntityByName("point_spotlight");
-	if (ent != -1)
+	if (ent > -1)
 	{
 		TeleportEntity(ent, eyePos, NULL_VECTOR, NULL_VECTOR);
 
