@@ -28,6 +28,12 @@ void AFK_SetTime(int client, bool bReset = true)
 	}
 }
 
+void AFK_SetAFK(int client)
+{
+	g_PlayerNoPoints[client] = true;
+	g_AfkAtGameTime[client] = 1.0;
+}
+
 void AFK_CheckTime(int client)
 {
 	if (g_AfkAtGameTime[client] != 0.0 && g_AfkAtGameTime[client] < GetGameTime())

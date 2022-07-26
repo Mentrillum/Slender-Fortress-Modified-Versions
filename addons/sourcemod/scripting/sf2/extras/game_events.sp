@@ -336,6 +336,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 
 			if (!g_FullyEnableSpectatorConVar.BoolValue)
 			{
+				AFK_SetAFK(client);
 				g_PlayerSwitchBlueTimer[client] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
