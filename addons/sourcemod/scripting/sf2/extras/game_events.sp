@@ -343,6 +343,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 		{
 			if (!g_PlayerChoseTeam[client])
 			{
+				AFK_SetAFK(client);
 				g_PlayerChoseTeam[client] = true;
 
 				if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)

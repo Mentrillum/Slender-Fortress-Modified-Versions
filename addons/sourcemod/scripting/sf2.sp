@@ -4435,6 +4435,8 @@ public void OnClientPutInServer(int client)
 	ClientSetScareBoostEndTime(client, -1.0);
 
 	ClientStartProxyAvailableTimer(client);
+	
+	AFK_SetTime(client);
 
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
