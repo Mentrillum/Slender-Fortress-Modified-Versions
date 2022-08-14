@@ -1596,6 +1596,26 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 		return false;
 	}
 
+	if (kv.JumpToKey("map_blacklist"))
+	{
+		char s1[4], s2[64], s3[64];
+		GetCurrentMap(s3, sizeof(s3));
+		for (int i = 1;; i++)
+		{
+			FormatEx(s1, sizeof(s1), "%d", i);
+			kv.GetString(s1, s2, sizeof(s2));
+			if (s2[0] == '\0') break;
+
+			if (StrContains(s3, s2, false) != -1)
+			{
+				FormatEx(loadFailReasonBuffer, iLoadFailReasonBufferLen, "is blacklisted on %s!", s3);
+				return false;
+			}
+		}
+		
+		kv.GoBack();
+	}
+
 	float bossModelScale = kv.GetFloat("model_scale", 1.0);
 	if (bossModelScale <= 0.0)
 	{
