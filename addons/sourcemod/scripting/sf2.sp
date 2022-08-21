@@ -910,6 +910,7 @@ ConVar g_UsePlayersForKillFeedConVar;
 ConVar g_DefaultLegacyHudConVar;
 ConVar g_DifficultyVoteOptionsConVar;
 ConVar g_DifficultyVoteRandomConVar;
+ConVar g_DifficultyNoGracePageConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -3511,6 +3512,22 @@ static Action Hook_PageOnTakeDamage(int page, int &attacker, int &inflictor, flo
 
 void CollectPage(int page, int activator)
 {
+	if (g_RoundState == SF2RoundState_Grace)
+	{
+		char noGracePage[PLATFORM_MAX_PATH];
+		g_DifficultyNoGracePageConVar.GetString(noGracePage, sizeof(noGracePage));
+		if (noGracePage[0])
+		{
+			char match[4];
+			IntToString(g_DifficultyConVar.IntValue, match, sizeof(match));
+			if (StrContains(noGracePage, match) != -1)
+			{
+				CPrintToChat(activator, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Grace Period Page");
+				return;
+			}
+		}
+	}
+
 	if (SF_SpecialRound(SPECIALROUND_ESCAPETICKETS))
 	{
 		ClientEscape(activator);
