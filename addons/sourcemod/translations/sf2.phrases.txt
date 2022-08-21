@@ -120,6 +120,11 @@
 
 	}
 
+	"SF2 Grace Period Page"
+	{
+		"en"	"Wait for Grace period to end to collect a page."
+	}
+
 	"SF2 Player Escaped"
 	{
 		"#format"		"{1:s}"

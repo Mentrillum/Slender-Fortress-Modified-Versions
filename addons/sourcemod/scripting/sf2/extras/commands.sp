@@ -217,6 +217,8 @@ public void OnPluginStart()
 	g_DifficultyVoteOptionsConVar = CreateConVar("sf2_difficulty_vote_options", "1,2,3", "What vote options will appear on the Difficulty vote. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon, 6 = Random");
 	g_DifficultyVoteRandomConVar = CreateConVar("sf2_difficulty_random_vote", "1", "If random vote will use a random vote option instead of a random difficulty.", _, true, 0.0, true, 1.0);
 
+	g_DifficultyNoGracePageConVar = CreateConVar("sf2_difficulty_no_grace_pages", "", "On what difficulties will players be unable to collect pages while grace period is active. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon");
+
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
 	g_HudSync = CreateHudSynchronizer();
