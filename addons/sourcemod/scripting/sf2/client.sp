@@ -271,16 +271,31 @@ public Action Hook_ClientSetTransmit(int client,int other)
 	return Plugin_Continue;
 }
 
-public Action TF2_CalcIsAttackCritical(int client,int weapon, char[] weaponName, bool &result)
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponName, bool &result)
 {
-	if (!g_Enabled)
+	if (!g_Enabled || g_RestartSessionEnabled || g_PlayerEliminated[client])
 	{
 		return Plugin_Continue;
 	}
 
-	if ((IsRoundInWarmup() || IsClientInPvP(client)) && !IsRoundEnding())
+	int entity = GetClientAimTarget(client, false);
+	if (entity > MaxClients)
 	{
-		//Save this for later I guess
+		char buffer[64];
+		if (GetEntityClassname(entity, buffer, sizeof(buffer)) && StrContains(buffer, "prop_dynamic") == 0)
+		{
+			if (GetEntPropString(entity, Prop_Data, "m_iName", buffer, sizeof(buffer)) && StrContains(buffer, "sf2_page", false) == 0)
+			{
+				float pos1[3], pos2[3];
+				GetClientEyePosition(client, pos1);
+				GetEntPropVector(entity, Prop_Data, "m_vecOrigin", pos2);
+				
+				if (GetVectorDistance(pos1, pos2, true) < 2500.0)
+				{
+					CollectPage(entity, client);
+				}
+			}
+		}
 	}
 
 	return Plugin_Continue;
