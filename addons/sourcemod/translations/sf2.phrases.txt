@@ -1741,6 +1741,21 @@
 		"fi"	"{lightblue}Haamu tila otetaan nyt käyttöön, kun kuolet RED:llä."
 	}
 
+	"SF2 Settings View Bobbing Toggle Title"
+	{
+		"en" 	"Set view bobbing toggle"
+	}
+
+	"SF2 Toggle View Bobbing On"
+	{
+		"en"	"{lightblue}View bobbing is now enabled."
+	}
+
+	"SF2 Toggle View Bobbing Off"
+	{
+		"en"	"{lightblue}View bobbing is now disabled."
+	}
+
 	"SF2 Recent Changes"
 	{
 		"en"	"Recent Changes:"
