@@ -286,6 +286,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slafk", Command_NoPoints);
 	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
 	RegConsoleCmd("sm_slhud", Command_MenuSwitchHud);
+	RegConsoleCmd("sm_slviewbob", Command_MenuViewBob);
 	RegConsoleCmd("+sprint", Command_SprintOn);
 	RegConsoleCmd("-sprint", Command_SprintOff);
 	RegConsoleCmd("+blink", Command_BlinkOn);
@@ -474,6 +475,27 @@ static Action Command_MenuSwitchHud(int client,int args)
 	DrawPanelItem(panel, "Use the legacy HUD");
 
 	SendPanelToClient(panel, client, Panel_SettingsHudVersion, 30);
+	delete panel;
+	return Plugin_Handled;
+}
+
+static Action Command_MenuViewBob(int client,int args)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	char buffer[512];
+	FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings View Bobbing Toggle Title", client);
+
+	Handle panel = CreatePanel();
+	SetPanelTitle(panel, buffer);
+
+	DrawPanelItem(panel, "Enable View Bobbing");
+	DrawPanelItem(panel, "Disable View Bobbing");
+
+	SendPanelToClient(panel, client, Panel_SettingsViewBobbing, 30);
 	delete panel;
 	return Plugin_Handled;
 }

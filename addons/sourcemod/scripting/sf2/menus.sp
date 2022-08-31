@@ -147,6 +147,8 @@ void SetupMenus()
 	AddMenuItem(g_MenuSettings, "0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Hud Version Title");
 	AddMenuItem(g_MenuSettings, "0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings View Bobbing Toggle Title");
+	AddMenuItem(g_MenuSettings, "0", buffer);
 	SetMenuExitBackButton(g_MenuSettings, true);
 
 	g_MenuSettingsFlashlightTemp1 = CreateMenu(Menu_Settings_Flashlighttemp1);
@@ -1067,6 +1069,10 @@ public int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 				SendPanelToClient(panel, param1, Panel_SettingsHudVersion, 30);
 				delete panel;
 			}
+			case 10:
+			{
+				FakeClientCommand(param1, "sm_slviewbob");
+			}
 		}
 	}
 	else if (action == MenuAction_Cancel)
@@ -1350,6 +1356,30 @@ public int Panel_SettingsHudVersion(Handle menu, MenuAction action,int param1,in
 				g_PlayerPreferences[param1].PlayerPreference_LegacyHud = true;
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Legacy Hud Use", param1);
+			}
+		}
+
+		DisplayMenu(g_MenuSettings, param1, 30);
+	}
+}
+
+public int Panel_SettingsViewBobbing(Handle menu, MenuAction action,int param1,int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_ViewBobbing = true;
+				ClientSaveCookies(param1);
+				CPrintToChat(param1, "%T", "SF2 Toggle View Bobbing On", param1);
+			}
+			case 2:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_ViewBobbing = false;
+				ClientSaveCookies(param1);
+				CPrintToChat(param1, "%T", "SF2 Toggle View Bobbing Off", param1);
 			}
 		}
 
