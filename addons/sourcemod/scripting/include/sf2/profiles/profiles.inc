@@ -1888,11 +1888,11 @@ enum struct SF2BossProfileData
 		{
 			this.LocalDeathCamSounds.Load(kv);
 		}
-		else if (strcmp(sectionName, "sound_player_deathcam") == 0 || strcmp(sectionName, "sound_player_death") == 0)
+		else if (strcmp(sectionName, "sound_player_deathcam") == 0)
 		{
 			this.ClientDeathCamSounds.Load(kv);
 		}
-		else if (strcmp(sectionName, "sound_player_deathcam_all") == 0 || strcmp(sectionName, "sound_player_death_all") == 0)
+		else if (strcmp(sectionName, "sound_player_deathcam_all") == 0)
 		{
 			this.GlobalDeathCamSounds.Load(kv);
 		}
