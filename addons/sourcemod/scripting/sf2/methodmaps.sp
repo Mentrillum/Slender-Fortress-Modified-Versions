@@ -4,6 +4,8 @@
 
 #define _sf2_methodmaps_included
 
+#pragma semicolon 1
+
 const SF2NPC_BaseNPC SF2_INVALID_NPC = view_as<SF2NPC_BaseNPC>(-1);
 const SF2NPC_Chaser SF2_INVALID_NPC_CHASER = view_as<SF2NPC_Chaser>(-1);
 const SF2NPC_Statue SF2_INVALID_NPC_STATUE = view_as<SF2NPC_Statue>(-1);
@@ -115,34 +117,6 @@ methodmap SF2NPC_BaseNPC
 		public get()
 		{
 			return NPCGetFOV(this.Index);
-		}
-	}
-
-	property float Anger
-	{
-		public get()
-		{
-			return NPCGetAnger(this.Index);
-		}
-		public set(float amount)
-		{
-			NPCSetAnger(this.Index, amount);
-		}
-	}
-
-	property float AngerAddOnPageGrab
-	{
-		public get()
-		{
-			return NPCGetAngerAddOnPageGrab(this.Index);
-		}
-	}
-
-	property float AngerAddOnPageGrabTimeDiff
-	{
-		public get()
-		{
-			return NPCGetAngerAddOnPageGrabTimeDiff(this.Index);
 		}
 	}
 
@@ -365,19 +339,14 @@ methodmap SF2NPC_BaseNPC
         }
     }
 
-	public void AddAnger(float amount)
+	public bool HasAttribute(int attributeIndex)
 	{
-		NPCAddAnger(this.Index, amount);
+		return NPCHasAttribute(this.Index, attributeIndex);
 	}
 
-	public bool HasAttribute(const char[] attributeName)
+	public float GetAttributeValue(int attributeIndex)
 	{
-		return NPCHasAttribute(this.Index, attributeName);
-	}
-
-	public float GetAttributeValue(const char[] attributeName, float defaultValue = 0.0)
-	{
-		return NPCGetAttributeValue(this.Index, attributeName, defaultValue);
+		return NPCGetAttributeValue(this.Index, attributeIndex);
 	}
 
 	public bool CanBeSeen(bool fov = true, bool blink = false)
@@ -388,6 +357,11 @@ methodmap SF2NPC_BaseNPC
 	public bool PlayerCanSee(int client, bool fov = true, bool blink = false, bool eliminated = false)
 	{
 		return PlayerCanSeeSlender(client, this.Index, fov, blink, eliminated);
+	}
+
+	public void AddCompanions()
+	{
+		NPCAddCompanions(this);
 	}
 }
 
@@ -422,14 +396,6 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		public get()
 		{
 			return NPCChaserGetStunFlashlightDamage(this.Index);
-		}
-	}
-
-	property float StunDuration
-	{
-		public get()
-		{
-			return NPCChaserGetStunDuration(this.Index);
 		}
 	}
 

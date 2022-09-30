@@ -4,6 +4,8 @@
 
 #define _sf2_playergroups_menus
 
+#pragma semicolon 1
+
 void DisplayGroupMainMenuToClient(int client)
 {
 	Handle menu = CreateMenu(Menu_GroupMain);
@@ -61,6 +63,7 @@ public int Menu_GroupMain(Handle menu, MenuAction action,int param1,int param2)
 			}
 		}
 	}
+	return 0;
 }
 
 void DisplayCreateGroupMenuToClient(int client)
@@ -126,6 +129,7 @@ public int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2
 
 		DisplayGroupMainMenuToClient(param1);
 	}
+	return 0;
 }
 
 void DisplayLeaveGroupMenuToClient(int client)
@@ -177,6 +181,7 @@ public int Menu_LeaveGroup(Handle menu, MenuAction action,int param1,int param2)
 
 		DisplayGroupMainMenuToClient(param1);
 	}
+	return 0;
 }
 
 void DisplayAdminGroupMenuToClient(int client)
@@ -275,6 +280,7 @@ public int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
 			CPrintToChat(param1, "%T", "SF2 Group Does Not Exist", param1);
 		}
 	}
+	return 0;
 }
 
 void DisplayViewGroupMembersMenuToClient(int client)
@@ -358,6 +364,7 @@ public int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int p
 	{
 		DisplayAdminGroupMenuToClient(param1);
 	}
+	return 0;
 }
 
 void DisplaySetGroupLeaderMenuToClient(int client)
@@ -475,6 +482,7 @@ public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int par
 
 		DisplayAdminGroupMenuToClient(param1);
 	}
+	return 0;
 }
 
 void DisplayKickFromGroupMenuToClient(int client)
@@ -594,6 +602,7 @@ public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int para
 
 		DisplayKickFromGroupMenuToClient(param1);
 	}
+	return 0;
 }
 
 void DisplaySetGroupNameMenuToClient(int client)
@@ -640,6 +649,7 @@ public int Menu_SetGroupName(Handle menu, MenuAction action,int param1,int param
 	{
 		DisplayAdminGroupMenuToClient(param1);
 	}
+	return 0;
 }
 
 void DisplayInviteToGroupMenuToClient(int client)
@@ -752,4 +762,5 @@ public int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int para
 
 		DisplayInviteToGroupMenuToClient(param1);
 	}
+	return 0;
 }

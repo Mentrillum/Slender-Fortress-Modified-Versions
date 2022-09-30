@@ -1,5 +1,7 @@
 // sf2_trigger_escape
 
+#pragma semicolon 1
+
 // A trigger that when touched by a player on RED will let the player escape.
 // Escaping can only occur during the Escape phase.
 

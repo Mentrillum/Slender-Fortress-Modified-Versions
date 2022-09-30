@@ -4,6 +4,8 @@
 //Detours
 //static Handle g_SDKGamerulesIsInTraining;
 
+#pragma semicolon 1
+
 //Timer data
 static Handle g_TimerTutorialMessage;
 static Handle g_TimerHideTutorialMessage;

@@ -3,6 +3,8 @@
 #endif
 #define _sf2_client_classconfigs_included
 
+#pragma semicolon 1
+
 float g_ClassRunSpeed[MAX_CLASSES + 1];
 float g_ClassWalkSpeed[MAX_CLASSES + 1];
 float g_ClassDangerSpeedMultipler[MAX_CLASSES + 1];
@@ -99,13 +101,13 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 	{
 		return false;
 	}
-	g_RestrictedWeaponsConfig.Rewind();
+	g_ClassStatsConfig.Rewind();
 
 	switch (class)
 	{
 		case TFClass_Scout:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("scout"))
+			if (g_ClassStatsConfig.JumpToKey("scout"))
 			{
 				strcopy(buffer, bufferLen, "scout");
 			}
@@ -116,7 +118,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Soldier:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("soldier"))
+			if (g_ClassStatsConfig.JumpToKey("soldier"))
 			{
 				strcopy(buffer, bufferLen, "soldier");
 			}
@@ -127,7 +129,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Pyro:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("pyro"))
+			if (g_ClassStatsConfig.JumpToKey("pyro"))
 			{
 				strcopy(buffer, bufferLen, "pyro");
 			}
@@ -138,7 +140,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_DemoMan:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("demoman"))
+			if (g_ClassStatsConfig.JumpToKey("demoman"))
 			{
 				strcopy(buffer, bufferLen, "demoman");
 			}
@@ -149,14 +151,14 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Heavy:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("heavy"))
+			if (g_ClassStatsConfig.JumpToKey("heavy"))
 			{
 				strcopy(buffer, bufferLen, "heavy");
 			}
 			else
 			{
-				g_RestrictedWeaponsConfig.Rewind();
-				if (g_RestrictedWeaponsConfig.JumpToKey("heavyweapons"))
+				g_ClassStatsConfig.Rewind();
+				if (g_ClassStatsConfig.JumpToKey("heavyweapons"))
 				{
 					strcopy(buffer, bufferLen, "heavyweapons");
 				}
@@ -168,7 +170,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Engineer:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("engineer"))
+			if (g_ClassStatsConfig.JumpToKey("engineer"))
 			{
 				strcopy(buffer, bufferLen, "engineer");
 			}
@@ -179,7 +181,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Medic:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("medic"))
+			if (g_ClassStatsConfig.JumpToKey("medic"))
 			{
 				strcopy(buffer, bufferLen, "medic");
 			}
@@ -190,7 +192,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Sniper:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("sniper"))
+			if (g_ClassStatsConfig.JumpToKey("sniper"))
 			{
 				strcopy(buffer, bufferLen, "sniper");
 			}
@@ -201,7 +203,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Spy:
 		{
-			if (g_RestrictedWeaponsConfig.JumpToKey("spy"))
+			if (g_ClassStatsConfig.JumpToKey("spy"))
 			{
 				strcopy(buffer, bufferLen, "spy");
 			}

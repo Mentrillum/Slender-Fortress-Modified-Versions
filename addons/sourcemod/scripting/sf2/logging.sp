@@ -3,6 +3,8 @@
 #endif
 #define _sf2_logging_included
 
+#pragma semicolon 1
+
 static char g_LogFilePath[512] = "";
 
 void InitializeLogging()
@@ -12,14 +14,14 @@ void InitializeLogging()
 	{
 		CreateDirectory(g_LogFilePath, FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC);
 	}
-
+	
 	char dateSuffix[256];
 	FormatTime(dateSuffix, sizeof(dateSuffix), "%Y-%m-%d.log", GetTime());
 	BuildPath(Path_SM, g_LogFilePath, sizeof(g_LogFilePath), "logs/sf2/%s", dateSuffix);
-
+	
 	char map[64];
 	GetCurrentMap(map, sizeof(map));
-
+	
 	LogSF2Message("-------- Mapchange to %s -------", map);
 }
 

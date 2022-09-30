@@ -3,6 +3,8 @@
 #endif
 #define _sf2_npc_chaser_included
 
+#pragma semicolon 1
+
 bool g_NpcOriginalVisibility[MAX_BOSSES];
 
 static float g_NpcWalkSpeed[MAX_BOSSES][Difficulty_Max];
@@ -11,7 +13,6 @@ static float g_NpcMaxWalkSpeed[MAX_BOSSES][Difficulty_Max];
 static float g_NpcWakeRadius[MAX_BOSSES];
 
 static bool g_NpcHasStunEnabled[MAX_BOSSES];
-static float g_NpcStunDuration[MAX_BOSSES];
 static float g_NpcStunCooldown[MAX_BOSSES];
 static bool g_NpcStunFlashlightEnabled[MAX_BOSSES];
 static bool g_NpcHasKeyDrop[MAX_BOSSES];
@@ -153,7 +154,7 @@ bool g_NpcUseStartFleeAnimation[MAX_BOSSES] = { false, ... };
 bool g_NpcUsesHealAnimation[MAX_BOSSES] = { false, ... };
 static float g_NpcTimeUntilChaseAfterInitial[MAX_BOSSES];
 float g_NpcCurrentAnimationSequencePlaybackRate[MAX_BOSSES] = { 1.0, ... };
-static char g_sNPCurrentAnimationSequenceName[MAX_BOSSES][256];
+static char g_NpcCurrentAnimationSequenceName[MAX_BOSSES][256];
 bool g_NpcAlreadyAttacked[MAX_BOSSES];
 
 bool g_NpcCopyAlerted[MAX_BOSSES];
@@ -193,14 +194,14 @@ static char keyModel[PLATFORM_MAX_PATH];
 bool g_NpcStealingLife[MAX_BOSSES];
 Handle g_NpcLifeStealTimer[MAX_BOSSES];
 
+static Handle g_NpcInstantKillThink[MAX_BOSSES];
+
 static bool g_NpcHasTrapsEnabled[MAX_BOSSES];
 static int g_NpcTrapType[MAX_BOSSES];
 static float g_NpcNextTrapSpawn[MAX_BOSSES][Difficulty_Max];
 
 //Special thanks to The Gaben
 bool g_SlenderHasDamageParticleEffect[MAX_BOSSES];
-float g_SlenderDamageClientSoundVolume[MAX_BOSSES];
-int g_SlenderDamageClientSoundPitch[MAX_BOSSES];
 char damageEffectParticle[PLATFORM_MAX_PATH];
 char damageEffectSound[PLATFORM_MAX_PATH];
 
@@ -233,10 +234,6 @@ int g_NpcHealCount[MAX_BOSSES];
 static int g_NpcBoxingCurrentDifficulty[MAX_BOSSES];
 static int g_NpcBoxingRagePhase[MAX_BOSSES];
 
-static bool g_NpcHasUsesMultiAttackSounds[MAX_BOSSES] = { false, ... };
-static bool g_NpcHasUsesMultiHitSounds[MAX_BOSSES] = { false, ... };
-static bool g_NpcHasUsesMultiMissSounds[MAX_BOSSES] = { false, ... };
-
 static bool g_NpcHasHasCrawling[MAX_BOSSES] = { false, ... };
 bool g_NpcIsCrawling[MAX_BOSSES] = { false, ... };
 bool g_NpcChangeToCrawl[MAX_BOSSES] = { false, ... };
@@ -263,8 +260,10 @@ enum struct BaseAttackStructure
 	int baseAttackMaxRepeats;
 	int currentAttackRepeat;
 	int weaponAttackIndex;
+
 	bool baseAttackLifeSteal;
 	float baseAttackLifeStealDuration;
+
 	float baseAttackProjectileDamage;
 	float baseAttackProjectileSpeed;
 	float baseAttackProjectileRadius;
@@ -274,30 +273,39 @@ enum struct BaseAttackStructure
 	bool baseAttackProjectileCrits;
 	float baseAttackProjectileIceSlowdownPercent;
 	float baseAttackProjectileIceSlowdownDuration;
+
 	int baseAttackBulletCount;
 	float baseAttackBulletDamage;
 	float baseAttackBulletSpread;
+
 	float baseAttackNextAttackTime;
+
 	float baseAttackLaserDamage;
 	float baseAttackLaserSize;
 	int baseAttackLaserColor[3];
 	bool baseAttackLaserAttachment;
 	float baseAttackLaserDuration;
 	float baseAttackLaserNoise;
+
 	bool baseAttackPullIn;
+
 	bool baseAttackWhileRunning;
 	float baseAttackRunSpeed;
 	float baseAttackRunDuration;
 	float baseAttackRunDelay;
+
 	int baseAttackUseOnDifficulty;
 	int baseAttackBlockOnDifficulty;
+
 	int baseAttackExplosiveDanceRadius;
+
 	int baseAttackWeaponTypeInt;
 	bool baseAttackIgnoreAlwaysLooking;
 	bool baseAttackGestures;
 	bool baseAttackDeathCamOnLowHealth;
 	float baseAttackUseOnHealth;
 	float baseAttackBlockOnHealth;
+	bool baseAttackDontInterruptChaseInitial;
 }
 
 int g_SlenderOldState[MAX_BOSSES];
@@ -602,7 +610,12 @@ float NPCChaserGetAttackBlockOnHealth(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackBlockOnHealth;
 }
 
-int NPCSetCurrentAttackIndex(int npcIndex, int attackIndex)
+bool NPCChaserGetAttackInterruptChaseInitialState(int npcIndex, int attackIndex)
+{
+	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDontInterruptChaseInitial;
+}
+
+void NPCSetCurrentAttackIndex(int npcIndex, int attackIndex)
 {
 	g_NpcCurrentAttackIndex[npcIndex] = attackIndex;
 }
@@ -612,9 +625,9 @@ int NPCGetCurrentAttackIndex(int npcIndex)
 	return g_NpcCurrentAttackIndex[npcIndex];
 }
 
-int NpcSetCurrentAttackRepeat(int npcIndex, int attackIndex, int iValue)
+void NpcSetCurrentAttackRepeat(int npcIndex, int attackIndex, int value)
 {
-	g_NpcBaseAttacks[npcIndex][attackIndex][1].currentAttackRepeat = iValue;
+	g_NpcBaseAttacks[npcIndex][attackIndex][1].currentAttackRepeat = value;
 }
 
 int NpcGetCurrentAttackRepeat(int npcIndex, int attackIndex)
@@ -632,9 +645,9 @@ float NPCChaserGetNextAttackTime(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackNextAttackTime;
 }
 
-float NPCChaserSetNextAttackTime(int npcIndex, int attackIndex, float flValue)
+void NPCChaserSetNextAttackTime(int npcIndex, int attackIndex, float value)
 {
-	g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackNextAttackTime = flValue;
+	g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackNextAttackTime = value;
 }
 
 bool NPCChaserIsStunEnabled(int npcIndex)
@@ -660,11 +673,6 @@ bool NPCChaseHasKeyDrop(int npcIndex)
 float NPCChaserGetStunFlashlightDamage(int npcIndex)
 {
 	return g_NpcStunFlashlightDamage[npcIndex];
-}
-
-float NPCChaserGetStunDuration(int npcIndex)
-{
-	return g_NpcStunDuration[npcIndex];
 }
 
 float NPCChaserGetStunCooldown(int npcIndex)
@@ -1354,21 +1362,6 @@ bool NPCChaserCanUseAlertWalkingAnimation(int npcIndex)
 	return g_NpcHasCanUseAlertWalkingAnimation[npcIndex];
 }
 
-bool NPCChaserHasMultiAttackSounds(int npcIndex)
-{
-	return g_NpcHasUsesMultiAttackSounds[npcIndex];
-}
-
-bool NPCChaserHasMultiHitSounds(int npcIndex)
-{
-	return g_NpcHasUsesMultiHitSounds[npcIndex];
-}
-
-bool NPCChaserHasMultiMissSounds(int npcIndex)
-{
-	return g_NpcHasUsesMultiMissSounds[npcIndex];
-}
-
 bool NPCChaserCanCrawl(int npcIndex)
 {
 	return g_NpcHasHasCrawling[npcIndex];
@@ -1394,9 +1387,9 @@ int NPCChaserGetBoxingDifficulty(int npcIndex)
 	return g_NpcBoxingCurrentDifficulty[npcIndex];
 }
 
-void NPCChaserSetBoxingDifficulty(int npcIndex, int iValue)
+void NPCChaserSetBoxingDifficulty(int npcIndex, int value)
 {
-	g_NpcBoxingCurrentDifficulty[npcIndex] = iValue;
+	g_NpcBoxingCurrentDifficulty[npcIndex] = value;
 }
 
 int NPCChaserGetBoxingRagePhase(int npcIndex)
@@ -1404,9 +1397,9 @@ int NPCChaserGetBoxingRagePhase(int npcIndex)
 	return g_NpcBoxingRagePhase[npcIndex];
 }
 
-void NPCChaserSetBoxingRagePhase(int npcIndex, int iValue)
+void NPCChaserSetBoxingRagePhase(int npcIndex, int value)
 {
-	g_NpcBoxingRagePhase[npcIndex] = iValue;
+	g_NpcBoxingRagePhase[npcIndex] = value;
 }
 
 bool NPCChaserCanChaseOnLook(int npcIndex)
@@ -1414,167 +1407,165 @@ bool NPCChaserCanChaseOnLook(int npcIndex)
 	return g_NpcChaseOnLook[npcIndex];
 }
 
-int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
+void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 {
-	SF2ChaserBossProfile profile = SF2ChaserBossProfile(NPCGetProfileIndex(npcIndex));
-	char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(npcIndex, profile, sizeof(profile));
 
-	g_NpcWakeRadius[npcIndex] = profile.WakeRadius;
+	g_NpcWakeRadius[npcIndex] = GetChaserProfileWakeRadius(profile);
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_NpcWalkSpeed[npcIndex][difficulty] = profile.GetWalkSpeed(difficulty);
-		g_NpcMaxWalkSpeed[npcIndex][difficulty] = profile.GetMaxWalkSpeed(difficulty);
+		g_NpcWalkSpeed[npcIndex][difficulty] = GetChaserProfileWalkSpeed(profile, difficulty);
+		g_NpcMaxWalkSpeed[npcIndex][difficulty] = GetChaserProfileMaxWalkSpeed(profile, difficulty);
 
-		g_NpcAlertGracetime[npcIndex][difficulty] = profile.GetAlertStateGraceTime(difficulty);
-		g_NpcAlertDuration[npcIndex][difficulty] = profile.GetAlertStateDuration(difficulty);
-		g_NpcChaseDuration[npcIndex][difficulty] = profile.GetChaseStateDuration(difficulty);
+		g_NpcAlertGracetime[npcIndex][difficulty] = GetChaserProfileAlertGracetime(profile, difficulty);
+		g_NpcAlertDuration[npcIndex][difficulty] = GetChaserProfileAlertDuration(profile, difficulty);
+		g_NpcChaseDuration[npcIndex][difficulty] = GetChaserProfileChaseDuration(profile, difficulty);
 
-		g_NpcCloakCooldown[npcIndex][difficulty] = profile.GetCloakCooldown(difficulty);
-		g_NpcCloakRange[npcIndex][difficulty] = profile.GetCloakRange(difficulty);
-		g_NpcDecloakRange[npcIndex][difficulty] = profile.GetDecloakRange(difficulty);
-		g_NpcCloakDuration[npcIndex][difficulty] = profile.GetCloakDuration(difficulty);
-		g_NpcCloakSpeedMultiplier[npcIndex][difficulty] = profile.GetCloakSpeedMultiplier(difficulty);
+		g_NpcCloakCooldown[npcIndex][difficulty] = GetChaserProfileCloakCooldown(profile, difficulty);
+		g_NpcCloakRange[npcIndex][difficulty] = GetChaserProfileCloakRange(profile, difficulty);
+		g_NpcDecloakRange[npcIndex][difficulty] = GetChaserProfileDecloakRange(profile, difficulty);
+		g_NpcCloakDuration[npcIndex][difficulty] = GetChaserProfileCloakDuration(profile, difficulty);
+		g_NpcCloakSpeedMultiplier[npcIndex][difficulty] = GetChaserProfileCloakSpeedMultiplier(profile, difficulty);
 
-		g_NpcProjectileCooldownMin[npcIndex][difficulty] = profile.GetProjectileCooldownMin(difficulty);
-		g_NpcProjectileCooldownMax[npcIndex][difficulty] = profile.GetProjectileCooldownMax(difficulty);
-		g_NpcProjectileSpeed[npcIndex][difficulty] = profile.GetProjectileSpeed(difficulty);
-		g_NpcProjectileDamage[npcIndex][difficulty] = profile.GetProjectileDamage(difficulty);
-		g_NpcProjectileRadius[npcIndex][difficulty] = profile.GetProjectileRadius(difficulty);
-		g_NpcProjectileDeviation[npcIndex][difficulty] = profile.GetProjectileDeviation(difficulty);
-		g_NpcProjectileCount[npcIndex][difficulty] = profile.GetProjectileCount(difficulty);
-		g_IceballSlowdownDuration[npcIndex][difficulty] = profile.GetIceballSlowdownDuration(difficulty);
-		g_IceballSlowdownPercent[npcIndex][difficulty] = profile.GetIceballSlowdownPercent(difficulty);
-		g_NpcProjectileLoadedAmmo[npcIndex][difficulty] = profile.GetProjectileLoadedAmmo(difficulty);
-		g_NpcProjectileReloadTime[npcIndex][difficulty] = profile.GetProjectileReloadTime(difficulty);
-		g_NpcProjectileChargeUpTime[npcIndex][difficulty] = profile.GetProjectileChargeUpTime(difficulty);
+		g_NpcProjectileCooldownMin[npcIndex][difficulty] = GetChaserProfileProjectileCooldownMin(profile, difficulty);
+		g_NpcProjectileCooldownMax[npcIndex][difficulty] = GetChaserProfileProjectileCooldownMax(profile, difficulty);
+		g_NpcProjectileSpeed[npcIndex][difficulty] = GetChaserProfileProjectileSpeed(profile, difficulty);
+		g_NpcProjectileDamage[npcIndex][difficulty] = GetChaserProfileProjectileDamage(profile, difficulty);
+		g_NpcProjectileRadius[npcIndex][difficulty] = GetChaserProfileProjectileRadius(profile, difficulty);
+		g_NpcProjectileDeviation[npcIndex][difficulty] = GetChaserProfileProjectileDeviation(profile, difficulty);
+		g_NpcProjectileCount[npcIndex][difficulty] = GetChaserProfileProjectileCount(profile, difficulty);
+		g_IceballSlowdownDuration[npcIndex][difficulty] = GetChaserProfileIceballSlowdownDuration(profile, difficulty);
+		g_IceballSlowdownPercent[npcIndex][difficulty] = GetChaserProfileIceballSlowdownPercent(profile, difficulty);
+		g_NpcProjectileLoadedAmmo[npcIndex][difficulty] = GetChaserProfileProjectileLoadedAmmo(profile, difficulty);
+		g_NpcProjectileReloadTime[npcIndex][difficulty] = GetChaserProfileProjectileAmmoReloadTime(profile, difficulty);
+		g_NpcProjectileChargeUpTime[npcIndex][difficulty] = GetChaserProfileProjectileChargeUpTime(profile, difficulty);
 		g_NpcProjectileAmmo[npcIndex] = g_NpcProjectileLoadedAmmo[npcIndex][difficulty];
 		g_NpcProjectileTimeToReload[npcIndex] = g_NpcProjectileReloadTime[npcIndex][difficulty];
 
-		g_NpcRandomDuration[npcIndex][difficulty] = profile.GetRandomDuration(difficulty);
-		g_NpcRandomSlowdown[npcIndex][difficulty] = profile.GetRandomSlowdown(difficulty);
-		g_NpcJarateDuration[npcIndex][difficulty] = profile.GetJarateDuration(difficulty);
-		g_NpcMilkDuration[npcIndex][difficulty] = profile.GetMilkDuration(difficulty);
-		g_NpcGasDuration[npcIndex][difficulty] = profile.GetGasDuration(difficulty);
-		g_NpcMarkDuration[npcIndex][difficulty] = profile.GetMarkDuration(difficulty);
-		g_NpcIgniteDelay[npcIndex][difficulty] = profile.GetIgniteDelay(difficulty);
-		g_NpcStunAttackDuration[npcIndex][difficulty] = profile.GetStunAttackDuration(difficulty);
-		g_NpcStunAttackSlowdown[npcIndex][difficulty] = profile.GetStunAttackSlowdown(difficulty);
-		g_NpcBleedDuration[npcIndex][difficulty] = profile.GetBleedDuration(difficulty);
-		g_NpcElectricDuration[npcIndex][difficulty] = profile.GetElectricDuration(difficulty);
-		g_NpcElectricSlowdown[npcIndex][difficulty] = profile.GetElectricSlowdown(difficulty);
+		g_NpcRandomDuration[npcIndex][difficulty] = GetChaserProfileRandomEffectDuration(profile, difficulty);
+		g_NpcRandomSlowdown[npcIndex][difficulty] = GetChaserProfileRandomEffectSlowdown(profile, difficulty);
+		g_NpcJarateDuration[npcIndex][difficulty] = GetChaserProfileJaratePlayerDuration(profile, difficulty);
+		g_NpcMilkDuration[npcIndex][difficulty] = GetChaserProfileMilkPlayerDuration(profile, difficulty);
+		g_NpcGasDuration[npcIndex][difficulty] = GetChaserProfileGasPlayerDuration(profile, difficulty);
+		g_NpcMarkDuration[npcIndex][difficulty] = GetChaserProfileMarkPlayerDuration(profile, difficulty);
+		g_NpcSilentMarkDuration[npcIndex][difficulty] = GetChaserProfileSilentMarkPlayerDuration(profile, difficulty);
+		g_NpcIgniteDelay[npcIndex][difficulty] = GetChaserProfileIgnitePlayerDelay(profile, difficulty);
+		g_NpcStunAttackDuration[npcIndex][difficulty] = GetChaserProfileStunPlayerDuration(profile, difficulty);
+		g_NpcStunAttackSlowdown[npcIndex][difficulty] = GetChaserProfileStunPlayerSlowdown(profile, difficulty);
+		g_NpcBleedDuration[npcIndex][difficulty] = GetChaserProfileBleedPlayerDuration(profile, difficulty);
+		g_NpcElectricDuration[npcIndex][difficulty] = GetChaserProfileEletricPlayerDuration(profile, difficulty);
+		g_NpcElectricSlowdown[npcIndex][difficulty] = GetChaserProfileEletricPlayerSlowdown(profile, difficulty);
 
-		g_NpcShockwaveDrain[npcIndex][difficulty] = profile.GetShockwaveDrain(difficulty);
-		g_NpcShockwaveForce[npcIndex][difficulty] = profile.GetShockwaveForce(difficulty);
-		g_NpcShockwaveHeight[npcIndex][difficulty] = profile.GetShockwaveHeight(difficulty);
-		g_NpcShockwaveRange[npcIndex][difficulty] = profile.GetShockwaveRange(difficulty);
-		g_NpcShockwaveStunDuration[npcIndex][difficulty] = profile.GetShockwaveStunDuration(difficulty);
-		g_NpcShockwaveStunSlowdown[npcIndex][difficulty] = profile.GetShockwaveStunSlowdown(difficulty);
+		g_NpcShockwaveDrain[npcIndex][difficulty] = GetChaserProfileShockwaveDrain(profile, difficulty);
+		g_NpcShockwaveForce[npcIndex][difficulty] = GetChaserProfileShockwaveForce(profile, difficulty);
+		g_NpcShockwaveHeight[npcIndex][difficulty] = GetChaserProfileShockwaveHeight(profile, difficulty);
+		g_NpcShockwaveRange[npcIndex][difficulty] = GetChaserProfileShockwaveRange(profile, difficulty);
+		g_NpcShockwaveStunDuration[npcIndex][difficulty] = GetChaserProfileShockwaveStunDuration(profile, difficulty);
+		g_NpcShockwaveStunSlowdown[npcIndex][difficulty] = GetChaserProfileShockwaveStunSlowdown(profile, difficulty);
 
-		g_NpcNextTrapSpawn[npcIndex][difficulty] = profile.GetTrapCooldown(difficulty);
+		g_NpcNextTrapSpawn[npcIndex][difficulty] = GetChaserProfileTrapSpawnCooldown(profile, difficulty);
 		g_SlenderNextTrapPlacement[npcIndex] = GetGameTime() + g_NpcNextTrapSpawn[npcIndex][difficulty];
 
-		g_NpcSearchWanderRangeMin[npcIndex][difficulty] = profile.GetWanderRangeMin(difficulty);
-		g_NpcSearchWanderRangeMax[npcIndex][difficulty] = profile.GetWanderRangeMax(difficulty);
+		g_NpcSearchWanderRangeMin[npcIndex][difficulty] = GetChaserProfileWanderRangeMin(profile, difficulty);
+		g_NpcSearchWanderRangeMax[npcIndex][difficulty] = GetChaserProfileWanderRangeMax(profile, difficulty);
 
-		g_NpcAutoChaseThreshold[npcIndex][difficulty] = profile.AutoChaseThreshold(difficulty);
-		g_NpcAutoChaseAddGeneral[npcIndex][difficulty] = profile.AutoChaseAddGeneral(difficulty);
-		g_NpcAutoChaseAddFootstep[npcIndex][difficulty] = profile.AutoChaseAddFootstep(difficulty);
-		g_NpcAutoChaseAddVoice[npcIndex][difficulty] = profile.AutoChaseAddVoice(difficulty);
-		g_NpcAutoChaseAddWeapon[npcIndex][difficulty] = profile.AutoChaseAddWeapon(difficulty);
-		g_NpcCrawlSpeedMultiplier[npcIndex][difficulty] = profile.GetCrawlingSpeedMultiplier(difficulty);
+		g_NpcAutoChaseThreshold[npcIndex][difficulty] = GetChaserProfileAutoChaseCount(profile, difficulty);
+		g_NpcAutoChaseAddGeneral[npcIndex][difficulty] = GetChaserProfileAutoChaseAddGeneral(profile, difficulty);
+		g_NpcAutoChaseAddFootstep[npcIndex][difficulty] = GetChaserProfileAutoChaseAddFootstep(profile, difficulty);
+		g_NpcAutoChaseAddVoice[npcIndex][difficulty] = GetChaserProfileAutoChaseAddVoice(profile, difficulty);
+		g_NpcAutoChaseAddWeapon[npcIndex][difficulty] = GetChaserProfileAutoChaseAddWeapon(profile, difficulty);
+		g_NpcCrawlSpeedMultiplier[npcIndex][difficulty] = GetChaserProfileCrawlSpeedMultiplier(profile, difficulty);
 	}
 
-	g_NpcBaseAttacksCount[npcIndex] = profile.AttackCount;
+	g_NpcBaseAttacksCount[npcIndex] = GetChaserProfileAttackCount(profile);
 	// Get attack data.
 	for (int i = 0; i < g_NpcBaseAttacksCount[npcIndex]; i++)
 	{
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackType = profile.GetAttackType(i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackType = GetChaserProfileAttackType(profile, i);
 		for (int diffAtk = 0; diffAtk < Difficulty_Max; diffAtk++)
 		{
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamage = profile.GetAttackDamage(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunSpeed = profile.GetAttackRunSpeed(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackCooldown = profile.GetAttackCooldown(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDamage = profile.GetAttackProjectileDamage(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileSpeed = profile.GetAttackProjectileSpeed(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileRadius = profile.GetAttackProjectileRadius(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDeviation = profile.GetAttackProjectileDeviation(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileCount = profile.GetAttackProjectileCount(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownPercent = profile.GetAttackProjectileIceSlowdownPercent(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownDuration = profile.GetAttackProjectileIceSlowdownDuration(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletCount = profile.GetAttackBulletCount(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletDamage = profile.GetAttackBulletDamage(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletSpread = profile.GetAttackBulletSpread(i, diffAtk);
-			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDamage = profile.GetAttackLaserDamage(i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamage = GetChaserProfileAttackDamage(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunSpeed = GetChaserProfileAttackRunSpeed(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackCooldown = GetChaserProfileAttackCooldown(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDamage = GetChaserProfileAttackProjectileDamage(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileSpeed = GetChaserProfileAttackProjectileSpeed(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileRadius = GetChaserProfileAttackProjectileRadius(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileDeviation = GetChaserProfileAttackProjectileDeviation(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileCount = GetChaserProfileAttackProjectileCount(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownPercent = GetChaserProfileAttackProjectileIceSlowPercent(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileIceSlowdownDuration = GetChaserProfileAttackProjectileIceSlowDuration(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletCount = GetChaserProfileAttackBulletCount(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletDamage = GetChaserProfileAttackBulletDamage(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletSpread = GetChaserProfileAttackBulletSpread(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDamage = GetChaserProfileAttackLaserDamage(profile, i, diffAtk);
 		}
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageVsProps = profile.GetAttackDamageVsProps(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageForce = profile.GetAttackDamageForce(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageType = profile.GetAttackDamageType(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageDelay = profile.GetAttackDamageDelay(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRange = profile.GetAttackRange(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDuration = profile.GetAttackDuration(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackSpread = profile.GetAttackSpread(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginRange = profile.GetAttackBeginRange(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginFOV = profile.GetAttackBeginFOV(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDisappear = profile.ShouldDisappearAfterAttack(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRepeat = profile.GetAttackRepeatCount(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackMaxRepeats = profile.GetMaxAttackRepeats(i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageVsProps = GetChaserProfileAttackDamageVsProps(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageForce = GetChaserProfileAttackDamageForce(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageType = GetChaserProfileAttackDamageType(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageDelay = GetChaserProfileAttackDamageDelay(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRange = GetChaserProfileAttackRange(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDuration = GetChaserProfileAttackDuration(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackSpread = GetChaserProfileAttackSpread(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginRange = GetChaserProfileAttackBeginRange(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginFOV = GetChaserProfileAttackBeginFOV(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDisappear = GetChaserProfileAttackDisappear(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRepeat = GetChaserProfileAttackRepeat(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackMaxRepeats = GetChaserProfileMaxAttackRepeats(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackNextAttackTime = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackIgnoreAlwaysLooking = profile.GetAttackIgnoreAlwaysLooking(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeSteal = profile.CanAttackLifeSteal(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeStealDuration = profile.GetAttackLifeStealDuration(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileCrits = profile.AreAttackProjectilesCritBoosted(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileType = profile.GetAttackProjectileType(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserSize = profile.GetAttackLaserSize(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWhileRunning = profile.CanRunWhileAttacking(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDuration = profile.GetAttackRunDuration(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDelay = profile.GetAttackRunDelay(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnDifficulty = profile.GetAttackUseOnDifficulty(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnDifficulty = profile.GetAttackBlockOnDifficulty(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackExplosiveDanceRadius = profile.GetAttackExplosiveDanceRadius(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWeaponTypeInt = profile.GetAttackWeaponTypeInt(i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackIgnoreAlwaysLooking = GetChaserProfileAttackIgnoreAlwaysLooking(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeSteal = GetChaserProfileAttackLifeStealState(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeStealDuration = GetChaserProfileAttackLifeStealDuration(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileCrits = GetChaserProfileAttackCritProjectiles(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileType = GetChaserProfileAttackProjectileType(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserSize = GetChaserProfileAttackLaserSize(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWhileRunning = GetChaserProfileAttackRunWhileAttackingState(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDuration = GetChaserProfileAttackRunDuration(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDelay = GetChaserProfileAttackRunDelay(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnDifficulty = GetChaserProfileAttackUseOnDifficulty(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnDifficulty = GetChaserProfileAttackBlockOnDifficulty(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackExplosiveDanceRadius = GetChaserProfileAttackExplosiveDanceRadius(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWeaponTypeInt = GetChaserProfileAttackWeaponTypeInt(profile, i);
 
 		int laserColor[3];
-		profile.GetAttackLaserColor(laserColor, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[0] = laserColor[0];
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[1] = laserColor[1];
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[2] = laserColor[2];
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserAttachment = profile.IsLaserOnAttachment(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserDuration = profile.GetAttackLaserDuration(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserNoise = profile.GetAttackLaserNoise(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackPullIn = profile.CanAttackPullIn(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackGestures = profile.HasAttackGestures(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDeathCamOnLowHealth = profile.AttackDeathCamOnLowHealth(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnHealth = profile.GetAttackUseOnHealth(i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnHealth = profile.GetAttackBlockOnHealth(i);
+		GetChaserProfileAttackLaserColor(profile, i, laserColor);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor = laserColor;
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserAttachment = GetChaserProfileEnableLaserAttachment(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserDuration = GetChaserProfileAttackLaserDuration(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserNoise = GetChaserProfileAttackLaserNoise(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackPullIn = GetChaserProfileAttackPullIn(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackGestures = GetChaserProfileAttackGesturesState(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDeathCamOnLowHealth = GetChaserProfileAttackDeathCamLowHealth(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnHealth = GetChaserProfileAttackUseOnHealth(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnHealth = GetChaserProfileAttackBlockOnHealth(profile, i);
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDontInterruptChaseInitial = GetChaserProfileAttackChaseInitialInterruptState(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].currentAttackRepeat = 0;
 	}
 
 	// Get stun data.
 	if (!invincible)
 	{
-		g_NpcHasStunEnabled[npcIndex] = profile.StunEnabled;
+		g_NpcHasStunEnabled[npcIndex] = GetChaserProfileStunState(profile);
 	}
 	else
 	{
 		g_NpcHasStunEnabled[npcIndex] = false;
 	}
-	g_NpcStunDuration[npcIndex] = profile.StunDuration;
-	g_NpcStunCooldown[npcIndex] = profile.StunCooldown;
-	g_NpcStunFlashlightEnabled[npcIndex] = profile.StunByFlashlightEnabled;
-	g_NpcStunFlashlightDamage[npcIndex] = profile.StunFlashlightDamage;
-	g_NpcStunInitialHealth[npcIndex] = profile.StunHealth;
-	g_NpcChaseInitialOnStun[npcIndex] = profile.ChaseInitialOnStun;
+	g_NpcStunCooldown[npcIndex] = GetChaserProfileStunCooldown(profile);
+	g_NpcStunFlashlightEnabled[npcIndex] = GetChaserProfileStunFlashlightState(profile);
+	g_NpcStunFlashlightDamage[npcIndex] = GetChaserProfileStunFlashlightDamage(profile);
+	g_NpcStunInitialHealth[npcIndex] = GetChaserProfileStunHealth(profile);
+	g_NpcChaseInitialOnStun[npcIndex] = GetChaserProfileStunOnChaseInitial(profile);
 
 	//Get key Data
-	g_NpcHasKeyDrop[npcIndex] = profile.HasKeyDrop;
+	g_NpcHasKeyDrop[npcIndex] = GetChaserProfileKeyDrop(profile);
 
 	//Get Cloak Data
-	g_NpcCloakEnabled[npcIndex] = profile.CloakEnabled;
+	g_NpcCloakEnabled[npcIndex] = GetChaserProfileCloakState(profile);
 	g_NpcNextDecloakTime[npcIndex] = -1.0;
 
-	float stunHealthPerPlayer = profile.StunHealthPerPlayer;
+	float stunHealthPerPlayer = GetChaserProfileStunHealthPerPlayer(profile);
 	int count;
 	for (int client; client <= MaxClients; client++)
 	{
@@ -1587,12 +1578,12 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	stunHealthPerPlayer *= float(count);
 	g_NpcStunInitialHealth[npcIndex] += stunHealthPerPlayer;
 
-	g_NpcHasAlwaysLookAtTarget[npcIndex] = NPCHasAttribute(npcIndex, "always look at target");
-	g_NpcHasAlwaysLookAtTargetWhileAttacking[npcIndex] = NPCHasAttribute(npcIndex, "always look at target while attacking");
-	g_NpcHasAlwaysLookAtTargetWhileChasing[npcIndex] = NPCHasAttribute(npcIndex, "always look at target while chasing");
-	g_NpcIgnoreNonMarkedForChase[npcIndex] = NPCHasAttribute(npcIndex, "ignore non-marked for chase");
+	g_NpcHasAlwaysLookAtTarget[npcIndex] = NPCHasAttribute(npcIndex, SF2Attribute_AlwaysLookAtTarget);
+	g_NpcHasAlwaysLookAtTargetWhileAttacking[npcIndex] = NPCHasAttribute(npcIndex, SF2Attribute_AlwaysLookAtTargetWhileAttacking);
+	g_NpcHasAlwaysLookAtTargetWhileChasing[npcIndex] = NPCHasAttribute(npcIndex, SF2Attribute_AlwaysLookAtTargetWhileChasing);
+	g_NpcIgnoreNonMarkedForChase[npcIndex] = NPCHasAttribute(npcIndex, SF2Attribute_IgnoreNonMarkedForChase);
 
-	g_NpcChaseOnLook[npcIndex] = profile.CanChaseOnLook;
+	g_NpcChaseOnLook[npcIndex] = GetChaserProfileChaseOnLook(profile);
 	if (g_NpcChaseOnLookTarget[npcIndex] == null)
 	{
 		g_NpcChaseOnLookTarget[npcIndex] = new ArrayList();
@@ -1605,33 +1596,28 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	NPCSetAddAcceleration(npcIndex, -NPCGetAddAcceleration(npcIndex));
 	NPCChaserSetAddStunHealth(npcIndex, -NPCChaserGetAddStunHealth(npcIndex));
 
-	g_NpcHasEarthquakeFootstepsEnabled[npcIndex] = profile.EarthquakeFootstepsEnabled;
-	g_NpcEarthquakeFootstepsAmplitude[npcIndex] = profile.EarthquakeFootstepsAmplitude;
-	g_NpcEarthquakeFootstepsFrequency[npcIndex] = profile.EarthquakeFootstepsFrequency;
-	g_NpcEarthquakeFootstepsDuration[npcIndex] = profile.EarthquakeFootstepsDuration;
-	g_NpcEarthquakeFootstepsRadius[npcIndex] = profile.EarthquakeFootstepsRadius;
-	g_NpcHasEarthquakeFootstepsAirShake[npcIndex] = profile.EarthquakeFootstepsAirShake;
+	g_NpcHasEarthquakeFootstepsEnabled[npcIndex] = GetChaserProfileEarthquakeFootstepState(profile);
+	g_NpcEarthquakeFootstepsAmplitude[npcIndex] = GetChaserProfileEarthquakeFootstepAmplitude(profile);
+	g_NpcEarthquakeFootstepsFrequency[npcIndex] = GetChaserProfileEarthquakeFootstepFrequency(profile);
+	g_NpcEarthquakeFootstepsDuration[npcIndex] = GetChaserProfileEarthquakeFootstepDuration(profile);
+	g_NpcEarthquakeFootstepsRadius[npcIndex] = GetChaserProfileEarthquakeFootstepRadius(profile);
+	g_NpcHasEarthquakeFootstepsAirShake[npcIndex] = GetChaserProfileEarthquakeFootstepAirShake(profile);
 
-	g_NpcSoundCountToAlert[npcIndex] = profile.SoundCountToAlert;
-	g_NpcHasDisappearOnStun[npcIndex] = profile.CanDisappearOnStun;
-	g_NpcHasDropItemOnStun[npcIndex] = profile.DropItemOnStun;
-	g_NpcDropItemType[npcIndex] = profile.DropItemType;
-	g_NpcHasIsBoxingBoss[npcIndex] = profile.IsBoxingBoss;
-	g_NpcHasNormalSoundHookEnabled[npcIndex] = profile.NormalSoundHook;
-	g_NpcHasCloakToHealEnabled[npcIndex] = profile.CanCloakToHeal;
-	g_NpcHasCanUseChaseInitialAnimation[npcIndex] = profile.UseChaseInitialAnimation;
-	g_NpcHasOldAnimationAIState[npcIndex] = profile.HasOldAnimationAI;
-	g_NpcHasCanUseAlertWalkingAnimation[npcIndex] = profile.UseAlertWalkingAnimation;
-	g_SlenderDifficultyAnimations[npcIndex] = profile.DifficultyAffectsAnimations;
-	g_NpcOriginalVisibility[npcIndex] = profile.UnnerfedVisibility;
+	g_NpcSoundCountToAlert[npcIndex] = GetChaserProfileSoundCountToAlert(profile);
+	g_NpcHasDisappearOnStun[npcIndex] = GetChaserProfileDisappearOnStun(profile);
+	g_NpcHasDropItemOnStun[npcIndex] = GetChaserProfileStunItemDropState(profile);
+	g_NpcDropItemType[npcIndex] = GetChaserProfileStunItemDropType(profile);
+	g_NpcHasIsBoxingBoss[npcIndex] = GetChaserProfileBoxingState(profile);
+	g_NpcHasNormalSoundHookEnabled[npcIndex] = GetChaserProfileNormalSoundHook(profile);
+	g_NpcHasCloakToHealEnabled[npcIndex] = GetChaserProfileCloakToHeal(profile);
+	g_NpcHasCanUseChaseInitialAnimation[npcIndex] = GetChaserProfileChaseInitialAnimationState(profile);
+	g_NpcHasOldAnimationAIState[npcIndex] = GetChaserProfileOldAnimState(profile);
+	g_NpcHasCanUseAlertWalkingAnimation[npcIndex] = GetChaserProfileAlertWalkingState(profile);
+	g_NpcOriginalVisibility[npcIndex] = GetChaserProfileUnnerfedVisibility(profile);
 
-	g_NpcHasUsesMultiAttackSounds[npcIndex] = profile.MultiAttackSounds;
-	g_NpcHasUsesMultiHitSounds[npcIndex] = profile.MultiHitSounds;
-	g_NpcHasUsesMultiMissSounds[npcIndex] = profile.MultiMissSounds;
-
-	g_NpcHasHasCrawling[npcIndex] = profile.IsCrawlingEnabled;
-	GetProfileVector(npcProfile, "crawl_detect_mins", g_NpcCrawlDetectMins[npcIndex], view_as<float>( {0.0, 0.0, 0.0} ));
-	GetProfileVector(npcProfile, "crawl_detect_maxs", g_NpcCrawlDetectMaxs[npcIndex], view_as<float>( {0.0, 0.0, 0.0} ));
+	g_NpcHasHasCrawling[npcIndex] = GetChaserProfileCrawlState(profile);
+	GetChaserProfileCrawlMins(profile, g_NpcCrawlDetectMins[npcIndex]);
+	GetChaserProfileCrawlMaxs(profile, g_NpcCrawlDetectMaxs[npcIndex]);
 
 	if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 	{
@@ -1652,91 +1638,90 @@ int NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcHasCloaked[npcIndex] = false;
 
 	//Get Projectile Data
-	g_NpcHasProjectileEnabled[npcIndex] = profile.ProjectileEnabled;
-	g_NpcProjectileType[npcIndex] = profile.ProjectileType;
-	g_NpcHasCriticalRockets[npcIndex] = profile.HasCriticalRockets;
-	g_NpcHasUseShootGesture[npcIndex] = profile.UseShootGesture;
-	g_NpcHasUseProjectileAmmo[npcIndex] = profile.ProjectileUsesAmmo;
-	g_NpcHasUseChargeUpProjectiles[npcIndex] = profile.ChargeUpProjectiles;
+	g_NpcHasProjectileEnabled[npcIndex] = GetChaserProfileProjectileState(profile);
+	g_NpcProjectileType[npcIndex] = GetChaserProfileProjectileType(profile);
+	g_NpcHasCriticalRockets[npcIndex] = GetChaserProfileCriticalRockets(profile);
+	g_NpcHasUseShootGesture[npcIndex] = GetChaserProfileGestureShoot(profile);
+	g_NpcHasUseProjectileAmmo[npcIndex] = GetChaserProfileProjectileAmmoState(profile);
+	g_NpcHasUseChargeUpProjectiles[npcIndex] = GetChaserProfileChargeUpProjectilesState(profile);
 	g_NpcProjectileCooldown[npcIndex] = 0.0;
 	g_NpcReloadingProjectiles[npcIndex] = false;
 
-	g_NpcHasUseAdvancedDamageEffects[npcIndex] = profile.AdvancedDamageEffectsEnabled;
-	g_NpcHasAdvancedDamageEffectsRandom[npcIndex] = profile.AdvancedDamageEffectsRandom;
-	g_NpcHasAttachDamageParticle[npcIndex] = profile.AttachDamageEffectsParticle;
-	g_NpcRandomAttackIndexes[npcIndex] = profile.RandomAttackIndexes;
-	g_NpcRandomStunType[npcIndex] = profile.RandomAttackStunType;
-	g_NpcHasJaratePlayerEnabled[npcIndex] = profile.JaratePlayerOnHit;
-	g_NpcJarateAttackIndexes[npcIndex] = profile.JarateAttackIndexes;
-	g_NpcHasJaratePlayerBeamParticle[npcIndex] = profile.JaratePlayerBeamParticle;
-	g_NpcHasMilkPlayerEnabled[npcIndex] = profile.MilkPlayerOnHit;
-	g_NpcMilkAttackIndexes[npcIndex] = profile.MilkAttackIndexes;
-	g_NpcHasMilkPlayerBeamParticle[npcIndex] = profile.MilkPlayerBeamParticle;
-	g_NpcHasGasPlayerEnabled[npcIndex] = profile.GasPlayerOnHit;
-	g_NpcGasAttackIndexes[npcIndex] = profile.GasAttackIndexes;
-	g_NpcHasGasPlayerBeamParticle[npcIndex] = profile.GasPlayerBeamParticle;
-	g_NpcHasMarkPlayerEnabled[npcIndex] = profile.MarkPlayerOnHit;
-	g_NpcMarkAttackIndexes[npcIndex] = profile.MarkAttackIndexes;
-	g_NpcSilentMarkAttackIndexes[npcIndex] = profile.SilentMarkAttackIndexes;
-	g_NpcHasIgnitePlayerEnabled[npcIndex] = profile.IgnitePlayerOnHit;
-	g_NpcIgniteAttackIndexes[npcIndex] = profile.IgniteAttackIndexes;
-	g_NpcHasStunPlayerEnabled[npcIndex] = profile.StunPlayerOnHit;
-	g_NpcStunAttackIndexes[npcIndex] = profile.StunAttackIndexes;
-	g_NpcStunAttackType[npcIndex] = profile.StunAttackType;
-	g_NpcHasStunPlayerBeamParticle[npcIndex] = profile.StunPlayerBeamParticle;
-	g_NpcHasBleedPlayerEnabled[npcIndex] = profile.BleedPlayerOnHit;
-	g_NpcBleedAttackIndexes[npcIndex] = profile.BleedAttackIndexes;
-	g_NpcHasElectricPlayerEnabled[npcIndex] = profile.ElectricPlayerOnHit;
-	g_NpcElectricAttackIndexes[npcIndex] = profile.ElectricAttackIndexes;
-	g_NpcHasElectricPlayerBeamParticle[npcIndex] = profile.ElectricPlayerBeamParticle;
-	g_NpcHasSmitePlayerEnabled[npcIndex] = profile.SmitePlayerOnHit;
-	g_NpcHasSmiteMessage[npcIndex] = profile.SmiteMessage;
-	g_NpcSmiteAttackIndexes[npcIndex] = profile.SmiteAttackIndexes;
-	g_NpcSmiteDamage[npcIndex] = profile.SmiteDamage;
-	g_NpcSmiteDamageType[npcIndex] = profile.SmiteDamageType;
+	g_NpcHasUseAdvancedDamageEffects[npcIndex] = GetChaserProfileEnableAdvancedDamageEffects(profile);
+	g_NpcHasAdvancedDamageEffectsRandom[npcIndex] = GetChaserProfileEnableAdvancedDamageEffectsRandom(profile);
+	g_NpcHasAttachDamageParticle[npcIndex] = GetChaserProfileEnableAdvancedDamageParticles(profile);
+	g_NpcRandomAttackIndexes[npcIndex] = GetChaserProfileRandomAttackIndexes(profile);
+	g_NpcRandomStunType[npcIndex] = GetChaserProfileRandomStunType(profile);
+	g_NpcHasJaratePlayerEnabled[npcIndex] = GetChaserProfileJarateState(profile);
+	g_NpcJarateAttackIndexes[npcIndex] = GetChaserProfileJarateAttackIndexes(profile);
+	g_NpcHasJaratePlayerBeamParticle[npcIndex] = GetChaserProfileJarateBeamParticle(profile);
+	g_NpcHasMilkPlayerEnabled[npcIndex] = GetChaserProfileMilkState(profile);
+	g_NpcMilkAttackIndexes[npcIndex] = GetChaserProfileMilkAttackIndexes(profile);
+	g_NpcHasMilkPlayerBeamParticle[npcIndex] = GetChaserProfileMilkBeamParticle(profile);
+	g_NpcHasGasPlayerEnabled[npcIndex] = GetChaserProfileGasState(profile);
+	g_NpcGasAttackIndexes[npcIndex] = GetChaserProfileGasAttackIndexes(profile);
+	g_NpcHasGasPlayerBeamParticle[npcIndex] = GetChaserProfileGasBeamParticle(profile);
+	g_NpcHasMarkPlayerEnabled[npcIndex] = GetChaserProfileMarkState(profile);
+	g_NpcMarkAttackIndexes[npcIndex] = GetChaserProfileMarkAttackIndexes(profile);
+	g_NpcHasSilentMarkPlayerEnabled[npcIndex] = GetChaserProfileSilentMarkState(profile);
+	g_NpcSilentMarkAttackIndexes[npcIndex] = GetChaserProfileSilentMarkAttackIndexes(profile);
+	g_NpcHasIgnitePlayerEnabled[npcIndex] = GetChaserProfileIgniteState(profile);
+	g_NpcIgniteAttackIndexes[npcIndex] = GetChaserProfileIgniteAttackIndexes(profile);
+	g_NpcHasStunPlayerEnabled[npcIndex] = GetChaserProfileStunAttackState(profile);
+	g_NpcStunAttackIndexes[npcIndex] = GetChaserProfileStunAttackIndexes(profile);
+	g_NpcStunAttackType[npcIndex] = GetChaserProfileStunDamageType(profile);
+	g_NpcHasStunPlayerBeamParticle[npcIndex] = GetChaserProfileStunAttackBeamParticle(profile);
+	g_NpcHasBleedPlayerEnabled[npcIndex] = GetChaserProfileBleedState(profile);
+	g_NpcBleedAttackIndexes[npcIndex] = GetChaserProfileBleedAttackIndexes(profile);
+	g_NpcHasElectricPlayerEnabled[npcIndex] = GetChaserProfileEletricAttackState(profile);
+	g_NpcElectricAttackIndexes[npcIndex] = GetChaserProfileEletricAttackIndexes(profile);
+	g_NpcHasElectricPlayerBeamParticle[npcIndex] = GetChaserProfileEletricBeamParticle(profile);
+	g_NpcHasSmitePlayerEnabled[npcIndex] = GetChaserProfileSmiteState(profile);
+	g_NpcHasSmiteMessage[npcIndex] = GetChaserProfileSmiteMessage(profile);
+	g_NpcSmiteAttackIndexes[npcIndex] = GetChaserProfileSmiteAttackIndexes(profile);
+	g_NpcSmiteDamage[npcIndex] = GetChaserProfileSmiteDamage(profile);
+	g_NpcSmiteDamageType[npcIndex] = GetChaserProfileSmiteDamageType(profile);
 
-	g_NpcHasXenobladeBreakComboSystem[npcIndex] = profile.XenobladeCombo;
-	g_NpcXenobladeBreakDuration[npcIndex] = profile.XenobladeBreakDuration;
-	g_NpcXenobladeToppleDuration[npcIndex] = profile.XenobladeToppleDuration;
-	g_NpcXenobladeToppleSlowdown[npcIndex] = profile.XenobladeToppleSlowdown;
-	g_NpcXenobladeDazeDuration[npcIndex] = profile.XenobladeDazeDuration;
+	g_NpcHasXenobladeBreakComboSystem[npcIndex] = GetChaserProfileXenobladeCombo(profile);
+	g_NpcXenobladeBreakDuration[npcIndex] = GetChaserProfileXenobladeBreakDuration(profile);
+	g_NpcXenobladeToppleDuration[npcIndex] = GetChaserProfileXenobladeToppleDuration(profile);
+	g_NpcXenobladeToppleSlowdown[npcIndex] = GetChaserProfileXenobladeToppleSlowdown(profile);
+	g_NpcXenobladeDazeDuration[npcIndex] = GetChaserProfileXenobladeDazeDuration(profile);
 
 	int smiteColor[4];
-	profile.GetSmiteColor(smiteColor);
+	GetChaserProfileSmiteColor(profile, smiteColor);
 
 	g_NpcSmiteColorR[npcIndex] = smiteColor[0];
 	g_NpcSmiteColorG[npcIndex] = smiteColor[1];
 	g_NpcSmiteColorB[npcIndex] = smiteColor[2];
 	g_NpcSmiteTransparency[npcIndex] = smiteColor[3];
-	g_SlenderHasDamageParticleEffect[npcIndex] = profile.HasDamageParticles;
-	g_SlenderDamageClientSoundVolume[npcIndex] = profile.DamageParticleVolume;
-	g_SlenderDamageClientSoundPitch[npcIndex] = profile.DamageParticlePitch;
+	g_SlenderHasDamageParticleEffect[npcIndex] = GetChaserProfileDamageParticleState(profile);
 
-	g_NpcHasShockwaveEnabled[npcIndex] = profile.HasShockwaves;
-	g_NpcHasShockwaveStunEnabled[npcIndex] = profile.ShockwaveStunEnabled;
-	g_NpcShockwaveAttackIndexes[npcIndex] = profile.ShockwaveAttackIndexes;
-	g_NpcShockwaveWidth[npcIndex][0] = profile.ShockwaveWidth1;
-	g_NpcShockwaveWidth[npcIndex][1] = profile.ShockwaveWidth2;
-	g_NpcShockwaveAmplitude[npcIndex] = profile.ShockwaveAmplitude;
+	g_NpcHasShockwaveEnabled[npcIndex] = GetChaserProfileShockwaveState(profile);
+	g_NpcHasShockwaveStunEnabled[npcIndex] = GetChaserProfileShockwaveStunState(profile);
+	g_NpcShockwaveAttackIndexes[npcIndex] = GetChaserProfileShockwaveAttackIndexes(profile);
+	g_NpcShockwaveWidth[npcIndex][0] = GetChaserProfileShockwaveWidth1(profile);
+	g_NpcShockwaveWidth[npcIndex][1] = GetChaserProfileShockwaveWidth2(profile);
+	g_NpcShockwaveAmplitude[npcIndex] = GetChaserProfileShockwaveAmplitude(profile);
 
-	g_NpcHasTrapsEnabled[npcIndex] = profile.HasTraps;
-	g_NpcTrapType[npcIndex] = profile.TrapType;
+	g_NpcHasTrapsEnabled[npcIndex] = GetChaserProfileTrapState(profile);
+	g_NpcTrapType[npcIndex] = GetChaserProfileTrapType(profile);
 
-	g_SlenderHasAutoChaseEnabled[npcIndex] = profile.AutoChaseEnabled;
-	g_NpcHasAutoChaseSprinters[npcIndex] = profile.AutoChaseSprinters;
+	g_SlenderHasAutoChaseEnabled[npcIndex] = GetChaserProfileAutoChaseState(profile);
+	g_NpcHasAutoChaseSprinters[npcIndex] = GetChaserProfileAutoChaseSprinterState(profile);
 	g_NpcAutoChaseSprinterCooldown[npcIndex] = 0.0;
 	g_NpcInAutoChase[npcIndex] = false;
 	g_SlenderIsAutoChasingLoudPlayer[npcIndex] = false;
 
-	g_SlenderChasesEndlessly[npcIndex] = profile.ChasesEndlessly;
+	g_SlenderChasesEndlessly[npcIndex] = GetChaserProfileEndlessChasingState(profile);
 
 	g_NpcLaserTimer[npcIndex] = 0.0;
 
-	g_NpcHasCanSelfHeal[npcIndex] = profile.SelfHealState;
-	g_NpcStartSelfHealPercentage[npcIndex] = profile.SelfHealStartPercentage;
-	g_NpcSelfHealPercentageOne[npcIndex] = profile.SelfHealPercentageOne;
-	g_NpcSelfHealPercentageTwo[npcIndex] = profile.SelfHealPercentageTwo;
-	g_NpcSelfHealPercentageThree[npcIndex] = profile.SelfHealPercentageThree;
+	g_NpcHasCanSelfHeal[npcIndex] = GetChaserProfileSelfHealState(profile);
+	g_NpcStartSelfHealPercentage[npcIndex] = GetChaserProfileSelfHealStartPercentage(profile);
+	g_NpcSelfHealPercentageOne[npcIndex] = GetChaserProfileSelfHealPercentageOne(profile);
+	g_NpcSelfHealPercentageTwo[npcIndex] = GetChaserProfileSelfHealPercentageTwo(profile);
+	g_NpcSelfHealPercentageThree[npcIndex] = GetChaserProfileSelfHealPercentageThree(profile);
 	g_NpcIsRunningToHeal[npcIndex] = false;
 	g_NpcIsHealing[npcIndex] = false;
 	g_NpcFleeHealTimer[npcIndex] = 0.0;
@@ -1796,6 +1781,7 @@ static void NPCChaserResetValues(int npcIndex)
 		g_NpcMilkDuration[npcIndex][difficulty] = 0.0;
 		g_NpcGasDuration[npcIndex][difficulty] = 0.0;
 		g_NpcMarkDuration[npcIndex][difficulty] = 0.0;
+		g_NpcSilentMarkDuration[npcIndex][difficulty] = 0.0;
 		g_NpcIgniteDelay[npcIndex][difficulty] = 0.0;
 		g_NpcStunAttackDuration[npcIndex][difficulty] = 0.0;
 		g_NpcStunAttackSlowdown[npcIndex][difficulty] = 0.0;
@@ -1886,6 +1872,7 @@ static void NPCChaserResetValues(int npcIndex)
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDeathCamOnLowHealth = false;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnHealth = -1.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnHealth = -1.0;
+		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDontInterruptChaseInitial = false;
 	}
 
 	g_NpcHasEarthquakeFootstepsEnabled[npcIndex] = false;
@@ -1906,22 +1893,16 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcHasOldAnimationAIState[npcIndex] = false;
 	g_NpcHasCanUseAlertWalkingAnimation[npcIndex] = false;
 
-	g_NpcHasUsesMultiAttackSounds[npcIndex] = false;
-	g_NpcHasUsesMultiHitSounds[npcIndex] = false;
-	g_NpcHasUsesMultiMissSounds[npcIndex] = false;
-
 	g_NpcHasHasCrawling[npcIndex] = false;
 	g_NpcIsCrawling[npcIndex] = false;
 
 	g_NpcHasStunEnabled[npcIndex] = false;
 	g_NpcAlreadyAttacked[npcIndex] = false;
-	g_NpcStunDuration[npcIndex] = 0.0;
 	g_NpcStunCooldown[npcIndex] = 0.0;
 	g_NpcStunFlashlightEnabled[npcIndex] = false;
 	g_NpcStunInitialHealth[npcIndex] = 0.0;
 	g_NpcStunAddHealth[npcIndex] = 0.0;
 	g_NpcChaseInitialOnStun[npcIndex] = false;
-	g_SlenderDifficultyAnimations[npcIndex] = false;
 	g_NpcOriginalVisibility[npcIndex] = false;
 
 	g_NpcCloakEnabled[npcIndex] = false;
@@ -1970,6 +1951,7 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcGasAttackIndexes[npcIndex] = 0;
 	g_NpcHasMarkPlayerEnabled[npcIndex] = false;
 	g_NpcMarkAttackIndexes[npcIndex] = 0;
+	g_NpcHasSilentMarkPlayerEnabled[npcIndex] = false;
 	g_NpcSilentMarkAttackIndexes[npcIndex] = 0;
 	g_NpcHasIgnitePlayerEnabled[npcIndex] = false;
 	g_NpcIgniteAttackIndexes[npcIndex] = 0;
@@ -2002,8 +1984,6 @@ static void NPCChaserResetValues(int npcIndex)
 	g_NpcShockwaveAmplitude[npcIndex] = 0.0;
 	g_NpcTimeUntilChaseAfterInitial[npcIndex] = 0.0;
 	g_SlenderHasDamageParticleEffect[npcIndex] = false;
-	g_SlenderDamageClientSoundVolume[npcIndex] = 0.0;
-	g_SlenderDamageClientSoundPitch[npcIndex] = 0;
 
 	g_NpcHasTrapsEnabled[npcIndex] = false;
 	g_NpcTrapType[npcIndex] = 0;
@@ -2059,6 +2039,87 @@ void Spawn_Chaser(int bossIndex)
 	NPCSetAddAcceleration(bossIndex, -NPCGetAddAcceleration(bossIndex));
 	NPCChaserSetAddStunHealth(bossIndex, -NPCChaserGetAddStunHealth(bossIndex));
 
+	g_NpcInstantKillThink[bossIndex] = CreateTimer(0.0, Timer_InstantKillThink, bossIndex, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+
+}
+
+void Despawn_Chaser(int bossIndex)
+{
+	g_NpcInstantKillThink[bossIndex] = null;
+}
+
+static Action Timer_InstantKillThink(Handle timer, int bossIndex)
+{
+	if (NPCGetUniqueID(bossIndex) == -1)
+	{
+		return Plugin_Stop;
+	}
+
+	if (timer != g_NpcInstantKillThink[bossIndex])
+	{
+		return Plugin_Stop;
+	}
+
+	int boss = NPCGetEntIndex(bossIndex);
+	if (!boss || boss == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
+
+	float radius = NPCGetInstantKillRadius(bossIndex);
+
+	if (radius < 0.0)
+	{
+		return Plugin_Stop;
+	}
+
+	if (g_SlenderInDeathcam[bossIndex])
+	{
+		return Plugin_Continue;
+	}
+
+	if ((NPCGetFlags(bossIndex) & SFF_MARKEDASFAKE))
+	{
+		return Plugin_Continue;
+	}
+
+	float slenderPos[3];
+	SlenderGetAbsOrigin(bossIndex, slenderPos);
+
+	bool attackWaiters = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	for (int i = 1; i < MaxClients; i++)
+	{
+		if (!IsValidClient(i) || IsClientInDeathCam(i) || IsClientInGhostMode(i) || !IsPlayerAlive(i) || g_PlayerProxy[i])
+		{
+			continue;
+		}
+
+		if (!attackWaiters && g_PlayerEliminated[i])
+		{
+			continue;
+		}
+
+		float myPos[3];
+
+		GetClientAbsOrigin(i, myPos);
+
+		if ((GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(radius) &&
+			(GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
+			&& !g_SlenderInDeathcam[bossIndex])
+		{
+			if (PlayerCanSeeSlender(i, bossIndex, false, _, !attackWaiters))
+			{
+				g_SlenderLastKill[bossIndex] = GetGameTime();
+
+				ClientStartDeathCam(i, bossIndex, slenderPos);
+			}
+		}
+	}
+
+	return Plugin_Continue;
 }
 
 //	So this is how the thought process of the bosses should go.
@@ -2097,7 +2158,7 @@ stock bool IsTargetValidForSlender(int target, bool bIncludeEliminated = false)
 	return true;
 }
 
-public int NPCChaserGetClosestPlayer(int slender)
+int NPCChaserGetClosestPlayer(int slender)
 {
 	if (!g_Enabled)
 	{
@@ -2152,15 +2213,19 @@ public int NPCChaserGetClosestPlayer(int slender)
 void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn = false)
 {
 	char animation[256];
-	float playbackRate, tempFootsteps, cycle;
+	float playbackRate, tempFootsteps, cycle, footstepTime, tempDuration, duration;
 	bool animationFound = false;
+	int index;
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	bool clearLayers = view_as<bool>(GetProfileNum(profile, "animation_clear_layers_on_update", 1));
+	SF2BossProfileMasterAnimationsData animData;
+	GetBossProfileAnimationsData(profile, animData);
+
+	bool clearLayers = GetChaserProfileClearLayersState(profile);
 
 	switch (state)
 	{
@@ -2168,113 +2233,11 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		{
 			if (!spawn)
 			{
-				switch (difficulty)
-				{
-					case Difficulty_Normal:
-					{
-						animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-					}
-					case Difficulty_Hard:
-					{
-						bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						if (!animationFound2 || strcmp(animation, "") <= 0)
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Insane:
-					{
-						bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						if (!animationFound3 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Nightmare:
-					{
-						bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						if (!animationFound4 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Apollyon:
-					{
-						bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						if (!animationFound5 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-									if (animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_IdleAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderIdleFootstepTime[bossIndex], cycle);
-						}
-					}
-				}
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Idle], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 			}
 			else
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_SpawnAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Spawn], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
 			}
 		}
 		case STATE_WANDER:
@@ -2283,215 +2246,11 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			{
 				if (!g_NpcIsCrawling[bossIndex])
 				{
-					switch (difficulty)
-					{
-						case Difficulty_Normal:
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-						}
-						case Difficulty_Hard:
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Insane:
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Nightmare:
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Apollyon:
-						{
-							bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound5 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound4 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									if (!animationFound3 || strcmp(animation, "") <= 0)
-									{
-										bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										if (!animationFound2 || strcmp(animation, "") <= 0)
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										}
-										else
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										}
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-					}
+					animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Walk], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 				}
 				else
 				{
-					switch (difficulty)
-					{
-						case Difficulty_Normal:
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-						}
-						case Difficulty_Hard:
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Insane:
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Nightmare:
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Apollyon:
-						{
-							bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound5 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound4 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									if (!animationFound3 || strcmp(animation, "") <= 0)
-									{
-										bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										if (!animationFound2 || strcmp(animation, "") <= 0)
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										}
-										else
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										}
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-					}
+					animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_CrawlWalk], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 				}
 			}
 		}
@@ -2501,322 +2260,16 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			{
 				if (NPCChaserCanUseAlertWalkingAnimation(bossIndex))
 				{
-					switch (difficulty)
-					{
-						case Difficulty_Normal:
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-						}
-						case Difficulty_Hard:
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Insane:
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Nightmare:
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-						case Difficulty_Apollyon:
-						{
-							bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							if (!animationFound5 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								if (!animationFound4 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									if (!animationFound3 || strcmp(animation, "") <= 0)
-									{
-										bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										if (!animationFound2 || strcmp(animation, "") <= 0)
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										}
-										else
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-										}
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAlertAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex], cycle);
-							}
-						}
-					}
+					animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_WalkAlert], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 				}
 				else
 				{
-					switch (difficulty)
-					{
-						case Difficulty_Normal:
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						}
-						case Difficulty_Hard:
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-						case Difficulty_Insane:
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-						case Difficulty_Nightmare:
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-						case Difficulty_Apollyon:
-						{
-							bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound5 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex]);
-								if (!animationFound4 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-									if (!animationFound3 || strcmp(animation, "") <= 0)
-									{
-										bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-										if (!animationFound2 || strcmp(animation, "") <= 0)
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-										}
-										else
-										{
-											animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-										}
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_WalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-					}
+					animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Walk], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 				}
 			}
 			else
 			{
-				switch (difficulty)
-				{
-					case Difficulty_Normal:
-					{
-						animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-					}
-					case Difficulty_Hard:
-					{
-						bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						if (!animationFound2 || strcmp(animation, "") <= 0)
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						}
-					}
-					case Difficulty_Insane:
-					{
-						bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						if (!animationFound3 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						}
-					}
-					case Difficulty_Nightmare:
-					{
-						bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						if (!animationFound4 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						}
-					}
-					case Difficulty_Apollyon:
-					{
-						bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						if (!animationFound5 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex]);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderWalkFootstepTime[bossIndex]);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderWalkFootstepTime[bossIndex]);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderWalkFootstepTime[bossIndex]);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderWalkFootstepTime[bossIndex]);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CrawlWalkAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderWalkFootstepTime[bossIndex]);
-						}
-					}
-				}
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_CrawlWalk], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 			}
 		}
 		case STATE_CHASE:
@@ -2826,266 +2279,55 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			!g_NpcUsesHealAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] &&
 			!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] && !g_NpcIsCrawling[bossIndex])
 			{
-				switch (difficulty)
-				{
-					case Difficulty_Normal:
-					{
-						animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-					}
-					case Difficulty_Hard:
-					{
-						bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound2 || strcmp(animation, "") <= 0)
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Insane:
-					{
-						bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound3 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Nightmare:
-					{
-						bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound4 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Apollyon:
-					{
-						bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound5 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-				}
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Run], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 			}
 			else if (g_NpcUsesChaseInitialAnimation[bossIndex])
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_ChaseInitialAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
 			}
 			else if (g_NpcUsesRageAnimation1[bossIndex] || g_NpcUsesRageAnimation2[bossIndex] || g_NpcUsesRageAnimation3[bossIndex])
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_RageAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
-			}
-			else if (g_NpcUsesCloakStartAnimation[bossIndex])
-			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CloakStartAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
-			}
-			else if (g_NpcUsesCloakEndAnimation[bossIndex])
-			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_CloakEndAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Rage], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
 			}
 			else if (g_NpcIsCrawling[bossIndex] && !g_NpcUsesChaseInitialAnimation[bossIndex] &&
 			!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] &&
 			!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
 			{
-				switch (difficulty)
-				{
-					case Difficulty_Normal:
-					{
-						animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-					}
-					case Difficulty_Hard:
-					{
-						bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound2 || strcmp(animation, "") <= 0)
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Insane:
-					{
-						bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound3 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							if (!animationFound2 || strcmp(animation, "") <= 0)
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Nightmare:
-					{
-						bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound4 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							if (!animationFound3 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								if (!animationFound2 || strcmp(animation, "") <= 0)
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-					case Difficulty_Apollyon:
-					{
-						bool animationFound5 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						if (!animationFound5 || strcmp(animation, "") <= 0)
-						{
-							bool animationFound4 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							if (!animationFound4 || strcmp(animation, "") <= 0)
-							{
-								bool animationFound3 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								if (!animationFound3 || strcmp(animation, "") <= 0)
-								{
-									bool animationFound2 = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-									if (!animationFound2 || strcmp(animation, "") <= 0)
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-									}
-									else
-									{
-										animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 2, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-									}
-								}
-								else
-								{
-									animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 3, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-								}
-							}
-							else
-							{
-								animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, 4, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-							}
-						}
-						else
-						{
-							animationFound = GetProfileAnimation(bossIndex, profile, ChaserANimation_CrawlRunAnimations, animation, sizeof(animation), playbackRate, difficulty, _, g_SlenderRunFootstepTime[bossIndex], cycle);
-						}
-					}
-				}
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_CrawlRun], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 			}
 		}
 		case STATE_ATTACK:
 		{
 			if (!g_NpcUseFireAnimation[bossIndex])
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_AttackAnimations, animation, sizeof(animation), playbackRate, 1, NPCGetCurrentAttackIndex(bossIndex) + 1, g_SlenderAttackFootstepTime[bossIndex], cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index, NPCGetCurrentAttackIndex(bossIndex));
 			}
 			else
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_ShootAnimations, animation, sizeof(animation), playbackRate, 1, NPCGetCurrentAttackIndex(bossIndex) + 1, g_SlenderAttackFootstepTime[bossIndex], cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Shoot], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index, NPCGetCurrentAttackIndex(bossIndex));
 			}
 		}
 		case STATE_STUN:
 		{
-			animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_StunAnimations, animation, sizeof(animation), playbackRate, 1, _, g_SlenderStunFootstepTime[bossIndex], cycle);
+			animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Stun], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, footstepTime, index);
 		}
 		case STATE_DEATHCAM:
 		{
-			animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_DeathcamAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
+			animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, tempFootsteps, index);
 		}
 	}
+
 	switch (state)
 	{
 		case STATE_IDLE, STATE_WANDER, STATE_ALERT, STATE_CHASE:
 		{
 			if (g_NpcUseStartFleeAnimation[bossIndex])
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_FleeInitialAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_FleeInitial], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
 			}
 			else if (g_NpcUsesHealAnimation[bossIndex])
 			{
-				animationFound = GetProfileAnimation(bossIndex, profile, ChaserAnimation_HealAnimations, animation, sizeof(animation), playbackRate, 1, _, tempFootsteps, cycle);
+				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Heal], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, tempFootsteps, index);
 			}
 		}
 	}
@@ -3099,7 +2341,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		playbackRate = 12.0;
 	}
 
-	if (animationFound && strcmp(animation, "") != 0)
+	if (animationFound && animation[0] != '\0')
 	{
 		Action action = Plugin_Continue;
 		Call_StartForward(g_OnBossAnimationUpdateFwd);
@@ -3107,34 +2349,35 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		Call_Finish(action);
 		if (action != Plugin_Handled)
 		{
+			g_SlenderFootstepTime[bossIndex] = footstepTime;
+			g_SlenderAnimationDuration[bossIndex] = duration;
 			g_NpcCurrentAnimationSequencePlaybackRate[bossIndex] = playbackRate;
 			g_NpcCurrentAnimationSequence[bossIndex] = EntitySetAnimation(ent, animation, playbackRate, _, cycle);
-			g_sNPCurrentAnimationSequenceName[bossIndex] = animation;
+			g_NpcCurrentAnimationSequenceName[bossIndex] = animation;
 			EntitySetAnimation(ent, animation, playbackRate, _, cycle); //Fix an issue where an anim could start on the wrong frame.
 			if (g_NpcCurrentAnimationSequence[bossIndex] <= -1)
 			{
 				g_NpcCurrentAnimationSequence[bossIndex] = 0;
-				//SendDebugMessageToPlayers(DEBUG_BOSS_ANIMATION, 0, "INVALID ANIMATION %s", animation);
 			}
 			bool animationLoop = (state == STATE_IDLE || state == STATE_ALERT ||
 			(state == STATE_CHASE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex])
 			|| state == STATE_WANDER);
 			if (state == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
 			{
-				animationLoop = view_as<bool>(GetProfileAttackNum(profile, "attack_override_loop", GetEntProp(ent, Prop_Data, "m_bSequenceLoops"), NPCGetCurrentAttackIndex(bossIndex)));
+				animationLoop = view_as<bool>(GetEntProp(ent, Prop_Data, "m_bSequenceLoops"));
 			}
 			if (state == STATE_CHASE && g_NpcUsesChaseInitialAnimation[bossIndex])
 			{
-				animationLoop = view_as<bool>(GetProfileNum(profile, "chase_initial_override_loop", GetEntProp(ent, Prop_Data, "m_bSequenceLoops")));
+				animationLoop = view_as<bool>(GetEntProp(ent, Prop_Data, "m_bSequenceLoops"));
 			}
 			SetEntProp(ent, Prop_Data, "m_bSequenceLoops", animationLoop);
 		}
 	}
 	if (state == STATE_ATTACK && NPCChaserGetAttackGestureState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
 	{
-		float gestureCycle, duration;
-		animationFound = GetProfileGesture(bossIndex, profile, ChaserAnimation_AttackAnimations, animation, sizeof(animation), playbackRate, cycle, NPCGetCurrentAttackIndex(bossIndex) + 1);
-		if (animationFound && strcmp(animation, "") != 0)
+		float gestureCycle;
+		animationFound = animData.GetGesture(NPCGetCurrentAttackIndex(bossIndex), g_SlenderAnimationsList[SF2BossAnimation_Attack], difficulty, animation, sizeof(animation), playbackRate, cycle);
+		if (animationFound && animation[0] != '\0')
 		{
 			CBaseCombatCharacter overlay = CBaseCombatCharacter(ent);
 			int gesture = overlay.LookupSequence(animation);
@@ -3165,7 +2408,7 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 	float myPos[3];
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	if (NPCHasAttribute(bossIndex, "alert copies"))
+	if (NPCHasAttribute(bossIndex, SF2Attribute_AlertCopies))
 	{
 		for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
 		{
@@ -3202,7 +2445,7 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 					g_NpcCopyAlerted[bossCheck] = true;
 					g_SlenderTimeUntilNoPersistence[bossCheck] = GetGameTime() + NPCChaserGetChaseDuration(bossCheck, difficulty);
 					g_SlenderTimeUntilAlert[bossCheck] = GetGameTime() + NPCChaserGetChaseDuration(bossCheck, difficulty);
-					SlenderPerformVoice(bossCheck, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(bossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+					SlenderPerformVoice(bossCheck, _, SF2BossSound_ChaseInitial);
 					if (NPCChaserCanUseChaseInitialAnimation(bossCheck) && !g_NpcUsesChaseInitialAnimation[bossCheck] && !SF_IsSlaughterRunMap())
 					{
 						int copySlender = NPCGetEntIndex(bossCheck);
@@ -3218,14 +2461,14 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 							NPCChaserUpdateBossAnimation(bossCheck, copySlender, g_SlenderState[bossCheck]);
 							char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 							NPCGetProfile(bossCheck, profile, sizeof(profile));
-							g_SlenderChaseInitialTimer[bossCheck] = CreateTimer(GetProfileFloat(profile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(copySlender), TIMER_FLAG_NO_MAPCHANGE);
+							g_SlenderChaseInitialTimer[bossCheck] = CreateTimer(g_SlenderAnimationDuration[bossCheck], Timer_SlenderChaseInitialTimer, EntIndexToEntRef(copySlender), TIMER_FLAG_NO_MAPCHANGE);
 						}
 					}
 				}
 			}
 		}
 	}
-	if (NPCHasAttribute(bossIndex, "alert companions"))
+	if (NPCHasAttribute(bossIndex, SF2Attribute_AlertCompanions))
 	{
 		for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
 		{
@@ -3262,7 +2505,7 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 					g_NpcCopyAlerted[bossCheck] = true;
 					g_SlenderTimeUntilNoPersistence[bossCheck] = GetGameTime() + NPCChaserGetChaseDuration(bossCheck, difficulty);
 					g_SlenderTimeUntilAlert[bossCheck] = GetGameTime() + NPCChaserGetChaseDuration(bossCheck, difficulty);
-					SlenderPerformVoice(bossCheck, "sound_chaseenemyinitial", _, NPCChaserNormalSoundHookEnabled(bossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+					SlenderPerformVoice(bossCheck, _, SF2BossSound_ChaseInitial);
 					if (NPCChaserCanUseChaseInitialAnimation(bossCheck) && !g_NpcUsesChaseInitialAnimation[bossCheck] && !SF_IsSlaughterRunMap())
 					{
 						int copySlender = NPCGetEntIndex(bossCheck);
@@ -3278,7 +2521,7 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 							NPCChaserUpdateBossAnimation(bossCheck, copySlender, g_SlenderState[bossCheck]);
 							char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 							NPCGetProfile(bossCheck, profile, sizeof(profile));
-							g_SlenderChaseInitialTimer[bossCheck] = CreateTimer(GetProfileFloat(profile, "chase_initial_timer", 0.0), Timer_SlenderChaseInitialTimer, EntIndexToEntRef(copySlender), TIMER_FLAG_NO_MAPCHANGE);
+							g_SlenderChaseInitialTimer[bossCheck] = CreateTimer(g_SlenderAnimationDuration[bossCheck], Timer_SlenderChaseInitialTimer, EntIndexToEntRef(copySlender), TIMER_FLAG_NO_MAPCHANGE);
 						}
 					}
 				}
@@ -3287,7 +2530,7 @@ stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTa
 	}
 }
 
-public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
+Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3352,7 +2595,7 @@ public Action Timer_SlenderChaseInitialTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
+Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3416,7 +2659,7 @@ public Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
+Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3480,7 +2723,7 @@ public Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
+Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3544,7 +2787,7 @@ public Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderSpawnTimer(Handle timer, any entref)
+Action Timer_SlenderSpawnTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3577,15 +2820,18 @@ public Action Timer_SlenderSpawnTimer(Handle timer, any entref)
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 
 	SDKHook(slender, SDKHook_Think, SlenderChaseBossProcessMovement);
+	g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, entref, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	g_SlenderSpawning[bossIndex] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
-	g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(slender), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	NPCChaserUpdateBossAnimation(bossIndex, slender, STATE_IDLE);
+	Call_StartForward(g_OnBossFinishSpawningFwd);
+	Call_PushCell(bossIndex);
+	Call_Finish();
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
+Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3652,7 +2898,7 @@ public Action Timer_SlenderHealAnimationTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderHealDelayTimer(Handle timer, any entref)
+Action Timer_SlenderHealDelayTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3676,7 +2922,7 @@ public Action Timer_SlenderHealDelayTimer(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	SlenderPerformVoice(bossIndex, "sound_heal_self", _, NPCChaserNormalSoundHookEnabled(bossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
+	SlenderPerformVoice(bossIndex, _, SF2BossSound_SelfHeal);
 
 	g_NpcHealCount[bossIndex] = 0;
 
@@ -3684,7 +2930,7 @@ public Action Timer_SlenderHealDelayTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderHealEventTimer(Handle timer, any entref)
+Action Timer_SlenderHealEventTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3771,7 +3017,7 @@ public Action Timer_SlenderHealEventTimer(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
+Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3834,6 +3080,7 @@ public Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 
 	return Plugin_Stop;
 }
+
 public MRESReturn ShouldCollideWith(Address thisAddress, DHookReturn returnHandle, DHookParam params)
 {
 	int entity = params.Get(1);
@@ -3873,18 +3120,6 @@ public MRESReturn ShouldCollideWith(Address thisAddress, DHookReturn returnHandl
 	return MRES_Ignored;
 }
 
-//TODO: Fix hitbox damage numbers for this.
-public MRESReturn Hook_BossUpdateHitboxTransmitState(int bossEntity, DHookReturn hookReturn)
-{
-    if (!g_Enabled || !IsValidEntity(bossEntity))
-    {
-        return MRES_Ignored;
-    }
-
-    hookReturn.Value = SetEntityTransmitState(bossEntity, FL_EDICT_DONTSEND);
-    return MRES_Supercede;
-}
-
 void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 {
 	if (!IsValidClient(client))
@@ -3907,7 +3142,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserRandomEffectIndexes(bossIndex);
-		GetProfileString(profile, "player_random_attack_indexes", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileRandomAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4051,7 +3286,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserGetJarateAttackIndexes(bossIndex);
-		GetProfileString(profile, "player_jarate_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileJarateAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4063,7 +3298,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetJarateDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_jarate_particle", jaratePlayerParticle, sizeof(jaratePlayerParticle), JARATE_PARTICLE);
+					GetChaserProfileJarateParticle(profile, jaratePlayerParticle, sizeof(jaratePlayerParticle));
 					if (jaratePlayerParticle[0] == '\0')
 					{
 						jaratePlayerParticle = JARATE_PARTICLE;
@@ -4108,7 +3343,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetJarateDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_jarate_particle", jaratePlayerParticle, sizeof(jaratePlayerParticle), JARATE_PARTICLE);
+					GetChaserProfileJarateParticle(profile, jaratePlayerParticle, sizeof(jaratePlayerParticle));
 					if (jaratePlayerParticle[0] == '\0')
 					{
 						jaratePlayerParticle = JARATE_PARTICLE;
@@ -4145,7 +3380,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserGetMilkAttackIndexes(bossIndex);
-		GetProfileString(profile, "player_milk_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileMilkAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4157,7 +3392,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetMilkDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_milk_particle", milkPlayerParticle, sizeof(milkPlayerParticle), MILK_PARTICLE);
+					GetChaserProfileMilkParticle(profile, milkPlayerParticle, sizeof(milkPlayerParticle));
 					if (milkPlayerParticle[0] == '\0')
 					{
 						milkPlayerParticle = MILK_PARTICLE;
@@ -4202,7 +3437,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetMilkDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_milk_particle", milkPlayerParticle, sizeof(milkPlayerParticle), MILK_PARTICLE);
+					GetChaserProfileMilkParticle(profile, milkPlayerParticle, sizeof(milkPlayerParticle));
 					if (milkPlayerParticle[0] == '\0')
 					{
 						milkPlayerParticle = MILK_PARTICLE;
@@ -4239,7 +3474,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserGetGasAttackIndexes(bossIndex);
-		GetProfileString(profile, "player_gas_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileGasAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4251,7 +3486,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetGasDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_gas_particle", gasPlayerParticle, sizeof(gasPlayerParticle), GAS_PARTICLE);
+					GetChaserProfileGasParticle(profile, gasPlayerParticle, sizeof(gasPlayerParticle));
 					if (gasPlayerParticle[0] == '\0')
 					{
 						gasPlayerParticle = GAS_PARTICLE;
@@ -4296,7 +3531,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetGasDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_gas_particle", gasPlayerParticle, sizeof(gasPlayerParticle), GAS_PARTICLE);
+					GetChaserProfileGasParticle(profile, gasPlayerParticle, sizeof(gasPlayerParticle));
 					if (gasPlayerParticle[0] == '\0')
 					{
 						gasPlayerParticle = GAS_PARTICLE;
@@ -4333,7 +3568,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserGetMarkAttackIndexes(bossIndex);
-		GetProfileString(profile, "player_mark_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileMarkAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4379,7 +3614,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserGetSilentMarkAttackIndexes(bossIndex);
-		GetProfileString(profile, "player_silent_mark_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileSilentMarkAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4425,7 +3660,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 		char currentIndex[2];
 		int damageIndexes = NPCChaserGetIgniteAttackIndexes(bossIndex);
-		GetProfileString(profile, "player_ignite_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileIgniteAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
 
@@ -4469,7 +3704,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		int damageIndexes = NPCChaserGetStunAttackIndexes(bossIndex);
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
-		GetProfileString(profile, "player_stun_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileStunAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 
 		int count = ExplodeString(allowedIndexes, " ", allowedIndexesList, 33, 3);
 		if (count > 1)
@@ -4479,7 +3714,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetStunAttackDuration(bossIndex, difficulty))
 				{
-					GetProfileString(profile, "player_stun_particle", stunPlayerParticle, sizeof(stunPlayerParticle), STUN_PARTICLE);
+					GetChaserProfileStunParticle(profile, stunPlayerParticle, sizeof(stunPlayerParticle));
 					if (stunPlayerParticle[0] == '\0')
 					{
 						stunPlayerParticle = STUN_PARTICLE;
@@ -4545,7 +3780,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetStunAttackDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_stun_particle", stunPlayerParticle, sizeof(stunPlayerParticle), STUN_PARTICLE);
+					GetChaserProfileStunParticle(profile, stunPlayerParticle, sizeof(stunPlayerParticle));
 					if (stunPlayerParticle[0] == '\0')
 					{
 						stunPlayerParticle = STUN_PARTICLE;
@@ -4605,7 +3840,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		int damageIndexes = NPCChaserGetBleedAttackIndexes(bossIndex);
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
-		GetProfileString(profile, "player_bleed_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileBleedAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 
 		int count = ExplodeString(allowedIndexes, " ", allowedIndexesList, 33, 3);
 		if (count > 1)
@@ -4651,7 +3886,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		int damageIndexes = NPCChaserGetElectricAttackIndexes(bossIndex);
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
-		GetProfileString(profile, "player_electrocute_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileEletricAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 
 		int count = ExplodeString(allowedIndexes, " ", allowedIndexesList, 33, 3);
 		if (count > 1)
@@ -4661,8 +3896,8 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetElectricDuration(bossIndex, difficulty))
 				{
-					GetProfileString(profile, "player_electric_red_particle", electricPlayerParticleRed, sizeof(electricPlayerParticleRed), ELECTRIC_RED_PARTICLE);
-					GetProfileString(profile, "player_electric_blue_particle", electricPlayerParticleBlue, sizeof(electricPlayerParticleBlue), ELECTRIC_BLUE_PARTICLE);
+					GetChaserProfileElectricRedParticle(profile, electricPlayerParticleRed, sizeof(electricPlayerParticleRed));
+					GetChaserProfileElectricBlueParticle(profile, electricPlayerParticleBlue, sizeof(electricPlayerParticleBlue));
 					if (electricPlayerParticleRed[0] == '\0')
 					{
 						electricPlayerParticleRed = ELECTRIC_RED_PARTICLE;
@@ -4742,8 +3977,8 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetElectricDuration(bossIndex, difficulty) > 0.0)
 				{
-					GetProfileString(profile, "player_electric_red_particle", electricPlayerParticleRed, sizeof(electricPlayerParticleRed), ELECTRIC_RED_PARTICLE);
-					GetProfileString(profile, "player_electric_blue_particle", electricPlayerParticleBlue, sizeof(electricPlayerParticleBlue), ELECTRIC_BLUE_PARTICLE);
+					GetChaserProfileElectricRedParticle(profile, electricPlayerParticleRed, sizeof(electricPlayerParticleRed));
+					GetChaserProfileElectricBlueParticle(profile, electricPlayerParticleBlue, sizeof(electricPlayerParticleBlue));
 					if (electricPlayerParticleRed[0] == '\0')
 					{
 						electricPlayerParticleRed = ELECTRIC_RED_PARTICLE;
@@ -4817,7 +4052,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 		int damageIndexes = NPCChaserGetSmiteAttackIndexes(bossIndex);
 		FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 		FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex + 1);
-		GetProfileString(profile, "player_smite_attack_indexs", allowedIndexes, sizeof(allowedIndexes), "1");
+		GetChaserProfileSmiteAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 
 		int count = ExplodeString(allowedIndexes, " ", allowedIndexesList, 33, 3);
 		if (count > 1)
@@ -4894,45 +4129,61 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 	}
 }
 
+void NPCClearAttackStats(int bossIndex, bool killTimers = false)
+{
+	if (!killTimers)
+	{
+		g_SlenderAttackTimer[bossIndex] = null;
+		g_NpcLifeStealTimer[bossIndex] = null;
+		g_SlenderBackupAtkTimer[bossIndex] = null;
+	}
+	else
+	{
+		if (g_SlenderAttackTimer[bossIndex] != null)
+		{
+			KillTimer(g_SlenderAttackTimer[bossIndex]);
+		}
+		if (g_NpcLifeStealTimer[bossIndex] != null)
+		{
+			KillTimer(g_NpcLifeStealTimer[bossIndex]);
+		}
+		if (g_SlenderBackupAtkTimer[bossIndex] != null)
+		{
+			KillTimer(g_SlenderBackupAtkTimer[bossIndex]);
+		}
+	}
+	g_IsSlenderAttacking[bossIndex] = false;
+	g_NpcStealingLife[bossIndex] = false;
+	g_NpcAlreadyAttacked[bossIndex] = false;
+	g_NpcUseFireAnimation[bossIndex] = false;
+}
+
 static bool NPCPropPhysicsAttack(int bossIndex, int prop)
 {
-	char buffer[PLATFORM_MAX_PATH], profile[SF2_MAX_PROFILE_NAME_LENGTH], model[SF2_MAX_PROFILE_NAME_LENGTH], key[64];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH], model[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
+	ArrayList props = GetChaserProfileAttackPropModels(profile);
+	if (props == null)
+	{
+		return false;
+	}
 	if (!IsValidEntity(prop))
 	{
 		return false;
 	}
 	GetEntPropString(prop, Prop_Data, "m_ModelName", model, sizeof(model));
-	if (!g_Config.JumpToKey("attack_props_physics_models"))
+	int arrayIndex = props.FindString(model);
+	if (arrayIndex == -1)
 	{
-		return true;
+		return false;
 	}
-	bool bFound = false;
-	for (int i = 1; ; i++)
-	{
-		FormatEx(key, sizeof(key), "%d", i);
-		g_Config.GetString(key, buffer, PLATFORM_MAX_PATH);
-		if (buffer[0] == '\0')
-		{
-			break;
-		}
-		if (strcmp(buffer, model) == 0)
-		{
-			bFound = true;
-			break;
-		}
-	}
-	return bFound;
+	return true;
 }
 stock void NPC_DropKey(int bossIndex)
 {
 	char buffer[PLATFORM_MAX_PATH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-	g_Config.GetString("key_trigger", buffer, PLATFORM_MAX_PATH);
+	GetChaserProfileKeyTrigger(profile, buffer, sizeof(buffer));
 	if (buffer[0] != '\0')
 	{
 		float myPos[3], vel[3];
@@ -4941,18 +4192,10 @@ stock void NPC_DropKey(int bossIndex)
 		Format(buffer, PLATFORM_MAX_PATH, "sf2_key_%s", buffer);
 
 		int touchBox = CreateEntityByName("tf_halloween_pickup");
-		//To do: allow the cfg maker to change the model.
 		DispatchKeyValue(touchBox, "targetname", buffer);
-		//New key model
-		GetProfileString(profile, "key_model", keyModel, sizeof(keyModel));
-		if (keyModel[0] == '\0')
-		{
-			DispatchKeyValue(touchBox, "powerup_model", SF_KEYMODEL);
-		}
-		else
-		{
-			DispatchKeyValue(touchBox, "powerup_model", keyModel);
-		}
+		// New key model
+		GetChaserProfileKeyModel(profile, keyModel, sizeof(keyModel));
+		DispatchKeyValue(touchBox, "powerup_model", keyModel);
 		DispatchKeyValue(touchBox, "modelscale", "2.0");
 		DispatchKeyValue(touchBox, "pickup_sound", "ui/itemcrate_smash_ultrarare_short.wav");
 		DispatchKeyValue(touchBox, "pickup_particle", "utaunt_firework_teamcolor_red");
@@ -5065,19 +4308,19 @@ public void KeyTrigger(const char[] output, int caller, int activator, float del
 	TriggerKey(caller);
 }
 
-public Action Hook_KeySetTransmit(int entity, int iOther)
+public Action Hook_KeySetTransmit(int entity, int other)
 {
-	if (!IsValidClient(iOther))
+	if (!IsValidClient(other))
 	{
 		return Plugin_Continue;
 	}
 
-	if (g_PlayerEliminated[iOther] && IsClientInGhostMode(iOther))
+	if (g_PlayerEliminated[other] && IsClientInGhostMode(other))
 	{
 		return Plugin_Continue;
 	}
 
-	if (!g_PlayerEliminated[iOther])
+	if (!g_PlayerEliminated[other])
 	{
 		return Plugin_Continue;
 	}

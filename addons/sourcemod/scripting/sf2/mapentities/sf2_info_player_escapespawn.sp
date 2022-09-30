@@ -1,5 +1,7 @@
 // sf2_info_player_escapespawn
 
+#pragma semicolon 1
+
 static CEntityFactory g_EntityFactory;
 
 methodmap SF2PlayerEscapeSpawnEntity < SF2SpawnPointBaseEntity

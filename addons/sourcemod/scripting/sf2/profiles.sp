@@ -3,17 +3,17 @@
 #endif
 #define _sf2_profiles_included
 
-#define FILE_PROFILES "configs/sf2/profiles.cfg"
+#pragma semicolon 1
+
 #define FILE_PROFILES_DIR "configs/sf2/profiles"
 #define FILE_PROFILES_PACKS "configs/sf2/profiles_packs.cfg"
 #define FILE_PROFILES_PACKS_DIR "configs/sf2/profiles/packs"
 
-#define FILE_PROFILES_DATA "data/sf2/profiles.cfg"
 #define FILE_PROFILES_DIR_DATA "data/sf2/profiles"
 #define FILE_PROFILES_PACKS_DATA "data/sf2/profiles_packs.cfg"
 #define FILE_PROFILES_PACKS_DIR_DATA "data/sf2/profiles/packs"
 
-static ArrayList g_BossProfileList = null;
+ArrayList g_BossProfileList = null;
 static ArrayList g_SelectableBossProfileList = null;
 static ArrayList g_SelectableAdminBossProfileList = null;
 static ArrayList g_SelectableBoxingBossProfileList = null;
@@ -21,8 +21,7 @@ static ArrayList g_SelectableRenevantBossProfileList = null;
 static ArrayList g_SelectableRenevantBossAdminProfileList = null;
 static ArrayList g_hSelectableBossProfileQueueList = null;
 
-StringMap g_BossProfileNames = null;
-ArrayList g_BossProfileData = null;
+StringMap g_BossProfileData = null;
 
 ConVar g_BossProfilePackConVar = null;
 ConVar g_BossProfilePackDefaultConVar = null;
@@ -36,16 +35,51 @@ ConVar g_BossPackVoteShuffleConVar;
 
 static bool g_BossPackVoteEnabled = false;
 
+static StringMap g_Activities;
+
 static char mapBossPack[64];
+
+GlobalForward g_OnBossProfileLoadedFwd;
+static GlobalForward g_OnBossProfileUnloadedFwd;
 
 #include "sf2/profiles/profiles_boss_functions.sp"
 #include "sf2/profiles/profile_chaser.sp"
 #include "sf2/profiles/profile_statue.sp"
 
+void SetupBossProfileNatives()
+{
+	CreateNative("SF2_IsBossProfileValid", Native_IsBossProfileValid);
+	CreateNative("SF2_GetBossProfileNum", Native_GetBossProfileNum);
+	CreateNative("SF2_GetBossProfileFloat", Native_GetBossProfileFloat);
+	CreateNative("SF2_GetBossProfileString", Native_GetBossProfileString);
+	CreateNative("SF2_GetBossProfileVector", Native_GetBossProfileVector);
+	CreateNative("SF2_GetBossProfileDifficultyNumValues", Native_GetBossProfileDifficultyNumValues);
+	CreateNative("SF2_GetBossProfileDifficultyBoolValues", Native_GetBossProfileDifficultyBoolValues);
+	CreateNative("SF2_GetBossProfileDifficultyFloatValues", Native_GetBossProfileDifficultyFloatValues);
+	CreateNative("SF2_GetBossAttackProfileNum", Native_GetBossAttackProfileNum);
+	CreateNative("SF2_GetBossAttackProfileFloat", Native_GetBossAttackProfileFloat);
+	CreateNative("SF2_GetBossAttackProfileString", Native_GetBossAttackProfileString);
+	CreateNative("SF2_GetBossAttackProfileVector", Native_GetBossAttackProfileVector);
+	CreateNative("SF2_GetRandomStringFromBossProfile", Native_GetRandomStringFromBossProfile);
+	CreateNative("SF2_GetBossAttributeName", Native_GetBossAttributeName);
+	CreateNative("SF2_GetBossAttributeValue", Native_GetBossAttributeValue);
+
+	CreateNative("SF2_GetBossProfileData", Native_GetBossProfileData);
+	CreateNative("SF2_GetChaserBossProfileData", Native_GetChaserBossProfileData);
+	CreateNative("SF2_GetStatueBossProfileData", Native_GetStatueBossProfileData);
+}
+
 void InitializeBossProfiles()
 {
-	g_BossProfileNames = new StringMap();
-	g_BossProfileData = new ArrayList(BossProfileData_MaxStats);
+	g_BossProfileList = new ArrayList(ByteCountToCells(SF2_MAX_PROFILE_NAME_LENGTH));
+	g_BossProfileData = new StringMap();
+
+	g_Activities = new StringMap();
+
+	g_OnBossProfileLoadedFwd = new GlobalForward("SF2_OnBossProfileLoaded", ET_Ignore, Param_String);
+	g_OnBossProfileUnloadedFwd = new GlobalForward("SF2_OnBossProfileUnloaded", ET_Ignore, Param_String);
+
+	AddProfileActivities();
 
 	g_BossProfilePackConVar = CreateConVar("sf2_boss_profile_pack", "", "The boss pack referenced in profiles_packs.cfg that should be loaded.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	g_BossProfilePackDefaultConVar = CreateConVar("sf2_boss_profile_pack_default", "", "If the boss pack defined in sf2_boss_profile_pack is blank or could not be loaded, this pack will be used instead.", FCVAR_NOTIFY);
@@ -57,6 +91,127 @@ void InitializeBossProfiles()
 	InitializeStatueProfiles();
 	InitializeChaserProfiles();
 }
+
+static void AddProfileActivities()
+{
+	// Movement activities
+	g_Activities.SetValue("ACT_COMBAT_IDLE", ACT_COMBAT_IDLE);
+	g_Activities.SetValue("ACT_IDLE", ACT_IDLE);
+	g_Activities.SetValue("ACT_IDLE_STIMULATED", ACT_IDLE_STIMULATED);
+	g_Activities.SetValue("ACT_IDLE_AGITATED", ACT_IDLE_AGITATED);
+	g_Activities.SetValue("ACT_IDLE_ANGRY", ACT_IDLE_ANGRY);
+	g_Activities.SetValue("ACT_IDLE_RELAXED", ACT_IDLE_RELAXED);
+	g_Activities.SetValue("ACT_IDLE_AIM_STIMULATED", ACT_IDLE_AIM_STIMULATED);
+	g_Activities.SetValue("ACT_IDLE_AIM_AGITATED", ACT_IDLE_AIM_AGITATED);
+	g_Activities.SetValue("ACT_IDLE_AIM_RELAXED", ACT_IDLE_AIM_RELAXED);
+	g_Activities.SetValue("ACT_CROUCH", ACT_CROUCH); // act of crouching down
+	g_Activities.SetValue("ACT_CROUCHIDLE", ACT_CROUCHIDLE);
+	g_Activities.SetValue("ACT_CROUCHIDLE_STIMULATED", ACT_CROUCHIDLE_STIMULATED);
+	g_Activities.SetValue("ACT_CROUCHIDLE_AIM_STIMULATED", ACT_CROUCHIDLE_AIM_STIMULATED);
+	g_Activities.SetValue("ACT_CROUCHIDLE_AGITATED", ACT_CROUCHIDLE_AGITATED);
+	g_Activities.SetValue("ACT_STAND", ACT_STAND); // standing up from crouch
+	g_Activities.SetValue("ACT_WALK", ACT_WALK);
+	g_Activities.SetValue("ACT_WALK_STIMULATED", ACT_WALK_STIMULATED);
+	g_Activities.SetValue("ACT_WALK_AGITATED", ACT_WALK_AGITATED);
+	g_Activities.SetValue("ACT_WALK_ANGRY", ACT_WALK_ANGRY);
+	g_Activities.SetValue("ACT_WALK_RELAXED", ACT_WALK_RELAXED);
+	g_Activities.SetValue("ACT_WALK_AIM_STIMULATED", ACT_WALK_AIM_STIMULATED);
+	g_Activities.SetValue("ACT_WALK_AIM_AGITATED", ACT_WALK_AIM_AGITATED);
+	g_Activities.SetValue("ACT_WALK_CROUCH", ACT_WALK_CROUCH);
+	g_Activities.SetValue("ACT_WALK_CROUCH_AIM", ACT_WALK_CROUCH_AIM);
+	g_Activities.SetValue("ACT_RUN", ACT_RUN);
+	g_Activities.SetValue("ACT_RUN_STIMULATED", ACT_RUN_STIMULATED);
+	g_Activities.SetValue("ACT_RUN_AGITATED", ACT_RUN_AGITATED);
+	g_Activities.SetValue("ACT_RUN_RELAXED", ACT_RUN_RELAXED);
+	g_Activities.SetValue("ACT_RUN_AIM_STIMULATED", ACT_RUN_AIM_STIMULATED);
+	g_Activities.SetValue("ACT_RUN_AIM_AGITATED", ACT_RUN_AIM_AGITATED);
+	g_Activities.SetValue("ACT_RUN_AIM_RELAXED", ACT_RUN_AIM_RELAXED);
+	g_Activities.SetValue("ACT_RUN_CROUCH", ACT_RUN_CROUCH);
+	g_Activities.SetValue("ACT_RUN_CROUCH_AIM", ACT_RUN_CROUCH_AIM);
+	g_Activities.SetValue("ACT_JUMP", ACT_JUMP);
+	g_Activities.SetValue("ACT_FLY", ACT_FLY);
+	g_Activities.SetValue("ACT_LAND", ACT_LAND);
+	g_Activities.SetValue("ACT_LEAP", ACT_LEAP);
+	g_Activities.SetValue("ACT_CLIMB_UP", ACT_CLIMB_UP);
+	g_Activities.SetValue("ACT_CLIMB_DOWN", ACT_CLIMB_DOWN);
+	g_Activities.SetValue("ACT_CLIMB_DISMOUNT", ACT_CLIMB_DISMOUNT);
+
+	// Attack activities
+	g_Activities.SetValue("ACT_MELEE_ATTACK1", ACT_MELEE_ATTACK1);
+	g_Activities.SetValue("ACT_MELEE_ATTACK2", ACT_MELEE_ATTACK2);
+	g_Activities.SetValue("ACT_GESTURE_MELEE_ATTACK1", ACT_GESTURE_MELEE_ATTACK1);
+	g_Activities.SetValue("ACT_GESTURE_MELEE_ATTACK2", ACT_GESTURE_MELEE_ATTACK2);
+	g_Activities.SetValue("ACT_MELEE_ATTACK_SWING_GESTURE", ACT_MELEE_ATTACK_SWING_GESTURE);
+	g_Activities.SetValue("ACT_RANGE_ATTACK1", ACT_RANGE_ATTACK1);
+	g_Activities.SetValue("ACT_RANGE_ATTACK2", ACT_RANGE_ATTACK2);
+	g_Activities.SetValue("ACT_GESTURE_RANGE_ATTACK1", ACT_GESTURE_RANGE_ATTACK1);
+	g_Activities.SetValue("ACT_GESTURE_RANGE_ATTACK2", ACT_GESTURE_RANGE_ATTACK2);
+	g_Activities.SetValue("ACT_RANGE_ATTACK1_LOW", ACT_RANGE_ATTACK1_LOW);
+	g_Activities.SetValue("ACT_RANGE_ATTACK2_LOW", ACT_RANGE_ATTACK2_LOW);
+	g_Activities.SetValue("ACT_GESTURE_RANGE_ATTACK1_LOW", ACT_GESTURE_RANGE_ATTACK1_LOW);
+	g_Activities.SetValue("ACT_GESTURE_RANGE_ATTACK2_LOW", ACT_GESTURE_RANGE_ATTACK2_LOW);
+	g_Activities.SetValue("ACT_SPECIAL_ATTACK1", ACT_SPECIAL_ATTACK1);
+	g_Activities.SetValue("ACT_SPECIAL_ATTACK2", ACT_SPECIAL_ATTACK2);
+	g_Activities.SetValue("ACT_RANGE_ATTACK_THROW", ACT_RANGE_ATTACK_THROW);
+	g_Activities.SetValue("ACT_GESTURE_RANGE_ATTACK_THROW", ACT_GESTURE_RANGE_ATTACK_THROW);
+	g_Activities.SetValue("ACT_RELOAD", ACT_RELOAD);
+	g_Activities.SetValue("ACT_RELOAD_LOW", ACT_RELOAD_LOW);
+	g_Activities.SetValue("ACT_RELOAD_START", ACT_RELOAD_START);
+	g_Activities.SetValue("ACT_RELOAD_FINISH", ACT_RELOAD_FINISH);
+	g_Activities.SetValue("ACT_GESTURE_RELOAD", ACT_GESTURE_RELOAD);
+
+	// Flinch activities
+	g_Activities.SetValue("ACT_SMALL_FLINCH", ACT_SMALL_FLINCH);
+	g_Activities.SetValue("ACT_GESTURE_SMALL_FLINCH", ACT_GESTURE_SMALL_FLINCH);
+	g_Activities.SetValue("ACT_BIG_FLINCH", ACT_BIG_FLINCH);
+	g_Activities.SetValue("ACT_GESTURE_BIG_FLINCH", ACT_GESTURE_BIG_FLINCH);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_BLAST", ACT_GESTURE_FLINCH_BLAST);
+	g_Activities.SetValue("ACT_FLINCH_HEAD", ACT_FLINCH_HEAD);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_HEAD", ACT_GESTURE_FLINCH_HEAD);
+	g_Activities.SetValue("ACT_FLINCH_CHEST", ACT_FLINCH_CHEST);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_CHEST", ACT_GESTURE_FLINCH_CHEST);
+	g_Activities.SetValue("ACT_FLINCH_STOMACH", ACT_FLINCH_STOMACH);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_STOMACH", ACT_GESTURE_FLINCH_STOMACH);
+	g_Activities.SetValue("ACT_FLINCH_LEFTARM", ACT_FLINCH_LEFTARM);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_LEFTARM", ACT_GESTURE_FLINCH_LEFTARM);
+	g_Activities.SetValue("ACT_FLINCH_RIGHTARM", ACT_FLINCH_RIGHTARM);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_RIGHTARM", ACT_GESTURE_FLINCH_RIGHTARM);
+	g_Activities.SetValue("ACT_FLINCH_LEFTLEG", ACT_FLINCH_LEFTLEG);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_LEFTLEG", ACT_GESTURE_FLINCH_LEFTLEG);
+	g_Activities.SetValue("ACT_FLINCH_RIGHTLEG", ACT_FLINCH_RIGHTLEG);
+	g_Activities.SetValue("ACT_GESTURE_FLINCH_RIGHTLEG", ACT_GESTURE_FLINCH_RIGHTLEG);
+
+	// Death activities
+	g_Activities.SetValue("ACT_DIESIMPLE", ACT_DIESIMPLE);
+	g_Activities.SetValue("ACT_DIE_HEADSHOT", ACT_DIE_HEADSHOT);
+	g_Activities.SetValue("ACT_DIE_CHESTSHOT", ACT_DIE_CHESTSHOT);
+	g_Activities.SetValue("ACT_DIE_GUTSHOT", ACT_DIE_GUTSHOT);
+	g_Activities.SetValue("ACT_DIE_BACKSHOT", ACT_DIE_BACKSHOT);
+
+	// Misc activities
+	g_Activities.SetValue("ACT_TRANSITION", ACT_TRANSITION); // Spawn animation
+	g_Activities.SetValue("ACT_DISARM", ACT_DISARM); // Spawn animation
+	g_Activities.SetValue("ACT_BUSY_STAND", ACT_BUSY_STAND); // Detected animation
+	g_Activities.SetValue("ACT_VICTORY_DANCE", ACT_VICTORY_DANCE); // Taunt kill animation
+	g_Activities.SetValue("ACT_MP_GESTURE_VC_HANDMOUTH_MELEE", ACT_MP_GESTURE_VC_HANDMOUTH_MELEE);
+	g_Activities.SetValue("ACT_MP_GESTURE_VC_FINGERPOINT_MELEE", ACT_MP_GESTURE_VC_FINGERPOINT_MELEE);
+	g_Activities.SetValue("ACT_MP_GESTURE_VC_FISTPUMP_MELEE", ACT_MP_GESTURE_VC_FISTPUMP_MELEE);
+	g_Activities.SetValue("ACT_MP_GESTURE_VC_THUMBSUP_MELEE", ACT_MP_GESTURE_VC_THUMBSUP_MELEE);
+	g_Activities.SetValue("ACT_MP_GESTURE_VC_NODYES_MELEE", ACT_MP_GESTURE_VC_NODYES_MELEE);
+	g_Activities.SetValue("ACT_MP_GESTURE_VC_NODNO_MELEE", ACT_MP_GESTURE_VC_NODNO_MELEE);
+}
+
+Activity TranslateProfileActivityFromName(const char[] activityName)
+{
+	Activity activity;
+	if (g_Activities.GetValue(activityName, activity))
+	{
+		return activity;
+	}
+
+	return ACT_INVALID;
+}
+
 /*
 Command
 */
@@ -127,14 +282,101 @@ void BossProfilesOnMapEnd()
 	ClearBossProfiles();
 }
 
+static void PreUnloadBossProfile(const char[] profile)
+{
+	SF2BossProfileData profileData;
+	g_BossProfileData.GetArray(profile, profileData, sizeof(profileData));
+
+	int bossType = GetBossProfileType(profile);
+	switch (bossType)
+	{
+		case SF2BossType_Statue:
+		{
+			UnloadStatueBossProfile(profile);
+		}
+		case SF2BossType_Chaser:
+		{
+			UnloadChaserBossProfile(profile);
+		}
+	}
+
+	profileData.Destroy();
+}
+
+void UnloadBossProfile(const char[] profile)
+{
+	if (!IsProfileValid(profile))
+	{
+		return;
+	}
+
+	Call_StartForward(g_OnBossProfileUnloadedFwd);
+	Call_PushString(profile);
+	Call_Finish();
+
+	PreUnloadBossProfile(profile);
+
+	int index = g_BossProfileList.FindString(profile);
+	if (index != -1)
+	{
+		g_BossProfileList.Erase(index);
+	}
+
+	index = g_SelectableBossProfileList.FindString(profile);
+	if (index != -1)
+	{
+		g_SelectableBossProfileList.Erase(index);
+	}
+
+	index = g_SelectableAdminBossProfileList.FindString(profile);
+	if (index != -1)
+	{
+		g_SelectableAdminBossProfileList.Erase(index);
+	}
+
+	index = g_SelectableBoxingBossProfileList.FindString(profile);
+	if (index != -1)
+	{
+		g_SelectableBoxingBossProfileList.Erase(index);
+	}
+
+	index = g_SelectableRenevantBossProfileList.FindString(profile);
+	if (index != -1)
+	{
+		g_SelectableRenevantBossProfileList.Erase(index);
+	}
+
+	index = g_SelectableRenevantBossAdminProfileList.FindString(profile);
+	if (index != -1)
+	{
+		g_SelectableRenevantBossAdminProfileList.Erase(index);
+	}
+
+	g_BossProfileData.Remove(profile);
+
+	g_Config.Rewind();
+	if (g_Config.JumpToKey(profile))
+	{
+		g_Config.DeleteThis();
+	}
+}
+
 /**
  *	Clears all data and memory currently in use by all boss profiles.
  */
 void ClearBossProfiles()
 {
-	if (g_BossProfileList != null)
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	for (int i = 0; i < g_BossProfileList.Length; i++)
 	{
-		delete g_BossProfileList;
+		g_BossProfileList.GetString(i, profile, sizeof(profile));
+
+		if (!IsProfileValid(profile))
+		{
+			continue;
+		}
+
+		PreUnloadBossProfile(profile);
 	}
 
 	if (g_SelectableBossProfileList != null)
@@ -162,11 +404,8 @@ void ClearBossProfiles()
 		delete g_SelectableRenevantBossAdminProfileList;
 	}
 
-	g_BossProfileNames.Clear();
+	g_BossProfileList.Clear();
 	g_BossProfileData.Clear();
-
-	ClearChaserProfiles();
-	ClearStatueProfiles();
 }
 
 void ReloadBossProfiles()
@@ -224,18 +463,7 @@ void ReloadBossProfiles()
 
 	char configPath[PLATFORM_MAX_PATH];
 
-	// First load from configs/sf2/profiles.cfg or data/sf2/profiles.cfg
-	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
-	{
-		BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES);
-	}
-	else
-	{
-		BuildPath(Path_SM, configPath, sizeof(configPath), FILE_PROFILES_DATA);
-	}
-	LoadProfilesFromFile(configPath);
-
-	// Then, load profiles individually from configs/sf2/profiles or data/sf2/profiles directory.
+	// Only load profiles individually from configs/sf2/profiles or data/sf2/profiles directory.
 	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 	{
 		LoadProfilesFromDirectory(FILE_PROFILES_DIR);
@@ -298,10 +526,6 @@ void ReloadBossProfiles()
 						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 						LoadProfilesFromDirectory(packConfigFilePath);
 					}
-					else if (FileExists(configPath))
-					{
-						LoadProfilesFromFile(configPath);
-					}
 
 					if (!voteBossPackLoaded)
 					{
@@ -348,10 +572,6 @@ void ReloadBossProfiles()
 							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
 							LoadProfilesFromDirectory(packConfigFilePath);
 						}
-						else if (FileExists(configPath))
-						{
-							LoadProfilesFromFile(configPath);
-						}
 					}
 				}
 			}
@@ -373,58 +593,6 @@ void ReloadBossProfiles()
 	g_hSelectableBossProfileQueueList = g_SelectableBossProfileList.Clone();
 
 	g_BossProfilePackConVar.SetString("");
-}
-
-static void LoadProfilesFromFile(const char[] configPath)
-{
-	LogSF2Message("Loading boss profiles from file %s...", configPath);
-
-	if (!FileExists(configPath))
-	{
-		LogSF2Message("File not found! Skipping...");
-		return;
-	}
-
-	KeyValues kv = new KeyValues("root");
-	if (!FileToKeyValues(kv, configPath))
-	{
-		delete kv;
-		LogSF2Message("Unexpected error while reading file! Skipping...");
-		return;
-	}
-	else
-	{
-		if (KvGotoFirstSubKey(kv))
-		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			char profileLoadFailReason[512];
-
-			int loadedCount = 0;
-
-			do
-			{
-				kv.GetSectionName(profile, sizeof(profile));
-				if (LoadBossProfile(kv, profile, profileLoadFailReason, sizeof(profileLoadFailReason)))
-				{
-					loadedCount++;
-					LogSF2Message("%s...", profile);
-				}
-				else
-				{
-					LogSF2Message("%s...FAILED (reason: %s)", profile, profileLoadFailReason);
-				}
-			}
-			while (kv.GotoNextKey());
-
-			LogSF2Message("Loaded %d boss profile(s) from file!", loadedCount);
-		}
-		else
-		{
-			LogSF2Message("No boss profiles loaded from file!");
-		}
-
-		delete kv;
-	}
 }
 
 /**
@@ -509,38 +677,6 @@ static void LoadProfilesFromDirectory(const char[] relDirPath)
 	LogSF2Message("Loaded %d boss profile(s) from directory!", count, relDirPath);
 }
 
-/**
- * Attempts to precache a sound path, a path relative to sound/ folder.
- *
- * If the sound file exists within the server files, the file is added to the downloads table.
- *
- * @param soundPath		Path to sound, relative to sound/ folder.
- * @param disableWarning	Disables the warning if a file doesn't exist.
- */
-void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning = false)
-{
-	if (soundPath[0] == '\0')
-	{
-		return;
-	}
-
-	char fullPath[PLATFORM_MAX_PATH];
-	FormatEx(fullPath, sizeof(fullPath), "sound/%s", soundPath);
-
-	if (FileExists(fullPath, false) || FileExists(fullPath, true))
-	{
-		PrecacheSound2(soundPath);
-	}
-	else
-	{
-		if (!disableWarning)
-		{
-			LogSF2Message("Sound file %s does not exist, excluding from downloads!", fullPath);
-		}
-		PrecacheSound(soundPath);
-	}
-}
-
 Handle g_BossPackVoteMapTimer = null;
 Handle g_BossPackVoteTimer = null;
 static bool g_BossPackVoteCompleted;
@@ -621,7 +757,7 @@ void CheckRoundLimitForBossPackVote(int roundCount)
 
 void InitiateBossPackVote(int initiator)
 {
-	if (initiator<33)//A admin called the command, it's probably for a good reason
+	if (initiator<33) //A admin called the command, it's probably for a good reason
 	{
 		g_BossPackVoteCompleted = false;
 	}
@@ -629,7 +765,6 @@ void InitiateBossPackVote(int initiator)
 	{
 
 	}
-	//PrintToChatAll("Start vote");
 	// Gather boss packs, if any.
 	if (g_BossPackConfig == null)
 	{
@@ -652,12 +787,13 @@ void InitiateBossPackVote(int initiator)
 	NativeVotes_SetDetails(voteMenu,title);
 	StringMap menuDisplayNamesTrie = new StringMap();
 	ArrayList menuOptionsInfo = new ArrayList(128);
+	int voteIndex = 0;
+	bool incrementReached = false;
 
 	do
 	{
 		if (!view_as<bool>(g_BossPackConfig.GetNum("autoload")) && view_as<bool>(g_BossPackConfig.GetNum("show_in_vote", 1)))
 		{
-
 			char bossPack[128];
 			g_BossPackConfig.GetSectionName(bossPack, sizeof(bossPack));
 			if (strcmp(bossPack,mapBossPack) != 0)
@@ -667,6 +803,14 @@ void InitiateBossPackVote(int initiator)
 
 				menuDisplayNamesTrie.SetString(bossPack, bossPackName);
 				menuOptionsInfo.PushString(bossPack);
+				if (!incrementReached)
+				{
+					voteIndex++;
+				}
+			}
+			else
+			{
+				incrementReached = true;
 			}
 		}
 	}
@@ -680,6 +824,13 @@ void InitiateBossPackVote(int initiator)
 		return;
 	}
 
+	ArrayList menuOptionsInfoOrder = menuOptionsInfo.Clone();
+
+	if (voteIndex == menuOptionsInfoOrder.Length)
+	{
+		voteIndex = 0;
+	}
+
 	if (g_BossPackVoteShuffleConVar.BoolValue)
 	{
 		menuOptionsInfo.Sort(Sort_Random, Sort_String);
@@ -687,10 +838,22 @@ void InitiateBossPackVote(int initiator)
 
 	for (int i = 0; i < menuOptionsInfo.Length; i++)
 	{
-		if (i<=5)
+		if (i <= 5)
 		{
 			char bossPack[128], bossPackName[64];
-			menuOptionsInfo.GetString(i, bossPack, sizeof(bossPack));
+			if (i == 0)
+			{
+				menuOptionsInfoOrder.GetString(voteIndex, bossPack, sizeof(bossPack));
+				int packIndex = menuOptionsInfo.FindString(bossPack);
+				if (packIndex != -1)
+				{
+					menuOptionsInfo.Erase(packIndex);
+				}
+			}
+			else
+			{
+				menuOptionsInfo.GetString(i, bossPack, sizeof(bossPack));
+			}
 			menuDisplayNamesTrie.GetString(bossPack, bossPackName, sizeof(bossPackName));
 			NativeVotes_AddItem(voteMenu, bossPack, bossPackName);
 		}
@@ -698,6 +861,7 @@ void InitiateBossPackVote(int initiator)
 
 	delete menuDisplayNamesTrie;
 	delete menuOptionsInfo;
+	delete menuOptionsInfoOrder;
 
 	g_BossPackVoteStarted = true;
 	if (g_BossPackVoteMapTimer != null)
@@ -728,7 +892,6 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 				char defaultPack[128];
 				g_BossProfilePackDefaultConVar.GetString(defaultPack, sizeof(defaultPack));
 				g_BossProfilePackConVar.SetString(defaultPack);
-				//CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Boss Pack No Vote");
 			}
 			else
 			{
@@ -762,6 +925,7 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 			delete menu;
 		}
 	}
+	return 0;
 }
 
 public Action Timer_StartBossPackVote(Handle timer)
@@ -827,7 +991,10 @@ stock float GetProfileFloat(const char[] profile, const char[] keyValue, float d
 
 stock bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR)
 {
-	for (int i = 0; i < 3; i++) buffer[i] = defaultValue[i];
+	for (int i = 0; i < 3; i++)
+	{
+		buffer[i] = defaultValue[i];
+	}
 
 	if (!IsProfileValid(profile))
 	{
@@ -865,10 +1032,10 @@ stock bool GetProfileColor(const char[] profile,
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile);
 
-	char sValue[64];
-	g_Config.GetString(keyValue, sValue, sizeof(sValue));
+	char value[64];
+	g_Config.GetString(keyValue, value, sizeof(value));
 
-	if (sValue[0] != '\0')
+	if (value[0] != '\0')
 	{
 		g_Config.GetColor(keyValue, r, g, b, a);
 	}
@@ -1065,4 +1232,19 @@ void RemoveBossProfileFromQueueList(const char[] profile)
 	{
 		GetSelectableBossProfileQueueList().Erase(selectIndex);
 	}
+}
+
+public any Native_GetBossProfileData(Handle plugin,int numParams)
+{
+	return g_BossProfileData;
+}
+
+public any Native_GetChaserBossProfileData(Handle plugin,int numParams)
+{
+	return g_ChaserBossProfileData;
+}
+
+public any Native_GetStatueBossProfileData(Handle plugin,int numParams)
+{
+	return g_StatueBossProfileData;
 }

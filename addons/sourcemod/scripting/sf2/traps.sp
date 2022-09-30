@@ -3,6 +3,8 @@
 #endif
 #define _sf2_traps_included
 
+#pragma semicolon 1
+
 static float g_TrapDespawnTimer[2049];
 static bool g_TrapClosed[2049];
 static int g_TrapState[2049];

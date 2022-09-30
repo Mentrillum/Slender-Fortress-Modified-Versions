@@ -4,6 +4,8 @@
 
 #define _sf2_pvp_menus
 
+#pragma semicolon 1
+
 Handle g_MenuSettingsPvP;
 
 public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
@@ -51,6 +53,7 @@ public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param
 			DisplayMenu(g_MenuSettings, param1, 30);
 		}
 	}
+	return 0;
 }
 
 public int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int param2)
@@ -73,6 +76,7 @@ public int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int
 
 		DisplayMenu(g_MenuSettings, param1, 30);
 	}
+	return 0;
 }
 
 public int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param1,int param2)
@@ -95,4 +99,5 @@ public int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param
 
 		DisplayMenu(g_MenuSettings, param1, 30);
 	}
+	return 0;
 }

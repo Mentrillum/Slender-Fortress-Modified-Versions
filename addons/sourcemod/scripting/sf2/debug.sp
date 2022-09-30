@@ -3,6 +3,8 @@
 #endif
 #define _sf2_debug_included
 
+#pragma semicolon 1
+
 #include <profiler>
 
 #define DEBUG_BOSS_TELEPORTATION (1 << 0)

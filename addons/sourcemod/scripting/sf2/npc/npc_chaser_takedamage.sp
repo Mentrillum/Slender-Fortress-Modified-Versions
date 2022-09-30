@@ -4,6 +4,8 @@
 
 #define _sf2_npc_chaser_takedamage_included
 
+#pragma semicolon 1
+
 //death_enable
 //death_health
 //death_duration
@@ -235,7 +237,7 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 			SubtractVectors(traceEndPos, traceStartPos, buffer);
 			GetVectorAngles(buffer, buffer);
 
-			if (FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) >= (NPCGetBackstabFOV(bossIndex) * 0.5) && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && GetProfileFloat(profile, "backstab_damage_scale", 0.05) > 0.0)
+			if (FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) >= (NPCGetBackstabFOV(bossIndex) * 0.5) && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && GetChaserProfileBackstabDamageScale(profile) > 0.0)
 			{
 				damagetype = DMG_CRIT;
 				EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
@@ -259,7 +261,7 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 						}
 					}
 					SetEntProp(vm, Prop_Send, "m_nSequence", anim);
-					damage = NPCChaserGetStunInitialHealth(bossIndex) * GetProfileFloat(profile, "backstab_damage_scale", 0.05);
+					damage = NPCChaserGetStunInitialHealth(bossIndex) * GetChaserProfileBackstabDamageScale(profile);
 					NPCSetAddSpeed(bossIndex, 12.5);
 					NPCSetAddMaxSpeed(bossIndex, 25.0);
 					NPCSetAddAcceleration(bossIndex, 100.0);
@@ -319,6 +321,20 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 		damage = 0.0;
 	}
 
+	ArrayList resistances = GetChaserProfileDamageResistances(profile);
+	if (resistances != null)
+	{
+		for (int i = 0; i < resistances.Length; i++)
+		{
+			int type = resistances.Get(i);
+			if (damagetype & type || damagetype == type)
+			{
+				damage = 0.0;
+				return Plugin_Changed;
+			}
+		}
+	}
+
 	if (NPCGetType(bossIndex) == SF2BossType_Chaser && damage > 0.0)
 	{
 		int state = g_SlenderState[bossIndex];
@@ -343,6 +359,11 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 						SetEntityHealth(attacker, _healthToRecover);
 					}
 				}
+				if (NPCGetHealthbarState(bossIndex))
+				{
+					UpdateHealthBar(bossIndex);
+				}
+
 				Event event = CreateEvent("npc_hurt");
 				if (event)
 				{
@@ -364,39 +385,35 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 
 					event.Fire();
 				}
-
-				if ((damagetype & DMG_CRIT) && !miniCrit)
+				if (IsValidClient(attacker))
 				{
-					float myEyePos[3];
-					SlenderGetAbsOrigin(bossIndex, myEyePos);
-					float myEyePosEx[3];
-					GetEntPropVector(slender, Prop_Send, "m_vecMaxs", myEyePosEx);
-					myEyePos[2] += myEyePosEx[2];
+					if ((damagetype & DMG_CRIT) && !miniCrit)
+					{
+						float myEyePos[3];
+						SlenderGetAbsOrigin(bossIndex, myEyePos);
+						float myEyePosEx[3];
+						GetEntPropVector(slender, Prop_Send, "m_vecMaxs", myEyePosEx);
+						myEyePos[2] += myEyePosEx[2];
 
-					TE_Particle(g_Particles[CriticalHit], myEyePos, myEyePos);
-					TE_SendToAll();
+						TE_Particle(g_Particles[CriticalHit], myEyePos, myEyePos);
+						TE_SendToClient(attacker);
 
-					EmitSoundToAll(CRIT_SOUND, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+						EmitSoundToClient(attacker, CRIT_SOUND, _, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+					}
+					else if (miniCrit)
+					{
+						float myEyePos[3];
+						SlenderGetAbsOrigin(bossIndex, myEyePos);
+						float myEyePosEx[3];
+						GetEntPropVector(slender, Prop_Send, "m_vecMaxs", myEyePosEx);
+						myEyePos[2]+=myEyePosEx[2];
+
+						TE_Particle(g_Particles[MiniCritHit], myEyePos, myEyePos);
+						TE_SendToClient(attacker);
+
+						EmitSoundToClient(attacker, MINICRIT_SOUND, _, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+					}
 				}
-				else if (miniCrit)
-				{
-					float myEyePos[3];
-					SlenderGetAbsOrigin(bossIndex, myEyePos);
-					float myEyePosEx[3];
-					GetEntPropVector(slender, Prop_Send, "m_vecMaxs", myEyePosEx);
-					myEyePos[2]+=myEyePosEx[2];
-
-					TE_Particle(g_Particles[MiniCritHit], myEyePos, myEyePos);
-					TE_SendToAll();
-
-					EmitSoundToAll(MINICRIT_SOUND, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-				}
-			}
-
-			//(Experimental)
-			if (g_SlenderNextStunTime[bossIndex] <= GetGameTime() && NPCGetHealthbarState(bossIndex) && state != STATE_STUN && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_SlenderInDeathcam[bossIndex] && !g_RestartSessionEnabled)
-			{
-				UpdateHealthBar(bossIndex);
 			}
 		}
 	}
@@ -471,7 +488,10 @@ public void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_P
 			}
 			g_SlenderBoxingBossIsKilled[bossIndex] = true;
 		}
-		else NPC_DropKey(bossIndex);
+		else
+		{
+			NPC_DropKey(bossIndex);
+		}
 	}
 
 	if (NPCChaserCanDropItemOnStun(bossIndex))
@@ -603,7 +623,7 @@ public void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_P
 
 		g_NpcHasCloaked[bossIndex] = false;
 		SlenderToggleParticleEffects(victim, true);
-		GetProfileString(profile, "cloak_particle", cloakParticle, sizeof(cloakParticle));
+		GetChaserProfileCloakParticle(profile, cloakParticle, sizeof(cloakParticle));
 		if (cloakParticle[0] == '\0')
 		{
 			cloakParticle = "drg_cow_explosioncore_charged_blue";
@@ -618,13 +638,13 @@ public void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_P
 
 	if (!doChasePersistencyInit)
 	{
-		float persistencyTime = GetProfileFloat(profile, "search_chase_persistency_time_init_stun", -1.0);
+		float persistencyTime = GetChaserProfileChaseStunPersistencyTimeInit(profile);
 		if (persistencyTime >= 0.0)
 		{
 			g_SlenderTimeUntilNoPersistence[bossIndex] = GetGameTime() + persistencyTime;
 		}
 
-		persistencyTime = GetProfileFloat(profile, "search_chase_persistency_time_add_stun", 2.0);
+		persistencyTime = GetChaserProfileChaseStunPersistencyTimeAdd(profile);
 		if (persistencyTime >= 0.0)
 		{
 			if (g_SlenderTimeUntilNoPersistence[bossIndex] < GetGameTime())
@@ -636,49 +656,17 @@ public void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_P
 	}
 	else
 	{
-		float persistencyTime = GetProfileFloat(profile, "search_chase_persistency_time_init", 5.0);
+		float persistencyTime = GetChaserProfileChaseAttackPersistencyTimeInit(profile);
 		if (persistencyTime >= 0.0)
 		{
 			g_SlenderTimeUntilNoPersistence[bossIndex] = GetGameTime() + persistencyTime;
 		}
 	}
 
-	g_SlenderTimeUntilRecover[bossIndex] = GetGameTime() + NPCChaserGetStunDuration(bossIndex);
+	NPCChaserUpdateBossAnimation(bossIndex, victim, g_SlenderState[bossIndex]);
+
+	g_SlenderTimeUntilRecover[bossIndex] = GetGameTime() + g_SlenderAnimationDuration[bossIndex];
 
 	// Sound handling. Ignore time check.
-	SlenderPerformVoice(bossIndex, "sound_stun", _, NPCChaserNormalSoundHookEnabled(bossIndex) ? SNDCHAN_VOICE : SNDCHAN_AUTO);
-	if (NPCChaserNormalSoundHookEnabled(bossIndex))
-	{
-		char stunSoundPath[PLATFORM_MAX_PATH];
-		GetRandomStringFromProfile(profile, "sound_stun", stunSoundPath, sizeof(stunSoundPath));
-		if (stunSoundPath[0] != '\0')
-		{
-			ClientStopAllSlenderSounds(victim, profile, "sound_alertofenemy", SNDCHAN_AUTO);
-			ClientStopAllSlenderSounds(victim, profile, "sound_chasingenemy", SNDCHAN_AUTO);
-			if (NPCChaserHasMultiAttackSounds(bossIndex))
-			{
-				for (int i = 0; i < NPCChaserGetAttackCount(bossIndex); i++)
-				{
-					if (i == 0)
-					{
-						ClientStopAllSlenderSounds(victim, profile, "sound_attackenemy", SNDCHAN_AUTO);
-					}
-					else
-					{
-						char attackString[PLATFORM_MAX_PATH];
-						FormatEx(attackString, sizeof(attackString), "sound_attackenemy_%i", i+1);
-						ClientStopAllSlenderSounds(victim, profile, attackString, SNDCHAN_AUTO);
-					}
-				}
-			}
-			else
-			{
-				ClientStopAllSlenderSounds(victim, profile, "sound_attackenemy", SNDCHAN_AUTO);
-			}
-			ClientStopAllSlenderSounds(victim, profile, "sound_idle", SNDCHAN_AUTO);
-			ClientStopAllSlenderSounds(victim, profile, "sound_chaseenemyinitial", SNDCHAN_AUTO);
-		}
-	}
-
-	NPCChaserUpdateBossAnimation(bossIndex, victim, g_SlenderState[bossIndex]);
+	SlenderPerformVoice(bossIndex, _, SF2BossSound_Stun);
 }

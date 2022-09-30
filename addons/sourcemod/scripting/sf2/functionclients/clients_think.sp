@@ -3,7 +3,9 @@
 #endif
 #define _sf2_clients_think_included
 
-public void Hook_ClientPreThink(int client)
+#pragma semicolon 1
+
+void Hook_ClientPreThink(int client)
 {
 	if (!g_Enabled)
 	{
@@ -14,6 +16,25 @@ public void Hook_ClientPreThink(int client)
 	ClientProcessInteractiveGlow(client);
 	ClientProcessStaticShake(client);
 	ClientProcessViewAngles(client);
+
+	if (IsClientInDeathCam(client) && !IsClientInGhostMode(client))
+	{
+		int ent = EntRefToEntIndex(g_PlayerDeathCamEnt[client]);
+		if (ent && ent != INVALID_ENT_REFERENCE && g_CameraInDeathCamAdvanced[ent])
+		{
+			float camPos[3], camAngs[3];
+			GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", camAngs);
+			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", camPos);
+
+			camPos[0] -= g_CameraPlayerOffsetBackward[ent];
+			camPos[2] -= g_CameraPlayerOffsetDownward[ent];
+
+			CBaseEntity player = CBaseEntity(client);
+
+			player.SetLocalOrigin(camPos);
+			player.SetLocalAngles(camAngs);
+		}
+	}
 
 	if (IsClientInGhostMode(client))
 	{
@@ -75,21 +96,6 @@ public void Hook_ClientPreThink(int client)
 
 				if (roundState == 4)
 				{
-					if (IsClientInDeathCam(client))
-					{
-						int ent = EntRefToEntIndex(g_PlayerDeathCamEnt[client]);
-						if (ent && ent != INVALID_ENT_REFERENCE && g_CameraInDeathCamAdvanced[ent])
-						{
-							float camPos[3], camAngs[3];
-							GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", camAngs);
-							GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", camPos);
-
-							camPos[0] -= g_CameraPlayerOffsetBackward[ent];
-							camPos[2] -= g_CameraPlayerOffsetDownward[ent];
-
-							TeleportEntity(client, camPos, camAngs, NULL_VECTOR);
-						}
-					}
 					bool inDanger = false;
 
 					if (!inDanger)
@@ -205,9 +211,9 @@ public void Hook_ClientPreThink(int client)
 					// Check for weapon speed changes.
 					int weaponEnt = INVALID_ENT_REFERENCE;
 
-					for (int iSlot = 0; iSlot <= 5; iSlot++)
+					for (int slot = 0; slot <= 5; slot++)
 					{
-						weaponEnt = GetPlayerWeaponSlot(client, iSlot);
+						weaponEnt = GetPlayerWeaponSlot(client, slot);
 						if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
 						{
 							continue;
@@ -590,7 +596,7 @@ public void Hook_ClientPreThink(int client)
 	ClientProcessVisibility(client);
 }
 
-public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
+Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
 {
 	if (!g_Enabled)
 	{
@@ -669,7 +675,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	if (IsValidClient(attacker) && !g_PlayerEliminated[attacker] && !DidClientEscape(attacker) && class == TFClass_Soldier && !(GetEntityFlags(attacker) & FL_ONGROUND))
 	{
 		int weaponEnt = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
+		if (IsValidEntity(weaponEnt))
 		{
 			int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 			float zVelocity[3];
@@ -785,8 +791,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 									}
 								}
 
-								ConVar cvar = FindConVar("tf_weapon_criticals");
-								if (cvar != null && cvar.BoolValue)
+								if (g_WeaponCriticalsConVar != null && g_WeaponCriticalsConVar.BoolValue)
 								{
 									damagetype |= DMG_ACID;
 								}
@@ -912,38 +917,42 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 					}
 					if (damage * (damagetype & DMG_CRIT ? 3.0 : 1.0) >= float(GetClientHealth(victim)) && !TF2_IsPlayerInCondition(victim, view_as<TFCond>(87)))//The proxy is about to die
 					{
-						char className[64];
-						char sectionName[64];
 						char buffer[PLATFORM_MAX_PATH];
-						TF2_GetClassName(TF2_GetPlayerClass(victim), className, sizeof(className));
-
-						FormatEx(sectionName, sizeof(sectionName), "proxies_death_anim_%s", className);
-						if ((GetProfileString(profile, sectionName, buffer, sizeof(buffer)) && buffer[0] != '\0') ||
-						(GetProfileString(profile, "proxies_death_anim_all", buffer, sizeof(buffer)) && buffer[0] != '\0'))
+						int classIndex = view_as<int>(TF2_GetPlayerClass(victim));
+						ArrayList deathAnims = GetBossProfileProxyDeathAnimations(profile);
+						if (deathAnims != null)
 						{
-							FormatEx(sectionName, sizeof(sectionName), "proxies_death_anim_frames_%s", className);
-							g_ClientMaxFrameDeathAnim[victim]=GetProfileNum(profile, sectionName, 0);
-							if (g_ClientMaxFrameDeathAnim[victim] == 0)
+							deathAnims.GetString(classIndex, buffer, sizeof(buffer));
+							if (buffer[0] == '\0')
 							{
-								g_ClientMaxFrameDeathAnim[victim] = GetProfileNum(profile, "proxies_death_anim_frames_all", 0);
+								deathAnims.GetString(0, buffer, sizeof(buffer));
 							}
-							if (g_ClientMaxFrameDeathAnim[victim] > 0)
+							if (buffer[0] != '\0')
 							{
-								// Cancel out any other taunts.
-								if (TF2_IsPlayerInCondition(victim, TFCond_Taunting))
+								g_ClientMaxFrameDeathAnim[victim]=GetBossProfileProxyDeathAnimFrames(profile, classIndex);
+								if (g_ClientMaxFrameDeathAnim[victim] == 0)
 								{
-									TF2_RemoveCondition(victim, TFCond_Taunting);
+									g_ClientMaxFrameDeathAnim[victim] = GetBossProfileProxyDeathAnimFrames(profile, 0);
 								}
-								//The model has a death anim play it.
-								SDK_PlaySpecificSequence(victim,buffer);
-								g_ClientFrame[victim] = 0;
-								RequestFrame(ProxyDeathAnimation,victim);
-								TF2_AddCondition(victim, view_as<TFCond>(87), 5.0);
-								//Prevent death, and show the damage to the attacker.
-								TF2_AddCondition(victim, view_as<TFCond>(70), 0.5);
-								return Plugin_Changed;
+								if (g_ClientMaxFrameDeathAnim[victim] > 0)
+								{
+									// Cancel out any other taunts.
+									if (TF2_IsPlayerInCondition(victim, TFCond_Taunting))
+									{
+										TF2_RemoveCondition(victim, TFCond_Taunting);
+									}
+									//The model has a death anim play it.
+									SDK_PlaySpecificSequence(victim,buffer);
+									g_ClientFrame[victim] = 0;
+									RequestFrame(ProxyDeathAnimation,victim);
+									TF2_AddCondition(victim, view_as<TFCond>(87), 5.0);
+									//Prevent death, and show the damage to the attacker.
+									TF2_AddCondition(victim, view_as<TFCond>(70), 0.5);
+									return Plugin_Changed;
+								}
 							}
 						}
+
 						//the player has no death anim leave him die.
 					}
 					return Plugin_Changed;
@@ -974,7 +983,7 @@ public Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, f
 	return Plugin_Continue;
 }
 
-public Action Timer_ClientSprinting(Handle timer, any userid)
+Action Timer_ClientSprinting(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1013,7 +1022,7 @@ public Action Timer_ClientSprinting(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public void Hook_ClientSprintingPreThink(int client)
+void Hook_ClientSprintingPreThink(int client)
 {
 	if (!IsClientReallySprinting(client))
 	{
@@ -1045,7 +1054,7 @@ public void Hook_ClientSprintingPreThink(int client)
 	}
 }
 
-public void Hook_ClientRechargeSprintPreThink(int client)
+void Hook_ClientRechargeSprintPreThink(int client)
 {
 	if (IsClientReallySprinting(client))
 	{
@@ -1073,7 +1082,7 @@ public void Hook_ClientRechargeSprintPreThink(int client)
 	}
 }
 
-public Action Timer_ClientRechargeSprint(Handle timer, any userid)
+Action Timer_ClientRechargeSprint(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1304,7 +1313,7 @@ void ClientOnJump(int client)
 	}
 }
 
-public Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
+Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1353,7 +1362,7 @@ public Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_ClientCheckCamp(Handle timer, any userid)
+Action Timer_ClientCheckCamp(Handle timer, any userid)
 {
 	if (IsRoundInWarmup())
 	{
@@ -1473,7 +1482,7 @@ public Action Timer_ClientCheckCamp(Handle timer, any userid)
 #define SF2_PLAYER_HUD_INFINITY_SYMBOL "∞"
 #define SF2_PLAYER_HUD_SPRINT_SYMBOL "»"
 
-public Action Timer_ClientAverageUpdate(Handle timer)
+Action Timer_ClientAverageUpdate(Handle timer)
 {
 	if (timer != g_ClientAverageUpdateTimer)
 	{
@@ -1493,8 +1502,8 @@ public Action Timer_ClientAverageUpdate(Handle timer)
 	// First, process through HUD stuff.
 	char buffer[256];
 
-	static hudColorHealthy[3];
-	static hudColorCritical[3] = { 255, 10, 10 };
+	static int hudColorHealthy[3];
+	static int hudColorCritical[3] = { 255, 10, 10 };
 
 	for (int i = 1; i <= MaxClients; i++)
 	{

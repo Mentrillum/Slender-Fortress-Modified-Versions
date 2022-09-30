@@ -1,5 +1,7 @@
 // sf2_info_page_music
 
+#pragma semicolon 1
+
 static const char g_EntityClassname[] = "sf2_info_page_music"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
 static CEntityFactory g_EntityFactory;

@@ -3,6 +3,8 @@
 #endif
 #define _sf2_mapentities_included
 
+#pragma semicolon 1
+
 //#define DEBUG_MAPENTITIES
 
 static PrivateForward g_CustomEntityOnMapStart;

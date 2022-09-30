@@ -4,16 +4,6 @@
 	{
 		"Offsets"
 		{
-			"CBaseCombatCharacter::GetLastKnownArea"
-			{
-				"windows"	"319"
-				"linux"		"320"
-			}
-			"CBaseCombatCharacter::UpdateLastKnownArea"
-			{
-				"windows"	"322"
-				"linux"		"323"
-			}
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
 				"windows"	"331"
@@ -24,35 +14,10 @@
 				"windows"	"377"
 				"linux"		"383"	
 			}
-			"CTFGameRules::IsInTraining"
-			{
-				"linux"		"182"
-				"windows"	"181"
-			}
-			"CTFGameRules::GetGameType"
-			{
-				"linux"		"136"
-				"windows"	"135"
-			}
-			"CTFBaseBoss::GetCurrencyValue"
-			{
-				"windows"	"332"
-				"linux"		"338"
-			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"windows"	"18"
 				"linux"		"19"
-			}
-			"CBaseEntity::MyNextBotPointer"
-			{
-				"linux"		"73"
-				"windows"	"72"
-			}
-			"CBaseEntity::GetVectors"
-			{
-				"linux"    	"140"
-				"windows"       "139"
 			}
 			"CBaseEntity::GetSmoothedVelocity"
 			{
@@ -64,16 +29,6 @@
 				"linux"		"20"
 				"windows"	"19"
 			}
-			"CBaseAnimating::StudioFrameAdvance"
-			{
-				"linux"		"198"
-				"windows"	"197"
-			}
-			"CBaseAnimating::m_pStudioHdr"
-			{
-				"linux"		"288"
-				"windows"	"283"
-			}
 			"CBaseProjectile::CanCollideWithTeammates"
 			{
 				"linux"		"227"
@@ -84,221 +39,6 @@
 				"windows"	"435"
 				"linux"		"436"
 			}
-			"INextBotComponent::GetBot"
-			{
-				"linux"		"46"
-				"windows"	"45"
-			}
-			"INextBot::GetEntity"
-			{
-				"linux"		"47"
-				"windows"	"46"
-			}
-			"INextBot::Update"
-			{
-				"linux"		"44"
-				"windows"	"43"
-			}
-			"INextBot::GetBodyInterface"
-			{
-				"linux"		"50"
-				"windows"	"49"
-			}
-			"INextBot::GetLocomotionInterface"
-			{
-				"linux"		"49"
-				"windows"	"48"
-			}
-			"ILocomotion::Approach"
-			{
-				"linux"		"47"
-				"windows"	"46"
-			}
-			"ILocomotion::Jump"
-			{
-				"linux"		"51"
-				"windows"	"50"
-			}
-			"ILocomotion::IsClimbingOrJumping"
-			{
-				"linux"		"52"
-				"windows"	"51"
-			}
-			"ILocomotion::Run"
-			{
-				"linux"		"56"
-				"windows"	"55"
-			}
-			"ILocomotion::Walk"
-			{
-				"linux"		"57"
-				"windows"	"56"
-			}
-			"ILocomotion::Stop"
-			{
-				"linux"		"58"
-				"windows"	"57"
-			}
-			"ILocomotion::ClimbUpToLedge"
-			{
-				"linux"		"49"
-				"windows"	"48"
-			}
-			"ILocomotion::JumpAcrossGap"
-			{
-				"linux"		"50"
-				"windows"	"49"
-			}
-			"ILocomotion::IsOnGround"
-			{
-				"linux"		"64"
-				"windows"	"63"
-			}
-			"ILocomotion::GetGroundNormal"
-			{
-				"linux"		"66"
-				"windows"	"65"
-			}
-			"ILocomotion::GetGroundSpeed"
-			{
-				"linux"		"67"
-				"windows"	"66"
-			}
-			"ILocomotion::GetGroundMotionVector"
-			{
-				"linux"		"68"
-				"windows"	"67"
-			}
-			"ILocomotion::FaceTowards"
-			{
-				"linux"		"74"
-				"windows"	"73"
-			}
-			"ILocomotion::IsAbleToClimb"
-			{
-				"linux"		"78"
-				"windows"	"77"
-			}
-			"ILocomotion::GetFeet"
-			{
-				"linux"		"79"
-				"windows"	"78"
-			}
-			"ILocomotion::IsAbleToJumpAcrossGaps"
-			{
-				"linux"		"77"
-				"windows"	"76"
-			}
-			"ILocomotion::GetStepHeight"
-			{
-				"linux"		"80"
-				"windows"	"79"
-			}
-			"ILocomotion::GetMaxJumpHeight"
-			{
-				"linux"		"81"
-				"windows"	"80"
-			}
-			"ILocomotion::GetMaxAcceleration"
-			{
-				"linux"		"85"
-				"windows"	"84"
-			}
-			"ILocomotion::GetVelocity"
-			{
-				"linux"		"87"
-				"windows"	"86"
-			}
-			"ILocomotion::IsStuck"
-			{
-				"linux"		"96"
-				"windows"	"95"
-			}
-			"ILocomotion::ShouldCollideWith"
-			{
-				"linux"		"100"
-				"windows"	"99"
-			}
-			"NextBotGroundLocomotion::GetMaxDeceleration"
-			{
-				"linux"		"86"
-				"windows"	"85"
-			}
-			"NextBotGroundLocomotion::SetVelocity"
-			{
-				"linux"		"105"
-				"windows"	"104"
-			}
-			"NextBotGroundLocomotion::GetGravity"
-			{
-				"linux"		"106"
-				"windows"	"105"
-			}
-			"NextBotGroundLocomotion::GetGroundNormal"
-			{
-				"windows"	"65"
-				"linux"		"66"
-			}
-			"NextBotGroundLocomotion::GetAcceleration"
-			{
-				"linux"		"103"
-				"windows"	"102"
-			}
-			"NextBotGroundLocomotion::GetFrictionForward"
-			{
-				"linux"		"107"
-				"windows"	"106"
-			}
-			"NextBotGroundLocomotion::GetFrictionSideways"
-			{
-				"linux"		"108"
-				"windows"	"107"
-			}
-			"IBody::StartActivity"
-			{
-				"linux"		"59"
-				"windows"	"58"
-			}
-			"IBody::GetHullWidth"
-			{
-				"linux"		"75"
-				"windows"	"74"
-			}
-			"IBody::GetHullHeight"
-			{
-				"linux"		"76"
-				"windows"	"75"
-			}
-			"IBody::GetStandHullHeight"
-			{
-				"linux"		"77"
-				"windows"	"76"
-			}
-			"IBody::GetCrouchHullHeight"
-			{
-				"linux"		"78"
-				"windows"	"77"
-			}
-			"IBody::GetHullMins"
-			{
-				"linux"		"79"
-				"windows"	"78"
-			}
-			"IBody::GetHullMaxs"
-			{
-				"linux"		"80"
-				"windows"	"79"
-			}
-			"IBody::GetSolidMask"
-			{
-				"linux"		"81"
-				"windows"	"80"
-			}
-			"CNavArea::m_id"
-			{
-				"linux"		"34"
-				"windows"	"34"
-			}
 			"CBaseTrigger::PassesTriggerFilters"
 			{
 				"linux"		"205"
@@ -307,41 +47,6 @@
 		}
 		"Signatures"
 		{
-			"CBaseAnimating::SetPoseParameter"
-			{
-				"library"		"server"
-				"linux"			"@_ZN14CBaseAnimating16SetPoseParameterEP10CStudioHdrif"
-				"windows"		"\x55\x8B\xEC\x8B\x45\x08\xD9\x45\x10"
-			}
-			"CBaseAnimating::LookupPoseParameter"
-			{
-				"library"		"server"
-				"linux"			"@_ZN14CBaseAnimating19LookupPoseParameterEP10CStudioHdrPKc"
-				"windows"		"\x55\x8B\xEC\x57\x8B\x7D\x08\x85\xFF\x75\x2A\x33\xC0\x5F\x5D\xC2\x08\x00"
-			}
-			"LookupSequence"
-			{
-				"library"		"server"
-				"windows"		"\x55\x8B\xEC\x56\x8B\x75\x08\x85\xF6\x75\x2A\x33\xC0\x5E\x5D\xC3\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x53"
-				"linux"			"@_Z14LookupSequenceP10CStudioHdrPKc"
-			}
-			"CBaseAnimating::LookupSequence"
-			{
-				"library"		"server"
-				"linux"			"@_ZN14CBaseAnimating14LookupSequenceEPKc"
-			}
-			"CBaseAnimatingOverlay::AddGestureSequence"
-			{
-				"library"	"server"
-				"windows"	"\x55\x8B\xEC\x56\x6A\x00\xFF\x75\x08\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x85\xC0\x78\x2A"
-				"linux"		"@_ZN21CBaseAnimatingOverlay18AddGestureSequenceEib"
-			}
-			"CBaseAnimating::ResetSequence"
-			{
-				"library"		"server"
-				"linux"			"@_ZN14CBaseAnimating13ResetSequenceEi"
-				"windows"		"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x53\x56\x57\x83\x78\x30\x00\x8B\xD9\x8B\x7D\x08"
-			}
 			"CTFPlayer::PlaySpecificSequence"
 			{
 				"library"		"server"
@@ -353,6 +58,14 @@
 				"library"	 "server"
 				"linux"		"@_ZN12CBaseTrigger13PointIsWithinERK6Vector"
 				"windows" 	"\x53\x8B\xDC\x83\xEC\x2A\x83\xE4\x2A\x83\xC4\x2A\x55\x8B\x6B\x2A\x89\x6C\x2A\x2A\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x8B\x43\x2A\x56\x50\x8B\xF1"
+			}
+
+			// "CreateEntityByName( %s, %d ) - CreateEdict failed."
+			"CreateEntityByName"
+			{
+				"library"	"server"
+				"linux"		"@_Z18CreateEntityByNamePKci"
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x0C\x83\xFE\xFF\x74\x24\x8B\x0D"
 			}
 		}
 	}

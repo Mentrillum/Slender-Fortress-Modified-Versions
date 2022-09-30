@@ -3,6 +3,8 @@
 #endif
 #define _sf2_afk_mode_included
 
+#pragma semicolon 1
+
 static float g_AfkAtGameTime[MAXPLAYERS + 1];
 
 void AFK_SetTime(int client, bool bReset = true)

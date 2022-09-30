@@ -3,6 +3,9 @@
 #endif
 #define _sf2_included
 
+#define PLUGIN_VERSION "1.7.5 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.5 M"
+
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
 #define SF2_MAX_NAME_LENGTH 32
@@ -99,7 +102,7 @@ enum SoundType
 	SoundType_Voice,
 	SoundType_Weapon,
 	SoundType_Flashlight,
-	SoundType_NIL
+	SoundType_Max
 };
 
 enum
@@ -110,7 +113,6 @@ enum
 	Difficulty_Insane,
 	Difficulty_Nightmare,
 	Difficulty_Apollyon,
-	Difficulty_Unusued, //DO NOT TOUCH
 	Difficulty_Max
 };
 
@@ -131,6 +133,43 @@ enum
 	SF2BossType_MaxTypes
 };
 
+enum
+{
+	SF2BossSound_None = 0,
+	SF2BossSound_Idle,
+	SF2BossSound_Alert,
+	SF2BossSound_Chasing,
+	SF2BossSound_ChaseInitial,
+	SF2BossSound_Stun = 5,
+	SF2BossSound_Attack,
+	SF2BossSound_AttackKilled,
+	SF2BossSound_RageAll,
+	SF2BossSound_RageTwo,
+	SF2BossSound_RageThree = 10,
+	SF2BossSound_SelfHeal,
+	SF2BossSound_MaxSounds
+};
+
+enum
+{
+	SF2BossAnimation_Idle = 0,
+	SF2BossAnimation_Walk,
+	SF2BossAnimation_WalkAlert,
+	SF2BossAnimation_Attack,
+	SF2BossAnimation_Shoot,
+	SF2BossAnimation_Run = 5,
+	SF2BossAnimation_Stun,
+	SF2BossAnimation_ChaseInitial,
+	SF2BossAnimation_Rage,
+	SF2BossAnimation_Spawn,
+	SF2BossAnimation_FleeInitial = 10,
+	SF2BossAnimation_Heal,
+	SF2BossAnimation_DeathCam,
+	SF2BossAnimation_CrawlWalk,
+	SF2BossAnimation_CrawlRun,
+	SF2BossAnimation_MaxAnimations = 15
+}
+
 enum SF2RoundState
 {
 	SF2RoundState_Invalid = -1,
@@ -140,6 +179,85 @@ enum SF2RoundState
 	SF2RoundState_Active,			// round is running for RED
 	SF2RoundState_Escape,			// escape stage for RED
 	SF2RoundState_Outro				// round win for a team, next round coming soon
+};
+
+enum
+{
+	SF2Attribute_ReducedSpeedOnLook = 0,
+	SF2Attribute_ReducedWalkSpeedOnLook,
+	SF2Attribute_AddStunHealhOnStun,
+	SF2Attribute_AlwaysLookAtTarget,
+	SF2Attribute_AlwaysLookAtTargetWhileChasing,
+	SF2Attribute_AlwaysLookAtTargetWhileAttacking = 5,
+	SF2Attribute_BleedPlayerOnHit,
+	SF2Attribute_IgnitePlayerOnHit,
+	SF2Attribute_StunPlayerOnHit,
+	SF2Attribute_StunPlayerPercentage,
+	SF2Attribute_JaratePlayerOnHit = 10,
+	SF2Attribute_MilkPlayerOnHit,
+	SF2Attribute_GasPlayerOnHit,
+	SF2Attribute_IgnitePlayerOnScare,
+	SF2Attribute_MarkPlayerForDeathOnScare,
+	SF2Attribute_SilentMarkPlayerForDeathOnScare = 15,
+	SF2Attribute_IgnitePlayerOnDeath,
+	SF2Attribute_AddSpeedOnStun,
+	SF2Attribute_AddMaxSpeedOnStun,
+	SF2Attribute_DeathCamOnLowHealth,
+	SF2Attribute_AlertCopies = 20,
+	SF2Attribute_AlertCompanions,
+	SF2Attribute_BlockWalkSpeedUnderDifficulty,
+	SF2Attribute_ChaseTargetOnScare,
+	SF2Attribute_IgnoreNonMarkedForChase,
+	SF2Attribute_ReducedAccelerationOnLook = 25,
+	SF2Attribute_AddAccelerationOnStun,
+	SF2Attribute_Max
+};
+
+char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
+{
+	"sound_none", // Placeholder
+	"sound_idle",
+	"sound_alertofenemy",
+	"sound_chasingenemy",
+	"sound_chaseenemyinitial",
+	"sound_stun",
+	"sound_attackenemy",
+	"sound_attack_killed",
+	"sound_rage",
+	"sound_rage_2",
+	"sound_rage_3",
+	"sound_heal_self"
+};
+
+char g_AttributesList[SF2Attribute_Max][] =
+{
+	"reduced speed on look",
+	"reduced walk speed on look",
+	"add stun health on stun",
+	"always look at target",
+	"always look at target while chasing",
+	"always look at target while attacking",
+	"bleed player on hit",
+	"ignite player on hit",
+	"stun player on hit",
+	"stun player percentage",
+	"jarate player on hit",
+	"milk player on hit",
+	"gas player on hit",
+	"ignite player on scare",
+	"mark player for death on scare",
+	"silent mark player for death on scare",
+	"ignite player on death",
+	"add speed on stun",
+	"add max speed on stun",
+	"death cam on low health",
+	"alert copies",
+	"alert companions",
+	"block walk speed under difficulty",
+	"chase target on scare",
+	"ignore non-marked for chase",
+	"reduced acceleration on look",
+	"add acceleration on stun"
 };
 
 enum ParticleAttachment
@@ -154,26 +272,27 @@ enum ParticleAttachment
 	MAX_PATTACH_TYPES,
 };
 
+#include <sf2/defines>
+#include <sf2/profiles/profiles>
+
 // Boss flags.
 #define SFF_SPAWNONCE (1 << 0)
 #define SFF_NOTELEPORT (1 << 1)
 #define SFF_FAKE (1 << 2)
 #define SFF_MARKEDASFAKE (1 << 3)
 #define SFF_ATTACKWAITERS (1 << 4)
-#define SFF_HASSTATICSHAKE (1 << 5)
-#define SFF_STATICONLOOK (1 << 6)
-#define SFF_STATICONRADIUS (1 << 7)
-#define SFF_PROXIES (1 << 8)
-#define SFF_WANDERMOVE (1 << 9)
-#define SFF_HASJUMPSCARE (1 << 10)
-#define SFF_HASSIGHTSOUNDS (1 << 11)
-#define SFF_HASSTATICLOOPLOCALSOUND (1 << 12)
-#define SFF_HASVIEWSHAKE (1 << 13)
-#define SFF_COPIES (1 << 14)
-#define SFF_ATTACKPROPS (1 << 15)
-#define SFF_WEAPONKILLS (1 << 16)
-#define SFF_WEAPONKILLSONRADIUS (1 << 17)
-#define SFF_RANDOMATTACKS (1 << 18)
+#define SFF_STATICONLOOK (1 << 5)
+#define SFF_STATICONRADIUS (1 << 6)
+#define SFF_PROXIES (1 << 7)
+#define SFF_WANDERMOVE (1 << 8)
+#define SFF_HASJUMPSCARE (1 << 9)
+#define SFF_HASSIGHTSOUNDS (1 << 10)
+#define SFF_HASSTATICLOOPLOCALSOUND (1 << 11)
+#define SFF_HASVIEWSHAKE (1 << 12)
+#define SFF_COPIES (1 << 13)
+#define SFF_ATTACKPROPS (1 << 14)
+#define SFF_WEAPONKILLS (1 << 15)
+#define SFF_WEAPONKILLSONRADIUS (1 << 16)
 
 // Interrup conditions.
 #define COND_HEARDSUSPICIOUSSOUND (1 << 0)
@@ -196,6 +315,20 @@ enum ParticleAttachment
 #define PROJ_BASEBALL (1 << 7)
 #define PROJ_FIREBALL_ATTACK (1 << 8)
 #define PROJ_ICEBALL_ATTACK (1 << 9)
+
+/**
+ * Called after a boss profile is successfully loaded.
+ *
+ * @param profile      Profile name
+ */
+forward void SF2_OnBossProfileLoaded(const char[] profile);
+
+/**
+ * Called before a boss profile is unloaded.
+ *
+ * @param profile     Profile name
+ */
+forward void SF2_OnBossProfileUnloaded(const char[] profile);
 
 /**
  * Called when a boss is added into the game.
@@ -230,7 +363,7 @@ forward void SF2_OnBossChangeState(int bossIndex, int oldState, int newState);
 /**
  * Called when the boss updates its animation.
  *
- * @param bossIndex	Boss index. 
+ * @param bossIndex	Boss index.
  * @return				If Plugin_Handled, animation change will be blocked.
  */
 forward Action SF2_OnBossAnimationUpdate(int bossIndex);
@@ -302,13 +435,28 @@ forward void SF2_OnBossCloaked(int bossIndex);
 forward void SF2_OnBossDecloaked(int bossIndex);
 
 /**
+ * Called when the boss finishes their spawn animation
+ *
+ * @param bossIndex	Boss index.
+ */
+forward void SF2_OnBossFinishSpawning(int bossIndex);
+
+/**
+ * Called when the boss finishes validating all attack indexes.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackArray ArrayList containing all valid attacks
+ */
+forward void SF2_OnBossPreAttack(int bossIndex, ArrayList attackArray);
+
+/**
  * Called when pages have spawned into the map.
  */
 forward void SF2_OnPagesSpawned();
 
 /**
  * Called when the round state changes.
- * 
+ *
  * @param oldState		Old state.
  * @param newState		New state.
  */
@@ -520,6 +668,18 @@ forward Action SF2_OnClientEnterGame(int client);
 forward Action SF2_OnGroupEnterGame(int groupIndex);
 
 /**
+ * Called whenever everything SF2 related is initialized
+ */
+forward void SF2_OnEverythingLoaded();
+
+/**
+ * Returns the global variable g_Config.
+ *
+ * @return				g_Config.
+ */
+native KeyValues SF2_GetConfig();
+
+/**
  * Returns a bool about the gamemode's state.
  *
  * @return				True if the gamemode is running, false if not.
@@ -570,6 +730,21 @@ native bool SF2_IsSpecialRoundRunning();
 native int SF2_GetSpecialRoundType();
 
 /**
+ * Returns if a certain special round is running
+ *
+ * @return				Special round type.
+ */
+native int SF2_IsInSpecialRound(int specialRound);
+
+/**
+ * Returns the current group a player is in.
+ *
+ * @param client	Client index.
+ * @return		Group index the player is in, -1 otherwise.
+ */
+native int SF2_GetClientGroup(int client);
+
+/**
  * Returns the amount of a queue points a player has.
  *
  * @param client	Client index.
@@ -584,14 +759,6 @@ native int SF2_GetClientQueuePoints(int client);
  * @param amount	Amount of queue points.
  */
 native void SF2_SetClientQueuePoints(int client, int amount);
-
-/**
- * Returns the current group a player is in.
- *
- * @param client	Client index.
- * @return		Group index the player is in, -1 otherwise.
- */
-native int SF2_GetClientGroup(int client);
 
 /**
  * Returns a bool about the client's elimination state.
@@ -803,7 +970,7 @@ native bool SF2_IsClientTrapped(int client);
  * Returns whether or not the client is in a death cam.
  *
  * @param client			Client index.
- * @return					True in in a death cam, false otherwise. 
+ * @return					True in in a death cam, false otherwise.
  */
 native bool SF2_IsClientInDeathCam(int client);
 
@@ -858,7 +1025,6 @@ native int SF2_EntIndexToBossIndex(int entIndex);
  */
 native int SF2_BossIndexToEntIndex(int bossIndex);
 
-
 /**
  * Returns the entity index of a boss using NPCGetEntIndex() rather than EntRefToEntIndex().
  *
@@ -884,6 +1050,25 @@ native int SF2_BossIDToBossIndex(int bossID);
 native int SF2_BossIndexToBossID(int bossIndex);
 
 /**
+ * Updates the boss animation based on the defined state
+ *
+ * @param bossIndex			Boss index.
+ * @param ent				Entity index.
+ * @param state				State.
+ * @param spawn				Determines if the boss should use a spawn animation.
+*/
+native void SF2_UpdateBossAnimation(int bossIndex, int ent, int state, bool spawn = false);
+
+/**
+ * Forces a boss to jump at a position.
+ *
+ * @param nextbotLocomotion		Boss' ground locomotion (Requires to use CBaseNPC natives).
+ * @param startPos				The position the boss is at.
+ * @param endPos				Where the boss should jump to.
+*/
+native void SF2_ForceBossJump(NextBotGroundLocomotion nextbotLocomotion, float startPos[3], float endPos[3]);
+
+/**
  * Adds a boss into the game.
  *
  * @param profile			Name of profile.
@@ -900,6 +1085,13 @@ native int SF2_AddBoss(const char[] profile, int flags=0, bool spawnCompanions=t
  * @param bossIndex	Boss index.
  */
 native void SF2_RemoveBoss(int bossIndex);
+
+/**
+ * Despawns a boss.
+ *
+ * @param bossIndex	Boss index.
+ */
+native void SF2_DespawnBoss(int bossIndex);
 
 /**
  * Retrieves the profile name of the boss.
@@ -942,11 +1134,12 @@ native void SF2_SetBossFlags(int bossIndex, int flags);
 native void SF2_SpawnBoss(int bossIndex, const float position[3]);
 
 /**
- * Despawns the boss from the map.
+ * Checks to see if the boss is using their spawn animation.
  *
  * @param bossIndex		Boss index.
+ * @return				Spawning state
  */
-native void SF2_DespawnBoss(int bossIndex);
+native bool SF2_IsBossSpawning(int bossIndex);
 
 /**
  * Returns the entity index of the boss's model.
@@ -966,13 +1159,21 @@ native int SF2_GetBossTarget(int bossIndex);
 
 /**
  * If the boss is in a chase state, sets the target for the boss.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
  * @param client			The new target.
  */
 native void SF2_SetBossTarget(int bossIndex, int client);
+
+/**
+ * Returns the boss's default path follower.
+ *
+ * @param bossIndex		Boss index.
+ * @return					Path Follower.
+ */
+native PathFollower SF2_GetBossPathFollower(int bossIndex);
 
 /**
  * If the boss is a copy, this returns the boss that this copy is associated with.
@@ -983,6 +1184,15 @@ native void SF2_SetBossTarget(int bossIndex, int client);
 native int SF2_GetBossMaster(int bossIndex);
 
 /**
+ * Returns the boss's idle lifetime.
+ *
+ * @param bossIndex		Boss index.
+ * @param difficulty	The difficulty index.
+ * @return					The boss's default idle lifetime
+ */
+native float SF2_GetBossIdleLifetime(int bossIndex, int difficulty);
+
+/**
  * Returns the boss's current state.
  *
  * Only used with Chaser bosses.
@@ -991,6 +1201,15 @@ native int SF2_GetBossMaster(int bossIndex);
  * @return					The boss's state.
  */
 native int SF2_GetBossState(int bossIndex);
+
+/**
+ * Sets the boss's current state.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex		Boss index.
+ */
+native void SF2_SetBossState(int bossIndex, int state);
 
 /**
  * Returns the boss's eye position in the world. Used for visibility checks.
@@ -1018,7 +1237,7 @@ native float SF2_GetBossFOV(int bossIndex);
 
 /**
  * If the boss is in a chase state, returns the time which the boss's persistency on the target ends.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1028,7 +1247,7 @@ native float SF2_GetBossTimeUntilNoPersistence(int bossIndex);
 
 /**
  * If the boss is in a chase state, sets the time which the boss's persistency on the target ends.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1038,7 +1257,7 @@ native void SF2_SetBossTimeUntilNoPersistence(int bossIndex, float time);
 
 /**
  * If the boss is in an alert state, returns the time which the boss should revert to idle state.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1048,7 +1267,7 @@ native float SF2_GetBossTimeUntilIdle(int bossIndex);
 
 /**
  * If the boss is in an alert state, sets the time which the boss should revert to idle state.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1058,7 +1277,7 @@ native void SF2_SetBossTimeUntilIdle(int bossIndex, float time);
 
 /**
  * If the boss is in a chase state, returns the time which the boss should revert to alert state.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1068,7 +1287,7 @@ native float SF2_GetBossTimeUntilAlert(int bossIndex);
 
 /**
  * If the boss is in a chase state, sets the time which the boss should revert to alert state.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1128,7 +1347,7 @@ native void SF2_SetBossStunHealth(int bossIndex, float health);
 
 /**
  * Returns the time where the boss is not under stun cooldown.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1138,7 +1357,7 @@ native float SF2_GetBossNextStunTime(int bossIndex);
 
 /**
  * Sets the time where the boss is not under stun cooldown.
- * 
+ *
  * Only used with Chaser bosses.
  *
  * @param bossIndex		Boss index.
@@ -1243,6 +1462,39 @@ native bool SF2_GetBossProfileString(const char[] profile, const char[] key, cha
 native bool SF2_GetBossProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR);
 
 /**
+ * Retrieves integer difficulty keyvalues from the profile.
+ *
+ * @param kv				KeyValues
+ * @param baseKeyName		Name of the base key.
+ * @param buffer			Values to store the key values in
+ * @param defaultValues		Fallback values
+ * @return					The value, or defaultValue if the key doesn't exist.
+ */
+native void SF2_GetBossProfileDifficultyNumValues(KeyValues kv, const char[] baseKeyName, int buffer[Difficulty_Max], const int defaultValues[Difficulty_Max] = { 0, ... })
+
+/**
+ * Retrieves bool difficulty keyvalues from the profile.
+ *
+ * @param kv				KeyValues
+ * @param baseKeyName		Name of the base key.
+ * @param buffer			Values to store the key values in
+ * @param defaultValues		Fallback values
+ * @return					The value, or defaultValue if the key doesn't exist.
+ */
+native void SF2_GetBossProfileDifficultyBoolValues(KeyValues kv, const char[] baseKeyName, bool buffer[Difficulty_Max], const bool defaultValues[Difficulty_Max] = { false, ... })
+
+/**
+ * Retrieves float difficulty keyvalues from the profile.
+ *
+ * @param kv				KeyValues
+ * @param baseKeyName		Name of the base key.
+ * @param buffer			Values to store the key values in
+ * @param defaultValues		Fallback values
+ * @return					The value, or defaultValue if the key doesn't exist.
+ */
+native void SF2_GetBossProfileDifficultyFloatValues(KeyValues kv, const char[] baseKeyName, float buffer[Difficulty_Max], const float defaultValues[Difficulty_Max] = { 0.0, ... })
+
+/**
  * Retrieves an integer keyvalue from the profile.
  *
  * @param profile			Profile name.
@@ -1304,7 +1556,7 @@ native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] ke
  * }
  *
  * This function will randomly choose a string value within "section" if key = "section".
- * 
+ *
  * @param profile			Profile name.
  * @param key				Name of the key. Must be a section.
  * @param buffer			Buffer to store the value.
@@ -1317,17 +1569,17 @@ native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[
 /**
  * Returns an attribute name if one exists
  * @param bossIndex	Boss index.
- * @param attribute	Name of attribute.
+ * @param attribute	Name of attribute in enum.
 */
-native bool SF2_GetBossAttributeName(int bossIndex, const char[] attribute);
+native bool SF2_GetBossAttributeName(int bossIndex, int attribute);
 
 /**
  * Returns the value of an attribute.
  * @param bossIndex	Boss index.
- * @param attribute	Name of attribute.
+ * @param attribute	Name of attribute in enum.
  * @param defaultValue	Default value of attribute.
 */
-native float SF2_GetBossAttributeValue(int bossIndex, const char[] attribute, float defaultValue = 0.0);
+native float SF2_GetBossAttributeValue(int bossIndex, int attribute);
 
 /**
  * Returns the projectile type a boss uses.
@@ -1344,8 +1596,72 @@ native int SF2_GetBossProjectileType(int bossIndex);
  * Only used with Chaser bosses.
  *
  * @param bossIndex	Boss index.
+ * @return Attack index.
 */
 native int SF2_GetBossCurrentAttackIndex(int bossIndex);
+
+/**
+ * Sets the boss' current attack index.
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex New attack index.
+*/
+native int SF2_SetBossCurrentAttackIndex(int bossIndex, int attackIndex);
+
+/**
+ * Returns all available attack indexes of the boss
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+*/
+native int SF2_GetBossMaxAttackIndexes(int bossIndex);
+
+/**
+ * Returns the boss' current run duration time
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex Attack index.
+ * @return Attack run duration time.
+*/
+native float SF2_GetBossAttackRunDurationTime(int bossIndex, int attackIndex);
+
+/**
+ * Sets the boss' current run duration time
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex Attack index.
+ * @param newTime New attack run duration time.
+*/
+native void SF2_SetBossAttackRunDurationTime(int bossIndex, int attackIndex, float newTime);
+
+/**
+ * Returns the boss' current run duration time
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex Attack index.
+ * @return Attack run delay time.
+*/
+native float SF2_GetBossAttackRunDelayTime(int bossIndex, int attackIndex);
+
+/**
+ * Sets the boss' current run delay time
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex Attack index.
+ * @param newTime New attack run delay time.
+*/
+native void SF2_SetBossAttackRunDelayTime(int bossIndex, int attackIndex, float newTime);
 
 /**
  * Returns the damage type of a set attack index.
@@ -1369,6 +1685,28 @@ native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
 native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int difficulty);
 
 /**
+ * Returns the spread of a set attack index
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex	Attack index.
+ * @param difficulty	The difficulty.
+*/
+native float SF2_GetBossAttackIndexSpread(int bossIndex, int attackIndex);
+
+/**
+ * Returns the range of a set attack index
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex	Attack index.
+ * @param difficulty	The difficulty.
+*/
+native float SF2_GetBossAttackIndexRange(int bossIndex, int attackIndex);
+
+/**
  * Returns the attack type of a set attack index.
  *
  * Only used with Chaser bosses.
@@ -1377,6 +1715,91 @@ native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int di
  * @param attackIndex	Attack index.
 */
 native int SF2_GetBossAttackIndexType(int bossIndex, int attackIndex);
+
+/**
+ * Returns the teleport think timer in Handle form
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+*/
+native Handle SF2_GetBossTeleportThinkTimer(int bossIndex);
+
+/**
+ * Sets the teleport think timer and destroys the old think timer
+ *
+ * @param bossIndex	Boss index.
+ * @param timer		New timer (Can also be null).
+*/
+native void SF2_SetBossTeleportThinkTimer(int bossIndex, Handle timer);
+
+/**
+ * Returns the boss' teleport target
+ *
+ * @param bossIndex	Boss index.
+ * @param difficulty	The difficulty index.
+ * @return		Teleport entity index.
+*/
+native int SF2_GetBossTeleportTarget(int bossIndex);
+
+/**
+ * Returns the boss think timer in Handle form
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @return		Handle timer.
+*/
+native Handle SF2_GetBossThinkTimer(int bossIndex);
+
+/**
+ * Sets the boss think timer and destroys the old think timer
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param timer		New timer (Can also be null).
+*/
+native void SF2_SetBossThinkTimer(int bossIndex, Handle timer);
+
+/**
+ * Unhooks the boss' current pre-think hook function. Use this sparingly. (Or don't)
+ *
+ * @param bossIndex Boss index.
+ */
+native void SF2_UnhookBossThinkHook(int bossIndex);
+
+/**
+ * Forcefully makes the boss perform a voice based on pre-defined voices
+ *
+ * Only used with Chaser bosses.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex	Optional index that looks mainly for attack sounds in sub sections
+ * @param soundType		Type of sound the boss should perform
+*/
+native void SF2_PerformBossVoice(int bossIndex, const int attackIndex = -1, int soundType = -1);
+
+/**
+ * Returns the StringMap variable containing every precached base boss profile
+ *
+ * @return		StringMap containing all base boss profile datas
+*/
+native StringMap SF2_GetBossProfileData();
+
+/**
+ * Returns the StringMap variable containing every precached chaser boss profile
+ *
+ * @return		StringMap containing all chaser boss profile datas
+*/
+native StringMap SF2_GetChaserBossProfileData();
+
+/**
+ * Returns the StringMap variable containing every precached statue boss profile
+ *
+ * @return		StringMap containing all statue boss profile datas
+*/
+native StringMap SF2_GetStatueBossProfileData();
 
 /**
  * Returns the distance of 2 vectors without utilizing the square root function and converting the values properly.
@@ -1451,7 +1874,7 @@ native bool SF2_IsRenevantMap();
  */
 native bool SF2_IsSlaughterRunMap();
 
-public SharedPlugin __pl_sf2 = 
+public SharedPlugin __pl_sf2 =
 {
 	name = "sf2",
 	file = "sf2.smx",

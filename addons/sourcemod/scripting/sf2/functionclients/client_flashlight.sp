@@ -5,6 +5,18 @@
 
 #define SF2_ULTRAVISION_CONE 180.0
 
+#pragma semicolon 1
+
+static bool g_PlayerHasFlashlight[MAXPLAYERS + 1] = { false, ... };
+static bool g_PlayerFlashlightBroken[MAXPLAYERS + 1] = { false, ... };
+static float g_PlayerFlashlightBatteryLife[MAXPLAYERS + 1] = { 1.0, ... };
+static Handle g_PlayerFlashlightBatteryTimer[MAXPLAYERS + 1] = { null, ... };
+static float g_PlayerFlashlightNextInputTime[MAXPLAYERS + 1] = { -1.0, ... };
+static int g_PlayerFlashlightEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerFlashlightEntAng[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_ClientFlashlightStartEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_ClientFlashlightEndEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+
 static Action Timer_DrainFlashlight(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
@@ -100,7 +112,6 @@ void ClientProcessFlashlightAngles(int client)
 	if (IsPlayerAlive(client))
 	{
 		int fl;
-		float eyeAng[3], ang2[3];
 
 		if (IsClientUsingFlashlight(client))
 		{
@@ -108,15 +119,6 @@ void ClientProcessFlashlightAngles(int client)
 			if (fl && fl != INVALID_ENT_REFERENCE)
 			{
 				TeleportEntity(fl, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }), NULL_VECTOR);
-			}
-
-			fl = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
-			if (fl && fl != INVALID_ENT_REFERENCE)
-			{
-				GetClientEyeAngles(client, eyeAng);
-				GetClientAbsAngles(client, ang2);
-				SubtractVectors(eyeAng, ang2, eyeAng);
-				TeleportEntity(fl, NULL_VECTOR, eyeAng, NULL_VECTOR);
 			}
 		}
 	}
@@ -247,7 +249,7 @@ static Action Hook_FlashlightSetTransmit(int ent,int other)
 	return Plugin_Continue;
 }
 
-static Action Hook_Flashlight2SetTransmit(int ent,int other)
+/*static Action Hook_Flashlight2SetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -260,124 +262,33 @@ static Action Hook_Flashlight2SetTransmit(int ent,int other)
 		return Plugin_Continue;
 	}
 
-	if (ownerEntity != other)
+	if (ownerEntity == other)
+	{
+		if (view_as<bool>(GetEntProp(ownerEntity, Prop_Send, "m_nForceTauntCam")) && !TF2_IsPlayerInCondition(ownerEntity, TFCond_Taunting))
+		{
+			return Plugin_Handled;
+		}
+	}
+	else
 	{
 		if (GetEntPropEnt(other, Prop_Send, "m_hObserverTarget") == ownerEntity && GetEntProp(other, Prop_Send, "m_iObserverMode") == 4)
 		{
 			return Plugin_Handled;
 		}
 
-		if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+		if (!DidClientEscape(ownerEntity) && !g_PlayerEliminated[ownerEntity])
 		{
-			if (!g_PlayerEliminated[other] && !DidClientEscape(other))
+			if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
 			{
-				return Plugin_Handled;
+				if (!g_PlayerEliminated[other] && !DidClientEscape(other))
+				{
+					return Plugin_Handled;
+				}
 			}
 		}
 	}
 	return Plugin_Continue;
-}
-
-void Hook_FlashlightEndSpawnPost(int ent)
-{
-	if (!g_Enabled)
-	{
-		return;
-	}
-
-	SDKHook(ent, SDKHook_SetTransmit, Hook_FlashlightEndSetTransmit);
-	SDKUnhook(ent, SDKHook_SpawnPost, Hook_FlashlightEndSpawnPost);
-}
-
-Action Hook_FlashlightBeamSetTransmit(int ent,int other)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	int owner = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-
-	if (owner == -1)
-	{
-		return Plugin_Continue;
-	}
-
-	int client = -1;
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i))
-		{
-			continue;
-		}
-
-		if (EntRefToEntIndex(g_PlayerFlashlightEntAng[i]) == owner)
-		{
-			client = i;
-			break;
-		}
-	}
-
-	if (client == -1)
-	{
-		return Plugin_Continue;
-	}
-
-	if (client == other)
-	{
-		if (!GetEntProp(client, Prop_Send, "m_nForceTauntCam") || !GetEntProp(client, Prop_Send, "m_iObserverMode"))
-		{
-			return Plugin_Handled;
-		}
-	}
-
-	return Plugin_Continue;
-}
-
-static Action Hook_FlashlightEndSetTransmit(int ent,int other)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	int owner = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-
-	if (owner == -1)
-	{
-		return Plugin_Continue;
-	}
-
-	int client = -1;
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i))
-		{
-			continue;
-		}
-
-		if (EntRefToEntIndex(g_PlayerFlashlightEntAng[i]) == owner)
-		{
-			client = i;
-			break;
-		}
-	}
-
-	if (client == -1)
-	{
-		return Plugin_Continue;
-	}
-
-	if (client == other)
-	{
-		if (!GetEntProp(client, Prop_Send, "m_nForceTauntCam") || !GetEntProp(client, Prop_Send, "m_iObserverMode"))
-		{
-			return Plugin_Handled;
-		}
-	}
-
-	return Plugin_Continue;
-}
+}*/
 
 /**
  *	Turns on the player's flashlight. Nothing else.
@@ -396,13 +307,14 @@ void ClientTurnOnFlashlight(int client)
 
 	g_PlayerHasFlashlight[client] = true;
 
-	float eyePos[3];
+	float eyePos[3], eyeAng[3];
 
 	float length = SF2_FLASHLIGHT_LENGTH;
 	float doubleLength = SF2_FLASHLIGHT_LENGTH*3.0;
 	float radius = SF2_FLASHLIGHT_WIDTH;
 	float doubleRadius = SF2_FLASHLIGHT_WIDTH*2.0;
 	GetClientEyePosition(client, eyePos);
+	GetClientEyeAngles(client, eyeAng);
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
@@ -422,47 +334,50 @@ void ClientTurnOnFlashlight(int client)
 		int ent = CreateEntityByName("light_dynamic");
 		if (ent != -1)
 		{
-			TeleportEntity(ent, eyePos, NULL_VECTOR, NULL_VECTOR);
+			TeleportEntity(ent, eyePos, eyeAng, NULL_VECTOR);
 			DispatchKeyValue(ent, "targetname", "WUBADUBDUBMOTHERBUCKERS");
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 1)
+			switch (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature)
 			{
-				DispatchKeyValue(ent, "rendercolor", "255 150 50");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 2)
-			{
-				DispatchKeyValue(ent, "rendercolor", "255 210 100");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 3)
-			{
-				DispatchKeyValue(ent, "rendercolor", "255 255 120");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 4)
-			{
-				DispatchKeyValue(ent, "rendercolor", "255 255 185");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 5)
-			{
-				DispatchKeyValue(ent, "rendercolor", "255 255 210");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 6)
-			{
-				DispatchKeyValue(ent, "rendercolor", "255 255 255");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 7)
-			{
-				DispatchKeyValue(ent, "rendercolor", "210 255 255");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 8)
-			{
-				DispatchKeyValue(ent, "rendercolor", "185 255 255");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 9)
-			{
-				DispatchKeyValue(ent, "rendercolor", "150 255 255");
-			}
-			if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 10)
-			{
-				DispatchKeyValue(ent, "rendercolor", "125 255 255");
+				case 1:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 150 50");
+				}
+				case 2:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 210 100");
+				}
+				case 3:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 255 120");
+				}
+				case 4:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 255 185");
+				}
+				case 5:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 255 210");
+				}
+				case 6:
+				{
+					DispatchKeyValue(ent, "rendercolor", "255 255 255");
+				}
+				case 7:
+				{
+					DispatchKeyValue(ent, "rendercolor", "210 255 255");
+				}
+				case 8:
+				{
+					DispatchKeyValue(ent, "rendercolor", "185 255 255");
+				}
+				case 9:
+				{
+					DispatchKeyValue(ent, "rendercolor", "150 255 255");
+				}
+				case 10:
+				{
+					DispatchKeyValue(ent, "rendercolor", "125 255 255");
+				}
 			}
 			if (!IsClassConfigsValid())
 			{
@@ -530,116 +445,184 @@ void ClientTurnOnFlashlight(int client)
 	}
 
 	// Spawn the light that only everyone else will see.
-	int ent = CreateEntityByName("point_spotlight");
-	if (ent > -1)
+	/*int ent = CreateEntityByName("env_beam");
+	if (ent != -1)
 	{
-		TeleportEntity(ent, eyePos, NULL_VECTOR, NULL_VECTOR);
+		int startEnt = CreateEntityByName("info_target");
+		int endEnt = CreateEntityByName("info_target");
+		if (startEnt != -1) // Start
+		{
+			SetEntPropString(startEnt, Prop_Data, "m_iClassname", "sf2_flashlight_spotlight_start");
+			SetEntProp(startEnt, Prop_Data, "m_spawnflags", 1);
+			TeleportEntity(startEnt, eyePos, eyeAng, NULL_VECTOR);
+			SetVariantString("!activator");
+			AcceptEntityInput(startEnt, "SetParent", client);
 
-		char buffer[256];
-		if (!IsClassConfigsValid())
+			DispatchSpawn(startEnt);
+			SetEntityOwner(startEnt, client);
+
+			g_ClientFlashlightStartEntity[client] = EntIndexToEntRef(startEnt);
+
+			SetEntityTransmitState(startEnt, FL_EDICT_FULLCHECK);
+			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, startEnt, Hook_SpotlightEffectUpdateTransmitState);
+			g_DHookShouldTransmit.HookEntity(Hook_Pre, startEnt, Hook_SpotlightEffectShouldTransmit);
+		}
+		if (endEnt != -1) // End
 		{
-			if (class != TFClass_Engineer)
+			SetEntPropString(endEnt, Prop_Data, "m_iClassname", "sf2_flashlight_spotlight_end");
+			SetEntProp(endEnt, Prop_Data, "m_spawnflags", 1);
+			TeleportEntity(endEnt, eyePos, eyeAng, NULL_VECTOR);
+			SetVariantString("!activator");
+			AcceptEntityInput(endEnt, "SetParent", client);
+
+			DispatchSpawn(endEnt);
+			SetEntityOwner(endEnt, client);
+
+			g_ClientFlashlightEndEntity[client] = EntIndexToEntRef(endEnt);
+
+			SetEntityTransmitState(endEnt, FL_EDICT_FULLCHECK);
+			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, endEnt, Hook_SpotlightEffectUpdateTransmitState);
+			g_DHookShouldTransmit.HookEntity(Hook_Pre, endEnt, Hook_SpotlightEffectShouldTransmit);
+		}
+
+		switch (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature)
+		{
+			case 1:
 			{
-				FloatToString(length, buffer, sizeof(buffer));
+				SetEntityRenderColor(ent, 255, 150, 50, 64);
 			}
-			else
+			case 2:
 			{
-				FloatToString(doubleLength, buffer, sizeof(buffer));
+				SetEntityRenderColor(ent, 255, 210, 100, 64);
 			}
-		}
-		else
-		{
-			FloatToString(length * g_ClassFlashlightLength[classToInt], buffer, sizeof(buffer));
-		}
-		DispatchKeyValue(ent, "spotlightlength", buffer);
-		if (!IsClassConfigsValid())
-		{
-			if (class != TFClass_Engineer)
+			case 3:
 			{
-				FloatToString(radius, buffer, sizeof(buffer));
+				SetEntityRenderColor(ent, 255, 255, 120, 64);
 			}
-			else
+			case 4:
 			{
-				FloatToString(doubleRadius, buffer, sizeof(buffer));
+				SetEntityRenderColor(ent, 255, 255, 185, 64);
+			}
+			case 5:
+			{
+				SetEntityRenderColor(ent, 255, 255, 210, 64);
+			}
+			case 6:
+			{
+				SetEntityRenderColor(ent, 255, 255, 255, 64);
+			}
+			case 7:
+			{
+				SetEntityRenderColor(ent, 210, 255, 255, 64);
+			}
+			case 8:
+			{
+				SetEntityRenderColor(ent, 185, 255, 255, 64);
+			}
+			case 9:
+			{
+				SetEntityRenderColor(ent, 150, 255, 255, 64);
+			}
+			case 10:
+			{
+				SetEntityRenderColor(ent, 125, 255, 255, 64);
 			}
 		}
-		else
-		{
-			FloatToString(radius * g_ClassFlashlightRadius[classToInt], buffer, sizeof(buffer));
-		}
-		DispatchKeyValue(ent, "spotlightwidth", buffer);
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 1)
-		{
-			DispatchKeyValue(ent, "rendercolor", "255 150 50");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 2)
-		{
-			DispatchKeyValue(ent, "rendercolor", "255 210 100");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 3)
-		{
-			DispatchKeyValue(ent, "rendercolor", "255 255 120");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 4)
-		{
-			DispatchKeyValue(ent, "rendercolor", "255 255 185");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 5)
-		{
-			DispatchKeyValue(ent, "rendercolor", "255 255 210");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 6)
-		{
-			DispatchKeyValue(ent, "rendercolor", "255 255 255");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 7)
-		{
-			DispatchKeyValue(ent, "rendercolor", "210 255 255");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 8)
-		{
-			DispatchKeyValue(ent, "rendercolor", "185 255 255");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 9)
-		{
-			DispatchKeyValue(ent, "rendercolor", "150 255 255");
-		}
-		if (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature == 10)
-		{
-			DispatchKeyValue(ent, "rendercolor", "125 255 255");
-		}
+
+		SetEntityModel(ent, SF2_FLASHLIGHT_BEAM_MATERIAL);
+		SetEntityRenderMode(ent, RENDER_TRANSTEXTURE);
+		SetEntPropFloat(ent, Prop_Data, "m_life", 0.0);
+
+		TeleportEntity(ent, eyePos, eyeAng, NULL_VECTOR);
+
 		DispatchSpawn(ent);
 		ActivateEntity(ent);
+
+		SetEntPropEnt(ent, Prop_Send, "m_hAttachEntity", startEnt, 0);
+		SetEntPropEnt(ent, Prop_Send, "m_hAttachEntity", endEnt, 1);
+		SetEntProp(ent, Prop_Send, "m_nNumBeamEnts", 2);
+		SetEntProp(ent, Prop_Send, "m_nBeamType", 2);
+
+		SetEntPropFloat(ent, Prop_Send, "m_fWidth", 40.0);
+		SetEntPropFloat(ent, Prop_Data, "m_fEndWidth", 102.0);
+
+		SetEntPropFloat(ent, Prop_Send, "m_fFadeLength", 0.0);
+		SetEntProp(ent, Prop_Send, "m_nHaloIndex", g_FlashlightHaloModel);
+		SetEntPropFloat(ent, Prop_Send, "m_fHaloScale", 40.0);
+		SetEntProp(ent, Prop_Send, "m_nBeamFlags", 0x80 | 0x200);
+		SetEntProp(ent, Prop_Data, "m_spawnflags", 0x8000);
+
+		AcceptEntityInput(ent, "TurnOn");
+
 		SetVariantString("!activator");
 		AcceptEntityInput(ent, "SetParent", client);
-		AcceptEntityInput(ent, "LightOn");
 
-		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(ent);
+		SetEntityOwner(ent, client);
 
 		SDKHook(ent, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
+		SetEntityTransmitState(ent, FL_EDICT_FULLCHECK);
+		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, ent, Hook_SpotlightEffectUpdateTransmitState);
+		g_DHookShouldTransmit.HookEntity(Hook_Pre, ent, Hook_SpotlightEffectShouldTransmit);
 
-		int offset = FindDataMapInfo(ent, "m_nHaloSprite");
-		if (offset != -1)
-		{
-			// m_hSpotlight
-			int spotlight = GetEntDataEnt2(ent, offset + 4);
-			if (IsValidEntity(spotlight))
-			{
-				SDKHook(spotlight, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
-			}
-
-			// m_hSpotlightTarget
-			spotlight = GetEntDataEnt2(ent, offset + 8);
-			if (IsValidEntity(spotlight))
-			{
-				SDKHook(spotlight, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
-			}
-		}
-	}
+		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(ent);
+	}*/
 
 	Call_StartForward(g_OnClientActivateFlashlightFwd);
 	Call_PushCell(client);
 	Call_Finish();
+}
+
+void Hook_OnFlashlightThink(int client)
+{
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
+	float length;
+	if (!IsClassConfigsValid())
+	{
+		if (class != TFClass_Engineer)
+		{
+			length = SF2_FLASHLIGHT_LENGTH;
+		}
+		else
+		{
+			length = SF2_FLASHLIGHT_LENGTH * 3.0;
+		}
+	}
+	else
+	{
+		length = SF2_FLASHLIGHT_LENGTH * g_ClassFlashlightLength[classToInt];
+	}
+	if (IsClientUsingFlashlight(client))
+	{
+		int endEnt = EntRefToEntIndex(g_ClientFlashlightEndEntity[client]);
+		if (IsValidEntity(endEnt))
+		{
+			float entPos[3], entRot[3], tempRot[3], endPos[3];
+			GetClientEyePosition(client, entPos);
+			GetClientEyeAngles(client, entRot);
+			GetEntPropVector(client, Prop_Data, "m_angAbsRotation", tempRot);
+			tempRot[0] = 0.0;
+			tempRot[2] = 0.0;
+			AddVectors(entRot, tempRot, entRot);
+			GetAngleVectors(entRot, entRot, NULL_VECTOR, NULL_VECTOR);
+			endPos = entRot;
+			ScaleVector(endPos, length);
+			AddVectors(endPos, entPos, endPos);
+
+			CBaseEntity spotlightEnd = CBaseEntity(endEnt);
+			if (spotlightEnd.IsValid())
+			{
+				TR_TraceRayFilter(entPos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitEntity, client);
+
+				float hitPos[3];
+				TR_GetEndPosition(hitPos);
+
+				hitPos[2] += 20.0;
+
+				spotlightEnd.SetAbsOrigin(hitPos);
+			}
+		}
+	}
 }
 
 /**
@@ -667,12 +650,24 @@ void ClientTurnOffFlashlight(int client)
 	ent = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(ent, "LightOff");
+		AcceptEntityInput(ent, "TurnOff");
 		CreateTimer(0.1, Timer_KillEntity, g_PlayerFlashlightEntAng[client], TIMER_FLAG_NO_MAPCHANGE);
+	}
+	ent = EntRefToEntIndex(g_ClientFlashlightStartEntity[client]);
+	if (ent && ent != INVALID_ENT_REFERENCE)
+	{
+		CreateTimer(0.1, Timer_KillEntity, g_ClientFlashlightStartEntity[client], TIMER_FLAG_NO_MAPCHANGE);
+	}
+	ent = EntRefToEntIndex(g_ClientFlashlightEndEntity[client]);
+	if (ent && ent != INVALID_ENT_REFERENCE)
+	{
+		CreateTimer(0.1, Timer_KillEntity, g_ClientFlashlightEndEntity[client], TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	g_PlayerFlashlightEnt[client] = INVALID_ENT_REFERENCE;
 	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
+	g_ClientFlashlightStartEntity[client] = INVALID_ENT_REFERENCE;
+	g_ClientFlashlightEndEntity[client] = INVALID_ENT_REFERENCE;
 
 	if (IsClientInGame(client))
 	{
@@ -693,13 +688,27 @@ void ClientTurnOffFlashlight(int client)
 
 void ClientStartRechargingFlashlightBattery(int client)
 {
-	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(SF2_FLASHLIGHT_RECHARGE_RATE, Timer_RechargeFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
+	float rechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
+	if (!IsClassConfigsValid())
+	{
+		if (class == TFClass_Engineer)
+		{
+			rechargeRate *= 0.8;
+		}
+	}
+	else
+	{
+		rechargeRate *= g_ClassFlashlightRechargeRate[classToInt];
+	}
+
+	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(rechargeRate, Timer_RechargeFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void ClientStartDrainingFlashlightBattery(int client)
 {
 	float drainRate = SF2_FLASHLIGHT_DRAIN_RATE;
-	float rechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
 	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
 	int difficulty = g_DifficultyConVar.IntValue;
 
@@ -738,13 +747,11 @@ void ClientStartDrainingFlashlightBattery(int client)
 		{
 			// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
 			drainRate *= 1.5;
-			rechargeRate *= 0.8;
 		}
 	}
 	else
 	{
 		drainRate *= g_ClassFlashlightDrainRate[classToInt];
-		rechargeRate *= g_ClassFlashlightRechargeRate[classToInt];
 	}
 
 	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(drainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);

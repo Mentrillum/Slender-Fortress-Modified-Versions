@@ -3,7 +3,9 @@
 #endif
 #define _sf2_client_music_included
 
-stock void ClientUpdateMusicSystem(int client, bool initialize=false)
+#pragma semicolon 1
+
+void ClientUpdateMusicSystem(int client, bool initialize=false)
 {
 	int oldPageMusicMaster = EntRefToEntIndex(g_PlayerPageMusicMaster[client]);
 	int oldPageMusicActiveIndex = g_PageMusicActiveIndex[client];
@@ -20,17 +22,13 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 		g_PlayerPageMusicMaster[client] = INVALID_ENT_REFERENCE;
 		g_PageMusicActiveIndex[client] = -1;
 
-		if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
+		if (MusicActive())//A boss is overriding the music.
 		{
 			char path[PLATFORM_MAX_PATH];
 			GetBossMusic(path,sizeof(path));
 			if (path[0] != '\0')
 			{
 				StopSound(client, MUSIC_CHAN, path);
-			}
-			if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
-			{
-				StopSound(client, MUSIC_CHAN, TRIPLEBOSSESMUSIC);
 			}
 		}
 	}
@@ -133,11 +131,6 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 		int oldIdleBoss = g_PlayerIdleMusicMaster[client];
 		int old20DollarsBoss = g_Player20DollarsMusicMaster[client];
 
-		float anger = -1.0;
-		float seeAnger = -1.0;
-		float alertAnger = -1.0;
-		float twentyDollarsAnger = -1.0;
-
 		float buffer[3], buffer2[3], buffer3[3];
 
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -162,6 +155,8 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 			{
 				case SF2BossType_Chaser:
 				{
+					SF2BossProfileSoundInfo soundInfo;
+					ArrayList soundList;
 					GetClientAbsOrigin(client, buffer);
 					SlenderGetAbsOrigin(i, buffer3);
 
@@ -171,45 +166,43 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 						GetEntPropVector(target, Prop_Data, "m_vecAbsOrigin", buffer2);
 
 						if ((g_SlenderState[i] == STATE_CHASE || g_SlenderState[i] == STATE_ATTACK || g_SlenderState[i] == STATE_STUN) &&
-							!(NPCGetFlags(i) & SFF_MARKEDASFAKE) &&
-							(target == client || GetVectorSquareMagnitude(buffer, buffer2) <= SquareFloat(850.0) || GetVectorSquareMagnitude(buffer, buffer3) <= SquareFloat(850.0) || GetVectorSquareMagnitude(buffer, g_SlenderGoalPos[i]) <= SquareFloat(850.0)))
+							!(NPCGetFlags(i) & SFF_MARKEDASFAKE))
 						{
-							static char path[PLATFORM_MAX_PATH];
-							GetRandomStringFromProfile(profile, "sound_chase_music", path, sizeof(path));
-							if (path[0] != '\0')
+							GetChaserProfileChaseMusics(profile, soundInfo);
+
+							if ((target == client || GetVectorSquareMagnitude(buffer, buffer2) <= SquareFloat(soundInfo.Radius) ||
+							GetVectorSquareMagnitude(buffer, buffer3) <= SquareFloat(soundInfo.Radius) || GetVectorSquareMagnitude(buffer, g_SlenderGoalPos[i]) <= SquareFloat(soundInfo.Radius)))
 							{
-								if (NPCGetAnger(i) > anger)
+								soundList = soundInfo.Paths;
+								if (soundList != null && soundList.Length > 0)
 								{
-									anger = NPCGetAnger(i);
 									chasingBoss = i;
 								}
-							}
 
-							if ((g_SlenderState[i] == STATE_CHASE || g_SlenderState[i] == STATE_ATTACK) &&
-								PlayerCanSeeSlender(client, i, false))
-							{
-								if (oldChasingSeeBoss == -1 || !PlayerCanSeeSlender(client, oldChasingSeeBoss, false) || (NPCGetAnger(i) > seeAnger))
+								if ((g_SlenderState[i] == STATE_CHASE || g_SlenderState[i] == STATE_ATTACK) &&
+									PlayerCanSeeSlender(client, i, false))
 								{
-									GetRandomStringFromProfile(profile, "sound_chase_visible", path, sizeof(path));
-
-									if (path[0] != '\0')
+									if (oldChasingSeeBoss == -1 || !PlayerCanSeeSlender(client, oldChasingSeeBoss, false))
 									{
-										seeAnger = NPCGetAnger(i);
-										chasingSeeBoss = i;
-									}
-								}
-
-								if (g_20Dollars || SF_SpecialRound(SPECIALROUND_20DOLLARS))
-								{
-									if (old20DollarsBoss == -1 || !PlayerCanSeeSlender(client, old20DollarsBoss, false) || (NPCGetAnger(i) > twentyDollarsAnger))
-									{
-										if (!GetRandomStringFromProfile(profile, "sound_20dollars_music", path, sizeof(path)))
-										GetRandomStringFromProfile(profile, "sound_20dollars", path, sizeof(path));
-
-										if (path[0] != '\0' || SF_SpecialRound(SPECIALROUND_20DOLLARS))
+										GetChaserProfileChaseVisibleMusics(profile, soundInfo);
+										soundList = soundInfo.Paths;
+										if (soundList != null && soundList.Length > 0)
 										{
-											twentyDollarsAnger = NPCGetAnger(i);
-											twentyDollarsBoss = i;
+											chasingSeeBoss = i;
+										}
+									}
+
+									if (g_20Dollars || SF_SpecialRound(SPECIALROUND_20DOLLARS))
+									{
+										if (old20DollarsBoss == -1 || !PlayerCanSeeSlender(client, old20DollarsBoss, false))
+										{
+											GetChaserProfileTwentyDollarMusics(profile, soundInfo);
+											soundList = soundInfo.Paths;
+
+											if ((soundList != null && soundList.Length > 0) || SF_SpecialRound(SPECIALROUND_20DOLLARS))
+											{
+												twentyDollarsBoss = i;
+											}
 										}
 									}
 								}
@@ -219,43 +212,40 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 
 					if (g_SlenderState[i] == STATE_ALERT)
 					{
-						char path[PLATFORM_MAX_PATH];
-						GetRandomStringFromProfile(profile, "sound_alert_music", path, sizeof(path));
-						if (path[0] == '\0')
+						GetChaserProfileAlertMusics(profile, soundInfo);
+						soundList = soundInfo.Paths;
+						if (soundList == null || soundList.Length <= 0)
 						{
 							continue;
 						}
 
 						if (!(NPCGetFlags(i) & SFF_MARKEDASFAKE))
 						{
-							if (GetVectorSquareMagnitude(buffer, buffer3) <= SquareFloat(850.0) || GetVectorSquareMagnitude(buffer, g_SlenderGoalPos[i]) <= SquareFloat(850.0))
+							if (GetVectorSquareMagnitude(buffer, buffer3) <= SquareFloat(soundInfo.Radius) || GetVectorSquareMagnitude(buffer, g_SlenderGoalPos[i]) <= SquareFloat(soundInfo.Radius))
 							{
-								if (NPCGetAnger(i) > alertAnger)
-								{
-									alertAnger = NPCGetAnger(i);
-									alertBoss = i;
-								}
+								alertBoss = i;
 							}
 						}
 					}
 
 					if (g_SlenderState[i] == STATE_IDLE || g_SlenderState[i] == STATE_WANDER)
 					{
-						char path[PLATFORM_MAX_PATH];
-						GetRandomStringFromProfile(profile, "sound_idle_music", path, sizeof(path));
-						if (path[0] == '\0')
+						GetChaserProfileIdleMusics(profile, soundInfo);
+						soundList = soundInfo.Paths;
+						if (soundList == null || soundList.Length <= 0)
 						{
 							continue;
 						}
 
 						if (!(NPCGetFlags(i) & SFF_MARKEDASFAKE))
 						{
-							if (GetVectorSquareMagnitude(buffer, buffer3) <= SquareFloat(850.0) || GetVectorSquareMagnitude(buffer, g_SlenderGoalPos[i]) <= SquareFloat(850.0))
+							if (GetVectorSquareMagnitude(buffer, buffer3) <= SquareFloat(soundInfo.Radius) || GetVectorSquareMagnitude(buffer, g_SlenderGoalPos[i]) <= SquareFloat(soundInfo.Radius))
 							{
 								idleBoss = i;
 							}
 						}
 					}
+					soundList = null;
 				}
 			}
 		}
@@ -338,19 +328,11 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 		if (IsRoundEnding() || !IsClientInGame(client) || IsFakeClient(client) || DidClientEscape(client) || (g_PlayerEliminated[client] && !IsClientInGhostMode(client) && !g_PlayerProxy[client]))
 		{
 		}
-		else if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES)) //A boss is overriding the music.
+		else if (MusicActive()) //A boss is overriding the music.
 		{
-			if (!SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
-			{
-				GetBossMusic(path,sizeof(path));
-				ClientMusicStart(client, path, _, MUSIC_PAGE_VOLUME);
-				return;
-			}
-			else
-			{
-				ClientMusicStart(client, TRIPLEBOSSESMUSIC, _, 0.8);
-				return;
-			}
+			GetBossMusic(path,sizeof(path));
+			ClientMusicStart(client, path, _, MUSIC_PAGE_VOLUME);
+			return;
 		}
 
 		// Custom system.
@@ -479,12 +461,18 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 			if (inAlert && !inChase)
 			{
 				ClientAlertMusicStart(client, alertBoss);
-				if (!wasAlert) mainMusicState = -1;
+				if (!wasAlert)
+				{
+					mainMusicState = -1;
+				}
 			}
 			else
 			{
 				ClientAlertMusicStop(client, g_PlayerAlertMusicMaster[client]);
-				if (!inChase && wasAlert) mainMusicState = 1;
+				if (!inChase && wasAlert)
+				{
+					mainMusicState = 1;
+				}
 			}
 		}
 
@@ -581,14 +569,14 @@ stock void ClientUpdateMusicSystem(int client, bool initialize=false)
 				// player.
 
 				float bossDist = NPCGetDistanceFromEntity(bossToUse, client);
-				float flScalar = (bossDist / SquareFloat(700.0));
-				if (flScalar > 1.0)
+				float scalar = (bossDist / SquareFloat(700.0));
+				if (scalar > 1.0)
 				{
-					flScalar = 1.0;
+					scalar = 1.0;
 				}
-				float flStressAdd = 0.1 * (1.0 - flScalar);
+				float stressAdd = 0.1 * (1.0 - scalar);
 
-				ClientAddStress(client, flStressAdd);
+				ClientAddStress(client, stressAdd);
 			}
 		}
 	}
@@ -632,7 +620,7 @@ void ClientMusicStart(int client, const char[] newMusic, float volume=-1.0, floa
 		StopSound(client, MUSIC_CHAN, oldMusic);
 	}
 	strcopy(g_PlayerMusicString[client], sizeof(g_PlayerMusicString[]), newMusic);
-	if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
+	if (MusicActive())//A boss is overriding the music.
 	{
 		GetBossMusic(g_PlayerMusicString[client],sizeof(g_PlayerMusicString[]));
 	}
@@ -688,8 +676,9 @@ void Client20DollarsMusicReset(int client)
 				StopSound(client, MUSIC_CHAN, TWENTYDOLLARS_MUSIC);
 				NPCGetProfile(i, profile, sizeof(profile));
 
-				ClientStopAllSlenderSounds(client, profile, "sound_20dollars_music", MUSIC_CHAN);
-				ClientStopAllSlenderSounds(client, profile, "sound_20dollars", MUSIC_CHAN);
+				SF2BossProfileSoundInfo soundInfo;
+				GetChaserProfileTwentyDollarMusics(profile, soundInfo);
+				soundInfo.StopAllSounds(client);
 			}
 		}
 	}
@@ -697,10 +686,16 @@ void Client20DollarsMusicReset(int client)
 
 void Client20DollarsMusicStart(int client,int bossIndex)
 {
-	if (!IsValidClient(client)) return;
+	if (!IsValidClient(client))
+	{
+		return;
+	}
 
 	int oldMaster = g_Player20DollarsMusicMaster[client];
-	if (oldMaster == bossIndex) return;
+	if (oldMaster == bossIndex)
+	{
+		return;
+	}
 
 	g_Player20DollarsMusicOldMaster[client] = oldMaster;
 
@@ -708,9 +703,11 @@ void Client20DollarsMusicStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	if (!GetRandomStringFromProfile(profile, "sound_20dollars_music", buffer, sizeof(buffer)))
+	SF2BossProfileSoundInfo soundInfo;
+	GetChaserProfileTwentyDollarMusics(profile, soundInfo);
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
-		GetRandomStringFromProfile(profile, "sound_20dollars", buffer, sizeof(buffer));
+		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
 	}
 
 	if (SF_SpecialRound(SPECIALROUND_20DOLLARS))
@@ -732,6 +729,17 @@ void Client20DollarsMusicStart(int client,int bossIndex)
 	if (g_Player20DollarsMusicVolumes[client][bossIndex] <= 0.0)
 	{
 		strcopy(g_Player20DollarsMusicString[client][bossIndex], sizeof(g_Player20DollarsMusicString[][]), buffer);
+	}
+	if (oldMaster != -1 && g_Player20DollarsMusicString[client][oldMaster][0] != '\0' &&
+		strcmp(g_Player20DollarsMusicString[client][oldMaster], g_Player20DollarsMusicString[client][bossIndex]) == 0)
+	{
+		if (g_Player20DollarsMusicVolumes[client][bossIndex] < 1.0)
+		{
+			g_Player20DollarsMusicVolumes[client][bossIndex] = g_Player20DollarsMusicVolumes[client][oldMaster];
+			g_Player20DollarsMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeIn20DollarsMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_Player20DollarsMusicTimer[client][bossIndex], true);
+		}
+		return;
 	}
 	g_Player20DollarsMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeIn20DollarsMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_Player20DollarsMusicTimer[client][bossIndex], true);
@@ -783,7 +791,9 @@ void ClientAlertMusicReset(int client)
 			{
 				NPCGetProfile(i, profile, sizeof(profile));
 
-				ClientStopAllSlenderSounds(client, profile, "sound_alert_music", MUSIC_CHAN);
+				SF2BossProfileSoundInfo soundInfo;
+				GetChaserProfileAlertMusics(profile, soundInfo);
+				soundInfo.StopAllSounds(client);
 			}
 		}
 	}
@@ -808,7 +818,12 @@ void ClientAlertMusicStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, "sound_alert_music", buffer, sizeof(buffer));
+	SF2BossProfileSoundInfo soundInfo;
+	GetChaserProfileAlertMusics(profile, soundInfo);
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+	{
+		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
+	}
 
 	if (buffer[0] == '\0')
 	{
@@ -819,6 +834,17 @@ void ClientAlertMusicStart(int client,int bossIndex)
 	if (g_PlayerAlertMusicVolumes[client][bossIndex] <= 0.0)
 	{
 		strcopy(g_PlayerAlertMusicString[client][bossIndex], sizeof(g_PlayerAlertMusicString[][]), buffer);
+	}
+	if (oldMaster != -1 && g_PlayerAlertMusicString[client][oldMaster][0] != '\0' &&
+		strcmp(g_PlayerAlertMusicString[client][oldMaster], g_PlayerAlertMusicString[client][bossIndex]) == 0)
+	{
+		if (g_PlayerAlertMusicVolumes[client][bossIndex] < 1.0)
+		{
+			g_PlayerAlertMusicVolumes[client][bossIndex] = g_PlayerAlertMusicVolumes[client][oldMaster];
+			g_PlayerAlertMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInAlertMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_PlayerAlertMusicTimer[client][bossIndex], true);
+		}
+		return;
 	}
 	g_PlayerAlertMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInAlertMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_PlayerAlertMusicTimer[client][bossIndex], true);
@@ -869,7 +895,9 @@ void ClientIdleMusicReset(int client)
 			{
 				NPCGetProfile(i, profile, sizeof(profile));
 
-				ClientStopAllSlenderSounds(client, profile, "sound_idle_music", MUSIC_CHAN);
+				SF2BossProfileSoundInfo soundInfo;
+				GetChaserProfileIdleMusics(profile, soundInfo);
+				soundInfo.StopAllSounds(client);
 			}
 		}
 	}
@@ -894,7 +922,12 @@ void ClientIdleMusicStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, "sound_idle_music", buffer, sizeof(buffer));
+	SF2BossProfileSoundInfo soundInfo;
+	GetChaserProfileIdleMusics(profile, soundInfo);
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+	{
+		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
+	}
 
 	if (buffer[0] == '\0')
 	{
@@ -905,6 +938,17 @@ void ClientIdleMusicStart(int client,int bossIndex)
 	if (g_PlayerIdleMusicVolumes[client][bossIndex] <= 0.0 && strcmp(buffer, g_PlayerIdleMusicString[client][bossIndex], true) != 0)
 	{
 		strcopy(g_PlayerIdleMusicString[client][bossIndex], sizeof(g_PlayerIdleMusicString[][]), buffer);
+	}
+	if (oldMaster != -1 && g_PlayerIdleMusicString[client][oldMaster][0] != '\0' &&
+		strcmp(g_PlayerIdleMusicString[client][oldMaster], g_PlayerIdleMusicString[client][bossIndex]) == 0)
+	{
+		if (g_PlayerIdleMusicVolumes[client][bossIndex] < 1.0)
+		{
+			g_PlayerIdleMusicVolumes[client][bossIndex] = g_PlayerIdleMusicVolumes[client][oldMaster];
+			g_PlayerIdleMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInIdleMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_PlayerIdleMusicTimer[client][bossIndex], true);
+		}
+		return;
 	}
 	g_PlayerIdleMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInIdleMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_PlayerIdleMusicTimer[client][bossIndex], true);
@@ -955,7 +999,9 @@ void ClientChaseMusicReset(int client)
 			{
 				NPCGetProfile(i, profile, sizeof(profile));
 
-				ClientStopAllSlenderSounds(client, profile, "sound_chase_music", MUSIC_CHAN);
+				SF2BossProfileSoundInfo soundInfo;
+				GetChaserProfileChaseMusics(profile, soundInfo);
+				soundInfo.StopAllSounds(client);
 			}
 		}
 	}
@@ -980,7 +1026,12 @@ void ClientMusicChaseStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, "sound_chase_music", buffer, sizeof(buffer));
+	SF2BossProfileSoundInfo soundInfo;
+	GetChaserProfileChaseMusics(profile, soundInfo);
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+	{
+		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
+	}
 
 	if (buffer[0] == '\0')
 	{
@@ -992,7 +1043,18 @@ void ClientMusicChaseStart(int client,int bossIndex)
 	{
 		strcopy(g_PlayerChaseMusicString[client][bossIndex], sizeof(g_PlayerChaseMusicString[][]), buffer);
 	}
-	if (MusicActive() || SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))//A boss is overriding the music.
+	if (oldMaster != -1 && g_PlayerChaseMusicString[client][oldMaster][0] != '\0' &&
+		strcmp(g_PlayerChaseMusicString[client][oldMaster], g_PlayerChaseMusicString[client][bossIndex]) == 0)
+	{
+		if (g_PlayerChaseMusicVolumes[client][bossIndex] < 1.0)
+		{
+			g_PlayerChaseMusicVolumes[client][bossIndex] = g_PlayerChaseMusicVolumes[client][oldMaster];
+			g_PlayerChaseMusicTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_PlayerChaseMusicTimer[client][bossIndex], true);
+		}
+		return;
+	}
+	if (MusicActive())//A boss is overriding the music.
 	{
 		GetBossMusic(g_PlayerChaseMusicString[client][bossIndex],sizeof(g_PlayerChaseMusicString[][]));
 	}
@@ -1045,7 +1107,9 @@ void ClientChaseMusicSeeReset(int client)
 			{
 				NPCGetProfile(i, profile, sizeof(profile));
 
-				ClientStopAllSlenderSounds(client, profile, "sound_chase_visible", MUSIC_CHAN);
+				SF2BossProfileSoundInfo soundInfo;
+				GetChaserProfileChaseVisibleMusics(profile, soundInfo);
+				soundInfo.StopAllSounds(client);
 			}
 		}
 	}
@@ -1070,7 +1134,13 @@ void ClientMusicChaseSeeStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	GetRandomStringFromProfile(profile, "sound_chase_visible", buffer, sizeof(buffer));
+	SF2BossProfileSoundInfo soundInfo;
+	GetChaserProfileChaseVisibleMusics(profile, soundInfo);
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+	{
+		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
+	}
+
 	if (buffer[0] == '\0')
 	{
 		return;
@@ -1080,6 +1150,17 @@ void ClientMusicChaseSeeStart(int client,int bossIndex)
 	if (g_PlayerChaseMusicSeeVolumes[client][bossIndex] <= 0.0)
 	{
 		strcopy(g_PlayerChaseMusicSeeString[client][bossIndex], sizeof(g_PlayerChaseMusicSeeString[][]), buffer);
+	}
+	if (oldMaster != -1 && g_PlayerChaseMusicSeeString[client][oldMaster][0] != '\0' &&
+		strcmp(g_PlayerChaseMusicSeeString[client][oldMaster], g_PlayerChaseMusicSeeString[client][bossIndex]) == 0)
+	{
+		if (g_PlayerChaseMusicSeeVolumes[client][bossIndex] < 1.0)
+		{
+			g_PlayerChaseMusicSeeVolumes[client][bossIndex] = g_PlayerChaseMusicSeeVolumes[client][oldMaster];
+			g_PlayerChaseMusicSeeTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusicSee, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_PlayerChaseMusicSeeTimer[client][bossIndex], true);
+		}
+		return;
 	}
 	g_PlayerChaseMusicSeeTimer[client][bossIndex] = CreateTimer(0.01, Timer_PlayerFadeInChaseMusicSee, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_PlayerChaseMusicSeeTimer[client][bossIndex], true);
@@ -1169,7 +1250,7 @@ void Client90sMusicStop(int client)
 	TriggerTimer(g_Player90sMusicTimer[client], true);
 }
 
-public Action Timer_PlayerFadeInMusic(Handle timer, any userid)
+Action Timer_PlayerFadeInMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1202,7 +1283,7 @@ public Action Timer_PlayerFadeInMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOutMusic(Handle timer, any userid)
+Action Timer_PlayerFadeOutMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1235,7 +1316,7 @@ public Action Timer_PlayerFadeOutMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeIn20DollarsMusic(Handle timer, any userid)
+Action Timer_PlayerFadeIn20DollarsMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1287,7 +1368,7 @@ public Action Timer_PlayerFadeIn20DollarsMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOut20DollarsMusic(Handle timer, any userid)
+Action Timer_PlayerFadeOut20DollarsMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1344,7 +1425,7 @@ public Action Timer_PlayerFadeOut20DollarsMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
+Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1396,7 +1477,7 @@ public Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOutAlertMusic(Handle timer, any userid)
+Action Timer_PlayerFadeOutAlertMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1453,7 +1534,7 @@ public Action Timer_PlayerFadeOutAlertMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeInIdleMusic(Handle timer, any userid)
+Action Timer_PlayerFadeInIdleMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1505,7 +1586,7 @@ public Action Timer_PlayerFadeInIdleMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOutIdleMusic(Handle timer, any userid)
+Action Timer_PlayerFadeOutIdleMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1562,7 +1643,7 @@ public Action Timer_PlayerFadeOutIdleMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
+Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1614,7 +1695,7 @@ public Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeInChaseMusicSee(Handle timer, any userid)
+Action Timer_PlayerFadeInChaseMusicSee(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1666,7 +1747,7 @@ public Action Timer_PlayerFadeInChaseMusicSee(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOutChaseMusic(Handle timer, any userid)
+Action Timer_PlayerFadeOutChaseMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1723,7 +1804,7 @@ public Action Timer_PlayerFadeOutChaseMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOutChaseMusicSee(Handle timer, any userid)
+Action Timer_PlayerFadeOutChaseMusicSee(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1780,7 +1861,7 @@ public Action Timer_PlayerFadeOutChaseMusicSee(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
+Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1813,7 +1894,7 @@ public Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
+Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)

@@ -3,6 +3,8 @@
 #endif
 #define _sf2_specialround_included
 
+#pragma semicolon 1
+
 #define SR_CYCLELENGTH 10.0
 #define SR_STARTDELAY 0.25
 #define SR_MUSIC "slender/specialround.mp3"
@@ -156,7 +158,7 @@ stock bool SpecialRoundCanBeSelected(int specialRound)
 
 	g_SpecialRoundsConfig.Rewind();
 	char specialRoundString[32];
-	FormatEx(specialRound, sizeof(specialRoundString), "%d", specialRound);
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
 
 	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
 	{
@@ -1019,25 +1021,7 @@ void SpecialRoundStart()
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			currentMusicTrack = TRIPLEBOSSESMUSIC;
 			int tripleBosses=0;
-			for(int client = 1; client <= MaxClients; client++)
-			{
-				if (IsValidClient(client) && !g_PlayerEliminated[client])
-				{
-					ClientChaseMusicReset(client);
-					ClientChaseMusicSeeReset(client);
-					ClientAlertMusicReset(client);
-					ClientIdleMusicReset(client);
-					Client20DollarsMusicReset(client);
-					if (currentMusicTrack[0] != '\0')
-					{
-						StopSound(client, MUSIC_CHAN, currentMusicTrack);
-					}
-					ClientMusicStart(client, TRIPLEBOSSESMUSIC, _, MUSIC_PAGE_VOLUME);
-					ClientUpdateMusicSystem(client);
-				}
-			}
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
 				NPCStopMusic();
@@ -1336,7 +1320,9 @@ void SpecialRoundStart()
 		SF_RemoveSpecialRound(SPECIALROUND_DOUBLEROULETTE);
 	}
 	if (SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
+	{
 		SpecialRoundCycleStart();
+	}
 }
 
 public Action Timer_SpecialRoundVoteLoop(Handle timer)
@@ -1641,6 +1627,7 @@ public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 			delete menu;
 		}
 	}
+	return 0;
 }
 
 void SpecialRound_RoundEnd()

@@ -5,6 +5,8 @@
 
 // To initialize, call the SF2MapEntityBase.Initialize() function from SetupCustomMapEntities().
 
+#pragma semicolon 1
+
 static const char g_EntityClassname[] = ""; // The custom classname of the entity. Should be prefixed with "sf2_"
 
 static CEntityFactory g_EntityFactory;

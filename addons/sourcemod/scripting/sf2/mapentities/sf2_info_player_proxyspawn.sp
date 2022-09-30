@@ -1,5 +1,7 @@
 // sf2_info_player_proxyspawn
 
+#pragma semicolon 1
+
 static CEntityFactory g_EntityFactory;
 
 methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity

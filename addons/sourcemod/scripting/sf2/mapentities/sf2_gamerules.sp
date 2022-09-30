@@ -1,5 +1,7 @@
 // sf2_gamerules
 
+#pragma semicolon 1
+
 static const char g_EntityClassname[] = "sf2_gamerules";
 
 static CEntityFactory g_EntityFactory;

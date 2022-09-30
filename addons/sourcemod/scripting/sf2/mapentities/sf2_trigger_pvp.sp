@@ -1,5 +1,7 @@
 // sf2_trigger_pvp
 
+#pragma semicolon 1
+
 static CEntityFactory g_EntityFactory;
 
 /**

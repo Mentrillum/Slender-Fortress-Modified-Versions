@@ -1,5 +1,7 @@
 // sf2_trigger_boss_despawn
 
+#pragma semicolon 1
+
 // A trigger that when touched by a boss will despawn the boss from the map.
 
 static CEntityFactory g_EntityFactory;

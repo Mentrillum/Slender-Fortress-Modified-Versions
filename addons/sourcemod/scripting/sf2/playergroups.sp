@@ -3,6 +3,8 @@
 #endif
 #define _sf2_playergroups_included
 
+#pragma semicolon 1
+
 #define SF2_MAX_PLAYER_GROUPS MAXPLAYERS
 #define SF2_MAX_PLAYER_GROUP_NAME_LENGTH 32
 
@@ -64,7 +66,10 @@ void SendPlayerGroupInvitation(int client,int groupID,int inviter=-1)
 	}
 
 	int groupIndex = GetPlayerGroupFromID(groupID);
-	if (groupIndex == -1) return;
+	if (groupIndex == -1)
+	{
+		return;
+	}
 
 	int myGroupIndex = ClientGetPlayerGroup(client);
 	if (IsPlayerGroupActive(myGroupIndex))
@@ -193,6 +198,7 @@ public int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2
 			}
 		}
 	}
+	return 0;
 }
 
 void DisplayResetGroupQueuePointsMenuToClient(int client)
@@ -265,6 +271,7 @@ public int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,
 
 		DisplayAdminGroupMenuToClient(param1);
 	}
+	return 0;
 }
 
 void CheckPlayerGroup(int groupIndex)
@@ -575,7 +582,7 @@ stock int GetPlayerGroupInvitedPlayerCount(int groupIndex,int client)
 	return g_PlayerGroupInvitedPlayerCount[groupIndex][client];
 }
 
-stock int SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int amount)
+stock void SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int amount)
 {
 	g_PlayerGroupInvitedPlayerCount[groupIndex][client] = amount;
 }

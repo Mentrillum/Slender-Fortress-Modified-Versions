@@ -3,6 +3,8 @@
 #endif
 #define _sf2_npc_chaser_projectiles_included
 
+#pragma semicolon 1
+
 static char gestureShootAnim[PLATFORM_MAX_PATH];
 static char baseballModel[PLATFORM_MAX_PATH];
 
@@ -110,20 +112,21 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 	float effectPos[3], tempEffectPos[3];
 	float effectAng[3] = {0.0, 0.0, 0.0};
 
-	int randomPosMin = GetProfileNum(profile, "projectile_pos_number_min", 1);
-	int randomPosMax = GetProfileNum(profile, "projectile_pos_number_max", 1);
+	int randomPosMin = GetChaserProfileRandomProjectilePosMin(profile);
+	int randomPosMax = GetChaserProfileRandomProjectilePosMax(profile);
+	ArrayList posArray = GetChaserProfileProjectilePositionsArray(profile);
 
-	if (randomPosMin == 1 && randomPosMax == 1)
+	if (randomPosMin == randomPosMax)
 	{
-		g_Config.GetVector("projectile_pos_offset", tempEffectPos);
+		posArray.GetArray(0, tempEffectPos);
 	}
 	else
 	{
 		int randomProjectilePos = GetRandomInt(randomPosMin, randomPosMax);
-		char keyName[PLATFORM_MAX_PATH];
-		FormatEx(keyName, sizeof(keyName), "projectile_pos_offset_%i", randomProjectilePos);
-		g_Config.GetVector(keyName, tempEffectPos);
+		posArray.GetArray(randomProjectilePos, tempEffectPos);
 	}
+
+	posArray = null;
 
 	VectorTransform(tempEffectPos, basePos, baseAng, tempEffectPos);
 	AddVectors(effectAng, baseAng, effectAng);
@@ -196,12 +199,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1)
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
 						{
-							combatChar.AddGestureSequence(iSequence);
+							combatChar.AddGestureSequence(sequence);
 						}
 					}
 
@@ -245,12 +248,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1)
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
 						{
-							combatChar.AddGestureSequence(iSequence);
+							combatChar.AddGestureSequence(sequence);
 						}
 					}
 
@@ -276,7 +279,10 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 					velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					if (NPCChaserHasCriticalRockets(bossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					if (NPCChaserHasCriticalRockets(bossIndex))
+					{
+						SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					}
 					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(bossIndex, difficulty), true); // set damage
 					ProjectileSetFlags(projectileEnt, PROJ_ROCKET);
 					SetEntityModel(projectileEnt, g_SlenderRocketModel[bossIndex]);
@@ -287,12 +293,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1)
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
 						{
-							combatChar.AddGestureSequence(iSequence);
+							combatChar.AddGestureSequence(sequence);
 						}
 					}
 
@@ -342,13 +348,19 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex))
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1) combatChar.AddGestureSequence(iSequence);
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
+						{
+							combatChar.AddGestureSequence(sequence);
+						}
 					}
 
-					if (i == 0) EmitSoundToAll(g_SlenderRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+					if (i == 0)
+					{
+						EmitSoundToAll(g_SlenderRocketShootSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+					}
 					g_NpcProjectileCooldown[bossIndex] = GetGameTime() + GetRandomFloat(min, max);
 				}
 			}*/
@@ -382,12 +394,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 						if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 						{
-							GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+							GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-							int iSequence = combatChar.LookupSequence(gestureShootAnim);
-							if (iSequence != -1)
+							int sequence = combatChar.LookupSequence(gestureShootAnim);
+							if (sequence != -1)
 							{
-								combatChar.AddGestureSequence(iSequence);
+								combatChar.AddGestureSequence(sequence);
 							}
 						}
 
@@ -424,12 +436,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1)
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
 						{
-							combatChar.AddGestureSequence(iSequence);
+							combatChar.AddGestureSequence(sequence);
 						}
 					}
 
@@ -472,12 +484,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 						if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 						{
-							GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+							GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-							int iSequence = combatChar.LookupSequence(gestureShootAnim);
-							if (iSequence != -1)
+							int sequence = combatChar.LookupSequence(gestureShootAnim);
+							if (sequence != -1)
 							{
-								combatChar.AddGestureSequence(iSequence);
+								combatChar.AddGestureSequence(sequence);
 							}
 						}
 
@@ -517,12 +529,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1)
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
 						{
-							combatChar.AddGestureSequence(iSequence);
+							combatChar.AddGestureSequence(sequence);
 						}
 					}
 
@@ -546,7 +558,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 					velocity[0] = bufferProj[0]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 					velocity[1] = bufferProj[1]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 					velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
-					GetProfileString(slenderProfile, "baseball_model", baseballModel, sizeof(baseballModel));
+					GetChaserProfileBaseballModel(slenderProfile, baseballModel, sizeof(baseballModel));
 					if (baseballModel[0] == '\0')
 					{
 						baseballModel = BASEBALL_MODEL;
@@ -564,12 +576,12 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 
 					if (NPCChaserUseShootGesture(bossIndex) && i == 0)
 					{
-						GetProfileString(slenderProfile, "gesture_shootprojectile", gestureShootAnim, sizeof(gestureShootAnim));
+						GetChaserProfileShootGestureName(slenderProfile, gestureShootAnim, sizeof(gestureShootAnim));
 
-						int iSequence = combatChar.LookupSequence(gestureShootAnim);
-						if (iSequence != -1)
+						int sequence = combatChar.LookupSequence(gestureShootAnim);
+						if (sequence != -1)
 						{
-							combatChar.AddGestureSequence(iSequence);
+							combatChar.AddGestureSequence(sequence);
 						}
 					}
 
@@ -586,7 +598,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 	return projectileEnt;
 }
 
-public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target, const char[] slenderProfile, const char[] sectionName)
+public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target, const char[] slenderProfile)
 {
 	int attackIndex = NPCGetCurrentAttackIndex(bossIndex);
 	int projectileType = NPCChaserGetAttackProjectileType(bossIndex, attackIndex);
@@ -614,7 +626,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 	float effectPos[3], tempEffectPos[3];
 	float effectAng[3] = {0.0, 0.0, 0.0};
 
-	GetProfileAttackVector(slenderProfile, "attack_projectile_offset", tempEffectPos, view_as<float>({0.0, 0.0, 0.0}), attackIndex+1);
+	GetChaserProfileAttackProjectileOffset(slenderProfile, attackIndex, tempEffectPos);
 	VectorTransform(tempEffectPos, basePos, baseAng, tempEffectPos);
 	AddVectors(effectAng, baseAng, effectAng);
 
@@ -664,7 +676,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					velocity[1] = bufferProj[1]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 					velocity[2] = bufferProj[2]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 					char fireballTrail[PLATFORM_MAX_PATH];
-					GetProfileAttackString(slenderProfile, "attack_fire_trail", fireballTrail, sizeof(fireballTrail), FIREBALL_TRAIL, attackIndex+1);
+					GetChaserProfileAttackFireballTrail(slenderProfile, attackIndex, fireballTrail, sizeof(fireballTrail));
 					AttachParticle(projectileEnt, fireballTrail);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
@@ -681,28 +693,6 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					DispatchSpawn(projectileEnt);
 					ProjectileSetFlags(projectileEnt, PROJ_FIREBALL_ATTACK);
 					SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileAttackTouch);
-
-					char path[PLATFORM_MAX_PATH];
-					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-
-					if (path[0] != '\0')
-					{
-						char buffer[512];
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_volume");
-						float volume = GetProfileFloat(slenderProfile, buffer, 1.0);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_channel");
-						int channel = GetProfileNum(slenderProfile, buffer, SNDCHAN_WEAPON);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_level");
-						int level = GetProfileNum(slenderProfile, buffer, SNDLEVEL_SCREAMING);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_pitch");
-						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-
-						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
-					}
 				}
 			}
 			case 1:
@@ -713,7 +703,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 				{
 					float velocity[3], bufferProj[3];
 					char rocketModel[PLATFORM_MAX_PATH];
-					GetProfileAttackString(slenderProfile, "attack_rocket_model", rocketModel, sizeof(rocketModel), ROCKET_MODEL, attackIndex+1);
+					GetChaserProfileAttackRocketModel(slenderProfile, attackIndex, rocketModel, sizeof(rocketModel));
 
 					GetAngleVectors(shootAng, bufferProj, NULL_VECTOR, NULL_VECTOR);
 
@@ -738,28 +728,6 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     team, 1);
 					TeleportEntity(projectileEnt, effectPos, shootAng, velocity);
 					DispatchSpawn(projectileEnt);
-
-					char path[PLATFORM_MAX_PATH];
-					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-
-					if (path[0] != '\0' && i == 0)
-					{
-						char buffer[512];
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_volume");
-						float volume = GetProfileFloat(slenderProfile, buffer, 1.0);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_channel");
-						int channel = GetProfileNum(slenderProfile, buffer, SNDCHAN_WEAPON);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_level");
-						int level = GetProfileNum(slenderProfile, buffer, SNDLEVEL_SCREAMING);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_pitch");
-						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-
-						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
-					}
 				}
 			}
 			case 2:
@@ -776,7 +744,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					velocity[1] = bufferProj[1]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 					velocity[2] = bufferProj[2]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 					char fireballTrail[PLATFORM_MAX_PATH];
-					GetProfileAttackString(slenderProfile, "attack_fire_iceball_trail", fireballTrail, sizeof(fireballTrail), ICEBALL_TRAIL, attackIndex+1);
+					GetChaserProfileAttackIceballTrail(slenderProfile, attackIndex, fireballTrail, sizeof(fireballTrail));
 					AttachParticle(projectileEnt, fireballTrail);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
@@ -794,28 +762,6 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					TeleportEntity(projectileEnt, effectPos, shootAng, velocity);
 					DispatchSpawn(projectileEnt);
 					ProjectileSetFlags(projectileEnt, PROJ_ICEBALL_ATTACK);
-
-					char path[PLATFORM_MAX_PATH];
-					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-
-					if (path[0] != '\0' && i == 0)
-					{
-						char buffer[512];
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_volume");
-						float volume = GetProfileFloat(slenderProfile, buffer, 1.0);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_channel");
-						int channel = GetProfileNum(slenderProfile, buffer, SNDCHAN_WEAPON);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_level");
-						int level = GetProfileNum(slenderProfile, buffer, SNDLEVEL_SCREAMING);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_pitch");
-						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-
-						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
-					}
 				}
 			}
 			case 3:
@@ -848,28 +794,6 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 					ProjectileSetFlags(projectileEnt, PROJ_GRENADE);
 
 					//SDKHook(projectileEnt, SDKHook_StartTouch, Hook_ProjectileTouch);
-
-					char path[PLATFORM_MAX_PATH];
-					GetRandomStringFromProfile(slenderProfile, sectionName, path, sizeof(path));
-
-					if (path[0] != '\0' && i == 0)
-					{
-						char buffer[512];
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_volume");
-						float volume = GetProfileFloat(slenderProfile, buffer, 1.0);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_channel");
-						int channel = GetProfileNum(slenderProfile, buffer, SNDCHAN_WEAPON);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_level");
-						int level = GetProfileNum(slenderProfile, buffer, SNDLEVEL_SCREAMING);
-						strcopy(buffer, sizeof(buffer), sectionName);
-						StrCat(buffer, sizeof(buffer), "_pitch");
-						int pitch = GetProfileNum(slenderProfile, buffer, 100);
-
-						EmitSoundToAll(path, slender, channel, level, _, volume, pitch);
-					}
 				}
 			}
 		}
@@ -1066,9 +990,15 @@ public Action Hook_ProjectileTouch(int entity, int other)
 					float fallOff = NPCChaserGetProjectileRadius(bossIndex, difficulty)/2.0;
 					for (int client = 1; client <= MaxClients; client++)
 					{
-						if (!IsValidClient(client) || !IsClientInGame(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client)) continue;
+						if (!IsValidClient(client) || !IsClientInGame(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client))
+						{
+							continue;
+						}
 
-						if (!attackEliminated && g_PlayerEliminated[client]) continue;
+						if (!attackEliminated && g_PlayerEliminated[client])
+						{
+							continue;
+						}
 
 						float targetPos[3];
 						GetClientEyePosition(client, targetPos);

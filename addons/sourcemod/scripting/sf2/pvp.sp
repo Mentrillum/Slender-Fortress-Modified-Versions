@@ -3,6 +3,8 @@
 #endif
 #define _sf2_pvp_included
 
+#pragma semicolon 1
+
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 #define FLAME_HIT_DELAY 0.05
 
@@ -85,14 +87,14 @@ enum struct PvPProjectile_BallOfFire
 				if (IsValidClient(otherEntity) && IsClientInPvP(otherEntity) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
 				{
 					float damage = GetEntDataFloat(ent, FindSendPropInfo("CTFProjectile_BallOfFire", "m_iDeflected") + 4);
-					float damageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? FindConVar("tf_fireball_burning_bonus").FloatValue : 1.0;
+					float damageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? g_DragonsFuryBurningBonus.FloatValue : 1.0;
 					float damagePos[3];
 					GetEntPropVector(ent, Prop_Data, "m_vecOrigin", damagePos);
 					// int damageCustom = 79;
 
 					if (TF2_GetPlayerClass(otherEntity) == TFClass_Pyro)
 					{
-						TF2_AddCondition(otherEntity, TFCond_BurningPyro, FindConVar("tf_fireball_burn_duration").FloatValue * 0.5, ownerEntity);
+						TF2_AddCondition(otherEntity, TFCond_BurningPyro, g_DragonsFuryBurnDuration.FloatValue * 0.5, ownerEntity);
 					}
 
 					TF2_IgnitePlayer(otherEntity, ownerEntity);
@@ -365,7 +367,7 @@ public Action Hook_PvPProjectile_OnTouch(int projectile, int client)
 	return Plugin_Continue;
 }
 
-public Action PvP_OnTriggerStartTouchEx(int trigger,int other)
+public void PvP_OnTriggerStartTouchEx(int trigger,int other)
 {
 	if (other > MaxClients && IsValidEntity(other))
 	{
@@ -626,10 +628,14 @@ public void PvP_OnTriggerStartTouch(int trigger,int other)
 		if (IsValidClient(other) && IsPlayerAlive(other) && !IsClientInGhostMode(other))
 		{
 			if (!g_PlayerEliminated[other] && !DidClientEscape(other))
+			{
 				return;
+			}
 			//Use valve's kill code if the player is stuck.
 			if (GetEntPropFloat(other, Prop_Send, "m_flModelScale") != 1.0)
+			{
 				TF2_AddCondition(other, TFCond_HalloweenTiny, 0.1);
+			}
 			//Resize the player.
 			SetEntPropFloat(other, Prop_Send, "m_flModelScale", 1.0);
 			SetEntPropFloat(other, Prop_Send, "m_flHeadScale", 1.0);
@@ -660,7 +666,7 @@ public void PvP_OnTriggerStartTouch(int trigger,int other)
 	}
 }
 
-public Action PvP_OnTriggerEndTouch(int trigger,int other)
+public void PvP_OnTriggerEndTouch(int trigger,int other)
 {
 	if (IsValidClient(other))
 	{
@@ -720,7 +726,7 @@ public Action PvP_OnTriggerEndTouch(int trigger,int other)
 	}
 }
 
-public Action PvP_OnTriggerStartTouchBoxing(int trigger,int other)
+public void PvP_OnTriggerStartTouchBoxing(int trigger,int other)
 {
 	//A projectile went in the area. (Experimental)
 	if (other > MaxClients && IsValidEntity(other) && !IsRoundInWarmup() && !IsRoundEnding())
@@ -880,17 +886,17 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
 	{
-		return;
+		return Plugin_Stop;
 	}
 
 	if (g_PlayerProxy[client])
 	{
-		return;
+		return Plugin_Stop;
 	}
 
 	if (timer != g_PlayerPvPRespawnTimer[client])
 	{
-		return;
+		return Plugin_Stop;
 	}
 	g_PlayerPvPRespawnTimer[client] = null;
 
@@ -972,6 +978,7 @@ public Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 			spawnPoint.FireOutput("OnSpawn", client);
 		}
 	}
+	return Plugin_Stop;
 }
 
 public Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)

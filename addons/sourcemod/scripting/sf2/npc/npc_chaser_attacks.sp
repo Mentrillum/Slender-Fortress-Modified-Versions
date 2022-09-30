@@ -4,6 +4,8 @@
 
 #define _sf2_npc_chaser_attacks_included
 
+#pragma semicolon 1
+
 public void PerformSmiteBoss(int client, int target, any entref)
 {
 	if (!g_Enabled)
@@ -291,7 +293,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	AddVectors(g_SlenderEyePosOffset[bossIndex], myEyeAng, myEyeAng);
 
 	float viewPunch[3];
-	GetProfileAttackVector(profile, "attack_punchvel", viewPunch, _, attackIndex+1);
+	GetChaserProfileAttackPunchVelocity(profile, attackIndex, viewPunch);
 
 	float targetDist;
 	Handle traceHandle = null;
@@ -369,9 +371,8 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	{
 		if (NpcGetCurrentAttackRepeat(bossIndex, attackIndex) < NPCChaserGetMaxAttackRepeats(bossIndex, attackIndex))
 		{
-			char attackBuffer[512];
-			FormatEx(attackBuffer, sizeof(attackBuffer), "attack_repeat_%i_delay", NpcGetCurrentAttackRepeat(bossIndex, attackIndex) + 1);
-			float delay = GetProfileAttackFloat(profile, attackBuffer, 0.0, attackIndex+1);
+			ArrayList repeatArray = GetChaserProfileAttackRepeatTimers(profile, attackIndex);
+			float delay = repeatArray.Get(NpcGetCurrentAttackRepeat(bossIndex, attackIndex));
 			g_SlenderAttackTimer[bossIndex] = CreateTimer(delay, Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 			NpcSetCurrentAttackRepeat(bossIndex, attackIndex, NpcGetCurrentAttackRepeat(bossIndex, attackIndex) + 1);
 			if (g_SlenderBackupAtkTimer[bossIndex] == null && g_NpcAlreadyAttacked[bossIndex])
@@ -450,7 +451,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 				char currentIndex[2];
 				int damageIndexes = NPCChaserGetShockwaveAttackIndexes(bossIndex);
-				GetProfileString(profile, "shockwave_attack_index", allowedIndexes, sizeof(allowedIndexes), "1");
+				GetChaserProfileShockwaveAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 				FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 				FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex+1);
 
@@ -462,30 +463,29 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 						int forIndex = StringToInt(allowedIndexesList[index]);
 						if (forIndex == attackIndex + 1)
 						{
-							float beamColor[3], haloColor[3];
+							int beamColor[3], haloColor[3];
 							int color1[4], color2[4];
-							float defaultColorBeam[3] = {128.0, 128.0, 128.0};
-							float defaultColorHalo[3] = {255.0, 255.0, 255.0};
 							float myShockPos[3];
 
 							GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myShockPos);
 							myShockPos[2] += 10;
 
-							GetProfileVector(profile, "shockwave_color_1", beamColor, defaultColorBeam);
-							GetProfileVector(profile, "shockwave_color_2", haloColor, defaultColorHalo);
+							GetChaserProfileShockwaveColor1(profile, beamColor);
+							GetChaserProfileShockwaveColor2(profile, haloColor);
 
-							color1[0] = RoundToNearest(beamColor[0]);
-							color1[1] = RoundToNearest(beamColor[1]);
-							color1[2] = RoundToNearest(beamColor[2]);
-							color1[3] = GetProfileNum(profile, "shockwave_alpha_1", 255);
+							color1[0] = beamColor[0];
+							color1[1] = beamColor[1];
+							color1[2] = beamColor[2];
+							color1[3] = GetChaserProfileShockwaveAlpha1(profile);
 
-							color2[0] = RoundToNearest(haloColor[0]);
-							color2[1] = RoundToNearest(haloColor[1]);
-							color2[2] = RoundToNearest(haloColor[2]);
-							color2[3] = GetProfileNum(profile, "shockwave_alpha_2", 255);
+							color2[0] = haloColor[0];
+							color2[1] = haloColor[1];
+							color2[2] = haloColor[2];
+							color2[3] = GetChaserProfileShockwaveAlpha2(profile);
+
 							int modelBeam, modelHalo;
-							modelBeam = PrecacheModel(g_SlenderShockwaveBeamSprite[bossIndex], true);
-							modelHalo = PrecacheModel(g_SlenderShockwaveHaloSprite[bossIndex], true);
+							modelBeam = GetBossProfileShockwaveBeamModel(profile);
+							modelHalo = GetBossProfileShockwaveHaloModel(profile);
 
 							TE_SetupBeamRingPoint(myShockPos, 10.0, NPCChaserGetShockwaveRange(bossIndex,difficulty), modelBeam, modelHalo, 0, 30, 0.2, NPCChaserGetShockwaveWidth(bossIndex,1), NPCChaserGetShockwaveAmplitude(bossIndex), color2, 15, 0); //Inner
 							TE_SendToAll();
@@ -508,27 +508,26 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 						int currentAtkIndex = StringToInt(currentIndex);
 						if (attackNumber == currentAtkIndex)
 						{
-							float beamColor[3], haloColor[3];
+							int beamColor[3], haloColor[3];
 							int color1[4], color2[4];
-							float defaultColorBeam[3] = {128.0, 128.0, 128.0};
-							float defaultColorHalo[3] = {255.0, 255.0, 255.0};
 							float myShockPos[3];
 
 							GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myShockPos);
 							myShockPos[2] += 10;
 
-							GetProfileVector(profile, "shockwave_color_1", beamColor, defaultColorBeam);
-							GetProfileVector(profile, "shockwave_color_2", haloColor, defaultColorHalo);
+							GetChaserProfileShockwaveColor1(profile, beamColor);
+							GetChaserProfileShockwaveColor2(profile, haloColor);
 
-							color1[0] = RoundToNearest(beamColor[0]);
-							color1[1] = RoundToNearest(beamColor[1]);
-							color1[2] = RoundToNearest(beamColor[2]);
-							color1[3] = GetProfileNum(profile, "shockwave_alpha_1", 255);
+							color1[0] = beamColor[0];
+							color1[1] = beamColor[1];
+							color1[2] = beamColor[2];
+							color1[3] = GetChaserProfileShockwaveAlpha1(profile);
 
-							color2[0] = RoundToNearest(haloColor[0]);
-							color2[1] = RoundToNearest(haloColor[1]);
-							color2[2] = RoundToNearest(haloColor[2]);
-							color2[3] = GetProfileNum(profile, "shockwave_alpha_2", 255);
+							color2[0] = haloColor[0];
+							color2[1] = haloColor[1];
+							color2[2] = haloColor[2];
+							color2[3] = GetChaserProfileShockwaveAlpha2(profile);
+
 							int modelBeam, modelHalo;
 							modelBeam = PrecacheModel(g_SlenderShockwaveBeamSprite[bossIndex], true);
 							modelHalo = PrecacheModel(g_SlenderShockwaveHaloSprite[bossIndex], true);
@@ -565,7 +564,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					char indexes[8], allowedIndexes[88], allowedIndexesList[33][3];
 					char currentIndex[2];
 					int damageIndexes = NPCChaserGetShockwaveAttackIndexes(bossIndex);
-					GetProfileString(profile, "shockwave_attack_index", allowedIndexes, sizeof(allowedIndexes), "1");
+					GetChaserProfileShockwaveAttackIndexesString(profile, allowedIndexes, sizeof(allowedIndexes));
 					FormatEx(indexes, sizeof(indexes), "%d", damageIndexes);
 					FormatEx(currentIndex, sizeof(currentIndex), "%d", attackIndex+1);
 
@@ -865,7 +864,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 								Call_PushCell(damageType);
 								Call_Finish();
 								float checkHealth = float(GetEntProp(i, Prop_Send, "m_iHealth"));
-								if (IsValidClient(i) && (NPCHasAttribute(bossIndex, "death cam on low health") || NPCChaserGetAttackDeathCamOnLowHealth(bossIndex, attackIndex)) && GetClientTeam(i) != TFTeam_Blue)
+								if (IsValidClient(i) && (NPCHasAttribute(bossIndex, SF2Attribute_DeathCamOnLowHealth) || NPCChaserGetAttackDeathCamOnLowHealth(bossIndex, attackIndex)) && GetClientTeam(i) != TFTeam_Blue)
 								{
 									float checkDamage = tinyDamage;
 
@@ -956,7 +955,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 								Call_PushCell(damageType);
 								Call_Finish();
 								float checkHealth = float(GetEntProp(i, Prop_Send, "m_iHealth"));
-								if (IsValidClient(i) && (NPCHasAttribute(bossIndex, "death cam on low health") || NPCChaserGetAttackDeathCamOnLowHealth(bossIndex, attackIndex)) && GetClientTeam(i) != TFTeam_Blue)
+								if (IsValidClient(i) && (NPCHasAttribute(bossIndex, SF2Attribute_DeathCamOnLowHealth) || NPCChaserGetAttackDeathCamOnLowHealth(bossIndex, attackIndex)) && GetClientTeam(i) != TFTeam_Blue)
 								{
 									float checkDamage = damage;
 
@@ -1048,67 +1047,44 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							}
 							if (TF2_IsPlayerInCondition(i, TFCond_Milked))
 							{
-								float healthRecover = damage * 0.35;
-								NPCChaserAddStunHealth(bossIndex, healthRecover);
+								NPCChaserAddStunHealth(bossIndex, damage * 0.6);
 								if (NPCGetHealthbarState(bossIndex))
 								{
 									UpdateHealthBar(bossIndex);
 								}
 							}
-
-							if (NPCHasAttribute(bossIndex, "bleed player on hit"))
+							float duration = NPCGetAttributeValue(bossIndex, SF2Attribute_BleedPlayerOnHit);
+							if (duration > 0.0 && !TF2_IsPlayerInCondition(i, TFCond_Bleeding) && !NPCChaserBleedPlayerOnHit(bossIndex))
 							{
-								float duration = NPCGetAttributeValue(bossIndex, "bleed player on hit");
-								if (duration > 0.0 && !TF2_IsPlayerInCondition(i, TFCond_Bleeding))
-								{
-									TF2_MakeBleed(i, i, duration);
-								}
+								TF2_MakeBleed(i, i, duration);
 							}
-							if (NPCHasAttribute(bossIndex, "ignite player on hit"))
+							if (NPCHasAttribute(bossIndex, SF2Attribute_IgnitePlayerOnHit))
 							{
 								TF2_IgnitePlayer(i, i);
 							}
-							if (NPCHasAttribute(bossIndex, "stun player on hit"))
+							duration = NPCGetAttributeValue(bossIndex, SF2Attribute_StunPlayerOnHit);
+							if (duration > 0.0)
 							{
-								float duration = NPCGetAttributeValue(bossIndex, "stun player on hit");
-								float slowdown = NPCGetAttributeValue(bossIndex, "stun player percentage");
-								if (duration > 0.0 && slowdown > 0.0)
+								float slowdown = NPCGetAttributeValue(bossIndex, SF2Attribute_StunPlayerPercentage);
+								if (slowdown > 0.0)
 								{
 									TF2_StunPlayer(i, duration, slowdown, TF_STUNFLAGS_SMALLBONK, i);
 								}
 							}
-							if (NPCHasAttribute(bossIndex, "jarate player on hit"))
+							duration = NPCGetAttributeValue(bossIndex, SF2Attribute_JaratePlayerOnHit);
+							if (duration > 0.0 && !NPCChaserJaratePlayerOnHit(bossIndex))
 							{
-								float duration = NPCGetAttributeValue(bossIndex, "jarate player on hit");
-								if (duration > 0.0)
-								{
-									if (!NPCChaserJaratePlayerOnHit(bossIndex))
-									{
-										TF2_AddCondition(i, TFCond_Jarated, duration);
-									}
-								}
+								TF2_AddCondition(i, TFCond_Jarated, duration);
 							}
-							if (NPCHasAttribute(bossIndex, "milk player on hit"))
+							duration = NPCGetAttributeValue(bossIndex, SF2Attribute_MilkPlayerOnHit);
+							if (duration > 0.0 && !NPCChaserMilkPlayerOnHit(bossIndex))
 							{
-								float duration = NPCGetAttributeValue(bossIndex, "milk player on hit");
-								if (duration > 0.0)
-								{
-									if (!NPCChaserMilkPlayerOnHit(bossIndex))
-									{
-										TF2_AddCondition(i, TFCond_Milked, duration);
-									}
-								}
+								TF2_AddCondition(i, TFCond_Milked, duration);
 							}
-							if (NPCHasAttribute(bossIndex, "gas player on hit"))
+							duration = NPCGetAttributeValue(bossIndex, SF2Attribute_GasPlayerOnHit);
+							if (duration > 0.0 && !NPCChaserGasPlayerOnHit(bossIndex))
 							{
-								float duration = NPCGetAttributeValue(bossIndex, "gas player on hit");
-								if (duration > 0.0)
-								{
-									if (!NPCChaserGasPlayerOnHit(bossIndex))
-									{
-										TF2_AddCondition(i, TFCond_Gas, duration);
-									}
-								}
+								TF2_AddCondition(i, TFCond_Gas, duration);
 							}
 
 							if (NPCChaserUseAdvancedDamageEffects(bossIndex))
@@ -1117,10 +1093,10 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							}
 							if (NPCChaserDamageParticlesEnabled(bossIndex))
 							{
-								GetProfileString(profile, "damage_effect_particle", damageEffectParticle, sizeof(damageEffectParticle));
+								GetChaserProfileDamageParticleName(profile, damageEffectParticle, sizeof(damageEffectParticle));
 								if (damageEffectParticle[0] != '\0')
 								{
-									bool beamParticle = view_as<bool>(GetProfileNum(profile, "damage_effect_beam_particle"));
+									bool beamParticle = GetChaserProfileDamageParticleBeamState(profile);
 									if (beamParticle)
 									{
 										SlenderCreateParticleBeamClient(bossIndex, damageEffectParticle, 35.0, i);
@@ -1129,7 +1105,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										SlenderCreateParticleAttach(bossIndex, damageEffectParticle, 35.0, i);
 									}
-									GetProfileString(profile, "sound_damage_effect", damageEffectSound, sizeof(damageEffectSound));
+									GetChaserProfileDamageParticleSound(profile, damageEffectSound, sizeof(damageEffectSound));
 									if (damageEffectSound[0] != '\0')
 									{
 										EmitSoundToAll(damageEffectSound, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
@@ -1194,151 +1170,40 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					AcceptEntityInput(phys, "Explode");
 					RemoveEntity(phys);
 				}
-				if (!NPCChaserHasMultiHitSounds(bossIndex))
+				ArrayList hitSounds = GetChaserProfileHitSounds(profile);
+				if (hitSounds != null && hitSounds.Length > 0)
 				{
-					GetRandomStringFromProfile(profile, "sound_hitenemy", soundPath, sizeof(soundPath), _, attackIndex + 1);
-					if (soundPath[0] != '\0')
+					SF2BossProfileSoundInfo soundInfo;
+					ArrayList soundList;
+					hitSounds.GetArray(hitSounds.Length == 1 ? 0 : attackIndex, soundInfo, sizeof(soundInfo));
+					soundList = soundInfo.Paths;
+					if (soundList != null && soundList.Length > 0)
 					{
-						char buffer[512];
-						strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-						StrCat(buffer, sizeof(buffer), "_volume");
-						float volume = GetProfileFloat(profile, buffer, 1.0);
-						strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-						StrCat(buffer, sizeof(buffer), "_channel");
-						int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
-						strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-						StrCat(buffer, sizeof(buffer), "_level");
-						int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
-						strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-						StrCat(buffer, sizeof(buffer), "_pitch");
-						int pitch = GetProfileNum(profile, buffer, 100);
-						EmitSoundToAll(soundPath, slender, channel, level, _, volume, pitch);
-					}
-				}
-				else
-				{
-					char attackString[PLATFORM_MAX_PATH];
-					int attackIndexNum = attackIndex+1;
-					FormatEx(attackString, sizeof(attackString), "sound_hitenemy_%i", attackIndexNum);
-					switch (attackIndexNum)
-					{
-						case 1:
+						soundList.GetString(GetRandomInt(0, soundList.Length - 1), soundPath, sizeof(soundPath));
+						if (soundPath[0] != '\0')
 						{
-							GetRandomStringFromProfile(profile, "sound_hitenemy", soundPath, sizeof(soundPath));
-							if (soundPath[0] != '\0')
-							{
-								char buffer[512];
-								strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-								StrCat(buffer, sizeof(buffer), "_volume");
-								float volume = GetProfileFloat(profile, buffer, 1.0);
-								strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-								StrCat(buffer, sizeof(buffer), "_channel");
-								int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
-								strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-								StrCat(buffer, sizeof(buffer), "_level");
-								int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
-								strcopy(buffer, sizeof(buffer), "sound_hitenemy");
-								StrCat(buffer, sizeof(buffer), "_pitch");
-								int pitch = GetProfileNum(profile, buffer, 100);
-								EmitSoundToAll(soundPath, slender, channel, level, _, volume, pitch);
-							}
-						}
-						default:
-						{
-							GetRandomStringFromProfile(profile, attackString, soundPath, sizeof(soundPath));
-							if (soundPath[0] != '\0')
-							{
-								char buffer[512];
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_volume");
-								float volume = GetProfileFloat(profile, buffer, 1.0);
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_channel");
-								int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_level");
-								int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_pitch");
-								int pitch = GetProfileNum(profile, buffer, 100);
-								EmitSoundToAll(soundPath, slender, channel, level, _, volume, pitch);
-							}
+							EmitSoundToAll(soundPath, slender, soundInfo.Channel, soundInfo.Level,
+							soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
 						}
 					}
 				}
-
 			}
 			else
 			{
-				if (!NPCChaserHasMultiMissSounds(bossIndex))
+				ArrayList hitSounds = GetChaserProfileMissSounds(profile);
+				if (hitSounds != null && hitSounds.Length > 0)
 				{
-					GetRandomStringFromProfile(profile, "sound_missenemy", soundPath, sizeof(soundPath), _, attackIndex+1);
-					if (soundPath[0] != '\0')
+					SF2BossProfileSoundInfo soundInfo;
+					ArrayList soundList;
+					hitSounds.GetArray(hitSounds.Length == 1 ? 0 : attackIndex, soundInfo, sizeof(soundInfo));
+					soundList = soundInfo.Paths;
+					if (soundList != null && soundList.Length > 0)
 					{
-						char buffer[512];
-						strcopy(buffer, sizeof(buffer), "sound_missenemy");
-						StrCat(buffer, sizeof(buffer), "_volume");
-						float volume = GetProfileFloat(profile, buffer, 1.0);
-						strcopy(buffer, sizeof(buffer), "sound_missenemy");
-						StrCat(buffer, sizeof(buffer), "_channel");
-						int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
-						strcopy(buffer, sizeof(buffer), "sound_missenemy");
-						StrCat(buffer, sizeof(buffer), "_level");
-						int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
-						strcopy(buffer, sizeof(buffer), "sound_missenemy");
-						StrCat(buffer, sizeof(buffer), "_pitch");
-						int pitch = GetProfileNum(profile, buffer, 100);
-						EmitSoundToAll(soundPath, slender, channel, level, _, volume, pitch);
-					}
-				}
-				else
-				{
-					char attackString[PLATFORM_MAX_PATH];
-					int attackIndexNum = attackIndex+1;
-					FormatEx(attackString, sizeof(attackString), "sound_missenemy_%i", attackIndexNum);
-					switch (attackIndexNum)
-					{
-						case 1:
+						soundList.GetString(GetRandomInt(0, soundList.Length - 1), soundPath, sizeof(soundPath));
+						if (soundPath[0] != '\0')
 						{
-							GetRandomStringFromProfile(profile, "sound_missenemy", soundPath, sizeof(soundPath));
-							if (soundPath[0] != '\0')
-							{
-								char buffer[512];
-								strcopy(buffer, sizeof(buffer), "sound_missenemy");
-								StrCat(buffer, sizeof(buffer), "_volume");
-								float volume = GetProfileFloat(profile, buffer, 1.0);
-								strcopy(buffer, sizeof(buffer), "sound_missenemy");
-								StrCat(buffer, sizeof(buffer), "_channel");
-								int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
-								strcopy(buffer, sizeof(buffer), "sound_missenemy");
-								StrCat(buffer, sizeof(buffer), "_level");
-								int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
-								strcopy(buffer, sizeof(buffer), "sound_missenemy");
-								StrCat(buffer, sizeof(buffer), "_pitch");
-								int pitch = GetProfileNum(profile, buffer, 100);
-								EmitSoundToAll(soundPath, slender, channel, level, _, volume, pitch);
-							}
-						}
-						default:
-						{
-							GetRandomStringFromProfile(profile, attackString, soundPath, sizeof(soundPath));
-							if (soundPath[0] != '\0')
-							{
-								char buffer[512];
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_volume");
-								float volume = GetProfileFloat(profile, buffer, 1.0);
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_channel");
-								int channel = GetProfileNum(profile, buffer, SNDCHAN_AUTO);
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_level");
-								int level = GetProfileNum(profile, buffer, SNDLEVEL_SCREAMING);
-								strcopy(buffer, sizeof(buffer), attackString);
-								StrCat(buffer, sizeof(buffer), "_pitch");
-								int pitch = GetProfileNum(profile, buffer, 100);
-								EmitSoundToAll(soundPath, slender, channel, level, _, volume, pitch);
-							}
+							EmitSoundToAll(soundPath, slender, soundInfo.Channel, soundInfo.Level,
+							soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
 						}
 					}
 				}
@@ -1349,12 +1214,24 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			//BULLETS ANYONE? Thx Pelipoika
 			int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 			char soundPath[PLATFORM_MAX_PATH], particleName[PLATFORM_MAX_PATH];
-			GetProfileAttackString(profile, "attack_bullet_tracer", particleName, sizeof(particleName), "bullet_tracer02_blue", attackIndex+1);
+			GetChaserProfileAttackBulletTrace(profile, attackIndex, particleName, sizeof(particleName));
 			float vecSpread = NPCChaserGetAttackBulletSpread(bossIndex, attackIndex, difficulty);
-			GetRandomStringFromProfile(profile, "sound_bulletshoot", soundPath, sizeof(soundPath));
-			if (soundPath[0] != '\0')
+			ArrayList hitSounds = GetChaserProfileBulletShootSounds(profile);
+			if (hitSounds != null && hitSounds.Length > 0)
 			{
-				EmitSoundToAll(soundPath, slender, SNDCHAN_WEAPON, GetProfileNum(profile, "sound_bulletshoot_level",90));
+				SF2BossProfileSoundInfo soundInfo;
+				ArrayList soundList;
+				hitSounds.GetArray(hitSounds.Length == 1 ? 0 : attackIndex, soundInfo, sizeof(soundInfo));
+				soundList = soundInfo.Paths;
+				if (soundList != null && soundList.Length > 0)
+				{
+					soundList.GetString(GetRandomInt(0, soundList.Length - 1), soundPath, sizeof(soundPath));
+					if (soundPath[0] != '\0')
+					{
+						EmitSoundToAll(soundPath, slender, soundInfo.Channel, soundInfo.Level,
+						soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
+					}
+				}
 			}
 
 			float effectPos[3], clientPos[3], basePos[3], baseAng[3];
@@ -1380,7 +1257,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				clientPos[0] = 10.0;
 				VectorTransform(clientPos, basePos, baseAng, clientPos);
 			}
-			GetProfileAttackVector(profile, "attack_bullet_offset", effectPos, view_as<float>({0.0, 0.0, 0.0}), attackIndex+1);
+			GetChaserProfileAttackBulletOffset(profile, attackIndex, effectPos);
 			VectorTransform(effectPos, basePos, baseAng, effectPos);
 			AddVectors(effectAng, baseAng, effectAng);
 
@@ -1502,28 +1379,26 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 			if (IsValidClient(target) && IsClientInGame(target) && IsPlayerAlive(target) && !IsClientInGhostMode(target))
 			{
-				if (!view_as<bool>(GetProfileNum(profile,"multi_shoot_projectile_sounds",0)))
+				ArrayList hitSounds = GetChaserProfileProjectileShootSounds(profile);
+				if (hitSounds != null && hitSounds.Length > 0)
 				{
-					NPCChaserProjectileAttackShoot(bossIndex, slender, target, profile, "sound_attackshootprojectile");
-				}
-				else
-				{
-					int attackIndexNum = attackIndex+1;
-					char attackShootString[128];
-					FormatEx(attackShootString, sizeof(attackShootString), "sound_attackshootprojectile_%i", attackIndexNum);
-					switch (attackIndexNum)
+					SF2BossProfileSoundInfo soundInfo;
+					ArrayList soundList;
+					hitSounds.GetArray(hitSounds.Length == 1 ? 0 : attackIndex, soundInfo, sizeof(soundInfo));
+					soundList = soundInfo.Paths;
+					if (soundList != null && soundList.Length > 0)
 					{
-						case 1:
+						char soundPath[PLATFORM_MAX_PATH];
+						soundList.GetString(GetRandomInt(0, soundList.Length - 1), soundPath, sizeof(soundPath));
+						if (soundPath[0] != '\0')
 						{
-							NPCChaserProjectileAttackShoot(bossIndex, slender, target, profile, "sound_attackshootprojectile");
-						}
-						default:
-						{
-							NPCChaserProjectileAttackShoot(bossIndex, slender, target, profile, attackShootString);
+							EmitSoundToAll(soundPath, slender, soundInfo.Channel, soundInfo.Level,
+							soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
 						}
 					}
 				}
-				if (view_as<bool>(GetProfileNum(profile,"use_shoot_animations",0)))
+				NPCChaserProjectileAttackShoot(bossIndex, slender, target, profile);
+				if (GetChaserProfileShootAnimationsState(profile))
 				{
 					g_NpcUseFireAnimation[bossIndex] = true;
 					int state = g_SlenderState[bossIndex];
@@ -1599,7 +1474,7 @@ float[] CalculateBulletDamageForce(const float bulletDir[3], float scale)
 {
 	float force[3]; force = bulletDir;
 	NormalizeVector(force, force);
-	ScaleVector(force, FindConVar("phys_pushscale").FloatValue);
+	ScaleVector(force, g_PhysicsPushScaleConVar.FloatValue);
 	ScaleVector(force, scale);
 	return force;
 }
@@ -1867,7 +1742,7 @@ public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
 		float effectAng[3] = {0.0, 0.0, 0.0};
 		GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", basePos);
 		GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", baseAng);
-		GetProfileAttackVector(profile, "attack_laser_offset", effectPos, view_as<float>({0.0, 0.0, 0.0}), attackIndex+1);
+		GetChaserProfileAttackLaserOffset(profile, attackIndex, effectPos);
 		VectorTransform(effectPos, basePos, baseAng, effectPos);
 		AddVectors(effectAng, baseAng, effectAng);
 
@@ -1927,7 +1802,7 @@ public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
 			if (NPCChaserGetAttackLaserAttachmentState(bossIndex, attackIndex))
 			{
 				char attachment[PLATFORM_MAX_PATH];
-				GetProfileAttackString(profile, "attack_laser_attachment_name", attachment, sizeof(attachment), "", attackIndex+1);
+				GetChaserProfileAttackLaserAttachmentName(profile, attackIndex, attachment, sizeof(attachment));
 				int attachmentIndex = animationEntity.LookupAttachment(attachment);
 				float targetEntPos[3], tempAng[3];
 				animationEntity.GetAttachment(attachmentIndex, targetEntPos, tempAng);

@@ -3,14 +3,18 @@
 #endif
 #define _sf2_client_proxy_functions_included
 
+#pragma semicolon 1
+
+static int g_ActionItemIndexes[] = { 57, 231 };
+
 void ClientResetProxy(int client, bool resetFull=true)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetProxy(%d)", client);
 	}
-#endif
+	#endif
 
 	int oldMaster = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 	char oldProfileName[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -46,9 +50,13 @@ void ClientResetProxy(int client, bool resetFull=true)
 
 			if (oldProfileName[0] != '\0')
 			{
-				ClientStopAllSlenderSounds(client, oldProfileName, "sound_proxy_spawn", g_SlenderProxySpawnChannel[oldMaster]);
-				ClientStopAllSlenderSounds(client, oldProfileName, "sound_proxy_hurt", g_SlenderProxyHurtChannel[oldMaster]);
-				ClientStopAllSlenderSounds(client, oldProfileName, "sound_proxy_idle", g_SlenderProxyIdleChannel[oldMaster]);
+				SF2BossProfileSoundInfo soundInfo;
+				GetBossProfileProxySpawnSounds(oldProfileName, soundInfo);
+				soundInfo.StopAllSounds(client);
+				GetBossProfileProxyHurtSounds(oldProfileName, soundInfo);
+				soundInfo.StopAllSounds(client);
+				GetBossProfileProxyIdleSounds(oldProfileName, soundInfo);
+				soundInfo.StopAllSounds(client);
 			}
 		}
 	}
@@ -79,12 +87,12 @@ void ClientStartProxyAvailableTimer(int client)
 
 void ClientStartProxyForce(int client, int slenderID, const float pos[3], int spawnPoint)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientStartProxyForce(%d, %d, pos)", client, slenderID);
 	}
-#endif
+	#endif
 
 	g_PlayerProxyAskMaster[client] = slenderID;
 	for (int i = 0; i < 3; i++)
@@ -98,12 +106,12 @@ void ClientStartProxyForce(int client, int slenderID, const float pos[3], int sp
 	g_PlayerProxyAvailableTimer[client] = CreateTimer(1.0, Timer_ClientForceProxy, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	TriggerTimer(g_PlayerProxyAvailableTimer[client], true);
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientStartProxyForce(%d, %d, pos)", client, slenderID);
 	}
-#endif
+	#endif
 }
 
 void ClientStopProxyForce(int client)
@@ -113,7 +121,7 @@ void ClientStopProxyForce(int client)
 	g_PlayerProxyAvailableTimer[client] = null;
 }
 
-public Action Timer_ClientForceProxy(Handle timer, any userid)
+Action Timer_ClientForceProxy(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -214,7 +222,7 @@ void DisplayProxyAskMenu(int client, int askMaster, const float pos[3], int spaw
 	DisplayMenu(menu, client, 15);
 }
 
-public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
+int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 {
 	switch (action)
 	{
@@ -302,9 +310,10 @@ public int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 			}
 		}
 	}
+	return 0;
 }
 
-public Action Timer_ClientProxyAvailable(Handle timer, any userid)
+Action Timer_ClientProxyAvailable(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -383,7 +392,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	g_PlayerProxyAvailableTimer[client] = null;
 
 	char allowedClasses[512];
-	GetProfileString(profile, "proxies_classes", allowedClasses, sizeof(allowedClasses));
+	GetBossProfileProxyClasses(profile, allowedClasses, sizeof(allowedClasses));
 
 	char className[64];
 	TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
@@ -496,14 +505,8 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	if (NPCGetProxySpawnEffectState(bossIndex))
 	{
 		char spawnEffect[PLATFORM_MAX_PATH];
-		GetProfileString(profile, "proxies_spawn_effect", spawnEffect, sizeof(spawnEffect));
+		GetBossProfileProxySpawnEffectName(profile, spawnEffect, sizeof(spawnEffect));
 		CreateGeneralParticle(client, spawnEffect, NPCGetProxySpawnEffectZOffset(bossIndex));
-	}
-
-	float resize = GetProfileFloat(profile, "proxies_resize");
-	if (resize > 0.0)
-	{
-		SetEntPropFloat(client, Prop_Send, "m_flModelScale", resize);
 	}
 
 	Call_StartForward(g_OnClientSpawnedAsProxyFwd);
@@ -511,7 +514,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	Call_Finish();
 }
 
-public Action Timer_GiveWeaponAll(Handle timer, any userid)
+Action Timer_GiveWeaponAll(Handle timer, any userid)
 {
 	if (!g_Enabled)
 	{
@@ -536,16 +539,22 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 		NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 		int weaponIndex, weaponSlot;
-		char weaponName[PLATFORM_MAX_PATH], weaponStats[PLATFORM_MAX_PATH], className[64], sectionName[64];
-		TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
-		FormatEx(sectionName, sizeof(sectionName), "proxies_weapon_class_%s", className);
-		GetProfileString(profile, sectionName, weaponName, sizeof(weaponName));
-		FormatEx(sectionName, sizeof(sectionName), "proxies_weapon_stats_%s", className);
-		GetProfileString(profile, sectionName, weaponStats, sizeof(weaponStats));
-		FormatEx(sectionName, sizeof(sectionName), "proxies_weapon_index_%s", className);
-		weaponIndex = GetProfileNum(profile, sectionName, 0);
-		FormatEx(sectionName, sizeof(sectionName), "proxies_weapon_slot_%s", className);
-		weaponSlot = GetProfileNum(profile, sectionName, 0);
+		char weaponName[PLATFORM_MAX_PATH], weaponStats[PLATFORM_MAX_PATH];
+		int classIndex = view_as<int>(TF2_GetPlayerClass(client)) - 1;
+		ArrayList weaponArray = GetBossProfileProxyWeaponClassNames(profile);
+		if (weaponArray == null)
+		{
+			return Plugin_Stop;
+		}
+		weaponArray.GetString(classIndex, weaponName, sizeof(weaponName));
+		weaponArray = GetBossProfileProxyWeaponStats(profile);
+		if (weaponArray == null)
+		{
+			return Plugin_Stop;
+		}
+		weaponArray.GetString(classIndex, weaponStats, sizeof(weaponStats));
+		weaponIndex = GetBossProfileProxyWeaponIndexes(profile, classIndex);
+		weaponSlot = GetBossProfileProxyWeaponSlots(profile, classIndex);
 
 		switch (weaponSlot)
 		{
@@ -572,7 +581,7 @@ public Action Timer_GiveWeaponAll(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public bool Hook_ClientProxyShouldCollide(int ent,int collisiongroup,int contentsmask, bool originalResult)
+bool Hook_ClientProxyShouldCollide(int ent,int collisiongroup,int contentsmask, bool originalResult)
 {
 	if (!g_Enabled || !g_PlayerProxy[ent] || IsClientInPvP(ent))
 	{
@@ -587,7 +596,7 @@ public bool Hook_ClientProxyShouldCollide(int ent,int collisiongroup,int content
 	return originalResult;
 }
 //RequestFrame//
-public void ProxyDeathAnimation(any client)
+void ProxyDeathAnimation(any client)
 {
 	if (client != -1)
 	{
@@ -604,7 +613,7 @@ public void ProxyDeathAnimation(any client)
 	}
 }
 
-public Action Timer_ClientProxyControl(Handle timer, any userid)
+Action Timer_ClientProxyControl(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -634,7 +643,7 @@ public Action Timer_ClientProxyControl(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public Action Timer_ApplyCustomModel(Handle timer, any userid)
+Action Timer_ApplyCustomModel(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -651,97 +660,188 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(master, profile, sizeof(profile));
 
+		int difficulty = GetLocalGlobalDifficulty(master);
+
 		// Set custom model, if any.
-		char buffer[PLATFORM_MAX_PATH], bufferHard[PLATFORM_MAX_PATH], bufferInsane[PLATFORM_MAX_PATH], bufferNightmare[PLATFORM_MAX_PATH], bufferApollyon[PLATFORM_MAX_PATH];
-		char sectionName[64];
+		char buffer[PLATFORM_MAX_PATH];
 
 		TF2_RegeneratePlayer(client);
 
 		char className[64];
-		TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
+		TFClassType playerClass = TF2_GetPlayerClass(client);
+		int classToInt = view_as<int>(playerClass);
+		TF2_GetClassName(playerClass, className, sizeof(className));
 
-		if (view_as<bool>(g_Config.GetNum("proxy_difficulty_models", 0)))
+		ArrayList modelsArray;
+
+		if (GetBossProfileProxyDifficultyModelsState(profile))
 		{
-			char sectionNameHard[128], sectionNameInsane[128], sectionNameNightmare[128], sectionNameApollyon[128];
+			switch (difficulty)
+			{
+				case Difficulty_Easy, Difficulty_Normal:
+				{
+					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					if (modelsArray == null)
+					{
+						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+					}
+					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
+				}
+				case Difficulty_Hard:
+				{
+					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					if (modelsArray == null)
+					{
+						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						if (modelsArray == null)
+						{
+							modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+							if (modelsArray == null)
+							{
+								modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+							}
+						}
+					}
+					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),buffer);
+				}
+				case Difficulty_Insane:
+				{
+					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					if (modelsArray == null)
+					{
+						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						if (modelsArray == null)
+						{
+							modelsArray = GetBossProfileProxyModels(profile, classToInt, 2);
+							if (modelsArray == null)
+							{
+								modelsArray = GetBossProfileProxyModels(profile, 0, 2);
+								if (modelsArray == null)
+								{
+									modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+									if (modelsArray == null)
+									{
+										modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+									}
+								}
+							}
+						}
+					}
+					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),buffer);
+				}
+				case Difficulty_Nightmare:
+				{
+					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					if (modelsArray == null)
+					{
+						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						if (modelsArray == null)
+						{
+							modelsArray = GetBossProfileProxyModels(profile, classToInt, 3);
+							if (modelsArray == null)
+							{
+								modelsArray = GetBossProfileProxyModels(profile, 0, 3);
+								if (modelsArray == null)
+								{
+									modelsArray = GetBossProfileProxyModels(profile, classToInt, 2);
+									if (modelsArray == null)
+									{
+										modelsArray = GetBossProfileProxyModels(profile, 0, 2);
+										if (modelsArray == null)
+										{
+											modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+											if (modelsArray == null)
+											{
+												modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),buffer);
+				}
+				case Difficulty_Apollyon:
+				{
+					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					if (modelsArray == null)
+					{
+						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						if (modelsArray == null)
+						{
+							modelsArray = GetBossProfileProxyModels(profile, classToInt, 4);
+							if (modelsArray == null)
+							{
+								modelsArray = GetBossProfileProxyModels(profile, 0, 4);
+								if (modelsArray == null)
+								{
+									modelsArray = GetBossProfileProxyModels(profile, classToInt, 3);
+									if (modelsArray == null)
+									{
+										modelsArray = GetBossProfileProxyModels(profile, 0, 3);
+										if (modelsArray == null)
+										{
+											modelsArray = GetBossProfileProxyModels(profile, classToInt, 2);
+											if (modelsArray == null)
+											{
+												modelsArray = GetBossProfileProxyModels(profile, 0, 2);
+												if (modelsArray == null)
+												{
+													modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+													if (modelsArray == null)
+													{
+														modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),buffer);
+				}
+			}
 
-			FormatEx(sectionName, sizeof(sectionName), "mod_proxy_%s", className);
-			FormatEx(sectionNameHard, sizeof(sectionNameHard), "mod_proxy_%s_hard", className);
-			FormatEx(sectionNameInsane, sizeof(sectionNameInsane), "mod_proxy_%s_insane", className);
-			FormatEx(sectionNameNightmare, sizeof(sectionNameNightmare), "mod_proxy_%s_nightmare", className);
-			FormatEx(sectionNameApollyon, sizeof(sectionNameApollyon), "mod_proxy_%s_apollyon", className);
-
-			if ((GetRandomStringFromProfile(profile, sectionName, buffer, sizeof(buffer)) && buffer[0] != '\0') ||
-				(GetRandomStringFromProfile(profile, "mod_proxy_all", buffer, sizeof(buffer)) && buffer[0] != '\0'))
+			if (buffer[0] != '\0')
 			{
 				SetVariantString(buffer);
 				AcceptEntityInput(client, "SetCustomModel");
 				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
-				strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
 
-				if ((GetRandomStringFromProfile(profile, sectionNameHard, bufferHard, sizeof(bufferHard)) && bufferHard[0] != '\0') ||
-					(GetRandomStringFromProfile(profile, "mod_proxy_all_hard", bufferHard, sizeof(bufferHard)) && bufferHard[0] != '\0'))
-				{
-					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),bufferHard);
-				}
-				else
-				{
-					strcopy(bufferHard,sizeof(bufferHard),buffer);
-					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),bufferHard);
-				}
-
-				if ((GetRandomStringFromProfile(profile, sectionNameInsane, bufferInsane, sizeof(bufferInsane)) && bufferInsane[0] != '\0') ||
-					(GetRandomStringFromProfile(profile, "mod_proxy_all_insane", bufferInsane, sizeof(bufferInsane)) && bufferInsane[0] != '\0'))
-				{
-					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),bufferInsane);
-				}
-				else
-				{
-					strcopy(bufferInsane,sizeof(bufferInsane),bufferHard);
-					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),bufferInsane);
-				}
-
-				if ((GetRandomStringFromProfile(profile, sectionNameNightmare, bufferNightmare, sizeof(bufferNightmare)) && bufferNightmare[0] != '\0') ||
-					(GetRandomStringFromProfile(profile, "mod_proxy_all_nightmare", bufferNightmare, sizeof(bufferNightmare)) && bufferNightmare[0] != '\0'))
-				{
-					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),bufferNightmare);
-				}
-				else
-				{
-					strcopy(bufferNightmare,sizeof(bufferNightmare),bufferInsane);
-					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),bufferNightmare);
-				}
-
-				if ((GetRandomStringFromProfile(profile, sectionNameApollyon, bufferApollyon, sizeof(bufferApollyon)) && bufferApollyon[0] != '\0') ||
-					(GetRandomStringFromProfile(profile, "mod_proxy_all_apollyon", bufferApollyon, sizeof(bufferApollyon)) && bufferApollyon[0] != '\0'))
-				{
-					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),bufferApollyon);
-				}
-				else
-				{
-					strcopy(bufferApollyon,sizeof(bufferApollyon),bufferNightmare);
-					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),bufferApollyon);
-				}
-
-				CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				CreateTimer(0.5, ClientCheckProxyModel, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 		else
 		{
-			FormatEx(sectionName, sizeof(sectionName), "mod_proxy_%s", className);
-			if ((GetRandomStringFromProfile(profile, sectionName, buffer, sizeof(buffer)) && buffer[0] != '\0') ||
-				(GetRandomStringFromProfile(profile, "mod_proxy_all", buffer, sizeof(buffer)) && buffer[0] != '\0'))
+			modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+			if (modelsArray == null)
 			{
-				SetVariantString(buffer);
-				AcceptEntityInput(client, "SetCustomModel");
-				SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
-				strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
-				strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),buffer);
-				strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),buffer);
-				strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),buffer);
-				strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),buffer);
-				//Prevent plugins like Model manager to override proxy model.
-				CreateTimer(0.5,ClientCheckProxyModel,GetClientUserId(client),TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-				//PrintToChatAll("Proxy model:%s",g_ClientProxyModel[client]);
+				modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+			}
+			if (modelsArray != null)
+			{
+				modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+				if (buffer[0] != '\0')
+				{
+					SetVariantString(buffer);
+					AcceptEntityInput(client, "SetCustomModel");
+					SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
+					strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
+					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),buffer);
+					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),buffer);
+					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),buffer);
+					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),buffer);
+					//Prevent plugins like Model manager to override proxy model.
+					CreateTimer(0.5, ClientCheckProxyModel, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				}
 			}
 		}
 
@@ -767,25 +867,25 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 		if (IsPlayerAlive(client))
 		{
 			g_PlayerProxyNextVoiceSound[client] = GetGameTime();
+			SF2BossProfileSoundInfo soundInfo;
+			GetBossProfileProxySpawnSounds(profile, soundInfo);
 			// Play any sounds, if any.
-			if (GetRandomStringFromProfile(profile, "sound_proxy_spawn", buffer, sizeof(buffer)) && buffer[0] != '\0')
+			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 			{
-				int channel = g_SlenderProxySpawnChannel[master];
-				int level = g_SlenderProxySpawnLevel[master];
-				int flags = g_SlenderProxySpawnFlags[master];
-				float volume = g_SlenderProxySpawnVolume[master];
-				int pitch = g_SlenderProxySpawnPitch[master];
-
-				EmitSoundToAll(buffer, client, channel, level, flags, volume, pitch);
+				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
+				if (buffer[0] != '\0')
+				{
+					EmitSoundToAll(buffer, client, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
+				}
 			}
 
-			bool zombie = view_as<bool>(GetProfileNum(profile, "proxies_zombie", 0));
+			bool zombie = GetBossProfileProxyZombiesState(profile);
 			if (zombie)
 			{
-				int value = FindConVar("tf_forced_holiday").IntValue;
+				int value = g_ForcedHolidayConVar.IntValue;
 				if (value != 9 && value != 2)
 				{
-					FindConVar("tf_forced_holiday").SetInt(9);//Full-Moon
+					g_ForcedHolidayConVar.SetInt(9); //Full-Moon
 				}
 				int index;
 				TFClassType class = TF2_GetPlayerClass(client);
@@ -852,7 +952,7 @@ public Action Timer_ApplyCustomModel(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public Action ClientCheckProxyModel(Handle timer, any userid)
+Action ClientCheckProxyModel(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -879,7 +979,7 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 	{
 		case Difficulty_Normal:
 		{
-			if (strcmp(model,g_ClientProxyModel[client]) != 0)
+			if (strcmp(model,g_ClientProxyModel[client]) != 0 && g_ClientProxyModel[client][0] != '\0')
 			{
 				SetVariantString(g_ClientProxyModel[client]);
 				AcceptEntityInput(client, "SetCustomModel");
@@ -888,7 +988,7 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 		}
 		case Difficulty_Hard:
 		{
-			if (strcmp(model,g_ClientProxyModelHard[client]) != 0)
+			if (strcmp(model,g_ClientProxyModelHard[client]) != 0 && g_ClientProxyModelHard[client][0] != '\0')
 			{
 				SetVariantString(g_ClientProxyModelHard[client]);
 				AcceptEntityInput(client, "SetCustomModel");
@@ -897,7 +997,7 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 		}
 		case Difficulty_Insane:
 		{
-			if (strcmp(model,g_ClientProxyModelInsane[client]) != 0)
+			if (strcmp(model,g_ClientProxyModelInsane[client]) != 0 && g_ClientProxyModelInsane[client][0] != '\0')
 			{
 				SetVariantString(g_ClientProxyModelInsane[client]);
 				AcceptEntityInput(client, "SetCustomModel");
@@ -906,7 +1006,7 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 		}
 		case Difficulty_Nightmare:
 		{
-			if (strcmp(model,g_ClientProxyModelNightmare[client]) != 0)
+			if (strcmp(model,g_ClientProxyModelNightmare[client]) != 0 && g_ClientProxyModelNightmare[client][0] != '\0')
 			{
 				SetVariantString(g_ClientProxyModelNightmare[client]);
 				AcceptEntityInput(client, "SetCustomModel");
@@ -915,7 +1015,7 @@ public Action ClientCheckProxyModel(Handle timer, any userid)
 		}
 		case Difficulty_Apollyon:
 		{
-			if (strcmp(model,g_ClientProxyModelApollyon[client]) != 0)
+			if (strcmp(model,g_ClientProxyModelApollyon[client]) != 0 && g_ClientProxyModelApollyon[client][0] != '\0')
 			{
 				SetVariantString(g_ClientProxyModelApollyon[client]);
 				AcceptEntityInput(client, "SetCustomModel");
@@ -937,7 +1037,7 @@ void SF2_RefreshRestrictions()
 		}
 	}
 }
-public Action Timer_ClientPostWeapons(Handle timer, any userid)
+Action Timer_ClientPostWeapons(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -962,7 +1062,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 	g_PlayerHasRegenerationItem[client] = false;
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("START Timer_ClientPostWeapons(%d)", client);
@@ -984,7 +1084,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 			oldWeaponItemIndexes[i] = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 		}
 	}
-#endif
+	#endif
 
 	bool removeWeapons = true;
 	bool keepUtilityItems = false;
@@ -1667,7 +1767,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 	TF2Attrib_SetByDefIndex(client, 109, healthFromPack);
 
-#if defined DEBUG
+	#if defined DEBUG
 	int weaponEnt = INVALID_ENT_REFERENCE;
 
 	for (int i = 0; i <= 5; i++)
@@ -1690,7 +1790,7 @@ public Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 		DebugMessage("END Timer_ClientPostWeapons(%d) -> remove = %d, restrict = %d", client, removeWeapons, restrictWeapons);
 	}
-#endif
+	#endif
 	return Plugin_Stop;
 }
 
@@ -1726,21 +1826,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDef
 	return Plugin_Continue;
 }
 
-public void Frame_ReplaceSpyCicle(int client)
-{
-	if (IsClientInGame(client))
-	{
-		TF2_RemoveWeaponSlot(client, TFWeaponSlot_Melee);
-		Handle itemHandle = PrepareItemHandle("tf_weapon_knife", 4, 0, 0, "");
-		int newKnife = TF2Items_GiveNamedItem(client, itemHandle);
-		delete itemHandle;
-		itemHandle = null;
-		EquipPlayerWeapon(client, newKnife);
-		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-	}
-}
-
-public void Frame_ClientHealArrow(int client)
+void Frame_ClientHealArrow(int client)
 {
 	if (IsClientInGame(client) && IsClientInPvP(client))
 	{

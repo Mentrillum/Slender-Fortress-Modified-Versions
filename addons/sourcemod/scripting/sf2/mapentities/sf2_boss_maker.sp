@@ -1,5 +1,7 @@
 // sf2_boss_maker
 
+#pragma semicolon 1
+
 static const char g_EntityClassname[] = "sf2_boss_maker"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
 #define SF_SF2_BOSS_MAKER_NODROP 1

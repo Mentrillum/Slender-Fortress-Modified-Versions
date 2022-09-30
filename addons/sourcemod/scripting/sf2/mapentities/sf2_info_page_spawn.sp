@@ -1,5 +1,7 @@
 // sf2_info_page_spawn
 
+#pragma semicolon 1
+
 static CEntityFactory g_EntityFactory;
 
 /**

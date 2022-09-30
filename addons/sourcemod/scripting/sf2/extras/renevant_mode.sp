@@ -3,6 +3,8 @@
 #endif
 #define _sf2_renevant_mode_included
 
+#pragma semicolon 1
+
 stock bool SF_IsRenevantMap()
 {
 	return view_as<bool>(g_IsRenevantMap || (g_RenevantMapConVar.IntValue == 1));

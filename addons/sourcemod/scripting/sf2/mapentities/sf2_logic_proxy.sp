@@ -1,5 +1,7 @@
 // sf2_logic_proxy
 
+#pragma semicolon 1
+
 static CEntityFactory g_EntityFactory;
 
 /**

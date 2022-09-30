@@ -35,18 +35,12 @@ bool steamworks;
 #include <sf2>
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.7.4.3 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.4.3 M"
+#pragma dynamic 131072
 
 #define TFTeam_Spectator 1
 #define TFTeam_Red 2
 #define TFTeam_Blue 3
 #define TFTeam_Boss 5
-
-#define MASK_RED 33640459
-#define MASK_BLUE 33638411
-
-#define EF_ITEM_BLINK 0x100
 
 public Plugin myinfo =
 {
@@ -57,147 +51,24 @@ public Plugin myinfo =
 	url = "https://discord.gg/7Zz7RYTCC4"
 }
 
-#define FILE_RESTRICTEDWEAPONS "configs/sf2/restrictedweapons.cfg"
-#define FILE_RESTRICTEDWEAPONS_DATA "data/sf2/restrictedweapons.cfg"
-
-#define FILE_CLASSCONFIGS "configs/sf2/class_stats.cfg"
-#define FILE_CLASSCONFIGS_DATA "data/sf2/class_stats.cfg"
-
-#define BOSS_THINKRATE 0.1 // doesn't really matter much since timers go at a minimum of 0.1 seconds anyways
-
-#define CRIT_SOUND "player/crit_hit.wav"
-#define CRIT_PARTICLENAME "crit_text"
-#define MINICRIT_SOUND "player/crit_hit_mini.wav"
-#define MINICRIT_PARTICLENAME "minicrit_text"
-#define ZAP_SOUND "weapons/barret_arm_zap.wav"
-#define ZAP_PARTICLENAME "dxhr_arm_muzzleflash"
-#define FIREWORKSBLU_PARTICLENAME "utaunt_firework_teamcolor_blue"
-#define FIREWORKSRED_PARTICLENAME "utaunt_firework_teamcolor_red"
-#define TELEPORTEDINBLU_PARTICLENAME "teleported_red"
-#define SOUND_THUNDER "ambient/explosions/explode_9.wav"
-
-#define EXPLOSIVEDANCE_EXPLOSION1 "weapons/explode1.wav"
-#define EXPLOSIVEDANCE_EXPLOSION2 "weapons/explode2.wav"
-#define EXPLOSIVEDANCE_EXPLOSION3 "weapons/explode3.wav"
-
-#define SPECIAL1UPSOUND "mvm/mvm_revive.wav"
-
-#define SPECIALROUND_BOO_DISTANCE 120.0
-#define SPECIALROUND_BOO_DURATION 4.0
-
-#define PAGE_DETECTOR_BEEP "items/cart_explode_trigger.wav"
-
-#define PAGE_MODEL "models/slender/pickups/sheet.mdl"
-#define PAGE_MODELSCALE 1.0
-
-#define DEFAULT_CLOAKONSOUND "weapons/medi_shield_deploy.wav"
-#define DEFAULT_CLOAKOFFSOUND "weapons/medi_shield_retract.wav"
-
-#define SF_KEYMODEL "models/demani_sf/key_australium.mdl"
-
-#define FLASHLIGHT_CLICKSOUND "slender/slenderflashlightclick.wav"
-#define FLASHLIGHT_CLICKSOUND_NIGHTVISION "slender/nightvision.mp3"
-#define FLASHLIGHT_BREAKSOUND "ambient/energy/spark6.wav"
-#define FLASHLIGHT_NOSOUND "player/suit_denydevice.wav"
-#define PAGE_GRABSOUND "slender/slenderpagegrab.wav"
-#define TWENTYDOLLARS_MUSIC "slender/gimm20dollars_v2.wav"
-
-#define MUSIC_CHAN SNDCHAN_AUTO
-#define MUSIC_GOTPAGES1_SOUND "slender/newambience_1.wav"
-#define MUSIC_GOTPAGES2_SOUND "slender/newambience_2.wav"
-#define MUSIC_GOTPAGES3_SOUND "slender/newambience_3.wav"
-#define MUSIC_GOTPAGES4_SOUND "slender/newambience_4.wav"
-#define MUSIC_PAGE_VOLUME 1.0
-
-#define SF2_INTRO_DEFAULT_MUSIC "slender/intro.mp3"
-
-#define PROXY_RAGE_MODE_SOUND "slender/proxyrage.mp3"
-
-#define FIREBALL_SHOOT "misc/halloween/spell_fireball_cast.wav"
-#define FIREBALL_IMPACT "misc/halloween/spell_fireball_impact.wav"
-#define FIREBALL_TRAIL "spell_fireball_small_red"
-#define ICEBALL_IMPACT "weapons/icicle_freeze_victim_01.wav"
-#define ICEBALL_TRAIL "spell_fireball_small_blue"
-#define ROCKET_SHOOT "weapons/rocket_shoot.wav"
-#define ROCKET_IMPACT "weapons/explode1.wav"
-#define ROCKET_MODEL "models/weapons/w_models/w_rocket.mdl"
-#define ROCKET_TRAIL "rockettrail"
-#define ROCKET_EXPLODE_PARTICLE "ExplosionCore_MidAir"
-#define GRENADE_SHOOT "weapons/grenade_launcher_shoot.wav"
-#define SENTRYROCKET_SHOOT "weapons/sentry_rocket.wav"
-#define ARROW_SHOOT "weapons/bow_shoot.wav"
-#define GRENADE_MODEL "models/weapons/w_models/w_grenade_grenadelauncher.mdl"
-#define MANGLER_SHOOT "weapons/cow_mangler_main_shot.wav"
-#define MANGLER_EXPLODE1 "weapons/cow_mangler_explosion_normal_01.wav"
-#define MANGLER_EXPLODE2 "weapons/cow_mangler_explosion_normal_02.wav"
-#define MANGLER_EXPLODE3 "weapons/cow_mangler_explosion_normal_03.wav"
-#define BASEBALL_SHOOT "weapons/bat_baseball_hit1.wav"
-#define BASEBALL_MODEL "weapons/w_models/w_baseball.mdl"
-
-#define JARATE_HITPLAYER "weapons/jar_single.wav"
-#define JARATE_PARTICLE "peejar_impact"
-#define MILK_PARTICLE "peejar_impact_milk"
-#define GAS_PARTICLE "gas_can_impact_blue"
-#define STUN_HITPLAYER "weapons/icicle_freeze_victim_01.wav"
-#define STUN_PARTICLE "xms_icicle_melt"
-#define ELECTRIC_RED_PARTICLE "electrocuted_gibbed_red"
-#define ELECTRIC_BLUE_PARTICLE "electrocuted_gibbed_red"
-
-//Page Rewards
-#define EXPLODE_PLAYER "items/pumpkin_explode1.wav"
-#define UBER_ROLL "misc/halloween/spell_overheal.wav"
-#define NO_EFFECT_ROLL "player/taunt_sorcery_fail.wav"
-#define BLEED_ROLL "items/powerup_pickup_plague_infected.wav"
-#define CRIT_ROLL "items/powerup_pickup_crits.wav"
-#define LOSE_SPRINT_ROLL "misc/banana_slip.wav"
-#define JARATE_ROLL "weapons/jar_explode.wav"
-#define GAS_ROLL "weapons/gas_can_explode.wav"
-
-#define FIREWORK_EXPLOSION	"weapons/flare_detonator_explode.wav"
-#define FIREWORK_START "weapons/flare_detonator_launch.wav"
-#define FIREWORK_PARTICLE	"burningplayer_rainbow_flame"
-
-#define GENERIC_ROLL_TICK "ui/buttonrollover.wav"
-
-#define MINICRIT_BUFF "weapons/buff_banner_flag.wav"
-
-#define HYPERSNATCHER_NIGHTAMRE_1 "slender/snatcher/nightmare1.wav"
-#define HYPERSNATCHER_NIGHTAMRE_2 "slender/snatcher/nightmare2.wav"
-#define HYPERSNATCHER_NIGHTAMRE_3 "slender/snatcher/nightmare3.wav"
-#define HYPERSNATCHER_NIGHTAMRE_4 "slender/snatcher/nightmare4.wav"
-#define HYPERSNATCHER_NIGHTAMRE_5 "slender/snatcher/nightmare5.wav"
-#define SNATCHER_APOLLYON_1 "slender/snatcher/apollyon1.wav"
-#define SNATCHER_APOLLYON_2 "slender/snatcher/apollyon2.wav"
-#define SNATCHER_APOLLYON_3 "slender/snatcher/apollyon3.wav"
-
-#define RENEVANT_MAXWAVES 5
-
-#define NULLSOUND "misc/null.wav"
-
-#define NINETYSMUSIC "slender/sf2modified_runninginthe90s_v2.wav"
-#define TRIPLEBOSSESMUSIC "slender/sf2modified_triplebosses_v2.wav"
-
-#define TRAP_DEPLOY "slender/modified_traps/beartrap/trap_deploy.mp3"
-#define TRAP_CLOSE "slender/modified_traps/beartrap/trap_close.mp3"
-#define TRAP_MODEL "models/mentrillum/traps/beartrap.mdl"
-
-#define LASER_MODEL "sprites/laser.vmt"
-int g_LaserIndex;
-
-#define THANATOPHOBIA_SCOUTNO "vo/scout_no03.mp3"
-#define THANATOPHOBIA_SOLDIERNO "vo/soldier_no01.mp3"
-#define THANATOPHOBIA_PYRONO "vo/pyro_no01.mp3"
-#define THANATOPHOBIA_DEMOMANNO "vo/demoman_no03.mp3"
-#define THANATOPHOBIA_HEAVYNO "vo/heavy_no02.mp3"
-#define THANATOPHOBIA_ENGINEERNO "vo/engineer_no01.mp3"
-#define THANATOPHOBIA_MEDICNO "vo/medic_no03.mp3"
-#define THANATOPHOBIA_SNIPERNO "vo/sniper_no01.mp3"
-#define THANATOPHOBIA_SPYNO "vo/spy_no02.mp3"
-
-#define SF2_HUD_TEXT_COLOR_R 127
-#define SF2_HUD_TEXT_COLOR_G 167
-#define SF2_HUD_TEXT_COLOR_B 141
-#define SF2_HUD_TEXT_COLOR_A 255
+char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
+{
+	"idle",
+	"walk",
+	"walkalert",
+	"attack",
+	"shoot",
+	"run",
+	"stun",
+	"chaseinitial",
+	"rage",
+	"spawn",
+	"fleestart",
+	"heal",
+	"deathcam",
+	"crawlwalk",
+	"crawlrun"
+};
 
 enum struct MuteMode
 {
@@ -242,11 +113,11 @@ static const char g_PageCollectDuckSounds[][] =
 };
 
 //Update
-bool g_SeeUpdateMenu[MAXPLAYERS + 1] = false;
+bool g_SeeUpdateMenu[MAXPLAYERS + 1] = { false, ... };
 //Command
-bool g_PlayerNoPoints[MAXPLAYERS + 1] = false;
-bool g_AdminNoPoints[MAXPLAYERS + 1] = false;
-bool g_AdminAllTalk[MAXPLAYERS + 1] = false;
+bool g_PlayerNoPoints[MAXPLAYERS + 1] = { false, ... };
+bool g_AdminNoPoints[MAXPLAYERS + 1] = { false, ... };
+bool g_AdminAllTalk[MAXPLAYERS + 1] = { false, ... };
 
 // Offsets.
 int g_PlayerFOVOffset = -1;
@@ -291,8 +162,8 @@ int g_SlenderDeathCamTarget[MAX_BOSSES];
 float g_SlenderLastKill[MAX_BOSSES];
 int g_SlenderState[MAX_BOSSES];
 int g_SlenderTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
-bool g_SlenderTargetIsVisible[MAX_BOSSES] = false;
-bool g_SlenderSpawning[MAX_BOSSES] = false;
+bool g_SlenderTargetIsVisible[MAX_BOSSES] = { false, ... };
+bool g_SlenderSpawning[MAX_BOSSES] = { false, ... };
 float g_SlenderAcceleration[MAX_BOSSES][Difficulty_Max];
 float g_SlenderGoalPos[MAX_BOSSES][3];
 float g_SlenderStaticRadius[MAX_BOSSES][Difficulty_Max];
@@ -303,7 +174,8 @@ float g_SlenderChaseDeathPosition[MAX_BOSSES][3];
 bool g_SlenderChaseDeathPositionBool[MAX_BOSSES];
 bool g_SlenderHasAutoChaseEnabled[MAX_BOSSES];
 bool g_SlenderChasesEndlessly[MAX_BOSSES] = { false, ... };
-bool g_SlenderSpawnDifficultyCompanions[MAX_BOSSES] = { false, ... };
+bool g_SlenderAddCompanionsOnDifficulty[MAX_BOSSES] = { false, ... };
+float g_SlenderStatueIdleLifeTime[MAX_BOSSES];
 
 bool g_SlenderDeathCamScareSound[MAX_BOSSES];
 bool g_SlenderPublicDeathCam[MAX_BOSSES];
@@ -386,27 +258,27 @@ char g_SlenderTrapAnimIdle[MAX_BOSSES][65];
 char g_SlenderTrapAnimOpen[MAX_BOSSES][65];
 char g_SlenderTrapAnimClose[MAX_BOSSES][65];
 
-int g_SlenderTeleportTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
+public int g_SlenderTeleportTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_SlenderProxyTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
-bool g_SlenderTeleportTargetIsCamping[MAX_BOSSES] = false;
+bool g_SlenderTeleportTargetIsCamping[MAX_BOSSES] = { false, ... };
 
-float g_SlenderNextTeleportTime[MAX_BOSSES] = { -1.0, ... };
+public float g_SlenderNextTeleportTime[MAX_BOSSES] = { -1.0, ... };
 float g_SlenderTeleportTargetTime[MAX_BOSSES] = { -1.0, ... };
-float g_SlenderTeleportMinRange[MAX_BOSSES][Difficulty_Max];
-float g_SlenderTeleportMaxRange[MAX_BOSSES][Difficulty_Max];
+public float g_SlenderTeleportMinRange[MAX_BOSSES][Difficulty_Max];
+public float g_SlenderTeleportMaxRange[MAX_BOSSES][Difficulty_Max];
 float g_SlenderTeleportMaxTargetTime[MAX_BOSSES] = { -1.0, ... };
 float g_SlenderTeleportMaxTargetStress[MAX_BOSSES] = { 0.0, ... };
 float g_SlenderTeleportPlayersRestTime[MAX_BOSSES][MAXPLAYERS + 1];
 bool g_SlenderTeleportIgnoreChases[MAX_BOSSES];
 bool g_SlenderTeleportIgnoreVis[MAX_BOSSES];
 
-bool g_SlenderInDeathcam[MAX_BOSSES] = false;
+bool g_SlenderInDeathcam[MAX_BOSSES] = { false, ... };
 
 bool g_SlenderProxiesAllowNormalVoices[MAX_BOSSES];
 
 int g_SlenderBoxingBossCount = 0;
 int g_SlenderBoxingBossKilled = 0;
-bool g_SlenderBoxingBossIsKilled[MAX_BOSSES] = false;
+bool g_SlenderBoxingBossIsKilled[MAX_BOSSES] = { false, ... };
 
 //The global timer replacing OnGameFrame()
 Handle g_OnGameFrameTimer = null;
@@ -470,17 +342,10 @@ float g_SlenderNextMoanSound[MAX_BOSSES] = { -1.0, ... };
 float g_SlenderNextWanderPos[MAX_BOSSES][Difficulty_Max];
 float g_SlenderNextCloakTime[MAX_BOSSES] = { -1.0, ... };
 float g_SlenderNextTrapPlacement[MAX_BOSSES] = { -1.0, ... };
-float g_SlenderNextFootstepIdleSound[MAX_BOSSES] = { -1.0, ... };
-float g_SlenderNextFootstepWalkSound[MAX_BOSSES] = { -1.0, ... };
-float g_SlenderNextFootstepRunSound[MAX_BOSSES] = { -1.0, ... };
-float g_SlenderNextFootstepStunSound[MAX_BOSSES] = { -1.0, ... };
-float g_SlenderNextFootstepAttackSound[MAX_BOSSES] = { -1.0, ... };
+float g_SlenderNextFootstepSound[MAX_BOSSES] = { -1.0, ... };
 
-float g_SlenderIdleFootstepTime[MAX_BOSSES];
-float g_SlenderWalkFootstepTime[MAX_BOSSES];
-float g_SlenderRunFootstepTime[MAX_BOSSES];
-float g_SlenderStunFootstepTime[MAX_BOSSES];
-float g_SlenderAttackFootstepTime[MAX_BOSSES];
+float g_SlenderFootstepTime[MAX_BOSSES];
+float g_SlenderAnimationDuration[MAX_BOSSES];
 
 float g_SlenderTimeUntilRecover[MAX_BOSSES] = { -1.0, ... };
 float g_SlenderTimeUntilAlert[MAX_BOSSES] = { -1.0, ... };
@@ -498,32 +363,7 @@ int g_SlenderProxyControlGainHitByEnemy[MAX_BOSSES][Difficulty_Max];
 float g_SlenderProxyControlDrainRate[MAX_BOSSES][Difficulty_Max];
 int g_SlenderMaxProxies[MAX_BOSSES][Difficulty_Max];
 
-int g_SlenderProxyHurtChannel[MAX_BOSSES];
-int g_SlenderProxyHurtLevel[MAX_BOSSES];
-int g_SlenderProxyHurtFlags[MAX_BOSSES];
-float g_SlenderProxyHurtVolume[MAX_BOSSES];
-int g_SlenderProxyHurtPitch[MAX_BOSSES];
-int g_SlenderProxyDeathChannel[MAX_BOSSES];
-int g_SlenderProxyDeathLevel[MAX_BOSSES];
-int g_SlenderProxyDeathFlags[MAX_BOSSES];
-float g_SlenderProxyDeathVolume[MAX_BOSSES];
-int g_SlenderProxyDeathPitch[MAX_BOSSES];
-int g_SlenderProxyIdleChannel[MAX_BOSSES];
-int g_SlenderProxyIdleLevel[MAX_BOSSES];
-int g_SlenderProxyIdleFlags[MAX_BOSSES];
-float g_SlenderProxyIdleVolume[MAX_BOSSES];
-int g_SlenderProxyIdlePitch[MAX_BOSSES];
-float g_SlenderProxyIdleCooldownMin[MAX_BOSSES];
-float g_SlenderProxyIdleCooldownMax[MAX_BOSSES];
-int g_SlenderProxySpawnChannel[MAX_BOSSES];
-int g_SlenderProxySpawnLevel[MAX_BOSSES];
-int g_SlenderProxySpawnFlags[MAX_BOSSES];
-float g_SlenderProxySpawnVolume[MAX_BOSSES];
-int g_SlenderProxySpawnPitch[MAX_BOSSES];
-
 bool g_SlenderInBacon[MAX_BOSSES];
-
-bool g_SlenderDifficultyAnimations[MAX_BOSSES];
 
 int g_NightvisionType = 0;
 
@@ -541,7 +381,6 @@ enum struct SF2PageEntityData
 ArrayList g_Pages;
 int g_PageCount;
 int g_PageMax;
-float g_PageFoundLastTime;
 bool g_PageRef;
 char g_PageRefModelName[PLATFORM_MAX_PATH];
 float g_PageRefModelScale;
@@ -619,17 +458,6 @@ bool g_InProxySurvivalRageMode = false;
 
 int g_PlayerRandomClassNumber[MAXPLAYERS + 1];
 
-// Hint data.
-enum
-{
-	PlayerHint_Sprint = 0,
-	PlayerHint_Flashlight,
-	PlayerHint_MainMenu,
-	PlayerHint_Blink,
-	PlayerHint_Trap,
-	PlayerHint_MaxNum
-};
-
 enum struct PlayerPreferences
 {
 	bool PlayerPreference_PvPAutoSpawn;
@@ -650,7 +478,6 @@ enum struct PlayerPreferences
 
 }
 
-bool g_PlayerHints[MAXPLAYERS + 1][PlayerHint_MaxNum];
 PlayerPreferences g_PlayerPreferences[MAXPLAYERS + 1];
 
 //Particle data.
@@ -665,7 +492,7 @@ enum
 	MaxParticle
 };
 
-int g_Particles[MaxParticle] = -1;
+int g_Particles[MaxParticle] = { -1, ... };
 
 // Player data.
 bool g_PlayerIsExitCamping[MAXPLAYERS + 1];
@@ -710,7 +537,7 @@ Handle g_PlayerPageRewardTimer[MAXPLAYERS + 1] = { null, ... };
 Handle g_PlayerPageRewardCycleTimer[MAXPLAYERS + 1] = { null, ... };
 Handle g_PlayerFireworkTimer[MAXPLAYERS + 1] = { null, ... };
 
-bool g_PlayerGettingPageReward[MAXPLAYERS + 1] = false;
+bool g_PlayerGettingPageReward[MAXPLAYERS + 1] = { false, ... };
 
 // Music system.
 int g_PlayerMusicFlags[MAXPLAYERS + 1];
@@ -863,7 +690,6 @@ ConVar g_NewBossRoundBehaviorConVar;
 ConVar g_NewBossRoundIntervalConVar;
 ConVar g_NewBossRoundForceConVar;
 ConVar g_IgnoreRoundWinConditionsConVar;
-ConVar g_DefaultBossVisibilityStateConVar;
 ConVar g_EnableWallHaxConVar;
 ConVar g_IgnoreRedPlayerDeathSwapConVar;
 ConVar g_PlayerVoiceDistanceConVar;
@@ -921,8 +747,12 @@ ConVar g_PlayerInfiniteBlinkOverrideConVar;
 
 ConVar g_GravityConVar;
 float g_Gravity;
-
 ConVar g_MaxRoundsConVar;
+ConVar g_ForcedHolidayConVar;
+ConVar g_WeaponCriticalsConVar;
+ConVar g_PhysicsPushScaleConVar;
+ConVar g_DragonsFuryBurningBonus;
+ConVar g_DragonsFuryBurnDuration;
 
 bool g_20Dollars;
 
@@ -956,6 +786,8 @@ GlobalForward g_OnBossRemovedFwd;
 GlobalForward g_OnBossStunnedFwd;
 GlobalForward g_OnBossCloakedFwd;
 GlobalForward g_OnBossDecloakedFwd;
+GlobalForward g_OnBossFinishSpawningFwd;
+GlobalForward g_OnBossPreAttackFwd;
 GlobalForward g_OnPagesSpawnedFwd;
 GlobalForward g_OnRoundStateChangeFwd;
 GlobalForward g_OnClientCollectPageFwd;
@@ -984,19 +816,14 @@ GlobalForward g_OnBossPackVoteStartFwd;
 GlobalForward g_OnDifficultyChangeFwd;
 GlobalForward g_OnClientEnterGameFwd;
 GlobalForward g_OnGroupEnterGameFwd;
+GlobalForward g_OnEverythingLoadedFwd;
 
 Handle g_SDKGetMaxHealth;
-Handle g_SDKGetLastKnownArea;
-Handle g_SDKUpdateLastKnownArea;
-Handle g_SDKGetLocomotionInterface;
-Handle g_SDKGetNextBot;
 Handle g_SDKEquipWearable;
 Handle g_SDKPlaySpecificSequence;
 Handle g_SDKPointIsWithin;
 Handle g_SDKPassesTriggerFilters;
 Handle g_SDKGetSmoothedVelocity;
-Handle g_SDKGetVectors;
-Handle g_SDKResetSequence;
 Handle g_SDKStartTouch;
 Handle g_SDKEndTouch;
 Handle g_SDKWeaponSwitch;
@@ -1004,14 +831,13 @@ Handle g_SDKWeaponSwitch;
 DynamicHook g_DHookWantsLagCompensationOnEntity;
 DynamicHook g_DHookShouldTransmit;
 DynamicHook g_DHookUpdateTransmitState;
-DynamicHook g_DHookShouldCollide;
 DynamicHook g_DHookWeaponGetCustomDamageType;
 DynamicHook g_DHookProjectileCanCollideWithTeammates;
 
 // SourceTV userid used for boss name
 int g_SourceTVUserID = -1;
 char g_OldClientName[MAXPLAYERS + 1][64];
-Handle g_TimerChangeClientName[MAXPLAYERS + 1] = null;
+Handle g_TimerChangeClientName[MAXPLAYERS + 1] = { null, ... };
 
 //Fail Timer
 Handle g_TimerFail = null;
@@ -1030,6 +856,11 @@ ArrayList g_RenevantWaveList;
 stock ArrayList g_FuncNavPrefer;
 
 #define SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND "ui/item_acquired.wav"
+
+#define SF2_FLASHLIGHT_BEAM_MATERIAL "sprites/glow_test02.vmt"
+#define SF2_FLASHLIGHT_HALO_MATERIAL "sprites/glow1.vmt"
+
+int g_FlashlightHaloModel = -1;
 
 #if defined DEBUG
 #include "sf2/debug.sp"
@@ -1109,7 +940,6 @@ public void OnMapStart()
 	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
 	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
 	PrecacheModel(LASER_MODEL, true);
-	g_LaserIndex = PrecacheModel("materials/sprites/laser.vmt");
 	char overlay[PLATFORM_MAX_PATH];
 	g_CameraOverlayConVar.GetString(overlay, sizeof(overlay));
 	PrecacheMaterial2(overlay);
@@ -1117,6 +947,9 @@ public void OnMapStart()
 	PrecacheMaterial2(overlay);
 	g_GhostOverlayConVar.GetString(overlay, sizeof(overlay));
 	PrecacheMaterial2(overlay);
+
+	PrecacheModel(SF2_FLASHLIGHT_BEAM_MATERIAL);
+	g_FlashlightHaloModel = PrecacheModel(SF2_FLASHLIGHT_HALO_MATERIAL, true);
 
 	SF2MapEntity_OnMapStart();
 }
@@ -1415,7 +1248,6 @@ static void PrecacheStuff()
 	PrecacheSound2(SNATCHER_APOLLYON_3);
 
 	PrecacheSound2(NINETYSMUSIC);
-	PrecacheSound2(TRIPLEBOSSESMUSIC);
 
 	PrecacheSound2(TRAP_CLOSE);
 	PrecacheSound2(TRAP_DEPLOY);
@@ -1529,9 +1361,6 @@ static void StopPlugin()
 		NPCStopMusic();
 	}
 
-	//Remove Timer handles
-	CleanTimerHandles();
-
 	// Cleanup bosses.
 	NPCRemoveAll();
 
@@ -1569,83 +1398,6 @@ static void StopPlugin()
 	}
 
 	delete g_Config;
-}
-
-public void CleanTimerHandles()
-{
-	g_RoundMessagesTimer = null;
-	g_ClientAverageUpdateTimer = null;
-	g_BossCountUpdateTimer = null;
-	g_BlueNightvisionOutlineTimer = null;
-	g_RoundIntroTextTimer = null;
-	g_RoundIntroTimer = null;
-	g_RoundGraceTimer = null;
-	g_RoundTimer = null;
-	g_RenevantWaveTimer = null;
-	g_VoteTimer = null;
-	g_TimerFail = null;
-	g_BossPackVoteTimer = null;
-	g_BossPackVoteMapTimer = null;
-	timerMusic = null;
-	g_OnGameFrameTimer = null;
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsValidClient(i) || !IsClientInGame(i))
-		{
-			continue;
-		}
-		g_PlayerPageRewardTimer[i] = null;
-		g_PlayerPageRewardCycleTimer[i] = null;
-		g_PlayerOverlayCheck[i] = null;
-		g_PlayerPostWeaponsTimer[i] = null;
-		g_PlayerSwitchBlueTimer[i] = null;
-		g_PlayerIntroMusicTimer[i] = null;
-		g_PlayerPvPRespawnTimer[i] = null;
-		g_PlayerPvPTimer[i] = null;
-		g_PlayerIgniteTimer[i] = null;
-		g_PlayerResetIgnite[i] = null;
-		g_PlayerStaticTimer[i] = null;
-		g_PlayerLastStaticTimer[i] = null;
-		g_ClientSpecialRoundTimer[i] = null;
-		g_PlayerBreathTimer[i] = null;
-		g_PlayerSprintTimer[i] = null;
-		g_PlayerProxyAvailableTimer[i] = null;
-		g_PlayerProxyControlTimer[i] = null;
-		g_ClientGlowTimer[i] = null;
-		g_PlayerDeathCamTimer[i] = null;
-		g_PlayerGhostModeConnectionCheckTimer[i] = null;
-		g_PlayerCampingTimer[i] = null;
-		g_PlayerBlinkTimer[i] = null;
-		g_PlayerMusicTimer[i] = null;
-		g_Player90sMusicTimer[i] = null;
-		g_PlayerFlashlightBatteryTimer[i] = null;
-	}
-	for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
-	{
-		if (NPCGetUniqueID(bossIndex) == -1)
-		{
-			continue;
-		}
-		g_SlenderRage1Timer[bossIndex] = null;
-		g_SlenderRage2Timer[bossIndex] = null;
-		g_SlenderRage3Timer[bossIndex] = null;
-		g_SlenderHealTimer[bossIndex] = null;
-		g_SlenderHealDelayTimer[bossIndex] = null;
-		g_SlenderStartFleeTimer[bossIndex] = null;
-		g_SlenderAttackTimer[bossIndex] = null;
-		g_NpcLifeStealTimer[bossIndex] = null;
-		g_SlenderChaseInitialTimer[bossIndex] = null;
-		g_SlenderEntityThink[bossIndex] = null;
-		g_SlenderHealEventTimer[bossIndex] = null;
-		g_SlenderLaserTimer[bossIndex] = null;
-		g_SlenderThink[bossIndex] = null;
-		g_SlenderSpawnTimer[bossIndex] = null;
-		g_SlenderBurnTimer[bossIndex] = null;
-		g_SlenderBleedTimer[bossIndex] = null;
-		g_SlenderMarkedTimer[bossIndex] = null;
-		g_SlenderFakeTimer[bossIndex] = null;
-		g_SlenderDeathCamTimer[bossIndex] = null;
-	}
 }
 
 public void OnMapEnd()
@@ -1833,7 +1585,7 @@ static Action Timer_GlobalGameFrame(Handle timer)
 		}
 	}
 	// Check if we can add some proxies.
-	if (IsRoundPlaying() && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap())
+	if (IsRoundPlaying() && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
 	{
 			ArrayList proxyCandidates = new ArrayList();
 
@@ -1902,7 +1654,7 @@ static Action Timer_GlobalGameFrame(Handle timer)
 
 				float spawnChanceMin = NPCGetProxySpawnChanceMin(bossIndex, difficulty);
 				float spawnChanceMax = NPCGetProxySpawnChanceMax(bossIndex, difficulty);
-				float spawnChanceThreshold = NPCGetProxySpawnChanceThreshold(bossIndex, difficulty) * NPCGetAnger(bossIndex);
+				float spawnChanceThreshold = NPCGetProxySpawnChanceThreshold(bossIndex, difficulty);
 
 				float chance = GetRandomFloat(spawnChanceMin, spawnChanceMax);
 				if (chance > spawnChanceThreshold && !g_InProxySurvivalRageMode)
@@ -2249,7 +2001,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 				continue;
 			}
 
-			bool bwub = false;
+			bool busy = false;
 			for (int bossEnt = 0; bossEnt < MAX_BOSSES; bossEnt++)
 			{
 				SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(bossEnt);
@@ -2262,14 +2014,14 @@ static Action Timer_BossCountUpdate(Handle timer)
 					continue;
 				}
 
-				if (g_SlenderTarget[Npc.Index] == client)
+				if (EntRefToEntIndex(g_SlenderTarget[Npc.Index]) == client)
 				{
-					bwub = true;
+					busy = true;
 					break;
 				}
 			}
 
-			if (!bwub)
+			if (!busy)
 			{
 				continue;
 			}
@@ -2299,6 +2051,11 @@ static Action Timer_BossCountUpdate(Handle timer)
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
 				SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(i);
+				if (Npc.UniqueID == -1)
+				{
+					continue;
+				}
+
 				if (g_SlenderCopyMaster[Npc.Index] == -1)
 				{
 					continue;
@@ -2369,17 +2126,14 @@ static Action Timer_BossCountUpdate(Handle timer)
 
 				int difficulty = GetLocalGlobalDifficulty(Npc.Index);
 
-				Npc.GetProfile(profile, sizeof(profile));
 				int copyDifficulty = g_SlenderMaxCopies[Npc.Index][difficulty];
 				if (copyCount >= copyDifficulty)
 				{
 					continue;
 				}
-				SF2NPC_BaseNPC NpcCopy = AddProfile(profile, _, Npc);
-				if (!NpcCopy.IsValid())
-				{
-					//LogError("Could not add copy for %d: No free slots!", i);
-				}
+
+				Npc.GetProfile(profile, sizeof(profile));
+				AddProfile(profile, _, Npc);
 
 				count--;
 			}
@@ -2517,7 +2271,7 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 			}
 		}
 		CheckIfMusicValid();
-		if (MusicActive() && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+		if (MusicActive())
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
@@ -2544,7 +2298,7 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 				continue;
 			}
 			SF2NPC_BaseNPC masterNpc = SF2NPC_BaseNPC(g_SlenderCompanionMaster[Npc.Index]);
-			if (masterNpc.IsValid() && g_SlenderSpawnDifficultyCompanions[masterNpc.Index])
+			if (masterNpc.IsValid() && g_SlenderAddCompanionsOnDifficulty[masterNpc.Index])
 			{
 				Npc.RemoveFromGame();
 			}
@@ -2556,13 +2310,9 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 			{
 				continue;
 			}
-			if (g_SlenderSpawnDifficultyCompanions[Npc.Index])
+			if (g_SlenderAddCompanionsOnDifficulty[Npc.Index])
 			{
-				ArrayList companions = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
-				char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-				Npc.GetProfile(profile, sizeof(profile));
-				NPCSpawnAdvancedCompanions(Npc, companions, true, profile);
-				delete companions;
+				Npc.AddCompanions();
 			}
 		}
 	}
@@ -2743,15 +2493,7 @@ public void OnEntityCreated(int ent, const char[] classname)
 		return;
 	}
 
-	if (strcmp(classname, "spotlight_end") == 0)
-	{
-		SDKHook(ent, SDKHook_SpawnPost, Hook_FlashlightEndSpawnPost);
-	}
-	else if (strcmp(classname, "beam") == 0)
-	{
-		SDKHook(ent, SDKHook_SetTransmit, Hook_FlashlightBeamSetTransmit);
-	}
-	else if (strncmp(classname, "item_healthkit_", 15) == 0 && !SF_IsBoxingMap())
+	if (strncmp(classname, "item_healthkit_", 15) == 0 && !SF_IsBoxingMap())
 	{
 		SDKHook(ent, SDKHook_Touch, Hook_HealthKitOnTouch);
 	}
@@ -3996,8 +3738,8 @@ static Action Timer_GiveRandomPageReward(Handle timer, any entref)
 							push[2] = 4096.0;
 							TeleportEntity(player, playerPos, NULL_VECTOR, push);
 
-							int iParticle = AttachParticle(player, FIREWORK_PARTICLE);
-							CreateTimer(0.5, Timer_KillEntity, iParticle, TIMER_FLAG_NO_MAPCHANGE);
+							int particleEnt = AttachParticle(player, FIREWORK_PARTICLE);
+							CreateTimer(0.5, Timer_KillEntity, particleEnt, TIMER_FLAG_NO_MAPCHANGE);
 
 							CreateTimer(0.5, Timer_Firework_Explode, GetClientUserId(player), TIMER_FLAG_NO_MAPCHANGE);
 						}
@@ -4400,6 +4142,7 @@ public void OnClientPutInServer(int client)
 	g_PlayerDesiredFOV[client] = 90;
 
 	SDKHook(client, SDKHook_PreThink, Hook_ClientPreThink);
+	SDKHook(client, SDKHook_PreThinkPost, Hook_OnFlashlightThink);
 	SDKHook(client, SDKHook_SetTransmit, Hook_ClientSetTransmit);
 	SDKHook(client, SDKHook_TraceAttack, Hook_PvPPlayerTraceAttack);
 	SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
@@ -4452,8 +4195,8 @@ public void OnClientPutInServer(int client)
 	ClientSetScareBoostEndTime(client, -1.0);
 
 	ClientStartProxyAvailableTimer(client);
-	
-	AFK_SetTime(client);
+
+	AFK_SetAFK(client);
 
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
@@ -4592,6 +4335,7 @@ public void OnClientDisconnect(int client)
 			if (!IsRoundPlaying())
 			{
 				// Force the next player in queue to take my place, if any.
+				g_PlayerEliminated[client] = true;
 				ForceInNextPlayersInQueue(1, true);
 			}
 			else
@@ -5058,7 +4802,7 @@ stock bool IsClientParticipating(int client)
 
 	switch (team)
 	{
-		case TFTeam_Unassigned, TFTeam_Spectator:
+		case 0, 1:
 		{
 			return false;
 		}
@@ -5298,8 +5042,8 @@ void ForceInNextPlayersInQueue(int amount, bool showMessage = false)
 				continue;
 			}
 
-			int iMemberCount = GetPlayerGroupMemberCount(groupIndex);
-			if (iMemberCount <= amountLeft)
+			int memberCount = GetPlayerGroupMemberCount(groupIndex);
+			if (memberCount <= amountLeft)
 			{
 				Action action;
 				Call_StartForward(g_OnGroupEnterGameFwd);
@@ -5324,7 +5068,7 @@ void ForceInNextPlayersInQueue(int amount, bool showMessage = false)
 
 				SetPlayerGroupPlaying(groupIndex, true);
 
-				amountLeft -= iMemberCount;
+				amountLeft -= memberCount;
 			}
 		}
 	}
@@ -5498,7 +5242,7 @@ void SlenderOnClientStressUpdate(int client)
 		{
 			if (g_PlayerEliminated[teleportTarget] ||
 				DidClientEscape(teleportTarget) ||
-				(!SF_IsRenevantMap() && !SF_IsSurvivalMap() && !g_SlenderTeleportIgnoreChases[Npc.Index] && stress >= g_SlenderTeleportMaxTargetStress[bossIndex]) ||
+				(!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !g_SlenderTeleportIgnoreChases[Npc.Index] && stress >= g_SlenderTeleportMaxTargetStress[bossIndex]) ||
 				GetGameTime() >= g_SlenderTeleportMaxTargetTime[Npc.Index])
 			{
 				// Queue for a new target and mark the old target in the rest period.
@@ -5572,7 +5316,7 @@ void SlenderOnClientStressUpdate(int client)
 				// Set our preferred target to the new guy.
 				float targetDuration = Npc.GetTeleportPersistencyPeriod(difficulty);
 				float deviation = GetRandomFloat(0.92, 1.08);
-				targetDuration = Pow(deviation * targetDuration, ((g_RoundDifficultyModifier * (Npc.Anger - 1.0)) / 2.0)) + ((deviation * targetDuration) - 1.0);
+				targetDuration = Pow(deviation * targetDuration, ((g_RoundDifficultyModifier) / 2.0)) + ((deviation * targetDuration) - 1.0);
 
 				g_SlenderTeleportTarget[Npc.Index] = EntIndexToEntRef(preferredTeleportTarget);
 				g_SlenderTeleportPlayersRestTime[Npc.Index][preferredTeleportTarget] = -1.0;
@@ -5664,6 +5408,7 @@ static int GetPageMusicRanges()
 	}
 
 	LogSF2Message("Loaded page music ranges successfully!");
+	return 0;
 }
 void SetPageCount(int num)
 {
@@ -5839,25 +5584,6 @@ void SetPageCount(int num)
 				}
 			}
 
-			// Increase anger on selected bosses.
-			for (int i = 0; i < MAX_BOSSES; i++)
-			{
-				if (NPCGetUniqueID(i) == -1)
-				{
-					continue;
-				}
-
-				float pageDiff = NPCGetAngerAddOnPageGrabTimeDiff(i);
-				if (pageDiff >= 0.0)
-				{
-					int diff = g_PageCount - oldPageCount;
-					if ((GetGameTime() - g_PageFoundLastTime) < pageDiff)
-					{
-						NPCAddAnger(i, NPCGetAngerAddOnPageGrab(i) * float(diff));
-					}
-				}
-			}
-
 			if (SF_IsSlaughterRunMap())
 			{
 				if (g_PageCount == 1) //The first collectible for maps like Enclosed
@@ -5880,11 +5606,11 @@ void SetPageCount(int num)
 						}
 						if (g_RoundDifficultyModifier > 1.0)
 						{
-							speed = originalSpeed + ((originalSpeed * g_RoundDifficultyModifier) / 15) + (NPCGetAnger(npcIndex) * g_RoundDifficultyModifier);
+							speed = originalSpeed + ((originalSpeed * g_RoundDifficultyModifier) / 15);
 						}
 						else
 						{
-							speed = originalSpeed + NPCGetAnger(npcIndex);
+							speed = originalSpeed;
 						}
 						timerCheck = speed / g_SlaughterRunDivisibleTimeConVar.FloatValue;
 						times[bosses] = timerCheck;
@@ -5931,8 +5657,6 @@ void SetPageCount(int num)
 					}
 				}
 			}
-
-			g_PageFoundLastTime = GetGameTime();
 		}
 
 		SF2MapEntity_OnPageCountChanged(g_PageCount, oldPageCount);
@@ -6720,7 +6444,6 @@ Action Timer_RevertClientName(Handle timer, int index)
 	g_TimerChangeClientName[index] = null;
 	if (IsClientInGame(index))
 	{
-		//TF2_ChangePlayerName(iSourceTV, g_OldClientName[index], true);
 		SetClientName(index, g_OldClientName[index]);
 		SetEntPropString(index, Prop_Data, "m_szNetname", g_OldClientName[index]);
 	}
@@ -7256,12 +6979,12 @@ Action Timer_ModifyRagdoll(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	int iSlender = EntRefToEntIndex(g_PlayerBossKillSubject[client]);
-	if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
+	int slender = EntRefToEntIndex(g_PlayerBossKillSubject[client]);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
-	int bossIndex = NPCGetFromEntIndex(iSlender);
+	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
 		return Plugin_Stop;
@@ -7287,10 +7010,10 @@ Action Timer_ModifyRagdoll(Handle timer, any userid)
 			SetEntPropVector(ent, Prop_Send, "m_vecRagdollOrigin", pos);
 			if (g_SlenderHasPushRagdollOnKill[bossIndex])
 			{
-				float flForce[3];
-				GetProfileVector(profile, "push_ragdoll_force", flForce);
-				SetEntPropVector(ent, Prop_Send, "m_vecRagdollVelocity", flForce);
-				SetEntPropVector(ent, Prop_Send, "m_vecForce", flForce);
+				float vectorForce[3];
+				GetBossProfilePushRagdollForce(profile, vectorForce);
+				SetEntPropVector(ent, Prop_Send, "m_vecRagdollVelocity", vectorForce);
+				SetEntPropVector(ent, Prop_Send, "m_vecForce", vectorForce);
 			}
 			else
 			{
@@ -7499,7 +7222,7 @@ stock int AttachParticle(int entity, char[] particleType, float posOffset[3] = {
 	return -1;
 }
 
-void CreateGeneralParticle(int entity, const char[] sSectionName, float particleZPos = 0.0)
+void CreateGeneralParticle(int entity, const char[] sectionName, float particleZPos = 0.0)
 {
 	if (entity == -1)
 	{
@@ -7511,7 +7234,25 @@ void CreateGeneralParticle(int entity, const char[] sSectionName, float particle
 	GetEntPropVector(entity, Prop_Data, "m_angAbsRotation", slenderAngles);
 	slenderPosition[2] += particleZPos;
 
-	DispatchParticleEffect(entity, sSectionName, slenderPosition, slenderAngles, slenderPosition);
+	if (!DispatchParticleEffect(entity, sectionName, slenderPosition, slenderAngles, slenderPosition))
+	{
+		int particleEnt = CreateEntityByName("info_particle_system");
+
+		if (particleEnt != -1 && entity != -1)
+		{
+			TeleportEntity(particleEnt, slenderPosition, slenderAngles, NULL_VECTOR);
+
+			DispatchKeyValue(particleEnt, "targetname", "tf2particle");
+			DispatchKeyValue(particleEnt, "effect_name", sectionName);
+
+			DispatchSpawn(particleEnt);
+
+			ActivateEntity(particleEnt);
+			AcceptEntityInput(particleEnt, "start");
+
+			CreateTimer(0.1, Timer_KillEdict, particleEnt, TIMER_FLAG_NO_MAPCHANGE);
+		}
+	}
 }
 
 static Action Timer_RoundStart(Handle timer)
@@ -8627,6 +8368,7 @@ static bool HandleSpecialRoundState()
 		DebugMessage("END HandleSpecialRoundState() -> g_IsSpecialRound = %d (count = %d, new = %d, continuous = %d)", g_IsSpecialRound, g_SpecialRoundCount, g_IsSpecialRoundNew, g_IsSpecialRoundContinuous);
 	}
 	#endif
+	return true;
 }
 /*
 bool IsNewBossRoundRunning()
