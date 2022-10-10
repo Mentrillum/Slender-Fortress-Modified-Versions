@@ -836,18 +836,23 @@ void InitiateBossPackVote(int initiator)
 		menuOptionsInfo.Sort(Sort_Random, Sort_String);
 	}
 
+	int loopLength = 5;
+	bool incrementPack = false;
 	for (int i = 0; i < menuOptionsInfo.Length; i++)
 	{
-		if (i <= 5)
+		if (i <= loopLength)
 		{
 			char bossPack[128], bossPackName[64];
-			if (i == 0)
+			if (i == 0 && !incrementPack)
 			{
 				menuOptionsInfoOrder.GetString(voteIndex, bossPack, sizeof(bossPack));
 				int packIndex = menuOptionsInfo.FindString(bossPack);
 				if (packIndex != -1)
 				{
 					menuOptionsInfo.Erase(packIndex);
+					i--;
+					loopLength--;
+					incrementPack = true;
 				}
 			}
 			else

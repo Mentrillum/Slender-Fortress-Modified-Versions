@@ -597,7 +597,7 @@ float ClientGetDefaultSprintSpeed(int client, TFClassType class = TFClass_Unknow
 		}
 		case TFClass_Medic:
 		{
-			returnFloat = 300.0;
+			returnFloat = 290.0;
 		}
 		case TFClass_Pyro:
 		{
@@ -1909,6 +1909,10 @@ void ClientSprintTimer(int client, bool recharge=false)
 			else if (class == TFClass_Medic || class == TFClass_Spy)
 			{
 				rate *= 1.05;
+			}
+			else if (class == TFClass_Scout)
+			{
+				rate *= 1.08;
 			}
 		}
 		else

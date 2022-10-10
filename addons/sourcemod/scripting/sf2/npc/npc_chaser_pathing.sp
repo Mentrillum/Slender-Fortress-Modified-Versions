@@ -705,7 +705,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 									}
 									else
 									{
-										CNavArea area = TheNavMesh.GetNearestNavArea(myPos, _, 300.0);
+										CNavArea area = TheNavMesh.GetNearestNavArea(myPos, _, 500.0);
 										if (area == NULL_AREA)
 										{
 											area = segment.area;
@@ -830,7 +830,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 									}
 									else
 									{
-										CNavArea area = TheNavMesh.GetNearestNavArea(myPos, _, 300.0);
+										CNavArea area = TheNavMesh.GetNearestNavArea(myPos, _, 500.0);
 										if (area == NULL_AREA)
 										{
 											area = segment.area;

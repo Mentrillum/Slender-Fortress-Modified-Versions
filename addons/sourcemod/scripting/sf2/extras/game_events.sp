@@ -1823,10 +1823,9 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 
 					if (strcmp(weaponClass, "demokatana") == 0)
 					{
-						int attackerPreHealth = GetEntProp(attacker, Prop_Send, "m_iHealth");
 						Handle pack = CreateDataPack();
 						WritePackCell(pack, GetClientUserId(attacker));
-						WritePackCell(pack, attackerPreHealth + katanaHealthGain);
+						WritePackCell(pack, katanaHealthGain);
 
 						CreateTimer(0.0, Timer_SetPlayerHealth, pack, TIMER_FLAG_NO_MAPCHANGE);
 					}

@@ -3684,7 +3684,7 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 
 		if (TF2_GetPlayerClass(client) == TFClass_Scout)
 		{
-			distance *= 0.7;
+			distance *= 0.8;
 		}
 	}
 	else

@@ -161,7 +161,7 @@ public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor
 			if (zVelocity[2] < 0.0) //A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
 			{
 				damagetype |= DMG_CRIT;
-				damage *= 3.0;
+				damage *= 2.0;
 			}
 		}
 	}

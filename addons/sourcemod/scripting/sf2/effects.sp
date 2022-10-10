@@ -340,6 +340,11 @@ void SlenderSpawnEffects(int bossIndex)
 								TeleportEntity(startEnt, effectPos, effectAng, NULL_VECTOR);
 								SetVariantString("!activator");
 								AcceptEntityInput(startEnt, "SetParent", slenderEnt);
+								if (effectsInfo.Attachment && effectsInfo.AttachmentName[0] != '\0')
+								{
+									SetVariantString(effectsInfo.AttachmentName);
+									AcceptEntityInput(startEnt, "SetParentAttachmentMaintainOffset");
+								}
 
 								DispatchSpawn(startEnt);
 								SetEntityOwner(startEnt, slenderEnt);
@@ -355,8 +360,13 @@ void SlenderSpawnEffects(int bossIndex)
 								TeleportEntity(endEnt, effectPos, effectAng, NULL_VECTOR);
 								SetVariantString("!activator");
 								AcceptEntityInput(endEnt, "SetParent", slenderEnt);
-								DispatchSpawn(endEnt);
+								if (effectsInfo.Attachment && effectsInfo.AttachmentName[0] != '\0')
+								{
+									SetVariantString(effectsInfo.AttachmentName);
+									AcceptEntityInput(endEnt, "SetParentAttachmentMaintainOffset");
+								}
 
+								DispatchSpawn(endEnt);
 								SetEntityOwner(endEnt, slenderEnt);
 
 								SetEntityTransmitState(endEnt, FL_EDICT_FULLCHECK);
@@ -437,7 +447,7 @@ void SlenderSpawnEffects(int bossIndex)
 						if (effectsInfo.AttachmentName[0] != '\0')
 						{
 							SetVariantString(effectsInfo.AttachmentName);
-							if (effectsInfo.Type != EffectType_PropDynamic)
+							if (effectsInfo.Type != EffectType_PropDynamic && effectsInfo.Type != EffectType_PointSpotlight)
 							{
 								AcceptEntityInput(entity, "SetParentAttachment");
 							}
