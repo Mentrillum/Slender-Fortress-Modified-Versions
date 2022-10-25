@@ -159,6 +159,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 	CreateNative("SF2_IsBossStunnable", Native_IsBossStunnable);
 	CreateNative("SF2_IsBossStunnableByFlashlight", Native_IsBossStunnableByFlashlight);
 	CreateNative("SF2_IsBossCloaked", Native_IsBossCloaked);
+	CreateNative("SF2_GetBossStunHealth", Native_GetBossStunHealth);
 	CreateNative("SF2_SetBossStunHealth", Native_SetBossStunHealth);
 	CreateNative("SF2_GetBossNextStunTime", Native_GetBossNextStunTime);
 	CreateNative("SF2_ForceBossGiveUp", Native_ForceBossGiveUp);
