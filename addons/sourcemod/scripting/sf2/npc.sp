@@ -211,12 +211,12 @@ void NPCSetDeathCamEnabled(int npcIndex, bool state)
 	g_NpcHasDeathCamEnabled[npcIndex] = state;
 }
 
-public void NPCInitialize()
+void NPCInitialize()
 {
 	NPCChaserInitialize();
 }
 
-public void NPCOnConfigsExecuted()
+void NPCOnConfigsExecuted()
 {
 	g_NpcGlobalUniqueID = 0;
 }
@@ -922,7 +922,7 @@ stock void GetBossMusic(char[] buffer,int bufferLen)
 		}
 	}
 }
-public Action BossMusic(Handle timer,any bossIndex)
+static Action BossMusic(Handle timer,any bossIndex)
 {
 	int difficulty = g_DifficultyConVar.IntValue;
 	float time = NPCGetSoundMusicLoop(bossIndex, difficulty);
@@ -3193,7 +3193,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 	Call_Finish();
 }
 
-public MRESReturn Hook_BossUpdateTransmitState(int bossEntity, DHookReturn hookReturn)
+static MRESReturn Hook_BossUpdateTransmitState(int bossEntity, DHookReturn hookReturn)
 {
     if (!g_Enabled || !IsValidEntity(bossEntity) || NPCGetFromEntIndex(bossEntity) == -1)
     {
@@ -3357,7 +3357,7 @@ void RemoveSlender(int bossIndex)
 	}
 }
 
-public Action Timer_BossBurn(Handle timer, any entref)
+Action Timer_BossBurn(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3421,7 +3421,7 @@ public Action Timer_BossBurn(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_BossBleed(Handle timer, any entref)
+Action Timer_BossBleed(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3483,7 +3483,7 @@ public Action Timer_BossBleed(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_BossMarked(Handle timer, any entref)
+Action Timer_BossMarked(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -3518,26 +3518,7 @@ public Action Timer_BossMarked(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public bool Hook_HitBoxShouldCollide(int slender,int collisiongroup,int contentsmask, bool originalResult)
-{
-	if ((contentsmask & CONTENTS_MONSTERCLIP) || (contentsmask & CONTENTS_PLAYERCLIP))
-	{
-		//CONTENTS_MOVEABLE seems to make the hitbox bullet proof
-		return false;
-	}
-	return originalResult;
-}
-
-public bool Hook_BossShouldCollide(int slender,int collisiongroup,int contentsmask, bool originalResult)
-{
-	if ((contentsmask & CONTENTS_MONSTERCLIP))
-	{
-		return false;
-	}
-	return originalResult;
-}
-
-public Action Hook_SlenderGlowSetTransmit(int entity,int other)
+static Action Hook_SlenderGlowSetTransmit(int entity,int other)
 {
 	if (!g_Enabled)
 	{
@@ -3552,11 +3533,6 @@ public Action Hook_SlenderGlowSetTransmit(int entity,int other)
 		return Plugin_Continue;
 	}
 	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && GetClientTeam(other) == TFTeam_Red && !g_PlayerEscaped[other] && !g_PlayerEliminated[other])
-	{
-		return Plugin_Continue;
-	}
-	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-	if (nightVision && g_NightvisionType == 2 && GetClientTeam(other) == TFTeam_Red && !g_PlayerEscaped[other] && !g_PlayerEliminated[other] && IsClientUsingFlashlight(other))
 	{
 		return Plugin_Continue;
 	}
@@ -4320,41 +4296,6 @@ void SlenderCreateParticleSpawnEffect(int bossIndex, bool despawn = false)
 	}
 }
 
-// This functor ensures that the proposed boss position is not too
-// close to other players that are within the distance defined by
-// minSearchDist.
-
-// Returning false on the functor will immediately discard the proposed position.
-
-public bool SlenderChaseBossPlaceFunctor(int bossIndex, const float activeAreaCenterPos[3], const float areaPos[3], float minSearchDist, float maxSearchDist, bool originalResult)
-{
-	if (FloatAbs(activeAreaCenterPos[2] - areaPos[2]) > 320.0)
-	{
-		return false;
-	}
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i) ||
-			!IsPlayerAlive(i) ||
-			g_PlayerEliminated[i] ||
-			g_PlayerEscaped[i])
-		{
-			continue;
-		}
-
-		float clientPos[3];
-		GetClientAbsOrigin(i, clientPos);
-
-		if (GetVectorSquareMagnitude(clientPos, areaPos) < SquareFloat(minSearchDist))
-		{
-			return false;
-		}
-	}
-
-	return originalResult;
-}
-
 // As time passes on, we have to get more aggressive in order to successfully peak the target's
 // stress level in the allotted duration we're given. Otherwise we'll be forced to place him
 // in a rest period.
@@ -4362,28 +4303,7 @@ public bool SlenderChaseBossPlaceFunctor(int bossIndex, const float activeAreaCe
 // Teleport progressively closer as time passes in attempt to increase the target's stress level.
 // Maximum minimum range is capped by the boss's anger level.
 
-stock float CalculateTeleportMinRange(int bossIndex, float initialMinRange, float teleportMaxRange)
-{
-	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	float teleportTargetTimeLeft = g_SlenderTeleportMaxTargetTime[bossIndex] - GetGameTime();
-	float teleportTargetTimeInitial = g_SlenderTeleportMaxTargetTime[bossIndex] - g_SlenderTeleportTargetTime[bossIndex];
-	float teleportMinRange = teleportMaxRange - (1.0 - (teleportTargetTimeLeft / teleportTargetTimeInitial)) * (teleportMaxRange - initialMinRange);
-
-	teleportMinRange += (g_SlenderTeleportMinRange[bossIndex][difficulty] - teleportMaxRange) * Pow(0.0, 2.0 / g_RoundDifficultyModifier);
-
-	if (teleportMinRange < initialMinRange)
-	{
-		teleportMinRange = initialMinRange;
-	}
-	if (teleportMinRange > teleportMaxRange)
-	{
-		teleportMinRange = teleportMaxRange;
-	}
-
-	return teleportMinRange;
-}
-
-public Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
+static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 {
 	if (bossIndex == -1)
 	{
@@ -4483,7 +4403,7 @@ public Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 			}
 			else
 			{
-				float teleportMinRange = CalculateTeleportMinRange(bossIndex, g_SlenderTeleportMinRange[bossIndex][difficulty], g_SlenderTeleportMaxRange[bossIndex][difficulty]);
+				float teleportMinRange = g_SlenderTeleportMinRange[bossIndex][difficulty];
 				bool shouldBeBehindObstruction = false;
 				if (NPCGetTeleportType(bossIndex) == 2)
 				{
@@ -4762,7 +4682,7 @@ bool SlenderMarkAsFake(int bossIndex)
 	return true;
 }
 
-public Action Timer_SlenderMarkedAsFake(Handle timer, any data)
+static Action Timer_SlenderMarkedAsFake(Handle timer, any data)
 {
 	if (timer != g_SlenderFakeTimer[data])
 	{
@@ -4935,7 +4855,7 @@ stock bool SlenderAddGlow(int bossIndex, const char[] attachment="", int color[4
 		AcceptEntityInput(glow, "SetGlowColor");
 		g_DHookShouldTransmit.HookEntity(Hook_Pre, glow, Hook_EntityShouldTransmit);
 		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, glow, Hook_GlowUpdateTransmitState);
-		SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
+		SetEntityTransmitState(glow, FL_EDICT_CHANGED);
 
 		return true;
 	}
@@ -5295,7 +5215,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 		return false;
 	}
 
-	float teleportMinRange = CalculateTeleportMinRange(bossIndex, g_SlenderProxyTeleportMinRange[bossIndex][difficulty], g_SlenderProxyTeleportMaxRange[bossIndex][difficulty]);
+	float teleportMinRange = g_SlenderProxyTeleportMinRange[bossIndex][difficulty];
 	CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(teleportTarget);
 	CNavArea targetArea = tempCharacter.GetLastKnownArea();
 	int teleportAreaIndex = -1;

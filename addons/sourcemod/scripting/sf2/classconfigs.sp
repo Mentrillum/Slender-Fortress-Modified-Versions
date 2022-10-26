@@ -79,7 +79,7 @@ bool IsClassConfigsValid()
     return g_ClassStatsConfig == null ? false : true;
 }
 
-int GetClassStatNum(const char[] class, const char[] keyValue, int defaultValue = 0)
+static int GetClassStatNum(const char[] class, const char[] keyValue, int defaultValue = 0)
 {
     g_ClassStatsConfig.Rewind();
     g_ClassStatsConfig.JumpToKey(class);
@@ -87,7 +87,7 @@ int GetClassStatNum(const char[] class, const char[] keyValue, int defaultValue 
     return g_ClassStatsConfig.GetNum(keyValue, defaultValue);
 }
 
-float GetClassStatFloat(const char[] class, const char[] keyValue, float defaultValue = 0.0)
+static float GetClassStatFloat(const char[] class, const char[] keyValue, float defaultValue = 0.0)
 {
     g_ClassStatsConfig.Rewind();
     g_ClassStatsConfig.JumpToKey(class);
@@ -95,7 +95,7 @@ float GetClassStatFloat(const char[] class, const char[] keyValue, float default
     return g_ClassStatsConfig.GetFloat(keyValue, defaultValue);
 }
 
-bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
+static bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 {
 	if (!IsClassConfigsValid())
 	{
@@ -220,7 +220,7 @@ bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
 	return true;
 }
 
-void PrecacheClassProfiles()
+static void PrecacheClassProfiles()
 {
 	if (!IsClassConfigsValid())
 	{

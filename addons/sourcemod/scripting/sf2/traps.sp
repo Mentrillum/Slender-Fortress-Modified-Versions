@@ -104,7 +104,7 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 	}
 }
 
-Action Timer_TrapThink(Handle timer, any entref)
+static Action Timer_TrapThink(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -187,7 +187,7 @@ Action Timer_TrapThink(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-void TrapUpdateAnimation(int trapEntity)
+static void TrapUpdateAnimation(int trapEntity)
 {
 	if (!IsValidEntity(trapEntity))
 	{
@@ -223,7 +223,7 @@ void TrapUpdateAnimation(int trapEntity)
 	g_TrapAnimChange[trapEntity] = false;
 }
 
-void OnTrapOpenComplete(const char[] output, int caller, int activator, float delay)
+static void OnTrapOpenComplete(const char[] output, int caller, int activator, float delay)
 {
 	if (IsValidEntity(caller))
 	{
@@ -255,7 +255,7 @@ public Action Hook_TrapTouch(int trapEntity, int client)
 	return Plugin_Continue;
 }
 */
-public Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
+static Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
 {
 	if (!g_Enabled)
 	{
@@ -288,7 +288,7 @@ public Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,
 	return Plugin_Continue;
 }
 
-void Trap_Despawn(int trapEntity)
+static void Trap_Despawn(int trapEntity)
 {
 	if (g_TrapTimer[trapEntity] != null)
 	{

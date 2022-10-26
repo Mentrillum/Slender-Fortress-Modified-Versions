@@ -215,7 +215,7 @@ Activity TranslateProfileActivityFromName(const char[] activityName)
 /*
 Command
 */
-public Action Command_Pack(int client,int args)
+Action Command_Pack(int client,int args)
 {
 	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
@@ -241,7 +241,7 @@ public Action Command_Pack(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_NextPack(int client,int args)
+Action Command_NextPack(int client,int args)
 {
 	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
@@ -884,7 +884,8 @@ void InitiateBossPackVote(int initiator)
 	Call_StartForward(g_OnBossPackVoteStartFwd);
 	Call_Finish();
 }
-public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param2)
+
+static int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param2)
 {
 	switch (action)
 	{
@@ -933,7 +934,7 @@ public int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 	return 0;
 }
 
-public Action Timer_StartBossPackVote(Handle timer)
+static Action Timer_StartBossPackVote(Handle timer)
 {
 	if (timer != g_BossPackVoteMapTimer)
 	{
@@ -946,7 +947,7 @@ public Action Timer_StartBossPackVote(Handle timer)
 	return Plugin_Handled;
 }
 
-public Action Timer_BossPackVoteLoop(Handle timer)
+static Action Timer_BossPackVoteLoop(Handle timer)
 {
 	if (timer != g_BossPackVoteTimer || g_BossPackVoteCompleted || g_BossPackVoteStarted)
 	{
@@ -1239,17 +1240,218 @@ void RemoveBossProfileFromQueueList(const char[] profile)
 	}
 }
 
-public any Native_GetBossProfileData(Handle plugin,int numParams)
+static any Native_GetBossProfileData(Handle plugin,int numParams)
 {
 	return g_BossProfileData;
 }
 
-public any Native_GetChaserBossProfileData(Handle plugin,int numParams)
+static any Native_GetChaserBossProfileData(Handle plugin,int numParams)
 {
 	return g_ChaserBossProfileData;
 }
 
-public any Native_GetStatueBossProfileData(Handle plugin,int numParams)
+static any Native_GetStatueBossProfileData(Handle plugin,int numParams)
 {
 	return g_StatueBossProfileData;
+}
+
+static any Native_IsBossProfileValid(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	return IsProfileValid(profile);
+}
+
+static any Native_GetBossProfileNum(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	return GetProfileNum(profile, keyValue, GetNativeCell(3));
+}
+
+static any Native_GetBossProfileFloat(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	return GetProfileFloat(profile, keyValue, GetNativeCell(3));
+}
+
+static any Native_GetBossProfileString(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	int resultLen = GetNativeCell(4);
+	char[] result = new char[resultLen];
+
+	char defaultValue[512];
+	GetNativeString(5, defaultValue, sizeof(defaultValue));
+
+	bool success = GetProfileString(profile, keyValue, result, resultLen, defaultValue);
+
+	SetNativeString(3, result, resultLen);
+	return success;
+}
+
+static any Native_GetBossProfileVector(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	float result[3];
+	float defaultValue[3];
+	GetNativeArray(4, defaultValue, 3);
+
+	bool success = GetProfileVector(profile, keyValue, result, defaultValue);
+
+	SetNativeArray(3, result, 3);
+	return success;
+}
+
+static any Native_GetBossProfileDifficultyNumValues(Handle plugin,int numParams)
+{
+	char keyValue[PLATFORM_MAX_PATH];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+	int result[Difficulty_Max];
+	int defaultValue[Difficulty_Max];
+	GetNativeArray(3, result, Difficulty_Max);
+	GetNativeArray(4, defaultValue, Difficulty_Max);
+	GetProfileDifficultyNumValues(GetNativeCell(1), keyValue, result, defaultValue);
+	return 0;
+}
+
+static any Native_GetBossProfileDifficultyBoolValues(Handle plugin,int numParams)
+{
+	char keyValue[PLATFORM_MAX_PATH];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+	bool result[Difficulty_Max];
+	bool defaultValue[Difficulty_Max];
+	GetNativeArray(3, result, Difficulty_Max);
+	GetNativeArray(4, defaultValue, Difficulty_Max);
+	GetProfileDifficultyBoolValues(GetNativeCell(1), keyValue, result, defaultValue);
+	return 0;
+}
+
+static any Native_GetBossProfileDifficultyFloatValues(Handle plugin,int numParams)
+{
+	char keyValue[PLATFORM_MAX_PATH];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+	float result[Difficulty_Max];
+	float defaultValue[Difficulty_Max];
+	GetNativeArray(3, result, Difficulty_Max);
+	GetNativeArray(4, defaultValue, Difficulty_Max);
+	GetProfileDifficultyFloatValues(GetNativeCell(1), keyValue, result, defaultValue);
+	return 0;
+}
+
+static any Native_GetBossAttackProfileNum(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	return GetProfileAttackNum(profile, keyValue, GetNativeCell(3), GetNativeCell(4));
+}
+
+static any Native_GetBossAttackProfileFloat(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	return GetProfileAttackFloat(profile, keyValue, GetNativeCell(3), GetNativeCell(4));
+}
+
+static any Native_GetBossAttackProfileString(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	int resultLen = GetNativeCell(4);
+	char[] result = new char[resultLen];
+
+	char defaultValue[512];
+	GetNativeString(5, defaultValue, sizeof(defaultValue));
+
+	bool success = GetProfileAttackString(profile, keyValue, result, resultLen, defaultValue, GetNativeCell(6));
+
+	SetNativeString(3, result, resultLen);
+	return success;
+}
+
+static any Native_GetBossAttackProfileVector(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	float result[3];
+	float defaultValue[3];
+	GetNativeArray(4, defaultValue, 3);
+
+	bool success = GetProfileAttackVector(profile, keyValue, result, defaultValue, GetNativeCell(5));
+
+	SetNativeArray(3, result, 3);
+	return success;
+}
+
+static any Native_GetRandomStringFromBossProfile(Handle plugin,int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
+
+	char keyValue[256];
+	GetNativeString(2, keyValue, sizeof(keyValue));
+
+	int bufferLen = GetNativeCell(4);
+	char[] buffer = new char[bufferLen];
+
+	int iIndex = GetNativeCell(5);
+
+	bool success = GetRandomStringFromProfile(profile, keyValue, buffer, bufferLen, iIndex);
+	SetNativeString(3, buffer, bufferLen);
+	return success;
+}
+
+static any Native_GetBossAttributeName(Handle plugin,int numParams)
+{
+	int attributeIndex = GetNativeCell(2);
+
+	bool success = NPCHasAttribute(GetNativeCell(1), attributeIndex);
+	return success;
+}
+
+static any Native_GetBossAttributeValue(Handle plugin,int numParams)
+{
+	int attributeIndex = GetNativeCell(2);
+
+	if (!NPCHasAttribute(GetNativeCell(1), attributeIndex))
+	{
+		return 0.0;
+	}
+	return NPCGetAttributeValue(GetNativeCell(1), attributeIndex);
 }

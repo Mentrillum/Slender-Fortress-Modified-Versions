@@ -29,7 +29,7 @@ void UnloadStatueBossProfile(const char[] profile)
 	g_StatueBossProfileData.Remove(profile);
 }
 
-public bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
+bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
 {
 	SF2StatueBossProfileData profileData;
 	profileData.Init();

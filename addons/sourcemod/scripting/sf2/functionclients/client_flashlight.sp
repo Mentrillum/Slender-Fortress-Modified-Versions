@@ -207,12 +207,12 @@ void ClientBreakFlashlight(int client)
  */
 void ClientResetFlashlight(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetFlashlight(%d)", client);
 	}
-#endif
+	#endif
 
 	ClientTurnOffFlashlight(client);
 	ClientSetFlashlightBatteryLife(client, 1.0);
@@ -220,12 +220,12 @@ void ClientResetFlashlight(int client)
 	g_PlayerFlashlightBatteryTimer[client] = null;
 	g_PlayerFlashlightNextInputTime[client] = -1.0;
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetFlashlight(%d)", client);
 	}
-#endif
+	#endif
 }
 
 static Action Hook_FlashlightSetTransmit(int ent,int other)
@@ -709,38 +709,10 @@ void ClientStartRechargingFlashlightBattery(int client)
 void ClientStartDrainingFlashlightBattery(int client)
 {
 	float drainRate = SF2_FLASHLIGHT_DRAIN_RATE;
-	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-	int difficulty = g_DifficultyConVar.IntValue;
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
 
-	if (nightVision && g_NightvisionType == 2) //Blue nightvision
-	{
-		switch (difficulty)
-		{
-			case Difficulty_Normal:
-			{
-				drainRate *= 0.4;
-			}
-			case Difficulty_Hard:
-			{
-				drainRate *= 0.35;
-			}
-			case Difficulty_Insane:
-			{
-				drainRate *= 0.3;
-			}
-			case Difficulty_Nightmare:
-			{
-				drainRate *= 0.2;
-			}
-			case Difficulty_Apollyon:
-			{
-				drainRate *= 0.1;
-			}
-		}
-	}
 	if (!IsClassConfigsValid())
 	{
 		if (class == TFClass_Engineer)
@@ -847,12 +819,12 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		return;
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientActivateUltravision(%d)", client);
 	}
-#endif
+	#endif
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
@@ -878,10 +850,6 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 				case 1:
 				{
 					DispatchKeyValue(ent, "rendercolor", "255 50 50");
-				}
-				case 2:
-				{
-					DispatchKeyValue(ent, "rendercolor", "50 50 255");
 				}
 			}
 		}
@@ -969,10 +937,6 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 				{
 					DispatchKeyValue(ent, "rendercolor", "255 50 50");
 				}
-				case 2:
-				{
-					DispatchKeyValue(ent, "rendercolor", "50 50 255");
-				}
 			}
 		}
 
@@ -998,12 +962,12 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		}
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientActivateUltravision(%d)", client);
 	}
-#endif
+	#endif
 }
 
 static Action Timer_UltravisionFadeInEffect(Handle timer, any userid)

@@ -1007,7 +1007,7 @@ enum struct SF2ChaserBossProfileData
 		{
 			this.IdleMusics.Load(kv);
 		}
-		else if (strcmp(sectionName, "sound_20dollars") == 0 || strcmp(sectionName, "sound_20dollars_music") == 0)
+		else if (strcmp(sectionName, "sound_20dollars") == 0)
 		{
 			this.TwentyDollarsMusics.Load(kv);
 		}

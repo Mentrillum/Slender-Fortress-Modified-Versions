@@ -31,20 +31,20 @@ char g_strPlayerBreathSounds[][] =
 };
 
 //Client Special Round Timer
-Handle g_ClientSpecialRoundTimer[MAXPLAYERS + 1];
+static Handle g_ClientSpecialRoundTimer[MAXPLAYERS + 1];
 
 // Deathcam data.
 static int g_PlayerDeathCamBoss[MAXPLAYERS + 1] = { -1, ... };
 static bool g_PlayerDeathCam[MAXPLAYERS + 1] = { false, ... };
 static bool g_PlayerDeathCamShowOverlay[MAXPLAYERS + 1] = { false, ... };
 int g_PlayerDeathCamEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-int g_PlayerDeathCamEnt2[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-int g_PlayerDeathCamTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-Handle g_PlayerDeathCamTimer[MAXPLAYERS + 1] = { null, ... };
+static int g_PlayerDeathCamEnt2[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerDeathCamTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static Handle g_PlayerDeathCamTimer[MAXPLAYERS + 1] = { null, ... };
 bool g_CameraInDeathCamAdvanced[2049] = { false, ... };
 float g_CameraPlayerOffsetBackward[2049] = { 0.0, ... };
 float g_CameraPlayerOffsetDownward[2049] = { 0.0, ... };
-float g_vecPlayerOriginalDeathcamPosition[MAXPLAYERS + 1][3];
+static float g_vecPlayerOriginalDeathcamPosition[MAXPLAYERS + 1][3];
 
 // Ultravision data.
 bool g_PlayerHasUltravision[MAXPLAYERS + 1] = { false, ... };
@@ -56,7 +56,7 @@ int g_PlayerSprintPoints[MAXPLAYERS + 1] = { 100, ... };
 Handle g_PlayerSprintTimer[MAXPLAYERS + 1] = { null, ... };
 
 // Blink data.
-Handle g_PlayerBlinkTimer[MAXPLAYERS + 1] = { null, ... };
+static Handle g_PlayerBlinkTimer[MAXPLAYERS + 1] = { null, ... };
 static bool g_PlayerBlink[MAXPLAYERS + 1] = { false, ... };
 bool g_PlayerHoldingBlink[MAXPLAYERS + 1] = { false, ... };
 static float g_PlayerBlinkMeter[MAXPLAYERS + 1] = { 0.0, ... };
@@ -65,7 +65,7 @@ static int g_PlayerBlinkCount[MAXPLAYERS + 1] = { 0, ... };
 
 // Breathing data.
 bool g_PlayerBreath[MAXPLAYERS + 1] = { false, ... };
-Handle g_PlayerBreathTimer[MAXPLAYERS + 1] = { null, ... };
+static Handle g_PlayerBreathTimer[MAXPLAYERS + 1] = { null, ... };
 
 // Interactive glow data.
 static int g_PlayerInteractiveGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
@@ -91,13 +91,6 @@ bool g_IsPlayerCampingFirstTime[MAXPLAYERS + 1];
 int g_ClientMaxFrameDeathAnim[MAXPLAYERS + 1];
 int g_ClientFrame[MAXPLAYERS + 1];
 
-//Proxy model
-char g_ClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-char g_ClientProxyModelHard[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-char g_ClientProxyModelInsane[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-char g_ClientProxyModelNightmare[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-char g_ClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-
 //Nav Data
 //static CNavArea g_lastNavArea[MAXPLAYERS + 1];
 
@@ -114,7 +107,7 @@ static bool g_PlayerPeeking[MAXPLAYERS + 1] = { false, ... };
 #define SF2_PLAYER_VIEWBOB_SCALE_Y 0.0
 #define SF2_PLAYER_VIEWBOB_SCALE_Z 0.0
 
-public MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, DHookReturn returnHandle, DHookParam params)
+MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, DHookReturn returnHandle, DHookParam params)
 {
 	if (!g_Enabled || IsFakeClient(client))
 	{
@@ -189,7 +182,7 @@ void ClientSetScareBoostEndTime(int client, float time)
 	g_PlayerScareBoostEndTime[client] = time;
 }
 
-public Action Hook_HealthKitOnTouch(int healthKit, int client)
+Action Hook_HealthKitOnTouch(int healthKit, int client)
 {
 	if (MaxClients >= client > 0 && IsClientInGame(client))
 	{
@@ -296,7 +289,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponName
 	return Plugin_Continue;
 }
 
-public void Hook_ClientWeaponEquipPost(int client, int weapon)
+void Hook_ClientWeaponEquipPost(int client, int weapon)
 {
 	if (!IsValidClient(client) || !IsClientInGame(client) || !IsValidEdict(weapon))
 	{
@@ -305,7 +298,7 @@ public void Hook_ClientWeaponEquipPost(int client, int weapon)
 	g_DHookWeaponGetCustomDamageType.HookEntity(Hook_Pre, weapon, Hook_WeaponGetCustomDamageType);
 }
 
-public Action Hook_TEFireBullets(const char[] te_name,const int[] players,int numClients, float delay)
+Action Hook_TEFireBullets(const char[] te_name,const int[] players,int numClients, float delay)
 {
 	if (!g_Enabled)
 	{
@@ -369,12 +362,12 @@ void ClientEscape(int client)
 		return;
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 1)
 	{
 		DebugMessage("START ClientEscape(%d)", client);
 	}
-#endif
+	#endif
 
 	g_PlayerEscaped[client] = true;
 
@@ -460,15 +453,15 @@ void ClientEscape(int client)
 	Call_PushCell(client);
 	Call_Finish();
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 1)
 	{
 		DebugMessage("END ClientEscape(%d)", client);
 	}
-#endif
+	#endif
 }
 
-public Action Timer_TeleportPlayerToEscapePoint(Handle timer, any userid)
+Action Timer_TeleportPlayerToEscapePoint(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -784,6 +777,7 @@ void ClientProcessStaticShake(int client)
 		SetEntDataVector(client, g_PlayerPunchAngleOffsetVel, newPunchAngVel, true);
 	}
 }
+
 void ClientProcessVisibility(int client)
 {
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
@@ -1322,7 +1316,7 @@ void ClientProcessViewAngles(int client)
 	}
 }
 
-public Action Timer_ClientIncreaseStatic(Handle timer, any userid)
+static Action Timer_ClientIncreaseStatic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1358,7 +1352,7 @@ public Action Timer_ClientIncreaseStatic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_ClientDecreaseStatic(Handle timer, any userid)
+Action Timer_ClientDecreaseStatic(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1400,7 +1394,7 @@ public Action Timer_ClientDecreaseStatic(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-public Action Timer_ClientFadeOutLastStaticSound(Handle timer, any userid)
+static Action Timer_ClientFadeOutLastStaticSound(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1465,7 +1459,7 @@ void ClientSetSpecialRoundTimer(int client, float time, Timer callback, any data
 	g_ClientSpecialRoundTimer[client] = CreateTimer(time, callback, data, flags);
 }
 
-public Action Timer_ClientPageDetector(Handle timer, int userid)
+Action Timer_ClientPageDetector(Handle timer, int userid)
 {
 	if (!SF_SpecialRound(SPECIALROUND_PAGEDETECTOR))
 	{
@@ -1492,34 +1486,31 @@ public Action Timer_ClientPageDetector(Handle timer, int userid)
 		return Plugin_Stop;
 	}
 
+	int closestPageEntIndex = -1;
+
 	float distance = SquareFloat(99999.0);
 	float clientPos[3], pagePos[3];
 	GetClientAbsOrigin(client, clientPos);
 
-	char model[255], targetName[64];
+	ArrayList pageEntities = new ArrayList();
+	GetPageEntities(pageEntities);
 
-	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "*")) != -1)
+	for (int i = 0; i < pageEntities.Length; i++)
 	{
-		if (!IsEntityClassname(ent, "prop_dynamic", false) && !IsEntityClassname(ent, "prop_dynamic_override", false))
-		{
-			continue;
-		}
+		CBaseEntity pageEnt = CBaseEntity(pageEntities.Get(i));
+		pageEnt.GetAbsOrigin(pagePos);
 
-		GetEntPropString(ent, Prop_Data, "m_ModelName", model, sizeof(model));
-		GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
-		if (model[0] != '\0')
+		float squareDistance = GetVectorSquareMagnitude(clientPos, pagePos);
+
+		if (closestPageEntIndex == -1 || squareDistance < distance)
 		{
-			if ((strcmp(model, g_PageRefModelName) == 0 || strcmp(model, PAGE_MODEL) == 0) && StrContains(targetName, "sf2_page_", false) != -1)
-			{
-				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pagePos);
-				if (GetVectorSquareMagnitude(clientPos, pagePos) < distance)
-				{
-					distance = GetVectorSquareMagnitude(clientPos, pagePos);
-				}
-			}
+			closestPageEntIndex = pageEnt.index;
+			distance = squareDistance;
 		}
 	}
+
+	delete pageEntities;
+
 	float nextBeepTime = distance/SquareFloat(800.0);
 
 	if (nextBeepTime > 5.0)
@@ -1531,7 +1522,7 @@ public Action Timer_ClientPageDetector(Handle timer, int userid)
 		nextBeepTime = 0.1;
 	}
 
-	EmitSoundToClient(client,PAGE_DETECTOR_BEEP, _, _, _, _, _, 100-RoundToNearest(nextBeepTime*10.0));
+	EmitSoundToClient(client, PAGE_DETECTOR_BEEP, _, _, _, _, _, 100 - RoundToNearest(nextBeepTime * 10.0));
 	g_ClientSpecialRoundTimer[client] = CreateTimer(nextBeepTime, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Stop;
 }
@@ -1594,12 +1585,12 @@ void ClientResetInteractiveGlow(int client)
  */
 void ClientRemoveInteractiveGlow(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientRemoveInteractiveGlow(%d)", client);
 	}
-#endif
+	#endif
 
 	int ent = EntRefToEntIndex(g_PlayerInteractiveGlowEntity[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
@@ -1609,18 +1600,18 @@ void ClientRemoveInteractiveGlow(int client)
 
 	g_PlayerInteractiveGlowEntity[client] = INVALID_ENT_REFERENCE;
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientRemoveInteractiveGlow(%d)", client);
 	}
-#endif
+	#endif
 }
 
 /**
  *	Creates an interactive glow for an entity to show to a player.
  */
-bool ClientCreateInteractiveGlow(int client,int entity, const char[] attachment="")
+static bool ClientCreateInteractiveGlow(int client,int entity, const char[] attachment="")
 {
 	ClientRemoveInteractiveGlow(client);
 
@@ -1678,12 +1669,12 @@ bool ClientCreateInteractiveGlow(int client,int entity, const char[] attachment=
 
 		SDKHook(ent, SDKHook_SetTransmit, Hook_InterativeGlowSetTransmit);
 
-	#if defined DEBUG
+		#if defined DEBUG
 		if (g_DebugDetailConVar.IntValue > 2)
 		{
 			DebugMessage("END ClientCreateInteractiveGlow(%d) -> true", client);
 		}
-	#endif
+		#endif
 
 		return true;
 	}
@@ -1698,7 +1689,7 @@ bool ClientCreateInteractiveGlow(int client,int entity, const char[] attachment=
 	return false;
 }
 
-public Action Hook_InterativeGlowSetTransmit(int ent,int other)
+static Action Hook_InterativeGlowSetTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -1723,7 +1714,7 @@ void ClientResetBreathing(int client)
 	g_PlayerBreathTimer[client] = null;
 }
 
-float ClientCalculateBreathingCooldown(int client)
+static float ClientCalculateBreathingCooldown(int client)
 {
 	float average = 0.0;
 	int averageNum = 0;
@@ -1748,7 +1739,7 @@ void ClientStartBreathing(int client)
 	g_PlayerBreathTimer[client] = CreateTimer(ClientCalculateBreathingCooldown(client), Timer_ClientBreath, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
-void ClientStopBreathing(int client)
+static void ClientStopBreathing(int client)
 {
 	g_PlayerBreath[client] = false;
 	g_PlayerBreathTimer[client] = null;
@@ -1759,7 +1750,7 @@ bool ClientCanBreath(int client)
 	return view_as<bool>(ClientCalculateBreathingCooldown(client) < SF2_PLAYER_BREATH_COOLDOWN_MAX);
 }
 
-public Action Timer_ClientBreath(Handle timer, any userid)
+static Action Timer_ClientBreath(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -1806,12 +1797,12 @@ int ClientGetSprintPoints(int client)
 
 void ClientResetSprint(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetSprint(%d)", client);
 	}
-#endif
+	#endif
 
 	bool wasSprinting = IsClientSprinting(client);
 
@@ -1834,12 +1825,12 @@ void ClientResetSprint(int client)
 		Call_Finish();
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetSprint(%d)", client);
 	}
-#endif
+	#endif
 }
 
 void ClientStartSprint(int client)
@@ -1978,7 +1969,7 @@ bool IsClientReallySprinting(int client)
 //	GHOST AND GLOW FUNCTIONS
 //	==========================================================
 
-public Action Timer_ClassScramblePlayer(Handle timer, any userid)
+Action Timer_ClassScramblePlayer(Handle timer, any userid)
 {
 	if (!g_Enabled)
 	{
@@ -2001,7 +1992,8 @@ public Action Timer_ClassScramblePlayer(Handle timer, any userid)
 
 	return Plugin_Stop;
 }
-public Action Timer_ClassScramblePlayer2(Handle timer, any userid)
+
+Action Timer_ClassScramblePlayer2(Handle timer, any userid)
 {
 	if (!g_Enabled)
 	{
@@ -2072,36 +2064,36 @@ void ClientEnableConstantGlow(int client, int color[4] = {255, 255, 255, 255})
 	{
 		g_PlayerConstantGlowEnabled[client] = true;
 
-		SDKHook(glow, SDKHook_SetTransmit, Hook_ConstantGlowSetTransmitVersion2);
+		SDKHook(glow, SDKHook_SetTransmit, Hook_ConstantGlowSetTransmit);
 
 		g_PlayerGlowEntity[client] = EntIndexToEntRef(glow);
 		//Set our desired glow color
 		SetVariantColor(color);
 		AcceptEntityInput(glow, "SetGlowColor");
+		SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
 		g_DHookShouldTransmit.HookEntity(Hook_Pre, glow, Hook_EntityShouldTransmit);
 		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, glow, Hook_GlowUpdateTransmitState);
-		SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
 	}
 }
 
 void ClientResetJumpScare(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetJumpScare(%d)", client);
 	}
-#endif
+	#endif
 
 	g_PlayerJumpScareBoss[client] = -1;
 	g_PlayerJumpScareLifeTime[client] = -1.0;
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetJumpScare(%d)", client);
 	}
-#endif
+	#endif
 }
 
 void ClientDoJumpScare(int client,int bossIndex, float flLifeTime)
@@ -2186,7 +2178,7 @@ bool IsClientInDeathCam(int client)
 	return g_PlayerDeathCam[client];
 }
 
-public Action Hook_DeathCamSetTransmit(int slender,int other)
+static Action Hook_DeathCamSetTransmit(int slender,int other)
 {
 	if (!g_Enabled)
 	{
@@ -2207,12 +2199,12 @@ void ClientResetDeathCam(int client)
 		return; // no really need to reset if it wasn't set.
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetDeathCam(%d)", client);
 	}
-#endif
+	#endif
 
 	int deathCamBoss = NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]);
 
@@ -2255,12 +2247,12 @@ void ClientResetDeathCam(int client)
 	Call_PushCell(deathCamBoss);
 	Call_Finish();
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetDeathCam(%d)", client);
 	}
-#endif
+	#endif
 }
 
 void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bool antiCamp = false)
@@ -2527,7 +2519,7 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 	Call_Finish();
 }
 
-void Frame_PublicDeathCam(int cameraRef)
+static void Frame_PublicDeathCam(int cameraRef)
 {
 	int camera = EntRefToEntIndex(cameraRef);
 	if (IsValidEntity(camera))
@@ -2550,7 +2542,7 @@ void Frame_PublicDeathCam(int cameraRef)
 	}
 }
 
-public Action Timer_ClientResetDeathCam1(Handle timer, any userid)
+static Action Timer_ClientResetDeathCam1(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -2587,7 +2579,7 @@ public Action Timer_ClientResetDeathCam1(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public Action Timer_BossDeathCamDelay(Handle timer, any entref)
+static Action Timer_BossDeathCamDelay(Handle timer, any entref)
 {
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
@@ -2610,7 +2602,7 @@ public Action Timer_BossDeathCamDelay(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_BossDeathCamDuration(Handle timer, any entref)
+static Action Timer_BossDeathCamDuration(Handle timer, any entref)
 {
 	int slender = EntRefToEntIndex(entref);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
@@ -2652,7 +2644,7 @@ public Action Timer_BossDeathCamDuration(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
+static Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -2729,9 +2721,9 @@ public Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 	{
 		g_PlayerIsExitCamping[client] = false;
 	}
-#if defined DEBUG
+	#if defined DEBUG
 	SendDebugMessageToPlayer(client, DEBUG_NAV, 1, "Old area: %i DHF:%s, New area: %i DHF:%s, is considered as exit camper: %s", oldArea.Index, (oldArea.Attributes & NAV_MESH_DONT_HIDE) ? "true" : "false", newArea.Index, (newArea.Attributes & NAV_MESH_DONT_HIDE) ? "true" : "false", (g_PlayerIsExitCamping[client]) ? "true" : "false" );
-#endif
+	#endif
 }*/
 
 //	==========================================================
@@ -2771,9 +2763,9 @@ void ClientSetGhostModeState(int client, bool state)
 
 	if (state)
 	{
-#if defined DEBUG
+		#if defined DEBUG
 		SendDebugMessageToPlayer(client, DEBUG_GHOSTMODE, 0, "{green}Entered ghost mode.");
-#endif
+		#endif
 		//Strip the always edict flag
 		SetEntityFlags(client,GetEntityFlags(client)^FL_EDICT_ALWAYS);
 		//Remove the fire cond
@@ -2807,9 +2799,9 @@ void ClientSetGhostModeState(int client, bool state)
 	}
 	else
 	{
-#if defined DEBUG
+		#if defined DEBUG
 		SendDebugMessageToPlayer(client, DEBUG_GHOSTMODE, 0, "{green}Exited ghost mode.");
-#endif
+		#endif
 		TF2Attrib_SetByName(client, "mod see enemy health", 0.0);
 		g_PlayerGhostModeConnectionCheckTimer[client] = null;
 		g_PlayerGhostModeConnectionTimeOutTime[client] = -1.0;
@@ -2926,12 +2918,12 @@ void ClientHandleGhostMode(int client, bool forceSpawn=false)
 		return;
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientHandleGhostMode(%d, %d)", client, forceSpawn);
 	}
-#endif
+	#endif
 
 	if (!TF2_IsPlayerInCondition(client, TFCond_Stealthed) || forceSpawn)
 	{
@@ -2965,15 +2957,15 @@ void ClientHandleGhostMode(int client, bool forceSpawn=false)
 		CreateTimer(0.2, Timer_ClientGhostStripWearables, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientHandleGhostMode(%d, %d)", client, forceSpawn);
 	}
-#endif
+	#endif
 }
 
-public Action Timer_ClientGhostStripWearables(Handle timer, int userid)
+static Action Timer_ClientGhostStripWearables(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (!IsValidClient(client))
@@ -2992,12 +2984,12 @@ public Action Timer_ClientGhostStripWearables(Handle timer, int userid)
 
 void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientGhostModeNextTarget(%d)", client);
 	}
-#endif
+	#endif
 
 	if (g_PlayerPreferences[client].PlayerPreference_GhostModeTeleportState == 0 || ignoreSetting)
 	{
@@ -3042,10 +3034,10 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 		}
 
 		#if defined DEBUG
-			if (g_DebugDetailConVar.IntValue > 2)
-			{
-				DebugMessage("END ClientGhostModeNextTarget(%d)", client);
-			}
+		if (g_DebugDetailConVar.IntValue > 2)
+		{
+			DebugMessage("END ClientGhostModeNextTarget(%d)", client);
+		}
 		#endif
 	}
 	else
@@ -3093,10 +3085,10 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 		}
 
 		#if defined DEBUG
-			if (g_DebugDetailConVar.IntValue > 2)
-			{
-				DebugMessage("END ClientGhostModeNextTarget(%d)", client);
-			}
+		if (g_DebugDetailConVar.IntValue > 2)
+		{
+			DebugMessage("END ClientGhostModeNextTarget(%d)", client);
+		}
 		#endif
 	}
 }
@@ -3106,7 +3098,7 @@ bool IsClientInGhostMode(int client)
 	return g_PlayerInGhostMode[client];
 }
 
-public Action Hook_GhostNoTouch(int entity, int other)
+Action Hook_GhostNoTouch(int entity, int other)
 {
 	if (0 < other <= MaxClients && IsClientInGame(other))
 	{
@@ -3191,7 +3183,7 @@ void ClientPerformScare(int client,int bossIndex)
 	Call_Finish();
 }
 
-void ClientPerformSightSound(int client,int bossIndex)
+static void ClientPerformSightSound(int client,int bossIndex)
 {
 	if (NPCGetUniqueID(bossIndex) == -1)
 	{
@@ -3245,12 +3237,12 @@ void ClientPerformSightSound(int client,int bossIndex)
 
 void ClientResetScare(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetScare(%d)", client);
 	}
-#endif
+	#endif
 
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -3258,12 +3250,12 @@ void ClientResetScare(int client)
 		g_PlayerScareLastTime[client][i] = -1.0;
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetScare(%d)", client);
 	}
-#endif
+	#endif
 }
 
 //	==========================================================
@@ -3272,12 +3264,12 @@ void ClientResetScare(int client)
 
 void ClientResetCampingStats(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetCampingStats(%d)", client);
 	}
-#endif
+	#endif
 
 	g_PlayerCampingStrikes[client] = 0;
 	g_PlayerIsExitCamping[client] = false;
@@ -3288,12 +3280,12 @@ void ClientResetCampingStats(int client)
 	g_PlayerCampingLastPosition[client][2] = 0.0;
 	g_ClientAllowedTimeNearEscape[client] = g_ExitCampingTimeAllowedConVar.FloatValue;
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetCampingStats(%d)", client);
 	}
-#endif
+	#endif
 }
 
 void ClientStartCampingTimer(int client)
@@ -3374,7 +3366,7 @@ void ClientBlink(int client)
 /**
  *	Unsets the player from the blinking state.
  */
-void ClientUnblink(int client)
+static void ClientUnblink(int client)
 {
 	if (!IsClientBlinking(client))
 	{
@@ -3391,7 +3383,7 @@ void ClientStartDrainingBlinkMeter(int client)
 	g_PlayerBlinkTimer[client] = CreateTimer(ClientGetBlinkRate(client), Timer_BlinkTimer, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action Timer_BlinkTimer(Handle timer, any userid)
+static Action Timer_BlinkTimer(Handle timer, any userid)
 {
 	if (IsRoundInWarmup())
 	{
@@ -3455,26 +3447,7 @@ static Action Timer_TryUnblink(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-public Action Timer_BlinkTimer2(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
-	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_PlayerBlinkTimer[client])
-	{
-		return Plugin_Stop;
-	}
-
-	ClientUnblink(client);
-	ClientStartDrainingBlinkMeter(client);
-
-	return Plugin_Stop;
-}
-
-float ClientGetBlinkRate(int client)
+static float ClientGetBlinkRate(int client)
 {
 	float value = g_PlayerBlinkRateConVar.FloatValue;
 	TFClassType class = TF2_GetPlayerClass(client);
@@ -3569,12 +3542,12 @@ void ClientAddStress(int client, float stressAmount)
 
 void ClientResetOverlay(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetOverlay(%d)", client);
 	}
-#endif
+	#endif
 
 	g_PlayerOverlayCheck[client] = null;
 
@@ -3583,15 +3556,15 @@ void ClientResetOverlay(int client)
 		ClientCommand(client, "r_screenoverlay \"\"");
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetOverlay(%d)", client);
 	}
-#endif
+	#endif
 }
 
-public Action Timer_PlayerOverlayCheck(Handle timer, any userid)
+Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)
@@ -3811,32 +3784,14 @@ void ClientShowMainMessage(int client, const char[] message, any ...)
 	ShowSyncHudText(client, g_HudSync, messageDisplay);
 }
 
-void ClientShowRenevantMessage(int client, const char[] message, int params, any ...)
-{
-	char messageDisplay[512];
-	VFormat(messageDisplay, sizeof(messageDisplay), message, params);
-
-	SetHudTextParams(-1.0, 0.25,
-		5.0,
-		255,
-		255,
-		255,
-		200,
-		2,
-		1.0,
-		0.05,
-		2.0);
-	ShowSyncHudText(client, g_HudSync3, messageDisplay);
-}
-
 void ClientResetSlenderStats(int client)
 {
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("START ClientResetSlenderStats(%d)", client);
 	}
-#endif
+	#endif
 
 	g_PlayerStressAmount[client] = 0.0;
 	g_PlayerStressNextUpdateTime[client] = -1.0;
@@ -3849,12 +3804,12 @@ void ClientResetSlenderStats(int client)
 		g_PlayerScaredByBoss[client][i] = false;
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
 		DebugMessage("END ClientResetSlenderStats(%d)", client);
 	}
-#endif
+	#endif
 }
 
 bool ClientSetQueuePoints(int client,int amount)
@@ -3926,94 +3881,14 @@ void ClientViewPunch(int client, const float angleOffset[3])
 	SetEntDataVector(client, g_PlayerPunchAngleOffsetVel, offset, true);
 }
 
-public Action Hook_ConstantGlowSetTransmit(int ent,int other)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-	if (!Network_ClientHasSeenEntity(other, ent))
-	{
-		return Plugin_Continue;
-	}
-
-	int owner = GetEntPropEnt(ent, Prop_Send, "moveparent");
-
-	if (owner != -1)
-	{
-		int glowManager = GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity");
-		if (glowManager > MaxClients)
-		{
-			AcceptEntityInput(glowManager, "Disable");
-			AcceptEntityInput(glowManager, "Enable");
-		}
-
-		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !IsClientInGhostMode(other) && !g_PlayerProxy[other] && !g_EnableWallHaxConVar.BoolValue)
-		{
-			if (owner == other)
-			{
-				return Plugin_Handled;
-			}
-
-			if (!IsPlayerAlive(owner) || !IsPlayerAlive(other) || !g_PlayerEliminated[other] || !SF_SpecialRound(SPECIALROUND_WALLHAX) || !g_EnableWallHaxConVar.BoolValue)
-			{
-				return Plugin_Handled;
-			}
-		}
-
-		if (IsClientInGhostMode(other) || g_PlayerProxy[other])
-		{
-			return Plugin_Continue;
-		}
-
-		if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && !g_PlayerEscaped[other] && GetClientTeam(other) == TFTeam_Red)
-		{
-			return Plugin_Continue;
-		}
-
-		if (g_PlayerProxy[other])
-		{
-			if (TF2_GetPlayerClass(owner) == TFClass_Medic || TF2_IsPlayerInCondition(owner, TFCond_Taunting))
-			{
-				return Plugin_Continue;
-			}
-
-			if (TF2_GetPlayerClass(owner) != TFClass_Spy)//Allow proxies to see someone's glow if they are moving near by, and they aren't a spy.
-			{
-				float vecSpeed[3];
-				SDK_GetSmoothedVelocity(owner, vecSpeed);
-				if (GetVectorLength(vecSpeed, true) >= SquareFloat(100.0))
-				{
-					float ownerPos[3], proxyPos[3];
-					GetClientEyePosition(owner, ownerPos);
-					GetClientEyePosition(other, proxyPos);
-
-					if (GetVectorSquareMagnitude(ownerPos, proxyPos) <= SquareFloat((700.0 + ((g_PlayerHasRegenerationItem[owner]) ? 300.0 : 0.0))))//To-do add a cvar for that.
-					{
-						return Plugin_Continue;
-					}
-				}
-			}
-
-			float vecSpeed[3];
-			SDK_GetSmoothedVelocity(other, vecSpeed);
-			if (GetVectorLength(vecSpeed, true) < SquareFloat(100.0))//Don't show if not moving slowly.
-			{
-				return Plugin_Continue;
-			}
-		}
-	}
-	return Plugin_Handled;
-}
-
-public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
+static Action Hook_ConstantGlowSetTransmit(int ent, int other)
 {
 	if (!g_Enabled)
 	{
 		return Plugin_Continue;
 	}
 
-	int owner = GetEntPropEnt(ent, Prop_Send, "moveparent");
+	int owner = GetEntPropEnt(ent, Prop_Send, "m_hTarget");
 	if (owner == other)
 	{
 		return Plugin_Handled;
@@ -4028,7 +3903,31 @@ public Action Hook_ConstantGlowSetTransmitVersion2(int ent, int other)
 	}
 	if (g_PlayerProxy[other])
 	{
-		return Plugin_Continue;
+		if (!IsValidClient(owner))
+		{
+			return Plugin_Handled;
+		}
+		if (g_PlayerProxy[owner] || TF2_IsPlayerInCondition(owner, TFCond_Taunting))
+		{
+			return Plugin_Continue;
+		}
+
+		float velocity[3], moveSpeed;
+		GetEntPropVector(other, Prop_Data, "m_vecAbsVelocity", velocity);
+		moveSpeed = GetVectorLength(velocity, true);
+
+		if (moveSpeed <= SquareFloat(150.0))
+		{
+			float ownerPos[3], proxyPos[3];
+			GetClientEyePosition(owner, ownerPos);
+			GetClientEyePosition(other, proxyPos);
+
+			float distance = SquareFloat(500.0);
+			if (GetVectorSquareMagnitude(ownerPos, proxyPos) <= distance)
+			{
+				return Plugin_Continue;
+			}
+		}
 	}
 	if (IsClientInGhostMode(other))
 	{
@@ -4177,7 +4076,7 @@ bool IsPointVisibleToPlayer(int client, const float pos[3], bool checkFOV=true, 
 	return true;
 }
 
-public Action Timer_RespawnPlayer(Handle timer, any userid)
+Action Timer_RespawnPlayer(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0)

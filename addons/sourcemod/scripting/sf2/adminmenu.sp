@@ -51,7 +51,7 @@ static void DisplayPlayerForceProxyAdminMenu(int client)
 	DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 }
 
-public int AdminTopMenu_PlayerForceProxy(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
+static int AdminTopMenu_PlayerForceProxy(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
@@ -64,7 +64,7 @@ public int AdminTopMenu_PlayerForceProxy(Handle topmenu, TopMenuAction action, T
 	return 0;
 }
 
-public int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -113,7 +113,7 @@ public int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 	return 0;
 }
 
-public int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -178,7 +178,7 @@ static void DisplayPlayerSetPlayStateAdminMenu(int client)
 	DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 }
 
-public int AdminTopMenu_PlayerSetPlayState(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
+static int AdminTopMenu_PlayerSetPlayState(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
@@ -191,7 +191,7 @@ public int AdminTopMenu_PlayerSetPlayState(Handle topmenu, TopMenuAction action,
 	return 0;
 }
 
-public int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -233,7 +233,7 @@ public int AdminMenu_PlayerSetPlayState(Handle menu, MenuAction action,int param
 	return 0;
 }
 
-public int AdminMenu_PlayerSetPlayStateConfirm(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_PlayerSetPlayStateConfirm(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -301,7 +301,7 @@ static void DisplayBossMainAdminMenu(int client)
 	DisplayMenu(menuHandle, client, MENU_TIME_FOREVER);
 }
 
-public int AdminMenu_BossMain(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_BossMain(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -350,7 +350,7 @@ public int AdminMenu_BossMain(Handle menu, MenuAction action,int param1,int para
 	return 0;
 }
 
-public int AdminTopMenu_BossMain(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
+static int AdminTopMenu_BossMain(Handle topmenu, TopMenuAction action, TopMenuObject object_id,int param, char[] buffer,int maxlength)
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
@@ -395,7 +395,7 @@ static bool DisplayAddBossAdminMenu(int client) //Use for view boss list
 	return false;
 }
 
-public int AdminMenu_AddBoss(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_AddBoss(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -453,7 +453,7 @@ static bool DisplayAddFakeBossAdminMenu(int client)
 	return false;
 }
 
-public int AdminMenu_AddFakeBoss(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_AddFakeBoss(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -546,7 +546,7 @@ static bool DisplayRemoveBossAdminMenu(int client)
 	return false;
 }
 
-public int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -601,7 +601,7 @@ static bool DisplaySpawnBossAdminMenu(int client)
 	return false;
 }
 
-public int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -656,7 +656,7 @@ static bool DisplayBossAttackWaitersAdminMenu(int client)
 	return false;
 }
 
-public int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -705,7 +705,7 @@ public int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1
 	return 0;
 }
 
-public int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -770,7 +770,7 @@ static bool DisplayBossTeleportAdminMenu(int client)
 	return false;
 }
 
-public int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -819,7 +819,7 @@ public int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int 
 	return 0;
 }
 
-public int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -912,7 +912,7 @@ static bool DisplayOverrideBossAdminMenu(int client)
 	return false;
 }
 
-public int AdminMenu_OverrideBoss(Handle menu, MenuAction action,int param1,int param2)
+static int AdminMenu_OverrideBoss(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{

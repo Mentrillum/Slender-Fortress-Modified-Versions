@@ -8,7 +8,7 @@
 /**
  *	Loads a profile in the current KeyValues position in kv.
  */
-public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
+bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
 {
 	SF2BossProfileData profileData;
 	profileData.Init();
@@ -947,7 +947,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					}
 					else
 					{
-						//LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s4);
+						LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s4);
 					}
 				}
 			}
@@ -964,7 +964,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 
 					if (!PrecacheModel(s4, true))
 					{
-						//LogSF2Message("Model file %s failed to be precached, likely does not exist. This will crash the server if not fixed.", s4);
+						LogSF2Message("Model file %s failed to be precached, likely does not exist. This will crash the server if not fixed.", s4);
 					}
 				}
 			}
@@ -986,7 +986,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					}
 					else
 					{
-						//LogSF2Message("Texture file %s does not exist, please fix this download or remove it from the array.", s5);
+						LogSF2Message("Texture file %s does not exist, please fix this download or remove it from the array.", s5);
 					}
 
 					FormatEx(s5, sizeof(s5), "%s.vmt", s4);
@@ -996,7 +996,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 					}
 					else
 					{
-						//LogSF2Message("Material file %s does not exist, please fix this download or remove it from the array.", s5);
+						LogSF2Message("Material file %s does not exist, please fix this download or remove it from the array.", s5);
 					}
 				}
 			}
@@ -1022,7 +1022,7 @@ public bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailR
 						}
 						else
 						{
-							//LogSF2Message("Model file %s does not exist, please fix this download or remove it from the array.", s5);
+							LogSF2Message("Model file %s does not exist, please fix this download or remove it from the array.", s5);
 						}
 					}
 				}

@@ -117,8 +117,6 @@ float HULL_HUMAN_MAXS[3] = { 13.0, 13.0, 72.0 };
 float HULL_TF2PLAYER_MINS[3] = { -24.5, -24.5, 0.0 };
 float HULL_TF2PLAYER_MAXS[3] = { 24.5,  24.5, 83.0 };
 
-static bool g_ClientAndEntityNetwork[2049][MAXPLAYERS+1];
-
 //  ==========================================================
 //	Map Functions
 //  ==========================================================
@@ -207,46 +205,6 @@ int SetEntityTransmitState(int entity, int newFlags)
     SetEdictFlags(entity, flags);
 
     return flags;
-}
-
-public Action NetworkHook_EntityTransmission(int entity, int client)
-{
-	if (!Network_ClientHasSeenEntity(client, entity))
-	{
-		DataPack networkData = new DataPack();
-		networkData.WriteCell(EntIndexToEntRef(entity));
-		networkData.WriteCell(GetClientUserId(client));
-		RequestFrame(Frame_UpdateClientEntityInfo, networkData);
-	}
-	return Plugin_Continue;
-}
-
-public void Frame_UpdateClientEntityInfo(DataPack networkData)
-{
-	networkData.Reset();
-	int ref = networkData.ReadCell();
-	int userid = networkData.ReadCell();
-	delete networkData;
-	int entity = EntRefToEntIndex(ref);
-	int client = GetClientOfUserId(userid);
-
-	if (entity > 0 && client > 0)
-	{
-		g_ClientAndEntityNetwork[entity][client] = true;
-	}
-}
-
-void Network_ResetClient(int client)
-{
-	for (int i = 0; i < 2049; i++)
-	{
-		g_ClientAndEntityNetwork[i][client] = false;
-	}
-}
-
-bool Network_ClientHasSeenEntity(int client, int entIndex)
-{
-	return g_ClientAndEntityNetwork[entIndex][client];
 }
 
 bool IsEntityClassname(int entIndex, const char[] classname, bool caseSensitive=true)
@@ -409,7 +367,7 @@ void CBaseNPC_RemoveAllLayers(int entity)
 	}
 }
 
-void SDK_GetSmoothedVelocity(int entity, float vector[3])
+/*void SDK_GetSmoothedVelocity(int entity, float vector[3])
 {
 	if (g_SDKGetSmoothedVelocity == null)
 	{
@@ -417,7 +375,7 @@ void SDK_GetSmoothedVelocity(int entity, float vector[3])
 		return;
 	}
 	SDKCall(g_SDKGetSmoothedVelocity, entity, vector);
-}
+}*/
 
 bool NavHasFuncPrefer(CNavArea area)
 {
@@ -478,14 +436,14 @@ void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 {
 	if (g_SDKPlaySpecificSequence != null)
 	{
-#if defined DEBUG
+		#if defined DEBUG
 		static bool once = true;
 		if (once)
 		{
 			PrintToServer("(SDK_PlaySpecificSequence) Calling on player %N \"%s\"..", client, strSequence);
 			once = false;
 		}
-#endif
+		#endif
 		SDKCall(g_SDKPlaySpecificSequence, client, strSequence);
 	}
 }
@@ -770,7 +728,7 @@ void UTIL_ClientScreenShake(int client, float amplitude, float duration, float f
 	}
 }
 
-public void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int b,int a)
+void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int b,int a)
 {
 	int clients[1];
 	Handle bf;
@@ -1388,7 +1346,7 @@ int FindStringIndex2(int tableidx, const char[] str)
 //	TRACE FUNCTIONS
 //	==========================================================
 
-public bool TraceRayDontHitEntity(int entity,int mask,any data)
+bool TraceRayDontHitEntity(int entity,int mask,any data)
 {
 	if (entity == data)
 	{
@@ -1406,7 +1364,7 @@ public bool TraceRayDontHitEntity(int entity,int mask,any data)
 	return true;
 }
 
-public bool TraceRayDontHitPlayers(int entity,int mask, any data)
+bool TraceRayDontHitPlayers(int entity,int mask, any data)
 {
 	if (entity > 0 && entity <= MaxClients)
 	{
@@ -1424,7 +1382,7 @@ public bool TraceRayDontHitPlayers(int entity,int mask, any data)
 	return true;
 }
 
-public bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
+bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 {
 	if (entity == data)
 	{
@@ -1450,7 +1408,7 @@ public bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 //	==========================================================
 //	TIMER/CALLBACK FUNCTIONS
 //	==========================================================
-public Action Timer_KillEntity(Handle timer, any entref)
+Action Timer_KillEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (ent == INVALID_ENT_REFERENCE)
@@ -1466,7 +1424,8 @@ public Action Timer_KillEntity(Handle timer, any entref)
 
 	return Plugin_Stop;
 }
-public Action Timer_KillEdict(Handle timer, any entref)
+
+Action Timer_KillEdict(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (!IsValidEdict(ent))
@@ -1687,10 +1646,6 @@ bool DispatchParticleEffectBeam(int entity, const char[] particle, float startPo
 
 MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
 {
-	if (!IsValidEntity(glow))
-	{
-		return MRES_Ignored;
-	}
 	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
 	return MRES_Supercede;
 }

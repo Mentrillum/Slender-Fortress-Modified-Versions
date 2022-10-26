@@ -10,7 +10,7 @@
  *	Parses and stores the unique values of a chaser profile from the current position in the profiles config.
  *	Returns true if loading was successful, false if not.
  */
-public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
+bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
 {
 	strcopy(loadFailReasonBuffer, loadFailReasonBufferLen, "");
 
@@ -874,7 +874,7 @@ public bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loa
 	return true;
 }
 
-public int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chaserProfileData)
+static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chaserProfileData)
 {
 	// Create the array.
 	ArrayList attacks = chaserProfileData.Attacks;

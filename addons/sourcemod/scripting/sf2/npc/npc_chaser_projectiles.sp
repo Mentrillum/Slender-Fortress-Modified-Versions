@@ -49,7 +49,7 @@ static char baseballModel[PLATFORM_MAX_PATH];
 	return Plugin_Continue;
 }*/
 
-public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, const char[] slenderProfile, float myPos[3])
+int NPCChaserProjectileShoot(int bossIndex, int slender, int target, const char[] slenderProfile, float myPos[3])
 {
 	if (g_RestartSessionEnabled)
 	{
@@ -598,7 +598,7 @@ public int NPCChaserProjectileShoot(int bossIndex, int slender, int target, cons
 	return projectileEnt;
 }
 
-public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target, const char[] slenderProfile)
+int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target, const char[] slenderProfile)
 {
 	int attackIndex = NPCGetCurrentAttackIndex(bossIndex);
 	int projectileType = NPCChaserGetAttackProjectileType(bossIndex, attackIndex);
@@ -802,7 +802,7 @@ public int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target
 	return projectileEnt;
 }
 
-public Action Hook_ProjectileAttackTouch(int entity, int other)
+static Action Hook_ProjectileAttackTouch(int entity, int other)
 {
 	switch (ProjectileGetFlags(entity))
 	{
@@ -912,7 +912,7 @@ public Action Hook_ProjectileAttackTouch(int entity, int other)
 	return Plugin_Handled;
 }
 
-public Action Hook_ProjectileTouch(int entity, int other)
+static Action Hook_ProjectileTouch(int entity, int other)
 {
 	switch (ProjectileGetFlags(entity))
 	{
@@ -1084,7 +1084,7 @@ public Action Hook_ProjectileTouch(int entity, int other)
 	return Plugin_Handled;
 }
 
-public Action Hook_ProjectileTransmit(int ent, int other)
+static Action Hook_ProjectileTransmit(int ent, int other)
 {
 	if (!g_Enabled)
 	{

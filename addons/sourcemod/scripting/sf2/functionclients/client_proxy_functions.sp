@@ -7,6 +7,13 @@
 
 static int g_ActionItemIndexes[] = { 57, 231 };
 
+//Proxy model
+static char g_ClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelHard[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelInsane[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelNightmare[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+
 void ClientResetProxy(int client, bool resetFull=true)
 {
 	#if defined DEBUG

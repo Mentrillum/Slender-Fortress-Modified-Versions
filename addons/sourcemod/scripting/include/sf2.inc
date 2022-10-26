@@ -3,8 +3,8 @@
 #endif
 #define _sf2_included
 
-#define PLUGIN_VERSION "1.7.5.02 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.5.02 M"
+#define PLUGIN_VERSION "1.7.5.03 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.5.03 M"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -448,6 +448,14 @@ forward void SF2_OnBossFinishSpawning(int bossIndex);
  * @param attackArray ArrayList containing all valid attacks
  */
 forward void SF2_OnBossPreAttack(int bossIndex, ArrayList attackArray);
+
+/**
+ * Called when the boss finishes an attack yet not exiting it's attack state.
+ *
+ * @param bossIndex	Boss index.
+ * @param attackIndex Current attack index.
+ */
+forward void SF2_OnBossAttacked(int bossIndex, int attackIndex);
 
 /**
  * Called when pages have spawned into the map.

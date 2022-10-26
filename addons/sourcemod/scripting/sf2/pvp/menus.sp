@@ -8,7 +8,7 @@
 
 Handle g_MenuSettingsPvP;
 
-public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
+int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -56,7 +56,7 @@ public int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param
 	return 0;
 }
 
-public int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int param2)
+static int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -79,7 +79,7 @@ public int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int
 	return 0;
 }
 
-public int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param1,int param2)
+static int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param1,int param2)
 {
 	if (action == MenuAction_Select)
 	{

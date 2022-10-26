@@ -44,6 +44,24 @@ static bool Renevant_TryAddSingleBossProfile(char profile[SF2_MAX_PROFILE_NAME_L
 	return true;
 }
 
+static void ShowRenevantMessageToClient(int client, const char[] message, int params, any ...)
+{
+	char messageDisplay[512];
+	VFormat(messageDisplay, sizeof(messageDisplay), message, params);
+
+	SetHudTextParams(-1.0, 0.25,
+		5.0,
+		255,
+		255,
+		255,
+		200,
+		2,
+		1.0,
+		0.05,
+		2.0);
+	ShowSyncHudText(client, g_HudSync3, messageDisplay);
+}
+
 static void Renevant_BroadcastMessage(const char[] message, int params, ...)
 {
 	char format[512];
@@ -56,7 +74,7 @@ static void Renevant_BroadcastMessage(const char[] message, int params, ...)
 			continue;
 		}
 
-		ClientShowRenevantMessage(i, format, params + 1);
+		ShowRenevantMessageToClient(i, format, params + 1);
 	}
 }
 

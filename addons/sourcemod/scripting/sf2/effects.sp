@@ -5,8 +5,8 @@
 
 #pragma semicolon 1
 
-EffectEvent g_EntityEffectEvent[2049];
-EffectType g_EntityEffectType[2049];
+static EffectEvent g_EntityEffectEvent[2049];
+static EffectType g_EntityEffectType[2049];
 static ArrayList g_NpcEffectsArray[MAX_BOSSES];
 static float g_EffectSpotlightEndLength[2049];
 static int g_EffectSpotlightEndEntity[2049] = { INVALID_ENT_REFERENCE, ... };
@@ -512,7 +512,8 @@ void SlenderSpawnEffects(int bossIndex)
 		}
 	}
 }
-public Action Hook_EffectTransmit(int ent,int other)
+
+static Action Hook_EffectTransmit(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -534,7 +535,8 @@ public Action Hook_EffectTransmit(int ent,int other)
 
 	return Plugin_Continue;
 }
-public Action Hook_EffectTransmitX(int ent,int other)
+
+static Action Hook_EffectTransmitX(int ent,int other)
 {
 	if (!g_Enabled)
 	{
@@ -584,6 +586,7 @@ void SlenderToggleParticleEffects(int slenderEnt,bool reverse=false)
 		}
 	}
 }
+
 void SlenderRemoveEffects(int slenderEnt,bool kill=false)
 {
 	int bossIndex = NPCGetFromEntIndex(slenderEnt);
@@ -643,6 +646,7 @@ void SlenderRemoveEffects(int slenderEnt,bool kill=false)
 	}
 	delete g_NpcEffectsArray[bossIndex];
 }
+
 static void SlenderSpotlightThink(int slenderEnt)
 {
 	if (IsValidEntity(slenderEnt))
@@ -682,56 +686,6 @@ static void SlenderSpotlightThink(int slenderEnt)
 			}
 		}
 	}
-}
-
-stock EffectType GetEffectTypeFromString(const char[] type)
-{
-	if (strcmp(type, "steam", false) == 0)
-	{
-		return EffectType_Steam;
-	}
-	if (strcmp(type, "dynamiclight", false) == 0)
-	{
-		return EffectType_DynamicLight;
-	}
-	if (strcmp(type, "particle", false) == 0)
-	{
-		return EffectType_Particle;
-	}
-	if (strcmp(type, "trail", false) == 0)
-	{
-		return EffectType_Trail;
-	}
-	if (strcmp(type, "propdynamic", false) == 0)
-	{
-		return EffectType_PropDynamic;
-	}
-	if (strcmp(type, "pointspotlight", false) == 0)
-	{
-		return EffectType_PointSpotlight;
-	}
-	if (strcmp(type, "sprite", false) == 0)
-	{
-		return EffectType_Sprite;
-	}
-	return EffectType_Invalid;
-}
-
-stock EffectEvent GetEffectEventFromString(const char[] type)
-{
-	if (strcmp(type, "constant", false) == 0)
-	{
-		return EffectEvent_Constant;
-	}
-	if (strcmp(type, "boss_hitplayer", false) == 0)
-	{
-		return EffectEvent_HitPlayer;
-	}
-	if (strcmp(type, "boss_seenbyplayer", false) == 0)
-	{
-		return EffectEvent_PlayerSeesBoss;
-	}
-	return EffectEvent_Invalid;
 }
 
 static Action Timer_DiscoLight(Handle timer, any effect)

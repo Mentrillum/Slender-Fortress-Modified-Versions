@@ -25,7 +25,7 @@
     }
 */
 
-public Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	if (!IsValidEntity(victim))
 	{
@@ -447,7 +447,7 @@ void UpdateHealthBar(int bossIndex, int optionalSetPercent = -1)
 	SetEntProp(g_HealthBar, Prop_Send, "m_iBossHealthPercentageByte", healthPercent);
 }
 
-public void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_PROFILE_NAME_LENGTH], float position[3])
+void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_PROFILE_NAME_LENGTH], float position[3])
 {
 	if (bossIndex == -1)
 	{

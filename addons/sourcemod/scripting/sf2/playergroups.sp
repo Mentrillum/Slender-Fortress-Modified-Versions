@@ -156,7 +156,7 @@ void SendPlayerGroupInvitation(int client,int groupID,int inviter=-1)
 	}
 }
 
-public int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -232,7 +232,7 @@ void DisplayResetGroupQueuePointsMenuToClient(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -281,12 +281,12 @@ void CheckPlayerGroup(int groupIndex)
 		return;
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("START CheckPlayerGroup(%d)", groupIndex);
 	}
-#endif
+	#endif
 
 	int memberCount = GetPlayerGroupMemberCount(groupIndex);
 	if (memberCount <= 0)
@@ -302,9 +302,12 @@ void CheckPlayerGroup(int groupIndex)
 			{
 				if (!IsValidClient(i) || !IsClientParticipating(i))
 				{
-#if defined DEBUG
-					if (g_DebugDetailConVar.IntValue > 0) DebugMessage("CheckPlayerGroup(%d): Invalid client detected (%d), removing from group", groupIndex, i);
-#endif
+					#if defined DEBUG
+					if (g_DebugDetailConVar.IntValue > 0)
+					{
+						DebugMessage("CheckPlayerGroup(%d): Invalid client detected (%d), removing from group", groupIndex, i);
+					}
+					#endif
 
 					ClientSetPlayerGroup(i, -1);
 				}
@@ -317,12 +320,12 @@ void CheckPlayerGroup(int groupIndex)
 
 		if (excessMemberCount > 0)
 		{
-#if defined DEBUG
+			#if defined DEBUG
 			if (g_DebugDetailConVar.IntValue > 0)
 			{
 				DebugMessage("CheckPlayerGroup(%d): Excess members detected", groupIndex);
 			}
-#endif
+			#endif
 
 			int groupLeader = GetPlayerGroupLeader(groupIndex);
 			if (IsValidClient(groupLeader))
@@ -351,12 +354,12 @@ void CheckPlayerGroup(int groupIndex)
 		}
 	}
 
-#if defined DEBUG
+	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("END CheckPlayerGroup(%d)", groupIndex);
 	}
-#endif
+	#endif
 }
 
 stock int GetPlayerGroupCount()

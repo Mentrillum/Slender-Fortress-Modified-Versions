@@ -490,7 +490,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 					g_SlenderLastFoundPlayer[chaserBoss.Index][ent] = GetGameTime();
 				}
 			}
-			else if (g_SlenderIsAutoChasingLoudPlayer[chaserBoss.Index] && g_NpcIgnoreNonMarkedForChase[chaserBoss.Index])
+			else if ((g_SlenderIsAutoChasingLoudPlayer[chaserBoss.Index] && g_NpcIgnoreNonMarkedForChase[chaserBoss.Index]) || NPCChaserCanChaseOnLook(chaserBoss.Index))
 			{
 				if (g_NpcChaseOnLookTarget[chaserBoss.Index].Length > 0 && g_NpcChaseOnLookTarget[chaserBoss.Index].FindValue(ent) != -1 &&
 					dist <= SquareFloat(searchRange))

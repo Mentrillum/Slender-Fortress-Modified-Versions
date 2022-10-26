@@ -8,32 +8,6 @@
 
 StringMap g_ChaserBossProfileData;
 
-enum
-{
-	ChaserAnimation_IdleAnimations = 0, //Array that contains all the idle animations
-	ChaserAnimation_WalkAnimations, //Array that contains all the walk animations
-	ChaserAnimation_WalkAlertAnimations, //Array that contains all the alert walk animations
-	ChaserAnimation_AttackAnimations, //Array that contains all the attack animations (working on attack index)
-	ChaserAnimation_ShootAnimations, //Array that contains all the attack animations after we shoot something
-	ChaserAnimation_RunAnimations, //Array that contains all the run animations
-	ChaserAnimation_RunAltAnimations, //Array that contains all the alternate run animations
-	ChaserAnimation_StunAnimations, //Array that contains all the stun animations
-	ChaserAnimation_ChaseInitialAnimations, //Array that contains all the chase initial animations
-	ChaserAnimation_RageAnimations, //Array that contains all the rage animations, used for Boxing Maps
-	ChaserAnimation_DeathAnimations, //Array that contains all the death animations
-	ChaserAnimation_JumpAnimations, //Array that contains all the jump animations
-	ChaserAnimation_SpawnAnimations, //Array that contains all the spawn animations
-	ChaserAnimation_FleeInitialAnimations, //Array that contains all the flee initial animations
-	ChaserAnimation_HealAnimations, //Array that contains all the self healing animations
-	ChaserAnimation_DeathcamAnimations, //Array that contains all the deathcam animations
-	ChaserAnimation_CloakStartAnimations, //Array that contains all the cloak start animations
-	ChaserAnimation_CloakEndAnimations, //Array that contains all the cloak end animations
-	ChaserAnimation_CrawlWalkAnimations, //Array that contains all the crawl walking animations
-	ChaserANimation_CrawlRunAnimations, //Array that contains all the crawl running animations
-	ChaserANimation_CrawlAltRunAnimations, //Array that contains all the crawl running animations
-	ChaserAnimation_MaxAnimations
-};
-
 #include "sf2/profiles/profile_chaser_precache.sp"
 
 void InitializeChaserProfiles()

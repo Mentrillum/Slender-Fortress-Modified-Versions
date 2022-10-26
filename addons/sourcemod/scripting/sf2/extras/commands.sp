@@ -411,9 +411,9 @@ public void OnPluginStart()
 
 	// @TODO: When cvars are finalized, set this to true.
 	AutoExecConfig(false);
-#if defined DEBUG
+	#if defined DEBUG
 	InitializeDebug();
-#endif
+	#endif
 
 	Call_StartForward(g_OnEverythingLoadedFwd);
 	Call_Finish();

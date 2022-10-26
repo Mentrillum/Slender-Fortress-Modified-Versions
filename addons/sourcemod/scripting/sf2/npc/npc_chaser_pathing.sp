@@ -7,7 +7,7 @@
 
 static float g_NpcEstimatedYaw[MAX_BOSSES] = { 0.0, ... };
 
-public void SlenderChaseBossProcessMovement(int bossEnt)
+void SlenderChaseBossProcessMovement(int bossEnt)
 {
 	if (!g_Enabled)
 	{
@@ -955,7 +955,7 @@ public void SlenderChaseBossProcessMovement(int bossEnt)
 	return;
 }
 
-public void SlenderSetNextThink(int bossEnt)
+void SlenderSetNextThink(int bossEnt)
 {
 	if (!g_Enabled)
 	{

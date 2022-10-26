@@ -35,7 +35,7 @@ void DisplayGroupMainMenuToClient(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public int Menu_GroupMain(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_GroupMain(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -89,7 +89,7 @@ void DisplayCreateGroupMenuToClient(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -158,7 +158,7 @@ void DisplayLeaveGroupMenuToClient(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public int Menu_LeaveGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_LeaveGroup(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -228,7 +228,7 @@ void DisplayAdminGroupMenuToClient(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -347,7 +347,7 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	#endif
 }
 
-public int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -442,7 +442,7 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	#endif
 }
 
-public int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -560,7 +560,7 @@ void DisplayKickFromGroupMenuToClient(int client)
 	#endif
 }
 
-public int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -632,7 +632,7 @@ void DisplaySetGroupNameMenuToClient(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-public int Menu_SetGroupName(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_SetGroupName(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -735,7 +735,7 @@ void DisplayInviteToGroupMenuToClient(int client)
 	#endif
 }
 
-public int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int param2)
 {
 	if (action == MenuAction_End)
 	{

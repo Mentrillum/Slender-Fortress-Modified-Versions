@@ -14,18 +14,18 @@ void InitializeLogging()
 	{
 		CreateDirectory(g_LogFilePath, FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC);
 	}
-	
+
 	char dateSuffix[256];
 	FormatTime(dateSuffix, sizeof(dateSuffix), "%Y-%m-%d.log", GetTime());
 	BuildPath(Path_SM, g_LogFilePath, sizeof(g_LogFilePath), "logs/sf2/%s", dateSuffix);
-	
+
 	char map[64];
 	GetCurrentMap(map, sizeof(map));
-	
+
 	LogSF2Message("-------- Mapchange to %s -------", map);
 }
 
-stock void LogSF2Message(const char[] message, any ...)
+void LogSF2Message(const char[] message, any ...)
 {
 	char logMessage[1024], temp[1024];
 	VFormat(temp, sizeof(temp), message, 2);

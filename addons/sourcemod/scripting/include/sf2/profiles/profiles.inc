@@ -1952,6 +1952,10 @@ enum struct SF2BossProfileData
 		{
 			this.OutroMusics.Load(kv);
 		}
+		else if (strcmp(sectionName, "sound_sight") == 0)
+		{
+			this.SightSounds.Load(kv);
+		}
 	}
 }
 

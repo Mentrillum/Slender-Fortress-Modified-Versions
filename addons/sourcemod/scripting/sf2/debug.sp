@@ -150,7 +150,7 @@ stock void SendDebugMessageToPlayersSpecialRound(const char[] message, any ...)
 	}
 }
 
-public Action Command_DebugBossTeleport(int client,int args)
+static Action Command_DebugBossTeleport(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -172,7 +172,7 @@ public Action Command_DebugBossTeleport(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugBossChase(int client,int args)
+static Action Command_DebugBossChase(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -194,7 +194,7 @@ public Action Command_DebugBossChase(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugBossIdle(int client,int args)
+static Action Command_DebugBossIdle(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -216,7 +216,7 @@ public Action Command_DebugBossIdle(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugBossAnimation(int client,int args)
+static Action Command_DebugBossAnimation(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -238,7 +238,7 @@ public Action Command_DebugBossAnimation(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugNextbot(int client,int args)
+static Action Command_DebugNextbot(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -260,7 +260,7 @@ public Action Command_DebugNextbot(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugPlayerStress(int client, int args)
+static Action Command_DebugPlayerStress(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -282,7 +282,7 @@ public Action Command_DebugPlayerStress(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugBossProxies(int client, int args)
+static Action Command_DebugBossProxies(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -303,7 +303,7 @@ public Action Command_DebugBossProxies(int client, int args)
 
 	return Plugin_Handled;
 }
-public Action Command_DebugHitbox(int client, int args)
+static Action Command_DebugHitbox(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -325,7 +325,7 @@ public Action Command_DebugHitbox(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugStun(int client, int args)
+static Action Command_DebugStun(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -347,7 +347,7 @@ public Action Command_DebugStun(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugGhostMode(int client, int args)
+static Action Command_DebugGhostMode(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -369,7 +369,7 @@ public Action Command_DebugGhostMode(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugEntity(int client, int args)
+static Action Command_DebugEntity(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -391,7 +391,7 @@ public Action Command_DebugEntity(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugEvent(int client,int args)
+static Action Command_DebugEvent(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -413,7 +413,7 @@ public Action Command_DebugEvent(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugKillIcons(int client,int args)
+static Action Command_DebugKillIcons(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
@@ -435,7 +435,7 @@ public Action Command_DebugKillIcons(int client,int args)
 	return Plugin_Handled;
 }
 
-public Action Command_DebugArrayLists(int client,int args)
+static Action Command_DebugArrayLists(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
 	{

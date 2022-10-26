@@ -6,7 +6,7 @@
 
 #pragma semicolon 1
 
-public void PerformSmiteBoss(int client, int target, any entref)
+void PerformSmiteBoss(int client, int target, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -101,7 +101,7 @@ public void PerformSmiteBoss(int client, int target, any entref)
 
 }
 
-public Action Timer_SlenderStealLife(Handle timer, any entref)
+Action Timer_SlenderStealLife(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -236,7 +236,7 @@ public Action Timer_SlenderStealLife(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
+Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -963,7 +963,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										checkDamage *= 3;
 									}
-									else if ((damageType == 1327104 || TF2_IsPlayerInCondition(i, TFCond_Jarated) || TF2_IsPlayerInCondition(i, TFCond_MarkedForDeath)) && !TF2_IsPlayerInCondition(i, TFCond_DefenseBuffed))
+									else if ((damageType == 1327104 || TF2_IsPlayerInCondition(i, TFCond_Jarated) || TF2_IsPlayerInCondition(i, TFCond_MarkedForDeath) || TF2_IsPlayerInCondition(i, TFCond_MarkedForDeathSilent)) && !TF2_IsPlayerInCondition(i, TFCond_DefenseBuffed))
 									{
 										checkDamage *= 1.35;
 									}
@@ -1431,6 +1431,10 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			}
 		}
 	}
+	Call_StartForward(g_OnBossAttackedFwd);
+	Call_PushCell(bossIndex);
+	Call_PushCell(attackIndex);
+	Call_Finish();
 	if (NPCChaserGetAttackDisappear(bossIndex, attackIndex) != 1 && NPCChaserGetAttackRepeat(bossIndex, attackIndex) < 1)
 	{
 		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex)-NPCChaserGetAttackDamageDelay(bossIndex, attackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
@@ -1470,7 +1474,7 @@ public Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-float[] CalculateBulletDamageForce(const float bulletDir[3], float scale)
+static float[] CalculateBulletDamageForce(const float bulletDir[3], float scale)
 {
 	float force[3]; force = bulletDir;
 	NormalizeVector(force, force);
@@ -1479,7 +1483,7 @@ float[] CalculateBulletDamageForce(const float bulletDir[3], float scale)
 	return force;
 }
 
-public Action Timer_SlenderChaseBossAttackIgniteHit(Handle timer, any entref)
+Action Timer_SlenderChaseBossAttackIgniteHit(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -1502,7 +1506,7 @@ public Action Timer_SlenderChaseBossAttackIgniteHit(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderChaseBossResetIgnite(Handle timer, any entref)
+static Action Timer_SlenderChaseBossResetIgnite(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -1524,7 +1528,7 @@ public Action Timer_SlenderChaseBossResetIgnite(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderPrepareExplosiveDance(Handle timer, any entref)
+Action Timer_SlenderPrepareExplosiveDance(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -1541,7 +1545,7 @@ public Action Timer_SlenderPrepareExplosiveDance(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
+static Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -1641,7 +1645,7 @@ public Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_SlenderChaseBossAttackBeginLaser(Handle timer, any entref)
+Action Timer_SlenderChaseBossAttackBeginLaser(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{
@@ -1680,7 +1684,7 @@ public Action Timer_SlenderChaseBossAttackBeginLaser(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-public Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
+static Action Timer_SlenderChaseBossAttackLaser(Handle timer, any entref)
 {
 	if (!g_Enabled)
 	{

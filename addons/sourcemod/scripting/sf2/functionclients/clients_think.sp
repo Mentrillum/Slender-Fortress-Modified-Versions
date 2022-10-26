@@ -543,9 +543,9 @@ void Hook_ClientPreThink(int client)
 		g_PlayerStressNextUpdateTime[client] = GetGameTime() + 0.33;
 		ClientAddStress(client, -0.01);
 
-#if defined DEBUG
+		#if defined DEBUG
 		SendDebugMessageToPlayer(client, DEBUG_PLAYER_STRESS, 1, "g_PlayerStressAmount[%d]: %0.1f", client, g_PlayerStressAmount[client]);
-#endif
+		#endif
 	}
 
 	// Process screen shake, if enabled.
