@@ -4855,7 +4855,7 @@ stock bool SlenderAddGlow(int bossIndex, const char[] attachment="", int color[4
 		AcceptEntityInput(glow, "SetGlowColor");
 		g_DHookShouldTransmit.HookEntity(Hook_Pre, glow, Hook_EntityShouldTransmit);
 		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, glow, Hook_GlowUpdateTransmitState);
-		SetEntityTransmitState(glow, FL_EDICT_CHANGED);
+		SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
 
 		return true;
 	}
