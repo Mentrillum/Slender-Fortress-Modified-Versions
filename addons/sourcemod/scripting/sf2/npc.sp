@@ -4072,7 +4072,7 @@ void SlenderCastAnimEvent(int bossIndex, int event)
 	ArrayList arraySounds = GetBossProfileEventSounds(profile);
 	ArrayList arrayIndexes = GetBossProfileEventIndexes(profile);
 
-	if (arraySounds || arrayIndexes == null)
+	if (!arraySounds || arrayIndexes == null)
 	{
 		return;
 	}
@@ -4084,7 +4084,7 @@ void SlenderCastAnimEvent(int bossIndex, int event)
 	}
 
 	SF2BossProfileSoundInfo soundInfo;
-	arrayIndexes.GetArray(foundIndex, soundInfo, sizeof(soundInfo));
+	arraySounds.GetArray(foundIndex, soundInfo, sizeof(soundInfo));
 
 	ArrayList soundPaths = soundInfo.Paths;
 	if (soundPaths == null)
