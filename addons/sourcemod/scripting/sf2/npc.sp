@@ -3543,7 +3543,7 @@ static Action Hook_SlenderGlowSetTransmit(int entity,int other)
 	return Plugin_Handled;
 }
 
-stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
+bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 {
 	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
@@ -3552,8 +3552,8 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	int iSlender = NPCGetEntIndex(bossIndex);
-	if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
+	int slender = NPCGetEntIndex(bossIndex);
+	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return false;
 	}
@@ -3583,25 +3583,33 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 	float myEyePos[3];
 	SlenderGetEyePosition(bossIndex, myEyePos);
 
+	float cooldown = 0.0;
+
 	switch (soundType)
 	{
-		case SoundType_Footstep:
+		case SoundType_Footstep, SoundType_LoudFootstep, SoundType_QuietFootstep:
 		{
 			if (!(GetEntityFlags(client) & FL_ONGROUND))
 			{
 				return false;
 			}
 
-			if (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked"))
+			if (soundType == SoundType_QuietFootstep)
 			{
+				cooldown = GetChaserProfileHearQuietFootstepCooldown(profile, difficulty);
 				distance *= 1.85;
 			}
-			if (IsClientReallySprinting(client))
+			else if (soundType == SoundType_LoudFootstep)
 			{
+				cooldown = GetChaserProfileHearLoudFootstepCooldown(profile, difficulty);
 				distance *= 0.66;
 			}
+			else
+			{
+				cooldown = GetChaserProfileHearFootstepCooldown(profile, difficulty);
+			}
 
-			trace = TR_TraceRayFilterEx(myPos, hisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			trace = TR_TraceRayFilterEx(myPos, hisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, slender);
 			traceHit = TR_DidHit(trace);
 			delete trace;
 		}
@@ -3610,7 +3618,7 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 			float hisEyePos[3];
 			GetClientEyePosition(client, hisEyePos);
 
-			trace = TR_TraceRayFilterEx(myEyePos, hisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			trace = TR_TraceRayFilterEx(myEyePos, hisEyePos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, slender);
 			traceHit = TR_DidHit(trace);
 			delete trace;
 
@@ -3621,6 +3629,15 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 			else if (IsClassConfigsValid() && soundType == SoundType_Flashlight)
 			{
 				distance *= g_ClassFlashlightSoundRadius[classToInt];
+			}
+
+			if (soundType == SoundType_Voice)
+			{
+				cooldown = GetChaserProfileHearVoiceCooldown(profile, difficulty);
+			}
+			else if (soundType == SoundType_Flashlight)
+			{
+				cooldown = GetChaserProfileHearFlashlightCooldown(profile, difficulty);
 			}
 		}
 		case SoundType_Weapon:
@@ -3636,11 +3653,13 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 			GetClientAbsOrigin(client, endPos);
 			AddVectors(hisPos, middle, endPos);
 
-			trace = TR_TraceRayFilterEx(myEyePos, endPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, iSlender);
+			trace = TR_TraceRayFilterEx(myEyePos, endPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, slender);
 			traceHit = TR_DidHit(trace);
 			delete trace;
 
 			distance *= 0.66;
+
+			cooldown = GetChaserProfileHearWeaponCooldown(profile, difficulty);
 		}
 	}
 
@@ -3672,6 +3691,13 @@ stock bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 	{
 		return false;
 	}
+
+	if (g_SlenderSoundPositionSetCooldown[bossIndex] > GetGameTime() && cooldown > 0.0)
+	{
+		return false;
+	}
+
+	g_SlenderSoundPositionSetCooldown[bossIndex] = GetGameTime() + cooldown;
 
 	return true;
 }
@@ -4092,7 +4118,7 @@ void SlenderCastAnimEvent(int bossIndex, int event)
 		return;
 	}
 	char path[PLATFORM_MAX_PATH];
-	soundPaths.GetString(GetRandomInt(0, soundPaths.Length-1), path, sizeof(path));
+	soundPaths.GetString(GetRandomInt(0, soundPaths.Length - 1), path, sizeof(path));
 
 	if (path[0] != '\0')
 	{

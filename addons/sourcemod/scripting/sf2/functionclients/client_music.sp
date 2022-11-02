@@ -603,7 +603,7 @@ void ClientMusicReset(int client)
 
 void ClientMusicStart(int client, const char[] newMusic, float volume=-1.0, float targetVolume=-1.0, bool copyOnly=false)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -686,7 +686,7 @@ void Client20DollarsMusicReset(int client)
 
 void Client20DollarsMusicStart(int client,int bossIndex)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -801,7 +801,7 @@ void ClientAlertMusicReset(int client)
 
 void ClientAlertMusicStart(int client,int bossIndex)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -905,7 +905,7 @@ void ClientIdleMusicReset(int client)
 
 void ClientIdleMusicStart(int client,int bossIndex)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -1009,7 +1009,7 @@ void ClientChaseMusicReset(int client)
 
 void ClientMusicChaseStart(int client,int bossIndex)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -1117,7 +1117,7 @@ void ClientChaseMusicSeeReset(int client)
 
 void ClientMusicChaseSeeStart(int client,int bossIndex)
 {
-	if (!IsClientInGame(client))
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}
@@ -1216,7 +1216,7 @@ void Client90sMusicReset(int client)
 
 void Client90sMusicStart(int client)
 {
-	if (!IsValidClient(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
 	{
 		return;
 	}

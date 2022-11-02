@@ -954,7 +954,7 @@ static any Native_CreateBossSoundHint(Handle plugin, int numParams)
 
 	switch (soundType)
 	{
-		case SoundType_Footstep:
+		case SoundType_Footstep, SoundType_LoudFootstep, SoundType_QuietFootstep:
 		{
 			CopyVector(position, g_SlenderTargetSoundTempPos[boss.Index]);
 			g_SlenderInterruptConditions[boss.Index] |= (COND_HEARDSUSPICIOUSSOUND | COND_HEARDFOOTSTEP);

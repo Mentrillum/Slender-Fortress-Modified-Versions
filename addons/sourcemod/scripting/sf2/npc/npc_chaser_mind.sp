@@ -597,13 +597,16 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 					}
 					soundList = null;
 					TF2_AddCondition(ent, TFCond_MarkedForDeathSilent, -1.0);
-					if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && state != STATE_CHASE && state != STATE_ATTACK && state != STATE_STUN)
+					if (NPCChaserCanUseChaseInitialAnimation(chaserBoss.Index) && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index] && !SF_IsSlaughterRunMap())
 					{
-						g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
-						npc.flWalkSpeed = 0.0;
-						npc.flRunSpeed = 0.0;
-						NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, state);
-						g_SlenderChaseInitialTimer[chaserBoss.Index] = CreateTimer(g_SlenderAnimationDuration[chaserBoss.Index], Timer_SlenderChaseInitialTimer, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+						if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && state != STATE_CHASE && state != STATE_ATTACK && state != STATE_STUN)
+						{
+							g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
+							npc.flWalkSpeed = 0.0;
+							npc.flRunSpeed = 0.0;
+							NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, STATE_CHASE);
+							g_SlenderChaseInitialTimer[chaserBoss.Index] = CreateTimer(g_SlenderAnimationDuration[chaserBoss.Index], Timer_SlenderChaseInitialTimer, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+						}
 					}
 				}
 			}
@@ -621,7 +624,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 
 	if (g_SlenderIsAutoChasingLoudPlayer[chaserBoss.Index])
 	{
-		if (g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0)
+		if (g_NpcChaseOnLookTarget[chaserBoss.Index] == null || g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0)
 		{
 			g_SlenderIsAutoChasingLoudPlayer[chaserBoss.Index] = false;
 			g_SlenderSoundTarget[chaserBoss.Index] = INVALID_ENT_REFERENCE;
@@ -858,50 +861,52 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 			}
 			else if (interruptConditions & COND_HEARDSUSPICIOUSSOUND)
 			{
-				// Sound counts:
-				// +1 will be added if it hears a footstep.
-				// +2 will be added if the footstep is someone sprinting.
-				// +5 will be added if the sound is from a player's weapon hitting an object or flashlight is heard..
-				// +10 will be added if a voice command.
-				//
 				// Sound counts will be reset after the boss hears a sound after a certain amount of time.
 				// The purpose of sound counts is to induce boss focusing on sounds suspicious entities are making.
 
 				int count = 0;
 				if (interruptConditions & COND_HEARDFOOTSTEP)
 				{
-					count += 1;
+					count += GetChaserProfileFootstepAddThreshold(slenderProfile, difficulty);
 				}
 				if (interruptConditions & COND_HEARDFOOTSTEPLOUD)
 				{
-					count += 2;
+					count += GetChaserProfileLoudFootstepAddThreshold(slenderProfile, difficulty);
 				}
-				if ((interruptConditions & COND_HEARDWEAPON) || (interruptConditions & COND_HEARDFLASHLIGHT))
+				if (interruptConditions & COND_HEARDFOOTSTEPQUIET)
 				{
-					count += 5;
+					count += GetChaserProfileQuietFootstepAddThreshold(slenderProfile, difficulty);
+				}
+				if (interruptConditions & COND_HEARDWEAPON)
+				{
+					count += GetChaserProfileWeaponAddThreshold(slenderProfile, difficulty);
+				}
+				if (interruptConditions & COND_HEARDFLASHLIGHT)
+				{
+					count += GetChaserProfileFlashlightAddThreshold(slenderProfile, difficulty);
 				}
 				if (interruptConditions & COND_HEARDVOICE)
 				{
-					count += 10;
+					count += GetChaserProfileVoiceAddThreshold(slenderProfile, difficulty);
 				}
 
 				bool discardMasterPos = view_as<bool>(GetGameTime() >= g_SlenderTargetSoundDiscardMasterPosTime[chaserBoss.Index]);
 
-				if (GetVectorSquareMagnitude(g_SlenderTargetSoundTempPos[chaserBoss.Index], g_SlenderTargetSoundMasterPos[chaserBoss.Index]) <= SquareFloat(GetChaserProfileSoundPosDistanceTolerance(slenderProfile)) ||
-					discardMasterPos)
+				if (discardMasterPos)
 				{
-					if (discardMasterPos)
-					{
-						g_SlenderTargetSoundCount[chaserBoss.Index] = 0;
-					}
+					g_SlenderTargetSoundCount[chaserBoss.Index] = 0;
+				}
 
-					g_SlenderTargetSoundDiscardMasterPosTime[chaserBoss.Index] = GetGameTime() + GetChaserProfileSoundPosDiscardTime(slenderProfile);
+				if ((GetVectorSquareMagnitude(g_SlenderTargetSoundTempPos[chaserBoss.Index], g_SlenderTargetSoundMasterPos[chaserBoss.Index]) <= SquareFloat(GetChaserProfileSoundPosDistanceTolerance(slenderProfile, difficulty)) ||
+					discardMasterPos) && count > 0)
+				{
+					g_SlenderTargetSoundDiscardMasterPosTime[chaserBoss.Index] = GetGameTime() + GetChaserProfileSoundPosDiscardTime(slenderProfile, difficulty);
 					g_SlenderTargetSoundMasterPos[chaserBoss.Index][0] = g_SlenderTargetSoundTempPos[chaserBoss.Index][0];
 					g_SlenderTargetSoundMasterPos[chaserBoss.Index][1] = g_SlenderTargetSoundTempPos[chaserBoss.Index][1];
 					g_SlenderTargetSoundMasterPos[chaserBoss.Index][2] = g_SlenderTargetSoundTempPos[chaserBoss.Index][2];
 					g_SlenderTargetSoundCount[chaserBoss.Index] += count;
 				}
-				if (g_SlenderTargetSoundCount[chaserBoss.Index] >= NPCChaserGetSoundCountToAlert(chaserBoss.Index))
+				if (g_SlenderTargetSoundCount[chaserBoss.Index] >= NPCChaserGetSoundCountToAlert(chaserBoss.Index, difficulty))
 				{
 					// Someone's making some noise over there! Time to investigate.
 					g_SlenderInvestigatingSound[chaserBoss.Index] = true; // This is just so that our sound position would be the goal position.
@@ -1032,12 +1037,37 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 				}
 				else if (interruptConditions & COND_HEARDSUSPICIOUSSOUND)
 				{
+					int count = 0;
+					if (interruptConditions & COND_HEARDFOOTSTEP)
+					{
+						count += GetChaserProfileFootstepAddThreshold(slenderProfile, difficulty);
+					}
+					if (interruptConditions & COND_HEARDFOOTSTEPLOUD)
+					{
+						count += GetChaserProfileLoudFootstepAddThreshold(slenderProfile, difficulty);
+					}
+					if (interruptConditions & COND_HEARDFOOTSTEPQUIET)
+					{
+						count += GetChaserProfileQuietFootstepAddThreshold(slenderProfile, difficulty);
+					}
+					if (interruptConditions & COND_HEARDWEAPON)
+					{
+						count += GetChaserProfileWeaponAddThreshold(slenderProfile, difficulty);
+					}
+					if (interruptConditions & COND_HEARDFLASHLIGHT)
+					{
+						count += GetChaserProfileFlashlightAddThreshold(slenderProfile, difficulty);
+					}
+					if (interruptConditions & COND_HEARDVOICE)
+					{
+						count += GetChaserProfileVoiceAddThreshold(slenderProfile, difficulty);
+					}
 					bool discardMasterPos = view_as<bool>(GetGameTime() >= g_SlenderTargetSoundDiscardMasterPosTime[chaserBoss.Index]);
 
-					if (GetVectorSquareMagnitude(g_SlenderTargetSoundTempPos[chaserBoss.Index], g_SlenderTargetSoundMasterPos[chaserBoss.Index]) <= SquareFloat(GetChaserProfileSoundPosDistanceTolerance(slenderProfile)) ||
-						discardMasterPos)
+					if ((GetVectorSquareMagnitude(g_SlenderTargetSoundTempPos[chaserBoss.Index], g_SlenderTargetSoundMasterPos[chaserBoss.Index]) <= SquareFloat(GetChaserProfileSoundPosDistanceTolerance(slenderProfile, difficulty)) ||
+						discardMasterPos) && count > 0)
 					{
-						g_SlenderTargetSoundDiscardMasterPosTime[chaserBoss.Index] = GetGameTime() + GetChaserProfileSoundPosDiscardTime(slenderProfile);
+						g_SlenderTargetSoundDiscardMasterPosTime[chaserBoss.Index] = GetGameTime() + GetChaserProfileSoundPosDiscardTime(slenderProfile, difficulty);
 						g_SlenderTargetSoundMasterPos[chaserBoss.Index][0] = g_SlenderTargetSoundTempPos[chaserBoss.Index][0];
 						g_SlenderTargetSoundMasterPos[chaserBoss.Index][1] = g_SlenderTargetSoundTempPos[chaserBoss.Index][1];
 						g_SlenderTargetSoundMasterPos[chaserBoss.Index][2] = g_SlenderTargetSoundTempPos[chaserBoss.Index][2];
@@ -2219,7 +2249,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								SlenderPerformVoice(chaserBoss.Index, _, SF2BossSound_ChaseInitial);
 								if (NPCChaserCanUseChaseInitialAnimation(chaserBoss.Index) && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index] && !SF_IsSlaughterRunMap())
 								{
-									if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0)
+									if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && (g_NpcChaseOnLookTarget[chaserBoss.Index] == null || g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0))
 									{
 										g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
 										npc.flWalkSpeed = 0.0;
@@ -2235,7 +2265,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 							SlenderPerformVoice(chaserBoss.Index, _, SF2BossSound_ChaseInitial);
 							if (NPCChaserCanUseChaseInitialAnimation(chaserBoss.Index) && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index] && !SF_IsSlaughterRunMap())
 							{
-								if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0)
+								if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && (g_NpcChaseOnLookTarget[chaserBoss.Index] == null || g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0))
 								{
 									g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
 									npc.flWalkSpeed = 0.0;

@@ -502,7 +502,7 @@ static void Renevant_SpawnApollyon()
 	}
 }
 
-public int Native_IsRenevantMap(Handle plugin, int numParams)
+int Native_IsRenevantMap(Handle plugin, int numParams)
 {
 	return view_as<int>(SF_IsRenevantMap());
 }

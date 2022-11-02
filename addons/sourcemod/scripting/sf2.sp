@@ -328,6 +328,7 @@ bool g_SlenderInvestigatingSound[MAX_BOSSES];
 int g_SlenderTargetSoundCount[MAX_BOSSES];
 int g_SlenderAutoChaseCount[MAX_BOSSES];
 float g_SlenderAutoChaseCooldown[MAX_BOSSES];
+float g_SlenderSoundPositionSetCooldown[MAX_BOSSES];
 int g_SlenderSoundTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_SlenderSeeTarget[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 bool g_SlenderIsAutoChasingLoudPlayer[MAX_BOSSES];
@@ -1280,7 +1281,6 @@ static void PrecacheStuff()
 	AddFileToDownloadsTable("models/slender/pickups/sheet.phy");
 	AddFileToDownloadsTable("models/slender/pickups/sheet.sw.vtx");
 	AddFileToDownloadsTable("models/slender/pickups/sheet.vvd");
-	AddFileToDownloadsTable("models/slender/pickups/sheet.xbox");
 
 	AddFileToDownloadsTable("models/demani_sf/key_australium.mdl");
 	AddFileToDownloadsTable("models/demani_sf/key_australium.dx80.vtx");
@@ -2677,11 +2677,6 @@ Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_M
 					return Plugin_Handled;
 				}
 			}
-			if (!StrContains(sample, "player/footsteps", false) || StrContains(sample, "step", false) != -1)
-			{
-				sample = NULLSOUND;
-				return Plugin_Changed;
-			}
 		}
 		else if (g_PlayerProxy[entity])
 		{
@@ -2736,6 +2731,7 @@ Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_M
 								g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddVoice(bossIndex, difficulty);
 								g_SlenderAutoChaseCooldown[bossIndex] = GetGameTime() + 0.3;
 							}
+							g_SlenderTargetSoundType[bossIndex] = SoundType_Voice;
 						}
 					}
 				}
@@ -2759,6 +2755,29 @@ Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_M
 							ClientViewPunch(entity, punchVelStep);
 						}
 
+						bool isLoudStep = false;
+
+						bool isCrouchStep = false;
+
+						if (IsClientSprinting(entity) && !(GetEntProp(entity, Prop_Send, "m_bDucking") || GetEntProp(entity, Prop_Send, "m_bDucked")))
+						{
+							isLoudStep = true;
+						}
+						else if (GetEntProp(entity, Prop_Send, "m_bDucking") || GetEntProp(entity, Prop_Send, "m_bDucked"))
+						{
+							isCrouchStep = true;
+						}
+
+						SoundType soundType = SoundType_Footstep;
+						if (isLoudStep)
+						{
+							soundType = SoundType_LoudFootstep;
+						}
+						else if (isCrouchStep)
+						{
+							soundType = SoundType_QuietFootstep;
+						}
+
 						for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
 						{
 							if (NPCGetUniqueID(bossIndex) == -1)
@@ -2766,29 +2785,36 @@ Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_M
 								continue;
 							}
 
-							if (SlenderCanHearPlayer(bossIndex, entity, SoundType_Footstep) && NPCShouldHearEntity(bossIndex, entity, SoundType_Footstep))
+							if (SlenderCanHearPlayer(bossIndex, entity, soundType) && NPCShouldHearEntity(bossIndex, entity, soundType))
 							{
 								GetClientAbsOrigin(entity, g_SlenderTargetSoundTempPos[bossIndex]);
 								g_SlenderInterruptConditions[bossIndex] |= COND_HEARDSUSPICIOUSSOUND;
-								g_SlenderInterruptConditions[bossIndex] |= COND_HEARDFOOTSTEP;
-								if (g_SlenderState[bossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(bossIndex) && g_SlenderAutoChaseCooldown[bossIndex] < GetGameTime())
-								{
-									g_SlenderSoundTarget[bossIndex] = EntIndexToEntRef(entity);
-									if (!IsClientReallySprinting(entity))
-									{
-										g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddFootstep(bossIndex, difficulty);
-									}
-									else if (IsClientReallySprinting(entity) && NPCChaserCanAutoChaseSprinters(bossIndex))
-									{
-										g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddFootstep(bossIndex, difficulty) * 3;
-									}
-									g_SlenderAutoChaseCooldown[bossIndex] = GetGameTime() + 0.3;
-								}
-
-								if (IsClientSprinting(entity) && !(GetEntProp(entity, Prop_Send, "m_bDucking") || GetEntProp(entity, Prop_Send, "m_bDucked")))
+								if (isLoudStep)
 								{
 									g_SlenderInterruptConditions[bossIndex] |= COND_HEARDFOOTSTEPLOUD;
 								}
+								else if (isCrouchStep)
+								{
+									g_SlenderInterruptConditions[bossIndex] |= COND_HEARDFOOTSTEPQUIET;
+								}
+								else
+								{
+									g_SlenderInterruptConditions[bossIndex] |= COND_HEARDFOOTSTEP;
+								}
+								if (g_SlenderState[bossIndex] == STATE_ALERT && NPCChaserIsAutoChaseEnabled(bossIndex) && g_SlenderAutoChaseCooldown[bossIndex] < GetGameTime())
+								{
+									g_SlenderSoundTarget[bossIndex] = EntIndexToEntRef(entity);
+									if (!isLoudStep)
+									{
+										g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddFootstep(bossIndex, difficulty);
+									}
+									else
+									{
+										g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddLoudFootstep(bossIndex, difficulty);
+									}
+									g_SlenderAutoChaseCooldown[bossIndex] = GetGameTime() + 0.3;
+								}
+								g_SlenderTargetSoundType[bossIndex] = soundType;
 							}
 						}
 					}
@@ -2815,6 +2841,7 @@ Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_M
 									g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddWeapon(bossIndex, difficulty);
 									g_SlenderAutoChaseCooldown[bossIndex] = GetGameTime() + 0.3;
 								}
+								g_SlenderTargetSoundType[bossIndex] = SoundType_Weapon;
 							}
 						}
 					}
@@ -2841,6 +2868,7 @@ Action Hook_NormalSound(int clients[64], int &numClients, char sample[PLATFORM_M
 									g_SlenderAutoChaseCount[bossIndex] += NPCChaserAutoChaseAddWeapon(bossIndex, difficulty);
 									g_SlenderAutoChaseCooldown[bossIndex] = GetGameTime() + 0.3;
 								}
+								g_SlenderTargetSoundType[bossIndex] = SoundType_Flashlight;
 							}
 						}
 					}

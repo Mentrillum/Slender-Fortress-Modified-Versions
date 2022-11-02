@@ -39,8 +39,6 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	profileData.ChaseDurationAddVisibleMin = kv.GetFloat("search_chase_duration_add_visible_min", profileData.ChaseDurationAddVisibleMin);
 	profileData.ChaseDurationAddVisibleMax = kv.GetFloat("search_chase_duration_add_visible_max", profileData.ChaseDurationAddVisibleMax);
 
-	profileData.SoundPosDiscardTime = kv.GetFloat("search_sound_pos_discard_time", profileData.SoundPosDiscardTime);
-	profileData.SoundPosDistanceTolerance = kv.GetFloat("search_sound_pos_dist_tolerance", profileData.SoundPosDistanceTolerance);
 	profileData.ChasePersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init", profileData.ChasePersistencyTimeInit);
 	profileData.ChaseAttackPersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init_attack", profileData.ChaseAttackPersistencyTimeInit);
 	profileData.ChaseAttackPersistencyTimeAdd = kv.GetFloat("search_chase_persistency_time_add_attack", profileData.ChaseAttackPersistencyTimeAdd);
@@ -49,6 +47,41 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	profileData.ChasePersistencyAddVisibleMin = kv.GetFloat("search_chase_persistency_time_add_visible_min", profileData.ChasePersistencyAddVisibleMin);
 	profileData.ChaseStunPersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init_stun", profileData.ChaseStunPersistencyTimeInit);
 	profileData.ChaseStunPersistencyTimeAdd = kv.GetFloat("search_chase_persistency_time_add_stun", profileData.ChaseStunPersistencyTimeAdd);
+
+	if (kv.JumpToKey("senses"))
+	{
+		if (kv.JumpToKey("hearing"))
+		{
+			GetProfileDifficultyNumValues(kv, "threshold", profileData.SoundCountToAlert, profileData.SoundCountToAlert);
+			GetProfileDifficultyFloatValues(kv, "discard_time", profileData.SoundPosDiscardTime, profileData.SoundPosDiscardTime);
+			GetProfileDifficultyFloatValues(kv, "distance_tolerance", profileData.SoundPosDistanceTolerance, profileData.SoundPosDistanceTolerance);
+
+			if (kv.JumpToKey("cooldown"))
+			{
+				GetProfileDifficultyFloatValues(kv, "footstep", profileData.FootstepSenses.Cooldown, profileData.FootstepSenses.Cooldown);
+				GetProfileDifficultyFloatValues(kv, "footstep_loud", profileData.LoudFootstepSenses.Cooldown, profileData.LoudFootstepSenses.Cooldown);
+				GetProfileDifficultyFloatValues(kv, "footstep_quiet", profileData.QuietFootstepSenses.Cooldown, profileData.QuietFootstepSenses.Cooldown);
+
+				GetProfileDifficultyFloatValues(kv, "voice", profileData.VoiceSenses.Cooldown, profileData.VoiceSenses.Cooldown);
+				GetProfileDifficultyFloatValues(kv, "weapon", profileData.WeaponSenses.Cooldown, profileData.WeaponSenses.Cooldown);
+				GetProfileDifficultyFloatValues(kv, "flashlight", profileData.FlashlightSenses.Cooldown, profileData.FlashlightSenses.Cooldown);
+				kv.GoBack();
+			}
+			if (kv.JumpToKey("add"))
+			{
+				GetProfileDifficultyNumValues(kv, "footstep", profileData.FootstepSenses.AddCount, profileData.FootstepSenses.AddCount);
+				GetProfileDifficultyNumValues(kv, "footstep_loud", profileData.LoudFootstepSenses.AddCount, profileData.LoudFootstepSenses.AddCount);
+				GetProfileDifficultyNumValues(kv, "footstep_quiet", profileData.QuietFootstepSenses.AddCount, profileData.QuietFootstepSenses.AddCount);
+
+				GetProfileDifficultyNumValues(kv, "voice", profileData.VoiceSenses.AddCount, profileData.VoiceSenses.AddCount);
+				GetProfileDifficultyNumValues(kv, "weapon", profileData.WeaponSenses.AddCount, profileData.WeaponSenses.AddCount);
+				GetProfileDifficultyNumValues(kv, "flashlight", profileData.FlashlightSenses.AddCount, profileData.FlashlightSenses.AddCount);
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+		kv.GoBack();
+	}
 
 	GetProfileDifficultyFloatValues(kv, "search_wander_range_min", profileData.WanderRangeMin, profileData.WanderRangeMin);
 	GetProfileDifficultyFloatValues(kv, "search_wander_range_max", profileData.WanderRangeMax, profileData.WanderRangeMax);
@@ -468,13 +501,13 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_threshold", profileData.AutoChaseCount, profileData.AutoChaseCount);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add", profileData.AutoChaseAdd, profileData.AutoChaseAdd);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_footsteps", profileData.AutoChaseAddFootstep, profileData.AutoChaseAddFootstep);
+		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_footsteps_loud", profileData.AutoChaseAddLoudFootstep, profileData.AutoChaseAddFootstep);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_voice", profileData.AutoChaseAddVoice, profileData.AutoChaseAddVoice);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_weapon", profileData.AutoChaseAddWeapon, profileData.AutoChaseAddWeapon);
 	}
 	profileData.AutoChaseSprinters = view_as<bool>(kv.GetNum("auto_chase_sprinters", profileData.AutoChaseSprinters));
-	profileData.SoundCountToAlert = kv.GetNum("search_sound_count_until_alert", profileData.SoundCountToAlert);
 
-	profileData.ChasesEndlessly = view_as<bool>(KvGetNum(kv,"boss_chases_endlessly", profileData.ChasesEndlessly));
+	profileData.ChasesEndlessly = view_as<bool>(KvGetNum(kv, "boss_chases_endlessly", profileData.ChasesEndlessly));
 
 	profileData.SelfHeal = view_as<bool>(kv.GetNum("self_heal_enabled", profileData.SelfHeal));
 	if (profileData.SelfHeal)

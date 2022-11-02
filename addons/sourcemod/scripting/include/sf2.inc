@@ -3,8 +3,8 @@
 #endif
 #define _sf2_included
 
-#define PLUGIN_VERSION "1.7.5.03 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.5.03 M"
+#define PLUGIN_VERSION "1.7.5.04 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.5.04 M"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -99,6 +99,8 @@ enum SoundType
 {
 	SoundType_None = 0,
 	SoundType_Footstep,
+	SoundType_QuietFootstep,
+	SoundType_LoudFootstep,
 	SoundType_Voice,
 	SoundType_Weapon,
 	SoundType_Flashlight,
@@ -297,12 +299,13 @@ enum ParticleAttachment
 // Interrup conditions.
 #define COND_HEARDSUSPICIOUSSOUND (1 << 0)
 #define COND_HEARDFOOTSTEP (1 << 1)
-#define COND_HEARDFOOTSTEPLOUD (1 << 2)
-#define COND_HEARDWEAPON (1 << 3)
-#define COND_HEARDVOICE (1 << 4)
-#define COND_CHASETARGETINVALIDATED (1 << 5)
-#define COND_SAWENEMY (1 << 5)
-#define COND_HEARDFLASHLIGHT (1 << 6)
+#define COND_HEARDFOOTSTEPQUIET (1 << 2)
+#define COND_HEARDFOOTSTEPLOUD (1 << 3)
+#define COND_HEARDWEAPON (1 << 4)
+#define COND_HEARDVOICE (1 << 5)
+#define COND_CHASETARGETINVALIDATED (1 << 6)
+#define COND_SAWENEMY (1 << 7)
+#define COND_HEARDFLASHLIGHT (1 << 8)
 
 // Projectile flags.
 #define PROJ_FIREBALL (1 << 0)
