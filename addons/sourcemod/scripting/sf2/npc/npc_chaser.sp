@@ -102,6 +102,7 @@ static float g_NpcSilentMarkDuration[MAX_BOSSES][Difficulty_Max];
 
 static bool g_NpcHasIgnitePlayerEnabled[MAX_BOSSES];
 static int g_NpcIgniteAttackIndexes[MAX_BOSSES];
+static float g_NpcIgniteDuration[MAX_BOSSES][Difficulty_Max];
 static float g_NpcIgniteDelay[MAX_BOSSES][Difficulty_Max];
 
 static bool g_NpcHasStunPlayerEnabled[MAX_BOSSES];
@@ -1003,6 +1004,11 @@ int NPCChaserGetIgniteAttackIndexes(int npcIndex)
 	return g_NpcIgniteAttackIndexes[npcIndex];
 }
 
+float NPCChaserGetIgniteDuration(int npcIndex, int difficulty)
+{
+	return g_NpcIgniteDuration[npcIndex][difficulty];
+}
+
 float NPCChaserGetIgniteDelay(int npcIndex, int difficulty)
 {
 	return g_NpcIgniteDelay[npcIndex][difficulty];
@@ -1459,6 +1465,7 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 		g_NpcGasDuration[npcIndex][difficulty] = GetChaserProfileGasPlayerDuration(profile, difficulty);
 		g_NpcMarkDuration[npcIndex][difficulty] = GetChaserProfileMarkPlayerDuration(profile, difficulty);
 		g_NpcSilentMarkDuration[npcIndex][difficulty] = GetChaserProfileSilentMarkPlayerDuration(profile, difficulty);
+		g_NpcIgniteDuration[npcIndex][difficulty] = GetChaserProfileIgnitePlayerDuration(profile, difficulty);
 		g_NpcIgniteDelay[npcIndex][difficulty] = GetChaserProfileIgnitePlayerDelay(profile, difficulty);
 		g_NpcStunAttackDuration[npcIndex][difficulty] = GetChaserProfileStunPlayerDuration(profile, difficulty);
 		g_NpcStunAttackSlowdown[npcIndex][difficulty] = GetChaserProfileStunPlayerSlowdown(profile, difficulty);
@@ -1792,6 +1799,7 @@ static void NPCChaserResetValues(int npcIndex)
 		g_NpcGasDuration[npcIndex][difficulty] = 0.0;
 		g_NpcMarkDuration[npcIndex][difficulty] = 0.0;
 		g_NpcSilentMarkDuration[npcIndex][difficulty] = 0.0;
+		g_NpcIgniteDuration[npcIndex][difficulty] = 0.0;
 		g_NpcIgniteDelay[npcIndex][difficulty] = 0.0;
 		g_NpcStunAttackDuration[npcIndex][difficulty] = 0.0;
 		g_NpcStunAttackSlowdown[npcIndex][difficulty] = 0.0;
@@ -2071,8 +2079,8 @@ static Action Timer_InstantKillThink(Handle timer, int bossIndex)
 		return Plugin_Stop;
 	}
 
-	int boss = NPCGetEntIndex(bossIndex);
-	if (!boss || boss == INVALID_ENT_REFERENCE)
+	CBaseEntity boss = CBaseEntity(NPCGetEntIndex(bossIndex));
+	if (!boss.IsValid())
 	{
 		return Plugin_Stop;
 	}
@@ -2095,38 +2103,43 @@ static Action Timer_InstantKillThink(Handle timer, int bossIndex)
 	}
 
 	float slenderPos[3];
-	SlenderGetAbsOrigin(bossIndex, slenderPos);
+	boss.GetAbsOrigin(slenderPos);
 
 	bool attackWaiters = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	for (int i = 1; i < MaxClients; i++)
+	int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
+	if (!target || target == INVALID_ENT_REFERENCE)
 	{
-		if (!IsValidClient(i) || IsClientInDeathCam(i) || IsClientInGhostMode(i) || !IsPlayerAlive(i) || g_PlayerProxy[i])
+		return Plugin_Continue;
+	}
+
+	if (!IsValidClient(target) || IsClientInDeathCam(target) || IsClientInGhostMode(target) || !IsPlayerAlive(target) || g_PlayerProxy[target])
+	{
+		return Plugin_Continue;
+	}
+
+	if (!attackWaiters && g_PlayerEliminated[target])
+	{
+		return Plugin_Continue;
+	}
+
+	float myPos[3];
+
+	GetClientAbsOrigin(target, myPos);
+	myPos[2] += 35.0;
+	slenderPos[2] += 35.0;
+
+	if ((GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(radius) &&
+		(GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
+		&& !g_SlenderInDeathcam[bossIndex])
+	{
+		if (PlayerCanSeeSlender(target, bossIndex, false, _, !attackWaiters))
 		{
-			continue;
-		}
-
-		if (!attackWaiters && g_PlayerEliminated[i])
-		{
-			continue;
-		}
-
-		float myPos[3];
-
-		GetClientAbsOrigin(i, myPos);
-
-		if ((GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(radius) &&
-			(GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
-			&& !g_SlenderInDeathcam[bossIndex])
-		{
-			if (PlayerCanSeeSlender(i, bossIndex, false, _, !attackWaiters))
-			{
-				g_SlenderLastKill[bossIndex] = GetGameTime();
-
-				ClientStartDeathCam(i, bossIndex, slenderPos);
-			}
+			g_SlenderLastKill[bossIndex] = GetGameTime();
+			slenderPos[2] -= 35.0;
+			ClientStartDeathCam(target, bossIndex, slenderPos);
 		}
 	}
 
@@ -3681,10 +3694,17 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			for (int i = 0; i < count && i < NPCChaserGetAttackCount(bossIndex); i++)
 			{
 				int forIndex = StringToInt(allowedIndexesList[i]);
-				if (forIndex == attackIndex + 1 && NPCChaserGetIgniteDelay(bossIndex, difficulty) && IsValidClient(client) && g_PlayerIgniteTimer[client] == null)
+				if (forIndex == attackIndex + 1 && IsValidClient(client) && NPCChaserGetIgniteDuration(bossIndex, difficulty))
 				{
-					g_PlayerIgniteTimer[client] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client), TIMER_FLAG_NO_MAPCHANGE);
-					g_PlayerResetIgnite[client] = null;
+					g_PlayerIgniteDurationEffect[client] = NPCChaserGetIgniteDuration(bossIndex, difficulty);
+					if (NPCChaserGetIgniteDelay(bossIndex, difficulty) > 0.0 && g_PlayerIgniteTimer[client] == null)
+					{
+						g_PlayerIgniteTimer[client] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client), TIMER_FLAG_NO_MAPCHANGE);
+					}
+					else
+					{
+						TF2_IgnitePlayer(client, client, g_PlayerIgniteDurationEffect[client]);
+					}
 					break;
 				}
 			}
@@ -3700,10 +3720,17 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			if (indexes[0] != '\0' && currentIndex[0] != '\0' && attackNumber != -1)
 			{
 				int currentAtkIndex = StringToInt(currentIndex);
-				if (attackNumber == currentAtkIndex && NPCChaserGetIgniteDelay(bossIndex, difficulty) && IsValidClient(client) && g_PlayerIgniteTimer[client] == null)
+				if (attackNumber == currentAtkIndex && IsValidClient(client) && NPCChaserGetIgniteDuration(bossIndex, difficulty))
 				{
-					g_PlayerIgniteTimer[client] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client), TIMER_FLAG_NO_MAPCHANGE);
-					g_PlayerResetIgnite[client] = null;
+					g_PlayerIgniteDurationEffect[client] = NPCChaserGetIgniteDuration(bossIndex, difficulty);
+					if (NPCChaserGetIgniteDelay(bossIndex, difficulty) > 0.0 && g_PlayerIgniteTimer[client] == null)
+					{
+						g_PlayerIgniteTimer[client] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client), TIMER_FLAG_NO_MAPCHANGE);
+					}
+					else
+					{
+						TF2_IgnitePlayer(client, client, g_PlayerIgniteDurationEffect[client]);
+					}
 				}
 			}
 		}

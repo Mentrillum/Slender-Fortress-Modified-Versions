@@ -130,9 +130,6 @@ public void OnPluginStart()
 	g_GhostModeConnectionCheckConVar = CreateConVar("sf2_ghostmode_check_connection", "1", "Checks a player's connection while in Ghost Mode. If the check fails, the client is booted out of Ghost Mode and the action and client's SteamID is logged in the main SF2 log.");
 	g_GhostModeConnectionToleranceConVar = CreateConVar("sf2_ghostmode_connection_tolerance", "5.0", "If sf2_ghostmode_check_connection is set to 1 and the client has timed out for at least this amount of time, the client will be booted out of Ghost Mode.");
 
-	g_20DollarsConVar = CreateConVar("sf2_20dollarmode", "0", "Enable/Disable $20 mode.", _, true, 0.0, true, 1.0);
-	g_20DollarsConVar.AddChangeHook(OnConVarChanged);
-
 	g_MaxPlayersConVar = CreateConVar("sf2_maxplayers", "6", "The maximum amount of players that can be in one round.", _, true, 1.0);
 	g_MaxPlayersConVar.AddChangeHook(OnConVarChanged);
 
@@ -1913,22 +1910,22 @@ static Action Command_ForceSpecialRound(int client,int args)
 	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
 
-	int iSpecialRound = StringToInt(arg1);
+	int specialRound = StringToInt(arg1);
 
-	if (iSpecialRound < 1)
+	if (specialRound < 1)
 	{
-		iSpecialRound = 1;
+		specialRound = 1;
 	}
-	else if (iSpecialRound > 40)
+	else if (specialRound > 38)
 	{
-		iSpecialRound = 40;
+		specialRound = 38;
 	}
-	else if (iSpecialRound > 0 && iSpecialRound < 40)
+	else if (specialRound > 0 && specialRound < 39)
 	{
-		g_SpecialRoundOverrideConVar.SetInt(iSpecialRound);
+		g_SpecialRoundOverrideConVar.SetInt(specialRound);
 	}
 
-	switch (iSpecialRound)
+	switch (specialRound)
 	{
 		case SPECIALROUND_DOUBLETROUBLE:
 		{
@@ -2061,10 +2058,6 @@ static Action Command_ForceSpecialRound(int client,int args)
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
 			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Triple Bosses.", "SF2 Prefix", client);
-		}
-		case SPECIALROUND_20DOLLARS:
-		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}20 Dollars.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_MODBOSSES:
 		{

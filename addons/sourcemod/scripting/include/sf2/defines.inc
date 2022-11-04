@@ -46,7 +46,6 @@
 #define FLASHLIGHT_BREAKSOUND "ambient/energy/spark6.wav"
 #define FLASHLIGHT_NOSOUND "player/suit_denydevice.wav"
 #define PAGE_GRABSOUND "slender/slenderpagegrab.wav"
-#define TWENTYDOLLARS_MUSIC "slender/gimm20dollars_v2.wav"
 
 #define MUSIC_CHAN SNDCHAN_AUTO
 #define MUSIC_GOTPAGES1_SOUND "slender/newambience_1.wav"

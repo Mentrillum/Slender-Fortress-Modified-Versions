@@ -7,7 +7,7 @@
 
 static float g_AfkAtGameTime[MAXPLAYERS + 1];
 
-void AFK_SetTime(int client, bool bReset = true)
+void AFK_SetTime(int client, bool reset = true)
 {
 	if (g_AfkAtGameTime[client] != 0.0 && g_AfkAtGameTime[client] < GetGameTime())
 	{
@@ -20,7 +20,7 @@ void AFK_SetTime(int client, bool bReset = true)
 		// Player already has their points disabled
 		g_AfkAtGameTime[client] = 0.0;
 	}
-	else if (!bReset || !g_PlayerAFKTimeConVar.BoolValue)
+	else if (!reset || !g_PlayerAFKTimeConVar.BoolValue)
 	{
 		g_AfkAtGameTime[client] = 0.0;
 	}

@@ -531,7 +531,6 @@ void CheckIfMusicValid()
 						ClientChaseMusicSeeReset(client);
 						ClientAlertMusicReset(client);
 						ClientIdleMusicReset(client);
-						Client20DollarsMusicReset(client);
 						GetChaserProfileChaseMusics(profile, soundInfo);
 						soundInfo.StopAllSounds(client);
 						GetChaserProfileChaseVisibleMusics(profile, soundInfo);
@@ -539,8 +538,6 @@ void CheckIfMusicValid()
 						GetChaserProfileAlertMusics(profile, soundInfo);
 						soundInfo.StopAllSounds(client);
 						GetChaserProfileIdleMusics(profile, soundInfo);
-						soundInfo.StopAllSounds(client);
-						GetChaserProfileTwentyDollarMusics(profile, soundInfo);
 						soundInfo.StopAllSounds(client);
 						if (g_PlayerMusicString[client][0] != '\0')
 						{
@@ -2153,7 +2150,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 				if ((g_NpcAllowMusicOnDifficulty[Npc.Index] & g_DifficultyConVar.IntValue) && time > 0.0)
 				{
 					timerMusic = CreateTimer(time,BossMusic,Npc.Index,TIMER_FLAG_NO_MAPCHANGE);
-					for(int client = 1;client <=MaxClients;client ++)
+					for(int client = 1; client <=MaxClients; client++)
 					{
 						if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
 						{
@@ -2161,7 +2158,6 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 							ClientChaseMusicSeeReset(client);
 							ClientAlertMusicReset(client);
 							ClientIdleMusicReset(client);
-							Client20DollarsMusicReset(client);
 							GetChaserProfileChaseMusics(profile, soundInfo);
 							soundInfo.StopAllSounds(client);
 							GetChaserProfileChaseVisibleMusics(profile, soundInfo);
@@ -2169,8 +2165,6 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 							GetChaserProfileAlertMusics(profile, soundInfo);
 							soundInfo.StopAllSounds(client);
 							GetChaserProfileIdleMusics(profile, soundInfo);
-							soundInfo.StopAllSounds(client);
-							GetChaserProfileTwentyDollarMusics(profile, soundInfo);
 							soundInfo.StopAllSounds(client);
 							if (g_PlayerMusicString[client][0] != '\0')
 							{
@@ -2591,10 +2585,6 @@ void RemoveProfile(int bossIndex)
 				ClientIdleMusicReset(i);
 			}
 
-			if (g_Player20DollarsMusicMaster[i] == bossIndex)
-			{
-				Client20DollarsMusicReset(i);
-			}
 			ClientUpdateMusicSystem(i);
 		}
 	}

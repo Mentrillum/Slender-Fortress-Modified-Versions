@@ -463,6 +463,7 @@ enum struct SF2ChaserBossProfileData
 	bool IgniteEffects;
 	int IgniteIndexes;
 	char IgniteIndexesString[88];
+	float IgniteDuration[Difficulty_Max];
 	float IgniteDelay[Difficulty_Max];
 
 	bool StunEffects;
@@ -591,7 +592,6 @@ enum struct SF2ChaserBossProfileData
 	SF2BossProfileSoundInfo ChaseVisibleMusics;
 	SF2BossProfileSoundInfo AlertMusics;
 	SF2BossProfileSoundInfo IdleMusics;
-	SF2BossProfileSoundInfo TwentyDollarsMusics;
 
 	void Init()
 	{
@@ -650,6 +650,7 @@ enum struct SF2ChaserBossProfileData
 			this.GasDuration[difficulty] = this.GasDuration[difficulty] = difficulty > 0 ? this.GasDuration[difficulty - 1] : 0.0;
 			this.MarkDuration[difficulty] = this.MarkDuration[difficulty] = difficulty > 0 ? this.MarkDuration[difficulty - 1] : 0.0;
 			this.SilentMarkDuration[difficulty] = this.SilentMarkDuration[difficulty] = difficulty > 0 ? this.SilentMarkDuration[difficulty - 1] : 0.0;
+			this.IgniteDuration[difficulty] = this.IgniteDuration[difficulty] = difficulty > 0 ? this.IgniteDuration[difficulty - 1] : 10.0;
 			this.IgniteDelay[difficulty] = this.IgniteDelay[difficulty] = difficulty > 0 ? this.IgniteDelay[difficulty - 1] : 0.0;
 			this.StunEffectDuration[difficulty] = this.StunEffectDuration[difficulty] = difficulty > 0 ? this.StunEffectDuration[difficulty - 1] : 0.0;
 			this.StunEffectSlowdown[difficulty] = this.StunEffectSlowdown[difficulty] = difficulty > 0 ? this.StunEffectSlowdown[difficulty - 1] : 0.0;
@@ -927,8 +928,6 @@ enum struct SF2ChaserBossProfileData
 		this.AlertMusics.Channel = MUSIC_CHAN;
 		this.IdleMusics.Init();
 		this.IdleMusics.Channel = MUSIC_CHAN;
-		this.TwentyDollarsMusics.Init();
-		this.TwentyDollarsMusics.Channel = MUSIC_CHAN;
 	}
 
 	void PostLoad()
@@ -951,7 +950,6 @@ enum struct SF2ChaserBossProfileData
 		this.ChaseVisibleMusics.PostLoad();
 		this.AlertMusics.PostLoad();
 		this.IdleMusics.PostLoad();
-		this.TwentyDollarsMusics.PostLoad();
 
 		if (this.ProjectilePosOffsets != null && this.ProjectilePosOffsets.Length <= 0)
 		{
@@ -1050,10 +1048,6 @@ enum struct SF2ChaserBossProfileData
 		{
 			this.IdleMusics.Load(kv);
 		}
-		else if (strcmp(sectionName, "sound_20dollars") == 0)
-		{
-			this.TwentyDollarsMusics.Load(kv);
-		}
 	}
 
 	void Destroy()
@@ -1076,7 +1070,6 @@ enum struct SF2ChaserBossProfileData
 		this.ChaseVisibleMusics.Destroy();
 		this.AlertMusics.Destroy();
 		this.IdleMusics.Destroy();
-		this.TwentyDollarsMusics.Destroy();
 		if (this.Attacks != null)
 		{
 			SF2ChaserBossProfileAttackData attackData;

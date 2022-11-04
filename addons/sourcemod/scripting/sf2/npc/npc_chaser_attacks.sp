@@ -1501,29 +1501,7 @@ Action Timer_SlenderChaseBossAttackIgniteHit(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	TF2_IgnitePlayer(player, player);
-	g_PlayerResetIgnite[player] = CreateTimer(0.1, Timer_SlenderChaseBossResetIgnite, EntIndexToEntRef(player), TIMER_FLAG_NO_MAPCHANGE);
-	return Plugin_Stop;
-}
-
-static Action Timer_SlenderChaseBossResetIgnite(Handle timer, any entref)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Stop;
-	}
-
-	int player = EntRefToEntIndex(entref);
-	if (!player || player == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_PlayerResetIgnite[player])
-	{
-		return Plugin_Stop;
-	}
-
+	TF2_IgnitePlayer(player, player, g_PlayerIgniteDurationEffect[player]);
 	g_PlayerIgniteTimer[player] = null;
 	return Plugin_Stop;
 }

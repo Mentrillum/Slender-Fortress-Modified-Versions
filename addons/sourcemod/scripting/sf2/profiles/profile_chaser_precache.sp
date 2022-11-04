@@ -346,6 +346,7 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 				profileData.IgniteIndexes = 1;
 			}
 			kv.GetString("player_ignite_attack_indexs", profileData.IgniteIndexesString, sizeof(profileData.IgniteIndexesString), profileData.IgniteIndexesString);
+			GetProfileDifficultyFloatValues(kv, "player_ignite_duration", profileData.IgniteDuration, profileData.IgniteDuration);
 			GetProfileDifficultyFloatValues(kv, "player_ignite_delay", profileData.IgniteDelay, profileData.IgniteDelay);
 		}
 

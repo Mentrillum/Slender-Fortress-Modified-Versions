@@ -564,7 +564,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientChaseMusicSeeReset(client);
 		ClientAlertMusicReset(client);
 		ClientIdleMusicReset(client);
-		Client20DollarsMusicReset(client);
 		Client90sMusicReset(client);
 		ClientMusicReset(client);
 		ClientResetProxy(client);
@@ -607,8 +606,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 
 	g_PlayerPostWeaponsTimer[client] = null;
 	g_PlayerIgniteTimer[client] = null;
-	g_PlayerResetIgnite[client] = null;
-	g_PlayerPageRewardTimer[client] = null;
 	g_PlayerPageRewardCycleTimer[client] = null;
 	g_PlayerFireworkTimer[client] = null;
 
@@ -665,7 +662,6 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientChaseMusicSeeReset(client);
 			ClientAlertMusicReset(client);
 			ClientIdleMusicReset(client);
-			Client20DollarsMusicReset(client);
 			Client90sMusicReset(client);
 			ClientMusicReset(client);
 			ClientResetProxy(client);
@@ -1526,7 +1522,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		ClientChaseMusicSeeReset(client);
 		ClientAlertMusicReset(client);
 		ClientIdleMusicReset(client);
-		Client20DollarsMusicReset(client);
 		Client90sMusicReset(client);
 		ClientMusicReset(client);
 
@@ -1836,8 +1831,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 
 		g_PlayerPostWeaponsTimer[client] = null;
 		g_PlayerIgniteTimer[client] = null;
-		g_PlayerResetIgnite[client] = null;
-		g_PlayerPageRewardTimer[client] = null;
 		g_PlayerPageRewardCycleTimer[client] = null;
 		g_PlayerFireworkTimer[client] = null;
 

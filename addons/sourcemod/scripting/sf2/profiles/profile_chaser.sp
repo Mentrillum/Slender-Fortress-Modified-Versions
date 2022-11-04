@@ -387,6 +387,12 @@ float GetChaserProfileSilentMarkPlayerDuration(const char[] profile,int difficul
 	return g_CachedProfileData.SilentMarkDuration[difficulty];
 }
 
+float GetChaserProfileIgnitePlayerDuration(const char[] profile,int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IgniteDuration[difficulty];
+}
+
 float GetChaserProfileIgnitePlayerDelay(const char[] profile,int difficulty)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -2201,12 +2207,6 @@ void GetChaserProfileIdleMusics(const char[] profile, SF2BossProfileSoundInfo pa
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	params = g_CachedProfileData.IdleMusics;
-}
-
-void GetChaserProfileTwentyDollarMusics(const char[] profile, SF2BossProfileSoundInfo params)
-{
-	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	params = g_CachedProfileData.TwentyDollarsMusics;
 }
 
 int GetProfileAttackNum(const char[] profile, const char[] keyValue,int defaultValue=0, const int attackIndex)

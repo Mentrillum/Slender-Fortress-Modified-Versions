@@ -384,7 +384,6 @@ void ClientEscape(int client)
 	ClientChaseMusicSeeReset(client);
 	ClientAlertMusicReset(client);
 	ClientIdleMusicReset(client);
-	Client20DollarsMusicReset(client);
 	Client90sMusicReset(client);
 	ClientMusicReset(client);
 	ClientResetProxy(client);
@@ -2405,7 +2404,7 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 				g_SlenderInDeathcam[bossIndex] = true;
 				SetEntityRenderMode(slenderEnt, RENDER_TRANSCOLOR);
 				SetEntityRenderColor(slenderEnt, g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], 0);
-				NPCChaserUpdateBossAnimation(bossIndex, slenderEnt, STATE_DEATHCAM);
+				NPCChaserUpdateBossAnimation(bossIndex, slenderEnt, STATE_IDLE);
 				g_SlenderDeathCamTarget[bossIndex] = EntIndexToEntRef(client);
 				if (g_SlenderEntityThink[bossIndex] != null)
 				{

@@ -523,10 +523,7 @@ static ArrayList SpecialEnabledList()
 		{
 			AddSpecialRoundToList(SPECIALROUND_TRIPLEBOSSES, enabledRounds);
 		}
-		if (!SF_SpecialRound(SPECIALROUND_20DOLLARS) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_IsBoxingMap())
-		{
-			AddSpecialRoundToList(SPECIALROUND_20DOLLARS, enabledRounds);
-		}
+
 		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_SpecialRound(SPECIALROUND_VOTE) && (GetSelectableAdminBossProfileList().Length > 0 || IsProfileValid(snatcher)))
 		{
 			AddSpecialRoundToList(SPECIALROUND_MODBOSSES, enabledRounds);
@@ -1547,10 +1544,7 @@ static void SpecialCreateVote()
 			{
 				FormatEx(item, sizeof(item), "Triple Bosses");
 			}
-			case SPECIALROUND_20DOLLARS:
-			{
-				FormatEx(item, sizeof(item), "20 Dollars");
-			}
+
 			case SPECIALROUND_BOSSROULETTE:
 			{
 				FormatEx(item, sizeof(item), "Boss Roulette");
