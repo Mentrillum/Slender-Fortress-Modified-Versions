@@ -278,12 +278,18 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponName
 				GetClientEyePosition(client, pos1);
 				GetEntPropVector(entity, Prop_Data, "m_vecOrigin", pos2);
 
-				if (GetVectorDistance(pos1, pos2, true) < 2500.0)
+				if (GetVectorSquareMagnitude(pos1, pos2) < SquareFloat(50.0))
 				{
 					CollectPage(entity, client);
 				}
 			}
 		}
+	}
+
+	if (g_PlayerProxy[client])
+	{
+		result = false;
+		return Plugin_Changed;
 	}
 
 	return Plugin_Continue;
@@ -406,6 +412,12 @@ void ClientEscape(int client)
 		if (NPCGetUniqueID(npcIndex) == -1)
 		{
 			continue;
+		}
+		if (EntRefToEntIndex(g_SlenderTarget[npcIndex]) == client)
+		{
+			g_SlenderInterruptConditions[npcIndex] |= COND_CHASETARGETINVALIDATED;
+			GetClientAbsOrigin(client, g_SlenderChaseDeathPosition[npcIndex]);
+			g_BossPathFollower[npcIndex].Invalidate();
 		}
 		if (g_NpcChaseOnLookTarget[npcIndex] == null)
 		{

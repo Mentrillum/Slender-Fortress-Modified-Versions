@@ -122,9 +122,9 @@ void Hook_ClientPreThink(int client)
 									ClientSetScareBoostEndTime(client, GetGameTime() + 5.0);
 
 									// Induce client stress levels.
-									float flUnComfortZoneDist = 512.0;
-									float flStressScalar = ((SquareFloat(flUnComfortZoneDist) / NPCGetDistanceFromEntity(i, client)));
-									ClientAddStress(client, 0.025 * flStressScalar);
+									float unComfortZoneDist = 512.0;
+									float stressScalar = ((SquareFloat(unComfortZoneDist) / NPCGetDistanceFromEntity(i, client)));
+									ClientAddStress(client, 0.025 * stressScalar);
 
 									break;
 								}
@@ -311,9 +311,9 @@ void Hook_ClientPreThink(int client)
 								else
 								{
 									weaponEnt = INVALID_ENT_REFERENCE;
-									for (int iSlot = 0; iSlot <= 5; iSlot++)
+									for (int slot = 0; slot <= 5; slot++)
 									{
-										weaponEnt = GetPlayerWeaponSlot(client, iSlot);
+										weaponEnt = GetPlayerWeaponSlot(client, slot);
 										if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
 										{
 											continue;
@@ -340,9 +340,9 @@ void Hook_ClientPreThink(int client)
 							if (class == TFClass_Pyro)
 							{
 								weaponEnt = INVALID_ENT_REFERENCE;
-								for (int iSlot = 0; iSlot <= 5; iSlot++)
+								for (int slot = 0; slot <= 5; slot++)
 								{
-									weaponEnt = GetPlayerWeaponSlot(client, iSlot);
+									weaponEnt = GetPlayerWeaponSlot(client, slot);
 									if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
 									{
 										continue;
@@ -365,18 +365,18 @@ void Hook_ClientPreThink(int client)
 						}
 					}
 
-					float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.5);
-					float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.35);
-					if (g_PlayerSprintPoints[client] > 7)
+					float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.425);
+					float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.3);
+					if (g_PlayerSprintPoints[client] > 8)
 					{
 						sprintSpeedSubtract -= sprintSpeedSubtract * (g_PlayerSprintPoints[client] != 0 ? (float(g_PlayerSprintPoints[client]) / 100.0) : 0.0);
 						sprintSpeed -= sprintSpeedSubtract;
 					}
 					else
 					{
-						sprintSpeedSubtract += 25;
+						sprintSpeedSubtract += 125;
 						sprintSpeed -= sprintSpeedSubtract;
-						walkSpeedSubtract += 15;
+						walkSpeedSubtract += 25;
 						walkSpeed -= walkSpeedSubtract;
 					}
 

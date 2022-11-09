@@ -267,6 +267,11 @@ methodmap SF2NPC_BaseNPC
 		return NPCGetAddSpeed(this.Index);
 	}
 
+	public bool GetAbsOrigin(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
+	{
+		return SlenderGetAbsOrigin(this.Index, buffer, defaultValue);
+	}
+
 	property float AddSpeed
 	{
 		public get()

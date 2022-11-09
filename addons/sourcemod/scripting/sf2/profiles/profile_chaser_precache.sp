@@ -33,20 +33,21 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.WakeRadius = 0.0;
 	}
 
-	GetProfileDifficultyFloatValues(kv, "search_alert_gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
-	GetProfileDifficultyFloatValues(kv, "search_alert_duration", profileData.AlertDuration, profileData.AlertDuration);
-	GetProfileDifficultyFloatValues(kv, "search_chase_duration", profileData.ChaseDuration, profileData.ChaseDuration);
-	profileData.ChaseDurationAddVisibleMin = kv.GetFloat("search_chase_duration_add_visible_min", profileData.ChaseDurationAddVisibleMin);
-	profileData.ChaseDurationAddVisibleMax = kv.GetFloat("search_chase_duration_add_visible_max", profileData.ChaseDurationAddVisibleMax);
+	GetProfileDifficultyFloatValues(kv, "alert_gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
+	GetProfileDifficultyFloatValues(kv, "alert_duration", profileData.AlertDuration, profileData.AlertDuration);
+	GetProfileDifficultyFloatValues(kv, "chase_duration", profileData.ChaseDuration, profileData.ChaseDuration);
+	profileData.ChaseDurationAddVisibleMin = kv.GetFloat("chase_duration_add_visible_min", profileData.ChaseDurationAddVisibleMin);
+	profileData.ChaseDurationAddVisibleMax = kv.GetFloat("chase_duration_add_visible_max", profileData.ChaseDurationAddVisibleMax);
 
-	profileData.ChasePersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init", profileData.ChasePersistencyTimeInit);
-	profileData.ChaseAttackPersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init_attack", profileData.ChaseAttackPersistencyTimeInit);
-	profileData.ChaseAttackPersistencyTimeAdd = kv.GetFloat("search_chase_persistency_time_add_attack", profileData.ChaseAttackPersistencyTimeAdd);
-	profileData.ChaseNewTargetPersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init_newtarget", profileData.ChaseNewTargetPersistencyTimeInit);
-	profileData.ChaseNewTargetPersistencyTimeAdd = kv.GetFloat("search_chase_persistency_time_add_newtarget", profileData.ChaseNewTargetPersistencyTimeAdd);
-	profileData.ChasePersistencyAddVisibleMin = kv.GetFloat("search_chase_persistency_time_add_visible_min", profileData.ChasePersistencyAddVisibleMin);
-	profileData.ChaseStunPersistencyTimeInit = kv.GetFloat("search_chase_persistency_time_init_stun", profileData.ChaseStunPersistencyTimeInit);
-	profileData.ChaseStunPersistencyTimeAdd = kv.GetFloat("search_chase_persistency_time_add_stun", profileData.ChaseStunPersistencyTimeAdd);
+	profileData.ChasePersistencyTimeInit = kv.GetFloat("chase_persistency_time_init", profileData.ChasePersistencyTimeInit);
+	profileData.ChaseAttackPersistencyTimeInit = kv.GetFloat("chase_persistency_time_init_attack", profileData.ChaseAttackPersistencyTimeInit);
+	profileData.ChaseAttackPersistencyTimeAdd = kv.GetFloat("chase_persistency_time_add_attack", profileData.ChaseAttackPersistencyTimeAdd);
+	profileData.ChaseNewTargetPersistencyTimeInit = kv.GetFloat("chase_persistency_time_init_newtarget", profileData.ChaseNewTargetPersistencyTimeInit);
+	profileData.ChaseNewTargetPersistencyTimeAdd = kv.GetFloat("chase_persistency_time_add_newtarget", profileData.ChaseNewTargetPersistencyTimeAdd);
+	profileData.ChasePersistencyAddVisibleMin = kv.GetFloat("chase_persistency_time_add_visible_min", profileData.ChasePersistencyAddVisibleMin);
+	profileData.ChasePersistencyAddVisibleMax = kv.GetFloat("chase_persistency_time_add_visible_max", profileData.ChasePersistencyAddVisibleMax);
+	profileData.ChaseStunPersistencyTimeInit = kv.GetFloat("chase_persistency_time_init_stun", profileData.ChaseStunPersistencyTimeInit);
+	profileData.ChaseStunPersistencyTimeAdd = kv.GetFloat("chase_persistency_time_add_stun", profileData.ChaseStunPersistencyTimeAdd);
 
 	if (kv.JumpToKey("senses"))
 	{
@@ -83,10 +84,12 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		kv.GoBack();
 	}
 
-	GetProfileDifficultyFloatValues(kv, "search_wander_range_min", profileData.WanderRangeMin, profileData.WanderRangeMin);
-	GetProfileDifficultyFloatValues(kv, "search_wander_range_max", profileData.WanderRangeMax, profileData.WanderRangeMax);
-	GetProfileDifficultyFloatValues(kv, "search_wander_time_min", profileData.WanderTimeMin, profileData.WanderTimeMin);
-	GetProfileDifficultyFloatValues(kv, "search_wander_time_max", profileData.WanderTimeMax, profileData.WanderTimeMax);
+	GetProfileDifficultyFloatValues(kv, "wander_range_min", profileData.WanderRangeMin, profileData.WanderRangeMin);
+	GetProfileDifficultyFloatValues(kv, "wander_range_max", profileData.WanderRangeMax, profileData.WanderRangeMax);
+	GetProfileDifficultyFloatValues(kv, "wander_time_min", profileData.WanderTimeMin, profileData.WanderTimeMin);
+	GetProfileDifficultyFloatValues(kv, "wander_time_max", profileData.WanderTimeMax, profileData.WanderTimeMax);
+	GetProfileDifficultyFloatValues(kv, "wander_enter_time_min", profileData.WanderEnterTimeMin, profileData.WanderEnterTimeMin);
+	GetProfileDifficultyFloatValues(kv, "wander_enter_time_max", profileData.WanderEnterTimeMax, profileData.WanderEnterTimeMax);
 
 	profileData.StunEnabled = view_as<bool>(kv.GetNum("stun_enabled", profileData.StunEnabled));
 	if (profileData.StunEnabled)

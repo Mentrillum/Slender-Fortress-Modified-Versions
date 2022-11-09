@@ -326,7 +326,7 @@ float g_NpcBaseAttackRunDelayTime[MAX_BOSSES][SF2_CHASER_BOSS_MAX_ATTACKS];
 #include "sf2/npc/npc_creeper.sp"
 #include "sf2/methodmaps.sp"
 
-public void NPCChaserInitialize()
+void NPCChaserInitialize()
 {
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
@@ -2045,6 +2045,9 @@ static void NPCChaserResetValues(int npcIndex)
 
 void Spawn_Chaser(int bossIndex)
 {
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
+
 	g_LastStuckTime[bossIndex] = 0.0;
 	g_SlenderOldState[bossIndex] = STATE_IDLE;
 	g_NpcCopyAlerted[bossIndex] = false;
@@ -2059,6 +2062,12 @@ void Spawn_Chaser(int bossIndex)
 	NPCChaserSetAddStunHealth(bossIndex, -NPCChaserGetAddStunHealth(bossIndex));
 
 	g_NpcInstantKillThink[bossIndex] = CreateTimer(0.0, Timer_InstantKillThink, bossIndex, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+
+	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+	{
+		g_SlenderNextWanderPos[bossIndex][difficulty] = GetGameTime() +
+			GetRandomFloat(GetChaserProfileWanderEnterTimeMin(profile, difficulty), GetChaserProfileWanderEnterTimeMax(profile, difficulty));
+	}
 
 }
 
@@ -2232,6 +2241,54 @@ int NPCChaserGetClosestPlayer(int slender)
 	}
 
 	return -1;
+}
+
+bool NPCGetWanderPosition(SF2NPC_Chaser boss)
+{
+	// We're allowed to move in wander mode. Get a new wandering position and create a path to follow.
+	// If the position can't be reached, then just get to the closest area that we can get.
+	int difficulty = GetLocalGlobalDifficulty(boss.Index);
+	float myPos[3];
+	boss.GetAbsOrigin(myPos);
+	float wanderRangeMin = NPCChaserGetWanderRangeMin(boss.Index, difficulty);
+	float wanderRangeMax = NPCChaserGetWanderRangeMax(boss.Index, difficulty);
+	float wanderRange = GetRandomFloat(wanderRangeMin, wanderRangeMax);
+	CNavArea navArea = TheNavMesh.GetNearestNavArea(myPos, _, 256.0);
+	SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(navArea, wanderRange);
+	int areaCount = collector.Count();
+	ArrayList areaArray = new ArrayList(1, areaCount);
+	int validAreaCount = 0;
+	for (int i = 0; i < areaCount; i++)
+	{
+		if (collector.Get(i).HasAttributes(NAV_MESH_CROUCH))
+		{
+			continue;
+		}
+		areaArray.Set(validAreaCount, i);
+		validAreaCount++;
+	}
+
+	areaArray.Resize(validAreaCount);
+
+	if (areaArray.Length <= 0)
+	{
+		return false;
+	}
+	float wanderPos[3];
+	CNavArea wanderArea = collector.Get(areaArray.Get(GetRandomInt(0, validAreaCount - 1)));
+	if (wanderArea == view_as<CNavArea>(0))
+	{
+		return false;
+	}
+	wanderArea.GetCenter(wanderPos);
+
+	boss.SetGoalPos(wanderPos);
+
+	g_SlenderNextPathTime[boss.Index] = -1.0; // We're not going to wander around too much, so no need for a time constraint.
+
+	delete collector;
+	delete areaArray;
+	return true;
 }
 
 void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn = false)
@@ -3103,45 +3160,6 @@ Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	NPCChaserUpdateBossAnimation(bossIndex, slender, state);
 
 	return Plugin_Stop;
-}
-
-public MRESReturn ShouldCollideWith(Address thisAddress, DHookReturn returnHandle, DHookParam params)
-{
-	int entity = params.Get(1);
-	if (IsValidEntity(entity))
-	{
-		char class[32];
-		GetEdictClassname(entity, class, sizeof(class));
-		if (strcmp(class, "tf_zombie") == 0)
-		{
-			returnHandle.Value = false;
-			return MRES_Supercede;
-		}
-		else if (strcmp(class, "base_boss") == 0)
-		{
-			returnHandle.Value = false;
-			return MRES_Supercede;
-		}
-		else if (strcmp(class, "base_npc") == 0)
-		{
-			returnHandle.Value = false;
-			return MRES_Supercede;
-		}
-		else if (strcmp(class, "player") == 0)
-		{
-			if (g_PlayerProxy[entity] || IsClientInGhostMode(entity) || IsClientInDeathCam(entity) || GetClientTeam(entity) == TFTeam_Blue || IsClientInDeathCam(entity))
-			{
-				returnHandle.Value = false;
-				return MRES_Supercede;
-			}
-		}
-		else if (IsEntityAProjectile(entity))
-		{
-			returnHandle.Value = false;
-			return MRES_Supercede;
-		}
-	}
-	return MRES_Ignored;
 }
 
 void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
@@ -4341,12 +4359,13 @@ stock void NPC_DropKey(int bossIndex)
 		CreateTimer(timeLeft, CollectKey, EntIndexToEntRef(touchBox), TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
-public void KeyTrigger(const char[] output, int caller, int activator, float delay)
+
+void KeyTrigger(const char[] output, int caller, int activator, float delay)
 {
 	TriggerKey(caller);
 }
 
-public Action Hook_KeySetTransmit(int entity, int other)
+Action Hook_KeySetTransmit(int entity, int other)
 {
 	if (!IsValidClient(other))
 	{
@@ -4366,7 +4385,7 @@ public Action Hook_KeySetTransmit(int entity, int other)
 	return Plugin_Handled;
 }
 
-public Action CollectKey(Handle timer, any entref)
+Action CollectKey(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (ent == INVALID_ENT_REFERENCE)

@@ -332,7 +332,7 @@ int EntitySetAnimation(int entity, const char[] name, float playbackRate = 1.0, 
 		animationEntity.ResetSequence(sequence);
 		if (cycle > 0.0)
 		{
-			SetEntPropFloat(entity, Prop_Data, "m_flCycle", cycle);
+			animationEntity.SetPropFloat(Prop_Data, "m_flCycle", cycle);
 		}
 	}
 
@@ -344,7 +344,7 @@ int EntitySetAnimation(int entity, const char[] name, float playbackRate = 1.0, 
 	{
 		playbackRate = 12.0;
 	}
-	SetEntPropFloat(entity, Prop_Send, "m_flPlaybackRate", playbackRate);
+	animationEntity.SetPropFloat(Prop_Send, "m_flPlaybackRate", playbackRate);
 	return sequence;
 }
 

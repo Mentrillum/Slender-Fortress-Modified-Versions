@@ -5,7 +5,7 @@
 
 #pragma semicolon 1
 
-public Action Event_RoundStart(Handle event, const char[] name, bool dB)
+Action Event_RoundStart(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -122,7 +122,7 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	return Plugin_Continue;
 }
 
-public Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
+Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!g_Enabled)
 	{
@@ -144,7 +144,7 @@ public Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action Event_Audio(Event event, const char[] name, bool dB)
+Action Event_Audio(Event event, const char[] name, bool dB)
 {
 	char strAudio[PLATFORM_MAX_PATH];
 
@@ -168,7 +168,7 @@ public Action Event_Audio(Event event, const char[] name, bool dB)
 	return Plugin_Continue;
 }
 
-public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
+Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -254,42 +254,7 @@ public Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 	return Plugin_Continue;
 }
 
-public Action Event_PlayerTeamPre(Handle event, const char[] name, bool dB)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 1)
-	{
-		DebugMessage("EVENT START: Event_PlayerTeamPre");
-	}
-	#endif
-
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (client > 0)
-	{
-		if (GetEventInt(event, "team") > 1 || GetEventInt(event, "oldteam") > 1)
-		{
-			SetEventBroadcast(event, true);
-		}
-	}
-
-	#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 1)
-	{
-		DebugMessage("EVENT END: Event_PlayerTeamPre");
-	}
-	#endif
-
-	delete event;
-
-	return Plugin_Continue;
-}
-
-public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
+Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -509,7 +474,7 @@ public Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 	return Plugin_Continue;
 }
 
-public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
+Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -909,7 +874,7 @@ public Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	return Plugin_Continue;
 }
 
-public void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast)
+void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast)
 {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	if (client <= 0)
@@ -1032,7 +997,7 @@ public void Event_PlayerClass(Event event, const char[] name, bool dontBroadcast
 	}
 }
 
-public Action Event_PostInventoryApplication(Handle event, const char[] name, bool dB)
+Action Event_PostInventoryApplication(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -1063,7 +1028,8 @@ public Action Event_PostInventoryApplication(Handle event, const char[] name, bo
 
 	return Plugin_Continue;
 }
-public Action Event_DontBroadcastToClients(Handle event, const char[] name, bool dB)
+
+Action Event_DontBroadcastToClients(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -1079,7 +1045,7 @@ public Action Event_DontBroadcastToClients(Handle event, const char[] name, bool
 	return Plugin_Continue;
 }
 
-public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
+Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -1419,7 +1385,7 @@ public Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	return Plugin_Changed;
 }
 
-public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
+Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -1480,7 +1446,7 @@ public Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 	return Plugin_Continue;
 }
 
-public Action Event_PlayerDeath(Event event, const char[] name, bool dB)
+Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{

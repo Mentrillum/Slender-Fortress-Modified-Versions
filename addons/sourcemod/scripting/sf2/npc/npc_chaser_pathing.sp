@@ -379,7 +379,7 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 				ScaleVector(pathNodePos, segment.length);
 				AddVectors(pathEndPos, pathNodePos, pathEndPos);
 
-				if (g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, CLIMB_UP, 120.0))
+				if (g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, CLIMB_UP, 120.0) || g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, JUMP_OVER_GAP, 120.0)|| g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, LADDER_UP, 120.0))
 				{
 					CBaseNPC_Jump(loco, myPos, pathEndPos);
 				}
@@ -950,6 +950,11 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 				g_LastPos[bossIndex] = myPos;
 			}
 		}
+	}
+
+	if (GetGameTime() >= g_SlenderNextFootstepSound[bossIndex])
+	{
+		SlenderCastFootstep(bossIndex);
 	}
 
 	return;

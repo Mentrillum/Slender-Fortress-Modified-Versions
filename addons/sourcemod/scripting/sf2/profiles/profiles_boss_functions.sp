@@ -228,8 +228,8 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	GetProfileDifficultyFloatValues(kv, "sound_music_loop", profileData.SoundMusicLoop, profileData.SoundMusicLoop);
 	GetProfileDifficultyFloatValues(kv, "kill_cooldown", profileData.InstantKillCooldown, profileData.InstantKillCooldown);
 
-	GetProfileDifficultyFloatValues(kv, "search_range", profileData.SearchRange, profileData.SearchRange);
-	GetProfileDifficultyFloatValues(kv, "search_sound_range", profileData.SearchSoundRange, profileData.SearchSoundRange);
+	GetProfileDifficultyFloatValues(kv, "search_view_distance", profileData.SearchRange, profileData.SearchRange);
+	GetProfileDifficultyFloatValues(kv, "hearing_range", profileData.SearchSoundRange, profileData.SearchSoundRange);
 	GetProfileDifficultyFloatValues(kv, "taunt_alert_range", profileData.TauntAlertRange, profileData.TauntAlertRange);
 
 	GetProfileDifficultyBoolValues(kv, "teleport_allowed", profileData.TeleportAllowed, profileData.TeleportAllowed);
@@ -374,8 +374,8 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 	profileData.OutroMusic = view_as<bool>(kv.GetNum("sound_music_outro_enabled", profileData.OutroMusic));
 
-	profileData.EngineSoundLevel = kv.GetNum("engine_sound_level", profileData.EngineSoundLevel);
-	profileData.EngineSoundVolume = kv.GetFloat("engine_sound_volume", profileData.EngineSoundVolume);
+	profileData.EngineSoundLevel = kv.GetNum("constant_sound_level", profileData.EngineSoundLevel);
+	profileData.EngineSoundVolume = kv.GetFloat("constant_sound_volume", profileData.EngineSoundVolume);
 
 	kv.GetVector("eye_pos", profileData.EyePosOffset, profileData.EyePosOffset);
 	kv.GetVector("eye_ang_offset", profileData.EyeAngOffset, profileData.EyeAngOffset);
@@ -735,7 +735,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	kv.GetString("arrow_shoot_sound", profileData.ArrowShootSound, sizeof(profileData.ArrowShootSound), profileData.ArrowShootSound);
 	kv.GetString("mangler_shoot_sound", profileData.ManglerShootSound, sizeof(profileData.ManglerShootSound), profileData.ManglerShootSound);
 	kv.GetString("baseball_shoot_sound", profileData.BaseballShootSound, sizeof(profileData.BaseballShootSound), profileData.BaseballShootSound);
-	kv.GetString("engine_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
+	kv.GetString("constant_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
 	kv.GetString("tp_effect_spawn_sound", profileData.SpawnEffectSound, sizeof(profileData.SpawnEffectSound), profileData.SpawnEffectSound);
 	kv.GetString("tp_effect_despawn_sound", profileData.DespawnEffectSound, sizeof(profileData.DespawnEffectSound), profileData.DespawnEffectSound);
 	kv.GetString("player_smite_sound", profileData.SmiteHitSound, sizeof(profileData.SmiteHitSound), profileData.SmiteHitSound);

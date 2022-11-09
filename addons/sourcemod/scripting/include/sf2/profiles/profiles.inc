@@ -426,6 +426,7 @@ enum struct SF2BossProfileSoundInfo
 	ArrayList Paths;
 	float Radius;
 	bool Loaded;
+	float Chance;
 
 	void Init()
 	{
@@ -439,6 +440,7 @@ enum struct SF2BossProfileSoundInfo
 		this.PitchRandomMin = this.Pitch;
 		this.PitchRandomMax = this.Pitch;
 		this.Radius = 850.0;
+		this.Chance = 1.0;
 
 		this.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 	}
@@ -475,6 +477,15 @@ enum struct SF2BossProfileSoundInfo
 			this.PitchRandomMin = kv.GetNum("pitch_random_min", this.PitchRandomMin);
 			this.PitchRandomMax = kv.GetNum("pitch_random_max", this.PitchRandomMax);
 			this.Radius = kv.GetFloat("radius", this.Radius);
+			this.Chance = kv.GetFloat("chance", this.Chance);
+			if (this.Chance < 0.0)
+			{
+				this.Chance = 0.0;
+			}
+			if (this.Chance > 1.0)
+			{
+				this.Chance = 1.0;
+			}
 		}
 	}
 

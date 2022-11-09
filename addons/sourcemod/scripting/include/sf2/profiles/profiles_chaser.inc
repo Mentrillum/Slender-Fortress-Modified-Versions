@@ -341,6 +341,8 @@ enum struct SF2ChaserBossProfileData
 	float WanderRangeMax[Difficulty_Max];
 	float WanderTimeMin[Difficulty_Max];
 	float WanderTimeMax[Difficulty_Max];
+	float WanderEnterTimeMin[Difficulty_Max];
+	float WanderEnterTimeMax[Difficulty_Max];
 
 	bool StunEnabled;
 	float StunCooldown;
@@ -610,8 +612,10 @@ enum struct SF2ChaserBossProfileData
 
 			this.WanderRangeMin[difficulty] = this.WanderRangeMin[difficulty] = difficulty > 0 ? this.WanderRangeMin[difficulty - 1] : 400.0;
 			this.WanderRangeMax[difficulty] = this.WanderRangeMax[difficulty] = difficulty > 0 ? this.WanderRangeMax[difficulty - 1] : 1024.0;
-			this.WanderTimeMin[difficulty] = this.WanderTimeMin[difficulty] = difficulty > 0 ? this.WanderTimeMin[difficulty - 1] : 3.0;
-			this.WanderTimeMax[difficulty] = this.WanderTimeMax[difficulty] = difficulty > 0 ? this.WanderTimeMax[difficulty - 1] : 4.5;
+			this.WanderTimeMin[difficulty] = this.WanderTimeMin[difficulty] = difficulty > 0 ? this.WanderTimeMin[difficulty - 1] : 8.0;
+			this.WanderTimeMax[difficulty] = this.WanderTimeMax[difficulty] = difficulty > 0 ? this.WanderTimeMax[difficulty - 1] : 12.0;
+			this.WanderEnterTimeMin[difficulty] = this.WanderEnterTimeMin[difficulty] = difficulty > 0 ? this.WanderEnterTimeMin[difficulty - 1] : 2.0;
+			this.WanderEnterTimeMax[difficulty] = this.WanderEnterTimeMax[difficulty] = difficulty > 0 ? this.WanderEnterTimeMax[difficulty - 1] : 4.5;
 
 			this.AwarenessIncreaseRate[difficulty] = this.AwarenessIncreaseRate[difficulty] = difficulty > 0 ? this.AwarenessIncreaseRate[difficulty - 1] : 75.0;
 			this.AwarenessDecreaseRate[difficulty] = this.AwarenessDecreaseRate[difficulty] = difficulty > 0 ? this.AwarenessDecreaseRate[difficulty - 1] : 150.0;

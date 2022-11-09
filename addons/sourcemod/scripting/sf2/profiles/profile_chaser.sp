@@ -195,12 +195,6 @@ float GetChaserProfileChaseStunPersistencyTimeAdd(const char[] profile)
 	return g_CachedProfileData.ChaseStunPersistencyTimeAdd;
 }
 
-float GetChaserProfileWanderRangeMin(const char[] profile,int difficulty)
-{
-	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.WanderRangeMin[difficulty];
-}
-
 float GetChaserProfileHearFootstepCooldown(const char[] profile, int difficulty)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -273,6 +267,12 @@ int GetChaserProfileFlashlightAddThreshold(const char[] profile, int difficulty)
 	return g_CachedProfileData.FlashlightSenses.AddCount[difficulty];
 }
 
+float GetChaserProfileWanderRangeMin(const char[] profile,int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderRangeMin[difficulty];
+}
+
 float GetChaserProfileWanderRangeMax(const char[] profile,int difficulty)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -289,6 +289,18 @@ float GetChaserProfileWanderTimeMax(const char[] profile,int difficulty)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.WanderTimeMax[difficulty];
+}
+
+float GetChaserProfileWanderEnterTimeMin(const char[] profile,int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderEnterTimeMin[difficulty];
+}
+
+float GetChaserProfileWanderEnterTimeMax(const char[] profile,int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderEnterTimeMax[difficulty];
 }
 
 float GetChaserProfileProjectileCooldownMin(const char[] profile,int difficulty)
