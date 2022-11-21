@@ -731,14 +731,14 @@ void ClientStartDrainingFlashlightBattery(int client)
 
 void ClientHandleFlashlight(int client)
 {
-	if (!IsValidClient(client) || !IsPlayerAlive(client))
+	if (!IsValidClient(client) || !IsPlayerAlive(client) || (TF2_IsPlayerInCondition(client, TFCond_Taunting) && !IsClientUsingFlashlight(client)))
 	{
 		return;
 	}
 
 	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
 
-	if (IsClientUsingFlashlight(client))
+	if (IsClientUsingFlashlight(client) || TF2_IsPlayerInCondition(client, TFCond_Taunting))
 	{
 		ClientTurnOffFlashlight(client);
 		ClientStartRechargingFlashlightBattery(client);

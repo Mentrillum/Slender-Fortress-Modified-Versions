@@ -3771,7 +3771,14 @@ void ClientUpdateListeningFlags(int client, bool reset=false)
 			}
 			else
 			{
-				SetListenOverride(client, i, Listen_No);
+				if (!DidClientEscape(client))
+				{
+					SetListenOverride(client, i, Listen_No);
+				}
+				else
+				{
+					SetListenOverride(client, i, Listen_Default);
+				}
 			}
 		}
 	}
@@ -3944,7 +3951,7 @@ static Action Hook_ConstantGlowSetTransmit(int ent, int other)
 	{
 		return Plugin_Continue;
 	}
-	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && ((GetClientTeam(other) == TFTeam_Red && !g_PlayerEscaped[other] && !g_PlayerEliminated[other]) || (g_PlayerProxy[other])))
+	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && ((GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other]) || (g_PlayerProxy[other])))
 	{
 		return Plugin_Continue;
 	}

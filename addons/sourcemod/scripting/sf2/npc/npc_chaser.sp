@@ -2168,7 +2168,7 @@ static Action Timer_InstantKillThink(Handle timer, int bossIndex)
 //			- If I lose sight or I'm unable to traverse safely, find paths around obstacles and follow memorized path.
 //			- If I reach the end of my path and I still don't see him and I still want to pursue him, keep on going in the direction I'm going.
 
-stock bool IsTargetValidForSlender(int target, bool bIncludeEliminated = false)
+bool IsTargetValidForSlender(int target, bool includeEliminated = false)
 {
 	if (!target || !IsValidClient(target))
 	{
@@ -2180,7 +2180,7 @@ stock bool IsTargetValidForSlender(int target, bool bIncludeEliminated = false)
 		if (!IsClientInGame(target) ||
 			!IsPlayerAlive(target) ||
 			IsClientInDeathCam(target) ||
-			(!bIncludeEliminated && g_PlayerEliminated[target]) ||
+			(!includeEliminated && g_PlayerEliminated[target]) ||
 			IsClientInGhostMode(target) ||
 			DidClientEscape(target))
 		{
@@ -4136,7 +4136,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 							}
 							if (GetClientTeam(client) == 2)
 							{
-								CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
+								CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
 							}
 						}
 					}
@@ -4175,7 +4175,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 							}
 							if (GetClientTeam(client) == 2)
 							{
-								CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
+								CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
 							}
 						}
 					}

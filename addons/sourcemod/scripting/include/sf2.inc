@@ -3,8 +3,8 @@
 #endif
 #define _sf2_included
 
-#define PLUGIN_VERSION "1.7.5.06 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.5.06 M"
+#define PLUGIN_VERSION "1.7.5.07 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.5.07 M"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64

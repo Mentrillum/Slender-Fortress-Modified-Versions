@@ -85,7 +85,7 @@ static int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 		int client = GetClientOfUserId(StringToInt(userId));
 		if (client <= 0)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
 			DisplayPlayerForceProxyAdminMenu(param1);
 		}
 		else
@@ -100,7 +100,7 @@ static int AdminMenu_PlayerForceProxy(Handle menu, MenuAction action,int param1,
 			{
 				delete menuHandle;
 				DisplayTopMenu(g_TopMenu, param1, TopMenuPosition_LastCategory);
-				CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", param1);
+				CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 No Active Bosses", param1);
 			}
 			else
 			{
@@ -131,7 +131,7 @@ static int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int par
 		int client = GetClientOfUserId(g_PlayerAdminMenuTargetUserId[param1]);
 		if (client <= 0)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Player Does Not Exist", param1);
 		}
 		else
 		{
@@ -140,22 +140,22 @@ static int AdminMenu_PlayerForceProxyBoss(Handle menu, MenuAction action,int par
 			int index = NPCGetFromUniqueID(StringToInt(id));
 			if (index == -1)
 			{
-				CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+				CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 			}
 			else
 			{
 				if (!(NPCGetFlags(index) & SFF_PROXIES) ||
 					g_SlenderCopyMaster[index] != -1)
 				{
-					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Not Allowed To Have Proxies", param1);
+					CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Not Allowed To Have Proxies", param1);
 				}
 				else if (!g_PlayerEliminated[client])
 				{
-					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player In Game", param1);
+					CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Player In Game", param1);
 				}
 				else if (g_PlayerProxy[param1])
 				{
-					CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player Already A Proxy", param1);
+					CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Player Already A Proxy", param1);
 				}
 				else
 				{
@@ -531,7 +531,7 @@ static bool DisplayRemoveBossAdminMenu(int client)
 		if (!AddBossTargetsToMenu(menuHandle))
 		{
 			delete menuHandle;
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 		}
 		else
 		{
@@ -566,7 +566,7 @@ static int AdminMenu_RemoveBoss(Handle menu, MenuAction action,int param1,int pa
 		int index = NPCGetFromUniqueID(StringToInt(id));
 		if (index == -1)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
 		else
 		{
@@ -586,7 +586,7 @@ static bool DisplaySpawnBossAdminMenu(int client)
 		if (!AddBossTargetsToMenu(menuHandle))
 		{
 			delete menuHandle;
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 		}
 		else
 		{
@@ -621,7 +621,7 @@ static int AdminMenu_SpawnBoss(Handle menu, MenuAction action,int param1,int par
 		int index = NPCGetFromUniqueID(StringToInt(id));
 		if (index == -1)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
 		else
 		{
@@ -641,7 +641,7 @@ static bool DisplayBossAttackWaitersAdminMenu(int client)
 		if (!AddBossTargetsToMenu(menuHandle))
 		{
 			delete menuHandle;
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 		}
 		else
 		{
@@ -676,7 +676,7 @@ static int AdminMenu_BossAttackWaiters(Handle menu, MenuAction action,int param1
 		int index = NPCGetFromUniqueID(StringToInt(id));
 		if (index == -1)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 			DisplayBossAttackWaitersAdminMenu(param1);
 		}
 		else
@@ -725,7 +725,7 @@ static int AdminMenu_BossAttackWaitersConfirm(Handle menu, MenuAction action,int
 		int index = NPCGetFromUniqueID(StringToInt(id));
 		if (index == -1)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
 		else
 		{
@@ -755,7 +755,7 @@ static bool DisplayBossTeleportAdminMenu(int client)
 		if (!AddBossTargetsToMenu(menuHandle))
 		{
 			delete menuHandle;
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 No Active Bosses", client);
 		}
 		else
 		{
@@ -790,7 +790,7 @@ static int AdminMenu_BossTeleport(Handle menu, MenuAction action,int param1,int 
 		int index = NPCGetFromUniqueID(StringToInt(id));
 		if (index == -1)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 			DisplayBossTeleportAdminMenu(param1);
 		}
 		else
@@ -839,7 +839,7 @@ static int AdminMenu_BossTeleportConfirm(Handle menu, MenuAction action,int para
 		int index = NPCGetFromUniqueID(StringToInt(id));
 		if (index == -1)
 		{
-			CPrintToChat(param1, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
+			CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Does Not Exist", param1);
 		}
 		else
 		{
@@ -927,10 +927,16 @@ static int AdminMenu_OverrideBoss(Handle menu, MenuAction action,int param1,int 
 	}
 	else if (action == MenuAction_Select)
 	{
-		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH], name[SF2_MAX_NAME_LENGTH];
 		GetMenuItem(menu, param2, profile, sizeof(profile));
 
-		FakeClientCommand(param1, "sm_cvar sf2_boss_profile_override %s", profile);
+		g_BossProfileOverrideConVar.SetString(profile);
+
+		ArrayList arrayNames;
+		arrayNames = GetBossProfileNames(profile);
+		arrayNames.GetString(Difficulty_Normal, name, sizeof(name));
+
+		CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next boss to {valve}%s{default}.", "SF2 Prefix", param1, name);
 
 		DisplayOverrideBossAdminMenu(param1);
 	}

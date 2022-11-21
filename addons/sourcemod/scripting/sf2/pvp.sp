@@ -500,7 +500,7 @@ void PvP_OnPlayerSpawn(int client)
 	{
 		if (!IsClientInGhostMode(client) && !g_PlayerProxy[client])
 		{
-			if (g_PlayerEliminated[client] || g_PlayerEscaped[client])
+			if (g_PlayerEliminated[client] || DidClientEscape(client))
 			{
 				bool autoSpawn = g_PlayerPreferences[client].PlayerPreference_PvPAutoSpawn;
 
@@ -555,7 +555,7 @@ void PvP_OnPlayerDeath(int client, bool fake)
 
 			if (autoSpawn)
 			{
-				if (g_PlayerEliminated[client] || g_PlayerEscaped[client])
+				if (g_PlayerEliminated[client] || DidClientEscape(client))
 				{
 					if (!IsRoundEnding())
 					{

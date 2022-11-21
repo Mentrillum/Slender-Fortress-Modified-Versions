@@ -847,17 +847,17 @@ void SpecialRoundStart()
 						case 1:
 						{
 							g_DifficultyConVar.SetInt(Difficulty_Normal);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
 						}
 						case 2:
 						{
 							g_DifficultyConVar.SetInt(Difficulty_Hard);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
 						}
 						case 3:
 						{
 							g_DifficultyConVar.SetInt(Difficulty_Insane);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
 						}
 						case 4:
 						{
@@ -868,7 +868,7 @@ void SpecialRoundStart()
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
 						}
 						case 5:
 						{
@@ -879,7 +879,7 @@ void SpecialRoundStart()
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
 							int randomQuote = GetRandomInt(1, 8);
 							switch (randomQuote)
 							{
@@ -936,17 +936,17 @@ void SpecialRoundStart()
 							case 1:
 							{
 								g_DifficultyConVar.SetInt(Difficulty_Normal);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
 							}
 							case 2:
 							{
 								g_DifficultyConVar.SetInt(Difficulty_Hard);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
 							}
 							case 3:
 							{
 								g_DifficultyConVar.SetInt(Difficulty_Insane);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
 							}
 							case 4:
 							{
@@ -957,7 +957,7 @@ void SpecialRoundStart()
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 								g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
 							}
 							case 5:
 							{
@@ -968,7 +968,7 @@ void SpecialRoundStart()
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 								g_DifficultyConVar.SetInt(Difficulty_Apollyon);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
 								int randomQuote = GetRandomInt(1, 8);
 								switch (randomQuote)
 								{
@@ -1613,7 +1613,7 @@ static int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 			char specialRound[64], specialRoundName[64], display[120];
 			NativeVotes_GetItem(menu, param1, specialRound, sizeof(specialRound), specialRoundName, sizeof(specialRoundName));
 
-			CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", specialRoundName);
+			CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", specialRoundName);
 			FormatEx(display,120,"%t","SF2 Special Round Vote Successful", specialRoundName);
 
 			g_SpecialRoundType = StringToInt(specialRound);

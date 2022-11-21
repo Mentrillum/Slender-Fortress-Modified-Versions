@@ -29,22 +29,6 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 		return;
 	}
 
-	//From Pelipoika's rainbow outline plugin
-	if (NPCGetCustomOutlinesState(bossIndex) && NPCGetRainbowOutlineState(bossIndex))
-	{
-		int glow = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
-		int color[4];
-		color[0] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 0) * 127.5 + 127.5);
-		color[1] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 2) * 127.5 + 127.5);
-		color[2] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 4) * 127.5 + 127.5);
-		color[3] = 255;
-		if (IsValidEntity(glow))
-		{
-			SetVariantColor(color);
-			AcceptEntityInput(glow, "SetGlowColor");
-		}
-	}
-
 	INextBot bot = npc.GetBot();
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	CBaseCombatCharacter combatChar = CBaseCombatCharacter(bossEnt);
@@ -973,6 +957,22 @@ void SlenderSetNextThink(int bossEnt)
 	int bossIndex = NPCGetFromEntIndex(bossEnt);
 	if (bossIndex != -1)
 	{
+		//From Pelipoika's rainbow outline plugin
+		if (NPCGetCustomOutlinesState(bossIndex) && NPCGetRainbowOutlineState(bossIndex))
+		{
+			int glow = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
+			int color[4];
+			color[0] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 0) * 127.5 + 127.5);
+			color[1] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 2) * 127.5 + 127.5);
+			color[2] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(bossIndex)) + bossIndex + 4) * 127.5 + 127.5);
+			color[3] = 255;
+			if (IsValidEntity(glow))
+			{
+				SetVariantColor(color);
+				AcceptEntityInput(glow, "SetGlowColor");
+			}
+		}
+
 		int state = g_SlenderState[bossIndex];
 		bool changeAngle = false;
 		float posToAt[3];

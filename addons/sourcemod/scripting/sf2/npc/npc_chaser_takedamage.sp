@@ -596,7 +596,7 @@ void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_PROFILE_
 				{
 					strcopy(bossName, sizeof(bossName), profile);
 				}
-				CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Boxing Win Message", player, bossName);
+				CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Boxing Win Message", player, bossName);
 			}
 		}
 	}

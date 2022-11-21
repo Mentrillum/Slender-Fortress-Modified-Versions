@@ -327,6 +327,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_slalltalk", Command_AllTalkToggle, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("sm_sf2_eventmode", Command_ConditionToggle, ADMFLAG_CONVARS);
 	RegAdminCmd("sm_sleventmode", Command_ConditionToggle, ADMFLAG_CONVARS, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("sm_sf2_endless_chasing", Command_EndlessChasing, ADMFLAG_SLAY);
+	RegAdminCmd("sm_sf2_red_player_death_switch", Command_RedDeathTeamSwitch, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_set_queue", Command_SetQueuePoints, ADMFLAG_CHEATS);
 	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
 	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
@@ -1179,7 +1181,7 @@ static Action Command_SpawnSlender(int client,int args)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	Npc.GetProfile(profile, sizeof(profile));
 
-	CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
+	CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
 
 	return Plugin_Handled;
 }
@@ -1234,11 +1236,11 @@ static Action Command_SpawnAllSlenders(int client,int args)
 		}
 		else
 		{
-			CPrintToChat(client, "{royalblue}%t{default}Already spawning bosses, please wait...", "SF2 Prefix");
+			CPrintToChat(client, "{royalblue}%t {default}Already spawning bosses, please wait...", "SF2 Prefix");
 		}
 	}
 
-	CPrintToChat(client, "{royalblue}%t{default}Spawned all bosses at your location.", "SF2 Prefix");
+	CPrintToChat(client, "{royalblue}%t {default}Spawned all bosses at your location.", "SF2 Prefix");
 
 	return Plugin_Handled;
 }
@@ -1256,7 +1258,7 @@ static Action Timer_SpawnAllSlenders(Handle timer, any userid)
 	}
 	if (g_SpawnAllBossesCount >= 64)
 	{
-		CPrintToChat(client, "{royalblue}%t{default}Spawned all bosses at your locations.", "SF2 Prefix");
+		CPrintToChat(client, "{royalblue}%t {default}Spawned all bosses at your locations.", "SF2 Prefix");
 		g_SpawnAllBossesCount = 0;
 		g_SpawnAllSlendersTimer[client] = null;
 		return Plugin_Stop;
@@ -1316,7 +1318,7 @@ static Action Command_RemoveSlender(int client,int args)
 
 	NPCRemove(bossIndex);
 
-	CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
+	CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
 
 	return Plugin_Handled;
 }
@@ -1338,11 +1340,11 @@ static Action Command_RemoveAllSlenders(int client,int args)
 			}
 			NPCRemove(npcIndex);
 		}
-		CPrintToChat(client, "{royalblue}%t{default}Removed all bosses.", "SF2 Prefix", client);
+		CPrintToChat(client, "{royalblue}%t {default}Removed all bosses.", "SF2 Prefix", client);
 	}
 	else
 	{
-		CPrintToChat(client, "{royalblue}%t{default}Cannot use this command in Boxing maps.", "SF2 Prefix", client);
+		CPrintToChat(client, "{royalblue}%t {default}Cannot use this command in Boxing maps.", "SF2 Prefix", client);
 	}
 
 	if (MusicActive())
@@ -1460,7 +1462,7 @@ static Action Command_SlenderAttackWaiters(int client,int args)
 		if (!oldState)
 		{
 			NPCSetFlags(bossIndex, bossFlags | SFF_ATTACKWAITERS);
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Attack Waiters", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Attack Waiters", client);
 		}
 	}
 	else
@@ -1468,7 +1470,7 @@ static Action Command_SlenderAttackWaiters(int client,int args)
 		if (oldState)
 		{
 			NPCSetFlags(bossIndex, bossFlags & ~SFF_ATTACKWAITERS);
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Do Not Attack Waiters", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Do Not Attack Waiters", client);
 		}
 	}
 
@@ -1513,7 +1515,7 @@ static Action Command_SlenderNoTeleport(int client,int args)
 		if (!oldState)
 		{
 			NPCSetFlags(bossIndex, bossFlags | SFF_NOTELEPORT);
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Should Not Teleport", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Should Not Teleport", client);
 		}
 	}
 	else
@@ -1521,7 +1523,7 @@ static Action Command_SlenderNoTeleport(int client,int args)
 		if (oldState)
 		{
 			NPCSetFlags(bossIndex, bossFlags & ~SFF_NOTELEPORT);
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Boss Should Teleport", client);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Boss Should Teleport", client);
 		}
 	}
 
@@ -1564,11 +1566,11 @@ static Action Command_ToggleAllBossTeleports(int client,int args)
 	}
 	if (state)
 	{
-		CPrintToChat(client, "{royalblue}%t{default}All bosses can no longer teleport.", "SF2 Prefix", client);
+		CPrintToChat(client, "{royalblue}%t {default}All bosses can no longer teleport.", "SF2 Prefix", client);
 	}
 	else if (!state)
 	{
-		CPrintToChat(client, "{royalblue}%t{default}All bosses can now teleport.", "SF2 Prefix", client);
+		CPrintToChat(client, "{royalblue}%t {default}All bosses can now teleport.", "SF2 Prefix", client);
 	}
 
 	return Plugin_Handled;
@@ -1603,7 +1605,7 @@ static Action Command_DebugLogicEscape(int client,int args)
 			}
 		}
 	}
-	CPrintToChat(client, "{royalblue}%t{default}Triggered sf2_logic_escape.", "SF2 Prefix", client);
+	CPrintToChat(client, "{royalblue}%t {default}Triggered sf2_logic_escape.", "SF2 Prefix", client);
 
 	return Plugin_Handled;
 }
@@ -1634,7 +1636,7 @@ static Action Command_ReloadProfiles(int client, int args)
 	ReloadRestrictedWeapons();
 	ReloadSpecialRounds();
 	ReloadClassConfigs();
-	CPrintToChatAll("{royalblue}%t{default} Reloaded all profiles successfully.", "SF2 Prefix");
+	CPrintToChatAll("{royalblue}%t {default} Reloaded all profiles successfully.", "SF2 Prefix");
 
 	return Plugin_Handled;
 }
@@ -1675,11 +1677,11 @@ static Action Command_ToggleAllAttackWaiters(int client,int args)
 	}
 	if (state)
 	{
-		CPrintToChat(client, "{royalblue}%t{default}All bosses can now attack waiters.", "SF2 Prefix", client);
+		CPrintToChat(client, "{royalblue}%t {default}All bosses can now attack waiters.", "SF2 Prefix", client);
 	}
 	else if (!state)
 	{
-		CPrintToChat(client, "{royalblue}%t{default}All bosses can no longer attack waiters.", "SF2 Prefix", client);
+		CPrintToChat(client, "{royalblue}%t {default}All bosses can no longer attack waiters.", "SF2 Prefix", client);
 	}
 
 	return Plugin_Handled;
@@ -1700,7 +1702,7 @@ static Action Command_ForceProxy(int client,int args)
 
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
+		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
 		return Plugin_Handled;
 	}
 
@@ -1753,7 +1755,7 @@ static Action Command_ForceProxy(int client,int args)
 
 		if (!g_PlayerEliminated[target])
 		{
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", client, name);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Unable To Perform Action On Player In Round", client, name);
 			continue;
 		}
 
@@ -1768,7 +1770,7 @@ static Action Command_ForceProxy(int client,int args)
 
 		if (!SpawnProxy(client, bossIndex, intPos, spawnPoint))
 		{
-			CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", client, name);
+			CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Player No Place For Proxy", client, name);
 			continue;
 		}
 
@@ -1839,7 +1841,7 @@ static Action Command_ForceDifficulty(int client,int args)
 
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
+		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
 		return Plugin_Handled;
 	}
 
@@ -1865,29 +1867,29 @@ static Action Command_ForceDifficulty(int client,int args)
 	{
 		case Difficulty_Normal:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {yellow}%t{default}.", "SF2 Prefix", client, "SF2 Normal Difficulty");
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the difficulty to {yellow}%t{default}.", "SF2 Prefix", client, "SF2 Normal Difficulty");
 		}
 		case Difficulty_Hard:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {orange}%t{default}.", "SF2 Prefix", client, "SF2 Hard Difficulty");
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the difficulty to {orange}%t{default}.", "SF2 Prefix", client, "SF2 Hard Difficulty");
 		}
 		case Difficulty_Insane:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {red}%t{default}.", "SF2 Prefix", client, "SF2 Insane Difficulty");
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the difficulty to {red}%t{default}.", "SF2 Prefix", client, "SF2 Insane Difficulty");
 		}
 		case Difficulty_Nightmare:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {valve}%t!", "SF2 Prefix", client, "SF2 Nightmare Difficulty");
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the difficulty to {valve}%t!", "SF2 Prefix", client, "SF2 Nightmare Difficulty");
 		}
 		case Difficulty_Apollyon:
 		{
 			if (!g_RestartSessionEnabled)
 			{
-				CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {darkgray}%t!", "SF2 Prefix", client, "SF2 Apollyon Difficulty");
+				CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the difficulty to {darkgray}%t!", "SF2 Prefix", client, "SF2 Apollyon Difficulty");
 			}
 			else
 			{
-				CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the difficulty to {mediumslateblue}%t!", "SF2 Prefix", client, "SF2 Calamity Difficulty");
+				CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the difficulty to {mediumslateblue}%t!", "SF2 Prefix", client, "SF2 Calamity Difficulty");
 			}
 		}
 	}
@@ -1903,7 +1905,7 @@ static Action Command_ForceSpecialRound(int client,int args)
 
 	if (args == 0)
 	{
-		ReplyToCommand(client, "Usage: sm_sf2_force_special_round <specialround 1-39>");
+		ReplyToCommand(client, "Usage: sm_sf2_force_special_round <specialround 1-38>");
 		return Plugin_Handled;
 	}
 
@@ -1929,155 +1931,155 @@ static Action Command_ForceSpecialRound(int client,int args)
 	{
 		case SPECIALROUND_DOUBLETROUBLE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Trouble.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Double Trouble.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_INSANEDIFFICULTY:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Suicide Time.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Suicide Time.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_DOUBLEMAXPLAYERS:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Players.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Double Players.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_LIGHTSOUT:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Lights Out.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Lights Out.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_BEACON:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Bacon Spray.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Bacon Spray.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_DOOMBOX:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Stealth Box of Doom.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Stealth Box of Doom.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_NOGRACE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Start Running.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Start Running.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_2DOUBLE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double It All, But Go No Higher.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Double It All, But Go No Higher.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_DOUBLEROULETTE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Double Roulette.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Double Roulette.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_NIGHTVISION:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Night Vision.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Night Vision.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_INFINITEFLASHLIGHT:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Infinite Flashlight.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Infinite Flashlight.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_DREAMFAKEBOSSES:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Just A Dream.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Just A Dream.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_EYESONTHECLOACK:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Countdown.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Countdown.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_NOPAGEBONUS:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Deadline.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Deadline.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_DUCKS:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Ducks.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Ducks.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_1UP:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}1-Up.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}1-Up.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_NOULTRAVISION:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Blind.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Blind.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_SUPRISE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Surprise Me.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Surprise Me.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_LASTRESORT:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Last Resort.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Last Resort.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_ESCAPETICKETS:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Escape Tickets.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Escape Tickets.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_REVOLUTION:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Revolution.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Special Round Revolution.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_DISTORTION:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Space Distortion.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Space Distortion.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_MULTIEFFECT:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Multieffect.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Multieffect.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_BOO:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boo.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Boo.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_VOTE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Special Round Vote.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Special Round Vote.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_COFFEE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Coffee.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Coffee.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_PAGEDETECTOR:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Item Detectors.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Item Detectors.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_CLASSSCRAMBLE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Class Scramble.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Class Scramble.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_2DOOM:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Silent Slender.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Silent Slender.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_PAGEREWARDS:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Page Rewards.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Page Rewards.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_TINYBOSSES:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Tiny Bosses.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Tiny Bosses.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_RUNNINGINTHE90S:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}In The 90s.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}In The 90s.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Triple Bosses.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Triple Bosses.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_MODBOSSES:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}MODified Bosses {default}(WARNING, ITS H3LL).", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}MODified Bosses {default}(WARNING, ITS H3LL).", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_BOSSROULETTE:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Boss Roulette.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Boss Roulette.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_THANATOPHOBIA:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Thanatophobia.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Thanatophobia.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_WALLHAX:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Wall Hax.", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_SINGLEPLAYER:
 		{
-			CPrintToChatAll("{royalblue}%t{collectors}%N {default}set the next special round to {lightblue}Single Player.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Single Player.", "SF2 Prefix", client);
 		}
 	}
 
@@ -2256,7 +2258,7 @@ static Action Command_ForceState(int client,int args)
 
 	if (IsRoundEnding() || IsRoundInWarmup())
 	{
-		CPrintToChat(client, "{royalblue}%t{default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
+		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Cannot Use Command", client);
 		return Plugin_Handled;
 	}
 
@@ -2351,7 +2353,7 @@ Action Timer_ForcePlayer(Handle timer, any userid)
 static Action Command_AllTalkToggle(int client, int args)
 {
 	g_AdminAllTalk[client] = !g_AdminAllTalk[client];
-	CPrintToChat(client, "{royalblue}%t{default}You will %s hear and speak to all players.", "SF2 Prefix", g_AdminAllTalk[client] ? "now" : "no longer");
+	CPrintToChat(client, "{royalblue}%t {default}You will %s hear and speak to all players.", "SF2 Prefix", g_AdminAllTalk[client] ? "now" : "no longer");
 
 	for (int target = 1; target <= MaxClients; target++)
 	{
@@ -2385,7 +2387,21 @@ static Action Command_AllTalkOff(int client, int args)
 static Action Command_ConditionToggle(int client, int args)
 {
 	g_IgnoreRoundWinConditionsConVar.BoolValue = !g_IgnoreRoundWinConditionsConVar.BoolValue;
-	CPrintToChat(client, "{royalblue}%t{default}Round condition is now %sabled.", "SF2 Prefix", g_IgnoreRoundWinConditionsConVar.BoolValue ? "dis" : "en");
+	CPrintToChat(client, "{royalblue}%t {default}Round condition is now %sabled.", "SF2 Prefix", g_IgnoreRoundWinConditionsConVar.BoolValue ? "dis" : "en");
+	return Plugin_Handled;
+}
+
+static Action Command_EndlessChasing(int client, int args)
+{
+	g_BossChaseEndlesslyConVar.BoolValue = !g_BossChaseEndlesslyConVar.BoolValue;
+	CPrintToChat(client, "{royalblue}%t {default}Bosses will %s endlessly chase.", "SF2 Prefix", g_BossChaseEndlesslyConVar.BoolValue ? "now" : "no longer");
+	return Plugin_Handled;
+}
+
+static Action Command_RedDeathTeamSwitch(int client, int args)
+{
+	g_IgnoreRedPlayerDeathSwapConVar.BoolValue = !g_IgnoreRedPlayerDeathSwapConVar.BoolValue;
+	CPrintToChat(client, "{royalblue}%t {default}RED players will %s respawn upon death.", "SF2 Prefix", g_IgnoreRedPlayerDeathSwapConVar.BoolValue ? "now" : "no longer");
 	return Plugin_Handled;
 }
 

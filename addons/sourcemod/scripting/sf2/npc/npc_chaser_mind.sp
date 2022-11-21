@@ -282,6 +282,12 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 		}
 	}
 
+	if (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN)
+	{
+		g_SlenderAutoChaseCount[chaserBoss.Index] = 0;
+		g_SlenderSoundTarget[chaserBoss.Index] = INVALID_ENT_REFERENCE;
+	}
+
 	if (g_SlenderSoundTarget[chaserBoss.Index] != INVALID_ENT_REFERENCE)
 	{
 		soundTarget = EntRefToEntIndex(g_SlenderSoundTarget[chaserBoss.Index]);

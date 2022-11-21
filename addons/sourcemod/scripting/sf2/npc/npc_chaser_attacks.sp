@@ -618,7 +618,10 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 									{
 										float percentLife;
 										percentLife = ClientGetFlashlightBatteryLife(i) - NPCChaserGetShockwaveDrain(bossIndex, difficulty);
-										if (percentLife < 0.0) percentLife = 0.0;
+										if (percentLife < 0.0)
+										{
+											percentLife = 0.0;
+										}
 										ClientSetFlashlightBatteryLife(i, percentLife);
 
 										float directionForce[3];

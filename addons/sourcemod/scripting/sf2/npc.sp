@@ -131,7 +131,7 @@ bool g_NpcUsesRageAnimation1[MAX_BOSSES] = { false, ... };
 bool g_NpcUsesRageAnimation2[MAX_BOSSES] = { false, ... };
 bool g_NpcUsesRageAnimation3[MAX_BOSSES] = { false, ... };
 
-stock bool NPCGetBossName(int npcIndex = -1, char[] buffer,int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
+bool NPCGetBossName(int npcIndex = -1, char[] buffer,int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
 {
 	if (npcIndex == -1 && profile[0] == '\0')
 	{
@@ -3521,7 +3521,7 @@ static Action Hook_SlenderGlowSetTransmit(int entity,int other)
 	{
 		return Plugin_Continue;
 	}
-	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && GetClientTeam(other) == TFTeam_Red && !g_PlayerEscaped[other] && !g_PlayerEliminated[other])
+	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other])
 	{
 		return Plugin_Continue;
 	}
@@ -3585,16 +3585,28 @@ bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 
 			if (soundType == SoundType_QuietFootstep)
 			{
+				if (GetChaserProfileQuietFootstepAddThreshold(profile, difficulty) <= 0)
+				{
+					return false;
+				}
 				cooldown = GetChaserProfileHearQuietFootstepCooldown(profile, difficulty);
 				distance *= 1.85;
 			}
 			else if (soundType == SoundType_LoudFootstep)
 			{
+				if (GetChaserProfileLoudFootstepAddThreshold(profile, difficulty) <= 0)
+				{
+					return false;
+				}
 				cooldown = GetChaserProfileHearLoudFootstepCooldown(profile, difficulty);
 				distance *= 0.66;
 			}
 			else
 			{
+				if (GetChaserProfileFootstepAddThreshold(profile, difficulty) <= 0)
+				{
+					return false;
+				}
 				cooldown = GetChaserProfileHearFootstepCooldown(profile, difficulty);
 			}
 
@@ -3622,21 +3634,37 @@ bool SlenderCanHearPlayer(int bossIndex,int client, SoundType soundType)
 
 			if (soundType == SoundType_Voice)
 			{
+				if (GetChaserProfileVoiceAddThreshold(profile, difficulty) <= 0)
+				{
+					return false;
+				}
 				cooldown = GetChaserProfileHearVoiceCooldown(profile, difficulty);
 			}
 			else if (soundType == SoundType_Flashlight)
 			{
+				if (GetChaserProfileFlashlightAddThreshold(profile, difficulty) <= 0)
+				{
+					return false;
+				}
 				cooldown = GetChaserProfileHearFlashlightCooldown(profile, difficulty);
 			}
 		}
 		case SoundType_Weapon:
 		{
+			if (GetChaserProfileWeaponAddThreshold(profile, difficulty) <= 0)
+			{
+				return false;
+			}
+
 			float hisMins[3], hisMaxs[3];
 			GetEntPropVector(client, Prop_Send, "m_vecMins", hisMins);
 			GetEntPropVector(client, Prop_Send, "m_vecMaxs", hisMaxs);
 
 			float middle[3];
-			for (int i = 0; i < 2; i++) middle[i] = (hisMins[i] + hisMaxs[i]) / 2.0;
+			for (int i = 0; i < 2; i++)
+			{
+				middle[i] = (hisMins[i] + hisMaxs[i]) / 2.0;
+			}
 
 			float endPos[3];
 			GetClientAbsOrigin(client, endPos);
@@ -3935,22 +3963,110 @@ void SlenderPerformVoiceCooldown(int bossIndex, int slender, SF2BossProfileSound
 			g_SlenderNextVoiceSound[bossIndex] = GetGameTime() + cooldown;
 			return;
 		}
-		if (soundInfo.PitchRandomMin != soundInfo.Pitch || soundInfo.PitchRandomMax != soundInfo.Pitch)
+		SlenderCalculateVolume(buffer, slender, soundInfo, 0, pitch);
+		g_SlenderNextVoiceSound[bossIndex] = GetGameTime() + cooldown;
+	}
+}
+
+void SlenderCalculateVolume(const char[] buffer, int slender, SF2BossProfileSoundInfo soundInfo, int state, int randomPitch)
+{
+	// State 0 = voice, state 1 = everything else
+	int volumeCount = RoundToCeil(soundInfo.Volume);
+	for (int i = 0; i < volumeCount; i++)
+	{
+		float finalVolume = soundInfo.Volume;
+		if (i + 1 != volumeCount)
 		{
-			EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags,
-			soundInfo.Volume, pitch);
-		}
-		else if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
-		{
-			EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags,
-			soundInfo.Volume, ((soundInfo.PitchRandomMin == soundInfo.Pitch && soundInfo.PitchRandomMax == soundInfo.Pitch) ? soundInfo.Pitch : pitch) + 25);
+			switch (state)
+			{
+				case 0:
+				{
+					SlenderCastVoice(buffer, slender, soundInfo, 1.0, randomPitch);
+				}
+				default:
+				{
+					SlenderDetermineGameSounds(buffer, slender, soundInfo, 1.0, randomPitch);
+				}
+			}
 		}
 		else
 		{
-			EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags,
-			soundInfo.Volume, soundInfo.Pitch);
+			if (finalVolume > 1.0)
+			{
+				while (finalVolume > 1.0)
+				{
+					finalVolume -= 1.0;
+				}
+				switch (state)
+				{
+					case 0:
+					{
+						SlenderCastVoice(buffer, slender, soundInfo, finalVolume, randomPitch);
+					}
+					default:
+					{
+						SlenderDetermineGameSounds(buffer, slender, soundInfo, finalVolume, randomPitch);
+					}
+				}
+			}
+			else
+			{
+				switch (state)
+				{
+					case 0:
+					{
+						SlenderCastVoice(buffer, slender, soundInfo, _, randomPitch);
+					}
+					default:
+					{
+						SlenderDetermineGameSounds(buffer, slender, soundInfo, _, randomPitch);
+					}
+				}
+			}
 		}
-		g_SlenderNextVoiceSound[bossIndex] = GetGameTime() + cooldown;
+	}
+}
+
+void SlenderDetermineGameSounds(const char[] buffer, int slender, SF2BossProfileSoundInfo soundInfo, float overrideVolume = -1.0, int randomPitch = 100)
+{
+	float volume = soundInfo.Volume;
+	if (overrideVolume >= 0.0)
+	{
+		volume = overrideVolume;
+	}
+	if (StrContains(buffer, ".mp3", true) == -1 && StrContains(buffer, ".wav", true) == -1)
+	{
+		EmitGameSoundToAll(buffer, slender);
+	}
+	else
+	{
+		EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, _, volume,
+		(soundInfo.PitchRandomMin == soundInfo.Pitch && soundInfo.PitchRandomMax == soundInfo.Pitch) ? soundInfo.Pitch : randomPitch);
+	}
+}
+
+void SlenderCastVoice(const char[] buffer, int slender, SF2BossProfileSoundInfo soundInfo, float overrideVolume = -1.0, int randomPitch = 100)
+{
+	float volume = soundInfo.Volume;
+	if (overrideVolume >= 0.0)
+	{
+		volume = overrideVolume;
+	}
+	if (soundInfo.PitchRandomMin != soundInfo.Pitch || soundInfo.PitchRandomMax != soundInfo.Pitch)
+	{
+		EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags,
+		volume, randomPitch);
+	}
+	else if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
+	{
+		EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags,
+		volume,
+		((soundInfo.PitchRandomMin == soundInfo.Pitch && soundInfo.PitchRandomMax == soundInfo.Pitch) ? soundInfo.Pitch : randomPitch) + 25);
+	}
+	else
+	{
+		EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags,
+		volume, soundInfo.Pitch);
 	}
 }
 
@@ -3989,21 +4105,10 @@ void SlenderCastFootstep(int bossIndex)
 
 	if (path[0] != '\0')
 	{
-		float volume = soundInfo.Volume;
-		int channel = soundInfo.Channel;
-		int level = soundInfo.Level;
-		int pitch = soundInfo.Pitch;
 		int randomPitch = GetRandomInt(soundInfo.PitchRandomMin, soundInfo.PitchRandomMax);
 
 		g_SlenderNextFootstepSound[bossIndex] = GetGameTime() + g_SlenderFootstepTime[bossIndex];
-		if (StrContains(path, ".mp3", true) == -1 && StrContains(path, ".wav", true) == -1)
-		{
-			EmitGameSoundToAll(path, slender);
-		}
-		else
-		{
-			EmitSoundToAll(path, slender, channel, level, _, volume, (soundInfo.PitchRandomMin == pitch && soundInfo.PitchRandomMax == pitch) ? pitch : randomPitch);
-		}
+		SlenderCalculateVolume(path, slender, soundInfo, 1, randomPitch);
 		if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 		{
 			UTIL_ScreenShake(myPos, NPCChaserGetEarthquakeFootstepsAmplitude(bossIndex),
@@ -4059,16 +4164,8 @@ void SlenderCastFootstepAnimEvent(int bossIndex, int event)
 
 	if (path[0] != '\0')
 	{
-		int pitch = soundInfo.Pitch;
 		int randomPitch = GetRandomInt(soundInfo.PitchRandomMin, soundInfo.PitchRandomMax);
-		if (StrContains(path, ".mp3", true) == -1 && StrContains(path, ".wav", true) == -1)
-		{
-			EmitGameSoundToAll(path, slender);
-		}
-		else
-		{
-			EmitSoundToAll(path, slender, soundInfo.Channel, soundInfo.Level, _, soundInfo.Volume, (soundInfo.PitchRandomMin == pitch && soundInfo.PitchRandomMax == pitch) ? pitch : randomPitch);
-		}
+		SlenderCalculateVolume(path, slender, soundInfo, 1, randomPitch);
 	}
 	if (NPCChaserGetEarthquakeFootstepsState(bossIndex))
 	{
@@ -4121,16 +4218,8 @@ void SlenderCastAnimEvent(int bossIndex, int event)
 
 	if (path[0] != '\0')
 	{
-		int pitch = soundInfo.Pitch;
 		int randomPitch = GetRandomInt(soundInfo.PitchRandomMin, soundInfo.PitchRandomMax);
-		if (StrContains(path, ".mp3", true) == -1 && StrContains(path, ".wav", true) == -1)
-		{
-			EmitGameSoundToAll(path, slender);
-		}
-		else
-		{
-			EmitSoundToAll(path, slender, soundInfo.Channel, soundInfo.Level, _, soundInfo.Volume, (soundInfo.PitchRandomMin == pitch && soundInfo.PitchRandomMax == pitch) ? pitch : randomPitch);
-		}
+		SlenderCalculateVolume(path, slender, soundInfo, 1, randomPitch);
 	}
 }
 
