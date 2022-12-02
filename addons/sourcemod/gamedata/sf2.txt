@@ -6,43 +6,43 @@
 		{
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
-				"windows"	"331"
-				"linux"		"332"
+				"windows"	"334"
+				"linux"		"335"
 			}
 			"CTFWeaponBase::GetCustomDamageType"
 			{
-				"windows"	"377"
-				"linux"		"383"	
+				"windows"	"386"
+				"linux"		"380"	
 			}
 			"CBaseEntity::ShouldTransmit"
 			{
-				"windows"	"18"
-				"linux"		"19"
+				"windows"	"20"
+				"linux"		"21"
 			}
 			"CBaseEntity::GetSmoothedVelocity"
 			{
-				"linux"    	"143"
-				"windows"       "142"
+				"linux"    	"146"
+				"windows"       "145"
 			}
 			"CBaseEntity::UpdateTransmitState"
 			{
-				"linux"		"20"
-				"windows"	"19"
+				"linux"		"22"
+				"windows"	"21"
 			}
 			"CBaseProjectile::CanCollideWithTeammates"
 			{
-				"linux"		"227"
-				"windows"	"226"
+				"linux"		"230"
+				"windows"	"229"
 			}
 			"CTFPlayer::EquipWearable"
 			{
-				"windows"	"435"
-				"linux"		"436"
+				"windows"	"438"
+				"linux"		"439"
 			}
 			"CBaseTrigger::PassesTriggerFilters"
 			{
-				"linux"		"205"
-				"windows"	"204"
+				"linux"		"208"
+				"windows"	"207"
 			}
 		}
 		"Signatures"
