@@ -7,15 +7,15 @@
 
 #pragma semicolon 1
 
-static bool g_PlayerHasFlashlight[MAXPLAYERS + 1] = { false, ... };
-static bool g_PlayerFlashlightBroken[MAXPLAYERS + 1] = { false, ... };
-static float g_PlayerFlashlightBatteryLife[MAXPLAYERS + 1] = { 1.0, ... };
-static Handle g_PlayerFlashlightBatteryTimer[MAXPLAYERS + 1] = { null, ... };
-static float g_PlayerFlashlightNextInputTime[MAXPLAYERS + 1] = { -1.0, ... };
-static int g_PlayerFlashlightEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_PlayerFlashlightEntAng[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_ClientFlashlightStartEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_ClientFlashlightEndEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static bool g_PlayerHasFlashlight[MAXTF2PLAYERS] = { false, ... };
+static bool g_PlayerFlashlightBroken[MAXTF2PLAYERS] = { false, ... };
+static float g_PlayerFlashlightBatteryLife[MAXTF2PLAYERS] = { 1.0, ... };
+static Handle g_PlayerFlashlightBatteryTimer[MAXTF2PLAYERS] = { null, ... };
+static float g_PlayerFlashlightNextInputTime[MAXTF2PLAYERS] = { -1.0, ... };
+static int g_PlayerFlashlightEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerFlashlightEntAng[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_ClientFlashlightStartEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_ClientFlashlightEndEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 
 static Action Timer_DrainFlashlight(Handle timer, any userid)
 {
@@ -136,7 +136,7 @@ void ClientHandleFlashlightFlickerState(int client)
 
 	if (IsClientUsingFlashlight(client))
 	{
-		bool flicker = view_as<bool>(ClientGetFlashlightBatteryLife(client) <= SF2_FLASHLIGHT_FLICKERAT);
+		bool flicker = ClientGetFlashlightBatteryLife(client) <= SF2_FLASHLIGHT_FLICKERAT;
 
 		int fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
 		if (fl && fl != INVALID_ENT_REFERENCE)
@@ -264,7 +264,7 @@ static Action Hook_FlashlightSetTransmit(int ent,int other)
 
 	if (ownerEntity == other)
 	{
-		if (view_as<bool>(GetEntProp(ownerEntity, Prop_Send, "m_nForceTauntCam")) && !TF2_IsPlayerInCondition(ownerEntity, TFCond_Taunting))
+		if (!!(GetEntProp(ownerEntity, Prop_Send, "m_nForceTauntCam")) && !TF2_IsPlayerInCondition(ownerEntity, TFCond_Taunting))
 		{
 			return Plugin_Handled;
 		}
@@ -1044,8 +1044,8 @@ static Action Hook_UltravisionSetTransmit(int ent,int other)
 	}
 	return Plugin_Continue;
 }
-
-stock void ClientSDKFlashlightTurnOn(int client)
+/*
+void ClientSDKFlashlightTurnOn(int client)
 {
 	if (!IsValidClient(client))
 	{
@@ -1063,7 +1063,7 @@ stock void ClientSDKFlashlightTurnOn(int client)
 	SetEntProp(client, Prop_Send, "m_fEffects", effects);
 }
 
-stock void ClientSDKFlashlightTurnOff(int client)
+void ClientSDKFlashlightTurnOff(int client)
 {
 	if (!IsValidClient(client))
 	{
@@ -1080,3 +1080,4 @@ stock void ClientSDKFlashlightTurnOff(int client)
 
 	SetEntProp(client, Prop_Send, "m_fEffects", effects);
 }
+*/

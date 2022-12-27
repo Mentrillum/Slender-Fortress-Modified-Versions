@@ -1671,12 +1671,12 @@ Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
 
 bool ClientHasMusicFlag(int client,int flag)
 {
-	return view_as<bool>(g_PlayerMusicFlags[client] & flag);
+	return !!(g_PlayerMusicFlags[client] & flag);
 }
 
 bool ClientHasMusicFlag2(int value,int flag)
 {
-	return view_as<bool>(value & flag);
+	return !!(value & flag);
 }
 
 void ClientAddMusicFlag(int client,int flag)

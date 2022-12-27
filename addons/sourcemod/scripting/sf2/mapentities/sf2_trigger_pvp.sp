@@ -9,7 +9,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2TriggerPvPEntity < SF2TriggerMapEntity
 {
-	public SF2TriggerPvPEntity(int entIndex) { return view_as<SF2TriggerPvPEntity>(SF2TriggerMapEntity(entIndex)); }
+	public SF2TriggerPvPEntity(int entIndex)
+	{
+		return view_as<SF2TriggerPvPEntity>(SF2TriggerMapEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{

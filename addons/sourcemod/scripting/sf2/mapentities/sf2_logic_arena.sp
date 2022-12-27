@@ -11,7 +11,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2LogicRenevantEntity < CBaseEntity
 {
-	public SF2LogicRenevantEntity(int entIndex) { return view_as<SF2LogicRenevantEntity>(SF2MapEntity(entIndex)); }
+	public SF2LogicRenevantEntity(int entIndex)
+	{
+		return view_as<SF2LogicRenevantEntity>(SF2MapEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -25,8 +28,14 @@ methodmap SF2LogicRenevantEntity < CBaseEntity
 
 	property int FinaleTime
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iFinaleTime"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iFinaleTime", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iFinaleTime");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iFinaleTime", value);
+		}
 	}
 
 	public static void Initialize()
@@ -94,9 +103,9 @@ static void InputSetWave(int entity, int activator, int caller, int wave)
 	{
 		wave = 0;
 	}
-	if (wave > RENEVANT_MAXWAVES)
+	if (wave > g_RenevantMaxWaves.IntValue)
 	{
-		wave = RENEVANT_MAXWAVES;
+		wave = g_RenevantMaxWaves.IntValue;
 	}
 
 	Renevant_SetWave(wave);
@@ -108,9 +117,9 @@ static void InputSetWaveResetTimer(int entity, int activator, int caller, int wa
 	{
 		wave = 0;
 	}
-	if (wave > RENEVANT_MAXWAVES)
+	if (wave > g_RenevantMaxWaves.IntValue)
 	{
-		wave = RENEVANT_MAXWAVES;
+		wave = g_RenevantMaxWaves.IntValue;
 	}
 
 	Renevant_SetWave(wave, true);

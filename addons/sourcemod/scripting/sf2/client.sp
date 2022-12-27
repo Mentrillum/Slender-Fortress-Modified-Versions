@@ -31,72 +31,72 @@ char g_strPlayerBreathSounds[][] =
 };
 
 //Client Special Round Timer
-static Handle g_ClientSpecialRoundTimer[MAXPLAYERS + 1];
+static Handle g_ClientSpecialRoundTimer[MAXTF2PLAYERS];
 
 // Deathcam data.
-static int g_PlayerDeathCamBoss[MAXPLAYERS + 1] = { -1, ... };
-static bool g_PlayerDeathCam[MAXPLAYERS + 1] = { false, ... };
-static bool g_PlayerDeathCamShowOverlay[MAXPLAYERS + 1] = { false, ... };
-int g_PlayerDeathCamEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_PlayerDeathCamEnt2[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_PlayerDeathCamTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static Handle g_PlayerDeathCamTimer[MAXPLAYERS + 1] = { null, ... };
+static int g_PlayerDeathCamBoss[MAXTF2PLAYERS] = { -1, ... };
+static bool g_PlayerDeathCam[MAXTF2PLAYERS] = { false, ... };
+static bool g_PlayerDeathCamShowOverlay[MAXTF2PLAYERS] = { false, ... };
+int g_PlayerDeathCamEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerDeathCamEnt2[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerDeathCamTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static Handle g_PlayerDeathCamTimer[MAXTF2PLAYERS] = { null, ... };
 bool g_CameraInDeathCamAdvanced[2049] = { false, ... };
 float g_CameraPlayerOffsetBackward[2049] = { 0.0, ... };
 float g_CameraPlayerOffsetDownward[2049] = { 0.0, ... };
-static float g_vecPlayerOriginalDeathcamPosition[MAXPLAYERS + 1][3];
+static float g_vecPlayerOriginalDeathcamPosition[MAXTF2PLAYERS][3];
 
 // Ultravision data.
-bool g_PlayerHasUltravision[MAXPLAYERS + 1] = { false, ... };
-int g_PlayerUltravisionEnt[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+bool g_PlayerHasUltravision[MAXTF2PLAYERS] = { false, ... };
+int g_PlayerUltravisionEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 
 // Sprint data.
-static bool g_PlayerSprint[MAXPLAYERS + 1] = { false, ... };
-int g_PlayerSprintPoints[MAXPLAYERS + 1] = { 100, ... };
-Handle g_PlayerSprintTimer[MAXPLAYERS + 1] = { null, ... };
+static bool g_PlayerSprint[MAXTF2PLAYERS] = { false, ... };
+int g_PlayerSprintPoints[MAXTF2PLAYERS] = { 100, ... };
+Handle g_PlayerSprintTimer[MAXTF2PLAYERS] = { null, ... };
 
 // Blink data.
-static Handle g_PlayerBlinkTimer[MAXPLAYERS + 1] = { null, ... };
-static bool g_PlayerBlink[MAXPLAYERS + 1] = { false, ... };
-bool g_PlayerHoldingBlink[MAXPLAYERS + 1] = { false, ... };
-static float g_PlayerBlinkMeter[MAXPLAYERS + 1] = { 0.0, ... };
-static float g_TimeUntilUnblink[MAXPLAYERS + 1] = { 0.0, ... };
-static int g_PlayerBlinkCount[MAXPLAYERS + 1] = { 0, ... };
+static Handle g_PlayerBlinkTimer[MAXTF2PLAYERS] = { null, ... };
+static bool g_PlayerBlink[MAXTF2PLAYERS] = { false, ... };
+bool g_PlayerHoldingBlink[MAXTF2PLAYERS] = { false, ... };
+static float g_PlayerBlinkMeter[MAXTF2PLAYERS] = { 0.0, ... };
+static float g_TimeUntilUnblink[MAXTF2PLAYERS] = { 0.0, ... };
+static int g_PlayerBlinkCount[MAXTF2PLAYERS] = { 0, ... };
 
 // Breathing data.
-bool g_PlayerBreath[MAXPLAYERS + 1] = { false, ... };
-static Handle g_PlayerBreathTimer[MAXPLAYERS + 1] = { null, ... };
+bool g_PlayerBreath[MAXTF2PLAYERS] = { false, ... };
+static Handle g_PlayerBreathTimer[MAXTF2PLAYERS] = { null, ... };
 
 // Interactive glow data.
-static int g_PlayerInteractiveGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_PlayerInteractiveGlowTargetEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerInteractiveGlowEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerInteractiveGlowTargetEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 
 // Constant glow data.
-static int g_PlayerGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static bool g_PlayerConstantGlowEnabled[MAXPLAYERS + 1] = { false, ... };
+static int g_PlayerGlowEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static bool g_PlayerConstantGlowEnabled[MAXTF2PLAYERS] = { false, ... };
 
 // Jumpscare data.
-static int g_PlayerJumpScareBoss[MAXPLAYERS + 1] = { -1, ... };
-static float g_PlayerJumpScareLifeTime[MAXPLAYERS + 1] = { -1.0, ... };
+static int g_PlayerJumpScareBoss[MAXTF2PLAYERS] = { -1, ... };
+static float g_PlayerJumpScareLifeTime[MAXTF2PLAYERS] = { -1.0, ... };
 
-static float g_PlayerScareBoostEndTime[MAXPLAYERS + 1] = { -1.0, ... };
+static float g_PlayerScareBoostEndTime[MAXTF2PLAYERS] = { -1.0, ... };
 
 // Anti-camping data.
-int g_PlayerCampingStrikes[MAXPLAYERS + 1] = { 0, ... };
-Handle g_PlayerCampingTimer[MAXPLAYERS + 1] = { null, ... };
-float g_PlayerCampingLastPosition[MAXPLAYERS + 1][3];
-bool g_IsPlayerCampingFirstTime[MAXPLAYERS + 1];
+int g_PlayerCampingStrikes[MAXTF2PLAYERS] = { 0, ... };
+Handle g_PlayerCampingTimer[MAXTF2PLAYERS] = { null, ... };
+float g_PlayerCampingLastPosition[MAXTF2PLAYERS][3];
+bool g_IsPlayerCampingFirstTime[MAXTF2PLAYERS];
 
 // Frame data
-int g_ClientMaxFrameDeathAnim[MAXPLAYERS + 1];
-int g_ClientFrame[MAXPLAYERS + 1];
+int g_ClientMaxFrameDeathAnim[MAXTF2PLAYERS];
+int g_ClientFrame[MAXTF2PLAYERS];
 
 //Nav Data
-//static CNavArea g_lastNavArea[MAXPLAYERS + 1];
+//static CNavArea g_lastNavArea[MAXTF2PLAYERS];
 
-static float g_ClientAllowedTimeNearEscape[MAXPLAYERS + 1];
+static float g_ClientAllowedTimeNearEscape[MAXTF2PLAYERS];
 //Peeking Data
-static bool g_PlayerPeeking[MAXPLAYERS + 1] = { false, ... };
+static bool g_PlayerPeeking[MAXTF2PLAYERS] = { false, ... };
 
 //	==========================================================
 //	GENERAL CLIENT HOOK FUNCTIONS
@@ -1758,7 +1758,7 @@ static void ClientStopBreathing(int client)
 
 bool ClientCanBreath(int client)
 {
-	return view_as<bool>(ClientCalculateBreathingCooldown(client) < SF2_PLAYER_BREATH_COOLDOWN_MAX);
+	return ClientCalculateBreathingCooldown(client) < SF2_PLAYER_BREATH_COOLDOWN_MAX;
 }
 
 static Action Timer_ClientBreath(Handle timer, any userid)
@@ -2302,46 +2302,18 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	ArrayList soundList;
 	SF2BossProfileSoundInfo soundInfo;
 	if (g_SlenderDeathCamScareSound[bossIndex])
 	{
 		GetBossProfileScareSounds(profile, soundInfo);
-		soundList = soundInfo.Paths;
-		if (soundList != null && soundList.Length > 0)
-		{
-			soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-			if (buffer[0] != '\0')
-			{
-				EmitSoundToClient(client, buffer, _, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-			}
-		}
-		soundList = null;
+		soundInfo.EmitSound(true, client);
 	}
 
 	GetBossProfileClientDeathCamSounds(profile, soundInfo);
-	soundList = soundInfo.Paths;
-	if (soundList != null && soundList.Length > 0)
-	{
-		soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-		if (buffer[0] != '\0')
-		{
-			EmitSoundToClient(client, buffer, _, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-		}
-	}
-	soundList = null;
+	soundInfo.EmitSound(true, client);
 
 	GetBossProfileGlobalDeathCamSounds(profile, soundInfo);
-	soundList = soundInfo.Paths;
-	if (soundList != null && soundList.Length > 0)
-	{
-		soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-		if (buffer[0] != '\0')
-		{
-			EmitSoundToAll(buffer, _, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-		}
-	}
-	soundList = null;
+	soundInfo.EmitSound();
 
 	// Call our forward.
 	Call_StartForward(g_OnClientCaughtByBossFwd);
@@ -2397,16 +2369,7 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 	else
 	{
 		GetBossProfileLocalDeathCamSounds(profile, soundInfo);
-		soundList = soundInfo.Paths;
-		if (soundList != null && soundList.Length > 0)
-		{
-			soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-			if (buffer[0] != '\0')
-			{
-				EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-			}
-		}
-		soundList = null;
+		soundInfo.EmitSound(_, slender);
 		SetEntityMoveType(client, MOVETYPE_NOCLIP);
 		if (!antiCamp)
 		{
@@ -2568,7 +2531,7 @@ static Action Timer_ClientResetDeathCam1(Handle timer, any userid)
 
 	SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]));
 
-	char buffer[PLATFORM_MAX_PATH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 
 	if (Npc.IsValid())
 	{
@@ -2576,14 +2539,7 @@ static Action Timer_ClientResetDeathCam1(Handle timer, any userid)
 		Npc.GetProfile(profile, sizeof(profile));
 		SF2BossProfileSoundInfo soundInfo;
 		GetBossProfilePlayerDeathcamOverlaySounds(profile, soundInfo);
-		if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
-		{
-			soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
-			if (buffer[0] != '\0')
-			{
-				EmitSoundToClient(client, buffer, _, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-			}
-		}
+		soundInfo.EmitSound(true, client);
 		g_PlayerDeathCamTimer[client] = CreateTimer(g_SlenderDeathCamTime[Npc.Index], Timer_ClientResetDeathCamEnd, userid, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
@@ -2741,12 +2697,12 @@ static Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 //	GHOST MODE FUNCTIONS
 //	==========================================================
 
-static bool g_PlayerInGhostMode[MAXPLAYERS + 1] = { false, ... };
-static int g_PlayerGhostModeTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-static int g_PlayerGhostModeBossTarget[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
-Handle g_PlayerGhostModeConnectionCheckTimer[MAXPLAYERS + 1] = { null, ... };
-float g_PlayerGhostModeConnectionTimeOutTime[MAXPLAYERS + 1] = { -1.0, ... };
-float g_PlayerGhostModeConnectionBootTime[MAXPLAYERS + 1] = { -1.0, ... };
+static bool g_PlayerInGhostMode[MAXTF2PLAYERS] = { false, ... };
+static int g_PlayerGhostModeTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerGhostModeBossTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+Handle g_PlayerGhostModeConnectionCheckTimer[MAXTF2PLAYERS] = { null, ... };
+float g_PlayerGhostModeConnectionTimeOutTime[MAXTF2PLAYERS] = { -1.0, ... };
+float g_PlayerGhostModeConnectionBootTime[MAXTF2PLAYERS] = { -1.0, ... };
 
 /**
  *	Enables/Disables ghost mode on the player.
@@ -2885,17 +2841,17 @@ void ClientSetGhostModeState(int client, bool state)
 				{
 					color[3] = 255;
 				}
-				SlenderAddGlow(npcIndex,_,color);
+				SlenderAddGlow(npcIndex, color);
 			}
 			else
 			{
-				SlenderAddGlow(npcIndex,_,view_as<int>({0, 0, 0, 0}));
+				SlenderAddGlow(npcIndex, view_as<int>({0, 0, 0, 0}));
 			}
 		}
 		else
 		{
 			int purple[4] = {150, 0, 255, 255};
-			SlenderAddGlow(npcIndex,_,purple);
+			SlenderAddGlow(npcIndex, purple);
 		}
 	}
 
@@ -3160,7 +3116,7 @@ void ClientPerformScare(int client,int bossIndex)
 
 	if (scareSound[0] != '\0')
 	{
-		EmitSoundToClient(client, scareSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		soundInfo.EmitSound(true, client);
 
 		if (NPCGetFlags(bossIndex) & SFF_HASSIGHTSOUNDS)
 		{
@@ -3217,19 +3173,12 @@ static void ClientPerformSightSound(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char sightSound[PLATFORM_MAX_PATH];
-	ArrayList soundList;
 	SF2BossProfileSoundInfo soundInfo;
 	GetBossProfileSightSounds(profile, soundInfo);
-	soundList = soundInfo.Paths;
-	if (soundList != null && soundList.Length > 0)
-	{
-		soundList.GetString(GetRandomInt(0, soundList.Length - 1), sightSound, sizeof(sightSound));
-	}
-	soundList = null;
 
 	if (sightSound[0] != '\0')
 	{
-		EmitSoundToClient(client, sightSound, _, MUSIC_CHAN, SNDLEVEL_NONE);
+		soundInfo.EmitSound(true, client);
 
 		g_PlayerSightSoundNextTime[client][master] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
 
@@ -3951,7 +3900,7 @@ static Action Hook_ConstantGlowSetTransmit(int ent, int other)
 	{
 		return Plugin_Continue;
 	}
-	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue) && ((GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other]) || (g_PlayerProxy[other])))
+	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax) && ((GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other]) || (g_PlayerProxy[other])))
 	{
 		return Plugin_Continue;
 	}
@@ -4132,3 +4081,4 @@ Action Timer_RespawnPlayer(Handle timer, any userid)
 #include "sf2/functionclients/client_flashlight.sp"
 #include "sf2/functionclients/client_music.sp"
 #include "sf2/functionclients/client_proxy_functions.sp"
+#include "sf2/methodmaps.sp"

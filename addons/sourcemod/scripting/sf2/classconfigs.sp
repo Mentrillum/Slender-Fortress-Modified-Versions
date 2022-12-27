@@ -245,7 +245,7 @@ static void PrecacheClassProfiles()
 		g_ClassSprintPointLossJumping[i] = GetClassStatNum(className, "sprint_loss_while_jumping", 7);
 
 		g_ClassProxyDamageVulnerability[i] = GetClassStatFloat(className, "proxy_damage_vulnerability");
-		g_ClassCanPickUpHealth[i] = view_as<bool>(GetClassStatNum(className, "can_pickup_health", 1));
+		g_ClassCanPickUpHealth[i] = !!GetClassStatNum(className, "can_pickup_health", 1);
 		g_ClassHealthPickupMultiplier[i] = GetClassStatFloat(className, "health_pickup_multiplier", 1.0);
 
 		g_ClassBossPriorityMultiplier[i] = GetClassStatFloat(className, "boss_priority");
@@ -271,8 +271,8 @@ static void PrecacheClassProfiles()
 		g_ClassFlashlightRechargeRate[i] = GetClassStatFloat(className, "flashlight_recharge_rate", 1.0);
 		g_ClassFlashlightSoundRadius[i] = GetClassStatFloat(className, "flashlight_sound_radius", 0.5);
 
-		g_ClassBlockedOnThanatophobia[i] = view_as<bool>(GetClassStatNum(className, "blocked_on_thanatophobia"));
+		g_ClassBlockedOnThanatophobia[i] = !!GetClassStatNum(className, "blocked_on_thanatophobia");
 
-		g_ClassInvulnerableToTraps[i] = view_as<bool>(GetClassStatNum(className, "immune_to_traps"));
+		g_ClassInvulnerableToTraps[i] = !!GetClassStatNum(className, "immune_to_traps");
 	}
 }

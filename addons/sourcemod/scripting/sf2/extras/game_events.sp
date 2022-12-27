@@ -186,7 +186,7 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 
 	if (SF_IsRenevantMap() && g_RenevantWaveTimer != null) KillTimer(g_RenevantWaveTimer);
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -294,7 +294,7 @@ Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 
 			ClientSetGhostModeState(client, false);
 
-			if (!view_as<bool>(GetEntProp(client, Prop_Send, "m_bIsCoaching")))
+			if (!GetEntProp(client, Prop_Send, "m_bIsCoaching"))
 			{
 				// This is to prevent player spawn spam when someone is coaching. Who coaches in SF2, anyway?
 				TF2_RespawnPlayer(client);
@@ -492,7 +492,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	StartProfiling(profiler);
 	SendDebugMessageToPlayers(DEBUG_EVENT, 0, "(Event_PlayerSpawn) Started profiling...");
 
-	//PrintToChatAll("(SPAWN) Spawn event called.");
 	if (g_DebugDetailConVar.IntValue > 0)
 	{
 		DebugMessage("EVENT START: Event_PlayerSpawn(%d)", client);
@@ -1423,16 +1422,11 @@ Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(proxyMaster, profile, sizeof(profile));
 
-			char buffer[PLATFORM_MAX_PATH];
 			SF2BossProfileSoundInfo soundInfo;
 			GetBossProfileProxyHurtSounds(profile, soundInfo);
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 			{
-				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
-				if (buffer[0] != '\0')
-				{
-					EmitSoundToAll(buffer, client, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-				}
+				soundInfo.EmitSound(_, client);
 			}
 		}
 	}
@@ -1466,7 +1460,7 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 	}
 	#endif
 
-	bool fake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
+	bool fake = !!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
 	int inflictor = event.GetInt("inflictor_entindex");
 
 	#if defined DEBUG
@@ -1596,7 +1590,7 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 							{
 								int maxHealth = SDKCall(g_SDKGetMaxHealth, reds);
 								float damageToTake = float(maxHealth) / 10.0;
-								SDKHooks_TakeDamage(reds, reds, reds, damageToTake, 128, _, view_as<float>( { 0.0, 0.0, 0.0 } ));
+								SDKHooks_TakeDamage(reds, reds, reds, damageToTake, 128, _, { 0.0, 0.0, 0.0 } );
 							}
 							case 5:
 							{
@@ -1674,7 +1668,7 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 						g_PlayerBossKillSubject[client] = EntIndexToEntRef(slender);
 					}
 
-					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH], bossName[SF2_MAX_NAME_LENGTH];
+					char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], bossName[SF2_MAX_NAME_LENGTH];
 					NPCGetProfile(npcIndex2, npcProfile, sizeof(npcProfile));
 					NPCGetBossName(npcIndex2, bossName, sizeof(bossName));
 
@@ -1687,30 +1681,12 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 					}
 					#endif
 
-					ArrayList soundList;
 					SF2BossProfileSoundInfo soundInfo;
 					GetChaserProfileAttackKilledClientSounds(npcProfile, soundInfo);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-						if (buffer[0] != '\0' && g_PlayerEliminated[client])
-						{
-							EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
-						}
-					}
+					soundInfo.EmitSound(true, client);
 
 					GetChaserProfileAttackKilledAllSounds(npcProfile, soundInfo);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-						if (buffer[0] != '\0' && g_PlayerEliminated[client])
-						{
-							EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
-						}
-					}
-					soundList = null;
+					soundInfo.EmitSound();
 
 					SlenderPrintChatMessage(npcIndex2, client);
 
@@ -1753,17 +1729,9 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 				NPCGetProfile(proxyMaster, profile, sizeof(profile));
 
-				char buffer[PLATFORM_MAX_PATH];
 				SF2BossProfileSoundInfo soundInfo;
 				GetBossProfileProxyDeathSounds(profile, soundInfo);
-				if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
-				{
-					soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
-					if (buffer[0] != '\0')
-					{
-						EmitSoundToAll(buffer, client, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-					}
-				}
+				soundInfo.EmitSound(_, client);
 			}
 		}
 

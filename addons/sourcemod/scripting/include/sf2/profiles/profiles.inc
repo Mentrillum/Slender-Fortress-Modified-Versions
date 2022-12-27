@@ -41,7 +41,7 @@ void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning
 	{
 		if (!disableWarning)
 		{
-			//LogSF2Message("Sound file %s does not exist, excluding from downloads!", fullPath);
+			PrintToServer("[SF2] Sound file %s does not exist, excluding from downloads!", fullPath);
 		}
 		PrecacheSound(soundPath);
 	}
@@ -521,6 +521,74 @@ enum struct SF2BossProfileSoundInfo
 			}
 
 			StopSound(entity, this.Channel, buffer);
+		}
+	}
+
+	void EmitSound(bool toClient = false, int entity = -1, int emitter = SOUND_FROM_PLAYER, float origin[3] = NULL_VECTOR, int addPitch = 0)
+	{
+		if (this.Paths == null || this.Paths.Length <= 0)
+		{
+			return;
+		}
+		char buffer[PLATFORM_MAX_PATH];
+		this.Paths.GetString(GetRandomInt(0, this.Paths.Length - 1), buffer, sizeof(buffer));
+		int pitch = GetRandomInt(this.PitchRandomMin, this.PitchRandomMax);
+		int volumeCount = RoundToCeil(this.Volume);
+		for (int i = 0; i < volumeCount; i++)
+		{
+			float finalVolume = this.Volume;
+			if (i + 1 != volumeCount)
+			{
+				if (!toClient)
+				{
+					EmitSoundToAll(buffer, entity, this.Channel, this.Level, this.Flags, 1.0,
+					((this.PitchRandomMin == this.Pitch && this.PitchRandomMax == this.Pitch) ? this.Pitch : pitch) + addPitch,
+					_, origin);
+				}
+				else
+				{
+					EmitSoundToClient(entity, buffer, emitter, this.Channel, this.Level, this.Flags, 1.0,
+					((this.PitchRandomMin == this.Pitch && this.PitchRandomMax == this.Pitch) ? this.Pitch : pitch) + addPitch,
+					_, origin);
+				}
+			}
+			else
+			{
+				if (finalVolume > 1.0)
+				{
+					while (finalVolume > 1.0)
+					{
+						finalVolume -= 1.0;
+					}
+					if (!toClient)
+					{
+						EmitSoundToAll(buffer, entity, this.Channel, this.Level, this.Flags, finalVolume,
+						((this.PitchRandomMin == this.Pitch && this.PitchRandomMax == this.Pitch) ? this.Pitch : pitch) + addPitch,
+						_, origin);
+					}
+					else
+					{
+						EmitSoundToClient(entity, buffer, emitter, this.Channel, this.Level, this.Flags, finalVolume,
+						((this.PitchRandomMin == this.Pitch && this.PitchRandomMax == this.Pitch) ? this.Pitch : pitch) + addPitch,
+						_, origin);
+					}
+				}
+				else
+				{
+					if (!toClient)
+					{
+						EmitSoundToAll(buffer, entity, this.Channel, this.Level, this.Flags, this.Volume,
+						((this.PitchRandomMin == this.Pitch && this.PitchRandomMax == this.Pitch) ? this.Pitch : pitch) + addPitch,
+						_, origin);
+					}
+					else
+					{
+						EmitSoundToClient(entity, buffer, emitter, this.Channel, this.Level, this.Flags, this.Volume,
+						((this.PitchRandomMin == this.Pitch && this.PitchRandomMax == this.Pitch) ? this.Pitch : pitch) + addPitch,
+						_, origin);
+					}
+				}
+			}
 		}
 	}
 }
@@ -1058,6 +1126,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 			}
 			else
 			{
+				if (preDefinedIndex >= animDataArray.Length)
+				{
+					preDefinedIndex = animDataArray.Length - 1;
+				}
 				randomAnimation = preDefinedIndex;
 			}
 			SF2BossProfileAnimationSectionNameData animData;
@@ -1399,7 +1471,7 @@ enum struct SF2BossProfileData
 		this.RaidHitbox = false;
 		this.IgnoreNavPrefer = true;
 		this.StepSize = 18.0;
-		this.NodeDistanceLookAhead = 512.0;
+		this.NodeDistanceLookAhead = 128.0;
 		this.RenderFX = view_as<int>(RENDERFX_NONE);
 		this.RenderMode = view_as<int>(RENDER_NORMAL);
 
@@ -1583,10 +1655,16 @@ enum struct SF2BossProfileData
 		this.ClientDeathCamSounds.Init();
 		this.GlobalDeathCamSounds.Init();
 		this.ScareSounds.Init();
+		this.ScareSounds.Channel = MUSIC_CHAN;
+		this.ScareSounds.Level = SNDLEVEL_NONE;
 		this.SightSounds.Init();
 		this.SightSounds.CooldownMin = 8.0;
 		this.SightSounds.CooldownMax = 14.0;
+		this.SightSounds.Channel = MUSIC_CHAN;
+		this.SightSounds.Level = SNDLEVEL_NONE;
 		this.IntroSounds.Init();
+		this.IntroSounds.Channel = SNDCHAN_STATIC;
+		this.IntroSounds.Level = SNDLEVEL_HELICOPTER;
 		this.SpawnLocalSounds.Init();
 		this.SpawnLocalSounds.CooldownMin = 0.0;
 		this.SpawnLocalSounds.CooldownMax = 0.0;

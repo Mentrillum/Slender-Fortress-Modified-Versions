@@ -8,11 +8,11 @@
 static int g_ActionItemIndexes[] = { 57, 231 };
 
 //Proxy model
-static char g_ClientProxyModel[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-static char g_ClientProxyModelHard[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-static char g_ClientProxyModelInsane[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-static char g_ClientProxyModelNightmare[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
-static char g_ClientProxyModelApollyon[MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+static char g_ClientProxyModel[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelHard[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelInsane[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelNightmare[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static char g_ClientProxyModelApollyon[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
 
 void ClientResetProxy(int client, bool resetFull=true)
 {
@@ -484,12 +484,12 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 			{
 				color[3] = 255;
 			}
-			SlenderAddGlow(npcIndex,_,color);
+			SlenderAddGlow(npcIndex, color);
 		}
 		else
 		{
 			int purple[4] = {150, 0, 255, 255};
-			SlenderAddGlow(npcIndex,_,purple);
+			SlenderAddGlow(npcIndex, purple);
 		}
 	}
 
@@ -521,7 +521,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	Call_Finish();
 }
 
-Action Timer_GiveWeaponAll(Handle timer, any userid)
+static Action Timer_GiveWeaponAll(Handle timer, any userid)
 {
 	if (!g_Enabled)
 	{
@@ -547,7 +547,8 @@ Action Timer_GiveWeaponAll(Handle timer, any userid)
 
 		int weaponIndex, weaponSlot;
 		char weaponName[PLATFORM_MAX_PATH], weaponStats[PLATFORM_MAX_PATH];
-		int classIndex = view_as<int>(TF2_GetPlayerClass(client)) - 1;
+		int classIndex = view_as<int>(TF2_GetPlayerClass(client));
+		classIndex--;
 		ArrayList weaponArray = GetBossProfileProxyWeaponClassNames(profile);
 		if (weaponArray == null)
 		{
@@ -560,8 +561,8 @@ Action Timer_GiveWeaponAll(Handle timer, any userid)
 			return Plugin_Stop;
 		}
 		weaponArray.GetString(classIndex, weaponStats, sizeof(weaponStats));
-		weaponIndex = GetBossProfileProxyWeaponIndexes(profile, classIndex);
-		weaponSlot = GetBossProfileProxyWeaponSlots(profile, classIndex);
+		weaponIndex = GetBossProfileProxyWeaponIndexes(profile, classIndex + 1);
+		weaponSlot = GetBossProfileProxyWeaponSlots(profile, classIndex + 1);
 
 		switch (weaponSlot)
 		{
@@ -581,7 +582,6 @@ Action Timer_GiveWeaponAll(Handle timer, any userid)
 		Handle weaponHandle = PrepareItemHandle(weaponName, weaponIndex, 0, 0, weaponStats);
 		int entity = TF2Items_GiveNamedItem(client, weaponHandle);
 		delete weaponHandle;
-		weaponHandle = null;
 		EquipPlayerWeapon(client, entity);
 		SetEntProp(entity, Prop_Send, "m_bValidatedAttachedEntity", 1);
 	}
@@ -607,14 +607,14 @@ void ProxyDeathAnimation(any client)
 {
 	if (client != -1)
 	{
-		if (g_ClientFrame[client]>=g_ClientMaxFrameDeathAnim[client])
+		if (g_ClientFrame[client] >= g_ClientMaxFrameDeathAnim[client])
 		{
-			g_ClientFrame[client]=-1;
+			g_ClientFrame[client]--;
 			KillClient(client);
 		}
 		else
 		{
-			g_ClientFrame[client]+=1;
+			g_ClientFrame[client]++;
 			RequestFrame(ProxyDeathAnimation,client);
 		}
 	}
@@ -877,14 +877,7 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 			SF2BossProfileSoundInfo soundInfo;
 			GetBossProfileProxySpawnSounds(profile, soundInfo);
 			// Play any sounds, if any.
-			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
-			{
-				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
-				if (buffer[0] != '\0')
-				{
-					EmitSoundToAll(buffer, client, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-				}
-			}
+			soundInfo.EmitSound(_, client);
 
 			bool zombie = GetBossProfileProxyZombiesState(profile);
 			if (zombie)
@@ -1919,7 +1912,7 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 	}
 	if (g_RestrictedWeaponsConfig.JumpToKey("all"))
 	{
-		//returnBool = view_as<bool>(g_RestrictedWeaponsConfig.GetNum(itemDef));
+		//returnBool = !!(g_RestrictedWeaponsConfig.GetNum(itemDef));
 		//view_as bool value turn to 2 into a true value.
 		if (g_RestrictedWeaponsConfig.GetNum(itemDef)==1)
 		{
@@ -1930,7 +1923,7 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 			int proxyRestricted = g_RestrictedWeaponsConfig.GetNum(itemDef, 0);
 			if (proxyRestricted==2)
 			{
-				returnBool=true;
+				returnBool = true;
 			}
 		}
 	}
@@ -1986,17 +1979,17 @@ bool IsWeaponRestricted(TFClassType class,int itemDefInt)
 
 	if (bFoundSection)
 	{
-		//returnBool = view_as<bool>(g_RestrictedWeaponsConfig.GetNum(itemDef, returnBool));
+		//returnBool = !!(g_RestrictedWeaponsConfig.GetNum(itemDef, returnBool));
 		if (g_RestrictedWeaponsConfig.GetNum(itemDef)==1)
 		{
-			returnBool=true;
+			returnBool = true;
 		}
 		if (proxyBoss && !returnBool)
 		{
 			int proxyRestricted = g_RestrictedWeaponsConfig.GetNum(itemDef, 0);
 			if (proxyRestricted==2)
 			{
-				returnBool=true;
+				returnBool = true;
 			}
 		}
 	}

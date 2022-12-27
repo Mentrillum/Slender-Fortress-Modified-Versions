@@ -244,8 +244,6 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "SAXY GIBUS MAN\n");
 	StrCat(buffer, sizeof(buffer), "Fire\n");
 	StrCat(buffer, sizeof(buffer), "[NxN]Nameless\n");
-	StrCat(buffer, sizeof(buffer), "Diviously\n");
-	StrCat(buffer, sizeof(buffer), "Astolfo Alter\n");
 
 	SetMenuTitle(g_MenuCredits4, buffer);
 	AddMenuItem(g_MenuCredits4, "0", "Next");
@@ -256,12 +254,11 @@ void SetupMenus()
 	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "And finally to all of these people that helped out this version one way or another!\n \n");
 	StrCat(buffer, sizeof(buffer), "Dookster\n");
-	StrCat(buffer, sizeof(buffer), "Astolfo Alter\n");
 	StrCat(buffer, sizeof(buffer), "Spook\n");
 	StrCat(buffer, sizeof(buffer), "Rorek\n");
 	StrCat(buffer, sizeof(buffer), "Chillax\n");
 	StrCat(buffer, sizeof(buffer), "Staff from Disc-FF (EllieDear, Arrow Skye, tocks, and Pasta Stalin)\n");
-	StrCat(buffer, sizeof(buffer), "Basically everyone at District: Zen\n");
+	StrCat(buffer, sizeof(buffer), "Basically everyone at Disc-FF\n");
 	StrCat(buffer, sizeof(buffer), "And you for playing this new way of SF2!\n \n");
 
 	SetMenuTitle(g_MenuCredits5, buffer);

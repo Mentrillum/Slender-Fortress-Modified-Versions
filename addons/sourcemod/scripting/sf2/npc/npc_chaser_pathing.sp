@@ -61,8 +61,7 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 			}
 			case STATE_CHASE:
 			{
-				if (!g_NpcUsesChaseInitialAnimation[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex]
-					&& !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex]
+				if (!g_NpcUsesChaseInitialAnimation[bossIndex] && !NPCIsRaging(bossIndex)
 					&& !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 				{
 					if (npc != INVALID_NPC)
@@ -85,8 +84,7 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 			{
 				int currentAttackIndex = NPCGetCurrentAttackIndex(bossIndex);
 				if (NPCChaserGetAttackWhileRunningState(bossIndex, currentAttackIndex) &&
-					!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] &&
-					!g_NpcUsesRageAnimation3[bossIndex] && GetGameTime() >= g_NpcBaseAttackRunDelayTime[bossIndex][currentAttackIndex])
+					!NPCIsRaging(bossIndex) && GetGameTime() >= g_NpcBaseAttackRunDelayTime[bossIndex][currentAttackIndex])
 				{
 					if (NPCChaserGetAttackRunDuration(bossIndex, currentAttackIndex) > 0.0)
 					{
@@ -252,7 +250,7 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 						}
 					}
 
-					if (g_NpcUsesChaseInitialAnimation[bossIndex] || g_NpcUsesRageAnimation1[bossIndex] || g_NpcUsesRageAnimation2[bossIndex] || g_NpcUsesRageAnimation3[bossIndex] || g_NpcUseStartFleeAnimation[bossIndex])
+					if (g_NpcUsesChaseInitialAnimation[bossIndex] || NPCIsRaging(bossIndex) || g_NpcUseStartFleeAnimation[bossIndex])
 					{
 						if (target && target != INVALID_ENT_REFERENCE)
 						{
@@ -350,7 +348,7 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 			bot.Update();
 		}
 		if (!SF_IsBoxingMap() && loco.IsOnGround() && !loco.IsClimbingOrJumping() && (state == STATE_ALERT || state == STATE_CHASE || state == STATE_WANDER || state == STATE_ATTACK) &&
-		!g_NpcUsesChaseInitialAnimation[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] &&
+		!g_NpcUsesChaseInitialAnimation[bossIndex] && !NPCIsRaging(bossIndex) &&
 		!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex])
 		{
 			float pathNodePos[3], pathEndPos[3];
@@ -1024,7 +1022,7 @@ void SlenderSetNextThink(int bossEnt)
 							}
 						}
 
-						if (g_NpcUsesChaseInitialAnimation[bossIndex] || g_NpcUsesRageAnimation1[bossIndex] || g_NpcUsesRageAnimation2[bossIndex] || g_NpcUsesRageAnimation3[bossIndex] || g_NpcUseStartFleeAnimation[bossIndex])
+						if (g_NpcUsesChaseInitialAnimation[bossIndex] || NPCIsRaging(bossIndex) || g_NpcUseStartFleeAnimation[bossIndex])
 						{
 							if (target && target != INVALID_ENT_REFERENCE)
 							{

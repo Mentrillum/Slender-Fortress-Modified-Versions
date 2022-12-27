@@ -16,7 +16,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2MapEntityBase < CBaseEntity
 {
-	public SF2MapEntityBase(int entIndex) { return view_as<SF2MapEntityBase>(CBaseEntity(entIndex)); }
+	public SF2MapEntityBase(int entIndex)
+	{
+		return view_as<SF2MapEntityBase>(CBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{

@@ -9,7 +9,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2LogicProxyEntity < CBaseEntity
 {
-	public SF2LogicProxyEntity(int entIndex) { return view_as<SF2LogicProxyEntity>(CBaseEntity(entIndex)); }
+	public SF2LogicProxyEntity(int entIndex)
+	{
+		return view_as<SF2LogicProxyEntity>(CBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{

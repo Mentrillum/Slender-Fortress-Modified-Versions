@@ -67,13 +67,13 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 
 	AddVectors(myEyeAng, g_SlenderEyeAngOffset[bossIndex], myEyeAng);
 
-	if (IsValidClient(attacker) && SF_IsBoxingMap() && (TF2_IsPlayerInCondition(attacker, TFCond_RegenBuffed)) && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+	if (IsValidClient(attacker) && SF_IsBoxingMap() && (TF2_IsPlayerInCondition(attacker, TFCond_RegenBuffed)) && !NPCIsRaging(bossIndex))
 	{
 		int health = GetClientHealth(attacker);
 		float multipliedDamage = damage;
 		multipliedDamage *= 0.475;
 		int newHealth = health + RoundToCeil(multipliedDamage);
-		if (newHealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))
+		if (newHealth <= GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))
 		{
 			SetEntityHealth(attacker, newHealth);
 		}
@@ -87,22 +87,22 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && TF2_GetPlayerClass(attacker) == TFClass_Scout)
 	{
 		int stick = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (IsValidEntity(stick) && GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 349 && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_SlenderIsBurning[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(stick) && GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 349 && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_SlenderIsBurning[bossIndex] && !NPCIsRaging(bossIndex))
 		{
 			damagetype = DMG_CRIT;
 			damage *= 3.0;
 		}
-		if (IsValidEntity(stick) && (GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 325 || GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 452) && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(stick) && (GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 325 || GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 452) && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderBleedTimer[bossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			g_SlenderStopBleedingTimer[bossIndex] = GetGameTime() + 5.0;
 		}
-		if (IsValidEntity(stick) && GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 355 && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(stick) && GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 355 && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderMarkedTimer[bossIndex] = CreateTimer(15.0, Timer_BossMarked, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 			g_SlenderIsMarked[bossIndex] = true;
 		}
-		if (IsValidEntity(stick) && GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 648 && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && shootDist > SquareFloat(72.0) && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(stick) && GetEntProp(stick, Prop_Send, "m_iItemDefinitionIndex") == 648 && stick == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && shootDist > SquareFloat(72.0) && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderBleedTimer[bossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			g_SlenderStopBleedingTimer[bossIndex] = GetGameTime() + 5.0;
@@ -113,7 +113,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 		//Probably the only time where buffing the phlog is a good thing.
 		int phlog = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Primary);
 		int fragment = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (IsValidEntity(phlog) && GetEntProp(phlog, Prop_Send, "m_iItemDefinitionIndex") == TF_WEAPON_PHLOGISTINATOR && GetEntPropFloat(attacker, Prop_Send, "m_flNextRageEarnTime") <= GetGameTime() && !view_as<bool>(GetEntProp(attacker, Prop_Send, "m_bRageDraining")))
+		if (IsValidEntity(phlog) && GetEntProp(phlog, Prop_Send, "m_iItemDefinitionIndex") == TF_WEAPON_PHLOGISTINATOR && GetEntPropFloat(attacker, Prop_Send, "m_flNextRageEarnTime") <= GetGameTime() && !(GetEntProp(attacker, Prop_Send, "m_bRageDraining")))
 		{
 			float rage = GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter");
 			rage += (damage / 30.00);
@@ -123,13 +123,15 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 			}
 			SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter", rage);
 		}
-		if (IsValidEntity(fragment) && SF_IsBoxingMap() && GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 348 && fragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(fragment) && SF_IsBoxingMap() && GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 348 && fragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderBurnTimer[bossIndex] = CreateTimer(0.5, Timer_BossBurn, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			g_SlenderStopBurningTimer[bossIndex] = GetGameTime() + 15.0;
 			g_SlenderIsBurning[bossIndex] = true;
 		}
-		if (IsValidEntity(fragment) && SF_IsBoxingMap() && (GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 38 || GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 457 || GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 1000) && fragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_SlenderIsBurning[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(fragment) && SF_IsBoxingMap() &&
+		(GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 38 || GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 457 || GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 1000)
+		&& fragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_SlenderIsBurning[bossIndex] && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderBurnTimer[bossIndex] = null;
 			g_SlenderStopBurningTimer[bossIndex] = GetGameTime();
@@ -141,7 +143,9 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 		{
 			TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
 		}
-		if (IsValidEntity(fragment) && SF_IsBoxingMap() && (GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 813 || GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 834) && fragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && (g_SlenderIsMarked[bossIndex]))
+		if (IsValidEntity(fragment) && SF_IsBoxingMap() &&
+		(GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 813 || GetEntProp(fragment, Prop_Send, "m_iItemDefinitionIndex") == 834)
+		&& fragment == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex) && (g_SlenderIsMarked[bossIndex]))
 		{
 			damagetype = DMG_CRIT;
 			damage *= 3.0;
@@ -149,20 +153,36 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 	}
 	if (IsValidClient(attacker) && TF2_GetPlayerClass(attacker) == TFClass_Soldier)
 	{
-		int whip = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (IsValidEntity(whip) && GetEntProp(whip, Prop_Send, "m_iItemDefinitionIndex") == 447 && whip == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
+		int weapon = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
+		if (IsValidEntity(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 447 && weapon == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon")) // Whip
 		{
 			TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
 		}
-		else if (IsValidEntity(whip) && GetEntProp(whip, Prop_Send, "m_iItemDefinitionIndex") == 416 && whip == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
+		else if (IsValidEntity(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 416 && weapon == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon"))
 		{
 			float zVelocity[3];
 			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", zVelocity);
-			if (zVelocity[2] < 0.0) //A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
+			if (zVelocity[2] < 0.0) // A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
 			{
 				damagetype |= DMG_CRIT;
 				damage *= 2.0;
 			}
+		}
+		float requiredRage = 6.0;
+		if (IsValidEntity(weapon) && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 354) // Concheror
+		{
+			requiredRage = 4.8;
+		}
+		bool draining = !!GetEntProp(attacker, Prop_Send, "m_bRageDraining");
+		if (!draining)
+		{
+			float rage = GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter");
+			rage += (damage / requiredRage);
+			if (rage > 100.0)
+			{
+				rage = 100.0;
+			}
+			SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter", rage);
 		}
 	}
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && TF2_GetPlayerClass(attacker) == TFClass_Heavy)
@@ -172,7 +192,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 		{
 			TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
 		}
-		if (IsValidEntity(gloves) && GetEntProp(gloves, Prop_Send, "m_iItemDefinitionIndex") == 43 && gloves == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && !IsClientCritBoosted(attacker) && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(gloves) && GetEntProp(gloves, Prop_Send, "m_iItemDefinitionIndex") == 43 && gloves == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && !IsClientCritBoosted(attacker) && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_PlayerHitsToCrits[attacker]++;
 			if (g_PlayerHitsToCrits[attacker] == 5)
@@ -185,7 +205,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && TF2_GetPlayerClass(attacker) == TFClass_Engineer)
 	{
 		int wrench = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (IsValidEntity(wrench) && GetEntProp(wrench, Prop_Send, "m_iItemDefinitionIndex") == 155 && wrench == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(wrench) && GetEntProp(wrench, Prop_Send, "m_iItemDefinitionIndex") == 155 && wrench == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderBleedTimer[bossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			g_SlenderStopBleedingTimer[bossIndex] = GetGameTime() + 5.0;
@@ -194,12 +214,12 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && TF2_GetPlayerClass(attacker) == TFClass_Sniper)
 	{
 		int sharpy = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (IsValidEntity(sharpy) && GetEntProp(sharpy, Prop_Send, "m_iItemDefinitionIndex") == 171 && sharpy == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(sharpy) && GetEntProp(sharpy, Prop_Send, "m_iItemDefinitionIndex") == 171 && sharpy == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_SlenderBleedTimer[bossIndex] = CreateTimer(0.5, Timer_BossBleed, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 			g_SlenderStopBleedingTimer[bossIndex] = GetGameTime() + 6.0;
 		}
-		if (IsValidEntity(sharpy) && GetEntProp(sharpy, Prop_Send, "m_iItemDefinitionIndex") == 232 && sharpy == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_SlenderIsMarked[bossIndex] && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(sharpy) && GetEntProp(sharpy, Prop_Send, "m_iItemDefinitionIndex") == 232 && sharpy == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && g_SlenderIsMarked[bossIndex] && !NPCIsRaging(bossIndex))
 		{
 			damagetype = DMG_CRIT;
 			damage *= 3.0;
@@ -209,7 +229,9 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 	if (IsValidClient(attacker) && SF_IsBoxingMap() && TF2_GetPlayerClass(attacker) == TFClass_DemoMan)
 	{
 		int sword = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Melee);
-		if (IsValidEntity(sword) && (GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 132 || GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 266 || GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 482 || GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 1082) && sword == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+		if (IsValidEntity(sword) &&
+		(GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 132 || GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 266 || GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 482 || GetEntProp(sword, Prop_Send, "m_iItemDefinitionIndex") == 1082)
+		&& sword == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon") && SF_IsBoxingMap() && !NPCIsRaging(bossIndex))
 		{
 			g_PlayerHitsToHeads[attacker]++;
 			if (g_PlayerHitsToHeads[attacker] == 5)
@@ -237,7 +259,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 			SubtractVectors(traceEndPos, traceStartPos, buffer);
 			GetVectorAngles(buffer, buffer);
 
-			if (FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) >= (NPCGetBackstabFOV(bossIndex) * 0.5) && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && GetChaserProfileBackstabDamageScale(profile) > 0.0)
+			if (FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) >= (NPCGetBackstabFOV(bossIndex) * 0.5) && !NPCIsRaging(bossIndex) && GetChaserProfileBackstabDamageScale(profile) > 0.0)
 			{
 				damagetype = DMG_CRIT;
 				EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
@@ -301,7 +323,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 		miniCrit = true;
 	}
 
-	if ((g_SlenderIsMarked[bossIndex]) && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+	if ((g_SlenderIsMarked[bossIndex]) && !NPCIsRaging(bossIndex))
 	{
 		miniCrit = true;
 		damage *= 1.35;
@@ -314,7 +336,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 	{
 		damage = 0.0;
 	}
-	bool attackEliminated = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+	bool attackEliminated = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 
 	if (SF_IsBoxingMap() && IsValidClient(attacker) && !attackEliminated && (GetClientTeam(attacker) == TFTeam_Blue))
 	{
@@ -341,7 +363,7 @@ Action Hook_SlenderOnTakeDamage(int victim, int &attacker, int &inflictor, float
 
 		if (NPCChaserIsStunEnabled(bossIndex) && !g_SlenderSpawning[bossIndex])
 		{
-			if (g_SlenderNextStunTime[bossIndex] <= GetGameTime() && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_SlenderInDeathcam[bossIndex] && !g_RestartSessionEnabled)
+			if (g_SlenderNextStunTime[bossIndex] <= GetGameTime() && !NPCIsRaging(bossIndex) && !g_SlenderInDeathcam[bossIndex] && !g_RestartSessionEnabled)
 			{
 				NPCChaserAddStunHealth(bossIndex, -damage);
 				if (NPCChaserGetStunHealth(bossIndex) <= 0.0 && state != STATE_STUN)

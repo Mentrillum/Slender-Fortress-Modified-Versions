@@ -131,46 +131,47 @@ static Action Timer_TrapThink(Handle timer, any entref)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsClientInGame(i) ||
-				!IsPlayerAlive(i) ||
-				g_PlayerEliminated[i] ||
-				IsClientInGhostMode(i) ||
-				DidClientEscape(i))
+			SF2_BasePlayer player = SF2_BasePlayer(i);
+			if (!player.IsInGame ||
+				!player.IsAlive ||
+				player.IsEliminated ||
+				player.IsInGhostMode ||
+				player.HasEscaped)
 			{
 				continue;
 			}
 
 			float entPos[3], otherPos[3];
-			GetEntPropVector(i, Prop_Data, "m_vecAbsOrigin", otherPos);
+			player.GetPropVector(Prop_Data, "m_vecAbsOrigin", otherPos);
 			GetEntPropVector(trapEntity, Prop_Data, "m_vecAbsOrigin", entPos);
 			float zPos = otherPos[2] - entPos[2];
 			float distance = GetVectorSquareMagnitude(otherPos, entPos);
 			if (distance <= SquareFloat(50.0) && (zPos <= 25.0 && zPos >= -25.0))
 			{
-				TFClassType classType = TF2_GetPlayerClass(i);
+				TFClassType classType = player.Class;
 				int classToInt = view_as<int>(classType);
 
 				if (!IsClassConfigsValid())
 				{
 					if (classType != TFClass_Heavy)
 					{
-						g_PlayerTrapped[i] = true;
-						g_PlayerTrapCount[i] = GetRandomInt(2, 4);
+						player.IsTrapped = true;
+						player.TrapCount = GetRandomInt(2, 4);
 					}
 				}
 				else
 				{
 					if (!g_ClassInvulnerableToTraps[classToInt])
 					{
-						g_PlayerTrapped[i] = true;
-						g_PlayerTrapCount[i] = GetRandomInt(2, 4);
+						player.IsTrapped = true;
+						player.TrapCount = GetRandomInt(2, 4);
 					}
 				}
-				if (!g_PlayerHints[i][PlayerHint_Trap])
+				if (!g_PlayerHints[player.index][PlayerHint_Trap])
 				{
-					ClientShowHint(i, PlayerHint_Trap);
+					player.ShowHint(PlayerHint_Trap);
 				}
-				SDKHooks_TakeDamage(i, i, i, 10.0, 128);
+				SDKHooks_TakeDamage(player.index, player.index, player.index, 10.0, 128);
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
 				int bossIndex = g_TrapMaster[trapEntity];

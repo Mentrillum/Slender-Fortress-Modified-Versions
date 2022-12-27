@@ -20,7 +20,10 @@ enum struct SF2PageMusicEntityRangeData
  */
 methodmap SF2PageMusicEntity < CBaseEntity
 {
-	public SF2PageMusicEntity(int entIndex) { return view_as<SF2PageMusicEntity>(CBaseEntity(entIndex)); }
+	public SF2PageMusicEntity(int entIndex)
+	{
+		return view_as<SF2PageMusicEntity>(CBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -34,30 +37,42 @@ methodmap SF2PageMusicEntity < CBaseEntity
 
 	property bool Layered
 	{
-		public get() { return !!this.GetProp(Prop_Data, "sf2_bLayered"); }
-		public set(bool value) { this.SetProp(Prop_Data, "sf2_bLayered", value); }
+		public get()
+		{
+			return !!this.GetProp(Prop_Data, "sf2_bLayered");
+		}
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "sf2_bLayered", value);
+		}
 	}
 
 	property ArrayList Ranges
 	{
-		public get() { return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hRanges")); }
-		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hRanges", value); }
+		public get()
+		{
+			return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hRanges"));
+		}
+		public set(ArrayList value)
+		{
+			this.SetProp(Prop_Data, "sf2_hRanges", value);
+		}
 	}
 
-	public void GetRangeKeyValue(int index, char[] buffer, int iBufferLen)
+	public void GetRangeKeyValue(int index, char[] buffer, int bufferLen)
 	{
 		char fieldName[64];
 		FormatEx(fieldName, sizeof(fieldName), "sf2_szRange%d", index);
 
-		this.GetPropString(Prop_Data, fieldName, buffer, iBufferLen);
+		this.GetPropString(Prop_Data, fieldName, buffer, bufferLen);
 	}
 
-	public void GetRangeMusicKeyValue(int index, char[] buffer, int iBufferLen)
+	public void GetRangeMusicKeyValue(int index, char[] buffer, int bufferLen)
 	{
 		char fieldName[64];
 		FormatEx(fieldName, sizeof(fieldName), "sf2_szRangeMusic%d", index);
 
-		this.GetPropString(Prop_Data, fieldName, buffer, iBufferLen);
+		this.GetPropString(Prop_Data, fieldName, buffer, bufferLen);
 	}
 
 	public void GetRange(int index, SF2PageMusicEntityRangeData rangeData)
@@ -77,7 +92,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		return rangeData.Music[0] != '\0';
 	}
 
-	public bool GetRangeMusic(int num, char[] buffer, int iBufferLen)
+	public bool GetRangeMusic(int num, char[] buffer, int bufferLen)
 	{
 		SF2PageMusicEntityRangeData rangeData;
 
@@ -91,7 +106,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 			this.GetRange(i, rangeData);
 			if (num >= rangeData.Min && num <= rangeData.Max)
 			{
-				strcopy(buffer, iBufferLen, rangeData.Music);
+				strcopy(buffer, bufferLen, rangeData.Music);
 				return true;
 			}
 		}

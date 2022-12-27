@@ -7,6 +7,7 @@
 #pragma semicolon 1
 
 const SF2NPC_BaseNPC SF2_INVALID_NPC = view_as<SF2NPC_BaseNPC>(-1);
+const SF2_BasePlayer SF2_INVALID_PLAYER = view_as<SF2_BasePlayer>(-1);
 const SF2NPC_Chaser SF2_INVALID_NPC_CHASER = view_as<SF2NPC_Chaser>(-1);
 const SF2NPC_Statue SF2_INVALID_NPC_STATUE = view_as<SF2NPC_Statue>(-1);
 
@@ -257,14 +258,29 @@ methodmap SF2NPC_BaseNPC
 		return NPCGetSpeed(this.Index, difficulty);
 	}
 
+	public float GetAddSpeed()
+	{
+		return NPCGetAddSpeed(this.Index);
+	}
+
+	public void SetAddSpeed(float value)
+	{
+		NPCSetAddSpeed(this.Index, value);
+	}
+
 	public float GetMaxSpeed(int difficulty)
 	{
 		return NPCGetMaxSpeed(this.Index, difficulty);
 	}
 
-	public float GetAddSpeed()
+	public float GetAddMaxSpeed()
 	{
-		return NPCGetAddSpeed(this.Index);
+		return NPCGetAddMaxSpeed(this.Index);
+	}
+
+	public void SetAddMaxSpeed(float value)
+	{
+		NPCSetAddMaxSpeed(this.Index, value);
 	}
 
 	public bool GetAbsOrigin(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
@@ -272,33 +288,19 @@ methodmap SF2NPC_BaseNPC
 		return SlenderGetAbsOrigin(this.Index, buffer, defaultValue);
 	}
 
-	property float AddSpeed
-	{
-		public get()
-		{
-			NPCGetAddSpeed(this.Index);
-		}
-		public set(float amount)
-		{
-			NPCSetAddSpeed(this.Index, amount);
-		}
-	}
-
-	property float AddMaxSpeed
-	{
-		public get()
-		{
-			NPCGetAddMaxSpeed(this.Index);
-		}
-		public set(float amount)
-		{
-			NPCSetAddMaxSpeed(this.Index, amount);
-		}
-	}
-
 	public float GetAcceleration(int difficulty)
 	{
 		return NPCGetAcceleration(this.Index, difficulty);
+	}
+
+	public float GetAddAcceleration()
+	{
+		return NPCGetAddAcceleration(this.Index);
+	}
+
+	public void SetAddAcceleration(float value)
+	{
+		NPCSetAddAcceleration(this.Index, value);
 	}
 
 	property float AddAcceleration
@@ -367,6 +369,530 @@ methodmap SF2NPC_BaseNPC
 	public void AddCompanions()
 	{
 		NPCAddCompanions(this);
+	}
+}
+
+methodmap SF2_BasePlayer < CBaseCombatCharacter
+{
+	public SF2_BasePlayer(int client)
+	{
+		if (!IsValidClient(client))
+		{
+			return view_as<SF2_BasePlayer>(SF2_INVALID_PLAYER);
+		}
+		return view_as<SF2_BasePlayer>(client);
+	}
+
+	property int UserID
+	{
+		public get()
+		{
+			return GetClientUserId(this.index);
+		}
+	}
+
+	property bool IsValid
+	{
+		public get()
+		{
+			return IsValidClient(this.index);
+		}
+	}
+
+	property bool IsAlive
+	{
+		public get()
+		{
+			return IsPlayerAlive(this.index);
+		}
+	}
+
+	property bool IsInGame
+	{
+		public get()
+		{
+			return IsClientInGame(this.index);
+		}
+	}
+
+	property bool IsBot
+	{
+		public get()
+		{
+			return IsFakeClient(this.index);
+		}
+	}
+
+	property bool IsSourceTV
+	{
+		public get()
+		{
+			return IsClientSourceTV(this.index);
+		}
+	}
+
+	property bool IsReplay
+	{
+		public get()
+		{
+			return IsClientReplay(this.index);
+		}
+	}
+
+	property bool InThirdPerson
+	{
+		public get()
+		{
+			return !!GetEntProp(this.index, Prop_Send, "m_nForceTauntCam");
+		}
+	}
+
+	property int Buttons
+	{
+		public get()
+		{
+			return GetClientButtons(this.index);
+		}
+	}
+
+	property int Health
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Send, "m_iHealth");
+		}
+
+		public set(int value)
+		{
+			this.SetProp(Prop_Send, "m_iHealth", value);
+		}
+	}
+
+	property int MaxHealth
+	{
+		public get()
+		{
+			return SDKCall(g_SDKGetMaxHealth, this.index);
+		}
+	}
+
+	property bool Ducking
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Send, "m_bDucking") != 0;
+		}
+	}
+
+	property bool Ducked
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Send, "m_bDucked") != 0;
+		}
+	}
+
+	public int GetDataEnt(int offset)
+	{
+		return GetEntDataEnt2(this.index, offset);
+	}
+
+	property TFClassType Class
+	{
+		public get()
+		{
+			return TF2_GetPlayerClass(this.index);
+		}
+	}
+
+	property int Team
+	{
+		public get()
+		{
+			return GetClientTeam(this.index);
+		}
+	}
+
+	property bool HasRegenItem
+	{
+		public get()
+		{
+			return g_PlayerHasRegenerationItem[this.index];
+		}
+		public set(bool state)
+		{
+			g_PlayerHasRegenerationItem[this.index] = state;
+		}
+	}
+
+	public bool InCondition(TFCond condition)
+	{
+		return TF2_IsPlayerInCondition(this.index, condition);
+	}
+
+	public bool ChangeCondition(TFCond condition, bool remove = false, float duration = TFCondDuration_Infinite, int inflictor = 0)
+	{
+		if (remove)
+		{
+			TF2_RemoveCondition(this.index, condition);
+		}
+		else
+		{
+			TF2_AddCondition(this.index, condition, duration, inflictor);
+		}
+	}
+
+	public void Ignite(bool self = false, int attacker = 0, float duration = 10.0)
+	{
+		TF2_IgnitePlayer(this.index, !self && attacker > 0 ? attacker : this.index, duration);
+	}
+
+	public void Bleed(bool self = false, int attacker = 0, float duration = 5.0)
+	{
+		TF2_MakeBleed(this.index, !self && attacker > 0 ? attacker : this.index, duration);
+	}
+
+	public void Stun(float duration, float slowdown, int stunflags, int attacker = 0)
+	{
+		TF2_StunPlayer(this.index, duration, slowdown, stunflags, attacker);
+	}
+
+	public void Regenerate()
+	{
+		TF2_RegeneratePlayer(this.index);
+	}
+
+	public void SetClass(TFClassType classType, bool weapons = true, bool persistent = true)
+	{
+		TF2_SetPlayerClass(this.index, classType, weapons, persistent);
+	}
+
+	public void GetEyePosition(float vector[3])
+	{
+		GetClientEyePosition(this.index, vector);
+	}
+
+	public void GetEyeAngles(float vector[3])
+	{
+		GetClientEyeAngles(this.index, vector);
+	}
+
+	public void GetDataVector(int offset, float buffer[3])
+	{
+		GetEntDataVector(this.index, offset, buffer);
+	}
+
+	public void SetDataVector(int offset, const float buffer[3], bool state=false)
+	{
+		SetEntDataVector(this.index, offset, buffer, state);
+	}
+
+	public float GetDistanceFromEntity(int ent)
+	{
+		return ClientGetDistanceFromEntity(this.index, ent);
+	}
+
+	public int GetWeaponSlot(int slot)
+	{
+		return GetPlayerWeaponSlot(this.index, slot);
+	}
+
+	public void ScreenShake(float amp, float duration, float freq)
+	{
+		UTIL_ClientScreenShake(this.index, amp, duration, freq);
+	}
+
+	public int ShowHudText(Handle hudSync, const char[] buffer)
+	{
+		return ShowSyncHudText(this.index, hudSync, buffer);
+	}
+
+	public any SDK_Call(Handle handle)
+	{
+		return SDKCall(handle, this.index);
+	}
+
+	public void ViewPunch(const float punchVel[3])
+	{
+		ClientViewPunch(this.index, punchVel);
+	}
+
+	public void TakeDamage(bool self = false, int inflictor = 0, int attacker = 0, float damage, int damageType = DMG_GENERIC, int weapon = -1,
+		const float damageForce[3] = NULL_VECTOR, const float damagePosition[3] = NULL_VECTOR, bool bypassHooks = true)
+	{
+		SDKHooks_TakeDamage(this.index, !self && inflictor > 0 ? inflictor : this.index, !self && attacker > 0 ? attacker : this.index,
+		damage, damageType, weapon, damageForce, damagePosition, bypassHooks);
+	}
+
+	public void Respawn()
+	{
+		TF2_RespawnPlayer(this.index);
+	}
+
+	public void UpdateListeningFlags(bool reset = false)
+	{
+		ClientUpdateListeningFlags(this.index, false);
+	}
+
+	property bool IsEliminated
+	{
+		public get()
+		{
+			return g_PlayerEliminated[this.index];
+		}
+		public set(bool state)
+		{
+			g_PlayerEliminated[this.index] = state;
+		}
+	}
+
+	property bool IsInGhostMode
+	{
+		public get()
+		{
+			return IsClientInGhostMode(this.index);
+		}
+	}
+
+	public void SetGhostState(bool state)
+	{
+		ClientSetGhostModeState(this.index, state);
+	}
+
+	property bool IsProxy
+	{
+		public get()
+		{
+			return g_PlayerProxy[this.index];
+		}
+		public set(bool state)
+		{
+			g_PlayerProxy[this.index] = state;
+		}
+	}
+
+	property int ProxyControl
+	{
+		public get()
+		{
+			return g_PlayerProxyControl[this.index];
+		}
+		public set(int value)
+		{
+			if (value < 0)
+			{
+				value = 0;
+			}
+			if (value > 100)
+			{
+				value = 100;
+			}
+			g_PlayerProxyControl[this.index] = value;
+		}
+	}
+
+	property int ProxyMaster
+	{
+		public get()
+		{
+			return g_PlayerProxyMaster[this.index];
+		}
+		public set(int value)
+		{
+			g_PlayerProxyMaster[this.index] = value;
+		}
+	}
+
+	property bool IsInPvP
+	{
+		public get()
+		{
+			return IsClientInPvP(this.index);
+		}
+	}
+
+	property bool IsInDeathCam
+	{
+		public get()
+		{
+			return IsClientInDeathCam(this.index);
+		}
+	}
+
+	public void StartDeathCam(int bossIndex, const float vecLookPos[3], bool antiCamp = false)
+	{
+		ClientStartDeathCam(this.index, bossIndex, vecLookPos, antiCamp);
+	}
+
+	property bool HasEscaped
+	{
+		public get()
+		{
+			return DidClientEscape(this.index);
+		}
+	}
+
+	public void Escape()
+	{
+		ClientEscape(this.index);
+	}
+
+	public void TeleportToEscapePoint()
+	{
+		TeleportClientToEscapePoint(this.index);
+	}
+
+	property bool UsingFlashlight
+	{
+		public get()
+		{
+			return IsClientUsingFlashlight(this.index);
+		}
+	}
+
+	public void HandleFlashlight()
+	{
+		ClientHandleFlashlight(this.index);
+	}
+
+	property float FlashlightBatteryLife
+	{
+		public get()
+		{
+			return ClientGetFlashlightBatteryLife(this.index);
+		}
+		public set(float value)
+		{
+			ClientSetFlashlightBatteryLife(this.index, value);
+		}
+	}
+
+	public void ResetFlashlight()
+	{
+		ClientResetFlashlight(this.index);
+	}
+
+	property bool IsSprinting
+	{
+		public get()
+		{
+			return IsClientSprinting(this.index);
+		}
+	}
+
+	property bool IsReallySprinting
+	{
+		public get()
+		{
+			return IsClientReallySprinting(this.index);
+		}
+	}
+
+	property bool IsBlinking
+	{
+		public get()
+		{
+			return IsClientBlinking(this.index);
+		}
+	}
+
+	property float BlinkMeter
+	{
+		public get()
+		{
+			return ClientGetBlinkMeter(this.index);
+		}
+		public set(float amount)
+		{
+			ClientSetBlinkMeter(this.index, amount);
+		}
+	}
+
+	property int BlinkCount
+	{
+		public get()
+		{
+			return ClientGetBlinkCount(this.index);
+		}
+	}
+
+	public void ResetBlink()
+	{
+		ClientResetBlink(this.index);
+	}
+
+	public bool StartPeeking()
+	{
+		return ClientStartPeeking(this.index);
+	}
+
+	property int PageCount
+	{
+		public get()
+		{
+			return g_PlayerPageCount[this.index];
+		}
+		public set(int amount)
+		{
+			g_PlayerPageCount[this.index] = amount;
+		}
+	}
+
+	public void ResetHints()
+	{
+		ClientResetHints(this.index);
+	}
+
+	public void ShowHint(int hint)
+	{
+		ClientShowHint(this.index, hint);
+	}
+
+	property bool IsTrapped
+	{
+		public get()
+		{
+			return g_PlayerTrapped[this.index];
+		}
+		public set(bool state)
+		{
+			g_PlayerTrapped[this.index] = state;
+		}
+	}
+
+	property int TrapCount
+	{
+		public get()
+		{
+			return g_PlayerTrapCount[this.index];
+		}
+		public set(int amount)
+		{
+			g_PlayerTrapCount[this.index] = amount;
+		}
+	}
+
+	public void UpdateMusicSystem(bool initialize = false)
+	{
+		ClientUpdateMusicSystem(this.index, initialize);
+	}
+
+	property bool HasConstantGlow
+	{
+		public get()
+		{
+			return DoesClientHaveConstantGlow(this.index);
+		}
+	}
+
+	public void SetPlayState(bool state, bool enablePlay = true)
+	{
+		SetClientPlayState(this.index, state, enablePlay);
+	}
+
+	public bool CanSeeSlender(int bossIndex, bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true)
+	{
+		return PlayerCanSeeSlender(this.index, bossIndex, checkFOV, checkBlink, checkEliminated);
 	}
 }
 
@@ -736,9 +1262,34 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		return NPCChaserGetMaxWalkSpeed(this.Index, difficulty);
 	}
 
+	public void SetStunHealth(float value)
+	{
+		NPCChaserSetStunHealth(this.Index, value);
+	}
+
+	public float GetInitialStunHealth()
+	{
+		return NPCChaserGetStunInitialHealth(this.Index);
+	}
+
+	public float GetAddStunHealth()
+	{
+		return NPCChaserGetAddStunHealth(this.Index);
+	}
+
+	public float SetAddStunHealth(float value)
+	{
+		NPCChaserSetAddStunHealth(this.Index, value);
+	}
+
 	public void AddStunHealth(float amount)
 	{
 		NPCChaserAddStunHealth(this.Index, amount);
+	}
+
+	public float GetFlashlightDamage()
+	{
+		NPCChaserGetStunFlashlightDamage(this.Index);
 	}
 
 	property bool AutoChaseEnabled

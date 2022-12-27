@@ -345,9 +345,10 @@ void NPCChaserResetAnimationInfo(int npcIndex, int iSequence = 0)
 	g_NpcUseFireAnimation[npcIndex] = false;
 	g_NpcUsesHealAnimation[npcIndex] = false;
 	g_NpcUseStartFleeAnimation[npcIndex] = false;
-	g_NpcUsesRageAnimation1[npcIndex] = false;
-	g_NpcUsesRageAnimation2[npcIndex] = false;
-	g_NpcUsesRageAnimation3[npcIndex] = false;
+	for (int i = 0; i < 3; i++)
+	{
+		g_NpcUsesRageAnimation[npcIndex][i] = false;
+	}
 }
 
 float NPCChaserGetWalkSpeed(int npcIndex, int difficulty)
@@ -1585,7 +1586,8 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	int count;
 	for (int client; client <= MaxClients; client++)
 	{
-		if (IsValidClient(client) && g_PlayerEliminated[client])
+		SF2_BasePlayer player = SF2_BasePlayer(client);
+		if (player.IsValid && player.IsEliminated)
 		{
 			count++;
 		}
@@ -2114,29 +2116,30 @@ static Action Timer_InstantKillThink(Handle timer, int bossIndex)
 	float slenderPos[3];
 	boss.GetAbsOrigin(slenderPos);
 
-	bool attackWaiters = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+	bool attackWaiters = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
-	if (!target || target == INVALID_ENT_REFERENCE)
+	int ref = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
+	if (!ref || ref == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Continue;
+	}
+	SF2_BasePlayer target = SF2_BasePlayer(ref);
+
+	if (!target.IsValid || target.IsInDeathCam || target.IsInGhostMode || !target.IsAlive || target.IsProxy)
 	{
 		return Plugin_Continue;
 	}
 
-	if (!IsValidClient(target) || IsClientInDeathCam(target) || IsClientInGhostMode(target) || !IsPlayerAlive(target) || g_PlayerProxy[target])
-	{
-		return Plugin_Continue;
-	}
-
-	if (!attackWaiters && g_PlayerEliminated[target])
+	if (!attackWaiters && target.IsEliminated)
 	{
 		return Plugin_Continue;
 	}
 
 	float myPos[3];
 
-	GetClientAbsOrigin(target, myPos);
+	target.GetAbsOrigin(myPos);
 	myPos[2] += 35.0;
 	slenderPos[2] += 35.0;
 
@@ -2144,11 +2147,11 @@ static Action Timer_InstantKillThink(Handle timer, int bossIndex)
 		(GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
 		&& !g_SlenderInDeathcam[bossIndex])
 	{
-		if (PlayerCanSeeSlender(target, bossIndex, false, _, !attackWaiters))
+		if (target.CanSeeSlender(bossIndex, false, _, !attackWaiters))
 		{
 			g_SlenderLastKill[bossIndex] = GetGameTime();
 			slenderPos[2] -= 35.0;
-			ClientStartDeathCam(target, bossIndex, slenderPos);
+			target.StartDeathCam(bossIndex, slenderPos);
 		}
 	}
 
@@ -2168,21 +2171,21 @@ static Action Timer_InstantKillThink(Handle timer, int bossIndex)
 //			- If I lose sight or I'm unable to traverse safely, find paths around obstacles and follow memorized path.
 //			- If I reach the end of my path and I still don't see him and I still want to pursue him, keep on going in the direction I'm going.
 
-bool IsTargetValidForSlender(int target, bool includeEliminated = false)
+bool IsTargetValidForSlender(SF2_BasePlayer target, bool includeEliminated = false)
 {
-	if (!target || !IsValidClient(target))
+	if (!target.IsValid)
 	{
 		return false;
 	}
 
-	if (IsValidClient(target))
+	if (target.IsValid)
 	{
-		if (!IsClientInGame(target) ||
-			!IsPlayerAlive(target) ||
-			IsClientInDeathCam(target) ||
-			(!includeEliminated && g_PlayerEliminated[target]) ||
-			IsClientInGhostMode(target) ||
-			DidClientEscape(target))
+		if (!target.IsInGame ||
+			!target.IsAlive ||
+			target.IsInDeathCam ||
+			(!includeEliminated && target.IsEliminated) ||
+			target.IsInGhostMode ||
+			target.HasEscaped)
 		{
 			return false;
 		}
@@ -2191,21 +2194,21 @@ bool IsTargetValidForSlender(int target, bool includeEliminated = false)
 	return true;
 }
 
-int NPCChaserGetClosestPlayer(int slender)
+SF2_BasePlayer NPCChaserGetClosestPlayer(int slender)
 {
 	if (!g_Enabled)
 	{
-		return -1;
+		return SF2_INVALID_PLAYER;
 	}
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
-		return -1;
+		return SF2_INVALID_PLAYER;
 	}
 
 	int bossIndex = NPCGetFromEntIndex(slender);
 	if (bossIndex == -1)
 	{
-		return -1;
+		return SF2_INVALID_PLAYER;
 	}
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
@@ -2213,34 +2216,35 @@ int NPCChaserGetClosestPlayer(int slender)
 	float position[3];
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", position);
 
-	int closestTarget = -1;
+	SF2_BasePlayer closestTarget = SF2_INVALID_PLAYER;
 	float searchRadius = NPCGetSearchRadius(bossIndex, difficulty);
 
-	for (int i = 0; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i) || !IsClientInGame(i) || IsClientInGhostMode(i) || g_PlayerProxy[i] || !IsPlayerAlive(i) || g_PlayerEliminated[i])
+		SF2_BasePlayer client = SF2_BasePlayer(i);
+		if (!client.IsValid || !client.IsInGame || client.IsInGhostMode || client.IsProxy || !client.IsAlive || client.IsEliminated)
 		{
 			continue;
 		}
 
 		float clientPos[3];
-		GetClientAbsOrigin(i, clientPos);
+		client.GetAbsOrigin(clientPos);
 
 		float distance = GetVectorSquareMagnitude(position, clientPos);
 
 		if (distance < SquareFloat(searchRadius))
 		{
-			closestTarget = i;
+			closestTarget = client;
 			searchRadius = distance;
 		}
 	}
 
-	if (IsValidClient(closestTarget))
+	if (closestTarget.IsValid)
 	{
 		return closestTarget;
 	}
 
-	return -1;
+	return SF2_INVALID_PLAYER;
 }
 
 bool NPCGetWanderPosition(SF2NPC_Chaser boss)
@@ -2253,7 +2257,8 @@ bool NPCGetWanderPosition(SF2NPC_Chaser boss)
 	float wanderRangeMin = NPCChaserGetWanderRangeMin(boss.Index, difficulty);
 	float wanderRangeMax = NPCChaserGetWanderRangeMax(boss.Index, difficulty);
 	float wanderRange = GetRandomFloat(wanderRangeMin, wanderRangeMax);
-	CNavArea navArea = TheNavMesh.GetNearestNavArea(myPos, _, 256.0);
+	CBaseCombatCharacter npc = CBaseCombatCharacter(boss.EntIndex);
+	CNavArea navArea = npc.GetLastKnownArea();
 	SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(navArea, wanderRange);
 	int areaCount = collector.Count();
 	ArrayList areaArray = new ArrayList(1, areaCount);
@@ -2268,15 +2273,13 @@ bool NPCGetWanderPosition(SF2NPC_Chaser boss)
 		validAreaCount++;
 	}
 
-	areaArray.Resize(validAreaCount);
-
 	if (areaArray.Length <= 0)
 	{
 		return false;
 	}
 	float wanderPos[3];
 	CNavArea wanderArea = collector.Get(areaArray.Get(GetRandomInt(0, validAreaCount - 1)));
-	if (wanderArea == view_as<CNavArea>(0))
+	if (wanderArea == NULL_AREA)
 	{
 		return false;
 	}
@@ -2356,7 +2359,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		case STATE_CHASE:
 		{
 			if (!g_NpcUsesChaseInitialAnimation[bossIndex] &&
-			!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] &&
+			!NPCIsRaging(bossIndex) &&
 			!g_NpcUsesHealAnimation[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] &&
 			!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] && !g_NpcIsCrawling[bossIndex])
 			{
@@ -2366,13 +2369,13 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			{
 				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
 			}
-			else if (g_NpcUsesRageAnimation1[bossIndex] || g_NpcUsesRageAnimation2[bossIndex] || g_NpcUsesRageAnimation3[bossIndex])
+			else if (NPCIsRaging(bossIndex))
 			{
 				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Rage], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
 			}
 			else if (g_NpcIsCrawling[bossIndex] && !g_NpcUsesChaseInitialAnimation[bossIndex] &&
 			!g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex] &&
-			!g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex])
+			!NPCIsRaging(bossIndex))
 			{
 				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_CrawlRun], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index);
 			}
@@ -2398,19 +2401,17 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		}
 	}
 
-	switch (state)
+	if (NPCIsRaging(bossIndex))
 	{
-		case STATE_IDLE, STATE_WANDER, STATE_ALERT, STATE_CHASE:
-		{
-			if (g_NpcUseStartFleeAnimation[bossIndex])
-			{
-				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_FleeInitial], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
-			}
-			else if (g_NpcUsesHealAnimation[bossIndex])
-			{
-				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Heal], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, tempFootsteps, index);
-			}
-		}
+		animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Rage], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
+	}
+	else if (g_NpcUseStartFleeAnimation[bossIndex])
+	{
+		animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_FleeInitial], difficulty, animation, sizeof(animation), playbackRate, duration, cycle, tempFootsteps, index);
+	}
+	else if (g_NpcUsesHealAnimation[bossIndex])
+	{
+		animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Heal], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, tempFootsteps, index);
 	}
 
 	if (playbackRate < -12.0)
@@ -2441,15 +2442,16 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 				g_NpcCurrentAnimationSequence[bossIndex] = 0;
 			}
 			bool animationLoop = (state == STATE_IDLE || state == STATE_ALERT ||
-			(state == STATE_CHASE && !g_NpcUsesRageAnimation1[bossIndex] && !g_NpcUsesRageAnimation2[bossIndex] && !g_NpcUsesRageAnimation3[bossIndex] && !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex])
+			(state == STATE_CHASE && !NPCIsRaging(bossIndex)
+			&& !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex])
 			|| state == STATE_WANDER);
 			if (state == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
 			{
-				animationLoop = view_as<bool>(GetEntProp(ent, Prop_Data, "m_bSequenceLoops"));
+				animationLoop = !!GetEntProp(ent, Prop_Data, "m_bSequenceLoops");
 			}
 			if (state == STATE_CHASE && g_NpcUsesChaseInitialAnimation[bossIndex])
 			{
-				animationLoop = view_as<bool>(GetEntProp(ent, Prop_Data, "m_bSequenceLoops"));
+				animationLoop = !!GetEntProp(ent, Prop_Data, "m_bSequenceLoops");
 			}
 			SetEntProp(ent, Prop_Data, "m_bSequenceLoops", animationLoop);
 		}
@@ -2479,7 +2481,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 	}
 }
 
-stock void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTarget = -1)
+void SlenderAlertAllValidBosses(int bossIndex, int target = -1, int bestTarget = -1)
 {
 	int slender = NPCGetEntIndex(bossIndex);
 	if (!slender || slender == INVALID_ENT_REFERENCE)
@@ -2700,7 +2702,7 @@ Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	if (!g_NpcUsesRageAnimation1[bossIndex])
+	if (!g_NpcUsesRageAnimation[bossIndex][0])
 	{
 		return Plugin_Stop;
 	}
@@ -2730,7 +2732,7 @@ Action Timer_SlenderRageOneTimer(Handle timer, any entref)
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
 
-	g_NpcUsesRageAnimation1[bossIndex] = false;
+	g_NpcUsesRageAnimation[bossIndex][0] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
 	if (state != STATE_ATTACK)
@@ -2764,7 +2766,7 @@ Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	if (!g_NpcUsesRageAnimation2[bossIndex])
+	if (!g_NpcUsesRageAnimation[bossIndex][1])
 	{
 		return Plugin_Stop;
 	}
@@ -2794,7 +2796,7 @@ Action Timer_SlenderRageTwoTimer(Handle timer, any entref)
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
 
-	g_NpcUsesRageAnimation2[bossIndex] = false;
+	g_NpcUsesRageAnimation[bossIndex][1] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
 	if (state != STATE_ATTACK)
@@ -2828,7 +2830,7 @@ Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	if (!g_NpcUsesRageAnimation3[bossIndex])
+	if (!g_NpcUsesRageAnimation[bossIndex][2])
 	{
 		return Plugin_Stop;
 	}
@@ -2858,7 +2860,7 @@ Action Timer_SlenderRageThreeTimer(Handle timer, any entref)
 	float speed = originalSpeed;
 	g_SlenderCalculatedSpeed[bossIndex] = speed;
 
-	g_NpcUsesRageAnimation3[bossIndex] = false;
+	g_NpcUsesRageAnimation[bossIndex][2] = false;
 	g_LastStuckTime[bossIndex] = 0.0;
 	loco.ClearStuckStatus();
 	if (state != STATE_ATTACK)
@@ -3162,9 +3164,9 @@ Action Timer_SlenderFleeAnimationTimer(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
+void SlenderDoDamageEffects(int bossIndex, int attackIndex, SF2_BasePlayer client)
 {
-	if (!IsValidClient(client))
+	if (!client.IsValid)
 	{
 		return;
 	}
@@ -3194,37 +3196,37 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			for (int i = 0; i < count && i < NPCChaserGetAttackCount(bossIndex); i++)
 			{
 				int forIndex = StringToInt(allowedIndexesList[i]);
-				if (forIndex == attackIndex + 1 && NPCChaserRandomEffectDuration(bossIndex, difficulty) > 0.0 && IsValidClient(client))
+				if (forIndex == attackIndex + 1 && NPCChaserRandomEffectDuration(bossIndex, difficulty) > 0.0)
 				{
 					int randomEffect = GetRandomInt(0, 6);
 					switch (randomEffect)
 					{
 						case 0:
 						{
-							TF2_AddCondition(client, TFCond_Jarated, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_Jarated, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 1:
 						{
-							TF2_AddCondition(client, TFCond_Milked, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_Milked, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 2:
 						{
-							TF2_AddCondition(client, TFCond_Gas, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_Gas, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 3:
 						{
-							TF2_AddCondition(client, TFCond_MarkedForDeath, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_MarkedForDeath, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 4:
 						{
-							if (!TF2_IsPlayerInCondition(client, TFCond_Bleeding))
+							if (!client.InCondition(TFCond_Bleeding))
 							{
-								TF2_MakeBleed(client, client, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+								client.Bleed(true, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 							}
 						}
 						case 5:
 						{
-							TF2_IgnitePlayer(client, client);
+							client.Ignite(true, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 6:
 						{
@@ -3232,19 +3234,19 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 							{
 								case 1:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
 								}
 								case 2:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
 								}
 								case 3:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
 								}
 								case 4:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
 								}
 							}
 						}
@@ -3264,37 +3266,37 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			if (indexes[0] != '\0' && currentIndex[0] != '\0' && attackNumber != -1)
 			{
 				int currentAtkIndex = StringToInt(currentIndex);
-				if (attackNumber == currentAtkIndex && NPCChaserRandomEffectDuration(bossIndex, difficulty) > 0.0 && IsValidClient(client))
+				if (attackNumber == currentAtkIndex && NPCChaserRandomEffectDuration(bossIndex, difficulty) > 0.0)
 				{
 					int randomEffect = GetRandomInt(0, 6);
 					switch (randomEffect)
 					{
 						case 0:
 						{
-							TF2_AddCondition(client, TFCond_Jarated, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_Jarated, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 1:
 						{
-							TF2_AddCondition(client, TFCond_Milked, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_Milked, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 2:
 						{
-							TF2_AddCondition(client, TFCond_Gas, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_Gas, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 3:
 						{
-							TF2_AddCondition(client, TFCond_MarkedForDeath, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+							client.ChangeCondition(TFCond_MarkedForDeath, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 4:
 						{
-							if (!TF2_IsPlayerInCondition(client, TFCond_Bleeding))
+							if (!client.InCondition(TFCond_Bleeding))
 							{
-								TF2_MakeBleed(client, client, NPCChaserRandomEffectDuration(bossIndex, difficulty));
+								client.Bleed(true, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 							}
 						}
 						case 5:
 						{
-							TF2_IgnitePlayer(client, client);
+							client.Ignite(true, _, NPCChaserRandomEffectDuration(bossIndex, difficulty));
 						}
 						case 6:
 						{
@@ -3302,19 +3304,19 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 							{
 								case 1:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
 								}
 								case 2:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
 								}
 								case 3:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
 								}
 								case 4:
 								{
-									TF2_StunPlayer(client, NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
+									client.Stun(NPCChaserRandomEffectDuration(bossIndex, difficulty), NPCChaserRandomEffectSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
 								}
 							}
 						}
@@ -3364,10 +3366,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderJarateHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_Jarated, NPCChaserGetJarateDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_Jarated, _, NPCChaserGetJarateDuration(bossIndex, difficulty));
 					break;
 				}
 			}
@@ -3409,10 +3408,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderJarateHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_Jarated, NPCChaserGetJarateDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_Jarated, _, NPCChaserGetJarateDuration(bossIndex, difficulty));
 				}
 			}
 		}
@@ -3458,10 +3454,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderMilkHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_Milked, NPCChaserGetMilkDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_Milked, _, NPCChaserGetMilkDuration(bossIndex, difficulty));
 					break;
 				}
 			}
@@ -3503,10 +3496,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderMilkHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_Milked, NPCChaserGetMilkDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_Milked, _, NPCChaserGetMilkDuration(bossIndex, difficulty));
 				}
 			}
 		}
@@ -3552,10 +3542,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderGasHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_Gas, NPCChaserGetGasDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_Gas, _, NPCChaserGetGasDuration(bossIndex, difficulty));
 					break;
 				}
 			}
@@ -3597,10 +3584,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderGasHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_Gas, NPCChaserGetGasDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_Gas, _, NPCChaserGetGasDuration(bossIndex, difficulty));
 				}
 			}
 		}
@@ -3622,10 +3606,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetMarkDuration(bossIndex, difficulty) > 0.0)
 				{
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_MarkedForDeath, NPCChaserGetMarkDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_MarkedForDeath, _, NPCChaserGetMarkDuration(bossIndex, difficulty));
 					break;
 				}
 			}
@@ -3643,10 +3624,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetMarkDuration(bossIndex, difficulty))
 				{
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_MarkedForDeath, NPCChaserGetMarkDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_MarkedForDeath, _, NPCChaserGetMarkDuration(bossIndex, difficulty));
 				}
 			}
 		}
@@ -3668,10 +3646,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int forIndex = StringToInt(allowedIndexesList[i]);
 				if (forIndex == attackIndex + 1 && NPCChaserGetSilentMarkDuration(bossIndex, difficulty) > 0.0)
 				{
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_MarkedForDeathSilent, NPCChaserGetSilentMarkDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_MarkedForDeathSilent, _, NPCChaserGetSilentMarkDuration(bossIndex, difficulty));
 					break;
 				}
 			}
@@ -3689,10 +3664,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				int currentAtkIndex = StringToInt(currentIndex);
 				if (attackNumber == currentAtkIndex && NPCChaserGetSilentMarkDuration(bossIndex, difficulty))
 				{
-					if (IsValidClient(client))
-					{
-						TF2_AddCondition(client, TFCond_MarkedForDeathSilent, NPCChaserGetSilentMarkDuration(bossIndex, difficulty));
-					}
+					client.ChangeCondition(TFCond_MarkedForDeathSilent, _, NPCChaserGetSilentMarkDuration(bossIndex, difficulty));
 				}
 			}
 		}
@@ -3712,16 +3684,16 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			for (int i = 0; i < count && i < NPCChaserGetAttackCount(bossIndex); i++)
 			{
 				int forIndex = StringToInt(allowedIndexesList[i]);
-				if (forIndex == attackIndex + 1 && IsValidClient(client) && NPCChaserGetIgniteDuration(bossIndex, difficulty))
+				if (forIndex == attackIndex + 1 && NPCChaserGetIgniteDuration(bossIndex, difficulty))
 				{
-					g_PlayerIgniteDurationEffect[client] = NPCChaserGetIgniteDuration(bossIndex, difficulty);
-					if (NPCChaserGetIgniteDelay(bossIndex, difficulty) > 0.0 && g_PlayerIgniteTimer[client] == null)
+					g_PlayerIgniteDurationEffect[client.index] = NPCChaserGetIgniteDuration(bossIndex, difficulty);
+					if (NPCChaserGetIgniteDelay(bossIndex, difficulty) > 0.0 && g_PlayerIgniteTimer[client.index] == null)
 					{
-						g_PlayerIgniteTimer[client] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client), TIMER_FLAG_NO_MAPCHANGE);
+						g_PlayerIgniteTimer[client.index] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client.index), TIMER_FLAG_NO_MAPCHANGE);
 					}
 					else
 					{
-						TF2_IgnitePlayer(client, client, g_PlayerIgniteDurationEffect[client]);
+						client.Ignite(true, _, g_PlayerIgniteDurationEffect[client.index]);
 					}
 					break;
 				}
@@ -3738,16 +3710,16 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			if (indexes[0] != '\0' && currentIndex[0] != '\0' && attackNumber != -1)
 			{
 				int currentAtkIndex = StringToInt(currentIndex);
-				if (attackNumber == currentAtkIndex && IsValidClient(client) && NPCChaserGetIgniteDuration(bossIndex, difficulty))
+				if (attackNumber == currentAtkIndex && NPCChaserGetIgniteDuration(bossIndex, difficulty))
 				{
-					g_PlayerIgniteDurationEffect[client] = NPCChaserGetIgniteDuration(bossIndex, difficulty);
-					if (NPCChaserGetIgniteDelay(bossIndex, difficulty) > 0.0 && g_PlayerIgniteTimer[client] == null)
+					g_PlayerIgniteDurationEffect[client.index] = NPCChaserGetIgniteDuration(bossIndex, difficulty);
+					if (NPCChaserGetIgniteDelay(bossIndex, difficulty) > 0.0 && g_PlayerIgniteTimer[client.index] == null)
 					{
-						g_PlayerIgniteTimer[client] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client), TIMER_FLAG_NO_MAPCHANGE);
+						g_PlayerIgniteTimer[client.index] = CreateTimer(NPCChaserGetIgniteDelay(bossIndex, difficulty), Timer_SlenderChaseBossAttackIgniteHit, EntIndexToEntRef(client.index), TIMER_FLAG_NO_MAPCHANGE);
 					}
 					else
 					{
-						TF2_IgnitePlayer(client, client, g_PlayerIgniteDurationEffect[client]);
+						client.Ignite(true, _, g_PlayerIgniteDurationEffect[client.index]);
 					}
 				}
 			}
@@ -3797,26 +3769,23 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderStunHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
+					switch (NPCChaserGetStunAttackType(bossIndex))
 					{
-						switch (NPCChaserGetStunAttackType(bossIndex))
+						case 1:
 						{
-							case 1:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
-							}
-							case 2:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
-							}
-							case 3:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
-							}
-							case 4:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
-							}
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
+						}
+						case 2:
+						{
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
+						}
+						case 3:
+						{
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
+						}
+						case 4:
+						{
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
 						}
 					}
 					break;
@@ -3863,26 +3832,23 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					{
 						EmitSoundToAll(g_SlenderStunHitSound[bossIndex], slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 					}
-					if (IsValidClient(client))
+					switch (NPCChaserGetStunAttackType(bossIndex))
 					{
-						switch (NPCChaserGetStunAttackType(bossIndex))
+						case 1:
 						{
-							case 1:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
-							}
-							case 2:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
-							}
-							case 3:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
-							}
-							case 4:
-							{
-								TF2_StunPlayer(client, NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
-							}
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
+						}
+						case 2:
+						{
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
+						}
+						case 3:
+						{
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
+						}
+						case 4:
+						{
+							client.Stun(NPCChaserGetStunAttackDuration(bossIndex, difficulty), NPCChaserGetStunAttackSlowdown(bossIndex, difficulty), TF_STUNFLAGS_GHOSTSCARE);
 						}
 					}
 				}
@@ -3904,11 +3870,11 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			for (int i = 0; i < count && i < NPCChaserGetAttackCount(bossIndex); i++)
 			{
 				int forIndex = StringToInt(allowedIndexesList[i]);
-				if (forIndex == attackIndex + 1 && NPCChaserGetBleedDuration(bossIndex, difficulty) && IsValidClient(client))
+				if (forIndex == attackIndex + 1 && NPCChaserGetBleedDuration(bossIndex, difficulty))
 				{
-					if (!TF2_IsPlayerInCondition(client, TFCond_Bleeding))
+					if (!client.InCondition(TFCond_Bleeding))
 					{
-						TF2_MakeBleed(client, client, NPCChaserGetBleedDuration(bossIndex, difficulty));
+						client.Bleed(true, _, NPCChaserGetBleedDuration(bossIndex, difficulty));
 						break;
 					}
 				}
@@ -3925,11 +3891,11 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 			if (indexes[0] != '\0' && currentIndex[0] != '\0' && attackNumber != -1)
 			{
 				int currentAtkIndex = StringToInt(currentIndex);
-				if (attackNumber == currentAtkIndex && NPCChaserGetBleedDuration(bossIndex, difficulty) > 0.0 && IsValidClient(client))
+				if (attackNumber == currentAtkIndex && NPCChaserGetBleedDuration(bossIndex, difficulty) > 0.0)
 				{
-					if (!TF2_IsPlayerInCondition(client, TFCond_Bleeding))
+					if (!client.InCondition(TFCond_Bleeding))
 					{
-						TF2_MakeBleed(client, client, NPCChaserGetBleedDuration(bossIndex, difficulty));
+						client.Bleed(true, _, NPCChaserGetBleedDuration(bossIndex, difficulty));
 					}
 				}
 			}
@@ -3964,7 +3930,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					}
 					if (NPCChaserAttachDamageParticle(bossIndex))
 					{
-						if (GetClientTeam(client) == TFTeam_Red)
+						if (client.Team == TFTeam_Red)
 						{
 							if (NPCChaserGetElectricBeamParticle(bossIndex))
 							{
@@ -3975,7 +3941,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 								SlenderCreateParticleAttach(bossIndex, electricPlayerParticleRed, 35.0, client);
 							}
 						}
-						else if (GetClientTeam(client) == TFTeam_Blue)
+						else if (client.Team == TFTeam_Blue)
 						{
 							if (NPCChaserGetElectricBeamParticle(bossIndex))
 							{
@@ -3989,31 +3955,28 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					}
 					else
 					{
-						if (GetClientTeam(client) == TFTeam_Red)
+						if (client.Team == TFTeam_Red)
 						{
 							SlenderCreateParticle(bossIndex, electricPlayerParticleRed, 55.0);
 						}
-						else if (GetClientTeam(client) == TFTeam_Blue)
+						else if (client.Team == TFTeam_Blue)
 						{
 							SlenderCreateParticle(bossIndex, electricPlayerParticleBlue, 55.0);
 						}
 					}
-					if (IsValidClient(client))
+					switch (NPCChaserGetStunAttackType(bossIndex))
 					{
-						switch (NPCChaserGetStunAttackType(bossIndex))
+						case 1:
 						{
-							case 1:
-							{
-								TF2_StunPlayer(client, NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
-							}
-							case 2:
-							{
-								TF2_StunPlayer(client, NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
-							}
-							case 3, 4:
-							{
-								TF2_StunPlayer(client, NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
-							}
+							client.Stun(NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
+						}
+						case 2:
+						{
+							client.Stun(NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
+						}
+						case 3, 4:
+						{
+							client.Stun(NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
 						}
 					}
 					break;
@@ -4045,7 +4008,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					}
 					if (NPCChaserAttachDamageParticle(bossIndex))
 					{
-						if (GetClientTeam(client) == TFTeam_Red)
+						if (client.Team == TFTeam_Red)
 						{
 							if (NPCChaserGetElectricBeamParticle(bossIndex))
 							{
@@ -4056,7 +4019,7 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 								SlenderCreateParticleAttach(bossIndex, electricPlayerParticleRed, 35.0, client);
 							}
 						}
-						else if (GetClientTeam(client) == TFTeam_Blue)
+						else if (client.Team == TFTeam_Blue)
 						{
 							if (NPCChaserGetElectricBeamParticle(bossIndex))
 							{
@@ -4070,31 +4033,28 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 					}
 					else
 					{
-						if (GetClientTeam(client) == TFTeam_Red)
+						if (client.Team == TFTeam_Red)
 						{
 							SlenderCreateParticle(bossIndex, electricPlayerParticleRed, 55.0);
 						}
-						else if (GetClientTeam(client) == TFTeam_Blue)
+						else if (client.Team == TFTeam_Blue)
 						{
 							SlenderCreateParticle(bossIndex, electricPlayerParticleBlue, 55.0);
 						}
 					}
-					if (IsValidClient(client))
+					switch (NPCChaserGetStunAttackType(bossIndex))
 					{
-						switch (NPCChaserGetStunAttackType(bossIndex))
+						case 1:
 						{
-							case 1:
-							{
-								TF2_StunPlayer(client, NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
-							}
-							case 2:
-							{
-								TF2_StunPlayer(client, NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
-							}
-							case 3, 4:
-							{
-								TF2_StunPlayer(client, NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
-							}
+							client.Stun(NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN);
+						}
+						case 2:
+						{
+							client.Stun(NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAGS_LOSERSTATE);
+						}
+						case 3, 4:
+						{
+							client.Stun(NPCChaserGetElectricDuration(bossIndex, difficulty), NPCChaserGetElectricSlowdown(bossIndex, difficulty), TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
 						}
 					}
 				}
@@ -4119,25 +4079,21 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				if (forIndex == attackIndex + 1)
 				{
 					PerformSmiteBoss(bossIndex, client, EntIndexToEntRef(slender));
-					SDKHooks_TakeDamage(client, slender, slender, NPCChaserGetSmiteDamage(bossIndex), NPCChaserGetSmiteDamageType(bossIndex), _, view_as<float>( { 0.0, 0.0, 0.0 } ), flMyEyePos);
-					if (IsValidClient(client))
+					client.TakeDamage(_, slender, slender, NPCChaserGetSmiteDamage(bossIndex), NPCChaserGetSmiteDamageType(bossIndex), _, view_as<float>( { 0.0, 0.0, 0.0 } ), flMyEyePos);
+					if (NPCChaserSmitePlayerMessage(bossIndex))
 					{
-						ClientViewPunch(client, view_as<float>( { 0.0, 0.0, 0.0 } ));
-						if (NPCChaserSmitePlayerMessage(bossIndex))
-						{
-							char player[32];
-							FormatEx(player, sizeof(player), "%N", client);
+						char player[32];
+						FormatEx(player, sizeof(player), "%N", client.index);
 
-							char name[SF2_MAX_NAME_LENGTH];
-							NPCGetBossName(bossIndex, name, sizeof(name));
-							if (name[0] == '\0')
-							{
-								strcopy(name, sizeof(name), profile);
-							}
-							if (GetClientTeam(client) == 2)
-							{
-								CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
-							}
+						char name[SF2_MAX_NAME_LENGTH];
+						NPCGetBossName(bossIndex, name, sizeof(name));
+						if (name[0] == '\0')
+						{
+							strcopy(name, sizeof(name), profile);
+						}
+						if (client.Team == TFTeam_Red)
+						{
+							CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
 						}
 					}
 					break;
@@ -4158,25 +4114,21 @@ void SlenderDoDamageEffects(int bossIndex, int attackIndex, int client)
 				if (attackNumber == currentAtkIndex)
 				{
 					PerformSmiteBoss(bossIndex, client, EntIndexToEntRef(slender));
-					SDKHooks_TakeDamage(client, slender, slender, NPCChaserGetSmiteDamage(bossIndex), NPCChaserGetSmiteDamageType(bossIndex), _, view_as<float>( { 0.0, 0.0, 0.0 } ), flMyEyePos);
-					if (IsValidClient(client))
+					client.TakeDamage(_, slender, slender, NPCChaserGetSmiteDamage(bossIndex), NPCChaserGetSmiteDamageType(bossIndex), _, view_as<float>( { 0.0, 0.0, 0.0 } ), flMyEyePos);
+					if (NPCChaserSmitePlayerMessage(bossIndex))
 					{
-						ClientViewPunch(client, view_as<float>( { 0.0, 0.0, 0.0 } ));
-						if (NPCChaserSmitePlayerMessage(bossIndex))
-						{
-							char player[32];
-							FormatEx(player, sizeof(player), "%N", client);
+						char player[32];
+						FormatEx(player, sizeof(player), "%N", client.index);
 
-							char name[SF2_MAX_NAME_LENGTH];
-							NPCGetBossName(bossIndex, name, sizeof(name));
-							if (name[0] == '\0')
-							{
-								strcopy(name, sizeof(name), profile);
-							}
-							if (GetClientTeam(client) == 2)
-							{
-								CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
-							}
+						char name[SF2_MAX_NAME_LENGTH];
+						NPCGetBossName(bossIndex, name, sizeof(name));
+						if (name[0] == '\0')
+						{
+							strcopy(name, sizeof(name), profile);
+						}
+						if (client.Team == TFTeam_Red)
+						{
+							CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", name, player);
 						}
 					}
 				}
@@ -4235,7 +4187,8 @@ static bool NPCPropPhysicsAttack(int bossIndex, int prop)
 	}
 	return true;
 }
-stock void NPC_DropKey(int bossIndex)
+
+void NPC_DropKey(int bossIndex)
 {
 	char buffer[PLATFORM_MAX_PATH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -4403,7 +4356,7 @@ Action CollectKey(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-stock void TriggerKey(int caller)
+void TriggerKey(int caller)
 {
 	char targetName[PLATFORM_MAX_PATH];
 	GetEntPropString(caller, Prop_Data, "m_iName", targetName, sizeof(targetName));
@@ -4459,7 +4412,8 @@ stock void TriggerKey(int caller)
 	RemoveEntity(caller);
 	EmitSoundToAll("ui/itemcrate_smash_ultrarare_short.wav", caller, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 }
-stock bool NPC_CanAttackProps(int bossIndex, float flAttackRange, float flAttackFOV)
+
+bool NPC_CanAttackProps(int bossIndex, float flAttackRange, float flAttackFOV)
 {
 	int prop = -1;
 	while ((prop = FindEntityByClassname(prop, "prop_physics")) > MaxClients)
@@ -4492,8 +4446,4 @@ stock bool NPC_CanAttackProps(int bossIndex, float flAttackRange, float flAttack
 		}
 	}
 	return false;
-}
-stock void CBaseNPC_OnStuck(NextBotAction action, int actor)
-{
-	return;
 }

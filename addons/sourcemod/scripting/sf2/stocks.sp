@@ -123,32 +123,32 @@ float HULL_TF2PLAYER_MAXS[3] = { 24.5,  24.5, 83.0 };
 
 bool SF_IsSurvivalMap()
 {
-	return view_as<bool>(g_IsSurvivalMap || (g_SurvivalMapConVar.IntValue == 1));
+	return !!(g_IsSurvivalMap || (g_SurvivalMapConVar.IntValue == 1));
 }
 
 bool SF_IsRaidMap()
 {
-	return view_as<bool>(g_IsRaidMap || (g_RaidMapConVar.IntValue == 1));
+	return !!(g_IsRaidMap || (g_RaidMapConVar.IntValue == 1));
 }
 
 bool SF_IsProxyMap()
 {
-	return view_as<bool>(g_IsProxyMap || (g_ProxyMapConVar.IntValue == 1));
+	return !!(g_IsProxyMap || (g_ProxyMapConVar.IntValue == 1));
 }
 
 bool SF_BossesChaseEndlessly()
 {
-	return view_as<bool>(g_BossesChaseEndlessly || (g_BossChaseEndlesslyConVar.IntValue == 1));
+	return !!(g_BossesChaseEndlessly || (g_BossChaseEndlesslyConVar.IntValue == 1));
 }
 
 bool SF_IsBoxingMap()
 {
-	return view_as<bool>(g_IsBoxingMap || (g_BoxingMapConVar.IntValue == 1));
+	return !!(g_IsBoxingMap || (g_BoxingMapConVar.IntValue == 1));
 }
 
 bool SF_IsSlaughterRunMap()
 {
-	return view_as<bool>(g_IsSlaughterRunMap || (g_SlaughterRunMapConVar.IntValue == 1));
+	return !!(g_IsSlaughterRunMap || (g_SlaughterRunMapConVar.IntValue == 1));
 }
 /*
 int SDK_StartTouch(int entity, int iOther)
@@ -173,7 +173,7 @@ bool SDK_PointIsWithin(int func, float pos[3])
 {
 	if (g_SDKPointIsWithin != null)
 	{
-		return view_as<bool>(SDKCall(g_SDKPointIsWithin, func, pos));
+		return !!(SDKCall(g_SDKPointIsWithin, func, pos));
 	}
 
 	return false;
@@ -687,7 +687,7 @@ void TF2_DestroySpyWeapons()
 void ClientSwitchToWeaponSlot(int client,int slot)
 {
 	int weaponEnt = GetPlayerWeaponSlot(client, slot);
-	if (weaponEnt < MaxClients)
+	if (weaponEnt <= MaxClients)
 	{
 		return;
 	}
@@ -748,7 +748,7 @@ void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int 
 
 bool IsValidClient(int client)
 {
-	return view_as<bool>((client > 0 && client <= MaxClients && IsClientInGame(client)));
+	return client > 0 && client <= MaxClients && IsClientInGame(client);
 }
 
 void PrintToSourceTV(const char[] message)
@@ -1090,7 +1090,7 @@ void CopyVector(const float copy[3], float dest[3])
  */
 void VectorTransform(const float offset[3], const float worldpos[3], const float ang[3], float buffer[3])
 {
-	float fwd[3],right[3], up[3];
+	float fwd[3], right[3], up[3];
 	GetAngleVectors(ang, fwd, right, up);
 
 	NormalizeVector(fwd, fwd);
@@ -1105,16 +1105,18 @@ void VectorTransform(const float offset[3], const float worldpos[3], const float
 	buffer[1] = worldpos[1] + right[1] + fwd[1] + up[1];
 	buffer[2] = worldpos[2] + right[2] + fwd[2] + up[2];
 }
-void GetPositionForward(float vPos[3], float vAng[3], float vReturn[3], float fDistance)
+
+void GetPositionForward(float pos[3], float ang[3], float returnValue[3], float distance)
 {
-	float vDir[3];
-	GetAngleVectors(vAng, vDir, NULL_VECTOR, NULL_VECTOR);
-	vReturn = vPos;
+	float dir[3];
+	GetAngleVectors(ang, dir, NULL_VECTOR, NULL_VECTOR);
+	returnValue = pos;
 	for(int i=0; i<3; i++)
 	{
-		vReturn[i] += vDir[i] * fDistance;
+		returnValue[i] += dir[i] * distance;
 	}
 }
+
 //	==========================================================
 //	ANGLE FUNCTIONS
 //	==========================================================
@@ -1356,7 +1358,7 @@ bool TraceRayDontHitEntity(int entity,int mask,any data)
 	{
 		char class[64];
 		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_boss") == 0 || strcmp(class, "base_npc"))
+		if (strcmp(class, "base_npc"))
 		{
 			return false;
 		}
@@ -1374,7 +1376,7 @@ bool TraceRayDontHitPlayers(int entity,int mask, any data)
 	{
 		char class[64];
 		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_boss") == 0 || strcmp(class, "base_npc"))
+		if (strcmp(class, "base_npc"))
 		{
 			return false;
 		}
@@ -1396,7 +1398,7 @@ bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 	{
 		char class[64];
 		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_boss") == 0 || strcmp(class, "base_npc"))
+		if (strcmp(class, "base_npc"))
 		{
 			return false;
 		}
@@ -1443,7 +1445,7 @@ Action Timer_KillEdict(Handle timer, any entref)
 //	==========================================================
 bool IsInfiniteFlashlightEnabled()
 {
-	return view_as<bool>(g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
+	return !!(g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
 }
 
 int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];

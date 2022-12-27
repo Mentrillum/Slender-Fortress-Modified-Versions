@@ -20,12 +20,17 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 {
-	public SF2BossMakerEntity(int entIndex) { return view_as<SF2BossMakerEntity>(CBaseEntity(entIndex)); }
+	public SF2BossMakerEntity(int entIndex)
+	{
+		return view_as<SF2BossMakerEntity>(CBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
 		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
@@ -47,32 +52,62 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 	property ArrayList Bosses
 	{
-		public get() { return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hBosses")); }
-		public set(ArrayList value) { this.SetProp(Prop_Data, "sf2_hBosses", value); }
+		public get()
+		{
+			return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hBosses"));
+		}
+		public set(ArrayList value)
+		{
+			this.SetProp(Prop_Data, "sf2_hBosses", value);
+		}
 	}
 
 	property int SpawnCount
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iSpawnCount"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iSpawnCount", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iSpawnCount");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iSpawnCount", value);
+		}
 	}
 
 	property float SpawnRadius
 	{
-		public get() { return this.GetPropFloat(Prop_Data, "sf2_flSpawnRadius"); }
-		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flSpawnRadius", value); }
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "sf2_flSpawnRadius");
+		}
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "sf2_flSpawnRadius", value);
+		}
 	}
 
 	property int MaxLiveBosses
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_nMaxLiveChildren"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_nMaxLiveChildren", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_nMaxLiveChildren");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_nMaxLiveChildren", value);
+		}
 	}
 
 	property int SpawnDestination
 	{
-		public get() { return this.GetPropEnt(Prop_Data, "sf2_iDestinationEntity"); }
-		public set(int entity) { this.SetPropEnt(Prop_Data, "sf2_iDestinationEntity", IsValidEntity(entity) ? entity : INVALID_ENT_REFERENCE); }
+		public get()
+		{
+			return this.GetPropEnt(Prop_Data, "sf2_iDestinationEntity");
+		}
+		public set(int entity)
+		{
+			this.SetPropEnt(Prop_Data, "sf2_iDestinationEntity", IsValidEntity(entity) ? entity : INVALID_ENT_REFERENCE);
+		}
 	}
 
 	public void GetSpawnDestinationName(char[] buffer, int bufferLen)
@@ -97,14 +132,26 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 	property float SpawnAnimationPlaybackRate
 	{
-		public get() { return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimRate"); }
-		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimRate", value); }
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimRate");
+		}
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimRate", value);
+		}
 	}
 
 	property float SpawnAnimationDuration
 	{
-		public get() { return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration"); }
-		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration", value); }
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration");
+		}
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration", value);
+		}
 	}
 
 	property int LiveCount

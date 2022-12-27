@@ -6,7 +6,10 @@ static CEntityFactory g_EntityFactory;
 
 methodmap SF2PlayerEscapeSpawnEntity < SF2SpawnPointBaseEntity
 {
-	public SF2PlayerEscapeSpawnEntity(int entIndex) { return view_as<SF2PlayerEscapeSpawnEntity>(SF2SpawnPointBaseEntity(entIndex)); }
+	public SF2PlayerEscapeSpawnEntity(int entIndex)
+	{
+		return view_as<SF2PlayerEscapeSpawnEntity>(SF2SpawnPointBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -20,8 +23,14 @@ methodmap SF2PlayerEscapeSpawnEntity < SF2SpawnPointBaseEntity
 
 	property bool Enabled
 	{
-		public get() { return !this.GetProp(Prop_Data, "sf2_bDisabled"); }
-		public set(bool value) { this.SetProp(Prop_Data, "sf2_bDisabled", !value); }
+		public get()
+		{
+			return !this.GetProp(Prop_Data, "sf2_bDisabled");
+		}
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "sf2_bDisabled", !value);
+		}
 	}
 
 	public static void Initialize()

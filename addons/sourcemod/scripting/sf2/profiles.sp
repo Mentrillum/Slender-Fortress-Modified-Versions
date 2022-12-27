@@ -502,7 +502,7 @@ void ReloadBossProfiles()
 				char bossPackName[128];
 				g_BossPackConfig.GetSectionName(bossPackName, sizeof(bossPackName));
 
-				bool autoLoad = view_as<bool>(g_BossPackConfig.GetNum("autoload"));
+				bool autoLoad = !!g_BossPackConfig.GetNum("autoload");
 
 				if (autoLoad || (mapBossPack[0] != '\0' && strcmp(mapBossPack, bossPackName) == 0))
 				{
@@ -792,7 +792,7 @@ void InitiateBossPackVote(int initiator)
 
 	do
 	{
-		if (!view_as<bool>(g_BossPackConfig.GetNum("autoload")) && view_as<bool>(g_BossPackConfig.GetNum("show_in_vote", 1)))
+		if (!g_BossPackConfig.GetNum("autoload") && !!g_BossPackConfig.GetNum("show_in_vote", 1))
 		{
 			char bossPack[128];
 			g_BossPackConfig.GetSectionName(bossPack, sizeof(bossPack));
@@ -966,10 +966,10 @@ static Action Timer_BossPackVoteLoop(Handle timer)
 
 bool IsProfileValid(const char[] profile)
 {
-	return view_as<bool>((GetBossProfileList().FindString(profile) != -1));
+	return GetBossProfileList().FindString(profile) != -1;
 }
 
-stock int GetProfileNum(const char[] profile, const char[] keyValue,int defaultValue=0)
+int GetProfileNum(const char[] profile, const char[] keyValue,int defaultValue=0)
 {
 	if (!IsProfileValid(profile))
 	{
@@ -982,7 +982,7 @@ stock int GetProfileNum(const char[] profile, const char[] keyValue,int defaultV
 	return g_Config.GetNum(keyValue, defaultValue);
 }
 
-stock float GetProfileFloat(const char[] profile, const char[] keyValue, float defaultValue=0.0)
+float GetProfileFloat(const char[] profile, const char[] keyValue, float defaultValue=0.0)
 {
 	if (!IsProfileValid(profile))
 	{
@@ -995,7 +995,7 @@ stock float GetProfileFloat(const char[] profile, const char[] keyValue, float d
 	return g_Config.GetFloat(keyValue, defaultValue);
 }
 
-stock bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR)
+bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -1013,8 +1013,8 @@ stock bool GetProfileVector(const char[] profile, const char[] keyValue, float b
 	g_Config.GetVector(keyValue, buffer, defaultValue);
 	return true;
 }
-
-stock bool GetProfileColor(const char[] profile,
+/*
+bool GetProfileColor(const char[] profile,
 	const char[] keyValue,
 	int &r,
 	int &g,
@@ -1048,8 +1048,8 @@ stock bool GetProfileColor(const char[] profile,
 
 	return true;
 }
-
-stock bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer,int bufferLen, const char[] defaultValue="")
+*/
+bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer,int bufferLen, const char[] defaultValue="")
 {
 	strcopy(buffer, bufferLen, defaultValue);
 
@@ -1066,7 +1066,7 @@ stock bool GetProfileString(const char[] profile, const char[] keyValue, char[] 
 }
 
 // Code originally from FF2. Credits to the original authors Rainbolt Dash and FlaminSarge.
-stock bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, char[] buffer,int bufferLen,int index = -1,int attackIndex = -1,int &result = 0)
+bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, char[] buffer,int bufferLen,int index = -1,int attackIndex = -1,int &result = 0)
 {
 	buffer[0] = '\0';
 	result = 0;

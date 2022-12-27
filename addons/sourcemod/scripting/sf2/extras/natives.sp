@@ -103,6 +103,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
 
 	CreateNative("SF2_IsClientTrapped", Native_IsClientTrapped);
 	CreateNative("SF2_IsClientInDeathCam", Native_IsClientInDeathCam);
+	CreateNative("SF2_ClientStartDeathCam", Native_ClientStartDeathCam);
 
 	CreateNative("SF2_ClientSpawnProxy", Native_ClientSpawnProxy);
 	CreateNative("SF2_ClientForceProxy", Native_ClientForceProxy);
@@ -510,7 +511,7 @@ static any Native_GetClientBlinkMeter(Handle plugin,int numParams)
 
 static any Native_SetClientBlinkMeter(Handle plugin,int numParams)
 {
-	ClientSetBlinkMeter(GetNativeCell(1), view_as<float>(GetNativeCell(2)));
+	ClientSetBlinkMeter(GetNativeCell(1), GetNativeCell(2));
 	return 0;
 }
 
@@ -619,6 +620,14 @@ static any Native_IsClientInDeathCam(Handle plugin, int numParams)
 	return IsClientInDeathCam(GetNativeCell(1));
 }
 
+static any Native_ClientStartDeathCam(Handle plugin, int numParams)
+{
+	float pos[3];
+	GetNativeArray(3, pos, sizeof(pos));
+	ClientStartDeathCam(GetNativeCell(1), GetNativeCell(2), pos, GetNativeCell(4));
+	return 0;
+}
+
 static any Native_ClientSpawnProxy(Handle plugin, int numParams)
 {
 	float teleportPos[3];
@@ -692,8 +701,8 @@ static any Native_AddBoss(Handle plugin, int numParams)
 	GetNativeString(1, profile, sizeof(profile));
 
 	int flags = GetNativeCell(2);
-	bool spawnCompanions = view_as<bool>(GetNativeCell(3));
-	bool playSpawnSound = view_as<bool>(GetNativeCell(4));
+	bool spawnCompanions = GetNativeCell(3);
+	bool playSpawnSound = GetNativeCell(4);
 
 	return AddProfile(profile, flags, _, spawnCompanions, playSpawnSound);
 }
@@ -934,7 +943,7 @@ static any Native_GetBossGoalPosition(Handle plugin, int numParams)
 
 static any Native_CanBossHearClient(Handle plugin, int numParams)
 {
-	return SlenderCanHearPlayer(GetNativeCell(1), GetNativeCell(2), view_as<SoundType>(GetNativeCell(3)));
+	return SlenderCanHearPlayer(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
 
 static any Native_CreateBossSoundHint(Handle plugin, int numParams)
@@ -945,7 +954,7 @@ static any Native_CreateBossSoundHint(Handle plugin, int numParams)
 		return 0;
 	}
 
-	SoundType soundType = view_as<SoundType>(GetNativeCell(2));
+	SoundType soundType = GetNativeCell(2);
 
 	float position[3];
 	GetNativeArray(3, position, 3);

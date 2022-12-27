@@ -6,7 +6,10 @@ static CEntityFactory g_EntityFactory;
 
 methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 {
-	public SF2PlayerProxySpawnEntity(int entIndex) { return view_as<SF2PlayerProxySpawnEntity>(SF2SpawnPointBaseEntity(entIndex)); }
+	public SF2PlayerProxySpawnEntity(int entIndex)
+	{
+		return view_as<SF2PlayerProxySpawnEntity>(SF2SpawnPointBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -20,14 +23,26 @@ methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 
 	property bool Enabled
 	{
-		public get() { return !this.GetProp(Prop_Data, "sf2_bDisabled"); }
-		public set(bool value) { this.SetProp(Prop_Data, "sf2_bDisabled", !value); }
+		public get()
+		{
+			return !this.GetProp(Prop_Data, "sf2_bDisabled");
+		}
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "sf2_bDisabled", !value);
+		}
 	}
 
 	property bool IgnoreVisibility
 	{
-		public get() { return !!this.GetProp(Prop_Data, "sf2_bIgnoreVisibility"); }
-		public set(bool value) { this.SetProp(Prop_Data, "sf2_bIgnoreVisibility", value); }
+		public get()
+		{
+			return !!this.GetProp(Prop_Data, "sf2_bIgnoreVisibility");
+		}
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "sf2_bIgnoreVisibility", value);
+		}
 	}
 
 	public static void Initialize()

@@ -5,9 +5,9 @@
 
 #pragma semicolon 1
 
-stock bool SF_IsRenevantMap()
+bool SF_IsRenevantMap()
 {
-	return view_as<bool>(g_IsRenevantMap || (g_RenevantMapConVar.IntValue == 1));
+	return !!(g_IsRenevantMap || (g_RenevantMapConVar.IntValue == 1));
 }
 
 static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int profileLen, char[] name, int nameLen, bool playSpawnSound=true, bool invincible = false)
@@ -90,6 +90,7 @@ enum RenevantWave
 	RenevantWave_MarkForDeath,
 	RenevantWave_SingleBoss,
 	RenevantWave_AdminBoss,
+	RenevantWave_WallHax,
 	RenevantWave_Max
 }
 
@@ -211,6 +212,12 @@ static void Renevant_DoWaveAction(RenevantWave action)
 							CPrintToChatAll("{purple}Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 						}
 					}
+
+					int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_BaconSpray);
+					if (eraseWave != -1)
+					{
+						g_RenevantWaveList.Erase(eraseWave);
+					}
 				}
 			}
 		}
@@ -297,7 +304,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_MarkForDeath:
 		{
 			g_RenevantMarkForDeath = true;
-			for (int client = 1; client < MaxClients; client++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
 				if (!IsValidClient(client))
 				{
@@ -369,12 +376,22 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			}
 			delete selectableBosses;
 		}
+		case RenevantWave_WallHax:
+		{
+			g_RenevantWallHax = true;
+			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nYou can now see players and bosses through walls.");
+			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_WallHax);
+			if (eraseWave != -1)
+			{
+				g_RenevantWaveList.Erase(eraseWave);
+			}
+		}
 	}
 
 	Renevant_BroadcastMessage(broadcastMessage, 2);
 }
 
-void Renevant_SetWave(int wave, bool resetTimer=false)
+void Renevant_SetWave(int wave, bool resetTimer = false)
 {
 	if (!SF_IsRenevantMap() || g_RenevantWaveNumber == wave)
 	{
@@ -383,13 +400,13 @@ void Renevant_SetWave(int wave, bool resetTimer=false)
 
 	g_RenevantWaveNumber = wave;
 
-	if (resetTimer && wave < RENEVANT_MAXWAVES && wave != 0)
+	if (resetTimer && wave < g_RenevantMaxWaves.IntValue && wave != 0)
 	{
-		float time = ((float(g_RoundEscapeTimeLimit) - float(g_RenevantFinaleTime)) / RENEVANT_MAXWAVES);
+		float time = ((float(g_RoundEscapeTimeLimit) - float(g_RenevantFinaleTime)) / g_RenevantMaxWaves.IntValue);
 		g_RenevantWaveTimer = CreateTimer(time, Timer_RenevantWave, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	}
 
-	if (wave == 0 || wave >= RENEVANT_MAXWAVES)
+	if (wave == 0 || wave >= g_RenevantMaxWaves.IntValue)
 	{
 		g_RenevantWaveTimer = null; // At zero/max wave so stop it.
 	}
@@ -452,7 +469,7 @@ static Action Timer_RenevantWave(Handle timer, any data)
 
 	Renevant_SetWave(g_RenevantWaveNumber + 1);
 
-	if (g_RenevantWaveNumber == RENEVANT_MAXWAVES)
+	if (g_RenevantWaveNumber == g_RenevantMaxWaves.IntValue)
 	{
 		return Plugin_Stop;
 	}

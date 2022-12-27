@@ -410,7 +410,7 @@ Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	bool attackWaiters = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+	bool attackWaiters = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 
 	if (NPCGetType(bossIndex) == SF2BossType_Statue)
 	{
@@ -534,19 +534,19 @@ Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 
 		if (!PeopleCanSeeSlender(bossIndex, true, SlenderUsesBlink(bossIndex), !attackWaiters))
 		{
-			int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
+			SF2_BasePlayer target = SF2_BasePlayer(EntRefToEntIndex(g_SlenderTarget[bossIndex]));
 			if (IsTargetValidForSlender(target, attackWaiters) && gameTime < g_NpcTimeUntilAbandon[bossIndex] && (gameTime - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
 			{
 				move = true;
 				float slenderPos[3], pos[3];
 				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPos);
-				GetClientAbsOrigin(target, pos);
+				target.GetAbsOrigin(pos);
 				if (NPCGetTeleporter(bossIndex, 0) != INVALID_ENT_REFERENCE)
 				{
-					int iTeleporter = EntRefToEntIndex(NPCGetTeleporter(bossIndex, 0));
-					if (IsValidEntity(iTeleporter) && iTeleporter > MaxClients)
+					int teleporter = EntRefToEntIndex(NPCGetTeleporter(bossIndex, 0));
+					if (IsValidEntity(teleporter) && teleporter > MaxClients)
 					{
-						GetEntPropVector(iTeleporter, Prop_Data, "m_vecAbsOrigin", pos);
+						GetEntPropVector(teleporter, Prop_Data, "m_vecAbsOrigin", pos);
 					}
 				}
 				g_BossPathFollower[bossIndex].ComputeToPos(bot, pos);
@@ -577,7 +577,7 @@ Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 
 				SetEntityModel(slender, buffer);
 
-				if (PlayerCanSeeSlender(target, bossIndex, false, !attackWaiters))
+				if (target.CanSeeSlender(bossIndex, false, !attackWaiters))
 				{
 					float distRatio = (dist / SquareFloat(maxRange));
 
@@ -603,7 +603,7 @@ Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 					else
 					{
 						g_SlenderLastKill[bossIndex] = gameTime;
-						ClientStartDeathCam(target, bossIndex, pos);
+						target.StartDeathCam(bossIndex, pos);
 						g_LastStuckTime[bossIndex] = gameTime + NPCGetInstantKillCooldown(bossIndex, difficulty) + 0.1;
 						if (NPCGetInstantKillCooldown(bossIndex, difficulty) > 0.0)
 						{
@@ -631,15 +631,7 @@ Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
 			ArrayList soundList;
 			char buffer[PLATFORM_MAX_PATH];
 			GetStatueProfileSingleMoveSounds(profile, soundInfo);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-				if (buffer[0] != '\0')
-				{
-					EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-				}
-			}
+			soundInfo.EmitSound(_, slender);
 
 			GetStatueProfileMoveSounds(profile, soundInfo);
 			soundList = soundInfo.Paths;

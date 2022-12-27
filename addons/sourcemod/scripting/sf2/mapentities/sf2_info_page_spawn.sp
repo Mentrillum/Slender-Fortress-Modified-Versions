@@ -9,7 +9,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2PageSpawnEntity < CBaseEntity
 {
-	public SF2PageSpawnEntity(int entIndex) { return view_as<SF2PageSpawnEntity>(SF2MapEntity(entIndex)); }
+	public SF2PageSpawnEntity(int entIndex)
+	{
+		return view_as<SF2PageSpawnEntity>(SF2MapEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -21,9 +24,9 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
-	public void GetPageModel(char[] buffer, int iBufferLen)
+	public void GetPageModel(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sModel", buffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sModel", buffer, bufferLen);
 	}
 
 	public void SetPageModel(const char[] buffer)
@@ -33,25 +36,43 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 
 	property int PageSkin
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iSkin"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iSkin", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iSkin");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iSkin", value);
+		}
 	}
 
 	property float PageModelScale
 	{
-		public get() { return this.GetPropFloat(Prop_Data, "sf2_flModelScale"); }
-		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flModelScale", value); }
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "sf2_flModelScale");
+		}
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "sf2_flModelScale", value);
+		}
 	}
 
 	property int PageBodygroup
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iBodyGroup"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iBodyGroup", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iBodyGroup");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iBodyGroup", value);
+		}
 	}
 
-	public void GetPageGroup(char[] buffer, int iBufferLen)
+	public void GetPageGroup(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sGroup", buffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sGroup", buffer, bufferLen);
 	}
 
 	public void SetPageGroup(const char[] buffer)
@@ -59,9 +80,9 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		this.SetPropString(Prop_Data, "sf2_sGroup", buffer);
 	}
 
-	public void GetPageAnimation(char[] buffer, int iBufferLen)
+	public void GetPageAnimation(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sAnimation", buffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sAnimation", buffer, bufferLen);
 	}
 
 	public void SetPageAnimation(const char[] buffer)
@@ -69,9 +90,9 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		this.SetPropString(Prop_Data, "sf2_sAnimation", buffer);
 	}
 
-	public void GetPageCollectSound(char[] buffer, int iBufferLen)
+	public void GetPageCollectSound(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sCollectSound", buffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sCollectSound", buffer, bufferLen);
 	}
 
 	public void SetPageCollectSound(const char[] buffer)
@@ -81,8 +102,14 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 
 	property int PageCollectSoundPitch
 	{
-		public get() { this.GetProp(Prop_Data, "sf2_iCollectSoundPitch"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iCollectSoundPitch", value); }
+		public get()
+		{
+			this.GetProp(Prop_Data, "sf2_iCollectSoundPitch");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iCollectSoundPitch", value);
+		}
 	}
 
 	public static void Initialize()

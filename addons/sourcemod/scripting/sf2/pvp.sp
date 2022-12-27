@@ -40,12 +40,12 @@ static const char g_PvPProjectileClassesNoTouch[][] =
 	"tf_projectile_flare"
 };
 
-static bool g_PlayerInPvP[MAXPLAYERS + 1];
-static bool g_PlayerIsLeavingPvP[MAXPLAYERS + 1];
-Handle g_PlayerPvPTimer[MAXPLAYERS + 1];
-Handle g_PlayerPvPRespawnTimer[MAXPLAYERS + 1];
-static int g_PlayerPvPTimerCount[MAXPLAYERS + 1];
-static ArrayList g_PlayerEnteredPvPTriggers[MAXPLAYERS + 1] = { null, ... };
+static bool g_PlayerInPvP[MAXTF2PLAYERS];
+static bool g_PlayerIsLeavingPvP[MAXTF2PLAYERS];
+Handle g_PlayerPvPTimer[MAXTF2PLAYERS];
+Handle g_PlayerPvPRespawnTimer[MAXTF2PLAYERS];
+static int g_PlayerPvPTimerCount[MAXTF2PLAYERS];
+static ArrayList g_PlayerEnteredPvPTriggers[MAXTF2PLAYERS] = { null, ... };
 
 //Blood
 static int g_PvPUserIdLastTrace;
@@ -1133,5 +1133,5 @@ void PvP_InitializeAPI()
 
 static int Native_IsClientInPvP(Handle plugin,int numParams)
 {
-	return view_as<bool>(IsClientInPvP(GetNativeCell(1)));
+	return IsClientInPvP(GetNativeCell(1));
 }

@@ -73,6 +73,8 @@ public void OnPluginStart()
 	g_Pages = new ArrayList(sizeof(SF2PageEntityData));
 	g_PageMusicRanges = new ArrayList(3);
 
+	char valueToString[32];
+
 	// Register console variables.
 	g_VersionConVar = CreateConVar("sf2modified_version", PLUGIN_VERSION, "The current version of Slender Fortress. DO NOT TOUCH!", FCVAR_SPONLY | FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	g_VersionConVar.SetString(PLUGIN_VERSION);
@@ -195,9 +197,11 @@ public void OnPluginStart()
 
 	g_BoxingMapConVar = CreateConVar("sf2_isboxingmap", "0", "Set to 1 if the map is a boxing map.", _, true, 0.0, true, 1.0);
 
+	IntToString(RENEVANT_MAXWAVES, valueToString, sizeof(valueToString));
 	g_RenevantMapConVar = CreateConVar("sf2_isrenevantmap", "0", "Set to 1 if the map uses Renevant logic.", _, true, 0.0, true, 1.0);
 	g_DefaultRenevantBossConVar = CreateConVar("sf2_renevant_boss_default", "", "Determine what boss should spawn during the Single Boss wave, if nothing is inputted, Single Boss will not trigger.");
 	g_DefaultRenevantBossMessageConVar = CreateConVar("sf2_renevant_bossspawn_message", "", "This is what will be used as the spawn message for the Single Boss wave.");
+	g_RenevantMaxWaves = CreateConVar("sf2_renevant_maxwaves", valueToString, "Determines the maximum number of waves the Revenant gamemode can use.", _, true, 0.0);
 
 	g_SlaughterRunMapConVar = CreateConVar("sf2_isslaughterrunmap", "0", "Set to 1 if the map is a slaughter run map.", _, true, 0.0, true, 1.0);
 
@@ -395,8 +399,6 @@ public void OnPluginStart()
 	NPCInitialize();
 
 	SetupMenus();
-
-	Tutorial_Initialize();
 
 	SetupAdminMenu();
 
@@ -690,7 +692,7 @@ static Action Command_NoPointsAdmin(int client,int args)
 	{
 		char arg2[32];
 		GetCmdArg(2, arg2, sizeof(arg2));
-		mode = view_as<bool>(StringToInt(arg2));
+		mode = !!StringToInt(arg2);
 	}
 
 	for (int i = 0; i < target_count; i++)
@@ -1029,18 +1031,12 @@ static Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(master, profile, sizeof(profile));
-			char buffer[PLATFORM_MAX_PATH];
 			SF2BossProfileSoundInfo soundInfo;
 			GetBossProfileProxyIdleSounds(profile, soundInfo);
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0 && GetGameTime() >= g_PlayerProxyNextVoiceSound[client])
 			{
-				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
-				if (buffer[0] != '\0')
-				{
-					EmitSoundToAll(buffer, client, soundInfo.Channel, soundInfo.Level, soundInfo.Flags, soundInfo.Volume, soundInfo.Pitch);
-
-					g_PlayerProxyNextVoiceSound[client] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
-				}
+				soundInfo.EmitSound(_, client);
+				g_PlayerProxyNextVoiceSound[client] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
 			}
 		}
 	}
@@ -1186,7 +1182,7 @@ static Action Command_SpawnSlender(int client,int args)
 	return Plugin_Handled;
 }
 
-static Handle g_SpawnAllSlendersTimer[MAXPLAYERS + 1] = { null, ... };
+static Handle g_SpawnAllSlendersTimer[MAXTF2PLAYERS] = { null, ... };
 static int g_SpawnAllBossesCount = 0;
 
 static Action Command_SpawnAllSlenders(int client,int args)
@@ -1204,7 +1200,7 @@ static Action Command_SpawnAllSlenders(int client,int args)
 
 	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
-	bool doTimer = view_as<bool>(StringToInt(arg1));
+	bool doTimer = !!StringToInt(arg1);
 
 	if (!doTimer)
 	{
@@ -1247,25 +1243,25 @@ static Action Command_SpawnAllSlenders(int client,int args)
 
 static Action Timer_SpawnAllSlenders(Handle timer, any userid)
 {
-	int client = GetClientOfUserId(userid);
-	if (!IsValidClient(client))
+	SF2_BasePlayer client = SF2_BasePlayer(GetClientOfUserId(userid));
+	if (!client.IsValid)
 	{
 		return Plugin_Stop;
 	}
-	if (timer != g_SpawnAllSlendersTimer[client])
+	if (timer != g_SpawnAllSlendersTimer[client.index])
 	{
 		return Plugin_Stop;
 	}
 	if (g_SpawnAllBossesCount >= 64)
 	{
-		CPrintToChat(client, "{royalblue}%t {default}Spawned all bosses at your locations.", "SF2 Prefix");
+		CPrintToChat(client.index, "{royalblue}%t {default}Spawned all bosses at your locations.", "SF2 Prefix");
 		g_SpawnAllBossesCount = 0;
-		g_SpawnAllSlendersTimer[client] = null;
+		g_SpawnAllSlendersTimer[client.index] = null;
 		return Plugin_Stop;
 	}
 	float eyePos[3], eyeAng[3], endPos[3];
-	GetClientEyePosition(client, eyePos);
-	GetClientEyeAngles(client, eyeAng);
+	client.GetEyePosition(eyePos);
+	client.GetEyeAngles(eyeAng);
 
 	Handle trace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 	TR_GetEndPosition(endPos, trace);
@@ -1451,8 +1447,8 @@ static Action Command_SlenderAttackWaiters(int client,int args)
 
 	int bossFlags = NPCGetFlags(bossIndex);
 
-	bool state = view_as<bool>(StringToInt(arg2));
-	bool oldState = view_as<bool>(bossFlags & SFF_ATTACKWAITERS);
+	bool state = !!StringToInt(arg2);
+	bool oldState = !!(bossFlags & SFF_ATTACKWAITERS);
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -1504,8 +1500,8 @@ static Action Command_SlenderNoTeleport(int client,int args)
 
 	int bossFlags = NPCGetFlags(bossIndex);
 
-	bool state = view_as<bool>(StringToInt(arg2));
-	bool oldState = view_as<bool>(bossFlags & SFF_NOTELEPORT);
+	bool state = !!StringToInt(arg2);
+	bool oldState = !!(bossFlags & SFF_NOTELEPORT);
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -2336,16 +2332,16 @@ static Action Command_ForceState(int client,int args)
 
 Action Timer_ForcePlayer(Handle timer, any userid)
 {
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
+	SF2_BasePlayer client = SF2_BasePlayer(GetClientOfUserId(userid));
+	if (!client.IsValid)
 	{
 		return Plugin_Stop;
 	}
 
 	char name[MAX_NAME_LENGTH];
-	FormatEx(name, sizeof(name), "%N", client);
+	FormatEx(name, sizeof(name), "%N", client.index);
 
-	SetClientPlayState(client, true);
+	client.SetPlayState(true);
 	//CPrintToChatAll("{royalblue}%t {collectors}%N: {default}%t", "SF2 Prefix", client, "SF2 Player Forced In Game", name);
 	return Plugin_Stop;
 }

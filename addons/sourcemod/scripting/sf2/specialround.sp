@@ -178,7 +178,7 @@ static bool SpecialRoundCanBeSelected(int specialRound)
 		return false;
 	}
 
-	return view_as<bool>(g_SpecialRoundsConfig.GetNum("enabled", 1));
+	return !!g_SpecialRoundsConfig.GetNum("enabled", 1);
 }
 
 static bool IsSpecialRoundEnabled(int specialRound)
@@ -1127,17 +1127,17 @@ void SpecialRoundStart()
 						{
 							color[3] = 255;
 						}
-						SlenderAddGlow(npcIndex,_,color);
+						SlenderAddGlow(npcIndex, color);
 					}
 					else
 					{
-						SlenderAddGlow(npcIndex,_,view_as<int>({0, 0, 0, 0}));
+						SlenderAddGlow(npcIndex, view_as<int>({0, 0, 0, 0}));
 					}
 				}
 				else
 				{
 					int purple[4] = {150, 0, 255, 255};
-					SlenderAddGlow(npcIndex,_,purple);
+					SlenderAddGlow(npcIndex, purple);
 				}
 			}
 			for (int i = 1; i <= MaxClients; i++)
@@ -1303,7 +1303,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_SINGLEPLAYER:
 		{
-			for (int client = 1; client < MaxClients; client++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
 				if (IsValidClient(client) && IsClientInGame(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
 				{
@@ -1657,7 +1657,7 @@ void SpecialRoundInitializeAPI()
 
 static any Native_IsSpecialRoundRunning(Handle plugin,int numParams)
 {
-	return view_as<bool>(g_IsSpecialRound);
+	return g_IsSpecialRound;
 }
 
 static any Native_GetSpecialRoundType(Handle plugin,int numParams)

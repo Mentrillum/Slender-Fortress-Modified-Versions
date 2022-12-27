@@ -16,7 +16,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2GameTextEntity < CBaseEntity
 {
-	public SF2GameTextEntity(int entIndex) { return view_as<SF2GameTextEntity>(CBaseEntity(entIndex)); }
+	public SF2GameTextEntity(int entIndex)
+	{
+		return view_as<SF2GameTextEntity>(CBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -108,8 +111,14 @@ methodmap SF2GameTextEntity < CBaseEntity
 
 	property float NextIntroTextDelay
 	{
-		public get() { return this.GetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay"); }
-		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay", value); }
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay");
+		}
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay", value);
+		}
 	}
 
 	public void GetNextIntroTextEntityName(char[] buffer, int bufferSize)
@@ -168,7 +177,7 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 {
 	SF2GameTextEntity thisEnt = SF2GameTextEntity(entity);
 
-	int clients[MAXPLAYERS + 1];
+	int clients[MAXTF2PLAYERS];
 	int clientsNum;
 
 	char message[512];

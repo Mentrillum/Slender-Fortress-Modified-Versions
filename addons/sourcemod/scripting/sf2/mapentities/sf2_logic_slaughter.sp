@@ -9,7 +9,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2LogicSlaughterEntity < CBaseEntity
 {
-	public SF2LogicSlaughterEntity(int entIndex) { return view_as<SF2LogicSlaughterEntity>(CBaseEntity(entIndex)); }
+	public SF2LogicSlaughterEntity(int entIndex)
+	{
+		return view_as<SF2LogicSlaughterEntity>(CBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{

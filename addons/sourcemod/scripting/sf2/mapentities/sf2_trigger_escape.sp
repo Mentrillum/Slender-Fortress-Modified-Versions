@@ -12,7 +12,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2TriggerEscapeEntity < SF2TriggerMapEntity
 {
-	public SF2TriggerEscapeEntity(int entIndex) { return view_as<SF2TriggerEscapeEntity>(SF2TriggerMapEntity(entIndex)); }
+	public SF2TriggerEscapeEntity(int entIndex)
+	{
+		return view_as<SF2TriggerEscapeEntity>(SF2TriggerMapEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{

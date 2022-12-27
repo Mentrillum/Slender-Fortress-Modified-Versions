@@ -361,8 +361,6 @@ enum struct SF2ChaserBossProfileData
 	char KeyModel[PLATFORM_MAX_PATH];
 	char KeyTrigger[PLATFORM_MAX_PATH];
 
-	float MemoryLifeTime;
-
 	float AwarenessIncreaseRate[Difficulty_Max];
 	float AwarenessDecreaseRate[Difficulty_Max];
 
@@ -738,8 +736,6 @@ enum struct SF2ChaserBossProfileData
 		this.KeyModel = SF_KEYMODEL;
 		this.KeyTrigger[0] = '\0';
 
-		this.MemoryLifeTime = 10.0;
-
 		this.AutoChaseEnabled = false;
 		this.AutoChaseSprinters = false;
 
@@ -910,8 +906,14 @@ enum struct SF2ChaserBossProfileData
 		this.ChasingSounds.Init();
 		this.ChaseInitialSounds.Init();
 		this.AttackKilledSounds.Init();
+		this.AttackKilledSounds.Channel = SNDCHAN_STATIC;
+		this.AttackKilledSounds.Level = SNDLEVEL_HELICOPTER;
 		this.AttackKilledAllSounds.Init();
+		this.AttackKilledAllSounds.Channel = SNDCHAN_STATIC;
+		this.AttackKilledAllSounds.Level = SNDLEVEL_HELICOPTER;
 		this.AttackKilledClientSounds.Init();
+		this.AttackKilledClientSounds.Channel = SNDCHAN_STATIC;
+		this.AttackKilledClientSounds.Level = SNDLEVEL_HELICOPTER;
 		this.RageAllSounds.Init();
 		this.RageTwoSounds.Init();
 		this.RageThreeSounds.Init();

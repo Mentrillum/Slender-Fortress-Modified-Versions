@@ -11,7 +11,10 @@ static CEntityFactory g_EntityFactory;
  */
 methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 {
-	public SF2BossSpawnEntity(int entIndex) { return view_as<SF2BossSpawnEntity>(SF2SpawnPointBaseEntity(entIndex)); }
+	public SF2BossSpawnEntity(int entIndex)
+	{
+		return view_as<SF2BossSpawnEntity>(SF2SpawnPointBaseEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
@@ -23,20 +26,26 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
-	public void GetBossProfile(char[] sBuffer, int iBufferLen)
+	public void GetBossProfile(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_szBossProfile", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_szBossProfile", buffer, bufferLen);
 	}
 
-	public void SetBossProfile(const char[] sBuffer)
+	public void SetBossProfile(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_szBossProfile", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_szBossProfile", buffer);
 	}
 
 	property int MaxBosses
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iMaxBosses"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iMaxBosses", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iMaxBosses");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iMaxBosses", value);
+		}
 	}
 
 	public void Spawn()

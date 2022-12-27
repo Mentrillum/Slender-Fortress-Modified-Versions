@@ -9,16 +9,16 @@
 #define SF2_MAX_PLAYER_GROUP_NAME_LENGTH 32
 
 static int g_PlayerGroupGlobalID = -1;
-static int g_PlayerCurrentGroup[MAXPLAYERS + 1] = { -1, ... };
+static int g_PlayerCurrentGroup[MAXTF2PLAYERS] = { -1, ... };
 static bool g_PlayerGroupActive[SF2_MAX_PLAYER_GROUPS] = { false, ... };
 static int g_PlayerGroupLeader[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
 static int g_PlayerGroupID[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
 static int g_PlayerGroupQueuePoints[SF2_MAX_PLAYER_GROUPS];
 static int g_PlayerGroupPlaying[SF2_MAX_PLAYER_GROUPS] = { false, ... };
 static StringMap g_PlayerGroupNames;
-static bool g_PlayerGroupInvitedPlayer[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
-static int g_PlayerGroupInvitedPlayerCount[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
-static float g_PlayerGroupInvitedPlayerTime[SF2_MAX_PLAYER_GROUPS][MAXPLAYERS + 1];
+static bool g_PlayerGroupInvitedPlayer[SF2_MAX_PLAYER_GROUPS][MAXTF2PLAYERS];
+static int g_PlayerGroupInvitedPlayerCount[SF2_MAX_PLAYER_GROUPS][MAXTF2PLAYERS];
+static float g_PlayerGroupInvitedPlayerTime[SF2_MAX_PLAYER_GROUPS][MAXTF2PLAYERS];
 
 void SetupPlayerGroups()
 {
@@ -26,7 +26,7 @@ void SetupPlayerGroups()
 	g_PlayerGroupNames = new StringMap();
 }
 
-stock int GetPlayerGroupFromID(int groupID)
+int GetPlayerGroupFromID(int groupID)
 {
 	for (int i = 0; i < SF2_MAX_PLAYER_GROUPS; i++)
 	{
@@ -361,20 +361,23 @@ void CheckPlayerGroup(int groupIndex)
 	}
 	#endif
 }
-
-stock int GetPlayerGroupCount()
+/*
+int GetPlayerGroupCount()
 {
 	int count;
 
 	for (int i = 0; i < SF2_MAX_PLAYER_GROUPS; i++)
 	{
-		if (IsPlayerGroupActive(i)) count++;
+		if (IsPlayerGroupActive(i))
+		{
+			count++;
+		}
 	}
 
 	return count;
 }
-
-stock int CreatePlayerGroup()
+*/
+int CreatePlayerGroup()
 {
 	// Get an inactive group.
 	int index = -1;
@@ -409,7 +412,7 @@ stock int CreatePlayerGroup()
 	return index;
 }
 
-stock void RemovePlayerGroup(int groupIndex)
+void RemovePlayerGroup(int groupIndex)
 {
 	if (!IsPlayerGroupActive(groupIndex))
 	{
@@ -424,7 +427,7 @@ stock void RemovePlayerGroup(int groupIndex)
 	SetPlayerGroupID(groupIndex, -1);
 }
 
-stock void ClearPlayerGroupMembers(int groupIndex)
+void ClearPlayerGroupMembers(int groupIndex)
 {
 	if (!IsPlayerGroupValid(groupIndex))
 	{
@@ -440,41 +443,41 @@ stock void ClearPlayerGroupMembers(int groupIndex)
 	}
 }
 
-stock bool GetPlayerGroupName(int groupIndex, char[] buffer,int iBufferLen)
+bool GetPlayerGroupName(int groupIndex, char[] buffer,int iBufferLen)
 {
 	char groupIndexString[32];
 	FormatEx(groupIndexString, sizeof(groupIndexString), "%d", groupIndex);
 	return g_PlayerGroupNames.GetString(groupIndexString, buffer, iBufferLen);
 }
 
-stock void SetPlayerGroupName(int groupIndex, const char[] groupName)
+void SetPlayerGroupName(int groupIndex, const char[] groupName)
 {
 	char groupIndexString[32];
 	FormatEx(groupIndexString, sizeof(groupIndexString), "%d", groupIndex);
 	g_PlayerGroupNames.SetString(groupIndexString, groupName);
 }
 
-stock int GetPlayerGroupID(int groupIndex)
+int GetPlayerGroupID(int groupIndex)
 {
 	return g_PlayerGroupID[groupIndex];
 }
 
-stock void SetPlayerGroupID(int groupIndex,int iID)
+void SetPlayerGroupID(int groupIndex,int iID)
 {
 	g_PlayerGroupID[groupIndex] = iID;
 }
 
-stock bool IsPlayerGroupActive(int groupIndex)
+bool IsPlayerGroupActive(int groupIndex)
 {
 	return IsPlayerGroupValid(groupIndex) && g_PlayerGroupActive[groupIndex];
 }
 
-stock bool IsPlayerGroupValid(int groupIndex)
+bool IsPlayerGroupValid(int groupIndex)
 {
 	return (groupIndex >= 0 && groupIndex < SF2_MAX_PLAYER_GROUPS);
 }
 
-stock int GetPlayerGroupMemberCount(int groupIndex)
+int GetPlayerGroupMemberCount(int groupIndex)
 {
 	int count;
 
@@ -494,22 +497,22 @@ stock int GetPlayerGroupMemberCount(int groupIndex)
 	return count;
 }
 
-stock bool IsPlayerGroupPlaying(int groupIndex)
+bool IsPlayerGroupPlaying(int groupIndex)
 {
 	return (IsPlayerGroupActive(groupIndex) && g_PlayerGroupPlaying[groupIndex]);
 }
 
-stock void SetPlayerGroupPlaying(int groupIndex, bool toggle)
+void SetPlayerGroupPlaying(int groupIndex, bool toggle)
 {
 	g_PlayerGroupPlaying[groupIndex] = toggle;
 }
 
-stock int GetPlayerGroupLeader(int groupIndex)
+int GetPlayerGroupLeader(int groupIndex)
 {
 	return g_PlayerGroupLeader[groupIndex];
 }
 
-stock void SetPlayerGroupLeader(int groupIndex,int groupLeader)
+void SetPlayerGroupLeader(int groupIndex,int groupLeader)
 {
 	g_PlayerGroupLeader[groupIndex] = groupLeader;
 
@@ -560,52 +563,52 @@ int PlayerGroupFindNewLeader(int groupIndex)
 	return -1;
 }
 
-stock int GetPlayerGroupQueuePoints(int groupIndex)
+int GetPlayerGroupQueuePoints(int groupIndex)
 {
 	return g_PlayerGroupQueuePoints[groupIndex];
 }
 
-stock void SetPlayerGroupQueuePoints(int groupIndex,int amount)
+void SetPlayerGroupQueuePoints(int groupIndex,int amount)
 {
 	g_PlayerGroupQueuePoints[groupIndex] = amount;
 }
-
-stock bool HasPlayerGroupInvitedPlayer(int groupIndex,int client)
+/*
+bool HasPlayerGroupInvitedPlayer(int groupIndex,int client)
 {
 	return g_PlayerGroupInvitedPlayer[groupIndex][client];
 }
-
-stock void SetPlayerGroupInvitedPlayer(int groupIndex,int client, bool toggle)
+*/
+void SetPlayerGroupInvitedPlayer(int groupIndex,int client, bool toggle)
 {
 	g_PlayerGroupInvitedPlayer[groupIndex][client] = toggle;
 }
 
-stock int GetPlayerGroupInvitedPlayerCount(int groupIndex,int client)
+int GetPlayerGroupInvitedPlayerCount(int groupIndex,int client)
 {
 	return g_PlayerGroupInvitedPlayerCount[groupIndex][client];
 }
 
-stock void SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int amount)
+void SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int amount)
 {
 	g_PlayerGroupInvitedPlayerCount[groupIndex][client] = amount;
 }
 
-stock float GetPlayerGroupInvitedPlayerTime(int groupIndex,int client)
+float GetPlayerGroupInvitedPlayerTime(int groupIndex,int client)
 {
 	return g_PlayerGroupInvitedPlayerTime[groupIndex][client];
 }
 
-stock void SetPlayerGroupInvitedPlayerTime(int groupIndex,int client, float flTime)
+void SetPlayerGroupInvitedPlayerTime(int groupIndex,int client, float flTime)
 {
 	g_PlayerGroupInvitedPlayerTime[groupIndex][client] = flTime;
 }
 
-stock int ClientGetPlayerGroup(int client)
+int ClientGetPlayerGroup(int client)
 {
 	return g_PlayerCurrentGroup[client];
 }
 
-stock void ClientSetPlayerGroup(int client,int groupIndex)
+void ClientSetPlayerGroup(int client,int groupIndex)
 {
 	int oldPlayerGroup = ClientGetPlayerGroup(client);
 	if (oldPlayerGroup == groupIndex)

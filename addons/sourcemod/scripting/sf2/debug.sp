@@ -23,7 +23,7 @@
 #define DEBUG_ARRAYLIST (1 << 13)
 #define DEBUG_BOSS_IDLE (1 << 14)
 
-int g_PlayerDebugFlags[MAXPLAYERS + 1] = { 0, ... };
+int g_PlayerDebugFlags[MAXTF2PLAYERS] = { 0, ... };
 
 static char g_DebugLogFilePath[512] = "";
 
@@ -62,7 +62,7 @@ void InitializeDebugLogging()
 	DebugMessage("-------- Mapchange to %s -------", map);
 }
 
-stock void DebugMessage(const char[] message, any ...)
+void DebugMessage(const char[] message, any ...)
 {
 	char debugMessage[1024], temp[1024];
 	VFormat(temp, sizeof(temp), message, 2);
@@ -71,7 +71,7 @@ stock void DebugMessage(const char[] message, any ...)
 	LogToFile(g_DebugLogFilePath, debugMessage);
 }
 
-stock void SendDebugMessageToPlayer(int client,int debugFlags,int type, const char[] message, any ...)
+void SendDebugMessageToPlayer(int client,int debugFlags,int type, const char[] message, any ...)
 {
 	if (!IsClientInGame(client) || IsFakeClient(client))
 	{
@@ -101,7 +101,7 @@ stock void SendDebugMessageToPlayer(int client,int debugFlags,int type, const ch
 	}
 }
 
-stock void SendDebugMessageToPlayers(int debugFlags,int type, const char[] message, any ...)
+void SendDebugMessageToPlayers(int debugFlags,int type, const char[] message, any ...)
 {
 	char msg[1024];
 	VFormat(msg, sizeof(msg), message, 4);
@@ -134,22 +134,6 @@ stock void SendDebugMessageToPlayers(int debugFlags,int type, const char[] messa
 	}
 }
 
-stock void SendDebugMessageToPlayersSpecialRound(const char[] message, any ...)
-{
-	char msg[1024];
-	VFormat(msg, sizeof(msg), message, 2);
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || (g_PlayerEliminated[i] && !IsClientInGhostMode(i)) || DidClientEscape(i))
-		{
-			continue;
-		}
-
-		PrintCenterText(i, msg);
-	}
-}
-
 static Action Command_DebugBossTeleport(int client,int args)
 {
 	if (client < 1 || client > MaxClients)
@@ -157,7 +141,7 @@ static Action Command_DebugBossTeleport(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_TELEPORTATION);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_TELEPORTATION);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_TELEPORTATION;
@@ -179,7 +163,7 @@ static Action Command_DebugBossChase(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_CHASE);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_CHASE);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_CHASE;
@@ -201,7 +185,7 @@ static Action Command_DebugBossIdle(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_IDLE);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_IDLE);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_IDLE;
@@ -223,7 +207,7 @@ static Action Command_DebugBossAnimation(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_ANIMATION);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_ANIMATION);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_ANIMATION;
@@ -245,7 +229,7 @@ static Action Command_DebugNextbot(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_NEXTBOT);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_NEXTBOT);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_NEXTBOT;
@@ -267,7 +251,7 @@ static Action Command_DebugPlayerStress(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_PLAYER_STRESS);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_PLAYER_STRESS);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_PLAYER_STRESS;
@@ -289,7 +273,7 @@ static Action Command_DebugBossProxies(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_PROXIES);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_PROXIES);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_PROXIES;
@@ -310,7 +294,7 @@ static Action Command_DebugHitbox(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_HITBOX);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_HITBOX);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_HITBOX;
@@ -332,7 +316,7 @@ static Action Command_DebugStun(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_BOSS_STUN);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_STUN);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_STUN;
@@ -354,7 +338,7 @@ static Action Command_DebugGhostMode(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_GHOSTMODE);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_GHOSTMODE);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_GHOSTMODE;
@@ -376,7 +360,7 @@ static Action Command_DebugEntity(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_ENTITIES);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_ENTITIES);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_ENTITIES;
@@ -398,7 +382,7 @@ static Action Command_DebugEvent(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_EVENT);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_EVENT);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_EVENT;
@@ -420,7 +404,7 @@ static Action Command_DebugKillIcons(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_KILLICONS);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_KILLICONS);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_KILLICONS;
@@ -442,7 +426,7 @@ static Action Command_DebugArrayLists(int client,int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = view_as<bool>(g_PlayerDebugFlags[client] & DEBUG_ARRAYLIST);
+	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_ARRAYLIST);
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_ARRAYLIST;

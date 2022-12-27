@@ -6,7 +6,7 @@
 #pragma semicolon 1
 
 static Handle g_TopMenu = null;
-static int g_PlayerAdminMenuTargetUserId[MAXPLAYERS + 1] = { -1, ... };
+static int g_PlayerAdminMenuTargetUserId[MAXTF2PLAYERS] = { -1, ... };
 
 void SetupAdminMenu()
 {

@@ -382,7 +382,10 @@ int NPCChaserProjectileShoot(int bossIndex, int slender, int target, const char[
 
 						TeleportEntity(projectileEnt, effectPos, shootAng, NULL_VECTOR);
 						DispatchSpawn(projectileEnt);
-						if (NPCChaserHasCriticalRockets(bossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+						if (NPCChaserHasCriticalRockets(bossIndex))
+						{
+							SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+						}
 						SetEntProp(projectileEnt,    Prop_Send, "m_iTeamNum",     3, 1);
 						SetEntProp(projectileEnt,    Prop_Send, "m_nSkin",     1, 1);
 						SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
@@ -426,7 +429,10 @@ int NPCChaserProjectileShoot(int bossIndex, int slender, int target, const char[
 					velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					if (NPCChaserHasCriticalRockets(bossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					if (NPCChaserHasCriticalRockets(bossIndex))
+					{
+						SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
+					}
 					SetEntDataFloat(projectileEnt, FindSendPropInfo("CTFProjectile_SentryRocket", "m_iDeflected") + 4, NPCChaserGetProjectileDamage(bossIndex, difficulty), true); // set damage
 					ProjectileSetFlags(projectileEnt, PROJ_SENTRYROCKET);
 
@@ -468,7 +474,10 @@ int NPCChaserProjectileShoot(int bossIndex, int slender, int target, const char[
 						velocity[1] = bufferProj[1]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 						velocity[2] = bufferProj[2]*NPCChaserGetProjectileSpeed(bossIndex, difficulty);
 
-						if (NPCChaserHasCriticalRockets(bossIndex)) SetEntProp(projectileEnt,    Prop_Send, "m_bCrits", 1, 1);
+						if (NPCChaserHasCriticalRockets(bossIndex))
+						{
+							SetEntProp(projectileEnt, Prop_Send, "m_bCrits", 1, 1);
+						}
 						SetEntPropFloat(projectileEnt, Prop_Data, "m_flDamage", NPCChaserGetProjectileDamage(bossIndex, difficulty));
 						SetEntPropFloat(projectileEnt, Prop_Data, "m_flSpeedMin", NPCChaserGetProjectileSpeed(bossIndex, difficulty));
 						SetEntPropFloat(projectileEnt, Prop_Data, "m_flSpeedMax", NPCChaserGetProjectileSpeed(bossIndex, difficulty));
@@ -850,7 +859,7 @@ static Action Hook_ProjectileAttackTouch(int entity, int other)
 				{
 					int difficulty = GetLocalGlobalDifficulty(bossIndex);
 					int attackIndex = NPCGetCurrentAttackIndex(bossIndex);
-					bool attackEliminated = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+					bool attackEliminated = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 					float radius = NPCChaserGetAttackProjectileRadius(bossIndex, attackIndex, difficulty);
 					for (int client = 1; client <= MaxClients; client++)
 					{
@@ -878,7 +887,10 @@ static Action Hook_ProjectileAttackTouch(int entity, int other)
 						int traceHitEntity = TR_GetEntityIndex(trace);
 						delete trace;
 
-						if (!isVisible && traceHitEntity == client) isVisible = true;
+						if (!isVisible && traceHitEntity == client)
+						{
+							isVisible = true;
+						}
 
 						if (isVisible)
 						{
@@ -985,7 +997,7 @@ static Action Hook_ProjectileTouch(int entity, int other)
 				if (bossIndex != -1)
 				{
 					int difficulty = GetLocalGlobalDifficulty(bossIndex);
-					bool attackEliminated = view_as<bool>(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
+					bool attackEliminated = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 					float radius = NPCChaserGetProjectileRadius(bossIndex, difficulty);
 					float fallOff = NPCChaserGetProjectileRadius(bossIndex, difficulty)/2.0;
 					for (int client = 1; client <= MaxClients; client++)

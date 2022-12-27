@@ -1,4 +1,9 @@
-bool g_PlayerHints[MAXPLAYERS + 1][PlayerHint_MaxNum];
+#if defined _sf2_client_hints_included
+ #endinput
+#endif
+#define _sf2_client_hints_included
+
+bool g_PlayerHints[MAXTF2PLAYERS][PlayerHint_MaxNum];
 
 // Hint data.
 enum

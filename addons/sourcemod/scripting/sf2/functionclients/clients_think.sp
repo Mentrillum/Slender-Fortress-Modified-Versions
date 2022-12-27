@@ -692,7 +692,7 @@ Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &d
 		int npcIndex = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 		if (npcIndex != -1)
 		{
-			bool attackEliminated = view_as<bool>(NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS);
+			bool attackEliminated = !!(NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS);
 			if (!attackEliminated && (GetClientTeam(victim) == TFTeam_Blue) && IsValidClient(victim) )
 			{
 				damage = 0.0;
@@ -1175,7 +1175,7 @@ void ClientOnButtonPress(int client,int button)
 		{
 			if (IsPlayerAlive(client) && !(GetEntityFlags(client) & FL_FROZEN))
 			{
-				if (!view_as<bool>(GetEntProp(client, Prop_Send, "m_bDucked")) &&
+				if (!(GetEntProp(client, Prop_Send, "m_bDucked")) &&
 					(GetEntityFlags(client) & FL_ONGROUND) &&
 					GetEntProp(client, Prop_Send, "m_nWaterLevel") < 2)
 				{

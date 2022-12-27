@@ -5,7 +5,7 @@
 
 #pragma semicolon 1
 
-static float g_AfkAtGameTime[MAXPLAYERS + 1];
+static float g_AfkAtGameTime[MAXTF2PLAYERS];
 
 void AFK_SetTime(int client, bool reset = true)
 {
