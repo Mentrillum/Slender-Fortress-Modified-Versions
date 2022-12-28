@@ -2180,8 +2180,7 @@ bool IsTargetValidForSlender(SF2_BasePlayer target, bool includeEliminated = fal
 
 	if (target.IsValid)
 	{
-		if (!target.IsInGame ||
-			!target.IsAlive ||
+		if (!target.IsAlive ||
 			target.IsInDeathCam ||
 			(!includeEliminated && target.IsEliminated) ||
 			target.IsInGhostMode ||
@@ -2222,7 +2221,7 @@ SF2_BasePlayer NPCChaserGetClosestPlayer(int slender)
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		SF2_BasePlayer client = SF2_BasePlayer(i);
-		if (!client.IsValid || !client.IsInGame || client.IsInGhostMode || client.IsProxy || !client.IsAlive || client.IsEliminated)
+		if (!client.IsValid || client.IsInGhostMode || client.IsProxy || !client.IsAlive || client.IsEliminated)
 		{
 			continue;
 		}

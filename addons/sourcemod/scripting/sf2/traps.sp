@@ -132,7 +132,7 @@ static Action Timer_TrapThink(Handle timer, any entref)
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
-			if (!player.IsInGame ||
+			if (!player.IsValid ||
 				!player.IsAlive ||
 				player.IsEliminated ||
 				player.IsInGhostMode ||
