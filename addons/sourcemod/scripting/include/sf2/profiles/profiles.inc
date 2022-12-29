@@ -544,7 +544,7 @@ stock void SetProfileDifficultyStringArrayValues(KeyValues kv, const char[] base
 		GetProfileKeyWithDifficultySuffix(baseKeyName, i, key, sizeof(key));
 		char[] value = new char[PLATFORM_MAX_PATH];
 		kv.GetString(key, value, PLATFORM_MAX_PATH, temporaryKeys);
-		if (models && strncmp(value, "models/", 7, false) != 0 && strncmp(value, "models\\", 7, false) != 0)
+		if (models && strncmp(value, "models/", 7, false) != 0 && strncmp(value, "models\\", 7, false) != 0 && value[0] != '\0')
 		{
 			Format(value, PLATFORM_MAX_PATH, "models/%s", value);
 		}

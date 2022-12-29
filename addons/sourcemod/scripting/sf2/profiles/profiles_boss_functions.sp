@@ -43,7 +43,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	for (int i = 0; i < profileData.Models.Length; i++)
 	{
 		profileData.Models.GetString(i, modelName, sizeof(modelName));
-		if (modelName[0] != '\0')
+		if (modelName[0] != '\0' && strcmp(modelName[0], "models/", true) != 0 && strcmp(modelName[0], "models\\", true) != 0)
 		{
 			PrecacheModel2(modelName, _, _, g_FileCheckConVar.BoolValue);
 		}

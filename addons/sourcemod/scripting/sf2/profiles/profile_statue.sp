@@ -44,7 +44,7 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	for (int i = 0; i < profileData.ModelsAverageDist.Length; i++)
 	{
 		profileData.ModelsAverageDist.GetString(i, modelName, sizeof(modelName));
-		if (modelName[0] != '\0' || strcmp(modelName, "models/") == 0)
+		if (modelName[0] != '\0' && strcmp(modelName[0], "models/", true) != 0 && strcmp(modelName[0], "models\\", true) != 0)
 		{
 			PrecacheModel2(modelName, _, _, g_FileCheckConVar.BoolValue);
 		}
@@ -52,7 +52,7 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	for (int i = 0; i < profileData.ModelsCloseDist.Length; i++)
 	{
 		profileData.ModelsCloseDist.GetString(i, modelName, sizeof(modelName));
-		if (modelName[0] != '\0' || strcmp(modelName, "models/") == 0)
+		if (modelName[0] != '\0' && strcmp(modelName[0], "models/", true) != 0 && strcmp(modelName[0], "models\\", true) != 0)
 		{
 			PrecacheModel2(modelName, _, _, g_FileCheckConVar.BoolValue);
 		}

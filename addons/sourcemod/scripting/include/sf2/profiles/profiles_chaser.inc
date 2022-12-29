@@ -116,7 +116,6 @@ enum struct SF2ChaserBossProfileAttackData
 
 	int WeaponInt;
 	char WeaponString[PLATFORM_MAX_PATH];
-	bool WeaponTypes;
 
 	bool LifeSteal[Difficulty_Max];
 	float LifeStealDuration[Difficulty_Max];
@@ -250,7 +249,6 @@ enum struct SF2ChaserBossProfileAttackData
 
 		this.WeaponInt = 0;
 		this.WeaponString[0] = '\0';
-		this.WeaponTypes = false;
 
 		this.ProjectileType = 0;
 		this.FireballTrail = FIREBALL_TRAIL;

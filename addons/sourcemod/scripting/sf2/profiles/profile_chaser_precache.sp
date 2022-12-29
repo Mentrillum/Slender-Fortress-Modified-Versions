@@ -1092,8 +1092,6 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 
 		GetProfileDifficultyFloatValues(kv, "cooldown", attackData.Cooldown, attackData.Cooldown);
 
-
-
 		attackData.Repeat = kv.GetNum("repeat", attackData.Repeat);
 		if (attackData.Repeat < 0)
 		{
@@ -1124,16 +1122,12 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		GetProfileDifficultyBoolValues(kv, "ignore_always_looking", attackData.IgnoreAlwaysLooking, attackData.IgnoreAlwaysLooking);
 		GetProfileDifficultyBoolValues(kv, "disappear_upon_damaging", attackData.Disappear, attackData.Disappear);
 
-		attackData.WeaponTypes = !!kv.GetNum("weaponsenable", attackData.WeaponTypes);
-		if (attackData.WeaponTypes)
+		attackData.WeaponInt = kv.GetNum("weapontypeint", attackData.WeaponInt);
+		if (attackData.WeaponInt < 0)
 		{
-			attackData.WeaponInt = kv.GetNum("weapontypeint", attackData.WeaponInt);
-			if (attackData.WeaponInt < 1)
-			{
-				attackData.WeaponInt = 0;
-			}
-			kv.GetString("weapontype", attackData.WeaponString, sizeof(attackData.WeaponString), attackData.WeaponString);
+			attackData.WeaponInt = 0;
 		}
+		kv.GetString("weapontype", attackData.WeaponString, sizeof(attackData.WeaponString), attackData.WeaponString);
 
 		GetProfileDifficultyBoolValues(kv, "run_enabled", attackData.AttackWhileRunning, attackData.AttackWhileRunning);
 		GetProfileDifficultyFloatValues(kv, "run_speed", attackData.RunSpeed, attackData.RunSpeed);
