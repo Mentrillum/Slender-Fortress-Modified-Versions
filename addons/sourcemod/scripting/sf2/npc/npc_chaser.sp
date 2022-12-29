@@ -386,9 +386,9 @@ float NPCChaserGetAttackDamageVsProps(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDamageVsProps;
 }
 
-float NPCChaserGetAttackDamageForce(int npcIndex, int attackIndex)
+float NPCChaserGetAttackDamageForce(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDamageForce;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackDamageForce;
 }
 /*
 float NPCChaserGetAttackLifeStealDuration(int npcIndex,int attackIndex)
@@ -396,14 +396,14 @@ float NPCChaserGetAttackLifeStealDuration(int npcIndex,int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackLifeStealDuration;
 }
 */
-bool NPCChaserGetAttackLifeStealState(int npcIndex, int attackIndex)
+bool NPCChaserGetAttackLifeStealState(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackLifeSteal;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackLifeSteal;
 }
 
-bool NPCChaserGetAttackWhileRunningState(int npcIndex, int attackIndex)
+bool NPCChaserGetAttackWhileRunningState(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackWhileRunning;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackWhileRunning;
 }
 
 float NPCChaserGetAttackRunSpeed(int npcIndex, int attackIndex, int difficulty)
@@ -411,14 +411,14 @@ float NPCChaserGetAttackRunSpeed(int npcIndex, int attackIndex, int difficulty)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackRunSpeed;
 }
 
-float NPCChaserGetAttackRunDuration(int npcIndex, int attackIndex)
+float NPCChaserGetAttackRunDuration(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackRunDuration;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackRunDuration;
 }
 
-float NPCChaserGetAttackRunDelay(int npcIndex, int attackIndex)
+float NPCChaserGetAttackRunDelay(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackRunDelay;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackRunDelay;
 }
 
 int NPCChaserGetAttackUseOnDifficulty(int npcIndex, int attackIndex)
@@ -431,9 +431,9 @@ int NPCChaserGetAttackBlockOnDifficulty(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackBlockOnDifficulty;
 }
 
-int NPCChaserGetAttackExplosiveDanceRadius(int npcIndex, int attackIndex)
+int NPCChaserGetAttackExplosiveDanceRadius(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackExplosiveDanceRadius;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackExplosiveDanceRadius;
 }
 
 int NPCChaserGetAttackWeaponTypeInt(int npcIndex, int attackIndex)
@@ -471,9 +471,9 @@ int NPCChaserGetAttackProjectileCount(int npcIndex, int attackIndex, int difficu
 	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackProjectileCount;
 }
 
-bool NPCChaserGetAttackProjectileCrits(int npcIndex, int attackIndex)
+bool NPCChaserGetAttackProjectileCrits(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackProjectileCrits;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackProjectileCrits;
 }
 
 float NPCChaserGetAttackProjectileIceSlowdownPercent(int npcIndex, int attackIndex, int difficulty)
@@ -523,9 +523,9 @@ bool NPCChaserGetAttackLaserAttachmentState(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackLaserAttachment;
 }
 
-float NPCChaserGetAttackLaserDuration(int npcIndex, int attackIndex)
+float NPCChaserGetAttackLaserDuration(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackLaserDuration;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackLaserDuration;
 }
 
 float NPCChaserGetAttackLaserNoise(int npcIndex, int attackIndex)
@@ -538,14 +538,14 @@ bool NPCChaserGetAttackPullIn(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackPullIn;
 }
 
-int NPCChaserGetAttackDamageType(int npcIndex, int attackIndex)
+int NPCChaserGetAttackDamageType(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDamageType;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackDamageType;
 }
 
-int NPCChaserGetAttackDisappear(int npcIndex, int attackIndex)
+int NPCChaserGetAttackDisappear(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDisappear;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackDisappear;
 }
 
 int NPCChaserGetAttackRepeat(int npcIndex, int attackIndex)
@@ -558,39 +558,39 @@ int NPCChaserGetMaxAttackRepeats(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackMaxRepeats;
 }
 
-bool NPCChaserGetAttackIgnoreAlwaysLooking(int npcIndex, int attackIndex)
+bool NPCChaserGetAttackIgnoreAlwaysLooking(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackIgnoreAlwaysLooking;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackIgnoreAlwaysLooking;
 }
 
-float NPCChaserGetAttackDamageDelay(int npcIndex, int attackIndex)
+float NPCChaserGetAttackDamageDelay(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDamageDelay;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackDamageDelay;
 }
 
-float NPCChaserGetAttackRange(int npcIndex, int attackIndex)
+float NPCChaserGetAttackRange(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackRange;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackRange;
 }
 
-float NPCChaserGetAttackDuration(int npcIndex, int attackIndex)
+float NPCChaserGetAttackDuration(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDuration;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackDuration;
 }
 
-float NPCChaserGetAttackSpread(int npcIndex, int attackIndex)
+float NPCChaserGetAttackSpread(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackSpread;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackSpread;
 }
 
-float NPCChaserGetAttackBeginRange(int npcIndex, int attackIndex)
+float NPCChaserGetAttackBeginRange(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackBeginRange;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackBeginRange;
 }
 
-float NPCChaserGetAttackBeginFOV(int npcIndex, int attackIndex)
+float NPCChaserGetAttackBeginFOV(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackBeginFOV;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackBeginFOV;
 }
 
 bool NPCChaserGetAttackGestureState(int npcIndex, int attackIndex)
@@ -613,9 +613,9 @@ float NPCChaserGetAttackBlockOnHealth(int npcIndex, int attackIndex)
 	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackBlockOnHealth;
 }
 
-bool NPCChaserGetAttackInterruptChaseInitialState(int npcIndex, int attackIndex)
+bool NPCChaserGetAttackInterruptChaseInitialState(int npcIndex, int attackIndex, int difficulty)
 {
-	return g_NpcBaseAttacks[npcIndex][attackIndex][1].baseAttackDontInterruptChaseInitial;
+	return g_NpcBaseAttacks[npcIndex][attackIndex][difficulty].baseAttackDontInterruptChaseInitial;
 }
 
 void NPCSetCurrentAttackIndex(int npcIndex, int attackIndex)
@@ -688,14 +688,14 @@ float NPCChaserGetStunHealth(int npcIndex)
 	return g_NpcStunHealth[npcIndex];
 }
 
-void NPCChaserSetStunHealth(int npcIndex, float flAmount)
+void NPCChaserSetStunHealth(int npcIndex, float amount)
 {
-	g_NpcStunHealth[npcIndex] = flAmount;
+	g_NpcStunHealth[npcIndex] = amount;
 }
 
-void NPCChaserSetStunInitialHealth(int npcIndex, float flAmount)
+void NPCChaserSetStunInitialHealth(int npcIndex, float amount)
 {
-	g_NpcStunInitialHealth[npcIndex] = flAmount;
+	g_NpcStunInitialHealth[npcIndex] = amount;
 }
 
 float NPCChaserGetAddStunHealth(int npcIndex)
@@ -703,16 +703,16 @@ float NPCChaserGetAddStunHealth(int npcIndex)
 	return g_NpcStunAddHealth[npcIndex];
 }
 
-void NPCChaserSetAddStunHealth(int npcIndex, float flAmount)
+void NPCChaserSetAddStunHealth(int npcIndex, float amount)
 {
-	g_NpcStunAddHealth[npcIndex] += flAmount;
+	g_NpcStunAddHealth[npcIndex] += amount;
 }
 
-void NPCChaserAddStunHealth(int npcIndex, float flAmount)
+void NPCChaserAddStunHealth(int npcIndex, float amount)
 {
 	if (GetGameTime() >= g_SlenderNextStunTime[npcIndex])
 	{
-		NPCChaserSetStunHealth(npcIndex, NPCChaserGetStunHealth(npcIndex) + flAmount);
+		NPCChaserSetStunHealth(npcIndex, NPCChaserGetStunHealth(npcIndex) + amount);
 		#if defined DEBUG
 		SendDebugMessageToPlayers(DEBUG_BOSS_STUN, 0, "Boss %i, new amount: %0.0f", npcIndex, NPCChaserGetStunHealth(npcIndex));
 		#endif
@@ -1517,46 +1517,52 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletDamage = GetChaserProfileAttackBulletDamage(profile, i, diffAtk);
 			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletSpread = GetChaserProfileAttackBulletSpread(profile, i, diffAtk);
 			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDamage = GetChaserProfileAttackLaserDamage(profile, i, diffAtk);
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamageForce = GetChaserProfileAttackDamageForce(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamageType = GetChaserProfileAttackDamageType(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamageDelay = GetChaserProfileAttackDamageDelay(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRange = GetChaserProfileAttackRange(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDuration = GetChaserProfileAttackDuration(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackSpread = GetChaserProfileAttackSpread(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBeginRange = GetChaserProfileAttackBeginRange(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBeginFOV = GetChaserProfileAttackBeginFOV(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDisappear = GetChaserProfileAttackDisappear(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackIgnoreAlwaysLooking = GetChaserProfileAttackIgnoreAlwaysLooking(profile, i, diffAtk);
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLifeSteal = GetChaserProfileAttackLifeStealState(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLifeStealDuration = GetChaserProfileAttackLifeStealDuration(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileCrits = GetChaserProfileAttackCritProjectiles(profile, i, diffAtk);
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackWhileRunning = GetChaserProfileAttackRunWhileAttackingState(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunDuration = GetChaserProfileAttackRunDuration(profile, i, diffAtk);
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunDelay = GetChaserProfileAttackRunDelay(profile, i, diffAtk);
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackExplosiveDanceRadius = GetChaserProfileAttackExplosiveDanceRadius(profile, i, diffAtk);
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDuration = GetChaserProfileAttackLaserDuration(profile, i, diffAtk);
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDontInterruptChaseInitial = GetChaserProfileAttackChaseInitialInterruptState(profile, i, diffAtk);
 		}
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageVsProps = GetChaserProfileAttackDamageVsProps(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageForce = GetChaserProfileAttackDamageForce(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageType = GetChaserProfileAttackDamageType(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageDelay = GetChaserProfileAttackDamageDelay(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRange = GetChaserProfileAttackRange(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDuration = GetChaserProfileAttackDuration(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackSpread = GetChaserProfileAttackSpread(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginRange = GetChaserProfileAttackBeginRange(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginFOV = GetChaserProfileAttackBeginFOV(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDisappear = GetChaserProfileAttackDisappear(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRepeat = GetChaserProfileAttackRepeat(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackMaxRepeats = GetChaserProfileMaxAttackRepeats(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackNextAttackTime = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackIgnoreAlwaysLooking = GetChaserProfileAttackIgnoreAlwaysLooking(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeSteal = GetChaserProfileAttackLifeStealState(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeStealDuration = GetChaserProfileAttackLifeStealDuration(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileCrits = GetChaserProfileAttackCritProjectiles(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileType = GetChaserProfileAttackProjectileType(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserSize = GetChaserProfileAttackLaserSize(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWhileRunning = GetChaserProfileAttackRunWhileAttackingState(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDuration = GetChaserProfileAttackRunDuration(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDelay = GetChaserProfileAttackRunDelay(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnDifficulty = GetChaserProfileAttackUseOnDifficulty(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnDifficulty = GetChaserProfileAttackBlockOnDifficulty(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackExplosiveDanceRadius = GetChaserProfileAttackExplosiveDanceRadius(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWeaponTypeInt = GetChaserProfileAttackWeaponTypeInt(profile, i);
 
 		int laserColor[3];
 		GetChaserProfileAttackLaserColor(profile, i, laserColor);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor = laserColor;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserAttachment = GetChaserProfileEnableLaserAttachment(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserDuration = GetChaserProfileAttackLaserDuration(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserNoise = GetChaserProfileAttackLaserNoise(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackPullIn = GetChaserProfileAttackPullIn(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackGestures = GetChaserProfileAttackGesturesState(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDeathCamOnLowHealth = GetChaserProfileAttackDeathCamLowHealth(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnHealth = GetChaserProfileAttackUseOnHealth(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnHealth = GetChaserProfileAttackBlockOnHealth(profile, i);
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDontInterruptChaseInitial = GetChaserProfileAttackChaseInitialInterruptState(profile, i);
 		g_NpcBaseAttacks[npcIndex][i][1].currentAttackRepeat = 0;
 	}
 
@@ -1853,47 +1859,53 @@ static void NPCChaserResetValues(int npcIndex)
 			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletDamage = 0.0;
 			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBulletSpread = 0.0;
 			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDamage = 0.0;
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamageForce = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamageType = 0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDamageDelay = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRange = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDuration = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackSpread = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBeginRange = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackBeginFOV = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDisappear = 0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackIgnoreAlwaysLooking = false;
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLifeSteal = false;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLifeStealDuration = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackProjectileCrits = false;
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackWhileRunning = false;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunDuration = 0.0;
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackRunDelay = 0.0;
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackExplosiveDanceRadius = 0;
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackLaserDuration = 0.0;
+
+			g_NpcBaseAttacks[npcIndex][i][diffAtk].baseAttackDontInterruptChaseInitial = false;
 		}
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageVsProps = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageForce = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageType = 0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDamageDelay = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRange = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDuration = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackSpread = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginRange = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBeginFOV = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDisappear = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRepeat = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackMaxRepeats = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackNextAttackTime = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackIgnoreAlwaysLooking = false;
 		g_NpcBaseAttacks[npcIndex][i][1].weaponAttackIndex = 0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeSteal = false;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLifeStealDuration = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileCrits = false;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackProjectileType = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserSize = 0.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[0] = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[1] = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserColor[2] = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserAttachment = false;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserDuration = 0.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackLaserNoise = 0.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackPullIn = false;
 		g_NpcBaseAttacks[npcIndex][i][1].currentAttackRepeat = 0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWhileRunning = false;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDuration = 0.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackRunDelay = 0.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnDifficulty = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnDifficulty = 0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackExplosiveDanceRadius = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackWeaponTypeInt = 0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackGestures = false;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDeathCamOnLowHealth = false;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackUseOnHealth = -1.0;
 		g_NpcBaseAttacks[npcIndex][i][1].baseAttackBlockOnHealth = -1.0;
-		g_NpcBaseAttacks[npcIndex][i][1].baseAttackDontInterruptChaseInitial = false;
 	}
 
 	g_NpcHasEarthquakeFootstepsEnabled[npcIndex] = false;
@@ -2444,7 +2456,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 			(state == STATE_CHASE && !NPCIsRaging(bossIndex)
 			&& !g_NpcUseStartFleeAnimation[bossIndex] && !g_NpcUsesHealAnimation[bossIndex] && !g_NpcUsesCloakStartAnimation[bossIndex] && !g_NpcUsesCloakEndAnimation[bossIndex])
 			|| state == STATE_WANDER);
-			if (state == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(bossIndex, NPCGetCurrentAttackIndex(bossIndex)))
+			if (state == STATE_ATTACK && NPCChaserGetAttackWhileRunningState(bossIndex, NPCGetCurrentAttackIndex(bossIndex), difficulty))
 			{
 				animationLoop = !!GetEntProp(ent, Prop_Data, "m_bSequenceLoops");
 			}

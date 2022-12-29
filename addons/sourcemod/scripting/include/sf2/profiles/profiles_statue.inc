@@ -52,15 +52,15 @@ enum struct SF2StatueBossProfileData
 		this.SingleMoveSounds.Destroy();
 	}
 
-	void SortSoundSections(KeyValues kv, const char[] sectionName)
+	void SortSoundSections(KeyValues kv, const char[] sectionName, bool checkFile)
 	{
 		if (strcmp(sectionName, "sound_move") == 0)
 		{
-			this.MoveSounds.Load(kv);
+			this.MoveSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_move_single") == 0)
 		{
-			this.SingleMoveSounds.Load(kv);
+			this.SingleMoveSounds.Load(kv, checkFile);
 		}
 	}
 }

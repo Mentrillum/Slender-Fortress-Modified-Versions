@@ -1052,7 +1052,7 @@ static any Native_SetBossAttackRunDelayTime(Handle plugin,int numParams)
 
 static any Native_GetBossAttackIndexDamageType(Handle plugin,int numParams)
 {
-	return NPCChaserGetAttackDamageType(GetNativeCell(1), GetNativeCell(2));
+	return NPCChaserGetAttackDamageType(GetNativeCell(1), GetNativeCell(2), Difficulty_Normal);
 }
 
 static any Native_GetBossAttackIndexDamage(Handle plugin,int numParams)
@@ -1062,12 +1062,12 @@ static any Native_GetBossAttackIndexDamage(Handle plugin,int numParams)
 
 static any Native_GetBossAttackIndexSpread(Handle plugin,int numParams)
 {
-	return NPCChaserGetAttackSpread(GetNativeCell(1), GetNativeCell(2));
+	return NPCChaserGetAttackSpread(GetNativeCell(1), GetNativeCell(2), Difficulty_Normal);
 }
 
 static any Native_GetBossAttackIndexRange(Handle plugin,int numParams)
 {
-	return NPCChaserGetAttackRange(GetNativeCell(1), GetNativeCell(2));
+	return NPCChaserGetAttackRange(GetNativeCell(1), GetNativeCell(2), Difficulty_Normal);
 }
 
 static any Native_GetBossAttackIndexType(Handle plugin,int numParams)

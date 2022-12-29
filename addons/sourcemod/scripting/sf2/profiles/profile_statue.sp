@@ -46,7 +46,7 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.ModelsAverageDist.GetString(i, modelName, sizeof(modelName));
 		if (modelName[0] != '\0' || strcmp(modelName, "models/") == 0)
 		{
-			PrecacheModel2(modelName);
+			PrecacheModel2(modelName, _, _, g_FileCheckConVar.BoolValue);
 		}
 	}
 	for (int i = 0; i < profileData.ModelsCloseDist.Length; i++)
@@ -54,7 +54,7 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.ModelsCloseDist.GetString(i, modelName, sizeof(modelName));
 		if (modelName[0] != '\0' || strcmp(modelName, "models/") == 0)
 		{
-			PrecacheModel2(modelName);
+			PrecacheModel2(modelName, _, _, g_FileCheckConVar.BoolValue);
 		}
 	}
 
@@ -75,7 +75,7 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 
 			if (!StrContains(s2, "sound_"))
 			{
-				profileData.SortSoundSections(kv, s2);
+				profileData.SortSoundSections(kv, s2, g_FileCheckConVar.BoolValue);
 			}
 		}
 		while (kv.GotoNextKey());

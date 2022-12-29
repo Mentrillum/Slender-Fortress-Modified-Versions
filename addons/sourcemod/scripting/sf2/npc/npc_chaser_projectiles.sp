@@ -721,7 +721,7 @@ int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target, const
 					velocity[2] = bufferProj[2]*NPCChaserGetAttackProjectileSpeed(bossIndex, attackIndex, difficulty);
 
 					SetEntPropEnt(projectileEnt, Prop_Send, "m_hOwnerEntity", slender);
-					if (NPCChaserGetAttackProjectileCrits(bossIndex, attackIndex))
+					if (NPCChaserGetAttackProjectileCrits(bossIndex, attackIndex, difficulty))
 					{
 						SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
 					}
@@ -789,7 +789,7 @@ int NPCChaserProjectileAttackShoot(int bossIndex, int slender, int target, const
 
 					TeleportEntity(projectileEnt, effectPos, shootAng, NULL_VECTOR);
 					DispatchSpawn(projectileEnt);
-					if (NPCChaserGetAttackProjectileCrits(bossIndex, attackIndex))
+					if (NPCChaserGetAttackProjectileCrits(bossIndex, attackIndex, difficulty))
 					{
 						SetEntProp(projectileEnt,    Prop_Send, "m_bCritical", 1, 1);
 					}

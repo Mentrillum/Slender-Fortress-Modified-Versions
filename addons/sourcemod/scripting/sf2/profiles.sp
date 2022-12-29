@@ -76,7 +76,7 @@ void InitializeBossProfiles()
 
 	g_Activities = new StringMap();
 
-	g_OnBossProfileLoadedFwd = new GlobalForward("SF2_OnBossProfileLoaded", ET_Ignore, Param_String);
+	g_OnBossProfileLoadedFwd = new GlobalForward("SF2_OnBossProfileLoaded", ET_Ignore, Param_String, Param_Any);
 	g_OnBossProfileUnloadedFwd = new GlobalForward("SF2_OnBossProfileUnloaded", ET_Ignore, Param_String);
 
 	AddProfileActivities();
@@ -420,6 +420,9 @@ void ReloadBossProfiles()
 		delete g_BossPackConfig;
 	}
 
+	Profiler profiler = new Profiler();
+	profiler.Start();
+
 	// Clear and reload the lists.
 	ClearBossProfiles();
 
@@ -593,6 +596,11 @@ void ReloadBossProfiles()
 	g_hSelectableBossProfileQueueList = g_SelectableBossProfileList.Clone();
 
 	g_BossProfilePackConVar.SetString("");
+
+	profiler.Stop();
+	LogSF2Message("Time to take to load all boss configs: %f", profiler.Time);
+
+	delete profiler;
 }
 
 /**

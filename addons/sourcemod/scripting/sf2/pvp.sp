@@ -202,7 +202,7 @@ void PvP_OnRoundStart()
 
 void PvP_Precache()
 {
-	PrecacheSound2(SF2_PVP_SPAWN_SOUND);
+	PrecacheSound2(SF2_PVP_SPAWN_SOUND, true);
 }
 
 void PvP_OnClientPutInServer(int client)

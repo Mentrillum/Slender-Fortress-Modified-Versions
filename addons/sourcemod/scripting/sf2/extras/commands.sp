@@ -230,6 +230,8 @@ public void OnPluginStart()
 
 	g_DifficultyNoGracePageConVar = CreateConVar("sf2_difficulty_no_grace_pages", "", "On what difficulties will players be unable to collect pages while grace period is active. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon");
 
+	g_FileCheckConVar = CreateConVar("sf2_debug_file_checks", "0", "Determines if the gamemode should look for missing files when loading all the bosses. Note that turning this on leads to longer boss loading times.", _, true, 0.0, true, 1.0);
+
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
 	g_HudSync = CreateHudSynchronizer();

@@ -4,12 +4,19 @@
 // FUNCTIONS
 // ======================================
 
-void PrecacheSound2(const char[] path)
+stock void PrecacheSound2(const char[] path, bool checkFile)
 {
 	PrecacheSound(path, true);
 	char buffer[PLATFORM_MAX_PATH];
 	FormatEx(buffer, sizeof(buffer), "sound/%s", path);
-	if (FileExists(buffer, true))
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
 	{
 		AddFileToDownloadsTable(buffer);
 	}
@@ -22,8 +29,9 @@ void PrecacheSound2(const char[] path)
  *
  * @param soundPath		Path to sound, relative to sound/ folder.
  * @param disableWarning	Disables the warning if a file doesn't exist.
+ * @param checkFile		Determines if missing files should be checked.
  */
-void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning = false)
+stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning = false, bool checkFile)
 {
 	if (soundPath[0] == '\0')
 	{
@@ -33,18 +41,238 @@ void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning
 	char fullPath[PLATFORM_MAX_PATH];
 	FormatEx(fullPath, sizeof(fullPath), "sound/%s", soundPath);
 
-	if (FileExists(fullPath, false) || FileExists(fullPath, true))
+	if (checkFile)
 	{
-		PrecacheSound2(soundPath);
+		if (FileExists(fullPath, false) || FileExists(fullPath, true))
+		{
+			PrecacheSound2(soundPath, checkFile);
+		}
+		else
+		{
+			if (!disableWarning)
+			{
+				PrintToServer("[SF2] Sound file %s does not exist, excluding from downloads!", fullPath);
+			}
+			PrecacheSound(soundPath);
+		}
 	}
 	else
 	{
-		if (!disableWarning)
-		{
-			PrintToServer("[SF2] Sound file %s does not exist, excluding from downloads!", fullPath);
-		}
-		PrecacheSound(soundPath);
+		PrecacheSound2(soundPath, checkFile);
 	}
+}
+
+/**
+ * Precaches a model path relative to models/ and adds it to the downloads table if valid.
+ *
+ * @param path		Path to model, relative to models/ folder.
+ * @param phy	Determines if the .phy file extension should be checked.
+ * @param xbox	Determines if the .xbox file extension should be checked.
+ * @param checkFile		Determines if missing files should be checked.
+ */
+stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile)
+{
+	char fixedPath[PLATFORM_MAX_PATH];
+
+	if (strncmp(path, "models/", 7, false) == 0 || strncmp(path, "models\\", 7, false) == 0)
+	{
+		strcopy(fixedPath, sizeof(fixedPath), path[7]);
+	}
+	else
+	{
+		strcopy(fixedPath, sizeof(fixedPath), path);
+	}
+
+	ReplaceString(fixedPath, sizeof(fixedPath), ".mdl", "", false);
+
+	char buffer[PLATFORM_MAX_PATH];
+	FormatEx(buffer, sizeof(buffer), "models/%s.dx80.vtx", fixedPath);
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+
+	FormatEx(buffer, sizeof(buffer), "models/%s.dx90.vtx", fixedPath);
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+
+	FormatEx(buffer, sizeof(buffer), "models/%s.mdl", fixedPath);
+	if (!IsModelPrecached(buffer))
+	{
+		PrecacheModel(buffer);
+	}
+
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+
+	if (phy)
+	{
+		// Some models do not have phy, so we can make this optional.
+		// No really, some players get fussy over missing downloads.
+
+		FormatEx(buffer, sizeof(buffer), "models/%s.phy", fixedPath);
+
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+
+	FormatEx(buffer, sizeof(buffer), "models/%s.sw.vtx", fixedPath);
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+
+	FormatEx(buffer, sizeof(buffer), "models/%s.vvd", fixedPath);
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+
+	if (xbox)
+	{
+		// Due to some super old legacy thingy, some really old models were compiled with a setup for xbox.
+		// So just to keep everyone happy, incase this is magically a problem, we'll include xbox files if set.
+		// I mean it really shouldn't be an issue but, better safe than sorry...
+		FormatEx(buffer, sizeof(buffer), "models/%s.xbox", fixedPath);
+		if (checkFile)
+		{
+			if (FileExists(buffer, true))
+			{
+				AddFileToDownloadsTable(buffer);
+			}
+		}
+		else
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+}
+
+/**
+ * Adds a material and texture path relative to materials/ to the download list.
+ *
+ * @param path		Path to the material and texture, relative to materials/ folder.
+ * @param checkFile		Determines if missing files should be checked.
+ */
+stock void PrecacheMaterial2(const char[] path, bool checkFile)
+{
+	char buffer[PLATFORM_MAX_PATH];
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", path);
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", path);
+	if (checkFile)
+	{
+		if (FileExists(buffer, true))
+		{
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+	else
+	{
+		AddFileToDownloadsTable(buffer);
+	}
+}
+
+/**
+ * Precaches a particle system found in the string table ParticleEffectNames
+ *
+ * @param particleSystem		Particle name
+ */
+stock int PrecacheParticleSystem(const char[] particleSystem)
+{
+	static int particleEffectNames = -1;
+
+	if (particleEffectNames == -1)
+	{
+		if ((particleEffectNames = FindStringTable("ParticleEffectNames")) == -1)
+		{
+			return -1;
+		}
+	}
+
+	int index = FindStringIndex2(particleEffectNames, particleSystem);
+	if (index == -1)
+	{
+		int numStrings = GetStringTableNumStrings(particleEffectNames);
+		if (numStrings >= GetStringTableMaxStrings(particleEffectNames))
+		{
+			return -1;
+		}
+
+		AddToStringTable(particleEffectNames, particleSystem);
+		index = numStrings;
+	}
+
+	return index;
+}
+
+int FindStringIndex2(int tableidx, const char[] str)
+{
+	char buf[1024];
+
+	int numStrings = GetStringTableNumStrings(tableidx);
+	for (int i=0; i < numStrings; i++)
+	{
+		ReadStringTable(tableidx, i, buf, sizeof(buf));
+
+		if (strcmp(buf, str) == 0)
+		{
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 /**
@@ -445,7 +673,7 @@ enum struct SF2BossProfileSoundInfo
 		this.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 	}
 
-	void Load(KeyValues kv)
+	void Load(KeyValues kv, bool checkFile)
 	{
 		if (kv.JumpToKey("paths"))
 		{
@@ -459,7 +687,7 @@ enum struct SF2BossProfileSoundInfo
 					break;
 				}
 
-				TryPrecacheBossProfileSoundPath(soundPath);
+				TryPrecacheBossProfileSoundPath(soundPath, _, checkFile);
 
 				this.Paths.PushString(soundPath);
 			}
@@ -1971,79 +2199,79 @@ enum struct SF2BossProfileData
 		}
 	}
 
-	void SortSoundSections(KeyValues kv, const char[] sectionName)
+	void SortSoundSections(KeyValues kv, const char[] sectionName, bool checkFile)
 	{
 		if (strcmp(sectionName, "sound_player_deathcam_local") == 0)
 		{
-			this.LocalDeathCamSounds.Load(kv);
+			this.LocalDeathCamSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_player_deathcam") == 0)
 		{
-			this.ClientDeathCamSounds.Load(kv);
+			this.ClientDeathCamSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_player_deathcam_all") == 0)
 		{
-			this.GlobalDeathCamSounds.Load(kv);
+			this.GlobalDeathCamSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_scare_player") == 0)
 		{
-			this.ScareSounds.Load(kv);
+			this.ScareSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_music") == 0)
 		{
-			this.MusicSoundsNormal.Load(kv);
+			this.MusicSoundsNormal.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_music_hard") == 0)
 		{
-			this.MusicSoundsHard.Load(kv);
+			this.MusicSoundsHard.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_music_insane") == 0)
 		{
-			this.MusicSoundsInsane.Load(kv);
+			this.MusicSoundsInsane.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_music_nightmare") == 0)
 		{
-			this.MusicSoundsNightmare.Load(kv);
+			this.MusicSoundsNightmare.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_music_apollyon") == 0)
 		{
-			this.MusicSoundsApollyon.Load(kv);
+			this.MusicSoundsApollyon.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_spawn_all") == 0)
 		{
-			this.IntroSounds.Load(kv);
+			this.IntroSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_spawn_local") == 0)
 		{
-			this.SpawnLocalSounds.Load(kv);
+			this.SpawnLocalSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_player_deathcam_overlay") == 0)
 		{
-			this.PlayerDeathCamOverlaySounds.Load(kv);
+			this.PlayerDeathCamOverlaySounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_proxy_spawn") == 0)
 		{
-			this.ProxySpawnSounds.Load(kv);
+			this.ProxySpawnSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_proxy_idle") == 0)
 		{
-			this.ProxyIdleSounds.Load(kv);
+			this.ProxyIdleSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_proxy_hurt") == 0)
 		{
-			this.ProxyHurtSounds.Load(kv);
+			this.ProxyHurtSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_proxy_death") == 0)
 		{
-			this.ProxyDeathSounds.Load(kv);
+			this.ProxyDeathSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_music_outro") == 0)
 		{
-			this.OutroMusics.Load(kv);
+			this.OutroMusics.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_sight") == 0)
 		{
-			this.SightSounds.Load(kv);
+			this.SightSounds.Load(kv, checkFile);
 		}
 	}
 }

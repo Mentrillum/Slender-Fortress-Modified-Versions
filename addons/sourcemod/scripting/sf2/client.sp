@@ -8,7 +8,6 @@
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
 #define SF2_OVERLAY_GHOST "overlays/slender/ghostcamera"
-#define SF2_OVERLAY_MARBLEHORNETS "overlays/slender/marblehornetsoverlay"
 
 #define SF2_ULTRAVISION_WIDTH 800.0
 #define SF2_ULTRAVISION_LENGTH 800.0

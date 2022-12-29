@@ -45,7 +45,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		profileData.Models.GetString(i, modelName, sizeof(modelName));
 		if (modelName[0] != '\0')
 		{
-			PrecacheModel2(modelName);
+			PrecacheModel2(modelName, _, _, g_FileCheckConVar.BoolValue);
 		}
 	}
 	SetProfileDifficultyStringArrayValues(kv, "name", profileData.Names);
@@ -642,6 +642,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 										profileData.ProxyModelsApollyon[i].PushString(modelDirectory);
 									}
 								}
+								PrecacheModel2(modelDirectory, _, _, g_FileCheckConVar.BoolValue);
 							}
 						}
 						kv.GoBack();
@@ -747,33 +748,37 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	kv.GetString("trap_animation_closed", profileData.TrapAnimClose, sizeof(profileData.TrapAnimClose), profileData.TrapAnimClose);
 	kv.GetString("trap_animation_open", profileData.TrapAnimOpen, sizeof(profileData.TrapAnimOpen), profileData.TrapAnimOpen);
 
-	TryPrecacheBossProfileSoundPath(profileData.CloakOnSound);
-	TryPrecacheBossProfileSoundPath(profileData.CloakOffSound);
-	TryPrecacheBossProfileSoundPath(profileData.JarateHitSound);
-	TryPrecacheBossProfileSoundPath(profileData.MilkHitSound);
-	TryPrecacheBossProfileSoundPath(profileData.GasHitSound);
-	TryPrecacheBossProfileSoundPath(profileData.StunHitSound);
-	TryPrecacheBossProfileSoundPath(profileData.FireballExplodeSound);
-	TryPrecacheBossProfileSoundPath(profileData.FireballShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.IceballSlowSound);
-	TryPrecacheBossProfileSoundPath(profileData.RocketExplodeSound);
-	TryPrecacheBossProfileSoundPath(profileData.RocketShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.GrenadeShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.SentryRocketShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.ArrowShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.ManglerShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.BaseballShootSound);
-	TryPrecacheBossProfileSoundPath(profileData.EngineSound);
-	TryPrecacheBossProfileSoundPath(profileData.SpawnEffectSound);
-	TryPrecacheBossProfileSoundPath(profileData.DespawnEffectSound);
-	TryPrecacheBossProfileSoundPath(profileData.TrapDeploySound, true);
-	TryPrecacheBossProfileSoundPath(profileData.TrapMissSound, true);
-	TryPrecacheBossProfileSoundPath(profileData.TrapCatchSound, true);
+	TryPrecacheBossProfileSoundPath(profileData.CloakOnSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.CloakOffSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.JarateHitSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.MilkHitSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.GasHitSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.StunHitSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.FireballExplodeSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.FireballShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.IceballSlowSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.RocketExplodeSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.RocketShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.GrenadeShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.SentryRocketShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.ArrowShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.ManglerShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.BaseballShootSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.EngineSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.SpawnEffectSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.DespawnEffectSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.TrapDeploySound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.TrapMissSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.TrapCatchSound, _, g_FileCheckConVar.BoolValue);
 	if (strcmp(profileData.RocketModel, ROCKET_MODEL, true) != 0)
 	{
 		if (!PrecacheModel(profileData.RocketModel, true))
 		{
 			LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.RocketModel);
+		}
+		else
+		{
+			PrecacheModel2(profileData.RocketModel, _, _, g_FileCheckConVar.BoolValue);
 		}
 	}
 	if (strcmp(profileData.TrapModel, TRAP_MODEL, true) != 0)
@@ -781,6 +786,10 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		if (!PrecacheModel(profileData.TrapModel, true))
 		{
 			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.TrapModel);
+		}
+		else
+		{
+			PrecacheModel2(profileData.TrapModel, _, _, g_FileCheckConVar.BoolValue);
 		}
 	}
 
@@ -899,7 +908,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 						break;
 					}
 
-					TryPrecacheBossProfileSoundPath(s4);
+					TryPrecacheBossProfileSoundPath(s4, _, g_FileCheckConVar.BoolValue);
 
 					// Here comes an if else mess, I'm very sorry
 					if (strcmp(s2, "sound_jumpscare") == 0)
@@ -927,7 +936,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 				{
 					kv.GoBack();
 				}
-				profileData.SortSoundSections(kv, s2);
+				profileData.SortSoundSections(kv, s2, g_FileCheckConVar.BoolValue);
 			}
 			else if (strcmp(s2, "download") == 0)
 			{
@@ -940,13 +949,20 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 						break;
 					}
 
-					if (FileExists(s4) || FileExists(s4, true))
+					if (g_FileCheckConVar.BoolValue)
 					{
-						AddFileToDownloadsTable(s4);
+						if (FileExists(s4) || FileExists(s4, true))
+						{
+							AddFileToDownloadsTable(s4);
+						}
+						else
+						{
+							LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s4);
+						}
 					}
 					else
 					{
-						LogSF2Message("File %s does not exist, please fix this download or remove it from the array.", s4);
+						AddFileToDownloadsTable(s4);
 					}
 				}
 			}
@@ -979,23 +995,37 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 					}
 
 					FormatEx(s5, sizeof(s5), "%s.vtf", s4);
-					if (FileExists(s5) || FileExists(s5, true))
+					if (g_FileCheckConVar.BoolValue)
 					{
-						AddFileToDownloadsTable(s5);
+						if (FileExists(s5) || FileExists(s5, true))
+						{
+							AddFileToDownloadsTable(s5);
+						}
+						else
+						{
+							LogSF2Message("Texture file %s does not exist, please fix this download or remove it from the array.", s5);
+						}
 					}
 					else
 					{
-						LogSF2Message("Texture file %s does not exist, please fix this download or remove it from the array.", s5);
+						AddFileToDownloadsTable(s5);
 					}
 
 					FormatEx(s5, sizeof(s5), "%s.vmt", s4);
-					if (FileExists(s5) || FileExists(s5, true))
+					if (g_FileCheckConVar.BoolValue)
 					{
-						AddFileToDownloadsTable(s5);
+						if (FileExists(s5) || FileExists(s5, true))
+						{
+							AddFileToDownloadsTable(s5);
+						}
+						else
+						{
+							LogSF2Message("Material file %s does not exist, please fix this download or remove it from the array.", s5);
+						}
 					}
 					else
 					{
-						LogSF2Message("Material file %s does not exist, please fix this download or remove it from the array.", s5);
+						AddFileToDownloadsTable(s5);
 					}
 				}
 			}
@@ -1015,13 +1045,20 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 					for (int is = 0; is < sizeof(extensions); is++)
 					{
 						FormatEx(s5, sizeof(s5), "%s%s", s4, extensions[is]);
-						if (FileExists(s5) || FileExists(s5, true))
+						if (g_FileCheckConVar.BoolValue)
 						{
-							AddFileToDownloadsTable(s5);
+							if (FileExists(s5) || FileExists(s5, true))
+							{
+								AddFileToDownloadsTable(s5);
+							}
+							else
+							{
+								LogSF2Message("Model file %s does not exist, please fix this download or remove it from the array.", s5);
+							}
 						}
 						else
 						{
-							LogSF2Message("Model file %s does not exist, please fix this download or remove it from the array.", s5);
+							AddFileToDownloadsTable(s5);
 						}
 					}
 				}
@@ -1049,7 +1086,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 				SF2BossProfileSoundInfo soundInfo;
 				soundInfo.Init();
-				soundInfo.Load(kv);
+				soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
 				soundInfo.PostLoad();
 				if (soundInfo.Paths != null)
 				{
@@ -1074,7 +1111,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 				SF2BossProfileSoundInfo soundInfo;
 				soundInfo.Init();
-				soundInfo.Load(kv);
+				soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
 				soundInfo.PostLoad();
 				if (soundInfo.Paths != null)
 				{
@@ -1145,6 +1182,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 	Call_StartForward(g_OnBossProfileLoadedFwd);
 	Call_PushString(profile);
+	Call_PushCell(kv);
 	Call_Finish();
 
 	return true;

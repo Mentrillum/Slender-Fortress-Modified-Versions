@@ -734,6 +734,7 @@ ConVar g_DefaultLegacyHudConVar;
 ConVar g_DifficultyVoteOptionsConVar;
 ConVar g_DifficultyVoteRandomConVar;
 ConVar g_DifficultyNoGracePageConVar;
+ConVar g_FileCheckConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -935,11 +936,11 @@ public void OnMapStart()
 	PrecacheModel(LASER_MODEL, true);
 	char overlay[PLATFORM_MAX_PATH];
 	g_CameraOverlayConVar.GetString(overlay, sizeof(overlay));
-	PrecacheMaterial2(overlay);
+	PrecacheMaterial2(overlay, true);
 	g_OverlayNoGrainConVar.GetString(overlay, sizeof(overlay));
-	PrecacheMaterial2(overlay);
+	PrecacheMaterial2(overlay, true);
 	g_GhostOverlayConVar.GetString(overlay, sizeof(overlay));
-	PrecacheMaterial2(overlay);
+	PrecacheMaterial2(overlay, true);
 
 	PrecacheModel(SF2_FLASHLIGHT_BEAM_MATERIAL);
 	g_FlashlightHaloModel = PrecacheModel(SF2_FLASHLIGHT_HALO_MATERIAL, true);
@@ -1142,7 +1143,7 @@ static void PrecacheStuff()
 
 	for (int i = 0; i < sizeof(g_SoundNightmareMode) - 1; i++)
 	{
-		PrecacheSound2(g_SoundNightmareMode[i]);
+		PrecacheSound2(g_SoundNightmareMode[i], true);
 	}
 
 	PrecacheSound("ui/itemcrate_smash_ultrarare_short.wav");
@@ -1178,11 +1179,11 @@ static void PrecacheStuff()
 	PrecacheModel(SF_KEYMODEL, true);
 	PrecacheModel(TRAP_MODEL, true);
 
-	PrecacheSound2(FLASHLIGHT_CLICKSOUND);
-	PrecacheSound2(FLASHLIGHT_CLICKSOUND_NIGHTVISION);
-	PrecacheSound2(FLASHLIGHT_BREAKSOUND);
-	PrecacheSound2(FLASHLIGHT_NOSOUND);
-	PrecacheSound2(PAGE_GRABSOUND);
+	PrecacheSound2(FLASHLIGHT_CLICKSOUND, true);
+	PrecacheSound2(FLASHLIGHT_CLICKSOUND_NIGHTVISION, true);
+	PrecacheSound2(FLASHLIGHT_BREAKSOUND, true);
+	PrecacheSound2(FLASHLIGHT_NOSOUND, true);
+	PrecacheSound2(PAGE_GRABSOUND, true);
 
 	PrecacheSound(DEFAULT_CLOAKONSOUND);
 	PrecacheSound(DEFAULT_CLOAKOFFSOUND);
@@ -1218,46 +1219,44 @@ static void PrecacheStuff()
 	PrecacheSound(JARATE_HITPLAYER);
 	PrecacheSound(STUN_HITPLAYER);
 
-	PrecacheSound2(MUSIC_GOTPAGES1_SOUND);
-	PrecacheSound2(MUSIC_GOTPAGES2_SOUND);
-	PrecacheSound2(MUSIC_GOTPAGES3_SOUND);
-	PrecacheSound2(MUSIC_GOTPAGES4_SOUND);
+	PrecacheSound2(MUSIC_GOTPAGES1_SOUND, true);
+	PrecacheSound2(MUSIC_GOTPAGES2_SOUND, true);
+	PrecacheSound2(MUSIC_GOTPAGES3_SOUND, true);
+	PrecacheSound2(MUSIC_GOTPAGES4_SOUND, true);
 
-	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_1);
-	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_2);
-	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_3);
-	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_4);
-	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_5);
-	PrecacheSound2(SNATCHER_APOLLYON_1);
-	PrecacheSound2(SNATCHER_APOLLYON_2);
-	PrecacheSound2(SNATCHER_APOLLYON_3);
+	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_1, true);
+	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_2, true);
+	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_3, true);
+	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_4, true);
+	PrecacheSound2(HYPERSNATCHER_NIGHTAMRE_5, true);
+	PrecacheSound2(SNATCHER_APOLLYON_1, true);
+	PrecacheSound2(SNATCHER_APOLLYON_2, true);
+	PrecacheSound2(SNATCHER_APOLLYON_3, true);
 
-	PrecacheSound2(NINETYSMUSIC);
+	PrecacheSound2(NINETYSMUSIC, true);
 
-	PrecacheSound2(TRAP_CLOSE);
-	PrecacheSound2(TRAP_DEPLOY);
+	PrecacheSound2(TRAP_CLOSE, true);
+	PrecacheSound2(TRAP_DEPLOY, true);
 
 	for (int i = 0; i < sizeof(g_PageCollectDuckSounds); i++)
 	{
 		PrecacheSound(g_PageCollectDuckSounds[i]);
 	}
 
-	PrecacheSound2(PROXY_RAGE_MODE_SOUND);
+	PrecacheSound2(PROXY_RAGE_MODE_SOUND, true);
 
-	PrecacheSound2(SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND);
+	PrecacheSound2(SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND, true);
 
 	for (int i = 0; i < sizeof(g_strPlayerBreathSounds); i++)
 	{
-		PrecacheSound2(g_strPlayerBreathSounds[i]);
+		PrecacheSound2(g_strPlayerBreathSounds[i], true);
 	}
 
 	// Special round.
-	PrecacheSound2(SR_MUSIC);
-	PrecacheSound2(SR_SOUND_SELECT);
+	PrecacheSound2(SR_MUSIC, true);
+	PrecacheSound2(SR_SOUND_SELECT, true);
 	PrecacheSound(SR_SOUND_SELECT_BR);
-	PrecacheSound2(SF2_INTRO_DEFAULT_MUSIC);
-
-	PrecacheMaterial2(SF2_OVERLAY_MARBLEHORNETS);
+	PrecacheSound2(SF2_INTRO_DEFAULT_MUSIC, true);
 
 	AddFileToDownloadsTable("models/slender/pickups/sheet.mdl");
 	AddFileToDownloadsTable("models/slender/pickups/sheet.dx80.vtx");
@@ -1371,6 +1370,7 @@ static void StopPlugin()
 	g_RenevantBeaconEffect = false;
 	g_Renevant90sEffect = false;
 	g_RenevantMarkForDeath = false;
+	g_RenevantWallHax = false;
 
 	BossProfilesOnMapEnd();
 
@@ -4068,6 +4068,7 @@ void SetRoundState(SF2RoundState roundState)
 			g_InProxySurvivalRageMode = false;
 			g_RenevantWaveTimer = null;
 			g_RenevantMultiEffect = false;
+			g_RenevantWallHax = false;
 			g_RenevantBeaconEffect = false;
 			g_Renevant90sEffect = false;
 			g_RenevantMarkForDeath = false;
@@ -8211,6 +8212,7 @@ void InitializeNewGame()
 	{
 		g_RenevantWaveTimer = null;
 		g_RenevantMultiEffect = false;
+		g_RenevantWallHax = false;
 		g_RenevantBeaconEffect = false;
 		g_Renevant90sEffect = false;
 		g_RenevantMarkForDeath = false;

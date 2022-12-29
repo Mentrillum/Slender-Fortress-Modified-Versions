@@ -3,8 +3,8 @@
 #endif
 #define _sf2_included
 
-#define PLUGIN_VERSION "1.7.5.08 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.5.08 M"
+#define PLUGIN_VERSION "1.7.5.09 M"
+#define PLUGIN_VERSION_DISPLAY "1.7.5.09 M"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -322,7 +322,7 @@ enum ParticleAttachment
  *
  * @param profile      Profile name
  */
-forward void SF2_OnBossProfileLoaded(const char[] profile);
+forward void SF2_OnBossProfileLoaded(const char[] profile, KeyValues kv);
 
 /**
  * Called before a boss profile is unloaded.
@@ -1690,6 +1690,7 @@ native void SF2_SetBossAttackRunDelayTime(int bossIndex, int attackIndex, float 
  * @param bossIndex	Boss index.
  * @param attackIndex	Attack index.
 */
+#pragma deprecated Use SF2ChaserBossProfileAttackData.DamageType[Difficulty_Max] instead.
 native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
 
 /**
@@ -1701,6 +1702,7 @@ native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
  * @param attackIndex	Attack index.
  * @param difficulty	The difficulty.
 */
+#pragma deprecated Use SF2ChaserBossProfileAttackData.Damage[Difficulty_Max] instead.
 native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int difficulty);
 
 /**
@@ -1712,6 +1714,7 @@ native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int di
  * @param attackIndex	Attack index.
  * @param difficulty	The difficulty.
 */
+#pragma deprecated Use SF2ChaserBossProfileAttackData.Spread[Difficulty_Max] instead.
 native float SF2_GetBossAttackIndexSpread(int bossIndex, int attackIndex);
 
 /**
@@ -1723,6 +1726,7 @@ native float SF2_GetBossAttackIndexSpread(int bossIndex, int attackIndex);
  * @param attackIndex	Attack index.
  * @param difficulty	The difficulty.
 */
+#pragma deprecated Use SF2ChaserBossProfileAttackData.Range[Difficulty_Max] instead.
 native float SF2_GetBossAttackIndexRange(int bossIndex, int attackIndex);
 
 /**

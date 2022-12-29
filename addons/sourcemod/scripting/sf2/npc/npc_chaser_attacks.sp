@@ -152,9 +152,9 @@ Action Timer_SlenderStealLife(Handle timer, any entref)
 	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", myEyeAng);
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 
-	float attackRange = NPCChaserGetAttackRange(bossIndex, attackIndex);
-	float attackFOV = NPCChaserGetAttackSpread(bossIndex, attackIndex);
-	float attackDamageForce = NPCChaserGetAttackDamageForce(bossIndex, attackIndex);
+	float attackRange = NPCChaserGetAttackRange(bossIndex, attackIndex, difficulty);
+	float attackFOV = NPCChaserGetAttackSpread(bossIndex, attackIndex, difficulty);
+	float attackDamageForce = NPCChaserGetAttackDamageForce(bossIndex, attackIndex, difficulty);
 
 	int i = -1;
 	while ((i = FindEntityByClassname(i, "player")) != -1)
@@ -289,7 +289,7 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 		damage *= 0.5;
 	}
 	float damageVsProps = NPCChaserGetAttackDamageVsProps(bossIndex, attackIndex);
-	int damageType = NPCChaserGetAttackDamageType(bossIndex, attackIndex);
+	int damageType = NPCChaserGetAttackDamageType(bossIndex, attackIndex, difficulty);
 
 	// Damage all players within range.
 	float myPos[3], myEyePos[3], myEyeAng[3], vecMyRot[3];
@@ -307,9 +307,9 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	Handle traceHandle = null;
 	Handle traceShockwave = null;
 
-	float attackRange = NPCChaserGetAttackRange(bossIndex, attackIndex);
-	float attackFOV = NPCChaserGetAttackSpread(bossIndex, attackIndex);
-	float attackDamageForce = NPCChaserGetAttackDamageForce(bossIndex, attackIndex);
+	float attackRange = NPCChaserGetAttackRange(bossIndex, attackIndex, difficulty);
+	float attackFOV = NPCChaserGetAttackSpread(bossIndex, attackIndex, difficulty);
+	float attackDamageForce = NPCChaserGetAttackDamageForce(bossIndex, attackIndex, difficulty);
 
 	bool hit = false;
 
@@ -349,7 +349,7 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 
 	if (NPCChaserGetAttackRepeat(bossIndex, attackIndex) == 1)
 	{
-		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(bossIndex, attackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDamageDelay(bossIndex, attackIndex, difficulty), Timer_SlenderChaseBossAttack, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 		if (g_SlenderBackupAtkTimer[bossIndex] == null && g_NpcAlreadyAttacked[bossIndex])
 		{
 			g_IsSlenderAttacking[bossIndex] = false;
@@ -1272,16 +1272,16 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	Call_PushCell(bossIndex);
 	Call_PushCell(attackIndex);
 	Call_Finish();
-	if (NPCChaserGetAttackDisappear(bossIndex, attackIndex) != 1 && NPCChaserGetAttackRepeat(bossIndex, attackIndex) < 1)
+	if (NPCChaserGetAttackDisappear(bossIndex, attackIndex, difficulty) != 1 && NPCChaserGetAttackRepeat(bossIndex, attackIndex) < 1)
 	{
-		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex)-NPCChaserGetAttackDamageDelay(bossIndex, attackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex, difficulty) - NPCChaserGetAttackDamageDelay(bossIndex, attackIndex, difficulty), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	if (NPCChaserGetAttackRepeat(bossIndex, attackIndex) >= 1 && !g_NpcAlreadyAttacked[bossIndex])
 	{
-		g_SlenderBackupAtkTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex)-NPCChaserGetAttackDamageDelay(bossIndex, attackIndex), Timer_SlenderChaseBossAttackEndBackup, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+		g_SlenderBackupAtkTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex, difficulty) - NPCChaserGetAttackDamageDelay(bossIndex, attackIndex, difficulty), Timer_SlenderChaseBossAttackEndBackup, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 		g_NpcAlreadyAttacked[bossIndex] = true;
 	}
-	if (NPCChaserGetAttackDisappear(bossIndex, attackIndex) == 1)
+	if (NPCChaserGetAttackDisappear(bossIndex, attackIndex, difficulty) == 1)
 	{
 		g_IsSlenderAttacking[bossIndex] = false;
 		g_NpcStealingLife[bossIndex] = false;
@@ -1399,7 +1399,9 @@ static Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 
 	int attackIndex = NPCGetCurrentAttackIndex(bossIndex);
 
-	int range = NPCChaserGetAttackExplosiveDanceRadius(bossIndex, attackIndex);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	int range = NPCChaserGetAttackExplosiveDanceRadius(bossIndex, attackIndex, difficulty);
 
 	AddVectors(g_SlenderEyePosOffset[bossIndex], myEyeAng, myEyeAng);
 
@@ -1454,7 +1456,7 @@ static Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 	}
 	else
 	{
-		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex)-NPCChaserGetAttackDamageDelay(bossIndex, attackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender));
+		g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex, difficulty) - NPCChaserGetAttackDamageDelay(bossIndex, attackIndex, difficulty), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender));
 		exploded = 0;
 		return Plugin_Stop;
 	}
@@ -1489,11 +1491,11 @@ Action Timer_SlenderChaseBossAttackBeginLaser(Handle timer, any entref)
 
 	int attackIndex = NPCGetCurrentAttackIndex(bossIndex);
 
-	g_NpcLaserTimer[bossIndex] = GetGameTime() + NPCChaserGetAttackLaserDuration(bossIndex, attackIndex);
+	g_NpcLaserTimer[bossIndex] = GetGameTime() + NPCChaserGetAttackLaserDuration(bossIndex, attackIndex, difficulty);
 
 	g_SlenderLaserTimer[bossIndex] = CreateTimer(0.1, Timer_SlenderChaseBossAttackLaser, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
-	g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex)-NPCChaserGetAttackDamageDelay(bossIndex, attackIndex), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
+	g_SlenderAttackTimer[bossIndex] = CreateTimer(NPCChaserGetAttackDuration(bossIndex, attackIndex, difficulty) - NPCChaserGetAttackDamageDelay(bossIndex, attackIndex, difficulty), Timer_SlenderChaseBossAttackEnd, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
 
 	NPCChaserSetNextAttackTime(bossIndex, attackIndex, GetGameTime()+NPCChaserGetAttackCooldown(bossIndex, attackIndex, difficulty));
 

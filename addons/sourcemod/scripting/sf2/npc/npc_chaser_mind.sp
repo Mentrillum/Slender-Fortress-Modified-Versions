@@ -554,7 +554,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 			}
 		}
 
-		if (NPCChaserIsStunByFlashlightEnabled(chaserBoss.Index) && IsClientUsingFlashlight(ent) && playerInFOV[ent]) // Check to see if someone is facing at us with flashlight on. Only if I'm facing them too. BLINDNESS!
+		if (chaserBoss.StunByFlashlightEnabled && IsClientUsingFlashlight(ent) && playerInFOV[ent]) // Check to see if someone is facing at us with flashlight on. Only if I'm facing them too. BLINDNESS!
 		{
 			if (GetVectorSquareMagnitude(traceStartPos, traceEndPos) <= SquareFloat(SF2_FLASHLIGHT_LENGTH))
 			{
@@ -638,26 +638,27 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 	{
 		if (stunEnabled)
 		{
-			if (NPCChaserIsStunByFlashlightEnabled(chaserBoss.Index) && !(SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && !(g_NightvisionEnabledConVar.BoolValue))
+			if (chaserBoss.StunByFlashlightEnabled && !(SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && !(g_NightvisionEnabledConVar.BoolValue))
 			{
-				if (NPCChaserGetStunHealth(chaserBoss.Index) > 0)
+				if (chaserBoss.StunHealth > 0)
 				{
+					PrintCenterTextAll("%f %f %f", chaserBoss.StunHealth, chaserBoss.InitialStunHealth, chaserBoss.StunFlashlightDamage);
 					if (!IsClassConfigsValid())
 					{
 						if (!doubleFlashlightDamage)
 						{
-							chaserBoss.AddStunHealth(-chaserBoss.GetFlashlightDamage());
+							chaserBoss.AddStunHealth(-chaserBoss.StunFlashlightDamage);
 						}
 						else
 						{
-							chaserBoss.AddStunHealth(-chaserBoss.GetFlashlightDamage() * 1.5);
+							chaserBoss.AddStunHealth(-chaserBoss.StunFlashlightDamage * 1.5);
 						}
 					}
 					else
 					{
-						chaserBoss.AddStunHealth(-chaserBoss.GetFlashlightDamage() * customFlashlightDamage);
+						chaserBoss.AddStunHealth(-chaserBoss.StunFlashlightDamage * customFlashlightDamage);
 					}
-					if (NPCChaserGetStunHealth(chaserBoss.Index) <= 0.0 && state != STATE_STUN)
+					if (chaserBoss.StunHealth <= 0.0 && state != STATE_STUN)
 					{
 						chaserBoss.TriggerStun(npcEntity.index, slenderProfile, myPos);
 						Call_StartForward(g_OnBossStunnedFwd);
@@ -1097,7 +1098,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 
 					if (chaserBoss.Flags & SFF_ATTACKPROPS)
 					{
-						blockingProp = NPC_CanAttackProps(chaserBoss.Index, NPCChaserGetAttackRange(chaserBoss.Index, attackIndex), NPCChaserGetAttackSpread(chaserBoss.Index, attackIndex));
+						blockingProp = NPC_CanAttackProps(chaserBoss.Index, NPCChaserGetAttackRange(chaserBoss.Index, attackIndex, difficulty), NPCChaserGetAttackSpread(chaserBoss.Index, attackIndex, difficulty));
 					}
 
 					if (blockingProp)
@@ -1129,14 +1130,14 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 				{
 					float traceStartPos[3], traceEndPos[3];
 					NPCGetEyePosition(chaserBoss.Index, traceStartPos);
-					if (NPCChaserIsCloakEnabled(chaserBoss.Index))
+					if (chaserBoss.CloakEnabled)
 					{
 						float cloakDist = GetVectorSquareMagnitude(g_SlenderGoalPos[chaserBoss.Index], myPos);
-						float cloakRange = NPCChaserGetCloakRange(chaserBoss.Index, difficulty);
-						float decloakRange = NPCChaserGetDecloakRange(chaserBoss.Index, difficulty);
+						float cloakRange = chaserBoss.GetCloakRange(difficulty);
+						float decloakRange = chaserBoss.GetDecloakRange(difficulty);
 						if (cloakDist <= SquareFloat(cloakRange) && !g_NpcHasCloaked[chaserBoss.Index] && g_SlenderNextCloakTime[chaserBoss.Index] <= gameTime && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index])
 						{
-							//Time for a more cloaking aproach!
+							// Time for a more cloaking aproach!
 							SetEntityRenderMode(npcEntity.index, view_as<RenderMode>(GetChaserProfileCloakRenderMode(slenderProfile)));
 
 							int cloakColor[4];
@@ -1171,7 +1172,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						}
 					}
 
-					if (NPCChaserIsProjectileEnabled(chaserBoss.Index))
+					if (chaserBoss.ProjectileEnabled)
 					{
 						if (chaserBoss.Flags & SFF_FAKE)
 						{
@@ -1181,7 +1182,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						{
 							NPCChaserProjectileShoot(chaserBoss.Index, npcEntity.index, target, slenderProfile, myPos);
 						}
-						else if (NPCChaserUseProjectileAmmo(chaserBoss.Index))
+						else if (chaserBoss.ProjectileUsesAmmo)
 						{
 							if (g_NpcProjectileCooldown[chaserBoss.Index] <= gameTime && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index] && (building || (playerInFOV[target] && CanNPCSeePlayerNonTransparent(chaserBoss.Index, SF2_BasePlayer(target)))) && !g_NpcHasCloaked[chaserBoss.Index] && (g_NpcProjectileAmmo[chaserBoss.Index] != 0))
 							{
@@ -1320,7 +1321,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								}
 							}
 							if (g_NpcUsesChaseInitialAnimation[chaserBoss.Index] &&
-								NPCChaserGetAttackInterruptChaseInitialState(chaserBoss.Index, attackIndex2))
+								NPCChaserGetAttackInterruptChaseInitialState(chaserBoss.Index, attackIndex2, difficulty))
 							{
 								int eraseAttack = arrayAttacks.FindValue(attackIndex2);
 								if (eraseAttack != -1)
@@ -1336,8 +1337,8 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						if (arrayAttacks != null && arrayAttacks.Length > 0)
 						{
 							int randomAttackIndex = arrayAttacks.Get(GetRandomInt(0, arrayAttacks.Length - 1));
-							attackBeginRangeEx = NPCChaserGetAttackBeginRange(chaserBoss.Index, randomAttackIndex);
-							attackBeginFOVEx = NPCChaserGetAttackBeginFOV(chaserBoss.Index, randomAttackIndex);
+							attackBeginRangeEx = NPCChaserGetAttackBeginRange(chaserBoss.Index, randomAttackIndex, difficulty);
+							attackBeginFOVEx = NPCChaserGetAttackBeginFOV(chaserBoss.Index, randomAttackIndex, difficulty);
 							if (attackDist <= SquareFloat(attackBeginRangeEx) && fov <= (attackBeginFOVEx / 2.0) &&
 							!NPCIsRaging(chaserBoss.Index) &&
 							!g_NpcUseStartFleeAnimation[chaserBoss.Index] && !g_NpcIsRunningToHeal[chaserBoss.Index] && !g_NpcIsHealing[chaserBoss.Index])
@@ -1364,7 +1365,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 
 							if (chaserBoss.Flags & SFF_ATTACKPROPS)
 							{
-								blockingProp = NPC_CanAttackProps(chaserBoss.Index, NPCChaserGetAttackRange(chaserBoss.Index, attackIndex), NPCChaserGetAttackSpread(chaserBoss.Index, attackIndex));
+								blockingProp = NPC_CanAttackProps(chaserBoss.Index, NPCChaserGetAttackRange(chaserBoss.Index, attackIndex, difficulty), NPCChaserGetAttackSpread(chaserBoss.Index, attackIndex, difficulty));
 							}
 
 							if (blockingProp)
@@ -1396,8 +1397,8 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 				if (g_IsSlenderAttacking[chaserBoss.Index])
 				{
 					int attackIndex = NPCGetCurrentAttackIndex(chaserBoss.Index);
-					bool cancelLos = GetChaserProfileAttackCancelLOSState(slenderProfile, attackIndex);
-					float cancelDistance = GetChaserProfileAttackCancelDistance(slenderProfile, attackIndex);
+					bool cancelLos = GetChaserProfileAttackCancelLOSState(slenderProfile, attackIndex, difficulty);
+					float cancelDistance = GetChaserProfileAttackCancelDistance(slenderProfile, attackIndex, difficulty);
 					if (cancelLos)
 					{
 						if (!IsValidClient(target) || !playerVisible[target])
@@ -1528,7 +1529,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 				if (gameTime >= g_SlenderTimeUntilRecover[chaserBoss.Index])
 				{
 					g_LastStuckTime[chaserBoss.Index] = 0.0;
-					if (NPCChaserCanDisappearOnStun(chaserBoss.Index))
+					if (chaserBoss.CanDisappearOnStun())
 					{
 						RemoveSlender(chaserBoss.Index);
 					}
@@ -1536,13 +1537,13 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 					float value = chaserBoss.GetAttributeValue(SF2Attribute_AddStunHealhOnStun);
 					if (value > 0.0)
 					{
-						chaserBoss.SetStunHealth(chaserBoss.GetInitialStunHealth());
-						chaserBoss.SetAddStunHealth(value);
-						chaserBoss.AddStunHealth(chaserBoss.GetAddStunHealth());
+						chaserBoss.StunHealth = chaserBoss.InitialStunHealth;
+						chaserBoss.StunHealthAdd = value;
+						chaserBoss.AddStunHealth(chaserBoss.StunHealthAdd);
 					}
 					else
 					{
-						chaserBoss.SetStunHealth(chaserBoss.GetInitialStunHealth());
+						chaserBoss.StunHealth = chaserBoss.InitialStunHealth;
 					}
 					value = chaserBoss.GetAttributeValue(SF2Attribute_AddSpeedOnStun);
 					if (value > 0.0)
@@ -1559,7 +1560,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 					{
 						chaserBoss.SetAddAcceleration(value);
 					}
-					g_SlenderNextStunTime[chaserBoss.Index] = gameTime + NPCChaserGetStunCooldown(chaserBoss.Index);
+					g_SlenderNextStunTime[chaserBoss.Index] = gameTime + chaserBoss.StunCooldown;
 					if (IsValidClient(target))
 					{
 						// Chase him again!
@@ -1595,7 +1596,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 	{
 		if (stunEnabled)
 		{
-			if (NPCChaserGetStunHealth(chaserBoss.Index) <= 0 && g_SlenderNextStunTime[chaserBoss.Index] <= gameTime)
+			if (chaserBoss.StunHealth <= 0 && g_SlenderNextStunTime[chaserBoss.Index] <= gameTime)
 			{
 				state = STATE_STUN;
 				if (g_SlenderChaseInitialTimer[chaserBoss.Index] != null)
@@ -1607,7 +1608,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 			{
 				if (!NPCChaserGetSelfHealState(chaserBoss.Index))
 				{
-					float percent = NPCChaserGetStunInitialHealth(chaserBoss.Index) > 0 ? (NPCChaserGetStunHealth(chaserBoss.Index) / NPCChaserGetStunInitialHealth(chaserBoss.Index)) : 0.0;
+					float percent = chaserBoss.InitialStunHealth > 0 ? (chaserBoss.StunHealth / chaserBoss.InitialStunHealth) : 0.0;
 					if (percent < 0.75 && percent >= 0.5 && !g_NpcUsesRageAnimation[chaserBoss.Index][0] && !g_NpcUsedRage1[chaserBoss.Index])
 					{
 						g_NpcUsesRageAnimation[chaserBoss.Index][0] = true;
@@ -1624,7 +1625,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								}
 							}
 						}
-						NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index)+1);
+						NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index) + 1);
 						SlenderPerformVoice(chaserBoss.Index, _, SF2BossSound_RageAll);
 						chaserBoss.SetAddSpeed(12.5);
 						chaserBoss.SetAddMaxSpeed(25.0);
@@ -1673,7 +1674,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								}
 							}
 						}
-						NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index)+1);
+						NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index) + 1);
 						SF2BossProfileSoundInfo soundInfo;
 						GetChaserProfileRageTwoSounds(slenderProfile, soundInfo);
 						if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
@@ -1735,7 +1736,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								}
 							}
 						}
-						NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index)+1);
+						NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index) + 1);
 						SF2BossProfileSoundInfo soundInfo;
 						GetChaserProfileRageThreeSounds(slenderProfile, soundInfo);
 						if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
@@ -1763,7 +1764,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 				}
 				else
 				{
-					float percent = NPCChaserGetStunInitialHealth(chaserBoss.Index) > 0 ? (NPCChaserGetStunHealth(chaserBoss.Index) / NPCChaserGetStunInitialHealth(chaserBoss.Index)) : 0.0;
+					float percent = chaserBoss.InitialStunHealth > 0 ? (chaserBoss.StunHealth / chaserBoss.InitialStunHealth) : 0.0;
 					if (percent < NPCChaserGetStartSelfHealPercentage(chaserBoss.Index) && g_NpcSelfHealStage[chaserBoss.Index] < 3)
 					{
 						if (g_NpcIsRunningToHeal[chaserBoss.Index] || g_NpcIsHealing[chaserBoss.Index])
@@ -1809,9 +1810,9 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								}
 							}
 
-							if (!g_NpcHasCloaked[chaserBoss.Index] && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index] && NPCChaserIsCloakEnabled(chaserBoss.Index) && NPCChaserCanCloakToHeal(chaserBoss.Index))
+							if (!g_NpcHasCloaked[chaserBoss.Index] && !g_NpcUsesChaseInitialAnimation[chaserBoss.Index] && chaserBoss.CloakEnabled && NPCChaserCanCloakToHeal(chaserBoss.Index))
 							{
-								//Time for a more cloaking aproach!
+								// Time for a more cloaking aproach!
 								SetEntityRenderMode(npcEntity.index, view_as<RenderMode>(GetChaserProfileCloakRenderMode(slenderProfile)));
 
 								int cloakColor[4];
@@ -1840,7 +1841,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						}
 						if ((GetVectorSquareMagnitude(g_SlenderGoalPos[chaserBoss.Index], myPos) < SquareFloat(125.0) || g_NpcFleeHealTimer[chaserBoss.Index] < gameTime) && g_NpcSetHealDestination[chaserBoss.Index] && !g_NpcIsHealing[chaserBoss.Index])
 						{
-							if (g_NpcHasCloaked[chaserBoss.Index] && NPCChaserIsCloakEnabled(chaserBoss.Index))
+							if (g_NpcHasCloaked[chaserBoss.Index] && chaserBoss.CloakEnabled)
 							{
 								SetEntityRenderMode(npcEntity.index, view_as<RenderMode>(g_SlenderRenderMode[chaserBoss.Index]));
 								SetEntityRenderColor(npcEntity.index, g_SlenderRenderColor[chaserBoss.Index][0], g_SlenderRenderColor[chaserBoss.Index][1], g_SlenderRenderColor[chaserBoss.Index][2], g_SlenderRenderColor[chaserBoss.Index][3]);
@@ -1886,7 +1887,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 											}
 										}
 									}
-									NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index)+1);
+									NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index) + 1);
 									npc.flWalkSpeed = 0.0;
 									npc.flRunSpeed = 0.0;
 									g_SlenderStartFleeTimer[chaserBoss.Index] = CreateTimer(g_SlenderAnimationDuration[chaserBoss.Index], Timer_SlenderFleeAnimationTimer, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
@@ -1929,7 +1930,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 											}
 										}
 									}
-									NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index)+1);
+									NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index) + 1);
 									npc.flWalkSpeed = 0.0;
 									npc.flRunSpeed = 0.0;
 									g_SlenderStartFleeTimer[chaserBoss.Index] = CreateTimer(g_SlenderAnimationDuration[chaserBoss.Index], Timer_SlenderFleeAnimationTimer, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
@@ -1985,7 +1986,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 											}
 										}
 									}
-									NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index)+1);
+									NPCChaserSetBoxingRagePhase(chaserBoss.Index, NPCChaserGetBoxingRagePhase(chaserBoss.Index) + 1);
 									npc.flWalkSpeed = 0.0;
 									npc.flRunSpeed = 0.0;
 									g_SlenderStartFleeTimer[chaserBoss.Index] = CreateTimer(g_SlenderAnimationDuration[chaserBoss.Index], Timer_SlenderFleeAnimationTimer, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
@@ -2096,7 +2097,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 					g_SlenderTimeUntilKill[chaserBoss.Index] = gameTime + NPCGetIdleLifetime(chaserBoss.Index, difficulty);
 				}
 
-				if (g_NpcHasCloaked[chaserBoss.Index] && NPCChaserIsCloakEnabled(chaserBoss.Index))
+				if (g_NpcHasCloaked[chaserBoss.Index] && chaserBoss.CloakEnabled)
 				{
 					SetEntityRenderMode(npcEntity.index, view_as<RenderMode>(g_SlenderRenderMode[chaserBoss.Index]));
 					SetEntityRenderColor(npcEntity.index, g_SlenderRenderColor[chaserBoss.Index][0], g_SlenderRenderColor[chaserBoss.Index][1], g_SlenderRenderColor[chaserBoss.Index][2], 0);
@@ -2129,7 +2130,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 				g_NpcLostChasingScareVictim[chaserBoss.Index] = false;
 				g_SlenderTimeUntilChase[chaserBoss.Index] = gameTime + NPCChaserGetAlertGracetime(chaserBoss.Index, difficulty);
 
-				if (g_NpcHasCloaked[chaserBoss.Index] && NPCChaserIsCloakEnabled(chaserBoss.Index))
+				if (g_NpcHasCloaked[chaserBoss.Index] && chaserBoss.CloakEnabled)
 				{
 					SetEntityRenderMode(npcEntity.index, view_as<RenderMode>(g_SlenderRenderMode[chaserBoss.Index]));
 					SetEntityRenderColor(npcEntity.index, g_SlenderRenderColor[chaserBoss.Index][0], g_SlenderRenderColor[chaserBoss.Index][1], g_SlenderRenderColor[chaserBoss.Index][2], 0);
@@ -2177,28 +2178,28 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						CBaseNPC_RemoveAllLayers(npcEntity.index);
 						loco.ClearStuckStatus();
 						int attackIndex = NPCGetCurrentAttackIndex(chaserBoss.Index);
-						if (!NPCChaserGetAttackWhileRunningState(chaserBoss.Index, attackIndex))
+						if (!NPCChaserGetAttackWhileRunningState(chaserBoss.Index, attackIndex, difficulty))
 						{
 							npc.flWalkSpeed = 0.0;
 							npc.flRunSpeed = 0.0;
 						}
 						if (NPCChaserGetAttackType(chaserBoss.Index, attackIndex) != SF2BossAttackType_ExplosiveDance && NPCChaserGetAttackType(chaserBoss.Index, attackIndex) != SF2BossAttackType_LaserBeam)
 						{
-							g_SlenderAttackTimer[chaserBoss.Index] = CreateTimer(NPCChaserGetAttackDamageDelay(chaserBoss.Index, attackIndex), Timer_SlenderChaseBossAttack, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+							g_SlenderAttackTimer[chaserBoss.Index] = CreateTimer(NPCChaserGetAttackDamageDelay(chaserBoss.Index, attackIndex, difficulty), Timer_SlenderChaseBossAttack, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
 							g_NpcAlreadyAttacked[chaserBoss.Index] = false;
 							NpcSetCurrentAttackRepeat(chaserBoss.Index, attackIndex, 0);
 							NPCChaserSetNextAttackTime(chaserBoss.Index, attackIndex, gameTime + NPCChaserGetAttackCooldown(chaserBoss.Index, attackIndex, difficulty));
 						}
 						else if (NPCChaserGetAttackType(chaserBoss.Index, attackIndex) == SF2BossAttackType_ExplosiveDance)
 						{
-							g_SlenderAttackTimer[chaserBoss.Index] = CreateTimer(NPCChaserGetAttackDamageDelay(chaserBoss.Index, attackIndex), Timer_SlenderPrepareExplosiveDance, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+							g_SlenderAttackTimer[chaserBoss.Index] = CreateTimer(NPCChaserGetAttackDamageDelay(chaserBoss.Index, attackIndex, difficulty), Timer_SlenderPrepareExplosiveDance, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
 							NPCChaserSetNextAttackTime(chaserBoss.Index, attackIndex, gameTime + NPCChaserGetAttackCooldown(chaserBoss.Index, attackIndex, difficulty));
 						}
 						else if (NPCChaserGetAttackType(chaserBoss.Index, attackIndex) == SF2BossAttackType_LaserBeam)
 						{
-							g_SlenderAttackTimer[chaserBoss.Index] = CreateTimer(NPCChaserGetAttackDamageDelay(chaserBoss.Index, attackIndex), Timer_SlenderChaseBossAttackBeginLaser, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
+							g_SlenderAttackTimer[chaserBoss.Index] = CreateTimer(NPCChaserGetAttackDamageDelay(chaserBoss.Index, attackIndex, difficulty), Timer_SlenderChaseBossAttackBeginLaser, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
 						}
-						if (NPCChaserGetAttackLifeStealState(chaserBoss.Index, attackIndex) && NPCChaserGetAttackType(chaserBoss.Index, attackIndex) == SF2BossAttackType_Melee)
+						if (NPCChaserGetAttackLifeStealState(chaserBoss.Index, attackIndex, difficulty) && NPCChaserGetAttackType(chaserBoss.Index, attackIndex) == SF2BossAttackType_Melee)
 						{
 							if (!g_NpcStealingLife[chaserBoss.Index])
 							{
@@ -2207,11 +2208,11 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 							}
 						}
 
-						g_SlenderTimeUntilAttackEnd[chaserBoss.Index] = gameTime + NPCChaserGetAttackDuration(chaserBoss.Index, attackIndex) + 0.01;
+						g_SlenderTimeUntilAttackEnd[chaserBoss.Index] = gameTime + NPCChaserGetAttackDuration(chaserBoss.Index, attackIndex, difficulty) + 0.01;
 
-						g_NpcBaseAttackRunDurationTime[chaserBoss.Index][attackIndex] = gameTime + NPCChaserGetAttackRunDuration(chaserBoss.Index, attackIndex);
+						g_NpcBaseAttackRunDurationTime[chaserBoss.Index][attackIndex] = gameTime + NPCChaserGetAttackRunDuration(chaserBoss.Index, attackIndex, difficulty);
 
-						g_NpcBaseAttackRunDelayTime[chaserBoss.Index][attackIndex] = gameTime + NPCChaserGetAttackRunDelay(chaserBoss.Index, attackIndex);
+						g_NpcBaseAttackRunDelayTime[chaserBoss.Index][attackIndex] = gameTime + NPCChaserGetAttackRunDelay(chaserBoss.Index, attackIndex, difficulty);
 
 						float persistencyTime = GetChaserProfileChaseAttackPersistencyTimeInit(slenderProfile);
 						if (persistencyTime >= 0.0)
@@ -2229,7 +2230,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 							g_SlenderTimeUntilNoPersistence[chaserBoss.Index] += persistencyTime;
 						}
 
-						if (g_NpcHasCloaked[chaserBoss.Index] && NPCChaserIsCloakEnabled(chaserBoss.Index))
+						if (g_NpcHasCloaked[chaserBoss.Index] && chaserBoss.CloakEnabled)
 						{
 							SetEntityRenderMode(npcEntity.index, view_as<RenderMode>(g_SlenderRenderMode[chaserBoss.Index]));
 							SetEntityRenderColor(npcEntity.index, g_SlenderRenderColor[chaserBoss.Index][0], g_SlenderRenderColor[chaserBoss.Index][1], g_SlenderRenderColor[chaserBoss.Index][2], 0);

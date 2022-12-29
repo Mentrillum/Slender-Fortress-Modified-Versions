@@ -950,7 +950,7 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		}
 	}
 
-	property float StunInitialHealth
+	property float InitialStunHealth
 	{
 		public get()
 		{
@@ -999,6 +999,11 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 	public float GetCloakRange(int difficulty)
 	{
 		return NPCChaserGetCloakRange(this.Index, difficulty);
+	}
+
+	public float GetDecloakRange(int difficulty)
+	{
+		return NPCChaserGetDecloakRange(this.Index, difficulty);
 	}
 
 	public float GetCloakSpeedMultiplier(int difficulty)
@@ -1262,24 +1267,16 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		return NPCChaserGetMaxWalkSpeed(this.Index, difficulty);
 	}
 
-	public void SetStunHealth(float value)
+	property float StunHealthAdd
 	{
-		NPCChaserSetStunHealth(this.Index, value);
-	}
-
-	public float GetInitialStunHealth()
-	{
-		return NPCChaserGetStunInitialHealth(this.Index);
-	}
-
-	public float GetAddStunHealth()
-	{
-		return NPCChaserGetAddStunHealth(this.Index);
-	}
-
-	public float SetAddStunHealth(float value)
-	{
-		NPCChaserSetAddStunHealth(this.Index, value);
+		public get()
+		{
+			return NPCChaserGetAddStunHealth(this.Index);
+		}
+		public set(float value)
+		{
+			NPCChaserSetAddStunHealth(this.Index, value);
+		}
 	}
 
 	public void AddStunHealth(float amount)
@@ -1287,9 +1284,9 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		NPCChaserAddStunHealth(this.Index, amount);
 	}
 
-	public float GetFlashlightDamage()
+	public bool CanDisappearOnStun()
 	{
-		NPCChaserGetStunFlashlightDamage(this.Index);
+		return NPCChaserCanDisappearOnStun(this.Index);
 	}
 
 	property bool AutoChaseEnabled

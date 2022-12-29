@@ -8,8 +8,8 @@ enum
 	SF2BossAttackType_Projectile = 2,
 	SF2BossAttackType_ExplosiveDance = 3,
 	SF2BossAttackType_LaserBeam = 4,
-	SF2BossAttackType_Unused,
-	SF2BossAttackType_Custom
+	SF2BossAttackType_Custom = 5,
+	SF2BossAttackType_Unused
 };
 
 enum
@@ -94,39 +94,39 @@ enum struct SF2ChaserBossProfileAttackData
 
 	float Damage[Difficulty_Max];
 	float DamageVsProps;
-	float DamageForce;
-	int DamageType;
-	float DamageDelay;
+	float DamageForce[Difficulty_Max];
+	int DamageType[Difficulty_Max];
+	float DamageDelay[Difficulty_Max];
 
-	float Range;
-	float Duration;
-	float Spread;
-	float BeginRange;
-	float BeginFOV;
+	float Range[Difficulty_Max];
+	float Duration[Difficulty_Max];
+	float Spread[Difficulty_Max];
+	float BeginRange[Difficulty_Max];
+	float BeginFOV[Difficulty_Max];
 	float PunchVelocity[3];
 
 	float Cooldown[Difficulty_Max];
 
-	bool Disappear;
+	bool Disappear[Difficulty_Max];
 	int Repeat;
 	int MaxRepeats;
 	ArrayList RepeatTimers;
 
-	bool IgnoreAlwaysLooking;
+	bool IgnoreAlwaysLooking[Difficulty_Max];
 
 	int WeaponInt;
 	char WeaponString[PLATFORM_MAX_PATH];
 	bool WeaponTypes;
 
-	bool LifeSteal;
-	float LifeStealDuration;
+	bool LifeSteal[Difficulty_Max];
+	float LifeStealDuration[Difficulty_Max];
 
 	float ProjectileDamage[Difficulty_Max];
 	float ProjectileSpeed[Difficulty_Max];
 	float ProjectileRadius[Difficulty_Max];
 	float ProjectileDeviation[Difficulty_Max];
 	int ProjectileCount[Difficulty_Max];
-	bool CritProjectiles;
+	bool CritProjectiles[Difficulty_Max];
 	int ProjectileType;
 	float ProjectileOffset[3];
 	char FireballTrail[PLATFORM_MAX_PATH];
@@ -146,58 +146,86 @@ enum struct SF2ChaserBossProfileAttackData
 	float LaserSize;
 	int LaserColor[3];
 	bool LaserAttachment;
-	float LaserDuration;
+	float LaserDuration[Difficulty_Max];
 	float LaserNoise;
 	float LaserOffset[3];
 	char LaserAttachmentName[PLATFORM_MAX_PATH];
 
 	bool PullIn;
 
-	bool AttackWhileRunning;
+	bool AttackWhileRunning[Difficulty_Max];
 	float RunSpeed[Difficulty_Max];
-	float RunDuration;
-	float RunDelay;
+	float RunDuration[Difficulty_Max];
+	float RunDelay[Difficulty_Max];
 
 	int UseOnDifficulty;
 	int BlockOnDifficulty;
 	float UseOnHealth;
 	float BlockOnHealth;
 
-	int ExplosiveDanceRadius;
+	int ExplosiveDanceRadius[Difficulty_Max];
 
 	bool Gestures;
 
 	bool DeathCamLowHealth;
 
-	bool DontInterruptChaseInitial;
+	bool DontInterruptChaseInitial[Difficulty_Max];
 
-	bool CancelLos;
-	float CancelDistance;
+	bool CancelLos[Difficulty_Max];
+	float CancelDistance[Difficulty_Max];
 
 	void Init()
 	{
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.Damage[difficulty] = this.Damage[difficulty] = difficulty > 0 ? this.Damage[difficulty - 1] : 0.0;
+			this.Damage[difficulty] = 0.0;
+			this.DamageForce[difficulty] = 0.0;
+			this.DamageType[difficulty] = 0;
+			this.DamageDelay[difficulty] = 0.0;
 
-			this.Cooldown[difficulty] = this.Cooldown[difficulty] = difficulty > 0 ? this.Cooldown[difficulty - 1] : 0.0;
+			this.Range[difficulty] = 0.0;
+			this.Duration[difficulty] = 0.0;
+			this.Spread[difficulty] = 45.0;
+			this.BeginRange[difficulty] = this.Range[difficulty];
+			this.BeginFOV[difficulty] = this.Spread[difficulty];
 
-			this.ProjectileDamage[difficulty] = this.ProjectileDamage[difficulty] = difficulty > 0 ? this.ProjectileDamage[difficulty - 1] : 20.0;
-			this.ProjectileSpeed[difficulty] = this.ProjectileSpeed[difficulty] = difficulty > 0 ? this.ProjectileSpeed[difficulty - 1] : 1100.0;
-			this.ProjectileRadius[difficulty] = this.ProjectileRadius[difficulty] = difficulty > 0 ? this.ProjectileRadius[difficulty - 1] : 128.0;
-			this.ProjectileDeviation[difficulty] = this.ProjectileDeviation[difficulty] = difficulty > 0 ? this.ProjectileDeviation[difficulty - 1] : 0.0;
-			this.ProjectileCount[difficulty] = this.ProjectileCount[difficulty] = difficulty > 0 ? this.ProjectileCount[difficulty - 1] : 1;
+			this.Cooldown[difficulty] = 0.0;
 
-			this.IceballSlowdownPercent[difficulty] = this.IceballSlowdownPercent[difficulty] = difficulty > 0 ? this.IceballSlowdownPercent[difficulty - 1] : 0.55;
-			this.IceballSlowdownDuration[difficulty] = this.IceballSlowdownDuration[difficulty] = difficulty > 0 ? this.IceballSlowdownDuration[difficulty - 1] : 2.0;
+			this.Disappear[difficulty] = false;
 
-			this.BulletCount[difficulty] = this.BulletCount[difficulty] = difficulty > 0 ? this.BulletCount[difficulty - 1] : 4;
-			this.BulletDamage[difficulty] = this.BulletDamage[difficulty] = difficulty > 0 ? this.BulletDamage[difficulty - 1] : 8.0;
-			this.BulletSpread[difficulty] = this.BulletSpread[difficulty] = difficulty > 0 ? this.BulletSpread[difficulty - 1] : 0.1;
+			this.IgnoreAlwaysLooking[difficulty] = false;
 
-			this.LaserDamage[difficulty] = this.LaserDamage[difficulty] = difficulty > 0 ? this.LaserDamage[difficulty - 1] : 25.0;
+			this.LifeSteal[difficulty] = false;
+			this.LifeStealDuration[difficulty] = 0.0;
 
-			this.RunSpeed[difficulty] = this.RunSpeed[difficulty] = difficulty > 0 ? this.RunSpeed[difficulty - 1] : 0.0;
+			this.ProjectileDamage[difficulty] = 20.0;
+			this.ProjectileSpeed[difficulty] = 1100.0;
+			this.ProjectileRadius[difficulty] = 128.0;
+			this.ProjectileDeviation[difficulty] = 0.0;
+			this.ProjectileCount[difficulty] = 1;
+			this.CritProjectiles[difficulty] = false;
+
+			this.IceballSlowdownPercent[difficulty] = 0.55;
+			this.IceballSlowdownDuration[difficulty] = 2.0;
+
+			this.BulletCount[difficulty] = 4;
+			this.BulletDamage[difficulty] = 8.0;
+			this.BulletSpread[difficulty] = 0.1;
+
+			this.LaserDamage[difficulty] = 25.0;
+			this.LaserDuration[difficulty] = this.Duration[difficulty];
+
+			this.AttackWhileRunning[difficulty] = false;
+			this.RunDuration[difficulty] = 0.0;
+			this.RunDelay[difficulty] = 0.0;
+			this.RunSpeed[difficulty] = 0.0;
+
+			this.ExplosiveDanceRadius[difficulty] = 350;
+
+			this.DontInterruptChaseInitial[difficulty] = false;
+
+			this.CancelLos[difficulty] = false;
+			this.CancelDistance[difficulty] = -1.0;
 		}
 		for (int i = 0; i < 3; i++)
 		{
@@ -215,31 +243,15 @@ enum struct SF2ChaserBossProfileAttackData
 		this.CanUseAgainstProps = false;
 
 		this.DamageVsProps = this.Damage[1];
-		this.DamageForce = 0.0;
-		this.DamageType = 0;
-		this.DamageDelay = 0.0;
 
-		this.Range = 0.0;
-		this.Duration = 0.0;
-		this.Spread = 45.0;
-		this.BeginRange = this.Range;
-		this.BeginFOV = this.Spread;
-
-		this.Disappear = false;
 		this.Repeat = 0;
 		this.MaxRepeats = 0;
 		this.RepeatTimers = null;
-
-		this.IgnoreAlwaysLooking = false;
 
 		this.WeaponInt = 0;
 		this.WeaponString[0] = '\0';
 		this.WeaponTypes = false;
 
-		this.LifeSteal = false;
-		this.LifeStealDuration = 0.0;
-
-		this.CritProjectiles = false;
 		this.ProjectileType = 0;
 		this.FireballTrail = FIREBALL_TRAIL;
 		this.IceballTrail = ICEBALL_TRAIL;
@@ -249,31 +261,19 @@ enum struct SF2ChaserBossProfileAttackData
 
 		this.LaserSize = 12.0;
 		this.LaserAttachment = false;
-		this.LaserDuration = this.Duration;
 		this.LaserNoise = 1.0;
 		this.LaserAttachmentName[0] = '\0';
 
 		this.PullIn = false;
-
-		this.AttackWhileRunning = false;
-		this.RunDuration = 0.0;
-		this.RunDelay = 0.0;
 
 		this.UseOnDifficulty = 0;
 		this.BlockOnDifficulty = 6;
 		this.UseOnHealth = -1.0;
 		this.BlockOnHealth = -1.0;
 
-		this.ExplosiveDanceRadius = 350;
-
 		this.Gestures = false;
 
 		this.DeathCamLowHealth = false;
-
-		this.DontInterruptChaseInitial = false;
-
-		this.CancelLos = false;
-		this.CancelDistance = -1.0;
 	}
 
 	void Destroy()
@@ -984,75 +984,75 @@ enum struct SF2ChaserBossProfileData
 		}
 	}
 
-	void SortSoundSections(KeyValues kv, const char[] sectionName)
+	void SortSoundSections(KeyValues kv, const char[] sectionName, bool checkFile)
 	{
 		if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Idle]) == 0)
 		{
-			this.IdleSounds.Load(kv);
+			this.IdleSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Alert]) == 0)
 		{
-			this.AlertSounds.Load(kv);
+			this.AlertSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Chasing]) == 0)
 		{
-			this.ChasingSounds.Load(kv);
+			this.ChasingSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_ChaseInitial]) == 0)
 		{
-			this.ChaseInitialSounds.Load(kv);
+			this.ChaseInitialSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_AttackKilled]) == 0)
 		{
-			this.AttackKilledSounds.Load(kv);
+			this.AttackKilledSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_attack_killed_all") == 0)
 		{
-			this.AttackKilledAllSounds.Load(kv);
+			this.AttackKilledAllSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_attack_killed_client") == 0)
 		{
-			this.AttackKilledClientSounds.Load(kv);
+			this.AttackKilledClientSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageAll]) == 0)
 		{
-			this.RageAllSounds.Load(kv);
+			this.RageAllSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageTwo]) == 0)
 		{
-			this.RageTwoSounds.Load(kv);
+			this.RageTwoSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageThree]) == 0)
 		{
-			this.RageThreeSounds.Load(kv);
+			this.RageThreeSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_SelfHeal]) == 0)
 		{
-			this.SelfHealSounds.Load(kv);
+			this.SelfHealSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Stun]) == 0)
 		{
-			this.StunnedSounds.Load(kv);
+			this.StunnedSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_footsteps") == 0)
 		{
-			this.FootstepSounds.Load(kv);
+			this.FootstepSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_chase_music") == 0)
 		{
-			this.ChaseMusics.Load(kv);
+			this.ChaseMusics.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_chase_visible") == 0)
 		{
-			this.ChaseVisibleMusics.Load(kv);
+			this.ChaseVisibleMusics.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_alert_music") == 0)
 		{
-			this.AlertMusics.Load(kv);
+			this.AlertMusics.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_idle_music") == 0)
 		{
-			this.IdleMusics.Load(kv);
+			this.IdleMusics.Load(kv, checkFile);
 		}
 	}
 
