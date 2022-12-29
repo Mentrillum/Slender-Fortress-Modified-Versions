@@ -642,7 +642,6 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 			{
 				if (chaserBoss.StunHealth > 0)
 				{
-					PrintCenterTextAll("%f %f %f", chaserBoss.StunHealth, chaserBoss.InitialStunHealth, chaserBoss.StunFlashlightDamage);
 					if (!IsClassConfigsValid())
 					{
 						if (!doubleFlashlightDamage)
