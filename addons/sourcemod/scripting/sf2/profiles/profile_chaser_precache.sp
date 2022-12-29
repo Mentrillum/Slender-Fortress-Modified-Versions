@@ -1148,7 +1148,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		attackData.Gestures = !!kv.GetNum("gestures", attackData.Gestures);
 
 		GetProfileDifficultyBoolValues(kv, "cancel_los", attackData.CancelLos, attackData.CancelLos);
-		GetProfileDifficultyFloatValues(kv, "run_speed", attackData.CancelDistance, attackData.CancelDistance);
+		GetProfileDifficultyFloatValues(kv, "cancel_distance", attackData.CancelDistance, attackData.CancelDistance);
 
 		attacks.SetArray(attackNum - 1, attackData, sizeof(attackData));
 
