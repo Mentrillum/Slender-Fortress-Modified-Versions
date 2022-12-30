@@ -285,10 +285,10 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponName
 		}
 	}
 
-	if (g_PlayerProxy[client])
+	if (g_PlayerProxy[client] && !IsClientCritBoosted(client))
 	{
 		result = false;
-		return Plugin_Changed;
+		return Plugin_Handled;
 	}
 
 	return Plugin_Continue;

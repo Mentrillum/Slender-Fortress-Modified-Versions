@@ -177,17 +177,14 @@ void ClientUpdateMusicSystem(int client, bool initialize=false)
 									chasingBoss = i;
 								}
 
-								if ((g_SlenderState[i] == STATE_CHASE || g_SlenderState[i] == STATE_ATTACK) &&
+								if ((g_SlenderState[i] == STATE_CHASE || g_SlenderState[i] == STATE_ATTACK || g_SlenderState[i] == STATE_STUN) &&
 									PlayerCanSeeSlender(client, i, false))
 								{
-									if (oldChasingSeeBoss == -1 || !PlayerCanSeeSlender(client, oldChasingSeeBoss, false))
+									GetChaserProfileChaseVisibleMusics(profile, soundInfo);
+									soundList = soundInfo.Paths;
+									if (soundList != null && soundList.Length > 0)
 									{
-										GetChaserProfileChaseVisibleMusics(profile, soundInfo);
-										soundList = soundInfo.Paths;
-										if (soundList != null && soundList.Length > 0)
-										{
-											chasingSeeBoss = i;
-										}
+										chasingSeeBoss = i;
 									}
 								}
 							}

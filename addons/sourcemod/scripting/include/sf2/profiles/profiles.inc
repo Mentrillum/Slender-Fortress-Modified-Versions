@@ -15,6 +15,10 @@ stock void PrecacheSound2(const char[] path, bool checkFile)
 		{
 			AddFileToDownloadsTable(buffer);
 		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
+		}
 	}
 	else
 	{
@@ -72,6 +76,11 @@ stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableW
  */
 stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile)
 {
+	if (path[0] == '\0')
+	{
+		return;
+	}
+
 	char fixedPath[PLATFORM_MAX_PATH];
 
 	if (strncmp(path, "models/", 7, false) == 0 || strncmp(path, "models\\", 7, false) == 0)
@@ -93,6 +102,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 		{
 			AddFileToDownloadsTable(buffer);
 		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
+		}
 	}
 	else
 	{
@@ -105,6 +118,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 		if (FileExists(buffer, true))
 		{
 			AddFileToDownloadsTable(buffer);
+		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
 		}
 	}
 	else
@@ -123,6 +140,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 		if (FileExists(buffer, true))
 		{
 			AddFileToDownloadsTable(buffer);
+		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
 		}
 	}
 	else
@@ -150,6 +171,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 		{
 			AddFileToDownloadsTable(buffer);
 		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
+		}
 	}
 	else
 	{
@@ -162,6 +187,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 		if (FileExists(buffer, true))
 		{
 			AddFileToDownloadsTable(buffer);
+		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
 		}
 	}
 	else
@@ -180,6 +209,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 			if (FileExists(buffer, true))
 			{
 				AddFileToDownloadsTable(buffer);
+			}
+			else
+			{
+				PrintToServer("[SF2] File %s is missing from the server files!", buffer);
 			}
 		}
 		else
@@ -205,6 +238,10 @@ stock void PrecacheMaterial2(const char[] path, bool checkFile)
 		{
 			AddFileToDownloadsTable(buffer);
 		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
+		}
 	}
 	else
 	{
@@ -216,6 +253,10 @@ stock void PrecacheMaterial2(const char[] path, bool checkFile)
 		if (FileExists(buffer, true))
 		{
 			AddFileToDownloadsTable(buffer);
+		}
+		else
+		{
+			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
 		}
 	}
 	else
@@ -541,7 +582,7 @@ stock void SetProfileDifficultyStringArrayValues(KeyValues kv, const char[] base
 
 	for (int i = 0; i < Difficulty_Max; i++)
 	{
-		GetProfileKeyWithDifficultySuffix(baseKeyName, i, key, sizeof(key));
+		GetProfileKeyWithDifficultySuffix(baseKeyName, i == 0 ? 1 : i, key, sizeof(key));
 		char[] value = new char[PLATFORM_MAX_PATH];
 		kv.GetString(key, value, PLATFORM_MAX_PATH, temporaryKeys);
 		if (models && strncmp(value, "models/", 7, false) != 0 && strncmp(value, "models\\", 7, false) != 0 && value[0] != '\0')
