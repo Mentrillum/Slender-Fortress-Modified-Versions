@@ -175,6 +175,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	{
 		kv.GetString("tp_effect_spawn_particle", profileData.SpawnParticle, sizeof(profileData.SpawnParticle), profileData.SpawnParticle);
 		kv.GetString("tp_effect_spawn_sound", profileData.SpawnParticleSound, sizeof(profileData.SpawnParticleSound), profileData.SpawnParticleSound);
+		TryPrecacheBossProfileSoundPath(profileData.SpawnParticleSound, _, g_FileCheckConVar.BoolValue);
 		profileData.SpawnParticleSoundVolume = kv.GetFloat("tp_effect_spawn_sound_volume", profileData.SpawnParticleSoundVolume);
 		profileData.SpawnParticleSoundPitch = kv.GetNum("tp_effect_spawn_sound_pitch", profileData.SpawnParticleSoundPitch);
 	}
@@ -184,6 +185,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	{
 		kv.GetString("tp_effect_despawn_particle", profileData.DespawnParticle, sizeof(profileData.DespawnParticle), profileData.DespawnParticle);
 		kv.GetString("tp_effect_despawn_sound", profileData.DespawnParticleSound, sizeof(profileData.DespawnParticleSound), profileData.DespawnParticleSound);
+		TryPrecacheBossProfileSoundPath(profileData.DespawnParticleSound, _, g_FileCheckConVar.BoolValue);
 		profileData.DespawnParticleSoundVolume = kv.GetFloat("tp_effect_despawn_sound_volume", profileData.DespawnParticleSoundVolume);
 		profileData.DespawnParticleSoundPitch = kv.GetNum("tp_effect_despawn_sound_pitch", profileData.DespawnParticleSoundPitch);
 	}
@@ -715,83 +717,9 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	g_Config.JumpToKey(profile, true);
 	g_Config.Import(kv);
 
-	kv.GetString("cloak_on_sound", profileData.CloakOnSound, sizeof(profileData.CloakOnSound), profileData.CloakOnSound);
-	kv.GetString("cloak_off_sound", profileData.CloakOffSound, sizeof(profileData.CloakOffSound), profileData.CloakOffSound);
-	kv.GetString("player_jarate_sound", profileData.JarateHitSound, sizeof(profileData.JarateHitSound), profileData.JarateHitSound);
-	kv.GetString("player_milk_sound", profileData.MilkHitSound, sizeof(profileData.MilkHitSound), profileData.MilkHitSound);
-	kv.GetString("player_gas_sound", profileData.GasHitSound, sizeof(profileData.GasHitSound), profileData.GasHitSound);
-	kv.GetString("player_stun_sound", profileData.StunHitSound, sizeof(profileData.StunHitSound), profileData.StunHitSound);
-	kv.GetString("fire_explode_sound", profileData.FireballExplodeSound, sizeof(profileData.FireballExplodeSound), profileData.FireballExplodeSound);
-	kv.GetString("fire_shoot_sound", profileData.FireballShootSound, sizeof(profileData.FireballShootSound), profileData.FireballShootSound);
-	kv.GetString("fire_trail", profileData.FireballTrail, sizeof(profileData.FireballTrail), profileData.FireballTrail);
-	kv.GetString("rocket_trail_particle", profileData.RocketTrail, sizeof(profileData.RocketTrail), profileData.RocketTrail);
-	kv.GetString("rocket_explode_particle", profileData.RocketExplodeParticle, sizeof(profileData.RocketExplodeParticle), profileData.RocketExplodeParticle);
-	kv.GetString("fire_iceball_slow_sound", profileData.IceballSlowSound, sizeof(profileData.IceballSlowSound), profileData.IceballSlowSound);
-	kv.GetString("fire_iceball_trail", profileData.IceballTrail, sizeof(profileData.IceballTrail), profileData.IceballTrail);
-	kv.GetString("rocket_explode_sound", profileData.RocketExplodeSound, sizeof(profileData.RocketExplodeSound), profileData.RocketExplodeSound);
-	kv.GetString("rocket_shoot_sound", profileData.RocketShootSound, sizeof(profileData.RocketShootSound), profileData.RocketShootSound);
-	kv.GetString("grenade_shoot_sound", profileData.GrenadeShootSound, sizeof(profileData.GrenadeShootSound), profileData.GrenadeShootSound);
-	kv.GetString("sentryrocket_shoot_sound", profileData.SentryRocketShootSound, sizeof(profileData.SentryRocketShootSound), profileData.SentryRocketShootSound);
-	kv.GetString("arrow_shoot_sound", profileData.ArrowShootSound, sizeof(profileData.ArrowShootSound), profileData.ArrowShootSound);
-	kv.GetString("mangler_shoot_sound", profileData.ManglerShootSound, sizeof(profileData.ManglerShootSound), profileData.ManglerShootSound);
-	kv.GetString("baseball_shoot_sound", profileData.BaseballShootSound, sizeof(profileData.BaseballShootSound), profileData.BaseballShootSound);
 	kv.GetString("constant_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
-	kv.GetString("tp_effect_spawn_sound", profileData.SpawnEffectSound, sizeof(profileData.SpawnEffectSound), profileData.SpawnEffectSound);
-	kv.GetString("tp_effect_despawn_sound", profileData.DespawnEffectSound, sizeof(profileData.DespawnEffectSound), profileData.DespawnEffectSound);
-	kv.GetString("player_smite_sound", profileData.SmiteHitSound, sizeof(profileData.SmiteHitSound), profileData.SmiteHitSound);
-	kv.GetString("rocket_model", profileData.RocketModel, sizeof(profileData.RocketModel), profileData.RocketModel);
-	kv.GetString("trap_model", profileData.TrapModel, sizeof(profileData.TrapModel), profileData.TrapModel);
-	kv.GetString("trap_deploy_sound", profileData.TrapDeploySound, sizeof(profileData.TrapDeploySound), profileData.TrapDeploySound);
-	kv.GetString("trap_miss_sound", profileData.TrapMissSound, sizeof(profileData.TrapMissSound), profileData.TrapMissSound);
-	kv.GetString("trap_catch_sound", profileData.TrapCatchSound, sizeof(profileData.TrapCatchSound), profileData.TrapCatchSound);
-	kv.GetString("trap_animation_idle", profileData.TrapAnimIdle, sizeof(profileData.TrapAnimIdle), profileData.TrapAnimIdle);
-	kv.GetString("trap_animation_closed", profileData.TrapAnimClose, sizeof(profileData.TrapAnimClose), profileData.TrapAnimClose);
-	kv.GetString("trap_animation_open", profileData.TrapAnimOpen, sizeof(profileData.TrapAnimOpen), profileData.TrapAnimOpen);
 
-	TryPrecacheBossProfileSoundPath(profileData.CloakOnSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.CloakOffSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.JarateHitSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.MilkHitSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.GasHitSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.StunHitSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.FireballExplodeSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.FireballShootSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.IceballSlowSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.RocketExplodeSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.RocketShootSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.GrenadeShootSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.SentryRocketShootSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.ArrowShootSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.ManglerShootSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.BaseballShootSound, _, g_FileCheckConVar.BoolValue);
 	TryPrecacheBossProfileSoundPath(profileData.EngineSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.SpawnEffectSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.DespawnEffectSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.TrapDeploySound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.TrapMissSound, _, g_FileCheckConVar.BoolValue);
-	TryPrecacheBossProfileSoundPath(profileData.TrapCatchSound, _, g_FileCheckConVar.BoolValue);
-	if (strcmp(profileData.RocketModel, ROCKET_MODEL, true) != 0)
-	{
-		if (!PrecacheModel(profileData.RocketModel, true))
-		{
-			LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.RocketModel);
-		}
-		else
-		{
-			PrecacheModel2(profileData.RocketModel, _, _, g_FileCheckConVar.BoolValue);
-		}
-	}
-	if (strcmp(profileData.TrapModel, TRAP_MODEL, true) != 0)
-	{
-		if (!PrecacheModel(profileData.TrapModel, true))
-		{
-			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.TrapModel);
-		}
-		else
-		{
-			PrecacheModel2(profileData.TrapModel, _, _, g_FileCheckConVar.BoolValue);
-		}
-	}
 
 	int index = g_BossProfileList.FindString(profile);
 	if (index == -1)
@@ -1031,8 +959,6 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			}
 			else if (strcmp(s2, "mod_download") == 0)
 			{
-				static const char extensions[][] = { ".mdl", ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
-
 				for (int i = 1;; i++)
 				{
 					FormatEx(s3, sizeof(s3), "%d", i);
@@ -1042,25 +968,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 						break;
 					}
 
-					for (int is = 0; is < sizeof(extensions); is++)
-					{
-						FormatEx(s5, sizeof(s5), "%s%s", s4, extensions[is]);
-						if (g_FileCheckConVar.BoolValue)
-						{
-							if (FileExists(s5) || FileExists(s5, true))
-							{
-								AddFileToDownloadsTable(s5);
-							}
-							else
-							{
-								LogSF2Message("Model file %s does not exist, please fix this download or remove it from the array.", s5);
-							}
-						}
-						else
-						{
-							AddFileToDownloadsTable(s5);
-						}
-					}
+					PrecacheModel2(s4, _, _, g_FileCheckConVar.BoolValue);
 				}
 			}
 			else if (strcmp(s2, "overlay_player_death") == 0)
@@ -2289,132 +2197,6 @@ bool GetBossProfileOutroMusicState(const char[] profile)
 	return g_CachedProfileData.OutroMusic;
 }
 
-int GetBossProfileCloakOnSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakOnSound);
-}
-
-int GetBossProfileCloakOffSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakOffSound);
-}
-
-int GetBossProfileRocketShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketShootSound);
-}
-
-int GetBossProfileRocketModel(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketModel);
-}
-
-int GetBossProfileSentryRocketShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.SentryRocketShootSound);
-}
-
-int GetBossProfileFireballShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballShootSound);
-}
-
-int GetBossProfileFireballTrail(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballTrail);
-}
-
-int GetBossProfileRocketTrail(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketTrail);
-}
-
-int GetBossProfileRocketExplodeParticle(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketExplodeParticle);
-}
-
-int GetBossProfileRocketExplodeSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketExplodeSound);
-}
-
-int GetBossProfileFireballExplodeSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballExplodeSound);
-}
-
-int GetBossProfileIceballSlowSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.IceballSlowSound);
-}
-
-int GetBossProfileIceballTrail(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.IceballTrail);
-}
-
-int GetBossProfileGrenadeShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.GrenadeShootSound);
-}
-
-int GetBossProfileArrowShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.ArrowShootSound);
-}
-
-int GetBossProfileManglerShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.ManglerShootSound);
-}
-
-int GetBossProfileBaseballShootSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.BaseballShootSound);
-}
-
-int GetBossProfileJarateHitSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.JarateHitSound);
-}
-
-int GetBossProfileMilkHitSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.MilkHitSound);
-}
-
-int GetBossProfileGasHitSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.GasHitSound);
-}
-
-int GetBossProfileStunHitSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.StunHitSound);
-}
-
 int GetBossProfileEngineSound(const char[] profile, char[] buffer, int bufferlen)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -2431,54 +2213,6 @@ float GetBossProfileEngineSoundVolume(const char[] profile)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.EngineSoundVolume;
-}
-
-int GetBossProfileSmiteHitSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.SmiteHitSound);
-}
-
-int GetBossProfileTrapModel(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapModel);
-}
-
-int GetBossProfileTrapDeploySound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapDeploySound);
-}
-
-int GetBossProfileTrapMissSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapMissSound);
-}
-
-int GetBossProfileTrapCatchSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapCatchSound);
-}
-
-int GetBossProfileTrapAnimIdle(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimIdle);
-}
-
-int GetBossProfileTrapAnimClose(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimClose);
-}
-
-int GetBossProfileTrapAnimOpen(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimOpen);
 }
 
 void GetBossProfileLocalDeathCamSounds(const char[] profile, SF2BossProfileSoundInfo params)

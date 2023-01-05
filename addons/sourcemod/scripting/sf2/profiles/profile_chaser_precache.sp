@@ -178,6 +178,11 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		GetProfileColorNoBacks(kv, "cloak_rendercolor", profileData.CloakRenderColor[0], profileData.CloakRenderColor[1], profileData.CloakRenderColor[2], profileData.CloakRenderColor[3],
 								g_CachedProfileData.RenderColor[0], g_CachedProfileData.RenderColor[1], g_CachedProfileData.RenderColor[2], profileData.CloakRenderColor[3]);
 		profileData.CloakRenderMode = kv.GetNum("cloak_rendermode", profileData.CloakRenderMode);
+
+		kv.GetString("cloak_on_sound", profileData.CloakOnSound, sizeof(profileData.CloakOnSound), profileData.CloakOnSound);
+		kv.GetString("cloak_off_sound", profileData.CloakOffSound, sizeof(profileData.CloakOffSound), profileData.CloakOffSound);
+		TryPrecacheBossProfileSoundPath(profileData.CloakOnSound, _, g_FileCheckConVar.BoolValue);
+		TryPrecacheBossProfileSoundPath(profileData.CloakOffSound, _, g_FileCheckConVar.BoolValue);
 	}
 	profileData.ProjectilesEnabled = !!kv.GetNum("projectile_enable", profileData.ProjectilesEnabled);
 	if (profileData.ProjectilesEnabled)
@@ -223,10 +228,84 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		{
 			profileData.ProjectileRandomPosMax = profileData.ProjectileRandomPosMin;
 		}
-		if (profileData.ProjectileType == SF2BossProjectileType_Baseball)
+
+		switch (profileData.ProjectileType)
 		{
-			kv.GetString("baseball_model", profileData.BaseballModel, sizeof(profileData.BaseballModel), profileData.BaseballModel);
-			PrecacheModel2(profileData.BaseballModel, _, _, g_FileCheckConVar.BoolValue);
+			case SF2BossProjectileType_Fireball:
+			{
+				kv.GetString("fire_explode_sound", profileData.FireballExplodeSound, sizeof(profileData.FireballExplodeSound), profileData.FireballExplodeSound);
+				kv.GetString("fire_shoot_sound", profileData.FireballShootSound, sizeof(profileData.FireballShootSound), profileData.FireballShootSound);
+				kv.GetString("fire_trail", profileData.FireballTrail, sizeof(profileData.FireballTrail), profileData.FireballTrail);
+
+				TryPrecacheBossProfileSoundPath(profileData.FireballExplodeSound, _, g_FileCheckConVar.BoolValue);
+				TryPrecacheBossProfileSoundPath(profileData.FireballShootSound, _, g_FileCheckConVar.BoolValue);
+			}
+			case SF2BossProjectileType_Iceball:
+			{
+				kv.GetString("fire_explode_sound", profileData.FireballExplodeSound, sizeof(profileData.FireballExplodeSound), profileData.FireballExplodeSound);
+				kv.GetString("fire_shoot_sound", profileData.FireballShootSound, sizeof(profileData.FireballShootSound), profileData.FireballShootSound);
+				kv.GetString("fire_iceball_slow_sound", profileData.IceballSlowSound, sizeof(profileData.IceballSlowSound), profileData.IceballSlowSound);
+				kv.GetString("fire_iceball_trail", profileData.IceballTrail, sizeof(profileData.IceballTrail), profileData.IceballTrail);
+
+				TryPrecacheBossProfileSoundPath(profileData.FireballExplodeSound, _, g_FileCheckConVar.BoolValue);
+				TryPrecacheBossProfileSoundPath(profileData.FireballShootSound, _, g_FileCheckConVar.BoolValue);
+				TryPrecacheBossProfileSoundPath(profileData.IceballSlowSound, _, g_FileCheckConVar.BoolValue);
+			}
+			case SF2BossProjectileType_Rocket:
+			{
+				kv.GetString("rocket_trail_particle", profileData.RocketTrail, sizeof(profileData.RocketTrail), profileData.RocketTrail);
+				kv.GetString("rocket_explode_particle", profileData.RocketExplodeParticle, sizeof(profileData.RocketExplodeParticle), profileData.RocketExplodeParticle);
+				kv.GetString("rocket_explode_sound", profileData.RocketExplodeSound, sizeof(profileData.RocketExplodeSound), profileData.RocketExplodeSound);
+				kv.GetString("rocket_shoot_sound", profileData.RocketShootSound, sizeof(profileData.RocketShootSound), profileData.RocketShootSound);
+				kv.GetString("rocket_model", profileData.RocketModel, sizeof(profileData.RocketModel), profileData.RocketModel);
+
+				TryPrecacheBossProfileSoundPath(profileData.RocketExplodeSound, _, g_FileCheckConVar.BoolValue);
+				TryPrecacheBossProfileSoundPath(profileData.RocketShootSound, _, g_FileCheckConVar.BoolValue);
+
+				if (strcmp(profileData.RocketModel, ROCKET_MODEL, true) != 0)
+				{
+					if (!PrecacheModel(profileData.RocketModel, true))
+					{
+						LogSF2Message("Rocket model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.RocketModel);
+					}
+					else
+					{
+						PrecacheModel2(profileData.RocketModel, _, _, g_FileCheckConVar.BoolValue);
+					}
+				}
+			}
+			case SF2BossProjectileType_Grenade:
+			{
+				kv.GetString("grenade_shoot_sound", profileData.GrenadeShootSound, sizeof(profileData.GrenadeShootSound), profileData.GrenadeShootSound);
+
+				TryPrecacheBossProfileSoundPath(profileData.GrenadeShootSound, _, g_FileCheckConVar.BoolValue);
+			}
+			case SF2BossProjectileType_SentryRocket:
+			{
+				kv.GetString("sentryrocket_shoot_sound", profileData.SentryRocketShootSound, sizeof(profileData.SentryRocketShootSound), profileData.SentryRocketShootSound);
+
+				TryPrecacheBossProfileSoundPath(profileData.SentryRocketShootSound, _, g_FileCheckConVar.BoolValue);
+			}
+			case SF2BossProjectileType_Arrow:
+			{
+				kv.GetString("arrow_shoot_sound", profileData.ArrowShootSound, sizeof(profileData.ArrowShootSound), profileData.ArrowShootSound);
+
+				TryPrecacheBossProfileSoundPath(profileData.ArrowShootSound, _, g_FileCheckConVar.BoolValue);
+			}
+			case SF2BossProjectileType_Mangler:
+			{
+				kv.GetString("mangler_shoot_sound", profileData.ManglerShootSound, sizeof(profileData.ManglerShootSound), profileData.ManglerShootSound);
+
+				TryPrecacheBossProfileSoundPath(profileData.ManglerShootSound, _, g_FileCheckConVar.BoolValue);
+			}
+			case SF2BossProjectileType_Baseball:
+			{
+				kv.GetString("baseball_model", profileData.BaseballModel, sizeof(profileData.BaseballModel), profileData.BaseballModel);
+				kv.GetString("baseball_shoot_sound", profileData.BaseballShootSound, sizeof(profileData.BaseballShootSound), profileData.BaseballShootSound);
+
+				TryPrecacheBossProfileSoundPath(profileData.BaseballShootSound, _, g_FileCheckConVar.BoolValue);
+				PrecacheModel2(profileData.BaseballModel, _, _, g_FileCheckConVar.BoolValue);
+			}
 		}
 		profileData.ProjectilePosOffsets = new ArrayList(3);
 		if (profileData.ProjectileRandomPosMin == profileData.ProjectileRandomPosMax)
@@ -248,9 +327,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 				profileData.ProjectilePosOffsets.PushArray(position);
 			}
 		}
-
-		profileData.ShootAnimations = !!kv.GetNum("use_shoot_animations", profileData.ShootAnimations);
 	}
+
+	profileData.ShootAnimations = !!kv.GetNum("use_shoot_animations", profileData.ShootAnimations);
 
 	profileData.AdvancedDamageEffects = !!kv.GetNum("player_damage_effects", profileData.AdvancedDamageEffects);
 	if (profileData.AdvancedDamageEffects)
@@ -291,6 +370,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			GetProfileDifficultyFloatValues(kv, "player_jarate_duration", profileData.JarateDuration, profileData.JarateDuration);
 			profileData.JarateBeamParticle = !!kv.GetNum("player_jarate_beam_particle", profileData.JarateBeamParticle);
 			kv.GetString("player_jarate_particle", profileData.JarateParticle, sizeof(profileData.JarateParticle), profileData.JarateParticle);
+
+			kv.GetString("player_jarate_sound", profileData.JarateHitSound, sizeof(profileData.JarateHitSound), profileData.JarateHitSound);
+			TryPrecacheBossProfileSoundPath(profileData.JarateHitSound, _, g_FileCheckConVar.BoolValue);
 		}
 
 		profileData.MilkEffects = !!kv.GetNum("player_milk_on_hit", profileData.MilkEffects);
@@ -305,6 +387,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			GetProfileDifficultyFloatValues(kv, "player_milk_duration", profileData.MilkDuration, profileData.MilkDuration);
 			profileData.MilkBeamParaticle = !!kv.GetNum("player_milk_beam_particle", profileData.MilkBeamParaticle);
 			kv.GetString("player_milk_particle", profileData.MilkParticle, sizeof(profileData.MilkParticle), profileData.MilkParticle);
+
+			kv.GetString("player_milk_sound", profileData.MilkHitSound, sizeof(profileData.MilkHitSound), profileData.MilkHitSound);
+			TryPrecacheBossProfileSoundPath(profileData.MilkHitSound, _, g_FileCheckConVar.BoolValue);
 		}
 
 		profileData.GasEffects = !!kv.GetNum("player_gas_on_hit", profileData.GasEffects);
@@ -319,6 +404,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			GetProfileDifficultyFloatValues(kv, "player_gas_duration", profileData.GasDuration, profileData.GasDuration);
 			profileData.GasBeamParticle = !!kv.GetNum("player_gas_beam_particle", profileData.GasBeamParticle);
 			kv.GetString("player_gas_particle", profileData.GasParticle, sizeof(profileData.GasParticle), profileData.GasParticle);
+
+			kv.GetString("player_gas_sound", profileData.GasHitSound, sizeof(profileData.GasHitSound), profileData.GasHitSound);
+			TryPrecacheBossProfileSoundPath(profileData.GasHitSound, _, g_FileCheckConVar.BoolValue);
 		}
 
 		profileData.MarkEffects = !!kv.GetNum("player_mark_on_hit", profileData.MarkEffects);
@@ -380,6 +468,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			GetProfileDifficultyFloatValues(kv, "player_stun_slowdown", profileData.StunEffectSlowdown, profileData.StunEffectSlowdown);
 			profileData.StunEffectBeamParticle = !!kv.GetNum("player_stun_beam_particle", profileData.StunEffectBeamParticle);
 			kv.GetString("player_stun_particle", profileData.StunParticle, sizeof(profileData.StunParticle), profileData.StunParticle);
+
+			kv.GetString("player_stun_sound", profileData.StunHitSound, sizeof(profileData.StunHitSound), profileData.StunHitSound);
+			TryPrecacheBossProfileSoundPath(profileData.StunHitSound, _, g_FileCheckConVar.BoolValue);
 		}
 
 		profileData.BleedEffects = !!kv.GetNum("player_bleed_on_hit", profileData.BleedEffects);
@@ -426,6 +517,8 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			profileData.SmiteColor[2] = kv.GetNum("player_smite_color_b", profileData.SmiteColor[2]);
 			profileData.SmiteColor[3] = kv.GetNum("player_smite_transparency", profileData.SmiteColor[3]);
 			profileData.SmiteMessage = !!kv.GetNum("player_smite_message", profileData.SmiteMessage);
+
+			kv.GetString("player_smite_sound", profileData.SmiteHitSound, sizeof(profileData.SmiteHitSound), profileData.SmiteHitSound);
 		}
 	}
 
@@ -444,6 +537,7 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		kv.GetString("damage_effect_particle", profileData.DamageParticleName, sizeof(profileData.DamageParticleName), profileData.DamageParticleName);
 		profileData.DamageParticleBeam = !!kv.GetNum("damage_effect_beam_particle", profileData.DamageParticleBeam);
 		kv.GetString("sound_damage_effect", profileData.DamageParticleSound, sizeof(profileData.DamageParticleSound), profileData.DamageParticleSound);
+		TryPrecacheBossProfileSoundPath(profileData.DamageParticleSound, _, g_FileCheckConVar.BoolValue);
 	}
 
 	profileData.Shockwaves = !!kv.GetNum("shockwave", profileData.Shockwaves);
@@ -509,6 +603,28 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	{
 		profileData.TrapType = kv.GetNum("trap_type", profileData.TrapType);
 		GetProfileDifficultyFloatValues(kv, "trap_spawn_cooldown", profileData.TrapCooldown, profileData.TrapCooldown);
+		kv.GetString("trap_model", profileData.TrapModel, sizeof(profileData.TrapModel), profileData.TrapModel);
+		kv.GetString("trap_deploy_sound", profileData.TrapDeploySound, sizeof(profileData.TrapDeploySound), profileData.TrapDeploySound);
+		kv.GetString("trap_miss_sound", profileData.TrapMissSound, sizeof(profileData.TrapMissSound), profileData.TrapMissSound);
+		kv.GetString("trap_catch_sound", profileData.TrapCatchSound, sizeof(profileData.TrapCatchSound), profileData.TrapCatchSound);
+		kv.GetString("trap_animation_idle", profileData.TrapAnimIdle, sizeof(profileData.TrapAnimIdle), profileData.TrapAnimIdle);
+		kv.GetString("trap_animation_closed", profileData.TrapAnimClose, sizeof(profileData.TrapAnimClose), profileData.TrapAnimClose);
+		kv.GetString("trap_animation_open", profileData.TrapAnimOpen, sizeof(profileData.TrapAnimOpen), profileData.TrapAnimOpen);
+		TryPrecacheBossProfileSoundPath(profileData.TrapDeploySound, _, g_FileCheckConVar.BoolValue);
+		TryPrecacheBossProfileSoundPath(profileData.TrapMissSound, _, g_FileCheckConVar.BoolValue);
+		TryPrecacheBossProfileSoundPath(profileData.TrapCatchSound, _, g_FileCheckConVar.BoolValue);
+
+		if (strcmp(profileData.TrapModel, TRAP_MODEL, true) != 0)
+		{
+			if (!PrecacheModel(profileData.TrapModel, true))
+			{
+				LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.TrapModel);
+			}
+			else
+			{
+				PrecacheModel2(profileData.TrapModel, _, _, g_FileCheckConVar.BoolValue);
+			}
+		}
 	}
 
 	profileData.AutoChaseEnabled = !!kv.GetNum("auto_chase_enabled", profileData.AutoChaseEnabled);

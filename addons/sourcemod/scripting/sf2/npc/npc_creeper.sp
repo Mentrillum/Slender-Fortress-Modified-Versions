@@ -81,6 +81,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 
 	INextBot bot = npc.GetBot();
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	CBaseCombatCharacter combatChar = CBaseCombatCharacter(bossEnt);
 
 	char slenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
@@ -274,8 +275,8 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 								}
 								else
 								{
-									CNavArea area = TheNavMesh.GetNearestNavArea(myPos, _, 300.0);
-									if (area == NULL_AREA)
+									CNavArea area = combatChar.GetLastKnownArea();
+									if (area == NULL_AREA && segment != NULL_PATH_SEGMENT)
 									{
 										area = segment.area;
 									}

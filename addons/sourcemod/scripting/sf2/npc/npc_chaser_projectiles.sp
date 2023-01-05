@@ -826,7 +826,7 @@ static Action Hook_ProjectileAttackTouch(int entity, int other)
 				int bossIndex = NPCGetFromEntIndex(slender);
 				if (bossIndex != -1)
 				{
-					EmitSoundToAll(g_SlenderFireballExplodeSound[bossIndex], entity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+					EmitSoundToAll(FIREBALL_IMPACT, entity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 				}
 				CreateGeneralParticle(entity, "spell_batball_impact_blue");
 			}
@@ -1062,7 +1062,7 @@ static Action Hook_ProjectileTouch(int entity, int other)
 								}
 								else if ((ProjectileGetFlags(entity) & PROJ_ICEBALL))
 								{
-									EmitSoundToClient(client, ICEBALL_IMPACT, _, MUSIC_CHAN);
+									EmitSoundToClient(client, g_SlenderIceballImpactSound[bossIndex], _, MUSIC_CHAN);
 									TF2_StunPlayer(client, NPCChaserGetIceballSlowdownDuration(bossIndex, difficulty), NPCChaserGetIceballSlowdownPercent(bossIndex, difficulty), TF_STUNFLAG_SLOWDOWN, client);
 								}
 							}

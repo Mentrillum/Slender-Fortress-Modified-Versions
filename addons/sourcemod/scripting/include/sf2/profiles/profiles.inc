@@ -1293,11 +1293,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 					if (strcmp(animType, "shoot") == 0)
 					{
 						doResize = true;
-						animDataArray.Resize(SF2_CHASER_BOSS_MAX_ATTACKS);
 						for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
 						{
 							SF2BossProfileAnimationSectionNameData tempData;
-							animDataArray.SetArray(i, tempData, sizeof(tempData));
+							animDataArray.PushArray(tempData, sizeof(tempData));
 						}
 					}
 
@@ -1646,41 +1645,9 @@ enum struct SF2BossProfileData
 
 	bool OutroMusic;
 
-	char CloakOnSound[PLATFORM_MAX_PATH];
-	char CloakOffSound[PLATFORM_MAX_PATH];
-	char JarateHitSound[PLATFORM_MAX_PATH];
-	char MilkHitSound[PLATFORM_MAX_PATH];
-	char GasHitSound[PLATFORM_MAX_PATH];
-	char StunHitSound[PLATFORM_MAX_PATH];
-	char FireballExplodeSound[PLATFORM_MAX_PATH];
-	char FireballShootSound[PLATFORM_MAX_PATH];
-	char FireballTrail[PLATFORM_MAX_PATH];
-	char RocketTrail[PLATFORM_MAX_PATH];
-	char RocketExplodeParticle[PLATFORM_MAX_PATH];
-	char IceballSlowSound[PLATFORM_MAX_PATH];
-	char IceballTrail[PLATFORM_MAX_PATH];
-	char RocketExplodeSound[PLATFORM_MAX_PATH];
-	char RocketShootSound[PLATFORM_MAX_PATH];
-	char GrenadeShootSound[PLATFORM_MAX_PATH];
-	char SentryRocketShootSound[PLATFORM_MAX_PATH];
-	char ArrowShootSound[PLATFORM_MAX_PATH];
-	char ManglerShootSound[PLATFORM_MAX_PATH];
-	char BaseballShootSound[PLATFORM_MAX_PATH];
 	char EngineSound[PLATFORM_MAX_PATH];
 	int EngineSoundLevel;
 	float EngineSoundVolume;
-	char SpawnEffectSound[PLATFORM_MAX_PATH];
-	char DespawnEffectSound[PLATFORM_MAX_PATH];
-	char SmiteHitSound[PLATFORM_MAX_PATH];
-	char RocketModel[PLATFORM_MAX_PATH];
-
-	char TrapModel[PLATFORM_MAX_PATH];
-	char TrapDeploySound[PLATFORM_MAX_PATH];
-	char TrapMissSound[PLATFORM_MAX_PATH];
-	char TrapCatchSound[PLATFORM_MAX_PATH];
-	char TrapAnimIdle[PLATFORM_MAX_PATH];
-	char TrapAnimClose[PLATFORM_MAX_PATH];
-	char TrapAnimOpen[PLATFORM_MAX_PATH];
 
 	// Sounds
 	SF2BossProfileSoundInfo LocalDeathCamSounds;
@@ -1884,41 +1851,9 @@ enum struct SF2BossProfileData
 
 		this.OutroMusic = false;
 
-		this.CloakOnSound = DEFAULT_CLOAKONSOUND;
-		this.CloakOffSound = DEFAULT_CLOAKOFFSOUND;
-		this.JarateHitSound = JARATE_HITPLAYER;
-		this.MilkHitSound = JARATE_HITPLAYER;
-		this.GasHitSound = JARATE_HITPLAYER;
-		this.StunHitSound = STUN_HITPLAYER;
-		this.FireballExplodeSound = FIREBALL_IMPACT;
-		this.FireballShootSound = FIREBALL_SHOOT;
-		this.FireballTrail = FIREBALL_TRAIL;
-		this.RocketTrail = ROCKET_TRAIL;
-		this.RocketExplodeParticle = ROCKET_EXPLODE_PARTICLE;
-		this.IceballSlowSound = ICEBALL_IMPACT;
-		this.IceballTrail = ICEBALL_TRAIL;
-		this.RocketExplodeSound = ROCKET_IMPACT;
-		this.RocketShootSound = ROCKET_SHOOT;
-		this.GrenadeShootSound = GRENADE_SHOOT;
-		this.SentryRocketShootSound = SENTRYROCKET_SHOOT;
-		this.ArrowShootSound = ARROW_SHOOT;
-		this.ManglerShootSound = MANGLER_SHOOT;
-		this.BaseballShootSound = BASEBALL_SHOOT;
 		this.EngineSound[0] = '\0';
 		this.EngineSoundLevel = 83;
 		this.EngineSoundVolume = 0.8;
-		this.SpawnEffectSound[0] = '\0';
-		this.DespawnEffectSound[0] = '\0';
-		this.SmiteHitSound = SOUND_THUNDER;
-		this.RocketModel = ROCKET_MODEL;
-
-		this.TrapModel = TRAP_MODEL;
-		this.TrapDeploySound = TRAP_DEPLOY;
-		this.TrapMissSound = TRAP_CLOSE;
-		this.TrapCatchSound = TRAP_CLOSE;
-		this.TrapAnimIdle = "trapopenend";
-		this.TrapAnimClose = "trapclosed";
-		this.TrapAnimOpen[0] = '\0';
 
 		this.LocalDeathCamSounds.Init();
 		this.ClientDeathCamSounds.Init();

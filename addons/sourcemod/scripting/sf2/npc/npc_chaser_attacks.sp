@@ -492,8 +492,8 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 							color2[3] = GetChaserProfileShockwaveAlpha2(profile);
 
 							int modelBeam, modelHalo;
-							modelBeam = GetBossProfileShockwaveBeamModel(profile);
-							modelHalo = GetBossProfileShockwaveHaloModel(profile);
+							modelBeam = GetChaserProfileShockwaveBeamModel(profile);
+							modelHalo = GetChaserProfileShockwaveHaloModel(profile);
 
 							TE_SetupBeamRingPoint(myShockPos, 10.0, NPCChaserGetShockwaveRange(bossIndex,difficulty), modelBeam, modelHalo, 0, 30, 0.2, NPCChaserGetShockwaveWidth(bossIndex,1), NPCChaserGetShockwaveAmplitude(bossIndex), color2, 15, 0); //Inner
 							TE_SendToAll();

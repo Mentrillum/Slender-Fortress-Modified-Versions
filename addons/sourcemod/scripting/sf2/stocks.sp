@@ -1448,7 +1448,7 @@ bool DispatchParticleEffect(int entity, const char[] particle, float startPos[3]
 	}
 	else
 	{
-		LogError("There is no valid particle to use for effects.");
+		//LogError("There is no valid particle to use for effects.");
 		return false;
 	}
 	return true;
@@ -1504,7 +1504,7 @@ bool DispatchParticleEffectBeam(int entity, const char[] particle, float startPo
 	}
 	else
 	{
-		LogError("There is no valid particle to use for effects.");
+		//LogError("There is no valid particle to use for effects.");
 		return false;
 	}
 	return true;

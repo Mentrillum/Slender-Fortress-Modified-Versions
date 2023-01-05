@@ -1933,38 +1933,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 
 	g_SlenderAddCompanionsOnDifficulty[Npc.Index] = false;
 
-	GetBossProfileCloakOnSound(profile, g_SlenderCloakOnSound[Npc.Index], sizeof(g_SlenderCloakOnSound[]));
-	GetBossProfileCloakOffSound(profile, g_SlenderCloakOffSound[Npc.Index], sizeof(g_SlenderCloakOffSound[]));
-	GetBossProfileRocketShootSound(profile, g_SlenderRocketShootSound[Npc.Index], sizeof(g_SlenderRocketShootSound[]));
-	GetBossProfileRocketModel(profile, g_SlenderRocketModel[Npc.Index], sizeof(g_SlenderRocketModel[]));
-	GetBossProfileSentryRocketShootSound(profile, g_SlenderSentryRocketShootSound[Npc.Index], sizeof(g_SlenderSentryRocketShootSound[]));
-	GetBossProfileFireballShootSound(profile, g_SlenderFireballShootSound[Npc.Index], sizeof(g_SlenderFireballShootSound[]));
-	GetBossProfileRocketExplodeSound(profile, g_SlenderRocketExplodeSound[Npc.Index], sizeof(g_SlenderRocketExplodeSound[]));
-	GetBossProfileFireballTrail(profile, g_SlenderFireballTrail[Npc.Index], sizeof(g_SlenderFireballTrail[]));
-	GetBossProfileRocketTrail(profile, g_SlenderRocketTrailParticle[Npc.Index], sizeof(g_SlenderRocketTrailParticle[]));
-	GetBossProfileRocketExplodeParticle(profile, g_SlenderRocketExplodeParticle[Npc.Index], sizeof(g_SlenderRocketExplodeParticle[]));
-	GetBossProfileFireballExplodeSound(profile, g_SlenderFireballExplodeSound[Npc.Index], sizeof(g_SlenderFireballExplodeSound[]));
-	GetBossProfileIceballSlowSound(profile, g_SlenderIceballImpactSound[Npc.Index], sizeof(g_SlenderIceballImpactSound[]));
-	GetBossProfileIceballTrail(profile, g_SlenderIceballTrail[Npc.Index], sizeof(g_SlenderIceballTrail));
-	GetBossProfileGrenadeShootSound(profile, g_SlenderGrenadeShootSound[Npc.Index], sizeof(g_SlenderGrenadeShootSound[]));
-	GetBossProfileArrowShootSound(profile, g_SlenderArrowShootSound[Npc.Index], sizeof(g_SlenderArrowShootSound[]));
-	GetBossProfileManglerShootSound(profile, g_SlenderManglerShootSound[Npc.Index], sizeof(g_SlenderManglerShootSound[]));
-	GetBossProfileBaseballShootSound(profile, g_SlenderBaseballShootSound[Npc.Index], sizeof(g_SlenderBaseballShootSound[]));
-	GetBossProfileJarateHitSound(profile, g_SlenderJarateHitSound[Npc.Index], sizeof(g_SlenderJarateHitSound[]));
-	GetBossProfileMilkHitSound(profile, g_SlenderMilkHitSound[Npc.Index], sizeof(g_SlenderMilkHitSound[]));
-	GetBossProfileGasHitSound(profile, g_SlenderGasHitSound[Npc.Index], sizeof(g_SlenderGasHitSound[]));
-	GetBossProfileStunHitSound(profile, g_SlenderStunHitSound[Npc.Index], sizeof(g_SlenderStunHitSound[]));
 	GetBossProfileEngineSound(profile, g_SlenderEngineSound[Npc.Index], sizeof(g_SlenderEngineSound[]));
-	GetBossProfileShockwaveBeamSprite(profile, g_SlenderShockwaveBeamSprite[Npc.Index], sizeof(g_SlenderShockwaveBeamSprite[]));
-	GetBossProfileShockwaveHaloSprite(profile, g_SlenderShockwaveHaloSprite[Npc.Index], sizeof(g_SlenderShockwaveHaloSprite[]));
-	GetBossProfileSmiteHitSound(profile, g_SlenderSmiteSound[Npc.Index], sizeof(g_SlenderSmiteSound[]));
-	GetBossProfileTrapModel(profile, g_SlenderTrapModel[Npc.Index], sizeof(g_SlenderTrapModel[]));
-	GetBossProfileTrapDeploySound(profile, g_SlenderTrapDeploySound[Npc.Index], sizeof(g_SlenderTrapDeploySound[]));
-	GetBossProfileTrapMissSound(profile, g_SlenderTrapMissSound[Npc.Index], sizeof(g_SlenderTrapMissSound[]));
-	GetBossProfileTrapCatchSound(profile, g_SlenderTrapHitSound[Npc.Index], sizeof(g_SlenderTrapHitSound[]));
-	GetBossProfileTrapAnimIdle(profile, g_SlenderTrapAnimIdle[Npc.Index], sizeof(g_SlenderTrapAnimIdle[]));
-	GetBossProfileTrapAnimClose(profile, g_SlenderTrapAnimClose[Npc.Index], sizeof(g_SlenderTrapAnimClose[]));
-	GetBossProfileTrapAnimOpen(profile, g_SlenderTrapAnimOpen[Npc.Index], sizeof(g_SlenderTrapAnimOpen[]));
 
 	g_SlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
@@ -3777,15 +3746,15 @@ void SlenderPrintChatMessage(int bossIndex, int player)
 				if (StrContains(buffer, "[PLAYER]", true) != -1)
 				{
 					FormatEx(replacePlayer, sizeof(replacePlayer), "{red}%s{default}", playerName);
-					ReplaceString(buffer, sizeof(buffer), "[PLAYER]", replacePlayer, true);
+					ReplaceString(buffer, sizeof(buffer), "[PLAYER]", replacePlayer);
 				}
 				if (StrContains(buffer, "[BOSS]", true) != -1)
 				{
-					ReplaceString(buffer, sizeof(buffer), "[BOSS]", name, true);
+					ReplaceString(buffer, sizeof(buffer), "[BOSS]", name);
 				}
 				if (StrContains(buffer, "[ROUNDTIME]", true) != -1)
 				{
-					ReplaceString(buffer, sizeof(buffer), "[ROUNDTIME]", time, true);
+					ReplaceString(buffer, sizeof(buffer), "[ROUNDTIME]", time);
 				}
 				int chatLength = strlen(prefix) + strlen(buffer);
 				if (chatLength > 255)

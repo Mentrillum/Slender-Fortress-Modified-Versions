@@ -1581,12 +1581,12 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcStunInitialHealth[npcIndex] = GetChaserProfileStunHealth(profile);
 	g_NpcChaseInitialOnStun[npcIndex] = GetChaserProfileStunOnChaseInitial(profile);
 
-	//Get key Data
 	g_NpcHasKeyDrop[npcIndex] = GetChaserProfileKeyDrop(profile);
 
-	//Get Cloak Data
 	g_NpcCloakEnabled[npcIndex] = GetChaserProfileCloakState(profile);
 	g_NpcNextDecloakTime[npcIndex] = -1.0;
+	GetChaserProfileCloakOnSound(profile, g_SlenderCloakOnSound[npcIndex], sizeof(g_SlenderCloakOnSound[]));
+	GetChaserProfileCloakOffSound(profile, g_SlenderCloakOffSound[npcIndex], sizeof(g_SlenderCloakOffSound[]));
 
 	float stunHealthPerPlayer = GetChaserProfileStunHealthPerPlayer(profile);
 	int count;
@@ -1664,6 +1664,28 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcHasProjectileEnabled[npcIndex] = GetChaserProfileProjectileState(profile);
 	g_NpcProjectileType[npcIndex] = GetChaserProfileProjectileType(profile);
 	g_NpcHasCriticalRockets[npcIndex] = GetChaserProfileCriticalRockets(profile);
+	GetChaserProfileFireballShootSound(profile, g_SlenderFireballShootSound[npcIndex], sizeof(g_SlenderFireballShootSound[]));
+	GetChaserProfileFireballTrail(profile, g_SlenderFireballTrail[npcIndex], sizeof(g_SlenderFireballTrail[]));
+	GetChaserProfileFireballExplodeSound(profile, g_SlenderFireballExplodeSound[npcIndex], sizeof(g_SlenderFireballExplodeSound[]));
+
+	GetChaserProfileIceballSlowSound(profile, g_SlenderIceballImpactSound[npcIndex], sizeof(g_SlenderIceballImpactSound[]));
+	GetChaserProfileIceballTrail(profile, g_SlenderIceballTrail[npcIndex], sizeof(g_SlenderIceballTrail));
+
+	GetChaserProfileRocketShootSound(profile, g_SlenderRocketShootSound[npcIndex], sizeof(g_SlenderRocketShootSound[]));
+	GetChaserProfileRocketModel(profile, g_SlenderRocketModel[npcIndex], sizeof(g_SlenderRocketModel[]));
+	GetChaserProfileRocketExplodeSound(profile, g_SlenderRocketExplodeSound[npcIndex], sizeof(g_SlenderRocketExplodeSound[]));
+	GetChaserProfileRocketTrail(profile, g_SlenderRocketTrailParticle[npcIndex], sizeof(g_SlenderRocketTrailParticle[]));
+	GetChaserProfileRocketExplodeParticle(profile, g_SlenderRocketExplodeParticle[npcIndex], sizeof(g_SlenderRocketExplodeParticle[]));
+	GetChaserProfileSentryRocketShootSound(profile, g_SlenderSentryRocketShootSound[npcIndex], sizeof(g_SlenderSentryRocketShootSound[]));
+
+	GetChaserProfileGrenadeShootSound(profile, g_SlenderGrenadeShootSound[npcIndex], sizeof(g_SlenderGrenadeShootSound[]));
+
+	GetChaserProfileArrowShootSound(profile, g_SlenderArrowShootSound[npcIndex], sizeof(g_SlenderArrowShootSound[]));
+
+	GetChaserProfileManglerShootSound(profile, g_SlenderManglerShootSound[npcIndex], sizeof(g_SlenderManglerShootSound[]));
+
+	GetChaserProfileBaseballShootSound(profile, g_SlenderBaseballShootSound[npcIndex], sizeof(g_SlenderBaseballShootSound[]));
+
 	g_NpcHasUseShootGesture[npcIndex] = GetChaserProfileGestureShoot(profile);
 	g_NpcHasUseProjectileAmmo[npcIndex] = GetChaserProfileProjectileAmmoState(profile);
 	g_NpcHasUseChargeUpProjectiles[npcIndex] = GetChaserProfileChargeUpProjectilesState(profile);
@@ -1675,35 +1697,50 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcHasAttachDamageParticle[npcIndex] = GetChaserProfileEnableAdvancedDamageParticles(profile);
 	g_NpcRandomAttackIndexes[npcIndex] = GetChaserProfileRandomAttackIndexes(profile);
 	g_NpcRandomStunType[npcIndex] = GetChaserProfileRandomStunType(profile);
+
 	g_NpcHasJaratePlayerEnabled[npcIndex] = GetChaserProfileJarateState(profile);
 	g_NpcJarateAttackIndexes[npcIndex] = GetChaserProfileJarateAttackIndexes(profile);
 	g_NpcHasJaratePlayerBeamParticle[npcIndex] = GetChaserProfileJarateBeamParticle(profile);
+	GetChaserProfileJarateHitSound(profile, g_SlenderJarateHitSound[npcIndex], sizeof(g_SlenderJarateHitSound[]));
+
 	g_NpcHasMilkPlayerEnabled[npcIndex] = GetChaserProfileMilkState(profile);
 	g_NpcMilkAttackIndexes[npcIndex] = GetChaserProfileMilkAttackIndexes(profile);
 	g_NpcHasMilkPlayerBeamParticle[npcIndex] = GetChaserProfileMilkBeamParticle(profile);
+	GetChaserProfileMilkHitSound(profile, g_SlenderMilkHitSound[npcIndex], sizeof(g_SlenderMilkHitSound[]));
+
 	g_NpcHasGasPlayerEnabled[npcIndex] = GetChaserProfileGasState(profile);
 	g_NpcGasAttackIndexes[npcIndex] = GetChaserProfileGasAttackIndexes(profile);
 	g_NpcHasGasPlayerBeamParticle[npcIndex] = GetChaserProfileGasBeamParticle(profile);
+	GetChaserProfileGasHitSound(profile, g_SlenderGasHitSound[npcIndex], sizeof(g_SlenderGasHitSound[]));
+
 	g_NpcHasMarkPlayerEnabled[npcIndex] = GetChaserProfileMarkState(profile);
 	g_NpcMarkAttackIndexes[npcIndex] = GetChaserProfileMarkAttackIndexes(profile);
+
 	g_NpcHasSilentMarkPlayerEnabled[npcIndex] = GetChaserProfileSilentMarkState(profile);
 	g_NpcSilentMarkAttackIndexes[npcIndex] = GetChaserProfileSilentMarkAttackIndexes(profile);
+
 	g_NpcHasIgnitePlayerEnabled[npcIndex] = GetChaserProfileIgniteState(profile);
 	g_NpcIgniteAttackIndexes[npcIndex] = GetChaserProfileIgniteAttackIndexes(profile);
+
 	g_NpcHasStunPlayerEnabled[npcIndex] = GetChaserProfileStunAttackState(profile);
 	g_NpcStunAttackIndexes[npcIndex] = GetChaserProfileStunAttackIndexes(profile);
 	g_NpcStunAttackType[npcIndex] = GetChaserProfileStunDamageType(profile);
 	g_NpcHasStunPlayerBeamParticle[npcIndex] = GetChaserProfileStunAttackBeamParticle(profile);
+	GetChaserProfileStunHitSound(profile, g_SlenderStunHitSound[npcIndex], sizeof(g_SlenderStunHitSound[]));
+
 	g_NpcHasBleedPlayerEnabled[npcIndex] = GetChaserProfileBleedState(profile);
 	g_NpcBleedAttackIndexes[npcIndex] = GetChaserProfileBleedAttackIndexes(profile);
+
 	g_NpcHasElectricPlayerEnabled[npcIndex] = GetChaserProfileEletricAttackState(profile);
 	g_NpcElectricAttackIndexes[npcIndex] = GetChaserProfileEletricAttackIndexes(profile);
 	g_NpcHasElectricPlayerBeamParticle[npcIndex] = GetChaserProfileEletricBeamParticle(profile);
+
 	g_NpcHasSmitePlayerEnabled[npcIndex] = GetChaserProfileSmiteState(profile);
 	g_NpcHasSmiteMessage[npcIndex] = GetChaserProfileSmiteMessage(profile);
 	g_NpcSmiteAttackIndexes[npcIndex] = GetChaserProfileSmiteAttackIndexes(profile);
 	g_NpcSmiteDamage[npcIndex] = GetChaserProfileSmiteDamage(profile);
 	g_NpcSmiteDamageType[npcIndex] = GetChaserProfileSmiteDamageType(profile);
+	GetChaserProfileSmiteHitSound(profile, g_SlenderSmiteSound[npcIndex], sizeof(g_SlenderSmiteSound[]));
 
 	g_NpcHasXenobladeBreakComboSystem[npcIndex] = GetChaserProfileXenobladeCombo(profile);
 	g_NpcXenobladeBreakDuration[npcIndex] = GetChaserProfileXenobladeBreakDuration(profile);
@@ -1726,9 +1763,18 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 	g_NpcShockwaveWidth[npcIndex][0] = GetChaserProfileShockwaveWidth1(profile);
 	g_NpcShockwaveWidth[npcIndex][1] = GetChaserProfileShockwaveWidth2(profile);
 	g_NpcShockwaveAmplitude[npcIndex] = GetChaserProfileShockwaveAmplitude(profile);
+	GetChaserProfileShockwaveBeamSprite(profile, g_SlenderShockwaveBeamSprite[npcIndex], sizeof(g_SlenderShockwaveBeamSprite[]));
+	GetChaserProfileShockwaveHaloSprite(profile, g_SlenderShockwaveHaloSprite[npcIndex], sizeof(g_SlenderShockwaveHaloSprite[]));
 
 	g_NpcHasTrapsEnabled[npcIndex] = GetChaserProfileTrapState(profile);
 	g_NpcTrapType[npcIndex] = GetChaserProfileTrapType(profile);
+	GetChaserProfileTrapModel(profile, g_SlenderTrapModel[npcIndex], sizeof(g_SlenderTrapModel[]));
+	GetChaserProfileTrapDeploySound(profile, g_SlenderTrapDeploySound[npcIndex], sizeof(g_SlenderTrapDeploySound[]));
+	GetChaserProfileTrapMissSound(profile, g_SlenderTrapMissSound[npcIndex], sizeof(g_SlenderTrapMissSound[]));
+	GetChaserProfileTrapCatchSound(profile, g_SlenderTrapHitSound[npcIndex], sizeof(g_SlenderTrapHitSound[]));
+	GetChaserProfileTrapAnimIdle(profile, g_SlenderTrapAnimIdle[npcIndex], sizeof(g_SlenderTrapAnimIdle[]));
+	GetChaserProfileTrapAnimClose(profile, g_SlenderTrapAnimClose[npcIndex], sizeof(g_SlenderTrapAnimClose[]));
+	GetChaserProfileTrapAnimOpen(profile, g_SlenderTrapAnimOpen[npcIndex], sizeof(g_SlenderTrapAnimOpen[]));
 
 	g_SlenderHasAutoChaseEnabled[npcIndex] = GetChaserProfileAutoChaseState(profile);
 	g_NpcHasAutoChaseSprinters[npcIndex] = GetChaserProfileAutoChaseSprinterState(profile);
@@ -2393,14 +2439,7 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		}
 		case STATE_ATTACK:
 		{
-			if (!g_NpcUseFireAnimation[bossIndex])
-			{
-				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index, NPCGetCurrentAttackIndex(bossIndex));
-			}
-			else
-			{
-				animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Shoot], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index, NPCGetCurrentAttackIndex(bossIndex));
-			}
+			animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index, NPCGetCurrentAttackIndex(bossIndex));
 		}
 		case STATE_STUN:
 		{
@@ -2410,6 +2449,11 @@ void NPCChaserUpdateBossAnimation(int bossIndex, int ent, int state, bool spawn 
 		{
 			animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, tempFootsteps, index);
 		}
+	}
+
+	if (g_NpcUseFireAnimation[bossIndex])
+	{
+		animationFound = animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Shoot], difficulty, animation, sizeof(animation), playbackRate, tempDuration, cycle, footstepTime, index, NPCGetCurrentAttackIndex(bossIndex));
 	}
 
 	if (NPCIsRaging(bossIndex))

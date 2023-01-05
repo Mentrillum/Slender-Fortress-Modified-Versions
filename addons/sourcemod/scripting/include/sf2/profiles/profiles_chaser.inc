@@ -380,6 +380,8 @@ enum struct SF2ChaserBossProfileData
 	float EarthquakeFootstepAmplitude;
 	float EarthquakeFootstepFrequency;
 
+	char CloakOnSound[PLATFORM_MAX_PATH];
+	char CloakOffSound[PLATFORM_MAX_PATH];
 	bool CanCloak;
 	bool CloakOnFlee;
 	float CloakCooldown[Difficulty_Max];
@@ -412,6 +414,21 @@ enum struct SF2ChaserBossProfileData
 	int ProjectileRandomPosMin;
 	int ProjectileRandomPosMax;
 	ArrayList ProjectilePosOffsets;
+	char FireballExplodeSound[PLATFORM_MAX_PATH];
+	char FireballShootSound[PLATFORM_MAX_PATH];
+	char FireballTrail[PLATFORM_MAX_PATH];
+	char RocketTrail[PLATFORM_MAX_PATH];
+	char RocketExplodeParticle[PLATFORM_MAX_PATH];
+	char RocketModel[PLATFORM_MAX_PATH];
+	char IceballSlowSound[PLATFORM_MAX_PATH];
+	char IceballTrail[PLATFORM_MAX_PATH];
+	char RocketExplodeSound[PLATFORM_MAX_PATH];
+	char RocketShootSound[PLATFORM_MAX_PATH];
+	char GrenadeShootSound[PLATFORM_MAX_PATH];
+	char SentryRocketShootSound[PLATFORM_MAX_PATH];
+	char ArrowShootSound[PLATFORM_MAX_PATH];
+	char ManglerShootSound[PLATFORM_MAX_PATH];
+	char BaseballShootSound[PLATFORM_MAX_PATH];
 	char BaseballModel[PLATFORM_MAX_PATH];
 
 	float IceballSlowDuration[Difficulty_Max];
@@ -433,6 +450,7 @@ enum struct SF2ChaserBossProfileData
 	float JarateDuration[Difficulty_Max];
 	bool JarateBeamParticle;
 	char JarateParticle[PLATFORM_MAX_PATH];
+	char JarateHitSound[PLATFORM_MAX_PATH];
 
 	bool MilkEffects;
 	int MilkIndexes;
@@ -440,6 +458,7 @@ enum struct SF2ChaserBossProfileData
 	float MilkDuration[Difficulty_Max];
 	bool MilkBeamParaticle;
 	char MilkParticle[PLATFORM_MAX_PATH];
+	char MilkHitSound[PLATFORM_MAX_PATH];
 
 	bool GasEffects;
 	int GasIndexes;
@@ -447,6 +466,7 @@ enum struct SF2ChaserBossProfileData
 	float GasDuration[Difficulty_Max];
 	bool GasBeamParticle;
 	char GasParticle[PLATFORM_MAX_PATH];
+	char GasHitSound[PLATFORM_MAX_PATH];
 
 	bool MarkEffects;
 	int MarkIndexes;
@@ -472,6 +492,7 @@ enum struct SF2ChaserBossProfileData
 	int StunEffectType;
 	bool StunEffectBeamParticle;
 	char StunParticle[PLATFORM_MAX_PATH];
+	char StunHitSound[PLATFORM_MAX_PATH];
 
 	bool BleedEffects;
 	int BleedIndexes;
@@ -495,6 +516,7 @@ enum struct SF2ChaserBossProfileData
 	int SmiteDamageType;
 	int SmiteColor[4];
 	bool SmiteMessage;
+	char SmiteHitSound[PLATFORM_MAX_PATH];
 
 	bool XenobladeCombo;
 	float XenobladeDuration;
@@ -526,6 +548,13 @@ enum struct SF2ChaserBossProfileData
 	bool Traps;
 	int TrapType;
 	float TrapCooldown[Difficulty_Max];
+	char TrapModel[PLATFORM_MAX_PATH];
+	char TrapDeploySound[PLATFORM_MAX_PATH];
+	char TrapMissSound[PLATFORM_MAX_PATH];
+	char TrapCatchSound[PLATFORM_MAX_PATH];
+	char TrapAnimIdle[PLATFORM_MAX_PATH];
+	char TrapAnimClose[PLATFORM_MAX_PATH];
+	char TrapAnimOpen[PLATFORM_MAX_PATH];
 
 	bool DamageParticles;
 	char DamageParticleName[PLATFORM_MAX_PATH];
@@ -754,6 +783,8 @@ enum struct SF2ChaserBossProfileData
 		this.CloakRenderColor[2] = 2;
 		this.CloakRenderColor[3] = 3;
 		this.CloakRenderMode = 1;
+		this.CloakOnSound = DEFAULT_CLOAKONSOUND;
+		this.CloakOffSound = DEFAULT_CLOAKOFFSOUND;
 
 		this.ProjectilesEnabled = false;
 		this.ProjectileType = SF2BossProjectileType_Fireball;
@@ -766,6 +797,21 @@ enum struct SF2ChaserBossProfileData
 		this.ProjectileRandomPosMin = 1;
 		this.ProjectileRandomPosMax = 1;
 		this.ProjectilePosOffsets = null;
+		this.FireballExplodeSound = FIREBALL_IMPACT;
+		this.FireballShootSound = FIREBALL_SHOOT;
+		this.FireballTrail = FIREBALL_TRAIL;
+		this.RocketTrail = ROCKET_TRAIL;
+		this.RocketExplodeParticle = ROCKET_EXPLODE_PARTICLE;
+		this.RocketModel = ROCKET_MODEL;
+		this.IceballSlowSound = ICEBALL_IMPACT;
+		this.IceballTrail = ICEBALL_TRAIL;
+		this.RocketExplodeSound = ROCKET_IMPACT;
+		this.RocketShootSound = ROCKET_SHOOT;
+		this.GrenadeShootSound = GRENADE_SHOOT;
+		this.SentryRocketShootSound = SENTRYROCKET_SHOOT;
+		this.ArrowShootSound = ARROW_SHOOT;
+		this.ManglerShootSound = MANGLER_SHOOT;
+		this.BaseballShootSound = BASEBALL_SHOOT;
 		this.BaseballModel = BASEBALL_MODEL;
 
 		this.AdvancedDamageEffects = false;
@@ -781,18 +827,21 @@ enum struct SF2ChaserBossProfileData
 		this.JarateIndexesString = "1";
 		this.JarateBeamParticle = false;
 		this.JarateParticle = JARATE_PARTICLE;
+		this.JarateHitSound = JARATE_HITPLAYER;
 
 		this.MilkEffects = false;
 		this.MilkIndexes = 1;
 		this.MilkIndexesString = "1";
 		this.MilkBeamParaticle = false;
 		this.MilkParticle = MILK_PARTICLE;
+		this.MilkHitSound = JARATE_HITPLAYER;
 
 		this.GasEffects = false;
 		this.GasIndexes = 1;
 		this.GasIndexesString = "1";
 		this.GasBeamParticle = false;
 		this.GasParticle = GAS_PARTICLE;
+		this.GasHitSound = JARATE_HITPLAYER;
 
 		this.MarkEffects = false;
 		this.MarkIndexes = 1;
@@ -812,6 +861,7 @@ enum struct SF2ChaserBossProfileData
 		this.StunEffectType = 0;
 		this.StunEffectBeamParticle = false;
 		this.StunParticle = STUN_PARTICLE;
+		this.StunHitSound = STUN_HITPLAYER;
 
 		this.BleedEffects = false;
 		this.BleedIndexes = 1;
@@ -835,6 +885,7 @@ enum struct SF2ChaserBossProfileData
 		this.SmiteColor[2] = 255;
 		this.SmiteColor[3] = 255;
 		this.SmiteMessage = false;
+		this.SmiteHitSound = SOUND_THUNDER;
 
 		this.XenobladeCombo = false;
 		this.XenobladeDuration = 0.0;
@@ -858,6 +909,13 @@ enum struct SF2ChaserBossProfileData
 
 		this.Traps = false;
 		this.TrapType = 0;
+		this.TrapModel = TRAP_MODEL;
+		this.TrapDeploySound = TRAP_DEPLOY;
+		this.TrapMissSound = TRAP_CLOSE;
+		this.TrapCatchSound = TRAP_CLOSE;
+		this.TrapAnimIdle = "trapopenend";
+		this.TrapAnimClose = "trapclosed";
+		this.TrapAnimOpen[0] = '\0';
 
 		this.DamageParticles = false;
 		this.DamageParticleName[0] = '\0';

@@ -1059,6 +1059,11 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	#endif
 	int client = GetClientOfUserId(event.GetInt("userid"));
 
+	if (g_PlayerProxy[client])
+	{
+		TF2Attrib_RemoveByName(client, "crit mod disabled");
+	}
+
 	int inflictor = event.GetInt("inflictor_entindex");
 
 	// If this player was killed by a boss, play a sound.

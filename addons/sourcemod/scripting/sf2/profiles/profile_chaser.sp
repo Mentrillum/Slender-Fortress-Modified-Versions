@@ -621,6 +621,12 @@ float GetChaserProfileSmiteDamage(const char[] profile)
 	return g_CachedProfileData.SmiteDamage;
 }
 
+int GetChaserProfileSmiteHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.SmiteHitSound);
+}
+
 int GetChaserProfileAttackType(const char[] profile, int attackIndex)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -1381,6 +1387,12 @@ int GetChaserProfileJarateParticle(const char[] profile, char[] buffer, int buff
 	return strcopy(buffer, bufferlen, g_CachedProfileData.JarateParticle);
 }
 
+int GetChaserProfileJarateHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.JarateHitSound);
+}
+
 bool GetChaserProfileMilkState(const char[] profile)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -1399,6 +1411,12 @@ int GetChaserProfileMilkParticle(const char[] profile, char[] buffer, int buffer
 	return strcopy(buffer, bufferlen, g_CachedProfileData.MilkParticle);
 }
 
+int GetChaserProfileMilkHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.MilkHitSound);
+}
+
 bool GetChaserProfileGasState(const char[] profile)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -1415,6 +1433,12 @@ int GetChaserProfileGasParticle(const char[] profile, char[] buffer, int bufferl
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return strcopy(buffer, bufferlen, g_CachedProfileData.GasParticle);
+}
+
+int GetChaserProfileGasHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.GasHitSound);
 }
 
 bool GetChaserProfileMarkState(const char[] profile)
@@ -1451,6 +1475,12 @@ int GetChaserProfileStunParticle(const char[] profile, char[] buffer, int buffer
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return strcopy(buffer, bufferlen, g_CachedProfileData.StunParticle);
+}
+
+int GetChaserProfileStunHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.StunHitSound);
 }
 
 bool GetChaserProfileBleedState(const char[] profile)
@@ -1541,6 +1571,96 @@ bool GetChaserProfileCriticalRockets(const char[] profile)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.CriticalProjectiles;
+}
+
+int GetChaserProfileFireballShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballShootSound);
+}
+
+int GetChaserProfileFireballTrail(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballTrail);
+}
+
+int GetChaserProfileFireballExplodeSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballExplodeSound);
+}
+
+int GetChaserProfileIceballSlowSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.IceballSlowSound);
+}
+
+int GetChaserProfileIceballTrail(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.IceballTrail);
+}
+
+int GetChaserProfileRocketShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketShootSound);
+}
+
+int GetChaserProfileRocketModel(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketModel);
+}
+
+int GetChaserProfileRocketTrail(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketTrail);
+}
+
+int GetChaserProfileRocketExplodeParticle(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketExplodeParticle);
+}
+
+int GetChaserProfileRocketExplodeSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketExplodeSound);
+}
+
+int GetChaserProfileSentryRocketShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.SentryRocketShootSound);
+}
+
+int GetChaserProfileGrenadeShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.GrenadeShootSound);
+}
+
+int GetChaserProfileArrowShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ArrowShootSound);
+}
+
+int GetChaserProfileManglerShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ManglerShootSound);
+}
+
+int GetChaserProfileBaseballShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.BaseballShootSound);
 }
 
 bool GetChaserProfileGestureShoot(const char[] profile)
@@ -1849,6 +1969,18 @@ int GetChaserProfileCloakRenderMode(const char[] profile)
 	return g_CachedProfileData.CloakRenderMode;
 }
 
+int GetChaserProfileCloakOnSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakOnSound);
+}
+
+int GetChaserProfileCloakOffSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakOffSound);
+}
+
 bool GetChaserProfileChaseInitialAnimationState(const char[] profile)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -2035,25 +2167,25 @@ int GetChaserProfileShockwaveAlpha2(const char[] profile)
 	return g_CachedProfileData.ShockwaveAlpha2;
 }
 
-int GetBossProfileShockwaveBeamSprite(const char[] profile, char[] buffer, int bufferlen)
+int GetChaserProfileShockwaveBeamSprite(const char[] profile, char[] buffer, int bufferlen)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return strcopy(buffer, bufferlen, g_CachedProfileData.ShockwaveBeamSprite);
 }
 
-int GetBossProfileShockwaveHaloSprite(const char[] profile, char[] buffer, int bufferlen)
+int GetChaserProfileShockwaveHaloSprite(const char[] profile, char[] buffer, int bufferlen)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return strcopy(buffer, bufferlen, g_CachedProfileData.ShockwaveHaloSprite);
 }
 
-int GetBossProfileShockwaveBeamModel(const char[] profile)
+int GetChaserProfileShockwaveBeamModel(const char[] profile)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.ShockwaveBeamModel;
 }
 
-int GetBossProfileShockwaveHaloModel(const char[] profile)
+int GetChaserProfileShockwaveHaloModel(const char[] profile)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.ShockwaveHaloModel;
@@ -2075,6 +2207,48 @@ float GetChaserProfileTrapSpawnCooldown(const char[] profile, int difficulty)
 {
 	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.TrapCooldown[difficulty];
+}
+
+int GetChaserProfileTrapModel(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapModel);
+}
+
+int GetChaserProfileTrapDeploySound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapDeploySound);
+}
+
+int GetChaserProfileTrapMissSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapMissSound);
+}
+
+int GetChaserProfileTrapCatchSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapCatchSound);
+}
+
+int GetChaserProfileTrapAnimIdle(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimIdle);
+}
+
+int GetChaserProfileTrapAnimClose(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimClose);
+}
+
+int GetChaserProfileTrapAnimOpen(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimOpen);
 }
 
 bool GetChaserProfileCrawlState(const char[] profile)

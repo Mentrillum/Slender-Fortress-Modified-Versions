@@ -1247,9 +1247,9 @@ static void PrecacheStuff()
 
 	PrecacheSound2(SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND, true);
 
-	for (int i = 0; i < sizeof(g_strPlayerBreathSounds); i++)
+	for (int i = 0; i < sizeof(g_PlayerBreathSounds); i++)
 	{
-		PrecacheSound2(g_strPlayerBreathSounds[i], true);
+		PrecacheSound2(g_PlayerBreathSounds[i], true);
 	}
 
 	// Special round.

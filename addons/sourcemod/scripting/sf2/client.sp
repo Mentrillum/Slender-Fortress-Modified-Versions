@@ -24,7 +24,7 @@
 #define SF2_FLASHLIGHT_ENABLEAT 0.3 // The percentage of the Flashlight battery where the Flashlight will be able to be used again (if the player shortens out the Flashlight from excessive use).
 #define SF2_FLASHLIGHT_COOLDOWN 0.4 // How much time players have to wait before being able to switch their flashlight on again after turning it off.
 
-char g_strPlayerBreathSounds[][] =
+char g_PlayerBreathSounds[][] =
 {
 	"slender/fastbreath1.wav"
 };
@@ -1780,7 +1780,7 @@ static Action Timer_ClientBreath(Handle timer, any userid)
 
 	if (ClientCanBreath(client))
 	{
-		EmitSoundToAll(g_strPlayerBreathSounds[GetRandomInt(0, sizeof(g_strPlayerBreathSounds) - 1)], client, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+		EmitSoundToAll(g_PlayerBreathSounds[GetRandomInt(0, sizeof(g_PlayerBreathSounds) - 1)], client, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 
 		ClientStartBreathing(client);
 		return Plugin_Stop;
@@ -2312,7 +2312,14 @@ void ClientStartDeathCam(int client,int bossIndex, const float vecLookPos[3], bo
 	soundInfo.EmitSound(true, client);
 
 	GetBossProfileGlobalDeathCamSounds(profile, soundInfo);
-	soundInfo.EmitSound();
+	for (int i = 0; i < MaxClients; i++)
+	{
+		if (!IsValidClient(i))
+		{
+			continue;
+		}
+		soundInfo.EmitSound(true, i);
+	}
 
 	// Call our forward.
 	Call_StartForward(g_OnClientCaughtByBossFwd);

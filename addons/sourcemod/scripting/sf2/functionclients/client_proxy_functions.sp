@@ -660,6 +660,8 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 
 	SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
 
+	TF2Attrib_SetByName(client, "crit mod disabled", 0.0);
+
 	int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 
 	if (g_PlayerProxy[client] && master != -1)
