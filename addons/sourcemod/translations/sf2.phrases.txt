@@ -357,7 +357,7 @@
 		"ru"	"\"ЛКМ\" - Взять предмет\n\"ПКМ\" - Вкл./выкл. Фонарик\n\"Перезарядка\" - Моргнуть\nУдерж. \"Специальная атака\" - Бег"
 		"fi"	"Ensisijainen hyökkäys - Kerää lappu\nToissijainen hyökkäys - Ottaa taskulampun käyttöön\nLataa - Räpäyttää\nErityis hyökkäys - Juokse"
 		"chi"	"主要攻击键 - 拾取物品\n次要攻击键 - 开关闪光灯\n装填弹药键 - 眨眼\n按住特殊攻击键 - 冲刺"
-		"pt"	"Disparo primário - coletar página\nDisparo-alt - Alternar lanterna\nRecarregar - Piscar\nSEGURAR \"Disparo especial\" - Correr"
+		"pt"	"Ataque primário - coletar página\nAtaque secundário - alternar lanterna\nRecarregar - piscar\nSEGURAR \"ataque especial\" - correr"
 	}
 
 	"SF2 Help Sprinting And Stamina Menu Title"
@@ -375,7 +375,7 @@
 		"ru"	"У вас есть возможность быстро бежать, которая\nактивируется нажатием кнопки специальной атаки\n(по умолчанию L, можно изменить в настройках).\nОднако, нельзя бежать бесконечно, так что\nлучше сохранить силы для особого случая.\nПрыжки так же требуют сил.\n \nК тому же, бег производит больше шума чем ходьба,\nтак что бег не лучшая идея для незаметности."
 		"fi"	"Sinulla on kyky juosta, jota pystyt käyttämään\npitämällä pojassa erikois hyökkäys nappiasi\n(oletuksena näppäin L, jota voit vaihtaa asetuksista.\nKuitenkin, juokseminen ei kestä loputtomiin,\njoten on parasta säästää kestävyytesi hätätilanteisiin.\nMyös hyppiminen vähentää kestävyyttäsi\n \nLisäksi, juokseminen tekee enemmän ääntä\nkuin kävely tai kyykistely, joten juokseminen\nei ole vaihtoehto hiippailussa."
 		"chi"	"你可以通过按住特殊攻击键(默认鼠标中键)来冲刺。\n然而，冲刺需要耐力，因此最好在紧急情况下使用。\n跳跃也会消耗耐力。\n \n另外，冲刺比走路和蹲伏要发出更多的声音，\n因此假如你想隐蔽，那就不要冲刺。"
-		"pt"	"Você pode correr ao segurar o botão de disparo\nespecial (MOUSE3 por padrão). (Use a bind\n\"+attack3\" para alterar a vinculação.) Entretanto, a corrida\nnão é infinita, então é melhor conservar\na sua energia para situações de emergência.\nPular também diminui a sua energia.\n\nAlém disso, correr faz mais barulho\ndo que andar ou agachar, então correr não é\numa opção furtiva."
+		"pt"	"Você pode correr ao segurar o botão de ataque\nespecial (MOUSE3 por padrão). (Use a bind\n\"+attack3\" para alterar a vinculação.) Entretanto, a corrida\nnão é infinita, então é melhor conservar\na sua energia para situações de emergência.\nPular também diminui a sua energia.\n\nAlém disso, correr faz mais barulho\ndo que andar ou agachar, então correr não é\numa opção furtiva."
 	}
 
 	"SF2 Help Class Info Menu Title"
@@ -724,7 +724,7 @@
 		"en"	"{dodgerblue}Slender Fortress Modified official Discord server: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 		"ru"	"{dodgerblue}Официальный Discord сервер Slender Fortress Modified: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 		"chi"	"{dodgerblue}Slender Fortress Modified官方Discord服务器：{lightblue}https://discord.gg/7Zz7RYTCC4{default}"
-		"pt"	"{dodgerblue}GitHub oficial do Slender Fortress Modified: {lightblue}https://github.com/Mentrillum/Slender-Fortress-Modified-Versions{default}"
+		"pt"	"{dodgerblue}Servidor oficial do Slender Fortress Modified no Discord: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 	}
 
 	"SF2 Ad Message 2"
@@ -944,7 +944,7 @@
 		"ru"	"Бег - Удерж. кнопку \"Специальная атака\""
 		"fi"	"Juokse - Pidä Pohjassa Erityis Hyökkäystäsi"
 		"chi"	"冲刺 - 按住特殊攻击键"
-		"pt"	"Correr - SEGURAR \"disparo especial\""
+		"pt"	"Correr - SEGURAR \"ataque especial\""
 	}
 
 	"SF2 Hint Flashlight"
@@ -953,7 +953,7 @@
 		"ru"	"Фонарик - ПКМ"
 		"fi"	"Taskulamppu - Toissijainen Hyökkäys"
 		"chi"	"闪光灯 - 次要攻击键"
-		"pt"	"Lanterna - disparo-alt"
+		"pt"	"Lanterna - ataque secundário"
 	}
 
 	"SF2 Hint Blink"
