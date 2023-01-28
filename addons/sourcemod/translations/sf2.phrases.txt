@@ -294,7 +294,7 @@
 		"ru"	"Slender Fortress 2 (SF2) это игровой режим основанный\nна игре \"Slender: The Eight Pages\" за авторством\nMark J. Hadley. Цель - найти и собрать все предметы\nна карте и не попасться преследователю.\nСобирайте предметы, ударяя их."
 		"fi"	"Slender Fortress 2 (SF2) on pelimuoto joka perustuu\n peliin \"Slender: The Eight Pages\" tehnyt Mark\nJ. Hadley. Tehtäväsi on kerätä kaikki tavarat\nkartalta ja paeta jäämättäsi kiinni\nviholliselle. Keräät lappuja lyömällä\nniitä lähitaistelu aseellasi."
 		"chi"	"暗鬼要塞2(SF2)是一个基于游戏\n \"瘦长鬼影：八页纸\" 作者Mark J.Hadley。\n游戏目标是收集地图内所有物品而不被敌人抓住\n使用近战物品攻击物品来收集。"
-		"pt"	"O Slender Fortress 2 (SF2) é um modo de jogo baseado no\njogo \"Slender: The Eight Pages\" feito por\nMark J. Hadley. O objetivo é coletar todos os itens\nno mapa e escapar sem ser pego\npelo inimigo. Colete páginas ao atingi-las\ncom a sua arma corpo a corpo."
+		"pt"	"O Slender Fortress 2 (SF2) é um modo de jogo baseado no\njogo \"Slender: The Eight Pages\" feito por Mark J. Hadley.\nO objetivo é coletar todos os itens no mapa e escapar sem\nser pego pelos inimigos. Colete páginas ao bater nelas\ncom a sua arma corpo a corpo."
 	}
 
 	"SF2 Help Objective Description 2"
@@ -303,7 +303,7 @@
 		"ru"	"Только определённое количество игроков будет\nвыбрано для игры за КРАСНЫХ. Остальным игрокам\nнеобходимо ждать своей очереди в команде СИНИХ.\nСиние могут наблюдать за красными,\nиспользуя команду !slghost."
 		"fi"	"Vain osa pelaajista valitaan RED:lle\npelaamaan peliä. Muut pelaajat joutuvat odottamaan\nvuoroaan BLU:lla kunnes on heidän vuoronsa.\nBLU pystyy katsomaan RED:iä reaaliaikaisesti\nkäyttäen komentoa !slghost."
 		"chi"	"只有一部分的蓝队玩家会被选入游戏\n剩下的玩家必须在蓝队等待直到轮到自己\n蓝队可以使用!slghost来实时观察红队\n而不用进入观察者队伍。"
-		"pt"	"Apenas uma certa quantidade de jogadores serão\nselecionados da equipe BLU para jogar. O resto\ndos jogadores terão de esperar na equipe BLU até que\no seu turno chegue. Jogadores da BLU podem observar jogadores\nda RED em tempo real com o comando !slghost sem\ntem quer assisti-los no modo espectador."
+		"pt"	"Apenas uma certa quantidade de jogadores serão selecionados\nda equipe BLU para jogar. O resto dos jogadores terão\nde esperar na equipe BLU até que o seu turno chegue.\nJogadores da equipe BLU podem assistir os jogadores\nda equipe RED em tempo real com o comando \"!slghost\"\nsem ter que assisti-los no modo espectador."
 	}
 
 	"SF2 Help Commands Menu Title"
@@ -321,7 +321,7 @@
 		"ru"	"!slender - Показать главное меню.\n!slnext - Показать следующих игроков в очереди.\n!slghost - Показать меню режима призрака.\n!slhelp - Показать меню помощи.\n!slcredits - Показать тех замечательных людей, кто помог с этим модом."
 		"fi"	"!slender - Näyttää päävalikon.\n!slnext - Näyttää listan seuraavista pelaajista.\n!slghost - Näyttää Haamu Tilan valikon.\n!slhelp - Näyttää ohjevalikon.\n!slcredits - Näyttää mahtavat henkilöt jotka auttoivat tämän pelimuodon kanssa."
 		"chi"	"!slender - 显示主菜单。\n!slnext - 显示列表谁是下一个玩家。\n!slghost - 显示幽灵模式菜单。\n!slhelp - 显示帮助菜单。\n!slcredits - 显示帮助制作此mod的人。"
-		"pt"	"!slender - Exibe o menu principal.\n!slnext - Exibe a fila de espera de quem vai jogar.\n!slghost - Exibe o menu do modo fantasma.\n!slhelp - Exibe o menu de ajuda.\n!slcredits - Exibe os nomes de quem ajudou a desenvolver este modo."
+		"pt"	"!slender — exibe o menu principal.\n!slnext — exibe a fila de espera de quem vai jogar.\n!slghost — exibe o menu do modo fantasma.\n!slhelp — exibe o menu de ajuda.\n!slcredits — exibe os nomes de quem ajudou a desenvolver este modo."
 	}
 
 	"SF2 Help Ghost Mode Menu Title"
@@ -339,7 +339,7 @@
 		"ru"	"Режим призрака это возможность Синих видеть\nКрасных, без необходимости переключаться в\nНаблюдателей. Красные не смогут увидеть вас и\nне смогут взаимодействовать с вами. Вы так же\nне сможете взаимодействовать с ними."
 		"fi"	"Haamu Tila on ominaisuus jolla BLU pelaajat\nvoivat katsoa RED pelaajia ilman että\ntarvitsee mennä Katsomoon. RED pelaajat eivät pysty\nnäkemään sinua, eivätkä pysty vaikuttaa\nsinuun. Sinä et myöskään pysty vaikuttamaan RED:iin."
 		"chi"	"幽灵模式是让蓝队可以实时观察红队但又不需要\n进入观察者的一项功能。红队无法看见你和交互。\n你也不能和红队进行交互。"
-		"pt"	"O modo fantasma é um recurso que jogadores da\nequipe BLU podem usar para assistir\njogadores da RED sem ir para o modo espectador.\nJogadores da RED não poderão ver nem interagir\ncom você. Você também não pode interagir com a RED."
+		"pt"	"O modo fantasma é um recurso que jogadores da equipe BLU\npodem usar para assistir jogadores da RED sem ir para o\nmodo espectador. Jogadores da RED não poderão ver nem\ninteragir com você. Você também não pode interagir com\na equipe RED."
 	}
 
 	"SF2 Help Controls Menu Title"
@@ -357,7 +357,7 @@
 		"ru"	"\"ЛКМ\" - Взять предмет\n\"ПКМ\" - Вкл./выкл. Фонарик\n\"Перезарядка\" - Моргнуть\nУдерж. \"Специальная атака\" - Бег"
 		"fi"	"Ensisijainen hyökkäys - Kerää lappu\nToissijainen hyökkäys - Ottaa taskulampun käyttöön\nLataa - Räpäyttää\nErityis hyökkäys - Juokse"
 		"chi"	"主要攻击键 - 拾取物品\n次要攻击键 - 开关闪光灯\n装填弹药键 - 眨眼\n按住特殊攻击键 - 冲刺"
-		"pt"	"Ataque primário - coletar página\nAtaque secundário - alternar lanterna\nRecarregar - piscar\nSEGURAR \"ataque especial\" - correr"
+		"pt"	"Ataque primário — coletar página\nAtaque secundário — alternar lanterna\nRecarregar — piscar\nSEGURAR \"ataque especial\" — correr"
 	}
 
 	"SF2 Help Sprinting And Stamina Menu Title"
@@ -371,11 +371,11 @@
 
 	"SF2 Help Sprinting And Stamina Description"
 	{
-		"en"	"You have the ability to sprint, which can be\ndone via holding down your special attack key\n(default bind is L, you can change this in Options).\nHowever, sprinting does not last forever,\nso it's best to conserve your stamina for\nemergencies only. Jumping also decreases your stamina.\n \nIn addition, sprinting makes more sound\nthan walking or crouching, so sprinting is not\nan option in stealth."
-		"ru"	"У вас есть возможность быстро бежать, которая\nактивируется нажатием кнопки специальной атаки\n(по умолчанию L, можно изменить в настройках).\nОднако, нельзя бежать бесконечно, так что\nлучше сохранить силы для особого случая.\nПрыжки так же требуют сил.\n \nК тому же, бег производит больше шума чем ходьба,\nтак что бег не лучшая идея для незаметности."
-		"fi"	"Sinulla on kyky juosta, jota pystyt käyttämään\npitämällä pojassa erikois hyökkäys nappiasi\n(oletuksena näppäin L, jota voit vaihtaa asetuksista.\nKuitenkin, juokseminen ei kestä loputtomiin,\njoten on parasta säästää kestävyytesi hätätilanteisiin.\nMyös hyppiminen vähentää kestävyyttäsi\n \nLisäksi, juokseminen tekee enemmän ääntä\nkuin kävely tai kyykistely, joten juokseminen\nei ole vaihtoehto hiippailussa."
+		"en"	"You have the ability to sprint, which can be\ndone via holding down your special attack key\n(default bind is MOUSE3, you can change this in Options).\nHowever, sprinting does not last forever,\nso it's best to conserve your stamina for\nemergencies only. Jumping also decreases your stamina.\n \nIn addition, sprinting makes more sound\nthan walking or crouching, so sprinting is not\nan option in stealth."
+		"ru"	"У вас есть возможность быстро бежать, которая\nактивируется нажатием кнопки специальной атаки\n(по умолчанию MOUSE3, можно изменить в настройках).\nОднако, нельзя бежать бесконечно, так что\nлучше сохранить силы для особого случая.\nПрыжки так же требуют сил.\n \nК тому же, бег производит больше шума чем ходьба,\nтак что бег не лучшая идея для незаметности."
+		"fi"	"Sinulla on kyky juosta, jota pystyt käyttämään\npitämällä pojassa erikois hyökkäys nappiasi\n(oletuksena näppäin MOUSE3, jota voit vaihtaa asetuksista.\nKuitenkin, juokseminen ei kestä loputtomiin,\njoten on parasta säästää kestävyytesi hätätilanteisiin.\nMyös hyppiminen vähentää kestävyyttäsi\n \nLisäksi, juokseminen tekee enemmän ääntä\nkuin kävely tai kyykistely, joten juokseminen\nei ole vaihtoehto hiippailussa."
 		"chi"	"你可以通过按住特殊攻击键(默认鼠标中键)来冲刺。\n然而，冲刺需要耐力，因此最好在紧急情况下使用。\n跳跃也会消耗耐力。\n \n另外，冲刺比走路和蹲伏要发出更多的声音，\n因此假如你想隐蔽，那就不要冲刺。"
-		"pt"	"Você pode correr ao segurar o botão de ataque\nespecial (MOUSE3 por padrão). (Use a bind\n\"+attack3\" para alterar a vinculação.) Entretanto, a corrida\nnão é infinita, então é melhor conservar\na sua energia para situações de emergência.\nPular também diminui a sua energia.\n\nAlém disso, correr faz mais barulho\ndo que andar ou agachar, então correr não é\numa opção furtiva."
+		"pt"	"Você pode correr ao segurar o botão de ataque especial\n(MOUSE3 por padrão). (Use a bind \"+attack3\" para alterar\na vinculação.) Entretanto, a corrida não é infinita,\nentão é melhor conservar a sua energia para situações\nde emergência. Pular também diminui a sua energia.\n\nAlém disso, correr faz mais barulho do que andar ou\nagachar, então correr não é uma opção furtiva."
 	}
 
 	"SF2 Help Class Info Menu Title"
@@ -398,11 +398,11 @@
 
 	"SF2 Help Scout Class Info Menu Title"
 	{
-		"en"	"The Scout"
-		"ru"	"Разведчик"
-		"fi"	"Scout"
-		"chi"	"侦察兵"
-		"pt"	"O Scout"
+		"en"	"[1] The Scout"
+		"ru"	"[1] Разведчик"
+		"fi"	"[1] Scout"
+		"chi"	"[1] 侦察兵"
+		"pt"	"[1] Scout"
 	}
 
 	"SF2 Help Scout Class Info Description"
@@ -416,11 +416,11 @@
 
 	"SF2 Help Soldier Class Info Menu Title"
 	{
-		"en"	"The Soldier"
-		"ru"	"Солдат"
-		"fi"	"Soldier"
-		"chi"	"士兵"
-		"pt"	"O Soldier"
+		"en"	"[2] The Soldier"
+		"ru"	"[2] Солдат"
+		"fi"	"[2] Soldier"
+		"chi"	"[2] 士兵"
+		"pt"	"[2] Soldier"
 	}
 
 	"SF2 Help Soldier Class Info Description"
@@ -429,16 +429,16 @@
 		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полудзатоити восстанавливает только 20 ед. за убийство\n[-] План эвакуации влияет только на скорость бега"
 		"fi"	"[+] Kuritoimenpide lisää kävelyn ja juoksemisen nopeutta\nPuolisokea Samurai antaa vain 20 terveyttä taposta\n[-] Pakosuunnitelma vaikuttaa vain ja ainostaan juoksu nopeuteen"
 		"chi"	"[+] 指挥官的军鞭同时增加走路和冲刺速度\n[-] 座头市之刀击杀后只恢复20HP\n[-] 逃生计划镐只影响冲刺速度"
-		"pt"	"[+] A Ação Disciplinar aumenta a velocidade de\nandar e de correr\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar\n[-] O Plano de Fuga apenas afeta a vel. de correr"
+		"pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
 	}
 
 	"SF2 Help Sniper Class Info Menu Title"
 	{
-		"en"	"The Sniper"
-		"ru"	"Спайпер"
-		"fi"	"Sniper"
-		"chi"	"狙击手"
-		"pt"	"O Sniper"
+		"en"	"[8] The Sniper"
+		"ru"	"[8] Спайпер"
+		"fi"	"[8] Sniper"
+		"chi"	"[8] 狙击手"
+		"pt"	"[8] Sniper"
 	}
 
 	"SF2 Help Sniper Class Info Description"
@@ -452,11 +452,11 @@
 
 	"SF2 Help Demoman Class Info Menu Title"
 	{
-		"en"	"The Demoman"
-		"ru"	"Подрывник"
-		"fi"	"Demomies"
-		"chi"	"爆破手"
-		"pt"	"O Demoman"
+		"en"	"[4] The Demoman"
+		"ru"	"[4] Подрывник"
+		"fi"	"[4] Demomies"
+		"chi"	"[4] 爆破手"
+		"pt"	"[4] Demoman"
 	}
 
 	"SF2 Help Demoman Class Info Description"
@@ -470,11 +470,11 @@
 
 	"SF2 Help Heavy Class Info Menu Title"
 	{
-		"en"	"The Heavy"
-		"ru"	"Пулемётчик"
-		"fi"	"Heavy"
-		"chi"	"机枪手"
-		"pt"	"O Heavy"
+		"en"	"[5] The Heavy"
+		"ru"	"[5] Пулемётчик"
+		"fi"	"[5] Heavy"
+		"chi"	"[5] 机枪手"
+		"pt"	"[5] Heavy"
 	}
 
 	"SF2 Help Heavy Class Info Description"
@@ -483,16 +483,16 @@
 		"ru"	"[+] Много здоровья, мало подвержен внушению\n[-] ГРУ влияют только на скорость бега"
 		"fi"	"[+] Suuri terveys, vähiten vaikutusta näytön keikkumisesta\n Pikajuoksuhanskat vaikuttaa vain juoksunopeuteen"
 		"chi"	"[+] 很多生命值，不容易受到屏幕震动效果\n[-] 紧急逃跑手套只影响冲刺速度"
-		"pt"	"[+] Mais vida e o balanço da tela afeta menos\n[-] As Geradoras de Rapidez Urgente apenas afetam a vel. de correr"
+		"pt"	"[+] Mais vida e o balanço da tela afeta menos\n[-] As Geradoras de Rapidez Urgente afetam somente a velocidade de correr"
 	}
 
 	"SF2 Help Medic Class Info Menu Title"
 	{
-		"en"	"The Medic"
-		"ru"	"Медик"
-		"fi"	"Medic"
-		"chi"	"医生"
-		"pt"	"O Medic"
+		"en"	"[7] The Medic"
+		"ru"	"[7] Медик"
+		"fi"	"[7] Medic"
+		"chi"	"[7] 医生"
+		"pt"	"[7] Medic"
 	}
 
 	"SF2 Help Medic Class Info Description"
@@ -501,16 +501,16 @@
 		"ru"	"[+] Со временем восстанавливает здоровье\n[-] Приоритетная цель"
 		"fi"	"[+] Terveys palautuu ajan myötä\n[-] Ensisijainen kohde bosseille"
 		"chi"	"[+] 随时间恢复生命值\n[-] Boss们的优先目标"
-		"pt"	"[+] Regenera vida ao longo do tempo\n[-] O chefão priorizará você mais"
+		"pt"	"[+] Regenera vida ao longo do tempo\n[-] Torna-se o alvo prioritário de chefões"
 	}
 
 	"SF2 Help Pyro Class Info Menu Title"
 	{
-		"en"	"The Pyro"
-		"ru"	"Поджигатель"
-		"fi"	"Pyro"
-		"chi"	"火焰兵"
-		"pt"	"Pyro"
+		"en"	"[3] The Pyro"
+		"ru"	"[3] Поджигатель"
+		"fi"	"[3] Pyro"
+		"chi"	"[3] 火焰兵"
+		"pt"	"[3] Pyro"
 	}
 
 	"SF2 Help Pyro Class Info Description"
@@ -519,16 +519,16 @@
 		"ru"	"[+] Огнеупорный, хех!\n[-] Разъединитель восстанавливает только 20 ед. за убийство, и\nполучаемый при ближнем бое урон увеличен на 33%%"
 		"fi"	"[+] Tulenkestävä, duh!\n[-] Tunkki palauttaa vain 20 terveyttä taposta\nlähitaistelu vahingon ottoa lisätty 33%%"
 		"chi"	"[+] 防火！哇！\n[-] 强力千斤顶击杀只恢复20HP，受到的近战伤害增加33%%"
-		"pt"	"[+] Imune a fogo (ah, vá?)\n[-] A Ligação Direta restaura apenas 20 de vida e\no dano sofrido de armas corpo a corpo\né 33% maior"
+		"pt"	"[+] Imune a fogo (ah, vá?)\n[-] A Ligação Direta restaura apenas 20 de vida e\no dano sofrido de armas corpo a corpo é 33%% maior"
 	}
 
 	"SF2 Help Spy Class Info Menu Title"
 	{
-		"en"	"The Spy"
-		"ru"	"Шпион"
-		"fi"	"Spy"
-		"chi"	"间谍"
-		"pt"	"O Spy"
+		"en"	"[9] The Spy"
+		"ru"	"[9] Шпион"
+		"fi"	"[9] Spy"
+		"chi"	"[9] 间谍"
+		"pt"	"[9] Spy"
 	}
 
 	"SF2 Help Spy Class Info Description"
@@ -542,11 +542,11 @@
 
 	"SF2 Help Engineer Class Info Menu Title"
 	{
-		"en"	"The Engineer"
-		"ru"	"Инженер"
-		"fi"	"Engineer"
-		"chi"	"工程师"
-		"pt"	"O Engineer"
+		"en"	"[6] The Engineer"
+		"ru"	"[6] Инженер"
+		"fi"	"[6] Engineer"
+		"chi"	"[6] 工程师"
+		"pt"	"[6] Engineer"
 	}
 
 	"SF2 Help Engineer Class Info Description"
@@ -619,22 +619,13 @@
 		"pt"	"Alternar granulação de filme"
 	}
 
-
-
 	"SF2 Settings Proxy Menu Title"
-
 	{
-
 		"en"	"Allow being picked as a proxy"
-
 		"ru"	"Разрешить выбор в качестве помощника"
-
 		"fi"	"Salli valitsemisesi avustajaksi"
-		
 		"chi"	"允许被选为小弟"
-
 		"pt"	"Permitir ser selecionado como proxy"
-
 	}
 
 	"SF2 Settings Proxy Ask Menu Title"
@@ -693,11 +684,11 @@
 	"SF2 Music Volum Changed"
 	{
 		"#format"		"{1:d}"
-		"en" 	"{lightblue}Music volume set to {1}%."
-		"ru" 	"{lightblue}Громкость музыки установлена на {1}%."
-		"fi"	"{lightblue}Musiikin äänenvoimakkuus vaihdettu {1}%."
-		"chi"	"{lightblue}音乐音量已设为 {1}% 。"
-		"pt"	"{lightblue}Volume da música definido para {1}%."
+		"en" 	"{lightblue}Music volume set to {1}%%."
+		"ru" 	"{lightblue}Громкость музыки установлена на {1}%%."
+		"fi"	"{lightblue}Musiikin äänenvoimakkuus vaihdettu {1}%%."
+		"chi"	"{lightblue}音乐音量已设为 {1}%% 。"
+		"pt"	"{lightblue}Volume da música definido para {1}%%."
 	}
 
 	"SF2 Settings Flashlight Temperature Title"
@@ -712,11 +703,11 @@
 	"SF2 Flashlight Temperature Changed"
 	{
 		"#format"		"{1:d}"
-		"en" 	"{lightblue}Flashlight temperature set to {1}%."
-		"ru" 	"{lightblue}Температура фонарика установлена на {1}%."
-		"fi"	"{lightblue}Taskulampun lämpötila vaihdettu {1}%."
-		"chi"	"{lightblue}手电筒温度设为 {1}% 。"
-		"pt"	"{lightblue}Temperatura da lanterna definida para {1}%."
+		"en" 	"{lightblue}Flashlight temperature set to {1}%%."
+		"ru" 	"{lightblue}Температура фонарика установлена на {1}%%."
+		"fi"	"{lightblue}Taskulampun lämpötila vaihdettu {1}%%."
+		"chi"	"{lightblue}手电筒温度设为 {1}%% 。"
+		"pt"	"{lightblue}Temperatura da lanterna definida para {1}%%."
 	}
 
 	"SF2 Ad Message 1"
@@ -742,7 +733,7 @@
 		"ru"	"{dodgerblue}Добро пожаловать в {lightblue}Slender Fortress{dodgerblue}! Если вы новичок, откройте главное меню, набрав в чате {lightblue}!slender{dodgerblue}."
 		"fi"	"{dodgerblue}Tervetuloa {lightblue}Slender Fortress:iin{dodgerblue}! Jos olet uusi tähän pelitilaan, pääset päävalikkoon kirjoittamalla {lightblue}!slender{dodgerblue} chattiin."
 		"chi"	"{dodgerblue}欢迎来到{lightblue}暗鬼要塞{dodgerblue}！假如你新玩这个模式，在聊天键入{lightblue}!slender{dodgerblue}来进入主菜单。"
-		"pt"	"{dodgerblue}Bem-vindo(a) ao {lightblue}Slender Fortress{dodgerblue}! Caso não saiba como este modo funciona, acesse o menu principal com o comando {lightblue}!slender{dodgerblue}."
+		"pt"	"{dodgerblue}Bem-vindo(a) ao {lightblue}Slender Fortress{dodgerblue}! Caso não saiba como este modo funciona, acesse o menu principal com o comando \"{lightblue}!slender{dodgerblue}\"a."
 	}
 
 	"SF2 No Queue Points To Spectator"
@@ -944,7 +935,7 @@
 		"ru"	"Бег - Удерж. кнопку \"Специальная атака\""
 		"fi"	"Juokse - Pidä Pohjassa Erityis Hyökkäystäsi"
 		"chi"	"冲刺 - 按住特殊攻击键"
-		"pt"	"Correr - SEGURAR \"ataque especial\""
+		"pt"	"Correr — SEGURAR \"ataque especial\""
 	}
 
 	"SF2 Hint Flashlight"
@@ -953,7 +944,7 @@
 		"ru"	"Фонарик - ПКМ"
 		"fi"	"Taskulamppu - Toissijainen Hyökkäys"
 		"chi"	"闪光灯 - 次要攻击键"
-		"pt"	"Lanterna - ataque secundário"
+		"pt"	"Lanterna — ataque secundário"
 	}
 
 	"SF2 Hint Blink"
@@ -962,7 +953,7 @@
 		"ru"	"Моргнуть - \"Перезарядка\""
 		"fi"	"Räpäytys - Lataa"
 		"chi"	"眨眼 - 装填弹药键"
-		"pt"	"Piscar - recarregar"
+		"pt"	"Piscar — recarregar"
 	}
 
 	"SF2 Hint Main Menu"
@@ -971,7 +962,7 @@
 		"ru"	"Главное меню - Напишите в чате !sf2 или !slender"
 		"fi"	"Päävalikko - Kirjoita !sf2 tai !slender chattiin"
 		"chi"	"主菜单 - 在聊天键入!sf2。"
-		"pt"	"Menu principal - digite !sf2 ou !slender na janela de conversa"
+		"pt"	"Menu principal — digite !sf2 ou !slender na janela de conversa"
 	}
 	
 	"SF2 Hint Trap"
@@ -980,7 +971,7 @@
 		"ru"	"Выбраться из ловушки - нажмите клавишу прыжка несколько раз."
 		"fi"	"Poistu Ansasta - Paina hyppy nappia pari kertaa."
 		"chi"	"跳出陷阱 - 按几次跳跃键。"
-		"pt"	"Sair da armadilha - pressione \"Pular\" algumas vezes."
+		"pt"	"Sair da armadilha — pressione \"Pular\" algumas vezes."
 	}
 
 	"SF2 Admin Menu Boss Main"
