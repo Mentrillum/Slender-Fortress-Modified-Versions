@@ -733,7 +733,7 @@
 		"ru"	"{dodgerblue}Добро пожаловать в {lightblue}Slender Fortress{dodgerblue}! Если вы новичок, откройте главное меню, набрав в чате {lightblue}!slender{dodgerblue}."
 		"fi"	"{dodgerblue}Tervetuloa {lightblue}Slender Fortress:iin{dodgerblue}! Jos olet uusi tähän pelitilaan, pääset päävalikkoon kirjoittamalla {lightblue}!slender{dodgerblue} chattiin."
 		"chi"	"{dodgerblue}欢迎来到{lightblue}暗鬼要塞{dodgerblue}！假如你新玩这个模式，在聊天键入{lightblue}!slender{dodgerblue}来进入主菜单。"
-		"pt"	"{dodgerblue}Bem-vindo(a) ao {lightblue}Slender Fortress{dodgerblue}! Caso não saiba como este modo funciona, acesse o menu principal com o comando \"{lightblue}!slender{dodgerblue}\"a."
+		"pt"	"{dodgerblue}Bem-vindo(a) ao {lightblue}Slender Fortress{dodgerblue}! Caso não saiba como este modo funciona, acesse o menu principal com o comando \"{lightblue}!slender{dodgerblue}\"."
 	}
 
 	"SF2 No Queue Points To Spectator"
