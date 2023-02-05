@@ -1543,6 +1543,20 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 						SetEntityHealth(client, 300);
 					}
 				}
+				case 1084: //Festive GRU
+				{
+					TF2_RemoveWeaponSlot(client, slot);
+
+					weaponHandle = PrepareItemHandle("tf_weapon_fists", 1084, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
+					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
+					delete weaponHandle;
+					weaponHandle = null;
+					EquipPlayerWeapon(client, entity);
+					if (!IsRoundPlaying())
+					{
+						SetEntityHealth(client, 300);
+					}
+				}
 				case 1100: //Bread Bite
 				{
 					TF2_RemoveWeaponSlot(client, slot);
@@ -1552,6 +1566,10 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 					delete weaponHandle;
 					weaponHandle = null;
 					EquipPlayerWeapon(client, entity);
+					if (!IsRoundPlaying())
+					{
+						SetEntityHealth(client, 300);
+					}
 				}
 				case 426: //Eviction Notice
 				{
