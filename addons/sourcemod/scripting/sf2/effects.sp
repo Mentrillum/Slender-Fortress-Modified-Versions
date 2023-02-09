@@ -3,802 +3,770 @@
 #endif
 #define _sf2_effects_included
 
-enum EffectEvent
+#pragma semicolon 1
+
+static EffectEvent g_EntityEffectEvent[2049];
+static EffectType g_EntityEffectType[2049];
+static ArrayList g_NpcEffectsArray[MAX_BOSSES];
+static float g_EffectSpotlightEndLength[2049];
+static int g_EffectSpotlightEndEntity[2049] = { INVALID_ENT_REFERENCE, ... };
+
+void SlenderSpawnEffects(int bossIndex)
 {
-	EffectEvent_Invalid = -1,
-	EffectEvent_Constant = 0,
-	EffectEvent_HitPlayer,
-	EffectEvent_PlayerSeesBoss
-};
-
-enum EffectType
-{
-	EffectType_Invalid = -1,
-	EffectType_Steam = 0,
-	EffectType_DynamicLight,
-	EffectType_Particle,
-	EffectType_Trail,
-	EffectType_PropDynamic
-};
-
-EffectEvent g_iEntityEffectType[2049];
-
-void SlenderSpawnEffects(int iBossIndex)
-{
-	if (iBossIndex < 0 || iBossIndex >= MAX_BOSSES) return;
-	
-	int iBossID = NPCGetUniqueID(iBossIndex);
-	if (iBossID == -1) return;
-	
-	int iDifficulty = GetLocalGlobalDifficulty(iBossIndex);
-
-	int iSlender = NPCGetEntIndex(iBossIndex);
-	
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(iBossIndex, sProfile, sizeof(sProfile));
-
-	if (NPCGetDiscoModeState(iBossIndex))
+	if (bossIndex < 0 || bossIndex >= MAX_BOSSES)
 	{
-		int iLight = CreateEntityByName("light_dynamic");
-		int iParticle = CreateEntityByName("info_particle_system");
-		if (iLight != -1)
-		{
-			float flEffectPos[3], flEffectAng[3], flBasePosX[3], flBaseAngX[3];
-			GetEntPropVector(iSlender, Prop_Data, "m_vecAbsOrigin", flBasePosX);
-			GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAngX);
-			flEffectPos[2] = 50.0;
-			VectorTransform(flEffectPos, flBasePosX, flBaseAngX, flEffectPos);
-			AddVectors(flEffectAng, flBaseAngX, flEffectAng);
-			TeleportEntity(iLight, flEffectPos, flEffectAng, NULL_VECTOR);
-			SetVariantInt(5);
-			AcceptEntityInput(iLight, "Brightness");
-			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(iBossIndex), NPCGetDiscoModeRadiusMax(iBossIndex)));
-			AcceptEntityInput(iLight, "Distance");
-			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(iBossIndex), NPCGetDiscoModeRadiusMax(iBossIndex)));
-			AcceptEntityInput(iLight, "spotlight_radius");
-			SetVariantInt(1);
-			AcceptEntityInput(iLight, "cone");
-			DispatchKeyValue(iLight, "spawnflags", "0");
-			int rChase = GetRandomInt(75, 250);
-			int gChase = GetRandomInt(75, 250);
-			int bChase = GetRandomInt(75, 250);
-			SetEntityRenderColor(iLight, rChase, gChase, bChase, 255);
-			DispatchSpawn(iLight);
-			ActivateEntity(iLight);
-			AcceptEntityInput(iLight, "TurnOn");
-			SetVariantString("!activator");
-			AcceptEntityInput(iLight, "SetParent", iSlender);
-			CreateTimer(0.1, Timer_DiscoLight, EntIndexToEntRef(iLight), TIMER_REPEAT);
-			SDKHook(iLight, SDKHook_SetTransmit, Hook_EffectTransmitX);
-		}
-
-		if (iParticle != -1)
-		{
-			float flEffectPos[3], flEffectAng[3], flBasePosX[3], flBaseAngX[3];
-			GetEntPropVector(iSlender, Prop_Data, "m_vecAbsOrigin", flBasePosX);
-			GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAngX);
-			CopyVector(NPCGetDiscoModePos(iBossIndex), flEffectPos);
-			VectorTransform(flEffectPos, flBasePosX, flBaseAngX, flEffectPos);
-			AddVectors(flEffectAng, flBaseAngX, flEffectAng);
-			TeleportEntity(iParticle, flEffectPos, flEffectAng, NULL_VECTOR);
-
-			DispatchKeyValue(iParticle, "effect_name", "utaunt_disco_party");
-			DispatchSpawn(iParticle);
-			ActivateEntity(iParticle);
-			AcceptEntityInput(iParticle, "start");
-			SetVariantString("!activator");
-			AcceptEntityInput(iParticle, "SetParent", iSlender);
-			SDKHook(iParticle, SDKHook_SetTransmit, Hook_EffectTransmitX);
-		}
-	}
-	if (NPCGetFestiveLightState(iBossIndex))
-	{
-		int iLight = CreateEntityByName("light_dynamic");
-		if (iLight != -1)
-		{
-			float flEffectPos[3], flEffectAng[3], flBasePosX[3], flBaseAngX[3];
-			GetEntPropVector(iSlender, Prop_Data, "m_vecAbsOrigin", flBasePosX);
-			GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAngX);
-			CopyVector(NPCGetFestiveLightPosition(iBossIndex), flEffectPos);
-			CopyVector(NPCGetFestiveLightAngle(iBossIndex), flEffectAng);
-			VectorTransform(flEffectPos, flBasePosX, flBaseAngX, flEffectPos);
-			AddVectors(flEffectAng, flBaseAngX, flEffectAng);
-			TeleportEntity(iLight, flEffectPos, flEffectAng, NULL_VECTOR);
-			SetVariantInt(NPCGetFestiveLightBrightness(iBossIndex));
-			AcceptEntityInput(iLight, "Brightness");
-			SetVariantFloat(NPCGetFestiveLightDistance(iBossIndex));
-			AcceptEntityInput(iLight, "Distance");
-			SetVariantFloat(NPCGetFestiveLightRadius(iBossIndex));
-			AcceptEntityInput(iLight, "spotlight_radius");
-			SetVariantInt(1);
-			AcceptEntityInput(iLight, "cone");
-			DispatchKeyValue(iLight, "spawnflags", "0");
-			int iFunnyFestive = GetRandomInt(1, 3);
-			switch (iFunnyFestive)
-			{
-				case 1:
-				{
-					SetEntityRenderColor(iLight, 230, 37, 37, 255);
-				}
-				case 2:
-				{
-					SetEntityRenderColor(iLight, 94, 227, 79, 255);
-				}
-				case 3:
-				{
-					SetEntityRenderColor(iLight, 235, 235, 235, 255);
-				}
-			}
-			DispatchSpawn(iLight);
-			ActivateEntity(iLight);
-			CreateTimer(0.5, Timer_FestiveLight, EntIndexToEntRef(iLight), TIMER_REPEAT);
-			AcceptEntityInput(iLight, "TurnOn");
-			SetVariantString("!activator");
-			AcceptEntityInput(iLight, "SetParent", iSlender);
-			SDKHook(iLight, SDKHook_SetTransmit, Hook_EffectTransmitX);
-		}
-	}
-	
-	g_hConfig.Rewind();
-	if (!g_hConfig.JumpToKey(sProfile) || !g_hConfig.JumpToKey("effects") || !g_hConfig.GotoFirstSubKey()) return;
-	
-	ArrayList hArray = new ArrayList(64);
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for hArray in SlenderSpawnEffects.", hArray);
-	#endif
-	char sSectionName[64];
-	
-	do
-	{
-		g_hConfig.GetSectionName(sSectionName, sizeof(sSectionName));
-		hArray.PushString(sSectionName);
-	}
-	while (g_hConfig.GotoNextKey());
-	
-	if (hArray.Length == 0)
-	{
-		delete hArray;
-		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hArray in SlenderSpawnEffects due to no length.", hArray);
-		#endif
 		return;
 	}
 
-	float flBasePos[3], flBaseAng[3];
-	
-	g_hConfig.Rewind();
-	g_hConfig.JumpToKey(sProfile);
-	g_hConfig.JumpToKey("effects");
-	
-	for (int  i = 0, iSize = hArray.Length; i < iSize; i++)
+	int bossID = NPCGetUniqueID(bossIndex);
+	if (bossID == -1)
 	{
-		hArray.GetString(i, sSectionName, sizeof(sSectionName));
-		g_hConfig.JumpToKey(sSectionName);
-		
-		// Validate effect event. Check to see if it matches with ours.
-		char sEffectEvent[64];
-		g_hConfig.GetString("event", sEffectEvent, sizeof(sEffectEvent));
-		if (strcmp(sEffectEvent, "constant", false) == 0 || strcmp(sEffectEvent, "boss_hitplayer", false) == 0 || strcmp(sEffectEvent, "boss_seenbyplayer", false) == 0) 
+		return;
+	}
+
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	int slenderEnt = NPCGetEntIndex(bossIndex);
+
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(bossIndex, profile, sizeof(profile));
+
+	if (g_NpcEffectsArray[bossIndex] == null)
+	{
+		g_NpcEffectsArray[bossIndex] = new ArrayList();
+	}
+
+	if (NPCGetDiscoModeState(bossIndex))
+	{
+		int light = CreateEntityByName("light_dynamic");
+		int particle = CreateEntityByName("info_particle_system");
+		if (light != -1)
 		{
-			// Validate effect type.
-			char sEffectType[64];
-			g_hConfig.GetString("type", sEffectType, sizeof(sEffectType));
-			EffectType iEffectType = GetEffectTypeFromString(sEffectType);
-			
-			if (iEffectType != EffectType_Invalid)
+			float effectPos[3], effectAng[3], basePosX[3], baseAngX[3];
+			GetEntPropVector(slenderEnt, Prop_Data, "m_vecAbsOrigin", basePosX);
+			GetEntPropVector(slenderEnt, Prop_Data, "m_angAbsRotation", baseAngX);
+			effectPos[2] = 50.0;
+			VectorTransform(effectPos, basePosX, baseAngX, effectPos);
+			AddVectors(effectAng, baseAngX, effectAng);
+			TeleportEntity(light, effectPos, effectAng, NULL_VECTOR);
+			SetVariantInt(5);
+			AcceptEntityInput(light, "Brightness");
+			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(bossIndex), NPCGetDiscoModeRadiusMax(bossIndex)));
+			AcceptEntityInput(light, "Distance");
+			SetVariantFloat(GetRandomFloat(NPCGetDiscoModeRadiusMin(bossIndex), NPCGetDiscoModeRadiusMax(bossIndex)));
+			AcceptEntityInput(light, "spotlight_radius");
+			SetVariantInt(1);
+			AcceptEntityInput(light, "cone");
+			DispatchKeyValue(light, "spawnflags", "0");
+			int rChase = GetRandomInt(75, 250);
+			int gChase = GetRandomInt(75, 250);
+			int bChase = GetRandomInt(75, 250);
+			SetEntityRenderColor(light, rChase, gChase, bChase, 255);
+			DispatchSpawn(light);
+			ActivateEntity(light);
+			AcceptEntityInput(light, "TurnOn");
+			SetVariantString("!activator");
+			AcceptEntityInput(light, "SetParent", slenderEnt);
+			CreateTimer(0.1, Timer_DiscoLight, EntIndexToEntRef(light), TIMER_REPEAT);
+			SDKHook(light, SDKHook_SetTransmit, Hook_EffectTransmitX);
+			g_EntityEffectType[light] = EffectType_DynamicLight;
+			g_NpcEffectsArray[bossIndex].Push(light);
+		}
+
+		if (particle != -1)
+		{
+			float effectPos[3], effectAng[3], basePosX[3], baseAngX[3];
+			GetEntPropVector(slenderEnt, Prop_Data, "m_vecAbsOrigin", basePosX);
+			GetEntPropVector(slenderEnt, Prop_Data, "m_angAbsRotation", baseAngX);
+			CopyVector(NPCGetDiscoModePos(bossIndex), effectPos);
+			VectorTransform(effectPos, basePosX, baseAngX, effectPos);
+			AddVectors(effectAng, baseAngX, effectAng);
+			TeleportEntity(particle, effectPos, effectAng, NULL_VECTOR);
+
+			DispatchKeyValue(particle, "effect_name", "utaunt_disco_party");
+			DispatchSpawn(particle);
+			ActivateEntity(particle);
+			AcceptEntityInput(particle, "start");
+			SetVariantString("!activator");
+			AcceptEntityInput(particle, "SetParent", slenderEnt);
+			SDKHook(particle, SDKHook_SetTransmit, Hook_EffectTransmitX);
+			g_EntityEffectType[particle] = EffectType_Particle;
+			g_NpcEffectsArray[bossIndex].Push(particle);
+		}
+	}
+	if (NPCGetFestiveLightState(bossIndex))
+	{
+		int light = CreateEntityByName("light_dynamic");
+		if (light != -1)
+		{
+			float effectPos[3], effectAng[3], basePosX[3], baseAngX[3];
+			GetEntPropVector(slenderEnt, Prop_Data, "m_vecAbsOrigin", basePosX);
+			GetEntPropVector(slenderEnt, Prop_Data, "m_angAbsRotation", baseAngX);
+			CopyVector(NPCGetFestiveLightPosition(bossIndex), effectPos);
+			CopyVector(NPCGetFestiveLightAngle(bossIndex), effectAng);
+			VectorTransform(effectPos, basePosX, baseAngX, effectPos);
+			AddVectors(effectAng, baseAngX, effectAng);
+			TeleportEntity(light, effectPos, effectAng, NULL_VECTOR);
+			SetVariantInt(NPCGetFestiveLightBrightness(bossIndex));
+			AcceptEntityInput(light, "Brightness");
+			SetVariantFloat(NPCGetFestiveLightDistance(bossIndex));
+			AcceptEntityInput(light, "Distance");
+			SetVariantFloat(NPCGetFestiveLightRadius(bossIndex));
+			AcceptEntityInput(light, "spotlight_radius");
+			SetVariantInt(1);
+			AcceptEntityInput(light, "cone");
+			DispatchKeyValue(light, "spawnflags", "0");
+			int funnyFestive = GetRandomInt(1, 3);
+			switch (funnyFestive)
+			{
+				case 1:
+				{
+					SetEntityRenderColor(light, 230, 37, 37, 255);
+				}
+				case 2:
+				{
+					SetEntityRenderColor(light, 94, 227, 79, 255);
+				}
+				case 3:
+				{
+					SetEntityRenderColor(light, 235, 235, 235, 255);
+				}
+			}
+			DispatchSpawn(light);
+			ActivateEntity(light);
+			CreateTimer(0.5, Timer_FestiveLight, EntIndexToEntRef(light), TIMER_REPEAT);
+			AcceptEntityInput(light, "TurnOn");
+			SetVariantString("!activator");
+			AcceptEntityInput(light, "SetParent", slenderEnt);
+			SDKHook(light, SDKHook_SetTransmit, Hook_EffectTransmitX);
+			g_EntityEffectType[light] = EffectType_Particle;
+			g_NpcEffectsArray[bossIndex].Push(light);
+		}
+	}
+
+	ArrayList array = GetBossProfileEffectsArray(profile);
+	char sectionName[64];
+
+	if (array == null)
+	{
+		return;
+	}
+
+	float basePos[3], baseAng[3];
+	SF2BossProfileBaseEffectInfo effectsInfo;
+	for (int  i = 0, size = array.Length; i < size; i++)
+	{
+		array.GetArray(i, effectsInfo, sizeof(effectsInfo));
+
+		// Validate effect event and type. Check to see if it matches with ours.
+		if (effectsInfo.Event != EffectEvent_Invalid)
+		{
+			if (effectsInfo.Type != EffectType_Invalid)
 			{
 				// Check base position behavior.
-				char sBasePosCustom[64];
-				g_hConfig.GetString("origin_custom", sBasePosCustom, sizeof(sBasePosCustom));
-				if (strcmp(sBasePosCustom, "&CURRENTTARGET&", false) == 0)
+				if (!slenderEnt || slenderEnt == INVALID_ENT_REFERENCE)
 				{
-					int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
-					if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
-					{
-						LogError("Could not spawn effect %s for boss %d: unable to read position of target due to no target!");
-						g_hConfig.GoBack();
-						continue;
-					}
-					
-					GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flBasePos);
-				}
-				else
-				{
-					if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
-					{
-						LogError("Could not spawn effect %s for boss %d: unable to read position due to boss entity not in game!");
-						g_hConfig.GoBack();
-						continue;
-					}
-					
-					GetEntPropVector(iSlender, Prop_Data, "m_vecAbsOrigin", flBasePos);
-				}
-				
-				char sBaseAngCustom[64];
-				g_hConfig.GetString("angles_custom", sBaseAngCustom, sizeof(sBaseAngCustom));
-				if (strcmp(sBaseAngCustom, "&CURRENTTARGET&", false) == 0)
-				{
-					int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
-					if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
-					{
-						LogError("Could not spawn effect %s for boss %d: unable to read angles of target due to no target!");
-						g_hConfig.GoBack();
-						continue;
-					}
-					
-					GetEntPropVector(iTarget, Prop_Data, "m_angAbsRotation", flBaseAng);
-				}
-				else
-				{
-					if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
-					{
-						LogError("Could not spawn effect %s for boss %d: unable to read angles due to boss entity not in game!");
-						g_hConfig.GoBack();
-						continue;
-					}
-					
-					GetEntPropVector(iSlender, Prop_Data, "m_angAbsRotation", flBaseAng);
+					LogError("Could not spawn effect %s for boss %d: unable to read position due to boss entity not in game!");
+					continue;
 				}
 
-				int iDifficultyIndex = g_hConfig.GetNum("difficulty_indexes", 123456);
-				char sIndexes[8], sCurrentIndex[2];
-				FormatEx(sIndexes, sizeof(sIndexes), "%d", iDifficultyIndex);
-				FormatEx(sCurrentIndex, sizeof(sCurrentIndex), "%d", g_cvDifficulty.IntValue);
-				char sNumber = sCurrentIndex[0];
-				int iDifficultyNumber = 0;
-				if (FindCharInString(sIndexes, sNumber) != -1)
+				GetEntPropVector(slenderEnt, Prop_Data, "m_vecAbsOrigin", basePos);
+
+				if (!slenderEnt || slenderEnt == INVALID_ENT_REFERENCE)
 				{
-					iDifficultyNumber += g_cvDifficulty.IntValue;
+					LogError("Could not spawn effect %s for boss %d: unable to read angles due to boss entity not in game!");
+					continue;
 				}
-				if (sIndexes[0] != '\0' && sCurrentIndex[0] != '\0' && iDifficultyNumber != -1)
+
+				GetEntPropVector(slenderEnt, Prop_Data, "m_angAbsRotation", baseAng);
+
+				int difficultyIndex = effectsInfo.DifficultyIndexes;
+				char indexes[8], currentIndex[2];
+				FormatEx(indexes, sizeof(indexes), "%d", difficultyIndex);
+				FormatEx(currentIndex, sizeof(currentIndex), "%d", g_DifficultyConVar.IntValue);
+				char number = currentIndex[0];
+				int difficultyNumber = 0;
+				if (FindCharInString(indexes, number) != -1)
 				{
-					int iCurrentIndex = StringToInt(sCurrentIndex);
-					if (iDifficultyNumber != iCurrentIndex)
+					difficultyNumber += g_DifficultyConVar.IntValue;
+				}
+				if (indexes[0] != '\0' && currentIndex[0] != '\0' && difficultyNumber != -1)
+				{
+					int currentIntegerIndex = StringToInt(currentIndex);
+					if (difficultyNumber != currentIntegerIndex)
 					{
-						g_hConfig.GoBack();
 						continue;
 					}
 				}
 
-				int  iEnt = -1;
-				
-				switch (iEffectType)
-				{
-					case EffectType_Steam: iEnt = CreateEntityByName("env_steam");
-					case EffectType_DynamicLight: iEnt = CreateEntityByName("light_dynamic");
-					case EffectType_Particle: iEnt = CreateEntityByName("info_particle_system");
-					case EffectType_Trail: iEnt = CreateEntityByName("env_spritetrail");
-					case EffectType_PropDynamic: iEnt = CreateEntityByName("prop_dynamic");
-				}
-				
-				if (iEnt != -1)
-				{
-					char sValue[PLATFORM_MAX_PATH];
-					g_hConfig.GetString("renderamt", sValue, sizeof(sValue), "255");
-					DispatchKeyValue(iEnt, "renderamt", sValue);
-					g_hConfig.GetString("rendermode", sValue, sizeof(sValue));
-					DispatchKeyValue(iEnt, "rendermode", sValue);
-					g_hConfig.GetString("renderfx", sValue, sizeof(sValue), "0");
-					DispatchKeyValue(iEnt, "renderfx", sValue);
-					g_hConfig.GetString("spawnflags", sValue, sizeof(sValue));
-					DispatchKeyValue(iEnt, "spawnflags", sValue);
+				int entity = -1;
 
-					float flEffectPos[3], flEffectAng[3];
-					
-					g_hConfig.GetVector("origin", flEffectPos);
-					g_hConfig.GetVector("angles", flEffectAng);
-					VectorTransform(flEffectPos, flBasePos, flBaseAng, flEffectPos);
-					AddVectors(flEffectAng, flBaseAng, flEffectAng);
-					TeleportEntity(iEnt, flEffectPos, flEffectAng, NULL_VECTOR);
-					
-					switch (iEffectType)
+				switch (effectsInfo.Type)
+				{
+					case EffectType_Steam:
+					{
+						entity = CreateEntityByName("env_steam");
+					}
+					case EffectType_DynamicLight:
+					{
+						entity = CreateEntityByName("light_dynamic");
+					}
+					case EffectType_Particle:
+					{
+						entity = CreateEntityByName("info_particle_system");
+					}
+					case EffectType_Trail:
+					{
+						entity = CreateEntityByName("env_spritetrail");
+					}
+					case EffectType_PropDynamic:
+					{
+						entity = CreateEntityByName("prop_dynamic");
+					}
+					case EffectType_PointSpotlight:
+					{
+						entity = CreateEntityByName("env_beam");
+					}
+					case EffectType_Sprite:
+					{
+						entity = CreateEntityByName("env_sprite");
+					}
+				}
+
+				if (entity != -1)
+				{
+					char value[PLATFORM_MAX_PATH];
+					DispatchKeyValueInt(entity, "renderamt", effectsInfo.FadeAlpha);
+					DispatchKeyValueInt(entity, "rendermode", view_as<int>(effectsInfo.RenderModes));
+					DispatchKeyValueInt(entity, "renderfx", view_as<int>(effectsInfo.RenderEffects));
+					DispatchKeyValueInt(entity, "spawnflags", effectsInfo.SpawnFlags);
+
+					float effectPos[3], effectAng[3];
+
+					effectPos = effectsInfo.Origin;
+					effectAng = effectsInfo.Angles;
+
+					VectorTransform(effectPos, basePos, baseAng, effectPos);
+					AddVectors(effectAng, baseAng, effectAng);
+					TeleportEntity(entity, effectPos, effectAng, NULL_VECTOR);
+
+					switch (effectsInfo.Type)
 					{
 						case EffectType_Steam:
 						{
-							g_hConfig.GetString("spreadspeed", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "SpreadSpeed", sValue);
-							g_hConfig.GetString("speed", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "Speed", sValue);
-							g_hConfig.GetString("startsize", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "StartSize", sValue);
-							g_hConfig.GetString("endsize", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "EndSize", sValue);
-							g_hConfig.GetString("rate", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "Rate", sValue);
-							g_hConfig.GetString("jetlength", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "Jetlength", sValue);
-							g_hConfig.GetString("rollspeed", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "RollSpeed", sValue);
-							g_hConfig.GetString("particletype", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "type", sValue);
-							DispatchSpawn(iEnt);
-							ActivateEntity(iEnt);
+							DispatchKeyValueInt(entity, "SpreadSpeed", effectsInfo.SteamSpreadSpeed);
+							DispatchKeyValueInt(entity, "Speed", effectsInfo.SteamSpeed);
+							DispatchKeyValueInt(entity, "StartSize", effectsInfo.SteamStartSize);
+							DispatchKeyValueInt(entity, "EndSize", effectsInfo.SteamEndSize);
+							DispatchKeyValueInt(entity, "Rate", effectsInfo.SteamRate);
+							DispatchKeyValueInt(entity, "Jetlength", effectsInfo.SteamJetLength);
+							DispatchKeyValueFloat(entity, "RollSpeed", effectsInfo.SteamRollSpeed);
+							DispatchKeyValueInt(entity, "type", effectsInfo.SteamType);
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
 						}
 						case EffectType_DynamicLight:
 						{
-							SetVariantInt(g_hConfig.GetNum("brightness"));
-							AcceptEntityInput(iEnt, "Brightness");
-							SetVariantFloat(g_hConfig.GetFloat("distance"));
-							AcceptEntityInput(iEnt, "Distance");
-							SetVariantFloat(g_hConfig.GetFloat("distance"));
-							AcceptEntityInput(iEnt, "spotlight_radius");
-							SetVariantInt(g_hConfig.GetNum("cone"));
-							AcceptEntityInput(iEnt, "cone");
-							DispatchSpawn(iEnt);
-							ActivateEntity(iEnt);
-							
-							int r, g, b, a;
-							if (view_as<bool>(g_hConfig.GetNum("difficulty_lights", 0)) || view_as<bool>(g_hConfig.GetNum("difficulty_rendercolor", 0)))
-							{
-								switch (iDifficulty)
-								{
-									case Difficulty_Normal: g_hConfig.GetColor("rendercolor", r, g, b, a);
-									case Difficulty_Hard:
-									{
-										g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-									}
-									case Difficulty_Insane:
-									{
-										g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-										}
-									}
-									case Difficulty_Nightmare:
-									{
-										g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0)
-											{
-												g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-												if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-											}
-										}
-									}
-									case Difficulty_Apollyon: 
-									{
-										g_hConfig.GetColor("rendercolor_apollyon", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0)
-											{
-												g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-												if (r == 0 && g == 0 && b == 0 && a == 0)
-												{
-													g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-													if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-												}
-											}
-										}
-									}
-								}
-							}
-							else g_hConfig.GetColor("rendercolor", r, g, b, a);
-							SetEntityRenderColor(iEnt, r, g, b, a);
-							SetEntProp(iEnt, Prop_Data, "m_LightStyle", g_hConfig.GetNum("lightstyle", 0));
+							SetVariantInt(effectsInfo.LightBrightness);
+							AcceptEntityInput(entity, "Brightness");
+							SetVariantFloat(effectsInfo.LightMaxDistance);
+							AcceptEntityInput(entity, "Distance");
+							SetVariantFloat(effectsInfo.LightMaxDistance);
+							AcceptEntityInput(entity, "spotlight_radius");
+							SetVariantInt(effectsInfo.LightCone);
+							AcceptEntityInput(entity, "cone");
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
+
+							int renderColor[4];
+							effectsInfo.Colors.GetArray(difficulty, renderColor, sizeof(renderColor));
+
+							SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+							SetEntProp(entity, Prop_Data, "m_LightStyle", effectsInfo.LightStyle);
 						}
 						case EffectType_Particle:
 						{
-							g_hConfig.GetString("particlename", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "effect_name", sValue);
-							DispatchSpawn(iEnt);
-							ActivateEntity(iEnt);
+							DispatchKeyValue(entity, "effect_name", effectsInfo.ParticleName);
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
 						}
 						case EffectType_Trail:
 						{
-							DispatchKeyValueFloat(iEnt, "lifetime", g_hConfig.GetFloat("trailtime", 1.0));
-							DispatchKeyValueFloat(iEnt, "startwidth", g_hConfig.GetFloat("startwidth", 6.0));
-							DispatchKeyValueFloat(iEnt, "endwidth", g_hConfig.GetFloat("endwidth", 15.0));
-							g_hConfig.GetString("spritename", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "spritename", sValue);
-							SetEntPropFloat(iEnt, Prop_Send, "m_flTextureRes", 0.05);
-							int  r, g, b, a;
-							if (view_as<bool>(g_hConfig.GetNum("difficulty_rendercolor", 0)))
-							{
-								switch (iDifficulty)
-								{
-									case Difficulty_Normal: g_hConfig.GetColor("rendercolor", r, g, b, a);
-									case Difficulty_Hard:
-									{
-										g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-									}
-									case Difficulty_Insane:
-									{
-										g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-										}
-									}
-									case Difficulty_Nightmare:
-									{
-										g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0)
-											{
-												g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-												if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-											}
-										}
-									}
-									case Difficulty_Apollyon: 
-									{
-										g_hConfig.GetColor("rendercolor_apollyon", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0)
-											{
-												g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-												if (r == 0 && g == 0 && b == 0 && a == 0)
-												{
-													g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-													if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-												}
-											}
-										}
-									}
-								}
-							}
-							else g_hConfig.GetColor("rendercolor", r, g, b, a);
-							SetEntityRenderColor(iEnt, r, g, b, a);
-							DispatchSpawn(iEnt);
-							ActivateEntity(iEnt);
+							DispatchKeyValueFloat(entity, "lifetime", effectsInfo.TrailTime);
+							DispatchKeyValueFloat(entity, "startwidth", effectsInfo.TrailStartWidth);
+							DispatchKeyValueFloat(entity, "endwidth", effectsInfo.TrailEndWidth);
+							DispatchKeyValue(entity, "spritename", effectsInfo.TrailName);
+							SetEntPropFloat(entity, Prop_Send, "m_flTextureRes", 0.05);
+
+							int renderColor[4];
+							effectsInfo.Colors.GetArray(difficulty, renderColor, sizeof(renderColor));
+
+							SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
 						}
 						case EffectType_PropDynamic:
 						{
-							g_hConfig.GetString("modelname", sValue, sizeof(sValue));
-							DispatchKeyValue(iEnt, "model", sValue);
-							float flModelScale = g_hConfig.GetFloat("modelscale", GetEntPropFloat(iSlender, Prop_Send, "m_flModelScale"));
-							if (SF_SpecialRound(SPECIALROUND_TINYBOSSES) && flModelScale != GetEntPropFloat(iSlender, Prop_Send, "m_flModelScale")) flModelScale *= 0.5;
-							DispatchKeyValueFloat(iEnt, "modelscale", flModelScale);
-							SetEntProp(iEnt, Prop_Send, "m_nSkin", g_hConfig.GetNum("modelskin", 0));
-							SetEntProp(iEnt, Prop_Send, "m_fEffects", EF_BONEMERGE|EF_PARENT_ANIMATES);
-							g_hConfig.GetString("modelanimation", sValue, sizeof(sValue));
-							if (sValue[0] != '\0')
+							DispatchKeyValue(entity, "model", effectsInfo.ModelName);
+							float modelScale = effectsInfo.ModelScale;
+							if (SF_SpecialRound(SPECIALROUND_TINYBOSSES) && modelScale != GetEntPropFloat(slenderEnt, Prop_Send, "m_flModelScale"))
 							{
-								SetVariantString(sValue);
-								AcceptEntityInput(iEnt, "SetAnimation");
+								modelScale *= 0.5;
 							}
-							int  r, g, b, a;
-							if (view_as<bool>(g_hConfig.GetNum("difficulty_rendercolor", 0)))
+							DispatchKeyValueFloat(entity, "modelscale", modelScale);
+							SetEntProp(entity, Prop_Send, "m_nSkin", effectsInfo.ModelSkin);
+							SetEntProp(entity, Prop_Send, "m_fEffects", EF_BONEMERGE|EF_PARENT_ANIMATES);
+							if (effectsInfo.ModelAnimation[0] != '\0')
 							{
-								switch (iDifficulty)
+								SetVariantString(value);
+								AcceptEntityInput(entity, "SetAnimation");
+							}
+
+							int renderColor[4];
+							effectsInfo.Colors.GetArray(difficulty, renderColor, sizeof(renderColor));
+
+							SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
+						}
+						case EffectType_PointSpotlight:
+						{
+							int startEnt = CreateEntityByName("info_target");
+							int endEnt = CreateEntityByName("info_target");
+							if (startEnt != -1) // Start
+							{
+								SetEntPropString(startEnt, Prop_Data, "m_iClassname", "sf2_boss_spotlight_start");
+								SetEntProp(startEnt, Prop_Data, "m_spawnflags", 1);
+								TeleportEntity(startEnt, effectPos, effectAng, NULL_VECTOR);
+								SetVariantString("!activator");
+								AcceptEntityInput(startEnt, "SetParent", slenderEnt);
+								if (effectsInfo.Attachment && effectsInfo.AttachmentName[0] != '\0')
 								{
-									case Difficulty_Normal: g_hConfig.GetColor("rendercolor", r, g, b, a);
-									case Difficulty_Hard:
-									{
-										g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-									}
-									case Difficulty_Insane:
-									{
-										g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-										}
-									}
-									case Difficulty_Nightmare:
-									{
-										g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0)
-											{
-												g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-												if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-											}
-										}
-									}
-									case Difficulty_Apollyon: 
-									{
-										g_hConfig.GetColor("rendercolor_apollyon", r, g, b, a);
-										if (r == 0 && g == 0 && b == 0 && a == 0)
-										{
-											g_hConfig.GetColor("rendercolor_nightmare", r, g, b, a);
-											if (r == 0 && g == 0 && b == 0 && a == 0)
-											{
-												g_hConfig.GetColor("rendercolor_insane", r, g, b, a);
-												if (r == 0 && g == 0 && b == 0 && a == 0)
-												{
-													g_hConfig.GetColor("rendercolor_hard", r, g, b, a);
-													if (r == 0 && g == 0 && b == 0 && a == 0) g_hConfig.GetColor("rendercolor", r, g, b, a);
-												}
-											}
-										}
-									}
+									SetVariantString(effectsInfo.AttachmentName);
+									AcceptEntityInput(startEnt, "SetParentAttachmentMaintainOffset");
 								}
+
+								DispatchSpawn(startEnt);
+								SetEntityOwner(startEnt, slenderEnt);
+
+								SetEntityTransmitState(startEnt, FL_EDICT_FULLCHECK);
+								g_DHookUpdateTransmitState.HookEntity(Hook_Pre, startEnt, Hook_SpotlightEffectUpdateTransmitState);
+								g_DHookShouldTransmit.HookEntity(Hook_Pre, startEnt, Hook_SpotlightEffectShouldTransmit);
 							}
-							else g_hConfig.GetColor("rendercolor", r, g, b, a);
-							SetEntityRenderColor(iEnt, r, g, b, a);
-							DispatchSpawn(iEnt);
-							ActivateEntity(iEnt);
-						}
-					}
-					
-					float flLifeTime = g_hConfig.GetFloat("lifetime");
-					if (flLifeTime > 0.0) CreateTimer(flLifeTime, Timer_KillEntity, EntIndexToEntRef(iEnt), TIMER_FLAG_NO_MAPCHANGE);
-					
-					char sParentCustom[64];
-					g_hConfig.GetString("parent_custom", sParentCustom, sizeof(sParentCustom));
-					if (strcmp(sParentCustom, "&CURRENTTARGET&", false) == 0)
-					{
-						int  iTarget = EntRefToEntIndex(g_iSlenderTarget[iBossIndex]);
-						if (!iTarget || iTarget == INVALID_ENT_REFERENCE)
-						{
-							LogError("Could not parent effect %s of boss %d to current target: target does not exist!", sSectionName, iBossIndex);
-							g_hConfig.GoBack();
-							continue;
-						}
-					
-						SetVariantString("!activator");
-						AcceptEntityInput(iEnt, "SetParent", iTarget);
-						if (view_as<bool>(g_hConfig.GetNum("attach_point", 0)))
-						{
-							char sAttachment[PLATFORM_MAX_PATH];
-							g_hConfig.GetString("attachment_point", sAttachment, sizeof(sAttachment));
-							if (sAttachment[0] != '\0')
+							if (endEnt != -1) // End
 							{
-								SetVariantString(sAttachment);
-								if (iEffectType != EffectType_PropDynamic) AcceptEntityInput(iEnt, "SetParentAttachment");
-								else AcceptEntityInput(iEnt, "SetParentAttachmentMaintainOffset");
+								SetEntPropString(endEnt, Prop_Data, "m_iClassname", "sf2_boss_spotlight_end");
+								SetEntProp(endEnt, Prop_Data, "m_spawnflags", 1);
+								TeleportEntity(endEnt, effectPos, effectAng, NULL_VECTOR);
+								SetVariantString("!activator");
+								AcceptEntityInput(endEnt, "SetParent", slenderEnt);
+								if (effectsInfo.Attachment && effectsInfo.AttachmentName[0] != '\0')
+								{
+									SetVariantString(effectsInfo.AttachmentName);
+									AcceptEntityInput(endEnt, "SetParentAttachmentMaintainOffset");
+								}
+
+								DispatchSpawn(endEnt);
+								SetEntityOwner(endEnt, slenderEnt);
+
+								SetEntityTransmitState(endEnt, FL_EDICT_FULLCHECK);
+								g_DHookUpdateTransmitState.HookEntity(Hook_Pre, endEnt, Hook_SpotlightEffectUpdateTransmitState);
+								g_DHookShouldTransmit.HookEntity(Hook_Pre, endEnt, Hook_SpotlightEffectShouldTransmit);
 							}
+							int renderColor[4];
+							effectsInfo.Colors.GetArray(difficulty, renderColor, sizeof(renderColor));
+
+							SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+							SetEntityModel(entity, SF2_FLASHLIGHT_BEAM_MATERIAL);
+							SetEntityRenderMode(entity, effectsInfo.RenderModes);
+							SetEntPropFloat(entity, Prop_Data, "m_life", 0.0);
+
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
+
+							SetEntPropEnt(entity, Prop_Send, "m_hAttachEntity", startEnt, 0);
+							SetEntPropEnt(entity, Prop_Send, "m_hAttachEntity", endEnt, 1);
+							SetEntProp(entity, Prop_Send, "m_nNumBeamEnts", 2);
+							SetEntProp(entity, Prop_Send, "m_nBeamType", 2);
+
+							float width = effectsInfo.SpotlightWidth;
+							SetEntPropFloat(entity, Prop_Send, "m_fWidth", width);
+
+							float endWidth = width * 2.0;
+							SetEntPropFloat(entity, Prop_Data, "m_fEndWidth", endWidth);
+
+							SetEntPropFloat(entity, Prop_Send, "m_fFadeLength", 0.0);
+							SetEntProp(entity, Prop_Send, "m_nHaloIndex", g_FlashlightHaloModel);
+							SetEntPropFloat(entity, Prop_Send, "m_fHaloScale", 40.0);
+							SetEntProp(entity, Prop_Send, "m_nBeamFlags", 0x80 | 0x200);
+							SetEntProp(entity, Prop_Data, "m_spawnflags", 0x8000);
+							g_EffectSpotlightEndEntity[entity] = EntIndexToEntRef(endEnt);
+
+							g_EffectSpotlightEndLength[entity] = effectsInfo.SpotlightLength;
+
+							AcceptEntityInput(entity, "TurnOn");
+
+							SetEntityOwner(entity, slenderEnt);
+
+							SetEntityTransmitState(entity, FL_EDICT_FULLCHECK);
+							g_DHookUpdateTransmitState.HookEntity(Hook_Pre, entity, Hook_SpotlightEffectUpdateTransmitState);
+							g_DHookShouldTransmit.HookEntity(Hook_Pre, entity, Hook_SpotlightEffectShouldTransmit);
+						}
+						case EffectType_Sprite:
+						{
+							DispatchKeyValue(entity, "classname", "env_sprite");
+							DispatchKeyValue(entity, "model", effectsInfo.SpriteName);
+							DispatchKeyValueFloat(entity, "scale", effectsInfo.SpriteScale);
+
+							int renderColor[4];
+							effectsInfo.Colors.GetArray(difficulty, renderColor, sizeof(renderColor));
+
+							SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+
+							DispatchSpawn(entity);
+							ActivateEntity(entity);
 						}
 					}
-					else
+
+					float lifeTime = effectsInfo.LifeTime;
+					if (lifeTime > 0.0)
 					{
-						if (!iSlender || iSlender == INVALID_ENT_REFERENCE)
+						CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+					}
+
+					if (!slenderEnt || slenderEnt == INVALID_ENT_REFERENCE)
+					{
+						LogError("Could not parent effect %s of boss %d to itself: boss entity does not exist!", sectionName, bossIndex);
+						continue;
+					}
+
+					SetVariantString("!activator");
+					AcceptEntityInput(entity, "SetParent", slenderEnt);
+					if (effectsInfo.Attachment)
+					{
+						if (effectsInfo.AttachmentName[0] != '\0')
 						{
-							LogError("Could not parent effect %s of boss %d to itself: boss entity does not exist!", sSectionName, iBossIndex);
-							g_hConfig.GoBack();
-							continue;
-						}
-						
-						SetVariantString("!activator");
-						AcceptEntityInput(iEnt, "SetParent", iSlender);
-						if (view_as<bool>(g_hConfig.GetNum("attach_point", 0)))
-						{
-							char sAttachment[PLATFORM_MAX_PATH];
-							g_hConfig.GetString("attachment_point", sAttachment, sizeof(sAttachment));
-							if (sAttachment[0] != '\0')
+							SetVariantString(effectsInfo.AttachmentName);
+							if (effectsInfo.Type != EffectType_PropDynamic && effectsInfo.Type != EffectType_PointSpotlight)
 							{
-								SetVariantString(sAttachment);
-								if (iEffectType != EffectType_PropDynamic) AcceptEntityInput(iEnt, "SetParentAttachment");
-								else AcceptEntityInput(iEnt, "SetParentAttachmentMaintainOffset");
+								AcceptEntityInput(entity, "SetParentAttachment");
+							}
+							else
+							{
+								AcceptEntityInput(entity, "SetParentAttachmentMaintainOffset");
 							}
 						}
 					}
-					
-					switch (iEffectType)
+
+					switch (effectsInfo.Type)
 					{
 						case EffectType_Steam,
-							EffectType_DynamicLight: 
+							EffectType_DynamicLight:
 						{
-							AcceptEntityInput(iEnt, "TurnOn");
+							AcceptEntityInput(entity, "TurnOn");
 						}
 						case EffectType_Particle:
 						{
-							AcceptEntityInput(iEnt, "start");
+							AcceptEntityInput(entity, "start");
 						}
 						case EffectType_Trail:
 						{
-							AcceptEntityInput(iEnt, "showsprite");
+							AcceptEntityInput(entity, "showsprite");
+						}
+						case EffectType_PointSpotlight:
+						{
+							AcceptEntityInput(entity, "TurnOn");
+						}
+						case EffectType_Sprite:
+						{
+							AcceptEntityInput(entity, "ShowSprite");
 						}
 					}
-					SDKHook(iEnt, SDKHook_SetTransmit, Hook_EffectTransmit);
-					g_iEntityEffectType[iEnt] = GetEffectEventFromString(sEffectEvent);
+					SDKHook(entity, SDKHook_SetTransmit, Hook_EffectTransmit);
+					g_EntityEffectType[entity] = effectsInfo.Type;
+					g_EntityEffectEvent[entity] = effectsInfo.Event;
+					g_NpcEffectsArray[bossIndex].Push(entity);
 				}
 			}
 			else
 			{
-				LogError("Could not spawn effect %s for boss %d: invalid type!", sSectionName, iBossIndex);
+				LogError("Could not spawn effect %s for boss %d: invalid type!", sectionName, bossIndex);
 			}
 		}
-		
-		g_hConfig.GoBack();
 	}
-	
-	delete hArray;
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for hArray in SlenderSpawnEffects.", hArray);
-	#endif
-}
-public Action Hook_EffectTransmit(int ent,int other)
-{
-	if (!g_bEnabled) return Plugin_Continue;
 
-	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	int iBossIndex = NPCGetFromEntIndex(slender);
-
-	if (iBossIndex != -1 && NPCChaserIsCloaked(iBossIndex)) return Plugin_Handled;
-	if (g_iEntityEffectType[ent] == EffectEvent_PlayerSeesBoss && IsValidClient(other) && iBossIndex != -1 && !g_bPlayerEliminated[other] && !IsClientInGhostMode(other) && 
-	!DidClientEscape(other) && !PlayerCanSeeSlender(other, iBossIndex, true)) return Plugin_Handled;
-
-	return Plugin_Continue;
-}
-public Action Hook_EffectTransmitX(int ent,int other)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-
-	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	int iBossIndex = NPCGetFromEntIndex(slender);
-
-	if (iBossIndex != -1 && NPCChaserIsCloaked(iBossIndex)) return Plugin_Handled;
-
-	return Plugin_Continue;
-}
-void SlenderToggleParticleEffects(int iSlender,bool bReverse=false)
-{
-	int iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "info_particle_system")) > MaxClients)
+	if (g_NpcEffectsArray[bossIndex] != null && g_NpcEffectsArray[bossIndex].Length > 0)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
+		for (int effects = 0; effects < g_NpcEffectsArray[bossIndex].Length; effects++)
 		{
-			if (!bReverse)
+			int ent = g_NpcEffectsArray[bossIndex].Get(effects);
+			if (!IsValidEntity(ent))
 			{
-				AcceptEntityInput(iEffect, "stop");
-				AcceptEntityInput(iEffect, "stop");
+				continue;
+			}
+			if (g_EntityEffectType[ent] == EffectType_PointSpotlight)
+			{
+				SDKHook(slenderEnt, SDKHook_ThinkPost, SlenderSpotlightThink);
+				break;
+			}
+		}
+	}
+}
+
+static Action Hook_EffectTransmit(int ent,int other)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	int slender = GetEntPropEnt(ent, Prop_Send, "moveparent");
+	int bossIndex = NPCGetFromEntIndex(slender);
+
+	if (bossIndex != -1 && NPCChaserIsCloaked(bossIndex))
+	{
+		return Plugin_Handled;
+	}
+	if (g_EntityEffectEvent[ent] == EffectEvent_PlayerSeesBoss && IsValidClient(other) && bossIndex != -1 && !g_PlayerEliminated[other] && !IsClientInGhostMode(other) &&
+	!DidClientEscape(other) && !PlayerCanSeeSlender(other, bossIndex, true))
+	{
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
+
+static Action Hook_EffectTransmitX(int ent,int other)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
+	int bossIndex = NPCGetFromEntIndex(slender);
+
+	if (bossIndex != -1 && NPCChaserIsCloaked(bossIndex))
+	{
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
+
+MRESReturn Hook_SpotlightEffectUpdateTransmitState(int entity, DHookReturn returnHook)
+{
+	returnHook.Value = SetEntityTransmitState(entity, FL_EDICT_FULLCHECK);
+	return MRES_Supercede;
+}
+
+MRESReturn Hook_SpotlightEffectShouldTransmit(int entity, DHookReturn returnHook, DHookParam params)
+{
+	returnHook.Value = FL_EDICT_ALWAYS;
+	return MRES_Supercede;
+}
+
+void SlenderToggleParticleEffects(int slenderEnt,bool reverse=false)
+{
+	int effect = -1;
+	while((effect = FindEntityByClassname(effect, "info_particle_system")) > MaxClients)
+	{
+		if (GetEntPropEnt(effect,Prop_Send,"moveparent") == slenderEnt)
+		{
+			if (!reverse)
+			{
+				AcceptEntityInput(effect, "stop");
+				AcceptEntityInput(effect, "stop");
 			}
 			else
 			{
-				AcceptEntityInput(iEffect, "stop");
-				AcceptEntityInput(iEffect, "start");
+				AcceptEntityInput(effect, "stop");
+				AcceptEntityInput(effect, "start");
 			}
 		}
 	}
 }
-void SlenderRemoveEffects(int iSlender,bool bKill=false)
+
+void SlenderRemoveEffects(int slenderEnt,bool kill=false)
 {
-	int iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "light_dynamic")) > MaxClients)
+	int bossIndex = NPCGetFromEntIndex(slenderEnt);
+	if (bossIndex == -1)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
-		{
-			AcceptEntityInput(iEffect, "TurnOff");
-			if(bKill)
-				RemoveEntity(iEffect);
-		}
-	}
-	
-	iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "env_steam")) > MaxClients)
-	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
-		{
-			AcceptEntityInput(iEffect, "TurnOff");
-			if(bKill)
-				RemoveEntity(iEffect);
-		}
+		return;
 	}
 
-	iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "info_particle_system")) > MaxClients)
+	if (g_NpcEffectsArray[bossIndex] == null)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
-		{
-			AcceptEntityInput(iEffect, "stop");
-			if(bKill)
-				RemoveEntity(iEffect);
-		}
+		return;
 	}
 
-	iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "env_spritetrail")) > MaxClients)
+	if (g_NpcEffectsArray[bossIndex] != null && g_NpcEffectsArray[bossIndex].Length <= 0)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender)
-		{
-			AcceptEntityInput(iEffect, "hidesprite");
-			if(bKill)
-				RemoveEntity(iEffect);
-		}
+		return;
 	}
 
-	iEffect = -1;
-	while((iEffect = FindEntityByClassname(iEffect, "prop_dynamic")) > MaxClients)
+	for (int effect = 0; effect < g_NpcEffectsArray[bossIndex].Length; effect++)
 	{
-		if(GetEntPropEnt(iEffect,Prop_Send,"moveparent") == iSlender && bKill)
+		int ent = g_NpcEffectsArray[bossIndex].Get(effect);
+		if (!IsValidEntity(ent))
 		{
-			RemoveEntity(iEffect);
+			continue;
+		}
+		switch (g_EntityEffectType[ent])
+		{
+			case EffectType_Steam, EffectType_DynamicLight:
+			{
+				AcceptEntityInput(ent, "TurnOff");
+			}
+			case EffectType_Particle:
+			{
+				AcceptEntityInput(ent, "stop");
+			}
+			case EffectType_Trail:
+			{
+				AcceptEntityInput(ent, "hidesprite");
+			}
+			case EffectType_Sprite:
+			{
+				AcceptEntityInput(ent, "HideSprite");
+			}
+		}
+
+		if (kill)
+		{
+			if (g_EntityEffectType[ent] == EffectType_PointSpotlight)
+			{
+				AcceptEntityInput(ent, "KillHierarchy");
+			}
+			else
+			{
+				RemoveEntity(ent);
+			}
+		}
+	}
+	delete g_NpcEffectsArray[bossIndex];
+}
+
+static void SlenderSpotlightThink(int slenderEnt)
+{
+	if (IsValidEntity(slenderEnt))
+	{
+		int bossIndex = NPCGetFromEntIndex(slenderEnt);
+		if (bossIndex != -1 && g_NpcEffectsArray[bossIndex] != null && g_NpcEffectsArray[bossIndex].Length > 0)
+		{
+			for (int effect = 0; effect < g_NpcEffectsArray[bossIndex].Length; effect++)
+			{
+				int ent = g_NpcEffectsArray[bossIndex].Get(effect);
+				if (!IsValidEntity(ent))
+				{
+					continue;
+				}
+				if (g_EntityEffectType[ent] != EffectType_PointSpotlight)
+				{
+					continue;
+				}
+				float entPos[3], entRot[3], endPos[3];
+				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", entPos);
+				GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", entRot);
+				GetAngleVectors(entRot, entRot, NULL_VECTOR, NULL_VECTOR);
+				endPos = entRot;
+				ScaleVector(endPos, g_EffectSpotlightEndLength[ent]);
+				AddVectors(endPos, entPos, endPos);
+
+				CBaseEntity spotlightEnd = CBaseEntity(EntRefToEntIndex(g_EffectSpotlightEndEntity[ent]));
+				if (spotlightEnd.IsValid())
+				{
+					TR_TraceRayFilter(entPos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitEntity, ent);
+
+					float hitPos[3];
+					TR_GetEndPosition(hitPos);
+
+					spotlightEnd.SetAbsOrigin(hitPos);
+				}
+			}
 		}
 	}
 }
-stock void GetEffectEventString(EffectEvent iEvent, char[] sBuffer,int iBufferLen)
+
+static Action Timer_DiscoLight(Handle timer, any effect)
 {
-	switch (iEvent)
+	if (effect == -1)
 	{
-		case EffectEvent_Constant: strcopy(sBuffer, iBufferLen, "constant");
-		case EffectEvent_HitPlayer: strcopy(sBuffer, iBufferLen, "boss_hitplayer");
-		case EffectEvent_PlayerSeesBoss: strcopy(sBuffer, iBufferLen, "boss_seenbyplayer");
-		default: sBuffer[0] = '\0';
+		return Plugin_Stop;
 	}
-}
 
-stock EffectType GetEffectTypeFromString(const char[] sType)
-{
-	if (strcmp(sType, "steam", false) == 0) return EffectType_Steam;
-	if (strcmp(sType, "dynamiclight", false) == 0) return EffectType_DynamicLight;
-	if (strcmp(sType, "particle", false) == 0) return EffectType_Particle;
-	if (strcmp(sType, "trail", false) == 0) return EffectType_Trail;
-	if (strcmp(sType, "propdynamic", false) == 0) return EffectType_PropDynamic;
-	return EffectType_Invalid;
-}
+	int ent = EntRefToEntIndex(effect);
+	if (!IsValidEntity(ent))
+	{
+		return Plugin_Stop;
+	}
 
-stock EffectEvent GetEffectEventFromString(const char[] sType)
-{
-	if (strcmp(sType, "constant", false) == 0) return EffectEvent_Constant;
-	if (strcmp(sType, "boss_hitplayer", false) == 0) return EffectEvent_HitPlayer;
-	if (strcmp(sType, "boss_seenbyplayer", false) == 0) return EffectEvent_PlayerSeesBoss;
-	return EffectEvent_Invalid;
-}
-
-static Action Timer_DiscoLight(Handle timer, any iEffect)
-{
-	if (iEffect == -1) return Plugin_Stop;
-	
-	int ent = EntRefToEntIndex(iEffect);
-	if (!IsValidEntity(ent)) return Plugin_Stop;
-	
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
 
-	int iBossIndex = NPCGetFromEntIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
-	
+	int bossIndex = NPCGetFromEntIndex(slender);
+	if (bossIndex == -1)
+	{
+		return Plugin_Stop;
+	}
+
 	int rChase = GetRandomInt(75, 250);
 	int gChase = GetRandomInt(75, 250);
 	int bChase = GetRandomInt(75, 250);
-	SetEntityRenderColor(iEffect, rChase, gChase, bChase, 255);
+	SetEntityRenderColor(effect, rChase, gChase, bChase, 255);
 
-	float DistanceRNG = GetRandomFloat(NPCGetDiscoModeRadiusMin(iBossIndex), NPCGetDiscoModeRadiusMax(iBossIndex));
+	float distanceRNG = GetRandomFloat(NPCGetDiscoModeRadiusMin(bossIndex), NPCGetDiscoModeRadiusMax(bossIndex));
 
-	SetVariantFloat(DistanceRNG);
-	AcceptEntityInput(iEffect, "Distance");
-	SetVariantFloat(DistanceRNG);
-	AcceptEntityInput(iEffect, "spotlight_radius");
+	SetVariantFloat(distanceRNG);
+	AcceptEntityInput(effect, "Distance");
+	SetVariantFloat(distanceRNG);
+	AcceptEntityInput(effect, "spotlight_radius");
 
 	return Plugin_Continue;
 }
 
-static Action Timer_FestiveLight(Handle timer, any iEffect)
+static Action Timer_FestiveLight(Handle timer, any effect)
 {
-	if (iEffect == -1) return Plugin_Stop;
-	
-	int ent = EntRefToEntIndex(iEffect);
-	if (!IsValidEntity(ent)) return Plugin_Stop;
-	
+	if (effect == -1)
+	{
+		return Plugin_Stop;
+	}
+
+	int ent = EntRefToEntIndex(effect);
+	if (!IsValidEntity(ent))
+	{
+		return Plugin_Stop;
+	}
+
 	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	if (!slender || slender == INVALID_ENT_REFERENCE) return Plugin_Stop;
+	if (!slender || slender == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
 
-	int iBossIndex = SF2_EntIndexToBossIndex(slender);
-	if (iBossIndex == -1) return Plugin_Stop;
+	int bossIndex = NPCGetFromEntIndex(slender);
+	if (bossIndex == -1)
+	{
+		return Plugin_Stop;
+	}
 
-	int iFunnyFestive = GetRandomInt(1, 3);
-	switch (iFunnyFestive)
+	int funnyFestive = GetRandomInt(1, 3);
+	switch (funnyFestive)
 	{
 		case 1:
 		{
-			SetEntityRenderColor(iEffect, 230, 37, 37, 255);
+			SetEntityRenderColor(effect, 230, 37, 37, 255);
 		}
 		case 2:
 		{
-			SetEntityRenderColor(iEffect, 94, 227, 79, 255);
+			SetEntityRenderColor(effect, 94, 227, 79, 255);
 		}
 		case 3:
 		{
-			SetEntityRenderColor(iEffect, 235, 235, 235, 255);
+			SetEntityRenderColor(effect, 235, 235, 235, 255);
 		}
 	}
 

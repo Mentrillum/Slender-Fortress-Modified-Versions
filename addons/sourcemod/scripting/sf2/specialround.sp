@@ -3,60 +3,81 @@
 #endif
 #define _sf2_specialround_included
 
+#pragma semicolon 1
+
 #define SR_CYCLELENGTH 10.0
-#define SR_STARTDELAY 1.25
+#define SR_STARTDELAY 0.25
 #define SR_MUSIC "slender/specialround.mp3"
 #define SR_SOUND_SELECT "slender/specialroundselect.mp3"
 #define SR_SOUND_SELECT_BR "ambient/rottenburg/rottenburg_belltower.wav"
+#define SR_DUCK_MODEL "models/workshop/player/items/pyro/eotl_ducky/eotl_bonus_duck.mdl"
 
 #define FILE_SPECIALROUNDS "configs/sf2/specialrounds.cfg"
 #define FILE_SPECIALROUNDS_DATA "data/sf2/specialrounds.cfg"
 
-static ArrayList g_hSpecialRoundCycleNames = null;
+static ArrayList g_SpecialRoundCycleNames = null;
+static ArrayList g_DisabledSpecialRounds = null;
 
-static Handle g_hSpecialRoundTimer = null;
-static int g_iSpecialRoundCycleNum = 0;
-static float g_flSpecialRoundCycleEndTime = -1.0;
-static bool g_bStarted = false;
-static int doubleroulettecount = 0;
-static int g_iSpecialRoundType = 0;
+static Handle g_SpecialRoundTimer = null;
+static int g_SpecialRoundCycleNum = 0;
+static float g_SpecialRoundCycleEndTime = -1.0;
+static bool g_Started = false;
+static int doublerouletteCount = 0;
+static int g_SpecialRoundType = 0;
+
 void ReloadSpecialRounds()
 {
-	if (g_hSpecialRoundCycleNames == null)
+	if (g_SpecialRoundCycleNames == null)
 	{
-		g_hSpecialRoundCycleNames = new ArrayList(128);
+		g_SpecialRoundCycleNames = new ArrayList(ByteCountToCells(128));
 	}
-	
-	g_hSpecialRoundCycleNames.Clear();
 
-	if (g_hSpecialRoundsConfig != null)
+	if (g_DisabledSpecialRounds == null)
 	{
-		delete g_hSpecialRoundsConfig;
-		g_hSpecialRoundsConfig = null;
+		g_DisabledSpecialRounds = new ArrayList();
 	}
-	
+
+	g_SpecialRoundCycleNames.Clear();
+	g_DisabledSpecialRounds.Clear();
+
+	if (g_SpecialRoundsConfig != null)
+	{
+		delete g_SpecialRoundsConfig;
+		g_SpecialRoundsConfig = null;
+	}
+
 	char buffer[PLATFORM_MAX_PATH];
-	if (!g_cvUseAlternateConfigDirectory.BoolValue) BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS);
-	else BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS_DATA);
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
+	{
+		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS);
+	}
+	else
+	{
+		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_SPECIALROUNDS_DATA);
+	}
 	KeyValues kv = new KeyValues("root");
 	if (!FileToKeyValues(kv, buffer))
 	{
 		delete kv;
-		LogError("Failed to load special rounds! File %s not found!", !g_cvUseAlternateConfigDirectory.BoolValue ? FILE_SPECIALROUNDS : FILE_SPECIALROUNDS_DATA);
+		LogError("Failed to load special rounds! File %s not found!", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_SPECIALROUNDS : FILE_SPECIALROUNDS_DATA);
 	}
 	else
 	{
-		g_hSpecialRoundsConfig = kv;
+		g_SpecialRoundsConfig = kv;
 		LogMessage("Loaded special rounds file!");
-		
+
 		// Load names for the cycle.
-		char sBuffer[128];
-		for (int iSpecialRound = SPECIALROUND_DOUBLETROUBLE; iSpecialRound < SPECIALROUND_MAXROUNDS; iSpecialRound++)
+		char buffer2[128];
+		for (int specialRound = SPECIALROUND_DOUBLETROUBLE; specialRound < SPECIALROUND_MAXROUNDS; specialRound++)
 		{
-			SpecialRoundGetDescriptionHud(iSpecialRound, sBuffer, sizeof(sBuffer));
-			g_hSpecialRoundCycleNames.PushString(sBuffer);
+			SpecialRoundGetDescriptionHud(specialRound, buffer2, sizeof(buffer2));
+			g_SpecialRoundCycleNames.PushString(buffer2);
+			if (!SpecialRoundCanBeSelected(specialRound))
+			{
+				g_DisabledSpecialRounds.Push(specialRound);
+			}
 		}
-		
+
 		kv.Rewind();
 		if (kv.JumpToKey("jokes"))
 		{
@@ -64,482 +85,640 @@ void ReloadSpecialRounds()
 			{
 				do
 				{
-					kv.GetString(NULL_STRING, sBuffer, sizeof(sBuffer));
-					if (strlen(sBuffer) > 0)
+					kv.GetString(NULL_STRING, buffer2, sizeof(buffer2));
+					if (strlen(buffer2) > 0)
 					{
-						g_hSpecialRoundCycleNames.PushString(sBuffer);
+						g_SpecialRoundCycleNames.PushString(buffer2);
 					}
 				}
 				while (kv.GotoNextKey(false));
 			}
 		}
-		
-		g_hSpecialRoundCycleNames.Sort(Sort_Random, Sort_String);
+
+		g_SpecialRoundCycleNames.Sort(Sort_Random, Sort_String);
 	}
 }
 
-stock void SpecialRoundGetDescriptionHud(int iSpecialRound, char[] buffer,int bufferlen)
+static void SpecialRoundGetDescriptionHud(int specialRound, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferlen, "");
+	strcopy(buffer, bufferLen, "");
 
-	if (g_hSpecialRoundsConfig == null) return;
-	
-	g_hSpecialRoundsConfig.Rewind();
-	char sSpecialRound[32];
-	FormatEx(sSpecialRound, sizeof(sSpecialRound), "%d", iSpecialRound);
-	
-	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return;
-	
-	g_hSpecialRoundsConfig.GetString("display_text_hud", buffer, bufferlen);
+	if (g_SpecialRoundsConfig == null)
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.Rewind();
+	char specialRoundString[32];
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
+
+	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.GetString("display_text_hud", buffer, bufferLen);
 }
 
-stock void SpecialRoundGetDescriptionChat(int iSpecialRound, char[] buffer,int bufferlen)
+static void SpecialRoundGetDescriptionChat(int specialRound, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferlen, "");
+	strcopy(buffer, bufferLen, "");
 
-	if (g_hSpecialRoundsConfig == null) return;
-	
-	g_hSpecialRoundsConfig.Rewind();
-	char sSpecialRound[64];
-	FormatEx(sSpecialRound, sizeof(sSpecialRound), "%d", iSpecialRound);
-	
-	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return;
-	
-	g_hSpecialRoundsConfig.GetString("display_text_chat", buffer, bufferlen);
+	if (g_SpecialRoundsConfig == null)
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.Rewind();
+	char specialRoundString[64];
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
+
+	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.GetString("display_text_chat", buffer, bufferLen);
 }
 
-stock void SpecialRoundGetIconHud(int iSpecialRound, char[] buffer,int bufferlen)
+static void SpecialRoundGetIconHud(int specialRound, char[] buffer,int bufferLen)
 {
-	strcopy(buffer, bufferlen, "");
+	strcopy(buffer, bufferLen, "");
 
-	if (g_hSpecialRoundsConfig == null) return;
-	
-	g_hSpecialRoundsConfig.Rewind();
-	char sSpecialRound[32];
-	FormatEx(sSpecialRound, sizeof(sSpecialRound), "%d", iSpecialRound);
-	
-	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return;
-	
-	g_hSpecialRoundsConfig.GetString("display_icon_hud", buffer, bufferlen);
+	if (g_SpecialRoundsConfig == null)
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.Rewind();
+	char specialRoundString[32];
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
+
+	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.GetString("display_icon_hud", buffer, bufferLen);
 }
 
-stock bool SpecialRoundCanBeSelected(int iSpecialRound)
+static bool SpecialRoundCanBeSelected(int specialRound)
 {
-	if (g_hSpecialRoundsConfig == null) return false;
-	
-	g_hSpecialRoundsConfig.Rewind();
-	char sSpecialRound[32];
-	FormatEx(sSpecialRound, sizeof(sSpecialRound), "%d", iSpecialRound);
-	
-	if (!g_hSpecialRoundsConfig.JumpToKey(sSpecialRound)) return false;
-	
-	return view_as<bool>(g_hSpecialRoundsConfig.GetNum("enabled", 1));
+	if (g_SpecialRoundsConfig == null)
+	{
+		return false;
+	}
+
+	g_SpecialRoundsConfig.Rewind();
+	char specialRoundString[32];
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
+
+	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
+	{
+		return false;
+	}
+
+	return !!g_SpecialRoundsConfig.GetNum("enabled", 1);
 }
 
-public Action Timer_SpecialRoundCycle(Handle timer)
+static bool IsSpecialRoundEnabled(int specialRound)
 {
-	if (timer != g_hSpecialRoundTimer) return Plugin_Stop;
-	
-	if (GetGameTime() >= g_flSpecialRoundCycleEndTime)
+	if (g_DisabledSpecialRounds == null)
+	{
+		return true;
+	}
+
+	return g_DisabledSpecialRounds.FindValue(specialRound) == -1;
+}
+
+static void AddSpecialRoundToList(int specialRound, ArrayList list)
+{
+	if (!IsSpecialRoundEnabled(specialRound))
+	{
+		return;
+	}
+
+	list.Push(specialRound);
+}
+
+static Action Timer_SpecialRoundCycle(Handle timer)
+{
+	if (timer != g_SpecialRoundTimer)
+	{
+		return Plugin_Stop;
+	}
+
+	if (GetGameTime() >= g_SpecialRoundCycleEndTime)
 	{
 		SpecialRoundCycleFinish();
 		return Plugin_Stop;
 	}
-	
-	char sBuffer[128];
-	g_hSpecialRoundCycleNames.GetString(g_iSpecialRoundCycleNum, sBuffer, sizeof(sBuffer));
-	
-	if(!SF_SpecialRound(SPECIALROUND_SUPRISE))
-		SpecialRoundGameText(sBuffer);
-	
-	g_iSpecialRoundCycleNum++;
-	if (g_iSpecialRoundCycleNum >= g_hSpecialRoundCycleNames.Length)
+
+	char buffer[128];
+	g_SpecialRoundCycleNames.GetString(g_SpecialRoundCycleNum, buffer, sizeof(buffer));
+
+	if (!SF_SpecialRound(SPECIALROUND_SUPRISE))
 	{
-		g_iSpecialRoundCycleNum = 0;
+		SpecialRoundGameText(buffer);
 	}
-	
+
+	g_SpecialRoundCycleNum++;
+	if (g_SpecialRoundCycleNum >= g_SpecialRoundCycleNames.Length)
+	{
+		g_SpecialRoundCycleNum = 0;
+	}
+
 	return Plugin_Continue;
 }
 
-public Action Timer_SpecialRoundStart(Handle timer)
+static Action Timer_SpecialRoundStart(Handle timer)
 {
-	if (timer != g_hSpecialRoundTimer) return Plugin_Stop;
-	if (!g_bSpecialRound) return Plugin_Stop;
-	
+	if (timer != g_SpecialRoundTimer)
+	{
+		return Plugin_Stop;
+	}
+	if (!g_IsSpecialRound)
+	{
+		return Plugin_Stop;
+	}
+
 	SpecialRoundStart();
 
 	return Plugin_Stop;
 }
-public Action Timer_SpecialRoundFakeBosses(Handle timer)
+
+static Action Timer_SpecialRoundFakeBosses(Handle timer)
 {
-	if (!g_bSpecialRound) return Plugin_Stop;
-	if (!SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES)) return Plugin_Stop;
-	char sProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	int iFakeBossCount=0;
+	if (!g_IsSpecialRound)
+	{
+		return Plugin_Stop;
+	}
+	if (!SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES))
+	{
+		return Plugin_Stop;
+	}
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	int fakeBossCount = 0;
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
-		if (NPCGetUniqueID(i) == -1) continue;
+		if (NPCGetUniqueID(i) == -1)
+		{
+			continue;
+		}
 		if (NPCGetFlags(i) & SFF_FAKE)
-			iFakeBossCount+=1;
+		{
+			fakeBossCount += 1;
+		}
 	}
-	//PrintToChatAll("Fake count: %i",iFakeBossCount);
-	if(iFakeBossCount==3) return Plugin_Continue;
+	if (fakeBossCount == 3)
+	{
+		return Plugin_Continue;
+	}
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
 		SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(i);
-		if (!Npc.IsValid()) continue;
+		if (!Npc.IsValid())
+		{
+			continue;
+		}
 		if (Npc.Flags & SFF_FAKE)
 		{
 			continue;
 		}
 		//Harcoded max of 3 fake bosses
-		if(iFakeBossCount==3) break;
-		Npc.GetProfile(sProfile, sizeof(sProfile));
-		SF2NPC_BaseNPC NpcFake = AddProfile(sProfile, SFF_FAKE, Npc);
+		if (fakeBossCount == 3)
+		{
+			break;
+		}
+		Npc.GetProfile(profile, sizeof(profile));
+		SF2NPC_BaseNPC NpcFake = AddProfile(profile, SFF_FAKE, Npc);
 		if (!NpcFake.IsValid())
 		{
 			LogError("Could not add fake boss for %d: No free slots!", i);
 		}
-		iFakeBossCount+=1;
+		fakeBossCount += 1;
 	}
-	//PrintToChatAll("Fake count: %i",iFakeBossCount);
+	//PrintToChatAll("Fake count: %i",fakeBossCount);
 	return Plugin_Continue;
 }
-	
-/*
-public Action Timer_SpecialRoundAttribute(Handle timer)
-{
-	if (timer != g_hSpecialRoundTimer) return Plugin_Stop;
-	if (!g_bSpecialRound) return Plugin_Stop;
-	
-	int iCond = -1;
-	
-	switch (g_iSpecialRoundType)
-	{
-		case SPECIALROUND_DEFENSEBUFF: iCond = _:TFCond_DefenseBuffed;
-		case SPECIALROUND_MARKEDFORDEATH: iCond = _:TFCond_MarkedForDeath;
-	}
-	
-	if (iCond != -1)
-	{
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_bPlayerEliminated[i] || g_bPlayerGhostMode[i]) continue;
-			
-			TF2_AddCondition(i, view_as<TFCond>(iCond), 0.8);
-		}
-	}
-	
-	return Plugin_Continue;
-}
-*/
 
 void SpecialRoundCycleStart()
 {
-	if (!g_bSpecialRound) return;
-	if(g_bStarted) return;
-	
-	g_bStarted = true;
+	if (!g_IsSpecialRound)
+	{
+		return;
+	}
+	if (g_Started)
+	{
+		return;
+	}
+
+	g_Started = true;
 	EmitSoundToAll(SR_MUSIC, _, MUSIC_CHAN);
-	g_iSpecialRoundType = 0;
-	g_iSpecialRoundCycleNum = 0;
-	g_flSpecialRoundCycleEndTime = GetGameTime() + SR_CYCLELENGTH;
-	g_hSpecialRoundTimer = CreateTimer(0.1, Timer_SpecialRoundCycle, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	g_SpecialRoundType = 0;
+	g_SpecialRoundCycleNum = 0;
+	g_SpecialRoundCycleEndTime = GetGameTime() + SR_CYCLELENGTH;
+	g_SpecialRoundTimer = CreateTimer(0.1, Timer_SpecialRoundCycle, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
-void SpecialRoundCycleFinish()
+static void SpecialRoundCycleFinish()
 {
 	EmitSoundToAll(SR_SOUND_SELECT, _, SNDCHAN_AUTO);
-	int iOverride = g_cvSpecialRoundOverride.IntValue;
-	if (iOverride >= 1 && iOverride < SPECIALROUND_MAXROUNDS)
+	int override = g_SpecialRoundOverrideConVar.IntValue;
+	if (override >= 1 && override < SPECIALROUND_MAXROUNDS)
 	{
-		g_iSpecialRoundType = iOverride;
+		g_SpecialRoundType = override;
 	}
 	else
 	{
-		ArrayList arrayEnabledRound = SpecialEnabledList();
-		
-		g_iSpecialRoundType = arrayEnabledRound.Get(GetRandomInt(0, arrayEnabledRound.Length-1));
-		
-		delete arrayEnabledRound;
+		ArrayList enabledRounds = SpecialEnabledList();
+
+		g_SpecialRoundType = enabledRounds.Get(GetRandomInt(0, enabledRounds.Length-1));
+
+		delete enabledRounds;
 	}
-	g_cvSpecialRoundOverride.SetInt(-1);
-	
-	if(!SF_SpecialRound(SPECIALROUND_SUPRISE))
+	g_SpecialRoundOverrideConVar.SetInt(-1);
+
+	if (!SF_SpecialRound(SPECIALROUND_SUPRISE))
 	{
-		char sDescHud[64];
-		SpecialRoundGetDescriptionHud(g_iSpecialRoundType, sDescHud, sizeof(sDescHud));
-				
-		char sIconHud[64];
-		SpecialRoundGetIconHud(g_iSpecialRoundType, sIconHud, sizeof(sIconHud));
-				
-		char sDescChat[64];
-		SpecialRoundGetDescriptionChat(g_iSpecialRoundType, sDescChat, sizeof(sDescChat));
-				
-		SpecialRoundGameText(sDescHud, sIconHud);
-		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", sDescChat); // For those who are using minimized HUD...
+		char descHud[64];
+		SpecialRoundGetDescriptionHud(g_SpecialRoundType, descHud, sizeof(descHud));
+
+		char iconHud[64];
+		SpecialRoundGetIconHud(g_SpecialRoundType, iconHud, sizeof(iconHud));
+
+		char descChat[64];
+		SpecialRoundGetDescriptionChat(g_SpecialRoundType, descChat, sizeof(descChat));
+
+		SpecialRoundGameText(descHud, iconHud);
+		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", descChat); // For those who are using minimized HUD...
 	}
-		
-	g_hSpecialRoundTimer = CreateTimer(SR_STARTDELAY, Timer_SpecialRoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	g_SpecialRoundTimer = CreateTimer(SR_STARTDELAY, Timer_SpecialRoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-ArrayList SpecialEnabledList()
+static ArrayList SpecialEnabledList()
 {
-	if (g_bSpecialRound)
+	if (g_IsSpecialRound)
 	{
-		ArrayList arrayEnabledRounds = new ArrayList();
-		char sSnatcher[64] = "hypersnatcher_nerfed";
-		
-		int iPlayers;
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		ArrayList enabledRounds = new ArrayList();
+		char snatcher[64] = "hypersnatcher_nerfed";
+
+		int players;
+		for (int client = 1; client <= MaxClients; client++)
 		{
-			if (IsValidClient(iClient) && !g_bPlayerEliminated[iClient])
-				iPlayers++;
+			if (IsValidClient(client) && !g_PlayerEliminated[client])
+			{
+				players++;
+			}
 		}
 
 		if (!SF_IsBoxingMap())
 		{
 			if (GetSelectableBossProfileList().Length > 0)
 			{
-				arrayEnabledRounds.Push(SPECIALROUND_DOUBLETROUBLE);
-				arrayEnabledRounds.Push(SPECIALROUND_DOOMBOX);
+				AddSpecialRoundToList(SPECIALROUND_DOUBLETROUBLE, enabledRounds);
+				AddSpecialRoundToList(SPECIALROUND_DOOMBOX, enabledRounds);
 			}
 		}
 		else
 		{
 			if (GetSelectableBoxingBossProfileList().Length > 0)
 			{
-				arrayEnabledRounds.Push(SPECIALROUND_DOUBLETROUBLE);
-				arrayEnabledRounds.Push(SPECIALROUND_DOOMBOX);
+				AddSpecialRoundToList(SPECIALROUND_DOUBLETROUBLE, enabledRounds);
+				AddSpecialRoundToList(SPECIALROUND_DOOMBOX, enabledRounds);
 			}
 		}
-		
-		if (GetActivePlayerCount() <= g_cvMaxPlayers.IntValue * 2 && g_cvDifficulty.IntValue < 3 && !SF_IsBoxingMap())
+
+		if (GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2 && g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
 		{
-			arrayEnabledRounds.Push(SPECIALROUND_DOUBLEMAXPLAYERS);
+			AddSpecialRoundToList(SPECIALROUND_DOUBLEMAXPLAYERS, enabledRounds);
 		}
 		if (!SF_IsBoxingMap())
 		{
-			if (GetSelectableBossProfileList().Length > 0 && GetActivePlayerCount() <= g_cvMaxPlayers.IntValue * 2)
+			if (GetSelectableBossProfileList().Length > 0 && GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2)
 			{
-				if (g_cvDifficulty.IntValue < 3)
+				if (g_DifficultyConVar.IntValue < 3)
 				{
-					arrayEnabledRounds.Push(SPECIALROUND_2DOUBLE);
+					AddSpecialRoundToList(SPECIALROUND_2DOUBLE, enabledRounds);
 				}
-				if (g_cvDifficulty.IntValue < 2)
+				if (g_DifficultyConVar.IntValue < 2)
 				{
-					arrayEnabledRounds.Push(SPECIALROUND_2DOOM);
+					AddSpecialRoundToList(SPECIALROUND_2DOOM, enabledRounds);
 				}
 			}
 		}
 		else
 		{
-			if (GetSelectableBossProfileList().Length > 0 && GetActivePlayerCount() <= g_cvMaxPlayers.IntValue * 2)
+			if (GetSelectableBossProfileList().Length > 0 && GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2)
 			{
-				arrayEnabledRounds.Push(SPECIALROUND_2DOUBLE);
+				AddSpecialRoundToList(SPECIALROUND_2DOUBLE, enabledRounds);
 			}
 		}
-		if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && g_cvDifficulty.IntValue < 3 && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_INSANEDIFFICULTY);
-		if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !g_cvNightvisionEnabled.BoolValue && !SF_SpecialRound(SPECIALROUND_NOULTRAVISION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_LIGHTSOUT);
-			
+		if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_2DOOM) && g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_INSANEDIFFICULTY, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !g_NightvisionEnabledConVar.BoolValue && !SF_SpecialRound(SPECIALROUND_NOULTRAVISION) && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_LIGHTSOUT, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_BEACON) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_BEACON);
-		
-		if (!SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_IsBoxingMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && GetRoundState() != SF2RoundState_Intro && g_hRoundGraceTimer != null)
-			arrayEnabledRounds.Push(SPECIALROUND_NOGRACE);
-			
-		if (!SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_cvNightvisionEnabled.BoolValue && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_NIGHTVISION);
-			
+		{
+			AddSpecialRoundToList(SPECIALROUND_BEACON, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_NOGRACE) && !SF_IsBoxingMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && GetRoundState() != SF2RoundState_Intro && g_RoundGraceTimer != null)
+		{
+			AddSpecialRoundToList(SPECIALROUND_NOGRACE, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_NightvisionEnabledConVar.BoolValue && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_NIGHTVISION, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_DOUBLEROULETTE);
-			
-		if (!SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_cvNightvisionEnabled.BoolValue && !SF_IsBoxingMap() && !g_bRoundInfiniteFlashlight)
-			arrayEnabledRounds.Push(SPECIALROUND_INFINITEFLASHLIGHT);
-			
+		{
+			AddSpecialRoundToList(SPECIALROUND_DOUBLEROULETTE, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !g_NightvisionEnabledConVar.BoolValue && !SF_IsBoxingMap() && !g_RoundInfiniteFlashlight)
+		{
+			AddSpecialRoundToList(SPECIALROUND_INFINITEFLASHLIGHT, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_DREAMFAKEBOSSES) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_DREAMFAKEBOSSES);
-			
-		if (!SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK))
-			arrayEnabledRounds.Push(SPECIALROUND_EYESONTHECLOACK);
-		
-		if (!SF_SpecialRound(SPECIALROUND_NOPAGEBONUS) && g_iPageMax > 2 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_NOPAGEBONUS);
-
-		if(g_iPageMax > 3 && !SF_SpecialRound(SPECIALROUND_DUCKS) && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_DUCKS);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_DREAMFAKEBOSSES, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK) && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_EYESONTHECLOACK, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_NOPAGEBONUS) && g_PageMax > 2 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_NOPAGEBONUS, enabledRounds);
+		}
+		if (g_PageMax > 3 && !SF_SpecialRound(SPECIALROUND_DUCKS) && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_DUCKS, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_1UP) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
-			arrayEnabledRounds.Push(SPECIALROUND_1UP);
-		
-		if (g_iPageMax > 2 && !SF_SpecialRound(SPECIALROUND_NOULTRAVISION) && !SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_NOULTRAVISION);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_1UP, enabledRounds);
+		}
+		if (g_PageMax > 2 && !SF_SpecialRound(SPECIALROUND_NOULTRAVISION) && !SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !SF_SpecialRound(SPECIALROUND_NIGHTVISION) && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_NOULTRAVISION, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_SUPRISE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_SUPRISE);
-		
-		if (!SF_SpecialRound(SPECIALROUND_LASTRESORT) && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap() && g_iPageMax > 1)
-			arrayEnabledRounds.Push(SPECIALROUND_LASTRESORT);
-		
-		if (!SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && g_iPageMax > 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_ESCAPETICKETS);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_SUPRISE, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_LASTRESORT) && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap() && g_PageMax > 1)
+		{
+			AddSpecialRoundToList(SPECIALROUND_LASTRESORT, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && g_PageMax > 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_ESCAPETICKETS, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_REVOLUTION);
-		
-		if (!SF_SpecialRound(SPECIALROUND_DISTORTION) && iPlayers >= 4 && g_iPageMax > 4 && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_DISTORTION);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_REVOLUTION, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_DISTORTION) && players >= 4 && g_PageMax > 4 && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_DISTORTION, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_MULTIEFFECT) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_MULTIEFFECT);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_MULTIEFFECT, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_BOO) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_BOO);
-		
-		if (!SF_SpecialRound(SPECIALROUND_REALISM) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_REALISM);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_BOO, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_COFFEE) && !SF_IsRaidMap() && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_COFFEE);
-		
-		if (!SF_SpecialRound(SPECIALROUND_PAGEDETECTOR) && !SF_IsRaidMap() && g_iPageMax >= 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_PAGEDETECTOR);
-		
-		if (!SF_SpecialRound(SPECIALROUND_CLASSSCRAMBLE) && g_iPageMax >= 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_CLASSSCRAMBLE);
-
-		if (!SF_SpecialRound(SPECIALROUND_PAGEREWARDS) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && g_iPageMax > 4 && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_PAGEREWARDS);
-			
+		{
+			AddSpecialRoundToList(SPECIALROUND_COFFEE, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_PAGEDETECTOR) && !SF_IsRaidMap() && g_PageMax >= 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_PAGEDETECTOR, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_CLASSSCRAMBLE) && g_PageMax >= 4 && GetRoundState() != SF2RoundState_Escape && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_CLASSSCRAMBLE, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_PAGEREWARDS) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && g_PageMax > 4 && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_PAGEREWARDS, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_TINYBOSSES) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_TINYBOSSES);
-			
+		{
+			AddSpecialRoundToList(SPECIALROUND_TINYBOSSES, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) && !SF_IsRaidMap() && !SF_IsSurvivalMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_RUNNINGINTHE90S);
-			
+		{
+			AddSpecialRoundToList(SPECIALROUND_RUNNINGINTHE90S, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && GetArraySize(GetSelectableBossProfileList()) > 0 && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_TRIPLEBOSSES);
+		{
+			AddSpecialRoundToList(SPECIALROUND_TRIPLEBOSSES, enabledRounds);
+		}
 
-		if (!SF_SpecialRound(SPECIALROUND_20DOLLARS) && !SF_IsRaidMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_20DOLLARS);
-
-		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_SpecialRound(SPECIALROUND_VOTE) && (GetSelectableAdminBossProfileList().Length > 0 || IsProfileValid(sSnatcher)))
-			arrayEnabledRounds.Push(SPECIALROUND_MODBOSSES);
-
+		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_SpecialRound(SPECIALROUND_VOTE) && (GetSelectableAdminBossProfileList().Length > 0 || IsProfileValid(snatcher)))
+		{
+			AddSpecialRoundToList(SPECIALROUND_MODBOSSES, enabledRounds);
+		}
 		if (!SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_IsProxyMap() && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_VOTE))
-			arrayEnabledRounds.Push(SPECIALROUND_THANATOPHOBIA);
-
-		if (!SF_SpecialRound(SPECIALROUND_BOSSROULETTE) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_IsProxyMap() && g_iPageMax > 4 && g_iPageMax < 13 && GetArraySize(GetSelectableBossProfileList()) > 0)
-			arrayEnabledRounds.Push(SPECIALROUND_BOSSROULETTE);
-
-		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_IsBoxingMap() && g_cvDifficulty.IntValue < 3)
-			arrayEnabledRounds.Push(SPECIALROUND_WALLHAX);
-		
+		{
+			AddSpecialRoundToList(SPECIALROUND_THANATOPHOBIA, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_BOSSROULETTE) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_IsProxyMap() && g_PageMax > 4 && g_PageMax < 13 && GetArraySize(GetSelectableBossProfileList()) > 0)
+		{
+			AddSpecialRoundToList(SPECIALROUND_BOSSROULETTE, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_IsBoxingMap() && g_DifficultyConVar.IntValue < 3)
+		{
+			AddSpecialRoundToList(SPECIALROUND_WALLHAX, enabledRounds);
+		}
+		if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER) && players > 1 && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_IsProxyMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_SINGLEPLAYER, enabledRounds);
+		}
 		//Always keep this special round push at the bottom, we need the array length.
-		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && arrayEnabledRounds.Length > 5 && !SF_IsBoxingMap())
-			arrayEnabledRounds.Push(SPECIALROUND_VOTE);
-		
-		return arrayEnabledRounds;
+		if (!SF_SpecialRound(SPECIALROUND_VOTE) && !SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION) && !SF_SpecialRound(SPECIALROUND_SUPRISE) && enabledRounds.Length > 5 && !SF_IsBoxingMap())
+		{
+			AddSpecialRoundToList(SPECIALROUND_VOTE, enabledRounds);
+		}
+
+		return enabledRounds;
 	}
 	return null;
 }
 
 void SpecialRoundStart()
 {
-	if (!g_bSpecialRound) return;
-	if (g_iSpecialRoundType < 1 || g_iSpecialRoundType >= SPECIALROUND_MAXROUNDS) return;
-	g_bStarted = false;
-	g_hSpecialRoundTimer = null;
-	if(SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
-		doubleroulettecount += 1;
-	switch (g_iSpecialRoundType)
+	if (!g_IsSpecialRound)
+	{
+		return;
+	}
+	if (g_SpecialRoundType < 1 || g_SpecialRoundType >= SPECIALROUND_MAXROUNDS)
+	{
+		return;
+	}
+	g_Started = false;
+	g_SpecialRoundTimer = null;
+	if (SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
+	{
+		doublerouletteCount += 1;
+	}
+	switch (g_SpecialRoundType)
 	{
 		case SPECIALROUND_DOUBLETROUBLE:
 		{
-			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList hSelectableBosses = GetSelectableBossProfileList().Clone();
-			ArrayList hSelectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
-			
+			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
+			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
+
 			if (!SF_IsBoxingMap())
 			{
-				if (hSelectableBosses.Length > 0)
+				if (selectableBosses.Length > 0)
 				{
-					hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer);
+					selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer);
 				}
 			}
 			else
 			{
-				if (hSelectableBoxingBosses.Length > 0)
+				if (selectableBoxingBosses.Length > 0)
 				{
-					hSelectableBoxingBosses.GetString(GetRandomInt(0, hSelectableBoxingBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer);
+					selectableBoxingBosses.GetString(GetRandomInt(0, selectableBoxingBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer);
 				}
 			}
-			delete hSelectableBosses;
-			delete hSelectableBoxingBosses;
+			delete selectableBosses;
+			delete selectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_DOUBLETROUBLE);
 		}
 		case SPECIALROUND_DOOMBOX:
 		{
-			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList hSelectableBosses = GetSelectableBossProfileList().Clone();
-			ArrayList hSelectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
-			
+			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
+			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
+
 			if (!SF_IsBoxingMap())
 			{
-				if (hSelectableBosses.Length > 0)
+				if (selectableBosses.Length > 0)
 				{
-					hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer,_,_,_,false);
-					hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer,_,_,_,false);
+					selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer,_,_,_,false);
+					selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer,_,_,_,false);
 				}
 			}
 			else
 			{
-				if (hSelectableBoxingBosses.Length > 0)
+				if (selectableBoxingBosses.Length > 0)
 				{
-					hSelectableBoxingBosses.GetString(GetRandomInt(0, hSelectableBoxingBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer,_,_,_,false);
-					hSelectableBoxingBosses.GetString(GetRandomInt(0, hSelectableBoxingBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer,_,_,_,false);
+					selectableBoxingBosses.GetString(GetRandomInt(0, selectableBoxingBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer,_,_,_,false);
+					selectableBoxingBosses.GetString(GetRandomInt(0, selectableBoxingBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer,_,_,_,false);
 				}
 			}
-			delete hSelectableBosses;
-			delete hSelectableBoxingBosses;
+			delete selectableBosses;
+			delete selectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_DOOMBOX);
 		}
 		case SPECIALROUND_THANATOPHOBIA:
 		{
-			for (int iClient = 1; iClient <= MaxClients; iClient++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
-				if (!IsValidClient(iClient)) continue;
-				if (!IsPlayerAlive(iClient)) continue;
-				if (g_bPlayerEliminated[iClient]) continue;
-				if (DidClientEscape(iClient)) continue;
-				
-				if (TF2_GetPlayerClass(iClient) == TFClass_Medic)
+				if (!IsValidClient(client))
 				{
-					TFClassType newClass;
-					int iRandom = GetRandomInt(1,8);
-					switch (iRandom)
-					{
-						case 1: newClass = TFClass_Scout;
-						case 2: newClass = TFClass_Soldier;
-						case 3: newClass = TFClass_Pyro;
-						case 4: newClass = TFClass_DemoMan;
-						case 5: newClass = TFClass_Heavy;
-						case 6: newClass = TFClass_Engineer;
-						case 7: newClass = TFClass_Sniper;
-						case 8: newClass = TFClass_Spy;
-					}
-					TF2_SetPlayerClass(iClient, newClass);
-					TF2_RegeneratePlayer(iClient);
+					continue;
 				}
-				else if (TF2_GetPlayerClass(iClient) == TFClass_Sniper)
+				if (!IsPlayerAlive(client))
+				{
+					continue;
+				}
+				if (g_PlayerEliminated[client])
+				{
+					continue;
+				}
+				if (DidClientEscape(client))
+				{
+					continue;
+				}
+				TFClassType class = TF2_GetPlayerClass(client);
+				int classToInt = view_as<int>(class);
+				if (!IsClassConfigsValid())
+				{
+					if (class == TFClass_Medic)
+					{
+						TFClassType newClass;
+						int random = GetRandomInt(1,8);
+						switch (random)
+						{
+							case 1:
+							{
+								newClass = TFClass_Scout;
+							}
+							case 2:
+							{
+								newClass = TFClass_Soldier;
+							}
+							case 3:
+							{
+								newClass = TFClass_Pyro;
+							}
+							case 4:
+							{
+								newClass = TFClass_DemoMan;
+							}
+							case 5:
+							{
+								newClass = TFClass_Heavy;
+							}
+							case 6:
+							{
+								newClass = TFClass_Engineer;
+							}
+							case 7:
+							{
+								newClass = TFClass_Sniper;
+							}
+							case 8:
+							{
+								newClass = TFClass_Spy;
+							}
+							case 9:
+							{
+								newClass = TFClass_Medic;
+							}
+						}
+						TF2_SetPlayerClass(client, newClass);
+						TF2_RegeneratePlayer(client);
+					}
+				}
+				else
+				{
+					if (g_ClassBlockedOnThanatophobia[classToInt])
+					{
+						ArrayList classArrays = new ArrayList();
+						for (int i = 1; i < MAX_CLASSES + 1; i++)
+						{
+							if (!g_ClassBlockedOnThanatophobia[i])
+							{
+								classArrays.Push(view_as<TFClassType>(i));
+							}
+						}
+						TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
+						TF2_SetPlayerClass(client, newClass);
+						TF2_RegeneratePlayer(client);
+						delete classArrays;
+					}
+				}
+				if (TF2_GetPlayerClass(client) == TFClass_Sniper)
 				{
 					int ent = -1;
 					while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
@@ -548,7 +727,7 @@ void SpecialRoundStart()
 
 						if (642 == itemIndex)
 						{
-							if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == iClient)
+							if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
 							{
 								RemoveEntity(ent);
 							}
@@ -556,56 +735,69 @@ void SpecialRoundStart()
 					}
 				}
 			}
+			SF2_RefreshRestrictions();
 			SF_AddSpecialRound(SPECIALROUND_THANATOPHOBIA);
 		}
 		case SPECIALROUND_INSANEDIFFICULTY:
 		{
-			if (g_cvDifficulty.IntValue < 3)
-				g_cvDifficulty.SetString("3"); // Override difficulty to Insane.
+			if (g_DifficultyConVar.IntValue < 3)
+			{
+				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
 			SF_AddSpecialRound(SPECIALROUND_INSANEDIFFICULTY);
 		}
 		case SPECIALROUND_NOGRACE:
 		{
-			if (g_cvDifficulty.IntValue < 2)
-				g_cvDifficulty.SetString("2"); // Override difficulty to Hardcore.
-			if(g_hRoundGraceTimer!=null)
-				TriggerTimer(g_hRoundGraceTimer);
+			if (g_DifficultyConVar.IntValue < 2)
+			{
+				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
+			}
+			if (g_RoundGraceTimer != null)
+			{
+				TriggerTimer(g_RoundGraceTimer);
+			}
 			SF_AddSpecialRound(SPECIALROUND_NOGRACE);
 		}
 		case SPECIALROUND_ESCAPETICKETS:
 		{
-			if (g_cvDifficulty.IntValue < 3)
-				g_cvDifficulty.SetString("3"); // Override difficulty to Insane.
-			if(g_hRoundGraceTimer!=null)
-				TriggerTimer(g_hRoundGraceTimer);
+			if (g_DifficultyConVar.IntValue < 3)
+			{
+				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
+			if (g_RoundGraceTimer != null)
+			{
+				TriggerTimer(g_RoundGraceTimer);
+			}
 			SF_AddSpecialRound(SPECIALROUND_ESCAPETICKETS);
 		}
 		case SPECIALROUND_2DOUBLE:
 		{
-			ForceInNextPlayersInQueue(g_cvMaxPlayers.IntValue);
-			if (g_cvDifficulty.IntValue < 3 && !SF_IsBoxingMap())
-				g_cvDifficulty.SetString("3"); // Override difficulty to Insane.
-			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList hSelectableBosses = GetSelectableBossProfileList().Clone();
-			ArrayList hSelectableBoxingBosses = GetSelectableBossProfileList().Clone();
+			ForceInNextPlayersInQueue(g_MaxPlayersConVar.IntValue);
+			if (g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
+			{
+				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
+			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
+			ArrayList selectableBoxingBosses = GetSelectableBossProfileList().Clone();
 			if (!SF_IsBoxingMap())
 			{
-				if (hSelectableBosses.Length > 0)
+				if (selectableBosses.Length > 0)
 				{
-					hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer);
+					selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer);
 				}
 			}
 			else
 			{
-				if (hSelectableBoxingBosses.Length > 0)
+				if (selectableBoxingBosses.Length > 0)
 				{
-					hSelectableBoxingBosses.GetString(GetRandomInt(0, hSelectableBoxingBosses.Length - 1), sBuffer, sizeof(sBuffer));
-					AddProfile(sBuffer);
+					selectableBoxingBosses.GetString(GetRandomInt(0, selectableBoxingBosses.Length - 1), buffer, sizeof(buffer));
+					AddProfile(buffer);
 				}
 			}
-			delete hSelectableBosses;
-			delete hSelectableBoxingBosses;
+			delete selectableBosses;
+			delete selectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_2DOUBLE);
 		}
 		case SPECIALROUND_SUPRISE:
@@ -615,72 +807,81 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_DOUBLEMAXPLAYERS:
 		{
-			ForceInNextPlayersInQueue(g_cvMaxPlayers.IntValue);
-			if (g_cvDifficulty.IntValue < 3)
-				g_cvDifficulty.SetString("3"); // Override difficulty to Insane.
+			ForceInNextPlayersInQueue(g_MaxPlayersConVar.IntValue);
+			if (g_DifficultyConVar.IntValue < 3)
+			{
+				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
 			SF_AddSpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS);
 		}
 		case SPECIALROUND_CLASSSCRAMBLE:
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsValidClient(i) || g_bPlayerEliminated[i] || GetClientTeam(i) != TFTeam_Red || DidClientEscape(i) || !IsPlayerAlive(i)) continue;
-				g_iPlayerRandomClassNumber[i] = GetRandomInt(1, 9);
+				if (!IsValidClient(i) || g_PlayerEliminated[i] || GetClientTeam(i) != TFTeam_Red || DidClientEscape(i) || !IsPlayerAlive(i))
+				{
+					continue;
+				}
+				g_PlayerRandomClassNumber[i] = GetRandomInt(1, 9);
 			}
 			SF_AddSpecialRound(SPECIALROUND_CLASSSCRAMBLE);
 		}
 		case SPECIALROUND_MODBOSSES:
 		{
-			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH], sNightmareDisplay[256];
+			char buffer[SF2_MAX_PROFILE_NAME_LENGTH], sNightmareDisplay[256];
 			if (!SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
 			{
 				NPCStopMusic();
 				NPCRemoveAll();
 			}
-			ArrayList hSelectableBosses = GetSelectableAdminBossProfileList().Clone();
-			if (hSelectableBosses.Length > 0)
+			ArrayList selectableBosses = GetSelectableAdminBossProfileList().Clone();
+			if (selectableBosses.Length > 0)
 			{
-				hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-				AddProfile(sBuffer);
-				int iRandomDifficulty = GetRandomInt(1, 5);
+				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+				AddProfile(buffer);
+				int randomDifficulty = GetRandomInt(1, 5);
 				if (!SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
 				{
-					switch (iRandomDifficulty)
+					switch (randomDifficulty)
 					{
 						case 1:
 						{
-							g_cvDifficulty.SetInt(Difficulty_Normal);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
+							g_DifficultyConVar.SetInt(Difficulty_Normal);
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
 						}
 						case 2:
 						{
-							g_cvDifficulty.SetInt(Difficulty_Hard);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
+							g_DifficultyConVar.SetInt(Difficulty_Hard);
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
 						}
 						case 3:
 						{
-							g_cvDifficulty.SetInt(Difficulty_Insane);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
+							g_DifficultyConVar.SetInt(Difficulty_Insane);
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
 						}
 						case 4:
 						{
-							for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-								EmitSoundToAll(g_strSoundNightmareMode[i]);
+							for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+							{
+								EmitSoundToAll(g_SoundNightmareMode[i]);
+							}
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
-							g_cvDifficulty.SetInt(Difficulty_Nightmare);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
+							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
 						}
 						case 5:
 						{
-							for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-								EmitSoundToAll(g_strSoundNightmareMode[i]);
+							for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+							{
+								EmitSoundToAll(g_SoundNightmareMode[i]);
+							}
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
-							g_cvDifficulty.SetInt(Difficulty_Apollyon);
-							CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
-							int iRandomQuote = GetRandomInt(1, 8);
-							switch (iRandomQuote)
+							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
+							int randomQuote = GetRandomInt(1, 8);
+							switch (randomQuote)
 							{
 								case 1:
 								{
@@ -728,44 +929,48 @@ void SpecialRoundStart()
 				}
 				else
 				{
-					if (iRandomDifficulty > g_cvDifficulty.IntValue)
+					if (randomDifficulty > g_DifficultyConVar.IntValue)
 					{
-						switch (iRandomDifficulty)
+						switch (randomDifficulty)
 						{
 							case 1:
 							{
-								g_cvDifficulty.SetInt(Difficulty_Normal);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
+								g_DifficultyConVar.SetInt(Difficulty_Normal);
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
 							}
 							case 2:
 							{
-								g_cvDifficulty.SetInt(Difficulty_Hard);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
+								g_DifficultyConVar.SetInt(Difficulty_Hard);
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
 							}
 							case 3:
 							{
-								g_cvDifficulty.SetInt(Difficulty_Insane);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
+								g_DifficultyConVar.SetInt(Difficulty_Insane);
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
 							}
 							case 4:
 							{
-								for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-									EmitSoundToAll(g_strSoundNightmareMode[i]);
+								for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+								{
+									EmitSoundToAll(g_SoundNightmareMode[i]);
+								}
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
-								g_cvDifficulty.SetInt(Difficulty_Nightmare);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
+								g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
 							}
 							case 5:
 							{
-								for (int i = 0; i < sizeof(g_strSoundNightmareMode)-1; i++)
-									EmitSoundToAll(g_strSoundNightmareMode[i]);
+								for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+								{
+									EmitSoundToAll(g_SoundNightmareMode[i]);
+								}
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
-								g_cvDifficulty.SetInt(Difficulty_Apollyon);
-								CPrintToChatAll("{royalblue}%t{default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
-								int iRandomQuote = GetRandomInt(1, 8);
-								switch (iRandomQuote)
+								g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
+								int randomQuote = GetRandomInt(1, 8);
+								switch (randomQuote)
 								{
 									case 1:
 									{
@@ -813,48 +1018,41 @@ void SpecialRoundStart()
 					}
 				}
 			}
-			delete hSelectableBosses;
+			delete selectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_MODBOSSES);
 		}
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
-			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			sCurrentMusicTrack = TRIPLEBOSSESMUSIC;
-			int iTripleBosses=0;
-			for(int client = 1;client <=MaxClients;client ++)
-			{
-				if(IsValidClient(client) && !g_bPlayerEliminated[client])
-				{
-					ClientChaseMusicReset(client);
-					ClientChaseMusicSeeReset(client);
-					ClientAlertMusicReset(client);
-					if (sCurrentMusicTrack[0] != '\0') StopSound(client, MUSIC_CHAN, sCurrentMusicTrack);
-					ClientMusicStart(client, TRIPLEBOSSESMUSIC, _, MUSIC_PAGE_VOLUME);
-					ClientUpdateMusicSystem(client);
-				}
-			}
+			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			int tripleBosses=0;
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
 				NPCStopMusic();
 				SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(i);
-				if (!Npc.IsValid()) continue;
-				Npc.GetProfile(sBuffer, sizeof(sBuffer));
-				if (iTripleBosses == 1) break;
-				AddProfile(sBuffer,_,_,_,false);
-				AddProfile(sBuffer,_,_,_,false);
-				iTripleBosses += 1;
+				if (!Npc.IsValid())
+				{
+					continue;
+				}
+				Npc.GetProfile(buffer, sizeof(buffer));
+				if (tripleBosses == 1)
+				{
+					break;
+				}
+				AddProfile(buffer,_,_,_,false);
+				AddProfile(buffer,_,_,_,false);
+				tripleBosses += 1;
 			}
 			SF_AddSpecialRound(SPECIALROUND_TRIPLEBOSSES);
 		}
 		case SPECIALROUND_LIGHTSOUT,SPECIALROUND_NIGHTVISION:
 		{
-			if (g_iSpecialRoundType == SPECIALROUND_LIGHTSOUT)
+			if (g_SpecialRoundType == SPECIALROUND_LIGHTSOUT)
 			{
 				SF_RemoveSpecialRound(SPECIALROUND_NIGHTVISION);
 				SF_RemoveSpecialRound(SPECIALROUND_INFINITEFLASHLIGHT);
 				SF_AddSpecialRound(SPECIALROUND_LIGHTSOUT);
 			}
-			else if (g_iSpecialRoundType == SPECIALROUND_NIGHTVISION)
+			else if (g_SpecialRoundType == SPECIALROUND_NIGHTVISION)
 			{
 				SF_RemoveSpecialRound(SPECIALROUND_NOULTRAVISION);
 				SF_RemoveSpecialRound(SPECIALROUND_LIGHTSOUT);
@@ -862,9 +1060,12 @@ void SpecialRoundStart()
 			}
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsClientInGame(i)) continue;
-				
-				if (!g_bPlayerEliminated[i])
+				if (!IsClientInGame(i))
+				{
+					continue;
+				}
+
+				if (!g_PlayerEliminated[i])
 				{
 					ClientDeactivateUltravision(i);
 					ClientResetFlashlight(i);
@@ -874,52 +1075,87 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_WALLHAX:
 		{
-			if (g_cvDifficulty.IntValue < 3)
-				g_cvDifficulty.SetString("3"); // Override difficulty to Hardcore.
-			for (int iNPCIndex = 0; iNPCIndex < MAX_BOSSES; iNPCIndex++)
-			{	
-				if (NPCGetUniqueID(iNPCIndex) == -1) continue;
-				SlenderRemoveGlow(iNPCIndex);
-				if (NPCGetCustomOutlinesState(iNPCIndex))
+			if (g_DifficultyConVar.IntValue < 3)
+			{
+				g_DifficultyConVar.SetString("3"); // Override difficulty to Hardcore.
+			}
+			for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
+			{
+				if (NPCGetUniqueID(npcIndex) == -1)
 				{
-					if (!NPCGetRainbowOutlineState(iNPCIndex))
+					continue;
+				}
+				SlenderRemoveGlow(npcIndex);
+				if (NPCGetCustomOutlinesState(npcIndex))
+				{
+					if (!NPCGetRainbowOutlineState(npcIndex))
 					{
 						int color[4];
-						color[0] = NPCGetOutlineColorR(iNPCIndex);
-						color[1] = NPCGetOutlineColorG(iNPCIndex);
-						color[2] = NPCGetOutlineColorB(iNPCIndex);
-						color[3] = NPCGetOutlineTransparency(iNPCIndex);
-						if (color[0] < 0) color[0] = 0;
-						if (color[1] < 0) color[1] = 0;
-						if (color[2] < 0) color[2] = 0;
-						if (color[3] < 0) color[3] = 0;
-						if (color[0] > 255) color[0] = 255;
-						if (color[1] > 255) color[1] = 255;
-						if (color[2] > 255) color[2] = 255;
-						if (color[3] > 255) color[3] = 255;
-						SlenderAddGlow(iNPCIndex,_,color);
+						color[0] = NPCGetOutlineColorR(npcIndex);
+						color[1] = NPCGetOutlineColorG(npcIndex);
+						color[2] = NPCGetOutlineColorB(npcIndex);
+						color[3] = NPCGetOutlineTransparency(npcIndex);
+						if (color[0] < 0)
+						{
+							color[0] = 0;
+						}
+						if (color[1] < 0)
+						{
+							color[1] = 0;
+						}
+						if (color[2] < 0)
+						{
+							color[2] = 0;
+						}
+						if (color[3] < 0)
+						{
+							color[3] = 0;
+						}
+						if (color[0] > 255)
+						{
+							color[0] = 255;
+						}
+						if (color[1] > 255)
+						{
+							color[1] = 255;
+						}
+						if (color[2] > 255)
+						{
+							color[2] = 255;
+						}
+						if (color[3] > 255)
+						{
+							color[3] = 255;
+						}
+						SlenderAddGlow(npcIndex, color);
 					}
-					else SlenderAddGlow(iNPCIndex,_,view_as<int>({0, 0, 0, 0}));
+					else
+					{
+						SlenderAddGlow(npcIndex, view_as<int>({0, 0, 0, 0}));
+					}
 				}
 				else
 				{
-					int iPurple[4] = {150, 0, 255, 255};
-					SlenderAddGlow(iNPCIndex,_,iPurple);
+					int purple[4] = {150, 0, 255, 255};
+					SlenderAddGlow(npcIndex, purple);
 				}
 			}
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsValidClient(i)) continue;
-				ClientDisableConstantGlow(i);
-				if (!g_bPlayerProxy[i] && !DidClientEscape(i) && !g_bPlayerEliminated[i])
+				if (!IsValidClient(i))
 				{
-					int iRed[4] = {184, 56, 59, 255};
-					ClientEnableConstantGlow(i, "head", iRed);
+					continue;
 				}
-				else if ((g_bPlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+				ClientDisableConstantGlow(i);
+				if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
 				{
-					int iYellow[4] = {255, 208, 0, 255};
-					ClientEnableConstantGlow(i, "head", iYellow);
+					int red[4] = {184, 56, 59, 255};
+					ClientEnableConstantGlow(i, red);
+				}
+				else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
+				{
+					int yellow[4] = {255, 208, 0, 255};
+					ClientEnableConstantGlow(i, yellow);
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_WALLHAX);
@@ -927,15 +1163,18 @@ void SpecialRoundStart()
 		case SPECIALROUND_INFINITEFLASHLIGHT:
 		{
 			SF_RemoveSpecialRound(SPECIALROUND_LIGHTSOUT);
-			bool bNightVision = (g_cvNightvisionEnabled.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-			if (bNightVision && g_iNightvisionType != 1)
+			bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
+			if (nightVision && g_NightvisionType != 1)
 			{
-				g_iNightvisionType = 1;
+				g_NightvisionType = 1;
 				for (int i = 1; i <= MaxClients; i++)
 				{
-					if (!IsClientInGame(i)) continue;
-					
-					if (!g_bPlayerEliminated[i])
+					if (!IsClientInGame(i))
+					{
+						continue;
+					}
+
+					if (!g_PlayerEliminated[i])
 					{
 						ClientDeactivateUltravision(i);
 						ClientResetFlashlight(i);
@@ -954,13 +1193,16 @@ void SpecialRoundStart()
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsClientInGame(i)) continue;
-				
-				if (!g_bPlayerEliminated[i])
+				if (!IsClientInGame(i))
 				{
-					g_bPlayerDied1Up[i] = false;
-					g_bPlayerIn1UpCondition[i] = true;
-					g_bPlayerFullyDied1Up[i] = false;
+					continue;
+				}
+
+				if (!g_PlayerEliminated[i])
+				{
+					g_PlayerDied1Up[i] = false;
+					g_PlayerIn1UpCondition[i] = true;
+					g_PlayerFullyDied1Up[i] = false;
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_1UP);
@@ -970,9 +1212,12 @@ void SpecialRoundStart()
 			SF_AddSpecialRound(SPECIALROUND_NOULTRAVISION);
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsClientInGame(i)) continue;
-				
-				if (!g_bPlayerEliminated[i])
+				if (!IsClientInGame(i))
+				{
+					continue;
+				}
+
+				if (!g_PlayerEliminated[i])
 				{
 					ClientDeactivateUltravision(i);
 				}
@@ -980,54 +1225,32 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_DUCKS:
 		{
-			char sModel[255], targetName[64];
-			PrecacheModel("models/workshop/player/items/pyro/eotl_ducky/eotl_bonus_duck.mdl");
-			int ent = -1;
-			while ((ent = FindEntityByClassname(ent, "*")) != -1)
+			PrecacheModel(SR_DUCK_MODEL);
+
+			ArrayList pageEntities = new ArrayList();
+			GetPageEntities(pageEntities);
+
+			for (int i = 0; i < pageEntities.Length; i++)
 			{
-				if (!IsEntityClassname(ent, "prop_dynamic", false) && !IsEntityClassname(ent, "prop_dynamic_override", false)) continue;
-				
-				GetEntPropString(ent, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
-				GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
-				if (sModel[0] != '\0')
+				CBaseEntity pageEnt = CBaseEntity(pageEntities.Get(i));
+
+				pageEnt.SetModel(SR_DUCK_MODEL);
+
+				CBaseEntity parent = CBaseEntity(pageEnt.GetPropEnt(Prop_Send, "m_hEffectEntity"));
+				if (parent.IsValid())
 				{
-					if ((strcmp(sModel, g_strPageRefModel) == 0 || strcmp(sModel, PAGE_MODEL) == 0) && StrContains(targetName, "sf2_page_ex", false) != -1)
-					{
-						SetEntityModel(ent, "models/workshop/player/items/pyro/eotl_ducky/eotl_bonus_duck.mdl");
-					}
+					parent.SetModel(SR_DUCK_MODEL);
 				}
 			}
+
+			delete pageEntities;
+
 			SF_AddSpecialRound(SPECIALROUND_DUCKS);
 		}
 		case SPECIALROUND_REVOLUTION:
 		{
 			SF_AddSpecialRound(SPECIALROUND_REVOLUTION);
-			g_iSpecialRoundTime = 0;
-		}
-		case SPECIALROUND_REALISM:
-		{
-			SF_AddSpecialRound(SPECIALROUND_REALISM);
-			NPCStopMusic();
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (!IsClientInGame(i)) continue;
-				
-				if (!g_bPlayerEliminated[i])
-				{
-					g_hPlayerOverlayCheck[i] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(i), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-					TriggerTimer(g_hPlayerOverlayCheck[i], true);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES1PERCENT);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES25PERCENT);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES50PERCENT);
-					ClientRemoveMusicFlag(i, MUSICF_PAGES75PERCENT);
-					g_iPlayerPageMusicMaster[i] = INVALID_ENT_REFERENCE;
-					g_iPageMusicActiveIndex[i] = -1;
-					ClientMusicStart(i, NULLSOUND, _, MUSIC_PAGE_VOLUME);
-					CreateTimer(0.1, Timer_RealismCheck, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
-					StopSound(i, MUSIC_CHAN, g_strRoundIntroMusic);
-					EmitSoundToClient(i, MARBLEHORNETS_STATIC, _, SNDCHAN_STATIC, 100, _, 0.8);
-				}
-			}
+			g_SpecialRoundTime = 0;
 		}
 		case SPECIALROUND_VOTE:
 		{
@@ -1045,9 +1268,12 @@ void SpecialRoundStart()
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
-				if (!IsClientInGame(i)) continue;
-				
-				if (!g_bPlayerEliminated[i])
+				if (!IsClientInGame(i))
+				{
+					continue;
+				}
+
+				if (!g_PlayerEliminated[i])
 				{
 					ClientSetSpecialRoundTimer(i, 0.0, Timer_ClientPageDetector, GetClientUserId(i));
 				}
@@ -1056,190 +1282,326 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_2DOOM:
 		{
-			ForceInNextPlayersInQueue(g_cvMaxPlayers.IntValue);
-			if (g_cvDifficulty.IntValue < 2)
-				g_cvDifficulty.SetString("2"); // Override difficulty to Hardcore.
-			char sBuffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList hSelectableBosses = GetSelectableBossProfileList().Clone();
-			if (hSelectableBosses.Length > 0)
+			ForceInNextPlayersInQueue(g_MaxPlayersConVar.IntValue);
+			if (g_DifficultyConVar.IntValue < 2)
 			{
-				hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-				AddProfile(sBuffer,_,_,_,false);
-				hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-				AddProfile(sBuffer,_,_,_,false);
-				hSelectableBosses.GetString(GetRandomInt(0, hSelectableBosses.Length - 1), sBuffer, sizeof(sBuffer));
-				AddProfile(sBuffer,_,_,_,false);
+				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
 			}
-			delete hSelectableBosses;
+			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
+			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
+			if (selectableBosses.Length > 0)
+			{
+				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+				AddProfile(buffer,_,_,_,false);
+				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+				AddProfile(buffer,_,_,_,false);
+				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+				AddProfile(buffer,_,_,_,false);
+			}
+			delete selectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_2DOOM);
+		}
+		case SPECIALROUND_SINGLEPLAYER:
+		{
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				if (IsValidClient(client) && IsClientInGame(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
+				{
+					TF2_StripContrackerOnly(client);
+				}
+			}
+			SF_AddSpecialRound(SPECIALROUND_SINGLEPLAYER);
 		}
 		default:
 		{
-			SF_AddSpecialRound(g_iSpecialRoundType);
+			SF_AddSpecialRound(g_SpecialRoundType);
 		}
 	}
-	if(doubleroulettecount==2)
+	if (doublerouletteCount == 2)
 	{
-		doubleroulettecount=0;
+		doublerouletteCount = 0;
 		SF_RemoveSpecialRound(SPECIALROUND_DOUBLEROULETTE);
 	}
-	if(SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
+	if (SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE))
+	{
 		SpecialRoundCycleStart();
+	}
 }
 
-public Action Timer_RealismCheck(Handle timer, any userid)
+static Action Timer_SpecialRoundVoteLoop(Handle timer)
 {
-	int client = GetClientOfUserId(userid);
-	if(client <= 0) return Plugin_Stop;
-	if (!IsValidClient(client) || !IsClientInGame(client) || IsClientSourceTV(client)) return Plugin_Stop;
-	
-	ClientUpdateMusicSystem(client);
+	if (!g_IsSpecialRound)
+	{
+		return Plugin_Stop;
+	}
+	if (!SF_SpecialRound(SPECIALROUND_VOTE))
+	{
+		return Plugin_Stop;
+	}
+	if (GetRoundState() != SF2RoundState_Escape && GetRoundState() != SF2RoundState_Active && GetRoundState() != SF2RoundState_Intro)
+	{
+		return Plugin_Stop;
+	}
+	if (NativeVotes_IsVoteInProgress())
+	{
+		return Plugin_Continue;
+	}
 
-	return Plugin_Stop;
-}
-
-public Action Timer_SpecialRoundVoteLoop(Handle timer)
-{
-	if (!g_bSpecialRound) return Plugin_Stop;
-	if (!SF_SpecialRound(SPECIALROUND_VOTE)) return Plugin_Stop;
-	if (GetRoundState() != SF2RoundState_Escape && GetRoundState() != SF2RoundState_Active && GetRoundState() != SF2RoundState_Intro) return Plugin_Stop;
-	if (NativeVotes_IsVoteInProgress()) return Plugin_Continue;
-	
 	SpecialCreateVote();
 	return Plugin_Stop;
 }
 
-public Action Timer_DisplaySpecialRound(Handle timer)
+Action Timer_DisplaySpecialRound(Handle timer)
 {
-	char sDescHud[64];
-	SpecialRoundGetDescriptionHud(g_iSpecialRoundType, sDescHud, sizeof(sDescHud));
-		
-	char sIconHud[64];
-	SpecialRoundGetIconHud(g_iSpecialRoundType, sIconHud, sizeof(sIconHud));
-		
-	char sDescChat[64];
-	SpecialRoundGetDescriptionChat(g_iSpecialRoundType, sDescChat, sizeof(sDescChat));
-		
-	SpecialRoundGameText(sDescHud, sIconHud);
-	if (strcmp(sDescChat, "") != 0)
-		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", sDescChat);
+	char descHud[64];
+	SpecialRoundGetDescriptionHud(g_SpecialRoundType, descHud, sizeof(descHud));
+
+	char iconHud[64];
+	SpecialRoundGetIconHud(g_SpecialRoundType, iconHud, sizeof(iconHud));
+
+	char descChat[64];
+	SpecialRoundGetDescriptionChat(g_SpecialRoundType, descChat, sizeof(descChat));
+
+	SpecialRoundGameText(descHud, iconHud);
+	if (strcmp(descChat, "") != 0)
+	{
+		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", descChat);
+	}
 	else
+	{
 		CPrintToChatAll("{dodgerblue}Special round in developement...");
+	}
 
 	return Plugin_Stop;
 }
 
-void SpecialCreateVote()
+static void SpecialCreateVote()
 {
 	Handle voteMenu = NativeVotes_Create(Menu_SpecialVote, NativeVotesType_Custom_Mult);
 	NativeVotes_SetInitiator(voteMenu, NATIVEVOTES_SERVER_INDEX);
-	
-	char Tittle[255];
-	FormatEx(Tittle,255,"%t%t","SF2 Prefix","SF2 Special Round Vote Menu Title");
-	NativeVotes_SetDetails(voteMenu,Tittle);
-	
-	ArrayList arrayEnabledRounds = SpecialEnabledList().Clone();
 
-	int iEraseVoteRound = arrayEnabledRounds.FindValue(SPECIALROUND_VOTE);
-	if (iEraseVoteRound != -1) arrayEnabledRounds.Erase(iEraseVoteRound);
+	char title[255];
+	FormatEx(title,255,"%t%t","SF2 Prefix","SF2 Special Round Vote Menu Title");
+	NativeVotes_SetDetails(voteMenu,title);
 
-	iEraseVoteRound = arrayEnabledRounds.FindValue(SPECIALROUND_MODBOSSES);
-	if (iEraseVoteRound != -1) arrayEnabledRounds.Erase(iEraseVoteRound);
+	ArrayList enabledRounds = SpecialEnabledList().Clone();
 
-	iEraseVoteRound = arrayEnabledRounds.FindValue(SPECIALROUND_THANATOPHOBIA);
-	if (iEraseVoteRound != -1) arrayEnabledRounds.Erase(iEraseVoteRound);
+	int eraseVoteRound = enabledRounds.FindValue(SPECIALROUND_VOTE);
+	if (eraseVoteRound != -1)
+	{
+		enabledRounds.Erase(eraseVoteRound);
+	}
+
+	eraseVoteRound = enabledRounds.FindValue(SPECIALROUND_MODBOSSES);
+	if (eraseVoteRound != -1)
+	{
+		enabledRounds.Erase(eraseVoteRound);
+	}
+
+	eraseVoteRound = enabledRounds.FindValue(SPECIALROUND_THANATOPHOBIA);
+	if (eraseVoteRound != -1)
+	{
+		enabledRounds.Erase(eraseVoteRound);
+	}
 
 	for (int i = 0; i < 5; i++)
 	{
-		int iRound = arrayEnabledRounds.Get(GetRandomInt(0,arrayEnabledRounds.Length-1));
-		int iEraseRound = arrayEnabledRounds.FindValue(iRound);
-		if (iEraseRound != -1) arrayEnabledRounds.Erase(iEraseRound);
-
-		char sItem[30], sItemOutPut[30];
-		switch (iRound)
+		int round = enabledRounds.Get(GetRandomInt(0, enabledRounds.Length-1));
+		int eraseRound = enabledRounds.FindValue(round);
+		if (eraseRound != -1)
 		{
-			case SPECIALROUND_DOUBLETROUBLE: FormatEx(sItem, sizeof(sItem), "Double Trouble");
-			case SPECIALROUND_INSANEDIFFICULTY: FormatEx(sItem, sizeof(sItem), "Suicide Time");
-			case SPECIALROUND_DOUBLEMAXPLAYERS: FormatEx(sItem, sizeof(sItem), "Double Players");
-			case SPECIALROUND_LIGHTSOUT: FormatEx(sItem, sizeof(sItem), "Lights Out");
-			case SPECIALROUND_BEACON: FormatEx(sItem, sizeof(sItem), "Bacon Spray");
-			case SPECIALROUND_DOOMBOX: FormatEx(sItem, sizeof(sItem), "Doom Box");
-			case SPECIALROUND_NOGRACE: FormatEx(sItem, sizeof(sItem), "Start Running");
-			case SPECIALROUND_2DOUBLE: FormatEx(sItem, sizeof(sItem), "Double It All");
-			case SPECIALROUND_DOUBLEROULETTE: FormatEx(sItem, sizeof(sItem), "Double Roulette");
-			case SPECIALROUND_NIGHTVISION: FormatEx(sItem, sizeof(sItem), "Night Vision");
-			case SPECIALROUND_INFINITEFLASHLIGHT: FormatEx(sItem, sizeof(sItem), "Infinite Flashlight");
-			case SPECIALROUND_DREAMFAKEBOSSES: FormatEx(sItem, sizeof(sItem), "Just a Dream");
-			case SPECIALROUND_EYESONTHECLOACK: FormatEx(sItem, sizeof(sItem), "Countdown");
-			case SPECIALROUND_NOPAGEBONUS: FormatEx(sItem, sizeof(sItem), "Deadline");
-			case SPECIALROUND_DUCKS: FormatEx(sItem, sizeof(sItem), "Ducks");
-			case SPECIALROUND_1UP: FormatEx(sItem, sizeof(sItem), "1-Up");
-			case SPECIALROUND_NOULTRAVISION: FormatEx(sItem, sizeof(sItem), "Blind");
-			case SPECIALROUND_SUPRISE: FormatEx(sItem, sizeof(sItem), "Surprise");
-			case SPECIALROUND_LASTRESORT: FormatEx(sItem, sizeof(sItem), "Last Resort");
-			case SPECIALROUND_ESCAPETICKETS: FormatEx(sItem, sizeof(sItem), "Escape Tickets");
-			case SPECIALROUND_REVOLUTION: FormatEx(sItem, sizeof(sItem), "Special Round Revolution");
-			case SPECIALROUND_DISTORTION: FormatEx(sItem, sizeof(sItem), "Space Distortion");
-			case SPECIALROUND_MULTIEFFECT: FormatEx(sItem, sizeof(sItem), "Multieffect");
-			case SPECIALROUND_BOO: FormatEx(sItem, sizeof(sItem), "Boo");
-			case SPECIALROUND_REALISM: FormatEx(sItem, sizeof(sItem), "Marble Hornets");
-			case SPECIALROUND_COFFEE: FormatEx(sItem, sizeof(sItem), "Coffee");
-			case SPECIALROUND_PAGEDETECTOR: FormatEx(sItem, sizeof(sItem), "Page Detector");
-			case SPECIALROUND_CLASSSCRAMBLE: FormatEx(sItem, sizeof(sItem), "Class Scramble");
-			case SPECIALROUND_2DOOM: FormatEx(sItem, sizeof(sItem), "Silent Slender");
-			case SPECIALROUND_PAGEREWARDS: FormatEx(sItem, sizeof(sItem), "Page Rewards");
-			case SPECIALROUND_TINYBOSSES: FormatEx(sItem, sizeof(sItem), "Tiny Bosses");
-			case SPECIALROUND_RUNNINGINTHE90S: FormatEx(sItem, sizeof(sItem), "In The 90s");
-			case SPECIALROUND_TRIPLEBOSSES: FormatEx(sItem, sizeof(sItem), "Triple Bosses");
-			case SPECIALROUND_20DOLLARS: FormatEx(sItem, sizeof(sItem), "20 Dollars");
-			case SPECIALROUND_BOSSROULETTE: FormatEx(sItem, sizeof(sItem), "Boss Roulette");
-			case SPECIALROUND_WALLHAX: FormatEx(sItem, sizeof(sItem), "Wall Hax");
+			enabledRounds.Erase(eraseRound);
+		}
+
+		char item[30], itemOutPut[30];
+		switch (round)
+		{
+			case SPECIALROUND_DOUBLETROUBLE:
+			{
+				FormatEx(item, sizeof(item), "Double Trouble");
+			}
+			case SPECIALROUND_INSANEDIFFICULTY:
+			{
+				FormatEx(item, sizeof(item), "Suicide Time");
+			}
+			case SPECIALROUND_DOUBLEMAXPLAYERS:
+			{
+				FormatEx(item, sizeof(item), "Double Players");
+			}
+			case SPECIALROUND_LIGHTSOUT:
+			{
+				FormatEx(item, sizeof(item), "Lights Out");
+			}
+			case SPECIALROUND_BEACON:
+			{
+				FormatEx(item, sizeof(item), "Bacon Spray");
+			}
+			case SPECIALROUND_DOOMBOX:
+			{
+				FormatEx(item, sizeof(item), "Doom Box");
+			}
+			case SPECIALROUND_NOGRACE:
+			{
+				FormatEx(item, sizeof(item), "Start Running");
+			}
+			case SPECIALROUND_2DOUBLE:
+			{
+				FormatEx(item, sizeof(item), "Double It All");
+			}
+			case SPECIALROUND_DOUBLEROULETTE:
+			{
+				FormatEx(item, sizeof(item), "Double Roulette");
+			}
+			case SPECIALROUND_NIGHTVISION:
+			{
+				FormatEx(item, sizeof(item), "Night Vision");
+			}
+			case SPECIALROUND_INFINITEFLASHLIGHT:
+			{
+				FormatEx(item, sizeof(item), "Infinite Flashlight");
+			}
+			case SPECIALROUND_DREAMFAKEBOSSES:
+			{
+				FormatEx(item, sizeof(item), "Just a Dream");
+			}
+			case SPECIALROUND_EYESONTHECLOACK:
+			{
+				FormatEx(item, sizeof(item), "Countdown");
+			}
+			case SPECIALROUND_NOPAGEBONUS:
+			{
+				FormatEx(item, sizeof(item), "Deadline");
+			}
+			case SPECIALROUND_DUCKS:
+			{
+				FormatEx(item, sizeof(item), "Ducks");
+			}
+			case SPECIALROUND_1UP:
+			{
+				FormatEx(item, sizeof(item), "1-Up");
+			}
+			case SPECIALROUND_NOULTRAVISION:
+			{
+				FormatEx(item, sizeof(item), "Blind");
+			}
+			case SPECIALROUND_SUPRISE:
+			{
+				FormatEx(item, sizeof(item), "Surprise");
+			}
+			case SPECIALROUND_LASTRESORT:
+			{
+				FormatEx(item, sizeof(item), "Last Resort");
+			}
+			case SPECIALROUND_ESCAPETICKETS:
+			{
+				FormatEx(item, sizeof(item), "Escape Tickets");
+			}
+			case SPECIALROUND_REVOLUTION:
+			{
+				FormatEx(item, sizeof(item), "Special Round Revolution");
+			}
+			case SPECIALROUND_DISTORTION:
+			{
+				FormatEx(item, sizeof(item), "Space Distortion");
+			}
+			case SPECIALROUND_MULTIEFFECT:
+			{
+				FormatEx(item, sizeof(item), "Multieffect");
+			}
+			case SPECIALROUND_BOO:
+			{
+				FormatEx(item, sizeof(item), "Boo");
+			}
+			case SPECIALROUND_COFFEE:
+			{
+				FormatEx(item, sizeof(item), "Coffee");
+			}
+			case SPECIALROUND_PAGEDETECTOR:
+			{
+				FormatEx(item, sizeof(item), "Page Detector");
+			}
+			case SPECIALROUND_CLASSSCRAMBLE:
+			{
+				FormatEx(item, sizeof(item), "Class Scramble");
+			}
+			case SPECIALROUND_2DOOM:
+			{
+				FormatEx(item, sizeof(item), "Silent Slender");
+			}
+			case SPECIALROUND_PAGEREWARDS:
+			{
+				FormatEx(item, sizeof(item), "Page Rewards");
+			}
+			case SPECIALROUND_TINYBOSSES:
+			{
+				FormatEx(item, sizeof(item), "Tiny Bosses");
+			}
+			case SPECIALROUND_RUNNINGINTHE90S:
+			{
+				FormatEx(item, sizeof(item), "In The 90s");
+			}
+			case SPECIALROUND_TRIPLEBOSSES:
+			{
+				FormatEx(item, sizeof(item), "Triple Bosses");
+			}
+
+			case SPECIALROUND_BOSSROULETTE:
+			{
+				FormatEx(item, sizeof(item), "Boss Roulette");
+			}
+			case SPECIALROUND_WALLHAX:
+			{
+				FormatEx(item, sizeof(item), "Wall Hax");
+			}
 		}
 		for (int iBit = 0; iBit < 30; iBit++)
 		{
-			if (strcmp(sItem[iBit],"-") == 0 ||strcmp(sItem[iBit],":") == 0)
+			if (strcmp(item[iBit],"-") == 0 ||strcmp(item[iBit],":") == 0)
 			{
 				break;
 			}
-			sItemOutPut[iBit] = sItem[iBit];
+			itemOutPut[iBit] = item[iBit];
 		}
-		FormatEx(sItem, sizeof(sItem), "%d", iRound);
-		NativeVotes_AddItem(voteMenu, sItem, sItemOutPut);
+		FormatEx(item, sizeof(item), "%d", round);
+		NativeVotes_AddItem(voteMenu, item, itemOutPut);
 	}
-	
-	delete arrayEnabledRounds;
-	
+
+	delete enabledRounds;
+
 	int total = 0;
 	int[] players = new int[MaxClients];
-	
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i)) continue;
-		
-		if (!g_bPlayerEliminated[i])
+		if (!IsClientInGame(i))
+		{
+			continue;
+		}
+
+		if (!g_PlayerEliminated[i])
 		{
 			players[total++] = i;
 		}
 	}
-	
+
 	NativeVotes_Display(voteMenu, players, total, 20);
 }
 
-public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2)
 {
 	switch (action)
-	{	
+	{
 		case MenuAction_VoteCancel:
 		{
 			if (param1 == VoteCancel_NoVotes)
 			{
 				NativeVotes_DisplayFail(menu, NativeVotesFail_NotEnoughVotes);
-				
-				ArrayList arrayEnabledRounds = SpecialEnabledList();
-				g_iSpecialRoundType = arrayEnabledRounds.Get(GetRandomInt(0, arrayEnabledRounds.Length-1));
-				g_cvSpecialRoundOverride.SetInt(g_iSpecialRoundType);
+
+				ArrayList enabledRounds = SpecialEnabledList();
+				g_SpecialRoundType = enabledRounds.Get(GetRandomInt(0, enabledRounds.Length-1));
+				g_SpecialRoundOverrideConVar.SetInt(g_SpecialRoundType);
 				SpecialRoundCycleFinish();
-				delete arrayEnabledRounds;
+				delete enabledRounds;
 			}
 			else
 			{
@@ -1248,16 +1610,16 @@ public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 		}
 		case MenuAction_VoteEnd:
 		{
-			char sSpecialRound[64], sSpecialRoundName[64], display[120];
-			NativeVotes_GetItem(menu, param1, sSpecialRound, sizeof(sSpecialRound), sSpecialRoundName, sizeof(sSpecialRoundName));
-			
-			CPrintToChatAll("{royalblue}%t{default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", sSpecialRoundName);
-			FormatEx(display,120,"%t","SF2 Special Round Vote Successful", sSpecialRoundName);
-			
-			g_iSpecialRoundType = StringToInt(sSpecialRound);
-			g_cvSpecialRoundOverride.SetInt(g_iSpecialRoundType);
+			char specialRound[64], specialRoundName[64], display[120];
+			NativeVotes_GetItem(menu, param1, specialRound, sizeof(specialRound), specialRoundName, sizeof(specialRoundName));
+
+			CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", specialRoundName);
+			FormatEx(display,120,"%t","SF2 Special Round Vote Successful", specialRoundName);
+
+			g_SpecialRoundType = StringToInt(specialRound);
+			g_SpecialRoundOverrideConVar.SetInt(g_SpecialRoundType);
 			SpecialRoundCycleFinish();
-			
+
 			NativeVotes_DisplayPass(menu, display);
 		}
 		case MenuAction_End:
@@ -1265,38 +1627,40 @@ public int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 			delete menu;
 		}
 	}
+	return 0;
 }
 
 void SpecialRound_RoundEnd()
 {
-	g_bStarted = false;
+	g_Started = false;
 	SF_RemoveAllSpecialRound();
 }
+
 void SpecialRoundReset()
 {
-	g_iSpecialRoundType = 0;
-	g_hSpecialRoundTimer = null;
-	g_iSpecialRoundCycleNum = 0;
-	g_flSpecialRoundCycleEndTime = -1.0;
+	g_SpecialRoundType = 0;
+	g_SpecialRoundTimer = null;
+	g_SpecialRoundCycleNum = 0;
+	g_SpecialRoundCycleEndTime = -1.0;
 }
 
 bool IsSpecialRoundRunning()
 {
-	return g_bSpecialRound;
+	return g_IsSpecialRound;
 }
 
-public void SpecialRoundInitializeAPI()
+void SpecialRoundInitializeAPI()
 {
 	CreateNative("SF2_IsSpecialRoundRunning", Native_IsSpecialRoundRunning);
 	CreateNative("SF2_GetSpecialRoundType", Native_GetSpecialRoundType);
 }
 
-public int Native_IsSpecialRoundRunning(Handle plugin,int numParams)
+static any Native_IsSpecialRoundRunning(Handle plugin,int numParams)
 {
-	return view_as<bool>(g_bSpecialRound);
+	return g_IsSpecialRound;
 }
 
-public int Native_GetSpecialRoundType(Handle plugin,int numParams)
+static any Native_GetSpecialRoundType(Handle plugin,int numParams)
 {
-	return g_iSpecialRoundType;
+	return g_SpecialRoundType;
 }

@@ -1,13 +1,17 @@
+#pragma semicolon 1
 
-static CEntityFactory g_entityFactory;
+static CEntityFactory g_EntityFactory;
 
 methodmap SF2SpawnPointBaseEntity < CBaseEntity
 {
-	public SF2SpawnPointBaseEntity(int entIndex) { return view_as<SF2SpawnPointBaseEntity>(CBaseEntity(entIndex)); }
+	public SF2SpawnPointBaseEntity(int entIndex)
+	{
+		return view_as<SF2SpawnPointBaseEntity>(CBaseEntity(entIndex));
+	}
 
 	public static CEntityFactory GetBaseFactory()
 	{
-		return g_entityFactory;
+		return g_EntityFactory;
 	}
 
 	public static void Initialize()
@@ -18,11 +22,11 @@ methodmap SF2SpawnPointBaseEntity < CBaseEntity
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("SF2SpawnPointBaseEntity");
-	g_entityFactory.IsAbstract = true;
-	g_entityFactory.DeriveFromBaseEntity(true);
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory("SF2SpawnPointBaseEntity");
+	g_EntityFactory.IsAbstract = true;
+	g_EntityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineOutput("OnSpawn")
 		.EndDataMapDesc();
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }

@@ -1,84 +1,115 @@
 // sf2_info_page_spawn
 
-static CEntityFactory g_entityFactory;
+#pragma semicolon 1
+
+static CEntityFactory g_EntityFactory;
 
 /**
  *	Interface that exposes public methods for interacting with the entity.
  */
 methodmap SF2PageSpawnEntity < CBaseEntity
 {
-	public SF2PageSpawnEntity(int entIndex) { return view_as<SF2PageSpawnEntity>(SF2MapEntity(entIndex)); }
+	public SF2PageSpawnEntity(int entIndex)
+	{
+		return view_as<SF2PageSpawnEntity>(SF2MapEntity(entIndex));
+	}
 
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
-	public void GetPageModel(char[] sBuffer, int iBufferLen)
+	public void GetPageModel(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sModel", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sModel", buffer, bufferLen);
 	}
 
-	public void SetPageModel(const char[] sBuffer)
+	public void SetPageModel(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_sModel", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_sModel", buffer);
 	}
 
 	property int PageSkin
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iSkin"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iSkin", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iSkin");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iSkin", value);
+		}
 	}
 
 	property float PageModelScale
 	{
-		public get() { return this.GetPropFloat(Prop_Data, "sf2_flModelScale"); }
-		public set(float value) { this.SetPropFloat(Prop_Data, "sf2_flModelScale", value); }
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "sf2_flModelScale");
+		}
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "sf2_flModelScale", value);
+		}
 	}
 
 	property int PageBodygroup
 	{
-		public get() { return this.GetProp(Prop_Data, "sf2_iBodyGroup"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iBodyGroup", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "sf2_iBodyGroup");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iBodyGroup", value);
+		}
 	}
 
-	public void GetPageGroup(char[] sBuffer, int iBufferLen)
+	public void GetPageGroup(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sGroup", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sGroup", buffer, bufferLen);
 	}
 
-	public void SetPageGroup(const char[] sBuffer)
+	public void SetPageGroup(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_sGroup", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_sGroup", buffer);
 	}
 
-	public void GetPageAnimation(char[] sBuffer, int iBufferLen)
+	public void GetPageAnimation(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sAnimation", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sAnimation", buffer, bufferLen);
 	}
 
-	public void SetPageAnimation(const char[] sBuffer)
+	public void SetPageAnimation(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_sAnimation", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_sAnimation", buffer);
 	}
 
-	public void GetPageCollectSound(char[] sBuffer, int iBufferLen)
+	public void GetPageCollectSound(char[] buffer, int bufferLen)
 	{
-		this.GetPropString(Prop_Data, "sf2_sCollectSound", sBuffer, iBufferLen);
+		this.GetPropString(Prop_Data, "sf2_sCollectSound", buffer, bufferLen);
 	}
 
-	public void SetPageCollectSound(const char[] sBuffer)
+	public void SetPageCollectSound(const char[] buffer)
 	{
-		this.SetPropString(Prop_Data, "sf2_sCollectSound", sBuffer);
+		this.SetPropString(Prop_Data, "sf2_sCollectSound", buffer);
 	}
 
 	property int PageCollectSoundPitch
 	{
-		public get() { this.GetProp(Prop_Data, "sf2_iCollectSoundPitch"); }
-		public set(int value) { this.SetProp(Prop_Data, "sf2_iCollectSoundPitch", value); }
+		public get()
+		{
+			this.GetProp(Prop_Data, "sf2_iCollectSoundPitch");
+		}
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "sf2_iCollectSoundPitch", value);
+		}
 	}
 
 	public static void Initialize()
@@ -89,10 +120,10 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("sf2_info_page_spawn", OnCreate);
-	g_entityFactory.DeriveFromBaseEntity(true);
+	g_EntityFactory = new CEntityFactory("sf2_info_page_spawn", OnCreate);
+	g_EntityFactory.DeriveFromBaseEntity(true);
 
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineStringField("sf2_sModel", _, "model")
 		.DefineIntField("sf2_iSkin", _, "skin")
 		.DefineIntField("sf2_iBodyGroup", _, "setbodygroup")
@@ -103,12 +134,12 @@ static void Initialize()
 		.DefineIntField("sf2_iCollectSoundPitch", _, "collectsoundpitch")
 	.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
-static void OnCreate(int iEntity)
+static void OnCreate(int entity)
 {
-	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(iEntity);
+	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(entity);
 	thisEnt.SetPageModel(PAGE_MODEL);
 	thisEnt.PageSkin = -1;
 	thisEnt.PageBodygroup = 0;
@@ -119,24 +150,24 @@ static void OnCreate(int iEntity)
 	thisEnt.PageCollectSoundPitch = 0;
 	thisEnt.SetRenderColor(255, 255, 255, 255);
 
-	SDKHook(iEntity, SDKHook_SpawnPost, OnSpawn);
+	SDKHook(entity, SDKHook_SpawnPost, OnSpawn);
 }
 
-static void OnSpawn(int iEntity) 
+static void OnSpawn(int entity)
 {
-	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(iEntity);
+	SF2PageSpawnEntity thisEnt = SF2PageSpawnEntity(entity);
 
-	char sBuffer[PLATFORM_MAX_PATH];
+	char buffer[PLATFORM_MAX_PATH];
 
-	thisEnt.GetPageModel(sBuffer, sizeof(sBuffer));
-	if (sBuffer[0])
+	thisEnt.GetPageModel(buffer, sizeof(buffer));
+	if (buffer[0])
 	{
-		PrecacheModel(sBuffer);
+		PrecacheModel(buffer);
 	}
 
-	thisEnt.GetPageCollectSound(sBuffer, sizeof(sBuffer));
-	if (sBuffer[0])
+	thisEnt.GetPageCollectSound(buffer, sizeof(buffer));
+	if (buffer[0])
 	{
-		PrecacheSound(sBuffer);
+		PrecacheSound(buffer);
 	}
 }

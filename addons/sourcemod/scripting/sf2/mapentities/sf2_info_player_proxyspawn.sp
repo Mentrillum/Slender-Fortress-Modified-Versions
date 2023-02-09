@@ -1,29 +1,48 @@
 // sf2_info_player_proxyspawn
 
-static CEntityFactory g_entityFactory;
+#pragma semicolon 1
+
+static CEntityFactory g_EntityFactory;
 
 methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 {
-	public SF2PlayerProxySpawnEntity(int entIndex) { return view_as<SF2PlayerProxySpawnEntity>(SF2SpawnPointBaseEntity(entIndex)); }
-	
+	public SF2PlayerProxySpawnEntity(int entIndex)
+	{
+		return view_as<SF2PlayerProxySpawnEntity>(SF2SpawnPointBaseEntity(entIndex));
+	}
+
 	public bool IsValid()
 	{
 		if (!CBaseEntity(this.index).IsValid())
+		{
 			return false;
+		}
 
-		return CEntityFactory.GetFactoryOfEntity(this.index) == g_entityFactory;
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_EntityFactory;
 	}
 
 	property bool Enabled
 	{
-		public get() { return !this.GetProp(Prop_Data, "sf2_bDisabled"); }
-		public set(bool value) { this.SetProp(Prop_Data, "sf2_bDisabled", !value); }
+		public get()
+		{
+			return !this.GetProp(Prop_Data, "sf2_bDisabled");
+		}
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "sf2_bDisabled", !value);
+		}
 	}
 
 	property bool IgnoreVisibility
 	{
-		public get() { return !!this.GetProp(Prop_Data, "sf2_bIgnoreVisibility"); }
-		public set(bool value) { this.SetProp(Prop_Data, "sf2_bIgnoreVisibility", value); }
+		public get()
+		{
+			return !!this.GetProp(Prop_Data, "sf2_bIgnoreVisibility");
+		}
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "sf2_bIgnoreVisibility", value);
+		}
 	}
 
 	public static void Initialize()
@@ -34,9 +53,9 @@ methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 
 static void Initialize()
 {
-	g_entityFactory = new CEntityFactory("sf2_info_player_proxyspawn", OnCreate);
-	g_entityFactory.DeriveFromFactory(SF2PlayerProxySpawnEntity.GetBaseFactory());
-	g_entityFactory.BeginDataMapDesc()
+	g_EntityFactory = new CEntityFactory("sf2_info_player_proxyspawn", OnCreate);
+	g_EntityFactory.DeriveFromFactory(SF2PlayerProxySpawnEntity.GetBaseFactory());
+	g_EntityFactory.BeginDataMapDesc()
 		.DefineBoolField("sf2_bDisabled", _, "startdisabled")
 		.DefineBoolField("sf2_bIgnoreVisibility", _, "ignorevisibility")
 		.DefineInputFunc("Enable", InputFuncValueType_Void, InputEnable)
@@ -45,45 +64,45 @@ static void Initialize()
 		.DefineInputFunc("DisableIgnoreVisibility", InputFuncValueType_Void, InputDisableIgnoreVisibility)
 	.EndDataMapDesc();
 
-	g_entityFactory.Install();
+	g_EntityFactory.Install();
 }
 
-static void OnCreate(int iEntity)
+static void OnCreate(int entity)
 {
-	SF2PlayerProxySpawnEntity thisEnt = SF2PlayerProxySpawnEntity(iEntity);
+	SF2PlayerProxySpawnEntity thisEnt = SF2PlayerProxySpawnEntity(entity);
 
 	thisEnt.Enabled = true;
 	thisEnt.IgnoreVisibility = false;
 }
 
-static void InputEnable(int iEntity, int iActivator, int iCaller)
+static void InputEnable(int entity, int activator, int caller)
 {
 	// Suppress warnings
-	iActivator = iCaller;
-	iCaller = iActivator;
-	SF2PlayerProxySpawnEntity(iEntity).Enabled = true;
+	activator = caller;
+	caller = activator;
+	SF2PlayerProxySpawnEntity(entity).Enabled = true;
 }
 
-static void InputDisable(int iEntity, int iActivator, int iCaller)
+static void InputDisable(int entity, int activator, int caller)
 {
 	// Suppress warnings
-	iActivator = iCaller;
-	iCaller = iActivator;
-	SF2PlayerProxySpawnEntity(iEntity).Enabled = false;
+	activator = caller;
+	caller = activator;
+	SF2PlayerProxySpawnEntity(entity).Enabled = false;
 }
 
-static void InputEnableIgnoreVisibility(int iEntity, int iActivator, int iCaller)
+static void InputEnableIgnoreVisibility(int entity, int activator, int caller)
 {
 	// Suppress warnings
-	iActivator = iCaller;
-	iCaller = iActivator;
-	SF2PlayerProxySpawnEntity(iEntity).IgnoreVisibility = true;
+	activator = caller;
+	caller = activator;
+	SF2PlayerProxySpawnEntity(entity).IgnoreVisibility = true;
 }
 
-static void InputDisableIgnoreVisibility(int iEntity, int iActivator, int iCaller)
+static void InputDisableIgnoreVisibility(int entity, int activator, int caller)
 {
 	// Suppress warnings
-	iActivator = iCaller;
-	iCaller = iActivator;
-	SF2PlayerProxySpawnEntity(iEntity).IgnoreVisibility = false;
+	activator = caller;
+	caller = activator;
+	SF2PlayerProxySpawnEntity(entity).IgnoreVisibility = false;
 }

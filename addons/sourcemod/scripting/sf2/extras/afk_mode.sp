@@ -3,36 +3,44 @@
 #endif
 #define _sf2_afk_mode_included
 
-static float g_fAfkAtGameTime[MAXPLAYERS + 1];
+#pragma semicolon 1
 
-void AFK_SetTime(int iClient, bool bReset = true)
+static float g_AfkAtGameTime[MAXTF2PLAYERS];
+
+void AFK_SetTime(int client, bool reset = true)
 {
-	if (g_fAfkAtGameTime[iClient] != 0.0 && g_fAfkAtGameTime[iClient] < GetGameTime())
+	if (g_AfkAtGameTime[client] != 0.0 && g_AfkAtGameTime[client] < GetGameTime())
 	{
-		g_bPlayerNoPoints[iClient] = false;
-		PrintCenterText(iClient, "");
+		g_PlayerNoPoints[client] = false;
+		PrintCenterText(client, "");
 	}
 
-	if (g_bPlayerNoPoints[iClient] || g_bAdminNoPoints[iClient])
+	if (g_PlayerNoPoints[client] || g_AdminNoPoints[client])
 	{
 		// Player already has their points disabled
-		g_fAfkAtGameTime[iClient] = 0.0;
+		g_AfkAtGameTime[client] = 0.0;
 	}
-	else if(!bReset || !g_cvPlayerAFKTime.BoolValue)
+	else if (!reset || !g_PlayerAFKTimeConVar.BoolValue)
 	{
-		g_fAfkAtGameTime[iClient] = 0.0;
+		g_AfkAtGameTime[client] = 0.0;
 	}
 	else
 	{
-		g_fAfkAtGameTime[iClient] = GetGameTime() + g_cvPlayerAFKTime.FloatValue;
+		g_AfkAtGameTime[client] = GetGameTime() + g_PlayerAFKTimeConVar.FloatValue;
 	}
 }
 
-void AFK_CheckTime(int iClient)
+void AFK_SetAFK(int client)
 {
-	if (g_fAfkAtGameTime[iClient] != 0.0 && g_fAfkAtGameTime[iClient] < GetGameTime())
+	g_PlayerNoPoints[client] = true;
+	g_AfkAtGameTime[client] = 1.0;
+}
+
+void AFK_CheckTime(int client)
+{
+	if (g_AfkAtGameTime[client] != 0.0 && g_AfkAtGameTime[client] < GetGameTime())
 	{
-		g_bPlayerNoPoints[iClient] = true;
-		PrintCenterText(iClient, "%T", "SF2 AFK Status", iClient);
+		g_PlayerNoPoints[client] = true;
+		PrintCenterText(client, "%T", "SF2 AFK Status", client);
 	}
 }

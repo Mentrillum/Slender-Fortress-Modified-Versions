@@ -3,16 +3,11 @@
 #endif
 #define _sf2_stocks_included
 
+#pragma semicolon 1
+
 #define VALID_MINIMUM_MEMORY_ADDRESS 0x10000
 
-#define SF2_FLASHLIGHT_WIDTH 512.0 // How wide the player's Flashlight should be in world units.
 #define SF2_FLASHLIGHT_LENGTH 1024.0 // How far the player's Flashlight can reach in world units.
-#define SF2_FLASHLIGHT_BRIGHTNESS 0 // Intensity of the players' Flashlight.
-#define SF2_FLASHLIGHT_DRAIN_RATE 0.65 // How long (in seconds) each bar on the player's Flashlight meter lasts.
-#define SF2_FLASHLIGHT_RECHARGE_RATE 0.68 // How long (in seconds) it takes each bar on the player's Flashlight meter to recharge.
-#define SF2_FLASHLIGHT_FLICKERAT 0.25 // The percentage of the Flashlight battery where the Flashlight will start to blink.
-#define SF2_FLASHLIGHT_ENABLEAT 0.3 // The percentage of the Flashlight battery where the Flashlight will be able to be used again (if the player shortens out the Flashlight from excessive use).
-#define SF2_FLASHLIGHT_COOLDOWN 0.4 // How much time players have to wait before being able to switch their flashlight on again after turning it off.
 
 #define HalfHumanHeight 35.5
 
@@ -122,65 +117,63 @@ float HULL_HUMAN_MAXS[3] = { 13.0, 13.0, 72.0 };
 float HULL_TF2PLAYER_MINS[3] = { -24.5, -24.5, 0.0 };
 float HULL_TF2PLAYER_MAXS[3] = { 24.5,  24.5, 83.0 };
 
-static bool g_bClientAndEntityNetwork[2049][MAXPLAYERS+1];
-
 //  ==========================================================
 //	Map Functions
 //  ==========================================================
 
-stock bool SF_IsSurvivalMap()
+bool SF_IsSurvivalMap()
 {
-	return view_as<bool>(g_bIsSurvivalMap || (g_cvSurvivalMap.IntValue == 1));
+	return !!(g_IsSurvivalMap || (g_SurvivalMapConVar.IntValue == 1));
 }
 
-stock bool SF_IsRaidMap()
+bool SF_IsRaidMap()
 {
-	return view_as<bool>(g_bIsRaidMap || (g_cvRaidMap.IntValue == 1));
+	return !!(g_IsRaidMap || (g_RaidMapConVar.IntValue == 1));
 }
 
-stock bool SF_IsProxyMap()
+bool SF_IsProxyMap()
 {
-	return view_as<bool>(g_bIsProxyMap || (g_cvProxyMap.IntValue == 1));
+	return !!(g_IsProxyMap || (g_ProxyMapConVar.IntValue == 1));
 }
 
-stock bool SF_BossesChaseEndlessly()
+bool SF_BossesChaseEndlessly()
 {
-	return view_as<bool>(g_bBossesChaseEndlessly || (g_cvBossChaseEndlessly.IntValue == 1));
+	return !!(g_BossesChaseEndlessly || (g_BossChaseEndlesslyConVar.IntValue == 1));
 }
 
-stock bool SF_IsBoxingMap()
+bool SF_IsBoxingMap()
 {
-	return view_as<bool>(g_bIsBoxingMap || (g_cvBoxingMap.IntValue == 1));
+	return !!(g_IsBoxingMap || (g_BoxingMapConVar.IntValue == 1));
 }
 
-stock bool SF_IsSlaughterRunMap()
+bool SF_IsSlaughterRunMap()
 {
-	return view_as<bool>(g_bIsSlaughterRunMap || (g_cvSlaughterRunMap.IntValue == 1));
+	return !!(g_IsSlaughterRunMap || (g_SlaughterRunMapConVar.IntValue == 1));
 }
 /*
-int SDK_StartTouch(int iEntity, int iOther)
+int SDK_StartTouch(int entity, int iOther)
 {
-	if(g_hSDKStartTouch != null)
+	if (g_SDKStartTouch != null)
 	{
-		return SDKCall(g_hSDKStartTouch, iEntity, iOther);
+		return SDKCall(g_SDKStartTouch, entity, iOther);
 	}
 	return -1;
 }
 
-int SDK_EndTouch(int iEntity, int iOther)
+int SDK_EndTouch(int entity, int iOther)
 {
-	if(g_hSDKEndTouch != null)
+	if (g_SDKEndTouch != null)
 	{
-		return SDKCall(g_hSDKEndTouch, iEntity, iOther);
+		return SDKCall(g_SDKEndTouch, entity, iOther);
 	}
 	return -1;
 }
 */
-bool SDK_PointIsWithin(int iFunc, float flPos[3])
+bool SDK_PointIsWithin(int func, float pos[3])
 {
-	if(g_hSDKPointIsWithin != null)
+	if (g_SDKPointIsWithin != null)
 	{
-		return view_as<bool>(SDKCall(g_hSDKPointIsWithin, iFunc, flPos));
+		return !!(SDKCall(g_SDKPointIsWithin, func, pos));
 	}
 
 	return false;
@@ -189,302 +182,218 @@ bool SDK_PointIsWithin(int iFunc, float flPos[3])
 //	ENTITY & ENTITY NETWORK FUNCTIONS
 //	==========================================================
 
-stock int EnsureEntRef(int entIndex)
+int EnsureEntRef(int entIndex)
 {
 	if (entIndex & (1 << 31))
+	{
 		return entIndex;
+	}
 
 	return IsValidEntity(entIndex) ? EntIndexToEntRef(entIndex) : INVALID_ENT_REFERENCE;
 }
 
-stock void Network_HookEntity(int iEnt)
+int SetEntityTransmitState(int entity, int newFlags)
 {
-	Network_ResetEntity(iEnt);
-	SDKHook(iEnt, SDKHook_SetTransmit, NetworkHook_EntityTransmission);
-}
-
-stock int SetEntityTransmitState(int iEntity, int iNewFlags)
-{
-    if (!IsValidEdict(iEntity))
-        return 0;
-
-    int iFlags = GetEdictFlags(iEntity);
-    iFlags &= ~(FL_EDICT_ALWAYS | FL_EDICT_PVSCHECK | FL_EDICT_DONTSEND);
-    iFlags |= iNewFlags;
-    SetEdictFlags(iEntity, iFlags);
-
-    return iFlags;
-}
-
-public Action NetworkHook_EntityTransmission(int iEntity, int iClient)
-{
-	if (!Network_ClientHasSeenEntity(iClient, iEntity))
-	{
-		DataPack networkData = new DataPack();
-		networkData.WriteCell(EntIndexToEntRef(iEntity));
-		networkData.WriteCell(GetClientUserId(iClient));
-		RequestFrame(Frame_UpdateClientEntityInfo, networkData);
+    if (!IsValidEdict(entity))
+    {
+		return 0;
 	}
-	return Plugin_Continue;
+
+    int flags = GetEdictFlags(entity);
+    flags &= ~(FL_EDICT_ALWAYS | FL_EDICT_PVSCHECK | FL_EDICT_DONTSEND);
+    flags |= newFlags;
+    SetEdictFlags(entity, flags);
+
+    return flags;
 }
 
-public void Frame_UpdateClientEntityInfo(DataPack networkData)
+bool IsEntityClassname(int entIndex, const char[] classname, bool caseSensitive=true)
 {
-	networkData.Reset(); 
-	int iRef = networkData.ReadCell();
-	int userid = networkData.ReadCell();
-	delete networkData;
-	int iEntity = EntRefToEntIndex(iRef);
-	int iClient = GetClientOfUserId(userid);
-	
-	if (iEntity > 0 && iClient > 0)
-		g_bClientAndEntityNetwork[iEntity][iClient] = true;
-}
-
-stock void Network_ResetClient(int iClient)
-{
-	for (int i = 0; i < 2049; i++)
+	if (!IsValidEntity(entIndex))
 	{
-		g_bClientAndEntityNetwork[i][iClient] = false;
+		return false;
 	}
+
+	char buffer[256];
+	GetEntityClassname(entIndex, buffer, sizeof(buffer));
+
+	return strcmp(buffer, classname, caseSensitive) == 0;
 }
 
-stock void Network_ResetEntity(int iEnt)
-{
-	for (int i = 0; i <= MaxClients; i++)
-	{
-		g_bClientAndEntityNetwork[iEnt][i] = false;
-	}
-}
-
-stock bool Network_ClientHasSeenEntity(int iClient, int iEnt)
-{
-	return g_bClientAndEntityNetwork[iEnt][iClient];
-}
-
-stock bool IsEntityClassname(int iEnt, const char[] classname, bool bCaseSensitive=true)
-{
-	if (!IsValidEntity(iEnt)) return false;
-	
-	char sBuffer[256];
-	GetEntityClassname(iEnt, sBuffer, sizeof(sBuffer));
-	
-	return strcmp(sBuffer, classname, bCaseSensitive) == 0;
-}
-
-stock int FindEntityByTargetname(const char[] targetName, const char[] className, bool caseSensitive=true)
+int FindEntityByTargetname(const char[] targetName, const char[] className, bool caseSensitive=true)
 {
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, className)) != -1)
 	{
-		char sName[64];
-		GetEntPropString(ent, Prop_Data, "m_iName", sName, sizeof(sName));
-		if (strcmp(sName, targetName, caseSensitive) == 0)
+		char name[64];
+		GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
+		if (strcmp(name, targetName, caseSensitive) == 0)
 		{
 			return ent;
 		}
 	}
-	
+
 	return INVALID_ENT_REFERENCE;
 }
 
-stock float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
+float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
 {
-	float vec3[3];
-	SubtractVectors(vec1, vec2, vec3);
-	float flResult = GetVectorLength(vec3, true);
-	return flResult;
+	return GetVectorDistance(vec1, vec2, true);
 }
 
-stock float SquareFloat(const float value)
+/*float GetVectorAnglesTwoPoints(const float startPos[3], const float endPos[3], float angles[3])
+{
+    static float tmpVec[3];
+    tmpVec[0] = endPos[0] - startPos[0];
+    tmpVec[1] = endPos[1] - startPos[1];
+    tmpVec[2] = endPos[2] - startPos[2];
+    GetVectorAngles(tmpVec, angles);
+}*/
+
+float SquareFloat(const float value)
 {
 	return value * value; //Using this to combine GetVectorSquareMagnitude() to improve performance
 }
 
-stock int SquareInt(const int value)
+float EntityDistanceFromEntity(int ent1, int ent2)
 {
-	return value * value; //Using this to combine GetVectorSquareMagnitude() to improve performance
-}
-
-stock float Math_Min(float flReturn, float flMin)
-{
-	if (flReturn < flMin) {
-		flReturn = flMin;
-	}
-	
-	return flReturn;
-}
-
-stock float Math_Max(float flReturn, float flMax)
-{	
-	if (flReturn > flMax) {
-		flReturn = flMax;
-	}
-	
-	return flReturn;
-}
-
-stock float Math_Clamp(float flReturn, float flMin, float flMax)
-{
-	flReturn = Math_Min(flReturn, flMin);
-	flReturn = Math_Max(flReturn, flMax);
-
-	return flReturn;
-}
-
-stock float EntityDistanceFromEntity(int ent1,int ent2)
-{
-	if (!IsValidEntity(ent1) || !IsValidEntity(ent2)) return -1.0;
-	
-	float flMyPos[3],flHisPos[3];
-	GetEntPropVector(ent1, Prop_Data, "m_vecAbsOrigin", flMyPos);
-	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", flHisPos);
-	return GetVectorSquareMagnitude(flMyPos, flHisPos);
-}
-
-stock void GetEntityOBBCenterPosition(int ent, float flBuffer)
-{
-	float flPos[3], flMins[3], flMaxs[3];
-	GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", flPos);
-	GetEntPropVector(ent, Prop_Send, "m_vecMins", flMins);
-	GetEntPropVector(ent, Prop_Send, "m_vecMaxs", flMaxs);
-	
-	for (new i = 0; i < 3; i++) flBuffer[i] = flPos[i] + ((flMins[i] + flMaxs[i]) / 2.0);
-}
-
-stock bool IsSpaceOccupied(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
-{
-	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitEntity, entity);
-	bool bHit = TR_DidHit(hTrace);
-	ref = TR_GetEntityIndex(hTrace);
-	delete hTrace;
-	return bHit;
-}
-
-stock bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
-{
-	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
-	bool bHit = TR_DidHit(hTrace);
-	ref = TR_GetEntityIndex(hTrace);
-	delete hTrace;
-	return bHit;
-}
-
-stock bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
-{
-	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
-	bool bHit = TR_DidHit(hTrace);
-	ref = TR_GetEntityIndex(hTrace);
-	delete hTrace;
-	return bHit;
-}
-
-stock bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
-{
-	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
-	bool bHit = TR_DidHit(hTrace);
-	ref = TR_GetEntityIndex(hTrace);
-	delete hTrace;
-	return bHit;
-}
-
-stock bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
-{
-	Handle hTrace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
-	bool bHit = TR_DidHit(hTrace);
-	ref = TR_GetEntityIndex(hTrace);
-	delete hTrace;
-	return bHit;
-}
-
-int EntitySetAnimation(int iEntity, const char[] sName, float flPlaybackRate = 1.0, int iForceSequence = -1, float flCycle = 0.0)
-{
-	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(iEntity);
-	int iSequence = iForceSequence;
-	if (iForceSequence == -1)
+	if (!IsValidEntity(ent1) || !IsValidEntity(ent2))
 	{
-		iSequence = animationEntity.LookupSequence(sName);
-	}
-	
-	if (iSequence != -1)
-	{
-		animationEntity.ResetSequence(iSequence);
-		SetEntPropFloat(iEntity, Prop_Data, "m_flCycle", flCycle);
+		return -1.0;
 	}
 
-	if (flPlaybackRate<-12.0) flPlaybackRate = -12.0;
-	if (flPlaybackRate>12.0) flPlaybackRate = 12.0;
-	SetEntPropFloat(iEntity, Prop_Send, "m_flPlaybackRate", flPlaybackRate);
-	return iSequence;
+	float myPos[3],hisPos[3];
+	GetEntPropVector(ent1, Prop_Data, "m_vecAbsOrigin", myPos);
+	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", hisPos);
+	return GetVectorSquareMagnitude(myPos, hisPos);
 }
 
-stock void EntitySetBlendAnimation(int iEntity, const char[] sParameter, float flSpeed)
+bool IsSpaceOccupied(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	int iParameter = utils_EntityLookupPoseParameter(iEntity, sParameter);
-	if (iParameter < 0)
-		return;
-	float flNewValue;
-	utils_StudioSetPoseParameter(iEntity, iParameter, flSpeed, flNewValue);
-	SetEntPropFloat(iEntity, Prop_Send, "m_flPoseParameter", flNewValue, iParameter);
-	//PrintToChatAll("called");
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitEntity, entity);
+	bool hit = TR_DidHit(trace);
+	ref = TR_GetEntityIndex(trace);
+	delete trace;
+	return hit;
 }
-stock void CBaseNPC_RemoveAllLayers(int iEntity)
+
+bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	if (!IsValidEntity(iEntity)) return;
-	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(iEntity);
-	int iCount = animationEntity.GetNumAnimOverlays();
-	for(int i = 0; i < iCount; i++) 
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
+	bool hit = TR_DidHit(trace);
+	ref = TR_GetEntityIndex(trace);
+	delete trace;
+	return hit;
+}
+
+bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+{
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
+	bool hit = TR_DidHit(trace);
+	ref = TR_GetEntityIndex(trace);
+	delete trace;
+	return hit;
+}
+
+bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+{
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
+	bool hit = TR_DidHit(trace);
+	ref = TR_GetEntityIndex(trace);
+	delete trace;
+	return hit;
+}
+
+bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+{
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
+	bool hit = TR_DidHit(trace);
+	ref = TR_GetEntityIndex(trace);
+	delete trace;
+	return hit;
+}
+
+int EntitySetAnimation(int entity, const char[] name, float playbackRate = 1.0, int forceSequence = -1, float cycle = 0.0)
+{
+	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(entity);
+	int sequence = forceSequence;
+	Activity activity = TranslateProfileActivityFromName(name);
+	if (activity != ACT_INVALID)
 	{
-		CAnimationLayer pOverlay = animationEntity.GetAnimOverlay(i); 
-		if (!pOverlay.IsAlive()) 
+		sequence = animationEntity.SelectWeightedSequence(activity);
+	}
+	else if (activity == ACT_INVALID && forceSequence == -1)
+	{
+		sequence = animationEntity.LookupSequence(name);
+	}
+
+	if (sequence != -1)
+	{
+		animationEntity.ResetSequence(sequence);
+		if (cycle > 0.0)
 		{
-			continue; 
+			animationEntity.SetPropFloat(Prop_Data, "m_flCycle", cycle);
 		}
-		pOverlay.KillMe();
 	}
-}
-stock void SDK_GetVectors(int iEntity, float vecForward[3], float vecRight[3], float vecUp[3])
-{
-	if (g_hSDKGetVectors != null)
+
+	if (playbackRate < -12.0)
 	{
-		SDKCall(g_hSDKGetVectors, iEntity, vecForward, vecRight, vecUp);
+		playbackRate = -12.0;
+	}
+	if (playbackRate > 12.0)
+	{
+		playbackRate = 12.0;
+	}
+	animationEntity.SetPropFloat(Prop_Send, "m_flPlaybackRate", playbackRate);
+	return sequence;
+}
+
+void CBaseNPC_RemoveAllLayers(int entity)
+{
+	if (!IsValidEntity(entity))
+	{
 		return;
+	}
+	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(entity);
+	int count = animationEntity.GetNumAnimOverlays();
+	for(int i = 0; i < count; i++)
+	{
+		CAnimationLayer overlay = animationEntity.GetAnimOverlay(i);
+		if (!overlay.IsAlive())
+		{
+			continue;
+		}
+		overlay.KillMe();
 	}
 }
 
-stock void SDK_GetSmoothedVelocity(int iEntity, float flVector[3])
+/*void SDK_GetSmoothedVelocity(int entity, float vector[3])
 {
-	if (g_hSDKGetSmoothedVelocity == null)
+	if (g_SDKGetSmoothedVelocity == null)
 	{
 		LogError("SDKCall for GetSmoothedVelocity is invalid!");
 		return;
 	}
-	SDKCall(g_hSDKGetSmoothedVelocity, iEntity, flVector);
-}
+	SDKCall(g_SDKGetSmoothedVelocity, entity, vector);
+}*/
 
-stock void NavCollectFuncNavPrefer()
+bool NavHasFuncPrefer(CNavArea area)
 {
-	if (g_aFuncNavPrefer == null) return;
-	g_aFuncNavPrefer.Clear();
-	int iFunc = -1;
-	while ((iFunc = FindEntityByClassname(iFunc, "func_nav_prefer")) != -1)
+	if (g_FuncNavPrefer == null)
 	{
-		g_aFuncNavPrefer.Push(iFunc);
+		return false;
 	}
-}
-
-stock bool NavHasFuncPrefer(CNavArea area)
-{
-	if (g_aFuncNavPrefer == null) return false;
-	float flCenter[3];
-	area.GetCenter(flCenter);
-	if (g_aFuncNavPrefer.Length > 0)
+	float center[3];
+	area.GetCenter(center);
+	if (g_FuncNavPrefer.Length > 0)
 	{
-		for (int a = 1; a <= (g_aFuncNavPrefer.Length - 1); a++)
+		for (int a = 1; a <= (g_FuncNavPrefer.Length - 1); a++)
 		{
-			int iFunc = g_aFuncNavPrefer.Get(a);
-			if (SDK_PointIsWithin(iFunc, flCenter))
+			int func = g_FuncNavPrefer.Get(a);
+			if (SDK_PointIsWithin(func, center))
+			{
 				return true;
+			}
 		}
 	}
 	return false;
@@ -493,28 +402,28 @@ stock bool NavHasFuncPrefer(CNavArea area)
 //  =========================================================
 //  GLOW FUNCTIONS
 //  =========================================================
-//I borrowed this glow creation code from Pelipoika, cause It's efficient and clean 
-stock int TF2_CreateGlow(int iEnt)
+//I borrowed this glow creation code from Pelipoika, cause It's efficient and clean
+int TF2_CreateGlow(int entIndex)
 {
 	char oldEntName[64];
-	GetEntPropString(iEnt, Prop_Data, "m_iName", oldEntName, sizeof(oldEntName));
+	GetEntPropString(entIndex, Prop_Data, "m_iName", oldEntName, sizeof(oldEntName));
 
 	char strName[126], strClass[64];
-	GetEntityClassname(iEnt, strClass, sizeof(strClass));
-	FormatEx(strName, sizeof(strName), "%s%i", strClass, iEnt);
-	DispatchKeyValue(iEnt, "targetname", strName);
-	
+	GetEntityClassname(entIndex, strClass, sizeof(strClass));
+	FormatEx(strName, sizeof(strName), "%s%i", strClass, entIndex);
+	DispatchKeyValue(entIndex, "targetname", strName);
+
 	int ent = CreateEntityByName("tf_glow");
 	DispatchKeyValue(ent, "target", strName);
-	FormatEx(strName, sizeof(strName), "tf_glow_%i", iEnt);
+	FormatEx(strName, sizeof(strName), "tf_glow_%i", entIndex);
 	DispatchKeyValue(ent, "targetname", strName);
 	DispatchKeyValue(ent, "Mode", "0");
 	DispatchSpawn(ent);
-	
+
 	AcceptEntityInput(ent, "Enable");
-	
+
 	//Change name back to old name because we don't need it anymore.
-	SetEntPropString(iEnt, Prop_Data, "m_iName", oldEntName);
+	SetEntPropString(entIndex, Prop_Data, "m_iName", oldEntName);
 
 	return ent;
 }
@@ -522,32 +431,32 @@ stock int TF2_CreateGlow(int iEnt)
 //	CLIENT ENTITY FUNCTIONS
 //	==========================================================
 
-//Credits to Linux_lover for this stock and signature.
-stock void SDK_PlaySpecificSequence(int client, const char[] strSequence)
+//Credits to Linux_lover for this and signature.
+void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 {
-	if(g_hSDKPlaySpecificSequence != null)
+	if (g_SDKPlaySpecificSequence != null)
 	{
-#if defined DEBUG
+		#if defined DEBUG
 		static bool once = true;
-		if(once)
+		if (once)
 		{
 			PrintToServer("(SDK_PlaySpecificSequence) Calling on player %N \"%s\"..", client, strSequence);
 			once = false;
 		}
-#endif
-		SDKCall(g_hSDKPlaySpecificSequence, client, strSequence);
+		#endif
+		SDKCall(g_SDKPlaySpecificSequence, client, strSequence);
 	}
 }
 
-stock void SDK_EquipWearable(int client, int entity)
+void SDK_EquipWearable(int client, int entity)
 {
-	if(g_hSDKEquipWearable != null)
+	if (g_SDKEquipWearable != null)
 	{
-		SDKCall( g_hSDKEquipWearable, client, entity );
+		SDKCall(g_SDKEquipWearable, client, entity);
 	}
 }
 
-stock void KillClient(int client)
+void KillClient(int client)
 {
 	if (client != -1)
 	{
@@ -558,84 +467,48 @@ stock void KillClient(int client)
 	}
 }
 
-stock bool IsEntityAProjectile(int entity)
+bool IsEntityAProjectile(int entity)
 {
 	char classname[64];
-	if (IsValidEntity(entity) && GetEntityClassname(entity, classname, sizeof(classname)) && 
-	(strcmp(classname, "env_explosion") == 0 || 
-	strcmp(classname, "tf_projectile_sentryrocket") == 0 || 
-	strcmp(classname, "tf_projectile_rocket") == 0 || 
-	strcmp(classname, "tf_projectile_pipe") == 0 || 
-	strcmp(classname, "tf_projectile_arrow") == 0)) return true;
+	if (IsValidEntity(entity) && GetEntityClassname(entity, classname, sizeof(classname)) &&
+	(strcmp(classname, "env_explosion") == 0 ||
+	strcmp(classname, "tf_projectile_sentryrocket") == 0 ||
+	strcmp(classname, "tf_projectile_rocket") == 0 ||
+	strcmp(classname, "tf_projectile_pipe") == 0 ||
+	strcmp(classname, "tf_projectile_arrow") == 0))
+	{
+		return true;
+	}
 	return false;
 }
 
-stock void DestroyAllActiveWeapons(int client)
+void DestroyAllActiveWeapons(int client)
 {
 	for (int i = 0; i <= 5; i++)
 	{
-		int iWeapon = GetPlayerWeaponSlot(client, i);
-		if (!IsValidEntity(iWeapon)) continue;
-		RemoveEntity(iWeapon);
+		int weaponEnt = GetPlayerWeaponSlot(client, i);
+		if (!IsValidEntity(weaponEnt))
+		{
+			continue;
+		}
+		RemoveEntity(weaponEnt);
 	}
 }
 
 #define SF_IGNORE_LOS	0x0004
 #define SF_NO_DISGUISED_SPY_HEALING	0x0008
 
-/* Hack around server code logic to call CTFPlayerShared::StopHealing */
-stock void SDK_StopHealing(int iHealer, int iClient)
-{
-	int iEntity = CreateEntityByName("obj_dispenser");
-	if(iEntity > MaxClients)
-	{
-		float vecPos[3];
-		GetClientEyePosition(iClient, vecPos);
-		TeleportEntity(iEntity, vecPos, NULL_VECTOR, NULL_VECTOR);
-		int iTeam = GetClientTeam(iClient);
-		DispatchSpawn(iEntity);
-
-		char strTeam[5];
-		FormatEx(strTeam, sizeof(strTeam), "%d", iTeam);
-		DispatchKeyValue(iEntity, "teamnum", strTeam);
-
-		SetVariantInt(iTeam);
-		AcceptEntityInput(iEntity, "setteam");
-		AcceptEntityInput(iEntity, "setbuilder", iHealer);
-		SetVariantInt(999);
-		AcceptEntityInput(iEntity, "SetHealth");
-
-		//Set various property to get the dispenser working asap
-		SetEntProp(iEntity, Prop_Data, "m_spawnflags", SF_IGNORE_LOS);
-		SetEntPropEnt(iEntity, Prop_Send, "m_hBuilder", iHealer);
-		SetEntProp(iEntity, Prop_Send, "m_bBuilding", false);
-		SetEntProp(iEntity, Prop_Send, "m_bDisabled", false);
-		SetEntProp(iEntity, Prop_Send, "m_bCarryDeploy", false);
-		
-		// Remove the team glow outline.
-		/*int flags = GetEntProp(iEntity, Prop_Send, "m_fEffects");
-		flags |= EF_NODRAW;
-		SetEntProp(iEntity, Prop_Send, "m_fEffects", flags);*/
-		
-		//Start the healing
-		SDK_StartTouch(iEntity, iClient);
-		SetEntProp(iEntity, Prop_Send, "m_bCarryDeploy", true);
-		//SDK_EndTouch(iEntity, iClient);
-		CreateTimer(10.0, Timer_KillEntity, EntIndexToEntRef(iEntity), TIMER_FLAG_NO_MAPCHANGE);
-	}
-}
-
 int SDK_SwitchWeapon(int client, int weapon)
 {
-	if(g_hSDKWeaponSwitch != null)
+	if (g_SDKWeaponSwitch != null)
 	{
-		return SDKCall(g_hSDKWeaponSwitch, client, weapon, 0);
+		return SDKCall(g_SDKWeaponSwitch, client, weapon, 0);
 	}
 
 	return -1;
 }
 
-stock bool IsClientInKart(int client)
+bool IsClientInKart(int client)
 {
 	if (TF2_IsPlayerInCondition(client, TFCond_HalloweenKart) ||
 		TF2_IsPlayerInCondition(client, TFCond_HalloweenKartDash) ||
@@ -647,7 +520,7 @@ stock bool IsClientInKart(int client)
 	return false;
 }
 
-stock bool IsClientCritUbercharged(int client)
+bool IsClientCritUbercharged(int client)
 {
 	if (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) ||
 		TF2_IsPlayerInCondition(client, TFCond_UberchargeFading) ||
@@ -660,7 +533,7 @@ stock bool IsClientCritUbercharged(int client)
 	return false;
 }
 
-stock bool IsClientCritBoosted(int client)
+bool IsClientCritBoosted(int client)
 {
 	if (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) ||
 		TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy) ||
@@ -674,261 +547,193 @@ stock bool IsClientCritBoosted(int client)
 	{
 		return true;
 	}
-	
-	int iActiveWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-	if (IsValidEdict(iActiveWeapon))
+
+	int activeWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+	if (IsValidEdict(activeWeapon))
 	{
-		char sNetClass[64];
-		GetEntityNetClass(iActiveWeapon, sNetClass, sizeof(sNetClass));
-		
-		if (strcmp(sNetClass, "CTFFlameThrower") == 0)
+		char netClass[64];
+		GetEntityNetClass(activeWeapon, netClass, sizeof(netClass));
+
+		if (strcmp(netClass, "CTFFlameThrower") == 0)
 		{
-			if (GetEntProp(iActiveWeapon, Prop_Send, "m_bCritFire")) return true;
-		
-			int iItemDef = GetEntProp(iActiveWeapon, Prop_Send, "m_iItemDefinitionIndex");
-			if (iItemDef == 594 && TF2_IsPlayerInCondition(client, TFCond_CritMmmph)) return true;
+			if (GetEntProp(activeWeapon, Prop_Send, "m_bCritFire"))
+			{
+				return true;
+			}
+
+			int iItemDef = GetEntProp(activeWeapon, Prop_Send, "m_iItemDefinitionIndex");
+			if (iItemDef == 594 && TF2_IsPlayerInCondition(client, TFCond_CritMmmph))
+			{
+				return true;
+			}
 		}
-		else if (strcmp(sNetClass, "CTFMinigun") == 0)
+		else if (strcmp(netClass, "CTFMinigun") == 0)
 		{
-			if (GetEntProp(iActiveWeapon, Prop_Send, "m_bCritShot")) return true;
+			if (GetEntProp(activeWeapon, Prop_Send, "m_bCritShot"))
+			{
+				return true;
+			}
 		}
 	}
-	
+
 	return false;
 }
 
-stock void TF2_StripWearables(int client)
+void TF2_StripWearables(int client)
 {
-	int iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_wearable")) > MaxClients)
+	int entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_wearable")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_wearable_vm")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_wearable_vm")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_powerup_bottle")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_wearable_razorback")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_wearable_razorback")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == client)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 }
 
-stock void TF2_DestroySpyWeapons(int client)
+void TF2_DestroySpyWeapons()
 {
-	int iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_revolver")) > MaxClients)
+	int entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_weapon_revolver")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_builder")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_weapon_builder")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_knife")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_weapon_knife")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "saxxy")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "saxxy")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_pda_spy")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_weapon_pda_spy")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_invis")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_weapon_invis")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 
-	iEntity = MaxClients+1;
-	while((iEntity = FindEntityByClassname(iEntity, "tf_weapon_sapper")) > MaxClients)
+	entity = MaxClients+1;
+	while((entity = FindEntityByClassname(entity, "tf_weapon_sapper")) > MaxClients)
 	{
-		if(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") < 1)
+		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
-			RemoveEntity(iEntity);
+			RemoveEntity(entity);
 		}
 	}
 }
 
-stock void TF2_ChangePlayerName(int iClient, const char[] sNewName, bool bPrintInChat = false)
+void ClientSwitchToWeaponSlot(int client,int slot)
 {
-	char sOldName[64];
-	GetEntPropString(iClient, Prop_Data, "m_szNetname", sOldName, sizeof(sOldName));
-	
-	/*Event event_namechange = CreateEvent("player_changename");
-	event_namechange.SetInt("userid", GetClientUserId(iClient));
-	event_namechange.SetString("oldname", sOldName);
-	event_namechange.SetString("newname", sNewName);
-	event_namechange.Fire();*/
-	
-	int players[MAXPLAYERS+1];
-	int playersNum;
-	for (int player = 1; player <= MaxClients; player++)
+	int weaponEnt = GetPlayerWeaponSlot(client, slot);
+	if (weaponEnt <= MaxClients)
 	{
-		if (!IsClientInGame(player)) continue;
-		players[playersNum++] = player;
+		return;
 	}
-	UTIL_SayText2(players, playersNum, iClient, bPrintInChat, "#TF_Name_Change", sOldName, sNewName);
-	
-	
-	SetEntPropString(iClient, Prop_Data, "m_szNetname", sNewName);
+
+	SDK_SwitchWeapon(client, weaponEnt);
 }
 
-stock int TF2_FindNoiseMaker(int iClient)
+void ChangeClientTeamNoSuicide(int client,int team, bool respawn=true)
 {
-	int iEntity = MaxClients + 1;
-	while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable")) > MaxClients)
+	if (!IsClientInGame(client))
 	{
-		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient)
-		{
-			if (TF2_WeaponFindAttribute(iEntity, 196) > 0.0)
-			{
-				return iEntity;
-			}
-		}
+		return;
 	}
-	
-	return -1;
-}
 
-stock float TF2_WeaponFindAttribute(int iWeapon, int iAttrib)
-{
-	Address addAttrib = TF2Attrib_GetByDefIndex(iWeapon, iAttrib);
-	if (addAttrib == Address_Null)
-	{
-		int iItemDefIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-		int iAttributes[16];
-		float flAttribValues[16];
-		
-		int iMaxAttrib = TF2Attrib_GetStaticAttribs(iItemDefIndex, iAttributes, flAttribValues);
-		for (int i = 0; i < iMaxAttrib; i++)
-		{
-			if (iAttributes[i] == iAttrib)
-			{
-				return flAttribValues[i];
-			}
-		}
-		
-		return 0.0;
-	}
-	
-	return TF2Attrib_GetValue(addAttrib);
-}
-
-stock void ClientSwitchToWeaponSlot(int client,int iSlot)
-{
-	int iWeapon = GetPlayerWeaponSlot(client, iSlot);
-	if (iWeapon < MaxClients) return;
-	
-	SDK_SwitchWeapon(client, iWeapon);
-}
-
-stock void ChangeClientTeamNoSuicide(int client,int team, bool bRespawn=true)
-{
-	if (!IsClientInGame(client)) return;
-	
 	if (GetClientTeam(client) != team)
 	{
 		SetEntProp(client, Prop_Send, "m_lifeState", 2);
 		ChangeClientTeam(client, team);
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
-		if (bRespawn) TF2_RespawnPlayer(client);
+		if (respawn)
+		{
+			TF2_RespawnPlayer(client);
+		}
 	}
 }
 
-stock void UTIL_SayText2(int[] players, int playersNum, int iEntity, bool bChat, const char[] msg_name, const char[] param1="", const char[] param2="", const char[] param3="", const char[] param4="")
+void UTIL_ClientScreenShake(int client, float amplitude, float duration, float frequency)
 {
-	BfWrite message = UserMessageToBfWrite(StartMessage("SayText2", players, playersNum, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS)); 
-	
-	message.WriteByte(iEntity);
-	
-	message.WriteByte(bChat);
-
-	message.WriteString(msg_name); 
-	
-	message.WriteString(param1); 
-	
-	message.WriteString(param2); 
-	
-	message.WriteString(param3);
-
-	message.WriteString(param4);
-	delete message;
-	EndMessage();
-}
-
-stock void UTIL_ClientScreenShake(int client, float amplitude, float duration, float frequency)
-{
-	Handle hBf = StartMessageOne("Shake", client);
-	if (hBf != null)
+	Handle bf = StartMessageOne("Shake", client);
+	if (bf != null)
 	{
-		BfWriteByte(hBf, 0);
-		BfWriteFloat(hBf, amplitude);
-		BfWriteFloat(hBf, frequency);
-		BfWriteFloat(hBf, duration);
-		delete hBf;
+		BfWriteByte(bf, 0);
+		BfWriteFloat(bf, amplitude);
+		BfWriteFloat(bf, frequency);
+		BfWriteFloat(bf, duration);
+		delete bf;
 		EndMessage();
 	}
 }
 
-public void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int b,int a)
+void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int b,int a)
 {
 	int clients[1];
 	Handle bf;
 	clients[0] = client;
-	
+
 	bf = StartMessage("Fade", clients, 1);
 	BfWriteShort(bf, duration);
 	BfWriteShort(bf, time);
@@ -941,68 +746,55 @@ public void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int
 	EndMessage();
 }
 
-stock bool IsValidClient(int client)
+bool IsValidClient(int client)
 {
-	return view_as<bool>((client > 0 && client <= MaxClients && IsClientInGame(client)));
+	return client > 0 && client <= MaxClients && IsClientInGame(client);
 }
 
-stock void PrintToSourceTV(const char[] Message)
+void PrintToSourceTV(const char[] message)
 {
-	int iClient = GetClientOfUserId(g_iSourceTVUserID);
-	if (MaxClients >= iClient > 0 && IsClientInGame(iClient) && IsClientSourceTV(iClient))
+	int client = GetClientOfUserId(g_SourceTVUserID);
+	if (MaxClients >= client > 0 && IsClientInGame(client) && IsClientSourceTV(client))
 	{
-		CPrintToChat(iClient, Message);
+		CPrintToChat(client, message);
 	}
 }
 //	==========================================================
 //	TF2-SPECIFIC FUNCTIONS
 //	==========================================================
-stock bool TF2_IsMiniCritBuffed(int iClient)
+bool TF2_IsMiniCritBuffed(int client)
 {
-	return (TF2_IsPlayerInCondition(iClient, TFCond_CritCola)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritHype)
-        || TF2_IsPlayerInCondition(iClient, TFCond_Buffed)
+	return (TF2_IsPlayerInCondition(client, TFCond_CritCola)
+        || TF2_IsPlayerInCondition(client, TFCond_CritHype)
+        || TF2_IsPlayerInCondition(client, TFCond_Buffed)
     );
 }
 
-stock bool TF2_IsPlayerCritBuffed(int iClient)
+bool IsTauntWep(int weaponEnt)
 {
-    return (TF2_IsPlayerInCondition(iClient, TFCond_Kritzkrieged)
-        || TF2_IsPlayerInCondition(iClient, TFCond_HalloweenCritCandy)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritCanteen)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritDemoCharge)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnFirstBlood)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnWin)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnFlagCapture)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritOnKill)
-        || TF2_IsPlayerInCondition(iClient, TFCond_CritMmmph)
-		|| TF2_IsPlayerInCondition(iClient, TFCond_CritOnDamage)
-    );
-}
-
-stock bool IsTauntWep(int iWeapon)
-{
-	int Index = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-	if(Index==37 || Index==304 || Index==5 || Index==195 || Index==43 || Index==239 || Index==310 || Index==331 || Index==426 || Index==587 || Index==656 || Index==1084 || Index==1100 || Index == 1143)
+	int index = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+	if (index==37 || index==304 || index==5 || index==195 || index==43 || index==239 || index==310 || index==331 || index==426 || index==587 || index==656 || index==1084 || index==1100 || index == 1143)
+	{
 		return true;
+	}
 	return false;
 }
 
-stock void FindHealthBar()
+void FindHealthBar()
 {
-	g_ihealthBar = FindEntityByClassname(-1, "monster_resource");
-	
-	if (g_ihealthBar == -1)
+	g_HealthBar = FindEntityByClassname(-1, "monster_resource");
+
+	if (g_HealthBar == -1)
 	{
-		g_ihealthBar = CreateEntityByName("monster_resource");
-		if (g_ihealthBar != -1)
+		g_HealthBar = CreateEntityByName("monster_resource");
+		if (g_HealthBar != -1)
 		{
-			DispatchSpawn(g_ihealthBar);
+			DispatchSpawn(g_HealthBar);
 		}
 	}
 }
 
-stock void ForceTeamWin(int team)
+void ForceTeamWin(int team)
 {
 	int ent = FindEntityByClassname(-1, "team_control_point_master");
 	if (ent == -1)
@@ -1011,219 +803,111 @@ stock void ForceTeamWin(int team)
 		DispatchSpawn(ent);
 		AcceptEntityInput(ent, "Enable");
 	}
-	
+
 	SetVariantInt(team);
 	AcceptEntityInput(ent, "SetWinner");
 }
 
-stock void GameTextTFMessage(const char[] message, const char[] icon="")
+Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att)
 {
-	int ent = CreateEntityByName("game_text_tf");
-	DispatchKeyValue(ent, "message", message);
-	DispatchKeyValue(ent, "display_to_team", "0");
-	DispatchKeyValue(ent, "icon", icon);
-	DispatchSpawn(ent);
-	AcceptEntityInput(ent, "Display");
-	RemoveEntity(ent);
-}
+	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
+	TF2Items_SetClassname(item, classname);
+	TF2Items_SetItemIndex(item, index);
+	TF2Items_SetLevel(item, level);
+	TF2Items_SetQuality(item, quality);
 
-stock int BuildAnnotationBitString(const int[] clients,int iMaxClients)
-{
-	int iBitString = 1;
-	for (int i = 0; i < maxClients; i++)
+	// Set attributes.
+	char atts[32][32];
+	int count = ExplodeString(att, " ; ", atts, 32, 32);
+	if (count > 1)
 	{
-		int client = clients[i];
-		if (!IsClientInGame(client) || !IsPlayerAlive(client)) continue;
-	
-		iBitString |= RoundFloat(Pow(2.0, float(client)));
-	}
-	
-	return iBitString;
-}
-
-stock void SpawnAnnotation(int client,int entity, const float pos[3], const char[] message, float lifetime)
-{
-	Handle event = CreateEvent("show_annotation", true);
-	if (event != null)
-	{
-		new bitstring = BuildAnnotationBitString(id, pos, type, team);
-		if (bitstring > 1)
+		TF2Items_SetNumAttributes(item, count / 2);
+		int i2 = 0;
+		for (int i = 0; i < count; i+= 2)
 		{
-			pos[2] -= 35.0;
-			SetEventFloat(event, "worldPosX", pos[0]);
-			SetEventFloat(event, "worldPosY", pos[1]);
-			SetEventFloat(event, "worldPosZ", pos[2]);
-			SetEventFloat(event, "lifetime", lifetime);
-			SetEventInt(event, "id", id);
-			SetEventString(event, "text", message);
-			SetEventInt(event, "visibilityBitfield", bitstring);
-			FireEvent(event);
-			KillTimer(event);
-		}
-		
-	}
-}
-
-stock float TF2_GetClassBaseSpeed(TFClassType class)
-{
-	switch (class)
-	{
-		case TFClass_Scout:
-		{
-			return 400.0;
-		}
-		case TFClass_Soldier:
-		{
-			return 240.0;
-		}
-		case TFClass_Pyro:
-		{
-			return 300.0;
-		}
-		case TFClass_DemoMan:
-		{
-			return 280.0;
-		}
-		case TFClass_Heavy:
-		{
-			return 230.0;
-		}
-		case TFClass_Engineer:
-		{
-			return 300.0;
-		}
-		case TFClass_Medic:
-		{
-			return 320.0;
-		}
-		case TFClass_Sniper:
-		{
-			return 300.0;
-		}
-		case TFClass_Spy:
-		{
-			return 320.0;
-		}
-	}
-	
-	return 0.0;
-}
-
-stock Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att, bool bDisableCrits = false)
-{
-	Handle hItem = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
-	TF2Items_SetClassname(hItem, classname);
-	TF2Items_SetItemIndex(hItem, index);
-	TF2Items_SetLevel(hItem, level);
-	TF2Items_SetQuality(hItem, quality);
-
-	if (bDisableCrits)
-	{
-		// Set attributes.
-		char atts[32][32];
-		int count = ExplodeString(att, " ; ", atts, 32, 32);
-		if (count > 1)
-		{
-			TF2Items_SetNumAttributes(hItem, count / 2);
-			int i2 = 0;
-			for (int i = 0; i < count + 2; i+= 2)
-			{
-				if (i == count)
-				{
-					TF2Items_SetAttribute(hItem, i2, 28, 0.0);
-				}
-				else TF2Items_SetAttribute(hItem, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
-				i2++;
-			}
-		}
-		else
-		{
-			TF2Items_SetNumAttributes(hItem, 1);
-			TF2Items_SetAttribute(hItem, 0, 28, 0.0);
+			TF2Items_SetAttribute(item, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
+			i2++;
 		}
 	}
 	else
 	{
-		// Set attributes.
-		char atts[32][32];
-		int count = ExplodeString(att, " ; ", atts, 32, 32);
-		if (count > 1)
-		{
-			TF2Items_SetNumAttributes(hItem, count / 2);
-			int i2 = 0;
-			for (int i = 0; i < count; i+= 2)
-			{
-				TF2Items_SetAttribute(hItem, i2, StringToInt(atts[i]), StringToFloat(atts[i+1]));
-				i2++;
-			}
-		}
-		else
-		{
-			TF2Items_SetNumAttributes(hItem, 0);
-		}	
+		TF2Items_SetNumAttributes(item, 0);
 	}
-	
-	return hItem;
+
+	return item;
 }
 
-stock void SpeakResponseConcept(int client, const char[] concept) //Thanks The Gaben 
+void SpeakResponseConcept(int client, const char[] concept) //Thanks The Gaben
 {
 	SetVariantString(concept);
 	AcceptEntityInput(client, "SpeakResponseConcept");
 }
 
-stock void SpecialRoundGameText(const char[] strMessage, const char strIcon[]="")
+void SpecialRoundGameText(const char[] message, const char[] icon = "")
 {
-	int iEntity = CreateEntityByName("game_text_tf");
-	DispatchKeyValue(iEntity,"message", strMessage);
-	DispatchKeyValue(iEntity,"display_to_team", "0");
-	DispatchKeyValue(iEntity,"icon", strIcon);
-	DispatchKeyValue(iEntity,"targetname", "game_text1");
-	DispatchKeyValue(iEntity,"background", "0");
-	DispatchSpawn(iEntity);
-	AcceptEntityInput(iEntity, "Display", iEntity, iEntity); //The only time I keep this.
-	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(iEntity), TIMER_FLAG_NO_MAPCHANGE);
+	int entity = CreateEntityByName("game_text_tf");
+	DispatchKeyValue(entity,"message", message);
+	DispatchKeyValue(entity,"display_to_team", "0");
+	DispatchKeyValue(entity,"icon", icon);
+	DispatchKeyValue(entity,"targetname", "game_text1");
+	DispatchKeyValue(entity,"background", "0");
+	DispatchSpawn(entity);
+	AcceptEntityInput(entity, "Display", entity, entity); //The only time I keep this.
+	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 }
 // Removes wearables such as botkillers from weapons.
-stock void TF2_RemoveWeaponSlotAndWearables(int client,int iSlot)
+void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
 {
-	int iWeapon = GetPlayerWeaponSlot(client, iSlot);
-	if (!IsValidEntity(iWeapon)) return;
-	
-	int iWearable = INVALID_ENT_REFERENCE;
-	while ((iWearable = FindEntityByClassname(iWearable, "tf_wearable")) != -1)
+	int weaponEnt = GetPlayerWeaponSlot(client, slot);
+	if (!IsValidEntity(weaponEnt)) return;
+
+	int wearable = INVALID_ENT_REFERENCE;
+	while ((wearable = FindEntityByClassname(wearable, "tf_wearable")) != -1)
 	{
-		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
-		if (iWeaponAssociated == iWeapon)
+		int weaponAssociated = GetEntPropEnt(wearable, Prop_Send, "m_hWeaponAssociatedWith");
+		if (weaponAssociated == weaponEnt)
 		{
-			RemoveEntity(iWearable);
+			RemoveEntity(wearable);
 		}
 	}
-	
-	iWearable = INVALID_ENT_REFERENCE;
-	while ((iWearable = FindEntityByClassname(iWearable, "tf_wearable_vm")) != -1)
+
+	wearable = INVALID_ENT_REFERENCE;
+	while ((wearable = FindEntityByClassname(wearable, "tf_wearable_vm")) != -1)
 	{
-		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
-		if (iWeaponAssociated == iWeapon)
+		int weaponAssociated = GetEntPropEnt(wearable, Prop_Send, "m_hWeaponAssociatedWith");
+		if (weaponAssociated == weaponEnt)
 		{
-			RemoveEntity(iWearable);
+			RemoveEntity(wearable);
 		}
 	}
-	
-	iWearable = INVALID_ENT_REFERENCE;
-	while ((iWearable = FindEntityByClassname(iWearable, "tf_wearable_campaign_item")) != -1)
+
+	wearable = INVALID_ENT_REFERENCE;
+	while ((wearable = FindEntityByClassname(wearable, "tf_wearable_campaign_item")) != -1)
 	{
-		int iWeaponAssociated = GetEntPropEnt(iWearable, Prop_Send, "m_hWeaponAssociatedWith");
-		if (iWeaponAssociated == iWeapon)
+		int weaponAssociated = GetEntPropEnt(wearable, Prop_Send, "m_hWeaponAssociatedWith");
+		if (weaponAssociated == weaponEnt)
 		{
-			RemoveEntity(iWearable);
+			RemoveEntity(wearable);
 		}
 	}
-	
-	TF2_RemoveWeaponSlot(client, iSlot);
+
+	TF2_RemoveWeaponSlot(client, slot);
 }
 
-void TE_Particle(int iParticleIndex, float origin[3]=NULL_VECTOR, float start[3]=NULL_VECTOR, float angles[3]=NULL_VECTOR, int entindex=-1, int attachtype=-1, int attachpoint=-1, bool resetParticles=true)
+void TF2_StripContrackerOnly(int client)
+{
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "tf_wearable_campaign_item")) > MaxClients)
+	{
+		if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
+		{
+			RemoveEntity(ent);
+			break;
+		}
+	}
+}
+
+void TE_Particle(int particleIndex, float origin[3]=NULL_VECTOR, float start[3]=NULL_VECTOR, float angles[3]=NULL_VECTOR, int entindex=-1, int attachtype=-1, int attachpoint=-1, bool resetParticles=true)
 {
     TE_Start("TFParticleEffect");
     TE_WriteFloat("m_vecOrigin[0]", origin[0]);
@@ -1233,39 +917,45 @@ void TE_Particle(int iParticleIndex, float origin[3]=NULL_VECTOR, float start[3]
     TE_WriteFloat("m_vecStart[1]", start[1]);
     TE_WriteFloat("m_vecStart[2]", start[2]);
     TE_WriteVector("m_vecAngles", angles);
-    TE_WriteNum("m_iParticleSystemIndex", iParticleIndex);
+    TE_WriteNum("m_iParticleSystemIndex", particleIndex);
     TE_WriteNum("entindex", entindex);
 
-    if(attachtype != -1)
+    if (attachtype != -1)
     {
         TE_WriteNum("m_iAttachType", attachtype);
     }
-    if(attachpoint != -1)
+    if (attachpoint != -1)
     {
         TE_WriteNum("m_iAttachmentPointIndex", attachpoint);
     }
     TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
 }
 
-stock void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float duration, float radius, int command, bool airShake)
+void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float duration, float radius, int command, bool airShake)
 {
 	for(int i=1; i<=MaxClients; i++)
 	{
-		if(IsClientInGame(i) && !IsFakeClient(i) && !IsClientInGhostMode(i))
+		if (IsClientInGame(i) && !IsFakeClient(i) && !IsClientInGhostMode(i))
 		{
-			if(!airShake && command == 0 && !(GetEntityFlags(i) && FL_ONGROUND)) continue;
+			if (!airShake && command == 0 && !(GetEntityFlags(i) && FL_ONGROUND))
+			{
+				continue;
+			}
 
 			float playerPos[3];
 			GetClientAbsOrigin(i, playerPos);
 
 			float localAmplitude = ComputeShakeAmplitude(center, playerPos, amplitude, radius);
 
-			if(localAmplitude < 0.0) continue;
+			if (localAmplitude < 0.0)
+			{
+				continue;
+			}
 
-			if(localAmplitude > 0 || command == 1)
+			if (localAmplitude > 0 || command == 1)
 			{
 				Handle msg = StartMessageOne("Shake", i, USERMSG_RELIABLE);
-				if(msg != null)
+				if (msg != null)
 				{
 					BfWriteByte(msg, command);
 					BfWriteFloat(msg, localAmplitude);
@@ -1279,16 +969,19 @@ stock void UTIL_ScreenShake(float center[3], float amplitude, float frequency, f
 	}
 }
 
-stock float ComputeShakeAmplitude(float center[3], float playerPos[3], float amplitude, float radius)
+float ComputeShakeAmplitude(float center[3], float playerPos[3], float amplitude, float radius)
 {
-	if(radius <= 0.0) return amplitude;
+	if (radius <= 0.0)
+	{
+		return amplitude;
+	}
 
 	float localAmplitude = -1.0;
 	float delta[3];
 	SubtractVectors(center, playerPos, delta);
 	float distance = GetVectorLength(delta, true);
 
-	if(distance <= SquareFloat(radius))
+	if (distance <= SquareFloat(radius))
 	{
 		float perc = 1.0 - ((distance / SquareFloat(radius)));
 		localAmplitude = amplitude * perc;
@@ -1304,7 +997,7 @@ stock float ComputeShakeAmplitude(float center[3], float playerPos[3], float amp
 /**
  *	Converts a given timestamp into hours, minutes, and seconds.
  */
-stock void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
+void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
 {
 	s = RoundFloat(time);
 	h = s / 3600;
@@ -1313,47 +1006,54 @@ stock void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
 	s = s % 60;
 }
 
-stock int FixedUnsigned16(float value,int scale)
+int FixedUnsigned16(float value,int scale)
 {
-	int iOutput;
-	
-	iOutput = RoundToFloor(value * float(scale));
-	
-	if (iOutput < 0)
+	int output;
+
+	output = RoundToFloor(value * float(scale));
+
+	if (output < 0)
 	{
-		iOutput = 0;
+		output = 0;
 	}
-	
-	if (iOutput > 0xFFFF)
+
+	if (output > 0xFFFF)
 	{
-		iOutput = 0xFFFF;
+		output = 0xFFFF;
 	}
-	
-	return iOutput;
+
+	return output;
 }
 
-stock float FloatMin(float a, float b)
+float FloatClamp(float a, float min, float max)
 {
-	if (a < b) return a;
-	return b;
-}
-
-stock float FloatMax(float a, float b)
-{
-	if (a > b) return a;
-	return b;
+	if (a < min)
+	{
+		a = min;
+	}
+	if (a > max)
+	{
+		a = max;
+	}
+	return a;
 }
 
 /**
- *	Linearly interpolates between flA and flB by t.
+ *	Linearly interpolates between a and b by t.
  */
-stock float LerpFloats(const float flA, const float flB, float t)
+/*float LerpFloats(const float a, const float b, float t)
 {
-    if (t < 0.0) t = 0.0;
-    if (t > 1.0) t = 1.0;
-    
-    return flA + (flB - flA) * t;
-}
+    if (t < 0.0)
+	{
+		t = 0.0;
+	}
+    if (t > 1.0)
+	{
+		t = 1.0;
+	}
+
+    return a + (b - a) * t;
+}*/
 
 //	==========================================================
 //	VECTOR FUNCTIONS
@@ -1362,270 +1062,244 @@ stock float LerpFloats(const float flA, const float flB, float t)
 /**
  *	Copies a vector into another vector.
  */
-stock void CopyVector(const float flCopy[3], float flDest[3])
+void CopyVector(const float copy[3], float dest[3])
 {
-	flDest[0] = flCopy[0];
-	flDest[1] = flCopy[1];
-	flDest[2] = flCopy[2];
+	dest[0] = copy[0];
+	dest[1] = copy[1];
+	dest[2] = copy[2];
 }
 
-stock void LerpVectors(const float fA[3] , const float fB[3], float fC[3], float t)
+/*void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
 {
-    if (t < 0.0) t = 0.0;
-    if (t > 1.0) t = 1.0;
-    
-    fC[0] = fA[0] + (fB[0] - fA[0]) * t;
-    fC[1] = fA[1] + (fB[1] - fA[1]) * t;
-    fC[2] = fA[2] + (fB[2] - fA[2]) * t;
-}
+    if (t < 0.0)
+	{
+		t = 0.0;
+	}
+    if (t > 1.0)
+	{
+		t = 1.0;
+	}
+
+    c[0] = a[0] + (b[0] - a[0]) * t;
+    c[1] = a[1] + (b[1] - a[1]) * t;
+    c[2] = a[2] + (b[2] - a[2]) * t;
+}*/
 
 /**
  *	Translates and re-orients a given offset vector into world space, given a world position and angle.
  */
-stock void VectorTransform(const float offset[3], const float worldpos[3], const float ang[3], float buffer[3])
+void VectorTransform(const float offset[3], const float worldpos[3], const float ang[3], float buffer[3])
 {
-	float fwd[3],right[3], up[3];
+	float fwd[3], right[3], up[3];
 	GetAngleVectors(ang, fwd, right, up);
-	
+
 	NormalizeVector(fwd, fwd);
 	NormalizeVector(right, right);
 	NormalizeVector(up, up);
-	
+
 	ScaleVector(right, offset[1]);
 	ScaleVector(fwd, offset[0]);
 	ScaleVector(up, offset[2]);
-	
+
 	buffer[0] = worldpos[0] + right[0] + fwd[0] + up[0];
 	buffer[1] = worldpos[1] + right[1] + fwd[1] + up[1];
 	buffer[2] = worldpos[2] + right[2] + fwd[2] + up[2];
 }
-stock void GetPositionForward(float vPos[3], float vAng[3], float vReturn[3], float fDistance)
+
+void GetPositionForward(float pos[3], float ang[3], float returnValue[3], float distance)
 {
-	float vDir[3];
-	GetAngleVectors(vAng, vDir, NULL_VECTOR, NULL_VECTOR);
-	vReturn = vPos;
-	for(int i=0; i<3; i++) vReturn[i] += vDir[i] * fDistance;
+	float dir[3];
+	GetAngleVectors(ang, dir, NULL_VECTOR, NULL_VECTOR);
+	returnValue = pos;
+	for(int i=0; i<3; i++)
+	{
+		returnValue[i] += dir[i] * distance;
+	}
 }
+
 //	==========================================================
 //	ANGLE FUNCTIONS
 //	==========================================================
 
-stock float ApproachAngle(float target, float value, float speed)
+/*float ApproachAngle(float target, float value, float speed)
 {
 	float delta = AngleDiff(value, target);
-	
-	if (speed < 0.0) speed = -speed;
-	
-	if (delta > speed) value += speed;
-	else if (delta < -speed) value -= speed;
-	else value = target;
-	
-	return AngleNormalize(value);
-}
 
-stock float AngleNormalize(float angle)
+	if (speed < 0.0)
+	{
+		speed = -speed;
+	}
+
+	if (delta > speed)
+	{
+		value += speed;
+	}
+	else if (delta < -speed)
+	{
+		value -= speed;
+	}
+	else
+	{
+		value = target;
+	}
+
+	return AngleNormalize(value);
+}*/
+
+float AngleNormalize(float angle)
 {
-	while (angle > 180.0) angle -= 360.0;
-	while (angle < -180.0) angle += 360.0;
+	while (angle > 180.0)
+	{
+		angle -= 360.0;
+	}
+	while (angle < -180.0)
+	{
+		angle += 360.0;
+	}
 	return angle;
 }
 
-stock float AngleDiff(float firstAngle, float secondAngle)
+float AngleDiff(float firstAngle, float secondAngle)
 {
 	float diff = secondAngle - firstAngle;
 	return AngleNormalize(diff);
 }
-
-//	==========================================================
-//	PRECACHING FUNCTIONS
-//	==========================================================
-
-stock void PrecacheSound2(const char[] path)
+//Credits to Boikinov for figuring out these calculations I don't understand the thought process of
+float GetAngleBetweenVectors(const float vector1[3], const float vector2[3], const float direction[3])
 {
-	PrecacheSound(path, true);
-	char buffer[PLATFORM_MAX_PATH];
-	FormatEx(buffer, sizeof(buffer), "sound/%s", path);
-	AddFileToDownloadsTable(buffer);
+    float vector1_n[3], vector2_n[3], direction_n[3], cross[3];
+    NormalizeVector(direction, direction_n);
+    NormalizeVector(vector1, vector1_n);
+    NormalizeVector(vector2, vector2_n);
+    float degree = ArcCosine(GetVectorDotProduct( vector1_n, vector2_n )) * 57.29577951;
+    GetVectorCrossProduct(vector1_n, vector2_n, cross);
+
+    if (GetVectorDotProduct(cross, direction_n) < 0.0)
+    {
+        degree *= -1.0;
+    }
+
+    return degree;
 }
 
-stock void PrecacheMaterial2(const char[] path)
+void RotateYaw(float angles[3], float degree)
 {
-	char buffer[PLATFORM_MAX_PATH];
-	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", path);
-	AddFileToDownloadsTable(buffer);
-	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", path);
-	AddFileToDownloadsTable(buffer);
-}
+    float direction[3], normal[3];
+    GetAngleVectors(angles, direction, NULL_VECTOR, normal);
 
-stock int PrecacheParticleSystem(const char[] particleSystem)
-{
-	static int particleEffectNames = INVALID_STRING_TABLE;
+    float sin = Sine(degree * 0.01745328);
+    float cos = Cosine(degree * 0.01745328);
+    float a = normal[0] * sin;
+    float b = normal[1] * sin;
+    float c = normal[2] * sin;
+    float x = direction[2] * b + direction[0] * cos - direction[1] * c;
+    float y = direction[0] * c + direction[1] * cos - direction[2] * a;
+    float z = direction[1] * a + direction[2] * cos - direction[0] * b;
+    direction[0] = x;
+    direction[1] = y;
+    direction[2] = z;
 
-	if (particleEffectNames == INVALID_STRING_TABLE) {
-		if ((particleEffectNames = FindStringTable("ParticleEffectNames")) == INVALID_STRING_TABLE) {
-			return INVALID_STRING_INDEX;
-		}
-	}
+    GetVectorAngles(direction, angles);
 
-	int index = FindStringIndex2(particleEffectNames, particleSystem);
-	if (index == INVALID_STRING_INDEX) {
-		int numStrings = GetStringTableNumStrings(particleEffectNames);
-		if (numStrings >= GetStringTableMaxStrings(particleEffectNames)) {
-			return INVALID_STRING_INDEX;
-		}
-		
-		AddToStringTable(particleEffectNames, particleSystem);
-		index = numStrings;
-	}
-	
-	return index;
-}
+    float up[3];
+    GetVectorVectors(direction, NULL_VECTOR, up);
 
-stock int FindStringIndex2(int tableidx, const char[] str)
-{
-	char buf[1024];
-	
-	int numStrings = GetStringTableNumStrings(tableidx);
-	for (int i=0; i < numStrings; i++) {
-		ReadStringTable(tableidx, i, buf, sizeof(buf));
-		
-		if (strcmp(buf, str) == 0) {
-			return i;
-		}
-	}
-	
-	return INVALID_STRING_INDEX;
-}
-
-stock void InsertNodesAroundPoint(ArrayList hArray, const float flOrigin[3], float flDist, float flAddAng, Function iCallback=INVALID_FUNCTION, any data=-1)
-{
-	if (hArray == null) return;
-	
-	float flDirection[3];
-	float flPos[3];
-	
-	for (float flAng = 0.0; flAng < 360.0; flAng += flAddAng)
-	{
-		flDirection[0] = 0.0;
-		flDirection[1] = flAng;
-		flDirection[2] = 0.0;
-		
-		GetAngleVectors(flDirection, flDirection, NULL_VECTOR, NULL_VECTOR);
-		NormalizeVector(flDirection, flDirection);
-		ScaleVector(flDirection, flDist);
-		AddVectors(flDirection, flOrigin, flPos);
-		
-		float flPos2[3];
-		for (int i = 0; i < 2; i++) flPos2[i] = flPos[i];
-		
-		if (iCallback != INVALID_FUNCTION)
-		{
-			Action iAction = Plugin_Continue;
-			
-			Call_StartFunction(null, iCallback);
-			Call_PushArray(flOrigin, 3);
-			Call_PushArrayEx(flPos2, 3, SM_PARAM_COPYBACK);
-			Call_PushCell(data);
-			Call_Finish(iAction);
-			
-			if (iAction == Plugin_Stop || iAction == Plugin_Handled) continue;
-			else if (iAction == Plugin_Changed)
-			{
-				for (int i = 0; i < 2; i++) flPos[i] = flPos2[i];
-			}
-		}
-		
-		hArray.PushArray(flPos, 3);
-	}
+    float roll = GetAngleBetweenVectors(up, normal, direction);
+    angles[2] += roll;
 }
 
 //	==========================================================
 //	TRACE FUNCTIONS
 //	==========================================================
 
-public bool TraceRayDontHitEntity(int entity,int mask,any data)
+bool TraceRayDontHitEntity(int entity,int mask,any data)
 {
-	if (entity == data) return false;
+	if (entity == data)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_boss") == 0 || strcmp(sClass, "base_npc")) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc"))
+		{
+			return false;
+		}
 	}
 	return true;
 }
 
-public bool TraceRayDontHitPlayers(int entity,int mask, any data)
+bool TraceRayDontHitPlayers(int entity,int mask, any data)
 {
-	if (entity > 0 && entity <= MaxClients) return false;
+	if (entity > 0 && entity <= MaxClients)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_boss") == 0 || strcmp(sClass, "base_npc")) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc"))
+		{
+			return false;
+		}
 	}
 	return true;
 }
 
-public bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
+bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 {
-	if (entity == data) return false;
-	if (entity > 0 && entity <= MaxClients) return false;
+	if (entity == data)
+	{
+		return false;
+	}
+	if (entity > 0 && entity <= MaxClients)
+	{
+		return false;
+	}
 	if (IsValidEntity(entity))
 	{
-		char sClass[64];
-		GetEntityClassname(entity, sClass, sizeof(sClass));
-		if (strcmp(sClass, "base_boss") == 0 || strcmp(sClass, "base_npc")) return false;
+		char class[64];
+		GetEntityClassname(entity, class, sizeof(class));
+		if (strcmp(class, "base_npc"))
+		{
+			return false;
+		}
 	}
-	
+
 	return true;
 }
 
 //	==========================================================
 //	TIMER/CALLBACK FUNCTIONS
 //	==========================================================
-stock void CloseEvent(Event event)
-{
-	CreateTimer(10.0,CloseEventTimer,event,TIMER_FLAG_NO_MAPCHANGE);
-}
-stock void DeleteHandle(Handle handle)
-{
-	CreateTimer(0.1,CloseHandleTimer,handle,TIMER_FLAG_NO_MAPCHANGE);
-}
-public Action CloseEventTimer(Handle timer,Event event)
-{
-	delete event;
-	return Plugin_Stop;
-}
-public Action CloseHandleTimer(Handle timer,Handle handle)
-{
-	delete handle;
-	return Plugin_Stop;
-}
-public Action Timer_KillEntity(Handle timer, any entref)
+Action Timer_KillEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (ent == INVALID_ENT_REFERENCE) return Plugin_Stop;
-	if (!IsValidEntity(ent)) return Plugin_Stop;
-	
+	if (ent == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
+	if (!IsValidEntity(ent))
+	{
+		return Plugin_Stop;
+	}
+
 	RemoveEntity(ent);
 
 	return Plugin_Stop;
 }
-public Action Timer_KillEdict(Handle timer, any entref)
+
+Action Timer_KillEdict(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (!IsValidEdict(ent)) return Plugin_Stop;
-	
-	RemoveEdict(ent);
+	if (!IsValidEdict(ent))
+	{
+		return Plugin_Stop;
+	}
 
-	return Plugin_Stop;
-}
-public Action Timer_KillSlender(Handle timer, any data)
-{
-	if (data == -1 || NPCGetUniqueID(data) == -1) return Plugin_Stop;
-	
-	RemoveSlender(data);
+	RemoveEdict(ent);
 
 	return Plugin_Stop;
 }
@@ -1633,57 +1307,61 @@ public Action Timer_KillSlender(Handle timer, any data)
 //	==========================================================
 //	SPECIAL ROUND FUNCTIONS
 //	==========================================================
-stock bool IsInfiniteFlashlightEnabled()
+bool IsInfiniteFlashlightEnabled()
 {
-	return view_as<bool>(g_bRoundInfiniteFlashlight || (g_cvPlayerInfiniteFlashlightOverride.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_cvNightvisionEnabled.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_iNightvisionType == 1));
+	return !!(g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
 }
 
-int g_iArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
+int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
 
-stock bool SF_SpecialRound(int iSpecialRound)
+bool SF_SpecialRound(int specialRound)
 {
-	if(!g_bSpecialRound)
-		return false;
-	for (int iArray = 0;iArray < SPECIALROUND_MAXROUNDS; iArray++)
+	if (!g_IsSpecialRound)
 	{
-		if(iSpecialRound==g_iArraySpecialRoundType[iArray])
+		return false;
+	}
+	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	{
+		if (specialRound==g_ArraySpecialRoundType[array])
+		{
 			return true;
+		}
 	}
 	return false;
 }
 
-stock void SF_AddSpecialRound(int iSpecialRound)
+void SF_AddSpecialRound(int specialRound)
 {
-	for (int iArray = 0;iArray < SPECIALROUND_MAXROUNDS; iArray++)
+	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
 	{
-		if (g_iArraySpecialRoundType[iArray] == 0 || g_iArraySpecialRoundType[iArray] == iSpecialRound)
+		if (g_ArraySpecialRoundType[array] == 0 || g_ArraySpecialRoundType[array] == specialRound)
 		{
-			g_iArraySpecialRoundType[iArray] = iSpecialRound;
+			g_ArraySpecialRoundType[array] = specialRound;
 			break;
 		}
 	}
 }
 
-stock void SF_RemoveSpecialRound(int iSpecialRound)
+void SF_RemoveSpecialRound(int specialRound)
 {
-	for (int iArray = 0;iArray < SPECIALROUND_MAXROUNDS; iArray++)
+	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
 	{
-		if (g_iArraySpecialRoundType[iArray] == iSpecialRound)
+		if (g_ArraySpecialRoundType[array] == specialRound)
 		{
-			g_iArraySpecialRoundType[iArray] = 0;
+			g_ArraySpecialRoundType[array] = 0;
 			//Useless
-			/*if (iArray != (SPECIALROUND_MAXROUNDS-1))
+			/*if (array != (SPECIALROUND_MAXROUNDS-1))
 			{
-				for (int iArray2 = iArray;iArray2 < SPECIALROUND_MAXROUNDS; iArray2++)
+				for (int iArray2 = array;iArray2 < SPECIALROUND_MAXROUNDS; iArray2++)
 				{
-					if (g_iArraySpecialRoundType[iArray2+1] != 0)
+					if (g_ArraySpecialRoundType[iArray2+1] != 0)
 					{
-						g_iArraySpecialRoundType[iArray2] = g_iArraySpecialRoundType[iArray2+1];
-						g_iArraySpecialRoundType[iArray2+1] = 0;
+						g_ArraySpecialRoundType[iArray2] = g_ArraySpecialRoundType[iArray2+1];
+						g_ArraySpecialRoundType[iArray2+1] = 0;
 					}
 					else
 					{
-						g_iArraySpecialRoundType[iArray2] = 0;
+						g_ArraySpecialRoundType[iArray2] = 0;
 						break;
 					}
 				}
@@ -1693,23 +1371,147 @@ stock void SF_RemoveSpecialRound(int iSpecialRound)
 	}
 }
 
-stock void SF_RemoveAllSpecialRound()
+void SF_RemoveAllSpecialRound()
 {
-	for (int iArray = 0;iArray < SPECIALROUND_MAXROUNDS; iArray++)
+	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
 	{
-		g_iArraySpecialRoundType[iArray] = 0;
+		g_ArraySpecialRoundType[array] = 0;
 	}
 }
 
 //	==========================================================
 //	OTHER FUNCTIONS
 //	==========================================================
-stock int GetLocalGlobalDifficulty(int iNPCIndex = 1)
+int GetLocalGlobalDifficulty(int npcIndex = -1)
 {
 	if (SF_IsBoxingMap())
 	{
-		if (NPCGetUniqueID(iNPCIndex) != -1) return NPCChaserGetBoxingDifficulty(iNPCIndex);
-		else return g_cvDifficulty.IntValue;
+		if (NPCGetUniqueID(npcIndex) != -1)
+		{
+			return NPCChaserGetBoxingDifficulty(npcIndex);
+		}
+		else
+		{
+			return g_DifficultyConVar.IntValue;
+		}
 	}
-	return g_cvDifficulty.IntValue;
+	return g_DifficultyConVar.IntValue;
+}
+
+bool DispatchParticleEffect(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
+									   int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
+{
+	char particleReal[PLATFORM_MAX_PATH];
+	FormatEx(particleReal, PLATFORM_MAX_PATH, "%s", particle);
+	if (particle[0] != '\0')
+	{
+		int tblidx = FindStringTable("ParticleEffectNames");
+		if (tblidx == INVALID_STRING_TABLE)
+		{
+			LogError("Could not find string table: ParticleEffectNames");
+			return false;
+		}
+		char tmp[256];
+		int count = GetStringTableNumStrings(tblidx);
+		int stridx = INVALID_STRING_INDEX;
+		for (int i = 0; i < count; i++)
+		{
+			ReadStringTable(tblidx, i, tmp, sizeof(tmp));
+			if (strcmp(tmp, particleReal, false) == 0)
+			{
+				stridx = i;
+				break;
+			}
+		}
+		if (stridx == INVALID_STRING_INDEX)
+		{
+			LogError("Could not find particle: %s", particleReal);
+			return false;
+		}
+
+		TE_Start("TFParticleEffect");
+		TE_WriteFloat("m_vecOrigin[0]", startPos[0]);
+		TE_WriteFloat("m_vecOrigin[1]", startPos[1]);
+		TE_WriteFloat("m_vecOrigin[2]", startPos[2]);
+		TE_WriteVector("m_vecAngles", angles);
+		TE_WriteNum("m_iParticleSystemIndex", stridx);
+		TE_WriteNum("entindex", entity);
+		TE_WriteNum("m_iAttachType", view_as<int>(attachType));
+		TE_WriteNum("m_iAttachmentPointIndex", attachmentPointIndex);
+		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);
+		TE_WriteNum("m_bControlPoint1", 0);
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 0);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);
+		TE_SendToAll();
+	}
+	else
+	{
+		//LogError("There is no valid particle to use for effects.");
+		return false;
+	}
+	return true;
+}
+
+bool DispatchParticleEffectBeam(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
+									   int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
+{
+	char particleReal[PLATFORM_MAX_PATH];
+	FormatEx(particleReal, PLATFORM_MAX_PATH, "%s", particle);
+	if (particle[0] != '\0')
+	{
+		int tblidx = FindStringTable("ParticleEffectNames");
+		if (tblidx == INVALID_STRING_TABLE)
+		{
+			LogError("Could not find string table: ParticleEffectNames");
+			return false;
+		}
+		char tmp[256];
+		int count = GetStringTableNumStrings(tblidx);
+		int stridx = INVALID_STRING_INDEX;
+		for (int i = 0; i < count; i++)
+		{
+			ReadStringTable(tblidx, i, tmp, sizeof(tmp));
+			if (strcmp(tmp, particleReal, false) == 0)
+			{
+				stridx = i;
+				break;
+			}
+		}
+		if (stridx == INVALID_STRING_INDEX)
+		{
+			LogError("Could not find particle: %s", particleReal);
+			return false;
+		}
+
+		TE_Start("TFParticleEffect");
+		TE_WriteFloat("m_vecOrigin[0]", startPos[0]);
+		TE_WriteFloat("m_vecOrigin[1]", startPos[1]);
+		TE_WriteFloat("m_vecOrigin[2]", startPos[2]);
+		TE_WriteVector("m_vecAngles", angles);
+		TE_WriteNum("m_iParticleSystemIndex", stridx);
+		TE_WriteNum("entindex", entity);
+		TE_WriteNum("m_iAttachType", view_as<int>(attachType));
+		TE_WriteNum("m_iAttachmentPointIndex", attachmentPointIndex);
+		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);
+		TE_WriteNum("m_bControlPoint1", 1);
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 5);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);
+		TE_SendToAll();
+	}
+	else
+	{
+		//LogError("There is no valid particle to use for effects.");
+		return false;
+	}
+	return true;
+}
+
+MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
+{
+	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
+	return MRES_Supercede;
 }

@@ -4,3319 +4,2506 @@
 
 #define _sf2_profiles_chaser
 
-#include "sf2/profiles/profiles_boss_functions.sp"
+#pragma semicolon 1
 
-#define SF2_CHASER_BOSS_MAX_ATTACKS 32
-#define SF2_CHASER_BOSS_MAX_ANIMATIONS 32
-
-StringMap g_hChaserProfileNames;
-ArrayList g_hChaserProfileData;
-
-enum
-{
-	SF2BossAttackType_Invalid = -1,
-	SF2BossAttackType_Melee = 0,
-	SF2BossAttackType_Ranged = 1,
-	SF2BossAttackType_Projectile = 2,
-	SF2BossAttackType_ExplosiveDance = 3,
-	SF2BossAttackType_LaserBeam = 4,
-	SF2BossAttackType_Unused,
-	SF2BossAttackType_Custom
-};
-
-enum
-{
-	SF2BossProjectileType_Invalid = -1,
-	SF2BossProjectileType_Fireball = 0,
-	SF2BossProjectileType_Iceball = 1,
-	SF2BossProjectileType_Rocket = 2,
-	SF2BossProjectileType_Grenade = 3,
-	SF2BossProjectileType_SentryRocket = 4,
-	SF2BossProjectileType_Arrow = 5,
-	SF2BossProjectileType_Mangler = 6,
-	SF2BossProjectileType_Baseball = 7,
-	SF2BossProjectileType_Unused,
-	SF2BossProjectileType_Custom
-};
-
-enum
-{
-	SF2BossTrapType_Invalid = -1,
-	SF2BossTrapType_BearTrap = 0,
-	SF2BossTrapType_Unused,
-	SF2BossTrapType_Custom
-};
-
-enum
-{
-	ChaserProfileData_WalkSpeedEasy,
-	ChaserProfileData_WalkSpeedNormal,
-	ChaserProfileData_WalkSpeedHard,
-	ChaserProfileData_WalkSpeedInsane,
-	ChaserProfileData_WalkSpeedNightmare,
-	ChaserProfileData_WalkSpeedApollyon,
-	
-	ChaserProfileData_MaxWalkSpeedEasy,
-	ChaserProfileData_MaxWalkSpeedNormal,
-	ChaserProfileData_MaxWalkSpeedHard,
-	ChaserProfileData_MaxWalkSpeedInsane,
-	ChaserProfileData_MaxWalkSpeedNightmare,
-	ChaserProfileData_MaxWalkSpeedApollyon,
-	
-	ChaserProfileData_WakeRadius,
-
-	ChaserProfileData_DifficultyAffectsAnimations,
-	
-	ChaserProfileData_Attacks,		// array that contains data about attacks
-	
-	ChaserProfileData_SearchAlertDuration,
-	ChaserProfileData_SearchAlertDurationEasy,
-	ChaserProfileData_SearchAlertDurationHard,
-	ChaserProfileData_SearchAlertDurationInsane,
-	ChaserProfileData_SearchAlertDurationNightmare,
-	ChaserProfileData_SearchAlertDurationApollyon,
-
-	ChaserProfileData_SearchAlertGracetime,
-	ChaserProfileData_SearchAlertGracetimeEasy,
-	ChaserProfileData_SearchAlertGracetimeHard,
-	ChaserProfileData_SearchAlertGracetimeInsane,
-	ChaserProfileData_SearchAlertGracetimeNightmare,
-	ChaserProfileData_SearchAlertGracetimeApollyon,
-	
-	ChaserProfileData_SearchChaseDuration,
-	ChaserProfileData_SearchChaseDurationEasy,
-	ChaserProfileData_SearchChaseDurationHard,
-	ChaserProfileData_SearchChaseDurationInsane,
-	ChaserProfileData_SearchChaseDurationNightmare,
-	ChaserProfileData_SearchChaseDurationApollyon,
-
-	ChaserProfileData_SearchWanderRangeMin,
-	ChaserProfileData_SearchWanderRangeMinEasy,
-	ChaserProfileData_SearchWanderRangeMinHard,
-	ChaserProfileData_SearchWanderRangeMinInsane,
-	ChaserProfileData_SearchWanderRangeMinNightmare,
-	ChaserProfileData_SearchWanderRangeMinApollyon,
-
-	ChaserProfileData_SearchWanderRangeMax,
-	ChaserProfileData_SearchWanderRangeMaxEasy,
-	ChaserProfileData_SearchWanderRangeMaxHard,
-	ChaserProfileData_SearchWanderRangeMaxInsane,
-	ChaserProfileData_SearchWanderRangeMaxNightmare,
-	ChaserProfileData_SearchWanderRangeMaxApollyon,
-
-	ChaserProfileData_SearchWanderTimeMin,
-	ChaserProfileData_SearchWanderTimeMinEasy,
-	ChaserProfileData_SearchWanderTimeMinHard,
-	ChaserProfileData_SearchWanderTimeMinInsane,
-	ChaserProfileData_SearchWanderTimeMinNightmare,
-	ChaserProfileData_SearchWanderTimeMinApollyon,
-
-	ChaserProfileData_SearchWanderTimeMax,
-	ChaserProfileData_SearchWanderTimeMaxEasy,
-	ChaserProfileData_SearchWanderTimeMaxHard,
-	ChaserProfileData_SearchWanderTimeMaxInsane,
-	ChaserProfileData_SearchWanderTimeMaxNightmare,
-	ChaserProfileData_SearchWanderTimeMaxApollyon,
-
-	ChaserProfileData_CanBeStunned,
-	ChaserProfileData_StunDuration,
-	ChaserProfileData_StunCooldown,
-	ChaserProfileData_StunHealth,
-	ChaserProfileData_StunHealthPerPlayer,
-	ChaserProfileData_CanBeStunnedByFlashlight,
-	ChaserProfileData_StunFlashlightDamage,
-	ChaserProfileData_DisappearOnStun,
-	ChaserProfileData_ItemDropOnStun,
-	ChaserProfileData_ItemDropTypeStun,
-	ChaserProfileData_ChaseInitialOnStun,
-	
-	ChaserProfileData_KeyDrop,
-	
-	ChaserProfileData_MemoryLifeTime,
-	
-	ChaserProfileData_AwarenessIncreaseRateEasy,
-	ChaserProfileData_AwarenessIncreaseRateNormal,
-	ChaserProfileData_AwarenessIncreaseRateHard,
-	ChaserProfileData_AwarenessIncreaseRateInsane,
-	ChaserProfileData_AwarenessIncreaseRateNightmare,
-	ChaserProfileData_AwarenessIncreaseRateApollyon,
-	
-	ChaserProfileData_AwarenessDecreaseRateEasy,
-	ChaserProfileData_AwarenessDecreaseRateNormal,
-	ChaserProfileData_AwarenessDecreaseRateHard,
-	ChaserProfileData_AwarenessDecreaseRateInsane,
-	ChaserProfileData_AwarenessDecreaseRateNightmare,
-	ChaserProfileData_AwarenessDecreaseRateApollyon,
-
-	ChaserProfileData_AutoChaseEnabled,
-	ChaserProfileData_AutoChaseCount,
-	ChaserProfileData_AutoChaseCountEasy,
-	ChaserProfileData_AutoChaseCountHard,
-	ChaserProfileData_AutoChaseCountInsane,
-	ChaserProfileData_AutoChaseCountNightmare,
-	ChaserProfileData_AutoChaseCountApollyon,
-	ChaserProfileData_AutoChaseAdd,
-	ChaserProfileData_AutoChaseAddEasy,
-	ChaserProfileData_AutoChaseAddHard,
-	ChaserProfileData_AutoChaseAddInsane,
-	ChaserProfileData_AutoChaseAddNightmare,
-	ChaserProfileData_AutoChaseAddApollyon,
-	ChaserProfileData_AutoChaseAddFootstep,
-	ChaserProfileData_AutoChaseAddFootstepEasy,
-	ChaserProfileData_AutoChaseAddFootstepHard,
-	ChaserProfileData_AutoChaseAddFootstepInsane,
-	ChaserProfileData_AutoChaseAddFootstepNightmare,
-	ChaserProfileData_AutoChaseAddFootstepApollyon,
-	ChaserProfileData_AutoChaseAddVoice,
-	ChaserProfileData_AutoChaseAddVoiceEasy,
-	ChaserProfileData_AutoChaseAddVoiceHard,
-	ChaserProfileData_AutoChaseAddVoiceInsane,
-	ChaserProfileData_AutoChaseAddVoiceNightmare,
-	ChaserProfileData_AutoChaseAddVoiceApollyon,
-	ChaserProfileData_AutoChaseAddWeapon,
-	ChaserProfileData_AutoChaseAddWeaponEasy,
-	ChaserProfileData_AutoChaseAddWeaponHard,
-	ChaserProfileData_AutoChaseAddWeaponInsane,
-	ChaserProfileData_AutoChaseAddWeaponNightmare,
-	ChaserProfileData_AutoChaseAddWeaponApollyon,
-	ChaserProfileData_AutoChaseSprinters,
-	
-	ChaserProfileData_ChasesEndlessly,
-
-	ChaserProfileData_EarthquakeFootstepsEnabled,
-	ChaserProfileData_EarthquakeFootstepsRadius,
-	ChaserProfileData_EarthquakeFootstepsDuration,
-	ChaserProfileData_EarthquakeFootstepsCanAirShake,
-	ChaserProfileData_EarthquakeFootstepsAmplitude,
-	ChaserProfileData_EarthquakeFootstepsFrequency,
-
-	ChaserProfileData_CanCloak,
-	ChaserProfileData_CloakOnFlee,
-	ChaserProfileData_CloakCooldownEasy,
-	ChaserProfileData_CloakCooldownNormal,
-	ChaserProfileData_CloakCooldownHard,
-	ChaserProfileData_CloakCooldownInsane,
-	ChaserProfileData_CloakCooldownNightmare,
-	ChaserProfileData_CloakCooldownApollyon,
-	
-	ChaserProfileData_CloakRangeEasy,
-	ChaserProfileData_CloakRangeNormal,
-	ChaserProfileData_CloakRangeHard,
-	ChaserProfileData_CloakRangeInsane,
-	ChaserProfileData_CloakRangeNightmare,
-	ChaserProfileData_CloakRangeApollyon,
-
-	ChaserProfileData_CloakDecloakRangeEasy,
-	ChaserProfileData_CloakDecloakRangeNormal,
-	ChaserProfileData_CloakDecloakRangeHard,
-	ChaserProfileData_CloakDecloakRangeInsane,
-	ChaserProfileData_CloakDecloakRangeNightmare,
-	ChaserProfileData_CloakDecloakRangeApollyon,
-
-	ChaserProfileData_CloakDurationEasy,
-	ChaserProfileData_CloakDurationNormal,
-	ChaserProfileData_CloakDurationHard,
-	ChaserProfileData_CloakDurationInsane,
-	ChaserProfileData_CloakDurationNightmare,
-	ChaserProfileData_CloakDurationApollyon,
-
-	ChaserProfileData_CloakSpeedMultiplierEasy,
-	ChaserProfileData_CloakSpeedMultiplierNormal,
-	ChaserProfileData_CloakSpeedMultiplierHard,
-	ChaserProfileData_CloakSpeedMultiplierInsane,
-	ChaserProfileData_CloakSpeedMultiplierNightmare,
-	ChaserProfileData_CloakSpeedMultiplierApollyon,
-	
-	ChaserProfileData_ProjectileEnable,
-	ChaserProfileData_ProjectileCooldownMinEasy,
-	ChaserProfileData_ProjectileCooldownMinNormal,
-	ChaserProfileData_ProjectileCooldownMinHard,
-	ChaserProfileData_ProjectileCooldownMinInsane,
-	ChaserProfileData_ProjectileCooldownMinNightmare,
-	ChaserProfileData_ProjectileCooldownMinApollyon,
-	
-	ChaserProfileData_ProjectileCooldownMaxEasy,
-	ChaserProfileData_ProjectileCooldownMaxNormal,
-	ChaserProfileData_ProjectileCooldownMaxHard,
-	ChaserProfileData_ProjectileCooldownMaxInsane,
-	ChaserProfileData_ProjectileCooldownMaxNightmare,
-	ChaserProfileData_ProjectileCooldownMaxApollyon,
-	
-	ChaserProfileData_ProjectileSpeedEasy,
-	ChaserProfileData_ProjectileSpeedNormal,
-	ChaserProfileData_ProjectileSpeedHard,
-	ChaserProfileData_ProjectileSpeedInsane,
-	ChaserProfileData_ProjectileSpeedNightmare,
-	ChaserProfileData_ProjectileSpeedApollyon,
-	
-	ChaserProfileData_ProjectileDamageEasy,
-	ChaserProfileData_ProjectileDamageNormal,
-	ChaserProfileData_ProjectileDamageHard,
-	ChaserProfileData_ProjectileDamageInsane,
-	ChaserProfileData_ProjectileDamageNightmare,
-	ChaserProfileData_ProjectileDamageApollyon,
-	
-	ChaserProfileData_ProjectileRadiusEasy,
-	ChaserProfileData_ProjectileRadiusNormal,
-	ChaserProfileData_ProjectileRadiusHard,
-	ChaserProfileData_ProjectileRadiusInsane,
-	ChaserProfileData_ProjectileRadiusNightmare,
-	ChaserProfileData_ProjectileRadiusApollyon,
-
-	ChaserProfileData_ProjectileDeviation,
-	ChaserProfileData_ProjectileDeviationEasy,
-	ChaserProfileData_ProjectileDeviationHard,
-	ChaserProfileData_ProjectileDeviationInsane,
-	ChaserProfileData_ProjectileDeviationNightmare,
-	ChaserProfileData_ProjectileDeviationApollyon,
-	
-	ChaserProfileData_ProjectileType,
-	ChaserProfileData_CriticlaRockets,
-	ChaserProfileData_UseShootGesture,
-	ChaserProfileData_ProjectileClipEnable,
-	ChaserProfileData_ProjectileClipEasy,
-	ChaserProfileData_ProjectileClipNormal,
-	ChaserProfileData_ProjectileClipHard,
-	ChaserProfileData_ProjectileClipInsane,
-	ChaserProfileData_ProjectileClipNightmare,
-	ChaserProfileData_ProjectileClipApollyon,
-	
-	ChaserProfileData_ProjectileReloadTimeEasy,
-	ChaserProfileData_ProjectileReloadTimeNormal,
-	ChaserProfileData_ProjectileReloadTimeHard,
-	ChaserProfileData_ProjectileReloadTimeInsane,
-	ChaserProfileData_ProjectileReloadTimeNightmare,
-	ChaserProfileData_ProjectileReloadTimeApollyon,
-	
-	ChaserProfileData_UseChargeUpProjectiles,
-	ChaserProfileData_ProjectileChargeUpEasy,
-	ChaserProfileData_ProjectileChargeUpNormal,
-	ChaserProfileData_ProjectileChargeUpHard,
-	ChaserProfileData_ProjectileChargeUpInsane,
-	ChaserProfileData_ProjectileChargeUpNightmare,
-	ChaserProfileData_ProjectileChargeUpApollyon,
-
-	ChaserProfileData_ProjectileCount,
-	ChaserProfileData_ProjectileCountEasy,
-	ChaserProfileData_ProjectileCountHard,
-	ChaserProfileData_ProjectileCountInsane,
-	ChaserProfileData_ProjectileCountNightmare,
-	ChaserProfileData_ProjectileCountApollyon,
-	
-	ChaserProfileData_IceballSlowdownDurationEasy,
-	ChaserProfileData_IceballSlowdownDurationNormal,
-	ChaserProfileData_IceballSlowdownDurationHard,
-	ChaserProfileData_IceballSlowdownDurationInsane,
-	ChaserProfileData_IceballSlowdownDurationNightmare,
-	ChaserProfileData_IceballSlowdownDurationApollyon,
-	
-	ChaserProfileData_IceballSlowdownPercentEasy,
-	ChaserProfileData_IceballSlowdownPercentNormal,
-	ChaserProfileData_IceballSlowdownPercentHard,
-	ChaserProfileData_IceballSlowdownPercentInsane,
-	ChaserProfileData_IceballSlowdownPercentNightmare,
-	ChaserProfileData_IceballSlowdownPercentApollyon,
-	
-	ChaserProfileData_AdvancedDamageEffectsEnabled,
-	ChaserProfileData_AdvancedDamageEffectsRandom,
-	ChaserProfileData_AdvancedDamageEffectsParticles,
-	
-	ChaserProfileData_RandomAdvancedIndexes,
-	ChaserProfileData_RandomAdvancedDurationEasy,
-	ChaserProfileData_RandomAdvancedDurationNormal,
-	ChaserProfileData_RandomAdvancedDurationHard,
-	ChaserProfileData_RandomAdvancedDurationInsane,
-	ChaserProfileData_RandomAdvancedDurationNightmare,
-	ChaserProfileData_RandomAdvancedDurationApollyon,
-	ChaserProfileData_RandomAdvancedSlowdownEasy,
-	ChaserProfileData_RandomAdvancedSlowdownNormal,
-	ChaserProfileData_RandomAdvancedSlowdownHard,
-	ChaserProfileData_RandomAdvancedSlowdownInsane,
-	ChaserProfileData_RandomAdvancedSlowdownNightmare,
-	ChaserProfileData_RandomAdvancedSlowdownApollyon,
-	ChaserProfileData_RandomAdvancedStunType,
-	
-	ChaserProfileData_EnableJarateAdvanced,
-	ChaserProfileData_JarateAdvancedIndexes,
-	ChaserProfileData_JarateAdvancedDurationEasy,
-	ChaserProfileData_JarateAdvancedDurationNormal,
-	ChaserProfileData_JarateAdvancedDurationHard,
-	ChaserProfileData_JarateAdvancedDurationInsane,
-	ChaserProfileData_JarateAdvancedDurationNightmare,
-	ChaserProfileData_JarateAdvancedDurationApollyon,
-	
-	ChaserProfileData_EnableMilkAdvanced,
-	ChaserProfileData_MilkAdvancedIndexes,
-	ChaserProfileData_MilkAdvancedDurationEasy,
-	ChaserProfileData_MilkAdvancedDurationNormal,
-	ChaserProfileData_MilkAdvancedDurationHard,
-	ChaserProfileData_MilkAdvancedDurationInsane,
-	ChaserProfileData_MilkAdvancedDurationNightmare,
-	ChaserProfileData_MilkAdvancedDurationApollyon,
-	
-	ChaserProfileData_EnableGasAdvanced,
-	ChaserProfileData_GasAdvancedIndexes,
-	ChaserProfileData_GasAdvancedDurationEasy,
-	ChaserProfileData_GasAdvancedDurationNormal,
-	ChaserProfileData_GasAdvancedDurationHard,
-	ChaserProfileData_GasAdvancedDurationInsane,
-	ChaserProfileData_GasAdvancedDurationNightmare,
-	ChaserProfileData_GasAdvancedDurationApollyon,
-	
-	ChaserProfileData_EnableMarkAdvanced,
-	ChaserProfileData_MarkAdvancedIndexes,
-	ChaserProfileData_MarkAdvancedDurationEasy,
-	ChaserProfileData_MarkAdvancedDurationNormal,
-	ChaserProfileData_MarkAdvancedDurationHard,
-	ChaserProfileData_MarkAdvancedDurationInsane,
-	ChaserProfileData_MarkAdvancedDurationNightmare,
-	ChaserProfileData_MarkAdvancedDurationApollyon,
-
-	ChaserProfileData_EnableSilentMarkAdvanced,
-	ChaserProfileData_SilentMarkAdvancedIndexes,
-	ChaserProfileData_SilentMarkAdvancedDurationEasy,
-	ChaserProfileData_SilentMarkAdvancedDurationNormal,
-	ChaserProfileData_SilentMarkAdvancedDurationHard,
-	ChaserProfileData_SilentMarkAdvancedDurationInsane,
-	ChaserProfileData_SilentMarkAdvancedDurationNightmare,
-	ChaserProfileData_SilentMarkAdvancedDurationApollyon,
-	
-	ChaserProfileData_EnableIgniteAdvanced,
-	ChaserProfileData_IgniteAdvancedIndexes,
-	ChaserProfileData_IgniteAdvancedDelayEasy,
-	ChaserProfileData_IgniteAdvancedDelayNormal,
-	ChaserProfileData_IgniteAdvancedDelayHard,
-	ChaserProfileData_IgniteAdvancedDelayInsane,
-	ChaserProfileData_IgniteAdvancedDelayNightmare,
-	ChaserProfileData_IgniteAdvancedDelayApollyon,
-	
-	ChaserProfileData_EnableStunAdvanced,
-	ChaserProfileData_StunAdvancedIndexes,
-	ChaserProfileData_StunAdvancedDurationEasy,
-	ChaserProfileData_StunAdvancedDurationNormal,
-	ChaserProfileData_StunAdvancedDurationHard,
-	ChaserProfileData_StunAdvancedDurationInsane,
-	ChaserProfileData_StunAdvancedDurationNightmare,
-	ChaserProfileData_StunAdvancedDurationApollyon,
-	ChaserProfileData_StunAdvancedSlowdownEasy,
-	ChaserProfileData_StunAdvancedSlowdownNormal,
-	ChaserProfileData_StunAdvancedSlowdownHard,
-	ChaserProfileData_StunAdvancedSlowdownInsane,
-	ChaserProfileData_StunAdvancedSlowdownNightmare,
-	ChaserProfileData_StunAdvancedSlowdownApollyon,
-	ChaserProfileData_StunAdvancedType,
-	
-	ChaserProfileData_EnableBleedAdvanced,
-	ChaserProfileData_BleedAdvancedIndexes,
-	ChaserProfileData_BleedAdvancedDurationEasy,
-	ChaserProfileData_BleedAdvancedDurationNormal,
-	ChaserProfileData_BleedAdvancedDurationHard,
-	ChaserProfileData_BleedAdvancedDurationInsane,
-	ChaserProfileData_BleedAdvancedDurationNightmare,
-	ChaserProfileData_BleedAdvancedDurationApollyon,
-	
-	ChaserProfileData_EnableEletricAdvanced,
-	ChaserProfileData_EletricAdvancedIndexes,
-	ChaserProfileData_EletricAdvancedDurationEasy,
-	ChaserProfileData_EletricAdvancedDurationNormal,
-	ChaserProfileData_EletricAdvancedDurationHard,
-	ChaserProfileData_EletricAdvancedDurationInsane,
-	ChaserProfileData_EletricAdvancedDurationNightmare,
-	ChaserProfileData_EletricAdvancedDurationApollyon,
-	ChaserProfileData_EletricAdvancedSlowdownEasy,
-	ChaserProfileData_EletricAdvancedSlowdownNormal,
-	ChaserProfileData_EletricAdvancedSlowdownHard,
-	ChaserProfileData_EletricAdvancedSlowdownInsane,
-	ChaserProfileData_EletricAdvancedSlowdownNightmare,
-	ChaserProfileData_EletricAdvancedSlowdownApollyon,
-	ChaserProfileData_EletricAdvancedType,
-	
-	ChaserProfileData_EnableSmiteAdvanced,
-	ChaserProfileData_SmiteAdvancedIndexes,
-	ChaserProfileData_SmiteAdvancedDamage,
-	ChaserProfileData_SmiteAdvancedDamageType,
-	ChaserProfileData_SmiteColorR,
-	ChaserProfileData_SmiteColorG,
-	ChaserProfileData_SmiteColorB,
-	ChaserProfileData_SmiteTransparency,
-	ChaserProfileData_SmiteMessage,
-
-	ChaserProfileData_EnableXenobladeBreakCombo,
-	ChaserProfileData_XenobladeBreakDuration,
-	ChaserProfileData_XenobladeToppleDuration,
-	ChaserProfileData_XenobladeToppleSlowdown,
-	ChaserProfileData_XenobladeDazeDuration,
-	
-	ChaserProfileData_ShockwavesEnable,
-	ChaserProfileData_ShockwaveHeightEasy,
-	ChaserProfileData_ShockwaveHeightNormal,
-	ChaserProfileData_ShockwaveHeightHard,
-	ChaserProfileData_ShockwaveHeightInsane,
-	ChaserProfileData_ShockwaveHeightNightmare,
-	ChaserProfileData_ShockwaveHeightApollyon,
-	ChaserProfileData_ShockwaveRangeEasy,
-	ChaserProfileData_ShockwaveRangeNormal,
-	ChaserProfileData_ShockwaveRangeHard,
-	ChaserProfileData_ShockwaveRangeInsane,
-	ChaserProfileData_ShockwaveRangeNightmare,
-	ChaserProfileData_ShockwaveRangeApollyon,
-	ChaserProfileData_ShockwaveDrainEasy,
-	ChaserProfileData_ShockwaveDrainNormal,
-	ChaserProfileData_ShockwaveDrainHard,
-	ChaserProfileData_ShockwaveDrainInsane,
-	ChaserProfileData_ShockwaveDrainNightmare,
-	ChaserProfileData_ShockwaveDrainApollyon,
-	ChaserProfileData_ShockwaveForceEasy,
-	ChaserProfileData_ShockwaveForceNormal,
-	ChaserProfileData_ShockwaveForceHard,
-	ChaserProfileData_ShockwaveForceInsane,
-	ChaserProfileData_ShockwaveForceNightmare,
-	ChaserProfileData_ShockwaveForceApollyon,
-	ChaserProfileData_ShockwaveStunEnabled,
-	ChaserProfileData_ShockwaveStunDurationEasy,
-	ChaserProfileData_ShockwaveStunDurationNormal,
-	ChaserProfileData_ShockwaveStunDurationHard,
-	ChaserProfileData_ShockwaveStunDurationInsane,
-	ChaserProfileData_ShockwaveStunDurationNightmare,
-	ChaserProfileData_ShockwaveStunDurationApollyon,
-	ChaserProfileData_ShockwaveStunSlowdownEasy,
-	ChaserProfileData_ShockwaveStunSlowdownNormal,
-	ChaserProfileData_ShockwaveStunSlowdownHard,
-	ChaserProfileData_ShockwaveStunSlowdownInsane,
-	ChaserProfileData_ShockwaveStunSlowdownNightmare,
-	ChaserProfileData_ShockwaveStunSlowdownApollyon,
-	ChaserProfileData_ShockwaveAttackIndexes,
-	
-	ChaserProfileData_TrapsEnabled,
-	ChaserProfileData_TrapType,
-	ChaserProfileData_TrapSpawnCooldownEasy,
-	ChaserProfileData_TrapSpawnCooldownNormal,
-	ChaserProfileData_TrapSpawnCooldownHard,
-	ChaserProfileData_TrapSpawnCooldownInsane,
-	ChaserProfileData_TrapSpawnCooldownNightmare,
-	ChaserProfileData_TrapSpawnCooldownApollyon,
-	
-	ChaserProfileData_EnableDamageParticles,
-	ChaserProfileData_DamageParticleVolume,
-	ChaserProfileData_DamageParticlePitch,
-	
-	ChaserProfileData_CanSelfHeal,
-	ChaserProfileData_HealStartHealthPercentage,
-	ChaserProfileData_HealPercentageOne,
-	ChaserProfileData_HealPercentageTwo,
-	ChaserProfileData_HealPercentageThree,
-
-	ChaserProfileData_SoundCountToAlert,
-	ChaserProfileData_BoxingBoss,
-	ChaserProfileData_CloakToHeal,
-	ChaserProfileData_NormalSoundHook,
-	ChaserProfileData_ChaseInitialAnimationUse,
-	ChaserProfileData_OldAnimationAI,
-	ChaserProfileData_AlertWalkingAnimation,
-
-	ChaserProfileData_MultiAttackSounds,
-	ChaserProfileData_MultiHitSounds,
-	ChaserProfileData_MultiMissSounds,
-
-	ChaserProfileData_CrawlingEnabled,
-	ChaserProfileData_CrawlSpeedMultiplierEasy,
-	ChaserProfileData_CrawlSpeedMultiplierNormal,
-	ChaserProfileData_CrawlSpeedMultiplierHard,
-	ChaserProfileData_CrawlSpeedMultiplierInsane,
-	ChaserProfileData_CrawlSpeedMultiplierNightmare,
-	ChaserProfileData_CrawlSpeedMultiplierApollyon,
-
-	ChaserProfileData_MaxStats
-};
-
-enum
-{
-	ChaserProfileAttackData_Type = 0,
-	ChaserProfileAttackData_CanUseAgainstProps,
-	ChaserProfileAttackData_Damage,
-	ChaserProfileAttackData_DamageEasy,
-	ChaserProfileAttackData_DamageHard,
-	ChaserProfileAttackData_DamageInsane,
-	ChaserProfileAttackData_DamageNightmare,
-	ChaserProfileAttackData_DamageApollyon,
-	ChaserProfileAttackData_DamageVsProps,
-	ChaserProfileAttackData_DamageForce,
-	ChaserProfileAttackData_DamageType,
-	ChaserProfileAttackData_DamageDelay,
-	ChaserProfileAttackData_Range,
-	ChaserProfileAttackData_Duration,
-	ChaserProfileAttackData_Spread,
-	ChaserProfileAttackData_BeginRange,
-	ChaserProfileAttackData_BeginFOV,
-	ChaserProfileAttackData_Cooldown,
-	ChaserProfileAttackData_CooldownEasy,
-	ChaserProfileAttackData_CooldownHard,
-	ChaserProfileAttackData_CooldownInsane,
-	ChaserProfileAttackData_CooldownNightmare,
-	ChaserProfileAttackData_CooldownApollyon,
-	ChaserProfileAttackData_Disappear,
-	ChaserProfileAttackData_Repeat,
-	ChaserProfileAttackData_MaxAttackRepeat,
-	ChaserProfileAttackData_IgnoreAlwaysLooking,
-	ChaserProfileAttackData_WeaponInt,
-	ChaserProfileAttackData_WeaponString,
-	ChaserProfileAttackData_CanUseWeaponTypes,
-	ChaserProfileAttackData_LifeStealEnabled,
-	ChaserProfileAttackData_LifeStealDuration,
-	ChaserProfileAttackData_ProjectileDamage,
-	ChaserProfileAttackData_ProjectileDamageEasy,
-	ChaserProfileAttackData_ProjectileDamageHard,
-	ChaserProfileAttackData_ProjectileDamageInsane,
-	ChaserProfileAttackData_ProjectileDamageNightmare,
-	ChaserProfileAttackData_ProjectileDamageApollyon,
-	ChaserProfileAttackData_ProjectileSpeed,
-	ChaserProfileAttackData_ProjectileSpeedEasy,
-	ChaserProfileAttackData_ProjectileSpeedHard,
-	ChaserProfileAttackData_ProjectileSpeedInsane,
-	ChaserProfileAttackData_ProjectileSpeedNightmare,
-	ChaserProfileAttackData_ProjectileSpeedApollyon,
-	ChaserProfileAttackData_ProjectileRadius,
-	ChaserProfileAttackData_ProjectileRadiusEasy,
-	ChaserProfileAttackData_ProjectileRadiusHard,
-	ChaserProfileAttackData_ProjectileRadiusInsane,
-	ChaserProfileAttackData_ProjectileRadiusNightmare,
-	ChaserProfileAttackData_ProjectileRadiusApollyon,
-	ChaserProfileAttackData_ProjectileDeviation,
-	ChaserProfileAttackData_ProjectileDeviationEasy,
-	ChaserProfileAttackData_ProjectileDeviationHard,
-	ChaserProfileAttackData_ProjectileDeviationInsane,
-	ChaserProfileAttackData_ProjectileDeviationNightmare,
-	ChaserProfileAttackData_ProjectileDeviationApollyon,
-	ChaserProfileAttackData_ProjectileCount,
-	ChaserProfileAttackData_ProjectileCountEasy,
-	ChaserProfileAttackData_ProjectileCountHard,
-	ChaserProfileAttackData_ProjectileCountInsane,
-	ChaserProfileAttackData_ProjectileCountNightmare,
-	ChaserProfileAttackData_ProjectileCountApollyon,
-	ChaserProfileAttackData_ProjectileCrits,
-	ChaserProfileAttackData_ProjectileType,
-	ChaserProfileAttackData_BulletCount,
-	ChaserProfileAttackData_BulletCountEasy,
-	ChaserProfileAttackData_BulletCountHard,
-	ChaserProfileAttackData_BulletCountInsane,
-	ChaserProfileAttackData_BulletCountNightmare,
-	ChaserProfileAttackData_BulletCountApollyon,
-	ChaserProfileAttackData_BulletDamage,
-	ChaserProfileAttackData_BulletDamageEasy,
-	ChaserProfileAttackData_BulletDamageHard,
-	ChaserProfileAttackData_BulletDamageInsane,
-	ChaserProfileAttackData_BulletDamageNightmare,
-	ChaserProfileAttackData_BulletDamageApollyon,
-	ChaserProfileAttackData_BulletSpread,
-	ChaserProfileAttackData_BulletSpreadEasy,
-	ChaserProfileAttackData_BulletSpreadHard,
-	ChaserProfileAttackData_BulletSpreadInsane,
-	ChaserProfileAttackData_BulletSpreadNightmare,
-	ChaserProfileAttackData_BulletSpreadApollyon,
-	ChaserProfileAttackData_LaserDamage,
-	ChaserProfileAttackData_LaserDamageEasy,
-	ChaserProfileAttackData_LaserDamageHard,
-	ChaserProfileAttackData_LaserDamageInsane,
-	ChaserProfileAttackData_LaserDamageNightmare,
-	ChaserProfileAttackData_LaserDamageApollyon,
-	ChaserProfileAttackData_LaserSize,
-	ChaserProfileAttackData_LaserColorR,
-	ChaserProfileAttackData_LaserColorG,
-	ChaserProfileAttackData_LaserColorB,
-	ChaserProfileAttackData_LaserAttachment,
-	ChaserProfileAttackData_LaserDuration,
-	ChaserProfileAttackData_LaserNoise,
-	ChaserProfileAttackData_PullIn,
-	ChaserProfileAttackData_ProjectileIceSlowdownPercent,
-	ChaserProfileAttackData_ProjectileIceSlowdownPercentEasy,
-	ChaserProfileAttackData_ProjectileIceSlowdownPercentHard,
-	ChaserProfileAttackData_ProjectileIceSlowdownPercentInsane,
-	ChaserProfileAttackData_ProjectileIceSlowdownPercentNightmare,
-	ChaserProfileAttackData_ProjectileIceSlowdownPercentApollyon,
-	ChaserProfileAttackData_ProjectileIceSlowdownDuration,
-	ChaserProfileAttackData_ProjectileIceSlowdownDurationEasy,
-	ChaserProfileAttackData_ProjectileIceSlowdownDurationHard,
-	ChaserProfileAttackData_ProjectileIceSlowdownDurationInsane,
-	ChaserProfileAttackData_ProjectileIceSlowdownDurationNightmare,
-	ChaserProfileAttackData_ProjectileIceSlowdownDurationApollyon,
-	ChaserProfileAttackData_CanAttackWhileRunning,
-	ChaserProfileAttackData_RunSpeed,
-	ChaserProfileAttackData_RunSpeedEasy,
-	ChaserProfileAttackData_RunSpeedHard,
-	ChaserProfileAttackData_RunSpeedInsane,
-	ChaserProfileAttackData_RunSpeedNightmare,
-	ChaserProfileAttackData_RunSpeedApollyon,
-	ChaserProfileAttackData_RunDuration,
-	ChaserProfileAttackData_RunDelay,
-	ChaserProfileAttackData_UseOnDifficulty,
-	ChaserProfileAttackData_BlockOnDifficulty,
-	ChaserProfileAttackData_ExplosiveDanceRadius,
-	ChaserProfileAttackData_Gestures,
-	ChaserProfileAttackData_MaxStats
-};
-
-enum 
-{
-	ChaserAnimationType_Idle = 0,
-	ChaserAnimationType_IdlePlaybackRate,
-	ChaserAnimationType_Walk = 0,
-	ChaserAnimationType_WalkPlaybackRate,
-	ChaserAnimationType_Run = 0,
-	ChaserAnimationType_RunPlaybackRate,
-	ChaserAnimationType_Attack = 0,
-	ChaserAnimationType_AttackPlaybackRate,
-	ChaserAnimationType_Stunned = 0,
-	ChaserAnimationType_StunnedPlaybackRate,
-	ChaserAnimationType_Death = 0,
-	ChaserAnimationType_DeathPlaybackRate,
-	ChaserAnimationType_Spawn = 0,
-	ChaserAnimationType_SpawnPlaybackRate,
-	ChaserAnimationType_Heal = 0,
-	ChaserAnimationType_HealPlaybackRate,
-	ChaserAnimationType_Deathcam = 0,
-	ChaserAnimationType_DeathcamPlaybackRate,
-	ChaserAnimationType_CloakStart = 0,
-	ChaserAnimationType_CloakStartPlaybackRate,
-	ChaserAnimationType_CloakEnd = 0,
-	ChaserAnimationType_CloakEndPlaybackRate,
-};
-
-enum
-{
-	ChaserAnimation_IdleAnimations = 0, //Array that contains all the idle animations
-	ChaserAnimation_WalkAnimations, //Array that contains all the walk animations
-	ChaserAnimation_WalkAlertAnimations, //Array that contains all the alert walk animations
-	ChaserAnimation_AttackAnimations, //Array that contains all the attack animations (working on attack index)
-	ChaserAnimation_ShootAnimations, //Array that contains all the attack animations after we shoot something
-	ChaserAnimation_RunAnimations, //Array that contains all the run animations
-	ChaserAnimation_StunAnimations, //Array that contains all the stun animations
-	ChaserAnimation_ChaseInitialAnimations, //Array that contains all the chase initial animations
-	ChaserAnimation_RageAnimations, //Array that contains all the rage animations, used for Boxing Maps
-	ChaserAnimation_DeathAnimations, //Array that contains all the death animations
-	ChaserAnimation_JumpAnimations, //Array that contains all the jump animations
-	ChaserAnimation_SpawnAnimations, //Array that contains all the spawn animations
-	ChaserAnimation_FleeInitialAnimations, //Array that contains all the flee initial animations
-	ChaserAnimation_HealAnimations, //Array that contains all the self healing animations
-	ChaserAnimation_DeathcamAnimations, //Array that contains all the deathcam animations
-	ChaserAnimation_CloakStartAnimations, //Array that contains all the cloak start animations
-	ChaserAnimation_CloakEndAnimations, //Array that contains all the cloak end animations
-	ChaserAnimation_CrawlWalkAnimations, //Array that contains all the crawl walking animations
-	ChaserANimation_CrawlRunAnimations, //Array that contains all the crawl running animations
-	ChaserAnimation_MaxAnimations
-};
-
-methodmap SF2ChaserBossProfile < SF2BaseBossProfile
-{
-	property int AttackCount
-	{
-		public get() { return GetChaserProfileAttackCount(this.UniqueProfileIndex); }
-	}
-
-	property bool DifficultyAffectsAnimations
-	{
-		public get() { return g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_DifficultyAffectsAnimations); }
-	}
-
-	property float WakeRadius
-	{
-		public get() { return GetChaserProfileWakeRadius(this.UniqueProfileIndex); }
-	}
-
-	property int SmiteDamageType
-	{
-		public get() { return GetChaserProfileSmiteDamageType(this.UniqueProfileIndex); }
-	}
-
-	property float SmiteDamage
-	{
-		public get() { return GetChaserProfileSmiteDamage(this.UniqueProfileIndex); }
-	}
-
-	property bool AdvancedDamageEffectsEnabled
-	{
-		public get() { return GetChaserProfileEnableAdvancedDamageEffects(this.UniqueProfileIndex); }
-	}
-
-	property bool AdvancedDamageEffectsRandom
-	{
-		public get() { return GetChaserProfileEnableAdvancedDamageEffectsRandom(this.UniqueProfileIndex); }
-	}
-
-	property bool AttachDamageEffectsParticle
-	{
-		public get() { return GetChaserProfileEnableAdvancedDamageParticles(this.UniqueProfileIndex); }
-	}
-	
-	property int RandomAttackIndexes
-	{
-		public get() { return GetChaserProfileRandomAttackIndexes(this.UniqueProfileIndex); }
-	}
-		
-	property int RandomAttackStunType
-	{
-		public get() { return GetChaserProfileRandomStunType(this.UniqueProfileIndex); }
-	}
-
-	property bool JaratePlayerOnHit
-	{
-		public get() { return GetChaserProfileJarateState(this.UniqueProfileIndex); }
-	}
-
-	property int JarateAttackIndexes
-	{
-		public get() { return GetChaserProfileJarateAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool MilkPlayerOnHit
-	{
-		public get() { return GetChaserProfileMilkState(this.UniqueProfileIndex); }
-	}
-
-	property int MilkAttackIndexes
-	{
-		public get() { return GetChaserProfileMilkAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool GasPlayerOnHit
-	{
-		public get() { return GetChaserProfileGasState(this.UniqueProfileIndex); }
-	}
-
-	property int GasAttackIndexes
-	{
-		public get() { return GetChaserProfileGasAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool MarkPlayerOnHit
-	{
-		public get() { return GetChaserProfileMarkState(this.UniqueProfileIndex); }
-	}
-
-	property int MarkAttackIndexes
-	{
-		public get() { return GetChaserProfileMarkAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool SilentMarkPlayerOnHit
-	{
-		public get() { return GetChaserProfileSilentMarkState(this.UniqueProfileIndex); }
-	}
-
-	property int SilentMarkAttackIndexes
-	{
-		public get() { return GetChaserProfileSilentMarkAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool IgnitePlayerOnHit
-	{
-		public get() { return GetChaserProfileIgniteState(this.UniqueProfileIndex); }
-	}
-
-	property int IgniteAttackIndexes
-	{
-		public get() { return GetChaserProfileIgniteAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool StunPlayerOnHit
-	{
-		public get() { return GetChaserProfileStunAttackState(this.UniqueProfileIndex); }
-	}
-
-	property int StunAttackIndexes
-	{
-		public get() { return GetChaserProfileStunAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property int StunAttackType
-	{
-		public get() { return GetChaserProfileStunDamageType(this.UniqueProfileIndex); }
-	}
-
-	property bool BleedPlayerOnHit
-	{
-		public get() { return GetChaserProfileBleedState(this.UniqueProfileIndex); }
-	}
-
-	property int BleedAttackIndexes
-	{
-		public get() { return GetChaserProfileBleedAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool ElectricPlayerOnHit
-	{
-		public get() { return GetChaserProfileEletricAttackState(this.UniqueProfileIndex); }
-	}
-
-	property int ElectricAttackIndexes
-	{
-		public get() { return GetChaserProfileEletricAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool SmitePlayerOnHit
-	{
-		public get() { return GetChaserProfileSmiteState(this.UniqueProfileIndex); }
-	}
-
-	property bool SmiteMessage
-	{
-		public get() { return GetChaserProfileSmiteMessage(this.UniqueProfileIndex); }
-	}
-
-	property int SmiteAttackIndexes
-	{
-		public get() { return GetChaserProfileSmiteAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool XenobladeCombo
-	{
-		public get() { return GetChaserProfileXenobladeCombo(this.UniqueProfileIndex); }
-	}
-
-	property float XenobladeBreakDuration
-	{
-		public get() { return GetChaserProfileXenobladeBreakDuration(this.UniqueProfileIndex); }
-	}
-
-	property float XenobladeToppleDuration
-	{
-		public get() { return GetChaserProfileXenobladeToppleDuration(this.UniqueProfileIndex); }
-	}
-
-	property float XenobladeToppleSlowdown
-	{
-		public get() { return GetChaserProfileXenobladeToppleSlowdown(this.UniqueProfileIndex); }
-	}
-
-	property float XenobladeDazeDuration
-	{
-		public get() { return GetChaserProfileXenobladeDazeDuration(this.UniqueProfileIndex); }
-	}
-
-	property bool CloakEnabled
-	{
-		public get() { return GetChaserProfileCloakState(this.UniqueProfileIndex); }
-	}
-
-	property bool HasKeyDrop
-	{
-		public get() { return GetChaserProfileKeyDrop(this.UniqueProfileIndex); }
-	}
-
-	property bool HasDamageParticles
-	{
-		public get() { return GetChaserProfileDamageParticleState(this.UniqueProfileIndex); }
-	}
-
-	property float DamageParticleVolume
-	{
-		public get() { return GetChaserProfileDamageParticleVolume(this.UniqueProfileIndex); }
-	}
-
-	property int DamageParticlePitch
-	{
-		public get() { return GetChaserProfileDamageParticlePitch(this.UniqueProfileIndex); }
-	}
-
-	property bool StunEnabled
-	{
-		public get() { return GetChaserProfileStunState(this.UniqueProfileIndex); }
-	}
-
-	property float StunDuration
-	{
-		public get() { return GetChaserProfileStunDuration(this.UniqueProfileIndex); }
-	}
-
-	property float StunCooldown
-	{
-		public get() { return GetChaserProfileStunCooldown(this.UniqueProfileIndex); }
-	}
-
-	property bool StunByFlashlightEnabled
-	{
-		public get() { return GetChaserProfileStunFlashlightState(this.UniqueProfileIndex); }
-	}
-
-	property float StunFlashlightDamage
-	{
-		public get() { return GetChaserProfileStunFlashlightDamage(this.UniqueProfileIndex); }
-	}
-
-	property bool ChaseInitialOnStun
-	{
-		public get() { return GetChaserProfileStunOnChaseInitial(this.UniqueProfileIndex); }
-	}
-
-	property float StunHealth
-	{
-		public get() { return GetChaserProfileStunHealth(this.UniqueProfileIndex); }
-	}
-
-	property float StunHealthPerPlayer
-	{
-		public get() { return GetChaserProfileStunHealthPerPlayer(this.UniqueProfileIndex); }
-	}
-
-	property bool HasShockwaves
-	{
-		public get() { return GetChaserProfileShockwaveState(this.UniqueProfileIndex); }
-	}
-
-	property int ShockwaveAttackIndexes
-	{
-		public get() { return GetChaserProfileShockwaveAttackIndexes(this.UniqueProfileIndex); }
-	}
-
-	property bool ShockwaveStunEnabled
-	{
-		public get() { return GetChaserProfileShockwaveStunState(this.UniqueProfileIndex); }
-	}
-
-	property bool HasTraps
-	{
-		public get() { return GetChaserProfileTrapState(this.UniqueProfileIndex); }
-	}
-
-	property int TrapType
-	{
-		public get() { return GetChaserProfileTrapType(this.UniqueProfileIndex); }
-	}
-
-	property bool ProjectileEnabled
-	{
-		public get() { return GetChaserProfileProjectileState(this.UniqueProfileIndex); }
-	}
-
-	property bool HasCriticalRockets
-	{
-		public get() { return GetChaserProfileCriticalRockets(this.UniqueProfileIndex); }
-	}
-
-	property bool UseShootGesture
-	{
-		public get() { return GetChaserProfileGestureShoot(this.UniqueProfileIndex); }
-	}
-
-	property bool ProjectileUsesAmmo
-	{
-		public get() { return GetChaserProfileProjectileAmmoState(this.UniqueProfileIndex); }
-	}
-
-	property bool ChargeUpProjectiles
-	{
-		public get() { return GetChaserProfileChargeUpProjectilesState(this.UniqueProfileIndex); }
-	}
-
-	property int ProjectileType
-	{
-		public get() { return GetChaserProfileProjectileType(this.UniqueProfileIndex); }
-	}
-
-	property bool AutoChaseEnabled
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseEnabled)); }
-	}
-
-	public int AutoChaseThreshold(int difficulty)
-	{
-		return GetChaserProfileAutoChaseCount(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int AutoChaseAddGeneral(int difficulty)
-	{
-		return GetChaserProfileAutoChaseAddGeneral(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int AutoChaseAddFootstep(int difficulty)
-	{
-		return GetChaserProfileAutoChaseAddFootstep(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int AutoChaseAddVoice(int difficulty)
-	{
-		return GetChaserProfileAutoChaseAddVoice(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int AutoChaseAddWeapon(int difficulty)
-	{
-		return GetChaserProfileAutoChaseAddWeapon(this.UniqueProfileIndex, difficulty);
-	}
-
-	property bool AutoChaseSprinters
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AutoChaseSprinters)); }
-	}
-
-	property bool EarthquakeFootstepsEnabled
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsEnabled)); }
-	}
-
-	property float EarthquakeFootstepsAmplitude
-	{
-		public get() { return view_as<float>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsAmplitude)); }
-	}
-
-	property float EarthquakeFootstepsFrequency
-	{
-		public get() { return view_as<float>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsFrequency)); }
-	}
-
-	property float EarthquakeFootstepsDuration
-	{
-		public get() { return view_as<float>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsDuration)); }
-	}
-
-	property float EarthquakeFootstepsRadius
-	{
-		public get() { return view_as<float>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsRadius)); }
-	}
-
-	property bool EarthquakeFootstepsAirShake
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_EarthquakeFootstepsCanAirShake)); }
-	}
-
-	property bool ChasesEndlessly
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ChasesEndlessly)); }
-	}
-	
-	property bool SelfHealState
-	{
-		public get() { return GetChaserProfileSelfHealState(this.UniqueProfileIndex); }
-	}
-
-	property int SoundCountToAlert
-	{
-		public get() { return g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_SoundCountToAlert); }
-	}
-
-	property bool CanDisappearOnStun
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_DisappearOnStun)); }
-	}
-
-	property bool DropItemOnStun
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ItemDropOnStun)); }
-	}
-
-	property int DropItemType
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ItemDropTypeStun)); }
-	}
-
-	property bool IsBoxingBoss
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_BoxingBoss)); }
-	}
-
-	property bool NormalSoundHook
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_NormalSoundHook)); }
-	}
-
-	property bool CanCloakToHeal
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_CloakToHeal)); }
-	}
-
-	property bool UseChaseInitialAnimation
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_ChaseInitialAnimationUse)); }
-	}
-
-	property bool HasOldAnimationAI
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_OldAnimationAI)); }
-	}
-
-	property bool UseAlertWalkingAnimation
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_AlertWalkingAnimation)); }
-	}
-
-	property bool MultiAttackSounds
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_MultiAttackSounds)); }
-	}
-
-	property bool MultiHitSounds
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_MultiHitSounds)); }
-	}
-
-	property bool MultiMissSounds
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_MultiMissSounds)); }
-	}
-
-	property float SelfHealStartPercentage
-	{
-		public get() { return GetChaserProfileSelfHealStartPercentage(this.UniqueProfileIndex); }
-	}
-	
-	property float SelfHealPercentageOne
-	{
-		public get() { return GetChaserProfileSelfHealPercentageOne(this.UniqueProfileIndex); }
-	}
-	
-	property float SelfHealPercentageTwo
-	{
-		public get() { return GetChaserProfileSelfHealPercentageTwo(this.UniqueProfileIndex); }
-	}
-	
-	property float SelfHealPercentageThree
-	{
-		public get() { return GetChaserProfileSelfHealPercentageThree(this.UniqueProfileIndex); }
-	}
-
-	public SF2ChaserBossProfile(int profileIndex)
-	{
-		return view_as<SF2ChaserBossProfile>(profileIndex);
-	}
-
-	public float GetWalkSpeed(int difficulty)
-	{
-		return GetChaserProfileWalkSpeed(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetMaxWalkSpeed(int difficulty)
-	{
-		return GetChaserProfileMaxWalkSpeed(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetAlertStateGraceTime(int difficulty)
-	{
-		return GetChaserProfileAlertGracetime(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetAlertStateDuration(int difficulty)
-	{
-		return GetChaserProfileAlertDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetChaseStateDuration(int difficulty)
-	{
-		return GetChaserProfileChaseDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetWanderRangeMin(int difficulty)
-	{
-		return GetChaserProfileWanderRangeMin(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetWanderRangeMax(int difficulty)
-	{
-		return GetChaserProfileWanderRangeMax(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetWanderTimeMin(int difficulty)
-	{
-		return GetChaserProfileWanderTimeMin(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetWanderTimeMax(int difficulty)
-	{
-		return GetChaserProfileWanderTimeMax(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetAwarenessIncreaseRate(int difficulty)
-	{
-		return GetChaserProfileAwarenessIncreaseRate(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetAwarenessDecreaseRate(int difficulty)
-	{
-		return GetChaserProfileAwarenessDecreaseRate(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileCooldownMin(int difficulty)
-	{
-		return GetChaserProfileProjectileCooldownMin(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileCooldownMax(int difficulty)
-	{
-		return GetChaserProfileProjectileCooldownMax(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileSpeed(int difficulty)
-	{
-		return GetChaserProfileProjectileSpeed(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileDamage(int difficulty)
-	{
-		return GetChaserProfileProjectileDamage(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileRadius(int difficulty)
-	{
-		return GetChaserProfileProjectileRadius(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileDeviation(int difficulty)
-	{
-		return GetChaserProfileProjectileDeviation(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int GetProjectileCount(int difficulty)
-	{
-		return GetChaserProfileProjectileCount(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int GetProjectileLoadedAmmo(int difficulty)
-	{
-		return GetChaserProfileProjectileLoadedAmmo(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileReloadTime(int difficulty)
-	{
-		return GetChaserProfileProjectileAmmoReloadTime(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetProjectileChargeUpTime(int difficulty)
-	{
-		return GetChaserProfileProjectileChargeUpTime(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetIceballSlowdownDuration(int difficulty)
-	{
-		return GetChaserProfileIceballSlowdownDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetIceballSlowdownPercent(int difficulty)
-	{
-		return GetChaserProfileIceballSlowdownPercent(this.UniqueProfileIndex, difficulty);
-	}
-	
-	public float GetRandomDuration(int difficulty)
-	{
-		return GetChaserProfileRandomEffectDuration(this.UniqueProfileIndex, difficulty);
-	}
-	
-	public float GetRandomSlowdown(int difficulty)
-	{
-		return GetChaserProfileRandomEffectSlowdown(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetJarateDuration(int difficulty)
-	{
-		return GetChaserProfileJaratePlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetMilkDuration(int difficulty)
-	{
-		return GetChaserProfileMilkPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetGasDuration(int difficulty)
-	{
-		return GetChaserProfileGasPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetMarkDuration(int difficulty)
-	{
-		return GetChaserProfileMarkPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetSilentMarkDuration(int difficulty)
-	{
-		return GetChaserProfileSilentMarkPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetIgniteDelay(int difficulty)
-	{
-		return GetChaserProfileIgnitePlayerDelay(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetStunAttackDuration(int difficulty)
-	{
-		return GetChaserProfileStunPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetStunAttackSlowdown(int difficulty)
-	{
-		return GetChaserProfileStunPlayerSlowdown(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetBleedDuration(int difficulty)
-	{
-		return GetChaserProfileBleedPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetElectricDuration(int difficulty)
-	{
-		return GetChaserProfileEletricPlayerDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetElectricSlowdown(int difficulty)
-	{
-		return GetChaserProfileEletricPlayerSlowdown(this.UniqueProfileIndex, difficulty);
-	}
-
-	public int GetAttackType(int attackIndex)
-	{
-		return GetChaserProfileAttackType(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public bool ShouldDisappearAfterAttack(int attackIndex)
-	{
-		return view_as<bool>(GetChaserProfileAttackDisappear(this.UniqueProfileIndex, attackIndex));
-	}
-
-	public int GetAttackRepeatCount(int attackIndex)
-	{
-		return GetChaserProfileAttackRepeat(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetMaxAttackRepeats(int attackIndex)
-	{
-		return GetChaserProfileMaxAttackRepeats(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public bool GetAttackIgnoreAlwaysLooking(int attackIndex)
-	{
-		return GetChaserProfileAttackIgnoreAlwaysLooking(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetAttackWeaponTypeInt(int attackIndex)
-	{
-		return GetChaserProfileAttackWeaponTypeInt(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackDamage(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackDamage(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackDamageVsProps(int attackIndex)
-	{
-		return GetChaserProfileAttackDamageVsProps(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackDamageDelay(int attackIndex)
-	{
-		return GetChaserProfileAttackDamageDelay(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackDamageForce(int attackIndex)
-	{
-		return GetChaserProfileAttackDamageForce(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetAttackDamageType(int attackIndex)
-	{
-		return GetChaserProfileAttackDamageType(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackCooldown(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackCooldown(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackDuration(int attackIndex)
-	{
-		return GetChaserProfileAttackDuration(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackRange(int attackIndex)
-	{
-		return GetChaserProfileAttackRange(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackSpread(int attackIndex)
-	{
-		return GetChaserProfileAttackSpread(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackBeginRange(int attackIndex)
-	{
-		return GetChaserProfileAttackBeginRange(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackBeginFOV(int attackIndex)
-	{
-		return GetChaserProfileAttackBeginFOV(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public bool CanAttackLifeSteal(int attackIndex)
-	{
-		return GetChaserProfileAttackLifeStealState(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackLifeStealDuration(int attackIndex)
-	{
-		return GetChaserProfileAttackLifeStealDuration(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public bool CanRunWhileAttacking(int attackIndex)
-	{
-		return GetChaserProfileAttackRunWhileAttackingState(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackRunSpeed(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackRunSpeed(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackRunDuration(int attackIndex)
-	{
-		return GetChaserProfileAttackRunDuration(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackRunDelay(int attackIndex)
-	{
-		return GetChaserProfileAttackRunDelay(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetAttackUseOnDifficulty(int attackIndex)
-	{
-		return GetChaserProfileAttackUseOnDifficulty(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetAttackBlockOnDifficulty(int attackIndex)
-	{
-		return GetChaserProfileAttackBlockOnDifficulty(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetAttackExplosiveDanceRadius(int attackIndex)
-	{
-		return GetChaserProfileAttackExplosiveDanceRadius(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public float GetAttackProjectileDamage(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileDamage(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackProjectileSpeed(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileSpeed(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackProjectileRadius(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileRadius(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackProjectileDeviation(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileDeviation(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public int GetAttackProjectileCount(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileCount(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public bool AreAttackProjectilesCritBoosted(int attackIndex)
-	{
-		return GetChaserProfileAttackCritProjectiles(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public int GetAttackProjectileType(int attackIndex)
-	{
-		return GetChaserProfileAttackProjectileType(this.UniqueProfileIndex, attackIndex);
-	}
-	
-	public float GetAttackProjectileIceSlowdownPercent(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileIceSlowPercent(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-	
-	public float GetAttackProjectileIceSlowdownDuration(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackProjectileIceSlowDuration(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public int GetAttackBulletCount(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackBulletCount(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackBulletDamage(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackBulletDamage(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-
-	public float GetAttackBulletSpread(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackBulletSpread(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-	
-	public float GetAttackLaserDamage(int attackIndex, int difficulty)
-	{
-		return GetChaserProfileAttackLaserDamage(this.UniqueProfileIndex, attackIndex, difficulty);
-	}
-	
-	public float GetAttackLaserSize(int attackIndex)
-	{
-		return GetChaserProfileAttackLaserSize(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public void GetAttackLaserColor(int color[3],int attackIndex)
-	{
-		color[0] = GetChaserProfileAttackLaserColorR(this.UniqueProfileIndex, attackIndex);
-		color[1] = GetChaserProfileAttackLaserColorG(this.UniqueProfileIndex, attackIndex);
-		color[2] = GetChaserProfileAttackLaserColorB(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public bool IsLaserOnAttachment(int attackIndex)
-	{
-		return GetChaserProfileEnableLaserAttachment(this.UniqueProfileIndex, attackIndex);
-	}
-	
-	public float GetAttackLaserDuration(int attackIndex)
-	{
-		return GetChaserProfileAttackLaserDuration(this.UniqueProfileIndex, attackIndex);
-	}
-	
-	public float GetAttackLaserNoise(int attackIndex)
-	{
-		return GetChaserProfileAttackLaserNoise(this.UniqueProfileIndex, attackIndex);
-	}
-	
-	public bool CanAttackPullIn(int attackIndex)
-	{
-		return GetChaserProfileAttackPullIn(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public bool HasAttackGestures(int attackIndex)
-	{
-		return GetChaserProfileAttackGesturesState(this.UniqueProfileIndex, attackIndex);
-	}
-
-	public void GetSmiteColor(int color[4])
-	{
-		color[0] = GetChaserProfileSmiteColorR(this.UniqueProfileIndex);
-		color[1] = GetChaserProfileSmiteColorG(this.UniqueProfileIndex);
-		color[2] = GetChaserProfileSmiteColorB(this.UniqueProfileIndex);
-		color[3] = GetChaserProfileSmiteColorTrans(this.UniqueProfileIndex);
-	}
-
-	public float GetCloakCooldown(int difficulty)
-	{
-		return GetChaserProfileCloakCooldown(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetCloakRange(int difficulty)
-	{
-		return GetChaserProfileCloakRange(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetDecloakRange(int difficulty)
-	{
-		return GetChaserProfileDecloakRange(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetCloakDuration(int difficulty)
-	{
-		return GetChaserProfileCloakDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetCloakSpeedMultiplier(int difficulty)
-	{
-		return GetChaserProfileCloakSpeedMultiplier(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetShockwaveHeight(int difficulty)
-	{
-		return GetChaserProfileShockwaveHeight(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetShockwaveRange(int difficulty)
-	{
-		return GetChaserProfileShockwaveRange(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetShockwaveDrain(int difficulty)
-	{
-		return GetChaserProfileShockwaveDrain(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetShockwaveForce(int difficulty)
-	{
-		return GetChaserProfileShockwaveForce(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetShockwaveStunDuration(int difficulty)
-	{
-		return GetChaserProfileShockwaveStunDuration(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetShockwaveStunSlowdown(int difficulty)
-	{
-		return GetChaserProfileShockwaveStunSlowdown(this.UniqueProfileIndex, difficulty);
-	}
-
-	public float GetTrapCooldown(int difficulty)
-	{
-		return GetChaserProfileTrapSpawnCooldown(this.UniqueProfileIndex, difficulty);
-	}
-
-	property bool IsCrawlingEnabled
-	{
-		public get() { return view_as<bool>(g_hChaserProfileData.Get(this.UniqueProfileIndex, ChaserProfileData_CrawlingEnabled)); }
-	}
-
-	public float GetCrawlingSpeedMultiplier(int difficulty)
-	{
-		return GetChaserProfileCrawlSpeedMultiplier(this.UniqueProfileIndex, difficulty);
-	}
-}
+StringMap g_ChaserBossProfileData;
 
 #include "sf2/profiles/profile_chaser_precache.sp"
 
 void InitializeChaserProfiles()
 {
-	g_hChaserProfileNames = new StringMap();
-	g_hChaserProfileData = new ArrayList(ChaserProfileData_MaxStats);
+	g_ChaserBossProfileData = new StringMap();
 }
 
-/**
- *	Clears all data and memory currently in use by chaser profiles.
- */
-void ClearChaserProfiles()
+void UnloadChaserBossProfile(const char[] profile)
 {
-	for (int i = 0; i < g_hChaserProfileData.Length; i++)
+	char tempProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	if (!g_ChaserBossProfileData.GetString(profile, tempProfile, sizeof(tempProfile)) || tempProfile[0] == '\0')
 	{
-		ArrayList hHandle = g_hChaserProfileData.Get(i, ChaserProfileData_Attacks);
-		if (hHandle != null)
-		{
-			delete hHandle;
-		}
+		return;
 	}
-	
-	g_hChaserProfileNames.Clear();
-	g_hChaserProfileData.Clear();
+
+	SF2ChaserBossProfileData chaserProfileData;
+	g_ChaserBossProfileData.GetArray(profile, chaserProfileData, sizeof(chaserProfileData));
+
+	chaserProfileData.Destroy();
+
+	g_ChaserBossProfileData.Remove(profile);
+}
+
+static SF2ChaserBossProfileData g_CachedProfileData;
+
+bool GetChaserProfileEndlessChasingState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChasesEndlessly;
+}
+
+bool GetChaserProfileAutoChaseState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseEnabled;
+}
+
+bool GetChaserProfileAutoChaseSprinterState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseSprinters;
+}
+
+int GetChaserProfileAutoChaseCount(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseCount[difficulty];
+}
+
+int GetChaserProfileAutoChaseAddGeneral(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseAdd[difficulty];
+}
+
+int GetChaserProfileAutoChaseAddFootstep(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseAddFootstep[difficulty];
+}
+
+int GetChaserProfileAutoChaseAddLoudFootstep(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseAddLoudFootstep[difficulty];
+}
+
+int GetChaserProfileAutoChaseAddVoice(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseAddVoice[difficulty];
+}
+
+int GetChaserProfileAutoChaseAddWeapon(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AutoChaseAddWeapon[difficulty];
+}
+
+float GetChaserProfileWalkSpeed(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WalkSpeed[difficulty];
+}
+
+float GetChaserProfileMaxWalkSpeed(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MaxWalkSpeed[difficulty];
+}
+
+float GetChaserProfileAlertGracetime(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AlertGracetime[difficulty];
+}
+
+float GetChaserProfileAlertDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AlertDuration[difficulty];
+}
+
+float GetChaserProfileChaseDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseDuration[difficulty];
+}
+
+float GetChaserProfileChaseDurationAddVisibleMin(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseDurationAddVisibleMin;
+}
+
+float GetChaserProfileChaseDurationAddVisibleMax(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseDurationAddVisibleMax;
+}
+
+float GetChaserProfileSoundPosDiscardTime(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SoundPosDiscardTime[difficulty];
+}
+
+float GetChaserProfileSoundPosDistanceTolerance(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SoundPosDistanceTolerance[difficulty];
+}
+
+float GetChaserProfileChasePersistencyTimeInit(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChasePersistencyTimeInit;
+}
+
+float GetChaserProfileChaseAttackPersistencyTimeInit(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseAttackPersistencyTimeInit;
+}
+
+float GetChaserProfileChaseAttackPersistencyTimeAdd(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseAttackPersistencyTimeAdd;
+}
+
+float GetChaserProfileChaseNewTargetPersistencyTimeInit(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseNewTargetPersistencyTimeInit;
+}
+
+float GetChaserProfileChaseNewTargetPersistencyTimeAdd(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseNewTargetPersistencyTimeAdd;
+}
+
+float GetChaserProfileChasePersistencyAddVisibleMin(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChasePersistencyAddVisibleMin;
+}
+
+float GetChaserProfileChasePersistencyAddVisibleMax(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChasePersistencyAddVisibleMax;
+}
+
+float GetChaserProfileChaseStunPersistencyTimeInit(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseStunPersistencyTimeInit;
+}
+
+float GetChaserProfileChaseStunPersistencyTimeAdd(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseStunPersistencyTimeAdd;
+}
+
+float GetChaserProfileHearFootstepCooldown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.FootstepSenses.Cooldown[difficulty];
+}
+
+float GetChaserProfileHearLoudFootstepCooldown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.LoudFootstepSenses.Cooldown[difficulty];
+}
+
+float GetChaserProfileHearQuietFootstepCooldown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.QuietFootstepSenses.Cooldown[difficulty];
+}
+
+float GetChaserProfileHearVoiceCooldown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.VoiceSenses.Cooldown[difficulty];
+}
+
+float GetChaserProfileHearWeaponCooldown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WeaponSenses.Cooldown[difficulty];
+}
+
+float GetChaserProfileHearFlashlightCooldown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.FlashlightSenses.Cooldown[difficulty];
+}
+
+int GetChaserProfileFootstepAddThreshold(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.FootstepSenses.AddCount[difficulty];
+}
+
+int GetChaserProfileLoudFootstepAddThreshold(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.LoudFootstepSenses.AddCount[difficulty];
+}
+
+int GetChaserProfileQuietFootstepAddThreshold(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.QuietFootstepSenses.AddCount[difficulty];
+}
+
+int GetChaserProfileVoiceAddThreshold(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.VoiceSenses.AddCount[difficulty];
+}
+
+int GetChaserProfileWeaponAddThreshold(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WeaponSenses.AddCount[difficulty];
+}
+
+int GetChaserProfileFlashlightAddThreshold(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.FlashlightSenses.AddCount[difficulty];
+}
+
+float GetChaserProfileWanderRangeMin(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderRangeMin[difficulty];
+}
+
+float GetChaserProfileWanderRangeMax(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderRangeMax[difficulty];
+}
+
+float GetChaserProfileWanderTimeMin(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderTimeMin[difficulty];
+}
+
+float GetChaserProfileWanderTimeMax(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderTimeMax[difficulty];
+}
+
+float GetChaserProfileWanderEnterTimeMin(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderEnterTimeMin[difficulty];
+}
+
+float GetChaserProfileWanderEnterTimeMax(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WanderEnterTimeMax[difficulty];
+}
+
+float GetChaserProfileProjectileCooldownMin(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileCooldownMin[difficulty];
+}
+
+float GetChaserProfileProjectileCooldownMax(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileCooldownMax[difficulty];
+}
+
+float GetChaserProfileIceballSlowdownDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IceballSlowDuration[difficulty];
+}
+
+float GetChaserProfileIceballSlowdownPercent(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IceballSlowPercent[difficulty];
+}
+
+float GetChaserProfileProjectileSpeed(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileSpeed[difficulty];
+}
+
+float GetChaserProfileProjectileDamage(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileDamage[difficulty];
+}
+
+float GetChaserProfileProjectileRadius(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileRadius[difficulty];
+}
+
+float GetChaserProfileProjectileDeviation(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileDeviation[difficulty];
+}
+
+int GetChaserProfileProjectileCount(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileCount[difficulty];
+}
+
+float GetChaserProfileRandomEffectDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.RandomEffectDuration[difficulty];
+}
+
+float GetChaserProfileRandomEffectSlowdown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.RandomEffectSlowdown[difficulty];
+}
+
+float GetChaserProfileJaratePlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.JarateDuration[difficulty];
+}
+
+float GetChaserProfileMilkPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MilkDuration[difficulty];
+}
+
+float GetChaserProfileGasPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.GasDuration[difficulty];
+}
+
+float GetChaserProfileMarkPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MarkDuration[difficulty];
+}
+
+float GetChaserProfileSilentMarkPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SilentMarkDuration[difficulty];
+}
+
+float GetChaserProfileIgnitePlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IgniteDuration[difficulty];
+}
+
+float GetChaserProfileIgnitePlayerDelay(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IgniteDelay[difficulty];
+}
+
+float GetChaserProfileStunPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEffectDuration[difficulty];
+}
+
+float GetChaserProfileStunPlayerSlowdown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEffectSlowdown[difficulty];
+}
+
+float GetChaserProfileBleedPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.BleedDuration[difficulty];
+}
+
+float GetChaserProfileEletricPlayerDuration(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ElectricDuration[difficulty];
+}
+
+float GetChaserProfileEletricPlayerSlowdown(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ElectricSlowdown[difficulty];
+}
+
+float GetChaserProfileWakeRadius(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.WakeRadius;
+}
+
+int GetChaserProfileAttackCount(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.Attacks.Length;
+}
+
+ArrayList GetChaserProfileAttackPropModels(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AttackPropModels;
+}
+
+int GetChaserProfileRandomAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.RandomEffectIndexes;
+}
+
+int GetChaserProfileRandomAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RandomEffectIndexesString);
+}
+
+int GetChaserProfileRandomStunType(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.RandomEffectStunType;
+}
+
+int GetChaserProfileJarateAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.JarateIndexes;
+}
+
+int GetChaserProfileJarateAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.JarateIndexesString);
+}
+
+int GetChaserProfileMilkAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MilkIndexes;
+}
+
+int GetChaserProfileMilkAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.MilkIndexesString);
+}
+
+int GetChaserProfileGasAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.GasIndexes;
+}
+
+int GetChaserProfileGasAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.GasIndexesString);
+}
+
+int GetChaserProfileMarkAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MarkIndexes;
+}
+
+int GetChaserProfileMarkAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.MarkIndexesString);
+}
+
+int GetChaserProfileSilentMarkAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SilentMarkIndexes;
+}
+
+int GetChaserProfileSilentMarkAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.SilentMarkIndexesString);
+}
+
+int GetChaserProfileIgniteAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IgniteIndexes;
+}
+
+int GetChaserProfileIgniteAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.IgniteIndexesString);
+}
+
+int GetChaserProfileStunAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEffectIndexes;
+}
+
+int GetChaserProfileStunAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.StunEffectIndexesString);
+}
+
+int GetChaserProfileStunDamageType(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEffectType;
+}
+
+int GetChaserProfileBleedAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.BleedIndexes;
+}
+
+int GetChaserProfileBleedAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.BleedIndexesString);
+}
+
+int GetChaserProfileEletricAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ElectricIndexes;
+}
+
+int GetChaserProfileEletricAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ElectricIndexesString);
+}
+
+int GetChaserProfileSmiteAttackIndexes(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SmiteIndexes;
+}
+
+int GetChaserProfileSmiteAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.SmiteIndexesString);
+}
+
+int GetChaserProfileSmiteDamageType(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SmiteDamageType;
+}
+
+void GetChaserProfileSmiteColor(const char[] profile, int buffer[4])
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	buffer = g_CachedProfileData.SmiteColor;
+}
+
+float GetChaserProfileSmiteDamage(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SmiteDamage;
+}
+
+int GetChaserProfileSmiteHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.SmiteHitSound);
+}
+
+int GetChaserProfileAttackType(const char[] profile, int attackIndex)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::Type);
+}
+
+void GetChaserProfileAttackPunchVelocity(const char[] profile, int attackIndex, float buffer[3])
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	buffer = attackData.PunchVelocity;
+}
+
+bool GetChaserProfileAttackDisappear(const char[] profile, int attackIndex, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.Disappear[difficulty];
+}
+
+int GetChaserProfileAttackRepeat(const char[] profile, int attackIndex)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::Repeat);
+}
+
+int GetChaserProfileMaxAttackRepeats(const char[] profile, int attackIndex)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::MaxRepeats);
+}
+
+ArrayList GetChaserProfileAttackRepeatTimers(const char[] profile, int attackIndex)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return null;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.RepeatTimers;
+}
+
+bool GetChaserProfileAttackIgnoreAlwaysLooking(const char[] profile, int attackIndex, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.IgnoreAlwaysLooking[difficulty];
+}
+
+int GetChaserProfileAttackWeaponTypeInt(const char[] profile, int attackIndex)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::WeaponInt);
+}
+
+int GetChaserProfileAttackWeaponTypeString(const char[] profile, int attackIndex, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return strcopy(buffer, bufferlen, attackData.WeaponString);
+}
+
+float GetChaserProfileAttackDamage(const char[] profile, int attackIndex, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.Damage[difficulty];
+}
+
+float GetChaserProfileAttackLifeStealDuration(const char[] profile, int attackIndex, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.LifeStealDuration[difficulty];
 }
 
-int GetChaserProfileAutoChaseCount(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackProjectileDamage(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseCountEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseCountHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseCountInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseCountNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseCountApollyon);
+		return 0.0;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseCount);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.ProjectileDamage[difficulty];
 }
 
-int GetChaserProfileAutoChaseAddGeneral(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackProjectileSpeed(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddApollyon);
+		return 0.0;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAdd);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.ProjectileSpeed[difficulty];
 }
 
-int GetChaserProfileAutoChaseAddFootstep(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackProjectileRadius(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddFootstepEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddFootstepHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddFootstepInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddFootstepNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddFootstepApollyon);
+		return 0.0;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddFootstep);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.ProjectileRadius[difficulty];
 }
 
-int GetChaserProfileAutoChaseAddVoice(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackProjectileDeviation(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddVoiceEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddVoiceHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddVoiceInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddVoiceNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddVoiceApollyon);
+		return 0.0;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddVoice);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.ProjectileDeviation[difficulty];
 }
 
-int GetChaserProfileAutoChaseAddWeapon(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackProjectileCount(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddWeaponEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddWeaponHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddWeaponInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddWeaponNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddWeaponApollyon);
+		return 0;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AutoChaseAddWeapon);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.ProjectileCount[difficulty];
 }
 
-float GetChaserProfileWalkSpeed(int iChaserProfileIndex,int iDifficulty)
+bool GetChaserProfileAttackCritProjectiles(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WalkSpeedEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WalkSpeedHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WalkSpeedInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WalkSpeedNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WalkSpeedApollyon));
+		return false;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WalkSpeedNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.CritProjectiles[difficulty];
 }
 
-float GetChaserProfileMaxWalkSpeed(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackProjectileType(const char[] profile, int attackIndex)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MaxWalkSpeedNormal));
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::ProjectileType);
 }
 
-float GetChaserProfileAlertGracetime(int iChaserProfileIndex,int iDifficulty)
+void GetChaserProfileAttackProjectileOffset(const char[] profile, int attackIndex, float buffer[3])
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertGracetimeApollyon));
+		return;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertGracetime));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	buffer = attackData.ProjectileOffset;
 }
 
-float GetChaserProfileAlertDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackProjectileIceSlowPercent(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchAlertDuration));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.IceballSlowdownPercent[difficulty];
 }
 
-float GetChaserProfileChaseDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackProjectileIceSlowDuration(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchChaseDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchChaseDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchChaseDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchChaseDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchChaseDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchChaseDuration));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.IceballSlowdownDuration[difficulty];
 }
 
-float GetChaserProfileWanderRangeMin(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackFireballTrail(const char[] profile, int attackIndex, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMinApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMin));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return strcopy(buffer, bufferlen, attackData.FireballTrail);
 }
 
-float GetChaserProfileWanderRangeMax(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackIceballTrail(const char[] profile, int attackIndex, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMaxApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderRangeMax));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return strcopy(buffer, bufferlen, attackData.IceballTrail);
 }
 
-float GetChaserProfileWanderTimeMin(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackRocketModel(const char[] profile, int attackIndex, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMinApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMin));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return strcopy(buffer, bufferlen, attackData.RocketModel);
 }
 
-float GetChaserProfileWanderTimeMax(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackBulletCount(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMaxApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SearchWanderTimeMax));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.BulletCount[difficulty];
 }
 
-float GetChaserProfileProjectileCooldownMin(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackBulletDamage(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMinNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.BulletDamage[difficulty];
 }
 
-float GetChaserProfileProjectileCooldownMax(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackBulletSpread(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCooldownMaxNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.BulletSpread[difficulty];
 }
 
-float GetChaserProfileIceballSlowdownDuration(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackBulletTrace(const char[] profile, int attackIndex, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownDurationNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return strcopy(buffer, bufferlen, attackData.BulletTrace);
 }
 
-float GetChaserProfileIceballSlowdownPercent(int iChaserProfileIndex,int iDifficulty)
+void GetChaserProfileAttackBulletOffset(const char[] profile, int attackIndex, float buffer[3])
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentApollyon));
+		return;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IceballSlowdownPercentNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	buffer = attackData.BulletOffset;
 }
 
-float GetChaserProfileProjectileSpeed(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackLaserDamage(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileSpeedEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileSpeedHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileSpeedInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileSpeedNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileSpeedApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileSpeedNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.LaserDamage[difficulty];
 }
 
-float GetChaserProfileProjectileDamage(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackLaserSize(const char[] profile, int attackIndex)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDamageEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDamageHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDamageInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDamageNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDamageApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDamageNormal));
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::LaserSize);
 }
 
-float GetChaserProfileProjectileRadius(int iChaserProfileIndex,int iDifficulty)
+void GetChaserProfileAttackLaserColor(const char[] profile, int attackIndex, int buffer[3])
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileRadiusEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileRadiusHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileRadiusInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileRadiusNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileRadiusApollyon));
+		return;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileRadiusNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	buffer = attackData.LaserColor;
 }
 
-float GetChaserProfileProjectileDeviation(int iChaserProfileIndex,int iDifficulty)
+bool GetChaserProfileEnableLaserAttachment(const char[] profile, int attackIndex)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDeviationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDeviationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDeviationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDeviationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDeviationApollyon));
+		return false;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileDeviation));
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::LaserAttachment);
 }
 
-int GetChaserProfileProjectileCount(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackLaserDuration(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCountEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCountHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCountInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCountNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCountApollyon);
+		return 0.0;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileCount);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.LaserDuration[difficulty];
 }
 
-float GetChaserProfileRandomEffectDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackLaserNoise(const char[] profile, int attackIndex)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedDurationNormal));
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::LaserNoise);
 }
 
-float GetChaserProfileRandomEffectSlowdown(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackLaserAttachmentName(const char[] profile, int attackIndex, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedSlowdownNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return strcopy(buffer, bufferlen, attackData.LaserAttachmentName);
 }
 
-float GetChaserProfileJaratePlayerDuration(int iChaserProfileIndex,int iDifficulty)
+void GetChaserProfileAttackLaserOffset(const char[] profile, int attackIndex, float buffer[3])
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationNightmare);
-		case Difficulty_Apollyon: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationApollyon);
+		return;
 	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedDurationNormal);
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	buffer = attackData.LaserOffset;
 }
 
-float GetChaserProfileMilkPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+bool GetChaserProfileAttackPullIn(const char[] profile, int attackIndex)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationApollyon));
+		return false;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedDurationNormal));
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::PullIn);
 }
 
-float GetChaserProfileGasPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackDamageVsProps(const char[] profile, int attackIndex)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedDurationNormal));
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::DamageVsProps);
 }
 
-float GetChaserProfileMarkPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackDamageForce(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedDurationNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.DamageForce[difficulty];
 }
 
-float GetChaserProfileSilentMarkPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileAttackDamageType(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedDurationApollyon));
+		return 0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedDurationNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.DamageType[difficulty];
 }
 
-float GetChaserProfileIgnitePlayerDelay(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackDamageDelay(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedDelayNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.DamageDelay[difficulty];
 }
 
-float GetChaserProfileStunPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackRange(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedDurationNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.Range[difficulty];
 }
 
-float GetChaserProfileStunPlayerSlowdown(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackDuration(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedSlowdownNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.Duration[difficulty];
 }
 
-float GetChaserProfileBleedPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackSpread(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedDurationNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.Spread[difficulty];
 }
 
-float GetChaserProfileEletricPlayerDuration(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackBeginRange(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedDurationNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.BeginRange[difficulty];
 }
 
-float GetChaserProfileEletricPlayerSlowdown(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileAttackBeginFOV(const char[] profile, int attackIndex, int difficulty)
 {
-	switch (iDifficulty)
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
 	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownApollyon));
+		return 0.0;
 	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedSlowdownNormal));
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.BeginFOV[difficulty];
 }
-/*
-Handle GetChaserProfileAnimationsData(int iChaserProfileIndex)
+
+float GetChaserProfileAttackCooldown(const char[] profile, int attackIndex, int difficulty)
 {
-	return view_as<Handle>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Animations));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.Cooldown[difficulty];
 }
-*/
-float GetChaserProfileWakeRadius(int iChaserProfileIndex)
+
+bool GetChaserProfileAttackLifeStealState(const char[] profile, int attackIndex, int difficulty)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_WakeRadius));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.LifeSteal[difficulty];
 }
 
-int GetChaserProfileAttackCount(int iChaserProfileIndex)
+bool GetChaserProfileAttackRunWhileAttackingState(const char[] profile, int attackIndex, int difficulty)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Length;
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.AttackWhileRunning[difficulty];
 }
 
-int GetChaserProfileRandomAttackIndexes(int iChaserProfileIndex)
+float GetChaserProfileAttackRunSpeed(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.RunSpeed[difficulty];
 }
 
-int GetChaserProfileRandomStunType(int iChaserProfileIndex)
+float GetChaserProfileAttackRunDuration(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_RandomAdvancedStunType);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.RunDuration[difficulty];
 }
 
-int GetChaserProfileJarateAttackIndexes(int iChaserProfileIndex)
+float GetChaserProfileAttackRunDelay(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_JarateAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.RunDelay[difficulty];
 }
 
-int GetChaserProfileMilkAttackIndexes(int iChaserProfileIndex)
+int GetChaserProfileAttackUseOnDifficulty(const char[] profile, int attackIndex)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MilkAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::UseOnDifficulty);
 }
 
-int GetChaserProfileGasAttackIndexes(int iChaserProfileIndex)
+int GetChaserProfileAttackBlockOnDifficulty(const char[] profile, int attackIndex)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_GasAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::BlockOnDifficulty);
 }
 
-int GetChaserProfileMarkAttackIndexes(int iChaserProfileIndex)
+int GetChaserProfileAttackExplosiveDanceRadius(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_MarkAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.ExplosiveDanceRadius[difficulty];
 }
 
-int GetChaserProfileSilentMarkAttackIndexes(int iChaserProfileIndex)
+bool GetChaserProfileAttackGesturesState(const char[] profile, int attackIndex)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SilentMarkAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::Gestures);
 }
 
-int GetChaserProfileIgniteAttackIndexes(int iChaserProfileIndex)
+bool GetChaserProfileAttackDeathCamLowHealth(const char[] profile, int attackIndex)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_IgniteAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::DeathCamLowHealth);
 }
 
-int GetChaserProfileStunAttackIndexes(int iChaserProfileIndex)
+bool GetChaserProfileAttackChaseInitialInterruptState(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.DontInterruptChaseInitial[difficulty];
 }
 
-int GetChaserProfileStunDamageType(int iChaserProfileIndex)
+float GetChaserProfileAttackUseOnHealth(const char[] profile, int attackIndex)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunAdvancedType);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::UseOnHealth);
 }
 
-int GetChaserProfileBleedAttackIndexes(int iChaserProfileIndex)
+float GetChaserProfileAttackBlockOnHealth(const char[] profile, int attackIndex)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_BleedAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	return g_CachedProfileData.Attacks.Get(attackIndex, SF2ChaserBossProfileAttackData::BlockOnHealth);
 }
 
-int GetChaserProfileEletricAttackIndexes(int iChaserProfileIndex)
+bool GetChaserProfileAttackCancelLOSState(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EletricAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return false;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.CancelLos[difficulty];
 }
 
-int GetChaserProfileSmiteAttackIndexes(int iChaserProfileIndex)
+float GetChaserProfileAttackCancelDistance(const char[] profile, int attackIndex, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteAdvancedIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	if (g_CachedProfileData.Attacks.Length <= attackIndex)
+	{
+		return 0.0;
+	}
+	SF2ChaserBossProfileAttackData attackData;
+	g_CachedProfileData.Attacks.GetArray(attackIndex, attackData, sizeof(attackData));
+	return attackData.CancelDistance[difficulty];
 }
 
-int GetChaserProfileSmiteDamageType(int iChaserProfileIndex)
+bool GetChaserProfileEnableAdvancedDamageEffects(const char[] profile)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteAdvancedDamageType);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AdvancedDamageEffects;
 }
 
-int GetChaserProfileSmiteColorR(int iChaserProfileIndex)
+bool GetChaserProfileEnableAdvancedDamageEffectsRandom(const char[] profile)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteColorR);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.RandomAdvancedDamageEffects;
 }
 
-int GetChaserProfileSmiteColorG(int iChaserProfileIndex)
+bool GetChaserProfileEnableAdvancedDamageParticles(const char[] profile)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteColorG);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AdvancedDamageEffectParticles;
 }
 
-int GetChaserProfileSmiteColorB(int iChaserProfileIndex)
+bool GetChaserProfileJarateState(const char[] profile)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteColorB);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.JarateEffects;
 }
 
-int GetChaserProfileSmiteColorTrans(int iChaserProfileIndex)
+bool GetChaserProfileJarateBeamParticle(const char[] profile)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteTransparency);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.JarateBeamParticle;
 }
 
-float GetChaserProfileSmiteDamage(int iChaserProfileIndex)
+int GetChaserProfileJarateParticle(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteAdvancedDamage));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.JarateParticle);
 }
 
-int GetChaserProfileAttackType(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileJarateHitSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Type);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.JarateHitSound);
 }
 
-int GetChaserProfileAttackDisappear(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileMilkState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Disappear);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MilkEffects;
 }
 
-int GetChaserProfileAttackRepeat(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileMilkBeamParticle(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Repeat);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MilkBeamParaticle;
 }
 
-int GetChaserProfileMaxAttackRepeats(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileMilkParticle(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_MaxAttackRepeat);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.MilkParticle);
 }
 
-bool GetChaserProfileAttackIgnoreAlwaysLooking(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileMilkHitSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_IgnoreAlwaysLooking));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.MilkHitSound);
 }
 
-int GetChaserProfileAttackWeaponTypeInt(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileGasState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_WeaponInt);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.GasEffects;
 }
 
-float GetChaserProfileAttackDamage(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+bool GetChaserProfileGasBeamParticle(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.GasBeamParticle;
+}
 
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageApollyon));
-	}
+int GetChaserProfileGasParticle(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.GasParticle);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Damage));
+int GetChaserProfileGasHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.GasHitSound);
 }
 
-float GetChaserProfileAttackLifeStealDuration(int iChaserProfileIndex,int  iAttackIndex)
+bool GetChaserProfileMarkState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LifeStealDuration));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MarkEffects;
 }
 
-float GetChaserProfileAttackProjectileDamage(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+bool GetChaserProfileSilentMarkState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDamageEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDamageHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDamageInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDamageNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDamageApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SilentMarkEffects;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDamage));
+bool GetChaserProfileIgniteState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.IgniteEffects;
 }
 
-float GetChaserProfileAttackProjectileSpeed(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+bool GetChaserProfileStunAttackState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileSpeedEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileSpeedHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileSpeedInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileSpeedNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileSpeedApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEffects;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileSpeed));
+bool GetChaserProfileStunAttackBeamParticle(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEffectBeamParticle;
 }
 
-float GetChaserProfileAttackProjectileRadius(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+int GetChaserProfileStunParticle(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileRadiusEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileRadiusHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileRadiusInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileRadiusNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileRadiusApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.StunParticle);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileRadius));
+int GetChaserProfileStunHitSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.StunHitSound);
 }
 
-float GetChaserProfileAttackProjectileDeviation(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+bool GetChaserProfileBleedState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDeviationEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDeviationHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDeviationInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDeviationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDeviationApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.BleedEffects;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileDeviation));
+bool GetChaserProfileEletricAttackState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ElectricEffects;
 }
 
-int GetChaserProfileAttackProjectileCount(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+bool GetChaserProfileEletricBeamParticle(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCountEasy);
-		case Difficulty_Hard: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCountHard);
-		case Difficulty_Insane: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCountInsane);
-		case Difficulty_Nightmare: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCountNightmare);
-		case Difficulty_Apollyon: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCountApollyon);
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ElectricBeamParticle;
+}
+
+int GetChaserProfileElectricRedParticle(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ElectricParticleRed);
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCount);
+int GetChaserProfileElectricBlueParticle(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ElectricParticleBlue);
 }
 
-bool GetChaserProfileAttackCritProjectiles(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileSmiteState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SmiteEffects;
+}
 
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileCrits));
+bool GetChaserProfileSmiteMessage(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SmiteMessage;
 }
 
-int GetChaserProfileAttackProjectileType(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileXenobladeCombo(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.XenobladeCombo;
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileType);
+float GetChaserProfileXenobladeBreakDuration(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.XenobladeDuration;
 }
 
-float GetChaserProfileAttackProjectileIceSlowPercent(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+float GetChaserProfileXenobladeToppleDuration(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercentEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercentHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercentInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercentNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercentApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.XenobladeToppleDuration;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownPercent));
+float GetChaserProfileXenobladeToppleSlowdown(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.XenobladeToppleSlowdown;
 }
 
-float GetChaserProfileAttackProjectileIceSlowDuration(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+float GetChaserProfileXenobladeDazeDuration(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDurationEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDurationHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDurationApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.XenobladeDazeDuration;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ProjectileIceSlowdownDuration));
+bool GetChaserProfileCloakState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CanCloak;
 }
 
-int GetChaserProfileAttackBulletCount(int iChaserProfileIndex,int iAttackIndex,int iDifficulty)
+bool GetChaserProfileProjectileState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletCountEasy);
-		case Difficulty_Hard: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletCountHard);
-		case Difficulty_Insane: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletCountInsane);
-		case Difficulty_Nightmare: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletCountNightmare);
-		case Difficulty_Apollyon: return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletCountApollyon);
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectilesEnabled;
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletCount);
+bool GetChaserProfileCriticalRockets(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CriticalProjectiles;
 }
 
-float GetChaserProfileAttackBulletDamage(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+int GetChaserProfileFireballShootSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletDamageEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletDamageHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletDamageInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletDamageNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletDamageApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballShootSound);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletDamage));
+int GetChaserProfileFireballTrail(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballTrail);
 }
 
-float GetChaserProfileAttackBulletSpread(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+int GetChaserProfileFireballExplodeSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletSpreadEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletSpreadHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletSpreadInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletSpreadNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletSpreadApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.FireballExplodeSound);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BulletSpread));
+int GetChaserProfileIceballSlowSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.IceballSlowSound);
 }
 
-float GetChaserProfileAttackLaserDamage(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+int GetChaserProfileIceballTrail(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDamageEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDamageHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDamageInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDamageNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDamageApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.IceballTrail);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDamage));
+int GetChaserProfileRocketShootSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketShootSound);
 }
 
-float GetChaserProfileAttackLaserSize(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileRocketModel(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserSize));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketModel);
 }
 
-int GetChaserProfileAttackLaserColorR(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileRocketTrail(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserColorR);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketTrail);
 }
 
-int GetChaserProfileAttackLaserColorG(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileRocketExplodeParticle(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserColorG);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketExplodeParticle);
 }
 
-int GetChaserProfileAttackLaserColorB(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileRocketExplodeSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserColorB);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.RocketExplodeSound);
 }
 
-bool GetChaserProfileEnableLaserAttachment(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileSentryRocketShootSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserAttachment));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.SentryRocketShootSound);
 }
 
-float GetChaserProfileAttackLaserDuration(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileGrenadeShootSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserDuration));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.GrenadeShootSound);
 }
 
-float GetChaserProfileAttackLaserNoise(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileArrowShootSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LaserNoise));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ArrowShootSound);
 }
 
-bool GetChaserProfileAttackPullIn(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileManglerShootSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_PullIn));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ManglerShootSound);
 }
 
-float GetChaserProfileAttackDamageVsProps(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileBaseballShootSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.BaseballShootSound);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageVsProps));
+bool GetChaserProfileGestureShoot(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShootGestures;
 }
 
-float GetChaserProfileAttackDamageForce(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileShootGestureName(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ShootGestureName);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageForce));
+bool GetChaserProfileShootAnimationsState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShootAnimations;
 }
 
-int GetChaserProfileAttackDamageType(int iChaserProfileIndex,int  iAttackIndex)
+bool GetChaserProfileProjectileAmmoState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileClips;
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageType);
+bool GetChaserProfileChargeUpProjectilesState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChargeUpProjectiles;
 }
 
-float GetChaserProfileAttackDamageDelay(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileRandomProjectilePosMin(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileRandomPosMin;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_DamageDelay));
+int GetChaserProfileRandomProjectilePosMax(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileRandomPosMax;
 }
 
-float GetChaserProfileAttackRange(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileBaseballModel(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.BaseballModel);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Range));
+ArrayList GetChaserProfileProjectilePositionsArray(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectilePosOffsets;
 }
 
-float GetChaserProfileAttackDuration(int iChaserProfileIndex,int  iAttackIndex)
+int GetChaserProfileProjectileType(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileType;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Duration));
+int GetChaserProfileProjectileLoadedAmmo(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileClipSize[difficulty];
 }
 
-float GetChaserProfileAttackSpread(int iChaserProfileIndex,int  iAttackIndex)
+float GetChaserProfileProjectileAmmoReloadTime(const char[] profile, int difficulty)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileReloadTime[difficulty];
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Spread));
+float GetChaserProfileProjectileChargeUpTime(const char[] profile, int difficulty)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileChargeUp[difficulty];
 }
 
-float GetChaserProfileAttackBeginRange(int iChaserProfileIndex,int  iAttackIndex)
+bool GetChaserProfileDamageParticleState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.DamageParticles;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BeginRange));
+int GetChaserProfileDamageParticleName(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.DamageParticleName);
 }
 
-float GetChaserProfileAttackBeginFOV(int iChaserProfileIndex,int  iAttackIndex)
+bool GetChaserProfileDamageParticleBeamState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.DamageParticleBeam;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BeginFOV));
+int GetChaserProfileDamageParticleSound(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.DamageParticleSound);
 }
 
-float GetChaserProfileAttackCooldown(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+bool GetChaserProfileStunState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
-	
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_CooldownEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_CooldownHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_CooldownInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_CooldownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_CooldownApollyon));
-	}
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunEnabled;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Cooldown));
+float GetChaserProfileStunCooldown(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunCooldown;
 }
 
-bool GetChaserProfileAttackLifeStealState(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileStunFlashlightState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.FlashlightStun;
+}
 
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_LifeStealEnabled));
+float GetChaserProfileStunFlashlightDamage(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.FlashlightDamage;
 }
 
-bool GetChaserProfileAttackRunWhileAttackingState(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileStunOnChaseInitial(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseInitialOnStun;
+}
 
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_CanAttackWhileRunning));
+ArrayList GetChaserProfileDamageResistances(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.DamageResistances;
 }
 
+float GetChaserProfileStunHealth(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunHealth;
+}
 
-float GetChaserProfileAttackRunSpeed(int iChaserProfileIndex,int  iAttackIndex,int iDifficulty)
+float GetChaserProfileStunHealthPerPlayer(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunHealthPerPlayer;
+}
 
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunSpeedEasy));
-		case Difficulty_Hard: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunSpeedHard));
-		case Difficulty_Insane: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunSpeedInsane));
-		case Difficulty_Nightmare: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunSpeedNightmare));
-		case Difficulty_Apollyon: return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunSpeedApollyon));
-	}
+float GetChaserProfileStunHealthPerClass(const char[] profile, int index)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunHealthPerClass[index];
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunSpeed));
+bool GetChaserProfileKeyDrop(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.KeyDrop;
 }
 
-float GetChaserProfileAttackRunDuration(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileKeyModel(const char[] profile, char[] buffer, int bufferlen)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.KeyModel);
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunDuration));
+int GetChaserProfileKeyTrigger(const char[] profile, char[] buffer, int bufferlen)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.KeyTrigger);
 }
 
-float GetChaserProfileAttackRunDelay(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileDisappearOnStun(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.DisappearOnStun;
+}
 
-	return view_as<float>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_RunDelay));
+bool GetChaserProfileStunItemDropState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ItemDropOnStun;
 }
 
-int GetChaserProfileAttackUseOnDifficulty(int iChaserProfileIndex,int iAttackIndex)
+int GetChaserProfileStunItemDropType(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.StunItemDropType;
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_UseOnDifficulty);
+bool GetChaserProfileBoxingState(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.BoxingBoss;
 }
 
-int GetChaserProfileAttackBlockOnDifficulty(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileNormalSoundHook(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.NormalSoundHook;
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_BlockOnDifficulty);
+bool GetChaserProfileChaseOnLook(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseOnLook;
 }
 
-int GetChaserProfileAttackExplosiveDanceRadius(int iChaserProfileIndex,int iAttackIndex)
+bool GetChaserProfileEarthquakeFootstepState(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.EarthquakeFootsteps;
+}
 
-	return hAttacks.Get(iAttackIndex, ChaserProfileAttackData_ExplosiveDanceRadius);
+float GetChaserProfileEarthquakeFootstepAmplitude(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.EarthquakeFootstepAmplitude;
 }
 
-bool GetChaserProfileAttackGesturesState(int iChaserProfileIndex,int iAttackIndex)
+float GetChaserProfileEarthquakeFootstepFrequency(const char[] profile)
 {
-	ArrayList hAttacks = g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_Attacks);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.EarthquakeFootstepFrequency;
+}
 
-	return view_as<bool>(hAttacks.Get(iAttackIndex, ChaserProfileAttackData_Gestures));
+float GetChaserProfileEarthquakeFootstepDuration(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.EarthquakeFootstepDuration;
 }
 
+float GetChaserProfileEarthquakeFootstepRadius(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.EarthquakeFootstepRadius;
+}
 
-bool GetChaserProfileEnableAdvancedDamageEffects(int iChaserProfileIndex)
+bool GetChaserProfileEarthquakeFootstepAirShake(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AdvancedDamageEffectsEnabled));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.EarthquakeFootstepAirShake;
 }
 
-bool GetChaserProfileEnableAdvancedDamageEffectsRandom(int iChaserProfileIndex)
+int GetChaserProfileSoundCountToAlert(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AdvancedDamageEffectsRandom));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SoundCountToAlert[difficulty];
 }
 
-bool GetChaserProfileEnableAdvancedDamageParticles(int iChaserProfileIndex)
+float GetChaserProfileCloakCooldown(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AdvancedDamageEffectsParticles));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CloakCooldown[difficulty];
 }
 
-bool GetChaserProfileJarateState(int iChaserProfileIndex)
+float GetChaserProfileCloakRange(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableJarateAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CloakRange[difficulty];
 }
 
-bool GetChaserProfileMilkState(int iChaserProfileIndex)
+float GetChaserProfileDecloakRange(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableMilkAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.DecloakRange[difficulty];
 }
 
-bool GetChaserProfileGasState(int iChaserProfileIndex)
+float GetChaserProfileCloakDuration(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableGasAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CloakDuration[difficulty];
 }
 
-bool GetChaserProfileMarkState(int iChaserProfileIndex)
+float GetChaserProfileCloakSpeedMultiplier(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableMarkAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CloakSpeedMultiplier[difficulty];
 }
 
-bool GetChaserProfileSilentMarkState(int iChaserProfileIndex)
+bool GetChaserProfileCloakToHeal(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableSilentMarkAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CloakToHeal;
 }
 
-bool GetChaserProfileIgniteState(int iChaserProfileIndex)
+int GetChaserProfileCloakParticle(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableIgniteAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakParticle);
 }
 
-bool GetChaserProfileStunAttackState(int iChaserProfileIndex)
+void GetChaserProfileCloakRenderColor(const char[] profile, int buffer[4])
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableStunAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	buffer =  g_CachedProfileData.CloakRenderColor;
 }
 
-bool GetChaserProfileBleedState(int iChaserProfileIndex)
+int GetChaserProfileCloakRenderMode(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableBleedAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CloakRenderMode;
 }
 
-bool GetChaserProfileEletricAttackState(int iChaserProfileIndex)
+int GetChaserProfileCloakOnSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableEletricAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakOnSound);
 }
 
-bool GetChaserProfileSmiteState(int iChaserProfileIndex)
+int GetChaserProfileCloakOffSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableSmiteAdvanced));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.CloakOffSound);
 }
 
-bool GetChaserProfileSmiteMessage(int iChaserProfileIndex)
+bool GetChaserProfileChaseInitialAnimationState(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_SmiteMessage));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ChaseInitialAnimations;
 }
 
-bool GetChaserProfileXenobladeCombo(int iChaserProfileIndex)
+bool GetChaserProfileSpawnAnimationState(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableXenobladeBreakCombo));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SpawnAnimationsEnabled;
 }
 
-float GetChaserProfileXenobladeBreakDuration(int iChaserProfileIndex)
+bool GetChaserProfileOldAnimState(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_XenobladeBreakDuration));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.OldAnimationAI;
 }
 
-float GetChaserProfileXenobladeToppleDuration(int iChaserProfileIndex)
+bool GetChaserProfileAlertWalkingState(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_XenobladeToppleDuration));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AlertWalkingAnimation;
 }
 
-float GetChaserProfileXenobladeToppleSlowdown(int iChaserProfileIndex)
+bool GetChaserProfileUnnerfedVisibility(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_XenobladeToppleSlowdown));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.UnnerfedVisibility;
 }
 
-float GetChaserProfileXenobladeDazeDuration(int iChaserProfileIndex)
+bool GetChaserProfileClearLayersState(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_XenobladeDazeDuration));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ClearLayersOnAnimUpdate;
 }
 
-bool GetChaserProfileCloakState(int iChaserProfileIndex)
+float GetChaserProfileHealAnimTimer(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CanCloak));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HealAnimationTimer;
 }
 
-bool GetChaserProfileProjectileState(int iChaserProfileIndex)
+float GetChaserProfileHealFunctionTimer(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileEnable));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HealFunctionTimer;
 }
 
-bool GetChaserProfileCriticalRockets(int iChaserProfileIndex)
+float GetChaserProfileHealRangeMin(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CriticlaRockets));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HealRangeMin;
 }
 
-bool GetChaserProfileGestureShoot(int iChaserProfileIndex)
+float GetChaserProfileHealRangeMax(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_UseShootGesture));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HealRangeMax;
 }
 
-bool GetChaserProfileProjectileAmmoState(int iChaserProfileIndex)
+float GetChaserProfileHealTimeMin(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileClipEnable));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HealTimeMin;
 }
 
-bool GetChaserProfileChargeUpProjectilesState(int iChaserProfileIndex)
+float GetChaserProfileHealTimeMax(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_UseChargeUpProjectiles));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HealTimeMax;
 }
 
-int GetChaserProfileProjectileType(int iChaserProfileIndex)
+float GetChaserProfileAfterburnMultiplier(const char[] profile)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileType);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AfterburnMultiplier;
 }
 
-int GetChaserProfileProjectileLoadedAmmo(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileBackstabDamageScale(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileClipEasy);
-		case Difficulty_Hard: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileClipHard);
-		case Difficulty_Insane: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileClipInsane);
-		case Difficulty_Nightmare: return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileClipNightmare);
-	}
-	
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileClipNormal);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.BackstabDamageScale;
 }
 
-float GetChaserProfileProjectileAmmoReloadTime(int iChaserProfileIndex,int iDifficulty)
+bool GetChaserProfileShockwaveState(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileReloadTimeNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.Shockwaves;
 }
 
-float GetChaserProfileProjectileChargeUpTime(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileShockwaveHeight(const char[] profile, int difficulty)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ProjectileChargeUpNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveHeight[difficulty];
 }
 
-bool GetChaserProfileDamageParticleState(int iChaserProfileIndex)
+float GetChaserProfileShockwaveRange(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_EnableDamageParticles));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveRange[difficulty];
 }
 
-float GetChaserProfileDamageParticleVolume(int iChaserProfileIndex)
+float GetChaserProfileShockwaveDrain(const char[] profile, int difficulty)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_DamageParticleVolume));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveDrain[difficulty];
 }
 
-int GetChaserProfileDamageParticlePitch(int iChaserProfileIndex)
+float GetChaserProfileShockwaveForce(const char[] profile, int difficulty)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_DamageParticlePitch);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveForce[difficulty];
 }
 
-bool GetChaserProfileStunState(int iChaserProfileIndex)
+bool GetChaserProfileShockwaveStunState(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CanBeStunned));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveStun;
 }
 
-float GetChaserProfileStunDuration(int iChaserProfileIndex)
+float GetChaserProfileShockwaveStunDuration(const char[] profile, int difficulty)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunDuration));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveStunDuration[difficulty];
 }
 
-float GetChaserProfileStunCooldown(int iChaserProfileIndex)
+float GetChaserProfileShockwaveStunSlowdown(const char[] profile, int difficulty)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunCooldown));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveStunSlowdown[difficulty];
 }
 
-bool GetChaserProfileStunFlashlightState(int iChaserProfileIndex)
+int GetChaserProfileShockwaveAttackIndexes(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CanBeStunnedByFlashlight));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveIndexes;
 }
 
-float GetChaserProfileStunFlashlightDamage(int iChaserProfileIndex)
+int GetChaserProfileShockwaveAttackIndexesString(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunFlashlightDamage));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ShockwaveIndexesString);
 }
 
-bool GetChaserProfileStunOnChaseInitial(int iChaserProfileIndex)
+float GetChaserProfileShockwaveWidth1(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ChaseInitialOnStun));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveWidths[0];
 }
 
-float GetChaserProfileStunHealth(int iChaserProfileIndex)
+float GetChaserProfileShockwaveWidth2(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunHealth));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveWidths[1];
 }
 
-float GetChaserProfileStunHealthPerPlayer(int iChaserProfileIndex)
+float GetChaserProfileShockwaveAmplitude(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_StunHealthPerPlayer));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveAmplitude;
 }
 
-bool GetChaserProfileKeyDrop(int iChaserProfileIndex)
+void GetChaserProfileShockwaveColor1(const char[] profile, int buffer[3])
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_KeyDrop));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	buffer = g_CachedProfileData.ShockwaveColor1;
 }
 
-float GetChaserProfileCloakCooldown(int iChaserProfileIndex,int iDifficulty)
+void GetChaserProfileShockwaveColor2(const char[] profile, int buffer[3])
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakCooldownEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakCooldownHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakCooldownInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakCooldownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakCooldownApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakCooldownNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	buffer = g_CachedProfileData.ShockwaveColor2;
 }
 
-float GetChaserProfileCloakRange(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileShockwaveAlpha1(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakRangeEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakRangeHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakRangeInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakRangeNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakRangeApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakRangeNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveAlpha1;
 }
 
-float GetChaserProfileDecloakRange(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileShockwaveAlpha2(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDecloakRangeEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDecloakRangeHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDecloakRangeInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDecloakRangeNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDecloakRangeApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDecloakRangeNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveAlpha2;
 }
 
-float GetChaserProfileCloakDuration(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileShockwaveBeamSprite(const char[] profile, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDurationApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakDurationNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ShockwaveBeamSprite);
 }
 
-float GetChaserProfileCloakSpeedMultiplier(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileShockwaveHaloSprite(const char[] profile, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakSpeedMultiplierEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakSpeedMultiplierHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakSpeedMultiplierInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakSpeedMultiplierNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakSpeedMultiplierApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CloakSpeedMultiplierNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.ShockwaveHaloSprite);
 }
 
-bool GetChaserProfileShockwaveState(int iChaserProfileIndex)
+int GetChaserProfileShockwaveBeamModel(const char[] profile)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwavesEnable));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveBeamModel;
 }
 
-float GetChaserProfileShockwaveHeight(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileShockwaveHaloModel(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveHeightEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveHeightHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveHeightInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveHeightNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveHeightApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveHeightNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ShockwaveHaloModel;
 }
 
-float GetChaserProfileShockwaveRange(int iChaserProfileIndex,int iDifficulty)
+bool GetChaserProfileTrapState(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveRangeEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveRangeHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveRangeInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveRangeNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveRangeApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveRangeNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.Traps;
 }
 
-float GetChaserProfileShockwaveDrain(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileTrapType(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveDrainEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveDrainHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveDrainInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveDrainNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveDrainApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveDrainNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.TrapType;
 }
 
-float GetChaserProfileShockwaveForce(int iChaserProfileIndex,int iDifficulty)
+float GetChaserProfileTrapSpawnCooldown(const char[] profile, int difficulty)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveForceEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveForceHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveForceInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveForceNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveForceApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveForceNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.TrapCooldown[difficulty];
 }
 
-bool GetChaserProfileShockwaveStunState(int iChaserProfileIndex)
+int GetChaserProfileTrapModel(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunEnabled));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapModel);
 }
 
-float GetChaserProfileShockwaveStunDuration(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileTrapDeploySound(const char[] profile, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunDurationNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapDeploySound);
 }
 
-float GetChaserProfileShockwaveStunSlowdown(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileTrapMissSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveStunSlowdownNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapMissSound);
 }
 
-int GetChaserProfileShockwaveAttackIndexes(int iChaserProfileIndex)
+int GetChaserProfileTrapCatchSound(const char[] profile, char[] buffer, int bufferlen)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_ShockwaveAttackIndexes);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapCatchSound);
 }
 
-bool GetChaserProfileTrapState(int iChaserProfileIndex)
+int GetChaserProfileTrapAnimIdle(const char[] profile, char[] buffer, int bufferlen)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapsEnabled));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimIdle);
 }
 
-int GetChaserProfileTrapType(int iChaserProfileIndex)
+int GetChaserProfileTrapAnimClose(const char[] profile, char[] buffer, int bufferlen)
 {
-	return g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapType);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimClose);
 }
 
-float GetChaserProfileTrapSpawnCooldown(int iChaserProfileIndex,int iDifficulty)
+int GetChaserProfileTrapAnimOpen(const char[] profile, char[] buffer, int bufferlen)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_TrapSpawnCooldownNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return strcopy(buffer, bufferlen, g_CachedProfileData.TrapAnimOpen);
 }
 
-float GetChaserProfileCrawlSpeedMultiplier(int iChaserProfileIndex,int iDifficulty)
+bool GetChaserProfileCrawlState(const char[] profile)
 {
-	switch (iDifficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CrawlSpeedMultiplierEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CrawlSpeedMultiplierHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CrawlSpeedMultiplierInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CrawlSpeedMultiplierNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CrawlSpeedMultiplierApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CrawlSpeedMultiplierNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.Crawling;
 }
 
-bool GetChaserProfileSelfHealState(int iChaserProfileIndex)
+float GetChaserProfileCrawlSpeedMultiplier(const char[] profile, int difficulty)
 {
-	return view_as<bool>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_CanSelfHeal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.CrawlSpeedMultiplier[difficulty];
 }
 
-float GetChaserProfileSelfHealStartPercentage(int iChaserProfileIndex)
+void GetChaserProfileCrawlMins(const char[] profile, float buffer[3])
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_HealStartHealthPercentage));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	buffer = g_CachedProfileData.CrawlDetectMins;
 }
 
-float GetChaserProfileSelfHealPercentageOne(int iChaserProfileIndex)
+void GetChaserProfileCrawlMaxs(const char[] profile, float buffer[3])
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_HealPercentageOne));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	buffer = g_CachedProfileData.CrawlDetectMaxs;
 }
 
-float GetChaserProfileSelfHealPercentageTwo(int iChaserProfileIndex)
+bool GetChaserProfileSelfHealState(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_HealPercentageTwo));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SelfHeal;
 }
 
-float GetChaserProfileSelfHealPercentageThree(int iChaserProfileIndex)
+float GetChaserProfileSelfHealStartPercentage(const char[] profile)
 {
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_HealPercentageThree));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SelfHealPercentageStart;
 }
 
-stock float GetChaserProfileAwarenessIncreaseRate(int iChaserProfileIndex,int difficulty)
+float GetChaserProfileSelfHealPercentageOne(const char[] profile)
 {
-	switch (difficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessIncreaseRateNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SelfHealRecover[0];
 }
 
-stock float GetChaserProfileAwarenessDecreaseRate(int iChaserProfileIndex,int difficulty)
+float GetChaserProfileSelfHealPercentageTwo(const char[] profile)
 {
-	switch (difficulty)
-	{
-		case Difficulty_Easy: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateEasy));
-		case Difficulty_Hard: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateHard));
-		case Difficulty_Insane: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateInsane));
-		case Difficulty_Nightmare: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateNightmare));
-		case Difficulty_Apollyon: return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateApollyon));
-	}
-	
-	return view_as<float>(g_hChaserProfileData.Get(iChaserProfileIndex, ChaserProfileData_AwarenessDecreaseRateNormal));
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SelfHealRecover[1];
+}
+
+float GetChaserProfileSelfHealPercentageThree(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.SelfHealRecover[2];
+}
+
+void GetChaserProfileIdleSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.IdleSounds;
+}
+
+void GetChaserProfileAlertSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.AlertSounds;
+}
+
+void GetChaserProfileChasingSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.ChasingSounds;
+}
+
+void GetChaserProfileChaseInitialSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.ChaseInitialSounds;
+}
+
+void GetChaserProfileStunSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.StunnedSounds;
+}
+
+void GetChaserProfileAttackKilledSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.AttackKilledSounds;
+}
+
+void GetChaserProfileAttackKilledAllSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.AttackKilledAllSounds;
+}
+
+void GetChaserProfileAttackKilledClientSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.AttackKilledClientSounds;
+}
+
+void GetChaserProfileRageAllSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.RageAllSounds;
+}
+
+void GetChaserProfileRageTwoSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.RageTwoSounds;
+}
+
+void GetChaserProfileRageThreeSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.RageThreeSounds;
+}
+
+void GetChaserProfileSelfHealSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.SelfHealSounds;
+}
+
+void GetChaserProfileFootstepSounds(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.FootstepSounds;
+}
+
+ArrayList GetChaserProfileAttackSounds(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.AttackSounds;
 }
 
-stock int GetProfileAttackNum(const char[] sProfile, const char[] keyValue,int defaultValue=0, const int iAttackIndex)
+ArrayList GetChaserProfileHitSounds(const char[] profile)
 {
-	if (!IsProfileValid(sProfile)) return defaultValue;
-	
-	char sKey[4];
-	g_hConfig.Rewind();
-	g_hConfig.JumpToKey(sProfile);
-	g_hConfig.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
-	g_hConfig.JumpToKey(sKey);
-	return g_hConfig.GetNum(keyValue, defaultValue);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.HitSounds;
 }
 
-stock float GetProfileAttackFloat(const char[] sProfile, const char[] keyValue,float defaultValue=0.0, const int iAttackIndex)
+ArrayList GetChaserProfileMissSounds(const char[] profile)
 {
-	if (!IsProfileValid(sProfile)) return defaultValue;
-	
-	char sKey[4];
-	g_hConfig.Rewind();
-	g_hConfig.JumpToKey(sProfile);
-	g_hConfig.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
-	g_hConfig.JumpToKey(sKey);
-	return g_hConfig.GetFloat(keyValue, defaultValue);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.MissSounds;
 }
 
-stock bool GetProfileAttackString(const char[] sProfile, const char[] keyValue, char[] sBuffer, int iLenght, const char[] sDefaultValue = "", const int iAttackIndex)
+ArrayList GetChaserProfileBulletShootSounds(const char[] profile)
 {
-	if (!IsProfileValid(sProfile)) return false;
-	
-	char sKey[4];
-	g_hConfig.Rewind();
-	g_hConfig.JumpToKey(sProfile);
-	g_hConfig.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
-	g_hConfig.JumpToKey(sKey);
-	g_hConfig.GetString(keyValue, sBuffer, iLenght, sDefaultValue);
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.BulletShootSounds;
+}
+
+ArrayList GetChaserProfileProjectileShootSounds(const char[] profile)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProjectileShootSounds;
+}
+
+void GetChaserProfileChaseMusics(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.ChaseMusics;
+}
+
+void GetChaserProfileChaseVisibleMusics(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.ChaseVisibleMusics;
+}
+
+void GetChaserProfileAlertMusics(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.AlertMusics;
+}
+
+void GetChaserProfileIdleMusics(const char[] profile, SF2BossProfileSoundInfo params)
+{
+	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	params = g_CachedProfileData.IdleMusics;
+}
+
+int GetProfileAttackNum(const char[] profile, const char[] keyValue, int defaultValue=0, const int attackIndex)
+{
+	if (!IsProfileValid(profile))
+	{
+		return defaultValue;
+	}
+
+	char key[4];
+	g_Config.Rewind();
+	g_Config.JumpToKey(profile);
+	g_Config.JumpToKey("attacks");
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
+	return g_Config.GetNum(keyValue, defaultValue);
+}
+
+float GetProfileAttackFloat(const char[] profile, const char[] keyValue,float defaultValue=0.0, const int attackIndex)
+{
+	if (!IsProfileValid(profile))
+	{
+		return defaultValue;
+	}
+
+	char key[4];
+	g_Config.Rewind();
+	g_Config.JumpToKey(profile);
+	g_Config.JumpToKey("attacks");
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
+	return g_Config.GetFloat(keyValue, defaultValue);
+}
+
+bool GetProfileAttackString(const char[] profile, const char[] keyValue, char[] buffer, int length, const char[] defaultValue = "", const int attackIndex)
+{
+	if (!IsProfileValid(profile))
+	{
+		return false;
+	}
+
+	char key[4];
+	g_Config.Rewind();
+	g_Config.JumpToKey(profile);
+	g_Config.JumpToKey("attacks");
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
+	g_Config.GetString(keyValue, buffer, length, defaultValue);
 	return true;
 }
 
-stock bool GetProfileAttackVector(const char[] sProfile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int iAttackIndex)
+bool GetProfileAttackVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int attackIndex)
 {
-	for (int i = 0; i < 3; i++) buffer[i] = defaultValue[i];
-	
-	if (!IsProfileValid(sProfile)) return false;
-	
-	char sKey[4];
-	g_hConfig.Rewind();
-	g_hConfig.JumpToKey(sProfile);
-	g_hConfig.JumpToKey("attacks");
-	FormatEx(sKey, sizeof(sKey), "%d", iAttackIndex);
-	g_hConfig.JumpToKey(sKey);
-	g_hConfig.GetVector(keyValue, buffer, defaultValue);
+	for (int i = 0; i < 3; i++)
+	{
+		buffer[i] = defaultValue[i];
+	}
+
+	if (!IsProfileValid(profile))
+	{
+		return false;
+	}
+
+	char key[4];
+	g_Config.Rewind();
+	g_Config.JumpToKey(profile);
+	g_Config.JumpToKey("attacks");
+	FormatEx(key, sizeof(key), "%d", attackIndex);
+	g_Config.JumpToKey(key);
+	g_Config.GetVector(keyValue, buffer, defaultValue);
 	return true;
 }
