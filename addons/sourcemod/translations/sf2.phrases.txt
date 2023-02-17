@@ -407,7 +407,7 @@
 
 	"SF2 Help Scout Class Info Description"
 	{
-		"en"	"[+] 15%% increase in sprint duration\n[-] Low health, most affected by screen wobbling"
+		"en"	"[+] 15%% increase in sprint duration\n[+] Fastest base sprint speed\n[-] Low health, most affected by screen wobbling"
 		"ru"	"[+] На 15%% увеличена продолжительность бега\n[-] Мало здоровья, наиболее подвержен внушению"
 		"fi"	"[+] 15%% lisäys juoksun kestoon\n[-] Heikko terveys, ottaa eniten vaikustusta näytön keikkumisesta"
 		"chi"	"[+] 增加 15%% 冲刺持续时间\n[-] 低生命值，更容易受到屏幕震动效果"
@@ -425,11 +425,11 @@
 
 	"SF2 Help Soldier Class Info Description"
 	{
-		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[-] The Half-Zatoichi only restores 20 HP on kill\n[-] The Escape Plan only affects sprinting speed"
-		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полудзатоити восстанавливает только 20 ед. за убийство\n[-] План эвакуации влияет только на скорость бега"
-		"fi"	"[+] Kuritoimenpide lisää kävelyn ja juoksemisen nopeutta\nPuolisokea Samurai antaa vain 20 terveyttä taposta\n[-] Pakosuunnitelma vaikuttaa vain ja ainostaan juoksu nopeuteen"
-		"chi"	"[+] 指挥官的军鞭同时增加走路和冲刺速度\n[-] 座头市之刀击杀后只恢复20HP\n[-] 逃生计划镐只影响冲刺速度"
-		"pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
+		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] 5%% higher static resistance and recovery rate\n[+] Market Gardener crits in midair\n[+] Jumping while walking doesn't cost stamina\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] Slowest sprint speed along with Heavy and Demoman\n[-] The Escape Plan only affects sprinting speed"
+		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полудзатоити восстанавливает только 5 ед. за убийство\n[-] План эвакуации влияет только на скорость бега"
+		"fi"	"[+] Kuritoimenpide lisää kävelyn ja juoksemisen nopeutta\nPuolisokea Samurai antaa vain 5 terveyttä taposta\n[-] Pakosuunnitelma vaikuttaa vain ja ainostaan juoksu nopeuteen"
+		"chi"	"[+] 指挥官的军鞭同时增加走路和冲刺速度\n[-] 座头市之刀击杀后只恢复5HP\n[-] 逃生计划镐只影响冲刺速度"
+    "pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 5 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
 	}
 
 	"SF2 Help Sniper Class Info Menu Title"
@@ -461,7 +461,7 @@
 
 	"SF2 Help Demoman Class Info Description"
 	{
-		"en"	"[+] 66%% increase in scare sprint duration\n[-] The Half-Zatoichi only restores 20 HP on kill"
+		"en"	"[+] 66%% increase in scare sprint duration\n[-] Slowest base sprint speed along with Soldier and Heavy\n[-] The Half-Zatoichi only restores 5 HP on kill"
 		"ru"	"[+] На 66%% увеличена продолжительность бега при испуге\n[-] Полудзатоити восстанавливает только 20 ед. за убийство"
 		"fi"	"[+] 66%% lisäys pelottamisen juoksunopeuteen\n[-] Puolisokea Samurai palauttaa vain 20 terveyttä taposta"
 		"chi"	"[+] 惊吓状态下增加 66%% 冲刺持续时间\n[-] 座头市之刀击杀后只恢复20HP"
@@ -479,7 +479,7 @@
 
 	"SF2 Help Heavy Class Info Description"
 	{
-		"en"	"[+] Large health, least affected by screen wobbling\n[-] The Gloves of Running Urgently only affects sprinting speed"
+		"en"	"[+] Large health, least affected by screen wobbling\n [+] Unable to be trapped by bear traps\n [-] Slowest sprint speed along with Soldier and Demoman\n[-] The Gloves of Running Urgently only affects sprinting speed"
 		"ru"	"[+] Много здоровья, мало подвержен внушению\n[-] ГРУ влияют только на скорость бега"
 		"fi"	"[+] Suuri terveys, vähiten vaikutusta näytön keikkumisesta\n Pikajuoksuhanskat vaikuttaa vain juoksunopeuteen"
 		"chi"	"[+] 很多生命值，不容易受到屏幕震动效果\n[-] 紧急逃跑手套只影响冲刺速度"
@@ -497,7 +497,7 @@
 
 	"SF2 Help Medic Class Info Description"
 	{
-		"en"	"[+] Regenerates health over time\n[-] Prioritized target to bosses"
+		"en"	"[+] Regenerates health over time\n[-] Highest priority to bosses\n[-] Unable to pick up health packs\n[-] Proxies deal 15%% more damage"
 		"ru"	"[+] Со временем восстанавливает здоровье\n[-] Приоритетная цель"
 		"fi"	"[+] Terveys palautuu ajan myötä\n[-] Ensisijainen kohde bosseille"
 		"chi"	"[+] 随时间恢复生命值\n[-] Boss们的优先目标"
@@ -533,11 +533,11 @@
 
 	"SF2 Help Spy Class Info Description"
 	{
-		"en"	"[+] All sounds you make are 35%% quieter to bosses\n[-] Low health, most affected by screen wobbling"
-		"ru"	"[+] Все издаваемые звуки на 35%% тише\n[-] Мало здоровья, наиболее подвержен внушению"
-		"fi"	"[+] Kaikki äänet jota teet ovat 35%% hiljaisempia bosseille\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
-		"chi"	"[+] 你发出的声音对Boss来说有 35%% 安静加成\n[-] 低生命值，最容易受到屏幕震动效果"
-		"pt"	"[+] Todos os sons que você faz são 35%% mais silenciosos\npara os chefões\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+		"en"	"[+] All sounds you make are 30%% quieter to bosses\n[+] 5%% more sprint duration\n[-] Low health, most affected by screen wobbling\n[-] Higher boss priority\n[-] Least amount of scare sprint speed boost\n[-] Big Earner and Kunai only work against proxies"
+		"ru"	"[+] Все издаваемые звуки на 30%% тише\n[-] Мало здоровья, наиболее подвержен внушению"
+		"fi"	"[+] Kaikki äänet jota teet ovat 30%% hiljaisempia bosseille\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
+		"chi"	"[+] 你发出的声音对Boss来说有 30%% 安静加成\n[-] 低生命值，最容易受到屏幕震动效果"
+    "pt"	"[+] Todos os sons que você faz são 30%% mais silenciosos\npara os chefões\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
 	}
 
 	"SF2 Help Engineer Class Info Menu Title"
