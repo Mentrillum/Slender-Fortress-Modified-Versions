@@ -3182,7 +3182,7 @@ static void ClientPerformSightSound(int client,int bossIndex)
 	SF2BossProfileSoundInfo soundInfo;
 	GetBossProfileSightSounds(profile, soundInfo);
 
-	if (sightSound[0] != '\0')
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.EmitSound(true, client);
 
