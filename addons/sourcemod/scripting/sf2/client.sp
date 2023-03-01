@@ -3178,11 +3178,10 @@ static void ClientPerformSightSound(int client,int bossIndex)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	char sightSound[PLATFORM_MAX_PATH];
 	SF2BossProfileSoundInfo soundInfo;
 	GetBossProfileSightSounds(profile, soundInfo);
 
-	if (sightSound[0] != '\0')
+	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.EmitSound(true, client);
 
