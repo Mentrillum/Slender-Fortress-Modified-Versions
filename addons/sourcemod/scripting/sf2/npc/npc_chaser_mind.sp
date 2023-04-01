@@ -7,6 +7,7 @@
 #pragma semicolon 1
 
 char cloakParticle[PLATFORM_MAX_PATH];
+static bool g_BossForceAnimationUpdate[MAX_BOSSES] = { false, ... };
 
 Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are so big, you get a file dedicated to only you
 {
@@ -46,6 +47,8 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
 	INextBot bot = npc.GetBot();
 	CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npc.GetEntity());
+
+	g_BossForceAnimationUpdate[chaserBoss.Index] = false;
 
 	float gameTime = GetGameTime();
 
@@ -603,6 +606,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && state != STATE_CHASE && state != STATE_ATTACK && state != STATE_STUN)
 						{
 							g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
+							g_BossForceAnimationUpdate[chaserBoss.Index] = true;
 							npc.flWalkSpeed = 0.0;
 							npc.flRunSpeed = 0.0;
 							NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, STATE_CHASE);
@@ -734,9 +738,9 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 			{
 				ArrayList arrayRaidTargets = new ArrayList();
 
-				for (int i = 1; i <= MaxClients; i++)
+				for (int i = 1; i < MaxClients; i++)
 				{
-					if (!IsClientInGame(i) ||
+					if (!IsValidClient(i) ||
 						!IsPlayerAlive(i) ||
 						g_PlayerEliminated[i] ||
 						IsClientInGhostMode(i) ||
@@ -771,7 +775,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 			for (int i = 0; i < g_NpcChaseOnLookTarget[chaserBoss.Index].Length; i++)
 			{
 				int lookClient = g_NpcChaseOnLookTarget[chaserBoss.Index].Get(i);
-				if (IsValidClient(lookClient) && !g_PlayerEliminated[lookClient] && IsPlayerAlive(lookClient) && IsClientInGame(lookClient) &&
+				if (IsValidClient(lookClient) && !g_PlayerEliminated[lookClient] && IsPlayerAlive(lookClient) &&
 					!IsClientInGhostMode(lookClient) && !DidClientEscape(lookClient))
 				{
 					bestNewTarget = lookClient;
@@ -1231,6 +1235,11 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						delete trace;
 					}
 
+					if (!CanNPCSeePlayerNonTransparent(chaserBoss.Index, SF2_BasePlayer(target)))
+					{
+
+					}
+
 					if (!building && !playerVisible[target] && !g_NpcIsRunningToHeal[chaserBoss.Index] && !g_NpcIsHealing[chaserBoss.Index])
 					{
 						if (gameTime >= g_SlenderTimeUntilAlert[chaserBoss.Index] || (!attackEliminated && g_PlayerEliminated[target]))
@@ -1615,7 +1624,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						if (difficulty != 2 && difficulty < 2)
 						{
 							NPCChaserSetBoxingDifficulty(chaserBoss.Index, NPCChaserGetBoxingDifficulty(chaserBoss.Index) + 1);
-							for (int client = 1; client <= MaxClients; client++)
+							for (int client = 1; client < MaxClients; client++)
 							{
 								if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 								{
@@ -1647,7 +1656,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						if (difficulty != 3 && difficulty < 3)
 						{
 							NPCChaserSetBoxingDifficulty(chaserBoss.Index, NPCChaserGetBoxingDifficulty(chaserBoss.Index) + 1);
-							for (int client = 1; client <= MaxClients; client++)
+							for (int client = 1; client < MaxClients; client++)
 							{
 								if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 								{
@@ -1705,7 +1714,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 						if (difficulty != 4 && difficulty < 4)
 						{
 							NPCChaserSetBoxingDifficulty(chaserBoss.Index, NPCChaserGetBoxingDifficulty(chaserBoss.Index) + 1);
-							for (int client = 1; client <= MaxClients; client++)
+							for (int client = 1; client < MaxClients; client++)
 							{
 								if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 								{
@@ -1877,7 +1886,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 									if (difficulty != 2 && difficulty < 2)
 									{
 										NPCChaserSetBoxingDifficulty(chaserBoss.Index, NPCChaserGetBoxingDifficulty(chaserBoss.Index) + 1);
-										for (int client = 1; client <= MaxClients; client++)
+										for (int client = 1; client < MaxClients; client++)
 										{
 											if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 											{
@@ -1903,7 +1912,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 									if (difficulty != 3 && difficulty < 3)
 									{
 										NPCChaserSetBoxingDifficulty(chaserBoss.Index, NPCChaserGetBoxingDifficulty(chaserBoss.Index) + 1);
-										for (int client = 1; client <= MaxClients; client++)
+										for (int client = 1; client < MaxClients; client++)
 										{
 											if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 											{
@@ -1955,7 +1964,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 									if (difficulty != 4 && difficulty < 4)
 									{
 										NPCChaserSetBoxingDifficulty(chaserBoss.Index, NPCChaserGetBoxingDifficulty(chaserBoss.Index) + 1);
-										for (int client = 1; client <= MaxClients; client++)
+										for (int client = 1; client < MaxClients; client++)
 										{
 											if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 											{
@@ -2266,6 +2275,7 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 									if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && (g_NpcChaseOnLookTarget[chaserBoss.Index] == null || g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0))
 									{
 										g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
+										g_BossForceAnimationUpdate[chaserBoss.Index] = true;
 										npc.flWalkSpeed = 0.0;
 										npc.flRunSpeed = 0.0;
 										NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, state);
@@ -2282,8 +2292,8 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 								if (g_SlenderChaseInitialTimer[chaserBoss.Index] == null && (g_NpcChaseOnLookTarget[chaserBoss.Index] == null || g_NpcChaseOnLookTarget[chaserBoss.Index].Length <= 0))
 								{
 									g_NpcUsesChaseInitialAnimation[chaserBoss.Index] = true;
+									g_BossForceAnimationUpdate[chaserBoss.Index] = true;
 									npc.flWalkSpeed = 0.0;
-									npc.flRunSpeed = 0.0;
 									NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, state);
 									g_SlenderChaseInitialTimer[chaserBoss.Index] = CreateTimer(g_SlenderAnimationDuration[chaserBoss.Index], Timer_SlenderChaseInitialTimer, EntIndexToEntRef(npcEntity.index), TIMER_FLAG_NO_MAPCHANGE);
 								}
@@ -2321,7 +2331,14 @@ Action Timer_SlenderChaseBossThink(Handle timer, any entref) //God damn you are 
 
 	if (oldState != state && !g_SlenderSpawning[chaserBoss.Index])
 	{
-		NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, state);
+		if (g_BossForceAnimationUpdate[chaserBoss.Index])
+		{
+			g_BossForceAnimationUpdate[chaserBoss.Index] = false;
+		}
+		else
+		{
+			NPCChaserUpdateBossAnimation(chaserBoss.Index, npcEntity.index, state);
+		}
 	}
 
 	if (g_NpcChangeToCrawl[chaserBoss.Index] && (state == STATE_CHASE || state == STATE_WANDER || state == STATE_ALERT))

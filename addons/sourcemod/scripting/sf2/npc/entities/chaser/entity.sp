@@ -1,0 +1,1 @@
+#pragma semicolon 1

@@ -5,12 +5,39 @@
 
 #pragma semicolon 1
 
+void SetupRenevantMode()
+{
+	g_OnRoundEndPFwd.AddFunction(null, OnRoundEnd);
+	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+}
+
+static void OnRoundEnd()
+{
+	if (SF_IsRenevantMap() && g_RenevantWaveTimer != null)
+	{
+		KillTimer(g_RenevantWaveTimer);
+	}
+}
+
+static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
+{
+	if (fake)
+	{
+		return;
+	}
+
+	if (g_RenevantMultiEffect)
+	{
+		CreateTimer(0.1, Timer_ReplacePlayerRagdoll, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+
 bool SF_IsRenevantMap()
 {
 	return !!(g_IsRenevantMap || (g_RenevantMapConVar.IntValue == 1));
 }
 
-static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int profileLen, char[] name, int nameLen, bool playSpawnSound=true, bool invincible = false)
+static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int profileLen, char[] name, int nameLen, bool playSpawnSound = true, bool invincible = false)
 {
 	if (!GetRandomRenevantBossProfile(profile, profileLen))
 	{
@@ -27,22 +54,6 @@ static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH]
 	return true;
 }
 
-static bool Renevant_TryAddSingleBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], char[] name, int nameLen, bool playSpawnSound=true, bool invincible = false)
-{
-	if (!IsProfileValid(profile))
-	{
-		return false;
-	}
-
-	NPCGetBossName(_, name, nameLen, profile);
-	if (name[0] == '\0')
-	{
-		strcopy(name, nameLen, profile);
-	}
-	AddProfile(profile, _, _, _, playSpawnSound, invincible);
-
-	return true;
-}
 
 static void ShowRenevantMessageToClient(int client, const char[] message, int params, any ...)
 {
@@ -67,9 +78,9 @@ static void Renevant_BroadcastMessage(const char[] message, int params, ...)
 	char format[512];
 	VFormat(format, sizeof(format), message, params);
 
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
-		if (!IsValidClient(i) || !IsClientInGame(i) || (g_PlayerEliminated[i] && !IsClientInGhostMode(i)) || !IsPlayerAlive(i))
+		if (!IsValidClient(i) || (g_PlayerEliminated[i] && !IsClientInGhostMode(i)) || !IsPlayerAlive(i))
 		{
 			continue;
 		}
@@ -120,6 +131,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 	{
 		case RenevantWave_Normal:
 		{
+			// Do nothing
 		}
 		case RenevantWave_IncreaseDifficulty:
 		{
@@ -159,10 +171,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 					CPrintToChatAll("The difficulty has been set to: {darkgray}%t{default}!", "SF2 Apollyon Difficulty");
 
-					for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-					{
-						EmitSoundToAll(g_SoundNightmareMode[i]);
-					}
+					PlayNightmareSound();
 
 					FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 
@@ -304,13 +313,13 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_MarkForDeath:
 		{
 			g_RenevantMarkForDeath = true;
-			for (int client = 1; client <= MaxClients; client++)
+			for (int client = 1; client < MaxClients; client++)
 			{
 				if (!IsValidClient(client))
 				{
 					continue;
 				}
-				if (!IsClientInGame(client) ||
+				if (!IsValidClient(client) ||
 					!IsPlayerAlive(client) ||
 					g_PlayerEliminated[client] ||
 					IsClientInGhostMode(client) ||
@@ -331,7 +340,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		{
 			char bufferSingle[SF2_MAX_PROFILE_NAME_LENGTH], singleBossName[SF2_MAX_NAME_LENGTH];
 			g_DefaultRenevantBossConVar.GetString(bufferSingle, sizeof(bufferSingle));
-			if (Renevant_TryAddSingleBossProfile(bufferSingle, singleBossName, sizeof(singleBossName), _, true))
+			if (Renevant_TryAddBossProfile(bufferSingle, sizeof(bufferSingle), singleBossName, sizeof(singleBossName), _, true))
 			{
 				addedBossCount++;
 			}
@@ -494,12 +503,12 @@ static void Renevant_SpawnApollyon()
 	ent = -1;
 	if (spawnPoint.Length > 0)
 	{
-		ent = spawnPoint.Get(GetRandomInt(0,spawnPoint.Length-1));
+		ent = spawnPoint.Get(GetRandomInt(0, spawnPoint.Length - 1));
 	}
 
 	delete spawnPoint;
 
-	if (ent > MaxClients)
+	if (IsValidEntity(ent))
 	{
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", teleportPos);
 		for(int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)

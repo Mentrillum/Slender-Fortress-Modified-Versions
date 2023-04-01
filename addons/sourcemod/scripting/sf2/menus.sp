@@ -270,8 +270,8 @@ void SetupMenus()
 	StrCat(buffer, sizeof(buffer), "Version: ");
 	StrCat(buffer, sizeof(buffer), PLUGIN_VERSION);
 	StrCat(buffer, sizeof(buffer), "\n \n");
-	Format(buffer, sizeof(buffer), "%s%t\n",buffer,"SF2 Recent Changes");
-	Format(buffer, sizeof(buffer), "%s%t\n",buffer,"SF2 Change Log");
+	Format(buffer, sizeof(buffer), "%s%t\n", buffer, "SF2 Recent Changes");
+	Format(buffer, sizeof(buffer), "%s%t\n", buffer, "SF2 Change Log");
 	StrCat(buffer, sizeof(buffer), "\n \n");
 
 	SetMenuTitle(g_MenuUpdate, buffer);
@@ -302,7 +302,7 @@ void RandomizeVoteMenu()
 	bool apollyon = StrContains(buffer, "5") != -1;
 	bool random = StrContains(buffer, "6") != -1;
 
-	switch (GetRandomInt(1,6))//There's probably a better way to do this but I was tired.
+	switch (GetRandomInt(1, 6))//There's probably a better way to do this but I was tired.
 	{
 		case 1:
 		{
@@ -413,11 +413,13 @@ void RandomizeVoteMenu()
 			}
 		}
 	}
+
 	if (nightmare)
 	{
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Nightmare Difficulty");
 		AddMenuItem(g_MenuVoteDifficulty, "4", buffer);
 	}
+
 	if(apollyon)
 	{
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Apollyon Difficulty");
@@ -431,7 +433,7 @@ void RandomizeVoteMenu()
 	}
 }
 
-static int Menu_Main(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Main(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -478,14 +480,14 @@ static int Menu_Main(Handle menu, MenuAction action,int param1,int param2)
 	return 0;
 }
 
-static int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_RestartSessionConVar.BoolValue)
 	{
 		int clientInGame = 0, clientCallingForNightmare = 0;
-		for (int client = 1; client <= MaxClients; client++)
+		for (int client = 1; client < MaxClients; client++)
 		{
-			if (IsClientInGame(client) && !g_PlayerEliminated[client])
+			if (IsValidClient(client) && !g_PlayerEliminated[client])
 			{
 				clientInGame++;
 				if (g_PlayerCalledForNightmare[client])
@@ -648,10 +650,7 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				FormatEx(display, sizeof(display), "%t!", "SF2 Nightmare Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 				strcopy(color, sizeof(color), "{valve}");
-				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-				{
-					EmitSoundToAll(g_SoundNightmareMode[i]);
-				}
+				PlayNightmareSound();
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 			}
 			case Difficulty_Apollyon:
@@ -659,10 +658,7 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 				FormatEx(display, sizeof(display), "%t!", "SF2 Apollyon Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 				strcopy(color, sizeof(color), "{darkgray}");
-				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-				{
-					EmitSoundToAll(g_SoundNightmareMode[i]);
-				}
+				PlayNightmareSound();
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 				if (rng)
 				{
@@ -724,7 +720,7 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action,int param1,int par
 	return 0;
 }
 
-static int Menu_Help(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Help(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -766,7 +762,7 @@ static int Menu_Help(Handle menu, MenuAction action,int param1,int param2)
 	return 0;
 }
 
-static int Menu_HelpObjective(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_HelpObjective(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -785,7 +781,7 @@ static int Menu_HelpObjective(Handle menu, MenuAction action,int param1,int para
 	return 0;
 }
 
-static int Menu_HelpObjective2(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_HelpObjective2(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -800,7 +796,7 @@ static int Menu_HelpObjective2(Handle menu, MenuAction action,int param1,int par
 	return 0;
 }
 
-static int Menu_BackButtonOnly(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_BackButtonOnly(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -815,7 +811,7 @@ static int Menu_BackButtonOnly(Handle menu, MenuAction action,int param1,int par
 	return 0;
 }
 
-static int Menu_Credits(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Credits(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -834,7 +830,7 @@ static int Menu_Credits(Handle menu, MenuAction action,int param1,int param2)
 	return 0;
 }
 
-static int Menu_Credits1(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Credits1(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -853,7 +849,7 @@ static int Menu_Credits1(Handle menu, MenuAction action,int param1,int param2)
 	return 0;
 }
 
-static int Menu_ClassInfo(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ClassInfo(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Cancel)
 	{
@@ -880,7 +876,7 @@ static int Menu_ClassInfo(Handle menu, MenuAction action,int param1,int param2)
 	return 0;
 }
 
-static int Menu_ClassInfoBackOnly(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ClassInfoBackOnly(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -893,7 +889,7 @@ static int Menu_ClassInfoBackOnly(Handle menu, MenuAction action,int param1,int 
 	return 0;
 }
 
-static int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Settings(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1043,7 +1039,7 @@ static int Menu_Settings(Handle menu, MenuAction action,int param1,int param2)
 	return 0;
 }
 
-static int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1111,7 +1107,7 @@ static int Menu_Settings_Flashlighttemp1(Handle menu, MenuAction action,int para
 	return 0;
 }
 
-static int Panel_SettingsFilmGrain(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsFilmGrain(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1136,7 +1132,7 @@ static int Panel_SettingsFilmGrain(Handle menu, MenuAction action,int param1,int
 	return 0;
 }
 
-static int Panel_SettingsHints(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsHints(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1161,7 +1157,7 @@ static int Panel_SettingsHints(Handle menu, MenuAction action,int param1,int par
 	return 0;
 }
 
-static int Panel_SettingsProxy(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsProxy(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1186,7 +1182,7 @@ static int Panel_SettingsProxy(Handle menu, MenuAction action,int param1,int par
 	return 0;
 }
 
-static int Panel_SettingsProxyAskMenu(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsProxyAskMenu(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1211,7 +1207,7 @@ static int Panel_SettingsProxyAskMenu(Handle menu, MenuAction action,int param1,
 	return 0;
 }
 
-static int Panel_SettingsMuteMode(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsMuteMode(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1245,7 +1241,7 @@ static int Panel_SettingsMuteMode(Handle menu, MenuAction action,int param1,int 
 	return 0;
 }
 
-static int Panel_SettingsGhostModeTeleport(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsGhostModeTeleport(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1272,7 +1268,7 @@ static int Panel_SettingsGhostModeTeleport(Handle menu, MenuAction action,int pa
 	return 0;
 }
 
-static int Panel_SettingsGhostModeToggleState(Handle menu, MenuAction action,int param1,int param2)
+static int Panel_SettingsGhostModeToggleState(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1306,7 +1302,7 @@ static int Panel_SettingsGhostModeToggleState(Handle menu, MenuAction action,int
 	return 0;
 }
 
-int Panel_SettingsHudVersion(Handle menu, MenuAction action,int param1,int param2)
+int Panel_SettingsHudVersion(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1331,7 +1327,7 @@ int Panel_SettingsHudVersion(Handle menu, MenuAction action,int param1,int param
 	return 0;
 }
 
-int Panel_SettingsViewBobbing(Handle menu, MenuAction action,int param1,int param2)
+int Panel_SettingsViewBobbing(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1356,7 +1352,7 @@ int Panel_SettingsViewBobbing(Handle menu, MenuAction action,int param1,int para
 	return 0;
 }
 
-static int Menu_Credits2(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Credits2(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1374,7 +1370,7 @@ static int Menu_Credits2(Handle menu, MenuAction action,int param1,int param2)
 	}
 	return 0;
 }
-static int Menu_Credits3(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Credits3(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1392,7 +1388,7 @@ static int Menu_Credits3(Handle menu, MenuAction action,int param1,int param2)
 	}
 	return 0;
 }
-static int Menu_Credits4(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Credits4(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1410,7 +1406,7 @@ static int Menu_Credits4(Handle menu, MenuAction action,int param1,int param2)
 	}
 	return 0;
 }
-static int Menu_Credits5(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Credits5(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1424,7 +1420,7 @@ static int Menu_Credits5(Handle menu, MenuAction action,int param1,int param2)
 	}
 	return 0;
 }
-static int Menu_Update(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_Update(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1474,7 +1470,7 @@ void DisplayQueuePointsMenu(int client)
 				}
 				else
 				{
-					for (int i2 = 1; i2 <= MaxClients; i2++)
+					for (int i2 = 1; i2 < MaxClients; i2++)
 					{
 						if (!IsValidClient(i2))
 						{
@@ -1514,7 +1510,7 @@ void DisplayViewGroupMembersQueueMenu(int client,int groupIndex)
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersArray in DisplayViewGroupMembersQueueMenu.", playersArray);
 	#endif
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -1570,7 +1566,7 @@ void DisplayViewGroupMembersQueueMenu(int client,int groupIndex)
 	#endif
 }
 
-static int Menu_ViewGroupMembersQueue(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ViewGroupMembersQueue(Handle menu, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
@@ -1606,7 +1602,7 @@ void DisplayResetQueuePointsMenu(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-static int Menu_QueuePoints(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_QueuePoints(Handle menu, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
@@ -1645,7 +1641,7 @@ static int Menu_QueuePoints(Handle menu, MenuAction action,int param1,int param2
 	return 0;
 }
 
-static int Menu_ResetQueuePoints(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ResetQueuePoints(Handle menu, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
@@ -1710,7 +1706,7 @@ void DisplayBossList(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-static int Menu_BossList(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_BossList(Handle menu, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{

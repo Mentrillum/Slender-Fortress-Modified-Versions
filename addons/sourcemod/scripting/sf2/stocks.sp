@@ -118,6 +118,15 @@ float HULL_TF2PLAYER_MINS[3] = { -24.5, -24.5, 0.0 };
 float HULL_TF2PLAYER_MAXS[3] = { 24.5,  24.5, 83.0 };
 
 //  ==========================================================
+//  Overrides
+//  ==========================================================
+bool TF2_IsPlayerInConditionEx(int client, TFCond condition)
+{
+	return g_ClientInCondition[client][condition];
+}
+#define TF2_IsPlayerInCondition TF2_IsPlayerInConditionEx
+
+//  ==========================================================
 //	Map Functions
 //  ==========================================================
 
@@ -262,7 +271,7 @@ float EntityDistanceFromEntity(int ent1, int ent2)
 		return -1.0;
 	}
 
-	float myPos[3],hisPos[3];
+	float myPos[3], hisPos[3];
 	GetEntPropVector(ent1, Prop_Data, "m_vecAbsOrigin", myPos);
 	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", hisPos);
 	return GetVectorSquareMagnitude(myPos, hisPos);
@@ -408,15 +417,15 @@ int TF2_CreateGlow(int entIndex)
 	char oldEntName[64];
 	GetEntPropString(entIndex, Prop_Data, "m_iName", oldEntName, sizeof(oldEntName));
 
-	char strName[126], strClass[64];
-	GetEntityClassname(entIndex, strClass, sizeof(strClass));
-	FormatEx(strName, sizeof(strName), "%s%i", strClass, entIndex);
-	DispatchKeyValue(entIndex, "targetname", strName);
+	char name[126], class[64];
+	GetEntityClassname(entIndex, class, sizeof(class));
+	FormatEx(name, sizeof(name), "%s%i", class, entIndex);
+	DispatchKeyValue(entIndex, "targetname", name);
 
 	int ent = CreateEntityByName("tf_glow");
-	DispatchKeyValue(ent, "target", strName);
-	FormatEx(strName, sizeof(strName), "tf_glow_%i", entIndex);
-	DispatchKeyValue(ent, "targetname", strName);
+	DispatchKeyValue(ent, "target", name);
+	FormatEx(name, sizeof(name), "tf_glow_%i", entIndex);
+	DispatchKeyValue(ent, "targetname", name);
 	DispatchKeyValue(ent, "Mode", "0");
 	DispatchSpawn(ent);
 
@@ -432,7 +441,7 @@ int TF2_CreateGlow(int entIndex)
 //	==========================================================
 
 //Credits to Linux_lover for this and signature.
-void SDK_PlaySpecificSequence(int client, const char[] strSequence)
+void SDK_PlaySpecificSequence(int client, const char[] sequence)
 {
 	if (g_SDKPlaySpecificSequence != null)
 	{
@@ -440,11 +449,11 @@ void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 		static bool once = true;
 		if (once)
 		{
-			PrintToServer("(SDK_PlaySpecificSequence) Calling on player %N \"%s\"..", client, strSequence);
+			PrintToServer("(SDK_PlaySpecificSequence) Calling on player %N \"%s\"..", client, sequence);
 			once = false;
 		}
 		#endif
-		SDKCall(g_SDKPlaySpecificSequence, client, strSequence);
+		SDKCall(g_SDKPlaySpecificSequence, client, sequence);
 	}
 }
 
@@ -581,7 +590,7 @@ bool IsClientCritBoosted(int client)
 
 void TF2_StripWearables(int client)
 {
-	int entity = MaxClients+1;
+	int entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_wearable")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
@@ -590,7 +599,7 @@ void TF2_StripWearables(int client)
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_wearable_vm")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
@@ -599,7 +608,7 @@ void TF2_StripWearables(int client)
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_powerup_bottle")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
@@ -608,7 +617,7 @@ void TF2_StripWearables(int client)
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_wearable_razorback")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
@@ -620,7 +629,7 @@ void TF2_StripWearables(int client)
 
 void TF2_DestroySpyWeapons()
 {
-	int entity = MaxClients+1;
+	int entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_weapon_revolver")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -629,7 +638,7 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_weapon_builder")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -638,7 +647,7 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_weapon_knife")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -647,7 +656,7 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "saxxy")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -656,7 +665,7 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_weapon_pda_spy")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -665,7 +674,7 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_weapon_invis")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -674,7 +683,7 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
+	entity = MaxClients + 1;
 	while((entity = FindEntityByClassname(entity, "tf_weapon_sapper")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
@@ -697,7 +706,7 @@ void ClientSwitchToWeaponSlot(int client,int slot)
 
 void ChangeClientTeamNoSuicide(int client,int team, bool respawn=true)
 {
-	if (!IsClientInGame(client))
+	if (!IsClientInGameEx(client))
 	{
 		return;
 	}
@@ -746,15 +755,20 @@ void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int 
 	EndMessage();
 }
 
+bool IsClientInGameEx(int client)
+{
+	return g_ClientInGame[client];
+}
+
 bool IsValidClient(int client)
 {
-	return client > 0 && client <= MaxClients && IsClientInGame(client);
+	return client > 0 && client <= MaxClients && IsClientInGameEx(client);
 }
 
 void PrintToSourceTV(const char[] message)
 {
 	int client = GetClientOfUserId(g_SourceTVUserID);
-	if (MaxClients >= client > 0 && IsClientInGame(client) && IsClientSourceTV(client))
+	if (MaxClients >= client > 0 && IsClientInGameEx(client) && IsClientSourceTV(client))
 	{
 		CPrintToChat(client, message);
 	}
@@ -773,7 +787,9 @@ bool TF2_IsMiniCritBuffed(int client)
 bool IsTauntWep(int weaponEnt)
 {
 	int index = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-	if (index==37 || index==304 || index==5 || index==195 || index==43 || index==239 || index==310 || index==331 || index==426 || index==587 || index==656 || index==1084 || index==1100 || index == 1143)
+	if (index == 37 || index == 304 || index == 5 || index == 195 || index == 43 ||
+	index == 239 || index == 310 || index == 331 || index == 426 || index == 587 ||
+	index == 656 || index == 1084 || index == 1100 || index == 1143)
 	{
 		return true;
 	}
@@ -808,7 +824,7 @@ void ForceTeamWin(int team)
 	AcceptEntityInput(ent, "SetWinner");
 }
 
-Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att)
+Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att)
 {
 	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
 	TF2Items_SetClassname(item, classname);
@@ -856,10 +872,13 @@ void SpecialRoundGameText(const char[] message, const char[] icon = "")
 	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 }
 // Removes wearables such as botkillers from weapons.
-void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
+void TF2_RemoveWeaponSlotAndWearables(int client, int slot)
 {
 	int weaponEnt = GetPlayerWeaponSlot(client, slot);
-	if (!IsValidEntity(weaponEnt)) return;
+	if (!IsValidEntity(weaponEnt))
+	{
+		return;
+	}
 
 	int wearable = INVALID_ENT_REFERENCE;
 	while ((wearable = FindEntityByClassname(wearable, "tf_wearable")) != -1)
@@ -907,7 +926,7 @@ void TF2_StripContrackerOnly(int client)
 	}
 }
 
-void TE_Particle(int particleIndex, float origin[3]=NULL_VECTOR, float start[3]=NULL_VECTOR, float angles[3]=NULL_VECTOR, int entindex=-1, int attachtype=-1, int attachpoint=-1, bool resetParticles=true)
+void TE_Particle(int particleIndex, float origin[3] = NULL_VECTOR, float start[3] = NULL_VECTOR, float angles[3] = NULL_VECTOR, int entindex = -1, int attachtype = -1, int attachpoint = -1, bool resetParticles = true)
 {
     TE_Start("TFParticleEffect");
     TE_WriteFloat("m_vecOrigin[0]", origin[0]);
@@ -935,7 +954,7 @@ void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float d
 {
 	for(int i=1; i<=MaxClients; i++)
 	{
-		if (IsClientInGame(i) && !IsFakeClient(i) && !IsClientInGhostMode(i))
+		if (IsClientInGameEx(i) && !IsFakeClient(i) && !IsClientInGhostMode(i))
 		{
 			if (!airShake && command == 0 && !(GetEntityFlags(i) && FL_ONGROUND))
 			{
@@ -997,7 +1016,7 @@ float ComputeShakeAmplitude(float center[3], float playerPos[3], float amplitude
 /**
  *	Converts a given timestamp into hours, minutes, and seconds.
  */
-void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
+void FloatToTimeHMS(float time, int &h=0, int &m=0, int &s=0)
 {
 	s = RoundFloat(time);
 	h = s / 3600;
@@ -1006,7 +1025,7 @@ void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
 	s = s % 60;
 }
 
-int FixedUnsigned16(float value,int scale)
+int FixedUnsigned16(float value, int scale)
 {
 	int output;
 
@@ -1111,7 +1130,7 @@ void GetPositionForward(float pos[3], float ang[3], float returnValue[3], float 
 	float dir[3];
 	GetAngleVectors(ang, dir, NULL_VECTOR, NULL_VECTOR);
 	returnValue = pos;
-	for(int i=0; i<3; i++)
+	for(int i = 0; i < 3; i++)
 	{
 		returnValue[i] += dir[i] * distance;
 	}
@@ -1171,7 +1190,7 @@ float GetAngleBetweenVectors(const float vector1[3], const float vector2[3], con
     NormalizeVector(direction, direction_n);
     NormalizeVector(vector1, vector1_n);
     NormalizeVector(vector2, vector2_n);
-    float degree = ArcCosine(GetVectorDotProduct( vector1_n, vector2_n )) * 57.29577951;
+    float degree = ArcCosine(GetVectorDotProduct(vector1_n, vector2_n)) * 57.29577951;
     GetVectorCrossProduct(vector1_n, vector2_n, cross);
 
     if (GetVectorDotProduct(cross, direction_n) < 0.0)
@@ -1212,60 +1231,45 @@ void RotateYaw(float angles[3], float degree)
 //	TRACE FUNCTIONS
 //	==========================================================
 
-bool TraceRayDontHitEntity(int entity,int mask,any data)
+bool TraceRayDontHitEntity(int entity, int mask, any data)
 {
 	if (entity == data)
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
-	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc"))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-bool TraceRayDontHitPlayers(int entity,int mask, any data)
-{
-	if (entity > 0 && entity <= MaxClients)
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
+	return true;
+}
+
+bool TraceRayDontHitPlayers(int entity, int mask, any data)
+{
+	if (IsValidClient(entity))
 	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc"))
-		{
-			return false;
-		}
+		return false;
+	}
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
+	{
+		return false;
 	}
 	return true;
 }
 
-bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
+bool TraceRayDontHitPlayersOrEntity(int entity, int mask, any data)
 {
 	if (entity == data)
 	{
 		return false;
 	}
-	if (entity > 0 && entity <= MaxClients)
+	if (IsValidClient(entity))
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc"))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	return true;
@@ -1277,11 +1281,7 @@ bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 Action Timer_KillEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (ent == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-	if (!IsValidEntity(ent))
+	if (!ent || ent == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
@@ -1294,7 +1294,7 @@ Action Timer_KillEntity(Handle timer, any entref)
 Action Timer_KillEdict(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (!IsValidEdict(ent))
+	if (!ent || ent == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
@@ -1320,9 +1320,9 @@ bool SF_SpecialRound(int specialRound)
 	{
 		return false;
 	}
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
-		if (specialRound==g_ArraySpecialRoundType[array])
+		if (specialRound == g_ArraySpecialRoundType[array])
 		{
 			return true;
 		}
@@ -1332,7 +1332,7 @@ bool SF_SpecialRound(int specialRound)
 
 void SF_AddSpecialRound(int specialRound)
 {
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		if (g_ArraySpecialRoundType[array] == 0 || g_ArraySpecialRoundType[array] == specialRound)
 		{
@@ -1344,28 +1344,11 @@ void SF_AddSpecialRound(int specialRound)
 
 void SF_RemoveSpecialRound(int specialRound)
 {
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		if (g_ArraySpecialRoundType[array] == specialRound)
 		{
 			g_ArraySpecialRoundType[array] = 0;
-			//Useless
-			/*if (array != (SPECIALROUND_MAXROUNDS-1))
-			{
-				for (int iArray2 = array;iArray2 < SPECIALROUND_MAXROUNDS; iArray2++)
-				{
-					if (g_ArraySpecialRoundType[iArray2+1] != 0)
-					{
-						g_ArraySpecialRoundType[iArray2] = g_ArraySpecialRoundType[iArray2+1];
-						g_ArraySpecialRoundType[iArray2+1] = 0;
-					}
-					else
-					{
-						g_ArraySpecialRoundType[iArray2] = 0;
-						break;
-					}
-				}
-			}*/
 			break;
 		}
 	}
@@ -1373,7 +1356,7 @@ void SF_RemoveSpecialRound(int specialRound)
 
 void SF_RemoveAllSpecialRound()
 {
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		g_ArraySpecialRoundType[array] = 0;
 	}
@@ -1514,4 +1497,12 @@ MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
 {
 	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
 	return MRES_Supercede;
+}
+
+void PlayNightmareSound()
+{
+	for (int i = 0; i < sizeof(g_SoundNightmareMode); i++)
+	{
+		EmitSoundToAll(g_SoundNightmareMode[i]);
+	}
 }

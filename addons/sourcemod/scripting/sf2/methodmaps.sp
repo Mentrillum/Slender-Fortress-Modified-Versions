@@ -29,6 +29,14 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
+	property PathFollower Path
+	{
+		public get()
+		{
+			return g_BossPathFollower[this.Index];
+		}
+	}
+
 	property int ProfileIndex
 	{
 		public get()
@@ -51,6 +59,11 @@ methodmap SF2NPC_BaseNPC
 		{
 			return NPCGetUniqueID(this.Index);
 		}
+	}
+
+	public static SF2NPC_BaseNPC FromUniqueId(int iUniqueId)
+	{
+		return SF2NPC_BaseNPC(NPCGetFromUniqueID(iUniqueId));
 	}
 
 	property int EntRef
@@ -95,6 +108,11 @@ methodmap SF2NPC_BaseNPC
 		{
 			return NPCGetModelSkin(this.Index);
 		}
+	}
+
+	public bool GetModel(int modelState = 0, char[] buffer, int bufferLen)
+	{
+		return GetSlenderModel(this.Index, modelState, buffer, bufferLen);
 	}
 
 	property int RaidHitbox
@@ -143,6 +161,11 @@ methodmap SF2NPC_BaseNPC
 		{
 			return NPCGetInstantKillRadius(this.Index);
 		}
+	}
+
+	public float GetInstantKillCooldown(int difficulty)
+	{
+		return NPCGetInstantKillCooldown(this.Index, difficulty);
 	}
 
 	property int TeleportType
@@ -411,7 +434,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 	{
 		public get()
 		{
-			return IsClientInGame(this.index);
+			return IsClientInGameEx(this.index);
 		}
 	}
 
@@ -542,6 +565,16 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	public bool IsCritBoosted()
+	{
+		return IsClientCritBoosted(this.index);
+	}
+
+	public bool IsMiniCritBoosted()
+	{
+		return TF2_IsMiniCritBuffed(this.index);
+	}
+
 	public void Ignite(bool self = false, int attacker = 0, float duration = 10.0)
 	{
 		TF2_IgnitePlayer(this.index, !self && attacker > 0 ? attacker : this.index, duration);
@@ -552,7 +585,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		TF2_MakeBleed(this.index, !self && attacker > 0 ? attacker : this.index, duration);
 	}
 
-	public void Stun(float duration, float slowdown, int stunflags, int attacker = 0)
+	public void Stun(float duration, float slowdown = 0.0, int stunflags, int attacker = 0)
 	{
 		TF2_StunPlayer(this.index, duration, slowdown, stunflags, attacker);
 	}
@@ -597,6 +630,16 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		return GetPlayerWeaponSlot(this.index, slot);
 	}
 
+	public void SwitchToWeaponSlot(int slot)
+	{
+		ClientSwitchToWeaponSlot(this.index, slot);
+	}
+
+	public void RemoveWeaponSlot(int slot)
+	{
+		TF2_RemoveWeaponSlot(this.index, slot);
+	}
+
 	public void ScreenShake(float amp, float duration, float freq)
 	{
 		UTIL_ClientScreenShake(this.index, amp, duration, freq);
@@ -632,6 +675,26 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 	public void UpdateListeningFlags(bool reset = false)
 	{
 		ClientUpdateListeningFlags(this.index, false);
+	}
+
+	property bool IsParticipating
+	{
+		public get()
+		{
+			return IsClientParticipating(this.index);
+		}
+	}
+
+	property int LastButtons
+	{
+		public get()
+		{
+			return g_PlayerLastButtons[this.index];
+		}
+		public set(int value)
+		{
+			g_PlayerLastButtons[this.index] = value;
+		}
 	}
 
 	property bool IsEliminated
@@ -719,9 +782,9 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void StartDeathCam(int bossIndex, const float vecLookPos[3], bool antiCamp = false)
+	public void StartDeathCam(int bossIndex, const float lookPos[3], bool antiCamp = false)
 	{
-		ClientStartDeathCam(this.index, bossIndex, vecLookPos, antiCamp);
+		ClientStartDeathCam(this.index, bossIndex, lookPos, antiCamp);
 	}
 
 	property bool HasEscaped
@@ -772,6 +835,11 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		ClientResetFlashlight(this.index);
 	}
 
+	public float GetFlashlightNextInputTime()
+	{
+		return ClientGetFlashlightNextInputTime(this.index);
+	}
+
 	property bool IsSprinting
 	{
 		public get()
@@ -788,12 +856,42 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	public void HandleSprint(bool sprint)
+	{
+		ClientHandleSprint(this.index, sprint);
+	}
+
+	public void SetSprintTimer(bool recharge = false)
+	{
+		ClientSprintTimer(this.index, recharge);
+	}
+
+	public int GetSprintPoints()
+	{
+		return ClientGetSprintPoints(this.index);
+	}
+
+	public void SetSprintPoints(int value)
+	{
+		ClientSetSprintPoints(this.index, value);
+	}
+
 	property bool IsBlinking
 	{
 		public get()
 		{
 			return IsClientBlinking(this.index);
 		}
+	}
+
+	public bool IsHoldingBlink()
+	{
+		return IsClientHoldingBlink(this.index);
+	}
+
+	public void SetHoldingBlink(bool value)
+	{
+		ClientSetHoldingBlink(this.index, value);
 	}
 
 	property float BlinkMeter
@@ -816,14 +914,19 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void ResetBlink()
+	public void Blink()
 	{
-		ClientResetBlink(this.index);
+		ClientBlink(this.index);
 	}
 
 	public bool StartPeeking()
 	{
 		return ClientStartPeeking(this.index);
+	}
+
+	public void EndPeeking()
+	{
+		ClientEndPeeking(this.index);
 	}
 
 	property int PageCount
@@ -836,11 +939,6 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		{
 			g_PlayerPageCount[this.index] = amount;
 		}
-	}
-
-	public void ResetHints()
-	{
-		ClientResetHints(this.index);
 	}
 
 	public void ShowHint(int hint)
@@ -893,6 +991,21 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 	public bool CanSeeSlender(int bossIndex, bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true)
 	{
 		return PlayerCanSeeSlender(this.index, bossIndex, checkFOV, checkBlink, checkEliminated);
+	}
+
+	public void SetAFKTime(bool reset = true)
+	{
+		AFK_SetTime(this.index);
+	}
+
+	public void SetAFKState()
+	{
+		AFK_SetAFK(this.index);
+	}
+
+	public void CheckAFKTime()
+	{
+		AFK_CheckTime(this.index);
 	}
 }
 
@@ -1339,5 +1452,25 @@ methodmap SF2NPC_Statue < SF2NPC_BaseNPC
 	public SF2NPC_Statue(int index)
 	{
 		return view_as<SF2NPC_Statue>(SF2NPC_BaseNPC(index));
+	}
+
+	public float GetIdleLifetime(int difficulty)
+	{
+		return NPCStatueGetIdleLifetime(this.Index, difficulty);
+	}
+
+	public float GetChaseDuration(int difficulty)
+	{
+		return NPCStatueChaseDuration(this.Index, difficulty);
+	}
+
+	public float AddChaseDurationMin(int difficulty)
+	{
+		return NPCStatueGetChaseDurationAddMin(this.Index, difficulty);
+	}
+
+	public float AddChaseDurationMax(int difficulty)
+	{
+		return NPCStatueGetChaseDurationAddMax(this.Index, difficulty);
 	}
 }

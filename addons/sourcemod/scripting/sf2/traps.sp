@@ -15,6 +15,29 @@ static bool g_TrapAnimChange[2049];
 static Handle g_TrapTimer[2049];
 //State 0 = Idle, State 1 = Closed
 
+void SetupTraps()
+{
+	g_OnPlayerJumpPFwd.AddFunction(null, OnJump);
+}
+
+static void OnJump(SF2_BasePlayer client)
+{
+	if (client.IsEliminated || IsRoundEnding() || IsRoundInWarmup() || client.HasEscaped)
+	{
+		return;
+	}
+
+	if (client.IsTrapped)
+	{
+		client.TrapCount -= 1;
+	}
+	if (client.IsTrapped && client.TrapCount <= 1)
+	{
+		client.IsTrapped = false;
+		client.TrapCount = 0;
+	}
+}
+
 void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 {
 	int slender = NPCGetEntIndex(bossIndex);
@@ -129,7 +152,7 @@ static Action Timer_TrapThink(Handle timer, any entref)
 
 	if (!g_TrapClosed[trapEntity])
 	{
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
 			if (!player.IsValid ||
@@ -142,7 +165,7 @@ static Action Timer_TrapThink(Handle timer, any entref)
 			}
 
 			float entPos[3], otherPos[3];
-			player.GetPropVector(Prop_Data, "m_vecAbsOrigin", otherPos);
+			player.GetAbsOrigin(otherPos);
 			GetEntPropVector(trapEntity, Prop_Data, "m_vecAbsOrigin", entPos);
 			float zPos = otherPos[2] - entPos[2];
 			float distance = GetVectorSquareMagnitude(otherPos, entPos);
@@ -171,7 +194,7 @@ static Action Timer_TrapThink(Handle timer, any entref)
 				{
 					player.ShowHint(PlayerHint_Trap);
 				}
-				SDKHooks_TakeDamage(player.index, player.index, player.index, 10.0, 128);
+				player.TakeDamage(true, _, _, 10.0, 128);
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
 				int bossIndex = g_TrapMaster[trapEntity];
@@ -232,30 +255,7 @@ static void OnTrapOpenComplete(const char[] output, int caller, int activator, f
 		g_TrapDoIdleAnim[caller] = true;
 	}
 }
-/*
-public Action Hook_TrapTouch(int trapEntity, int client)
-{
-	if (MaxClients >= client > 0 && IsClientInGame(client))
-	{
-		if (!g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red && !g_TrapClosed[trapEntity])
-		{
-			g_PlayerTrapped[client] = true;
-			if (!g_PlayerHints[client][PlayerHint_Trap])
-			{
-				ClientShowHint(client, PlayerHint_Trap);
-			}
-			SDKHooks_TakeDamage(client, client, client, 10.0, 128);
-			g_PlayerTrapCount[client] = GetRandomInt(2, 4);
-			g_TrapClosed[trapEntity] = true;
-			g_TrapState[trapEntity] = 1;
-			EmitSoundToAll(TRAP_CLOSE, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
-			AcceptEntityInput(trapEntity, "DisableCollision");
-		}
-		if (IsClientInGhostMode(client)) return Plugin_Handled;
-	}
-	return Plugin_Continue;
-}
-*/
+
 static Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
 {
 	if (!g_Enabled)

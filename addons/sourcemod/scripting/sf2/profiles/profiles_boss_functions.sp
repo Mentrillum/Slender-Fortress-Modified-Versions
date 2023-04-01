@@ -175,7 +175,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	{
 		kv.GetString("tp_effect_spawn_particle", profileData.SpawnParticle, sizeof(profileData.SpawnParticle), profileData.SpawnParticle);
 		kv.GetString("tp_effect_spawn_sound", profileData.SpawnParticleSound, sizeof(profileData.SpawnParticleSound), profileData.SpawnParticleSound);
-		TryPrecacheBossProfileSoundPath(profileData.SpawnParticleSound, _, g_FileCheckConVar.BoolValue);
+		TryPrecacheBossProfileSoundPath(profileData.SpawnParticleSound, g_FileCheckConVar.BoolValue);
 		profileData.SpawnParticleSoundVolume = kv.GetFloat("tp_effect_spawn_sound_volume", profileData.SpawnParticleSoundVolume);
 		profileData.SpawnParticleSoundPitch = kv.GetNum("tp_effect_spawn_sound_pitch", profileData.SpawnParticleSoundPitch);
 	}
@@ -185,7 +185,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	{
 		kv.GetString("tp_effect_despawn_particle", profileData.DespawnParticle, sizeof(profileData.DespawnParticle), profileData.DespawnParticle);
 		kv.GetString("tp_effect_despawn_sound", profileData.DespawnParticleSound, sizeof(profileData.DespawnParticleSound), profileData.DespawnParticleSound);
-		TryPrecacheBossProfileSoundPath(profileData.DespawnParticleSound, _, g_FileCheckConVar.BoolValue);
+		TryPrecacheBossProfileSoundPath(profileData.DespawnParticleSound, g_FileCheckConVar.BoolValue);
 		profileData.DespawnParticleSoundVolume = kv.GetFloat("tp_effect_despawn_sound_volume", profileData.DespawnParticleSoundVolume);
 		profileData.DespawnParticleSoundPitch = kv.GetNum("tp_effect_despawn_sound_pitch", profileData.DespawnParticleSoundPitch);
 	}
@@ -719,7 +719,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 	kv.GetString("constant_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
 
-	TryPrecacheBossProfileSoundPath(profileData.EngineSound, _, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.EngineSound, g_FileCheckConVar.BoolValue);
 
 	int index = g_BossProfileList.FindString(profile);
 	if (index == -1)
@@ -836,7 +836,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 						break;
 					}
 
-					TryPrecacheBossProfileSoundPath(s4, _, g_FileCheckConVar.BoolValue);
+					TryPrecacheBossProfileSoundPath(s4, g_FileCheckConVar.BoolValue);
 
 					// Here comes an if else mess, I'm very sorry
 					if (strcmp(s2, "sound_jumpscare") == 0)

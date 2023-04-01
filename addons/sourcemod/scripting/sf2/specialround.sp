@@ -25,6 +25,237 @@ static bool g_Started = false;
 static int doublerouletteCount = 0;
 static int g_SpecialRoundType = 0;
 
+void SetupSpecialRounds()
+{
+	g_OnRoundEndPFwd.AddFunction(null, OnRoundEnd);
+	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
+	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+	g_OnPlayerTeamPFwd.AddFunction(null, OnPlayerTeam);
+	g_OnPlayerClassPFwd.AddFunction(null, OnPlayerClass);
+}
+
+static void OnRoundEnd()
+{
+	g_Started = false;
+	SF_RemoveAllSpecialRound();
+}
+
+static void OnPlayerSpawn(SF2_BasePlayer client)
+{
+	if (client.IsEliminated)
+	{
+		return;
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+	{
+		TF2_StripContrackerOnly(client.index);
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_1UP) && !g_PlayerIn1UpCondition[client.index] && !g_PlayerDied1Up[client.index])
+	{
+		g_PlayerDied1Up[client.index] = false;
+		g_PlayerIn1UpCondition[client.index] = true;
+		g_PlayerFullyDied1Up[client.index] = false;
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_PAGEDETECTOR))
+	{
+		ClientSetSpecialRoundTimer(client.index, 0.0, Timer_ClientPageDetector, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !client.HasEscaped)
+	{
+		ChangeThanatophobiaClass(client);
+	}
+}
+
+static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
+{
+	if (fake)
+	{
+		return;
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_MULTIEFFECT))
+	{
+		CreateTimer(0.1, Timer_ReplacePlayerRagdoll, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !client.HasEscaped)
+	{
+		for (int reds = 1; reds < MaxClients; reds++)
+		{
+			if (!IsValidClient(reds) ||
+				g_PlayerEliminated[reds] ||
+				DidClientEscape(reds) ||
+				GetClientTeam(reds) != TFTeam_Red ||
+				!IsPlayerAlive(reds))
+			{
+				continue;
+			}
+			int randomNegative = GetRandomInt(1, 5);
+			switch (randomNegative)
+			{
+				case 1:
+				{
+					TF2_MakeBleed(reds, reds, 4.0);
+					EmitSoundToClient(reds, BLEED_ROLL, reds, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				}
+				case 2:
+				{
+					TF2_AddCondition(reds, TFCond_Jarated, 5.0);
+					EmitSoundToClient(reds, JARATE_ROLL, reds, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				}
+				case 3:
+				{
+					TF2_AddCondition(reds, TFCond_Gas, 5.0);
+					EmitSoundToClient(reds, GAS_ROLL, reds, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+				}
+				case 4:
+				{
+					int maxHealth = SDKCall(g_SDKGetMaxHealth, reds);
+					float damageToTake = float(maxHealth) / 10.0;
+					SDKHooks_TakeDamage(reds, reds, reds, damageToTake, 128, _, { 0.0, 0.0, 0.0 } );
+				}
+				case 5:
+				{
+					TF2_AddCondition(reds, TFCond_MarkedForDeath, 5.0);
+				}
+			}
+		}
+	}
+}
+
+static void OnPlayerTeam(SF2_BasePlayer client, int team)
+{
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !client.IsEliminated && team == TFTeam_Red &&
+		!client.HasEscaped)
+	{
+		ChangeThanatophobiaClass(client);
+	}
+}
+
+static void OnPlayerClass(SF2_BasePlayer client)
+{
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && !client.IsEliminated && client.Team == TFTeam_Red &&
+		!client.HasEscaped)
+	{
+		ChangeThanatophobiaClass(client);
+	}
+}
+
+static void ChangeThanatophobiaClass(SF2_BasePlayer client)
+{
+	TFClassType class = client.Class;
+	int classToInt = view_as<int>(class);
+	if (!IsClassConfigsValid())
+	{
+		if (class == TFClass_Medic)
+		{
+			ShowVGUIPanel(client.index, "class_red");
+			EmitSoundToClient(client.index, THANATOPHOBIA_MEDICNO);
+			TFClassType newClass;
+			int random = GetRandomInt(1, 8);
+			switch (random)
+			{
+				case 1:
+				{
+					newClass = TFClass_Scout;
+				}
+				case 2:
+				{
+					newClass = TFClass_Soldier;
+				}
+				case 3:
+				{
+					newClass = TFClass_Pyro;
+				}
+				case 4:
+				{
+					newClass = TFClass_DemoMan;
+				}
+				case 5:
+				{
+					newClass = TFClass_Heavy;
+				}
+				case 6:
+				{
+					newClass = TFClass_Engineer;
+				}
+				case 7:
+				{
+					newClass = TFClass_Sniper;
+				}
+				case 8:
+				{
+					newClass = TFClass_Spy;
+				}
+			}
+			client.SetClass(newClass);
+			client.Regenerate();
+		}
+	}
+	else
+	{
+		if (g_ClassBlockedOnThanatophobia[classToInt])
+		{
+			ShowVGUIPanel(client.index, "class_red");
+			switch (class)
+			{
+				case TFClass_Scout:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_SCOUTNO);
+				}
+				case TFClass_Soldier:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_SOLDIERNO);
+				}
+				case TFClass_Pyro:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_PYRONO);
+				}
+				case TFClass_DemoMan:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_DEMOMANNO);
+				}
+				case TFClass_Heavy:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_HEAVYNO);
+				}
+				case TFClass_Engineer:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_ENGINEERNO);
+				}
+				case TFClass_Medic:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_MEDICNO);
+				}
+				case TFClass_Sniper:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_SNIPERNO);
+				}
+				case TFClass_Spy:
+				{
+					EmitSoundToClient(client.index, THANATOPHOBIA_SPYNO);
+				}
+			}
+			ArrayList classArrays = new ArrayList();
+			for (int i = 1; i < MAX_CLASSES + 1; i++)
+			{
+				if (!g_ClassBlockedOnThanatophobia[i])
+				{
+					classArrays.Push(view_as<TFClassType>(i));
+				}
+			}
+			TFClassType newClass = classArrays.Get(GetRandomInt(0, classArrays.Length - 1));
+			client.SetClass(newClass);
+			client.Regenerate();
+			delete classArrays;
+		}
+	}
+}
+
 void ReloadSpecialRounds()
 {
 	if (g_SpecialRoundCycleNames == null)
@@ -365,7 +596,7 @@ static ArrayList SpecialEnabledList()
 		char snatcher[64] = "hypersnatcher_nerfed";
 
 		int players;
-		for (int client = 1; client <= MaxClients; client++)
+		for (int client = 1; client < MaxClients; client++)
 		{
 			if (IsValidClient(client) && !g_PlayerEliminated[client])
 			{
@@ -631,7 +862,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_THANATOPHOBIA:
 		{
-			for (int client = 1; client <= MaxClients; client++)
+			for (int client = 1; client < MaxClients; client++)
 			{
 				if (!IsValidClient(client))
 				{
@@ -816,7 +1047,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_CLASSSCRAMBLE:
 		{
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
 				if (!IsValidClient(i) || g_PlayerEliminated[i] || GetClientTeam(i) != TFTeam_Red || DidClientEscape(i) || !IsPlayerAlive(i))
 				{
@@ -861,10 +1092,7 @@ void SpecialRoundStart()
 						}
 						case 4:
 						{
-							for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-							{
-								EmitSoundToAll(g_SoundNightmareMode[i]);
-							}
+							PlayNightmareSound();
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
@@ -872,10 +1100,7 @@ void SpecialRoundStart()
 						}
 						case 5:
 						{
-							for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-							{
-								EmitSoundToAll(g_SoundNightmareMode[i]);
-							}
+							PlayNightmareSound();
 							FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 							SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
@@ -950,10 +1175,7 @@ void SpecialRoundStart()
 							}
 							case 4:
 							{
-								for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-								{
-									EmitSoundToAll(g_SoundNightmareMode[i]);
-								}
+								PlayNightmareSound();
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 								g_DifficultyConVar.SetInt(Difficulty_Nightmare);
@@ -961,10 +1183,7 @@ void SpecialRoundStart()
 							}
 							case 5:
 							{
-								for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-								{
-									EmitSoundToAll(g_SoundNightmareMode[i]);
-								}
+								PlayNightmareSound();
 								FormatEx(sNightmareDisplay, sizeof(sNightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 								SpecialRoundGameText(sNightmareDisplay, "leaderboard_streak");
 								g_DifficultyConVar.SetInt(Difficulty_Apollyon);
@@ -1058,9 +1277,9 @@ void SpecialRoundStart()
 				SF_RemoveSpecialRound(SPECIALROUND_LIGHTSOUT);
 				SF_AddSpecialRound(SPECIALROUND_NIGHTVISION);
 			}
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
-				if (!IsClientInGame(i))
+				if (!IsValidClient(i))
 				{
 					continue;
 				}
@@ -1140,7 +1359,7 @@ void SpecialRoundStart()
 					SlenderAddGlow(npcIndex, purple);
 				}
 			}
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -1167,9 +1386,9 @@ void SpecialRoundStart()
 			if (nightVision && g_NightvisionType != 1)
 			{
 				g_NightvisionType = 1;
-				for (int i = 1; i <= MaxClients; i++)
+				for (int i = 1; i < MaxClients; i++)
 				{
-					if (!IsClientInGame(i))
+					if (!IsValidClient(i))
 					{
 						continue;
 					}
@@ -1191,9 +1410,9 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_1UP:
 		{
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
-				if (!IsClientInGame(i))
+				if (!IsValidClient(i))
 				{
 					continue;
 				}
@@ -1210,9 +1429,9 @@ void SpecialRoundStart()
 		case SPECIALROUND_NOULTRAVISION:
 		{
 			SF_AddSpecialRound(SPECIALROUND_NOULTRAVISION);
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
-				if (!IsClientInGame(i))
+				if (!IsValidClient(i))
 				{
 					continue;
 				}
@@ -1266,9 +1485,9 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_PAGEDETECTOR:
 		{
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
-				if (!IsClientInGame(i))
+				if (!IsValidClient(i))
 				{
 					continue;
 				}
@@ -1303,9 +1522,9 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_SINGLEPLAYER:
 		{
-			for (int client = 1; client <= MaxClients; client++)
+			for (int client = 1; client < MaxClients; client++)
 			{
-				if (IsValidClient(client) && IsClientInGame(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
+				if (IsValidClient(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
 				{
 					TF2_StripContrackerOnly(client);
 				}
@@ -1381,7 +1600,7 @@ static void SpecialCreateVote()
 	NativeVotes_SetInitiator(voteMenu, NATIVEVOTES_SERVER_INDEX);
 
 	char title[255];
-	FormatEx(title,255,"%t%t","SF2 Prefix","SF2 Special Round Vote Menu Title");
+	FormatEx(title, 255, "%t%t", "SF2 Prefix", "SF2 Special Round Vote Menu Title");
 	NativeVotes_SetDetails(voteMenu,title);
 
 	ArrayList enabledRounds = SpecialEnabledList().Clone();
@@ -1571,9 +1790,9 @@ static void SpecialCreateVote()
 	int total = 0;
 	int[] players = new int[MaxClients];
 
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
-		if (!IsClientInGame(i))
+		if (!IsValidClient(i))
 		{
 			continue;
 		}
@@ -1614,7 +1833,7 @@ static int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 			NativeVotes_GetItem(menu, param1, specialRound, sizeof(specialRound), specialRoundName, sizeof(specialRoundName));
 
 			CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Special Round Vote Successful", specialRoundName);
-			FormatEx(display,120,"%t","SF2 Special Round Vote Successful", specialRoundName);
+			FormatEx(display, 120, "%t", "SF2 Special Round Vote Successful", specialRoundName);
 
 			g_SpecialRoundType = StringToInt(specialRound);
 			g_SpecialRoundOverrideConVar.SetInt(g_SpecialRoundType);
@@ -1628,12 +1847,6 @@ static int Menu_SpecialVote(Handle menu, MenuAction action,int param1,int param2
 		}
 	}
 	return 0;
-}
-
-void SpecialRound_RoundEnd()
-{
-	g_Started = false;
-	SF_RemoveAllSpecialRound();
 }
 
 void SpecialRoundReset()

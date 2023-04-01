@@ -298,7 +298,7 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplayViewGroupMembersMenuToClient.", playersHandle);
 	#endif
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -389,7 +389,7 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplaySetGroupLeaderMenuToClient.", playersHandle);
 	#endif
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -507,7 +507,7 @@ void DisplayKickFromGroupMenuToClient(int client)
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplayKickFromGroupMenuToClient.", playersHandle);
 	#endif
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -682,7 +682,7 @@ void DisplayInviteToGroupMenuToClient(int client)
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplayInviteToGroupMenuToClient.", playersHandle);
 	#endif
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i) || !IsClientParticipating(i))
 		{

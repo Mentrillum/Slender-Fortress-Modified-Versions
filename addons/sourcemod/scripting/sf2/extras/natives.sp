@@ -9,7 +9,7 @@
 //	GENERAL PLUGIN HOOK FUNCTIONS
 //	==========================================================
 
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error,int err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	RegPluginLibrary("sf2");
 
@@ -284,23 +284,23 @@ void SDK_Init()
 		BuildPath(Path_SM, strFilePath, sizeof(strFilePath), "gamedata/tf2items.randomizer.txt");
 		if (FileExists(strFilePath))
 		{
-			Handle hGameConf = LoadGameConfigFile("tf2items.randomizer");
-			if (hGameConf != null)
+			GameData gameConf = LoadGameConfigFile("tf2items.randomizer");
+			if (gameConf != null)
 			{
 				StartPrepSDKCall(SDKCall_Player);
-				PrepSDKCall_SetFromConf(hGameConf, SDKConf_Virtual, "CTFPlayer::EquipWearable");
+				PrepSDKCall_SetFromConf(gameConf, SDKConf_Virtual, "CTFPlayer::EquipWearable");
 				PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer );
 				g_SDKEquipWearable = EndPrepSDKCall();
 				if (g_SDKEquipWearable == null)
 				{
 					// Old gamedata
 					StartPrepSDKCall(SDKCall_Player);
-					PrepSDKCall_SetFromConf(hGameConf, SDKConf_Virtual, "EquipWearable");
+					PrepSDKCall_SetFromConf(gameConf, SDKConf_Virtual, "EquipWearable");
 					PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 					g_SDKEquipWearable = EndPrepSDKCall();
 				}
 			}
-			delete hGameConf;
+			delete gameConf;
 		}
 	}
 	if (g_SDKEquipWearable == null)
@@ -397,17 +397,17 @@ void SDK_Init()
 //	API
 //	==========================================================
 
-static any Native_GetConfig(Handle plugin,int numParams)
+static any Native_GetConfig(Handle plugin, int numParams)
 {
 	return g_Config;
 }
 
-static any Native_IsRunning(Handle plugin,int numParams)
+static any Native_IsRunning(Handle plugin, int numParams)
 {
 	return g_Enabled;
 }
 
-static any Native_GetRoundState(Handle plugin,int numParams)
+static any Native_GetRoundState(Handle plugin, int numParams)
 {
 	return g_RoundState;
 }
@@ -417,12 +417,12 @@ static any Native_IsRoundInGracePeriod(Handle plugin, int numParams)
 	return GetRoundState() == SF2RoundState_Grace;
 }
 
-static any Native_GetCurrentDifficulty(Handle plugin,int numParams)
+static any Native_GetCurrentDifficulty(Handle plugin, int numParams)
 {
 	return g_DifficultyConVar.IntValue;
 }
 
-static any Native_GetDifficultyModifier(Handle plugin,int numParams)
+static any Native_GetDifficultyModifier(Handle plugin, int numParams)
 {
 	int difficulty = GetNativeCell(1);
 	if (difficulty < Difficulty_Easy || difficulty >= Difficulty_Max)
@@ -458,107 +458,107 @@ static any Native_GetDifficultyModifier(Handle plugin,int numParams)
 	return DIFFICULTYMODIFIER_NORMAL;
 }
 
-static any Native_IsInSpecialRound(Handle plugin,int numParams)
+static any Native_IsInSpecialRound(Handle plugin, int numParams)
 {
 	return SF_SpecialRound(GetNativeCell(1));
 }
 
-static any Native_GetClientGroup(Handle plugin,int numParams)
+static any Native_GetClientGroup(Handle plugin, int numParams)
 {
 	return ClientGetPlayerGroup(GetNativeCell(1));
 }
 
-static any Native_GetClientQueuePoints(Handle plugin,int numParams)
+static any Native_GetClientQueuePoints(Handle plugin, int numParams)
 {
 	return g_PlayerQueuePoints[GetNativeCell(1)];
 }
 
-static any Native_SetClientQueuePoints(Handle plugin,int numParams)
+static any Native_SetClientQueuePoints(Handle plugin, int numParams)
 {
 	g_PlayerQueuePoints[GetNativeCell(1)] = GetNativeCell(2);
 	return 0;
 }
 
-static any Native_IsClientEliminated(Handle plugin,int numParams)
+static any Native_IsClientEliminated(Handle plugin, int numParams)
 {
 	return g_PlayerEliminated[GetNativeCell(1)];
 }
 
-static any Native_IsClientInGhostMode(Handle plugin,int numParams)
+static any Native_IsClientInGhostMode(Handle plugin, int numParams)
 {
 	return IsClientInGhostMode(GetNativeCell(1));
 }
 
-static any Native_IsClientProxy(Handle plugin,int numParams)
+static any Native_IsClientProxy(Handle plugin, int numParams)
 {
 	return g_PlayerProxy[GetNativeCell(1)];
 }
 
-static any Native_GetClientBlinkCount(Handle plugin,int numParams)
+static any Native_GetClientBlinkCount(Handle plugin, int numParams)
 {
 	return ClientGetBlinkCount(GetNativeCell(1));
 }
 
-static any Native_IsClientBlinking(Handle plugin,int numParams)
+static any Native_IsClientBlinking(Handle plugin, int numParams)
 {
 	return IsClientBlinking(GetNativeCell(1));
 }
 
-static any Native_GetClientBlinkMeter(Handle plugin,int numParams)
+static any Native_GetClientBlinkMeter(Handle plugin, int numParams)
 {
 	return ClientGetBlinkMeter(GetNativeCell(1));
 }
 
-static any Native_SetClientBlinkMeter(Handle plugin,int numParams)
+static any Native_SetClientBlinkMeter(Handle plugin, int numParams)
 {
 	ClientSetBlinkMeter(GetNativeCell(1), GetNativeCell(2));
 	return 0;
 }
 
-static any Native_GetClientProxyMaster(Handle plugin,int numParams)
+static any Native_GetClientProxyMaster(Handle plugin, int numParams)
 {
 	return NPCGetFromUniqueID(g_PlayerProxyMaster[GetNativeCell(1)]);
 }
 
-static any Native_GetClientProxyControlAmount(Handle plugin,int numParams)
+static any Native_GetClientProxyControlAmount(Handle plugin, int numParams)
 {
 	return g_PlayerProxyControl[GetNativeCell(1)];
 }
 
-static any Native_GetClientProxyControlRate(Handle plugin,int numParams)
+static any Native_GetClientProxyControlRate(Handle plugin, int numParams)
 {
 	return g_PlayerProxyControlRate[GetNativeCell(1)];
 }
 
-static any Native_SetClientProxyMaster(Handle plugin,int numParams)
+static any Native_SetClientProxyMaster(Handle plugin, int numParams)
 {
 	g_PlayerProxyMaster[GetNativeCell(1)] = NPCGetUniqueID(GetNativeCell(2));
 	return 0;
 }
 
-static any Native_SetClientProxyControlAmount(Handle plugin,int numParams)
+static any Native_SetClientProxyControlAmount(Handle plugin, int numParams)
 {
 	g_PlayerProxyControl[GetNativeCell(1)] = GetNativeCell(2);
 	return 0;
 }
 
-static any Native_SetClientProxyControlRate(Handle plugin,int numParams)
+static any Native_SetClientProxyControlRate(Handle plugin, int numParams)
 {
 	g_PlayerProxyControlRate[GetNativeCell(1)] = GetNativeCell(2);
 	return 0;
 }
 
-static any Native_IsClientLookingAtBoss(Handle plugin,int numParams)
+static any Native_IsClientLookingAtBoss(Handle plugin, int numParams)
 {
 	return g_PlayerSeesSlender[GetNativeCell(1)][GetNativeCell(2)];
 }
 
-static any Native_DidClientEscape(Handle plugin,int numParams)
+static any Native_DidClientEscape(Handle plugin, int numParams)
 {
 	return DidClientEscape(GetNativeCell(1));
 }
 
-static any Native_ForceClientEscape(Handle plugin,int numParams)
+static any Native_ForceClientEscape(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 
@@ -644,49 +644,49 @@ static any Native_ClientForceProxy(Handle plugin, int numParams)
 	return 0;
 }
 
-static any Native_CollectAsPage(Handle plugin,int numParams)
+static any Native_CollectAsPage(Handle plugin, int numParams)
 {
 	CollectPage(GetNativeCell(1), GetNativeCell(2));
 	return 0;
 }
 
-static any Native_GetMaxBosses(Handle plugin,int numParams)
+static any Native_GetMaxBosses(Handle plugin, int numParams)
 {
 	return MAX_BOSSES;
 }
 
-static any Native_EntIndexToBossIndex(Handle plugin,int numParams)
+static any Native_EntIndexToBossIndex(Handle plugin, int numParams)
 {
 	return NPCGetFromEntIndex(GetNativeCell(1));
 }
 
-static any Native_BossIndexToEntIndex(Handle plugin,int numParams)
+static any Native_BossIndexToEntIndex(Handle plugin, int numParams)
 {
 	return EntRefToEntIndex(g_SlenderEnt[GetNativeCell(1)]);
 }
 
-static any Native_BossIndexToEntIndexEx(Handle plugin,int numParams)
+static any Native_BossIndexToEntIndexEx(Handle plugin, int numParams)
 {
 	return NPCGetEntIndex(GetNativeCell(1));
 }
 
-static any Native_BossIDToBossIndex(Handle plugin,int numParams)
+static any Native_BossIDToBossIndex(Handle plugin, int numParams)
 {
 	return NPCGetFromUniqueID(GetNativeCell(1));
 }
 
-static any Native_BossIndexToBossID(Handle plugin,int numParams)
+static any Native_BossIndexToBossID(Handle plugin, int numParams)
 {
 	return NPCGetUniqueID(GetNativeCell(1));
 }
 
-static any Native_UpdateBossAnimation(Handle plugin,int numParams)
+static any Native_UpdateBossAnimation(Handle plugin, int numParams)
 {
 	NPCChaserUpdateBossAnimation(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), GetNativeCell(4));
 	return 0;
 }
 
-static any Native_ForceBossJump(Handle plugin,int numParams)
+static any Native_ForceBossJump(Handle plugin, int numParams)
 {
 	float startPos[3], endPos[3];
 	GetNativeArray(2, startPos, 3);
@@ -737,7 +737,7 @@ static any Native_PerformBossVoice(Handle plugin, int numParams)
 	return 0;
 }
 
-static any Native_GetBossName(Handle plugin,int numParams)
+static any Native_GetBossName(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(GetNativeCell(1), profile, sizeof(profile));
@@ -782,12 +782,12 @@ static any Native_IsBossSpawning(Handle plugin, int numParams)
 	return g_SlenderSpawning[GetNativeCell(1)];
 }
 
-static any Native_GetBossModelEntity(Handle plugin,int numParams)
+static any Native_GetBossModelEntity(Handle plugin, int numParams)
 {
 	return EntRefToEntIndex(g_SlenderEnt[GetNativeCell(1)]);
 }
 
-static any Native_GetBossTarget(Handle plugin,int numParams)
+static any Native_GetBossTarget(Handle plugin, int numParams)
 {
 	return EntRefToEntIndex(g_SlenderTarget[GetNativeCell(1)]);
 }
@@ -803,22 +803,22 @@ static any Native_GetBossPathFollower(Handle plugin, int numParams)
 	return g_BossPathFollower[GetNativeCell(1)];
 }
 
-static any Native_GetBossMaster(Handle plugin,int numParams)
+static any Native_GetBossMaster(Handle plugin, int numParams)
 {
 	return g_SlenderCopyMaster[GetNativeCell(1)];
 }
 
-static any Native_GetBossIdleLifetime(Handle plugin,int numParams)
+static any Native_GetBossIdleLifetime(Handle plugin, int numParams)
 {
 	return NPCGetIdleLifetime(GetNativeCell(1), GetNativeCell(2));
 }
 
-static any Native_GetBossState(Handle plugin,int numParams)
+static any Native_GetBossState(Handle plugin, int numParams)
 {
 	return g_SlenderState[GetNativeCell(1)];
 }
 
-static any Native_SetBossState(Handle plugin,int numParams)
+static any Native_SetBossState(Handle plugin, int numParams)
 {
 	g_SlenderState[GetNativeCell(1)] = GetNativeCell(2);
 	return 0;
@@ -1007,104 +1007,104 @@ static any Native_CreateBossSoundHint(Handle plugin, int numParams)
 	return 0;
 }
 
-static any Native_GetBossProjectileType(Handle plugin,int numParams)
+static any Native_GetBossProjectileType(Handle plugin, int numParams)
 {
 	return NPCChaserGetProjectileType(GetNativeCell(1));
 }
 
-static any Native_SetBossCurrentAttackIndex(Handle plugin,int numParams)
+static any Native_SetBossCurrentAttackIndex(Handle plugin, int numParams)
 {
 	NPCSetCurrentAttackIndex(GetNativeCell(1), GetNativeCell(2));
 	return 0;
 }
 
-static any Native_GetBossCurrentAttackIndex(Handle plugin,int numParams)
+static any Native_GetBossCurrentAttackIndex(Handle plugin, int numParams)
 {
 	return NPCGetCurrentAttackIndex(GetNativeCell(1));
 }
 
-static any Native_GetBossMaxAttackIndexes(Handle plugin,int numParams)
+static any Native_GetBossMaxAttackIndexes(Handle plugin, int numParams)
 {
 	return NPCChaserGetAttackCount(GetNativeCell(1));
 }
 
-static any Native_GetBossAttackRunDurationTime(Handle plugin,int numParams)
+static any Native_GetBossAttackRunDurationTime(Handle plugin, int numParams)
 {
 	return g_NpcBaseAttackRunDurationTime[GetNativeCell(1)][GetNativeCell(2)];
 }
 
-static any Native_SetBossAttackRunDurationTime(Handle plugin,int numParams)
+static any Native_SetBossAttackRunDurationTime(Handle plugin, int numParams)
 {
 	g_NpcBaseAttackRunDurationTime[GetNativeCell(1)][GetNativeCell(2)] = GetNativeCell(3);
 	return 0;
 }
 
-static any Native_GetBossAttackRunDelayTime(Handle plugin,int numParams)
+static any Native_GetBossAttackRunDelayTime(Handle plugin, int numParams)
 {
 	return g_NpcBaseAttackRunDelayTime[GetNativeCell(1)][GetNativeCell(2)];
 }
 
-static any Native_SetBossAttackRunDelayTime(Handle plugin,int numParams)
+static any Native_SetBossAttackRunDelayTime(Handle plugin, int numParams)
 {
 	g_NpcBaseAttackRunDelayTime[GetNativeCell(1)][GetNativeCell(2)] = GetNativeCell(3);
 	return 0;
 }
 
-static any Native_GetBossAttackIndexDamageType(Handle plugin,int numParams)
+static any Native_GetBossAttackIndexDamageType(Handle plugin, int numParams)
 {
 	return NPCChaserGetAttackDamageType(GetNativeCell(1), GetNativeCell(2), Difficulty_Normal);
 }
 
-static any Native_GetBossAttackIndexDamage(Handle plugin,int numParams)
+static any Native_GetBossAttackIndexDamage(Handle plugin, int numParams)
 {
 	return NPCChaserGetAttackDamage(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
 
-static any Native_GetBossAttackIndexSpread(Handle plugin,int numParams)
+static any Native_GetBossAttackIndexSpread(Handle plugin, int numParams)
 {
 	return NPCChaserGetAttackSpread(GetNativeCell(1), GetNativeCell(2), Difficulty_Normal);
 }
 
-static any Native_GetBossAttackIndexRange(Handle plugin,int numParams)
+static any Native_GetBossAttackIndexRange(Handle plugin, int numParams)
 {
 	return NPCChaserGetAttackRange(GetNativeCell(1), GetNativeCell(2), Difficulty_Normal);
 }
 
-static any Native_GetBossAttackIndexType(Handle plugin,int numParams)
+static any Native_GetBossAttackIndexType(Handle plugin, int numParams)
 {
 	return NPCChaserGetAttackType(GetNativeCell(1), GetNativeCell(2));
 }
 
-static any Native_GetBossTeleportThinkTimer(Handle plugin,int numParams)
+static any Native_GetBossTeleportThinkTimer(Handle plugin, int numParams)
 {
 	return g_SlenderThink[GetNativeCell(1)];
 }
 
-static any Native_SetBossTeleportThinkTimer(Handle plugin,int numParams)
+static any Native_SetBossTeleportThinkTimer(Handle plugin, int numParams)
 {
 	int bossIndex = GetNativeCell(1);
 	g_SlenderThink[bossIndex] = GetNativeCell(2);
 	return 0;
 }
 
-static any Native_GetBossTeleportTarget(Handle plugin,int numParams)
+static any Native_GetBossTeleportTarget(Handle plugin, int numParams)
 {
 	return EntRefToEntIndex(g_SlenderTeleportTarget[GetNativeCell(1)]);
 }
 
-static any Native_GetBossThinkTimer(Handle plugin,int numParams)
+static any Native_GetBossThinkTimer(Handle plugin, int numParams)
 {
 	return g_SlenderEntityThink[GetNativeCell(1)];
 }
 
-static any Native_SetBossThinkTimer(Handle plugin,int numParams)
+static any Native_SetBossThinkTimer(Handle plugin, int numParams)
 {
 	int bossIndex = GetNativeCell(1);
 	g_SlenderEntityThink[bossIndex] = GetNativeCell(2);
 	return 0;
 }
 
-static any Native_UnhookBossThinkHook(Handle plugin,int numParams)
+static any Native_UnhookBossThinkHook(Handle plugin, int numParams)
 {
 	int bossIndex = GetNativeCell(1);
 	int slender = NPCGetEntIndex(bossIndex);
