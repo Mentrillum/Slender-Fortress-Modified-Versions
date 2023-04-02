@@ -88,49 +88,83 @@ void Hook_ClientPreThink(int client)
 			}
 			else if (g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Blue)
 			{
+				int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
+
+				float maxSpeed;
+				bool override;
+
+				if (master != -1)
+				{
+					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+					NPCGetProfile(master, profile, sizeof(profile));
+
+					override = GetBossProfileProxyOverrideMaxSpeed(profile);
+					if (override)
+					{
+						int difficulty = GetLocalGlobalDifficulty(master);
+
+						maxSpeed = GetBossProfileProxyMaxSpeed(profile, difficulty);
+					}
+				}
+				
 				bool speedup = TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly);
 
-				switch (class)
+				if (override)
 				{
-					case TFClass_Scout:
+					if (speedup || g_InProxySurvivalRageMode)
 					{
-						if (speedup || g_InProxySurvivalRageMode)
-						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 390.0);
-						}
-						else
-						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
-						}
+						float rageSpeed = maxSpeed + 30.0;
+						SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", rageSpeed);
 					}
-					case TFClass_Medic:
+					else
 					{
-						if (speedup || g_InProxySurvivalRageMode)
-						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 370.0);
-						}
-						else
-						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
-						}
+						SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", maxSpeed);
 					}
-					case TFClass_Spy:
+				}
+				else
+				{
+					switch (class)
 					{
-						if (speedup || g_InProxySurvivalRageMode)
+						case TFClass_Scout:
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 370.0);
+							if (speedup || g_InProxySurvivalRageMode)
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 390.0);
+							}
+							else
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
+							}
 						}
-						else
+						case TFClass_Medic:
 						{
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
+							if (speedup || g_InProxySurvivalRageMode)
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 370.0);
+							}
+							else
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
+							}
 						}
-					}
-					default:
-					{
-						if (g_InProxySurvivalRageMode)
+						case TFClass_Spy:
 						{
-							float rageSpeed = ClientGetDefaultSprintSpeed(client) + 30.0;
-							SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", rageSpeed);
+							if (speedup || g_InProxySurvivalRageMode)
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 370.0);
+							}
+							else
+							{
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
+							}
+						}
+						default:
+						{
+							if (g_InProxySurvivalRageMode)
+							{
+								float rageSpeed = ClientGetDefaultSprintSpeed(client) + 30.0;
+								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", rageSpeed);
+							}
 						}
 					}
 				}
