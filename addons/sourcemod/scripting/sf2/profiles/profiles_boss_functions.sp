@@ -690,6 +690,12 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 				}
 			}
 		}
+
+		profileData.ProxyOverrideMaxSpeed = !!kv.GetNum("proxies_override_max_speed", profileData.ProxyOverrideMaxSpeed);
+		if (profileData.ProxyOverrideMaxSpeed)
+		{
+			GetProfileDifficultyFloatValues(kv, "proxies_max_speed", profileData.ProxyMaxSpeed, profileData.ProxyMaxSpeed);
+		}
 	}
 
 	UnloadBossProfile(profile);
@@ -1841,6 +1847,18 @@ ArrayList GetBossProfileProxyModels(const char[] profile, int index, int difficu
 		}
 	}
 	return g_CachedProfileData.ProxyModels[index];
+}
+
+bool GetBossProfileProxyOverrideMaxSpeed(const char[] profile)
+{
+	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProxyOverrideMaxSpeed;
+}
+
+float GetBossProfileProxyMaxSpeed(const char[] profile, int difficulty)
+{
+	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	return g_CachedProfileData.ProxyMaxSpeed[difficulty];
 }
 
 float GetBossProfileFOV(const char[] profile)

@@ -1615,6 +1615,8 @@ enum struct SF2BossProfileData
 	ArrayList ProxyModelsInsane[10];
 	ArrayList ProxyModelsNightmare[10];
 	ArrayList ProxyModelsApollyon[10];
+	bool ProxyOverrideMaxSpeed;
+	float ProxyMaxSpeed[Difficulty_Max];
 
 	bool FakeCopies;
 
@@ -1823,6 +1825,7 @@ enum struct SF2BossProfileData
 		this.ProxyDeathAnimations = null;
 		this.ProxyZombies = false;
 		this.ProxyDifficultyModels = false;
+		this.ProxyOverrideMaxSpeed = false;
 
 		this.FakeCopies = false;
 
@@ -1979,6 +1982,7 @@ enum struct SF2BossProfileData
 			this.ProxySpawnCooldownMax[difficulty] = difficulty > 0 ? this.ProxySpawnCooldownMax[difficulty - 1] : 0.0;
 			this.ProxyTeleportRangeMin[difficulty] = difficulty > 0 ? this.ProxyTeleportRangeMin[difficulty - 1] : 500.0;
 			this.ProxyTeleportRangeMax[difficulty] = difficulty > 0 ? this.ProxyTeleportRangeMax[difficulty - 1] : 3200.0;
+			this.ProxyMaxSpeed[difficulty] = difficulty > 0 ? this.ProxyMaxSpeed[difficulty - 1] : 230.0;
 
 			this.DrainCreditAmount[difficulty] = difficulty > 0 ? this.DrainCreditAmount[difficulty - 1] : 50;
 		}
