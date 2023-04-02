@@ -6726,7 +6726,7 @@ static Action Timer_RoundStart(Handle timer)
 		{
 			if (clientsNum)
 			{
-				g_VoteTimer = CreateTimer(5.0, Timer_VoteDifficulty, arrayClients, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				g_VoteTimer = CreateTimer(1.0, Timer_VoteDifficulty, arrayClients, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 				TriggerTimer(g_VoteTimer, true);
 
 				int gameText = -1;

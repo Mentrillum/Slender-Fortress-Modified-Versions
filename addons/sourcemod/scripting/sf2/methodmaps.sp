@@ -399,7 +399,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 {
 	public SF2_BasePlayer(int client)
 	{
-		if (!IsValidClient(client))
+		if (client <= 0)
 		{
 			return view_as<SF2_BasePlayer>(SF2_INVALID_PLAYER);
 		}

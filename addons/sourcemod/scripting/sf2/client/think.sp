@@ -106,7 +106,7 @@ void Hook_ClientPreThink(int client)
 						maxSpeed = GetBossProfileProxyMaxSpeed(profile, difficulty);
 					}
 				}
-				
+
 				bool speedup = TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly);
 
 				if (override)
