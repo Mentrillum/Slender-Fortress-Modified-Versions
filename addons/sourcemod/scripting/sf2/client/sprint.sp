@@ -635,7 +635,7 @@ static void Hook_SprintThink(int client)
 		}
 	}
 
-	if (player.IsTrapped)
+	if (player.IsTrapped || g_PlayerPeeking[player.index])
 	{
 		player.SetPropFloat(Prop_Send, "m_flMaxspeed", 0.1);
 		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 0.1);
