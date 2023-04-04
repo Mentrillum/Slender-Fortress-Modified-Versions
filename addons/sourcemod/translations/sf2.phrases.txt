@@ -259,7 +259,7 @@
 		"fi"	"Olet nyt Haamu Tilassa. Käytä äänikomentoja teleporttaaksesi RED pelaajaan. Hiivi napauttaaksesi itsesi maahan ilmasta."
 		"chi"	"你现在处于幽灵模式。使用语言命令来传送到一个红队玩家。在空中按蹲来降落。"
 		"pt"	"Você está no modo fantasma. Use um comando de voz para teletransportar-se a um jogador da equipe RED. Pressione \"Agachar\" para jogar-se ao chão."
-		"ko"	"유령 모드가 되었습니다. 음성 명령을 사용하면 레드 플레이어에게 텔레포트 됩니다. 공중에 있는 동안 앉기 키를 누르면 빠르게 바닥으로 내려갑니다."
+		"ko"	"유령 모드가 되었습니다. 음성 명령을 사용하면 RED 팀 플레이어에게 텔레포트 됩니다. 공중에 있는 동안 앉기 키를 누르면 빠르게 바닥으로 내려갑니다."
 	}
 
 	"SF2 Ghost Mode Disabled"
@@ -337,7 +337,7 @@
 		"fi"	"Vain osa pelaajista valitaan RED:lle\npelaamaan peliä. Muut pelaajat joutuvat odottamaan\nvuoroaan BLU:lla kunnes on heidän vuoronsa.\nBLU pystyy katsomaan RED:iä reaaliaikaisesti\nkäyttäen komentoa !slghost."
 		"chi"	"只有一部分的蓝队玩家会被选入游戏\n剩下的玩家必须在蓝队等待直到轮到自己\n蓝队可以使用!slghost来实时观察红队\n而不用进入观察者队伍。"
 		"pt"	"Apenas uma certa quantidade de jogadores serão selecionados\nda equipe BLU para jogar. O resto dos jogadores terão\nde esperar na equipe BLU até que o seu turno chegue.\nJogadores da equipe BLU podem assistir os jogadores\nda equipe RED em tempo real com o comando \"!slghost\"\nsem ter que assisti-los no modo espectador."
-		"ko"	"블루 팀 플레이어 중에서 일정 인원 수만 선택되어 플레이하게 됩니다.\n나머지 플레이어는 대기실에서 다음 차례가 올 때까지 기다려야 합니다.\n블루팀은 관전자 팀에 들어갈 필요 없이\n!slghost 명령어를 통해 유령이 되어\n실시간으로 레드팀 상황을 볼 수 있습니다."
+		"ko"	"BLU 팀 플레이어 중에서 일정 인원 수만 선택되어 플레이하게 됩니다.\n나머지 플레이어는 대기실에서 다음 차례가 올 때까지 기다려야 합니다.\nBLU 팀은 관전자 팀에 들어갈 필요 없이\n!slghost 명령어를 통해 유령이 되어\n실시간으로 RED팀 상황을 볼 수 있습니다."
 	}
 
 	"SF2 Help Commands Menu Title"
@@ -377,7 +377,7 @@
 		"fi"	"Haamu Tila on ominaisuus jolla BLU pelaajat\nvoivat katsoa RED pelaajia ilman että\ntarvitsee mennä Katsomoon. RED pelaajat eivät pysty\nnäkemään sinua, eivätkä pysty vaikuttaa\nsinuun. Sinä et myöskään pysty vaikuttamaan RED:iin."
 		"chi"	"幽灵模式是让蓝队可以实时观察红队但又不需要\n进入观察者的一项功能。红队无法看见你和交互。\n你也不能和红队进行交互。"
 		"pt"	"O modo fantasma é um recurso que jogadores da equipe BLU\npodem usar para assistir jogadores da RED sem ir para o\nmodo espectador. Jogadores da RED não poderão ver nem\ninteragir com você. Você também não pode interagir com\na equipe RED."
-		"ko"	"유령 모드는 블루 팀 플레이어가 관전자 팀으로 넘어가지 않고\n레드 팀 상황을 볼 수 있게 해줍니다.\n레드 팀 플레이어는 유령이 된 당신을 볼 수도 만질 수도 없습니다.\n또한 통상적으로는 얘기도 나눌 수 없습니다."
+		"ko"	"유령 모드는 BLU 팀 플레이어가 관전자 팀으로 넘어가지 않고\nRED 팀 상황을 볼 수 있게 해줍니다.\nRED 팀 플레이어는 유령이 된 당신을 볼 수도 만질 수도 없습니다.\n또한 통상적으로는 얘기도 나눌 수 없습니다."
 	}
 
 	"SF2 Help Controls Menu Title"
@@ -881,7 +881,7 @@
 		"en"	"{royalblue}Disabled going to RED naturally."
 		"fi"	"{royalblue}Poistettiin pääsy RED:iin normaalisti."
 		"pt"	"{royalblue}Ida natural à RED desativada."
-		"ko"	"{royalblue}AFK로 인해 레드 팀 자동 참가가 비활성화되었습니다."
+		"ko"	"{royalblue}AFK로 인해 RED 팀 자동 참가가 비활성화되었습니다."
 	}
 
 	"SF2 AFK Off"
@@ -889,7 +889,7 @@
 		"en"	"{royalblue}Enabled going to RED naturally."
 		"fi"	"{royalblue}Otettiin käyttöön pääsy RED:iin normaalisti."
 		"pt"	"{royalblue}Ida natural à RED ativada."
-		"ko"	"{royalblue}레드팀 자동 참가가 다시 활성화되었습니다."
+		"ko"	"{royalblue}RED팀 자동 참가가 다시 활성화되었습니다."
 	}
 
 	"SF2 AFK Status"
@@ -1021,7 +1021,7 @@
 		"fi"	"{lightblue}Sinut on pakotettu peliin, koska RED:in pelaaja katkaisi yhteyden tai meni katsomoon. Pidä hauskaa!"
 		"chi"	"{lightblue}因为一名红队玩家断开连接或进入观察者，你被强制加入游戏。玩的开心！"
 		"pt"	"{lightblue}Você foi movido para a equipe RED devido à saída de outro jogador. Divirta-se!"
-		"ko"	"{lightblue}레드 팀에 있는 플레이어가 서버와 연결이 끊겼거나 관전 팀으로 합류해 당신이 대신해서 들어갔습니다. 재밌게 하세요!"
+		"ko"	"{lightblue}RED 팀에 있는 플레이어가 서버와 연결이 끊겼거나 관전 팀으로 합류해 당신이 대신해서 들어갔습니다. 재밌게 하세요!"
 	}
 
 	"SF2 Special Round Announce Chat"
@@ -1142,7 +1142,7 @@
 		"fi"	"Kytke bossi hyökkäämään odottajiin (BLU)"
 		"chi"	"开关Boss攻击等待者（蓝队）"
 		"pt"	"Alternar \"Chefão ataca aguardantes\" (BLU)"
-		"ko"	"보스의 대기자(블루 팀)를 향한 공격 여부 토글"
+		"ko"	"보스의 대기자(BLU 팀)를 향한 공격 여부 토글"
 	}
 
 	"SF2 Admin Menu Boss Attack Waiters Confirm"
@@ -1153,7 +1153,7 @@
 		"fi"	"Pitäisikö {1} antaa hyökätä odottajiin (BLU)?"
 		"chi"	"应该让 {1} 攻击等待者（蓝队）吗？"
 		"pt"	"{1} deve atacar os aguardantes (BLU)?"
-		"ko"	"{1} 이(가) 대기자(블루팀)을 공격하게 하겠습니까?"
+		"ko"	"{1} 이(가) 대기자(BLU팀)을 공격하게 하겠습니까?"
 	}
 
 	"SF2 Admin Menu Boss Teleport"
@@ -1163,7 +1163,7 @@
 		"fi"	"Kytke bossin teleporttaaminen RED:iin"
 		"chi"	"开关Boss传送到红队"
 		"pt"	"Alternar \"Chefão teletransporta-se à RED\""
-		"ko"	"보스의 레드 팀을 향한 텔레포트 여부 토글"
+		"ko"	"보스의 RED 팀을 향한 텔레포트 여부 토글"
 	}
 
 	"SF2 Admin Menu Boss Teleport Confirm"
@@ -1174,7 +1174,7 @@
 		"fi"	"Pitäisikö {1} pystyä teleporttaamaan RED:in lähelle?"
 		"chi"	"应该让 {1} 能够传送到红队附近吗？"
 		"pt"	"{1] deve poder teletransportar-se próximo à RED?"
-		"ko"	"{1} 이(가) 레드 팀을 향해 텔레포트하게끔 만들겠습니까?"
+		"ko"	"{1} 이(가) RED 팀을 향해 텔레포트하게끔 만들겠습니까?"
 	}
 
 	"SF2 Admin Menu Override Boss"
@@ -1590,7 +1590,7 @@
 		"fi"	"Kutsu pelaajia liittymään ryhmääsi!\nHUOMAUTUS: Et voi kutsua pelaajia jotka ovat\njo ryhmässä. Tai ovat pelaamassa RED:llä"
 		"chi"	"邀请玩家进入你的组！\n \n注意：你不能邀请已有组的玩家，\n或正在以红队身份游玩的玩家。"
 		"pt"	"Convide jogadores para o seu grupo!\n\nAVISO: você não pode convidar jogadores que\njá estão em um grupo ou que estão na equipe RED."
-		"ko"	"플레이어를 그룹에 초대하십시오!\n \n참고: 이미 그룹에 있거나 레드 팀으로 플레이 중인 플레이어는 초대할 수 없습니다."
+		"ko"	"플레이어를 그룹에 초대하십시오!\n \n참고: 이미 그룹에 있거나 RED 팀으로 플레이 중인 플레이어는 초대할 수 없습니다."
 	}
 
 	"SF2 Group Invitation Sent"
@@ -1761,7 +1761,7 @@
 	{
 		"en"	"You cannot perform this command because the player is currently playing on RED."
 		"pt"	"Não é possível usar este comando porque o jogador está jogando na equipe RED."
-		"ko"	"플레이어가 이미 레드 팀에 있으므로 이 명령어는 수행할 수 없습니다."
+		"ko"	"플레이어가 이미 RED 팀에 있으므로 이 명령어는 수행할 수 없습니다."
 	}
 
 	"SF2 Create Group Menu Title"
@@ -1940,7 +1940,7 @@
 		"fi"	"Apulaisena, tehtävänäsi on tappaa RED tiimi. Sinut\nteleportataan lähelle RED pelaajien sijaintia\nkun hyväksyt. Lisäksi, Apulaiset näkevät RED tiimin\nääriviivat seinien läpi, jotta voit tehdä yllätyshyökkäyksiä.\nMutta, elämäsi on riippuvainen ohjausmittaristasi,\neli se ei säily loputtomiin.\n \nHyväksytkö?"
 		"chi"	"作为小弟，你的目标是击杀红队。\n你在同意后会被传送到一个红队玩家附近的位置\n另外，小弟可以透过墙看见红队的轮廓，\n你可以按需来偷袭。但是你的生命值和控制能力挂钩，\n因此你不能一直成为小弟。\n \n你接受吗？"
 		"pt"	"Como um proxy, o seu objetivo é matar a equipe RED.\nVocê será teletransportado próximo de um jogador\nda equipe RED assim que aceitar. Em adição, proxies\npodem ver as silhuetas da equipe RED através das\nparedes, então você pode atacá-los de surpresa. En-\ntretanto, a sua vida depende do seu medidor de con-\ntrole, que não durará para sempre.\n\nDeseja aceitar?"
-		"ko"	"프록시의 목표는 레드 팀을 죽이는 것입니다.\n프록시가 되는 것을 수락하면 레드 팀 근처에서 텔레포트 됩니다.\n또한 프록시는 벽 너머로 레드팀 플레이어의 외곽선을 볼 수 있으며, 그런 점을 이용하여 기습을 시도하세요.\n그러나 화면 하단 수명 미터는 레드 팀을 타격하지 않는 한 계속 감소합니다.\n \n프록시가 되시겠습니까?"
+		"ko"	"프록시의 목표는 RED 팀을 죽이는 것입니다.\n프록시가 되는 것을 수락하면 RED 팀 근처에서 텔레포트 됩니다.\n또한 프록시는 벽 너머로 RED팀 플레이어의 외곽선을 볼 수 있으며, 그런 점을 이용하여 기습을 시도하세요.\n그러나 화면 하단 수명 미터는 RED 팀을 타격하지 않는 한 계속 감소합니다.\n \n프록시가 되시겠습니까?"
 	}
 
 	"SF2 Too Much Time"
@@ -1971,7 +1971,7 @@
 		"fi"	"Sinut on valittu olemaan Avustaja!\nSinut teleportataan RED tiimin alueelle {1} sekunnin päästä."
 		"chi"	"你被选为了小弟！\n你将在 {1} 秒后传送到红队区域。"
 		"pt"	"Você foi selecionado para ser um\nproxy! Você será teletransportado à área da RED em {1} segundo(s)."
-		"ko"	"프록시로 선택되었습니다!\n{1}초 후에 레드 팀 플레이 구역으로 텔레포트됩니다."
+		"ko"	"프록시로 선택되었습니다!\n{1}초 후에 RED 팀 플레이 구역으로 텔레포트됩니다."
 	}
 
 	"SF2 Boss Pack Menu Title"
@@ -2168,7 +2168,7 @@
 		"en"	"{lightblue}Ghost mode will now be enabled upon dying in RED."
 		"fi"	"{lightblue}Haamu tila otetaan nyt käyttöön, kun kuolet RED:llä."
 		"pt"	"{lightblue}Agora, o modo fantasma será ativado após morrer estando na RED."
-		"ko"	"{lightblue}이제 레드 팀으로 플레이 도중 사망 시 유령 모드가 활성화됩니다."
+		"ko"	"{lightblue}이제 RED 팀으로 플레이 도중 사망 시 유령 모드가 활성화됩니다."
 	}
 	
 	"SF2 Settings View Bobbing Toggle Title"
