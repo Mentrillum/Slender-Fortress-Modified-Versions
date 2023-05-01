@@ -696,12 +696,12 @@ static Action Timer_DiscoLight(Handle timer, any effect)
 	}
 
 	int ent = EntRefToEntIndex(effect);
-	if (!IsValidEntity(ent))
+	if (!ent || ent == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
 
-	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
+	int slender = GetEntPropEnt(ent, Prop_Send, "moveparent");
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
@@ -736,19 +736,7 @@ static Action Timer_FestiveLight(Handle timer, any effect)
 	}
 
 	int ent = EntRefToEntIndex(effect);
-	if (!IsValidEntity(ent))
-	{
-		return Plugin_Stop;
-	}
-
-	int slender = GetEntPropEnt(ent,Prop_Send,"moveparent");
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	int bossIndex = NPCGetFromEntIndex(slender);
-	if (bossIndex == -1)
+	if (!ent || ent == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
@@ -758,15 +746,15 @@ static Action Timer_FestiveLight(Handle timer, any effect)
 	{
 		case 1:
 		{
-			SetEntityRenderColor(effect, 230, 37, 37, 255);
+			SetEntityRenderColor(ent, 230, 37, 37, 255);
 		}
 		case 2:
 		{
-			SetEntityRenderColor(effect, 94, 227, 79, 255);
+			SetEntityRenderColor(ent, 94, 227, 79, 255);
 		}
 		case 3:
 		{
-			SetEntityRenderColor(effect, 235, 235, 235, 255);
+			SetEntityRenderColor(ent, 235, 235, 235, 255);
 		}
 	}
 

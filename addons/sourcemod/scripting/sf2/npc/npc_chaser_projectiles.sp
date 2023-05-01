@@ -861,9 +861,9 @@ static Action Hook_ProjectileAttackTouch(int entity, int other)
 					int attackIndex = NPCGetCurrentAttackIndex(bossIndex);
 					bool attackEliminated = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 					float radius = NPCChaserGetAttackProjectileRadius(bossIndex, attackIndex, difficulty);
-					for (int client = 1; client <= MaxClients; client++)
+					for (int client = 1; client < MaxClients; client++)
 					{
-						if (!IsValidClient(client) || !IsClientInGame(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client))
+						if (!IsValidClient(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client))
 						{
 							continue;
 						}
@@ -968,7 +968,7 @@ static Action Hook_ProjectileTouch(int entity, int other)
 			float entPos[3], otherPos[3];
 			GetEntPropVector(other, Prop_Data, "m_vecAbsOrigin", otherPos);
 			GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", entPos);
-			if (other > 0 && other <= MaxClients)
+			if (IsValidClient(other))
 			{
 				int slender = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 				if (slender != INVALID_ENT_REFERENCE)
@@ -1000,9 +1000,9 @@ static Action Hook_ProjectileTouch(int entity, int other)
 					bool attackEliminated = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
 					float radius = NPCChaserGetProjectileRadius(bossIndex, difficulty);
 					float fallOff = NPCChaserGetProjectileRadius(bossIndex, difficulty)/2.0;
-					for (int client = 1; client <= MaxClients; client++)
+					for (int client = 1; client < MaxClients; client++)
 					{
-						if (!IsValidClient(client) || !IsClientInGame(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client))
+						if (!IsValidClient(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client))
 						{
 							continue;
 						}

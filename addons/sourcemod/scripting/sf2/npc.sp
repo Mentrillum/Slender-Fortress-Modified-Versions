@@ -346,6 +346,7 @@ void NPCStopMusic()
 		}
 	}
 }
+
 void CheckIfMusicValid()
 {
 	int difficulty = g_DifficultyConVar.IntValue;
@@ -524,7 +525,7 @@ void CheckIfMusicValid()
 					}
 					if (currentMusicTrack[0] != '\0')
 					{
-						timerMusic = CreateTimer(NPCGetSoundMusicLoop(i, difficulty),BossMusic,i,TIMER_FLAG_NO_MAPCHANGE);
+						timerMusic = CreateTimer(NPCGetSoundMusicLoop(i, difficulty), BossMusic, i, TIMER_FLAG_NO_MAPCHANGE);
 						StopSound(client, MUSIC_CHAN, currentMusicTrack);
 						ClientChaseMusicReset(client);
 						ClientChaseMusicSeeReset(client);
@@ -937,7 +938,7 @@ static Action BossMusic(Handle timer,any bossIndex)
 					StopSound(i, MUSIC_CHAN, currentMusicTrack);
 				}
 			}
-			timerMusic = CreateTimer(time,BossMusic,bossIndex,TIMER_FLAG_NO_MAPCHANGE);
+			timerMusic = CreateTimer(time, BossMusic, bossIndex, TIMER_FLAG_NO_MAPCHANGE);
 			return Plugin_Continue;
 		}
 		NPCStopMusic();
@@ -1440,7 +1441,7 @@ bool NPCShouldHearEntity(int npcIndex, int entity, SoundType soundType)
 bool NPCAreAvailablePlayersAlive()
 {
 	int number = 0;
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == TFTeam_Red && !g_PlayerEliminated[i] && !DidClientEscape(i))
 		{
@@ -1545,9 +1546,9 @@ bool SlenderCanRemove(int bossIndex)
 				float slenderPos[3], buffer[3];
 				SlenderGetAbsOrigin(bossIndex, slenderPos);
 
-				for (int i = 1; i <= MaxClients; i++)
+				for (int i = 1; i < MaxClients; i++)
 				{
-					if (!IsClientInGame(i) ||
+					if (!IsValidClient(i) ||
 						!IsPlayerAlive(i) ||
 						g_PlayerEliminated[i] ||
 						IsClientInGhostMode(i) ||
@@ -1918,7 +1919,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 
 	g_SlenderCustomOutroSong[Npc.Index] = GetBossProfileOutroMusicState(profile);
 
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		g_PlayerLastChaseBossEncounterTime[i][Npc.Index] = -1.0;
 		g_SlenderTeleportPlayersRestTime[Npc.Index][i] = -1.0;
@@ -1935,7 +1936,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 
 	GetBossProfileEngineSound(profile, g_SlenderEngineSound[Npc.Index], sizeof(g_SlenderEngineSound[]));
 
-	g_SlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	g_SlenderThink[Npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, Npc.UniqueID, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
 	switch (bossType)
 	{
@@ -1960,7 +1961,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 		{
 			SF2BossProfileSoundInfo soundInfo;
 			GetBossProfileIntroSounds(profile, soundInfo);
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -2124,7 +2125,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 				if ((g_NpcAllowMusicOnDifficulty[Npc.Index] & g_DifficultyConVar.IntValue) && time > 0.0)
 				{
 					timerMusic = CreateTimer(time, BossMusic, Npc.Index, TIMER_FLAG_NO_MAPCHANGE);
-					for(int client = 1; client <= MaxClients; client++)
+					for(int client = 1; client < MaxClients; client++)
 					{
 						if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
 						{
@@ -2522,49 +2523,17 @@ void RemoveProfile(int bossIndex)
 	Call_PushCell(bossIndex);
 	Call_Finish();
 
+	Call_StartForward(g_OnBossRemovedPFwd);
+	Call_PushCell(bossIndex);
+	Call_Finish();
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	NPCChaserOnRemoveProfile(bossIndex);
 
-	// Remove all possible sounds, for emergencies.
-	if (!MusicActive())
-	{
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsClientInGame(i))
-			{
-				continue;
-			}
-
-			// Remove chase music.
-			if (g_PlayerChaseMusicMaster[i] == bossIndex)
-			{
-				ClientChaseMusicReset(i);
-			}
-
-			// Don't forget search theme
-			if (g_PlayerAlertMusicMaster[i] == bossIndex)
-			{
-				ClientAlertMusicReset(i);
-			}
-
-			if (g_PlayerChaseMusicSeeMaster[i] == bossIndex)
-			{
-				ClientChaseMusicSeeReset(i);
-			}
-
-			if (g_PlayerIdleMusicMaster[i] == bossIndex)
-			{
-				ClientIdleMusicReset(i);
-			}
-
-			ClientUpdateMusicSystem(i);
-		}
-	}
-
 	// Clean up on the clients.
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		g_SlenderLastFoundPlayer[bossIndex][i] = -1.0;
 		g_PlayerLastChaseBossEncounterTime[i][bossIndex] = -1.0;
@@ -2573,22 +2542,6 @@ void RemoveProfile(int bossIndex)
 		for (int i2 = 0; i2 < 3; i2++)
 		{
 			g_SlenderLastFoundPlayerPos[bossIndex][i][i2] = 0.0;
-		}
-
-		if (IsClientInGame(i))
-		{
-			if (NPCGetUniqueID(bossIndex) == g_PlayerStaticMaster[i])
-			{
-				g_PlayerStaticMaster[i] = -1;
-
-				// No one is the static master.
-				g_PlayerStaticTimer[i] = CreateTimer(g_PlayerStaticDecreaseRate[i],
-					Timer_ClientDecreaseStatic,
-					GetClientUserId(i),
-					TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-
-				TriggerTimer(g_PlayerStaticTimer[i], true);
-			}
 		}
 	}
 
@@ -2746,123 +2699,51 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 	AddVectors(truePos, pos, truePos);
 
 	int bossIndex = Npc.Index;
-	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
 	char buffer[PLATFORM_MAX_PATH];
 
 	GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
 
-	CBaseNPC npcBoss = CBaseNPC();
-	CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npcBoss.GetEntity());
-	CBaseNPC_Locomotion locomotion = npcBoss.GetLocomotion();
-	npcEntity.Hook_HandleAnimEvent(CBaseAnimating_HandleAnimEvent);
-
-	npcEntity.Teleport(truePos, trueAng);
-	npcEntity.SetModel(buffer);
-	npcEntity.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[bossIndex]));
-	npcEntity.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[bossIndex]));
-	npcEntity.SetRenderColor(g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
-	if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
-	{
-		float scaleModel = NPCGetModelScale(bossIndex) * 0.5;
-		npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
-	}
-	else
-	{
-		npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(bossIndex));
-	}
-	npcEntity.Spawn();
-	npcEntity.Activate();
-
-	npcBoss.flStepSize = 18.0;
-	npcBoss.flGravity = g_Gravity;
-	npcBoss.flAcceleration = g_SlenderCalculatedAcceleration[bossIndex];
-	npcBoss.flDeathDropHeight = 99999.0;
-	npcBoss.flJumpHeight = 512.0;
-	npcBoss.flWalkSpeed = g_SlenderCalculatedWalkSpeed[bossIndex];
-	npcBoss.flRunSpeed = g_SlenderCalculatedSpeed[bossIndex];
-
-	g_BossPathFollower[bossIndex].SetMinLookAheadDistance(GetBossProfileNodeDistanceLookAhead(profile));
-
-	if (NPCGetModelSkinMax(bossIndex) > 0)
-	{
-		int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(bossIndex));
-		npcEntity.SetProp(Prop_Send, "m_nSkin", randomSkin);
-	}
-	else
-	{
-		if (GetBossProfileSkinDifficultyState(profile))
-		{
-			npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(bossIndex, difficulty));
-		}
-		else
-		{
-			npcEntity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(bossIndex));
-		}
-	}
-	if (NPCGetModelBodyGroupsMax(bossIndex) > 0)
-	{
-		int randomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(bossIndex));
-		npcEntity.SetProp(Prop_Send, "m_nBody", randomBody);
-	}
-	else
-	{
-		if (GetBossProfileBodyGroupsDifficultyState(profile))
-		{
-			npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(bossIndex, difficulty));
-		}
-		else
-		{
-			npcEntity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(bossIndex));
-		}
-	}
-
-	g_DHookUpdateTransmitState.HookEntity(Hook_Pre, npcEntity.iEnt, Hook_BossUpdateTransmitState);
-	SetEntityFlags(npcEntity.iEnt, FL_NPC);
-	SetEntityTransmitState(npcEntity.iEnt, FL_EDICT_ALWAYS);
-
-	g_SlenderEnt[bossIndex] = EntIndexToEntRef(npcEntity.iEnt);
-
-	if (g_SlenderEngineSound[bossIndex][0] != '\0')
-	{
-		EmitSoundToAll(g_SlenderEngineSound[bossIndex], npcEntity.iEnt, SNDCHAN_STATIC, GetBossProfileEngineSoundLevel(profile),
-		_, GetBossProfileEngineSoundVolume(profile));
-	}
-
-	if (GetBossProfileSpawnParticleState(profile))
-	{
-		SlenderCreateParticleSpawnEffect(bossIndex);
-	}
+	CBaseCombatCharacter entity;
 
 	switch (NPCGetType(bossIndex))
 	{
 		case SF2BossType_Statue:
 		{
-			npcBoss.flMaxYawRate = 0.0;
-
-			locomotion.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
-			locomotion.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
-			locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
-			locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
-
-			npcEntity.SetPropVector(Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
-			npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
-
-			npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
-			npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
-
-			npcEntity.SetProp(Prop_Data, "m_nSolidType", SOLID_BBOX);
-			npcEntity.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
-
-			SDKHook(npcEntity.iEnt, SDKHook_ThinkPost, SlenderStatueSetNextThink);
-			SDKHook(npcEntity.iEnt, SDKHook_Think, SlenderStatueBossProcessMovement);
-
-			g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderBlinkBossThink, g_SlenderEnt[bossIndex], TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-
-			Spawn_Statue(bossIndex);
+			entity = Spawn_Statue(bossIndex);
 		}
 		case SF2BossType_Chaser:
 		{
+			CBaseNPC npcBoss = CBaseNPC();
+			CBaseCombatCharacter npcEntity = CBaseCombatCharacter(npcBoss.GetEntity());
+			CBaseNPC_Locomotion locomotion = npcBoss.GetLocomotion();
+			npcEntity.Hook_HandleAnimEvent(CBaseAnimating_HandleAnimEvent);
+
+			npcEntity.Teleport(truePos, trueAng);
+			npcEntity.SetModel(buffer);
+			npcEntity.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[bossIndex]));
+			npcEntity.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[bossIndex]));
+			npcEntity.SetRenderColor(g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], g_SlenderRenderColor[bossIndex][3]);
+			if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
+			{
+				float scaleModel = NPCGetModelScale(bossIndex) * 0.5;
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
+			}
+			else
+			{
+				npcEntity.SetPropFloat(Prop_Send, "m_flModelScale", NPCGetModelScale(bossIndex));
+			}
+			npcEntity.Spawn();
+			npcEntity.Activate();
+
+			npcBoss.flStepSize = 18.0;
+			npcBoss.flGravity = g_Gravity;
+			npcBoss.flAcceleration = g_SlenderCalculatedAcceleration[bossIndex];
+			npcBoss.flDeathDropHeight = 99999.0;
+			npcBoss.flJumpHeight = 512.0;
+			npcBoss.flWalkSpeed = g_SlenderCalculatedWalkSpeed[bossIndex];
+			npcBoss.flRunSpeed = g_SlenderCalculatedSpeed[bossIndex];
+
 			npcBoss.flMaxYawRate = NPCGetTurnRate(bossIndex);
 
 			locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
@@ -3005,7 +2886,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				g_SlenderChaseDeathPosition[bossIndex][i] = 0.0;
 			}
 
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
 				g_SlenderLastFoundPlayer[bossIndex][i] = -1.0;
 
@@ -3057,7 +2938,63 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			int entHealth = RoundToCeil(maxHealth + 1500000000.0);
 			npcEntity.SetProp(Prop_Data, "m_iHealth", entHealth);
 			npcEntity.SetProp(Prop_Data, "m_iMaxHealth", entHealth);
+
+			entity = npcEntity;
 		}
+	}
+
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	g_BossPathFollower[bossIndex].SetMinLookAheadDistance(GetBossProfileNodeDistanceLookAhead(profile));
+
+	if (NPCGetModelSkinMax(bossIndex) > 0)
+	{
+		int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(bossIndex));
+		entity.SetProp(Prop_Send, "m_nSkin", randomSkin);
+	}
+	else
+	{
+		if (GetBossProfileSkinDifficultyState(profile))
+		{
+			entity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkinDifficulty(bossIndex, difficulty));
+		}
+		else
+		{
+			entity.SetProp(Prop_Send, "m_nSkin", NPCGetModelSkin(bossIndex));
+		}
+	}
+	if (NPCGetModelBodyGroupsMax(bossIndex) > 0)
+	{
+		int randomBody = GetRandomInt(0, NPCGetModelBodyGroupsMax(bossIndex));
+		entity.SetProp(Prop_Send, "m_nBody", randomBody);
+	}
+	else
+	{
+		if (GetBossProfileBodyGroupsDifficultyState(profile))
+		{
+			entity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroupsDifficulty(bossIndex, difficulty));
+		}
+		else
+		{
+			entity.SetProp(Prop_Send, "m_nBody", NPCGetModelBodyGroups(bossIndex));
+		}
+	}
+
+	g_DHookUpdateTransmitState.HookEntity(Hook_Pre, entity.iEnt, Hook_BossUpdateTransmitState);
+	SetEntityFlags(entity.iEnt, FL_NPC);
+	SetEntityTransmitState(entity.iEnt, FL_EDICT_ALWAYS);
+
+	g_SlenderEnt[bossIndex] = EntIndexToEntRef(entity.iEnt);
+
+	if (g_SlenderEngineSound[bossIndex][0] != '\0')
+	{
+		EmitSoundToAll(g_SlenderEngineSound[bossIndex], entity.iEnt, SNDCHAN_STATIC, GetBossProfileEngineSoundLevel(profile),
+		_, GetBossProfileEngineSoundVolume(profile));
+	}
+
+	if (GetBossProfileSpawnParticleState(profile))
+	{
+		SlenderCreateParticleSpawnEffect(bossIndex);
 	}
 
 	if (NPCGetCustomOutlinesState(bossIndex))
@@ -3172,22 +3109,22 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 	return loco.CallBaseFunction(other);
 }
 
-static bool CanJumpAcrossGaps(CBaseNPC_Locomotion loco)
+bool CanJumpAcrossGaps(CBaseNPC_Locomotion loco)
 {
 	return false;
 }
 
-static void JumpAcrossGapsCBase(CBaseNPC_Locomotion loco, const float landingGoal[3], const float landingForward[3])
+void JumpAcrossGapsCBase(CBaseNPC_Locomotion loco, const float landingGoal[3], const float landingForward[3])
 {
 	return;
 }
 
-static bool ClimbUpCBase(CBaseNPC_Locomotion loco, const float vecGoal[3], const float vecForward[3], int entity)
+bool ClimbUpCBase(CBaseNPC_Locomotion loco, const float goal[3], const float fwd[3], int entity)
 {
 	return false;
 }
 
-static MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, DHookParam params)
+MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, DHookParam params)
 {
 	int bossIndex = NPCGetFromEntIndex(thisInt);
 	if (bossIndex == -1)
@@ -3241,7 +3178,7 @@ void RemoveSlender(int bossIndex)
 		}
 
 		int glowEnt = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
-		if (glowEnt != INVALID_ENT_REFERENCE)
+		if (glowEnt && glowEnt != INVALID_ENT_REFERENCE)
 		{
 			RemoveEntity(glowEnt);
 			g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
@@ -4207,12 +4144,15 @@ void SlenderCreateParticleSpawnEffect(int bossIndex, bool despawn = false)
 // Teleport progressively closer as time passes in attempt to increase the target's stress level.
 // Maximum minimum range is capped by the boss's anger level.
 
-static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
+static Action Timer_SlenderTeleportThink(Handle timer, any id)
 {
-	if (bossIndex == -1)
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC.FromUniqueId(id);
+	if (!controller.IsValid())
 	{
 		return Plugin_Stop;
 	}
+
+	int bossIndex = controller.Index;
 	if (timer != g_SlenderThink[bossIndex])
 	{
 		return Plugin_Stop;
@@ -4228,7 +4168,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 		return Plugin_Continue;
 	}
 
-	if (NPCGetFlags(bossIndex) & SFF_NOTELEPORT)
+	if (controller.Flags & SFF_NOTELEPORT)
 	{
 		return Plugin_Continue;
 	}
@@ -4245,9 +4185,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 	{
 		return Plugin_Continue;
 	}
-	if (NPCGetTeleportType(bossIndex) == 2)
+	if (controller.TeleportType == 2)
 	{
-		int bossEnt = NPCGetEntIndex(bossIndex);
+		int bossEnt = controller.EntIndex;
 		if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 		{
 			if (NPCGetType(bossIndex) == SF2BossType_Chaser)
@@ -4379,7 +4319,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 						else
 						{
 							canSpawn = true;
-							for (int i = 1; i <= MaxClients; i++)
+							for (int i = 1; i < MaxClients; i++)
 							{
 								if (!IsValidClient(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i) || g_PlayerEliminated[i]
 									|| g_PlayerProxy[i] || DidClientEscape(i))
@@ -4474,7 +4414,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 
 							if (canSpawn)
 							{
-								SpawnSlender(bossIndex, spawnPos);
+								SpawnSlender(controller, spawnPos);
 
 								if (g_PlayerIsExitCamping[teleportTarget])
 								{
@@ -4489,9 +4429,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any bossIndex)
 								{
 									bool didJumpScare = false;
 
-									for (int i = 1; i <= MaxClients; i++)
+									for (int i = 1; i < MaxClients; i++)
 									{
-										if (!IsClientInGame(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
+										if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
 										{
 											continue;
 										}
@@ -4779,7 +4719,7 @@ void SlenderRemoveGlow(int bossIndex)
 	}
 
 	int glow = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
-	if (glow != INVALID_ENT_REFERENCE)
+	if (glow && glow != INVALID_ENT_REFERENCE)
 	{
 		RemoveEntity(glow);
 		g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
@@ -4806,7 +4746,7 @@ bool IsNPCVisibleToPlayer(int npcIndex,int client, bool checkFOV=true, bool chec
 
 bool IsNPCVisibleToAPlayer(int npcIndex, bool checkFOV=true, bool checkBlink=false, bool checkEliminated=true)
 {
-	for (int client = 1; client <= MaxClients; client++)
+	for (int client = 1; client < MaxClients; client++)
 	{
 		if (IsNPCVisibleToPlayer(npcIndex, client, checkFOV, checkBlink, checkEliminated))
 		{
@@ -4850,7 +4790,12 @@ bool CanNPCSeePlayerNonTransparent(int npcIndex, SF2_BasePlayer client)
 			npcEnt);
 
 		bool isVisible = !TR_DidHit(trace);
+		if (!isVisible && TR_GetEntityIndex(trace) == client.index)
+		{
+			isVisible = true;
+		}
 		delete trace;
+
 
 		return isVisible;
 	}
@@ -4871,7 +4816,7 @@ float NPCGetDistanceFromPoint(int npcIndex, const float point[3])
 	return -1.0;
 }
 
-float NPCGetDistanceFromEntity(int npcIndex,int ent)
+float NPCGetDistanceFromEntity(int npcIndex, int ent)
 {
 	if (!IsValidEntity(ent))
 	{
@@ -4884,117 +4829,73 @@ float NPCGetDistanceFromEntity(int npcIndex,int ent)
 	return NPCGetDistanceFromPoint(npcIndex, pos);
 }
 
-bool TraceRayBossVisibility(int entity,int mask, any data)
-{
-	if (entity == data || IsValidClient(entity))
-	{
-		return false;
-	}
-	if (entity > 0 && entity <= MaxClients)
-	{
-		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
-		{
-			return false;
-		}
-	}
-	int bossIndex = NPCGetFromEntIndex(entity);
-	if (entity <= MAX_BOSSES)
-	{
-		return false;
-	}
-	if (bossIndex != -1)
-	{
-		return false;
-	}
-	if (IsValidEntity(entity))
-	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc") == 0)
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-bool TraceRayDontHitCharacters(int entity,int mask, any data)
-{
-	if (entity > 0 && entity <= MaxClients)
-	{
-		return false;
-	}
-
-	int bossIndex = NPCGetFromEntIndex(entity);
-	if (bossIndex != -1)
-	{
-		return false;
-	}
-	if (IsValidEntity(entity))
-	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc") == 0)
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool TraceRayDontHitAnyEntity(int entity,int mask,any data)
+bool TraceRayBossVisibility(int entity, int mask, any data)
 {
 	if (entity == data)
 	{
 		return false;
 	}
-	if (entity > 0 && entity <= MaxClients)
+	if (IsValidClient(entity))
 	{
 		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
 		{
 			return false;
 		}
 	}
-	int bossIndex = NPCGetFromEntIndex(entity);
-	if (bossIndex != -1)
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
+	return true;
+}
+
+bool TraceRayDontHitCharacters(int entity, int mask, any data)
+{
+	if (IsValidClient(entity))
 	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc") == 0)
+		return false;
+	}
+
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool TraceRayDontHitAnyEntity(int entity, int mask, any data)
+{
+	if (entity == data)
+	{
+		return false;
+	}
+	if (IsValidClient(entity))
+	{
+		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
 		{
 			return false;
 		}
+	}
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
+	{
+		return false;
 	}
 	return true;
 }
 
 bool TraceRayDontHitAnyEntity_Pathing(int entity, int contentsMask, int desiredcollisiongroup)
 {
-	if ((entity > 0 && entity <= MaxClients))
+	if (IsValidClient(entity))
 	{
 		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
 		{
 			return false;
 		}
 	}
-	int bossIndex = NPCGetFromEntIndex(entity);
-	if (bossIndex != -1)
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
 		return false;
-	}
-	if (IsValidEntity(entity))
-	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc") == 0)
-		{
-			return false;
-		}
 	}
 	return true;
 }
@@ -5006,16 +4907,12 @@ bool TraceRayDontHitCharactersOrEntity(int entity,int mask, any data)
 		return false;
 	}
 
-	if (entity > 0 && entity <= MaxClients)
+	if (IsValidClient(entity))
 	{
 		return false;
 	}
-	int bossIndex = NPCGetFromEntIndex(entity);
-	if (bossIndex != -1)
-	{
-		return false;
-	}
-	if (IsValidEntity(entity) && CBaseEntity(entity).IsCombatCharacter())
+
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
 		return false;
 	}
@@ -5247,9 +5144,9 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				bool tooNear = false;
 
 				// Check minimum range with players.
-				for (int teleportClient = 1; teleportClient <= MaxClients; teleportClient++)
+				for (int teleportClient = 1; teleportClient < MaxClients; teleportClient++)
 				{
-					if (!IsClientInGame(teleportClient) ||
+					if (!IsValidClient(teleportClient) ||
 						!IsPlayerAlive(teleportClient) ||
 						g_PlayerEliminated[teleportClient] ||
 						IsClientInGhostMode(teleportClient) ||
@@ -5358,3 +5255,4 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 
 #include "sf2/npc/npc_chaser.sp"
 #include "sf2/npc/npc_chaser_takedamage.sp"
+#include "sf2/npc/entities/initialize.sp"

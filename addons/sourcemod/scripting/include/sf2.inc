@@ -3,8 +3,8 @@
 #endif
 #define _sf2_included
 
-#define PLUGIN_VERSION "1.7.5.10 M"
-#define PLUGIN_VERSION_DISPLAY "1.7.5.10 M"
+#define PLUGIN_VERSION "1.8.0 M Alpha"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -991,7 +991,7 @@ native bool SF2_IsClientInDeathCam(int client);
  * @param vecLookPos		The position the player should look at.
  * @param antiCamp			Whether the player was camping or not.
  */
-native void SF2_ClientStartDeathCam(int client, int bossIndex, const float vecLookPos[3], bool antiCamp = false);
+native void SF2_ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool antiCamp = false);
 
 /**
  * Returns whether or not a proxy can be spawned, returns a teleport position or spawn point if defined and the result is true, works well with SF2_ClientForceProxy.

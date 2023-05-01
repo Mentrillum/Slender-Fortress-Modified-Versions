@@ -251,7 +251,7 @@ static int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,
 			{
 				SetPlayerGroupQueuePoints(groupIndex, 0);
 
-				for (int i = 1; i <= MaxClients; i++)
+				for (int i = 1; i < MaxClients; i++)
 				{
 					if (!IsValidClient(i))
 					{
@@ -296,7 +296,7 @@ void CheckPlayerGroup(int groupIndex)
 	else
 	{
 		// Remove any person that isn't participating.
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
 			if (ClientGetPlayerGroup(i) == groupIndex)
 			{
@@ -333,7 +333,7 @@ void CheckPlayerGroup(int groupIndex)
 				CPrintToChat(groupLeader, "%T", "SF2 Group Has Too Many Members", groupLeader);
 			}
 
-			for (int i = 1, count; i <= MaxClients && count < excessMemberCount; i++)
+			for (int i = 1, count; i < MaxClients && count < excessMemberCount; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -401,7 +401,7 @@ int CreatePlayerGroup()
 		SetPlayerGroupName(index, "");
 		SetPlayerGroupPlaying(index, false);
 
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
 			SetPlayerGroupInvitedPlayer(index, i, false);
 			SetPlayerGroupInvitedPlayerCount(index, i, 0);
@@ -434,7 +434,7 @@ void ClearPlayerGroupMembers(int groupIndex)
 		return;
 	}
 
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (ClientGetPlayerGroup(i) == groupIndex)
 		{
@@ -481,7 +481,7 @@ int GetPlayerGroupMemberCount(int groupIndex)
 {
 	int count;
 
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -525,7 +525,7 @@ void SetPlayerGroupLeader(int groupIndex,int groupLeader)
 		char name[MAX_NAME_LENGTH];
 		FormatEx(name, sizeof(name), "%N", groupLeader);
 
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
 			if (groupLeader == i || !IsValidClient(i))
 			{
@@ -546,7 +546,7 @@ int PlayerGroupFindNewLeader(int groupIndex)
 		return -1;
 	}
 
-	for (int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -631,7 +631,7 @@ void ClientSetPlayerGroup(int client,int groupIndex)
 		GetPlayerGroupName(oldPlayerGroup, groupName, sizeof(groupName));
 		CPrintToChat(client, "%T", "SF2 Left Group", client, groupName);
 
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
 			if (i == client || !IsValidClient(i))
 			{
@@ -675,7 +675,7 @@ void ClientSetPlayerGroup(int client,int groupIndex)
 		GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
 		CPrintToChat(client, "%T", "SF2 Joined Group", client, groupName);
 
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
 			if (i == client || !IsValidClient(i))
 			{

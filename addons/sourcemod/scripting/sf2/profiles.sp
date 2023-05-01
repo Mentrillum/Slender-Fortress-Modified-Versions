@@ -765,7 +765,7 @@ void CheckRoundLimitForBossPackVote(int roundCount)
 
 void InitiateBossPackVote(int initiator)
 {
-	if (initiator<33) //A admin called the command, it's probably for a good reason
+	if (initiator < 33) //A admin called the command, it's probably for a good reason
 	{
 		g_BossPackVoteCompleted = false;
 	}
@@ -791,8 +791,8 @@ void InitiateBossPackVote(int initiator)
 	Handle voteMenu = NativeVotes_Create(Menu_BossPackVote, NativeVotesType_Custom_Mult);
 	NativeVotes_SetInitiator(voteMenu, initiator);
 	char title[255];
-	FormatEx(title,255,"%t%t","SF2 Prefix","SF2 Boss Pack Vote Menu Title");
-	NativeVotes_SetDetails(voteMenu,title);
+	FormatEx(title, 255, "%t%t", "SF2 Prefix", "SF2 Boss Pack Vote Menu Title");
+	NativeVotes_SetDetails(voteMenu, title);
 	StringMap menuDisplayNamesTrie = new StringMap();
 	ArrayList menuOptionsInfo = new ArrayList(128);
 	int voteIndex = 0;

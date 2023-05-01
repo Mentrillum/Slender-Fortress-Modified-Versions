@@ -170,9 +170,9 @@ Action Timer_SlenderStealLife(Handle timer, any entref)
 			continue;
 		}
 
-		float targetPos[3], vecClientPos[3];
+		float targetPos[3], clientPos[3];
 		player.GetEyePosition(targetPos);
-		player.GetAbsOrigin(vecClientPos);
+		player.GetAbsOrigin(clientPos);
 
 		traceHandle = TR_TraceRayFilterEx(myEyePos,
 			targetPos,
@@ -292,10 +292,10 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 	int damageType = NPCChaserGetAttackDamageType(bossIndex, attackIndex, difficulty);
 
 	// Damage all players within range.
-	float myPos[3], myEyePos[3], myEyeAng[3], vecMyRot[3];
+	float myPos[3], myEyePos[3], myEyeAng[3], myRot[3];
 	NPCGetEyePosition(bossIndex, myEyePos);
 	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", myEyeAng);
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", vecMyRot);
+	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", myRot);
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 
 	AddVectors(g_SlenderEyePosOffset[bossIndex], myEyeAng, myEyeAng);
@@ -563,10 +563,10 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 					continue;
 				}
 
-				float targetPos[3], vecClientPos[3], targetPosShockwave[3];
+				float targetPos[3], clientPos[3], targetPosShockwave[3];
 				player.GetEyePosition(targetPos);
 				targetPosShockwave = targetPos;
-				player.GetAbsOrigin(vecClientPos);
+				player.GetAbsOrigin(clientPos);
 
 				if (NPCChaserShockwaveOnAttack(bossIndex))
 				{
@@ -623,7 +623,7 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 								{
 									float targetDistShockwave = GetVectorSquareMagnitude(targetPos, myEyePos);
 
-									if ((vecClientPos[2] <= myPos[2] + NPCChaserGetShockwaveHeight(bossIndex, difficulty)) && (targetDistShockwave <= SquareFloat(NPCChaserGetShockwaveRange(bossIndex, difficulty))))
+									if ((clientPos[2] <= myPos[2] + NPCChaserGetShockwaveHeight(bossIndex, difficulty)) && (targetDistShockwave <= SquareFloat(NPCChaserGetShockwaveRange(bossIndex, difficulty))))
 									{
 										float percentLife;
 										percentLife = player.FlashlightBatteryLife - NPCChaserGetShockwaveDrain(bossIndex, difficulty);
@@ -712,7 +712,7 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 								{
 									float targetDistShockwave = GetVectorSquareMagnitude(targetPos, myEyePos);
 
-									if ((vecClientPos[2] <= myPos[2] + NPCChaserGetShockwaveHeight(bossIndex, difficulty)) && (targetDistShockwave <= SquareFloat(NPCChaserGetShockwaveRange(bossIndex, difficulty))))
+									if ((clientPos[2] <= myPos[2] + NPCChaserGetShockwaveHeight(bossIndex, difficulty)) && (targetDistShockwave <= SquareFloat(NPCChaserGetShockwaveRange(bossIndex, difficulty))))
 									{
 										float percentLife;
 										percentLife = player.FlashlightBatteryLife - NPCChaserGetShockwaveDrain(bossIndex, difficulty);
@@ -907,8 +907,8 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 
 								float effectAng[3] = {0.0, 0.0, 0.0};
 
-								VectorTransform(myEyePos, myPos, vecMyRot, myEyePos);
-								AddVectors(effectAng, vecMyRot, effectAng);
+								VectorTransform(myEyePos, myPos, myRot, myEyePos);
+								AddVectors(effectAng, myRot, effectAng);
 
 								float pullDirection[3], pullAngle[3];
 								SubtractVectors(newClientPos, myEyePos, pullDirection);
@@ -1081,7 +1081,7 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 			SF2_BasePlayer target = SF2_BasePlayer(EntRefToEntIndex(g_SlenderTarget[bossIndex]));
 			char particleName[PLATFORM_MAX_PATH];
 			GetChaserProfileAttackBulletTrace(profile, attackIndex, particleName, sizeof(particleName));
-			float vecSpread = NPCChaserGetAttackBulletSpread(bossIndex, attackIndex, difficulty);
+			float spread = NPCChaserGetAttackBulletSpread(bossIndex, attackIndex, difficulty);
 			ArrayList bulletSounds = GetChaserProfileBulletShootSounds(profile);
 			if (bulletSounds != null && bulletSounds.Length > 0)
 			{
@@ -1126,13 +1126,13 @@ Action Timer_SlenderChaseBossAttack(Handle timer, any entref)
 				x = GetRandomFloat( -0.5, 0.5 ) + GetRandomFloat( -0.5, 0.5 );
 				y = GetRandomFloat( -0.5, 0.5 ) + GetRandomFloat( -0.5, 0.5 );
 
-				float dirShooting[3], vecRight[3], vecUp[3];
-				GetAngleVectors(shootAng, dirShooting, vecRight, vecUp);
+				float dirShooting[3], right[3], up[3];
+				GetAngleVectors(shootAng, dirShooting, right, up);
 
 				float dir[3];
-				dir[0] = dirShooting[0] + x * vecSpread * vecRight[0] + y * vecSpread * vecUp[0];
-				dir[1] = dirShooting[1] + x * vecSpread * vecRight[1] + y * vecSpread * vecUp[1];
-				dir[2] = dirShooting[2] + x * vecSpread * vecRight[2] + y * vecSpread * vecUp[2];
+				dir[0] = dirShooting[0] + x * spread * right[0] + y * spread * up[0];
+				dir[1] = dirShooting[1] + x * spread * right[1] + y * spread * up[1];
+				dir[2] = dirShooting[2] + x * spread * right[2] + y * spread * up[2];
 				NormalizeVector(dir, dir);
 
 				float end[3];
@@ -1421,7 +1421,7 @@ static Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 		explosionPosition[2] = slenderPosition[2] + 50.0;
 		for (int e = 0; e < 5; e++)
 		{
-			for (int i = 1; i <= MaxClients; i++)
+			for (int i = 1; i < MaxClients; i++)
 			{
 				SF2_BasePlayer player = SF2_BasePlayer(i);
 				if (!player.IsValid || !player.IsAlive || player.IsInGhostMode)
@@ -1442,8 +1442,8 @@ static Action Timer_SlenderChaseBossExplosiveDance(Handle timer, any entref)
 					SetEntProp(explosivePower, Prop_Data, "m_iMagnitude", 666, 4);
 					SetEntProp(explosivePower, Prop_Data, "m_iRadiusOverride", 200, 4);
 					SetEntPropEnt(explosivePower, Prop_Data, "m_hOwnerEntity", slender);
-					explosionPosition[0]=slenderPosition[0]+float(GetRandomInt(-range, range));
-					explosionPosition[1]=slenderPosition[1]+float(GetRandomInt(-range, range));
+					explosionPosition[0] = slenderPosition[0] + float(GetRandomInt(-range, range));
+					explosionPosition[1] = slenderPosition[1] + float(GetRandomInt(-range, range));
 					TeleportEntity(explosivePower, explosionPosition, NULL_VECTOR, NULL_VECTOR);
 					DispatchSpawn(explosivePower);
 

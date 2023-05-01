@@ -606,7 +606,7 @@ void NPCBossTriggerStun(int bossIndex, int victim, char profile[SF2_MAX_PROFILE_
 	g_NpcSelfHealStage[bossIndex] = 12;
 	if (SF_IsBoxingMap() && NPCChaserIsBoxingBoss(bossIndex))
 	{
-		for (int client = 1; client <= MaxClients; client++)
+		for (int client = 1; client < MaxClients; client++)
 		{
 			if (IsValidClient(client) && !g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red)
 			{

@@ -193,7 +193,7 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 		// If a targetname is specified, try to show text to the matched entity.
 
 		int target = -1;
-		while ((target = SF2MapEntity_FindEntityByTargetname(target, value, caller, activator, caller)) != -1 && target > 0 && target <= MaxClients)
+		while ((target = SF2MapEntity_FindEntityByTargetname(target, value, caller, activator, caller)) != -1 && IsValidClient(target))
 		{
 			clients[clientsNum++] = target;
 		}
@@ -202,9 +202,9 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 	{
 		int spawnFlags = thisEnt.GetProp(Prop_Data, "m_spawnflags");
 
-		for (int i = 1; i <= MaxClients; i++)
+		for (int i = 1; i < MaxClients; i++)
 		{
-			if (!IsClientInGame(i))
+			if (!IsValidClient(i))
 			{
 				continue;
 			}

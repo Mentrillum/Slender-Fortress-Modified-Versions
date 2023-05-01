@@ -21,6 +21,26 @@ float NPCStatueChaseDuration(int npcIndex, int difficulty)
 	return g_NpcStatueChaseDuration[npcIndex][difficulty];
 }
 
+float NPCStatueGetChaseDurationAddMin(int npcIndex, int difficulty)
+{
+	return g_NpcStatueChaseDurationAddMin[npcIndex][difficulty];
+}
+
+float NPCStatueGetChaseDurationAddMax(int npcIndex, int difficulty)
+{
+	return g_NpcStatueChaseDurationAddMax[npcIndex][difficulty];
+}
+
+float NPCStatueGetIdleLifetime(int npcIndex, int difficulty)
+{
+	return g_NpcStatueIdleLifetime[npcIndex][difficulty];
+}
+
+float NPCStatueGetModelChangeDistance(int npcIndex, int difficulty)
+{
+	return g_NpcStatueModelChangeDistMax[npcIndex][difficulty];
+}
+
 void NPCStatueOnSelectProfile(const char[] profile, int npcIndex)
 {
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
@@ -34,11 +54,12 @@ void NPCStatueOnSelectProfile(const char[] profile, int npcIndex)
 	}
 }
 
-void Spawn_Statue(int npcIndex)
+CBaseCombatCharacter Spawn_Statue(int npcIndex)
 {
 	g_NpcStatueMoving[npcIndex] = false;
 	g_SlenderTarget[npcIndex] = INVALID_ENT_REFERENCE;
 	g_SlenderStatueIdleLifeTime[npcIndex] = GetGameTime() + g_NpcStatueIdleLifetime[npcIndex][GetLocalGlobalDifficulty()];
+	return CBaseCombatCharacter(CreateEntityByName("sf2_statue_npc"));
 }
 
 void SlenderStatueBossProcessMovement(int bossEnt)
@@ -364,295 +385,4 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 	}
 
 	return;
-}
-
-void SlenderStatueSetNextThink(int bossEnt)
-{
-	if (!g_Enabled)
-	{
-		return;
-	}
-
-	CBaseCombatCharacter(bossEnt).SetNextThink(GetGameTime());
-
-	return;
-}
-
-Action Timer_SlenderBlinkBossThink(Handle timer, any entref)
-{
-	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	int bossIndex = NPCGetFromEntIndex(slender);
-	if (bossIndex == -1)
-	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_SlenderEntityThink[bossIndex])
-	{
-		return Plugin_Stop;
-	}
-
-	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
-	if (npc == INVALID_NPC)
-	{
-		return Plugin_Stop;
-	}
-
-	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	INextBot bot = npc.GetBot();
-
-	int difficulty = g_DifficultyConVar.IntValue;
-
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(bossIndex, profile, sizeof(profile));
-
-	bool attackWaiters = !!(NPCGetFlags(bossIndex) & SFF_ATTACKWAITERS);
-
-	if (NPCGetType(bossIndex) == SF2BossType_Statue)
-	{
-		float gameTime = GetGameTime();
-		float chaseDurationTimeAddMin = g_NpcStatueChaseDurationAddMin[bossIndex][difficulty];
-		float chaseDurationTimeAddMax = g_NpcStatueChaseDurationAddMax[bossIndex][difficulty];
-		bool move = false;
-		if (PeopleCanSeeSlender(bossIndex, true, SlenderUsesBlink(bossIndex), !attackWaiters))
-		{
-			if (g_NpcTimeUntilAbandon[bossIndex] < gameTime)
-			{
-				g_NpcTimeUntilAbandon[bossIndex] = gameTime + NPCStatueChaseDuration(bossIndex, difficulty);
-			}
-			g_NpcTimeUntilAbandon[bossIndex] += chaseDurationTimeAddMin;
-			if (g_NpcTimeUntilAbandon[bossIndex] > (gameTime + NPCStatueChaseDuration(bossIndex, difficulty)))
-			{
-				g_NpcTimeUntilAbandon[bossIndex] = gameTime + NPCStatueChaseDuration(bossIndex, difficulty);
-			}
-			for (int i = 0; i < MAX_NPCTELEPORTER; i++)
-			{
-				if (NPCGetTeleporter(bossIndex, i) != INVALID_ENT_REFERENCE)
-				{
-					NPCSetTeleporter(bossIndex, i, INVALID_ENT_REFERENCE);
-				}
-			}
-		}
-
-		int origTarget = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
-		if (SF_BossesChaseEndlessly() || SF_IsSlaughterRunMap() && IsValidClient(origTarget))
-		{
-			g_NpcTimeUntilAbandon[bossIndex] = gameTime + NPCStatueChaseDuration(bossIndex, difficulty);
-		}
-
-		if (SF_BossesChaseEndlessly() || SF_IsSlaughterRunMap())
-		{
-			if (!IsValidClient(origTarget) || (IsValidClient(origTarget) && g_PlayerEliminated[origTarget]))
-			{
-				if (NPCAreAvailablePlayersAlive())
-				{
-					ArrayList arrayRaidTargets = new ArrayList();
-
-					for (int i = 1; i <= MaxClients; i++)
-					{
-						if (!IsClientInGame(i) ||
-							!IsPlayerAlive(i) ||
-							g_PlayerEliminated[i] ||
-							IsClientInGhostMode(i) ||
-							DidClientEscape(i))
-						{
-							continue;
-						}
-						arrayRaidTargets.Push(i);
-					}
-					if(arrayRaidTargets.Length > 0)
-					{
-						int raidTarget = arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1));
-						if(IsValidClient(raidTarget) && !g_PlayerEliminated[raidTarget])
-						{
-							g_SlenderTarget[bossIndex] = EntIndexToEntRef(raidTarget);
-							g_NpcTimeUntilAbandon[bossIndex] = gameTime + NPCStatueChaseDuration(bossIndex, difficulty);
-						}
-					}
-					delete arrayRaidTargets;
-				}
-			}
-		}
-
-		int bestPlayer = -1;
-		ArrayList array = new ArrayList();
-
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsClientInGame(i) || !IsPlayerAlive(i) || IsClientInDeathCam(i) || (!attackWaiters && g_PlayerEliminated[i]) || DidClientEscape(i) || IsClientInGhostMode(i) || !PlayerCanSeeSlender(i, bossIndex, false, false, !attackWaiters))
-			{
-				continue;
-			}
-
-			if (!NPCShouldSeeEntity(bossIndex, i))
-			{
-				continue;
-			}
-
-			array.Push(i);
-		}
-
-		if (array.Length)
-		{
-			float slenderPos[3];
-			SlenderGetAbsOrigin(bossIndex, slenderPos);
-
-			float tempPos[3];
-			int tempPlayer = -1;
-			float tempDist = SquareFloat(16384.0);
-			for (int i = 0; i < array.Length; i++)
-			{
-				int client = array.Get(i);
-				GetClientAbsOrigin(client, tempPos);
-				if (GetVectorSquareMagnitude(tempPos, slenderPos) < tempDist)
-				{
-					tempPlayer = client;
-					tempDist = GetVectorSquareMagnitude(tempPos, slenderPos);
-				}
-				if (SF_SpecialRound(SPECIALROUND_BOO) && GetVectorSquareMagnitude(tempPos, slenderPos) < SquareFloat(SPECIALROUND_BOO_DISTANCE))
-				{
-					TF2_StunPlayer(client, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
-				}
-			}
-
-			bestPlayer = tempPlayer;
-			if (bestPlayer != -1)
-			{
-				g_SlenderTarget[bossIndex] = EntIndexToEntRef(bestPlayer);
-				if (g_NpcTimeUntilAbandon[bossIndex] < gameTime)
-				{
-					g_NpcTimeUntilAbandon[bossIndex] = gameTime + NPCStatueChaseDuration(bossIndex, difficulty);
-				}
-			}
-		}
-
-		delete array;
-
-		if (!PeopleCanSeeSlender(bossIndex, true, SlenderUsesBlink(bossIndex), !attackWaiters))
-		{
-			SF2_BasePlayer target = SF2_BasePlayer(EntRefToEntIndex(g_SlenderTarget[bossIndex]));
-			if (IsTargetValidForSlender(target, attackWaiters) && gameTime < g_NpcTimeUntilAbandon[bossIndex] && (gameTime - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
-			{
-				move = true;
-				float slenderPos[3], pos[3];
-				GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPos);
-				target.GetAbsOrigin(pos);
-				if (NPCGetTeleporter(bossIndex, 0) != INVALID_ENT_REFERENCE)
-				{
-					int teleporter = EntRefToEntIndex(NPCGetTeleporter(bossIndex, 0));
-					if (IsValidEntity(teleporter) && teleporter > MaxClients)
-					{
-						GetEntPropVector(teleporter, Prop_Data, "m_vecAbsOrigin", pos);
-					}
-				}
-				g_BossPathFollower[bossIndex].ComputeToPos(bot, pos);
-
-				float maxRange = g_NpcStatueModelChangeDistMax[bossIndex][difficulty];
-				float dist = GetVectorSquareMagnitude(slenderPos, pos);
-
-				char buffer[PLATFORM_MAX_PATH];
-
-				if (dist < SquareFloat(maxRange * 0.33))
-				{
-					GetSlenderModel(bossIndex, 2, buffer, sizeof(buffer));
-				}
-				else if (dist < SquareFloat(maxRange * 0.66))
-				{
-					GetSlenderModel(bossIndex, 1, buffer, sizeof(buffer));
-				}
-				else
-				{
-					GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
-				}
-
-				// Fallback if error.
-				if (buffer[0] == '\0' || strcmp(buffer, "models/") == 0)
-				{
-					GetSlenderModel(bossIndex, _, buffer, sizeof(buffer));
-				}
-
-				SetEntityModel(slender, buffer);
-
-				if (target.CanSeeSlender(bossIndex, false, !attackWaiters))
-				{
-					float distRatio = (dist / SquareFloat(maxRange));
-
-					float chaseDurationAdd = chaseDurationTimeAddMax - ((chaseDurationTimeAddMax - chaseDurationTimeAddMin) * distRatio);
-
-					if (chaseDurationAdd > 0.0)
-					{
-						g_NpcTimeUntilAbandon[bossIndex] += chaseDurationAdd;
-						if (g_NpcTimeUntilAbandon[bossIndex] > (gameTime + NPCStatueChaseDuration(bossIndex, difficulty)))
-						{
-							g_NpcTimeUntilAbandon[bossIndex] = gameTime + NPCStatueChaseDuration(bossIndex, difficulty);
-						}
-					}
-				}
-
-				if (dist <= SquareFloat(NPCGetInstantKillRadius(bossIndex)))
-				{
-					if (NPCGetFlags(bossIndex) & SFF_FAKE)
-					{
-						SlenderMarkAsFake(bossIndex);
-						return Plugin_Stop;
-					}
-					else
-					{
-						g_SlenderLastKill[bossIndex] = gameTime;
-						target.StartDeathCam(bossIndex, pos);
-						g_LastStuckTime[bossIndex] = gameTime + NPCGetInstantKillCooldown(bossIndex, difficulty) + 0.1;
-						if (NPCGetInstantKillCooldown(bossIndex, difficulty) > 0.0)
-						{
-							g_NpcStatueMoving[bossIndex] = false;
-							loco.ClearStuckStatus();
-						}
-						g_SlenderTarget[bossIndex] = INVALID_ENT_REFERENCE;
-					}
-				}
-
-				g_SlenderStatueIdleLifeTime[bossIndex] = gameTime + g_NpcStatueIdleLifetime[bossIndex][difficulty];
-			}
-			else
-			{
-				float origin[3];
-				SlenderGetAbsOrigin(bossIndex, origin);
-				origin[2] -= 10.0;
-				g_LastPos[bossIndex] = origin;
-			}
-		}
-
-		SF2BossProfileSoundInfo soundInfo;
-		if (move)
-		{
-			ArrayList soundList;
-			char buffer[PLATFORM_MAX_PATH];
-			GetStatueProfileSingleMoveSounds(profile, soundInfo);
-			soundInfo.EmitSound(_, slender);
-
-			GetStatueProfileMoveSounds(profile, soundInfo);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-				if (buffer[0] != '\0')
-				{
-					EmitSoundToAll(buffer, slender, soundInfo.Channel, soundInfo.Level, SND_CHANGEVOL, soundInfo.Volume, soundInfo.Pitch);
-				}
-			}
-			soundList = null;
-		}
-		else
-		{
-			GetStatueProfileMoveSounds(profile, soundInfo);
-			soundInfo.StopAllSounds(slender);
-		}
-		g_NpcStatueMoving[bossIndex] = move;
-	}
-
-	return Plugin_Continue;
 }
