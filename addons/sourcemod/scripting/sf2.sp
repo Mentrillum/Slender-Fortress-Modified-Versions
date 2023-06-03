@@ -712,6 +712,10 @@ ConVar g_DifficultyVoteOptionsConVar;
 ConVar g_DifficultyVoteRandomConVar;
 ConVar g_DifficultyNoGracePageConVar;
 ConVar g_FileCheckConVar;
+ConVar g_WarmupTimeConVar;
+ConVar g_TimeLimitOverrideConVar;
+ConVar g_TimeLimitEscapeOverrideConVar;
+ConVar g_TimeGainFromPageGrabOverrideConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -7298,21 +7302,21 @@ static void InitializeMapEntities()
 			else if (!StrContains(targetName, "sf2_time_limit_", false))
 			{
 				ReplaceString(targetName, sizeof(targetName), "sf2_time_limit_", "", false);
-				g_RoundTimeLimit = StringToInt(targetName);
+				g_RoundTimeLimit = g_TimeLimitOverrideConVar.IntValue ? g_TimeLimitOverrideConVar.IntValue : StringToInt(targetName);
 
 				LogSF2Message("Found sf2_time_limit entity, set time limit to %d", g_RoundTimeLimit);
 			}
 			else if (!StrContains(targetName, "sf2_escape_time_limit_", false))
 			{
 				ReplaceString(targetName, sizeof(targetName), "sf2_escape_time_limit_", "", false);
-				g_RoundEscapeTimeLimit = StringToInt(targetName);
+				g_RoundEscapeTimeLimit = g_TimeLimitEscapeOverrideConVar.IntValue ? g_TimeLimitEscapeOverrideConVar.IntValue : StringToInt(targetName);
 
 				LogSF2Message("Found sf2_escape_time_limit entity, set escape time limit to %d", g_RoundEscapeTimeLimit);
 			}
 			else if (!StrContains(targetName, "sf2_time_gain_from_page_", false))
 			{
 				ReplaceString(targetName, sizeof(targetName), "sf2_time_gain_from_page_", "", false);
-				g_RoundTimeGainFromPage = StringToInt(targetName);
+				g_RoundTimeGainFromPage = g_TimeGainFromPageGrabOverrideConVar.IntValue ? g_TimeGainFromPageGrabOverrideConVar.IntValue : StringToInt(targetName);
 
 				LogSF2Message("Found sf2_time_gain_from_page entity, set time gain to %d", g_RoundTimeGainFromPage);
 			}

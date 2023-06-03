@@ -225,6 +225,12 @@ public void OnPluginStart()
 
 	g_FileCheckConVar = CreateConVar("sf2_debug_file_checks", "0", "Determines if the gamemode should look for missing files when loading all the bosses. Note that turning this on leads to longer boss loading times.", _, true, 0.0, true, 1.0);
 
+	g_WarmupTimeConVar = CreateConVar("sf2_warmup_round_time", "15", "Set Warmup Round time.", _, true, 5.0);
+
+	g_TimeLimitOverrideConVar = CreateConVar("sf2_timelimit_override", "0", "The time limit of the round. This override map's time limit.", _, true, 0.0);
+	g_TimeLimitEscapeOverrideConVar = CreateConVar("sf2_timelimit_escape_override", "0", "The time limit to escape. This override map's time limit.", _, true, 0.0);
+	g_TimeGainFromPageGrabOverrideConVar = CreateConVar("sf2_time_gain_page_grab_override", "0", "The time gained from grabbing a page. This override map's amount.");
+
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
 	g_HudSync = CreateHudSynchronizer();

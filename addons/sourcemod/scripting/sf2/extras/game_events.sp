@@ -79,8 +79,8 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 
 		SetRoundState(SF2RoundState_Waiting);
 
-		ServerCommand("mp_restartgame 15");
-		PrintCenterTextAll("Round restarting in 15 seconds");
+		ServerCommand("mp_restartgame %d", g_WarmupTimeConVar.IntValue);
+		PrintCenterTextAll("Round restarting in %d seconds", g_WarmupTimeConVar.IntValue);
 	}
 	else
 	{
