@@ -427,7 +427,7 @@ void SlenderChaseBossProcessMovement(int bossEnt)
 		int pitch = combatChar.LookupPoseParameter("body_pitch");
 		int yaw = combatChar.LookupPoseParameter("body_yaw");
 		float dir[3], ang[3], npcCenter[3], lookPos[3];
-		combatChar.WorldSpaceCenter(npcCenter);
+		NPCGetEyePosition(bossIndex, npcCenter);
 		int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
 		if (target && target != INVALID_ENT_REFERENCE)
 		{
