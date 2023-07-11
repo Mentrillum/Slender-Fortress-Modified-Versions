@@ -1339,7 +1339,7 @@ static any Native_GetBossProfileDifficultyNumValues(Handle plugin,int numParams)
 	int defaultValue[Difficulty_Max];
 	GetNativeArray(3, result, Difficulty_Max);
 	GetNativeArray(4, defaultValue, Difficulty_Max);
-	GetProfileDifficultyNumValues(GetNativeCell(1), keyValue, result, defaultValue);
+	GetProfileDifficultyNumValues2(GetNativeCell(1), keyValue, result, defaultValue);
 	return 0;
 }
 
@@ -1351,7 +1351,7 @@ static any Native_GetBossProfileDifficultyBoolValues(Handle plugin,int numParams
 	bool defaultValue[Difficulty_Max];
 	GetNativeArray(3, result, Difficulty_Max);
 	GetNativeArray(4, defaultValue, Difficulty_Max);
-	GetProfileDifficultyBoolValues(GetNativeCell(1), keyValue, result, defaultValue);
+	GetProfileDifficultyBoolValues2(GetNativeCell(1), keyValue, result, defaultValue);
 	return 0;
 }
 
@@ -1363,7 +1363,7 @@ static any Native_GetBossProfileDifficultyFloatValues(Handle plugin,int numParam
 	float defaultValue[Difficulty_Max];
 	GetNativeArray(3, result, Difficulty_Max);
 	GetNativeArray(4, defaultValue, Difficulty_Max);
-	GetProfileDifficultyFloatValues(GetNativeCell(1), keyValue, result, defaultValue);
+	GetProfileDifficultyFloatValues2(GetNativeCell(1), keyValue, result, defaultValue);
 	return 0;
 }
 
@@ -1462,4 +1462,100 @@ static any Native_GetBossAttributeValue(Handle plugin,int numParams)
 		return 0.0;
 	}
 	return NPCGetAttributeValue(GetNativeCell(1), attributeIndex);
+}
+
+/**
+ * @note	Same as GetProfileDifficultyNumValues. But it needs to native.
+ */
+public void GetProfileDifficultyNumValues2(KeyValues kv, const char[] baseKeyName, int buffer[Difficulty_Max], const int defaultValues[Difficulty_Max])
+{
+	buffer = defaultValues;
+
+	if (kv.GetDataType(baseKeyName) != KvData_None)
+	{
+		int defaultValue = kv.GetNum(baseKeyName);
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			buffer[i] = defaultValue;
+		}
+	}
+
+	char key[64];
+
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		GetProfileKeyWithDifficultySuffix(baseKeyName, i, key, sizeof(key));
+		if (kv.GetDataType(key) != KvData_None)
+		{
+			int value = kv.GetNum(key, buffer[i]);
+			for (int j = i; j < Difficulty_Max; j++)
+			{
+				buffer[j] = value;
+			}
+		}
+	}
+}
+
+/**
+ * @note	Same as GetProfileDifficultyBoolValues. But it needs to native.
+ */
+public void GetProfileDifficultyBoolValues2(KeyValues kv, const char[] baseKeyName, bool buffer[Difficulty_Max], const bool defaultValues[Difficulty_Max])
+{
+	buffer = defaultValues;
+
+	if (kv.GetDataType(baseKeyName) != KvData_None)
+	{
+		bool defaultValue = kv.GetNum(baseKeyName) != 0;
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			buffer[i] = defaultValue;
+		}
+	}
+
+	char key[64];
+
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		GetProfileKeyWithDifficultySuffix(baseKeyName, i, key, sizeof(key));
+		if (kv.GetDataType(key) != KvData_None)
+		{
+			bool value = kv.GetNum(key, buffer[i]) != 0;
+			for (int j = i; j < Difficulty_Max; j++)
+			{
+				buffer[j] = value;
+			}
+		}
+	}
+}
+
+/**
+ * @note	Same as GetProfileDifficultyFloatValues. But it needs to native.
+ */
+public void GetProfileDifficultyFloatValues2(KeyValues kv, const char[] baseKeyName, float buffer[Difficulty_Max], const float defaultValues[Difficulty_Max])
+{
+	buffer = defaultValues;
+
+	if (kv.GetDataType(baseKeyName) != KvData_None)
+	{
+		float defaultValue = kv.GetFloat(baseKeyName);
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			buffer[i] = defaultValue;
+		}
+	}
+
+	char key[64];
+
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		GetProfileKeyWithDifficultySuffix(baseKeyName, i, key, sizeof(key));
+		if (kv.GetDataType(key) != KvData_None)
+		{
+			float value = kv.GetFloat(key, buffer[i]);
+			for (int j = i; j < Difficulty_Max; j++)
+			{
+				buffer[j] = value;
+			}
+		}
+	}
 }
