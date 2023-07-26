@@ -42,7 +42,7 @@ bool steamworks;
 #define TFTeam_Blue 3
 #define TFTeam_Boss 5
 
-#define MAXTF2PLAYERS 65
+#define MAXTF2PLAYERS 36
 
 public Plugin myinfo =
 {
