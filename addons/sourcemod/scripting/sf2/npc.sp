@@ -2755,10 +2755,11 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 			}
 
+			float pathingBoxMin[3], pathingBoxMax[3];
 			if (NPCGetRaidHitbox(bossIndex) == 1)
 			{
-				npcBoss.SetBodyMins(g_SlenderDetectMins[bossIndex]);
-				npcBoss.SetBodyMaxs(g_SlenderDetectMaxs[bossIndex]);
+				pathingBoxMin = g_SlenderDetectMins[bossIndex];
+				pathingBoxMax = g_SlenderDetectMaxs[bossIndex];
 
 				npcEntity.SetPropVector(Prop_Send, "m_vecMins", g_SlenderDetectMins[bossIndex]);
 				npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", g_SlenderDetectMaxs[bossIndex]);
@@ -2768,8 +2769,8 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 			}
 			else if (NPCGetRaidHitbox(bossIndex) == 0)
 			{
-				npcBoss.SetBodyMins(HULL_HUMAN_MINS);
-				npcBoss.SetBodyMaxs(HULL_HUMAN_MAXS);
+				pathingBoxMin = HULL_HUMAN_MINS;
+				pathingBoxMax = HULL_HUMAN_MAXS;
 
 				npcEntity.SetPropVector(Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
 				npcEntity.SetPropVector(Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);
@@ -2777,6 +2778,14 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
 				npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
 			}
+			for (int i = 0; i < 2; i++)
+			{
+				// Yes we don't want to increase the Z values
+				pathingBoxMin[i] -= 5.0;
+				pathingBoxMax[i] += 5.0;
+			}
+			npcBoss.SetBodyMins(pathingBoxMin);
+			npcBoss.SetBodyMaxs(pathingBoxMax);
 
 			if (SF_IsBoxingMap())
 			{

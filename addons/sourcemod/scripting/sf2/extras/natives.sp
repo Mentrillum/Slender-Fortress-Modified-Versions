@@ -691,7 +691,7 @@ static any Native_ForceBossJump(Handle plugin, int numParams)
 	float startPos[3], endPos[3];
 	GetNativeArray(2, startPos, 3);
 	GetNativeArray(3, endPos, 3);
-	CBaseNPC_Jump(GetNativeCell(1), startPos, endPos);
+	//CBaseNPC_Jump(GetNativeCell(1), startPos, endPos);
 	return 0;
 }
 

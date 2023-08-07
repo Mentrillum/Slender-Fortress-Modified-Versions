@@ -102,7 +102,6 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 
 	INextBot bot = npc.GetBot();
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
-	CBaseCombatCharacter combatChar = CBaseCombatCharacter(bossEnt);
 
 	char slenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
@@ -185,7 +184,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 
 				if (g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, JUMP_OVER_GAP, 120.0) || g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, CLIMB_UP, 120.0) || g_BossPathFollower[bossIndex].IsDiscontinuityAhead(bot, LADDER_UP, 120.0))
 				{
-					CBaseNPC_Jump(loco, myPos, pathEndPos);
+					CBaseNPC_Jump(bossEnt, loco, myPos, pathEndPos);
 				}
 			}
 		}
@@ -232,146 +231,16 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 					if (g_LastStuckTime[bossIndex] == 0.0) g_LastStuckTime[bossIndex] = GetGameTime();
 
 					if ((g_LastStuckTime[bossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) &&
-					!g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex])
+					!g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT)
 					{
-						float movePos[3];
-						Segment segment;
-						if (g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT &&
-						g_BossPathFollower[bossIndex].NextSegment(g_BossPathFollower[bossIndex].FirstSegment()) != NULL_PATH_SEGMENT)
-						{
-							segment = g_BossPathFollower[bossIndex].NextSegment(g_BossPathFollower[bossIndex].FirstSegment());
-							segment.GetPos(movePos);
-						}
-						else if (g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT &&
-						g_BossPathFollower[bossIndex].PriorSegment(g_BossPathFollower[bossIndex].FirstSegment()) != NULL_PATH_SEGMENT)
-						{
-							segment = g_BossPathFollower[bossIndex].PriorSegment(g_BossPathFollower[bossIndex].FirstSegment());
-							segment.GetPos(movePos);
-						}
-						else
-						{
-							g_BossPathFollower[bossIndex].GetClosestPosition(myPos, movePos);
-						}
-						bool pathResolved = false;
+						float movePos[3], segmentPos[3];
+						Segment segment = g_BossPathFollower[bossIndex].FirstSegment();
+						segment.GetPos(segmentPos);
+						g_BossPathFollower[bossIndex].GetClosestPosition(segmentPos, movePos, segment, 50.0);
+						TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
 
-						if (SlenderChaseBoss_OnStuckResolvePath(bossEnt, myPos, myEyeAng, movePos, movePos))
-						{
-							if (!IsSpaceOccupied(movePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, bossEnt))
-							{
-								pathResolved = true;
-								TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
-								float origin[3];
-								loco.SetVelocity(origin);
-							}
-							else
-							{
-								movePos[2] += loco.GetStepHeight();
-								if (!IsSpaceOccupied(movePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, bossEnt))
-								{
-									pathResolved = true;
-									TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
-									float origin[3];
-									loco.SetVelocity(origin);
-								}
-							}
-						}
-						if (!pathResolved)
-						{
-							if (!IsSpaceOccupied(movePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, bossEnt))
-							{
-								pathResolved = false;
-								TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
-								float origin[3];
-								loco.SetVelocity(origin);
-							}
-							else
-							{
-								movePos[2] += loco.GetStepHeight();
-								if (!IsSpaceOccupied(movePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, bossEnt))
-								{
-									pathResolved = true;
-									TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
-									float origin[3];
-									loco.SetVelocity(origin);
-								}
-								else
-								{
-									CNavArea area = combatChar.GetLastKnownArea();
-									if (area == NULL_AREA && segment != NULL_PATH_SEGMENT)
-									{
-										area = segment.area;
-									}
-									if (area != NULL_AREA)
-									{
-										area.GetCenter(movePos);
-										if (!IsSpaceOccupied(movePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, bossEnt))
-										{
-											pathResolved = false;
-											TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
-											float origin[3];
-											loco.SetVelocity(origin);
-										}
-										else
-										{
-											movePos[2] += loco.GetStepHeight();
-											if (!IsSpaceOccupied(movePos, HULL_HUMAN_MINS, HULL_HUMAN_MAXS, bossEnt))
-											{
-												pathResolved = true;
-												TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
-												float origin[3];
-												loco.SetVelocity(origin);
-											}
-										}
-									}
-									if (!pathResolved)
-									{
-										if (!SF_IsSlaughterRunMap() && !g_RestartSessionEnabled)
-										{
-											RemoveSlender(bossIndex);//We are stuck there's no way out for us, unspawn, players are just going to abuse that we are stuck.
-										}
-										else
-										{
-											ArrayList spawnPoint = new ArrayList();
-											float teleportPos[3];
-											int ent = -1, spawnTeam = 0;
-											while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
-											{
-												spawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
-												if (spawnTeam == TFTeam_Red)
-												{
-													spawnPoint.Push(ent);
-												}
-
-											}
-											ent = -1;
-											if (spawnPoint.Length > 0)
-											{
-												ent = spawnPoint.Get(GetRandomInt(0,spawnPoint.Length-1));
-											}
-
-											delete spawnPoint;
-
-											if (IsValidEntity(ent))
-											{
-												GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", teleportPos);
-												TeleportEntity(bossEnt, teleportPos, NULL_VECTOR, NULL_VECTOR);
-												float origin[3];
-												loco.SetVelocity(origin);
-											}
-											else
-											{
-												RemoveSlender(bossIndex);
-											}
-										}
-									}
-								}
-							}
-						}
-						if (pathResolved)
-						{
-							loco.ClearStuckStatus();
-							g_LastStuckTime[bossIndex] = 0.0;
-						}
+						loco.ClearStuckStatus();
+						g_LastStuckTime[bossIndex] = 0.0;
 					}
 				}
 			}

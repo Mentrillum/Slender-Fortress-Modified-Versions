@@ -3,6 +3,8 @@
 #endif
 #define _sf2_included
 
+#include <cbasenpc>
+
 #define PLUGIN_VERSION "1.8.0 M Alpha"
 #define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha"
 

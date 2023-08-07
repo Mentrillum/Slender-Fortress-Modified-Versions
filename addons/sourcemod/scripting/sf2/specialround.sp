@@ -82,7 +82,7 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 		CreateTimer(0.1, Timer_ReplacePlayerRagdoll, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
-	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !client.HasEscaped)
+	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !client.HasEscaped && !client.IsEliminated)
 	{
 		for (int reds = 1; reds < MaxClients; reds++)
 		{

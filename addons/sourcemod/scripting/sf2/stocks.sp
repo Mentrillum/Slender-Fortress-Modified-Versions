@@ -276,7 +276,7 @@ float EntityDistanceFromEntity(int ent1, int ent2)
 	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", hisPos);
 	return GetVectorSquareMagnitude(myPos, hisPos);
 }
-
+/*
 bool IsSpaceOccupied(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
 	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitEntity, entity);
@@ -285,7 +285,7 @@ bool IsSpaceOccupied(const float pos[3], const float mins[3], const float maxs[3
 	delete trace;
 	return hit;
 }
-
+*/
 bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
 	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
