@@ -11,8 +11,8 @@
 			}
 			"CTFWeaponBase::GetCustomDamageType"
 			{
-				"linux" "386"
-				"windows" "380"
+				"linux" "387"
+				"windows" "381"
 			}
 			"CBaseEntity::ShouldTransmit"
 			{
