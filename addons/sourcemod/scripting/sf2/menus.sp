@@ -298,8 +298,8 @@ void RandomizeVoteMenu()
 	bool normal = StrContains(buffer, "1") != -1;
 	bool hard = StrContains(buffer, "2") != -1;
 	bool insane = StrContains(buffer, "3") != -1;
-	bool nightmare = StrContains(buffer, "4") != -1;
-	bool apollyon = StrContains(buffer, "5") != -1;
+	bool nightmare = false;
+	bool apollyon = false;
 	bool random = StrContains(buffer, "6") != -1;
 
 	switch (GetRandomInt(1, 6))//There's probably a better way to do this but I was tired.
@@ -539,8 +539,8 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int p
 				bool normal = StrContains(info, "1") != -1;
 				bool hard = StrContains(info, "2") != -1;
 				bool insane = StrContains(info, "3") != -1;
-				bool nightmare = StrContains(info, "4") != -1;
-				bool apollyon = StrContains(info, "5") != -1;
+				bool nightmare = false;
+				bool apollyon = false;
 
 				int count = ((normal ? 1 : 0) + (hard ? 1 : 0) + (insane ? 1 : 0) + (nightmare ? 1 : 0) + (apollyon ? 1 : 0));
 
