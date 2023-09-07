@@ -1637,7 +1637,7 @@ void ClientUpdateListeningFlags(int client, bool reset=false)
 		return;
 	}
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (i == client || !IsValidClient(i) || IsClientSourceTV(i))
 		{
@@ -2003,7 +2003,7 @@ void TF2_GetClassName(TFClassType class, char[] buffer,int bufferLen)
 
 bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool checkBlink = false)
 {
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{

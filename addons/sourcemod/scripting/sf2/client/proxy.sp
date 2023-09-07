@@ -205,7 +205,7 @@ Action Timer_ClientForceProxy(Handle timer, any userid)
 			int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
 			int numProxies = 0;
 
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i) || !g_PlayerEliminated[i])
 				{
@@ -303,7 +303,7 @@ int Menu_ProxyAsk(Handle menu, MenuAction action,int param1,int param2)
 					int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
 					int numProxies;
 
-					for (int client = 1; client < MaxClients; client++)
+					for (int client = 1; client <= MaxClients; client++)
 					{
 						if (!IsValidClient(client) || !g_PlayerEliminated[client])
 						{
@@ -906,7 +906,7 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 			}
 		}
 
-		for (int i = 1; i < MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsValidClient(i))
 			{

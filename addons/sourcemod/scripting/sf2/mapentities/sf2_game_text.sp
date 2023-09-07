@@ -202,7 +202,7 @@ static void InputDisplay(int entity, int activator, int caller, const char[] val
 	{
 		int spawnFlags = thisEnt.GetProp(Prop_Data, "m_spawnflags");
 
-		for (int i = 1; i < MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsValidClient(i))
 			{

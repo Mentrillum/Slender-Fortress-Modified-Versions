@@ -58,6 +58,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnClientEnterGameFwd = new GlobalForward("SF2_OnClientEnterGame", ET_Hook, Param_Cell);
 	g_OnGroupEnterGameFwd = new GlobalForward("SF2_OnGroupEnterGame", ET_Hook, Param_Cell);
 	g_OnEverythingLoadedFwd = new GlobalForward("SF2_OnEverythingLoaded", ET_Ignore);
+	g_OnDifficultyVoteFinishedFwd = new GlobalForward("SF2_OnDifficultyVoteFinished", ET_Ignore, Param_Cell, Param_Cell);
 
 	CreateNative("SF2_GetConfig", Native_GetConfig);
 	CreateNative("SF2_IsRunning", Native_IsRunning);

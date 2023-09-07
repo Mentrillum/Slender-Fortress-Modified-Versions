@@ -1125,13 +1125,19 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 
 static MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHookReturn returnHandle, DHookParam params)
 {
-	if (!IsValidEdict(projectile) || !IsValidEntity(projectile))
+	if (!g_Enabled)
 	{
 		return MRES_Ignored;
 	}
 
-	returnHandle.Value = true;
-	return MRES_Supercede;
+	int owner = GetEntPropEnt(projectile, Prop_Data, "m_hOwnerEntity");
+	if (IsValidClient(owner) && (IsRoundInWarmup() || IsClientInPvP(owner)))
+	{
+		returnHandle.Value = true;
+		return MRES_Supercede;
+	}
+
+	return MRES_Ignored;
 }
 
 // API

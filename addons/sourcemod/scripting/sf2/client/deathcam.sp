@@ -175,7 +175,7 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	soundInfo.EmitSound(true, client);
 
 	GetBossProfileGlobalDeathCamSounds(profile, soundInfo);
-	for (int i = 0; i < MaxClients; i++)
+	for (int i = 0; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{

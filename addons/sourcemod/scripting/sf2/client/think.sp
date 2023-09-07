@@ -779,7 +779,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 	static int hudColorHealthy[3];
 	static int hudColorCritical[3] = { 255, 10, 10 };
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{

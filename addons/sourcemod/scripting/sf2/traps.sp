@@ -152,7 +152,7 @@ static Action Timer_TrapThink(Handle timer, any entref)
 
 	if (!g_TrapClosed[trapEntity])
 	{
-		for (int i = 1; i < MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
 			if (!player.IsValid ||

@@ -219,8 +219,8 @@ public void OnPluginStart()
 	g_DefaultLegacyHudConVar = CreateConVar("sf2_default_legacy_hud", "0", "Set to 1 if the server should enable the legacy hud by default in their settings.", _, true, 0.0, true, 1.0);
 
 	g_DifficultyVoteOptionsConVar = CreateConVar("sf2_difficulty_vote_options", "1,2,3", "What vote options will appear on the Difficulty vote. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon, 6 = Random");
+	g_DifficultyVoteRevoteConVar = CreateConVar("sf2_difficulty_vote_runoff", "0.0", "If the winning vote has less precentage of player votes, do a run-off vote.", _, true, 0.0, true, 1.0);
 	g_DifficultyVoteRandomConVar = CreateConVar("sf2_difficulty_random_vote", "1", "If random vote will use a random vote option instead of a random difficulty.", _, true, 0.0, true, 1.0);
-
 	g_DifficultyNoGracePageConVar = CreateConVar("sf2_difficulty_no_grace_pages", "", "On what difficulties will players be unable to collect pages while grace period is active. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon");
 
 	g_FileCheckConVar = CreateConVar("sf2_debug_file_checks", "0", "Determines if the gamemode should look for missing files when loading all the bosses. Note that turning this on leads to longer boss loading times.", _, true, 0.0, true, 1.0);
@@ -861,7 +861,7 @@ static Action Command_GroupName(int client, int args)
 	GetPlayerGroupName(groupIndex, oldGroupName, sizeof(oldGroupName));
 	SetPlayerGroupName(groupIndex, groupName);
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -2407,7 +2407,7 @@ static Action Command_AllTalkToggle(int client, int args)
 	g_AdminAllTalk[client] = !g_AdminAllTalk[client];
 	CPrintToChat(client, "{royalblue}%t {default}You will %s hear and speak to all players.", "SF2 Prefix", g_AdminAllTalk[client] ? "now" : "no longer");
 
-	for (int target = 1; target < MaxClients; target++)
+	for (int target = 1; target <= MaxClients; target++)
 	{
 		ClientUpdateListeningFlags(target);
 	}
@@ -2418,7 +2418,7 @@ static Action Command_AllTalkOn(int client, int args)
 {
 	g_AdminAllTalk[client] = true;
 
-	for (int target = 1; target < MaxClients; target++)
+	for (int target = 1; target <= MaxClients; target++)
 	{
 		ClientUpdateListeningFlags(target);
 	}
@@ -2429,7 +2429,7 @@ static Action Command_AllTalkOff(int client, int args)
 {
 	g_AdminAllTalk[client] = false;
 
-	for (int target = 1; target < MaxClients; target++)
+	for (int target = 1; target <= MaxClients; target++)
 	{
 		ClientUpdateListeningFlags(target);
 	}
@@ -2604,7 +2604,7 @@ static Action Command_MaxPlayersOverride(int client, int args)
 static Action Command_SpecialRoundMode(int client, int args)
 {
 	g_SpecialRoundBehaviorConVar.BoolValue = !g_SpecialRoundBehaviorConVar.BoolValue;
-	CPrintToChat(client, "{royalblue}%t {default}Set the special rounds to %s.", "SF2 Prefix", g_BlockSuicideDuringRoundConVar.BoolValue ? "always reset upon the next round" : "keep going until all players have played a special round");
+	CPrintToChat(client, "{royalblue}%t {default}Set the special rounds to %s.", "SF2 Prefix", g_SpecialRoundBehaviorConVar.BoolValue ? "always reset upon the next round" : "keep going until all players have played a special round");
 	return Plugin_Handled;
 }
 

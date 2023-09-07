@@ -48,8 +48,12 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	}
 
 	// Refresh players.
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
+		if (!IsValidClient(i))
+		{
+			continue;
+		}
 		ClientSetGhostModeState(i, false);
 
 		g_PlayerPlaying[i] = false;
@@ -115,7 +119,7 @@ Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 
 	char cappers[7];
 	int i = 0;
-	for (int client = 1; client < MaxClients; client++)
+	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (IsValidClient(client) && DidClientEscape(client) && i < 7)
 		{
@@ -168,7 +172,7 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 
 	SF_FailEnd();
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{

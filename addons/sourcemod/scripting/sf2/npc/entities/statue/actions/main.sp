@@ -74,7 +74,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 			{
 				ArrayList arrayRaidTargets = new ArrayList();
 
-				for (int i = 1; i < MaxClients; i++)
+				for (int i = 1; i <= MaxClients; i++)
 				{
 					if (!IsValidClient(i) ||
 						!IsPlayerAlive(i) ||
@@ -103,7 +103,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 	int bestPlayer = -1;
 	ArrayList array = new ArrayList();
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i) || !IsPlayerAlive(i) ||
 		IsClientInDeathCam(i) || (!attackWaiters && g_PlayerEliminated[i]) ||

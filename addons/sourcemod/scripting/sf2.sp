@@ -710,6 +710,7 @@ ConVar g_UsePlayersForKillFeedConVar;
 ConVar g_DefaultLegacyHudConVar;
 ConVar g_DifficultyVoteOptionsConVar;
 ConVar g_DifficultyVoteRandomConVar;
+ConVar g_DifficultyVoteRevoteConVar;
 ConVar g_DifficultyNoGracePageConVar;
 ConVar g_FileCheckConVar;
 
@@ -791,6 +792,7 @@ GlobalForward g_OnDifficultyChangeFwd;
 GlobalForward g_OnClientEnterGameFwd;
 GlobalForward g_OnGroupEnterGameFwd;
 GlobalForward g_OnEverythingLoadedFwd;
+GlobalForward g_OnDifficultyVoteFinishedFwd;
 
 // Private forwards
 PrivateForward g_OnMapStartPFwd;
@@ -938,8 +940,6 @@ public void OnMapStart()
 
 	PrecacheModel(SF2_FLASHLIGHT_BEAM_MATERIAL);
 	g_FlashlightHaloModel = PrecacheModel(SF2_FLASHLIGHT_HALO_MATERIAL, true);
-
-	SetupEntityActions();
 
 	Call_StartForward(g_OnMapStartPFwd);
 	Call_Finish();
@@ -2301,7 +2301,7 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 	}
 	else if (cvar == g_RaidMapConVar)
 	{
-		for (int i = 1; i < MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer client = SF2_BasePlayer(i);
 			if (!client.IsValid)
@@ -7027,36 +7027,42 @@ static Action Timer_VoteDifficulty(Handle timer, any data)
 
 	if (timer != g_VoteTimer || IsRoundEnding())
 	{
-		delete arrayClients;
+		if (arrayClients != null)
+		{
+			delete arrayClients;
+		}
 		return Plugin_Stop;
 	}
 
-	if (NativeVotes_IsVoteInProgress())
+	if (NativeVotes_IsVoteInProgress() || IsVoteInProgress())
 	{
 		return Plugin_Continue; // There's another vote in progess. Wait.
 	}
 
 	int clients[MAXTF2PLAYERS] = { -1, ... };
 	int clientsNum;
-	for (int i = 0, size = arrayClients.Length; i < size; i++)
+	if (arrayClients != null)
 	{
-		int client = GetClientOfUserId(arrayClients.Get(i));
-		if (client <= 0)
+		for (int i = 0, size = arrayClients.Length; i < size; i++)
 		{
-			continue;
+			int client = GetClientOfUserId(arrayClients.Get(i));
+			if (client <= 0)
+			{
+				continue;
+			}
+
+			clients[clientsNum] = client;
+			clientsNum++;
 		}
 
-		clients[clientsNum] = client;
-		clientsNum++;
+		delete arrayClients;
 	}
-
-	delete arrayClients;
 	#if defined DEBUG
 	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for arrayClients in Timer_VoteDifficulty.", arrayClients);
 	#endif
 
 	RandomizeVoteMenu();
-	VoteMenu(g_MenuVoteDifficulty, clients, clientsNum, 15);
+	VoteMenu(g_MenuVoteDifficulty, clients, clientsNum, (g_DifficultyVoteRevoteConVar.FloatValue > 0.0) ? 10 : 15);
 	if (GetMenuItemCount(g_MenuVoteDifficulty) == 1)
 	{
 		for (int i = 0; i < clientsNum; i++)

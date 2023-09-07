@@ -55,7 +55,7 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 
 static void OnBossRemoved(int bossIndex)
 {
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{

@@ -78,7 +78,7 @@ static void Renevant_BroadcastMessage(const char[] message, int params, ...)
 	char format[512];
 	VFormat(format, sizeof(format), message, params);
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i) || (g_PlayerEliminated[i] && !IsClientInGhostMode(i)) || !IsPlayerAlive(i))
 		{
@@ -313,7 +313,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_MarkForDeath:
 		{
 			g_RenevantMarkForDeath = true;
-			for (int client = 1; client < MaxClients; client++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
 				if (!IsValidClient(client))
 				{

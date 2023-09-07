@@ -84,7 +84,7 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 
 	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && IsRoundPlaying() && !client.HasEscaped && !client.IsEliminated)
 	{
-		for (int reds = 1; reds < MaxClients; reds++)
+		for (int reds = 1; reds <= MaxClients; reds++)
 		{
 			if (!IsValidClient(reds) ||
 				g_PlayerEliminated[reds] ||
@@ -596,7 +596,7 @@ static ArrayList SpecialEnabledList()
 		char snatcher[64] = "hypersnatcher_nerfed";
 
 		int players;
-		for (int client = 1; client < MaxClients; client++)
+		for (int client = 1; client <= MaxClients; client++)
 		{
 			if (IsValidClient(client) && !g_PlayerEliminated[client])
 			{
@@ -862,7 +862,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_THANATOPHOBIA:
 		{
-			for (int client = 1; client < MaxClients; client++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
 				if (!IsValidClient(client))
 				{
@@ -1047,7 +1047,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_CLASSSCRAMBLE:
 		{
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i) || g_PlayerEliminated[i] || GetClientTeam(i) != TFTeam_Red || DidClientEscape(i) || !IsPlayerAlive(i))
 				{
@@ -1277,7 +1277,7 @@ void SpecialRoundStart()
 				SF_RemoveSpecialRound(SPECIALROUND_LIGHTSOUT);
 				SF_AddSpecialRound(SPECIALROUND_NIGHTVISION);
 			}
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -1359,7 +1359,7 @@ void SpecialRoundStart()
 					SlenderAddGlow(npcIndex, purple);
 				}
 			}
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -1386,7 +1386,7 @@ void SpecialRoundStart()
 			if (nightVision && g_NightvisionType != 1)
 			{
 				g_NightvisionType = 1;
-				for (int i = 1; i < MaxClients; i++)
+				for (int i = 1; i <= MaxClients; i++)
 				{
 					if (!IsValidClient(i))
 					{
@@ -1410,7 +1410,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_1UP:
 		{
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -1429,7 +1429,7 @@ void SpecialRoundStart()
 		case SPECIALROUND_NOULTRAVISION:
 		{
 			SF_AddSpecialRound(SPECIALROUND_NOULTRAVISION);
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -1485,7 +1485,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_PAGEDETECTOR:
 		{
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -1522,7 +1522,7 @@ void SpecialRoundStart()
 		}
 		case SPECIALROUND_SINGLEPLAYER:
 		{
-			for (int client = 1; client < MaxClients; client++)
+			for (int client = 1; client <= MaxClients; client++)
 			{
 				if (IsValidClient(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
 				{
@@ -1790,7 +1790,7 @@ static void SpecialCreateVote()
 	int total = 0;
 	int[] players = new int[MaxClients];
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{

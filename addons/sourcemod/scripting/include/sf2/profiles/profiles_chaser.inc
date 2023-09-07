@@ -736,7 +736,7 @@ enum struct SF2ChaserBossProfileData
 		{
 			this.FootstepSenses.AddCount[difficulty] = 1;
 			this.LoudFootstepSenses.AddCount[difficulty] = 2;
-			this.QuietFootstepSenses.AddCount[difficulty] = 1;
+			this.QuietFootstepSenses.AddCount[difficulty] = 0;
 
 			this.VoiceSenses.AddCount[difficulty] = 10;
 			this.WeaponSenses.AddCount[difficulty] = 5;

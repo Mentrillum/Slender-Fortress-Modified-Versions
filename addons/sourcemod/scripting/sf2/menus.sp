@@ -26,6 +26,9 @@ Handle g_MenuCredits4;
 Handle g_MenuCredits5;
 Handle g_MenuUpdate;
 
+static ArrayList g_Voters;
+static bool g_IsRunOff;
+
 #include "sf2/playergroups/menus.sp"
 #include "sf2/pvp/menus.sp"
 
@@ -290,7 +293,15 @@ void RandomizeVoteMenu()
 		delete g_MenuVoteDifficulty;
 	}
 
-	g_MenuVoteDifficulty = CreateMenu(Menu_VoteDifficulty);
+	if (g_Voters != null)
+	{
+		delete g_Voters;
+	}
+
+	g_Voters = new ArrayList(2);
+	g_IsRunOff = false;
+
+	g_MenuVoteDifficulty = CreateMenu((g_DifficultyVoteRevoteConVar.FloatValue > 0.0) ? Menu_VoteNoneDifficulty : Menu_VoteDifficulty);
 	SetMenuTitle(g_MenuVoteDifficulty, "%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
 
 	g_DifficultyVoteOptionsConVar.GetString(buffer, sizeof(buffer));
@@ -298,8 +309,8 @@ void RandomizeVoteMenu()
 	bool normal = StrContains(buffer, "1") != -1;
 	bool hard = StrContains(buffer, "2") != -1;
 	bool insane = StrContains(buffer, "3") != -1;
-	bool nightmare = false;
-	bool apollyon = false;
+	bool nightmare = StrContains(buffer, "4") != -1;
+	bool apollyon = StrContains(buffer, "5") != -1;
 	bool random = StrContains(buffer, "6") != -1;
 
 	switch (GetRandomInt(1, 6))//There's probably a better way to do this but I was tired.
@@ -420,7 +431,7 @@ void RandomizeVoteMenu()
 		AddMenuItem(g_MenuVoteDifficulty, "4", buffer);
 	}
 
-	if(apollyon)
+	if (apollyon)
 	{
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Apollyon Difficulty");
 		AddMenuItem(g_MenuVoteDifficulty, "5", buffer);
@@ -430,6 +441,11 @@ void RandomizeVoteMenu()
 	{
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Random Difficulty");
 		AddMenuItem(g_MenuVoteDifficulty, "", buffer);
+	}
+
+	if (g_DifficultyVoteRevoteConVar.FloatValue > 0.0)
+	{
+		SetVoteResultCallback(g_MenuVoteDifficulty, Menu_VoteRunoffDifficulty);
 	}
 }
 
@@ -480,8 +496,136 @@ static int Menu_Main(Handle menu, MenuAction action, int param1, int param2)
 	return 0;
 }
 
-static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int param2)
+static void Menu_VoteRunoffDifficulty(Menu oldmenu, int votes, int clients, const int[][] clientInfo, int items, const int[][] itemInfo)
 {
+	if (items > 1)
+	{
+		float runoff = g_DifficultyVoteRevoteConVar.FloatValue;
+		if (runoff)
+		{
+			if (float(itemInfo[0][VOTEINFO_ITEM_VOTES]) <= (votes * runoff))
+			{
+				g_IsRunOff = true;
+				Menu newmenu = new Menu(Menu_VoteDifficulty);
+				newmenu.SetTitle("%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+
+				ArrayList list = new ArrayList();
+				for(int i = 0; i < items; i++)
+				{
+					if (itemInfo[i][VOTEINFO_ITEM_VOTES] >= itemInfo[1][VOTEINFO_ITEM_VOTES])
+					{
+						list.Push(itemInfo[i][VOTEINFO_ITEM_INDEX]);
+					}
+				}
+
+				char data[64], display[64];
+				int length = list.Length;
+				for (int i = 0; i < length; i++)
+				{
+					int index = list.Get(i);
+					oldmenu.GetItem(index, data, sizeof(data), _, display, sizeof(display));
+					newmenu.AddItem(data, display);
+				}
+
+				delete list;
+
+				list = new ArrayList();
+
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!IsClientInGame(i) || IsFakeClient(i) || g_PlayerEliminated[i])
+					{
+						continue;
+					}
+
+					list.Push(GetClientUserId(i));
+				}
+
+				if (list.Length)
+				{
+					//delete g_VoteTimer;
+					g_VoteTimer = CreateTimer(1.0, Timer_ReVoteDifficulty, list, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE | TIMER_DATA_HNDL_CLOSE);
+				}
+				else
+				{
+					delete list;
+				}
+
+				if (GetMenuItemCount(g_MenuVoteDifficulty) > 1)
+				{
+					Call_StartForward(g_OnDifficultyVoteFinishedFwd);
+					Call_PushCell(g_Voters);
+					Call_PushCell(false);
+					Call_Finish();
+				}
+				g_Voters.Clear();
+
+				delete g_MenuVoteDifficulty;
+				g_MenuVoteDifficulty = newmenu;
+
+				return;
+			}
+		}
+	}
+
+	Menu_VoteDifficulty(oldmenu, MenuAction_VoteEnd, itemInfo[0][VOTEINFO_ITEM_INDEX], 0);
+}
+
+static Action Timer_ReVoteDifficulty(Handle timer, ArrayList arrayClients)
+{
+	if (timer != g_VoteTimer || IsRoundEnding())
+	{
+		g_VoteTimer = null;
+		return Plugin_Stop;
+	}
+
+	if (IsVoteInProgress())
+	{
+		return Plugin_Continue; // There's another vote in progess. Wait.
+	}
+
+	int clients[MAXPLAYERS + 1] = { -1, ... };
+	int clientsNum;
+	for (int i = 0, size = arrayClients.Length; i < size; i++)
+	{
+		int client = GetClientOfUserId(arrayClients.Get(i));
+		if (client <= 0)
+		{
+			continue;
+		}
+
+		clients[clientsNum] = client;
+		clientsNum++;
+	}
+
+	VoteMenu(g_MenuVoteDifficulty, clients, clientsNum, 7);
+	g_VoteTimer = null;
+	return Plugin_Stop;
+}
+
+static int Menu_VoteNoneDifficulty(Menu menu, MenuAction action,int param1,int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		char option[64];
+		GetMenuItem(menu, param2, option, sizeof(option));
+		int index = g_Voters.Push(param1);
+		int value = StringToInt(option);
+		g_Voters.Set(index, value, 1);
+	}
+	return 0;
+}
+
+static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		char option[64];
+		GetMenuItem(menu, param2, option, sizeof(option));
+		int index = g_Voters.Push(param1);
+		int value = StringToInt(option);
+		g_Voters.Set(index, value, 1);
+	}
 	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_RestartSessionConVar.BoolValue)
 	{
 		int clientInGame = 0, clientCallingForNightmare = 0;
@@ -539,8 +683,8 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int p
 				bool normal = StrContains(info, "1") != -1;
 				bool hard = StrContains(info, "2") != -1;
 				bool insane = StrContains(info, "3") != -1;
-				bool nightmare = false;
-				bool apollyon = false;
+				bool nightmare = StrContains(info, "4") != -1;
+				bool apollyon = StrContains(info, "5") != -1;
 
 				int count = ((normal ? 1 : 0) + (hard ? 1 : 0) + (insane ? 1 : 0) + (nightmare ? 1 : 0) + (apollyon ? 1 : 0));
 
@@ -650,7 +794,10 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int p
 				FormatEx(display, sizeof(display), "%t!", "SF2 Nightmare Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 				strcopy(color, sizeof(color), "{valve}");
-				PlayNightmareSound();
+				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+				{
+					EmitSoundToAll(g_SoundNightmareMode[i]);
+				}
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 			}
 			case Difficulty_Apollyon:
@@ -658,7 +805,10 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int p
 				FormatEx(display, sizeof(display), "%t!", "SF2 Apollyon Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 				strcopy(color, sizeof(color), "{darkgray}");
-				PlayNightmareSound();
+				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+				{
+					EmitSoundToAll(g_SoundNightmareMode[i]);
+				}
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 				if (rng)
 				{
@@ -716,6 +866,15 @@ static int Menu_VoteDifficulty(Handle menu, MenuAction action, int param1, int p
 		}
 
 		CPrintToChatAll("%t %s%s", "SF2 Difficulty Vote Finished", color, display);
+		char checker[64];
+		g_DifficultyVoteRandomConVar.GetString(checker, sizeof(checker));
+		if (GetMenuItemCount(g_MenuVoteDifficulty) > 1)
+		{
+			Call_StartForward(g_OnDifficultyVoteFinishedFwd);
+			Call_PushCell(g_Voters);
+			Call_PushCell(g_IsRunOff);
+			Call_Finish();
+		}
 	}
 	return 0;
 }

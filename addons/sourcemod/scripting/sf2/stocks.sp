@@ -1275,6 +1275,20 @@ bool TraceRayDontHitPlayersOrEntity(int entity, int mask, any data)
 	return true;
 }
 
+bool TraceRayDontHitPlayersOrEntityEx(int entity, int mask, any data)
+{
+	if (entity == data)
+	{
+		return false;
+	}
+	if (IsValidClient(entity))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 //	==========================================================
 //	TIMER/CALLBACK FUNCTIONS
 //	==========================================================

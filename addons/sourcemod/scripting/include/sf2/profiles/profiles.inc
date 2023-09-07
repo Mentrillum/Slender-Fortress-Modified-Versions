@@ -1395,6 +1395,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 		if (this.Animations.GetValue(animType, animDataArray))
 		{
+			if (animDataArray.Length == 0)
+			{
+				return false;
+			}
 			int randomAnimation;
 			if (preDefinedIndex <= -1)
 			{
@@ -1430,6 +1434,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 		if (this.Gestures.GetValue(animType, gestureDataArray))
 		{
+			if (gestureDataArray.Length == 0)
+			{
+				return false;
+			}
 			SF2BossProfileAttackGestureData gestureData;
 			gestureDataArray.GetArray(definedIndex, gestureData, sizeof(gestureData));
 

@@ -213,6 +213,7 @@ void NPCSetDeathCamEnabled(int npcIndex, bool state)
 void NPCInitialize()
 {
 	NPCChaserInitialize();
+	SetupEntityActions();
 }
 
 void NPCOnConfigsExecuted()
@@ -1441,7 +1442,7 @@ bool NPCShouldHearEntity(int npcIndex, int entity, SoundType soundType)
 bool NPCAreAvailablePlayersAlive()
 {
 	int number = 0;
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsValidClient(i) && IsPlayerAlive(i) && GetClientTeam(i) == TFTeam_Red && !g_PlayerEliminated[i] && !DidClientEscape(i))
 		{
@@ -1546,7 +1547,7 @@ bool SlenderCanRemove(int bossIndex)
 				float slenderPos[3], buffer[3];
 				SlenderGetAbsOrigin(bossIndex, slenderPos);
 
-				for (int i = 1; i < MaxClients; i++)
+				for (int i = 1; i <= MaxClients; i++)
 				{
 					if (!IsValidClient(i) ||
 						!IsPlayerAlive(i) ||
@@ -1919,7 +1920,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 
 	g_SlenderCustomOutroSong[Npc.Index] = GetBossProfileOutroMusicState(profile);
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_PlayerLastChaseBossEncounterTime[i][Npc.Index] = -1.0;
 		g_SlenderTeleportPlayersRestTime[Npc.Index][i] = -1.0;
@@ -1961,7 +1962,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 		{
 			SF2BossProfileSoundInfo soundInfo;
 			GetBossProfileIntroSounds(profile, soundInfo);
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsValidClient(i))
 				{
@@ -2125,7 +2126,7 @@ bool SelectProfile(SF2NPC_BaseNPC Npc, const char[] profile,int additionalBossFl
 				if ((g_NpcAllowMusicOnDifficulty[Npc.Index] & g_DifficultyConVar.IntValue) && time > 0.0)
 				{
 					timerMusic = CreateTimer(time, BossMusic, Npc.Index, TIMER_FLAG_NO_MAPCHANGE);
-					for(int client = 1; client < MaxClients; client++)
+					for(int client = 1; client <= MaxClients; client++)
 					{
 						if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
 						{
@@ -2453,7 +2454,11 @@ void ChangeAllSlenderModels()
 		NPCGetProfile(npcIndex, profile, sizeof(profile));
 		GetSlenderModel(npcIndex, _, buffer, sizeof(buffer));
 		SetEntityModel(slender, buffer);
-		SetEntityModel(EntRefToEntIndex(g_NpcGlowEntity[npcIndex]), buffer);
+		int glow = EntRefToEntIndex(g_NpcGlowEntity[npcIndex]);
+		if (glow && glow != INVALID_ENT_REFERENCE)
+		{
+			SetEntityModel(EntRefToEntIndex(g_NpcGlowEntity[npcIndex]), buffer);
+		}
 		if (NPCGetModelSkinMax(npcIndex) > 0)
 		{
 			int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(npcIndex));
@@ -2533,7 +2538,7 @@ void RemoveProfile(int bossIndex)
 	NPCChaserOnRemoveProfile(bossIndex);
 
 	// Clean up on the clients.
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_SlenderLastFoundPlayer[bossIndex][i] = -1.0;
 		g_PlayerLastChaseBossEncounterTime[i][bossIndex] = -1.0;
@@ -2895,7 +2900,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 				g_SlenderChaseDeathPosition[bossIndex][i] = 0.0;
 			}
 
-			for (int i = 1; i < MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				g_SlenderLastFoundPlayer[bossIndex][i] = -1.0;
 
@@ -4302,17 +4307,16 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 						randomArea = areaArray.Get(randomCell);
 						area = collector.Get(randomArea);
 						area.GetCenter(spawnPos);
-						spawnPos[2] += 15.0;
 
 						float traceMins[3];
-						traceMins[0] = g_SlenderDetectMins[bossIndex][0];
-						traceMins[1] = g_SlenderDetectMins[bossIndex][1];
+						traceMins[0] = g_SlenderDetectMins[bossIndex][0] - 5.0;
+						traceMins[1] = g_SlenderDetectMins[bossIndex][1] - 5.0;
 						traceMins[2] = 0.0;
 
 						float traceMaxs[3];
-						traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0];
-						traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1];
-						traceMaxs[2] = 0.0;
+						traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0] + 5.0;
+						traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1] + 5.0;
+						traceMaxs[2] = g_SlenderDetectMaxs[bossIndex][2];
 
 						TR_TraceHullFilter(spawnPos, spawnPos, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitEntity);
 						if (TR_DidHit())
@@ -4328,7 +4332,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 						else
 						{
 							canSpawn = true;
-							for (int i = 1; i < MaxClients; i++)
+							for (int i = 1; i <= MaxClients; i++)
 							{
 								if (!IsValidClient(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i) || g_PlayerEliminated[i]
 									|| g_PlayerProxy[i] || DidClientEscape(i))
@@ -4438,7 +4442,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 								{
 									bool didJumpScare = false;
 
-									for (int i = 1; i < MaxClients; i++)
+									for (int i = 1; i <= MaxClients; i++)
 									{
 										if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
 										{
@@ -4755,7 +4759,7 @@ bool IsNPCVisibleToPlayer(int npcIndex,int client, bool checkFOV=true, bool chec
 
 bool IsNPCVisibleToAPlayer(int npcIndex, bool checkFOV=true, bool checkBlink=false, bool checkEliminated=true)
 {
-	for (int client = 1; client < MaxClients; client++)
+	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (IsNPCVisibleToPlayer(npcIndex, client, checkFOV, checkBlink, checkEliminated))
 		{
@@ -5153,7 +5157,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				bool tooNear = false;
 
 				// Check minimum range with players.
-				for (int teleportClient = 1; teleportClient < MaxClients; teleportClient++)
+				for (int teleportClient = 1; teleportClient <= MaxClients; teleportClient++)
 				{
 					if (!IsValidClient(teleportClient) ||
 						!IsPlayerAlive(teleportClient) ||

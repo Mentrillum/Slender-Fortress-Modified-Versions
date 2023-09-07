@@ -216,7 +216,7 @@ void ClientSetGhostModeState(int client, bool state)
 		}
 	}
 
-	for (int i = 1; i < MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
 		{
@@ -324,7 +324,7 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 		int lastTarget = EntRefToEntIndex(g_PlayerGhostModeTarget[client]);
 		int nextTarget = -1;
 		int firstTarget = -1;
-		for (int i = 1; i < MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (IsValidClient(i) && (!g_PlayerEliminated[i] || g_PlayerProxy[i]) && !IsClientInGhostMode(i) && !DidClientEscape(i) && IsPlayerAlive(i))
 			{
