@@ -794,10 +794,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 				FormatEx(display, sizeof(display), "%t!", "SF2 Nightmare Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 				strcopy(color, sizeof(color), "{valve}");
-				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-				{
-					EmitSoundToAll(g_SoundNightmareMode[i]);
-				}
+				PlayNightmareSound();
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 			}
 			case Difficulty_Apollyon:
@@ -805,10 +802,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 				FormatEx(display, sizeof(display), "%t!", "SF2 Apollyon Difficulty");
 				FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 				strcopy(color, sizeof(color), "{darkgray}");
-				for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
-				{
-					EmitSoundToAll(g_SoundNightmareMode[i]);
-				}
+				PlayNightmareSound();
 				SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 				if (rng)
 				{
