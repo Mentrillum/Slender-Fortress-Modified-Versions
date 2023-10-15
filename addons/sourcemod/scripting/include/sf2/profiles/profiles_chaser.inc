@@ -736,7 +736,7 @@ enum struct SF2ChaserBossProfileData
 		{
 			this.FootstepSenses.AddCount[difficulty] = 1;
 			this.LoudFootstepSenses.AddCount[difficulty] = 2;
-			this.QuietFootstepSenses.AddCount[difficulty] = 1;
+			this.QuietFootstepSenses.AddCount[difficulty] = 0;
 
 			this.VoiceSenses.AddCount[difficulty] = 10;
 			this.WeaponSenses.AddCount[difficulty] = 5;
@@ -1172,6 +1172,7 @@ enum struct SF2ChaserBossProfileData
 				}
 				soundInfo.Destroy();
 			}
+			delete this.AttackSounds;
 		}
 		if (this.HitSounds != null)
 		{
@@ -1187,6 +1188,7 @@ enum struct SF2ChaserBossProfileData
 				}
 				soundInfo.Destroy();
 			}
+			delete this.HitSounds;
 		}
 		if (this.MissSounds != null)
 		{
@@ -1202,6 +1204,7 @@ enum struct SF2ChaserBossProfileData
 				}
 				soundInfo.Destroy();
 			}
+			delete this.MissSounds;
 		}
 		if (this.BulletShootSounds != null)
 		{
@@ -1217,6 +1220,7 @@ enum struct SF2ChaserBossProfileData
 				}
 				soundInfo.Destroy();
 			}
+			delete this.BulletShootSounds;
 		}
 		if (this.ProjectileShootSounds != null)
 		{
@@ -1232,6 +1236,7 @@ enum struct SF2ChaserBossProfileData
 				}
 				soundInfo.Destroy();
 			}
+			delete this.ProjectileShootSounds;
 		}
 
 		if (this.DamageResistances != null)

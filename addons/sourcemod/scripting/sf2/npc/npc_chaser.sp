@@ -334,9 +334,9 @@ void NPCChaserInitialize()
 	}
 }
 
-void NPCChaserResetAnimationInfo(int npcIndex, int iSequence = 0)
+void NPCChaserResetAnimationInfo(int npcIndex, int sequence = 0)
 {
-	g_NpcCurrentAnimationSequence[npcIndex] = iSequence;
+	g_NpcCurrentAnimationSequence[npcIndex] = sequence;
 	g_NpcHasCurrentAnimationSequenceIsLooped[npcIndex] = false;
 	g_NpcCurrentAnimationSequencePlaybackRate[npcIndex] = 1.0;
 	g_NpcUsesChaseInitialAnimation[npcIndex] = false;
@@ -1590,7 +1590,7 @@ void NPCChaserOnSelectProfile(int npcIndex, bool invincible)
 
 	float stunHealthPerPlayer = GetChaserProfileStunHealthPerPlayer(profile);
 	int count;
-	for (int client; client <= MaxClients; client++)
+	for (int client = 1; client <= MaxClients; client++)
 	{
 		SF2_BasePlayer player = SF2_BasePlayer(client);
 		if (player.IsValid && player.IsEliminated)

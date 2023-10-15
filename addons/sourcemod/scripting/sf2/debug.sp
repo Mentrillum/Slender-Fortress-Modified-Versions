@@ -73,7 +73,7 @@ void DebugMessage(const char[] message, any ...)
 
 void SendDebugMessageToPlayer(int client,int debugFlags,int type, const char[] message, any ...)
 {
-	if (!IsClientInGame(client) || IsFakeClient(client))
+	if (!IsClientInGameEx(client) || IsFakeClient(client))
 	{
 		return;
 	}
@@ -108,7 +108,7 @@ void SendDebugMessageToPlayers(int debugFlags,int type, const char[] message, an
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i) || IsFakeClient(i))
+		if (!IsClientInGameEx(i) || IsFakeClient(i))
 		{
 			continue;
 		}

@@ -7,6 +7,7 @@
 		"fi"	"Valitse vaikeustaso:"
 		"chi"	"选择难度："
 		"pt"	"Selecione uma dificuldade:"
+		"ko"	"난이도 선택:"
 	}
 
 	"SF2 Difficulty Vote Finished"
@@ -16,6 +17,7 @@
 		"fi"	"Äänestys onnistui! Vaikeustaso on muutettu tasoon:"
 		"chi"	"投票成功！难度已被改为："
 		"pt"	"Votação finalizada! A dificuldade foi alterada para:"
+		"ko"	"투표 성공! 선택된 난이도:"
 	}
 
 	"SF2 Easy Difficulty"
@@ -25,6 +27,7 @@
 		"fi"	"Helppo"
 		"chi"	"新手"
 		"pt"	"Fácil"
+		"ko"	"쉬움"
 	}
 
 	"SF2 Normal Difficulty"
@@ -34,6 +37,7 @@
 		"fi"	"Tavallinen"
 		"chi"	"普通"
 		"pt"	"Normal"
+		"ko"	"보통"
 	}
 
 	"SF2 Hard Difficulty"
@@ -43,6 +47,7 @@
 		"fi"	"Vaikea"
 		"chi"	"困难"
 		"pt"	"Hardcore"
+		"ko"	"하드코어"
 	}
 
 	"SF2 Insane Difficulty"
@@ -52,6 +57,7 @@
 		"fi"	"Hullu"
 		"chi"	"疯狂"
 		"pt"	"Insana"
+		"ko"	"광기"
 	}
 
 	"SF2 Nightmare Difficulty"
@@ -59,24 +65,28 @@
 		"en"	"Nightmare"
 		"fi"	"Painajainen"
 		"pt"	"Pesadelo"
+		"ko"	"악몽"
 	}
 
 	"SF2 Apollyon Difficulty"
 	{
 		"en"	"Apollyon"
 		"pt"	"Apoliom"
+		"ko"	"아폴리온"
 	}
 
 	"SF2 Calamity Difficulty"
 	{
 		"en"	"Calamity"
 		"pt"	"Calamidade"
+		"ko"	"대재앙"
 	}
 	
 	"SF2 Random Difficulty"
 	{
 		"en"	"Random"
 		"pt"	"Aleatória"
+		"ko"	"랜덤"
 	}
 
 	"SF2 Default Intro Message Singular"
@@ -87,6 +97,7 @@
 		"fi"	"Kerää {1} lappu"
 		"chi"	"收集 {1} 纸张"
 		"pt"	"Colete {1} página"
+		"ko"	"단서 {1} 개 수집"
 	}
 
 	"SF2 Default Intro Message Plural"
@@ -97,6 +108,7 @@
 		"fi"	"Kerää kaikki {1} lappua"
 		"chi"	"收集所有 {1} 纸张"
 		"pt"	"Colete todas as {1} páginas"
+		"ko"	"단서 {1} 개 모두 수집"
 	}
 
 	"SF2 Default Escape Message"
@@ -106,6 +118,7 @@
 		"fi"	"Pakene!"
 		"chi"	"逃出去！"
 		"pt"	"Fuja!"
+		"ko"	"탈출하세요!"
 	}
 
 	"SF2 Default Survive Message"
@@ -115,6 +128,7 @@
 		"fi"	"Selviydy!"
 		"chi"	"活下来！"
 		"pt"	"Sobreviva!"
+		"ko"	"살아남으세요!"
 	}
 
 	"SF2 Default Boxing Message"
@@ -124,6 +138,7 @@
 		"fi"	"Tapa Mestari!"
 		"chi"	"击杀冠军！"
 		"pt"	"Mate o campeão!"
+		"ko"	"챔피언을 쓰러뜨리세요!"
 	}
 
 	"SF2 Grace Period End"
@@ -133,13 +148,14 @@
 		"fi"	"Lisäaika loppui. Kuolema johtaa nyt eliminointiin."
 		"chi"	"宽限期结束。死亡将会导致出局。"
 		"pt"	"O tempo de preparação acabou. Mortes resultarão em eliminação."
-
+		"ko"	"유예 기간이 끝났습니다. 이제 죽으면 탈락입니다."
 	}
 	
 	"SF2 Grace Period Page"
 	{
 		"en"	"Wait for Grace period to end to collect a page."
 		"pt"	"Aguardando o tempo de preparação acabar para coletar uma página."
+		"ko"	"단서를 수집하기 위해선 유예 기간이 끝날 때까지 기다리세요."
 	}
 
 	"SF2 Player Escaped"
@@ -150,6 +166,7 @@
 		"fi"			"{dodgerblue}{1}{default} on paennut!"
 		"chi"			"{dodgerblue}{1}{default} 成功逃出了！"
 		"pt"			"{dodgerblue}{1}{default} escapou!"
+		"ko"			"{dodgerblue}{1}{default}(이)가 탈출했습니다!"
 	}
 
 	"SF2 Player Killed Champion"
@@ -160,6 +177,7 @@
 		"fi"			"{red}{1}{default} on tappanut {valve}{2}!"
 		"chi"			"{red}{1}{default} 击杀了 {valve}{2}！"
 		"pt"			"{red}{1}{default} matou o {valve}{2}!"
+		"ko"			"{red}{1}{default} (이)가 {valve}{2}{default}를 쓰러뜨렸습니다!"
 	}
 
 	"SF2 Camping System Warning"
@@ -170,6 +188,7 @@
 		"fi"			"VAROITUS: Jos et liiku paikaltasi {1} sekunttiin, vihollinen nappaa sinut."
 		"chi"			"警告：如果你在 {1} 秒内不从当前位置移动的话，你会被Boss抓住。"
 		"pt"			"AVISO: caso não se mova do seu lugar em {1} segundos, você será pego pelo chefão."
+		"ko"			"경고: {1} 초 안에 해당 장소를 벗어나지 않으면, 죽게 됩니다."
 	}
 
 	"SF2 Main Menu Title"
@@ -179,6 +198,7 @@
 		"fi"	"Päävalikko"
 		"chi"	"主菜单"
 		"pt"	"Menu principal"
+		"ko"	"메인 메뉴"
 	}
 
 	"SF2 Queue Menu Title"
@@ -188,6 +208,7 @@
 		"fi"	"Jonolista"
 		"chi"	"队列清单"
 		"pt"	"Fila de espera"
+		"ko"	"대기열"
 	}
 
 	"SF2 Reset Queue Points Option"
@@ -198,6 +219,7 @@
 		"fi"	"Sinun pisteesi: {1} (valitse tyhjentääksesi)"
 		"chi"	"你的点数: {1} (选择此项重置)"
 		"pt"	"Seus pontos: {1} (selecione para zerar)"
+		"ko"	"현재 포인트: {1} (누를시 포인트 초기화)"
 	}
 
 	"SF2 Should Reset Queue Points"
@@ -207,6 +229,7 @@
 		"fi"	"Haluatko varmasti tyhjentää pisteesi 0:aan?"
 		"chi"	"你真的要重置点数为0吗？"
 		"pt"	"Tem certeza de que deseja zerar os seus pontos de espera?"
+		"ko"	"정말 대기열 포인트를 0으로 초기화 하시겠습니까?"
 	}
 
 	"SF2 Queue Points Reset"
@@ -216,6 +239,7 @@
 		"fi"	"Olet tyhjentänyt pisteesi 0:aan"
 		"chi"	"你已重置点数为0。"
 		"pt"	"Os seus pontos de espera foram zerados."
+		"ko"	"대기열 포인트가 0으로 초기화 되었습니다."
 	}
 
 	"SF2 Ghost Mode Menu Title"
@@ -225,6 +249,7 @@
 		"fi"	"Muuta Haamu Tilaa:"
 		"chi"	"开关幽灵模式："
 		"pt"	"Alternar modo fantasma:"
+		"ko"	"유령 모드 토글:"
 	}
 
 	"SF2 Ghost Mode Enabled"
@@ -234,6 +259,7 @@
 		"fi"	"Olet nyt Haamu Tilassa. Käytä äänikomentoja teleporttaaksesi RED pelaajaan. Hiivi napauttaaksesi itsesi maahan ilmasta."
 		"chi"	"你现在处于幽灵模式。使用语言命令来传送到一个红队玩家。在空中按蹲来降落。"
 		"pt"	"Você está no modo fantasma. Use um comando de voz para teletransportar-se a um jogador da equipe RED. Pressione \"Agachar\" para jogar-se ao chão."
+		"ko"	"유령 모드가 되었습니다. 음성 명령을 사용하면 RED 팀 플레이어에게 텔레포트 됩니다. 공중에 있는 동안 앉기 키를 누르면 빠르게 바닥으로 내려갑니다."
 	}
 
 	"SF2 Ghost Mode Disabled"
@@ -243,6 +269,7 @@
 		"fi"	"Olet ottanut Haamu Tilan pois."
 		"chi"	"你已关闭幽灵模式。"
 		"pt"	"Modo fantasma desativado."
+		"ko"	"유령 모드가 비활성화되었습니다."
 	}
 
 	"SF2 Ghost Mode Not Allowed"
@@ -252,6 +279,7 @@
 		"fi"	"Et voi mennä Haamu Tilaan juuri nyt."
 		"chi"	"你现在不可以切换幽灵模式。"
 		"pt"	"Alternação para o modo fantasma indisponível."
+		"ko"	"지금은 유령 모드를 사용할 수 없습니다."
 	}
 
 	"SF2 Ghost Mode Bad Connection"
@@ -262,12 +290,14 @@
 		"fi"	"Sinut potkittiin ulos Haamu Tilasta ajoituksen vuoksi {1} sekunniksi."
 		"chi"	"你因为超时了 {1} 秒而被移出幽灵模式。"
 		"pt"	"Você foi removido do modo fantasma devido ao tempo-limite de {1} segundo(s) ter acabado."
+		"ko"	"{1}초 간의 연결 지연시간 초과로 인해 유령 모드가 해제되었습니다."
 	}
 
 	"SF2 Prefix"
 	{
 		"en"	"[SF2]"
 		"pt"	"[SF2]"
+		"ko"	"[SF2]"
 	}
 
 	"SF2 Help Menu Title"
@@ -277,6 +307,7 @@
 		"fi"	"Ohjevalikko"
 		"chi"	"帮助菜单"
 		"pt"	"Menu de ajuda"
+		"ko"	"도움말"
 	}
 
 	"SF2 Help Objective Menu Title"
@@ -286,6 +317,7 @@
 		"fi"	"Tehtävä"
 		"chi"	"目标"
 		"pt"	"Objetivo"
+		"ko"	"목표"
 	}
 
 	"SF2 Help Objective Description"
@@ -295,6 +327,7 @@
 		"fi"	"Slender Fortress 2 (SF2) on pelimuoto joka perustuu\n peliin \"Slender: The Eight Pages\" tehnyt Mark\nJ. Hadley. Tehtäväsi on kerätä kaikki tavarat\nkartalta ja paeta jäämättäsi kiinni\nviholliselle. Keräät lappuja lyömällä\nniitä lähitaistelu aseellasi."
 		"chi"	"暗鬼要塞2(SF2)是一个基于游戏\n \"瘦长鬼影：八页纸\" 作者Mark J.Hadley。\n游戏目标是收集地图内所有物品而不被敌人抓住\n使用近战物品攻击物品来收集。"
 		"pt"	"O Slender Fortress 2 (SF2) é um modo de jogo baseado no\njogo \"Slender: The Eight Pages\" feito por Mark J. Hadley.\nO objetivo é coletar todos os itens no mapa e escapar sem\nser pego pelos inimigos. Colete páginas ao bater nelas\ncom a sua arma corpo a corpo."
+		"ko"	"슬렌더 포트리스 2 (SF2)는\nMark J. Hadley 가 만든 게임인\n\"Slender: The Eight Pages\"\n을 베이스로 한 게임모드입니다.\n적을 피해 단서를 모두 모으고 시설을 탈출 하세요.\n근접 공격을 통해 단서를 모을 수 있습니다."
 	}
 
 	"SF2 Help Objective Description 2"
@@ -304,6 +337,7 @@
 		"fi"	"Vain osa pelaajista valitaan RED:lle\npelaamaan peliä. Muut pelaajat joutuvat odottamaan\nvuoroaan BLU:lla kunnes on heidän vuoronsa.\nBLU pystyy katsomaan RED:iä reaaliaikaisesti\nkäyttäen komentoa !slghost."
 		"chi"	"只有一部分的蓝队玩家会被选入游戏\n剩下的玩家必须在蓝队等待直到轮到自己\n蓝队可以使用!slghost来实时观察红队\n而不用进入观察者队伍。"
 		"pt"	"Apenas uma certa quantidade de jogadores serão selecionados\nda equipe BLU para jogar. O resto dos jogadores terão\nde esperar na equipe BLU até que o seu turno chegue.\nJogadores da equipe BLU podem assistir os jogadores\nda equipe RED em tempo real com o comando \"!slghost\"\nsem ter que assisti-los no modo espectador."
+		"ko"	"BLU 팀 플레이어 중에서 일정 인원 수만 선택되어 플레이하게 됩니다.\n나머지 플레이어는 대기실에서 다음 차례가 올 때까지 기다려야 합니다.\nBLU 팀은 관전자 팀에 들어갈 필요 없이\n!slghost 명령어를 통해 유령이 되어\n실시간으로 RED팀 상황을 볼 수 있습니다."
 	}
 
 	"SF2 Help Commands Menu Title"
@@ -313,6 +347,7 @@
 		"fi"	"Komentolista"
 		"chi"	"命令列表"
 		"pt"	"Lista de comandos"
+		"ko"	"명령어 모음"
 	}
 
 	"SF2 Help Commands Description"
@@ -322,6 +357,7 @@
 		"fi"	"!slender - Näyttää päävalikon.\n!slnext - Näyttää listan seuraavista pelaajista.\n!slghost - Näyttää Haamu Tilan valikon.\n!slhelp - Näyttää ohjevalikon.\n!slcredits - Näyttää mahtavat henkilöt jotka auttoivat tämän pelimuodon kanssa."
 		"chi"	"!slender - 显示主菜单。\n!slnext - 显示列表谁是下一个玩家。\n!slghost - 显示幽灵模式菜单。\n!slhelp - 显示帮助菜单。\n!slcredits - 显示帮助制作此mod的人。"
 		"pt"	"!slender — exibe o menu principal.\n!slnext — exibe a fila de espera de quem vai jogar.\n!slghost — exibe o menu do modo fantasma.\n!slhelp — exibe o menu de ajuda.\n!slcredits — exibe os nomes de quem ajudou a desenvolver este modo."
+		"ko"	"!slender - 게임모드의 메인메뉴를 보여줍니다.\n!slnext - 현재 대기열을 보여줍니다.\n!slghost - 유령 모드가 됩니다.\n!slhelp - 도움말을 보여줍니다.\n!slcredits - 어떤 개쩌는 녀셕들이 이 게임모드에 도움을 줬는지 알려줍니다."
 	}
 
 	"SF2 Help Ghost Mode Menu Title"
@@ -331,6 +367,7 @@
 		"fi"	"Mikä on Haamu Tila?"
 		"chi"	"什么是幽灵模式？"
 		"pt"	"O que é o modo fantasma?"
+		"ko"	"유령 모드가 뭔가요?"
 	}
 
 	"SF2 Help Ghost Mode Description"
@@ -340,6 +377,7 @@
 		"fi"	"Haamu Tila on ominaisuus jolla BLU pelaajat\nvoivat katsoa RED pelaajia ilman että\ntarvitsee mennä Katsomoon. RED pelaajat eivät pysty\nnäkemään sinua, eivätkä pysty vaikuttaa\nsinuun. Sinä et myöskään pysty vaikuttamaan RED:iin."
 		"chi"	"幽灵模式是让蓝队可以实时观察红队但又不需要\n进入观察者的一项功能。红队无法看见你和交互。\n你也不能和红队进行交互。"
 		"pt"	"O modo fantasma é um recurso que jogadores da equipe BLU\npodem usar para assistir jogadores da RED sem ir para o\nmodo espectador. Jogadores da RED não poderão ver nem\ninteragir com você. Você também não pode interagir com\na equipe RED."
+		"ko"	"유령 모드는 BLU 팀 플레이어가 관전자 팀으로 넘어가지 않고\nRED 팀 상황을 볼 수 있게 해줍니다.\nRED 팀 플레이어는 유령이 된 당신을 볼 수도 만질 수도 없습니다.\n또한 통상적으로는 얘기도 나눌 수 없습니다."
 	}
 
 	"SF2 Help Controls Menu Title"
@@ -349,6 +387,7 @@
 		"fi"	"Kontrollit"
 		"chi"	"控制"
 		"pt"	"Controles"
+		"ko"	"조작법"
 	}
 
 	"SF2 Help Controls Description"
@@ -358,6 +397,7 @@
 		"fi"	"Ensisijainen hyökkäys - Kerää lappu\nToissijainen hyökkäys - Ottaa taskulampun käyttöön\nLataa - Räpäyttää\nErityis hyökkäys - Juokse"
 		"chi"	"主要攻击键 - 拾取物品\n次要攻击键 - 开关闪光灯\n装填弹药键 - 眨眼\n按住特殊攻击键 - 冲刺"
 		"pt"	"Ataque primário — coletar página\nAtaque secundário — alternar lanterna\nRecarregar — piscar\nSEGURAR \"ataque especial\" — correr"
+		"ko"	"주 공격키 - 단서 수집\n보조 공격키 - 손전등 토글\n재장전키 - 눈 깜빡이기\n특수 공격키 누르기 - 달리기"
 	}
 
 	"SF2 Help Sprinting And Stamina Menu Title"
@@ -367,6 +407,7 @@
 		"fi"	"Juokseminen ja Kestävyys"
 		"chi"	"冲刺与耐力"
 		"pt"	"Corrida e energia"
+		"ko"	"달리기와 스테미너"
 	}
 
 	"SF2 Help Sprinting And Stamina Description"
@@ -376,6 +417,7 @@
 		"fi"	"Sinulla on kyky juosta, jota pystyt käyttämään\npitämällä pojassa erikois hyökkäys nappiasi\n(oletuksena näppäin MOUSE3, jota voit vaihtaa asetuksista.\nKuitenkin, juokseminen ei kestä loputtomiin,\njoten on parasta säästää kestävyytesi hätätilanteisiin.\nMyös hyppiminen vähentää kestävyyttäsi\n \nLisäksi, juokseminen tekee enemmän ääntä\nkuin kävely tai kyykistely, joten juokseminen\nei ole vaihtoehto hiippailussa."
 		"chi"	"你可以通过按住特殊攻击键(默认鼠标中键)来冲刺。\n然而，冲刺需要耐力，因此最好在紧急情况下使用。\n跳跃也会消耗耐力。\n \n另外，冲刺比走路和蹲伏要发出更多的声音，\n因此假如你想隐蔽，那就不要冲刺。"
 		"pt"	"Você pode correr ao segurar o botão de ataque especial\n(MOUSE3 por padrão). (Use a bind \"+attack3\" para alterar\na vinculação.) Entretanto, a corrida não é infinita,\nentão é melhor conservar a sua energia para situações\nde emergência. Pular também diminui a sua energia.\n\nAlém disso, correr faz mais barulho do que andar ou\nagachar, então correr não é uma opção furtiva."
+		"ko"	"달릴 수 있는 능력을 가지고 있으며, 특수 공격키를\n꾹 누르면 능력을 쓸 수 있습니다.\n(보통 마우스 휠키로 바인드 되있습니다)\n하지만 무한으로 달릴 수 없으며,\n때문에 아찔한 상황을 대비해 스테미너를 아껴야합니다.\n또한 점프를 해도 스테미너가 닳습니다.\n추가로 뛸 때는 걷거나 앉아서 갈 때보다\n더 큰 소음을 냅니다."
 	}
 
 	"SF2 Help Class Info Menu Title"
@@ -385,6 +427,7 @@
 		"fi"	"Luokkien tiedot"
 		"chi"	"兵种信息"
 		"pt"	"Informação das classes"
+		"ko"	"클래스 정보"
 	}
 
 	"SF2 Help Class Info Description"
@@ -394,6 +437,7 @@
 		"fi"	"Valitse vaihtoehto nähdäksesi tietoja jokaisesta\npelaaja luokasta, mukaan lukien parannuksista ja heikennyksistä"
 		"chi"	"选择一个选项来查看对应兵种的信息，\n其中包括了增强与削弱。"
 		"pt"	"Selecione uma opção para ver as informações de\ncada classe, incluindo vantagens e desvantagens."
+		"ko"	"버프와 너프를 포함한 각 클래스에 대한 정보를 보려면 옵션을 선택하세요."
 	}
 
 	"SF2 Help Scout Class Info Menu Title"
@@ -403,6 +447,7 @@
 		"fi"	"[1] Scout"
 		"chi"	"[1] 侦察兵"
 		"pt"	"[1] Scout"
+		"ko"	"[1] 스카웃"
 	}
 
 	"SF2 Help Scout Class Info Description"
@@ -412,6 +457,7 @@
 		"fi"	"[+] 15%% lisäys juoksun kestoon\n[-] Heikko terveys, ottaa eniten vaikustusta näytön keikkumisesta"
 		"chi"	"[+] 增加 15%% 冲刺持续时间\n[-] 低生命值，更容易受到屏幕震动效果"
 		"pt"	"[+] Aumento de 15%% na duração da corrida\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+		"ko"	"[+] 8% 더 많은 스테미너 양\n[+] 기본 달리기 속도가 제일 빠름\n[-] 소음이 보스에게 20%% 더 크게 들림\n[-] 체력 낮음\n[-] 스태틱 15%% 취약\n[-] 스태틱 회복 속도 15%% 감소"
 	}
 
 	"SF2 Help Soldier Class Info Menu Title"
@@ -421,15 +467,17 @@
 		"fi"	"[2] Soldier"
 		"chi"	"[2] 士兵"
 		"pt"	"[2] Soldier"
+		"ko"	"[2] 솔저"
 	}
 
 	"SF2 Help Soldier Class Info Description"
 	{
-		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] 5%% higher static resistance and recovery rate\n[+] Market Gardener crits in midair\n[+] Jumping while walking doesn't cost stamina\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] Slowest sprint speed along with Heavy and Demoman\n[-] The Escape Plan only affects sprinting speed"
+		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] 5%% higher static resistance and recovery rate\n[+] Market Gardener crits in midair\n[+] Jumping while walking doesn't cost stamina\n[+] The Escape Plan increases speed by your health loss\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] Slowest sprint speed along with Heavy and Demoman"
 		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полудзатоити восстанавливает только 5 ед. за убийство\n[-] План эвакуации влияет только на скорость бега"
 		"fi"	"[+] Kuritoimenpide lisää kävelyn ja juoksemisen nopeutta\nPuolisokea Samurai antaa vain 5 terveyttä taposta\n[-] Pakosuunnitelma vaikuttaa vain ja ainostaan juoksu nopeuteen"
 		"chi"	"[+] 指挥官的军鞭同时增加走路和冲刺速度\n[-] 座头市之刀击杀后只恢复5HP\n[-] 逃生计划镐只影响冲刺速度"
-    "pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 5 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
+    	"pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 5 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
+		"ko"	"[+] 징계 조치로 속도 증진 부여 가능\n[+] 스태틱 5%% 저항\n[+] 스태틱 회복 속도 5%% 증가\n[+] 마켓 가든 모종삽으로 공중에 있을 때 2배의 피해를 가할 수 있음\n[+] 걸을 때 점프는 스테미너에 영향을 주지 않음\n[+] 탈출 계획을 들고 있을 때 체력 손실에 따라 속도 증가\n[-] 반맹인 검객을 통해서 얻는 회복량이 5로 고정\n[-] 헤비와 데모맨과 더불어 가장 느린 달리기 속도"
 	}
 
 	"SF2 Help Sniper Class Info Menu Title"
@@ -439,15 +487,17 @@
 		"fi"	"[8] Sniper"
 		"chi"	"[8] 狙击手"
 		"pt"	"[8] Sniper"
+		"ko"	"[8] 스나이퍼"
 	}
 
 	"SF2 Help Sniper Class Info Description"
 	{
-		"en"	"[+] Blink rate increased by 45%%\n[-] Low health, most affected by screen wobbling"
+		"en"	"[+] Blink rate increased by 100%%\n[-] Low health, most affected by screen wobbling"
 		"ru"	"[+] Моргает на 45%% реже\n[-] Мало здоровья, наиболее подвержен внушению"
 		"fi"	"[+] Räpäyttelya lisätty 40%%\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
 		"chi"	"[+] 眨眼频率增益 45%%\n[-] 低生命值，更容易受到屏幕震动效果"
 		"pt"	"[+] Aumento da taxa de piscada em 45%%\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+		"ko"	"[+] 눈 깜빡임 지속 시간 100%% 증가\n[+] 울트라비전의 범위가 2배로 증가함\n[+] 스태틱 5%% 저항\n[+] 스태틱 회복 속도 10%% 증가\n[-] 울트라비전의 밝기가 25%% 어두어짐"
 	}
 
 	"SF2 Help Demoman Class Info Menu Title"
@@ -457,6 +507,7 @@
 		"fi"	"[4] Demomies"
 		"chi"	"[4] 爆破手"
 		"pt"	"[4] Demoman"
+		"ko"	"[4] 데모맨"
 	}
 
 	"SF2 Help Demoman Class Info Description"
@@ -466,6 +517,7 @@
 		"fi"	"[+] 66%% lisäys pelottamisen juoksunopeuteen\n[-] Puolisokea Samurai palauttaa vain 20 terveyttä taposta"
 		"chi"	"[+] 惊吓状态下增加 66%% 冲刺持续时间\n[-] 座头市之刀击杀后只恢复20HP"
 		"pt"	"[+] Aumento de 66%% na duração da corrida quando assustado\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar"
+		"ko"	"[+] 공포 상태일 때, 스테미너 양 66%% 증가\n[-] 솔저와 헤비와 더불어 가장 느린 달리기 속도\n[-] 반맹인 검객을 통해서 얻는 회복량이 5로 고정"
 	}
 
 	"SF2 Help Heavy Class Info Menu Title"
@@ -475,6 +527,7 @@
 		"fi"	"[5] Heavy"
 		"chi"	"[5] 机枪手"
 		"pt"	"[5] Heavy"
+		"ko"	"[5] 헤비"
 	}
 
 	"SF2 Help Heavy Class Info Description"
@@ -484,6 +537,7 @@
 		"fi"	"[+] Suuri terveys, vähiten vaikutusta näytön keikkumisesta\n Pikajuoksuhanskat vaikuttaa vain juoksunopeuteen"
 		"chi"	"[+] 很多生命值，不容易受到屏幕震动效果\n[-] 紧急逃跑手套只影响冲刺速度"
 		"pt"	"[+] Mais vida e o balanço da tela afeta menos\n[-] As Geradoras de Rapidez Urgente afetam somente a velocidade de correr"
+		"ko"	"[+] 체력 많음\n[+] 스태틱 15%% 저항\n[+] 스태틱 회복 속도 15%% 증가\n[+] 덫에 걸리지 않음\n[-] G.R.U는 옛날 성능으로 돌아감"
 	}
 
 	"SF2 Help Medic Class Info Menu Title"
@@ -493,6 +547,7 @@
 		"fi"	"[7] Medic"
 		"chi"	"[7] 医生"
 		"pt"	"[7] Medic"
+		"ko"	"[7] 메딕"
 	}
 
 	"SF2 Help Medic Class Info Description"
@@ -502,6 +557,7 @@
 		"fi"	"[+] Terveys palautuu ajan myötä\n[-] Ensisijainen kohde bosseille"
 		"chi"	"[+] 随时间恢复生命值\n[-] Boss们的优先目标"
 		"pt"	"[+] Regenera vida ao longo do tempo\n[-] Torna-se o alvo prioritário de chefões"
+		"ko"	"[+] 매 초마다 체력이 회복됨\n[-] 보스 타겟 우선순위 20%% 증가\n[-] 치료제를 먹을 수 없음\n[-] 프록시에게 받는 피해 15%% 취약\n[-] Thanatophobia 스페셜 라운드 때 사용 불가"
 	}
 
 	"SF2 Help Pyro Class Info Menu Title"
@@ -511,6 +567,7 @@
 		"fi"	"[3] Pyro"
 		"chi"	"[3] 火焰兵"
 		"pt"	"[3] Pyro"
+		"ko"	"[3] 파이로"
 	}
 
 	"SF2 Help Pyro Class Info Description"
@@ -520,6 +577,7 @@
 		"fi"	"[+] Tulenkestävä, duh!\n[-] Tunkki palauttaa vain 20 terveyttä taposta\nlähitaistelu vahingon ottoa lisätty 33%%"
 		"chi"	"[+] 防火！哇！\n[-] 强力千斤顶击杀只恢复20HP，受到的近战伤害增加33%%"
 		"pt"	"[+] Imune a fogo (ah, vá?)\n[-] A Ligação Direta restaura apenas 20 de vida e\no dano sofrido de armas corpo a corpo é 33%% maior"
+		"ko"	"[+] 화염 면역!\n[-] 전원 잭을 통해 얻을 수 있는 회복량이 20으로 고정,\n착용 시 받는 피해량이 33% 증가함"
 	}
 
 	"SF2 Help Spy Class Info Menu Title"
@@ -529,15 +587,17 @@
 		"fi"	"[9] Spy"
 		"chi"	"[9] 间谍"
 		"pt"	"[9] Spy"
+		"ko"	"[9] 스파이"
 	}
 
 	"SF2 Help Spy Class Info Description"
 	{
-		"en"	"[+] All sounds you make are 30%% quieter to bosses\n[+] 5%% more sprint duration\n[-] Low health, most affected by screen wobbling\n[-] Higher boss priority\n[-] Least amount of scare sprint speed boost\n[-] Big Earner and Kunai only work against proxies"
+		"en"	"[+] All sounds you make are 30%% quieter to bosses\n[+] 5%% more sprint duration\n[-] Low health\n[-] Higher boss priority\n[-] Least amount of scare sprint speed boost\n[-] Big Earner and Kunai only work against proxies"
 		"ru"	"[+] Все издаваемые звуки на 30%% тише\n[-] Мало здоровья, наиболее подвержен внушению"
 		"fi"	"[+] Kaikki äänet jota teet ovat 30%% hiljaisempia bosseille\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
 		"chi"	"[+] 你发出的声音对Boss来说有 30%% 安静加成\n[-] 低生命值，最容易受到屏幕震动效果"
-    "pt"	"[+] Todos os sons que você faz são 30%% mais silenciosos\npara os chefões\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+    	"pt"	"[+] Todos os sons que você faz são 30%% mais silenciosos\npara os chefões\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+		"ko"	"[+] 소음이 30%% 더 조용히 들림\n[+] 5%% 더 많은 스테미나 양\n[-] 낮은 체력\n[-] 보스 타겟 우선순위 10%% 증가\n[-] 공포 상태에서 증가하는 속도값 감소\n[-] 재력가와 묵인자의 쿠나이는 프록시한테만 적용됨"
 	}
 
 	"SF2 Help Engineer Class Info Menu Title"
@@ -547,6 +607,7 @@
 		"fi"	"[6] Engineer"
 		"chi"	"[6] 工程师"
 		"pt"	"[6] Engineer"
+		"ko"	"[6] 엔지니어"
 	}
 
 	"SF2 Help Engineer Class Info Description"
@@ -556,6 +617,7 @@
 		"fi"	"[+] 75%% lisäys taskulampun patterin elämään\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
 		"chi"	"[+] 增加 75%% 手电筒电池容量\n[+] 增益 60%% 手电筒充能速率\n[-] 低生命值，最容易受到屏幕震动效果"
 		"pt"	"[+] Aumento de 75%% da duração bateria da lanterna\n[+] Aumento de 60%% da taxa de recarga da lanterna\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+		"ko"	"[+] 손전등 배터리 용량 50%% 증가\n[+] 손전등 범위 100%% 증가\n[+] 손전등 거리 200%% 증가\n[+] 손전등 배터리 충전 속도 20%% 증가\n[+] 손전등 스턴 피해량 50%% 증가\n[+] 25%% 작은 손전등 소음\n[-] 낮은 체력, 스태틱 10%% 취약\n[-] 울트라비전이 생기기까지 걸리는 시간 증가"
 	}
 
 	"SF2 Settings Menu Title"
@@ -565,6 +627,7 @@
 		"fi"	"Asetukset"
 		"chi"	"设置"
 		"pt"	"Configurações"
+		"ko"	"설정"
 	}
 
 	"SF2 Settings PvP Menu Title"
@@ -574,6 +637,7 @@
 		"fi"	"PVP Areenan Asetukset"
 		"chi"	"PvP 区域设置"
 		"pt"	"Configurações da arena JxJ"
+		"ko"	"PvP 구역 설정"
 	}
 
 	"SF2 Settings PvP Spawn Menu Title"
@@ -583,6 +647,7 @@
 		"fi"	"Ota käyttöön/Poista käytöstä neuvot"
 		"chi"	"开启/关闭自动重生"
 		"pt"	"Ativar/desativar renascimento automático"
+		"ko"	"PvP 구역에서 자동 부활 활성화/비활성화"
 	}
 
 	"SF2 Settings PvP Spawn Protection Title"
@@ -590,6 +655,7 @@
 		"en"	"Enable/Disable spawn protection"
 		"fi"	"Ota käyttöön/Poista käytöstä spawn suojaus"
 		"pt"	"Ativar/desativar proteção de renascimento"
+		"ko"	"스폰 보호 활성화/비활성화"
 	}
 
 	"SF2 Settings Hints Menu Title"
@@ -599,6 +665,7 @@
 		"fi"	"Ota käyttöön/Poista käytöstä neuvot"
 		"chi"	"开关提示"
 		"pt"	"Alternar dicas"
+		"ko"	"힌트 표시 토글"
 	}
 
 	"SF2 Settings Mute Mode Menu Title"
@@ -608,6 +675,7 @@
 		"fi"	"Aseta mykistystila"
 		"chi"	"设置禁言模式"
 		"pt"	"Definir modo de emudecimento"
+		"ko"	"음소거 모드 설정"
 	}
 
 	"SF2 Settings Film Grain Menu Title"
@@ -617,6 +685,7 @@
 		"fi"	"Ota käyttöön/Poista käytöstä näytön rakeisuus tehoste"
 		"chi"	"开关膜颗粒效应"
 		"pt"	"Alternar granulação de filme"
+		"ko"	"필름 그래인 토글"
 	}
 
 	"SF2 Settings Proxy Menu Title"
@@ -626,6 +695,7 @@
 		"fi"	"Salli valitsemisesi avustajaksi"
 		"chi"	"允许被选为小弟"
 		"pt"	"Permitir ser selecionado como proxy"
+		"ko"	"프록시로 선택 여부 설정"
 	}
 
 	"SF2 Settings Proxy Ask Menu Title"
@@ -633,6 +703,7 @@
 		"en"	"Enable/Disable the proxy ask message"
 		"fi"	"Ota käyttöön/Poista käytöstä avustaja kysymys viesti"
 		"pt"	"Ativar/desativar mensagem de \"proxy ou não\""
+		"ko"	"프록시 참가 요청 메시지 활성화/비활성화"
 	}
 
 	"SF2 Settings Hud Version Title"
@@ -640,6 +711,7 @@
 		"en"	"Switch HUD version between legacy and new"
 		"fi"	"Vaihda HUD versio vanhan ja uuden välillä"
 		"pt"	"Alternar versão da interface entre antiga e nova"
+		"ko"	"구 버전과 신 버전으로 HUD 전환 설정"
 	}
 
 	"SF2 Settings Ghost Overlay Menu Title"
@@ -649,6 +721,7 @@
 		"fi"	"Vaihda Haamu Tilan overlay"
 		"chi"	"开关幽灵模式覆盖"
 		"pt"	"Alternar sobreposição do modo fantasma"
+		"ko"	"유령 모드 오버레이 토글"
 	}
 	
 	"SF2 Settings Ghost Mode Teleport Menu Title"
@@ -656,6 +729,7 @@
 		"en"	"Set ghost mode teleport state"
 		"fi"	"Aseta haamu tila teleportointi tila"
 		"pt"	"Definir estado do teletransporte do modo fantasma"
+		"ko"	"유령 모드 텔레포트 상태 설정"
 	}
 	
 	"SF2 Settings Ghost Mode Toggle State Menu Title"
@@ -663,6 +737,7 @@
 		"en"	"Set ghost mode toggle state"
 		"fi"	"Aseta haamu tilan toggle tila"
 		"pt"	"Definir estado da alternação do modo fantasma"
+		"ko"	"유령 모드 돌입 토글 설정"
 	}
 	
 	"SF2 Settings Hud Version Title"
@@ -670,6 +745,7 @@
 		"en"	"Set HUD version"
 		"fi"	"Aseta HUD versio"
 		"pt"	"Definir versão da interface"
+		"ko"	"HUD 버전 설정"
 	}
 
 	"SF2 Settings Music Volume Title"
@@ -679,6 +755,7 @@
 		"fi"	"Vaihda musiikin äänenvoimakkuutta"
 		"chi"	"设置音乐音量"
 		"pt"	"Definir volume da música"
+		"ko"	"음악 볼륨 설정"
 	}
 
 	"SF2 Music Volum Changed"
@@ -689,6 +766,7 @@
 		"fi"	"{lightblue}Musiikin äänenvoimakkuus vaihdettu {1}%%."
 		"chi"	"{lightblue}音乐音量已设为 {1}%% 。"
 		"pt"	"{lightblue}Volume da música definido para {1}%%."
+		"ko"	"{lightblue}음악 볼륨이 {1}% 으로 설정 되었습니다."
 	}
 
 	"SF2 Settings Flashlight Temperature Title"
@@ -698,6 +776,7 @@
 		"fi"	"Aseta taskulampun lämpötila"
 		"chi"	"设置手电筒温度"
 		"pt"	"Definir temperatura da lanterna"
+		"ko"	"손전등 색감 설정"
 	}
 
 	"SF2 Flashlight Temperature Changed"
@@ -708,6 +787,7 @@
 		"fi"	"{lightblue}Taskulampun lämpötila vaihdettu {1}%%."
 		"chi"	"{lightblue}手电筒温度设为 {1}%% 。"
 		"pt"	"{lightblue}Temperatura da lanterna definida para {1}%%."
+		"ko" 	"{lightblue}손전등 색감이 {1}% 으로 설정되었습니다."
 	}
 
 	"SF2 Ad Message 1"
@@ -716,6 +796,7 @@
 		"ru"	"{dodgerblue}Официальный Discord сервер Slender Fortress Modified: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 		"chi"	"{dodgerblue}Slender Fortress Modified官方Discord服务器：{lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 		"pt"	"{dodgerblue}Servidor oficial do Slender Fortress Modified no Discord: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
+		"ko"	"{dodgerblue}슬렌더 포트리스 모디파이드 공식 디스코드 서버: {lightblue}https://discord.gg/7Zz7RYTCC4{default}"
 	}
 
 	"SF2 Ad Message 2"
@@ -725,6 +806,7 @@
 		"fi"	"{dodgerblue}Uusi tähän pelitilaan? Kirjoita {lightblue}!slender{dodgerblue} chattiin avataksesi päävalikon."
 		"chi"	"{dodgerblue}新玩这个模式？在聊天键入{lightblue}!slender{dodgerblue}来打开主菜单。"
 		"pt"	"{dodgerblue}Não sabe como este modo funciona? Digite {lightblue}!slender{dodgerblue} na janela de conversa para abrir o menu principal."
+		"ko"	"{dodgerblue}이 게임모드가 처음 이신가요? {lightblue}!slender{dodgerblue}를 채팅에 입력하여 메인 메뉴를 확인하세요."
 	}
 
 	"SF2 Welcome Message"
@@ -734,6 +816,7 @@
 		"fi"	"{dodgerblue}Tervetuloa {lightblue}Slender Fortress:iin{dodgerblue}! Jos olet uusi tähän pelitilaan, pääset päävalikkoon kirjoittamalla {lightblue}!slender{dodgerblue} chattiin."
 		"chi"	"{dodgerblue}欢迎来到{lightblue}暗鬼要塞{dodgerblue}！假如你新玩这个模式，在聊天键入{lightblue}!slender{dodgerblue}来进入主菜单。"
 		"pt"	"{dodgerblue}Bem-vindo(a) ao {lightblue}Slender Fortress{dodgerblue}! Caso não saiba como este modo funciona, acesse o menu principal com o comando \"{lightblue}!slender{dodgerblue}\"."
+		"ko"	"{lightblue}슬렌더 포트리스{dodgerblue}에 오신 것을 환영합니다! 이 게임모드가 처음 이시면, {lightblue}!slender{dodgerblue}를 채팅에 입력하여 메인 메뉴를 확인하세요."
 	}
 
 	"SF2 No Queue Points To Spectator"
@@ -743,6 +826,7 @@
 		"fi"	"{dodgerblue}Sinulle ei annettu pisteitä, koska olit Katsoja tiimillä."
 		"chi"	"{dodgerblue}因为你在观察者队伍，你没有获得任何队列点数。"
 		"pt"	"{dodgerblue}Você não recebeu pontos de espera porque você estava no modo espectador."
+		"ko"	"{dodgerblue}관전 팀에 머물러 있어서 대기열 포인트를 받지 못했습니다."
 	}
 
 	"SF2 PvP Spawn Accept"
@@ -752,6 +836,7 @@
 		"fi"	"{lightblue}Otettiin käyttöön automaattinen PvP areenalla syntyminen"
 		"chi"	"{lightblue}已开启PvP区域自动重生。"
 		"pt"	"{lightblue}Renascimento automático na arena JxJ ativado."
+		"ko"	"{lightblue}PvP 구역 자동 부활이 활성화되었습니다."
 	}
 
 	"SF2 PvP Spawn Decline"
@@ -761,6 +846,7 @@
 		"fi"	"{lightblue}Poistettiin käytöstä automaattinen PvP areenalla syntyminen."
 		"chi"	"{lightblue}已关闭PvP区域自动重生。"
 		"pt"	"{lightblue}Renascimento automático na arena JxJ desativado."
+		"ko"	"{lightblue}PvP 구역 자동 부활이 비활성화 되었습니다."
 	}
 
 	"SF2 PvP Protection On"
@@ -768,6 +854,7 @@
 		"en"	"{lightblue}Enabled PvP Spawn Protection."
 		"fi"	"{lightblue}PvP Spawn Suojaus otettiin käyttöön."
 		"pt"	"{lightblue}Proteção na arena JxJ ativada."
+		"ko"	"{lightblue}PvP 구역 부활 보호가 활성화되었습니다."
 	}
 
 	"SF2 PvP Protection Off"
@@ -775,6 +862,7 @@
 		"en"	"{lightblue}Disabled PvP Spawn Protection."
 		"fi"	"{lightblue}PvP Spawn Suojaus poistettu käytöstä."
 		"pt"	"{lightblue}Proteção na arena JxJ desativada."
+		"ko"	"{lightblue}PvP 구역 부활 보호가 비활성화되었습니다."
 	}
 
 	"SF2 Exiting PvP Arena"
@@ -785,6 +873,7 @@
 		"fi"	"Olet lähtemässä PvP Areenalta!\nMenetät aseesi {1} sekunnin päästä jos et palaa!"
 		"chi"	"你正离开PvP区域！\n假如你不回去，你会在 {1} 秒后失去你的武器！"
 		"pt"	"Você está saindo da arena JxJ! Você perderá as suas armas em {1} segundo(s) caso não retorne!"
+		"ko"	"PvP 구역을 벗어났습니다!\n무기를 잃기 싫다면 {1} 초 안에 돌아오세요!"
 	}
 	
 	"SF2 AFK On"
@@ -792,6 +881,7 @@
 		"en"	"{royalblue}Disabled going to RED naturally."
 		"fi"	"{royalblue}Poistettiin pääsy RED:iin normaalisti."
 		"pt"	"{royalblue}Ida natural à RED desativada."
+		"ko"	"{royalblue}AFK로 인해 RED 팀 자동 참가가 비활성화되었습니다."
 	}
 
 	"SF2 AFK Off"
@@ -799,6 +889,7 @@
 		"en"	"{royalblue}Enabled going to RED naturally."
 		"fi"	"{royalblue}Otettiin käyttöön pääsy RED:iin normaalisti."
 		"pt"	"{royalblue}Ida natural à RED ativada."
+		"ko"	"{royalblue}RED팀 자동 참가가 다시 활성화되었습니다."
 	}
 
 	"SF2 AFK Status"
@@ -806,6 +897,7 @@
 		"en"	"You are currently AFK, press a button to wake up."
 		"fi"	"Olet nyt AFK, paina jotain nappia herätäksesi."
 		"pt"	"Você está ausente. Pressione um botão para acordar."
+		"ko"	"현재 잠수 상태입니다. 아무 키나 눌러 깨어나세요."
 	}
 
 	"SF2 Enabled Hints"
@@ -815,6 +907,7 @@
 		"fi"	"{lightblue}Vihjeet otettiin käyttöön."
 		"chi"	"{lightblue}已开启提示。"
 		"pt"	"{lightblue}Dicas ativadas."
+		"ko"	"{lightblue}힌트가 활성화되었습니다."
 	}
 
 	"SF2 Disabled Hints"
@@ -824,6 +917,7 @@
 		"fi"	"{lightblue}Vihjeet poistettiin käytöstä."
 		"chi"	"{lightblue}已关闭提示。"
 		"pt"	"{lightblue}Dicas desativadas."
+		"ko"	"{lightblue}힌트가 비활성화되었습니다."
 	}
 
 	"SF2 Enabled Film Grain"
@@ -833,6 +927,7 @@
 		"fi"	"{lightblue}Otettiin käyttöön näytön rakeisuus tehoste."
 		"chi"	"{lightblue}已开启膜颗粒效应"
 		"pt"	"{lightblue}Granulação de filme ativada."
+		"ko"	"{lightblue}필름 그래인이 활성화되었습니다."
 	}
 
 	"SF2 Disabled Film Grain"
@@ -842,6 +937,7 @@
 		"fi"	"{lightblue}Poistettiin näytön rakeisuus tehoste."
 		"chi"	"{lightblue}已关闭膜颗粒效应"
 		"pt"	"{lightblue}Granulação de filme desativada."
+		"ko"	"{lightblue}필름 그래인이 비활성화되었습니다."
 	}
 
 	"SF2 Enabled Proxy"
@@ -851,6 +947,7 @@
 		"fi"	"{lightblue}Olet nyt valittavissa avustajaksi."
 		"chi"	"{lightblue}你现在有随机可能被选为小弟。"
 		"pt"	"{lightblue}Agora, você pode ser selecionado como um proxy."
+		"ko"	"{lightblue}이제 프록시로 선택될 수 있습니다."
 	}
 
 	"SF2 Disabled Proxy"
@@ -860,6 +957,7 @@
 		"fi"	"{lightblue}Sinua ei enään valita avustajaksi."
 		"chi"	"{lightblue}你不再会被选为小弟。"
 		"pt"	"{lightblue}Você não poderá mais ser selecionado como um proxy."
+		"ko"	"{lightblue}더 이상 프록시로 선택되지 않습니다."
 	}
 
 	"SF2 New Hud Use"
@@ -867,6 +965,7 @@
 		"en"	"{lightblue}Enabled the new HUD."
 		"fi"	"{lightblue}Otettiin käyttöön uusi HUD."
 		"pt"	"{lightblue}Interface nova ativada."
+		"ko"	"{lightblue}신 버전 HUD를 활성화했습니다."
 	}
 
 	"SF2 Legacy Hud Use"
@@ -874,6 +973,7 @@
 		"en"	"{lightblue}Enabled the legacy HUD."
 		"fi"	"{lightblue}Otettiin käyttöön vanha HUD."
 		"pt"	"{lightblue}Interface antiga ativada."
+		"ko"	"{lightblue}구 버전 HUD를 활성화했습니다."
 	}
 
 	"SF2 Enabled Ask Message Proxy"
@@ -881,6 +981,7 @@
 		"en"	"{lightblue}You will now be prompted and asked when you can become a proxy."
 		"fi"	"{lightblue}Olet nyt valittavissa avustajaksi."
 		"pt"	"{lightblue}Agora, o jogo perguntará se você deseja ser um proxy quando possível."
+		"ko"	"{lightblue}이제 프록시 참가 요청 메시지가 표시됩니다."
 	}
 
 	"SF2 Disabled Ask Message Proxy"
@@ -888,6 +989,7 @@
 		"en"	"{lightblue}You will no longer be prompted and asked when you can become a proxy."
 		"fi"	"{lightblue}Sinua ei enään valita avustajaksi."
 		"pt"	"{lightblue}Agora, o jogo não perguntará se você deseja ser um proxy quando possível."
+		"ko"	"{lightblue}프록시가 될 수 있어도 더 이상 참가 요청 여부를 묻지 않습니다."
 	}
 
 	"SF2 Give Queue Points"
@@ -898,6 +1000,7 @@
 		"fi"	"{dodgerblue}Sinulle on annettu {1} jonopistettä pelaamisesta."
 		"chi"	"{dodgerblue}你因为游玩获得了 {1} 队列点数。"
 		"pt"	"{dodgerblue}Você recebeu {1} ponto(s) de espera por jogar."
+		"ko"	"{dodgerblue}플레이를 위해 {1} 만큼의 대기열 포인트를 받았습니다."
 	}
 
 	"SF2 Give Group Queue Points"
@@ -908,6 +1011,7 @@
 		"fi"	"{dodgerblue}Sinun ryhmällesi on annettu {1} jonopistettä pelaamisesta."
 		"chi"	"{dodgerblue}你的组因为游玩获得了 {1} 队列点数。"
 		"pt"	"{dodgerblue}O seu grupo recebeu {1} ponto(s) de esepra por jogar."
+		"ko"	"{dodgerblue}귀하의 그룹은 {1} 만큼의 대기열 포인트를 받았습니다."
 	}
 
 	"SF2 Force Play"
@@ -917,6 +1021,7 @@
 		"fi"	"{lightblue}Sinut on pakotettu peliin, koska RED:in pelaaja katkaisi yhteyden tai meni katsomoon. Pidä hauskaa!"
 		"chi"	"{lightblue}因为一名红队玩家断开连接或进入观察者，你被强制加入游戏。玩的开心！"
 		"pt"	"{lightblue}Você foi movido para a equipe RED devido à saída de outro jogador. Divirta-se!"
+		"ko"	"{lightblue}RED 팀에 있는 플레이어가 서버와 연결이 끊겼거나 관전 팀으로 합류해 당신이 대신해서 들어갔습니다. 재밌게 하세요!"
 	}
 
 	"SF2 Special Round Announce Chat"
@@ -927,6 +1032,7 @@
 		"fi"	"Valittu erikois erä: {lightblue}{1}"
 		"chi"	"选择了特殊回合：{lightblue}{1}"
 		"pt"	"Selecionar rodada especial: {lightblue}{1}"
+		"ko"	"선택된 스페셜 라운드: {lightblue}{1}"
 	}
 
 	"SF2 Hint Sprint"
@@ -936,6 +1042,7 @@
 		"fi"	"Juokse - Pidä Pohjassa Erityis Hyökkäystäsi"
 		"chi"	"冲刺 - 按住特殊攻击键"
 		"pt"	"Correr — SEGURAR \"ataque especial\""
+		"ko"	"달리기 - 특수 공격 키 누르기"
 	}
 
 	"SF2 Hint Flashlight"
@@ -945,6 +1052,7 @@
 		"fi"	"Taskulamppu - Toissijainen Hyökkäys"
 		"chi"	"闪光灯 - 次要攻击键"
 		"pt"	"Lanterna — ataque secundário"
+		"ko"	"손전등 - 보조 공격 키"
 	}
 
 	"SF2 Hint Blink"
@@ -954,6 +1062,7 @@
 		"fi"	"Räpäytys - Lataa"
 		"chi"	"眨眼 - 装填弹药键"
 		"pt"	"Piscar — recarregar"
+		"ko"	"눈 깜빡임 - 재장전 키"
 	}
 
 	"SF2 Hint Main Menu"
@@ -963,6 +1072,7 @@
 		"fi"	"Päävalikko - Kirjoita !sf2 tai !slender chattiin"
 		"chi"	"主菜单 - 在聊天键入!sf2。"
 		"pt"	"Menu principal — digite !sf2 ou !slender na janela de conversa"
+		"ko"	"메인 메뉴 - 채팅창에 !sf2 또는 !slender 입력"
 	}
 	
 	"SF2 Hint Trap"
@@ -972,6 +1082,7 @@
 		"fi"	"Poistu Ansasta - Paina hyppy nappia pari kertaa."
 		"chi"	"跳出陷阱 - 按几次跳跃键。"
 		"pt"	"Sair da armadilha — pressione \"Pular\" algumas vezes."
+		"ko"	"함정 벗어나기 - 점프 키를 연타하세요."
 	}
 
 	"SF2 Admin Menu Boss Main"
@@ -981,6 +1092,7 @@
 		"fi"	"Bossien Hallinta"
 		"chi"	"Boss管理"
 		"pt"	"Administração de chefão"
+		"ko"	"현재 보스 관리"
 	}
 
 	"SF2 Admin Menu Add Boss"
@@ -990,6 +1102,7 @@
 		"fi"	"Lisää bossi"
 		"chi"	"增加一个Boss"
 		"pt"	"Adicionar um chefão"
+		"ko"	"보스 추가"
 	}
 
 	"SF2 Admin Menu Add Fake Boss"
@@ -999,6 +1112,7 @@
 		"fi"	"Lisää teko bossi"
 		"chi"	"增加一个假Boss"
 		"pt"	"Adicionar um chefão falso"
+		"ko"	"가짜 보스 추가"
 	}
 
 	"SF2 Admin Menu Remove Boss"
@@ -1008,6 +1122,7 @@
 		"fi"	"Poista bossi"
 		"chi"	"移除一个Boss"
 		"pt"	"Remover um chefão"
+		"ko"	"보스 제거"
 	}
 
 	"SF2 Admin Menu Spawn Boss"
@@ -1015,8 +1130,9 @@
 		"en"	"Spawn an active boss"
 		"ru"	"Создать активного босса"
 		"fi"	"Spawnaa aktiivinen bossi"
-		"chi" "生成一个活跃Boss"
+		"chi"	"生成一个活跃Boss"
 		"pt"	"Criar um chefão ativo"
+		"ko"	"활동 중인 보스 소환"
 	}
 
 	"SF2 Admin Menu Boss Attack Waiters"
@@ -1026,6 +1142,7 @@
 		"fi"	"Kytke bossi hyökkäämään odottajiin (BLU)"
 		"chi"	"开关Boss攻击等待者（蓝队）"
 		"pt"	"Alternar \"Chefão ataca aguardantes\" (BLU)"
+		"ko"	"보스의 대기자(BLU 팀)를 향한 공격 여부 토글"
 	}
 
 	"SF2 Admin Menu Boss Attack Waiters Confirm"
@@ -1036,6 +1153,7 @@
 		"fi"	"Pitäisikö {1} antaa hyökätä odottajiin (BLU)?"
 		"chi"	"应该让 {1} 攻击等待者（蓝队）吗？"
 		"pt"	"{1} deve atacar os aguardantes (BLU)?"
+		"ko"	"{1} 이(가) 대기자(BLU팀)을 공격하게 하겠습니까?"
 	}
 
 	"SF2 Admin Menu Boss Teleport"
@@ -1045,6 +1163,7 @@
 		"fi"	"Kytke bossin teleporttaaminen RED:iin"
 		"chi"	"开关Boss传送到红队"
 		"pt"	"Alternar \"Chefão teletransporta-se à RED\""
+		"ko"	"보스의 RED 팀을 향한 텔레포트 여부 토글"
 	}
 
 	"SF2 Admin Menu Boss Teleport Confirm"
@@ -1055,6 +1174,7 @@
 		"fi"	"Pitäisikö {1} pystyä teleporttaamaan RED:in lähelle?"
 		"chi"	"应该让 {1} 能够传送到红队附近吗？"
 		"pt"	"{1] deve poder teletransportar-se próximo à RED?"
+		"ko"	"{1} 이(가) RED 팀을 향해 텔레포트하게끔 만들겠습니까?"
 	}
 
 	"SF2 Admin Menu Override Boss"
@@ -1064,6 +1184,7 @@
 		"fi"	"Aseta seuraavan bossin ohitus"
 		"chi"	"选择下一个Boss覆盖"
 		"pt"	"Defina a substituição do próx. chefão"
+		"ko"	"다음 보스 재정의"
 	}
 
 	"SF2 Admin Menu Current Boss Override"
@@ -1074,6 +1195,7 @@
 		"fi"	"Nykyisen Bossin Ohitus: {1}"
 		"chi"	"当前Boss覆盖：{1}"
 		"pt"	"Substituição de chefão atual: {1}"
+		"ko"	"현재 보스 재정의 : {1}"
 	}
 
 	"SF2 Admin Menu Player Set Play State"
@@ -1083,6 +1205,7 @@
 		"fi"	"Pakota pelaaja sisään/ulos pelistä"
 		"chi"	"强制玩家进入/离开游戏"
 		"pt"	"Forçar jogador a entrar/sair da rodada"
+		"ko"	"플레이어 게임 강제 입장/퇴장"
 	}
 
 	"SF2 Admin Menu Player Set Play State Confirm"
@@ -1093,6 +1216,7 @@
 		"fi"	"Pakotetaanko {1} sisään tai ulos pelistä?"
 		"chi"	"强制 {1} 进入或离开游戏？"
 		"pt"	"Forçar {1} a entrar/sair da rodada?"
+		"ko"	"{1} 을(를) 게임에 강제 입장/퇴장 시키겠습니까?"
 	}
 
 	"SF2 Admin Menu Player Force Proxy"
@@ -1102,6 +1226,7 @@
 		"fi"	"Pakota pelaaja olemaan avustaja"
 		"chi"	"强制玩家成为小弟"
 		"pt"	"Forçar jogador a ser um proxy"
+		"ko"	"플레이어를 프록시로 강제 설정"
 	}
 
 	"SF2 Admin Menu Player Force Proxy Boss"
@@ -1111,6 +1236,7 @@
 		"fi"	"Minkä bossin avustaja pelaaja olisi?"
 		"chi"	"让玩家成为哪个Boss的小弟？"
 		"pt"	"Para qual chefão o jogador deverá ser um proxy?"
+		"ko"	"어떤 보스를 위해 플레이어가 프록시가 되어야 합니까?"
 	}
 
 	"SF2 Boss Does Not Exist"
@@ -1120,6 +1246,7 @@
 		"fi"	"Tuota bossia ei ole enään olemassa!"
 		"chi"	"Boss已不存在！"
 		"pt"	"Este chefão não existe mais!"
+		"ko"	"해당 보스는 더 이상 존재하지 않습니다!"
 	}
 
 	"SF2 Player Does Not Exist"
@@ -1129,6 +1256,7 @@
 		"fi"	"Tuota pelaajaa ei ole olemassa!"
 		"chi"	"玩家不存在！"
 		"pt"	"Este jogador não existe!"
+		"ko"	"해당 플레이어는 더 이상 존재하지 않습니다!"
 	}
 
 	"SF2 No Active Bosses"
@@ -1138,6 +1266,7 @@
 		"fi"	"Aktiivisia bosseja ei ole saatavilla!"
 		"chi"	"没有可用的活跃Boss！"
 		"pt"	"Nenhum chefão ativo disponível!"
+		"ko"	"활동 중인 보스 중 사용 가능한 보스가 없습니다!"
 	}
 
 	"SF2 Spawned Boss"
@@ -1147,6 +1276,7 @@
 		"fi"	"Bossi syntyi sijaintiisi!"
 		"chi"	"在你的位置生成了Boss！"
 		"pt"	"Chefão criado na sua posição!"
+		"ko"	"바라보고 있는 위치에 보스를 소환했습니다!"
 	}
 
 	"SF2 Removed Boss"
@@ -1156,6 +1286,7 @@
 		"fi"	"Poistettiin bossi!"
 		"chi"	"移除了Boss！"
 		"pt"	"Chefão removido!"
+		"ko"	"보스가 제거되었습니다!"
 	}
 
 	"SF2 Boss Not Allowed To Have Proxies"
@@ -1165,6 +1296,7 @@
 		"fi"	"Tuolle bossille ei ole sallittu avustajia!"
 		"chi"	"这个Boss不允许获得小弟！"
 		"pt"	"Este chefão não pode ter proxies!"
+		"ko"	"해당 보스는 프록시를 가질 수 없는 보스입니다!"
 	}
 
 	"SF2 Boss Should Teleport"
@@ -1174,6 +1306,7 @@
 		"fi"	"Bossi pystyy nyt teleporttaamaan!"
 		"chi"	"Boss现在可以传送了！"
 		"pt"	"Agora, o chefão pode teletransportar-se!"
+		"ko"	"이제 보스가 텔레포트할 수 있습니다!"
 	}
 
 	"SF2 Boss Should Not Teleport"
@@ -1183,6 +1316,7 @@
 		"fi"	"Bossi ei pysty enään teleporttaamaan!"
 		"chi"	"Boss现在不可以传送了！"
 		"pt"	"O chefão não pode mais teletransportar-se!"
+		"ko"	"보스는 더 이상 텔레포트할 수 없습니다!"
 	}
 
 	"SF2 Boss Attack Waiters"
@@ -1192,6 +1326,7 @@
 		"fi"	"Bossi hyökkää nyt odottajiin!"
 		"chi"	"Boss现在会攻击等待者！"
 		"pt"	"Agora, o chefão atacará os aguardantes!"
+		"ko"	"이제 보스는 대기자를 공격 할 것입니다!"
 	}
 
 	"SF2 Boss Do Not Attack Waiters"
@@ -1201,6 +1336,7 @@
 		"fi"	"Bossi ei enään hyökkää odottajiin!"
 		"chi"	"Boss不会攻击等待者！"
 		"pt"	"O chefão não atacará mais os aguardantes."
+		"ko"	"더 이상 보스는 대기자를 공격하지 않습니다!"
 	}
 
 	"SF2 Player Already A Proxy"
@@ -1210,6 +1346,7 @@
 		"fi"	"Tuo pelaaja on jo avustaja!"
 		"chi"	"这个玩家已经是小弟了！"
 		"pt"	"Este jogador já é um proxy!"
+		"ko"	"해당 플레이어는 이미 프록시입니다!"
 	}
 
 	"SF2 Unable To Perform Action On Player In Round"
@@ -1220,6 +1357,7 @@
 		"fi"	"Ei pysty suorittamaan toimintoa {red}{1}{default} koska hän on erässä pelaamassa."
 		"chi"	"无法对 {red}{1}{default} 执行操作，因为他/她已在当前回合游玩中。"
 		"pt"	"Não foi possível realizar a ação em {red}{1}{default} porque tal jogador está jogando na rodada atual."
+		"ko"	"해당 플레이어는 현재 라운드에서 플레이 중이므로 {red}{1}{default}에 대해 작업을 수행할 수 없습니다."
 	}
 
 	"SF2 Player Forced In Game"
@@ -1230,6 +1368,7 @@
 		"fi"	"Pakotettiin {blue}{1}{default} peliin."
 		"chi"	"强制 {blue}{1}{default} 进入游戏。"
 		"pt"	"{blue}{1}{default} foi forçado a entrar na rodada atual."
+		"ko"	"{blue}{1}{default}을(를) 게임에 강제 입장시켰습니다."
 	}
 
 	"SF2 Player Forced Out Of Game"
@@ -1240,6 +1379,7 @@
 		"fi"	"Pakotettiin {red}{1}{default} ulos pelistä."
 		"chi"	"强制 {red}{1}{default} 离开游戏。"
 		"pt"	"{red}{1}{default} foi forçado a sair da rodada atual."
+		"ko"	"{red}{1}{default}을(를) 게임에 강제 퇴장시켰습니다."
 	}
 	
 	"SF2 Set Queue Points"
@@ -1247,6 +1387,7 @@
 		"#format"	"{1:s}"
 		"en"	"Changed {blue}{1}{default} queue points."
 		"pt"	"Os pontos de espera de {blue}{1}{default} foram alterados."
+		"ko"	"{blue}{1}{default}의 대기열 포인트를 변경했습니다."
 	}
 
 	"SF2 Cannot Use Command"
@@ -1256,6 +1397,7 @@
 		"fi"	"Tätä komentoa ei juuri nyt pysty käyttämään."
 		"chi"	"这个命令现在不可以使用。"
 		"pt"	"Este comando está indisponível no momento."
+		"ko"	"현재 해당 명령어를 사용할 수 없습니다."
 	}
 
 	"SF2 Player No Place For Proxy"
@@ -1266,6 +1408,7 @@
 		"fi"	"Ei pystytty löytämään hyvää paikkaa avustajalle {blue}{1}!"
 		"chi"	"无法为 {blue}{1} 找到好的小弟位置。"
 		"pt"	"Não foi possível obter uma boa localização de proxy para {blue}{1}{default}!"
+		"ko"	"{blue}{1}에 적합한 프록시 위치를 찾을 수 없습니다."
 	}
 
 	"SF2 In"
@@ -1275,6 +1418,7 @@
 		"fi"	"Sisällä"
 		"chi"	"进入"
 		"pt"	"Dentro"
+		"ko"	"입장"
 	}
 
 	"SF2 Out"
@@ -1284,6 +1428,7 @@
 		"fi"	"Ulkona"
 		"chi"	"离开"
 		"pt"	"Fora"
+		"ko"	"퇴장"
 	}
 
 	"SF2 Group Main Menu Title"
@@ -1293,6 +1438,7 @@
 		"fi"	"Ryhmä Valikko"
 		"chi"	"组菜单"
 		"pt"	"Menu do grupo"
+		"ko"	"그룹 메뉴"
 	}
 
 	"SF2 Group Main Menu Description"
@@ -1302,6 +1448,7 @@
 		"fi"	"Hallinoi, katso tietoja, luo, tai lähde ryhmästä."
 		"chi"	"管理，查看信息，创造或退出一个组。"
 		"pt"	"Administrar, ver informações, criar ou sair de um grupo."
+		"ko"	"그룹을 관리, 정보 보기, 생성 또는 탈퇴합니다."
 	}
 
 	"SF2 Admin Group Menu Title"
@@ -1311,6 +1458,7 @@
 		"fi"	"Hallinnoi/Katso tietoja nykyisestä ryhmästä"
 		"chi"	"管理/查看信息于当前组"
 		"pt"	"Administrar/ver informações do grupo atual"
+		"ko"	"현재 그룹의 관리/정보 보기"
 	}
 
 	"SF2 Admin Group Menu Description"
@@ -1321,6 +1469,7 @@
 		"fi"	"Ryhmän Nimi: {1}\nRyhmän Johtaja: {2}\nJäsenet: {3}/{4}\nJonopisteet: {5}"
 		"chi"	"组名称：{1}\n组领袖：{2}\n成员：{3}/{4}\n队列点数：{5}"
 		"pt"	"Nome do grupo: {1}\nLíder do grupo: {2}\nMembros: {3}/{4}\nPontos de espera: {5}"
+		"ko"	"그룹 이름: {1}\n그룹 리더: {2}\n멤버: {3}/{4}\n대기열 포인트: {5}"
 	}
 
 	"SF2 View Current Group Info Menu Title"
@@ -1330,6 +1479,7 @@
 		"fi"	"Näytä nykyisen ryhmän tiedot"
 		"chi"	"查看当前组信息"
 		"pt"	"Ver informações do grupo atual"
+		"ko"	"현재 그룹의 정보 보기"
 	}
 
 	"SF2 View Group Members Menu Title"
@@ -1339,6 +1489,7 @@
 		"fi"	"Näytä ryhmän jäsenet"
 		"chi"	"查看组成员"
 		"pt"	"Ver membros do grupo"
+		"ko"	"그룹 구성원 보기"
 	}
 
 	"SF2 View Group Members Menu Description"
@@ -1348,6 +1499,7 @@
 		"fi"	"Lista kaikista ryhmäsi jäsenistä:"
 		"chi"	"你的组的全部成员列表："
 		"pt"	"Lista de todos os membros no seu grupo:"
+		"ko"	"그룹의 모든 구성원 목록:"
 	}
 
 	"SF2 Set Group Name Menu Title"
@@ -1357,6 +1509,7 @@
 		"fi"	"Anna ryhmälle nimi"
 		"chi"	"设置组名称"
 		"pt"	"Definir nome do grupo"
+		"ko"	"그룹 이름 설정"
 	}
 
 	"SF2 Set Group Name Menu Description"
@@ -1366,6 +1519,7 @@
 		"fi"	"Voit antaa tekemällesi ryhmälle mukautetun nimen\nselvästi tunnistettavissa muista. Voit antaa\nnykyisen ryhmäsi nimen kirjoittamalla seuraavasti\nchattiin:\n \n /slgroupname <name>\n \nMaksimi nimen pituus on 64 merkkiä."
 		"chi"	"你可以给你的组设置独特的名称。\n你可以把你要设置的组名在聊天区这样键入：\n \n /slgroupname <名字>\n \n名称不能超过64个字符。"
 		"pt"	"Você pode definir um nome personalizado para o\nseu grupo para torná-lo único. Você pode alterar o\nnome do seu grupo atual\nao digitar o seguinte na ja-\nnela de conversa:\n\n/slgroupname <nome>\n\nAté 64 caracteres podem ser usados no nome."
+		"ko"	"다른 그룹과의 구별을 위해서 그룹의 이름을 설정할 수 있습니다.\n채팅창에 입력:\n \n /slgroupname <이름>.\n\n이름의 최대 길이는 영문 기준 64자 입니다."
 	}
 
 	"SF2 Invalid Group Name"
@@ -1375,6 +1529,7 @@
 		"fi"	"Epäsopiva ryhmän nimi!"
 		"chi"	"无效的组名！"
 		"pt"	"Nome do grupo inválido!"
+		"ko"	"잘못된 그룹 이름입니다!"
 	}
 
 	"SF2 Group Name Set"
@@ -1385,6 +1540,7 @@
 		"fi"	"Ryhmäsi nimi on vaihdettu tästä: {1} tähän: {2}."
 		"chi"	"你的组名已从 {1} 改为 {2}。"
 		"pt"	"O nome do seu grupo foi alterado de {1} para {2}."
+		"ko"	"그룹 이름이 {1}에서 {2}(으)로 변경되었습니다."
 	}
 
 	"SF2 Set Group Leader Menu Title"
@@ -1394,6 +1550,7 @@
 		"fi"	"Aseta ryhmän johtaja"
 		"chi"	"设置组领袖"
 		"pt"	"Definir líder do grupo"
+		"ko"	"그룹 리더 설정"
 	}
 
 	"SF2 Set Group Leader Menu Description"
@@ -1403,6 +1560,7 @@
 		"fi"	"Kenen pitäisi olla uusi ryhmän johtaja?"
 		"chi"	"谁应是新的组领袖？"
 		"pt"	"Quem deve ser o novo líder do grupo?"
+		"ko"	"누구를 새로운 리더로 하시겠습니까?"
 	}
 
 	"SF2 Group Has Too Many Members"
@@ -1412,6 +1570,7 @@
 		"fi"	"Ryhmässäsi on liian monta jäsentä! Jotkin ryhmäsi jäsenistäsi potkitaan tilan hankkimiseksi."
 		"chi"	"你的组成员太多了！将踢出一些成员来制造空间。"
 		"pt"	"O seu grupo tem muitos membros! Alguns serão expulsos para liberar novas vagas."
+		"ko"	"당신의 그룹에는 멤버가 너무 많습니다! 멤버들 중 일부는 자리를 마련하기 위해 그룹에서 쫓아내야 합니다."
 	}
 
 	"SF2 Invite To Group Menu Title"
@@ -1421,6 +1580,7 @@
 		"fi"	"Kutsu pelaajia ryhmääsi"
 		"chi"	"邀请玩家进入组"
 		"pt"	"Convidar jogadores para o grupo"
+		"ko"	"그룹에 플레이어 초대"
 	}
 
 	"SF2 Invite To Group Menu Description"
@@ -1430,6 +1590,7 @@
 		"fi"	"Kutsu pelaajia liittymään ryhmääsi!\nHUOMAUTUS: Et voi kutsua pelaajia jotka ovat\njo ryhmässä. Tai ovat pelaamassa RED:llä"
 		"chi"	"邀请玩家进入你的组！\n \n注意：你不能邀请已有组的玩家，\n或正在以红队身份游玩的玩家。"
 		"pt"	"Convide jogadores para o seu grupo!\n\nAVISO: você não pode convidar jogadores que\njá estão em um grupo ou que estão na equipe RED."
+		"ko"	"플레이어를 그룹에 초대하십시오!\n \n참고: 이미 그룹에 있거나 RED 팀으로 플레이 중인 플레이어는 초대할 수 없습니다."
 	}
 
 	"SF2 Group Invitation Sent"
@@ -1440,6 +1601,7 @@
 		"fi"	"Kutsu ryhmääsi lähetettiin pelaajalle: {1}."
 		"chi"	"已发送组邀请给 {1} 。"
 		"pt"	"Convite de grupo enviado para {1}."
+		"ko"	"{1}에게 그룹 초대를 보냈습니다."
 	}
 
 	"SF2 Group Invite Menu Description"
@@ -1450,6 +1612,7 @@
 		"fi"	"Sait ryhmäkutsun pelaajalta {1} liity\n{2} ryhmään.\n \nVAROITUS: Liittymällä ryhmään, menetät kaikki jonopisteesi!\nSinut laitetaan jonoon vasta, kun ryhmäsi valitaan.\n \nHyväksytkö kutsun?"
 		"chi"	"你被 {1} 邀请加入 {2} 组。\n \n警告：加入组后，你的队列点数会被重置为0！\n你只能在你的组被选上时加入队列。\n \n要接受邀请吗？"
 		"pt"	"{1} convidou você para juntar-se ao grupo\n{2}.\n\nAVISO: ao entrar em um grupo, todos os seus pontos de espera\nserão zerados! Você apenas poderá jogar quando o seu\ngrupo for selecionado.\n\nDeseja aceitar o convite?"
+		"ko"	"{1}로부터\n{2} 그룹에 가입하도록 초대받았습니다.\n \n경고: 그룹에 가입하면 대기열 포인트가 0으로 초기화됩니다.\n그룹을 선택할 때만 대기열에 들어갑니다.\n \n초대에 응하시겠습니까?"
 	}
 
 	"SF2 No Group Invite Spam"
@@ -1460,6 +1623,7 @@
 		"fi"	"Sinun pitää odottaa {1} sekunttia ennen kuin voit lähettää uutta kutsua pelaajalle {2}."
 		"chi"	"你必须等待 {1} 秒才能再次发送邀请给 {2} 。"
 		"pt"	"Aguarde {1} antes de enviar um novo convite para {2}."
+		"ko"	"{2}에 다른 초대를 보내기 전에 {1}초를 기다려야 합니다."
 	}
 
 	"SF2 Kick From Group Menu Title"
@@ -1469,6 +1633,7 @@
 		"fi"	"Potki pelaaja ryhmästä"
 		"chi"	"将玩家踢出组"
 		"pt"	"Expulsar jogadores do grupo"
+		"ko"	"그룹에서 플레이어 쫓아내기"
 	}
 
 	"SF2 Kick From Group Menu Description"
@@ -1478,6 +1643,7 @@
 		"fi"	"Potki ei halutut pelaajat ryhmästä."
 		"chi"	"将不想要的玩家踢出组。"
 		"pt"	"Expulse jogadores indesejáveis do seu grupo."
+		"ko"	"그룹에서 원치 않는 플레이어를 쫓아냈습니다."
 	}
 
 	"SF2 Kicked From Group"
@@ -1488,6 +1654,7 @@
 		"fi"	"Sinut on potkittu ryhmästä {1}."
 		"chi"	"你被 {1} 组踢出。"
 		"pt"	"Você foi expulso do grupo {1}."
+		"ko"	"{1} 그룹에서 쫓겨났습니다."
 	}
 
 	"SF2 Player Kicked From Group"
@@ -1498,6 +1665,7 @@
 		"fi"	"{1} Potkittiin ryhmästä."
 		"chi"	"已从组踢出 {1} 。"
 		"pt"	"{1} foi expulso do grupo."
+		"ko"	"그룹에서 {1}을(를) 쫓아냈습니다."
 	}
 
 	"SF2 Reset Group Queue Points Menu Title"
@@ -1507,6 +1675,7 @@
 		"fi"	"Tyhjää ryhmäsi pisteet"
 		"chi"	"重置组的队列点数"
 		"pt"	"Redfinir os pontos de espera do grupo"
+		"ko"	"그룹 대기열 포인트 초기화"
 	}
 
 	"SF2 Reset Group Queue Points Menu Description"
@@ -1516,6 +1685,7 @@
 		"fi"	"Oletko varma, että haluat tyhjätä\nryhmäsi pisteet takaisin 0?"
 		"chi"	"你确定要重置组的队列点数为0？"
 		"pt"	"Tem certeza de que deseja zerar\nos pontos de espera do grupo?"
+		"ko"	"그룹의 대기열 포인트를 0으로 초기화하시겠습니까?"
 	}
 
 	"SF2 Group Queue Points Reset"
@@ -1525,6 +1695,7 @@
 		"fi"	"Ryhmäsi jonopisteet tyhjennettiin takaisin 0!"
 		"chi"	"你的组的队列点数被重置为0！"
 		"pt"	"Os pontos de espera do seu grupo foram zerados!"
+		"ko"	"그룹의 대기열 포인트가 0으로 초기화되었습니다!"
 	}
 
 	"SF2 Group Is Full"
@@ -1534,6 +1705,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska ryhmäsi on täynnä!"
 		"chi"	"因为组已满，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque o grupo está cheio!"
+		"ko"	"그룹이 꽉 찼기 때문에 이 명령어는 수행할 수 없습니다!"
 	}
 
 	"SF2 Not Group Leader"
@@ -1543,6 +1715,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska et ole ryhmänjohtaja."
 		"chi"	"因为你不是组领袖，所以你不可以使用此命令！"
 		"pt"	"Apenas o líder do grupo pode usar este comando."
+		"ko"	"그룹 리더가 아니므로 이 명령어는 수행할 수 없습니다."
 	}
 
 	"SF2 No Players Available"
@@ -1552,6 +1725,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska yhtään pelaajia ei ole käytettävissä!"
 		"chi"	"因为已经没有可用玩家，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque não há jogadores disponíveis!"
+		"ko"	"플레이어가 그룹에 없으므로 이 명령어는 수행할 수 없습니다."
 	}
 
 	"SF2 Player Not In Group"
@@ -1561,6 +1735,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska pelaaja ei ole ryhmässäsi."
 		"chi"	"因为此玩家不在你的组，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque o jogador não está no seu grupo."
+		"ko"	"플레이어가 이미 다른 그룹에 있으므로 이 명령어는 수행할 수 없습니다."
 	}
 
 	"SF2 Player In Another Group"
@@ -1570,6 +1745,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska pelaaja on jo toisessa ryhmässä."
 		"chi"	"因为玩家已在其他组，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque o jogador já está em outro grupo."
+		"ko"	"플레이어가 이미 그룹에 있으므로 이 명령어는 수행할 수 없습니다."
 	}
 
 	"SF2 Player In Group"
@@ -1585,6 +1761,7 @@
 	{
 		"en"	"You cannot perform this command because the player is currently playing on RED."
 		"pt"	"Não é possível usar este comando porque o jogador está jogando na equipe RED."
+		"ko"	"플레이어가 이미 RED 팀에 있으므로 이 명령어는 수행할 수 없습니다."
 	}
 
 	"SF2 Create Group Menu Title"
@@ -1594,6 +1771,7 @@
 		"fi"	"Luo uusi ryhmä"
 		"chi"	"创建新的组"
 		"pt"	"Criar novo grupo"
+		"ko"	"새 그룹 만들기"
 	}
 
 	"SF2 Create Group Menu Description"
@@ -1604,6 +1782,7 @@
 		"fi"	"Ryhmän luominen antaa sinun pelaata kavereidesi\nkanssa! Mutta, voit ainoastaan kutsua {1} pelaajaa\nryhmääsi. Ja kun jonotatte, koko ryhmän jonotuspisteet\nasetetaan pisteidesi mukaisesti,\njotka ovat {2}. Mutta, henkilökohtaiset jonopisteesi\nTYHJÄTÄÄN TAKAISIN 0!\n \n Luo uusi ryhmä?"
 		"chi"	"创建组可以让你和你的朋友一起玩！\n然而你只可以邀请 {1} 玩家进入你的组。\n关于队列，整个组的队列点数都被设为你的，即是{2}。\n但是，你的个人队列点数会被重置为0！\n \n创建新的组吗？"
 		"pt"	"Um grupo permite que você jogue junto com os seus\namigos! Entretanto, só é possível convidar {1} joga-\ndor(es) ao seu grupo. Na fila de espera, os pontos\nde todo o grupo será definido para os\nseus, que são {2}. Todavia, os seus pontos de espera\npessoais serão zerados!\n\nCriar novo grupo?"
+		"ko"	"그룹을 만들면\n여러분과 친구들이 함께 플레이할 수 있습니다!\n하지만 최대 {1}명만 그룹에 초대할 수 있습니다.\n대기열의 경우, 전체 그룹의 대기열 포인트가 {2}으로 설정됩니다.\n그러나 자신의 개인 대기열 포인트는 0으로 초기화 됩니다!\n그룹을 만드시겠습니까?"
 	}
 
 	"SF2 Player New Group Leader"
@@ -1614,6 +1793,7 @@
 		"fi"	"{1} on uusi ryhmän johtaja."
 		"chi"	"{1} 现在是你的组的新的领袖。"
 		"pt"	"Agora, {1} é o novo líder do seu grupo."
+		"ko"	"{1}님이 이제 그룹의 새 리더입니다."
 	}
 
 	"SF2 New Group Leader"
@@ -1624,6 +1804,7 @@
 		"fi"	"Olet nyt ryhmän johtaja {1} ryhmässä."
 		"chi"	"你现在是 {1} 组的领袖。"
 		"pt"	"Agora, você é o líder do grupo {1}."
+		"ko"	"이제 당신이 {1} 그룹의 리더입니다."
 	}
 
 	"SF2 In Group"
@@ -1633,6 +1814,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska olet jo ryhmässä!"
 		"chi"	"因为你已经在组内了，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque você já está no grupo!"
+		"ko"	"그룹에 이미 속해 있으므로 이 명령어는 수행할 수 없습니다!"
 	}
 
 	"SF2 In Another Group"
@@ -1642,6 +1824,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska olet jo toisessa ryhmässä!"
 		"chi"	"因为你已经在另一个组内了，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque você já está em outro grupo!"
+		"ko"	"이미 다른 그룹에 속해 있으므로 이 명령어는 수행할 수 없습니다!"
 	}
 
 	"SF2 Joined Group"
@@ -1652,6 +1835,7 @@
 		"fi"	"Olet nyt ryhmässä {1}. Tervetuloa!"
 		"chi"	"你现在在 {1} 组。欢迎！"
 		"pt"	"Você se juntou ao grupo {1}. Seja bem-vindo(a)!"
+		"ko"	"{1} 그룹에 가입했습니다. 환영합니다!"
 	}
 
 	"SF2 Left Group"
@@ -1662,6 +1846,7 @@
 		"fi"	"Olet lähtenyt ryhmästä {1}."
 		"chi"	"你已离开 {1} 组。"
 		"pt"	"Você saiu do grupo {1}."
+		"ko"	"{1} 그룹을 탈퇴했습니다."
 	}
 
 	"SF2 Player Joined Group"
@@ -1672,6 +1857,7 @@
 		"fi"	"Pelaaja {1} on liittynyt ryhmääsi."
 		"chi"	"玩家 {1} 加入了你的组。"
 		"pt"	"{1} entrou no seu grupo."
+		"ko"	"{1} 플레이어가 그룹에 가입했습니다."
 	}
 
 	"SF2 Player Left Group"
@@ -1682,6 +1868,7 @@
 		"fi"	"Pelaaja {1} on lähtenyt ryhmästäsi."
 		"chi"	"玩家 {1} 离开了你的组。"
 		"pt"	"{1} saiu do seu grupo."
+		"ko"	"{1} 플레이어가 그룹에서 탈퇴했습니다."
 	}
 
 	"SF2 Created Group"
@@ -1692,6 +1879,7 @@
 		"fi"	"Ryhmän luonti onnistui! Uuden ryhmäsi nimi on: {1}"
 		"chi"	"创建组成功！你的新的组名称是：{1}"
 		"pt"	"Grupo criado com sucesso! O novo nome do seu grupo é: {1}"
+		"ko"	"그룹을 만들었습니다! 새 그룹의 이름은 {1}입니다."
 	}
 
 	"SF2 Max Groups Reached"
@@ -1701,6 +1889,7 @@
 		"fi"	"Uutta ryhmää ei voi luoda, koska ryhmien enimmäismäärä on saavutettu!"
 		"chi"	"因为组的最大数量已达到，所以无法创建新的组！"
 		"pt"	"Não é possível criar um novo grupo porque o número máximo de grupos foi atingido!"
+		"ko"	"최대 그룹 수에 도달했기 때문에 새 그룹을 만들 수 없습니다!"
 	}
 
 	"SF2 Group Does Not Exist"
@@ -1710,6 +1899,7 @@
 		"fi"	"Et voi suorittaa tätä komentoa, koska ryhmääsi ei enään ole olemassa!"
 		"chi"	"因为你的组已不存在，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque o seu grupo não existe mais!"
+		"ko"	"그룹이 더 이상 존재하지 않으므로 이 명령어는 수행할 수 없습니다!"
 	}
 
 	"SF2 Leave Group Menu Title"
@@ -1719,6 +1909,7 @@
 		"fi"	"Poistu nykyisestä ryhmästä"
 		"chi"	"离开当前组"
 		"pt"	"Sair do grupo atual"
+		"ko"	"현재 그룹 나가기"
 	}
 
 	"SF2 Leave Group Menu Description"
@@ -1729,6 +1920,7 @@
 		"fi"	"Oletko varma että haluat lähteä ryhmästä {1}?"
 		"chi"	"你确定要离开 {1} 组吗？"
 		"pt"	"Tem certeza de que deseja sair do grupo {1}?"
+		"ko"	"정말 {1} 그룹에서 나가겠습니까?"
 	}
 
 	"SF2 Proxy Ask Menu Title"
@@ -1738,6 +1930,7 @@
 		"fi"	"Sinut on valittu olemaan Apulainen!"
 		"chi"	"你被选成为了小弟！"
 		"pt"	"Você foi selecionado para ser um proxy!"
+		"ko"	"프록시로 선택되었습니다!"
 	}
 
 	"SF2 Proxy Ask Menu Description"
@@ -1747,6 +1940,7 @@
 		"fi"	"Apulaisena, tehtävänäsi on tappaa RED tiimi. Sinut\nteleportataan lähelle RED pelaajien sijaintia\nkun hyväksyt. Lisäksi, Apulaiset näkevät RED tiimin\nääriviivat seinien läpi, jotta voit tehdä yllätyshyökkäyksiä.\nMutta, elämäsi on riippuvainen ohjausmittaristasi,\neli se ei säily loputtomiin.\n \nHyväksytkö?"
 		"chi"	"作为小弟，你的目标是击杀红队。\n你在同意后会被传送到一个红队玩家附近的位置\n另外，小弟可以透过墙看见红队的轮廓，\n你可以按需来偷袭。但是你的生命值和控制能力挂钩，\n因此你不能一直成为小弟。\n \n你接受吗？"
 		"pt"	"Como um proxy, o seu objetivo é matar a equipe RED.\nVocê será teletransportado próximo de um jogador\nda equipe RED assim que aceitar. Em adição, proxies\npodem ver as silhuetas da equipe RED através das\nparedes, então você pode atacá-los de surpresa. En-\ntretanto, a sua vida depende do seu medidor de con-\ntrole, que não durará para sempre.\n\nDeseja aceitar?"
+		"ko"	"프록시의 목표는 RED 팀을 죽이는 것입니다.\n프록시가 되는 것을 수락하면 RED 팀 근처에서 텔레포트 됩니다.\n또한 프록시는 벽 너머로 RED팀 플레이어의 외곽선을 볼 수 있으며, 그런 점을 이용하여 기습을 시도하세요.\n그러나 화면 하단 수명 미터는 RED 팀을 타격하지 않는 한 계속 감소합니다.\n \n프록시가 되시겠습니까?"
 	}
 
 	"SF2 Too Much Time"
@@ -1756,6 +1950,7 @@
 		"fi"	"{dodgerblue}[SF2] {lightblue}Valitettavasti olet viettänyt liian paljon aikaa, aloituspisteesi on näkyvillä pelaajalle."
 		"chi"	"{dodgerblue}[SF2] {lightblue}抱歉你花了太多时间，你的重生点其实对一名玩家可见。"
 		"pt"	"{dodgerblue}[SF2] {lightblue}Você demorou demais e o seu ponto de nascimento está visível para um jogador."
+		"ko"	"{dodgerblue}[SF2] {lightblue}시간을 너무 많이 빼앗아 죄송합니다. 당신의 스폰 위치가 플레이어에게 사실상 보이게 됩니다."
 	}
 
 	"SF2 Too Many Proxies"
@@ -1765,6 +1960,7 @@
 		"fi"	"Anteeksi, mutta tällä hetkellä pelissä on liian monta Avustajaa."
 		"chi"	"抱歉，现在游戏中太多小弟了。"
 		"pt"	"Erro: há muitos proxies na rodada atual."
+		"ko"	"죄송합니다. 현재 게임에 프록시가 너무 많습니다."
 	}
 
 	"SF2 Proxy Force Message"
@@ -1775,42 +1971,47 @@
 		"fi"	"Sinut on valittu olemaan Avustaja!\nSinut teleportataan RED tiimin alueelle {1} sekunnin päästä."
 		"chi"	"你被选为了小弟！\n你将在 {1} 秒后传送到红队区域。"
 		"pt"	"Você foi selecionado para ser um\nproxy! Você será teletransportado à área da RED em {1} segundo(s)."
+		"ko"	"프록시로 선택되었습니다!\n{1}초 후에 RED 팀 플레이 구역으로 텔레포트됩니다."
 	}
 
 	"SF2 Boss Pack Menu Title"
 	{
-		"en" "Show the current pack, if there's one:"
-		"ru" "Показать текущий набор, если он есть:"
-		"fi" "Näytä nykyinen paketti, jos sellainen on:"
+		"en"	"Show the current pack, if there's one:"
+		"ru"	"Показать текущий набор, если он есть:"
+		"fi"	"Näytä nykyinen paketti, jos sellainen on:"
 		"chi"	"如果有的话，显示当前包："
-		"pt" "Exibir o pacote atual (caso haja um):"
+		"pt"	"Exibir o pacote atual (caso haja um):"
+		"ko"	"현재 보스팩이 있는 경우, 해당 보스팩을 표시:"
 	}
 	
 	"SF2 Boss Next Pack Menu Title"
 	{
-		"en" "Show the next boss pack, if there is one:"
-		"ru" "Показать следующий набор боссов, если он есть:"
-		"fi" "Näytä seuraava boss paketti, jos sellainen on:"
+		"en"	"Show the next boss pack, if there is one:"
+		"ru"	"Показать следующий набор боссов, если он есть:"
+		"fi"	"Näytä seuraava boss paketti, jos sellainen on:"
 		"chi"	"如果有的话，显示下一个boss包："
-		"pt" "Exibir o próximo pacote de chefões (caso haja um):"
+		"pt"	"Exibir o próximo pacote de chefões (caso haja um):"
+		"ko"	"다음 보스팩이 있는 경우, 해당 보스팩을 표시:"
 	}
 	
 	"SF2 Boss View On List Title"
 	{
-		"en" "Show the bosses on the current pack:"
-		"ru" "Показать боссов в текущем наборе:"
-		"fi" "Näytä nykyisen paketin bossit:"
+		"en"	"Show the bosses on the current pack:"
+		"ru"	"Показать боссов в текущем наборе:"
+		"fi"	"Näytä nykyisen paketin bossit:"
 		"chi"	"显示当前包的Boss："
-		"pt" "Exibir os chefões do pacote atual:"
+		"pt"	"Exibir os chefões do pacote atual:"
+		"ko"	"현재 보스팩에 있는 보스 표시:"
 	}
 	
 	"SF2 Boss List Menu Title"
 	{
-		"en" "Current Bosses"
-		"ru" "Текущие боссы"
-		"fi" "Nykyiset Bossit"
+		"en"	"Current Bosses"
+		"ru"	"Текущие боссы"
+		"fi"	"Nykyiset Bossit"
 		"chi"	"当前Boss"
 		"pt"	"Chefões atuais"
+		"ko"	"현재 보스 목록"
 	}
 
 	"SF2 Boss Pack Vote Menu Title"
@@ -1820,6 +2021,7 @@
 		"fi"	"Valitse boss paketti seuraavalle kartalle!"
 		"chi"	"选择下一个地图的Boss包"
 		"pt"	"Selecione o pacote de chefões para o próx. mapa!"
+		"ko"	"다음 맵의 보스팩을 선택하세요!"
 	}
 
 	"SF2 Boss Pack Vote Successful"
@@ -1830,6 +2032,7 @@
 		"fi"	"Äänestys onnistui! Seuraava boss paketti, joka ladataan seuraavalle kartalle on: {1}"
 		"chi"	"投票成功！下一个地图的Boss包已设为：{1}"
 		"pt"	"Votação finalizada! O próximo pacote de chefões a ser carregado no próx. mapa é: {1}"
+		"ko"	"투표 성공! 다음 맵에 로드할 보스 팩은 {1}입니다."
 	}
 
 	"SF2 Boss Pack No Vote"
@@ -1839,6 +2042,7 @@
 		"fi"	"Kukaan ei äänestänyt. Seuraava kartalle ladattava boss paketti on oletuspaketti."
 		"chi"	"无人投票。下一个地图的Boss包将为默认。"
 		"pt"	"Ninguém votou. O próximo pacote de chefões a ser carregado no próx. mapa será o padrão."
+		"ko"	"아무도 투표를 안 했어요. 다음 맵의 보스팩은 기본값으로 로드됩니다."
 	}
 
 	"SF2 Special Round Vote Menu Title"
@@ -1848,6 +2052,7 @@
 		"fi"	"Valitse erikoiskierros!"
 		"chi"	"选择特殊回合！"
 		"pt"	"Selecione a rodada especial!"
+		"ko"	"스페셜 라운드를 고르세요!"
 	}	
 
 	"SF2 Special Round Vote Successful"
@@ -1858,6 +2063,7 @@
 		"fi"	"Äänestys onnistui! Aktivoidaan erikoiskierros: {1}"
 		"chi"	"投票成功！启动特殊回合：{1}"
 		"pt"	"Votação finalizada! Ativando rodada especial: {1}"
+		"ko"	"투표 성공! 스페셜 라운드 활성화: {1}"
 	}
 
 	"SF2 Projected Flashlight"
@@ -1867,6 +2073,7 @@
 		"fi"	"{dodgerblue}Taskulamppusi on asetettu tilaan {lightblue}Projected{dodgerblue}"
 		"chi"	"{dodgerblue}你的手电筒模式已设为{lightblue}投影{dodgerblue}。"
 		"pt"	"{dodgerblue}O modo da sua lanterna foi alterado para \"{lightblue}Projetado{dodgerblue}\"."
+		"ko"	"{dodgerblue}손전등 조명 모드가 {lightblue}Projected{doggerblue}으로 설정되었습니다."
 	}
 
 	"SF2 Normal Flashlight"
@@ -1876,6 +2083,7 @@
 		"fi"	"{dodgerblue}Taskulamppusi on asetettu tilaan {lightblue}Normaali{dodgerblue}."
 		"chi"	"{dodgerblue}你的手电筒模式已设为{lightblue}普通{dodgerblue}。"
 		"pt"	"{dodgerblue}O modo da sua lanterna foi alterado para \"{lightblue}Normal{dodgerblue}\"."
+		"ko"	"{dodgerblue}손전등 조명 모드가 {lightblue}기본{dodgerblue}으로 설정되었습니다."
 	}
 
 	"SF2 Mute Mode Normal"
@@ -1885,6 +2093,7 @@
 		"fi"	"{lightblue}Mykistystila asetettu normaaliksi."
 		"chi"	"{lightblue}禁言模式设为普通。"
 		"pt"	"{lightblue}Modo de emudecimento alterado para \"Normal\"."
+		"ko"	"{lightblue}음소거 모드가 정상으로 설정되었습니다."
 	}
 
 	"SF2 Mute Mode Opposing"
@@ -1894,6 +2103,7 @@
 		"fi"	"{lightblue}Vastatiimi vaimennettiin."
 		"chi"	"{lightblue}禁言敌方队伍。"
 		"pt"	"{lightblue}Equipe inimiga emudecida."
+		"ko"	"{lightblue}상대 팀을 음소거했습니다."
 	}
 
 	"SF2 Mute Mode Proxy"
@@ -1903,6 +2113,7 @@
 		"fi"	"{lightblue}Vastatiimi hiljennettiin, mutta asetukset asetetaan automaattisesti normaaliksi, jos olet avustaja."
 		"chi"	"{lightblue}禁言敌方队伍，但将在成为小弟后自动设为普通。"
 		"pt"	"{lightblue}Equipe inimiga emudecida. Entretanto, as configurações voltarão ao normal quando você for um proxy."
+		"ko"	"{lightblue}상대 팀을 음소거하지만 프록시가 되는 경우 설정이 자동으로 기본값으로 설정됩니다."
 	}
 
 	"SF2 Settings Ghost Mode Teleport Title"
@@ -1910,6 +2121,7 @@
 		"en" 	"Change ghost mode teleport state"
 		"fi"	"Muuta haamu tilan teleportin tilaa"
 		"pt"	"Alterar estado de teletransporte do modo fantasma"
+		"ko" 	"유령 모드 텔레포트 상태 변경"
 	}
 
 	"SF2 Teleport Ghost Players"
@@ -1917,12 +2129,14 @@
 		"en"	"{lightblue}You can now teleport to only players during ghost mode."
 		"fi"	"{lightblue}Voit nyt teleportata pelaajiin vain haamu tilassa."
 		"pt"	"{lightblue}Agora, você pode teletransportar-se apenas a jogadores no modo fantasma."
+		"ko"	"{lightblue}이제 플레이어를 향해서만 텔레포트 할 수 있습니다."
 	}
 
 	"SF2 Teleport Ghost Bosses"
 	{
 		"en"	"{lightblue}You can now teleport to only bosses during ghost mode."
 		"pt"	"{lightblue}Agora, você pode teletransportar-se apenas ao chefão no modo fantasma."
+		"ko"	"{lightblue}이제 보스를 향해서만 텔레포트 할 수 있습니다."
 	}
 
 	"SF2 Settings Ghost Mode Toggle State Title"
@@ -1930,6 +2144,7 @@
 		"en" 	"Set ghost mode toggle state"
 		"fi"	"Aseta haamu muodon tila"
 		"pt"	"Definir estado da alternação do modo fantasma"
+		"ko" 	"유령 모드 돌입 설정 토글"
 	}
 
 	"SF2 Toggle Ghost Default"
@@ -1937,6 +2152,7 @@
 		"en"	"{lightblue}Ghost mode will now be enabled any time you want."
 		"fi"	"{lightblue}Haamu tila otetaan nyt käyttöön koska tahansa, kun haluat."
 		"pt"	"{lightblue}Agora, o modo fantasma será ativado ao seu comando."
+		"ko"	"{lightblue}유령 모드는 이제 언제든지 사용할 수 있습니다."
 	}
 
 	"SF2 Toggle Ghost On Grace"
@@ -1944,6 +2160,7 @@
 		"en"	"{lightblue}Ghost mode will now be enabled whenever grace period ends."
 		"fi"	"{lightblue}Haamu tila otetaan nyt käyttöön, kun armonaika loppuu."
 		"pt"	"{lightblue}Agora, o modo fantasma apenas será ativado após o tempo de preparação acabar."
+		"ko"	"{lightblue}이제 유예 기간이 끝날 때마다 유령 모드가 활성화됩니다."
 	}
 
 	"SF2 Toggle Ghost On Death"
@@ -1951,24 +2168,28 @@
 		"en"	"{lightblue}Ghost mode will now be enabled upon dying in RED."
 		"fi"	"{lightblue}Haamu tila otetaan nyt käyttöön, kun kuolet RED:llä."
 		"pt"	"{lightblue}Agora, o modo fantasma será ativado após morrer estando na RED."
+		"ko"	"{lightblue}이제 RED 팀으로 플레이 도중 사망 시 유령 모드가 활성화됩니다."
 	}
 	
 	"SF2 Settings View Bobbing Toggle Title"
 	{
 		"en" 	"Set view bobbing toggle"
 		"pt"	"Definir alternação da arma balançando ao andar"
+		"ko"	"시야 기울어짐 설정"
 	}
 
 	"SF2 Toggle View Bobbing On"
 	{
 		"en"	"{lightblue}View bobbing is now enabled."
 		"pt"	"{lightblue}Agora, a arma balança ao andar."
+		"ko"	"{lightblue}시야 기울어짐이 활성화되었습니다."
 	}
 
 	"SF2 Toggle View Bobbing Off"
 	{
 		"en"	"{lightblue}View bobbing is now disabled."
 		"pt"	"{lightblue}Agora, a arma não balança ao andar."
+		"ko"	"{lightblue}시야 기울어짐이 비활성화되었습니다."
 	}
 
 	"SF2 Recent Changes"
@@ -1978,12 +2199,14 @@
 		"fi"	"Viimeaikaiset muutokset:"
 		"chi"	"最近改动："
 		"pt"	"Alterações recentes:"
+		"ko"	"최근 변경 사항:"
 	}
 	
 	"SF2 Change Log"
 	{
 		"en"	"-Precached literally every boss key value\n-Removed certain backwards compatibility"
 		"pt"	"- Pré-carregamento de todos os valores-chave\nde chefões (literalmente)\n- Remoção de certas retrocompatibilidades"
+		"ko"	"-모든 보스의 키밸류 값을 프리캐쉬하고\n사후 지원용으로 남겨뒀던 불필요한 커맨드를 지웠음!"
 	}
 
 	"SF2 Smite player"
@@ -1993,6 +2216,7 @@
 		"fi"			"Iske pelaajaa"
 		"chi"			"惩戒玩家"
 		"pt"			"Castigar jogador"
+		"ko"			"플레이어에게 천벌내리기"
 	}
 
 	"SF2 Smote target"
@@ -2003,6 +2227,7 @@
 		"fi"			"{valve}{1}{default} kutsui Zeuksen voiman ja iski {red}{2}!"
 		"chi"			"{valve}{1}{default} 召唤了宙斯之力并惩罚了 {red}{2} ！"
 		"pt"			"{valve}{1}{default} evocou o poder de Zeus e castigou {red}{2}{default}!"
+		"ko"			"{valve}{1}{default}이(가) 제우스의 힘을 호출해 {red}{2}을(를) 박살냈습니다."
 	}
 
 	"SF2 Boxing Initiate"
@@ -2012,6 +2237,7 @@
 		"fi"			"Vaikeustaso asetettu tasoon: {yellow}Normaali{default}.\nVaikeustaso pahenee, kun mestaristamme tulee heikompi."
 		"chi"			"难度已设为{yellow}普通{default}。\n我们的冠军越虚弱，难度就越大。"
 		"pt"			"A dificuldade foi alterada para {yellow}Normal{default}.\nA dificuldade será aumentada de acordo com o enfraquecimento do nosso campeão."
+		"ko"			"난이도가 {yellow}보통{default}(으)로 설정되었습니다.\n챔피언이 약해질수록 난이도는 높아질 것입니다."
 	}
 
 	"SF2 Boxing Win Message"
@@ -2022,5 +2248,6 @@
 		"fi"			"{red}{1}{default} on kukistanut {valve}{2}."
 		"chi"			"{red}{1}{default} 击败了 {valve}{2}。"
 		"pt"			"{red}{1}{default} derrotou {valve}{2}{default}."
+		"ko"			"{red}{1}{default}이(가) {default}{2}을(를) 쓰러뜨렸습니다!"
 	}
 }

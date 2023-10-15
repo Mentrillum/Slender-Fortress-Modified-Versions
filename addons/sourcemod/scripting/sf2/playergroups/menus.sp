@@ -8,8 +8,8 @@
 
 void DisplayGroupMainMenuToClient(int client)
 {
-	Handle menu = CreateMenu(Menu_GroupMain);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Group Main Menu Title", client, "SF2 Group Main Menu Description", client);
+	Menu menu = new Menu(Menu_GroupMain);
+	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Group Main Menu Title", client, "SF2 Group Main Menu Description", client);
 
 	int groupIndex = ClientGetPlayerGroup(client);
 	bool groupIsActive = IsPlayerGroupActive(groupIndex);
@@ -24,18 +24,18 @@ void DisplayGroupMainMenuToClient(int client)
 		Format(buffer, sizeof(buffer), "%T", "SF2 View Current Group Info Menu Title", client);
 	}
 
-	AddMenuItem(menu, "0", buffer, groupIsActive ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	menu.AddItem("0", buffer, groupIsActive ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 
 	Format(buffer, sizeof(buffer), "%T", "SF2 Create Group Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupIsActive ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	menu.AddItem("0", buffer, groupIsActive ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 	Format(buffer, sizeof(buffer), "%T", "SF2 Leave Group Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupIsActive ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	menu.AddItem("0", buffer, groupIsActive ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 
-	SetMenuExitBackButton(menu, true);
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-static int Menu_GroupMain(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_GroupMain(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -43,7 +43,10 @@ static int Menu_GroupMain(Handle menu, MenuAction action,int param1,int param2)
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack) DisplayMenu(g_MenuMain, param1, 30);
+		if (param2 == MenuCancel_ExitBack)
+		{
+			DisplayMenu(g_MenuMain, param1, 30);
+		}
 	}
 	else if (action == MenuAction_Select)
 	{
@@ -77,19 +80,19 @@ void DisplayCreateGroupMenuToClient(int client)
 		return;
 	}
 
-	Handle menu = CreateMenu(Menu_CreateGroup);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Create Group Menu Title", client, "SF2 Create Group Menu Description", client, GetMaxPlayersForRound(), g_PlayerQueuePoints[client]);
+	Menu menu = new Menu(Menu_CreateGroup);
+	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Create Group Menu Title", client, "SF2 Create Group Menu Description", client, GetMaxPlayersForRound(), g_PlayerQueuePoints[client]);
 
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Yes", client);
-	AddMenuItem(menu, "0", buffer);
+	menu.AddItem("0", buffer);
 	Format(buffer, sizeof(buffer), "%T", "No", client);
-	AddMenuItem(menu, "0", buffer);
+	menu.AddItem("0", buffer);
 
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-static int Menu_CreateGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_CreateGroup(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -146,19 +149,19 @@ void DisplayLeaveGroupMenuToClient(int client)
 	char groupName[SF2_MAX_PLAYER_GROUP_NAME_LENGTH];
 	GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
 
-	Handle menu = CreateMenu(Menu_LeaveGroup);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Leave Group Menu Title", client, "SF2 Leave Group Menu Description", client, groupName);
+	Menu menu = new Menu(Menu_LeaveGroup);
+	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Leave Group Menu Title", client, "SF2 Leave Group Menu Description", client, groupName);
 
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Yes", client);
-	AddMenuItem(menu, "0", buffer);
+	menu.AddItem("0", buffer);
 	Format(buffer, sizeof(buffer), "%T", "No", client);
-	AddMenuItem(menu, "0", buffer);
+	menu.AddItem("0", buffer);
 
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-static int Menu_LeaveGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_LeaveGroup(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -207,28 +210,30 @@ void DisplayAdminGroupMenuToClient(int client)
 	int maxPlayers = GetMaxPlayersForRound();
 	int queuePoints = GetPlayerGroupQueuePoints(groupIndex);
 
-	Handle menu = CreateMenu(Menu_AdminGroup);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Admin Group Menu Title", client, "SF2 Admin Group Menu Description", client, groupName, leaderName, memberCount, maxPlayers, queuePoints);
+	Menu menu = new Menu(Menu_AdminGroup);
+	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Admin Group Menu Title", client, "SF2 Admin Group Menu Description", client, groupName, leaderName, memberCount, maxPlayers, queuePoints);
 
 	char buffer[256];
-	Format(buffer, sizeof(buffer), "%T", "SF2 View Group Members Menu Title", client);
-	AddMenuItem(menu, "0", buffer);
-	Format(buffer, sizeof(buffer), "%T", "SF2 Set Group Name Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	Format(buffer, sizeof(buffer), "%T", "SF2 Set Group Leader Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	Format(buffer, sizeof(buffer), "%T", "SF2 Invite To Group Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupLeader == client && memberCount < maxPlayers ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	Format(buffer, sizeof(buffer), "%T", "SF2 Kick From Group Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupLeader == client && memberCount > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
-	Format(buffer, sizeof(buffer), "%T", "SF2 Reset Group Queue Points Menu Title", client);
-	AddMenuItem(menu, "0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 View Group Members Menu Title", client);
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Set Group Name Menu Title", client);
+	menu.AddItem("0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Set Group Leader Menu Title", client);
+	menu.AddItem("0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Invite To Group Menu Title", client);
+	menu.AddItem("0", buffer, groupLeader == client && memberCount < maxPlayers ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Kick From Group Menu Title", client);
+	menu.AddItem("0", buffer, groupLeader == client && memberCount > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Reset Group Queue Points Menu Title", client);
+	menu.AddItem("0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+	FormatEx(buffer, sizeof(buffer), "Opt in for Nightmare + Apollyon voting");
+	menu.AddItem("0", buffer, groupLeader == client ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 
-	SetMenuExitBackButton(menu, true);
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-static int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_AdminGroup(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -272,6 +277,10 @@ static int Menu_AdminGroup(Handle menu, MenuAction action,int param1,int param2)
 				{
 					DisplayResetGroupQueuePointsMenuToClient(param1);
 				}
+				case 6:
+				{
+					DisplayOptInHardDifficultiesToClient(param1);
+				}
 			}
 		}
 		else
@@ -295,9 +304,6 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	}
 
 	ArrayList playersHandle = new ArrayList();
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplayViewGroupMembersMenuToClient.", playersHandle);
-	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
@@ -317,8 +323,8 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	int playerCount = playersHandle.Length;
 	if (playerCount)
 	{
-		Handle menu = CreateMenu(Menu_ViewGroupMembers);
-		SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, "SF2 View Group Members Menu Description", client);
+		Menu menu = new Menu(Menu_ViewGroupMembers);
+		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, "SF2 View Group Members Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -328,11 +334,11 @@ void DisplayViewGroupMembersMenuToClient(int client)
 			int clientArray = playersHandle.Get(i);
 			FormatEx(userId, sizeof(userId), "%d", GetClientUserId(clientArray));
 			FormatEx(name, sizeof(name), "%N", clientArray);
-			AddMenuItem(menu, userId, name);
+			menu.AddItem(userId, name);
 		}
 
-		SetMenuExitBackButton(menu, true);
-		DisplayMenu(menu, client, MENU_TIME_FOREVER);
+		menu.ExitBackButton = true;
+		menu.Display(client, MENU_TIME_FOREVER);
 	}
 	else
 	{
@@ -342,12 +348,9 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	}
 
 	delete playersHandle;
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for playersHandle in DisplayViewGroupMembersMenuToClient.", playersHandle);
-	#endif
 }
 
-static int Menu_ViewGroupMembers(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ViewGroupMembers(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -386,9 +389,6 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	}
 
 	ArrayList playersHandle = new ArrayList();
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplaySetGroupLeaderMenuToClient.", playersHandle);
-	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
@@ -412,8 +412,8 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	int playerCount = playersHandle.Length;
 	if (playerCount)
 	{
-		Handle menu = CreateMenu(Menu_SetGroupLeader);
-		SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Leader Menu Title", client, "SF2 Set Group Leader Menu Description", client);
+		Menu menu = new Menu(Menu_SetGroupLeader);
+		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Leader Menu Title", client, "SF2 Set Group Leader Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -423,11 +423,11 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 			int clientArray = playersHandle.Get(i);
 			FormatEx(userId, sizeof(userId), "%d", GetClientUserId(clientArray));
 			FormatEx(name, sizeof(name), "%N", clientArray);
-			AddMenuItem(menu, userId, name);
+			menu.AddItem(userId, name);
 		}
 
-		SetMenuExitBackButton(menu, true);
-		DisplayMenu(menu, client, MENU_TIME_FOREVER);
+		menu.ExitBackButton = true;
+		menu.Display(client, MENU_TIME_FOREVER);
 	}
 	else
 	{
@@ -437,12 +437,9 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	}
 
 	delete playersHandle;
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for playersHandle in DisplaySetGroupLeaderMenuToClient.", playersHandle);
-	#endif
 }
 
-static int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_SetGroupLeader(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -461,7 +458,7 @@ static int Menu_SetGroupLeader(Handle menu, MenuAction action,int param1,int par
 		if (IsPlayerGroupActive(groupIndex) && GetPlayerGroupLeader(groupIndex) == param1)
 		{
 			char info[64];
-			GetMenuItem(menu, param2, info, sizeof(info));
+			menu.GetItem(param2, info, sizeof(info));
 			int userid = StringToInt(info);
 			int player = GetClientOfUserId(userid);
 
@@ -504,9 +501,6 @@ void DisplayKickFromGroupMenuToClient(int client)
 	}
 
 	ArrayList playersHandle = new ArrayList();
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplayKickFromGroupMenuToClient.", playersHandle);
-	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
@@ -530,8 +524,8 @@ void DisplayKickFromGroupMenuToClient(int client)
 	int playerCount = playersHandle.Length;
 	if (playerCount)
 	{
-		Handle menu = CreateMenu(Menu_KickFromGroup);
-		SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Kick From Group Menu Title", client, "SF2 Kick From Group Menu Description", client);
+		Menu menu = new Menu(Menu_KickFromGroup);
+		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Kick From Group Menu Title", client, "SF2 Kick From Group Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -541,11 +535,11 @@ void DisplayKickFromGroupMenuToClient(int client)
 			int clientArray = playersHandle.Get(i);
 			FormatEx(userId, sizeof(userId), "%d", GetClientUserId(clientArray));
 			FormatEx(name, sizeof(name), "%N", clientArray);
-			AddMenuItem(menu, userId, name);
+			menu.AddItem(userId, name);
 		}
 
-		SetMenuExitBackButton(menu, true);
-		DisplayMenu(menu, client, MENU_TIME_FOREVER);
+		menu.ExitBackButton = true;
+		menu.Display(client, MENU_TIME_FOREVER);
 	}
 	else
 	{
@@ -555,12 +549,9 @@ void DisplayKickFromGroupMenuToClient(int client)
 	}
 
 	delete playersHandle;
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for playersHandle in DisplayKickFromGroupMenuToClient.", playersHandle);
-	#endif
 }
 
-static int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_KickFromGroup(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -579,7 +570,7 @@ static int Menu_KickFromGroup(Handle menu, MenuAction action,int param1,int para
 		if (IsPlayerGroupActive(groupIndex) && GetPlayerGroupLeader(groupIndex) == param1)
 		{
 			char info[64];
-			GetMenuItem(menu, param2, info, sizeof(info));
+			menu.GetItem(param2, info, sizeof(info));
 			int userid = StringToInt(info);
 			int player = GetClientOfUserId(userid);
 
@@ -623,16 +614,16 @@ void DisplaySetGroupNameMenuToClient(int client)
 		return;
 	}
 
-	Handle menu = CreateMenu(Menu_SetGroupName);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Name Menu Title", client, "SF2 Set Group Name Menu Description", client);
+	Menu menu = new Menu(Menu_SetGroupName);
+	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Name Menu Title", client, "SF2 Set Group Name Menu Description", client);
 
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Back", client);
-	AddMenuItem(menu, "0", buffer);
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.AddItem("0", buffer);
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-static int Menu_SetGroupName(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_SetGroupName(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -679,9 +670,6 @@ void DisplayInviteToGroupMenuToClient(int client)
 	}
 
 	ArrayList playersHandle = new ArrayList();
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been created for playersHandle in DisplayInviteToGroupMenuToClient.", playersHandle);
-	#endif
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i) || !IsClientParticipating(i))
@@ -705,8 +693,8 @@ void DisplayInviteToGroupMenuToClient(int client)
 	int playerCount = playersHandle.Length;
 	if (playerCount)
 	{
-		Handle menu = CreateMenu(Menu_InviteToGroup);
-		SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Invite To Group Menu Title", client, "SF2 Invite To Group Menu Description", client);
+		Menu menu = new Menu(Menu_InviteToGroup);
+		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Invite To Group Menu Title", client, "SF2 Invite To Group Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -716,11 +704,11 @@ void DisplayInviteToGroupMenuToClient(int client)
 			int clientArray = playersHandle.Get(i);
 			FormatEx(userId, sizeof(userId), "%d", GetClientUserId(clientArray));
 			FormatEx(name, sizeof(name), "%N", clientArray);
-			AddMenuItem(menu, userId, name);
+			menu.AddItem(userId, name);
 		}
 
-		SetMenuExitBackButton(menu, true);
-		DisplayMenu(menu, client, MENU_TIME_FOREVER);
+		menu.ExitBackButton = true;
+		menu.Display(client, MENU_TIME_FOREVER);
 	}
 	else
 	{
@@ -730,12 +718,9 @@ void DisplayInviteToGroupMenuToClient(int client)
 	}
 
 	delete playersHandle;
-	#if defined DEBUG
-	SendDebugMessageToPlayers(DEBUG_ARRAYLIST, 0, "Array list %b has been deleted for playersHandle in DisplayInviteToGroupMenuToClient.", playersHandle);
-	#endif
 }
 
-static int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_InviteToGroup(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -754,10 +739,10 @@ static int Menu_InviteToGroup(Handle menu, MenuAction action,int param1,int para
 		if (IsPlayerGroupActive(groupIndex) && GetPlayerGroupLeader(groupIndex) == param1)
 		{
 			char info[64];
-			GetMenuItem(menu, param2, info, sizeof(info));
+			menu.GetItem(param2, info, sizeof(info));
 			int userid = StringToInt(info);
-			int iInvitedPlayer = GetClientOfUserId(userid);
-			SendPlayerGroupInvitation(iInvitedPlayer, GetPlayerGroupID(groupIndex), param1);
+			int invitedPlayer = GetClientOfUserId(userid);
+			SendPlayerGroupInvitation(invitedPlayer, GetPlayerGroupID(groupIndex), param1);
 		}
 
 		DisplayInviteToGroupMenuToClient(param1);

@@ -4,11 +4,18 @@
 // FUNCTIONS
 // ======================================
 
-stock void PrecacheSound2(const char[] path, bool checkFile)
+stock void PrecacheSound2(const char[] path, bool checkFile, bool replace = true)
 {
-	PrecacheSound(path, true);
+	char tempPath[PLATFORM_MAX_PATH];
+	strcopy(tempPath, sizeof(tempPath), path);
+	PrecacheSound(tempPath, true);
+	if (replace)
+	{
+		ReplaceStringEx(tempPath, sizeof(tempPath), ")", "");
+		ReplaceStringEx(tempPath, sizeof(tempPath), "#", "");
+	}
 	char buffer[PLATFORM_MAX_PATH];
-	FormatEx(buffer, sizeof(buffer), "sound/%s", path);
+	FormatEx(buffer, sizeof(buffer), "sound/%s", tempPath);
 	if (checkFile)
 	{
 		if (FileExists(buffer, true))
@@ -35,34 +42,35 @@ stock void PrecacheSound2(const char[] path, bool checkFile)
  * @param disableWarning	Disables the warning if a file doesn't exist.
  * @param checkFile		Determines if missing files should be checked.
  */
-stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool disableWarning = false, bool checkFile)
+stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool checkFile)
 {
 	if (soundPath[0] == '\0')
 	{
 		return;
 	}
 
-	char fullPath[PLATFORM_MAX_PATH];
-	FormatEx(fullPath, sizeof(fullPath), "sound/%s", soundPath);
+	char fullPath[PLATFORM_MAX_PATH], tempPath[PLATFORM_MAX_PATH];
+	strcopy(tempPath, sizeof(tempPath), soundPath);
+	PrecacheSound(tempPath);
+	ReplaceStringEx(tempPath, sizeof(tempPath), ")", "");
+	ReplaceStringEx(tempPath, sizeof(tempPath), "#", "");
+	FormatEx(fullPath, sizeof(fullPath), "sound/%s", tempPath);
 
 	if (checkFile)
 	{
 		if (FileExists(fullPath, false) || FileExists(fullPath, true))
 		{
-			PrecacheSound2(soundPath, checkFile);
+			PrecacheSound2(tempPath, checkFile, false);
 		}
 		else
 		{
-			if (!disableWarning)
-			{
-				PrintToServer("[SF2] Sound file %s does not exist, excluding from downloads!", fullPath);
-			}
-			PrecacheSound(soundPath);
+			PrintToServer("[SF2] Sound file %s does not exist, excluding from downloads!", fullPath);
+			PrecacheSound(tempPath);
 		}
 	}
 	else
 	{
-		PrecacheSound2(soundPath, checkFile);
+		PrecacheSound2(tempPath, checkFile, false);
 	}
 }
 
@@ -728,7 +736,7 @@ enum struct SF2BossProfileSoundInfo
 					break;
 				}
 
-				TryPrecacheBossProfileSoundPath(soundPath, _, checkFile);
+				TryPrecacheBossProfileSoundPath(soundPath, checkFile);
 
 				this.Paths.PushString(soundPath);
 			}
@@ -1357,6 +1365,11 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				animDataArray.GetArray(j, animData, sizeof(animData));
 				animData.Destroy();
 			}
+
+			if (animDataArray != null)
+			{
+				delete animDataArray;
+			}
 		}
 
 		for (int i = 0; i < gestureSnapshot.Length; i++)
@@ -1369,11 +1382,11 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				animDataArray.GetArray(j, gestureData, sizeof(gestureData));
 				gestureData.Destroy();
 			}
-		}
 
-		if (animDataArray != null)
-		{
-			delete animDataArray;
+			if (animDataArray != null)
+			{
+				delete animDataArray;
+			}
 		}
 
 		delete snapshot;
@@ -1387,6 +1400,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 		if (this.Animations.GetValue(animType, animDataArray))
 		{
+			if (animDataArray.Length == 0)
+			{
+				return false;
+			}
 			int randomAnimation;
 			if (preDefinedIndex <= -1)
 			{
@@ -1422,6 +1439,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 		if (this.Gestures.GetValue(animType, gestureDataArray))
 		{
+			if (gestureDataArray.Length == 0)
+			{
+				return false;
+			}
 			SF2BossProfileAttackGestureData gestureData;
 			gestureDataArray.GetArray(definedIndex, gestureData, sizeof(gestureData));
 
@@ -1607,6 +1628,8 @@ enum struct SF2BossProfileData
 	ArrayList ProxyModelsInsane[10];
 	ArrayList ProxyModelsNightmare[10];
 	ArrayList ProxyModelsApollyon[10];
+	bool ProxyOverrideMaxSpeed;
+	float ProxyMaxSpeed[Difficulty_Max];
 
 	bool FakeCopies;
 
@@ -1815,6 +1838,7 @@ enum struct SF2BossProfileData
 		this.ProxyDeathAnimations = null;
 		this.ProxyZombies = false;
 		this.ProxyDifficultyModels = false;
+		this.ProxyOverrideMaxSpeed = false;
 
 		this.FakeCopies = false;
 
@@ -1971,6 +1995,7 @@ enum struct SF2BossProfileData
 			this.ProxySpawnCooldownMax[difficulty] = difficulty > 0 ? this.ProxySpawnCooldownMax[difficulty - 1] : 0.0;
 			this.ProxyTeleportRangeMin[difficulty] = difficulty > 0 ? this.ProxyTeleportRangeMin[difficulty - 1] : 500.0;
 			this.ProxyTeleportRangeMax[difficulty] = difficulty > 0 ? this.ProxyTeleportRangeMax[difficulty - 1] : 3200.0;
+			this.ProxyMaxSpeed[difficulty] = difficulty > 0 ? this.ProxyMaxSpeed[difficulty - 1] : 230.0;
 
 			this.DrainCreditAmount[difficulty] = difficulty > 0 ? this.DrainCreditAmount[difficulty - 1] : 50;
 		}
