@@ -2685,11 +2685,6 @@ void RemoveProfile(int bossIndex)
 
 void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 {
-	if (!IsRoundPlaying())
-	{
-		return;
-	}
-
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
 	{
 		return; // Stop spawning bosses before all pages are picked up in Renevant.
@@ -2715,7 +2710,7 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 	{
 		case SF2BossType_Statue:
 		{
-			entity = Spawn_Statue(bossIndex);
+			entity = Spawn_Statue(Npc, truePos, trueAng);
 		}
 		case SF2BossType_Chaser:
 		{
@@ -2782,12 +2777,6 @@ void SpawnSlender(SF2NPC_BaseNPC Npc, const float pos[3])
 
 				npcEntity.SetPropVector(Prop_Send, "m_vecMinsPreScaled", HULL_HUMAN_MINS);
 				npcEntity.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", HULL_HUMAN_MAXS);
-			}
-			for (int i = 0; i < 2; i++)
-			{
-				// Yes we don't want to increase the Z values
-				pathingBoxMin[i] -= 5.0;
-				pathingBoxMax[i] += 5.0;
 			}
 			npcBoss.SetBodyMins(pathingBoxMin);
 			npcBoss.SetBodyMaxs(pathingBoxMax);
@@ -4199,9 +4188,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 	{
 		return Plugin_Continue;
 	}
+	int bossEnt = controller.EntIndex;
 	if (controller.TeleportType == 2)
 	{
-		int bossEnt = controller.EntIndex;
 		if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 		{
 			if (NPCGetType(bossIndex) == SF2BossType_Chaser)
@@ -4261,6 +4250,11 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 			}
 			else
 			{
+				if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
+				{
+					controller.UnSpawn();
+					return Plugin_Continue;
+				}
 				float teleportMinRange = g_SlenderTeleportMinRange[bossIndex][difficulty];
 				bool shouldBeBehindObstruction = false;
 				if (NPCGetTeleportType(bossIndex) == 2)

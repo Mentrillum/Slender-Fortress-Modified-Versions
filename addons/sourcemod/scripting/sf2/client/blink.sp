@@ -24,6 +24,10 @@ static void OnPutInServer(SF2_BasePlayer client)
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
 	ClientResetBlink(client.index);
+	if (!client.IsEliminated)
+	{
+		ClientStartDrainingBlinkMeter(client.index);
+	}
 }
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)

@@ -9,6 +9,16 @@ methodmap SF2_StatueEntity < CBaseCombatCharacter
 		return view_as<SF2_StatueEntity>(entity);
 	}
 
+	public bool IsValid()
+	{
+		if (!CBaseCombatCharacter(this.index).IsValid())
+		{
+			return false;
+		}
+
+		return CEntityFactory.GetFactoryOfEntity(this.index) == g_Factory;
+	}
+
 	public static void Initialize()
 	{
 		g_Factory = new CEntityFactory("sf2_statue_npc", OnCreate, OnRemove);
@@ -107,11 +117,30 @@ methodmap SF2_StatueEntity < CBaseCombatCharacter
 		char buffer[PLATFORM_MAX_PATH];
 
 		GetSlenderModel(controller.Index, _, buffer, sizeof(buffer));
+		statue.SetModel(buffer);
+		statue.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[controller.Index]));
+		statue.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[controller.Index]));
+		statue.SetRenderColor(g_SlenderRenderColor[controller.Index][0], g_SlenderRenderColor[controller.Index][1],
+								g_SlenderRenderColor[controller.Index][2], g_SlenderRenderColor[controller.Index][3]);
+
+		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
+		{
+			float scaleModel = controller.ModelScale * 0.5;
+			statue.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
+		}
+		else
+		{
+			statue.SetPropFloat(Prop_Send, "m_flModelScale", controller.ModelScale);
+		}
 
 		CBaseNPC npc = TheNPCs.FindNPCByEntIndex(statue.index);
 		CBaseNPC_Locomotion loco = npc.GetLocomotion();
 
 		npc.flMaxYawRate = 0.0;
+		npc.flStepSize = 18.0;
+		npc.flGravity = g_Gravity;
+		npc.flDeathDropHeight = 99999.0;
+		npc.flJumpHeight = 512.0;
 		loco.SetCallback(LocomotionCallback_IsAbleToJumpAcrossGaps, CanJumpAcrossGaps);
 		loco.SetCallback(LocomotionCallback_IsAbleToClimb, CanJumpAcrossGaps);
 		loco.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGapsCBase);
@@ -128,6 +157,13 @@ methodmap SF2_StatueEntity < CBaseCombatCharacter
 
 		SDKHook(statue.iEnt, SDKHook_ThinkPost, SlenderStatueSetNextThink);
 		SDKHook(statue.iEnt, SDKHook_Think, SlenderStatueBossProcessMovement);
+
+		statue.Teleport(pos, ang, NULL_VECTOR);
+
+		statue.Spawn();
+		statue.Activate();
+
+		return statue;
 	}
 }
 

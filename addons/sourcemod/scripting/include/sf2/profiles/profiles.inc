@@ -1365,6 +1365,11 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				animDataArray.GetArray(j, animData, sizeof(animData));
 				animData.Destroy();
 			}
+
+			if (animDataArray != null)
+			{
+				delete animDataArray;
+			}
 		}
 
 		for (int i = 0; i < gestureSnapshot.Length; i++)
@@ -1377,11 +1382,11 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				animDataArray.GetArray(j, gestureData, sizeof(gestureData));
 				gestureData.Destroy();
 			}
-		}
 
-		if (animDataArray != null)
-		{
-			delete animDataArray;
+			if (animDataArray != null)
+			{
+				delete animDataArray;
+			}
 		}
 
 		delete snapshot;

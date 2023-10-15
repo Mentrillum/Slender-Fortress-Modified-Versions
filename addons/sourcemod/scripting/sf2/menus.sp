@@ -7,7 +7,7 @@
 #pragma semicolon 1
 
 Handle g_MenuMain;
-Handle g_MenuVoteDifficulty;
+Menu g_MenuVoteDifficulty;
 Handle g_MenuHelp;
 Handle g_MenuHelpObjective;
 Handle g_MenuHelpObjective2;
@@ -301,147 +301,123 @@ void RandomizeVoteMenu()
 	g_Voters = new ArrayList(2);
 	g_IsRunOff = false;
 
-	g_MenuVoteDifficulty = CreateMenu((g_DifficultyVoteRevoteConVar.FloatValue > 0.0) ? Menu_VoteNoneDifficulty : Menu_VoteDifficulty);
-	SetMenuTitle(g_MenuVoteDifficulty, "%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+	g_MenuVoteDifficulty = new Menu((g_DifficultyVoteRevoteConVar.FloatValue > 0.0) ? Menu_VoteNoneDifficulty : Menu_VoteDifficulty);
+	g_MenuVoteDifficulty.SetTitle("%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
 
 	g_DifficultyVoteOptionsConVar.GetString(buffer, sizeof(buffer));
 
 	bool normal = StrContains(buffer, "1") != -1;
 	bool hard = StrContains(buffer, "2") != -1;
 	bool insane = StrContains(buffer, "3") != -1;
-	bool nightmare = StrContains(buffer, "4") != -1;
-	bool apollyon = StrContains(buffer, "5") != -1;
 	bool random = StrContains(buffer, "6") != -1;
 
-	switch (GetRandomInt(1, 6))//There's probably a better way to do this but I was tired.
+	// WHOA there is a better way, and I'm not tired
+	ArrayList options = new ArrayList(ByteCountToCells(64));
+	ArrayList indicies = new ArrayList();
+	int index = 0;
+	if (normal)
 	{
-		case 1:
-		{
-			if (normal)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
-			}
-			if (hard)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
-			}
-			if (insane)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
-			}
-		}
-		case 2:
-		{
-			if (hard)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
-			}
-			if (normal)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
-			}
-			if (insane)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
-			}
-		}
-		case 3:
-		{
-			if (hard)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
-			}
-			if (insane)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
-			}
-			if (normal)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
-			}
-		}
-		case 4:
-		{
-			if (normal)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
-			}
-			if (insane)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
-			}
-			if (hard)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
-			}
-		}
-		case 5:
-		{
-			if (insane)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
-			}
-			if (normal)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
-			}
-			if (hard)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
-			}
-		}
-		case 6:
-		{
-			if (insane)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "3", buffer);
-			}
-			if (hard)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "2", buffer);
-			}
-			if (normal)
-			{
-				FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
-				AddMenuItem(g_MenuVoteDifficulty, "1", buffer);
-			}
-		}
+		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Normal Difficulty");
+		options.PushString(buffer);
+		indicies.Push(1);
+		index++;
 	}
 
-	if (nightmare)
+	if (hard)
 	{
+		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Hard Difficulty");
+		options.PushString(buffer);
+		indicies.Push(2);
+		index++;
+	}
+
+	if (insane)
+	{
+		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Insane Difficulty");
+		options.PushString(buffer);
+		indicies.Push(3);
+		index++;
+	}
+
+	int participating = 0;
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i) || !IsClientParticipating(i) || IsFakeClient(i))
+		{
+			continue;
+		}
+
+		participating++;
+	}
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i) || g_PlayerEliminated[i])
+		{
+			continue;
+		}
+
+		int group = ClientGetPlayerGroup(i);
+		if (!IsPlayerGroupValid(group) || !IsPlayerGroupOptInHarder(group))
+		{
+			continue;
+		}
+
+		if (GetPlayerGroupMemberCount(group) < participating)
+		{
+			if (GetPlayerGroupMemberCount(group) < GetMaxPlayersForRound())
+			{
+				continue;
+			}
+		}
+
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Nightmare Difficulty");
-		AddMenuItem(g_MenuVoteDifficulty, "4", buffer);
-	}
+		options.PushString(buffer);
+		indicies.Push(4);
+		index++;
 
-	if (apollyon)
-	{
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Apollyon Difficulty");
-		AddMenuItem(g_MenuVoteDifficulty, "5", buffer);
+		options.PushString(buffer);
+		indicies.Push(5);
+		index++;
+		break;
 	}
 
 	if (random)
 	{
 		FormatEx(buffer, sizeof(buffer), "%t", "SF2 Random Difficulty");
-		AddMenuItem(g_MenuVoteDifficulty, "", buffer);
+		options.PushString(buffer);
+		indicies.Push(6);
+		index++;
 	}
+
+	// I'm going to say that the random shuffle for the array list sucks, so I'm doing my own
+	ArrayList actualOptions = new ArrayList(ByteCountToCells(64));
+	ArrayList actualIndicies = new ArrayList();
+	for (int i = 0; i < options.Length;)
+	{
+		int arrayIndex = GetRandomInt(0, options.Length - 1);
+		char choice[64];
+		options.GetString(arrayIndex, choice, sizeof(choice));
+		actualOptions.PushString(choice);
+		actualIndicies.Push(indicies.Get(arrayIndex));
+		options.Erase(arrayIndex);
+		indicies.Erase(arrayIndex);
+	}
+
+	for (int i = 0; i < actualOptions.Length; i++)
+	{
+		int indexToAdd = actualIndicies.Get(i);
+		char choice[64], value[2];
+		actualOptions.GetString(i, choice, sizeof(choice));
+		FormatEx(value, sizeof(value), "%d", indexToAdd);
+		g_MenuVoteDifficulty.AddItem(value, choice);
+	}
+
+	delete options;
+	delete indicies;
+	delete actualOptions;
+	delete actualIndicies;
 
 	if (g_DifficultyVoteRevoteConVar.FloatValue > 0.0)
 	{
@@ -616,12 +592,12 @@ static int Menu_VoteNoneDifficulty(Menu menu, MenuAction action,int param1,int p
 	return 0;
 }
 
-static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param2)
+static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
 		char option[64];
-		GetMenuItem(menu, param2, option, sizeof(option));
+		menu.GetItem(param2, option, sizeof(option));
 		int index = g_Voters.Push(param1);
 		int value = StringToInt(option);
 		g_Voters.Set(index, value, 1);
@@ -629,7 +605,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_RestartSessionConVar.BoolValue)
 	{
 		int clientInGame = 0, clientCallingForNightmare = 0;
-		for (int client = 1; client < MaxClients; client++)
+		for (int client = 1; client <= MaxClients; client++)
 		{
 			if (IsValidClient(client) && !g_PlayerEliminated[client])
 			{
@@ -643,7 +619,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 		bool playersCalledForNightmare = (clientInGame == clientCallingForNightmare);
 
 		char info[64], display[256], color[32], nightmareDisplay[256];
-		GetMenuItem(menu, param1, info, sizeof(info), _, display, sizeof(display));
+		menu.GetItem(param1, info, sizeof(info), _, display, sizeof(display));
 
 		bool rng = false;
 
@@ -651,7 +627,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 		{
 			g_DifficultyConVar.SetInt(Difficulty_Insane);
 		}
-		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) && !SF_SpecialRound(SPECIALROUND_2DOOM) &&
+		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) &&
 		!SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) &&
 		!SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) &&
 		(GetRandomInt(1, 200) <= 2 || playersCalledForNightmare))
@@ -666,7 +642,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 				g_DifficultyConVar.SetInt(Difficulty_Nightmare);
 			}
 		}
-		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE) || SF_SpecialRound(SPECIALROUND_2DOOM)))
+		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE)))
 		{
 			g_DifficultyConVar.SetInt(Difficulty_Hard);
 		}
@@ -683,43 +659,15 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 				bool normal = StrContains(info, "1") != -1;
 				bool hard = StrContains(info, "2") != -1;
 				bool insane = StrContains(info, "3") != -1;
-				bool nightmare = StrContains(info, "4") != -1;
-				bool apollyon = StrContains(info, "5") != -1;
 
-				int count = ((normal ? 1 : 0) + (hard ? 1 : 0) + (insane ? 1 : 0) + (nightmare ? 1 : 0) + (apollyon ? 1 : 0));
+				int count = ((normal ? 1 : 0) + (hard ? 1 : 0) + (insane ? 1 : 0));
 
 				int rand = GetRandomInt(1, count);
 				switch (rand)
 				{
-					case 5:
-					{
-						g_DifficultyConVar.SetInt(Difficulty_Apollyon);
-					}
-					case 4:
-					{
-						if (nightmare)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-						}
-						else
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
-						}
-					}
 					case 3:
 					{
-						if (insane)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
-						}
-						else if (nightmare)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-						}
-						else
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
-						}
+						g_DifficultyConVar.SetInt(Difficulty_Insane);
 					}
 					case 2:
 					{
@@ -727,17 +675,9 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 						{
 							g_DifficultyConVar.SetInt(Difficulty_Hard);
 						}
-						else if (insane)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
-						}
-						else if (nightmare)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-						}
 						else
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							g_DifficultyConVar.SetInt(Difficulty_Insane);
 						}
 					}
 					case 1:
@@ -750,35 +690,22 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 						{
 							g_DifficultyConVar.SetInt(Difficulty_Hard);
 						}
-						else if (insane)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
-						}
-						else if (nightmare)
-						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-						}
 						else
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							g_DifficultyConVar.SetInt(Difficulty_Insane);
 						}
 					}
 				}
 			}
 			else
 			{
-				g_DifficultyConVar.SetInt(GetRandomInt(Difficulty_Normal, Difficulty_Apollyon));
+				g_DifficultyConVar.SetInt(GetRandomInt(Difficulty_Normal, Difficulty_Insane));
 			}
 		}
 
 		int difficulty = g_DifficultyConVar.IntValue;
 		switch (difficulty)
 		{
-			case Difficulty_Easy:
-			{
-				FormatEx(display, sizeof(display), "%t", "SF2 Easy Difficulty");
-				strcopy(color, sizeof(color), "{green}");
-			}
 			case Difficulty_Hard:
 			{
 				FormatEx(display, sizeof(display), "%t", "SF2 Hard Difficulty");
@@ -862,7 +789,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action,int param1,int param
 		CPrintToChatAll("%t %s%s", "SF2 Difficulty Vote Finished", color, display);
 		char checker[64];
 		g_DifficultyVoteRandomConVar.GetString(checker, sizeof(checker));
-		if (GetMenuItemCount(g_MenuVoteDifficulty) > 1)
+		if (g_MenuVoteDifficulty.ItemCount > 1)
 		{
 			Call_StartForward(g_OnDifficultyVoteFinishedFwd);
 			Call_PushCell(g_Voters);

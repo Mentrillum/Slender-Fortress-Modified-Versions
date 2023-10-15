@@ -5,8 +5,6 @@
 
 #pragma semicolon 1
 
-static bool g_NpcStatueMoving[MAX_BOSSES];
-
 static float g_NpcStatueChaseDuration[MAX_BOSSES][Difficulty_Max];
 static float g_NpcStatueChaseDurationAddMin[MAX_BOSSES][Difficulty_Max];
 static float g_NpcStatueChaseDurationAddMax[MAX_BOSSES][Difficulty_Max];
@@ -54,12 +52,11 @@ void NPCStatueOnSelectProfile(const char[] profile, int npcIndex)
 	}
 }
 
-CBaseCombatCharacter Spawn_Statue(int npcIndex)
+CBaseCombatCharacter Spawn_Statue(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
 {
-	g_NpcStatueMoving[npcIndex] = false;
-	g_SlenderTarget[npcIndex] = INVALID_ENT_REFERENCE;
-	g_SlenderStatueIdleLifeTime[npcIndex] = GetGameTime() + g_NpcStatueIdleLifetime[npcIndex][GetLocalGlobalDifficulty()];
-	return CBaseCombatCharacter(CreateEntityByName("sf2_statue_npc"));
+	g_SlenderTarget[controller.Index] = INVALID_ENT_REFERENCE;
+	g_SlenderStatueIdleLifeTime[controller.Index] = GetGameTime() + g_NpcStatueIdleLifetime[controller.Index][GetLocalGlobalDifficulty()];
+	return SF2_StatueEntity.Create(controller, pos, ang);
 }
 
 void SlenderStatueBossProcessMovement(int bossEnt)
@@ -102,6 +99,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 
 	INextBot bot = npc.GetBot();
 	CBaseNPC_Locomotion loco = npc.GetLocomotion();
+	SF2_StatueEntity statue = SF2_StatueEntity(bossEnt);
 
 	char slenderProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, slenderProfile, sizeof(slenderProfile));
@@ -119,7 +117,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 	float speed = originalSpeed;
 	speed = originalSpeed + ((originalSpeed * g_RoundDifficultyModifier) / 15.0);
 
-	if (!g_SlenderInDeathcam[bossIndex] && g_NpcStatueMoving[bossIndex])
+	if (!g_SlenderInDeathcam[bossIndex] && statue.IsMoving)
 	{
 		npc.flWalkSpeed = speed * 10.0;
 		npc.flRunSpeed = speed * 10.0;
@@ -134,9 +132,10 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 	// Process angles.
 	bool changeAngle = false;
 	float posToAt[3];
-	if (g_NpcStatueMoving[bossIndex])
+	g_SlenderTarget[bossIndex] = EnsureEntRef(statue.Target);
+	if (statue.IsMoving)
 	{
-		int target = EntRefToEntIndex(g_SlenderTarget[bossIndex]);
+		int target = statue.Target;
 		if (target && target != INVALID_ENT_REFERENCE)
 		{
 			changeAngle = true;
@@ -160,7 +159,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 
 	if (!g_SlenderSpawning[bossIndex] && !g_SlenderInDeathcam[bossIndex])
 	{
-		if (g_NpcStatueMoving[bossIndex])
+		if (statue.IsMoving)
 		{
 			loco.Run();
 			g_BossPathFollower[bossIndex].Update(bot);
@@ -170,7 +169,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 		{
 			loco.Stop();
 		}
-		if (loco.IsOnGround() && !loco.IsClimbingOrJumping() && g_NpcStatueMoving[bossIndex])
+		if (loco.IsOnGround() && !loco.IsClimbingOrJumping() && statue.IsMoving)
 		{
 			float pathNodePos[3], pathEndPos[3];
 			Segment segment;
@@ -217,7 +216,7 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 		g_NpcVelocityCancel[bossIndex] = false;
 	}
 
-	if (g_NpcStatueMoving[bossIndex] && !g_SlenderInDeathcam[bossIndex] && GetGameTime() < g_NpcTimeUntilAbandon[bossIndex] && (GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
+	if (statue.IsMoving && !g_SlenderInDeathcam[bossIndex] && GetGameTime() < g_NpcTimeUntilAbandon[bossIndex] && (GetGameTime() - g_SlenderLastKill[bossIndex]) >= NPCGetInstantKillCooldown(bossIndex, difficulty))
 	{
 		bool runUnstuck = true;
 		if (runUnstuck)
@@ -228,19 +227,94 @@ void SlenderStatueBossProcessMovement(int bossEnt)
 
 				if (!blockingProp)
 				{
-					if (g_LastStuckTime[bossIndex] == 0.0) g_LastStuckTime[bossIndex] = GetGameTime();
-
-					if ((g_LastStuckTime[bossIndex] <= GetGameTime()-1.0 || loco.GetStuckDuration() >= 1.0) &&
-					!g_NpcIsRunningToHeal[bossIndex] && !g_NpcIsHealing[bossIndex] && g_BossPathFollower[bossIndex].FirstSegment() != NULL_PATH_SEGMENT)
+					if (g_LastStuckTime[bossIndex] == 0.0)
 					{
-						float movePos[3], segmentPos[3];
-						Segment segment = g_BossPathFollower[bossIndex].FirstSegment();
-						segment.GetPos(segmentPos);
-						g_BossPathFollower[bossIndex].GetClosestPosition(segmentPos, movePos, segment, 50.0);
-						TeleportEntity(bossEnt, movePos, NULL_VECTOR, NULL_VECTOR);
+						g_LastStuckTime[bossIndex] = GetGameTime();
+					}
+
+					if ((g_LastStuckTime[bossIndex] <= GetGameTime() - 1.0 || loco.GetStuckDuration() >= 1.0))
+					{
+						float destination[3];
+						CNavArea area = TheNavMesh.GetNearestNavArea(g_LastPos[bossIndex], _, _, _, false);
+						area.GetCenter(destination);
+						float tempMaxs[3];
+						npc.GetBodyMaxs(tempMaxs);
+						float traceMins[3];
+						traceMins[0] = g_SlenderDetectMins[bossIndex][0];
+						traceMins[1] = g_SlenderDetectMins[bossIndex][1];
+						traceMins[2] = 0.0;
+
+						float traceMaxs[3];
+						traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0];
+						traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1];
+						traceMaxs[2] = tempMaxs[2];
+						TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
+						if (GetVectorSquareMagnitude(destination, g_LastPos[bossIndex]) <= SquareFloat(16.0) || TR_DidHit())
+						{
+							CursorData cursor = g_BossPathFollower[bossIndex].GetCursorData();
+							SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, 256.0);
+							int areaCount = collector.Count();
+							ArrayList areaArray = new ArrayList(1, areaCount);
+							int validAreaCount = 0;
+							for (int i = 0; i < areaCount; i++)
+							{
+								if (collector.Get(i).GetCostSoFar() < 16.0)
+								{
+									continue;
+								}
+								if (cursor.segmentPrior != NULL_PATH_SEGMENT)
+								{
+									CNavArea segmentArea = cursor.segmentPrior.area;
+									if (segmentArea == collector.Get(i))
+									{
+										continue;
+									}
+								}
+								float navPos[3];
+								collector.Get(i).GetCenter(navPos);
+								if (GetVectorSquareMagnitude(myPos, navPos) <= SquareFloat(16.0))
+								{
+									continue;
+								}
+								areaArray.Set(validAreaCount, i);
+								validAreaCount++;
+							}
+
+							int randomArea = 0, randomCell = 0;
+							areaArray.Resize(validAreaCount);
+							area = NULL_AREA;
+							while (validAreaCount > 1)
+							{
+								randomCell = GetRandomInt(0, validAreaCount - 1);
+								randomArea = areaArray.Get(randomCell);
+								area = collector.Get(randomArea);
+								area.GetCenter(destination);
+
+								TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
+								if (TR_DidHit())
+								{
+									area = NULL_AREA;
+									validAreaCount--;
+									int findValue = areaArray.FindValue(randomCell);
+									if (findValue != -1)
+									{
+										areaArray.Erase(findValue);
+									}
+								}
+								else
+								{
+									break;
+								}
+							}
+
+							delete collector;
+							delete areaArray;
+						}
+						g_BossPathFollower[bossIndex].GetClosestPosition(destination, destination, g_BossPathFollower[bossIndex].FirstSegment(), 128.0);
+						TeleportEntity(bossEnt, destination, NULL_VECTOR, NULL_VECTOR);
 
 						loco.ClearStuckStatus();
-						g_LastStuckTime[bossIndex] = 0.0;
+						g_LastStuckTime[bossIndex] = GetGameTime();
 					}
 				}
 			}
