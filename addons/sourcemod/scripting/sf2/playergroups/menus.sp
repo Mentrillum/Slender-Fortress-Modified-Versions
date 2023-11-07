@@ -45,7 +45,7 @@ static int Menu_GroupMain(Menu menu, MenuAction action, int param1, int param2)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_MenuMain, param1, 30);
+			g_MenuMain.Display(param1, 30);
 		}
 	}
 	else if (action == MenuAction_Select)

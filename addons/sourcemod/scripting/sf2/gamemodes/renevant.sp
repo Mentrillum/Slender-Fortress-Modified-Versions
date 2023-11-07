@@ -5,10 +5,21 @@
 
 #pragma semicolon 1
 
+static GlobalForward g_OnRenevantTriggerWaveFwd;
+
 void SetupRenevantMode()
 {
 	g_OnRoundEndPFwd.AddFunction(null, OnRoundEnd);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
+	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
+}
+
+void Renevant_InitializeAPI()
+{
+	g_OnRenevantTriggerWaveFwd = new GlobalForward("SF2_OnRenevantWaveTrigger", ET_Ignore, Param_Cell);
+
+	CreateNative("SF2_IsRenevantMap", Native_IsRenevantMap);
 }
 
 static void OnRoundEnd()
@@ -32,12 +43,28 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 	}
 }
 
-bool SF_IsRenevantMap()
+static void OnPlayerSpawn(SF2_BasePlayer client)
 {
-	return !!(g_IsRenevantMap || (g_RenevantMapConVar.IntValue == 1));
+	if (SF_IsRenevantMap() && g_RenevantMarkForDeath && !client.HasEscaped)
+	{
+		client.ChangeCondition(TFCond_MarkedForDeathSilent, _, -1.0);
+	}
 }
 
-static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int profileLen, char[] name, int nameLen, bool playSpawnSound = true, bool invincible = false)
+static void OnPlayerEscape(SF2_BasePlayer client)
+{
+	if (SF_IsRenevantMap() && g_RenevantMarkForDeath)
+	{
+		client.ChangeCondition(TFCond_MarkedForDeathSilent, true);
+	}
+}
+
+bool SF_IsRenevantMap()
+{
+	return (g_IsRenevantMap || (g_RenevantMapConVar.IntValue == 1));
+}
+
+static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int profileLen, char[] name, int nameLen, bool playSpawnSound = true)
 {
 	if (!GetRandomRenevantBossProfile(profile, profileLen))
 	{
@@ -49,7 +76,7 @@ static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH]
 	{
 		strcopy(name, nameLen, profile);
 	}
-	AddProfile(profile, _, _, _, playSpawnSound, invincible);
+	AddProfile(profile, _, _, _, playSpawnSound);
 
 	return true;
 }
@@ -340,7 +367,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		{
 			char bufferSingle[SF2_MAX_PROFILE_NAME_LENGTH], singleBossName[SF2_MAX_NAME_LENGTH];
 			g_DefaultRenevantBossConVar.GetString(bufferSingle, sizeof(bufferSingle));
-			if (Renevant_TryAddBossProfile(bufferSingle, sizeof(bufferSingle), singleBossName, sizeof(singleBossName), _, true))
+			if (Renevant_TryAddBossProfile(bufferSingle, sizeof(bufferSingle), singleBossName, sizeof(singleBossName)))
 			{
 				addedBossCount++;
 			}
@@ -513,7 +540,7 @@ static void Renevant_SpawnApollyon()
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", teleportPos);
 		for(int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
 		{
-			SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(npcIndex);
+			SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(npcIndex);
 			if (!Npc.IsValid())
 			{
 				continue;
@@ -528,7 +555,7 @@ static void Renevant_SpawnApollyon()
 	}
 }
 
-int Native_IsRenevantMap(Handle plugin, int numParams)
+static int Native_IsRenevantMap(Handle plugin, int numParams)
 {
 	return view_as<int>(SF_IsRenevantMap());
 }

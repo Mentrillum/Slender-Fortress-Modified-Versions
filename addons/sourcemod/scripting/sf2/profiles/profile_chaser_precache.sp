@@ -10,22 +10,18 @@
  *	Parses and stores the unique values of a chaser profile from the current position in the profiles config.
  *	Returns true if loading was successful, false if not.
  */
-bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
+bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen, SF2BossProfileData baseData)
 {
 	strcopy(loadFailReasonBuffer, loadFailReasonBufferLen, "");
 
 	SF2ChaserBossProfileData profileData;
 	profileData.Init();
 
-	SF2BossProfileData g_CachedProfileData;
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
+	profileData.UnnerfedVisibility = kv.GetNum("old_boss_visibility", profileData.UnnerfedVisibility) != 0;
 
-	profileData.UnnerfedVisibility = !!kv.GetNum("old_boss_visibility", profileData.UnnerfedVisibility);
-
-	profileData.ClearLayersOnAnimUpdate = !!kv.GetNum("animation_clear_layers_on_update", profileData.ClearLayersOnAnimUpdate);
+	profileData.ClearLayersOnAnimUpdate = kv.GetNum("animation_clear_layers_on_update", profileData.ClearLayersOnAnimUpdate) != 0;
 
 	GetProfileDifficultyFloatValues(kv, "walkspeed", profileData.WalkSpeed, profileData.WalkSpeed);
-	GetProfileDifficultyFloatValues(kv, "walkspeed_max", profileData.MaxWalkSpeed, profileData.MaxWalkSpeed);
 
 	profileData.WakeRadius = kv.GetFloat("wake_radius", profileData.WakeRadius);
 	if (profileData.WakeRadius < 0.0)
@@ -33,21 +29,50 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.WakeRadius = 0.0;
 	}
 
+	if (kv.JumpToKey("idle"))
+	{
+		profileData.IdleData.Load(kv);
+		kv.GoBack();
+	}
+
 	GetProfileDifficultyFloatValues(kv, "alert_gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
 	GetProfileDifficultyFloatValues(kv, "alert_duration", profileData.AlertDuration, profileData.AlertDuration);
-	GetProfileDifficultyFloatValues(kv, "chase_duration", profileData.ChaseDuration, profileData.ChaseDuration);
-	profileData.ChaseDurationAddVisibleMin = kv.GetFloat("chase_duration_add_visible_min", profileData.ChaseDurationAddVisibleMin);
-	profileData.ChaseDurationAddVisibleMax = kv.GetFloat("chase_duration_add_visible_max", profileData.ChaseDurationAddVisibleMax);
 
-	profileData.ChasePersistencyTimeInit = kv.GetFloat("chase_persistency_time_init", profileData.ChasePersistencyTimeInit);
-	profileData.ChaseAttackPersistencyTimeInit = kv.GetFloat("chase_persistency_time_init_attack", profileData.ChaseAttackPersistencyTimeInit);
-	profileData.ChaseAttackPersistencyTimeAdd = kv.GetFloat("chase_persistency_time_add_attack", profileData.ChaseAttackPersistencyTimeAdd);
-	profileData.ChaseNewTargetPersistencyTimeInit = kv.GetFloat("chase_persistency_time_init_newtarget", profileData.ChaseNewTargetPersistencyTimeInit);
-	profileData.ChaseNewTargetPersistencyTimeAdd = kv.GetFloat("chase_persistency_time_add_newtarget", profileData.ChaseNewTargetPersistencyTimeAdd);
-	profileData.ChasePersistencyAddVisibleMin = kv.GetFloat("chase_persistency_time_add_visible_min", profileData.ChasePersistencyAddVisibleMin);
-	profileData.ChasePersistencyAddVisibleMax = kv.GetFloat("chase_persistency_time_add_visible_max", profileData.ChasePersistencyAddVisibleMax);
-	profileData.ChaseStunPersistencyTimeInit = kv.GetFloat("chase_persistency_time_init_stun", profileData.ChaseStunPersistencyTimeInit);
-	profileData.ChaseStunPersistencyTimeAdd = kv.GetFloat("chase_persistency_time_add_stun", profileData.ChaseStunPersistencyTimeAdd);
+	if (kv.JumpToKey("alert"))
+	{
+		GetProfileDifficultyFloatValues(kv, "gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
+		GetProfileDifficultyFloatValues(kv, "duration", profileData.AlertDuration, profileData.AlertDuration);
+		GetProfileDifficultyBoolValues(kv, "run_on_wander", profileData.AlertRunOnWander, profileData.AlertRunOnWander);
+		GetProfileDifficultyBoolValues(kv, "run_on_suspect", profileData.AlertRunOnHearSound, profileData.AlertRunOnHearSound);
+
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			profileData.AlertOnAlertInfo.Radius[i] = baseData.SearchRange[i];
+		}
+		profileData.AlertOnAlertInfo.Load(kv);
+
+		kv.GoBack();
+	}
+
+	if (kv.JumpToKey("chase"))
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			profileData.AlertOnChaseInfo.Radius[i] = baseData.SearchRange[i];
+		}
+		profileData.AlertOnChaseInfo.Load(kv);
+
+		kv.GoBack();
+	}
+
+	GetProfileDifficultyFloatValues(kv, "chase_duration", profileData.ChaseDuration, profileData.ChaseDuration);
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		profileData.ChaseDurationAddMaxRange[i] = baseData.SearchRange[i];
+	}
+	GetProfileDifficultyFloatValues(kv, "chase_duration_add_max_range", profileData.ChaseDurationAddMaxRange, profileData.ChaseDurationAddMaxRange);
+	GetProfileDifficultyFloatValues(kv, "chase_duration_add_visible_min", profileData.ChaseDurationAddVisibleMin, profileData.ChaseDurationAddVisibleMin);
+	GetProfileDifficultyFloatValues(kv, "chase_duration_add_visible_max", profileData.ChaseDurationAddVisibleMax, profileData.ChaseDurationAddVisibleMax);
 
 	if (kv.JumpToKey("senses"))
 	{
@@ -81,9 +106,16 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			}
 			kv.GoBack();
 		}
+		if (kv.JumpToKey("smell"))
+		{
+			profileData.SmellData.Load(kv);
+
+			kv.GoBack();
+		}
 		kv.GoBack();
 	}
 
+	GetProfileDifficultyBoolValues(kv, "wander_move", profileData.CanWander, profileData.CanWander);
 	GetProfileDifficultyFloatValues(kv, "wander_range_min", profileData.WanderRangeMin, profileData.WanderRangeMin);
 	GetProfileDifficultyFloatValues(kv, "wander_range_max", profileData.WanderRangeMax, profileData.WanderRangeMax);
 	GetProfileDifficultyFloatValues(kv, "wander_time_min", profileData.WanderTimeMin, profileData.WanderTimeMin);
@@ -91,19 +123,11 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	GetProfileDifficultyFloatValues(kv, "wander_enter_time_min", profileData.WanderEnterTimeMin, profileData.WanderEnterTimeMin);
 	GetProfileDifficultyFloatValues(kv, "wander_enter_time_max", profileData.WanderEnterTimeMax, profileData.WanderEnterTimeMax);
 
-	profileData.StunEnabled = !!kv.GetNum("stun_enabled", profileData.StunEnabled);
+	profileData.StunEnabled = kv.GetNum("stun_enabled", profileData.StunEnabled) != 0;
 	if (profileData.StunEnabled)
 	{
-		profileData.StunCooldown = kv.GetFloat("stun_cooldown", profileData.StunCooldown);
-		if (profileData.StunCooldown < 0.0)
-		{
-			profileData.StunCooldown = 0.0;
-		}
-		profileData.StunHealth = kv.GetFloat("stun_health", profileData.StunHealth);
-		if (profileData.StunHealth < 0.0)
-		{
-			profileData.StunHealth = 0.0;
-		}
+		GetProfileDifficultyFloatValues(kv, "stun_cooldown", profileData.StunCooldown, profileData.StunCooldown);
+		GetProfileDifficultyFloatValues(kv, "stun_health", profileData.StunHealth, profileData.StunHealth);
 		profileData.StunHealthPerPlayer = kv.GetFloat("stun_health_per_player", profileData.StunHealthPerPlayer);
 		if (profileData.StunHealthPerPlayer < 0.0)
 		{
@@ -118,25 +142,14 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.StunHealthPerClass[7] = kv.GetFloat("stun_health_per_pyro", profileData.StunHealthPerClass[7]);
 		profileData.StunHealthPerClass[8] = kv.GetFloat("stun_health_per_spy", profileData.StunHealthPerClass[8]);
 		profileData.StunHealthPerClass[9] = kv.GetFloat("stun_health_per_engineer", profileData.StunHealthPerClass[9]);
-		profileData.FlashlightStun = !!kv.GetNum("stun_damage_flashlight_enabled", profileData.FlashlightStun);
-		profileData.FlashlightDamage = kv.GetFloat("stun_damage_flashlight", profileData.FlashlightDamage);
-		profileData.ChaseInitialOnStun = !!kv.GetNum("chase_initial_on_stun", profileData.ChaseInitialOnStun);
+		GetProfileDifficultyBoolValues(kv, "stun_damage_flashlight_enabled", profileData.FlashlightStun, profileData.FlashlightStun);
+		GetProfileDifficultyFloatValues(kv, "stun_damage_flashlight", profileData.FlashlightDamage, profileData.FlashlightDamage);
+		profileData.ChaseInitialOnStun = kv.GetNum("chase_initial_on_stun", profileData.ChaseInitialOnStun) != 0;
 
-		profileData.ItemDropOnStun = !!kv.GetNum("drop_item_on_stun", profileData.ItemDropOnStun);
-		if (profileData.ItemDropOnStun)
-		{
-			profileData.StunItemDropType = kv.GetNum("drop_item_type", profileData.StunItemDropType);
-			if (profileData.StunItemDropType < 1)
-			{
-				profileData.StunItemDropType = 1;
-			}
-			if (profileData.StunItemDropType > 7)
-			{
-				profileData.StunItemDropType = 7;
-			}
-		}
+		GetProfileDifficultyBoolValues(kv, "drop_item_on_stun", profileData.ItemDropOnStun);
+		GetProfileDifficultyNumValues(kv, "drop_item_type", profileData.StunItemDropType, profileData.StunItemDropType);
 
-		profileData.DisappearOnStun = !!kv.GetNum("disappear_on_stun", profileData.DisappearOnStun);
+		profileData.DisappearOnStun = kv.GetNum("disappear_on_stun", profileData.DisappearOnStun) != 0;
 
 		if (kv.JumpToKey("resistances"))
 		{
@@ -156,7 +169,7 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			kv.GoBack();
 		}
 
-		profileData.KeyDrop = !!kv.GetNum("keydrop_enabled", profileData.KeyDrop);
+		profileData.KeyDrop = kv.GetNum("keydrop_enabled", profileData.KeyDrop) != 0;
 		if (profileData.KeyDrop)
 		{
 			kv.GetString("key_model", profileData.KeyModel, sizeof(profileData.KeyModel), profileData.KeyModel);
@@ -165,25 +178,18 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		}
 	}
 
-	profileData.CanCloak = !!kv.GetNum("cloak_enable", profileData.CanCloak);
-	if (profileData.CanCloak)
+	if (kv.JumpToKey("death"))
 	{
-		GetProfileDifficultyFloatValues(kv, "cloak_cooldown", profileData.CloakCooldown, profileData.CloakCooldown);
-		GetProfileDifficultyFloatValues(kv, "cloak_range", profileData.CloakRange, profileData.CloakRange);
-		GetProfileDifficultyFloatValues(kv, "cloak_decloak_range", profileData.DecloakRange, profileData.DecloakRange);
-		GetProfileDifficultyFloatValues(kv, "cloak_duration", profileData.CloakDuration, profileData.CloakDuration);
-		GetProfileDifficultyFloatValues(kv, "cloak_speed_multiplier", profileData.CloakSpeedMultiplier, profileData.CloakSpeedMultiplier);
-		kv.GetString("cloak_particle", profileData.CloakParticle, sizeof(profileData.CloakParticle), profileData.CloakParticle);
-
-		GetProfileColorNoBacks(kv, "cloak_rendercolor", profileData.CloakRenderColor[0], profileData.CloakRenderColor[1], profileData.CloakRenderColor[2], profileData.CloakRenderColor[3],
-								g_CachedProfileData.RenderColor[0], g_CachedProfileData.RenderColor[1], g_CachedProfileData.RenderColor[2], profileData.CloakRenderColor[3]);
-		profileData.CloakRenderMode = kv.GetNum("cloak_rendermode", profileData.CloakRenderMode);
-
-		kv.GetString("cloak_on_sound", profileData.CloakOnSound, sizeof(profileData.CloakOnSound), profileData.CloakOnSound);
-		kv.GetString("cloak_off_sound", profileData.CloakOffSound, sizeof(profileData.CloakOffSound), profileData.CloakOffSound);
-		TryPrecacheBossProfileSoundPath(profileData.CloakOnSound, g_FileCheckConVar.BoolValue);
-		TryPrecacheBossProfileSoundPath(profileData.CloakOffSound, g_FileCheckConVar.BoolValue);
+		profileData.DeathData.Load(kv, g_FileCheckConVar.BoolValue);
+		kv.GoBack();
 	}
+
+	if (kv.JumpToKey("cloaking"))
+	{
+		profileData.CloakData.Load(kv, g_FileCheckConVar.BoolValue);
+		kv.GoBack();
+	}
+
 	profileData.ProjectilesEnabled = !!kv.GetNum("projectile_enable", profileData.ProjectilesEnabled);
 	if (profileData.ProjectilesEnabled)
 	{
@@ -198,8 +204,8 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		GetProfileDifficultyFloatValues(kv, "projectile_damageradius", profileData.ProjectileRadius, profileData.ProjectileRadius);
 		GetProfileDifficultyFloatValues(kv, "projectile_deviation", profileData.ProjectileDeviation, profileData.ProjectileDeviation);
 		GetProfileDifficultyNumValues(kv, "projectile_count", profileData.ProjectileCount, profileData.ProjectileCount);
-		profileData.CriticalProjectiles = !!kv.GetNum("enable_crit_rockets", profileData.CriticalProjectiles);
-		profileData.ShootGestures = !!kv.GetNum("use_gesture_shoot", profileData.ShootGestures);
+		profileData.CriticalProjectiles = kv.GetNum("enable_crit_rockets", profileData.CriticalProjectiles) != 0;
+		profileData.ShootGestures = kv.GetNum("use_gesture_shoot", profileData.ShootGestures) != 0;
 		if (profileData.ShootGestures)
 		{
 			kv.GetString("gesture_shootprojectile", profileData.ShootGestureName, sizeof(profileData.ShootGestureName), profileData.ShootGestureName);
@@ -321,7 +327,7 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 			float position[3];
 			for (int i = 0; i <= profileData.ProjectileRandomPosMax; i++)
 			{
-				position = view_as<float>( { 0.0, 0.0, 0.0 });
+				position = { 0.0, 0.0, 0.0 };
 				FormatEx(keyName, sizeof(keyName), "projectile_pos_offset_%i", i);
 				kv.GetVector(keyName, position, position);
 				profileData.ProjectilePosOffsets.PushArray(position);
@@ -331,197 +337,6 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 
 	profileData.ShootAnimations = !!kv.GetNum("use_shoot_animations", profileData.ShootAnimations);
 
-	profileData.AdvancedDamageEffects = !!kv.GetNum("player_damage_effects", profileData.AdvancedDamageEffects);
-	if (profileData.AdvancedDamageEffects)
-	{
-		profileData.AdvancedDamageEffectParticles = !!kv.GetNum("player_attach_particle", profileData.AdvancedDamageEffectParticles);
-
-		profileData.RandomAdvancedDamageEffects = !!kv.GetNum("player_damage_random_effects", profileData.RandomAdvancedDamageEffects);
-		if (profileData.RandomAdvancedDamageEffects)
-		{
-			profileData.RandomEffectIndexes = kv.GetNum("player_random_attack_indexes", profileData.RandomEffectIndexes);
-			if (profileData.RandomEffectIndexes < 0)
-			{
-				profileData.RandomEffectIndexes = 1;
-			}
-			kv.GetString("player_random_attack_indexes", profileData.RandomEffectIndexesString, sizeof(profileData.RandomEffectIndexesString), profileData.RandomEffectIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_random_duration", profileData.RandomEffectDuration, profileData.RandomEffectDuration);
-			GetProfileDifficultyFloatValues(kv, "player_random_slowdown", profileData.RandomEffectSlowdown, profileData.RandomEffectSlowdown);
-			profileData.RandomEffectStunType = kv.GetNum("player_random_stun_type", profileData.RandomEffectStunType);
-			if (profileData.RandomEffectStunType < 0)
-			{
-				profileData.RandomEffectStunType = 0;
-			}
-			if (profileData.RandomEffectStunType > 3)
-			{
-				profileData.RandomEffectStunType = 3;
-			}
-		}
-
-		profileData.JarateEffects = !!kv.GetNum("player_jarate_on_hit", profileData.JarateEffects);
-		if (profileData.JarateEffects)
-		{
-			profileData.JarateIndexes = kv.GetNum("player_jarate_attack_indexs", profileData.JarateIndexes);
-			if (profileData.JarateIndexes < 0)
-			{
-				profileData.JarateIndexes = 1;
-			}
-			kv.GetString("player_jarate_attack_indexs", profileData.JarateIndexesString, sizeof(profileData.JarateIndexesString), profileData.JarateIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_jarate_duration", profileData.JarateDuration, profileData.JarateDuration);
-			profileData.JarateBeamParticle = !!kv.GetNum("player_jarate_beam_particle", profileData.JarateBeamParticle);
-			kv.GetString("player_jarate_particle", profileData.JarateParticle, sizeof(profileData.JarateParticle), profileData.JarateParticle);
-
-			kv.GetString("player_jarate_sound", profileData.JarateHitSound, sizeof(profileData.JarateHitSound), profileData.JarateHitSound);
-			TryPrecacheBossProfileSoundPath(profileData.JarateHitSound, g_FileCheckConVar.BoolValue);
-		}
-
-		profileData.MilkEffects = !!kv.GetNum("player_milk_on_hit", profileData.MilkEffects);
-		if (profileData.MilkEffects)
-		{
-			profileData.MilkIndexes = kv.GetNum("player_milk_attack_indexs", profileData.MilkIndexes);
-			if (profileData.MilkIndexes < 0)
-			{
-				profileData.MilkIndexes = 1;
-			}
-			kv.GetString("player_milk_attack_indexs", profileData.MilkIndexesString, sizeof(profileData.MilkIndexesString), profileData.MilkIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_milk_duration", profileData.MilkDuration, profileData.MilkDuration);
-			profileData.MilkBeamParaticle = !!kv.GetNum("player_milk_beam_particle", profileData.MilkBeamParaticle);
-			kv.GetString("player_milk_particle", profileData.MilkParticle, sizeof(profileData.MilkParticle), profileData.MilkParticle);
-
-			kv.GetString("player_milk_sound", profileData.MilkHitSound, sizeof(profileData.MilkHitSound), profileData.MilkHitSound);
-			TryPrecacheBossProfileSoundPath(profileData.MilkHitSound, g_FileCheckConVar.BoolValue);
-		}
-
-		profileData.GasEffects = !!kv.GetNum("player_gas_on_hit", profileData.GasEffects);
-		if (profileData.GasEffects)
-		{
-			profileData.GasIndexes = kv.GetNum("player_gas_attack_indexs", profileData.GasIndexes);
-			if (profileData.GasIndexes < 0)
-			{
-				profileData.GasIndexes = 1;
-			}
-			kv.GetString("player_gas_attack_indexs", profileData.GasIndexesString, sizeof(profileData.GasIndexesString), profileData.GasIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_gas_duration", profileData.GasDuration, profileData.GasDuration);
-			profileData.GasBeamParticle = !!kv.GetNum("player_gas_beam_particle", profileData.GasBeamParticle);
-			kv.GetString("player_gas_particle", profileData.GasParticle, sizeof(profileData.GasParticle), profileData.GasParticle);
-
-			kv.GetString("player_gas_sound", profileData.GasHitSound, sizeof(profileData.GasHitSound), profileData.GasHitSound);
-			TryPrecacheBossProfileSoundPath(profileData.GasHitSound, g_FileCheckConVar.BoolValue);
-		}
-
-		profileData.MarkEffects = !!kv.GetNum("player_mark_on_hit", profileData.MarkEffects);
-		if (profileData.MarkEffects)
-		{
-			profileData.MarkIndexes = kv.GetNum("player_mark_attack_indexs", profileData.MarkIndexes);
-			if (profileData.MarkIndexes < 0)
-			{
-				profileData.MarkIndexes = 1;
-			}
-			kv.GetString("player_mark_attack_indexs", profileData.MarkIndexesString, sizeof(profileData.MarkIndexesString), profileData.MarkIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_mark_duration", profileData.MarkDuration, profileData.MarkDuration);
-		}
-
-		profileData.SilentMarkEffects = !!kv.GetNum("player_silent_mark_on_hit", profileData.SilentMarkEffects);
-		if (profileData.SilentMarkEffects)
-		{
-			profileData.SilentMarkIndexes = kv.GetNum("player_silent_mark_attack_indexs", profileData.SilentMarkIndexes);
-			if (profileData.SilentMarkIndexes < 0)
-			{
-				profileData.SilentMarkIndexes = 1;
-			}
-			kv.GetString("player_silent_mark_attack_indexs", profileData.SilentMarkIndexesString, sizeof(profileData.SilentMarkIndexesString), profileData.SilentMarkIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_silent_mark_duration", profileData.SilentMarkDuration, profileData.SilentMarkDuration);
-		}
-
-		profileData.IgniteEffects = !!kv.GetNum("player_ignite_on_hit", profileData.IgniteEffects);
-		if (profileData.IgniteEffects)
-		{
-			profileData.IgniteIndexes = kv.GetNum("player_ignite_attack_indexs", profileData.IgniteIndexes);
-			if (profileData.IgniteIndexes < 0)
-			{
-				profileData.IgniteIndexes = 1;
-			}
-			kv.GetString("player_ignite_attack_indexs", profileData.IgniteIndexesString, sizeof(profileData.IgniteIndexesString), profileData.IgniteIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_ignite_duration", profileData.IgniteDuration, profileData.IgniteDuration);
-			GetProfileDifficultyFloatValues(kv, "player_ignite_delay", profileData.IgniteDelay, profileData.IgniteDelay);
-		}
-
-		profileData.StunEffects = !!kv.GetNum("player_stun_on_hit", profileData.StunEffects);
-		if (profileData.StunEffects)
-		{
-			profileData.StunEffectType = kv.GetNum("player_stun_type", profileData.StunEffectType);
-			if (profileData.StunEffectType < 0)
-			{
-				profileData.StunEffectType = 0;
-			}
-			if (profileData.StunEffectType > 3)
-			{
-				profileData.StunEffectType = 3;
-			}
-			profileData.StunEffectIndexes = kv.GetNum("player_stun_attack_indexs", profileData.StunEffectIndexes);
-			if (profileData.StunEffectIndexes < 0)
-			{
-				profileData.StunEffectIndexes = 1;
-			}
-			kv.GetString("player_stun_attack_indexs", profileData.StunEffectIndexesString, sizeof(profileData.StunEffectIndexesString), profileData.StunEffectIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_stun_duration", profileData.StunEffectDuration, profileData.StunEffectDuration);
-			GetProfileDifficultyFloatValues(kv, "player_stun_slowdown", profileData.StunEffectSlowdown, profileData.StunEffectSlowdown);
-			profileData.StunEffectBeamParticle = !!kv.GetNum("player_stun_beam_particle", profileData.StunEffectBeamParticle);
-			kv.GetString("player_stun_particle", profileData.StunParticle, sizeof(profileData.StunParticle), profileData.StunParticle);
-
-			kv.GetString("player_stun_sound", profileData.StunHitSound, sizeof(profileData.StunHitSound), profileData.StunHitSound);
-			TryPrecacheBossProfileSoundPath(profileData.StunHitSound, g_FileCheckConVar.BoolValue);
-		}
-
-		profileData.BleedEffects = !!kv.GetNum("player_bleed_on_hit", profileData.BleedEffects);
-		if (profileData.BleedEffects)
-		{
-			profileData.BleedIndexes = kv.GetNum("player_bleed_attack_indexs", profileData.BleedIndexes);
-			if (profileData.BleedIndexes < 0)
-			{
-				profileData.BleedIndexes = 1;
-			}
-			kv.GetString("player_bleed_attack_indexs", profileData.BleedIndexesString, sizeof(profileData.BleedIndexesString), profileData.BleedIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_bleed_duration", profileData.BleedDuration, profileData.BleedDuration);
-		}
-
-		profileData.ElectricEffects = !!kv.GetNum("player_electric_slow_on_hit", profileData.ElectricEffects);
-		if (profileData.ElectricEffects)
-		{
-			profileData.ElectricIndexes = kv.GetNum("player_electrocute_attack_indexs", profileData.ElectricIndexes);
-			if (profileData.ElectricIndexes < 0)
-			{
-				profileData.ElectricIndexes = 1;
-			}
-			kv.GetString("player_electrocute_attack_indexs", profileData.ElectricIndexesString, sizeof(profileData.ElectricIndexesString), profileData.ElectricIndexesString);
-			GetProfileDifficultyFloatValues(kv, "player_electric_slow_duration", profileData.ElectricDuration, profileData.ElectricDuration);
-			GetProfileDifficultyFloatValues(kv, "player_electric_slow_slowdown", profileData.ElectricSlowdown, profileData.ElectricSlowdown);
-			profileData.ElectricBeamParticle = !!kv.GetNum("player_electric_beam_particle", profileData.ElectricBeamParticle);
-			kv.GetString("player_electric_red_particle", profileData.ElectricParticleRed, sizeof(profileData.ElectricParticleRed), profileData.ElectricParticleRed);
-			kv.GetString("player_electric_blue_particle", profileData.ElectricParticleBlue, sizeof(profileData.ElectricParticleBlue), profileData.ElectricParticleBlue);
-		}
-
-		profileData.SmiteEffects = !!kv.GetNum("player_smite_on_hit", profileData.SmiteEffects);
-		if (profileData.SmiteEffects)
-		{
-			profileData.SmiteIndexes = kv.GetNum("player_smite_attack_indexs", profileData.SmiteIndexes);
-			if (profileData.SmiteIndexes < 0)
-			{
-				profileData.SmiteIndexes = 1;
-			}
-			kv.GetString("player_smite_attack_indexs", profileData.SmiteIndexesString, sizeof(profileData.SmiteIndexesString), profileData.SmiteIndexesString);
-			profileData.SmiteDamage = kv.GetFloat("player_smite_damage", profileData.SmiteDamage);
-			profileData.SmiteDamageType = kv.GetNum("player_smite_damage_type", profileData.SmiteDamageType);
-			profileData.SmiteColor[0] = kv.GetNum("player_smite_color_r", profileData.SmiteColor[0]);
-			profileData.SmiteColor[1] = kv.GetNum("player_smite_color_g", profileData.SmiteColor[1]);
-			profileData.SmiteColor[2] = kv.GetNum("player_smite_color_b", profileData.SmiteColor[2]);
-			profileData.SmiteColor[3] = kv.GetNum("player_smite_transparency", profileData.SmiteColor[3]);
-			profileData.SmiteMessage = !!kv.GetNum("player_smite_message", profileData.SmiteMessage);
-
-			kv.GetString("player_smite_sound", profileData.SmiteHitSound, sizeof(profileData.SmiteHitSound), profileData.SmiteHitSound);
-		}
-	}
-
 	profileData.XenobladeCombo = !!kv.GetNum("xenoblade_chain_art_combo", profileData.XenobladeCombo);
 	if (profileData.XenobladeCombo)
 	{
@@ -529,63 +344,6 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.XenobladeToppleDuration = kv.GetFloat("xenoblade_topple_duration", profileData.XenobladeToppleDuration);
 		profileData.XenobladeToppleSlowdown = kv.GetFloat("xenoblade_topple_slowdown", profileData.XenobladeToppleSlowdown);
 		profileData.XenobladeDazeDuration = kv.GetFloat("xenoblade_daze_duration", profileData.XenobladeDazeDuration);
-	}
-
-	profileData.DamageParticles = !!kv.GetNum("damage_particle_effect_enabled", profileData.DamageParticles);
-	if (profileData.DamageParticles)
-	{
-		kv.GetString("damage_effect_particle", profileData.DamageParticleName, sizeof(profileData.DamageParticleName), profileData.DamageParticleName);
-		profileData.DamageParticleBeam = !!kv.GetNum("damage_effect_beam_particle", profileData.DamageParticleBeam);
-		kv.GetString("sound_damage_effect", profileData.DamageParticleSound, sizeof(profileData.DamageParticleSound), profileData.DamageParticleSound);
-		TryPrecacheBossProfileSoundPath(profileData.DamageParticleSound, g_FileCheckConVar.BoolValue);
-	}
-
-	profileData.Shockwaves = !!kv.GetNum("shockwave", profileData.Shockwaves);
-	if (profileData.Shockwaves)
-	{
-		GetProfileDifficultyFloatValues(kv, "shockwave_height", profileData.ShockwaveHeight, profileData.ShockwaveHeight);
-		GetProfileDifficultyFloatValues(kv, "shockwave_range", profileData.ShockwaveRange, profileData.ShockwaveRange);
-		GetProfileDifficultyFloatValues(kv, "shockwave_drain", profileData.ShockwaveDrain, profileData.ShockwaveDrain);
-		GetProfileDifficultyFloatValues(kv, "shockwave_force", profileData.ShockwaveForce, profileData.ShockwaveForce);
-
-		profileData.ShockwaveStun = !!kv.GetNum("shockwave_stun", profileData.ShockwaveStun);
-		GetProfileDifficultyFloatValues(kv, "shockwave_stun_duration", profileData.ShockwaveStunDuration, profileData.ShockwaveStunDuration);
-		GetProfileDifficultyFloatValues(kv, "shockwave_stun_slowdown", profileData.ShockwaveStunSlowdown, profileData.ShockwaveStunSlowdown);
-
-		profileData.ShockwaveIndexes = kv.GetNum("shockwave_attack_index", profileData.ShockwaveIndexes);
-		if (profileData.ShockwaveIndexes < 1)
-		{
-			profileData.ShockwaveIndexes = 1;
-		}
-		kv.GetString("shockwave_attack_index", profileData.ShockwaveIndexesString, sizeof(profileData.ShockwaveIndexesString), profileData.ShockwaveIndexesString);
-		profileData.ShockwaveWidths[0] = kv.GetFloat("shockwave_width_1", profileData.ShockwaveWidths[0]);
-		profileData.ShockwaveWidths[1] = kv.GetFloat("shockwave_width_2", profileData.ShockwaveWidths[1]);
-		profileData.ShockwaveAmplitude = kv.GetFloat("shockwave_amplitude", profileData.ShockwaveAmplitude);
-
-		float tempColor[3];
-		tempColor[0] = float(profileData.ShockwaveColor1[0]);
-		tempColor[1] = float(profileData.ShockwaveColor1[1]);
-		tempColor[2] = float(profileData.ShockwaveColor1[2]);
-		kv.GetVector("shockwave_color_1", tempColor, tempColor);
-		profileData.ShockwaveColor1[0] = RoundToNearest(tempColor[0]);
-		profileData.ShockwaveColor1[1] = RoundToNearest(tempColor[1]);
-		profileData.ShockwaveColor1[2] = RoundToNearest(tempColor[2]);
-
-		tempColor[0] = float(profileData.ShockwaveColor2[0]);
-		tempColor[1] = float(profileData.ShockwaveColor2[1]);
-		tempColor[2] = float(profileData.ShockwaveColor2[2]);
-		kv.GetVector("shockwave_color_2", tempColor, tempColor);
-		profileData.ShockwaveColor2[0] = RoundToNearest(tempColor[0]);
-		profileData.ShockwaveColor2[1] = RoundToNearest(tempColor[1]);
-		profileData.ShockwaveColor2[2] = RoundToNearest(tempColor[2]);
-
-		profileData.ShockwaveAlpha1 = kv.GetNum("shockwave_alpha_1", profileData.ShockwaveAlpha1);
-		profileData.ShockwaveAlpha2 = kv.GetNum("shockwave_alpha_2", profileData.ShockwaveAlpha2);
-
-		kv.GetString("shockwave_beam_sprite", profileData.ShockwaveBeamSprite, sizeof(profileData.ShockwaveBeamSprite), profileData.ShockwaveBeamSprite);
-		kv.GetString("shockwave_halo_sprite", profileData.ShockwaveHaloSprite, sizeof(profileData.ShockwaveHaloSprite), profileData.ShockwaveHaloSprite);
-		profileData.ShockwaveBeamModel = PrecacheModel(profileData.ShockwaveBeamSprite, true);
-		profileData.ShockwaveHaloModel = PrecacheModel(profileData.ShockwaveHaloSprite, true);
 	}
 
 	profileData.EarthquakeFootsteps = !!kv.GetNum("earthquake_footsteps", profileData.EarthquakeFootsteps);
@@ -598,134 +356,102 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.EarthquakeFootstepAirShake = !!kv.GetNum("earthquake_footsteps_airshake", profileData.EarthquakeFootstepAirShake);
 	}
 
-	profileData.Traps = !!kv.GetNum("traps_enabled", profileData.Traps);
-	if (profileData.Traps)
-	{
-		profileData.TrapType = kv.GetNum("trap_type", profileData.TrapType);
-		GetProfileDifficultyFloatValues(kv, "trap_spawn_cooldown", profileData.TrapCooldown, profileData.TrapCooldown);
-		kv.GetString("trap_model", profileData.TrapModel, sizeof(profileData.TrapModel), profileData.TrapModel);
-		kv.GetString("trap_deploy_sound", profileData.TrapDeploySound, sizeof(profileData.TrapDeploySound), profileData.TrapDeploySound);
-		kv.GetString("trap_miss_sound", profileData.TrapMissSound, sizeof(profileData.TrapMissSound), profileData.TrapMissSound);
-		kv.GetString("trap_catch_sound", profileData.TrapCatchSound, sizeof(profileData.TrapCatchSound), profileData.TrapCatchSound);
-		kv.GetString("trap_animation_idle", profileData.TrapAnimIdle, sizeof(profileData.TrapAnimIdle), profileData.TrapAnimIdle);
-		kv.GetString("trap_animation_closed", profileData.TrapAnimClose, sizeof(profileData.TrapAnimClose), profileData.TrapAnimClose);
-		kv.GetString("trap_animation_open", profileData.TrapAnimOpen, sizeof(profileData.TrapAnimOpen), profileData.TrapAnimOpen);
-		TryPrecacheBossProfileSoundPath(profileData.TrapDeploySound, g_FileCheckConVar.BoolValue);
-		TryPrecacheBossProfileSoundPath(profileData.TrapMissSound, g_FileCheckConVar.BoolValue);
-		TryPrecacheBossProfileSoundPath(profileData.TrapCatchSound, g_FileCheckConVar.BoolValue);
+	GetProfileDifficultyBoolValues(kv, "traps_enabled", profileData.Traps, profileData.Traps);
+	GetProfileDifficultyNumValues(kv, "trap_type", profileData.TrapType, profileData.TrapType);
+	GetProfileDifficultyFloatValues(kv, "trap_spawn_cooldown", profileData.TrapCooldown, profileData.TrapCooldown);
+	kv.GetString("trap_model", profileData.TrapModel, sizeof(profileData.TrapModel), profileData.TrapModel);
+	kv.GetString("trap_deploy_sound", profileData.TrapDeploySound, sizeof(profileData.TrapDeploySound), profileData.TrapDeploySound);
+	kv.GetString("trap_miss_sound", profileData.TrapMissSound, sizeof(profileData.TrapMissSound), profileData.TrapMissSound);
+	kv.GetString("trap_catch_sound", profileData.TrapCatchSound, sizeof(profileData.TrapCatchSound), profileData.TrapCatchSound);
+	kv.GetString("trap_animation_idle", profileData.TrapAnimIdle, sizeof(profileData.TrapAnimIdle), profileData.TrapAnimIdle);
+	kv.GetString("trap_animation_closed", profileData.TrapAnimClose, sizeof(profileData.TrapAnimClose), profileData.TrapAnimClose);
+	kv.GetString("trap_animation_open", profileData.TrapAnimOpen, sizeof(profileData.TrapAnimOpen), profileData.TrapAnimOpen);
+	TryPrecacheBossProfileSoundPath(profileData.TrapDeploySound, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.TrapMissSound, g_FileCheckConVar.BoolValue);
+	TryPrecacheBossProfileSoundPath(profileData.TrapCatchSound, g_FileCheckConVar.BoolValue);
 
-		if (strcmp(profileData.TrapModel, TRAP_MODEL, true) != 0)
+	if (strcmp(profileData.TrapModel, TRAP_MODEL, true) != 0)
+	{
+		if (!PrecacheModel(profileData.TrapModel, true))
 		{
-			if (!PrecacheModel(profileData.TrapModel, true))
-			{
-				LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.TrapModel);
-			}
-			else
-			{
-				PrecacheModel2(profileData.TrapModel, _, _, g_FileCheckConVar.BoolValue);
-			}
+			LogSF2Message("Trap model file %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", profileData.TrapModel);
+		}
+		else
+		{
+			PrecacheModel2(profileData.TrapModel, _, _, g_FileCheckConVar.BoolValue);
 		}
 	}
 
-	profileData.AutoChaseEnabled = !!kv.GetNum("auto_chase_enabled", profileData.AutoChaseEnabled);
-	if (profileData.AutoChaseEnabled)
+	if (kv.JumpToKey("autochase"))
 	{
+		GetProfileDifficultyBoolValues(kv, "enabled", profileData.AutoChaseEnabled, profileData.AutoChaseEnabled);
+		GetProfileDifficultyNumValues(kv, "threshold", profileData.AutoChaseCount, profileData.AutoChaseCount);
+		GetProfileDifficultyFloatValues(kv, "cooldown_after_chase", profileData.AutoChaseAfterChaseCooldown, profileData.AutoChaseAfterChaseCooldown);
+		GetProfileDifficultyBoolValues(kv, "sprinters", profileData.AutoChaseSprinters, profileData.AutoChaseSprinters);
+		if (kv.JumpToKey("add"))
+		{
+			GetProfileDifficultyNumValues(kv, "on_state_change", profileData.AutoChaseAdd, profileData.AutoChaseAdd);
+			GetProfileDifficultyNumValues(kv, "footsteps", profileData.AutoChaseAddFootstep, profileData.AutoChaseAddFootstep);
+			GetProfileDifficultyNumValues(kv, "footsteps_loud", profileData.AutoChaseAddLoudFootstep, profileData.AutoChaseAddLoudFootstep);
+			GetProfileDifficultyNumValues(kv, "footsteps_quiet", profileData.AutoChaseAddQuietFootstep, profileData.AutoChaseAddQuietFootstep);
+			GetProfileDifficultyNumValues(kv, "voice", profileData.AutoChaseAddVoice, profileData.AutoChaseAddVoice);
+			GetProfileDifficultyNumValues(kv, "weapon", profileData.AutoChaseAddWeapon, profileData.AutoChaseAddWeapon);
+			kv.GoBack();
+		}
+		kv.GoBack();
+	}
+	else
+	{
+		GetProfileDifficultyBoolValues(kv, "auto_chase_enabled", profileData.AutoChaseEnabled, profileData.AutoChaseEnabled);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_threshold", profileData.AutoChaseCount, profileData.AutoChaseCount);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add", profileData.AutoChaseAdd, profileData.AutoChaseAdd);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_footsteps", profileData.AutoChaseAddFootstep, profileData.AutoChaseAddFootstep);
-		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_footsteps_loud", profileData.AutoChaseAddLoudFootstep, profileData.AutoChaseAddFootstep);
+		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_footsteps_loud", profileData.AutoChaseAddLoudFootstep, profileData.AutoChaseAddLoudFootstep);
+		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_footsteps_quiet", profileData.AutoChaseAddQuietFootstep, profileData.AutoChaseAddQuietFootstep);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_voice", profileData.AutoChaseAddVoice, profileData.AutoChaseAddVoice);
 		GetProfileDifficultyNumValues(kv, "auto_chase_sound_add_weapon", profileData.AutoChaseAddWeapon, profileData.AutoChaseAddWeapon);
+		GetProfileDifficultyBoolValues(kv, "auto_chase_sprinters", profileData.AutoChaseSprinters, profileData.AutoChaseSprinters);
+		GetProfileDifficultyFloatValues(kv, "auto_chase_cooldown_after_chase", profileData.AutoChaseAfterChaseCooldown, profileData.AutoChaseAfterChaseCooldown);
 	}
-	profileData.AutoChaseSprinters = !!kv.GetNum("auto_chase_sprinters", profileData.AutoChaseSprinters);
 
 	profileData.ChasesEndlessly = !!KvGetNum(kv, "boss_chases_endlessly", profileData.ChasesEndlessly);
 
-	profileData.SelfHeal = !!kv.GetNum("self_heal_enabled", profileData.SelfHeal);
-	if (profileData.SelfHeal)
+	if (kv.JumpToKey("chase_on_look"))
 	{
-		profileData.SelfHealPercentageStart = kv.GetFloat("health_percentage_to_heal", profileData.SelfHealPercentageStart);
-		if (profileData.SelfHealPercentageStart < 0.0)
-		{
-			profileData.SelfHealPercentageStart = 0.0;
-		}
-		if (profileData.SelfHealPercentageStart > 0.999)
-		{
-			profileData.SelfHealPercentageStart = 0.999;
-		}
-		profileData.SelfHealRecover[0] = kv.GetFloat("heal_percentage_one", profileData.SelfHealRecover[0]);
-		if (profileData.SelfHealRecover[0] < 0.0)
-		{
-			profileData.SelfHealRecover[0] = 0.0;
-		}
-		if (profileData.SelfHealRecover[0] > 1.0)
-		{
-			profileData.SelfHealRecover[0] = 1.0;
-		}
-		profileData.SelfHealRecover[1] = kv.GetFloat("heal_percentage_two", profileData.SelfHealRecover[1]);
-		if (profileData.SelfHealRecover[1] < 0.0)
-		{
-			profileData.SelfHealRecover[1] = 0.0;
-		}
-		if (profileData.SelfHealRecover[1] > 1.0)
-		{
-			profileData.SelfHealRecover[1] = 1.0;
-		}
-		profileData.SelfHealRecover[2] = kv.GetFloat("heal_percentage_three", profileData.SelfHealRecover[2]);
-		if (profileData.SelfHealRecover[2] < 0.0)
-		{
-			profileData.SelfHealRecover[2] = 0.0;
-		}
-		if (profileData.SelfHealRecover[2] > 1.0)
-		{
-			profileData.SelfHealRecover[2] = 1.0;
-		}
-		profileData.CloakToHeal = !!kv.GetNum("cloak_to_heal", profileData.CloakToHeal);
+		profileData.ChaseOnLookData.Load(kv);
+		kv.GoBack();
 	}
 
-	profileData.Crawling = !!kv.GetNum("crawling_enabled", profileData.Crawling);
-	if (profileData.Crawling)
-	{
-		GetProfileDifficultyFloatValues(kv, "crawl_multiplier", profileData.CrawlSpeedMultiplier, profileData.CrawlSpeedMultiplier);
-		kv.GetVector("crawl_detect_mins", profileData.CrawlDetectMins, profileData.CrawlDetectMins);
-		kv.GetVector("crawl_detect_maxs", profileData.CrawlDetectMaxs, profileData.CrawlDetectMaxs);
-	}
+	profileData.BoxingBoss = kv.GetNum("boxing_boss", profileData.BoxingBoss) != 0;
 
-	profileData.ChaseOnLook = !!kv.GetNum("auto_chase_upon_look", profileData.ChaseOnLook);
-
-	GetProfileDifficultyFloatValues(kv, "awareness_rate_increase", profileData.AwarenessIncreaseRate, profileData.AwarenessIncreaseRate);
-	GetProfileDifficultyFloatValues(kv, "awareness_rate_decrease", profileData.AwarenessDecreaseRate, profileData.AwarenessDecreaseRate);
-
-	profileData.BoxingBoss = !!kv.GetNum("boxing_boss", profileData.BoxingBoss);
-
-	profileData.NormalSoundHook = !!kv.GetNum("normal_sound_hook", profileData.NormalSoundHook);
-
-	profileData.ChaseInitialAnimations = !!kv.GetNum("use_chase_initial_animation", profileData.ChaseInitialAnimations);
-
-	profileData.SpawnAnimationsEnabled = !!kv.GetNum("spawn_animation", profileData.SpawnAnimationsEnabled);
+	profileData.NormalSoundHook = kv.GetNum("normal_sound_hook", profileData.NormalSoundHook) != 0;
 
 	profileData.OldAnimationAI = !!kv.GetNum("old_animation_ai", profileData.OldAnimationAI);
 
-	profileData.AlertWalkingAnimation = !!kv.GetNum("use_alert_walking_animation", profileData.AlertWalkingAnimation);
-
-	if (profileData.BoxingBoss)
+	if (kv.JumpToKey("rages"))
 	{
-		profileData.HealAnimationTimer = kv.GetFloat("heal_timer_animation", profileData.HealAnimationTimer);
-		profileData.HealFunctionTimer = kv.GetFloat("heal_timer", profileData.HealFunctionTimer);
-		profileData.HealRangeMin = kv.GetFloat("heal_range_min", profileData.HealRangeMin);
-		profileData.HealRangeMax = kv.GetFloat("heal_range_max", profileData.HealRangeMax);
-		profileData.HealTimeMin = kv.GetFloat("heal_time_min", profileData.HealTimeMin);
-		profileData.HealTimeMax = kv.GetFloat("heal_range_max", profileData.HealTimeMax);
+		profileData.Rages = new ArrayList(sizeof(SF2ChaserRageInfo));
+		if (kv.GotoFirstSubKey())
+		{
+			do
+			{
+				SF2ChaserRageInfo rage;
+				rage.Init();
+				rage.Load(kv, g_FileCheckConVar.BoolValue);
+				profileData.Rages.PushArray(rage);
+			}
+			while (kv.GotoNextKey());
 
-		profileData.AfterburnMultiplier = kv.GetFloat("fire_damage_multiplier", profileData.AfterburnMultiplier);
-		profileData.BackstabDamageScale = kv.GetFloat("backstab_damage_scale", profileData.BackstabDamageScale);
+			kv.GoBack();
+		}
+		kv.GoBack();
 	}
 
 	profileData.Attacks = new ArrayList(sizeof(SF2ChaserBossProfileAttackData));
 
-	int attackNums = ParseChaserProfileAttacks(kv, profileData);
+	int attackNums = ParseChaserProfileAttacks(kv, profileData, baseData);
 
-	if (g_CachedProfileData.Flags & SFF_ATTACKPROPS)
+	if (baseData.Flags & SFF_ATTACKPROPS)
 	{
 		profileData.AttackPropModels = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 		if (kv.JumpToKey("attack_props_physics_models"))
@@ -756,10 +482,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.ChasingSounds.Channel = SNDCHAN_VOICE;
 		profileData.ChaseInitialSounds.Channel = SNDCHAN_VOICE;
 		profileData.StunnedSounds.Channel = SNDCHAN_VOICE;
-		profileData.RageAllSounds.Channel = SNDCHAN_VOICE;
-		profileData.RageTwoSounds.Channel = SNDCHAN_VOICE;
-		profileData.RageThreeSounds.Channel = SNDCHAN_VOICE;
-		profileData.SelfHealSounds.Channel = SNDCHAN_VOICE;
+		profileData.DeathSounds.Channel = SNDCHAN_VOICE;
+		profileData.TauntKillSounds.Channel = SNDCHAN_VOICE;
+		profileData.SmellSounds.Channel = SNDCHAN_VOICE;
 	}
 
 	// We have to copy and paste here, the previous kv.GotoFirstSubKey() in profile_boss_functions.sp will somehow reset all values of these sound sections
@@ -785,249 +510,61 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	{
 		if (kv.JumpToKey(g_SlenderVoiceList[SF2BossSound_Attack]))
 		{
-			profileData.AttackSounds = new ArrayList(sizeof(SF2BossProfileSoundInfo));
-			char number[3];
-			if (kv.GotoFirstSubKey())
-			{
-				char sectionName[64];
-				kv.GetSectionName(sectionName, sizeof(sectionName));
-				if (strcmp(sectionName, "paths") == 0)
-				{
-					kv.GoBack();
-					SF2BossProfileSoundInfo soundInfo;
-					soundInfo.Init();
-					if (profileData.NormalSoundHook)
-					{
-						soundInfo.Channel = SNDCHAN_VOICE;
-					}
-					soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-					soundInfo.PostLoad();
-					if (soundInfo.Paths != null)
-					{
-						profileData.AttackSounds.PushArray(soundInfo, sizeof(soundInfo));
-					}
-				}
-				else
-				{
-					profileData.AttackSounds.Resize(SF2_CHASER_BOSS_MAX_ATTACKS);
-					for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-					{
-						SF2BossProfileSoundInfo tempInfo;
-						profileData.AttackSounds.SetArray(i, tempInfo, sizeof(tempInfo));
-					}
-					do
-					{
-						kv.GetSectionName(number, sizeof(number));
-						int index = StringToInt(number);
-						SF2BossProfileSoundInfo soundInfo;
-						soundInfo.Init();
-						if (profileData.NormalSoundHook)
-						{
-							soundInfo.Channel = SNDCHAN_VOICE;
-						}
-						soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-						soundInfo.PostLoad();
-						if (soundInfo.Paths != null)
-						{
-							profileData.AttackSounds.SetArray(index - 1, soundInfo, sizeof(soundInfo));
-						}
-					}
-					while (kv.GotoNextKey());
-					kv.GoBack();
-				}
-			}
-			kv.GoBack();
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.AttackSounds, profileData.NormalSoundHook);
 		}
 		if (kv.JumpToKey("sound_hitenemy"))
 		{
-			profileData.HitSounds = new ArrayList(sizeof(SF2BossProfileSoundInfo));
-			char number[3];
-			if (kv.GotoFirstSubKey())
-			{
-				char sectionName[64];
-				kv.GetSectionName(sectionName, sizeof(sectionName));
-				if (strcmp(sectionName, "paths") == 0)
-				{
-					kv.GoBack();
-					SF2BossProfileSoundInfo soundInfo;
-					soundInfo.Init();
-					soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-					soundInfo.PostLoad();
-					if (soundInfo.Paths != null)
-					{
-						profileData.HitSounds.PushArray(soundInfo, sizeof(soundInfo));
-					}
-				}
-				else
-				{
-					profileData.HitSounds.Resize(SF2_CHASER_BOSS_MAX_ATTACKS);
-					for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-					{
-						SF2BossProfileSoundInfo tempInfo;
-						profileData.HitSounds.SetArray(i, tempInfo, sizeof(tempInfo));
-					}
-					do
-					{
-						kv.GetSectionName(number, sizeof(number));
-						int index = StringToInt(number);
-						SF2BossProfileSoundInfo soundInfo;
-						soundInfo.Init();
-						soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-						soundInfo.PostLoad();
-						if (soundInfo.Paths != null)
-						{
-							profileData.HitSounds.SetArray(index - 1, soundInfo, sizeof(soundInfo));
-						}
-					}
-					while (kv.GotoNextKey());
-					kv.GoBack();
-				}
-			}
-			kv.GoBack();
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.HitSounds, false);
 		}
 		if (kv.JumpToKey("sound_missenemy"))
 		{
-			profileData.MissSounds = new ArrayList(sizeof(SF2BossProfileSoundInfo));
-			char number[3];
-			if (kv.GotoFirstSubKey())
-			{
-				char sectionName[64];
-				kv.GetSectionName(sectionName, sizeof(sectionName));
-				if (strcmp(sectionName, "paths") == 0)
-				{
-					kv.GoBack();
-					SF2BossProfileSoundInfo soundInfo;
-					soundInfo.Init();
-					soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-					soundInfo.PostLoad();
-					if (soundInfo.Paths != null)
-					{
-						profileData.MissSounds.PushArray(soundInfo, sizeof(soundInfo));
-					}
-				}
-				else
-				{
-					profileData.MissSounds.Resize(SF2_CHASER_BOSS_MAX_ATTACKS);
-					for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-					{
-						SF2BossProfileSoundInfo tempInfo;
-						profileData.MissSounds.SetArray(i, tempInfo, sizeof(tempInfo));
-					}
-					do
-					{
-						kv.GetSectionName(number, sizeof(number));
-						int index = StringToInt(number);
-						SF2BossProfileSoundInfo soundInfo;
-						soundInfo.Init();
-						soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-						soundInfo.PostLoad();
-						if (soundInfo.Paths != null)
-						{
-							profileData.MissSounds.SetArray(index - 1, soundInfo, sizeof(soundInfo));
-						}
-					}
-					while (kv.GotoNextKey());
-					kv.GoBack();
-				}
-			}
-			kv.GoBack();
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.MissSounds, false);
 		}
 		if (kv.JumpToKey("sound_bulletshoot"))
 		{
-			profileData.BulletShootSounds = new ArrayList(sizeof(SF2BossProfileSoundInfo));
-			char number[3];
-			if (kv.GotoFirstSubKey())
-			{
-				char sectionName[64];
-				kv.GetSectionName(sectionName, sizeof(sectionName));
-				if (strcmp(sectionName, "paths") == 0)
-				{
-					kv.GoBack();
-					SF2BossProfileSoundInfo soundInfo;
-					soundInfo.Init();
-					soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-					soundInfo.PostLoad();
-					if (soundInfo.Paths != null)
-					{
-						profileData.BulletShootSounds.PushArray(soundInfo, sizeof(soundInfo));
-					}
-				}
-				else
-				{
-					profileData.BulletShootSounds.Resize(SF2_CHASER_BOSS_MAX_ATTACKS);
-					for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-					{
-						SF2BossProfileSoundInfo tempInfo;
-						profileData.BulletShootSounds.SetArray(i, tempInfo, sizeof(tempInfo));
-					}
-					do
-					{
-						kv.GetSectionName(number, sizeof(number));
-						int index = StringToInt(number);
-						SF2BossProfileSoundInfo soundInfo;
-						soundInfo.Init();
-						soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-						soundInfo.PostLoad();
-						if (soundInfo.Paths != null)
-						{
-							profileData.BulletShootSounds.SetArray(index - 1, soundInfo, sizeof(soundInfo));
-						}
-					}
-					while (kv.GotoNextKey());
-					kv.GoBack();
-				}
-			}
-			kv.GoBack();
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.BulletShootSounds, false);
 		}
 		if (kv.JumpToKey("sound_attackshootprojectile"))
 		{
-			profileData.ProjectileShootSounds = new ArrayList(sizeof(SF2BossProfileSoundInfo));
-			char number[3];
-			if (kv.GotoFirstSubKey())
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.ProjectileShootSounds, false);
+		}
+		if (kv.JumpToKey(g_SlenderVoiceList[SF2BossSound_AttackBegin]))
+		{
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.AttackBeginSounds, profileData.NormalSoundHook);
+		}
+		if (kv.JumpToKey(g_SlenderVoiceList[SF2BossSound_AttackEnd]))
+		{
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.AttackEndSounds, profileData.NormalSoundHook);
+		}
+		if (kv.JumpToKey("sound_attack_loop"))
+		{
+			profileData.LoadNestedSoundSections(kv, g_FileCheckConVar.BoolValue, profileData.AttackLoopSounds, false);
+		}
+	}
+
+	if (kv.JumpToKey("postures"))
+	{
+		profileData.Postures = new StringMap();
+		if (kv.GotoFirstSubKey())
+		{
+			do
 			{
-				char sectionName[64];
-				kv.GetSectionName(sectionName, sizeof(sectionName));
-				if (strcmp(sectionName, "paths") == 0)
+				SF2ChaserBossProfilePostureInfo posture;
+				posture.Init();
+				for (int i = 0; i < Difficulty_Max; i++)
 				{
-					kv.GoBack();
-					SF2BossProfileSoundInfo soundInfo;
-					soundInfo.Init();
-					soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-					soundInfo.PostLoad();
-					if (soundInfo.Paths != null)
-					{
-						profileData.ProjectileShootSounds.PushArray(soundInfo, sizeof(soundInfo));
-					}
+					posture.Speed[i] = baseData.RunSpeed[i];
+					posture.WalkSpeed[i] = profileData.WalkSpeed[i];
+					posture.Acceleration[i] = baseData.Acceleration[i];
 				}
-				else
-				{
-					profileData.ProjectileShootSounds.Resize(SF2_CHASER_BOSS_MAX_ATTACKS);
-					for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-					{
-						SF2BossProfileSoundInfo tempInfo;
-						profileData.ProjectileShootSounds.SetArray(i, tempInfo, sizeof(tempInfo));
-					}
-					do
-					{
-						kv.GetSectionName(number, sizeof(number));
-						int index = StringToInt(number);
-						SF2BossProfileSoundInfo soundInfo;
-						soundInfo.Init();
-						soundInfo.Load(kv, g_FileCheckConVar.BoolValue);
-						soundInfo.PostLoad();
-						if (soundInfo.Paths != null)
-						{
-							profileData.ProjectileShootSounds.SetArray(index - 1, soundInfo, sizeof(soundInfo));
-						}
-					}
-					while (kv.GotoNextKey());
-					kv.GoBack();
-				}
+				posture.Load(kv);
+				profileData.Postures.SetArray(posture.Name, posture, sizeof(posture));
 			}
+			while (kv.GotoNextKey());
+
 			kv.GoBack();
 		}
-		char sectionName[128];
-		kv.GetSectionName(sectionName, sizeof(sectionName));
+		kv.GoBack();
 	}
 
 	profileData.PostLoad();
@@ -1037,144 +574,117 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	return true;
 }
 
-static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chaserProfileData)
+static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chaserProfileData, SF2BossProfileData baseData)
 {
 	// Create the array.
 	ArrayList attacks = chaserProfileData.Attacks;
 
-	int maxAttacks = -1;
-	if (kv.JumpToKey("attacks"))
-	{
-		maxAttacks = 0;
-		char num[3];
-		for (int i = 1; i <= SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-		{
-			FormatEx(num, sizeof(num), "%d", i);
-			if (kv.JumpToKey(num))
-			{
-				maxAttacks++;
-				kv.GoBack();
-			}
-		}
-		if (maxAttacks == 0)
-		{
-			LogSF2Message("[SF2 PROFILES PARSER] Critical error, found \"attacks\" section with no attacks inside of it!");
-		}
-	}
-	if (maxAttacks <= -1)
+	if (!kv.JumpToKey("attacks"))
 	{
 		return -1;
 	}
-	else
+
+	if (!kv.GotoFirstSubKey())
 	{
-		attacks.Resize(maxAttacks);
-		for (int i = 0; i < maxAttacks; i++)
-		{
-			attacks.Set(i, SF2BossAttackType_Invalid, SF2ChaserBossProfileAttackData::Type);
-		}
+		LogSF2Message("[SF2 PROFILES PARSER] Critical error, found \"attacks\" section with no attacks inside of it!");
+		kv.GoBack();
+		return -1;
 	}
-	char num[3];
-	for (int attackNum = -1; attackNum <=maxAttacks; attackNum++)
+
+	char attackName[64];
+	int index = 0;
+	do
 	{
-		if (attackNum < 1)
-		{
-			attackNum = 1;
-		}
-		FormatEx(num, sizeof(num), "%d", attackNum);
-		kv.JumpToKey(num);
+		kv.GetSectionName(attackName, sizeof(attackName));
+
 		SF2ChaserBossProfileAttackData attackData;
 		attackData.Init();
 
+		attackData.Index = index;
+		attackData.Name = attackName;
+
 		attackData.Type = kv.GetNum("type", attackData.Type);
+
+		if (attackData.Type == SF2BossAttackType_Invalid)
+		{
+			LogSF2Message("[SF2 PROFILES PARSER] Attack %s is not supposed to be an invalid attack!", attackName);
+			continue;
+		}
 
 		GetProfileDifficultyFloatValues(kv, "range", attackData.Range, attackData.Range);
 
-		switch (attackData.Type)
+		GetProfileDifficultyFloatValues(kv, "damage", attackData.Damage, attackData.Damage);
+
+		attackData.DamageVsProps = kv.GetFloat("damage_vs_props", attackData.DamageVsProps);
+		GetProfileDifficultyFloatValues(kv, "damageforce", attackData.DamageForce, attackData.DamageForce);
+
+		GetProfileDifficultyNumValues(kv, "damagetype", attackData.DamageType, attackData.DamageType);
+
+		attackData.CanUseAgainstProps = !!kv.GetNum("props", attackData.CanUseAgainstProps);
+
+		kv.GetVector("punchvel", attackData.PunchVelocity, attackData.PunchVelocity);
+
+		GetProfileDifficultyBoolValues(kv, "lifesteal", attackData.LifeSteal, attackData.LifeSteal);
+		GetProfileDifficultyFloatValues(kv, "lifesteal_duration", attackData.LifeStealDuration, attackData.LifeStealDuration);
+
+		attackData.PullIn = !!kv.GetNum("pull_player_in", attackData.PullIn);
+
+		attackData.DeathCamLowHealth = !!kv.GetNum("deathcam_on_low_health", attackData.DeathCamLowHealth);
+
+		GetProfileDifficultyNumValues(kv, "bullet_count", attackData.BulletCount, attackData.BulletCount);
+		GetProfileDifficultyFloatValues(kv, "bullet_damage", attackData.BulletDamage, attackData.BulletDamage);
+		GetProfileDifficultyFloatValues(kv, "bullet_spread", attackData.BulletSpread, attackData.BulletSpread);
+		kv.GetVector("bullet_offset", attackData.BulletOffset, attackData.BulletOffset);
+		kv.GetString("bullet_tracer", attackData.BulletTrace, sizeof(attackData.BulletTrace), attackData.BulletTrace);
+
+		GetProfileDifficultyFloatValues(kv, "projectile_damage", attackData.ProjectileDamage, attackData.ProjectileDamage);
+		GetProfileDifficultyFloatValues(kv, "projectile_speed", attackData.ProjectileSpeed, attackData.ProjectileSpeed);
+		GetProfileDifficultyFloatValues(kv, "projectile_radius", attackData.ProjectileRadius, attackData.ProjectileRadius);
+		GetProfileDifficultyFloatValues(kv, "projectile_deviation", attackData.ProjectileDeviation, attackData.ProjectileDeviation);
+		GetProfileDifficultyBoolValues(kv, "projectile_crits", attackData.CritProjectiles, attackData.CritProjectiles);
+		GetProfileDifficultyFloatValues(kv, "projectile_iceslow_percent", attackData.IceballSlowdownPercent, attackData.IceballSlowdownPercent);
+		GetProfileDifficultyFloatValues(kv, "projectile_iceslow_duration", attackData.IceballSlowdownDuration, attackData.IceballSlowdownDuration);
+		GetProfileDifficultyNumValues(kv, "projectile_count", attackData.ProjectileCount, attackData.ProjectileCount);
+		attackData.ProjectileType = kv.GetNum("projectiletype", attackData.ProjectileType);
+		kv.GetVector("projectile_offset", attackData.ProjectileOffset, attackData.ProjectileOffset);
+		kv.GetString("fire_trail", attackData.FireballTrail, sizeof(attackData.FireballTrail), attackData.FireballTrail);
+		kv.GetString("fire_iceball_trail", attackData.IceballTrail, sizeof(attackData.IceballTrail), attackData.IceballTrail);
+		kv.GetString("rocket_model", attackData.RocketModel, sizeof(attackData.RocketModel), attackData.RocketModel);
+
+		if (strcmp(attackData.RocketModel, ROCKET_MODEL, true) != 0)
 		{
-			case SF2BossAttackType_Melee, SF2BossAttackType_Custom:
+			if (!PrecacheModel(attackData.RocketModel, true))
 			{
-				GetProfileDifficultyFloatValues(kv, "damage", attackData.Damage, attackData.Damage);
-
-				attackData.DamageVsProps = kv.GetFloat("damage_vs_props", attackData.DamageVsProps);
-				GetProfileDifficultyFloatValues(kv, "damageforce", attackData.DamageForce, attackData.DamageForce);
-
-				GetProfileDifficultyNumValues(kv, "damagetype", attackData.DamageType, attackData.DamageType);
-
-				attackData.CanUseAgainstProps = !!kv.GetNum("props", attackData.CanUseAgainstProps);
-
-				kv.GetVector("punchvel", attackData.PunchVelocity, attackData.PunchVelocity);
-
-				GetProfileDifficultyBoolValues(kv, "lifesteal", attackData.LifeSteal, attackData.LifeSteal);
-				GetProfileDifficultyFloatValues(kv, "lifesteal_duration", attackData.LifeStealDuration, attackData.LifeStealDuration);
-
-				attackData.PullIn = !!kv.GetNum("pull_player_in", attackData.PullIn);
-
-				attackData.DeathCamLowHealth = !!kv.GetNum("deathcam_on_low_health", attackData.DeathCamLowHealth);
+				LogSF2Message("Attack rocket model file %s on attack name %s failed to be loaded, likely does not exist. This will crash the server if not fixed.", attackData.RocketModel, attackName);
 			}
-			case SF2BossAttackType_Ranged:
+			else
 			{
-				GetProfileDifficultyNumValues(kv, "bullet_count", attackData.BulletCount, attackData.BulletCount);
-				GetProfileDifficultyFloatValues(kv, "bullet_damage", attackData.BulletDamage, attackData.BulletDamage);
-				GetProfileDifficultyFloatValues(kv, "bullet_spread", attackData.BulletSpread, attackData.BulletSpread);
-				kv.GetVector("bullet_offset", attackData.BulletOffset, attackData.BulletOffset);
-				kv.GetString("bullet_tracer", attackData.BulletTrace, sizeof(attackData.BulletTrace), attackData.BulletTrace);
-			}
-			case SF2BossAttackType_Projectile:
-			{
-				GetProfileDifficultyFloatValues(kv, "projectile_damage", attackData.ProjectileDamage, attackData.ProjectileDamage);
-				GetProfileDifficultyFloatValues(kv, "projectile_speed", attackData.ProjectileSpeed, attackData.ProjectileSpeed);
-				GetProfileDifficultyFloatValues(kv, "projectile_radius", attackData.ProjectileRadius, attackData.ProjectileRadius);
-				GetProfileDifficultyFloatValues(kv, "projectile_deviation", attackData.ProjectileDeviation, attackData.ProjectileDeviation);
-				GetProfileDifficultyBoolValues(kv, "projectile_crits", attackData.CritProjectiles, attackData.CritProjectiles);
-				GetProfileDifficultyFloatValues(kv, "projectile_iceslow_percent", attackData.IceballSlowdownPercent, attackData.IceballSlowdownPercent);
-				GetProfileDifficultyFloatValues(kv, "projectile_iceslow_duration", attackData.IceballSlowdownDuration, attackData.IceballSlowdownDuration);
-				GetProfileDifficultyNumValues(kv, "projectile_count", attackData.ProjectileCount, attackData.ProjectileCount);
-				attackData.ProjectileType = kv.GetNum("projectiletype", attackData.ProjectileType);
-				kv.GetVector("projectile_offset", attackData.ProjectileOffset, attackData.ProjectileOffset);
-				kv.GetString("fire_trail", attackData.FireballTrail, sizeof(attackData.FireballTrail), attackData.FireballTrail);
-				kv.GetString("fire_iceball_trail", attackData.IceballTrail, sizeof(attackData.IceballTrail), attackData.IceballTrail);
-				kv.GetString("rocket_model", attackData.RocketModel, sizeof(attackData.RocketModel), attackData.RocketModel);
-
-				if (strcmp(attackData.RocketModel, ROCKET_MODEL, true) != 0)
-				{
-					if (!PrecacheModel(attackData.RocketModel, true))
-					{
-						LogSF2Message("Attack rocket model file %s on attack index %i failed to be loaded, likely does not exist. This will crash the server if not fixed.", attackData.RocketModel, attackNum);
-					}
-					else
-					{
-						PrecacheModel2(attackData.RocketModel, _, _, g_FileCheckConVar.BoolValue);
-					}
-				}
-			}
-			case SF2BossAttackType_ExplosiveDance:
-			{
-				GetProfileDifficultyNumValues(kv, "explosivedance_radius", attackData.ExplosiveDanceRadius, attackData.ExplosiveDanceRadius);
-			}
-			case SF2BossAttackType_LaserBeam:
-			{
-				GetProfileDifficultyFloatValues(kv, "laser_damage", attackData.LaserDamage, attackData.LaserDamage);
-				attackData.LaserSize = kv.GetFloat("laser_size", attackData.LaserSize);
-				if (attackData.LaserSize < 0.0)
-				{
-					attackData.LaserSize = 0.0;
-				}
-				attackData.LaserColor[0] = kv.GetNum("laser_color_r", attackData.LaserColor[0]);
-				attackData.LaserColor[1] = kv.GetNum("laser_color_g", attackData.LaserColor[1]);
-				attackData.LaserColor[2] = kv.GetNum("laser_color_b", attackData.LaserColor[2]);
-				attackData.LaserAttachment = !!kv.GetNum("laser_attachment", attackData.LaserAttachment);
-				if (attackData.LaserAttachment)
-				{
-					kv.GetString("laser_attachment_name", attackData.LaserAttachmentName, sizeof(attackData.LaserAttachmentName), attackData.LaserAttachmentName);
-				}
-				else
-				{
-					kv.GetVector("laser_offset", attackData.LaserOffset, attackData.LaserOffset);
-				}
-				GetProfileDifficultyFloatValues(kv, "laser_duration", attackData.LaserDuration, attackData.LaserDuration);
-				attackData.LaserNoise = kv.GetFloat("laser_noise", attackData.LaserNoise);
+				PrecacheModel2(attackData.RocketModel, _, _, g_FileCheckConVar.BoolValue);
 			}
 		}
+
+		GetProfileDifficultyFloatValues(kv, "explosivedance_radius", attackData.ExplosiveDanceRadius, attackData.ExplosiveDanceRadius);
+
+		GetProfileDifficultyFloatValues(kv, "laser_damage", attackData.LaserDamage, attackData.LaserDamage);
+		attackData.LaserSize = kv.GetFloat("laser_size", attackData.LaserSize);
+		if (attackData.LaserSize < 0.0)
+		{
+			attackData.LaserSize = 0.0;
+		}
+		attackData.LaserColor[0] = kv.GetNum("laser_color_r", attackData.LaserColor[0]);
+		attackData.LaserColor[1] = kv.GetNum("laser_color_g", attackData.LaserColor[1]);
+		attackData.LaserColor[2] = kv.GetNum("laser_color_b", attackData.LaserColor[2]);
+		attackData.LaserAttachment = !!kv.GetNum("laser_attachment", attackData.LaserAttachment);
+		if (attackData.LaserAttachment)
+		{
+			kv.GetString("laser_attachment_name", attackData.LaserAttachmentName, sizeof(attackData.LaserAttachmentName), attackData.LaserAttachmentName);
+		}
+		else
+		{
+			kv.GetVector("laser_offset", attackData.LaserOffset, attackData.LaserOffset);
+		}
+		GetProfileDifficultyFloatValues(kv, "laser_duration", attackData.LaserDuration, attackData.LaserDuration);
+		attackData.LaserNoise = kv.GetFloat("laser_noise", attackData.LaserNoise);
 
 		GetProfileDifficultyBoolValues(kv, "dont_interrupt_chaseinitial", attackData.DontInterruptChaseInitial, attackData.DontInterruptChaseInitial);
 
@@ -1249,31 +759,184 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		GetProfileDifficultyFloatValues(kv, "run_speed", attackData.RunSpeed, attackData.RunSpeed);
 		GetProfileDifficultyFloatValues(kv, "run_duration", attackData.RunDuration, attackData.RunDuration);
 		GetProfileDifficultyFloatValues(kv, "run_delay", attackData.RunDelay, attackData.RunDelay);
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			attackData.RunAcceleration[i] = baseData.Acceleration[i];
+		}
+		GetProfileDifficultyFloatValues(kv, "run_acceleration", attackData.RunAcceleration, attackData.RunAcceleration);
+		GetProfileDifficultyBoolValues(kv, "run_ground_speed", attackData.RunGroundSpeed, attackData.RunGroundSpeed);
 
 		attackData.UseOnDifficulty = kv.GetNum("use_on_difficulty", attackData.UseOnDifficulty);
 		attackData.BlockOnDifficulty = kv.GetNum("block_on_difficulty", attackData.BlockOnDifficulty);
 		attackData.UseOnHealth = kv.GetFloat("use_on_health", attackData.UseOnHealth);
 		attackData.BlockOnHealth = kv.GetFloat("block_on_health", attackData.BlockOnHealth);
 
-		attackData.Gestures = !!kv.GetNum("gestures", attackData.Gestures);
+		attackData.Gestures = kv.GetNum("gestures", attackData.Gestures) != 0;
 
 		GetProfileDifficultyBoolValues(kv, "cancel_los", attackData.CancelLos, attackData.CancelLos);
-		GetProfileDifficultyFloatValues(kv, "cancel_distance", attackData.CancelDistance, attackData.CancelDistance);
+		GetProfileDifficultyFloatValues(kv, "cancel_distance_max", attackData.CancelDistance, attackData.CancelDistance);
+		GetProfileDifficultyFloatValues(kv, "cancel_distance_min", attackData.MinCancelDistance, attackData.MinCancelDistance);
 
-		attacks.SetArray(attackNum - 1, attackData, sizeof(attackData));
+		attackData.EventNumber = kv.GetNum("event", attackData.EventNumber);
 
-		if (maxAttacks > 0) // Backward compatibility
+		kv.GetString("subtype", attackData.SubType, sizeof(attackData.SubType), attackData.SubType);
+
+		if (kv.JumpToKey("shockwave"))
 		{
+			attackData.Shockwave.Load(kv, g_FileCheckConVar.BoolValue);
 			kv.GoBack();
 		}
-		else
+
+		if (kv.JumpToKey("effects"))
 		{
-			break;
+			if (kv.JumpToKey("start"))
+			{
+				attackData.StartEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, g_FileCheckConVar.BoolValue);
+						attackData.StartEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("hit"))
+			{
+				attackData.HitEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, g_FileCheckConVar.BoolValue);
+						attackData.HitEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("miss"))
+			{
+				attackData.MissEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, g_FileCheckConVar.BoolValue);
+						attackData.MissEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			kv.GoBack();
 		}
+
+		if (kv.JumpToKey("apply_conditions"))
+		{
+			attackData.DamageEffects = new ArrayList(sizeof(SF2ChaserBossProfileDamageEffectData));
+			if (kv.GotoFirstSubKey())
+			{
+				do
+				{
+					char section[64];
+					SF2ChaserBossProfileDamageEffectData damageData;
+					damageData.Init();
+					kv.GetSectionName(section, sizeof(section));
+					if (!damageData.SetType(section))
+					{
+						continue;
+					}
+					damageData.Load(kv, g_FileCheckConVar.BoolValue);
+					attackData.DamageEffects.PushArray(damageData, sizeof(damageData));
+				}
+				while (kv.GotoNextKey());
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+
+		GetProfileDifficultyBoolValues(kv, "invulnerable", attackData.ImmuneToDamage, attackData.ImmuneToDamage);
+
+		if (kv.JumpToKey("use_with_posture"))
+		{
+			attackData.PostureWhitelist = new ArrayList(ByteCountToCells(64));
+			char key[64], posture[64];
+			for (int i = 1;; i++)
+			{
+				FormatEx(key, sizeof(key), "%d", i);
+				kv.GetString(key, posture, sizeof(posture));
+				if (posture[0] == '\0')
+				{
+					break;
+				}
+				attackData.PostureWhitelist.PushString(posture);
+			}
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("tongue"))
+		{
+			GetProfileDifficultyFloatValues(kv, "speed", attackData.TongueSpeed, attackData.TongueSpeed);
+			GetProfileDifficultyFloatValues(kv, "pull_scale", attackData.TonguePullScale, attackData.TonguePullScale);
+			GetProfileDifficultyBoolValues(kv, "can_escape", attackData.TongueCanEscape, attackData.TongueCanEscape);
+			kv.GetString("material", attackData.TongueMaterial, sizeof(attackData.TongueMaterial), attackData.TongueMaterial);
+			PrecacheMaterial2(attackData.TongueMaterial, g_FileCheckConVar.BoolValue);
+			kv.GetString("attachment", attackData.TongueAttachment, sizeof(attackData.TongueAttachment), attackData.TongueAttachment);
+			kv.GetVector("offset", attackData.TongueOffset, attackData.TongueOffset);
+
+			if (kv.JumpToKey("sounds"))
+			{
+				if (kv.JumpToKey("launch"))
+				{
+					attackData.TongueLaunchSound.Load(kv, g_FileCheckConVar.BoolValue);
+					kv.GoBack();
+				}
+
+				if (kv.JumpToKey("hit"))
+				{
+					attackData.TongueHitSound.Load(kv, g_FileCheckConVar.BoolValue);
+					kv.GoBack();
+				}
+
+				if (kv.JumpToKey("tied"))
+				{
+					attackData.TongueTiedSound.Load(kv, g_FileCheckConVar.BoolValue);
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			attackData.Animations.Init();
+			attackData.Animations.Load(kv);
+
+			kv.GoBack();
+		}
+
+		attacks.PushArray(attackData, sizeof(attackData));
+		index++;
 	}
-	if (maxAttacks > 0)
-	{
-		kv.GoBack();
-	}
-	return maxAttacks;
+	while (kv.GotoNextKey());
+
+	kv.GoBack();
+	kv.GoBack();
+
+	return index;
 }

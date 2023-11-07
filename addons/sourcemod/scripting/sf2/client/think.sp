@@ -17,9 +17,18 @@ void Hook_ClientPreThink(int client)
 	ClientProcessStaticShake(client);
 	ClientProcessViewAngles(client);
 
+	if ((g_PlayerTrapped[client] || g_PlayerLatchedByTongue[client]) && !IsClientInGhostMode(client))
+	{
+		TF2Attrib_SetByName(client, "increased jump height", 0.0);
+	}
+	else
+	{
+		TF2Attrib_SetByName(client, "increased jump height", 1.0);
+	}
+
 	if (IsClientInGhostMode(client))
 	{
-		SetEntityFlags(client, GetEntityFlags(client)^FL_EDICT_ALWAYS);
+		SetEntityFlags(client, GetEntityFlags(client) ^ FL_EDICT_ALWAYS);
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
 		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
@@ -56,12 +65,12 @@ void Hook_ClientPreThink(int client)
 					TF2_RemoveCondition(client, TFCond_Disguised);
 				}
 
-				if (TF2_IsPlayerInCondition(client, TFCond_Taunting) && g_PlayerTrapped[client])
+				if (TF2_IsPlayerInCondition(client, TFCond_Taunting) && (g_PlayerTrapped[client] || g_PlayerLatchedByTongue[client]))
 				{
 					TF2_RemoveCondition(client, TFCond_Taunting);
 				}
 
-				if (TF2_IsPlayerInCondition(client,TFCond_Taunting) && class == TFClass_Soldier)
+				if (TF2_IsPlayerInCondition(client, TFCond_Taunting) && class == TFClass_Soldier)
 				{
 					int weaponEnt = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
 					if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
@@ -76,14 +85,7 @@ void Hook_ClientPreThink(int client)
 
 				if (roundState == 4)
 				{
-					if (g_PlayerTrapped[client])
-					{
-						TF2Attrib_SetByName(client, "increased jump height", 0.0);
-					}
-					else
-					{
-						TF2Attrib_SetByName(client, "increased jump height", 1.0);
-					}
+
 				}
 			}
 			else if (g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Blue)
@@ -171,7 +173,7 @@ void Hook_ClientPreThink(int client)
 			}
 		}
 	}
-	if (g_PlayerEliminated[client] && IsClientInPvP(client))
+	if (g_PlayerEliminated[client] && (IsClientInPvP(client) || IsClientInPvE(client)))
 	{
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
@@ -179,29 +181,26 @@ void Hook_ClientPreThink(int client)
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 		if (IsClientInKart(client))
 		{
-			TF2_RemoveCondition(client,TFCond_HalloweenKart);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+			TF2_RemoveCondition(client, TFCond_HalloweenKart);
+			TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
+			TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
+			TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
 		}
 	}
 	if (IsRoundInWarmup() || (IsRoundInIntro() && !g_PlayerEliminated[client]) || IsRoundEnding()) //I told you, stop breaking my plugin
 	{
 		if (IsClientInKart(client))
 		{
-			TF2_RemoveCondition(client,TFCond_HalloweenKart);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+			TF2_RemoveCondition(client, TFCond_HalloweenKart);
+			TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
+			TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
+			TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
 		}
 	}
 
 	// Calculate player stress levels.
 	if (GetGameTime() >= g_PlayerStressNextUpdateTime[client])
 	{
-		//float flPagePercent = g_PageMax != 0 ? float(g_PageCount) / float(g_PageMax) : 0.0;
-		//float flPageCountPercent = g_PageMax != 0? float(g_PlayerPageCount[client]) / float(g_PageMax) : 0.0;
-
 		g_PlayerStressNextUpdateTime[client] = GetGameTime() + 0.33;
 		ClientAddStress(client, -0.01);
 
@@ -230,18 +229,20 @@ void Hook_ClientPreThink(int client)
 	ClientProcessVisibility(client);
 }
 
-Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
+Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_Enabled)
 	{
 		return Plugin_Continue;
 	}
 
+	SF2_BasePlayer victimPlayer = SF2_BasePlayer(victim);
+
 	Action action = Plugin_Continue;
 
 	float damage2 = damage;
 	Call_StartForward(g_OnClientTakeDamageFwd);
-	Call_PushCell(victim);
+	Call_PushCell(victimPlayer.index);
 	Call_PushCellRef(attacker);
 	Call_PushCellRef(inflictor);
 	Call_PushFloatRef(damage2);
@@ -253,7 +254,7 @@ Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &d
 		return Plugin_Changed;
 	}
 
-	TFClassType class = TF2_GetPlayerClass(victim);
+	TFClassType class = victimPlayer.Class;
 	int classToInt = view_as<int>(class);
 
 	if (IsRoundInWarmup() && IsValidClient(attacker))
@@ -287,22 +288,52 @@ Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &d
 		TF2_RemoveCondition(victim, TFCond_Gas);
 	}
 
-	if (IsValidClient(attacker) && IsValidClient(victim) && IsClientInPvP(victim) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && victim != attacker)
+	if (TF2_IsPlayerInCondition(victim, TFCond_Gas) && SF2_ChaserEntity(attacker).IsValid())
+	{
+		TF2_IgnitePlayer(victim, victim);
+		TF2_RemoveCondition(victim, TFCond_Gas);
+	}
+
+	if (IsValidClient(attacker) && IsValidClient(victim) && (IsClientInPvP(victim) || IsClientInPvE(victim)) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && victim != attacker)
 	{
 		damage = 0.0;
 		return Plugin_Changed;
 	}
 
-	if (IsValidClient(attacker) && IsValidClient(victim) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && g_PlayerTrapped[victim])
+	if (IsValidClient(attacker) && victimPlayer.IsValid && victimPlayer.Team == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && (victimPlayer.IsTrapped || victimPlayer.IsLatched))
 	{
-		if (!g_PlayerEliminated[attacker] && !g_PlayerEliminated[victim])
+		if (!g_PlayerEliminated[attacker] && !victimPlayer.IsEliminated && (damagetype & 0x80) != 0)
 		{
-			if (damagetype & 0x80) // 0x80 == melee damage
+			victimPlayer.IsTrapped = false;
+			if (victimPlayer.IsLatched)
 			{
-				g_PlayerTrapped[victim] = false;
-				TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
-				TF2_AddCondition(victim, TFCond_SpeedBuffAlly, 4.0);
+				victimPlayer.ChangeCondition(TFCond_Dazed, true);
+				for (int i = 0; i < MAX_BOSSES; i++)
+				{
+					SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+					if (!npc.IsValid())
+					{
+						continue;
+					}
+
+					if (victimPlayer.Latcher != npc.Index)
+					{
+						continue;
+					}
+
+					SF2_ChaserEntity chaser = SF2_ChaserEntity(npc.EntIndex);
+					if (!chaser.IsValid())
+					{
+						continue;
+					}
+
+					chaser.MyNextBotPointer().GetIntentionInterface().OnCommandString("break tongue");
+				}
 			}
+			victimPlayer.IsLatched = false;
+			victimPlayer.LatchCount = 0;
+			TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 4.0);
+			TF2_AddCondition(victim, TFCond_SpeedBuffAlly, 4.0);
 		}
 	}
 
@@ -321,12 +352,12 @@ Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &d
 		}
 	}
 
-	if (IsEntityAProjectile(inflictor))
+	if (!SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
 	{
 		int npcIndex = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 		if (npcIndex != -1)
 		{
-			bool attackEliminated = !!(NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS);
+			bool attackEliminated = (NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS) != 0;
 			if (!attackEliminated && (GetClientTeam(victim) == TFTeam_Blue) && IsValidClient(victim) )
 			{
 				damage = 0.0;
@@ -347,11 +378,24 @@ Action Hook_ClientOnTakeDamage(int victim,int &attacker,int &inflictor, float &d
 		}
 	}
 
+	bool canDamage = false;
 	if (attacker != victim && IsValidClient(attacker))
 	{
+		if (IsClientInPvP(victim) && IsClientInPvP(attacker))
+		{
+			canDamage = true;
+		}
+		if (IsClientLeavingPvP(victim) && !IsClientInPvP(attacker))
+		{
+			canDamage = true;
+		}
+		if (IsRoundInWarmup())
+		{
+			canDamage = true;
+		}
 		if (!IsRoundEnding())
 		{
-			if (IsRoundInWarmup() || (IsClientInPvP(victim) && IsClientInPvP(attacker)))
+			if (canDamage)
 			{
 				if (attacker == inflictor)
 				{
@@ -755,6 +799,7 @@ void ClientOnButtonRelease(SF2_BasePlayer client, int button)
 #define SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD ""
 #define SF2_PLAYER_HUD_INFINITY_SYMBOL "∞"
 #define SF2_PLAYER_HUD_SPRINT_SYMBOL "»"
+#define SF2_PLAYER_HUD_HEALTH_SYMBOL "♥"
 
 Action Timer_ClientAverageUpdate(Handle timer)
 {
@@ -781,11 +826,12 @@ Action Timer_ClientAverageUpdate(Handle timer)
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i))
+		SF2_BasePlayer player = SF2_BasePlayer(i);
+		if (!player.IsValid)
 		{
 			continue;
 		}
-		if (!g_PlayerPreferences[i].PlayerPreference_LegacyHud)
+		if (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud)
 		{
 			hudColorHealthy = { 50, 255, 50 };
 		}
@@ -794,60 +840,44 @@ Action Timer_ClientAverageUpdate(Handle timer)
 			hudColorHealthy = { 150, 255, 150 };
 		}
 
-		if (IsPlayerAlive(i) && !IsClientInDeathCam(i))
+		if (player.IsAlive && !player.IsInDeathCam)
 		{
-			if (!g_PlayerEliminated[i])
+			if (!player.IsEliminated)
 			{
-				if (DidClientEscape(i))
+				if (player.HasEscaped)
 				{
 					continue;
 				}
 
 				int maxBars = 12;
 				int bars;
+				char buffer2[64];
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					bars = RoundToCeil(float(maxBars) * ClientGetBlinkMeter(i));
+					float percent = float(player.Health) / float(player.MaxHealth);
+					if (percent > 1.0)
+					{
+						percent = 1.0;
+					}
+					bars = RoundToCeil(float(maxBars) * percent);
 					if (bars > maxBars)
 					{
 						bars = maxBars;
 					}
-
-					if (!g_PlayerPreferences[i].PlayerPreference_LegacyHud)
+					FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_HEALTH_SYMBOL);
+					for (int i2 = 0; i2 < maxBars; i2++)
 					{
-						if (bars != 0)
+						if (i2 < bars)
 						{
-							FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 						}
 						else
 						{
-							FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
-						}
-					}
-					else
-					{
-						FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
-					}
-
-					if (IsInfiniteBlinkEnabled())
-					{
-						StrCat(buffer, sizeof(buffer), SF2_PLAYER_HUD_INFINITY_SYMBOL);
-					}
-					else
-					{
-						for (int i2 = 0; i2 < maxBars; i2++)
-						{
-							if (i2 < bars)
-							{
-								StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
-							}
-							else
-							{
-								StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
-							}
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 						}
 					}
 				}
+
 				if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
 					bars = RoundToCeil(float(maxBars) * ClientGetFlashlightBatteryLife(i));
@@ -856,7 +886,6 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						bars = maxBars;
 					}
 
-					char buffer2[64];
 					FormatEx(buffer2, sizeof(buffer2), "\n%s  ", SF2_PLAYER_HUD_FLASHLIGHT_SYMBOL);
 					StrCat(buffer, sizeof(buffer), buffer2);
 
@@ -870,23 +899,22 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						{
 							if (i2 < bars)
 							{
-								StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+								StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 							}
 							else
 							{
-								StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+								StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 							}
 						}
 					}
 				}
 
-				bars = RoundToCeil(float(maxBars) * (float(ClientGetSprintPoints(i)) / 100.0));
+				bars = RoundToCeil(float(maxBars) * (float(player.GetSprintPoints()) / 100.0));
 				if (bars > maxBars)
 				{
 					bars = maxBars;
 				}
 
-				char buffer2[64];
 				FormatEx(buffer2, sizeof(buffer2), "\n%s  ", SF2_PLAYER_HUD_SPRINT_SYMBOL);
 				StrCat(buffer, sizeof(buffer), buffer2);
 
@@ -900,17 +928,16 @@ Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						if (i2 < bars)
 						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 						}
 						else
 						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 						}
 					}
 				}
 
-				float healthRatio = float(GetEntProp(i, Prop_Send, "m_iHealth")) / float(SDKCall(g_SDKGetMaxHealth, i));
-
+				float healthRatio = float(player.Health) / float(player.MaxHealth);
 				int color[3];
 				for (int i2 = 0; i2 < 3; i2++)
 				{
@@ -942,15 +969,63 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						0.07,
 						0.5);
 				}
-				ShowSyncHudText(i, g_HudSync2, buffer);
+				ShowSyncHudText(player.index, g_HudSync2, buffer);
+				if (!SF_IsRaidMap() && !SF_IsBoxingMap() && !IsInfiniteBlinkEnabled() && player.HasStartedBlinking)
+				{
+					bars = RoundToCeil(float(maxBars) * player.BlinkMeter);
+					if (bars > maxBars)
+					{
+						bars = maxBars;
+					}
+
+					if (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud)
+					{
+						if (bars != 0)
+						{
+							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
+						}
+						else
+						{
+							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
+						}
+					}
+					else
+					{
+						FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
+					}
+
+					for (int i2 = 0; i2 < maxBars; i2++)
+					{
+						if (i2 < bars)
+						{
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+						}
+						else
+						{
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+						}
+					}
+
+					SetHudTextParams(-1.0, 0.65,
+						0.3,
+						color[0],
+						color[1],
+						color[2],
+						40,
+						_,
+						1.0,
+						0.07,
+						0.5);
+					ShowSyncHudText(player.index, g_HudSync4, buffer);
+				}
 				buffer[0] = '\0';
 			}
 			else
 			{
-				if (g_PlayerProxy[i])
+				if (player.IsProxy)
 				{
 					int maxBars = 12;
-					int bars = RoundToCeil(float(maxBars) * (float(g_PlayerProxyControl[i]) / 100.0));
+					int bars = RoundToCeil(float(maxBars) * (float(player.ProxyControl) / 100.0));
 					if (bars > maxBars)
 					{
 						bars = maxBars;
@@ -962,11 +1037,11 @@ Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						if (i2 < bars)
 						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 						}
 						else
 						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[i].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 						}
 					}
 
@@ -980,12 +1055,12 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						1.0,
 						0.07,
 						0.5);
-					ShowSyncHudText(i, g_HudSync2, buffer);
+					ShowSyncHudText(player.index, g_HudSync2, buffer);
 				}
 			}
 		}
-		ClientUpdateListeningFlags(i);
-		ClientUpdateMusicSystem(i);
+		player.UpdateListeningFlags();
+		player.UpdateMusicSystem();
 	}
 
 	return Plugin_Continue;

@@ -9,8 +9,6 @@
 #define FILE_CLASSCONFIGS "configs/sf2/class_stats.cfg"
 #define FILE_CLASSCONFIGS_DATA "data/sf2/class_stats.cfg"
 
-#define BOSS_THINKRATE 0.1 // doesn't really matter much since timers go at a minimum of 0.1 seconds anyways
-
 #define CRIT_SOUND "player/crit_hit.wav"
 #define CRIT_PARTICLENAME "crit_text"
 #define MINICRIT_SOUND "player/crit_hit_mini.wav"
@@ -21,10 +19,6 @@
 #define FIREWORKSRED_PARTICLENAME "utaunt_firework_teamcolor_red"
 #define TELEPORTEDINBLU_PARTICLENAME "teleported_red"
 #define SOUND_THUNDER ")ambient/explosions/explode_9.wav"
-
-#define EXPLOSIVEDANCE_EXPLOSION1 ")weapons/explode1.wav"
-#define EXPLOSIVEDANCE_EXPLOSION2 ")weapons/explode2.wav"
-#define EXPLOSIVEDANCE_EXPLOSION3 ")weapons/explode3.wav"
 
 #define SPECIAL1UPSOUND "mvm/mvm_revive.wav"
 
@@ -139,3 +133,5 @@
 #define SF2_HUD_TEXT_COLOR_A 255
 
 #define SF2_CHASER_BOSS_MAX_ATTACKS 32
+
+#define SF2_PROFILE_CHASER_DEFAULT_POSTURE "default"

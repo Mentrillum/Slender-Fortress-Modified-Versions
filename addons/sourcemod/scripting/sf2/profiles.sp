@@ -53,9 +53,6 @@ void SetupBossProfileNatives()
 	CreateNative("SF2_GetBossProfileFloat", Native_GetBossProfileFloat);
 	CreateNative("SF2_GetBossProfileString", Native_GetBossProfileString);
 	CreateNative("SF2_GetBossProfileVector", Native_GetBossProfileVector);
-	CreateNative("SF2_GetBossProfileDifficultyNumValues", Native_GetBossProfileDifficultyNumValues);
-	CreateNative("SF2_GetBossProfileDifficultyBoolValues", Native_GetBossProfileDifficultyBoolValues);
-	CreateNative("SF2_GetBossProfileDifficultyFloatValues", Native_GetBossProfileDifficultyFloatValues);
 	CreateNative("SF2_GetBossAttackProfileNum", Native_GetBossAttackProfileNum);
 	CreateNative("SF2_GetBossAttackProfileFloat", Native_GetBossAttackProfileFloat);
 	CreateNative("SF2_GetBossAttackProfileString", Native_GetBossAttackProfileString);
@@ -67,6 +64,8 @@ void SetupBossProfileNatives()
 	CreateNative("SF2_GetBossProfileData", Native_GetBossProfileData);
 	CreateNative("SF2_GetChaserBossProfileData", Native_GetChaserBossProfileData);
 	CreateNative("SF2_GetStatueBossProfileData", Native_GetStatueBossProfileData);
+	CreateNative("SF2_TranslateProfileActivityFromName", Native_TranslateProfileActivityFromName);
+	CreateNative("SF2_LookupProfileAnimation", Native_LookupProfileAnimation);
 }
 
 void InitializeBossProfiles()
@@ -188,6 +187,22 @@ static void AddProfileActivities()
 	g_Activities.SetValue("ACT_DIE_GUTSHOT", ACT_DIE_GUTSHOT);
 	g_Activities.SetValue("ACT_DIE_BACKSHOT", ACT_DIE_BACKSHOT);
 
+	// Rage activites
+	g_Activities.SetValue("ACT_BUSY_QUEUE", ACT_BUSY_QUEUE);
+
+	// Flee starting activities
+	g_Activities.SetValue("ACT_SIGNAL1", ACT_SIGNAL1);
+	g_Activities.SetValue("ACT_SIGNAL2", ACT_SIGNAL2);
+	g_Activities.SetValue("ACT_SIGNAL3", ACT_SIGNAL3);
+
+	// Heal activities
+	g_Activities.SetValue("ACT_USE", ACT_USE);
+	g_Activities.SetValue("ACT_BUSY_QUEUE", ACT_BUSY_QUEUE);
+	g_Activities.SetValue("ACT_SHIELD_UP", ACT_SHIELD_UP);
+	g_Activities.SetValue("ACT_SHIELD_UP_IDLE", ACT_SHIELD_UP_IDLE);
+	g_Activities.SetValue("ACT_CROUCHING_SHIELD_UP", ACT_CROUCHING_SHIELD_UP);
+	g_Activities.SetValue("ACT_CROUCHING_SHIELD_UP_IDLE", ACT_CROUCHING_SHIELD_UP_IDLE);
+
 	// Misc activities
 	g_Activities.SetValue("ACT_TRANSITION", ACT_TRANSITION); // Spawn animation
 	g_Activities.SetValue("ACT_DISARM", ACT_DISARM); // Spawn animation
@@ -210,6 +225,24 @@ Activity TranslateProfileActivityFromName(const char[] activityName)
 	}
 
 	return ACT_INVALID;
+}
+
+int LookupProfileAnimation(int entity, const char[] animName)
+{
+	CBaseAnimating animator = CBaseAnimating(entity);
+
+	int sequence = -1;
+	Activity activity = TranslateProfileActivityFromName(animName);
+	if (activity != ACT_INVALID)
+	{
+		sequence = animator.SelectWeightedSequence(activity);
+	}
+	else
+	{
+		sequence = animator.LookupSequence(animName);
+	}
+
+	return sequence;
 }
 
 /*
@@ -352,6 +385,15 @@ void UnloadBossProfile(const char[] profile)
 		g_SelectableRenevantBossAdminProfileList.Erase(index);
 	}
 
+	SF2BossProfileData data;
+	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	if (data.IsPvEBoss)
+	{
+		char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+		strcopy(setProfile, sizeof(setProfile), profile);
+		UnregisterPvESlenderBoss(setProfile);
+	}
+
 	g_BossProfileData.Remove(profile);
 
 	g_Config.Rewind();
@@ -375,6 +417,10 @@ void ClearBossProfiles()
 		{
 			continue;
 		}
+
+		Call_StartForward(g_OnBossProfileUnloadedFwd);
+		Call_PushString(profile);
+		Call_Finish();
 
 		PreUnloadBossProfile(profile);
 	}
@@ -505,7 +551,7 @@ void ReloadBossProfiles()
 				char bossPackName[128];
 				g_BossPackConfig.GetSectionName(bossPackName, sizeof(bossPackName));
 
-				bool autoLoad = !!g_BossPackConfig.GetNum("autoload");
+				bool autoLoad = g_BossPackConfig.GetNum("autoload") != 0;
 
 				if (autoLoad || (mapBossPack[0] != '\0' && strcmp(mapBossPack, bossPackName) == 0))
 				{
@@ -800,7 +846,7 @@ void InitiateBossPackVote(int initiator)
 
 	do
 	{
-		if (!g_BossPackConfig.GetNum("autoload") && !!g_BossPackConfig.GetNum("show_in_vote", 1))
+		if (!g_BossPackConfig.GetNum("autoload") && g_BossPackConfig.GetNum("show_in_vote", 1) != 0)
 		{
 			char bossPack[128];
 			g_BossPackConfig.GetSectionName(bossPack, sizeof(bossPack));
@@ -1263,6 +1309,20 @@ static any Native_GetStatueBossProfileData(Handle plugin,int numParams)
 	return g_StatueBossProfileData;
 }
 
+static any Native_TranslateProfileActivityFromName(Handle plugin, int numParams)
+{
+	char activityName[64];
+	GetNativeString(1, activityName, sizeof(activityName));
+	return TranslateProfileActivityFromName(activityName);
+}
+
+static any Native_LookupProfileAnimation(Handle plugin, int numParams)
+{
+	char animationName[64];
+	GetNativeString(2, animationName, sizeof(animationName));
+	return LookupProfileAnimation(GetNativeCell(1), animationName);
+}
+
 static any Native_IsBossProfileValid(Handle plugin,int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -1329,42 +1389,6 @@ static any Native_GetBossProfileVector(Handle plugin,int numParams)
 
 	SetNativeArray(3, result, 3);
 	return success;
-}
-
-static any Native_GetBossProfileDifficultyNumValues(Handle plugin,int numParams)
-{
-	char keyValue[PLATFORM_MAX_PATH];
-	GetNativeString(2, keyValue, sizeof(keyValue));
-	int result[Difficulty_Max];
-	int defaultValue[Difficulty_Max];
-	GetNativeArray(3, result, Difficulty_Max);
-	GetNativeArray(4, defaultValue, Difficulty_Max);
-	GetProfileDifficultyNumValues(GetNativeCell(1), keyValue, result, defaultValue);
-	return 0;
-}
-
-static any Native_GetBossProfileDifficultyBoolValues(Handle plugin,int numParams)
-{
-	char keyValue[PLATFORM_MAX_PATH];
-	GetNativeString(2, keyValue, sizeof(keyValue));
-	bool result[Difficulty_Max];
-	bool defaultValue[Difficulty_Max];
-	GetNativeArray(3, result, Difficulty_Max);
-	GetNativeArray(4, defaultValue, Difficulty_Max);
-	GetProfileDifficultyBoolValues(GetNativeCell(1), keyValue, result, defaultValue);
-	return 0;
-}
-
-static any Native_GetBossProfileDifficultyFloatValues(Handle plugin,int numParams)
-{
-	char keyValue[PLATFORM_MAX_PATH];
-	GetNativeString(2, keyValue, sizeof(keyValue));
-	float result[Difficulty_Max];
-	float defaultValue[Difficulty_Max];
-	GetNativeArray(3, result, Difficulty_Max);
-	GetNativeArray(4, defaultValue, Difficulty_Max);
-	GetProfileDifficultyFloatValues(GetNativeCell(1), keyValue, result, defaultValue);
-	return 0;
 }
 
 static any Native_GetBossAttackProfileNum(Handle plugin,int numParams)
@@ -1438,9 +1462,9 @@ static any Native_GetRandomStringFromBossProfile(Handle plugin,int numParams)
 	int bufferLen = GetNativeCell(4);
 	char[] buffer = new char[bufferLen];
 
-	int iIndex = GetNativeCell(5);
+	int index = GetNativeCell(5);
 
-	bool success = GetRandomStringFromProfile(profile, keyValue, buffer, bufferLen, iIndex);
+	bool success = GetRandomStringFromProfile(profile, keyValue, buffer, bufferLen, index);
 	SetNativeString(3, buffer, bufferLen);
 	return success;
 }

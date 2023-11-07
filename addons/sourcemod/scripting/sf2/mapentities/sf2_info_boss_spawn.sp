@@ -42,6 +42,7 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iMaxBosses");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iMaxBosses", value);
@@ -77,7 +78,7 @@ methodmap SF2BossSpawnEntity < SF2SpawnPointBaseEntity
 			NPCGetProfile(bossIndex, profile, sizeof(profile));
 			if (strcmp(profile, targetProfile) == 0)
 			{
-				SpawnSlender(view_as<SF2NPC_BaseNPC>(bossIndex), pos);
+				SpawnSlender(SF2NPC_BaseNPC(bossIndex), pos);
 				count++;
 
 				int bossEntIndex = NPCGetEntIndex(bossIndex);

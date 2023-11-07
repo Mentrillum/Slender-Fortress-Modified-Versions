@@ -1,5 +1,19 @@
 #include <sdktools_sound>
 
+static const char g_SoundModifiers[][] = {
+	"*",
+	"#",
+	"@",
+	">",
+	"<",
+	"^",
+	")",
+	"}",
+	"$",
+	"!",
+	"?"
+};
+
 // ======================================
 // FUNCTIONS
 // ======================================
@@ -11,8 +25,10 @@ stock void PrecacheSound2(const char[] path, bool checkFile, bool replace = true
 	PrecacheSound(tempPath, true);
 	if (replace)
 	{
-		ReplaceStringEx(tempPath, sizeof(tempPath), ")", "");
-		ReplaceStringEx(tempPath, sizeof(tempPath), "#", "");
+		for (int i = 0; i < sizeof(g_SoundModifiers); i++)
+		{
+			ReplaceStringEx(tempPath, sizeof(tempPath), g_SoundModifiers[i], "");
+		}
 	}
 	char buffer[PLATFORM_MAX_PATH];
 	FormatEx(buffer, sizeof(buffer), "sound/%s", tempPath);
@@ -52,8 +68,10 @@ stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool checkFil
 	char fullPath[PLATFORM_MAX_PATH], tempPath[PLATFORM_MAX_PATH];
 	strcopy(tempPath, sizeof(tempPath), soundPath);
 	PrecacheSound(tempPath);
-	ReplaceStringEx(tempPath, sizeof(tempPath), ")", "");
-	ReplaceStringEx(tempPath, sizeof(tempPath), "#", "");
+	for (int i = 0; i < sizeof(g_SoundModifiers); i++)
+	{
+		ReplaceStringEx(tempPath, sizeof(tempPath), g_SoundModifiers[i], "");
+	}
 	FormatEx(fullPath, sizeof(fullPath), "sound/%s", tempPath);
 
 	if (checkFile)
@@ -82,11 +100,11 @@ stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool checkFil
  * @param xbox	Determines if the .xbox file extension should be checked.
  * @param checkFile		Determines if missing files should be checked.
  */
-stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile)
+stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile)
 {
 	if (path[0] == '\0')
 	{
-		return;
+		return -1;
 	}
 
 	char fixedPath[PLATFORM_MAX_PATH];
@@ -138,9 +156,10 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 	}
 
 	FormatEx(buffer, sizeof(buffer), "models/%s.mdl", fixedPath);
+	int returnValue = -1;
 	if (!IsModelPrecached(buffer))
 	{
-		PrecacheModel(buffer);
+		returnValue = PrecacheModel(buffer);
 	}
 
 	if (checkFile)
@@ -228,6 +247,8 @@ stock void PrecacheModel2(const char[] path, bool phy = true, bool xbox = false,
 			AddFileToDownloadsTable(buffer);
 		}
 	}
+
+	return returnValue;
 }
 
 /**
@@ -396,6 +417,13 @@ stock void GetProfileDifficultyNumValues(KeyValues kv, const char[] baseKeyName,
 				buffer[j] = value;
 			}
 		}
+		else
+		{
+			if (i > 0)
+			{
+				buffer[i] = buffer[i - 1];
+			}
+		}
 	}
 }
 
@@ -434,6 +462,13 @@ stock void GetProfileDifficultyBoolValues(KeyValues kv, const char[] baseKeyName
 				buffer[j] = value;
 			}
 		}
+		else
+		{
+			if (i > 0)
+			{
+				buffer[i] = buffer[i - 1];
+			}
+		}
 	}
 }
 
@@ -470,6 +505,13 @@ stock void GetProfileDifficultyFloatValues(KeyValues kv, const char[] baseKeyNam
 			for (int j = i; j < Difficulty_Max; j++)
 			{
 				buffer[j] = value;
+			}
+		}
+		else
+		{
+			if (i > 0)
+			{
+				buffer[i] = buffer[i - 1];
 			}
 		}
 	}
@@ -526,6 +568,13 @@ stock void GetProfileDifficultyVectorValues(KeyValues kv, const char[] baseKeyNa
 				buffer[j] = value;
 			}
 		}
+		else
+		{
+			if (i > 0)
+			{
+				buffer[i] = buffer[i - 1];
+			}
+		}
 	}
 }
 
@@ -580,6 +629,13 @@ void GetProfileDifficultyStringValues(KeyValues kv, const char[] baseKeyName, ch
 				strcopy(bufferArray[j], maxStringLen, value);
 			}
 		}
+		else
+		{
+			if (i > 0)
+			{
+				strcopy(bufferArray[i], maxStringLen, bufferArray[i - 1]);
+			}
+		}
 	}
 }
 
@@ -587,12 +643,12 @@ stock void SetProfileDifficultyStringArrayValues(KeyValues kv, const char[] base
 {
 	char key[64];
 	char temporaryKeys[PLATFORM_MAX_PATH];
+	char[] value = new char[PLATFORM_MAX_PATH];
 
 	for (int i = 0; i < Difficulty_Max; i++)
 	{
 		GetProfileKeyWithDifficultySuffix(baseKeyName, i == 0 ? 1 : i, key, sizeof(key));
-		char[] value = new char[PLATFORM_MAX_PATH];
-		kv.GetString(key, value, PLATFORM_MAX_PATH, temporaryKeys);
+		kv.GetString(key, value, PLATFORM_MAX_PATH, value);
 		if (models && strncmp(value, "models/", 7, false) != 0 && strncmp(value, "models\\", 7, false) != 0 && value[0] != '\0')
 		{
 			Format(value, PLATFORM_MAX_PATH, "models/%s", value);
@@ -611,10 +667,10 @@ bool GetProfileColorNoBacks(KeyValues kv,
 	int &g,
 	int &b,
 	int &a,
-	int dr=255,
-	int dg=255,
-	int db=255,
-	int da=255)
+	int dr = 255,
+	int dg = 255,
+	int db = 255,
+	int da = 255)
 {
 	r = dr;
 	g = dg;
@@ -682,6 +738,13 @@ void GetProfileDifficultyColorValues(KeyValues kv, const char[] baseKeyName, int
 				buffer[j] = value;
 			}
 		}
+		else
+		{
+			if (i > 0)
+			{
+				buffer[i] = buffer[i - 1];
+			}
+		}
 	}
 }
 
@@ -691,6 +754,7 @@ void GetProfileDifficultyColorValues(KeyValues kv, const char[] baseKeyName, int
 
 enum struct SF2BossProfileSoundInfo
 {
+	char SectionName[64];
 	int Channel;
 	float Volume;
 	int Flags;
@@ -707,6 +771,7 @@ enum struct SF2BossProfileSoundInfo
 
 	void Init()
 	{
+		this.SectionName[0] = '\0';
 		this.Channel = SNDCHAN_AUTO;
 		this.Volume = SNDVOL_NORMAL;
 		this.Flags = SND_NOFLAGS;
@@ -719,13 +784,14 @@ enum struct SF2BossProfileSoundInfo
 		this.Radius = 850.0;
 		this.Chance = 1.0;
 
-		this.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+		this.Paths = null;
 	}
 
 	void Load(KeyValues kv, bool checkFile)
 	{
 		if (kv.JumpToKey("paths"))
 		{
+			this.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 			char soundPath[PLATFORM_MAX_PATH], section[64];
 			for (int i = 1;; i++)
 			{
@@ -801,14 +867,34 @@ enum struct SF2BossProfileSoundInfo
 		}
 	}
 
-	void EmitSound(bool toClient = false, int entity = -1, int emitter = SOUND_FROM_PLAYER, float origin[3] = NULL_VECTOR, int addPitch = 0)
+	void EmitSound(bool toClient = false, int entity = -1, int emitter = SOUND_FROM_PLAYER, float origin[3] = NULL_VECTOR, int addPitch = 0, char returnSound[PLATFORM_MAX_PATH] = "", int definedIndex = -1)
 	{
 		if (this.Paths == null || this.Paths.Length <= 0)
 		{
 			return;
 		}
 		char buffer[PLATFORM_MAX_PATH];
-		this.Paths.GetString(GetRandomInt(0, this.Paths.Length - 1), buffer, sizeof(buffer));
+		if (definedIndex != -1)
+		{
+			this.Paths.GetString(definedIndex, buffer, sizeof(buffer));
+		}
+		else
+		{
+			this.Paths.GetString(GetRandomInt(0, this.Paths.Length - 1), buffer, sizeof(buffer));
+		}
+		returnSound = buffer;
+		if (StrContains(buffer, ".mp3", true) == -1 && StrContains(buffer, ".wav", true) == -1)
+		{
+			if (!toClient)
+			{
+				EmitGameSoundToAll(buffer, entity, this.Flags);
+			}
+			else
+			{
+				EmitGameSoundToClient(entity, buffer, emitter, this.Flags);
+			}
+			return;
+		}
 		int pitch = GetRandomInt(this.PitchRandomMin, this.PitchRandomMax);
 		int volumeCount = RoundToCeil(this.Volume);
 		for (int i = 0; i < volumeCount; i++)
@@ -870,6 +956,98 @@ enum struct SF2BossProfileSoundInfo
 	}
 }
 
+enum struct SF2ParticleData
+{
+	char ParticleName[128];
+	bool AttachParticles;
+	bool BeamParticles;
+	ParticleAttachment Type;
+	char Attachment[64];
+
+	void Init()
+	{
+		this.ParticleName[0] = '\0';
+		this.AttachParticles = true;
+		this.BeamParticles = false;
+		this.Type = PATTACH_CUSTOMORIGIN;
+		this.Attachment[0] = '\0';
+	}
+
+	void Load(KeyValues kv)
+	{
+		kv.GetString("particle", this.ParticleName, sizeof(this.ParticleName), this.ParticleName);
+		this.AttachParticles = kv.GetNum("attach", this.AttachParticles) != 0;
+		this.BeamParticles = kv.GetNum("beam", this.BeamParticles) != 0;
+		this.Type = view_as<ParticleAttachment>(kv.GetNum("attach_type", view_as<int>(this.Type)));
+		kv.GetString("attachment", this.Attachment, sizeof(this.Attachment), this.Attachment);
+	}
+
+	void Apply(CBaseAnimating player, CBaseAnimating caster)
+	{
+		CBaseAnimating castTo;
+		float myPos[3], myAng[3], targetPos[3];
+		if (!this.AttachParticles || this.BeamParticles)
+		{
+			caster.WorldSpaceCenter(myPos);
+			caster.GetAbsAngles(myAng);
+			player.WorldSpaceCenter(targetPos);
+			if (this.AttachParticles)
+			{
+				castTo = caster;
+			}
+		}
+		else
+		{
+			player.WorldSpaceCenter(myPos);
+			player.GetAbsAngles(myAng);
+			castTo = player;
+		}
+
+		int attachment = 0;
+		if (this.Attachment[0] != '\0')
+		{
+			attachment = castTo.LookupAttachment(this.Attachment);
+		}
+		if (attachment != 0)
+		{
+			castTo.GetAttachment(attachment, myPos, myAng);
+		}
+
+		if (this.Type == PATTACH_ROOTBONE_FOLLOW)
+		{
+			myPos = NULL_VECTOR;
+			myAng = NULL_VECTOR;
+		}
+
+		if (this.BeamParticles)
+		{
+			DispatchParticleEffectBeam(castTo.index, this.ParticleName, myPos, myAng, targetPos, attachment, this.Type, true);
+		}
+		else
+		{
+			if (!DispatchParticleEffect(castTo.index, this.ParticleName, myPos, myAng, myPos, attachment, this.Type, true))
+			{
+				if (this.Type == PATTACH_ROOTBONE_FOLLOW)
+				{
+					castTo.WorldSpaceCenter(myPos);
+					castTo.GetAbsAngles(myAng);
+				}
+				CBaseEntity particleEnt = CBaseEntity(CreateEntityByName("info_particle_system"));
+				if (particleEnt.IsValid())
+				{
+					particleEnt.Teleport(myPos, myAng, NULL_VECTOR);
+
+					particleEnt.KeyValue("effect_name", this.ParticleName);
+					particleEnt.Spawn();
+					particleEnt.Activate();
+					particleEnt.AcceptInput("start");
+					RemoveEntity(particleEnt.index);
+				}
+			}
+		}
+	}
+}
+
 enum EffectEvent
 {
 	EffectEvent_Invalid = -1,
@@ -887,11 +1065,15 @@ enum EffectType
 	EffectType_Trail,
 	EffectType_PropDynamic,
 	EffectType_PointSpotlight,
-	EffectType_Sprite
+	EffectType_Sprite,
+	EffectType_TempEntBeamRing,
+	EffectType_TempEntParticle,
+	EffectType_Sound
 };
 
 enum struct SF2BossProfileBaseEffectInfo
 {
+	char SectionName[64];
 	EffectEvent Event;
 	EffectType Type;
 	float Origin[3];
@@ -906,6 +1088,8 @@ enum struct SF2BossProfileBaseEffectInfo
 	char AttachmentName[PLATFORM_MAX_PATH];
 	ArrayList Colors;
 	int DifficultyIndexes;
+	float Delay;
+	bool AttachPlayer;
 
 	int SteamSpreadSpeed;
 	int SteamSpeed;
@@ -935,18 +1119,45 @@ enum struct SF2BossProfileBaseEffectInfo
 
 	float SpotlightWidth;
 	float SpotlightLength;
+	float SpotlightHaloScale;
 
 	char SpriteName[PLATFORM_MAX_PATH];
 	float SpriteScale;
 
+	float BeamRingStartRadius;
+	float BeamRingEndRadius;
+	int BeamRingStartFrame;
+	int BeamRingFrameRate;
+	float BeamRingWidth;
+	float BeamRingAmplitude;
+	int BeamRingSpeed;
+	int BeamRingFlags;
+	char BeamRingColor[32];
+	char BeamRingBeamSprite[PLATFORM_MAX_PATH];
+	int BeamRingBeamModel;
+	char BeamRingHaloSprite[PLATFORM_MAX_PATH];
+	int BeamRingHaloModel;
+
+	float TEParticleStartPos[3];
+	int TEParticleAttachType;
+	bool TEParticleReset;
+	bool TEParticleHasControlPoint;
+	int TEParticleControlPointAttachType;
+	float TEParticleControlPointOffset[3];
+
+	SF2BossProfileSoundInfo SoundSounds;
+
 	void Init()
 	{
+		this.SectionName[0] = '\0';
 		this.Event = EffectEvent_Invalid;
 		this.Type = EffectType_Invalid;
 		for (int i = 0; i < 3; i++)
 		{
 			this.Origin[i] = 0.0;
 			this.Angles[i] = 0.0;
+			this.TEParticleStartPos[i] = 0.0;
+			this.TEParticleControlPointOffset[i] = 0.0;
 		}
 		this.RenderModes = RENDER_NORMAL;
 		this.RenderEffects = RENDERFX_NONE;
@@ -956,6 +1167,7 @@ enum struct SF2BossProfileBaseEffectInfo
 		this.LifeTime = -1.0;
 		this.Colors = null;
 		this.DifficultyIndexes = 123456;
+		this.Delay = 0.0;
 
 		this.SteamSpreadSpeed = 0;
 		this.SteamSpeed = 0;
@@ -985,14 +1197,37 @@ enum struct SF2BossProfileBaseEffectInfo
 
 		this.SpotlightWidth = 40.0;
 		this.SpotlightLength = 512.0;
+		this.SpotlightHaloScale = 40.0;
 
 		this.SpriteName[0] = '\0';
 		this.SpriteScale = 1.0;
+
+		this.BeamRingStartRadius = 5.0;
+		this.BeamRingEndRadius = 10.0;
+		this.BeamRingStartFrame = 0;
+		this.BeamRingFrameRate = 12;
+		this.BeamRingWidth = 100.0;
+		this.BeamRingAmplitude = 1.0;
+		this.BeamRingSpeed = 5;
+		this.BeamRingFlags = 0;
+		this.BeamRingColor = "255 255 255 255";
+		this.BeamRingBeamSprite[0] = '\0';
+		this.BeamRingBeamModel = -1;
+		this.BeamRingHaloSprite[0] = '\0';
+		this.BeamRingHaloModel = -1;
+
+		this.TEParticleAttachType = 0;
+		this.TEParticleReset = true;
+		this.TEParticleHasControlPoint = false;
+		this.TEParticleControlPointAttachType = 0;
+
+		this.SoundSounds.Init();
 	}
 
-	void Load(KeyValues kv)
+	void Load(KeyValues kv, bool checkFile)
 	{
-		char effectTypeString[64];
+		kv.GetSectionName(this.SectionName, sizeof(this.SectionName));
+		char effectTypeString[64], buffer[PLATFORM_MAX_PATH];
 		kv.GetString("type", effectTypeString, sizeof(effectTypeString));
 		if (strcmp(effectTypeString, "steam", false) == 0)
 		{
@@ -1006,7 +1241,7 @@ enum struct SF2BossProfileBaseEffectInfo
 			this.SteamRollSpeed = kv.GetFloat("rollspeed", this.SteamRollSpeed);
 			this.SteamType = kv.GetNum("particletype", this.SteamType);
 		}
-		if (strcmp(effectTypeString, "dynamiclight", false) == 0)
+		else if (strcmp(effectTypeString, "dynamiclight", false) == 0)
 		{
 			this.Type = EffectType_DynamicLight;
 			this.LightBrightness = kv.GetNum("brightness", this.LightBrightness);
@@ -1016,12 +1251,12 @@ enum struct SF2BossProfileBaseEffectInfo
 
 			this.SetupColors(kv);
 		}
-		if (strcmp(effectTypeString, "particle", false) == 0)
+		else if (strcmp(effectTypeString, "particle", false) == 0)
 		{
 			this.Type = EffectType_Particle;
 			kv.GetString("particlename", this.ParticleName, sizeof(this.ParticleName), this.ParticleName);
 		}
-		if (strcmp(effectTypeString, "trail", false) == 0)
+		else if (strcmp(effectTypeString, "trail", false) == 0)
 		{
 			this.Type = EffectType_Trail;
 			this.TrailTime = kv.GetFloat("trailtime", this.TrailTime);
@@ -1031,7 +1266,7 @@ enum struct SF2BossProfileBaseEffectInfo
 
 			this.SetupColors(kv);
 		}
-		if (strcmp(effectTypeString, "propdynamic", false) == 0)
+		else if (strcmp(effectTypeString, "propdynamic", false) == 0)
 		{
 			this.Type = EffectType_PropDynamic;
 			kv.GetString("modelname", this.ModelName, sizeof(this.ModelName), this.ModelName);
@@ -1041,16 +1276,20 @@ enum struct SF2BossProfileBaseEffectInfo
 
 			this.SetupColors(kv);
 		}
-		if (strcmp(effectTypeString, "pointspotlight", false) == 0)
+		else if (strcmp(effectTypeString, "pointspotlight", false) == 0)
 		{
 			this.Type = EffectType_PointSpotlight;
 			this.RenderModes = RENDER_TRANSTEXTURE;
 			this.SpotlightWidth = kv.GetFloat("spotlightwidth", this.SpotlightWidth);
 			this.SpotlightLength = kv.GetFloat("spotlightlength", this.SpotlightLength);
+			this.SpotlightHaloScale = kv.GetFloat("halo_scale", this.SpotlightHaloScale);
+			this.LightBrightness = kv.GetNum("brightness", this.LightBrightness);
+			this.LightMaxDistance = kv.GetFloat("distance", this.LightMaxDistance);
+			this.LightCone = kv.GetNum("cone", this.LightCone);
 
 			this.SetupColors(kv);
 		}
-		if (strcmp(effectTypeString, "sprite", false) == 0)
+		else if (strcmp(effectTypeString, "sprite", false) == 0)
 		{
 			this.Type = EffectType_Sprite;
 			kv.GetString("spritename", this.SpriteName, sizeof(this.SpriteName), this.SpriteName);
@@ -1058,8 +1297,78 @@ enum struct SF2BossProfileBaseEffectInfo
 
 			this.SetupColors(kv);
 		}
+		else if (strcmp(effectTypeString, "te_beamring", false) == 0)
+		{
+			this.Type = EffectType_TempEntBeamRing;
+			this.BeamRingStartRadius = kv.GetFloat("start_radius", this.BeamRingStartRadius);
+			this.BeamRingEndRadius = kv.GetFloat("end_radius", this.BeamRingEndRadius);
+			this.BeamRingStartFrame = kv.GetNum("start_frame", this.BeamRingStartFrame);
+			this.BeamRingFrameRate = kv.GetNum("framerate", this.BeamRingFrameRate);
+			this.BeamRingWidth = kv.GetFloat("width", this.BeamRingWidth);
+			this.BeamRingAmplitude = kv.GetFloat("amplitude", this.BeamRingAmplitude);
+			this.BeamRingSpeed = kv.GetNum("speed", this.BeamRingSpeed);
+			this.BeamRingFlags = kv.GetNum("flags", this.BeamRingFlags);
+			kv.GetString("color", this.BeamRingColor, sizeof(this.BeamRingColor), this.BeamRingColor);
+			kv.GetString("beam_sprite", this.BeamRingBeamSprite, sizeof(this.BeamRingBeamSprite), this.BeamRingBeamSprite);
+			if (this.BeamRingBeamSprite[0] != '\0')
+			{
+				this.BeamRingBeamModel = PrecacheModel(this.BeamRingBeamSprite, true);
+				FormatEx(buffer, sizeof(buffer), "materials/%s", this.BeamRingBeamSprite);
+				AddFileToDownloadsTable(buffer);
+			}
+			kv.GetString("halo_sprite", this.BeamRingHaloSprite, sizeof(this.BeamRingHaloSprite), this.BeamRingHaloSprite);
+			if (this.BeamRingHaloSprite[0] != '\0')
+			{
+				this.BeamRingHaloModel = PrecacheModel(this.BeamRingHaloSprite, true);
+				FormatEx(buffer, sizeof(buffer), "materials/%s", this.BeamRingHaloSprite);
+				AddFileToDownloadsTable(buffer);
+			}
+		}
+		else if (strcmp(effectTypeString, "te_particle", false) == 0)
+		{
+			this.Type = EffectType_TempEntParticle;
+			kv.GetString("particlename", this.ParticleName, sizeof(this.ParticleName), this.ParticleName);
+			kv.GetVector("start", this.TEParticleStartPos, this.TEParticleStartPos);
 
-		kv.GetString("event", effectTypeString, sizeof(effectTypeString));
+			char attachType[64];
+			kv.GetString("attach_type", attachType, sizeof(attachType));
+			if (strcmp(attachType, "follow_origin", false) == 0)
+			{
+				this.TEParticleAttachType = 1;
+			}
+			else if (strcmp(attachType, "start_at_customorigin", false) == 0)
+			{
+				this.TEParticleAttachType = 2;
+			}
+			else if (strcmp(attachType, "start_at_attachment", false) == 0)
+			{
+				this.TEParticleAttachType = 3;
+			}
+			else if (strcmp(attachType, "follow_attachment", false) == 0)
+			{
+				this.TEParticleAttachType = 4;
+			}
+			else if (strcmp(attachType, "start_at_worldorigin", false) == 0)
+			{
+				this.TEParticleAttachType = 5;
+			}
+			else if (strcmp(attachType, "follow_rootbone", false) == 0)
+			{
+				this.TEParticleAttachType = 6;
+			}
+
+			this.TEParticleReset = kv.GetNum("reset_particles", this.TEParticleReset) != 0;
+			this.TEParticleHasControlPoint = kv.GetNum("control_point", this.TEParticleHasControlPoint) != 0;
+			this.TEParticleControlPointAttachType = kv.GetNum("control_point_attach_type", this.TEParticleControlPointAttachType);
+			kv.GetVector("control_point_offset", this.TEParticleControlPointOffset, this.TEParticleControlPointOffset);
+		}
+		else if (strcmp(effectTypeString, "sound", false) == 0)
+		{
+			this.Type = EffectType_Sound;
+			this.SoundSounds.Load(kv, checkFile);
+		}
+
+		kv.GetString("event", effectTypeString, sizeof(effectTypeString), "constant");
 		if (strcmp(effectTypeString, "constant", false) == 0)
 		{
 			this.Event = EffectEvent_Constant;
@@ -1080,8 +1389,11 @@ enum struct SF2BossProfileBaseEffectInfo
 		kv.GetVector("origin", this.Origin, this.Origin);
 		kv.GetVector("angles", this.Angles, this.Angles);
 		this.FadeAlpha = kv.GetNum("renderamt", this.FadeAlpha);
-		this.Attachment = view_as<bool>(kv.GetNum("attach_point", this.Attachment));
+		this.Attachment = kv.GetNum("attach_point", this.Attachment) != 0;
 		kv.GetString("attachment_point", this.AttachmentName, sizeof(this.AttachmentName), this.AttachmentName);
+		this.LifeTime = kv.GetFloat("lifetime", this.LifeTime);
+		this.Delay = kv.GetFloat("delay", this.Delay);
+		this.AttachPlayer = kv.GetNum("attach_player", this.AttachPlayer) != 0;
 	}
 
 	void SetupColors(KeyValues kv)
@@ -1096,12 +1408,18 @@ enum struct SF2BossProfileBaseEffectInfo
 		}
 	}
 
+	void PostLoad()
+	{
+		this.SoundSounds.PostLoad();
+	}
+
 	void Destroy()
 	{
 		if (this.Colors != null)
 		{
 			delete this.Colors;
 		}
+		this.SoundSounds.Destroy();
 	}
 }
 
@@ -1114,16 +1432,20 @@ enum struct SF2BossProfileCompanionsInfo
 	{
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.Weight[difficulty] = difficulty > 0 ? this.Weight[difficulty - 1] : 1.0;
+			this.Weight[difficulty] = 1.0;
 		}
-		this.Bosses = new ArrayList(ByteCountToCells(SF2_MAX_PROFILE_NAME_LENGTH));
+		this.Bosses = null;
 	}
 
 	void Load(KeyValues kv)
 	{
 		char compProfile[SF2_MAX_PROFILE_NAME_LENGTH], num[32];
-		kv.JumpToKey("bosses");
-		for (int i = 1;;i++)
+		if (!kv.JumpToKey("bosses"))
+		{
+			return;
+		}
+		this.Bosses = new ArrayList(ByteCountToCells(SF2_MAX_PROFILE_NAME_LENGTH));
+		for (int i = 1;; i++)
 		{
 			FormatEx(num, sizeof(num), "%d", i);
 			kv.GetString(num, compProfile, sizeof(compProfile));
@@ -1187,12 +1509,14 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 	float Playbackrate[Difficulty_Max];
 	float Cycle[Difficulty_Max];
 	float FootstepInterval[Difficulty_Max];
+	bool OverrideLoop[Difficulty_Max];
+	bool Loop[Difficulty_Max];
 	char SectionName[64];
+	char SubSectionName[64];
 
-	void Init(char optionalSectionName[64] = "")
+	void Init(char optionalSectionName[64] = "", char optionalSubSection[64] = "")
 	{
-		this.Sequences = new ArrayList(ByteCountToCells(64));
-		this.Sequences.Resize(Difficulty_Max);
+		this.Sequences = null;
 		if (optionalSectionName[0] != '\0')
 		{
 			this.SectionName[0] = '\0';
@@ -1201,32 +1525,32 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 		{
 			this.SectionName = optionalSectionName;
 		}
+		this.SubSectionName = optionalSubSection;
 
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
-			if (strcmp(optionalSectionName, "stun") == 0)
-			{
-				this.Duration[i] = this.Duration[i] = i > 0 ? this.Duration[i - 1] : 3.5;
-			}
-			else
-			{
-				this.Duration[i] = this.Duration[i] = i > 0 ? this.Duration[i - 1] : 0.0;
-			}
-			this.Playbackrate[i] = this.Playbackrate[i] = i > 0 ? this.Playbackrate[i - 1] : 1.0;
-			this.Cycle[i] = this.Cycle[i] = i > 0 ? this.Cycle[i - 1] : 0.0;
-			this.FootstepInterval[i] = this.FootstepInterval[i] = i > 0 ? this.FootstepInterval[i - 1] : 0.0;
+			this.Duration[i] = 0.0;
+			this.Playbackrate[i] = 1.0;
+			this.Cycle[i] = 0.0;
+			this.FootstepInterval[i] = -1.0;
+			this.OverrideLoop[i] = false;
+			this.Loop[i] = false;
 		}
 	}
 
 	void Load(KeyValues kv)
 	{
 		char animNames[Difficulty_Max][64];
+		this.Sequences = new ArrayList(ByteCountToCells(64));
+		this.Sequences.Resize(Difficulty_Max);
 
 		GetProfileDifficultyStringValues(kv, "name", animNames, sizeof(animNames[]), animNames);
 		GetProfileDifficultyFloatValues(kv, "playbackrate", this.Playbackrate, this.Playbackrate);
 		GetProfileDifficultyFloatValues(kv, "duration", this.Duration, this.Duration);
 		GetProfileDifficultyFloatValues(kv, "cycle", this.Cycle, this.Cycle);
 		GetProfileDifficultyFloatValues(kv, "footstepinterval", this.FootstepInterval, this.FootstepInterval);
+		GetProfileDifficultyBoolValues(kv, "override_loop", this.OverrideLoop, this.OverrideLoop);
+		GetProfileDifficultyBoolValues(kv, "loop", this.Loop, this.Loop);
 
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
@@ -1260,14 +1584,16 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 	void Init()
 	{
-		this.Animations = new StringMap();
-		this.Gestures = new StringMap();
+		this.Animations = null;
+		this.Gestures = null;
 	}
 
 	void Load(KeyValues kv)
 	{
 		if (kv.JumpToKey("animations"))
 		{
+			this.Animations = new StringMap();
+			this.Gestures = new StringMap();
 			char animType[64];
 			SF2BossProfileAnimationSectionNameData animData;
 			SF2BossProfileAttackGestureData gestureData;
@@ -1285,7 +1611,9 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 						{
 							do
 							{
-								gestureData.Init();
+								char animType2[64];
+								kv.GetSectionName(animType2, sizeof(animType2));
+								gestureData.Init(animType2);
 								gestureData.Load(kv);
 								gestureDataArray.PushArray(gestureData);
 							}
@@ -1297,43 +1625,20 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 					}
 
 					ArrayList animDataArray = new ArrayList(sizeof(animData));
-					bool doResize = false;
-					if (strcmp(animType, "shoot") == 0)
-					{
-						doResize = true;
-						for (int i = 0; i < SF2_CHASER_BOSS_MAX_ATTACKS; i++)
-						{
-							SF2BossProfileAnimationSectionNameData tempData;
-							animDataArray.PushArray(tempData, sizeof(tempData));
-						}
-					}
-
 					if (kv.GotoFirstSubKey()) // Find the indexes
 					{
 						do
 						{
 							char animType2[64];
 							kv.GetSectionName(animType2, sizeof(animType2));
-							animData.Init(animType);
+							animData.Init(animType, animType2);
 							animData.Load(kv);
-							if (!doResize)
-							{
-								animDataArray.PushArray(animData);
-							}
-							else
-							{
-								int index = StringToInt(animType2);
-								if (index > -1)
-								{
-									animDataArray.SetArray(index - 1, animData, sizeof(animData));
-								}
-							}
+							animDataArray.PushArray(animData);
 						}
 						while (kv.GotoNextKey());
 
 						kv.GoBack();
 					}
-
 					this.Animations.SetValue(animType, animDataArray);
 				}
 				while (kv.GotoNextKey());
@@ -1347,6 +1652,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 	void Destroy()
 	{
+		if (this.Animations == null || this.Gestures == null)
+		{
+			return;
+		}
 		StringMapSnapshot snapshot = this.Animations.Snapshot();
 		StringMapSnapshot gestureSnapshot = this.Gestures.Snapshot();
 
@@ -1365,7 +1674,6 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				animDataArray.GetArray(j, animData, sizeof(animData));
 				animData.Destroy();
 			}
-
 			if (animDataArray != null)
 			{
 				delete animDataArray;
@@ -1382,7 +1690,6 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				animDataArray.GetArray(j, gestureData, sizeof(gestureData));
 				gestureData.Destroy();
 			}
-
 			if (animDataArray != null)
 			{
 				delete animDataArray;
@@ -1390,19 +1697,35 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 		}
 
 		delete snapshot;
+		delete gestureSnapshot;
 		delete this.Animations;
 		delete this.Gestures;
 	}
 
-	bool GetAnimation(const char[] animType, int difficulty, char[] buffer, int bufferLen, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepinterval = 0.0, int &index = 0, int preDefinedIndex = -1)
+	bool HasAnimationSection(const char[] animType)
 	{
+		if (this.Animations == null)
+		{
+			return false;
+		}
+		ArrayList tempArray;
+
+		return this.Animations.GetValue(animType, tempArray);
+	}
+
+	bool GetAnimation(const char[] animType, int difficulty, char[] buffer, int bufferLen, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepinterval = 0.0, int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", bool &overrideLoop = false, bool &loop = false, int findIndex = -1)
+	{
+		if (this.Animations == null)
+		{
+			return false;
+		}
 		ArrayList animDataArray;
 
 		if (this.Animations.GetValue(animType, animDataArray))
 		{
-			if (animDataArray.Length == 0)
+			if (findIndex >= 0)
 			{
-				return false;
+				preDefinedIndex = animDataArray.FindValue(findIndex);
 			}
 			int randomAnimation;
 			if (preDefinedIndex <= -1)
@@ -1418,13 +1741,35 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				randomAnimation = preDefinedIndex;
 			}
 			SF2BossProfileAnimationSectionNameData animData;
-			animDataArray.GetArray(randomAnimation, animData, sizeof(animData));
+			if (preDefinedName[0] != '\0')
+			{
+				bool found = false;
+				for (int i = 0; i < animDataArray.Length; i++)
+				{
+					animDataArray.GetArray(i, animData, sizeof(animData));
+					if (strcmp(animData.SubSectionName, preDefinedName) == 0)
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				animDataArray.GetArray(randomAnimation, animData, sizeof(animData));
+			}
 
 			animData.GetSequence(difficulty, buffer, bufferLen);
 			rate = animData.Playbackrate[difficulty];
 			duration = animData.Duration[difficulty];
 			cycle = animData.Cycle[difficulty];
 			footstepinterval = animData.FootstepInterval[difficulty];
+			overrideLoop = animData.OverrideLoop[difficulty];
+			loop = animData.Loop[difficulty];
 			index = randomAnimation;
 
 			return true;
@@ -1433,18 +1778,38 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 		return false;
 	}
 
-	bool GetGesture(int definedIndex, const char[] animType, int difficulty, char[] buffer, int bufferLen, float &rate = 1.0, float &cycle = 0.0)
+	bool GetGesture(int definedIndex, const char[] definedName = "", const char[] animType, int difficulty, char[] buffer, int bufferLen, float &rate = 1.0, float &cycle = 0.0)
 	{
+		if (this.Gestures == null)
+		{
+			return false;
+		}
 		ArrayList gestureDataArray;
 
 		if (this.Gestures.GetValue(animType, gestureDataArray))
 		{
-			if (gestureDataArray.Length == 0)
-			{
-				return false;
-			}
 			SF2BossProfileAttackGestureData gestureData;
-			gestureDataArray.GetArray(definedIndex, gestureData, sizeof(gestureData));
+			if (definedName[0] != '\0')
+			{
+				bool found = false;
+				for (int i = 0; i < gestureDataArray.Length; i++)
+				{
+					gestureDataArray.GetArray(i, gestureData, sizeof(gestureData));
+					if (strcmp(gestureData.SectionName, definedName) == 0)
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				gestureDataArray.GetArray(definedIndex, gestureData, sizeof(gestureData));
+			}
 
 			gestureData.GetGesture(difficulty, buffer, bufferLen);
 			rate = gestureData.Playbackrate[difficulty];
@@ -1454,6 +1819,137 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 		}
 
 		return false;
+	}
+}
+
+enum struct SF2BossProfileCopiesInfo
+{
+	bool Enabled[Difficulty_Max];
+	int MinCopies[Difficulty_Max];
+	int MaxCopies[Difficulty_Max];
+	float TeleportDistanceSpacing[Difficulty_Max];
+	bool Fakes[Difficulty_Max];
+
+	void Init()
+	{
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.MinCopies[difficulty] = 0;
+			this.MaxCopies[difficulty] = 1;
+			this.TeleportDistanceSpacing[difficulty] = 800.0;
+			this.Fakes[difficulty] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		if (!kv.JumpToKey("copies"))
+		{
+			GetProfileDifficultyBoolValues(kv, "copy", this.Enabled, this.Enabled);
+			GetProfileDifficultyNumValues(kv, "copy_max", this.MaxCopies, this.MaxCopies);
+			GetProfileDifficultyFloatValues(kv, "copy_teleport_dist_from_others", this.TeleportDistanceSpacing, this.TeleportDistanceSpacing);
+			GetProfileDifficultyBoolValues(kv, "fake_copies", this.Fakes, this.Fakes);
+		}
+		else
+		{
+			GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+			GetProfileDifficultyNumValues(kv, "min", this.MinCopies, this.MinCopies);
+			GetProfileDifficultyNumValues(kv, "max", this.MaxCopies, this.MaxCopies);
+			GetProfileDifficultyFloatValues(kv, "teleport_spacing_between", this.TeleportDistanceSpacing, this.TeleportDistanceSpacing);
+			GetProfileDifficultyBoolValues(kv, "fakes", this.Fakes, this.Fakes);
+			kv.GoBack();
+		}
+	}
+}
+
+enum struct SF2BossProfilePublicDeathCamData
+{
+	bool Enabled;
+	bool Blackout;
+	SF2BossProfileSoundInfo ExecutionSounds;
+	char Attachment[64];
+	char TargetAttachment[64];
+	float DownwardOffset;
+	float BackwardOffset;
+
+	void Init()
+	{
+		this.Enabled = false;
+		this.Blackout = false;
+		this.ExecutionSounds.Init();
+		this.Attachment[0] = '\0';
+		this.TargetAttachment[0] = '\0';
+		this.DownwardOffset = 0.0;
+		this.BackwardOffset = 0.0;
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		this.Enabled = true;
+		this.Blackout = kv.GetNum("blackout", this.Blackout) != 0;
+		if (kv.JumpToKey("sounds"))
+		{
+			if (kv.JumpToKey("execution"))
+			{
+				this.ExecutionSounds.Load(kv, checkFile);
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+		kv.GetString("attachment", this.Attachment, sizeof(this.Attachment), this.Attachment);
+		kv.GetString("target_attachment", this.TargetAttachment, sizeof(this.TargetAttachment), this.TargetAttachment);
+		if (kv.JumpToKey("offset"))
+		{
+			this.DownwardOffset = kv.GetFloat("downward", this.DownwardOffset);
+			this.BackwardOffset = kv.GetFloat("backward", this.BackwardOffset);
+			kv.GoBack();
+		}
+	}
+
+	void PostLoad()
+	{
+		this.ExecutionSounds.PostLoad();
+	}
+
+	void Destroy()
+	{
+		this.ExecutionSounds.Destroy();
+	}
+}
+
+enum struct SF2BossProfileEyeData
+{
+	int Type;
+	float OffsetPos[3];
+	float OffsetAng[3];
+	char Bone[128];
+
+	void Init()
+	{
+		this.Type = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			this.OffsetPos[i] = 0.0;
+			this.OffsetAng[i] = 0.0;
+		}
+
+		this.OffsetPos[2] = 45.0;
+		this.Bone[0] = '\0';
+	}
+
+	void Load(KeyValues kv)
+	{
+		char type[64];
+		kv.GetString("mode", type, sizeof(type), "default");
+		if (strcmp(type, "bone") == 0)
+		{
+			this.Type = 1;
+			kv.GetString("bone", this.Bone, sizeof(this.Bone), this.Bone);
+			this.OffsetPos[2] = 0.0;
+		}
+		kv.GetVector("offset_pos", this.OffsetPos, this.OffsetPos);
+		kv.GetVector("offset_ang", this.OffsetAng, this.OffsetAng);
 	}
 }
 
@@ -1529,10 +2025,9 @@ enum struct SF2BossProfileData
 	float DeathCamTime;
 	float DeathCamPos[3];
 
-	int Copies[Difficulty_Max];
+	SF2BossProfilePublicDeathCamData DeathCamData;
 
 	float RunSpeed[Difficulty_Max];
-	float MaxRunSpeed[Difficulty_Max];
 	float Acceleration[Difficulty_Max];
 
 	float IdleLifeTime[Difficulty_Max];
@@ -1585,7 +2080,6 @@ enum struct SF2BossProfileData
 	float TeleportPersistencyPeriod[Difficulty_Max];
 	bool TeleportIgnoreChases;
 	bool TeleportIgnoreVis;
-	float TeleportCopyDistance;
 
 	float JumpscareDistance[Difficulty_Max];
 	float JumpscareDuration[Difficulty_Max];
@@ -1622,6 +2116,7 @@ enum struct SF2BossProfileData
 	ArrayList ProxyDeathAnimations;
 	int ProxyDeathAnimFrames[10];
 	bool ProxyZombies;
+	bool ProxyRobots;
 	bool ProxyDifficultyModels;
 	ArrayList ProxyModels[10];
 	ArrayList ProxyModelsHard[10];
@@ -1630,8 +2125,6 @@ enum struct SF2BossProfileData
 	ArrayList ProxyModelsApollyon[10];
 	bool ProxyOverrideMaxSpeed;
 	float ProxyMaxSpeed[Difficulty_Max];
-
-	bool FakeCopies;
 
 	bool DrainCredits;
 	int DrainCreditAmount[Difficulty_Max];
@@ -1672,6 +2165,10 @@ enum struct SF2BossProfileData
 	int EngineSoundLevel;
 	float EngineSoundVolume;
 
+	bool IsPvEBoss;
+	ArrayList PvESpawnMessagesArray;
+	char PvESpawnMessagePrefix[PLATFORM_MAX_PATH];
+
 	// Sounds
 	SF2BossProfileSoundInfo LocalDeathCamSounds;
 	SF2BossProfileSoundInfo ClientDeathCamSounds;
@@ -1710,17 +2207,21 @@ enum struct SF2BossProfileData
 	ArrayList CompanionsArray;
 	char CompanionSpawnType[64];
 
+	SF2BossProfileCopiesInfo CopiesInfo;
+
 	SF2BossProfileAttributesInfo AttributesInfo;
 
 	SF2BossProfileMasterAnimationsData AnimationData;
 
 	ArrayList EffectsArray;
 
+	SF2BossProfileEyeData EyeData;
+
 	void Init()
 	{
 		this.Models = null;
 		this.Names = null;
-		this.Type = SF2BossType_Unknown;
+		this.Type = SF2BossType_Chaser;
 		this.ModelScale = 1.0;
 		this.SkinMax = 0;
 		this.SkinDifficultiesOn = false;
@@ -1780,6 +2281,8 @@ enum struct SF2BossProfileData
 		this.DeathCamOverlayStartTime = 0.0;
 		this.DeathCamTime = 0.0;
 
+		this.DeathCamData.Init();
+
 		this.FOV = 90.0;
 		this.TurnRate = 250.0;
 
@@ -1808,10 +2311,9 @@ enum struct SF2BossProfileData
 
 		this.StaticScareAmount = 0.0;
 
-		this.TeleportType = 0;
+		this.TeleportType = 2;
 		this.TeleportIgnoreChases = false;
 		this.TeleportIgnoreVis = false;
-		this.TeleportCopyDistance = 800.0;
 
 		this.JumpscareOnScare = false;
 		this.JumpscareNoSight = false;
@@ -1837,10 +2339,9 @@ enum struct SF2BossProfileData
 		this.ProxySpawnEffectZOffset = 0.0;
 		this.ProxyDeathAnimations = null;
 		this.ProxyZombies = false;
+		this.ProxyRobots = false;
 		this.ProxyDifficultyModels = false;
 		this.ProxyOverrideMaxSpeed = false;
-
-		this.FakeCopies = false;
 
 		this.DrainCredits = false;
 
@@ -1875,20 +2376,26 @@ enum struct SF2BossProfileData
 
 		this.OutroMusic = false;
 
+		this.IsPvEBoss = false;
+		this.PvESpawnMessagesArray = null;
+		this.PvESpawnMessagePrefix[0] = '\0';
+
 		this.EngineSound[0] = '\0';
 		this.EngineSoundLevel = 83;
 		this.EngineSoundVolume = 0.8;
 
 		this.LocalDeathCamSounds.Init();
 		this.ClientDeathCamSounds.Init();
+		this.ClientDeathCamSounds.Channel = SNDCHAN_STATIC;
+		this.ClientDeathCamSounds.Level = SNDLEVEL_NONE;
 		this.GlobalDeathCamSounds.Init();
 		this.ScareSounds.Init();
-		this.ScareSounds.Channel = MUSIC_CHAN;
+		this.ScareSounds.Channel = SNDCHAN_STATIC;
 		this.ScareSounds.Level = SNDLEVEL_NONE;
 		this.SightSounds.Init();
 		this.SightSounds.CooldownMin = 8.0;
 		this.SightSounds.CooldownMax = 14.0;
-		this.SightSounds.Channel = MUSIC_CHAN;
+		this.SightSounds.Channel = SNDCHAN_STATIC;
 		this.SightSounds.Level = SNDLEVEL_NONE;
 		this.IntroSounds.Init();
 		this.IntroSounds.Channel = SNDCHAN_STATIC;
@@ -1933,71 +2440,71 @@ enum struct SF2BossProfileData
 		this.CompanionsArray = null;
 		this.CompanionSpawnType = "on_spawn on_difficulty_change";
 
+		this.CopiesInfo.Init();
 		this.AttributesInfo.Init();
 
 		this.AnimationData.Init(); // Save this here whenever I do statue boss animations
 
 		this.EffectsArray = null;
 
+		this.EyeData.Init();
+
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.Skin[difficulty] = difficulty > 0 ? this.Skin[difficulty - 1] : 0;
-			this.Body[difficulty] = difficulty > 0 ? this.Body[difficulty - 1] : 0;
+			this.Skin[difficulty] = 0;
+			this.Body[difficulty] = 0;
 
-			this.SoundMusicLoop[difficulty] = difficulty > 0 ? this.SoundMusicLoop[difficulty - 1] : 0.0;
+			this.SoundMusicLoop[difficulty] = 0.0;
 
-			this.Copies[difficulty] = difficulty > 0 ? this.Copies[difficulty - 1] : 1;
+			this.RunSpeed[difficulty] = 150.0;
+			this.Acceleration[difficulty] = 6000.0;
 
-			this.RunSpeed[difficulty] = difficulty > 0 ? this.RunSpeed[difficulty - 1] : 150.0;
-			this.MaxRunSpeed[difficulty] = difficulty > 0 ? this.MaxRunSpeed[difficulty - 1] : 150.0;
-			this.Acceleration[difficulty] = difficulty > 0 ? this.Acceleration[difficulty - 1] : 4000.0;
+			this.IdleLifeTime[difficulty] = 10.0;
 
-			this.IdleLifeTime[difficulty] = difficulty > 0 ? this.IdleLifeTime[difficulty - 1] : 10.0;
+			this.SearchRange[difficulty] = 1024.0;
+			this.SearchSoundRange[difficulty] = 1024.0;
+			this.TauntAlertRange[difficulty] = 512.0;
 
-			this.SearchRange[difficulty] = difficulty > 0 ? this.SearchRange[difficulty - 1] : 1024.0;
-			this.SearchSoundRange[difficulty] = difficulty > 0 ? this.SearchSoundRange[difficulty - 1] : 1024.0;
-			this.TauntAlertRange[difficulty] = difficulty > 0 ? this.TauntAlertRange[difficulty - 1] : 512.0;
+			this.InstantKillCooldown[difficulty] = 0.0;
 
-			this.InstantKillCooldown[difficulty] = difficulty > 0 ? this.InstantKillCooldown[difficulty - 1] : 0.0;
+			this.StaticRadius[difficulty] = 15.0;
+			this.StaticRate[difficulty] = 0.6;
+			this.StaticRateDecay[difficulty] = 0.2;
+			this.StaticGraceTime[difficulty] = 1.0;
 
-			this.StaticRadius[difficulty] = difficulty > 0 ? this.StaticRadius[difficulty - 1] : 0.0;
-			this.StaticRate[difficulty] = difficulty > 0 ? this.StaticRate[difficulty - 1] : 0.0;
-			this.StaticRateDecay[difficulty] = difficulty > 0 ? this.StaticRateDecay[difficulty - 1] : 0.0;
-			this.StaticGraceTime[difficulty] = difficulty > 0 ? this.StaticGraceTime[difficulty - 1] : 1.0;
+			this.TeleportAllowed[difficulty] = true;
+			this.TeleportRangeMin[difficulty] = 450.0;
+			this.TeleportRangeMax[difficulty] = 1500.0;
+			this.TeleportTimeMin[difficulty] = 5.0;
+			this.TeleportTimeMax[difficulty] = 9.0;
+			this.TeleportRestPeriod[difficulty] = 15.0;
+			this.TeleportStressMin[difficulty] = 0.2;
+			this.TeleportStressMax[difficulty] = 1.0;
+			this.TeleportPersistencyPeriod[difficulty] = 13.0;
 
-			this.TeleportAllowed[difficulty] = difficulty > 0 ? this.TeleportAllowed[difficulty - 1] : true;
-			this.TeleportRangeMin[difficulty] = difficulty > 0 ? this.TeleportRangeMin[difficulty - 1] : 325.0;
-			this.TeleportRangeMax[difficulty] = difficulty > 0 ? this.TeleportRangeMax[difficulty - 1] : 1024.0;
-			this.TeleportTimeMin[difficulty] = difficulty > 0 ? this.TeleportTimeMin[difficulty - 1] : 5.0;
-			this.TeleportTimeMax[difficulty] = difficulty > 0 ? this.TeleportTimeMax[difficulty - 1] : 9.0;
-			this.TeleportRestPeriod[difficulty] = difficulty > 0 ? this.TeleportRestPeriod[difficulty - 1] : 15.0;
-			this.TeleportStressMin[difficulty] = difficulty > 0 ? this.TeleportStressMin[difficulty - 1] : 0.2;
-			this.TeleportStressMax[difficulty] = difficulty > 0 ? this.TeleportStressMax[difficulty - 1] : 0.9;
-			this.TeleportPersistencyPeriod[difficulty] = difficulty > 0 ? this.TeleportPersistencyPeriod[difficulty - 1] : 13.0;
+			this.JumpscareDistance[difficulty] = 0.0;
+			this.JumpscareDuration[difficulty] = 0.0;
+			this.JumpscareCooldown[difficulty] = 0.0;
 
-			this.JumpscareDistance[difficulty] = difficulty > 0 ? this.JumpscareDistance[difficulty - 1] : 0.0;
-			this.JumpscareDuration[difficulty] = difficulty > 0 ? this.JumpscareDuration[difficulty - 1] : 0.0;
-			this.JumpscareCooldown[difficulty] = difficulty > 0 ? this.JumpscareCooldown[difficulty - 1] : 0.0;
+			this.ProxyDamageVsEnemy[difficulty] = 1.0;
+			this.ProxyDamageVsBackstab[difficulty] = 0.25;
+			this.ProxyDamageVsSelf[difficulty] = 1.0;
+			this.ProxyControlGainHitEnemy[difficulty] = 0;
+			this.ProxyControlGainHitByEnemy[difficulty] = 0;
+			this.ProxyControlDrainRate[difficulty] = 0.0;
+			this.MaxProxies[difficulty] = 0;
+			this.ProxySpawnChanceMin[difficulty] = 0.0;
+			this.ProxySpawnChaceMax[difficulty] = 0.0;
+			this.ProxySpawnChanceThreshold[difficulty] = 0.0;
+			this.ProxySpawnNumMin[difficulty] = 0;
+			this.ProxySpawnNumMax[difficulty] = 0;
+			this.ProxySpawnCooldownMin[difficulty] = 0.0;
+			this.ProxySpawnCooldownMax[difficulty] = 0.0;
+			this.ProxyTeleportRangeMin[difficulty] = 500.0;
+			this.ProxyTeleportRangeMax[difficulty] = 3200.0;
+			this.ProxyMaxSpeed[difficulty] = 230.0;
 
-			this.ProxyDamageVsEnemy[difficulty] = difficulty > 0 ? this.ProxyDamageVsEnemy[difficulty - 1] : 1.0;
-			this.ProxyDamageVsBackstab[difficulty] = difficulty > 0 ? this.ProxyDamageVsBackstab[difficulty - 1] : 0.25;
-			this.ProxyDamageVsSelf[difficulty] = difficulty > 0 ? this.ProxyDamageVsSelf[difficulty - 1] : 1.0;
-			this.ProxyControlGainHitEnemy[difficulty] = difficulty > 0 ? this.ProxyControlGainHitEnemy[difficulty - 1] : 0;
-			this.ProxyControlGainHitByEnemy[difficulty] = difficulty > 0 ? this.ProxyControlGainHitByEnemy[difficulty - 1] : 0;
-			this.ProxyControlDrainRate[difficulty] = difficulty > 0 ? this.ProxyControlDrainRate[difficulty - 1] : 0.0;
-			this.MaxProxies[difficulty] = difficulty > 0 ? this.MaxProxies[difficulty - 1] : 0;
-			this.ProxySpawnChanceMin[difficulty] = difficulty > 0 ? this.ProxySpawnChanceMin[difficulty - 1] : 0.0;
-			this.ProxySpawnChaceMax[difficulty] = difficulty > 0 ? this.ProxySpawnChaceMax[difficulty - 1] : 0.0;
-			this.ProxySpawnChanceThreshold[difficulty] = difficulty > 0 ? this.ProxySpawnChanceThreshold[difficulty - 1] : 0.0;
-			this.ProxySpawnNumMin[difficulty] = difficulty > 0 ? this.ProxySpawnNumMin[difficulty - 1] : 0;
-			this.ProxySpawnNumMax[difficulty] = difficulty > 0 ? this.ProxySpawnNumMax[difficulty - 1] : 0;
-			this.ProxySpawnCooldownMin[difficulty] = difficulty > 0 ? this.ProxySpawnCooldownMin[difficulty - 1] : 0.0;
-			this.ProxySpawnCooldownMax[difficulty] = difficulty > 0 ? this.ProxySpawnCooldownMax[difficulty - 1] : 0.0;
-			this.ProxyTeleportRangeMin[difficulty] = difficulty > 0 ? this.ProxyTeleportRangeMin[difficulty - 1] : 500.0;
-			this.ProxyTeleportRangeMax[difficulty] = difficulty > 0 ? this.ProxyTeleportRangeMax[difficulty - 1] : 3200.0;
-			this.ProxyMaxSpeed[difficulty] = difficulty > 0 ? this.ProxyMaxSpeed[difficulty - 1] : 230.0;
-
-			this.DrainCreditAmount[difficulty] = difficulty > 0 ? this.DrainCreditAmount[difficulty - 1] : 50;
+			this.DrainCreditAmount[difficulty] = 50;
 		}
 
 		for (int i = 0; i < 3; i++)
@@ -2019,10 +2526,12 @@ enum struct SF2BossProfileData
 			this.EyePosOffset[i] = 0.0;
 			this.EyeAngOffset[i] = 0.0;
 		}
+		this.EyePosOffset[2] = 45.0;
 	}
 
 	void PostLoad()
 	{
+		this.DeathCamData.PostLoad();
 		this.ClientDeathCamSounds.PostLoad();
 		this.GlobalDeathCamSounds.PostLoad();
 		this.LocalDeathCamSounds.PostLoad();
@@ -2053,6 +2562,16 @@ enum struct SF2BossProfileData
 				this.CompanionsArray.GetArray(i, companions, sizeof(companions));
 				companions.PostLoad();
 				this.CompanionsArray.SetArray(i, companions, sizeof(companions));
+			}
+		}
+		if (this.EffectsArray != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.EffectsArray.Length; i++)
+			{
+				this.EffectsArray.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
 			}
 		}
 		if (this.EffectsArray != null && this.EffectsArray.Length <= 0)
@@ -2098,10 +2617,31 @@ enum struct SF2BossProfileData
 		{
 			delete this.EventIndexes;
 		}
+		if (this.ProxyWeaponClassNames != null && this.ProxyWeaponClassNames.Length <= 0)
+		{
+			delete this.ProxyWeaponClassNames;
+		}
+		if (this.ProxyWeaponStats != null && this.ProxyWeaponStats.Length <= 0)
+		{
+			delete this.ProxyWeaponStats;
+		}
+		if (this.ProxyDeathAnimations != null && this.ProxyDeathAnimations.Length <= 0)
+		{
+			delete this.ProxyDeathAnimations;
+		}
+		if (this.DeathMessagesArray != null && this.DeathMessagesArray.Length <= 0)
+		{
+			delete this.DeathMessagesArray;
+		}
+		if (this.PvESpawnMessagesArray != null && this.PvESpawnMessagesArray.Length <= 0)
+		{
+			delete this.PvESpawnMessagesArray;
+		}
 	}
 
 	void Destroy()
 	{
+		this.DeathCamData.Destroy();
 		// Sounds
 		this.LocalDeathCamSounds.Destroy();
 		this.ClientDeathCamSounds.Destroy();
@@ -2156,6 +2696,10 @@ enum struct SF2BossProfileData
 		{
 			delete this.DeathMessagesArray;
 		}
+		if (this.PvESpawnMessagesArray != null)
+		{
+			delete this.PvESpawnMessagesArray;
+		}
 		if (this.ProxyWeaponClassNames != null)
 		{
 			delete this.ProxyWeaponClassNames;
@@ -2197,6 +2741,30 @@ enum struct SF2BossProfileData
 		if (this.EventIndexes != null)
 		{
 			delete this.EventIndexes;
+		}
+
+		for (int i = 0; i < 10; i++)
+		{
+			if (this.ProxyModels[i] != null)
+			{
+				delete this.ProxyModels[i];
+			}
+			if (this.ProxyModelsHard[i] != null)
+			{
+				delete this.ProxyModelsHard[i];
+			}
+			if (this.ProxyModelsInsane[i] != null)
+			{
+				delete this.ProxyModelsInsane[i];
+			}
+			if (this.ProxyModelsNightmare[i] != null)
+			{
+				delete this.ProxyModelsNightmare[i];
+			}
+			if (this.ProxyModelsApollyon[i] != null)
+			{
+				delete this.ProxyModelsApollyon[i];
+			}
 		}
 	}
 

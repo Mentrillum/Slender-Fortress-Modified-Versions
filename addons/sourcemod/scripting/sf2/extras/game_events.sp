@@ -50,10 +50,6 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	// Refresh players.
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsValidClient(i))
-		{
-			continue;
-		}
 		ClientSetGhostModeState(i, false);
 
 		g_PlayerPlaying[i] = false;
@@ -306,7 +302,6 @@ Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 		{
 			if (!g_PlayerChoseTeam[client])
 			{
-				AFK_SetAFK(client);
 				g_PlayerChoseTeam[client] = true;
 
 				if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
@@ -384,11 +379,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	if (GetClientTeam(client) > 1)
 	{
 		g_LastVisibilityProcess[client] = GetGameTime();
-		if (!g_SeeUpdateMenu[client])
-		{
-			g_SeeUpdateMenu[client] = true;
-			DisplayMenu(g_MenuUpdate, client, 30);
-		}
 	}
 	if (!IsClientParticipating(client))
 	{
@@ -431,11 +421,8 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	}
 
 	g_PlayerPostWeaponsTimer[client] = null;
-	g_PlayerIgniteTimer[client] = null;
 	g_PlayerPageRewardCycleTimer[client] = null;
 	g_PlayerFireworkTimer[client] = null;
-
-	g_PlayerBossKillSubject[client] = INVALID_ENT_REFERENCE;
 
 	g_PlayerGettingPageReward[client] = false;
 	g_PlayerHitsToCrits[client] = 0;
@@ -443,6 +430,10 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 
 	g_PlayerTrapped[client] = false;
 	g_PlayerTrapCount[client] = 0;
+
+	g_PlayerLatchedByTongue[client] = false;
+	g_PlayerLatchCount[client] = 0;
+	g_PlayerLatcher[client] = -1;
 
 	g_PlayerRandomClassNumber[client] = 1;
 
@@ -507,6 +498,10 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 
 			if (!g_PlayerEliminated[client])
 			{
+				if (IsFakeClient(client))
+				{
+					TF2_SetPlayerClass(client, TFClass_Sniper);
+				}
 				if ((SF_IsRaidMap() || SF_IsBoxingMap()) && !IsRoundPlaying())
 				{
 					TF2Attrib_SetByDefIndex(client, 10, 7.0);
@@ -522,7 +517,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					CreateTimer(0.1, Timer_StopAirDash, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 
-				ClientStartDrainingBlinkMeter(client);
 				ClientSetScareBoostEndTime(client, -1.0);
 
 				HandlePlayerIntroState(client);
@@ -546,11 +540,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				{
 					int red[4] = { 184, 56, 59, 255 };
 					ClientEnableConstantGlow(client, red);
-				}
-
-				if (SF_IsRenevantMap() && g_RenevantMarkForDeath && !DidClientEscape(client))
-				{
-					TF2_AddCondition(client, TFCond_MarkedForDeathSilent, -1.0);
 				}
 			}
 			else
@@ -676,8 +665,7 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	int inflictor = event.GetInt("inflictor_entindex");
 	int owner = inflictor;
 
-	// If this player was killed by a boss, play a sound.
-	if (IsEntityAProjectile(inflictor))
+	if (!SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
 	{
 		owner = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
 	}
@@ -685,7 +673,6 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	if (npcIndex != -1)
 	{
 		int target = GetClientOfUserId(g_SourceTVUserID);
-		int attackIndex = NPCGetCurrentAttackIndex(npcIndex);
 		if (!IsValidClient(target) || !IsClientSourceTV(target)) //If the server has a source TV bot uses to print boss' name in kill feed.
 		{
 			target = GetClientForDeath(client);
@@ -710,65 +697,33 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			SetEntPropString(target, Prop_Data, "m_szNetname", bossName);
 
 			event.SetString("assister_fallback", "");
-			if (!IsEntityAProjectile(inflictor))
+			if ((NPCGetFlags(npcIndex) & SFF_WEAPONKILLS) || (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS))
 			{
-				if ((NPCGetFlags(npcIndex) & SFF_WEAPONKILLS) || (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS))
+				if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS && SF2_ChaserEntity(owner).IsValid())
 				{
-					if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS)
-					{
-						char weaponType[PLATFORM_MAX_PATH];
-						int weaponNum = NPCChaserGetAttackWeaponTypeInt(npcIndex, attackIndex);
-						GetChaserProfileAttackWeaponTypeString(profile, attackIndex, weaponType, sizeof(weaponType));
-						event.SetString("weapon_logclassname", weaponType);
-						event.SetString("weapon", weaponType);
-						event.SetInt("customkill", weaponNum);
-					}
-					else if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
-					{
-						char weaponType[PLATFORM_MAX_PATH];
-						int weaponNum = GetBossProfileWeaponInt(profile);
-						GetBossProfileWeaponString(profile, weaponType, sizeof(weaponType));
-						event.SetString("weapon_logclassname", weaponType);
-						event.SetString("weapon", weaponType);
-						event.SetInt("customkill", weaponNum);
-					}
+					SF2_ChaserEntity chaser = SF2_ChaserEntity(owner);
+					SF2ChaserBossProfileData data;
+					data = NPCChaserGetProfileData(npcIndex);
+					SF2ChaserBossProfileAttackData attackData;
+					data.GetAttack(chaser.GetAttackName(), attackData);
+					event.SetString("weapon_logclassname", attackData.WeaponString);
+					event.SetString("weapon", attackData.WeaponString);
+					event.SetInt("customkill", attackData.WeaponInt);
 				}
-				else
+				else if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
 				{
-					event.SetString("weapon", "");
-					event.SetString("weapon_logclassname", "");
+					char weaponType[PLATFORM_MAX_PATH];
+					int weaponNum = GetBossProfileWeaponInt(profile);
+					GetBossProfileWeaponString(profile, weaponType, sizeof(weaponType));
+					event.SetString("weapon_logclassname", weaponType);
+					event.SetString("weapon", weaponType);
+					event.SetInt("customkill", weaponNum);
 				}
 			}
 			else
 			{
-				switch (ProjectileGetFlags(inflictor))
-				{
-					case PROJ_ROCKET:
-					{
-						event.SetString("weapon_logclassname", "tf_projectile_rocket");
-						event.SetString("weapon", "tf_projectile_rocket");
-					}
-					case PROJ_MANGLER:
-					{
-						event.SetString("weapon_logclassname", "cow_mangler");
-						event.SetString("weapon", "cow_mangler");
-					}
-					case PROJ_GRENADE:
-					{
-						event.SetString("weapon_logclassname", "tf_projectile_pipe");
-						event.SetString("weapon", "tf_projectile_pipe");
-					}
-					case PROJ_FIREBALL, PROJ_ICEBALL, PROJ_FIREBALL_ATTACK, PROJ_ICEBALL_ATTACK:
-					{
-						event.SetString("weapon_logclassname", "spellbook_fireball");
-						event.SetString("weapon", "spellbook_fireball");
-					}
-					case PROJ_SENTRYROCKET:
-					{
-						event.SetString("weapon_logclassname", "obj_sentrygun3");
-						event.SetString("weapon", "obj_sentrygun3");
-					}
-				}
+				event.SetString("weapon", "");
+				event.SetString("weapon_logclassname", "");
 			}
 
 			int userid = GetClientUserId(target);
@@ -794,54 +749,44 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			}
 		}
 	}
-	if (MAX_BOSSES > npcIndex >= 0 && (g_SlenderHasAshKillEffect[npcIndex] || g_SlenderHasCloakKillEffect[npcIndex]
-			 || g_SlenderHasDecapKillEffect[npcIndex] || g_SlenderHasDeleteKillEffect[npcIndex]
-			 || g_SlenderHasDissolveRagdollOnKill[npcIndex]
-			 || g_SlenderHasElectrocuteKillEffect[npcIndex] || g_SlenderHasGoldKillEffect[npcIndex]
-			 || g_SlenderHasIceKillEffect[npcIndex] || g_SlenderHasPlasmaRagdollOnKill[npcIndex]
-			 || g_SlenderHasPushRagdollOnKill[npcIndex] || g_SlenderHasResizeRagdollOnKill[npcIndex]
-			 || g_SlenderHasBurnKillEffect[npcIndex] || g_SlenderHasGibKillEffect[npcIndex]))
+
+	if (npcIndex != -1)
 	{
-		CreateTimer(0.01, Timer_ModifyRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
-	if (MAX_BOSSES > npcIndex >= 0 && g_SlenderPlayerCustomDeathFlag[npcIndex])
-	{
-		event.SetInt("death_flags", g_SlenderPlayerSetDeathFlag[npcIndex]);
-	}
-	if (MAX_BOSSES > npcIndex >= 0 && g_SlenderHasDecapOrGibKillEffect[npcIndex])
-	{
-		CreateTimer(0.01, Timer_DeGibRagdoll, GetClientUserId(client));
+		SF2BossProfileData data;
+		data = NPCGetProfileData(npcIndex);
+		g_PlayerBossKillSubject[client] = npcIndex;
+
+		if (data.AshRagdoll || data.CloakRagdoll || data.DecapRagdoll || data.DeleteRagdoll || data.DissolveRagdoll ||
+			data.ElectrocuteRagdoll || data.GoldRagdoll || data.IceRagdoll || data.PlasmaRagdoll || data.PushRagdoll ||
+			data.ResizeRagdoll || data.BurnRagdoll)
+		{
+			CreateTimer(0.01, Timer_ModifyRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		}
+
+		if (data.CustomDeathFlag)
+		{
+			event.SetInt("death_flags", data.CustomDeathFlagType);
+		}
+
+		if (data.DecapOrGibRagdoll)
+		{
+			CreateTimer(0.01, Timer_DeGibRagdoll, GetClientUserId(client));
+		}
+
+		if (data.MultiEffectRagdoll)
+		{
+			CreateTimer(0.01, Timer_MultiRagdoll, GetClientUserId(client));
+		}
 	}
 
-	if (MAX_BOSSES > npcIndex >= 0 && g_SlenderHasMultiKillEffect[npcIndex])
+	if (SF2_ProjectileIceball(inflictor).IsValid())
 	{
-		CreateTimer(0.01, Timer_MultiRagdoll, GetClientUserId(client));
+		CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
-	if (IsEntityAProjectile(inflictor))
+
+	if (SF2_ProjectileCowMangler(inflictor).IsValid())
 	{
-		switch (ProjectileGetFlags(inflictor))
-		{
-			case PROJ_MANGLER:
-			{
-				CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-			}
-			case PROJ_ICEBALL:
-			{
-				CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-			}
-			case PROJ_ICEBALL_ATTACK:
-			{
-				CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-			}
-		}
-	}
-	if (MAX_BOSSES > npcIndex >= 0)
-	{
-		float value = NPCGetAttributeValue(npcIndex, SF2Attribute_IgnitePlayerOnDeath);
-		if (MAX_BOSSES > npcIndex >= 0 && value > 0.0)
-		{
-			TF2_IgnitePlayer(client, client);
-		}
+		CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	#if defined DEBUG
@@ -932,7 +877,7 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 	}
 	#endif
 
-	bool fake = !!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
+	bool fake = (event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) != 0;
 	int inflictor = event.GetInt("inflictor_entindex");
 
 	#if defined DEBUG
@@ -966,16 +911,6 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			{
 				g_NpcChaseOnLookTarget[npcIndex].Erase(foundClient);
 			}
-			switch (NPCGetType(npcIndex))
-			{
-				case SF2BossType_Chaser:
-				{
-					if (g_SlenderState[npcIndex] == STATE_CHASE && EntRefToEntIndex(g_SlenderTarget[npcIndex]) == client)
-					{
-						g_SlenderGiveUp[npcIndex] = true;
-					}
-				}
-			}
 		}
 
 		if (IsRoundInWarmup())
@@ -986,10 +921,6 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		{
 			if (!g_PlayerEliminated[client])
 			{
-				if (IsFakeClient(client))
-				{
-					TF2_SetPlayerClass(client, TFClass_Sniper);
-				}
 				if (IsRoundInIntro() || (!IsRoundPlaying() && !IsRoundEnding()) || DidClientEscape(client) || (SF_SpecialRound(SPECIALROUND_1UP) && g_PlayerIn1UpCondition[client] && !g_PlayerDied1Up[client]))
 				{
 					CreateTimer(0.3, Timer_RespawnPlayer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -1006,82 +937,7 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 			{
 			}
 
-			int owner = inflictor;
-			if (IsEntityAProjectile(inflictor))
-			{
-				owner = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
-			}
-
-			// If this player was killed by a boss, play a sound, or print a message.
-			int npcIndex = NPCGetFromEntIndex(owner);
-			if (npcIndex != -1)
-			{
-				int slender = NPCGetEntIndex(npcIndex);
-				if (slender && slender != INVALID_ENT_REFERENCE)
-				{
-					g_PlayerBossKillSubject[client] = EntIndexToEntRef(slender);
-				}
-
-				char npcProfile[SF2_MAX_PROFILE_NAME_LENGTH], buffer[PLATFORM_MAX_PATH], bossName[SF2_MAX_NAME_LENGTH];
-				NPCGetProfile(npcIndex, npcProfile, sizeof(npcProfile));
-				NPCGetBossName(npcIndex, bossName, sizeof(bossName));
-
-				#if defined _store_included
-				int difficulty = GetLocalGlobalDifficulty(npcIndex);
-				if (NPCGetDrainCreditState(npcIndex))
-				{
-					Store_SetClientCredits(client, Store_GetClientCredits(client) - NPCGetDrainCreditAmount(npcIndex, difficulty));
-					CPrintToChat(client, "{valve}%s{default} has stolen {green}%i credits{default} from you.", bossName, NPCGetDrainCreditAmount(npcIndex, difficulty));
-				}
-				#endif
-
-				ArrayList soundList;
-				SF2BossProfileSoundInfo soundInfo;
-				GetChaserProfileAttackKilledClientSounds(npcProfile, soundInfo);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-					if (buffer[0] != '\0' && g_PlayerEliminated[client])
-					{
-						EmitSoundToClient(client, buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
-					}
-				}
-
-				GetChaserProfileAttackKilledAllSounds(npcProfile, soundInfo);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
-					if (buffer[0] != '\0' && g_PlayerEliminated[client])
-					{
-						EmitSoundToAll(buffer, _, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
-					}
-				}
-				soundList = null;
-
-				SlenderPrintChatMessage(npcIndex, client);
-
-				SlenderPerformVoice(npcIndex, _, SF2BossSound_AttackKilled);
-			}
-
 			CreateTimer(0.2, Timer_CheckRoundWinConditions, _, TIMER_FLAG_NO_MAPCHANGE);
-
-			// Notify to other bosses that this player has died.
-			for (int i = 0; i < MAX_BOSSES; i++)
-			{
-				if (NPCGetUniqueID(i) == -1)
-				{
-					continue;
-				}
-
-				if (EntRefToEntIndex(g_SlenderTarget[i]) == client)
-				{
-					g_SlenderInterruptConditions[i] |= COND_CHASETARGETINVALIDATED;
-					GetClientAbsOrigin(client, g_SlenderChaseDeathPosition[i]);
-					g_BossPathFollower[i].Invalidate();
-				}
-			}
 
 			if (g_IgnoreRedPlayerDeathSwapConVar.BoolValue && GetClientTeam(client) == TFTeam_Red)
 			{
@@ -1118,7 +974,6 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		}
 
 		g_PlayerPostWeaponsTimer[client] = null;
-		g_PlayerIgniteTimer[client] = null;
 		g_PlayerPageRewardCycleTimer[client] = null;
 		g_PlayerFireworkTimer[client] = null;
 
@@ -1128,6 +983,10 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 
 		g_PlayerTrapped[client] = false;
 		g_PlayerTrapCount[client] = 0;
+
+		g_PlayerLatchedByTongue[client] = false;
+		g_PlayerLatchCount[client] = 0;
+		g_PlayerLatcher[client] = -1;
 
 		g_PlayerRandomClassNumber[client] = 1;
 	}

@@ -93,7 +93,7 @@ void ClientSetGhostModeState(int client, bool state)
 		SendDebugMessageToPlayer(client, DEBUG_GHOSTMODE, 0, "{green}Entered ghost mode.");
 		#endif
 		//Strip the always edict flag
-		SetEntityFlags(client, GetEntityFlags(client)^FL_EDICT_ALWAYS);
+		SetEntityFlags(client, GetEntityFlags(client) ^ FL_EDICT_ALWAYS);
 		//Remove the fire cond
 		TF2_RemoveCondition(client,TFCond_OnFire);
 		//Call the spawn event.
@@ -157,6 +157,12 @@ void ClientSetGhostModeState(int client, bool state)
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
 		if (NPCGetUniqueID(npcIndex) == -1)
+		{
+			continue;
+		}
+		SF2BossProfileData data;
+		data = NPCGetProfileData(npcIndex);
+		if (data.IsPvEBoss)
 		{
 			continue;
 		}

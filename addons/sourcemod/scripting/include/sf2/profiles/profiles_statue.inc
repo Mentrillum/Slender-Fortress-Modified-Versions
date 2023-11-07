@@ -5,6 +5,7 @@ enum struct SF2StatueBossProfileData
 	ArrayList ModelsCloseDist;
 
 	float ChaseDuration[Difficulty_Max];
+	float ChaseDurationAddMaxRange[Difficulty_Max];
 	float ChaseDurationAddVisibilityMin[Difficulty_Max];
 	float ChaseDurationAddVisibilityMax[Difficulty_Max];
 
@@ -20,15 +21,17 @@ enum struct SF2StatueBossProfileData
 		this.ModelsCloseDist = null;
 
 		this.MoveSounds.Init();
+		this.MoveSounds.Flags = SND_CHANGEVOL;
 		this.SingleMoveSounds.Init();
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.ChaseDuration[difficulty] = difficulty > 0 ? this.ChaseDuration[difficulty - 1] : 5.0;
-			this.ChaseDurationAddVisibilityMin[difficulty] = difficulty > 0 ? this.ChaseDurationAddVisibilityMin[difficulty - 1] : 0.025;
-			this.ChaseDurationAddVisibilityMax[difficulty] = difficulty > 0 ? this.ChaseDurationAddVisibilityMax[difficulty - 1] : 0.15;
-			this.ModelChangeDistanceMax[difficulty] = difficulty > 0 ? this.ModelChangeDistanceMax[difficulty - 1] : 1024.0;
+			this.ChaseDuration[difficulty] = 5.0;
+			this.ChaseDurationAddMaxRange[difficulty] = 1024.0;
+			this.ChaseDurationAddVisibilityMin[difficulty] = 0.025;
+			this.ChaseDurationAddVisibilityMax[difficulty] = 0.15;
+			this.ModelChangeDistanceMax[difficulty] = 1024.0;
 
-			this.IdleLifeTime[difficulty] = difficulty > 0 ? this.IdleLifeTime[difficulty - 1] : 3.0;
+			this.IdleLifeTime[difficulty] = 3.0;
 		}
 	}
 

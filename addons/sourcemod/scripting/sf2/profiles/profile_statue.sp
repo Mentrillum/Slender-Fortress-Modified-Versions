@@ -15,21 +15,18 @@ void InitializeStatueProfiles()
 
 void UnloadStatueBossProfile(const char[] profile)
 {
-	char tempProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-	if (!g_StatueBossProfileData.GetString(profile, tempProfile, sizeof(tempProfile)) || tempProfile[0] == '\0')
+	SF2StatueBossProfileData statueProfileData;
+	if (!g_StatueBossProfileData.GetArray(profile, statueProfileData, sizeof(statueProfileData)))
 	{
 		return;
 	}
-
-	SF2StatueBossProfileData statueProfileData;
-	g_StatueBossProfileData.GetArray(profile, statueProfileData, sizeof(statueProfileData));
 
 	statueProfileData.Destroy();
 
 	g_StatueBossProfileData.Remove(profile);
 }
 
-bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
+bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen, SF2BossProfileData baseData)
 {
 	SF2StatueBossProfileData profileData;
 	profileData.Init();
@@ -59,6 +56,11 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	}
 
 	GetProfileDifficultyFloatValues(kv, "chase_duration", profileData.ChaseDuration, profileData.ChaseDuration);
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		profileData.ChaseDurationAddMaxRange[i] = baseData.SearchRange[i];
+	}
+	GetProfileDifficultyFloatValues(kv, "chase_duration_add_max_range", profileData.ChaseDurationAddMaxRange, profileData.ChaseDurationAddMaxRange);
 	GetProfileDifficultyFloatValues(kv, "chase_duration_add_visible_min", profileData.ChaseDurationAddVisibilityMin, profileData.ChaseDurationAddVisibilityMin);
 	GetProfileDifficultyFloatValues(kv, "chase_duration_add_visible_max", profileData.ChaseDurationAddVisibilityMax, profileData.ChaseDurationAddVisibilityMax);
 	GetProfileDifficultyFloatValues(kv, "model_change_dist_max", profileData.ModelChangeDistanceMax, profileData.ModelChangeDistanceMax);
@@ -88,60 +90,4 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	g_StatueBossProfileData.SetArray(profile, profileData, sizeof(profileData));
 
 	return true;
-}
-
-static SF2StatueBossProfileData g_CachedProfileData;
-
-ArrayList GetStatueProfileModelsAverageDist(const char[] profile)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.ModelsAverageDist;
-}
-
-ArrayList GetStatueProfileModelsCloseDist(const char[] profile)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.ModelsCloseDist;
-}
-
-float GetStatueProfileChaseDuration(const char[] profile, int difficulty)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.ChaseDuration[difficulty];
-}
-
-float GetStatueProfileChaseDurationAddVisibleMin(const char[] profile, int difficulty)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.ChaseDurationAddVisibilityMin[difficulty];
-}
-
-float GetStatueProfileChaseDurationAddVisibleMax(const char[] profile, int difficulty)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.ChaseDurationAddVisibilityMax[difficulty];
-}
-
-float GetStatueProfileIdleLifeTime(const char[] profile, int difficulty)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.IdleLifeTime[difficulty];
-}
-
-float GetStatueProfileModelChangeDistMax(const char[] profile, int difficulty)
-{
-	g_StatueBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.ModelChangeDistanceMax[difficulty];
-}
-
-void GetStatueProfileMoveSounds(const char[] profile, SF2BossProfileSoundInfo params)
-{
-	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	params = g_CachedProfileData.MoveSounds;
-}
-
-void GetStatueProfileSingleMoveSounds(const char[] profile, SF2BossProfileSoundInfo params)
-{
-	g_ChaserBossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	params = g_CachedProfileData.SingleMoveSounds;
 }

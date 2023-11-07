@@ -20,6 +20,18 @@
 		"ko"	"투표 성공! 선택된 난이도:"
 	}
 
+	"SF2 Difficulty Vote Finished Unsuccessful"
+	{
+		"#format"		"{1:d}"
+		"en" "Vote for ({lightblue}Apollyon{default}/{lightblue}Nightmare{default}) failed, ({lightblue}{1}{default}%%) of the vote is required to pass. The difficulty has been changed to:"
+	}
+
+	"SF2 Difficulty Vote Finished Unsuccessful Runoff"
+	{
+		"#format"		"{1:d}"
+		"en" "Vote for ({lightblue}Apollyon{default}/{lightblue}Nightmare{default}) failed, ({lightblue}{1}{default}%%) of the vote is required to pass. Initiating a runoff vote..."
+	}
+
 	"SF2 Easy Difficulty"
 	{
 		"en"	"Newbie"
@@ -81,7 +93,7 @@
 		"pt"	"Calamidade"
 		"ko"	"대재앙"
 	}
-	
+
 	"SF2 Random Difficulty"
 	{
 		"en"	"Random"
@@ -149,8 +161,9 @@
 		"chi"	"宽限期结束。死亡将会导致出局。"
 		"pt"	"O tempo de preparação acabou. Mortes resultarão em eliminação."
 		"ko"	"유예 기간이 끝났습니다. 이제 죽으면 탈락입니다."
+
 	}
-	
+
 	"SF2 Grace Period Page"
 	{
 		"en"	"Wait for Grace period to end to collect a page."
@@ -183,12 +196,7 @@
 	"SF2 Camping System Warning"
 	{
 		"#format"		"{1:d}"
-		"en"			"WARNING: If you do not move from your spot in {1} seconds, you will be caught by the boss."
-		"ru"			"ВНИМАНИЕ: Если в течение {1} сек. вы не начнёте двигаться, то вы будете схвачены!"
-		"fi"			"VAROITUS: Jos et liiku paikaltasi {1} sekunttiin, vihollinen nappaa sinut."
-		"chi"			"警告：如果你在 {1} 秒内不从当前位置移动的话，你会被Boss抓住。"
-		"pt"			"AVISO: caso não se mova do seu lugar em {1} segundos, você será pego pelo chefão."
-		"ko"			"경고: {1} 초 안에 해당 장소를 벗어나지 않으면, 죽게 됩니다."
+		"en"			"ALERT: If you do not move from your spot in {1} seconds, you will be eliminated from the game."
 	}
 
 	"SF2 Main Menu Title"
@@ -296,8 +304,6 @@
 	"SF2 Prefix"
 	{
 		"en"	"[SF2]"
-		"pt"	"[SF2]"
-		"ko"	"[SF2]"
 	}
 
 	"SF2 Help Menu Title"
@@ -442,182 +448,137 @@
 
 	"SF2 Help Scout Class Info Menu Title"
 	{
-		"en"	"[1] The Scout"
-		"ru"	"[1] Разведчик"
-		"fi"	"[1] Scout"
-		"chi"	"[1] 侦察兵"
-		"pt"	"[1] Scout"
-		"ko"	"[1] 스카웃"
+		"en"	"The Scout"
+		"ru"	"Разведчик"
+		"fi"	"Scout"
+		"chi"	"侦察兵"
+		"pt"	"Scout"
+		"ko"	"스카웃"
 	}
 
 	"SF2 Help Scout Class Info Description"
 	{
-		"en"	"[+] 15%% increase in sprint duration\n[+] Fastest base sprint speed\n[-] Low health, most affected by screen wobbling"
-		"ru"	"[+] На 15%% увеличена продолжительность бега\n[-] Мало здоровья, наиболее подвержен внушению"
-		"fi"	"[+] 15%% lisäys juoksun kestoon\n[-] Heikko terveys, ottaa eniten vaikustusta näytön keikkumisesta"
-		"chi"	"[+] 增加 15%% 冲刺持续时间\n[-] 低生命值，更容易受到屏幕震动效果"
-		"pt"	"[+] Aumento de 15%% na duração da corrida\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
-		"ko"	"[+] 8% 더 많은 스테미너 양\n[+] 기본 달리기 속도가 제일 빠름\n[-] 소음이 보스에게 20%% 더 크게 들림\n[-] 체력 낮음\n[-] 스태틱 15%% 취약\n[-] 스태틱 회복 속도 15%% 감소"
+		"en"	"[+] 10%% increase in sprint duration\n[-] Low health, most affected by screen wobbling"
 	}
 
 	"SF2 Help Soldier Class Info Menu Title"
 	{
-		"en"	"[2] The Soldier"
-		"ru"	"[2] Солдат"
-		"fi"	"[2] Soldier"
-		"chi"	"[2] 士兵"
-		"pt"	"[2] Soldier"
-		"ko"	"[2] 솔저"
+		"en"	"The Soldier"
+		"ru"	"Солдат"
+		"fi"	"Soldier"
+		"chi"	"士兵"
+		"pt"	"Soldier"
+		"ko"	"솔저"
 	}
 
 	"SF2 Help Soldier Class Info Description"
 	{
-		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] 5%% higher static resistance and recovery rate\n[+] Market Gardener crits in midair\n[+] Jumping while walking doesn't cost stamina\n[+] The Escape Plan increases speed by your health loss\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] Slowest sprint speed along with Heavy and Demoman"
-		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полудзатоити восстанавливает только 5 ед. за убийство\n[-] План эвакуации влияет только на скорость бега"
-		"fi"	"[+] Kuritoimenpide lisää kävelyn ja juoksemisen nopeutta\nPuolisokea Samurai antaa vain 5 terveyttä taposta\n[-] Pakosuunnitelma vaikuttaa vain ja ainostaan juoksu nopeuteen"
-		"chi"	"[+] 指挥官的军鞭同时增加走路和冲刺速度\n[-] 座头市之刀击杀后只恢复5HP\n[-] 逃生计划镐只影响冲刺速度"
-    	"pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 5 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
-		"ko"	"[+] 징계 조치로 속도 증진 부여 가능\n[+] 스태틱 5%% 저항\n[+] 스태틱 회복 속도 5%% 증가\n[+] 마켓 가든 모종삽으로 공중에 있을 때 2배의 피해를 가할 수 있음\n[+] 걸을 때 점프는 스테미너에 영향을 주지 않음\n[+] 탈출 계획을 들고 있을 때 체력 손실에 따라 속도 증가\n[-] 반맹인 검객을 통해서 얻는 회복량이 5로 고정\n[-] 헤비와 데모맨과 더불어 가장 느린 달리기 속도"
+		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] Cannot lose sprint points while non-sprint jumping\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] The Escape Plan only affects sprinting speed"
 	}
 
 	"SF2 Help Sniper Class Info Menu Title"
 	{
-		"en"	"[8] The Sniper"
-		"ru"	"[8] Спайпер"
-		"fi"	"[8] Sniper"
-		"chi"	"[8] 狙击手"
-		"pt"	"[8] Sniper"
-		"ko"	"[8] 스나이퍼"
+		"en"	"The Sniper"
+		"ru"	"Спайпер"
+		"fi"	"Sniper"
+		"chi"	"狙击手"
+		"pt"	"Sniper"
+		"ko"	"스나이퍼"
 	}
 
 	"SF2 Help Sniper Class Info Description"
 	{
 		"en"	"[+] Blink rate increased by 100%%\n[-] Low health, most affected by screen wobbling"
-		"ru"	"[+] Моргает на 45%% реже\n[-] Мало здоровья, наиболее подвержен внушению"
-		"fi"	"[+] Räpäyttelya lisätty 40%%\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
-		"chi"	"[+] 眨眼频率增益 45%%\n[-] 低生命值，更容易受到屏幕震动效果"
-		"pt"	"[+] Aumento da taxa de piscada em 45%%\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
-		"ko"	"[+] 눈 깜빡임 지속 시간 100%% 증가\n[+] 울트라비전의 범위가 2배로 증가함\n[+] 스태틱 5%% 저항\n[+] 스태틱 회복 속도 10%% 증가\n[-] 울트라비전의 밝기가 25%% 어두어짐"
 	}
 
 	"SF2 Help Demoman Class Info Menu Title"
 	{
-		"en"	"[4] The Demoman"
-		"ru"	"[4] Подрывник"
-		"fi"	"[4] Demomies"
-		"chi"	"[4] 爆破手"
-		"pt"	"[4] Demoman"
-		"ko"	"[4] 데모맨"
+		"en"	"The Demoman"
+		"ru"	"Подрывник"
+		"fi"	"Demomies"
+		"chi"	"爆破手"
+		"pt"	"Demoman"
+		"ko"	"데모맨"
 	}
 
 	"SF2 Help Demoman Class Info Description"
 	{
-		"en"	"[+] 66%% increase in scare sprint duration\n[-] Slowest base sprint speed along with Soldier and Heavy\n[-] The Half-Zatoichi only restores 5 HP on kill"
-		"ru"	"[+] На 66%% увеличена продолжительность бега при испуге\n[-] Полудзатоити восстанавливает только 20 ед. за убийство"
-		"fi"	"[+] 66%% lisäys pelottamisen juoksunopeuteen\n[-] Puolisokea Samurai palauttaa vain 20 terveyttä taposta"
-		"chi"	"[+] 惊吓状态下增加 66%% 冲刺持续时间\n[-] 座头市之刀击杀后只恢复20HP"
-		"pt"	"[+] Aumento de 66%% na duração da corrida quando assustado\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar"
-		"ko"	"[+] 공포 상태일 때, 스테미너 양 66%% 증가\n[-] 솔저와 헤비와 더불어 가장 느린 달리기 속도\n[-] 반맹인 검객을 통해서 얻는 회복량이 5로 고정"
+		"en"	"[+] 10%% increase in sprint duration\n[-] The Half-Zatoichi only restores 5 HP on kill"
 	}
 
 	"SF2 Help Heavy Class Info Menu Title"
 	{
-		"en"	"[5] The Heavy"
-		"ru"	"[5] Пулемётчик"
-		"fi"	"[5] Heavy"
-		"chi"	"[5] 机枪手"
-		"pt"	"[5] Heavy"
-		"ko"	"[5] 헤비"
+		"en"	"The Heavy"
+		"ru"	"Пулемётчик"
+		"fi"	"Heavy"
+		"chi"	"机枪手"
+		"pt"	"Heavy"
+		"ko"	"헤비"
 	}
 
 	"SF2 Help Heavy Class Info Description"
 	{
-		"en"	"[+] Large health, least affected by screen wobbling\n [+] Unable to be trapped by bear traps\n [-] Slowest sprint speed along with Soldier and Demoman\n[-] The Gloves of Running Urgently only affects sprinting speed"
-		"ru"	"[+] Много здоровья, мало подвержен внушению\n[-] ГРУ влияют только на скорость бега"
-		"fi"	"[+] Suuri terveys, vähiten vaikutusta näytön keikkumisesta\n Pikajuoksuhanskat vaikuttaa vain juoksunopeuteen"
-		"chi"	"[+] 很多生命值，不容易受到屏幕震动效果\n[-] 紧急逃跑手套只影响冲刺速度"
-		"pt"	"[+] Mais vida e o balanço da tela afeta menos\n[-] As Geradoras de Rapidez Urgente afetam somente a velocidade de correr"
-		"ko"	"[+] 체력 많음\n[+] 스태틱 15%% 저항\n[+] 스태틱 회복 속도 15%% 증가\n[+] 덫에 걸리지 않음\n[-] G.R.U는 옛날 성능으로 돌아감"
+		"en"	"[+] Large health, least affected by screen wobbling\n[+] Bear traps only deal minimum damage\n[-] The Gloves of Running Urgently only affects sprinting speed"
 	}
 
 	"SF2 Help Medic Class Info Menu Title"
 	{
-		"en"	"[7] The Medic"
-		"ru"	"[7] Медик"
-		"fi"	"[7] Medic"
-		"chi"	"[7] 医生"
-		"pt"	"[7] Medic"
-		"ko"	"[7] 메딕"
+		"en"	"The Medic"
+		"ru"	"Медик"
+		"fi"	"Medic"
+		"chi"	"医生"
+		"pt"	"Medic"
+		"ko"	"메딕"
 	}
 
 	"SF2 Help Medic Class Info Description"
 	{
-		"en"	"[+] Regenerates health over time\n[-] Highest priority to bosses\n[-] Unable to pick up health packs\n[-] Proxies deal 15%% more damage"
-		"ru"	"[+] Со временем восстанавливает здоровье\n[-] Приоритетная цель"
-		"fi"	"[+] Terveys palautuu ajan myötä\n[-] Ensisijainen kohde bosseille"
-		"chi"	"[+] 随时间恢复生命值\n[-] Boss们的优先目标"
-		"pt"	"[+] Regenera vida ao longo do tempo\n[-] Torna-se o alvo prioritário de chefões"
-		"ko"	"[+] 매 초마다 체력이 회복됨\n[-] 보스 타겟 우선순위 20%% 증가\n[-] 치료제를 먹을 수 없음\n[-] 프록시에게 받는 피해 15%% 취약\n[-] Thanatophobia 스페셜 라운드 때 사용 불가"
+		"en"	"[+] Regenerates health over time\n[-] Prioritized target to bosses\n[-] Blocked on the special round Thanatophobia"
 	}
 
 	"SF2 Help Pyro Class Info Menu Title"
 	{
-		"en"	"[3] The Pyro"
-		"ru"	"[3] Поджигатель"
-		"fi"	"[3] Pyro"
-		"chi"	"[3] 火焰兵"
-		"pt"	"[3] Pyro"
-		"ko"	"[3] 파이로"
+		"en"	"The Pyro"
+		"ru"	"Поджигатель"
+		"fi"	"Pyro"
+		"chi"	"火焰兵"
+		"pt"	"Pyro"
+		"ko"	"파이로"
 	}
 
 	"SF2 Help Pyro Class Info Description"
 	{
 		"en"	"[+] Fireproof, duh!\n[-] The Powerjack only restores 20 HP on kill, and\nmelee damage taken increased to 33%%"
-		"ru"	"[+] Огнеупорный, хех!\n[-] Разъединитель восстанавливает только 20 ед. за убийство, и\nполучаемый при ближнем бое урон увеличен на 33%%"
-		"fi"	"[+] Tulenkestävä, duh!\n[-] Tunkki palauttaa vain 20 terveyttä taposta\nlähitaistelu vahingon ottoa lisätty 33%%"
-		"chi"	"[+] 防火！哇！\n[-] 强力千斤顶击杀只恢复20HP，受到的近战伤害增加33%%"
-		"pt"	"[+] Imune a fogo (ah, vá?)\n[-] A Ligação Direta restaura apenas 20 de vida e\no dano sofrido de armas corpo a corpo é 33%% maior"
-		"ko"	"[+] 화염 면역!\n[-] 전원 잭을 통해 얻을 수 있는 회복량이 20으로 고정,\n착용 시 받는 피해량이 33% 증가함"
 	}
 
 	"SF2 Help Spy Class Info Menu Title"
 	{
-		"en"	"[9] The Spy"
-		"ru"	"[9] Шпион"
-		"fi"	"[9] Spy"
-		"chi"	"[9] 间谍"
-		"pt"	"[9] Spy"
-		"ko"	"[9] 스파이"
+		"en"	"The Spy"
+		"ru"	"Шпион"
+		"fi"	"Spy"
+		"chi"	"间谍"
+		"pt"	"Spy"
+		"ko"	"스파이"
 	}
 
 	"SF2 Help Spy Class Info Description"
 	{
-		"en"	"[+] All sounds you make are 30%% quieter to bosses\n[+] 5%% more sprint duration\n[-] Low health\n[-] Higher boss priority\n[-] Least amount of scare sprint speed boost\n[-] Big Earner and Kunai only work against proxies"
-		"ru"	"[+] Все издаваемые звуки на 30%% тише\n[-] Мало здоровья, наиболее подвержен внушению"
-		"fi"	"[+] Kaikki äänet jota teet ovat 30%% hiljaisempia bosseille\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
-		"chi"	"[+] 你发出的声音对Boss来说有 30%% 安静加成\n[-] 低生命值，最容易受到屏幕震动效果"
-    	"pt"	"[+] Todos os sons que você faz são 30%% mais silenciosos\npara os chefões\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
-		"ko"	"[+] 소음이 30%% 더 조용히 들림\n[+] 5%% 더 많은 스테미나 양\n[-] 낮은 체력\n[-] 보스 타겟 우선순위 10%% 증가\n[-] 공포 상태에서 증가하는 속도값 감소\n[-] 재력가와 묵인자의 쿠나이는 프록시한테만 적용됨"
+		"en"	"[+] All sounds you make are 30%% quieter to bosses\n[-] Low health, most affected by screen wobbling\n[-] Slightly prioritized target to bosses"
 	}
 
 	"SF2 Help Engineer Class Info Menu Title"
 	{
-		"en"	"[6] The Engineer"
-		"ru"	"[6] Инженер"
-		"fi"	"[6] Engineer"
-		"chi"	"[6] 工程师"
-		"pt"	"[6] Engineer"
-		"ko"	"[6] 엔지니어"
+		"en"	"The Engineer"
+		"ru"	"Инженер"
+		"fi"	"Engineer"
+		"chi"	"工程师"
+		"pt"	"Engineer"
+		"ko"	"엔지니어"
 	}
 
 	"SF2 Help Engineer Class Info Description"
 	{
-		"en"	"[+] 75%% increase in Flashlight battery life\n[+] 60%% decrease in Flashlight recharge rate\n[-] Low health, most affected by screen wobbling"
-		"ru"	"[+] Увеличение батареи фонарика на 75%%\n[+] На 60%% снижена скорость перезарядки фонарика\n[-] Низкое здоровье, наиболее подвержен внушению"
-		"fi"	"[+] 75%% lisäys taskulampun patterin elämään\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
-		"chi"	"[+] 增加 75%% 手电筒电池容量\n[+] 增益 60%% 手电筒充能速率\n[-] 低生命值，最容易受到屏幕震动效果"
-		"pt"	"[+] Aumento de 75%% da duração bateria da lanterna\n[+] Aumento de 60%% da taxa de recarga da lanterna\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
-		"ko"	"[+] 손전등 배터리 용량 50%% 증가\n[+] 손전등 범위 100%% 증가\n[+] 손전등 거리 200%% 증가\n[+] 손전등 배터리 충전 속도 20%% 증가\n[+] 손전등 스턴 피해량 50%% 증가\n[+] 25%% 작은 손전등 소음\n[-] 낮은 체력, 스태틱 10%% 취약\n[-] 울트라비전이 생기기까지 걸리는 시간 증가"
+		"en"	"[+] 50%% increase in Flashlight battery life\n[+] 20%% decrease in Flashlight recharge rate\n[+] Flashlight is overall brighter\n[-] Low health, most affected by screen wobbling"
 	}
 
 	"SF2 Settings Menu Title"
@@ -706,14 +667,6 @@
 		"ko"	"프록시 참가 요청 메시지 활성화/비활성화"
 	}
 
-	"SF2 Settings Hud Version Title"
-	{
-		"en"	"Switch HUD version between legacy and new"
-		"fi"	"Vaihda HUD versio vanhan ja uuden välillä"
-		"pt"	"Alternar versão da interface entre antiga e nova"
-		"ko"	"구 버전과 신 버전으로 HUD 전환 설정"
-	}
-
 	"SF2 Settings Ghost Overlay Menu Title"
 	{
 		"en"	"Toggle Ghost Mode overlay"
@@ -723,7 +676,7 @@
 		"pt"	"Alternar sobreposição do modo fantasma"
 		"ko"	"유령 모드 오버레이 토글"
 	}
-	
+
 	"SF2 Settings Ghost Mode Teleport Menu Title"
 	{
 		"en"	"Set ghost mode teleport state"
@@ -731,7 +684,7 @@
 		"pt"	"Definir estado do teletransporte do modo fantasma"
 		"ko"	"유령 모드 텔레포트 상태 설정"
 	}
-	
+
 	"SF2 Settings Ghost Mode Toggle State Menu Title"
 	{
 		"en"	"Set ghost mode toggle state"
@@ -739,7 +692,12 @@
 		"pt"	"Definir estado da alternação do modo fantasma"
 		"ko"	"유령 모드 돌입 토글 설정"
 	}
-	
+
+	"SF2 Settings View Bobbing Title"
+	{
+		"en" "Toggle camera view bobbing"
+	}
+
 	"SF2 Settings Hud Version Title"
 	{
 		"en"	"Set HUD version"
@@ -758,6 +716,11 @@
 		"ko"	"음악 볼륨 설정"
 	}
 
+	"SF2 Settings PvE Menu Title"
+	{
+		"en"	"PvE Arena Settings"
+	}
+
 	"SF2 Music Volum Changed"
 	{
 		"#format"		"{1:d}"
@@ -766,7 +729,7 @@
 		"fi"	"{lightblue}Musiikin äänenvoimakkuus vaihdettu {1}%%."
 		"chi"	"{lightblue}音乐音量已设为 {1}%% 。"
 		"pt"	"{lightblue}Volume da música definido para {1}%%."
-		"ko"	"{lightblue}음악 볼륨이 {1}% 으로 설정 되었습니다."
+		"ko"	"{lightblue}음악 볼륨이 {1}%% 으로 설정 되었습니다."
 	}
 
 	"SF2 Settings Flashlight Temperature Title"
@@ -782,12 +745,7 @@
 	"SF2 Flashlight Temperature Changed"
 	{
 		"#format"		"{1:d}"
-		"en" 	"{lightblue}Flashlight temperature set to {1}%%."
-		"ru" 	"{lightblue}Температура фонарика установлена на {1}%%."
-		"fi"	"{lightblue}Taskulampun lämpötila vaihdettu {1}%%."
-		"chi"	"{lightblue}手电筒温度设为 {1}%% 。"
-		"pt"	"{lightblue}Temperatura da lanterna definida para {1}%%."
-		"ko" 	"{lightblue}손전등 색감이 {1}% 으로 설정되었습니다."
+		"en" 	"{lightblue}Flashlight temperature set to {1}k kelvin."
 	}
 
 	"SF2 Ad Message 1"
@@ -875,7 +833,7 @@
 		"pt"	"Você está saindo da arena JxJ! Você perderá as suas armas em {1} segundo(s) caso não retorne!"
 		"ko"	"PvP 구역을 벗어났습니다!\n무기를 잃기 싫다면 {1} 초 안에 돌아오세요!"
 	}
-	
+
 	"SF2 AFK On"
 	{
 		"en"	"{royalblue}Disabled going to RED naturally."
@@ -995,23 +953,13 @@
 	"SF2 Give Queue Points"
 	{
 		"#format"	"{1:d}"
-		"en"	"{dodgerblue}You have been given {1} queue points for playing."
-		"ru"	"{dodgerblue}Вами были получены {1} очков очереди."
-		"fi"	"{dodgerblue}Sinulle on annettu {1} jonopistettä pelaamisesta."
-		"chi"	"{dodgerblue}你因为游玩获得了 {1} 队列点数。"
-		"pt"	"{dodgerblue}Você recebeu {1} ponto(s) de espera por jogar."
-		"ko"	"{dodgerblue}플레이를 위해 {1} 만큼의 대기열 포인트를 받았습니다."
+		"en" "{dodgerblue}You have been given {lightblue}{1} {dodgerblue}queue points for playing. Type {lightblue}!slnext {dodgerblue}to see when you will get to play on {red}RED{dodgerblue}."
 	}
 
 	"SF2 Give Group Queue Points"
 	{
 		"#format"	"{1:d}"
-		"en"	"{dodgerblue}Your group has been given {1} queue points for playing."
-		"ru"	"{dodgerblue}Вашей группой были получены {1} очков очереди."
-		"fi"	"{dodgerblue}Sinun ryhmällesi on annettu {1} jonopistettä pelaamisesta."
-		"chi"	"{dodgerblue}你的组因为游玩获得了 {1} 队列点数。"
-		"pt"	"{dodgerblue}O seu grupo recebeu {1} ponto(s) de esepra por jogar."
-		"ko"	"{dodgerblue}귀하의 그룹은 {1} 만큼의 대기열 포인트를 받았습니다."
+		"en"	"{dodgerblue}Your group has been given {1} queue points for playing. Type {lightblue}!slnext {dodgerblue}to see when you will get to play on {red}RED{dodgerblue}."
 	}
 
 	"SF2 Force Play"
@@ -1074,7 +1022,7 @@
 		"pt"	"Menu principal — digite !sf2 ou !slender na janela de conversa"
 		"ko"	"메인 메뉴 - 채팅창에 !sf2 또는 !slender 입력"
 	}
-	
+
 	"SF2 Hint Trap"
 	{
 		"en"	"Get Out of Trap - Press the jump key a few times."
@@ -1083,6 +1031,11 @@
 		"chi"	"跳出陷阱 - 按几次跳跃键。"
 		"pt"	"Sair da armadilha — pressione \"Pular\" algumas vezes."
 		"ko"	"함정 벗어나기 - 점프 키를 연타하세요."
+	}
+
+	"SF2 Admin Menu Title"
+	{
+		"en"	"SF2 Commands"
 	}
 
 	"SF2 Admin Menu Boss Main"
@@ -1381,7 +1334,7 @@
 		"pt"	"{red}{1}{default} foi forçado a sair da rodada atual."
 		"ko"	"{red}{1}{default}을(를) 게임에 강제 퇴장시켰습니다."
 	}
-	
+
 	"SF2 Set Queue Points"
 	{
 		"#format"	"{1:s}"
@@ -1756,7 +1709,7 @@
 		"chi"	"因为玩家已在你的组，所以你不可以使用此命令！"
 		"pt"	"Não é possível usar este comando porque o jogador já está no seu grupo."
 	}
-	
+
 	"SF2 Player In Game"
 	{
 		"en"	"You cannot perform this command because the player is currently playing on RED."
@@ -1976,39 +1929,39 @@
 
 	"SF2 Boss Pack Menu Title"
 	{
-		"en"	"Show the current pack, if there's one:"
-		"ru"	"Показать текущий набор, если он есть:"
-		"fi"	"Näytä nykyinen paketti, jos sellainen on:"
+		"en" "Show the current pack, if there's one:"
+		"ru" "Показать текущий набор, если он есть:"
+		"fi" "Näytä nykyinen paketti, jos sellainen on:"
 		"chi"	"如果有的话，显示当前包："
 		"pt"	"Exibir o pacote atual (caso haja um):"
 		"ko"	"현재 보스팩이 있는 경우, 해당 보스팩을 표시:"
 	}
-	
+
 	"SF2 Boss Next Pack Menu Title"
 	{
-		"en"	"Show the next boss pack, if there is one:"
-		"ru"	"Показать следующий набор боссов, если он есть:"
-		"fi"	"Näytä seuraava boss paketti, jos sellainen on:"
+		"en" "Show the next boss pack, if there is one:"
+		"ru" "Показать следующий набор боссов, если он есть:"
+		"fi" "Näytä seuraava boss paketti, jos sellainen on:"
 		"chi"	"如果有的话，显示下一个boss包："
 		"pt"	"Exibir o próximo pacote de chefões (caso haja um):"
 		"ko"	"다음 보스팩이 있는 경우, 해당 보스팩을 표시:"
 	}
-	
+
 	"SF2 Boss View On List Title"
 	{
-		"en"	"Show the bosses on the current pack:"
-		"ru"	"Показать боссов в текущем наборе:"
-		"fi"	"Näytä nykyisen paketin bossit:"
+		"en" "Show the bosses on the current pack:"
+		"ru" "Показать боссов в текущем наборе:"
+		"fi" "Näytä nykyisen paketin bossit:"
 		"chi"	"显示当前包的Boss："
 		"pt"	"Exibir os chefões do pacote atual:"
 		"ko"	"현재 보스팩에 있는 보스 표시:"
 	}
-	
+
 	"SF2 Boss List Menu Title"
 	{
-		"en"	"Current Bosses"
-		"ru"	"Текущие боссы"
-		"fi"	"Nykyiset Bossit"
+		"en" "Current Bosses"
+		"ru" "Текущие боссы"
+		"fi" "Nykyiset Bossit"
 		"chi"	"当前Boss"
 		"pt"	"Chefões atuais"
 		"ko"	"현재 보스 목록"
@@ -2053,7 +2006,7 @@
 		"chi"	"选择特殊回合！"
 		"pt"	"Selecione a rodada especial!"
 		"ko"	"스페셜 라운드를 고르세요!"
-	}	
+	}
 
 	"SF2 Special Round Vote Successful"
 	{
@@ -2170,7 +2123,7 @@
 		"pt"	"{lightblue}Agora, o modo fantasma será ativado após morrer estando na RED."
 		"ko"	"{lightblue}이제 RED 팀으로 플레이 도중 사망 시 유령 모드가 활성화됩니다."
 	}
-	
+
 	"SF2 Settings View Bobbing Toggle Title"
 	{
 		"en" 	"Set view bobbing toggle"
@@ -2200,13 +2153,6 @@
 		"chi"	"最近改动："
 		"pt"	"Alterações recentes:"
 		"ko"	"최근 변경 사항:"
-	}
-	
-	"SF2 Change Log"
-	{
-		"en"	"-Precached literally every boss key value\n-Removed certain backwards compatibility"
-		"pt"	"- Pré-carregamento de todos os valores-chave\nde chefões (literalmente)\n- Remoção de certas retrocompatibilidades"
-		"ko"	"-모든 보스의 키밸류 값을 프리캐쉬하고\n사후 지원용으로 남겨뒀던 불필요한 커맨드를 지웠음!"
 	}
 
 	"SF2 Smite player"
@@ -2250,4 +2196,69 @@
 		"pt"			"{red}{1}{default} derrotou {valve}{2}{default}."
 		"ko"			"{red}{1}{default}이(가) {default}{2}을(를) 쓰러뜨렸습니다!"
 	}
+
+	"SF2 Exiting PvE Arena"
+	{
+		"#format"	"{1:d}"
+		"en"	"You are exiting the PvE Arena!\nYou will lose your weapons in {1} second(s) if you don't return!"
+	}
+
+	"SF2 PvE Invalid File"
+	{
+		"en" "That is an invalid sound file."
+	}
+
+	"SF2 PvE Add Unique Track"
+	{
+		"en" "You already added that soundtrack, add a unique soundtrack."
+	}
+
+	"SF2 PvE Tracks Unavailable"
+	{
+		"en" "You don't have any more music sounds available, please remove at least one music file."
+	}
+
+	"SF2 PvE Added Track"
+	{
+		"#format" "{1:s}"
+		"en" "Successfully added sound file {1}."
+	}
+
+	"SF2 PvE Music Settings Title"
+	{
+		"en" "Adjust music settings"
+	}
+
+	"SF2 PvE No Tracks 1-3"
+	{
+		"en" "It looks like you don't have any music themes added, use !sf2_add_pve_music or sm_sf2_add_pve_music (for console users) to add a sound file."
+	}
+
+	"SF2 PvE No Tracks 2-3"
+	{
+		"en" "Example: !sf2_add_pve_music \"slender_boxing_ring/music/metal_gear_rising_revengeance_it_has_to_be_this_way.wav\""
+	}
+
+	"SF2 PvE No Tracks 3-3"
+	{
+		"en" "Make sure the sound file you want to add is found in your TF2 game files otherwise it will not play for you and print out a missing sound error."
+	}
+
+	"SF2 PvE Set Volume"
+	{
+		"#format" "{1:d}"
+		"en" "Set volume ({1}%%)"
+	}
+
+	"SF2 PvE Remove Music"
+	{
+		"en" "Remove"
+	}
+
+	"SF2 PvE Removed Music"
+	{
+		"#format" "{1:s}"
+		"en" "Removed music {1}."
+	}
 }
+

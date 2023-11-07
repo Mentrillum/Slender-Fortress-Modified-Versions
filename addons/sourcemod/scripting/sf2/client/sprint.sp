@@ -1,8 +1,10 @@
 #pragma semicolon 1
 
-bool g_PlayerSprint[MAXTF2PLAYERS] = { false, ... };
-int g_PlayerSprintPoints[MAXTF2PLAYERS] = { 100, ... };
-Handle g_PlayerSprintTimer[MAXTF2PLAYERS] = { null, ... };
+static bool g_PlayerSprint[MAXTF2PLAYERS] = { false, ... };
+static int g_PlayerSprintPoints[MAXTF2PLAYERS] = { 100, ... };
+static Handle g_PlayerSprintTimer[MAXTF2PLAYERS] = { null, ... };
+
+static ConVar g_PlayerScareSprintBoost;
 
 void SetupSprint()
 {
@@ -11,6 +13,8 @@ void SetupSprint()
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
+
+	g_PlayerScareSprintBoost = CreateConVar("sf2_player_scare_boost", "0", "If player is in danger, provide a small boost in speed.", _, true, 0.0, true, 1.0);
 }
 
 static void OnPutInServer(SF2_BasePlayer client)
@@ -22,13 +26,13 @@ static void OnPutInServer(SF2_BasePlayer client)
 
 static void OnJump(SF2_BasePlayer client)
 {
-	if (client.IsEliminated || IsRoundEnding() || IsRoundInWarmup() || client.HasEscaped)
+	if (client.IsEliminated || IsRoundEnding() || IsRoundInWarmup() || client.HasEscaped || client.IsLatched || client.IsTrapped)
 	{
 		return;
 	}
 
 	int override = g_PlayerInfiniteSprintOverrideConVar.IntValue;
-	if ((!g_IsRoundInfiniteSprint && override != 1) || override == 0 && !client.IsTrapped)
+	if ((!g_IsRoundInfiniteSprint && override != 1) || override == 0)
 	{
 		if (client.GetSprintPoints() >= 2)
 		{
@@ -87,7 +91,7 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 
 float ClientGetDefaultSprintSpeed(int client, TFClassType class = TFClass_Unknown)
 {
-	float returnFloat = 340.0;
+	float returnFloat = 400.0;
 	float returnFloat2 = returnFloat;
 	Action action = Plugin_Continue;
 	if (IsValidClient(client))
@@ -99,39 +103,39 @@ float ClientGetDefaultSprintSpeed(int client, TFClassType class = TFClass_Unknow
 	{
 		case TFClass_Scout:
 		{
-			returnFloat = 305.0;
+			returnFloat = 400.0;
 		}
 		case TFClass_Sniper:
 		{
-			returnFloat = 295.0;
+			returnFloat = 370.0;
 		}
 		case TFClass_Soldier:
 		{
-			returnFloat = 280.0;
+			returnFloat = 350.0;
 		}
 		case TFClass_DemoMan:
 		{
-			returnFloat = 280.0;
+			returnFloat = 350.0;
 		}
 		case TFClass_Heavy:
 		{
-			returnFloat = 280.0;
+			returnFloat = 350.0;
 		}
 		case TFClass_Medic:
 		{
-			returnFloat = 290.0;
+			returnFloat = 370.0;
 		}
 		case TFClass_Pyro:
 		{
-			returnFloat = 290.0;
+			returnFloat = 370.0;
 		}
 		case TFClass_Spy:
 		{
-			returnFloat = 300.0;
+			returnFloat = 370.0;
 		}
 		case TFClass_Engineer:
 		{
-			returnFloat = 295.0;
+			returnFloat = 370.0;
 		}
 	}
 
@@ -165,6 +169,14 @@ int ClientGetSprintPoints(int client)
 void ClientSetSprintPoints(int client, int value)
 {
 	g_PlayerSprintPoints[client] = value;
+	if (g_PlayerSprintPoints[client] > 100)
+	{
+		g_PlayerSprintPoints[client] = 100;
+	}
+	if (g_PlayerSprintPoints[client] < 0)
+	{
+		g_PlayerSprintPoints[client] = 0;
+	}
 }
 
 void ClientResetSprint(int client)
@@ -229,7 +241,7 @@ void ClientStartSprint(int client)
 	Call_Finish();
 }
 
-void ClientSprintTimer(int client, bool recharge=false)
+void ClientSprintTimer(int client, bool recharge = false)
 {
 	float rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 0.38 : 0.28;
 	if (recharge)
@@ -267,15 +279,15 @@ void ClientSprintTimer(int client, bool recharge=false)
 		{
 			if (class == TFClass_DemoMan)
 			{
-				rate *= 1.15;
+				rate *= 1.1;
 			}
 			else if (class == TFClass_Medic || class == TFClass_Spy)
 			{
-				rate *= 1.05;
+				rate *= 1.0;
 			}
 			else if (class == TFClass_Scout)
 			{
-				rate *= 1.08;
+				rate *= 1.05;
 			}
 		}
 		else
@@ -349,6 +361,7 @@ void ClientHandleSprint(int client, bool sprint)
 		}
 	}
 }
+
 bool IsClientReallySprinting(int client)
 {
 	if (!IsClientSprinting(client))
@@ -459,7 +472,7 @@ static Action Timer_ClientRechargeSprint(Handle timer, any userid)
 
 static void Hook_ClientSprintingPreThink(int client)
 {
-	if (!IsClientReallySprinting(client))
+	if (!IsClientSprinting(client))
 	{
 		SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
 		SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
@@ -485,7 +498,6 @@ static void Hook_ClientSprintingPreThink(int client)
 	else if (fov >= targetFov)
 	{
 		ClientSetFOV(client, targetFov);
-		//SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
 	}
 }
 
@@ -549,10 +561,17 @@ static void Hook_SprintThink(int client)
 				continue;
 			}
 
+			int ent = NPCGetEntIndex(i);
+			if (!ent || ent == INVALID_ENT_REFERENCE)
+			{
+				continue;
+			}
+
 			if (NPCGetType(i) == SF2BossType_Chaser)
 			{
-				bossTarget = EntRefToEntIndex(g_SlenderTarget[i]);
-				state = g_SlenderState[i];
+				SF2_ChaserEntity chaser = SF2_ChaserEntity(ent);
+				bossTarget = chaser.Target.index;
+				state = chaser.State;
 
 				if ((state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN) &&
 					((bossTarget && bossTarget != INVALID_ENT_REFERENCE && (bossTarget == client || ClientGetDistanceFromEntity(client, bossTarget) < SquareFloat(512.0))) || NPCGetDistanceFromEntity(i, client) < SquareFloat(512.0) || PlayerCanSeeSlender(client, i, false)))
@@ -726,33 +745,28 @@ static void Hook_SprintThink(int client)
 		if (player.InCondition(TFCond_SpeedBuffAlly))
 		{
 			walkSpeed += (walkSpeed * 0.115);
-			sprintSpeed += (sprintSpeed * 0.165);
+			sprintSpeed += (sprintSpeed * 0.125);
 		}
 	}
 	else
 	{
 		if (player.InCondition(TFCond_SpeedBuffAlly))
 		{
-			walkSpeed += (walkSpeed * 0.105);
-			sprintSpeed += (sprintSpeed * 0.14);
+			walkSpeed += (walkSpeed * 0.11);
+			sprintSpeed += (sprintSpeed * 0.11);
 		}
 	}
 
 	if (inDanger)
 	{
-		if (!IsClassConfigsValid())
+		if (g_PlayerScareSprintBoost.BoolValue)
 		{
-			if (class != TFClass_Spy && class != TFClass_Pyro)
+			if (!IsClassConfigsValid())
 			{
-				walkSpeed *= 1.34;
-				sprintSpeed *= 1.34;
-			}
-			else
-			{
-				if (class == TFClass_Spy)
+				if (class != TFClass_Spy && class != TFClass_Pyro)
 				{
-					walkSpeed *= 1.28;
-					sprintSpeed *= 1.28;
+					walkSpeed *= 1.34;
+					sprintSpeed *= 1.34;
 				}
 				else
 				{
@@ -766,7 +780,7 @@ static void Hook_SprintThink(int client)
 						}
 
 						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
+						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt) // Powerjack
 						{
 							walkSpeed *= 1.32;
 							sprintSpeed *= 1.32;
@@ -779,47 +793,43 @@ static void Hook_SprintThink(int client)
 					}
 				}
 			}
-		}
-		else
-		{
-			float multiplier = g_ClassDangerSpeedMultipler[classToInt];
-			if (class == TFClass_Pyro)
+			else
 			{
-				weaponEnt = INVALID_ENT_REFERENCE;
-				for (int slot = 0; slot <= 5; slot++)
+				float multiplier = g_ClassDangerSpeedMultipler[classToInt];
+				if (class == TFClass_Pyro)
 				{
-					weaponEnt = player.GetWeaponSlot(slot);
-					if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
+					weaponEnt = INVALID_ENT_REFERENCE;
+					for (int slot = 0; slot <= 5; slot++)
 					{
-						continue;
-					}
+						weaponEnt = player.GetWeaponSlot(slot);
+						if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
+						{
+							continue;
+						}
 
-					int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-					if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
-					{
-						multiplier -= 0.02;
+						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt) // Powerjack
+						{
+							multiplier -= 0.02;
+						}
 					}
 				}
+				walkSpeed *= multiplier;
+				sprintSpeed *= multiplier;
 			}
-			walkSpeed *= multiplier;
-			sprintSpeed *= multiplier;
 		}
 
-		if (!g_PlayerHints[player.index][PlayerHint_Sprint])
+		if (!player.HasHint(PlayerHint_Sprint))
 		{
 			player.ShowHint(PlayerHint_Sprint);
 		}
 	}
 
-	float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.425);
-	float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.3);
-	if (player.GetSprintPoints() > 8)
+	if (player.GetSprintPoints() <= 5)
 	{
-		sprintSpeedSubtract -= sprintSpeedSubtract * (player.GetSprintPoints() != 0 ? (float(player.GetSprintPoints()) / 100.0) : 0.0);
-		sprintSpeed -= sprintSpeedSubtract;
-	}
-	else
-	{
+		float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.425);
+		float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.3);
+
 		sprintSpeedSubtract += 125;
 		sprintSpeed -= sprintSpeedSubtract;
 		walkSpeedSubtract += 25;
@@ -845,12 +855,12 @@ static void Hook_SprintThink(int client)
 					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed/2.5);
 				}
 			}
-			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed-170.0);
+			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed * 0.5);
 		}
 		else
 		{
 			player.SetPropFloat(Prop_Send, "m_flMaxspeed", 520.0);
-			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed-170.0);
+			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed * 0.5);
 		}
 	}
 	else
@@ -863,13 +873,13 @@ static void Hook_SprintThink(int client)
 		{
 			if (SF_IsBoxingMap() || SF_IsRaidMap())
 			{
-				player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed*2.5);
+				player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed * 2.5);
 			}
 			else
 			{
-				player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed/2.5);
+				player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed / 2.5);
 			}
 		}
-		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", walkSpeed-20.0);
+		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", walkSpeed * 0.5);
 	}
 }

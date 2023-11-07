@@ -72,6 +72,7 @@ public void OnPluginStart()
 
 	g_Pages = new ArrayList(sizeof(SF2PageEntityData));
 	g_PageMusicRanges = new ArrayList(3);
+	g_EmptySpawnPagePoints = new ArrayList();
 
 	char valueToString[32];
 
@@ -118,7 +119,7 @@ public void OnPluginStart()
 	g_PlayerShakeFrequencyMaxConVar = CreateConVar("sf2_player_shake_frequency_max", "255", "Maximum frequency value of the shake. Should be a value between 1-255.", _, true, 1.0, true, 255.0);
 	g_PlayerShakeAmplitudeMaxConVar = CreateConVar("sf2_player_shake_amplitude_max", "5", "Maximum amplitude value of the shake. Should be a value between 1-16.", _, true, 1.0, true, 16.0);
 
-	g_PlayerBlinkRateConVar = CreateConVar("sf2_player_blink_rate", "0.33", "How long (in seconds) each bar on the player's Blink meter lasts.", _, true, 0.0);
+	g_PlayerBlinkRateConVar = CreateConVar("sf2_player_blink_rate", "1.0", "How long (in seconds) each bar on the player's Blink meter lasts.", _, true, 0.0);
 	g_PlayerBlinkHoldTimeConVar = CreateConVar("sf2_player_blink_holdtime", "0.15", "How long (in seconds) a player will stay in Blink mode when he or she blinks.", _, true, 0.0);
 
 	g_UltravisionEnabledConVar = CreateConVar("sf2_player_ultravision_enabled", "1", "Enable/Disable player Ultravision. This helps players see in the dark when their Flashlight is off or unavailable.", _, true, 0.0, true, 1.0);
@@ -218,10 +219,12 @@ public void OnPluginStart()
 
 	g_DefaultLegacyHudConVar = CreateConVar("sf2_default_legacy_hud", "0", "Set to 1 if the server should enable the legacy hud by default in their settings.", _, true, 0.0, true, 1.0);
 
-	g_DifficultyVoteOptionsConVar = CreateConVar("sf2_difficulty_vote_options", "1,2,3", "What vote options will appear on the Difficulty vote. 1 = Normal, 2 = Hard, 3 = Insane, 6 = Random");
+	g_DifficultyVoteOptionsConVar = CreateConVar("sf2_difficulty_vote_options", "1,2,3", "What vote options will appear on the Difficulty vote. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon, 6 = Random");
 	g_DifficultyVoteRevoteConVar = CreateConVar("sf2_difficulty_vote_runoff", "0.0", "If the winning vote has less precentage of player votes, do a run-off vote.", _, true, 0.0, true, 1.0);
 	g_DifficultyVoteRandomConVar = CreateConVar("sf2_difficulty_random_vote", "1", "If random vote will use a random vote option instead of a random difficulty.", _, true, 0.0, true, 1.0);
 	g_DifficultyNoGracePageConVar = CreateConVar("sf2_difficulty_no_grace_pages", "", "On what difficulties will players be unable to collect pages while grace period is active. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon");
+
+	g_HighDifficultyPercentConVar = CreateConVar("sf2_high_difficulty_vote_percentage", "0.0", "The required percentage needed for Nightmare and Apollyon to vote whenever they show up in the vote pool.");
 
 	g_FileCheckConVar = CreateConVar("sf2_debug_file_checks", "0", "Determines if the gamemode should look for missing files when loading all the bosses. Note that turning this on leads to longer boss loading times.", _, true, 0.0, true, 1.0);
 
@@ -230,15 +233,12 @@ public void OnPluginStart()
 	g_HudSync = CreateHudSynchronizer();
 	g_HudSync2 = CreateHudSynchronizer();
 	g_HudSync3 = CreateHudSynchronizer();
+	g_HudSync4 = CreateHudSynchronizer();
 	g_RoundTimerSync = CreateHudSynchronizer();
 	g_Cookie = RegClientCookie("sf2_newcookies", "", CookieAccess_Private);
 
 	switch (g_DifficultyConVar.IntValue)
 	{
-		case Difficulty_Easy:
-		{
-			g_RoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
-		}
 		case Difficulty_Hard:
 		{
 			g_RoundDifficultyModifier = DIFFICULTYMODIFIER_HARD;
@@ -276,7 +276,6 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_sltuto", Command_Tutorial);
 	RegConsoleCmd("sm_sf2tutorial", Command_Tutorial);
 	RegConsoleCmd("sm_sf2tuto", Command_Tutorial);
-	RegConsoleCmd("sm_slupdate", Command_Update);
 	RegConsoleCmd("sm_slpack", Command_Pack);
 	RegConsoleCmd("sm_sf2pack", Command_Pack);
 	RegConsoleCmd("sm_slnextpack", Command_NextPack);
@@ -391,6 +390,8 @@ public void OnPluginStart()
 	HookUserMessage(GetUserMessageId("SayText2"), Hook_BlockUserMessageEx, true);
 	//HookUserMessage(GetUserMessageId("TextMsg"), Hook_BlockUserMessage, true);
 
+	g_OnGamemodeStartPFwd = new PrivateForward(ET_Ignore);
+	g_OnGamemodeEnd = new PrivateForward(ET_Ignore);
 	g_OnMapStartPFwd = new PrivateForward(ET_Ignore);
 	g_OnGameFramePFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundStartPFwd = new PrivateForward(ET_Ignore);
@@ -405,10 +406,14 @@ public void OnPluginStart()
 	g_OnPlayerEscapePFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerTeamPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerClassPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnPlayerLookAtBossPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnBossRemovedPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnChaserGetAttackActionPFwd = new PrivateForward(ET_Hook, Param_Cell, Param_String, Param_CellByRef);
+	g_OnChaserGetCustomAttackPossibleStatePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_String, Param_Cell);
+	g_OnChaserUpdatePosturePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_String, Param_Cell);
 
 	// Hook sounds.
-	AddNormalSoundHook(view_as<NormalSHook>(Hook_NormalSound));
+	AddNormalSoundHook(Hook_NormalSound);
 
 	AddTempEntHook("Fire Bullets", Hook_TEFireBullets);
 
@@ -423,6 +428,10 @@ public void OnPluginStart()
 	SetupTraps();
 
 	SetupMenus();
+
+	InitializeChangelog();
+
+	InitializeEffects();
 
 	SetupAntiCamping();
 	SetupBlink();
@@ -442,8 +451,13 @@ public void OnPluginStart()
 	SetupPlayerGroups();
 
 	PvP_Initialize();
+	PvE_Initialize();
 
 	SetupCustomMapEntities();
+
+	SetupEntityActions();
+
+	InitializeCustomEntities();
 
 	SetupSpecialRounds();
 
@@ -509,7 +523,7 @@ static Action Command_Help(int client, int args)
 		return Plugin_Continue;
 	}
 
-	DisplayMenu(g_MenuHelp, client, 30);
+	g_MenuHelp.Display(client, 30);
 	return Plugin_Handled;
 }
 
@@ -520,7 +534,7 @@ static Action Command_Settings(int client, int args)
 		return Plugin_Continue;
 	}
 
-	DisplayMenu(g_MenuSettings, client, 30);
+	g_MenuSettings.Display(client, 30);
 	return Plugin_Handled;
 }
 
@@ -534,13 +548,13 @@ static Action Command_MenuSwitchHud(int client, int args)
 	char buffer[512];
 	FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Hud Version Title", client);
 
-	Handle panel = CreatePanel();
-	SetPanelTitle(panel, buffer);
+	Panel panel = new Panel();
+	panel.SetTitle(buffer);
 
-	DrawPanelItem(panel, "Use the new HUD");
-	DrawPanelItem(panel, "Use the legacy HUD");
+	panel.DrawItem("Use the new HUD");
+	panel.DrawItem("Use the legacy HUD");
 
-	SendPanelToClient(panel, client, Panel_SettingsHudVersion, 30);
+	panel.Send(client, Panel_SettingsHudVersion, 30);
 	delete panel;
 	return Plugin_Handled;
 }
@@ -553,11 +567,11 @@ static Action Command_MenuViewBob(int client, int args)
 	}
 	char buffer[512];
 	FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings View Bobbing Toggle Title", client);
-	Handle panel = CreatePanel();
-	SetPanelTitle(panel, buffer);
-	DrawPanelItem(panel, "Enable View Bobbing");
-	DrawPanelItem(panel, "Disable View Bobbing");
-	SendPanelToClient(panel, client, Panel_SettingsViewBobbing, 30);
+	Panel panel = new Panel();
+	panel.SetTitle(buffer);
+	panel.DrawItem("Enable View Bobbing");
+	panel.DrawItem("Disable View Bobbing");
+	panel.Send(client, Panel_SettingsViewBobbing, 30);
 	delete panel;
 	return Plugin_Handled;
 }
@@ -569,7 +583,7 @@ static Action Command_Credits(int client, int args)
 		return Plugin_Continue;
 	}
 
-	DisplayMenu(g_MenuCredits, client, MENU_TIME_FOREVER);
+	g_MenuCredits.Display(client, MENU_TIME_FOREVER);
 	return Plugin_Handled;
 }
 
@@ -744,7 +758,7 @@ static Action Command_NoPointsAdmin(int client, int args)
 	{
 		char arg2[32];
 		GetCmdArg(2, arg2, sizeof(arg2));
-		mode = !!StringToInt(arg2);
+		mode = StringToInt(arg2) != 0;
 	}
 
 	for (int i = 0; i < target_count; i++)
@@ -777,7 +791,7 @@ static Action Command_MainMenu(int client, int args)
 	{
 		return Plugin_Continue;
 	}
-	DisplayMenu(g_MenuMain, client, 30);
+	g_MenuMain.Display(client, 30);
 	return Plugin_Handled;
 }
 
@@ -788,16 +802,6 @@ static Action Command_Tutorial(int client, int args)
 		return Plugin_Continue;
 	}
 	//Tutorial_HandleClient(client);
-	return Plugin_Handled;
-}
-
-static Action Command_Update(int client, int args)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-	DisplayMenu(g_MenuUpdate, client, 30);
 	return Plugin_Handled;
 }
 
@@ -884,7 +888,7 @@ static Action Command_GhostMode(int client, int args)
 		return Plugin_Continue;
 	}
 
-	if (IsRoundEnding() || IsRoundInWarmup() || !g_PlayerEliminated[client] || !IsClientParticipating(client) || g_PlayerProxy[client] || IsClientInPvP(client) || IsClientInKart(client) || TF2_IsPlayerInCondition(client,TFCond_Taunting)|| TF2_IsPlayerInCondition(client,TFCond_Charging) || g_LastCommandTime[client] > GetEngineTime())
+	if (IsRoundEnding() || IsRoundInWarmup() || !g_PlayerEliminated[client] || !IsClientParticipating(client) || g_PlayerProxy[client] || IsClientInPvP(client) || IsClientInPvE(client) || IsClientInKart(client) || TF2_IsPlayerInCondition(client,TFCond_Taunting)|| TF2_IsPlayerInCondition(client,TFCond_Charging) || g_LastCommandTime[client] > GetEngineTime())
 	{
 		CPrintToChat(client, "{red}%T", "SF2 Ghost Mode Not Allowed", client);
 		return Plugin_Handled;
@@ -906,7 +910,7 @@ static Action Command_GhostMode(int client, int args)
 
 		CPrintToChat(client, "{dodgerblue}%T", "SF2 Ghost Mode Disabled", client);
 	}
-	g_LastCommandTime[client] = GetEngineTime()+0.5;
+	g_LastCommandTime[client] = GetEngineTime() + 0.5;
 	return Plugin_Handled;
 }
 
@@ -1211,9 +1215,17 @@ static Action Command_SpawnSlender(int client, int args)
 	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
 
-	SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(StringToInt(arg1));
-	if (NPCGetUniqueID(Npc.Index) == -1)
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(StringToInt(arg1));
+	if (!npc.IsValid())
 	{
+		return Plugin_Handled;
+	}
+
+	SF2BossProfileData data;
+	data = npc.GetProfileData();
+	if (data.IsPvEBoss)
+	{
+		ReplyToCommand(client, "You may not spawn PvE bosses!");
 		return Plugin_Handled;
 	}
 
@@ -1225,10 +1237,10 @@ static Action Command_SpawnSlender(int client, int args)
 	TR_GetEndPosition(endPos, trace);
 	delete trace;
 
-	SpawnSlender(Npc, endPos);
+	npc.Spawn(endPos);
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	Npc.GetProfile(profile, sizeof(profile));
+	npc.GetProfile(profile, sizeof(profile));
 
 	CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
 
@@ -1253,7 +1265,7 @@ static Action Command_SpawnAllSlenders(int client, int args)
 
 	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
-	bool doTimer = !!StringToInt(arg1);
+	bool doTimer = StringToInt(arg1) != 0;
 
 	if (!doTimer)
 	{
@@ -1266,13 +1278,19 @@ static Action Command_SpawnAllSlenders(int client, int args)
 		TR_GetEndPosition(endPos, trace);
 		delete trace;
 
-		SF2NPC_BaseNPC Npc;
-		for(int npcIndex;npcIndex<=MAX_BOSSES;npcIndex++)
+		SF2NPC_BaseNPC npc;
+		for (int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
 		{
-			Npc = view_as<SF2NPC_BaseNPC>(npcIndex);
-			if (Npc.IsValid())
+			npc = SF2NPC_BaseNPC(npcIndex);
+			if (npc.IsValid())
 			{
-				SpawnSlender(Npc, endPos);
+				SF2BossProfileData data;
+				data = npc.GetProfileData();
+				if (data.IsPvEBoss)
+				{
+					continue;
+				}
+				npc.Spawn(endPos);
 			}
 		}
 	}
@@ -1305,7 +1323,7 @@ static Action Timer_SpawnAllSlenders(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	if (g_SpawnAllBossesCount >= 64)
+	if (g_SpawnAllBossesCount >= MAX_BOSSES)
 	{
 		CPrintToChat(client.index, "{royalblue}%t {default}Spawned all bosses at your locations.", "SF2 Prefix");
 		g_SpawnAllBossesCount = 0;
@@ -1320,11 +1338,15 @@ static Action Timer_SpawnAllSlenders(Handle timer, any userid)
 	TR_GetEndPosition(endPos, trace);
 	delete trace;
 
-	SF2NPC_BaseNPC Npc;
-	Npc = view_as<SF2NPC_BaseNPC>(g_SpawnAllBossesCount);
-	if (Npc.IsValid())
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(g_SpawnAllBossesCount);
+	if (npc.IsValid())
 	{
-		SpawnSlender(Npc, endPos);
+		SF2BossProfileData data;
+		data = npc.GetProfileData();
+		if (!data.IsPvEBoss)
+		{
+			npc.Spawn(endPos);
+		}
 	}
 	g_SpawnAllBossesCount++;
 	return Plugin_Continue;
@@ -1355,6 +1377,14 @@ static Action Command_RemoveSlender(int client, int args)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
+	SF2BossProfileData data;
+	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	if (data.IsPvEBoss)
+	{
+		ReplyToCommand(client, "You may not remove PvE bosses!");
+		return Plugin_Handled;
+	}
+
 	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(bossIndex))
 	{
 		g_SlenderBoxingBossCount -= 1;
@@ -1383,11 +1413,19 @@ static Action Command_RemoveAllSlenders(int client, int args)
 	{
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 		{
-			if (NPCGetUniqueID(npcIndex) == -1)
+			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(npcIndex);
+			if (!npc.IsValid())
 			{
 				continue;
 			}
-			NPCRemove(npcIndex);
+
+			SF2BossProfileData data;
+			data = npc.GetProfileData();
+			if (data.IsPvEBoss)
+			{
+				continue;
+			}
+			npc.Remove();
 		}
 		CPrintToChat(client, "{royalblue}%t {default}Removed all bosses.", "SF2 Prefix", client);
 	}
@@ -1500,8 +1538,8 @@ static Action Command_SlenderAttackWaiters(int client, int args)
 
 	int bossFlags = NPCGetFlags(bossIndex);
 
-	bool state = !!StringToInt(arg2);
-	bool oldState = !!(bossFlags & SFF_ATTACKWAITERS);
+	bool state = StringToInt(arg2) != 0;
+	bool oldState = (bossFlags & SFF_ATTACKWAITERS) != 0;
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -1553,8 +1591,8 @@ static Action Command_SlenderNoTeleport(int client, int args)
 
 	int bossFlags = NPCGetFlags(bossIndex);
 
-	bool state = !!StringToInt(arg2);
-	bool oldState = !!(bossFlags & SFF_NOTELEPORT);
+	bool state = StringToInt(arg2) != 0;
+	bool oldState = (bossFlags & SFF_NOTELEPORT) != 0;
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -1798,7 +1836,7 @@ static Action Command_ForceProxy(int client, int args)
 		char name[MAX_NAME_LENGTH];
 		if (IsClientSourceTV(target))
 		{
-			continue;//Exclude the sourcetv bot
+			continue; // Exclude the sourcetv bot
 		}
 		FormatEx(name, sizeof(name), "%N", target);
 
@@ -1810,7 +1848,7 @@ static Action Command_ForceProxy(int client, int args)
 
 		if (g_PlayerProxy[target])
 		{
-			continue; //Exclude any active proxies
+			continue; // Exclude any active proxies
 		}
 
 		float intPos[3];
@@ -1899,15 +1937,15 @@ static Action Command_ForceDifficulty(int client, int args)
 
 	int newDifficulty = StringToInt(arg1);
 
-	if (newDifficulty < 1)
+	if (newDifficulty < Difficulty_Normal)
 	{
-		newDifficulty = 1;
+		newDifficulty = Difficulty_Normal;
 	}
-	else if (newDifficulty > 5)
+	else if (newDifficulty > Difficulty_Apollyon)
 	{
-		newDifficulty = 5;
+		newDifficulty = Difficulty_Apollyon;
 	}
-	else if (newDifficulty > 0 && newDifficulty < 6)
+	else if (newDifficulty > Difficulty_Easy && newDifficulty < Difficulty_Max)
 	{
 		g_DifficultyConVar.SetInt(newDifficulty);
 	}
@@ -1998,9 +2036,9 @@ static Action Command_ForceSpecialRound(int client, int args)
 		{
 			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Bacon Spray.", "SF2 Prefix", client);
 		}
-		case SPECIALROUND_DOOMBOX:
+		case SPECIALROUND_SILENTSLENDER:
 		{
-			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Stealth Box of Doom.", "SF2 Prefix", client);
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Silent Slender {default}(Here you die).", "SF2 Prefix", client);
 		}
 		case SPECIALROUND_NOGRACE:
 		{
@@ -2090,10 +2128,6 @@ static Action Command_ForceSpecialRound(int client, int args)
 		{
 			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Class Scramble.", "SF2 Prefix", client);
 		}
-		case SPECIALROUND_2DOOM:
-		{
-			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Silent Slender.", "SF2 Prefix", client);
-		}
 		case SPECIALROUND_PAGEREWARDS:
 		{
 			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Page Rewards.", "SF2 Prefix", client);
@@ -2130,6 +2164,10 @@ static Action Command_ForceSpecialRound(int client, int args)
 		{
 			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Single Player.", "SF2 Prefix", client);
 		}
+		case SPECIALROUND_BEATBOX:
+		{
+			CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next special round to {lightblue}Beatbox.", "SF2 Prefix", client);
+		}
 	}
 
 	return Plugin_Handled;
@@ -2157,8 +2195,16 @@ static Action Command_AddSlender(int client, int args)
 		return Plugin_Handled;
 	}
 
-	SF2NPC_BaseNPC Npc = AddProfile(profile);
-	if (Npc.IsValid())
+	SF2BossProfileData data;
+	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	if (data.IsPvEBoss)
+	{
+		ReplyToCommand(client, "You may not spawn PvE bosses!");
+		return Plugin_Handled;
+	}
+
+	SF2NPC_BaseNPC npc = AddProfile(profile);
+	if (npc.IsValid())
 	{
 		float eyePos[3], eyeAng[3], pos[3];
 		GetClientEyePosition(client, eyePos);
@@ -2168,16 +2214,17 @@ static Action Command_AddSlender(int client, int args)
 		TR_GetEndPosition(pos, trace);
 		delete trace;
 
-		SpawnSlender(Npc, pos);
+		npc.Spawn(pos);
 
-		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(Npc.Index))
+		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(npc.Index))
 		{
-			g_SlenderBoxingBossCount += 1;
+			g_SlenderBoxingBossCount++;
 		}
 	}
 
 	return Plugin_Handled;
 }
+
 static void NPCSpawn(const char[] output, int ent, int activator, float delay)
 {
 	if (!g_Enabled)
@@ -2200,19 +2247,18 @@ static void NPCSpawn(const char[] output, int ent, int activator, float delay)
 				return;
 			}
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			SF2NPC_BaseNPC Npc;
-			for(int npcIndex = 0; npcIndex<=MAX_BOSSES; npcIndex++)
+			SF2NPC_BaseNPC npc;
+			for(int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
 			{
-				Npc = view_as<SF2NPC_BaseNPC>(npcIndex);
-				if (Npc.IsValid())
+				npc = SF2NPC_BaseNPC(npcIndex);
+				if (npc.IsValid())
 				{
-					Npc.GetProfile(profile,sizeof(profile));
-					if (strcmp(profile,targetName) == 0)
+					npc.GetProfile(profile, sizeof(profile));
+					if (strcmp(profile, targetName) == 0)
 					{
-						Npc.UnSpawn();
 						float pos[3];
 						GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
-						SpawnSlender(Npc, pos);
+						npc.Spawn(pos);
 						break;
 					}
 				}
@@ -2228,7 +2274,7 @@ static void NPCSpawn(const char[] output, int ent, int activator, float delay)
 			ent = -1;
 			if (spawnPoint.Length > 0)
 			{
-				ent = spawnPoint.Get(GetRandomInt(0,spawnPoint.Length-1));
+				ent = spawnPoint.Get(GetRandomInt(0, spawnPoint.Length - 1));
 			}
 			delete spawnPoint;
 			if (IsValidEntity(ent))
@@ -2237,17 +2283,16 @@ static void NPCSpawn(const char[] output, int ent, int activator, float delay)
 				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
 				for(int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
 				{
-					SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(npcIndex);
-					if (!Npc.IsValid())
+					SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(npcIndex);
+					if (!npc.IsValid())
 					{
 						continue;
 					}
-					if (Npc.Flags & SFF_NOTELEPORT)
+					if (npc.Flags & SFF_NOTELEPORT)
 					{
 						continue;
 					}
-					Npc.UnSpawn();
-					SpawnSlender(Npc, pos);
+					npc.Spawn(pos);
 					break;
 				}
 			}
@@ -2278,8 +2323,16 @@ static Action Command_AddSlenderFake(int client, int args)
 		return Plugin_Handled;
 	}
 
-	SF2NPC_BaseNPC Npc = AddProfile(profile, SFF_FAKE);
-	if (Npc.IsValid())
+	SF2BossProfileData data;
+	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	if (data.IsPvEBoss)
+	{
+		ReplyToCommand(client, "You may not spawn PvE bosses!");
+		return Plugin_Handled;
+	}
+
+	SF2NPC_BaseNPC npc = AddProfile(profile, SFF_FAKE);
+	if (npc.IsValid())
 	{
 		float eyePos[3], eyeAng[3], pos[3];
 		GetClientEyePosition(client, eyePos);
@@ -2289,7 +2342,7 @@ static Action Command_AddSlenderFake(int client, int args)
 		TR_GetEndPosition(pos, trace);
 		delete trace;
 
-		SpawnSlender(Npc, pos);
+		npc.Spawn(pos);
 	}
 
 	return Plugin_Handled;
@@ -2366,7 +2419,7 @@ static Action Command_ForceState(int client, int args)
 				ClientSetGhostModeState(target, false);
 				TF2_RespawnPlayer(target);
 				TF2_RemoveCondition(target, TFCond_StealthedUserBuffFade);
-				g_LastCommandTime[target] = GetEngineTime()+0.5;
+				g_LastCommandTime[target] = GetEngineTime() + 0.5;
 				CreateTimer(0.25, Timer_ForcePlayer, GetClientUserId(target), TIMER_FLAG_NO_MAPCHANGE);
 			}
 			else
@@ -2604,7 +2657,7 @@ static Action Command_MaxPlayersOverride(int client, int args)
 static Action Command_SpecialRoundMode(int client, int args)
 {
 	g_SpecialRoundBehaviorConVar.BoolValue = !g_SpecialRoundBehaviorConVar.BoolValue;
-	CPrintToChat(client, "{royalblue}%t {default}Set the special rounds to %s.", "SF2 Prefix", g_SpecialRoundBehaviorConVar.BoolValue ? "always reset upon the next round" : "keep going until all players have played a special round");
+	CPrintToChat(client, "{royalblue}%t {default}Set the special rounds to %s.", "SF2 Prefix", g_BlockSuicideDuringRoundConVar.BoolValue ? "always reset upon the next round" : "keep going until all players have played a special round");
 	return Plugin_Handled;
 }
 

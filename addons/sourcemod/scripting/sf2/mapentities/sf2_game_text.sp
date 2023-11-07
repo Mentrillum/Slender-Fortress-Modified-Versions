@@ -45,12 +45,12 @@ methodmap SF2GameTextEntity < CBaseEntity
 	{
 		if (StrContains(buffer, "%d") != -1)
 		{
-			char sName[64];
-			this.GetPropString(Prop_Data, "m_iName", sName, sizeof(sName));
+			char name[64];
+			this.GetPropString(Prop_Data, "m_iName", name, sizeof(name));
 			char[] message = new char[bufferSize];
 			strcopy(message, bufferSize, buffer);
 			ReplaceString(message, bufferSize, "%d", "%%d");
-			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", sName, message);
+			LogError("sf2_game_text (%s): %%d formatting parameters are NOT ALLOWED! Use the <pageCount> and <maxPages> variables! Please report this to the map creator.\nOffending message: %s", name, message);
 			return false;
 		}
 
@@ -68,19 +68,22 @@ methodmap SF2GameTextEntity < CBaseEntity
 
 		if (StrContains(buffer, "<maxPages>") != -1)
 		{
-			char arg[16]; IntToString(g_PageMax, arg, sizeof(arg));
+			char arg[16];
+			IntToString(g_PageMax, arg, sizeof(arg));
 			ReplaceString(buffer, bufferSize, "<maxPages>", arg);
 		}
 
 		if (StrContains(buffer, "<pageCount>") != -1)
 		{
-			char arg[16]; IntToString(g_PageCount, arg, sizeof(arg));
+			char arg[16];
+			IntToString(g_PageCount, arg, sizeof(arg));
 			ReplaceString(buffer, bufferSize, "<pageCount>", arg);
 		}
 
 		if (StrContains(buffer, "<pagesLeft>") != -1)
 		{
-			char arg[16]; IntToString(g_PageMax - g_PageCount, arg, sizeof(arg));
+			char arg[16];
+			IntToString(g_PageMax - g_PageCount, arg, sizeof(arg));
 			ReplaceString(buffer, bufferSize, "<pagesLeft>", arg);
 		}
 	}
@@ -115,6 +118,7 @@ methodmap SF2GameTextEntity < CBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flNextIntroTextDelay", value);

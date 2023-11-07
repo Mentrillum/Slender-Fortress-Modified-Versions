@@ -169,7 +169,7 @@ static Action Timer_ClientCheckCamp(Handle timer, any userid)
 			}
 
 			float slenderPos[3];
-			SlenderGetAbsOrigin(i, slenderPos);
+			CBaseEntity(slender).GetAbsOrigin(slenderPos);
 
 			float dist = GetVectorSquareMagnitude(slenderPos, pos);
 			if (dist < distFromClosestBoss)

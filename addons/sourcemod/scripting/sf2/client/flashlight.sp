@@ -159,7 +159,14 @@ void ClientProcessFlashlightAngles(int client)
 		fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
 		if (fl && fl != INVALID_ENT_REFERENCE)
 		{
-			TeleportEntity(fl, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }), NULL_VECTOR);
+			TeleportEntity(fl, NULL_VECTOR, { 0.0, 0.0, 0.0 }, NULL_VECTOR);
+		}
+		fl = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
+		if (fl && fl != INVALID_ENT_REFERENCE)
+		{
+			float ang[3];
+			GetClientEyeAngles(client, ang);
+			TeleportEntity(fl, NULL_VECTOR, ang, NULL_VECTOR);
 		}
 	}
 }
@@ -216,6 +223,11 @@ float ClientGetFlashlightNextInputTime(int client)
 	return g_PlayerFlashlightNextInputTime[client];
 }
 
+int ClientGetFlashlightEntity(int client)
+{
+	return EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
+}
+
 /**
  *	Breaks the player's flashlight. Nothing else.
  */
@@ -259,6 +271,14 @@ void ClientResetFlashlight(int client)
 	g_PlayerFlashlightBroken[client] = false;
 	g_PlayerFlashlightBatteryTimer[client] = null;
 	g_PlayerFlashlightNextInputTime[client] = -1.0;
+
+	SF2PointSpotlightEntity spotlight = SF2PointSpotlightEntity(EntRefToEntIndex(g_PlayerFlashlightEntAng[client]));
+	if (spotlight.IsValid())
+	{
+		spotlight.TurnOff();
+		RemoveEntity(spotlight.index);
+	}
+	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
 
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
@@ -304,7 +324,7 @@ static Action Hook_FlashlightSetTransmit(int ent,int other)
 
 	if (ownerEntity == other)
 	{
-		if (!!(GetEntProp(ownerEntity, Prop_Send, "m_nForceTauntCam")) && !TF2_IsPlayerInCondition(ownerEntity, TFCond_Taunting))
+		if ((GetEntProp(ownerEntity, Prop_Send, "m_nForceTauntCam") != 0) && !TF2_IsPlayerInCondition(ownerEntity, TFCond_Taunting))
 		{
 			return Plugin_Handled;
 		}
@@ -350,14 +370,18 @@ void ClientTurnOnFlashlight(int client)
 	float eyePos[3], eyeAng[3];
 
 	float length = SF2_FLASHLIGHT_LENGTH;
-	float doubleLength = SF2_FLASHLIGHT_LENGTH*3.0;
+	float doubleLength = SF2_FLASHLIGHT_LENGTH * 3.0;
 	float radius = SF2_FLASHLIGHT_WIDTH;
-	float doubleRadius = SF2_FLASHLIGHT_WIDTH*2.0;
+	float doubleRadius = SF2_FLASHLIGHT_WIDTH * 2.0;
 	GetClientEyePosition(client, eyePos);
 	GetClientEyeAngles(client, eyeAng);
 
 	TFClassType class = TF2_GetPlayerClass(client);
 	int classToInt = view_as<int>(class);
+
+	// Convert WU to inches.
+	float cone = 55.0;
+	cone *= 0.75;
 
 	if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
 	{
@@ -464,10 +488,6 @@ void ClientTurnOnFlashlight(int client)
 			}
 			AcceptEntityInput(ent, "brightness");
 
-			// Convert WU to inches.
-			float cone = 55.0;
-			cone *= 0.75;
-
 			SetVariantInt(RoundToFloor(cone));
 			AcceptEntityInput(ent, "_inner_cone");
 			SetVariantInt(RoundToFloor(cone));
@@ -485,126 +505,105 @@ void ClientTurnOnFlashlight(int client)
 	}
 
 	// Spawn the light that only everyone else will see.
-	/*int ent = CreateEntityByName("env_beam");
-	if (ent != -1)
+	/*SF2PointSpotlightEntity spotlight = SF2PointSpotlightEntity(CreateEntityByName("sf2_point_spotlight"));
+	if (spotlight.IsValid())
 	{
-		int startEnt = CreateEntityByName("info_target");
-		int endEnt = CreateEntityByName("info_target");
-		if (startEnt != -1) // Start
-		{
-			SetEntPropString(startEnt, Prop_Data, "m_iClassname", "sf2_flashlight_spotlight_start");
-			SetEntProp(startEnt, Prop_Data, "m_spawnflags", 1);
-			TeleportEntity(startEnt, eyePos, eyeAng, NULL_VECTOR);
-			SetVariantString("!activator");
-			AcceptEntityInput(startEnt, "SetParent", client);
-
-			DispatchSpawn(startEnt);
-			SetEntityOwner(startEnt, client);
-
-			g_ClientFlashlightStartEntity[client] = EntIndexToEntRef(startEnt);
-
-			SetEntityTransmitState(startEnt, FL_EDICT_FULLCHECK);
-			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, startEnt, Hook_SpotlightEffectUpdateTransmitState);
-			g_DHookShouldTransmit.HookEntity(Hook_Pre, startEnt, Hook_SpotlightEffectShouldTransmit);
-		}
-		if (endEnt != -1) // End
-		{
-			SetEntPropString(endEnt, Prop_Data, "m_iClassname", "sf2_flashlight_spotlight_end");
-			SetEntProp(endEnt, Prop_Data, "m_spawnflags", 1);
-			TeleportEntity(endEnt, eyePos, eyeAng, NULL_VECTOR);
-			SetVariantString("!activator");
-			AcceptEntityInput(endEnt, "SetParent", client);
-
-			DispatchSpawn(endEnt);
-			SetEntityOwner(endEnt, client);
-
-			g_ClientFlashlightEndEntity[client] = EntIndexToEntRef(endEnt);
-
-			SetEntityTransmitState(endEnt, FL_EDICT_FULLCHECK);
-			g_DHookUpdateTransmitState.HookEntity(Hook_Pre, endEnt, Hook_SpotlightEffectUpdateTransmitState);
-			g_DHookShouldTransmit.HookEntity(Hook_Pre, endEnt, Hook_SpotlightEffectShouldTransmit);
-		}
-
+		TeleportEntity(spotlight.index, eyePos, eyeAng);
 		switch (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature)
 		{
 			case 1:
 			{
-				SetEntityRenderColor(ent, 255, 150, 50, 64);
+				spotlight.SetRenderColor(255, 150, 50, 255);
 			}
 			case 2:
 			{
-				SetEntityRenderColor(ent, 255, 210, 100, 64);
+				spotlight.SetRenderColor(255, 210, 100, 255);
 			}
 			case 3:
 			{
-				SetEntityRenderColor(ent, 255, 255, 120, 64);
+				spotlight.SetRenderColor(255, 255, 120, 255);
 			}
 			case 4:
 			{
-				SetEntityRenderColor(ent, 255, 255, 185, 64);
+				spotlight.SetRenderColor(255, 255, 185, 255);
 			}
 			case 5:
 			{
-				SetEntityRenderColor(ent, 255, 255, 210, 64);
+				spotlight.SetRenderColor(255, 255, 210, 255);
 			}
 			case 6:
 			{
-				SetEntityRenderColor(ent, 255, 255, 255, 64);
+				spotlight.SetRenderColor(255, 255, 255, 255);
 			}
 			case 7:
 			{
-				SetEntityRenderColor(ent, 210, 255, 255, 64);
+				spotlight.SetRenderColor(210, 255, 255, 255);
 			}
 			case 8:
 			{
-				SetEntityRenderColor(ent, 185, 255, 255, 64);
+				spotlight.SetRenderColor(185, 255, 255, 255);
 			}
 			case 9:
 			{
-				SetEntityRenderColor(ent, 150, 255, 255, 64);
+				spotlight.SetRenderColor(150, 255, 255, 255);
 			}
 			case 10:
 			{
-				SetEntityRenderColor(ent, 125, 255, 255, 64);
+				spotlight.SetRenderColor(125, 255, 255, 255);
 			}
 		}
-
-		SetEntityModel(ent, SF2_FLASHLIGHT_BEAM_MATERIAL);
-		SetEntityRenderMode(ent, RENDER_TRANSTEXTURE);
-		SetEntPropFloat(ent, Prop_Data, "m_life", 0.0);
-
-		TeleportEntity(ent, eyePos, eyeAng, NULL_VECTOR);
-
-		DispatchSpawn(ent);
-		ActivateEntity(ent);
-
-		SetEntPropEnt(ent, Prop_Send, "m_hAttachEntity", startEnt, 0);
-		SetEntPropEnt(ent, Prop_Send, "m_hAttachEntity", endEnt, 1);
-		SetEntProp(ent, Prop_Send, "m_nNumBeamEnts", 2);
-		SetEntProp(ent, Prop_Send, "m_nBeamType", 2);
-
-		SetEntPropFloat(ent, Prop_Send, "m_fWidth", 40.0);
-		SetEntPropFloat(ent, Prop_Data, "m_fEndWidth", 102.0);
-
-		SetEntPropFloat(ent, Prop_Send, "m_fFadeLength", 0.0);
-		SetEntProp(ent, Prop_Send, "m_nHaloIndex", g_FlashlightHaloModel);
-		SetEntPropFloat(ent, Prop_Send, "m_fHaloScale", 40.0);
-		SetEntProp(ent, Prop_Send, "m_nBeamFlags", 0x80 | 0x200);
-		SetEntProp(ent, Prop_Data, "m_spawnflags", 0x8000);
-
-		AcceptEntityInput(ent, "TurnOn");
-
+		if (!IsClassConfigsValid())
+		{
+			if (class != TFClass_Engineer)
+			{
+				spotlight.Length = length;
+			}
+			else
+			{
+				spotlight.Length = doubleLength;
+			}
+		}
+		else
+		{
+			float customLength = length * g_ClassFlashlightLength[classToInt];
+			spotlight.Length = customLength;
+		}
+		if (!IsClassConfigsValid())
+		{
+			if (class != TFClass_Engineer)
+			{
+				spotlight.Width = radius;
+			}
+			else
+			{
+				spotlight.Width = doubleRadius;
+			}
+		}
+		else
+		{
+			float customRadius = radius * g_ClassFlashlightRadius[classToInt];
+			spotlight.Width = customRadius;
+		}
+		if (!IsClassConfigsValid())
+		{
+			spotlight.Brightness = SF2_FLASHLIGHT_BRIGHTNESS;
+		}
+		else
+		{
+			int customBrightness = SF2_FLASHLIGHT_BRIGHTNESS + g_ClassFlashlightBrightness[classToInt];
+			spotlight.Brightness = customBrightness;
+		}
+		spotlight.Cone = RoundToFloor(cone);
+		spotlight.EndWidth = spotlight.Width * 2.0;
+		spotlight.Distance = spotlight.EndWidth;
+		spotlight.SpotlightRadius = spotlight.Length;
+		spotlight.HaloScale = 20.0;
+		spotlight.Spawn();
+		spotlight.Activate();
 		SetVariantString("!activator");
-		AcceptEntityInput(ent, "SetParent", client);
-
-		SetEntityOwner(ent, client);
-
-		SDKHook(ent, SDKHook_SetTransmit, Hook_Flashlight2SetTransmit);
-		SetEntityTransmitState(ent, FL_EDICT_FULLCHECK);
-		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, ent, Hook_SpotlightEffectUpdateTransmitState);
-		g_DHookShouldTransmit.HookEntity(Hook_Pre, ent, Hook_SpotlightEffectShouldTransmit);
-
-		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(ent);
+		spotlight.AcceptInput("SetParent", client);
+		spotlight.TurnOn();
+		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(spotlight.index);
 	}*/
 
 	Call_StartForward(g_OnClientActivateFlashlightFwd);
@@ -690,8 +689,7 @@ void ClientTurnOffFlashlight(int client)
 	ent = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(ent, "TurnOff");
-		CreateTimer(0.1, Timer_KillEntity, g_PlayerFlashlightEntAng[client], TIMER_FLAG_NO_MAPCHANGE);
+		RemoveEntity(ent);
 	}
 	ent = EntRefToEntIndex(g_ClientFlashlightStartEntity[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
@@ -705,9 +703,9 @@ void ClientTurnOffFlashlight(int client)
 	}
 
 	g_PlayerFlashlightEnt[client] = INVALID_ENT_REFERENCE;
-	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
 	g_ClientFlashlightStartEntity[client] = INVALID_ENT_REFERENCE;
 	g_ClientFlashlightEndEntity[client] = INVALID_ENT_REFERENCE;
+	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
 
 	if (IsValidClient(client))
 	{
@@ -776,6 +774,11 @@ void ClientHandleFlashlight(int client)
 		return;
 	}
 
+	if (IsClientInDeathCam(client))
+	{
+		return;
+	}
+
 	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
 
 	if (IsClientUsingFlashlight(client) || TF2_IsPlayerInCondition(client, TFCond_Taunting))
@@ -791,11 +794,11 @@ void ClientHandleFlashlight(int client)
 		{
 			if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
 			{
-				EmitSoundToAll(FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+				EmitSoundToAll(FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
 			}
 			else
 			{
-				EmitSoundToClient(client, FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+				EmitSoundToClient(client, FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
 			}
 		}
 	}
@@ -828,11 +831,11 @@ void ClientHandleFlashlight(int client)
 				g_PlayerFlashlightNextInputTime[client] = GetGameTime();
 				if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
 				{
-					EmitSoundToAll((nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+					EmitSoundToAll((nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
 				}
 				else
 				{
-					EmitSoundToClient(client, (nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_STATIC, SNDLEVEL_DRYER);
+					EmitSoundToClient(client, (nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
 				}
 			}
 			else

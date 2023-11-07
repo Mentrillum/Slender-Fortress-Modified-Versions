@@ -2,6 +2,8 @@
 
 // Blink data.
 static Handle g_PlayerBlinkTimer[MAXTF2PLAYERS] = { null, ... };
+static bool g_StartBlinking[MAXTF2PLAYERS] = { false, ... };
+static float g_TimeUntilStopBlinking[MAXTF2PLAYERS] = { -1.0, ... };
 static bool g_PlayerBlink[MAXTF2PLAYERS] = { false, ... };
 bool g_PlayerHoldingBlink[MAXTF2PLAYERS] = { false, ... };
 static float g_PlayerBlinkMeter[MAXTF2PLAYERS] = { 0.0, ... };
@@ -14,20 +16,22 @@ void SetupBlink()
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
+	g_OnPlayerLookAtBossPFwd.AddFunction(null, OnPlayerLookAtBoss);
 }
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
 	ClientResetBlink(client.index);
+
+	if (!client.IsSourceTV)
+	{
+		SDKHook(client.index, SDKHook_PreThinkPost, BlinkThink);
+	}
 }
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
 	ClientResetBlink(client.index);
-	if (!client.IsEliminated)
-	{
-		ClientStartDrainingBlinkMeter(client.index);
-	}
 }
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
@@ -41,6 +45,15 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 static void OnPlayerEscape(SF2_BasePlayer client)
 {
 	ClientResetBlink(client.index);
+}
+
+static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
+{
+	if (boss.IsAffectedBySight())
+	{
+		g_StartBlinking[client.index] = true;
+		g_TimeUntilStopBlinking[client.index] = GetGameTime() + 25.0;
+	}
 }
 
 bool IsClientBlinking(int client)
@@ -73,12 +86,19 @@ int ClientGetBlinkCount(int client)
 	return g_PlayerBlinkCount[client];
 }
 
+bool ClientHasStartedBlinking(int client)
+{
+	return g_StartBlinking[client];
+}
+
 /**
  *	Resets all data on blinking.
  */
 void ClientResetBlink(int client)
 {
 	g_PlayerBlinkTimer[client] = null;
+	g_StartBlinking[client] = false;
+	g_TimeUntilStopBlinking[client] = -1.0;
 	g_PlayerBlink[client] = false;
 	g_PlayerHoldingBlink[client] = false;
 	g_TimeUntilUnblink[client] = 0.0;
@@ -134,45 +154,59 @@ static void ClientUnblink(int client)
 	g_PlayerBlinkMeter[client] = 1.0;
 }
 
-void ClientStartDrainingBlinkMeter(int client)
+static void BlinkThink(int client)
 {
-	g_PlayerBlinkTimer[client] = CreateTimer(ClientGetBlinkRate(client), Timer_BlinkTimer, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-}
-
-static Action Timer_BlinkTimer(Handle timer, any userid)
-{
-	if (IsRoundInWarmup())
+	if (IsRoundInWarmup() || IsRoundInIntro())
 	{
-		return Plugin_Stop;
+		return;
 	}
 
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
+	if (IsInfiniteBlinkEnabled())
 	{
-		return Plugin_Stop;
+		return;
 	}
 
-	if (timer != g_PlayerBlinkTimer[client])
+	if (!g_StartBlinking[client])
 	{
-		return Plugin_Stop;
+		return;
 	}
 
-	if (IsPlayerAlive(client) && !IsClientInDeathCam(client) && !g_PlayerEliminated[client] && !IsClientInGhostMode(client) && !IsRoundEnding())
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+
+	for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
+	{
+		SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(bossIndex);
+		if (!controller.IsValid())
+		{
+			continue;
+		}
+
+		if (controller.IsAffectedBySight() && player.IsLookingAtBoss(controller))
+		{
+			g_TimeUntilStopBlinking[player.index] = GetGameTime() + 25.0;
+		}
+	}
+
+	if (g_TimeUntilStopBlinking[player.index] < GetGameTime())
+	{
+		g_StartBlinking[player.index] = false;
+		g_TimeUntilStopBlinking[player.index] = -1.0;
+		g_PlayerBlinkMeter[player.index] = 1.0;
+	}
+
+	if (player.IsAlive && !player.IsInDeathCam && !player.IsEliminated && !player.IsInGhostMode && !IsRoundEnding())
 	{
 		int override = g_PlayerInfiniteBlinkOverrideConVar.IntValue;
 		if ((!g_RoundInfiniteBlink && override != 1) || override == 0)
 		{
-			g_PlayerBlinkMeter[client] -= 0.05;
+			g_PlayerBlinkMeter[player.index] -= (0.15 * ClientGetBlinkRate(player.index) * GetGameFrameTime());
 		}
 
-		if (g_PlayerBlinkMeter[client] <= 0.0)
+		if (g_PlayerBlinkMeter[player.index] <= 0.0)
 		{
-			ClientBlink(client);
-			return Plugin_Stop;
+			player.Blink();
 		}
 	}
-
-	return Plugin_Continue;
 }
 
 static Action Timer_TryUnblink(Handle timer, any userid)
@@ -198,7 +232,6 @@ static Action Timer_TryUnblink(Handle timer, any userid)
 	}
 
 	ClientUnblink(client);
-	ClientStartDrainingBlinkMeter(client);
 
 	return Plugin_Stop;
 }

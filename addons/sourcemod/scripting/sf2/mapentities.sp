@@ -34,13 +34,20 @@ methodmap SF2TriggerMapEntity < CBaseEntity
 
 	public bool PassesTriggerFilters(int entity)
 	{
-		return !!SDKCall(g_SDKPassesTriggerFilters, this.index, entity);
+		return SDKCall(g_SDKPassesTriggerFilters, this.index, entity) != 0;
 	}
 
 	property bool IsDisabled
 	{
-		public get() { return !!this.GetProp(Prop_Data, "m_bDisabled"); }
-		public set(bool value) { this.SetProp(Prop_Data, "m_bDisabled", value); }
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_bDisabled") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_bDisabled", value);
+		}
 	}
 }
 
@@ -91,6 +98,7 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 #include "sf2/mapentities/sf2_trigger_escape.sp"
 #include "sf2/mapentities/sf2_info_player_escapespawn.sp"
 #include "sf2/mapentities/sf2_trigger_pvp.sp"
+#include "sf2/mapentities/sf2_trigger_pve.sp"
 #include "sf2/mapentities/sf2_info_player_pvpspawn.sp"
 #include "sf2/mapentities/sf2_info_player_proxyspawn.sp"
 #include "sf2/mapentities/sf2_info_boss_spawn.sp"
@@ -105,6 +113,7 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 #include "sf2/mapentities/sf2_logic_arena.sp"
 #include "sf2/mapentities/sf2_logic_boxing.sp"
 #include "sf2/mapentities/sf2_logic_slaughter.sp"
+#include "sf2/mapentities/sf2_point_spotlight.sp"
 
 void SetupCustomMapEntities()
 {
@@ -138,6 +147,9 @@ void SetupCustomMapEntities()
 
 	// sf2_trigger_pvp
 	SF2TriggerPvPEntity.Initialize();
+
+	// sf2_trigger_pve
+	SF2TriggerPvEEntity.Initialize();
 
 	// sf2_info_player_pvpspawn
 	SF2PlayerPvPSpawnEntity.Initialize();
@@ -176,6 +188,9 @@ void SetupCustomMapEntities()
 
 	// sf2_logic_slaughter
 	SF2LogicSlaughterEntity.Initialize();
+
+	// sf2_point_spotlight
+	SF2PointSpotlightEntity.Initialize();
 }
 
 static void MapStart()

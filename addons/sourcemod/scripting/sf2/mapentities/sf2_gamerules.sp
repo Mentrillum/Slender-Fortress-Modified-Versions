@@ -34,6 +34,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iMaxPlayers");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iMaxPlayers", value);
@@ -46,6 +47,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iMaxPages");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iMaxPages", value);
@@ -84,6 +86,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iInitialTimeLimit");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iInitialTimeLimit", value);
@@ -96,6 +99,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iPageCollectAddTime");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iPageCollectAddTime", value);
@@ -118,6 +122,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iPageCollectSoundPitch");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iPageCollectSoundPitch", value);
@@ -128,8 +133,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bInfiniteFlashlight");
+			return this.GetProp(Prop_Data, "sf2_bInfiniteFlashlight") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bInfiniteFlashlight", value);
@@ -140,8 +146,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bInfiniteSprint");
+			return this.GetProp(Prop_Data, "sf2_bInfiniteSprint") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bInfiniteSprint", value);
@@ -152,8 +159,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bInfiniteBlink");
+			return this.GetProp(Prop_Data, "sf2_bInfiniteBlink") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bInfiniteBlink", value);
@@ -164,8 +172,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bBossesChaseEndlessly");
+			return this.GetProp(Prop_Data, "sf2_bBossesChaseEndlessly") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bBossesChaseEndlessly", value);
@@ -176,8 +185,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bEscapeToWin");
+			return this.GetProp(Prop_Data, "sf2_bEscapeToWin") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bEscapeToWin", value);
@@ -190,6 +200,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iEscapeTimeLimit");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iEscapeTimeLimit", value);
@@ -226,8 +237,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bStopPageMusicOnEscape");
+			return this.GetProp(Prop_Data, "sf2_bStopPageMusicOnEscape") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bStopPageMusicOnEscape", value);
@@ -238,8 +250,9 @@ methodmap SF2GamerulesEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bSurvive");
+			return this.GetProp(Prop_Data, "sf2_bSurvive") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bSurvive", value);
@@ -252,6 +265,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iSurviveUntilTime");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iSurviveUntilTime", value);
@@ -294,6 +308,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flIntroFadeHoldTime");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flIntroFadeHoldTime", value);
@@ -306,6 +321,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flIntroFadeTime");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flIntroFadeTime", value);
@@ -344,6 +360,7 @@ methodmap SF2GamerulesEntity < CBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flIntroTextDelay");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flIntroTextDelay", value);

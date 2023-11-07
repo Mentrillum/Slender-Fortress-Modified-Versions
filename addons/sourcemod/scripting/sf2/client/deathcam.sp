@@ -3,15 +3,17 @@
 // Deathcam data.
 int g_PlayerDeathCamBoss[MAXTF2PLAYERS] = { -1, ... };
 static bool g_PlayerDeathCam[MAXTF2PLAYERS] = { false, ... };
+static float g_PlayerDeathCamTimer[MAXTF2PLAYERS];
+static bool g_PlayerDeathCamMustDoOverlay[MAXTF2PLAYERS];
 bool g_PlayerDeathCamShowOverlay[MAXTF2PLAYERS] = { false, ... };
 int g_PlayerDeathCamEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 static int g_PlayerDeathCamEnt2[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 static int g_PlayerDeathCamTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
-static Handle g_PlayerDeathCamTimer[MAXTF2PLAYERS] = { null, ... };
 bool g_CameraInDeathCamAdvanced[2049] = { false, ... };
 float g_CameraPlayerOffsetBackward[2049] = { 0.0, ... };
 float g_CameraPlayerOffsetDownward[2049] = { 0.0, ... };
 static float g_PlayerOriginalDeathcamPosition[MAXTF2PLAYERS][3];
+static bool g_Hooked = false;
 
 void SetupDeathCams()
 {
@@ -84,7 +86,7 @@ static void ClientResetDeathCam(int client)
 	g_PlayerDeathCamBoss[client] = -1;
 	g_PlayerDeathCam[client] = false;
 	g_PlayerDeathCamShowOverlay[client] = false;
-	g_PlayerDeathCamTimer[client] = null;
+	g_PlayerDeathCamTimer[client] = 0.0;
 
 	int ent = EntRefToEntIndex(g_PlayerDeathCamEnt[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
@@ -97,7 +99,10 @@ static void ClientResetDeathCam(int client)
 	ent = EntRefToEntIndex(g_PlayerDeathCamEnt2[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(ent, "Kill");
+		if (!SF2_BaseBoss(ent).IsValid() && !SF2_ChaserEntity(ent).IsValid() && !SF2_StatueEntity(ent).IsValid())
+		{
+			RemoveEntity(ent);
+		}
 	}
 
 	ent = EntRefToEntIndex(g_PlayerDeathCamTarget[client]);
@@ -115,6 +120,27 @@ static void ClientResetDeathCam(int client)
 		SetClientViewEntity(client, client);
 	}
 
+	SF2BossProfileData data;
+	data = NPCGetProfileData(deathCamBoss);
+	if (data.DeathCamData.Enabled && data.DeathCamData.Blackout)
+	{
+		UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+		CreateTimer(0.1, Timer_DeleteRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		TeleportEntity(client, {16000.0, 16000.0, 16000.0});
+
+		SF2BossProfileSoundInfo soundInfo;
+		soundInfo = data.DeathCamData.ExecutionSounds;
+		if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+		{
+			for (int i = 0; i < soundInfo.Paths.Length; i++)
+			{
+				soundInfo.EmitSound(true, client, SOUND_FROM_PLAYER, _, _, _, i);
+			}
+		}
+
+		UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+	}
+
 	Call_StartForward(g_OnClientEndDeathCamFwd);
 	Call_PushCell(client);
 	Call_PushCell(deathCamBoss);
@@ -128,7 +154,45 @@ static void ClientResetDeathCam(int client)
 	#endif
 }
 
-void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool antiCamp = false)
+static Action NoPlayerVoiceHook(int clients[64], int& numClients, char sample[PLATFORM_MAX_PATH], int& client, int& channel, float& volume, int& level, int& pitch, int& flags)
+{
+	if (!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	if (channel == SNDCHAN_VOICE)
+	{
+		RemoveNormalSoundHook(NoPlayerVoiceHook);
+		g_Hooked = false;
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
+}
+
+static Action Timer_DeleteRagdoll(Handle timer, int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(GetClientOfUserId(client));
+	if (!player.IsValid)
+	{
+		return Plugin_Continue;
+	}
+
+	int ragdoll = -1;
+	while ((ragdoll = FindEntityByClassname(ragdoll, "tf_ragdoll")) != -1)
+	{
+		if (GetEntPropEnt(ragdoll, Prop_Send, "m_hPlayer") == player.index)
+		{
+			RemoveEntity(ragdoll);
+			break;
+		}
+	}
+
+	return Plugin_Continue;
+}
+
+void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool antiCamp = false)
 {
 	if (IsClientInDeathCam(client))
 	{
@@ -138,24 +202,7 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	{
 		return;
 	}
-
-	for (int npcIndex; npcIndex < MAX_BOSSES; npcIndex++)
-	{
-		if (NPCGetUniqueID(npcIndex) == -1)
-		{
-			continue;
-		}
-		switch (NPCGetType(npcIndex))
-		{
-			case SF2BossType_Chaser:
-			{
-				if (g_SlenderState[npcIndex] == STATE_CHASE && EntRefToEntIndex(g_SlenderTarget[npcIndex]) == client)
-				{
-					g_SlenderGiveUp[npcIndex] = true;
-				}
-			}
-		}
-	}
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
 	GetClientAbsOrigin(client, g_PlayerOriginalDeathcamPosition[client]);
 
@@ -164,17 +211,20 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
+	SF2BossProfileData data;
+	data = NPCGetProfileData(bossIndex);
+
 	SF2BossProfileSoundInfo soundInfo;
 	if (g_SlenderDeathCamScareSound[bossIndex])
 	{
-		GetBossProfileScareSounds(profile, soundInfo);
-		soundInfo.EmitSound(true, client);
+		soundInfo = data.ScareSounds;
+		soundInfo.EmitSound(true, client, SOUND_FROM_PLAYER);
 	}
 
-	GetBossProfileClientDeathCamSounds(profile, soundInfo);
-	soundInfo.EmitSound(true, client);
+	soundInfo = data.ClientDeathCamSounds;
+	soundInfo.EmitSound(true, client, SOUND_FROM_PLAYER);
 
-	GetBossProfileGlobalDeathCamSounds(profile, soundInfo);
+	soundInfo = data.GlobalDeathCamSounds;
 	for (int i = 0; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i))
@@ -190,23 +240,17 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	Call_PushCell(bossIndex);
 	Call_Finish();
 
-	if (!NPCHasDeathCamEnabled(bossIndex) && !(NPCGetFlags(bossIndex) & SFF_FAKE))
+	if ((!NPCHasDeathCamEnabled(bossIndex) || antiCamp) && !(NPCGetFlags(bossIndex) & SFF_FAKE))
 	{
 		SetEntProp(client, Prop_Data, "m_takedamage", 2); // We do this because the point_viewcontrol changes our lifestate.
 
-		float value = NPCGetAttributeValue(bossIndex, SF2Attribute_IgnitePlayerOnDeath);
-		if (value > 0.0)
+		if (NPCHasAttribute(bossIndex, SF2Attribute_IgnitePlayerOnDeath))
 		{
 			TF2_IgnitePlayer(client, client);
 		}
 
-		int slenderEnt = NPCGetEntIndex(bossIndex);
-		if (slenderEnt > MaxClients)
-		{
-			SDKHooks_TakeDamage(client, slenderEnt, slenderEnt, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
-		}
 		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
-		ForcePlayerSuicide(client);//Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
+		ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 		KillClient(client);
 		return;
 	}
@@ -216,7 +260,6 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	}
 
 	g_PlayerDeathCamBoss[client] = NPCGetUniqueID(bossIndex);
-	g_PlayerDeathCam[client] = true;
 	g_PlayerDeathCamShowOverlay[client] = false;
 
 	float eyePos[3], eyeAng[3], angle[3];
@@ -228,46 +271,34 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	angle[2] = 0.0;
 
 	// Create fake model.
-	int slender = SpawnSlenderModel(bossIndex, lookPos, true);
-	TeleportEntity(slender, lookPos, angle, NULL_VECTOR);
-	g_PlayerDeathCamEnt2[client] = EntIndexToEntRef(slender);
-	if (!g_SlenderPublicDeathCam[bossIndex])
+	int slender = -1;
+	bool publicDeathcam = data.PublicDeathCam || data.DeathCamData.Enabled;
+	if (!publicDeathcam)
 	{
+		slender = SpawnSlenderModel(bossIndex, lookPos, true);
+		TeleportEntity(slender, lookPos, angle, NULL_VECTOR);
 		SDKHook(slender, SDKHook_SetTransmit, Hook_DeathCamSetTransmit);
 	}
 	else
 	{
-		GetBossProfileLocalDeathCamSounds(profile, soundInfo);
-		soundInfo.EmitSound(_, slender);
 		SetEntityMoveType(client, MOVETYPE_NOCLIP);
-		if (!antiCamp)
+		slender = NPCGetEntIndex(bossIndex);
+		if (SF2_ChaserEntity(slender).IsValid() || SF2_StatueEntity(slender).IsValid())
 		{
-			int slenderEnt = NPCGetEntIndex(bossIndex);
-			if (slenderEnt && slenderEnt != INVALID_ENT_REFERENCE)
-			{
-				g_SlenderInDeathcam[bossIndex] = true;
-				SetEntityRenderMode(slenderEnt, RENDER_TRANSCOLOR);
-				SetEntityRenderColor(slenderEnt, g_SlenderRenderColor[bossIndex][0], g_SlenderRenderColor[bossIndex][1], g_SlenderRenderColor[bossIndex][2], 0);
-				NPCChaserUpdateBossAnimation(bossIndex, slenderEnt, STATE_IDLE);
-				g_SlenderDeathCamTarget[bossIndex] = EntIndexToEntRef(client);
-				if (g_SlenderEntityThink[bossIndex] != null)
-				{
-					KillTimer(g_SlenderEntityThink[bossIndex]);
-				}
-				g_SlenderEntityThink[bossIndex] = CreateTimer(BOSS_THINKRATE, Timer_SlenderPublicDeathCamThink, EntIndexToEntRef(slenderEnt), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-			}
+			SF2_BaseBoss(slender).IsKillingSomeone = true;
+			SF2_BaseBoss(slender).KillTarget = CBaseEntity(client);
 		}
 	}
+	g_PlayerDeathCamEnt2[client] = EntIndexToEntRef(slender);
 
-	// Create camera look point.
 	char name[64];
 	FormatEx(name, sizeof(name), "sf2_boss_%d", EntIndexToEntRef(slender));
 
 	float offsetPos[3];
 	int target = CreateEntityByName("info_target");
-	if (!g_SlenderPublicDeathCam[bossIndex])
+	if (!publicDeathcam)
 	{
-		GetBossProfileDeathCamPosition(profile, offsetPos);
+		offsetPos = data.DeathCamPos;
 		AddVectors(lookPos, offsetPos, offsetPos);
 		TeleportEntity(target, offsetPos, NULL_VECTOR, NULL_VECTOR);
 		DispatchKeyValue(target, "targetname", name);
@@ -282,7 +313,11 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 		DispatchKeyValue(target, "targetname", name);
 		SetVariantString("!activator");
 		AcceptEntityInput(target, "SetParent", slender);
-		GetBossProfilePublicDeathCamTargetAttachment(profile, boneName, sizeof(boneName));
+		strcopy(boneName, sizeof(boneName), data.PublicDeathCamAttachment);
+		if (data.DeathCamData.Attachment[0] != '\0')
+		{
+			strcopy(boneName, sizeof(boneName), data.DeathCamData.Attachment);
+		}
 		if (boneName[0] != '\0')
 		{
 			SetVariantString(boneName);
@@ -299,7 +334,16 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 	DispatchSpawn(camera);
 	AcceptEntityInput(camera, "Enable", client);
 	g_PlayerDeathCamEnt[client] = EntIndexToEntRef(camera);
-	if (g_SlenderPublicDeathCam[bossIndex])
+	int light = ClientGetFlashlightEntity(client);
+	if (light && light != INVALID_ENT_REFERENCE)
+	{
+		SetVariantString("!activator");
+		AcceptEntityInput(light, "ClearParent");
+		TeleportEntity(light, eyePos, eyeAng, NULL_VECTOR);
+		SetVariantString("!activator");
+		AcceptEntityInput(light, "SetParent", camera);
+	}
+	if (publicDeathcam)
 	{
 		float camSpeed, camAcceleration, camDeceleration;
 
@@ -316,12 +360,23 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 		SetVariantString("!activator");
 		AcceptEntityInput(camera, "SetParent", slender);
 		char attachmentName[PLATFORM_MAX_PATH];
-		GetBossProfilePublicDeathCamAttachment(profile, attachmentName, sizeof(attachmentName));
+		strcopy(attachmentName, sizeof(attachmentName), data.PublicDeathCamAttachment);
+		if (data.DeathCamData.Attachment[0] != '\0')
+		{
+			strcopy(attachmentName, sizeof(attachmentName), data.DeathCamData.Attachment);
+		}
 		if (attachmentName[0] != '\0')
 		{
 			SetVariantString(attachmentName);
 			AcceptEntityInput(camera, "SetParentAttachment");
 		}
+
+		strcopy(attachmentName, sizeof(attachmentName), data.PublicDeathCamAttachmentTarget);
+		if (data.DeathCamData.Attachment[0] != '\0')
+		{
+			strcopy(attachmentName, sizeof(attachmentName), data.DeathCamData.TargetAttachment);
+		}
+		DispatchKeyValue(camera, "targetname", attachmentName);
 
 		g_CameraInDeathCamAdvanced[camera] = true;
 		g_CameraPlayerOffsetBackward[camera] = g_SlenderPublicDeathCamBackwardOffset[bossIndex];
@@ -329,32 +384,32 @@ void ClientStartDeathCam(int client,int bossIndex, const float lookPos[3], bool 
 		RequestFrame(Frame_PublicDeathCam, camera); //Resend taunt sound to eliminated players only
 	}
 
+	float duration = g_SlenderDeathCamTime[bossIndex];
 	if (g_SlenderDeathCamOverlay[bossIndex] && g_SlenderDeathCamOverlayTimeStart[bossIndex] >= 0.0)
 	{
-		if (g_SlenderPublicDeathCam[bossIndex] && !antiCamp)
-		{
-			int slenderEnt = NPCGetEntIndex(bossIndex);
-			if (slenderEnt && slenderEnt != INVALID_ENT_REFERENCE)
-			{
-				g_SlenderDeathCamTimer[bossIndex] = CreateTimer(g_SlenderDeathCamOverlayTimeStart[bossIndex], Timer_BossDeathCamDelay, EntIndexToEntRef(slenderEnt), TIMER_FLAG_NO_MAPCHANGE);
-			}
-		}
-		g_PlayerDeathCamTimer[client] = CreateTimer(g_SlenderDeathCamOverlayTimeStart[bossIndex], Timer_ClientResetDeathCam1, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		duration = g_SlenderDeathCamOverlayTimeStart[bossIndex];
 	}
-	else
+	if (duration <= 0.0 && publicDeathcam)
 	{
-		if (g_SlenderPublicDeathCam[bossIndex] && !antiCamp)
+		char animation[64];
+		SF2BossProfileMasterAnimationsData animData;
+		animData = data.AnimationData;
+		float rate = 1.0, cycle = 0.0;
+		animData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], difficulty, animation, sizeof(animation), rate, duration, cycle);
+		CBaseAnimating animator = CBaseAnimating(slender);
+		int sequence = animator.LookupSequence(animation);
+		if (duration <= 0.0 && sequence != -1)
 		{
-			int slenderEnt = NPCGetEntIndex(bossIndex);
-			if (slenderEnt && slenderEnt != INVALID_ENT_REFERENCE)
-			{
-				g_SlenderDeathCamTimer[bossIndex] = CreateTimer(g_SlenderDeathCamTime[bossIndex], Timer_BossDeathCamDuration, EntIndexToEntRef(slenderEnt), TIMER_FLAG_NO_MAPCHANGE);
-			}
+			duration = animator.SequenceDuration(sequence) / rate;
+			duration *= (1.0 - cycle);
 		}
-		g_PlayerDeathCamTimer[client] = CreateTimer(g_SlenderDeathCamTime[bossIndex], Timer_ClientResetDeathCamEnd, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 
-	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+	g_PlayerDeathCamTimer[client] = duration;
+	g_PlayerDeathCamMustDoOverlay[client] = g_SlenderDeathCamOverlay[bossIndex];
+	g_PlayerDeathCam[client] = true;
+
+	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, { 0.0, 0.0, 0.0 });
 
 	Call_StartForward(g_OnClientStartDeathCamFwd);
 	Call_PushCell(client);
@@ -386,112 +441,11 @@ static void Frame_PublicDeathCam(int cameraRef)
 	}
 }
 
-static Action Timer_ClientResetDeathCam1(Handle timer, any userid)
+static void StopDeathCam(int client)
 {
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
+	if (!IsValidClient(client))
 	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_PlayerDeathCamTimer[client])
-	{
-		return Plugin_Stop;
-	}
-
-	SF2NPC_BaseNPC Npc = view_as<SF2NPC_BaseNPC>(NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]));
-
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-
-	if (Npc.IsValid())
-	{
-		g_PlayerDeathCamShowOverlay[client] = true;
-		Npc.GetProfile(profile, sizeof(profile));
-		SF2BossProfileSoundInfo soundInfo;
-		GetBossProfilePlayerDeathcamOverlaySounds(profile, soundInfo);
-		soundInfo.EmitSound(true, client);
-		g_PlayerDeathCamTimer[client] = CreateTimer(g_SlenderDeathCamTime[Npc.Index], Timer_ClientResetDeathCamEnd, userid, TIMER_FLAG_NO_MAPCHANGE);
-	}
-
-	return Plugin_Stop;
-}
-
-static Action Timer_BossDeathCamDelay(Handle timer, any entref)
-{
-	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromEntIndex(slender));
-
-	if (timer != g_SlenderDeathCamTimer[Npc.Index])
-	{
-		return Plugin_Stop;
-	}
-
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	Npc.GetProfile(profile, sizeof(profile));
-
-	g_SlenderDeathCamTimer[Npc.Index] = CreateTimer(g_SlenderDeathCamTime[Npc.Index], Timer_BossDeathCamDuration, slender, TIMER_FLAG_NO_MAPCHANGE);
-
-	return Plugin_Stop;
-}
-
-static Action Timer_BossDeathCamDuration(Handle timer, any entref)
-{
-	int slender = EntRefToEntIndex(entref);
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	SF2NPC_Chaser Npc = SF2NPC_Chaser(NPCGetFromEntIndex(slender));
-
-	if (timer != g_SlenderDeathCamTimer[Npc.Index])
-	{
-		return Plugin_Stop;
-	}
-
-	if (g_SlenderInDeathcam[Npc.Index])
-	{
-		SetEntityRenderMode(slender, RENDER_NORMAL);
-		if (!Npc.CloakEnabled)
-		{
-			SetEntityRenderColor(slender, Npc.GetRenderColor(0), Npc.GetRenderColor(1), Npc.GetRenderColor(2), Npc.GetRenderColor(3));
-		}
-		g_SlenderEntityThink[Npc.Index] = CreateTimer(BOSS_THINKRATE, Timer_SlenderChaseBossThink, EntIndexToEntRef(slender), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-		if (!(Npc.Flags & SFF_FAKE))
-		{
-			g_SlenderInDeathcam[Npc.Index] = false;
-		}
-		Npc.UpdateAnimation(slender, Npc.State);
-	}
-	if ((Npc.Flags & SFF_FAKE))
-	{
-		if (g_SlenderInDeathcam[Npc.Index])
-		{
-			g_SlenderInDeathcam[Npc.Index] = false;
-		}
-		Npc.MarkAsFake();
-	}
-	g_SlenderDeathCamTimer[Npc.Index] = null;
-
-	return Plugin_Stop;
-}
-
-static Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
-	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_PlayerDeathCamTimer[client])
-	{
-		return Plugin_Stop;
+		return;
 	}
 
 	SetEntProp(client, Prop_Data, "m_takedamage", 2); // We do this because the point_viewcontrol entity changes our damage state.
@@ -499,37 +453,55 @@ static Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 	SF2NPC_BaseNPC deathCamBoss = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]));
 	if (deathCamBoss != SF2_INVALID_NPC)
 	{
-		float value = deathCamBoss.GetAttributeValue(SF2Attribute_IgnitePlayerOnDeath);
-		if (value > 0.0)
-		{
-			TF2_IgnitePlayer(client, client);
-		}
 		if (!(deathCamBoss.Flags & SFF_FAKE))
 		{
-			int slenderEnt = deathCamBoss.EntIndex;
-			if (slenderEnt > MaxClients)
+			if (deathCamBoss.HasAttribute(SF2Attribute_IgnitePlayerOnDeath))
 			{
-				SDKHooks_TakeDamage(client, slenderEnt, slenderEnt, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+				TF2_IgnitePlayer(client, client);
 			}
-			SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
-			ForcePlayerSuicide(client);//Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
+
+			SF2BossProfileData data;
+			data = deathCamBoss.GetProfileData();
+			if (data.DeathCamData.Enabled && data.DeathCamData.Blackout && !g_Hooked)
+			{
+				AddNormalSoundHook(NoPlayerVoiceHook);
+				g_Hooked = true;
+			}
+
+			Call_StartForward(g_OnClientPreKillDeathCamFwd);
+			Call_PushCell(client);
+			Call_PushCell(deathCamBoss.Index);
+			Call_Finish();
+
+			SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+			ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 			KillClient(client);
 		}
 		else
 		{
 			SetEntityMoveType(client, MOVETYPE_WALK);
-			TeleportEntity(client, g_PlayerOriginalDeathcamPosition[client], NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+			TeleportEntity(client, g_PlayerOriginalDeathcamPosition[client], NULL_VECTOR, { 0.0, 0.0, 0.0 });
+			int light = ClientGetFlashlightEntity(client);
+			if (light && light != INVALID_ENT_REFERENCE)
+			{
+				float eyePos[3], eyeAng[3];
+				GetClientEyePosition(client, eyePos);
+				GetClientEyeAngles(client, eyeAng);
+				SetVariantString("!activator");
+				AcceptEntityInput(light, "ClearParent");
+				TeleportEntity(light, eyePos, eyeAng, NULL_VECTOR);
+				SetVariantString("!activator");
+				AcceptEntityInput(light, "SetParent", client);
+			}
 		}
 	}
-	else //The boss is invalid? But the player got a death cam?
+	else // The boss is invalid? But the player got a death cam?
 	{
-		//Then kill him anyways.
+		// Then kill him anyways.
 		KillClient(client);
 		ForcePlayerSuicide(client);
 	}
 	ClientResetDeathCam(client);
-
-	return Plugin_Stop;
 }
 
 static void Hook_DeathCamThink(int client)
@@ -557,5 +529,33 @@ static void Hook_DeathCamThink(int client)
 
 		player.SetLocalOrigin(camPos);
 		player.SetLocalAngles(camAngs);
+	}
+
+	g_PlayerDeathCamTimer[player.index] -= GetGameFrameTime();
+	if (g_PlayerDeathCamTimer[player.index] <= 0.0)
+	{
+		if (g_PlayerDeathCamMustDoOverlay[player.index])
+		{
+			SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[player.index]));
+			float duration = 0.0;
+			if (Npc.IsValid())
+			{
+				g_PlayerDeathCamShowOverlay[player.index] = true;
+				SF2BossProfileData data;
+				data = Npc.GetProfileData();
+				SF2BossProfileSoundInfo soundInfo;
+				soundInfo = data.PlayerDeathCamOverlaySounds;
+				soundInfo.EmitSound(true, player.index);
+				duration = g_SlenderDeathCamTime[Npc.Index];
+				duration -= g_SlenderDeathCamOverlayTimeStart[Npc.Index];
+			}
+			g_PlayerDeathCamTimer[player.index] = duration;
+			g_PlayerDeathCamMustDoOverlay[player.index] = false;
+			return;
+		}
+		else
+		{
+			StopDeathCam(player.index);
+		}
 	}
 }

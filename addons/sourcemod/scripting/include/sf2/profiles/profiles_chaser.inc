@@ -1,4 +1,5 @@
 ConVar g_DefaultBossVisibilityStateConVar;
+#include <morecolors>
 
 enum
 {
@@ -9,7 +10,7 @@ enum
 	SF2BossAttackType_ExplosiveDance = 3,
 	SF2BossAttackType_LaserBeam = 4,
 	SF2BossAttackType_Custom = 5,
-	SF2BossAttackType_Unused
+	SF2BossAttackType_Tongue = 6
 };
 
 enum
@@ -23,7 +24,6 @@ enum
 	SF2BossProjectileType_Arrow = 5,
 	SF2BossProjectileType_Mangler = 6,
 	SF2BossProjectileType_Baseball = 7,
-	SF2BossProjectileType_Unused,
 	SF2BossProjectileType_Custom
 };
 
@@ -31,31 +31,47 @@ enum
 {
 	SF2BossTrapType_Invalid = -1,
 	SF2BossTrapType_BearTrap = 0,
-	SF2BossTrapType_Unused,
 	SF2BossTrapType_Custom
 };
+
+enum
+{
+	SF2DamageType_Invalid = -1,
+	SF2DamageType_Jarate = 0,
+	SF2DamageType_Milk,
+	SF2DamageType_Gas,
+	SF2DamageType_Mark,
+	SF2DamageType_Ignite,
+	SF2DamageType_Stun,
+	SF2DamageType_Bleed,
+	SF2DamageType_Smite,
+	SF2DamageType_Random
+}
 
 enum struct SF2BossProfileAttackGestureData // This one covers the gestures
 {
 	ArrayList Names;
 	float Playbackrate[Difficulty_Max];
 	float Cycle[Difficulty_Max];
+	char SectionName[64];
 
-	void Init()
+	void Init(char optionalSectionName[64] = "")
 	{
-		this.Names = new ArrayList(ByteCountToCells(64));
-		this.Names.Resize(Difficulty_Max);
+		this.Names = null;
+		this.SectionName = optionalSectionName;
 
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
-			this.Playbackrate[i] = this.Playbackrate[i] = i > 0 ? this.Playbackrate[i - 1] : 1.0;
-			this.Cycle[i] = this.Cycle[i] = i > 0 ? this.Cycle[i - 1] : 0.0;
+			this.Playbackrate[i] = 1.0;
+			this.Cycle[i] = 0.0;
 		}
 	}
 
 	void Load(KeyValues kv)
 	{
 		char animNames[Difficulty_Max][64];
+		this.Names = new ArrayList(ByteCountToCells(64));
+		this.Names.Resize(Difficulty_Max);
 
 		GetProfileDifficultyStringValues(kv, "gesture_name", animNames, sizeof(animNames[]), animNames);
 		GetProfileDifficultyFloatValues(kv, "gesture_playbackrate", this.Playbackrate, this.Playbackrate);
@@ -86,8 +102,533 @@ enum struct SF2BossProfileAttackGestureData // This one covers the gestures
 	}
 }
 
+enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
+{
+	int Type;
+	bool Enabled[Difficulty_Max];
+	float Duration[Difficulty_Max];
+	SF2BossProfileSoundInfo Sounds;
+	ArrayList Particles;
+
+	bool MarkSilent[Difficulty_Max];
+
+	float StunSlowdown[Difficulty_Max];
+	ArrayList StunFlags;
+
+	int SmiteSprite;
+	int SmiteSmokeSprite;
+	float SmiteDamage[Difficulty_Max];
+	int SmiteDamageType[Difficulty_Max];
+	int SmiteColor[4];
+	bool SmiteMessage;
+	char SmiteHitSound[PLATFORM_MAX_PATH];
+
+	ArrayList Types;
+
+	void Init()
+	{
+		this.Type = SF2DamageType_Invalid;
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+			this.Duration[i] = 8.0;
+
+			this.MarkSilent[i] = false;
+
+			this.StunSlowdown[i] = 0.5;
+
+			this.SmiteDamage[i] = 9001.0;
+			this.SmiteDamageType[i] = (1 << 20);
+		}
+		this.Sounds.Init();
+		this.Particles = null;
+
+		this.StunFlags = null;
+
+		this.SmiteSprite = PrecacheModel("sprites/lgtning.vmt");
+		this.SmiteSmokeSprite = PrecacheModel("sprites/steam1.vmt");
+		for (int i = 0; i < 4; i++)
+		{
+			this.SmiteColor[i] = 255;
+		}
+		this.SmiteMessage = false;
+		this.SmiteHitSound = SOUND_THUNDER;
+
+		this.Types = null;
+	}
+
+	bool SetType(const char[] section)
+	{
+		if (strcmp(section, "ignite") == 0)
+		{
+			this.Type = SF2DamageType_Ignite;
+		}
+		else if (strcmp(section, "gas") == 0)
+		{
+			this.Type = SF2DamageType_Gas;
+		}
+		else if (strcmp(section, "bleed") == 0)
+		{
+			this.Type = SF2DamageType_Bleed;
+		}
+		else if (strcmp(section, "mark") == 0)
+		{
+			this.Type = SF2DamageType_Mark;
+		}
+		else if (strcmp(section, "jarate") == 0)
+		{
+			this.Type = SF2DamageType_Jarate;
+		}
+		else if (strcmp(section, "milk") == 0)
+		{
+			this.Type = SF2DamageType_Milk;
+		}
+		else if (strcmp(section, "stun") == 0)
+		{
+			this.Type = SF2DamageType_Stun;
+		}
+		else if (strcmp(section, "smite") == 0)
+		{
+			this.Type = SF2DamageType_Smite;
+		}
+		else if (strcmp(section, "random") == 0)
+		{
+			this.Types = new ArrayList();
+			this.Type = SF2DamageType_Random;
+		}
+
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return false;
+		}
+
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = true;
+		}
+
+		return true;
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "duration", this.Duration, this.Duration);
+
+		GetProfileDifficultyBoolValues(kv, "silent", this.MarkSilent, this.MarkSilent);
+
+		char flags[Difficulty_Max][256];
+		GetProfileDifficultyFloatValues(kv, "slow_multiplier", this.StunSlowdown, this.StunSlowdown);
+		this.StunFlags = new ArrayList(ByteCountToCells(256));
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			flags[i] = "slow";
+		}
+		GetProfileDifficultyStringValues(kv, "flags", flags, sizeof(flags[]), flags);
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.StunFlags.PushString(flags[i]);
+		}
+
+		GetProfileDifficultyFloatValues(kv, "damage", this.SmiteDamage, this.SmiteDamage);
+		GetProfileDifficultyNumValues(kv, "damagetype", this.SmiteDamageType, this.SmiteDamageType);
+
+		GetProfileColorNoBacks(kv, "color", this.SmiteColor[0], this.SmiteColor[1], this.SmiteColor[2], this.SmiteColor[3],
+													this.SmiteColor[0], this.SmiteColor[1], this.SmiteColor[2], this.SmiteColor[3]);
+		this.SmiteMessage = kv.GetNum("message", this.SmiteMessage) != 0;
+		kv.GetString("hit_sound", this.SmiteHitSound, sizeof(this.SmiteHitSound), this.SmiteHitSound);
+
+		if (this.Types != null)
+		{
+			char type[256];
+			kv.GetString("random_types", type, sizeof(type));
+			char types[32][32];
+			int nums = ExplodeString(type, " ", types, sizeof(types), sizeof(types[]));
+			for (int i = 0; i < nums; i++)
+			{
+				if (strcmp(types[i], "ignite") == 0)
+				{
+					this.Types.Push(SF2DamageType_Ignite);
+				}
+				else if (strcmp(types[i], "gas") == 0)
+				{
+					this.Types.Push(SF2DamageType_Gas);
+				}
+				else if (strcmp(types[i], "bleed") == 0)
+				{
+					this.Types.Push(SF2DamageType_Bleed);
+				}
+				else if (strcmp(types[i], "mark") == 0)
+				{
+					this.Types.Push(SF2DamageType_Mark);
+				}
+				else if (strcmp(types[i], "jarate") == 0)
+				{
+					this.Types.Push(SF2DamageType_Jarate);
+				}
+				else if (strcmp(types[i], "milk") == 0)
+				{
+					this.Types.Push(SF2DamageType_Milk);
+				}
+				else if (strcmp(types[i], "stun") == 0)
+				{
+					this.Types.Push(SF2DamageType_Stun);
+				}
+				else if (strcmp(types[i], "smite") == 0)
+				{
+					this.Types.Push(SF2DamageType_Smite);
+				}
+			}
+		}
+
+		if (kv.JumpToKey("sounds"))
+		{
+			this.Sounds.Load(kv, checkFile);
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("particles"))
+		{
+			this.Particles = new ArrayList(sizeof(SF2ParticleData));
+			if (kv.GotoFirstSubKey())
+			{
+				do
+				{
+					SF2ParticleData particle;
+					particle.Init();
+					particle.Load(kv);
+					this.Particles.PushArray(particle, sizeof(particle));
+				}
+				while (kv.GotoNextKey());
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+	}
+
+	void PostLoad()
+	{
+		this.Sounds.PostLoad();
+	}
+
+	int GetStunType(int difficulty)
+	{
+		char flag[256];
+		this.StunFlags.GetString(difficulty, flag, sizeof(flag));
+		char flags[32][64];
+		int nums = ExplodeString(flag, " ", flags, sizeof(flags), sizeof(flags[]));
+		int value = 0;
+
+		for (int i = 0; i < nums; i++)
+		{
+			if (strcmp(flags[i], "slow") == 0)
+			{
+				value |= (1 << 0);
+			}
+			else if (strcmp(flags[i], "stuck") == 0)
+			{
+				value |= (1 << 1);
+			}
+			else if (strcmp(flags[i], "cheer_fx") == 0)
+			{
+				value |= (1 << 3);
+			}
+			else if (strcmp(flags[i], "no_fx") == 0)
+			{
+				value |= (1 << 5);
+			}
+			else if (strcmp(flags[i], "thirdperson") == 0)
+			{
+				value |= (1 << 6);
+			}
+			else if (strcmp(flags[i], "ghost_fx") == 0)
+			{
+				value |= (1 << 7);
+			}
+			else if (strcmp(flags[i], "loser") == 0)
+			{
+				value |= (1 << 0) | (1 << 5) | (1 << 6);
+			}
+			else if (strcmp(flags[i], "boo") == 0)
+			{
+				value |= (1 << 7) | (1 << 6);
+			}
+		}
+
+		return value;
+	}
+
+	void Destroy()
+	{
+		if (this.Particles != null)
+		{
+			delete this.Particles;
+		}
+		if (this.StunFlags != null)
+		{
+			delete this.StunFlags;
+		}
+		if (this.Types != null)
+		{
+			delete this.Types;
+		}
+		this.Sounds.Destroy();
+	}
+
+	void Apply(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	{
+		if (!this.Enabled[difficulty])
+		{
+			return;
+		}
+		this.Sounds.EmitSound(_, chaser.index);
+		if (this.Particles != null)
+		{
+			SF2ParticleData particle;
+			this.Particles.GetArray(GetRandomInt(0, this.Particles.Length - 1), particle, sizeof(particle));
+			particle.Apply(player, chaser);
+		}
+		int type = this.Type;
+		if (type == SF2DamageType_Random)
+		{
+			type = this.Types.Get(GetRandomInt(0, this.Types.Length - 1));
+		}
+		switch (type)
+		{
+			case SF2DamageType_Ignite:
+			{
+				TF2_IgnitePlayer(player.index, player.index, this.Duration[difficulty]);
+			}
+			case SF2DamageType_Gas:
+			{
+				TF2_AddCondition(player.index, TFCond_Gas, this.Duration[difficulty], player.index);
+			}
+			case SF2DamageType_Mark:
+			{
+				TF2_AddCondition(player.index, this.MarkSilent[difficulty] ? TFCond_MarkedForDeathSilent : TFCond_MarkedForDeath, this.Duration[difficulty], player.index);
+			}
+			case SF2DamageType_Bleed:
+			{
+				TF2_MakeBleed(player.index, player.index, this.Duration[difficulty]);
+			}
+			case SF2DamageType_Milk:
+			{
+				TF2_AddCondition(player.index, TFCond_Milked, this.Duration[difficulty], player.index);
+			}
+			case SF2DamageType_Jarate:
+			{
+				TF2_AddCondition(player.index, TFCond_Jarated, this.Duration[difficulty], player.index);
+			}
+			case SF2DamageType_Stun:
+			{
+				TF2_StunPlayer(player.index, this.Duration[difficulty], this.StunSlowdown[difficulty], this.GetStunType(difficulty));
+			}
+			case SF2DamageType_Smite:
+			{
+				float targetPos[3];
+				player.GetAbsOrigin(targetPos);
+				targetPos[2] -= 26.0;
+
+				int randomX = GetRandomInt(-500, 500);
+				int randomY = GetRandomInt(-500, 500);
+
+				float startPos[3];
+				startPos[0] = targetPos[0] + randomX;
+				startPos[1] = targetPos[1] + randomY;
+				startPos[2] = targetPos[2] + 800.0;
+
+				float origin[3];
+				TE_SetupBeamPoints(startPos, targetPos, this.SmiteSprite, 0, 0, 0, 0.2, 20.0, 10.0, 0, 1.0, this.SmiteColor, 3);
+				TE_SendToAll();
+
+				TE_SetupSparks(targetPos, origin, 5000, 1000);
+				TE_SendToAll();
+
+				TE_SetupEnergySplash(targetPos, origin, false);
+				TE_SendToAll();
+
+				TE_SetupSmoke(targetPos, this.SmiteSmokeSprite, 5.0, 10);
+				TE_SendToAll();
+
+				EmitAmbientSound(this.SmiteHitSound, startPos, player.index, SNDLEVEL_SCREAMING);
+				SDKHooks_TakeDamage(player.index, chaser.index, chaser.index, this.SmiteDamage[difficulty], this.SmiteDamageType[difficulty]);
+
+				int controller = chaser.Controller;
+				if (this.SmiteMessage && controller > -1 && GetClientTeam(player.index) == 2)
+				{
+					char playerName[32], bossName[SF2_MAX_NAME_LENGTH];
+					GetClientName(player.index, playerName, sizeof(playerName));
+					chaser.GetName(bossName, sizeof(bossName));
+					CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", bossName, playerName);
+				}
+			}
+		}
+	}
+}
+
+enum struct SF2ChaserBossProfileShockwaveData
+{
+	bool Enabled;
+	float Height[Difficulty_Max];
+	float Radius[Difficulty_Max];
+	float Force[Difficulty_Max];
+	float BatteryDrainPercent[Difficulty_Max];
+	int StaminaDrainPercent[Difficulty_Max];
+
+	ArrayList Effects;
+	ArrayList DamageEffects;
+
+	void Init()
+	{
+		this.Enabled = false;
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Height[i] = 80.0;
+			this.Radius[i] = 200.0;
+			this.Force[i] = 600.0;
+			this.BatteryDrainPercent[i] = 0.0;
+			this.StaminaDrainPercent[i] = 0;
+		}
+
+		this.Effects = null;
+		this.DamageEffects = null;
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		this.Enabled = true;
+		GetProfileDifficultyFloatValues(kv, "height", this.Height, this.Height);
+		GetProfileDifficultyFloatValues(kv, "radius", this.Radius, this.Radius);
+		GetProfileDifficultyFloatValues(kv, "force", this.Force, this.Force);
+		GetProfileDifficultyFloatValues(kv, "battery_drain", this.BatteryDrainPercent, this.BatteryDrainPercent);
+		GetProfileDifficultyNumValues(kv, "stamina_drain", this.StaminaDrainPercent, this.StaminaDrainPercent);
+
+		if (kv.JumpToKey("effects"))
+		{
+			this.Effects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+			if (kv.GotoFirstSubKey())
+			{
+				do
+				{
+					SF2BossProfileBaseEffectInfo effect;
+					effect.Init();
+					effect.Load(kv, checkFile);
+					this.Effects.PushArray(effect);
+				}
+				while (kv.GotoNextKey());
+
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("apply_conditions"))
+		{
+			this.DamageEffects = new ArrayList(sizeof(SF2ChaserBossProfileDamageEffectData));
+			if (kv.GotoFirstSubKey())
+			{
+				do
+				{
+					char section[64];
+					SF2ChaserBossProfileDamageEffectData damageData;
+					damageData.Init();
+					kv.GetSectionName(section, sizeof(section));
+					if (!damageData.SetType(section))
+					{
+						continue;
+					}
+					damageData.Load(kv, checkFile);
+					this.DamageEffects.PushArray(damageData, sizeof(damageData));
+				}
+				while (kv.GotoNextKey());
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+	}
+
+	void PostLoad()
+	{
+		if (this.Effects != null && this.Effects.Length <= 0)
+		{
+			delete this.Effects;
+		}
+		if (this.DamageEffects != null)
+		{
+			SF2ChaserBossProfileDamageEffectData damageData;
+			for (int i = 0; i < this.DamageEffects.Length; i++)
+			{
+				this.DamageEffects.GetArray(i, damageData, sizeof(damageData));
+				damageData.PostLoad();
+			}
+		}
+
+		if (this.Effects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.Effects.Length; i++)
+			{
+				this.Effects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+	}
+
+	void Destroy()
+	{
+		if (this.Effects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.Effects.Length; i++)
+			{
+				this.Effects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.Effects;
+		}
+		if (this.DamageEffects != null)
+		{
+			SF2ChaserBossProfileDamageEffectData damageData;
+			for (int i = 0; i < this.DamageEffects.Length; i++)
+			{
+				this.DamageEffects.GetArray(i, damageData, sizeof(damageData));
+				damageData.Destroy();
+			}
+			delete this.DamageEffects;
+		}
+	}
+
+	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	{
+		if (this.DamageEffects == null)
+		{
+			return;
+		}
+
+		if (!player.IsValid())
+		{
+			return;
+		}
+
+		for (int i = 0; i < this.DamageEffects.Length; i++)
+		{
+			SF2ChaserBossProfileDamageEffectData damageData;
+			for (int i2 = 0; i2 < this.DamageEffects.Length; i2++)
+			{
+				this.DamageEffects.GetArray(i2, damageData, sizeof(damageData));
+				damageData.Apply(player, difficulty, chaser);
+			}
+		}
+	}
+}
+
 enum struct SF2ChaserBossProfileAttackData
 {
+	int Index;
+	char Name[64];
+
 	int Type;
 
 	bool CanUseAgainstProps;
@@ -156,13 +697,15 @@ enum struct SF2ChaserBossProfileAttackData
 	float RunSpeed[Difficulty_Max];
 	float RunDuration[Difficulty_Max];
 	float RunDelay[Difficulty_Max];
+	float RunAcceleration[Difficulty_Max];
+	bool RunGroundSpeed[Difficulty_Max];
 
 	int UseOnDifficulty;
 	int BlockOnDifficulty;
 	float UseOnHealth;
 	float BlockOnHealth;
 
-	int ExplosiveDanceRadius[Difficulty_Max];
+	float ExplosiveDanceRadius[Difficulty_Max];
 
 	bool Gestures;
 
@@ -172,20 +715,48 @@ enum struct SF2ChaserBossProfileAttackData
 
 	bool CancelLos[Difficulty_Max];
 	float CancelDistance[Difficulty_Max];
+	float MinCancelDistance[Difficulty_Max];
+
+	int EventNumber;
+
+	char SubType[64];
+
+	SF2ChaserBossProfileShockwaveData Shockwave;
+
+	ArrayList StartEffects;
+	ArrayList HitEffects;
+	ArrayList MissEffects;
+	ArrayList DamageEffects;
+
+	bool ImmuneToDamage[Difficulty_Max];
+
+	ArrayList PostureWhitelist;
+
+	SF2BossProfileSoundInfo TongueLaunchSound;
+	SF2BossProfileSoundInfo TongueHitSound;
+	SF2BossProfileSoundInfo TongueTiedSound;
+	float TongueSpeed[Difficulty_Max];
+	float TonguePullScale[Difficulty_Max];
+	bool TongueCanEscape[Difficulty_Max];
+	char TongueMaterial[PLATFORM_MAX_PATH];
+	char TongueAttachment[PLATFORM_MAX_PATH];
+	float TongueOffset[3];
+
+	SF2BossProfileMasterAnimationsData Animations;
 
 	void Init()
 	{
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.Damage[difficulty] = 0.0;
+			this.Damage[difficulty] = 50.0;
 			this.DamageForce[difficulty] = 0.0;
-			this.DamageType[difficulty] = 0;
+			this.DamageType[difficulty] = 128;
 			this.DamageDelay[difficulty] = 0.0;
 
-			this.Range[difficulty] = 0.0;
+			this.Range[difficulty] = 180.0;
 			this.Duration[difficulty] = 0.0;
 			this.Spread[difficulty] = 45.0;
-			this.BeginRange[difficulty] = this.Range[difficulty];
+			this.BeginRange[difficulty] = 80.0;
 			this.BeginFOV[difficulty] = this.Spread[difficulty];
 
 			this.Cooldown[difficulty] = 0.0;
@@ -218,13 +789,22 @@ enum struct SF2ChaserBossProfileAttackData
 			this.RunDuration[difficulty] = 0.0;
 			this.RunDelay[difficulty] = 0.0;
 			this.RunSpeed[difficulty] = 0.0;
+			this.RunAcceleration[difficulty] = 4000.0;
+			this.RunGroundSpeed[difficulty] = false;
 
-			this.ExplosiveDanceRadius[difficulty] = 350;
+			this.ExplosiveDanceRadius[difficulty] = 350.0;
 
 			this.DontInterruptChaseInitial[difficulty] = false;
 
 			this.CancelLos[difficulty] = false;
 			this.CancelDistance[difficulty] = -1.0;
+			this.MinCancelDistance[difficulty] = -1.0;
+
+			this.ImmuneToDamage[difficulty] = false;
+
+			this.TongueSpeed[difficulty] = 900.0;
+			this.TonguePullScale[difficulty] = 6.0;
+			this.TongueCanEscape[difficulty] = true;
 		}
 		for (int i = 0; i < 3; i++)
 		{
@@ -236,7 +816,12 @@ enum struct SF2ChaserBossProfileAttackData
 
 			this.LaserColor[i] = 0;
 			this.LaserOffset[i] = 0.0;
+
+			this.TongueOffset[i] = 0.0;
 		}
+		this.Index = -1;
+		this.Name[0] = '\0';
+
 		this.Type = SF2BossAttackType_Melee;
 
 		this.CanUseAgainstProps = false;
@@ -272,6 +857,96 @@ enum struct SF2ChaserBossProfileAttackData
 		this.Gestures = false;
 
 		this.DeathCamLowHealth = false;
+
+		this.EventNumber = -1;
+
+		this.SubType[0] = '\0';
+
+		this.Shockwave.Init();
+
+		this.StartEffects = null;
+		this.HitEffects = null;
+		this.MissEffects = null;
+		this.DamageEffects = null;
+
+		this.PostureWhitelist = null;
+
+		this.TongueLaunchSound.Init();
+		this.TongueHitSound.Init();
+		this.TongueTiedSound.Init();
+		this.TongueMaterial[0] = '\0';
+		this.TongueAttachment[0] = '\0';
+	}
+
+	void PostLoad()
+	{
+		this.Shockwave.PostLoad();
+		if (this.StartEffects != null && this.StartEffects.Length <= 0)
+		{
+			delete this.StartEffects;
+		}
+
+		if (this.HitEffects != null && this.HitEffects.Length <= 0)
+		{
+			delete this.HitEffects;
+		}
+
+		if (this.MissEffects != null && this.MissEffects.Length <= 0)
+		{
+			delete this.MissEffects;
+		}
+
+		if (this.DamageEffects != null)
+		{
+			SF2ChaserBossProfileDamageEffectData damageData;
+			for (int i = 0; i < this.DamageEffects.Length; i++)
+			{
+				this.DamageEffects.GetArray(i, damageData, sizeof(damageData));
+				damageData.PostLoad();
+			}
+		}
+
+		if (this.StartEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.StartEffects.Length; i++)
+			{
+				this.StartEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.HitEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.HitEffects.Length; i++)
+			{
+				this.HitEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.MissEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.MissEffects.Length; i++)
+			{
+				this.MissEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.PostureWhitelist != null && this.PostureWhitelist.Length == 0)
+		{
+			delete this.PostureWhitelist;
+		}
+
+		this.TongueLaunchSound.PostLoad();
+		this.TongueHitSound.PostLoad();
+		this.TongueTiedSound.PostLoad();
 	}
 
 	void Destroy()
@@ -280,6 +955,103 @@ enum struct SF2ChaserBossProfileAttackData
 		{
 			delete this.RepeatTimers;
 		}
+
+		if (this.StartEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.StartEffects.Length; i++)
+			{
+				this.StartEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.StartEffects;
+		}
+
+		if (this.HitEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.HitEffects.Length; i++)
+			{
+				this.HitEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.HitEffects;
+		}
+
+		if (this.MissEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.MissEffects.Length; i++)
+			{
+				this.MissEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.MissEffects;
+		}
+
+		if (this.DamageEffects != null)
+		{
+			SF2ChaserBossProfileDamageEffectData damageData;
+			for (int i = 0; i < this.DamageEffects.Length; i++)
+			{
+				this.DamageEffects.GetArray(i, damageData, sizeof(damageData));
+				damageData.Destroy();
+			}
+			delete this.DamageEffects;
+		}
+		this.Shockwave.Destroy();
+
+		if (this.PostureWhitelist != null)
+		{
+			delete this.PostureWhitelist;
+		}
+
+		this.TongueLaunchSound.Destroy();
+		this.TongueHitSound.Destroy();
+		this.TongueTiedSound.Destroy();
+
+		this.Animations.Destroy();
+	}
+
+	bool IsSubType(const char[] subType)
+	{
+		return strcmp(subType, this.SubType) == 0;
+	}
+
+	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	{
+		if (this.DamageEffects == null)
+		{
+			return;
+		}
+
+		if (!player.IsValid())
+		{
+			return;
+		}
+
+		for (int i = 0; i < this.DamageEffects.Length; i++)
+		{
+			SF2ChaserBossProfileDamageEffectData damageData;
+			for (int i2 = 0; i2 < this.DamageEffects.Length; i2++)
+			{
+				this.DamageEffects.GetArray(i2, damageData, sizeof(damageData));
+				damageData.Apply(player, difficulty, chaser);
+			}
+		}
+	}
+
+	bool CanBeUsedWithPosture(const char[] posture)
+	{
+		if (this.PostureWhitelist == null)
+		{
+			return true;
+		}
+
+		return this.PostureWhitelist.FindString(posture) != -1;
 	}
 }
 
@@ -292,8 +1064,838 @@ enum struct SF2ChaserBossProfileSoundSenseData
 	{
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.AddCount[difficulty] = this.AddCount[difficulty] = difficulty > 0 ? this.AddCount[difficulty - 1] : 2;
-			this.Cooldown[difficulty] = this.Cooldown[difficulty] = difficulty > 0 ? this.Cooldown[difficulty - 1] : 0.0;
+			this.AddCount[difficulty] = 2;
+			this.Cooldown[difficulty] = 0.0;
+		}
+	}
+}
+
+enum struct SF2ChaserBossProfileSmellData
+{
+	bool Enabled[Difficulty_Max];
+	float CooldownMin[Difficulty_Max];
+	float CooldownMax[Difficulty_Max];
+	int PlayerCount[Difficulty_Max];
+	float PlayerRange[Difficulty_Max];
+	float SmellRange[Difficulty_Max];
+	bool ShouldChase[Difficulty_Max];
+
+	void Init()
+	{
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.CooldownMin[difficulty] = 6.0;
+			this.CooldownMax[difficulty] = 12.0;
+			this.PlayerCount[difficulty] = 1;
+			this.PlayerRange[difficulty] = 1000.0;
+			this.SmellRange[difficulty] = 1500.0;
+			this.ShouldChase[difficulty] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "cooldown_min", this.CooldownMin, this.CooldownMin);
+		GetProfileDifficultyFloatValues(kv, "cooldown_max", this.CooldownMax, this.CooldownMax);
+		GetProfileDifficultyNumValues(kv, "required_players", this.PlayerCount, this.PlayerCount);
+		GetProfileDifficultyFloatValues(kv, "required_player_range", this.PlayerRange, this.PlayerRange);
+		GetProfileDifficultyFloatValues(kv, "smelling_range", this.SmellRange, this.SmellRange);
+		GetProfileDifficultyBoolValues(kv, "should_chase_upon_smelled", this.ShouldChase, this.ShouldChase);
+	}
+}
+
+enum struct SF2ChaserBossProfileDeathData
+{
+	bool Enabled[Difficulty_Max];
+	float Health[Difficulty_Max];
+	bool RemoveOnDeath;
+	bool DisappearOnDeath;
+	bool RagdollOnDeath;
+
+	bool KeyDrop;
+	char KeyModel[PLATFORM_MAX_PATH];
+	char KeyTrigger[PLATFORM_MAX_PATH];
+
+	bool ItemDrop[Difficulty_Max];
+	int ItemDropType[Difficulty_Max];
+
+	float AddHealthPerPlayer[Difficulty_Max];
+	float AddHealthPerScout[Difficulty_Max];
+	float AddHealthPerSoldier[Difficulty_Max];
+	float AddHealthPerPyro[Difficulty_Max];
+	float AddHealthPerDemoman[Difficulty_Max];
+	float AddHealthPerHeavy[Difficulty_Max];
+	float AddHealthPerEngineer[Difficulty_Max];
+	float AddHealthPerMedic[Difficulty_Max];
+	float AddHealthPerSniper[Difficulty_Max];
+	float AddHealthPerSpy[Difficulty_Max];
+	float AddHealthPerDeath[Difficulty_Max];
+
+	void Init()
+	{
+		this.RemoveOnDeath = false;
+		this.DisappearOnDeath = false;
+		this.RagdollOnDeath = false;
+
+		this.KeyDrop = false;
+		this.KeyModel = SF_KEYMODEL;
+		this.KeyTrigger[0] = '\0';
+
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.Health[difficulty] = 400.0;
+
+			this.ItemDrop[difficulty] = false;
+			this.ItemDropType[difficulty] = 1;
+
+			this.AddHealthPerPlayer[difficulty] = 0.0;
+			this.AddHealthPerScout[difficulty] = 0.0;
+			this.AddHealthPerSoldier[difficulty] = 0.0;
+			this.AddHealthPerPyro[difficulty] = 0.0;
+			this.AddHealthPerDemoman[difficulty] = 0.0;
+			this.AddHealthPerHeavy[difficulty] = 0.0;
+			this.AddHealthPerEngineer[difficulty] = 0.0;
+			this.AddHealthPerMedic[difficulty] = 0.0;
+			this.AddHealthPerSniper[difficulty] = 0.0;
+			this.AddHealthPerSpy[difficulty] = 0.0;
+			this.AddHealthPerDeath[difficulty] = 0.0;
+		}
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "health", this.Health, this.Health);
+		this.RemoveOnDeath = kv.GetNum("remove", this.RemoveOnDeath) != 0;
+		this.DisappearOnDeath = kv.GetNum("disappear", this.DisappearOnDeath) != 0;
+		this.RagdollOnDeath = kv.GetNum("become_ragdoll", this.RagdollOnDeath) != 0;
+
+		this.KeyDrop = kv.GetNum("key_drop", this.KeyDrop) != 0;
+		kv.GetString("key_model", this.KeyModel, sizeof(this.KeyModel), this.KeyModel);
+		PrecacheModel2(this.KeyModel, _, _, checkFile);
+		kv.GetString("key_trigger", this.KeyTrigger, sizeof(this.KeyTrigger), this.KeyTrigger);
+
+		GetProfileDifficultyBoolValues(kv, "item_drop", this.ItemDrop, this.ItemDrop);
+		GetProfileDifficultyNumValues(kv, "item_drop_type", this.ItemDropType, this.ItemDropType);
+
+		if (kv.JumpToKey("add_health"))
+		{
+			GetProfileDifficultyFloatValues(kv, "player", this.AddHealthPerPlayer, this.AddHealthPerPlayer);
+			GetProfileDifficultyFloatValues(kv, "scout", this.AddHealthPerScout, this.AddHealthPerScout);
+			GetProfileDifficultyFloatValues(kv, "soldier", this.AddHealthPerSoldier, this.AddHealthPerSoldier);
+			GetProfileDifficultyFloatValues(kv, "pyro", this.AddHealthPerPyro, this.AddHealthPerPyro);
+			GetProfileDifficultyFloatValues(kv, "demoman", this.AddHealthPerDemoman, this.AddHealthPerDemoman);
+			GetProfileDifficultyFloatValues(kv, "heavy", this.AddHealthPerHeavy, this.AddHealthPerHeavy);
+			GetProfileDifficultyFloatValues(kv, "engineer", this.AddHealthPerEngineer, this.AddHealthPerEngineer);
+			GetProfileDifficultyFloatValues(kv, "medic", this.AddHealthPerMedic, this.AddHealthPerMedic);
+			GetProfileDifficultyFloatValues(kv, "sniper", this.AddHealthPerSniper, this.AddHealthPerSniper);
+			GetProfileDifficultyFloatValues(kv, "spy", this.AddHealthPerSpy, this.AddHealthPerSpy);
+			GetProfileDifficultyFloatValues(kv, "on_death", this.AddHealthPerDeath, this.AddHealthPerDeath);
+			kv.GoBack();
+		}
+	}
+}
+
+enum struct SF2ChaserBossProfileChaseOnLookData
+{
+	bool Enabled[Difficulty_Max];
+	bool AddTargets[Difficulty_Max];
+	float RequiredLookPosition[3];
+	float MinimumXAngle[Difficulty_Max];
+	float MaximumXAngle[Difficulty_Max];
+	float MinimumYAngle[Difficulty_Max];
+	float MaximumYAngle[Difficulty_Max];
+	float RequiredYAngle[Difficulty_Max];
+	float RequiredFOV[Difficulty_Max];
+
+	void Init()
+	{
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.AddTargets[difficulty] = true;
+			this.MinimumXAngle[difficulty] = 90.0;
+			this.MaximumXAngle[difficulty] = 180.0;
+			this.MinimumYAngle[difficulty] = 0.0;
+			this.MaximumYAngle[difficulty] = 90.0;
+			this.RequiredFOV[difficulty] = -1.0;
+		}
+		this.RequiredLookPosition[2] = 35.0;
+		for (int i = 0; i < 2; i++)
+		{
+			this.RequiredLookPosition[i] = 0.0;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyBoolValues(kv, "add_targets", this.AddTargets, this.AddTargets);
+		kv.GetVector("look_position", this.RequiredLookPosition, this.RequiredLookPosition);
+		GetProfileDifficultyFloatValues(kv, "minimum_x_angle", this.MinimumXAngle, this.MinimumXAngle);
+		GetProfileDifficultyFloatValues(kv, "maximum_x_angle", this.MaximumXAngle, this.MaximumXAngle);
+		GetProfileDifficultyFloatValues(kv, "minimum_y_angle", this.MinimumYAngle, this.MinimumYAngle);
+		GetProfileDifficultyFloatValues(kv, "maximum_y_angle", this.MaximumYAngle, this.MaximumYAngle);
+		GetProfileDifficultyFloatValues(kv, "required_fov", this.RequiredFOV, this.RequiredFOV);
+	}
+}
+
+enum struct SF2PostureConditionWithinBoundsInfo
+{
+	bool Enabled;
+	float Mins[3];
+	float Maxs[3];
+
+	void Init()
+	{
+		this.Enabled = false;
+		for (int i = 0; i < 3; i++)
+		{
+			this.Mins[0] = 0.0;
+			this.Maxs[0] = 0.0;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		this.Enabled = true;
+		kv.GetVector("mins", this.Mins, this.Mins);
+		kv.GetVector("maxs", this.Maxs, this.Maxs);
+	}
+}
+
+enum struct SF2PostureConditionRunAwayInfo
+{
+	bool Enabled;
+
+	void Init()
+	{
+		this.Enabled = false;
+	}
+
+	void Load()
+	{
+		this.Enabled = true;
+	}
+}
+
+enum struct SF2PostureConditionRagePhase
+{
+	bool Enabled;
+	ArrayList Names;
+
+	void Init()
+	{
+		this.Enabled = false;
+		this.Names = null;
+	}
+
+	void Load(KeyValues kv)
+	{
+		this.Enabled = true;
+		this.Names = new ArrayList(ByteCountToCells(64));
+		char value[1024];
+		kv.GetString("phases", value, sizeof(value), value);
+		char phase[64][64];
+		int maxLength = ExplodeString(value, " ", phase, sizeof(phase), sizeof(phase));
+		for (int i = 0; i < maxLength; i++)
+		{
+			this.Names.PushString(phase[i]);
+		}
+	}
+
+	void Destroy()
+	{
+		if (this.Names != null)
+		{
+			delete this.Names;
+		}
+	}
+}
+
+enum struct SF2PostureConditionWithinRangeInfo
+{
+	bool Enabled[Difficulty_Max];
+	float MinRange[Difficulty_Max];
+	float MaxRange[Difficulty_Max];
+	float Cooldown[Difficulty_Max];
+	float CurrentCooldown;
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+			this.MinRange[i] = 0.0;
+			this.MaxRange[i] = 512.0;
+			this.Cooldown[i] = 1.0;
+		}
+		this.CurrentCooldown = 0.0;
+	}
+
+	void Load(KeyValues kv)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = true;
+		}
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "min_range", this.MinRange, this.MinRange);
+		GetProfileDifficultyFloatValues(kv, "max_range", this.MaxRange, this.MaxRange);
+		GetProfileDifficultyFloatValues(kv, "cooldown", this.Cooldown, this.Cooldown);
+	}
+}
+
+enum struct SF2PostureConditionLookAtInfo
+{
+	bool Enabled[Difficulty_Max];
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = true;
+		}
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+	}
+}
+
+enum struct SF2PostureConditionAlertInfo
+{
+	bool Enabled[Difficulty_Max];
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = true;
+		}
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+	}
+}
+
+enum struct SF2PostureConditionCloakInfo
+{
+	bool Enabled[Difficulty_Max];
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = true;
+		}
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+	}
+}
+
+enum struct SF2ChaserBossProfilePostureInfo
+{
+	char Name[64];
+	float Speed[Difficulty_Max];
+	float WalkSpeed[Difficulty_Max];
+	float Acceleration[Difficulty_Max];
+	SF2BossProfileMasterAnimationsData Animations;
+	SF2PostureConditionWithinBoundsInfo BoundsInfo;
+	SF2PostureConditionRunAwayInfo RunAwayInfo;
+	SF2PostureConditionRagePhase RagePhaseInfo;
+	SF2PostureConditionWithinRangeInfo RangeInfo;
+	SF2PostureConditionLookAtInfo LookAtInfo;
+	SF2PostureConditionAlertInfo AlertInfo;
+	SF2PostureConditionCloakInfo CloakInfo;
+
+	void Init()
+	{
+		this.Name[0] = '\0';
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Speed[i] = 300.0;
+			this.WalkSpeed[i] = 100.0;
+			this.Acceleration[i] = 4000.0;
+		}
+		this.Animations.Init();
+		this.BoundsInfo.Init();
+		this.RunAwayInfo.Init();
+		this.RagePhaseInfo.Init();
+		this.RangeInfo.Init();
+		this.LookAtInfo.Init();
+		this.AlertInfo.Init();
+		this.CloakInfo.Init();
+	}
+
+	void Load(KeyValues kv)
+	{
+		kv.GetSectionName(this.Name, sizeof(this.Name));
+		GetProfileDifficultyFloatValues(kv, "speed", this.Speed, this.Speed);
+		GetProfileDifficultyFloatValues(kv, "walkspeed", this.WalkSpeed, this.WalkSpeed);
+		GetProfileDifficultyFloatValues(kv, "acceleration", this.Acceleration, this.Acceleration);
+		this.Animations.Load(kv);
+		if (kv.JumpToKey("conditions"))
+		{
+			if (kv.JumpToKey("within_bounds"))
+			{
+				this.BoundsInfo.Load(kv);
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("running_away"))
+			{
+				this.RunAwayInfo.Load();
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("in_phases"))
+			{
+				this.RagePhaseInfo.Load(kv);
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("within_range"))
+			{
+				this.RangeInfo.Load(kv);
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("on_look"))
+			{
+				this.LookAtInfo.Load(kv);
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("on_alert"))
+			{
+				this.AlertInfo.Load(kv);
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("on_cloak"))
+			{
+				this.CloakInfo.Load(kv);
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+	}
+
+	void Destroy()
+	{
+		this.Animations.Destroy();
+		this.RagePhaseInfo.Destroy();
+	}
+}
+
+enum struct SF2ChaserBossProfileAlertOnAlertInfo
+{
+	bool Enabled[Difficulty_Max];
+	bool OnChangeState[Difficulty_Max];
+	float Radius[Difficulty_Max];
+	bool ShouldBeVisible[Difficulty_Max];
+	bool Follow[Difficulty_Max];
+	float FollowCooldown[Difficulty_Max];
+	bool Patrol[Difficulty_Max];
+	float PatrolDurationMin[Difficulty_Max];
+	float PatrolDurationMax[Difficulty_Max];
+	float PatrolRadiusMin[Difficulty_Max];
+	float PatrolRadiusMax[Difficulty_Max];
+	bool Copies[Difficulty_Max];
+	bool Companions[Difficulty_Max];
+
+	void Init()
+	{
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.OnChangeState[difficulty] = true;
+			this.Radius[difficulty] = 1024.0;
+			this.ShouldBeVisible[difficulty] = false;
+			this.Follow[difficulty] = false;
+			this.FollowCooldown[difficulty] = 10.0;
+			this.Patrol[difficulty] = false;
+			this.PatrolDurationMin[difficulty] = 10.0;
+			this.PatrolDurationMax[difficulty] = 15.0;
+			this.PatrolRadiusMin[difficulty] = 750.0;
+			this.PatrolRadiusMax[difficulty] = 1500.0;
+			this.Copies[difficulty] = false;
+			this.Companions[difficulty] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		if (kv.JumpToKey("sync"))
+		{
+			GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+			GetProfileDifficultyBoolValues(kv, "on_change_state", this.OnChangeState, this.OnChangeState);
+			GetProfileDifficultyFloatValues(kv, "radius", this.Radius, this.Radius);
+			GetProfileDifficultyBoolValues(kv, "should_be_visible", this.ShouldBeVisible, this.ShouldBeVisible);
+			GetProfileDifficultyBoolValues(kv, "follow_leader", this.Follow, this.Follow);
+			GetProfileDifficultyFloatValues(kv, "follow_cooldown", this.FollowCooldown, this.FollowCooldown);
+			GetProfileDifficultyBoolValues(kv, "copies", this.Copies, this.Copies);
+			GetProfileDifficultyBoolValues(kv, "companions", this.Companions, this.Companions);
+
+			if (kv.JumpToKey("patrol"))
+			{
+				GetProfileDifficultyBoolValues(kv, "enabled", this.Patrol, this.Patrol);
+				GetProfileDifficultyFloatValues(kv, "duration_min", this.PatrolDurationMin, this.PatrolDurationMin);
+				GetProfileDifficultyFloatValues(kv, "duration_max", this.PatrolDurationMax, this.PatrolDurationMax);
+				GetProfileDifficultyFloatValues(kv, "radius_min", this.PatrolRadiusMin, this.PatrolRadiusMin);
+				GetProfileDifficultyFloatValues(kv, "radius_max", this.PatrolRadiusMax, this.PatrolRadiusMax);
+
+				kv.GoBack();
+			}
+
+			kv.GoBack();
+		}
+	}
+}
+
+enum struct SF2ChaserBossProfileAlertOnChaseInfo
+{
+	bool Enabled[Difficulty_Max];
+	bool OnChangeState[Difficulty_Max];
+	float Radius[Difficulty_Max];
+	bool ShouldBeVisible[Difficulty_Max];
+	bool Follow[Difficulty_Max];
+	float FollowCooldown[Difficulty_Max];
+	bool Copies[Difficulty_Max];
+	bool Companions[Difficulty_Max];
+
+	void Init()
+	{
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.OnChangeState[difficulty] = true;
+			this.Radius[difficulty] = 1024.0;
+			this.ShouldBeVisible[difficulty] = false;
+			this.Follow[difficulty] = false;
+			this.FollowCooldown[difficulty] = 10.0;
+			this.Copies[difficulty] = false;
+			this.Companions[difficulty] = false;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		if (kv.JumpToKey("chase_together"))
+		{
+			GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+			GetProfileDifficultyBoolValues(kv, "on_change_state", this.OnChangeState, this.OnChangeState);
+			GetProfileDifficultyFloatValues(kv, "radius", this.Radius, this.Radius);
+			GetProfileDifficultyBoolValues(kv, "should_be_visible", this.ShouldBeVisible, this.ShouldBeVisible);
+			GetProfileDifficultyBoolValues(kv, "follow_leader", this.Follow, this.Follow);
+			GetProfileDifficultyFloatValues(kv, "follow_cooldown", this.FollowCooldown, this.FollowCooldown);
+			GetProfileDifficultyBoolValues(kv, "copies", this.Copies, this.Copies);
+			GetProfileDifficultyBoolValues(kv, "companions", this.Companions, this.Companions);
+
+			kv.GoBack();
+		}
+	}
+}
+
+enum struct SF2ChaserRageInfo
+{
+	char Name[64];
+	float PercentageThreshold;
+
+	bool IncreaseDifficulty;
+
+	bool Invincible;
+
+	SF2BossProfileSoundInfo StartSounds;
+	SF2BossProfileSoundInfo HealSounds;
+
+	bool IsHealing;
+	bool HealCloak;
+	float FleeRange[2];
+	float HealAmount;
+	float HealDelay;
+	float HealDuration;
+
+	SF2BossProfileMasterAnimationsData Animations;
+
+	void Init()
+	{
+		this.Name[0] = '\0';
+		this.PercentageThreshold = 0.75;
+		this.IncreaseDifficulty = true;
+		this.Invincible = false;
+
+		this.StartSounds.Init();
+		this.HealSounds.Init();
+
+		this.IsHealing = false;
+		this.HealCloak = false;
+		this.FleeRange[0] = 512.0;
+		this.FleeRange[1] = 1024.0;
+		this.HealAmount = 0.5;
+		this.HealDelay = 0.0;
+		this.HealDuration = 1.0;
+
+		this.Animations.Init();
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		kv.GetSectionName(this.Name, sizeof(this.Name));
+		this.PercentageThreshold = kv.GetFloat("health_percent", this.PercentageThreshold);
+		this.IncreaseDifficulty = kv.GetNum("increase_difficulty", this.IncreaseDifficulty) != 0;
+		this.Invincible = kv.GetNum("invincible", this.Invincible) != 0;
+
+		if (kv.JumpToKey("heal"))
+		{
+			this.IsHealing = true;
+			this.HealCloak = kv.GetNum("cloak", this.HealCloak) != 0;
+			this.FleeRange[0] = kv.GetFloat("flee_range_min", this.FleeRange[0]);
+			this.FleeRange[1] = kv.GetFloat("flee_range_max", this.FleeRange[1]);
+			this.HealAmount = kv.GetFloat("amount", this.HealAmount);
+			this.HealDelay = kv.GetFloat("delay", this.HealDelay);
+			this.HealDuration = kv.GetFloat("duration", this.HealDuration);
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("sounds"))
+		{
+			if (kv.JumpToKey("start"))
+			{
+				this.StartSounds.Load(kv, checkFile);
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("healing"))
+			{
+				this.HealSounds.Load(kv, checkFile);
+				kv.GoBack();
+			}
+
+			kv.GoBack();
+		}
+
+		this.Animations.Load(kv);
+	}
+
+	void PostLoad()
+	{
+		this.StartSounds.PostLoad();
+		this.HealSounds.PostLoad();
+	}
+
+	void Destroy()
+	{
+		this.StartSounds.Destroy();
+		this.HealSounds.Destroy();
+		this.Animations.Destroy();
+	}
+}
+
+enum struct SF2ChaserBossProfileCloakData
+{
+	bool Enabled[Difficulty_Max];
+	float Duration[Difficulty_Max];
+	float Cooldown[Difficulty_Max];
+	float CloakRange[Difficulty_Max];
+	float DecloakRange[Difficulty_Max];
+	int CloakRenderColor[4];
+	int CloakRenderMode;
+	ArrayList CloakEffects;
+	ArrayList DecloakEffects;
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+			this.Cooldown[i] = 8.0;
+			this.Duration[i] = 10.0;
+			this.CloakRange[i] = 350.0;
+			this.DecloakRange[i] = 150.0;
+		}
+
+		this.CloakRenderColor[0] = 0;
+		this.CloakRenderColor[1] = 0;
+		this.CloakRenderColor[2] = 0;
+		this.CloakRenderColor[3] = 0;
+		this.CloakRenderMode = 1;
+		this.CloakEffects = null;
+		this.DecloakEffects = null;
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "duration", this.Duration, this.Duration);
+		GetProfileDifficultyFloatValues(kv, "cooldown", this.Cooldown, this.Cooldown);
+		GetProfileDifficultyFloatValues(kv, "cloak_range", this.CloakRange, this.CloakRange);
+		GetProfileDifficultyFloatValues(kv, "decloak_range", this.DecloakRange, this.DecloakRange);
+
+		GetProfileColorNoBacks(kv, "color", this.CloakRenderColor[0], this.CloakRenderColor[1], this.CloakRenderColor[2], this.CloakRenderColor[3],
+							this.CloakRenderColor[0], this.CloakRenderColor[1], this.CloakRenderColor[2], this.CloakRenderColor[3]);
+		this.CloakRenderMode = kv.GetNum("rendermode", this.CloakRenderMode);
+
+		if (kv.JumpToKey("effects"))
+		{
+			if (kv.JumpToKey("cloak"))
+			{
+				this.CloakEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, checkFile);
+						this.CloakEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("decloak"))
+			{
+				this.DecloakEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, checkFile);
+						this.DecloakEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+
+				kv.GoBack();
+			}
+
+			kv.GoBack();
+		}
+	}
+
+	void PostLoad()
+	{
+		if (this.CloakEffects != null && this.CloakEffects.Length <= 0)
+		{
+			delete this.CloakEffects;
+		}
+
+		if (this.DecloakEffects != null && this.DecloakEffects.Length <= 0)
+		{
+			delete this.DecloakEffects;
+		}
+
+		if (this.CloakEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.CloakEffects.Length; i++)
+			{
+				this.CloakEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.DecloakEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.DecloakEffects.Length; i++)
+			{
+				this.DecloakEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+	}
+
+	void Destroy()
+	{
+		if (this.CloakEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.CloakEffects.Length; i++)
+			{
+				this.CloakEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.CloakEffects;
+		}
+
+		if (this.DecloakEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.DecloakEffects.Length; i++)
+			{
+				this.DecloakEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.DecloakEffects;
+		}
+	}
+}
+
+enum struct SF2ChaserBossProfileIdleData
+{
+	bool TurnEnabled[Difficulty_Max];
+	float TurnAngle[Difficulty_Max];
+	float TurnMinTime[Difficulty_Max];
+	float TurnMaxTime[Difficulty_Max];
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.TurnEnabled[i] = true;
+			this.TurnAngle[i] = 360.0;
+			this.TurnMinTime[i] = 1.5;
+			this.TurnMaxTime[i] = 3.0;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		if (kv.JumpToKey("turn"))
+		{
+			GetProfileDifficultyBoolValues(kv, "enabled", this.TurnEnabled, this.TurnEnabled);
+			GetProfileDifficultyFloatValues(kv, "angle", this.TurnAngle, this.TurnAngle);
+			GetProfileDifficultyFloatValues(kv, "cooldown_min", this.TurnMinTime, this.TurnMinTime);
+			GetProfileDifficultyFloatValues(kv, "cooldown_max", this.TurnMaxTime, this.TurnMaxTime);
+			kv.GoBack();
 		}
 	}
 }
@@ -301,7 +1903,6 @@ enum struct SF2ChaserBossProfileSoundSenseData
 enum struct SF2ChaserBossProfileData
 {
 	float WalkSpeed[Difficulty_Max];
-	float MaxWalkSpeed[Difficulty_Max];
 
 	float WakeRadius;
 
@@ -311,19 +1912,13 @@ enum struct SF2ChaserBossProfileData
 
 	float AlertDuration[Difficulty_Max];
 	float AlertGracetime[Difficulty_Max];
-	float ChaseDuration[Difficulty_Max];
-	float ChaseDurationAddVisibleMin;
-	float ChaseDurationAddVisibleMax;
+	bool AlertRunOnHearSound[Difficulty_Max];
+	bool AlertRunOnWander[Difficulty_Max];
 
-	float ChasePersistencyTimeInit;
-	float ChaseAttackPersistencyTimeInit;
-	float ChaseAttackPersistencyTimeAdd;
-	float ChaseNewTargetPersistencyTimeInit;
-	float ChaseNewTargetPersistencyTimeAdd;
-	float ChasePersistencyAddVisibleMin;
-	float ChasePersistencyAddVisibleMax;
-	float ChaseStunPersistencyTimeInit;
-	float ChaseStunPersistencyTimeAdd;
+	float ChaseDuration[Difficulty_Max];
+	float ChaseDurationAddMaxRange[Difficulty_Max];
+	float ChaseDurationAddVisibleMin[Difficulty_Max];
+	float ChaseDurationAddVisibleMax[Difficulty_Max];
 
 	int SoundCountToAlert[Difficulty_Max];
 	float SoundPosDiscardTime[Difficulty_Max];
@@ -335,6 +1930,9 @@ enum struct SF2ChaserBossProfileData
 	SF2ChaserBossProfileSoundSenseData WeaponSenses;
 	SF2ChaserBossProfileSoundSenseData FlashlightSenses;
 
+	SF2ChaserBossProfileSmellData SmellData;
+
+	bool CanWander[Difficulty_Max];
 	float WanderRangeMin[Difficulty_Max];
 	float WanderRangeMax[Difficulty_Max];
 	float WanderTimeMin[Difficulty_Max];
@@ -343,33 +1941,34 @@ enum struct SF2ChaserBossProfileData
 	float WanderEnterTimeMax[Difficulty_Max];
 
 	bool StunEnabled;
-	float StunCooldown;
-	float StunHealth;
+	float StunCooldown[Difficulty_Max];
+	float StunHealth[Difficulty_Max];
 	float StunHealthPerPlayer;
 	float StunHealthPerClass[10];
-	bool FlashlightStun;
-	float FlashlightDamage;
+	bool FlashlightStun[Difficulty_Max];
+	float FlashlightDamage[Difficulty_Max];
 	bool DisappearOnStun;
-	bool ItemDropOnStun;
-	int StunItemDropType;
+	bool ItemDropOnStun[Difficulty_Max];
+	int StunItemDropType[Difficulty_Max];
 	bool ChaseInitialOnStun;
 	ArrayList DamageResistances;
+
+	SF2ChaserBossProfileDeathData DeathData;
 
 	bool KeyDrop;
 	char KeyModel[PLATFORM_MAX_PATH];
 	char KeyTrigger[PLATFORM_MAX_PATH];
 
-	float AwarenessIncreaseRate[Difficulty_Max];
-	float AwarenessDecreaseRate[Difficulty_Max];
-
-	bool AutoChaseEnabled;
+	bool AutoChaseEnabled[Difficulty_Max];
 	int AutoChaseCount[Difficulty_Max];
 	int AutoChaseAdd[Difficulty_Max];
 	int AutoChaseAddFootstep[Difficulty_Max];
 	int AutoChaseAddLoudFootstep[Difficulty_Max];
+	int AutoChaseAddQuietFootstep[Difficulty_Max];
 	int AutoChaseAddVoice[Difficulty_Max];
 	int AutoChaseAddWeapon[Difficulty_Max];
-	bool AutoChaseSprinters;
+	bool AutoChaseSprinters[Difficulty_Max];
+	float AutoChaseAfterChaseCooldown[Difficulty_Max];
 
 	bool ChasesEndlessly;
 
@@ -379,19 +1978,6 @@ enum struct SF2ChaserBossProfileData
 	bool EarthquakeFootstepAirShake;
 	float EarthquakeFootstepAmplitude;
 	float EarthquakeFootstepFrequency;
-
-	char CloakOnSound[PLATFORM_MAX_PATH];
-	char CloakOffSound[PLATFORM_MAX_PATH];
-	bool CanCloak;
-	bool CloakOnFlee;
-	float CloakCooldown[Difficulty_Max];
-	float CloakRange[Difficulty_Max];
-	float DecloakRange[Difficulty_Max];
-	float CloakDuration[Difficulty_Max];
-	float CloakSpeedMultiplier[Difficulty_Max];
-	char CloakParticle[PLATFORM_MAX_PATH];
-	int CloakRenderColor[4];
-	int CloakRenderMode;
 
 	bool ProjectilesEnabled;
 	float ProjectileCooldownMin[Difficulty_Max];
@@ -434,119 +2020,14 @@ enum struct SF2ChaserBossProfileData
 	float IceballSlowDuration[Difficulty_Max];
 	float IceballSlowPercent[Difficulty_Max];
 
-	bool AdvancedDamageEffects;
-	bool RandomAdvancedDamageEffects;
-	bool AdvancedDamageEffectParticles;
-
-	int RandomEffectIndexes;
-	char RandomEffectIndexesString[88];
-	float RandomEffectDuration[Difficulty_Max];
-	float RandomEffectSlowdown[Difficulty_Max];
-	int RandomEffectStunType;
-
-	bool JarateEffects;
-	int JarateIndexes;
-	char JarateIndexesString[88];
-	float JarateDuration[Difficulty_Max];
-	bool JarateBeamParticle;
-	char JarateParticle[PLATFORM_MAX_PATH];
-	char JarateHitSound[PLATFORM_MAX_PATH];
-
-	bool MilkEffects;
-	int MilkIndexes;
-	char MilkIndexesString[88];
-	float MilkDuration[Difficulty_Max];
-	bool MilkBeamParaticle;
-	char MilkParticle[PLATFORM_MAX_PATH];
-	char MilkHitSound[PLATFORM_MAX_PATH];
-
-	bool GasEffects;
-	int GasIndexes;
-	char GasIndexesString[88];
-	float GasDuration[Difficulty_Max];
-	bool GasBeamParticle;
-	char GasParticle[PLATFORM_MAX_PATH];
-	char GasHitSound[PLATFORM_MAX_PATH];
-
-	bool MarkEffects;
-	int MarkIndexes;
-	char MarkIndexesString[88];
-	float MarkDuration[Difficulty_Max];
-
-	bool SilentMarkEffects;
-	int SilentMarkIndexes;
-	char SilentMarkIndexesString[88];
-	float SilentMarkDuration[Difficulty_Max];
-
-	bool IgniteEffects;
-	int IgniteIndexes;
-	char IgniteIndexesString[88];
-	float IgniteDuration[Difficulty_Max];
-	float IgniteDelay[Difficulty_Max];
-
-	bool StunEffects;
-	int StunEffectIndexes;
-	char StunEffectIndexesString[88];
-	float StunEffectDuration[Difficulty_Max];
-	float StunEffectSlowdown[Difficulty_Max];
-	int StunEffectType;
-	bool StunEffectBeamParticle;
-	char StunParticle[PLATFORM_MAX_PATH];
-	char StunHitSound[PLATFORM_MAX_PATH];
-
-	bool BleedEffects;
-	int BleedIndexes;
-	char BleedIndexesString[88];
-	float BleedDuration[Difficulty_Max];
-
-	bool ElectricEffects;
-	int ElectricIndexes;
-	char ElectricIndexesString[88];
-	float ElectricDuration[Difficulty_Max];
-	float ElectricSlowdown[Difficulty_Max];
-	int ElectricType;
-	bool ElectricBeamParticle;
-	char ElectricParticleRed[PLATFORM_MAX_PATH];
-	char ElectricParticleBlue[PLATFORM_MAX_PATH];
-
-	bool SmiteEffects;
-	int SmiteIndexes;
-	char SmiteIndexesString[88];
-	float SmiteDamage;
-	int SmiteDamageType;
-	int SmiteColor[4];
-	bool SmiteMessage;
-	char SmiteHitSound[PLATFORM_MAX_PATH];
-
 	bool XenobladeCombo;
 	float XenobladeDuration;
 	float XenobladeToppleDuration;
 	float XenobladeToppleSlowdown;
 	float XenobladeDazeDuration;
 
-	bool Shockwaves;
-	float ShockwaveHeight[Difficulty_Max];
-	float ShockwaveRange[Difficulty_Max];
-	float ShockwaveDrain[Difficulty_Max];
-	float ShockwaveForce[Difficulty_Max];
-	bool ShockwaveStun;
-	float ShockwaveStunDuration[Difficulty_Max];
-	float ShockwaveStunSlowdown[Difficulty_Max];
-	int ShockwaveIndexes;
-	char ShockwaveIndexesString[88];
-	float ShockwaveWidths[2];
-	float ShockwaveAmplitude;
-	int ShockwaveColor1[3];
-	int ShockwaveColor2[3];
-	int ShockwaveAlpha1;
-	int ShockwaveAlpha2;
-	char ShockwaveBeamSprite[PLATFORM_MAX_PATH];
-	char ShockwaveHaloSprite[PLATFORM_MAX_PATH];
-	int ShockwaveBeamModel;
-	int ShockwaveHaloModel;
-
-	bool Traps;
-	int TrapType;
+	bool Traps[Difficulty_Max];
+	int TrapType[Difficulty_Max];
 	float TrapCooldown[Difficulty_Max];
 	char TrapModel[PLATFORM_MAX_PATH];
 	char TrapDeploySound[PLATFORM_MAX_PATH];
@@ -556,30 +2037,14 @@ enum struct SF2ChaserBossProfileData
 	char TrapAnimClose[PLATFORM_MAX_PATH];
 	char TrapAnimOpen[PLATFORM_MAX_PATH];
 
-	bool DamageParticles;
-	char DamageParticleName[PLATFORM_MAX_PATH];
-	bool DamageParticleBeam;
-	char DamageParticleSound[PLATFORM_MAX_PATH];
-
-	bool SelfHeal;
-	float SelfHealPercentageStart;
-	float SelfHealRecover[3];
-	bool CloakToHeal;
+	ArrayList Rages;
 
 	bool BoxingBoss;
 
 	bool NormalSoundHook;
-	bool ChaseInitialAnimations;
 	bool OldAnimationAI;
-	bool AlertWalkingAnimation;
-	bool SpawnAnimationsEnabled;
 
-	bool Crawling;
-	float CrawlSpeedMultiplier[Difficulty_Max];
-	float CrawlDetectMins[3];
-	float CrawlDetectMaxs[3];
-
-	bool ChaseOnLook;
+	SF2ChaserBossProfileChaseOnLookData ChaseOnLookData;
 
 	bool UnnerfedVisibility;
 
@@ -603,107 +2068,97 @@ enum struct SF2ChaserBossProfileData
 	SF2BossProfileSoundInfo AttackKilledSounds;
 	SF2BossProfileSoundInfo AttackKilledAllSounds;
 	SF2BossProfileSoundInfo AttackKilledClientSounds;
-	SF2BossProfileSoundInfo RageAllSounds;
-	SF2BossProfileSoundInfo RageTwoSounds;
-	SF2BossProfileSoundInfo RageThreeSounds;
-	SF2BossProfileSoundInfo SelfHealSounds;
 	SF2BossProfileSoundInfo StunnedSounds;
+	SF2BossProfileSoundInfo DeathSounds;
+	SF2BossProfileSoundInfo TauntKillSounds;
+	SF2BossProfileSoundInfo SmellSounds;
 	SF2BossProfileSoundInfo FootstepSounds;
 	ArrayList AttackSounds;
 	ArrayList HitSounds;
 	ArrayList MissSounds;
 	ArrayList BulletShootSounds;
 	ArrayList ProjectileShootSounds;
+	ArrayList AttackBeginSounds;
+	ArrayList AttackEndSounds;
+	ArrayList AttackLoopSounds;
 
 	SF2BossProfileSoundInfo ChaseMusics;
 	SF2BossProfileSoundInfo ChaseVisibleMusics;
 	SF2BossProfileSoundInfo AlertMusics;
 	SF2BossProfileSoundInfo IdleMusics;
 
+	StringMap Postures;
+
+	SF2ChaserBossProfileAlertOnAlertInfo AlertOnAlertInfo;
+	SF2ChaserBossProfileAlertOnChaseInfo AlertOnChaseInfo;
+
+	SF2ChaserBossProfileCloakData CloakData;
+
+	SF2ChaserBossProfileIdleData IdleData;
+
 	void Init()
 	{
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
-			this.WalkSpeed[difficulty] = this.WalkSpeed[difficulty] = difficulty > 0 ? this.WalkSpeed[difficulty - 1] : 30.0;
-			this.MaxWalkSpeed[difficulty] = this.MaxWalkSpeed[difficulty] = difficulty > 0 ? this.MaxWalkSpeed[difficulty - 1] : 30.0;
+			this.WalkSpeed[difficulty] = 90.0;
 
-			this.AlertDuration[difficulty] = this.AlertDuration[difficulty] = difficulty > 0 ? this.AlertDuration[difficulty - 1] : 5.0;
-			this.AlertGracetime[difficulty] = this.AlertGracetime[difficulty] = difficulty > 0 ? this.AlertGracetime[difficulty - 1] : 0.5;
-			this.ChaseDuration[difficulty] = this.ChaseDuration[difficulty] = difficulty > 0 ? this.ChaseDuration[difficulty - 1] : 10.0;
+			this.AlertDuration[difficulty] = 5.0;
+			this.AlertGracetime[difficulty] = 0.5;
+			this.AlertRunOnHearSound[difficulty] = false;
+			this.AlertRunOnWander[difficulty] = false;
 
-			this.SoundCountToAlert[difficulty] = this.SoundCountToAlert[difficulty] = difficulty > 0 ? this.SoundCountToAlert[difficulty - 1] : 8;
-			this.SoundPosDiscardTime[difficulty] = this.SoundPosDiscardTime[difficulty] = difficulty > 0 ? this.SoundPosDiscardTime[difficulty - 1] : 2.0;
-			this.SoundPosDistanceTolerance[difficulty] = this.SoundPosDistanceTolerance[difficulty] = difficulty > 0 ? this.SoundPosDistanceTolerance[difficulty - 1] : 512.0;
+			this.ChaseDuration[difficulty] = 10.0;
+			this.ChaseDurationAddMaxRange[difficulty] = 1024.0;
+			this.ChaseDurationAddVisibleMin[difficulty] = 0.01;
+			this.ChaseDurationAddVisibleMax[difficulty] = 0.05;
 
-			this.WanderRangeMin[difficulty] = this.WanderRangeMin[difficulty] = difficulty > 0 ? this.WanderRangeMin[difficulty - 1] : 400.0;
-			this.WanderRangeMax[difficulty] = this.WanderRangeMax[difficulty] = difficulty > 0 ? this.WanderRangeMax[difficulty - 1] : 1024.0;
-			this.WanderTimeMin[difficulty] = this.WanderTimeMin[difficulty] = difficulty > 0 ? this.WanderTimeMin[difficulty - 1] : 8.0;
-			this.WanderTimeMax[difficulty] = this.WanderTimeMax[difficulty] = difficulty > 0 ? this.WanderTimeMax[difficulty - 1] : 12.0;
-			this.WanderEnterTimeMin[difficulty] = this.WanderEnterTimeMin[difficulty] = difficulty > 0 ? this.WanderEnterTimeMin[difficulty - 1] : 2.0;
-			this.WanderEnterTimeMax[difficulty] = this.WanderEnterTimeMax[difficulty] = difficulty > 0 ? this.WanderEnterTimeMax[difficulty - 1] : 4.5;
+			this.SoundCountToAlert[difficulty] = 8;
+			this.SoundPosDiscardTime[difficulty] = 2.0;
+			this.SoundPosDistanceTolerance[difficulty] = 512.0;
 
-			this.AwarenessIncreaseRate[difficulty] = this.AwarenessIncreaseRate[difficulty] = difficulty > 0 ? this.AwarenessIncreaseRate[difficulty - 1] : 75.0;
-			this.AwarenessDecreaseRate[difficulty] = this.AwarenessDecreaseRate[difficulty] = difficulty > 0 ? this.AwarenessDecreaseRate[difficulty - 1] : 150.0;
+			this.CanWander[difficulty] = true;
+			this.WanderRangeMin[difficulty] = 400.0;
+			this.WanderRangeMax[difficulty] = 1024.0;
+			this.WanderTimeMin[difficulty] = 8.0;
+			this.WanderTimeMax[difficulty] = 12.0;
+			this.WanderEnterTimeMin[difficulty] = 2.0;
+			this.WanderEnterTimeMax[difficulty] = 4.5;
 
-			this.AutoChaseCount[difficulty] = this.AutoChaseCount[difficulty] = difficulty > 0 ? this.AutoChaseCount[difficulty - 1] : 30;
-			this.AutoChaseAdd[difficulty] = this.AutoChaseAdd[difficulty] = difficulty > 0 ? this.AutoChaseAdd[difficulty - 1] : 0;
-			this.AutoChaseAddFootstep[difficulty] = this.AutoChaseAddFootstep[difficulty] = difficulty > 0 ? this.AutoChaseAddFootstep[difficulty - 1] : 2;
+			this.StunCooldown[difficulty] = 3.5;
+			this.StunHealth[difficulty] = 0.0;
+			this.FlashlightStun[difficulty] = false;
+			this.FlashlightDamage[difficulty] = 0.0;
+			this.ItemDropOnStun[difficulty] = false;
+			this.StunItemDropType[difficulty] = 1;
+
+			this.AutoChaseEnabled[difficulty] = false;
+			this.AutoChaseCount[difficulty] = 100;
+			this.AutoChaseAdd[difficulty] = 0;
+			this.AutoChaseAddFootstep[difficulty] = 2;
 			this.AutoChaseAddLoudFootstep[difficulty] = this.AutoChaseAddFootstep[difficulty];
-			this.AutoChaseAddVoice[difficulty] = this.AutoChaseAddVoice[difficulty] = difficulty > 0 ? this.AutoChaseAddVoice[difficulty - 1] : 8;
-			this.AutoChaseAddWeapon[difficulty] = this.AutoChaseAddWeapon[difficulty] = difficulty > 0 ? this.AutoChaseAddWeapon[difficulty - 1] : 4;
+			this.AutoChaseAddQuietFootstep[difficulty] = 0;
+			this.AutoChaseAddVoice[difficulty] = 8;
+			this.AutoChaseAddWeapon[difficulty] = 4;
+			this.AutoChaseSprinters[difficulty] = false;
+			this.AutoChaseAfterChaseCooldown[difficulty] = 3.0;
 
-			this.CloakCooldown[difficulty] = this.CloakCooldown[difficulty] = difficulty > 0 ? this.CloakCooldown[difficulty - 1] : 8.0;
-			this.CloakRange[difficulty] = this.CloakRange[difficulty] = difficulty > 0 ? this.CloakRange[difficulty - 1] : 350.0;
-			this.DecloakRange[difficulty] = this.DecloakRange[difficulty] = difficulty > 0 ? this.DecloakRange[difficulty - 1] : 150.0;
-			this.CloakDuration[difficulty] = this.CloakDuration[difficulty] = difficulty > 0 ? this.CloakDuration[difficulty - 1] : 10.0;
-			this.CloakSpeedMultiplier[difficulty] = this.CloakSpeedMultiplier[difficulty] = difficulty > 0 ? this.CloakSpeedMultiplier[difficulty - 1] : 1.0;
+			this.ProjectileCooldownMin[difficulty] = 1.0;
+			this.ProjectileCooldownMax[difficulty] = 2.0;
+			this.ProjectileSpeed[difficulty] = 400.0;
+			this.ProjectileDamage[difficulty] = 50.0;
+			this.ProjectileRadius[difficulty] = 128.0;
+			this.ProjectileDeviation[difficulty] = 0.0;
+			this.ProjectileClipSize[difficulty] = 3;
+			this.ProjectileReloadTime[difficulty] = 2.0;
+			this.ProjectileChargeUp[difficulty] = 5.0;
+			this.ProjectileCount[difficulty] = 1;
 
-			this.ProjectileCooldownMin[difficulty] = this.ProjectileCooldownMin[difficulty] = difficulty > 0 ? this.ProjectileCooldownMin[difficulty - 1] : 1.0;
-			this.ProjectileCooldownMax[difficulty] = this.ProjectileCooldownMax[difficulty] = difficulty > 0 ? this.ProjectileCooldownMax[difficulty - 1] : 2.0;
-			this.ProjectileSpeed[difficulty] = this.ProjectileSpeed[difficulty] = difficulty > 0 ? this.ProjectileSpeed[difficulty - 1] : 400.0;
-			this.ProjectileDamage[difficulty] = this.ProjectileDamage[difficulty] = difficulty > 0 ? this.ProjectileDamage[difficulty - 1] : 50.0;
-			this.ProjectileRadius[difficulty] = this.ProjectileRadius[difficulty] = difficulty > 0 ? this.ProjectileRadius[difficulty - 1] : 128.0;
-			this.ProjectileDeviation[difficulty] = this.ProjectileDeviation[difficulty] = difficulty > 0 ? this.ProjectileDeviation[difficulty - 1] : 0.0;
-			this.ProjectileClipSize[difficulty] = this.ProjectileClipSize[difficulty] = difficulty > 0 ? this.ProjectileClipSize[difficulty - 1] : 3;
-			this.ProjectileReloadTime[difficulty] = this.ProjectileReloadTime[difficulty] = difficulty > 0 ? this.ProjectileReloadTime[difficulty - 1] : 2.0;
-			this.ProjectileChargeUp[difficulty] = this.ProjectileChargeUp[difficulty] = difficulty > 0 ? this.ProjectileChargeUp[difficulty - 1] : 5.0;
-			this.ProjectileCount[difficulty] = this.ProjectileCount[difficulty] = difficulty > 0 ? this.ProjectileCount[difficulty - 1] : 1;
+			this.IceballSlowDuration[difficulty] = 2.0;
+			this.IceballSlowPercent[difficulty] = 0.55;
 
-			this.IceballSlowDuration[difficulty] = this.IceballSlowDuration[difficulty] = difficulty > 0 ? this.IceballSlowDuration[difficulty - 1] : 2.0;
-			this.IceballSlowPercent[difficulty] = this.IceballSlowPercent[difficulty] = difficulty > 0 ? this.IceballSlowPercent[difficulty - 1] : 0.55;
-
-			this.RandomEffectDuration[difficulty] = this.RandomEffectDuration[difficulty] = difficulty > 0 ? this.RandomEffectDuration[difficulty - 1] : 0.0;
-			this.RandomEffectSlowdown[difficulty] = this.RandomEffectSlowdown[difficulty] = difficulty > 0 ? this.RandomEffectSlowdown[difficulty - 1] : 0.0;
-			this.JarateDuration[difficulty] = this.JarateDuration[difficulty] = difficulty > 0 ? this.JarateDuration[difficulty - 1] : 0.0;
-			this.MilkDuration[difficulty] = this.MilkDuration[difficulty] = difficulty > 0 ? this.MilkDuration[difficulty - 1] : 0.0;
-			this.GasDuration[difficulty] = this.GasDuration[difficulty] = difficulty > 0 ? this.GasDuration[difficulty - 1] : 0.0;
-			this.MarkDuration[difficulty] = this.MarkDuration[difficulty] = difficulty > 0 ? this.MarkDuration[difficulty - 1] : 0.0;
-			this.SilentMarkDuration[difficulty] = this.SilentMarkDuration[difficulty] = difficulty > 0 ? this.SilentMarkDuration[difficulty - 1] : 0.0;
-			this.IgniteDuration[difficulty] = this.IgniteDuration[difficulty] = difficulty > 0 ? this.IgniteDuration[difficulty - 1] : 10.0;
-			this.IgniteDelay[difficulty] = this.IgniteDelay[difficulty] = difficulty > 0 ? this.IgniteDelay[difficulty - 1] : 0.0;
-			this.StunEffectDuration[difficulty] = this.StunEffectDuration[difficulty] = difficulty > 0 ? this.StunEffectDuration[difficulty - 1] : 0.0;
-			this.StunEffectSlowdown[difficulty] = this.StunEffectSlowdown[difficulty] = difficulty > 0 ? this.StunEffectSlowdown[difficulty - 1] : 0.0;
-			this.BleedDuration[difficulty] = this.BleedDuration[difficulty] = difficulty > 0 ? this.BleedDuration[difficulty - 1] : 0.0;
-			this.ElectricDuration[difficulty] = this.ElectricDuration[difficulty] = difficulty > 0 ? this.ElectricDuration[difficulty - 1] : 0.0;
-			this.ElectricSlowdown[difficulty] = this.ElectricSlowdown[difficulty] = difficulty > 0 ? this.ElectricSlowdown[difficulty - 1] : 0.0;
-
-			this.ShockwaveHeight[difficulty] = this.ShockwaveHeight[difficulty] = difficulty > 0 ? this.ShockwaveHeight[difficulty - 1] : 64.0;
-			this.ShockwaveRange[difficulty] = this.ShockwaveRange[difficulty] = difficulty > 0 ? this.ShockwaveRange[difficulty - 1] : 200.0;
-			this.ShockwaveDrain[difficulty] = this.ShockwaveDrain[difficulty] = difficulty > 0 ? this.ShockwaveDrain[difficulty - 1] : 0.2;
-			this.ShockwaveForce[difficulty] = this.ShockwaveForce[difficulty] = difficulty > 0 ? this.ShockwaveForce[difficulty - 1] : 6.0;
-
-			this.ShockwaveStunDuration[difficulty] = this.ShockwaveStunDuration[difficulty] = difficulty > 0 ? this.ShockwaveStunDuration[difficulty - 1] : 2.0;
-			this.ShockwaveStunSlowdown[difficulty] = this.ShockwaveStunSlowdown[difficulty] = difficulty > 0 ? this.ShockwaveStunSlowdown[difficulty - 1] : 0.7;
-
-			this.TrapCooldown[difficulty] = this.TrapCooldown[difficulty] = difficulty > 0 ? this.TrapCooldown[difficulty - 1] : 8.0;
-
-			this.CrawlSpeedMultiplier[difficulty] = this.CrawlSpeedMultiplier[difficulty] = difficulty > 0 ? this.CrawlSpeedMultiplier[difficulty - 1] : 0.5;
-		}
-
-		for (int i = 0; i < 3; i++)
-		{
-			this.ShockwaveColor1[i] = 128;
-			this.ShockwaveColor2[i] = 255;
+			this.Traps[difficulty] = false;
+			this.TrapType[difficulty] = 0;
+			this.TrapCooldown[difficulty] = 8.0;
 		}
 
 		this.WakeRadius = 0.0;
@@ -712,25 +2167,14 @@ enum struct SF2ChaserBossProfileData
 
 		this.AttackPropModels = null;
 
-		this.ChaseDurationAddVisibleMin = 0.025;
-		this.ChaseDurationAddVisibleMax = 0.2;
-
-		this.ChasePersistencyTimeInit = 5.0;
-		this.ChaseAttackPersistencyTimeInit = -1.0;
-		this.ChaseAttackPersistencyTimeAdd = 2.0;
-		this.ChaseNewTargetPersistencyTimeInit = -1.0;
-		this.ChaseNewTargetPersistencyTimeAdd = 2.0;
-		this.ChasePersistencyAddVisibleMin = 0.05;
-		this.ChasePersistencyAddVisibleMax = 0.15;
-		this.ChaseStunPersistencyTimeInit = -1.0;
-		this.ChaseStunPersistencyTimeAdd = 2.0;
-
 		this.FootstepSenses.Init();
 		this.LoudFootstepSenses.Init();
 		this.QuietFootstepSenses.Init();
 		this.VoiceSenses.Init();
 		this.WeaponSenses.Init();
 		this.FlashlightSenses.Init();
+
+		this.SmellData.Init();
 
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
@@ -744,27 +2188,20 @@ enum struct SF2ChaserBossProfileData
 		}
 
 		this.StunEnabled = false;
-		this.StunCooldown = 3.5;
-		this.StunHealth = 0.0;
 		this.StunHealthPerPlayer = 0.0;
 		for (int i = 0; i < 10; i++)
 		{
 			this.StunHealthPerClass[i] = 0.0;
 		}
-		this.FlashlightStun = false;
-		this.FlashlightDamage = 0.0;
 		this.DisappearOnStun = false;
-		this.ItemDropOnStun = false;
-		this.StunItemDropType = 1;
 		this.ChaseInitialOnStun = false;
 		this.DamageResistances = null;
+
+		this.DeathData.Init();
 
 		this.KeyDrop = false;
 		this.KeyModel = SF_KEYMODEL;
 		this.KeyTrigger[0] = '\0';
-
-		this.AutoChaseEnabled = false;
-		this.AutoChaseSprinters = false;
 
 		this.ChasesEndlessly = false;
 
@@ -774,17 +2211,6 @@ enum struct SF2ChaserBossProfileData
 		this.EarthquakeFootstepAirShake = false;
 		this.EarthquakeFootstepAmplitude = 5.0;
 		this.EarthquakeFootstepFrequency = 25.0;
-
-		this.CanCloak = false;
-		this.CloakOnFlee = false;
-		this.CloakParticle = "drg_cow_explosioncore_charged_blue";
-		this.CloakRenderColor[0] = 0;
-		this.CloakRenderColor[1] = 1;
-		this.CloakRenderColor[2] = 2;
-		this.CloakRenderColor[3] = 3;
-		this.CloakRenderMode = 1;
-		this.CloakOnSound = DEFAULT_CLOAKONSOUND;
-		this.CloakOffSound = DEFAULT_CLOAKOFFSOUND;
 
 		this.ProjectilesEnabled = false;
 		this.ProjectileType = SF2BossProjectileType_Fireball;
@@ -814,101 +2240,12 @@ enum struct SF2ChaserBossProfileData
 		this.BaseballShootSound = BASEBALL_SHOOT;
 		this.BaseballModel = BASEBALL_MODEL;
 
-		this.AdvancedDamageEffects = false;
-		this.AdvancedDamageEffectParticles = true;
-
-		this.RandomAdvancedDamageEffects = false;
-		this.RandomEffectIndexes = 1;
-		this.RandomEffectIndexesString = "1";
-		this.RandomEffectStunType = 0;
-
-		this.JarateEffects = false;
-		this.JarateIndexes = 1;
-		this.JarateIndexesString = "1";
-		this.JarateBeamParticle = false;
-		this.JarateParticle = JARATE_PARTICLE;
-		this.JarateHitSound = JARATE_HITPLAYER;
-
-		this.MilkEffects = false;
-		this.MilkIndexes = 1;
-		this.MilkIndexesString = "1";
-		this.MilkBeamParaticle = false;
-		this.MilkParticle = MILK_PARTICLE;
-		this.MilkHitSound = JARATE_HITPLAYER;
-
-		this.GasEffects = false;
-		this.GasIndexes = 1;
-		this.GasIndexesString = "1";
-		this.GasBeamParticle = false;
-		this.GasParticle = GAS_PARTICLE;
-		this.GasHitSound = JARATE_HITPLAYER;
-
-		this.MarkEffects = false;
-		this.MarkIndexes = 1;
-		this.MarkIndexesString = "1";
-
-		this.SilentMarkEffects = false;
-		this.SilentMarkIndexes = 1;
-		this.SilentMarkIndexesString = "1";
-
-		this.IgniteEffects = false;
-		this.IgniteIndexes = 1;
-		this.IgniteIndexesString = "1";
-
-		this.StunEffects = false;
-		this.StunEffectIndexes = 1;
-		this.StunEffectIndexesString = "1";
-		this.StunEffectType = 0;
-		this.StunEffectBeamParticle = false;
-		this.StunParticle = STUN_PARTICLE;
-		this.StunHitSound = STUN_HITPLAYER;
-
-		this.BleedEffects = false;
-		this.BleedIndexes = 1;
-		this.BleedIndexesString = "1";
-
-		this.ElectricEffects = false;
-		this.ElectricIndexes = 1;
-		this.ElectricIndexesString = "1";
-		this.ElectricType = 0;
-		this.ElectricBeamParticle = false;
-		this.ElectricParticleRed = ELECTRIC_RED_PARTICLE;
-		this.ElectricParticleBlue = ELECTRIC_BLUE_PARTICLE;
-
-		this.SmiteEffects = false;
-		this.SmiteIndexes = 1;
-		this.SmiteIndexesString = "1";
-		this.SmiteDamage = 9001.0;
-		this.SmiteDamageType = 1048576; //Critical cause we're mean
-		this.SmiteColor[0] = 255;
-		this.SmiteColor[1] = 255;
-		this.SmiteColor[2] = 255;
-		this.SmiteColor[3] = 255;
-		this.SmiteMessage = false;
-		this.SmiteHitSound = SOUND_THUNDER;
-
 		this.XenobladeCombo = false;
 		this.XenobladeDuration = 0.0;
 		this.XenobladeToppleDuration = 0.0;
 		this.XenobladeToppleSlowdown = 0.5;
 		this.XenobladeDazeDuration = 0.0;
 
-		this.Shockwaves = false;
-		this.ShockwaveStun = false;
-		this.ShockwaveIndexes = 1;
-		this.ShockwaveIndexesString = "1";
-		this.ShockwaveWidths[0] = 40.0;
-		this.ShockwaveWidths[1] = 20.0;
-		this.ShockwaveAmplitude = 5.0;
-		this.ShockwaveAlpha1 = 255;
-		this.ShockwaveAlpha2 = 255;
-		this.ShockwaveBeamSprite = "sprites/laser.vmt";
-		this.ShockwaveHaloSprite = "sprites/halo01.vmt";
-		this.ShockwaveBeamModel = -1;
-		this.ShockwaveHaloModel = -1;
-
-		this.Traps = false;
-		this.TrapType = 0;
 		this.TrapModel = TRAP_MODEL;
 		this.TrapDeploySound = TRAP_DEPLOY;
 		this.TrapMissSound = TRAP_CLOSE;
@@ -917,31 +2254,14 @@ enum struct SF2ChaserBossProfileData
 		this.TrapAnimClose = "trapclosed";
 		this.TrapAnimOpen[0] = '\0';
 
-		this.DamageParticles = false;
-		this.DamageParticleName[0] = '\0';
-		this.DamageParticleBeam = false;
-		this.DamageParticleSound[0] = '\0';
-
-		this.SelfHeal = false;
-		this.SelfHealPercentageStart = 0.35;
-		this.SelfHealRecover[0] = 0.75;
-		this.SelfHealRecover[1] = 0.5;
-		this.SelfHealRecover[2] = 0.25;
-		this.CloakToHeal = false;
+		this.Rages = null;
 
 		this.BoxingBoss = false;
 
 		this.NormalSoundHook = false;
-		this.ChaseInitialAnimations = false;
 		this.OldAnimationAI = false;
-		this.AlertWalkingAnimation = false;
-		this.SpawnAnimationsEnabled = false;
 
-		this.Crawling = false;
-		this.CrawlDetectMins = view_as<float>({0.0, 0.0, 0.0});
-		this.CrawlDetectMaxs = view_as<float>({0.0, 0.0, 0.0});
-
-		this.ChaseOnLook = false;
+		this.ChaseOnLookData.Init();
 
 		this.UnnerfedVisibility = g_DefaultBossVisibilityStateConVar.BoolValue;
 
@@ -970,17 +2290,19 @@ enum struct SF2ChaserBossProfileData
 		this.AttackKilledClientSounds.Init();
 		this.AttackKilledClientSounds.Channel = SNDCHAN_STATIC;
 		this.AttackKilledClientSounds.Level = SNDLEVEL_HELICOPTER;
-		this.RageAllSounds.Init();
-		this.RageTwoSounds.Init();
-		this.RageThreeSounds.Init();
-		this.SelfHealSounds.Init();
 		this.StunnedSounds.Init();
+		this.DeathSounds.Init();
+		this.TauntKillSounds.Init();
+		this.SmellSounds.Init();
 		this.FootstepSounds.Init();
 		this.AttackSounds = null;
 		this.HitSounds = null;
 		this.MissSounds = null;
 		this.BulletShootSounds = null;
 		this.ProjectileShootSounds = null;
+		this.AttackBeginSounds = null;
+		this.AttackEndSounds = null;
+		this.AttackLoopSounds = null;
 
 		this.ChaseMusics.Init();
 		this.ChaseMusics.Channel = MUSIC_CHAN;
@@ -990,6 +2312,15 @@ enum struct SF2ChaserBossProfileData
 		this.AlertMusics.Channel = MUSIC_CHAN;
 		this.IdleMusics.Init();
 		this.IdleMusics.Channel = MUSIC_CHAN;
+
+		this.Postures = null;
+
+		this.AlertOnAlertInfo.Init();
+		this.AlertOnChaseInfo.Init();
+
+		this.CloakData.Init();
+
+		this.IdleData.Init();
 	}
 
 	void PostLoad()
@@ -1001,17 +2332,18 @@ enum struct SF2ChaserBossProfileData
 		this.AttackKilledSounds.PostLoad();
 		this.AttackKilledAllSounds.PostLoad();
 		this.AttackKilledClientSounds.PostLoad();
-		this.RageAllSounds.PostLoad();
-		this.RageTwoSounds.PostLoad();
-		this.RageThreeSounds.PostLoad();
-		this.SelfHealSounds.PostLoad();
 		this.StunnedSounds.PostLoad();
+		this.DeathSounds.PostLoad();
+		this.TauntKillSounds.PostLoad();
+		this.SmellSounds.PostLoad();
 		this.FootstepSounds.PostLoad();
 
 		this.ChaseMusics.PostLoad();
 		this.ChaseVisibleMusics.PostLoad();
 		this.AlertMusics.PostLoad();
 		this.IdleMusics.PostLoad();
+
+		this.CloakData.PostLoad();
 
 		if (this.ProjectilePosOffsets != null && this.ProjectilePosOffsets.Length <= 0)
 		{
@@ -1022,21 +2354,69 @@ enum struct SF2ChaserBossProfileData
 		{
 			delete this.AttackSounds;
 		}
+
 		if (this.HitSounds != null && this.HitSounds.Length <= 0)
 		{
 			delete this.HitSounds;
 		}
+
 		if (this.MissSounds != null && this.MissSounds.Length <= 0)
 		{
 			delete this.MissSounds;
 		}
+
 		if (this.BulletShootSounds != null && this.BulletShootSounds.Length <= 0)
 		{
 			delete this.BulletShootSounds;
 		}
+
 		if (this.ProjectileShootSounds != null && this.ProjectileShootSounds.Length <= 0)
 		{
 			delete this.ProjectileShootSounds;
+		}
+
+		if (this.AttackBeginSounds != null && this.AttackBeginSounds.Length <= 0)
+		{
+			delete this.AttackBeginSounds;
+		}
+
+		if (this.AttackEndSounds != null && this.AttackEndSounds.Length <= 0)
+		{
+			delete this.AttackEndSounds;
+		}
+
+		if (this.AttackLoopSounds != null && this.AttackLoopSounds.Length <= 0)
+		{
+			delete this.AttackLoopSounds;
+		}
+
+		if (this.Rages != null)
+		{
+			SF2ChaserRageInfo rageData;
+
+			for (int i = 0; i < this.Rages.Length; i++)
+			{
+				this.Rages.GetArray(i, rageData, sizeof(rageData));
+
+				rageData.PostLoad();
+			}
+		}
+
+		if (this.Attacks != null)
+		{
+			SF2ChaserBossProfileAttackData attackData;
+
+			for (int i = 0; i < this.Attacks.Length; i++)
+			{
+				this.Attacks.GetArray(i, attackData, sizeof(attackData));
+
+				if (attackData.Type == SF2BossAttackType_Invalid)
+				{
+					continue;
+				}
+
+				attackData.PostLoad();
+			}
 		}
 	}
 
@@ -1070,25 +2450,21 @@ enum struct SF2ChaserBossProfileData
 		{
 			this.AttackKilledClientSounds.Load(kv, checkFile);
 		}
-		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageAll]) == 0)
-		{
-			this.RageAllSounds.Load(kv, checkFile);
-		}
-		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageTwo]) == 0)
-		{
-			this.RageTwoSounds.Load(kv, checkFile);
-		}
-		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageThree]) == 0)
-		{
-			this.RageThreeSounds.Load(kv, checkFile);
-		}
-		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_SelfHeal]) == 0)
-		{
-			this.SelfHealSounds.Load(kv, checkFile);
-		}
 		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Stun]) == 0)
 		{
 			this.StunnedSounds.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Death]) == 0)
+		{
+			this.DeathSounds.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_TauntKill]) == 0)
+		{
+			this.TauntKillSounds.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Smell]) == 0)
+		{
+			this.SmellSounds.Load(kv, checkFile);
 		}
 		else if (strcmp(sectionName, "sound_footsteps") == 0)
 		{
@@ -1112,6 +2488,75 @@ enum struct SF2ChaserBossProfileData
 		}
 	}
 
+	void LoadNestedSoundSections(KeyValues kv, bool checkFile, ArrayList &list, bool soundHook = false)
+	{
+		list = new ArrayList(sizeof(SF2BossProfileSoundInfo));
+		if (kv.GotoFirstSubKey())
+		{
+			char sectionName[64];
+			kv.GetSectionName(sectionName, sizeof(sectionName));
+			if (strcmp(sectionName, "paths") == 0)
+			{
+				kv.GoBack();
+				SF2BossProfileSoundInfo soundInfo;
+				soundInfo.Init();
+				if (soundHook)
+				{
+					soundInfo.Channel = SNDCHAN_VOICE;
+				}
+				soundInfo.Load(kv, checkFile);
+				soundInfo.PostLoad();
+				if (soundInfo.Paths != null)
+				{
+					list.PushArray(soundInfo, sizeof(soundInfo));
+				}
+			}
+			else
+			{
+				do
+				{
+					kv.GetSectionName(sectionName, sizeof(sectionName));
+					SF2BossProfileSoundInfo soundInfo;
+					soundInfo.Init();
+					if (soundHook)
+					{
+						soundInfo.Channel = SNDCHAN_VOICE;
+					}
+					soundInfo.SectionName = sectionName;
+					soundInfo.Load(kv, checkFile);
+					soundInfo.PostLoad();
+					if (soundInfo.Paths != null)
+					{
+						list.PushArray(soundInfo, sizeof(soundInfo));
+					}
+				}
+				while (kv.GotoNextKey());
+				kv.GoBack();
+			}
+		}
+		kv.GoBack();
+	}
+
+	void DestroyNestedSection(ArrayList list)
+	{
+		if (list != null)
+		{
+			SF2BossProfileSoundInfo soundInfo;
+
+			for (int i = 0; i < list.Length; i++)
+			{
+				list.GetArray(i, soundInfo, sizeof(soundInfo));
+
+				if (soundInfo.Paths == null)
+				{
+					continue;
+				}
+				soundInfo.Destroy();
+			}
+			delete list;
+		}
+	}
+
 	void Destroy()
 	{
 		this.IdleSounds.Destroy();
@@ -1121,17 +2566,19 @@ enum struct SF2ChaserBossProfileData
 		this.AttackKilledSounds.Destroy();
 		this.AttackKilledAllSounds.Destroy();
 		this.AttackKilledClientSounds.Destroy();
-		this.RageAllSounds.Destroy();
-		this.RageTwoSounds.Destroy();
-		this.RageThreeSounds.Destroy();
-		this.SelfHealSounds.Destroy();
 		this.StunnedSounds.Destroy();
+		this.DeathSounds.Destroy();
+		this.TauntKillSounds.Destroy();
+		this.SmellSounds.Destroy();
 		this.FootstepSounds.Destroy();
 
 		this.ChaseMusics.Destroy();
 		this.ChaseVisibleMusics.Destroy();
 		this.AlertMusics.Destroy();
 		this.IdleMusics.Destroy();
+
+		this.CloakData.Destroy();
+
 		if (this.Attacks != null)
 		{
 			SF2ChaserBossProfileAttackData attackData;
@@ -1144,104 +2591,125 @@ enum struct SF2ChaserBossProfileData
 				{
 					continue;
 				}
-
 				attackData.Destroy();
 			}
 
 			delete this.Attacks;
 		}
+
 		if (this.ProjectilePosOffsets != null)
 		{
 			delete this.ProjectilePosOffsets;
 		}
+
 		if (this.AttackPropModels != null)
 		{
 			delete this.AttackPropModels;
-		}
-		if (this.AttackSounds != null)
-		{
-			SF2BossProfileSoundInfo soundInfo;
-
-			for (int i = 0; i < this.AttackSounds.Length; i++)
-			{
-				this.AttackSounds.GetArray(i, soundInfo, sizeof(soundInfo));
-
-				if (soundInfo.Paths == null)
-				{
-					continue;
-				}
-				soundInfo.Destroy();
-			}
-			delete this.AttackSounds;
-		}
-		if (this.HitSounds != null)
-		{
-			SF2BossProfileSoundInfo soundInfo;
-
-			for (int i = 0; i < this.HitSounds.Length; i++)
-			{
-				this.HitSounds.GetArray(i, soundInfo, sizeof(soundInfo));
-
-				if (soundInfo.Paths == null)
-				{
-					continue;
-				}
-				soundInfo.Destroy();
-			}
-			delete this.HitSounds;
-		}
-		if (this.MissSounds != null)
-		{
-			SF2BossProfileSoundInfo soundInfo;
-
-			for (int i = 0; i < this.MissSounds.Length; i++)
-			{
-				this.MissSounds.GetArray(i, soundInfo, sizeof(soundInfo));
-
-				if (soundInfo.Paths == null)
-				{
-					continue;
-				}
-				soundInfo.Destroy();
-			}
-			delete this.MissSounds;
-		}
-		if (this.BulletShootSounds != null)
-		{
-			SF2BossProfileSoundInfo soundInfo;
-
-			for (int i = 0; i < this.BulletShootSounds.Length; i++)
-			{
-				this.BulletShootSounds.GetArray(i, soundInfo, sizeof(soundInfo));
-
-				if (soundInfo.Paths == null)
-				{
-					continue;
-				}
-				soundInfo.Destroy();
-			}
-			delete this.BulletShootSounds;
-		}
-		if (this.ProjectileShootSounds != null)
-		{
-			SF2BossProfileSoundInfo soundInfo;
-
-			for (int i = 0; i < this.ProjectileShootSounds.Length; i++)
-			{
-				this.ProjectileShootSounds.GetArray(i, soundInfo, sizeof(soundInfo));
-
-				if (soundInfo.Paths == null)
-				{
-					continue;
-				}
-				soundInfo.Destroy();
-			}
-			delete this.ProjectileShootSounds;
 		}
 
 		if (this.DamageResistances != null)
 		{
 			delete this.DamageResistances;
 		}
+
+		this.DestroyNestedSection(this.AttackSounds);
+		this.DestroyNestedSection(this.HitSounds);
+		this.DestroyNestedSection(this.MissSounds);
+		this.DestroyNestedSection(this.BulletShootSounds);
+		this.DestroyNestedSection(this.ProjectileShootSounds);
+		this.DestroyNestedSection(this.AttackBeginSounds);
+		this.DestroyNestedSection(this.AttackEndSounds);
+		this.DestroyNestedSection(this.AttackLoopSounds);
+
+		if (this.Rages != null)
+		{
+			SF2ChaserRageInfo rageData;
+
+			for (int i = 0; i < this.Rages.Length; i++)
+			{
+				this.Rages.GetArray(i, rageData, sizeof(rageData));
+
+				rageData.Destroy();
+			}
+
+			delete this.Rages;
+		}
+
+		if (this.Postures != null)
+		{
+			StringMapSnapshot snapshot = this.Postures.Snapshot();
+			SF2ChaserBossProfilePostureInfo posture;
+
+			char postureName[64];
+			for (int i = 0; i < snapshot.Length; i++)
+			{
+				snapshot.GetKey(i, postureName, sizeof(postureName));
+				this.Postures.GetArray(postureName, posture, sizeof(posture));
+				posture.Destroy();
+			}
+
+			delete snapshot;
+			delete this.Postures;
+		}
+
+	}
+
+	bool GetAttackFromIndex(int attackIndex, SF2ChaserBossProfileAttackData data)
+	{
+		if (this.Attacks == null || this.Attacks.Length <= attackIndex)
+		{
+			return false;
+		}
+		this.Attacks.GetArray(attackIndex, data, sizeof(data));
+		return true;
+	}
+
+	bool GetAttack(const char[] attackName, SF2ChaserBossProfileAttackData data)
+	{
+		if (this.Attacks == null || this.Attacks.Length == 0)
+		{
+			return false;
+		}
+		for (int i = 0; i < this.Attacks.Length; i++)
+		{
+			SF2ChaserBossProfileAttackData tempData;
+			this.Attacks.GetArray(i, tempData, sizeof(tempData));
+			if (strcmp(attackName, tempData.Name) == 0)
+			{
+				data = tempData;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool GetPosture(const char[] posture, SF2ChaserBossProfilePostureInfo postureInfo)
+	{
+		if (this.Postures == null)
+		{
+			return false;
+		}
+
+		return this.Postures.GetArray(posture, postureInfo, sizeof(postureInfo));
+	}
+
+	bool GetPostureFromIndex(int index, SF2ChaserBossProfilePostureInfo postureInfo)
+	{
+		if (this.Postures == null)
+		{
+			return false;
+		}
+
+		StringMapSnapshot snapshot = this.Postures.Snapshot();
+		if (index >= snapshot.Length)
+		{
+			delete snapshot;
+			return false;
+		}
+		char postureName[64];
+		snapshot.GetKey(index, postureName, sizeof(postureName));
+		bool value = this.Postures.GetArray(postureName, postureInfo, sizeof(postureInfo));
+		delete snapshot;
+		return value;
 	}
 }

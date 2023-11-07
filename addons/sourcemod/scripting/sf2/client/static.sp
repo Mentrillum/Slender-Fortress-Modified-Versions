@@ -53,7 +53,7 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 	ClientResetStatic(client.index);
 }
 
-static void OnBossRemoved(int bossIndex)
+static void OnBossRemoved(SF2NPC_BaseNPC npc)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -62,7 +62,7 @@ static void OnBossRemoved(int bossIndex)
 			continue;
 		}
 
-		if (NPCGetUniqueID(bossIndex) == g_PlayerStaticMaster[i])
+		if (npc.UniqueID == g_PlayerStaticMaster[i])
 		{
 			g_PlayerStaticMaster[i] = -1;
 

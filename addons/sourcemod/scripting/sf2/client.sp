@@ -45,7 +45,6 @@ int g_ClientFrame[MAXTF2PLAYERS];
 #include "sf2/client/ghostmode.sp"
 #include "sf2/client/music.sp"
 #include "sf2/client/proxy.sp"
-#include "sf2/methodmaps.sp"
 
 //	==========================================================
 //	GENERAL CLIENT HOOK FUNCTIONS
@@ -282,12 +281,6 @@ void ClientEscape(int client)
 		{
 			continue;
 		}
-		if (EntRefToEntIndex(g_SlenderTarget[npcIndex]) == client)
-		{
-			g_SlenderInterruptConditions[npcIndex] |= COND_CHASETARGETINVALIDATED;
-			GetClientAbsOrigin(client, g_SlenderChaseDeathPosition[npcIndex]);
-			g_BossPathFollower[npcIndex].Invalidate();
-		}
 		if (g_NpcChaseOnLookTarget[npcIndex] == null)
 		{
 			continue;
@@ -296,16 +289,6 @@ void ClientEscape(int client)
 		if (foundClient != -1)
 		{
 			g_NpcChaseOnLookTarget[npcIndex].Erase(foundClient);
-		}
-		switch (NPCGetType(npcIndex))
-		{
-			case SF2BossType_Chaser:
-			{
-				if (g_SlenderState[npcIndex] == STATE_CHASE && EntRefToEntIndex(g_SlenderTarget[npcIndex]) == client)
-				{
-					g_SlenderGiveUp[npcIndex] = true;
-				}
-			}
 		}
 	}
 
@@ -320,11 +303,6 @@ void ClientEscape(int client)
 		char name[MAX_NAME_LENGTH];
 		FormatEx(name, sizeof(name), "%N", client);
 		CPrintToChatAll("%t", "SF2 Player Escaped", name);
-	}
-
-	if (SF_IsRenevantMap() && g_RenevantMarkForDeath)
-	{
-		TF2_RemoveCondition(client, TFCond_MarkedForDeathSilent);
 	}
 
 	CheckRoundWinConditions();
@@ -482,7 +460,7 @@ void ClientProcessVisibility(int client)
 
 		if (boss && boss != INVALID_ENT_REFERENCE)
 		{
-			SlenderGetAbsOrigin(i, slenderPos);
+			CBaseEntity(boss).GetAbsOrigin(slenderPos);
 			NPCGetEyePosition(i, slenderEyePos);
 
 			float slenderMins[3], slenderMaxs[3];
@@ -574,7 +552,6 @@ void ClientProcessVisibility(int client)
 
 			if (GetGameTime() >= g_PlayerScareNextTime[client][master])
 			{
-				g_PlayerScaredByBoss[client][master] = false;
 				if (GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(NPCGetScareRadius(i)))
 				{
 					ClientPerformScare(client, master);
@@ -608,7 +585,7 @@ void ClientProcessVisibility(int client)
 					if (NPCGetScareReplenishSprintState(master))
 					{
 						int clientSprintPoints = ClientGetSprintPoints(client);
-						g_PlayerSprintPoints[client] = clientSprintPoints + NPCGetScareReplenishSprintAmount(master);
+						ClientSetSprintPoints(client, clientSprintPoints + NPCGetScareReplenishSprintAmount(master));
 					}
 
 					float value = NPCGetAttributeValue(master, SF2Attribute_IgnitePlayerOnScare);
@@ -628,37 +605,10 @@ void ClientProcessVisibility(int client)
 					}
 					if (NPCHasAttribute(master, SF2Attribute_ChaseTargetOnScare))
 					{
-						if (g_SlenderState[i] != STATE_CHASE && g_SlenderState[i] != STATE_ATTACK && g_SlenderState[i] != STATE_STUN)
+						SF2_ChaserEntity chaser = SF2_ChaserEntity(boss);
+						if (chaser.IsValid() && chaser.State == STATE_IDLE || chaser.State == STATE_ALERT)
 						{
-							int slender = NPCGetEntIndex(i);
-							g_NpcPlayerScareVictin[i] = EntIndexToEntRef(client);
-							g_SlenderState[i] = STATE_CHASE;
-							GetClientAbsOrigin(client, g_SlenderGoalPos[i]);
-							g_SlenderTarget[i] = EntIndexToEntRef(client);
-							g_SlenderTimeUntilNoPersistence[i] = GetGameTime() + NPCChaserGetChaseDuration(i, difficulty);
-							g_SlenderTimeUntilAlert[i] = GetGameTime() + NPCChaserGetChaseDuration(i, difficulty);
-							SlenderPerformVoice(i, _, SF2BossSound_ChaseInitial);
-							if (NPCChaserCanUseChaseInitialAnimation(i) && !g_NpcUsesChaseInitialAnimation[i] && !SF_IsSlaughterRunMap())
-							{
-								if (g_SlenderChaseInitialTimer[i] == null)
-								{
-									CBaseNPC npc = TheNPCs.FindNPCByEntIndex(slender);
-									g_NpcUsesChaseInitialAnimation[i] = true;
-									npc.flWalkSpeed = 0.0;
-									npc.flRunSpeed = 0.0;
-									NPCChaserUpdateBossAnimation(i, slender, g_SlenderState[i]);
-									g_SlenderChaseInitialTimer[i] = CreateTimer(g_SlenderAnimationDuration[i], Timer_SlenderChaseInitialTimer, EntIndexToEntRef(slender), TIMER_FLAG_NO_MAPCHANGE);
-								}
-							}
-							else
-							{
-								if (i != -1 && slender && slender != INVALID_ENT_REFERENCE)
-								{
-									NPCChaserUpdateBossAnimation(i, slender, g_SlenderState[i]);
-								}
-							}
-							g_PlayerScaredByBoss[client][i] = true;
-							SlenderAlertAllValidBosses(i, client, client);
+							SF2_BasePlayer(client).SetForceChaseState(SF2NPC_BaseNPC(i), true);
 						}
 					}
 					if (NPCGetJumpscareOnScare(master))
@@ -681,6 +631,11 @@ void ClientProcessVisibility(int client)
 					return;
 				}
 			}
+
+			Call_StartForward(g_OnPlayerLookAtBossPFwd);
+			Call_PushCell(SF2_BasePlayer(client));
+			Call_PushCell(SF2NPC_BaseNPC(i));
+			Call_Finish();
 
 			Call_StartForward(g_OnClientLooksAtBossFwd);
 			Call_PushCell(client);
@@ -1014,33 +969,48 @@ Action Timer_ClientPageDetector(Handle timer, int userid)
 		return Plugin_Stop;
 	}
 
+	CNavArea area = CBaseCombatCharacter(client).GetLastKnownArea();
+	if (area == NULL_AREA)
+	{
+		g_ClientSpecialRoundTimer[client] = CreateTimer(0.1, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
+		return Plugin_Stop;
+	}
+
 	int closestPageEntIndex = -1;
 
-	float distance = SquareFloat(99999.0);
+	float bestCost = 9999999.9;
 	float clientPos[3], pagePos[3];
 	GetClientAbsOrigin(client, clientPos);
 
 	ArrayList pageEntities = new ArrayList();
 	GetPageEntities(pageEntities);
 
+	CNavArea goalArea;
 	for (int i = 0; i < pageEntities.Length; i++)
 	{
 		CBaseEntity pageEnt = CBaseEntity(pageEntities.Get(i));
 		pageEnt.GetAbsOrigin(pagePos);
+		goalArea = TheNavMesh.GetNearestNavArea(pagePos);
+		TheNavMesh.BuildPath(area, goalArea, pagePos, _, _, 5000.0);
 
-		float squareDistance = GetVectorSquareMagnitude(clientPos, pagePos);
+		float cost = goalArea.GetCostSoFar();
 
-		if (closestPageEntIndex == -1 || squareDistance < distance)
+		if (closestPageEntIndex == -1 || cost < bestCost)
 		{
 			closestPageEntIndex = pageEnt.index;
-			distance = squareDistance;
+			bestCost = cost;
 		}
 	}
 
 	delete pageEntities;
 
-	float nextBeepTime = distance/SquareFloat(800.0);
+	float nextBeepTime = bestCost / 1200.0;
 
+	if (nextBeepTime == 0.0)
+	{
+		g_ClientSpecialRoundTimer[client] = CreateTimer(0.1, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
+		return Plugin_Stop;
+	}
 	if (nextBeepTime > 5.0)
 	{
 		nextBeepTime = 5.0;
@@ -1050,7 +1020,7 @@ Action Timer_ClientPageDetector(Handle timer, int userid)
 		nextBeepTime = 0.1;
 	}
 
-	EmitSoundToClient(client, PAGE_DETECTOR_BEEP, _, _, _, _, _, 100 - RoundToNearest(nextBeepTime * 10.0));
+	EmitSoundToClient(client, PAGE_DETECTOR_BEEP, _, _, _, _, 0.7, 100 - RoundToNearest(nextBeepTime * 10.0));
 	g_ClientSpecialRoundTimer[client] = CreateTimer(nextBeepTime, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Stop;
 }
@@ -1217,7 +1187,7 @@ static bool ClientCreateInteractiveGlow(int client,int entity, const char[] atta
 	return false;
 }
 
-static Action Hook_InterativeGlowSetTransmit(int ent,int other)
+static Action Hook_InterativeGlowSetTransmit(int ent, int other)
 {
 	if (!g_Enabled)
 	{
@@ -1421,10 +1391,7 @@ void ClientPerformScare(int client,int bossIndex)
 	{
 		soundInfo.EmitSound(true, client);
 
-		if (NPCGetFlags(bossIndex) & SFF_HASSIGHTSOUNDS)
-		{
-			g_PlayerSightSoundNextTime[client][bossIndex] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
-		}
+		g_PlayerSightSoundNextTime[client][bossIndex] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
 
 		if (g_PlayerStressAmount[client] > 0.4)
 		{
@@ -1458,11 +1425,6 @@ static void ClientPerformSightSound(int client,int bossIndex)
 	if (NPCGetUniqueID(bossIndex) == -1)
 	{
 		LogError("Could not perform sight sound on client %d: boss does not exist!", client);
-		return;
-	}
-
-	if (!(NPCGetFlags(bossIndex) & SFF_HASSIGHTSOUNDS))
-	{
 		return;
 	}
 
@@ -1630,7 +1592,7 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 //	MISC FUNCTIONS
 //	==========================================================
 
-void ClientUpdateListeningFlags(int client, bool reset=false)
+void ClientUpdateListeningFlags(int client, bool reset = false)
 {
 	if (!IsValidClient(client))
 	{
@@ -1809,7 +1771,6 @@ void ClientResetSlenderStats(int client)
 		g_PlayerSeesSlender[client][i] = false;
 		g_PlayerSeesSlenderLastTime[client][i] = -1.0;
 		g_PlayerSightSoundNextTime[client][i] = -1.0;
-		g_PlayerScaredByBoss[client][i] = false;
 	}
 
 	#if defined DEBUG
@@ -1840,7 +1801,8 @@ void ClientSaveCookies(int client)
 
 	// Save and reset our queue points.
 	char s[512];
-	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d", g_PlayerQueuePoints[client],
+	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d",
+		g_PlayerQueuePoints[client],
 		g_PlayerPreferences[client].PlayerPreference_PvPAutoSpawn,
 		g_PlayerPreferences[client].PlayerPreference_ShowHints,
 		g_PlayerPreferences[client].PlayerPreference_MuteMode,
@@ -1853,7 +1815,8 @@ void ClientSaveCookies(int client)
 		g_PlayerPreferences[client].PlayerPreference_GhostModeToggleState,
 		g_PlayerPreferences[client].PlayerPreference_GroupOutline,
 		g_PlayerPreferences[client].PlayerPreference_GhostModeTeleportState,
-		g_PlayerPreferences[client].PlayerPreference_LegacyHud);
+		g_PlayerPreferences[client].PlayerPreference_LegacyHud,
+		RoundToNearest(g_PlayerPreferences[client].PlayerPreference_MusicVolume * 100));
 
 	SetClientCookie(client, g_Cookie, s);
 }
@@ -1954,7 +1917,7 @@ void ClientSetFOV(int client,int fov)
 	SetEntData(client, g_PlayerDefaultFOVOffset, fov);
 }
 
-void TF2_GetClassName(TFClassType class, char[] buffer,int bufferLen)
+void TF2_GetClassName(TFClassType class, char[] buffer, int bufferLen, bool alt = false)
 {
 	switch (class)
 	{
@@ -1976,7 +1939,7 @@ void TF2_GetClassName(TFClassType class, char[] buffer,int bufferLen)
 		}
 		case TFClass_Heavy:
 		{
-			strcopy(buffer, bufferLen, "heavyweapons");
+			strcopy(buffer, bufferLen, !alt ? "heavyweapons" : "heavy");
 		}
 		case TFClass_Medic:
 		{
@@ -2001,7 +1964,7 @@ void TF2_GetClassName(TFClassType class, char[] buffer,int bufferLen)
 	}
 }
 
-bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool checkBlink = false)
+bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true, bool ignoreFog = false)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -2009,7 +1972,7 @@ bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool chec
 		{
 			continue;
 		}
-		if (IsPointVisibleToPlayer(i, pos, checkFOV, checkBlink))
+		if (IsPointVisibleToPlayer(i, pos, checkFOV, checkBlink, checkEliminated, ignoreFog))
 		{
 			return true;
 		}
@@ -2030,7 +1993,7 @@ bool IsPointVisibleToPlayer(int client, const float pos[3], bool checkFOV = true
 		return false;
 	}
 
-	if (checkBlink && IsClientBlinking(client))
+	if (checkBlink && IsClientBlinking(client) && !g_PlayerEliminated[client])
 	{
 		return false;
 	}

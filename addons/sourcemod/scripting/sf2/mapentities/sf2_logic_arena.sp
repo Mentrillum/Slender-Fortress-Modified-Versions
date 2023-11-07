@@ -32,6 +32,7 @@ methodmap SF2LogicRenevantEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iFinaleTime");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iFinaleTime", value);

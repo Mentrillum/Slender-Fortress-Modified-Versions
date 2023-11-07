@@ -76,7 +76,7 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		float eyePos[3];
 		GetClientEyePosition(client, eyePos);
 
-		TeleportEntity(ent, eyePos, view_as<float>({ 90.0, 0.0, 0.0 }), NULL_VECTOR);
+		TeleportEntity(ent, eyePos, { 90.0, 0.0, 0.0 }, NULL_VECTOR);
 		if (nightVision && !g_PlayerEliminated[client])
 		{
 			switch (g_NightvisionType)

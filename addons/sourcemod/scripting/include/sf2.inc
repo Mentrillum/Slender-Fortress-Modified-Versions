@@ -4,9 +4,11 @@
 #define _sf2_included
 
 #include <cbasenpc>
+#include <cbasenpc/util>
+#include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -14,7 +16,6 @@
 
 #define MAX_BOSSES 64
 #define MAX_NPCTELEPORTER 5
-#define MAX_NODES -1
 #define MAX_TRAPS 64
 #define MAX_CLASSES 9
 
@@ -46,7 +47,7 @@ enum
 	SPECIALROUND_DOUBLEMAXPLAYERS,
 	SPECIALROUND_LIGHTSOUT,
 	SPECIALROUND_BEACON,
-	SPECIALROUND_DOOMBOX,
+	SPECIALROUND_SILENTSLENDER,
 	SPECIALROUND_NOGRACE,
 	SPECIALROUND_2DOUBLE,
 	SPECIALROUND_DOUBLEROULETTE,
@@ -69,7 +70,6 @@ enum
 	SPECIALROUND_COFFEE,
 	SPECIALROUND_PAGEDETECTOR,
 	SPECIALROUND_CLASSSCRAMBLE,
-	SPECIALROUND_2DOOM,
 	SPECIALROUND_PAGEREWARDS,
 	SPECIALROUND_TINYBOSSES,
 	SPECIALROUND_RUNNINGINTHE90S,
@@ -79,6 +79,7 @@ enum
 	SPECIALROUND_THANATOPHOBIA,
 	SPECIALROUND_WALLHAX,
 	SPECIALROUND_SINGLEPLAYER,
+	SPECIALROUND_BEATBOX,
 	SPECIALROUND_MAXROUNDS
 };
 
@@ -86,12 +87,12 @@ enum
 enum
 {
 	STATE_IDLE = 0,
-	STATE_WANDER,
 	STATE_ALERT,
 	STATE_CHASE,
 	STATE_ATTACK,
 	STATE_STUN,
 	STATE_DEATHCAM,
+	STATE_DEATH,
 	MAX_STATE
 };
 
@@ -109,7 +110,7 @@ enum SoundType
 
 enum
 {
-	Difficulty_Easy = 0,
+	Difficulty_Easy = 0, // Also called the none difficulty
 	Difficulty_Normal,
 	Difficulty_Hard,
 	Difficulty_Insane,
@@ -131,7 +132,6 @@ enum
 	SF2BossType_Static = 0,
 	SF2BossType_Statue,
 	SF2BossType_Chaser,
-	SF2BossType_AdvancedChaser,
 	SF2BossType_MaxTypes
 };
 
@@ -145,10 +145,11 @@ enum
 	SF2BossSound_Stun = 5,
 	SF2BossSound_Attack,
 	SF2BossSound_AttackKilled,
-	SF2BossSound_RageAll,
-	SF2BossSound_RageTwo,
-	SF2BossSound_RageThree = 10,
-	SF2BossSound_SelfHeal,
+	SF2BossSound_Death,
+	SF2BossSound_TauntKill,
+	SF2BossSound_Smell,
+	SF2BossSound_AttackBegin,
+	SF2BossSound_AttackEnd,
 	SF2BossSound_MaxSounds
 };
 
@@ -156,20 +157,21 @@ enum
 {
 	SF2BossAnimation_Idle = 0,
 	SF2BossAnimation_Walk,
-	SF2BossAnimation_WalkAlert,
 	SF2BossAnimation_Attack,
-	SF2BossAnimation_Shoot,
-	SF2BossAnimation_Run = 5,
+	SF2BossAnimation_Run,
 	SF2BossAnimation_Stun,
-	SF2BossAnimation_ChaseInitial,
+	SF2BossAnimation_ChaseInitial = 5,
 	SF2BossAnimation_Rage,
 	SF2BossAnimation_Spawn,
-	SF2BossAnimation_FleeInitial = 10,
+	SF2BossAnimation_FleeInitial,
 	SF2BossAnimation_Heal,
-	SF2BossAnimation_DeathCam,
-	SF2BossAnimation_CrawlWalk,
-	SF2BossAnimation_CrawlRun,
-	SF2BossAnimation_MaxAnimations = 15
+	SF2BossAnimation_DeathCam = 10,
+	SF2BossAnimation_Death,
+	SF2BossAnimation_TauntKill,
+	SF2BossAnimation_Smell,
+	SF2BossAnimation_AttackBegin,
+	SF2BossAnimation_AttackEnd = 15,
+	SF2BossAnimation_MaxAnimations
 }
 
 enum SF2RoundState
@@ -187,7 +189,7 @@ enum
 {
 	SF2Attribute_ReducedSpeedOnLook = 0,
 	SF2Attribute_ReducedWalkSpeedOnLook,
-	SF2Attribute_AddStunHealhOnStun,
+	SF2Attribute_AddStunHealthOnStun,
 	SF2Attribute_AlwaysLookAtTarget,
 	SF2Attribute_AlwaysLookAtTargetWhileChasing,
 	SF2Attribute_AlwaysLookAtTargetWhileAttacking = 5,
@@ -203,15 +205,14 @@ enum
 	SF2Attribute_SilentMarkPlayerForDeathOnScare = 15,
 	SF2Attribute_IgnitePlayerOnDeath,
 	SF2Attribute_AddSpeedOnStun,
-	SF2Attribute_AddMaxSpeedOnStun,
 	SF2Attribute_DeathCamOnLowHealth,
-	SF2Attribute_AlertCopies = 20,
-	SF2Attribute_AlertCompanions,
+	SF2Attribute_AlertCopies,
+	SF2Attribute_AlertCompanions = 20,
 	SF2Attribute_BlockWalkSpeedUnderDifficulty,
 	SF2Attribute_ChaseTargetOnScare,
 	SF2Attribute_IgnoreNonMarkedForChase,
-	SF2Attribute_ReducedAccelerationOnLook = 25,
-	SF2Attribute_AddAccelerationOnStun,
+	SF2Attribute_ReducedAccelerationOnLook,
+	SF2Attribute_AddAccelerationOnStun = 25,
 	SF2Attribute_Max
 };
 
@@ -225,10 +226,11 @@ char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
 	"sound_stun",
 	"sound_attackenemy",
 	"sound_attack_killed",
-	"sound_rage",
-	"sound_rage_2",
-	"sound_rage_3",
-	"sound_heal_self"
+	"sound_death",
+	"sound_taunt_kill",
+	"sound_smell",
+	"sound_attack_begin",
+	"sound_attack_end"
 };
 
 char g_AttributesList[SF2Attribute_Max][] =
@@ -251,7 +253,6 @@ char g_AttributesList[SF2Attribute_Max][] =
 	"silent mark player for death on scare",
 	"ignite player on death",
 	"add speed on stun",
-	"add max speed on stun",
 	"death cam on low health",
 	"alert copies",
 	"alert companions",
@@ -274,6 +275,15 @@ enum ParticleAttachment
 	MAX_PATTACH_TYPES,
 };
 
+enum SF2NPCMoveTypes
+{
+	SF2NPCMoveType_Walk = 0,
+	SF2NPCMoveType_Run,
+	SF2NPCMoveType_Attack,
+	SF2NPCMoveType_Max
+}
+
+#include <sf2/stocks>
 #include <sf2/defines>
 #include <sf2/profiles/profiles>
 
@@ -291,7 +301,7 @@ enum ParticleAttachment
 #define SFF_HASSIGHTSOUNDS (1 << 10)
 #define SFF_HASSTATICLOOPLOCALSOUND (1 << 11)
 #define SFF_HASVIEWSHAKE (1 << 12)
-#define SFF_COPIES (1 << 13)
+#define SFF_NOCOPIES (1 << 13)
 #define SFF_ATTACKPROPS (1 << 14)
 #define SFF_WEAPONKILLS (1 << 15)
 #define SFF_WEAPONKILLSONRADIUS (1 << 16)
@@ -306,30 +316,25 @@ enum ParticleAttachment
 #define COND_CHASETARGETINVALIDATED (1 << 6)
 #define COND_SAWENEMY (1 << 7)
 #define COND_HEARDFLASHLIGHT (1 << 8)
-
-// Projectile flags.
-#define PROJ_FIREBALL (1 << 0)
-#define PROJ_ICEBALL (1 << 1)
-#define PROJ_ROCKET (1 << 2)
-#define PROJ_SENTRYROCKET (1 << 3)
-#define PROJ_GRENADE (1 << 4)
-#define PROJ_ARROW (1 << 5)
-#define PROJ_MANGLER (1 << 6)
-#define PROJ_BASEBALL (1 << 7)
-#define PROJ_FIREBALL_ATTACK (1 << 8)
-#define PROJ_ICEBALL_ATTACK (1 << 9)
+#define COND_ALERT_TRIGGER (1 << 9)
+#define COND_NEWENEMY (1 << 10)
+#define COND_ENEMYNEAR (1 << 11)
+#define COND_ENEMYVISIBLE (1 << 12)
+#define COND_ENEMYRECHASE (1 << 13)
+#define COND_DEBUG (1 << 14)
 
 /**
  * Called after a boss profile is successfully loaded.
  *
- * @param profile      Profile name
+ * @param profile		Profile name
+ * @param kv			Key Values
  */
 forward void SF2_OnBossProfileLoaded(const char[] profile, KeyValues kv);
 
 /**
  * Called before a boss profile is unloaded.
  *
- * @param profile     Profile name
+ * @param profile		Profile name
  */
 forward void SF2_OnBossProfileUnloaded(const char[] profile);
 
@@ -362,14 +367,6 @@ forward void SF2_OnBossDespawn(int bossIndex);
  * @param newState		The new state.
  */
 forward void SF2_OnBossChangeState(int bossIndex, int oldState, int newState);
-
-/**
- * Called when the boss updates its animation.
- *
- * @param bossIndex	Boss index.
- * @return				If Plugin_Handled, animation change will be blocked.
- */
-forward Action SF2_OnBossAnimationUpdate(int bossIndex);
 
 /**
  * Called to determine the boss's run speed.
@@ -418,10 +415,18 @@ forward void SF2_OnBossRemoved(int bossIndex);
 /**
  * Called when the boss gets stun by a player.
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param client		The client who stunned the boss, will return -1 if the stun was a flashlight stun.
  */
 forward void SF2_OnBossStunned(int bossIndex, int client);
+
+/**
+ * Called when the boss gets killed..
+ *
+ * @param bossIndex		Boss index.
+ * @param attacker		The attacker who killed the boss.
+ */
+forward void SF2_OnBossKilled(int bossIndex, int attacker);
 
 /**
  * Called when the boss cloaks.
@@ -453,12 +458,34 @@ forward void SF2_OnBossFinishSpawning(int bossIndex);
 forward void SF2_OnBossPreAttack(int bossIndex, ArrayList attackArray);
 
 /**
- * Called when the boss finishes an attack yet not exiting it's attack state.
+ * Called just before a chaser boss takes damage.
  *
- * @param bossIndex	Boss index.
- * @param attackIndex Current attack index.
+ * @param chaser			Chaser entity
+ * @param attacker			Attacker entity
+ * @param inflictor			Inflictor entity
+ * @param damage			Damage about to be taken
+ * @return					Returning Plugin_Stop will invalidate any damage taken by the boss.
  */
-forward void SF2_OnBossAttacked(int bossIndex, int attackIndex);
+forward Action SF2_OnBossPreTakeDamage(SF2_ChaserBossEntity chaser, CBaseEntity attacker, CBaseEntity inflictor, float damage);
+
+/**
+ * Called whenever a chaser boss registers a player uses a flashlight for flashight stunning.
+ *
+ * @param chaser			Chaser entity
+ * @param player			Player using the flashlight
+ * @return					Returning Plugin_Stop will invalidate any flashlight damage taken by the boss from the specified player.
+ */
+forward Action SF2_OnBossPreFlashlightDamage(SF2_ChaserBossEntity chaser, SF2_Player player);
+
+
+/**
+ * Called whenever a chaser boss gets a command string "suspend for action" using INextBotEventResponder.OnCommandString()
+ *
+ * @param chaser			Chaser entity
+ * @param action			Action to use
+ * @return					Returning anything not Plugin_Continue will make the boss use the specified action and suspend for that
+ */
+forward Action SF2_OnChaserBossGetSuspendAction(SF2_ChaserBossEntity chaser, NextBotAction &action);
 
 /**
  * Called when pages have spawned into the map.
@@ -581,6 +608,14 @@ forward void SF2_OnClientLooksAwayFromBoss(int client, int bossIndex);
 forward void SF2_OnClientStartDeathCam(int client, int bossIndex);
 
 /**
+ * Called right before the player dies in a death cam
+ *
+ * @param client		Client index.
+ * @param bossIndex		Boss index.
+ */
+forward void SF2_OnClientPreKillDeathCam(int client, int bossIndex);
+
+/**
  * Called when the player gets exits a boss's deathcam.
  *
  * @param client		Client index.
@@ -684,6 +719,63 @@ forward Action SF2_OnGroupEnterGame(int groupIndex);
 forward void SF2_OnEverythingLoaded();
 
 /**
+ * Called whenever the difficulty vote finishes
+ *
+ * @param list 		ArrayList containing all valid attacks
+ */
+forward void SF2_OnDifficultyVoteFinished(ArrayList list, bool isRunOff);
+
+/**
+ * Called when a Chaser boss is determining if it's allowed to use the custom attack.
+ *
+ * @param chaser			Chaser entity
+ * @param attackName		Attack name
+ * @param data				Attack data
+ * @param target			The target entity that the boss is trying to use this attack on
+ * @return					Returning a value other than Plugin_Continue will block the boss from using
+ * 							the attack.
+ */
+forward Action SF2_OnIsBossCustomAttackPossible(SF2_ChaserBossEntity chaser, const char[] attackName, SF2ChaserBossProfileAttackData data, CBaseEntity target);
+
+/**
+ * Called when the Chaser boss has selected the custom attack and is requesting a
+ * NextBotAction to handle the attack logic.
+ *
+ * @param chaser			Chaser entity
+ * @param attackName		Attack name
+ * @param data				Attack data
+ * @param target			The target entity to use the attack on
+ * @param action			Parameter to fill with the NextBotAction
+ * @return					Return a value other than Plugin_Continue to use `action`
+ */
+forward Action SF2_OnBossGetCustomAttackAction(SF2_ChaserBossEntity chaser, const char[] attackName, SF2ChaserBossProfileAttackData data, CBaseEntity target, NextBotAction &action);
+
+/**
+ * Fires each time a boss starts an attack.
+ *
+ * @param chaser			Chaser entity
+ * @param attackName		Attack name
+ */
+forward void SF2_OnChaserBossStartAttack(SF2_ChaserBossEntity chaser, const char[] attackName);
+
+/**
+ * Fires after a boss has ended an attack.
+ *
+ * @param chaser			Chaser entity
+ * @param attackName		Attack name
+ */
+forward void SF2_OnChaserBossEndAttack(SF2_ChaserBossEntity chaser, const char[] attackName);
+
+/**
+ * Called whenever the gamemode picks a custom boss. Use this for creating entities.
+ *
+ * @param boss		The chosen boss
+ * @param pos		The selected position the boss will spawn on
+ * @param ang		The selected angle the boss will spawn on
+ */
+forward void SF2_OnSelectedPvEBoss(const char[] boss, const float pos[3], const float ang[3]);
+
+/**
  * Returns the global variable g_Config.
  *
  * @return				g_Config.
@@ -717,6 +809,15 @@ native bool SF2_IsRoundInGracePeriod();
  * @return				Integer of the difficulty.
  */
 native int SF2_GetCurrentDifficulty();
+
+/**
+ * Returns the current difficulty on the boss. This is only useful for boxing/PvE bosses.
+ * If the boss is not a PvE/boxing boss, then this will return the current gamemode difficulty.
+ *
+ * @param bossIndex		Boss index.
+ * @return				Integer of the difficulty.
+ */
+native int SF2_GetBossDifficulty(int bossIndex);
 
 /**
  * Returns the current difficulty of the round.
@@ -772,6 +873,55 @@ native int SF2_GetClientQueuePoints(int client);
 native void SF2_SetClientQueuePoints(int client, int amount);
 
 /**
+ * Returns whether or not the client is valid for SF2.
+ *
+ * @param client		Client index.
+ * @return				True if the player is valid, false if not.
+ */
+native bool SF2_IsValidClient(int client);
+
+/**
+ * Returns whether or not the client is crit boosted for SF2.
+ *
+ * @param client		Client index.
+ * @return				True if the player is crit boosted, false if not.
+ */
+native bool SF2_IsClientCritBoosted(int client);
+
+/**
+ * Returns whether or not the client is mini crit boosted for SF2.
+ *
+ * @param client		Client index.
+ * @return				True if the player is mini crit boosted, false if not.
+ */
+native bool SF2_IsClientMiniCritBoosted(int client);
+
+/**
+ * Returns whether or not the client is ubercharged for SF2.
+ *
+ * @param client		Client index.
+ * @return				True if the player is ubercharged, false if not.
+ */
+native bool SF2_IsClientUbercharged(int client);
+
+/**
+ * Returns whether or not the client is in a kart for SF2.
+ *
+ * @param client		Client index.
+ * @return				True if the player is in a kart, false if not.
+ */
+native bool SF2_IsClientInKart(int client);
+
+/**
+ * Returns whether or not the client is in a specific condition for SF2.
+ *
+ * @param client		Client index.
+ * @param condition		Condition to check.
+ * @return				True if the player is in a condition, false if not.
+ */
+native bool SF2_IsClientInCondition(int client, TFCond condition);
+
+/**
  * Returns a bool about the client's elimination state.
  *
  * @param client		Client index.
@@ -794,6 +944,14 @@ native bool SF2_IsClientInGhostMode(int client);
  * @return				True if the player is in a PvP zone, false if not.
  */
 native bool SF2_IsClientInPvP(int client);
+
+/**
+ * Returns a bool if the client is in a Player vs. Environment zone or not.
+ *
+ * @param client		Client index.
+ * @return				True if the player is in a PvE zone, false if not.
+ */
+native bool SF2_IsClientInPvE(int client);
 
 /**
  * Tells whether if the client is a Proxy or not.
@@ -1024,6 +1182,11 @@ native bool SF2_ClientForceProxy(int client, int bossIndex, const float teleport
 native void SF2_CollectAsPage(int pageEnt, int client);
 
 /**
+ * Returns the empty page spawn points not occupied by a page in ArrayList form.
+ */
+native ArrayList SF2_GetEmptyPageSpawnPoints();
+
+/**
  * Returns the maximum boss count.
  *
  * @return	Maximum boss count.
@@ -1069,16 +1232,6 @@ native int SF2_BossIDToBossIndex(int bossID);
  * @return					Unique id.
  */
 native int SF2_BossIndexToBossID(int bossIndex);
-
-/**
- * Updates the boss animation based on the defined state
- *
- * @param bossIndex			Boss index.
- * @param ent				Entity index.
- * @param state				State.
- * @param spawn				Determines if the boss should use a spawn animation.
-*/
-native void SF2_UpdateBossAnimation(int bossIndex, int ent, int state, bool spawn = false);
 
 /**
  * Forces a boss to jump at a position.
@@ -1248,92 +1401,10 @@ native void SF2_GetBossEyePosition(int bossIndex, float eyePos[3]);
  */
 native void SF2_GetBossEyePositionOffset(int bossIndex, float eyePosOffset[3]);
 
-/**
- * Returns the boss's field of view.
- *
- * @param bossIndex		Boss index.
- * @return					Field of view.
- */
-native float SF2_GetBossFOV(int bossIndex);
-
-/**
- * If the boss is in a chase state, returns the time which the boss's persistency on the target ends.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @return					Time where persistency ends.
- */
-native float SF2_GetBossTimeUntilNoPersistence(int bossIndex);
-
-/**
- * If the boss is in a chase state, sets the time which the boss's persistency on the target ends.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @param time				Time where persistency ends.
- */
-native void SF2_SetBossTimeUntilNoPersistence(int bossIndex, float time);
-
-/**
- * If the boss is in an alert state, returns the time which the boss should revert to idle state.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @return					Time where chase state should revert to idle state.
- */
-native float SF2_GetBossTimeUntilIdle(int bossIndex);
-
-/**
- * If the boss is in an alert state, sets the time which the boss should revert to idle state.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @param time				Time where chase state should revert to idle state.
- */
-native void SF2_SetBossTimeUntilIdle(int bossIndex, float time);
-
-/**
- * If the boss is in a chase state, returns the time which the boss should revert to alert state.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @return					Time where chase state should revert to alert state.
- */
-native float SF2_GetBossTimeUntilAlert(int bossIndex);
-
-/**
- * If the boss is in a chase state, sets the time which the boss should revert to alert state.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @param time				Time where chase state should revert to alert state.
- */
-native void SF2_SetBossTimeUntilAlert(int bossIndex, float time);
-
-/**
- * Returns whether or not the boss is stunnable.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @return					True if stunnable, false otherwise.
- */
+#pragma deprecated Use SF2ChaserBossProfileAttackData.StunEnabled[Difficulty_Max] instead.
 native bool SF2_IsBossStunnable(int bossIndex);
 
-/**
- * Returns whether or not the boss is stunnable by flashlight.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @return					True if stunnable by flashlight, false otherwise.
- */
+#pragma deprecated Use SF2ChaserBossProfileAttackData.StunFlashlight[Difficulty_Max] instead.
 native bool SF2_IsBossStunnableByFlashlight(int bossIndex);
 
 /**
@@ -1367,37 +1438,6 @@ native float SF2_GetBossStunHealth(int bossIndex);
 native void SF2_SetBossStunHealth(int bossIndex, float health);
 
 /**
- * Returns the time where the boss is not under stun cooldown.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @return					Time when boss is not under stun cooldown.
- */
-native float SF2_GetBossNextStunTime(int bossIndex);
-
-/**
- * Sets the time where the boss is not under stun cooldown.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @param time				Time when boss is not under stun cooldown.
- */
-native float SF2_SetBossNextStunTime(int bossIndex, float time);
-
-/**
- * Forces the boss to stop chasing.
- *
- * Only used with Chaser bosses.
- *
- * Note: If the boss is set to chase endlessly then this will not do anything.
- *
- * @param bossIndex		Boss index.
- */
-native void SF2_ForceBossGiveUp(int bossIndex);
-
-/**
  * Gets the current goal position of the boss.
  *
  * Only used with Chaser bosses.
@@ -1408,30 +1448,6 @@ native void SF2_ForceBossGiveUp(int bossIndex);
 native void SF2_GetBossGoalPosition(int bossIndex, float position[3]);
 
 /**
- * Returns whether or not the boss is able to hear the player given sound type.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @param client			Client index.
- * @param soundType			The type of sound to check.
- * @return					True if boss can hear, false otherwise.
- */
-native bool SF2_CanBossHearClient(int bossIndex, int client, SoundType soundType);
-
-/**
- * Creates a sound hint for the boss to follow.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex		Boss index.
- * @param soundType			The type of sound hint to create.
- * @param position			The position of the sound.
- * @param difficulty		The difficulty.
- */
-native void SF2_CreateBossSoundHint(int bossIndex, SoundType soundType, const float position[3], int difficulty);
-
-/**
  * Returns if the given profile is loaded or not.
  *
  * @param profile		Profile name.
@@ -1439,152 +1455,31 @@ native void SF2_CreateBossSoundHint(int bossIndex, SoundType soundType, const fl
  */
 native bool SF2_IsBossProfileValid(const char[] profile);
 
-/**
- * Retrieves an integer keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param defaultValue		Fallback value.
- * @return					The value, or defaultValue if the key doesn't exist.
- */
+#pragma deprecated Use SF2BossProfileData instead.
 native int SF2_GetBossProfileNum(const char[] profile, const char[] key, int defaultValue=0);
 
-/**
- * Retrieves a float keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param defaultValue	Fallback value.
- * @return					The value, or defaultValue if the key doesn't exist.
- */
+#pragma deprecated Use SF2BossProfileData instead.
 native float SF2_GetBossProfileFloat(const char[] profile, const char[] key, float defaultValue=0.0);
 
-/**
- * Retrieves a string keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param buffer			Buffer to store the value.
- * @param bufferLen		Max length of buffer.
- * @param defaultValue		Fallback value.
- * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
- */
+#pragma deprecated Use SF2BossProfileData instead.
 native bool SF2_GetBossProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue="");
 
-/**
- * Retrieves a vector keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param buffer			Buffer to store the value.
- * @param defaultValue	Fallback value.
- * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
- */
+#pragma deprecated Use SF2BossProfileData instead.
 native bool SF2_GetBossProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR);
 
-/**
- * Retrieves integer difficulty keyvalues from the profile.
- *
- * @param kv				KeyValues
- * @param baseKeyName		Name of the base key.
- * @param buffer			Values to store the key values in
- * @param defaultValues		Fallback values
- * @return					The value, or defaultValue if the key doesn't exist.
- */
-native void SF2_GetBossProfileDifficultyNumValues(KeyValues kv, const char[] baseKeyName, int buffer[Difficulty_Max], const int defaultValues[Difficulty_Max] = { 0, ... })
-
-/**
- * Retrieves bool difficulty keyvalues from the profile.
- *
- * @param kv				KeyValues
- * @param baseKeyName		Name of the base key.
- * @param buffer			Values to store the key values in
- * @param defaultValues		Fallback values
- * @return					The value, or defaultValue if the key doesn't exist.
- */
-native void SF2_GetBossProfileDifficultyBoolValues(KeyValues kv, const char[] baseKeyName, bool buffer[Difficulty_Max], const bool defaultValues[Difficulty_Max] = { false, ... })
-
-/**
- * Retrieves float difficulty keyvalues from the profile.
- *
- * @param kv				KeyValues
- * @param baseKeyName		Name of the base key.
- * @param buffer			Values to store the key values in
- * @param defaultValues		Fallback values
- * @return					The value, or defaultValue if the key doesn't exist.
- */
-native void SF2_GetBossProfileDifficultyFloatValues(KeyValues kv, const char[] baseKeyName, float buffer[Difficulty_Max], const float defaultValues[Difficulty_Max] = { 0.0, ... })
-
-/**
- * Retrieves an integer keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param defaultValue		Fallback value.
- * @param attackIndex		Attack Index to use.
- * @return					The value, or defaultValue if the key doesn't exist.
- */
+#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
 native int SF2_GetBossAttackProfileNum(const char[] profile, const char[] key, int defaultValue=0, const int attackIndex);
 
-/**
- * Retrieves a float keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param defaultValue	Fallback value.
- * @param attackIndex		Attack Index to use.
- * @return					The value, or defaultValue if the key doesn't exist.
- */
+#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
 native float SF2_GetBossAttackProfileFloat(const char[] profile, const char[] key, float defaultValue=0.0, const int attackIndex);
 
-/**
- * Retrieves a string keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param buffer			Buffer to store the value.
- * @param bufferLen		Max length of buffer.
- * @param defaultValue		Fallback value.
- * @param attackIndex		Attack Index to use.
- * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
- */
+#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
 native bool SF2_GetBossAttackProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue="", const int attackIndex);
 
-/**
- * Retrieves a vector keyvalue from the profile.
- *
- * @param profile			Profile name.
- * @param key				Name of the key.
- * @param buffer			Buffer to store the value.
- * @param defaultValue	Fallback value.
- * @param attackIndex		Attack Index to use.
- * @return					True if key exists; false otherwise. If false, buffer is set to defaultValue.
- */
+#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
 native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int attackIndex);
 
-/**
- * Retrieves a random string keyvalue from a section within the profile.
- *
- * Example: In a profile, a valid section would look like this:
- *
- * "profile"
- * {
- *   "section"
- *   {
- *     "1"   "item1"
- *     "2"   "item2"
- *   }
- * }
- *
- * This function will randomly choose a string value within "section" if key = "section".
- *
- * @param profile			Profile name.
- * @param key				Name of the key. Must be a section.
- * @param buffer			Buffer to store the value.
- * @param bufferLen		Max length of buffer.
- * @param index			Mainly used for attack indexes, selects a random sound from an array that is index.
- * @return					True if profile exists and key is set; false otherwise.
- */
+#pragma deprecated Use SF2BossProfileData instead.
 native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[] key, char[] buffer, int bufferLen, int index=-1);
 
 /**
@@ -1601,145 +1496,6 @@ native bool SF2_GetBossAttributeName(int bossIndex, int attribute);
  * @param defaultValue	Default value of attribute.
 */
 native float SF2_GetBossAttributeValue(int bossIndex, int attribute);
-
-/**
- * Returns the projectile type a boss uses.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
-*/
-native int SF2_GetBossProjectileType(int bossIndex);
-
-/**
- * Returns the current attack index of the boss.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @return Attack index.
-*/
-native int SF2_GetBossCurrentAttackIndex(int bossIndex);
-
-/**
- * Sets the boss' current attack index.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex New attack index.
-*/
-native int SF2_SetBossCurrentAttackIndex(int bossIndex, int attackIndex);
-
-/**
- * Returns all available attack indexes of the boss
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
-*/
-native int SF2_GetBossMaxAttackIndexes(int bossIndex);
-
-/**
- * Returns the boss' current run duration time
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex Attack index.
- * @return Attack run duration time.
-*/
-native float SF2_GetBossAttackRunDurationTime(int bossIndex, int attackIndex);
-
-/**
- * Sets the boss' current run duration time
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex Attack index.
- * @param newTime New attack run duration time.
-*/
-native void SF2_SetBossAttackRunDurationTime(int bossIndex, int attackIndex, float newTime);
-
-/**
- * Returns the boss' current run duration time
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex Attack index.
- * @return Attack run delay time.
-*/
-native float SF2_GetBossAttackRunDelayTime(int bossIndex, int attackIndex);
-
-/**
- * Sets the boss' current run delay time
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex Attack index.
- * @param newTime New attack run delay time.
-*/
-native void SF2_SetBossAttackRunDelayTime(int bossIndex, int attackIndex, float newTime);
-
-/**
- * Returns the damage type of a set attack index.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex	Attack index.
-*/
-#pragma deprecated Use SF2ChaserBossProfileAttackData.DamageType[Difficulty_Max] instead.
-native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
-
-/**
- * Returns the damage of a set attack index.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex	Attack index.
- * @param difficulty	The difficulty.
-*/
-#pragma deprecated Use SF2ChaserBossProfileAttackData.Damage[Difficulty_Max] instead.
-native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int difficulty);
-
-/**
- * Returns the spread of a set attack index
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex	Attack index.
- * @param difficulty	The difficulty.
-*/
-#pragma deprecated Use SF2ChaserBossProfileAttackData.Spread[Difficulty_Max] instead.
-native float SF2_GetBossAttackIndexSpread(int bossIndex, int attackIndex);
-
-/**
- * Returns the range of a set attack index
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex	Attack index.
- * @param difficulty	The difficulty.
-*/
-#pragma deprecated Use SF2ChaserBossProfileAttackData.Range[Difficulty_Max] instead.
-native float SF2_GetBossAttackIndexRange(int bossIndex, int attackIndex);
-
-/**
- * Returns the attack type of a set attack index.
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex	Attack index.
-*/
-native int SF2_GetBossAttackIndexType(int bossIndex, int attackIndex);
 
 /**
  * Returns the teleport think timer in Handle form
@@ -1768,44 +1524,6 @@ native void SF2_SetBossTeleportThinkTimer(int bossIndex, Handle timer);
 native int SF2_GetBossTeleportTarget(int bossIndex);
 
 /**
- * Returns the boss think timer in Handle form
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @return		Handle timer.
-*/
-native Handle SF2_GetBossThinkTimer(int bossIndex);
-
-/**
- * Sets the boss think timer and destroys the old think timer
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param timer		New timer (Can also be null).
-*/
-native void SF2_SetBossThinkTimer(int bossIndex, Handle timer);
-
-/**
- * Unhooks the boss' current pre-think hook function. Use this sparingly. (Or don't)
- *
- * @param bossIndex Boss index.
- */
-native void SF2_UnhookBossThinkHook(int bossIndex);
-
-/**
- * Forcefully makes the boss perform a voice based on pre-defined voices
- *
- * Only used with Chaser bosses.
- *
- * @param bossIndex	Boss index.
- * @param attackIndex	Optional index that looks mainly for attack sounds in sub sections
- * @param soundType		Type of sound the boss should perform
-*/
-native void SF2_PerformBossVoice(int bossIndex, const int attackIndex = -1, int soundType = -1);
-
-/**
  * Returns the StringMap variable containing every precached base boss profile
  *
  * @return		StringMap containing all base boss profile datas
@@ -1827,6 +1545,1242 @@ native StringMap SF2_GetChaserBossProfileData();
 native StringMap SF2_GetStatueBossProfileData();
 
 /**
+ * Spawns boss effects based on the list of effects used.
+ * Note this will not spawn the extra effects like the festive lights and the disco ball
+ * Only use this best for spawning in temporary effects.
+ * Note the array of effects must be an ArrayList that contains SF2BossProfileBaseEffectInfo.
+ *
+ * @param effects			The array of effects
+ * @param bossIndex			Boss to use
+ * @param overridePos		Override the spawn position of the effects
+ * @param overrideAng		Override the spawn angles of the effects
+ * @param output			The ArrayList that will contain all of the outputted entities as entity references
+ * @param entityOverride	If not INVALID_ENT_REFERENCE will attach all particles to the desired entity
+ */
+native void SF2_SpawnBossEffects(ArrayList effects, int bossIndex, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE);
+
+/**
+ *	Translates an activity name string into an Activity.
+ *
+ *	@param sActivity
+ *	@return					Activity, or ACT_INVALID if not found.
+ */
+native Activity SF2_TranslateProfileActivityFromName(const char[] activity);
+
+/**
+ *	Given an activity or sequence, translates into a sequence index.
+ *
+ *	@param iEntity			Entity index
+ *	@param sAnimation		Activity/sequence string
+ *	@return					Sequence index, or -1 if not found.
+ */
+native int SF2_LookupProfileAnimation(int entity, const char[] animation);
+
+/**
+ * Returns the profile data found on a boss index, note this is the basic profile data, I.E. what all bosses use
+ *
+ * @param bossIndex		Boss index.
+ * @param data			Data to be stored in. Note this takes in SF2BossProfileData
+ */
+native void SF2_GetProfileFromBossIndex(int bossIndex, any data[sizeof(SF2BossProfileData)]);
+
+/**
+ * Returns the chaser profile data found on a boss index.
+ *
+ * @param bossIndex		Boss index.
+ * @param data			Data to be stored in. Note this takes in SF2ChaserBossProfileData
+ */
+native void SF2_GetChaserProfileFromBossIndex(int bossIndex, any data[sizeof(SF2ChaserBossProfileData)]);
+
+/**
+ * Returns the statue profile data found on a boss index.
+ *
+ * @param bossIndex		Boss index.
+ * @param data			Data to be stored in. Note this takes in SF2StatueBossProfileData
+ */
+native void SF2_GetStatueProfileFromBossIndex(int bossIndex, any data[sizeof(SF2StatueBossProfileData)]);
+
+/**
+ * Returns the profile data found from a profile name, note this is the basic profile data, I.E. what all bosses use
+ *
+ * @param profile		Profile name.
+ * @param data			Data to be stored in. Note this takes in SF2BossProfileData
+ */
+native bool SF2_GetProfileFromName(const char[] profile, any data[sizeof(SF2BossProfileData)]);
+
+/**
+ * Returns the chaser profile data found from a profile name.
+ *
+ * @param profile		Profile name.
+ * @param data			Data to be stored in. Note this takes in SF2ChaserBossProfileData
+ */
+native bool SF2_GetChaserProfileFromName(const char[] profile, any data[sizeof(SF2ChaserBossProfileData)]);
+
+/**
+ * Returns the statue profile data found from a profile name.
+ *
+ * @param profile		Profile name.
+ * @param data			Data to be stored in. Note this takes in SF2StatueBossProfileData
+ */
+native bool SF2_GetStatueProfileFromName(const char[] profile, any data[sizeof(SF2ChaserBossProfileData)]);
+
+/**
+ * Methodmap responsible for all boss entities.
+*/
+methodmap SF2_BaseBossEntity < CBaseCombatCharacter
+{
+	/**
+	 * Whether or not the entity is actually a base boss
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
+	 *	Gets the controller index that owns this entity.
+	 */
+	property int Controller
+	{
+		public native get();
+	}
+
+	/**
+	 *	Gets the target entity index.
+	 */
+	property CBaseEntity Target
+	{
+		public native get();
+	}
+
+	/**
+	 *	The current state of the boss.
+	 */
+	property int State
+	{
+		public native get();
+	}
+
+	/**
+	 *	Time left in its current chase. Note that this does not always tick down
+	 *	at a steady rate.
+	 */
+	property float CurrentChaseDuration
+	{
+		public native get();
+	}
+
+	/**
+	 *	Gets the boss's eye position.
+	 *
+	 *	@param buffer     Buffer to store position
+	 */
+	public native void EyePosition(float buffer[3]);
+
+	/**
+	 *	Gets the boss's profile name
+	 *
+	 *	@param buffer		Buffer to name
+	 *  @param bufferLen	Size of buffer
+	 */
+	public native void GetProfileName(char[] buffer, int bufferLen);
+
+	/**
+	 * Gets the boss's name
+	 *
+	 * @param buffer		Buffer to name
+	 * @param bufferLen		Size of buffer
+	 */
+	public native void GetName(char[] buffer, int bufferLen);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_BaseBossEntity(int entity)
+	{
+		return view_as<SF2_BaseBossEntity>(entity);
+	}
+
+	/**
+	 * Gets the boss's profile data.
+	 *
+	 * @param data		Data to be stored in. Note this takes in SF2BossProfileData
+	 */
+	public native void ProfileData(any data[sizeof(SF2BossProfileData)]);
+
+	/**
+	 * Plays an animation on the boss from a specific animation section, even custom ones.
+	 *
+	 * @param animType			Animation section to search in.
+	 * @param preDefinedIndex	Optional animation index to use.
+	 * @param preDefinedName	Optional animation name to use.
+	 * @param duration			Optional animation duration return.
+	 */
+	public native void ResetProfileAnimation(const char[] animType, int preDefinedIndex = -1, const char[] preDefinedName = "", float &duration = 0.0)
+}
+
+/**
+ * The methodmap designed for statue bosses.
+ */
+methodmap SF2_StatueBossEntity < SF2_BaseBossEntity
+{
+	/**
+	 * Whether or not the entity is actually a statue boss
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
+	 * Returns whether or not the statue is moving.
+	 */
+	property bool IsMoving
+	{
+		public native get();
+	}
+
+	/**
+	 * Gets the time since the statue killed someone.
+	 */
+	property float LastKillTime
+	{
+		public native get();
+	}
+
+	/**
+	 * Gets the boss's profile data.
+	 *
+	 * @param data		Data to be stored in. Note this takes in SF2StatueBossProfileData
+	 */
+	public native void ProfileData(any data[sizeof(SF2StatueBossProfileData)]);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_StatueBossEntity(int entity)
+	{
+		return view_as<SF2_StatueBossEntity>(entity);
+	}
+}
+
+methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
+{
+	/**
+	 * Whether or not the entity is actually a chaser boss
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_ChaserBossEntity(int entity)
+	{
+		return view_as<SF2_ChaserBossEntity>(entity);
+	}
+
+	/**
+	 *	Whether or not the boss is attempting to move somewhere else.
+	 */
+	property bool IsAttemptingToMove
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not the boss is attacking.
+	 */
+	property bool IsAttacking
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not the boss is stunned or not.
+	 */
+	property bool IsStunned
+	{
+		public native get();
+	}
+
+	/**
+	 *	The current stun health.
+	 */
+	property int StunHealth
+	{
+		public native get();
+	}
+
+	/**
+	 *	The maximum stun health the boss spawns with.
+	 */
+	property int MaxStunHealth
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not stun health can be subtracted from the boss. This is
+	 *	affected by several factors including: if stunning is enabled or
+	 *	stun cooldown has elapsed.
+	 */
+	property bool CanBeStunned
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not the boss can take damage. This is mainly useful if the
+	 *	boss is performing an attack that makes them invulnerable or are currently
+	 *	in a rage state.
+	 */
+	property bool CanTakeDamage
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not the boss is currently raging.
+	 */
+	property bool IsRaging
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not the boss is currently running away to go heal.
+	 */
+	property bool IsRunningAway
+	{
+		public native get();
+	}
+
+	/**
+	 *	Whether or not the boss is currently trying to self heal.
+	 */
+	property bool IsSelfHealing
+	{
+		public native get();
+	}
+
+	/**
+	 * Gets the boss's profile data.
+	 *
+	 * @param data		Data to be stored in. Note this takes in SF2ChaserBossProfileData
+	 */
+	public native void ProfileData(any data[sizeof(SF2ChaserBossProfileData)]);
+
+	/**
+	 * Forces the boss to perform a voice. Note custom sound sections will not work.
+	 *
+	 * @param soundType		Sound type.
+	 * @param attackName	Optional attack name to search for.
+	 * @return				Whether or not the boss performed a voice.
+	 */
+	public native bool PerformVoice(int soundType = -1, const char[] attackName = "")
+
+	/**
+	 *	Gets the default posture of the boss. The default posture of a boss
+	 *	is named "default".
+	 *
+	 *	@param buffer		Buffer to store string
+	 *	@param bufferSize	Size of buffer
+	 *	@return				Number of characters written to buffer
+	 */
+	public native int GetDefaultPosture(char[] buffer, int bufferSize);
+
+	/**
+	 *	Sets the default posture of the boss.
+	 *
+	 *	@param buffer	Posture to set to
+	 *	@return			True if successful, false otherwise
+	 */
+	public native void SetDefaultPosture(const char[] buffer);
+
+	/**
+	 *	Gets the current attack name of the boss.
+	 *
+	 *	@param buffer		Buffer to store string
+	 *	@param bufferSize	Size of buffer
+	 *	@return				Number of characters written to buffer
+	 */
+	public native int GetAttackName(char[] buffer, int bufferSize);
+
+	/**
+	 *	Gets the time which the attack can be used again
+	 *
+	 *	@param attackName		Attack name
+	 *	@return					Timestamp
+	 */
+	public native float GetNextAttackTime(const char[] attackName);
+
+	/**
+	 *	Sets the time which the attack can be used again
+	 *
+	 *	@param attackName		Attack name
+	 *	@param time				Timestamp
+	 */
+	public native void SetNextAttackTime(const char[] attackName, float time);
+
+	/**
+	 * Drops a medkit/ammo pack depending on how the boss is configured
+	 *
+	 * @param death		Whether or not to use the death state's item drop state
+	 */
+	public native void DropItem(bool death = false)
+
+	/**
+	 * Checks if an attack is possible the default way
+	 * This only includes FOV and range checks
+	 * Difficulty checks and health checks are not included by default
+	 * Note that cooldown checks are already handled in SF2_ChaserEntity.GetAttackAction
+	 * And visibility checks are already handled in SF2_ChaserAttackLayerAction
+	 * You would use this primarily in SF2_OnIsBossCustomAttackPossible
+	 *
+	 * @param attackName			Name of the attack
+	 * @param includeDifficulties	Whether or not to include the difficulty checks
+	 * @param includeHealth			Whether or not to include target health checks
+	 * @return						Whether or not the attack is possible with the distance and FOV checks
+	 */
+	public bool IsAttackPossibleDefault(const char[] attackName, bool includeDifficulties = false, bool includeHealth = false)
+	{
+		if (!this.Target.IsValid())
+		{
+			return false;
+		}
+
+		int controller = this.Controller;
+		int difficulty = SF2_GetBossDifficulty(controller);
+
+		INextBot bot = this.MyNextBotPointer();
+		SF2ChaserBossProfileData data;
+		this.ProfileData(data);
+		SF2ChaserBossProfileAttackData attackData;
+		data.GetAttack(attackName, attackData);
+		float eyePos[3], targetPos[3], direction[3], eyeAng[3];
+		this.GetAbsAngles(eyeAng);
+		SF2_GetBossEyePosition(controller, eyePos);
+		this.Target.GetAbsOrigin(targetPos);
+		SubtractVectors(targetPos, eyePos, direction);
+		GetVectorAngles(direction, direction);
+		direction[2] = 180.0;
+
+		float distance = bot.GetRangeSquaredTo(this.Target.index);
+		float fov = FloatAbs(AngleDiff(direction[1], eyeAng[1]));
+
+		if (distance > Pow(attackData.BeginRange[difficulty], 2.0))
+		{
+			return false;
+		}
+
+		if (fov > attackData.BeginFOV[difficulty])
+		{
+			return false;
+		}
+
+		if (includeDifficulties)
+		{
+			if (difficulty < attackData.UseOnDifficulty)
+			{
+				return false;
+			}
+
+			if (difficulty >= attackData.BlockOnDifficulty)
+			{
+				return false;
+			}
+		}
+
+		if (includeHealth)
+		{
+			float health = float(this.Target.GetProp(Prop_Send, "m_iHealth"));
+			if (attackData.UseOnHealth != -1.0 && health < attackData.UseOnHealth)
+			{
+				return false;
+			}
+			if (attackData.BlockOnHealth != -1.0 && health >= attackData.BlockOnHealth)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+/**
+ * An action that plays a given sequence on the actor. This action exits when the
+ * duration has elapsed.
+ */
+methodmap SF2_PlaySequenceAndWaitAction < NextBotAction
+{
+	/**
+	 * @param sequence		Sequence index
+	 * @param duration 		How long the action should last. If 0.0, then this will be the sequence's
+	 * 						duration.
+	 * @param rate			Playback rate
+	 * @param cycle			Start cycle value, from 0.0 to 1.0
+	 */
+	public native SF2_PlaySequenceAndWaitAction(int sequence, float duration = 0.0, float rate = 1.0, float cycle = 0.0);
+}
+
+/**
+ * Interface to SF2_BasePlayer
+ */
+methodmap SF2_Player < CBaseCombatCharacter
+{
+	/**
+	 *	Attempts to cast a client to be this entity.
+	 *
+	 *	@param client     Client to use
+	 */
+	public SF2_Player(int client)
+	{
+		if (client <= 0)
+		{
+			return view_as<SF2_Player>(-1);
+		}
+		return view_as<SF2_Player>(client);
+	}
+
+	property int UserID
+	{
+		public native get();
+	}
+
+	/**
+	 * Returns true if the client index is > 0 and <= MaxClients, and if the client is in game.
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of IsPlayerAlive()
+	 */
+	property bool IsAlive
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of IsClientInGame()
+	 * Use this over IsClientInGame() though as it has extra optimizations
+	 */
+	property bool IsInGame
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of IsFakeClient()
+	 */
+	property bool IsBot
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of IsClientSourceTV()
+	 */
+	property bool IsSourceTV
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of IsClientReplay()
+	 */
+	property bool IsReplay
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the client is in third person mode
+	 */
+	property bool InThirdPerson
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of GetClientButtons()
+	 */
+	property int Buttons
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the client is moving
+	 */
+	public native bool IsMoving();
+
+	/**
+	 * Gets/Sets the client's health
+	 */
+	property int Health
+	{
+		public native get();
+
+		public native set(int value);
+	}
+
+	/**
+	 * Gets the client's max health
+	 */
+	property int MaxHealth
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the client is trying to duck
+	 */
+	property bool Ducking
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the client is currently ducked
+	 */
+	property bool Ducked
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of GetEntDataEnt2()
+	 */
+	public native int GetDataEnt(int offset);
+
+	/**
+	 * Alias of TF2_GetPlayerClass()
+	 */
+	property TFClassType Class
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of GetClientTeam()
+	 */
+	property int Team
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the client has a regenerating item like the Cozy Camper
+	 */
+	property bool HasRegenItem
+	{
+		public native get();
+
+		public native set(bool state);
+	}
+
+	/**
+	 * Alias of TF2_IsPlayerInCondition()
+	 * Use this over TF2_IsPlayerInCondition() though as it has extra optimizations
+	 *
+	 * @param condition		Condition type
+	 */
+	public native bool InCondition(TFCond condition);
+
+	/**
+	 * Alias of both TF2_RemoveCondition() and TF2_AddCondition()
+	 *
+	 * @param condition		Condition type
+	 * @param remove		Whether or not the condition should be removed
+	 * @param duration		How long the condition will last
+	 * @param inflictor		Inflictor of the condition
+	 */
+	public native bool ChangeCondition(TFCond condition, bool remove = false, float duration = -1.0, int inflictor = 0);
+
+	/**
+	 * Whether or not the client is crit boosted
+	 */
+	public native bool IsCritBoosted();
+
+	/**
+	 * Whether or not the client is mini crit boosted
+	 */
+	public native bool IsMiniCritBoosted();
+
+	/**
+	 * Alias of TF2_IgnitePlayer()
+	 *
+	 * @param self		Whether or not the attacker should be the player itself
+	 * @param attacker	Attacker index, this doesn't need to be set if self is true
+	 * @param duration	How long the afterburn should last
+	 */
+	public native void Ignite(bool self = false, int attacker = 0, float duration = 10.0);
+
+	/**
+	 * Alias of TF2_MakeBleed()
+	 *
+	 * @param self		Whether or not the attacker should be the player itself
+	 * @param attacker	Attacker index, this doesn't need to be set if self is true
+	 * @param duration	How long the bleed should last
+	 */
+	public native void Bleed(bool self = false, int attacker = 0, float duration = 5.0);
+
+	/**
+	 * Alias of TF2_StunPlayer()
+	 *
+	 * @param duration		How long the stun should last
+	 * @param slowdown		The multiplier to the player's speed in which they'll be slowed for
+	 * @param stunFlags		The flags of the stun
+	 * @param attacker		Attacker index
+	 */
+	public native void Stun(float duration, float slowdown = 0.0, int stunflags, int attacker = 0);
+
+	/**
+	 * Alias of TF2_RegeneratePlayer()
+	 */
+	public native void Regenerate();
+
+	/**
+	 * Alias of TF2_SetPlayerClass()
+	 *
+	 * @param classType		New class
+	 * @param weapons		Ignored/Unused
+	 * @param persistent	Whether or not the class change should remain after death
+	 */
+	public native void SetClass(TFClassType classType, bool weapons = true, bool persistent = true);
+
+	/**
+	 * Alias of GetClientEyePosition()
+	 *
+	 * @param vector		Destination to store the eye position
+	 */
+	public native void GetEyePosition(float vector[3]);
+
+	/**
+	 * Alias of GetClientEyeAngles()
+	 *
+	 * @param vector		Destination to store the eye angles
+	 */
+	public native void GetEyeAngles(float vector[3]);
+
+	/**
+	 * Alias of GetEntDataVector()
+	 *
+	 * @param offset		Offset to use
+	 * @param buffer		Vector to store the data in
+	 */
+	public native void GetDataVector(int offset, float buffer[3]);
+
+	/**
+	 * Alias of SetEntDataVector()
+	 *
+	 * @param offset		Offset to use
+	 * @param buffer		Vector to set
+	 * @param state			Whether or not the state should be sent over the network
+	 */
+	public native void SetDataVector(int offset, const float buffer[3], bool state = false);
+
+	/**
+	 * Returns the player's distance from an entity
+	 * Note this does not use the square root method
+	 *
+	 * @param ent	Entity to check
+	 */
+	public native float GetDistanceFromEntity(int ent);
+
+	/**
+	 * Alias of GetPlayerWeaponSlot()
+	 *
+	 * @param slot		Weapon slot
+	 */
+	public native int GetWeaponSlot(int slot);
+
+	/**
+	 * Switches the player's weapon slot to a specified index
+	 *
+	 * @param slot		Weapon slot
+	 */
+	public native void SwitchToWeaponSlot(int slot);
+
+	/**
+	 * Alias of TF2_RemoveWeaponSlot()
+	 *
+	 * @param slot		Weapon slot
+	 */
+	public native void RemoveWeaponSlot(int slot);
+
+	/**
+	 * Shakes the player's screen
+	 *
+	 * @param amp		Amplitude
+	 * @param duration	Duration of the screen shake
+	 * @param freq		Frequency
+	 */
+	public native void ScreenShake(float amp, float duration, float freq);
+
+	/**
+	 * Flings the client's camera in a specific direction
+	 *
+	 * @param punchVel		Direction/Strength
+	 */
+	public native void ViewPunch(const float punchVel[3]);
+
+	/**
+	 * Alias of SDKHooks_TakeDamage()
+	 *
+	 * @param self				Self damage
+	 * @param inflictor			Inflictor index, don't need to set if self is true
+	 * @param attacker			Attacker index, don't need to set if self is true
+	 * @param damage			Damage to take
+	 * @param damageType		Type of damage
+	 * @param weapon			Weapon index
+	 * @param damageForce		Velocity of damage force
+	 * @param damagePosition	Origin of damage
+	 * @param bypassHooks		Whether or not to bypass SDK hooks on OnTakeDamage
+	 */
+	public native void TakeDamage(bool self = false, int inflictor = 0, int attacker = 0, float damage, int damageType = 0, int weapon = -1,
+		const float damageForce[3] = NULL_VECTOR, const float damagePosition[3] = NULL_VECTOR, bool bypassHooks = true);
+
+	/**
+	 * Alias of TF2_RespawnPlayer()
+	 */
+	public native void Respawn();
+
+	/**
+	 * Updates the player's listening flags which determine if a player can hear the voice chat from a player
+	 *
+	 * @param reset		Resets all flags
+	 */
+	public native void UpdateListeningFlags(bool reset = false);
+
+	/**
+	 * Determines if the player is actually is a valid class, is in RED or BLU, and if the player is not coaching
+	 */
+	property bool IsParticipating
+	{
+		public native get();
+	}
+
+	/**
+	 * Alias of GetClientName()
+	 *
+	 * @param name		Buffer to store the client's name.
+	 * @param length	Maximum length of string buffer
+	 */
+	public native bool GetName(char[] name, int length);
+
+	/**
+	 * Gets/Sets the last buttons the player pressed
+	 */
+	property int LastButtons
+	{
+		public native get();
+
+		public native set(int value);
+	}
+
+	/**
+	 * Makes the player's speed fade to a specific color
+	 */
+	public native void ScreenFade(int duration, int time, int flags, int r, int g, int b, int a);
+
+	/**
+	 * Whether or not the player is eliminated from the game
+	 */
+	property bool IsEliminated
+	{
+		public native get();
+
+		public native set(bool state);
+	}
+
+	/**
+	 * Whether or not the player is in ghost mode
+	*/
+	property bool IsInGhostMode
+	{
+		public native get();
+	}
+
+	/**
+	 * Sets the player's ghost mode state
+	 *
+	 * @param state		New ghost mode state
+	 */
+	public native void SetGhostState(bool state);
+
+	/**
+	 * Whether or not the player is a proxy
+	 */
+	property bool IsProxy
+	{
+		public native get();
+
+		public native set(bool state);
+	}
+
+	/**
+	 * Gets/Sets the player's proxy control points
+	 */
+	property int ProxyControl
+	{
+		public native get();
+
+		public native set(int value);
+	}
+
+	/**
+	 * Gets/Sets the player's proxy master as a boss index
+	 */
+	property int ProxyMaster
+	{
+		public native get();
+
+		public native set(int value);
+	}
+
+	/**
+	 * Whether or not the player is in a PvP arena
+	 */
+	property bool IsInPvP
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the player is in a PvE arena
+	 */
+	property bool IsInPvE
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the player is in a death cam
+	 */
+	property bool IsInDeathCam
+	{
+		public native get();
+	}
+
+	/**
+	 * Starts a death cam for a boss
+	 *
+	 * @param bossIndex			Boss index to use
+	 * @param lookPos			What position the player should look at
+	 * @param antiCamp			Whether or not this was an anticamping death, only useful for public death cams
+	 */
+	public native void StartDeathCam(int bossIndex, const float lookPos[3], bool antiCamp = false);
+
+	/**
+	 * Whether or not the player has escaped
+	 */
+	property bool HasEscaped
+	{
+		public native get();
+	}
+
+	/**
+	 * Makes the player escape. Note this will not teleport the player to a escape point
+	 */
+	public native void Escape();
+
+	/**
+	 * Teleports the player to an escape point
+	 */
+	public native void TeleportToEscapePoint();
+
+	/**
+	 * Makes the player escape and teleports them to an escape point
+	 */
+	public native void ForceEscape();
+
+	/**
+	 * Whether or not the player is using a flashlight
+	 */
+	property bool UsingFlashlight
+	{
+		public native get();
+	}
+
+	/**
+	 * Toggles the player's flashlight state
+	 */
+	public native void HandleFlashlight();
+
+	/**
+	 * Gets/Sets the player's flashlight battery life
+	 */
+	property float FlashlightBatteryLife
+	{
+		public native get();
+
+		public native set(float value);
+	}
+
+	/**
+	 * Resets the player's flashlight
+	 */
+	public native void ResetFlashlight();
+
+	/**
+	 * Returns the player's next flashlight input time
+	 */
+	public native float GetFlashlightNextInputTime();
+
+	/**
+	 * Whether or not the player is sprinting. Note this only checks if the player is pressing the sprint button
+	 */
+	property bool IsSprinting
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the player is really sprinting.
+	 * This does consider if the player is on the ground and is actually moving
+	 */
+	property bool IsReallySprinting
+	{
+		public native get();
+	}
+
+	/**
+	 * Toggles the player's sprint state
+	 */
+	public native void HandleSprint(bool sprint);
+
+	/**
+	 * Sets the player's sprint timer
+	 *
+	 * @param recharge		Whether or not the timer should be recharging the player's sprint
+	 */
+	public native void SetSprintTimer(bool recharge = false);
+
+	/**
+	 * Returns the player's sprint points from 0-100
+	 */
+	public native int GetSprintPoints();
+
+	/**
+	 * Sets the player's sprint points
+	 */
+	public native void SetSprintPoints(int value);
+
+	/**
+	 * Whether or not the player's blink HUD element is showing
+	 */
+	property bool HasStartedBlinking
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the player is currently blinking
+	 */
+	property bool IsBlinking
+	{
+		public native get();
+	}
+
+	/**
+	 * Whether or not the player is continuing to stay blinked
+	 */
+	public native bool IsHoldingBlink();
+
+	/**
+	 * Sets the player's blink state
+	 *
+	 * @param value		Blink state
+	 */
+	public native void SetHoldingBlink(bool value);
+
+	/**
+	 * Gets/Sets the player's blink meter from 0.0 to 1.0
+	 */
+	property float BlinkMeter
+	{
+		public native get();
+
+		public native set(float amount);
+	}
+
+	/**
+	 * Returns how many times the player blinked
+	 */
+	property int BlinkCount
+	{
+		public native get();
+	}
+
+	/**
+	 * Makes the player blink
+	 */
+	public native void Blink();
+
+	/**
+	 * Makes the player start the peeking. This puts the player in third person
+	 */
+	public native bool StartPeeking();
+
+	/**
+	 * Makes the player end the peeking state. This simply puts the player back in first person
+	 */
+	public native void EndPeeking();
+
+	/**
+	 * Gets/Sets the amount of pages the player has collected
+	 */
+	property int PageCount
+	{
+		public native get();
+
+		public native set(int amount);
+	}
+
+	/**
+	 * Shows a hint to the player if the player has it enabled
+	 *
+	 * @param hint		Hint index
+	 */
+	public native void ShowHint(int hint);
+
+	/**
+	 * Gets/Sets the player's trap state
+	 */
+	property bool IsTrapped
+	{
+		public native get();
+
+		public native set(bool state);
+	}
+
+	/**
+	 * Gets/Sets the player's times they need to jump to not be trapped anymore
+	 */
+	property int TrapCount
+	{
+		public native get();
+
+		public native set(int amount);
+	}
+
+	/**
+	 * Gets/Sets the player's latched state if they're latched onto a boss's rope/tongue ability
+	 */
+	property bool IsLatched
+	{
+		public native get();
+
+		public native set(bool state);
+	}
+
+	/**
+	 * Gets/Sets the player's times they need to jump to not be latched by a boss anymore
+	 */
+	property int LatchCount
+	{
+		public native get();
+
+		public native set(int amount);
+	}
+
+	/**
+	 * Gets/Sets the player's latcher based on which boss is latching them with a boss's rope/tongue ability
+	 */
+	property int Latcher
+	{
+		public native get();
+
+		public native set(int value);
+	}
+
+	/**
+	 * Updates the player's music state
+	 *
+	 * @param initialize		Unknown????? Nobody knows what this actually does.
+	 */
+	public native void UpdateMusicSystem(bool initialize = false);
+
+	/**
+	 * Whether or not the player has a glow active
+	 */
+	property bool HasConstantGlow
+	{
+		public native get();
+	}
+
+	/**
+	 * Sets the player's play state based on if they're in RED
+	 *
+	 * @param state			State to be in
+	 * @param enablePlay	Whether or not the player is actively playing. Only set this if you know what you're doing
+	 */
+	public native void SetPlayState(bool state, bool enablePlay = true);
+
+	/**
+	 * Whether or not the player can see a boss
+	 *
+	 * @param bossIndex			Boss to check
+	 * @param checkFOV			Considers if the boss is in the player's FOV
+	 * @param checkBlink		Considers if the player is blinking
+	 * @param checkEliminated	Considers if the player is eliminated
+	 */
+	public native bool CanSeeSlender(int bossIndex, bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true);
+
+	/**
+	 * Sets the player's AFK time based on a set number of conditions
+	 *
+	 * @param reset		Whether or not the AFK time should be reset to the default AFK time
+	 */
+	public native void SetAFKTime(bool reset = true);
+
+	/**
+	 * Sets the player's AFK state
+	 */
+	public native void SetAFKState();
+
+	/**
+	 * Checks to make sure if the player is AFK or not, if they are the game puts the player in a AFK state
+	 */
+	public native void CheckAFKTime();
+
+	/**
+	 * Returns if the player should be immediately chased by a boss
+	 *
+	 * @param bossIndex		Boss to check
+	 */
+	public native bool ShouldBeForceChased(int bossIndex);
+
+	/**
+	 * Sets the player's state to be immediately chased by a boss
+	 *
+	 * @param bossIndex		Boss to use
+	 * @param value			State
+	 */
+	public native void SetForceChaseState(int bossIndex, bool value);
+
+	/**
+	 * Checks if a player is looking at a boss
+	 *
+	 * @param bossIndex			Boss to check
+	 */
+	public native bool IsLookingAtBoss(int bossIndex);
+}
+
+/**
  * Returns the distance of 2 vectors without utilizing the square root function and converting the values properly.
  *
  * @param vec1	Position 1.
@@ -1842,20 +2796,33 @@ native float SF2_GetVectorSquareMagnitude(const float vec1[3], const float vec2[
 native void SF2_InitiateBossPackVote(int initiator);
 
 /**
- * Returns the flags of the projectile.
+ * Adds a boss to the pool of PvE bosses. Note this takes entity names
  *
- * @param projectile		Entity index.
- * @return					Flags.
+ * @param bossName	Boss entity name
  */
-native int SF2_GetProjectileFlags(int projectile);
+native void SF2_RegisterPvEBoss(char[] bossName);
 
 /**
- * Sets the flags of the projectile.
+ * Removes a boss from the pool of PvE bosses. Note this takes entity names
+ * You MUST call this whenever your boss sub plugin ends or the gamemode will spawn an invalid entity
  *
- * @param projectile		Entity index.
- * @param flags				Flags.
+ * @param bossName	Boss entity name
  */
-native void SF2_SetProjectileFlags(int projectile, int flags);
+native void SF2_UnregisterPvEBoss(char[] bossName);
+
+/**
+ * Adds a boss onto the PvE boss list. This is required when you spawn your bosses in.
+ *
+ * @param bossEnt		Entity to add
+ */
+native void SF2_AddPvEBoss(int bossEnt);
+
+/**
+ * Removes a boss from the PvE boss list. This is required when your boss dies.
+ *
+ * @param bossEnt		Entity to remove
+ */
+native void SF2_KillPvEBoss(int bossEnt);
 
 /**
  * Returns if current map is a survival map or not.

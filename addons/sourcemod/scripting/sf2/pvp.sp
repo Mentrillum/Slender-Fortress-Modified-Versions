@@ -8,8 +8,8 @@
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 #define FLAME_HIT_DELAY 0.05
 
-ConVar g_PvPArenaLeaveTimeConVar = null;
-ConVar g_PvPArenaProjectileZapConVar = null;
+static ConVar g_PvPArenaLeaveTimeConVar = null;
+static ConVar g_PvPArenaProjectileZapConVar = null;
 
 static const char g_PvPProjectileClasses[][] =
 {
@@ -35,6 +35,7 @@ static const char g_PvPProjectileClasses[][] =
 	"tf_projectile_energy_ring",
 	"tf_projectile_syringe"
 };
+
 static const char g_PvPProjectileClassesNoTouch[][] =
 {
 	"tf_projectile_flare"
@@ -134,11 +135,11 @@ void PvP_Initialize()
 
 void PvP_SetupMenus()
 {
-	g_MenuSettingsPvP = CreateMenu(Menu_SettingsPvP);
-	SetMenuTitle(g_MenuSettingsPvP, "%t%t\n \n", "SF2 Prefix", "SF2 Settings PvP Menu Title");
-	AddMenuItem(g_MenuSettingsPvP, "0", "Toggle automatic spawning");
-	AddMenuItem(g_MenuSettingsPvP, "1", "Toggle spawn protection");
-	SetMenuExitBackButton(g_MenuSettingsPvP, true);
+	g_MenuSettingsPvP = new Menu(Menu_SettingsPvP);
+	g_MenuSettingsPvP.SetTitle("%t%t\n \n", "SF2 Prefix", "SF2 Settings PvP Menu Title");
+	g_MenuSettingsPvP.AddItem("0", "Toggle automatic spawning");
+	g_MenuSettingsPvP.AddItem("1", "Toggle spawn protection");
+	g_MenuSettingsPvP.ExitBackButton = true;
 }
 
 static void MapStart()
@@ -188,7 +189,7 @@ static void RoundStart()
 				//flags |= TRIGGER_PHYSICS_OBJECTS;
 				flags |= TRIGGER_PHYSICS_DEBRIS;
 				SetEntProp(ent, Prop_Data, "m_spawnflags", flags);
-				SDKHook( ent, SDKHook_EndTouch, PvP_OnTriggerEndTouch );
+				SDKHook(ent, SDKHook_EndTouch, PvP_OnTriggerEndTouch);
 			}
 		}
 	}
@@ -741,7 +742,7 @@ static Action EntityStillAlive(Handle timer, int ref)
 /**
  *	Enables/Disables PvP mode on the player.
  */
-void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles=true, bool regenerate=true)
+void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles = true, bool regenerate = true)
 {
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	if (!player.IsValid)
@@ -753,6 +754,12 @@ void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles=true,
 	if (status == oldInPvP)
 	{
 		return; // no change
+	}
+
+	if (status && player.IsInPvE)
+	{
+		PvE_ForceResetPlayerPvEData(player.index);
+		PvE_SetPlayerPvEState(player.index, false, false);
 	}
 
 	g_PlayerInPvP[player.index] = status;
@@ -949,10 +956,13 @@ static Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 		float pos[3], ang[3];
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
 		GetEntPropVector(ent, Prop_Data, "m_angAbsRotation", ang);
-		TeleportEntity(client, pos, ang, view_as<float>({ 0.0, 0.0, 0.0 }));
+		TeleportEntity(client, pos, ang, { 0.0, 0.0, 0.0 });
 
 		EmitAmbientSound(SF2_PVP_SPAWN_SOUND, pos, _, SNDLEVEL_NORMAL, _, 1.0);
-		if (g_PlayerPreferences[client].PlayerPreference_PvPSpawnProtection) TF2_AddCondition(client, TFCond_UberchargedCanteen, 1.5);
+		if (g_PlayerPreferences[client].PlayerPreference_PvPSpawnProtection)
+		{
+			TF2_AddCondition(client, TFCond_UberchargedCanteen, 1.5);
+		}
 
 		SF2PlayerPvPSpawnEntity spawnPoint = SF2PlayerPvPSpawnEntity(ent);
 		if (spawnPoint.IsValid())
@@ -1011,6 +1021,11 @@ static Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 bool IsClientInPvP(int client)
 {
 	return g_PlayerInPvP[client];
+}
+
+bool IsClientLeavingPvP(int client)
+{
+	return g_PlayerIsLeavingPvP[client];
 }
 ////////////////
 // Blood effects
@@ -1126,6 +1141,11 @@ MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDama
 static MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHookReturn returnHandle, DHookParam params)
 {
 	if (!g_Enabled)
+	{
+		return MRES_Ignored;
+	}
+
+	if (!IsValidEntity(projectile))
 	{
 		return MRES_Ignored;
 	}

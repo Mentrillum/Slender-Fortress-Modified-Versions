@@ -27,6 +27,7 @@ methodmap SF2PlayerEscapeSpawnEntity < SF2SpawnPointBaseEntity
 		{
 			return !this.GetProp(Prop_Data, "sf2_bDisabled");
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bDisabled", !value);

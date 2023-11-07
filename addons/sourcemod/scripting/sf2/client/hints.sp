@@ -54,7 +54,7 @@ void ClientResetHints(int client)
     #endif
 }
 
-void ClientShowHint(int client,int hint)
+void ClientShowHint(int client, int hint)
 {
 	g_PlayerHints[client][hint] = true;
 
@@ -81,4 +81,9 @@ void ClientShowHint(int client,int hint)
 			PrintHintText(client, "%T", "SF2 Hint Trap", client);
 		}
 	}
+}
+
+bool ClientHasHint(int client, int hint)
+{
+	return g_PlayerHints[client][hint];
 }
