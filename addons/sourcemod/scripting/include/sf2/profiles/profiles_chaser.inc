@@ -2258,6 +2258,8 @@ enum struct SF2ChaserBossProfileData
 		this.NormalSoundHook = false;
 		this.OldAnimationAI = false;
 
+		this.ChaseOnLookData.Init();
+
 		this.ClearLayersOnAnimUpdate = true;
 
 		this.HealAnimationTimer = 0.0;
