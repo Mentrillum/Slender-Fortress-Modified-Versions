@@ -163,8 +163,6 @@ public void OnPluginStart()
 	g_IgnoreRedPlayerDeathSwapConVar = CreateConVar("sf2_ignore_red_player_death_team_switch", "0", "If set to 1, RED players will not switch back to the BLU team.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_IgnoreRedPlayerDeathSwapConVar.AddChangeHook(OnConVarChanged);
 
-	g_DefaultBossVisibilityStateConVar = CreateConVar("sf2_default_boss_visibility", "0", "Sets the default visibility state for bosses before the CBaseNPC update to allow for easier/harder peeking, this does not affect bosses seeing through transparent surfaces like glass however. Keep in mind creators can override this value for specific bosses only.", _, true, 0.0, true, 1.0);
-
 	g_EnableWallHaxConVar = CreateConVar("sf2_enable_wall_hax", "0", "Enables/disables the Wall Hax special round without needing to turn on Wall Hax. This will not force the difficulty to Insane and will show player + boss outlines.", _, true, 0.0, true, 1.0);
 
 	g_TimeLimitConVar = CreateConVar("sf2_timelimit_default", "300", "The time limit of the round. Maps can change the time limit.", _, true, 0.0);

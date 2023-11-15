@@ -17,8 +17,6 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	SF2ChaserBossProfileData profileData;
 	profileData.Init();
 
-	profileData.UnnerfedVisibility = kv.GetNum("old_boss_visibility", profileData.UnnerfedVisibility) != 0;
-
 	profileData.ClearLayersOnAnimUpdate = kv.GetNum("animation_clear_layers_on_update", profileData.ClearLayersOnAnimUpdate) != 0;
 
 	GetProfileDifficultyFloatValues(kv, "walkspeed", profileData.WalkSpeed, profileData.WalkSpeed);
@@ -604,12 +602,6 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		attackData.Name = attackName;
 
 		attackData.Type = kv.GetNum("type", attackData.Type);
-
-		if (attackData.Type == SF2BossAttackType_Invalid)
-		{
-			LogSF2Message("[SF2 PROFILES PARSER] Attack %s is not supposed to be an invalid attack!", attackName);
-			continue;
-		}
 
 		GetProfileDifficultyFloatValues(kv, "range", attackData.Range, attackData.Range);
 

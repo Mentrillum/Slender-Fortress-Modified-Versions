@@ -66,6 +66,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineBoolField("m_IsAttacking")
 			.DefineBoolField("m_CancelAttack")
 			.DefineStringField("m_AttackName")
+			.DefineIntField("m_AttackIndex")
 			.DefineIntField("m_NextAttackTime")
 			.DefineFloatField("m_AttackRunDuration")
 			.DefineFloatField("m_AttackRunDelay")
@@ -432,6 +433,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public void SetAttackName(const char[] name)
 	{
 		this.SetPropString(Prop_Data, "m_AttackName", name);
+	}
+
+	property int AttackIndex
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_AttackIndex");
+		}
+
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "m_AttackIndex", value);
+		}
 	}
 
 	property StringMap NextAttackTime
@@ -1428,7 +1442,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 			attackName = attackData.Name;
 
-			return SF2_ChaserAttackAction(attackName, attackData.Duration[difficulty] + gameTime);
+			return SF2_ChaserAttackAction(attackName, attackData.Index, attackData.Duration[difficulty] + gameTime);
 		}
 
 		delete arrayAttacks;
@@ -2939,6 +2953,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		CreateNative("SF2_ChaserBossEntity.GetDefaultPosture", Native_GetDefaultPosture);
 		CreateNative("SF2_ChaserBossEntity.SetDefaultPosture", Native_SetDefaultPosture);
 		CreateNative("SF2_ChaserBossEntity.GetAttackName", Native_GetAttackName);
+		CreateNative("SF2_ChaserBossEntity.GetAttackIndex", Native_GetAttackIndex);
 		CreateNative("SF2_ChaserBossEntity.GetNextAttackTime", Native_GetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.SetNextAttackTime", Native_SetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.DropItem", Native_DropItem);
@@ -3080,6 +3095,7 @@ static void OnDisconnected(SF2_BasePlayer client)
 
 static void OnCreate(SF2_ChaserEntity ent)
 {
+	ent.AttackIndex = -1;
 	ent.Target = CBaseEntity(INVALID_ENT_REFERENCE);
 	ent.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
 	ent.IsAllowedToDespawn = true;
@@ -3131,12 +3147,15 @@ static Action Think(int entIndex)
 static void ThinkPost(int entIndex)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(entIndex);
+	SF2NPC_Chaser controller = chaser.Controller;
+	SF2BossProfileData data;
+	data = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
 
 	ProcessSpeed(chaser);
 
 	ProcessBody(chaser);
 
-	if (NPCGetCustomOutlinesState(chaser.Controller.Index) && NPCGetRainbowOutlineState(chaser.Controller.Index))
+	if (data.CustomOutlines && data.RainbowOutline)
 	{
 		chaser.ProcessRainbowOutline();
 	}
@@ -3582,32 +3601,16 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		bool isVisible, isTraceVisible;
 		int traceHitEntity;
-		if (data.UnnerfedVisibility)
-		{
-			Handle trace = TR_TraceRayFilterEx(traceStartPos,
-					traceEndPos,
-					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP,
-					RayType_EndPoint,
-					TraceRayBossVisibility,
-					chaser.index);
-			isVisible = !TR_DidHit(trace);
-			traceHitEntity = TR_GetEntityIndex(trace);
+		TR_TraceHullFilter(traceStartPos,
+		traceEndPos,
+		traceMins,
+		traceMaxs,
+		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP,
+		TraceRayBossVisibility,
+		chaser.index);
 
-			delete trace;
-		}
-		else
-		{
-			TR_TraceHullFilter(traceStartPos,
-			traceEndPos,
-			traceMins,
-			traceMaxs,
-			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP,
-			TraceRayBossVisibility,
-			chaser.index);
-
-			isVisible = !TR_DidHit();
-			traceHitEntity = TR_GetEntityIndex();
-		}
+		isVisible = !TR_DidHit();
+		traceHitEntity = TR_GetEntityIndex();
 
 		if (!isVisible && traceHitEntity == client.index)
 		{
@@ -4762,6 +4765,19 @@ static any Native_GetAttackName(Handle plugin, int numParams)
 	SetNativeString(2, attack, bufferSize);
 
 	return result;
+}
+
+static any Native_GetAttackIndex(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+
+	return bossEntity.AttackIndex;
 }
 
 static any Native_GetNextAttackTime(Handle plugin, int numParams)

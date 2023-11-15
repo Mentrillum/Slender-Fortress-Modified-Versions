@@ -23,6 +23,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnBossCloakedFwd = new GlobalForward("SF2_OnBossCloaked", ET_Ignore, Param_Cell);
 	g_OnBossDecloakedFwd = new GlobalForward("SF2_OnBossDecloaked", ET_Ignore, Param_Cell);
 	g_OnBossPreAttackFwd = new GlobalForward("SF2_OnBossPreAttack", ET_Ignore, Param_Cell, Param_Cell);
+	g_OnBossAttackedFwd = new GlobalForward("SF2_OnBossAttacked", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnBossPreTakeDamageFwd = new GlobalForward("SF2_OnBossPreTakeDamage", ET_Hook, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnBossPreFlashlightDamageFwd = new GlobalForward("SF2_OnBossPreFlashlightDamage", ET_Hook, Param_Cell, Param_Cell);
 	g_OnChaserBossGetSuspendActionFwd = new GlobalForward("SF2_OnChaserBossGetSuspendAction", ET_Hook, Param_Cell, Param_CellByRef);

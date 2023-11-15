@@ -321,6 +321,8 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		info.EmitSound(_, actor.index);
 	}
 
+	actor.DoShockwave(action.GetAttackName());
+
 	if (hit)
 	{
 		CBaseEntity phys = CBaseEntity(CreateEntityByName("env_physexplosion"));
@@ -352,8 +354,6 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	}
 
 	delete targets;
-
-	actor.DoShockwave(action.GetAttackName());
 }
 
 static void OnAnimationEvent(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity actor, int event)

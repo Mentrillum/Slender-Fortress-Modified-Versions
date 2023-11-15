@@ -1,4 +1,3 @@
-ConVar g_DefaultBossVisibilityStateConVar;
 #include <morecolors>
 
 enum
@@ -2046,8 +2045,6 @@ enum struct SF2ChaserBossProfileData
 
 	SF2ChaserBossProfileChaseOnLookData ChaseOnLookData;
 
-	bool UnnerfedVisibility;
-
 	bool ClearLayersOnAnimUpdate;
 
 	float HealAnimationTimer;
@@ -2260,10 +2257,6 @@ enum struct SF2ChaserBossProfileData
 
 		this.NormalSoundHook = false;
 		this.OldAnimationAI = false;
-
-		this.ChaseOnLookData.Init();
-
-		this.UnnerfedVisibility = g_DefaultBossVisibilityStateConVar.BoolValue;
 
 		this.ClearLayersOnAnimUpdate = true;
 

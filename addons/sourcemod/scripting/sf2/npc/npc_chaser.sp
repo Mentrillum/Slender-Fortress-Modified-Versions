@@ -561,6 +561,7 @@ static void TriggerKey(int caller)
 
 void NPCChaser_InitializeAPI()
 {
+	CreateNative("SF2_GetBossCurrentAttackIndex", Native_GetBossCurrentAttackIndex);
 	CreateNative("SF2_GetChaserProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetChaserProfileFromName", Native_GetProfileDataEx);
 
@@ -568,6 +569,23 @@ void NPCChaser_InitializeAPI()
 	g_OnChaserBossEndAttackFwd = new GlobalForward("SF2_OnChaserBossEndAttack", ET_Ignore, Param_Cell, Param_String);
 
 	SF2_ChaserEntity.SetupAPI();
+}
+
+static any Native_GetBossCurrentAttackIndex(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	return chaser.AttackIndex;
 }
 
 static any Native_GetProfileData(Handle plugin, int numParams)

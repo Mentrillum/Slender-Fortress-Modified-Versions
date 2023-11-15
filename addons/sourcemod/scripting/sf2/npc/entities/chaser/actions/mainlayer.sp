@@ -540,7 +540,7 @@ static void OnLeaveGround(SF2_ChaserMainAction action, SF2_ChaserEntity actor, C
 	actor.IsJumping = false;
 }
 
-static int OnCommandString(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, const char[] command)
+static int OnCommandString(SF2_ChaserMainAction action, SF2_ChaserEntity actor, const char[] command)
 {
 	if (StrContains(command, "debug attack ") == 0 && !actor.IsAttacking)
 	{
@@ -553,7 +553,7 @@ static int OnCommandString(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntit
 		data = controller.GetProfileData();
 		SF2ChaserBossProfileAttackData attackData;
 		data.GetAttack(attack, attackData);
-		return action.TrySuspendFor(SF2_ChaserAttackAction(attack, attackData.Duration[difficulty] + GetGameTime()), RESULT_IMPORTANT);
+		return action.TrySuspendFor(SF2_ChaserAttackAction(attack, attackData.Index, attackData.Duration[difficulty] + GetGameTime()), RESULT_IMPORTANT);
 	}
 
 	if (strcmp(command, "suspend for action") == 0)

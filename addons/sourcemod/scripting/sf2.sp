@@ -192,7 +192,6 @@ int g_SlenderOutlineColorG[MAX_BOSSES];
 int g_SlenderOutlineColorB[MAX_BOSSES];
 int g_SlenderOutlineTransparency[MAX_BOSSES];
 bool g_SlenderUseRainbowOutline[MAX_BOSSES];
-float g_SlenderRainbowCycleRate[MAX_BOSSES];
 
 int g_TrapEntityCount;
 float g_RoundTimeMessage = 0.0;
@@ -620,6 +619,7 @@ GlobalForward g_OnBossCloakedFwd;
 GlobalForward g_OnBossDecloakedFwd;
 GlobalForward g_OnBossFinishSpawningFwd;
 GlobalForward g_OnBossPreAttackFwd;
+GlobalForward g_OnBossAttackedFwd;
 GlobalForward g_OnBossPreTakeDamageFwd;
 GlobalForward g_OnBossPreFlashlightDamageFwd;
 GlobalForward g_OnChaserBossGetSuspendActionFwd;

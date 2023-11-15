@@ -1234,11 +1234,6 @@ bool NPCGetRainbowOutlineState(int npcIndex)
 	return g_SlenderUseRainbowOutline[npcIndex];
 }
 
-float NPCGetRainbowOutlineCycleRate(int npcIndex)
-{
-	return g_SlenderRainbowCycleRate[npcIndex];
-}
-
 void NPCSetAddSpeed(int npcIndex, float amount)
 {
 	g_NpcAddSpeed[npcIndex] += amount;
@@ -1740,7 +1735,6 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	g_SlenderOutlineColorB[npc.Index] = GetBossProfileOutlineColorB(profile);
 	g_SlenderOutlineTransparency[npc.Index] = GetBossProfileOutlineTransparency(profile);
 	g_SlenderUseRainbowOutline[npc.Index] = GetBossProfileRainbowOutlineState(profile);
-	g_SlenderRainbowCycleRate[npc.Index] = GetBossProfileRainbowCycleRate(profile);
 
 	g_NpcHasProxyWeaponsEnabled[npc.Index] = GetBossProfileProxyWeapons(profile);
 

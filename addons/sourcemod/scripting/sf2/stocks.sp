@@ -1403,10 +1403,6 @@ void SF_RemoveSpecialRound(int specialRound)
 
 void SF_RemoveAllSpecialRound()
 {
-	if (SF_SpecialRound(SPECIALROUND_BEATBOX))
-	{
-		StopBeatBoxMusicForAll();
-	}
 	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		g_ArraySpecialRoundType[array] = 0;

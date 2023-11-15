@@ -8,12 +8,13 @@
 #include "attacks/explosive_dance.sp"
 #include "attacks/custom.sp"
 #include "attacks/tongue.sp"
+#include "attacks/forward_based.sp"
 
 static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction < NextBotAction
 {
-	public SF2_ChaserAttackAction(const char[] attackName, float endTime)
+	public SF2_ChaserAttackAction(const char[] attackName, int attackIndex, float endTime)
 	{
 		if (g_Factory == null)
 		{
@@ -27,7 +28,9 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 			g_Factory.SetEventCallback(EventResponderType_OnOtherKilled, OnOtherKilled);
 			g_Factory.BeginDataMapDesc()
 				.DefineIntField("m_OldState")
+				.DefineIntField("m_OldMovementType")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_AttackIndex")
 				.DefineFloatField("m_EndTime")
 				.DefineBoolField("m_DidEndAnimation")
 				.DefineBoolField("m_PlayedBeginVoice")
@@ -52,6 +55,7 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 		SF2_ChaserAttackAction_Laser.Initialize();
 		SF2_ChaserAttackAction_Custom.Initialize();
 		SF2_ChaserAttackAction_Tongue.Initialize();
+		SF2_ChaserAttackAction_ForwardBased.Initialize();
 	}
 
 	property int OldState
@@ -67,6 +71,19 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 		}
 	}
 
+	property SF2NPCMoveTypes OldMovementType
+	{
+		public get()
+		{
+			return this.GetData("m_OldMovementType");
+		}
+
+		public set(SF2NPCMoveTypes value)
+		{
+			this.SetData("m_OldMovementType", value);
+		}
+	}
+
 	public char[] GetAttackName()
 	{
 		char name[128];
@@ -77,6 +94,19 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property int AttackIndex
+	{
+		public get()
+		{
+			return this.GetData("m_AttackIndex");
+		}
+
+		public set(int value)
+		{
+			this.SetData("m_AttackIndex", value);
+		}
 	}
 
 	property float EndTime
@@ -181,9 +211,11 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 	}
 
 	action.OldState = actor.State;
+	action.OldMovementType = actor.MovementType;
 	actor.State = STATE_ATTACK;
 
 	actor.SetAttackName(action.GetAttackName());
+	actor.AttackIndex = action.AttackIndex;
 	actor.IsAttacking = true;
 
 	actor.RemoveAllGestures();
@@ -375,7 +407,7 @@ static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 	actor.IsAttacking = false;
 	actor.IsAttemptingToMove = false;
 	actor.CancelAttack = false;
-	actor.MovementType = SF2NPCMoveType_Run;
+	actor.MovementType = action.OldMovementType;
 
 	char value[PLATFORM_MAX_PATH];
 	value = action.GetLoopSound();
@@ -407,6 +439,7 @@ static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 	actor.State = action.OldState;
 
 	actor.SetAttackName("");
+	actor.AttackIndex = -1;
 }
 
 static void OnOtherKilled(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseCombatCharacter victim, CBaseEntity attacker, CBaseEntity inflictor, float damage, int damagetype)

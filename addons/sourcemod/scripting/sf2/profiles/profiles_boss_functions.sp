@@ -1982,12 +1982,6 @@ bool GetBossProfileRainbowOutlineState(const char[] profile)
 	return g_CachedProfileData.RainbowOutline;
 }
 
-float GetBossProfileRainbowCycleRate(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.RainbowOutlineCycle;
-}
-
 bool GetBossProfileProxyWeapons(const char[] profile)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));

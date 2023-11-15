@@ -635,11 +635,13 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	public void ProcessRainbowOutline()
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
+		SF2BossProfileData data;
+		data = controller.GetProfileData();
 		int glow = EntRefToEntIndex(g_NpcGlowEntity[controller.Index]);
 		int color[4];
-		color[0] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(controller.Index)) + controller.Index + 0) * 127.5 + 127.5);
-		color[1] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(controller.Index)) + controller.Index + 2) * 127.5 + 127.5);
-		color[2] = RoundToNearest(Cosine((GetGameTime() * NPCGetRainbowOutlineCycleRate(controller.Index)) + controller.Index + 4) * 127.5 + 127.5);
+		color[0] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 0) * 127.5 + 127.5);
+		color[1] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 2) * 127.5 + 127.5);
+		color[2] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 4) * 127.5 + 127.5);
 		color[3] = 255;
 		if (glow && glow != INVALID_ENT_REFERENCE)
 		{

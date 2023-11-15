@@ -41,6 +41,7 @@ void SetupSpecialRounds()
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerTeamPFwd.AddFunction(null, OnPlayerTeam);
 	g_OnPlayerClassPFwd.AddFunction(null, OnPlayerClass);
+	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
 }
 
 static void OnGamemodeStart()
@@ -249,6 +250,7 @@ bool IsBeatBoxBeating(int index = 0)
 
 static void OnRoundEnd()
 {
+	StopBeatBoxMusicForAll();
 	g_Started = false;
 	SF_RemoveAllSpecialRound();
 }
@@ -264,8 +266,6 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 	{
 		return;
 	}
-
-	//StopBeatBoxMusic(client);
 
 	if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
 	{
@@ -364,6 +364,14 @@ static void OnPlayerClass(SF2_BasePlayer client)
 		!client.HasEscaped)
 	{
 		ChangeThanatophobiaClass(client);
+	}
+}
+
+static void OnPlayerEscape(SF2_BasePlayer client)
+{
+	if (SF_SpecialRound(SPECIALROUND_BEATBOX))
+	{
+		StopBeatBoxMusic(client);
 	}
 }
 

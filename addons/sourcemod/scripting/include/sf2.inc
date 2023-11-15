@@ -449,6 +449,9 @@ forward void SF2_OnBossDecloaked(int bossIndex);
  */
 forward void SF2_OnBossFinishSpawning(int bossIndex);
 
+#pragma deprecated Use custom boss attacks.
+forward void SF2_OnBossAttacked(int bossIndex, int attackIndex);
+
 /**
  * Called when the boss finishes validating all attack indexes.
  *
@@ -1482,20 +1485,14 @@ native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] ke
 #pragma deprecated Use SF2BossProfileData instead.
 native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[] key, char[] buffer, int bufferLen, int index=-1);
 
-/**
- * Returns an attribute name if one exists
- * @param bossIndex	Boss index.
- * @param attribute	Name of attribute in enum.
-*/
+#pragma deprecated Use SF2BossProfileData instead.
 native bool SF2_GetBossAttributeName(int bossIndex, int attribute);
 
-/**
- * Returns the value of an attribute.
- * @param bossIndex	Boss index.
- * @param attribute	Name of attribute in enum.
- * @param defaultValue	Default value of attribute.
-*/
+#pragma deprecated Use SF2BossProfileData instead.
 native float SF2_GetBossAttributeValue(int bossIndex, int attribute);
+
+#pragma deprecated Use SF2_ChaserBossEntity.GetAttackName instead.
+native int SF2_GetBossCurrentAttackIndex(int bossIndex);
 
 /**
  * Returns the teleport think timer in Handle form
@@ -1914,6 +1911,14 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	 *	@return				Number of characters written to buffer
 	 */
 	public native int GetAttackName(char[] buffer, int bufferSize);
+
+	/**
+	 *	Gets the current attack index of the boss.
+	 */
+	property int AttackIndex
+	{
+		public native get();
+	}
 
 	/**
 	 *	Gets the time which the attack can be used again
