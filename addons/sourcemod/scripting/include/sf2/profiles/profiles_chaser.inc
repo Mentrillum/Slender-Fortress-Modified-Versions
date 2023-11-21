@@ -654,6 +654,9 @@ enum struct SF2ChaserBossProfileAttackData
 
 	bool IgnoreAlwaysLooking[Difficulty_Max];
 
+	bool StartThroughWalls[Difficulty_Max];
+	bool HitThroughWalls[Difficulty_Max];
+
 	int WeaponInt;
 	char WeaponString[PLATFORM_MAX_PATH];
 
@@ -689,10 +692,10 @@ enum struct SF2ChaserBossProfileAttackData
 	float LaserNoise;
 	float LaserOffset[3];
 	char LaserAttachmentName[PLATFORM_MAX_PATH];
+	float LaserTicks[Difficulty_Max];
 
 	bool PullIn;
 
-	bool AttackWhileRunning[Difficulty_Max];
 	float RunSpeed[Difficulty_Max];
 	float RunDuration[Difficulty_Max];
 	float RunDelay[Difficulty_Max];
@@ -764,6 +767,9 @@ enum struct SF2ChaserBossProfileAttackData
 
 			this.IgnoreAlwaysLooking[difficulty] = false;
 
+			this.StartThroughWalls[difficulty] = false;
+			this.HitThroughWalls[difficulty] = false;
+
 			this.LifeSteal[difficulty] = false;
 			this.LifeStealDuration[difficulty] = 0.0;
 
@@ -783,8 +789,8 @@ enum struct SF2ChaserBossProfileAttackData
 
 			this.LaserDamage[difficulty] = 25.0;
 			this.LaserDuration[difficulty] = this.Duration[difficulty];
+			this.LaserTicks[difficulty] = 0.1;
 
-			this.AttackWhileRunning[difficulty] = false;
 			this.RunDuration[difficulty] = 0.0;
 			this.RunDelay[difficulty] = 0.0;
 			this.RunSpeed[difficulty] = 0.0;
@@ -1132,6 +1138,9 @@ enum struct SF2ChaserBossProfileDeathData
 	float AddHealthPerSpy[Difficulty_Max];
 	float AddHealthPerDeath[Difficulty_Max];
 
+	ArrayList Gibs;
+	int GibSkin;
+
 	void Init()
 	{
 		this.RemoveOnDeath = false;
@@ -1162,6 +1171,9 @@ enum struct SF2ChaserBossProfileDeathData
 			this.AddHealthPerSpy[difficulty] = 0.0;
 			this.AddHealthPerDeath[difficulty] = 0.0;
 		}
+
+		this.Gibs = null;
+		this.GibSkin = 0;
 	}
 
 	void Load(KeyValues kv, bool checkFile)
@@ -1194,6 +1206,33 @@ enum struct SF2ChaserBossProfileDeathData
 			GetProfileDifficultyFloatValues(kv, "spy", this.AddHealthPerSpy, this.AddHealthPerSpy);
 			GetProfileDifficultyFloatValues(kv, "on_death", this.AddHealthPerDeath, this.AddHealthPerDeath);
 			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("gibs"))
+		{
+			this.GibSkin = kv.GetNum("skin", this.GibSkin);
+			this.Gibs = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+			char value[PLATFORM_MAX_PATH], key[64];
+			for (int i = 1;; i++)
+			{
+				FormatEx(key, sizeof(key), "%d", i);
+				kv.GetString(key, value, sizeof(value));
+				if (value[0] == '\0')
+				{
+					break;
+				}
+				PrecacheModel2(value, _, _, checkFile);
+				this.Gibs.PushString(value);
+			}
+			kv.GoBack();
+		}
+	}
+
+	void Destroy()
+	{
+		if (this.Gibs != null)
+		{
+			delete this.Gibs;
 		}
 	}
 }
@@ -2573,6 +2612,8 @@ enum struct SF2ChaserBossProfileData
 		this.IdleMusics.Destroy();
 
 		this.CloakData.Destroy();
+
+		this.DeathData.Destroy();
 
 		if (this.Attacks != null)
 		{

@@ -6616,7 +6616,6 @@ static Action Timer_RoundTime(Handle timer)
 
 			float buffer[3];
 			GetClientAbsOrigin(i, buffer);
-			ClientStartDeathCam(i, 0, buffer, true);
 			if (SF_SpecialRound(SPECIALROUND_1UP))
 			{
 				g_PlayerDied1Up[i] = false;
@@ -6697,7 +6696,6 @@ static Action Timer_RoundTimeEscape(Handle timer)
 
 			float buffer[3];
 			GetClientAbsOrigin(i, buffer);
-			ClientStartDeathCam(i, 0, buffer, true);
 			if (SF_SpecialRound(SPECIALROUND_1UP))
 			{
 				g_PlayerDied1Up[i] = false;

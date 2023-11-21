@@ -677,6 +677,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		}
 		GetProfileDifficultyFloatValues(kv, "laser_duration", attackData.LaserDuration, attackData.LaserDuration);
 		attackData.LaserNoise = kv.GetFloat("laser_noise", attackData.LaserNoise);
+		GetProfileDifficultyFloatValues(kv, "laser_tick_delay", attackData.LaserTicks, attackData.LaserTicks);
 
 		GetProfileDifficultyBoolValues(kv, "dont_interrupt_chaseinitial", attackData.DontInterruptChaseInitial, attackData.DontInterruptChaseInitial);
 
@@ -740,6 +741,9 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		GetProfileDifficultyBoolValues(kv, "ignore_always_looking", attackData.IgnoreAlwaysLooking, attackData.IgnoreAlwaysLooking);
 		GetProfileDifficultyBoolValues(kv, "disappear_upon_damaging", attackData.Disappear, attackData.Disappear);
 
+		GetProfileDifficultyBoolValues(kv, "start_through_walls", attackData.StartThroughWalls, attackData.StartThroughWalls);
+		GetProfileDifficultyBoolValues(kv, "hit_through_walls", attackData.HitThroughWalls, attackData.HitThroughWalls);
+
 		attackData.WeaponInt = kv.GetNum("weapontypeint", attackData.WeaponInt);
 		if (attackData.WeaponInt < 0)
 		{
@@ -747,7 +751,6 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		}
 		kv.GetString("weapontype", attackData.WeaponString, sizeof(attackData.WeaponString), attackData.WeaponString);
 
-		GetProfileDifficultyBoolValues(kv, "run_enabled", attackData.AttackWhileRunning, attackData.AttackWhileRunning);
 		GetProfileDifficultyFloatValues(kv, "run_speed", attackData.RunSpeed, attackData.RunSpeed);
 		GetProfileDifficultyFloatValues(kv, "run_duration", attackData.RunDuration, attackData.RunDuration);
 		GetProfileDifficultyFloatValues(kv, "run_delay", attackData.RunDelay, attackData.RunDelay);

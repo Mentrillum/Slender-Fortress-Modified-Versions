@@ -1356,6 +1356,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
+			if (!attackData.StartThroughWalls[difficulty] && !this.IsLOSClearFromTarget(target))
+			{
+				continue;
+			}
+
 			if (attackData.Type == SF2BossAttackType_Custom)
 			{
 				Action result = Plugin_Continue;
@@ -3034,16 +3039,13 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 	info.EmitSound(true, client.index);
 
 	info = data.AttackKilledAllSounds;
-	if (info.Paths != null && info.Paths.Length > 0)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		for (int i = 1; i <= MaxClients; i++)
+		if (!IsValidClient(i))
 		{
-			if (!IsValidClient(i))
-			{
-				continue;
-			}
-			info.EmitSound(true, i);
+			continue;
 		}
+		info.EmitSound(true, i);
 	}
 }
 

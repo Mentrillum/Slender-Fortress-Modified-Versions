@@ -4,7 +4,7 @@ static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_Laser < NextBotAction
 {
-	public SF2_ChaserAttackAction_Laser(int attackIndex, const char[] attackName, float fireDelay)
+	public SF2_ChaserAttackAction_Laser(int attackIndex, const char[] attackName, float fireDelay, float duration)
 	{
 		if (g_Factory == null)
 		{
@@ -24,6 +24,7 @@ methodmap SF2_ChaserAttackAction_Laser < NextBotAction
 
 		action.NextFireTime = fireDelay;
 		action.AttackIndex = attackIndex;
+		action.LaserDuration = duration;
 		action.SetAttackName(attackName);
 
 		return action;
@@ -118,7 +119,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_Laser(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_Laser(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime(), attackData.LaserDuration[difficulty] + GetGameTime() + attackData.DamageDelay[difficulty]);
 	return Plugin_Changed;
 }
 
@@ -144,6 +145,7 @@ static int Update(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity actor, f
 	data = controller.GetProfileData();
 	SF2ChaserBossProfileAttackData attackData;
 	data.GetAttack(action.GetAttackName(), attackData);
+	int difficulty = controller.Difficulty;
 
 	float gameTime = GetGameTime();
 
@@ -151,8 +153,8 @@ static int Update(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity actor, f
 	{
 		if (action.LaserCooldown < gameTime)
 		{
-			action.LaserCooldown = gameTime + 0.1;
-			FireLaser(action, actor, 0.1);
+			action.LaserCooldown = gameTime + attackData.LaserTicks[difficulty];
+			FireLaser(action, actor, attackData.LaserTicks[difficulty]);
 		}
 
 		if (action.LaserDuration < gameTime)
@@ -243,7 +245,7 @@ static void FireLaser(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity acto
 			TE_SendToAll();
 		}
 
-		SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.LaserDamage[difficulty], DMG_SHOCK|DMG_ALWAYSGIB, _, _, endPos);
+		SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.LaserDamage[difficulty], DMG_SHOCK | DMG_ALWAYSGIB, _, _, endPos);
 
 		attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, SF2_ChaserBossEntity(actor.index));
 	}

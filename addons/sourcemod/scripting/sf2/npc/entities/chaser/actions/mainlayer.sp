@@ -374,7 +374,7 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(actor.index);
 	float gameTime = GetGameTime();
 
-	if (!path.IsValid() || !actor.IsAttemptingToMove || loco.GetDesiredSpeed() <= 0.0)
+	if (!path.IsValid() || !actor.IsAttemptingToMove || loco.GetDesiredSpeed() <= 0.0 || actor.MovementType == SF2NPCMoveType_Attack)
 	{
 		action.LastStuckTime = gameTime;
 		return;

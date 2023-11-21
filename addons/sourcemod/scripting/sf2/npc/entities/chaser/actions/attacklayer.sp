@@ -29,14 +29,11 @@ static int Update(SF2_ChaserAttackLayerAction action, SF2_ChaserEntity actor)
 	CBaseEntity target = actor.Target;
 	if (!actor.IsAttacking && target.IsValid())
 	{
-		if (actor.IsLOSClearFromTarget(target))
+		NextBotAction attackAction = actor.GetAttackAction(target);
+		if (attackAction != NULL_ACTION)
 		{
-			NextBotAction attackAction = actor.GetAttackAction(target);
-			if (attackAction != NULL_ACTION)
-			{
-				actor.EndCloak();
-				return action.SuspendFor(attackAction, "Time to die!");
-			}
+			actor.EndCloak();
+			return action.SuspendFor(attackAction, "Time to die!");
 		}
 	}
 	return action.Continue();

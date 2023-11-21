@@ -109,6 +109,18 @@ static void AddProfileActivities()
 	g_Activities.SetValue("ACT_CROUCHIDLE_AIM_STIMULATED", ACT_CROUCHIDLE_AIM_STIMULATED);
 	g_Activities.SetValue("ACT_CROUCHIDLE_AGITATED", ACT_CROUCHIDLE_AGITATED);
 	g_Activities.SetValue("ACT_STAND", ACT_STAND); // standing up from crouch
+	g_Activities.SetValue("ACT_MP_STAND_PRIMARY", ACT_MP_STAND_PRIMARY);
+	g_Activities.SetValue("ACT_MP_STAND_SECONDARY", ACT_MP_STAND_SECONDARY);
+	g_Activities.SetValue("ACT_MP_STAND_MELEE", ACT_MP_STAND_MELEE);
+	g_Activities.SetValue("ACT_MP_STAND_SECONDARY2", ACT_MP_STAND_SECONDARY2);
+	g_Activities.SetValue("ACT_MP_STAND_ITEM1", ACT_MP_STAND_ITEM1);
+	g_Activities.SetValue("ACT_MP_STAND_ITEM2", ACT_MP_STAND_ITEM2);
+	g_Activities.SetValue("ACT_MP_CROUCH_PRIMARY", ACT_MP_CROUCH_PRIMARY);
+	g_Activities.SetValue("ACT_MP_CROUCH_SECONDARY", ACT_MP_CROUCH_SECONDARY);
+	g_Activities.SetValue("ACT_MP_CROUCH_MELEE", ACT_MP_CROUCH_MELEE);
+	g_Activities.SetValue("ACT_MP_CROUCH_SECONDARY2", ACT_MP_CROUCH_SECONDARY2);
+	g_Activities.SetValue("ACT_MP_CROUCH_ITEM1", ACT_MP_CROUCH_ITEM1);
+	g_Activities.SetValue("ACT_MP_CROUCH_ITEM2", ACT_MP_CROUCH_ITEM2);
 	g_Activities.SetValue("ACT_WALK", ACT_WALK);
 	g_Activities.SetValue("ACT_WALK_STIMULATED", ACT_WALK_STIMULATED);
 	g_Activities.SetValue("ACT_WALK_AGITATED", ACT_WALK_AGITATED);
@@ -118,6 +130,12 @@ static void AddProfileActivities()
 	g_Activities.SetValue("ACT_WALK_AIM_AGITATED", ACT_WALK_AIM_AGITATED);
 	g_Activities.SetValue("ACT_WALK_CROUCH", ACT_WALK_CROUCH);
 	g_Activities.SetValue("ACT_WALK_CROUCH_AIM", ACT_WALK_CROUCH_AIM);
+	g_Activities.SetValue("ACT_MP_WALK_PRIMARY", ACT_MP_WALK_PRIMARY);
+	g_Activities.SetValue("ACT_MP_WALK_SECONDARY", ACT_MP_WALK_SECONDARY);
+	g_Activities.SetValue("ACT_MP_WALK_MELEE", ACT_MP_WALK_MELEE);
+	g_Activities.SetValue("ACT_MP_WALK_SECONDARY2", ACT_MP_WALK_SECONDARY2);
+	g_Activities.SetValue("ACT_MP_WALK_ITEM1", ACT_MP_WALK_ITEM1);
+	g_Activities.SetValue("ACT_MP_WALK_ITEM2", ACT_MP_WALK_ITEM2);
 	g_Activities.SetValue("ACT_RUN", ACT_RUN);
 	g_Activities.SetValue("ACT_RUN_STIMULATED", ACT_RUN_STIMULATED);
 	g_Activities.SetValue("ACT_RUN_AGITATED", ACT_RUN_AGITATED);
@@ -127,6 +145,12 @@ static void AddProfileActivities()
 	g_Activities.SetValue("ACT_RUN_AIM_RELAXED", ACT_RUN_AIM_RELAXED);
 	g_Activities.SetValue("ACT_RUN_CROUCH", ACT_RUN_CROUCH);
 	g_Activities.SetValue("ACT_RUN_CROUCH_AIM", ACT_RUN_CROUCH_AIM);
+	g_Activities.SetValue("ACT_MP_RUN_PRIMARY", ACT_MP_RUN_PRIMARY);
+	g_Activities.SetValue("ACT_MP_RUN_SECONDARY", ACT_MP_RUN_SECONDARY);
+	g_Activities.SetValue("ACT_MP_RUN_MELEE", ACT_MP_RUN_MELEE);
+	g_Activities.SetValue("ACT_MP_RUN_SECONDARY2", ACT_MP_RUN_SECONDARY2);
+	g_Activities.SetValue("ACT_MP_RUN_ITEM1", ACT_MP_RUN_ITEM1);
+	g_Activities.SetValue("ACT_MP_RUN_ITEM2", ACT_MP_RUN_ITEM2);
 	g_Activities.SetValue("ACT_JUMP", ACT_JUMP);
 	g_Activities.SetValue("ACT_FLY", ACT_FLY);
 	g_Activities.SetValue("ACT_LAND", ACT_LAND);
@@ -158,6 +182,10 @@ static void AddProfileActivities()
 	g_Activities.SetValue("ACT_RELOAD_START", ACT_RELOAD_START);
 	g_Activities.SetValue("ACT_RELOAD_FINISH", ACT_RELOAD_FINISH);
 	g_Activities.SetValue("ACT_GESTURE_RELOAD", ACT_GESTURE_RELOAD);
+	g_Activities.SetValue("ACT_MP_ATTACK_STAND_MELEE", ACT_MP_ATTACK_STAND_MELEE);
+	g_Activities.SetValue("ACT_MP_ATTACK_CROUCH_MELEE", ACT_MP_ATTACK_CROUCH_MELEE);
+	g_Activities.SetValue("ACT_MP_ATTACK_SWIM_MELEE", ACT_MP_ATTACK_SWIM_MELEE);
+	g_Activities.SetValue("ACT_MP_ATTACK_AIRWALK_MELEE", ACT_MP_ATTACK_AIRWALK_MELEE);
 
 	// Flinch activities
 	g_Activities.SetValue("ACT_SMALL_FLINCH", ACT_SMALL_FLINCH);

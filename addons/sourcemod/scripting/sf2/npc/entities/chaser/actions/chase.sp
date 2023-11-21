@@ -109,11 +109,11 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			return action.ChangeTo(SF2_ChaserIdleAction(), "Our target escaped, that is no good!");
 		}
 
-		float maxRange = data.ChaseDurationAddMaxRange[difficulty];
-		if (maxRange > 0.0 && player.IsValid && player.CanSeeSlender(controller.Index, false, _, !attackEliminated))
+		if (player.IsValid && player.CanSeeSlender(controller.Index, false, _, !attackEliminated))
 		{
+			float maxRange = data.ChaseDurationAddMaxRange[difficulty];
 			float distanceRatio = bot.GetRangeTo(player.index) / maxRange;
-			if (distanceRatio < 1.0)
+			if (maxRange > 0.0 && distanceRatio < 1.0)
 			{
 				float durationTimeAddMin = data.ChaseDurationAddVisibleMin[difficulty];
 				float durationTimeAddMax = data.ChaseDurationAddVisibleMax[difficulty];

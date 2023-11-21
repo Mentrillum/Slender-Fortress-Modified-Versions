@@ -241,7 +241,6 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 
 	if (attackData.RunSpeed[difficulty] > 0.0)
 	{
-		actor.IsAttemptingToMove = true;
 		actor.MovementType = SF2NPCMoveType_Attack;
 	}
 	actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
@@ -289,9 +288,13 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 
 	SF2ChaserBossProfileData data;
 	SF2ChaserBossProfileAttackData attackData;
+	int interrputConditions = actor.InterruptConditions;
 	data = controller.GetProfileData();
 	data.GetAttack(actor.GetAttackName(), attackData);
 	bool end = false;
+	INextBot bot = actor.MyNextBotPointer();
+	PathFollower path = controller.Path;
+	ILocomotion loco = bot.GetLocomotionInterface();
 
 	int difficulty = controller.Difficulty;
 
@@ -315,6 +318,17 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 		if (attackData.CancelLos[difficulty] && !actor.IsLOSClearFromTarget(target))
 		{
 			end = true;
+		}
+
+		if (actor.MovementType == SF2NPCMoveType_Attack && attackData.Type != SF2BossAttackType_Custom)
+		{
+			if (!bot.IsRangeLessThanEx(targetPos, 8.0))
+			{
+				if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
+				{
+					path.ComputeToPos(bot, targetPos);
+				}
+			}
 		}
 	}
 
@@ -357,6 +371,17 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 			}
 		}
 		return action.Done("Attack finished");
+	}
+
+	if (!path.IsValid())
+	{
+		loco.Stop();
+		actor.IsAttemptingToMove = false;
+	}
+	else
+	{
+		path.Update(bot);
+		actor.IsAttemptingToMove = true;
 	}
 
 	return action.Continue();

@@ -848,19 +848,19 @@ static void Hook_SprintThink(int client)
 			{
 				if (SF_IsBoxingMap() || SF_IsRaidMap())
 				{
-					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed*2.5);
+					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed * 2.5);
 				}
 				else
 				{
-					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed/2.5);
+					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed / 2.5);
 				}
 			}
-			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed * 0.5);
+			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 		}
 		else
 		{
 			player.SetPropFloat(Prop_Send, "m_flMaxspeed", 520.0);
-			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", sprintSpeed * 0.5);
+			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 		}
 	}
 	else
@@ -877,9 +877,9 @@ static void Hook_SprintThink(int client)
 			}
 			else
 			{
-				player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed / 2.5);
+				player.SetPropFloat(Prop_Send, "m_flMaxspeed", 190.0);
 			}
 		}
-		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", walkSpeed * 0.5);
+		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 	}
 }

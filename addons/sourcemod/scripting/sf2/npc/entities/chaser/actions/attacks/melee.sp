@@ -218,7 +218,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	{
 		CBaseEntity prop = CBaseEntity(targets.Get(i));
 
-		if (!IsTargetInMeleeChecks(actor, prop, range, spread))
+		if (!IsTargetInMeleeChecks(actor, attackData, prop, range, spread))
 		{
 			continue;
 		}
@@ -239,7 +239,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			continue;
 		}
 
-		if (!IsTargetInMeleeChecks(actor, player, range, spread))
+		if (!IsTargetInMeleeChecks(actor, attackData, player, range, spread))
 		{
 			continue;
 		}
@@ -254,7 +254,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		NormalizeVector(direction, direction);
 		ScaleVector(direction, force);
 
-		if (controller.HasAttribute(SF2Attribute_DeathCamOnLowHealth))
+		if (controller.HasAttribute(SF2Attribute_DeathCamOnLowHealth) || attackData.DeathCamLowHealth)
 		{
 			float checkDamage = damage;
 
@@ -375,7 +375,7 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_Melee action, SF2_ChaserEnti
 	}
 }
 
-static bool IsTargetInMeleeChecks(SF2_ChaserEntity actor, CBaseEntity target, float range, float fov)
+static bool IsTargetInMeleeChecks(SF2_ChaserEntity actor, SF2ChaserBossProfileAttackData data, CBaseEntity target, float range, float fov)
 {
 	if (!target.IsValid())
 	{
@@ -407,13 +407,16 @@ static bool IsTargetInMeleeChecks(SF2_ChaserEntity actor, CBaseEntity target, fl
 		return false;
 	}
 
-	TR_TraceRayFilter(myEyePos, targetPos,
-	CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_GRATE | CONTENTS_WINDOW,
-	RayType_EndPoint, TraceRayDontHitAnyEntity, actor.index);
-
-	if (TR_DidHit() && TR_GetEntityIndex() != target.index)
+	if (!data.HitThroughWalls[actor.Controller.Difficulty])
 	{
-		return false;
+		TR_TraceRayFilter(myEyePos, targetPos,
+		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_GRATE | CONTENTS_WINDOW,
+		RayType_EndPoint, TraceRayDontHitAnyEntity, actor.index);
+
+		if (TR_DidHit() && TR_GetEntityIndex() != target.index)
+		{
+			return false;
+		}
 	}
 
 	return true;

@@ -136,10 +136,12 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 
 	if (data.DeathData.RemoveOnDeath)
 	{
+		SpawnGibs(actor);
 		controller.Remove();
 	}
 	else if (data.DeathData.DisappearOnDeath)
 	{
+		SpawnGibs(actor);
 		controller.UnSpawn();
 	}
 	else if (data.DeathData.RagdollOnDeath)
@@ -157,4 +159,54 @@ static void OnAnimationEvent(SF2_ChaserDeathAction action, SF2_ChaserEntity acto
 
 	actor.CastAnimEvent(event);
 	actor.CastAnimEvent(event, true);
+}
+
+static void SpawnGibs(SF2_ChaserEntity actor)
+{
+	SF2NPC_Chaser controller = actor.Controller;
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	if (data.DeathData.Gibs == null)
+	{
+		return;
+	}
+	float pos[3], ang[3], vel[3];
+	char model[PLATFORM_MAX_PATH];
+	actor.WorldSpaceCenter(pos);
+	actor.GetAbsAngles(ang);
+	for (int i = 0; i < data.DeathData.Gibs.Length; i++)
+	{
+		ang[1] = GetRandomFloat(-180.0, 180.0);
+
+		for(int i2 = 0; i2 < 2; i2++)
+		{
+			vel[i2] += GetRandomFloat(-300.0, 300.0);
+		}
+		vel[2] = GetRandomFloat(-300.0, 300.0);
+
+		data.DeathData.Gibs.GetString(i, model, sizeof(model));
+
+		if (strlen(model) > 0)
+		{
+			CBaseEntity gib = CBaseEntity(CreateEntityByName("prop_physics_multiplayer"));
+			gib.KeyValue("model", model);
+			gib.KeyValue("physicsmode", "2");
+
+			gib.Teleport(pos, ang, vel);
+			gib.Spawn();
+			gib.Teleport(NULL_VECTOR, NULL_VECTOR, vel);
+
+			gib.SetProp(Prop_Send, "m_CollisionGroup", 1);
+			gib.SetProp(Prop_Send, "m_usSolidFlags", 0);
+			gib.SetProp(Prop_Send, "m_nSolidType", 2);
+			gib.SetProp(Prop_Send, "m_nSkin", data.DeathData.GibSkin);
+
+			int effects = 16 | 64;
+			gib.SetProp(Prop_Send, "m_fEffects", effects);
+
+			SetVariantString("OnUser1 !self:Kill::10.0:1");
+			gib.AcceptInput("AddOutput");
+			gib.AcceptInput("FireUser1");
+		}
+	}
 }

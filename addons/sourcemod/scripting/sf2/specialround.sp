@@ -1981,7 +1981,6 @@ static void SpecialCreateVote()
 			{
 				FormatEx(item, sizeof(item), "Triple Bosses");
 			}
-
 			case SPECIALROUND_BOSSROULETTE:
 			{
 				FormatEx(item, sizeof(item), "Boss Roulette");
@@ -1990,14 +1989,22 @@ static void SpecialCreateVote()
 			{
 				FormatEx(item, sizeof(item), "Wall Hax");
 			}
+			case SPECIALROUND_SINGLEPLAYER:
+			{
+				FormatEx(item, sizeof(item), "Single Player");
+			}
+			case SPECIALROUND_BEATBOX:
+			{
+				FormatEx(item, sizeof(item), "Beat Box");
+			}
 		}
-		for (int iBit = 0; iBit < 30; iBit++)
+		for (int bit = 0; bit < 30; bit++)
 		{
-			if (strcmp(item[iBit],"-") == 0 ||strcmp(item[iBit],":") == 0)
+			if (strcmp(item[bit],"-") == 0 ||strcmp(item[bit],":") == 0)
 			{
 				break;
 			}
-			itemOutPut[iBit] = item[iBit];
+			itemOutPut[bit] = item[bit];
 		}
 		FormatEx(item, sizeof(item), "%d", round);
 		NativeVotes_AddItem(voteMenu, item, itemOutPut);
