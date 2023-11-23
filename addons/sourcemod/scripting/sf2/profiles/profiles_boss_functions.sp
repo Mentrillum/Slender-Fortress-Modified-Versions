@@ -840,6 +840,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			kv.GoBack();
 		}
 		kv.GetString("pve_spawn_message_prefix", profileData.PvESpawnMessagePrefix, sizeof(profileData.PvESpawnMessagePrefix), profileData.PvESpawnMessagePrefix);
+		profileData.DisplayPvEHealth = kv.GetNum("pve_health_bar", profileData.DisplayPvEHealth) != 0;
 		char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 		strcopy(setProfile, sizeof(setProfile), profile);
 		if (kv.GetNum("pve_selectable", 1) != 0)

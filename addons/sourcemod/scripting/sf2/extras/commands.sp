@@ -235,6 +235,8 @@ public void OnPluginStart()
 	g_RoundTimerSync = CreateHudSynchronizer();
 	g_Cookie = RegClientCookie("sf2_newcookies", "", CookieAccess_Private);
 
+	g_Buildings = new ArrayList();
+
 	switch (g_DifficultyConVar.IntValue)
 	{
 		case Difficulty_Hard:

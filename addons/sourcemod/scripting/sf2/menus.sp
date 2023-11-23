@@ -1966,6 +1966,12 @@ void DisplayBossList(int client)
 			{
 				strcopy(displayName, sizeof(displayName), profile);
 			}
+			SF2BossProfileData data;
+			g_BossProfileData.GetArray(profile, data, sizeof(data));
+			if (data.IsPvEBoss)
+			{
+				StrCat(displayName, sizeof(displayName), " (PvE Boss)");
+			}
 			menu.AddItem(profile, displayName);
 		}
 	}

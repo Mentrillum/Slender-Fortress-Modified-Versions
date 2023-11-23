@@ -343,6 +343,8 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		int owner = this.GetPropEnt(Prop_Send, "m_hOwnerEntity");
 		float pos[3];
 		this.GetAbsOrigin(pos);
+
+		// Go for players
 		ArrayList hitList = new ArrayList();
 		TR_EnumerateEntitiesSphere(pos, this.BlastRadius, PARTITION_SOLID_EDICTS, EnumerateLivingPlayers, hitList);
 
@@ -375,6 +377,33 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 				Call_PushCell(player);
 				Call_PushCell(this);
 				Call_Finish();
+			}
+		}
+		hitList.Clear();
+
+		// Then do props
+		TR_EnumerateEntitiesSphere(pos, this.BlastRadius, PARTITION_SOLID_EDICTS, EnumerateBreakableEntities, hitList);
+		for (int i = 0; i < hitList.Length; i++)
+		{
+			CBaseEntity prop = CBaseEntity(hitList.Get(i));
+
+			float targetPos[3];
+			prop.WorldSpaceCenter(targetPos);
+			TR_TraceRayFilter(pos, targetPos,
+					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE,
+					RayType_EndPoint, TraceRayDontHitAnyEntity, this.index);
+
+			if (!TR_DidHit() || TR_GetEntityIndex() == prop.index)
+			{
+				float damage = this.CalculateFallOff(prop);
+				int flags = DMG_BLAST;
+				if (this.IsCrits)
+				{
+					flags |= DMG_ACID;
+				}
+				float force[3];
+				this.GetDamageForce(prop, force);
+				SDKHooks_TakeDamage(prop.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, damage, flags, _, force, pos, false);
 			}
 		}
 

@@ -14,6 +14,7 @@ methodmap SF2_ChaserFleeToHealAction < NextBotAction
 			g_Factory.SetEventCallback(EventResponderType_OnMoveToSuccess, OnMoveToSuccess);
 			g_Factory.SetEventCallback(EventResponderType_OnMoveToFailure, OnMoveToFailure);
 			g_Factory.BeginDataMapDesc()
+				.DefineFloatField("m_FleeTime")
 				.DefineFloatField("m_HealTime")
 				.DefineFloatField("m_HealDuration")
 				.DefineBoolField("m_HasPath")
@@ -24,6 +25,19 @@ methodmap SF2_ChaserFleeToHealAction < NextBotAction
 				.EndDataMapDesc();
 		}
 		return view_as<SF2_ChaserFleeToHealAction>(g_Factory.Create());
+	}
+
+	property float FleeTime
+	{
+		public get()
+		{
+			return this.GetDataFloat("m_FleeTime");
+		}
+
+		public set(float value)
+		{
+			this.SetDataFloat("m_FleeTime", value);
+		}
 	}
 
 	property float HealTime
@@ -132,6 +146,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserFleeToHealAction action, S
 	int difficulty = controller.Difficulty;
 	action.IsHealing = false;
 	action.HasPath = false;
+	action.FleeTime = GetRandomFloat(10.0, 15.0);
 	if (rageInfo.Animations.GetAnimation("start", difficulty, animName, sizeof(animName), rate, duration, cycle))
 	{
 		int sequence = LookupProfileAnimation(actor.index, animName);
@@ -262,6 +277,19 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 		{
 			actor.IsSelfHealing = false;
 			return action.Done();
+		}
+	}
+
+	if (!action.IsHealing)
+	{
+		action.FleeTime -= GetGameFrameTime();
+		if (action.FleeTime <= 0.0)
+		{
+			path.Invalidate();
+			actor.EndCloak();
+			actor.IsRunningAway = false;
+			action.IsHealing = true;
+			actor.IsSelfHealing = true;
 		}
 	}
 

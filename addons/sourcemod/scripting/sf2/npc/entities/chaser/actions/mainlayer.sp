@@ -327,7 +327,7 @@ static int OnResume(SF2_ChaserMainAction action, SF2_ChaserEntity actor, NextBot
 
 static int OnInjured(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseEntity attacker, CBaseEntity inflictor, float damage, int damageType)
 {
-	if (actor.CanBeStunned() && IsValidClient(attacker.index) && actor.CanTakeDamage(attacker, inflictor, damage))
+	if (actor.CanBeStunned() && IsValidClient(attacker.index) && actor.CanTakeDamage(attacker, inflictor, damage) && !actor.IsRaging)
 	{
 		actor.StunHealth -= damage;
 		if (actor.StunHealth <= 0.0)
@@ -407,31 +407,12 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
 		if (GetVectorSquareMagnitude(destination, lastPos) <= SquareFloat(16.0) || TR_DidHit())
 		{
-			CursorData cursor = path.GetCursorData();
-			SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, 256.0);
+			SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, 400.0);
 			int areaCount = collector.Count();
 			ArrayList areaArray = new ArrayList(1, areaCount);
 			int validAreaCount = 0;
 			for (int i = 0; i < areaCount; i++)
 			{
-				if (collector.Get(i).GetCostSoFar() < 16.0)
-				{
-					continue;
-				}
-				if (cursor.segmentPrior != NULL_PATH_SEGMENT)
-				{
-					CNavArea segmentArea = cursor.segmentPrior.area;
-					if (segmentArea == collector.Get(i))
-					{
-						continue;
-					}
-				}
-				float navPos[3];
-				collector.Get(i).GetCenter(navPos);
-				if (GetVectorSquareMagnitude(myPos, navPos) <= SquareFloat(16.0))
-				{
-					continue;
-				}
 				areaArray.Set(validAreaCount, i);
 				validAreaCount++;
 			}
@@ -466,7 +447,7 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 			delete collector;
 			delete areaArray;
 		}
-		path.GetClosestPosition(destination, destination, path.FirstSegment(), 128.0);
+		path.GetClosestPosition(destination, destination, path.FirstSegment(), 400.0);
 		action.LastStuckTime = gameTime + 0.75;
 		actor.Teleport(destination, NULL_VECTOR, NULL_VECTOR);
 	}

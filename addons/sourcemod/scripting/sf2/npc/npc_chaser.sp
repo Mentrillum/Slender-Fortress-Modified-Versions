@@ -32,7 +32,7 @@ static Handle g_NpcInstantKillThink[MAX_BOSSES];
 static int g_NpcBoxingCurrentDifficulty[MAX_BOSSES];
 static int g_NpcBoxingRagePhase[MAX_BOSSES];
 
-static bool g_ClientShouldBeForceChased[MAX_BOSSES][MAXTF2PLAYERS];
+static bool g_ClientShouldBeForceChased[MAX_BOSSES][2049];
 
 GlobalForward g_OnChaserBossStartAttackFwd;
 GlobalForward g_OnChaserBossEndAttackFwd;
@@ -138,12 +138,12 @@ void NPCChaserSetBoxingDifficulty(int npcIndex, int value)
 	g_NpcBoxingCurrentDifficulty[npcIndex] = value;
 }
 
-bool ShouldClientBeForceChased(SF2NPC_BaseNPC controller, SF2_BasePlayer client)
+bool ShouldClientBeForceChased(SF2NPC_BaseNPC controller, CBaseEntity client)
 {
 	return g_ClientShouldBeForceChased[controller.Index][client.index];
 }
 
-void SetClientForceChaseState(SF2NPC_BaseNPC controller, SF2_BasePlayer client, bool value)
+void SetClientForceChaseState(SF2NPC_BaseNPC controller, CBaseEntity client, bool value)
 {
 	g_ClientShouldBeForceChased[controller.Index][client.index] = value;
 }
@@ -153,7 +153,7 @@ ArrayList NPCChaserGetAutoChaseTargets(int npcIndex)
 	return g_NpcChaseOnLookTarget[npcIndex];
 }
 
-void ResetClientNPCStates(SF2_BasePlayer client)
+void ResetClientNPCStates(CBaseEntity client)
 {
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
@@ -300,18 +300,19 @@ void Despawn_Chaser(int bossIndex)
 //			- If I lose sight or I'm unable to traverse safely, find paths around obstacles and follow memorized path.
 //			- If I reach the end of my path and I still don't see him and I still want to pursue him, keep on going in the direction I'm going.
 
-bool IsTargetValidForSlender(SF2_BasePlayer target, bool includeEliminated = false)
+bool IsTargetValidForSlender(CBaseEntity target, bool includeEliminated = false)
 {
-	if (!target.IsValid)
+	if (!target.IsValid())
 	{
 		return false;
 	}
 
-	if (!target.IsAlive ||
-		target.IsInDeathCam ||
-		(!includeEliminated && target.IsEliminated) ||
-		target.IsInGhostMode ||
-		target.HasEscaped)
+	SF2_BasePlayer player = SF2_BasePlayer(target.index);
+	if (player.IsValid && (!player.IsAlive ||
+		player.IsInDeathCam ||
+		(!includeEliminated && player.IsEliminated) ||
+		player.IsInGhostMode ||
+		player.HasEscaped))
 	{
 		return false;
 	}
@@ -319,14 +320,16 @@ bool IsTargetValidForSlender(SF2_BasePlayer target, bool includeEliminated = fal
 	return true;
 }
 
-bool IsPvETargetValid(SF2_BasePlayer target)
+bool IsPvETargetValid(CBaseEntity target)
 {
-	if (!target.IsValid)
+	if (!target.IsValid())
 	{
 		return false;
 	}
 
-	if (!target.IsAlive || !target.IsInPvE || target.IsInGhostMode)
+	SF2_BasePlayer player = SF2_BasePlayer(target.index);
+
+	if (player.IsValid && (!player.IsAlive || !player.IsInPvE || player.IsInGhostMode))
 	{
 		return false;
 	}

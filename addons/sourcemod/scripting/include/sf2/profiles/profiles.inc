@@ -2168,6 +2168,7 @@ enum struct SF2BossProfileData
 	bool IsPvEBoss;
 	ArrayList PvESpawnMessagesArray;
 	char PvESpawnMessagePrefix[PLATFORM_MAX_PATH];
+	bool DisplayPvEHealth;
 
 	// Sounds
 	SF2BossProfileSoundInfo LocalDeathCamSounds;
@@ -2379,6 +2380,7 @@ enum struct SF2BossProfileData
 		this.IsPvEBoss = false;
 		this.PvESpawnMessagesArray = null;
 		this.PvESpawnMessagePrefix[0] = '\0';
+		this.DisplayPvEHealth = true;
 
 		this.EngineSound[0] = '\0';
 		this.EngineSoundLevel = 83;

@@ -802,7 +802,7 @@ static void SpawnPvEBoss(const char[] override = "")
 			{
 				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), g_CustomMusicOverride, sizeof(g_CustomMusicOverride));
 			}
-			g_ActiveBosses.Push(npc.EntIndex);
+			g_ActiveBosses.Push(EntIndexToEntRef(npc.EntIndex));
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
 				SF2NPC_BaseNPC testNPC = SF2NPC_BaseNPC(i);
@@ -814,7 +814,7 @@ static void SpawnPvEBoss(const char[] override = "")
 				if (testNPC.CompanionMaster == npc)
 				{
 					testNPC.Spawn(spawnPos);
-					g_ActiveBosses.Push(testNPC.EntIndex);
+					g_ActiveBosses.Push(EntIndexToEntRef(testNPC.EntIndex));
 				}
 			}
 
@@ -828,7 +828,7 @@ static void SpawnPvEBoss(const char[] override = "")
 						continue;
 					}
 					copy.Spawn(spawnPos);
-					g_ActiveBosses.Push(copy.EntIndex);
+					g_ActiveBosses.Push(EntIndexToEntRef(copy.EntIndex));
 				}
 			}
 		}
@@ -1125,7 +1125,7 @@ void UnregisterPvESlenderBoss(char profile[SF2_MAX_PROFILE_NAME_LENGTH])
 
 void KillPvEBoss(int boss)
 {
-	int index = g_ActiveBosses.FindValue(boss);
+	int index = g_ActiveBosses.FindValue(EntIndexToEntRef(boss));
 	if (index != -1)
 	{
 		g_ActiveBosses.Erase(index);
@@ -1168,6 +1168,11 @@ void KillPvEBoss(int boss)
 
 		CreateTimer(5.0, Timer_RemoveAllPvEBosses, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
+}
+
+ArrayList GetActivePvEBosses()
+{
+	return g_ActiveBosses;
 }
 
 static Action Timer_RemoveAllPvEBosses(Handle timer)

@@ -1304,7 +1304,8 @@ bool EnumerateBreakableEntities(int entIndex, ArrayList array)
 	char className[64];
 	GetEntityClassname(entIndex, className, sizeof(className));
 
-	if (strcmp(className, "prop_physics") == 0 || strcmp(className, "prop_dynamic") == 0)
+	if (strcmp(className, "prop_physics") == 0 || strcmp(className, "prop_dynamic") == 0 ||
+		strcmp(className, "func_breakable", false) == 0)
 	{
 		if (GetEntProp(entIndex, Prop_Data, "m_iHealth") > 0)
 		{

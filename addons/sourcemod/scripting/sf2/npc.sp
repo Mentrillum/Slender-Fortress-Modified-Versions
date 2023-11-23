@@ -2823,7 +2823,17 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 		}
 	}
 
-	entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Blue);
+	SF2BossProfileData data;
+	data = npc.GetProfileData();
+
+	if (!data.IsPvEBoss)
+	{
+		entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Blue);
+	}
+	else
+	{
+		entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Spectator);
+	}
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
@@ -2863,9 +2873,7 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	}
 
 	entity.AddFlag(FL_NPC);
-	SF2BossProfileData data;
-	data = npc.GetProfileData();
-	if (data.IsPvEBoss)
+	if (!data.IsPvEBoss)
 	{
 		entity.AddFlag(FL_NOTARGET);
 	}

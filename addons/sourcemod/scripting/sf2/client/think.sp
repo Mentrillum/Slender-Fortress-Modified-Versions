@@ -823,6 +823,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 
 	static int hudColorHealthy[3];
 	static int hudColorCritical[3] = { 255, 10, 10 };
+	static int hudColorBossBar[3] = { 43, 103, 255 };
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -1056,6 +1057,54 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						0.07,
 						0.5);
 					ShowSyncHudText(player.index, g_HudSync2, buffer);
+				}
+
+				if (player.IsInPvE)
+				{
+					ArrayList bosses = GetActivePvEBosses();
+					buffer[0] = '\0';
+					char buffer2[64];
+					char formatter[128], name[SF2_MAX_NAME_LENGTH];
+					for (int i2 = 0; i2 < bosses.Length; i2++)
+					{
+						if (i2 >= 4)
+						{
+							continue;
+						}
+						name[0] = '\0';
+						SF2_ChaserEntity chaser = SF2_ChaserEntity(EntRefToEntIndex(bosses.Get(i2)));
+						if (chaser.IsValid() && chaser.Controller.IsValid())
+						{
+							SF2BossProfileData data;
+							data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
+							data.Names.GetString(1, name, sizeof(name));
+							if (!data.DisplayPvEHealth)
+							{
+								continue;
+							}
+						}
+
+						if (bosses.Length > 1 && i2 > 0)
+						{
+							FormatEx(buffer2, sizeof(buffer2), "\n");
+						}
+
+						CBaseCombatCharacter boss = CBaseCombatCharacter(EntRefToEntIndex(bosses.Get(i2)));
+						int health = boss.GetProp(Prop_Data, "m_iHealth");
+						if (name[0] != '\0')
+						{
+							FormatEx(formatter, sizeof(formatter), "%s: %d", name, health);
+						}
+						else
+						{
+							FormatEx(formatter, sizeof(formatter), "%d", health);
+						}
+
+						StrCat(buffer2, sizeof(buffer2), formatter);
+						StrCat(buffer, sizeof(buffer), buffer2);
+						SetHudTextParams(-1.0, 0.15, 0.25, hudColorBossBar[0], hudColorBossBar[1], hudColorBossBar[2], 225, 0, 1.0, 0.07, 0.3);
+						ShowSyncHudText(i, g_HudSync2, buffer);
+					}
 				}
 			}
 		}

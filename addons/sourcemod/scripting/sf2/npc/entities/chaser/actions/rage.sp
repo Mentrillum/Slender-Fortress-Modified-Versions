@@ -14,6 +14,7 @@ methodmap SF2_ChaserRageAction < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
 			g_Factory.BeginDataMapDesc()
 				.DefineBoolField("m_HasRaged")
+				.DefineBoolField("m_IsHealing")
 				.EndDataMapDesc();
 		}
 		return view_as<SF2_ChaserRageAction>(g_Factory.Create());
@@ -29,6 +30,19 @@ methodmap SF2_ChaserRageAction < NextBotAction
 		public set(bool value)
 		{
 			this.SetData("m_HasRaged", value);
+		}
+	}
+
+	property bool IsHealing
+	{
+		public get()
+		{
+			return this.GetData("m_IsHealing") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetData("m_IsHealing", value);
 		}
 	}
 }
@@ -58,8 +72,14 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 
 	actor.EndCloak();
 
+	if (actor.State == STATE_ATTACK)
+	{
+		actor.CancelAttack = true;
+	}
+
 	if (rageInfo.IsHealing)
 	{
+		action.IsHealing = true;
 		return SF2_ChaserFleeToHealAction();
 	}
 
@@ -79,6 +99,16 @@ static int Update(SF2_ChaserRageAction action, SF2_ChaserEntity actor, float int
 {
 	if (action.ActiveChild != NULL_ACTION)
 	{
+		if (!action.IsHealing)
+		{
+			CBaseEntity target = actor.Target;
+			if (target.IsValid())
+			{
+				float pos[3];
+				target.GetAbsOrigin(pos);
+				actor.MyNextBotPointer().GetLocomotionInterface().FaceTowards(pos);
+			}
+		}
 		return action.Continue();
 	}
 

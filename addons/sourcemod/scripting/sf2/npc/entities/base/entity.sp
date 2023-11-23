@@ -41,9 +41,9 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineEntityField("m_Target")
 			.DefineEntityField("m_OldTarget")
 			.DefineBoolField("m_IsJumping")
-			.DefineBoolField("m_IsPlayerVisible", MAXTF2PLAYERS)
-			.DefineBoolField("m_IsPlayerInFOV", MAXTF2PLAYERS)
-			.DefineBoolField("m_IsPlayerNear", MAXTF2PLAYERS)
+			.DefineBoolField("m_IsEntityVisible", 2049)
+			.DefineBoolField("m_IsEntityInFOV", 2049)
+			.DefineBoolField("m_IsEntityNear", 2049)
 			.DefineFloatField("m_CurrentChaseDuration")
 			.DefineFloatField("m_LegacyFootstepInterval")
 			.DefineFloatField("m_LegacyFootstepTime")
@@ -62,6 +62,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineEntityField("m_KillTarget")
 			.DefineBoolField("m_IsAttemptingToMove")
 			.DefineIntField("m_EyeBoneIndex")
+			.DefineBoolField("m_VelocityCancel")
 		.EndDataMapDesc();
 		g_Factory.Install();
 
@@ -165,34 +166,34 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
-	public bool GetIsVisible(SF2_BasePlayer player)
+	public bool GetIsVisible(CBaseEntity entity)
 	{
-		return this.GetProp(Prop_Data, "m_IsPlayerVisible", player.index) != 0;
+		return this.GetProp(Prop_Data, "m_IsEntityVisible", entity.index) != 0;
 	}
 
-	public void SetIsVisible(SF2_BasePlayer player, bool value)
+	public void SetIsVisible(CBaseEntity entity, bool value)
 	{
-		this.SetProp(Prop_Data, "m_IsPlayerVisible", value, player.index);
+		this.SetProp(Prop_Data, "m_IsEntityVisible", value, entity.index);
 	}
 
-	public bool GetInFOV(SF2_BasePlayer player)
+	public bool GetInFOV(CBaseEntity entity)
 	{
-		return this.GetProp(Prop_Data, "m_IsPlayerInFOV", player.index) != 0;
+		return this.GetProp(Prop_Data, "m_IsEntityInFOV", entity.index) != 0;
 	}
 
-	public void SetInFOV(SF2_BasePlayer player, bool value)
+	public void SetInFOV(CBaseEntity entity, bool value)
 	{
-		this.SetProp(Prop_Data, "m_IsPlayerInFOV", value, player.index);
+		this.SetProp(Prop_Data, "m_IsEntityInFOV", value, entity.index);
 	}
 
-	public bool GetIsNear(SF2_BasePlayer player)
+	public bool GetIsNear(CBaseEntity entity)
 	{
-		return this.GetProp(Prop_Data, "m_IsPlayerNear", player.index) != 0;
+		return this.GetProp(Prop_Data, "m_IsEntityNear", entity.index) != 0;
 	}
 
-	public void SetIsNear(SF2_BasePlayer player, bool value)
+	public void SetIsNear(CBaseEntity entity, bool value)
 	{
-		this.SetProp(Prop_Data, "m_IsPlayerNear", value, player.index);
+		this.SetProp(Prop_Data, "m_IsEntityNear", value, entity.index);
 	}
 
 	property float CurrentChaseDuration
@@ -426,6 +427,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property bool VelocityCancel
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_VelocityCancel") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_VelocityCancel", value);
+		}
+	}
+
 	public void EyePosition(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
 	{
 		this.Controller.GetEyePosition(buffer, defaultValue);
@@ -647,6 +661,37 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		{
 			SetVariantColor(color);
 			AcceptEntityInput(glow, "SetGlowColor");
+		}
+	}
+
+	public void CheckVelocityCancel()
+	{
+		CBaseNPC npc = TheNPCs.FindNPCByEntIndex(this.index);
+		CBaseNPC_Locomotion loco = npc.GetLocomotion();
+		if (loco.IsClimbingOrJumping())
+		{
+			this.VelocityCancel = false;
+			return;
+		}
+		float mins[3], maxs[3];
+		npc.GetBodyMins(mins);
+		npc.GetBodyMaxs(maxs);
+		mins[0] -= 20.0;
+		mins[1] -= 20.0;
+
+		maxs[0] += 20.0;
+		maxs[1] += 20.0;
+
+		mins[2] += loco.GetStepHeight();
+		maxs[2] += 5.0;
+		float myPos[3];
+		this.GetAbsOrigin(myPos);
+
+		if (!this.VelocityCancel && IsSpaceOccupiedIgnorePlayersAndEnts(myPos, mins, maxs, this.index))
+		{
+			float origin[3];
+			loco.SetVelocity(origin);
+			this.VelocityCancel = true;
 		}
 	}
 }

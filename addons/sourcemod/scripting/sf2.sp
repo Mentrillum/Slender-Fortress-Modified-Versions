@@ -603,6 +603,8 @@ int g_ShockwaveBeam;
 int g_ShockwaveHalo;
 char g_DebugBeamSound[PLATFORM_MAX_PATH];
 
+ArrayList g_Buildings;
+
 // Global forwards.
 GlobalForward g_OnBossAddedFwd;
 GlobalForward g_OnBossSpawnFwd;
@@ -998,6 +1000,24 @@ static void StartPlugin()
 			continue;
 		}
 		OnClientPutInServer(i);
+	}
+
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "obj_sentrygun")) != -1)
+	{
+		g_Buildings.Push(EntIndexToEntRef(ent));
+	}
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "obj_teleporter")) != -1)
+	{
+		g_Buildings.Push(EntIndexToEntRef(ent));
+	}
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "obj_dispenser")) != -1)
+	{
+		g_Buildings.Push(EntIndexToEntRef(ent));
 	}
 
 	Call_StartForward(g_OnGamemodeStartPFwd);
@@ -1606,7 +1626,7 @@ Action Hook_CommandBuild(int client, const char[] command, int argc)
 	{
 		return Plugin_Continue;
 	}
-	if (!IsClientInPvP(client))
+	if (!IsClientInPvP(client) && !IsClientInPvE(client))
 	{
 		return Plugin_Handled;
 	}
@@ -2387,6 +2407,11 @@ public void OnEntityCreated(int ent, const char[] classname)
 	{
 		SetEntProp(ent, Prop_Send, "m_bIceRagdoll", true);
 	}
+	else if (strcmp(classname, "obj_sentrygun", false) == 0 || strcmp(classname, "obj_dispenser", false) == 0 ||
+		strcmp(classname, "obj_teleporter", false) == 0)
+	{
+		g_Buildings.Push(EntIndexToEntRef(ent));
+	}
 
 	Call_StartForward(g_OnEntityCreatedPFwd);
 	Call_PushCell(CBaseEntity(ent));
@@ -2466,6 +2491,12 @@ public void OnEntityDestroyed(int ent)
 		{
 			RemoveEntity(glow);
 		}
+	}
+
+	int index = g_Buildings.FindValue(EntIndexToEntRef(ent));
+	if (index != -1)
+	{
+		g_Buildings.Erase(index);
 	}
 
 	Call_StartForward(g_OnEntityDestroyedPFwd);
