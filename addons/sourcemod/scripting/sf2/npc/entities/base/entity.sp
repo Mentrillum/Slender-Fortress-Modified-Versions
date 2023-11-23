@@ -131,12 +131,12 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	{
 		public get()
 		{
-			return CBaseEntity(this.GetPropEnt(Prop_Data, "m_Target"));
+			return CBaseEntity(EntRefToEntIndex(this.GetPropEnt(Prop_Data, "m_Target")));
 		}
 
 		public set(CBaseEntity entity)
 		{
-			this.SetPropEnt(Prop_Data, "m_Target", entity.index);
+			this.SetPropEnt(Prop_Data, "m_Target", EnsureEntRef(entity.index));
 		}
 	}
 
@@ -144,12 +144,12 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	{
 		public get()
 		{
-			return CBaseEntity(this.GetPropEnt(Prop_Data, "m_OldTarget"));
+			return CBaseEntity(EntRefToEntIndex(this.GetPropEnt(Prop_Data, "m_OldTarget")));
 		}
 
 		public set(CBaseEntity entity)
 		{
-			this.SetPropEnt(Prop_Data, "m_OldTarget", entity.index);
+			this.SetPropEnt(Prop_Data, "m_OldTarget", EnsureEntRef(entity.index));
 		}
 	}
 
@@ -392,12 +392,12 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	{
 		public get()
 		{
-			return CBaseEntity(this.GetPropEnt(Prop_Data, "m_KillTarget"));
+			return CBaseEntity(EntRefToEntIndex(this.GetPropEnt(Prop_Data, "m_KillTarget")));
 		}
 
 		public set(CBaseEntity entity)
 		{
-			this.SetPropEnt(Prop_Data, "m_KillTarget", entity.index);
+			this.SetPropEnt(Prop_Data, "m_KillTarget", EnsureEntRef(entity.index));
 		}
 	}
 

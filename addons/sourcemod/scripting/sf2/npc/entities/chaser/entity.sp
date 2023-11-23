@@ -810,12 +810,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	{
 		public get()
 		{
-			return CBaseEntity(this.GetPropEnt(Prop_Data, "m_KillTarget"));
+			return CBaseEntity(EntRefToEntIndex(this.GetPropEnt(Prop_Data, "m_KillTarget")));
 		}
 
 		public set(CBaseEntity entity)
 		{
-			this.SetPropEnt(Prop_Data, "m_KillTarget", entity.index);
+			this.SetPropEnt(Prop_Data, "m_KillTarget", EnsureEntRef(entity.index));
 		}
 	}
 
@@ -3109,8 +3109,8 @@ static void OnDisconnected(SF2_BasePlayer client)
 static void OnCreate(SF2_ChaserEntity ent)
 {
 	ent.AttackIndex = -1;
-	ent.Target = CBaseEntity(INVALID_ENT_REFERENCE);
-	ent.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
+	ent.Target = CBaseEntity(-1);
+	ent.OldTarget = CBaseEntity(-1);
 	ent.IsAllowedToDespawn = true;
 	SDKHook(ent.index, SDKHook_Think, Think);
 	SDKHook(ent.index, SDKHook_ThinkPost, ThinkPost);
@@ -3975,6 +3975,8 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			}
 		}
 	}
+
+	delete valids;
 
 	if (bestNewTarget != INVALID_ENT_REFERENCE)
 	{
