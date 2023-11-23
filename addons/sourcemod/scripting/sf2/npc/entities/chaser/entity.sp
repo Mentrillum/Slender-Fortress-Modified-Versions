@@ -3432,7 +3432,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 	if (player.IsValid)
 	{
 		CBaseEntity weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Melee));
-		if (weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
+		if (weapon.IsValid() && weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
 		{
 			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 			{
@@ -3455,7 +3455,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 		}
 
 		weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Primary));
-		if (weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
+		if (weapon.IsValid() && weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
 		{
 			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 			{
@@ -3473,25 +3473,28 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 		}
 
 		weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Secondary));
-		switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
+		if (weapon.IsValid())
 		{
-			case 129, 1001, 226, 354: // Banners
+			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 			{
-				float requiredRage = 6.0;
-				if (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex") == 354)
+				case 129, 1001, 226, 354: // Banners
 				{
-					requiredRage = 4.8;
-				}
-
-				if (player.GetProp(Prop_Send, "m_bRageDraining") == 0)
-				{
-					float rage = player.GetPropFloat(Prop_Send, "m_flRageMeter");
-					rage += (damage / requiredRage);
-					if (rage > 100.0)
+					float requiredRage = 6.0;
+					if (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex") == 354)
 					{
-						rage = 100.0;
+						requiredRage = 4.8;
 					}
-					player.SetPropFloat(Prop_Send, "m_flRageMeter", rage);
+
+					if (player.GetProp(Prop_Send, "m_bRageDraining") == 0)
+					{
+						float rage = player.GetPropFloat(Prop_Send, "m_flRageMeter");
+						rage += (damage / requiredRage);
+						if (rage > 100.0)
+						{
+							rage = 100.0;
+						}
+						player.SetPropFloat(Prop_Send, "m_flRageMeter", rage);
+					}
 				}
 			}
 		}
