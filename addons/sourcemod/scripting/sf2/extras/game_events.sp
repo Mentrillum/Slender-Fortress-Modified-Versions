@@ -652,11 +652,6 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	#endif
 	int client = GetClientOfUserId(event.GetInt("userid"));
 
-	if (g_PlayerProxy[client])
-	{
-		TF2Attrib_RemoveByName(client, "crit mod disabled");
-	}
-
 	for (int i = 0; i < view_as<int>(TFCond_PowerupModeDominant); i++)
 	{
 		g_ClientInCondition[client][i] = false;
