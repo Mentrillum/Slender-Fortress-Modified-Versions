@@ -420,8 +420,8 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 		speed *= 1.25;
 	}
 
-	speed = (speed + (speed * g_RoundDifficultyModifier) / 15.0);
-	acceleration = (acceleration + (acceleration * g_RoundDifficultyModifier) / 15.0);
+	speed = (speed + (speed * GetDifficultyModifier(difficulty)) / 15.0);
+	acceleration = (acceleration + (acceleration * GetDifficultyModifier(difficulty)) / 15.0);
 
 	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
 	{

@@ -667,6 +667,7 @@ PrivateForward g_OnRoundStartPFwd;
 PrivateForward g_OnRoundEndPFwd;
 PrivateForward g_OnEntityCreatedPFwd;
 PrivateForward g_OnEntityDestroyedPFwd;
+PrivateForward g_OnEntityTeleportedPFwd;
 PrivateForward g_OnAdminMenuCreateOptionsPFwd;
 PrivateForward g_OnPlayerJumpPFwd;
 PrivateForward g_OnPlayerSpawnPFwd;
@@ -2846,90 +2847,29 @@ void Hook_TriggerOnEndTouch(const char[] output, int caller, int activator, floa
 	#endif
 }
 
-void Hook_TriggerTeleportOnStartTouch(const char[] output, int caller, int activator, float delay)
+void Hook_TriggerTeleportOnStartTouch(const char[] output, int teleporter, int activator, float delay)
 {
 	if (!g_Enabled)
 	{
 		return;
 	}
 
-	if (!IsValidEntity(caller))
+	if (!IsValidEntity(teleporter))
 	{
 		return;
 	}
 
-	int flags = GetEntProp(caller, Prop_Data, "m_spawnflags");
-	if (((flags & TRIGGER_CLIENTS) && (flags & TRIGGER_NPCS)) || (flags & TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS))
+	if (SDKCall(g_SDKPassesTriggerFilters, teleporter, activator) == 0)
 	{
-		if (IsValidClient(activator))
-		{
-			bool chase = ClientHasMusicFlag(activator, MUSICF_CHASE);
-			if (chase)
-			{
-				// The player took a teleporter and is chased, and the boss can take it too, add the teleporter to the temp boss' goals.
-				for (int i = 0; i < MAX_BOSSES; i++)
-				{
-					SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(i);
-					if (Npc.UniqueID == -1)
-					{
-						continue;
-					}
-					/*if (EntRefToEntIndex(g_SlenderTarget[i]) == activator)
-					{
-						for (int ii = 0; ii < MAX_NPCTELEPORTER; ii++)
-						{
-							if (Npc.GetTeleporter(ii) == INVALID_ENT_REFERENCE)
-							{
-								Npc.SetTeleporter(ii, EntIndexToEntRef(caller));
-								break;
-							}
-						}
-					}*/
-				}
-			}
-			return;
-		}
-		SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromEntIndex(activator));
-		if (Npc.IsValid())
-		{
-			//A boss took a teleporter
-			int teleporter = Npc.GetTeleporter(0);
-			if (teleporter == EntIndexToEntRef(caller)) //Remove our temp goal, and go back chase our target! GRAAAAAAAAAAAAh! Unless we have some other teleporters to take....fak.
-			{
-				Npc.SetTeleporter(0, INVALID_ENT_REFERENCE);
-			}
-			if (MAX_NPCTELEPORTER > 2 && Npc.GetTeleporter(1) != INVALID_ENT_REFERENCE)
-			{
-				for (int i = 0; i + 1 < MAX_NPCTELEPORTER; i++)
-				{
-					if (Npc.GetTeleporter(i + 1) != INVALID_ENT_REFERENCE)
-					{
-						Npc.SetTeleporter(i, Npc.GetTeleporter(i + 1));
-					}
-					else
-					{
-						Npc.SetTeleporter(i, INVALID_ENT_REFERENCE);
-					}
-				}
-			}
-		}
+		return;
 	}
-	if (IsValidClient(activator))
-	{
-		bool chase = ClientHasMusicFlag(activator, MUSICF_CHASE);
-		if (chase)
-		{
-			// The player took a teleporter and is chased, but the boss can't follow.
-			for (int i = 0; i < MAX_BOSSES; i++)
-			{
-				if (NPCGetUniqueID(i) == -1)
-				{
-					continue;
-				}
-			}
-		}
-	}
+
+	Call_StartForward(g_OnEntityTeleportedPFwd);
+	Call_PushCell(CBaseEntity(teleporter));
+	Call_PushCell(CBaseEntity(activator));
+	Call_Finish();
 }
+
 static Action Hook_PageOnTakeDamage(int page, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_Enabled)

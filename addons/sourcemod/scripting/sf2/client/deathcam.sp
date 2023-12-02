@@ -249,7 +249,9 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 			TF2_IgnitePlayer(client, client);
 		}
 
-		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+		CBaseEntity boss = CBaseEntity(NPCGetEntIndex(bossIndex));
+
+		SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
 		ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 		KillClient(client);
 		return;
@@ -473,7 +475,9 @@ static void StopDeathCam(int client)
 			Call_PushCell(deathCamBoss.Index);
 			Call_Finish();
 
-			SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+			CBaseEntity boss = CBaseEntity(deathCamBoss.EntIndex);
+
+			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
 			ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 			KillClient(client);
 		}
@@ -547,7 +551,6 @@ static void Hook_DeathCamThink(int client)
 				soundInfo = data.PlayerDeathCamOverlaySounds;
 				soundInfo.EmitSound(true, player.index);
 				duration = g_SlenderDeathCamTime[Npc.Index];
-				duration -= g_SlenderDeathCamOverlayTimeStart[Npc.Index];
 			}
 			g_PlayerDeathCamTimer[player.index] = duration;
 			g_PlayerDeathCamMustDoOverlay[player.index] = false;

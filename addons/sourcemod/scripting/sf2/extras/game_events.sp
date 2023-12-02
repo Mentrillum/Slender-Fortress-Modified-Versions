@@ -750,16 +750,31 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 		}
 	}
 
+	bool modify = false;
+
+	if (!modify && SF2_ProjectileIceball(inflictor).IsValid())
+	{
+		modify = true;
+		CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	if (!modify && SF2_ProjectileCowMangler(inflictor).IsValid())
+	{
+		modify = true;
+		CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	}
+
 	if (npcIndex != -1)
 	{
 		SF2BossProfileData data;
 		data = NPCGetProfileData(npcIndex);
 		g_PlayerBossKillSubject[client] = npcIndex;
 
-		if (data.AshRagdoll || data.CloakRagdoll || data.DecapRagdoll || data.DeleteRagdoll || data.DissolveRagdoll ||
+		if (!modify && (data.AshRagdoll || data.CloakRagdoll || data.DecapRagdoll || data.DeleteRagdoll || data.DissolveRagdoll ||
 			data.ElectrocuteRagdoll || data.GoldRagdoll || data.IceRagdoll || data.PlasmaRagdoll || data.PushRagdoll ||
-			data.ResizeRagdoll || data.BurnRagdoll)
+			data.ResizeRagdoll || data.BurnRagdoll || data.GibRagdoll))
 		{
+			modify = true;
 			CreateTimer(0.01, Timer_ModifyRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 
@@ -768,25 +783,17 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			event.SetInt("death_flags", data.CustomDeathFlagType);
 		}
 
-		if (data.DecapOrGibRagdoll)
+		if (!modify && data.DecapOrGibRagdoll)
 		{
+			modify = true;
 			CreateTimer(0.01, Timer_DeGibRagdoll, GetClientUserId(client));
 		}
 
-		if (data.MultiEffectRagdoll)
+		if (!modify && data.MultiEffectRagdoll)
 		{
+			modify = true;
 			CreateTimer(0.01, Timer_MultiRagdoll, GetClientUserId(client));
 		}
-	}
-
-	if (SF2_ProjectileIceball(inflictor).IsValid())
-	{
-		CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
-
-	if (SF2_ProjectileCowMangler(inflictor).IsValid())
-	{
-		CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	#if defined DEBUG

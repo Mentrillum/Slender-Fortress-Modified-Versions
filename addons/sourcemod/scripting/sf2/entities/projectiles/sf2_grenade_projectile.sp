@@ -281,12 +281,17 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 
 		grenade.Timer = GetGameTime() + 2.0;
 
-		SDKHook(grenade.index, SDKHook_VPhysicsUpdate, Think);
+		CreateTimer(0.1, Timer_Think, EntIndexToEntRef(grenade.index), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 	}
 }
 
-static void Think(int entity)
+static Action Timer_Think(Handle timer, any ref)
 {
+	int entity = EntRefToEntIndex(ref);
+	if (!entity || entity == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
 	SF2_ProjectileGrenade projectile = SF2_ProjectileGrenade(entity);
 
 	if (projectile.Timer < GetGameTime())
@@ -300,7 +305,7 @@ static void Think(int entity)
 
 	if (projectile.Touched)
 	{
-		return;
+		return Plugin_Continue;
 	}
 
 	float pos[3], mins[3], maxs[3];
@@ -313,7 +318,7 @@ static void Think(int entity)
 	if (hitIndex == 0)
 	{
 		projectile.Touched = true;
-		return;
+		return Plugin_Continue;
 	}
 	else
 	{
@@ -323,6 +328,8 @@ static void Think(int entity)
 			projectile.DoExplosion();
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 bool TraceRayGrenade(int entity, int mask, any data)

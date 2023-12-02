@@ -1441,6 +1441,34 @@ int GetLocalGlobalDifficulty(int npcIndex = -1)
 	return g_DifficultyConVar.IntValue;
 }
 
+float GetDifficultyModifier(int difficulty)
+{
+	switch (difficulty)
+	{
+		case Difficulty_Hard:
+		{
+			return DIFFICULTYMODIFIER_HARD;
+		}
+
+		case Difficulty_Insane:
+		{
+			return DIFFICULTYMODIFIER_INSANE;
+		}
+
+		case Difficulty_Nightmare:
+		{
+			return DIFFICULTYMODIFIER_NIGHTMARE;
+		}
+
+		case Difficulty_Apollyon:
+		{
+			return DIFFICULTYMODIFIER_APOLLYON;
+		}
+	}
+
+	return DIFFICULTYMODIFIER_NORMAL;
+}
+
 MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
 {
 	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);

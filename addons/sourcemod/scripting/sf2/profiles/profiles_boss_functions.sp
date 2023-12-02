@@ -343,43 +343,43 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	}
 	kv.GetString("chat_message_upon_death_prefix", profileData.DeathMessagePrefix, sizeof(profileData.DeathMessagePrefix), profileData.DeathMessagePrefix);
 
-	profileData.BurnRagdoll = !!kv.GetNum("burn_ragdoll_on_kill", profileData.BurnRagdoll);
-	profileData.CloakRagdoll = !!kv.GetNum("cloak_ragdoll_on_kill", profileData.CloakRagdoll);
-	profileData.DecapRagdoll = !!kv.GetNum("decap_ragdoll_on_kill", profileData.DecapRagdoll);
-	profileData.GibRagdoll = !!kv.GetNum("gib_ragdoll_on_kill", profileData.GibRagdoll);
-	profileData.IceRagdoll = !!kv.GetNum("ice_ragdoll_on_kill", profileData.IceRagdoll);
-	profileData.GoldRagdoll = !!kv.GetNum("gold_ragdoll_on_kill", profileData.GoldRagdoll);
-	profileData.ElectrocuteRagdoll = !!kv.GetNum("electrocute_ragdoll_on_kill", profileData.ElectrocuteRagdoll);
-	profileData.AshRagdoll = !!kv.GetNum("disintegrate_ragdoll_on_kill", profileData.AshRagdoll);
-	profileData.DeleteRagdoll = !!kv.GetNum("delete_ragdoll_on_kill", profileData.DeleteRagdoll);
-	profileData.PushRagdoll = !!kv.GetNum("push_ragdoll_on_kill", profileData.PushRagdoll);
+	profileData.BurnRagdoll = kv.GetNum("burn_ragdoll_on_kill", profileData.BurnRagdoll) != 0;
+	profileData.CloakRagdoll = kv.GetNum("cloak_ragdoll_on_kill", profileData.CloakRagdoll) != 0;
+	profileData.DecapRagdoll = kv.GetNum("decap_ragdoll_on_kill", profileData.DecapRagdoll) != 0;
+	profileData.GibRagdoll = kv.GetNum("gib_ragdoll_on_kill", profileData.GibRagdoll) != 0;
+	profileData.IceRagdoll = kv.GetNum("ice_ragdoll_on_kill", profileData.IceRagdoll) != 0;
+	profileData.GoldRagdoll = kv.GetNum("gold_ragdoll_on_kill", profileData.GoldRagdoll) != 0;
+	profileData.ElectrocuteRagdoll = kv.GetNum("electrocute_ragdoll_on_kill", profileData.ElectrocuteRagdoll) != 0;
+	profileData.AshRagdoll = kv.GetNum("disintegrate_ragdoll_on_kill", profileData.AshRagdoll) != 0;
+	profileData.DeleteRagdoll = kv.GetNum("delete_ragdoll_on_kill", profileData.DeleteRagdoll) != 0;
+	profileData.PushRagdoll = kv.GetNum("push_ragdoll_on_kill", profileData.PushRagdoll) != 0;
 	if (profileData.PushRagdoll)
 	{
 		kv.GetVector("push_ragdoll_force", profileData.PushRagdollForce, profileData.PushRagdollForce);
 	}
-	profileData.DissolveRagdoll = !!kv.GetNum("dissolve_ragdoll_on_kill", profileData.DissolveRagdoll);
+	profileData.DissolveRagdoll = kv.GetNum("dissolve_ragdoll_on_kill", profileData.DissolveRagdoll) != 0;
 	if (profileData.DissolveRagdoll)
 	{
 		profileData.DissolveKillType = kv.GetNum("dissolve_ragdoll_type", profileData.DissolveKillType);
 	}
-	profileData.PlasmaRagdoll = !!kv.GetNum("plasma_ragdoll_on_kill", profileData.PlasmaRagdoll);
-	profileData.ResizeRagdoll = !!kv.GetNum("resize_ragdoll_on_kill", profileData.ResizeRagdoll);
+	profileData.PlasmaRagdoll = kv.GetNum("plasma_ragdoll_on_kill", profileData.PlasmaRagdoll) != 0;
+	profileData.ResizeRagdoll = kv.GetNum("resize_ragdoll_on_kill", profileData.ResizeRagdoll) != 0;
 	if (profileData.ResizeRagdoll)
 	{
 		profileData.ResizeRagdollHead = kv.GetFloat("resize_ragdoll_head", profileData.ResizeRagdollHead);
 		profileData.ResizeRagdollHands = kv.GetFloat("resize_ragdoll_hands", profileData.ResizeRagdollHands);
 		profileData.ResizeRagdollTorso = kv.GetFloat("resize_ragdoll_torso", profileData.ResizeRagdollTorso);
 	}
-	profileData.DecapOrGibRagdoll = !!kv.GetNum("decap_or_gib_ragdoll_on_kill", profileData.DecapOrGibRagdoll);
-	profileData.SilentKill = !!kv.GetNum("silent_kill", profileData.SilentKill);
-	profileData.MultiEffectRagdoll = !!kv.GetNum("multieffect_ragdoll_on_kill", profileData.MultiEffectRagdoll);
-	profileData.CustomDeathFlag = !!kv.GetNum("attack_custom_deathflag_enabled", profileData.CustomDeathFlag);
+	profileData.DecapOrGibRagdoll = kv.GetNum("decap_or_gib_ragdoll_on_kill", profileData.DecapOrGibRagdoll) != 0;
+	profileData.SilentKill = kv.GetNum("silent_kill", profileData.SilentKill) != 0;
+	profileData.MultiEffectRagdoll = kv.GetNum("multieffect_ragdoll_on_kill", profileData.MultiEffectRagdoll) != 0;
+	profileData.CustomDeathFlag = kv.GetNum("attack_custom_deathflag_enabled", profileData.CustomDeathFlag) != 0;
 	if (profileData.CustomDeathFlag)
 	{
 		profileData.CustomDeathFlagType = kv.GetNum("attack_custom_deathflag", profileData.CustomDeathFlagType);
 	}
 
-	profileData.OutroMusic = !!kv.GetNum("sound_music_outro_enabled", profileData.OutroMusic);
+	profileData.OutroMusic = kv.GetNum("sound_music_outro_enabled", profileData.OutroMusic) != 0;
 
 	profileData.EngineSoundLevel = kv.GetNum("constant_sound_level", profileData.EngineSoundLevel);
 	profileData.EngineSoundVolume = kv.GetFloat("constant_sound_volume", profileData.EngineSoundVolume);

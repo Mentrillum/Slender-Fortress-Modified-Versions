@@ -11,6 +11,7 @@ methodmap SF2_StatueChaseAction < NextBotAction
 			g_Factory = new NextBotActionFactory("Statue_Chase");
 			g_Factory.SetCallback(NextBotActionCallbackType_OnStart, OnStart);
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
+			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
 		}
 		return view_as<SF2_StatueChaseAction>(g_Factory.Create());
 	}
@@ -117,6 +118,10 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	{
 		float pos[3];
 		target.GetAbsOrigin(pos);
+		if (actor.Teleporters.Length > 0)
+		{
+			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
+		}
 
 		if (!bot.IsRangeLessThanEx(pos, 8.0) && actor.IsMoving)
 		{
@@ -155,4 +160,12 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 		}
 	}
 	return action.Continue();
+}
+
+static void OnEnd(SF2_StatueChaseAction action, SF2_StatueEntity actor)
+{
+	if (actor.Teleporters != null)
+	{
+		actor.Teleporters.Clear();
+	}
 }

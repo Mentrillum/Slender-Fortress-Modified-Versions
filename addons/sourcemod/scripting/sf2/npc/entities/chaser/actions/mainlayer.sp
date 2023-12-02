@@ -239,8 +239,6 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		return action.SuspendFor(SF2_DeathCamAction());
 	}
 
-	UnstuckCheck(action, actor);
-
 	actor.ProcessTraps();
 
 	#if defined DEBUG
@@ -315,13 +313,22 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		delete props;
 	}
 
+	UnstuckCheck(action, actor);
+
 	return action.Continue();
 }
 
 static int OnResume(SF2_ChaserMainAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	action.LastStuckTime = GetGameTime() + 0.75;
-	actor.UpdateMovementAnimation();
+	if (!actor.IsInChaseInitial)
+	{
+		actor.UpdateMovementAnimation();
+	}
+	if (actor.WasStunned)
+	{
+		actor.WasStunned = false;
+	}
 	return action.Continue();
 }
 
@@ -371,18 +378,23 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 	ILocomotion loco = bot.GetLocomotionInterface();
 	SF2NPC_Chaser controller = actor.Controller;
 	PathFollower path = controller.Path;
-	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(actor.index);
 	float gameTime = GetGameTime();
 
-	if (!path.IsValid() || !actor.IsAttemptingToMove || loco.GetDesiredSpeed() <= 0.0 || actor.MovementType == SF2NPCMoveType_Attack)
+	float goalPos[3], myPos[3];
+	if (path.IsValid())
+	{
+		path.GetEndPosition(goalPos);
+	}
+	actor.GetAbsOrigin(myPos);
+
+	if (!path.IsValid() || !actor.IsAttemptingToMove || loco.GetDesiredSpeed() <= 0.0 || actor.MovementType == SF2NPCMoveType_Attack || (path.IsValid() && GetVectorSquareMagnitude(myPos, goalPos) <= Pow(16.0, 2.0)))
 	{
 		action.LastStuckTime = gameTime;
 		return;
 	}
 
-	float lastPos[3], myPos[3];
+	float lastPos[3];
 	action.GetLastPos(lastPos);
-	actor.GetAbsOrigin(myPos);
 
 	if (bot.IsRangeLessThanEx(lastPos, 0.13) || loco.GetGroundSpeed() <= 0.1)
 	{
@@ -391,63 +403,11 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 			return;
 		}
 		float destination[3];
-		CNavArea area = TheNavMesh.GetNearestNavArea(lastPos, _, _, _, false);
-		area.GetCenter(destination);
-		float tempMaxs[3];
-		npc.GetBodyMaxs(tempMaxs);
-		float traceMins[3];
-		traceMins[0] = g_SlenderDetectMins[controller.Index][0] - 5.0;
-		traceMins[1] = g_SlenderDetectMins[controller.Index][1] - 5.0;
-		traceMins[2] = 0.0;
-
-		float traceMaxs[3];
-		traceMaxs[0] = g_SlenderDetectMaxs[controller.Index][0] + 5.0;
-		traceMaxs[1] = g_SlenderDetectMaxs[controller.Index][1] + 5.0;
-		traceMaxs[2] = tempMaxs[2];
-		TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
-		if (GetVectorSquareMagnitude(destination, lastPos) <= SquareFloat(16.0) || TR_DidHit())
+		if (!NPCFindUnstuckPosition(actor, lastPos, destination))
 		{
-			SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, 400.0);
-			int areaCount = collector.Count();
-			ArrayList areaArray = new ArrayList(1, areaCount);
-			int validAreaCount = 0;
-			for (int i = 0; i < areaCount; i++)
-			{
-				areaArray.Set(validAreaCount, i);
-				validAreaCount++;
-			}
-
-			int randomArea = 0, randomCell = 0;
-			areaArray.Resize(validAreaCount);
-			area = NULL_AREA;
-			while (validAreaCount > 1)
-			{
-				randomCell = GetRandomInt(0, validAreaCount - 1);
-				randomArea = areaArray.Get(randomCell);
-				area = collector.Get(randomArea);
-				area.GetCenter(destination);
-
-				TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
-				if (TR_DidHit())
-				{
-					area = NULL_AREA;
-					validAreaCount--;
-					int findValue = areaArray.FindValue(randomCell);
-					if (findValue != -1)
-					{
-						areaArray.Erase(findValue);
-					}
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			delete collector;
-			delete areaArray;
+			controller.UnSpawn();
+			return;
 		}
-		path.GetClosestPosition(destination, destination, path.FirstSegment(), 400.0);
 		action.LastStuckTime = gameTime + 0.75;
 		actor.Teleport(destination, NULL_VECTOR, NULL_VECTOR);
 	}

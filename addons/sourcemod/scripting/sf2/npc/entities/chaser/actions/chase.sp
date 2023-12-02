@@ -12,6 +12,7 @@ methodmap SF2_ChaserChaseAction < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_InitialContainedAction, InitialContainedAction);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnStart, OnStart);
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
+			g_Factory.SetCallback(NextBotActionCallbackType_OnResume, OnResume);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
 		}
 		return view_as<SF2_ChaserChaseAction>(g_Factory.Create());
@@ -163,6 +164,21 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 	return action.Continue();
 }
 
+static void OnResume(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
+{
+	if (actor.WasStunned)
+	{
+		SF2NPC_Chaser controller = actor.Controller;
+		if (controller.IsValid())
+		{
+			if (controller.GetProfileData().ChaseInitialOnStun)
+			{
+				actor.PerformVoice(SF2BossSound_ChaseInitial);
+			}
+		}
+	}
+}
+
 static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 {
 	if (!actor.Controller.IsValid())
@@ -183,6 +199,10 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		SF2ChaserBossProfileData data;
 		data = actor.Controller.GetProfileData();
 		actor.FollowCooldownChase = GetGameTime() + data.AlertOnChaseInfo.FollowCooldown[difficulty];
+	}
+	if (actor.Teleporters != null)
+	{
+		actor.Teleporters.Clear();
 	}
 
 	SF2ChaserBossProfileData chaserData;

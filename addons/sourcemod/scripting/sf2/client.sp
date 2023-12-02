@@ -790,8 +790,8 @@ void ClientProcessVisibility(int client)
 			TriggerTimer(g_PlayerLastStaticTimer[client], true);
 
 			// Start up our own static timer.
-			float staticIncreaseRate = (g_SlenderStaticRate[bossNewStatic][difficulty] - (g_SlenderStaticRate[bossNewStatic][difficulty] * g_RoundDifficultyModifier)/10);
-			float staticDecreaseRate = (g_SlenderStaticRateDecay[bossNewStatic][difficulty] + (g_SlenderStaticRateDecay[bossNewStatic][difficulty] * g_RoundDifficultyModifier)/10);
+			float staticIncreaseRate = (g_SlenderStaticRate[bossNewStatic][difficulty] - (g_SlenderStaticRate[bossNewStatic][difficulty] * GetDifficultyModifier(difficulty)) / 10);
+			float staticDecreaseRate = (g_SlenderStaticRateDecay[bossNewStatic][difficulty] + (g_SlenderStaticRateDecay[bossNewStatic][difficulty] * GetDifficultyModifier(difficulty)) / 10);
 			if (!IsClassConfigsValid())
 			{
 				if (class == TFClass_Heavy)

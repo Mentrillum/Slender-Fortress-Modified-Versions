@@ -171,5 +171,6 @@ static void OnEnd(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 
 		actor.UpdateMovementAnimation();
 	}
+	actor.WasStunned = true;
 	actor.State = action.OldState;
 }

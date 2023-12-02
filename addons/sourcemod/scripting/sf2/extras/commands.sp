@@ -398,6 +398,7 @@ public void OnPluginStart()
 	g_OnRoundEndPFwd = new PrivateForward(ET_Ignore);
 	g_OnEntityCreatedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_OnEntityDestroyedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
+	g_OnEntityTeleportedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerJumpPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerSpawnPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerDeathPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);

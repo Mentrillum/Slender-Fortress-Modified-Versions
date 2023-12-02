@@ -31,7 +31,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 	public static void Initialize()
 	{
-		g_Factory = new CEntityFactory("sf2_npc_boss_base", OnCreate);
+		g_Factory = new CEntityFactory("sf2_npc_boss_base", OnCreate, OnRemove);
 		g_Factory.IsAbstract = true;
 		g_Factory.DeriveFromNPC();
 		g_Factory.BeginDataMapDesc()
@@ -63,6 +63,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineBoolField("m_IsAttemptingToMove")
 			.DefineIntField("m_EyeBoneIndex")
 			.DefineBoolField("m_VelocityCancel")
+			.DefineIntField("m_Teleporters")
 		.EndDataMapDesc();
 		g_Factory.Install();
 
@@ -440,6 +441,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property ArrayList Teleporters
+	{
+		public get()
+		{
+			return view_as<ArrayList>(this.GetProp(Prop_Data, "m_Teleporters"));
+		}
+
+		public set(ArrayList value)
+		{
+			this.SetProp(Prop_Data, "m_Teleporters", value);
+		}
+	}
+
 	public void EyePosition(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
 	{
 		this.Controller.GetEyePosition(buffer, defaultValue);
@@ -701,8 +715,17 @@ static void OnCreate(SF2_BaseBoss boss)
 	boss.Controller = SF2_INVALID_NPC;
 	boss.Target = CBaseEntity(-1);
 	boss.LastKillTime = 0.0;
+	boss.Teleporters = new ArrayList();
 
 	SDKHook(boss.index, SDKHook_SpawnPost, SpawnPost);
+}
+
+static void OnRemove(SF2_BaseBoss boss)
+{
+	if (boss.Teleporters != null)
+	{
+		delete boss.Teleporters;
+	}
 }
 
 static void SpawnPost(int entIndex)

@@ -564,8 +564,8 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 				if (effectsInfo.TEParticleAttachType == 2)
 				{
 					VectorTransform(start, basePos, baseAng, start);
-					pos = effectsInfo.Origin;
-					ang = effectsInfo.Angles;
+					pos = start;
+					ang = effectAng;
 				}
 				else
 				{

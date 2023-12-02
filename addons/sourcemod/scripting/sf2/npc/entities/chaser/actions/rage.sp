@@ -127,7 +127,7 @@ static void OnEnd(SF2_ChaserRageAction action, SF2_ChaserEntity actor)
 		data.Rages.GetArray(actor.RageIndex, rageInfo, sizeof(rageInfo));
 		if (rageInfo.IncreaseDifficulty)
 		{
-			actor.Controller.Difficulty++;
+			actor.Controller.Difficulty += 1;
 			if (actor.Controller.Difficulty > Difficulty_Apollyon)
 			{
 				actor.Controller.Difficulty = Difficulty_Apollyon;

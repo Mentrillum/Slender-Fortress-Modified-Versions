@@ -322,6 +322,10 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 
 		if (actor.MovementType == SF2NPCMoveType_Attack && attackData.Type != SF2BossAttackType_Custom)
 		{
+			if (actor.Teleporters.Length > 0)
+			{
+				CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(targetPos);
+			}
 			if (!bot.IsRangeLessThanEx(targetPos, 8.0))
 			{
 				if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))

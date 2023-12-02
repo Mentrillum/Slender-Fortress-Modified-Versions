@@ -140,7 +140,6 @@ static void UnstuckCheck(SF2_StatueBaseAction action, SF2_StatueEntity actor)
 	ILocomotion loco = bot.GetLocomotionInterface();
 	SF2NPC_Statue controller = actor.Controller;
 	PathFollower path = controller.Path;
-	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(actor.index);
 	float gameTime = GetGameTime();
 
 	if (!path.IsValid() || !actor.IsMoving || loco.GetDesiredSpeed() <= 0.0)
@@ -160,82 +159,11 @@ static void UnstuckCheck(SF2_StatueBaseAction action, SF2_StatueEntity actor)
 			return;
 		}
 		float destination[3];
-		CNavArea area = TheNavMesh.GetNearestNavArea(lastPos, _, _, _, false);
-		area.GetCenter(destination);
-		float tempMaxs[3];
-		npc.GetBodyMaxs(tempMaxs);
-		float traceMins[3];
-		traceMins[0] = g_SlenderDetectMins[controller.Index][0] - 5.0;
-		traceMins[1] = g_SlenderDetectMins[controller.Index][1] - 5.0;
-		traceMins[2] = 0.0;
-
-		float traceMaxs[3];
-		traceMaxs[0] = g_SlenderDetectMaxs[controller.Index][0] + 5.0;
-		traceMaxs[1] = g_SlenderDetectMaxs[controller.Index][1] + 5.0;
-		traceMaxs[2] = tempMaxs[2];
-		TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
-		if (GetVectorSquareMagnitude(destination, lastPos) <= SquareFloat(16.0) || TR_DidHit())
+		if (!NPCFindUnstuckPosition(actor, lastPos, destination))
 		{
-			CursorData cursor = path.GetCursorData();
-			SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, 256.0);
-			int areaCount = collector.Count();
-			ArrayList areaArray = new ArrayList(1, areaCount);
-			int validAreaCount = 0;
-			for (int i = 0; i < areaCount; i++)
-			{
-				if (collector.Get(i).GetCostSoFar() < 16.0)
-				{
-					continue;
-				}
-				if (cursor.segmentPrior != NULL_PATH_SEGMENT)
-				{
-					CNavArea segmentArea = cursor.segmentPrior.area;
-					if (segmentArea == collector.Get(i))
-					{
-						continue;
-					}
-				}
-				float navPos[3];
-				collector.Get(i).GetCenter(navPos);
-				if (GetVectorSquareMagnitude(myPos, navPos) <= SquareFloat(16.0))
-				{
-					continue;
-				}
-				areaArray.Set(validAreaCount, i);
-				validAreaCount++;
-			}
-
-			int randomArea = 0, randomCell = 0;
-			areaArray.Resize(validAreaCount);
-			area = NULL_AREA;
-			while (validAreaCount > 1)
-			{
-				randomCell = GetRandomInt(0, validAreaCount - 1);
-				randomArea = areaArray.Get(randomCell);
-				area = collector.Get(randomArea);
-				area.GetCenter(destination);
-
-				TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
-				if (TR_DidHit())
-				{
-					area = NULL_AREA;
-					validAreaCount--;
-					int findValue = areaArray.FindValue(randomCell);
-					if (findValue != -1)
-					{
-						areaArray.Erase(findValue);
-					}
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			delete collector;
-			delete areaArray;
+			controller.UnSpawn();
+			return;
 		}
-		path.GetClosestPosition(destination, destination, path.FirstSegment(), 128.0);
 		action.LastStuckTime = gameTime + 0.75;
 		actor.Teleport(destination, NULL_VECTOR, NULL_VECTOR);
 	}

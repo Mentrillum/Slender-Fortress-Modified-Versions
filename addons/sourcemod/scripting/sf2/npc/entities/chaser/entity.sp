@@ -56,6 +56,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineFloatField("m_OverrideSpawnAnimationDuration")
 			.DefineFloatField("m_Override")
 			.DefineBoolField("m_IsStunned")
+			.DefineBoolField("m_WasStunned")
 			.DefineFloatField("m_StunHealth")
 			.DefineFloatField("m_NextStunTime")
 			.DefineFloatField("m_MaxStunHealth")
@@ -249,6 +250,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "m_IsStunned", value);
+		}
+	}
+
+	property bool WasStunned
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_WasStunned") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_WasStunned", value);
 		}
 	}
 
@@ -1818,8 +1832,9 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 		else
 		{
-			if (this.ProjectileAmmo != 0)
+			if (this.ProjectileAmmo > 0)
 			{
+				this.ProjectileAmmo--;
 				this.ShootProjectile();
 			}
 			else
@@ -1829,7 +1844,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 					this.ProjectileReloadTime = gameTime + data.ProjectileReloadTime[difficulty];
 					this.IsReloadingProjectiles = true;
 				}
-				else if (this.ProjectileReloadTime <= gameTime && this.IsReloadingProjectiles)
+				if (this.ProjectileReloadTime <= gameTime && this.IsReloadingProjectiles)
 				{
 					this.ProjectileAmmo = data.ProjectileClipSize[difficulty];
 					this.IsReloadingProjectiles = false;
@@ -3675,6 +3690,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	{
 		attackEliminated = originalData.IsPvEBoss;
 	}
+	float gameTime = GetGameTime();
 
 	int difficulty = controller.Difficulty;
 
@@ -3874,7 +3890,8 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			}
 		}
 
-		if (player.IsValid && player.IsTrapped && (chaser.State == STATE_IDLE || chaser.State == STATE_ALERT) && dist <= SquareFloat(searchRange))
+		if (player.IsValid && (player.IsTrapped || (player.IsReallySprinting && data.AutoChaseSprinters[difficulty] && chaser.GetAutoChaseCooldown(player) < gameTime))
+			&& (chaser.State == STATE_IDLE || chaser.State == STATE_ALERT) && dist <= SquareFloat(searchRange))
 		{
 			player.SetForceChaseState(controller, true);
 		}
@@ -3984,6 +4001,10 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	if (bestNewTarget != INVALID_ENT_REFERENCE)
 	{
 		interruptConditions = playerInterruptFlags[bestNewTarget];
+		if (bestNewTarget != oldTarget)
+		{
+			chaser.Teleporters.Clear();
+		}
 		chaser.OldTarget = CBaseEntity(bestNewTarget);
 	}
 
@@ -4172,8 +4193,11 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		speed *= 1.25;
 	}
 
-	speed = (speed + (speed * g_RoundDifficultyModifier) / 15.0);
-	acceleration = (acceleration + (acceleration * g_RoundDifficultyModifier) / 15.0);
+	if (difficulty > Difficulty_Normal)
+	{
+		speed = (speed + (speed * GetDifficultyModifier(difficulty)) / 15.0);
+		acceleration = (acceleration + (acceleration * GetDifficultyModifier(difficulty)) / 15.0);
+	}
 
 	if (moveType == SF2NPCMoveType_Run)
 	{
@@ -4369,7 +4393,7 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		}
 		else
 		{
-			velocity = (velocity + ((npc.flRunSpeed * g_RoundDifficultyModifier) / 15.0)) / npc.flRunSpeed;
+			velocity = (velocity + ((npc.flRunSpeed * GetDifficultyModifier(controller.Difficulty)) / 15.0)) / npc.flRunSpeed;
 
 			if (loco.IsOnGround() && chaser.IsAttemptingToMove && chaser.State != STATE_ATTACK)
 			{

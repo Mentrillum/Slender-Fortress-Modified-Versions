@@ -199,6 +199,7 @@ void NPCInitialize()
 	g_OnClientCaughtByBossFwd = new GlobalForward("SF2_OnClientCaughtByBoss", ET_Ignore, Param_Cell, Param_Cell);
 
 	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
+	g_OnEntityTeleportedPFwd.AddFunction(null, EntityTeleported);
 
 	CreateNative("SF2_GetMaxBossCount", Native_GetMaxBosses);
 	CreateNative("SF2_EntIndexToBossIndex", Native_EntIndexToBossIndex);
@@ -247,6 +248,87 @@ static void EntityDestroyed(CBaseEntity ent, const char[] classname)
 	if (controller.IsValid())
 	{
 		NPCOnDespawn(controller, ent);
+	}
+}
+
+static void EntityTeleported(CBaseEntity teleporter, CBaseEntity activator)
+{
+	int flags = teleporter.GetProp(Prop_Data, "m_spawnflags");
+	if (((flags & TRIGGER_CLIENTS) != 0 && (flags & TRIGGER_NPCS)) || (flags & TRIGGER_EVERYTHING_BUT_PHYSICS_DEBRIS) != 0)
+	{
+		SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(NPCGetFromEntIndex(activator.index));
+		if (controller.IsValid())
+		{
+			// A boss took a teleporter, remove it from our list if possible
+			SF2_BaseBoss boss = SF2_BaseBoss(controller.EntIndex);
+			ArrayList teleporters = boss.Teleporters;
+			int index = teleporters.FindValue(teleporter.index);
+			if (index != -1)
+			{
+				teleporters.Erase(index);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < MAX_BOSSES; i++)
+			{
+				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+				if (!npc.IsValid())
+				{
+					continue;
+				}
+
+				SF2_BaseBoss boss = SF2_BaseBoss(npc.EntIndex);
+				if (!SF2_ChaserEntity(npc.EntIndex).IsValid() && !SF2_StatueEntity(npc.EntIndex).IsValid())
+				{
+					continue;
+				}
+
+				if (boss.Target == activator)
+				{
+					// The boss target took a teleporter and the boss can follow, add the teleporter to the list of teleporters
+					boss.Teleporters.Push(teleporter.index);
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < MAX_BOSSES; i++)
+		{
+			SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(i);
+			if (!controller.IsValid())
+			{
+				continue;
+			}
+
+			SF2_BaseBoss boss = SF2_BaseBoss(controller.EntIndex);
+			if (!SF2_ChaserEntity(controller.EntIndex).IsValid() && !SF2_StatueEntity(controller.EntIndex).IsValid())
+			{
+				continue;
+			}
+
+			// Currently a boss is chasing this entity but the boss cannot follow, abort the chase state
+			if (boss.Target == activator)
+			{
+				boss.Target = CBaseEntity(-1);
+				boss.OldTarget = CBaseEntity(-1);
+
+				// OR if we're supposed to endlessly chase, despawn us otherwise that'd lead to some bad moments
+				if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap())
+				{
+					controller.UnSpawn();
+				}
+
+				if (controller.Type == SF2BossType_Chaser)
+				{
+					if (view_as<SF2NPC_Chaser>(controller).GetProfileData().ChasesEndlessly)
+					{
+						controller.UnSpawn();
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -2369,6 +2451,101 @@ bool GetSlenderModel(int bossIndex, int modelState = 0, char[] buffer, int buffe
 		}
 	}
 	return true;
+}
+
+bool NPCFindUnstuckPosition(SF2_BaseBoss boss, float lastPos[3], float destination[3])
+{
+	SF2NPC_BaseNPC controller = boss.Controller;
+	PathFollower path = controller.Path;
+	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(boss.index);
+	CNavArea area = TheNavMesh.GetNearestNavArea(lastPos, _, _, _, false);
+	area.GetCenter(destination);
+	float tempMaxs[3];
+	npc.GetBodyMaxs(tempMaxs);
+	float traceMins[3];
+	traceMins[0] = g_SlenderDetectMins[controller.Index][0] - 5.0;
+	traceMins[1] = g_SlenderDetectMins[controller.Index][1] - 5.0;
+	traceMins[2] = 0.0;
+
+	float traceMaxs[3];
+	traceMaxs[0] = g_SlenderDetectMaxs[controller.Index][0] + 5.0;
+	traceMaxs[1] = g_SlenderDetectMaxs[controller.Index][1] + 5.0;
+	traceMaxs[2] = tempMaxs[2];
+	TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
+	if (GetVectorSquareMagnitude(destination, lastPos) <= SquareFloat(16.0) || TR_DidHit())
+	{
+		SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, 400.0);
+		int areaCount = collector.Count();
+		ArrayList areaArray = new ArrayList(1, areaCount);
+		int validAreaCount = 0;
+		for (int i = 0; i < areaCount; i++)
+		{
+			areaArray.Set(validAreaCount, i);
+			validAreaCount++;
+		}
+
+		int randomArea = 0, randomCell = 0;
+		areaArray.Resize(validAreaCount);
+		area = NULL_AREA;
+		while (validAreaCount > 1)
+		{
+			randomCell = GetRandomInt(0, validAreaCount - 1);
+			randomArea = areaArray.Get(randomCell);
+			area = collector.Get(randomArea);
+			area.GetCenter(destination);
+
+			TR_TraceHullFilter(destination, destination, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx);
+			if (TR_DidHit())
+			{
+				area = NULL_AREA;
+				validAreaCount--;
+				int findValue = areaArray.FindValue(randomCell);
+				if (findValue != -1)
+				{
+					areaArray.Erase(findValue);
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		delete collector;
+		delete areaArray;
+	}
+	path.GetClosestPosition(destination, destination, path.FirstSegment(), 400.0);
+	if (GetVectorSquareMagnitude(destination, lastPos) > SquareFloat(8.0))
+	{
+		return true;
+	}
+
+	Segment first = path.FirstSegment();
+	if (first != NULL_PATH_SEGMENT)
+	{
+		int attempts = 0;
+		Segment next = NULL_PATH_SEGMENT;
+		while (attempts <= 2)
+		{
+			next = path.NextSegment(first);
+			if (next == NULL_PATH_SEGMENT)
+			{
+				break;
+			}
+			float segmentPos[3], temp[3];
+			next.GetPos(segmentPos);
+			path.GetClosestPosition(segmentPos, temp, next, 800.0);
+			if (GetVectorSquareMagnitude(temp, lastPos) > SquareFloat(64.0))
+			{
+				destination = temp;
+				return true;
+			}
+			first = next;
+			attempts++;
+		}
+	}
+
+	return false;
 }
 
 void ChangeAllSlenderModels()

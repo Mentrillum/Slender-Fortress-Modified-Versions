@@ -137,7 +137,73 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 	if (data.DeathData.RemoveOnDeath)
 	{
 		SpawnGibs(actor);
-		controller.Remove();
+		if (data.DeathData.RagdollOnDeath)
+		{
+			actor.AcceptInput("BecomeRagdoll");
+		}
+		if (controller.IsCopy)
+		{
+			controller.Remove();
+		}
+		else
+		{
+			SF2NPC_BaseNPC newMaster = SF2_INVALID_NPC;
+			for (int i = 0; i < MAX_BOSSES; i++)
+			{
+				SF2NPC_BaseNPC other = SF2NPC_BaseNPC(i);
+				if (!other.IsValid())
+				{
+					continue;
+				}
+
+				if (other == controller)
+				{
+					continue;
+				}
+
+				if (!other.IsCopy)
+				{
+					continue;
+				}
+
+				if (other.CopyMaster == controller && CBaseEntity(other.EntIndex).IsValid())
+				{
+					newMaster = other;
+					newMaster.CopyMaster = SF2_INVALID_NPC;
+					break;
+				}
+			}
+
+			// Let's switch copy masters
+			if (newMaster.IsValid())
+			{
+				for (int i = 0; i < MAX_BOSSES; i++)
+				{
+					SF2NPC_BaseNPC other = SF2NPC_BaseNPC(i);
+					if (!other.IsValid())
+					{
+						continue;
+					}
+
+					if (other == controller)
+					{
+						continue;
+					}
+
+					if (!other.IsCopy)
+					{
+						continue;
+					}
+
+					if (other.CopyMaster == controller)
+					{
+						other.CopyMaster = newMaster;
+					}
+				}
+			}
+
+			controller.Remove();
+		}
 	}
 	else if (data.DeathData.DisappearOnDeath)
 	{
