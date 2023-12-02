@@ -991,6 +991,10 @@ Action Timer_ClientPageDetector(Handle timer, int userid)
 		CBaseEntity pageEnt = CBaseEntity(pageEntities.Get(i));
 		pageEnt.GetAbsOrigin(pagePos);
 		goalArea = TheNavMesh.GetNearestNavArea(pagePos);
+		if (goalArea == NULL_AREA)
+		{
+			continue;
+		}
 		TheNavMesh.BuildPath(area, goalArea, pagePos, _, _, 5000.0);
 
 		float cost = goalArea.GetCostSoFar();

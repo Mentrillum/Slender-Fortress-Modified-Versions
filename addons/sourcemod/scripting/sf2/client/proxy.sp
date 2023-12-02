@@ -789,7 +789,7 @@ Action Timer_ClientProxyControl(Handle timer, any userid)
 	if (g_PlayerProxyControl[client] <= 0)
 	{
 		// ForcePlayerSuicide isn't really dependable, since the player doesn't suicide until several seconds after spawning has passed.
-		SDKHooks_TakeDamage(client, client, client, 9001.0, DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+		KillClient(client);
 		return Plugin_Stop;
 	}
 
