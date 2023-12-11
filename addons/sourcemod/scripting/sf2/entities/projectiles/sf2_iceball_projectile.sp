@@ -8,7 +8,7 @@ methodmap SF2_ProjectileIceball < SF2_ProjectileBase
 {
 	public SF2_ProjectileIceball(int entIndex)
 	{
-		return view_as<SF2_ProjectileIceball>(CBaseAnimating(entIndex));
+		return view_as<SF2_ProjectileIceball>(entIndex);
 	}
 
 	public bool IsValid()
@@ -32,6 +32,11 @@ methodmap SF2_ProjectileIceball < SF2_ProjectileBase
 			.EndDataMapDesc();
 		g_Factory.Install();
 		g_OnPlayerDamagedByProjectilePFwd.AddFunction(null, OnPlayerDamagedByProjectile);
+	}
+
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Iceball.Create", Native_Create);
 	}
 
 	property float SlowDuration
@@ -115,4 +120,17 @@ static void OnPlayerDamagedByProjectile(SF2_BasePlayer player, SF2_ProjectileBas
 		EmitSoundToClient(player.index, iceball.GetFreezeSound(), _, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 		player.Stun(iceball.SlowDuration, iceball.SlowMultiplier, TF_STUNFLAG_SLOWDOWN, player.index);
 	}
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char impact[64], trail[64], freeze[64];
+	GetNativeString(7, impact, sizeof(impact));
+	GetNativeString(8, trail, sizeof(trail));
+	GetNativeString(11, freeze, sizeof(freeze));
+	SF2_ProjectileIceball projectile = SF2_ProjectileIceball.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), impact, trail, GetNativeCell(9), GetNativeCell(10), freeze, GetNativeCell(12));
+	return projectile;
 }

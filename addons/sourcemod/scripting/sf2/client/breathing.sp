@@ -56,7 +56,7 @@ static float ClientCalculateBreathingCooldown(int client)
 	int averageNum = 0;
 
 	// Sprinting only, for now.
-	average += (SF2_PLAYER_BREATH_COOLDOWN_MAX * 6.7765 * Pow((float(ClientGetSprintPoints(client)) / 100.0), 1.65));
+	average += (SF2_PLAYER_BREATH_COOLDOWN_MAX * 6.7765 * Pow(SF2_BasePlayer(client).Stamina, 1.65));
 	averageNum++;
 
 	average /= float(averageNum);

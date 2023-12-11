@@ -29,6 +29,11 @@ methodmap SF2_ProjectileFireball < SF2_ProjectileBase
 		g_OnPlayerDamagedByProjectilePFwd.AddFunction(null, OnPlayerDamagedByProjectile);
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Fireball.Create", Native_Create);
+	}
+
 	public void OnPlayerDamaged(SF2_BasePlayer player)
 	{
 		player.Ignite(true);
@@ -64,4 +69,16 @@ static void OnPlayerDamagedByProjectile(SF2_BasePlayer player, SF2_ProjectileBas
 	{
 		player.Ignite(true);
 	}
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char impact[64], trail[64];
+	GetNativeString(7, impact, sizeof(impact));
+	GetNativeString(8, trail, sizeof(trail));
+	SF2_ProjectileFireball projectile = SF2_ProjectileFireball.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), impact, trail);
+	return projectile;
 }

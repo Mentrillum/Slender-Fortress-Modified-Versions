@@ -1719,10 +1719,10 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 					player.FlashlightBatteryLife -= amount;
 				}
 
-				int sprintAmount = shockwaveData.StaminaDrainPercent[difficulty];
+				float sprintAmount = shockwaveData.StaminaDrainPercent[difficulty];
 				if (sprintAmount > 0.0)
 				{
-					player.SetSprintPoints(player.GetSprintPoints() - sprintAmount);
+					player.Stamina -= sprintAmount;
 				}
 
 				shockwaveData.ApplyDamageEffects(player, difficulty, SF2_ChaserBossEntity(this.index));
@@ -3356,73 +3356,98 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	if (player.IsValid)
 	{
 		CBaseEntity weaponEnt = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Melee));
-		if (weaponEnt.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon") && player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap()) && chaser.State != STATE_DEATH)
+		if (weaponEnt.IsValid() && weaponEnt.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
 		{
-			float myEyePos[3], clientEyePos[3], buffer[3], myAng[3];
-			player.GetEyePosition(clientEyePos);
-			chaser.Controller.GetEyePosition(myEyePos);
-			SubtractVectors(clientEyePos, myEyePos, buffer);
-			GetVectorAngles(buffer, buffer);
-			chaser.GetAbsAngles(myAng);
-
-			if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 90.0 && chaserData.BackstabDamageScale > 0.0)
+			switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 			{
-				damageType = DMG_CRIT;
-				EmitSoundToClient(player.index, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
-				weaponEnt.SetPropFloat(Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
-				player.SetPropFloat(Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
-				player.SetPropFloat(Prop_Send, "m_flStealthNextChangeTime", GetGameTime() + 2.0);
-				CBaseAnimating model = CBaseAnimating(player.GetPropEnt(Prop_Send, "m_hViewModel"));
-				if (model.IsValid() && model.index > MaxClients)
+				case 447, 426, 1181: // Whip + Eviction Notice + Hot Hand
 				{
-					int sequence = 0;
+					player.ChangeCondition(TFCond_SpeedBuffAlly, _, 4.0);
+				}
+
+				case 416: // Market Gardener
+				{
+					float zVelocity[3];
+					player.GetPropVector(Prop_Data, "m_vecVelocity", zVelocity);
+					if (zVelocity[2] < 0.0) // A soldier has the market gardener and is currently falling down, like Minecraft with its critical hits.
+					{
+						damageType |= DMG_CRIT;
+						damage *= 2.0;
+
+						return Plugin_Changed;
+					}
+				}
+			}
+
+			if (player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap()) && chaser.State != STATE_DEATH)
+			{
+				float myEyePos[3], clientEyePos[3], buffer[3], myAng[3];
+				player.GetEyePosition(clientEyePos);
+				chaser.Controller.GetEyePosition(myEyePos);
+				SubtractVectors(clientEyePos, myEyePos, buffer);
+				GetVectorAngles(buffer, buffer);
+				chaser.GetAbsAngles(myAng);
+
+				if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 90.0 && chaserData.BackstabDamageScale > 0.0)
+				{
+					damageType = DMG_CRIT;
+					EmitSoundToClient(player.index, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
+					weaponEnt.SetPropFloat(Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 2.0);
+					player.SetPropFloat(Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
+					player.SetPropFloat(Prop_Send, "m_flStealthNextChangeTime", GetGameTime() + 2.0);
+					CBaseAnimating model = CBaseAnimating(player.GetPropEnt(Prop_Send, "m_hViewModel"));
+					if (model.IsValid() && model.index > MaxClients)
+					{
+						int sequence = 0;
+						switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
+						{
+							case 4, 194, 665, 727, 794, 803, 883, 892, 901, 910, 959, 968: // Butterfly knives
+							{
+								sequence = 42;
+							}
+							case 225, 356, 461, 574, 649: // Non-butterfly knives
+							{
+								sequence = 16;
+							}
+							case 423, 1071, 30758: // Multi-class knives
+							{
+								sequence = 21;
+							}
+							case 638: // Sharp Dresser
+							{
+								sequence = 32;
+							}
+						}
+						model.SetProp(Prop_Send, "m_nSequence", sequence);
+					}
+
+					damage = chaser.MaxHealth * chaserData.BackstabDamageScale;
+					if (!chaserData.DeathData.Enabled[difficulty])
+					{
+						damage = chaser.MaxStunHealth * chaserData.BackstabDamageScale;
+					}
 					switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 					{
-						case 4, 194, 665, 727, 794, 803, 883, 892, 901, 910, 959, 968: // Butterfly knives
+						case 356: // Kunai
 						{
-							sequence = 42;
+							int health = player.Health + 100;
+							if (health > 210)
+							{
+								health = 210;
+							}
+							SetEntityHealth(player.index, health);
 						}
-						case 225, 356, 461, 574, 649: // Non-butterfly knives
+
+						case 461: // Big Earner
 						{
-							sequence = 16;
-						}
-						case 423, 1071, 30758: // Multi-class knives
-						{
-							sequence = 21;
-						}
-						case 638: // Sharp Dresser
-						{
-							sequence = 32;
+							player.ChangeCondition(TFCond_SpeedBuffAlly, _, 4.0);
 						}
 					}
-					model.SetProp(Prop_Send, "m_nSequence", sequence);
-				}
 
-				damage = chaser.MaxHealth * chaserData.BackstabDamageScale;
-				if (!chaserData.DeathData.Enabled[difficulty])
-				{
-					damage = chaser.MaxStunHealth * chaserData.BackstabDamageScale;
+					return Plugin_Changed;
 				}
-				switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
-				{
-					case 356: // Kunai
-					{
-						int health = player.Health + 100;
-						if (health > 210)
-						{
-							health = 210;
-						}
-						SetEntityHealth(player.index, health);
-					}
-
-					case 461: // Big Earner
-					{
-						player.ChangeCondition(TFCond_SpeedBuffAlly, _, 4.0);
-					}
-				}
-
-				return Plugin_Changed;
 			}
+
 		}
 	}
 
@@ -3446,30 +3471,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 
 	if (player.IsValid)
 	{
-		CBaseEntity weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Melee));
-		if (weapon.IsValid() && weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
-		{
-			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
-			{
-				case 447, 426, 1181: // Whip + Eviction Notice + Hot Hand
-				{
-					player.ChangeCondition(TFCond_SpeedBuffAlly, _, 4.0);
-				}
-
-				case 416: // Market Gardener
-				{
-					float zVelocity[3];
-					player.GetPropVector(Prop_Data, "m_vecVelocity", zVelocity);
-					if (zVelocity[2] < 0.0) // A soldier has the market gardener and is currently falling down, like Minecraft with its critical hits.
-					{
-						damageType |= DMG_CRIT;
-						damage *= 2.0;
-					}
-				}
-			}
-		}
-
-		weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Primary));
+		CBaseEntity weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Primary));
 		if (weapon.IsValid() && weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
 		{
 			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
@@ -4421,21 +4423,28 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 		SF2_ChaserEntity chaser = SF2_ChaserEntity(bot.GetEntity());
 		if (player.IsValid)
 		{
+			if (player.IsInGhostMode)
+			{
+				return false;
+			}
+
 			if (chaser.IsValid() && chaser.Controller.IsValid())
 			{
 				SF2BossProfileData data;
 				SF2NPC_BaseNPC controller = view_as<SF2NPC_BaseNPC>(chaser.Controller);
 				data = controller.GetProfileData();
-				if (data.IsPvEBoss && player.IsInPvE)
+				if ((data.IsPvEBoss && player.IsInPvE) || (controller.Flags & SFF_ATTACKWAITERS) != 0)
 				{
 					return true;
 				}
 			}
+
 			if (!SF_IsBoxingMap() && !player.IsProxy && !player.IsInGhostMode && player.Team != TFTeam_Blue && !player.IsInDeathCam)
 			{
 				return true;
 			}
 		}
+
 		if (chaser.IsValid() && chaser.Controller.IsValid())
 		{
 			SF2BossProfileData data;

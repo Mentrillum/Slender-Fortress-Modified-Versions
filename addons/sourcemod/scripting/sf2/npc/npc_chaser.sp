@@ -567,6 +567,7 @@ void NPCChaser_InitializeAPI()
 	CreateNative("SF2_GetBossCurrentAttackIndex", Native_GetBossCurrentAttackIndex);
 	CreateNative("SF2_GetChaserProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetChaserProfileFromName", Native_GetProfileDataEx);
+	CreateNative("SF2_SetEntityForceChaseState", Native_SetForceChaseState);
 
 	g_OnChaserBossStartAttackFwd = new GlobalForward("SF2_OnChaserBossStartAttack", ET_Ignore, Param_Cell, Param_String);
 	g_OnChaserBossEndAttackFwd = new GlobalForward("SF2_OnChaserBossEndAttack", ET_Ignore, Param_Cell, Param_String);
@@ -617,4 +618,22 @@ static any Native_GetProfileDataEx(Handle plugin, int numParams)
 
 	SetNativeArray(2, data, sizeof(data));
 	return true;
+}
+
+static any Native_SetForceChaseState(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	CBaseEntity target = CBaseEntity(GetNativeCell(2));
+	if (!target.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", controller.Index);
+	}
+
+	SetClientForceChaseState(controller, target, GetNativeCell(3));
+	return 0;
 }

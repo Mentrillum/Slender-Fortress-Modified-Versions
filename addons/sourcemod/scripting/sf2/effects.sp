@@ -31,7 +31,7 @@ static void EntityDestroyed(CBaseEntity ent, const char[] classname)
 	}
 }
 
-void SlenderSpawnEffects(ArrayList effects, int bossIndex, bool nonEffects = true, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE)
+void SlenderSpawnEffects(ArrayList effects, int bossIndex, bool nonEffects = true, const float overridePos[3] = { 0.0, 0.0, 0.0 }, const float overrideAng[3] = { 0.0, 0.0, 0.0 }, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE)
 {
 	if (bossIndex < 0 || bossIndex >= MAX_BOSSES)
 	{
@@ -226,7 +226,7 @@ static Action Timer_SpawnEffect(Handle timer, DataPack pack)
 	return Plugin_Stop;
 }
 
-static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE)
+static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex, const float overridePos[3] = { 0.0, 0.0, 0.0 }, const float overrideAng[3] = { 0.0, 0.0, 0.0 }, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE)
 {
 	int slenderEnt = NPCGetEntIndex(bossIndex);
 	int attacher = slenderEnt;
@@ -236,7 +236,7 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 	}
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 	float basePos[3], baseAng[3];
-	if (!IsNullVector(overridePos))
+	if (!IsEmptyVector(overridePos))
 	{
 		basePos = overridePos;
 	}
@@ -244,7 +244,7 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 	{
 		GetEntPropVector(attacher, Prop_Data, "m_vecAbsOrigin", basePos);
 	}
-	if (!IsNullVector(overrideAng))
+	if (!IsEmptyVector(overrideAng))
 	{
 		baseAng = overrideAng;
 	}
@@ -542,7 +542,7 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 				}
 
 				TE_SetupBeamRingPoint(effectPos, effectsInfo.BeamRingStartRadius, effectsInfo.BeamRingEndRadius, effectsInfo.BeamRingBeamModel, effectsInfo.BeamRingHaloModel, effectsInfo.BeamRingStartFrame, effectsInfo.BeamRingFrameRate, effectsInfo.LifeTime, effectsInfo.BeamRingWidth, effectsInfo.BeamRingAmplitude, color, effectsInfo.BeamRingSpeed, effectsInfo.BeamRingFlags);
-				TE_SendToAll(effectsInfo.Delay);
+				TE_SendToAll();
 			}
 			case EffectType_TempEntParticle:
 			{
@@ -573,7 +573,7 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 					ang = effectAng;
 				}
 				TE_Particle(particle, pos, start, ang, attacher, effectsInfo.TEParticleAttachType, attachment, effectsInfo.TEParticleReset, effectsInfo.TEParticleHasControlPoint, effectsInfo.TEParticleControlPointAttachType, effectsInfo.TEParticleControlPointOffset);
-				TE_SendToAll(effectsInfo.Delay);
+				TE_SendToAll();
 			}
 			case EffectType_Sound:
 			{

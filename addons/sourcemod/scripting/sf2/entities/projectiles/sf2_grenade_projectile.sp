@@ -49,6 +49,11 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		return g_Factory;
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Grenade.Create", Native_Create);
+	}
+
 	property CBaseEntity TrailEntity
 	{
 		public get()
@@ -264,7 +269,6 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		SetEntityOwner(grenade.index, owner.index);
 		grenade.SetModel(model);
 		grenade.SetProp(Prop_Send, "m_nSkin", 1);
-		grenade.SetProp(Prop_Send, "m_usSolidFlags", 12);
 		grenade.KeyValue("solid", "2");
 		grenade.KeyValue("spawnflags", "4");
 		grenade.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
@@ -360,4 +364,18 @@ bool TraceRayGrenade(int entity, int mask, any data)
 	}
 
 	return true;
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char trail[64], explosion[64], impact[64], model[64];
+	GetNativeString(8, trail, sizeof(trail));
+	GetNativeString(9, explosion, sizeof(explosion));
+	GetNativeString(10, impact, sizeof(impact));
+	GetNativeString(11, model, sizeof(model));
+	SF2_ProjectileGrenade projectile = SF2_ProjectileGrenade.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), GetNativeCell(7), trail, explosion, impact, model, GetNativeCell(12));
+	return projectile;
 }

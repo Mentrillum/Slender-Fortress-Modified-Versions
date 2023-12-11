@@ -41,6 +41,12 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		return g_Factory;
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Base.Initialize", Native_Initialize);
+		CreateNative("SF2_Projectile_Base.DoExplosion", Native_DoExplosion);
+	}
+
 	property CBaseEntity TrailEntity
 	{
 		public get()
@@ -244,6 +250,8 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		this.SetVelocity();
 
 		SDKHook(this.index, SDKHook_StartTouch, StartTouch);
+
+		CreateTimer(15.0, Timer_KillEntity, EntIndexToEntRef(this.index), TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	public void CreateTrail(bool teleport = false, const char[] override = "sprites/laserbeam.vmt", const char[] alpha = "0", const char[] mode = "10")
@@ -410,7 +418,7 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		delete hitList;
 		if (this.Type != SF2BossProjectileType_Mangler)
 		{
-			EmitSoundToAll(this.GetImpactSound(), this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+			EmitSoundToAll(this.GetImpactSound(), this.index, SNDCHAN_ITEM);
 		}
 		else
 		{
@@ -482,7 +490,12 @@ static void StartTouch(int entity, int other)
 	SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
 	if (otherPlayer.IsValid)
 	{
-		if (otherPlayer.IsInGhostMode || (otherPlayer.IsProxy && !projectile.AttackWaiters))
+		if (otherPlayer.IsInGhostMode)
+		{
+			return;
+		}
+
+		if (otherPlayer.IsEliminated && !projectile.AttackWaiters)
 		{
 			return;
 		}
@@ -501,7 +514,9 @@ static void StartTouch(int entity, int other)
 		hit = false;
 	}
 
-	if (SF2_ProjectileBase(other).IsValid())
+	char class[64];
+	GetEntityClassname(other, class, sizeof(class));
+	if (StrContains(class, "sf2_projectile", false) != -1)
 	{
 		hit = false;
 	}
@@ -515,6 +530,40 @@ static void StartTouch(int entity, int other)
 	{
 		projectile.DoExplosion();
 	}
+}
+
+static any Native_Initialize(Handle plugin, int numParams)
+{
+	SF2_ProjectileBase projectile = SF2_ProjectileBase(GetNativeCell(1));
+	if (!projectile.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid projectile index %d", projectile.index);
+	}
+
+	float pos[3], ang[3];
+	GetNativeArray(3, pos, 3);
+	GetNativeArray(4, ang, 3);
+	char trail[64], explosion[64], impact[64], model[64];
+	GetNativeString(9, trail, sizeof(trail));
+	GetNativeString(10, explosion, sizeof(explosion));
+	GetNativeString(11, impact, sizeof(impact));
+	GetNativeString(12, model, sizeof(model));
+	projectile.InitializeProjectile(GetNativeCell(1), GetNativeCell(2), pos, ang, GetNativeCell(5), GetNativeCell(6), GetNativeCell(7), GetNativeCell(8), trail, explosion, impact, model, GetNativeCell(13));
+
+	return 0;
+}
+
+static any Native_DoExplosion(Handle plugin, int numParams)
+{
+	SF2_ProjectileBase projectile = SF2_ProjectileBase(GetNativeCell(1));
+	if (!projectile.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid projectile index %d", projectile.index);
+	}
+
+	projectile.DoExplosion();
+
+	return 0;
 }
 
 #include "projectiles/sf2_fireball_projectile.sp"

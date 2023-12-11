@@ -28,6 +28,11 @@ methodmap SF2_ProjectileCowMangler < SF2_ProjectileRocket
 		g_Factory.Install();
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_CowMangler.Create", Native_Create);
+	}
+
 	public static SF2_ProjectileCowMangler Create(
 		const CBaseEntity owner,
 		const float pos[3],
@@ -47,4 +52,17 @@ methodmap SF2_ProjectileCowMangler < SF2_ProjectileRocket
 
 		return rocket;
 	}
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char impact[64], trail[64], freeze[64];
+	GetNativeString(7, impact, sizeof(impact));
+	GetNativeString(8, trail, sizeof(trail));
+	GetNativeString(9, freeze, sizeof(freeze));
+	SF2_ProjectileCowMangler projectile = SF2_ProjectileCowMangler.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), GetNativeCell(7));
+	return projectile;
 }

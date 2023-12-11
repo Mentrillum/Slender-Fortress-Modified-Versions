@@ -31,6 +31,11 @@ methodmap SF2_ProjectileArrow < SF2_ProjectileBase
 		g_Factory.Install();
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Arrow.Create", Native_Create);
+	}
+
 	property bool Touched
 	{
 		public get()
@@ -102,7 +107,12 @@ static void StartTouch(int entity, int other)
 	SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
 	if (otherPlayer.IsValid)
 	{
-		if (otherPlayer.IsInGhostMode || (otherPlayer.IsProxy && !projectile.AttackWaiters))
+		if (otherPlayer.IsInGhostMode)
+		{
+			return;
+		}
+
+		if (otherPlayer.IsEliminated && !projectile.AttackWaiters)
 		{
 			return;
 		}
@@ -121,7 +131,9 @@ static void StartTouch(int entity, int other)
 		hit = false;
 	}
 
-	if (SF2_ProjectileBase(other).IsValid())
+	char class[64];
+	GetEntityClassname(other, class, sizeof(class));
+	if (StrContains(class, "sf2_projectile", false) != -1)
 	{
 		hit = false;
 	}
@@ -162,4 +174,17 @@ static void StartTouch(int entity, int other)
 		EmitSoundToAll(projectile.GetImpactSound(), projectile.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 		RemoveEntity(projectile.index);
 	}
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char trail[64], impact[64], model[64];
+	GetNativeString(7, trail, sizeof(trail));
+	GetNativeString(8, impact, sizeof(impact));
+	GetNativeString(9, model, sizeof(model));
+	SF2_ProjectileArrow projectile = SF2_ProjectileArrow.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), trail, impact, model, GetNativeCell(10));
+	return projectile;
 }

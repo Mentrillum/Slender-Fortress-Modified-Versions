@@ -28,6 +28,11 @@ methodmap SF2_ProjectileRocket < SF2_ProjectileBase
 		g_Factory.Install();
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Rocket.Create", Native_Create);
+	}
+
 	public static SF2_ProjectileRocket Create(
 		const CBaseEntity owner,
 		const float pos[3],
@@ -52,4 +57,18 @@ methodmap SF2_ProjectileRocket < SF2_ProjectileBase
 
 		return rocket;
 	}
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char trail[64], explosion[64], impact[64], model[64];
+	GetNativeString(8, trail, sizeof(trail));
+	GetNativeString(9, explosion, sizeof(explosion));
+	GetNativeString(10, impact, sizeof(impact));
+	GetNativeString(11, model, sizeof(model));
+	SF2_ProjectileRocket projectile = SF2_ProjectileRocket.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), GetNativeCell(7), trail, explosion, impact, model, GetNativeCell(12));
+	return projectile;
 }

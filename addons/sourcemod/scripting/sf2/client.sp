@@ -107,6 +107,11 @@ Action Hook_HealthKitOnTouch(int healthKit, int client)
 {
 	if (IsValidClient(client))
 	{
+		if (IsClientInPvE(client) || IsClientInPvP(client))
+		{
+			return Plugin_Continue;
+		}
+
 		TFClassType class = TF2_GetPlayerClass(client);
 		int classToInt = view_as<int>(class);
 		if (!SF_IsBoxingMap())
@@ -126,6 +131,7 @@ Action Hook_HealthKitOnTouch(int healthKit, int client)
 				}
 			}
 		}
+
 		if (IsClientInGhostMode(client))
 		{
 			return Plugin_Handled;
@@ -584,8 +590,7 @@ void ClientProcessVisibility(int client)
 
 					if (NPCGetScareReplenishSprintState(master))
 					{
-						int clientSprintPoints = ClientGetSprintPoints(client);
-						ClientSetSprintPoints(client, clientSprintPoints + NPCGetScareReplenishSprintAmount(master));
+						SF2_BasePlayer(client).Stamina += NPCGetScareReplenishSprintAmount(master);
 					}
 
 					float value = NPCGetAttributeValue(master, SF2Attribute_IgnitePlayerOnScare);
@@ -593,16 +598,19 @@ void ClientProcessVisibility(int client)
 					{
 						TF2_IgnitePlayer(client, client);
 					}
+
 					value = NPCGetAttributeValue(master, SF2Attribute_MarkPlayerForDeathOnScare);
 					if (value > 0.0)
 					{
 						TF2_AddCondition(client, TFCond_MarkedForDeath, value);
 					}
+
 					value = NPCGetAttributeValue(master, SF2Attribute_SilentMarkPlayerForDeathOnScare);
 					if (value > 0.0)
 					{
 						TF2_AddCondition(client, TFCond_MarkedForDeathSilent, value);
 					}
+
 					if (NPCHasAttribute(master, SF2Attribute_ChaseTargetOnScare))
 					{
 						SF2_ChaserEntity chaser = SF2_ChaserEntity(boss);
@@ -611,6 +619,7 @@ void ClientProcessVisibility(int client)
 							SF2_BasePlayer(client).SetForceChaseState(SF2NPC_BaseNPC(i), true);
 						}
 					}
+
 					if (NPCGetJumpscareOnScare(master))
 					{
 						float jumpScareDuration = NPCGetJumpscareDuration(master, difficulty);

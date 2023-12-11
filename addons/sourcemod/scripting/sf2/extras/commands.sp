@@ -767,7 +767,7 @@ static Action Command_NoPointsAdmin(int client, int args)
 		int target = target_list[i];
 		if (IsClientSourceTV(target))
 		{
-			continue;//Exclude the sourcetv bot
+			continue; // Exclude the sourcetv bot
 		}
 
 		g_AdminNoPoints[client] = args > 1 ? mode : !g_AdminNoPoints[client];
@@ -1243,7 +1243,10 @@ static Action Command_SpawnSlender(int client, int args)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	npc.GetProfile(profile, sizeof(profile));
 
-	CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
+	if (IsValidClient(client))
+	{
+		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
+	}
 
 	return Plugin_Handled;
 }
@@ -1398,7 +1401,10 @@ static Action Command_RemoveSlender(int client, int args)
 
 	NPCRemove(bossIndex);
 
-	CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
+	if (IsValidClient(client))
+	{
+		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
+	}
 
 	return Plugin_Handled;
 }
@@ -1428,11 +1434,17 @@ static Action Command_RemoveAllSlenders(int client, int args)
 			}
 			npc.Remove();
 		}
-		CPrintToChat(client, "{royalblue}%t {default}Removed all bosses.", "SF2 Prefix", client);
+		if (IsValidClient(client))
+		{
+			CPrintToChat(client, "{royalblue}%t {default}Removed all bosses.", "SF2 Prefix", client);
+		}
 	}
 	else
 	{
-		CPrintToChat(client, "{royalblue}%t {default}Cannot use this command in Boxing maps.", "SF2 Prefix", client);
+		if (IsValidClient(client))
+		{
+			CPrintToChat(client, "{royalblue}%t {default}Cannot use this command in Boxing maps.", "SF2 Prefix", client);
+		}
 	}
 
 	if (MusicActive())
@@ -1676,21 +1688,10 @@ static Action Command_DebugLogicEscape(int client, int args)
 	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 	{
 		GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
-		if (!SF_IsBoxingMap())
+		if (strcmp(name, "sf2_logic_escape", false) == 0)
 		{
-			if (strcmp(name, "sf2_logic_escape", false) == 0)
-			{
-				AcceptEntityInput(ent, "FireUser1");
-				break;
-			}
-		}
-		else
-		{
-			if (strcmp(name, "sf2_logic_escape", false) == 0)
-			{
-				AcceptEntityInput(ent, "FireUser1");
-				break;
-			}
+			AcceptEntityInput(ent, "FireUser1");
+			break;
 		}
 	}
 	CPrintToChat(client, "{royalblue}%t {default}Triggered sf2_logic_escape.", "SF2 Prefix", client);

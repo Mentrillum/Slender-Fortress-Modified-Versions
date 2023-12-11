@@ -2060,7 +2060,7 @@ enum struct SF2BossProfileData
 	char ScareReactionCustom[PLATFORM_MAX_PATH];
 
 	bool ScareReplenishSprint;
-	int ScareReplenishSprintAmount;
+	float ScareReplenishSprintAmount;
 
 	float StaticRadius[Difficulty_Max];
 	float StaticRate[Difficulty_Max];
@@ -2308,7 +2308,7 @@ enum struct SF2BossProfileData
 		this.ScareReactionCustom[0] = '\0';
 
 		this.ScareReplenishSprint = false;
-		this.ScareReplenishSprintAmount = 0;
+		this.ScareReplenishSprintAmount = 0.0;
 
 		this.StaticScareAmount = 0.0;
 

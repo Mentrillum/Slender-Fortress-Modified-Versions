@@ -908,19 +908,22 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		ClientHandleSprint(this.index, sprint);
 	}
 
-	public void SetSprintTimer(bool recharge = false)
+	property float Stamina
 	{
-		ClientSprintTimer(this.index, recharge);
+		public get()
+		{
+			return ClientGetStamina(this.index);
+		}
+
+		public set(float value)
+		{
+			ClientSetStamina(this.index, value);
+		}
 	}
 
-	public int GetSprintPoints()
+	public void SetStaminaRechargeTime(float time, bool checkTime = true)
 	{
-		return ClientGetSprintPoints(this.index);
-	}
-
-	public void SetSprintPoints(int value)
-	{
-		ClientSetSprintPoints(this.index, value);
+		SetPlayerStaminaRechargeTime(this, time, checkTime);
 	}
 
 	property bool HasStartedBlinking
@@ -1269,9 +1272,9 @@ void SetupMethodmapAPI()
 	CreateNative("SF2_Player.IsSprinting.get", Native_GetClientIsSprinting);
 	CreateNative("SF2_Player.IsReallySprinting.get", Native_GetClientIsReallySprinting);
 	CreateNative("SF2_Player.HandleSprint", Native_ClientHandleSprint);
-	CreateNative("SF2_Player.SetSprintTimer", Native_SetClientSprintTimer);
-	CreateNative("SF2_Player.GetSprintPoints", Native_GetClientSprintPoints);
-	CreateNative("SF2_Player.SetSprintPoints", Native_SetClientSprintPoints);
+	CreateNative("SF2_Player.Stamina.get", Native_GetClientSprintPoints);
+	CreateNative("SF2_Player.Stamina.set", Native_SetClientSprintPoints);
+	CreateNative("SF2_Player.SetStaminaRechargeTime", Native_SetClientStaminaRechargeTime);
 	CreateNative("SF2_Player.HasStartedBlinking.get", Native_GetClientHasStartedBlinking);
 	CreateNative("SF2_Player.IsBlinking.get", Native_GetClientIsBlinking);
 	CreateNative("SF2_Player.IsHoldingBlink", Native_GetClientIsHoldingBlink);
@@ -2229,19 +2232,6 @@ static any Native_ClientHandleSprint(Handle plugin, int numParams)
 	return 0;
 }
 
-static any Native_SetClientSprintTimer(Handle plugin, int numParams)
-{
-	int client = GetNativeCell(1);
-	if (!IsValidClient(client))
-	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", client);
-	}
-
-	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.SetSprintTimer(GetNativeCell(2));
-	return 0;
-}
-
 static any Native_GetClientSprintPoints(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
@@ -2251,7 +2241,7 @@ static any Native_GetClientSprintPoints(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
-	return player.GetSprintPoints();
+	return player.Stamina;
 }
 
 static any Native_SetClientSprintPoints(Handle plugin, int numParams)
@@ -2263,7 +2253,20 @@ static any Native_SetClientSprintPoints(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.SetSprintPoints(GetNativeCell(2));
+	player.Stamina = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_SetClientStaminaRechargeTime(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	if (!IsValidClient(client))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", client);
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	player.SetStaminaRechargeTime(GetNativeCell(2), GetNativeCell(3));
 	return 0;
 }
 

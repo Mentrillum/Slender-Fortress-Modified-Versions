@@ -910,7 +910,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 					}
 				}
 
-				bars = RoundToCeil(float(maxBars) * (float(player.GetSprintPoints()) / 100.0));
+				bars = RoundToCeil(float(maxBars) * player.Stamina);
 				if (bars > maxBars)
 				{
 					bars = maxBars;

@@ -10,7 +10,7 @@ float g_ClassWalkSpeed[MAX_CLASSES + 1];
 float g_ClassDangerSpeedMultipler[MAX_CLASSES + 1];
 float g_ClassSprintDurationMultipler[MAX_CLASSES + 1];
 float g_ClassScareSprintDurationMultipler[MAX_CLASSES + 1];
-int g_ClassSprintPointLossJumping[MAX_CLASSES + 1];
+float g_ClassSprintPointLossJumping[MAX_CLASSES + 1];
 
 float g_ClassProxyDamageVulnerability[MAX_CLASSES + 1];
 bool g_ClassCanPickUpHealth[MAX_CLASSES + 1];
@@ -242,7 +242,7 @@ static void PrecacheClassProfiles()
 		g_ClassDangerSpeedMultipler[i] = GetClassStatFloat(className, "danger_speed_multiplier", 1.34);
 		g_ClassSprintDurationMultipler[i] = GetClassStatFloat(className, "sprint_multiplier", 1.0);
 		g_ClassScareSprintDurationMultipler[i] = GetClassStatFloat(className, "scare_sprint_multiplier", 1.0);
-		g_ClassSprintPointLossJumping[i] = GetClassStatNum(className, "sprint_loss_while_jumping", 7);
+		g_ClassSprintPointLossJumping[i] = GetClassStatFloat(className, "sprint_loss_while_jumping", 0.07);
 
 		g_ClassProxyDamageVulnerability[i] = GetClassStatFloat(className, "proxy_damage_vulnerability");
 		g_ClassCanPickUpHealth[i] = GetClassStatNum(className, "can_pickup_health", 1) != 0;

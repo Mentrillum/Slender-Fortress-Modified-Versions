@@ -31,6 +31,11 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 		g_Factory.Install();
 	}
 
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_Projectile_Baseball.Create", Native_Create);
+	}
+
 	property float TravelTime
 	{
 		public get()
@@ -157,4 +162,15 @@ static void Think(int entity)
 			projectile.Touched = true;
 		}
 	}
+}
+
+static any Native_Create(Handle plugin, int numParams)
+{
+	float pos[3], ang[3];
+	GetNativeArray(2, pos, 3);
+	GetNativeArray(3, ang, 3);
+	char model[64];
+	GetNativeString(7, model, sizeof(model));
+	SF2_ProjectileBaseball projectile = SF2_ProjectileBaseball.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), model, GetNativeCell(8));
+	return projectile;
 }

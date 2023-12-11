@@ -305,7 +305,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	profileData.ScareReplenishSprint = !!kv.GetNum("scare_player_replenish_sprint", profileData.ScareReplenishSprint);
 	if (profileData.ScareReplenishSprint)
 	{
-		profileData.ScareReplenishSprintAmount = kv.GetNum("scare_player_replenish_sprint_amount", profileData.ScareReplenishSprintAmount);
+		profileData.ScareReplenishSprintAmount = kv.GetFloat("scare_player_replenish_sprint_amount", profileData.ScareReplenishSprintAmount);
 	}
 
 	GetProfileDifficultyFloatValues(kv, "static_radius", profileData.StaticRadius, profileData.StaticRadius);
@@ -1935,7 +1935,7 @@ bool GetBossProfileScareReplenishState(const char[] profile)
 	return g_CachedProfileData.ScareReplenishSprint;
 }
 
-int GetBossProfileScareReplenishAmount(const char[] profile)
+float GetBossProfileScareReplenishAmount(const char[] profile)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.ScareReplenishSprintAmount;

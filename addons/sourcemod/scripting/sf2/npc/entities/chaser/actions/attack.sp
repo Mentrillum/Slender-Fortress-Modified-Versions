@@ -234,6 +234,11 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 
 	actor.InvokeOnStartAttack(action.GetAttackName());
 
+	if (attackData.StartEffects != null)
+	{
+		SlenderSpawnEffects(attackData.StartEffects, controller.Index, false);
+	}
+
 	if (attackData.Type == SF2BossAttackType_Custom)
 	{
 		return action.Continue();
@@ -255,11 +260,6 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 	{
 		actor.PerformVoice(SF2BossSound_Attack, action.GetAttackName());
 		action.PlayedBeginVoice = true;
-	}
-
-	if (attackData.StartEffects != null)
-	{
-		SlenderSpawnEffects(attackData.StartEffects, controller.Index, false);
 	}
 
 	float duration = 0.0;

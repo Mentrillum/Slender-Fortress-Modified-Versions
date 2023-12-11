@@ -43,6 +43,12 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 
 	actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
 
+	if (actor.InitialChaseDuration > 0.0)
+	{
+		actor.CurrentChaseDuration = actor.InitialChaseDuration;
+		actor.InitialChaseDuration = 0.0;
+	}
+
 	if (data.AlertOnChaseInfo.OnChangeState[difficulty])
 	{
 		actor.ForceChaseOtherBosses();

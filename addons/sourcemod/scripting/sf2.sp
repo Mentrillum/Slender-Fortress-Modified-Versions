@@ -118,7 +118,7 @@ static const char g_PageCollectDuckSounds[][] =
 };
 
 bool g_ClientInGame[MAXTF2PLAYERS] = { false, ... };
-bool g_ClientInCondition[MAXTF2PLAYERS][TFCond_PowerupModeDominant];
+bool g_ClientInCondition[MAXTF2PLAYERS][TFCond_PowerupModeDominant + view_as<TFCond>(1)];
 
 //Command
 bool g_PlayerNoPoints[MAXTF2PLAYERS] = { false, ... };
@@ -624,6 +624,7 @@ GlobalForward g_OnBossPreAttackFwd;
 GlobalForward g_OnBossAttackedFwd;
 GlobalForward g_OnBossPreTakeDamageFwd;
 GlobalForward g_OnBossPreFlashlightDamageFwd;
+GlobalForward g_OnBossAnimationUpdateFwd;
 GlobalForward g_OnChaserBossGetSuspendActionFwd;
 GlobalForward g_OnPagesSpawnedFwd;
 GlobalForward g_OnRoundStateChangeFwd;
@@ -3186,9 +3187,7 @@ static void GiveRandomPageReward(int player)
 				case 15, 16:
 				{
 					EmitSoundToClient(player, LOSE_SPRINT_ROLL, player, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-					ClientStopSprint(player);
-					ClientSetSprintPoints(player, 0);
-					ClientStopSprint(player);
+					SF2_Player(player).Stamina = 0.0;
 				}
 				case 17:
 				{
@@ -4103,16 +4102,6 @@ bool IsRoundInIntro()
 bool IsRoundEnding()
 {
 	return GetRoundState() == SF2RoundState_Outro;
-}
-
-bool IsInfiniteBlinkEnabled()
-{
-	return g_RoundInfiniteBlink || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
-}
-
-bool IsInfiniteSprintEnabled()
-{
-	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1);
 }
 
 bool IsClientParticipating(int client)

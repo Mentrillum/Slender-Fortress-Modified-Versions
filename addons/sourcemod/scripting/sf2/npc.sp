@@ -79,7 +79,7 @@ static bool g_NpcHasPlayerScareReaction[MAX_BOSSES];
 static int g_NpcPlayerScareReactionType[MAX_BOSSES];
 
 static bool g_NpcHasPlayerScareReplenishSprint[MAX_BOSSES];
-static int g_NpcPlayerScareReplenishSprintAmount[MAX_BOSSES];
+static float g_NpcPlayerScareReplenishSprintAmount[MAX_BOSSES];
 
 static int g_NpcTeleportType[MAX_BOSSES] = { -1, ... };
 
@@ -1458,7 +1458,7 @@ bool NPCGetScareReplenishSprintState(int npcIndex)
 	return g_NpcHasPlayerScareReplenishSprint[npcIndex];
 }
 
-int NPCGetScareReplenishSprintAmount(int npcIndex)
+float NPCGetScareReplenishSprintAmount(int npcIndex)
 {
 	return g_NpcPlayerScareReplenishSprintAmount[npcIndex];
 }
@@ -2723,7 +2723,7 @@ void RemoveProfile(int bossIndex)
 	g_NpcHasPlayerScareReaction[bossIndex] = false;
 	g_NpcPlayerScareReactionType[bossIndex] = 0;
 	g_NpcHasPlayerScareReplenishSprint[bossIndex] = false;
-	g_NpcPlayerScareReplenishSprintAmount[bossIndex] = 0;
+	g_NpcPlayerScareReplenishSprintAmount[bossIndex] = 0.0;
 	g_SlenderRenderFX[bossIndex] = 0;
 	g_SlenderRenderMode[bossIndex] = 0;
 
@@ -3683,6 +3683,8 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 		return Plugin_Continue;
 	}
 
+	float gameTime = GetGameTime();
+
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
 	// Check to see if anyone's looking at me before doing anything.
@@ -3716,23 +3718,23 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 				int state = chaser.State;
 				if (state == STATE_IDLE && chaser.IsAllowedToDespawn)
 				{
-					if (GetGameTime() < g_SlenderTimeUntilKill[bossIndex])
+					if (gameTime < g_SlenderTimeUntilKill[bossIndex])
 					{
 						return Plugin_Continue;
 					}
 				}
 				else
 				{
-					if (GetGameTime() >= g_SlenderTimeUntilKill[bossIndex])
+					if (gameTime >= g_SlenderTimeUntilKill[bossIndex])
 					{
-						g_SlenderTimeUntilKill[bossIndex] = GetGameTime() + NPCGetIdleLifetime(bossIndex, difficulty);
+						g_SlenderTimeUntilKill[bossIndex] = gameTime + NPCGetIdleLifetime(bossIndex, difficulty);
 					}
 					return Plugin_Continue;
 				}
 			}
 			else if (NPCGetType(bossIndex) == SF2BossType_Statue)
 			{
-				if (g_SlenderStatueIdleLifeTime[bossIndex] > GetGameTime())
+				if (g_SlenderStatueIdleLifeTime[bossIndex] > gameTime)
 				{
 					return Plugin_Continue;
 				}
@@ -3745,7 +3747,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 
 	if (IsRoundPlaying())
 	{
-		if (GetGameTime() >= g_SlenderNextTeleportTime[bossIndex])
+		if (gameTime >= g_SlenderNextTeleportTime[bossIndex])
 		{
 			if (!NPCIsTeleportAllowed(bossIndex, difficulty) && bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 			{
@@ -3753,7 +3755,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 				return Plugin_Continue;
 			}
 			float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
-			g_SlenderNextTeleportTime[bossIndex] = GetGameTime() + teleportTime;
+			g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
 			bool ignoreFuncNavPrefer = g_NpcHasIgnoreNavPrefer[bossIndex];
 
 			int teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[bossIndex]);
@@ -4046,6 +4048,11 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: failed because of teleport time (curtime: %f, teletime: %f)", bossIndex, GetGameTime(), g_SlenderNextTeleportTime[bossIndex]);
 			#endif
 		}
+	}
+	else
+	{
+		float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
+		g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
 	}
 
 	return Plugin_Continue;
@@ -4424,7 +4431,7 @@ bool TraceRayDontHitAnyEntity_Pathing(int entity, int contentsMask, int desiredc
 	return true;
 }
 
-bool TraceRayDontHitCharactersOrEntity(int entity,int mask, any data)
+bool TraceRayDontHitCharactersOrEntity(int entity, int mask, any data)
 {
 	if (entity == data)
 	{

@@ -24,6 +24,11 @@ static int OnStart(SF2_StatueChaseAction action, SF2_StatueEntity actor, NextBot
 	SF2StatueBossProfileData data;
 	data = controller.GetProfileData();
 	actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+	if (actor.InitialChaseDuration > 0.0)
+	{
+		actor.CurrentChaseDuration = actor.InitialChaseDuration;
+		actor.InitialChaseDuration = 0.0;
+	}
 
 	actor.State = STATE_CHASE;
 	return action.Continue();

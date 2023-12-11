@@ -369,6 +369,15 @@ forward void SF2_OnBossDespawn(int bossIndex);
 forward void SF2_OnBossChangeState(int bossIndex, int oldState, int newState);
 
 /**
+ * Called each time a boss update its animation.
+ *
+ * @param bossIndex		Boss index.
+ * @param animation		The animation name used.
+ * @return 				If Plugin_Handled will not update the boss animation.
+ */
+forward Action SF2_OnBossAnimationUpdate(int bossIndex, const char[] animation);
+
+/**
  * Called to determine the boss's run speed.
  *
  * @param bossIndex	Boss index.
@@ -1622,6 +1631,16 @@ native bool SF2_GetChaserProfileFromName(const char[] profile, any data[sizeof(S
 native bool SF2_GetStatueProfileFromName(const char[] profile, any data[sizeof(SF2ChaserBossProfileData)]);
 
 /**
+ * Forces a boss to enter in the chase state and immediately go after the target.
+ * If the boss is already chasing a target, then the target will be queued up for it to be auto chased.
+ *
+ * @param bossIndex		Boss index.
+ * @param target		Entity to use.
+ * @param value			Force chase state
+ */
+native void SF2_SetEntityForceChaseState(int bossIndex, CBaseEntity target, bool value);
+
+/**
  * Methodmap responsible for all boss entities.
 */
 methodmap SF2_BaseBossEntity < CBaseCombatCharacter
@@ -1665,6 +1684,17 @@ methodmap SF2_BaseBossEntity < CBaseCombatCharacter
 	property float CurrentChaseDuration
 	{
 		public native get();
+		public native set(float value);
+	}
+
+	/**
+	 * If set will override the chase duration next time the boss goes into the chase state.
+	 * This value will reset to 0 once the boss enters the chase state.
+	 */
+	property float InitialChaseDuration
+	{
+		public native get();
+		public native set(float value);
 	}
 
 	/**
@@ -2568,21 +2598,23 @@ methodmap SF2_Player < CBaseCombatCharacter
 	public native void HandleSprint(bool sprint);
 
 	/**
-	 * Sets the player's sprint timer
+	 * Gets/sets the player's stamina
+	 */
+	property float Stamina
+	{
+		public native get();
+
+		public native set(float value);
+	}
+
+	/**
+	 * Sets the stamina's next recharge time
 	 *
-	 * @param recharge		Whether or not the timer should be recharging the player's sprint
+	 * @param time			Amount of time it will take for the stamina to continue to recharge
+	 * @param checkTime		Whether or not to check if the current recharge time is greater than the
+	 * 						inputted recharge time
 	 */
-	public native void SetSprintTimer(bool recharge = false);
-
-	/**
-	 * Returns the player's sprint points from 0-100
-	 */
-	public native int GetSprintPoints();
-
-	/**
-	 * Sets the player's sprint points
-	 */
-	public native void SetSprintPoints(int value);
+	public native void SetStaminaRechargeTime(float time, bool checkTime = true);
 
 	/**
 	 * Whether or not the player's blink HUD element is showing
@@ -2783,6 +2815,400 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 * @param bossIndex			Boss to check
 	 */
 	public native bool IsLookingAtBoss(int bossIndex);
+}
+
+/**
+ * Interface to SF2_ProjectileBase
+ *
+ * Useful for creating custom projectiles, see sf2/entities/projectiles to see how projectiles are created
+ */
+methodmap SF2_Projectile_Base < CBaseAnimating
+{
+	/**
+	 * Initializes a projectile's stats
+	 *
+	 * @param type			Projectile type
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param blastRadius	If configured to explode, the blast radius of the projectile
+	 * @param isCrits		Whether or not to use the crit damage type
+	 * @param trail			Trail material name
+	 * @param explosion		Explosion particle
+	 * @param impactSound	Impact/explosion sound
+	 * @param model			Model name
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 */
+	public native void Initialize(const int type = SF2BossProjectileType_Custom,
+								const CBaseEntity owner,
+								const float pos[3],
+								const float ang[3],
+								const float speed,
+								const float damage,
+								const float blastRadius,
+								const bool isCrits,
+								const char[] trail,
+								const char[] explosion,
+								const char[] impactSound,
+								const char[] model,
+								const bool attackWaiters = false);
+
+	/**
+	 * Triggers a explosion on the projectile and removes it
+	 */
+	public native void DoExplosion();
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Base(int entity)
+	{
+		return view_as<SF2_Projectile_Base>(entity);
+	}
+}
+
+/**
+ * The methodmap for arrow projectiles
+ */
+methodmap SF2_Projectile_Arrow < SF2_Projectile_Base
+{
+	/**
+	 * Creates a arrow projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param isCrits		Whether or not to use the crit damage type
+	 * @param trail			Trail material name
+	 * @param impactSound	Impact sound when it hits a player
+	 * @param model			Model name
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_Arrow Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const bool isCrits,
+		const char[] trail,
+		const char[] impactSound,
+		const char[] model,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Arrow(int entity)
+	{
+		return view_as<SF2_Projectile_Arrow>(entity);
+	}
+}
+
+/**
+ * The methodmap for baseball projectiles
+ */
+methodmap SF2_Projectile_Baseball < SF2_Projectile_Base
+{
+	/**
+	 * Creates a baseball projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param isCrits		Whether or not to use the crit damage type
+	 * @param model			Model name
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_Baseball Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const bool isCrits,
+		const char[] model,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Baseball(int entity)
+	{
+		return view_as<SF2_Projectile_Baseball>(entity);
+	}
+}
+
+/**
+ * The methodmap for cow mangler projectiles
+ */
+methodmap SF2_Projectile_CowMangler < SF2_Projectile_Base
+{
+	/**
+	 * Creates a cow mangler projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param blastRadius	The blast radius of the projectile
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_CowMangler Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const float blastRadius,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_CowMangler(int entity)
+	{
+		return view_as<SF2_Projectile_CowMangler>(entity);
+	}
+}
+
+/**
+ * The methodmap for fireball projectiles
+ */
+methodmap SF2_Projectile_Fireball < SF2_Projectile_Base
+{
+	/**
+	 * Creates a fireball projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param blastRadius	The blast radius of the projectile
+	 * @param impactSound	Impact sound when it hits a player
+	 * @param trail			Trail material name
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_Fireball Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const float blastRadius,
+		const char[] impactSound,
+		const char[] trail,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Fireball(int entity)
+	{
+		return view_as<SF2_Projectile_Fireball>(entity);
+	}
+}
+
+/**
+ * The methodmap for grenade projectiles
+ */
+methodmap SF2_Projectile_Grenade < SF2_Projectile_Base
+{
+	/**
+	 * Creates a grenade projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param blastRadius	The blast radius of the projectile
+	 * @param isCrits		Whether or not to use the crit damage type
+	 * @param trail			Trail material name
+	 * @param explosion		Explosion particle
+	 * @param impactSound	Impact/explosion sound
+	 * @param model			Model name
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_Grenade Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const float blastRadius,
+		const bool isCrits,
+		const char[] trail,
+		const char[] explosion,
+		const char[] impactSound,
+		const char[] model,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Grenade(int entity)
+	{
+		return view_as<SF2_Projectile_Grenade>(entity);
+	}
+}
+
+/**
+ * The methodmap for iceball projectiles
+ */
+methodmap SF2_Projectile_Iceball < SF2_Projectile_Base
+{
+	/**
+	 * Creates a iceball projectile.
+	 *
+	 * @param owner				Owner entity
+	 * @param pos				Spawn position
+	 * @param ang				Spawn angles
+	 * @param speed				Speed of the projectile
+	 * @param damage			Damage of the projectile
+	 * @param blastRadius		The blast radius of the projectile
+	 * @param impactSound		Impact sound when it hits a player
+	 * @param trail				Trail material name
+	 * @param slowDuration		How long the slowdown effect lasts
+	 * @param slowMultiplier	The speed multiplier of the slowdown effect
+	 * @param freezeSound		The sound that plays when a player gets slowed down
+	 * @param attackWaiters		Whether or not the BLU team should be hurt
+	 * @return					Projectile entity
+	 */
+	public static native SF2_Projectile_Iceball Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const float blastRadius,
+		const char[] impactSound,
+		const char[] trail,
+		const float slowDuration,
+		const float slowMultiplier,
+		const char[] freezeSound,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Iceball(int entity)
+	{
+		return view_as<SF2_Projectile_Iceball>(entity);
+	}
+}
+
+/**
+ * The methodmap for rocket projectiles
+ */
+methodmap SF2_Projectile_Rocket < SF2_Projectile_Base
+{
+	/**
+	 * Creates a rocket projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param blastRadius	The blast radius of the projectile
+	 * @param isCrits		Whether or not to use the crit damage type
+	 * @param trail			Trail material name
+	 * @param explosion		Explosion particle
+	 * @param impactSound	Impact/explosion sound
+	 * @param model			Model name
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_Rocket Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const float blastRadius,
+		const bool isCrits,
+		const char[] trail,
+		const char[] explosion,
+		const char[] impactSound,
+		const char[] model,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_Rocket(int entity)
+	{
+		return view_as<SF2_Projectile_Rocket>(entity);
+	}
+}
+
+/**
+ * The methodmap for sentry rocket projectiles
+ */
+methodmap SF2_Projectile_SentryRocket < SF2_Projectile_Base
+{
+	/**
+	 * Creates a sentry rocket projectile.
+	 *
+	 * @param owner			Owner entity
+	 * @param pos			Spawn position
+	 * @param ang			Spawn angles
+	 * @param speed			Speed of the projectile
+	 * @param damage		Damage of the projectile
+	 * @param blastRadius	The blast radius of the projectile
+	 * @param isCrits		Whether or not to use the crit damage type
+	 * @param attackWaiters	Whether or not the BLU team should be hurt
+	 * @return				Projectile entity
+	 */
+	public static native SF2_Projectile_SentryRocket Create(
+		const CBaseEntity owner,
+		const float pos[3],
+		const float ang[3],
+		const float speed,
+		const float damage,
+		const float blastRadius,
+		const bool isCrits,
+		const bool attackWaiters = false);
+
+	/**
+	 *	Attempts to cast an entity to be this entity.
+	 *
+	 *	@param entity     Entity to use
+	 */
+	public SF2_Projectile_SentryRocket(int entity)
+	{
+		return view_as<SF2_Projectile_SentryRocket>(entity);
+	}
 }
 
 /**

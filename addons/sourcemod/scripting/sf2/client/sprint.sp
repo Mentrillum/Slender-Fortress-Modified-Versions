@@ -1,8 +1,9 @@
 #pragma semicolon 1
 
 static bool g_PlayerSprint[MAXTF2PLAYERS] = { false, ... };
-static int g_PlayerSprintPoints[MAXTF2PLAYERS] = { 100, ... };
-static Handle g_PlayerSprintTimer[MAXTF2PLAYERS] = { null, ... };
+static bool g_WantsToSprint[MAXTF2PLAYERS] = { false, ... };
+static float g_Stamina[MAXTF2PLAYERS] = { 1.0, ... };
+static float g_StaminaRechargeTime[MAXTF2PLAYERS] = { 1.0, ... };
 
 static ConVar g_PlayerScareSprintBoost;
 
@@ -19,8 +20,9 @@ void SetupSprint()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
-	ClientResetSprint(client.index);
+	ClientResetSprint(client);
 
+	SDKHook(client.index, SDKHook_PreThink, Hook_SpeedThink);
 	SDKHook(client.index, SDKHook_PreThink, Hook_SprintThink);
 }
 
@@ -31,62 +33,168 @@ static void OnJump(SF2_BasePlayer client)
 		return;
 	}
 
-	int override = g_PlayerInfiniteSprintOverrideConVar.IntValue;
-	if ((!g_IsRoundInfiniteSprint && override != 1) || override == 0)
+	if (!IsInfiniteSprintEnabled() && client.Stamina > 0.0)
 	{
-		if (client.GetSprintPoints() >= 2)
+		TFClassType classType = client.Class;
+		int classToInt = view_as<int>(classType);
+		if (!IsClassConfigsValid())
 		{
-			TFClassType classType = client.Class;
-			int classToInt = view_as<int>(classType);
-			if (!IsClassConfigsValid())
+			if (classType != TFClass_Soldier || client.Stamina <= 0.1 || client.IsSprinting)
 			{
-				if (classType != TFClass_Soldier || client.GetSprintPoints() <= 10 || client.IsSprinting)
-				{
-					client.SetSprintPoints(client.GetSprintPoints() - 7);
-				}
-			}
-			else
-			{
-				int sprintPointsLoss = g_ClassSprintPointLossJumping[classToInt];
-				if (client.GetSprintPoints() <= 10 || client.IsSprinting)
-				{
-					sprintPointsLoss = 7;
-				}
-				client.SetSprintPoints(client.GetSprintPoints() - sprintPointsLoss);
-			}
-			if (client.GetSprintPoints() <= 0)
-			{
-				client.SetSprintPoints(0);
+				client.SetStaminaRechargeTime(GetGameTime() + 1.5);
+
+				client.Stamina -= 0.07;
 			}
 		}
-	}
-
-	if (!client.IsSprinting)
-	{
-		if (g_PlayerSprintTimer[client.index] == null)
+		else
 		{
-			// If the player hasn't sprinted recently, force us to regenerate the stamina.
-			client.SetSprintTimer(true);
+			float sprintPointsLoss = g_ClassSprintPointLossJumping[classToInt];
+			if (client.Stamina <= 0.1 || client.IsSprinting)
+			{
+				sprintPointsLoss = 0.07;
+			}
+
+			if (sprintPointsLoss > 0.0)
+			{
+				client.SetStaminaRechargeTime(GetGameTime() + 1.5);
+			}
+
+			client.Stamina -= sprintPointsLoss;
 		}
 	}
 }
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
-	ClientResetSprint(client.index);
+	ClientResetSprint(client);
+
+	if (client.IsAlive && !client.IsEliminated && !client.HasEscaped)
+	{
+		if (SF_IsBoxingMap() || SF_IsRaidMap())
+		{
+			g_WantsToSprint[client.index] = true;
+		}
+	}
 }
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
 	if (!fake)
 	{
-		ClientResetSprint(client.index);
+		ClientResetSprint(client);
 	}
 }
 
 static void OnPlayerEscape(SF2_BasePlayer client)
 {
-	ClientResetSprint(client.index);
+	ClientResetSprint(client);
+}
+
+static void Hook_SprintThink(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsAlive || player.IsEliminated || player.HasEscaped || player.IsInGhostMode)
+	{
+		return;
+	}
+
+	bool wasSprinting = g_PlayerSprint[client];
+	bool isSprinting = false;
+
+	if (g_WantsToSprint[player.index] && !player.IsInDeathCam)
+	{
+		float velocity[3];
+		player.GetAbsVelocity(velocity);
+		if (GetVectorLength(velocity, true) > Pow(30.0, 2.0))
+		{
+			isSprinting = true;
+		}
+
+		int fov = GetEntData(client, g_PlayerDefaultFOVOffset);
+
+		int targetFov = g_PlayerDesiredFOV[client] + 10;
+
+		if (fov < targetFov)
+		{
+			int diff = RoundFloat(FloatAbs(float(fov - targetFov)));
+			if (diff >= 1)
+			{
+				ClientSetFOV(client, fov + 1);
+			}
+			else
+			{
+				ClientSetFOV(client, targetFov);
+			}
+		}
+		else if (fov >= targetFov)
+		{
+			ClientSetFOV(client, targetFov);
+		}
+	}
+	else
+	{
+		int fov = GetEntData(client, g_PlayerDefaultFOVOffset);
+		if (fov > g_PlayerDesiredFOV[client])
+		{
+			int diff = RoundFloat(FloatAbs(float(fov - g_PlayerDesiredFOV[client])));
+			if (diff >= 1)
+			{
+				ClientSetFOV(client, fov - 1);
+			}
+			else
+			{
+				ClientSetFOV(client, g_PlayerDesiredFOV[client]);
+			}
+		}
+		else if (fov <= g_PlayerDesiredFOV[client])
+		{
+			ClientSetFOV(client, g_PlayerDesiredFOV[client]);
+		}
+	}
+
+	g_PlayerSprint[player.index] = isSprinting;
+
+	if (wasSprinting != isSprinting)
+	{
+		if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+		{
+			if (isSprinting)
+			{
+				Client90sMusicStart(client);
+
+				Call_StartForward(g_OnClientStartSprintingFwd);
+				Call_PushCell(client);
+				Call_Finish();
+			}
+			else
+			{
+				Client90sMusicStop(client);
+
+				Call_StartForward(g_OnClientStopSprintingFwd);
+				Call_PushCell(client);
+				Call_Finish();
+			}
+		}
+	}
+
+	if (isSprinting)
+	{
+		if (!IsInfiniteSprintEnabled())
+		{
+			player.SetStaminaRechargeTime(GetGameTime() + 1.5);
+
+			player.Stamina -= GetStaminaDecreaseRate(player) * GetTickInterval();
+			if (player.Stamina <= 0.0)
+			{
+				g_WantsToSprint[client] = false;
+			}
+		}
+	}
+
+	if (player.Stamina < 1.0 && GetGameTime() > g_StaminaRechargeTime[player.index])
+	{
+		player.Stamina += GetStaminaRechargeRate(player) * GetTickInterval();
+	}
 }
 
 float ClientGetDefaultSprintSpeed(int client, TFClassType class = TFClass_Unknown)
@@ -161,171 +269,131 @@ bool IsClientSprinting(int client)
 	return g_PlayerSprint[client];
 }
 
-int ClientGetSprintPoints(int client)
+float ClientGetStamina(int client)
 {
-	return g_PlayerSprintPoints[client];
+	return g_Stamina[client];
 }
 
-void ClientSetSprintPoints(int client, int value)
+void ClientSetStamina(int client, float value)
 {
-	g_PlayerSprintPoints[client] = value;
-	if (g_PlayerSprintPoints[client] > 100)
+	g_Stamina[client] = value;
+	if (g_Stamina[client] > 1.0)
 	{
-		g_PlayerSprintPoints[client] = 100;
+		g_Stamina[client] = 1.0;
 	}
-	if (g_PlayerSprintPoints[client] < 0)
+	if (g_Stamina[client] < 0.0)
 	{
-		g_PlayerSprintPoints[client] = 0;
+		g_Stamina[client] = 0.0;
 	}
 }
 
-void ClientResetSprint(int client)
+void SetPlayerStaminaRechargeTime(SF2_BasePlayer client, float time, bool checkTime = true)
+{
+	if (checkTime && g_StaminaRechargeTime[client.index] >= time)
+	{
+		return;
+	}
+
+	g_StaminaRechargeTime[client.index] = time;
+}
+
+float GetStaminaDecreaseRate(SF2_BasePlayer client)
+{
+	float rate = 0.03;
+
+	if (SF_SpecialRound(SPECIALROUND_COFFEE))
+	{
+		rate *= 0.5;
+	}
+
+	if (SF_IsProxyMap())
+	{
+		rate *= 0.25;
+	}
+
+	TFClassType class = client.Class;
+	int classToInt = view_as<int>(class);
+	if (!IsClassConfigsValid())
+	{
+		if (class == TFClass_DemoMan)
+		{
+			rate *= 0.9; // Demoman gets a 10% sprint duration increase
+		}
+		else if (class == TFClass_Scout)
+		{
+			rate *= 0.95; // Scout gets a 5% sprint duration increase
+		}
+	}
+	else
+	{
+		rate *= g_ClassSprintDurationMultipler[classToInt];
+	}
+
+	return rate;
+}
+
+float GetStaminaRechargeRate(SF2_BasePlayer client)
+{
+	float rate = 0.02;
+
+	if (client.Ducked)
+	{
+		float velocity[3];
+		client.GetAbsVelocity(velocity);
+		if (GetVectorLength(velocity, true) == 0.0)
+		{
+			// Double the sprint rate if the player is crouching and holding still
+			rate = 0.04;
+		}
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_COFFEE))
+	{
+		rate *= 0.35;
+	}
+
+	if (SF_IsProxyMap())
+	{
+		rate *= 0.25;
+	}
+
+	return rate;
+}
+
+static void ClientResetSprint(SF2_BasePlayer client)
 {
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
-		DebugMessage("START ClientResetSprint(%d)", client);
+		DebugMessage("START ClientResetSprint(%d)", client.index);
 	}
 	#endif
 
-	bool wasSprinting = IsClientSprinting(client);
+	bool wasSprinting = client.IsSprinting;
 
-	g_PlayerSprint[client] = false;
-	g_PlayerSprintPoints[client] = 100;
-	g_PlayerSprintTimer[client] = null;
+	client.SetStaminaRechargeTime(0.0, false);
+	g_PlayerSprint[client.index] = false;
+	g_WantsToSprint[client.index] = false;
+	client.Stamina = 1.0;
 
-	if (IsValidClient(client))
+	if (client.IsValid)
 	{
-		SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
-		SDKUnhook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
-
-		ClientSetFOV(client, g_PlayerDesiredFOV[client]);
+		ClientSetFOV(client.index, g_PlayerDesiredFOV[client.index]);
 	}
 
 	if (wasSprinting)
 	{
 		Call_StartForward(g_OnClientStopSprintingFwd);
-		Call_PushCell(client);
+		Call_PushCell(client.index);
 		Call_Finish();
 	}
 
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
 	{
-		DebugMessage("END ClientResetSprint(%d)", client);
+		DebugMessage("END ClientResetSprint(%d)", client.index);
 	}
 	#endif
-}
-
-void ClientStartSprint(int client)
-{
-	if (IsClientSprinting(client))
-	{
-		return;
-	}
-
-	g_PlayerSprint[client] = true;
-	g_PlayerSprintTimer[client] = null;
-	ClientSprintTimer(client);
-	TriggerTimer(g_PlayerSprintTimer[client], true);
-	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) || g_Renevant90sEffect)
-	{
-		Client90sMusicStart(client);
-	}
-
-	SDKHook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
-	SDKUnhook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
-
-	Call_StartForward(g_OnClientStartSprintingFwd);
-	Call_PushCell(client);
-	Call_Finish();
-}
-
-void ClientSprintTimer(int client, bool recharge = false)
-{
-	float rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 0.38 : 0.28;
-	if (recharge)
-	{
-		rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 1.4 : 0.8;
-	}
-
-	TFClassType class = TF2_GetPlayerClass(client);
-	int classToInt = view_as<int>(class);
-
-	float velocity[3];
-	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", velocity);
-
-	if (recharge)
-	{
-		if (!(GetEntityFlags(client) & FL_ONGROUND))
-		{
-			rate *= 0.75;
-		}
-		else if (GetVectorLength(velocity, true) == 0.0)
-		{
-			if (GetEntProp(client, Prop_Send, "m_bDucked"))
-			{
-				rate *= 0.66;
-			}
-			else
-			{
-				rate *= 0.75;
-			}
-		}
-	}
-	else
-	{
-		if (!IsClassConfigsValid())
-		{
-			if (class == TFClass_DemoMan)
-			{
-				rate *= 1.1;
-			}
-			else if (class == TFClass_Medic || class == TFClass_Spy)
-			{
-				rate *= 1.0;
-			}
-			else if (class == TFClass_Scout)
-			{
-				rate *= 1.05;
-			}
-		}
-		else
-		{
-			rate *= g_ClassSprintDurationMultipler[classToInt];
-		}
-	}
-
-	if (recharge)
-	{
-		g_PlayerSprintTimer[client] = CreateTimer(rate, Timer_ClientRechargeSprint, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
-	else
-	{
-		g_PlayerSprintTimer[client] = CreateTimer(rate, Timer_ClientSprinting, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
-}
-
-void ClientStopSprint(int client)
-{
-	if (!IsClientSprinting(client))
-	{
-		return;
-	}
-	g_PlayerSprint[client] = false;
-	g_PlayerSprintTimer[client] = null;
-	ClientSprintTimer(client, true);
-	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) || g_Renevant90sEffect)
-	{
-		Client90sMusicStop(client);
-	}
-
-	SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
-	SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
-
-	Call_StartForward(g_OnClientStopSprintingFwd);
-	Call_PushCell(client);
-	Call_Finish();
 }
 
  /**
@@ -333,6 +401,11 @@ void ClientStopSprint(int client)
   */
 void ClientHandleSprint(int client, bool sprint)
 {
+	if (IsRoundInWarmup() || IsRoundInIntro() || IsRoundEnding())
+	{
+		return;
+	}
+
 	if (!IsPlayerAlive(client) ||
 		g_PlayerEliminated[client] ||
 		DidClientEscape(client) ||
@@ -342,11 +415,16 @@ void ClientHandleSprint(int client, bool sprint)
 		return;
 	}
 
+	if (SF_IsRaidMap() || SF_IsBoxingMap()) // On these maps we always sprint
+	{
+		return;
+	}
+
 	if (sprint)
 	{
-		if (g_PlayerSprintPoints[client] > 0)
+		if (g_Stamina[client] > 0)
 		{
-			ClientStartSprint(client);
+			g_WantsToSprint[client] = true;
 		}
 		else
 		{
@@ -355,10 +433,7 @@ void ClientHandleSprint(int client, bool sprint)
 	}
 	else
 	{
-		if (IsClientSprinting(client))
-		{
-			ClientStopSprint(client);
-		}
+		g_WantsToSprint[client] = false;
 	}
 }
 
@@ -383,153 +458,7 @@ bool IsClientReallySprinting(int client)
 	return true;
 }
 
-static Action Timer_ClientSprinting(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
-	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_PlayerSprintTimer[client])
-	{
-		return Plugin_Stop;
-	}
-
-	if (!IsClientSprinting(client))
-	{
-		return Plugin_Stop;
-	}
-
-	if (g_PlayerSprintPoints[client] <= 0)
-	{
-		ClientStopSprint(client);
-		g_PlayerSprintPoints[client] = 0;
-		return Plugin_Stop;
-	}
-
-	if (IsClientReallySprinting(client))
-	{
-		int override = g_PlayerInfiniteSprintOverrideConVar.IntValue;
-		if ((!g_IsRoundInfiniteSprint && override != 1) || override == 0)
-		{
-			g_PlayerSprintPoints[client]--;
-		}
-	}
-
-	ClientSprintTimer(client);
-
-	return Plugin_Stop;
-}
-
-static Action Timer_ClientRechargeSprint(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
-	{
-		return Plugin_Stop;
-	}
-
-	float velSpeed[3];
-	GetEntPropVector(client, Prop_Data, "m_vecBaseVelocity", velSpeed);
-	float speed = GetVectorLength(velSpeed, true);
-
-	if (timer != g_PlayerSprintTimer[client])
-	{
-		return Plugin_Stop;
-	}
-
-	if (IsClientSprinting(client))
-	{
-		g_PlayerSprintTimer[client] = null;
-		return Plugin_Stop;
-	}
-
-	if (g_PlayerSprintPoints[client] >= 100)
-	{
-		g_PlayerSprintPoints[client] = 100;
-		g_PlayerSprintTimer[client] = null;
-		return Plugin_Stop;
-	}
-	if ((!GetEntProp(client, Prop_Send, "m_bDucking") && !GetEntProp(client, Prop_Send, "m_bDucked")) || (GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked") && IsClientReallySprinting(client) || speed > 0.0))
-	{
-		g_PlayerSprintPoints[client]++;
-	}
-	else if ((GetEntProp(client, Prop_Send, "m_bDucking") || GetEntProp(client, Prop_Send, "m_bDucked")) && !IsClientReallySprinting(client) && speed == 0.0)
-	{
-		if (!SF_SpecialRound(SPECIALROUND_COFFEE))
-		{
-			g_PlayerSprintPoints[client] += 2;
-		}
-		else
-		{
-			g_PlayerSprintPoints[client] += 1;
-		}
-	}
-	ClientSprintTimer(client, true);
-	return Plugin_Stop;
-}
-
-static void Hook_ClientSprintingPreThink(int client)
-{
-	if (!IsClientSprinting(client))
-	{
-		SDKUnhook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
-		SDKHook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
-		return;
-	}
-
-	int fov = GetEntData(client, g_PlayerDefaultFOVOffset);
-
-	int targetFov = g_PlayerDesiredFOV[client] + 10;
-
-	if (fov < targetFov)
-	{
-		int diff = RoundFloat(FloatAbs(float(fov - targetFov)));
-		if (diff >= 1)
-		{
-			ClientSetFOV(client, fov + 1);
-		}
-		else
-		{
-			ClientSetFOV(client, targetFov);
-		}
-	}
-	else if (fov >= targetFov)
-	{
-		ClientSetFOV(client, targetFov);
-	}
-}
-
-static void Hook_ClientRechargeSprintPreThink(int client)
-{
-	if (IsClientReallySprinting(client))
-	{
-		SDKUnhook(client, SDKHook_PreThink, Hook_ClientRechargeSprintPreThink);
-		SDKHook(client, SDKHook_PreThink, Hook_ClientSprintingPreThink);
-		return;
-	}
-
-	int fov = GetEntData(client, g_PlayerDefaultFOVOffset);
-	if (fov > g_PlayerDesiredFOV[client])
-	{
-		int diff = RoundFloat(FloatAbs(float(fov - g_PlayerDesiredFOV[client])));
-		if (diff >= 1)
-		{
-			ClientSetFOV(client, fov - 1);
-		}
-		else
-		{
-			ClientSetFOV(client, g_PlayerDesiredFOV[client]);
-		}
-	}
-	else if (fov <= g_PlayerDesiredFOV[client])
-	{
-		ClientSetFOV(client, g_PlayerDesiredFOV[client]);
-	}
-}
-
-static void Hook_SprintThink(int client)
+static void Hook_SpeedThink(int client)
 {
 	if (!g_Enabled)
 	{
@@ -825,7 +754,7 @@ static void Hook_SprintThink(int client)
 		}
 	}
 
-	if (player.GetSprintPoints() <= 5)
+	if (player.Stamina <= 0.04)
 	{
 		float sprintSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.425);
 		float walkSpeedSubtract = ((sprintSpeed - walkSpeed) * 0.3);

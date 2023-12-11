@@ -472,7 +472,7 @@ enum struct SF2ChaserBossProfileShockwaveData
 	float Radius[Difficulty_Max];
 	float Force[Difficulty_Max];
 	float BatteryDrainPercent[Difficulty_Max];
-	int StaminaDrainPercent[Difficulty_Max];
+	float StaminaDrainPercent[Difficulty_Max];
 
 	ArrayList Effects;
 	ArrayList DamageEffects;
@@ -486,7 +486,7 @@ enum struct SF2ChaserBossProfileShockwaveData
 			this.Radius[i] = 200.0;
 			this.Force[i] = 600.0;
 			this.BatteryDrainPercent[i] = 0.0;
-			this.StaminaDrainPercent[i] = 0;
+			this.StaminaDrainPercent[i] = 0.0;
 		}
 
 		this.Effects = null;
@@ -500,7 +500,7 @@ enum struct SF2ChaserBossProfileShockwaveData
 		GetProfileDifficultyFloatValues(kv, "radius", this.Radius, this.Radius);
 		GetProfileDifficultyFloatValues(kv, "force", this.Force, this.Force);
 		GetProfileDifficultyFloatValues(kv, "battery_drain", this.BatteryDrainPercent, this.BatteryDrainPercent);
-		GetProfileDifficultyNumValues(kv, "stamina_drain", this.StaminaDrainPercent, this.StaminaDrainPercent);
+		GetProfileDifficultyFloatValues(kv, "stamina_drain", this.StaminaDrainPercent, this.StaminaDrainPercent);
 
 		if (kv.JumpToKey("effects"))
 		{

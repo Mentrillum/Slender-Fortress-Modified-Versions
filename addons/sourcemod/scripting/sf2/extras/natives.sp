@@ -26,6 +26,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnBossAttackedFwd = new GlobalForward("SF2_OnBossAttacked", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnBossPreTakeDamageFwd = new GlobalForward("SF2_OnBossPreTakeDamage", ET_Hook, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnBossPreFlashlightDamageFwd = new GlobalForward("SF2_OnBossPreFlashlightDamage", ET_Hook, Param_Cell, Param_Cell);
+	g_OnBossAnimationUpdateFwd = new GlobalForward("SF2_OnBossAnimationUpdate", ET_Hook, Param_Cell, Param_String);
 	g_OnChaserBossGetSuspendActionFwd = new GlobalForward("SF2_OnChaserBossGetSuspendAction", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnPagesSpawnedFwd = new GlobalForward("SF2_OnPagesSpawned", ET_Ignore);
 	g_OnRoundStateChangeFwd = new GlobalForward("SF2_OnRoundStateChange", ET_Ignore, Param_Cell, Param_Cell);
@@ -102,8 +103,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("SF2_SetClientFlashlightBatteryLife", Native_SetClientFlashlightBatteryLife);
 	CreateNative("SF2_IsClientUsingFlashlight", Native_IsClientUsingFlashlight);
 
-	CreateNative("SF2_GetClientSprintPoints", Native_GetClientSprintPoints);
-	CreateNative("SF2_SetClientSprintPoints", Native_SetClientSprintPoints);
+	CreateNative("SF2_GetClientStaminaPoints", Native_GetClientSprintPoints);
+	CreateNative("SF2_SetClientStaminaPoints", Native_SetClientSprintPoints);
 	CreateNative("SF2_IsClientSprinting", Native_IsClientSprinting);
 	CreateNative("SF2_IsClientReallySprinting", Native_IsClientReallySprinting);
 	CreateNative("SF2_SetClientSprintState", Native_SetClientSprintState);
@@ -153,6 +154,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	SpecialRoundInitializeAPI();
 
 	SetupMethodmapAPI();
+
+	SetupCustomEntitiesAPI();
 
 	SetupBossProfileNatives();
 
@@ -582,12 +585,12 @@ static any Native_IsClientUsingFlashlight(Handle plugin, int numParams)
 
 static any Native_GetClientSprintPoints(Handle plugin, int numParams)
 {
-	return ClientGetSprintPoints(GetNativeCell(1));
+	return SF2_BasePlayer(GetNativeCell(1)).Stamina;
 }
 
 static any Native_SetClientSprintPoints(Handle plugin, int numParams)
 {
-	ClientSetSprintPoints(GetNativeCell(1), GetNativeCell(2));
+	SF2_BasePlayer(GetNativeCell(1)).Stamina = GetNativeCell(2);
 	return 0;
 }
 

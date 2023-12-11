@@ -45,6 +45,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineBoolField("m_IsEntityInFOV", 2049)
 			.DefineBoolField("m_IsEntityNear", 2049)
 			.DefineFloatField("m_CurrentChaseDuration")
+			.DefineFloatField("m_InitialChaseDuration")
 			.DefineFloatField("m_LegacyFootstepInterval")
 			.DefineFloatField("m_LegacyFootstepTime")
 			.DefineIntField("m_MovementType")
@@ -207,6 +208,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "m_CurrentChaseDuration", value);
+		}
+	}
+
+	property float InitialChaseDuration
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_InitialChaseDuration");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_InitialChaseDuration", value);
 		}
 	}
 
@@ -466,6 +480,9 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		CreateNative("SF2_BaseBossEntity.Target.get", Native_GetTarget);
 		CreateNative("SF2_BaseBossEntity.State.get", Native_GetState);
 		CreateNative("SF2_BaseBossEntity.CurrentChaseDuration.get", Native_GetCurrentChaseDuration);
+		CreateNative("SF2_BaseBossEntity.CurrentChaseDuration.set", Native_SetCurrentChaseDuration);
+		CreateNative("SF2_BaseBossEntity.InitialChaseDuration.get", Native_GetInitialChaseDuration);
+		CreateNative("SF2_BaseBossEntity.InitialChaseDuration.set", Native_SetInitialChaseDuration);
 		CreateNative("SF2_BaseBossEntity.EyePosition", Native_EyePosition);
 		CreateNative("SF2_BaseBossEntity.GetProfileName", Native_GetProfileName);
 		CreateNative("SF2_BaseBossEntity.GetName", Native_GetName);
@@ -474,7 +491,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	}
 
 	public int SelectProfileAnimation(const char[] animType, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepInterval = 0.0,
-										int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false)
+										int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0)
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
 		int difficulty = controller.Difficulty;
@@ -513,6 +530,8 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 		int sequence = LookupProfileAnimation(this.index, animation);
 
+		strcopy(returnAnimation, rtnAnimationLength, animation);
+
 		this.AnimationPlaybackRate = rate;
 
 		return sequence;
@@ -547,8 +566,9 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		float rate = 1.0, cycle = 0.0, footstepInterval = 0.0;
 		bool overrideLoop, loop;
 		int index = 0;
+		char animation[64];
 
-		int sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop);
+		int sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation));
 		if (sequence == -1)
 		{
 			return false;
@@ -563,27 +583,36 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			rate = 12.0;
 		}
 
-		bool isMovement = strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Walk]) == 0 ||
+		Action result = Plugin_Continue;
+		Call_StartForward(g_OnBossAnimationUpdateFwd);
+		Call_PushCell(this.Controller);
+		Call_PushString(animation);
+		Call_Finish(result);
+
+		if (result != Plugin_Handled)
+		{
+			bool isMovement = strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Walk]) == 0 ||
 							strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Run]) == 0;
 
-		bool shouldLoop = isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0;
-		this.ResetSequence(sequence);
-		this.SetPropFloat(Prop_Send, "m_flCycle", cycle);
-		if (strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Attack]) == 0 && this.MovementType == SF2NPCMoveType_Attack)
-		{
-			shouldLoop = true;
-		}
-		if (overrideLoop)
-		{
-			this.SetProp(Prop_Data, "m_bSequenceLoops", loop);
-		}
-		else
-		{
-			this.SetProp(Prop_Data, "m_bSequenceLoops", shouldLoop);
-		}
-		this.SetPropFloat(Prop_Send, "m_flPlaybackRate", rate);
+			bool shouldLoop = isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0;
+			this.ResetSequence(sequence);
+			this.SetPropFloat(Prop_Send, "m_flCycle", cycle);
+			if (strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Attack]) == 0 && this.MovementType == SF2NPCMoveType_Attack)
+			{
+				shouldLoop = true;
+			}
+			if (overrideLoop)
+			{
+				this.SetProp(Prop_Data, "m_bSequenceLoops", loop);
+			}
+			else
+			{
+				this.SetProp(Prop_Data, "m_bSequenceLoops", shouldLoop);
+			}
+			this.SetPropFloat(Prop_Send, "m_flPlaybackRate", rate);
 
-		this.LegacyFootstepInterval = footstepInterval;
+			this.LegacyFootstepInterval = footstepInterval;
+		}
 
 		return true;
 	}
@@ -846,6 +875,44 @@ static any Native_GetCurrentChaseDuration(Handle plugin, int numParams)
 
 	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
 	return bossEntity.CurrentChaseDuration;
+}
+
+static any Native_SetCurrentChaseDuration(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	bossEntity.CurrentChaseDuration = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_GetInitialChaseDuration(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	return bossEntity.InitialChaseDuration;
+}
+
+static any Native_SetInitialChaseDuration(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	bossEntity.InitialChaseDuration = GetNativeCell(2);
+	return 0;
 }
 
 static any Native_EyePosition(Handle plugin, int numParams)

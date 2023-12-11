@@ -1149,6 +1149,20 @@ void GetPositionForward(float pos[3], float ang[3], float returnValue[3], float 
 	}
 }
 
+bool IsEmptyVector(const float test[3])
+{
+	int count = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (test[i] == 0.0)
+		{
+			count++;
+		}
+	}
+
+	return count == 3;
+}
+
 //	==========================================================
 //	ANGLE FUNCTIONS
 //	==========================================================
@@ -1358,6 +1372,16 @@ Action Timer_KillEdict(Handle timer, any entref)
 bool IsInfiniteFlashlightEnabled()
 {
 	return (g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
+}
+
+bool IsInfiniteBlinkEnabled()
+{
+	return g_RoundInfiniteBlink || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
+}
+
+bool IsInfiniteSprintEnabled()
+{
+	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1);
 }
 
 static int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
