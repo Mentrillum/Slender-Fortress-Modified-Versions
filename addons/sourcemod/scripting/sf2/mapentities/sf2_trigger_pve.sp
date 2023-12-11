@@ -48,7 +48,7 @@ static void Initialize()
 	g_EntityFactory = new CEntityFactory("sf2_trigger_pve", OnCreate);
 	g_EntityFactory.DeriveFromClass("trigger_multiple");
 	g_EntityFactory.BeginDataMapDesc()
-		.DefineFloatField("m_IsBossPvE", _, "bosspve")
+		.DefineBoolField("m_IsBossPvE", _, "bosspve")
 		.EndDataMapDesc();
 
 	g_EntityFactory.Install();
