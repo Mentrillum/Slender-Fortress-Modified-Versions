@@ -271,7 +271,7 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		grenade.SetProp(Prop_Send, "m_nSkin", 1);
 		grenade.KeyValue("solid", "2");
 		grenade.KeyValue("spawnflags", "4");
-		grenade.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(grenade.index, COLLISION_GROUP_DEBRIS_TRIGGER);
 		grenade.SetProp(Prop_Send, "m_usSolidFlags", 0);
 
 		CBaseEntity particle = grenade.CreateParticle(grenade.GetTrailName());

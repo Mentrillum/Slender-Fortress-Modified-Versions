@@ -2926,7 +2926,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		if (SF_IsBoxingMap() || originalData.IsPvEBoss)
 		{
-			chaser.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+			SetEntityCollisionGroup(chaser.index, COLLISION_GROUP_DEBRIS_TRIGGER);
 		}
 
 		for (int difficulty2 = 0; difficulty2 < Difficulty_Max; difficulty2++)

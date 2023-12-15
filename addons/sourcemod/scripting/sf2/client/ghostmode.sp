@@ -271,7 +271,7 @@ void ClientHandleGhostMode(int client, bool forceSpawn = false)
 		SetEntProp(client, Prop_Send, "m_usSolidFlags", 4);
 		SetEntProp(client, Prop_Data, "m_nSolidType", 0);
 		SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
-		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
 		SetEntityFlags(client, GetEntityFlags(client) | FL_NOTARGET);
 		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(client, _, _, _, 0);

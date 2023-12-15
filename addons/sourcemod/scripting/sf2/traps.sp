@@ -82,7 +82,7 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 
 				SetEntProp(trapEntity, Prop_Send, "m_usSolidFlags", FSOLID_TRIGGER_TOUCH_DEBRIS|FSOLID_TRIGGER|FSOLID_NOT_SOLID|FSOLID_CUSTOMBOXTEST);
 				SetEntProp(trapEntity, Prop_Data, "m_nSolidType", SOLID_BBOX);
-				SetEntProp(trapEntity, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER); // COLLISION_GROUP_DEBRIS
+				SetEntityCollisionGroup(trapEntity, COLLISION_GROUP_DEBRIS_TRIGGER);
 
 				float mins[3], maxs[3];
 				mins[0] = -25.0;

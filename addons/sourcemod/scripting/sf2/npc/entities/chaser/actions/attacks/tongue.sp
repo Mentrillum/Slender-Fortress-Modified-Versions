@@ -534,7 +534,7 @@ static void FireTongue(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Tongue act
 	trail.Spawn();
 	trail.Activate();
 	trail.SetProp(Prop_Send, "m_usSolidFlags", 22);
-	trail.SetProp(Prop_Send, "m_CollisionGroup", 1);
+	SetEntityCollisionGroup(trail.index, 1);
 	trail.Teleport(effectPos, shootAng, velocity);
 	SetVariantString("!activator");
 	tongueEnd.AcceptInput("SetParent", trail.index);

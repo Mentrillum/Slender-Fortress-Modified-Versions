@@ -157,7 +157,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		npc.SetBodyMaxs(HULL_HUMAN_MAXS);
 
 		statue.SetProp(Prop_Data, "m_nSolidType", SOLID_BBOX);
-		statue.SetProp(Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(statue.index, COLLISION_GROUP_DEBRIS_TRIGGER);
 
 		statue.Teleport(pos, ang, NULL_VECTOR);
 

@@ -262,7 +262,7 @@ static void SpawnGibs(SF2_ChaserEntity actor)
 			gib.Spawn();
 			gib.Teleport(NULL_VECTOR, NULL_VECTOR, vel);
 
-			gib.SetProp(Prop_Send, "m_CollisionGroup", 1);
+			SetEntityCollisionGroup(gib.index, 1);
 			gib.SetProp(Prop_Send, "m_usSolidFlags", 0);
 			gib.SetProp(Prop_Send, "m_nSolidType", 2);
 			gib.SetProp(Prop_Send, "m_nSkin", data.DeathData.GibSkin);
