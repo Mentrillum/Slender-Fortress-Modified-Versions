@@ -191,16 +191,21 @@ void NPCSetDeathCamEnabled(int npcIndex, bool state)
 
 void NPCInitialize()
 {
+	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
+	g_OnEntityTeleportedPFwd.AddFunction(null, EntityTeleported);
+
+	NPCChaserInitialize();
+}
+
+void NPC_InitializeAPI()
+{
 	g_OnBossAddedFwd = new GlobalForward("SF2_OnBossAdded", ET_Ignore, Param_Cell);
 	g_OnBossSpawnFwd = new GlobalForward("SF2_OnBossSpawn", ET_Ignore, Param_Cell);
 	g_OnBossDespawnFwd = new GlobalForward("SF2_OnBossDespawn", ET_Ignore, Param_Cell);
 	g_OnBossRemovedFwd = new GlobalForward("SF2_OnBossRemoved", ET_Ignore, Param_Cell);
 	g_OnBossFinishSpawningFwd = new GlobalForward("SF2_OnBossFinishSpawning", ET_Ignore, Param_Cell);
 	g_OnClientCaughtByBossFwd = new GlobalForward("SF2_OnClientCaughtByBoss", ET_Ignore, Param_Cell, Param_Cell);
-
-	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
-	g_OnEntityTeleportedPFwd.AddFunction(null, EntityTeleported);
-
+	
 	CreateNative("SF2_GetMaxBossCount", Native_GetMaxBosses);
 	CreateNative("SF2_EntIndexToBossIndex", Native_EntIndexToBossIndex);
 	CreateNative("SF2_BossIndexToEntIndex", Native_BossIndexToEntIndex);
@@ -238,8 +243,6 @@ void NPCInitialize()
 	CreateNative("SF2_GetProfileFromName", Native_GetProfileDataEx);
 
 	CreateNative("SF2_SpawnBossEffects", Native_SpawnBossEffects);
-
-	NPCChaserInitialize();
 }
 
 static void EntityDestroyed(CBaseEntity ent, const char[] classname)
