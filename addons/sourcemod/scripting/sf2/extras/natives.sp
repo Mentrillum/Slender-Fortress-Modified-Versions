@@ -143,6 +143,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	SF2_BaseBoss.SetupAPI();
 	SF2_PlaySequenceAndWait.SetupAPI();
+	NPC_InitializeAPI();
 	NPCChaser_InitializeAPI();
 	NPCStatue_InitializeAPI();
 
