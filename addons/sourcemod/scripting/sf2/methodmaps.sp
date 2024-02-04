@@ -2166,7 +2166,7 @@ static any Native_SetClientFlashlightBatteryLife(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.FlashlightBatteryLife = GetNativeCell(3);
+	player.FlashlightBatteryLife = GetNativeCell(2);
 	return 0;
 }
 
