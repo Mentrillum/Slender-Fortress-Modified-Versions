@@ -34,6 +34,7 @@ methodmap SF2_ProjectileArrow < SF2_ProjectileBase
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_Arrow.Create", Native_Create);
+		CreateNative("SF2_projectile_Arrow.IsValid.get", Native_IsValid);
 	}
 
 	property bool Touched
@@ -105,6 +106,7 @@ static void StartTouch(int entity, int other)
 
 	bool hit = true;
 	SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
+	int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
 	if (otherPlayer.IsValid)
 	{
 		if (otherPlayer.IsInGhostMode)
@@ -113,6 +115,11 @@ static void StartTouch(int entity, int other)
 		}
 
 		if (otherPlayer.IsEliminated && !projectile.AttackWaiters)
+		{
+			return;
+		}
+
+		if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == otherPlayer.Team)
 		{
 			return;
 		}
@@ -126,7 +133,7 @@ static void StartTouch(int entity, int other)
 		}
 	}
 
-	if (projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity") == other)
+	if (owner == other)
 	{
 		hit = false;
 	}
@@ -145,7 +152,10 @@ static void StartTouch(int entity, int other)
 
 	if (hit)
 	{
-		int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
+		Call_StartForward(g_OnProjectileTouchFwd);
+		Call_PushCell(projectile);
+		Call_PushCell(CBaseEntity(other));
+		Call_Finish();
 		int flags = DMG_BULLET;
 		float pos[3];
 		projectile.GetAbsOrigin(pos);
@@ -187,4 +197,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(9, model, sizeof(model));
 	SF2_ProjectileArrow projectile = SF2_ProjectileArrow.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), trail, impact, model, GetNativeCell(10));
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileArrow(GetNativeCell(1)).IsValid();
 }

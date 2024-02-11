@@ -7,12 +7,13 @@
 
 void SetupMusic()
 {
-	g_OnGamemodeEnd.AddFunction(null, OnGamemodeEnd);
+	g_OnGamemodeEndPFwd.AddFunction(null, OnGamemodeEnd);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerPutInServerPFwd.AddFunction(null, OnPutInServer);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
 	g_OnBossRemovedPFwd.AddFunction(null, OnBossRemoved);
+	g_OnDifficultyChangePFwd.AddFunction(null, OnDifficultyChange);
 }
 
 static void OnGamemodeEnd()
@@ -30,12 +31,22 @@ static void OnGamemodeEnd()
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientUpdateMusicSystem(client.index);
 	ClientResetChannels(client.index);
 }
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!fake)
 	{
 		ClientResetChannels(client.index);
@@ -45,6 +56,11 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientResetChannels(client.index);
 	ClientUpdateMusicSystem(client.index);
 }
@@ -93,6 +109,30 @@ static void OnBossRemoved(SF2NPC_BaseNPC npc)
 	}
 }
 
+static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
+{
+	CheckIfMusicValid();
+	if (MusicActive())
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			SF2_BasePlayer client = SF2_BasePlayer(i);
+			if (!client.IsValid || client.IsSourceTV)
+			{
+				continue;
+			}
+
+			char path[PLATFORM_MAX_PATH];
+			GetBossMusic(path, sizeof(path));
+			if (path[0] != '\0')
+			{
+				StopSound(i, MUSIC_CHAN, path);
+			}
+			client.UpdateMusicSystem();
+		}
+	}
+}
+
 void ClientResetChannels(int client)
 {
 	ClientChaseMusicReset(client);
@@ -105,6 +145,11 @@ void ClientResetChannels(int client)
 
 void ClientUpdateMusicSystem(int client, bool initialize = false)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	int oldPageMusicMaster = EntRefToEntIndex(g_PlayerPageMusicMaster[client]);
 	int oldPageMusicActiveIndex = g_PageMusicActiveIndex[client];
 	int oldMusicFlags = g_PlayerMusicFlags[client];

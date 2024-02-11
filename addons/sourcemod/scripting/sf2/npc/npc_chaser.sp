@@ -33,6 +33,7 @@ static int g_NpcBoxingCurrentDifficulty[MAX_BOSSES];
 static int g_NpcBoxingRagePhase[MAX_BOSSES];
 
 static bool g_ClientShouldBeForceChased[MAX_BOSSES][2049];
+static bool g_IsTargetMarked[MAX_BOSSES][2049];
 
 GlobalForward g_OnChaserBossStartAttackFwd;
 GlobalForward g_OnChaserBossEndAttackFwd;
@@ -148,6 +149,16 @@ void SetClientForceChaseState(SF2NPC_BaseNPC controller, CBaseEntity client, boo
 	g_ClientShouldBeForceChased[controller.Index][client.index] = value;
 }
 
+bool IsTargetMarked(SF2NPC_BaseNPC controller, CBaseEntity entity)
+{
+	return g_IsTargetMarked[controller.Index][entity.index];
+}
+
+void SetTargetMarkState(SF2NPC_BaseNPC controller, CBaseEntity entity, bool value)
+{
+	g_IsTargetMarked[controller.Index][entity.index] = value;
+}
+
 ArrayList NPCChaserGetAutoChaseTargets(int npcIndex)
 {
 	return g_NpcChaseOnLookTarget[npcIndex];
@@ -245,6 +256,11 @@ static void NPCChaserResetValues(int npcIndex)
 
 SF2_ChaserEntity Spawn_Chaser(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
 {
+	int bossIndex = controller.Index;
+
+	NPCSetAddSpeed(bossIndex, -NPCGetAddSpeed(bossIndex));
+	NPCSetAddAcceleration(bossIndex, -NPCGetAddAcceleration(bossIndex));
+	NPCChaserSetAddStunHealth(bossIndex, -NPCChaserGetAddStunHealth(bossIndex));
 	/*char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
@@ -255,10 +271,6 @@ SF2_ChaserEntity Spawn_Chaser(SF2NPC_BaseNPC controller, const float pos[3], con
 	g_NpcIsCrawling[bossIndex] = false;
 	g_NpcChangeToCrawl[bossIndex] = false;
 	g_SlenderSoundPositionSetCooldown[bossIndex] = 0.0;
-
-	NPCSetAddSpeed(bossIndex, -NPCGetAddSpeed(bossIndex));
-	NPCSetAddAcceleration(bossIndex, -NPCGetAddAcceleration(bossIndex));
-	NPCChaserSetAddStunHealth(bossIndex, -NPCChaserGetAddStunHealth(bossIndex));
 
 	//g_NpcInstantKillThink[bossIndex] = CreateTimer(0.0, Timer_InstantKillThink, bossIndex, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 
@@ -300,9 +312,14 @@ void Despawn_Chaser(int bossIndex)
 //			- If I lose sight or I'm unable to traverse safely, find paths around obstacles and follow memorized path.
 //			- If I reach the end of my path and I still don't see him and I still want to pursue him, keep on going in the direction I'm going.
 
-bool IsTargetValidForSlender(CBaseEntity target, bool includeEliminated = false)
+bool IsTargetValidForSlender(SF2_BaseBoss boss, CBaseEntity target, bool includeEliminated = false)
 {
 	if (!target.IsValid())
+	{
+		return false;
+	}
+
+	if (target.index <= 0)
 	{
 		return false;
 	}
@@ -310,11 +327,27 @@ bool IsTargetValidForSlender(CBaseEntity target, bool includeEliminated = false)
 	SF2_BasePlayer player = SF2_BasePlayer(target.index);
 	if (player.IsValid && (!player.IsAlive ||
 		player.IsInDeathCam ||
-		(!includeEliminated && player.IsEliminated) ||
 		player.IsInGhostMode ||
-		player.HasEscaped))
+		player.HasEscaped ||
+		player.InCondition(view_as<TFCond>(130)) ||
+		player.Team == TFTeam_Spectator))
 	{
 		return false;
+	}
+
+	if (!g_Enabled)
+	{
+		if (target.GetProp(Prop_Data, "m_iTeamNum") == boss.Team)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (!includeEliminated && player.IsValid && player.IsEliminated)
+		{
+			return false;
+		}
 	}
 
 	return true;
@@ -565,6 +598,14 @@ static void TriggerKey(int caller)
 void NPCChaser_InitializeAPI()
 {
 	CreateNative("SF2_GetBossCurrentAttackIndex", Native_GetBossCurrentAttackIndex);
+	CreateNative("SF2_GetBossAttackIndexType", Native_GetBossAttackIndexType);
+	CreateNative("SF2_GetBossAttackIndexDamage", Native_GetBossAttackIndexDamage);
+	CreateNative("SF2_UpdateBossAnimation", Native_UpdateBossAnimation);
+	CreateNative("SF2_GetBossAttackIndexDamageType", Native_GetBossAttackIndexDamageType);
+
+	CreateNative("SF2_PerformBossVoice", Native_PerformVoice);
+	CreateNative("SF2_CreateBossSoundHint", Native_CreateBossSoundHint);
+
 	CreateNative("SF2_GetChaserProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetChaserProfileFromName", Native_GetProfileDataEx);
 	CreateNative("SF2_SetEntityForceChaseState", Native_SetForceChaseState);
@@ -590,6 +631,178 @@ static any Native_GetBossCurrentAttackIndex(Handle plugin, int numParams)
 	}
 
 	return chaser.AttackIndex;
+}
+
+static any Native_PerformVoice(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	SF2ChaserBossProfileAttackData attackData;
+	data.GetAttackFromIndex(GetNativeCell(3), attackData);
+
+	return chaser.PerformVoice(GetNativeCell(2), attackData.Name);
+}
+
+static any Native_CreateBossSoundHint(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	float position[3];
+	GetNativeArray(3, position, 3);
+
+	chaser.UpdateAlertTriggerCountEx(position);
+
+	return 0;
+}
+
+static any Native_GetBossAttackIndexType(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	SF2ChaserBossProfileAttackData attackData;
+	data.GetAttackFromIndex(GetNativeCell(2), attackData);
+
+	return attackData.Type;
+}
+
+static any Native_GetBossAttackIndexDamage(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	SF2ChaserBossProfileAttackData attackData;
+	data.GetAttackFromIndex(GetNativeCell(2), attackData);
+
+	return attackData.Damage[GetNativeCell(3)];
+}
+
+static any Native_UpdateBossAnimation(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	char value[64];
+	bool spawn = GetNativeCell(4);
+	switch (GetNativeCell(3))
+	{
+		case STATE_IDLE, STATE_ALERT, STATE_CHASE:
+		{
+			if (!chaser.IsInChaseInitial && !spawn)
+			{
+				chaser.UpdateMovementAnimation();
+				return 0;
+			}
+			else
+			{
+				strcopy(value, sizeof(value), g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]);
+			}
+		}
+
+		case STATE_ATTACK:
+		{
+			strcopy(value, sizeof(value), g_SlenderAnimationsList[SF2BossAnimation_Attack]);
+		}
+
+		case STATE_STUN:
+		{
+			strcopy(value, sizeof(value), g_SlenderAnimationsList[SF2BossAnimation_Stun]);
+		}
+
+		case STATE_DEATHCAM:
+		{
+			strcopy(value, sizeof(value), g_SlenderAnimationsList[SF2BossAnimation_DeathCam]);
+		}
+
+		case STATE_DEATH:
+		{
+			strcopy(value, sizeof(value), g_SlenderAnimationsList[SF2BossAnimation_Death]);
+		}
+	}
+
+	if (spawn)
+	{
+		strcopy(value, sizeof(value), g_SlenderAnimationsList[SF2BossAnimation_Spawn]);
+	}
+
+	chaser.ResetProfileAnimation(value, _, chaser.GetAttackName());
+
+	return 0;
+}
+
+static any Native_GetBossAttackIndexDamageType(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+	}
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	SF2ChaserBossProfileAttackData attackData;
+	data.GetAttackFromIndex(GetNativeCell(2), attackData);
+
+	return attackData.DamageType[1];
 }
 
 static any Native_GetProfileData(Handle plugin, int numParams)

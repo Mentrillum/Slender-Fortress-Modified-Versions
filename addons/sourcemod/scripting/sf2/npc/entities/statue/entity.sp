@@ -141,7 +141,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 
 		npc.flMaxYawRate = 0.0;
 		npc.flStepSize = 18.0;
-		npc.flGravity = g_Gravity;
+		npc.flGravity = 800.0;
 		npc.flDeathDropHeight = 99999.0;
 		npc.flJumpHeight = 512.0;
 		npc.flMaxYawRate = originalData.TurnRate;
@@ -235,7 +235,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 	traceMaxs[2] = 0.0;
 
 	int oldTarget = statue.OldTarget.index;
-	if (!IsTargetValidForSlender(SF2_BasePlayer(oldTarget), attackEliminated))
+	if (!IsTargetValidForSlender(statue, SF2_BasePlayer(oldTarget), attackEliminated))
 	{
 		statue.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
 		oldTarget = INVALID_ENT_REFERENCE;
@@ -252,7 +252,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		SF2_BasePlayer client = SF2_BasePlayer(i);
-		if (!IsTargetValidForSlender(client, attackEliminated) && !originalData.IsPvEBoss)
+		if (!IsTargetValidForSlender(statue, client, attackEliminated) && !originalData.IsPvEBoss)
 		{
 			continue;
 		}
@@ -340,9 +340,9 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 		statue.OldTarget = CBaseEntity(bestNewTarget);
 	}
 
-	if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap())
+	if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || g_RenevantBossesChaseEndlessly)
 	{
-		if (!IsTargetValidForSlender(SF2_BasePlayer(bestNewTarget), attackEliminated))
+		if (!IsTargetValidForSlender(statue, SF2_BasePlayer(bestNewTarget), attackEliminated))
 		{
 			if (statue.State != STATE_CHASE && NPCAreAvailablePlayersAlive())
 			{
@@ -396,7 +396,7 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	}
 	acceleration += controller.GetAddAcceleration();
 
-	speed = originalData.RunSpeed[difficulty];
+	speed = originalData.RunSpeed[difficulty] * 10.0; // Backwards compatibility
 	if (controller.HasAttribute(SF2Attribute_ReducedSpeedOnLook) && controller.CanBeSeen(_, true))
 	{
 		speed *= controller.GetAttributeValue(SF2Attribute_ReducedSpeedOnLook);
@@ -423,7 +423,7 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	speed = (speed + (speed * GetDifficultyModifier(difficulty)) / 15.0);
 	acceleration = (acceleration + (acceleration * GetDifficultyModifier(difficulty)) / 15.0);
 
-	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S))
+	if (SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S) || g_Renevant90sEffect)
 	{
 		if (speed < 520.0)
 		{
@@ -440,7 +440,7 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 		acceleration += 10000.0;
 	}
 
-	if (IsBeatBoxBeating(2) || statue.IsKillingSomeone || !statue.IsMoving)
+	if ((!originalData.IsPvEBoss && IsBeatBoxBeating(2)) || statue.IsKillingSomeone || !statue.IsMoving)
 	{
 		speed = 0.0;
 	}

@@ -419,9 +419,16 @@ stock void GetProfileDifficultyNumValues(KeyValues kv, const char[] baseKeyName,
 		}
 		else
 		{
-			if (i > 0)
+			if (defaultValues[i] != 0)
 			{
-				buffer[i] = buffer[i - 1];
+				buffer[i] = defaultValues[i];
+			}
+			else
+			{
+				if (i > 0)
+				{
+					buffer[i] = buffer[i - 1];
+				}
 			}
 		}
 	}
@@ -464,9 +471,16 @@ stock void GetProfileDifficultyBoolValues(KeyValues kv, const char[] baseKeyName
 		}
 		else
 		{
-			if (i > 0)
+			if (defaultValues[i])
 			{
-				buffer[i] = buffer[i - 1];
+				buffer[i] = defaultValues[i];
+			}
+			else
+			{
+				if (i > 0)
+				{
+					buffer[i] = buffer[i - 1];
+				}
 			}
 		}
 	}
@@ -509,9 +523,16 @@ stock void GetProfileDifficultyFloatValues(KeyValues kv, const char[] baseKeyNam
 		}
 		else
 		{
-			if (i > 0)
+			if (defaultValues[i] != 0.0)
 			{
-				buffer[i] = buffer[i - 1];
+				buffer[i] = defaultValues[i];
+			}
+			else
+			{
+				if (i > 0)
+				{
+					buffer[i] = buffer[i - 1];
+				}
 			}
 		}
 	}
@@ -570,9 +591,24 @@ stock void GetProfileDifficultyVectorValues(KeyValues kv, const char[] baseKeyNa
 		}
 		else
 		{
-			if (i > 0)
+			bool def = false;
+			for (int k = 0; k < 3; k++)
 			{
-				buffer[i] = buffer[i - 1];
+				if (defaultValueVectors[i][k] != 0.0)
+				{
+					def = true;
+				}
+			}
+			if (def)
+			{
+				buffer[i] = defaultValueVectors[i];
+			}
+			else
+			{
+				if (i > 0)
+				{
+					buffer[i] = buffer[i - 1];
+				}
 			}
 		}
 	}
@@ -631,9 +667,16 @@ void GetProfileDifficultyStringValues(KeyValues kv, const char[] baseKeyName, ch
 		}
 		else
 		{
-			if (i > 0)
+			if (defaultValueStrings[i][0] != '\0')
 			{
-				strcopy(bufferArray[i], maxStringLen, bufferArray[i - 1]);
+				strcopy(bufferArray[i], maxStringLen, defaultValueStrings[i]);
+			}
+			else
+			{
+				if (i > 0)
+				{
+					strcopy(bufferArray[i], maxStringLen, bufferArray[i - 1]);
+				}
 			}
 		}
 	}
@@ -789,6 +832,7 @@ enum struct SF2BossProfileSoundInfo
 
 	void Load(KeyValues kv, bool checkFile)
 	{
+		kv.GetSectionName(this.SectionName, sizeof(this.SectionName));
 		if (kv.JumpToKey("paths"))
 		{
 			this.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
@@ -829,6 +873,59 @@ enum struct SF2BossProfileSoundInfo
 			{
 				this.Chance = 1.0;
 			}
+		}
+		else
+		{
+			this.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+			char soundPath[PLATFORM_MAX_PATH], section[64], formatter[90];
+			for (int i = 1;; i++)
+			{
+				FormatEx(section, sizeof(section), "%d", i);
+				kv.GetString(section, soundPath, sizeof(soundPath));
+				if (soundPath[0] == '\0')
+				{
+					break;
+				}
+
+				TryPrecacheBossProfileSoundPath(soundPath, checkFile);
+
+				this.Paths.PushString(soundPath);
+			}
+			kv.GoBack();
+			FormatEx(formatter, sizeof(formatter), "%s_channel", this.SectionName);
+			this.Channel = kv.GetNum(formatter, this.Channel);
+			FormatEx(formatter, sizeof(formatter), "%s_level", this.SectionName);
+			this.Level = kv.GetNum(formatter, this.Level);
+			FormatEx(formatter, sizeof(formatter), "%s_flags", this.SectionName);
+			this.Flags = kv.GetNum(formatter, this.Flags);
+			FormatEx(formatter, sizeof(formatter), "%s_volume", this.SectionName);
+			this.Volume = kv.GetFloat(formatter, this.Volume);
+			FormatEx(formatter, sizeof(formatter), "%s_pitch", this.SectionName);
+			this.Pitch = kv.GetNum(formatter, this.Pitch);
+			this.PitchRandomMin = this.Pitch;
+			this.PitchRandomMax = this.Pitch;
+			FormatEx(formatter, sizeof(formatter), "%s_cooldown_min", this.SectionName);
+			this.CooldownMin = kv.GetFloat(formatter, this.CooldownMin);
+			FormatEx(formatter, sizeof(formatter), "%s_cooldown_max", this.SectionName);
+			this.CooldownMax = kv.GetFloat(formatter, this.CooldownMax);
+			FormatEx(formatter, sizeof(formatter), "%s_pitch_random_min", this.SectionName);
+			this.PitchRandomMin = kv.GetNum(formatter, this.PitchRandomMin);
+			FormatEx(formatter, sizeof(formatter), "%s_pitch_random_max", this.SectionName);
+			this.PitchRandomMax = kv.GetNum(formatter, this.PitchRandomMax);
+			FormatEx(formatter, sizeof(formatter), "%s_radius", this.SectionName);
+			this.Radius = kv.GetFloat(formatter, this.Radius);
+			FormatEx(formatter, sizeof(formatter), "%s_chance", this.SectionName);
+			this.Chance = kv.GetFloat(formatter, this.Chance);
+			if (this.Chance < 0.0)
+			{
+				this.Chance = 0.0;
+			}
+			if (this.Chance > 1.0)
+			{
+				this.Chance = 1.0;
+			}
+
+			kv.JumpToKey(this.SectionName);
 		}
 	}
 
@@ -1211,9 +1308,9 @@ enum struct SF2BossProfileBaseEffectInfo
 		this.BeamRingSpeed = 5;
 		this.BeamRingFlags = 0;
 		this.BeamRingColor = "255 255 255 255";
-		this.BeamRingBeamSprite[0] = '\0';
+		this.BeamRingBeamSprite = "sprites/laser.vmt";
 		this.BeamRingBeamModel = -1;
-		this.BeamRingHaloSprite[0] = '\0';
+		this.BeamRingHaloSprite = "sprites/halo01.vmt";
 		this.BeamRingHaloModel = -1;
 
 		this.TEParticleAttachType = 0;
@@ -1517,15 +1614,15 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 	void Init(char optionalSectionName[64] = "", char optionalSubSection[64] = "")
 	{
 		this.Sequences = null;
-		if (optionalSectionName[0] != '\0')
+		if (optionalSectionName[0] == '\0')
 		{
 			this.SectionName[0] = '\0';
 		}
 		else
 		{
-			this.SectionName = optionalSectionName;
+			strcopy(this.SectionName, sizeof(this.SectionName), optionalSectionName);
 		}
-		this.SubSectionName = optionalSubSection;
+		strcopy(this.SubSectionName, sizeof(this.SubSectionName), optionalSubSection);
 
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
@@ -1538,19 +1635,37 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 		}
 	}
 
-	void Load(KeyValues kv)
+	void Load(KeyValues kv, bool newStuff = true)
 	{
-		char animNames[Difficulty_Max][64];
+		char animNames[Difficulty_Max][64], formatter[90];
 		this.Sequences = new ArrayList(ByteCountToCells(64));
 		this.Sequences.Resize(Difficulty_Max);
 
-		GetProfileDifficultyStringValues(kv, "name", animNames, sizeof(animNames[]), animNames);
-		GetProfileDifficultyFloatValues(kv, "playbackrate", this.Playbackrate, this.Playbackrate);
-		GetProfileDifficultyFloatValues(kv, "duration", this.Duration, this.Duration);
-		GetProfileDifficultyFloatValues(kv, "cycle", this.Cycle, this.Cycle);
-		GetProfileDifficultyFloatValues(kv, "footstepinterval", this.FootstepInterval, this.FootstepInterval);
-		GetProfileDifficultyBoolValues(kv, "override_loop", this.OverrideLoop, this.OverrideLoop);
-		GetProfileDifficultyBoolValues(kv, "loop", this.Loop, this.Loop);
+		if (newStuff)
+		{
+			GetProfileDifficultyStringValues(kv, "name", animNames, sizeof(animNames[]), animNames);
+			GetProfileDifficultyFloatValues(kv, "playbackrate", this.Playbackrate, this.Playbackrate);
+			GetProfileDifficultyFloatValues(kv, "duration", this.Duration, this.Duration);
+			GetProfileDifficultyFloatValues(kv, "cycle", this.Cycle, this.Cycle);
+			GetProfileDifficultyFloatValues(kv, "footstepinterval", this.FootstepInterval, this.FootstepInterval);
+			GetProfileDifficultyBoolValues(kv, "override_loop", this.OverrideLoop, this.OverrideLoop);
+			GetProfileDifficultyBoolValues(kv, "loop", this.Loop, this.Loop);
+		}
+
+		FormatEx(formatter, sizeof(formatter), "animation_%s", this.SectionName);
+		GetProfileDifficultyStringValues(kv, formatter, animNames, sizeof(animNames[]), animNames);
+
+		FormatEx(formatter, sizeof(formatter), "animation_%s_playbackrate", this.SectionName);
+		GetProfileDifficultyFloatValues(kv, formatter, this.Playbackrate, this.Playbackrate);
+
+		FormatEx(formatter, sizeof(formatter), "animation_%s_duration", this.SectionName);
+		GetProfileDifficultyFloatValues(kv, formatter, this.Duration, this.Duration);
+
+		FormatEx(formatter, sizeof(formatter), "animation_%s_cycle", this.SectionName);
+		GetProfileDifficultyFloatValues(kv, formatter, this.Cycle, this.Cycle);
+
+		FormatEx(formatter, sizeof(formatter), "animation_%s_cycle", this.SectionName);
+		GetProfileDifficultyFloatValues(kv, formatter, this.FootstepInterval, this.FootstepInterval);
 
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
@@ -1581,21 +1696,23 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 {
 	StringMap Animations;
 	StringMap Gestures;
+	bool Classic;
 
 	void Init()
 	{
 		this.Animations = null;
 		this.Gestures = null;
+		this.Classic = false;
 	}
 
-	void Load(KeyValues kv)
+	void Load(KeyValues kv, bool newStuff = false)
 	{
+		SF2BossProfileAnimationSectionNameData animData;
+		this.Animations = new StringMap();
 		if (kv.JumpToKey("animations"))
 		{
-			this.Animations = new StringMap();
 			this.Gestures = new StringMap();
 			char animType[64];
-			SF2BossProfileAnimationSectionNameData animData;
 			SF2BossProfileAttackGestureData gestureData;
 
 			if (kv.GotoFirstSubKey()) // Find the animation name
@@ -1647,6 +1764,29 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 			}
 
 			kv.GoBack();
+		}
+		else
+		{
+			if (!newStuff)
+			{
+				return;
+			}
+			for (int i = 0; i < SF2BossAnimation_MaxAnimations; i++)
+			{
+				char formatter[90], section[64];
+				FormatEx(formatter, sizeof(formatter), "animation_%s", g_SlenderAnimationsList[i]);
+				if (kv.GetDataType(formatter) == KvData_None)
+				{
+					continue;
+				}
+				ArrayList animDataArray = new ArrayList(sizeof(animData));
+				strcopy(section, sizeof(section), g_SlenderAnimationsList[i]);
+				animData.Init(section);
+				animData.Load(kv, false);
+				animDataArray.PushArray(animData);
+				this.Animations.SetValue(section, animDataArray);
+				this.Classic = true;
+			}
 		}
 	}
 
@@ -1741,7 +1881,7 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				randomAnimation = preDefinedIndex;
 			}
 			SF2BossProfileAnimationSectionNameData animData;
-			if (preDefinedName[0] != '\0')
+			if (!this.Classic && preDefinedName[0] != '\0')
 			{
 				bool found = false;
 				for (int i = 0; i < animDataArray.Length; i++)

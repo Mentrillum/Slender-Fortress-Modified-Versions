@@ -17,7 +17,7 @@ void SetupRenevantMode()
 
 void Renevant_InitializeAPI()
 {
-	g_OnRenevantTriggerWaveFwd = new GlobalForward("SF2_OnRenevantWaveTrigger", ET_Ignore, Param_Cell);
+	g_OnRenevantTriggerWaveFwd = new GlobalForward("SF2_OnRenevantWaveTrigger", ET_Ignore, Param_Cell, Param_Cell);
 
 	CreateNative("SF2_IsRenevantMap", Native_IsRenevantMap);
 }
@@ -32,6 +32,11 @@ static void OnRoundEnd()
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (fake)
 	{
 		return;
@@ -116,22 +121,6 @@ static void Renevant_BroadcastMessage(const char[] message, int params, ...)
 	}
 }
 
-enum RenevantWave
-{
-	RenevantWave_Normal = 0,
-	RenevantWave_IncreaseDifficulty,
-	RenevantWave_MultiEffect,
-	RenevantWave_BaconSpray,
-	RenevantWave_DoubleTrouble,
-	RenevantWave_DoomBox,
-	RenevantWave_90s,
-	RenevantWave_MarkForDeath,
-	RenevantWave_SingleBoss,
-	RenevantWave_AdminBoss,
-	RenevantWave_WallHax,
-	RenevantWave_Max
-}
-
 static void Renevant_DoWaveAction(RenevantWave action)
 {
 	char buffer[SF2_MAX_PROFILE_NAME_LENGTH], buffer2[SF2_MAX_PROFILE_NAME_LENGTH], buffer3[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -189,7 +178,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Apollyon;
 
-					g_BossesChaseEndlessly = true;
+					g_RenevantBossesChaseEndlessly = true;
 					g_IsRoundInfiniteSprint = true;
 
 					char nightmareDisplay[256];
@@ -447,6 +436,13 @@ void Renevant_SetWave(int wave, bool resetTimer = false)
 		g_RenevantWaveTimer = null; // At zero/max wave so stop it.
 	}
 
+	if (wave == 0)
+	{
+		return;
+	}
+
+	RenevantWave randomWave = RenevantWave_Normal;
+
 	switch (g_RenevantWaveNumber)
 	{
 		case 1: //Wave 1
@@ -482,10 +478,14 @@ void Renevant_SetWave(int wave, bool resetTimer = false)
 			}
 			delete selectableBosses;
 		}
+		case 0:
+		{
+			// Do nothing
+		}
 		default: //Waves except 1
 		{
-			int randomWave = g_RenevantWaveList.Get(GetRandomInt(0, g_RenevantWaveList.Length - 1));
-			Renevant_DoWaveAction(view_as<RenevantWave>(randomWave));
+			randomWave = view_as<RenevantWave>(g_RenevantWaveList.Get(GetRandomInt(0, g_RenevantWaveList.Length - 1)));
+			Renevant_DoWaveAction(randomWave);
 		}
 	}
 
@@ -493,12 +493,23 @@ void Renevant_SetWave(int wave, bool resetTimer = false)
 
 	Call_StartForward(g_OnRenevantTriggerWaveFwd);
 	Call_PushCell(g_RenevantWaveNumber);
+	Call_PushCell(randomWave);
+	Call_Finish();
+
+	Call_StartForward(g_OnRenevantTriggerWavePFwd);
+	Call_PushCell(g_RenevantWaveNumber);
+	Call_PushCell(randomWave);
 	Call_Finish();
 }
 
 static Action Timer_RenevantWave(Handle timer, any data)
 {
-	if (timer != g_RenevantWaveTimer || IsRoundEnding())
+	if (timer != g_RenevantWaveTimer)
+	{
+		return Plugin_Stop;
+	}
+
+	if (!IsRoundInEscapeObjective())
 	{
 		return Plugin_Stop;
 	}
@@ -549,8 +560,8 @@ static void Renevant_SpawnApollyon()
 			{
 				continue;
 			}
-			Npc.UnSpawn();
-			SpawnSlender(Npc, teleportPos);
+			Npc.UnSpawn(true);
+			Npc.Spawn(teleportPos);
 		}
 	}
 }

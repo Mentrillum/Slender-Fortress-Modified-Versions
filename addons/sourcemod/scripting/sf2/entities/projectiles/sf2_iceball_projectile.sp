@@ -37,6 +37,7 @@ methodmap SF2_ProjectileIceball < SF2_ProjectileBase
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_Iceball.Create", Native_Create);
+		CreateNative("SF2_Projectile_Iceball.IsValid.get", Native_IsValid);
 	}
 
 	property float SlowDuration
@@ -133,4 +134,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(11, freeze, sizeof(freeze));
 	SF2_ProjectileIceball projectile = SF2_ProjectileIceball.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), impact, trail, GetNativeCell(9), GetNativeCell(10), freeze, GetNativeCell(12));
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileIceball(GetNativeCell(1)).IsValid();
 }

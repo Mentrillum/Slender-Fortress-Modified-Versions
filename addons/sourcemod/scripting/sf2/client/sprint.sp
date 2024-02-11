@@ -15,11 +15,16 @@ void SetupSprint()
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
 
-	g_PlayerScareSprintBoost = CreateConVar("sf2_player_scare_boost", "0", "If player is in danger, provide a small boost in speed.", _, true, 0.0, true, 1.0);
+	g_PlayerScareSprintBoost = CreateConVar("sf2_player_scare_boost", "0", "Determines if the player run speeds should be decreased slightly if they are not in danger.", _, true, 0.0, true, 1.0);
 }
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientResetSprint(client);
 
 	SDKHook(client.index, SDKHook_PreThink, Hook_SpeedThink);
@@ -66,6 +71,11 @@ static void OnJump(SF2_BasePlayer client)
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientResetSprint(client);
 
 	if (client.IsAlive && !client.IsEliminated && !client.HasEscaped)
@@ -79,6 +89,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!fake)
 	{
 		ClientResetSprint(client);
@@ -481,7 +496,7 @@ static void Hook_SpeedThink(int client)
 	if (!inDanger)
 	{
 		int state;
-		int bossTarget;
+		CBaseEntity bossTarget;
 
 		for (int i = 0; i < MAX_BOSSES; i++)
 		{
@@ -499,11 +514,11 @@ static void Hook_SpeedThink(int client)
 			if (NPCGetType(i) == SF2BossType_Chaser)
 			{
 				SF2_ChaserEntity chaser = SF2_ChaserEntity(ent);
-				bossTarget = chaser.Target.index;
+				bossTarget = chaser.Target;
 				state = chaser.State;
 
 				if ((state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN) &&
-					((bossTarget && bossTarget != INVALID_ENT_REFERENCE && (bossTarget == client || ClientGetDistanceFromEntity(client, bossTarget) < SquareFloat(512.0))) || NPCGetDistanceFromEntity(i, client) < SquareFloat(512.0) || PlayerCanSeeSlender(client, i, false)))
+					((bossTarget.IsValid() && (bossTarget.index == client || ClientGetDistanceFromEntity(client, bossTarget.index) < SquareFloat(512.0))) || NPCGetDistanceFromEntity(i, client) < SquareFloat(512.0) || PlayerCanSeeSlender(client, i, false)))
 				{
 					inDanger = true;
 					ClientSetScareBoostEndTime(player.index, GetGameTime() + 5.0);
@@ -686,38 +701,49 @@ static void Hook_SpeedThink(int client)
 		}
 	}
 
-	if (inDanger)
+	if (g_PlayerScareSprintBoost.BoolValue)
 	{
-		if (g_PlayerScareSprintBoost.BoolValue)
+		if (!inDanger)
+		{
+			// We're not going to account for sprint speed for the scare sprint mechanic
+			// It's a bit of a headache for me to do something like that
+			float newValue = (walkSpeed + sprintSpeed) / 1.85;
+			sprintSpeed = newValue;
+		}
+		else
 		{
 			if (!IsClassConfigsValid())
 			{
 				if (class != TFClass_Spy && class != TFClass_Pyro)
 				{
 					walkSpeed *= 1.34;
-					sprintSpeed *= 1.34;
 				}
 				else
 				{
-					weaponEnt = INVALID_ENT_REFERENCE;
-					for (int slot = 0; slot <= 5; slot++)
+					if (class == TFClass_Spy)
 					{
-						weaponEnt = player.GetWeaponSlot(slot);
-						if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
+						walkSpeed *= 1.28;
+					}
+					else
+					{
+						weaponEnt = INVALID_ENT_REFERENCE;
+						for (int slot = 0; slot <= 5; slot++)
 						{
-							continue;
-						}
+							weaponEnt = player.GetWeaponSlot(slot);
+							if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
+							{
+								continue;
+							}
 
-						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt) // Powerjack
-						{
-							walkSpeed *= 1.32;
-							sprintSpeed *= 1.32;
-						}
-						else
-						{
-							walkSpeed *= 1.34;
-							sprintSpeed *= 1.34;
+							int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+							if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
+							{
+								walkSpeed *= 1.32;
+							}
+							else
+							{
+								walkSpeed *= 1.34;
+							}
 						}
 					}
 				}
@@ -737,17 +763,19 @@ static void Hook_SpeedThink(int client)
 						}
 
 						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt) // Powerjack
+						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
 						{
 							multiplier -= 0.02;
 						}
 					}
 				}
 				walkSpeed *= multiplier;
-				sprintSpeed *= multiplier;
 			}
 		}
+	}
 
+	if (inDanger)
+	{
 		if (!player.HasHint(PlayerHint_Sprint))
 		{
 			player.ShowHint(PlayerHint_Sprint);
@@ -811,4 +839,42 @@ static void Hook_SpeedThink(int client)
 		}
 		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 	}
+}
+
+void Sprint_SetupAPI()
+{
+	CreateNative("SF2_GetClientSprintPoints", Native_GetSprintPoints);
+	CreateNative("SF2_SetClientSprintPoints", Native_SetSprintPoints);
+
+	CreateNative("SF2_IsClientSprinting", Native_IsSprinting);
+	CreateNative("SF2_IsClientReallySprinting", Native_IsReallySprinting);
+	CreateNative("SF2_SetClientSprintState", Native_SetSprintState);
+}
+
+static any Native_GetSprintPoints(Handle plugin, int numParams)
+{
+	return RoundToNearest(SF2_BasePlayer(GetNativeCell(1)).Stamina * 100.0);
+}
+
+static any Native_SetSprintPoints(Handle plugin, int numParams)
+{
+	float newValue = GetNativeCell(2) / 100.0;
+	SF2_BasePlayer(GetNativeCell(1)).Stamina = newValue;
+	return 0;
+}
+
+static any Native_IsSprinting(Handle plugin, int numParams)
+{
+	return IsClientSprinting(GetNativeCell(1));
+}
+
+static any Native_IsReallySprinting(Handle plugin, int numParams)
+{
+	return IsClientReallySprinting(GetNativeCell(1));
+}
+
+static any Native_SetSprintState(Handle plugin, int numParams)
+{
+	ClientHandleSprint(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }

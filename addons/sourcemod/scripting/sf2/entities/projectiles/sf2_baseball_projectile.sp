@@ -34,6 +34,7 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_Baseball.Create", Native_Create);
+		CreateNative("SF2_Projectile_Baseball.IsValid.get", Native_IsValid);
 	}
 
 	property float TravelTime
@@ -98,6 +99,7 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 static void Think(int entity)
 {
 	SF2_ProjectileBaseball projectile = SF2_ProjectileBaseball(entity);
+	int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
 
 	if (projectile.Timer < GetGameTime())
 	{
@@ -118,6 +120,14 @@ static void Think(int entity)
 	TR_TraceHullFilter(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, projectile.index);
 
 	int hitIndex = TR_GetEntityIndex();
+	if (IsValidEntity(hitIndex))
+	{
+		Call_StartForward(g_OnProjectileTouchFwd);
+		Call_PushCell(projectile);
+		Call_PushCell(CBaseEntity(hitIndex));
+		Call_Finish();
+	}
+
 	if (hitIndex == 0)
 	{
 		projectile.Touched = true;
@@ -125,14 +135,29 @@ static void Think(int entity)
 	}
 	else
 	{
+		int flags = DMG_CLUB;
+		if (projectile.IsCrits)
+		{
+			flags |= DMG_ACID;
+		}
 		SF2_BasePlayer player = SF2_BasePlayer(hitIndex);
 		if (player.IsValid)
 		{
-			int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
-			int flags = DMG_CLUB;
-			if (projectile.IsCrits)
+			if (player.IsInGhostMode)
 			{
-				flags |= DMG_ACID;
+				return;
+			}
+
+			if (player.IsEliminated && !projectile.AttackWaiters)
+			{
+				projectile.Touched = true;
+				return;
+			}
+
+			if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == player.Team)
+			{
+				projectile.Touched = true;
+				return;
 			}
 			player.TakeDamage(_, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
 			float ratio = projectile.TravelTime / 1.0;
@@ -161,6 +186,10 @@ static void Think(int entity)
 			Call_Finish();
 			projectile.Touched = true;
 		}
+		else
+		{
+			SDKHooks_TakeDamage(hitIndex, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
+		}
 	}
 }
 
@@ -173,4 +202,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(7, model, sizeof(model));
 	SF2_ProjectileBaseball projectile = SF2_ProjectileBaseball.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), model, GetNativeCell(8));
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileBaseball(GetNativeCell(1)).IsValid();
 }

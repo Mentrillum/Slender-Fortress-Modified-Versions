@@ -120,31 +120,34 @@ static void ClientResetDeathCam(int client)
 		SetClientViewEntity(client, client);
 	}
 
-	SF2BossProfileData data;
-	data = NPCGetProfileData(deathCamBoss);
-	if (data.DeathCamData.Enabled && data.DeathCamData.Blackout)
+	if (deathCamBoss != -1)
 	{
-		UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
-		CreateTimer(0.1, Timer_DeleteRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-		TeleportEntity(client, {16000.0, 16000.0, 16000.0});
-
-		SF2BossProfileSoundInfo soundInfo;
-		soundInfo = data.DeathCamData.ExecutionSounds;
-		if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+		SF2BossProfileData data;
+		data = NPCGetProfileData(deathCamBoss);
+		if (data.DeathCamData.Enabled && data.DeathCamData.Blackout)
 		{
-			for (int i = 0; i < soundInfo.Paths.Length; i++)
+			UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+			CreateTimer(0.1, Timer_DeleteRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			TeleportEntity(client, {16000.0, 16000.0, 16000.0});
+
+			SF2BossProfileSoundInfo soundInfo;
+			soundInfo = data.DeathCamData.ExecutionSounds;
+			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 			{
-				soundInfo.EmitSound(true, client, SOUND_FROM_PLAYER, _, _, _, i);
+				for (int i = 0; i < soundInfo.Paths.Length; i++)
+				{
+					soundInfo.EmitSound(true, client, SOUND_FROM_PLAYER, _, _, _, i);
+				}
 			}
+
+			UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
 		}
 
-		UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+		Call_StartForward(g_OnClientEndDeathCamFwd);
+		Call_PushCell(client);
+		Call_PushCell(deathCamBoss);
+		Call_Finish();
 	}
-
-	Call_StartForward(g_OnClientEndDeathCamFwd);
-	Call_PushCell(client);
-	Call_PushCell(deathCamBoss);
-	Call_Finish();
 
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
@@ -250,8 +253,8 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 		}
 
 		CBaseEntity boss = CBaseEntity(NPCGetEntIndex(bossIndex));
-
-		SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+		float damage = float(GetEntProp(client, Prop_Send, "m_iHealth")) * 4.0;
+		SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
 		ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 		KillClient(client);
 		return;
@@ -476,8 +479,8 @@ static void StopDeathCam(int client)
 			Call_Finish();
 
 			CBaseEntity boss = CBaseEntity(deathCamBoss.EntIndex);
-
-			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+			float damage = float(GetEntProp(client, Prop_Send, "m_iHealth")) * 4.0;
+			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
 			ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 			KillClient(client);
 		}
@@ -510,11 +513,6 @@ static void StopDeathCam(int client)
 
 static void Hook_DeathCamThink(int client)
 {
-	if (!g_Enabled)
-	{
-		return;
-	}
-
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	if (!player.IsValid || !player.IsInDeathCam || player.IsInGhostMode)
 	{

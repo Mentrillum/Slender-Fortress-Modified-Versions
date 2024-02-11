@@ -161,7 +161,7 @@ static void UnstuckCheck(SF2_StatueBaseAction action, SF2_StatueEntity actor)
 		float destination[3];
 		if (!NPCFindUnstuckPosition(actor, lastPos, destination))
 		{
-			controller.UnSpawn();
+			controller.UnSpawn(true);
 			return;
 		}
 		action.LastStuckTime = gameTime + 0.75;

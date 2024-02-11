@@ -920,6 +920,12 @@ static bool DisplayOverrideBossAdminMenu(int client)
 			{
 				strcopy(displayName, sizeof(displayName), profile);
 			}
+			SF2BossProfileData data;
+			g_BossProfileData.GetArray(profile, data, sizeof(data));
+			if (data.IsPvEBoss)
+			{
+				continue;
+			}
 			menuHandle.AddItem(profile, displayName);
 		}
 

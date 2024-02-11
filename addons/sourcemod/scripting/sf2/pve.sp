@@ -314,6 +314,10 @@ static void RoundStart()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
 	g_PlayerEnteredPvETriggers[client.index] = new ArrayList();
 
 	PvE_ForceResetPlayerPvEData(client.index);
@@ -384,6 +388,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!fake)
 	{
 		if (client.IsInPvE)

@@ -208,7 +208,7 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 	else if (data.DeathData.DisappearOnDeath)
 	{
 		SpawnGibs(actor);
-		controller.UnSpawn();
+		controller.UnSpawn(true);
 	}
 	else if (data.DeathData.RagdollOnDeath)
 	{

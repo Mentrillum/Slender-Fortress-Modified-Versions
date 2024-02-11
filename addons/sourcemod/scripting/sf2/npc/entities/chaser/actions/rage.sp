@@ -79,7 +79,9 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 
 	if (rageInfo.IsHealing)
 	{
+		SetHealthBarColor(true);
 		action.IsHealing = true;
+		actor.IsGoingToHeal = true;
 		return SF2_ChaserFleeToHealAction();
 	}
 
@@ -119,6 +121,7 @@ static void OnEnd(SF2_ChaserRageAction action, SF2_ChaserEntity actor)
 {
 	actor.IsRaging = false;
 	actor.OverrideInvincible = false;
+	actor.IsGoingToHeal = false;
 	if (actor.Controller.IsValid())
 	{
 		SF2ChaserBossProfileData data;

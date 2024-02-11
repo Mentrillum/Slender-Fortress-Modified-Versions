@@ -13,7 +13,6 @@ void Hook_ClientPreThink(int client)
 	}
 
 	ClientProcessFlashlightAngles(client);
-	ClientProcessInteractiveGlow(client);
 	ClientProcessStaticShake(client);
 	ClientProcessViewAngles(client);
 
@@ -231,12 +230,16 @@ void Hook_ClientPreThink(int client)
 
 Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
+	SF2_BasePlayer victimPlayer = SF2_BasePlayer(victim);
 	if (!g_Enabled)
 	{
+		if (NPCGetFromEntIndex(attacker) != -1 && GetEntProp(attacker, Prop_Data, "m_iTeamNum") == victimPlayer.Team)
+		{
+			damage = 0.0;
+			return Plugin_Changed;
+		}
 		return Plugin_Continue;
 	}
-
-	SF2_BasePlayer victimPlayer = SF2_BasePlayer(victim);
 
 	Action action = Plugin_Continue;
 
@@ -363,18 +366,6 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 				damage = 0.0;
 				return Plugin_Changed;
 			}
-		}
-	}
-
-	// Prevent telefrags
-	if ((damagetype & DMG_CRUSH) && damage > 500.0)
-	{
-		SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromEntIndex(attacker));
-		if (Npc != SF2_INVALID_NPC && IsValidClient(victim))
-		{
-			damage = 0.0;
-			Npc.UnSpawn();
-			return Plugin_Changed;
 		}
 	}
 
@@ -1007,7 +998,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						}
 					}
 
-					SetHudTextParams(-1.0, 0.65,
+					SetHudTextParams(0.8, 0.83,
 						0.3,
 						color[0],
 						color[1],

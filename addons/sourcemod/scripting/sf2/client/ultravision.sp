@@ -38,6 +38,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientDeactivateUltravision(client.index);
 }
 
@@ -48,6 +53,11 @@ bool IsClientUsingUltravision(int client)
 
 void ClientActivateUltravision(int client, bool nightVision = false)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!IsValidClient(client) || IsClientUsingUltravision(client))
 	{
 		return;
@@ -79,15 +89,19 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		TeleportEntity(ent, eyePos, { 90.0, 0.0, 0.0 }, NULL_VECTOR);
 		if (nightVision && !g_PlayerEliminated[client])
 		{
-			switch (g_NightvisionType)
+			switch (g_NightVisionType)
 			{
-				case 0:
+				case 0: // Green
 				{
 					DispatchKeyValue(ent, "rendercolor", "50 255 50");
 				}
-				case 1:
+				case 1: // Red
 				{
 					DispatchKeyValue(ent, "rendercolor", "255 50 50");
+				}
+				case 2: // Blue
+				{
+					DispatchKeyValue(ent, "rendercolor", "50 50 255");
 				}
 			}
 		}
@@ -165,15 +179,19 @@ void ClientActivateUltravision(int client, bool nightVision = false)
 		SetEntityRenderColor(ent, 150, 225, 255, 255);
 		if (nightVision && !g_PlayerEliminated[client])
 		{
-			switch (g_NightvisionType)
+			switch (g_NightVisionType)
 			{
-				case 0:
+				case 0: // Green
 				{
 					DispatchKeyValue(ent, "rendercolor", "50 255 50");
 				}
-				case 1:
+				case 1: // Red
 				{
 					DispatchKeyValue(ent, "rendercolor", "255 50 50");
+				}
+				case 2: // Blue
+				{
+					DispatchKeyValue(ent, "rendercolor", "50 50 255");
 				}
 			}
 		}

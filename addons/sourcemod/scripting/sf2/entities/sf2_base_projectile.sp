@@ -359,9 +359,19 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		for (int i = 0; i < hitList.Length; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(hitList.Get(i));
-			if (!this.AttackWaiters && player.IsEliminated)
+			if (g_Enabled)
 			{
-				continue;
+				if (!this.AttackWaiters && player.IsEliminated)
+				{
+					continue;
+				}
+			}
+			else
+			{
+				if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == player.Team)
+				{
+					continue;
+				}
 			}
 
 			float targetPos[3];
@@ -485,6 +495,7 @@ static void MapStart()
 static void StartTouch(int entity, int other)
 {
 	SF2_ProjectileBase projectile = SF2_ProjectileBase(entity);
+	int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
 
 	bool hit = true;
 	SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
@@ -499,35 +510,39 @@ static void StartTouch(int entity, int other)
 		{
 			return;
 		}
+
+		if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == otherPlayer.Team)
+		{
+			return;
+		}
 	}
 	else
 	{
 		int hitIndex = NPCGetFromEntIndex(other);
 		if (hitIndex != -1)
 		{
-			hit = false;
+			return;
 		}
 	}
 
-	if (projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity") == other)
+	if (owner == other)
 	{
-		hit = false;
+		return;
 	}
 
 	char class[64];
 	GetEntityClassname(other, class, sizeof(class));
 	if (StrContains(class, "sf2_projectile", false) != -1)
 	{
-		hit = false;
-	}
-
-	if (other == 0)
-	{
-		hit = true;
+		return;
 	}
 
 	if (hit)
 	{
+		Call_StartForward(g_OnProjectileTouchFwd);
+		Call_PushCell(projectile);
+		Call_PushCell(CBaseEntity(other));
+		Call_Finish();
 		projectile.DoExplosion();
 	}
 }

@@ -1255,10 +1255,10 @@ enum struct SF2ChaserBossProfileChaseOnLookData
 		{
 			this.Enabled[difficulty] = false;
 			this.AddTargets[difficulty] = true;
-			this.MinimumXAngle[difficulty] = 90.0;
+			this.MinimumXAngle[difficulty] = -45.0;
 			this.MaximumXAngle[difficulty] = 180.0;
 			this.MinimumYAngle[difficulty] = 0.0;
-			this.MaximumYAngle[difficulty] = 90.0;
+			this.MaximumYAngle[difficulty] = 105.0;
 			this.RequiredFOV[difficulty] = -1.0;
 		}
 		this.RequiredLookPosition[2] = 35.0;
@@ -1493,7 +1493,7 @@ enum struct SF2ChaserBossProfilePostureInfo
 		GetProfileDifficultyFloatValues(kv, "speed", this.Speed, this.Speed);
 		GetProfileDifficultyFloatValues(kv, "walkspeed", this.WalkSpeed, this.WalkSpeed);
 		GetProfileDifficultyFloatValues(kv, "acceleration", this.Acceleration, this.Acceleration);
-		this.Animations.Load(kv);
+		this.Animations.Load(kv, false);
 		if (kv.JumpToKey("conditions"))
 		{
 			if (kv.JumpToKey("within_bounds"))
@@ -1735,7 +1735,7 @@ enum struct SF2ChaserRageInfo
 			kv.GoBack();
 		}
 
-		this.Animations.Load(kv);
+		this.Animations.Load(kv, false);
 	}
 
 	void PostLoad()
@@ -1957,6 +1957,8 @@ enum struct SF2ChaserBossProfileData
 	float ChaseDurationAddMaxRange[Difficulty_Max];
 	float ChaseDurationAddVisibleMin[Difficulty_Max];
 	float ChaseDurationAddVisibleMax[Difficulty_Max];
+	float ChaseDurationAddOnAttack[Difficulty_Max];
+	float ChaseDurationAddOnStun[Difficulty_Max];
 
 	int SoundCountToAlert[Difficulty_Max];
 	float SoundPosDiscardTime[Difficulty_Max];
@@ -2028,7 +2030,6 @@ enum struct SF2ChaserBossProfileData
 	bool CriticalProjectiles;
 	bool ShootGestures;
 	char ShootGestureName[PLATFORM_MAX_PATH];
-	bool ShootAnimations;
 	bool ProjectileClips;
 	int ProjectileClipSize[Difficulty_Max];
 	float ProjectileReloadTime[Difficulty_Max];
@@ -2109,6 +2110,11 @@ enum struct SF2ChaserBossProfileData
 	SF2BossProfileSoundInfo TauntKillSounds;
 	SF2BossProfileSoundInfo SmellSounds;
 	SF2BossProfileSoundInfo FootstepSounds;
+	SF2BossProfileSoundInfo SelfHealSounds;
+	SF2BossProfileSoundInfo RageSounds1;
+	SF2BossProfileSoundInfo RageSounds2;
+	SF2BossProfileSoundInfo RageSounds3;
+	SF2BossProfileSoundInfo DespawnSounds;
 	ArrayList AttackSounds;
 	ArrayList HitSounds;
 	ArrayList MissSounds;
@@ -2147,6 +2153,8 @@ enum struct SF2ChaserBossProfileData
 			this.ChaseDurationAddMaxRange[difficulty] = 1024.0;
 			this.ChaseDurationAddVisibleMin[difficulty] = 0.01;
 			this.ChaseDurationAddVisibleMax[difficulty] = 0.05;
+			this.ChaseDurationAddOnAttack[difficulty] = 0.0;
+			this.ChaseDurationAddOnStun[difficulty] = 0.0;
 
 			this.SoundCountToAlert[difficulty] = 8;
 			this.SoundPosDiscardTime[difficulty] = 2.0;
@@ -2253,7 +2261,6 @@ enum struct SF2ChaserBossProfileData
 		this.CriticalProjectiles = false;
 		this.ShootGestures = false;
 		this.ShootGestureName[0] = '\0';
-		this.ShootAnimations = false;
 		this.ProjectileClips = false;
 		this.ChargeUpProjectiles = false;
 		this.ProjectileRandomPosMin = 1;
@@ -2328,6 +2335,11 @@ enum struct SF2ChaserBossProfileData
 		this.DeathSounds.Init();
 		this.TauntKillSounds.Init();
 		this.SmellSounds.Init();
+		this.SelfHealSounds.Init();
+		this.RageSounds1.Init();
+		this.RageSounds2.Init();
+		this.RageSounds3.Init();
+		this.DespawnSounds.Init();
 		this.FootstepSounds.Init();
 		this.AttackSounds = null;
 		this.HitSounds = null;
@@ -2370,6 +2382,11 @@ enum struct SF2ChaserBossProfileData
 		this.DeathSounds.PostLoad();
 		this.TauntKillSounds.PostLoad();
 		this.SmellSounds.PostLoad();
+		this.SelfHealSounds.PostLoad();
+		this.RageSounds1.PostLoad();
+		this.RageSounds2.PostLoad();
+		this.RageSounds3.PostLoad();
+		this.DespawnSounds.PostLoad();
 		this.FootstepSounds.PostLoad();
 
 		this.ChaseMusics.PostLoad();
@@ -2500,6 +2517,26 @@ enum struct SF2ChaserBossProfileData
 		{
 			this.SmellSounds.Load(kv, checkFile);
 		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_SelfHeal]) == 0)
+		{
+			this.SelfHealSounds.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageAll]) == 0)
+		{
+			this.RageSounds1.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageTwo]) == 0)
+		{
+			this.RageSounds2.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_RageThree]) == 0)
+		{
+			this.RageSounds3.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, g_SlenderVoiceList[SF2BossSound_Despawn]) == 0)
+		{
+			this.DespawnSounds.Load(kv, checkFile);
+		}
 		else if (strcmp(sectionName, "sound_footsteps") == 0)
 		{
 			this.FootstepSounds.Load(kv, checkFile);
@@ -2522,9 +2559,69 @@ enum struct SF2ChaserBossProfileData
 		}
 	}
 
-	void LoadNestedSoundSections(KeyValues kv, bool checkFile, ArrayList &list, bool soundHook = false)
+	void LoadNestedSoundSections(const char[] section, KeyValues kv, bool checkFile, ArrayList &list, bool soundHook = false, SF2ChaserBossProfileData data)
 	{
 		list = new ArrayList(sizeof(SF2BossProfileSoundInfo));
+		bool classic = false;
+		kv.GoBack();
+		for (int i = 0; i < data.Attacks.Length; i++)
+		{
+			char formatter[90];
+			SF2ChaserBossProfileAttackData attackData;
+			data.Attacks.GetArray(i, attackData, sizeof(attackData));
+			if (strcmp(attackData.Name, "1") == 0)
+			{
+				continue;
+			}
+			FormatEx(formatter, sizeof(formatter), "%s_%s", section, attackData.Name);
+
+			if (kv.JumpToKey(formatter))
+			{
+				classic = true;
+				kv.GoBack();
+				break;
+			}
+		}
+		if (classic)
+		{
+			for (int i = 0; i < data.Attacks.Length; i++)
+			{
+				char formatter[90];
+				SF2ChaserBossProfileAttackData attackData;
+				data.Attacks.GetArray(i, attackData, sizeof(attackData));
+				if (strcmp(attackData.Name, "1") == 0)
+				{
+					FormatEx(formatter, sizeof(formatter), "%s", section);
+				}
+				else
+				{
+					FormatEx(formatter, sizeof(formatter), "%s_%s", section, attackData.Name);
+				}
+
+				if (kv.JumpToKey(formatter))
+				{
+					SF2BossProfileSoundInfo soundInfo;
+					soundInfo.Init();
+					if (soundHook)
+					{
+						soundInfo.Channel = SNDCHAN_VOICE;
+					}
+					soundInfo.Load(kv, checkFile);
+					soundInfo.PostLoad();
+					strcopy(soundInfo.SectionName, sizeof(soundInfo.SectionName), attackData.Name);
+					if (soundInfo.Paths != null)
+					{
+						list.PushArray(soundInfo, sizeof(soundInfo));
+					}
+					kv.GoBack();
+				}
+			}
+			return;
+		}
+		else
+		{
+			kv.JumpToKey(section);
+		}
 		if (kv.GotoFirstSubKey())
 		{
 			char sectionName[64];
@@ -2540,6 +2637,7 @@ enum struct SF2ChaserBossProfileData
 				}
 				soundInfo.Load(kv, checkFile);
 				soundInfo.PostLoad();
+				soundInfo.SectionName[0] = '\0';
 				if (soundInfo.Paths != null)
 				{
 					list.PushArray(soundInfo, sizeof(soundInfo));
@@ -2566,6 +2664,23 @@ enum struct SF2ChaserBossProfileData
 				}
 				while (kv.GotoNextKey());
 				kv.GoBack();
+			}
+
+		}
+		else
+		{
+			SF2BossProfileSoundInfo soundInfo;
+			soundInfo.Init();
+			if (soundHook)
+			{
+				soundInfo.Channel = SNDCHAN_VOICE;
+			}
+			soundInfo.Load(kv, checkFile);
+			soundInfo.PostLoad();
+			soundInfo.SectionName[0] = '\0';
+			if (soundInfo.Paths != null)
+			{
+				list.PushArray(soundInfo, sizeof(soundInfo));
 			}
 		}
 		kv.GoBack();
@@ -2604,6 +2719,11 @@ enum struct SF2ChaserBossProfileData
 		this.DeathSounds.Destroy();
 		this.TauntKillSounds.Destroy();
 		this.SmellSounds.Destroy();
+		this.SelfHealSounds.Destroy();
+		this.RageSounds1.Destroy();
+		this.RageSounds2.Destroy();
+		this.RageSounds3.Destroy();
+		this.DespawnSounds.Destroy();
 		this.FootstepSounds.Destroy();
 
 		this.ChaseMusics.Destroy();

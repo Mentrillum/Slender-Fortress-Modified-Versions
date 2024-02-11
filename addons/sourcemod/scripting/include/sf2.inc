@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.5"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.5"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -147,9 +147,14 @@ enum
 	SF2BossSound_AttackKilled,
 	SF2BossSound_Death,
 	SF2BossSound_TauntKill,
-	SF2BossSound_Smell,
+	SF2BossSound_Smell = 10,
 	SF2BossSound_AttackBegin,
 	SF2BossSound_AttackEnd,
+	SF2BossSound_SelfHeal,
+	SF2BossSound_RageAll,
+	SF2BossSound_RageTwo = 15,
+	SF2BossSound_RageThree,
+	SF2BossSound_Despawn,
 	SF2BossSound_MaxSounds
 };
 
@@ -171,6 +176,8 @@ enum
 	SF2BossAnimation_Smell,
 	SF2BossAnimation_AttackBegin,
 	SF2BossAnimation_AttackEnd = 15,
+	SF2BossAnimation_ProjectileShoot,
+	SF2BossAnimation_Despawn,
 	SF2BossAnimation_MaxAnimations
 }
 
@@ -230,7 +237,34 @@ char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
 	"sound_taunt_kill",
 	"sound_smell",
 	"sound_attack_begin",
-	"sound_attack_end"
+	"sound_attack_end",
+	"sound_heal_self",
+	"sound_rage",
+	"sound_rage_2",
+	"sound_rage_3",
+	"sound_despawn"
+};
+
+char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
+{
+	"idle",
+	"walk",
+	"attack",
+	"run",
+	"stun",
+	"chaseinitial",
+	"rage",
+	"spawn",
+	"fleestart",
+	"heal",
+	"deathcam",
+	"death",
+	"tauntkill",
+	"smell",
+	"attack_begin",
+	"attack_end",
+	"shoot",
+	"despawn"
 };
 
 char g_AttributesList[SF2Attribute_Max][] =
@@ -283,6 +317,22 @@ enum SF2NPCMoveTypes
 	SF2NPCMoveType_Max
 }
 
+enum RenevantWave
+{
+	RenevantWave_Normal = 0,
+	RenevantWave_IncreaseDifficulty,
+	RenevantWave_MultiEffect,
+	RenevantWave_BaconSpray,
+	RenevantWave_DoubleTrouble,
+	RenevantWave_DoomBox,
+	RenevantWave_90s,
+	RenevantWave_MarkForDeath,
+	RenevantWave_SingleBoss,
+	RenevantWave_AdminBoss,
+	RenevantWave_WallHax,
+	RenevantWave_Max
+}
+
 #include <sf2/stocks>
 #include <sf2/defines>
 #include <sf2/profiles/profiles>
@@ -322,6 +372,7 @@ enum SF2NPCMoveTypes
 #define COND_ENEMYVISIBLE (1 << 12)
 #define COND_ENEMYRECHASE (1 << 13)
 #define COND_DEBUG (1 << 14)
+#define COND_ALERT_TRIGGER_POS (1 << 15)
 
 /**
  * Called after a boss profile is successfully loaded.
@@ -693,8 +744,9 @@ forward void SF2_OnClientSpawnedAsProxy(int client);
  * Called whenever the Renevant gamemode triggers a new wave.
  *
  * @param wave		The wave number that got triggered.
+ * @param condition	The wave condition used.
  */
-forward void SF2_OnRenevantWaveTrigger(int wave);
+forward void SF2_OnRenevantWaveTrigger(int wave, RenevantWave condition);
 
 /**
  * Called whenever the boss pack vote starts
@@ -761,6 +813,14 @@ forward Action SF2_OnIsBossCustomAttackPossible(SF2_ChaserBossEntity chaser, con
  * @return					Return a value other than Plugin_Continue to use `action`
  */
 forward Action SF2_OnBossGetCustomAttackAction(SF2_ChaserBossEntity chaser, const char[] attackName, SF2ChaserBossProfileAttackData data, CBaseEntity target, NextBotAction &action);
+
+/**
+ * Called when a projectile from SF2 has touched another entity successfully and has either exploded or dealt damage.
+ *
+ * @param projectile		Projectile entity
+ * @param other				Entity the projectile touched
+ */
+forward void SF2_OnProjectileTouch(SF2_Projectile_Base projectile, CBaseEntity other);
 
 /**
  * Fires each time a boss starts an attack.
@@ -1503,6 +1563,36 @@ native float SF2_GetBossAttributeValue(int bossIndex, int attribute);
 #pragma deprecated Use SF2_ChaserBossEntity.GetAttackName instead.
 native int SF2_GetBossCurrentAttackIndex(int bossIndex);
 
+#pragma deprecated Use SF2ChaserBossProfileAttackData.Type instead.
+native int SF2_GetBossAttackIndexType(int bossIndex, int attackIndex);
+
+#pragma deprecated This no longer does anything.
+native float SF2_GetBossTimeUntilNoPersistence(int bossIndex);
+
+#pragma deprecated This no longer does anything.
+native void SF2_SetBossTimeUntilNoPersistence(int bossIndex, float time);
+
+#pragma deprecated Use SF2_BaseBossEntity.CurrentChaseDuration instead.
+native float SF2_GetBossTimeUntilAlert(int bossIndex);
+
+#pragma deprecated Use SF2_BaseBossEntity.CurrentChaseDuration instead.
+native void SF2_SetBossTimeUntilAlert(int bossIndex, float time);
+
+#pragma deprecated Use SF2_ChaserBossEntity.PerformVoice instead.
+native void SF2_PerformBossVoice(int bossIndex, const int attackIndex = -1, int soundType = -1);
+
+#pragma deprecated Use SF2_ChaserBossEntity.CreateSoundHint instead.
+native void SF2_CreateBossSoundHint(int bossIndex, SoundType soundType, const float position[3], int difficulty);
+
+#pragma deprecated Use SF2ChaserBossProfileAttackData.Damage[Difficulty_Max] instead.
+native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int difficulty);
+
+#pragma deprecated Use SF2ChaserBossProfileAttackData.DamageType[Difficulty_Max] instead.
+native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
+
+#pragma deprecated Use SF2_BaseBossEntity.ResetProfileAnimation instead.
+native void SF2_UpdateBossAnimation(int bossIndex, int ent, int state, bool spawn = false);
+
 /**
  * Returns the teleport think timer in Handle form
  *
@@ -1738,7 +1828,7 @@ methodmap SF2_BaseBossEntity < CBaseCombatCharacter
 	public native void ProfileData(any data[sizeof(SF2BossProfileData)]);
 
 	/**
-	 * Plays an animation on the boss from a specific animation section, even custom ones.
+	 * Plays an animation on the boss from a specific animation section, even custom ones. Note this is limited to the main "animations" section.
 	 *
 	 * @param animType			Animation section to search in.
 	 * @param preDefinedIndex	Optional animation index to use.
@@ -1916,6 +2006,14 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	public native bool PerformVoice(int soundType = -1, const char[] attackName = "")
 
 	/**
+	 * Forces the boss to perform a voice using a custom sound section.
+	 *
+	 * @param soundInfo		Sound section to use.
+	 * @return				Whether or not the boss performed a voice.
+	 */
+	public native bool PerformCustomVoice(any soundInfo[sizeof(SF2BossProfileSoundInfo)])
+
+	/**
 	 *	Gets the default posture of the boss. The default posture of a boss
 	 *	is named "default".
 	 *
@@ -1971,7 +2069,14 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	 *
 	 * @param death		Whether or not to use the death state's item drop state
 	 */
-	public native void DropItem(bool death = false)
+	public native void DropItem(bool death = false);
+
+	/**
+	 * Forces a boss to be alert at a specific position.
+	 *
+	 * @param position		Position the boss should be alerted to.
+	 */
+	public native void CreateSoundHint(float position[3]);
 
 	/**
 	 * Checks if an attack is possible the default way
@@ -2904,6 +3009,14 @@ methodmap SF2_Projectile_Arrow < SF2_Projectile_Base
 		const bool attackWaiters = false);
 
 	/**
+	 * Whether or not the entity is actually a arrow
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
 	 *	Attempts to cast an entity to be this entity.
 	 *
 	 *	@param entity     Entity to use
@@ -2943,6 +3056,14 @@ methodmap SF2_Projectile_Baseball < SF2_Projectile_Base
 		const bool attackWaiters = false);
 
 	/**
+	 * Whether or not the entity is actually a baseball
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
 	 *	Attempts to cast an entity to be this entity.
 	 *
 	 *	@param entity     Entity to use
@@ -2978,6 +3099,14 @@ methodmap SF2_Projectile_CowMangler < SF2_Projectile_Base
 		const float damage,
 		const float blastRadius,
 		const bool attackWaiters = false);
+
+	/**
+	 * Whether or not the entity is actually a cow mangler projectile
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
 
 	/**
 	 *	Attempts to cast an entity to be this entity.
@@ -3019,6 +3148,14 @@ methodmap SF2_Projectile_Fireball < SF2_Projectile_Base
 		const char[] impactSound,
 		const char[] trail,
 		const bool attackWaiters = false);
+
+	/**
+	 * Whether or not the entity is actually a fireball
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
 
 	/**
 	 *	Attempts to cast an entity to be this entity.
@@ -3068,6 +3205,14 @@ methodmap SF2_Projectile_Grenade < SF2_Projectile_Base
 		const bool attackWaiters = false);
 
 	/**
+	 * Whether or not the entity is actually a grenade
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
 	 *	Attempts to cast an entity to be this entity.
 	 *
 	 *	@param entity     Entity to use
@@ -3113,6 +3258,14 @@ methodmap SF2_Projectile_Iceball < SF2_Projectile_Base
 		const float slowMultiplier,
 		const char[] freezeSound,
 		const bool attackWaiters = false);
+
+	/**
+	 * Whether or not the entity is actually a iceball
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
 
 	/**
 	 *	Attempts to cast an entity to be this entity.
@@ -3162,6 +3315,14 @@ methodmap SF2_Projectile_Rocket < SF2_Projectile_Base
 		const bool attackWaiters = false);
 
 	/**
+	 * Whether or not the entity is actually a rocket
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
 	 *	Attempts to cast an entity to be this entity.
 	 *
 	 *	@param entity     Entity to use
@@ -3199,6 +3360,14 @@ methodmap SF2_Projectile_SentryRocket < SF2_Projectile_Base
 		const float blastRadius,
 		const bool isCrits,
 		const bool attackWaiters = false);
+
+	/**
+	 * Whether or not the entity is actually a sentry rocket
+	 */
+	property bool IsValid
+	{
+		public native get();
+	}
 
 	/**
 	 *	Attempts to cast an entity to be this entity.

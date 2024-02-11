@@ -136,6 +136,7 @@ static int Update(SF2_ChaserAttackAction_Projectile action, SF2_ChaserEntity act
 	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.EventNumber == -1)
 	{
 		FireProjectile(actor, action.GetAttackName());
+		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_ProjectileShoot], _, action.GetAttackName());
 
 		int repeatState = attackData.Repeat;
 		if (repeatState > 0)

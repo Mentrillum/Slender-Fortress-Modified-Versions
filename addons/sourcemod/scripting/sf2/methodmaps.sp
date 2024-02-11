@@ -263,11 +263,19 @@ methodmap SF2NPC_BaseNPC
 		SpawnSlender(this, pos);
 	}
 
-	public void UnSpawn()
+	public void UnSpawn(bool instant = false)
 	{
 		if (IsValidEntity(this.EntIndex))
 		{
-			RemoveEntity(this.EntIndex);
+			SF2_ChaserEntity chaser = SF2_ChaserEntity(this.EntIndex);
+			if (chaser.IsValid() && !instant)
+			{
+				chaser.ShouldDespawn = true;
+			}
+			else
+			{
+				RemoveEntity(this.EntIndex);
+			}
 		}
 	}
 
@@ -416,6 +424,19 @@ methodmap SF2NPC_BaseNPC
 	public void SetAffectedBySight(bool state)
 	{
 		NPCSetAffectedBySightState(this.Index, state);
+	}
+
+	property int DefaultTeam
+	{
+		public get()
+		{
+			return NPCGetDefaultTeam(this.Index);
+		}
+
+		public set(int value)
+		{
+			NPCSetDefaultTeam(this.Index, value);
+		}
 	}
 }
 
@@ -1079,14 +1100,6 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 	public void UpdateMusicSystem(bool initialize = false)
 	{
 		ClientUpdateMusicSystem(this.index, initialize);
-	}
-
-	property bool HasConstantGlow
-	{
-		public get()
-		{
-			return DoesClientHaveConstantGlow(this.index);
-		}
 	}
 
 	public void SetPlayState(bool state, bool enablePlay = true)
@@ -2579,8 +2592,7 @@ static any Native_GetClientHasConstantGlow(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", client);
 	}
 
-	SF2_BasePlayer player = SF2_BasePlayer(client);
-	return player.HasConstantGlow;
+	return DoesEntityHaveGlow(client);
 }
 
 static any Native_SetClientPlayState(Handle plugin, int numParams)

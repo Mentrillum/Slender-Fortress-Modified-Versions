@@ -31,6 +31,7 @@ methodmap SF2_ProjectileCowMangler < SF2_ProjectileRocket
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_CowMangler.Create", Native_Create);
+		CreateNative("SF2_Projectile_CowMangler.IsValid.get", Native_IsValid);
 	}
 
 	public static SF2_ProjectileCowMangler Create(
@@ -65,4 +66,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(9, freeze, sizeof(freeze));
 	SF2_ProjectileCowMangler projectile = SF2_ProjectileCowMangler.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), GetNativeCell(7));
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileCowMangler(GetNativeCell(1)).IsValid();
 }

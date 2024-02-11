@@ -88,14 +88,14 @@ enum struct PvPProjectile_BallOfFire
 				if (IsValidClient(otherEntity) && IsClientInPvP(otherEntity) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
 				{
 					float damage = GetEntDataFloat(ent, FindSendPropInfo("CTFProjectile_BallOfFire", "m_iDeflected") + 4);
-					float damageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? g_DragonsFuryBurningBonus.FloatValue : 1.0;
+					float damageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? g_DragonsFuryBurningBonusConVar.FloatValue : 1.0;
 					float damagePos[3];
 					GetEntPropVector(ent, Prop_Data, "m_vecOrigin", damagePos);
 					// int damageCustom = 79;
 
 					if (TF2_GetPlayerClass(otherEntity) == TFClass_Pyro)
 					{
-						TF2_AddCondition(otherEntity, TFCond_BurningPyro, g_DragonsFuryBurnDuration.FloatValue * 0.5, ownerEntity);
+						TF2_AddCondition(otherEntity, TFCond_BurningPyro, g_DragonsFuryBurnDurationConVar.FloatValue * 0.5, ownerEntity);
 					}
 
 					TF2_IgnitePlayer(otherEntity, ownerEntity);
@@ -218,6 +218,10 @@ void PvP_Precache()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
 	g_PlayerEnteredPvPTriggers[client.index] = new ArrayList();
 
 	PvP_ForceResetPlayerPvPData(client.index);
@@ -358,19 +362,6 @@ static Action Hook_PvPProjectile_OnTouch(int projectile, int client)
 	// Check if the projectile hit a player outside of pvp area
 	// Without that, cannon balls can bounce players which should not happen because they are outside of pvp.
 	if (IsValidClient(client) && !IsClientInPvP(client))
-	{
-		RemoveEntity(projectile);
-		return Plugin_Handled;
-	}
-
-	int throwerOffset = FindDataMapInfo(projectile, "m_hThrower");
-	int ownerEntity = GetEntPropEnt(projectile, Prop_Data, "m_hOwnerEntity");
-	if (ownerEntity != client && throwerOffset != -1)
-	{
-		ownerEntity = GetEntDataEnt2(projectile, throwerOffset);
-	}
-
-	if (ownerEntity == client)
 	{
 		RemoveEntity(projectile);
 		return Plugin_Handled;
@@ -553,6 +544,11 @@ void PvP_ZapProjectile(int projectile, bool effects=true)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!fake)
 	{
 		if (client.IsInPvP)

@@ -29,12 +29,12 @@ methodmap SF2_ChaserStunnedAction < NextBotAction
 	{
 		public get()
 		{
-			return this.GetDataEnt("m_Attacker");
+			return EntRefToEntIndex(this.GetDataEnt("m_Attacker"));
 		}
 
 		public set(int value)
 		{
-			this.SetDataEnt("m_Attacker", value);
+			this.SetDataEnt("m_Attacker", EnsureEntRef(value));
 		}
 	}
 
@@ -94,6 +94,7 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 {
 	SF2NPC_Chaser controller = actor.Controller;
 	SF2ChaserBossProfileData data;
+	int difficulty = controller.Difficulty;
 	data = controller.GetProfileData();
 	if (data.KeyDrop)
 	{
@@ -116,6 +117,15 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 
 	actor.RemoveAllGestures();
 	CBaseNPC_RemoveAllLayers(actor.index);
+
+	if (actor.State == STATE_CHASE)
+	{
+		actor.CurrentChaseDuration += data.ChaseDurationAddOnStun[difficulty];
+		if (actor.CurrentChaseDuration > data.ChaseDuration[difficulty])
+		{
+			actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+		}
+	}
 
 	actor.State = STATE_STUN;
 
@@ -151,7 +161,7 @@ static int Update(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, float 
 
 	if (actor.Controller.GetProfileData().DisappearOnStun)
 	{
-		actor.Controller.UnSpawn();
+		actor.Controller.UnSpawn(true);
 	}
 	return action.Done("I am no longer stunned");
 }

@@ -94,6 +94,11 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		return action.Continue();
 	}
 
+	if (actor.ShouldDespawn)
+	{
+		return action.ChangeTo(SF2_ChaserDespawnAction());
+	}
+
 	float gameTime = GetGameTime();
 
 	int difficulty = controller.Difficulty;
@@ -111,7 +116,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 	data = controller.GetProfileData();
 	SF2BossProfileData originalData;
 	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	if (data.FlashlightStun[difficulty] && actor.CanBeStunned() && actor.CanTakeDamage())
+	if (data.FlashlightStun[difficulty] && actor.CanBeStunned() && actor.CanTakeDamage() && actor.FlashlightTick < gameTime)
 	{
 		bool inFlashlight = false;
 		float customDamage = 1.0;
@@ -120,7 +125,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
-			if (!IsTargetValidForSlender(player, attackEliminated))
+			if (!IsTargetValidForSlender(actor, player, attackEliminated))
 			{
 				continue;
 			}
@@ -186,6 +191,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		if (inFlashlight)
 		{
 			actor.StunHealth -= data.FlashlightDamage[difficulty] * customDamage;
+			actor.FlashlightTick = gameTime + 0.1;
 			if (actor.StunHealth <= 0.0)
 			{
 				return action.SuspendFor(SF2_ChaserStunnedAction(), "I was stunned by a flashlight");
@@ -210,7 +216,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 			for (int i = 0; i < playersList.Length; i++)
 			{
 				SF2_BasePlayer client = SF2_BasePlayer(playersList.Get(i));
-				if (!attackEliminated && client.IsEliminated)
+				if (!IsTargetValidForSlender(actor, client, attackEliminated))
 				{
 					continue;
 				}
@@ -334,12 +340,22 @@ static int OnResume(SF2_ChaserMainAction action, SF2_ChaserEntity actor, NextBot
 
 static int OnInjured(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseEntity attacker, CBaseEntity inflictor, float damage, int damageType)
 {
-	if (actor.CanBeStunned() && IsValidClient(attacker.index) && actor.CanTakeDamage(attacker, inflictor, damage) && !actor.IsRaging)
+	if (actor.CanBeStunned() && IsValidClient(attacker.index) && actor.CanTakeDamage(attacker, inflictor, damage))
 	{
 		actor.StunHealth -= damage;
 		if (actor.StunHealth <= 0.0)
 		{
-			return action.TrySuspendFor(SF2_ChaserStunnedAction(), RESULT_IMPORTANT, "I was stunned by someone");
+			if (actor.GetProp(Prop_Data, "m_takedamage") == DAMAGE_EVENTS_ONLY) // Stun health only
+			{
+				return action.TrySuspendFor(SF2_ChaserStunnedAction(attacker), RESULT_IMPORTANT, "I was stunned by someone");
+			}
+			else
+			{
+				if (!actor.IsRaging)
+				{
+					return action.TrySuspendFor(SF2_ChaserStunnedAction(attacker), RESULT_IMPORTANT, "I was stunned by someone");
+				}
+			}
 		}
 	}
 
@@ -352,7 +368,14 @@ static int OnInjured(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseE
 	{
 		SF2ChaserRageInfo rageInfo;
 		data.Rages.GetArray(search, rageInfo, sizeof(rageInfo));
-		if (float(actor.GetProp(Prop_Data, "m_iHealth")) <= actor.MaxHealth * rageInfo.PercentageThreshold)
+		float maxHealth = actor.MaxHealth;
+		float health = float(actor.GetProp(Prop_Data, "m_iHealth"));
+		if (!data.DeathData.Enabled[controller.Difficulty])
+		{
+			maxHealth = actor.MaxStunHealth;
+			health = actor.StunHealth;
+		}
+		if (health <= maxHealth * rageInfo.PercentageThreshold)
 		{
 			return action.TrySuspendFor(SF2_ChaserRageAction(), RESULT_IMPORTANT, "I need to rage!");
 		}
@@ -405,7 +428,7 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		float destination[3];
 		if (!NPCFindUnstuckPosition(actor, lastPos, destination))
 		{
-			controller.UnSpawn();
+			controller.UnSpawn(true);
 			return;
 		}
 		action.LastStuckTime = gameTime + 0.75;
@@ -432,21 +455,19 @@ static void OnContact(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBase
 
 	char classname[64];
 	other.GetClassname(classname, sizeof(classname));
-	if (strcmp(classname, "obj_sentrygun", false) == 0 || strcmp(classname, "obj_dispenser", false) == 0 ||
+	if (strcmp(classname, "obj_dispenser", false) == 0 ||
 		strcmp(classname, "obj_teleporter", false) == 0 || strcmp(classname, "func_breakable", false) == 0)
 	{
-		int health = other.GetProp(Prop_Data, "m_iHealth");
-		SDKHooks_TakeDamage(other.index, actor.index, actor.index, health * 4.0);
+		SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0);
+	}
+
+	// Destroy mini sentires, not non-mini sentries
+	if (strcmp(classname, "obj_sentrygun", false) == 0 && other.GetProp(Prop_Send, "m_bMiniBuilding"))
+	{
+		SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0);
 	}
 
 	if (strcmp(classname, "prop_physics") == 0 || strcmp(classname, "prop_dynamic") == 0)
-	{
-		if (other.GetProp(Prop_Data, "m_iHealth") > 0)
-		{
-			SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0);
-		}
-	}
-	if (strncmp(classname, "obj_", 4) == 0)
 	{
 		if (other.GetProp(Prop_Data, "m_iHealth") > 0)
 		{

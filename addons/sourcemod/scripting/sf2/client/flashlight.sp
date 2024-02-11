@@ -34,6 +34,10 @@ void SetupFlashlight()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
 	ClientResetFlashlight(client.index);
 }
 
@@ -49,6 +53,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!fake)
 	{
 		ClientResetFlashlight(client.index);
@@ -251,6 +260,10 @@ void ClientBreakFlashlight(int client)
 
 	Call_StartForward(g_OnClientBreakFlashlightFwd);
 	Call_PushCell(client);
+	Call_Finish();
+
+	Call_StartForward(g_OnPlayerFlashlightBreakPFwd);
+	Call_PushCell(SF2_BasePlayer(client));
 	Call_Finish();
 }
 
@@ -763,6 +776,32 @@ void ClientStartDrainingFlashlightBattery(int client)
 	{
 		drainRate *= g_ClassFlashlightDrainRate[classToInt];
 	}
+	if (IsNightVisionEnabled() && g_NightVisionType == 2) //Blue nightvision
+	{
+		switch (g_DifficultyConVar.IntValue)
+		{
+			case Difficulty_Normal:
+			{
+				drainRate *= 0.3;
+			}
+			case Difficulty_Hard:
+			{
+				drainRate *= 0.25;
+			}
+			case Difficulty_Insane:
+			{
+				drainRate *= 0.2;
+			}
+			case Difficulty_Nightmare:
+			{
+				drainRate *= 0.15;
+			}
+			case Difficulty_Apollyon:
+			{
+				drainRate *= 0.1;
+			}
+		}
+	}
 
 	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(drainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -779,7 +818,7 @@ void ClientHandleFlashlight(int client)
 		return;
 	}
 
-	bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
+	bool nightVision = IsNightVisionEnabled();
 
 	if (IsClientUsingFlashlight(client) || TF2_IsPlayerInCondition(client, TFCond_Taunting))
 	{
@@ -801,6 +840,10 @@ void ClientHandleFlashlight(int client)
 				EmitSoundToClient(client, FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
 			}
 		}
+
+		Call_StartForward(g_OnPlayerTurnOffFlashlightPFwd);
+		Call_PushCell(SF2_BasePlayer(client));
+		Call_Finish();
 	}
 	else
 	{
@@ -837,6 +880,10 @@ void ClientHandleFlashlight(int client)
 				{
 					EmitSoundToClient(client, (nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
 				}
+
+				Call_StartForward(g_OnPlayerTurnOnFlashlightPFwd);
+				Call_PushCell(SF2_BasePlayer(client));
+				Call_Finish();
 			}
 			else
 			{

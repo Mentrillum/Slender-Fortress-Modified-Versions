@@ -32,6 +32,7 @@ methodmap SF2_ProjectileFireball < SF2_ProjectileBase
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_Fireball.Create", Native_Create);
+		CreateNative("SF2_Projectile_Fireball.IsValid.get", Native_IsValid);
 	}
 
 	public void OnPlayerDamaged(SF2_BasePlayer player)
@@ -81,4 +82,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(8, trail, sizeof(trail));
 	SF2_ProjectileFireball projectile = SF2_ProjectileFireball.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), impact, trail);
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileFireball(GetNativeCell(1)).IsValid();
 }

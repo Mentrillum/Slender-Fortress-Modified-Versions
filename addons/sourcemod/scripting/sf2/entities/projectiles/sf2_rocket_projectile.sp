@@ -31,6 +31,7 @@ methodmap SF2_ProjectileRocket < SF2_ProjectileBase
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_Rocket.Create", Native_Create);
+		CreateNative("SF2_Projectile_Rocket.IsValid.get", Native_IsValid);
 	}
 
 	public static SF2_ProjectileRocket Create(
@@ -71,4 +72,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(11, model, sizeof(model));
 	SF2_ProjectileRocket projectile = SF2_ProjectileRocket.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), GetNativeCell(7), trail, explosion, impact, model, GetNativeCell(12));
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileRocket(GetNativeCell(1)).IsValid();
 }

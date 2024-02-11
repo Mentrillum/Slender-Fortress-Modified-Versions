@@ -59,6 +59,8 @@
 #define ICEBALL_TRAIL "spell_fireball_small_blue"
 #define ROCKET_SHOOT ")weapons/rocket_shoot.wav"
 #define ROCKET_IMPACT ")weapons/explode1.wav"
+#define ROCKET_IMPACT2 ")weapons/explode2.wav"
+#define ROCKET_IMPACT3 ")weapons/explode3.wav"
 #define ROCKET_MODEL "models/weapons/w_models/w_rocket.mdl"
 #define ROCKET_TRAIL "rockettrail"
 #define ROCKET_EXPLODE_PARTICLE "ExplosionCore_MidAir"

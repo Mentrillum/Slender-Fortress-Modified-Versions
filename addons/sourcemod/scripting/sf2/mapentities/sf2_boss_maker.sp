@@ -289,7 +289,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				continue;
 			}
 
-			boss.UnSpawn();
+			boss.UnSpawn(true);
 		}
 	}
 

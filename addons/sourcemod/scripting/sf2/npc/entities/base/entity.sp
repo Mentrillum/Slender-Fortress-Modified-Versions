@@ -473,6 +473,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		this.Controller.GetEyePosition(buffer, defaultValue);
 	}
 
+	property int Team
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_iTeamNum");
+		}
+
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "m_iTeamNum", value);
+		}
+	}
+
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_BaseBossEntity.IsValid.get", Native_GetIsValid);
@@ -694,17 +707,12 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		SF2NPC_BaseNPC controller = this.Controller;
 		SF2BossProfileData data;
 		data = controller.GetProfileData();
-		int glow = EntRefToEntIndex(g_NpcGlowEntity[controller.Index]);
 		int color[4];
 		color[0] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 0) * 127.5 + 127.5);
 		color[1] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 2) * 127.5 + 127.5);
 		color[2] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 4) * 127.5 + 127.5);
 		color[3] = 255;
-		if (glow && glow != INVALID_ENT_REFERENCE)
-		{
-			SetVariantColor(color);
-			AcceptEntityInput(glow, "SetGlowColor");
-		}
+		SetGlowColor(this.index, color);
 	}
 
 	public void CheckVelocityCancel()

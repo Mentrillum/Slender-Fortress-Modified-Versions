@@ -20,6 +20,11 @@ void InitializeChangelog()
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (client.Team > 1 && !g_SeeUpdateMenu[client.index])
 	{
 		g_SeeUpdateMenu[client.index] = true;

@@ -602,7 +602,7 @@ static Action Hook_EffectTransmit(int ent, int other)
 	SF2_BasePlayer player = SF2_BasePlayer(other);
 	if (player.IsValid && !player.IsEliminated && !player.IsInGhostMode && !player.HasEscaped)
 	{
-		if (g_EntityEffectEvent[ent] == EffectEvent_PlayerSeesBoss && controller.PlayerCanSee(player.index))
+		if (g_EntityEffectEvent[ent] == EffectEvent_PlayerSeesBoss && !controller.PlayerCanSee(player.index))
 		{
 			return Plugin_Handled;
 		}

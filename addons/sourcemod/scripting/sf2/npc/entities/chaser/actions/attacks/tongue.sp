@@ -300,9 +300,12 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 		{
 			SF2_BasePlayer player = players.Get(i);
 
-			if (!attackEliminated && player.IsEliminated)
+			if (g_Enabled)
 			{
-				continue;
+				if (!attackEliminated && player.IsEliminated)
+				{
+					continue;
+				}
 			}
 
 			float worldSpace[3];

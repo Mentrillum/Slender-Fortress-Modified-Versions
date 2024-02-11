@@ -219,22 +219,22 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 	NormalizeVector(direction, direction);
 	GetVectorAngles(direction, angle);
 
+	float fwd[3], right[3], up[3];
+	GetAngleVectors(angle, fwd, right, up);
+
+	float dir[3], end[3];
+	float x, y;
+
 	for (int i = 0; i < attackData.BulletCount[difficulty]; i++)
 	{
-		float x, y;
 		x = GetRandomFloat(-0.5, 0.5) + GetRandomFloat(-0.5, 0.5);
 		y = GetRandomFloat(-0.5, 0.5) + GetRandomFloat(-0.5, 0.5);
 
-		float fwd[3], right[3], up[3];
-		GetAngleVectors(angle, fwd, right, up);
-
-		float dir[3];
 		dir[0] = fwd[0] + x * spread * right[0] + y * spread * up[0];
 		dir[1] = fwd[1] + x * spread * right[1] + y * spread * up[1];
 		dir[2] = fwd[2] + x * spread * right[2] + y * spread * up[2];
 		NormalizeVector(dir, dir);
 
-		float end[3];
 		end[0] = effectPos[0] + dir[0] * 9001.0;
 		end[1] = effectPos[1] + dir[1] * 9001.0;
 		end[2] = effectPos[2] + dir[2] * 9001.0;
@@ -247,73 +247,52 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 			if (hitTarget == -1)
 			{
 				delete trace;
-				return;
+				continue;
 			}
 
 			float endPos[3];
 			TR_GetEndPosition(endPos, trace);
 
-			if (hitTarget == 0)
-			{
-				float normal[3];
-				TR_GetPlaneNormal(trace, normal);
-				GetVectorAngles(normal, normal);
-				CreateParticle("impact_concrete", endPos, normal);
-			}
+			TE_SetupEffectDispatch(GetEffectDispatchStringTableIndex("Impact"),
+					.origin = endPos,
+					.start = effectPos,
+					.damageType = DMG_BULLET,
+					.surfaceProp = TR_GetSurfaceProps(trace),
+					.hitbox = TR_GetHitGroup(trace),
+					.entindex = TR_GetEntityIndex(trace));
+			TE_SendToAll();
 
 			SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.BulletDamage[difficulty], DMG_BULLET, _, CalculateBulletDamageForce(dir, 1.0), endPos);
 
 			attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, SF2_ChaserBossEntity(actor.index));
 
-			char effect[PLATFORM_MAX_PATH];
-			FormatEx(effect, sizeof(effect), "%s", attackData.BulletTrace);
 			if (attackData.BulletTrace[0] == '\0')
 			{
 				delete trace;
-				return;
+				continue;
 			}
 
 			int table = FindStringTable("ParticleEffectNames");
-			if (table == INVALID_STRING_TABLE)
-			{
-				LogError("Could not find string table: ParticleEffectNames");
-				delete trace;
-				return;
-			}
-
 			char tmp[256];
 			int count = GetStringTableNumStrings(table);
-			int strIndex = INVALID_STRING_INDEX;
+			int index = INVALID_STRING_INDEX;
 			for (int i2 = 0; i2 < count; i2++)
 			{
 				ReadStringTable(table, i2, tmp, sizeof(tmp));
-				if (strcmp(tmp, effect, false) == 0)
+				if (strcmp(tmp, attackData.BulletTrace, false) == 0)
 				{
-					strIndex = i2;
+					index = i2;
 					break;
 				}
 			}
-			if (strIndex == INVALID_STRING_INDEX)
-			{
-				LogError("Could not find particle: %s", effect);
-				delete trace;
-				return;
-			}
 
-			TE_Start("TFParticleEffect");
-			TE_WriteFloat("m_vecOrigin[0]", effectPos[0]);
-			TE_WriteFloat("m_vecOrigin[1]", effectPos[1]);
-			TE_WriteFloat("m_vecOrigin[2]", effectPos[2]);
-			TE_WriteNum("m_iParticleSystemIndex", strIndex);
-			TE_WriteNum("entindex", actor.index);
-			TE_WriteNum("m_iAttachType", 2);
-			TE_WriteNum("m_iAttachmentPointIndex", 0);
-			TE_WriteNum("m_bResetParticles", false);
-			TE_WriteNum("m_bControlPoint1", 1);
-			TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 5);
-			TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
-			TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
-			TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);
+			if (index == INVALID_STRING_INDEX)
+			{
+				LogError("Could not find particle: %s", attackData.BulletTrace);
+				delete trace;
+				continue;
+			}
+			TE_Particle(index, effectPos, effectPos, dir, actor.index, view_as<int>(PATTACH_CUSTOMORIGIN), _, _, true, view_as<int>(PATTACH_CUSTOMORIGIN), endPos);
 			TE_SendToAll();
 		}
 		delete trace;

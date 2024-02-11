@@ -162,6 +162,19 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 		}
 		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "Stop! I heard someone!");
 	}
+	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0)
+	{
+		float pos[3];
+		actor.GetAlertTriggerPositionEx(pos);
+
+		actor.State = STATE_ALERT;
+		path.Invalidate();
+		if (data.NormalSoundHook)
+		{
+			actor.NextVoiceTime = 0.0;
+		}
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "Stop! I got a sound hint!");
+	}
 
 	return action.Continue();
 }

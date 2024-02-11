@@ -19,7 +19,7 @@ static ArrayList g_SelectableAdminBossProfileList = null;
 static ArrayList g_SelectableBoxingBossProfileList = null;
 static ArrayList g_SelectableRenevantBossProfileList = null;
 static ArrayList g_SelectableRenevantBossAdminProfileList = null;
-static ArrayList g_hSelectableBossProfileQueueList = null;
+static ArrayList g_SelectableBossProfileQueueList = null;
 
 StringMap g_BossProfileData = null;
 
@@ -296,9 +296,9 @@ Action Command_Pack(int client,int args)
 	g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), mapBossPack);
 	if (bossPackName[0] == '\0')
 	{
-		FormatEx(bossPackName,sizeof(bossPackName),"Core Pack");
+		FormatEx(bossPackName, sizeof(bossPackName), "Core Pack");
 	}
-	CPrintToChat(client,"{dodgerblue}Pack: {lightblue}%s",bossPackName);
+	CPrintToChat(client, "{dodgerblue}Pack: {lightblue}%s", bossPackName);
 	return Plugin_Handled;
 }
 
@@ -332,9 +332,9 @@ Action Command_NextPack(int client,int args)
 	g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), nextpack);
 	if (bossPackName[0] == '\0')
 	{
-		FormatEx(bossPackName,sizeof(bossPackName),"Core Pack");
+		FormatEx(bossPackName, sizeof(bossPackName), "Core Pack");
 	}
-	CPrintToChat(client,"{dodgerblue}Next pack: {lightblue}%s",bossPackName);
+	CPrintToChat(client, "{dodgerblue}Next pack: {lightblue}%s", bossPackName);
 	return Plugin_Handled;
 }
 
@@ -347,6 +347,8 @@ static void PreUnloadBossProfile(const char[] profile)
 {
 	SF2BossProfileData profileData;
 	g_BossProfileData.GetArray(profile, profileData, sizeof(profileData));
+
+	LogSF2Message("Unloading %s...", profile);
 
 	int bossType = GetBossProfileType(profile);
 	switch (bossType)
@@ -437,6 +439,11 @@ void UnloadBossProfile(const char[] profile)
 void ClearBossProfiles()
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	if (g_BossProfileList == null)
+	{
+		return;
+	}
+
 	for (int i = 0; i < g_BossProfileList.Length; i++)
 	{
 		g_BossProfileList.GetString(i, profile, sizeof(profile));
@@ -533,9 +540,9 @@ void ReloadBossProfiles()
 		g_SelectableRenevantBossAdminProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 
-	if (g_hSelectableBossProfileQueueList != null)
+	if (g_SelectableBossProfileQueueList != null)
 	{
-		delete g_hSelectableBossProfileQueueList;
+		delete g_SelectableBossProfileQueueList;
 	}
 
 	char configPath[PLATFORM_MAX_PATH];
@@ -667,7 +674,7 @@ void ReloadBossProfiles()
 	{
 		g_BossPackVoteEnabled = false;
 	}
-	g_hSelectableBossProfileQueueList = g_SelectableBossProfileList.Clone();
+	g_SelectableBossProfileQueueList = g_SelectableBossProfileList.Clone();
 
 	g_BossProfilePackConVar.SetString("");
 
@@ -1299,18 +1306,18 @@ bool GetRandomRenevantBossProfile(char[] sBuffer, int iBufferLen)
  */
 ArrayList GetSelectableBossProfileQueueList()
 {
-	if (g_hSelectableBossProfileQueueList.Length <= 0) //If every boss were selected at least once, refill the list.
+	if (g_SelectableBossProfileQueueList.Length <= 0) //If every boss were selected at least once, refill the list.
 	{
-		delete g_hSelectableBossProfileQueueList;
-		g_hSelectableBossProfileQueueList = GetSelectableBossProfileList().Clone();
+		delete g_SelectableBossProfileQueueList;
+		g_SelectableBossProfileQueueList = GetSelectableBossProfileList().Clone();
 	}
 
-	if (g_hSelectableBossProfileQueueList == null)
+	if (g_SelectableBossProfileQueueList == null)
 	{
-		g_hSelectableBossProfileQueueList = GetSelectableBossProfileList().Clone();
+		g_SelectableBossProfileQueueList = GetSelectableBossProfileList().Clone();
 	}
 
-	return g_hSelectableBossProfileQueueList;
+	return g_SelectableBossProfileQueueList;
 }
 
 void RemoveBossProfileFromQueueList(const char[] profile)

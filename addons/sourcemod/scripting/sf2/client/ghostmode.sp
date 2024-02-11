@@ -20,6 +20,10 @@ void SetupGhost()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
 	ClientSetGhostModeState(client.index, false);
 }
 
@@ -34,6 +38,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (fake || IsRoundInWarmup() || client.IsEliminated)
 	{
 		return;
@@ -82,6 +91,11 @@ void ClientSetGhostModeState(int client, bool state)
 	{
 		return;
 	}
+
+	Call_StartForward(g_OnPlayerChangeGhostStatePFwd);
+	Call_PushCell(SF2_BasePlayer(client));
+	Call_PushCell(state);
+	Call_Finish();
 
 	g_PlayerInGhostMode[client] = state;
 	g_PlayerGhostModeTarget[client] = INVALID_ENT_REFERENCE;
@@ -152,92 +166,6 @@ void ClientSetGhostModeState(int client, bool state)
 			SetEntityRenderMode(client, RENDER_NORMAL);
 			SetEntityRenderColor(client, _, _, _, 255);
 			SetEntityCollisionGroup(client, COLLISION_GROUP_PLAYER);
-		}
-	}
-	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
-	{
-		if (NPCGetUniqueID(npcIndex) == -1)
-		{
-			continue;
-		}
-		SF2BossProfileData data;
-		data = NPCGetProfileData(npcIndex);
-		if (data.IsPvEBoss)
-		{
-			continue;
-		}
-		SlenderRemoveGlow(npcIndex);
-		if (NPCGetCustomOutlinesState(npcIndex))
-		{
-			if (!NPCGetRainbowOutlineState(npcIndex))
-			{
-				int color[4];
-				color[0] = NPCGetOutlineColorR(npcIndex);
-				color[1] = NPCGetOutlineColorG(npcIndex);
-				color[2] = NPCGetOutlineColorB(npcIndex);
-				color[3] = NPCGetOutlineTransparency(npcIndex);
-				if (color[0] < 0)
-				{
-					color[0] = 0;
-				}
-				if (color[1] < 0)
-				{
-					color[1] = 0;
-				}
-				if (color[2] < 0)
-				{
-					color[2] = 0;
-				}
-				if (color[3] < 0)
-				{
-					color[3] = 0;
-				}
-				if (color[0] > 255)
-				{
-					color[0] = 255;
-				}
-				if (color[1] > 255)
-				{
-					color[1] = 255;
-				}
-				if (color[2] > 255)
-				{
-					color[2] = 255;
-				}
-				if (color[3] > 255)
-				{
-					color[3] = 255;
-				}
-				SlenderAddGlow(npcIndex, color);
-			}
-			else
-			{
-				SlenderAddGlow(npcIndex, view_as<int>({0, 0, 0, 0}));
-			}
-		}
-		else
-		{
-			int purple[4] = {150, 0, 255, 255};
-			SlenderAddGlow(npcIndex, purple);
-		}
-	}
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsValidClient(i))
-		{
-			continue;
-		}
-		ClientDisableConstantGlow(i);
-		if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
-		{
-			int red[4] = {184, 56, 59, 255};
-			ClientEnableConstantGlow(i, red);
-		}
-		else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
-		{
-			int yellow[4] = {255, 208, 0, 255};
-			ClientEnableConstantGlow(i, yellow);
 		}
 	}
 }
@@ -382,6 +310,11 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 		for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
 		{
 			if (NPCGetUniqueID(bossIndex) == -1 || !IsValidEntity(NPCGetEntIndex(bossIndex)))
+			{
+				continue;
+			}
+
+			if (NPCGetProfileData(bossIndex).IsPvEBoss)
 			{
 				continue;
 			}

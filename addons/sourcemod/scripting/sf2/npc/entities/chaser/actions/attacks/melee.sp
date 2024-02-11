@@ -186,11 +186,9 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		attackEliminated = true;
 	}
 	float damage = attackData.Damage[difficulty];
-	float damageVsProps = attackData.DamageVsProps;
 	if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 	{
 		damage *= 0.5;
-		damageVsProps *= 0.5;
 	}
 	int damageType = attackData.DamageType[difficulty];
 
@@ -218,13 +216,23 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	{
 		CBaseEntity prop = CBaseEntity(targets.Get(i));
 
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, prop, attackEliminated))
+		{
+			continue;
+		}
+
+		if (originalData.IsPvEBoss && !IsPvETargetValid(prop))
+		{
+			continue;
+		}
+
 		if (!IsTargetInMeleeChecks(actor, attackData, prop, range, spread))
 		{
 			continue;
 		}
 
 		hit = true;
-		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, damageVsProps, 64, _, _, myEyePos, false);
+		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, damage, 64, _, _, myEyePos, false);
 	}
 	targets.Clear();
 
@@ -234,7 +242,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	{
 		SF2_BasePlayer player = targets.Get(i);
 
-		if (!attackEliminated && player.IsEliminated)
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, player, attackEliminated))
+		{
+			continue;
+		}
+
+		if (originalData.IsPvEBoss && !IsPvETargetValid(player))
 		{
 			continue;
 		}
@@ -276,6 +289,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 				player.StartDeathCam(controller.Index, myPos);
 			}
 		}
+
+		if (attackData.HitEffects != null)
+		{
+			SlenderSpawnEffects(attackData.HitEffects, controller.Index, false, _, _, _, player.index);
+		}
+
 		player.TakeDamage(_, actor.index, actor.index, damage, damageType, _, direction, myEyePos, false);
 		player.ViewPunch(viewPunch);
 
@@ -291,11 +310,6 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		}
 
 		attackData.ApplyDamageEffects(player, difficulty, SF2_ChaserBossEntity(actor.index));
-
-		if (attackData.HitEffects != null)
-		{
-			SlenderSpawnEffects(attackData.HitEffects, controller.Index, false, _, _, _, player.index);
-		}
 
 		// Add stress
 		float stressScalar = damage / 125.0;
@@ -342,7 +356,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 
 		if (attackData.Disappear[difficulty])
 		{
-			controller.UnSpawn();
+			controller.UnSpawn(true);
 		}
 	}
 	else

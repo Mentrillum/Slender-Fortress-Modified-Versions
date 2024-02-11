@@ -210,10 +210,6 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 		return action.Done("No attack action was given");
 	}
 
-	action.OldState = actor.State;
-	action.OldMovementType = actor.MovementType;
-	actor.State = STATE_ATTACK;
-
 	actor.SetAttackName(action.GetAttackName());
 	actor.AttackIndex = action.AttackIndex;
 	actor.IsAttacking = true;
@@ -231,6 +227,19 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 	actor.AttackRunDuration = gameTime + attackData.RunDuration[difficulty];
 	actor.MyNextBotPointer().GetLocomotionInterface().Stop();
 	controller.Path.Invalidate();
+
+	if (actor.State == STATE_CHASE)
+	{
+		actor.CurrentChaseDuration += data.ChaseDurationAddOnAttack[difficulty];
+		if (actor.CurrentChaseDuration > data.ChaseDuration[difficulty])
+		{
+			actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+		}
+	}
+
+	action.OldState = actor.State;
+	action.OldMovementType = actor.MovementType;
+	actor.State = STATE_ATTACK;
 
 	actor.InvokeOnStartAttack(action.GetAttackName());
 

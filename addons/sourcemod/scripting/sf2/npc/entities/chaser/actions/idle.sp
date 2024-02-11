@@ -92,19 +92,23 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 
 static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float interval)
 {
-	if (IsBeatBoxBeating(2))
-	{
-		return action.SuspendFor(SF2_ChaserBeatBoxFreezeAction(actor.IsAttemptingToMove));
-	}
-	INextBot bot = actor.MyNextBotPointer();
-	ILocomotion loco = bot.GetLocomotionInterface();
 	SF2NPC_Chaser controller = actor.Controller;
 	if (!controller.IsValid())
 	{
 		return action.Continue();
 	}
+
 	SF2ChaserBossProfileData data;
 	data = controller.GetProfileData();
+	SF2BossProfileData originalData;
+	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+
+	if (!originalData.IsPvEBoss && IsBeatBoxBeating(2))
+	{
+		return action.SuspendFor(SF2_ChaserBeatBoxFreezeAction(actor.IsAttemptingToMove));
+	}
+	INextBot bot = actor.MyNextBotPointer();
+	ILocomotion loco = bot.GetLocomotionInterface();
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
 	int interruptConditions = actor.InterruptConditions;
@@ -191,6 +195,19 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		}
 		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "Someone made noise, let's go!");
 	}
+	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0)
+	{
+		float pos[3];
+		actor.GetAlertTriggerPositionEx(pos);
+
+		actor.State = STATE_ALERT;
+		path.Invalidate();
+		if (data.NormalSoundHook)
+		{
+			actor.NextVoiceTime = 0.0;
+		}
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "We got a sound hint, let's go!");
+	}
 
 	if ((interruptConditions & COND_DEBUG) != 0)
 	{
@@ -236,7 +253,19 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		}
 	}
 
-	if (actor.DebugShouldGoToPos)
+	bool isAbleToWander = data.CanWander[difficulty];
+	bool canWalk = true;
+	if (controller.HasAttribute(SF2Attribute_BlockWalkSpeedUnderDifficulty))
+	{
+		int value = RoundToNearest(controller.GetAttributeValue(SF2Attribute_BlockWalkSpeedUnderDifficulty));
+		if (difficulty < value)
+		{
+			isAbleToWander = false;
+			canWalk = false;
+		}
+	}
+
+	if (actor.DebugShouldGoToPos && canWalk)
 	{
 		float debugPos[3];
 		actor.GetForceWanderPosition(debugPos);
@@ -267,7 +296,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		}
 	}
 
-	if (data.CanWander[difficulty])
+	if (isAbleToWander)
 	{
 		if (gameTime >= action.NextWanderTime && GetRandomFloat(0.0, 1.0) <= 0.25)
 		{
@@ -334,12 +363,15 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 	}
 	else
 	{
-		float lookPos[3];
-		action.GetLookPosition(lookPos);
-		loco.FaceTowards(lookPos);
-		if (action.NextTurnTime <= 0.0)
+		if (data.IdleData.TurnEnabled[difficulty])
 		{
-			action.NextTurnTime = gameTime + GetRandomFloat(data.IdleData.TurnMinTime[difficulty], data.IdleData.TurnMaxTime[difficulty]);
+			float lookPos[3];
+			action.GetLookPosition(lookPos);
+			loco.FaceTowards(lookPos);
+			if (action.NextTurnTime <= 0.0)
+			{
+				action.NextTurnTime = gameTime + GetRandomFloat(data.IdleData.TurnMinTime[difficulty], data.IdleData.TurnMaxTime[difficulty]);
+			}
 		}
 	}
 

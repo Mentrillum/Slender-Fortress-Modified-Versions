@@ -59,6 +59,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnDifficultyVoteFinishedFwd = new GlobalForward("SF2_OnDifficultyVoteFinished", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell);
 	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell, Param_CellByRef);
+	g_OnProjectileTouchFwd = new GlobalForward("SF2_OnProjectileTouch", ET_Ignore, Param_Cell, Param_Cell);
 
 	CreateNative("SF2_GetConfig", Native_GetConfig);
 	CreateNative("SF2_IsRunning", Native_IsRunning);
@@ -103,12 +104,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("SF2_SetClientFlashlightBatteryLife", Native_SetClientFlashlightBatteryLife);
 	CreateNative("SF2_IsClientUsingFlashlight", Native_IsClientUsingFlashlight);
 
-	CreateNative("SF2_GetClientStaminaPoints", Native_GetClientSprintPoints);
-	CreateNative("SF2_SetClientStaminaPoints", Native_SetClientSprintPoints);
-	CreateNative("SF2_IsClientSprinting", Native_IsClientSprinting);
-	CreateNative("SF2_IsClientReallySprinting", Native_IsClientReallySprinting);
-	CreateNative("SF2_SetClientSprintState", Native_SetClientSprintState);
-
 	CreateNative("SF2_IsClientTrapped", Native_IsClientTrapped);
 	CreateNative("SF2_IsClientInDeathCam", Native_IsClientInDeathCam);
 	CreateNative("SF2_ClientStartDeathCam", Native_ClientStartDeathCam);
@@ -131,7 +126,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("SF2_IsBossCloaked", Native_IsBossCloaked);
 	CreateNative("SF2_GetBossStunHealth", Native_GetBossStunHealth);
 	CreateNative("SF2_SetBossStunHealth", Native_SetBossStunHealth);
-	CreateNative("SF2_GetBossGoalPosition", Native_GetBossGoalPosition);
 
 	CreateNative("SF2_GetVectorSquareMagnitude", Native_GetVectorSquareMagnitude);
 	CreateNative("SF2_InitiateBossPackVote", Native_InitiateBossPackVote);
@@ -146,6 +140,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	NPC_InitializeAPI();
 	NPCChaser_InitializeAPI();
 	NPCStatue_InitializeAPI();
+
+	Client_SetupAPI();
 
 	PvP_InitializeAPI();
 	PvE_InitializeAPI();
@@ -584,33 +580,6 @@ static any Native_IsClientUsingFlashlight(Handle plugin, int numParams)
 	return IsClientUsingFlashlight(GetNativeCell(1));
 }
 
-static any Native_GetClientSprintPoints(Handle plugin, int numParams)
-{
-	return SF2_BasePlayer(GetNativeCell(1)).Stamina;
-}
-
-static any Native_SetClientSprintPoints(Handle plugin, int numParams)
-{
-	SF2_BasePlayer(GetNativeCell(1)).Stamina = GetNativeCell(2);
-	return 0;
-}
-
-static any Native_IsClientSprinting(Handle plugin, int numParams)
-{
-	return IsClientSprinting(GetNativeCell(1));
-}
-
-static any Native_IsClientReallySprinting(Handle plugin, int numParams)
-{
-	return IsClientReallySprinting(GetNativeCell(1));
-}
-
-static any Native_SetClientSprintState(Handle plugin, int numParams)
-{
-	ClientHandleSprint(GetNativeCell(1), GetNativeCell(2));
-	return 0;
-}
-
 static any Native_IsClientTrapped(Handle plugin, int numParams)
 {
 	return g_PlayerTrapped[GetNativeCell(1)];
@@ -718,11 +687,6 @@ static any Native_SetBossStunHealth(Handle plugin, int numParams)
 		return 0;
 	}
 	chaser.StunHealth = GetNativeCell(2);
-	return 0;
-}
-
-static any Native_GetBossGoalPosition(Handle plugin, int numParams)
-{
 	return 0;
 }
 

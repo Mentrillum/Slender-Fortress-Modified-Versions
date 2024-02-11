@@ -171,6 +171,8 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 	SF2NPC_Chaser controller = actor.Controller;
 	SF2ChaserBossProfileData data;
 	data = controller.GetProfileData();
+	SF2BossProfileData originalData;
+	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
 	SF2ChaserRageInfo rageInfo;
 	data.Rages.GetArray(actor.RageIndex, rageInfo, sizeof(rageInfo));
 	PathFollower path = controller.Path;
@@ -264,11 +266,31 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 				action.PlayedSound = true;
 			}
 			float amount = actor.MaxHealth * rageInfo.HealAmount;
-			float increase = LerpFloats(0.0, amount, GetGameFrameTime() * (1.0 / rageInfo.HealDuration));
-			actor.SetProp(Prop_Data, "m_iHealth", RoundToFloor(increase + actor.GetProp(Prop_Data, "m_iHealth")));
-			if (float(actor.GetProp(Prop_Data, "m_iHealth")) > actor.MaxHealth)
+			if (!data.DeathData.Enabled[difficulty])
 			{
-				actor.SetProp(Prop_Data, "m_iHealth", RoundToFloor(actor.MaxHealth));
+				amount = actor.MaxStunHealth * rageInfo.HealAmount;
+			}
+			float increase = LerpFloats(0.0, amount, GetGameFrameTime() * (1.0 / rageInfo.HealDuration));
+			if (data.DeathData.Enabled[difficulty])
+			{
+				actor.SetProp(Prop_Data, "m_iHealth", RoundToFloor(increase + actor.GetProp(Prop_Data, "m_iHealth")));
+				if (float(actor.GetProp(Prop_Data, "m_iHealth")) > actor.MaxHealth)
+				{
+					actor.SetProp(Prop_Data, "m_iHealth", RoundToFloor(actor.MaxHealth));
+				}
+			}
+			else
+			{
+				actor.StunHealth += increase;
+				if (actor.StunHealth > actor.MaxStunHealth)
+				{
+					actor.StunHealth = actor.MaxStunHealth;
+				}
+			}
+			if (originalData.Healthbar)
+			{
+				UpdateHealthBar(controller.Index);
+				SetHealthBarColor(true);
 			}
 			action.HealDuration -= GetGameFrameTime();
 		}
@@ -276,6 +298,7 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 		if (action.HealAnimationDuration < gameTime)
 		{
 			actor.IsSelfHealing = false;
+			SetHealthBarColor(false);
 			return action.Done();
 		}
 	}

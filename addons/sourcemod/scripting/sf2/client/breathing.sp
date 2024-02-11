@@ -21,6 +21,10 @@ void SetupBreathing()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
 	ClientResetBreathing(client.index);
 
 	SDKHook(client.index, SDKHook_PreThink, Hook_BreathingThink);
@@ -33,6 +37,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!fake)
 	{
 		ClientResetBreathing(client.index);

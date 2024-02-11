@@ -9,6 +9,10 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
+		if (g_LoadOutsideMapsConVar.BoolValue)
+		{
+			NPCRemoveAll();
+		}
 		return Plugin_Continue;
 	}
 
@@ -351,6 +355,12 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
+		if (g_LoadOutsideMapsConVar.BoolValue && GetClientOfUserId(GetEventInt(event, "userid")) > 0)
+		{
+			Call_StartForward(g_OnPlayerSpawnPFwd);
+			Call_PushCell(SF2_BasePlayer(GetClientOfUserId(GetEventInt(event, "userid"))));
+			Call_Finish();
+		}
 		return Plugin_Continue;
 	}
 
@@ -393,9 +403,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		ClientResetJumpScare(client);
 		ClientUpdateListeningFlags(client);
 		ClientResetScare(client);
-
-		ClientResetInteractiveGlow(client);
-		ClientDisableConstantGlow(client);
 
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 		{
@@ -474,9 +481,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 			ClientUpdateListeningFlags(client);
 			ClientResetScare(client);
 
-			ClientResetInteractiveGlow(client);
-			ClientDisableConstantGlow(client);
-
 			for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 			{
 				if (NPCGetUniqueID(npcIndex) == -1)
@@ -536,11 +540,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				{
 					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
-				else
-				{
-					int red[4] = { 184, 56, 59, 255 };
-					ClientEnableConstantGlow(client, red);
-				}
 			}
 			else
 			{
@@ -557,7 +556,7 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	}
 
 	Call_StartForward(g_OnPlayerSpawnPFwd);
-	Call_PushCell(client);
+	Call_PushCell(SF2_BasePlayer(client));
 	Call_Finish();
 
 	#if defined DEBUG
@@ -861,6 +860,15 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
+		if (g_LoadOutsideMapsConVar.BoolValue && GetClientOfUserId(event.GetInt("userid")) > 0)
+		{
+			Call_StartForward(g_OnPlayerDeathPFwd);
+			Call_PushCell(SF2_BasePlayer(GetClientOfUserId(event.GetInt("userid"))));
+			Call_PushCell(event.GetInt("attacker"));
+			Call_PushCell(event.GetInt("inflictor_entindex"));
+			Call_PushCell((event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) != 0);
+			Call_Finish();
+		}
 		return Plugin_Continue;
 	}
 
@@ -894,9 +902,6 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		ClientResetSlenderStats(client);
 		ClientResetOverlay(client);
 		ClientResetJumpScare(client);
-		ClientResetInteractiveGlow(client);
-
-		ClientDisableConstantGlow(client);
 
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 		{

@@ -67,6 +67,8 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 
 	GetProfileDifficultyFloatValues(kv, "idle_lifetime", profileData.IdleLifeTime, profileData.IdleLifeTime);
 
+	ArrayList validSections = new ArrayList(ByteCountToCells(128));
+
 	if (kv.GotoFirstSubKey())
 	{
 		char s2[64];
@@ -74,6 +76,13 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		do
 		{
 			kv.GetSectionName(s2, sizeof(s2));
+
+			if (validSections.FindString(s2) != -1)
+			{
+				continue;
+			}
+
+			validSections.PushString(s2);
 
 			if (!StrContains(s2, "sound_"))
 			{
@@ -84,6 +93,8 @@ bool LoadStatueBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 
 		kv.GoBack();
 	}
+
+	delete validSections;
 
 	profileData.PostLoad();
 

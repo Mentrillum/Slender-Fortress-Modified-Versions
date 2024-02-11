@@ -133,11 +133,6 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 
 static Action Timer_TrapThink(Handle timer, any entref)
 {
-	if (!g_Enabled)
-	{
-		return Plugin_Stop;
-	}
-
 	int trapEntity = EntRefToEntIndex(entref);
 	if (!trapEntity || trapEntity == INVALID_ENT_REFERENCE)
 	{
@@ -160,13 +155,27 @@ static Action Timer_TrapThink(Handle timer, any entref)
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
-			if (!player.IsValid ||
-				!player.IsAlive ||
-				player.IsEliminated ||
+			if (player.IsValid && (!player.IsAlive ||
+				player.IsInDeathCam ||
 				player.IsInGhostMode ||
-				player.HasEscaped)
+				player.HasEscaped ||
+				player.InCondition(view_as<TFCond>(130)) ||
+				player.Team == TFTeam_Spectator))
 			{
 				continue;
+			}
+
+			if (!g_Enabled)
+			{
+				if (!player.IsValid)
+				{
+					continue;
+				}
+
+				if (player.GetProp(Prop_Data, "m_iTeamNum") == controller.DefaultTeam)
+				{
+					continue;
+				}
 			}
 
 			float entPos[3], otherPos[3];

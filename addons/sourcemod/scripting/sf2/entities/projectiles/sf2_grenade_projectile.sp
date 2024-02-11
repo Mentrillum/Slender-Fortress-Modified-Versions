@@ -52,6 +52,7 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_Projectile_Grenade.Create", Native_Create);
+		CreateNative("SF2_Projectile_Grenade.IsValid.get", Native_IsValid);
 	}
 
 	property CBaseEntity TrailEntity
@@ -319,6 +320,14 @@ static Action Timer_Think(Handle timer, any ref)
 	TR_TraceHullFilter(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, projectile.index);
 
 	int hitIndex = TR_GetEntityIndex();
+	if (IsValidEntity(hitIndex))
+	{
+		Call_StartForward(g_OnProjectileTouchFwd);
+		Call_PushCell(projectile);
+		Call_PushCell(CBaseEntity(hitIndex));
+		Call_Finish();
+	}
+
 	if (hitIndex == 0)
 	{
 		projectile.Touched = true;
@@ -326,11 +335,7 @@ static Action Timer_Think(Handle timer, any ref)
 	}
 	else
 	{
-		SF2_BasePlayer player = SF2_BasePlayer(hitIndex);
-		if (player.IsValid)
-		{
-			projectile.DoExplosion();
-		}
+		projectile.DoExplosion();
 	}
 
 	return Plugin_Continue;
@@ -344,6 +349,8 @@ bool TraceRayGrenade(int entity, int mask, any data)
 		return false;
 	}
 
+	int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
+
 	SF2_BasePlayer player = SF2_BasePlayer(entity);
 	if (player.IsValid)
 	{
@@ -356,11 +363,26 @@ bool TraceRayGrenade(int entity, int mask, any data)
 		{
 			return false;
 		}
+
+		if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == player.Team)
+		{
+			return false;
+		}
 	}
 
 	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
 		return false;
+	}
+
+	if (g_WhitelistedEntities.FindValue(EntIndexToEntRef(entity)) != -1)
+	{
+		return true;
+	}
+
+	if (g_Buildings.FindValue(EntIndexToEntRef(entity)) != -1)
+	{
+		return true;
 	}
 
 	return true;
@@ -378,4 +400,9 @@ static any Native_Create(Handle plugin, int numParams)
 	GetNativeString(11, model, sizeof(model));
 	SF2_ProjectileGrenade projectile = SF2_ProjectileGrenade.Create(GetNativeCell(1), pos, ang, GetNativeCell(4), GetNativeCell(5), GetNativeCell(6), GetNativeCell(7), trail, explosion, impact, model, GetNativeCell(12));
 	return projectile;
+}
+
+static any Native_IsValid(Handle plugin, int numParams)
+{
+	return SF2_ProjectileGrenade(GetNativeCell(1)).IsValid();
 }

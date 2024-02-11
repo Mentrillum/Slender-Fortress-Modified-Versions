@@ -38,6 +38,10 @@ static void OnGamemodeStart()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
 	ClientResetProxy(client.index);
 	ClientStartProxyAvailableTimer(client.index);
 }
@@ -49,11 +53,21 @@ static void OnDisconnected(SF2_BasePlayer client)
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientResetProxy(client.index);
 }
 
 static void OnPlayerDeath(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (!client.IsProxy)
 	{
 		return;
@@ -177,6 +191,14 @@ void ClientResetProxy(int client, bool resetFull = true)
 	#endif
 
 	bool oldProxy = g_PlayerProxy[client];
+	if (IsValidClient(client) && oldProxy != g_PlayerProxy[client])
+	{
+		Call_StartForward(g_OnPlayerChangeProxyStatePFwd);
+		Call_PushCell(SF2_BasePlayer(client));
+		Call_PushCell(false);
+		Call_Finish();
+	}
+
 	if (resetFull)
 	{
 		g_PlayerProxy[client] = false;
@@ -196,7 +218,6 @@ void ClientResetProxy(int client, bool resetFull = true)
 
 			if (resetFull)
 			{
-				ClientDisableConstantGlow(client);
 				SetVariantString("");
 				AcceptEntityInput(client, "SetCustomModel");
 			}
@@ -485,14 +506,17 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	{
 		return;
 	}
+
 	if (!(NPCGetFlags(bossIndex) & SFF_PROXIES))
 	{
 		return;
 	}
+
 	if (GetClientTeam(client) != TFTeam_Blue)
 	{
 		return;
 	}
+
 	if (g_PlayerProxy[client])
 	{
 		return;
@@ -511,13 +535,14 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 
 	if (IsClientInKart(client))
 	{
-		TF2_RemoveCondition(client,TFCond_HalloweenKart);
-		TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
-		TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
-		TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
+		TF2_RemoveCondition(client, TFCond_HalloweenKart);
+		TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
+		TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
+		TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
 	}
 
 	g_PlayerProxy[client] = true;
+
 	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
 	PvP_SetPlayerPvPState(client, false, true, false);
 	TF2_RespawnPlayer(client);
@@ -526,6 +551,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
 
 	g_PlayerProxy[client] = true;
+
 	g_PlayerProxyMaster[client] = NPCGetUniqueID(bossIndex);
 	g_PlayerProxyControl[client] = 100;
 	g_PlayerProxyControlRate[client] = g_SlenderProxyControlDrainRate[bossIndex][difficulty];
@@ -557,7 +583,6 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	UTIL_ScreenFade(client, 200, 1, FFADE_IN, 255, 255, 255, 100);
 	EmitSoundToClient(client, "weapons/teleporter_send.wav", _, SNDCHAN_STATIC);
 
-	ClientDisableConstantGlow(client);
 	ClientActivateUltravision(client);
 
 	TF2Attrib_SetByDefIndex(client, 28, 1.0);
@@ -567,78 +592,6 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 	if (NPCHasProxyWeapons(bossIndex))
 	{
 		CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
-
-	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
-	{
-		if (NPCGetUniqueID(npcIndex) == -1)
-		{
-			continue;
-		}
-		if (g_SlenderInDeathcam[npcIndex])
-		{
-			continue;
-		}
-		SF2BossProfileData data;
-		data = NPCGetProfileData(npcIndex);
-		if (data.IsPvEBoss)
-		{
-			continue;
-		}
-		SlenderRemoveGlow(npcIndex);
-		if (NPCGetCustomOutlinesState(npcIndex))
-		{
-			if (!NPCGetRainbowOutlineState(npcIndex))
-			{
-				int color[4];
-				color[0] = NPCGetOutlineColorR(npcIndex);
-				color[1] = NPCGetOutlineColorG(npcIndex);
-				color[2] = NPCGetOutlineColorB(npcIndex);
-				color[3] = NPCGetOutlineTransparency(npcIndex);
-				if (color[0] < 0)
-				{
-					color[0] = 0;
-				}
-				if (color[1] < 0)
-				{
-					color[1] = 0;
-				}
-				if (color[2] < 0)
-				{
-					color[2] = 0;
-				}
-				if (color[3] < 0)
-				{
-					color[3] = 0;
-				}
-				if (color[0] > 255)
-				{
-					color[0] = 255;
-				}
-				if (color[1] > 255)
-				{
-					color[1] = 255;
-				}
-				if (color[2] > 255)
-				{
-					color[2] = 255;
-				}
-				if (color[3] > 255)
-				{
-					color[3] = 255;
-				}
-				SlenderAddGlow(npcIndex, color);
-			}
-			else
-			{
-				SlenderAddGlow(bossIndex, {0, 0, 0, 0});
-			}
-		}
-		else
-		{
-			int purple[4] = {150, 0, 255, 255};
-			SlenderAddGlow(npcIndex, purple);
-		}
 	}
 
 	//SDKHook(client, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
@@ -666,6 +619,11 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 
 	Call_StartForward(g_OnClientSpawnedAsProxyFwd);
 	Call_PushCell(client);
+	Call_Finish();
+
+	Call_StartForward(g_OnPlayerChangeProxyStatePFwd);
+	Call_PushCell(SF2_BasePlayer(client));
+	Call_PushCell(true);
 	Call_Finish();
 }
 
@@ -997,25 +955,6 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 					//Prevent plugins like Model manager to override proxy model.
 					CreateTimer(0.5, ClientCheckProxyModel, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 				}
-			}
-		}
-
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (!IsValidClient(i))
-			{
-				continue;
-			}
-			ClientDisableConstantGlow(i);
-			if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
-			{
-				int red[4] = {184, 56, 59, 255};
-				ClientEnableConstantGlow(i, red);
-			}
-			else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
-			{
-				int yellow[4] = {255, 208, 0, 255};
-				ClientEnableConstantGlow(i, yellow);
 			}
 		}
 

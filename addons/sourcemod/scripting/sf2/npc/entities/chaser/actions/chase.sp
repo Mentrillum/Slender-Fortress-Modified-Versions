@@ -61,25 +61,26 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 
 static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 {
-	if (IsBeatBoxBeating(2) && actor.State != STATE_ATTACK && !actor.IsInChaseInitial)
-	{
-		return action.SuspendFor(SF2_ChaserBeatBoxFreezeAction(actor.IsAttemptingToMove));
-	}
 	SF2NPC_Chaser controller = actor.Controller;
-
 	if (!controller.IsValid())
 	{
 		return action.Continue();
+	}
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	SF2BossProfileData originalData;
+	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+
+	if (!originalData.IsPvEBoss && IsBeatBoxBeating(2) && actor.State != STATE_ATTACK && !actor.IsInChaseInitial)
+	{
+		return action.SuspendFor(SF2_ChaserBeatBoxFreezeAction(actor.IsAttemptingToMove));
 	}
 
 	CBaseEntity target = actor.Target;
 	float gameTime = GetGameTime();
 	int difficulty = controller.Difficulty;
 	INextBot bot = actor.MyNextBotPointer();
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
 	if (originalData.IsPvEBoss)
 	{
@@ -90,14 +91,13 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 	{
 		actor.ProcessCloak(target);
 
+		if (ShouldClientBeForceChased(controller, target))
+		{
+			SetClientForceChaseState(controller, target, false);
+		}
 		if (IsValidClient(target.index))
 		{
-			SF2_BasePlayer player = SF2_BasePlayer(target.index);
-			if (player.ShouldBeForceChased(controller))
-			{
-				player.SetForceChaseState(controller, false);
-			}
-			actor.SetAutoChaseCount(player, 0);
+			actor.SetAutoChaseCount(SF2_BasePlayer(target.index), 0);
 		}
 
 		if (!actor.IsAttacking)
@@ -109,8 +109,10 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			}
 		}
 
+		actor.RegisterProjectiles();
+
 		SF2_BasePlayer player = SF2_BasePlayer(target.index);
-		if (player.IsValid && player.HasEscaped)
+		if (!originalData.IsPvEBoss && player.IsValid && player.HasEscaped)
 		{
 			actor.State = STATE_IDLE;
 			return action.ChangeTo(SF2_ChaserIdleAction(), "Our target escaped, that is no good!");
@@ -132,8 +134,6 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 					actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
 				}
 			}
-
-			actor.RegisterProjectiles();
 		}
 		else
 		{
@@ -191,6 +191,7 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 	{
 		return;
 	}
+	SF2NPC_Chaser controller = actor.Controller;
 	actor.EndCloak();
 	PathFollower path = actor.Controller.Path;
 	float gameTime = GetGameTime();
@@ -229,6 +230,16 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			{
 				actor.SetAutoChaseCooldown(client, gameTime + cooldown);
 			}
+		}
+
+		for (int i = 1; i < GetMaxEntities(); i++)
+		{
+			if (!IsValidEntity(i))
+			{
+				continue;
+			}
+
+			SetTargetMarkState(controller, CBaseEntity(i), false);
 		}
 	}
 }

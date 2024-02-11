@@ -55,26 +55,6 @@ public Plugin myinfo =
 	url = "https://discord.gg/7Zz7RYTCC4"
 }
 
-char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
-{
-	"idle",
-	"walk",
-	"attack",
-	"run",
-	"stun",
-	"chaseinitial",
-	"rage",
-	"spawn",
-	"fleestart",
-	"heal",
-	"deathcam",
-	"death",
-	"tauntkill",
-	"smell",
-	"attack_begin",
-	"attack_end"
-};
-
 enum struct MuteMode
 {
 	int MuteMode_Normal;
@@ -118,7 +98,7 @@ static const char g_PageCollectDuckSounds[][] =
 };
 
 bool g_ClientInGame[MAXTF2PLAYERS] = { false, ... };
-bool g_ClientInCondition[MAXTF2PLAYERS][TFCond_PowerupModeDominant + view_as<TFCond>(1)];
+bool g_ClientInCondition[MAXTF2PLAYERS][TFCond_PowerupModeDominant + view_as<TFCond>(2)];
 
 //Command
 bool g_PlayerNoPoints[MAXTF2PLAYERS] = { false, ... };
@@ -187,10 +167,6 @@ float g_SlenderDeathCamTime[MAX_BOSSES];
 bool g_SlenderCustomOutroSong[MAX_BOSSES];
 
 bool g_SlenderUseCustomOutlines[MAX_BOSSES];
-int g_SlenderOutlineColorR[MAX_BOSSES];
-int g_SlenderOutlineColorG[MAX_BOSSES];
-int g_SlenderOutlineColorB[MAX_BOSSES];
-int g_SlenderOutlineTransparency[MAX_BOSSES];
 bool g_SlenderUseRainbowOutline[MAX_BOSSES];
 
 int g_TrapEntityCount;
@@ -209,8 +185,6 @@ float g_SlenderTeleportMaxTargetStress[MAX_BOSSES] = { 0.0, ... };
 float g_SlenderTeleportPlayersRestTime[MAX_BOSSES][MAXTF2PLAYERS];
 bool g_SlenderTeleportIgnoreChases[MAX_BOSSES];
 bool g_SlenderTeleportIgnoreVis[MAX_BOSSES];
-
-bool g_SlenderInDeathcam[MAX_BOSSES] = { false, ... };
 
 bool g_SlenderProxiesAllowNormalVoices[MAX_BOSSES];
 
@@ -241,7 +215,7 @@ int g_SlenderProxyControlGainHitByEnemy[MAX_BOSSES][Difficulty_Max];
 float g_SlenderProxyControlDrainRate[MAX_BOSSES][Difficulty_Max];
 int g_SlenderMaxProxies[MAX_BOSSES][Difficulty_Max];
 
-int g_NightvisionType = 0;
+int g_NightVisionType = 0;
 
 //Healthbar
 int g_HealthBar;
@@ -570,6 +544,8 @@ ConVar g_DifficultyVoteRevoteConVar;
 ConVar g_DifficultyNoGracePageConVar;
 ConVar g_HighDifficultyPercentConVar;
 ConVar g_FileCheckConVar;
+ConVar g_LoadOutsideMapsConVar;
+ConVar g_DefaultBossTeamConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -578,14 +554,12 @@ ConVar g_PlayerInfiniteSprintOverrideConVar;
 ConVar g_PlayerInfiniteFlashlightOverrideConVar;
 ConVar g_PlayerInfiniteBlinkOverrideConVar;
 
-ConVar g_GravityConVar;
-float g_Gravity;
 ConVar g_MaxRoundsConVar;
 ConVar g_ForcedHolidayConVar;
 ConVar g_WeaponCriticalsConVar;
 ConVar g_PhysicsPushScaleConVar;
-ConVar g_DragonsFuryBurningBonus;
-ConVar g_DragonsFuryBurnDuration;
+ConVar g_DragonsFuryBurningBonusConVar;
+ConVar g_DragonsFuryBurnDurationConVar;
 
 bool g_IsPlayerShakeEnabled;
 bool g_PlayerViewbobHurtEnabled;
@@ -604,6 +578,7 @@ int g_ShockwaveHalo;
 char g_DebugBeamSound[PLATFORM_MAX_PATH];
 
 ArrayList g_Buildings;
+ArrayList g_WhitelistedEntities;
 
 // Global forwards.
 GlobalForward g_OnBossAddedFwd;
@@ -658,11 +633,13 @@ GlobalForward g_OnEverythingLoadedFwd;
 GlobalForward g_OnDifficultyVoteFinishedFwd;
 GlobalForward g_OnIsBossCustomAttackPossibleFwd;
 GlobalForward g_OnBossGetCustomAttackActionFwd;
+GlobalForward g_OnProjectileTouchFwd;
 
 // Private forwards
 PrivateForward g_OnGamemodeStartPFwd;
-PrivateForward g_OnGamemodeEnd;
+PrivateForward g_OnGamemodeEndPFwd;
 PrivateForward g_OnMapStartPFwd;
+PrivateForward g_OnMapEndPFwd;
 PrivateForward g_OnGameFramePFwd;
 PrivateForward g_OnRoundStartPFwd;
 PrivateForward g_OnRoundEndPFwd;
@@ -679,10 +656,23 @@ PrivateForward g_OnPlayerEscapePFwd;
 PrivateForward g_OnPlayerTeamPFwd;
 PrivateForward g_OnPlayerClassPFwd;
 PrivateForward g_OnPlayerLookAtBossPFwd;
+PrivateForward g_OnPlayerChangePlayStatePFwd;
+PrivateForward g_OnPlayerChangeGhostStatePFwd;
+PrivateForward g_OnPlayerChangeProxyStatePFwd;
+PrivateForward g_OnPlayerConditionAddedPFwd;
+PrivateForward g_OnPlayerConditionRemovedPFwd;
+PrivateForward g_OnPlayerTurnOnFlashlightPFwd;
+PrivateForward g_OnPlayerTurnOffFlashlightPFwd;
+PrivateForward g_OnPlayerFlashlightBreakPFwd;
+PrivateForward g_OnSpecialRoundStartPFwd;
+PrivateForward g_OnBossSpawnPFwd;
 PrivateForward g_OnBossRemovedPFwd;
 PrivateForward g_OnChaserGetAttackActionPFwd;
 PrivateForward g_OnChaserGetCustomAttackPossibleStatePFwd;
 PrivateForward g_OnChaserUpdatePosturePFwd;
+PrivateForward g_OnDifficultyChangePFwd;
+PrivateForward g_OnRenevantTriggerWavePFwd;
+PrivateForward g_OnWallHaxDebugPFwd;
 
 Handle g_SDKGetMaxHealth;
 Handle g_SDKEquipWearable;
@@ -718,6 +708,7 @@ bool g_RenevantBeaconEffect = false;
 bool g_Renevant90sEffect = false;
 bool g_RenevantMarkForDeath = false;
 bool g_RenevantWallHax = false;
+bool g_RenevantBossesChaseEndlessly = false;
 bool g_IsRenevantMap = false;
 Handle g_RenevantWaveTimer = null;
 ArrayList g_RenevantWaveList;
@@ -736,6 +727,7 @@ int g_FlashlightHaloModel = -1;
 #endif
 #include "sf2/stocks.sp"
 #include "sf2/logging.sp"
+#include "sf2/glow.sp"
 #include "sf2/methodmaps.sp"
 #include "sf2/classconfigs.sp"
 #include "sf2/profiles.sp"
@@ -843,6 +835,50 @@ public void OnConfigsExecuted()
 			{
 				LogMessage("%s is not a Slender Fortress map. Plugin disabled!", map);
 				StopPlugin();
+				if (g_LoadOutsideMapsConVar.BoolValue)
+				{
+					InitializeLogging();
+					PrecacheStuff();
+					ReloadBossProfiles();
+					NPCOnConfigsExecuted();
+
+					int ent = -1;
+					while ((ent = FindEntityByClassname(ent, "obj_sentrygun")) != -1)
+					{
+						g_Buildings.Push(EntIndexToEntRef(ent));
+					}
+
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "obj_teleporter")) != -1)
+					{
+						g_Buildings.Push(EntIndexToEntRef(ent));
+					}
+
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "obj_dispenser")) != -1)
+					{
+						g_Buildings.Push(EntIndexToEntRef(ent));
+					}
+
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "tank_boss")) != -1)
+					{
+						g_WhitelistedEntities.Push(EntIndexToEntRef(ent));
+					}
+
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!IsClientInGame(i))
+						{
+							continue;
+						}
+						g_ClientInGame[i] = true;
+						SDKHook(i, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
+						Call_StartForward(g_OnPlayerPutInServerPFwd);
+						Call_PushCell(SF2_BasePlayer(i));
+						Call_Finish();
+					}
+				}
 			}
 		}
 		else
@@ -853,6 +889,10 @@ public void OnConfigsExecuted()
 
 	for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
 	{
+		if (g_BossPathFollower[bossIndex])
+		{
+			continue;
+		}
 		g_BossPathFollower[bossIndex] = PathFollower(_, TraceRayDontHitAnyEntity_Pathing, Path_FilterOnlyActors);
 	}
 }
@@ -914,8 +954,6 @@ static void StartPlugin()
 		}
 	}
 
-	g_Gravity = g_GravityConVar.FloatValue;
-
 	g_IsPlayerShakeEnabled = g_PlayerShakeEnabledConVar.BoolValue;
 	g_PlayerViewbobHurtEnabled = g_PlayerViewbobHurtEnabledConVar.BoolValue;
 	g_PlayerViewbobSprintEnabled = g_PlayerViewbobSprintEnabledConVar.BoolValue;
@@ -923,14 +961,14 @@ static void StartPlugin()
 	#if defined _SteamWorks_Included
 	if (steamworks)
 	{
-		SteamWorks_SetGameDescription("SF2 Rewrite ("...PLUGIN_VERSION_DISPLAY...")");
+		SteamWorks_SetGameDescription("SF2M Rewrite ("...PLUGIN_VERSION_DISPLAY...")");
 		steamtools = false;
 	}
 	#endif
 	#if defined _steamtools_included
 	if (steamtools)
 	{
-		Steam_SetGameDescription("SF2 Rewrite ("...PLUGIN_VERSION_DISPLAY...")");
+		Steam_SetGameDescription("SF2M Rewrite ("...PLUGIN_VERSION_DISPLAY...")");
 		steamworks = false;
 	}
 	#endif
@@ -1022,6 +1060,12 @@ static void StartPlugin()
 		g_Buildings.Push(EntIndexToEntRef(ent));
 	}
 
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "tank_boss")) != -1)
+	{
+		g_WhitelistedEntities.Push(EntIndexToEntRef(ent));
+	}
+
 	Call_StartForward(g_OnGamemodeStartPFwd);
 	Call_Finish();
 }
@@ -1083,6 +1127,8 @@ static void PrecacheStuff()
 	PrecacheSound(ICEBALL_IMPACT);
 	PrecacheSound(ROCKET_SHOOT);
 	PrecacheSound(ROCKET_IMPACT);
+	PrecacheSound(ROCKET_IMPACT2);
+	PrecacheSound(ROCKET_IMPACT3);
 	PrecacheSound(GRENADE_SHOOT);
 	PrecacheSound(SENTRYROCKET_SHOOT);
 	PrecacheSound(ARROW_SHOOT);
@@ -1236,8 +1282,6 @@ static void StopPlugin()
 	{
 		ClientResetFlashlight(i);
 		ClientDeactivateUltravision(i);
-		ClientDisableConstantGlow(i);
-		ClientRemoveInteractiveGlow(i);
 		g_TimerChangeClientName[i] = null;
 	}
 
@@ -1250,7 +1294,7 @@ static void StopPlugin()
 		}
 	}
 
-	Call_StartForward(g_OnGamemodeEnd);
+	Call_StartForward(g_OnGamemodeEndPFwd);
 	Call_Finish();
 
 	if (g_FuncNavPrefer != null)
@@ -1263,7 +1307,7 @@ static void StopPlugin()
 
 public void OnMapEnd()
 {
-	if (!g_Enabled)
+	if (!g_Enabled && !g_LoadOutsideMapsConVar.BoolValue)
 	{
 		return;
 	}
@@ -1277,10 +1321,14 @@ public void OnMapEnd()
 	g_RenevantBeaconEffect = false;
 	g_Renevant90sEffect = false;
 	g_RenevantMarkForDeath = false;
+	g_RenevantBossesChaseEndlessly = false;
 	g_RenevantWallHax = false;
 
 	BossProfilesOnMapEnd();
 	NPCRemoveAll();
+
+	Call_StartForward(g_OnMapEndPFwd);
+	Call_Finish();
 }
 
 public void OnMapTimeLeftChanged()
@@ -1318,6 +1366,7 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 			player.HandleFlashlight();
 		}
 	}
+
 	if (cond == TFCond_HalloweenKart)
 	{
 		if (player.IsProxy)
@@ -1330,11 +1379,26 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 			player.ChangeCondition(TFCond_SpawnOutline, true);
 		}
 	}
+
+	Call_StartForward(g_OnPlayerConditionAddedPFwd);
+	Call_PushCell(player);
+	Call_PushCell(cond);
+	Call_Finish();
 }
 
 public void TF2_OnConditionRemoved(int client, TFCond condition)
 {
 	g_ClientInCondition[client][condition] = false;
+
+	if (!g_Enabled)
+	{
+		return;
+	}
+
+	Call_StartForward(g_OnPlayerConditionRemovedPFwd);
+	Call_PushCell(SF2_BasePlayer(client));
+	Call_PushCell(condition);
+	Call_Finish();
 }
 
 static Action Timer_GlobalGameFrame(Handle timer)
@@ -1414,206 +1478,203 @@ static Action Timer_GlobalGameFrame(Handle timer)
 	// Check if we can add some proxies.
 	if (IsRoundPlaying() && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
 	{
-			ArrayList proxyCandidates = new ArrayList();
+		ArrayList proxyCandidates = new ArrayList();
 
-			for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
+		for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
+		{
+			if (NPCGetUniqueID(bossIndex) == -1)
 			{
-				if (NPCGetUniqueID(bossIndex) == -1)
+				continue;
+			}
+
+			if (!(NPCGetFlags(bossIndex) & SFF_PROXIES))
+			{
+				continue;
+			}
+
+			if (g_SlenderCopyMaster[bossIndex] != -1)
+			{
+				continue; // Copies cannot generate proxies.
+			}
+
+			if (GetGameTime() < g_SlenderTimeUntilNextProxy[bossIndex])
+			{
+				continue; // Proxy spawning hasn't cooled down yet.
+			}
+
+			int teleportTarget = EntRefToEntIndex(g_SlenderProxyTarget[bossIndex]);
+			if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
+			{
+				continue; // No teleport target.
+			}
+
+			int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+			int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
+			if (g_InProxySurvivalRageMode)
+			{
+				maxProxies += 5;
+			}
+
+			int numActiveProxies = 0;
+
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				if (!IsValidClient(client) || !g_PlayerEliminated[client])
+				{
+					continue;
+				}
+				if (!g_PlayerProxy[client])
 				{
 					continue;
 				}
 
-				if (!(NPCGetFlags(bossIndex) & SFF_PROXIES))
+				if (NPCGetFromUniqueID(g_PlayerProxyMaster[client]) == bossIndex)
+				{
+					numActiveProxies++;
+				}
+			}
+			if (numActiveProxies >= maxProxies)
+			{
+				#if defined DEBUG
+				SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d has too many active proxies!", bossIndex);
+				#endif
+				continue;
+			}
+
+			float spawnChanceMin = NPCGetProxySpawnChanceMin(bossIndex, difficulty);
+			float spawnChanceMax = NPCGetProxySpawnChanceMax(bossIndex, difficulty);
+			float spawnChanceThreshold = NPCGetProxySpawnChanceThreshold(bossIndex, difficulty);
+
+			float chance = GetRandomFloat(spawnChanceMin, spawnChanceMax);
+			if (chance > spawnChanceThreshold && !g_InProxySurvivalRageMode)
+			{
+				#if defined DEBUG
+				SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d's chances weren't in his favor!", bossIndex);
+				#endif
+				continue;
+			}
+
+			int availableProxies = maxProxies - numActiveProxies;
+
+			int spawnNumMin = NPCGetProxySpawnNumMin(bossIndex, difficulty);
+			int spawnNumMax = NPCGetProxySpawnNumMax(bossIndex, difficulty);
+
+			int spawnNum = 0;
+
+			// Get a list of people we can transform into a good Proxy.
+			proxyCandidates.Clear();
+
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				if (!IsValidClient(client) || !g_PlayerEliminated[client] || GetClientTeam(client) == TFTeam_Red)
+				{
+					continue;
+				}
+				if (g_PlayerProxy[client])
 				{
 					continue;
 				}
 
-				if (g_SlenderCopyMaster[bossIndex] != -1)
-				{
-					continue; // Copies cannot generate proxies.
-				}
-
-				if (GetGameTime() < g_SlenderTimeUntilNextProxy[bossIndex])
-				{
-					continue; // Proxy spawning hasn't cooled down yet.
-				}
-
-				int teleportTarget = EntRefToEntIndex(g_SlenderProxyTarget[bossIndex]);
-				if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
-				{
-					continue; // No teleport target.
-				}
-
-				int difficulty = GetLocalGlobalDifficulty(bossIndex);
-
-				int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
-				if (g_InProxySurvivalRageMode)
-				{
-					maxProxies += 5;
-				}
-
-				int numActiveProxies = 0;
-
-				for (int client = 1; client <= MaxClients; client++)
-				{
-					if (!IsValidClient(client) || !g_PlayerEliminated[client])
-					{
-						continue;
-					}
-					if (!g_PlayerProxy[client])
-					{
-						continue;
-					}
-
-					if (NPCGetFromUniqueID(g_PlayerProxyMaster[client]) == bossIndex)
-					{
-						numActiveProxies++;
-					}
-				}
-				if (numActiveProxies >= maxProxies)
+				if (!g_PlayerPreferences[client].PlayerPreference_EnableProxySelection && !IsFakeClient(client))
 				{
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d has too many active proxies!", bossIndex);
-					//PrintToChatAll("[PROXIES] Boss %d has too many active proxies!", bossIndex);
+					SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because of your preferences.", bossIndex);
 					#endif
 					continue;
 				}
 
-				float spawnChanceMin = NPCGetProxySpawnChanceMin(bossIndex, difficulty);
-				float spawnChanceMax = NPCGetProxySpawnChanceMax(bossIndex, difficulty);
-				float spawnChanceThreshold = NPCGetProxySpawnChanceThreshold(bossIndex, difficulty);
-
-				float chance = GetRandomFloat(spawnChanceMin, spawnChanceMax);
-				if (chance > spawnChanceThreshold && !g_InProxySurvivalRageMode)
+				if (!g_PlayerProxyAvailable[client])
 				{
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d's chances weren't in his favor!", bossIndex);
-					//PrintToChatAll("[PROXIES] Boss %d's chances weren't in his favor!", bossIndex);
+					SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because of your cooldown.", bossIndex);
 					#endif
 					continue;
 				}
 
-				int availableProxies = maxProxies - numActiveProxies;
-
-				int spawnNumMin = NPCGetProxySpawnNumMin(bossIndex, difficulty);
-				int spawnNumMax = NPCGetProxySpawnNumMax(bossIndex, difficulty);
-
-				int spawnNum = 0;
-
-				// Get a list of people we can transform into a good Proxy.
-				proxyCandidates.Clear();
-
-				for (int client = 1; client <= MaxClients; client++)
-				{
-					if (!IsValidClient(client) || !g_PlayerEliminated[client] || GetClientTeam(client) == TFTeam_Red)
-					{
-						continue;
-					}
-					if (g_PlayerProxy[client])
-					{
-						continue;
-					}
-
-					if (!g_PlayerPreferences[client].PlayerPreference_EnableProxySelection && !IsFakeClient(client))
-					{
-						#if defined DEBUG
-						SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because of your preferences.", bossIndex);
-						//PrintToChatAll("[PROXIES] You were rejected for being a proxy for boss %d because of your preferences.", bossIndex);
-						#endif
-						continue;
-					}
-
-					if (!g_PlayerProxyAvailable[client])
-					{
-						#if defined DEBUG
-						SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because of your cooldown.", bossIndex);
-						#endif
-						continue;
-					}
-
-					if (g_PlayerProxyAvailableInForce[client])
-					{
-						#if defined DEBUG
-						SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because you're already being forced into a Proxy.", bossIndex);
-						#endif
-						continue;
-					}
-
-					if (!IsClientParticipating(client))
-					{
-						#if defined DEBUG
-						SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because you're not participating.", bossIndex);
-						#endif
-						continue;
-					}
-
-					proxyCandidates.Push(client);
-					spawnNum++;
-				}
-
-				if (spawnNum >= spawnNumMax)
-				{
-					spawnNum = GetRandomInt(spawnNumMin, spawnNumMax);
-				}
-				else if (spawnNum >= spawnNumMin)
-				{
-					spawnNum = GetRandomInt(spawnNumMin, spawnNum);
-				}
-
-				if (spawnNum <= 0)
+				if (g_PlayerProxyAvailableInForce[client])
 				{
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d had a set spawn number of 0!", bossIndex);
+					SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because you're already being forced into a Proxy.", bossIndex);
 					#endif
 					continue;
 				}
-				bool cooldown = false;
-				// Randomize the array.
-				SortADTArray(proxyCandidates, Sort_Random, Sort_Integer);
 
-				float destinationPos[3];
-
-				for (int num = 0; num < spawnNum && num < availableProxies; num++)
+				if (!IsClientParticipating(client))
 				{
-					int client = proxyCandidates.Get(num);
-					int spawnPointEnt = -1;
-
-					if (!SpawnProxy(client, bossIndex, destinationPos, spawnPointEnt))
-					{
-						break;
-					}
-					cooldown = true;
-					if (!g_PlayerPreferences[client].PlayerPreference_ProxyShowMessage)
-					{
-						ClientStartProxyForce(client, NPCGetUniqueID(bossIndex), destinationPos, spawnPointEnt);
-					}
-					else
-					{
-						if (!IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro())
-						{
-							DisplayProxyAskMenu(client, NPCGetUniqueID(bossIndex), destinationPos, spawnPointEnt);
-						}
-					}
+					#if defined DEBUG
+					SendDebugMessageToPlayer(client, DEBUG_BOSS_PROXIES, 0, "[PROXIES] You were rejected for being a proxy for boss %d because you're not participating.", bossIndex);
+					#endif
+					continue;
 				}
-				// Set the cooldown time!
-				if (cooldown)
-				{
-					float spawnCooldownMin = NPCGetProxySpawnCooldownMin(bossIndex, difficulty);
-					float spawnCooldownMax = NPCGetProxySpawnCooldownMax(bossIndex, difficulty);
 
-					g_SlenderTimeUntilNextProxy[bossIndex] = GetGameTime() + GetRandomFloat(spawnCooldownMin, spawnCooldownMax);
+				proxyCandidates.Push(client);
+				spawnNum++;
+			}
+
+			if (spawnNum >= spawnNumMax)
+			{
+				spawnNum = GetRandomInt(spawnNumMin, spawnNumMax);
+			}
+			else if (spawnNum >= spawnNumMin)
+			{
+				spawnNum = GetRandomInt(spawnNumMin, spawnNum);
+			}
+
+			if (spawnNum <= 0)
+			{
+				#if defined DEBUG
+				SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d had a set spawn number of 0!", bossIndex);
+				#endif
+				continue;
+			}
+			bool cooldown = false;
+			// Randomize the array.
+			SortADTArray(proxyCandidates, Sort_Random, Sort_Integer);
+
+			float destinationPos[3];
+
+			for (int num = 0; num < spawnNum && num < availableProxies; num++)
+			{
+				int client = proxyCandidates.Get(num);
+				int spawnPointEnt = -1;
+
+				if (!SpawnProxy(client, bossIndex, destinationPos, spawnPointEnt))
+				{
+					break;
+				}
+				cooldown = true;
+				if (!g_PlayerPreferences[client].PlayerPreference_ProxyShowMessage)
+				{
+					ClientStartProxyForce(client, NPCGetUniqueID(bossIndex), destinationPos, spawnPointEnt);
 				}
 				else
 				{
-					g_SlenderTimeUntilNextProxy[bossIndex] = GetGameTime() + GetRandomFloat(3.0, 4.0);
+					if (!IsRoundEnding() && !IsRoundInWarmup() && !IsRoundInIntro())
+					{
+						DisplayProxyAskMenu(client, NPCGetUniqueID(bossIndex), destinationPos, spawnPointEnt);
+					}
 				}
+			}
+			// Set the cooldown time!
+			if (cooldown)
+			{
+				float spawnCooldownMin = NPCGetProxySpawnCooldownMin(bossIndex, difficulty);
+				float spawnCooldownMax = NPCGetProxySpawnCooldownMax(bossIndex, difficulty);
 
-				#if defined DEBUG
-				SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0,"[PROXIES] Boss %d finished proxy process!", bossIndex);
-				#endif
+				g_SlenderTimeUntilNextProxy[bossIndex] = GetGameTime() + GetRandomFloat(spawnCooldownMin, spawnCooldownMax);
+			}
+			else
+			{
+				g_SlenderTimeUntilNextProxy[bossIndex] = GetGameTime() + GetRandomFloat(3.0, 4.0);
 			}
 
-			delete proxyCandidates;
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0,"[PROXIES] Boss %d finished proxy process!", bossIndex);
+			#endif
+		}
+
+		delete proxyCandidates;
 	}
 
 	Call_StartForward(g_OnGameFramePFwd);
@@ -2135,26 +2196,6 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 				g_RoundDifficultyModifier = DIFFICULTYMODIFIER_NORMAL;
 			}
 		}
-		CheckIfMusicValid();
-		if (MusicActive())
-		{
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				SF2_BasePlayer client = SF2_BasePlayer(i);
-				if (!client.IsValid || client.IsSourceTV)
-				{
-					continue;
-				}
-
-				char path[PLATFORM_MAX_PATH];
-				GetBossMusic(path, sizeof(path));
-				if (path[0] != '\0')
-				{
-					StopSound(i, MUSIC_CHAN, path);
-				}
-				client.UpdateMusicSystem();
-			}
-		}
 		ChangeAllSlenderModels();
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 		{
@@ -2200,10 +2241,6 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 	else if (cvar == g_PlayerViewbobSprintEnabledConVar)
 	{
 		g_PlayerViewbobSprintEnabled = StringToInt(intValue) != 0;
-	}
-	else if (cvar == g_GravityConVar)
-	{
-		g_Gravity = StringToFloat(intValue);
 	}
 	else if (cvar == g_AllChatConVar || SF_IsBoxingMap())
 	{
@@ -2355,6 +2392,22 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 			}
 		}
 	}
+	else if (cvar == g_NightvisionEnabledConVar)
+	{
+		if (!IsInfiniteFlashlightEnabled())
+		{
+			g_NightVisionType = GetRandomInt(0, 2);
+		}
+		else
+		{
+			g_NightVisionType = 1;
+		}
+	}
+	else if (cvar == g_EnableWallHaxConVar)
+	{
+		Call_StartForward(g_OnWallHaxDebugPFwd);
+		Call_Finish();
+	}
 }
 
 static void ToggleWeaponCooldowns(SF2_BasePlayer client, bool invert)
@@ -2379,6 +2432,17 @@ static void ToggleWeaponCooldowns(SF2_BasePlayer client, bool invert)
 
 public void OnEntityCreated(int ent, const char[] classname)
 {
+	if (strcmp(classname, "obj_sentrygun", false) == 0 || strcmp(classname, "obj_dispenser", false) == 0 ||
+		strcmp(classname, "obj_teleporter", false) == 0)
+	{
+		g_Buildings.Push(EntIndexToEntRef(ent));
+	}
+
+	if (strcmp(classname, "tank_boss", false) == 0)
+	{
+		g_WhitelistedEntities.Push(EntIndexToEntRef(ent));
+	}
+
 	if (!g_Enabled)
 	{
 		return;
@@ -2408,11 +2472,6 @@ public void OnEntityCreated(int ent, const char[] classname)
 	else if (strcmp(classname, "tf_ragdoll") == 0)
 	{
 		SetEntProp(ent, Prop_Send, "m_bIceRagdoll", true);
-	}
-	else if (strcmp(classname, "obj_sentrygun", false) == 0 || strcmp(classname, "obj_dispenser", false) == 0 ||
-		strcmp(classname, "obj_teleporter", false) == 0)
-	{
-		g_Buildings.Push(EntIndexToEntRef(ent));
 	}
 
 	Call_StartForward(g_OnEntityCreatedPFwd);
@@ -2456,18 +2515,35 @@ MRESReturn Hook_WeaponGetCustomDamageType(int weapon, DHookReturn returnHandle, 
 
 public void OnEntityDestroyed(int ent)
 {
-	if (!g_Enabled)
-	{
-		return;
-	}
-
 	if (!IsValidEntity(ent) || ent <= 0)
 	{
 		return;
 	}
 
+	int index = g_Buildings.FindValue(EntIndexToEntRef(ent));
+	if (index != -1)
+	{
+		g_Buildings.Erase(index);
+	}
+
+	index = g_WhitelistedEntities.FindValue(EntIndexToEntRef(ent));
+	if (index != -1)
+	{
+		g_WhitelistedEntities.Erase(index);
+	}
+
 	char classname[64];
 	GetEntityClassname(ent, classname, sizeof(classname));
+
+	Call_StartForward(g_OnEntityDestroyedPFwd);
+	Call_PushCell(CBaseEntity(ent));
+	Call_PushString(classname);
+	Call_Finish();
+
+	if (!g_Enabled)
+	{
+		return;
+	}
 
 	if (strcmp(classname, "light_dynamic", false) == 0)
 	{
@@ -2494,17 +2570,6 @@ public void OnEntityDestroyed(int ent)
 			RemoveEntity(glow);
 		}
 	}
-
-	int index = g_Buildings.FindValue(EntIndexToEntRef(ent));
-	if (index != -1)
-	{
-		g_Buildings.Erase(index);
-	}
-
-	Call_StartForward(g_OnEntityDestroyedPFwd);
-	Call_PushCell(CBaseEntity(ent));
-	Call_PushString(classname);
-	Call_Finish();
 }
 
 Action Hook_BlockUserMessage(UserMsg msg_id, Handle bf, const int[] players, int playersNum, bool reliable, bool init)
@@ -2696,7 +2761,7 @@ MRESReturn Hook_EntityShouldTransmit(int entity, DHookReturn returnHandle, DHook
 	SF2_BasePlayer client = SF2_BasePlayer(entity);
 	if (client.IsValid)
 	{
-		if (client.HasConstantGlow)
+		if (DoesEntityHaveGlow(client.index))
 		{
 			returnHandle.Value = FL_EDICT_ALWAYS; // Should always transmit, but our SetTransmit hook gets the final say.
 			return MRES_Supercede;
@@ -3467,6 +3532,14 @@ public void OnClientPutInServer(int client)
 {
 	if (!g_Enabled)
 	{
+		if (g_LoadOutsideMapsConVar.BoolValue)
+		{
+			g_ClientInGame[client] = true;
+			SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
+			Call_StartForward(g_OnPlayerPutInServerPFwd);
+			Call_PushCell(SF2_BasePlayer(client));
+			Call_Finish();
+		}
 		return;
 	}
 
@@ -3534,9 +3607,6 @@ public void OnClientPutInServer(int client)
 	ClientResetJumpScare(client);
 	ClientUpdateListeningFlags(client);
 	ClientResetScare(client);
-
-	ClientResetInteractiveGlow(client);
-	ClientDisableConstantGlow(client);
 
 	ClientSetScareBoostEndTime(client, -1.0);
 
@@ -3662,8 +3732,6 @@ public void OnClientDisconnect(int client)
 
 	// Reset any client functions that may be still active.
 	ClientResetOverlay(client);
-	ClientResetInteractiveGlow(client);
-	ClientDisableConstantGlow(client);
 
 	if (SF_IsBoxingMap() && IsRoundInEscapeObjective())
 	{
@@ -3779,14 +3847,6 @@ void SetRoundState(SF2RoundState roundState)
 		case SF2RoundState_Intro:
 		{
 			g_RoundIntroTimer = null;
-			if (!IsInfiniteFlashlightEnabled())
-			{
-				g_NightvisionType = GetRandomInt(0, 1);
-			}
-			else
-			{
-				g_NightvisionType = 1;
-			}
 
 			// Enable movement on players.
 			for (int i = 1; i <= MaxClients; i++)
@@ -3904,6 +3964,7 @@ void SetRoundState(SF2RoundState roundState)
 			g_RenevantBeaconEffect = false;
 			g_Renevant90sEffect = false;
 			g_RenevantMarkForDeath = false;
+			g_RenevantBossesChaseEndlessly = false;
 			g_DifficultyConVar.SetInt(Difficulty_Normal);
 			if (g_RestartSessionConVar.BoolValue)
 			{
@@ -3931,6 +3992,15 @@ void SetRoundState(SF2RoundState roundState)
 		}
 		case SF2RoundState_Grace:
 		{
+			if (!IsInfiniteFlashlightEnabled())
+			{
+				g_NightVisionType = GetRandomInt(0, 2);
+			}
+			else
+			{
+				g_NightVisionType = 1;
+			}
+
 			// Start the grace period timer.
 			g_RoundGraceTimer = CreateTimer(g_GraceTimeConVar.FloatValue, Timer_RoundGrace, _, TIMER_FLAG_NO_MAPCHANGE);
 
@@ -4173,8 +4243,24 @@ ArrayList GetQueueList()
 	return array;
 }
 
-void SetClientPlayState(int client, bool state, bool enablePlay = true)
+void SetClientPlayState(int client, bool state, bool enablePlay = true, bool queue = true)
 {
+	if (g_PlayerEliminated[client] == !state)
+	{
+		return;
+	}
+
+	if (g_PlayerProxy[client])
+	{
+		return;
+	}
+
+	Call_StartForward(g_OnPlayerChangePlayStatePFwd);
+	Call_PushCell(SF2_BasePlayer(client));
+	Call_PushCell(state);
+	Call_PushCell(queue);
+	Call_Finish();
+
 	Handle message = StartMessageAll("PlayerTauntSoundLoopEnd", USERMSG_RELIABLE);
 	BfWriteByte(message, client);
 	delete message;
@@ -4182,15 +4268,6 @@ void SetClientPlayState(int client, bool state, bool enablePlay = true)
 
 	if (state)
 	{
-		if (!g_PlayerEliminated[client])
-		{
-			return;
-		}
-		if (g_PlayerProxy[client])
-		{
-			return;
-		}
-
 		g_PlayerCalledForNightmare[client] = false;
 		g_PlayerEliminated[client] = false;
 		g_PlayerPlaying[client] = enablePlay;
@@ -4220,17 +4297,11 @@ void SetClientPlayState(int client, bool state, bool enablePlay = true)
 	}
 	else
 	{
-		if (g_PlayerEliminated[client])
-		{
-			return;
-		}
-
 		g_PlayerEliminated[client] = true;
 		g_PlayerPlaying[client] = false;
 
 		ChangeClientTeamNoSuicide(client, TFTeam_Blue);
 	}
-
 }
 /*
 bool DidClientPlayNewBossRound(int client)
@@ -4520,6 +4591,7 @@ void SlenderOnClientStressUpdate(int client)
 					proxyArray.Push(i);
 				}
 			}
+
 			if (proxyArray.Length > 0)
 			{
 				int proxyClient = proxyArray.Get(GetRandomInt(0, proxyArray.Length - 1));
@@ -4534,7 +4606,16 @@ void SlenderOnClientStressUpdate(int client)
 
 		Npc.GetProfile(profile, sizeof(profile));
 
-		int teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[Npc.Index]);
+		int teleportTarget = EntRefToEntIndex(g_SlenderProxyTarget[Npc.Index]);
+		if (teleportTarget && teleportTarget != INVALID_ENT_REFERENCE)
+		{
+			if (g_PlayerEliminated[teleportTarget] || DidClientEscape(teleportTarget))
+			{
+				g_SlenderProxyTarget[Npc.Index] = INVALID_ENT_REFERENCE;
+			}
+		}
+
+		teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[Npc.Index]);
 		if (teleportTarget && teleportTarget != INVALID_ENT_REFERENCE && !g_PlayerIsExitCamping[teleportTarget])
 		{
 			if (g_PlayerEliminated[teleportTarget] || DidClientEscape(teleportTarget) ||
@@ -5157,7 +5238,7 @@ static Action Timer_SlaughterRunSpawnBosses(Handle timer)
 		{
 			continue;
 		}
-		Npc.UnSpawn();
+		Npc.UnSpawn(true);
 		if (spawnPoint.Length > 0)
 		{
 			ent = spawnPoint.Get(GetRandomInt(0, spawnPoint.Length - 1));
@@ -7980,6 +8061,7 @@ void InitializeNewGame()
 		g_RenevantBeaconEffect = false;
 		g_Renevant90sEffect = false;
 		g_RenevantMarkForDeath = false;
+		g_RenevantBossesChaseEndlessly = false;
 
 		Renevant_SetWave(0);
 	}

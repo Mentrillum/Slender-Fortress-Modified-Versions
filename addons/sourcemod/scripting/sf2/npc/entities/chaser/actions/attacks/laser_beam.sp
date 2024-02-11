@@ -163,6 +163,14 @@ static int Update(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity actor, f
 		}
 	}
 
+	CBaseEntity target = actor.Target;
+	if (target.IsValid())
+	{
+		float lookAt[3];
+		target.GetAbsOrigin(lookAt);
+		actor.MyNextBotPointer().GetLocomotionInterface().FaceTowards(lookAt);
+	}
+
 	return action.Continue();
 }
 

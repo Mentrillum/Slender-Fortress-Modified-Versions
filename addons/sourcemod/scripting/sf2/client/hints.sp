@@ -13,11 +13,21 @@ void SetupHints()
 
 static void OnPutInServer(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientResetHints(client.index);
 }
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	ClientResetHints(client.index);
 }
 

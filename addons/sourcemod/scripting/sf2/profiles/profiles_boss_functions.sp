@@ -129,6 +129,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	}
 
 	profileData.TurnRate = kv.GetFloat("maxyawrate", profileData.TurnRate);
+	profileData.TurnRate = kv.GetFloat("turnrate", profileData.TurnRate);
 
 	profileData.ScareCooldown = kv.GetFloat("scare_cooldown", profileData.ScareCooldown);
 	if (profileData.ScareCooldown < 0.0)
@@ -237,7 +238,9 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	GetProfileDifficultyFloatValues(kv, "kill_cooldown", profileData.InstantKillCooldown, profileData.InstantKillCooldown);
 
 	GetProfileDifficultyFloatValues(kv, "search_view_distance", profileData.SearchRange, profileData.SearchRange);
+	GetProfileDifficultyFloatValues(kv, "search_range", profileData.SearchRange, profileData.SearchRange);
 	GetProfileDifficultyFloatValues(kv, "hearing_range", profileData.SearchSoundRange, profileData.SearchSoundRange);
+	GetProfileDifficultyFloatValues(kv, "search_sound_range", profileData.SearchSoundRange, profileData.SearchSoundRange);
 	GetProfileDifficultyFloatValues(kv, "taunt_alert_range", profileData.TauntAlertRange, profileData.TauntAlertRange);
 
 	GetProfileDifficultyBoolValues(kv, "teleport_allowed", profileData.TeleportAllowed, profileData.TeleportAllowed);
@@ -382,7 +385,9 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	profileData.OutroMusic = kv.GetNum("sound_music_outro_enabled", profileData.OutroMusic) != 0;
 
 	profileData.EngineSoundLevel = kv.GetNum("constant_sound_level", profileData.EngineSoundLevel);
+	profileData.EngineSoundLevel = kv.GetNum("engine_sound_level", profileData.EngineSoundLevel);
 	profileData.EngineSoundVolume = kv.GetFloat("constant_sound_volume", profileData.EngineSoundVolume);
+	profileData.EngineSoundVolume = kv.GetFloat("engine_sound_volume", profileData.EngineSoundVolume);
 
 	kv.GetVector("eye_pos", profileData.EyePosOffset, profileData.EyePosOffset);
 	kv.GetVector("eye_ang_offset", profileData.EyeAngOffset, profileData.EyeAngOffset);
@@ -700,6 +705,8 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 	UnloadBossProfile(profile);
 
+	profileData.AnimationData.Load(kv, true);
+
 	switch (profileData.Type)
 	{
 		case SF2BossType_Statue:
@@ -717,13 +724,13 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			}
 		}
 	}
-
 	// Add the section to our config.
 	g_Config.Rewind();
 	g_Config.JumpToKey(profile, true);
 	g_Config.Import(kv);
 
 	kv.GetString("constant_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
+	kv.GetString("engine_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
 
 	TryPrecacheBossProfileSoundPath(profileData.EngineSound, g_FileCheckConVar.BoolValue);
 
@@ -874,6 +881,8 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
+	ArrayList validSections = new ArrayList(ByteCountToCells(128));
+
 	if (kv.GotoFirstSubKey()) //Special thanks to Fire for modifying the code for download errors.
 	{
 		char s2[64], s3[64], s4[PLATFORM_MAX_PATH], s5[PLATFORM_MAX_PATH];
@@ -881,6 +890,13 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		do
 		{
 			kv.GetSectionName(s2, sizeof(s2));
+
+			if (validSections.FindString(s2) != -1)
+			{
+				continue;
+			}
+
+			validSections.PushString(s2);
 
 			if (StrContains(s2, "sound_") != -1)
 			{
@@ -1099,6 +1115,8 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		kv.GoBack();
 	}
 
+	delete validSections;
+
 	if (kv.JumpToKey("companions"))
 	{
 		profileData.CompanionsArray = new ArrayList(sizeof(SF2BossProfileCompanionsInfo));
@@ -1123,8 +1141,6 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	{
 		profileData.AttributesInfo.Load(kv);
 	}
-
-	profileData.AnimationData.Load(kv);
 
 	if (kv.JumpToKey("effects"))
 	{
@@ -1951,30 +1967,6 @@ bool GetBossProfileCustomOutlinesState(const char[] profile)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.CustomOutlines;
-}
-
-int GetBossProfileOutlineColorR(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.OutlineColor[0];
-}
-
-int GetBossProfileOutlineColorG(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.OutlineColor[1];
-}
-
-int GetBossProfileOutlineColorB(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.OutlineColor[2];
-}
-
-int GetBossProfileOutlineTransparency(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.OutlineColor[3];
 }
 
 bool GetBossProfileRainbowOutlineState(const char[] profile)

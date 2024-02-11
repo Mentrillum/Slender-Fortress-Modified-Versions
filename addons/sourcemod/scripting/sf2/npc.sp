@@ -26,7 +26,6 @@ static int g_NpcModelBodyGroups[MAX_BOSSES] = { 0, ... };
 static int g_NpcModelBodyGroupsDifficulty[MAX_BOSSES][Difficulty_Max];
 static int g_NpcModelBodyGroupsMax[MAX_BOSSES] = { 0, ... };
 bool g_NpcRaidHitbox[MAX_BOSSES] = { false, ... };
-int g_NpcGlowEntity[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 static float g_NpcSoundMusicLoop[MAX_BOSSES][Difficulty_Max];
 static int g_NpcAllowMusicOnDifficulty[MAX_BOSSES];
 static char g_NpcName[MAX_BOSSES][Difficulty_Max][SF2_MAX_PROFILE_NAME_LENGTH];
@@ -106,6 +105,8 @@ static bool g_NpcHasProxySpawnEffectEnabled[MAX_BOSSES];
 static float g_NpcProxySpawnEffectZOffset[MAX_BOSSES];
 
 static bool g_NpcShouldBeAffectedBySight[MAX_BOSSES];
+
+static int g_NpcDefaultTeam[MAX_BOSSES];
 
 Handle timerMusic = null;//Planning to add a bosses array on.
 
@@ -195,6 +196,7 @@ void NPCInitialize()
 	g_OnEntityTeleportedPFwd.AddFunction(null, EntityTeleported);
 
 	NPCChaserInitialize();
+	SetupNPCGlows();
 }
 
 void NPC_InitializeAPI()
@@ -205,7 +207,7 @@ void NPC_InitializeAPI()
 	g_OnBossRemovedFwd = new GlobalForward("SF2_OnBossRemoved", ET_Ignore, Param_Cell);
 	g_OnBossFinishSpawningFwd = new GlobalForward("SF2_OnBossFinishSpawning", ET_Ignore, Param_Cell);
 	g_OnClientCaughtByBossFwd = new GlobalForward("SF2_OnClientCaughtByBoss", ET_Ignore, Param_Cell, Param_Cell);
-	
+
 	CreateNative("SF2_GetMaxBossCount", Native_GetMaxBosses);
 	CreateNative("SF2_EntIndexToBossIndex", Native_EntIndexToBossIndex);
 	CreateNative("SF2_BossIndexToEntIndex", Native_BossIndexToEntIndex);
@@ -238,6 +240,13 @@ void NPC_InitializeAPI()
 	CreateNative("SF2_GetBossTeleportThinkTimer", Native_GetBossTeleportThinkTimer);
 	CreateNative("SF2_SetBossTeleportThinkTimer", Native_SetBossTeleportThinkTimer);
 	CreateNative("SF2_GetBossTeleportTarget", Native_GetBossTeleportTarget);
+
+	CreateNative("SF2_GetBossGoalPosition", Native_GetBossGoalPosition);
+
+	CreateNative("SF2_GetBossTimeUntilNoPersistence", Native_Nothing);
+	CreateNative("SF2_SetBossTimeUntilNoPersistence", Native_Nothing);
+	CreateNative("SF2_GetBossTimeUntilAlert", Native_GetBossCurrentChaseDuration);
+	CreateNative("SF2_SetBossTimeUntilAlert", Native_SetBossCurrentChaseDuration);
 
 	CreateNative("SF2_GetProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetProfileFromName", Native_GetProfileDataEx);
@@ -362,13 +371,6 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
 	{
 		g_BossPathFollower[bossIndex].Invalidate();
 	}
-
-	int glowEnt = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
-	if (glowEnt && glowEnt != INVALID_ENT_REFERENCE)
-	{
-		RemoveEntity(glowEnt);
-	}
-	g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
 
 	if (GetBossProfileDespawnParticleState(profile))
 	{
@@ -573,6 +575,12 @@ void CheckIfMusicValid()
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
 		if (NPCGetUniqueID(i) == -1)
+		{
+			continue;
+		}
+		SF2BossProfileData data;
+		data = NPCGetProfileData(i);
+		if (data.IsPvEBoss)
 		{
 			continue;
 		}
@@ -1135,11 +1143,14 @@ void GetBossMusic(char[] buffer,int bufferLen)
 		}
 	}
 }
-static Action BossMusic(Handle timer,any bossIndex)
+
+static Action BossMusic(Handle timer, any bossIndex)
 {
 	int difficulty = g_DifficultyConVar.IntValue;
 	float time = NPCGetSoundMusicLoop(bossIndex, difficulty);
-	if (time > 0.0 && (g_NpcAllowMusicOnDifficulty[bossIndex] & difficulty))
+	SF2BossProfileData data;
+	data = NPCGetProfileData(bossIndex);
+	if (!data.IsPvEBoss && time > 0.0 && (g_NpcAllowMusicOnDifficulty[bossIndex] & difficulty))
 	{
 		if (bossIndex > -1)
 		{
@@ -1292,26 +1303,6 @@ float[] NPCGetFestiveLightAngle(int npcIndex)
 bool NPCGetCustomOutlinesState(int npcIndex)
 {
 	return g_SlenderUseCustomOutlines[npcIndex];
-}
-
-int NPCGetOutlineColorR(int npcIndex)
-{
-	return g_SlenderOutlineColorR[npcIndex];
-}
-
-int NPCGetOutlineColorG(int npcIndex)
-{
-	return g_SlenderOutlineColorG[npcIndex];
-}
-
-int NPCGetOutlineColorB(int npcIndex)
-{
-	return g_SlenderOutlineColorB[npcIndex];
-}
-
-int NPCGetOutlineTransparency(int npcIndex)
-{
-	return g_SlenderOutlineTransparency[npcIndex];
 }
 
 bool NPCGetRainbowOutlineState(int npcIndex)
@@ -1541,6 +1532,16 @@ bool NPCGetAffectedBySightState(int npcIndex)
 void NPCSetAffectedBySightState(int npcIndex, bool state)
 {
 	g_NpcShouldBeAffectedBySight[npcIndex] = state;
+}
+
+int NPCGetDefaultTeam(int npcIndex)
+{
+	return g_NpcDefaultTeam[npcIndex];
+}
+
+void NPCSetDefaultTeam(int npcIndex, int team)
+{
+	g_NpcDefaultTeam[npcIndex] = team;
 }
 
 bool NPCShouldSeeEntity(int npcIndex, int entity)
@@ -1815,10 +1816,6 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	GetBossProfileFestiveLightAngles(profile, g_NpcFestiveLightAng[npc.Index]);
 
 	g_SlenderUseCustomOutlines[npc.Index] = GetBossProfileCustomOutlinesState(profile);
-	g_SlenderOutlineColorR[npc.Index] = GetBossProfileOutlineColorR(profile);
-	g_SlenderOutlineColorG[npc.Index] = GetBossProfileOutlineColorG(profile);
-	g_SlenderOutlineColorB[npc.Index] = GetBossProfileOutlineColorB(profile);
-	g_SlenderOutlineTransparency[npc.Index] = GetBossProfileOutlineTransparency(profile);
 	g_SlenderUseRainbowOutline[npc.Index] = GetBossProfileRainbowOutlineState(profile);
 
 	g_NpcHasProxyWeaponsEnabled[npc.Index] = GetBossProfileProxyWeapons(profile);
@@ -1851,6 +1848,8 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	npc.CompanionMaster = SF2_INVALID_NPC;
 
 	g_NpcShouldBeAffectedBySight[npc.Index] = false;
+
+	g_NpcDefaultTeam[npc.Index] = g_DefaultBossTeamConVar.IntValue;
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
@@ -1980,7 +1979,21 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 
 	if (!profileData.IsPvEBoss)
 	{
-		g_SlenderThink[npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, npc.UniqueID, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		if (g_Enabled)
+		{
+			g_SlenderThink[npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, npc.UniqueID, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		}
+		else
+		{
+			if (g_NpcDefaultTeam[npc.Index] == TFTeam_Blue || g_NpcDefaultTeam[npc.Index] == TFTeam_Red)
+			{
+				g_SlenderThink[npc.Index] = CreateTimer(0.3, Timer_SlenderRespawnThink, npc.UniqueID, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			}
+			else
+			{
+				g_SlenderThink[npc.Index] = CreateTimer(0.3, Timer_SlenderTeleportThink, npc.UniqueID, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+			}
+		}
 	}
 
 	switch (bossType)
@@ -2043,14 +2056,17 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 				{
 					continue;
 				}
-				if (profileData.IsPvEBoss && !g_PlayerEliminated[i])
+				if (g_Enabled)
 				{
-					continue;
+					if (profileData.IsPvEBoss && !g_PlayerEliminated[i])
+					{
+						continue;
+					}
 				}
 				soundInfo.EmitSound(true, i);
 			}
 		}
-		if (!profileData.IsPvEBoss && timerMusic == null)
+		if (g_Enabled && !profileData.IsPvEBoss && timerMusic == null)
 		{
 			bool allowMusic = false;
 			float time;
@@ -2548,6 +2564,69 @@ bool NPCFindUnstuckPosition(SF2_BaseBoss boss, float lastPos[3], float destinati
 		}
 	}
 
+	SF2BossProfileData data;
+	data = controller.GetProfileData();
+
+	int ent = -1;
+	char targetName[64];
+	if (data.IsPvEBoss)
+	{
+		ArrayList spawnPointList = new ArrayList();
+
+		while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
+		{
+			GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+			if (!StrContains(targetName, "minigames_boss_spawnpoint", false))
+			{
+				spawnPointList.Push(ent);
+			}
+		}
+
+		if (spawnPointList.Length > 0)
+		{
+			ent = spawnPointList.Get(GetRandomInt(0, spawnPointList.Length - 1));
+		}
+
+		delete spawnPointList;
+
+		if (!IsValidEntity(ent))
+		{
+			return false;
+		}
+
+		CBaseEntity(ent).GetAbsOrigin(destination);
+		return true;
+	}
+
+	if (SF_IsBoxingMap())
+	{
+		ArrayList spawnPointList = new ArrayList();
+
+		while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
+		{
+			GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+			if (!StrContains(targetName, "sf2_boss_respawnpoint", false))
+			{
+				spawnPointList.Push(ent);
+			}
+		}
+
+		if (spawnPointList.Length > 0)
+		{
+			ent = spawnPointList.Get(GetRandomInt(0, spawnPointList.Length - 1));
+		}
+
+		delete spawnPointList;
+
+		if (!IsValidEntity(ent))
+		{
+			return false;
+		}
+
+		CBaseEntity(ent).GetAbsOrigin(destination);
+		return true;
+	}
+
 	return false;
 }
 
@@ -2570,7 +2649,12 @@ void ChangeAllSlenderModels()
 		NPCGetProfile(npcIndex, profile, sizeof(profile));
 		GetSlenderModel(npcIndex, _, buffer, sizeof(buffer));
 		SetEntityModel(slender, buffer);
-		SetEntityModel(EntRefToEntIndex(g_NpcGlowEntity[npcIndex]), buffer);
+
+		if (SF2_ChaserEntity(slender).IsValid())
+		{
+			SF2_ChaserEntity(slender).UpdateMovementAnimation();
+		}
+		SetGlowModel(slender, buffer);
 		if (NPCGetModelSkinMax(npcIndex) > 0)
 		{
 			int randomSkin = GetRandomInt(0, NPCGetModelSkinMax(npcIndex));
@@ -2633,7 +2717,7 @@ void ChangeAllSlenderModels()
 void RemoveProfile(int bossIndex)
 {
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(bossIndex);
-	controller.UnSpawn();
+	controller.UnSpawn(true);
 
 	// Call our forward.
 	Call_StartForward(g_OnBossRemovedFwd);
@@ -2761,7 +2845,7 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	}
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	npc.UnSpawn();
+	npc.UnSpawn(true);
 	npc.GetProfile(profile,sizeof(profile));
 
 	float truePos[3], trueAng[3];
@@ -3006,16 +3090,28 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	SF2BossProfileData data;
 	data = npc.GetProfileData();
 
-	if (!data.IsPvEBoss)
+	if (g_Enabled)
 	{
-		entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Blue);
+		if (!data.IsPvEBoss && (npc.Flags & SFF_ATTACKWAITERS) == 0)
+		{
+			entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Blue);
+		}
+		else
+		{
+			entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Spectator);
+		}
 	}
 	else
 	{
-		entity.SetProp(Prop_Data, "m_iTeamNum", TFTeam_Spectator);
+		entity.SetProp(Prop_Data, "m_iTeamNum", NPCGetDefaultTeam(bossIndex));
 	}
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	if (g_BossPathFollower[bossIndex] == view_as<PathFollower>(0))
+	{
+		g_BossPathFollower[bossIndex] = PathFollower(_, TraceRayDontHitAnyEntity_Pathing, Path_FilterOnlyActors);
+	}
 
 	g_BossPathFollower[bossIndex].SetMinLookAheadDistance(GetBossProfileNodeDistanceLookAhead(profile));
 
@@ -3053,9 +3149,16 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	}
 
 	entity.AddFlag(FL_NPC);
-	if (!data.IsPvEBoss)
+	if (g_Enabled)
 	{
-		entity.AddFlag(FL_NOTARGET);
+		if (!data.IsPvEBoss)
+		{
+			entity.AddFlag(FL_NOTARGET);
+		}
+	}
+	else
+	{
+		entity.AddFlag(FL_CLIENT);
 	}
 	//SetEntityTransmitState(entity.index, FL_EDICT_ALWAYS);
 
@@ -3070,63 +3173,6 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	if (GetBossProfileSpawnParticleState(profile))
 	{
 		SlenderCreateParticleSpawnEffect(bossIndex);
-	}
-
-	if (!data.IsPvEBoss)
-	{
-		if (NPCGetCustomOutlinesState(bossIndex))
-		{
-			if (!NPCGetRainbowOutlineState(bossIndex))
-			{
-				int color[4];
-				color[0] = NPCGetOutlineColorR(bossIndex);
-				color[1] = NPCGetOutlineColorG(bossIndex);
-				color[2] = NPCGetOutlineColorB(bossIndex);
-				color[3] = NPCGetOutlineTransparency(bossIndex);
-				if (color[0] < 0)
-				{
-					color[0] = 0;
-				}
-				if (color[1] < 0)
-				{
-					color[1] = 0;
-				}
-				if (color[2] < 0)
-				{
-					color[2] = 0;
-				}
-				if (color[3] < 0)
-				{
-					color[3] = 0;
-				}
-				if (color[0] > 255)
-				{
-					color[0] = 255;
-				}
-				if (color[1] > 255)
-				{
-					color[1] = 255;
-				}
-				if (color[2] > 255)
-				{
-					color[2] = 255;
-				}
-				if (color[3] > 255)
-				{
-					color[3] = 255;
-				}
-				SlenderAddGlow(bossIndex, color);
-			}
-			else
-			{
-				SlenderAddGlow(bossIndex, {0, 0, 0, 0});
-			}
-		}
-		else
-		{
-			int purple[4] = {150, 0, 255, 255};
-			SlenderAddGlow(bossIndex, purple);
-		}
 	}
 
 	int master = g_SlenderCopyMaster[bossIndex];
@@ -3153,6 +3199,10 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	// Call our forward.
 	Call_StartForward(g_OnBossSpawnFwd);
 	Call_PushCell(bossIndex);
+	Call_Finish();
+
+	Call_StartForward(g_OnBossSpawnPFwd);
+	Call_PushCell(npc);
 	Call_Finish();
 }
 
@@ -3218,6 +3268,15 @@ void UpdateHealthBar(int bossIndex, int optionalSetPercent = -1)
 		healthPercent = optionalSetPercent;
 	}
 	SetEntProp(g_HealthBar, Prop_Send, "m_iBossHealthPercentageByte", healthPercent);
+}
+
+void SetHealthBarColor(bool green)
+{
+	if (g_HealthBar == -1)
+	{
+		return;
+	}
+	SetEntProp(g_HealthBar, Prop_Send, "m_iBossState", view_as<int>(green));
 }
 
 /*Action Timer_BossBurn(Handle timer, any entref)
@@ -3381,31 +3440,6 @@ Action Timer_BossMarked(Handle timer, any entref)
 	return Plugin_Stop;
 }*/
 
-static Action Hook_SlenderGlowSetTransmit(int entity,int other)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-	if (g_PlayerProxy[other])
-	{
-		return Plugin_Continue;
-	}
-	if (IsClientInGhostMode(other))
-	{
-		return Plugin_Continue;
-	}
-	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax) && GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other])
-	{
-		return Plugin_Continue;
-	}
-	if (g_RestartSessionEnabled)
-	{
-		return Plugin_Continue;
-	}
-	return Plugin_Handled;
-}
-
 bool SlenderUsesBlink(int bossIndex)
 {
 	if (NPCGetType(bossIndex) == SF2BossType_Statue)
@@ -3417,6 +3451,11 @@ bool SlenderUsesBlink(int bossIndex)
 
 void SlenderPrintChatMessage(int bossIndex, int player)
 {
+	if (g_Enabled && GetClientTeam(player) != TFTeam_Red)
+	{
+		return;
+	}
+
 	if (bossIndex == -1)
 	{
 		return;
@@ -3466,11 +3505,23 @@ void SlenderPrintChatMessage(int bossIndex, int player)
 			{
 				prefix = "[SF2]";
 			}
-			if (buffer[0] != '\0' && GetClientTeam(player) == 2)
+			if (buffer[0] != '\0')
 			{
 				if (StrContains(buffer, "[PLAYER]", true) != -1)
 				{
-					FormatEx(replacePlayer, sizeof(replacePlayer), "{red}%s{default}", playerName);
+					switch (GetClientTeam(player))
+					{
+						case TFTeam_Red:
+						{
+							FormatEx(replacePlayer, sizeof(replacePlayer), "{red}%s{default}", playerName);
+						}
+
+						case TFTeam_Blue:
+						{
+							FormatEx(replacePlayer, sizeof(replacePlayer), "{blue}%s{default}", playerName);
+						}
+					}
+
 					ReplaceString(buffer, sizeof(buffer), "[PLAYER]", replacePlayer);
 				}
 				if (StrContains(buffer, "[BOSS]", true) != -1)
@@ -3659,6 +3710,11 @@ void SlenderCreateParticleSpawnEffect(int bossIndex, bool despawn = false)
 
 static Action Timer_SlenderTeleportThink(Handle timer, any id)
 {
+	if (!g_Enabled)
+	{
+		return Plugin_Stop;
+	}
+
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC.FromUniqueId(id);
 	if (!controller.IsValid())
 	{
@@ -4061,6 +4117,90 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 	return Plugin_Continue;
 }
 
+static Action Timer_SlenderRespawnThink(Handle timer, any id)
+{
+	if (g_Enabled)
+	{
+		return Plugin_Stop;
+	}
+
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC.FromUniqueId(id);
+	if (!controller.IsValid())
+	{
+		return Plugin_Stop;
+	}
+
+	int bossIndex = controller.Index;
+	if (timer != g_SlenderThink[bossIndex])
+	{
+		return Plugin_Stop;
+	}
+
+	float gameTime = GetGameTime();
+
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	bool cont = false;
+
+	int bossEnt = controller.EntIndex;
+	if (bossEnt && bossEnt != INVALID_ENT_REFERENCE && controller.TeleportType == 2)
+	{
+		cont = true;
+	}
+
+	if (!NPCIsTeleportAllowed(bossIndex, difficulty) && (!bossEnt || bossEnt == INVALID_ENT_REFERENCE))
+	{
+		cont = true;
+	}
+
+	if (cont)
+	{
+		float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
+		g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
+		return Plugin_Continue;
+	}
+
+	if (gameTime >= g_SlenderNextTeleportTime[bossIndex])
+	{
+		float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
+		g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
+
+		if (bossEnt && bossEnt != INVALID_ENT_REFERENCE) // For teleport type 0
+		{
+			controller.UnSpawn();
+			return Plugin_Continue;
+		}
+
+		ArrayList spawnPoint = new ArrayList();
+		float teleportPos[3];
+		int ent = -1, spawnTeam = 0;
+		while ((ent = FindEntityByClassname(ent, "info_player_teamspawn")) != -1)
+		{
+			spawnTeam = GetEntProp(ent, Prop_Data, "m_iInitialTeamNum");
+			if (spawnTeam == NPCGetDefaultTeam(bossIndex))
+			{
+				spawnPoint.Push(ent);
+			}
+		}
+
+		ent = -1;
+		if (spawnPoint.Length > 0)
+		{
+			ent = spawnPoint.Get(GetRandomInt(0, spawnPoint.Length - 1));
+		}
+
+		delete spawnPoint;
+
+		if (IsValidEntity(ent))
+		{
+			CBaseEntity(ent).GetAbsOrigin(teleportPos);
+			controller.Spawn(teleportPos);
+		}
+	}
+
+	return Plugin_Continue;
+}
+
 bool SlenderMarkAsFake(int bossIndex)
 {
 	int bossFlags = NPCGetFlags(bossIndex);
@@ -4251,58 +4391,6 @@ bool PlayerCanSeeSlender(int client, int bossIndex, bool checkFOV = true, bool c
 bool PeopleCanSeeSlender(int bossIndex, bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true)
 {
 	return IsNPCVisibleToAPlayer(bossIndex, checkFOV, checkBlink, checkEliminated);
-}
-
-bool SlenderAddGlow(int bossIndex, int color[4] = {255, 255, 255, 255})
-{
-	int slender = NPCGetEntIndex(bossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return false;
-	}
-
-	char buffer[PLATFORM_MAX_PATH];
-	GetEntPropString(slender, Prop_Data, "m_ModelName", buffer, sizeof(buffer));
-
-	if (buffer[0] == '\0')
-	{
-		return false;
-	}
-
-	// This is so much simpler, I don't know why I didn't make this earlier.
-	int glow = TF2_CreateGlow(slender);
-	if (IsValidEntity(glow))
-	{
-		SDKHook(glow, SDKHook_SetTransmit, Hook_SlenderGlowSetTransmit);
-
-		g_NpcGlowEntity[bossIndex] = EntIndexToEntRef(glow);
-		//Set our desired glow color
-		SetVariantColor(color);
-		AcceptEntityInput(glow, "SetGlowColor");
-		g_DHookShouldTransmit.HookEntity(Hook_Pre, glow, Hook_EntityShouldTransmit);
-		g_DHookUpdateTransmitState.HookEntity(Hook_Pre, glow, Hook_GlowUpdateTransmitState);
-		SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
-
-		return true;
-	}
-
-	return false;
-}
-
-void SlenderRemoveGlow(int bossIndex)
-{
-	int slender = NPCGetEntIndex(bossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return;
-	}
-
-	int glow = EntRefToEntIndex(g_NpcGlowEntity[bossIndex]);
-	if (glow && glow != INVALID_ENT_REFERENCE)
-	{
-		RemoveEntity(glow);
-		g_NpcGlowEntity[bossIndex] = INVALID_ENT_REFERENCE;
-	}
 }
 
 bool IsNPCVisibleToPlayer(int npcIndex, int client, bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true)
@@ -4787,8 +4875,8 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	return true;
 }
 
+#include "npc/glow.sp"
 #include "sf2/npc/npc_chaser.sp"
-//#include "sf2/npc/npc_chaser_takedamage.sp"
 #include "sf2/npc/entities/initialize.sp"
 
 static any Native_GetMaxBosses(Handle plugin, int numParams)
@@ -4919,13 +5007,25 @@ static any Native_GetBossIdleLifetime(Handle plugin, int numParams)
 
 static any Native_GetBossState(Handle plugin, int numParams)
 {
-	SF2_BaseBoss boss = SF2_BaseBoss(NPCGetEntIndex(GetNativeCell(1)));
+	int entity = NPCGetEntIndex(GetNativeCell(1));
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss boss = SF2_BaseBoss(entity);
 	return boss.State;
 }
 
 static any Native_SetBossState(Handle plugin, int numParams)
 {
-	SF2_BaseBoss boss = SF2_BaseBoss(NPCGetEntIndex(GetNativeCell(1)));
+	int entity = NPCGetEntIndex(GetNativeCell(1));
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss boss = SF2_BaseBoss(entity);
 	boss.State = GetNativeCell(2);
 	return 0;
 }
@@ -4975,6 +5075,67 @@ static any Native_SetBossTeleportThinkTimer(Handle plugin, int numParams)
 static any Native_GetBossTeleportTarget(Handle plugin, int numParams)
 {
 	return EntRefToEntIndex(g_SlenderTeleportTarget[GetNativeCell(1)]);
+}
+
+static any Native_GetBossGoalPosition(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	if (!controller.Path.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid path for boss index %d", controller.Index);
+	}
+
+	float ret[3];
+	controller.Path.GetEndPosition(ret);
+	SetNativeArray(2, ret, 3);
+	return 0;
+}
+
+static any Native_Nothing(Handle plugin, int numParams)
+{
+	return 0;
+}
+
+static any Native_GetBossCurrentChaseDuration(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	int entity = controller.EntIndex;
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	return bossEntity.CurrentChaseDuration;
+}
+
+static any Native_SetBossCurrentChaseDuration(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	int entity = controller.EntIndex;
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	bossEntity.CurrentChaseDuration = GetNativeCell(2);
+	return 0;
 }
 
 static any Native_GetProfileData(Handle plugin, int numParams)

@@ -216,19 +216,6 @@ int SetEntityTransmitState(int entity, int newFlags)
 	return flags;
 }
 
-bool IsEntityClassname(int entIndex, const char[] classname, bool caseSensitive=true)
-{
-	if (!IsValidEntity(entIndex))
-	{
-		return false;
-	}
-
-	char buffer[256];
-	GetEntityClassname(entIndex, buffer, sizeof(buffer));
-
-	return strcmp(buffer, classname, caseSensitive) == 0;
-}
-
 int FindEntityByTargetname(const char[] targetName, const char[] className, bool caseSensitive=true)
 {
 	int ent = -1;
@@ -658,7 +645,7 @@ void TF2_DestroySpyWeapons()
 	}
 }
 
-void ClientSwitchToWeaponSlot(int client,int slot)
+void ClientSwitchToWeaponSlot(int client, int slot)
 {
 	int weaponEnt = GetPlayerWeaponSlot(client, slot);
 	if (weaponEnt <= MaxClients)
@@ -669,7 +656,7 @@ void ClientSwitchToWeaponSlot(int client,int slot)
 	SDK_SwitchWeapon(client, weaponEnt);
 }
 
-void ChangeClientTeamNoSuicide(int client,int team, bool respawn=true)
+void ChangeClientTeamNoSuicide(int client, int team, bool respawn = true)
 {
 	if (!IsValidClient(client))
 	{
@@ -747,6 +734,15 @@ bool TF2_IsMiniCritBuffed(int client)
 		|| TF2_IsPlayerInCondition(client, TFCond_CritHype)
 		|| TF2_IsPlayerInCondition(client, TFCond_Buffed)
 	);
+}
+
+bool TF2_IsInvisible(int client)
+{
+	return ((TF2_IsPlayerInCondition(client, TFCond_Cloaked) ||
+		TF2_IsPlayerInCondition(client, TFCond_DeadRingered) ||
+		TF2_IsPlayerInCondition(client, TFCond_Stealthed))
+		&& !TF2_IsPlayerInCondition(client, TFCond_StealthedUserBuffFade)
+		&& !TF2_IsPlayerInCondition(client, TFCond_CloakFlicker));
 }
 
 bool IsTauntWep(int weaponEnt)
@@ -934,7 +930,7 @@ void TE_Particle(int particleIndex,
 	}
 }
 
-void CreateParticle(char[] particle, float pos[3], float ang[3])
+/*void CreateParticle(char[] particle, float pos[3], float ang[3])
 {
 	int tblidx = FindStringTable("ParticleEffectNames");
 	char tmp[256];
@@ -960,6 +956,80 @@ void CreateParticle(char[] particle, float pos[3], float ang[3])
 	TE_WriteNum("entindex", -1);
 	TE_WriteNum("m_iAttachType", 5);
 	TE_SendToAll();
+}*/
+
+void TE_SetupEffectDispatch(int effectName,
+	const float origin[3] = NULL_VECTOR,
+	const float start[3] = NULL_VECTOR,
+	const float angles[3] = NULL_VECTOR,
+	const float normal[3] = NULL_VECTOR,
+	int flags = 0,
+	float magnitude = 0.0,
+	float scale = 1.0,
+	int attachmentIndex = 0,
+	int surfaceProp = 0,
+	int material = 0,
+	int damageType = 0,
+	int hitbox = 0,
+	int entindex = 0,
+	int color = 0,
+	float radius = 0.0,
+	bool customColors = false,
+	bool controlPoint1 = false,
+	int cp1AttachType = -1,
+	const float cp1Offset[3] = NULL_VECTOR)
+{
+	TE_Start("EffectDispatch");
+	TE_WriteFloat("m_vOrigin[0]", origin[0]);
+	TE_WriteFloat("m_vOrigin[1]", origin[1]);
+	TE_WriteFloat("m_vOrigin[2]", origin[2]);
+	TE_WriteFloat("m_vStart[0]", start[0]);
+	TE_WriteFloat("m_vStart[1]", start[1]);
+	TE_WriteFloat("m_vStart[2]", start[2]);
+	TE_WriteVector("m_vAngles", angles);
+	TE_WriteVector("m_vNormal", normal);
+	TE_WriteNum("m_fFlags", flags);
+	TE_WriteFloat("m_flMagnitude", magnitude);
+	TE_WriteFloat("m_flScale", scale);
+	TE_WriteNum("m_nAttachmentIndex", attachmentIndex);
+	TE_WriteNum("m_nSurfaceProp", surfaceProp);
+	TE_WriteNum("m_iEffectName", effectName);
+	TE_WriteNum("m_nMaterial", material);
+	TE_WriteNum("m_nDamageType", damageType);
+	TE_WriteNum("m_nHitBox", hitbox);
+	TE_WriteNum("entindex", entindex);
+	TE_WriteNum("m_nColor", color);
+	TE_WriteFloat("m_flRadius", radius);
+	TE_WriteNum("m_bCustomColors", customColors);
+	TE_WriteNum("m_bControlPoint1", controlPoint1);
+	TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", cp1AttachType);
+	TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", cp1Offset[0]);
+	TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", cp1Offset[1]);
+	TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", cp1Offset[2]);
+}
+
+int GetEffectDispatchStringTableIndex(const char[] effectName)
+{
+	static int table = INVALID_STRING_TABLE;
+	if (table == INVALID_STRING_TABLE)
+	{
+		table = FindStringTable("EffectDispatch");
+	}
+
+	int index = FindStringIndex2(table, effectName);
+	if (index == INVALID_STRING_INDEX)
+	{
+		int numStrings = GetStringTableNumStrings(table);
+		if (numStrings >= GetStringTableMaxStrings(table))
+		{
+			return INVALID_STRING_INDEX;
+		}
+
+		AddToStringTable(table, effectName);
+		index = numStrings;
+	}
+
+	return index;
 }
 
 void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float duration, float radius, int command, bool airShake)
@@ -1319,7 +1389,7 @@ bool EnumerateBreakableEntities(int entIndex, ArrayList array)
 	GetEntityClassname(entIndex, className, sizeof(className));
 
 	if (strcmp(className, "prop_physics") == 0 || strcmp(className, "prop_dynamic") == 0 ||
-		strcmp(className, "func_breakable", false) == 0)
+		strcmp(className, "func_breakable", false) == 0 || strcmp(className, "tank_boss", false) == 0)
 	{
 		if (GetEntProp(entIndex, Prop_Data, "m_iHealth") > 0)
 		{
@@ -1371,7 +1441,7 @@ Action Timer_KillEdict(Handle timer, any entref)
 //	==========================================================
 bool IsInfiniteFlashlightEnabled()
 {
-	return (g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
+	return (g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || (IsNightVisionEnabled() && g_NightVisionType == 1));
 }
 
 bool IsInfiniteBlinkEnabled()
@@ -1382,6 +1452,11 @@ bool IsInfiniteBlinkEnabled()
 bool IsInfiniteSprintEnabled()
 {
 	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1);
+}
+
+bool IsNightVisionEnabled()
+{
+	return g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION);
 }
 
 static int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
@@ -1491,12 +1566,6 @@ float GetDifficultyModifier(int difficulty)
 	}
 
 	return DIFFICULTYMODIFIER_NORMAL;
-}
-
-MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
-{
-	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
-	return MRES_Supercede;
 }
 
 void PlayNightmareSound()

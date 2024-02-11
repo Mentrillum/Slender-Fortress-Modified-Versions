@@ -292,6 +292,11 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
 {
+	if (!g_Enabled)
+	{
+		return;
+	}
+
 	if (fake)
 	{
 		return;
@@ -1527,100 +1532,15 @@ void SpecialRoundStart()
 			{
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Hardcore.
 			}
-			for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
-			{
-				if (NPCGetUniqueID(npcIndex) == -1)
-				{
-					continue;
-				}
-				SF2BossProfileData data;
-				data = NPCGetProfileData(npcIndex);
-				if (data.IsPvEBoss)
-				{
-					continue;
-				}
-				SlenderRemoveGlow(npcIndex);
-				if (NPCGetCustomOutlinesState(npcIndex))
-				{
-					if (!NPCGetRainbowOutlineState(npcIndex))
-					{
-						int color[4];
-						color[0] = NPCGetOutlineColorR(npcIndex);
-						color[1] = NPCGetOutlineColorG(npcIndex);
-						color[2] = NPCGetOutlineColorB(npcIndex);
-						color[3] = NPCGetOutlineTransparency(npcIndex);
-						if (color[0] < 0)
-						{
-							color[0] = 0;
-						}
-						if (color[1] < 0)
-						{
-							color[1] = 0;
-						}
-						if (color[2] < 0)
-						{
-							color[2] = 0;
-						}
-						if (color[3] < 0)
-						{
-							color[3] = 0;
-						}
-						if (color[0] > 255)
-						{
-							color[0] = 255;
-						}
-						if (color[1] > 255)
-						{
-							color[1] = 255;
-						}
-						if (color[2] > 255)
-						{
-							color[2] = 255;
-						}
-						if (color[3] > 255)
-						{
-							color[3] = 255;
-						}
-						SlenderAddGlow(npcIndex, color);
-					}
-					else
-					{
-						SlenderAddGlow(npcIndex, {0, 0, 0, 0});
-					}
-				}
-				else
-				{
-					int purple[4] = {150, 0, 255, 255};
-					SlenderAddGlow(npcIndex, purple);
-				}
-			}
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (!IsValidClient(i))
-				{
-					continue;
-				}
-				ClientDisableConstantGlow(i);
-				if (!g_PlayerProxy[i] && !DidClientEscape(i) && !g_PlayerEliminated[i])
-				{
-					int red[4] = {184, 56, 59, 255};
-					ClientEnableConstantGlow(i, red);
-				}
-				else if ((g_PlayerProxy[i] && GetClientTeam(i) == TFTeam_Blue))
-				{
-					int yellow[4] = {255, 208, 0, 255};
-					ClientEnableConstantGlow(i, yellow);
-				}
-			}
+
 			SF_AddSpecialRound(SPECIALROUND_WALLHAX);
 		}
 		case SPECIALROUND_INFINITEFLASHLIGHT:
 		{
 			SF_RemoveSpecialRound(SPECIALROUND_LIGHTSOUT);
-			bool nightVision = (g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION));
-			if (nightVision && g_NightvisionType != 1)
+			if (IsNightVisionEnabled() && g_NightVisionType != 1)
 			{
-				g_NightvisionType = 1;
+				g_NightVisionType = 1;
 				for (int i = 1; i <= MaxClients; i++)
 				{
 					if (!IsValidClient(i))
@@ -1767,6 +1687,10 @@ void SpecialRoundStart()
 	{
 		SpecialRoundCycleStart();
 	}
+
+	Call_StartForward(g_OnSpecialRoundStartPFwd);
+	Call_PushCell(g_SpecialRoundType);
+	Call_Finish();
 }
 
 static Action Timer_SpecialRoundVoteLoop(Handle timer)
