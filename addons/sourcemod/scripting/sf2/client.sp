@@ -960,6 +960,7 @@ Action Timer_ClientPageDetector(Handle timer, int userid)
 	}
 
 	int client = GetClientOfUserId(userid);
+
 	if (!IsValidClient(client))
 	{
 		return Plugin_Stop;
@@ -975,52 +976,33 @@ Action Timer_ClientPageDetector(Handle timer, int userid)
 		return Plugin_Stop;
 	}
 
-	CNavArea area = CBaseCombatCharacter(client).GetLastKnownArea();
-	if (area == NULL_AREA)
-	{
-		g_ClientSpecialRoundTimer[client] = CreateTimer(0.1, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
-		return Plugin_Stop;
-	}
-
 	int closestPageEntIndex = -1;
 
-	float bestCost = 9999999.9;
+	float distance = SquareFloat(99999.0);
 	float clientPos[3], pagePos[3];
 	GetClientAbsOrigin(client, clientPos);
 
 	ArrayList pageEntities = new ArrayList();
 	GetPageEntities(pageEntities);
 
-	CNavArea goalArea;
 	for (int i = 0; i < pageEntities.Length; i++)
 	{
 		CBaseEntity pageEnt = CBaseEntity(pageEntities.Get(i));
 		pageEnt.GetAbsOrigin(pagePos);
-		goalArea = TheNavMesh.GetNearestNavArea(pagePos);
-		if (goalArea == NULL_AREA)
-		{
-			continue;
-		}
-		TheNavMesh.BuildPath(area, goalArea, pagePos, _, _, 5000.0);
 
-		float cost = goalArea.GetCostSoFar();
+		float squareDistance = GetVectorSquareMagnitude(clientPos, pagePos);
 
-		if (closestPageEntIndex == -1 || cost < bestCost)
+		if (closestPageEntIndex == -1 || squareDistance < distance)
 		{
 			closestPageEntIndex = pageEnt.index;
-			bestCost = cost;
+			distance = squareDistance;
 		}
 	}
 
 	delete pageEntities;
 
-	float nextBeepTime = bestCost / 1200.0;
+	float nextBeepTime = distance / SquareFloat(800.0);
 
-	if (nextBeepTime == 0.0)
-	{
-		g_ClientSpecialRoundTimer[client] = CreateTimer(0.1, Timer_ClientPageDetector, userid, TIMER_FLAG_NO_MAPCHANGE);
-		return Plugin_Stop;
-	}
 	if (nextBeepTime > 5.0)
 	{
 		nextBeepTime = 5.0;

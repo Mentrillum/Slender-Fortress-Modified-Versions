@@ -5010,7 +5010,7 @@ static any Native_GetBossState(Handle plugin, int numParams)
 	int entity = NPCGetEntIndex(GetNativeCell(1));
 	if (!IsValidEntity(entity))
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+		return 0;
 	}
 
 	SF2_BaseBoss boss = SF2_BaseBoss(entity);
@@ -5022,7 +5022,7 @@ static any Native_SetBossState(Handle plugin, int numParams)
 	int entity = NPCGetEntIndex(GetNativeCell(1));
 	if (!IsValidEntity(entity))
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+		return 0;
 	}
 
 	SF2_BaseBoss boss = SF2_BaseBoss(entity);
@@ -5112,7 +5112,7 @@ static any Native_GetBossCurrentChaseDuration(Handle plugin, int numParams)
 	int entity = controller.EntIndex;
 	if (!IsValidEntity(entity))
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+		return 0;
 	}
 
 	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
@@ -5130,7 +5130,7 @@ static any Native_SetBossCurrentChaseDuration(Handle plugin, int numParams)
 	int entity = controller.EntIndex;
 	if (!IsValidEntity(entity))
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+		return 0;
 	}
 
 	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);

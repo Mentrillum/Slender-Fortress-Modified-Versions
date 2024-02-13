@@ -2052,7 +2052,8 @@ static Action Command_ForceSpecialRound(int client, int args)
 	{
 		specialRound = 38;
 	}
-	else if (specialRound > 0 && specialRound < 39)
+
+	if (specialRound > 0 && specialRound < 39)
 	{
 		g_SpecialRoundOverrideConVar.SetInt(specialRound);
 	}

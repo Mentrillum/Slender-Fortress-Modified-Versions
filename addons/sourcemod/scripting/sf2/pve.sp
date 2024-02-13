@@ -120,7 +120,7 @@ static void OnGamemodeStart()
 
 static void GameFrame()
 {
-	if (g_TimeUntilBossSpawns < GetGameTime() && !g_HasBossSpawned && GetRoundState() != SF2RoundState_Waiting)
+	if (g_DoesPvEExist && g_TimeUntilBossSpawns < GetGameTime() && !g_HasBossSpawned && GetRoundState() != SF2RoundState_Waiting)
 	{
 		SpawnPvEBoss();
 	}
@@ -276,6 +276,7 @@ bool IsPvEBoxing()
 
 static void RoundStart()
 {
+	g_TimeUntilBossSpawns = GetRandomFloat(10.0, 20.0) + GetGameTime();
 	g_IsPvEActive = false;
 	g_HasBossSpawned = false;
 	g_ActiveBosses.Clear();
@@ -304,12 +305,6 @@ static void RoundStart()
 			SDKHook(ent, SDKHook_EndTouch, PvE_OnTriggerEndTouch);
 		}
 	}
-	if (!g_DoesPvEExist)
-	{
-		return;
-	}
-
-	g_TimeUntilBossSpawns = GetRandomFloat(10.0, 20.0) + GetGameTime();
 }
 
 static void OnPutInServer(SF2_BasePlayer client)

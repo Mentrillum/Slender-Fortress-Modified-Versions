@@ -1924,7 +1924,7 @@ static void SpecialCreateVote()
 		}
 		for (int bit = 0; bit < 30; bit++)
 		{
-			if (strcmp(item[bit],"-") == 0 ||strcmp(item[bit],":") == 0)
+			if (strcmp(item[bit], "-") == 0 || strcmp(item[bit], ":") == 0)
 			{
 				break;
 			}

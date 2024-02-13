@@ -627,7 +627,7 @@ static any Native_GetBossCurrentAttackIndex(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	return chaser.AttackIndex;
@@ -644,7 +644,7 @@ static any Native_PerformVoice(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	SF2ChaserBossProfileData data;
@@ -666,7 +666,7 @@ static any Native_CreateBossSoundHint(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	float position[3];
@@ -688,7 +688,7 @@ static any Native_GetBossAttackIndexType(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	SF2ChaserBossProfileData data;
@@ -710,7 +710,7 @@ static any Native_GetBossAttackIndexDamage(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	SF2ChaserBossProfileData data;
@@ -732,7 +732,7 @@ static any Native_UpdateBossAnimation(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	char value[64];
@@ -794,7 +794,7 @@ static any Native_GetBossAttackIndexDamageType(Handle plugin, int numParams)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 	if (!chaser.IsValid())
 	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Boss index %d does not have an entity", controller.Index);
+		return 0;
 	}
 
 	SF2ChaserBossProfileData data;
