@@ -277,7 +277,7 @@ static void OnTrapOpenComplete(const char[] output, int caller, int activator, f
 	}
 }
 
-static Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
+static Action Hook_TrapOnTakeDamage(int trapEntity, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_Enabled)
 	{

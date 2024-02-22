@@ -13,35 +13,30 @@ void SetupAdminMenu()
 {
 	g_OnAdminMenuCreateOptionsPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	/* Account for late loading */
-	Handle topMenu = null;
-	if (LibraryExists("adminmenu") && ((topMenu = GetAdminTopMenu()) != null))
+	Handle topMenuHndl = null;
+	if (LibraryExists("adminmenu") && ((topMenuHndl = GetAdminTopMenu()) != null))
 	{
-		OnAdminMenuReady(topMenu);
-	}
-}
+		TopMenu topMenu = TopMenu.FromHandle(topMenuHndl);
 
-public void OnAdminMenuReady(Handle topMenuHndl)
-{
-	TopMenu topMenu = TopMenu.FromHandle(topMenuHndl);
+		if (topMenu == g_TopMenu)
+		{
+			return;
+		}
 
-	if (topMenu == g_TopMenu)
-	{
-		return;
-	}
+		g_TopMenu = topMenu;
 
-	g_TopMenu = topMenu;
+		TopMenuObject commands = topMenu.FindCategory("SF2Commands");
+		if (commands == INVALID_TOPMENUOBJECT)
+		{
+			commands = topMenu.AddCategory("SF2Commands", AdminTopMenu_Main);
+		}
 
-	TopMenuObject commands = topMenu.FindCategory("SF2Commands");
-	if (commands == INVALID_TOPMENUOBJECT)
-	{
-		commands = topMenu.AddCategory("SF2Commands", AdminTopMenu_Main);
-	}
-
-	if (commands != INVALID_TOPMENUOBJECT)
-	{
-		topMenu.AddItem("sf2_boss_admin_main", AdminTopMenu_BossMain, commands, "sm_sf2_add_boss", ADMFLAG_SLAY);
-		topMenu.AddItem("sf2_player_setplaystate", AdminTopMenu_PlayerSetPlayState, commands, "sm_sf2_setplaystate", ADMFLAG_SLAY);
-		topMenu.AddItem("sf2_player_force_proxy", AdminTopMenu_PlayerForceProxy, commands, "sm_sf2_force_proxy", ADMFLAG_SLAY);
+		if (commands != INVALID_TOPMENUOBJECT)
+		{
+			topMenu.AddItem("sf2_boss_admin_main", AdminTopMenu_BossMain, commands, "sm_sf2_add_boss", ADMFLAG_SLAY);
+			topMenu.AddItem("sf2_player_setplaystate", AdminTopMenu_PlayerSetPlayState, commands, "sm_sf2_setplaystate", ADMFLAG_SLAY);
+			topMenu.AddItem("sf2_player_force_proxy", AdminTopMenu_PlayerForceProxy, commands, "sm_sf2_force_proxy", ADMFLAG_SLAY);
+		}
 	}
 }
 

@@ -545,6 +545,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 
 	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
 	PvP_SetPlayerPvPState(client, false, true, false);
+	PvE_SetPlayerPvEState(client, false, false);
 	TF2_RespawnPlayer(client);
 
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.

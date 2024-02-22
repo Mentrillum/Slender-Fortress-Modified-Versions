@@ -32,9 +32,12 @@ static Handle g_BeatBoxMasterTime = null;
 static Handle g_BeatBoxMusicTimer = null;
 static int g_BeatBoxCueIndex = 0;
 
+static int g_OverrideDifficulty = -1;
+
 void SetupSpecialRounds()
 {
 	g_OnGamemodeStartPFwd.AddFunction(null, OnGamemodeStart);
+	g_OnRoundStartPFwd.AddFunction(null, OnRoundStart);
 	g_OnRoundEndPFwd.AddFunction(null, OnRoundEnd);
 	g_OnAdminMenuCreateOptionsPFwd.AddFunction(null, OnAdminMenuCreateOptions);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
@@ -42,6 +45,7 @@ void SetupSpecialRounds()
 	g_OnPlayerTeamPFwd.AddFunction(null, OnPlayerTeam);
 	g_OnPlayerClassPFwd.AddFunction(null, OnPlayerClass);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
+	g_OnDifficultyChangePFwd.AddFunction(null, OnDifficultyVoteFinished);
 }
 
 static void OnGamemodeStart()
@@ -256,6 +260,11 @@ bool IsBeatBoxBeating(int index = 0)
 	return g_BeatBoxCueIndex > index && SF_SpecialRound(SPECIALROUND_BEATBOX);
 }
 
+static void OnRoundStart()
+{
+	g_OverrideDifficulty = -1;
+}
+
 static void OnRoundEnd()
 {
 	StopBeatBoxMusicForAll();
@@ -386,6 +395,17 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 	{
 		StopBeatBoxMusic(client);
 	}
+}
+
+static Action OnDifficultyVoteFinished(int& difficulty)
+{
+	if (g_OverrideDifficulty != -1 && difficulty < g_OverrideDifficulty)
+	{
+		difficulty = g_OverrideDifficulty;
+		return Plugin_Changed;
+	}
+
+	return Plugin_Continue;
 }
 
 static void ChangeThanatophobiaClass(SF2_BasePlayer client)
@@ -864,7 +884,7 @@ static ArrayList SpecialEnabledList()
 			}
 		}
 
-		if (GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2 && g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
+		if (GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2 && !SF_IsBoxingMap())
 		{
 			AddSpecialRoundToList(SPECIALROUND_DOUBLEMAXPLAYERS, enabledRounds);
 		}
@@ -872,10 +892,7 @@ static ArrayList SpecialEnabledList()
 		{
 			if (GetSelectableBossProfileList().Length > 0 && GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2)
 			{
-				if (g_DifficultyConVar.IntValue < 3)
-				{
-					AddSpecialRoundToList(SPECIALROUND_2DOUBLE, enabledRounds);
-				}
+				AddSpecialRoundToList(SPECIALROUND_2DOUBLE, enabledRounds);
 			}
 		}
 		else
@@ -1006,7 +1023,7 @@ static ArrayList SpecialEnabledList()
 		{
 			AddSpecialRoundToList(SPECIALROUND_BOSSROULETTE, enabledRounds);
 		}
-		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_IsBoxingMap() && g_DifficultyConVar.IntValue < 3)
+		if (!SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_IsRaidMap() && !SF_IsBoxingMap())
 		{
 			AddSpecialRoundToList(SPECIALROUND_WALLHAX, enabledRounds);
 		}
@@ -1078,6 +1095,10 @@ void SpecialRoundStart()
 			if (g_DifficultyConVar.IntValue < 2)
 			{
 				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
+			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 2)
+			{
+				g_OverrideDifficulty = 2;
 			}
 
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -1217,6 +1238,10 @@ void SpecialRoundStart()
 			{
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
 			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
+			{
+				g_OverrideDifficulty = 3;
+			}
 			SF_AddSpecialRound(SPECIALROUND_INSANEDIFFICULTY);
 		}
 		case SPECIALROUND_NOGRACE:
@@ -1224,6 +1249,10 @@ void SpecialRoundStart()
 			if (g_DifficultyConVar.IntValue < 2)
 			{
 				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
+			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 2)
+			{
+				g_OverrideDifficulty = 2;
 			}
 			if (g_RoundGraceTimer != null)
 			{
@@ -1237,6 +1266,10 @@ void SpecialRoundStart()
 			{
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
 			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
+			{
+				g_OverrideDifficulty = 3;
+			}
 			if (g_RoundGraceTimer != null)
 			{
 				TriggerTimer(g_RoundGraceTimer);
@@ -1249,6 +1282,10 @@ void SpecialRoundStart()
 			if (g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
 			{
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
+			{
+				g_OverrideDifficulty = 3;
 			}
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
 			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
@@ -1284,6 +1321,10 @@ void SpecialRoundStart()
 			if (g_DifficultyConVar.IntValue < 3)
 			{
 				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
+			{
+				g_OverrideDifficulty = 3;
 			}
 			SF_AddSpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS);
 		}
@@ -1478,6 +1519,11 @@ void SpecialRoundStart()
 						}
 					}
 				}
+
+				if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < randomDifficulty)
+				{
+					g_OverrideDifficulty = randomDifficulty;
+				}
 			}
 			delete selectableBosses;
 			SF_AddSpecialRound(SPECIALROUND_MODBOSSES);
@@ -1538,7 +1584,11 @@ void SpecialRoundStart()
 		{
 			if (g_DifficultyConVar.IntValue < 3)
 			{
-				g_DifficultyConVar.SetString("3"); // Override difficulty to Hardcore.
+				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+			}
+			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
+			{
+				g_OverrideDifficulty = 3;
 			}
 
 			SF_AddSpecialRound(SPECIALROUND_WALLHAX);

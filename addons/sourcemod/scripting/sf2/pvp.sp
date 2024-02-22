@@ -430,7 +430,7 @@ static void Hook_PvPProjectileSpawnPost(int ent)
 
 	if (IsValidClient(ownerEntity))
 	{
-		if (IsClientInPvP(ownerEntity))
+		if (IsRoundInWarmup() || IsClientInPvP(ownerEntity))
 		{
 			static const char fixWeaponNotCollidingWithTeammates[][] =
 			{

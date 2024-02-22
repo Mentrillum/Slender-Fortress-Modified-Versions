@@ -674,6 +674,7 @@ PrivateForward g_OnChaserGetAttackActionPFwd;
 PrivateForward g_OnChaserGetCustomAttackPossibleStatePFwd;
 PrivateForward g_OnChaserUpdatePosturePFwd;
 PrivateForward g_OnDifficultyChangePFwd;
+PrivateForward g_OnDifficultyVoteFinishedPFwd;
 PrivateForward g_OnRenevantTriggerWavePFwd;
 PrivateForward g_OnWallHaxDebugPFwd;
 
@@ -4302,6 +4303,7 @@ void SetClientPlayState(int client, bool state, bool enablePlay = true, bool que
 		ClientSetGhostModeState(client, false);
 
 		PvP_SetPlayerPvPState(client, false, false, false);
+		PvE_SetPlayerPvEState(client, false, false);
 
 		if (g_IsSpecialRound)
 		{

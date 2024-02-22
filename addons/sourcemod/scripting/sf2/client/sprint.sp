@@ -492,6 +492,7 @@ static void Hook_SpeedThink(int client)
 	int classToInt = view_as<int>(class);
 
 	bool inDanger = false;
+	bool inChase = false;
 
 	if (!inDanger)
 	{
@@ -521,6 +522,10 @@ static void Hook_SpeedThink(int client)
 					((bossTarget.IsValid() && (bossTarget.index == client || ClientGetDistanceFromEntity(client, bossTarget.index) < SquareFloat(512.0))) || NPCGetDistanceFromEntity(i, client) < SquareFloat(512.0) || PlayerCanSeeSlender(client, i, false)))
 				{
 					inDanger = true;
+					if (bossTarget.index == client)
+					{
+						inChase = true;
+					}
 					ClientSetScareBoostEndTime(player.index, GetGameTime() + 5.0);
 
 					// Induce client stress levels.
@@ -774,9 +779,13 @@ static void Hook_SpeedThink(int client)
 		}
 	}
 
-	if (inDanger)
+	if (g_PlayerPreferences[player.index].PlayerPreference_ShowHints && inDanger)
 	{
-		if (!player.HasHint(PlayerHint_Sprint))
+		if (!inChase && !player.HasHint(PlayerHint_Crouch))
+		{
+			player.ShowHint(PlayerHint_Crouch);
+		}
+		else if (inChase && !player.HasHint(PlayerHint_Sprint))
 		{
 			player.ShowHint(PlayerHint_Sprint);
 		}

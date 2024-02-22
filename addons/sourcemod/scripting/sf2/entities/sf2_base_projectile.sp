@@ -29,7 +29,6 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 			.DefineStringField("m_ImpactSound")
 			.DefineBoolField("m_AttackWaiters")
 			.EndDataMapDesc();
-		g_Factory.IsAbstract = true;
 		g_Factory.Install();
 
 		g_OnMapStartPFwd.AddFunction(null, MapStart);

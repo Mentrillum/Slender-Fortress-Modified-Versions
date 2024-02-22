@@ -196,6 +196,7 @@ void NPCInitialize()
 {
 	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
 	g_OnEntityTeleportedPFwd.AddFunction(null, EntityTeleported);
+	g_OnPlayerLookAtBossPFwd.AddFunction(null, OnPlayerLookAtBoss);
 
 	NPCChaserInitialize();
 	SetupNPCGlows();
@@ -343,6 +344,20 @@ static void EntityTeleported(CBaseEntity teleporter, CBaseEntity activator)
 						controller.UnSpawn();
 					}
 				}
+			}
+		}
+	}
+}
+
+static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
+{
+	switch (boss.Type)
+	{
+		case SF2BossType_Statue:
+		{
+			if (g_PlayerPreferences[client.index].PlayerPreference_ShowHints && !client.HasHint(PlayerHint_Blink))
+			{
+				client.ShowHint(PlayerHint_Blink);
 			}
 		}
 	}

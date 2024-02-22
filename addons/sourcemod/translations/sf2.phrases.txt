@@ -985,7 +985,7 @@
 
 	"SF2 Hint Sprint"
 	{
-		"en"	"Sprint - HOLD Special Attack"
+		"en"	"Sprint - HOLD Special Attack (Middle Mouse Button) or %%sprint%%"
 		"ru"	"Бег - Удерж. кнопку \"Специальная атака\""
 		"fi"	"Juokse - Pidä Pohjassa Erityis Hyökkäystäsi"
 		"chi"	"冲刺 - 按住特殊攻击键"
@@ -1031,6 +1031,16 @@
 		"chi"	"跳出陷阱 - 按几次跳跃键。"
 		"pt"	"Sair da armadilha — pressione \"Pular\" algumas vezes."
 		"ko"	"함정 벗어나기 - 점프 키를 연타하세요."
+	}
+
+	"SF2 Hint Noises"
+	{
+		"en"	"WARNING - Voice commands, weapon sounds, flashlight sounds, and footstep sounds can alert bosses."
+	}
+
+	"SF2 Hint Crouch"
+	{
+		"en"	"Crouch - %%duck%%\nSneak around quietly"
 	}
 
 	"SF2 Admin Menu Title"

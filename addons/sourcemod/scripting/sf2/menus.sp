@@ -660,32 +660,11 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 		char info[64], display[256], color[32], nightmareDisplay[256];
 		menu.GetItem(param1, info, sizeof(info), _, display, sizeof(display));
 
+		int difficulty = Difficulty_Normal;
+
 		bool rng = false, change = false;
 
-		if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_WALLHAX) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS)))
-		{
-			g_DifficultyConVar.SetInt(Difficulty_Insane);
-		}
-		else if (!SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) &&
-		!SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) && !SF_SpecialRound(SPECIALROUND_NOGRACE) &&
-		!SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) && !SF_SpecialRound(SPECIALROUND_WALLHAX) && !SF_SpecialRound(SPECIALROUND_MODBOSSES) &&
-		(GetRandomInt(1, 200) <= 2 || playersCalledForNightmare))
-		{
-			if (GetRandomInt(1, 20) <= 1)
-			{
-				rng = true;
-				g_DifficultyConVar.SetInt(Difficulty_Apollyon);
-			}
-			else
-			{
-				g_DifficultyConVar.SetInt(Difficulty_Nightmare);
-			}
-		}
-		else if (IsSpecialRoundRunning() && (SF_SpecialRound(SPECIALROUND_NOGRACE)))
-		{
-			g_DifficultyConVar.SetInt(Difficulty_Hard);
-		}
-		else if (info[0] != '\0')
+		if (info[0] != '\0')
 		{
 			if (g_HighDifficultyPercentConVar.FloatValue > 0.0 && (strcmp(info, "4") == 0 || strcmp(info, "5") == 0))
 			{
@@ -727,22 +706,20 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 					}
 					else
 					{
-						char winner[2] = "1";
+						int winner = Difficulty_Normal;
 						if (hrd > ins && hrd > nrm)
 						{
-							winner = "2";
+							winner = Difficulty_Hard;
 						}
 						else if (ins > hrd && ins > nrm)
 						{
-							winner = "3";
+							winner = Difficulty_Insane;
 						}
-						strcopy(info, sizeof(info), winner);
+						difficulty = winner;
 						change = true;
 					}
 				}
 			}
-
-			g_DifficultyConVar.SetString(info);
 		}
 		else
 		{
@@ -763,85 +740,109 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 				{
 					case 5:
 					{
-						g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+						difficulty = Difficulty_Apollyon;
 					}
 					case 4:
 					{
 						if (nightmare)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+							difficulty = Difficulty_Nightmare;
 						}
 						else
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							difficulty = Difficulty_Apollyon;
 						}
 					}
 					case 3:
 					{
 						if (insane)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
+							difficulty = Difficulty_Insane;
 						}
 						else if (nightmare)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+							difficulty = Difficulty_Nightmare;
 						}
 						else
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							difficulty = Difficulty_Apollyon;
 						}
 					}
 					case 2:
 					{
 						if (hard)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Hard);
+							difficulty = Difficulty_Hard;
 						}
 						else if (insane)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
+							difficulty = Difficulty_Insane;
 						}
 						else if (nightmare)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+							difficulty = Difficulty_Nightmare;
 						}
 						else
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							difficulty = Difficulty_Apollyon;
 						}
 					}
 					case 1:
 					{
 						if (normal)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Normal);
+							difficulty = Difficulty_Normal;
 						}
 						else if (hard)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Hard);
+							difficulty = Difficulty_Hard;
 						}
 						else if (insane)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
+							difficulty = Difficulty_Insane;
 						}
 						else if (nightmare)
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+							difficulty = Difficulty_Nightmare;
 						}
 						else
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							difficulty = Difficulty_Apollyon;
 						}
 					}
 				}
 			}
 			else
 			{
-				g_DifficultyConVar.SetInt(GetRandomInt(Difficulty_Normal, Difficulty_Insane));
+				difficulty = GetRandomInt(Difficulty_Normal, Difficulty_Insane);
 			}
 		}
 
-		int difficulty = g_DifficultyConVar.IntValue;
+		Action fwdAction = Plugin_Continue;
+		int difficulty2 = difficulty;
+
+		Call_StartForward(g_OnDifficultyVoteFinishedPFwd);
+		Call_PushCellRef(difficulty2);
+		Call_Finish(fwdAction);
+
+		if (fwdAction == Plugin_Changed)
+		{
+			difficulty = difficulty2;
+		}
+
+		if (GetRandomInt(1, 200) <= 2 || playersCalledForNightmare)
+		{
+			if (GetRandomInt(1, 20) <= 1)
+			{
+				rng = true;
+				difficulty = Difficulty_Apollyon;
+			}
+			else
+			{
+				difficulty = Difficulty_Nightmare;
+			}
+		}
+
 		switch (difficulty)
 		{
 			case Difficulty_Hard:
@@ -923,6 +924,8 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 				strcopy(color, sizeof(color), "{yellow}");
 			}
 		}
+
+		g_DifficultyConVar.SetInt(difficulty);
 
 		if (!change)
 		{
