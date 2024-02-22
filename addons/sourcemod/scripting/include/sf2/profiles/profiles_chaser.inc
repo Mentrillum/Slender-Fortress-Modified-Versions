@@ -1080,6 +1080,8 @@ enum struct SF2ChaserBossProfileSmellData
 	bool Enabled[Difficulty_Max];
 	float CooldownMin[Difficulty_Max];
 	float CooldownMax[Difficulty_Max];
+	float CooldownAfterStateMin[Difficulty_Max];
+	float CooldownAfterStateMax[Difficulty_Max];
 	int PlayerCount[Difficulty_Max];
 	float PlayerRange[Difficulty_Max];
 	float SmellRange[Difficulty_Max];
@@ -1092,6 +1094,8 @@ enum struct SF2ChaserBossProfileSmellData
 			this.Enabled[difficulty] = false;
 			this.CooldownMin[difficulty] = 6.0;
 			this.CooldownMax[difficulty] = 12.0;
+			this.CooldownAfterStateMin[difficulty] = 16.0;
+			this.CooldownAfterStateMax[difficulty] = 24.0;
 			this.PlayerCount[difficulty] = 1;
 			this.PlayerRange[difficulty] = 1000.0;
 			this.SmellRange[difficulty] = 1500.0;
@@ -1104,6 +1108,8 @@ enum struct SF2ChaserBossProfileSmellData
 		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
 		GetProfileDifficultyFloatValues(kv, "cooldown_min", this.CooldownMin, this.CooldownMin);
 		GetProfileDifficultyFloatValues(kv, "cooldown_max", this.CooldownMax, this.CooldownMax);
+		GetProfileDifficultyFloatValues(kv, "cooldown_after_state_min", this.CooldownAfterStateMin, this.CooldownAfterStateMin);
+		GetProfileDifficultyFloatValues(kv, "cooldown_after_state_max", this.CooldownAfterStateMax, this.CooldownAfterStateMax);
 		GetProfileDifficultyNumValues(kv, "required_players", this.PlayerCount, this.PlayerCount);
 		GetProfileDifficultyFloatValues(kv, "required_player_range", this.PlayerRange, this.PlayerRange);
 		GetProfileDifficultyFloatValues(kv, "smelling_range", this.SmellRange, this.SmellRange);

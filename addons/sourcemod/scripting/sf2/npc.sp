@@ -12,6 +12,8 @@
 
 static int g_NpcGlobalUniqueID = 0;
 
+static SF2BossProfileData g_NpcProfileData[MAX_BOSSES];
+
 static int g_NpcUniqueID[MAX_BOSSES] = { -1, ... };
 static char g_SlenderProfile[MAX_BOSSES][SF2_MAX_PROFILE_NAME_LENGTH];
 static int g_NpcProfileIndex[MAX_BOSSES] = { -1, ... };
@@ -252,6 +254,8 @@ void NPC_InitializeAPI()
 	CreateNative("SF2_GetProfileFromName", Native_GetProfileDataEx);
 
 	CreateNative("SF2_SpawnBossEffects", Native_SpawnBossEffects);
+
+	CreateNative("SF2_CanBossBeSeen", Native_CanBossBeSeen);
 }
 
 static void EntityDestroyed(CBaseEntity ent, const char[] classname)
@@ -367,7 +371,7 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
 		Despawn_Chaser(bossIndex);
 	}
 
-	if (g_BossPathFollower[bossIndex].IsValid())
+	if (g_BossPathFollower[bossIndex] != view_as<PathFollower>(0) && g_BossPathFollower[bossIndex].IsValid())
 	{
 		g_BossPathFollower[bossIndex].Invalidate();
 	}
@@ -525,12 +529,12 @@ bool NPCGetProfile(int npcIndex, char[] buffer, int bufferLen)
 
 SF2BossProfileData NPCGetProfileData(int npcIndex)
 {
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(npcIndex, profile, sizeof(profile));
+	return g_NpcProfileData[npcIndex];
+}
 
-	SF2BossProfileData profileData;
-	g_BossProfileData.GetArray(profile, profileData, sizeof(profileData));
-	return profileData;
+void NPCSetProfileData(int npcIndex, SF2BossProfileData value)
+{
+	g_NpcProfileData[npcIndex] = value;
 }
 
 void NPCSetProfile(int npcIndex, const char[] profile)
@@ -1572,6 +1576,11 @@ bool NPCShouldHearEntity(int npcIndex, int entity, SoundType soundType)
 		return false;
 	}
 
+	if (NPCGetType(npcIndex) == SF2BossType_Statue)
+	{
+		return false;
+	}
+
 	Action result = Plugin_Continue;
 	Call_StartForward(g_OnBossHearEntityFwd);
 	Call_PushCell(npcIndex);
@@ -1777,11 +1786,12 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	npc.SetProfile(profile);
 
 	SF2BossProfileData profileData;
-	profileData = npc.GetProfileData();
+	g_BossProfileData.GetArray(profile, profileData, sizeof(profileData));
 
 	int bossType = GetBossProfileType(profile);
 
 	g_NpcUniqueID[npc.Index] = g_NpcGlobalUniqueID++;
+	g_NpcProfileData[npc.Index] = profileData;
 	g_NpcType[npc.Index] = bossType;
 
 	g_NpcModelScale[npc.Index] = GetBossProfileModelScale(profile);
@@ -2717,6 +2727,24 @@ void ChangeAllSlenderModels()
 void RemoveProfile(int bossIndex)
 {
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(bossIndex);
+	if (IsValidEntity(controller.EntIndex))
+	{
+		KillPvEBoss(controller.EntIndex);
+	}
+
+	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(bossIndex))
+	{
+		g_SlenderBoxingBossCount -= 1;
+	}
+
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	controller.GetProfile(profile, sizeof(profile));
+
+	if (MusicActive() && BossHasMusic(profile) && BossMatchesCurrentMusic(profile))
+	{
+		NPCStopMusic();
+	}
+
 	controller.UnSpawn(true);
 
 	// Call our forward.
@@ -2727,9 +2755,6 @@ void RemoveProfile(int bossIndex)
 	Call_StartForward(g_OnBossRemovedPFwd);
 	Call_PushCell(controller);
 	Call_Finish();
-
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	controller.GetProfile(profile, sizeof(profile));
 
 	// Clean up on the clients.
 	for (int i = 1; i <= MaxClients; i++)
@@ -3151,7 +3176,7 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	entity.AddFlag(FL_NPC);
 	if (g_Enabled)
 	{
-		if (!data.IsPvEBoss)
+		if (!data.IsPvEBoss && !SF_IsRaidMap())
 		{
 			entity.AddFlag(FL_NOTARGET);
 		}
@@ -3819,13 +3844,15 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 
 			int teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[bossIndex]);
 
-			if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
+			if (!IsTargetValidForSlenderEx(CBaseEntity(teleportTarget), bossIndex))
 			{
 				// We don't have any good targets. Remove myself for now.
 				if (SlenderCanRemove(bossIndex))
 				{
 					controller.UnSpawn();
 				}
+
+				g_SlenderTeleportTarget[bossIndex] = INVALID_ENT_REFERENCE;
 
 				#if defined DEBUG
 				SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: no good target, removing...", bossIndex);
@@ -3838,6 +3865,13 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 					controller.UnSpawn();
 					return Plugin_Continue;
 				}
+
+				// Let's start the persistency timer here, so that way we won't have infinite looping impossible to spawn bosses
+				float targetDuration = controller.GetTeleportPersistencyPeriod(difficulty);
+				float deviation = GetRandomFloat(0.92, 1.08);
+				targetDuration = Pow(deviation * targetDuration, ((g_RoundDifficultyModifier) / 2.0)) + ((deviation * targetDuration) - 1.0);
+				g_SlenderTeleportMaxTargetTime[controller.Index] = gameTime + targetDuration;
+
 				float teleportMinRange = g_SlenderTeleportMinRange[bossIndex][difficulty];
 				bool shouldBeBehindObstruction = false;
 				if (NPCGetTeleportType(bossIndex) == 2)
@@ -3922,9 +3956,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 						NavCornerType cornerB = corners.Get(GetRandomInt(0, corners.Length - 1));
 						area.GetCorner(cornerA, spawnPos);
 						area.GetCorner(cornerB, cornerPosition);
-						LerpVectors(spawnPos, cornerPosition, spawnPos, GetURandomFloat());
+						LerpVectors(spawnPos, cornerPosition, spawnPos, GetRandomFloat(0.3, 0.7));
 						area.GetCorner(invert, cornerPosition);
-						LerpVectors(spawnPos, cornerPosition, spawnPos, GetURandomFloat());
+						LerpVectors(spawnPos, cornerPosition, spawnPos, GetRandomFloat(0.3, 0.7));
 						delete corners;*/
 
 						float traceMins[3];
@@ -3946,6 +3980,10 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 							if (findValue != -1)
 							{
 								areaArray.Erase(findValue);
+
+								#if defined DEBUG
+								SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: boss index %d collides with something", findValue, bossIndex);
+								#endif
 							}
 						}
 						else
@@ -3972,8 +4010,12 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 									if (findValue != -1 && findValue < validAreaCount)
 									{
 										areaArray.Erase(findValue);
+										#if defined DEBUG
+										SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: too close to %N", findValue, i);
+										#endif
 									}
 									canSpawn = false;
+									break;
 								}
 							}
 
@@ -3986,6 +4028,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 								if (findValue != -1)
 								{
 									areaArray.Erase(findValue);
+									#if defined DEBUG
+									SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: is visible to someone", findValue);
+									#endif
 								}
 								canSpawn = false;
 							}
@@ -4037,6 +4082,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 										if (findValue != -1)
 										{
 											areaArray.Erase(findValue);
+											#if defined DEBUG
+											SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: boss index %d is too close to copy %d", findValue, bossIndex, bossCheck);
+											#endif
 										}
 										canSpawn = false;
 										break;
@@ -4087,6 +4135,12 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 									}
 								}
 								break;
+							}
+							else
+							{
+								#if defined DEBUG
+								SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: can't spawn due to no available areas", bossIndex);
+								#endif
 							}
 						}
 					}
@@ -5174,4 +5228,9 @@ static any Native_SpawnBossEffects(Handle plugin, int numParams)
 	ArrayList output = GetNativeCellRef(5);
 	SlenderSpawnEffects(GetNativeCell(1), GetNativeCell(2), false, pos, ang, output, GetNativeCell(6));
 	return 0;
+}
+
+static any Native_CanBossBeSeen(Handle plugin, int numParams)
+{
+	return PeopleCanSeeSlender(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), GetNativeCell(4));
 }

@@ -1550,7 +1550,9 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 					else
 					{
 						if (!g_PlayerHasRegenerationItem[client])
+						{
 							g_PlayerHasRegenerationItem[client] = IsRegenWeapon(weaponEnt);
+						}
 					}
 				}
 				delete itemHandle;

@@ -168,7 +168,7 @@ void SetupMenus()
 
 	g_MenuCredits = new Menu(Menu_Credits);
 
-	FormatEx(buffer, sizeof(buffer), "Credits\n");
+	FormatEx(buffer, sizeof(buffer), "%t Credits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Coders: KitRifty, Kenzzer, Mentrillum, The Gaben\n");
 	StrCat(buffer, sizeof(buffer), "Mark J. Hadley - The creator of the Slender game\n");
 	StrCat(buffer, sizeof(buffer), "Mark Steen - Compositing the intro music\n");
@@ -182,7 +182,7 @@ void SetupMenus()
 
 	g_MenuCredits1 = new Menu(Menu_Credits1);
 
-	FormatEx(buffer, sizeof(buffer), "Credits\n");
+	FormatEx(buffer, sizeof(buffer), "%t Credits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Glubbable - For working on a ton of maps\n");
 	StrCat(buffer, sizeof(buffer), "Somberguy - Suggestions and support\n");
 	StrCat(buffer, sizeof(buffer), "Omi-Box - Materials, maps, current Slender Man model, and more\n");
@@ -197,7 +197,7 @@ void SetupMenus()
 
 	g_MenuCredits2 = new Menu(Menu_Credits2);
 
-	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
+	FormatEx(buffer, sizeof(buffer), "%t Credits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "To all the peeps who alpha-tested this thing!\n \n");
 	StrCat(buffer, sizeof(buffer), "Tofu\n");
 	StrCat(buffer, sizeof(buffer), "Ace-Dashie\n");
@@ -216,7 +216,7 @@ void SetupMenus()
 
 	g_MenuCredits3 = new Menu(Menu_Credits3);
 
-	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
+	FormatEx(buffer, sizeof(buffer), "%t Credits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Credits to all peeps who gave special round suggestions!\n \n");
 	StrCat(buffer, sizeof(buffer), "TehPlayer14\n");
 	StrCat(buffer, sizeof(buffer), "SirAnthony\n");
@@ -235,14 +235,13 @@ void SetupMenus()
 
 	g_MenuCredits4 = new Menu(Menu_Credits4);
 
-	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
+	FormatEx(buffer, sizeof(buffer), "%t Credits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "Major special thanks to all official Modified server owners!\n \n");
 	StrCat(buffer, sizeof(buffer), "Demon Hamster Eating My Wafflez\n");
 	StrCat(buffer, sizeof(buffer), "Munt\n");
 	StrCat(buffer, sizeof(buffer), "KanP\n");
 	StrCat(buffer, sizeof(buffer), "SAXY GIBUS MAN\n");
 	StrCat(buffer, sizeof(buffer), "Fire\n");
-	StrCat(buffer, sizeof(buffer), "[NxN]Nameless\n");
 
 	g_MenuCredits4.SetTitle(buffer);
 	g_MenuCredits4.AddItem("0", "Next");
@@ -250,7 +249,7 @@ void SetupMenus()
 
 	g_MenuCredits5 = new Menu(Menu_Credits5);
 
-	FormatEx(buffer, sizeof(buffer), "%tCredits\n \n", "SF2 Prefix");
+	FormatEx(buffer, sizeof(buffer), "%t Credits\n \n", "SF2 Prefix");
 	StrCat(buffer, sizeof(buffer), "And finally to all of these people that helped out this version one way or another!\n \n");
 	StrCat(buffer, sizeof(buffer), "KitRifty\n");
 	StrCat(buffer, sizeof(buffer), "Spook\n");
@@ -285,7 +284,7 @@ void RandomizeVoteMenu(bool excludeHigh = false)
 	g_IsRunOff = false;
 
 	g_MenuVoteDifficulty = new Menu((g_DifficultyVoteRevoteConVar.FloatValue > 0.0) ? Menu_VoteNoneDifficulty : Menu_VoteDifficulty);
-	g_MenuVoteDifficulty.SetTitle("%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+	g_MenuVoteDifficulty.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
 
 	g_DifficultyVoteOptionsConVar.GetString(buffer, sizeof(buffer));
 
@@ -499,7 +498,7 @@ static void Menu_VoteRunoffDifficulty(Menu oldmenu, int votes, int clients, cons
 			{
 				g_IsRunOff = true;
 				Menu newmenu = new Menu(Menu_VoteDifficulty);
-				newmenu.SetTitle("%t%t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+				newmenu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
 
 				ArrayList list = new ArrayList();
 				for(int i = 0; i < items; i++)
@@ -521,27 +520,7 @@ static void Menu_VoteRunoffDifficulty(Menu oldmenu, int votes, int clients, cons
 
 				delete list;
 
-				list = new ArrayList();
-
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (!IsClientInGame(i) || IsFakeClient(i) || g_PlayerEliminated[i])
-					{
-						continue;
-					}
-
-					list.Push(GetClientUserId(i));
-				}
-
-				if (list.Length)
-				{
-					//delete g_VoteTimer;
-					g_VoteTimer = CreateTimer(1.0, Timer_ReVoteDifficulty, list, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE | TIMER_DATA_HNDL_CLOSE);
-				}
-				else
-				{
-					delete list;
-				}
+				g_VoteTimer = CreateTimer(1.0, Timer_ReVoteDifficulty, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 
 				if (GetMenuItemCount(g_MenuVoteDifficulty) > 1)
 				{
@@ -563,7 +542,7 @@ static void Menu_VoteRunoffDifficulty(Menu oldmenu, int votes, int clients, cons
 	Menu_VoteDifficulty(oldmenu, MenuAction_VoteEnd, itemInfo[0][VOTEINFO_ITEM_INDEX], 0);
 }
 
-static Action Timer_ReVoteDifficulty(Handle timer, ArrayList arrayClients)
+static Action Timer_ReVoteDifficulty(Handle timer)
 {
 	if (timer != g_VoteTimer || IsRoundEnding())
 	{
@@ -571,23 +550,29 @@ static Action Timer_ReVoteDifficulty(Handle timer, ArrayList arrayClients)
 		return Plugin_Stop;
 	}
 
-	if (IsVoteInProgress())
+	if (IsVoteInProgress() || NativeVotes_IsVoteInProgress())
 	{
 		return Plugin_Continue; // There's another vote in progess. Wait.
 	}
 
-	int clients[MAXPLAYERS + 1] = { -1, ... };
+	int clients[MAXTF2PLAYERS] = { -1, ... };
 	int clientsNum;
-	for (int i = 0, size = arrayClients.Length; i < size; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		int client = GetClientOfUserId(arrayClients.Get(i));
-		if (client <= 0)
+		SF2_BasePlayer player = SF2_BasePlayer(i);
+		if (!player.IsValid || player.IsBot || player.IsEliminated)
 		{
 			continue;
 		}
 
-		clients[clientsNum] = client;
+		clients[clientsNum] = player.index;
 		clientsNum++;
+	}
+
+	if (clientsNum == 0)
+	{
+		g_VoteTimer = null;
+		return Plugin_Stop;
 	}
 
 	VoteMenu(g_MenuVoteDifficulty, clients, clientsNum, 7);
@@ -1109,7 +1094,7 @@ static int Menu_ClassInfo(Menu menu, MenuAction action, int param1, int param2)
 		FormatEx(title, sizeof(title), "SF2 Help %s Class Info Menu Title", info);
 		FormatEx(description, sizeof(description), "SF2 Help %s Class Info Description", info);
 
-		menuHandle.SetTitle("%t%t\n \n%t\n \n", "SF2 Prefix", title, description);
+		menuHandle.SetTitle("%t %t\n \n%t\n \n", "SF2 Prefix", title, description);
 		menuHandle.AddItem("0", "Back");
 		menuHandle.Display(param1, 30);
 	}
@@ -1764,7 +1749,7 @@ void DisplayQueuePointsMenu(int client)
 
 	delete queueList;
 
-	menu.SetTitle("%t%T\n \n", "SF2 Prefix", "SF2 Queue Menu Title", client);
+	menu.SetTitle("%t %T\n \n", "SF2 Prefix", "SF2 Queue Menu Title", client);
 	menu.ExitBackButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
@@ -1803,7 +1788,7 @@ void DisplayViewGroupMembersQueueMenu(int client,int groupIndex)
 		GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
 
 		Menu menuHandle = new Menu(Menu_ViewGroupMembersQueue);
-		menuHandle.SetTitle("%t%T (%s)\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, groupName);
+		menuHandle.SetTitle("%t %T (%s)\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, groupName);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH * 2];
@@ -1968,6 +1953,10 @@ void DisplayBossList(int client)
 			}
 			SF2BossProfileData data;
 			g_BossProfileData.GetArray(profile, data, sizeof(data));
+			if (data.Description.Hidden)
+			{
+				continue;
+			}
 			if (data.IsPvEBoss)
 			{
 				StrCat(displayName, sizeof(displayName), " (PvE Boss)");
@@ -1975,7 +1964,7 @@ void DisplayBossList(int client)
 			menu.AddItem(profile, displayName);
 		}
 	}
-	menu.SetTitle("%t%T\n \n", "SF2 Prefix", "SF2 Boss List Menu Title", client);
+	menu.SetTitle("%t %T\n \n", "SF2 Prefix", "SF2 Boss List Menu Title", client);
 	menu.ExitBackButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
@@ -1991,6 +1980,131 @@ static int Menu_BossList(Menu menu, MenuAction action, int param1, int param2)
 				g_MenuMain.Display(param1, 30);
 			}
 		}
+
+		case MenuAction_Select:
+		{
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			menu.GetItem(param2, profile, sizeof(profile));
+			SF2BossProfileData data;
+			g_BossProfileData.GetArray(profile, data, sizeof(data));
+			Menu newMenu = new Menu(Menu_BossDisplay);
+			char buffer[256], buffer2[128];
+			data.Names.GetString(Difficulty_Normal, buffer2, sizeof(buffer2));
+			FormatEx(buffer, sizeof(buffer), "%t %s\n \n", "SF2 Prefix", buffer2);
+			FormatEx(buffer2, sizeof(buffer2), "Type: %s\n \n", data.Description.Type);
+			StrCat(buffer, sizeof(buffer), buffer2);
+			SF2ChaserBossProfileData chaserData;
+			if (g_ChaserBossProfileData.GetArray(profile, chaserData, sizeof(chaserData)))
+			{
+				FormatEx(buffer2, sizeof(buffer2), "Walk speed: %s\n", ConvertWalkSpeedToDescription(chaserData.WalkSpeed[Difficulty_Normal]));
+			}
+			StrCat(buffer, sizeof(buffer), buffer2);
+			float speed = data.RunSpeed[Difficulty_Normal];
+			SF2StatueBossProfileData statueData;
+			if (g_StatueBossProfileData.GetArray(profile, statueData, sizeof(statueData)))
+			{
+				speed *= 10.0;
+			}
+			FormatEx(buffer2, sizeof(buffer2), "Run speed: %s\n \n", ConvertRunSpeedToDescription(speed));
+			StrCat(buffer, sizeof(buffer), buffer2);
+			FormatEx(buffer2, sizeof(buffer2), "%s", data.Description.Information);
+			ReplaceString(buffer2, sizeof(buffer2), "\\n", "\n");
+			StrCat(buffer, sizeof(buffer), buffer2);
+			newMenu.SetTitle(buffer);
+			newMenu.AddItem("", "", ITEMDRAW_SPACER);
+			newMenu.ExitBackButton = true;
+			newMenu.Display(param1, MENU_TIME_FOREVER);
+		}
+
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+	}
+	return 0;
+}
+
+static char[] ConvertWalkSpeedToDescription(float speed)
+{
+	char buffer[128];
+	buffer = "None";
+	if (speed > 0.0 && speed <= 45.0)
+	{
+		buffer = "Very slow";
+	}
+	else if (speed > 45.0 && speed <= 65.0)
+	{
+		buffer = "Slow";
+	}
+	else if (speed > 65.0 && speed <= 85.0)
+	{
+		buffer = "Moderate";
+	}
+	else if (speed > 85.0 && speed <= 120.0)
+	{
+		buffer = "Average";
+	}
+	else if (speed > 120.0 && speed <= 150.0)
+	{
+		buffer = "Fast";
+	}
+	else
+	{
+		buffer = "Very fast";
+	}
+
+	return buffer;
+}
+
+static char[] ConvertRunSpeedToDescription(float speed)
+{
+	char buffer[128];
+	buffer = "None";
+	if (speed > 0.0 && speed <= 50.0)
+	{
+		buffer = "Very slow";
+	}
+	else if (speed > 50.0 && speed <= 150.0)
+	{
+		buffer = "Slow";
+	}
+	else if (speed > 150.0 && speed <= 250.0)
+	{
+		buffer = "Moderate";
+	}
+	else if (speed > 250.0 && speed <= 300.0)
+	{
+		buffer = "Average";
+	}
+	else if (speed > 300.0 && speed <= 350.0)
+	{
+		buffer = "Fast";
+	}
+	else
+	{
+		buffer = "Very fast";
+	}
+
+	return buffer;
+}
+
+static int Menu_BossDisplay(Menu menu, MenuAction action, int param1, int param2)
+{
+	switch (action)
+	{
+		case MenuAction_Cancel:
+		{
+			if (param2 == MenuCancel_ExitBack)
+			{
+				DisplayBossList(param1);
+			}
+		}
+
+		case MenuAction_Select:
+		{
+			DisplayBossList(param1);
+		}
+
 		case MenuAction_End:
 		{
 			delete menu;

@@ -115,10 +115,7 @@ static void ClientResetDeathCam(int client)
 	g_PlayerDeathCamEnt2[client] = INVALID_ENT_REFERENCE;
 	g_PlayerDeathCamTarget[client] = INVALID_ENT_REFERENCE;
 
-	if (IsClientInGame(client))
-	{
-		SetClientViewEntity(client, client);
-	}
+	SetClientViewEntity(client, client);
 
 	if (deathCamBoss != -1)
 	{
@@ -146,6 +143,7 @@ static void ClientResetDeathCam(int client)
 		Call_StartForward(g_OnClientEndDeathCamFwd);
 		Call_PushCell(client);
 		Call_PushCell(deathCamBoss);
+		Call_PushCell(SF2_BaseBoss(ent).IsValid() || SF2_ChaserEntity(ent).IsValid() || SF2_StatueEntity(ent).IsValid());
 		Call_Finish();
 	}
 

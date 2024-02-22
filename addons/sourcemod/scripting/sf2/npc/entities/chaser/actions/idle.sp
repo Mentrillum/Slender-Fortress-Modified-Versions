@@ -83,7 +83,14 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 		}
 	}
 
-	actor.SmellCooldown = gameTime + GetRandomFloat(data.SmellData.CooldownMin[difficulty], data.SmellData.CooldownMax[difficulty]);
+	if (!actor.HasSmelled)
+	{
+		actor.SmellCooldown = gameTime + GetRandomFloat(data.SmellData.CooldownMin[difficulty], data.SmellData.CooldownMax[difficulty]);
+	}
+	else
+	{
+		actor.SmellCooldown = gameTime + GetRandomFloat(data.SmellData.CooldownAfterStateMin[difficulty], data.SmellData.CooldownAfterStateMax[difficulty]);
+	}
 
 	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + NPCGetIdleLifetime(controller.Index, difficulty);
 

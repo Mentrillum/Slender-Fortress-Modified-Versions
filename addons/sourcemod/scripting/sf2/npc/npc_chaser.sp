@@ -5,6 +5,8 @@
 
 #pragma semicolon 1
 
+static SF2ChaserBossProfileData g_NpcChaserProfileData[MAX_BOSSES];
+
 static float g_NpcStunAddHealth[MAX_BOSSES];
 
 static float g_NpcDeathInitialHealth[MAX_BOSSES][Difficulty_Max];
@@ -91,12 +93,12 @@ static void OnBossRemoved(SF2NPC_BaseNPC npc)
 
 SF2ChaserBossProfileData NPCChaserGetProfileData(int npcIndex)
 {
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(npcIndex, profile, sizeof(profile));
+	return g_NpcChaserProfileData[npcIndex];
+}
 
-	SF2ChaserBossProfileData profileData;
-	g_ChaserBossProfileData.GetArray(profile, profileData, sizeof(profileData));
-	return profileData;
+void NPCChaserSetProfileData(int npcIndex, SF2ChaserBossProfileData value)
+{
+	g_NpcChaserProfileData[npcIndex] = value;
 }
 
 float NPCChaserGetAddStunHealth(int npcIndex)
@@ -177,6 +179,9 @@ void NPCChaserOnSelectProfile(int npcIndex)
 	SF2NPC_Chaser chaser = SF2NPC_Chaser(npcIndex);
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(npcIndex, profile, sizeof(profile));
+	SF2ChaserBossProfileData profileData;
+	g_ChaserBossProfileData.GetArray(profile, profileData, sizeof(profileData));
+	g_NpcChaserProfileData[npcIndex] = profileData;
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
@@ -353,6 +358,64 @@ bool IsTargetValidForSlender(SF2_BaseBoss boss, CBaseEntity target, bool include
 	return true;
 }
 
+bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEliminated = false)
+{
+	if (!target.IsValid())
+	{
+		return false;
+	}
+
+	if (target.index <= 0)
+	{
+		return false;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(target.index);
+	if (player.IsValid && (!player.IsAlive ||
+		player.IsInDeathCam ||
+		player.IsInGhostMode ||
+		player.HasEscaped ||
+		player.InCondition(view_as<TFCond>(130)) ||
+		player.Team == TFTeam_Spectator))
+	{
+		return false;
+	}
+
+	if (g_Enabled)
+	{
+		if (!includeEliminated && player.IsValid && player.IsEliminated)
+		{
+			return false;
+		}
+
+		if (!g_SlenderTeleportIgnoreChases[bossIndex])
+		{
+			for (int i = 0; i < MAX_BOSSES; i++)
+			{
+				SF2NPC_Chaser npc = SF2NPC_Chaser(i);
+				if (!npc.IsValid())
+				{
+					continue;
+				}
+
+				SF2_ChaserEntity chaser = SF2_ChaserEntity(npc.EntIndex);
+				if (!chaser.IsValid())
+				{
+					continue;
+				}
+
+				int state = chaser.State;
+				if (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN)
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 bool IsPvETargetValid(CBaseEntity target)
 {
 	if (!target.IsValid())
@@ -365,6 +428,15 @@ bool IsPvETargetValid(CBaseEntity target)
 	if (player.IsValid && (!player.IsAlive || !player.IsInPvE || player.IsInGhostMode))
 	{
 		return false;
+	}
+
+	if (g_Buildings.FindValue(EntIndexToEntRef(target.index)) != -1)
+	{
+		int owner = target.GetPropEnt(Prop_Send, "m_hBuilder");
+		if (IsValidClient(owner) && !IsClientInPvE(owner))
+		{
+			return false;
+		}
 	}
 
 	return true;

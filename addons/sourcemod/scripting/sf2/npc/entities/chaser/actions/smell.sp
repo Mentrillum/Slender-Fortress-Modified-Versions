@@ -187,4 +187,5 @@ static int OnSuspend(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextB
 static void OnEnd(SF2_ChaserSmellAction action, SF2_ChaserEntity actor)
 {
 	actor.IsAllowedToDespawn = true;
+	actor.HasSmelled = true;
 }

@@ -44,7 +44,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnClientLooksAwayFromBossFwd = new GlobalForward("SF2_OnClientLooksAwayFromBoss", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnClientStartDeathCamFwd = new GlobalForward("SF2_OnClientStartDeathCam", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnClientPreKillDeathCamFwd = new GlobalForward("SF2_OnClientPreKillDeathCam", ET_Ignore, Param_Cell, Param_Cell);
-	g_OnClientEndDeathCamFwd = new GlobalForward("SF2_OnClientEndDeathCam", ET_Ignore, Param_Cell, Param_Cell);
+	g_OnClientEndDeathCamFwd = new GlobalForward("SF2_OnClientEndDeathCam", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	g_OnClientGetDefaultWalkSpeedFwd = new GlobalForward("SF2_OnClientGetDefaultWalkSpeed", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnClientGetDefaultSprintSpeedFwd = new GlobalForward("SF2_OnClientGetDefaultSprintSpeed", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnClientTakeDamageFwd = new GlobalForward("SF2_OnClientTakeDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef);

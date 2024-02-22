@@ -659,7 +659,7 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	int inflictor = event.GetInt("inflictor_entindex");
 	int owner = inflictor;
 
-	if (!SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
+	if (IsValidEntity(inflictor) && !SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
 	{
 		owner = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
 	}

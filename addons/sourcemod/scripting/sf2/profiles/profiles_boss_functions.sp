@@ -8,7 +8,7 @@
 /**
  *	Loads a profile in the current KeyValues position in kv.
  */
-bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen)
+bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen, bool lookIntoLoads = false, const char[] originalDir = "")
 {
 	SF2BossProfileData profileData;
 	profileData.Init();
@@ -34,6 +34,59 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 
 		kv.GoBack();
+	}
+
+	if (lookIntoLoads)
+	{
+		// In this, we're basically just gonna go look for companion bosses and skip them here
+		bool skip = true;
+
+		if (kv.GetNum("enable_random_selection", true) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.GetNum("admin_only", false) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.GetNum("enable_random_selection_boxing", false) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.GetNum("enable_random_selection_renevant", false) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.GetNum("enable_random_selection_renevant_admin", false) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.GetNum("is_pve", false) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.GetNum("always_load", false) != 0)
+		{
+			skip = false;
+		}
+
+		if (kv.JumpToKey("pve"))
+		{
+			kv.GoBack();
+			skip = false;
+		}
+
+		if (skip)
+		{
+			FormatEx(loadFailReasonBuffer, loadFailReasonBufferLen, "is not selectable, skipping!");
+			return false;
+		}
 	}
 
 	profileData.Models = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
@@ -130,6 +183,25 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 	profileData.TurnRate = kv.GetFloat("maxyawrate", profileData.TurnRate);
 	profileData.TurnRate = kv.GetFloat("turnrate", profileData.TurnRate);
+
+	switch (profileData.Type)
+	{
+		case SF2BossType_Chaser:
+		{
+			profileData.Description.Type = "Chaser";
+		}
+
+		case SF2BossType_Statue:
+		{
+			profileData.Description.Type = "Statue";
+		}
+	}
+
+	if (kv.JumpToKey("description"))
+	{
+		profileData.Description.Load(kv);
+		kv.GoBack();
+	}
 
 	profileData.ScareCooldown = kv.GetFloat("scare_cooldown", profileData.ScareCooldown);
 	if (profileData.ScareCooldown < 0.0)
@@ -252,21 +324,21 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	GetProfileDifficultyFloatValues(kv, "teleport_target_stress_min", profileData.TeleportStressMin, profileData.TeleportStressMin);
 	GetProfileDifficultyFloatValues(kv, "teleport_target_stress_max", profileData.TeleportStressMax, profileData.TeleportStressMax);
 	GetProfileDifficultyFloatValues(kv, "teleport_target_persistency_period", profileData.TeleportPersistencyPeriod, profileData.TeleportPersistencyPeriod);
-	profileData.TeleportIgnoreChases = !!kv.GetNum("teleport_target_ignore_chases", profileData.TeleportIgnoreChases);
-	profileData.TeleportIgnoreVis = !!kv.GetNum("teleport_target_ignore_visibility", profileData.TeleportIgnoreVis);
+	profileData.TeleportIgnoreChases = kv.GetNum("teleport_target_ignore_chases", profileData.TeleportIgnoreChases) != 0;
+	profileData.TeleportIgnoreVis = kv.GetNum("teleport_target_ignore_visibility", profileData.TeleportIgnoreVis) != 0;
 
 	GetProfileDifficultyFloatValues(kv, "jumpscare_distance", profileData.JumpscareDistance, profileData.JumpscareDistance);
 	GetProfileDifficultyFloatValues(kv, "jumpscare_duration", profileData.JumpscareDuration, profileData.JumpscareDuration);
 	GetProfileDifficultyFloatValues(kv, "jumpscare_cooldown", profileData.JumpscareCooldown, profileData.JumpscareCooldown);
-	profileData.JumpscareOnScare = !!kv.GetNum("jumpscare_on_scare", profileData.JumpscareOnScare);
-	profileData.JumpscareNoSight = !!kv.GetNum("jumpscare_no_sight", profileData.JumpscareNoSight);
+	profileData.JumpscareOnScare = kv.GetNum("jumpscare_on_scare", profileData.JumpscareOnScare) != 0;
+	profileData.JumpscareNoSight = kv.GetNum("jumpscare_no_sight", profileData.JumpscareNoSight) != 0;
 
 	GetProfileDifficultyFloatValues(kv, "speed", profileData.RunSpeed, profileData.RunSpeed);
 	GetProfileDifficultyFloatValues(kv, "acceleration", profileData.Acceleration, profileData.Acceleration);
 
 	GetProfileDifficultyFloatValues(kv, "idle_lifetime", profileData.IdleLifeTime, profileData.IdleLifeTime);
 
-	profileData.CustomOutlines = !!kv.GetNum("customizable_outlines", profileData.CustomOutlines);
+	profileData.CustomOutlines = kv.GetNum("customizable_outlines", profileData.CustomOutlines) != 0;
 	if (profileData.CustomOutlines)
 	{
 		profileData.OutlineColor[0] = kv.GetNum("outline_color_r", profileData.OutlineColor[0]);
@@ -305,7 +377,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		kv.GetString("scare_player_reaction_response_custom", profileData.ScareReactionCustom, sizeof(profileData.ScareReactionCustom), profileData.ScareReactionCustom);
 	}
 
-	profileData.ScareReplenishSprint = !!kv.GetNum("scare_player_replenish_sprint", profileData.ScareReplenishSprint);
+	profileData.ScareReplenishSprint = kv.GetNum("scare_player_replenish_sprint", profileData.ScareReplenishSprint) != 0;
 	if (profileData.ScareReplenishSprint)
 	{
 		profileData.ScareReplenishSprintAmount = kv.GetFloat("scare_player_replenish_sprint_amount", profileData.ScareReplenishSprintAmount);
@@ -740,7 +812,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		g_BossProfileList.PushString(profile);
 	}
 
-	if (!!kv.GetNum("enable_random_selection", 1))
+	if (kv.GetNum("enable_random_selection", true) != 0)
 	{
 		if (GetSelectableBossProfileList().FindString(profile) == -1)
 		{
@@ -757,7 +829,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (!!kv.GetNum("admin_only", 0))
+	if (kv.GetNum("admin_only", false) != 0)
 	{
 		if (GetSelectableAdminBossProfileList().FindString(profile) == -1)
 		{
@@ -774,7 +846,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (!!kv.GetNum("enable_random_selection_boxing", 0))
+	if (kv.GetNum("enable_random_selection_boxing", false) != 0)
 	{
 		if (GetSelectableBoxingBossProfileList().FindString(profile) == -1)
 		{
@@ -791,7 +863,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (!!kv.GetNum("enable_random_selection_renevant", 0))
+	if (kv.GetNum("enable_random_selection_renevant", false) != 0)
 	{
 		if (GetSelectableRenevantBossProfileList().FindString(profile) == -1)
 		{
@@ -808,7 +880,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (!!kv.GetNum("enable_random_selection_renevant_admin", 0))
+	if (kv.GetNum("enable_random_selection_renevant_admin", false) != 0)
 	{
 		if (GetSelectableRenevantBossAdminProfileList().FindString(profile) == -1)
 		{
@@ -825,35 +897,78 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	profileData.IsPvEBoss = kv.GetNum("is_pve", profileData.IsPvEBoss) != 0;
+	if (kv.JumpToKey("pve"))
+	{
+		profileData.IsPvEBoss = true;
+		kv.GoBack();
+	}
+	else
+	{
+		profileData.IsPvEBoss = kv.GetNum("is_pve", profileData.IsPvEBoss) != 0;
+	}
+
 	if (profileData.IsPvEBoss)
 	{
 		profileData.Flags = profileData.Flags & ~SFF_PROXIES;
-		if (kv.JumpToKey("pve_spawn_messages"))
+		if (kv.JumpToKey("pve"))
 		{
-			profileData.PvESpawnMessagesArray = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
-			char message[256], section[64];
-			for (int i = 1;; i++)
+			if (kv.JumpToKey("spawn_messages"))
 			{
-				FormatEx(section, sizeof(section), "%d", i);
-				kv.GetString(section, message, sizeof(message));
-				if (message[0] == '\0')
+				profileData.PvESpawnMessagesArray = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+				char message[256], section[64];
+				for (int i = 1;; i++)
 				{
-					break;
-				}
+					FormatEx(section, sizeof(section), "%d", i);
+					kv.GetString(section, message, sizeof(message));
+					if (message[0] == '\0')
+					{
+						break;
+					}
 
-				profileData.PvESpawnMessagesArray.PushString(message);
+					profileData.PvESpawnMessagesArray.PushString(message);
+				}
+				kv.GoBack();
 			}
+			kv.GetString("spawn_message_prefix", profileData.PvESpawnMessagePrefix, sizeof(profileData.PvESpawnMessagePrefix), profileData.PvESpawnMessagePrefix);
+			profileData.DisplayPvEHealth = kv.GetNum("health_bar", profileData.DisplayPvEHealth) != 0;
+			char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			strcopy(setProfile, sizeof(setProfile), profile);
+			if (kv.GetNum("selectable", 1) != 0)
+			{
+				RegisterPvESlenderBoss(setProfile);
+			}
+			profileData.PvETeleportEndTimer = kv.GetFloat("teleport_players_time", profileData.PvETeleportEndTimer);
 			kv.GoBack();
 		}
-		kv.GetString("pve_spawn_message_prefix", profileData.PvESpawnMessagePrefix, sizeof(profileData.PvESpawnMessagePrefix), profileData.PvESpawnMessagePrefix);
-		profileData.DisplayPvEHealth = kv.GetNum("pve_health_bar", profileData.DisplayPvEHealth) != 0;
-		char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		strcopy(setProfile, sizeof(setProfile), profile);
-		if (kv.GetNum("pve_selectable", 1) != 0)
+		else
 		{
-			RegisterPvESlenderBoss(setProfile);
+			if (kv.JumpToKey("pve_spawn_messages"))
+			{
+				profileData.PvESpawnMessagesArray = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+				char message[256], section[64];
+				for (int i = 1;; i++)
+				{
+					FormatEx(section, sizeof(section), "%d", i);
+					kv.GetString(section, message, sizeof(message));
+					if (message[0] == '\0')
+					{
+						break;
+					}
+
+					profileData.PvESpawnMessagesArray.PushString(message);
+				}
+				kv.GoBack();
+			}
+			kv.GetString("pve_spawn_message_prefix", profileData.PvESpawnMessagePrefix, sizeof(profileData.PvESpawnMessagePrefix), profileData.PvESpawnMessagePrefix);
+			profileData.DisplayPvEHealth = kv.GetNum("pve_health_bar", profileData.DisplayPvEHealth) != 0;
+			char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+			strcopy(setProfile, sizeof(setProfile), profile);
+			if (kv.GetNum("pve_selectable", 1) != 0)
+			{
+				RegisterPvESlenderBoss(setProfile);
+			}
 		}
+
 		index = GetSelectableBossProfileList().FindString(profile);
 		if (index != -1)
 		{
@@ -1130,6 +1245,49 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 				companions.Init();
 				companions.Load(kv);
 				profileData.CompanionsArray.PushArray(companions);
+				if (lookIntoLoads)
+				{
+					char compProfile[SF2_MAX_PROFILE_NAME_LENGTH], otherProfile[SF2_MAX_PROFILE_NAME_LENGTH], dir[PLATFORM_MAX_PATH], file[PLATFORM_MAX_PATH];
+					FileType fileType;
+					DirectoryListing directory = OpenDirectory(originalDir);
+					while (directory.GetNext(file, sizeof(file), fileType))
+					{
+						if (fileType == FileType_Directory)
+						{
+							continue;
+						}
+
+						FormatEx(dir, sizeof(dir), "%s/%s", originalDir, file);
+
+						for (int i = 0; i < companions.Bosses.Length; i++)
+						{
+							companions.Bosses.GetString(i, compProfile, sizeof(compProfile));
+
+							KeyValues otherKeys = new KeyValues("root");
+							if (!FileToKeyValues(otherKeys, dir))
+							{
+								delete otherKeys;
+								continue;
+							}
+
+							otherKeys.GetSectionName(otherProfile, sizeof(otherProfile));
+
+							if (strcmp(compProfile, otherProfile) == 0)
+							{
+								if (!LoadBossProfile(otherKeys, otherProfile, loadFailReasonBuffer, loadFailReasonBufferLen))
+								{
+									LogSF2Message("(COMPANION) %s...FAILED (reason: %s)", dir, loadFailReasonBuffer);
+								}
+								else
+								{
+									LogSF2Message("(COMPANION) %s...", otherProfile);
+								}
+							}
+
+							delete otherKeys;
+						}
+					}
+				}
 			}
 			while (kv.GotoNextKey());
 			kv.GoBack();

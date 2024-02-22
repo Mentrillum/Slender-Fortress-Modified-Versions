@@ -145,6 +145,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		npc.flDeathDropHeight = 99999.0;
 		npc.flJumpHeight = 512.0;
 		npc.flMaxYawRate = originalData.TurnRate;
+		loco.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
 		loco.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
 		statue.SetPropVector(Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
@@ -174,6 +175,11 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		CreateNative("SF2_StatueBossEntity.LastKillTime.get", Native_GetLastKillTime);
 		CreateNative("SF2_StatueBossEntity.ProfileData", Native_GetProfileData);
 	}
+}
+
+static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
+{
+	return false;
 }
 
 static void OnCreate(SF2_StatueEntity ent)

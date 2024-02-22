@@ -799,7 +799,7 @@ void ClientAlertMusicReset(int client)
 		g_PlayerAlertMusicVolumes[client][i] = 0.0;
 		g_PlayerAlertMusicString[client][i][0] = '\0';
 
-		if (NPCGetUniqueID(i) != -1)
+		if (NPCGetUniqueID(i) != -1 && NPCGetType(i) == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
@@ -903,7 +903,7 @@ void ClientIdleMusicReset(int client)
 		g_PlayerIdleMusicVolumes[client][i] = 0.0;
 		g_PlayerIdleMusicString[client][i][0] = '\0';
 
-		if (NPCGetUniqueID(i) != -1)
+		if (NPCGetUniqueID(i) != -1 && NPCGetType(i) == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
@@ -1007,7 +1007,7 @@ void ClientChaseMusicReset(int client)
 		g_PlayerChaseMusicTimer[client][i] = null;
 		g_PlayerChaseMusicString[client][i][0] = '\0';
 
-		if (NPCGetUniqueID(i) != -1)
+		if (NPCGetUniqueID(i) != -1 && NPCGetType(i) == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
@@ -1115,7 +1115,7 @@ void ClientChaseMusicSeeReset(int client)
 		g_PlayerChaseMusicSeeVolumes[client][i] = 0.0;
 		g_PlayerChaseMusicSeeString[client][i][0] = '\0';
 
-		if (NPCGetUniqueID(i) != -1)
+		if (NPCGetUniqueID(i) != -1 && NPCGetType(i) == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{

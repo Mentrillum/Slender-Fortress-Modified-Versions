@@ -11,6 +11,7 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 #include <cbasenpc/tf/nav>
+#include <profiler>
 
 #pragma semicolon 1
 
@@ -546,6 +547,7 @@ ConVar g_HighDifficultyPercentConVar;
 ConVar g_FileCheckConVar;
 ConVar g_LoadOutsideMapsConVar;
 ConVar g_DefaultBossTeamConVar;
+ConVar g_EngineerBuildInBLUConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -664,6 +666,7 @@ PrivateForward g_OnPlayerConditionRemovedPFwd;
 PrivateForward g_OnPlayerTurnOnFlashlightPFwd;
 PrivateForward g_OnPlayerTurnOffFlashlightPFwd;
 PrivateForward g_OnPlayerFlashlightBreakPFwd;
+PrivateForward g_OnPlayerAverageUpdatePFwd;
 PrivateForward g_OnSpecialRoundStartPFwd;
 PrivateForward g_OnBossSpawnPFwd;
 PrivateForward g_OnBossRemovedPFwd;
@@ -1689,9 +1692,31 @@ Action Hook_CommandBuild(int client, const char[] command, int argc)
 	{
 		return Plugin_Continue;
 	}
-	if (!IsClientInPvP(client) && !IsClientInPvE(client))
+
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsEliminated)
 	{
-		return Plugin_Handled;
+		if (player.HasEscaped && !player.IsInPvE && !player.IsInPvE)
+		{
+			return Plugin_Handled;
+		}
+	}
+	else
+	{
+		if (g_EngineerBuildInBLUConVar.BoolValue)
+		{
+			if (!player.IsEliminated || player.IsInGhostMode)
+			{
+				return Plugin_Handled;
+			}
+		}
+		else
+		{
+			if (!player.IsInPvP && !player.IsInPvE)
+			{
+				return Plugin_Handled;
+			}
+		}
 	}
 
 	return Plugin_Continue;
@@ -2816,6 +2841,7 @@ static Action Hook_TriggerOnTouchEx(int trigger, int other)
 	}
 	return Plugin_Continue;
 }
+
 static Action Hook_TriggerOnEndTouchEx(int trigger, int other)
 {
 	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
@@ -4582,7 +4608,7 @@ void SlenderOnClientStressUpdate(int client)
 		}
 		if ((bossFlags & SFF_NOTELEPORT) != 0 && (bossFlags & SFF_PROXIES) != 0 && !Npc.IsCopy)
 		{
-			//Go get a proxy target anyways
+			// Go get a proxy target anyways
 			ArrayList proxyArray = new ArrayList();
 			for (int i = 1; i <= MaxClients; i++)
 			{
@@ -4620,7 +4646,7 @@ void SlenderOnClientStressUpdate(int client)
 		{
 			if (g_PlayerEliminated[teleportTarget] || DidClientEscape(teleportTarget) ||
 				(!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !g_SlenderTeleportIgnoreChases[Npc.Index] && stress >= g_SlenderTeleportMaxTargetStress[bossIndex]) ||
-				gameTime >= g_SlenderTeleportMaxTargetTime[Npc.Index])
+				(g_SlenderTeleportMaxTargetTime[Npc.Index] > 0.0 && gameTime >= g_SlenderTeleportMaxTargetTime[Npc.Index]))
 			{
 				// Queue for a new target and mark the old target in the rest period.
 				float restPeriod = Npc.GetTeleportRestPeriod(difficulty);
@@ -4692,13 +4718,8 @@ void SlenderOnClientStressUpdate(int client)
 			if (IsValidClient(preferredTeleportTarget))
 			{
 				// Set our preferred target to the new guy.
-				float targetDuration = Npc.GetTeleportPersistencyPeriod(difficulty);
-				float deviation = GetRandomFloat(0.92, 1.08);
-				targetDuration = Pow(deviation * targetDuration, ((g_RoundDifficultyModifier) / 2.0)) + ((deviation * targetDuration) - 1.0);
-
 				g_SlenderTeleportTarget[Npc.Index] = EntIndexToEntRef(preferredTeleportTarget);
 				g_SlenderTeleportPlayersRestTime[Npc.Index][preferredTeleportTarget] = -1.0;
-				g_SlenderTeleportMaxTargetTime[Npc.Index] = gameTime + targetDuration;
 				g_SlenderTeleportTargetTime[Npc.Index] = gameTime;
 				g_SlenderTeleportMaxTargetStress[Npc.Index] = targetStress;
 
@@ -6557,7 +6578,6 @@ static Action Timer_RoundStart(Handle timer)
 {
 	if (g_PageMax > 0)
 	{
-		ArrayList arrayClients = new ArrayList();
 		int clients[MAXTF2PLAYERS];
 		int clientsNum = 0;
 
@@ -6569,7 +6589,6 @@ static Action Timer_RoundStart(Handle timer)
 				continue;
 			}
 
-			arrayClients.Push(player.UserID);
 			clients[clientsNum] = i;
 			clientsNum++;
 		}
@@ -6577,9 +6596,9 @@ static Action Timer_RoundStart(Handle timer)
 		// Show difficulty menu.
 		if (!SF_IsBoxingMap() && !SF_IsRenevantMap() && !SF_SpecialRound(SPECIALROUND_MODBOSSES))
 		{
-			if (clientsNum)
+			if (clientsNum > 0)
 			{
-				g_VoteTimer = CreateTimer(1.0, Timer_VoteDifficulty, arrayClients, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+				g_VoteTimer = CreateTimer(1.0, Timer_VoteDifficulty, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 				TriggerTimer(g_VoteTimer, true);
 
 				int gameText = -1;
@@ -6604,14 +6623,6 @@ static Action Timer_RoundStart(Handle timer)
 					}
 				}
 			}
-			else
-			{
-				delete arrayClients;
-			}
-		}
-		else
-		{
-			delete arrayClients;
 		}
 	}
 
@@ -6863,41 +6874,36 @@ static Action Timer_RoundTimeEscape(Handle timer)
 	return Plugin_Continue;
 }
 
-static Action Timer_VoteDifficulty(Handle timer, any data)
+static Action Timer_VoteDifficulty(Handle timer)
 {
-	ArrayList arrayClients = view_as<ArrayList>(data);
-
 	if (timer != g_VoteTimer || IsRoundEnding())
 	{
-		delete arrayClients;
 		return Plugin_Stop;
 	}
 
-	if (NativeVotes_IsVoteInProgress())
+	if (IsVoteInProgress() || NativeVotes_IsVoteInProgress())
 	{
 		return Plugin_Continue; // There's another vote in progess. Wait.
 	}
 
-	if (arrayClients == null)
-	{
-		return Plugin_Stop;
-	}
-
 	int clients[MAXTF2PLAYERS] = { -1, ... };
 	int clientsNum;
-	for (int i = 0, size = arrayClients.Length; i < size; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		int client = GetClientOfUserId(arrayClients.Get(i));
-		if (client <= 0)
+		SF2_BasePlayer player = SF2_BasePlayer(i);
+		if (!player.IsValid || player.IsBot || player.IsEliminated)
 		{
 			continue;
 		}
 
-		clients[clientsNum] = client;
+		clients[clientsNum] = player.index;
 		clientsNum++;
 	}
 
-	delete arrayClients;
+	if (clientsNum == 0)
+	{
+		return Plugin_Stop;
+	}
 
 	RandomizeVoteMenu();
 	g_MenuVoteDifficulty.DisplayVote(clients, clientsNum, 15);
@@ -6934,7 +6940,7 @@ void SF_FailEnd()
 
 static Action Timer_Fail(Handle timer)
 {
-	LogSF2Message("Wow you hit a rare bug, where the round doesn't end after the timer ran out. Collecting info on your game...\nContact Mentrillum or The Gaben and give them the following log:");
+	LogSF2Message("Wow you hit a rare bug, where the round doesn't end after the timer ran out. Collecting info on your game...\nContact Mentrillum and give them the following log:");
 	int escapedPlayers = 0;
 	int clientInGame = 0;
 	int redPlayers = 0;

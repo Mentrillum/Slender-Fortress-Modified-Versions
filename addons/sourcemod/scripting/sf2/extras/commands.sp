@@ -229,6 +229,8 @@ public void OnPluginStart()
 	g_LoadOutsideMapsConVar = CreateConVar("sf2_load_outside_maps", "0", "Allow bosses to be loaded outside of Slender Fortress maps.", _, true, 0.0, true, 1.0);
 	g_DefaultBossTeamConVar = CreateConVar("sf2_default_boss_team", "1", "If bosses are loaded outside of SF2, determine what default team bosses should be with.", _, true, 1.0, true, 5.0);
 
+	g_EngineerBuildInBLUConVar = CreateConVar("sf2_engineer_build_in_blue", "0", "Allows BLU engineers to build outside of the PvP and PvE arena.", _, true, 0.0, true, 1.0);
+
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
 	g_HudSync = CreateHudSynchronizer();
@@ -421,6 +423,7 @@ public void OnPluginStart()
 	g_OnPlayerTurnOnFlashlightPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerTurnOffFlashlightPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerFlashlightBreakPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnPlayerAverageUpdatePFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnSpecialRoundStartPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnBossSpawnPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnBossRemovedPFwd = new PrivateForward(ET_Ignore, Param_Cell);
@@ -1013,6 +1016,10 @@ static Action Hook_CommandSuicideAttempt(int client, const char[] command,int ar
 	{
 		return Plugin_Continue;
 	}
+	if (!IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
 	if (GetClientTeam(client) == TFTeam_Spectator)
 	{
 		return Plugin_Continue;
@@ -1416,16 +1423,6 @@ static Action Command_RemoveSlender(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(bossIndex))
-	{
-		g_SlenderBoxingBossCount -= 1;
-	}
-
-	if (MusicActive() && BossHasMusic(profile) && BossMatchesCurrentMusic(profile))
-	{
-		NPCStopMusic();
-	}
-
 	NPCRemove(bossIndex);
 
 	if (IsValidClient(client))
@@ -1764,6 +1761,35 @@ static Action Command_ReloadProfiles(int client, int args)
 		ReloadRestrictedWeapons();
 		ReloadSpecialRounds();
 		ReloadClassConfigs();
+	}
+
+	for (int i = 0; i < MAX_BOSSES; i++)
+	{
+		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+
+		if (!npc.IsValid())
+		{
+			continue;
+		}
+
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		npc.GetProfile(profile, sizeof(profile));
+		SF2BossProfileData data;
+		g_BossProfileData.GetArray(profile, data, sizeof(data));
+		NPCSetProfileData(npc.Index, data);
+
+		if (npc.Type == SF2BossType_Chaser)
+		{
+			SF2ChaserBossProfileData chaserData;
+			g_ChaserBossProfileData.GetArray(profile, chaserData, sizeof(chaserData));
+			NPCChaserSetProfileData(npc.Index, chaserData);
+		}
+		else if (npc.Type == SF2BossType_Statue)
+		{
+			SF2StatueBossProfileData statueData;
+			g_StatueBossProfileData.GetArray(profile, statueData, sizeof(statueData));
+			NPCStatueSetProfileData(npc.Index, statueData);
+		}
 	}
 	CPrintToChatAll("{royalblue}%t {default} Reloaded all profiles successfully.", "SF2 Prefix");
 

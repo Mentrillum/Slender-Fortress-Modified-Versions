@@ -496,6 +496,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		CreateNative("SF2_BaseBossEntity.CurrentChaseDuration.set", Native_SetCurrentChaseDuration);
 		CreateNative("SF2_BaseBossEntity.InitialChaseDuration.get", Native_GetInitialChaseDuration);
 		CreateNative("SF2_BaseBossEntity.InitialChaseDuration.set", Native_SetInitialChaseDuration);
+		CreateNative("SF2_BaseBossEntity.IsKillingSomeone.get", Native_GetIsKillingSomeone);
 		CreateNative("SF2_BaseBossEntity.EyePosition", Native_EyePosition);
 		CreateNative("SF2_BaseBossEntity.GetProfileName", Native_GetProfileName);
 		CreateNative("SF2_BaseBossEntity.GetName", Native_GetName);
@@ -921,6 +922,18 @@ static any Native_SetInitialChaseDuration(Handle plugin, int numParams)
 	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
 	bossEntity.InitialChaseDuration = GetNativeCell(2);
 	return 0;
+}
+
+static any Native_GetIsKillingSomeone(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	return bossEntity.IsKillingSomeone;
 }
 
 static any Native_EyePosition(Handle plugin, int numParams)

@@ -205,6 +205,8 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		kv.GoBack();
 	}
 
+	profileData.BackstabDamageScale = kv.GetFloat("backstab_damage_scale", profileData.BackstabDamageScale);
+
 	if (kv.JumpToKey("cloaking"))
 	{
 		profileData.CloakData.Load(kv, g_FileCheckConVar.BoolValue);

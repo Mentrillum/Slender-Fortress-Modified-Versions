@@ -146,7 +146,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserFleeToHealAction action, S
 	int difficulty = controller.Difficulty;
 	action.IsHealing = false;
 	action.HasPath = false;
-	action.FleeTime = GetRandomFloat(10.0, 15.0);
+	action.FleeTime = GetRandomFloat(5.0, 10.0);
 	if (rageInfo.Animations.GetAnimation("start", difficulty, animName, sizeof(animName), rate, duration, cycle))
 	{
 		int sequence = LookupProfileAnimation(actor.index, animName);

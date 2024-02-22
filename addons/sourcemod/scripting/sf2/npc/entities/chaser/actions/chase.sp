@@ -200,6 +200,7 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		path.Invalidate();
 	}
 	actor.MaintainTarget = false;
+	actor.HasSmelled = false;
 	int difficulty = actor.Controller.Difficulty;
 	if (actor.FollowedCompanionChase)
 	{

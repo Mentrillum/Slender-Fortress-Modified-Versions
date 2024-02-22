@@ -92,6 +92,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineFloatField("m_FollowCooldownChase")
 			.DefineIntField("m_SmellPlayerList")
 			.DefineFloatField("m_SmellCooldown")
+			.DefineBoolField("m_HasSmelled")
 			.DefineFloatField("m_ProjectileCooldown")
 			.DefineBoolField("m_IsReloadingProjectiles")
 			.DefineIntField("m_ProjectileAmmo")
@@ -118,8 +119,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		g_OnEntityCreatedPFwd.AddFunction(null, EntityCreated);
 		g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 		g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
-		g_OnPlayerDisconnectedPFwd.AddFunction(null, OnDisconnected);
-		g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
 
 		SF2_ChaserAttackAction.Initialize();
 		InitializePostureRagePhase();
@@ -795,6 +794,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "m_SmellCooldown", value);
+		}
+	}
+
+	property bool HasSmelled
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_HasSmelled") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_HasSmelled", value);
 		}
 	}
 
@@ -1690,6 +1702,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 			if ((controller.HasAttribute(SF2Attribute_AlwaysLookAtTarget) || controller.HasAttribute(SF2Attribute_AlwaysLookAtTargetWhileAttacking))
 				&& !attackData.IgnoreAlwaysLooking[difficulty])
+			{
+				aimAtTarget = true;
+			}
+
+			if (attackData.Type == SF2BossAttackType_LaserBeam || attackData.Type == SF2BossAttackType_Projectile || attackData.Type == SF2BossAttackType_Ranged)
 			{
 				aimAtTarget = true;
 			}
@@ -3158,7 +3175,6 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 		SF2NPC_Chaser controller = SF2NPC_Chaser(i);
 		chaser.SetAlertTriggerCount(client, 0);
 		chaser.SetAlertSoundTriggerCooldown(client, 0.0);
-		chaser.MyNextBotPointer().GetVisionInterface().ForgetEntity(client.index);
 		chaser.SetAutoChaseCount(client, 0);
 		chaser.SetAutoChaseCooldown(client, -1.0);
 		client.SetForceChaseState(controller, false);
@@ -3196,7 +3212,6 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 			continue;
 		}
 		SF2NPC_Chaser controller = SF2NPC_Chaser(i);
-		chaser.MyNextBotPointer().GetVisionInterface().ForgetEntity(client.index);
 
 		int index = controller.ChaseOnLookTargets.FindValue(entity);
 		if (index != -1)
@@ -3236,50 +3251,24 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 	}
 }
 
-static void OnPlayerEscape(SF2_BasePlayer client)
+static bool EnumerateTargets(int entIndex, ArrayList players)
 {
-	for (int i = 0; i < MAX_BOSSES; i++)
+	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
 	{
-		if (NPCGetUniqueID(i) == -1)
-		{
-			continue;
-		}
-		int entity = NPCGetEntIndex(i);
-		if (!entity || entity == INVALID_ENT_REFERENCE)
-		{
-			continue;
-		}
-
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(entity);
-		if (!chaser.IsValid())
-		{
-			continue;
-		}
-		chaser.MyNextBotPointer().GetVisionInterface().ForgetEntity(client.index);
+		players.Push(entIndex);
 	}
-}
 
-static void OnDisconnected(SF2_BasePlayer client)
-{
-	for (int i = 0; i < MAX_BOSSES; i++)
+	if (g_Buildings.FindValue(EnsureEntRef(entIndex)) != -1)
 	{
-		if (NPCGetUniqueID(i) == -1)
-		{
-			continue;
-		}
-		int entity = NPCGetEntIndex(i);
-		if (!entity || entity == INVALID_ENT_REFERENCE)
-		{
-			continue;
-		}
-
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(entity);
-		if (!chaser.IsValid())
-		{
-			continue;
-		}
-		chaser.MyNextBotPointer().GetVisionInterface().ForgetEntity(client.index);
+		players.Push(entIndex);
 	}
+
+	if (g_WhitelistedEntities.FindValue(EnsureEntRef(entIndex)) != -1)
+	{
+		players.Push(entIndex);
+	}
+
+	return true;
 }
 
 static void OnCreate(SF2_ChaserEntity ent)
@@ -3294,7 +3283,6 @@ static void OnCreate(SF2_ChaserEntity ent)
 	SDKHook(ent.index, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(ent.index, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
 	SDKHook(ent.index, SDKHook_TraceAttack, TraceOnHit);
-	SDKHook(ent.index, SDKHook_SetTransmit, SetTransmit);
 	SetEntityTransmitState(ent.index, FL_EDICT_FULLCHECK);
 	g_DHookShouldTransmit.HookEntity(Hook_Pre, ent.index, ShouldTransmit);
 	g_DHookUpdateTransmitState.HookEntity(Hook_Pre, ent.index, UpdateTransmitState);
@@ -3497,6 +3485,8 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(victim);
 	SF2_BasePlayer player = SF2_BasePlayer(attacker);
+	SF2BossProfileData data;
+	data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
 
 	if (player.IsValid && player.IsProxy)
 	{
@@ -3514,18 +3504,29 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		{
 			return Plugin_Handled;
 		}
+
+		if (data.IsPvEBoss && player.IsValid && !player.IsInPvE)
+		{
+			SDKHooks_TakeDamage(inflictor, chaser.index, chaser.index, CBaseEntity(inflictor).GetProp(Prop_Data, "m_iHealth") * 4.0);
+			return Plugin_Handled;
+		}
 	}
 
-	SF2BossProfileData data;
-	data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
 	SF2ChaserBossProfileData chaserData;
 	chaserData = chaser.Controller.GetProfileData();
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (player.IsValid)
 	{
+		float myEyePos[3], clientEyePos[3], buffer[3], myAng[3];
+		player.GetEyePosition(clientEyePos);
+		chaser.Controller.GetEyePosition(myEyePos);
+		SubtractVectors(clientEyePos, myEyePos, buffer);
+		GetVectorAngles(buffer, buffer);
+		chaser.GetAbsAngles(myAng);
+
 		CBaseEntity weaponEnt = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Melee));
-		if (weaponEnt.IsValid() && weaponEnt.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
+		if (weaponEnt.IsValid() && weaponEnt.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon") && weapon == weaponEnt.index)
 		{
 			switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 			{
@@ -3550,14 +3551,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 			if (player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap()) && chaser.State != STATE_DEATH)
 			{
-				float myEyePos[3], clientEyePos[3], buffer[3], myAng[3];
-				player.GetEyePosition(clientEyePos);
-				chaser.Controller.GetEyePosition(myEyePos);
-				SubtractVectors(clientEyePos, myEyePos, buffer);
-				GetVectorAngles(buffer, buffer);
-				chaser.GetAbsAngles(myAng);
-
-				if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 90.0 && chaserData.BackstabDamageScale > 0.0)
+				if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 75.0 && chaserData.BackstabDamageScale > 0.0)
 				{
 					damageType = DMG_CRIT;
 					EmitSoundToClient(player.index, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
@@ -3613,10 +3607,33 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 						}
 					}
 
+					player.SetProp(Prop_Send, "m_iRevengeCrits", player.GetProp(Prop_Send, "m_iRevengeCrits") + 1);
+
 					return Plugin_Changed;
 				}
 			}
+		}
 
+		weaponEnt = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Primary));
+		if (weaponEnt.IsValid() && weaponEnt.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon") && weapon == weaponEnt.index)
+		{
+			switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
+			{
+				case 15, 202, 41, 298, 312, 424, 654, 793, 802, 811, 832, 850, 882, 891, 900, 909, 958, 967: // Miniguns
+				{
+					damage *= 0.65;
+					return Plugin_Changed;
+				}
+
+				case 40, 1146: // Backburner
+				{
+					if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 60.0 && chaserData.BackstabDamageScale > 0.0)
+					{
+						damageType |= DMG_CRIT;
+						return Plugin_Changed;
+					}
+				}
+			}
 		}
 	}
 
@@ -3641,9 +3658,10 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 	if (player.IsValid)
 	{
 		CBaseEntity weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Primary));
-		if (weapon.IsValid() && weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon"))
+		if (weapon.IsValid())
 		{
-			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
+			int index = weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex");
+			switch (index)
 			{
 				case 594: // Phlog
 				{
@@ -3660,17 +3678,66 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 					}
 				}
 			}
+
+			if (weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon") && weapon.index == weaponEntIndex)
+			{
+				switch (index)
+				{
+					case 527: // Widowmaker
+					{
+						GivePlayerAmmo(player.index, RoundToNearest(damage), 3, true);
+					}
+
+					case 228, 1085: // Black Box
+					{
+						int health = player.Health;
+						float regen = FloatClamp(damage / 90.0, 0.0, 1.0);
+						int newHealth = health + RoundToNearest(20.0 * regen);
+						if (newHealth <= player.GetProp(Prop_Data, "m_iMaxHealth"))
+						{
+							SetEntityHealth(player.index, newHealth);
+						}
+						else
+						{
+							SetEntityHealth(player.index, player.GetProp(Prop_Data, "m_iMaxHealth"));
+						}
+						ShowHealthRegen(player.index, RoundToNearest(20.0 * regen), index);
+					}
+
+					case 448: // Soda Popper
+					{
+						if (!player.InCondition(TFCond_CritHype))
+						{
+							float hype = player.GetPropFloat(Prop_Send, "m_flHypeMeter");
+							float add = (damage / 350.0) * 100.0;
+							float result = FloatClamp(hype + add, 0.0, 100.0);
+							player.SetPropFloat(Prop_Send, "m_flHypeMeter", result);
+						}
+					}
+
+					case 772: // Baby Face's Blaster
+					{
+						float hype = player.GetPropFloat(Prop_Send, "m_flHypeMeter");
+						float add = (damage / 100.0) * 100.0;
+						float result = FloatClamp(hype + add, 0.0, 100.0);
+						player.SetPropFloat(Prop_Send, "m_flHypeMeter", result);
+						result /= 100.0;
+						player.SetPropFloat(Prop_Send, "m_flMaxspeed", 360.0 + (160.0 * result));
+					}
+				}
+			}
 		}
 
 		weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Secondary));
 		if (weapon.IsValid())
 		{
-			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
+			int index = weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex");
+			switch (index)
 			{
 				case 129, 1001, 226, 354: // Banners
 				{
 					float requiredRage = 6.0;
-					if (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex") == 354)
+					if (index == 354)
 					{
 						requiredRage = 4.8;
 					}
@@ -3684,6 +3751,47 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 							rage = 100.0;
 						}
 						player.SetPropFloat(Prop_Send, "m_flRageMeter", rage);
+					}
+				}
+			}
+
+			if (weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon") && weapon.index == weaponEntIndex)
+			{
+				switch (index)
+				{
+					case 773: // Pocket pistol
+					{
+						ShowHealthRegen(player.index, 3, index);
+						int health = player.Health;
+						int newHealth = health + 3;
+						if (newHealth <= player.GetProp(Prop_Data, "m_iMaxHealth"))
+						{
+							SetEntityHealth(player.index, newHealth);
+						}
+						else
+						{
+							SetEntityHealth(player.index, player.GetProp(Prop_Data, "m_iMaxHealth"));
+						}
+					}
+				}
+			}
+		}
+
+		weapon = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Melee));
+		if (weapon.IsValid() && weapon.index == player.GetPropEnt(Prop_Send, "m_hActiveWeapon") && weapon.index == weaponEntIndex)
+		{
+			switch (weapon.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
+			{
+				case 37: // Ubersaw
+				{
+					CBaseEntity secondary = CBaseEntity(player.GetWeaponSlot(TFWeaponSlot_Secondary));
+					if (secondary.IsValid())
+					{
+						secondary.SetPropFloat(Prop_Send, "m_flChargeLevel", secondary.GetPropFloat(Prop_Send, "m_flChargeLevel") + 0.25);
+						if (secondary.GetPropFloat(Prop_Send, "m_flChargeLevel") > 1.0)
+						{
+							secondary.SetPropFloat(Prop_Send, "m_flChargeLevel", 1.0);
+						}
 					}
 				}
 			}
@@ -3722,6 +3830,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 		{
 			SetEntityHealth(player.index, player.GetProp(Prop_Data, "m_iMaxHealth"));
 		}
+		ShowHealthRegen(player.index, RoundToCeil(mult));
 	}
 
 	if (broadcastDamage)
@@ -3803,24 +3912,6 @@ static Action TraceOnHit(int victim, int& attacker, int& inflictor, float& damag
 	return Plugin_Continue;
 }
 
-static Action SetTransmit(int ent, int other)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	SF2_BasePlayer player = SF2_BasePlayer(other);
-	SF2_ChaserEntity chaser = SF2_ChaserEntity(ent);
-
-	if (player.IsValid && player.IsInDeathCam && chaser.KillTarget != player)
-	{
-		return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
-}
-
 static MRESReturn UpdateTransmitState(int entIndex, DHookReturn ret, DHookParam params)
 {
 	if (entIndex == -1)
@@ -3877,6 +3968,8 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	float traceStartPos[3], traceEndPos[3], myPos[3], targetPos[3];
 	controller.GetEyePosition(traceStartPos);
 	chaser.GetAbsOrigin(myPos);
+
+	int state = chaser.State;
 
 	if (originalData.EyeData.Type == 1)
 	{
@@ -3938,59 +4031,19 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	}
 
 	ArrayList valids = new ArrayList();
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		SF2_BasePlayer client = SF2_BasePlayer(i);
-
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, client, attackEliminated))
-		{
-			continue;
-		}
-		if (originalData.IsPvEBoss && !IsPvETargetValid(client))
-		{
-			continue;
-		}
-
-		valids.Push(EntIndexToEntRef(client.index));
-	}
-
-	for (int i = 0; i < g_Buildings.Length; i++)
-	{
-		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
-		{
-			continue;
-		}
-		if (originalData.IsPvEBoss && !IsPvETargetValid(entity))
-		{
-			continue;
-		}
-
-		valids.Push(EntIndexToEntRef(entity.index));
-	}
-
-	for (int i = 0; i < g_WhitelistedEntities.Length; i++)
-	{
-		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
-		{
-			continue;
-		}
-		if (originalData.IsPvEBoss && !IsPvETargetValid(entity))
-		{
-			continue;
-		}
-
-		valids.Push(EntIndexToEntRef(entity.index));
-	}
-
+	TR_EnumerateEntitiesSphere(traceStartPos, searchRange, PARTITION_SOLID_EDICTS, EnumerateTargets, valids);
 	for (int i = 0; i < valids.Length; i++)
 	{
 		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(valids.Get(i)));
-		if (!entity.IsValid())
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
 		{
 			continue;
 		}
+		if (originalData.IsPvEBoss && !IsPvETargetValid(entity))
+		{
+			continue;
+		}
+
 		SF2_BasePlayer player = SF2_BasePlayer(entity.index);
 
 		if (player.IsValid && g_PlayerDebugFlags[player.index] & DEBUG_BOSS_EYES)
@@ -4229,7 +4282,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	{
 		if (!IsTargetValidForSlender(chaser, CBaseEntity(bestNewTarget), attackEliminated))
 		{
-			if (chaser.State != STATE_CHASE && (NPCAreAvailablePlayersAlive() || g_Buildings.Length > 0 || g_WhitelistedEntities.Length > 0))
+			if (state != STATE_CHASE && (NPCAreAvailablePlayersAlive() || g_Buildings.Length > 0 || g_WhitelistedEntities.Length > 0))
 			{
 				ArrayList arrayRaidTargets = new ArrayList();
 
@@ -4239,37 +4292,40 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 					{
 						continue;
 					}
-					arrayRaidTargets.Push(i);
+					arrayRaidTargets.Push(EntIndexToEntRef(i));
 				}
 
-				for (int i = 0; i < g_Buildings.Length; i++)
+				if (!g_Enabled)
 				{
-					if (!IsTargetValidForSlender(chaser, CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i))), false))
+					for (int i = 0; i < g_Buildings.Length; i++)
 					{
-						continue;
+						CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
+						if (!IsTargetValidForSlender(chaser, building, false))
+						{
+							continue;
+						}
+
+						// Do not go looking for buildings that are carried or are in an inactive state
+						if (building.GetProp(Prop_Send, "m_bCarried") || building.GetProp(Prop_Send, "m_iState") == 0)
+						{
+							continue;
+						}
+						arrayRaidTargets.Push(g_Buildings.Get(i));
 					}
 
-					CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
-					// Do not go looking for buildings that are carried or are in an inactive state
-					if (building.GetProp(Prop_Send, "m_bCarried") || building.GetProp(Prop_Send, "m_iState") == 0)
+					for (int i = 0; i < g_WhitelistedEntities.Length; i++)
 					{
-						continue;
+						if (!IsTargetValidForSlender(chaser, CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i))), false))
+						{
+							continue;
+						}
+						arrayRaidTargets.Push(g_WhitelistedEntities.Get(i));
 					}
-					arrayRaidTargets.Push(building.index);
-				}
-
-				for (int i = 0; i < g_WhitelistedEntities.Length; i++)
-				{
-					if (!IsTargetValidForSlender(chaser, CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i))), false))
-					{
-						continue;
-					}
-					arrayRaidTargets.Push(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
 				}
 
 				if (arrayRaidTargets.Length > 0)
 				{
-					int raidTarget = arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1));
+					int raidTarget = EntRefToEntIndex(arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1)));
 					if (IsValidClient(raidTarget))
 					{
 						if (!g_PlayerEliminated[raidTarget])
@@ -4292,7 +4348,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	{
 		if (!IsPvETargetValid(SF2_BasePlayer(bestNewTarget)))
 		{
-			if (chaser.State != STATE_CHASE)
+			if (state != STATE_CHASE)
 			{
 				ArrayList arrayRaidTargets = new ArrayList();
 
@@ -4302,11 +4358,12 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 					{
 						continue;
 					}
-					arrayRaidTargets.Push(i);
+					arrayRaidTargets.Push(EntIndexToEntRef(i));
 				}
+
 				if (arrayRaidTargets.Length > 0)
 				{
-					int raidTarget = arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1));
+					int raidTarget = EntRefToEntIndex(arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1)));
 					if (IsValidClient(raidTarget) && IsClientInPvE(raidTarget))
 					{
 						bestNewTarget = raidTarget;
@@ -4349,7 +4406,10 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 	originalData = baseController.GetProfileData();
 	SF2ChaserBossProfilePostureInfo postureInfo;
 	char posture[64];
-	chaser.GetPosture(posture, sizeof(posture));
+	if (data.Postures != null)
+	{
+		chaser.GetPosture(posture, sizeof(posture));
+	}
 
 	float speed, acceleration;
 
@@ -4489,7 +4549,10 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		return;
 	}
 
-	if (chaser.CanUpdatePosture())
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+
+	if (data.Postures != null && chaser.CanUpdatePosture())
 	{
 		char posture[64], resultPosture[64];
 		chaser.GetDefaultPosture(posture, sizeof(posture));
@@ -4512,8 +4575,6 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 	INextBot bot = chaser.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(chaser.index);
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
 
 	float speed = loco.GetGroundSpeed();
 
@@ -4666,6 +4727,11 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 
 static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 {
+	if (SF2_ChaserEntity(other).IsValid() || SF2_StatueEntity(other).IsValid())
+	{
+		return false;
+	}
+
 	if (IsValidEntity(other))
 	{
 		SF2_BasePlayer player = SF2_BasePlayer(other);

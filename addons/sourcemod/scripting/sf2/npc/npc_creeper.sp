@@ -6,15 +6,16 @@
 #pragma semicolon 1
 
 static float g_NpcStatueIdleLifetime[MAX_BOSSES][Difficulty_Max];
+static SF2StatueBossProfileData g_StatueProfileData[MAX_BOSSES];
 
 SF2StatueBossProfileData NPCStatueGetProfileData(int npcIndex)
 {
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(npcIndex, profile, sizeof(profile));
+	return g_StatueProfileData[npcIndex];
+}
 
-	SF2StatueBossProfileData profileData;
-	g_StatueBossProfileData.GetArray(profile, profileData, sizeof(profileData));
-	return profileData;
+void NPCStatueSetProfileData(int npcIndex, SF2StatueBossProfileData value)
+{
+	g_StatueProfileData[npcIndex] = value;
 }
 
 float NPCStatueGetIdleLifetime(int npcIndex, int difficulty)
@@ -25,11 +26,12 @@ float NPCStatueGetIdleLifetime(int npcIndex, int difficulty)
 void NPCStatueOnSelectProfile(int npcIndex)
 {
 	SF2NPC_Statue statue = SF2NPC_Statue(npcIndex);
-	SF2StatueBossProfileData data;
-	data = statue.GetProfileData();
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(npcIndex, profile, sizeof(profile));
+	g_StatueBossProfileData.GetArray(profile, g_StatueProfileData[npcIndex], sizeof(g_StatueProfileData[]));
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_NpcStatueIdleLifetime[npcIndex][difficulty] = data.IdleLifeTime[difficulty];
+		g_NpcStatueIdleLifetime[npcIndex][difficulty] = g_StatueProfileData[npcIndex].IdleLifeTime[difficulty];
 	}
 
 	statue.SetAffectedBySight(true);

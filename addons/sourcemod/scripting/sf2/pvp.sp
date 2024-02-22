@@ -361,8 +361,23 @@ static Action Hook_PvPProjectile_OnTouch(int projectile, int client)
 {
 	// Check if the projectile hit a player outside of pvp area
 	// Without that, cannon balls can bounce players which should not happen because they are outside of pvp.
+	bool remove = false;
 	if (IsValidClient(client) && !IsClientInPvP(client))
 	{
+		remove = true;
+	}
+
+	int owner = GetEntPropEnt(projectile, Prop_Data, "m_hOwnerEntity");
+	if (owner == client)
+	{
+		remove = false;
+	}
+
+	if (remove)
+	{
+		float vel[3];
+		CBaseEntity(client).GetAbsVelocity(vel);
+		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vel);
 		RemoveEntity(projectile);
 		return Plugin_Handled;
 	}

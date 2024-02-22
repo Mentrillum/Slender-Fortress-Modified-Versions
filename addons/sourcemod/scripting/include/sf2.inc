@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.5"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.5"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.6"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.6"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -682,9 +682,10 @@ forward void SF2_OnClientPreKillDeathCam(int client, int bossIndex);
  * Called when the player gets exits a boss's deathcam.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
+ * @param antiCamp		Whether the client died due to the anti camping timer.
  */
-forward void SF2_OnClientEndDeathCam(int client, int bossIndex);
+forward void SF2_OnClientEndDeathCam(int client, int bossIndex, bool antiCamp);
 
 /**
  * Called to determine a player's default walk speed.
@@ -1656,6 +1657,16 @@ native StringMap SF2_GetStatueBossProfileData();
 native void SF2_SpawnBossEffects(ArrayList effects, int bossIndex, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE);
 
 /**
+ * Returns if a boss can be seen by any player
+ *
+ * @param bossIndex			Boss to use
+ * @param checkFOV			Use player FOV to check if the boss can be seen
+ * @param checkBlink		Use player blink to check if the boss can be seen
+ * @param checkEliminated	Include/exclude eliminated players
+ */
+native bool SF2_CanBossBeSeen(int bossIndex, bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true);
+
+/**
  *	Translates an activity name string into an Activity.
  *
  *	@param sActivity
@@ -1785,6 +1796,14 @@ methodmap SF2_BaseBossEntity < CBaseCombatCharacter
 	{
 		public native get();
 		public native set(float value);
+	}
+
+	/**
+	 * Determines if the boss is currently in a public death cam.
+	 */
+	property bool IsKillingSomeone
+	{
+		public native get();
 	}
 
 	/**

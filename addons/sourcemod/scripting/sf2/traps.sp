@@ -155,23 +155,23 @@ static Action Timer_TrapThink(Handle timer, any entref)
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
-			if (player.IsValid && (!player.IsAlive ||
+			if (!player.IsValid)
+			{
+				continue;
+			}
+
+			if (!player.IsAlive ||
 				player.IsInDeathCam ||
 				player.IsInGhostMode ||
 				player.HasEscaped ||
 				player.InCondition(view_as<TFCond>(130)) ||
-				player.Team == TFTeam_Spectator))
+				player.Team == TFTeam_Spectator)
 			{
 				continue;
 			}
 
 			if (!g_Enabled)
 			{
-				if (!player.IsValid)
-				{
-					continue;
-				}
-
 				if (player.GetProp(Prop_Data, "m_iTeamNum") == controller.DefaultTeam)
 				{
 					continue;

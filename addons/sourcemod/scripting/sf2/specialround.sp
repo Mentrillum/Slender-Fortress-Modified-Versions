@@ -107,32 +107,40 @@ static Action Timer_BeatBoxMasterTimer(Handle timer)
 				{
 					continue;
 				}
+				float damage = 20.0;
 				switch (g_DifficultyConVar.IntValue)
 				{
 					case Difficulty_Normal:
 					{
 						client.Stun(2.0, 0.25, TF_STUNFLAGS_SMALLBONK, client.index);
+						damage = 20.0;
 					}
 					case Difficulty_Hard:
 					{
 						client.Stun(3.0, 0.45, TF_STUNFLAGS_SMALLBONK, client.index);
+						damage = 30.0;
 					}
 					case Difficulty_Insane:
 					{
 						client.Stun(3.5, 0.6, TF_STUNFLAGS_SMALLBONK, client.index);
-						client.TakeDamage(true, _, _, 20.0, DMG_CLUB);
+						damage = 40.0;
 					}
 					case Difficulty_Nightmare:
 					{
 						client.Stun(5.5, 0.7, TF_STUNFLAGS_SMALLBONK, client.index);
-						client.TakeDamage(true, _, _, 50.0, DMG_CLUB);
+						damage = 50.0;
 					}
 					case Difficulty_Apollyon:
 					{
 						client.Stun(7.5, 0.8, TF_STUNFLAGS_SMALLBONK, client.index);
-						client.TakeDamage(true, _, _, 50.0, DMG_CLUB);
+						damage = 60.0;
 					}
 				}
+				if (client.Class == TFClass_Medic)
+				{
+					damage *= 1.5;
+				}
+				client.TakeDamage(true, _, _, damage, DMG_CLUB);
 			}
 			DoBeatBoxBeat("Stop moving!", true);
 			g_BeatBoxMasterTime = CreateTimer(0.45, Timer_BeatBoxMasterTimer, _, TIMER_FLAG_NO_MAPCHANGE);

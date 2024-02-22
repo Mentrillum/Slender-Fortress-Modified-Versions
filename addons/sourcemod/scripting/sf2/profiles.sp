@@ -32,6 +32,7 @@ ConVar g_BossPackEndOfMapVoteConVar;
 ConVar g_BossPackVoteStartTimeConVar;
 ConVar g_BossPackVoteStartRoundConVar;
 ConVar g_BossPackVoteShuffleConVar;
+ConVar g_MaxCorePackBosses;
 
 static bool g_BossPackVoteEnabled = false;
 
@@ -86,6 +87,8 @@ void InitializeBossProfiles()
 	g_BossPackVoteStartTimeConVar = CreateConVar("sf2_boss_profile_pack_endvote_start", "4", "Specifies when to start the vote based on time remaining on the map, in minutes.", FCVAR_NOTIFY);
 	g_BossPackVoteStartRoundConVar = CreateConVar("sf2_boss_profile_pack_endvote_startround", "2", "Specifies when to start the vote based on rounds remaining on the map.", FCVAR_NOTIFY);
 	g_BossPackVoteShuffleConVar = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
+
+	g_MaxCorePackBosses = CreateConVar("sf2_max_core_pack_bosses", "-1", "Determines how many bosses can load randomly from the core pack, if set to less than 0 will keep this feature off. Note that companion bosses will still load if needed.");
 
 	InitializeStatueProfiles();
 	InitializeChaserProfiles();
@@ -550,11 +553,11 @@ void ReloadBossProfiles()
 	// Only load profiles individually from configs/sf2/profiles or data/sf2/profiles directory.
 	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
 	{
-		LoadProfilesFromDirectory(FILE_PROFILES_DIR);
+		LoadProfilesFromDirectory(FILE_PROFILES_DIR, g_MaxCorePackBosses.IntValue);
 	}
 	else
 	{
-		LoadProfilesFromDirectory(FILE_PROFILES_DIR_DATA);
+		LoadProfilesFromDirectory(FILE_PROFILES_DIR_DATA, g_MaxCorePackBosses.IntValue);
 	}
 
 	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
@@ -608,7 +611,12 @@ void ReloadBossProfiles()
 					if (DirExists(configPath))
 					{
 						FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
-						LoadProfilesFromDirectory(packConfigFilePath);
+						int maxLoadedBosses = -1;
+						if (g_BossPackConfig.JumpToKey("shuffler"))
+						{
+							maxLoadedBosses = g_BossPackConfig.GetNum("max", maxLoadedBosses);
+						}
+						LoadProfilesFromDirectory(packConfigFilePath, maxLoadedBosses);
 					}
 
 					if (!voteBossPackLoaded)
@@ -654,7 +662,12 @@ void ReloadBossProfiles()
 						if (DirExists(configPath))
 						{
 							FormatEx(packConfigFilePath, sizeof(packConfigFilePath), "%s/%s", !g_UseAlternateConfigDirectoryConVar.BoolValue ? FILE_PROFILES_PACKS_DIR : FILE_PROFILES_PACKS_DIR_DATA, packConfigFile);
-							LoadProfilesFromDirectory(packConfigFilePath);
+							int maxLoadedBosses = -1;
+							if (g_BossPackConfig.JumpToKey("shuffler"))
+							{
+								maxLoadedBosses = g_BossPackConfig.GetNum("max", maxLoadedBosses);
+							}
+							LoadProfilesFromDirectory(packConfigFilePath, maxLoadedBosses);
 						}
 					}
 				}
@@ -687,7 +700,7 @@ void ReloadBossProfiles()
 /**
  * Loads a profile from the specified file.
  */
-static bool LoadProfileFile(const char[] profilePath, char[] profileName, int profileNameLen, char[] errorReason, int errorReasonLen)
+static bool LoadProfileFile(const char[] profilePath, char[] profileName, int profileNameLen, char[] errorReason, int errorReasonLen, bool lookIntoLoads = false, const char[] originalDir)
 {
 	if (!FileExists(profilePath))
 	{
@@ -705,14 +718,14 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 
 	kv.GetSectionName(profileName, profileNameLen);
 
-	bool result = LoadBossProfile(kv, profileName, errorReason, errorReasonLen);
+	bool result = LoadBossProfile(kv, profileName, errorReason, errorReasonLen, lookIntoLoads, originalDir);
 
 	delete kv;
 
 	return result;
 }
 
-static void LoadProfilesFromDirectory(const char[] relDirPath)
+static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBosses = -1)
 {
 	LogSF2Message("Loading boss profile files from directory %s...", relDirPath);
 
@@ -740,6 +753,8 @@ static void LoadProfilesFromDirectory(const char[] relDirPath)
 	char errorReason[512];
 	FileType fileType;
 
+	ArrayList directories = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+
 	while (directory.GetNext(fileName, sizeof(fileName), fileType))
 	{
 		if (fileType == FileType_Directory)
@@ -750,7 +765,50 @@ static void LoadProfilesFromDirectory(const char[] relDirPath)
 		FormatEx(filePath, sizeof(filePath), "%s/%s", relDirPath, fileName);
 		BuildPath(Path_SM, filePath, sizeof(filePath), filePath);
 
-		if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason)))
+		directories.PushString(filePath);
+	}
+
+	delete directory;
+
+	ArrayList alwaysLoad;
+
+	if (maxLoadedBosses > 0)
+	{
+		directories.Sort(Sort_Random, Sort_String);
+		alwaysLoad = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+
+		for (int i = 0; i < directories.Length; i++)
+		{
+			directories.GetString(i, filePath, sizeof(filePath));
+
+			if (FileExists(filePath))
+			{
+				KeyValues kv = new KeyValues("root");
+				if (FileToKeyValues(kv, filePath) && kv.GetNum("always_load", false) != 0)
+				{
+					int index = directories.FindString(filePath);
+					if (index != -1)
+					{
+						directories.Erase(index);
+					}
+					alwaysLoad.PushString(filePath);
+				}
+
+				delete kv;
+			}
+		}
+	}
+
+	for (int i = 0; i < directories.Length; i++)
+	{
+		if (maxLoadedBosses > 0 && count == maxLoadedBosses)
+		{
+			break;
+		}
+
+		directories.GetString(i, filePath, sizeof(filePath));
+
+		if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason), maxLoadedBosses > 0, dirPath))
 		{
 			LogSF2Message("%s...FAILED (reason: %s)", filePath, errorReason);
 		}
@@ -761,9 +819,29 @@ static void LoadProfilesFromDirectory(const char[] relDirPath)
 		}
 	}
 
-	delete directory;
+	if (alwaysLoad != null)
+	{
+		for (int i = 0; i < alwaysLoad.Length; i++)
+		{
+			alwaysLoad.GetString(i, filePath, sizeof(filePath));
 
-	LogSF2Message("Loaded %d boss profile(s) from directory!", count, relDirPath);
+			if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason), maxLoadedBosses > 0, dirPath))
+			{
+				LogSF2Message("(ALWAYS LOAD) %s...FAILED (reason: %s)", filePath, errorReason);
+			}
+			else
+			{
+				LogSF2Message("(ALWAYS LOAD) %s...", profileName, filePath);
+				count++;
+			}
+		}
+
+		delete alwaysLoad;
+	}
+
+	delete directories;
+
+	LogSF2Message("Loaded %d boss profile(s) from directory %s!", count, relDirPath);
 }
 
 Handle g_BossPackVoteMapTimer = null;
@@ -881,7 +959,7 @@ void InitiateBossPackVote(int initiator)
 
 	do
 	{
-		if (!g_BossPackConfig.GetNum("autoload") && g_BossPackConfig.GetNum("show_in_vote", 1) != 0)
+		if (g_BossPackConfig.GetNum("autoload", false) == 0 && g_BossPackConfig.GetNum("show_in_vote", true) != 0)
 		{
 			char bossPack[128];
 			g_BossPackConfig.GetSectionName(bossPack, sizeof(bossPack));

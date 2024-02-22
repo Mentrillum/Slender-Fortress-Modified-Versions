@@ -2,6 +2,7 @@
 
 static bool g_PlayerInPvE[MAXTF2PLAYERS];
 static bool g_PlayerIsLeavingPvE[MAXTF2PLAYERS];
+static bool g_PlayerShowBossHealthPvE[MAXTF2PLAYERS];
 static Handle g_PlayerPvETimer[MAXTF2PLAYERS];
 static Handle g_PlayerPvERespawnTimer[MAXTF2PLAYERS];
 static int g_PlayerPvETimerCount[MAXTF2PLAYERS];
@@ -42,6 +43,7 @@ void PvE_Initialize()
 	g_OnPlayerDisconnectedPFwd.AddFunction(null, OnDisconnected);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+	g_OnPlayerAverageUpdatePFwd.AddFunction(null, OnPlayerAverageUpdate);
 
 	g_SlenderBosses = new ArrayList(ByteCountToCells(SF2_MAX_PROFILE_NAME_LENGTH));
 	g_CustomBosses = new ArrayList(ByteCountToCells(64));
@@ -50,6 +52,7 @@ void PvE_Initialize()
 	g_PvETriggers = new ArrayList();
 
 	RegConsoleCmd("sm_sf2_add_pve_music", Command_AddPvEMusic);
+	RegConsoleCmd("sm_sf2_pve_show_health", Command_ShowHealth);
 	RegAdminCmd("sm_sf2_do_pve", Command_DoPvE, ADMFLAG_SLAY);
 }
 
@@ -128,7 +131,6 @@ static void GameFrame()
 
 static void MapStart()
 {
-	g_PvETriggers.Clear();
 	g_DoesPvEExist = false;
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "trigger_multiple")) != -1)
@@ -146,8 +148,6 @@ static void MapStart()
 				float range = ((maxs[0] + maxs[1]) / 2.0) + (FloatAbs(mins[0] + mins[1]) / 2.0);
 				if (range > 2000.0)
 				{
-					// Temporary fix for maps like Cliffroad and Mountain Complex
-					g_PvETriggers.Push(ent);
 					g_DoesPvEExist = true;
 				}
 				SDKHook(ent, SDKHook_EndTouch, PvE_OnTriggerEndTouch);
@@ -163,7 +163,6 @@ static void MapStart()
 		{
 			if (trigger.IsBossPvE)
 			{
-				g_PvETriggers.Push(ent);
 				g_DoesPvEExist = true;
 			}
 			SDKHook(ent, SDKHook_EndTouch, PvE_OnTriggerEndTouch);
@@ -276,6 +275,7 @@ bool IsPvEBoxing()
 
 static void RoundStart()
 {
+	g_PvETriggers.Clear();
 	g_TimeUntilBossSpawns = GetRandomFloat(10.0, 20.0) + GetGameTime();
 	g_IsPvEActive = false;
 	g_HasBossSpawned = false;
@@ -291,6 +291,14 @@ static void RoundStart()
 			trigger.GetPropString(Prop_Data, "m_iName", name, sizeof(name));
 			if (StrContains(name, "sf2_pve_trigger", false) == 0)
 			{
+				float mins[3], maxs[3];
+				trigger.GetPropVector(Prop_Send, "m_vecMins", mins);
+				trigger.GetPropVector(Prop_Send, "m_vecMaxs", maxs);
+				float range = ((maxs[0] + maxs[1]) / 2.0) + (FloatAbs(mins[0] + mins[1]) / 2.0);
+				if (range > 2000.0)
+				{
+					g_PvETriggers.Push(EntIndexToEntRef(ent));
+				}
 				SDKHook(ent, SDKHook_EndTouch, PvE_OnTriggerEndTouch);
 			}
 		}
@@ -302,6 +310,10 @@ static void RoundStart()
 		SF2TriggerPvEEntity trigger = SF2TriggerPvEEntity(ent);
 		if (trigger.IsValid())
 		{
+			if (trigger.IsBossPvE)
+			{
+				g_PvETriggers.Push(EntIndexToEntRef(ent));
+			}
 			SDKHook(ent, SDKHook_EndTouch, PvE_OnTriggerEndTouch);
 		}
 	}
@@ -314,6 +326,8 @@ static void OnPutInServer(SF2_BasePlayer client)
 		return;
 	}
 	g_PlayerEnteredPvETriggers[client.index] = new ArrayList();
+
+	g_PlayerShowBossHealthPvE[client.index] = false;
 
 	PvE_ForceResetPlayerPvEData(client.index);
 
@@ -366,11 +380,6 @@ static void OnDisconnected(SF2_BasePlayer client)
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
-	if (!g_DoesPvEExist)
-	{
-		return;
-	}
-
 	if (IsRoundInWarmup() || GameRules_GetProp("m_bInWaitingForPlayers"))
 	{
 		return;
@@ -396,6 +405,66 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 		}
 
 		PvE_SetPlayerPvEState(client.index, false, false);
+	}
+}
+
+static void OnPlayerAverageUpdate(SF2_BasePlayer client)
+{
+	if (!client.IsInPvE && !g_PlayerShowBossHealthPvE[client.index])
+	{
+		return;
+	}
+
+	if (!client.IsEliminated && g_PlayerShowBossHealthPvE[client.index])
+	{
+		return;
+	}
+
+	static int hudColorBossBar[3] = { 43, 103, 255 };
+	char buffer[256];
+
+	ArrayList bosses = GetActivePvEBosses();
+	char buffer2[64];
+	char formatter[128], name[SF2_MAX_NAME_LENGTH];
+	for (int i2 = 0; i2 < bosses.Length; i2++)
+	{
+		if (i2 >= 4)
+		{
+			continue;
+		}
+		name[0] = '\0';
+		SF2_ChaserEntity chaser = SF2_ChaserEntity(EntRefToEntIndex(bosses.Get(i2)));
+		if (chaser.IsValid() && chaser.Controller.IsValid())
+		{
+			SF2BossProfileData data;
+			data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
+			data.Names.GetString(1, name, sizeof(name));
+			if (!data.DisplayPvEHealth)
+			{
+				continue;
+			}
+		}
+
+		if (bosses.Length > 1 && i2 > 0)
+		{
+			FormatEx(buffer2, sizeof(buffer2), "\n");
+		}
+
+		CBaseCombatCharacter boss = CBaseCombatCharacter(EntRefToEntIndex(bosses.Get(i2)));
+		int health = boss.GetProp(Prop_Data, "m_iHealth");
+		if (name[0] != '\0')
+		{
+			FormatEx(formatter, sizeof(formatter), "%s: %d", name, health);
+		}
+		else
+		{
+			FormatEx(formatter, sizeof(formatter), "%d", health);
+		}
+
+		StrCat(buffer2, sizeof(buffer2), formatter);
+		StrCat(buffer, sizeof(buffer), buffer2);
+		SetHudTextParams(-1.0, 0.15, 0.25, hudColorBossBar[0], hudColorBossBar[1], hudColorBossBar[2], 225, 0, 1.0, 0.07, 0.3);
+		ShowSyncHudText(client.index, g_HudSync2, buffer);
 	}
 }
 
@@ -515,7 +584,6 @@ void PvE_SetPlayerPvEState(int client, bool status, bool regenerate = true)
 		player.ChangeCondition(TFCond_Ubercharged, true);
 		player.ChangeCondition(TFCond_UberchargedOnTakeDamage, true);
 		player.ChangeCondition(TFCond_Taunting, true);
-
 		player.ChangeCondition(TFCond_UberchargedCanteen, _, 1.0);
 	}
 
@@ -557,7 +625,7 @@ void PvE_OnTriggerStartTouch(int trigger, int other)
 			SetEntPropFloat(other, Prop_Send, "m_flTorsoScale", 1.0);
 			SetEntPropFloat(other, Prop_Send, "m_flHandScale", 1.0);
 
-			int entRef = EnsureEntRef(trigger);
+			int entRef = EntIndexToEntRef(trigger);
 			if (g_PlayerEnteredPvETriggers[other].FindValue(entRef) == -1)
 			{
 				g_PlayerEnteredPvETriggers[other].Push(entRef);
@@ -576,7 +644,7 @@ void PvE_OnTriggerStartTouch(int trigger, int other)
 			else
 			{
 				PvE_SetPlayerPvEState(other, true);
-				if (g_IsPvEActive && g_PvETriggers.FindValue(trigger) != -1)
+				if (g_IsPvEActive && g_PvETriggers.FindValue(entRef) != -1)
 				{
 					if (g_CustomMusicOverride[0] != '\0')
 					{
@@ -920,6 +988,19 @@ static Action Command_AddPvEMusic(int client, int args)
 	return Plugin_Handled;
 }
 
+static Action Command_ShowHealth(int client, int args)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	g_PlayerShowBossHealthPvE[client] = !g_PlayerShowBossHealthPvE[client];
+	CPrintToChat(client, "{royalblue}%t {default}%s seeing the PvE boss health anywhere.", "SF2 Prefix", g_PlayerShowBossHealthPvE[client] ? "Enabled" : "Disabled");
+
+	return Plugin_Handled;
+}
+
 static void DisplayMusicSelectionPvE(int client)
 {
 	Menu newMenu = new Menu(PvEMenu_MusicSelection);
@@ -1143,6 +1224,14 @@ void KillPvEBoss(int boss)
 		g_CustomMusicOverride[0] = '\0';
 		g_IsPvEActive = false;
 		char targetName[64];
+		int bossIndex = NPCGetFromEntIndex(boss);
+		float time = 5.0;
+		if (bossIndex != -1)
+		{
+			SF2BossProfileData data;
+			data = NPCGetProfileData(bossIndex);
+			time = data.PvETeleportEndTimer;
+		}
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer client = SF2_BasePlayer(i);
@@ -1156,7 +1245,7 @@ void KillPvEBoss(int boss)
 				StopSound(client.index, SNDCHAN_AUTO, g_PlayerCurrentPvEMusic[client.index]);
 			}
 
-			g_PlayerPvERespawnTimer[client.index] = CreateTimer(5.0, Timer_TeleportPlayerToPvE, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
+			g_PlayerPvERespawnTimer[client.index] = CreateTimer(time, Timer_TeleportPlayerToPvE, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
 		}
 
 		int ent = -1;
@@ -1170,7 +1259,7 @@ void KillPvEBoss(int boss)
 			}
 		}
 
-		CreateTimer(5.0, Timer_RemoveAllPvEBosses, _, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(time, Timer_RemoveAllPvEBosses, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 

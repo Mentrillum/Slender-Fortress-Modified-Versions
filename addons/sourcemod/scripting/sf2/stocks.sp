@@ -266,37 +266,113 @@ float EntityDistanceFromEntity(int ent1, int ent2)
 
 bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
 bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
 bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
 bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
@@ -725,13 +801,24 @@ void PrintToSourceTV(const char[] message)
 		CPrintToChat(client, message);
 	}
 }
+
+void ShowHealthRegen(int client, int amount, int weaponIndex = -1)
+{
+	Event event = CreateEvent("player_healonhit");
+	if (event)
+	{
+		event.SetInt("amount", amount);
+		event.SetInt("entindex", client);
+		event.SetInt("weapon_def_index", weaponIndex);
+		event.Fire();
+	}
+}
 //	==========================================================
 //	TF2-SPECIFIC FUNCTIONS
 //	==========================================================
 bool TF2_IsMiniCritBuffed(int client)
 {
 	return (TF2_IsPlayerInCondition(client, TFCond_CritCola)
-		|| TF2_IsPlayerInCondition(client, TFCond_CritHype)
 		|| TF2_IsPlayerInCondition(client, TFCond_Buffed)
 	);
 }
@@ -1368,6 +1455,16 @@ bool TraceRayDontHitPlayersOrEntityEx(int entity, int mask, any data)
 	return true;
 }
 
+bool EnumerateEverything(int entIndex, ArrayList array)
+{
+	if (IsValidEntity(entIndex))
+	{
+		array.Push(entIndex);
+	}
+
+	return true;
+}
+
 bool EnumerateLivingPlayers(int entIndex, ArrayList players)
 {
 	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
@@ -1382,7 +1479,7 @@ bool EnumerateBreakableEntities(int entIndex, ArrayList array)
 {
 	if (!IsValidEntity(entIndex))
 	{
-		return true;
+		return false;
 	}
 
 	char className[64];
@@ -1522,7 +1619,7 @@ int GetLocalGlobalDifficulty(int npcIndex = -1)
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(npcIndex);
 	data = controller.GetProfileData();
 	SF2ChaserBossProfileData chaserData;
-	if (controller.Type == SF2BossType_Chaser)
+	if (data.Type == SF2BossType_Chaser)
 	{
 		chaserData = view_as<SF2NPC_Chaser>(controller).GetProfileData();
 	}

@@ -2093,6 +2093,27 @@ enum struct SF2BossProfileEyeData
 	}
 }
 
+enum struct SF2BossProfileDescriptionData
+{
+	bool Hidden;
+	char Type[32];
+	char Information[128];
+
+	void Init()
+	{
+		this.Hidden = false;
+		this.Type[0] = '\0';
+		this.Information = "No description provided.";
+	}
+
+	void Load(KeyValues kv)
+	{
+		this.Hidden = kv.GetNum("hidden", this.Hidden) != 0;
+		kv.GetString("type", this.Type, sizeof(this.Type), this.Type);
+		kv.GetString("description", this.Information, sizeof(this.Information), this.Information);
+	}
+}
+
 enum struct SF2BossProfileData
 {
 	ArrayList Models;
@@ -2114,6 +2135,8 @@ enum struct SF2BossProfileData
 	float NodeDistanceLookAhead;
 	int RenderFX;
 	int RenderMode;
+
+	SF2BossProfileDescriptionData Description;
 
 	char WeaponString[PLATFORM_MAX_PATH];
 	int WeaponInt;
@@ -2309,6 +2332,7 @@ enum struct SF2BossProfileData
 	ArrayList PvESpawnMessagesArray;
 	char PvESpawnMessagePrefix[PLATFORM_MAX_PATH];
 	bool DisplayPvEHealth;
+	float PvETeleportEndTimer;
 
 	// Sounds
 	SF2BossProfileSoundInfo LocalDeathCamSounds;
@@ -2375,6 +2399,8 @@ enum struct SF2BossProfileData
 		this.NodeDistanceLookAhead = 128.0;
 		this.RenderFX = view_as<int>(RENDERFX_NONE);
 		this.RenderMode = view_as<int>(RENDER_NORMAL);
+
+		this.Description.Init();
 
 		this.WeaponString[0] = '\0';
 		this.WeaponInt = 0;
@@ -2521,6 +2547,7 @@ enum struct SF2BossProfileData
 		this.PvESpawnMessagesArray = null;
 		this.PvESpawnMessagePrefix[0] = '\0';
 		this.DisplayPvEHealth = true;
+		this.PvETeleportEndTimer = 5.0;
 
 		this.EngineSound[0] = '\0';
 		this.EngineSoundLevel = 83;
