@@ -661,7 +661,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 		char info[64], display[256], color[32], nightmareDisplay[256];
 		menu.GetItem(param1, info, sizeof(info), _, display, sizeof(display));
 
-		int difficulty = Difficulty_Normal;
+		int difficulty = StringToInt(info);
 
 		bool rng = false, change = false;
 
