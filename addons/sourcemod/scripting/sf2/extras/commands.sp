@@ -431,7 +431,7 @@ public void OnPluginStart()
 	g_OnChaserGetCustomAttackPossibleStatePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_String, Param_Cell);
 	g_OnChaserUpdatePosturePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_String, Param_Cell);
 	g_OnDifficultyChangePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
-	g_OnDifficultyVoteFinishedPFwd = new PrivateForward(ET_Hook, Param_CellByRef);
+	g_OnDifficultyVoteFinishedPFwd = new PrivateForward(ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnRenevantTriggerWavePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnWallHaxDebugPFwd = new PrivateForward(ET_Ignore);
 

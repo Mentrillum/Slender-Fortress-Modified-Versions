@@ -397,11 +397,11 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 	}
 }
 
-static Action OnDifficultyVoteFinished(int& difficulty)
+static Action OnDifficultyVoteFinished(int difficulty, int& newDifficulty)
 {
-	if (g_OverrideDifficulty != -1 && difficulty < g_OverrideDifficulty)
+	if (g_OverrideDifficulty > -1 && difficulty < g_OverrideDifficulty)
 	{
-		difficulty = g_OverrideDifficulty;
+		newDifficulty = g_OverrideDifficulty;
 		return Plugin_Changed;
 	}
 

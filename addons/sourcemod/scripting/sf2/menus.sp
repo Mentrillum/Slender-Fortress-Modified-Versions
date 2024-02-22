@@ -641,6 +641,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 		int value = StringToInt(option);
 		g_Voters.Set(index, value, 1);
 	}
+
 	if (action == MenuAction_VoteEnd && !SF_SpecialRound(SPECIALROUND_MODBOSSES) && !g_RestartSessionConVar.BoolValue)
 	{
 		int clientInGame = 0, clientCallingForNightmare = 0;
@@ -821,13 +822,25 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 		Action fwdAction = Plugin_Continue;
 		int difficulty2 = difficulty;
 
+		// This cell ref shit does not work, why?
 		Call_StartForward(g_OnDifficultyVoteFinishedPFwd);
+		Call_PushCell(difficulty);
 		Call_PushCellRef(difficulty2);
 		Call_Finish(fwdAction);
 
 		if (fwdAction == Plugin_Changed)
 		{
 			difficulty = difficulty2;
+		}
+
+		if ((SF_SpecialRound(SPECIALROUND_SILENTSLENDER) || SF_SpecialRound(SPECIALROUND_NOGRACE)) && difficulty < Difficulty_Hard)
+		{
+			difficulty = Difficulty_Hard;
+		}
+
+		if ((SF_SpecialRound(SPECIALROUND_INSANEDIFFICULTY) || SF_SpecialRound(SPECIALROUND_ESCAPETICKETS) || SF_SpecialRound(SPECIALROUND_2DOUBLE) || SF_SpecialRound(SPECIALROUND_DOUBLEMAXPLAYERS) || SF_SpecialRound(SPECIALROUND_WALLHAX)) && difficulty < Difficulty_Insane)
+		{
+			difficulty = Difficulty_Insane;
 		}
 
 		if (GetRandomInt(1, 200) <= 2 || playersCalledForNightmare)

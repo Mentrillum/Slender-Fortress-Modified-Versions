@@ -75,7 +75,7 @@ static void OnPlayerChangePlayState(SF2_BasePlayer client, bool state, bool queu
 	}
 }
 
-static Action OnDifficultyVoteFinished(int& difficulty)
+static Action OnDifficultyVoteFinished(int difficulty, int& newDifficulty)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
