@@ -404,8 +404,11 @@ bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEl
 					continue;
 				}
 
+				SF2BossProfileData data;
+				data = view_as<SF2NPC_BaseNPC>(npc).GetProfileData();
+
 				int state = chaser.State;
-				if (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN)
+				if (!data.IsPvEBoss && (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN))
 				{
 					return false;
 				}

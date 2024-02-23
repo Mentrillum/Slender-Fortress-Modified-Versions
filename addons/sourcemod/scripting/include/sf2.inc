@@ -738,8 +738,38 @@ forward void SF2_OnClientDamagedByBoss(int client, int bossIndex, int inflictor,
 
 /**
  * Called when a player spawns as a proxy.
+ *
+ * @param client	The player who spawned as a proxy
  */
 forward void SF2_OnClientSpawnedAsProxy(int client);
+
+/**
+ * Called when a player enters a PvP arena
+ *
+ * @param client	The player who entered the PvP arena
+ */
+forward void SF2_OnClientEnterPvP(int client);
+
+/**
+ * Called when a player exits a PvP arena
+ *
+ * @param client	The player who exits the PvP arena
+ */
+forward void SF2_OnClientExitPvP(int client);
+
+/**
+ * Called when a player enters a PvE arena
+ *
+ * @param client	The player who entered the PvE arena
+ */
+forward void SF2_OnClientEnterPvE(int client);
+
+/**
+ * Called when a player exits a PvE arena
+ *
+ * @param client	The player who exits the PvE arena
+ */
+forward void SF2_OnClientExitPvE(int client);
 
 /**
  * Called whenever the Renevant gamemode triggers a new wave.
@@ -3442,6 +3472,13 @@ native void SF2_AddPvEBoss(int bossEnt);
  * @param bossEnt		Entity to remove
  */
 native void SF2_KillPvEBoss(int bossEnt);
+
+/**
+ * Returns the array list of the current active bosses, this list only contains entity references.
+ *
+ * @return	List of active PvE bosses or null if no bosses are active.
+ */
+native ArrayList SF2_GetActivePvEBosses();
 
 /**
  * Returns if current map is a survival map or not.

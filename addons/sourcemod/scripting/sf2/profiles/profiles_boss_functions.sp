@@ -66,7 +66,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			skip = false;
 		}
 
-		if (kv.GetNum("is_pve", false) != 0)
+		if (kv.GetNum("is_pve", false) != 0 && kv.GetNum("pve_selectable", 1) != 0)
 		{
 			skip = false;
 		}
@@ -76,7 +76,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			skip = false;
 		}
 
-		if (kv.JumpToKey("pve"))
+		if (kv.JumpToKey("pve") && kv.GetNum("selectable", 1) != 0)
 		{
 			kv.GoBack();
 			skip = false;

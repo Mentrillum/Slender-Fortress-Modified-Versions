@@ -28,6 +28,8 @@ static float g_MusicLoopTime[MAXTF2PLAYERS][MAX_MUSICS];
 static char g_CustomMusicOverride[PLATFORM_MAX_PATH];
 
 static GlobalForward g_OnSelectedPvEBoss;
+static GlobalForward g_OnPlayerEnterPvE;
+static GlobalForward g_OnPlayerExitPvE;
 
 static ArrayList g_PvETriggers;
 
@@ -585,6 +587,16 @@ void PvE_SetPlayerPvEState(int client, bool status, bool regenerate = true)
 		player.ChangeCondition(TFCond_UberchargedOnTakeDamage, true);
 		player.ChangeCondition(TFCond_Taunting, true);
 		player.ChangeCondition(TFCond_UberchargedCanteen, _, 1.0);
+
+		Call_StartForward(g_OnPlayerEnterPvE);
+		Call_PushCell(player.index);
+		Call_Finish();
+	}
+	else
+	{
+		Call_StartForward(g_OnPlayerExitPvE);
+		Call_PushCell(player.index);
+		Call_Finish();
 	}
 
 	if (regenerate)
@@ -887,6 +899,25 @@ static void SpawnPvEBoss(const char[] override = "")
 				{
 					testNPC.Spawn(spawnPos);
 					g_ActiveBosses.Push(EntIndexToEntRef(testNPC.EntIndex));
+
+					SF2BossProfileData tempData;
+					tempData = testNPC.GetProfileData();
+
+					if (tempData.CopiesInfo.Enabled[1])
+					{
+						char tempProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+						testNPC.GetProfile(tempProfile, sizeof(tempProfile));
+						for (int i2 = 0; i2 < tempData.CopiesInfo.MaxCopies[1]; i2++)
+						{
+							SF2NPC_BaseNPC copy = AddProfile(tempProfile, _, testNPC);
+							if (!copy.IsValid())
+							{
+								continue;
+							}
+							copy.Spawn(spawnPos);
+							g_ActiveBosses.Push(EntIndexToEntRef(copy.EntIndex));
+						}
+					}
 				}
 			}
 
@@ -1303,8 +1334,11 @@ void PvE_InitializeAPI()
 	CreateNative("SF2_SetOverridePvEMusic", Native_SetOverridePvEMusic);
 	CreateNative("SF2_UnregisterPvEBoss", Native_UnregisterPvEBoss);
 	g_OnSelectedPvEBoss = new GlobalForward("SF2_OnSelectedPvEBoss", ET_Ignore, Param_String, Param_Array, Param_Array);
+	g_OnPlayerEnterPvE = new GlobalForward("SF2_OnClientEnterPvE", ET_Ignore, Param_Cell);
+	g_OnPlayerExitPvE = new GlobalForward("SF2_OnClientExitPvE", ET_Ignore, Param_Cell);
 	CreateNative("SF2_AddPvEBoss", Native_AddPvEBoss);
 	CreateNative("SF2_KillPvEBoss", Native_KillPvEBoss);
+	CreateNative("SF2_GetActivePvEBosses", Native_GetActivePvEBosses);
 }
 
 static any Native_IsClientInPvE(Handle plugin, int numParams)
@@ -1346,4 +1380,9 @@ static any Native_KillPvEBoss(Handle plugin, int numParams)
 {
 	KillPvEBoss(GetNativeCell(1));
 	return 0;
+}
+
+static any Native_GetActivePvEBosses(Handle plugin, int numParams)
+{
+	return GetActivePvEBosses();
 }

@@ -3691,15 +3691,16 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 					case 228, 1085: // Black Box
 					{
 						int health = player.Health;
+						int maxHealth = player.GetProp(Prop_Data, "m_iMaxHealth");
 						float regen = FloatClamp(damage / 90.0, 0.0, 1.0);
 						int newHealth = health + RoundToNearest(20.0 * regen);
-						if (newHealth <= player.GetProp(Prop_Data, "m_iMaxHealth"))
+						if (newHealth <= maxHealth)
 						{
 							SetEntityHealth(player.index, newHealth);
 						}
 						else
 						{
-							SetEntityHealth(player.index, player.GetProp(Prop_Data, "m_iMaxHealth"));
+							SetEntityHealth(player.index, maxHealth);
 						}
 						ShowHealthRegen(player.index, RoundToNearest(20.0 * regen), index);
 					}
@@ -3763,14 +3764,15 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 					{
 						ShowHealthRegen(player.index, 3, index);
 						int health = player.Health;
+						int maxHealth = player.GetProp(Prop_Data, "m_iMaxHealth");
 						int newHealth = health + 3;
-						if (newHealth <= player.GetProp(Prop_Data, "m_iMaxHealth"))
+						if (newHealth <= maxHealth)
 						{
 							SetEntityHealth(player.index, newHealth);
 						}
 						else
 						{
-							SetEntityHealth(player.index, player.GetProp(Prop_Data, "m_iMaxHealth"));
+							SetEntityHealth(player.index, maxHealth);
 						}
 					}
 				}
@@ -3820,15 +3822,16 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 	if (damage > 0.0 && player.IsValid && player.InCondition(TFCond_RegenBuffed) && (SF_IsBoxingMap() || data.IsPvEBoss))
 	{
 		int health = player.Health;
+		int maxHealth = player.GetProp(Prop_Data, "m_iMaxHealth");
 		float mult = damage * 0.475;
 		int newHealth = health + RoundToCeil(mult);
-		if (newHealth <= player.GetProp(Prop_Data, "m_iMaxHealth"))
+		if (newHealth <= maxHealth)
 		{
 			SetEntityHealth(player.index, newHealth);
 		}
 		else
 		{
-			SetEntityHealth(player.index, player.GetProp(Prop_Data, "m_iMaxHealth"));
+			SetEntityHealth(player.index, maxHealth);
 		}
 		ShowHealthRegen(player.index, RoundToCeil(mult));
 	}

@@ -54,6 +54,9 @@ static float g_TimeLastTrace;
 
 static ArrayList g_PvPBallsOfFire;
 
+static GlobalForward g_OnPlayerEnterPvP;
+static GlobalForward g_OnPlayerExitPvP;
+
 enum struct PvPProjectile_BallOfFire
 {
 	int EntIndex;
@@ -784,6 +787,19 @@ void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles = tru
 		PvP_RemovePlayerProjectiles(player.index);
 	}
 
+	if (status)
+	{
+		Call_StartForward(g_OnPlayerEnterPvP);
+		Call_PushCell(player.index);
+		Call_Finish();
+	}
+	else
+	{
+		Call_StartForward(g_OnPlayerExitPvP);
+		Call_PushCell(player.index);
+		Call_Finish();
+	}
+
 	if (regenerate)
 	{
 		// Regenerate player but keep health the same.
@@ -1176,6 +1192,8 @@ static MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHoo
 void PvP_InitializeAPI()
 {
 	CreateNative("SF2_IsClientInPvP", Native_IsClientInPvP);
+	g_OnPlayerEnterPvP = new GlobalForward("SF2_OnClientEnterPvP", ET_Ignore, Param_Cell);
+	g_OnPlayerExitPvP = new GlobalForward("SF2_OnClientEnterPvP", ET_Ignore, Param_Cell);
 }
 
 static int Native_IsClientInPvP(Handle plugin,int numParams)

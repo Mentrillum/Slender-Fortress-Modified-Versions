@@ -1786,7 +1786,7 @@ bool SlenderCanRemove(int bossIndex)
 	return true;
 }
 
-bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossFlags = 0, SF2NPC_BaseNPC npcCopyMaster = SF2_INVALID_NPC, bool spawnCompanions = true, bool playSpawnSound = true)
+bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossFlags = 0, SF2NPC_BaseNPC npcCopyMaster = SF2_INVALID_NPC, bool spawnCompanions = true, bool playSpawnSound = true, bool showPvEMessage = true)
 {
 	if (!IsProfileValid(profile))
 	{
@@ -2040,7 +2040,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	}
 	else
 	{
-		if (profileData.IsPvEBoss && profileData.PvESpawnMessagesArray != null && profileData.PvESpawnMessagesArray.Length > 0)
+		if (profileData.IsPvEBoss && showPvEMessage && profileData.PvESpawnMessagesArray != null && profileData.PvESpawnMessagesArray.Length > 0)
 		{
 			char prefix[PLATFORM_MAX_PATH], message[PLATFORM_MAX_PATH];
 			strcopy(prefix, sizeof(prefix), profileData.PvESpawnMessagePrefix);
@@ -2319,7 +2319,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 							companionInfo.Bosses.GetString(i, compProfile, sizeof(compProfile));
 							if (IsProfileValid(compProfile))
 							{
-								SF2NPC_BaseNPC npcCompanion = AddProfile(compProfile, _, _, false, false);
+								SF2NPC_BaseNPC npcCompanion = AddProfile(compProfile, _, _, false, false, false);
 								if (npcCompanion.IsValid())
 								{
 									npcCompanion.CompanionMaster = npc;
@@ -2359,7 +2359,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	return true;
 }
 
-SF2NPC_BaseNPC AddProfile(const char[] name, int additionalBossFlags = 0, SF2NPC_BaseNPC npcCopyMaster = SF2_INVALID_NPC, bool spawnCompanions = true, bool playSpawnSound = true)
+SF2NPC_BaseNPC AddProfile(const char[] name, int additionalBossFlags = 0, SF2NPC_BaseNPC npcCopyMaster = SF2_INVALID_NPC, bool spawnCompanions = true, bool playSpawnSound = true, bool showPvEMessage = true)
 {
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
 	{
@@ -2370,7 +2370,7 @@ SF2NPC_BaseNPC AddProfile(const char[] name, int additionalBossFlags = 0, SF2NPC
 		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
 		if (!npc.IsValid())
 		{
-			if (SelectProfile(npc, name, additionalBossFlags, npcCopyMaster, spawnCompanions, playSpawnSound))
+			if (SelectProfile(npc, name, additionalBossFlags, npcCopyMaster, spawnCompanions, playSpawnSound, showPvEMessage))
 			{
 				return npc;
 			}
