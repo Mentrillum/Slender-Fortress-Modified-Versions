@@ -1691,10 +1691,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		data = controller.GetProfileData();
 		SF2ChaserBossProfileAttackData attackData;
 		data.GetAttack(attackName, attackData);
-		PathFollower path = controller.Path;
 		CBaseEntity target = this.Target;
 		int difficulty = controller.Difficulty;
-		bool shouldPath = false;
 
 		if (target.IsValid())
 		{
@@ -1717,28 +1715,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				target.GetAbsOrigin(pos);
 				loco.FaceTowards(pos);
 			}
-
-			if (attackData.RunSpeed[difficulty] > 0.0)
-			{
-				shouldPath = true;
-			}
-
-			if (shouldPath)
-			{
-				float pos[3];
-				target.GetAbsOrigin(pos);
-
-				path.ComputeToPos(bot, pos);
-			}
-		}
-
-		if (!path.IsValid())
-		{
-			loco.Stop();
-		}
-		else
-		{
-			path.Update(bot);
 		}
 	}
 
