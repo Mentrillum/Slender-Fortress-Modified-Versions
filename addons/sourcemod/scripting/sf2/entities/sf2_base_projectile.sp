@@ -355,7 +355,7 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		ArrayList hitList = new ArrayList();
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			SF2_BasePlayer player = SF2_BasePlayer(hitList.Get(i));
+			SF2_BasePlayer player = SF2_BasePlayer(i);
 			if (!player.IsValid)
 			{
 				continue;
