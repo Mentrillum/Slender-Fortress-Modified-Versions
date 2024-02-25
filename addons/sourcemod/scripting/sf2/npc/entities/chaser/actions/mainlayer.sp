@@ -211,11 +211,9 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 			{
 				attackEliminated = true;
 			}
-			ArrayList playersList = new ArrayList();
-			TR_EnumerateEntitiesSphere(worldSpace, originalData.InstantKillRadius, PARTITION_SOLID_EDICTS, EnumerateLivingPlayers, playersList);
-			for (int i = 0; i < playersList.Length; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
-				SF2_BasePlayer client = SF2_BasePlayer(playersList.Get(i));
+				SF2_BasePlayer client = SF2_BasePlayer(i);
 				if (!IsTargetValidForSlender(actor, client, attackEliminated))
 				{
 					continue;
@@ -236,7 +234,6 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 				client.StartDeathCam(controller.Index, myPos);
 				actor.CheckTauntKill(SF2_BasePlayer(client.index));
 			}
-			delete playersList;
 		}
 	}
 
@@ -297,26 +294,34 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 
 	if (!actor.IsAttacking && (controller.Flags & SFF_ATTACKPROPS) != 0)
 	{
-		float myPos[3];
+		float myPos[3], propPos[3];
 		actor.GetAbsOrigin(myPos);
-		ArrayList props = new ArrayList();
-		TR_EnumerateEntitiesSphere(myPos, 2000.0, PARTITION_SOLID_EDICTS, EnumerateBreakableEntities, props);
-		for (int i = 0; i < props.Length; i++)
+		for (int i = 0; i < g_BreakableProps.Length; i++)
 		{
-			if (!actor.IsLOSClearFromTarget(CBaseEntity(props.Get(i))))
+			CBaseEntity prop = CBaseEntity(EntRefToEntIndex(g_BreakableProps.Get(i)));
+			if (!prop.IsValid())
 			{
 				continue;
 			}
 
-			NextBotAction attackAction = actor.GetAttackAction(props.Get(i), true);
+			prop.GetAbsOrigin(propPos);
+			if (GetVectorSquareMagnitude(myPos, propPos) > Pow(1500.0, 2.0))
+			{
+				continue;
+			}
+
+			if (!actor.IsLOSClearFromTarget(prop))
+			{
+				continue;
+			}
+
+			NextBotAction attackAction = actor.GetAttackAction(prop, true);
 			if (attackAction != NULL_ACTION)
 			{
 				actor.EndCloak();
-				delete props;
 				return action.SuspendFor(attackAction, "Fuck you prop.");
 			}
 		}
-		delete props;
 	}
 
 	UnstuckCheck(action, actor);

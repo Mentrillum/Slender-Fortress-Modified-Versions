@@ -242,6 +242,7 @@ public void OnPluginStart()
 
 	g_Buildings = new ArrayList();
 	g_WhitelistedEntities = new ArrayList();
+	g_BreakableProps = new ArrayList();
 
 	switch (g_DifficultyConVar.IntValue)
 	{

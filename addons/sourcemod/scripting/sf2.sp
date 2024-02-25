@@ -581,6 +581,7 @@ char g_DebugBeamSound[PLATFORM_MAX_PATH];
 
 ArrayList g_Buildings;
 ArrayList g_WhitelistedEntities;
+ArrayList g_BreakableProps;
 
 // Global forwards.
 GlobalForward g_OnBossAddedFwd;
@@ -870,6 +871,33 @@ public void OnConfigsExecuted()
 						g_WhitelistedEntities.Push(EntIndexToEntRef(ent));
 					}
 
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "prop_physics")) != -1)
+					{
+						if (GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+						{
+							g_BreakableProps.Push(EntIndexToEntRef(ent));
+						}
+					}
+
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "prop_dynamic")) != -1)
+					{
+						if (GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+						{
+							g_BreakableProps.Push(EntIndexToEntRef(ent));
+						}
+					}
+
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "func_breakable")) != -1)
+					{
+						if (GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+						{
+							g_BreakableProps.Push(EntIndexToEntRef(ent));
+						}
+					}
+
 					for (int i = 1; i <= MaxClients; i++)
 					{
 						if (!IsClientInGame(i))
@@ -1068,6 +1096,33 @@ static void StartPlugin()
 	while ((ent = FindEntityByClassname(ent, "tank_boss")) != -1)
 	{
 		g_WhitelistedEntities.Push(EntIndexToEntRef(ent));
+	}
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "prop_physics")) != -1)
+	{
+		if (GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+		{
+			g_BreakableProps.Push(EntIndexToEntRef(ent));
+		}
+	}
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "prop_dynamic")) != -1)
+	{
+		if (GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+		{
+			g_BreakableProps.Push(EntIndexToEntRef(ent));
+		}
+	}
+
+	ent = -1;
+	while ((ent = FindEntityByClassname(ent, "func_breakable")) != -1)
+	{
+		if (GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+		{
+			g_BreakableProps.Push(EntIndexToEntRef(ent));
+		}
 	}
 
 	Call_StartForward(g_OnGamemodeStartPFwd);
@@ -2467,6 +2522,21 @@ public void OnEntityCreated(int ent, const char[] classname)
 	if (strcmp(classname, "tank_boss", false) == 0)
 	{
 		g_WhitelistedEntities.Push(EntIndexToEntRef(ent));
+	}
+
+	if (strcmp(classname, "prop_physics", false) == 0 && GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+	{
+		g_BreakableProps.Push(EntIndexToEntRef(ent));
+	}
+
+	if (strcmp(classname, "prop_dynamic", false) == 0 && GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+	{
+		g_BreakableProps.Push(EntIndexToEntRef(ent));
+	}
+
+	if (strcmp(classname, "func_breakable", false) == 0 && GetEntProp(ent, Prop_Data, "m_iHealth") > 0)
+	{
+		g_BreakableProps.Push(EntIndexToEntRef(ent));
 	}
 
 	if (!g_Enabled)

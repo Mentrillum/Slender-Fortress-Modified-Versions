@@ -1475,35 +1475,6 @@ bool EnumerateLivingPlayers(int entIndex, ArrayList players)
 	return true;
 }
 
-bool EnumerateBreakableEntities(int entIndex, ArrayList array)
-{
-	if (!IsValidEntity(entIndex))
-	{
-		return false;
-	}
-
-	char className[64];
-	GetEntityClassname(entIndex, className, sizeof(className));
-
-	if (strcmp(className, "prop_physics") == 0 || strcmp(className, "prop_dynamic") == 0 ||
-		strcmp(className, "func_breakable", false) == 0 || strcmp(className, "tank_boss", false) == 0)
-	{
-		if (GetEntProp(entIndex, Prop_Data, "m_iHealth") > 0)
-		{
-			array.Push(entIndex);
-		}
-	}
-	else if (strncmp(className, "obj_", 4) == 0)
-	{
-		if (GetEntProp(entIndex, Prop_Data, "m_iHealth") > 0)
-		{
-			array.Push(entIndex);
-		}
-	}
-
-	return true;
-}
-
 //	==========================================================
 //	TIMER/CALLBACK FUNCTIONS
 //	==========================================================

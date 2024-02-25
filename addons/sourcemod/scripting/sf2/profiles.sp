@@ -621,7 +621,7 @@ void ReloadBossProfiles()
 
 					if (!voteBossPackLoaded)
 					{
-						if (strcmp(mapBossPack, bossPackName) == 0)
+						if (!autoLoad && strcmp(mapBossPack, bossPackName) == 0)
 						{
 							voteBossPackLoaded = true;
 						}

@@ -324,7 +324,7 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 			end = true;
 		}
 
-		if (attackData.CancelLos[difficulty] && !actor.IsLOSClearFromTarget(target))
+		if (attackData.CancelLos[difficulty] && (actor.InterruptConditions & COND_ENEMYVISIBLE) == 0)
 		{
 			end = true;
 		}

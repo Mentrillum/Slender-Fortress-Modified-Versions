@@ -385,6 +385,11 @@ bool TraceRayGrenade(int entity, int mask, any data)
 		return true;
 	}
 
+	if (g_BreakableProps.FindValue(EntIndexToEntRef(entity)) != -1)
+	{
+		return true;
+	}
+
 	return true;
 }
 

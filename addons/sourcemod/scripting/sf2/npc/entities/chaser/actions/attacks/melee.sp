@@ -211,22 +211,88 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	ArrayList targets = new ArrayList();
 
 	// Sweep the props
-	TR_EnumerateEntitiesSphere(myEyePos, range, PARTITION_SOLID_EDICTS, EnumerateBreakableEntities, targets);
+	for (int i = 0; i < g_Buildings.Length; i++)
+	{
+		CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
+		if (!building.IsValid())
+		{
+			continue;
+		}
+
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
+		{
+			continue;
+		}
+
+		if (originalData.IsPvEBoss && !IsPvETargetValid(building))
+		{
+			continue;
+		}
+
+		if (!IsTargetInMeleeChecks(actor, attackData, building, range, spread))
+		{
+			continue;
+		}
+
+		targets.Push(g_Buildings.Get(i));
+	}
+
+	for (int i = 0; i < g_WhitelistedEntities.Length; i++)
+	{
+		CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
+		if (!building.IsValid())
+		{
+			continue;
+		}
+
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
+		{
+			continue;
+		}
+
+		if (originalData.IsPvEBoss && !IsPvETargetValid(building))
+		{
+			continue;
+		}
+
+		if (!IsTargetInMeleeChecks(actor, attackData, building, range, spread))
+		{
+			continue;
+		}
+
+		targets.Push(g_WhitelistedEntities.Get(i));
+	}
+
+	for (int i = 0; i < g_BreakableProps.Length; i++)
+	{
+		CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_BreakableProps.Get(i)));
+		if (!building.IsValid())
+		{
+			continue;
+		}
+
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
+		{
+			continue;
+		}
+
+		if (originalData.IsPvEBoss && !IsPvETargetValid(building))
+		{
+			continue;
+		}
+
+		if (!IsTargetInMeleeChecks(actor, attackData, building, range, spread))
+		{
+			continue;
+		}
+
+		targets.Push(g_BreakableProps.Get(i));
+	}
+
 	for (int i = 0; i < targets.Length; i++)
 	{
-		CBaseEntity prop = CBaseEntity(targets.Get(i));
-
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, prop, attackEliminated))
-		{
-			continue;
-		}
-
-		if (originalData.IsPvEBoss && !IsPvETargetValid(prop))
-		{
-			continue;
-		}
-
-		if (!IsTargetInMeleeChecks(actor, attackData, prop, range, spread))
+		CBaseEntity prop = CBaseEntity(EntRefToEntIndex(targets.Get(i)));
+		if (!prop.IsValid())
 		{
 			continue;
 		}
@@ -234,13 +300,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		hit = true;
 		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, damage, 64, _, _, myEyePos, false);
 	}
-	targets.Clear();
+	delete targets;
 
 	// Sweep the players
-	TR_EnumerateEntitiesSphere(myEyePos, range, PARTITION_SOLID_EDICTS, EnumerateLivingPlayers, targets);
-	for (int i = 0; i < targets.Length; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		SF2_BasePlayer player = targets.Get(i);
+		SF2_BasePlayer player = SF2_BasePlayer(i);
 
 		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, player, attackEliminated))
 		{
@@ -366,8 +431,6 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			SlenderSpawnEffects(attackData.MissEffects, controller.Index, false);
 		}
 	}
-
-	delete targets;
 }
 
 static void OnAnimationEvent(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity actor, int event)

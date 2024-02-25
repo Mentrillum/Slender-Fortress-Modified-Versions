@@ -1494,7 +1494,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
-			if (!attackData.StartThroughWalls[difficulty] && !this.IsLOSClearFromTarget(target))
+			if (!attackData.StartThroughWalls[difficulty] && (this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
 			{
 				continue;
 			}
@@ -1774,17 +1774,15 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		float myWorldSpace[3], myPos[3];
 		this.WorldSpaceCenter(myWorldSpace);
 		this.GetAbsOrigin(myPos);
-		ArrayList hitList = new ArrayList();
-		TR_EnumerateEntitiesSphere(myWorldSpace, radius, PARTITION_SOLID_EDICTS, EnumerateLivingPlayers, hitList);
 		bool eliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
 		if (originalData.IsPvEBoss)
 		{
 			eliminated = true;
 		}
 
-		for (int i = 0; i < hitList.Length; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			SF2_BasePlayer player = SF2_BasePlayer(hitList.Get(i));
+			SF2_BasePlayer player = SF2_BasePlayer(i);
 
 			if (!IsTargetValidForSlender(this, player, eliminated))
 			{
@@ -1835,8 +1833,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				shockwaveData.ApplyDamageEffects(player, difficulty, SF2_ChaserBossEntity(this.index));
 			}
 		}
-
-		delete hitList;
 	}
 
 	public bool SearchSoundsWithSectionName(ArrayList base, const char[] name, SF2BossProfileSoundInfo output)
@@ -1890,7 +1886,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
-		if (!this.IsLOSClearFromTarget(target, false))
+		if ((this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
 		{
 			return;
 		}
@@ -1927,7 +1923,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
-		if (!this.IsLOSClearFromTarget(this.Target))
+		if ((this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
 		{
 			return;
 		}
@@ -3227,26 +3223,6 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 	}
 }
 
-static bool EnumerateTargets(int entIndex, ArrayList players)
-{
-	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
-	{
-		players.Push(entIndex);
-	}
-
-	if (g_Buildings.FindValue(EnsureEntRef(entIndex)) != -1)
-	{
-		players.Push(entIndex);
-	}
-
-	if (g_WhitelistedEntities.FindValue(EnsureEntRef(entIndex)) != -1)
-	{
-		players.Push(entIndex);
-	}
-
-	return true;
-}
-
 static void OnCreate(SF2_ChaserEntity ent)
 {
 	ent.AttackIndex = -1;
@@ -4010,10 +3986,25 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	}
 
 	ArrayList valids = new ArrayList();
-	TR_EnumerateEntitiesSphere(traceStartPos, searchRange, PARTITION_SOLID_EDICTS, EnumerateTargets, valids);
-	for (int i = 0; i < valids.Length; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(valids.Get(i)));
+		SF2_BasePlayer client = SF2_BasePlayer(i);
+
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, client, attackEliminated))
+		{
+			continue;
+		}
+		if (originalData.IsPvEBoss && !IsPvETargetValid(client))
+		{
+			continue;
+		}
+
+		valids.Push(EntIndexToEntRef(client.index));
+	}
+
+	for (int i = 0; i < g_Buildings.Length; i++)
+	{
+		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
 		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
 		{
 			continue;
@@ -4023,6 +4014,31 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			continue;
 		}
 
+		valids.Push(EntIndexToEntRef(entity.index));
+	}
+
+	for (int i = 0; i < g_WhitelistedEntities.Length; i++)
+	{
+		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
+		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
+		{
+			continue;
+		}
+		if (originalData.IsPvEBoss && !IsPvETargetValid(entity))
+		{
+			continue;
+		}
+
+		valids.Push(EntIndexToEntRef(entity.index));
+	}
+
+	for (int i = 0; i < valids.Length; i++)
+	{
+		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(valids.Get(i)));
+		if (!entity.IsValid())
+		{
+			continue;
+		}
 		SF2_BasePlayer player = SF2_BasePlayer(entity.index);
 
 		if (player.IsValid && g_PlayerDebugFlags[player.index] & DEBUG_BOSS_EYES)

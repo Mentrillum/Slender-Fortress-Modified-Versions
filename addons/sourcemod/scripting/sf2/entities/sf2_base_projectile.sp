@@ -348,16 +348,25 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 	public void DoExplosion()
 	{
 		int owner = this.GetPropEnt(Prop_Send, "m_hOwnerEntity");
-		float pos[3];
+		float pos[3], otherPos[3];
 		this.GetAbsOrigin(pos);
 
-		// Go for players
+		// Search all valid entities
 		ArrayList hitList = new ArrayList();
-		TR_EnumerateEntitiesSphere(pos, this.BlastRadius, PARTITION_SOLID_EDICTS, EnumerateLivingPlayers, hitList);
-
-		for (int i = 0; i < hitList.Length; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(hitList.Get(i));
+			if (!player.IsValid)
+			{
+				continue;
+			}
+
+			player.GetAbsOrigin(otherPos);
+			if (GetVectorSquareMagnitude(pos, otherPos) > Pow(this.BlastRadius, 2.0))
+			{
+				continue;
+			}
+
 			if (g_Enabled)
 			{
 				if (!this.AttackWaiters && player.IsEliminated)
@@ -373,54 +382,97 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 				}
 			}
 
-			float targetPos[3];
-			player.GetEyePosition(targetPos);
-			TR_TraceRayFilter(pos, targetPos,
-					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE,
-					RayType_EndPoint, TraceRayDontHitAnyEntity, this.index);
-
-			if (!TR_DidHit() || TR_GetEntityIndex() == player.index)
-			{
-				float damage = this.CalculateFallOff(player);
-				int flags = DMG_BLAST;
-				if (this.IsCrits)
-				{
-					flags |= DMG_ACID;
-				}
-				float force[3];
-				this.GetDamageForce(player, force);
-				player.TakeDamage(_, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, damage, flags, _, force, pos);
-				Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
-				Call_PushCell(player);
-				Call_PushCell(this);
-				Call_Finish();
-			}
+			hitList.Push(EntIndexToEntRef(player.index));
 		}
-		hitList.Clear();
 
-		// Then do props
-		TR_EnumerateEntitiesSphere(pos, this.BlastRadius, PARTITION_SOLID_EDICTS, EnumerateBreakableEntities, hitList);
+		for (int i = 0; i < g_Buildings.Length; i++)
+		{
+			CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
+			if (!building.IsValid())
+			{
+				continue;
+			}
+
+			building.GetAbsOrigin(otherPos);
+			if (GetVectorSquareMagnitude(pos, otherPos) > Pow(this.BlastRadius, 2.0))
+			{
+				continue;
+			}
+
+			if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == building.GetProp(Prop_Data, "m_iTeamNum"))
+			{
+				continue;
+			}
+
+			hitList.Push(EntIndexToEntRef(building.index));
+		}
+
+		for (int i = 0; i < g_WhitelistedEntities.Length; i++)
+		{
+			CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
+			if (!building.IsValid())
+			{
+				continue;
+			}
+
+			building.GetAbsOrigin(otherPos);
+			if (GetVectorSquareMagnitude(pos, otherPos) > Pow(this.BlastRadius, 2.0))
+			{
+				continue;
+			}
+
+			hitList.Push(EntIndexToEntRef(building.index));
+		}
+
+		for (int i = 0; i < g_BreakableProps.Length; i++)
+		{
+			CBaseEntity building = CBaseEntity(EntRefToEntIndex(g_BreakableProps.Get(i)));
+			if (!building.IsValid())
+			{
+				continue;
+			}
+
+			building.GetAbsOrigin(otherPos);
+			if (GetVectorSquareMagnitude(pos, otherPos) > Pow(this.BlastRadius, 2.0))
+			{
+				continue;
+			}
+
+			hitList.Push(EntIndexToEntRef(building.index));
+		}
+
 		for (int i = 0; i < hitList.Length; i++)
 		{
-			CBaseEntity prop = CBaseEntity(hitList.Get(i));
+			CBaseEntity valid = CBaseEntity(EntRefToEntIndex(hitList.Get(i)));
+			if (!valid.IsValid())
+			{
+				continue;
+			}
 
 			float targetPos[3];
-			prop.WorldSpaceCenter(targetPos);
+			valid.WorldSpaceCenter(targetPos);
 			TR_TraceRayFilter(pos, targetPos,
 					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE,
 					RayType_EndPoint, TraceRayDontHitAnyEntity, this.index);
 
-			if (!TR_DidHit() || TR_GetEntityIndex() == prop.index)
+			if (!TR_DidHit() || TR_GetEntityIndex() == valid.index)
 			{
-				float damage = this.CalculateFallOff(prop);
+				float damage = this.CalculateFallOff(valid);
 				int flags = DMG_BLAST;
 				if (this.IsCrits)
 				{
 					flags |= DMG_ACID;
 				}
 				float force[3];
-				this.GetDamageForce(prop, force);
-				SDKHooks_TakeDamage(prop.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, damage, flags, _, force, pos, false);
+				this.GetDamageForce(valid, force);
+				SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, damage, flags, _, force, pos);
+				if (SF2_BasePlayer(valid.index).IsValid)
+				{
+					Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
+					Call_PushCell(SF2_BasePlayer(valid.index));
+					Call_PushCell(this);
+					Call_Finish();
+				}
 			}
 		}
 
