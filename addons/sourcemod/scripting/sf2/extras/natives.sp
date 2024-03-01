@@ -69,6 +69,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("SF2_GetBossDifficulty", Native_GetBossDifficulty);
 	CreateNative("SF2_GetDifficultyModifier", Native_GetDifficultyModifier);
 	CreateNative("SF2_IsInSpecialRound", Native_IsInSpecialRound);
+	CreateNative("SF2_GetCurrentBossPack", Native_GetCurrentBossPack);
 
 	CreateNative("SF2_GetClientGroup", Native_GetClientGroup);
 	CreateNative("SF2_GetClientQueuePoints", Native_GetClientQueuePoints);
@@ -428,6 +429,15 @@ static any Native_GetDifficultyModifier(Handle plugin, int numParams)
 static any Native_IsInSpecialRound(Handle plugin, int numParams)
 {
 	return SF_SpecialRound(GetNativeCell(1));
+}
+
+static any Native_GetCurrentBossPack(Handle plugin, int numParams)
+{
+	int length = GetNativeCell(2);
+	char[] bossPackName = new int[++length];
+	GetCurrentBossPack(bossPackName, length);
+	SetNativeString(1, bossPackName, length, _, length);
+	return length;
 }
 
 static any Native_GetClientGroup(Handle plugin, int numParams)

@@ -276,6 +276,24 @@ int LookupProfileAnimation(int entity, const char[] animName)
 	return sequence;
 }
 
+void GetCurrentBossPack(char[] bossPackName, int length)
+{
+	g_BossPackConfig.Rewind();
+	if (!g_BossPackConfig.JumpToKey("packs"))
+	{
+		return;
+	}
+	if (!g_BossPackConfig.JumpToKey(mapBossPack))
+	{
+		return;
+	}
+	g_BossPackConfig.GetString("name", bossPackName, length, mapBossPack);
+	if (bossPackName[0] == '\0')
+	{
+		FormatEx(bossPackName, length, "Core Pack");
+	}
+}
+
 /*
 Command
 */
@@ -286,21 +304,8 @@ Action Command_Pack(int client,int args)
 		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
 		return Plugin_Handled;
 	}
-	g_BossPackConfig.Rewind();
-	if (!g_BossPackConfig.JumpToKey("packs"))
-	{
-		return Plugin_Handled;
-	}
-	if (!g_BossPackConfig.JumpToKey(mapBossPack))
-	{
-		return Plugin_Handled;
-	}
 	char bossPackName[64];
-	g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), mapBossPack);
-	if (bossPackName[0] == '\0')
-	{
-		FormatEx(bossPackName, sizeof(bossPackName), "Core Pack");
-	}
+	GetCurrentBossPack(bossPackName, sizeof(bossPackName));
 	CPrintToChat(client, "{dodgerblue}Pack: {lightblue}%s", bossPackName);
 	return Plugin_Handled;
 }
