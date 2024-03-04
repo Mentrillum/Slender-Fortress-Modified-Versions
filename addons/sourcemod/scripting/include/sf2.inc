@@ -952,6 +952,16 @@ native int SF2_GetSpecialRoundType();
 native int SF2_IsInSpecialRound(int specialRound);
 
 /**
+ * Retrieves name of the current boss pack
+ *
+ * @param buffer			Buffer to store the pack name.
+ * @param bufferLen		Max length of buffer.
+ *
+ * @return				Number of bytes copied
+ */
+native int SF2_GetCurrentBossPack(char[] buffer, int bufferLen);
+
+/**
  * Returns the current group a player is in.
  *
  * @param client	Client index.
