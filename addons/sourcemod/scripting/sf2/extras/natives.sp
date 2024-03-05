@@ -434,7 +434,7 @@ static any Native_IsInSpecialRound(Handle plugin, int numParams)
 static any Native_GetCurrentBossPack(Handle plugin, int numParams)
 {
 	int length = GetNativeCell(2);
-	char[] bossPackName = new int[++length];
+	char[] bossPackName = new char[++length];
 	GetCurrentBossPack(bossPackName, length);
 	SetNativeString(1, bossPackName, length, _, length);
 	return length;
