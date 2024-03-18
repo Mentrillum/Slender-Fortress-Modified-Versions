@@ -3733,6 +3733,8 @@ public void OnClientPutInServer(int client)
 		QueryClientConVar(client, "fov_desired", OnClientGetDesiredFOV);
 	}
 
+	AFK_SetTime(client);
+
 	Call_StartForward(g_OnPlayerPutInServerPFwd);
 	Call_PushCell(SF2_BasePlayer(client));
 	Call_Finish();
