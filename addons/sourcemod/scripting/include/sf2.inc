@@ -3542,3 +3542,393 @@ public SharedPlugin __pl_sf2 =
 	required = 0,
 #endif
 };
+
+#if !defined REQUIRE_PLUGIN
+public void __pl_sf2_SetNTVOptional()
+{
+	// sf2/methodmaps.sp
+	MarkNativeAsOptional("SF2_Player.UserID.get");
+	MarkNativeAsOptional("SF2_Player.IsValid.get");
+	MarkNativeAsOptional("SF2_Player.IsAlive.get");
+	MarkNativeAsOptional("SF2_Player.IsInGame.get");
+	MarkNativeAsOptional("SF2_Player.IsBot.get");
+	MarkNativeAsOptional("SF2_Player.IsSourceTV.get");
+	MarkNativeAsOptional("SF2_Player.IsReplay.get");
+	MarkNativeAsOptional("SF2_Player.InThirdPerson.get");
+	MarkNativeAsOptional("SF2_Player.Buttons.get");
+	MarkNativeAsOptional("SF2_Player.IsMoving");
+	MarkNativeAsOptional("SF2_Player.Health.get");
+	MarkNativeAsOptional("SF2_Player.MaxHealth.get");
+	MarkNativeAsOptional("SF2_Player.Ducking.get");
+	MarkNativeAsOptional("SF2_Player.Ducked.get");
+	MarkNativeAsOptional("SF2_Player.GetDataEnt");
+	MarkNativeAsOptional("SF2_Player.Class.get");
+	MarkNativeAsOptional("SF2_Player.Team.get");
+	MarkNativeAsOptional("SF2_Player.HasRegenItem.get");
+	MarkNativeAsOptional("SF2_Player.HasRegenItem.set");
+	MarkNativeAsOptional("SF2_Player.InCondition");
+	MarkNativeAsOptional("SF2_Player.ChangeCondition");
+	MarkNativeAsOptional("SF2_Player.IsCritBoosted");
+	MarkNativeAsOptional("SF2_Player.IsMiniCritBoosted");
+	MarkNativeAsOptional("SF2_Player.Ignite");
+	MarkNativeAsOptional("SF2_Player.Bleed");
+	MarkNativeAsOptional("SF2_Player.Stun");
+	MarkNativeAsOptional("SF2_Player.Regenerate");
+	MarkNativeAsOptional("SF2_Player.SetClass");
+	MarkNativeAsOptional("SF2_Player.GetEyePosition");
+	MarkNativeAsOptional("SF2_Player.GetEyeAngles");
+	MarkNativeAsOptional("SF2_Player.GetDataVector");
+	MarkNativeAsOptional("SF2_Player.SetDataVector");
+	MarkNativeAsOptional("SF2_Player.GetDistanceFromEntity");
+	MarkNativeAsOptional("SF2_Player.GetWeaponSlot");
+	MarkNativeAsOptional("SF2_Player.SwitchToWeaponSlot");
+	MarkNativeAsOptional("SF2_Player.RemoveWeaponSlot");
+	MarkNativeAsOptional("SF2_Player.ScreenShake");
+	MarkNativeAsOptional("SF2_Player.ViewPunch");
+	MarkNativeAsOptional("SF2_Player.TakeDamage");
+	MarkNativeAsOptional("SF2_Player.Respawn");
+	MarkNativeAsOptional("SF2_Player.UpdateListeningFlags");
+	MarkNativeAsOptional("SF2_Player.IsParticipating.get");
+	MarkNativeAsOptional("SF2_Player.GetName");
+	MarkNativeAsOptional("SF2_Player.LastButtons.get");
+	MarkNativeAsOptional("SF2_Player.LastButtons.set");
+	MarkNativeAsOptional("SF2_Player.ScreenFade");
+	MarkNativeAsOptional("SF2_Player.IsEliminated.get");
+	MarkNativeAsOptional("SF2_Player.IsEliminated.set");
+	MarkNativeAsOptional("SF2_Player.IsInGhostMode.get");
+	MarkNativeAsOptional("SF2_Player.SetGhostState");
+	MarkNativeAsOptional("SF2_Player.IsProxy.get");
+	MarkNativeAsOptional("SF2_Player.IsProxy.set");
+	MarkNativeAsOptional("SF2_Player.ProxyControl.get");
+	MarkNativeAsOptional("SF2_Player.ProxyControl.set");
+	MarkNativeAsOptional("SF2_Player.ProxyMaster.get");
+	MarkNativeAsOptional("SF2_Player.ProxyMaster.set");
+	MarkNativeAsOptional("SF2_Player.IsInPvP.get");
+	MarkNativeAsOptional("SF2_Player.IsInPvE.get");
+	MarkNativeAsOptional("SF2_Player.IsInDeathCam.get");
+	MarkNativeAsOptional("SF2_Player.StartDeathCam");
+	MarkNativeAsOptional("SF2_Player.HasEscaped.get");
+	MarkNativeAsOptional("SF2_Player.Escape");
+	MarkNativeAsOptional("SF2_Player.TeleportToEscapePoint");
+	MarkNativeAsOptional("SF2_Player.ForceEscape");
+	MarkNativeAsOptional("SF2_Player.UsingFlashlight.get");
+	MarkNativeAsOptional("SF2_Player.HandleFlashlight");
+	MarkNativeAsOptional("SF2_Player.FlashlightBatteryLife.get");
+	MarkNativeAsOptional("SF2_Player.FlashlightBatteryLife.set");
+	MarkNativeAsOptional("SF2_Player.ResetFlashlight");
+	MarkNativeAsOptional("SF2_Player.GetFlashlightNextInputTime");
+	MarkNativeAsOptional("SF2_Player.IsSprinting.get");
+	MarkNativeAsOptional("SF2_Player.IsReallySprinting.get");
+	MarkNativeAsOptional("SF2_Player.HandleSprint");
+	MarkNativeAsOptional("SF2_Player.Stamina.get");
+	MarkNativeAsOptional("SF2_Player.Stamina.set");
+	MarkNativeAsOptional("SF2_Player.SetStaminaRechargeTime");
+	MarkNativeAsOptional("SF2_Player.HasStartedBlinking.get");
+	MarkNativeAsOptional("SF2_Player.IsBlinking.get");
+	MarkNativeAsOptional("SF2_Player.IsHoldingBlink");
+	MarkNativeAsOptional("SF2_Player.SetHoldingBlink");
+	MarkNativeAsOptional("SF2_Player.BlinkMeter.get");
+	MarkNativeAsOptional("SF2_Player.BlinkMeter.set");
+	MarkNativeAsOptional("SF2_Player.BlinkCount.get");
+	MarkNativeAsOptional("SF2_Player.Blink");
+	MarkNativeAsOptional("SF2_Player.StartPeeking");
+	MarkNativeAsOptional("SF2_Player.EndPeeking");
+	MarkNativeAsOptional("SF2_Player.PageCount.get");
+	MarkNativeAsOptional("SF2_Player.PageCount.set");
+	MarkNativeAsOptional("SF2_Player.ShowHint");
+	MarkNativeAsOptional("SF2_Player.IsTrapped.get");
+	MarkNativeAsOptional("SF2_Player.IsTrapped.set");
+	MarkNativeAsOptional("SF2_Player.TrapCount.get");
+	MarkNativeAsOptional("SF2_Player.TrapCount.set");
+	MarkNativeAsOptional("SF2_Player.IsLatched.get");
+	MarkNativeAsOptional("SF2_Player.IsLatched.set");
+	MarkNativeAsOptional("SF2_Player.LatchCount.get");
+	MarkNativeAsOptional("SF2_Player.LatchCount.set");
+	MarkNativeAsOptional("SF2_Player.Latcher.get");
+	MarkNativeAsOptional("SF2_Player.Latcher.set");
+	MarkNativeAsOptional("SF2_Player.UpdateMusicSystem");
+	MarkNativeAsOptional("SF2_Player.HasConstantGlow.get");
+	MarkNativeAsOptional("SF2_Player.SetPlayState");
+	MarkNativeAsOptional("SF2_Player.CanSeeSlender");
+	MarkNativeAsOptional("SF2_Player.SetAFKTime");
+	MarkNativeAsOptional("SF2_Player.SetAFKState");
+	MarkNativeAsOptional("SF2_Player.CheckAFKTime");
+	MarkNativeAsOptional("SF2_Player.ShouldBeForceChased");
+	MarkNativeAsOptional("SF2_Player.SetForceChaseState");
+	MarkNativeAsOptional("SF2_Player.IsLookingAtBoss");
+
+	// sf2/npc.sp
+	MarkNativeAsOptional("SF2_GetMaxBossCount");
+	MarkNativeAsOptional("SF2_EntIndexToBossIndex");
+	MarkNativeAsOptional("SF2_BossIndexToEntIndex");
+	MarkNativeAsOptional("SF2_BossIndexToEntIndexEx");
+	MarkNativeAsOptional("SF2_BossIDToBossIndex");
+	MarkNativeAsOptional("SF2_BossIndexToBossID");
+
+	MarkNativeAsOptional("SF2_AddBoss");
+	MarkNativeAsOptional("SF2_RemoveBoss");
+
+	MarkNativeAsOptional("SF2_GetBossName");
+	MarkNativeAsOptional("SF2_GetBossType");
+
+	MarkNativeAsOptional("SF2_GetBossFlags");
+	MarkNativeAsOptional("SF2_SetBossFlags");
+
+	MarkNativeAsOptional("SF2_SpawnBoss");
+	MarkNativeAsOptional("SF2_IsBossSpawning");
+	MarkNativeAsOptional("SF2_DespawnBoss");
+
+	MarkNativeAsOptional("SF2_GetBossPathFollower");
+	MarkNativeAsOptional("SF2_GetBossMaster");
+	MarkNativeAsOptional("SF2_GetBossIdleLifetime");
+	MarkNativeAsOptional("SF2_GetBossState");
+	MarkNativeAsOptional("SF2_SetBossState");
+
+	MarkNativeAsOptional("SF2_GetBossEyePosition");
+	MarkNativeAsOptional("SF2_GetBossEyePositionOffset");
+
+	MarkNativeAsOptional("SF2_GetBossTeleportThinkTimer");
+	MarkNativeAsOptional("SF2_SetBossTeleportThinkTimer");
+	MarkNativeAsOptional("SF2_GetBossTeleportTarget");
+
+	MarkNativeAsOptional("SF2_GetBossGoalPosition");
+
+	MarkNativeAsOptional("SF2_GetBossTimeUntilNoPersistence");
+	MarkNativeAsOptional("SF2_SetBossTimeUntilNoPersistence");
+	MarkNativeAsOptional("SF2_GetBossTimeUntilAlert");
+	MarkNativeAsOptional("SF2_SetBossTimeUntilAlert");
+
+	MarkNativeAsOptional("SF2_GetProfileFromBossIndex");
+	MarkNativeAsOptional("SF2_GetProfileFromName");
+
+	MarkNativeAsOptional("SF2_SpawnBossEffects");
+
+	MarkNativeAsOptional("SF2_CanBossBeSeen");
+
+	// sf2/profiles.sp
+	MarkNativeAsOptional("SF2_IsBossProfileValid");
+	MarkNativeAsOptional("SF2_GetBossProfileNum");
+	MarkNativeAsOptional("SF2_GetBossProfileFloat");
+	MarkNativeAsOptional("SF2_GetBossProfileString");
+	MarkNativeAsOptional("SF2_GetBossProfileVector");
+	MarkNativeAsOptional("SF2_GetBossAttackProfileNum");
+	MarkNativeAsOptional("SF2_GetBossAttackProfileFloat");
+	MarkNativeAsOptional("SF2_GetBossAttackProfileString");
+	MarkNativeAsOptional("SF2_GetBossAttackProfileVector");
+	MarkNativeAsOptional("SF2_GetRandomStringFromBossProfile");
+	MarkNativeAsOptional("SF2_GetBossAttributeName");
+	MarkNativeAsOptional("SF2_GetBossAttributeValue");
+
+	MarkNativeAsOptional("SF2_GetBossProfileData");
+	MarkNativeAsOptional("SF2_GetChaserBossProfileData");
+	MarkNativeAsOptional("SF2_GetStatueBossProfileData");
+	MarkNativeAsOptional("SF2_TranslateProfileActivityFromName");
+	MarkNativeAsOptional("SF2_LookupProfileAnimation");
+
+	// sf2/pve.sp
+	MarkNativeAsOptional("SF2_IsClientInPvE");
+	MarkNativeAsOptional("SF2_RegisterPvEBoss");
+	MarkNativeAsOptional("SF2_SetOverridePvEMusic");
+	MarkNativeAsOptional("SF2_UnregisterPvEBoss");
+	MarkNativeAsOptional("SF2_AddPvEBoss");
+	MarkNativeAsOptional("SF2_KillPvEBoss");
+	MarkNativeAsOptional("SF2_GetActivePvEBosses");
+
+	// pvp.sp
+	MarkNativeAsOptional("SF2_IsClientInPvP");
+
+	// specialround.sp
+	MarkNativeAsOptional("SF2_IsSpecialRoundRunning");
+	MarkNativeAsOptional("SF2_GetSpecialRoundType");
+
+	// client/sprint.sp
+	MarkNativeAsOptional("SF2_GetClientSprintPoints");
+	MarkNativeAsOptional("SF2_SetClientSprintPoints");
+
+	MarkNativeAsOptional("SF2_IsClientSprinting");
+	MarkNativeAsOptional("SF2_IsClientReallySprinting");
+	MarkNativeAsOptional("SF2_SetClientSprintState");
+
+	// entities/sf2_base_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Base.Initialize");
+	MarkNativeAsOptional("SF2_Projectile_Base.DoExplosion");
+
+	// entities/projectiles/sf2_arrow_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Arrow.Create");
+	MarkNativeAsOptional("SF2_projectile_Arrow.IsValid.get");
+
+	// entities/projectiles/sf2_baseball_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Baseball.Create");
+	MarkNativeAsOptional("SF2_Projectile_Baseball.IsValid.get");
+
+	// entities/projectiles/sf2_cow_mangler_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_CowMangler.Create");
+	MarkNativeAsOptional("SF2_Projectile_CowMangler.IsValid.get");
+
+	// entities/projectiles/sf2_fireball_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Fireball.Create");
+	MarkNativeAsOptional("SF2_Projectile_Fireball.IsValid.get");
+
+	// entities/projectiles/sf2_grenade_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Grenade.Create");
+	MarkNativeAsOptional("SF2_Projectile_Grenade.IsValid.get");
+
+	// entities/projectiles/sf2_iceball_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Iceball.Create");
+	MarkNativeAsOptional("SF2_Projectile_Iceball.IsValid.get");
+
+	// entities/projectiles/sf2_rocket_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_Rocket.Create");
+	MarkNativeAsOptional("SF2_Projectile_Rocket.IsValid.get");
+
+	// entities/projectiles/sf2_sentry_rocket_projectile.sp
+	MarkNativeAsOptional("SF2_Projectile_SentryRocket.Create");
+	MarkNativeAsOptional("SF2_Projectile_SentryRocket.IsValid.get");
+
+	// extras/natives.sp
+	MarkNativeAsOptional("SF2_GetConfig");
+	MarkNativeAsOptional("SF2_IsRunning");
+	MarkNativeAsOptional("SF2_GetRoundState");
+	MarkNativeAsOptional("SF2_IsRoundInGracePeriod");
+	MarkNativeAsOptional("SF2_GetCurrentDifficulty");
+	MarkNativeAsOptional("SF2_GetBossDifficulty");
+	MarkNativeAsOptional("SF2_GetDifficultyModifier");
+	MarkNativeAsOptional("SF2_IsInSpecialRound");
+	MarkNativeAsOptional("SF2_GetCurrentBossPack");
+
+	MarkNativeAsOptional("SF2_GetClientGroup");
+	MarkNativeAsOptional("SF2_GetClientQueuePoints");
+	MarkNativeAsOptional("SF2_SetClientQueuePoints");
+
+	MarkNativeAsOptional("SF2_IsValidClient");
+	MarkNativeAsOptional("SF2_IsClientCritBoosted");
+	MarkNativeAsOptional("SF2_IsClientMiniCritBoosted");
+	MarkNativeAsOptional("SF2_IsClientUbercharged");
+	MarkNativeAsOptional("SF2_IsClientInKart");
+	MarkNativeAsOptional("SF2_IsClientInCondition");
+	MarkNativeAsOptional("SF2_IsClientEliminated");
+	MarkNativeAsOptional("SF2_IsClientInGhostMode");
+	MarkNativeAsOptional("SF2_IsClientProxy");
+
+	MarkNativeAsOptional("SF2_GetClientBlinkCount");
+	MarkNativeAsOptional("SF2_IsClientBlinking");
+	MarkNativeAsOptional("SF2_GetClientBlinkMeter");
+	MarkNativeAsOptional("SF2_SetClientBlinkMeter");
+
+	MarkNativeAsOptional("SF2_GetClientProxyMaster");
+	MarkNativeAsOptional("SF2_GetClientProxyControlAmount");
+	MarkNativeAsOptional("SF2_GetClientProxyControlRate");
+	MarkNativeAsOptional("SF2_SetClientProxyMaster");
+	MarkNativeAsOptional("SF2_SetClientProxyControlAmount");
+	MarkNativeAsOptional("SF2_SetClientProxyControlRate");
+
+	MarkNativeAsOptional("SF2_IsClientLookingAtBoss");
+	MarkNativeAsOptional("SF2_DidClientEscape");
+	MarkNativeAsOptional("SF2_ForceClientEscape");
+
+	MarkNativeAsOptional("SF2_GetClientFlashlightBatteryLife");
+	MarkNativeAsOptional("SF2_SetClientFlashlightBatteryLife");
+	MarkNativeAsOptional("SF2_IsClientUsingFlashlight");
+
+	MarkNativeAsOptional("SF2_IsClientTrapped");
+	MarkNativeAsOptional("SF2_IsClientInDeathCam");
+	MarkNativeAsOptional("SF2_ClientStartDeathCam");
+
+	MarkNativeAsOptional("SF2_ClientSpawnProxy");
+	MarkNativeAsOptional("SF2_ClientForceProxy");
+
+	MarkNativeAsOptional("SF2_CollectAsPage");
+	MarkNativeAsOptional("SF2_GetEmptyPageSpawnPoints");
+
+	MarkNativeAsOptional("SF2_ForceBossJump");
+
+	MarkNativeAsOptional("SF2_GetBossModelEntity");
+
+	MarkNativeAsOptional("SF2_GetBossTarget");
+	MarkNativeAsOptional("SF2_SetBossTarget");
+
+	MarkNativeAsOptional("SF2_IsBossStunnable");
+	MarkNativeAsOptional("SF2_IsBossStunnableByFlashlight");
+	MarkNativeAsOptional("SF2_IsBossCloaked");
+	MarkNativeAsOptional("SF2_GetBossStunHealth");
+	MarkNativeAsOptional("SF2_SetBossStunHealth");
+
+	MarkNativeAsOptional("SF2_GetVectorSquareMagnitude");
+	MarkNativeAsOptional("SF2_InitiateBossPackVote");
+	MarkNativeAsOptional("SF2_IsSurvivalMap");
+	MarkNativeAsOptional("SF2_IsBoxingMap");
+	MarkNativeAsOptional("SF2_IsRaidMap");
+	MarkNativeAsOptional("SF2_IsProxyMap");
+	MarkNativeAsOptional("SF2_IsSlaughterRunMap");
+
+	// gamemodes/renevant.sp
+	MarkNativeAsOptional("SF2_IsRenevantMap");
+
+	// npc/npc_chaser.sp
+	MarkNativeAsOptional("SF2_GetBossCurrentAttackIndex");
+	MarkNativeAsOptional("SF2_GetBossAttackIndexType");
+	MarkNativeAsOptional("SF2_GetBossAttackIndexDamage");
+	MarkNativeAsOptional("SF2_UpdateBossAnimation");
+	MarkNativeAsOptional("SF2_GetBossAttackIndexDamageType");
+
+	MarkNativeAsOptional("SF2_PerformBossVoice");
+	MarkNativeAsOptional("SF2_CreateBossSoundHint");
+
+	MarkNativeAsOptional("SF2_GetChaserProfileFromBossIndex");
+	MarkNativeAsOptional("SF2_GetChaserProfileFromName");
+	MarkNativeAsOptional("SF2_SetEntityForceChaseState");
+
+	// npc/npc_creeper.sp
+	MarkNativeAsOptional("SF2_GetStatueProfileFromBossIndex");
+	MarkNativeAsOptional("SF2_GetStatueProfileFromName");
+
+	// npc/entities/base/entity.sp
+	MarkNativeAsOptional("SF2_BaseBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.Controller.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.Target.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.State.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.CurrentChaseDuration.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.CurrentChaseDuration.set");
+	MarkNativeAsOptional("SF2_BaseBossEntity.InitialChaseDuration.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.InitialChaseDuration.set");
+	MarkNativeAsOptional("SF2_BaseBossEntity.IsKillingSomeone.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.EyePosition");
+	MarkNativeAsOptional("SF2_BaseBossEntity.GetProfileName");
+	MarkNativeAsOptional("SF2_BaseBossEntity.GetName");
+	MarkNativeAsOptional("SF2_BaseBossEntity.ProfileData");
+	MarkNativeAsOptional("SF2_BaseBossEntity.ResetProfileAnimation");
+
+	// npc/entities/base/actions/playsequenceandwait.sp
+	MarkNativeAsOptional("SF2_PlaySequenceAndWaitAction.SF2_PlaySequenceAndWaitAction");
+
+	// npc/entities/chaser/entity.sp
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsAttemptingToMove.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsAttacking.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsStunned.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.StunHealth.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.MaxStunHealth.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.CanBeStunned.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.CanTakeDamage.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsRaging.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsRunningAway.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.IsSelfHealing.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.ProfileData");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.PerformVoice");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.PerformCustomVoice");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GetDefaultPosture");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.SetDefaultPosture");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GetAttackName");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GetAttackIndex");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GetNextAttackTime");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.SetNextAttackTime");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.DropItem");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.CreateSoundHint");
+
+	// npc/entities/statue/entity.sp
+	MarkNativeAsOptional("SF2_StatueBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_StatueBossEntity.IsMoving.get");
+	MarkNativeAsOptional("SF2_StatueBossEntity.LastKillTime.get");
+	MarkNativeAsOptional("SF2_StatueBossEntity.ProfileData");
+}
+#endif
