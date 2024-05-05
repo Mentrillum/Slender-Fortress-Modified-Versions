@@ -3093,7 +3093,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		CreateNative("SF2_ChaserBossEntity.GetDefaultPosture", Native_GetDefaultPosture);
 		CreateNative("SF2_ChaserBossEntity.SetDefaultPosture", Native_SetDefaultPosture);
 		CreateNative("SF2_ChaserBossEntity.GetAttackName", Native_GetAttackName);
-		CreateNative("SF2_ChaserBossEntity.GetAttackIndex", Native_GetAttackIndex);
+		CreateNative("SF2_ChaserBossEntity.AttackIndex.get", Native_GetAttackIndex);
 		CreateNative("SF2_ChaserBossEntity.GetNextAttackTime", Native_GetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.SetNextAttackTime", Native_SetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.DropItem", Native_DropItem);
@@ -4041,6 +4041,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		}
 		SF2_BasePlayer player = SF2_BasePlayer(entity.index);
 
+		#if defined DEBUG
 		if (player.IsValid && g_PlayerDebugFlags[player.index] & DEBUG_BOSS_EYES)
 		{
 			float end[3];
@@ -4050,6 +4051,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			TE_SetupBeamPoints(traceStartPos, end, g_ShockwaveBeam, g_ShockwaveHalo, 0, 30, 0.1, 5.0, 5.0, 5, 0.0, color, 1);
 			TE_SendToClient(player.index);
 		}
+		#endif
 
 		chaser.SetIsVisible(entity, false);
 		chaser.SetInFOV(entity, false);
