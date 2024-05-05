@@ -1601,7 +1601,7 @@ native bool SF2_GetBossAttributeName(int bossIndex, int attribute);
 #pragma deprecated Use SF2BossProfileData instead.
 native float SF2_GetBossAttributeValue(int bossIndex, int attribute);
 
-#pragma deprecated Use SF2_ChaserBossEntity.GetAttackName instead.
+#pragma deprecated Use SF2_ChaserBossEntity.AttackIndex instead.
 native int SF2_GetBossCurrentAttackIndex(int bossIndex);
 
 #pragma deprecated Use SF2ChaserBossProfileAttackData.Type instead.
@@ -3919,7 +3919,7 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_ChaserBossEntity.GetDefaultPosture");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.SetDefaultPosture");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.GetAttackName");
-	MarkNativeAsOptional("SF2_ChaserBossEntity.GetAttackIndex");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.AttackIndex.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.GetNextAttackTime");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.SetNextAttackTime");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.DropItem");
