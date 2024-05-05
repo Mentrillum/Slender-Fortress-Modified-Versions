@@ -3093,7 +3093,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		CreateNative("SF2_ChaserBossEntity.GetDefaultPosture", Native_GetDefaultPosture);
 		CreateNative("SF2_ChaserBossEntity.SetDefaultPosture", Native_SetDefaultPosture);
 		CreateNative("SF2_ChaserBossEntity.GetAttackName", Native_GetAttackName);
-		CreateNative("SF2_ChaserBossEntity.GetAttackIndex", Native_GetAttackIndex);
+		CreateNative("SF2_ChaserBossEntity.AttackIndex.get", Native_GetAttackIndex);
 		CreateNative("SF2_ChaserBossEntity.GetNextAttackTime", Native_GetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.SetNextAttackTime", Native_SetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.DropItem", Native_DropItem);
