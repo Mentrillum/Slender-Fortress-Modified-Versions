@@ -5,6 +5,7 @@
 
 #pragma semicolon 1
 
+#define GHOST_MODEL "models/props_halloween/ghost_no_hat.mdl"
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
 #define SF2_OVERLAY_GHOST "overlays/slender/ghostcamera"
@@ -228,7 +229,10 @@ Action Hook_ClientSetTransmit(int client,int other)
 	{
 		if (IsClientInGhostMode(client))
 		{
-			return Plugin_Handled;
+			if (g_GhostModeVisibleConVar.IntValue < 1  || (g_GhostModeVisibleConVar.IntValue == 1 && !IsClientInGhostMode(other)))
+			{
+				return Plugin_Handled;
+			}
 		}
 
 		if (IsClientInPvP(client))
@@ -658,6 +662,34 @@ void ClientProcessStaticShake(int client)
 		newPunchAng[i] = oldPunchAng[i];
 		newPunchAngVel[i] = oldPunchAngVel[i];
 	}
+	
+	int staticMaster = NPCGetFromUniqueID(g_PlayerStaticMaster[client]);
+	if (staticMaster != -1 && NPCGetFlags(staticMaster) & SFF_HASSTATICSHAKE)
+	{
+		if (g_PlayerStaticMode[client][staticMaster] == Static_Increase)
+		{
+			newStaticShakeMaster = staticMaster;
+		}
+	}
+	for (int i = 0; i < MAX_BOSSES; i++)
+	{
+		if (NPCGetUniqueID(i) == -1)
+		{
+			continue;
+		}
+		
+		
+		if (NPCGetFlags(i) & SFF_HASSTATICSHAKE)
+		{
+			int master = NPCGetFromUniqueID(g_SlenderCopyMaster[i]);
+			if (master == -1)
+			{
+				master = i;
+			}
+			
+			
+		}
+	}
 
 	if (newStaticShakeMaster != -1)
 	{
@@ -772,10 +804,12 @@ void ClientProcessStaticShake(int client)
 		NormalizeVector(newPunchAng, newPunchAng);
 
 		float angVelocityScalar = 5.0 * g_PlayerStaticAmount[client];
+		/*
 		if (angVelocityScalar < 1.0)
 		{
 			angVelocityScalar = 1.0;
 		}
+		*/
 		ScaleVector(newPunchAng, angVelocityScalar);
 
 		for (int i = 0; i < 2; i++)
@@ -1869,10 +1903,10 @@ void ClientStartSprint(int client)
 
 void ClientSprintTimer(int client, bool recharge=false)
 {
-	float rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 0.38 : 0.28;
+	float rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 0.55 : 0.45;
 	if (recharge)
 	{
-		rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 1.4 : 0.8;
+		rate = (SF_SpecialRound(SPECIALROUND_COFFEE)) ? 1.2 : 0.6;
 	}
 
 	TFClassType class = TF2_GetPlayerClass(client);
@@ -2705,10 +2739,16 @@ static Action Timer_ClientResetDeathCamEnd(Handle timer, any userid)
 
 static bool g_PlayerInGhostMode[MAXTF2PLAYERS] = { false, ... };
 static int g_PlayerGhostModeTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_iGhostModelIndex;
 static int g_PlayerGhostModeBossTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 Handle g_PlayerGhostModeConnectionCheckTimer[MAXTF2PLAYERS] = { null, ... };
 float g_PlayerGhostModeConnectionTimeOutTime[MAXTF2PLAYERS] = { -1.0, ... };
 float g_PlayerGhostModeConnectionBootTime[MAXTF2PLAYERS] = { -1.0, ... };
+
+void SF2_SetGhostModel(int iModelIndex)
+{
+	g_iGhostModelIndex = iModelIndex;
+}
 
 /**
  *	Enables/Disables ghost mode on the player.
@@ -2785,7 +2825,7 @@ void ClientSetGhostModeState(int client, bool state)
 			SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_YES);
 			TF2_RemoveCondition(client, TFCond_Stealthed);
 			SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
-			SetEntityGravity(client, 1.0);
+			//SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
 			SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
 			SetEntityFlags(client, GetEntityFlags(client) &~ FL_NOTARGET);
@@ -2797,6 +2837,7 @@ void ClientSetGhostModeState(int client, bool state)
 			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 			SetEntityRenderMode(client, RENDER_NORMAL);
 			SetEntityRenderColor(client, _, _, _, 255);
+			Client_ModelOverrides(client);
 		}
 	}
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
@@ -2913,11 +2954,12 @@ void ClientHandleGhostMode(int client, bool forceSpawn=false)
 		SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
 		SetEntityFlags(client, GetEntityFlags(client) | FL_NOTARGET);
 		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(client, _, _, _, 0);
+		SetEntityRenderColor(client, _, _, _, g_GhostModeVisibleAlphaConVar.IntValue);
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
+		Client_ModelOverrides(client, g_iGhostModelIndex);
 
 		// Set first observer target.
 		ClientGhostModeNextTarget(client, true);
@@ -3905,7 +3947,7 @@ static Action Hook_ConstantGlowSetTransmit(int ent, int other)
 	{
 		return Plugin_Continue;
 	}
-	if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax) && ((GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other]) || (g_PlayerProxy[other])))
+	if (((((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax)) || g_EnablePlayerOutlinesConVar.BoolValue) && (GetClientTeam(other) == TFTeam_Red && !DidClientEscape(other) && !g_PlayerEliminated[other])) || ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax) && (g_PlayerProxy[other])))
 	{
 		return Plugin_Continue;
 	}
@@ -4077,8 +4119,24 @@ Action Timer_RespawnPlayer(Handle timer, any userid)
 	}
 
 	TF2_RespawnPlayer(client);
+	SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
+	SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
+	SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
+	SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
+	if (!g_PlayerProxy[client])
+	{
+		Client_ModelOverrides(client);
+	}
 
 	return Plugin_Stop;
+}
+
+void Client_ModelOverrides(int iEntity, int iModelIndex = 0)
+{
+    for(int i=0; i<4; i++)
+    {
+        SetEntProp(iEntity, Prop_Send, "m_nModelIndexOverrides", iModelIndex, _, i);
+    }
 }
 
 #include "sf2/functionclients/client_hints.sp"

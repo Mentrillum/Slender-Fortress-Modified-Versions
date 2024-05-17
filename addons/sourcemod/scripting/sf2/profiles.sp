@@ -32,6 +32,7 @@ ConVar g_BossPackEndOfMapVoteConVar;
 ConVar g_BossPackVoteStartTimeConVar;
 ConVar g_BossPackVoteStartRoundConVar;
 ConVar g_BossPackVoteShuffleConVar;
+ConVar g_BossPackVoteIncludeCurrentConVar;
 
 static bool g_BossPackVoteEnabled = false;
 
@@ -87,6 +88,7 @@ void InitializeBossProfiles()
 	g_BossPackVoteStartTimeConVar = CreateConVar("sf2_boss_profile_pack_endvote_start", "4", "Specifies when to start the vote based on time remaining on the map, in minutes.", FCVAR_NOTIFY);
 	g_BossPackVoteStartRoundConVar = CreateConVar("sf2_boss_profile_pack_endvote_startround", "2", "Specifies when to start the vote based on rounds remaining on the map.", FCVAR_NOTIFY);
 	g_BossPackVoteShuffleConVar = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
+	g_BossPackVoteIncludeCurrentConVar = CreateConVar("sf2_boss_profile_pack_endvote_includecurrent", "1", "Allow the current boss pack to be voted for again.");
 
 	InitializeStatueProfiles();
 	InitializeChaserProfiles();
@@ -818,6 +820,15 @@ void InitiateBossPackVote(int initiator)
 			}
 			else
 			{
+				if (g_BossPackVoteIncludeCurrentConVar.BoolValue)
+				{
+					char bossPackName[64];
+					g_BossPackConfig.GetString("name", bossPackName, sizeof(bossPackName), bossPack);
+
+					menuDisplayNamesTrie.SetString(bossPack, bossPackName);
+					menuOptionsInfo.PushString(bossPack);
+				}
+				
 				incrementReached = true;
 			}
 		}

@@ -131,6 +131,8 @@ public void OnPluginStart()
 	g_GhostModeConnectionConVar = CreateConVar("sf2_ghostmode_no_tolerance", "0", "If set on 1, it will instant kick out the client of the Ghost mode if the client has timed out.");
 	g_GhostModeConnectionCheckConVar = CreateConVar("sf2_ghostmode_check_connection", "1", "Checks a player's connection while in Ghost Mode. If the check fails, the client is booted out of Ghost Mode and the action and client's SteamID is logged in the main SF2 log.");
 	g_GhostModeConnectionToleranceConVar = CreateConVar("sf2_ghostmode_connection_tolerance", "5.0", "If sf2_ghostmode_check_connection is set to 1 and the client has timed out for at least this amount of time, the client will be booted out of Ghost Mode.");
+	g_GhostModeVisibleConVar = CreateConVar("sf2_ghostmode_visible", "1", "0 = not visible at all, 1 = visible to only other ghosts, 2 = visible to all players (In-game players can only see particles)",_, true, 0.0, true, 2.0);
+	g_GhostModeVisibleAlphaConVar = CreateConVar("sf2_ghostmode_visible_alpha", "255", "The alpha of the render color for ghosts models. (Particles will be unaffected)",_, true, 0.0, true, 255.0);
 
 	g_MaxPlayersConVar = CreateConVar("sf2_maxplayers", "6", "The maximum amount of players that can be in one round.", _, true, 1.0);
 	g_MaxPlayersConVar.AddChangeHook(OnConVarChanged);
@@ -163,6 +165,7 @@ public void OnPluginStart()
 	g_NewBossRoundBehaviorConVar = CreateConVar("sf2_newbossround_mode", "0", "0 = boss selection will return to normal after the boss round, 1 = the new boss will continue being the boss until all players in the server have played against it (not counting spectators, recently joined players, and those who reset their queue points during the round).", _, true, 0.0, true, 1.0);
 	g_NewBossRoundIntervalConVar = CreateConVar("sf2_newbossround_interval", "3", "If this many rounds are completed, the next round's boss will be randomly chosen, but will not be the main boss.", _, true, 0.0);
 	g_NewBossRoundForceConVar = CreateConVar("sf2_newbossround_forceenable", "-1", "Sets whether a new boss will be chosen on the next round or not. Set to -1 to let the game choose.", _, true, -1.0, true, 1.0);
+	g_NewBossRoundIncludeMain = CreateConVar("sf2_newbossround_includemain", "0", "Should the main boss still be chosen in a new boss round? Helpful in cases where you want all rounds to be random bosses and you don't want the main boss to be excluded.", _, true, 0.0, true, 1.0);
 
 	g_IgnoreRoundWinConditionsConVar = CreateConVar("sf2_ignore_round_win_conditions", "0", "If set to 1, round will not end when RED is eliminated.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_IgnoreRoundWinConditionsConVar.AddChangeHook(OnConVarChanged);
@@ -172,6 +175,7 @@ public void OnPluginStart()
 	g_DefaultBossVisibilityStateConVar = CreateConVar("sf2_default_boss_visibility", "0", "Sets the default visibility state for bosses before the CBaseNPC update to allow for easier/harder peeking, this does not affect bosses seeing through transparent surfaces like glass however. Keep in mind creators can override this value for specific bosses only.", _, true, 0.0, true, 1.0);
 
 	g_EnableWallHaxConVar = CreateConVar("sf2_enable_wall_hax", "0", "Enables/disables the Wall Hax special round without needing to turn on Wall Hax. This will not force the difficulty to Insane and will show player + boss outlines.", _, true, 0.0, true, 1.0);
+	g_EnablePlayerOutlinesConVar = CreateConVar("sf2_enable_player_outlines", "0", "Allows RED players to see other RED players' outlines.", _, true, 0.0, true, 1.0);
 
 	g_TimeLimitConVar = CreateConVar("sf2_timelimit_default", "300", "The time limit of the round. Maps can change the time limit.", _, true, 0.0);
 	g_TimeLimitEscapeConVar = CreateConVar("sf2_timelimit_escape_default", "90", "The time limit to escape. Maps can change the time limit.", _, true, 0.0);
@@ -231,6 +235,8 @@ public void OnPluginStart()
 	g_DifficultyNoGracePageConVar = CreateConVar("sf2_difficulty_no_grace_pages", "", "On what difficulties will players be unable to collect pages while grace period is active. 1 = Normal, 2 = Hard, 3 = Insane, 4 = Nightmare, 5 = Apollyon");
 
 	g_FileCheckConVar = CreateConVar("sf2_debug_file_checks", "0", "Determines if the gamemode should look for missing files when loading all the bosses. Note that turning this on leads to longer boss loading times.", _, true, 0.0, true, 1.0);
+	
+	g_ChatBossAdded = CreateConVar("sf2_chat_bossadded", "0", "Determines if it should announce in chat when a boss has been added. 0 = Don't announce; 1 = Only announce if not silent; 2 = Always announce, but don't state who if silent", _, true, 0.0, true, 2.0);
 
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
@@ -291,6 +297,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slnext", Command_Next);
 	RegConsoleCmd("sm_slgroup", Command_Group);
 	RegConsoleCmd("sm_slghost", Command_GhostMode);
+	RegConsoleCmd("sm_slg", Command_GhostMode);
 	RegConsoleCmd("sm_slhelp", Command_Help);
 	RegConsoleCmd("sm_slsettings", Command_Settings);
 	RegConsoleCmd("sm_slcredits", Command_Credits);
@@ -321,6 +328,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_boss_no_teleport", Command_SlenderNoTeleport, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_proxy", Command_ForceProxy, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_escape", Command_ForceEscape, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_force_ghost", Command_ForceGhost, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_set_difficulty", Command_ForceDifficulty, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_force_special_round", Command_ForceSpecialRound, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_toggle_boss_teleports", Command_ToggleAllBossTeleports, ADMFLAG_SLAY);
@@ -401,6 +409,8 @@ public void OnPluginStart()
 	NPCInitialize();
 
 	SetupMenus();
+	
+	//Tutorial_Initialize();
 
 	SetupAdminMenu();
 
@@ -1819,6 +1829,93 @@ static Action Command_ForceEscape(int client,int args)
 		{
 			ClientEscape(target);
 			TeleportClientToEscapePoint(target);
+		}
+	}
+
+	return Plugin_Handled;
+}
+static Action Command_ForceGhost(int client,int args)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	if (args < 2)
+	{
+		ReplyToCommand(client, "Usage: sm_sf2_force_ghost <name|#userid> <0/1>");
+		return Plugin_Handled;
+	}
+
+	char arg1[32];
+	decl String:toggle[3];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	GetCmdArg(2, toggle, sizeof(toggle));
+	new iToggle = -1;
+	iToggle = StringToInt(toggle);
+
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
+
+	if ((target_count = ProcessTargetString(
+			arg1,
+			client,
+			target_list,
+			MAXPLAYERS,
+			0,
+			target_name,
+			sizeof(target_name),
+			tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+
+	bool wasSuccessful = false;
+	
+	for (int i = 0; i < target_count; i++)
+	{
+		int target = target_list[i];
+		if (IsRoundEnding() || IsRoundInWarmup() || !g_PlayerEliminated[target] || !IsClientParticipating(target) || g_PlayerProxy[target] || IsClientInPvP(target) || IsClientInKart(target) || TF2_IsPlayerInCondition(target,TFCond_Taunting)|| TF2_IsPlayerInCondition(target,TFCond_Charging) || g_LastCommandTime[target] > GetEngineTime())
+		{
+			ReplyToCommand(client, "Cannot toggle ghost mode for %N at this time.", target);
+			continue;
+		}
+		if (iToggle == 1)
+		{
+			if (!IsClientInGhostMode(target))
+			{
+				TF2_RespawnPlayer(target);
+				ClientSetGhostModeState(target, true);
+				HandlePlayerHUD(target);
+				TF2_AddCondition(target, TFCond_StealthedUserBuffFade, -1.0);
+
+				CPrintToChat(target, "{dodgerblue}%N has forced you into ghost mode.", client);
+				
+				if (!wasSuccessful) wasSuccessful = true;
+			}
+		}
+		else
+		{
+			if (IsClientInGhostMode(target))
+			{
+				ClientSetGhostModeState(target, false);
+				TF2_RespawnPlayer(target);
+				TF2_RemoveCondition(target, TFCond_StealthedUserBuffFade);
+
+				CPrintToChat(target, "{dodgerblue}%N has forced you out of ghost mode.", client);
+				
+				if (!wasSuccessful) wasSuccessful = true;
+			}
+		}
+	}
+	
+	if (wasSuccessful) {
+		if (iToggle == 1) {
+			ReplyToCommand(client, "Forced %s into ghost mode.", target_name);
+		} else {
+			ReplyToCommand(client, "Forced %s out of ghost mode.", target_name);
 		}
 	}
 

@@ -685,8 +685,10 @@ ConVar g_SpecialRoundIntervalConVar;
 ConVar g_NewBossRoundBehaviorConVar;
 ConVar g_NewBossRoundIntervalConVar;
 ConVar g_NewBossRoundForceConVar;
+ConVar g_NewBossRoundIncludeMain;
 ConVar g_IgnoreRoundWinConditionsConVar;
 ConVar g_EnableWallHaxConVar;
+ConVar g_EnablePlayerOutlinesConVar;
 ConVar g_IgnoreRedPlayerDeathSwapConVar;
 ConVar g_PlayerVoiceDistanceConVar;
 ConVar g_PlayerVoiceWallScaleConVar;
@@ -699,6 +701,8 @@ ConVar g_NightvisionEnabledConVar;
 ConVar g_GhostModeConnectionConVar;
 ConVar g_GhostModeConnectionCheckConVar;
 ConVar g_GhostModeConnectionToleranceConVar;
+ConVar g_GhostModeVisibleConVar;
+ConVar g_GhostModeVisibleAlphaConVar;
 ConVar g_IntroEnabledConVar;
 ConVar g_IntroDefaultHoldTimeConVar;
 ConVar g_IntroDefaultFadeTimeConVar;
@@ -735,6 +739,7 @@ ConVar g_DifficultyVoteOptionsConVar;
 ConVar g_DifficultyVoteRandomConVar;
 ConVar g_DifficultyNoGracePageConVar;
 ConVar g_FileCheckConVar;
+ConVar g_ChatBossAdded;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -944,6 +949,8 @@ public void OnMapStart()
 
 	PrecacheModel(SF2_FLASHLIGHT_BEAM_MATERIAL);
 	g_FlashlightHaloModel = PrecacheModel(SF2_FLASHLIGHT_HALO_MATERIAL, true);
+	
+	SF2_SetGhostModel(PrecacheModel(GHOST_MODEL));
 
 	SF2MapEntity_OnMapStart();
 }
@@ -1373,6 +1380,8 @@ static void StopPlugin()
 	g_RenevantWallHax = false;
 
 	BossProfilesOnMapEnd();
+	
+	//Tutorial_OnMapEnd();
 
 	if (g_FuncNavPrefer != null)
 	{
@@ -2013,11 +2022,13 @@ static Action Timer_RoundMessages(Handle timer)
 		}
 		case 1:
 		{
-			CPrintToChatAll("%t", "SF2 Ad Message 1");
+			//CPrintToChatAll("%t", "SF2 Ad Message 1");
+			CPrintToChatAll("%t", "SF2 Ad Message 2");
+			
 		}
 		case 2:
 		{
-			CPrintToChatAll("%t", "SF2 Ad Message 2");
+			CPrintToChatAll("{dodgerblue}Need a better rundown of the class perks? Try reading this: {lightblue}https://firefriendly.fandom.com/wiki/Slender_Class_Perks{default}");
 		}
 	}
 
@@ -2798,11 +2809,11 @@ MRESReturn Hook_EntityShouldTransmit(int entity, DHookReturn returnHandle, DHook
 			returnHandle.Value = FL_EDICT_ALWAYS; // Should always transmit, but our SetTransmit hook gets the final say.
 			return MRES_Supercede;
 		}
-		else if (client.IsInGhostMode)
+		/*else if (client.IsInGhostMode)
 		{
 			returnHandle.Value = FL_EDICT_DONTSEND;
 			return MRES_Supercede;
-		}
+		}*/
 	}
 	else
 	{
@@ -4671,15 +4682,28 @@ static Action Hook_SlenderObjectSetTransmitEx(int ent, int other)
 			return Plugin_Handled;
 		}
 	}
-	if (IsClientInGhostMode(other) || g_PlayerProxy[other])
+	if (g_PlayerProxy[other])
 	{
 		return Plugin_Handled;
 	}
 	if (IsValidClient(other))
 	{
-		if (ClientGetDistanceFromEntity(other, ent) <= SquareFloat(320.0) || GetClientTeam(other) == TFTeam_Spectator)
+		if (!IsClientInGhostMode(other))
 		{
-			return Plugin_Handled;
+			if (GetClientTeam(other) != TFTeam_Spectator)
+			{
+				if (ClientGetDistanceFromEntity(other, ent) <= SquareFloat(320.0))
+				{
+					return Plugin_Handled;
+				}
+			}
+			else
+			{
+				if (!IsValidEdict(GetEntPropEnt(other, Prop_Send, "m_hObserverTarget")))
+				{
+					return Plugin_Handled;
+				}
+			}
 		}
 	}
 
@@ -7835,7 +7859,7 @@ static ArrayList GetNewBossRoundProfileList()
 		g_BossMainConVar.GetString(mainBoss, sizeof(mainBoss));
 
 		int index = bossList.FindString(mainBoss);
-		if (index != -1)
+		if (index != -1 && g_NewBossRoundIncludeMain.IntValue != 1)
 		{
 			// Main boss exists; remove him from the list.
 			bossList.Erase(index);
@@ -8337,6 +8361,11 @@ void InitializeNewGame()
 				{
 					// Players currently in the "game" still have to be respawned.
 					TF2_RespawnPlayer(i);
+					SetEntPropFloat(i, Prop_Send, "m_flModelScale", 1.0);
+					SetEntPropFloat(i, Prop_Send, "m_flHeadScale", 1.0);
+					SetEntPropFloat(i, Prop_Send, "m_flTorsoScale", 1.0);
+					SetEntPropFloat(i, Prop_Send, "m_flHandScale", 1.0);
+					Client_ModelOverrides(i);
 				}
 			}
 		}
