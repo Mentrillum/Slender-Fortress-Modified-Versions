@@ -2825,7 +2825,7 @@ void ClientSetGhostModeState(int client, bool state)
 			SetEntProp(client, Prop_Data, "m_takedamage", DAMAGE_YES);
 			TF2_RemoveCondition(client, TFCond_Stealthed);
 			SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
-			//SetEntityGravity(client, 1.0);
+			SetEntityGravity(client, 1.0);
 			SetEntProp(client, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_PLAYER);
 			SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
 			SetEntityFlags(client, GetEntityFlags(client) &~ FL_NOTARGET);
