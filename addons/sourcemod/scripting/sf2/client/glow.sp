@@ -192,7 +192,7 @@ static bool ShouldBeVisibleToPlayer(SF2_BasePlayer client, SF2_BasePlayer other)
 				return false;
 			}
 
-			if ((SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax) || g_EnablePlayerOutlinesConVar.BoolValue)
+			if (SF_SpecialRound(SPECIALROUND_WALLHAX) || g_EnableWallHaxConVar.BoolValue || g_RenevantWallHax)
 			{
 				return true;
 			}

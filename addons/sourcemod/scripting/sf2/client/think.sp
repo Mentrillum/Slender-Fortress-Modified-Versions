@@ -49,13 +49,10 @@ void Hook_ClientPreThink(int client)
 	{
 		if (!IsRoundEnding() && !IsRoundInWarmup() && !DidClientEscape(client))
 		{
-			if (g_PlayerProxy[client])
-			{
-				SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
-				SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
-				SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
-				SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-			}
+			SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
+			SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
+			SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
+			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 
 			int roundState = view_as<int>(GameRules_GetRoundState());
 			TFClassType class = TF2_GetPlayerClass(client);
