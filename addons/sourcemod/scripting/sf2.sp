@@ -2216,14 +2216,10 @@ static Action Timer_RoundMessages(Handle timer)
 		{
 			CPrintToChatAll("%t", "SF2 Ad Message 2");
 		}
-		case 3:
-		{
-			CPrintToChatAll("{dodgerblue}Need a better rundown of the class perks? Try reading this: {lightblue}https://firefriendly.fandom.com/wiki/Slender_Class_Perks{default}");
-		}
 	}
 
 	g_RoundMessagesNum++;
-	if (g_RoundMessagesNum > 3)
+	if (g_RoundMessagesNum > 2)
 	{
 		g_RoundMessagesNum = 0;
 	}
