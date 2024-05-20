@@ -15,6 +15,7 @@ static int g_PlayerGroupLeader[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
 static int g_PlayerGroupID[SF2_MAX_PLAYER_GROUPS] = { -1, ... };
 static int g_PlayerGroupQueuePoints[SF2_MAX_PLAYER_GROUPS];
 static int g_PlayerGroupPlaying[SF2_MAX_PLAYER_GROUPS] = { false, ... };
+static bool g_PlayerGroupOptInHarder[SF2_MAX_PLAYER_GROUPS] = { false, ... };
 static StringMap g_PlayerGroupNames;
 static bool g_PlayerGroupInvitedPlayer[SF2_MAX_PLAYER_GROUPS][MAXTF2PLAYERS];
 static int g_PlayerGroupInvitedPlayerCount[SF2_MAX_PLAYER_GROUPS][MAXTF2PLAYERS];
@@ -43,7 +44,7 @@ int GetPlayerGroupFromID(int groupID)
 	return -1;
 }
 
-void SendPlayerGroupInvitation(int client,int groupID,int inviter=-1)
+void SendPlayerGroupInvitation(int client, int groupID, int inviter = -1)
 {
 	if (!IsValidClient(client) || !IsClientParticipating(client))
 	{
@@ -133,18 +134,18 @@ void SendPlayerGroupInvitation(int client,int groupID,int inviter=-1)
 		strcopy(leaderName, sizeof(leaderName), "nobody");
 	}
 
-	Handle menu = CreateMenu(Menu_GroupInvite);
-	SetMenuTitle(menu, "%t%T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, leaderName, groupName);
+	Menu menu = new Menu(Menu_GroupInvite);
+	menu.SetTitle("%t%T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, leaderName, groupName);
 
 	char groupIDString[64];
 	FormatEx(groupIDString, sizeof(groupIDString), "%d", groupID);
 
 	char buffer[256];
 	FormatEx(buffer, sizeof(buffer), "%T", "Yes", client);
-	AddMenuItem(menu, groupIDString, buffer);
+	menu.AddItem(groupIDString, buffer);
 	FormatEx(buffer, sizeof(buffer), "%T", "No", client);
-	AddMenuItem(menu, "0", buffer);
-	DisplayMenu(menu, client, 10);
+	menu.AddItem("0", buffer);
+	menu.Display(client, 10);
 
 	SetPlayerGroupInvitedPlayer(groupIndex, client, true);
 	SetPlayerGroupInvitedPlayerCount(groupIndex, client, GetPlayerGroupInvitedPlayerCount(groupIndex, client) + 1);
@@ -156,7 +157,7 @@ void SendPlayerGroupInvitation(int client,int groupID,int inviter=-1)
 	}
 }
 
-static int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_GroupInvite(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -167,7 +168,7 @@ static int Menu_GroupInvite(Handle menu, MenuAction action,int param1,int param2
 		if (param2 == 0)
 		{
 			char groupID[64];
-			GetMenuItem(menu, param2, groupID, sizeof(groupID));
+			menu.GetItem(param2, groupID, sizeof(groupID));
 			int groupIndex = GetPlayerGroupFromID(StringToInt(groupID));
 			if (IsPlayerGroupActive(groupIndex))
 			{
@@ -219,20 +220,20 @@ void DisplayResetGroupQueuePointsMenuToClient(int client)
 		return;
 	}
 
-	Handle menu = CreateMenu(Menu_ResetGroupQueuePoints);
-	SetMenuTitle(menu, "%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
+	Menu menu = new Menu(Menu_ResetGroupQueuePoints);
+	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
 
 	char buffer[256];
 	FormatEx(buffer, sizeof(buffer), "%T", "Yes", client);
-	AddMenuItem(menu, "0", buffer);
+	menu.AddItem("0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%T", "No", client);
-	AddMenuItem(menu, "0", buffer);
+	menu.AddItem("0", buffer);
 
-	SetMenuExitBackButton(menu, true);
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-static int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,int param2)
+static int Menu_ResetGroupQueuePoints(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -240,7 +241,10 @@ static int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,
 	}
 	else if (action == MenuAction_Cancel)
 	{
-		if (param2 == MenuCancel_ExitBack) DisplayAdminGroupMenuToClient(param1);
+		if (param2 == MenuCancel_ExitBack)
+		{
+			DisplayAdminGroupMenuToClient(param1);
+		}
 	}
 	else if (action == MenuAction_Select)
 	{
@@ -266,6 +270,99 @@ static int Menu_ResetGroupQueuePoints(Handle menu, MenuAction action,int param1,
 			else
 			{
 				CPrintToChat(param1, "%T", "SF2 Not Group Leader", param1);
+			}
+		}
+
+		DisplayAdminGroupMenuToClient(param1);
+	}
+	return 0;
+}
+
+void DisplayOptInHardDifficultiesToClient(int client)
+{
+	int groupIndex = ClientGetPlayerGroup(client);
+	if (!IsPlayerGroupActive(groupIndex))
+	{
+		// His group isn't valid anymore. Take him back to the main menu.
+		DisplayGroupMainMenuToClient(client);
+		CPrintToChat(client, "%T", "SF2 Group Does Not Exist", client);
+		return;
+	}
+
+	if (GetPlayerGroupLeader(groupIndex) != client)
+	{
+		DisplayAdminGroupMenuToClient(client);
+		CPrintToChat(client, "%T", "SF2 Not Group Leader", client);
+		return;
+	}
+
+	Menu menu = new Menu(Menu_OptInHarderDifficulties);
+	menu.SetTitle("%t Opt in to voting higher difficulties\n \nAre you sure you want your group to opt in being able to\nvote for Nightmare + Apollyon? Your group must\nbe 100%% filled to be able to vote for Nightmare + Apollyon.\n \n", "SF2 Prefix");
+
+	char buffer[256];
+	FormatEx(buffer, sizeof(buffer), "Opt in");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "Opt out");
+	menu.AddItem("0", buffer);
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+static int Menu_OptInHarderDifficulties(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			DisplayAdminGroupMenuToClient(param1);
+		}
+	}
+	else if (action == MenuAction_Select)
+	{
+		int groupIndex = ClientGetPlayerGroup(param1);
+		if (!IsPlayerGroupActive(groupIndex) || GetPlayerGroupLeader(groupIndex) != param1)
+		{
+			CPrintToChat(param1, "%T", "SF2 Not Group Leader", param1);
+		}
+		else
+		{
+			switch (param2)
+			{
+				case 0:
+				{
+					SetPlayerGroupOptInHarder(groupIndex, true);
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!IsValidClient(i))
+						{
+							continue;
+						}
+						if (ClientGetPlayerGroup(i) == groupIndex)
+						{
+							CPrintToChat(i, "Your group is now opted in to vote for Nightmare + Apollyon.");
+						}
+					}
+				}
+				case 1:
+				{
+					SetPlayerGroupOptInHarder(groupIndex, false);
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!IsValidClient(i))
+						{
+							continue;
+						}
+						if (ClientGetPlayerGroup(i) == groupIndex)
+						{
+							CPrintToChat(i, "Your group is now opted out to vote for Nightmare + Apollyon.");
+						}
+					}
+				}
 			}
 		}
 
@@ -400,6 +497,7 @@ int CreatePlayerGroup()
 		SetPlayerGroupLeader(index, -1);
 		SetPlayerGroupName(index, "");
 		SetPlayerGroupPlaying(index, false);
+		SetPlayerGroupOptInHarder(index, false);
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -425,6 +523,7 @@ void RemovePlayerGroup(int groupIndex)
 	SetPlayerGroupLeader(groupIndex, -1);
 	g_PlayerGroupActive[groupIndex] = false;
 	SetPlayerGroupID(groupIndex, -1);
+	SetPlayerGroupOptInHarder(groupIndex, false);
 }
 
 void ClearPlayerGroupMembers(int groupIndex)
@@ -462,9 +561,9 @@ int GetPlayerGroupID(int groupIndex)
 	return g_PlayerGroupID[groupIndex];
 }
 
-void SetPlayerGroupID(int groupIndex,int iID)
+void SetPlayerGroupID(int groupIndex, int id)
 {
-	g_PlayerGroupID[groupIndex] = iID;
+	g_PlayerGroupID[groupIndex] = id;
 }
 
 bool IsPlayerGroupActive(int groupIndex)
@@ -505,6 +604,16 @@ bool IsPlayerGroupPlaying(int groupIndex)
 void SetPlayerGroupPlaying(int groupIndex, bool toggle)
 {
 	g_PlayerGroupPlaying[groupIndex] = toggle;
+}
+
+bool IsPlayerGroupOptInHarder(int groupIndex)
+{
+	return (IsPlayerGroupActive(groupIndex) && g_PlayerGroupOptInHarder[groupIndex]);
+}
+
+void SetPlayerGroupOptInHarder(int groupIndex, bool value)
+{
+	g_PlayerGroupOptInHarder[groupIndex] = value;
 }
 
 int GetPlayerGroupLeader(int groupIndex)
@@ -578,17 +687,17 @@ bool HasPlayerGroupInvitedPlayer(int groupIndex,int client)
 	return g_PlayerGroupInvitedPlayer[groupIndex][client];
 }
 */
-void SetPlayerGroupInvitedPlayer(int groupIndex,int client, bool toggle)
+void SetPlayerGroupInvitedPlayer(int groupIndex, int client, bool toggle)
 {
 	g_PlayerGroupInvitedPlayer[groupIndex][client] = toggle;
 }
 
-int GetPlayerGroupInvitedPlayerCount(int groupIndex,int client)
+int GetPlayerGroupInvitedPlayerCount(int groupIndex, int client)
 {
 	return g_PlayerGroupInvitedPlayerCount[groupIndex][client];
 }
 
-void SetPlayerGroupInvitedPlayerCount(int groupIndex,int client,int amount)
+void SetPlayerGroupInvitedPlayerCount(int groupIndex, int client, int amount)
 {
 	g_PlayerGroupInvitedPlayerCount[groupIndex][client] = amount;
 }
@@ -598,9 +707,9 @@ float GetPlayerGroupInvitedPlayerTime(int groupIndex,int client)
 	return g_PlayerGroupInvitedPlayerTime[groupIndex][client];
 }
 
-void SetPlayerGroupInvitedPlayerTime(int groupIndex,int client, float flTime)
+void SetPlayerGroupInvitedPlayerTime(int groupIndex, int client, float time)
 {
-	g_PlayerGroupInvitedPlayerTime[groupIndex][client] = flTime;
+	g_PlayerGroupInvitedPlayerTime[groupIndex][client] = time;
 }
 
 int ClientGetPlayerGroup(int client)
@@ -608,7 +717,7 @@ int ClientGetPlayerGroup(int client)
 	return g_PlayerCurrentGroup[client];
 }
 
-void ClientSetPlayerGroup(int client,int groupIndex)
+void ClientSetPlayerGroup(int client, int groupIndex)
 {
 	int oldPlayerGroup = ClientGetPlayerGroup(client);
 	if (oldPlayerGroup == groupIndex)

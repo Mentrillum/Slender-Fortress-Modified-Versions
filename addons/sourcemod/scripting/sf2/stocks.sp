@@ -25,11 +25,11 @@
 #define HIDEHUD_INVEHICLE			( 1<<10 )
 #define HIDEHUD_BONUS_PROGRESS		( 1<<11 )	// Hide bonus progress display (for bonus map challenges)
 
-#define FFADE_IN            0x0001        // Just here so we don't pass 0 into the function
-#define FFADE_OUT           0x0002        // Fade out (not in)
-#define FFADE_MODULATE      0x0004        // Modulate (don't blend)
-#define FFADE_STAYOUT       0x0008        // ignores the duration, stays faded out until new ScreenFade message received
-#define FFADE_PURGE         0x0010        // Purges all other fades, replacing them with this one
+#define FFADE_IN			0x0001		// Just here so we don't pass 0 into the function
+#define FFADE_OUT			0x0002		// Fade out (not in)
+#define FFADE_MODULATE		0x0004		// Modulate (don't blend)
+#define FFADE_STAYOUT		0x0008		// ignores the duration, stays faded out until new ScreenFade message received
+#define FFADE_PURGE			0x0010		// Purges all other fades, replacing them with this one
 
 #define SF_FADE_IN				0x0001		// Fade in, not out
 #define SF_FADE_MODULATE		0x0002		// Modulate, don't blend
@@ -115,7 +115,16 @@ float HULL_HUMAN_MINS[3] = { -13.0, -13.0, 0.0 };
 float HULL_HUMAN_MAXS[3] = { 13.0, 13.0, 72.0 };
 
 float HULL_TF2PLAYER_MINS[3] = { -24.5, -24.5, 0.0 };
-float HULL_TF2PLAYER_MAXS[3] = { 24.5,  24.5, 83.0 };
+float HULL_TF2PLAYER_MAXS[3] = { 24.5, 24.5, 83.0 };
+
+//  ==========================================================
+//  Overrides
+//  ==========================================================
+bool TF2_IsPlayerInConditionEx(int client, TFCond condition)
+{
+	return g_ClientInCondition[client][condition];
+}
+#define TF2_IsPlayerInCondition TF2_IsPlayerInConditionEx
 
 //  ==========================================================
 //	Map Functions
@@ -123,32 +132,32 @@ float HULL_TF2PLAYER_MAXS[3] = { 24.5,  24.5, 83.0 };
 
 bool SF_IsSurvivalMap()
 {
-	return !!(g_IsSurvivalMap || (g_SurvivalMapConVar.IntValue == 1));
+	return (g_IsSurvivalMap || (g_SurvivalMapConVar.IntValue == 1));
 }
 
 bool SF_IsRaidMap()
 {
-	return !!(g_IsRaidMap || (g_RaidMapConVar.IntValue == 1));
+	return (g_IsRaidMap || (g_RaidMapConVar.IntValue == 1));
 }
 
 bool SF_IsProxyMap()
 {
-	return !!(g_IsProxyMap || (g_ProxyMapConVar.IntValue == 1));
+	return (g_IsProxyMap || (g_ProxyMapConVar.IntValue == 1));
 }
 
 bool SF_BossesChaseEndlessly()
 {
-	return !!(g_BossesChaseEndlessly || (g_BossChaseEndlesslyConVar.IntValue == 1));
+	return (g_BossesChaseEndlessly || (g_BossChaseEndlesslyConVar.IntValue == 1));
 }
 
 bool SF_IsBoxingMap()
 {
-	return !!(g_IsBoxingMap || (g_BoxingMapConVar.IntValue == 1));
+	return (g_IsBoxingMap || (g_BoxingMapConVar.IntValue == 1));
 }
 
 bool SF_IsSlaughterRunMap()
 {
-	return !!(g_IsSlaughterRunMap || (g_SlaughterRunMapConVar.IntValue == 1));
+	return (g_IsSlaughterRunMap || (g_SlaughterRunMapConVar.IntValue == 1));
 }
 /*
 int SDK_StartTouch(int entity, int iOther)
@@ -173,7 +182,7 @@ bool SDK_PointIsWithin(int func, float pos[3])
 {
 	if (g_SDKPointIsWithin != null)
 	{
-		return !!(SDKCall(g_SDKPointIsWithin, func, pos));
+		return (SDKCall(g_SDKPointIsWithin, func, pos)) != 0;
 	}
 
 	return false;
@@ -194,30 +203,17 @@ int EnsureEntRef(int entIndex)
 
 int SetEntityTransmitState(int entity, int newFlags)
 {
-    if (!IsValidEdict(entity))
-    {
+	if (!IsValidEdict(entity))
+	{
 		return 0;
 	}
 
-    int flags = GetEdictFlags(entity);
-    flags &= ~(FL_EDICT_ALWAYS | FL_EDICT_PVSCHECK | FL_EDICT_DONTSEND);
-    flags |= newFlags;
-    SetEdictFlags(entity, flags);
+	int flags = GetEdictFlags(entity);
+	flags &= ~(FL_EDICT_ALWAYS | FL_EDICT_PVSCHECK | FL_EDICT_DONTSEND);
+	flags |= newFlags;
+	SetEdictFlags(entity, flags);
 
-    return flags;
-}
-
-bool IsEntityClassname(int entIndex, const char[] classname, bool caseSensitive=true)
-{
-	if (!IsValidEntity(entIndex))
-	{
-		return false;
-	}
-
-	char buffer[256];
-	GetEntityClassname(entIndex, buffer, sizeof(buffer));
-
-	return strcmp(buffer, classname, caseSensitive) == 0;
+	return flags;
 }
 
 int FindEntityByTargetname(const char[] targetName, const char[] className, bool caseSensitive=true)
@@ -243,11 +239,11 @@ float GetVectorSquareMagnitude(const float vec1[3], const float vec2[3])
 
 /*float GetVectorAnglesTwoPoints(const float startPos[3], const float endPos[3], float angles[3])
 {
-    static float tmpVec[3];
-    tmpVec[0] = endPos[0] - startPos[0];
-    tmpVec[1] = endPos[1] - startPos[1];
-    tmpVec[2] = endPos[2] - startPos[2];
-    GetVectorAngles(tmpVec, angles);
+	static float tmpVec[3];
+	tmpVec[0] = endPos[0] - startPos[0];
+	tmpVec[1] = endPos[1] - startPos[1];
+	tmpVec[2] = endPos[2] - startPos[2];
+	GetVectorAngles(tmpVec, angles);
 }*/
 
 float SquareFloat(const float value)
@@ -262,90 +258,122 @@ float EntityDistanceFromEntity(int ent1, int ent2)
 		return -1.0;
 	}
 
-	float myPos[3],hisPos[3];
+	float myPos[3], hisPos[3];
 	GetEntPropVector(ent1, Prop_Data, "m_vecAbsOrigin", myPos);
 	GetEntPropVector(ent2, Prop_Data, "m_vecAbsOrigin", hisPos);
 	return GetVectorSquareMagnitude(myPos, hisPos);
 }
 
-bool IsSpaceOccupied(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
-{
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
-	return hit;
-}
-
 bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
 bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitCharactersOrEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
 bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
+	{
+		if (list.Get(i) == entity)
+		{
+			continue;
+		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	delete list;
 	return hit;
 }
 
 bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
 {
-	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
-	bool hit = TR_DidHit(trace);
-	ref = TR_GetEntityIndex(trace);
-	delete trace;
-	return hit;
-}
-
-int EntitySetAnimation(int entity, const char[] name, float playbackRate = 1.0, int forceSequence = -1, float cycle = 0.0)
-{
-	CBaseCombatCharacter animationEntity = CBaseCombatCharacter(entity);
-	int sequence = forceSequence;
-	Activity activity = TranslateProfileActivityFromName(name);
-	if (activity != ACT_INVALID)
+	bool check = false;
+	bool hit = false;
+	ArrayList list = new ArrayList();
+	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+	for (int i = 0; i < list.Length; i++)
 	{
-		sequence = animationEntity.SelectWeightedSequence(activity);
-	}
-	else if (activity == ACT_INVALID && forceSequence == -1)
-	{
-		sequence = animationEntity.LookupSequence(name);
-	}
-
-	if (sequence != -1)
-	{
-		animationEntity.ResetSequence(sequence);
-		if (cycle > 0.0)
+		if (list.Get(i) == entity)
 		{
-			animationEntity.SetPropFloat(Prop_Data, "m_flCycle", cycle);
+			continue;
 		}
+
+		check = true;
+		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
 	}
 
-	if (playbackRate < -12.0)
-	{
-		playbackRate = -12.0;
-	}
-	if (playbackRate > 12.0)
-	{
-		playbackRate = 12.0;
-	}
-	animationEntity.SetPropFloat(Prop_Send, "m_flPlaybackRate", playbackRate);
-	return sequence;
+	delete list;
+	return hit;
 }
 
 void CBaseNPC_RemoveAllLayers(int entity)
@@ -399,6 +427,18 @@ bool NavHasFuncPrefer(CNavArea area)
 	return false;
 }
 
+int LookupBone(int entity, const char[] name)
+{
+	int bone = -1;
+	bone = SDKCall(g_SDKLookupBone, entity, name);
+	return bone;
+}
+
+void GetBonePosition(int entity, int bone, float origin[3], float angles[3])
+{
+	SDKCall(g_SDKGetBonePosition, entity, bone, origin, angles);
+}
+
 //  =========================================================
 //  GLOW FUNCTIONS
 //  =========================================================
@@ -408,15 +448,15 @@ int TF2_CreateGlow(int entIndex)
 	char oldEntName[64];
 	GetEntPropString(entIndex, Prop_Data, "m_iName", oldEntName, sizeof(oldEntName));
 
-	char strName[126], strClass[64];
-	GetEntityClassname(entIndex, strClass, sizeof(strClass));
-	FormatEx(strName, sizeof(strName), "%s%i", strClass, entIndex);
-	DispatchKeyValue(entIndex, "targetname", strName);
+	char name[126], class[64];
+	GetEntityClassname(entIndex, class, sizeof(class));
+	FormatEx(name, sizeof(name), "%s%i", class, entIndex);
+	DispatchKeyValue(entIndex, "targetname", name);
 
 	int ent = CreateEntityByName("tf_glow");
-	DispatchKeyValue(ent, "target", strName);
-	FormatEx(strName, sizeof(strName), "tf_glow_%i", entIndex);
-	DispatchKeyValue(ent, "targetname", strName);
+	DispatchKeyValue(ent, "target", name);
+	FormatEx(name, sizeof(name), "tf_glow_%i", entIndex);
+	DispatchKeyValue(ent, "targetname", name);
 	DispatchKeyValue(ent, "Mode", "0");
 	DispatchSpawn(ent);
 
@@ -432,7 +472,7 @@ int TF2_CreateGlow(int entIndex)
 //	==========================================================
 
 //Credits to Linux_lover for this and signature.
-void SDK_PlaySpecificSequence(int client, const char[] strSequence)
+void SDK_PlaySpecificSequence(int client, const char[] sequence)
 {
 	if (g_SDKPlaySpecificSequence != null)
 	{
@@ -440,11 +480,11 @@ void SDK_PlaySpecificSequence(int client, const char[] strSequence)
 		static bool once = true;
 		if (once)
 		{
-			PrintToServer("(SDK_PlaySpecificSequence) Calling on player %N \"%s\"..", client, strSequence);
+			PrintToServer("(SDK_PlaySpecificSequence) Calling on player %N \"%s\"..", client, sequence);
 			once = false;
 		}
 		#endif
-		SDKCall(g_SDKPlaySpecificSequence, client, strSequence);
+		SDKCall(g_SDKPlaySpecificSequence, client, sequence);
 	}
 }
 
@@ -460,26 +500,26 @@ void KillClient(int client)
 {
 	if (client != -1)
 	{
-		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, view_as<float>({ 0.0, 0.0, 0.0 }));
+		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
 		ForcePlayerSuicide(client);
 		SetVariantInt(9001);
 		AcceptEntityInput(client, "RemoveHealth");
 	}
 }
 
-bool IsEntityAProjectile(int entity)
+void Explode(float pos[3], float damage, float radius, int attacker, const char[] explosionParticle = "ExplosionCore_MidAir")
 {
-	char classname[64];
-	if (IsValidEntity(entity) && GetEntityClassname(entity, classname, sizeof(classname)) &&
-	(strcmp(classname, "env_explosion") == 0 ||
-	strcmp(classname, "tf_projectile_sentryrocket") == 0 ||
-	strcmp(classname, "tf_projectile_rocket") == 0 ||
-	strcmp(classname, "tf_projectile_pipe") == 0 ||
-	strcmp(classname, "tf_projectile_arrow") == 0))
-	{
-		return true;
-	}
-	return false;
+	int bomb = CreateEntityByName("tf_generic_bomb");
+	DispatchKeyValueVector(bomb, "origin", pos);
+	DispatchKeyValueFloat(bomb, "damage", damage);
+	DispatchKeyValueFloat(bomb, "radius", radius);
+	DispatchKeyValue(bomb, "health", "1");
+	DispatchKeyValue(bomb, "friendlyfire", "1");
+	DispatchKeyValue(bomb, "explode_particle", explosionParticle);
+	SetEntityOwner(bomb, attacker);
+	DispatchSpawn(bomb);
+
+	SDKHooks_TakeDamage(bomb, attacker, attacker, 9001.0, DMG_BLAST);
 }
 
 void DestroyAllActiveWeapons(int client)
@@ -494,9 +534,6 @@ void DestroyAllActiveWeapons(int client)
 		RemoveEntity(weaponEnt);
 	}
 }
-
-#define SF_IGNORE_LOS	0x0004
-#define SF_NO_DISGUISED_SPY_HEALING	0x0008
 
 int SDK_SwitchWeapon(int client, int weapon)
 {
@@ -581,8 +618,8 @@ bool IsClientCritBoosted(int client)
 
 void TF2_StripWearables(int client)
 {
-	int entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_wearable")) > MaxClients)
+	int entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_wearable")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
@@ -590,8 +627,8 @@ void TF2_StripWearables(int client)
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_wearable_vm")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_wearable_vm")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
@@ -599,8 +636,8 @@ void TF2_StripWearables(int client)
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_powerup_bottle")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_powerup_bottle")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
@@ -608,8 +645,8 @@ void TF2_StripWearables(int client)
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_wearable_razorback")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_wearable_razorback")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
 		{
@@ -620,8 +657,8 @@ void TF2_StripWearables(int client)
 
 void TF2_DestroySpyWeapons()
 {
-	int entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_weapon_revolver")) > MaxClients)
+	int entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_weapon_revolver")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -629,8 +666,8 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_weapon_builder")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_weapon_builder")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -638,8 +675,8 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_weapon_knife")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_weapon_knife")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -647,8 +684,8 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "saxxy")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "saxxy")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -656,8 +693,8 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_weapon_pda_spy")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_weapon_pda_spy")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -665,8 +702,8 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_weapon_invis")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_weapon_invis")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -674,8 +711,8 @@ void TF2_DestroySpyWeapons()
 		}
 	}
 
-	entity = MaxClients+1;
-	while((entity = FindEntityByClassname(entity, "tf_weapon_sapper")) > MaxClients)
+	entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_weapon_sapper")) > MaxClients)
 	{
 		if (GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") < 1)
 		{
@@ -684,7 +721,7 @@ void TF2_DestroySpyWeapons()
 	}
 }
 
-void ClientSwitchToWeaponSlot(int client,int slot)
+void ClientSwitchToWeaponSlot(int client, int slot)
 {
 	int weaponEnt = GetPlayerWeaponSlot(client, slot);
 	if (weaponEnt <= MaxClients)
@@ -695,9 +732,9 @@ void ClientSwitchToWeaponSlot(int client,int slot)
 	SDK_SwitchWeapon(client, weaponEnt);
 }
 
-void ChangeClientTeamNoSuicide(int client,int team, bool respawn=true)
+void ChangeClientTeamNoSuicide(int client, int team, bool respawn = true)
 {
-	if (!IsClientInGame(client))
+	if (!IsValidClient(client))
 	{
 		return;
 	}
@@ -728,7 +765,7 @@ void UTIL_ClientScreenShake(int client, float amplitude, float duration, float f
 	}
 }
 
-void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int b,int a)
+void UTIL_ScreenFade(int client, int duration, int time, int flags, int r, int g, int b, int a)
 {
 	int clients[1];
 	Handle bf;
@@ -746,17 +783,34 @@ void UTIL_ScreenFade(int client,int duration,int time,int flags,int r,int g,int 
 	EndMessage();
 }
 
+bool IsClientInGameEx(int client)
+{
+	return g_ClientInGame[client];
+}
+
 bool IsValidClient(int client)
 {
-	return client > 0 && client <= MaxClients && IsClientInGame(client);
+	return client > 0 && client <= MaxClients && IsClientInGameEx(client);
 }
 
 void PrintToSourceTV(const char[] message)
 {
 	int client = GetClientOfUserId(g_SourceTVUserID);
-	if (MaxClients >= client > 0 && IsClientInGame(client) && IsClientSourceTV(client))
+	if (MaxClients >= client > 0 && IsValidClient(client) && IsClientSourceTV(client))
 	{
 		CPrintToChat(client, message);
+	}
+}
+
+void ShowHealthRegen(int client, int amount, int weaponIndex = -1)
+{
+	Event event = CreateEvent("player_healonhit");
+	if (event)
+	{
+		event.SetInt("amount", amount);
+		event.SetInt("entindex", client);
+		event.SetInt("weapon_def_index", weaponIndex);
+		event.Fire();
 	}
 }
 //	==========================================================
@@ -765,15 +819,25 @@ void PrintToSourceTV(const char[] message)
 bool TF2_IsMiniCritBuffed(int client)
 {
 	return (TF2_IsPlayerInCondition(client, TFCond_CritCola)
-        || TF2_IsPlayerInCondition(client, TFCond_CritHype)
-        || TF2_IsPlayerInCondition(client, TFCond_Buffed)
-    );
+		|| TF2_IsPlayerInCondition(client, TFCond_Buffed)
+	);
+}
+
+bool TF2_IsInvisible(int client)
+{
+	return ((TF2_IsPlayerInCondition(client, TFCond_Cloaked) ||
+		TF2_IsPlayerInCondition(client, TFCond_DeadRingered) ||
+		TF2_IsPlayerInCondition(client, TFCond_Stealthed))
+		&& !TF2_IsPlayerInCondition(client, TFCond_StealthedUserBuffFade)
+		&& !TF2_IsPlayerInCondition(client, TFCond_CloakFlicker));
 }
 
 bool IsTauntWep(int weaponEnt)
 {
 	int index = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-	if (index==37 || index==304 || index==5 || index==195 || index==43 || index==239 || index==310 || index==331 || index==426 || index==587 || index==656 || index==1084 || index==1100 || index == 1143)
+	if (index == 37 || index == 304 || index == 5 || index == 195 || index == 43 ||
+	index == 239 || index == 310 || index == 331 || index == 426 || index == 587 ||
+	index == 656 || index == 1084 || index == 1100 || index == 1143)
 	{
 		return true;
 	}
@@ -808,7 +872,7 @@ void ForceTeamWin(int team)
 	AcceptEntityInput(ent, "SetWinner");
 }
 
-Handle PrepareItemHandle(char[] classname,int index,int level,int quality, char[] att)
+Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att)
 {
 	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
 	TF2Items_SetClassname(item, classname);
@@ -846,20 +910,23 @@ void SpeakResponseConcept(int client, const char[] concept) //Thanks The Gaben
 void SpecialRoundGameText(const char[] message, const char[] icon = "")
 {
 	int entity = CreateEntityByName("game_text_tf");
-	DispatchKeyValue(entity,"message", message);
-	DispatchKeyValue(entity,"display_to_team", "0");
-	DispatchKeyValue(entity,"icon", icon);
-	DispatchKeyValue(entity,"targetname", "game_text1");
-	DispatchKeyValue(entity,"background", "0");
+	DispatchKeyValue(entity, "message", message);
+	DispatchKeyValue(entity, "display_to_team", "0");
+	DispatchKeyValue(entity, "icon", icon);
+	DispatchKeyValue(entity, "targetname", "game_text1");
+	DispatchKeyValue(entity, "background", "0");
 	DispatchSpawn(entity);
 	AcceptEntityInput(entity, "Display", entity, entity); //The only time I keep this.
 	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 }
 // Removes wearables such as botkillers from weapons.
-void TF2_RemoveWeaponSlotAndWearables(int client,int slot)
+void TF2_RemoveWeaponSlotAndWearables(int client, int slot)
 {
 	int weaponEnt = GetPlayerWeaponSlot(client, slot);
-	if (!IsValidEntity(weaponEnt)) return;
+	if (!IsValidEntity(weaponEnt))
+	{
+		return;
+	}
 
 	int wearable = INVALID_ENT_REFERENCE;
 	while ((wearable = FindEntityByClassname(wearable, "tf_wearable")) != -1)
@@ -907,43 +974,165 @@ void TF2_StripContrackerOnly(int client)
 	}
 }
 
-void TE_Particle(int particleIndex, float origin[3]=NULL_VECTOR, float start[3]=NULL_VECTOR, float angles[3]=NULL_VECTOR, int entindex=-1, int attachtype=-1, int attachpoint=-1, bool resetParticles=true)
+void TE_Particle(int particleIndex,
+				float origin[3] = NULL_VECTOR,
+				float start[3] = NULL_VECTOR,
+				float angles[3] = NULL_VECTOR,
+				int entindex = -1,
+				int attachtype = -1,
+				int attachpoint = -1,
+				bool resetParticles = true,
+				bool controlPoint = false,
+				int controlPointAttachType = -1,
+				const float controlPointOffset[3] = NULL_VECTOR)
 {
-    TE_Start("TFParticleEffect");
-    TE_WriteFloat("m_vecOrigin[0]", origin[0]);
-    TE_WriteFloat("m_vecOrigin[1]", origin[1]);
-    TE_WriteFloat("m_vecOrigin[2]", origin[2]);
-    TE_WriteFloat("m_vecStart[0]", start[0]);
-    TE_WriteFloat("m_vecStart[1]", start[1]);
-    TE_WriteFloat("m_vecStart[2]", start[2]);
-    TE_WriteVector("m_vecAngles", angles);
-    TE_WriteNum("m_iParticleSystemIndex", particleIndex);
-    TE_WriteNum("entindex", entindex);
+	TE_Start("TFParticleEffect");
+	TE_WriteFloat("m_vecOrigin[0]", origin[0]);
+	TE_WriteFloat("m_vecOrigin[1]", origin[1]);
+	TE_WriteFloat("m_vecOrigin[2]", origin[2]);
+	TE_WriteFloat("m_vecStart[0]", start[0]);
+	TE_WriteFloat("m_vecStart[1]", start[1]);
+	TE_WriteFloat("m_vecStart[2]", start[2]);
+	TE_WriteVector("m_vecAngles", angles);
+	TE_WriteNum("m_iParticleSystemIndex", particleIndex);
+	TE_WriteNum("entindex", entindex);
 
-    if (attachtype != -1)
-    {
-        TE_WriteNum("m_iAttachType", attachtype);
-    }
-    if (attachpoint != -1)
-    {
-        TE_WriteNum("m_iAttachmentPointIndex", attachpoint);
-    }
-    TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
+	if (attachtype != -1)
+	{
+		TE_WriteNum("m_iAttachType", attachtype);
+	}
+	if (attachpoint != -1)
+	{
+		TE_WriteNum("m_iAttachmentPointIndex", attachpoint);
+	}
+	TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
+
+	TE_WriteNum("m_bControlPoint1", controlPoint);
+	if (controlPoint)
+	{
+		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", controlPointAttachType);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", controlPointOffset[0]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", controlPointOffset[1]);
+		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", controlPointOffset[2]);
+	}
+}
+
+/*void CreateParticle(char[] particle, float pos[3], float ang[3])
+{
+	int tblidx = FindStringTable("ParticleEffectNames");
+	char tmp[256];
+	int count = GetStringTableNumStrings(tblidx);
+	int stridx = INVALID_STRING_INDEX;
+
+	for (int i = 0; i < count; i++)
+	{
+		ReadStringTable(tblidx, i, tmp, sizeof(tmp));
+		if (StrEqual(tmp, particle, false))
+		{
+			stridx = i;
+			break;
+		}
+	}
+
+	TE_Start("TFParticleEffect");
+	TE_WriteFloat("m_vecOrigin[0]", pos[0]);
+	TE_WriteFloat("m_vecOrigin[1]", pos[1]);
+	TE_WriteFloat("m_vecOrigin[2]", pos[2]);
+	TE_WriteVector("m_vecAngles", ang);
+	TE_WriteNum("m_iParticleSystemIndex", stridx);
+	TE_WriteNum("entindex", -1);
+	TE_WriteNum("m_iAttachType", 5);
+	TE_SendToAll();
+}*/
+
+void TE_SetupEffectDispatch(int effectName,
+	const float origin[3] = NULL_VECTOR,
+	const float start[3] = NULL_VECTOR,
+	const float angles[3] = NULL_VECTOR,
+	const float normal[3] = NULL_VECTOR,
+	int flags = 0,
+	float magnitude = 0.0,
+	float scale = 1.0,
+	int attachmentIndex = 0,
+	int surfaceProp = 0,
+	int material = 0,
+	int damageType = 0,
+	int hitbox = 0,
+	int entindex = 0,
+	int color = 0,
+	float radius = 0.0,
+	bool customColors = false,
+	bool controlPoint1 = false,
+	int cp1AttachType = -1,
+	const float cp1Offset[3] = NULL_VECTOR)
+{
+	TE_Start("EffectDispatch");
+	TE_WriteFloat("m_vOrigin[0]", origin[0]);
+	TE_WriteFloat("m_vOrigin[1]", origin[1]);
+	TE_WriteFloat("m_vOrigin[2]", origin[2]);
+	TE_WriteFloat("m_vStart[0]", start[0]);
+	TE_WriteFloat("m_vStart[1]", start[1]);
+	TE_WriteFloat("m_vStart[2]", start[2]);
+	TE_WriteVector("m_vAngles", angles);
+	TE_WriteVector("m_vNormal", normal);
+	TE_WriteNum("m_fFlags", flags);
+	TE_WriteFloat("m_flMagnitude", magnitude);
+	TE_WriteFloat("m_flScale", scale);
+	TE_WriteNum("m_nAttachmentIndex", attachmentIndex);
+	TE_WriteNum("m_nSurfaceProp", surfaceProp);
+	TE_WriteNum("m_iEffectName", effectName);
+	TE_WriteNum("m_nMaterial", material);
+	TE_WriteNum("m_nDamageType", damageType);
+	TE_WriteNum("m_nHitBox", hitbox);
+	TE_WriteNum("entindex", entindex);
+	TE_WriteNum("m_nColor", color);
+	TE_WriteFloat("m_flRadius", radius);
+	TE_WriteNum("m_bCustomColors", customColors);
+	TE_WriteNum("m_bControlPoint1", controlPoint1);
+	TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", cp1AttachType);
+	TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", cp1Offset[0]);
+	TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", cp1Offset[1]);
+	TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", cp1Offset[2]);
+}
+
+int GetEffectDispatchStringTableIndex(const char[] effectName)
+{
+	static int table = INVALID_STRING_TABLE;
+	if (table == INVALID_STRING_TABLE)
+	{
+		table = FindStringTable("EffectDispatch");
+	}
+
+	int index = FindStringIndex2(table, effectName);
+	if (index == INVALID_STRING_INDEX)
+	{
+		int numStrings = GetStringTableNumStrings(table);
+		if (numStrings >= GetStringTableMaxStrings(table))
+		{
+			return INVALID_STRING_INDEX;
+		}
+
+		AddToStringTable(table, effectName);
+		index = numStrings;
+	}
+
+	return index;
 }
 
 void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float duration, float radius, int command, bool airShake)
 {
-	for(int i=1; i<=MaxClients; i++)
+	for(int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && !IsFakeClient(i) && !IsClientInGhostMode(i))
+		SF2_BasePlayer player = SF2_BasePlayer(i);
+		if (player.IsValid && !player.IsBot && !player.IsInGhostMode)
 		{
-			if (!airShake && command == 0 && !(GetEntityFlags(i) && FL_ONGROUND))
+			if (!airShake && command == 0 && !(player.GetFlags() && FL_ONGROUND))
 			{
 				continue;
 			}
 
 			float playerPos[3];
-			GetClientAbsOrigin(i, playerPos);
+			player.GetAbsOrigin(playerPos);
 
 			float localAmplitude = ComputeShakeAmplitude(center, playerPos, amplitude, radius);
 
@@ -954,7 +1143,7 @@ void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float d
 
 			if (localAmplitude > 0 || command == 1)
 			{
-				Handle msg = StartMessageOne("Shake", i, USERMSG_RELIABLE);
+				Handle msg = StartMessageOne("Shake", player.index, USERMSG_RELIABLE);
 				if (msg != null)
 				{
 					BfWriteByte(msg, command);
@@ -997,7 +1186,7 @@ float ComputeShakeAmplitude(float center[3], float playerPos[3], float amplitude
 /**
  *	Converts a given timestamp into hours, minutes, and seconds.
  */
-void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
+void FloatToTimeHMS(float time, int &h=0, int &m=0, int &s=0)
 {
 	s = RoundFloat(time);
 	h = s / 3600;
@@ -1006,7 +1195,7 @@ void FloatToTimeHMS(float time,int &h=0,int &m=0,int &s=0)
 	s = s % 60;
 }
 
-int FixedUnsigned16(float value,int scale)
+int FixedUnsigned16(float value, int scale)
 {
 	int output;
 
@@ -1041,19 +1230,19 @@ float FloatClamp(float a, float min, float max)
 /**
  *	Linearly interpolates between a and b by t.
  */
-/*float LerpFloats(const float a, const float b, float t)
+float LerpFloats(const float a, const float b, float t)
 {
-    if (t < 0.0)
+	if (t < 0.0)
 	{
 		t = 0.0;
 	}
-    if (t > 1.0)
+	if (t > 1.0)
 	{
 		t = 1.0;
 	}
 
-    return a + (b - a) * t;
-}*/
+	return a + (b - a) * t;
+}
 
 //	==========================================================
 //	VECTOR FUNCTIONS
@@ -1071,18 +1260,18 @@ void CopyVector(const float copy[3], float dest[3])
 
 /*void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
 {
-    if (t < 0.0)
+	if (t < 0.0)
 	{
 		t = 0.0;
 	}
-    if (t > 1.0)
+	if (t > 1.0)
 	{
 		t = 1.0;
 	}
 
-    c[0] = a[0] + (b[0] - a[0]) * t;
-    c[1] = a[1] + (b[1] - a[1]) * t;
-    c[2] = a[2] + (b[2] - a[2]) * t;
+	c[0] = a[0] + (b[0] - a[0]) * t;
+	c[1] = a[1] + (b[1] - a[1]) * t;
+	c[2] = a[2] + (b[2] - a[2]) * t;
 }*/
 
 /**
@@ -1111,10 +1300,24 @@ void GetPositionForward(float pos[3], float ang[3], float returnValue[3], float 
 	float dir[3];
 	GetAngleVectors(ang, dir, NULL_VECTOR, NULL_VECTOR);
 	returnValue = pos;
-	for(int i=0; i<3; i++)
+	for(int i = 0; i < 3; i++)
 	{
 		returnValue[i] += dir[i] * distance;
 	}
+}
+
+bool IsEmptyVector(const float test[3])
+{
+	int count = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (test[i] == 0.0)
+		{
+			count++;
+		}
+	}
+
+	return count == 3;
 }
 
 //	==========================================================
@@ -1146,126 +1349,127 @@ void GetPositionForward(float pos[3], float ang[3], float returnValue[3], float 
 	return AngleNormalize(value);
 }*/
 
-float AngleNormalize(float angle)
-{
-	while (angle > 180.0)
-	{
-		angle -= 360.0;
-	}
-	while (angle < -180.0)
-	{
-		angle += 360.0;
-	}
-	return angle;
-}
-
-float AngleDiff(float firstAngle, float secondAngle)
-{
-	float diff = secondAngle - firstAngle;
-	return AngleNormalize(diff);
-}
 //Credits to Boikinov for figuring out these calculations I don't understand the thought process of
 float GetAngleBetweenVectors(const float vector1[3], const float vector2[3], const float direction[3])
 {
-    float vector1_n[3], vector2_n[3], direction_n[3], cross[3];
-    NormalizeVector(direction, direction_n);
-    NormalizeVector(vector1, vector1_n);
-    NormalizeVector(vector2, vector2_n);
-    float degree = ArcCosine(GetVectorDotProduct( vector1_n, vector2_n )) * 57.29577951;
-    GetVectorCrossProduct(vector1_n, vector2_n, cross);
+	float vector1_n[3], vector2_n[3], direction_n[3], cross[3];
+	NormalizeVector(direction, direction_n);
+	NormalizeVector(vector1, vector1_n);
+	NormalizeVector(vector2, vector2_n);
+	float degree = ArcCosine(GetVectorDotProduct(vector1_n, vector2_n)) * 57.29577951;
+	GetVectorCrossProduct(vector1_n, vector2_n, cross);
 
-    if (GetVectorDotProduct(cross, direction_n) < 0.0)
-    {
-        degree *= -1.0;
-    }
+	if (GetVectorDotProduct(cross, direction_n) < 0.0)
+	{
+		degree *= -1.0;
+	}
 
-    return degree;
+	return degree;
 }
 
 void RotateYaw(float angles[3], float degree)
 {
-    float direction[3], normal[3];
-    GetAngleVectors(angles, direction, NULL_VECTOR, normal);
+	float direction[3], normal[3];
+	GetAngleVectors(angles, direction, NULL_VECTOR, normal);
 
-    float sin = Sine(degree * 0.01745328);
-    float cos = Cosine(degree * 0.01745328);
-    float a = normal[0] * sin;
-    float b = normal[1] * sin;
-    float c = normal[2] * sin;
-    float x = direction[2] * b + direction[0] * cos - direction[1] * c;
-    float y = direction[0] * c + direction[1] * cos - direction[2] * a;
-    float z = direction[1] * a + direction[2] * cos - direction[0] * b;
-    direction[0] = x;
-    direction[1] = y;
-    direction[2] = z;
+	float sin = Sine(degree * 0.01745328);
+	float cos = Cosine(degree * 0.01745328);
+	float a = normal[0] * sin;
+	float b = normal[1] * sin;
+	float c = normal[2] * sin;
+	float x = direction[2] * b + direction[0] * cos - direction[1] * c;
+	float y = direction[0] * c + direction[1] * cos - direction[2] * a;
+	float z = direction[1] * a + direction[2] * cos - direction[0] * b;
+	direction[0] = x;
+	direction[1] = y;
+	direction[2] = z;
 
-    GetVectorAngles(direction, angles);
+	GetVectorAngles(direction, angles);
 
-    float up[3];
-    GetVectorVectors(direction, NULL_VECTOR, up);
+	float up[3];
+	GetVectorVectors(direction, NULL_VECTOR, up);
 
-    float roll = GetAngleBetweenVectors(up, normal, direction);
-    angles[2] += roll;
+	float roll = GetAngleBetweenVectors(up, normal, direction);
+	angles[2] += roll;
 }
 
 //	==========================================================
 //	TRACE FUNCTIONS
 //	==========================================================
 
-bool TraceRayDontHitEntity(int entity,int mask,any data)
+bool TraceRayDontHitEntity(int entity, int mask, any data)
 {
 	if (entity == data)
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
-	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc"))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-bool TraceRayDontHitPlayers(int entity,int mask, any data)
-{
-	if (entity > 0 && entity <= MaxClients)
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
+	return true;
+}
+
+bool TraceRayDontHitPlayers(int entity, int mask, any data)
+{
+	if (IsValidClient(entity))
 	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc"))
-		{
-			return false;
-		}
+		return false;
+	}
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
+	{
+		return false;
 	}
 	return true;
 }
 
-bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
+bool TraceRayDontHitPlayersOrEntity(int entity, int mask, any data)
 {
 	if (entity == data)
 	{
 		return false;
 	}
-	if (entity > 0 && entity <= MaxClients)
+	if (IsValidClient(entity))
 	{
 		return false;
 	}
-	if (IsValidEntity(entity))
+	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
 	{
-		char class[64];
-		GetEntityClassname(entity, class, sizeof(class));
-		if (strcmp(class, "base_npc"))
-		{
-			return false;
-		}
+		return false;
+	}
+
+	return true;
+}
+
+bool TraceRayDontHitPlayersOrEntityEx(int entity, int mask, any data)
+{
+	if (entity == data)
+	{
+		return false;
+	}
+	if (IsValidClient(entity))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool EnumerateEverything(int entIndex, ArrayList array)
+{
+	if (IsValidEntity(entIndex))
+	{
+		array.Push(entIndex);
+	}
+
+	return true;
+}
+
+bool EnumerateLivingPlayers(int entIndex, ArrayList players)
+{
+	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
+	{
+		players.Push(entIndex);
 	}
 
 	return true;
@@ -1277,11 +1481,7 @@ bool TraceRayDontHitPlayersOrEntity(int entity,int mask,any data)
 Action Timer_KillEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (ent == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-	if (!IsValidEntity(ent))
+	if (!ent || ent == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
@@ -1294,7 +1494,7 @@ Action Timer_KillEntity(Handle timer, any entref)
 Action Timer_KillEdict(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
-	if (!IsValidEdict(ent))
+	if (!ent || ent == INVALID_ENT_REFERENCE)
 	{
 		return Plugin_Stop;
 	}
@@ -1309,10 +1509,25 @@ Action Timer_KillEdict(Handle timer, any entref)
 //	==========================================================
 bool IsInfiniteFlashlightEnabled()
 {
-	return !!(g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || ((g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION)) && g_NightvisionType == 1));
+	return (g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || (IsNightVisionEnabled() && g_NightVisionType == 1));
 }
 
-int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
+bool IsInfiniteBlinkEnabled()
+{
+	return g_RoundInfiniteBlink || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
+}
+
+bool IsInfiniteSprintEnabled()
+{
+	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1);
+}
+
+bool IsNightVisionEnabled()
+{
+	return g_NightvisionEnabledConVar.BoolValue || SF_SpecialRound(SPECIALROUND_NIGHTVISION);
+}
+
+static int g_ArraySpecialRoundType[SPECIALROUND_MAXROUNDS];
 
 bool SF_SpecialRound(int specialRound)
 {
@@ -1320,9 +1535,9 @@ bool SF_SpecialRound(int specialRound)
 	{
 		return false;
 	}
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
-		if (specialRound==g_ArraySpecialRoundType[array])
+		if (specialRound == g_ArraySpecialRoundType[array])
 		{
 			return true;
 		}
@@ -1332,7 +1547,7 @@ bool SF_SpecialRound(int specialRound)
 
 void SF_AddSpecialRound(int specialRound)
 {
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		if (g_ArraySpecialRoundType[array] == 0 || g_ArraySpecialRoundType[array] == specialRound)
 		{
@@ -1344,28 +1559,11 @@ void SF_AddSpecialRound(int specialRound)
 
 void SF_RemoveSpecialRound(int specialRound)
 {
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		if (g_ArraySpecialRoundType[array] == specialRound)
 		{
 			g_ArraySpecialRoundType[array] = 0;
-			//Useless
-			/*if (array != (SPECIALROUND_MAXROUNDS-1))
-			{
-				for (int iArray2 = array;iArray2 < SPECIALROUND_MAXROUNDS; iArray2++)
-				{
-					if (g_ArraySpecialRoundType[iArray2+1] != 0)
-					{
-						g_ArraySpecialRoundType[iArray2] = g_ArraySpecialRoundType[iArray2+1];
-						g_ArraySpecialRoundType[iArray2+1] = 0;
-					}
-					else
-					{
-						g_ArraySpecialRoundType[iArray2] = 0;
-						break;
-					}
-				}
-			}*/
 			break;
 		}
 	}
@@ -1373,7 +1571,7 @@ void SF_RemoveSpecialRound(int specialRound)
 
 void SF_RemoveAllSpecialRound()
 {
-	for (int array = 0;array < SPECIALROUND_MAXROUNDS; array++)
+	for (int array = 0; array < SPECIALROUND_MAXROUNDS; array++)
 	{
 		g_ArraySpecialRoundType[array] = 0;
 	}
@@ -1384,7 +1582,19 @@ void SF_RemoveAllSpecialRound()
 //	==========================================================
 int GetLocalGlobalDifficulty(int npcIndex = -1)
 {
-	if (SF_IsBoxingMap())
+	if (npcIndex == -1)
+	{
+		return g_DifficultyConVar.IntValue;
+	}
+	SF2BossProfileData data;
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(npcIndex);
+	data = controller.GetProfileData();
+	SF2ChaserBossProfileData chaserData;
+	if (data.Type == SF2BossType_Chaser)
+	{
+		chaserData = view_as<SF2NPC_Chaser>(controller).GetProfileData();
+	}
+	if (data.IsPvEBoss || chaserData.BoxingBoss)
 	{
 		if (NPCGetUniqueID(npcIndex) != -1)
 		{
@@ -1398,120 +1608,38 @@ int GetLocalGlobalDifficulty(int npcIndex = -1)
 	return g_DifficultyConVar.IntValue;
 }
 
-bool DispatchParticleEffect(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
-									   int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
+float GetDifficultyModifier(int difficulty)
 {
-	char particleReal[PLATFORM_MAX_PATH];
-	FormatEx(particleReal, PLATFORM_MAX_PATH, "%s", particle);
-	if (particle[0] != '\0')
+	switch (difficulty)
 	{
-		int tblidx = FindStringTable("ParticleEffectNames");
-		if (tblidx == INVALID_STRING_TABLE)
+		case Difficulty_Hard:
 		{
-			LogError("Could not find string table: ParticleEffectNames");
-			return false;
-		}
-		char tmp[256];
-		int count = GetStringTableNumStrings(tblidx);
-		int stridx = INVALID_STRING_INDEX;
-		for (int i = 0; i < count; i++)
-		{
-			ReadStringTable(tblidx, i, tmp, sizeof(tmp));
-			if (strcmp(tmp, particleReal, false) == 0)
-			{
-				stridx = i;
-				break;
-			}
-		}
-		if (stridx == INVALID_STRING_INDEX)
-		{
-			LogError("Could not find particle: %s", particleReal);
-			return false;
+			return DIFFICULTYMODIFIER_HARD;
 		}
 
-		TE_Start("TFParticleEffect");
-		TE_WriteFloat("m_vecOrigin[0]", startPos[0]);
-		TE_WriteFloat("m_vecOrigin[1]", startPos[1]);
-		TE_WriteFloat("m_vecOrigin[2]", startPos[2]);
-		TE_WriteVector("m_vecAngles", angles);
-		TE_WriteNum("m_iParticleSystemIndex", stridx);
-		TE_WriteNum("entindex", entity);
-		TE_WriteNum("m_iAttachType", view_as<int>(attachType));
-		TE_WriteNum("m_iAttachmentPointIndex", attachmentPointIndex);
-		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);
-		TE_WriteNum("m_bControlPoint1", 0);
-		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 0);
-		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
-		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
-		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);
-		TE_SendToAll();
+		case Difficulty_Insane:
+		{
+			return DIFFICULTYMODIFIER_INSANE;
+		}
+
+		case Difficulty_Nightmare:
+		{
+			return DIFFICULTYMODIFIER_NIGHTMARE;
+		}
+
+		case Difficulty_Apollyon:
+		{
+			return DIFFICULTYMODIFIER_APOLLYON;
+		}
 	}
-	else
-	{
-		//LogError("There is no valid particle to use for effects.");
-		return false;
-	}
-	return true;
+
+	return DIFFICULTYMODIFIER_NORMAL;
 }
 
-bool DispatchParticleEffectBeam(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
-									   int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
+void PlayNightmareSound()
 {
-	char particleReal[PLATFORM_MAX_PATH];
-	FormatEx(particleReal, PLATFORM_MAX_PATH, "%s", particle);
-	if (particle[0] != '\0')
+	for (int i = 0; i < sizeof(g_SoundNightmareMode); i++)
 	{
-		int tblidx = FindStringTable("ParticleEffectNames");
-		if (tblidx == INVALID_STRING_TABLE)
-		{
-			LogError("Could not find string table: ParticleEffectNames");
-			return false;
-		}
-		char tmp[256];
-		int count = GetStringTableNumStrings(tblidx);
-		int stridx = INVALID_STRING_INDEX;
-		for (int i = 0; i < count; i++)
-		{
-			ReadStringTable(tblidx, i, tmp, sizeof(tmp));
-			if (strcmp(tmp, particleReal, false) == 0)
-			{
-				stridx = i;
-				break;
-			}
-		}
-		if (stridx == INVALID_STRING_INDEX)
-		{
-			LogError("Could not find particle: %s", particleReal);
-			return false;
-		}
-
-		TE_Start("TFParticleEffect");
-		TE_WriteFloat("m_vecOrigin[0]", startPos[0]);
-		TE_WriteFloat("m_vecOrigin[1]", startPos[1]);
-		TE_WriteFloat("m_vecOrigin[2]", startPos[2]);
-		TE_WriteVector("m_vecAngles", angles);
-		TE_WriteNum("m_iParticleSystemIndex", stridx);
-		TE_WriteNum("entindex", entity);
-		TE_WriteNum("m_iAttachType", view_as<int>(attachType));
-		TE_WriteNum("m_iAttachmentPointIndex", attachmentPointIndex);
-		TE_WriteNum("m_bResetParticles", resetAllParticlesOnEntity);
-		TE_WriteNum("m_bControlPoint1", 1);
-		TE_WriteNum("m_ControlPoint1.m_eParticleAttachment", 5);
-		TE_WriteFloat("m_ControlPoint1.m_vecOffset[0]", endPos[0]);
-		TE_WriteFloat("m_ControlPoint1.m_vecOffset[1]", endPos[1]);
-		TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", endPos[2]);
-		TE_SendToAll();
+		EmitSoundToAll(g_SoundNightmareMode[i]);
 	}
-	else
-	{
-		//LogError("There is no valid particle to use for effects.");
-		return false;
-	}
-	return true;
-}
-
-MRESReturn Hook_GlowUpdateTransmitState(int glow, DHookReturn returnHook)
-{
-	returnHook.Value = SetEntityTransmitState(glow, FL_EDICT_FULLCHECK);
-	return MRES_Supercede;
 }

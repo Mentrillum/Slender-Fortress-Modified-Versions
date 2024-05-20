@@ -6,9 +6,9 @@
 
 #pragma semicolon 1
 
-Handle g_MenuSettingsPvP;
+Menu g_MenuSettingsPvP;
 
-int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
+int Menu_SettingsPvP(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -19,15 +19,15 @@ int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
 				char buffer[512];
 				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings PvP Spawn Menu Title", param1);
 
-				Handle panel = CreatePanel();
-				SetPanelTitle(panel, buffer);
+				Panel panel = new Panel();
+				panel.SetTitle(buffer);
 
 				Format(buffer, sizeof(buffer), "%T", "Yes", param1);
-				DrawPanelItem(panel, buffer);
+				panel.DrawItem(buffer);
 				Format(buffer, sizeof(buffer), "%T", "No", param1);
-				DrawPanelItem(panel, buffer);
+				panel.DrawItem(buffer);
 
-				SendPanelToClient(panel, param1, Panel_SettingsPvPSpawn, 30);
+				panel.Send(param1, Panel_SettingsPvPSpawn, 30);
 				delete panel;
 			}
 			case 1:
@@ -35,13 +35,13 @@ int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
 				char buffer[512];
 				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings PvP Spawn Protection Title", param1);
 
-				Handle panel = CreatePanel();
-				SetPanelTitle(panel, buffer);
+				Panel panel = new Panel();
+				panel.SetTitle(buffer);
 
-				DrawPanelItem(panel, "On");
-				DrawPanelItem(panel, "Off");
+				panel.DrawItem("On");
+				panel.DrawItem("Off");
 
-				SendPanelToClient(panel, param1, Panel_SettingsPvPProtection, 30);
+				panel.Send(param1, Panel_SettingsPvPProtection, 30);
 				delete panel;
 			}
 		}
@@ -50,13 +50,13 @@ int Menu_SettingsPvP(Handle menu, MenuAction action,int  param1,int param2)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			DisplayMenu(g_MenuSettings, param1, 30);
+			g_MenuSettings.Display(param1, 30);
 		}
 	}
 	return 0;
 }
 
-static int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int param2)
+static int Panel_SettingsPvPSpawn(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -74,12 +74,12 @@ static int Panel_SettingsPvPSpawn(Handle menu, MenuAction action,int  param1,int
 			}
 		}
 
-		DisplayMenu(g_MenuSettings, param1, 30);
+		g_MenuSettings.Display(param1, 30);
 	}
 	return 0;
 }
 
-static int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param1,int param2)
+static int Panel_SettingsPvPProtection(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -97,7 +97,7 @@ static int Panel_SettingsPvPProtection(Handle menu, MenuAction action,int  param
 			}
 		}
 
-		DisplayMenu(g_MenuSettings, param1, 30);
+		g_MenuSettings.Display(param1, 30);
 	}
 	return 0;
 }

@@ -8,16 +8,39 @@
 static float g_TrapDespawnTimer[2049];
 static bool g_TrapClosed[2049];
 static int g_TrapState[2049];
-static int g_TrapMaster[2049];
+static SF2NPC_Chaser g_TrapMaster[2049];
 static bool g_TrapStartedOpenAnim[2049];
 static bool g_TrapDoIdleAnim[2049];
 static bool g_TrapAnimChange[2049];
 static Handle g_TrapTimer[2049];
 //State 0 = Idle, State 1 = Closed
 
-void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
+void SetupTraps()
 {
-	int slender = NPCGetEntIndex(bossIndex);
+	g_OnPlayerJumpPFwd.AddFunction(null, OnJump);
+}
+
+static void OnJump(SF2_BasePlayer client)
+{
+	if (client.IsEliminated || IsRoundEnding() || IsRoundInWarmup() || client.HasEscaped)
+	{
+		return;
+	}
+
+	if (client.IsTrapped)
+	{
+		client.TrapCount -= 1;
+	}
+	if (client.IsTrapped && client.TrapCount <= 1)
+	{
+		client.IsTrapped = false;
+		client.TrapCount = 0;
+	}
+}
+
+void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser controller)
+{
+	int slender = controller.EntIndex;
 	if (!slender || slender == INVALID_ENT_REFERENCE)
 	{
 		return;
@@ -41,7 +64,11 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 	float yaw = GetAngleBetweenVectors(product2, cross, tempAngles);
 	RotateYaw(newAngles, yaw - 90.0);
 
-	switch (NPCChaserGetTrapType(bossIndex))
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	int difficulty = controller.Difficulty;
+
+	switch (data.TrapType[difficulty])
 	{
 		case SF2BossTrapType_BearTrap:
 		{
@@ -49,13 +76,13 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 			if (trapEntity != -1)
 			{
 				TeleportEntity(trapEntity, newPos, newAngles, NULL_VECTOR);
-				SetEntityModel(trapEntity, g_SlenderTrapModel[bossIndex]);
+				SetEntityModel(trapEntity, data.TrapModel);
 				DispatchSpawn(trapEntity);
 				ActivateEntity(trapEntity);
 
 				SetEntProp(trapEntity, Prop_Send, "m_usSolidFlags", FSOLID_TRIGGER_TOUCH_DEBRIS|FSOLID_TRIGGER|FSOLID_NOT_SOLID|FSOLID_CUSTOMBOXTEST);
 				SetEntProp(trapEntity, Prop_Data, "m_nSolidType", SOLID_BBOX);
-				SetEntProp(trapEntity, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER); // COLLISION_GROUP_DEBRIS
+				SetEntityCollisionGroup(trapEntity, COLLISION_GROUP_DEBRIS_TRIGGER);
 
 				float mins[3], maxs[3];
 				mins[0] = -25.0;
@@ -72,21 +99,21 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 
 				AcceptEntityInput(trapEntity, "EnableCollision");
 
-				g_TrapMaster[trapEntity] = bossIndex;
+				g_TrapMaster[trapEntity] = controller;
 
 				g_TrapClosed[trapEntity] = false;
 				g_TrapAnimChange[trapEntity] = true;
 				SetEntProp(trapEntity, Prop_Data, "m_bSequenceLoops", false);
-				if (g_SlenderTrapAnimOpen[bossIndex][0] != '\0')
+				if (data.TrapAnimOpen[0] != '\0')
 				{
-					SetVariantString(g_SlenderTrapAnimOpen[bossIndex]);
+					SetVariantString(data.TrapAnimOpen);
 					AcceptEntityInput(trapEntity, "SetAnimation");
 					HookSingleEntityOutput(trapEntity, "OnAnimationDone", OnTrapOpenComplete, false);
 					g_TrapStartedOpenAnim[trapEntity] = true;
 				}
 				else
 				{
-					SetVariantString(g_SlenderTrapAnimIdle[bossIndex]);
+					SetVariantString(data.TrapAnimIdle);
 					AcceptEntityInput(trapEntity, "SetAnimation");
 				}
 
@@ -95,7 +122,7 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 				g_TrapDespawnTimer[trapEntity] = GetGameTime() + GetRandomFloat(20.0, 40.0);
 				g_TrapState[trapEntity] = 0;
 
-				EmitSoundToAll(g_SlenderTrapDeploySound[bossIndex], trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				EmitSoundToAll(data.TrapDeploySound, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 
 				SDKHook(trapEntity, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
 				g_TrapTimer[trapEntity] = CreateTimer(0.1, Timer_TrapThink, EntIndexToEntRef(trapEntity), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
@@ -106,11 +133,6 @@ void Trap_SpawnTrap(float position[3], float direction[3], int bossIndex)
 
 static Action Timer_TrapThink(Handle timer, any entref)
 {
-	if (!g_Enabled)
-	{
-		return Plugin_Stop;
-	}
-
 	int trapEntity = EntRefToEntIndex(entref);
 	if (!trapEntity || trapEntity == INVALID_ENT_REFERENCE)
 	{
@@ -122,7 +144,8 @@ static Action Timer_TrapThink(Handle timer, any entref)
 		return Plugin_Stop;
 	}
 
-	if (GetGameTime() >= g_TrapDespawnTimer[trapEntity])
+	SF2NPC_Chaser controller = g_TrapMaster[trapEntity];
+	if (GetGameTime() >= g_TrapDespawnTimer[trapEntity] || !controller.IsValid())
 	{
 		Trap_Despawn(trapEntity);
 	}
@@ -132,17 +155,31 @@ static Action Timer_TrapThink(Handle timer, any entref)
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer player = SF2_BasePlayer(i);
-			if (!player.IsValid ||
-				!player.IsAlive ||
-				player.IsEliminated ||
-				player.IsInGhostMode ||
-				player.HasEscaped)
+			if (!player.IsValid)
 			{
 				continue;
 			}
 
+			if (!player.IsAlive ||
+				player.IsInDeathCam ||
+				player.IsInGhostMode ||
+				player.HasEscaped ||
+				player.InCondition(view_as<TFCond>(130)) ||
+				player.Team == TFTeam_Spectator)
+			{
+				continue;
+			}
+
+			if (!g_Enabled)
+			{
+				if (player.GetProp(Prop_Data, "m_iTeamNum") == controller.DefaultTeam)
+				{
+					continue;
+				}
+			}
+
 			float entPos[3], otherPos[3];
-			player.GetPropVector(Prop_Data, "m_vecAbsOrigin", otherPos);
+			player.GetAbsOrigin(otherPos);
 			GetEntPropVector(trapEntity, Prop_Data, "m_vecAbsOrigin", entPos);
 			float zPos = otherPos[2] - entPos[2];
 			float distance = GetVectorSquareMagnitude(otherPos, entPos);
@@ -167,16 +204,17 @@ static Action Timer_TrapThink(Handle timer, any entref)
 						player.TrapCount = GetRandomInt(2, 4);
 					}
 				}
-				if (!g_PlayerHints[player.index][PlayerHint_Trap])
+				if (!player.HasHint(PlayerHint_Trap))
 				{
 					player.ShowHint(PlayerHint_Trap);
 				}
-				SDKHooks_TakeDamage(player.index, player.index, player.index, 10.0, 128);
+				player.TakeDamage(true, _, _, 10.0, 128);
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
-				int bossIndex = g_TrapMaster[trapEntity];
-				EmitSoundToAll(g_SlenderTrapHitSound[bossIndex], trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
-				SetVariantString(g_SlenderTrapAnimClose[bossIndex]);
+				SF2ChaserBossProfileData data;
+				data = controller.GetProfileData();
+				EmitSoundToAll(data.TrapCatchSound, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				SetVariantString(data.TrapAnimClose);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 				AcceptEntityInput(trapEntity, "DisableCollision");
 				g_TrapClosed[trapEntity] = true;
@@ -195,27 +233,33 @@ static void TrapUpdateAnimation(int trapEntity)
 		return;
 	}
 	int state = g_TrapState[trapEntity];
-	int bossIndex = g_TrapMaster[trapEntity];
+	SF2NPC_Chaser controller = g_TrapMaster[trapEntity];
+	if (!controller.IsValid())
+	{
+		return;
+	}
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
 	switch (state)
 	{
 		case 0:
 		{
-			if (!g_TrapStartedOpenAnim[trapEntity] && g_SlenderTrapAnimOpen[bossIndex][0] != '\0')
+			if (!g_TrapStartedOpenAnim[trapEntity] && data.TrapAnimOpen[0] != '\0')
 			{
-				SetVariantString(g_SlenderTrapAnimOpen[bossIndex]);
+				SetVariantString(data.TrapAnimOpen);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 				HookSingleEntityOutput(trapEntity, "OnAnimationDone", OnTrapOpenComplete, true);
 				g_TrapStartedOpenAnim[trapEntity] = true;
 			}
 			else if (g_TrapDoIdleAnim[trapEntity])
 			{
-				SetVariantString(g_SlenderTrapAnimIdle[bossIndex]);
+				SetVariantString(data.TrapAnimIdle);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 			}
 		}
 		case 1:
 		{
-			SetVariantString(g_SlenderTrapAnimClose[bossIndex]);
+			SetVariantString(data.TrapAnimClose);
 			AcceptEntityInput(trapEntity, "SetAnimation");
 			AcceptEntityInput(trapEntity, "DisableCollision");
 		}
@@ -232,31 +276,8 @@ static void OnTrapOpenComplete(const char[] output, int caller, int activator, f
 		g_TrapDoIdleAnim[caller] = true;
 	}
 }
-/*
-public Action Hook_TrapTouch(int trapEntity, int client)
-{
-	if (MaxClients >= client > 0 && IsClientInGame(client))
-	{
-		if (!g_PlayerEliminated[client] && GetClientTeam(client) == TFTeam_Red && !g_TrapClosed[trapEntity])
-		{
-			g_PlayerTrapped[client] = true;
-			if (!g_PlayerHints[client][PlayerHint_Trap])
-			{
-				ClientShowHint(client, PlayerHint_Trap);
-			}
-			SDKHooks_TakeDamage(client, client, client, 10.0, 128);
-			g_PlayerTrapCount[client] = GetRandomInt(2, 4);
-			g_TrapClosed[trapEntity] = true;
-			g_TrapState[trapEntity] = 1;
-			EmitSoundToAll(TRAP_CLOSE, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
-			AcceptEntityInput(trapEntity, "DisableCollision");
-		}
-		if (IsClientInGhostMode(client)) return Plugin_Handled;
-	}
-	return Plugin_Continue;
-}
-*/
-static Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,float &damage,int &damagetype,int &weapon, float damageForce[3], float damagePosition[3],int damagecustom)
+
+static Action Hook_TrapOnTakeDamage(int trapEntity, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_Enabled)
 	{
@@ -272,9 +293,11 @@ static Action Hook_TrapOnTakeDamage(int trapEntity,int &attacker,int &inflictor,
 				g_TrapClosed[trapEntity] = true;
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
-				int bossIndex = g_TrapMaster[trapEntity];
-				EmitSoundToAll(g_SlenderTrapMissSound[bossIndex], trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
-				SetVariantString(g_SlenderTrapAnimClose[bossIndex]);
+				SF2NPC_Chaser controller = g_TrapMaster[trapEntity];
+				SF2ChaserBossProfileData data;
+				data = controller.GetProfileData();
+				EmitSoundToAll(data.TrapMissSound, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				SetVariantString(data.TrapAnimClose);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 				AcceptEntityInput(trapEntity, "DisableCollision");
 				if (g_TrapDespawnTimer[trapEntity] > 5.0)

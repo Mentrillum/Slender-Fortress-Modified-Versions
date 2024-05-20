@@ -39,8 +39,9 @@ methodmap SF2PageMusicEntity < CBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bLayered");
+			return this.GetProp(Prop_Data, "sf2_bLayered") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bLayered", value);
@@ -53,6 +54,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		{
 			return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hRanges"));
 		}
+
 		public set(ArrayList value)
 		{
 			this.SetProp(Prop_Data, "sf2_hRanges", value);

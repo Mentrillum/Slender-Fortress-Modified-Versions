@@ -40,6 +40,7 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iSkin");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iSkin", value);
@@ -52,6 +53,7 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flModelScale");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flModelScale", value);
@@ -64,6 +66,7 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iBodyGroup");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iBodyGroup", value);
@@ -106,6 +109,7 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 		{
 			this.GetProp(Prop_Data, "sf2_iCollectSoundPitch");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iCollectSoundPitch", value);
@@ -160,13 +164,13 @@ static void OnSpawn(int entity)
 	char buffer[PLATFORM_MAX_PATH];
 
 	thisEnt.GetPageModel(buffer, sizeof(buffer));
-	if (buffer[0])
+	if (buffer[0] != '\0')
 	{
 		PrecacheModel(buffer);
 	}
 
 	thisEnt.GetPageCollectSound(buffer, sizeof(buffer));
-	if (buffer[0])
+	if (buffer[0] != '\0')
 	{
 		PrecacheSound(buffer);
 	}

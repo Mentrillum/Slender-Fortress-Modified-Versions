@@ -56,6 +56,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return view_as<ArrayList>(this.GetProp(Prop_Data, "sf2_hBosses"));
 		}
+
 		public set(ArrayList value)
 		{
 			this.SetProp(Prop_Data, "sf2_hBosses", value);
@@ -68,6 +69,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_iSpawnCount");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_iSpawnCount", value);
@@ -80,6 +82,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flSpawnRadius");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flSpawnRadius", value);
@@ -92,6 +95,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetProp(Prop_Data, "sf2_nMaxLiveChildren");
 		}
+
 		public set(int value)
 		{
 			this.SetProp(Prop_Data, "sf2_nMaxLiveChildren", value);
@@ -104,6 +108,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetPropEnt(Prop_Data, "sf2_iDestinationEntity");
 		}
+
 		public set(int entity)
 		{
 			this.SetPropEnt(Prop_Data, "sf2_iDestinationEntity", IsValidEntity(entity) ? entity : INVALID_ENT_REFERENCE);
@@ -136,6 +141,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimRate");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimRate", value);
@@ -148,6 +154,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 		{
 			return this.GetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration");
 		}
+
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "sf2_flSpawnAnimDuration", value);
@@ -209,9 +216,9 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 			pos[1] += vec[1];
 		}
 
-		SpawnSlender(view_as<SF2NPC_BaseNPC>(bossIndex), pos);
+		SpawnSlender(SF2NPC_BaseNPC(bossIndex), pos);
 
-		CBaseAnimating bossEntity = CBaseAnimating(NPCGetEntIndex(bossIndex));
+		CBaseCombatCharacter bossEntity = CBaseCombatCharacter(NPCGetEntIndex(bossIndex));
 		if (bossEntity.IsValid())
 		{
 			if (!(spawnFlags & SF_SF2_BOSS_MAKER_NODROP))
@@ -245,15 +252,8 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 				if (spawnAnim[0] != '\0')
 				{
-					float playbackRate = this.SpawnAnimationPlaybackRate;
-					float duration = this.SpawnAnimationDuration;
-
-					EntitySetAnimation(bossEntity.index, spawnAnim, playbackRate);
-					EntitySetAnimation(bossEntity.index, spawnAnim, playbackRate); //Fix an issue where an anim could start on the wrong frame.
-
-					g_SlenderSpawning[bossIndex] = true;
-					g_SlenderSpawnTimer[bossIndex] = CreateTimer(duration, Timer_SlenderSpawnTimer, EntIndexToEntRef(bossEntity.index), TIMER_FLAG_NO_MAPCHANGE);
-					g_SlenderEntityThink[bossIndex] = null;
+					SF2_ChaserEntity chaser = SF2_ChaserEntity(bossEntity.index);
+					chaser.SetOverrideSpawnAnimation(spawnAnim, this.SpawnAnimationDuration, this.SpawnAnimationPlaybackRate);
 				}
 			}
 
@@ -289,7 +289,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				continue;
 			}
 
-			boss.UnSpawn();
+			boss.UnSpawn(true);
 		}
 	}
 
@@ -400,7 +400,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 
 			if ((spawnFlags & SF_SF2_BOSS_MAKER_NOCOPIES))
 			{
-				NPCSetFlags(bossIndex, NPCGetFlags(bossIndex) & ~SFF_COPIES);
+				NPCSetFlags(bossIndex, NPCGetFlags(bossIndex) | SFF_NOCOPIES);
 			}
 
 			if (!(spawnFlags & SF_SF2_BOSS_MAKER_ADDONLY))

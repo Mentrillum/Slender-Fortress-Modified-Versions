@@ -398,6 +398,11 @@
 	input DisableStaminaJumpRestriction(void) : "Disable the stamina jump restriction."
 ]
 
-@SolidClass base(trigger_multiple) = sf2_trigger_pve : "(Private only) A trigger brush that when touched by a player will enter PvE mode."
+@SolidClass base(trigger_multiple) = sf2_trigger_pve : "A trigger brush that when touched by a player will enter PvE mode."
 [
+	bosspve(choices) : "Is Boss Arena" : 1 : "(Modified only) Determines if the PvE arena can spawn bosses and play soundtracks to players. Useful if you want areas where players can wield weapons but shouldn't damage each other." =
+	[
+		0 : "Disabled"
+		1 : "Enabled"
+	]
 ]

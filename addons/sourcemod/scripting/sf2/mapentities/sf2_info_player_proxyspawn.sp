@@ -27,6 +27,7 @@ methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 		{
 			return !this.GetProp(Prop_Data, "sf2_bDisabled");
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bDisabled", !value);
@@ -37,8 +38,9 @@ methodmap SF2PlayerProxySpawnEntity < SF2SpawnPointBaseEntity
 	{
 		public get()
 		{
-			return !!this.GetProp(Prop_Data, "sf2_bIgnoreVisibility");
+			return this.GetProp(Prop_Data, "sf2_bIgnoreVisibility") != 0;
 		}
+
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "sf2_bIgnoreVisibility", value);

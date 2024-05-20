@@ -20,8 +20,9 @@
 #define DEBUG_BOSS_ANIMATION (1 << 10)
 #define DEBUG_EVENT (1 << 11)
 #define DEBUG_KILLICONS (1 << 12)
-#define DEBUG_ARRAYLIST (1 << 13)
 #define DEBUG_BOSS_IDLE (1 << 14)
+#define DEBUG_BOSS_EYES (1 << 15)
+#define DEBUG_BOSS_PATH (1 << 16)
 
 int g_PlayerDebugFlags[MAXTF2PLAYERS] = { 0, ... };
 
@@ -45,8 +46,9 @@ void InitializeDebug()
 	RegAdminCmd("sm_sf2_debug_ghost_mode", Command_DebugGhostMode, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_events", Command_DebugEvent, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_kill_icons", Command_DebugKillIcons, ADMFLAG_CHEATS);
-	RegAdminCmd("sm_sf2_debug_arraylists", Command_DebugArrayLists, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf2_debug_boss_idle", Command_DebugBossIdle, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_debug_boss_eyes", Command_DebugBossEyes, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_debug_boss_path", Command_DebugBossPath, ADMFLAG_CHEATS);
 }
 
 void InitializeDebugLogging()
@@ -71,9 +73,9 @@ void DebugMessage(const char[] message, any ...)
 	LogToFile(g_DebugLogFilePath, debugMessage);
 }
 
-void SendDebugMessageToPlayer(int client,int debugFlags,int type, const char[] message, any ...)
+void SendDebugMessageToPlayer(int client, int debugFlags, int type, const char[] message, any ...)
 {
-	if (!IsClientInGame(client) || IsFakeClient(client))
+	if (!IsValidClient(client) || IsFakeClient(client))
 	{
 		return;
 	}
@@ -101,14 +103,14 @@ void SendDebugMessageToPlayer(int client,int debugFlags,int type, const char[] m
 	}
 }
 
-void SendDebugMessageToPlayers(int debugFlags,int type, const char[] message, any ...)
+void SendDebugMessageToPlayers(int debugFlags, int type, const char[] message, any ...)
 {
 	char msg[1024];
 	VFormat(msg, sizeof(msg), message, 4);
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i) || IsFakeClient(i))
+		if (!IsValidClient(i) || IsFakeClient(i))
 		{
 			continue;
 		}
@@ -134,14 +136,14 @@ void SendDebugMessageToPlayers(int debugFlags,int type, const char[] message, an
 	}
 }
 
-static Action Command_DebugBossTeleport(int client,int args)
+static Action Command_DebugBossTeleport(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_TELEPORTATION);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_TELEPORTATION) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_TELEPORTATION;
@@ -156,14 +158,14 @@ static Action Command_DebugBossTeleport(int client,int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugBossChase(int client,int args)
+static Action Command_DebugBossChase(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_CHASE);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_CHASE) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_CHASE;
@@ -178,14 +180,14 @@ static Action Command_DebugBossChase(int client,int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugBossIdle(int client,int args)
+static Action Command_DebugBossIdle(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_IDLE);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_IDLE) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_IDLE;
@@ -200,14 +202,58 @@ static Action Command_DebugBossIdle(int client,int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugBossAnimation(int client,int args)
+static Action Command_DebugBossEyes(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_ANIMATION);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_EYES) != 0;
+	if (!inMode)
+	{
+		g_PlayerDebugFlags[client] |= DEBUG_BOSS_EYES;
+		PrintToChat(client, "Enabled debugging boss eyes.");
+	}
+	else
+	{
+		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_EYES;
+		PrintToChat(client, "Disabled debugging boss eyes.");
+	}
+
+	return Plugin_Handled;
+}
+
+static Action Command_DebugBossPath(int client, int args)
+{
+	if (client < 1 || client > MaxClients)
+	{
+		return Plugin_Handled;
+	}
+
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_PATH) != 0;
+	if (!inMode)
+	{
+		g_PlayerDebugFlags[client] |= DEBUG_BOSS_PATH;
+		PrintToChat(client, "Enabled debugging boss pathing.");
+	}
+	else
+	{
+		g_PlayerDebugFlags[client] &= ~DEBUG_BOSS_PATH;
+		PrintToChat(client, "Disabled debugging boss pathing.");
+	}
+
+	return Plugin_Handled;
+}
+
+static Action Command_DebugBossAnimation(int client, int args)
+{
+	if (client < 1 || client > MaxClients)
+	{
+		return Plugin_Handled;
+	}
+
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_ANIMATION) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_ANIMATION;
@@ -222,14 +268,14 @@ static Action Command_DebugBossAnimation(int client,int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugNextbot(int client,int args)
+static Action Command_DebugNextbot(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_NEXTBOT);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_NEXTBOT) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_NEXTBOT;
@@ -251,7 +297,7 @@ static Action Command_DebugPlayerStress(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_PLAYER_STRESS);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_PLAYER_STRESS) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_PLAYER_STRESS;
@@ -273,7 +319,7 @@ static Action Command_DebugBossProxies(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_PROXIES);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_PROXIES) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_PROXIES;
@@ -294,7 +340,7 @@ static Action Command_DebugHitbox(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_HITBOX);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_HITBOX) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_HITBOX;
@@ -316,7 +362,7 @@ static Action Command_DebugStun(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_BOSS_STUN);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_BOSS_STUN) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_BOSS_STUN;
@@ -338,7 +384,7 @@ static Action Command_DebugGhostMode(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_GHOSTMODE);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_GHOSTMODE) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_GHOSTMODE;
@@ -360,7 +406,7 @@ static Action Command_DebugEntity(int client, int args)
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_ENTITIES);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_ENTITIES) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_ENTITIES;
@@ -375,14 +421,14 @@ static Action Command_DebugEntity(int client, int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugEvent(int client,int args)
+static Action Command_DebugEvent(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_EVENT);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_EVENT) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_EVENT;
@@ -397,14 +443,14 @@ static Action Command_DebugEvent(int client,int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugKillIcons(int client,int args)
+static Action Command_DebugKillIcons(int client, int args)
 {
 	if (client < 1 || client > MaxClients)
 	{
 		return Plugin_Handled;
 	}
 
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_KILLICONS);
+	bool inMode = (g_PlayerDebugFlags[client] & DEBUG_KILLICONS) != 0;
 	if (!inMode)
 	{
 		g_PlayerDebugFlags[client] |= DEBUG_KILLICONS;
@@ -419,24 +465,49 @@ static Action Command_DebugKillIcons(int client,int args)
 	return Plugin_Handled;
 }
 
-static Action Command_DebugArrayLists(int client,int args)
+void TE_DrawBox(int client, float origin[3], float endOrigin[3], float mins[3], float maxs[3], float duration = 0.1, int laserIndex, int color[4])
 {
-	if (client < 1 || client > MaxClients)
+	if( mins[0] == maxs[0] && mins[1] == maxs[1] && mins[2] == maxs[2] )
 	{
-		return Plugin_Handled;
-	}
-
-	bool inMode = !!(g_PlayerDebugFlags[client] & DEBUG_ARRAYLIST);
-	if (!inMode)
-	{
-		g_PlayerDebugFlags[client] |= DEBUG_ARRAYLIST;
-		PrintToChat(client, "Enabled debugging array lists.");
+		mins = {-15.0, -15.0, -15.0};
+		maxs = {15.0, 15.0, 15.0};
 	}
 	else
 	{
-		g_PlayerDebugFlags[client] &= ~DEBUG_ARRAYLIST;
-		PrintToChat(client, "Disabled debugging array lists.");
+		AddVectors(endOrigin, maxs, maxs);
+		AddVectors(origin, mins, mins);
 	}
 
-	return Plugin_Handled;
+	float pos1[3], pos2[3], pos3[3], pos4[3], pos5[3], pos6[3];
+	pos1 = maxs;
+	pos1[0] = mins[0];
+	pos2 = maxs;
+	pos2[1] = mins[1];
+	pos3 = maxs;
+	pos3[2] = mins[2];
+	pos4 = mins;
+	pos4[0] = maxs[0];
+	pos5 = mins;
+	pos5[1] = maxs[1];
+	pos6 = mins;
+	pos6[2] = maxs[2];
+
+	TE_SendBeam(client, maxs, pos1, duration, laserIndex, color);
+	TE_SendBeam(client, maxs, pos2, duration, laserIndex, color);
+	TE_SendBeam(client, maxs, pos3, duration, laserIndex, color);
+	TE_SendBeam(client, pos6, pos1, duration, laserIndex, color);
+	TE_SendBeam(client, pos6, pos2, duration, laserIndex, color);
+	TE_SendBeam(client, pos6, mins, duration, laserIndex, color);
+	TE_SendBeam(client, pos4, mins, duration, laserIndex, color);
+	TE_SendBeam(client, pos5, mins, duration, laserIndex, color);
+	TE_SendBeam(client, pos5, pos1, duration, laserIndex, color);
+	TE_SendBeam(client, pos5, pos3, duration, laserIndex, color);
+	TE_SendBeam(client, pos4, pos3, duration, laserIndex, color);
+	TE_SendBeam(client, pos4, pos2, duration, laserIndex, color);
+}
+
+void TE_SendBeam(int client, float mins[3], float maxs[3], float duration = 0.1, int laserIndex, int color[4])
+{
+	TE_SetupBeamPoints(mins, maxs, laserIndex, laserIndex, 0, 30, duration, 1.0, 1.0, 1, 0.0, color, 30);
+	TE_SendToClient(client);
 }
