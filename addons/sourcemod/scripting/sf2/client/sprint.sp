@@ -358,7 +358,7 @@ float GetStaminaRechargeRate(SF2_BasePlayer client)
 		if (GetVectorLength(velocity, true) == 0.0)
 		{
 			// Double the sprint rate if the player is crouching and holding still
-			rate = 0.03;
+			rate = 0.04;
 		}
 	}
 
