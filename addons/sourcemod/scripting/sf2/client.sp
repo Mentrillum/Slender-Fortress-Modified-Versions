@@ -156,7 +156,7 @@ Action Hook_ClientSetTransmit(int client,int other)
 	{
 		if (IsClientInGhostMode(client))
 		{
-			if (g_GhostModeVisibleConVar.IntValue < 1  || (g_GhostModeVisibleConVar.IntValue == 1 && !IsClientInGhostMode(other)))
+			if (g_GhostModeVisibleConVar.IntValue < 1  || ((g_GhostModeVisibleConVar.IntValue == 1 || SF_SpecialRound(SPECIALROUND_SINGLEPLAYER)) && !IsClientInGhostMode(other)))
 			{
 				return Plugin_Handled;
 			}
