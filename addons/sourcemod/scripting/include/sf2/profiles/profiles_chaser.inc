@@ -158,39 +158,39 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 
 	bool SetType(const char[] section)
 	{
-		if (strcmp(section, "ignite") == 0)
+		if (strcmp(section, "ignite", false) == 0)
 		{
 			this.Type = SF2DamageType_Ignite;
 		}
-		else if (strcmp(section, "gas") == 0)
+		else if (strcmp(section, "gas", false) == 0)
 		{
 			this.Type = SF2DamageType_Gas;
 		}
-		else if (strcmp(section, "bleed") == 0)
+		else if (strcmp(section, "bleed", false) == 0)
 		{
 			this.Type = SF2DamageType_Bleed;
 		}
-		else if (strcmp(section, "mark") == 0)
+		else if (strcmp(section, "mark", false) == 0)
 		{
 			this.Type = SF2DamageType_Mark;
 		}
-		else if (strcmp(section, "jarate") == 0)
+		else if (strcmp(section, "jarate", false) == 0)
 		{
 			this.Type = SF2DamageType_Jarate;
 		}
-		else if (strcmp(section, "milk") == 0)
+		else if (strcmp(section, "milk", false) == 0)
 		{
 			this.Type = SF2DamageType_Milk;
 		}
-		else if (strcmp(section, "stun") == 0)
+		else if (strcmp(section, "stun", false) == 0)
 		{
 			this.Type = SF2DamageType_Stun;
 		}
-		else if (strcmp(section, "smite") == 0)
+		else if (strcmp(section, "smite", false) == 0)
 		{
 			this.Type = SF2DamageType_Smite;
 		}
-		else if (strcmp(section, "random") == 0)
+		else if (strcmp(section, "random", false) == 0)
 		{
 			this.Types = new ArrayList();
 			this.Type = SF2DamageType_Random;
@@ -245,35 +245,35 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 			int nums = ExplodeString(type, " ", types, sizeof(types), sizeof(types[]));
 			for (int i = 0; i < nums; i++)
 			{
-				if (strcmp(types[i], "ignite") == 0)
+				if (strcmp(types[i], "ignite", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Ignite);
 				}
-				else if (strcmp(types[i], "gas") == 0)
+				else if (strcmp(types[i], "gas", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Gas);
 				}
-				else if (strcmp(types[i], "bleed") == 0)
+				else if (strcmp(types[i], "bleed", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Bleed);
 				}
-				else if (strcmp(types[i], "mark") == 0)
+				else if (strcmp(types[i], "mark", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Mark);
 				}
-				else if (strcmp(types[i], "jarate") == 0)
+				else if (strcmp(types[i], "jarate", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Jarate);
 				}
-				else if (strcmp(types[i], "milk") == 0)
+				else if (strcmp(types[i], "milk", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Milk);
 				}
-				else if (strcmp(types[i], "stun") == 0)
+				else if (strcmp(types[i], "stun", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Stun);
 				}
-				else if (strcmp(types[i], "smite") == 0)
+				else if (strcmp(types[i], "smite", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Smite);
 				}
@@ -320,35 +320,35 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 
 		for (int i = 0; i < nums; i++)
 		{
-			if (strcmp(flags[i], "slow") == 0)
+			if (strcmp(flags[i], "slow", false) == 0)
 			{
 				value |= (1 << 0);
 			}
-			else if (strcmp(flags[i], "stuck") == 0)
+			else if (strcmp(flags[i], "stuck", false) == 0)
 			{
 				value |= (1 << 1);
 			}
-			else if (strcmp(flags[i], "cheer_fx") == 0)
+			else if (strcmp(flags[i], "cheer_fx", false) == 0)
 			{
 				value |= (1 << 3);
 			}
-			else if (strcmp(flags[i], "no_fx") == 0)
+			else if (strcmp(flags[i], "no_fx", false) == 0)
 			{
 				value |= (1 << 5);
 			}
-			else if (strcmp(flags[i], "thirdperson") == 0)
+			else if (strcmp(flags[i], "thirdperson", false) == 0)
 			{
 				value |= (1 << 6);
 			}
-			else if (strcmp(flags[i], "ghost_fx") == 0)
+			else if (strcmp(flags[i], "ghost_fx", false) == 0)
 			{
 				value |= (1 << 7);
 			}
-			else if (strcmp(flags[i], "loser") == 0)
+			else if (strcmp(flags[i], "loser", false) == 0)
 			{
 				value |= (1 << 0) | (1 << 5) | (1 << 6);
 			}
-			else if (strcmp(flags[i], "boo") == 0)
+			else if (strcmp(flags[i], "boo", false) == 0)
 			{
 				value |= (1 << 7) | (1 << 6);
 			}
@@ -392,6 +392,7 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 		{
 			type = this.Types.Get(GetRandomInt(0, this.Types.Length - 1));
 		}
+
 		switch (type)
 		{
 			case SF2DamageType_Ignite:
