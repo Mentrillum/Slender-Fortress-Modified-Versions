@@ -6,7 +6,6 @@
 #pragma semicolon 1
 
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
-#define FLAME_HIT_DELAY 0.05
 
 static ConVar g_PvPArenaLeaveTimeConVar = null;
 static ConVar g_PvPArenaProjectileZapConVar = null;
@@ -23,6 +22,7 @@ static const char g_PvPProjectileClasses[][] =
 	"tf_projectile_balloffire",
 	"tf_projectile_jar",
 	"tf_projectile_jar_milk",
+	"tf_projectile_jar_gas",
 	"tf_projectile_pipe",
 	"tf_projectile_pipe_remote",
 	"tf_projectile_stun_ball",
@@ -41,12 +41,39 @@ static const char g_PvPProjectileClassesNoTouch[][] =
 	"tf_projectile_flare"
 };
 
+static const char g_PvPProjectileClassesNoHook[][] =
+{
+	"tf_projectile_pipe_remote",
+	"tf_projectile_balloffire"
+};
+
+static int g_SpectatorItemIDs[] =
+{
+	TF_WEAPON_BUFF_ITEM,		// CTFPlayerShared::PulseRageBuff
+	TF_WEAPON_FLAMETHROWER,		// CTFFlameThrower::SecondaryAttack
+	TF_WEAPON_FLAME_BALL,		// CWeaponFlameBall::SecondaryAttack
+	TF_WEAPON_SNIPERRIFLE,		// CTFPlayer::FireBullet
+	TF_WEAPON_KNIFE,			// CTFKnife::BackstabVMThink
+	TF_WEAPON_RAYGUN_REVENGE,	// CTFFlareGun_Revenge::ExtinguishPlayerInternal
+};
+
+static int g_EnemyItemIDs[] =
+{
+	TF_WEAPON_HANDGUN_SCOUT_PRIMARY,	// CTFPistol_ScoutPrimary::Push
+	TF_WEAPON_GRAPPLINGHOOK,			// CTFGrapplingHook::ActivateRune
+};
+
 static bool g_PlayerInPvP[MAXTF2PLAYERS];
 static bool g_PlayerIsLeavingPvP[MAXTF2PLAYERS];
 Handle g_PlayerPvPTimer[MAXTF2PLAYERS];
 Handle g_PlayerPvPRespawnTimer[MAXTF2PLAYERS];
 static int g_PlayerPvPTimerCount[MAXTF2PLAYERS];
 static ArrayList g_PlayerEnteredPvPTriggers[MAXTF2PLAYERS] = { null, ... };
+static float g_PlayerMedigunDrainTime[MAXTF2PLAYERS];
+static int g_PlayerOriginalTeam[MAXTF2PLAYERS];
+
+static TFTeam g_PreHookTeam[2049];
+static TFTeam g_PreHookDisguiseTeam[MAXTF2PLAYERS];
 
 //Blood
 static int g_PvPUserIdLastTrace;
@@ -56,6 +83,42 @@ static ArrayList g_PvPBallsOfFire;
 
 static GlobalForward g_OnPlayerEnterPvP;
 static GlobalForward g_OnPlayerExitPvP;
+
+#define TICK_NEVER_THINK -1.0
+static Handle g_SDKGetNextThink;
+static Handle g_SDKGetGlobalTeam;
+static Handle g_SDKChangeTeam;
+static Handle g_SDKAddPlayer;
+static Handle g_SDKRemovePlayer;
+static Handle g_SDKAddObject;
+static Handle g_SDKRemoveObject;
+static Handle g_SDKGetPenetrationType;
+
+static DynamicHook g_DHookCTFBaseRocketExplode;
+static DynamicHook g_DHookCBaseGrenadeExplode;
+static DynamicHook g_DHookVPhysicsUpdate;
+
+static DynamicDetour g_DDetourPhysicsDispatchThink;
+static DynamicDetour g_DDetourAllowedToHealTarget;
+
+enum ThinkFunction
+{
+	ThinkFunction_None,
+	ThinkFunction_DispenseThink,
+	ThinkFunction_SentryThink,
+	ThinkFunction_SapperThink,
+}
+
+static ThinkFunction g_ThinkFunction = ThinkFunction_None;
+
+enum
+{
+	PostThinkType_None,
+	PostThinkType_Spectator,
+	PostThinkType_EnemyTeam,
+}
+
+static int g_PostThinkType;
 
 enum struct PvPProjectile_BallOfFire
 {
@@ -77,7 +140,12 @@ enum struct PvPProjectile_BallOfFire
 
 		int ent = this.EntIndex;
 		int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-		if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity || !IsClientInPvP(ownerEntity))
+		if (!IsValidClient(ownerEntity) || otherEntity == ownerEntity)
+		{
+			return;
+		}
+
+		if (!IsClientInPvP(ownerEntity))
 		{
 			return;
 		}
@@ -88,7 +156,7 @@ enum struct PvPProjectile_BallOfFire
 			{
 				this.TouchedEntities.Push(otherEntity);
 
-				if (IsValidClient(otherEntity) && IsClientInPvP(otherEntity) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
+				if (IsValidClient(otherEntity) && (IsClientInPvP(otherEntity)) && GetEntProp(otherEntity, Prop_Send, "m_iTeamNum") == GetEntProp(ownerEntity, Prop_Send, "m_iTeamNum"))
 				{
 					float damage = GetEntDataFloat(ent, FindSendPropInfo("CTFProjectile_BallOfFire", "m_iDeflected") + 4);
 					float damageBonus = TF2_IsPlayerInCondition(otherEntity, TFCond_OnFire) ? g_DragonsFuryBurningBonusConVar.FloatValue : 1.0;
@@ -103,6 +171,11 @@ enum struct PvPProjectile_BallOfFire
 
 					TF2_IgnitePlayer(otherEntity, ownerEntity);
 					SDKHooks_TakeDamage(otherEntity, ownerEntity, ownerEntity, damage * damageBonus, 0x1220000, GetEntPropEnt(ownerEntity, Prop_Send, "m_hActiveWeapon"), NULL_VECTOR, damagePos);
+					CBaseEntity primary = CBaseEntity(GetPlayerWeaponSlot(ownerEntity, TFWeaponSlot_Primary));
+					if (primary.IsValid())
+					{
+						primary.SetPropFloat(Prop_Send, "m_flRechargeScale", 1.5);
+					}
 				}
 			}
 		}
@@ -129,11 +202,130 @@ void PvP_Initialize()
 	g_OnPlayerPutInServerPFwd.AddFunction(null, OnPutInServer);
 	g_OnPlayerDisconnectedPFwd.AddFunction(null, OnDisconnected);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
+	g_OnPlayerDeathPrePFwd.AddFunction(null, OnPlayerDeathPre);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+
+	GameData gameData = new GameData("sf2");
+
+	g_DHookCTFBaseRocketExplode = DynamicHook.FromConf(gameData, "CTFBaseRocket::Explode");
+	if (g_DHookCTFBaseRocketExplode == null)
+	{
+		SetFailState("Failed to create hook CTFBaseRocket::Explode from gamedata!");
+	}
+
+	g_DHookCBaseGrenadeExplode = DynamicHook.FromConf(gameData, "CBaseGrenade::Explode");
+	if (g_DHookCBaseGrenadeExplode == null)
+	{
+		SetFailState("Failed to create hook CTFBaseRocket::Explode from gamedata!");
+	}
+
+	g_DHookVPhysicsUpdate = DynamicHook.FromConf(gameData, "CBaseEntity::VPhysicsUpdate");
+	if (g_DHookVPhysicsUpdate == null)
+	{
+		SetFailState("Failed to create hook CBaseEntity::VPhysicsUpdate from gamedata!");
+	}
+
+	g_DDetourPhysicsDispatchThink = DynamicDetour.FromConf(gameData, "CBaseEntity::PhysicsDispatchThink");
+	if (g_DDetourPhysicsDispatchThink == null)
+	{
+		SetFailState("Failed to create hook CBaseEntity::PhysicsDispatchThink from gamedata!");
+	}
+
+	g_DDetourPhysicsDispatchThink.Enable(Hook_Pre, PhysicsDispatchThinkPre);
+	g_DDetourPhysicsDispatchThink.Enable(Hook_Post, PhysicsDispatchThinkPost);
+
+	g_DDetourAllowedToHealTarget = DynamicDetour.FromConf(gameData, "CWeaponMedigun::AllowedToHealTarget");
+	if (g_DDetourAllowedToHealTarget == null)
+	{
+		SetFailState("Failed to create hook CWeaponMedigun::AllowedToHealTarget from gamedata!");
+	}
+
+	g_DDetourAllowedToHealTarget.Enable(Hook_Pre, AllowedToHealTargetPre);
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CBaseEntity::GetNextThink");
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
+	g_SDKGetNextThink = EndPrepSDKCall();
+	if (g_SDKGetNextThink == null)
+	{
+		SetFailState("Failed to retrieve CBaseEntity::GetNextThink offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Static);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "GetGlobalTeam");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	g_SDKGetGlobalTeam = EndPrepSDKCall();
+	if (g_SDKGetGlobalTeam == null)
+	{
+		SetFailState("Failed to retrieve GetGlobalTeam offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseEntity::ChangeTeam");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	g_SDKChangeTeam = EndPrepSDKCall();
+	if (g_SDKChangeTeam == null)
+	{
+		SetFailState("Failed to retrieve CBaseEntity::ChangeTeam offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTeam::AddPlayer");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
+	g_SDKAddPlayer = EndPrepSDKCall();
+	if (g_SDKAddPlayer == null)
+	{
+		SetFailState("Failed to retrieve CTeam::AddPlayer offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTeam::RemovePlayer");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
+	g_SDKRemovePlayer = EndPrepSDKCall();
+	if (g_SDKRemovePlayer == null)
+	{
+		SetFailState("Failed to retrieve CTeam::RemovePlayer offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFTeam::AddObject");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	g_SDKAddObject = EndPrepSDKCall();
+	if (g_SDKAddObject == null)
+	{
+		SetFailState("Failed to retrieve CTFTeam::AddObject offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFTeam::RemoveObject");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	g_SDKRemoveObject = EndPrepSDKCall();
+	if (g_SDKRemoveObject == null)
+	{
+		SetFailState("Failed to retrieve CTFTeam::RemoveObject offset from gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFSniperRifle::GetPenetrateType");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	g_SDKGetPenetrationType = EndPrepSDKCall();
+	if (g_SDKGetPenetrationType == null)
+	{
+		SetFailState("Failed to retrieve CTFSniperRifle::GetPenetrateType offset from gamedata!");
+	}
+
+	delete gameData;
 
 	AddTempEntHook("TFBlood", TempEntHook_PvPBlood);
 	AddTempEntHook("World Decal", TempEntHook_PvPDecal);
 	AddTempEntHook("Entity Decal", TempEntHook_PvPDecal);
+
+	HookEvent("fish_notice", OnPlayerDeathEventPre, EventHookMode_Pre);
+	HookEvent("fish_notice__arm", OnPlayerDeathEventPre, EventHookMode_Pre);
+	HookEvent("slap_notice", OnPlayerDeathEventPre, EventHookMode_Pre);
+	HookEvent("player_death", OnPlayerDeathEventPre, EventHookMode_Pre);
 }
 
 void PvP_SetupMenus()
@@ -227,6 +419,14 @@ static void OnPutInServer(SF2_BasePlayer client)
 	}
 	g_PlayerEnteredPvPTriggers[client.index] = new ArrayList();
 
+	if (!client.IsSourceTV)
+	{
+		SDKHook(client.index, SDKHook_PreThink, ClientPreThink);
+		SDKHook(client.index, SDKHook_PreThinkPost, ClientPreThinkPost);
+		SDKHook(client.index, SDKHook_PostThink, ClientPostThink);
+		SDKHook(client.index, SDKHook_PostThinkPost, ClientPostThinkPost);
+	}
+
 	PvP_ForceResetPlayerPvPData(client.index);
 }
 
@@ -266,53 +466,20 @@ static void GameFrame()
 				}
 			}
 
+			for (int i2 = 0; i2 < sizeof(g_PvPProjectileClassesNoHook); i2++)
+			{
+				if (strcmp(g_PvPProjectileClasses[i], g_PvPProjectileClassesNoHook[i2], false) == 0)
+				{
+					changeProjectileTeam = false;
+				}
+			}
+
 			if (changeProjectileTeam)
 			{
 				SetEntProp(ent, Prop_Data, "m_iInitialTeamNum", 0);
 				SetEntProp(ent, Prop_Send, "m_iTeamNum", 0);
 			}
 		}
-	}
-
-	// Process through PvP flame entities.
-	{
-		static float mins[3] = { -6.0, ... };
-		static float maxs[3] = { 6.0, ... };
-
-		float origin[3];
-
-		Handle trace = null;
-		int ent = -1;
-		int ownerEntity = INVALID_ENT_REFERENCE;
-		int hitEntity = INVALID_ENT_REFERENCE;
-
-		while ((ent = FindEntityByClassname(ent, "tf_flame_manager")) != -1)
-		{
-			ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-
-			if (IsValidEdict(ownerEntity))
-			{
-				// tf_flame's initial owner SHOULD be the flamethrower that it originates from.
-				// If not, then something's completely bogus.
-
-				ownerEntity = GetEntPropEnt(ownerEntity, Prop_Data, "m_hOwnerEntity");
-			}
-
-			if (IsValidClient(ownerEntity) && (IsRoundInWarmup() || IsClientInPvP(ownerEntity)))
-			{
-				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", origin);
-
-				trace = TR_TraceHullFilterEx(origin, origin, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, ownerEntity);
-				hitEntity = TR_GetEntityIndex(trace);
-				delete trace;
-
-				if (IsValidEntity(hitEntity))
-				{
-					PvP_OnFlameEntityStartTouchPost(ent, hitEntity);
-				}
-			}
-		}
-		delete trace;
 	}
 }
 
@@ -325,7 +492,6 @@ static void EntityCreated(CBaseEntity ent, const char[] classname)
 	{
 		if (strcmp(classname, g_PvPProjectileClasses[i], false) == 0)
 		{
-			SDKHook(ent.index, SDKHook_Spawn, Hook_PvPProjectileSpawn);
 			SDKHook(ent.index, SDKHook_SpawnPost, Hook_PvPProjectileSpawnPost);
 			break;
 		}
@@ -337,6 +503,61 @@ static void EntityCreated(CBaseEntity ent, const char[] classname)
 		{
 			SDKHook(ent.index, SDKHook_Touch, Hook_PvPProjectile_OnTouch);
 			break;
+		}
+	}
+
+	if (strcmp(classname, "tf_flame_manager", false) == 0)
+	{
+		SDKHook(ent.index, SDKHook_Touch, FlameStartTouch);
+		SDKHook(ent.index, SDKHook_TouchPost, FlameStartTouchPost);
+	}
+	else if (strcmp(classname, "tf_gas_manager", false) == 0)
+	{
+		SDKHook(ent.index, SDKHook_Touch, GasStartTouch);
+	}
+
+	if (strncmp(classname, "tf_projectile_", 14) == 0)
+	{
+		g_DHookProjectileCanCollideWithTeammates.HookEntity(Hook_Post, ent.index, Hook_PvPProjectileCanCollideWithTeammates);
+
+		if (strcmp(classname, "tf_projectile_pipe_remote") == 0)
+		{
+			SDKHook(ent.index, SDKHook_OnTakeDamage, PipeOnTakeDamage);
+			SDKHook(ent.index, SDKHook_OnTakeDamagePost, PipeOnTakeDamagePost);
+		}
+		else if (strcmp(classname, "tf_projectile_flare") == 0)
+		{
+			g_DHookCTFBaseRocketExplode.HookEntity(Hook_Pre, ent.index, FlareExplodePre);
+			g_DHookCTFBaseRocketExplode.HookEntity(Hook_Post, ent.index, FlareExplodePost);
+		}
+		else if (strncmp(classname, "tf_projectile_jar", 17) == 0)
+		{
+			g_DHookCBaseGrenadeExplode.HookEntity(Hook_Pre, ent.index, JarExplodePre);
+			g_DHookCBaseGrenadeExplode.HookEntity(Hook_Post, ent.index, JarExplodePost);
+		}
+		else if (strncmp(classname, "tf_projectile_pipe", 18) == 0)
+		{
+			g_DHookVPhysicsUpdate.HookEntity(Hook_Pre, ent.index, VPhysicsUpdatePre);
+			g_DHookVPhysicsUpdate.HookEntity(Hook_Post, ent.index, VPhysicsUpdatePost);
+		}
+		else if (strcmp(classname, "tf_projectile_cleaver") == 0)
+		{
+			SDKHook(ent.index, SDKHook_Touch, CleaverTouch);
+			SDKHook(ent.index, SDKHook_TouchPost, CleaverTouchPost);
+		}
+		else if (strcmp(classname, "tf_projectile_pipe") == 0)
+		{
+			SDKHook(ent.index, SDKHook_Touch, GrenadeTouch);
+			SDKHook(ent.index, SDKHook_TouchPost, GrenadeTouchPost);
+		}
+	}
+	else if (IsEntityWeapon(ent.index))
+	{
+		int id = GetWeaponID(ent.index);
+		if (id == TF_WEAPON_SNIPERRIFLE || id == TF_WEAPON_SNIPERRIFLE_DECAP || id == TF_WEAPON_SNIPERRIFLE_CLASSIC)
+		{
+			// Fixes Sniper Rifles dealing no damage to teammates
+			g_DHookWeaponGetCustomDamageType.HookEntity(Hook_Post, ent.index, GetCustomDamageTypePost);
 		}
 	}
 }
@@ -358,6 +579,207 @@ static void EntityDestroyed(CBaseEntity ent, const char[] classname)
 			g_PvPBallsOfFire.Erase(index);
 		}
 	}
+}
+
+static float GetNextThink(int entity, const char[] context = "")
+{
+	if (g_SDKGetNextThink != null)
+	{
+		return SDKCall(g_SDKGetNextThink, entity, context);
+	}
+
+	return TICK_NEVER_THINK;
+}
+
+static Address SDKCall_GetGlobalTeam(TFTeam team)
+{
+	if (g_SDKGetGlobalTeam)
+	{
+		return SDKCall(g_SDKGetGlobalTeam, team);
+	}
+
+	return Address_Null;
+}
+
+static void CBaseEntity_ChangeTeam(int entity, TFTeam team)
+{
+	SDKCall(g_SDKChangeTeam, entity, team);
+}
+
+static void CTeam_AddPlayer(Address team, int client)
+{
+	SDKCall(g_SDKAddPlayer, team, client);
+}
+
+static void CTeam_RemovePlayer(Address team, int client)
+{
+	SDKCall(g_SDKRemovePlayer, team, client);
+}
+
+static void CTeam_AddObject(Address team, int obj)
+{
+	SDKCall(g_SDKAddObject, team, obj);
+}
+
+static void CTeam_RemoveObject(Address team, int obj)
+{
+	SDKCall(g_SDKRemoveObject, team, obj);
+}
+
+static void ClientPreThink(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsInPvP)
+	{
+		return;
+	}
+
+	if (player.Team == TFTeam_Red)
+	{
+		return;
+	}
+
+	float gameTime = GetGameTime();
+	CBaseEntity secondary = CBaseEntity(GetPlayerWeaponSlot(player.index, TFWeaponSlot_Secondary));
+	if (secondary.IsValid() && GetWeaponID(secondary.index) == TF_WEAPON_MEDIGUN && g_PlayerMedigunDrainTime[player.index] <= gameTime)
+	{
+		SF2_BasePlayer healTarget = SF2_BasePlayer(secondary.GetPropEnt(Prop_Send, "m_hHealingTarget"));
+		if (healTarget.IsValid && healTarget.IsAlive && (healTarget.IsInPvP))
+		{
+			float damage = 6.0;
+			if (secondary.GetProp(Prop_Send, "m_iItemDefinitionIndex") == 411) // Quick-Fix
+			{
+				damage *= 1.4;
+			}
+			if (player.InCondition(TFCond_MegaHeal))
+			{
+				damage *= 3.0;
+			}
+
+			int damageType = DMG_ENERGYBEAM;
+			if (player.IsCritBoosted())
+			{
+				damageType |= DMG_CRIT;
+			}
+			SDKHooks_TakeDamage(healTarget.index, player.index, player.index, damage, damageType, .bypassHooks = false);
+			g_PlayerMedigunDrainTime[player.index] = gameTime + 0.1;
+		}
+	}
+
+	player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+}
+
+static void ClientPreThinkPost(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsInPvP)
+	{
+		return;
+	}
+
+	if (player.Team != TFTeam_Spectator)
+	{
+		return;
+	}
+
+	player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+}
+
+static void ClientPostThink(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsInPvP)
+	{
+		return;
+	}
+
+	if (player.Team == TFTeam_Red)
+	{
+		return;
+	}
+
+	// CTFPlayer::DoTauntAttack
+	if (TF2_IsPlayerInCondition(client, TFCond_Taunting))
+	{
+		g_PostThinkType |= PostThinkType_Spectator;
+
+		// Allows taunt kill work on both teams
+		player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+		return;
+	}
+
+	int activeWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+	if (!IsValidEntity(activeWeapon))
+	{
+		return;
+	}
+
+	// For functions that use GetEnemyTeam(), move everyone else to the enemy team
+	// Disabled for now but it doesn't matter since this only applies to the Shortstop
+	for (int i = 0; i < sizeof(g_EnemyItemIDs); i++)
+	{
+		if (GetWeaponID(activeWeapon) == g_EnemyItemIDs[i])
+		{
+			g_PostThinkType |= PostThinkType_EnemyTeam;
+
+			TFTeam enemyTeam = GetEnemyTeam(TF2_GetClientTeam(client));
+
+			for (int other = 1; other <= MaxClients; other++)
+			{
+				SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
+				if (otherPlayer.IsValid && otherPlayer.index != player.index && (otherPlayer.IsInPvP))
+				{
+					otherPlayer.SetProp(Prop_Send, "m_iTeamNum", view_as<int>(enemyTeam));
+				}
+			}
+		}
+	}
+
+	// For functions that do simple GetTeamNumber() checks, move ourselves to spectator team
+	for (int i = 0; i < sizeof(g_SpectatorItemIDs); i++)
+	{
+		// Don't let losing team attack with those weapons
+		if (GameRules_GetRoundState() == RoundState_TeamWin && TF2_GetClientTeam(client) != view_as<TFTeam>(GameRules_GetProp("m_iWinningTeam")))
+		{
+			break;
+		}
+
+		if (GetWeaponID(activeWeapon) == g_SpectatorItemIDs[i])
+		{
+			g_PostThinkType |= PostThinkType_Spectator;
+
+			player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+		}
+	}
+}
+
+static void ClientPostThinkPost(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsInPvP)
+	{
+		return;
+	}
+
+	// Change everything back to how it was accordingly
+	if ((g_PostThinkType & PostThinkType_Spectator) != 0)
+	{
+		player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+	}
+
+	if ((g_PostThinkType & PostThinkType_EnemyTeam) != 0)
+	{
+		for (int other = 1; other <= MaxClients; other++)
+		{
+			SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
+			if (otherPlayer.IsValid && otherPlayer.index != player.index && otherPlayer.IsInPvP)
+			{
+				otherPlayer.SetProp(Prop_Send, "m_iTeamNum", view_as<int>(GetEnemyTeam(TF2_GetClientTeam(otherPlayer.index))));
+			}
+		}
+	}
+
+	g_PostThinkType = PostThinkType_None;
 }
 
 static Action Hook_PvPProjectile_OnTouch(int projectile, int client)
@@ -388,31 +810,6 @@ static Action Hook_PvPProjectile_OnTouch(int projectile, int client)
 	return Plugin_Continue;
 }
 
-static Action Hook_PvPProjectileSpawn(int ent)
-{
-	char class[64];
-	GetEntityClassname(ent, class, sizeof(class));
-
-	int throwerOffset = FindDataMapInfo(ent, "m_hThrower");
-	int ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-
-	if (ownerEntity == -1 && throwerOffset != -1)
-	{
-		ownerEntity = GetEntDataEnt2(ent, throwerOffset);
-	}
-
-	if (IsValidClient(ownerEntity))
-	{
-		if (IsClientInPvP(ownerEntity))
-		{
-			SetEntProp(ent, Prop_Data, "m_iInitialTeamNum", 0);
-			SetEntProp(ent, Prop_Send, "m_iTeamNum", 0);
-		}
-	}
-
-	return Plugin_Continue;
-}
-
 static void Hook_PvPProjectileSpawnPost(int ent)
 {
 	if (!IsValidEntity(ent))
@@ -433,24 +830,8 @@ static void Hook_PvPProjectileSpawnPost(int ent)
 
 	if (IsValidClient(ownerEntity))
 	{
-		if (IsRoundInWarmup() || IsClientInPvP(ownerEntity))
+		if (IsClientInPvP(ownerEntity))
 		{
-			static const char fixWeaponNotCollidingWithTeammates[][] =
-			{
-				"tf_projectile_rocket",
-				"tf_projectile_sentryrocket",
-				"tf_projectile_flare"
-			};
-
-			for (int i = 0; i < sizeof(fixWeaponNotCollidingWithTeammates); i++)
-			{
-				if (IsValidEntity(ent) && strcmp(class, fixWeaponNotCollidingWithTeammates[i], false) == 0)
-				{
-					DHookEntity(g_DHookProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
-					break;
-				}
-			}
-
 			if (strcmp(class, "tf_projectile_pipe", false) == 0 && GetEntProp(ent, Prop_Send, "m_iType") == 3)
 			{
 				/*
@@ -507,14 +888,16 @@ static void Hook_PvPProjectileBallOfFireTouchPost(int projectile, int otherEntit
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	PvP_SetPlayerPvPState(client.index, false, false, false);
+
+	g_PlayerIsLeavingPvP[client.index] = false;
+
+	g_PlayerOriginalTeam[client.index] = client.Team;
+
 	if (IsRoundInWarmup() || GameRules_GetProp("m_bInWaitingForPlayers"))
 	{
 		return;
 	}
-
-	PvP_SetPlayerPvPState(client.index, false, false, false);
-
-	g_PlayerIsLeavingPvP[client.index] = false;
 
 	if (client.IsAlive && client.IsParticipating)
 	{
@@ -558,6 +941,22 @@ void PvP_ZapProjectile(int projectile, bool effects=true)
 		SetEntityRenderColor(projectile, 0, 0, 0, 1);
 	}
 	RemoveEntity(projectile);
+}
+
+static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
+{
+	if (!g_Enabled)
+	{
+		return;
+	}
+
+	if (!fake)
+	{
+		if (client.IsInPvP)
+		{
+			client.SetProp(Prop_Send, "m_iTeamNum", g_PlayerOriginalTeam[client.index]);
+		}
+	}
 }
 
 static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
@@ -617,7 +1016,7 @@ static bool Hook_ClientPvPShouldCollide(int ent,int collisiongroup,int contentsm
 	return originalResult;
 }
 
-void PvP_OnTriggerStartTouch(int trigger,int other)
+void PvP_OnTriggerStartTouch(int trigger, int other)
 {
 	char name[64];
 	GetEntPropString(trigger, Prop_Data, "m_iName", name, sizeof(name));
@@ -812,40 +1211,690 @@ void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles = tru
 	}
 }
 
-static void PvP_OnFlameEntityStartTouchPost(int flame, int other) //Thanks Fire
+static void FlameStartTouch(int flame, int other)
 {
-	static float lastHit[MAXPLAYERS + 1];
-
 	SF2_BasePlayer client = SF2_BasePlayer(other);
 	if (client.IsValid)
 	{
-		float time = GetEngineTime();
-		if (lastHit[client.index] < time)
+		if ((client.IsInPvP) && !IsRoundEnding())
 		{
-			lastHit[client.index] = time + FLAME_HIT_DELAY;
-
-			if ((IsRoundInWarmup() || client.IsInPvP) && !IsRoundEnding())
+			int flamethrower = GetEntPropEnt(flame, Prop_Data, "m_hOwnerEntity");
+			if (IsValidEdict(flamethrower))
 			{
-				int flamethrower = GetEntPropEnt(flame, Prop_Data, "m_hOwnerEntity");
-				if (IsValidEdict(flamethrower))
+				SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(flamethrower, Prop_Data, "m_hOwnerEntity"));
+				if (ownerEntity.index != client.index && ownerEntity.IsValid)
 				{
-					SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(flamethrower, Prop_Data, "m_hOwnerEntity"));
-					if (ownerEntity.index != client.index && ownerEntity.IsValid)
+					if (ownerEntity.IsInPvP)
 					{
-						if (IsRoundInWarmup() || ownerEntity.IsInPvP)
+						if (client.Team == ownerEntity.Team && ownerEntity.Team != TFTeam_Red)
 						{
-							if (client.Team == ownerEntity.Team && ownerEntity.Team != TFTeam_Red)
-							{
-								//TF2_MakeBleed(other, ownerEntity, 4.0);
-								client.Ignite(_, ownerEntity.index);
-								client.TakeDamage(_, ownerEntity.index, ownerEntity.index, 10.0, ownerEntity.IsCritBoosted() ? (DMG_BURN | DMG_PREVENT_PHYSICS_FORCE | DMG_ACID) : DMG_BURN | DMG_PREVENT_PHYSICS_FORCE);
-							}
+							ownerEntity.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
 						}
 					}
 				}
 			}
 		}
 	}
+}
+
+static void FlameStartTouchPost(int flame, int other)
+{
+	int flamethrower = GetEntPropEnt(flame, Prop_Data, "m_hOwnerEntity");
+	if (IsValidEdict(flamethrower))
+	{
+		SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(flamethrower, Prop_Data, "m_hOwnerEntity"));
+		if (ownerEntity.IsValid && ownerEntity.Team == TFTeam_Spectator)
+		{
+			ownerEntity.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+		}
+	}
+}
+
+static Action GasStartTouch(int entity, int other)
+{
+	SF2_BasePlayer client = SF2_BasePlayer(other);
+	if (client.IsValid)
+	{
+		if ((client.IsInPvP) && !IsRoundEnding())
+		{
+			SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity"));
+			if (ownerEntity.index == client.index)
+			{
+				return Plugin_Handled;
+			}
+
+			if (ownerEntity.IsValid)
+			{
+				if (!ownerEntity.IsInPvP)
+				{
+					return Plugin_Handled;
+				}
+			}
+		}
+	}
+
+	return Plugin_Continue;
+}
+
+static Action PipeOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
+{
+	if (attacker != -1)
+	{
+		int owner = GetEntPropEnt(victim, Prop_Data, "m_hOwnerEntity");
+		if (owner == attacker)
+		{
+			return Plugin_Handled;
+		}
+
+		SF2_BasePlayer player = SF2_BasePlayer(owner);
+		if (player.IsValid)
+		{
+			if (player.Team == TFTeam_Red)
+			{
+				return Plugin_Handled;
+			}
+
+			if (!player.IsInPvP)
+			{
+				return Plugin_Handled;
+			}
+
+			player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+		}
+	}
+
+	return Plugin_Continue;
+}
+
+static void PipeOnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+	if (attacker != -1)
+	{
+		int owner = GetEntPropEnt(victim, Prop_Data, "m_hOwnerEntity");
+		if (owner == attacker)
+		{
+			return;
+		}
+
+		SF2_BasePlayer player = SF2_BasePlayer(owner);
+		if (player.IsValid)
+		{
+			if (player.Team == TFTeam_Red)
+			{
+				return;
+			}
+
+			if (!player.IsInPvP)
+			{
+				return;
+			}
+
+			player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+		}
+	}
+}
+
+static MRESReturn PhysicsDispatchThinkPre(int entity)
+{
+	char classname[64];
+	if (!GetEntityClassname(entity, classname, sizeof(classname)))
+	{
+		return MRES_Ignored;
+	}
+
+	if (strcmp(classname, "obj_sentrygun") == 0)
+	{
+		// CObjectSentrygun::SentryThink
+		if (GetNextThink(entity, "SentryThink") != TICK_NEVER_THINK)
+		{
+			return MRES_Ignored;
+		}
+
+		g_ThinkFunction = ThinkFunction_SentryThink;
+
+		TFTeam myTeam = TF2_GetEntityTeam(entity);
+		TFTeam enemyTeam = GetEnemyTeam(myTeam);
+		Address globalTeam = SDKCall_GetGlobalTeam(enemyTeam);
+
+		// CObjectSentrygun::FindTarget uses CTFTeamManager to collect valid players.
+		// Add all enemy players to the desired team.
+		for (int client = 1; client <= MaxClients; client++)
+		{
+			SF2_BasePlayer player = SF2_BasePlayer(client);
+			if (player.IsValid && (player.IsInPvP))
+			{
+				TFTeam team = TF2_GetClientTeam(client);
+				g_PreHookTeam[client] = team;
+				bool friendly = IsObjectFriendly(entity, client);
+
+				if (friendly && team == enemyTeam)
+				{
+					CTeam_RemovePlayer(globalTeam, client);
+				}
+				else if (!friendly && team != enemyTeam)
+				{
+					CTeam_AddPlayer(globalTeam, client);
+				}
+
+				// Sentry Guns don't shoot spies disguised as the same team, spoof the disguise team
+				if (!friendly)
+				{
+					g_PreHookDisguiseTeam[client] = view_as<TFTeam>(GetEntProp(client, Prop_Send, "m_nDisguiseTeam"));
+					SetEntProp(client, Prop_Send, "m_nDisguiseTeam", TFTeam_Spectator);
+				}
+			}
+		}
+
+		// Buildings work in a similar way.
+		// NOTE: Previously, we would use CBaseObject::ChangeTeam, but we switched to AddObject/RemoveObject calls,
+		// due to ChangeTeam recreating the build points, causing issues with sapper placement.
+		int obj = -1;
+		while ((obj = FindEntityByClassname(obj, "obj_*")) != -1)
+		{
+			if (!GetEntProp(obj, Prop_Send, "m_bPlacing"))
+			{
+				TFTeam team = TF2_GetEntityTeam(obj);
+				g_PreHookTeam[obj] = team;
+				bool friendly = IsObjectFriendly(entity, obj);
+
+				if (friendly && team == enemyTeam)
+				{
+					CTeam_RemoveObject(globalTeam, obj);
+				}
+				else if (!friendly && team != enemyTeam)
+				{
+					CTeam_AddObject(globalTeam, obj);
+				}
+			}
+		}
+	}
+	else if (strcmp(classname, "obj_dispenser") == 0)
+	{
+		// CObjectDispenser::DispenseThink
+		if (GetNextThink(entity, "DispenseThink") != TICK_NEVER_THINK)
+		{
+			return MRES_Ignored;
+		}
+
+		if (!GetEntProp(entity, Prop_Send, "m_bPlacing") && !GetEntProp(entity, Prop_Send, "m_bBuilding"))
+		{
+			g_ThinkFunction = ThinkFunction_DispenseThink;
+
+			// Disallow players able to be healed from dispenser
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				SF2_BasePlayer player = SF2_BasePlayer(client);
+				if (player.IsValid && player.IsInPvP && player.Team != TFTeam_Red)
+				{
+					if (!IsObjectFriendly(entity, client))
+					{
+						player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+					}
+				}
+			}
+		}
+	}
+	else if (strcmp(classname, "obj_attachment_sapper") == 0)
+	{
+		// CBaseObject::BaseObjectThink
+		if (GetNextThink(entity, "BaseObjectThink") != TICK_NEVER_THINK)
+		{
+			return MRES_Ignored;
+		}
+
+		g_ThinkFunction = ThinkFunction_SapperThink;
+
+		// Always set team to spectator so we can place sappers on buildings of both teams
+		CBaseEntity_ChangeTeam(entity, view_as<TFTeam>(TFTeam_Spectator));
+	}
+
+	return MRES_Ignored;
+}
+
+static MRESReturn PhysicsDispatchThinkPost(int entity)
+{
+	switch (g_ThinkFunction)
+	{
+		case ThinkFunction_SentryThink:
+		{
+			TFTeam myTeam = TF2_GetEntityTeam(entity);
+			TFTeam enemyTeam = GetEnemyTeam(myTeam);
+			Address globalTeam = SDKCall_GetGlobalTeam(enemyTeam);
+
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				SF2_BasePlayer player = SF2_BasePlayer(client);
+				if (player.IsValid && (player.IsInPvP))
+				{
+					TFTeam team = g_PreHookTeam[client];
+					g_PreHookTeam[client] = TFTeam_Unassigned;
+					bool friendly = IsObjectFriendly(entity, client);
+
+					if (friendly && team == enemyTeam)
+					{
+						CTeam_AddPlayer(globalTeam, client);
+					}
+					else if (!friendly && team != enemyTeam)
+					{
+						CTeam_RemovePlayer(globalTeam, client);
+					}
+
+					if (!friendly)
+					{
+						SetEntProp(client, Prop_Send, "m_nDisguiseTeam", g_PreHookDisguiseTeam[client]);
+						g_PreHookDisguiseTeam[client] = TFTeam_Unassigned;
+					}
+				}
+			}
+
+			int obj = -1;
+			while ((obj = FindEntityByClassname(obj, "obj_*")) != -1)
+			{
+				if (!GetEntProp(obj, Prop_Send, "m_bPlacing"))
+				{
+					TFTeam team = g_PreHookTeam[obj];
+					bool friendly = IsObjectFriendly(entity, obj);
+
+					if (friendly && team == enemyTeam)
+					{
+						CTeam_AddObject(globalTeam, obj);
+					}
+					else if (!friendly && team != enemyTeam)
+					{
+						CTeam_RemoveObject(globalTeam, obj);
+					}
+
+					g_PreHookTeam[obj] = TFTeam_Unassigned;
+				}
+			}
+		}
+		case ThinkFunction_DispenseThink:
+		{
+			for (int client = 1; client <= MaxClients; client++)
+			{
+				SF2_BasePlayer player = SF2_BasePlayer(client);
+				if (player.IsValid && (player.IsInPvP) && player.Team != TFTeam_Red)
+				{
+					if (!IsObjectFriendly(entity, client))
+					{
+						player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+					}
+				}
+			}
+		}
+	}
+
+	g_ThinkFunction = ThinkFunction_None;
+
+	return MRES_Ignored;
+}
+
+static MRESReturn FlareExplodePre(int entity, DHookParam params)
+{
+	SF2_BasePlayer other = SF2_BasePlayer(params.Get(2));
+	if (!other.IsValid)
+	{
+		return MRES_Ignored;
+	}
+
+	if (!other.IsInPvP)
+	{
+		return MRES_Ignored;
+	}
+
+	if (other.Team == TFTeam_Red)
+	{
+		return MRES_Ignored;
+	}
+
+	other.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+
+	return MRES_Ignored;
+}
+
+static MRESReturn FlareExplodePost(int entity, DHookParam params)
+{
+	SF2_BasePlayer other = SF2_BasePlayer(params.Get(2));
+	if (!other.IsValid)
+	{
+		return MRES_Ignored;
+	}
+
+	if (!other.IsInPvP)
+	{
+		return MRES_Ignored;
+	}
+
+	if (other.Team == TFTeam_Red)
+	{
+		return MRES_Ignored;
+	}
+
+	other.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+
+	return MRES_Ignored;
+}
+
+static MRESReturn AllowedToHealTargetPre(int medigun, DHookReturn ret, DHookParam params)
+{
+	SF2_BasePlayer owner = SF2_BasePlayer(GetEntPropEnt(medigun, Prop_Send, "m_hOwnerEntity"));
+	if (!owner.IsValid)
+	{
+		owner = SF2_BasePlayer(GetEntPropEnt(medigun, Prop_Send, "m_hOwner"));
+	}
+	int entity = params.Get(1);
+	SF2_BasePlayer target = SF2_BasePlayer(entity);
+	if (owner.IsEliminated)
+	{
+		if (target.IsValid)
+		{
+			if (target.IsEliminated)
+			{
+				if (owner.IsInPvP && !target.IsInPvP)
+				{
+					ret.Value = false;
+					return MRES_Supercede;
+				}
+
+				if (!owner.IsInPvP && target.IsInPvP)
+				{
+					ret.Value = false;
+					return MRES_Supercede;
+				}
+			}
+			else
+			{
+				ret.Value = true;
+				return MRES_Supercede;
+			}
+		}
+		else if (entity > MaxClients && NPCGetFromEntIndex(entity) != -1)
+		{
+			ret.Value = true;
+			return MRES_Supercede;
+		}
+	}
+	return MRES_Ignored;
+}
+
+static MRESReturn JarExplodePre(int entity, DHookParam params)
+{
+	SF2_BasePlayer thrower = SF2_BasePlayer(GetEntPropEnt(entity, Prop_Send, "m_hThrower"));
+	if (!thrower.IsValid)
+	{
+		return MRES_Ignored;
+	}
+
+	if (!thrower.IsInPvP)
+	{
+		return MRES_Ignored;
+	}
+
+	if (thrower.Team == TFTeam_Red)
+	{
+		return MRES_Ignored;
+	}
+
+	thrower.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+	CBaseEntity(entity).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+
+	return MRES_Ignored;
+}
+
+static MRESReturn JarExplodePost(int entity, DHookParam params)
+{
+	SF2_BasePlayer thrower = SF2_BasePlayer(GetEntPropEnt(entity, Prop_Send, "m_hThrower"));
+	if (!thrower.IsValid)
+	{
+		return MRES_Ignored;
+	}
+
+	if (!thrower.IsInPvP)
+	{
+		return MRES_Ignored;
+	}
+
+	if (thrower.Team == TFTeam_Red)
+	{
+		return MRES_Ignored;
+	}
+
+	thrower.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+	CBaseEntity(entity).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+
+	return MRES_Ignored;
+}
+
+static MRESReturn VPhysicsUpdatePre(int entity, DHookParam params)
+{
+	SF2_BasePlayer thrower = SF2_BasePlayer(GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"));
+	if (!thrower.IsValid)
+	{
+		return MRES_Ignored;
+	}
+
+	if (!thrower.IsInPvP)
+	{
+		return MRES_Ignored;
+	}
+
+	if (thrower.Team == TFTeam_Red)
+	{
+		return MRES_Ignored;
+	}
+
+	TFTeam enemyTeam = GetEnemyTeam(TF2_GetEntityTeam(entity));
+
+	// Not needed because of our CanCollideWithTeammates hook, but can't hurt
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		SF2_BasePlayer client = SF2_BasePlayer(i);
+		if (!client.IsValid || client.Team == TFTeam_Red)
+		{
+			continue;
+		}
+
+		if (!client.IsInPvP)
+		{
+			continue;
+		}
+
+		client.SetProp(Prop_Send, "m_iTeamNum", view_as<int>(enemyTeam));
+	}
+
+	// Fix projectiles rarely bouncing off buildings
+	int obj = -1;
+	while ((obj = FindEntityByClassname(obj, "obj_*")) != -1)
+	{
+		if (!IsObjectFriendly(obj, thrower.index))
+		{
+			continue;
+		}
+
+		if (CBaseEntity(obj).GetProp(Prop_Send, "m_iTeamNum") == TFTeam_Red)
+		{
+			continue;
+		}
+
+		CBaseEntity(obj).SetProp(Prop_Send, "m_iTeamNum", view_as<int>(enemyTeam));
+	}
+
+	return MRES_Ignored;
+}
+
+static MRESReturn VPhysicsUpdatePost(int entity, DHookParam params)
+{
+	int thrower = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		SF2_BasePlayer client = SF2_BasePlayer(i);
+		if (!client.IsValid || client.Team == TFTeam_Red)
+		{
+			continue;
+		}
+
+		if (!client.IsInPvP)
+		{
+			continue;
+		}
+
+		client.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+	}
+
+	int obj = -1;
+	while ((obj = FindEntityByClassname(obj, "obj_*")) != -1)
+	{
+		if (!IsObjectFriendly(obj, thrower))
+		{
+			continue;
+		}
+
+		CBaseEntity(obj).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+	}
+
+	return MRES_Ignored;
+}
+
+static Action CleaverTouch(int entity, int other)
+{
+	if (other == 0)
+	{
+		return Plugin_Continue;
+	}
+
+	int owner = GetEntPropEnt(entity, Prop_Data, "m_hThrower");
+	if (owner == other)
+	{
+		return Plugin_Continue;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(owner);
+	if (player.IsValid)
+	{
+		if (player.Team == TFTeam_Red)
+		{
+			return Plugin_Continue;
+		}
+
+		if (!player.IsInPvP)
+		{
+			return Plugin_Continue;
+		}
+
+		player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+		CBaseEntity(entity).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+	}
+
+	return Plugin_Continue;
+}
+
+static void CleaverTouchPost(int entity, int other)
+{
+	if (other == 0)
+	{
+		return;
+	}
+
+	int owner = GetEntPropEnt(entity, Prop_Data, "m_hThrower");
+	if (owner == other)
+	{
+		return;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(owner);
+	if (player.IsValid)
+	{
+		if (player.Team == TFTeam_Red)
+		{
+			return;
+		}
+
+		if (!player.IsInPvP)
+		{
+			return;
+		}
+
+		player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+		CBaseEntity(entity).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+	}
+}
+
+static Action GrenadeTouch(int entity, int other)
+{
+	if (other == 0)
+	{
+		return Plugin_Continue;
+	}
+
+	int owner = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
+	if (owner == other)
+	{
+		return Plugin_Continue;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(owner);
+	if (player.IsValid)
+	{
+		if (player.Team == TFTeam_Red)
+		{
+			return Plugin_Continue;
+		}
+
+		if (!player.IsInPvP)
+		{
+			return Plugin_Continue;
+		}
+
+		player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+		CBaseEntity(entity).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Spectator);
+	}
+
+	return Plugin_Continue;
+}
+
+static void GrenadeTouchPost(int entity, int other)
+{
+	if (other == 0)
+	{
+		return;
+	}
+
+	int owner = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
+	if (owner == other)
+	{
+		return;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(owner);
+	if (player.IsValid)
+	{
+		if (player.Team == TFTeam_Red)
+		{
+			return;
+		}
+
+		if (!player.IsInPvP)
+		{
+			return;
+		}
+
+		player.SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+		CBaseEntity(entity).SetProp(Prop_Send, "m_iTeamNum", TFTeam_Blue);
+	}
+}
+
+static MRESReturn GetCustomDamageTypePost(int entity, DHookReturn ret)
+{
+	// Allows Sniper Rifles to hit teammates, without breaking Machina penetration
+	int penetrateType = SDKCall(g_SDKGetPenetrationType, entity);
+	if (penetrateType == 0)
+	{
+		ret.Value = 0;
+		return MRES_Supercede;
+	}
+
+	return MRES_Ignored;
 }
 
 /**
@@ -1091,6 +2140,7 @@ Action Hook_PvPPlayerTraceAttack(int victim, int &attacker, int &inflictor, floa
 
 	return Plugin_Continue;
 }
+
 static Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numPlayers, float delay)
 {
 	if (!g_Enabled)
@@ -1113,56 +2163,42 @@ static Action TempEntHook_PvPDecal(const char[] te_name, int[] players, int numP
 	return Plugin_Continue;
 }
 
-MRESReturn PvP_GetWeaponCustomDamageType(int weapon, int client, int &customDamageType)
+// For mediguns, eventually I'll make proper assistants
+static Action OnPlayerDeathEventPre(Event event, const char[] name, bool dontBroadcast)
 {
-	if (IsValidClient(client) && IsClientInPvP(client) && IsValidEntity(weapon) && IsValidEdict(weapon) && IsValidEntity(client))
+	if (!g_Enabled)
 	{
-		static const char fixWeaponPenetrationClasses[][] =
-		{
-			"tf_weapon_sniperrifle",
-			"tf_weapon_sniperrifle_decap",
-			"tf_weapon_sniperrifle_classic"
-		};
+		return Plugin_Continue;
+	}
 
-		char weaponName[256];
-		GetEntityClassname(weapon, weaponName, sizeof(weaponName));
+	SF2_BasePlayer attacker = SF2_BasePlayer(GetClientOfUserId(event.GetInt("attacker")));
 
-		/*
-		 * Fixes the sniper rifle not damaging teammates.
-		 *
-		 * WHY? For every other hitscan weapon in the game, simply enforcing lag compensation in CTFPlayer::WantsLagCompensationOnEntity()
-		 * works. However, when it comes to weapons that penetrate teammates, the bullet trace will not iterate through teammates. This is
-		 * the case with all sniper rifles, and is the reason why damage is never normally dealt to teammates despite having friendly fire
-		 * on and lag compensation.
-		 *
-		 * In this case, the type of penetration is determined by CTFWeaponBase::GetCustomDamageType(). For Snipers, default value is
-		 * TF_DMG_CUSTOM_PENETRATE_MY_TEAM (11) (piss rifle is TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE (14)). This value specifies
-		 * penetration of the bullet through teammates without damaging them. The damage type is switched to 0, and for the Machina at
-		 * full charge, TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS (12).
-		 *
-		 */
-		for (int i = 0; i < sizeof(fixWeaponPenetrationClasses); i++)
+	if (attacker.IsValid && attacker.IsInPvP)
+	{
+		CBaseEntity weapon = CBaseEntity(attacker.GetPropEnt(Prop_Send, "m_hActiveWeapon"));
+		if (weapon.IsValid() && GetWeaponID(weapon.index) == TF_WEAPON_MEDIGUN)
 		{
-			if (strcmp(weaponName, fixWeaponPenetrationClasses[i], false) == 0)
+			event.SetString("weapon_logclassname", "tf_weapon_deathgun");
+			event.SetString("weapon", "merasmus_zap");
+		}
+	}
+
+	SF2_BasePlayer assister = SF2_BasePlayer(GetClientOfUserId(event.GetInt("assister")));
+	if (assister.IsValid && assister.IsInPvP)
+	{
+		CBaseEntity weapon = CBaseEntity(assister.GetPropEnt(Prop_Send, "m_hActiveWeapon"));
+		if (weapon.IsValid() && GetWeaponID(weapon.index) == TF_WEAPON_MEDIGUN)
+		{
+			CBaseEntity target = CBaseEntity(weapon.GetPropEnt(Prop_Send, "m_hHealingTarget"));
+			if (target.index == attacker.index)
 			{
-				customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
-				int itemDefIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-
-				if ((itemDefIndex == 526 || itemDefIndex == 30665) && GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") >= 150.0)  // The Machina, Shooting Star
-				{
-					customDamageType = 12; // TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS
-				}
-				else
-				{
-					customDamageType = 0; // no penetration behavior.
-				}
-
-				return MRES_Supercede;
+				event.SetInt("assister", -1);
+				event.SetString("assister_fallback", "");
 			}
 		}
 	}
 
-	return MRES_Ignored;
+	return Plugin_Changed;
 }
 
 static MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHookReturn returnHandle, DHookParam params)
@@ -1172,19 +2208,8 @@ static MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHoo
 		return MRES_Ignored;
 	}
 
-	if (!IsValidEntity(projectile))
-	{
-		return MRES_Ignored;
-	}
-
-	int owner = GetEntPropEnt(projectile, Prop_Data, "m_hOwnerEntity");
-	if (IsValidClient(owner) && (IsRoundInWarmup() || IsClientInPvP(owner)))
-	{
-		returnHandle.Value = true;
-		return MRES_Supercede;
-	}
-
-	return MRES_Ignored;
+	returnHandle.Value = true;
+	return MRES_Supercede;
 }
 
 // API

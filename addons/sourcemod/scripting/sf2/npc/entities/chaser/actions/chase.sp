@@ -105,7 +105,7 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			if (actor.CurrentChaseDuration <= 0.0)
 			{
 				actor.State = STATE_ALERT;
-				return action.ChangeTo(SF2_ChaserAlertAction(_, data.AlertRunOnHearSound[difficulty]), "Oh he got away...");
+				return action.ChangeTo(SF2_ChaserAlertAction(_, data.AlertData.RunOnSuspect[difficulty]), "Oh he got away...");
 			}
 		}
 
@@ -177,7 +177,7 @@ static void OnResume(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		SF2NPC_Chaser controller = actor.Controller;
 		if (controller.IsValid())
 		{
-			if (controller.GetProfileData().ChaseInitialOnStun)
+			if (controller.GetProfileData().StunData.ChaseInitialOnEnd[controller.Difficulty])
 			{
 				actor.PerformVoice(SF2BossSound_ChaseInitial);
 			}

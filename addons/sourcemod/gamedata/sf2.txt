@@ -45,6 +45,65 @@
 				"linux" "208"
 				"windows" "207"
 			}
+
+			"CTFWeaponBase::GetWeaponID"
+			{
+				"windows" "380"
+				"linux"	"386"
+			}
+
+			"CBaseEntity::IsBaseCombatWeapon"
+			{
+				"windows" "91"
+				"linux"	"92"
+			}
+
+			"CBaseEntity::ChangeTeam"
+			{
+				"library" "server"
+				"linux"	"97"
+				"windows" "96"
+			}
+
+			"CTeam::AddPlayer"
+			{
+				"linux"	"209"
+				"windows" "208"
+			}
+
+			"CTeam::RemovePlayer"
+			{
+				"linux"	"210"
+				"windows" "209"
+			}
+
+			"CBaseGrenade::Explode"
+			{
+				"library" "server"
+				"linux"	"236"
+				"windows" "235"
+			}
+
+			"CTFBaseRocket::Explode"
+			{
+				"library" "server"
+				"linux"	"240"
+				"windows" "239"
+			}
+
+			"CBaseEntity::VPhysicsUpdate"
+			{
+				"library" "server"
+				"linux"	"164"
+				"windows" "163"
+			}
+
+			"CTFSniperRifle::GetPenetrateType"
+			{
+				"library" "server"
+				"linux"	"407"
+				"windows" "400"
+			}
 		}
 
 		"Signatures"
@@ -53,14 +112,18 @@
 			{
 				"library" "server"
 				"linux"	"@_ZN9CTFPlayer20PlaySpecificSequenceEPKc"
+				"linux64" "@_ZN9CTFPlayer20PlaySpecificSequenceEPKc"
 				"windows" "\x55\x8B\xEC\x53\x56\x8B\x75\x08\x57\x56\x8B\xF9\xE8\x2A\x2A\x2A\x2A\x8B\xD8"
+				"windows64" "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xFA\x48\x8B\xD9\xE8\x2A\x2A\x2A\x2A\x48\x8B\xCB\x83\xF8\xFF\x74\x2A"
 			}
 
 			"CBaseTrigger::PointIsWithin"
 			{
 				"library" "server"
 				"linux"	"@_ZN12CBaseTrigger13PointIsWithinERK6Vector"
+				"linux64" "@_ZN12CBaseTrigger13PointIsWithinERK6Vector"
 				"windows" "\x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x04\x89\x6C\x24\x04\x8B\xEC\x81\xEC\xAC\x00\x00\x00"
+				"windows64" "\x48\x81\xEC\xF8\x00\x00\x00\xF3\x0F\x10\x02"
 			}
 
 			// "CreateEntityByName( %s, %d ) - CreateEdict failed."
@@ -68,21 +131,200 @@
 			{
 				"library" "server"
 				"linux"	"@_Z18CreateEntityByNamePKci"
+				"linux64" "@_Z18CreateEntityByNamePKci"
 				"windows" "\x2A\x2A\x2A\x2A\x2A\x2A\x0C\x83\xFE\xFF\x74\x24\x8B\x0D"
+				"windows64" "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x8B\xDA\x48\x8B\xF9\x83\xFA\xFF"
 			}
 
 			"CBaseAnimating::LookupBone" // int CBaseAnimating::LookupBone( const char *szName )
 			{
 				"library" "server"
 				"windows" "\x55\x8B\xEC\x56\x8B\xF1\x80\xBE\x2A\x2A\x2A\x2A\x00\x75\x2A\x83\xBE\x2A\x2A\x2A\x2A\x00\x75\x2A\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x2A\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x8B\x86\x2A\x2A\x2A\x2A\x85\xC0\x74\x2A\x83\x38\x00\x74\x2A\xFF\x75\x2A\x50\xE8\x2A\x2A\x2A\x2A\x83\xC4\x08\x5E"
+				"windows64" "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x80\xB9\x65\x04\x00\x00\x00\x48\x8B\xFA\x48\x8B\xD9\x75\x2A\x48\x83\xB9\xC0\x05\x00\x00\x00\x75\x2A\xE8\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\x2A\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x48\x8B\x8B\xC0\x05\x00\x00\x48\x85\xC9\x74\x2A\x48\x83\x39\x00\x74\x2A\x48\x8B\xD7\x48\x8B\x5C\x24\x30"
 				"linux"	"@_ZN14CBaseAnimating10LookupBoneEPKc"
+				"linux64" "@_ZN14CBaseAnimating10LookupBoneEPKc"
 			}
 
 			"CBaseAnimating::GetBonePosition" // void CBaseAnimating::GetBonePosition ( int iBone, Vector &origin, QAngle &angles )
 			{
 				"library" "server"
 				"windows" "\x55\x8B\xEC\x83\xEC\x30\x56\x8B\xF1\x80\xBE\x2A\x2A\x2A\x2A\x00\x75\x2A"
+				"windows64" "\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x50\x80\xB9\x65\x04\x00\x00\x00"
 				"linux"	"@_ZN14CBaseAnimating15GetBonePositionEiR6VectorR6QAngle"
+				"linux64" "@_ZN14CBaseAnimating15GetBonePositionEiR6VectorR6QAngle"
+			}
+
+			"Studio_SeqVelocity"
+			{
+				"library" "server"
+				"windows" "\x55\x8B\xEC\x83\xEC\x20\x53\x56\x8B\x75\x0C\x57\x8B\x7D\x08"
+				"windows64" "\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x81\xEC\x80\x00\x00\x00\x0F\x29\x74\x24\x70\x49\x8B\xF9"
+				"linux" "@_Z18Studio_SeqVelocityPK10CStudioHdrifPKfR6Vector"
+				"linux64" "@_Z18Studio_SeqVelocityPK10CStudioHdrifPKfR6Vector"
+			}
+
+			"CBaseEntity::PhysicsDispatchThink"
+			{
+				"library" "server"
+				"linux" "@_ZN11CBaseEntity20PhysicsDispatchThinkEMS_FvvE"
+				"linux64" "@_ZN11CBaseEntity20PhysicsDispatchThinkEMS_FvvE"
+				"windows" "\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x08\x83\x78\x30\x00\x53"
+				"windows64" "\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x60\x48\x8B\x05\x87\xD6\xA8\x00"
+			}
+
+			"CBaseEntity::GetNextThink"
+			{
+				"library" "server"
+				"linux" "@_ZN11CBaseEntity12GetNextThinkEPKc"
+				"linux64" "@_ZN11CBaseEntity12GetNextThinkEPKc"
+				"windows" "\x55\x8B\xEC\x8B\x45\x08\x56\x8B\xF1\x85\xC0\x75\x2A\x8B\x86\xD0\x00\x00\x00\x89\x45\x08"
+				"windows64" "\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x0F\x29\x74\x24\x20\x0F\x28\xF2\x49\x8B\xF1"
+			}
+
+			"GetGlobalTeam"
+			{
+				"library" "server"
+				"linux"	"@_Z13GetGlobalTeami"
+				"linux64" "@_Z13GetGlobalTeami"
+				"windows" "\x55\x8B\xEC\x8B\x4D\x08\x85\xC9\x78\x2A\x3B\x0D\x2A\x2A\x2A\x2A\x7D\x2A\xA1\x2A\x2A\x2A\x2A\x8B\x04\x88\x5D\xC3"
+				"windows64" "\x85\xC9\x78\x2A\x3B\x0D\xBE\x0D\xA4\x00"
+			}
+
+			"CTFTeam::AddObject"
+			{
+				"library" "server"
+				"linux"	"@_ZN7CTFTeam9AddObjectEP11CBaseObject"
+				"linux64" "@_ZN7CTFTeam9AddObjectEP11CBaseObject"
+				"windows" "\x80\xB9\x72\x0C\x00\x00\x00\x74\x2A\x80\xB9\xD1\x03\x00\x00\x00"
+				"windows64" "\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x50"
+			}
+
+			"CTFTeam::RemoveObject"
+			{
+				"library" "server"
+				"linux"	"@_ZN7CTFTeam12RemoveObjectEP11CBaseObject"
+				"linux64" "@_ZN7CTFTeam12RemoveObjectEP11CBaseObject"
+				"windows" "\x55\x8B\xEC\x56\x8B\xF1\x83\xBE\xF0\x03\x00\x00\x00"
+				"windows64" "\x40\x53\x56\x48\x83\xEC\x28\x83\xB9\x20\x05\x00\x00\x00"
+			}
+
+			"CWeaponMedigun::AllowedToHealTarget"
+			{
+				"library" "server"
+				"linux" "@_ZN14CWeaponMedigun19AllowedToHealTargetEP11CBaseEntity"
+				"linux64" "@_ZN14CWeaponMedigun19AllowedToHealTargetEP11CBaseEntity"
+				"windows" "\x55\x8B\xEC\x53\x8B\xD9\x56\x57\x8B\x93\x10\x02\x00\x00\x85\xD2\x0F\x84\x2A\x2A\x2A\x2A\xB9\xFF\x1F\x00\x00\x83\xFA\xFF\x74\x2A\x0F\xB7\xCA\xA1\x2A\x2A\x2A\x2A\xC1\xE1\x04\x8D\x78\x04\x03\xF9\x0F\x84\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x57\x04\x0F\x85\x2A\x2A\x2A\x2A\x8B\x3F\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x07\x8B\xCF\x8B\x80\x48\x01\x00\x00\xFF\xD0\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\x8B\x75\x08\x85\xF6\x74\x2A"
+				"windows64" "\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x30\x48\x8B\xDA"
+			}
+		}
+
+		"Functions"
+		{
+			"CTFFlameThrower::DeflectPlayer"
+			{
+				"signature"	"CTFFlameThrower::DeflectPlayer"
+				"callconv" "thiscall"
+				"hooktype" "entity"
+				"return" "bool"
+				"this" "entity"
+				"arguments"
+				{
+					"target"
+					{
+						"type" "cbaseentity"
+					}
+					"owner"
+					{
+						"type" "cbaseentity"
+					}
+					"pos"
+					{
+						"type" "vectorptr"
+					}
+				}
+			}
+
+			"CBaseEntity::PhysicsDispatchThink"
+			{
+				"signature"	"CBaseEntity::PhysicsDispatchThink"
+				"callconv" "thiscall"
+				"return" "void"
+				"this" "entity"
+				"arguments"
+				{
+					"thinkFunc"
+					{
+						"type" "int"
+					}
+				}
+			}
+
+			"CBaseGrenade::Explode"
+			{
+				"offset" "CBaseGrenade::Explode"
+				"hooktype" "entity"
+				"return" "void"
+				"this" "entity"
+				"arguments"
+				{
+					"pTrace"
+					{
+						"type" "int"
+					}
+					"bitsDamageType"
+					{
+						"type" "int"
+					}
+				}
+			}
+
+			"CTFBaseRocket::Explode"
+			{
+				"offset" "CTFBaseRocket::Explode"
+				"hooktype" "entity"
+				"return" "void"
+				"this" "entity"
+				"arguments"
+				{
+					"pTrace"
+					{
+						"type" "int"
+					}
+					"pOther"
+					{
+						"type" "cbaseentity"
+					}
+				}
+			}
+
+			"CWeaponMedigun::AllowedToHealTarget"
+			{
+				"signature"	"CWeaponMedigun::AllowedToHealTarget"
+				"callconv" "thiscall"
+				"return" "bool"
+				"this" "entity"
+				"arguments"
+				{
+					"pTarget"
+					{
+						"type" "cbaseentity"
+					}
+				}
+			}
+
+			"CBaseEntity::VPhysicsUpdate"
+			{
+				"offset" "CBaseEntity::VPhysicsUpdate"
+				"hooktype" "entity"
+				"return" "void"
+				"this" "entity"
+				"arguments"
+				{
+					"pPhysics"
+					{
+						"type" "objectptr"
+					}
+				}
 			}
 		}
 	}

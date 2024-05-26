@@ -80,7 +80,7 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 	if (client.IsAlive && !client.IsEliminated && !client.HasEscaped)
 	{
-		if (SF_IsBoxingMap() || SF_IsRaidMap())
+		if (SF_IsBoxingMap() || SF_IsRaidMap() || SF_IsSlaughterRunMap())
 		{
 			g_WantsToSprint[client.index] = true;
 		}
@@ -262,6 +262,11 @@ float ClientGetDefaultSprintSpeed(int client, TFClassType class = TFClass_Unknow
 		}
 	}
 
+	if (SF_IsSlaughterRunMap())
+	{
+		returnFloat = g_SlaughterRunDefaultClassRunSpeedConVar.FloatValue;
+	}
+
 	if (IsValidClient(client))
 	{
 		// Call our forward.
@@ -430,7 +435,7 @@ void ClientHandleSprint(int client, bool sprint)
 		return;
 	}
 
-	if (SF_IsRaidMap() || SF_IsBoxingMap()) // On these maps we always sprint
+	if (SF_IsRaidMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap()) // On these maps we always sprint
 	{
 		return;
 	}
@@ -611,7 +616,7 @@ static void Hook_SpeedThink(int client)
 	}
 
 	float walkSpeed, sprintSpeed;
-	if (!IsClassConfigsValid())
+	if (!IsClassConfigsValid() || SF_IsSlaughterRunMap())
 	{
 		walkSpeed = ClientGetDefaultWalkSpeed(player.index);
 		sprintSpeed = ClientGetDefaultSprintSpeed(player.index);

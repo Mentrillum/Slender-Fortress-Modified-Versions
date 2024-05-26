@@ -120,6 +120,11 @@ static int OnStart(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, NextBotAc
 		duration *= (1.0 - action.Cycle);
 	}
 
+	if (SF2_ChaserEntity(actor.index).IsValid())
+	{
+		SF2_ChaserEntity(actor.index).GroundSpeedOverride = true;
+	}
+
 	action.EndTime = GetGameTime() + duration;
 
 	return action.Continue();
@@ -129,6 +134,10 @@ static int Update(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, float inte
 {
 	if (GetGameTime() > action.EndTime)
 	{
+		if (SF2_ChaserEntity(actor.index).IsValid())
+		{
+			SF2_ChaserEntity(actor.index).GroundSpeedOverride = false;
+		}
 		return action.Done();
 	}
 

@@ -263,7 +263,6 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 			TE_SendToAll();
 
 			SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.BulletDamage[difficulty], DMG_BULLET, _, CalculateBulletDamageForce(dir, 1.0), endPos);
-
 			if (SF2_BasePlayer(hitTarget).IsValid)
 			{
 				attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, SF2_ChaserBossEntity(actor.index));

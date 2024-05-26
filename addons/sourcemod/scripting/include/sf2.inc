@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.6 F"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.6 F"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.7 F"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.7 F"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -2139,6 +2139,16 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	public native void CreateSoundHint(float position[3]);
 
 	/**
+	 *	Enables/Disables the ability for bosses to utilize their ground movement as their speed.
+	 *	Only use this for situations where the boss does not constantly path towards someone.
+	 */
+	property bool GroundSpeedOverride
+	{
+		public native get();
+		public native set(bool value);
+	}
+
+	/**
 	 * Checks if an attack is possible the default way
 	 * This only includes FOV and range checks
 	 * Difficulty checks and health checks are not included by default
@@ -3925,6 +3935,8 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_ChaserBossEntity.SetNextAttackTime");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.DropItem");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.CreateSoundHint");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride.set");
 
 	// npc/entities/statue/entity.sp
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsValid.get");

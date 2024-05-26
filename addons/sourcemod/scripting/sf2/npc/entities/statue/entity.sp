@@ -88,7 +88,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 
 		INextBot bot = this.MyNextBotPointer();
 		ILocomotion loco = bot.GetLocomotionInterface();
-		if (!this.GetIsVisible(player))
+		if ((this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
 		{
 			return;
 		}
@@ -187,12 +187,18 @@ static void OnCreate(SF2_StatueEntity ent)
 	ent.LastKillTime = 0.0;
 	SDKHook(ent.index, SDKHook_Think, Think);
 	SDKHook(ent.index, SDKHook_ThinkPost, ThinkPost);
+	SetEntityTransmitState(ent.index, FL_EDICT_FULLCHECK);
+	g_DHookShouldTransmit.HookEntity(Hook_Pre, ent.index, ShouldTransmit);
+	g_DHookUpdateTransmitState.HookEntity(Hook_Pre, ent.index, UpdateTransmitState);
 }
 
 static Action Think(int entIndex)
 {
 	SF2_StatueEntity statue = SF2_StatueEntity(entIndex);
-	statue.Target = ProcessVision(statue);
+	int interruptConditions = 0;
+	CBaseEntity target = ProcessVision(statue, interruptConditions);
+	statue.InterruptConditions |= interruptConditions;
+	statue.Target = target;
 
 	if (statue.IsMoving)
 	{
@@ -220,12 +226,40 @@ static void ThinkPost(int entIndex)
 		statue.DoAlwaysLookAt(statue.Target);
 	}
 
+	statue.InterruptConditions = 0;
 	statue.SetNextThink(GetGameTime());
 }
 
-static CBaseEntity ProcessVision(SF2_StatueEntity statue)
+static MRESReturn UpdateTransmitState(int entIndex, DHookReturn ret, DHookParam params)
 {
+	if (entIndex == -1)
+	{
+		return MRES_Ignored;
+	}
+
+	ret.Value = SetEntityTransmitState(entIndex, FL_EDICT_FULLCHECK);
+	return MRES_Supercede;
+}
+
+static MRESReturn ShouldTransmit(int entIndex, DHookReturn ret, DHookParam params)
+{
+	if (entIndex == -1)
+	{
+		return MRES_Ignored;
+	}
+
+	ret.Value = FL_EDICT_ALWAYS;
+	return MRES_Supercede;
+}
+
+static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditions = 0)
+{
+	interruptConditions = 0;
 	SF2NPC_Statue controller = statue.Controller;
+	if (!controller.IsValid())
+	{
+		return CBaseEntity(-1);
+	}
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
 	SF2StatueBossProfileData data;
 	data = controller.GetProfileData();
@@ -234,31 +268,61 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 	int difficulty = controller.Difficulty;
 
 	float playerDists[MAXTF2PLAYERS];
+	int playerInterruptFlags[MAXTF2PLAYERS];
 
 	float traceMins[3] = { -16.0, ... };
 	traceMins[2] = 0.0;
 	float traceMaxs[3] = { 16.0, ... };
 	traceMaxs[2] = 0.0;
+	float myEyeAng[3];
+	statue.GetAbsAngles(myEyeAng);
+	float traceStartPos[3], traceEndPos[3], myPos[3], targetPos[3];
+	controller.GetEyePosition(traceStartPos);
+	statue.GetAbsOrigin(myPos);
 
 	int oldTarget = statue.OldTarget.index;
-	if (!IsTargetValidForSlender(statue, SF2_BasePlayer(oldTarget), attackEliminated))
+	if (!IsTargetValidForSlender(statue, CBaseEntity(oldTarget), attackEliminated))
 	{
 		statue.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
 		oldTarget = INVALID_ENT_REFERENCE;
 	}
-	if (originalData.IsPvEBoss && !IsPvETargetValid(SF2_BasePlayer(oldTarget)))
-	{
-		statue.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
-		oldTarget = INVALID_ENT_REFERENCE;
-	}
+
 	int bestNewTarget = oldTarget;
 	float searchRange = originalData.SearchRange[difficulty];
 	float bestNewTargetDist = Pow(searchRange, 2.0);
+	if (IsValidEntity(bestNewTarget))
+	{
+		CBaseEntity(bestNewTarget).GetAbsOrigin(targetPos);
+		bestNewTargetDist = GetVectorSquareMagnitude(myPos, targetPos);
+		if (bestNewTargetDist > Pow(searchRange, 2.0))
+		{
+			bestNewTargetDist = Pow(searchRange, 2.0);
+		}
+	}
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		SF2_BasePlayer client = SF2_BasePlayer(i);
-		if (!IsTargetValidForSlender(statue, client, attackEliminated) && !originalData.IsPvEBoss)
+
+		#if defined DEBUG
+		if (client.IsValid && g_PlayerDebugFlags[client.index] & DEBUG_BOSS_EYES)
+		{
+			for (int i2 = 1; i2 <= MaxClients; i2++)
+			{
+				if (!IsTargetValidForSlender(statue, SF2_BasePlayer(i2), attackEliminated))
+				{
+					continue;
+				}
+				float eyes[3];
+				SF2_BasePlayer(i2).GetEyePosition(eyes);
+				int color[4] = { 0, 255, 0, 255 };
+				TE_SetupBeamPoints(traceStartPos, eyes, g_ShockwaveBeam, g_ShockwaveHalo, 0, 30, 0.1, 5.0, 5.0, 5, 0.0, color, 1);
+				TE_SendToClient(client.index);
+			}
+		}
+		#endif
+
+		if (!IsTargetValidForSlender(statue, client, attackEliminated))
 		{
 			continue;
 		}
@@ -267,25 +331,22 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 		statue.SetInFOV(client, false);
 		statue.SetIsNear(client, false);
 
-		float traceStartPos[3], traceEndPos[3];
-		controller.GetEyePosition(traceStartPos);
 		client.GetEyePosition(traceEndPos);
 
 		float dist = 99999999999.9;
 
-		bool isVisible;
+		bool isVisible = false;
 		int traceHitEntity;
-
-		Handle trace = TR_TraceRayFilterEx(traceStartPos,
+		TR_TraceHullFilter(traceStartPos,
 		traceEndPos,
+		traceMins,
+		traceMaxs,
 		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP,
-		RayType_EndPoint,
 		TraceRayBossVisibility,
 		statue.index);
-		isVisible = !TR_DidHit(trace);
-		traceHitEntity = TR_GetEntityIndex(trace);
 
-		delete trace;
+		isVisible = !TR_DidHit();
+		traceHitEntity = TR_GetEntityIndex();
 
 		if (!isVisible && traceHitEntity == client.index)
 		{
@@ -312,6 +373,11 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 			}
 		}
 
+		if (dist > Pow(originalData.SearchRange[difficulty], 2.0))
+		{
+			isVisible = false;
+		}
+
 		statue.SetIsVisible(client, isVisible);
 
 		if (statue.GetIsVisible(client) && SF_SpecialRound(SPECIALROUND_BOO) && GetVectorSquareMagnitude(traceEndPos, traceStartPos) < SquareFloat(SPECIALROUND_BOO_DISTANCE))
@@ -322,28 +388,33 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 		if (client.ShouldBeForceChased(controller))
 		{
 			bestNewTarget = client.index;
+			playerInterruptFlags[client.index] |= COND_ENEMYRECHASE;
+		}
+
+		if (statue.GetIsVisible(client))
+		{
+			playerInterruptFlags[client.index] |= COND_ENEMYVISIBLE;
+		}
+
+		if (client.index != oldTarget)
+		{
+			playerInterruptFlags[client.index] |= COND_NEWENEMY;
 		}
 
 		playerDists[client.index] = dist;
 
 		if (statue.GetIsVisible(client))
 		{
-			float targetPos[3];
-			client.GetAbsOrigin(targetPos);
 			if (dist <= SquareFloat(searchRange))
 			{
 				if (dist < bestNewTargetDist)
 				{
 					bestNewTarget = client.index;
 					bestNewTargetDist = dist;
+					playerInterruptFlags[client.index] |= COND_SAWENEMY;
 				}
 			}
 		}
-	}
-
-	if (bestNewTarget != INVALID_ENT_REFERENCE)
-	{
-		statue.OldTarget = CBaseEntity(bestNewTarget);
 	}
 
 	if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || g_RenevantBossesChaseEndlessly)
@@ -379,6 +450,12 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue)
 			}
 		}
 		statue.CurrentChaseDuration = data.ChaseDuration[difficulty];
+	}
+
+	if (bestNewTarget != INVALID_ENT_REFERENCE)
+	{
+		interruptConditions = playerInterruptFlags[bestNewTarget];
+		statue.OldTarget = CBaseEntity(bestNewTarget);
 	}
 
 	return CBaseEntity(bestNewTarget);
@@ -439,9 +516,10 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	}
 	if (SF_IsSlaughterRunMap())
 	{
-		if (speed < 580.0)
+		float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
+		if (!originalData.SlaughterRunData.CustomMinimumSpeed[difficulty] && speed < slaughterSpeed)
 		{
-			speed = 580.0;
+			speed = slaughterSpeed;
 		}
 		acceleration += 10000.0;
 	}

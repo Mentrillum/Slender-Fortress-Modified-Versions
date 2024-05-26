@@ -50,6 +50,7 @@
 
 #define MAX_BUTTONS 26
 
+// m_nSolidType
 #define SOLID_NONE			0	// no solid model
 #define SOLID_BSP			1	// a BSP tree
 #define SOLID_BBOX			2	// an AABB
@@ -69,14 +70,6 @@
 
 #define TF_WEAPON_PHLOGISTINATOR 594
 
-// m_nSolidType
-#define SOLID_NONE 0 // no solid model
-#define SOLID_BSP 1 // a BSP tree
-#define SOLID_BBOX 2 // an AABB
-#define SOLID_OBB 3 // an OBB (not implemented yet)
-#define SOLID_OBB_YAW 4 // an OBB, constrained so that it can only yaw
-#define SOLID_CUSTOM 5 // Always call into the entity for tests
-#define SOLID_VPHYSICS 6 // solid vphysics object, get vcollide from the model and collide with that
 // m_usSolidFlags
 #define FSOLID_CUSTOMRAYTEST 0x0001 // Ignore solid type + always call into the entity for ray tests
 #define FSOLID_CUSTOMBOXTEST 0x0002 // Ignore solid type + always call into the entity for swept box tests
@@ -89,26 +82,6 @@
 #define FSOLID_USE_TRIGGER_BOUNDS 0x0080 // Uses a special trigger bounds separate from the normal OBB
 #define FSOLID_ROOT_PARENT_ALIGNED 0x0100 // Collisions are defined in root parent's local coordinate space
 #define FSOLID_TRIGGER_TOUCH_DEBRIS 0x0200 // This trigger will touch debris objects
-
-#define	DAMAGE_NO				0
-#define DAMAGE_EVENTS_ONLY		1
-#define	DAMAGE_YES				2
-#define	DAMAGE_AIM				3
-
-#define EF_BONEMERGE			0x001 	// Performs bone merge on client side
-#define	EF_BRIGHTLIGHT 			0x002	// DLIGHT centered at entity origin
-#define	EF_DIMLIGHT 			0x004	// player flashlight
-#define	EF_NOINTERP				0x008	// don't interpolate the next frame
-#define	EF_NOSHADOW				0x010	// Don't cast no shadow
-#define	EF_NODRAW				0x020	// don't draw entity
-#define	EF_NORECEIVESHADOW		0x040	// Don't receive no shadow
-#define	EF_BONEMERGE_FASTCULL	0x080	// For use with EF_BONEMERGE. If this is set, then it places this ent's origin at its
-										// parent and uses the parent's bbox + the max extents of the aiment.
-										// Otherwise, it sets up the parent's bones every frame to figure out where to place
-										// the aiment, which is inefficient because it'll setup the parent's bones even if
-										// the parent is not in the PVS.
-#define	EF_ITEM_BLINK			0x100	// blink an item so that the user notices it.
-#define	EF_PARENT_ANIMATES		0x200	// always assume that the parent entity is animating
 
 // hull defines, mostly used for space checking.
 float HULL_HUMAN_MINS[3] = { -13.0, -13.0, 0.0 };
@@ -439,6 +412,11 @@ void GetBonePosition(int entity, int bone, float origin[3], float angles[3])
 	SDKCall(g_SDKGetBonePosition, entity, bone, origin, angles);
 }
 
+bool CBaseAnimating_GetSequenceVelocity(Address studioHdr, int sequence, float cycle, Address poseParameter, float velocity[3])
+{
+	return SDKCall(g_SDKSequenceVelocity, studioHdr, sequence, cycle, poseParameter, velocity);
+}
+
 //  =========================================================
 //  GLOW FUNCTIONS
 //  =========================================================
@@ -543,6 +521,16 @@ int SDK_SwitchWeapon(int client, int weapon)
 	}
 
 	return -1;
+}
+
+int GetWeaponID(int entity)
+{
+	return SDKCall(g_SDKGetWeaponID, entity);
+}
+
+bool IsEntityWeapon(int entity)
+{
+	return SDKCall(g_SDKIsWeapon, entity);
 }
 
 bool IsClientInKart(int client)
@@ -813,14 +801,45 @@ void ShowHealthRegen(int client, int amount, int weaponIndex = -1)
 		event.Fire();
 	}
 }
+
+bool IsObjectFriendly(int obj, int entity)
+{
+	if (IsValidEntity(entity))
+	{
+		if (IsValidClient(entity))
+		{
+			if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == GetEntPropEnt(entity, Prop_Send, "m_hDisguiseTarget"))
+			{
+				return true;
+			}
+			else if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == entity)	// obj_dispenser
+			{
+				return true;
+			}
+			else if (GetEntPropEnt(obj, Prop_Data, "m_hParent") == entity)	// pd_dispenser
+			{
+				return true;
+			}
+		}
+		else
+		{
+			if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == GetEntPropEnt(entity, Prop_Send, "m_hBuilder"))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 //	==========================================================
 //	TF2-SPECIFIC FUNCTIONS
 //	==========================================================
 bool TF2_IsMiniCritBuffed(int client)
 {
 	return (TF2_IsPlayerInCondition(client, TFCond_CritCola)
-		|| TF2_IsPlayerInCondition(client, TFCond_Buffed)
-	);
+		|| TF2_IsPlayerInCondition(client, TFCond_Buffed));
 }
 
 bool TF2_IsInvisible(int client)
@@ -919,6 +938,31 @@ void SpecialRoundGameText(const char[] message, const char[] icon = "")
 	AcceptEntityInput(entity, "Display", entity, entity); //The only time I keep this.
 	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 }
+
+TFTeam TF2_GetEntityTeam(int entity)
+{
+	return view_as<TFTeam>(GetEntProp(entity, Prop_Data, "m_iTeamNum"));
+}
+
+TFTeam GetEnemyTeam(TFTeam team)
+{
+	switch (team)
+	{
+		case view_as<TFTeam>(TFTeam_Red):
+		{
+			return view_as<TFTeam>(TFTeam_Blue);
+		}
+		case view_as<TFTeam>(TFTeam_Blue):
+		{
+			return view_as<TFTeam>(TFTeam_Red);
+		}
+		default:
+		{
+			return team;
+		}
+	}
+}
+
 // Removes wearables such as botkillers from weapons.
 void TF2_RemoveWeaponSlotAndWearables(int client, int slot)
 {
@@ -1519,7 +1563,7 @@ bool IsInfiniteBlinkEnabled()
 
 bool IsInfiniteSprintEnabled()
 {
-	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1);
+	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap();
 }
 
 bool IsNightVisionEnabled()

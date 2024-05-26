@@ -326,16 +326,37 @@ static Action Timer_Think(Handle timer, any ref)
 		Call_PushCell(projectile);
 		Call_PushCell(CBaseEntity(hitIndex));
 		Call_Finish();
-	}
 
-	if (hitIndex == 0)
-	{
-		projectile.Touched = true;
-		return Plugin_Continue;
-	}
-	else
-	{
-		projectile.DoExplosion();
+		if (hitIndex == 0)
+		{
+			projectile.Touched = true;
+			return Plugin_Continue;
+		}
+		else
+		{
+			if (SF2_BasePlayer(hitIndex).IsValid)
+			{
+				if (!SF2_BasePlayer(hitIndex).IsEliminated || projectile.AttackWaiters)
+				{
+					projectile.DoExplosion();
+				}
+
+				if (g_Buildings.FindValue(EntIndexToEntRef(hitIndex)) != -1)
+				{
+					projectile.DoExplosion();
+				}
+
+				if (g_WhitelistedEntities.FindValue(EntIndexToEntRef(hitIndex)) != -1)
+				{
+					projectile.DoExplosion();
+				}
+
+				if (g_BreakableProps.FindValue(EntIndexToEntRef(hitIndex)) != -1)
+				{
+					projectile.DoExplosion();
+				}
+			}
+		}
 	}
 
 	return Plugin_Continue;

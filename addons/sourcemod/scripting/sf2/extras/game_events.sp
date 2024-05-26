@@ -640,6 +640,15 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
+		if (g_LoadOutsideMapsConVar.BoolValue && GetClientOfUserId(event.GetInt("userid")) > 0)
+		{
+			Call_StartForward(g_OnPlayerDeathPrePFwd);
+			Call_PushCell(SF2_BasePlayer(GetClientOfUserId(event.GetInt("userid"))));
+			Call_PushCell(event.GetInt("attacker"));
+			Call_PushCell(event.GetInt("inflictor_entindex"));
+			Call_PushCell((event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) != 0);
+			Call_Finish();
+		}
 		return Plugin_Continue;
 	}
 
@@ -663,11 +672,19 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	{
 		owner = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
 	}
+
+	Call_StartForward(g_OnPlayerDeathPrePFwd);
+	Call_PushCell(SF2_BasePlayer(client));
+	Call_PushCell(event.GetInt("attacker"));
+	Call_PushCell(inflictor);
+	Call_PushCell((event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) != 0);
+	Call_Finish();
+
 	int npcIndex = NPCGetFromEntIndex(owner);
 	if (npcIndex != -1)
 	{
 		int target = GetClientOfUserId(g_SourceTVUserID);
-		if (!IsValidClient(target) || !IsClientSourceTV(target)) //If the server has a source TV bot uses to print boss' name in kill feed.
+		if (!IsValidClient(target) || !IsClientSourceTV(target)) // If the server has a source TV bot uses to print boss' name in kill feed.
 		{
 			target = GetClientForDeath(client);
 		}
@@ -796,6 +813,7 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 		DebugMessage("EVENT END: Event_PlayerDeathPre");
 	}
 	#endif
+
 	event.BroadcastDisabled = true;
 	return Plugin_Changed;
 }
@@ -1057,5 +1075,47 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 	#endif
 	delete event;
 
+	return Plugin_Continue;
+}
+
+static bool g_MuteHealOnHit = false;
+
+Action Event_PlayerHealed(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	int patient = GetClientOfUserId(event.GetInt("patient"));
+	int healer = GetClientOfUserId(event.GetInt("healer"));
+	if (!IsValidClient(patient) || !IsValidClient(healer))
+	{
+		return Plugin_Continue;
+	}
+
+	if ((IsClientInPvP(patient) && IsClientInPvP(healer)) || IsRoundInWarmup()) // Both in PvP
+	{
+		event.BroadcastDisabled = true;
+		g_MuteHealOnHit = true;
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
+
+Action Event_HealOnHit(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	if (g_MuteHealOnHit)
+	{
+		event.BroadcastDisabled = true;
+		g_MuteHealOnHit = false;
+		return Plugin_Handled;
+	}
 	return Plugin_Continue;
 }

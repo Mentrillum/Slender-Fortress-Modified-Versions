@@ -298,7 +298,17 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		}
 
 		hit = true;
-		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, damage, 64, _, _, myEyePos, false);
+
+		char class[64];
+		prop.GetClassname(class, sizeof(class));
+
+		float realDamage = damage;
+		if (attackData.DamagePercent[difficulty] > 0.0)
+		{
+			realDamage = strcmp(class, "tank_boss", false) != 0 ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
+			realDamage *= attackData.DamagePercent[difficulty];
+		}
+		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, realDamage, 64, _, _, myEyePos, false);
 	}
 	delete targets;
 
@@ -332,9 +342,15 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		NormalizeVector(direction, direction);
 		ScaleVector(direction, force);
 
+		float realDamage = damage;
+		if (attackData.DamagePercent[difficulty] > 0.0)
+		{
+			realDamage = float(player.GetProp(Prop_Data, "m_iMaxHealth")) * attackData.DamagePercent[difficulty];
+		}
+
 		if (controller.HasAttribute(SF2Attribute_DeathCamOnLowHealth) || attackData.DeathCamLowHealth)
 		{
-			float checkDamage = damage;
+			float checkDamage = realDamage;
 
 			if ((damageType & DMG_ACID) && !player.InCondition(TFCond_DefenseBuffed))
 			{
@@ -355,12 +371,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			}
 		}
 
-		if (attackData.HitEffects != null)
-		{
-			SlenderSpawnEffects(attackData.HitEffects, controller.Index, false, _, _, _, player.index);
-		}
-
-		player.TakeDamage(_, actor.index, actor.index, damage, damageType, _, direction, myEyePos, false);
+		player.TakeDamage(_, actor.index, actor.index, realDamage, damageType, _, direction, myEyePos, false);
 		player.ViewPunch(viewPunch);
 
 		if (player.InCondition(TFCond_UberchargedCanteen) && player.InCondition(TFCond_CritOnFirstBlood) && player.InCondition(TFCond_UberBulletResist) && player.InCondition(TFCond_UberBlastResist) && player.InCondition(TFCond_UberFireResist) && player.InCondition(TFCond_MegaHeal)) //Remove Powerplay
@@ -383,14 +394,6 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			stressScalar = 1.0;
 		}
 		ClientAddStress(player.index, 0.33 * stressScalar);
-
-		Call_StartForward(g_OnClientDamagedByBossFwd);
-		Call_PushCell(player.index);
-		Call_PushCell(controller);
-		Call_PushCell(actor.index);
-		Call_PushFloat(damage);
-		Call_PushCell(damageType);
-		Call_Finish();
 	}
 
 	ArrayList hitSounds = hit ? data.HitSounds : data.MissSounds;
@@ -418,17 +421,27 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			phys.AcceptInput("Explode");
 			RemoveEntity(phys.index);
 		}
-
-		if (attackData.Disappear[difficulty])
-		{
-			controller.UnSpawn(true);
-		}
 	}
 	else
 	{
 		if (attackData.MissEffects != null)
 		{
 			SlenderSpawnEffects(attackData.MissEffects, controller.Index, false);
+		}
+	}
+
+	if (!SF_IsSlaughterRunMap())
+	{
+		if (attackData.Disappear[difficulty])
+		{
+			controller.UnSpawn(true);
+		}
+		else
+		{
+			if (hit && attackData.DisappearOnHit[difficulty])
+			{
+				controller.UnSpawn(true);
+			}
 		}
 	}
 }

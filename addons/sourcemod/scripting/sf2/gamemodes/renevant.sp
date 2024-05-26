@@ -243,6 +243,12 @@ static void Renevant_DoWaveAction(RenevantWave action)
 					{
 						g_RenevantWaveList.Erase(eraseWave);
 					}
+
+					eraseWave = g_RenevantWaveList.FindValue(RenevantWave_IncreaseDifficulty);
+					if (eraseWave != -1)
+					{
+						g_RenevantWaveList.Erase(eraseWave);
+					}
 				}
 			}
 		}

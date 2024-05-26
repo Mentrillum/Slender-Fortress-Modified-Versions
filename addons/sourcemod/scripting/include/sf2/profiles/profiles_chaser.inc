@@ -158,39 +158,39 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 
 	bool SetType(const char[] section)
 	{
-		if (strcmp(section, "ignite") == 0)
+		if (strcmp(section, "ignite", false) == 0)
 		{
 			this.Type = SF2DamageType_Ignite;
 		}
-		else if (strcmp(section, "gas") == 0)
+		else if (strcmp(section, "gas", false) == 0)
 		{
 			this.Type = SF2DamageType_Gas;
 		}
-		else if (strcmp(section, "bleed") == 0)
+		else if (strcmp(section, "bleed", false) == 0)
 		{
 			this.Type = SF2DamageType_Bleed;
 		}
-		else if (strcmp(section, "mark") == 0)
+		else if (strcmp(section, "mark", false) == 0)
 		{
 			this.Type = SF2DamageType_Mark;
 		}
-		else if (strcmp(section, "jarate") == 0)
+		else if (strcmp(section, "jarate", false) == 0)
 		{
 			this.Type = SF2DamageType_Jarate;
 		}
-		else if (strcmp(section, "milk") == 0)
+		else if (strcmp(section, "milk", false) == 0)
 		{
 			this.Type = SF2DamageType_Milk;
 		}
-		else if (strcmp(section, "stun") == 0)
+		else if (strcmp(section, "stun", false) == 0)
 		{
 			this.Type = SF2DamageType_Stun;
 		}
-		else if (strcmp(section, "smite") == 0)
+		else if (strcmp(section, "smite", false) == 0)
 		{
 			this.Type = SF2DamageType_Smite;
 		}
-		else if (strcmp(section, "random") == 0)
+		else if (strcmp(section, "random", false) == 0)
 		{
 			this.Types = new ArrayList();
 			this.Type = SF2DamageType_Random;
@@ -245,35 +245,35 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 			int nums = ExplodeString(type, " ", types, sizeof(types), sizeof(types[]));
 			for (int i = 0; i < nums; i++)
 			{
-				if (strcmp(types[i], "ignite") == 0)
+				if (strcmp(types[i], "ignite", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Ignite);
 				}
-				else if (strcmp(types[i], "gas") == 0)
+				else if (strcmp(types[i], "gas", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Gas);
 				}
-				else if (strcmp(types[i], "bleed") == 0)
+				else if (strcmp(types[i], "bleed", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Bleed);
 				}
-				else if (strcmp(types[i], "mark") == 0)
+				else if (strcmp(types[i], "mark", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Mark);
 				}
-				else if (strcmp(types[i], "jarate") == 0)
+				else if (strcmp(types[i], "jarate", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Jarate);
 				}
-				else if (strcmp(types[i], "milk") == 0)
+				else if (strcmp(types[i], "milk", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Milk);
 				}
-				else if (strcmp(types[i], "stun") == 0)
+				else if (strcmp(types[i], "stun", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Stun);
 				}
-				else if (strcmp(types[i], "smite") == 0)
+				else if (strcmp(types[i], "smite", false) == 0)
 				{
 					this.Types.Push(SF2DamageType_Smite);
 				}
@@ -320,35 +320,35 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 
 		for (int i = 0; i < nums; i++)
 		{
-			if (strcmp(flags[i], "slow") == 0)
+			if (strcmp(flags[i], "slow", false) == 0)
 			{
 				value |= (1 << 0);
 			}
-			else if (strcmp(flags[i], "stuck") == 0)
+			else if (strcmp(flags[i], "stuck", false) == 0)
 			{
 				value |= (1 << 1);
 			}
-			else if (strcmp(flags[i], "cheer_fx") == 0)
+			else if (strcmp(flags[i], "cheer_fx", false) == 0)
 			{
 				value |= (1 << 3);
 			}
-			else if (strcmp(flags[i], "no_fx") == 0)
+			else if (strcmp(flags[i], "no_fx", false) == 0)
 			{
 				value |= (1 << 5);
 			}
-			else if (strcmp(flags[i], "thirdperson") == 0)
+			else if (strcmp(flags[i], "thirdperson", false) == 0)
 			{
 				value |= (1 << 6);
 			}
-			else if (strcmp(flags[i], "ghost_fx") == 0)
+			else if (strcmp(flags[i], "ghost_fx", false) == 0)
 			{
 				value |= (1 << 7);
 			}
-			else if (strcmp(flags[i], "loser") == 0)
+			else if (strcmp(flags[i], "loser", false) == 0)
 			{
 				value |= (1 << 0) | (1 << 5) | (1 << 6);
 			}
-			else if (strcmp(flags[i], "boo") == 0)
+			else if (strcmp(flags[i], "boo", false) == 0)
 			{
 				value |= (1 << 7) | (1 << 6);
 			}
@@ -392,6 +392,7 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 		{
 			type = this.Types.Get(GetRandomInt(0, this.Types.Length - 1));
 		}
+
 		switch (type)
 		{
 			case SF2DamageType_Ignite:
@@ -633,6 +634,7 @@ enum struct SF2ChaserBossProfileAttackData
 	bool CanUseAgainstProps;
 
 	float Damage[Difficulty_Max];
+	float DamagePercent[Difficulty_Max];
 	float DamageVsProps;
 	float DamageForce[Difficulty_Max];
 	int DamageType[Difficulty_Max];
@@ -648,6 +650,7 @@ enum struct SF2ChaserBossProfileAttackData
 	float Cooldown[Difficulty_Max];
 
 	bool Disappear[Difficulty_Max];
+	bool DisappearOnHit[Difficulty_Max];
 	int Repeat;
 	int MaxRepeats;
 	ArrayList RepeatTimers;
@@ -728,6 +731,7 @@ enum struct SF2ChaserBossProfileAttackData
 	ArrayList StartEffects;
 	ArrayList HitEffects;
 	ArrayList MissEffects;
+	ArrayList KillEffects;
 	ArrayList DamageEffects;
 
 	bool ImmuneToDamage[Difficulty_Max];
@@ -751,6 +755,7 @@ enum struct SF2ChaserBossProfileAttackData
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
 			this.Damage[difficulty] = 50.0;
+			this.DamagePercent[difficulty] = 0.0;
 			this.DamageForce[difficulty] = 0.0;
 			this.DamageType[difficulty] = 128;
 			this.DamageDelay[difficulty] = 0.0;
@@ -764,6 +769,7 @@ enum struct SF2ChaserBossProfileAttackData
 			this.Cooldown[difficulty] = 0.0;
 
 			this.Disappear[difficulty] = false;
+			this.DisappearOnHit[difficulty] = false;
 
 			this.IgnoreAlwaysLooking[difficulty] = false;
 
@@ -872,6 +878,7 @@ enum struct SF2ChaserBossProfileAttackData
 		this.StartEffects = null;
 		this.HitEffects = null;
 		this.MissEffects = null;
+		this.KillEffects = null;
 		this.DamageEffects = null;
 
 		this.PostureWhitelist = null;
@@ -899,6 +906,11 @@ enum struct SF2ChaserBossProfileAttackData
 		if (this.MissEffects != null && this.MissEffects.Length <= 0)
 		{
 			delete this.MissEffects;
+		}
+
+		if (this.KillEffects != null && this.KillEffects.Length <= 0)
+		{
+			delete this.KillEffects;
 		}
 
 		if (this.DamageEffects != null)
@@ -940,6 +952,17 @@ enum struct SF2ChaserBossProfileAttackData
 			for (int i = 0; i < this.MissEffects.Length; i++)
 			{
 				this.MissEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.KillEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.KillEffects.Length; i++)
+			{
+				this.KillEffects.GetArray(i, effects, sizeof(effects));
 				effects.PostLoad();
 			}
 		}
@@ -995,6 +1018,18 @@ enum struct SF2ChaserBossProfileAttackData
 				effect.Destroy();
 			}
 			delete this.MissEffects;
+		}
+
+		if (this.KillEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.KillEffects.Length; i++)
+			{
+				this.KillEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.KillEffects;
 		}
 
 		if (this.DamageEffects != null)
@@ -1117,6 +1152,225 @@ enum struct SF2ChaserBossProfileSmellData
 	}
 }
 
+enum struct SF2ChaserBossProfileStunData
+{
+	bool Enabled[Difficulty_Max];
+	float Health[Difficulty_Max];
+	float Cooldown[Difficulty_Max];
+	bool Disappear[Difficulty_Max];
+
+	bool FlashlightStun[Difficulty_Max];
+	float FlashlightStunDamage[Difficulty_Max];
+
+	bool ChaseInitialOnEnd[Difficulty_Max];
+
+	bool KeyDrop;
+	char KeyModel[PLATFORM_MAX_PATH];
+	char KeyTrigger[PLATFORM_MAX_PATH];
+
+	bool ItemDrop[Difficulty_Max];
+	int ItemDropType[Difficulty_Max];
+
+	float AddHealthPerPlayer[Difficulty_Max];
+	float AddHealthPerScout[Difficulty_Max];
+	float AddHealthPerSoldier[Difficulty_Max];
+	float AddHealthPerPyro[Difficulty_Max];
+	float AddHealthPerDemoman[Difficulty_Max];
+	float AddHealthPerHeavy[Difficulty_Max];
+	float AddHealthPerEngineer[Difficulty_Max];
+	float AddHealthPerMedic[Difficulty_Max];
+	float AddHealthPerSniper[Difficulty_Max];
+	float AddHealthPerSpy[Difficulty_Max];
+	float AddHealthPerStun[Difficulty_Max];
+	float AddSpeedPerStun[Difficulty_Max];
+	float AddAccelerationPerStun[Difficulty_Max];
+
+	ArrayList StartEffects;
+	ArrayList EndEffects;
+
+	void Init()
+	{
+		this.KeyDrop = false;
+		this.KeyModel = SF_KEYMODEL;
+		this.KeyTrigger[0] = '\0';
+
+		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
+		{
+			this.Enabled[difficulty] = false;
+			this.Health[difficulty] = 50.0;
+			this.Cooldown[difficulty] = 3.5;
+			this.Disappear[difficulty] = false;
+
+			this.FlashlightStun[difficulty] = false;
+			this.FlashlightStunDamage[difficulty] = 0.0;
+
+			this.ChaseInitialOnEnd[difficulty] = false;
+
+			this.ItemDrop[difficulty] = false;
+			this.ItemDropType[difficulty] = 1;
+
+			this.AddHealthPerPlayer[difficulty] = 0.0;
+			this.AddHealthPerScout[difficulty] = 0.0;
+			this.AddHealthPerSoldier[difficulty] = 0.0;
+			this.AddHealthPerPyro[difficulty] = 0.0;
+			this.AddHealthPerDemoman[difficulty] = 0.0;
+			this.AddHealthPerHeavy[difficulty] = 0.0;
+			this.AddHealthPerEngineer[difficulty] = 0.0;
+			this.AddHealthPerMedic[difficulty] = 0.0;
+			this.AddHealthPerSniper[difficulty] = 0.0;
+			this.AddHealthPerSpy[difficulty] = 0.0;
+			this.AddHealthPerStun[difficulty] = 0.0;
+			this.AddSpeedPerStun[difficulty] = 0.0;
+			this.AddAccelerationPerStun[difficulty] = 0.0;
+		}
+
+		this.StartEffects = null;
+		this.EndEffects = null;
+	}
+
+	void Load(KeyValues kv, bool checkFile)
+	{
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "health", this.Health, this.Health);
+		GetProfileDifficultyFloatValues(kv, "cooldown", this.Cooldown, this.Cooldown);
+		GetProfileDifficultyBoolValues(kv, "disappear", this.Disappear, this.Disappear);
+
+		if (kv.JumpToKey("flashlight_stun"))
+		{
+			for (int i = 0; i < Difficulty_Max; i++)
+			{
+				this.FlashlightStun[i] = true;
+			}
+			GetProfileDifficultyBoolValues(kv, "enabled", this.FlashlightStun, this.FlashlightStun);
+			GetProfileDifficultyFloatValues(kv, "damage", this.FlashlightStunDamage, this.FlashlightStunDamage);
+			kv.GoBack();
+		}
+
+		GetProfileDifficultyBoolValues(kv, "chase_initial_on_end", this.ChaseInitialOnEnd, this.ChaseInitialOnEnd);
+
+		this.KeyDrop = kv.GetNum("key_drop", this.KeyDrop) != 0;
+		kv.GetString("key_model", this.KeyModel, sizeof(this.KeyModel), this.KeyModel);
+		PrecacheModel2(this.KeyModel, _, _, checkFile);
+		kv.GetString("key_trigger", this.KeyTrigger, sizeof(this.KeyTrigger), this.KeyTrigger);
+
+		GetProfileDifficultyBoolValues(kv, "item_drop", this.ItemDrop, this.ItemDrop);
+		GetProfileDifficultyNumValues(kv, "item_drop_type", this.ItemDropType, this.ItemDropType);
+
+		if (kv.JumpToKey("effects"))
+		{
+			if (kv.JumpToKey("on_start"))
+			{
+				this.StartEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, checkFile);
+						this.StartEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("on_end"))
+			{
+				this.EndEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, checkFile);
+						this.EndEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("add_health"))
+		{
+			GetProfileDifficultyFloatValues(kv, "player", this.AddHealthPerPlayer, this.AddHealthPerPlayer);
+			GetProfileDifficultyFloatValues(kv, "scout", this.AddHealthPerScout, this.AddHealthPerScout);
+			GetProfileDifficultyFloatValues(kv, "soldier", this.AddHealthPerSoldier, this.AddHealthPerSoldier);
+			GetProfileDifficultyFloatValues(kv, "pyro", this.AddHealthPerPyro, this.AddHealthPerPyro);
+			GetProfileDifficultyFloatValues(kv, "demoman", this.AddHealthPerDemoman, this.AddHealthPerDemoman);
+			GetProfileDifficultyFloatValues(kv, "heavy", this.AddHealthPerHeavy, this.AddHealthPerHeavy);
+			GetProfileDifficultyFloatValues(kv, "engineer", this.AddHealthPerEngineer, this.AddHealthPerEngineer);
+			GetProfileDifficultyFloatValues(kv, "medic", this.AddHealthPerMedic, this.AddHealthPerMedic);
+			GetProfileDifficultyFloatValues(kv, "sniper", this.AddHealthPerSniper, this.AddHealthPerSniper);
+			GetProfileDifficultyFloatValues(kv, "spy", this.AddHealthPerSpy, this.AddHealthPerSpy);
+			GetProfileDifficultyFloatValues(kv, "on_stun", this.AddHealthPerStun, this.AddHealthPerStun);
+			kv.GoBack();
+		}
+
+		GetProfileDifficultyFloatValues(kv, "add_speed", this.AddSpeedPerStun, this.AddSpeedPerStun);
+		GetProfileDifficultyFloatValues(kv, "add_acceleration", this.AddAccelerationPerStun, this.AddAccelerationPerStun);
+	}
+
+	void PostLoad()
+	{
+		if (this.StartEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.StartEffects.Length; i++)
+			{
+				this.StartEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.EndEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.EndEffects.Length; i++)
+			{
+				this.EndEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+	}
+
+	void Destroy()
+	{
+		if (this.StartEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.StartEffects.Length; i++)
+			{
+				this.StartEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.StartEffects;
+		}
+
+		if (this.EndEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.EndEffects.Length; i++)
+			{
+				this.EndEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.EndEffects;
+		}
+	}
+}
+
 enum struct SF2ChaserBossProfileDeathData
 {
 	bool Enabled[Difficulty_Max];
@@ -1146,6 +1400,9 @@ enum struct SF2ChaserBossProfileDeathData
 
 	ArrayList Gibs;
 	int GibSkin;
+
+	ArrayList StartEffects;
+	ArrayList EndEffects;
 
 	void Init()
 	{
@@ -1180,6 +1437,9 @@ enum struct SF2ChaserBossProfileDeathData
 
 		this.Gibs = null;
 		this.GibSkin = 0;
+
+		this.StartEffects = null;
+		this.EndEffects = null;
 	}
 
 	void Load(KeyValues kv, bool checkFile)
@@ -1197,6 +1457,48 @@ enum struct SF2ChaserBossProfileDeathData
 
 		GetProfileDifficultyBoolValues(kv, "item_drop", this.ItemDrop, this.ItemDrop);
 		GetProfileDifficultyNumValues(kv, "item_drop_type", this.ItemDropType, this.ItemDropType);
+
+		if (kv.JumpToKey("effects"))
+		{
+			if (kv.JumpToKey("on_start"))
+			{
+				this.StartEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, checkFile);
+						this.StartEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("on_end"))
+			{
+				this.EndEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, checkFile);
+						this.EndEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
 
 		if (kv.JumpToKey("add_health"))
 		{
@@ -1234,11 +1536,60 @@ enum struct SF2ChaserBossProfileDeathData
 		}
 	}
 
+	void PostLoad()
+	{
+		if (this.StartEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.StartEffects.Length; i++)
+			{
+				this.StartEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+
+		if (this.EndEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effects;
+
+			for (int i = 0; i < this.EndEffects.Length; i++)
+			{
+				this.EndEffects.GetArray(i, effects, sizeof(effects));
+				effects.PostLoad();
+			}
+		}
+	}
+
 	void Destroy()
 	{
 		if (this.Gibs != null)
 		{
 			delete this.Gibs;
+		}
+
+		if (this.StartEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.StartEffects.Length; i++)
+			{
+				this.StartEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.StartEffects;
+		}
+
+		if (this.EndEffects != null)
+		{
+			SF2BossProfileBaseEffectInfo effect;
+
+			for (int i = 0; i < this.EndEffects.Length; i++)
+			{
+				this.EndEffects.GetArray(i, effect, sizeof(effect));
+				effect.Destroy();
+			}
+			delete this.EndEffects;
 		}
 	}
 }
@@ -1944,6 +2295,155 @@ enum struct SF2ChaserBossProfileIdleData
 	}
 }
 
+enum struct SF2ChaserBossProfileAlertData
+{
+	float GraceTime[Difficulty_Max];
+	float Duration[Difficulty_Max];
+	bool RunOnWander[Difficulty_Max];
+	bool RunOnSuspect[Difficulty_Max];
+
+	bool TurnEnabled[Difficulty_Max];
+	float TurnAngle[Difficulty_Max];
+	float TurnMinTime[Difficulty_Max];
+	float TurnMaxTime[Difficulty_Max];
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Duration[i] = 10.0;
+			this.GraceTime[i] = 0.5;
+			this.RunOnSuspect[i] = false;
+			this.RunOnWander[i] = false;
+
+			this.TurnEnabled[i] = true;
+			this.TurnAngle[i] = 360.0;
+			this.TurnMinTime[i] = 1.5;
+			this.TurnMaxTime[i] = 3.0;
+		}
+	}
+
+	void Load(KeyValues kv)
+	{
+		GetProfileDifficultyFloatValues(kv, "gracetime", this.GraceTime, this.GraceTime);
+		GetProfileDifficultyFloatValues(kv, "duration", this.Duration, this.Duration);
+		GetProfileDifficultyBoolValues(kv, "run_on_wander", this.RunOnWander, this.RunOnWander);
+		GetProfileDifficultyBoolValues(kv, "run_on_suspect", this.RunOnSuspect, this.RunOnSuspect);
+
+		if (kv.JumpToKey("turn"))
+		{
+			GetProfileDifficultyBoolValues(kv, "enabled", this.TurnEnabled, this.TurnEnabled);
+			GetProfileDifficultyFloatValues(kv, "angle", this.TurnAngle, this.TurnAngle);
+			GetProfileDifficultyFloatValues(kv, "cooldown_min", this.TurnMinTime, this.TurnMinTime);
+			GetProfileDifficultyFloatValues(kv, "cooldown_max", this.TurnMaxTime, this.TurnMaxTime);
+			kv.GoBack();
+		}
+	}
+}
+
+enum struct SF2ChaserBossProfileResistanceData
+{
+	bool Enabled[Difficulty_Max];
+	float Multiplier[Difficulty_Max];
+
+	ArrayList DamageTypes;
+	ArrayList HitboxGroups;
+	ArrayList Weapons;
+
+	void Init()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = false;
+			this.Multiplier[i] = 1.0;
+		}
+
+		this.DamageTypes = null;
+		this.HitboxGroups = null;
+		this.Weapons = null;
+	}
+
+	void Load(KeyValues kv)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.Enabled[i] = true;
+		}
+		GetProfileDifficultyBoolValues(kv, "enabled", this.Enabled, this.Enabled);
+		GetProfileDifficultyFloatValues(kv, "multiplier", this.Multiplier, this.Multiplier);
+		char key[64];
+		int resistance = -1;
+		if (kv.JumpToKey("damage_type"))
+		{
+			this.DamageTypes = new ArrayList();
+			resistance = -1;
+			for (int i = 1;; i++)
+			{
+				FormatEx(key, sizeof(key), "%d", i);
+				resistance = kv.GetNum(key, -1);
+				if (resistance == -1)
+				{
+					break;
+				}
+				this.DamageTypes.Push(resistance);
+			}
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("hitbox"))
+		{
+			this.HitboxGroups = new ArrayList();
+			resistance = -1;
+			for (int i = 1;; i++)
+			{
+				FormatEx(key, sizeof(key), "%d", i);
+				resistance = kv.GetNum(key, -1);
+				if (resistance == -1)
+				{
+					break;
+				}
+				this.HitboxGroups.Push(resistance);
+			}
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("weapon"))
+		{
+			this.Weapons = new ArrayList();
+			resistance = -1;
+			for (int i = 1;; i++)
+			{
+				FormatEx(key, sizeof(key), "%d", i);
+				resistance = kv.GetNum(key, -1);
+				if (resistance == -1)
+				{
+					break;
+				}
+				this.Weapons.Push(resistance);
+			}
+			kv.GoBack();
+		}
+	}
+
+	void Destroy()
+	{
+		if (this.DamageTypes != null)
+		{
+			delete this.DamageTypes;
+		}
+
+		if (this.HitboxGroups != null)
+		{
+			delete this.HitboxGroups;
+		}
+
+		if (this.Weapons != null)
+		{
+			delete this.Weapons;
+		}
+	}
+}
+
 enum struct SF2ChaserBossProfileData
 {
 	float WalkSpeed[Difficulty_Max];
@@ -1953,11 +2453,6 @@ enum struct SF2ChaserBossProfileData
 	ArrayList Attacks;
 
 	ArrayList AttackPropModels;
-
-	float AlertDuration[Difficulty_Max];
-	float AlertGracetime[Difficulty_Max];
-	bool AlertRunOnHearSound[Difficulty_Max];
-	bool AlertRunOnWander[Difficulty_Max];
 
 	float ChaseDuration[Difficulty_Max];
 	float ChaseDurationAddMaxRange[Difficulty_Max];
@@ -1986,19 +2481,9 @@ enum struct SF2ChaserBossProfileData
 	float WanderEnterTimeMin[Difficulty_Max];
 	float WanderEnterTimeMax[Difficulty_Max];
 
-	bool StunEnabled;
-	float StunCooldown[Difficulty_Max];
-	float StunHealth[Difficulty_Max];
-	float StunHealthPerPlayer;
-	float StunHealthPerClass[10];
-	bool FlashlightStun[Difficulty_Max];
-	float FlashlightDamage[Difficulty_Max];
-	bool DisappearOnStun;
-	bool ItemDropOnStun[Difficulty_Max];
-	int StunItemDropType[Difficulty_Max];
-	bool ChaseInitialOnStun;
 	ArrayList DamageResistances;
 
+	SF2ChaserBossProfileStunData StunData;
 	SF2ChaserBossProfileDeathData DeathData;
 
 	bool KeyDrop;
@@ -2143,17 +2628,13 @@ enum struct SF2ChaserBossProfileData
 	SF2ChaserBossProfileCloakData CloakData;
 
 	SF2ChaserBossProfileIdleData IdleData;
+	SF2ChaserBossProfileAlertData AlertData;
 
 	void Init()
 	{
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
 			this.WalkSpeed[difficulty] = 90.0;
-
-			this.AlertDuration[difficulty] = 5.0;
-			this.AlertGracetime[difficulty] = 0.5;
-			this.AlertRunOnHearSound[difficulty] = false;
-			this.AlertRunOnWander[difficulty] = false;
 
 			this.ChaseDuration[difficulty] = 10.0;
 			this.ChaseDurationAddMaxRange[difficulty] = 1024.0;
@@ -2167,19 +2648,12 @@ enum struct SF2ChaserBossProfileData
 			this.SoundPosDistanceTolerance[difficulty] = 512.0;
 
 			this.CanWander[difficulty] = true;
-			this.WanderRangeMin[difficulty] = 400.0;
-			this.WanderRangeMax[difficulty] = 1024.0;
+			this.WanderRangeMin[difficulty] = 800.0;
+			this.WanderRangeMax[difficulty] = 1600.0;
 			this.WanderTimeMin[difficulty] = 8.0;
 			this.WanderTimeMax[difficulty] = 12.0;
 			this.WanderEnterTimeMin[difficulty] = 2.0;
 			this.WanderEnterTimeMax[difficulty] = 4.5;
-
-			this.StunCooldown[difficulty] = 3.5;
-			this.StunHealth[difficulty] = 0.0;
-			this.FlashlightStun[difficulty] = false;
-			this.FlashlightDamage[difficulty] = 0.0;
-			this.ItemDropOnStun[difficulty] = false;
-			this.StunItemDropType[difficulty] = 1;
 
 			this.AutoChaseEnabled[difficulty] = false;
 			this.AutoChaseCount[difficulty] = 100;
@@ -2237,16 +2711,9 @@ enum struct SF2ChaserBossProfileData
 			this.FlashlightSenses.AddCount[difficulty] = 5;
 		}
 
-		this.StunEnabled = false;
-		this.StunHealthPerPlayer = 0.0;
-		for (int i = 0; i < 10; i++)
-		{
-			this.StunHealthPerClass[i] = 0.0;
-		}
-		this.DisappearOnStun = false;
-		this.ChaseInitialOnStun = false;
 		this.DamageResistances = null;
 
+		this.StunData.Init();
 		this.DeathData.Init();
 
 		this.KeyDrop = false;
@@ -2373,6 +2840,7 @@ enum struct SF2ChaserBossProfileData
 		this.CloakData.Init();
 
 		this.IdleData.Init();
+		this.AlertData.Init();
 	}
 
 	void PostLoad()
@@ -2401,6 +2869,9 @@ enum struct SF2ChaserBossProfileData
 		this.IdleMusics.PostLoad();
 
 		this.CloakData.PostLoad();
+
+		this.StunData.PostLoad();
+		this.DeathData.PostLoad();
 
 		if (this.ProjectilePosOffsets != null && this.ProjectilePosOffsets.Length <= 0)
 		{
@@ -2739,6 +3210,7 @@ enum struct SF2ChaserBossProfileData
 
 		this.CloakData.Destroy();
 
+		this.StunData.Destroy();
 		this.DeathData.Destroy();
 
 		if (this.Attacks != null)
@@ -2771,6 +3243,15 @@ enum struct SF2ChaserBossProfileData
 
 		if (this.DamageResistances != null)
 		{
+			SF2ChaserBossProfileResistanceData resistanceData;
+
+			for (int i = 0; i < this.DamageResistances.Length; i++)
+			{
+				this.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
+
+				resistanceData.Destroy();
+			}
+
 			delete this.DamageResistances;
 		}
 
