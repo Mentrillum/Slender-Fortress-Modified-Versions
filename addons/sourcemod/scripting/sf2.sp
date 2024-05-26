@@ -496,6 +496,7 @@ ConVar g_NewBossRoundForceConVar;
 ConVar g_NewBossRoundIncludeMain;
 ConVar g_IgnoreRoundWinConditionsConVar;
 ConVar g_EnableWallHaxConVar;
+ConVar g_EnablePlayerOutlinesConVar;
 ConVar g_IgnoreRedPlayerDeathSwapConVar;
 ConVar g_PlayerVoiceDistanceConVar;
 ConVar g_PlayerVoiceWallScaleConVar;
