@@ -3934,7 +3934,8 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_ChaserBossEntity.SetNextAttackTime");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.DropItem");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.CreateSoundHint");
-	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride.set");
 
 	// npc/entities/statue/entity.sp
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsValid.get");
