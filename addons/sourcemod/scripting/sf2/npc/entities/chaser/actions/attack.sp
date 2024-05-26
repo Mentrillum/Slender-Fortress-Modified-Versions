@@ -248,15 +248,16 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 		SlenderSpawnEffects(attackData.StartEffects, controller.Index, false);
 	}
 
+	if (attackData.RunSpeed[difficulty] > 0.0)
+	{
+		actor.MovementType = SF2NPCMoveType_Attack;
+	}
+
 	if (attackData.Type == SF2BossAttackType_Custom)
 	{
 		return action.Continue();
 	}
 
-	if (attackData.RunSpeed[difficulty] > 0.0)
-	{
-		actor.MovementType = SF2NPCMoveType_Attack;
-	}
 	actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
 	actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
 
@@ -329,12 +330,13 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 			end = true;
 		}
 
-		if (actor.MovementType == SF2NPCMoveType_Attack && attackData.Type != SF2BossAttackType_Custom)
+		if (actor.MovementType == SF2NPCMoveType_Attack)
 		{
 			if (actor.Teleporters.Length > 0)
 			{
 				CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(targetPos);
 			}
+
 			if (!bot.IsRangeLessThanEx(targetPos, 8.0))
 			{
 				if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
@@ -343,6 +345,17 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 				}
 			}
 		}
+	}
+
+	if (!path.IsValid())
+	{
+		loco.Stop();
+		actor.IsAttemptingToMove = false;
+	}
+	else
+	{
+		path.Update(bot);
+		actor.IsAttemptingToMove = true;
 	}
 
 	if (attackData.Type == SF2BossAttackType_Custom)
@@ -384,17 +397,6 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 			}
 		}
 		return action.Done("Attack finished");
-	}
-
-	if (!path.IsValid())
-	{
-		loco.Stop();
-		actor.IsAttemptingToMove = false;
-	}
-	else
-	{
-		path.Update(bot);
-		actor.IsAttemptingToMove = true;
 	}
 
 	return action.Continue();
@@ -445,6 +447,7 @@ static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 	actor.IsAttacking = false;
 	actor.IsAttemptingToMove = false;
 	actor.CancelAttack = false;
+	actor.GroundSpeedOverride = false;
 	actor.MovementType = action.OldMovementType;
 
 	char value[PLATFORM_MAX_PATH];

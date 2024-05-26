@@ -92,28 +92,28 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 	}
 }
 
-#include "sf2/mapentities/base_spawnpoint.sp"
-#include "sf2/mapentities/sf2_game_text.sp"
-#include "sf2/mapentities/sf2_gamerules.sp"
-#include "sf2/mapentities/sf2_trigger_escape.sp"
-#include "sf2/mapentities/sf2_info_player_escapespawn.sp"
-#include "sf2/mapentities/sf2_trigger_pvp.sp"
-#include "sf2/mapentities/sf2_trigger_pve.sp"
-#include "sf2/mapentities/sf2_info_player_pvpspawn.sp"
-#include "sf2/mapentities/sf2_info_player_proxyspawn.sp"
-#include "sf2/mapentities/sf2_info_boss_spawn.sp"
-#include "sf2/mapentities/sf2_info_page_spawn.sp"
-#include "sf2/mapentities/sf2_info_page_music.sp"
-#include "sf2/mapentities/sf2_logic_proxy.sp"
-#include "sf2/mapentities/sf2_logic_raid.sp"
-#include "sf2/mapentities/sf2_boss_maker.sp"
-#include "sf2/mapentities/sf2_trigger_boss_despawn.sp"
+#include "mapentities/base_spawnpoint.sp"
+#include "mapentities/sf2_game_text.sp"
+#include "mapentities/sf2_gamerules.sp"
+#include "mapentities/sf2_trigger_escape.sp"
+#include "mapentities/sf2_info_player_escapespawn.sp"
+#include "mapentities/sf2_trigger_pvp.sp"
+#include "mapentities/sf2_trigger_pve.sp"
+#include "mapentities/sf2_info_player_pvpspawn.sp"
+#include "mapentities/sf2_info_player_proxyspawn.sp"
+#include "mapentities/sf2_info_boss_spawn.sp"
+#include "mapentities/sf2_info_page_spawn.sp"
+#include "mapentities/sf2_info_page_music.sp"
+#include "mapentities/sf2_logic_proxy.sp"
+#include "mapentities/sf2_logic_raid.sp"
+#include "mapentities/sf2_boss_maker.sp"
+#include "mapentities/sf2_trigger_boss_despawn.sp"
 
 // Modified only
-#include "sf2/mapentities/sf2_logic_arena.sp"
-#include "sf2/mapentities/sf2_logic_boxing.sp"
-#include "sf2/mapentities/sf2_logic_slaughter.sp"
-#include "sf2/mapentities/sf2_point_spotlight.sp"
+#include "mapentities/sf2_logic_arena.sp"
+#include "mapentities/sf2_logic_boxing.sp"
+#include "mapentities/sf2_logic_slaughter.sp"
+#include "mapentities/sf2_point_spotlight.sp"
 
 void SetupCustomMapEntities()
 {

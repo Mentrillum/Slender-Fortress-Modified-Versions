@@ -196,8 +196,9 @@ public void OnPluginStart()
 	g_RenevantMaxWaves = CreateConVar("sf2_renevant_maxwaves", valueToString, "Determines the maximum number of waves the Revenant gamemode can use.", _, true, 0.0);
 
 	g_SlaughterRunMapConVar = CreateConVar("sf2_isslaughterrunmap", "0", "Set to 1 if the map is a slaughter run map.", _, true, 0.0, true, 1.0);
-
 	g_SlaughterRunDivisibleTimeConVar = CreateConVar("sf2_slaughterrun_divide_time", "125.0", "Determines how much the average time should be divided by in Slaughter Run, the lower the number, the longer the bosses spawn.", _, true, 0.0);
+	g_SlaughterRunDefaultClassRunSpeedConVar = CreateConVar("sf2_slaughterrun_class_run_speed", "450.0", "How fast every class will run if Slaughter Run is enabled.", _, true);
+	g_SlaughterRunMinimumBossRunSpeedConVar = CreateConVar("sf2_slaughterrun_min_boss_run_speed", "600.0", "The speed bosses will run at if their original run speed is less than this value.", _, true);
 
 	g_UseAlternateConfigDirectoryConVar = CreateConVar("sf2_alternateconfigs", "0", "Set to 1 if the server should pick up the configs from data/.", _, true, 0.0, true, 1.0);
 
@@ -383,6 +384,8 @@ public void OnPluginStart()
 	HookEvent("player_death", Event_PlayerDeathPre, EventHookMode_Pre);
 	HookEvent("player_death", Event_PlayerDeath);
 	HookEvent("player_changeclass", Event_PlayerClass);
+	HookEvent("player_healed", Event_PlayerHealed, EventHookMode_Pre);
+	HookEvent("player_healonhit", Event_HealOnHit, EventHookMode_Pre);
 
 	// Hook entities.
 	HookEntityOutput("info_npc_spawn_destination", "OnUser1", NPCSpawn);
@@ -409,6 +412,8 @@ public void OnPluginStart()
 	g_OnEntityTeleportedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerJumpPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerSpawnPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnPlayerTakeDamagePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
+	g_OnPlayerDeathPrePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerDeathPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerPutInServerPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerDisconnectedPFwd = new PrivateForward(ET_Ignore, Param_Cell);
@@ -2278,16 +2283,6 @@ static Action Command_AddSlender(int client, int args)
 	SF2NPC_BaseNPC npc = AddProfile(profile);
 	if (npc.IsValid())
 	{
-		float eyePos[3], eyeAng[3], pos[3];
-		GetClientEyePosition(client, eyePos);
-		GetClientEyeAngles(client, eyeAng);
-
-		Handle trace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_NPCSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
-		TR_GetEndPosition(pos, trace);
-		delete trace;
-
-		npc.Spawn(pos);
-
 		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(npc.Index))
 		{
 			g_SlenderBoxingBossCount++;

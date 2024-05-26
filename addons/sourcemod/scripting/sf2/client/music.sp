@@ -329,7 +329,7 @@ void ClientUpdateMusicSystem(int client, bool initialize = false)
 					{
 						target.GetAbsOrigin(buffer2);
 
-						if ((chaser.State == STATE_CHASE || chaser.State == STATE_ATTACK || chaser.State == STATE_STUN) &&
+						if ((chaser.State == STATE_CHASE || chaser.State == STATE_ATTACK || (chaser.State == STATE_STUN && (chaser.PreviousState == STATE_CHASE || chaser.PreviousState == STATE_ATTACK))) &&
 							!(NPCGetFlags(i) & SFF_MARKEDASFAKE))
 						{
 							GetChaserProfileChaseMusics(profile, soundInfo);
@@ -357,7 +357,7 @@ void ClientUpdateMusicSystem(int client, bool initialize = false)
 						}
 					}
 
-					if (chaser.State == STATE_ALERT)
+					if (chaser.State == STATE_ALERT || (chaser.State == STATE_STUN && chaser.PreviousState == STATE_ALERT))
 					{
 						GetChaserProfileAlertMusics(profile, soundInfo);
 						soundList = soundInfo.Paths;
@@ -375,7 +375,7 @@ void ClientUpdateMusicSystem(int client, bool initialize = false)
 						}
 					}
 
-					if (chaser.State == STATE_IDLE)
+					if (chaser.State == STATE_IDLE || (chaser.State == STATE_STUN && chaser.PreviousState == STATE_IDLE))
 					{
 						GetChaserProfileIdleMusics(profile, soundInfo);
 						soundList = soundInfo.Paths;

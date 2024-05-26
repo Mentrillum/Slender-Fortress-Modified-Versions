@@ -116,11 +116,13 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 	data = controller.GetProfileData();
 	SF2BossProfileData originalData;
 	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	if (data.FlashlightStun[difficulty] && actor.CanBeStunned() && actor.CanTakeDamage() && actor.FlashlightTick < gameTime)
+	if (data.StunData.FlashlightStun[difficulty] && actor.CanBeStunned() && actor.CanTakeDamage() && actor.FlashlightTick < gameTime &&
+		!IsNightVisionEnabled())
 	{
 		bool inFlashlight = false;
 		float customDamage = 1.0;
 		bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
+		int attacker = -1;
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -135,7 +137,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 				continue;
 			}
 
-			float hisPos[3], myPos[3], eyeAng[3], requiredAng[3];
+			float hisPos[3], myPos[3], myEyeAng[3], hisEyeAng[3], requiredAng[3];
 			player.GetAbsOrigin(hisPos);
 			actor.GetAbsOrigin(myPos);
 
@@ -144,11 +146,12 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 				continue;
 			}
 
-			player.GetEyeAngles(eyeAng);
+			actor.GetAbsAngles(myEyeAng);
+			player.GetEyeAngles(hisEyeAng);
 			SubtractVectors(hisPos, myPos, requiredAng);
 			GetVectorAngles(requiredAng, requiredAng);
 
-			if (FloatAbs(AngleDiff(eyeAng[0], requiredAng[0])) <= 35.0 && FloatAbs(AngleDiff(requiredAng[1], eyeAng[1])) < 145.0)
+			if (FloatAbs(AngleDiff(myEyeAng[1], requiredAng[1])) > 70.0 || FloatAbs(AngleDiff(hisEyeAng[1], requiredAng[1])) < 130.0 || FloatAbs(AngleDiff(requiredAng[0], hisEyeAng[0])) > 30.0)
 			{
 				continue;
 			}
@@ -180,21 +183,40 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 			{
 				customDamage = g_ClassFlashlightDamageMultiplier[view_as<int>(player.Class)];
 			}
+			attacker = i;
 			break;
-		}
-
-		if (SF_SpecialRound(SPECIALROUND_NIGHTVISION) || g_NightvisionEnabledConVar.BoolValue)
-		{
-			inFlashlight = false;
 		}
 
 		if (inFlashlight)
 		{
-			actor.StunHealth -= data.FlashlightDamage[difficulty] * customDamage;
+			actor.StunHealth -= data.StunData.FlashlightStunDamage[difficulty] * customDamage;
 			actor.FlashlightTick = gameTime + 0.1;
+
+			Event event = CreateEvent("npc_hurt");
+			if (event)
+			{
+				event.SetInt("entindex", actor.index);
+				event.SetInt("health", actor.GetProp(Prop_Data, "m_iHealth"));
+				event.SetInt("damageamount", RoundToFloor(data.StunData.FlashlightStunDamage[difficulty] * customDamage));
+				event.SetBool("crit", false);
+
+				if (IsValidClient(attacker))
+				{
+					event.SetInt("attacker_player", GetClientUserId(attacker));
+					event.SetInt("weaponid", 0);
+				}
+				else
+				{
+					event.SetInt("attacker_player", 0);
+					event.SetInt("weaponid", 0);
+				}
+
+				event.Fire();
+			}
+
 			if (actor.StunHealth <= 0.0)
 			{
-				return action.SuspendFor(SF2_ChaserStunnedAction(), "I was stunned by a flashlight");
+				return action.SuspendFor(SF2_ChaserStunnedAction(CBaseEntity(attacker)), "I was stunned by a flashlight");
 			}
 		}
 	}
@@ -433,8 +455,15 @@ static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		float destination[3];
 		if (!NPCFindUnstuckPosition(actor, lastPos, destination))
 		{
-			controller.UnSpawn(true);
-			return;
+			float mins[3], maxs[3];
+			actor.GetPropVector(Prop_Send, "m_vecMins", mins);
+			actor.GetPropVector(Prop_Send, "m_vecMaxs", maxs);
+			float range = ((maxs[0] + maxs[1]) / 2.0) + (FloatAbs(mins[0] + mins[1]) / 2.0);
+			if (GetVectorDistance(myPos, goalPos, true) > Pow(range + 16.0, 2.0))
+			{
+				controller.UnSpawn(true);
+				return;
+			}
 		}
 		action.LastStuckTime = gameTime + 0.75;
 		actor.Teleport(destination, NULL_VECTOR, NULL_VECTOR);

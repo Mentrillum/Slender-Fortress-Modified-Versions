@@ -243,29 +243,76 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		kv.GetVector("festive_lights_ang", profileData.FestiveLightAng, profileData.FestiveLightAng);
 	}
 
-	profileData.EnableSpawnParticles = kv.GetNum("tp_effect_spawn", profileData.EnableSpawnParticles) != 0;
-	if (profileData.EnableSpawnParticles)
+	if (kv.GetNum("tp_effect_spawn", false) != 0)
 	{
-		kv.GetString("tp_effect_spawn_particle", profileData.SpawnParticle, sizeof(profileData.SpawnParticle), profileData.SpawnParticle);
-		kv.GetString("tp_effect_spawn_sound", profileData.SpawnParticleSound, sizeof(profileData.SpawnParticleSound), profileData.SpawnParticleSound);
-		TryPrecacheBossProfileSoundPath(profileData.SpawnParticleSound, g_FileCheckConVar.BoolValue);
-		profileData.SpawnParticleSoundVolume = kv.GetFloat("tp_effect_spawn_sound_volume", profileData.SpawnParticleSoundVolume);
-		profileData.SpawnParticleSoundPitch = kv.GetNum("tp_effect_spawn_sound_pitch", profileData.SpawnParticleSoundPitch);
+		if (profileData.SpawnEffects == null)
+		{
+			profileData.SpawnEffects = new StringMap();
+		}
+		ArrayList listEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+
+		SF2BossProfileBaseEffectInfo particle;
+		SF2BossProfileBaseEffectInfo sound;
+
+		particle.Init();
+		particle.Type = EffectType_Particle;
+		particle.Event = EffectEvent_Constant;
+		kv.GetString("tp_effect_spawn_particle", particle.ParticleName, sizeof(particle.ParticleName), particle.ParticleName);
+		particle.LifeTime = 0.1;
+		kv.GetVector("tp_effect_origin", particle.Origin, particle.Origin);
+		particle.PostLoad();
+		listEffects.PushArray(particle);
+
+		char soundName[PLATFORM_MAX_PATH];
+		sound.Init();
+		sound.Type = EffectType_Sound;
+		sound.Event = EffectEvent_Constant;
+		kv.GetString("tp_effect_spawn_sound", soundName, sizeof(soundName), soundName);
+		TryPrecacheBossProfileSoundPath(soundName, g_FileCheckConVar.BoolValue);
+		sound.SoundSounds.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+		sound.SoundSounds.Paths.PushString(soundName);
+		sound.SoundSounds.Volume = kv.GetFloat("tp_effect_spawn_sound_volume", sound.SoundSounds.Volume);
+		sound.SoundSounds.Pitch = kv.GetNum("tp_effect_spawn_sound_pitch", sound.SoundSounds.Pitch);
+		sound.SoundSounds.PostLoad();
+		listEffects.PushArray(sound);
+
+		profileData.SpawnEffects.SetValue("TPEffectSpawnBackwards", listEffects);
 	}
 
-	profileData.EnableDespawnParticles = kv.GetNum("tp_effect_despawn", profileData.EnableDespawnParticles) != 0;
-	if (profileData.EnableDespawnParticles)
+	if (kv.GetNum("tp_effect_despawn", false) != 0)
 	{
-		kv.GetString("tp_effect_despawn_particle", profileData.DespawnParticle, sizeof(profileData.DespawnParticle), profileData.DespawnParticle);
-		kv.GetString("tp_effect_despawn_sound", profileData.DespawnParticleSound, sizeof(profileData.DespawnParticleSound), profileData.DespawnParticleSound);
-		TryPrecacheBossProfileSoundPath(profileData.DespawnParticleSound, g_FileCheckConVar.BoolValue);
-		profileData.DespawnParticleSoundVolume = kv.GetFloat("tp_effect_despawn_sound_volume", profileData.DespawnParticleSoundVolume);
-		profileData.DespawnParticleSoundPitch = kv.GetNum("tp_effect_despawn_sound_pitch", profileData.DespawnParticleSoundPitch);
-	}
+		if (profileData.DespawnEffects == null)
+		{
+			profileData.DespawnEffects = new StringMap();
+		}
+		ArrayList listEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
 
-	if (profileData.EnableSpawnParticles || profileData.EnableDespawnParticles)
-	{
-		kv.GetVector("tp_effect_origin", profileData.SpawnParticleOrigin, profileData.SpawnParticleOrigin);
+		SF2BossProfileBaseEffectInfo particle;
+		SF2BossProfileBaseEffectInfo sound;
+
+		particle.Init();
+		particle.Type = EffectType_Particle;
+		particle.Event = EffectEvent_Constant;
+		kv.GetString("tp_effect_despawn_particle", particle.ParticleName, sizeof(particle.ParticleName), particle.ParticleName);
+		particle.LifeTime = 0.1;
+		kv.GetVector("tp_effect_origin", particle.Origin, particle.Origin);
+		particle.PostLoad();
+		listEffects.PushArray(particle);
+
+		char soundName[PLATFORM_MAX_PATH];
+		sound.Init();
+		sound.Type = EffectType_Sound;
+		sound.Event = EffectEvent_Constant;
+		kv.GetString("tp_effect_despawn_sound", soundName, sizeof(soundName), soundName);
+		TryPrecacheBossProfileSoundPath(soundName, g_FileCheckConVar.BoolValue);
+		sound.SoundSounds.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+		sound.SoundSounds.Paths.PushString(soundName);
+		sound.SoundSounds.Volume = kv.GetFloat("tp_effect_despawn_sound_volume", sound.SoundSounds.Volume);
+		sound.SoundSounds.Pitch = kv.GetNum("tp_effect_despawn_sound_pitch", sound.SoundSounds.Pitch);
+		sound.SoundSounds.PostLoad();
+		listEffects.PushArray(sound);
+
+		profileData.DespawnEffects.SetValue("TPEffectDespawnBackwards", listEffects);
 	}
 
 	profileData.BlinkLookRate = kv.GetFloat("blink_look_rate_multiply", profileData.BlinkLookRate);
@@ -470,6 +517,12 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		kv.GoBack();
 		profileData.EyePosOffset = profileData.EyeData.OffsetPos;
 		profileData.EyeAngOffset = profileData.EyeData.OffsetAng;
+	}
+
+	if (kv.JumpToKey("slaughter_run"))
+	{
+		profileData.SlaughterRunData.Load(kv);
+		kv.GoBack();
 	}
 
 	// Parse through flags.
@@ -1320,6 +1373,93 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		kv.GoBack();
 	}
 
+	if (kv.JumpToKey("spawn_effects"))
+	{
+		if (profileData.SpawnEffects == null)
+		{
+			profileData.SpawnEffects = new StringMap();
+		}
+
+		if (kv.GotoFirstSubKey())
+		{
+			do
+			{
+				char section[64];
+				kv.GetSectionName(section, sizeof(section));
+				if (kv.JumpToKey("effects"))
+				{
+					ArrayList list = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+					if (kv.GotoFirstSubKey())
+					{
+						do
+						{
+							SF2BossProfileBaseEffectInfo effects;
+							effects.Init();
+							effects.ModelScale = profileData.ModelScale;
+							effects.Load(kv, g_FileCheckConVar.BoolValue);
+							if (effects.Type == EffectType_Particle)
+							{
+								effects.LifeTime = 0.1;
+							}
+							list.PushArray(effects);
+						}
+						while (kv.GotoNextKey());
+						kv.GoBack();
+					}
+					kv.GoBack();
+					profileData.SpawnEffects.SetValue(section, list);
+				}
+			}
+			while (kv.GotoNextKey());
+			kv.GoBack();
+		}
+		kv.GoBack();
+	}
+
+	if (kv.JumpToKey("despawn_effects"))
+	{
+		if (profileData.DespawnEffects == null)
+		{
+			profileData.DespawnEffects = new StringMap();
+		}
+		profileData.HideDespawnEffectsOnDeath = kv.GetNum("hide_on_death", profileData.HideDespawnEffectsOnDeath) != 0;
+
+		if (kv.GotoFirstSubKey())
+		{
+			do
+			{
+				char section[64];
+				kv.GetSectionName(section, sizeof(section));
+				if (kv.JumpToKey("effects"))
+				{
+					ArrayList list = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+					if (kv.GotoFirstSubKey())
+					{
+						do
+						{
+							SF2BossProfileBaseEffectInfo effects;
+							effects.Init();
+							effects.ModelScale = profileData.ModelScale;
+							effects.Load(kv, g_FileCheckConVar.BoolValue);
+							if (effects.Type == EffectType_Particle)
+							{
+								effects.LifeTime = 0.1;
+							}
+							list.PushArray(effects);
+						}
+						while (kv.GotoNextKey());
+						kv.GoBack();
+					}
+					kv.GoBack();
+					profileData.DespawnEffects.SetValue(section, list);
+				}
+			}
+			while (kv.GotoNextKey());
+			kv.GoBack();
+		}
+		kv.GoBack();
+	}
+
 	profileData.PostLoad();
 
 	g_BossProfileData.SetArray(profile, profileData, sizeof(profileData));
@@ -1524,72 +1664,6 @@ void GetBossProfileFestiveLightAngles(const char[] profile, float buffer[3])
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	buffer = g_CachedProfileData.FestiveLightAng;
-}
-
-bool GetBossProfileSpawnParticleState(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.EnableSpawnParticles;
-}
-
-int GetBossProfileSpawnParticleName(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.SpawnParticle);
-}
-
-int GetBossProfileSpawnParticleSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.SpawnParticleSound);
-}
-
-float GetBossProfileSpawnParticleSoundVolume(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.SpawnParticleSoundVolume;
-}
-
-int GetBossProfileSpawnParticleSoundPitch(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.SpawnParticleSoundPitch;
-}
-
-void GetBossProfileSpawnParticleOrigin(const char[] profile, float buffer[3])
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	buffer = g_CachedProfileData.SpawnParticleOrigin;
-}
-
-bool GetBossProfileDespawnParticleState(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.EnableDespawnParticles;
-}
-
-int GetBossProfileDespawnParticleName(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.DespawnParticle);
-}
-
-int GetBossProfileDespawnParticleSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.DespawnParticleSound);
-}
-
-float GetBossProfileDespawnParticleSoundVolume(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DespawnParticleSoundVolume;
-}
-
-int GetBossProfileDespawnParticleSoundPitch(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DespawnParticleSoundPitch;
 }
 
 ArrayList GetBossProfileNames(const char[] profile)

@@ -199,7 +199,7 @@ void ClientHandleGhostMode(int client, bool forceSpawn = false)
 		SetEntProp(client, Prop_Send, "m_usSolidFlags", 4);
 		SetEntProp(client, Prop_Data, "m_nSolidType", 0);
 		SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
-		SetEntityCollisionGroup(client, COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(client, 26);
 		SetEntityFlags(client, GetEntityFlags(client) | FL_NOTARGET);
 		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(client, _, _, _, 0);
@@ -402,7 +402,7 @@ Action Timer_GhostModeConnectionCheck(Handle timer, any userid)
 			TF2_RespawnPlayer(client);
 
 			char authString[128];
-			GetClientAuthId(client,AuthId_Engine, authString, sizeof(authString));
+			GetClientAuthId(client, AuthId_Engine, authString, sizeof(authString));
 
 			LogSF2Message("Removed %N (%s) from ghost mode due to timing out for %f seconds", client, authString, g_GhostModeConnectionToleranceConVar.FloatValue);
 

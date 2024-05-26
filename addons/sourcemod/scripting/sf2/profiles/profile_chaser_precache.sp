@@ -33,17 +33,9 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		kv.GoBack();
 	}
 
-	GetProfileDifficultyFloatValues(kv, "alert_gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
-	GetProfileDifficultyFloatValues(kv, "search_alert_gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
-	GetProfileDifficultyFloatValues(kv, "alert_duration", profileData.AlertDuration, profileData.AlertDuration);
-	GetProfileDifficultyFloatValues(kv, "search_alert_duration", profileData.AlertDuration, profileData.AlertDuration);
-
 	if (kv.JumpToKey("alert"))
 	{
-		GetProfileDifficultyFloatValues(kv, "gracetime", profileData.AlertGracetime, profileData.AlertGracetime);
-		GetProfileDifficultyFloatValues(kv, "duration", profileData.AlertDuration, profileData.AlertDuration);
-		GetProfileDifficultyBoolValues(kv, "run_on_wander", profileData.AlertRunOnWander, profileData.AlertRunOnWander);
-		GetProfileDifficultyBoolValues(kv, "run_on_suspect", profileData.AlertRunOnHearSound, profileData.AlertRunOnHearSound);
+		profileData.AlertData.Load(kv);
 
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
@@ -52,6 +44,13 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 		profileData.AlertOnAlertInfo.Load(kv);
 
 		kv.GoBack();
+	}
+	else
+	{
+		GetProfileDifficultyFloatValues(kv, "alert_gracetime", profileData.AlertData.GraceTime, profileData.AlertData.GraceTime);
+		GetProfileDifficultyFloatValues(kv, "search_alert_gracetime", profileData.AlertData.GraceTime, profileData.AlertData.GraceTime);
+		GetProfileDifficultyFloatValues(kv, "alert_duration", profileData.AlertData.Duration, profileData.AlertData.Duration);
+		GetProfileDifficultyFloatValues(kv, "search_alert_duration", profileData.AlertData.Duration, profileData.AlertData.Duration);
 	}
 
 	if (kv.JumpToKey("chase"))
@@ -144,37 +143,69 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 	GetProfileDifficultyFloatValues(kv, "wander_enter_time_min", profileData.WanderEnterTimeMin, profileData.WanderEnterTimeMin);
 	GetProfileDifficultyFloatValues(kv, "wander_enter_time_max", profileData.WanderEnterTimeMax, profileData.WanderEnterTimeMax);
 
-	profileData.StunEnabled = kv.GetNum("stun_enabled", profileData.StunEnabled) != 0;
-	if (profileData.StunEnabled)
+	if (kv.GetNum("stun_enabled", false) != 0)
 	{
-		GetProfileDifficultyFloatValues(kv, "stun_cooldown", profileData.StunCooldown, profileData.StunCooldown);
-		GetProfileDifficultyFloatValues(kv, "stun_health", profileData.StunHealth, profileData.StunHealth);
-		profileData.StunHealthPerPlayer = kv.GetFloat("stun_health_per_player", profileData.StunHealthPerPlayer);
-		if (profileData.StunHealthPerPlayer < 0.0)
+		SF2ChaserBossProfileStunData stunData;
+		stunData = profileData.StunData;
+		for (int i = 0; i < Difficulty_Max; i++)
 		{
-			profileData.StunHealthPerPlayer = 0.0;
+			stunData.Enabled[i] = true;
 		}
-		profileData.StunHealthPerClass[1] = kv.GetFloat("stun_health_per_scout", profileData.StunHealthPerClass[1]);
-		profileData.StunHealthPerClass[2] = kv.GetFloat("stun_health_per_sniper", profileData.StunHealthPerClass[2]);
-		profileData.StunHealthPerClass[3] = kv.GetFloat("stun_health_per_soldier", profileData.StunHealthPerClass[3]);
-		profileData.StunHealthPerClass[4] = kv.GetFloat("stun_health_per_demoman", profileData.StunHealthPerClass[4]);
-		profileData.StunHealthPerClass[5] = kv.GetFloat("stun_health_per_medic", profileData.StunHealthPerClass[5]);
-		profileData.StunHealthPerClass[6] = kv.GetFloat("stun_health_per_heavyweapons", profileData.StunHealthPerClass[6]);
-		profileData.StunHealthPerClass[7] = kv.GetFloat("stun_health_per_pyro", profileData.StunHealthPerClass[7]);
-		profileData.StunHealthPerClass[8] = kv.GetFloat("stun_health_per_spy", profileData.StunHealthPerClass[8]);
-		profileData.StunHealthPerClass[9] = kv.GetFloat("stun_health_per_engineer", profileData.StunHealthPerClass[9]);
-		GetProfileDifficultyBoolValues(kv, "stun_damage_flashlight_enabled", profileData.FlashlightStun, profileData.FlashlightStun);
-		GetProfileDifficultyFloatValues(kv, "stun_damage_flashlight", profileData.FlashlightDamage, profileData.FlashlightDamage);
-		profileData.ChaseInitialOnStun = kv.GetNum("chase_initial_on_stun", profileData.ChaseInitialOnStun) != 0;
+		GetProfileDifficultyFloatValues(kv, "stun_cooldown", stunData.Cooldown, stunData.Cooldown);
+		GetProfileDifficultyFloatValues(kv, "stun_health", stunData.Health, stunData.Health);
 
-		GetProfileDifficultyBoolValues(kv, "drop_item_on_stun", profileData.ItemDropOnStun);
-		GetProfileDifficultyNumValues(kv, "drop_item_type", profileData.StunItemDropType, profileData.StunItemDropType);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_player", stunData.AddHealthPerPlayer, stunData.AddHealthPerPlayer);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_scout", stunData.AddHealthPerScout, stunData.AddHealthPerScout);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_soldier", stunData.AddHealthPerSoldier, stunData.AddHealthPerSoldier);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_pyro", stunData.AddHealthPerPyro, stunData.AddHealthPerPyro);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_demoman", stunData.AddHealthPerDemoman, stunData.AddHealthPerDemoman);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_heavyweapons", stunData.AddHealthPerHeavy, stunData.AddHealthPerHeavy);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_engineer", stunData.AddHealthPerEngineer, stunData.AddHealthPerEngineer);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_medic", stunData.AddHealthPerMedic, stunData.AddHealthPerMedic);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_sniper", stunData.AddHealthPerSniper, stunData.AddHealthPerSniper);
+		GetProfileDifficultyFloatValues(kv, "stun_health_per_spy", stunData.AddHealthPerSpy, stunData.AddHealthPerSpy);
 
-		profileData.DisappearOnStun = kv.GetNum("disappear_on_stun", profileData.DisappearOnStun) != 0;
+		GetProfileDifficultyBoolValues(kv, "stun_damage_flashlight_enabled", stunData.FlashlightStun, stunData.FlashlightStun);
+		GetProfileDifficultyFloatValues(kv, "stun_damage_flashlight", stunData.FlashlightStunDamage, stunData.FlashlightStunDamage);
 
-		if (kv.JumpToKey("resistances"))
+		GetProfileDifficultyBoolValues(kv, "chase_initial_on_stun", stunData.ChaseInitialOnEnd, stunData.ChaseInitialOnEnd);
+
+		GetProfileDifficultyBoolValues(kv, "drop_item_on_stun", stunData.ItemDrop, stunData.ItemDrop);
+		GetProfileDifficultyNumValues(kv, "drop_item_type", stunData.ItemDropType, stunData.ItemDropType);
+
+		GetProfileDifficultyBoolValues(kv, "disappear_on_stun", stunData.Disappear, stunData.Disappear);
+
+		stunData.KeyDrop = kv.GetNum("keydrop_enabled", stunData.KeyDrop) != 0;
+		kv.GetString("key_model", stunData.KeyModel, sizeof(stunData.KeyModel), stunData.KeyModel);
+		PrecacheModel2(stunData.KeyModel, _, _, g_FileCheckConVar.BoolValue);
+		kv.GetString("key_trigger", stunData.KeyTrigger, sizeof(stunData.KeyTrigger), stunData.KeyTrigger);
+		profileData.StunData = stunData;
+	}
+	else
+	{
+		if (kv.JumpToKey("stun"))
 		{
-			profileData.DamageResistances = new ArrayList();
+			for (int i = 0; i < Difficulty_Max; i++)
+			{
+				profileData.StunData.Enabled[i] = true;
+			}
+			profileData.StunData.Load(kv, g_FileCheckConVar.BoolValue);
+			kv.GoBack();
+		}
+	}
+
+	if (kv.JumpToKey("resistances"))
+	{
+		profileData.DamageResistances = new ArrayList(sizeof(SF2ChaserBossProfileResistanceData));
+		if (!kv.GotoFirstSubKey())
+		{
+			SF2ChaserBossProfileResistanceData resistanceData;
+			resistanceData.Init();
+			for (int i = 0; i < Difficulty_Max; i++)
+			{
+				resistanceData.Multiplier[i] = 0.0;
+			}
+			resistanceData.DamageTypes = new ArrayList();
 			char key[64];
 			int resistance = -1;
 			for (int i = 1;; i++)
@@ -185,22 +216,32 @@ bool LoadChaserBossProfile(KeyValues kv, const char[] profile, char[] loadFailRe
 				{
 					break;
 				}
-				profileData.DamageResistances.Push(resistance);
+				resistanceData.DamageTypes.Push(resistance);
 			}
+			profileData.DamageResistances.PushArray(resistanceData);
+		}
+		else
+		{
+			do
+			{
+				SF2ChaserBossProfileResistanceData resistance;
+				resistance.Init();
+				resistance.Load(kv);
+				profileData.DamageResistances.PushArray(resistance);
+			}
+			while (kv.GotoNextKey());
+
 			kv.GoBack();
 		}
-
-		profileData.KeyDrop = kv.GetNum("keydrop_enabled", profileData.KeyDrop) != 0;
-		if (profileData.KeyDrop)
-		{
-			kv.GetString("key_model", profileData.KeyModel, sizeof(profileData.KeyModel), profileData.KeyModel);
-			PrecacheModel2(profileData.KeyModel, _, _, g_FileCheckConVar.BoolValue);
-			kv.GetString("key_trigger", profileData.KeyTrigger, sizeof(profileData.KeyTrigger), profileData.KeyTrigger);
-		}
+		kv.GoBack();
 	}
 
 	if (kv.JumpToKey("death"))
 	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			profileData.DeathData.Enabled[i] = true;
+		}
 		profileData.DeathData.Load(kv, g_FileCheckConVar.BoolValue);
 		kv.GoBack();
 	}
@@ -1394,7 +1435,7 @@ static void LoadLegacyEffects(KeyValues kv, SF2ChaserBossProfileData profileData
 				}
 				else
 				{
-					key = "player_stun_duration";
+					key = "player_stun_slowdown";
 				}
 
 				if (damageEffect.StunFlags == null)
@@ -1640,6 +1681,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 			attackData.Type = kv.GetNum("type", attackData.Type);
 			GetProfileDifficultyFloatValues(kv, "range", attackData.Range, attackData.Range);
 			GetProfileDifficultyFloatValues(kv, "damage", attackData.Damage, attackData.Damage);
+			GetProfileDifficultyFloatValues(kv, "damage_percent", attackData.DamagePercent, attackData.DamagePercent);
 			attackData.DamageVsProps = kv.GetFloat("damage_vs_props", attackData.DamageVsProps);
 			GetProfileDifficultyFloatValues(kv, "damageforce", attackData.DamageForce, attackData.DamageForce);
 			GetProfileDifficultyNumValues(kv, "damagetype", attackData.DamageType, attackData.DamageType);
@@ -1658,7 +1700,8 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 			GetProfileDifficultyFloatValues(kv, "begin_fov", attackData.BeginFOV, attackData.Spread);
 			GetProfileDifficultyFloatValues(kv, "cooldown", attackData.Cooldown, attackData.Cooldown);
 
-			GetProfileDifficultyBoolValues(kv, "disappear_upon_damaging", attackData.Disappear, attackData.Disappear);
+			GetProfileDifficultyBoolValues(kv, "disappear", attackData.Disappear, attackData.Disappear);
+			GetProfileDifficultyBoolValues(kv, "disappear_upon_damaging", attackData.DisappearOnHit, attackData.DisappearOnHit);
 		}
 		attackData.Type = kv.GetNum("attack_type", attackData.Type);
 
@@ -1948,6 +1991,25 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 						effect.Init();
 						effect.Load(kv, g_FileCheckConVar.BoolValue);
 						attackData.MissEffects.PushArray(effect);
+					}
+					while (kv.GotoNextKey());
+
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+
+			if (kv.JumpToKey("on_kill"))
+			{
+				attackData.KillEffects = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+				if (kv.GotoFirstSubKey())
+				{
+					do
+					{
+						SF2BossProfileBaseEffectInfo effect;
+						effect.Init();
+						effect.Load(kv, g_FileCheckConVar.BoolValue);
+						attackData.KillEffects.PushArray(effect);
 					}
 					while (kv.GotoNextKey());
 

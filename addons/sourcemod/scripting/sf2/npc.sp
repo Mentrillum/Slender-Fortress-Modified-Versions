@@ -110,7 +110,9 @@ static bool g_NpcShouldBeAffectedBySight[MAX_BOSSES];
 
 static int g_NpcDefaultTeam[MAX_BOSSES];
 
-Handle timerMusic = null;//Planning to add a bosses array on.
+static bool g_NpcWasKilled[MAX_BOSSES];
+
+Handle timerMusic = null; //Planning to add a bosses array on.
 
 bool NPCGetBossName(int npcIndex = -1, char[] buffer, int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
 {
@@ -363,7 +365,7 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 	}
 }
 
-void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
+void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = false)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
@@ -391,9 +393,25 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
 		g_BossPathFollower[bossIndex].Invalidate();
 	}
 
-	if (GetBossProfileDespawnParticleState(profile))
+	if (data.DespawnEffects != null)
 	{
-		SlenderCreateParticleSpawnEffect(bossIndex, true);
+		if (killed && data.HideDespawnEffectsOnDeath)
+		{
+			// Do nothing
+		}
+		else
+		{
+			StringMapSnapshot snapshot = data.DespawnEffects.Snapshot();
+			char key[64];
+			snapshot.GetKey(GetRandomInt(0, snapshot.Length - 1), key, sizeof(key));
+			ArrayList effects;
+			data.DespawnEffects.GetValue(key, effects);
+			float pos[3], ang[3];
+			CBaseEntity(NPCGetEntIndex(bossIndex)).GetAbsOrigin(pos);
+			CBaseEntity(NPCGetEntIndex(bossIndex)).GetAbsAngles(ang);
+			SlenderSpawnEffects(effects, bossIndex, false, pos, ang, _, _, true);
+			delete snapshot;
+		}
 	}
 
 	if (data.EngineSound[0] != '\0')
@@ -1561,6 +1579,16 @@ int NPCGetDefaultTeam(int npcIndex)
 void NPCSetDefaultTeam(int npcIndex, int team)
 {
 	g_NpcDefaultTeam[npcIndex] = team;
+}
+
+bool NPCGetWasKilled(int npcIndex)
+{
+	return g_NpcWasKilled[npcIndex];
+}
+
+void NPCSetWasKilled(int npcIndex, bool state)
+{
+	g_NpcWasKilled[npcIndex] = state;
 }
 
 bool NPCShouldSeeEntity(int npcIndex, int entity)
@@ -2755,7 +2783,7 @@ void RemoveProfile(int bossIndex)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
 
-	if (MusicActive() && BossHasMusic(profile) && BossMatchesCurrentMusic(profile))
+	if (!controller.IsCopy && MusicActive() && BossHasMusic(profile) && BossMatchesCurrentMusic(profile))
 	{
 		NPCStopMusic();
 	}
@@ -2887,6 +2915,7 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	npc.UnSpawn(true);
 	npc.GetProfile(profile,sizeof(profile));
+	npc.WasKilled = false;
 
 	float truePos[3], trueAng[3];
 	trueAng[1] = GetRandomFloat(0.0, 360.0);
@@ -3210,9 +3239,15 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 		_, data.EngineSoundVolume);
 	}
 
-	if (GetBossProfileSpawnParticleState(profile))
+	if (data.SpawnEffects != null)
 	{
-		SlenderCreateParticleSpawnEffect(bossIndex);
+		StringMapSnapshot snapshot = data.SpawnEffects.Snapshot();
+		char key[64];
+		snapshot.GetKey(GetRandomInt(0, snapshot.Length - 1), key, sizeof(key));
+		ArrayList effects;
+		data.SpawnEffects.GetValue(key, effects);
+		SlenderSpawnEffects(effects, bossIndex, false);
+		delete snapshot;
 	}
 
 	int master = g_SlenderCopyMaster[bossIndex];
@@ -3678,70 +3713,6 @@ void SlenderCastAnimEvent(int bossIndex, int event, int slender)
 	soundInfo.EmitSound(_, slender);
 }
 
-void SlenderCreateParticleSpawnEffect(int bossIndex, bool despawn = false)
-{
-	if (bossIndex == -1)
-	{
-		return;
-	}
-
-	int slender = NPCGetEntIndex(bossIndex);
-	if (!slender || slender == INVALID_ENT_REFERENCE)
-	{
-		return;
-	}
-
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(bossIndex, profile, sizeof(profile));
-
-	char particle[PLATFORM_MAX_PATH], soundEffect[PLATFORM_MAX_PATH];
-	float volume;
-	int pitch;
-	if (!despawn)
-	{
-		GetBossProfileSpawnParticleName(profile, particle, sizeof(particle));
-		GetBossProfileSpawnParticleSound(profile, soundEffect, sizeof(soundEffect));
-		volume = GetBossProfileSpawnParticleSoundVolume(profile);
-		pitch = GetBossProfileSpawnParticleSoundPitch(profile);
-	}
-	else
-	{
-		GetBossProfileDespawnParticleName(profile, particle, sizeof(particle));
-		GetBossProfileDespawnParticleSound(profile, soundEffect, sizeof(soundEffect));
-		volume = GetBossProfileDespawnParticleSoundVolume(profile);
-		pitch = GetBossProfileDespawnParticleSoundPitch(profile);
-	}
-
-	float slenderPosition[3], slenderAngles[3], offsetPos[3];
-	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", slenderPosition);
-	GetEntPropVector(slender, Prop_Data, "m_angAbsRotation", slenderAngles);
-	GetBossProfileSpawnParticleOrigin(profile, offsetPos);
-	AddVectors(offsetPos, slenderPosition, slenderPosition);
-
-	if (!DispatchParticleEffect(slender, particle, slenderPosition, slenderAngles, slenderPosition))
-	{
-		int particleEnt = CreateEntityByName("info_particle_system");
-
-		if (IsValidEntity(particleEnt))
-		{
-			TeleportEntity(particleEnt, slenderPosition, slenderAngles, NULL_VECTOR);
-
-			DispatchKeyValue(particleEnt, "targetname", "tf2particle");
-			DispatchKeyValue(particleEnt, "effect_name", particle);
-			DispatchSpawn(particleEnt);
-			ActivateEntity(particleEnt);
-			AcceptEntityInput(particleEnt, "start");
-
-			CreateTimer(0.1, Timer_KillEntity, particleEnt, TIMER_FLAG_NO_MAPCHANGE);
-		}
-	}
-
-	if (soundEffect[0] != '\0')
-	{
-		EmitSoundToAll(soundEffect, slender, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, volume, pitch);
-	}
-}
-
 // As time passes on, we have to get more aggressive in order to successfully peak the target's
 // stress level in the allotted duration we're given. Otherwise we'll be forced to place him
 // in a rest period.
@@ -4067,20 +4038,25 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 							SubtractVectors(spawnPos, g_SlenderEyePosOffset[bossIndex], spawnPos);
 
 							// Look for copies
-							if (controller.GetProfileData().CopiesInfo.Enabled[difficulty] && canSpawn && (controller.Flags & SFF_NOCOPIES) == 0)
+							if (controller.GetProfileData().CopiesInfo.Enabled[difficulty] && canSpawn)
 							{
 								float minDistBetweenBosses = GetBossProfileTeleportCopyDistance(profile, difficulty);
 
 								for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
 								{
+									SF2NPC_BaseNPC check = SF2NPC_BaseNPC(bossCheck);
 									if (bossCheck == bossIndex ||
-										NPCGetUniqueID(bossCheck) == -1 ||
-										(g_SlenderCopyMaster[bossIndex] != bossCheck && g_SlenderCopyMaster[bossIndex] != g_SlenderCopyMaster[bossCheck]))
+										!check.IsValid())
 									{
 										continue;
 									}
 
-									int bossEntCheck = NPCGetEntIndex(bossCheck);
+									if (check.CopyMaster != controller && controller.CopyMaster != check && controller.CopyMaster != check.CopyMaster)
+									{
+										continue;
+									}
+
+									int bossEntCheck = check.EntIndex;
 									if (!bossEntCheck || bossEntCheck == INVALID_ENT_REFERENCE)
 									{
 										continue;
@@ -4945,8 +4921,8 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 }
 
 #include "npc/glow.sp"
-#include "sf2/npc/npc_chaser.sp"
-#include "sf2/npc/entities/initialize.sp"
+#include "npc/npc_chaser.sp"
+#include "npc/entities/initialize.sp"
 
 static any Native_GetMaxBosses(Handle plugin, int numParams)
 {

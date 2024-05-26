@@ -1,8 +1,6 @@
 #define MASK_RED 33640459
 #define MASK_BLUE 33638411
 
-#define EF_ITEM_BLINK 0x100
-
 #define FILE_RESTRICTEDWEAPONS "configs/sf2/restrictedweapons.cfg"
 #define FILE_RESTRICTEDWEAPONS_DATA "data/sf2/restrictedweapons.cfg"
 
@@ -133,7 +131,5 @@
 #define SF2_HUD_TEXT_COLOR_G 167
 #define SF2_HUD_TEXT_COLOR_B 141
 #define SF2_HUD_TEXT_COLOR_A 255
-
-#define SF2_CHASER_BOSS_MAX_ATTACKS 32
 
 #define SF2_PROFILE_CHASER_DEFAULT_POSTURE "default"

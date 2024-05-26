@@ -40,6 +40,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineIntField("m_PreviousState")
 			.DefineEntityField("m_Target")
 			.DefineEntityField("m_OldTarget")
+			.DefineIntField("m_InterruptConditions")
 			.DefineBoolField("m_IsJumping")
 			.DefineBoolField("m_IsEntityVisible", 2049)
 			.DefineBoolField("m_IsEntityInFOV", 2049)
@@ -152,6 +153,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		public set(CBaseEntity entity)
 		{
 			this.SetPropEnt(Prop_Data, "m_OldTarget", EnsureEntRef(entity.index));
+		}
+	}
+
+	property int InterruptConditions
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_InterruptConditions");
+		}
+
+		public set(int value)
+		{
+			this.SetProp(Prop_Data, "m_InterruptConditions", value);
 		}
 	}
 
@@ -859,7 +873,12 @@ static any Native_GetTarget(Handle plugin, int numParams)
 	}
 
 	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
-	return bossEntity.Target;
+	CBaseEntity target = bossEntity.Target;
+	if (target.index == 0)
+	{
+		return CBaseEntity(-1);
+	}
+	return target;
 }
 
 static any Native_GetState(Handle plugin, int numParams)

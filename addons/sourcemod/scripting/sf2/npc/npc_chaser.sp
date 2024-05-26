@@ -44,7 +44,7 @@ GlobalForward g_OnChaserBossEndAttackFwd;
 #include "sf2/npc/npc_chaser_attacks.sp"
 #include "sf2/npc/npc_chaser_pathing.sp"
 #include "sf2/npc/npc_chaser_projectiles.sp"*/
-#include "sf2/npc/npc_creeper.sp"
+#include "npc_creeper.sp"
 
 void NPCChaserInitialize()
 {
@@ -353,6 +353,11 @@ bool IsTargetValidForSlender(SF2_BaseBoss boss, CBaseEntity target, bool include
 		{
 			return false;
 		}
+
+		if (target.GetProp(Prop_Data, "m_iTeamNum") == boss.Team)
+		{
+			return false;
+		}
 	}
 
 	return true;
@@ -634,41 +639,6 @@ static void TriggerKey(int caller)
 	RemoveEntity(caller);
 	EmitSoundToAll("ui/itemcrate_smash_ultrarare_short.wav", caller, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 }
-
-/*bool NPC_CanAttackProps(int bossIndex, float flAttackRange, float flAttackFOV)
-{
-	int prop = -1;
-	while ((prop = FindEntityByClassname(prop, "prop_physics")) > MaxClients)
-	{
-		if (NPCAttackValidateTarget(bossIndex, prop, flAttackRange, flAttackFOV, true))
-		{
-			if (NPCPropPhysicsAttack(bossIndex, prop))
-			{
-				return true;
-			}
-		}
-	}
-	prop = -1;
-	while ((prop = FindEntityByClassname(prop, "prop_*")) > MaxClients)
-	{
-		if (GetEntProp(prop, Prop_Data, "m_iHealth") > 0)
-		{
-			if (NPCAttackValidateTarget(bossIndex, prop, flAttackRange, flAttackFOV, true))
-			{
-				return true;
-			}
-		}
-	}
-	prop = -1;
-	while ((prop = FindEntityByClassname(prop, "obj_*")) > MaxClients)
-	{
-		if (NPCAttackValidateTarget(bossIndex, prop, flAttackRange, flAttackFOV, true))
-		{
-			return true;
-		}
-	}
-	return false;
-}*/
 
 void NPCChaser_InitializeAPI()
 {

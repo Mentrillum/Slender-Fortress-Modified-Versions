@@ -75,7 +75,7 @@ void Hook_ClientPreThink(int client)
 					if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
 					{
 						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if (itemDefInt == 775 || itemDefInt == 128)
+						if ((itemDefInt == 775 || itemDefInt == 128) && GetEntProp(client, Prop_Send, "m_iTauntIndex") == 0)
 						{
 							TF2_RemoveCondition(client, TFCond_Taunting); //Stop suiciding...
 						}
@@ -257,6 +257,20 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 		return Plugin_Changed;
 	}
 
+	Call_StartForward(g_OnPlayerTakeDamagePFwd);
+	Call_PushCell(victimPlayer);
+	Call_PushCellRef(attacker);
+	Call_PushCellRef(inflictor);
+	Call_PushFloatRef(damage2);
+	Call_PushCellRef(damagetype);
+	Call_Finish(action);
+
+	if (action == Plugin_Changed)
+	{
+		damage = damage2;
+		return Plugin_Changed;
+	}
+
 	TFClassType class = victimPlayer.Class;
 	int classToInt = view_as<int>(class);
 
@@ -377,10 +391,6 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 			canDamage = true;
 		}
 		if (IsClientLeavingPvP(victim) && !IsClientInPvP(attacker))
-		{
-			canDamage = true;
-		}
-		if (IsRoundInWarmup())
 		{
 			canDamage = true;
 		}

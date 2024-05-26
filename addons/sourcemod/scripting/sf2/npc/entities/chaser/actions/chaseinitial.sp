@@ -20,6 +20,11 @@ methodmap SF2_ChaserChaseInitialAction < NextBotAction
 
 	public static bool IsPossible(SF2_ChaserEntity actor)
 	{
+		if (SF_IsSlaughterRunMap())
+		{
+			return false;
+		}
+
 		SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
 		SF2BossProfileData data;
 		data = baseController.GetProfileData();
