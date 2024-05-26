@@ -126,69 +126,69 @@ static void Think(int entity)
 		Call_PushCell(projectile);
 		Call_PushCell(CBaseEntity(hitIndex));
 		Call_Finish();
-	}
 
-	if (hitIndex == 0)
-	{
-		projectile.Touched = true;
-		return;
-	}
-	else
-	{
-		int flags = DMG_CLUB;
-		if (projectile.IsCrits)
+		if (hitIndex == 0)
 		{
-			flags |= DMG_ACID;
-		}
-		SF2_BasePlayer player = SF2_BasePlayer(hitIndex);
-		if (player.IsValid)
-		{
-			if (player.IsInGhostMode)
-			{
-				return;
-			}
-
-			if (player.IsEliminated && !projectile.AttackWaiters)
-			{
-				projectile.Touched = true;
-				return;
-			}
-
-			if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == player.Team)
-			{
-				projectile.Touched = true;
-				return;
-			}
-			player.TakeDamage(_, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
-			float ratio = projectile.TravelTime / 1.0;
-			if (ratio > 0.1)
-			{
-				float time = 6.0 * ratio;
-				float stun = 0.5;
-				if (projectile.IsCrits)
-				{
-					time += 2.0;
-				}
-
-				if (ratio >= 1.0)
-				{
-					time += 1.0;
-				}
-
-				if (player.GetProp(Prop_Send, "m_nWaterLevel") < 3)
-				{
-					player.Stun(time, stun, TF_STUNFLAG_SLOWDOWN, player.index);
-				}
-			}
-			Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
-			Call_PushCell(player);
-			Call_PushCell(projectile);
-			Call_Finish();
 			projectile.Touched = true;
+			return;
 		}
 		else
 		{
-			SDKHooks_TakeDamage(hitIndex, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
+			int flags = DMG_CLUB;
+			if (projectile.IsCrits)
+			{
+				flags |= DMG_ACID;
+			}
+			SF2_BasePlayer player = SF2_BasePlayer(hitIndex);
+			if (player.IsValid)
+			{
+				if (player.IsInGhostMode)
+				{
+					return;
+				}
+
+				if (player.IsEliminated && !projectile.AttackWaiters)
+				{
+					projectile.Touched = true;
+					return;
+				}
+
+				if (IsValidEntity(owner) && GetEntProp(owner, Prop_Data, "m_iTeamNum") == player.Team)
+				{
+					projectile.Touched = true;
+					return;
+				}
+				player.TakeDamage(_, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
+				float ratio = projectile.TravelTime / 1.0;
+				if (ratio > 0.1)
+				{
+					float time = 6.0 * ratio;
+					float stun = 0.5;
+					if (projectile.IsCrits)
+					{
+						time += 2.0;
+					}
+
+					if (ratio >= 1.0)
+					{
+						time += 1.0;
+					}
+
+					if (player.GetProp(Prop_Send, "m_nWaterLevel") < 3)
+					{
+						player.Stun(time, stun, TF_STUNFLAG_SLOWDOWN, player.index);
+					}
+				}
+				Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
+				Call_PushCell(player);
+				Call_PushCell(projectile);
+				Call_Finish();
+				projectile.Touched = true;
+			}
+			else
+			{
+				SDKHooks_TakeDamage(hitIndex, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
+			}
 		}
 	}
 }
