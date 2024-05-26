@@ -65,7 +65,7 @@ MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, DHookReturn retur
 	return MRES_Supercede;
 }
 
-public Action CH_PassFilter(int ent1,int ent2, bool &result)
+public Action CH_PassFilter(int ent1, int ent2, bool &result)
 {
 	SF2RoundState state = GetRoundState();
 	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro)

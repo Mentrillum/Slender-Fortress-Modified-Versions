@@ -5084,6 +5084,13 @@ void SetPageCount(int num)
 						SF2BossProfileData data;
 						data = NPCGetProfileData(npcIndex);
 
+						if (data.SlaughterRunData.SpawnTime[difficulty] > -1.0)
+						{
+							times[bosses] = data.SlaughterRunData.SpawnTime[difficulty];
+							bosses++;
+							continue;
+						}
+
 						float originalSpeed, speed, timerCheck;
 						originalSpeed = data.RunSpeed[difficulty] + NPCGetAddSpeed(npcIndex);
 						float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;

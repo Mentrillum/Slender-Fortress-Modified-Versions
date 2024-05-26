@@ -515,9 +515,10 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	}
 	if (SF_IsSlaughterRunMap())
 	{
-		if (speed < 580.0)
+		float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
+		if (!originalData.SlaughterRunData.CustomMinimumSpeed[difficulty] && speed < slaughterSpeed)
 		{
-			speed = 580.0;
+			speed = slaughterSpeed;
 		}
 		acceleration += 10000.0;
 	}

@@ -4756,7 +4756,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		if (SF_IsSlaughterRunMap())
 		{
 			float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
-			if (speed < slaughterSpeed)
+			if (!originalData.SlaughterRunData.CustomMinimumSpeed[difficulty] && speed < slaughterSpeed)
 			{
 				speed = slaughterSpeed;
 			}
