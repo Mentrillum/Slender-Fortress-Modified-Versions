@@ -513,7 +513,6 @@ static void StopDeathCam(int client)
 				SetVariantString("!activator");
 				AcceptEntityInput(light, "SetParent", client);
 			}
-			PrintToChatAll("Fake");
 		}
 	}
 	else // The boss is invalid? But the player got a death cam?
