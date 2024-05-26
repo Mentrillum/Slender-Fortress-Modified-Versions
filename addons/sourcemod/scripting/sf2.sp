@@ -45,7 +45,7 @@ bool steamworks;
 #define TFTeam_Blue 3
 #define TFTeam_Boss 5
 
-#define MAXTF2PLAYERS 101
+#define MAXTF2PLAYERS 36
 
 public Plugin myinfo =
 {
@@ -79,12 +79,12 @@ enum struct FlashlightTemperature
 
 char g_SoundNightmareMode[][] =
 {
-	"#ambient/halloween/thunder_04.wav",
-	"#ambient/halloween/thunder_05.wav",
-	"#ambient/halloween/thunder_08.wav",
-	"#ambient/halloween/mysterious_perc_09.wav",
-	"#ambient/halloween/mysterious_perc_09.wav",
-	"#ambient/halloween/windgust_08.wav"
+	"ambient/halloween/thunder_04.wav",
+	"ambient/halloween/thunder_05.wav",
+	"ambient/halloween/thunder_08.wav",
+	"ambient/halloween/mysterious_perc_09.wav",
+	"ambient/halloween/mysterious_perc_09.wav",
+	"ambient/halloween/windgust_08.wav"
 };
 
 static const char g_PageCollectDuckSounds[][] =
@@ -537,8 +537,6 @@ ConVar g_RenevantMaxWaves;
 ConVar g_SlaughterRunMapConVar;
 ConVar g_TimeEscapeSurvivalConVar;
 ConVar g_SlaughterRunDivisibleTimeConVar;
-ConVar g_SlaughterRunDefaultClassRunSpeedConVar;
-ConVar g_SlaughterRunMinimumBossRunSpeedConVar;
 ConVar g_UseAlternateConfigDirectoryConVar;
 ConVar g_PlayerKeepWeaponsConVar;
 ConVar g_FullyEnableSpectatorConVar;
@@ -659,8 +657,6 @@ PrivateForward g_OnEntityTeleportedPFwd;
 PrivateForward g_OnAdminMenuCreateOptionsPFwd;
 PrivateForward g_OnPlayerJumpPFwd;
 PrivateForward g_OnPlayerSpawnPFwd;
-PrivateForward g_OnPlayerTakeDamagePFwd;
-PrivateForward g_OnPlayerDeathPrePFwd;
 PrivateForward g_OnPlayerDeathPFwd;
 PrivateForward g_OnPlayerPutInServerPFwd;
 PrivateForward g_OnPlayerDisconnectedPFwd;
@@ -693,14 +689,12 @@ Handle g_SDKEquipWearable;
 Handle g_SDKPlaySpecificSequence;
 Handle g_SDKPointIsWithin;
 Handle g_SDKPassesTriggerFilters;
+//Handle g_SDKGetSmoothedVelocity;
 Handle g_SDKLookupBone;
 Handle g_SDKGetBonePosition;
-Handle g_SDKSequenceVelocity;
 Handle g_SDKStartTouch;
 Handle g_SDKEndTouch;
 Handle g_SDKWeaponSwitch;
-Handle g_SDKGetWeaponID;
-Handle g_SDKIsWeapon;
 
 DynamicHook g_DHookWantsLagCompensationOnEntity;
 DynamicHook g_DHookShouldTransmit;
@@ -2578,11 +2572,48 @@ public void OnEntityCreated(int ent, const char[] classname)
 	{
 		RemoveEntity(ent);
 	}
+	else if (strcmp(classname, "tf_ragdoll") == 0)
+	{
+		SetEntProp(ent, Prop_Send, "m_bIceRagdoll", true);
+	}
 
 	Call_StartForward(g_OnEntityCreatedPFwd);
 	Call_PushCell(CBaseEntity(ent));
 	Call_PushString(classname);
 	Call_Finish();
+}
+
+MRESReturn Hook_WeaponGetCustomDamageType(int weapon, DHookReturn returnHandle, DHookParam params)
+{
+	if (!g_Enabled)
+	{
+		return MRES_Ignored;
+	}
+
+	SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity"));
+	if (ownerEntity.IsValid && ownerEntity.IsInPvP && IsValidEntity(weapon) && ownerEntity)
+	{
+		int customDamageType = returnHandle.Value;
+		if (customDamageType != -1)
+		{
+			MRESReturn hookResult = PvP_GetWeaponCustomDamageType(weapon, ownerEntity.index, customDamageType);
+			if (hookResult != MRES_Ignored)
+			{
+				returnHandle.Value = customDamageType;
+				return hookResult;
+			}
+		}
+		else
+		{
+			return MRES_Ignored;
+		}
+	}
+	else
+	{
+		return MRES_Ignored;
+	}
+
+	return MRES_Ignored;
 }
 
 public void OnEntityDestroyed(int ent)
@@ -3603,11 +3634,11 @@ public void OnClientCookiesCached(int client)
 
 public void OnClientPutInServer(int client)
 {
-	g_ClientInGame[client] = true;
 	if (!g_Enabled)
 	{
 		if (g_LoadOutsideMapsConVar.BoolValue)
 		{
+			g_ClientInGame[client] = true;
 			SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 			Call_StartForward(g_OnPlayerPutInServerPFwd);
 			Call_PushCell(SF2_BasePlayer(client));
@@ -3649,11 +3680,15 @@ public void OnClientPutInServer(int client)
 	g_PlayerPageCount[client] = 0;
 	g_PlayerDesiredFOV[client] = 90;
 
+	g_ClientInGame[client] = true;
+
 	SDKHook(client, SDKHook_PreThink, Hook_ClientPreThink);
 	SDKHook(client, SDKHook_PreThinkPost, Hook_OnFlashlightThink);
 	SDKHook(client, SDKHook_SetTransmit, Hook_ClientSetTransmit);
 	SDKHook(client, SDKHook_TraceAttack, Hook_PvPPlayerTraceAttack);
 	SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
+
+	SDKHook(client, SDKHook_WeaponEquipPost, Hook_ClientWeaponEquipPost);
 
 	g_DHookWantsLagCompensationOnEntity.HookEntity(Hook_Pre, client, Hook_ClientWantsLagCompensationOnEntity);
 
@@ -5104,19 +5139,11 @@ void SetPageCount(int num)
 						SF2BossProfileData data;
 						data = NPCGetProfileData(npcIndex);
 
-						if (data.SlaughterRunData.SpawnTime[difficulty] > -1.0)
-						{
-							times[bosses] = data.SlaughterRunData.SpawnTime[difficulty];
-							bosses++;
-							continue;
-						}
-
 						float originalSpeed, speed, timerCheck;
 						originalSpeed = data.RunSpeed[difficulty] + NPCGetAddSpeed(npcIndex);
-						float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
-						if (originalSpeed < slaughterSpeed)
+						if (originalSpeed < 600.0)
 						{
-							originalSpeed = slaughterSpeed;
+							originalSpeed = 600.0;
 						}
 						if (g_RoundDifficultyModifier > 1.0)
 						{
@@ -5142,6 +5169,29 @@ void SetPageCount(int num)
 						for (int i3 = 0; i3 < arrayLength; i3++)
 						{
 							averageTime += (times[i3] / GetRandomFloat(12.0, 22.0));
+						}
+						switch (g_DifficultyConVar.IntValue)
+						{
+							case Difficulty_Normal:
+							{
+								averageTime += 1.0;
+							}
+							case Difficulty_Hard:
+							{
+								averageTime += 2.0;
+							}
+							case Difficulty_Insane:
+							{
+								averageTime += 3.0;
+							}
+							case Difficulty_Nightmare:
+							{
+								averageTime += 4.0;
+							}
+							case Difficulty_Apollyon:
+							{
+								averageTime += 5.0;
+							}
 						}
 						PrintToChatAll("Time before bosses spawn: %f seconds", averageTime);
 						CreateTimer(averageTime, Timer_SlaughterRunSpawnBosses, _, TIMER_FLAG_NO_MAPCHANGE);

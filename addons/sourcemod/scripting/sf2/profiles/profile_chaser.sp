@@ -8,7 +8,7 @@
 
 StringMap g_ChaserBossProfileData;
 
-#include "profile_chaser_precache.sp"
+#include "sf2/profiles/profile_chaser_precache.sp"
 
 void InitializeChaserProfiles()
 {

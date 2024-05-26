@@ -1709,9 +1709,6 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 	{
 		SF2BossProfileAnimationSectionNameData animData;
 		this.Animations = new StringMap();
-		ArrayList temp = new ArrayList(sizeof(animData));
-		temp.PushArray(animData);
-		this.Animations.SetValue("deathcorridor", temp);
 		if (kv.JumpToKey("animations"))
 		{
 			this.Gestures = new StringMap();
@@ -1883,12 +1880,6 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				}
 				randomAnimation = preDefinedIndex;
 			}
-
-			if (animDataArray == null || animDataArray.Length <= 0)
-			{
-				return false;
-			}
-
 			SF2BossProfileAnimationSectionNameData animData;
 			if (!this.Classic && preDefinedName[0] != '\0')
 			{
@@ -2123,27 +2114,6 @@ enum struct SF2BossProfileDescriptionData
 	}
 }
 
-enum struct SF2BossProfileSlaughterRunData
-{
-	bool CustomMinimumSpeed[Difficulty_Max];
-	float SpawnTime[Difficulty_Max];
-
-	void Init()
-	{
-		for (int i = 0; i < Difficulty_Max; i++)
-		{
-			this.CustomMinimumSpeed[i] = false;
-			this.SpawnTime[i] = -1.0;
-		}
-	}
-
-	void Load(KeyValues kv)
-	{
-		GetProfileDifficultyBoolValues(kv, "custom_minimum_speed", this.CustomMinimumSpeed, this.CustomMinimumSpeed);
-		GetProfileDifficultyFloatValues(kv, "spawn_time", this.SpawnTime, this.SpawnTime);
-	}
-}
-
 enum struct SF2BossProfileData
 {
 	ArrayList Models;
@@ -2189,6 +2159,19 @@ enum struct SF2BossProfileData
 	float BlinkStaticRate;
 
 	float SoundMusicLoop[Difficulty_Max];
+
+	bool EnableSpawnParticles;
+	char SpawnParticle[PLATFORM_MAX_PATH];
+	char SpawnParticleSound[PLATFORM_MAX_PATH];
+	float SpawnParticleSoundVolume;
+	int SpawnParticleSoundPitch;
+	float SpawnParticleOrigin[3];
+
+	bool EnableDespawnParticles;
+	char DespawnParticle[PLATFORM_MAX_PATH];
+	char DespawnParticleSound[PLATFORM_MAX_PATH];
+	float DespawnParticleSoundVolume;
+	int DespawnParticleSoundPitch;
 
 	bool DeathCam;
 	bool DeathCamScareSound;
@@ -2397,13 +2380,7 @@ enum struct SF2BossProfileData
 
 	ArrayList EffectsArray;
 
-	StringMap SpawnEffects;
-	StringMap DespawnEffects;
-	bool HideDespawnEffectsOnDeath;
-
 	SF2BossProfileEyeData EyeData;
-
-	SF2BossProfileSlaughterRunData SlaughterRunData;
 
 	void Init()
 	{
@@ -2441,6 +2418,18 @@ enum struct SF2BossProfileData
 		this.FestiveLightBrightness = 0;
 		this.FestiveLightDistance = 0.0;
 		this.FestiveLightRadius = 0.0;
+
+		this.EnableSpawnParticles = false;
+		this.SpawnParticle[0] = '\0';
+		this.SpawnParticleSound[0] = '\0';
+		this.SpawnParticleSoundVolume = 1.0;
+		this.SpawnParticleSoundPitch = 100;
+
+		this.EnableDespawnParticles = false;
+		this.DespawnParticle[0] = '\0';
+		this.DespawnParticleSound[0] = '\0';
+		this.DespawnParticleSoundVolume = 1.0;
+		this.DespawnParticleSoundPitch = 100;
 
 		this.BlinkLookRate = 1.0;
 		this.BlinkStaticRate = 1.0;
@@ -2627,10 +2616,6 @@ enum struct SF2BossProfileData
 
 		this.EffectsArray = null;
 
-		this.SpawnEffects = null;
-		this.DespawnEffects = null;
-		this.HideDespawnEffectsOnDeath = false;
-
 		this.EyeData.Init();
 
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
@@ -2651,8 +2636,8 @@ enum struct SF2BossProfileData
 
 			this.InstantKillCooldown[difficulty] = 0.0;
 
-			this.StaticRadius[difficulty] = 150.0;
-			this.StaticRate[difficulty] = 0.65;
+			this.StaticRadius[difficulty] = 15.0;
+			this.StaticRate[difficulty] = 0.6;
 			this.StaticRateDecay[difficulty] = 0.2;
 			this.StaticGraceTime[difficulty] = 1.0;
 
@@ -2701,6 +2686,8 @@ enum struct SF2BossProfileData
 			this.FestiveLightPos[i] = 0.0;
 			this.FestiveLightAng[i] = 0.0;
 
+			this.SpawnParticleOrigin[i] = 0.0;
+
 			this.DeathCamPos[i] = 0.0;
 
 			this.PushRagdollForce[i] = 0.0;
@@ -2732,7 +2719,6 @@ enum struct SF2BossProfileData
 		this.ProxyDeathSounds.PostLoad();
 		this.PlayerDeathCamOverlaySounds.PostLoad();
 		this.OutroMusics.PostLoad();
-
 		if (this.CompanionsArray != null && this.CompanionsArray.Length <= 0)
 		{
 			delete this.CompanionsArray;
@@ -2747,12 +2733,6 @@ enum struct SF2BossProfileData
 				this.CompanionsArray.SetArray(i, companions, sizeof(companions));
 			}
 		}
-
-		if (this.EffectsArray != null && this.EffectsArray.Length <= 0)
-		{
-			delete this.EffectsArray;
-		}
-
 		if (this.EffectsArray != null)
 		{
 			SF2BossProfileBaseEffectInfo effects;
@@ -2763,49 +2743,10 @@ enum struct SF2BossProfileData
 				effects.PostLoad();
 			}
 		}
-
-		if (this.SpawnEffects != null)
+		if (this.EffectsArray != null && this.EffectsArray.Length <= 0)
 		{
-			StringMapSnapshot snapshot = this.SpawnEffects.Snapshot();
-			SF2BossProfileBaseEffectInfo effects;
-			ArrayList arrayEffects;
-
-			char effectSection[128];
-			for (int i = 0; i < snapshot.Length; i++)
-			{
-				snapshot.GetKey(i, effectSection, sizeof(effectSection));
-				this.SpawnEffects.GetValue(effectSection, arrayEffects);
-				for (int i2 = 0; i2 < arrayEffects.Length; i2++)
-				{
-					arrayEffects.GetArray(i2, effects, sizeof(effects));
-					effects.PostLoad();
-				}
-			}
-
-			delete snapshot;
+			delete this.EffectsArray;
 		}
-
-		if (this.DespawnEffects != null)
-		{
-			StringMapSnapshot snapshot = this.DespawnEffects.Snapshot();
-			SF2BossProfileBaseEffectInfo effects;
-			ArrayList arrayEffects;
-
-			char effectSection[128];
-			for (int i = 0; i < snapshot.Length; i++)
-			{
-				snapshot.GetKey(i, effectSection, sizeof(effectSection));
-				this.DespawnEffects.GetValue(effectSection, arrayEffects);
-				for (int i2 = 0; i2 < arrayEffects.Length; i2++)
-				{
-					arrayEffects.GetArray(i2, effects, sizeof(effects));
-					effects.PostLoad();
-				}
-			}
-
-			delete snapshot;
-		}
-
 		for (int i = 0; i < 10; i++)
 		{
 			if (this.ProxyModels[i] != null && this.ProxyModels[i].Length <= 0)
@@ -2829,47 +2770,38 @@ enum struct SF2BossProfileData
 				delete this.ProxyModelsApollyon[i];
 			}
 		}
-
 		if (this.FootstepEventSounds != null && this.FootstepEventSounds.Length <= 0)
 		{
 			delete this.FootstepEventSounds;
 		}
-
 		if (this.FootstepEventIndexes != null && this.FootstepEventIndexes.Length <= 0)
 		{
 			delete this.FootstepEventIndexes;
 		}
-
 		if (this.EventSounds != null && this.EventSounds.Length <= 0)
 		{
 			delete this.EventSounds;
 		}
-
 		if (this.EventIndexes != null && this.EventIndexes.Length <= 0)
 		{
 			delete this.EventIndexes;
 		}
-
 		if (this.ProxyWeaponClassNames != null && this.ProxyWeaponClassNames.Length <= 0)
 		{
 			delete this.ProxyWeaponClassNames;
 		}
-
 		if (this.ProxyWeaponStats != null && this.ProxyWeaponStats.Length <= 0)
 		{
 			delete this.ProxyWeaponStats;
 		}
-
 		if (this.ProxyDeathAnimations != null && this.ProxyDeathAnimations.Length <= 0)
 		{
 			delete this.ProxyDeathAnimations;
 		}
-
 		if (this.DeathMessagesArray != null && this.DeathMessagesArray.Length <= 0)
 		{
 			delete this.DeathMessagesArray;
 		}
-
 		if (this.PvESpawnMessagesArray != null && this.PvESpawnMessagesArray.Length <= 0)
 		{
 			delete this.PvESpawnMessagesArray;
@@ -2899,7 +2831,6 @@ enum struct SF2BossProfileData
 		this.PlayerDeathCamOverlaySounds.Destroy();
 		this.OutroMusics.Destroy();
 		this.AnimationData.Destroy();
-
 		if (this.CompanionsArray != null)
 		{
 			SF2BossProfileCompanionsInfo companions;
@@ -2911,7 +2842,6 @@ enum struct SF2BossProfileData
 			}
 			delete this.CompanionsArray;
 		}
-
 		if (this.EffectsArray != null)
 		{
 			SF2BossProfileBaseEffectInfo effects;
@@ -2923,88 +2853,34 @@ enum struct SF2BossProfileData
 			}
 			delete this.EffectsArray;
 		}
-
-		if (this.SpawnEffects != null)
-		{
-			StringMapSnapshot snapshot = this.SpawnEffects.Snapshot();
-			SF2BossProfileBaseEffectInfo effects;
-			ArrayList arrayEffects;
-
-			char effectSection[128];
-			for (int i = 0; i < snapshot.Length; i++)
-			{
-				snapshot.GetKey(i, effectSection, sizeof(effectSection));
-				this.SpawnEffects.GetValue(effectSection, arrayEffects);
-				for (int i2 = 0; i2 < arrayEffects.Length; i2++)
-				{
-					arrayEffects.GetArray(i2, effects, sizeof(effects));
-					effects.Destroy();
-				}
-				delete arrayEffects;
-			}
-
-			delete snapshot;
-			delete this.SpawnEffects;
-		}
-
-		if (this.DespawnEffects != null)
-		{
-			StringMapSnapshot snapshot = this.DespawnEffects.Snapshot();
-			SF2BossProfileBaseEffectInfo effects;
-			ArrayList arrayEffects;
-
-			char effectSection[128];
-			for (int i = 0; i < snapshot.Length; i++)
-			{
-				snapshot.GetKey(i, effectSection, sizeof(effectSection));
-				this.DespawnEffects.GetValue(effectSection, arrayEffects);
-				for (int i2 = 0; i2 < arrayEffects.Length; i2++)
-				{
-					arrayEffects.GetArray(i2, effects, sizeof(effects));
-					effects.Destroy();
-				}
-				delete arrayEffects;
-			}
-
-			delete snapshot;
-			delete this.DespawnEffects;
-		}
-
 		if (this.Models != null)
 		{
 			delete this.Models;
 		}
-
 		if (this.Names != null)
 		{
 			delete this.Names;
 		}
-
 		if (this.DeathMessagesArray != null)
 		{
 			delete this.DeathMessagesArray;
 		}
-
 		if (this.PvESpawnMessagesArray != null)
 		{
 			delete this.PvESpawnMessagesArray;
 		}
-
 		if (this.ProxyWeaponClassNames != null)
 		{
 			delete this.ProxyWeaponClassNames;
 		}
-
 		if (this.ProxyWeaponStats != null)
 		{
 			delete this.ProxyWeaponStats;
 		}
-
 		if (this.ProxyDeathAnimations != null)
 		{
 			delete this.ProxyDeathAnimations;
 		}
-
 		if (this.FootstepEventSounds != null)
 		{
 			SF2BossProfileSoundInfo soundInfo;
@@ -3016,12 +2892,10 @@ enum struct SF2BossProfileData
 			}
 			delete this.FootstepEventSounds;
 		}
-
 		if (this.FootstepEventIndexes != null)
 		{
 			delete this.FootstepEventIndexes;
 		}
-
 		if (this.EventSounds != null)
 		{
 			SF2BossProfileSoundInfo soundInfo;
@@ -3033,7 +2907,6 @@ enum struct SF2BossProfileData
 			}
 			delete this.EventSounds;
 		}
-
 		if (this.EventIndexes != null)
 		{
 			delete this.EventIndexes;

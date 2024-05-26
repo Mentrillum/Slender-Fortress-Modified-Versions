@@ -25,21 +25,21 @@ int g_ClientFrame[MAXTF2PLAYERS];
 //Nav Data
 //static CNavArea g_lastNavArea[MAXTF2PLAYERS];
 
-#include "client/glow.sp"
-#include "client/interactables.sp"
-#include "client/hints.sp"
-#include "client/think.sp"
-#include "client/static.sp"
-#include "client/blink.sp"
-#include "client/deathcam.sp"
-#include "client/ultravision.sp"
-#include "client/flashlight.sp"
-#include "client/peek.sp"
-#include "client/sprint.sp"
-#include "client/breathing.sp"
-#include "client/ghostmode.sp"
-#include "client/music.sp"
-#include "client/proxy.sp"
+#include "sf2/client/glow.sp"
+#include "sf2/client/interactables.sp"
+#include "sf2/client/hints.sp"
+#include "sf2/client/think.sp"
+#include "sf2/client/static.sp"
+#include "sf2/client/blink.sp"
+#include "sf2/client/deathcam.sp"
+#include "sf2/client/ultravision.sp"
+#include "sf2/client/flashlight.sp"
+#include "sf2/client/peek.sp"
+#include "sf2/client/sprint.sp"
+#include "sf2/client/breathing.sp"
+#include "sf2/client/ghostmode.sp"
+#include "sf2/client/music.sp"
+#include "sf2/client/proxy.sp"
 
 void Client_SetupAPI()
 {
@@ -66,7 +66,7 @@ MRESReturn Hook_ClientWantsLagCompensationOnEntity(int client, DHookReturn retur
 	return MRES_Supercede;
 }
 
-public Action CH_PassFilter(int ent1, int ent2, bool &result)
+public Action CH_PassFilter(int ent1,int ent2, bool &result)
 {
 	SF2RoundState state = GetRoundState();
 	if (state == SF2RoundState_Intro || state == SF2RoundState_Outro)
@@ -140,7 +140,7 @@ Action Hook_HealthKitOnTouch(int healthKit, int client)
 	return Plugin_Continue;
 }
 
-Action Hook_ClientSetTransmit(int client, int other)
+Action Hook_ClientSetTransmit(int client,int other)
 {
 	if (!g_Enabled)
 	{
@@ -184,10 +184,6 @@ Action Hook_ClientSetTransmit(int client, int other)
 				return Plugin_Handled;
 			}
 		}
-		else
-		{
-
-		}
 	}
 
 	return Plugin_Continue;
@@ -229,7 +225,16 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponName
 	return Plugin_Continue;
 }
 
-Action Hook_TEFireBullets(const char[] te_name, const int[] players, int numClients, float delay)
+void Hook_ClientWeaponEquipPost(int client, int weapon)
+{
+	if (!IsValidClient(client) || !IsValidEdict(weapon))
+	{
+		return;
+	}
+	g_DHookWeaponGetCustomDamageType.HookEntity(Hook_Pre, weapon, Hook_WeaponGetCustomDamageType);
+}
+
+Action Hook_TEFireBullets(const char[] te_name,const int[] players,int numClients, float delay)
 {
 	if (!g_Enabled)
 	{
@@ -613,7 +618,6 @@ void ClientProcessVisibility(int client)
 						if (chaser.IsValid() && chaser.State == STATE_IDLE || chaser.State == STATE_ALERT)
 						{
 							SF2_BasePlayer(client).SetForceChaseState(SF2NPC_BaseNPC(i), true);
-							SetTargetMarkState(SF2NPC_BaseNPC(i), CBaseEntity(client), true);
 						}
 					}
 
@@ -722,15 +726,6 @@ void ClientProcessVisibility(int client)
 			g_PlayerStaticMode[client][bossLastStatic] != Static_Increase)
 		{
 			bossNewStatic = i;
-		}
-	}
-
-	if (bossNewStatic != -1)
-	{
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(NPCGetEntIndex(bossNewStatic));
-		if (chaser.IsValid() && chaser.State == STATE_DEATH)
-		{
-			bossNewStatic = -1;
 		}
 	}
 
@@ -1097,10 +1092,10 @@ void ClientResetJumpScare(int client)
 	#endif
 }
 
-void ClientDoJumpScare(int client, int bossIndex, float lifeTime)
+void ClientDoJumpScare(int client,int bossIndex, float flLifeTime)
 {
 	g_PlayerJumpScareBoss[client] = NPCGetUniqueID(bossIndex);
-	g_PlayerJumpScareLifeTime[client] = GetGameTime() + lifeTime;
+	g_PlayerJumpScareLifeTime[client] = GetGameTime() + flLifeTime;
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
@@ -1118,7 +1113,7 @@ void ClientDoJumpScare(int client, int bossIndex, float lifeTime)
 //	SCARE FUNCTIONS
 //	==========================================================
 
-void ClientPerformScare(int client, int bossIndex)
+void ClientPerformScare(int client,int bossIndex)
 {
 	if (NPCGetUniqueID(bossIndex) == -1)
 	{
@@ -1184,7 +1179,7 @@ void ClientPerformScare(int client, int bossIndex)
 	Call_Finish();
 }
 
-static void ClientPerformSightSound(int client, int bossIndex)
+static void ClientPerformSightSound(int client,int bossIndex)
 {
 	if (NPCGetUniqueID(bossIndex) == -1)
 	{

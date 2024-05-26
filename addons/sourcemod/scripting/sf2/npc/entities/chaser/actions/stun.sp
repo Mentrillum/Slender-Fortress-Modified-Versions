@@ -21,20 +21,20 @@ methodmap SF2_ChaserStunnedAction < NextBotAction
 		}
 		SF2_ChaserStunnedAction action = view_as<SF2_ChaserStunnedAction>(g_Factory.Create());
 
-		action.Attacker = attacker;
+		action.Attacker = attacker.index;
 		return action;
 	}
 
-	property CBaseEntity Attacker
+	property int Attacker
 	{
 		public get()
 		{
-			return CBaseEntity(EntRefToEntIndex(this.GetDataEnt("m_Attacker")));
+			return EntRefToEntIndex(this.GetDataEnt("m_Attacker"));
 		}
 
-		public set(CBaseEntity value)
+		public set(int value)
 		{
-			this.SetDataEnt("m_Attacker", EnsureEntRef(value.index));
+			this.SetDataEnt("m_Attacker", EnsureEntRef(value));
 		}
 	}
 
@@ -71,7 +71,6 @@ static NextBotAction InitialContainedAction(SF2_ChaserStunnedAction action, SF2_
 	}
 
 	action.OldState = actor.State;
-	actor.PreviousState = actor.State;
 
 	actor.IsStunned = true;
 
@@ -97,18 +96,9 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 	SF2ChaserBossProfileData data;
 	int difficulty = controller.Difficulty;
 	data = controller.GetProfileData();
-
-	if (data.StunData.StartEffects != null)
-	{
-		float pos[3], ang[3];
-		actor.GetAbsOrigin(pos);
-		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(data.StunData.StartEffects, controller.Index, false, pos, ang, _, _, true);
-	}
-
 	if (data.KeyDrop)
 	{
-		if (SF_IsBoxingMap() && data.StunData.Disappear[difficulty] && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && !view_as<SF2NPC_BaseNPC>(controller).GetProfileData().IsPvEBoss)
+		if (SF_IsBoxingMap() && data.DisappearOnStun && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && !view_as<SF2NPC_BaseNPC>(controller).GetProfileData().IsPvEBoss)
 		{
 			g_SlenderBoxingBossKilled++;
 			if ((g_SlenderBoxingBossKilled == g_SlenderBoxingBossCount))
@@ -143,34 +133,20 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 	{
 		actor.MaxStunHealth += controller.GetAttributeValue(SF2Attribute_AddStunHealthOnStun);
 	}
-	else
-	{
-		actor.MaxStunHealth += data.StunData.AddHealthPerStun[difficulty];
-	}
 
 	if (controller.HasAttribute(SF2Attribute_AddSpeedOnStun))
 	{
 		controller.SetAddSpeed(controller.GetAttributeValue(SF2Attribute_AddSpeedOnStun));
-	}
-	else
-	{
-		controller.SetAddSpeed(data.StunData.AddSpeedPerStun[difficulty]);
 	}
 
 	if (controller.HasAttribute(SF2Attribute_AddAccelerationOnStun))
 	{
 		controller.SetAddAcceleration(controller.GetAttributeValue(SF2Attribute_AddAccelerationOnStun));
 	}
-	else
-	{
-		controller.SetAddAcceleration(data.StunData.AddAccelerationPerStun[difficulty]);
-	}
-
-	actor.GroundSpeedOverride = true;
 
 	Call_StartForward(g_OnBossStunnedFwd);
 	Call_PushCell(actor.Controller.Index);
-	Call_PushCell(action.Attacker.index);
+	Call_PushCell(action.Attacker);
 	Call_Finish();
 
 	return action.Continue();
@@ -183,7 +159,7 @@ static int Update(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, float 
 		return action.Continue();
 	}
 
-	if (actor.Controller.GetProfileData().StunData.Disappear[actor.Controller.Difficulty])
+	if (actor.Controller.GetProfileData().DisappearOnStun)
 	{
 		actor.Controller.UnSpawn(true);
 	}
@@ -197,40 +173,14 @@ static int OnSuspend(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, Nex
 
 static void OnEnd(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 {
-	SF2NPC_Chaser controller = actor.Controller;
-
-	if (!controller.IsValid())
-	{
-		return;
-	}
-
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-
-	if (data.StunData.EndEffects != null)
-	{
-		float pos[3], ang[3];
-		actor.GetAbsOrigin(pos);
-		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(data.StunData.EndEffects, controller.Index, false, pos, ang, _, _, true);
-	}
-
 	actor.IsStunned = false;
-	actor.GroundSpeedOverride = false;
 	actor.StunHealth = actor.MaxStunHealth;
+	if (actor.Controller.IsValid())
+	{
+		actor.NextStunTime = GetGameTime() + actor.Controller.GetProfileData().StunCooldown[actor.Controller.Difficulty];
 
-	actor.NextStunTime = GetGameTime() + data.StunData.Cooldown[actor.Controller.Difficulty];
-
-	actor.UpdateMovementAnimation();
-
+		actor.UpdateMovementAnimation();
+	}
 	actor.WasStunned = true;
 	actor.State = action.OldState;
-
-	if (actor.State == STATE_IDLE && action.Attacker.IsValid())
-	{
-		float pos[3];
-		action.Attacker.GetAbsOrigin(pos);
-		actor.SetAlertTriggerPositionEx(pos);
-		actor.QueueForAlertState = true;
-	}
 }

@@ -31,7 +31,7 @@ static void EntityDestroyed(CBaseEntity ent, const char[] classname)
 	}
 }
 
-void SlenderSpawnEffects(ArrayList effects, int bossIndex, bool nonEffects = true, const float overridePos[3] = { 0.0, 0.0, 0.0 }, const float overrideAng[3] = { 0.0, 0.0, 0.0 }, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE, bool noParenting = false)
+void SlenderSpawnEffects(ArrayList effects, int bossIndex, bool nonEffects = true, const float overridePos[3] = { 0.0, 0.0, 0.0 }, const float overrideAng[3] = { 0.0, 0.0, 0.0 }, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE)
 {
 	if (bossIndex < 0 || bossIndex >= MAX_BOSSES)
 	{
@@ -197,11 +197,10 @@ void SlenderSpawnEffects(ArrayList effects, int bossIndex, bool nonEffects = tru
 					pack.WriteCellArray(overrideAng, sizeof(overrideAng));
 					pack.WriteCell(output);
 					pack.WriteCell(entityOverride);
-					pack.WriteCell(noParenting);
 				}
 				else
 				{
-					SpawnEffect(effectsInfo, bossIndex, overridePos, overrideAng, output, entityOverride, noParenting);
+					SpawnEffect(effectsInfo, bossIndex, overridePos, overrideAng, output, entityOverride);
 				}
 			}
 			else
@@ -223,12 +222,11 @@ static Action Timer_SpawnEffect(Handle timer, DataPack pack)
 	pack.ReadCellArray(overrideAng, sizeof(overrideAng));
 	ArrayList output = pack.ReadCell();
 	int entityOverride = pack.ReadCell();
-	bool noParenting = pack.ReadCell();
-	SpawnEffect(effect, bossIndex, overridePos, overrideAng, output, entityOverride, noParenting);
+	SpawnEffect(effect, bossIndex, overridePos, overrideAng, output, entityOverride);
 	return Plugin_Stop;
 }
 
-static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex, const float overridePos[3] = { 0.0, 0.0, 0.0 }, const float overrideAng[3] = { 0.0, 0.0, 0.0 }, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE, bool noParenting = false)
+static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex, const float overridePos[3] = { 0.0, 0.0, 0.0 }, const float overrideAng[3] = { 0.0, 0.0, 0.0 }, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE)
 {
 	int slenderEnt = NPCGetEntIndex(bossIndex);
 	int attacher = slenderEnt;
@@ -469,29 +467,26 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 			CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 		}
 
-		if (!noParenting)
+		if (!attacher || attacher == INVALID_ENT_REFERENCE)
 		{
-			if (!attacher || attacher == INVALID_ENT_REFERENCE)
-			{
-				LogError("Could not parent effect %s of boss %d to itself: boss entity does not exist!", effectsInfo.SectionName, bossIndex);
-				return;
-			}
+			LogError("Could not parent effect %s of boss %d to itself: boss entity does not exist!", effectsInfo.SectionName, bossIndex);
+			return;
+		}
 
-			SetVariantString("!activator");
-			AcceptEntityInput(entity, "SetParent", attacher);
-			if (effectsInfo.Attachment)
+		SetVariantString("!activator");
+		AcceptEntityInput(entity, "SetParent", attacher);
+		if (effectsInfo.Attachment)
+		{
+			if (effectsInfo.AttachmentName[0] != '\0')
 			{
-				if (effectsInfo.AttachmentName[0] != '\0')
+				SetVariantString(effectsInfo.AttachmentName);
+				if (effectsInfo.Type != EffectType_PropDynamic && effectsInfo.Type != EffectType_PointSpotlight)
 				{
-					SetVariantString(effectsInfo.AttachmentName);
-					if (effectsInfo.Type != EffectType_PropDynamic && effectsInfo.Type != EffectType_PointSpotlight)
-					{
-						AcceptEntityInput(entity, "SetParentAttachment");
-					}
-					else
-					{
-						AcceptEntityInput(entity, "SetParentAttachmentMaintainOffset");
-					}
+					AcceptEntityInput(entity, "SetParentAttachment");
+				}
+				else
+				{
+					AcceptEntityInput(entity, "SetParentAttachmentMaintainOffset");
 				}
 			}
 		}
@@ -523,10 +518,7 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 		SDKHook(entity, SDKHook_SetTransmit, Hook_EffectTransmit);
 		g_EntityEffectType[entity] = effectsInfo.Type;
 		g_EntityEffectEvent[entity] = effectsInfo.Event;
-		if (!noParenting)
-		{
-			g_NpcEffectsArray[bossIndex].Push(entity);
-		}
+		g_NpcEffectsArray[bossIndex].Push(entity);
 
 		if (output != null)
 		{
@@ -599,11 +591,6 @@ static Action Hook_EffectTransmit(int ent, int other)
 	}
 
 	SF2_ChaserEntity slender = SF2_ChaserEntity(GetEntPropEnt(ent, Prop_Send, "moveparent"));
-
-	if (!slender.IsValid())
-	{
-		return Plugin_Continue;
-	}
 
 	if (slender.IsValid() && slender.HasCloaked)
 	{
