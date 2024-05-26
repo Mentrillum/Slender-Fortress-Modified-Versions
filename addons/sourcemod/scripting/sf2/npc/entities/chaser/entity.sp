@@ -74,7 +74,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineFloatField("m_AttackRunDelay")
 			.DefineFloatField("m_NextVoiceTime")
 			.DefineIntField("m_MovementType")
-			.DefineIntField("m_InterruptConditions")
 			.DefineIntField("m_AlertTriggerCount", MAXTF2PLAYERS)
 			.DefineVectorField("m_AlertTriggerPosition", MAXTF2PLAYERS)
 			.DefineEntityField("m_AlertTriggerTarget")
@@ -111,6 +110,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineBoolField("m_WasInBacon")
 			.DefineFloatField("m_FlashlightTick")
 			.DefineBoolField("m_ShouldDespawn")
+			.DefineBoolField("m_GroundSpeedOverride")
+			.DefineBoolField("m_QueueForAlertState")
 		.EndDataMapDesc();
 		g_Factory.Install();
 
@@ -118,6 +119,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		g_OnEntityCreatedPFwd.AddFunction(null, EntityCreated);
 		g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
+		g_OnPlayerTakeDamagePFwd.AddFunction(null, OnPlayerTakeDamage);
+		g_OnPlayerDeathPrePFwd.AddFunction(null, OnPlayerDeathPre);
 		g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 
 		SF2_ChaserAttackAction.Initialize();
@@ -172,12 +175,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public bool CanBeStunned()
 	{
+		if (SF_IsSlaughterRunMap() && !view_as<SF2NPC_BaseNPC>(this.Controller).GetProfileData().IsPvEBoss)
+		{
+			return false;
+		}
+
 		if (!this.Controller.IsValid())
 		{
 			return false;
 		}
 
-		if (!this.Controller.GetProfileData().StunEnabled)
+		if (!this.Controller.GetProfileData().StunData.Enabled[this.Controller.Difficulty])
 		{
 			return false;
 		}
@@ -212,6 +220,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public bool CanTakeDamage(CBaseEntity attacker = view_as<CBaseEntity>(-1), CBaseEntity inflictor = view_as<CBaseEntity>(-1), float damage = 0.0)
 	{
+		if (SF_IsSlaughterRunMap() && !view_as<SF2NPC_BaseNPC>(this.Controller).GetProfileData().IsPvEBoss)
+		{
+			return false;
+		}
+
 		if (!this.IsAttacking)
 		{
 			return true;
@@ -581,19 +594,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			{
 				this.UpdateMovementAnimation();
 			}
-		}
-	}
-
-	property int InterruptConditions
-	{
-		public get()
-		{
-			return this.GetProp(Prop_Data, "m_InterruptConditions");
-		}
-
-		public set(int value)
-		{
-			this.SetProp(Prop_Data, "m_InterruptConditions", value);
 		}
 	}
 
@@ -1055,6 +1055,32 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "m_ShouldDespawn", value);
+		}
+	}
+
+	property bool GroundSpeedOverride
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_GroundSpeedOverride") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_GroundSpeedOverride", value);
+		}
+	}
+
+	property bool QueueForAlertState
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_QueueForAlertState") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_QueueForAlertState", value);
 		}
 	}
 
@@ -1792,6 +1818,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			float clientWorldSpace[3];
 			player.WorldSpaceCenter(clientWorldSpace);
 
+			if (GetVectorDistance(myWorldSpace, clientWorldSpace, true) > Pow(radius, 2.0))
+			{
+				continue;
+			}
+
 			TR_TraceRayFilter(myWorldSpace, clientWorldSpace,
 			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, RayType_EndPoint,
 			TraceRayDontHitAnyEntity, this.index);
@@ -1819,13 +1850,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				}
 
 				float amount = shockwaveData.BatteryDrainPercent[difficulty];
-				if (amount > 0.0)
+				if (!IsInfiniteFlashlightEnabled() && amount > 0.0)
 				{
 					player.FlashlightBatteryLife -= amount;
 				}
 
 				float sprintAmount = shockwaveData.StaminaDrainPercent[difficulty];
-				if (sprintAmount > 0.0)
+				if (!IsInfiniteSprintEnabled() && sprintAmount > 0.0)
 				{
 					player.Stamina -= sprintAmount;
 				}
@@ -2789,13 +2820,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		SF2ChaserBossProfileData data;
 		data = controller.GetProfileData();
 		int difficulty = controller.Difficulty;
-		bool check = !death ? data.ItemDropOnStun[difficulty] : data.DeathData.ItemDrop[difficulty];
+		bool check = !death ? data.StunData.ItemDrop[difficulty] : data.DeathData.ItemDrop[difficulty];
 		if (!check)
 		{
 			return;
 		}
 
-		int type = !death ? data.StunItemDropType[difficulty] : data.DeathData.ItemDropType[difficulty];
+		int type = !death ? data.StunData.ItemDropType[difficulty] : data.DeathData.ItemDropType[difficulty];
 		char class[64];
 		switch (type)
 		{
@@ -2896,6 +2927,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		char buffer[PLATFORM_MAX_PATH];
 
+		int difficulty = g_DifficultyConVar.IntValue;
+
 		GetSlenderModel(controller.Index, _, buffer, sizeof(buffer));
 		chaser.SetModel(buffer);
 		chaser.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[controller.Index]));
@@ -2923,10 +2956,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		npc.flGravity = 800.0;
 		npc.flDeathDropHeight = 99999.0;
 		npc.flJumpHeight = 512.0;
+		npc.flFrictionForward = 0.0;
+		npc.flFrictionSideways = 3.0;
 
 		npc.flMaxYawRate = originalData.TurnRate;
 
-		float addStunHealth = data.StunHealthPerPlayer;
+		float addStunHealth = data.StunData.AddHealthPerPlayer[difficulty];
 		float classAdd;
 		int count;
 		for (int i = 1; i <= MaxClients; i++)
@@ -2952,53 +2987,53 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			{
 				case TFClass_Scout:
 				{
-					classAdd += data.StunHealthPerClass[1];
+					classAdd += data.StunData.AddHealthPerScout[difficulty];
 				}
 
 				case TFClass_Soldier:
 				{
-					classAdd += data.StunHealthPerClass[3];
+					classAdd += data.StunData.AddHealthPerSoldier[difficulty];
 				}
 
 				case TFClass_Pyro:
 				{
-					classAdd += data.StunHealthPerClass[7];
+					classAdd += data.StunData.AddHealthPerPyro[difficulty];
 				}
 
 				case TFClass_DemoMan:
 				{
-					classAdd += data.StunHealthPerClass[4];
+					classAdd += data.StunData.AddHealthPerDemoman[difficulty];
 				}
 
 				case TFClass_Heavy:
 				{
-					classAdd += data.StunHealthPerClass[6];
+					classAdd += data.StunData.AddHealthPerHeavy[difficulty];
 				}
 
 				case TFClass_Engineer:
 				{
-					classAdd += data.StunHealthPerClass[9];
+					classAdd += data.StunData.AddHealthPerEngineer[difficulty];
 				}
 
 				case TFClass_Medic:
 				{
-					classAdd += data.StunHealthPerClass[5];
+					classAdd += data.StunData.AddHealthPerMedic[difficulty];
 				}
 
 				case TFClass_Sniper:
 				{
-					classAdd += data.StunHealthPerClass[2];
+					classAdd += data.StunData.AddHealthPerSniper[difficulty];
 				}
 
 				case TFClass_Spy:
 				{
-					classAdd += data.StunHealthPerClass[8];
+					classAdd += data.StunData.AddHealthPerSpy[difficulty];
 				}
 			}
 		}
 
 		addStunHealth *= float(count);
-		chaser.StunHealth = data.StunHealth[controller.Difficulty] + addStunHealth + classAdd;
+		chaser.StunHealth = data.StunData.Health[controller.Difficulty] + addStunHealth + classAdd;
 		chaser.MaxStunHealth = chaser.StunHealth;
 
 		locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
@@ -3098,6 +3133,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		CreateNative("SF2_ChaserBossEntity.SetNextAttackTime", Native_SetNextAttackTime);
 		CreateNative("SF2_ChaserBossEntity.DropItem", Native_DropItem);
 		CreateNative("SF2_ChaserBossEntity.CreateSoundHint", Native_CreateSoundHint);
+		CreateNative("SF2_ChaserBossEntity.GroundSpeedOverride.get", Native_GetGroundSpeedOverride);
+		CreateNative("SF2_ChaserBossEntity.GroundSpeedOverride.set", Native_SetGroundSpeedOverride);
 	}
 }
 
@@ -3156,6 +3193,109 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 		if (index != -1)
 		{
 			controller.ChaseOnLookTargets.Erase(index);
+		}
+	}
+}
+
+static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &inflictor, float &damage, int &damageType)
+{
+	SF2_ChaserEntity boss = SF2_ChaserEntity(inflictor);
+	if (!boss.IsValid())
+	{
+		return Plugin_Continue;
+	}
+
+	SF2NPC_Chaser controller = boss.Controller;
+	if (!controller.IsValid())
+	{
+		return Plugin_Continue;
+	}
+
+	Call_StartForward(g_OnClientDamagedByBossFwd);
+	Call_PushCell(client.index);
+	Call_PushCell(controller);
+	Call_PushCell(boss.index);
+	Call_PushFloat(damage);
+	Call_PushCell(damageType);
+	Call_Finish();
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+
+	char attack[64];
+	strcopy(attack, sizeof(attack), boss.GetAttackName());
+	if (attack[0] != '\0')
+	{
+		SF2ChaserBossProfileAttackData attackData;
+		data.GetAttack(attack, attackData);
+
+		if (attackData.HitEffects != null)
+		{
+			SlenderSpawnEffects(attackData.HitEffects, controller.Index, false, _, _, _, client.index);
+		}
+	}
+
+	return Plugin_Continue;
+}
+
+static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
+{
+	if (fake)
+	{
+		return;
+	}
+
+	for (int i = 0; i < MAX_BOSSES; i++)
+	{
+		if (NPCGetUniqueID(i) == -1)
+		{
+			continue;
+		}
+		int entity = NPCGetEntIndex(i);
+		if (!entity || entity == INVALID_ENT_REFERENCE)
+		{
+			continue;
+		}
+
+		SF2_ChaserEntity chaser = SF2_ChaserEntity(entity);
+		if (!chaser.IsValid())
+		{
+			continue;
+		}
+		SF2NPC_Chaser controller = SF2NPC_Chaser(i);
+
+		int index = controller.ChaseOnLookTargets.FindValue(entity);
+		if (index != -1)
+		{
+			controller.ChaseOnLookTargets.Erase(index);
+		}
+	}
+
+	SF2_ChaserEntity boss = SF2_ChaserEntity(inflictor);
+	if (!boss.IsValid())
+	{
+		return;
+	}
+
+	SF2NPC_Chaser controller = boss.Controller;
+	if (!controller.IsValid())
+	{
+		return;
+	}
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+
+	char attack[64];
+	strcopy(attack, sizeof(attack), boss.GetAttackName());
+	if (attack[0] != '\0')
+	{
+		SF2ChaserBossProfileAttackData attackData;
+		data.GetAttack(attack, attackData);
+
+		if (attackData.KillEffects != null)
+		{
+			SlenderSpawnEffects(attackData.KillEffects, controller.Index, false, _, _, _, client.index);
 		}
 	}
 }
@@ -3467,9 +3607,63 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	SF2ChaserBossProfileData chaserData;
 	chaserData = chaser.Controller.GetProfileData();
 	int difficulty = chaser.Controller.Difficulty;
+	bool changed = false;
+
+	if (chaserData.DamageResistances != null)
+	{
+		SF2ChaserBossProfileResistanceData resistanceData;
+		for (int i = 0; i < chaserData.DamageResistances.Length; i++)
+		{
+			chaserData.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
+			if (resistanceData.DamageTypes == null)
+			{
+				continue;
+			}
+
+			for (int i2 = 0; i2 < resistanceData.DamageTypes.Length; i++)
+			{
+				int type = resistanceData.DamageTypes.Get(i);
+				if (damageType & type || damageType == type)
+				{
+					damage *= resistanceData.Multiplier[difficulty];
+					changed = true;
+					break;
+				}
+			}
+
+			if (changed)
+			{
+				break;
+			}
+		}
+	}
 
 	if (player.IsValid)
 	{
+		CBaseEntity activeWeapon = CBaseEntity(player.GetPropEnt(Prop_Send, "m_hActiveWeapon"));
+		if (activeWeapon.IsValid() && chaserData.DamageResistances != null)
+		{
+			SF2ChaserBossProfileResistanceData resistanceData;
+			int itemIndex = activeWeapon.GetProp(Prop_Send, "m_iItemDefinitionIndex");
+			for (int i = 0; i < chaserData.DamageResistances.Length; i++)
+			{
+				chaserData.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
+				if (resistanceData.Weapons == null)
+				{
+					continue;
+				}
+
+				if (resistanceData.Weapons.FindValue(itemIndex) == -1)
+				{
+					continue;
+				}
+
+				damage *= resistanceData.Multiplier[difficulty];
+				changed = true;
+				break;
+			}
+		}
+
 		float myEyePos[3], clientEyePos[3], buffer[3], myAng[3];
 		player.GetEyePosition(clientEyePos);
 		chaser.Controller.GetEyePosition(myEyePos);
@@ -3496,7 +3690,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 						damageType |= DMG_CRIT;
 						damage *= 0.667;
 
-						return Plugin_Changed;
+						changed = true;
 					}
 				}
 			}
@@ -3561,7 +3755,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 					player.SetProp(Prop_Send, "m_iRevengeCrits", player.GetProp(Prop_Send, "m_iRevengeCrits") + 1);
 
-					return Plugin_Changed;
+					changed = true;
 				}
 			}
 		}
@@ -3574,7 +3768,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 				case 15, 202, 41, 298, 312, 424, 654, 793, 802, 811, 832, 850, 882, 891, 900, 909, 958, 967: // Miniguns
 				{
 					damage *= 0.65;
-					return Plugin_Changed;
+					changed = true;
 				}
 
 				case 40, 1146: // Backburner
@@ -3582,14 +3776,14 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 					if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 60.0 && chaserData.BackstabDamageScale > 0.0)
 					{
 						damageType |= DMG_CRIT;
-						return Plugin_Changed;
+						changed = true;
 					}
 				}
 			}
 		}
 	}
 
-	return Plugin_Continue;
+	return changed ? Plugin_Changed : Plugin_Continue;
 }
 
 static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float damage, int damageType, int weaponEntIndex, const float vecDamageForce[3], const float vecDamagePosition[3])
@@ -3856,15 +4050,50 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 
 static Action TraceOnHit(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& ammotype, int hitbox, int hitgroup)
 {
+	bool changed = false;
+
 	if (IsValidClient(attacker))
 	{
 		if ((damagetype & DMG_USE_HITLOCATIONS) && hitgroup == 1)
 		{
 			damagetype = damagetype | DMG_CRIT;
-			return Plugin_Changed;
+			changed = true;
 		}
 	}
-	return Plugin_Continue;
+
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(victim);
+	SF2NPC_Chaser controller = chaser.Controller;
+	if (!controller.IsValid())
+	{
+		return changed ? Plugin_Changed : Plugin_Continue;
+	}
+
+	int difficulty = controller.Difficulty;
+
+	SF2ChaserBossProfileData data;
+	data = controller.GetProfileData();
+	if (data.DamageResistances != null)
+	{
+		SF2ChaserBossProfileResistanceData resistanceData;
+		for (int i = 0; i < data.DamageResistances.Length; i++)
+		{
+			data.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
+			if (resistanceData.HitboxGroups == null)
+			{
+				continue;
+			}
+
+			if (resistanceData.HitboxGroups.FindValue(hitgroup) == -1)
+			{
+				continue;
+			}
+
+			damage *= resistanceData.Multiplier[difficulty];
+			changed = true;
+			break;
+		}
+	}
+	return changed ? Plugin_Changed : Plugin_Continue;
 }
 
 static MRESReturn UpdateTransmitState(int entIndex, DHookReturn ret, DHookParam params)
@@ -4140,11 +4369,15 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		if (chaser.GetIsVisible(entity))
 		{
-			playerInterruptFlags[entity.index] |= COND_ENEMYVISIBLE;
 			if (chaser.GetInFOV(entity))
 			{
 				playerInterruptFlags[entity.index] |= COND_SAWENEMY;
 			}
+		}
+
+		if (isTraceVisible)
+		{
+			playerInterruptFlags[entity.index] |= COND_ENEMYVISIBLE;
 		}
 
 		playerDists[entity.index] = dist;
@@ -4328,11 +4561,13 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 						if (!g_PlayerEliminated[raidTarget])
 						{
 							bestNewTarget = raidTarget;
+							SetClientForceChaseState(controller, CBaseEntity(bestNewTarget), true);
 						}
 					}
 					else
 					{
 						bestNewTarget = raidTarget;
+						SetClientForceChaseState(controller, CBaseEntity(bestNewTarget), true);
 					}
 				}
 				delete arrayRaidTargets;
@@ -4364,6 +4599,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 					if (IsValidClient(raidTarget) && IsClientInPvE(raidTarget))
 					{
 						bestNewTarget = raidTarget;
+						SetClientForceChaseState(controller, CBaseEntity(bestNewTarget), true);
 					}
 				}
 				delete arrayRaidTargets;
@@ -4487,12 +4723,11 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 			{
 				attackSpeed = 0.0;
 			}
-			speed = attackSpeed;
-			float groundSpeed = chaser.GetPropFloat(Prop_Data, "m_flGroundSpeed");
-			if (groundSpeed != 0.0 && attackData.RunGroundSpeed[difficulty])
+			if (attackData.RunGroundSpeed[difficulty])
 			{
-				speed += groundSpeed;
+				chaser.GroundSpeedOverride = true;
 			}
+			speed = attackSpeed;
 			acceleration = attackData.RunAcceleration[difficulty];
 		}
 	}
@@ -4520,9 +4755,10 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		}
 		if (SF_IsSlaughterRunMap())
 		{
-			if (speed < 580.0)
+			float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
+			if (!originalData.SlaughterRunData.CustomMinimumSpeed[difficulty] && speed < slaughterSpeed)
 			{
-				speed = 580.0;
+				speed = slaughterSpeed;
 			}
 			acceleration += 10000.0;
 		}
@@ -4533,9 +4769,46 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		speed = 0.0;
 	}
 
-	npc.flWalkSpeed = speed * 0.9;
-	npc.flRunSpeed = speed;
-	npc.flAcceleration = acceleration;
+	if (!chaser.GroundSpeedOverride)
+	{
+		npc.flWalkSpeed = speed * 0.9;
+		npc.flRunSpeed = speed;
+		npc.flAcceleration = acceleration;
+	}
+	else
+	{
+		float vel[3], myPos[3], res[3], matrix[3][4], ang[3];
+		float cycle = chaser.GetPropFloat(Prop_Data, "m_flCycle");
+		if (cycle < 1.0)
+		{
+			CBaseNPC_Locomotion loco = npc.GetLocomotion();
+			Address poseParams = GetEntityAddress(chaser.index) + view_as<Address>(FindSendPropInfo("CBaseAnimating", "m_flPoseParameter"));
+			int sequence = chaser.GetProp(Prop_Send, "m_nSequence");
+
+			CBaseAnimating_GetSequenceVelocity(chaser.GetModelPtr(), sequence, cycle, poseParams, vel);
+			chaser.GetAbsOrigin(myPos);
+			chaser.GetLocalAngles(ang);
+			AngleMatrix(ang, matrix);
+			VectorRotate(vel, matrix, res);
+			AddVectors(res, myPos, res);
+			if (moveType != SF2NPCMoveType_Attack)
+			{
+				speed = GetVectorLength(vel) * chaser.GetPropFloat(Prop_Send, "m_flPlaybackRate") * 0.9 * chaser.GetPropFloat(Prop_Send, "m_flModelScale");
+			}
+			else
+			{
+				speed *= GetVectorLength(vel) * chaser.GetPropFloat(Prop_Send, "m_flPlaybackRate") * 0.9 * chaser.GetPropFloat(Prop_Send, "m_flModelScale");
+			}
+			npc.flAcceleration = speed * 10.0;
+			npc.flWalkSpeed = speed;
+			npc.flRunSpeed = speed;
+			loco.Run();
+			if (moveType != SF2NPCMoveType_Attack)
+			{
+				loco.Approach(res, 999999.9);
+			}
+		}
+	}
 }
 
 static void ProcessBody(SF2_ChaserEntity chaser)
@@ -4734,6 +5007,16 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 		SF2_BasePlayer player = SF2_BasePlayer(other);
 		INextBot bot = loco.GetBot();
 		SF2_ChaserEntity chaser = SF2_ChaserEntity(bot.GetEntity());
+
+		if (chaser.Controller.IsValid() && (chaser.Controller.Flags & SFF_MARKEDASFAKE) != 0)
+		{
+			return false;
+		}
+
+		if (chaser.State == STATE_DEATH)
+		{
+			return false;
+		}
 
 		char class[64];
 		GetEntityClassname(other, class, sizeof(class));
@@ -5438,5 +5721,30 @@ static any Native_CreateSoundHint(Handle plugin, int numParams)
 	GetNativeArray(2, position, 3);
 	bossEntity.UpdateAlertTriggerCountEx(position);
 
+	return 0;
+}
+
+static any Native_GetGroundSpeedOverride(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+	return bossEntity.GroundSpeedOverride;
+}
+
+static any Native_SetGroundSpeedOverride(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+	bossEntity.GroundSpeedOverride = GetNativeCell(2);
 	return 0;
 }

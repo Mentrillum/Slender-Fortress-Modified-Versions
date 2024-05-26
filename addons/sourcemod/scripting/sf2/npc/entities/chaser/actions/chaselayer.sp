@@ -47,7 +47,7 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 	ILocomotion loco = bot.GetLocomotionInterface();
 
 	bool tooClose = target.IsValid() &&
-		actor.GetIsVisible(SF2_BasePlayer(target.index)) &&
+		(interrputConditions & COND_ENEMYVISIBLE) != 0 &&
 		bot.IsRangeLessThan(target.index, 8.0);
 
 	if (tooClose && path.IsValid())
@@ -101,7 +101,7 @@ static int OnResume(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, N
 		SF2NPC_Chaser controller = actor.Controller;
 		if (controller.IsValid())
 		{
-			if (controller.GetProfileData().ChaseInitialOnStun && SF2_ChaserChaseInitialAction.IsPossible(actor))
+			if (controller.GetProfileData().StunData.ChaseInitialOnEnd[controller.Difficulty] && SF2_ChaserChaseInitialAction.IsPossible(actor))
 			{
 				return action.SuspendFor(SF2_ChaserChaseInitialAction());
 			}

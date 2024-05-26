@@ -28,9 +28,9 @@ Menu g_MenuCredits5;
 static ArrayList g_Voters;
 static bool g_IsRunOff;
 
-#include "sf2/playergroups/menus.sp"
-#include "sf2/pvp/menus.sp"
-#include "sf2/changelog.sp"
+#include "playergroups/menus.sp"
+#include "pvp/menus.sp"
+#include "changelog.sp"
 
 void SetupMenus()
 {

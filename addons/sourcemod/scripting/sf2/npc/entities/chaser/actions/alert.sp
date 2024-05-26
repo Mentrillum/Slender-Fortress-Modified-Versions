@@ -17,6 +17,7 @@ methodmap SF2_ChaserAlertAction < NextBotAction
 			g_Factory.SetEventCallback(EventResponderType_OnMoveToSuccess, OnMoveToSuccess);
 			g_Factory.SetEventCallback(EventResponderType_OnMoveToFailure, OnMoveToFailure);
 			g_Factory.BeginDataMapDesc()
+				.DefineBoolField("m_InitialState")
 				.DefineFloatField("m_EndTime")
 				.DefineBoolField("m_IsGoalPosSet")
 				.DefineVectorField("m_GoalPos")
@@ -40,6 +41,19 @@ methodmap SF2_ChaserAlertAction < NextBotAction
 		action.IsRunning = shouldRun;
 
 		return action;
+	}
+
+	property bool InitialState
+	{
+		public get()
+		{
+			return this.GetData("m_InitialState");
+		}
+
+		public set(bool value)
+		{
+			this.SetData("m_InitialState", value);
+		}
 	}
 
 	property float EndTime
@@ -171,8 +185,9 @@ static int OnStart(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, NextBot
 		actor.MovementType = SF2NPCMoveType_Run;
 	}
 
-	action.EndTime = gameTime + data.AlertDuration[difficulty];
-	action.TimeUntilChase = gameTime + data.AlertGracetime[difficulty];
+	action.EndTime = gameTime + data.AlertData.Duration[difficulty];
+	action.TimeUntilChase = gameTime + data.AlertData.GraceTime[difficulty];
+	action.InitialState = true;
 
 	if (data.AlertOnAlertInfo.OnChangeState[difficulty])
 	{
@@ -302,15 +317,16 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 			float pos[3];
 			actor.GetAlertTriggerPosition(alertTarget, pos);
 
-			UpdateAlertPosition(action, actor, pos, data.AlertRunOnHearSound[difficulty]);
+			UpdateAlertPosition(action, actor, pos, data.AlertData.RunOnSuspect[difficulty]);
 		}
 	}
-	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0)
+	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0 || actor.QueueForAlertState)
 	{
 		float pos[3];
 		actor.GetAlertTriggerPositionEx(pos);
 
-		UpdateAlertPosition(action, actor, pos, data.AlertRunOnHearSound[difficulty]);
+		UpdateAlertPosition(action, actor, pos, data.AlertData.RunOnSuspect[difficulty]);
+		actor.QueueForAlertState = false;
 	}
 
 	if ((interruptConditions & COND_DEBUG) != 0)
@@ -318,7 +334,7 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 		float pos[3];
 		actor.GetForceWanderPosition(pos);
 
-		UpdateAlertPosition(action, actor, pos, data.AlertRunOnWander[difficulty]);
+		UpdateAlertPosition(action, actor, pos, data.AlertData.RunOnWander[difficulty]);
 	}
 
 	bool isAbleToWander = action.HasReachedAlertPosition && data.CanWander[difficulty];
@@ -372,7 +388,7 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 				{
 					wanderArea.GetCenter(wanderPos);
 
-					UpdateAlertPosition(action, actor, wanderPos, data.AlertRunOnWander[difficulty]);
+					UpdateAlertPosition(action, actor, wanderPos, data.AlertData.RunOnWander[difficulty]);
 				}
 			}
 
@@ -398,26 +414,33 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 	}
 	else
 	{
-		float lookPos[3];
-		action.GetLookPosition(lookPos);
-		loco.FaceTowards(lookPos);
-		if (action.NextTurnTime <= 0.0)
+		if (data.AlertData.TurnEnabled[difficulty])
 		{
-			action.NextTurnTime = gameTime + GetRandomFloat(1.5, 3.0);
+			if (!action.InitialState)
+			{
+				float lookPos[3];
+				action.GetLookPosition(lookPos);
+				loco.FaceTowards(lookPos);
+			}
+			if (action.NextTurnTime <= 0.0)
+			{
+				action.NextTurnTime = gameTime + GetRandomFloat(data.AlertData.TurnMinTime[difficulty], data.AlertData.TurnMaxTime[difficulty]);
+			}
 		}
 	}
 
-	if (action.NextTurnTime > 0.0 && action.NextTurnTime <= gameTime)
+	if (data.AlertData.TurnEnabled[difficulty] && action.NextTurnTime > 0.0 && action.NextTurnTime <= gameTime)
 	{
 		float myPos[3], myAng[3];
 		actor.GetAbsOrigin(myPos);
 		actor.GetAbsAngles(myAng);
+		myAng[1] += GetRandomFloat(-data.AlertData.TurnAngle[difficulty], data.AlertData.TurnAngle[difficulty]);
 		float lookAt[3];
-		lookAt[0] = GetRandomFloat(-100.0, 100.0);
-		lookAt[1] = GetRandomFloat(-100.0, 100.0);
+		lookAt[0] = 50.0;
 		VectorTransform(lookAt, myPos, myAng, lookAt);
 		action.SetLookPosition(lookAt);
-		action.NextTurnTime = gameTime + GetRandomFloat(1.5, 3.0);
+		action.NextTurnTime = gameTime + GetRandomFloat(data.AlertData.TurnMinTime[difficulty], data.AlertData.TurnMaxTime[difficulty]);
+		action.InitialState = false;
 	}
 
 	if (gameTime >= actor.NextVoiceTime)
@@ -496,7 +519,7 @@ static void OnReachedAlertPosition(SF2_ChaserAlertAction action, SF2_ChaserEntit
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
 
-	action.NextTurnTime = gameTime + GetRandomFloat(1.5, 3.0);
+	action.NextTurnTime = gameTime + GetRandomFloat(data.AlertData.TurnMinTime[difficulty], data.AlertData.TurnMaxTime[difficulty]);
 	action.NextWanderTime = gameTime + GetRandomFloat(data.WanderEnterTimeMin[difficulty], data.WanderEnterTimeMax[difficulty]);
 }
 

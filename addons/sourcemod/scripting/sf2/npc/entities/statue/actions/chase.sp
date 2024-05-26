@@ -77,7 +77,14 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 		return action.ChangeTo(SF2_StatueIdleAction(), "Our target escaped, that is no good!");
 	}
 
-	if (actor.GetIsVisible(player))
+	if (player.IsValid && player.ShouldBeForceChased(controller))
+	{
+		player.SetForceChaseState(controller, false);
+	}
+
+	bool visible = (actor.InterruptConditions & COND_ENEMYVISIBLE) != 0;
+
+	if (visible)
 	{
 		float maxRange = data.ChaseDurationAddMaxRange[difficulty];
 		if (maxRange > 0.0 && player.IsValid && player.CanSeeSlender(controller.Index, false, _, !attackEliminated))
@@ -112,7 +119,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	}
 
 	bool tooClose = target.IsValid() &&
-		actor.GetIsVisible(SF2_BasePlayer(target.index)) &&
+		visible &&
 		bot.IsRangeLessThan(target.index, 8.0);
 
 	if ((tooClose || !actor.IsMoving) && path.IsValid())
@@ -150,7 +157,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	{
 		g_SlenderStatueIdleLifeTime[controller.Index] = gameTime + data.IdleLifeTime[difficulty];
 
-		if (bot.GetRangeSquaredTo(target.index) <= Pow(originalData.InstantKillRadius, 2.0) && actor.GetIsVisible(player))
+		if (bot.GetRangeSquaredTo(target.index) <= Pow(originalData.InstantKillRadius, 2.0) && visible)
 		{
 			if (controller.Flags & SFF_FAKE)
 			{

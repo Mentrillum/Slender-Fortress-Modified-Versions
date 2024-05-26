@@ -104,7 +104,7 @@ static void StartTouch(int entity, int other)
 		return;
 	}
 
-	bool hit = true;
+	bool hit = false;
 	SF2_BasePlayer otherPlayer = SF2_BasePlayer(other);
 	int owner = projectile.GetPropEnt(Prop_Send, "m_hOwnerEntity");
 	if (otherPlayer.IsValid)

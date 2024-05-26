@@ -438,6 +438,19 @@ methodmap SF2NPC_BaseNPC
 			NPCSetDefaultTeam(this.Index, value);
 		}
 	}
+
+	property bool WasKilled
+	{
+		public get()
+		{
+			return NPCGetWasKilled(this.Index);
+		}
+
+		public set(bool state)
+		{
+			NPCSetWasKilled(this.Index, state);
+		}
+	}
 }
 
 methodmap SF2_BasePlayer < CBaseCombatCharacter

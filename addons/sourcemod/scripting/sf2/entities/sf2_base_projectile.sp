@@ -309,30 +309,6 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		this.Teleport(NULL_VECTOR, NULL_VECTOR, velocity);
 	}
 
-	public float CalculateFallOff(CBaseEntity target)
-	{
-		float myPos[3], targetPos[3];
-		this.GetAbsOrigin(myPos);
-		target.WorldSpaceCenter(targetPos);
-
-		float distance = GetVectorDistance(myPos, targetPos, true) / Pow(this.BlastRadius, 2.0);
-		if (distance > 1.0)
-		{
-			distance = 1.0;
-		}
-		if (distance < 0.5)
-		{
-			distance = 0.5;
-		}
-
-		float returnValue = this.Damage / distance;
-		if (returnValue > this.Damage)
-		{
-			returnValue = this.Damage;
-		}
-		return returnValue;
-	}
-
 	public void GetDamageForce(CBaseEntity target, float buffer[3])
 	{
 		target.GetAbsVelocity(buffer);
@@ -350,6 +326,16 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		int owner = this.GetPropEnt(Prop_Send, "m_hOwnerEntity");
 		float pos[3], otherPos[3];
 		this.GetAbsOrigin(pos);
+		float adjustedDamage, falloff;
+		float subtracted[3];
+		if (this.BlastRadius)
+		{
+			falloff = this.Damage / this.BlastRadius;
+		}
+		else
+		{
+			falloff = 1.0;
+		}
 
 		// Search all valid entities
 		ArrayList hitList = new ArrayList();
@@ -455,24 +441,36 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE,
 					RayType_EndPoint, TraceRayDontHitAnyEntity, this.index);
 
-			if (!TR_DidHit() || TR_GetEntityIndex() == valid.index)
+			if (TR_DidHit() && TR_GetEntityIndex() != valid.index)
 			{
-				float damage = this.CalculateFallOff(valid);
-				int flags = DMG_BLAST;
-				if (this.IsCrits)
-				{
-					flags |= DMG_ACID;
-				}
-				float force[3];
-				this.GetDamageForce(valid, force);
-				SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, damage, flags, _, force, pos);
-				if (SF2_BasePlayer(valid.index).IsValid)
-				{
-					Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
-					Call_PushCell(SF2_BasePlayer(valid.index));
-					Call_PushCell(this);
-					Call_Finish();
-				}
+				continue;
+			}
+
+			TR_GetEndPosition(subtracted);
+
+			SubtractVectors(pos, subtracted, subtracted);
+			adjustedDamage = GetVectorLength(subtracted) * falloff;
+			adjustedDamage = this.Damage - adjustedDamage;
+
+			if (adjustedDamage <= 0.0)
+			{
+				continue;
+			}
+
+			int flags = DMG_BLAST;
+			if (this.IsCrits)
+			{
+				flags |= DMG_ACID;
+			}
+			float force[3];
+			this.GetDamageForce(valid, force);
+			SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, adjustedDamage, flags, _, force, pos);
+			if (SF2_BasePlayer(valid.index).IsValid)
+			{
+				Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
+				Call_PushCell(SF2_BasePlayer(valid.index));
+				Call_PushCell(this);
+				Call_Finish();
 			}
 		}
 

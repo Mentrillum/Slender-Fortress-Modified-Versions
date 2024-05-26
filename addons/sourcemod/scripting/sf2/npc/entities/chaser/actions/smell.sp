@@ -106,7 +106,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 				{
 					actor.NextVoiceTime = 0.0;
 				}
-				return action.ChangeTo(SF2_ChaserAlertAction(bestPos, data.AlertRunOnHearSound[difficulty]), "I smelled someone, what is it?");
+				return action.ChangeTo(SF2_ChaserAlertAction(bestPos, data.AlertData.RunOnSuspect[difficulty]), "I smelled someone, what is it?");
 			}
 			else
 			{
@@ -144,7 +144,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 			{
 				actor.NextVoiceTime = 0.0;
 			}
-			return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "Abort abort, I saw someone!");
+			return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Abort abort, I saw someone!");
 		}
 	}
 
@@ -160,7 +160,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 		{
 			actor.NextVoiceTime = 0.0;
 		}
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "Stop! I heard someone!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Stop! I heard someone!");
 	}
 	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0)
 	{
@@ -173,7 +173,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 		{
 			actor.NextVoiceTime = 0.0;
 		}
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertRunOnHearSound[difficulty]), "Stop! I got a sound hint!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Stop! I got a sound hint!");
 	}
 
 	return action.Continue();

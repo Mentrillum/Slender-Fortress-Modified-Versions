@@ -16,7 +16,7 @@ static char g_ClientProxyModelApollyon[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
 
 void SetupProxy()
 {
-	g_OnGamemodeStartPFwd.AddFunction(null, OnGamemodeStart);
+	g_OnMapStartPFwd.AddFunction(null, MapStart);
 	g_OnPlayerPutInServerPFwd.AddFunction(null, OnPutInServer);
 	g_OnPlayerDisconnectedPFwd.AddFunction(null, OnDisconnected);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
@@ -26,7 +26,7 @@ void SetupProxy()
 	AddNormalSoundHook(Hook_ProxySoundHook);
 }
 
-static void OnGamemodeStart()
+static void MapStart()
 {
 	for (int i = 1; i <= 18; i++)
 	{

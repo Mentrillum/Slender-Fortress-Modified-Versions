@@ -44,9 +44,9 @@ static char mapBossPack[64];
 GlobalForward g_OnBossProfileLoadedFwd;
 static GlobalForward g_OnBossProfileUnloadedFwd;
 
-#include "sf2/profiles/profiles_boss_functions.sp"
-#include "sf2/profiles/profile_chaser.sp"
-#include "sf2/profiles/profile_statue.sp"
+#include "profiles/profiles_boss_functions.sp"
+#include "profiles/profile_chaser.sp"
+#include "profiles/profile_statue.sp"
 
 void SetupBossProfileNatives()
 {
@@ -781,7 +781,6 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 
 	if (maxLoadedBosses > 0)
 	{
-		directories.Sort(Sort_Random, Sort_String);
 		alwaysLoad = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 
 		for (int i = 0; i < directories.Length; i++)
@@ -799,30 +798,11 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 						directories.Erase(index);
 					}
 					alwaysLoad.PushString(filePath);
+					i--;
 				}
 
 				delete kv;
 			}
-		}
-	}
-
-	for (int i = 0; i < directories.Length; i++)
-	{
-		if (maxLoadedBosses > 0 && count == maxLoadedBosses)
-		{
-			break;
-		}
-
-		directories.GetString(i, filePath, sizeof(filePath));
-
-		if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason), maxLoadedBosses > 0, dirPath))
-		{
-			LogSF2Message("%s...FAILED (reason: %s)", filePath, errorReason);
-		}
-		else
-		{
-			LogSF2Message("%s...", profileName, filePath);
-			count++;
 		}
 	}
 
@@ -844,6 +824,31 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 		}
 
 		delete alwaysLoad;
+	}
+
+	if (maxLoadedBosses > 0)
+	{
+		directories.Sort(Sort_Random, Sort_String);
+	}
+
+	for (int i = 0; i < directories.Length; i++)
+	{
+		if (maxLoadedBosses > 0 && count == maxLoadedBosses)
+		{
+			break;
+		}
+
+		directories.GetString(i, filePath, sizeof(filePath));
+
+		if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason), maxLoadedBosses > 0, dirPath))
+		{
+			LogSF2Message("%s...FAILED (reason: %s)", filePath, errorReason);
+		}
+		else
+		{
+			LogSF2Message("%s...", profileName, filePath);
+			count++;
+		}
 	}
 
 	delete directories;

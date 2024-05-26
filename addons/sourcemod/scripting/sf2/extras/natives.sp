@@ -313,6 +313,36 @@ void SDK_Init()
 		LogError("Failed to setup CBaseAnimating::GetBonePosition call from gamedata");
 	}
 
+	StartPrepSDKCall(SDKCall_Static);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "Studio_SeqVelocity");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_Float, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, .encflags = VENCODE_FLAG_COPYBACK);
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+	if ((g_SDKSequenceVelocity = EndPrepSDKCall()) == null)
+	{
+		LogError("Failed to setup Studio_SeqVelocity call from gamedata");
+	}
+
+	// From nosoop's TF2 Utils plugin
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFWeaponBase::GetWeaponID");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if ((g_SDKGetWeaponID = EndPrepSDKCall()) == null)
+	{
+		SetFailState("Failed to setup CTFWeaponBase::GetWeaponID call from gamedata");
+	}
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseEntity::IsBaseCombatWeapon");
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+	if ((g_SDKIsWeapon = EndPrepSDKCall()) == null)
+	{
+		SetFailState("Failed to setup CBaseEntity::IsBaseCombatWeapon call from gamedata");
+	}
+
 	//Hook_ClientWantsLagCompensationOnEntity
 	int offset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
 	g_DHookWantsLagCompensationOnEntity = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
@@ -664,14 +694,14 @@ static any Native_SetBossTarget(Handle plugin, int numParams)
 
 static any Native_IsBossStunnable(Handle plugin, int numParams)
 {
-	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().StunEnabled;
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().StunData.Enabled[1];
 }
 
 static any Native_IsBossStunnableByFlashlight(Handle plugin, int numParams)
 {
 	SF2ChaserBossProfileData data;
 	data = NPCChaserGetProfileData(GetNativeCell(1));
-	return data.FlashlightStun[1];
+	return data.StunData.FlashlightStun[1];
 }
 
 static any Native_IsBossCloaked(Handle plugin, int numParams)
