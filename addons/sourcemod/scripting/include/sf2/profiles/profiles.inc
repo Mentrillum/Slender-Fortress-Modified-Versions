@@ -2633,6 +2633,8 @@ enum struct SF2BossProfileData
 
 		this.EyeData.Init();
 
+		this.SlaughterRunData.Init();
+
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
 			this.Skin[difficulty] = 0;
