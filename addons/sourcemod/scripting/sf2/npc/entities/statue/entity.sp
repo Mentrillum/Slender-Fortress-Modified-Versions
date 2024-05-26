@@ -304,6 +304,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 	{
 		SF2_BasePlayer client = SF2_BasePlayer(i);
 
+		#if defined DEBUG
 		if (client.IsValid && g_PlayerDebugFlags[client.index] & DEBUG_BOSS_EYES)
 		{
 			for (int i2 = 1; i2 <= MaxClients; i2++)
@@ -318,8 +319,8 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 				TE_SetupBeamPoints(traceStartPos, eyes, g_ShockwaveBeam, g_ShockwaveHalo, 0, 30, 0.1, 5.0, 5.0, 5, 0.0, color, 1);
 				TE_SendToClient(client.index);
 			}
-
 		}
+		#endif
 
 		if (!IsTargetValidForSlender(statue, client, attackEliminated))
 		{
