@@ -817,7 +817,6 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 			else
 			{
 				LogSF2Message("(ALWAYS LOAD) %s...", profileName, filePath);
-				count++;
 			}
 		}
 
