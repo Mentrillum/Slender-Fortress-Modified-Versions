@@ -1563,7 +1563,7 @@ bool IsInfiniteBlinkEnabled()
 
 bool IsInfiniteSprintEnabled()
 {
-	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap();
+	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap() || SF_SpecialRound(SPECIALROUND_RUNNINGINTHE90S);
 }
 
 bool IsNightVisionEnabled()
