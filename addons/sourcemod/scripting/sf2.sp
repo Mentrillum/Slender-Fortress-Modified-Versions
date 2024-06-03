@@ -4587,7 +4587,7 @@ static Action Hook_SlenderObjectSetTransmit(int ent, int other)
 			return Plugin_Handled;
 		}
 	}
-	if (g_PlayerProxy[other])
+	if (IsClientInGhostMode(other) || g_PlayerProxy[other])
 	{
 		return Plugin_Handled;
 	}
@@ -4615,7 +4615,7 @@ static Action Hook_SlenderObjectSetTransmitEx(int ent, int other)
 			return Plugin_Handled;
 		}
 	}
-	if (IsClientInGhostMode(other) || g_PlayerProxy[other])
+	if (g_PlayerProxy[other])
 	{
 		return Plugin_Handled;
 	}
