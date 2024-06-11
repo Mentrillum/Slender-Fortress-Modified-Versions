@@ -1790,10 +1790,7 @@ Action Timer_RespawnPlayer(Handle timer, any userid)
 	SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 	SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
 	SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-	if (!g_PlayerProxy[client])
-	{
-		Client_ModelOverrides(client);
-	}
+	Client_ModelOverrides(client);
 
 	return Plugin_Stop;
 }
