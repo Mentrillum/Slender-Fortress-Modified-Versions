@@ -888,16 +888,16 @@ static void Hook_PvPProjectileBallOfFireTouchPost(int projectile, int otherEntit
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
-	PvP_SetPlayerPvPState(client.index, false, false, false);
-
-	g_PlayerIsLeavingPvP[client.index] = false;
-
 	g_PlayerOriginalTeam[client.index] = client.Team;
 
 	if (IsRoundInWarmup() || GameRules_GetProp("m_bInWaitingForPlayers"))
 	{
 		return;
 	}
+	
+	PvP_SetPlayerPvPState(client.index, false, false, false);
+
+	g_PlayerIsLeavingPvP[client.index] = false;
 
 	if (client.IsAlive && client.IsParticipating)
 	{
