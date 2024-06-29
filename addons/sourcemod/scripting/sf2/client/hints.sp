@@ -80,7 +80,7 @@ static Action OnDifficultyVoteFinished(int difficulty, int& newDifficulty)
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		SF2_BasePlayer player = SF2_BasePlayer(i);
-		if (!player.IsValid || !g_PlayerPreferences[player.index].PlayerPreference_ShowHints)
+		if (!player.IsValid) // || !g_PlayerPreferences[player.index].PlayerPreference_ShowHints
 		{
 			continue;
 		}
@@ -136,7 +136,7 @@ static Action Timer_ShowSprintHint(Handle timer, any userId)
 
 	SF2_BasePlayer player = SF2_BasePlayer(clientIndex);
 
-	if (player.IsEliminated || player.HasEscaped || !g_PlayerPreferences[player.index].PlayerPreference_ShowHints)
+	if (player.IsEliminated || player.HasEscaped) // || !g_PlayerPreferences[player.index].PlayerPreference_ShowHints
 	{
 		return Plugin_Stop;
 	}
@@ -169,7 +169,7 @@ static Action Timer_ShowNoisesHint(Handle timer, any userId)
 
 	SF2_BasePlayer player = SF2_BasePlayer(clientIndex);
 
-	if (player.IsEliminated || player.HasEscaped || !g_PlayerPreferences[player.index].PlayerPreference_ShowHints)
+	if (player.IsEliminated || player.HasEscaped) // || !g_PlayerPreferences[player.index].PlayerPreference_ShowHints
 	{
 		return Plugin_Stop;
 	}

@@ -357,7 +357,7 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 	{
 		case SF2BossType_Statue:
 		{
-			if (g_PlayerPreferences[client.index].PlayerPreference_ShowHints && !client.HasHint(PlayerHint_Blink))
+			if (!client.HasHint(PlayerHint_Blink)) // g_PlayerPreferences[client.index].PlayerPreference_ShowHints &&
 			{
 				client.ShowHint(PlayerHint_Blink);
 			}
