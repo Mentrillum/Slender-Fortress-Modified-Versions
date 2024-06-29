@@ -98,12 +98,12 @@ static Action OnDifficultyVoteFinished(int difficulty, int& newDifficulty)
 			{
 				player.ShowHint(PlayerHint_Flashlight);
 
-				if (!player.HasHint(PlayerHint_Sprint))
+				if (!player.HasHint(PlayerHint_Noises)) // PlayerHint_Sprint
 				{
-					g_ShowHintTimer[player.index] = CreateTimer(10.0, Timer_ShowSprintHint, player.UserID, TIMER_FLAG_NO_MAPCHANGE);
+					g_ShowHintTimer[player.index] = CreateTimer(10.0, Timer_ShowNoisesHint, player.UserID, TIMER_FLAG_NO_MAPCHANGE); // Timer_ShowSprintHint
 				}
 			}
-			else if (!player.HasHint(PlayerHint_Sprint))
+			/*else if (!player.HasHint(PlayerHint_Sprint))
 			{
 				player.ShowHint(PlayerHint_Sprint);
 
@@ -111,7 +111,7 @@ static Action OnDifficultyVoteFinished(int difficulty, int& newDifficulty)
 				{
 					g_ShowHintTimer[player.index] = CreateTimer(10.0, Timer_ShowNoisesHint, player.UserID, TIMER_FLAG_NO_MAPCHANGE);
 				}
-			}
+			}*/
 			else if (!player.HasHint(PlayerHint_Noises))
 			{
 				player.ShowHint(PlayerHint_Noises);
