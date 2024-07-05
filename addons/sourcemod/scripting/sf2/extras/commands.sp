@@ -2054,7 +2054,7 @@ static Action Command_ForceGhost(int client,int args)
 				HandlePlayerHUD(target);
 				TF2_AddCondition(target, TFCond_StealthedUserBuffFade, -1.0);
 
-				CPrintToChat(target, "{dodgerblue}%N has forced you into ghost mode.", client);
+				CPrintToChat(target, "{dodgerblue}Someone has forced you into ghost mode.");
 
 				if (!wasSuccessful) wasSuccessful = true;
 			}
@@ -2067,7 +2067,7 @@ static Action Command_ForceGhost(int client,int args)
 				TF2_RespawnPlayer(target);
 				TF2_RemoveCondition(target, TFCond_StealthedUserBuffFade);
 
-				CPrintToChat(target, "{dodgerblue}%N has forced you out of ghost mode.", client);
+				CPrintToChat(target, "{dodgerblue}Someone has forced you out of ghost mode.");
 
 				if (!wasSuccessful) wasSuccessful = true;
 			}
