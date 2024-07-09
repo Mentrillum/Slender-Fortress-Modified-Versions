@@ -969,6 +969,11 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 				g_PlayerEliminated[client] = false;
 				g_PlayerEscaped[client] = false;
 			}
+			if ((g_EscapeEliminationConVar.BoolValue && !(IsRoundInEscapeObjective() || g_RoundTime <= 0) && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap()) && GetClientTeam(client) == TFTeam_Red)
+			{
+				g_PlayerEliminated[client] = false;
+				g_PlayerEscaped[client] = false;
+			}
 		}
 
 		ClientUpdateListeningFlags(client);
