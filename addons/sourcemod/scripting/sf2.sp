@@ -4164,6 +4164,21 @@ void SetRoundState(SF2RoundState roundState)
 			{
 				Renevant_SetWave(1, true);
 			}
+			
+			if (g_EscapeEliminationConVar.BoolValue && !(IsRoundInEscapeObjective() || g_RoundTime <= 0) && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
+			{
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (!IsPlayerAlive(i) && g_PlayerPlaying[i] && !g_PlayerEliminated[i] && !DidClientEscape(i)))
+					{
+						g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the escape objective started.
+						if (GetClientTeam(i) == TFTeam_Red)
+						{
+							g_PlayerSwitchBlueTimer[i] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
+						}
+					}
+				}
+			}
 		}
 		case SF2RoundState_Outro:
 		{
@@ -6710,6 +6725,14 @@ static Action Timer_RoundTime(Handle timer)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (!IsPlayerAlive(i) && g_PlayerPlaying[i] && !g_PlayerEliminated[i] && !DidClientEscape(i)))
+			{
+				g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the round timer ended.
+				if (GetClientTeam(i) == TFTeam_Red)
+				{
+					g_PlayerSwitchBlueTimer[i] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
+				}
+			}
 			if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
 			{
 				continue;
@@ -6790,6 +6813,14 @@ static Action Timer_RoundTimeEscape(Handle timer)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (!IsPlayerAlive(i) && g_PlayerPlaying[i] && !g_PlayerEliminated[i] && !DidClientEscape(i)))
+			{
+				g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the round timer ended.
+				if (GetClientTeam(i) == TFTeam_Red)
+				{
+					g_PlayerSwitchBlueTimer[i] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
+				}
+			}
 			if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i) || DidClientEscape(i))
 			{
 				continue;
