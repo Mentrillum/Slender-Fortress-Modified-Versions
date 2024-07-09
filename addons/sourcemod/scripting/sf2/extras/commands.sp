@@ -164,6 +164,9 @@ public void OnPluginStart()
 	g_IgnoreRoundWinConditionsConVar.AddChangeHook(OnConVarChanged);
 	g_IgnoreRedPlayerDeathSwapConVar = CreateConVar("sf2_ignore_red_player_death_team_switch", "0", "If set to 1, RED players will not switch back to the BLU team.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_IgnoreRedPlayerDeathSwapConVar.AddChangeHook(OnConVarChanged);
+	
+	g_EscapeEliminationConVar = CreateConVar("sf2_escape_elimination", "0", "If set to 1, RED players can only be eliminated on death during escape sequence.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_EscapeEliminationConVar.AddChangeHook(OnConVarChanged);
 
 	g_EnableWallHaxConVar = CreateConVar("sf2_enable_wall_hax", "0", "Enables/disables the Wall Hax special round without needing to turn on Wall Hax. This will not force the difficulty to Insane and will show player + boss outlines.", _, true, 0.0, true, 1.0);
 	g_EnableWallHaxConVar.AddChangeHook(OnConVarChanged);
