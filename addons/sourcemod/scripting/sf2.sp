@@ -4165,7 +4165,7 @@ void SetRoundState(SF2RoundState roundState)
 				Renevant_SetWave(1, true);
 			}
 			
-			if (g_EscapeEliminationConVar.BoolValue && !(IsRoundInEscapeObjective() || g_RoundTime <= 0) && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
+			if (g_EscapeEliminationConVar.BoolValue && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
@@ -6589,7 +6589,7 @@ Action Timer_PlayerSwitchToBlue(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	if (g_EscapeEliminationConVar.BoolValue && !(IsRoundInEscapeObjective() || g_RoundTime <= 0) && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
+	if (g_EscapeEliminationConVar.BoolValue && !(IsRoundInEscapeObjective() || IsRoundEnding() || g_RoundTime <= 0) && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
 	{
 		return Plugin_Stop;
 	}
