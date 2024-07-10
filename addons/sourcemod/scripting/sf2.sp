@@ -4169,7 +4169,7 @@ void SetRoundState(SF2RoundState roundState)
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
-					if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsClientInGame(i) && !IsPlayerAlive(i) && g_PlayerPlaying[i] && !g_PlayerEliminated[i] && !DidClientEscape(i)))
+					if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsClientInGame(i) && !IsPlayerAlive(i) && IsClientParticipating(i) && !g_PlayerEliminated[i] && !DidClientEscape(i)))
 					{
 						g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the escape objective started.
 						if (GetClientTeam(i) == TFTeam_Red)
@@ -6725,7 +6725,7 @@ static Action Timer_RoundTime(Handle timer)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsValidClient(i) && !IsPlayerAlive(i) && g_PlayerPlaying[i] && !g_PlayerEliminated[i] && !DidClientEscape(i)))
+			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsValidClient(i) && !IsPlayerAlive(i) && IsClientParticipating(i) && !g_PlayerEliminated[i] && !DidClientEscape(i)))
 			{
 				g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the round timer ended.
 				if (GetClientTeam(i) == TFTeam_Red)
@@ -6813,7 +6813,7 @@ static Action Timer_RoundTimeEscape(Handle timer)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsValidClient(i) && !IsPlayerAlive(i) && g_PlayerPlaying[i] && !g_PlayerEliminated[i] && !DidClientEscape(i)))
+			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsValidClient(i) && !IsPlayerAlive(i) && IsClientParticipating(i) && !g_PlayerEliminated[i] && !DidClientEscape(i)))
 			{
 				g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the round timer ended.
 				if (GetClientTeam(i) == TFTeam_Red)
