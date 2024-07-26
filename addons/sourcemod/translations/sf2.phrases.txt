@@ -1160,6 +1160,10 @@
 		"pt"	"Substituição de chefão atual: {1}"
 		"ko"	"현재 보스 재정의 : {1}"
 	}
+	"SF2 Disabled Boss Pack"
+	{
+		"en"	"{hotpink}[SF2]{default} Boss Pack vote is disabled on this server."
+	}
 	"SF2 Boss Pack Next"
 	{
 		"#format" "{1:s}"
