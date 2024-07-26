@@ -301,7 +301,6 @@ Action Command_Pack(int client,int args)
 {
 	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
-		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
 		CPrintToChat(client, "%t", "SF2 Disabled Boss Pack");
 		return Plugin_Handled;
 	}
