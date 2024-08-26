@@ -355,6 +355,7 @@ enum RenevantWave
 #define SFF_ATTACKPROPS (1 << 14)
 #define SFF_WEAPONKILLS (1 << 15)
 #define SFF_WEAPONKILLSONRADIUS (1 << 16)
+#define SFF_HASSTATICSHAKE (1 << 17)
 
 // Interrup conditions.
 #define COND_HEARDSUSPICIOUSSOUND (1 << 0)
