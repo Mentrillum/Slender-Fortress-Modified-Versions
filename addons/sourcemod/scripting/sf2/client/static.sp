@@ -295,12 +295,10 @@ void ClientProcessStaticShake(int client)
 		NormalizeVector(newPunchAng, newPunchAng);
 
 		float angVelocityScalar = 5.0 * g_PlayerStaticAmount[client];
-		/*
-		if (angVelocityScalar < 1.0)
+		if (angVelocityScalar < 0.0)
 		{
-			angVelocityScalar = 1.0;
+			angVelocityScalar = 0.0;
 		}
-		*/
 		ScaleVector(newPunchAng, angVelocityScalar);
 
 		for (int i = 0; i < 2; i++)
