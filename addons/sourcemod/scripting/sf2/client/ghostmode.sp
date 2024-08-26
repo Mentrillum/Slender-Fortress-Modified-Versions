@@ -4,17 +4,10 @@
 
 static bool g_PlayerInGhostMode[MAXTF2PLAYERS] = { false, ... };
 static int g_PlayerGhostModeTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
-static int g_iGhostModelIndex;
 static int g_PlayerGhostModeBossTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 Handle g_PlayerGhostModeConnectionCheckTimer[MAXTF2PLAYERS] = { null, ... };
 float g_PlayerGhostModeConnectionTimeOutTime[MAXTF2PLAYERS] = { -1.0, ... };
 float g_PlayerGhostModeConnectionBootTime[MAXTF2PLAYERS] = { -1.0, ... };
-
-void SF2_SetGhostModel(int iModelIndex)
-{
-	g_iGhostModelIndex = iModelIndex;
-}
-
 
 void SetupGhost()
 {
@@ -172,7 +165,6 @@ void ClientSetGhostModeState(int client, bool state)
 			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 			SetEntityRenderMode(client, RENDER_NORMAL);
 			SetEntityRenderColor(client, _, _, _, 255);
-			Client_ModelOverrides(client);
 			SetEntityCollisionGroup(client, COLLISION_GROUP_PLAYER);
 		}
 	}
@@ -210,12 +202,11 @@ void ClientHandleGhostMode(int client, bool forceSpawn = false)
 		SetEntityCollisionGroup(client, 26);
 		SetEntityFlags(client, GetEntityFlags(client) | FL_NOTARGET);
 		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(client, _, _, _, g_GhostModeVisibleAlphaConVar.IntValue);
+		SetEntityRenderColor(client, _, _, _, 0);
 		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-		Client_ModelOverrides(client, g_iGhostModelIndex);
 
 		// Set first observer target.
 		ClientGhostModeNextTarget(client, true);

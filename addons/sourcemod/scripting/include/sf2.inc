@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.7 F"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.7 F"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.7"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.7"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -355,7 +355,6 @@ enum RenevantWave
 #define SFF_ATTACKPROPS (1 << 14)
 #define SFF_WEAPONKILLS (1 << 15)
 #define SFF_WEAPONKILLSONRADIUS (1 << 16)
-#define SFF_HASSTATICSHAKE (1 << 17)
 
 // Interrup conditions.
 #define COND_HEARDSUSPICIOUSSOUND (1 << 0)

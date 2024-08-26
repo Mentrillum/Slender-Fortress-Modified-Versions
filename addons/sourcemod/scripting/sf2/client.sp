@@ -5,7 +5,6 @@
 
 #pragma semicolon 1
 
-#define GHOST_MODEL "models/props_halloween/ghost_no_hat.mdl"
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
 
@@ -156,10 +155,7 @@ Action Hook_ClientSetTransmit(int client, int other)
 	{
 		if (IsClientInGhostMode(client))
 		{
-			if (g_GhostModeVisibleConVar.IntValue < 1  || ((g_GhostModeVisibleConVar.IntValue == 1 || SF_SpecialRound(SPECIALROUND_SINGLEPLAYER)) && !IsClientInGhostMode(other)))
-			{
-				return Plugin_Handled;
-			}
+			return Plugin_Handled;
 		}
 
 		if (IsClientInPvP(client))
@@ -1786,19 +1782,6 @@ Action Timer_RespawnPlayer(Handle timer, any userid)
 	}
 
 	TF2_RespawnPlayer(client);
-	SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-	Client_ModelOverrides(client);
 
 	return Plugin_Stop;
-}
-
-void Client_ModelOverrides(int iEntity, int iModelIndex = 0)
-{
-    for(int i=0; i<4; i++)
-    {
-        SetEntProp(iEntity, Prop_Send, "m_nModelIndexOverrides", iModelIndex, _, i);
-    }
 }

@@ -784,7 +784,7 @@ static void Hook_SpeedThink(int client)
 		}
 	}
 
-	if (inDanger) // g_PlayerPreferences[player.index].PlayerPreference_ShowHints &&
+	if (g_PlayerPreferences[player.index].PlayerPreference_ShowHints && inDanger)
 	{
 		if (!inChase && !player.HasHint(PlayerHint_Crouch))
 		{

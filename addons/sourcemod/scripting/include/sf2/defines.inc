@@ -33,7 +33,7 @@
 
 #define SF_KEYMODEL "models/demani_sf/key_australium.mdl"
 
-#define FLASHLIGHT_CLICKSOUND "slender/slenderflashlightclick_old.wav"
+#define FLASHLIGHT_CLICKSOUND "slender/slenderflashlightclick.wav"
 #define FLASHLIGHT_CLICKSOUND_NIGHTVISION "slender/nightvision.mp3"
 #define FLASHLIGHT_BREAKSOUND "ambient/energy/spark6.wav"
 #define FLASHLIGHT_NOSOUND "player/suit_denydevice.wav"
@@ -109,7 +109,7 @@
 
 #define NULLSOUND "misc/null.wav"
 
-#define NINETYSMUSIC "slender/sf2modified_runninginthe90s_v3.wav"
+#define NINETYSMUSIC "slender/sf2modified_runninginthe90s_v2.wav"
 
 #define TRAP_DEPLOY ")slender/modified_traps/beartrap/trap_deploy.mp3"
 #define TRAP_CLOSE ")slender/modified_traps/beartrap/trap_close.mp3"

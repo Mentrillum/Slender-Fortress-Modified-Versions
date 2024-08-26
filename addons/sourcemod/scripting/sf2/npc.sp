@@ -357,7 +357,7 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 	{
 		case SF2BossType_Statue:
 		{
-			if (!client.HasHint(PlayerHint_Blink)) // g_PlayerPreferences[client.index].PlayerPreference_ShowHints &&
+			if (g_PlayerPreferences[client.index].PlayerPreference_ShowHints && !client.HasHint(PlayerHint_Blink))
 			{
 				client.ShowHint(PlayerHint_Blink);
 			}
@@ -2381,55 +2381,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 
 	if (!npc.IsCopy)
 	{
-		if (!playSpawnSound)
-		{
-			LogSF2Message("Boss profile %s has been silently added to the game.", profile);
-		}
-		else
-		{
-			LogSF2Message("Boss profile %s has been added to the game.", profile);
-		}
-
-		if (g_ChatBossAdded.IntValue > 0)
-		{
-			char name[SF2_MAX_NAME_LENGTH];
-			ArrayList arrayNames2;
-			arrayNames2 = GetBossProfileNames(profile);
-			int difficulty = g_DifficultyConVar.IntValue;
-
-			switch (difficulty)
-			{
-				case Difficulty_Normal:
-				{
-					arrayNames2.GetString(Difficulty_Normal, name, sizeof(name));
-				}
-				case Difficulty_Hard:
-				{
-					arrayNames2.GetString(Difficulty_Hard, name, sizeof(name));
-				}
-				case Difficulty_Insane:
-				{
-					arrayNames2.GetString(Difficulty_Insane, name, sizeof(name));
-				}
-				case Difficulty_Nightmare:
-				{
-					arrayNames2.GetString(Difficulty_Nightmare, name, sizeof(name));
-				}
-				case Difficulty_Apollyon:
-				{
-					arrayNames2.GetString(Difficulty_Apollyon, name, sizeof(name));
-				}
-			}
-
-			if (playSpawnSound)
-			{
-				CPrintToChatAll("{royalblue}%t {valve}%s{default} has been added to the round.", "SF2 Prefix", name);
-			}
-			else if (g_ChatBossAdded.IntValue >= 2)
-			{
-				CPrintToChatAll("{royalblue}%t {default}A boss has been anonymously added to the round.", "SF2 Prefix");
-			}
-		}
+		LogSF2Message("Boss profile %s has been added to the game.", profile);
 	}
 
 	return true;

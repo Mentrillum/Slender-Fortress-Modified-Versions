@@ -493,11 +493,8 @@ ConVar g_SpecialRoundIntervalConVar;
 ConVar g_NewBossRoundBehaviorConVar;
 ConVar g_NewBossRoundIntervalConVar;
 ConVar g_NewBossRoundForceConVar;
-ConVar g_NewBossRoundIncludeMain;
 ConVar g_IgnoreRoundWinConditionsConVar;
-ConVar g_EscapeEliminationConVar;
 ConVar g_EnableWallHaxConVar;
-ConVar g_EnablePlayerOutlinesConVar;
 ConVar g_IgnoreRedPlayerDeathSwapConVar;
 ConVar g_PlayerVoiceDistanceConVar;
 ConVar g_PlayerVoiceWallScaleConVar;
@@ -510,8 +507,6 @@ ConVar g_NightvisionEnabledConVar;
 ConVar g_GhostModeConnectionConVar;
 ConVar g_GhostModeConnectionCheckConVar;
 ConVar g_GhostModeConnectionToleranceConVar;
-ConVar g_GhostModeVisibleConVar;
-ConVar g_GhostModeVisibleAlphaConVar;
 ConVar g_IntroEnabledConVar;
 ConVar g_IntroDefaultHoldTimeConVar;
 ConVar g_IntroDefaultFadeTimeConVar;
@@ -552,7 +547,6 @@ ConVar g_DifficultyVoteRevoteConVar;
 ConVar g_DifficultyNoGracePageConVar;
 ConVar g_HighDifficultyPercentConVar;
 ConVar g_FileCheckConVar;
-ConVar g_ChatBossAdded;
 ConVar g_LoadOutsideMapsConVar;
 ConVar g_DefaultBossTeamConVar;
 ConVar g_EngineerBuildInBLUConVar;
@@ -826,8 +820,6 @@ public void OnMapStart()
 
 	PrecacheModel(SF2_FLASHLIGHT_BEAM_MATERIAL);
 	g_FlashlightHaloModel = PrecacheModel(SF2_FLASHLIGHT_HALO_MATERIAL, true);
-	
-	SF2_SetGhostModel(PrecacheModel(GHOST_MODEL));
 
 	Call_StartForward(g_OnMapStartPFwd);
 	Call_Finish();
@@ -2839,11 +2831,11 @@ MRESReturn Hook_EntityShouldTransmit(int entity, DHookReturn returnHandle, DHook
 			returnHandle.Value = FL_EDICT_ALWAYS; // Should always transmit, but our SetTransmit hook gets the final say.
 			return MRES_Supercede;
 		}
-		/*else if (client.IsInGhostMode)
+		else if (client.IsInGhostMode)
 		{
 			returnHandle.Value = FL_EDICT_DONTSEND;
 			return MRES_Supercede;
-		}*/
+		}
 	}
 	else
 	{
@@ -4164,21 +4156,6 @@ void SetRoundState(SF2RoundState roundState)
 			{
 				Renevant_SetWave(1, true);
 			}
-			
-			if (g_EscapeEliminationConVar.BoolValue && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
-			{
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsClientInGame(i) && !IsPlayerAlive(i) && g_PlayerPlaying[i] && IsClientParticipating(i) && !g_PlayerEliminated[i] && !DidClientEscape(i)))
-					{
-						g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the escape objective started.
-						if (GetClientTeam(i) == TFTeam_Red)
-						{
-							g_PlayerSwitchBlueTimer[i] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
-						}
-					}
-				}
-			}
 		}
 		case SF2RoundState_Outro:
 		{
@@ -4631,28 +4608,15 @@ static Action Hook_SlenderObjectSetTransmitEx(int ent, int other)
 			return Plugin_Handled;
 		}
 	}
-	if (g_PlayerProxy[other])
+	if (IsClientInGhostMode(other) || g_PlayerProxy[other])
 	{
 		return Plugin_Handled;
 	}
 	if (IsValidClient(other))
 	{
-		if (!IsClientInGhostMode(other))
+		if (ClientGetDistanceFromEntity(other, ent) <= SquareFloat(320.0) || GetClientTeam(other) == TFTeam_Spectator)
 		{
-			if (GetClientTeam(other) != TFTeam_Spectator)
-			{
-				if (ClientGetDistanceFromEntity(other, ent) <= SquareFloat(320.0))
-				{
-					return Plugin_Handled;
-				}
-			}
-			else
-			{
-				if (!IsValidEdict(GetEntPropEnt(other, Prop_Send, "m_hObserverTarget")))
-				{
-					return Plugin_Handled;
-				}
-			}
+			return Plugin_Handled;
 		}
 	}
 
@@ -4839,7 +4803,7 @@ static int GetPageMusicRanges()
 			ExplodeString(name, "-", pageRanges, 2, 32);
 
 			int index = g_PageMusicRanges.Push(EntIndexToEntRef(ent));
-			if (index != -1 && g_NewBossRoundIncludeMain.IntValue != 1)
+			if (index != -1)
 			{
 				int min = StringToInt(pageRanges[0]);
 				int max = StringToInt(pageRanges[1]);
@@ -6589,10 +6553,6 @@ Action Timer_PlayerSwitchToBlue(Handle timer, any userid)
 	{
 		return Plugin_Stop;
 	}
-	if (g_EscapeEliminationConVar.BoolValue && !(IsRoundInEscapeObjective() || IsRoundEnding() || g_RoundTime <= 0) && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
-	{
-		return Plugin_Stop;
-	}
 
 	ChangeClientTeam(client, TFTeam_Blue);
 
@@ -6725,14 +6685,6 @@ static Action Timer_RoundTime(Handle timer)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsValidClient(i) && !IsPlayerAlive(i) && g_PlayerPlaying[i] && IsClientParticipating(i) && !g_PlayerEliminated[i] && !DidClientEscape(i)))
-			{
-				g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the round timer ended.
-				if (GetClientTeam(i) == TFTeam_Red)
-				{
-					g_PlayerSwitchBlueTimer[i] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
-				}
-			}
 			if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
 			{
 				continue;
@@ -6813,14 +6765,6 @@ static Action Timer_RoundTimeEscape(Handle timer)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!g_IgnoreRedPlayerDeathSwapConVar.BoolValue && (IsValidClient(i) && !IsPlayerAlive(i) && g_PlayerPlaying[i] && IsClientParticipating(i) && !g_PlayerEliminated[i] && !DidClientEscape(i)))
-			{
-				g_PlayerEliminated[i] = true; // Player was already dead but not eliminated when the round timer ended.
-				if (GetClientTeam(i) == TFTeam_Red)
-				{
-					g_PlayerSwitchBlueTimer[i] = CreateTimer(0.5, Timer_PlayerSwitchToBlue, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
-				}
-			}
 			if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i) || DidClientEscape(i))
 			{
 				continue;
@@ -8269,11 +8213,6 @@ void InitializeNewGame()
 				{
 					// Players currently in the "game" still have to be respawned.
 					TF2_RespawnPlayer(i);
-					SetEntPropFloat(i, Prop_Send, "m_flModelScale", 1.0);
-					SetEntPropFloat(i, Prop_Send, "m_flHeadScale", 1.0);
-					SetEntPropFloat(i, Prop_Send, "m_flTorsoScale", 1.0);
-					SetEntPropFloat(i, Prop_Send, "m_flHandScale", 1.0);
-					Client_ModelOverrides(i);
 				}
 			}
 		}

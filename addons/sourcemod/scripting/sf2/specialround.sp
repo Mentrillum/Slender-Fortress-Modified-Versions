@@ -1388,7 +1388,7 @@ void SpecialRoundStart()
 							SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
 							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
 							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
-							/*int randomQuote = GetRandomInt(1, 8);
+							int randomQuote = GetRandomInt(1, 8);
 							switch (randomQuote)
 							{
 								case 1:
@@ -1431,7 +1431,7 @@ void SpecialRoundStart()
 									EmitSoundToAll(SNATCHER_APOLLYON_3);
 									CPrintToChatAll("{purple}Snatcher{default}: Killing you is hard work, but it pays off. HA HA HA HA HA HA HA HA HA HA");
 								}
-							}*/
+							}
 						}
 					}
 				}
