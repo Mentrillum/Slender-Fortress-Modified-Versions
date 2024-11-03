@@ -240,8 +240,6 @@ public void OnPluginStart()
 	g_DefaultBossTeamConVar = CreateConVar("sf2_default_boss_team", "1", "If bosses are loaded outside of SF2, determine what default team bosses should be with.", _, true, 1.0, true, 5.0);
 
 	g_EngineerBuildInBLUConVar = CreateConVar("sf2_engineer_build_in_blue", "0", "Allows BLU engineers to build outside of the PvP and PvE arena.", _, true, 0.0, true, 1.0);
-	
-	g_ShowStaticMeterConVar = CreateConVar("sf2_show_static_meter", "0", "Displays the amount of static the player has received to the HUD.", _, true, 0.0, true, 1.0);
 
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
