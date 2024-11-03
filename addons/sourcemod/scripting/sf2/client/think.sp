@@ -804,6 +804,7 @@ void ClientOnButtonRelease(SF2_BasePlayer client, int button)
 #define SF2_PLAYER_HUD_INFINITY_SYMBOL "∞"
 #define SF2_PLAYER_HUD_SPRINT_SYMBOL "»"
 #define SF2_PLAYER_HUD_HEALTH_SYMBOL "♥"
+#define SF2_PLAYER_HUD_STATIC_SYMBOL "!"
 
 Action Timer_ClientAverageUpdate(Handle timer)
 {
@@ -928,6 +929,29 @@ Action Timer_ClientAverageUpdate(Handle timer)
 				}
 				else
 				{
+					for (int i2 = 0; i2 < maxBars; i2++)
+					{
+						if (i2 < bars)
+						{
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+						}
+						else
+						{
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+						}
+					}
+				}
+				
+				if (g_ShowStaticMeterConVar.BoolValue && (!SF_IsRaidMap() && !SF_IsBoxingMap()))
+				{
+					float percent = g_PlayerStaticAmount[player.index];
+					bars = RoundToCeil(float(maxBars) * percent);
+					if (bars > maxBars)
+					{
+						bars = maxBars;
+					}
+					FormatEx(buffer2, sizeof(buffer2), "\n%s  ", SF2_PLAYER_HUD_STATIC_SYMBOL);
+					StrCat(buffer, sizeof(buffer), buffer2);
 					for (int i2 = 0; i2 < maxBars; i2++)
 					{
 						if (i2 < bars)

@@ -556,6 +556,7 @@ ConVar g_ChatBossAdded;
 ConVar g_LoadOutsideMapsConVar;
 ConVar g_DefaultBossTeamConVar;
 ConVar g_EngineerBuildInBLUConVar;
+ConVar g_ShowStaticMeterConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
