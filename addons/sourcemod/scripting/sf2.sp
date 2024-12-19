@@ -4002,7 +4002,7 @@ void SetRoundState(SF2RoundState roundState)
 				delete spawnPoint;
 			}
 
-			if (g_EscapeEliminationConVar.BoolValue)
+			if (g_EscapeEliminationConVar.BoolValue && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
 			{
 				CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End Alt");
 			}
@@ -4188,7 +4188,7 @@ void SetRoundState(SF2RoundState roundState)
 				}
 			}
 			
-			if (g_EscapeEliminationConVar.BoolValue)
+			if (g_EscapeEliminationConVar.BoolValue && !SF_IsRenevantMap() && !SF_IsSlaughterRunMap() && !SF_IsBoxingMap())
 			{
 				CPrintToChatAll("{dodgerblue}%t", "SF2 Escape Elimination");
 			}
