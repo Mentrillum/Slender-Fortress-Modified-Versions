@@ -4002,7 +4002,14 @@ void SetRoundState(SF2RoundState roundState)
 				delete spawnPoint;
 			}
 
-			CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
+			if (g_EscapeEliminationConVar.BoolValue)
+			{
+				CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End Alt");
+			}
+			else
+			{
+				CPrintToChatAll("{dodgerblue}%t", "SF2 Grace Period End");
+			}
 		}
 		case SF2RoundState_Active:
 		{
@@ -4179,6 +4186,11 @@ void SetRoundState(SF2RoundState roundState)
 						}
 					}
 				}
+			}
+			
+			if (g_EscapeEliminationConVar.BoolValue)
+			{
+				CPrintToChatAll("{dodgerblue}%t", "SF2 Escape Elimination");
 			}
 		}
 		case SF2RoundState_Outro:

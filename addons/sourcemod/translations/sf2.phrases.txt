@@ -164,6 +164,18 @@
 
 	}
 
+	"SF2 Grace Period End Alt"
+	{
+		"en"	"Grace period ended. You will no longer instantly respawn."
+
+	}
+
+	"SF2 Escape Elimination"
+	{
+		"en"	"Escape phase started. Death will now result in elimination."
+
+	}
+
 	"SF2 Grace Period Page"
 	{
 		"en"	"Wait for Grace period to end to collect a page."
