@@ -12,6 +12,7 @@ methodmap SF2_PlaySequenceAndWait < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_OnStart, OnStart);
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnSuspend, OnSuspend);
+			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
 			g_Factory.BeginDataMapDesc()
 				.DefineIntField("m_Sequence")
 				.DefineFloatField("m_Duration")
@@ -119,10 +120,12 @@ static int OnStart(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, NextBotAc
 		duration = actor.SequenceDuration(action.Sequence) / action.Rate;
 		duration *= (1.0 - action.Cycle);
 	}
+
 	if (SF2_ChaserEntity(actor.index).IsValid())
 	{
 		SF2_ChaserEntity(actor.index).GroundSpeedOverride = true;
 	}
+
 	action.EndTime = GetGameTime() + duration;
 
 	return action.Continue();
@@ -132,10 +135,6 @@ static int Update(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, float inte
 {
 	if (GetGameTime() > action.EndTime)
 	{
-		if (SF2_ChaserEntity(actor.index).IsValid())
-		{
-			SF2_ChaserEntity(actor.index).GroundSpeedOverride = false;
-		}
 		return action.Done();
 	}
 
@@ -144,11 +143,15 @@ static int Update(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, float inte
 
 static int OnSuspend(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, NextBotAction interruptingAction)
 {
+	return action.Done();
+}
+
+static void OnEnd(SF2_PlaySequenceAndWait action, SF2_ChaserEntity actor)
+{
 	if (SF2_ChaserEntity(actor.index).IsValid())
 	{
 		SF2_ChaserEntity(actor.index).GroundSpeedOverride = false;
 	}
-	return action.Done();
 }
 
 static any Native_Create(Handle plugin, int numParams)

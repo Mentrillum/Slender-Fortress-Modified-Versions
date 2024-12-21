@@ -694,8 +694,6 @@ Handle g_SDKSequenceVelocity;
 Handle g_SDKStartTouch;
 Handle g_SDKEndTouch;
 Handle g_SDKWeaponSwitch;
-Handle g_SDKGetWeaponID;
-Handle g_SDKIsWeapon;
 
 DynamicHook g_DHookWantsLagCompensationOnEntity;
 DynamicHook g_DHookShouldTransmit;
@@ -3645,7 +3643,6 @@ public void OnClientPutInServer(int client)
 	SDKHook(client, SDKHook_PreThink, Hook_ClientPreThink);
 	SDKHook(client, SDKHook_PreThinkPost, Hook_OnFlashlightThink);
 	SDKHook(client, SDKHook_SetTransmit, Hook_ClientSetTransmit);
-	SDKHook(client, SDKHook_TraceAttack, Hook_PvPPlayerTraceAttack);
 	SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 
 	g_DHookWantsLagCompensationOnEntity.HookEntity(Hook_Pre, client, Hook_ClientWantsLagCompensationOnEntity);

@@ -301,12 +301,12 @@ Action Command_Pack(int client,int args)
 {
 	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
-		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
+		CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Disabled Boss Pack");
 		return Plugin_Handled;
 	}
 	char bossPackName[64];
 	GetCurrentBossPack(bossPackName, sizeof(bossPackName));
-	CPrintToChat(client, "{dodgerblue}Pack: {lightblue}%s", bossPackName);
+	CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Current Boss Pack", bossPackName);
 	return Plugin_Handled;
 }
 
@@ -314,7 +314,7 @@ Action Command_NextPack(int client,int args)
 {
 	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
-		CPrintToChat(client,"{red}Boss pack vote is disabled on this server.");
+		CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Disabled Boss Pack");
 		return Plugin_Handled;
 	}
 
@@ -323,7 +323,7 @@ Action Command_NextPack(int client,int args)
 
 	if (strcmp(nextpack, "") == 0)
 	{
-		CPrintToChat(client,"{dodgerblue}%t{lightblue}%t.","SF2 Prefix","Pending Vote");
+		CPrintToChat(client,"{royalblue}%t {lightblue}%t.","SF2 Prefix","Pending Vote");
 		return Plugin_Handled;
 	}
 
@@ -342,7 +342,7 @@ Action Command_NextPack(int client,int args)
 	{
 		FormatEx(bossPackName, sizeof(bossPackName), "Core Pack");
 	}
-	CPrintToChat(client, "{dodgerblue}Next pack: {lightblue}%s", bossPackName);
+	CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Boss Pack Next", bossPackName);
 	return Plugin_Handled;
 }
 
