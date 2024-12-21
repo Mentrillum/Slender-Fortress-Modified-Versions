@@ -567,6 +567,10 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	{
 		bossFlags |= SFF_WEAPONKILLSONRADIUS;
 	}
+	if (kv.GetNum("static_shake"), 0)
+	{
+		bossFlags |= SFF_HASSTATICSHAKE;
+	}
 	profileData.Flags = bossFlags;
 
 	profileData.CopiesInfo.Load(kv);
