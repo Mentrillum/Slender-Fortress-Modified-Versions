@@ -1,4 +1,21 @@
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap ChaserBossProfileExplosiveDanceAttack < ChaserBossProfileBaseAttack
+{
+	public float GetBlastRadius(int difficulty)
+	{
+		float def = 350.0;
+		def = this.GetDifficultyFloat("explosivedance_radius", difficulty, def);
+		def = this.GetDifficultyFloat("attack_explosivedance_radius", difficulty, def);
+		return def;
+	}
+
+	public float GetBlastSpread(int difficulty)
+	{
+		return this.GetDifficultyFloat("explosivedance_spread", difficulty, 350.0);
+	}
+}
 
 static char g_ExplosionSounds[][] =
 {
@@ -11,7 +28,7 @@ static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_ExplosiveDance < NextBotAction
 {
-	public SF2_ChaserAttackAction_ExplosiveDance(int attackIndex, const char[] attackName, float damageDelay)
+	public SF2_ChaserAttackAction_ExplosiveDance(const char[] attackName, ChaserBossProfileExplosiveDanceAttack data, float damageDelay)
 	{
 		if (g_Factory == null)
 		{
@@ -20,8 +37,8 @@ methodmap SF2_ChaserAttackAction_ExplosiveDance < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
-				.DefineIntField("m_AttackIndex")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_ProfileData")
 				.DefineFloatField("m_NextDamageTime")
 				.DefineIntField("m_ExplosionCount")
 				.EndDataMapDesc();
@@ -29,9 +46,9 @@ methodmap SF2_ChaserAttackAction_ExplosiveDance < NextBotAction
 		SF2_ChaserAttackAction_ExplosiveDance action = view_as<SF2_ChaserAttackAction_ExplosiveDance>(g_Factory.Create());
 
 		action.NextDamageTime = damageDelay;
-		action.AttackIndex = attackIndex;
 		action.SetAttackName(attackName);
 		action.ExplosionCount = 0;
+		action.ProfileData = data;
 
 		return action;
 	}
@@ -40,19 +57,6 @@ methodmap SF2_ChaserAttackAction_ExplosiveDance < NextBotAction
 	{
 		g_OnChaserGetAttackActionPFwd.AddFunction(null, OnChaserGetAttackAction);
 		g_OnGamemodeStartPFwd.AddFunction(null, OnGamemodeStart);
-	}
-
-	property int AttackIndex
-	{
-		public get()
-		{
-			return this.GetData("m_AttackIndex");
-		}
-
-		public set(int value)
-		{
-			this.SetData("m_AttackIndex", value);
-		}
 	}
 
 	public char[] GetAttackName()
@@ -65,6 +69,19 @@ methodmap SF2_ChaserAttackAction_ExplosiveDance < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property ChaserBossProfileExplosiveDanceAttack ProfileData
+	{
+		public get()
+		{
+			return this.GetData("m_ProfileData");
+		}
+
+		public set(ChaserBossProfileExplosiveDanceAttack value)
+		{
+			this.SetData("m_ProfileData", value);
+		}
 	}
 
 	property float NextDamageTime
@@ -109,10 +126,8 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = chaser.Controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfileExplosiveDanceAttack attackData = view_as<ChaserBossProfileExplosiveDanceAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (attackData.Type != SF2BossAttackType_ExplosiveDance)
@@ -120,7 +135,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_ExplosiveDance(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_ExplosiveDance(attackName, attackData, attackData.GetDelay(difficulty) + GetGameTime());
 	return Plugin_Changed;
 }
 
@@ -142,14 +157,11 @@ static int Update(SF2_ChaserAttackAction_ExplosiveDance action, SF2_ChaserEntity
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileExplosiveDanceAttack attackData = action.ProfileData;
 
 	float gameTime = GetGameTime();
 
-	if (action.NextDamageTime >= 0.0 && gameTime > action.NextDamageTime && attackData.EventNumber == -1)
+	if (action.NextDamageTime >= 0.0 && gameTime > action.NextDamageTime && attackData.GetEventNumber(controller.Difficulty) == -1)
 	{
 		DoExplosion(action, actor);
 	}
@@ -162,12 +174,9 @@ static void DoExplosion(SF2_ChaserAttackAction_ExplosiveDance action, SF2_Chaser
 
 	int difficulty = controller.Difficulty;
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
-	float damage = attackData.Damage[difficulty];
-	float radius = attackData.ExplosiveDanceRadius[difficulty];
+	ChaserBossProfileExplosiveDanceAttack attackData = action.ProfileData;
+	float damage = attackData.GetDamage(difficulty);
+	float radius = attackData.GetBlastRadius(difficulty);
 	if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 	{
 		damage *= 0.5;
@@ -187,8 +196,8 @@ static void DoExplosion(SF2_ChaserAttackAction_ExplosiveDance action, SF2_Chaser
 	float explosionPos[3];
 
 	explosionPos = worldPos;
-	explosionPos[0] = worldPos[0] + GetRandomFloat(-350.0, 350.0);
-	explosionPos[1] = worldPos[1] + GetRandomFloat(-350.0, 350.0);
+	explosionPos[0] = worldPos[0] + GetRandomFloat(-attackData.GetBlastSpread(difficulty), attackData.GetBlastSpread(difficulty));
+	explosionPos[1] = worldPos[1] + GetRandomFloat(-attackData.GetBlastSpread(difficulty), attackData.GetBlastSpread(difficulty));
 	Explode(explosionPos, damage, radius, actor.index);
 	EmitSoundToAll(g_ExplosionSounds[GetRandomInt(0, sizeof(g_ExplosionSounds) - 1)], actor.index, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 
@@ -203,12 +212,9 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_ExplosiveDance action, SF2_C
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileExplosiveDanceAttack attackData = action.ProfileData;
 
-	if (event == attackData.EventNumber)
+	if (event == attackData.GetEventNumber(controller.Difficulty))
 	{
 		DoExplosion(action, actor);
 	}

@@ -4,6 +4,7 @@
 #define _sf2_renevant_mode_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static GlobalForward g_OnRenevantTriggerWaveFwd;
 
@@ -76,7 +77,7 @@ static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH]
 		return false;
 	}
 
-	NPCGetBossName(_, name, nameLen, profile);
+	GetBossProfile(profile).GetName(1, name, nameLen);
 	if (name[0] == '\0')
 	{
 		strcopy(name, nameLen, profile);
@@ -105,7 +106,7 @@ static void ShowRenevantMessageToClient(int client, const char[] message, int pa
 	ShowSyncHudText(client, g_HudSync3, messageDisplay);
 }
 
-static void Renevant_BroadcastMessage(const char[] message, int params, ...)
+static void Renevant_BroadcastMessage(const char[] message, int params, any ...)
 {
 	char format[512];
 	VFormat(format, sizeof(format), message, params);
@@ -383,7 +384,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				SF2NPC_BaseNPC Npc = AddProfile(buffer);
 				if (Npc.IsValid())
 				{
-					NPCGetBossName(_, name, sizeof(name), buffer);
+					GetBossProfile(buffer).GetName(1, name, sizeof(name));
 					if (name[0] == '\0')
 					{
 						strcopy(name, sizeof(name), buffer);

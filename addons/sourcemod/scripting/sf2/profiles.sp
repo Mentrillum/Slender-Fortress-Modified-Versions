@@ -4,6 +4,7 @@
 #define _sf2_profiles_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define FILE_PROFILES_DIR "configs/sf2/profiles"
 #define FILE_PROFILES_PACKS "configs/sf2/profiles_packs.cfg"
@@ -43,6 +44,8 @@ static char mapBossPack[64];
 GlobalForward g_OnBossProfileLoadedFwd;
 static GlobalForward g_OnBossProfileUnloadedFwd;
 
+#include "profiles/keymap.sp"
+#include "profiles/objects.sp"
 #include "profiles/profiles_boss_functions.sp"
 #include "profiles/profile_chaser.sp"
 #include "profiles/profile_statue.sp"
@@ -62,11 +65,14 @@ void SetupBossProfileNatives()
 	CreateNative("SF2_GetBossAttributeName", Native_GetBossAttributeName);
 	CreateNative("SF2_GetBossAttributeValue", Native_GetBossAttributeValue);
 
-	CreateNative("SF2_GetBossProfileData", Native_GetBossProfileData);
-	CreateNative("SF2_GetChaserBossProfileData", Native_GetChaserBossProfileData);
-	CreateNative("SF2_GetStatueBossProfileData", Native_GetStatueBossProfileData);
 	CreateNative("SF2_TranslateProfileActivityFromName", Native_TranslateProfileActivityFromName);
 	CreateNative("SF2_LookupProfileAnimation", Native_LookupProfileAnimation);
+
+	CreateNative("SF2_BaseBossProfile.Type.get", Native_GetType);
+	CreateNative("SF2_BaseBossProfile.IsPvEBoss.get", Native_GetIsPvEBoss);
+
+	SetupProfileObjectNatives();
+	ProfileChaser_InititalizeAPI();
 }
 
 void InitializeBossProfiles()
@@ -76,8 +82,8 @@ void InitializeBossProfiles()
 
 	g_Activities = new StringMap();
 
-	g_OnBossProfileLoadedFwd = new GlobalForward("SF2_OnBossProfileLoaded", ET_Ignore, Param_String, Param_Any);
-	g_OnBossProfileUnloadedFwd = new GlobalForward("SF2_OnBossProfileUnloaded", ET_Ignore, Param_String);
+	g_OnBossProfileLoadedFwd = new GlobalForward("SF2_OnBossProfileLoaded", ET_Ignore, Param_String, Param_Cell);
+	g_OnBossProfileUnloadedFwd = new GlobalForward("SF2_OnBossProfileUnloaded", ET_Ignore, Param_String, Param_Cell);
 
 	AddProfileActivities();
 
@@ -89,9 +95,6 @@ void InitializeBossProfiles()
 	g_BossPackVoteShuffleConVar = CreateConVar("sf2_boss_profile_pack_endvote_shuffle", "0", "Shuffles the menu options of boss pack endvotes if enabled.");
 
 	g_MaxCorePackBosses = CreateConVar("sf2_max_core_pack_bosses", "-1", "Determines how many bosses can load randomly from the core pack, if set to less than 0 will keep this feature off. Note that companion bosses will still load if needed.");
-
-	InitializeStatueProfiles();
-	InitializeChaserProfiles();
 }
 
 static void AddProfileActivities()
@@ -261,6 +264,10 @@ Activity TranslateProfileActivityFromName(const char[] activityName)
 int LookupProfileAnimation(int entity, const char[] animName)
 {
 	CBaseAnimating animator = CBaseAnimating(entity);
+	if (animName[0] == '\0')
+	{
+		return -1;
+	}
 
 	int sequence = -1;
 	Activity activity = TranslateProfileActivityFromName(animName);
@@ -274,6 +281,11 @@ int LookupProfileAnimation(int entity, const char[] animName)
 	}
 
 	return sequence;
+}
+
+int GetMaxProfileDifficultySuffixSize()
+{
+	return 11;
 }
 
 void GetCurrentBossPack(char[] bossPackName, int length)
@@ -351,27 +363,15 @@ void BossProfilesOnMapEnd()
 	ClearBossProfiles();
 }
 
-static void PreUnloadBossProfile(const char[] profile)
+BaseBossProfile GetBossProfile(const char[] profile)
 {
-	SF2BossProfileData profileData;
-	g_BossProfileData.GetArray(profile, profileData, sizeof(profileData));
-
-	LogSF2Message("Unloading %s...", profile);
-
-	int bossType = GetBossProfileType(profile);
-	switch (bossType)
+	BaseBossProfile data = null;
+	if (g_BossProfileData.GetValue(profile, data))
 	{
-		case SF2BossType_Statue:
-		{
-			UnloadStatueBossProfile(profile);
-		}
-		case SF2BossType_Chaser:
-		{
-			UnloadChaserBossProfile(profile);
-		}
+		return data;
 	}
 
-	profileData.Destroy();
+	return null;
 }
 
 void UnloadBossProfile(const char[] profile)
@@ -381,11 +381,15 @@ void UnloadBossProfile(const char[] profile)
 		return;
 	}
 
+	LogSF2Message("Unloading %s...", profile);
+
+	BaseBossProfile profileData;
+	g_BossProfileData.GetValue(profile, profileData);
+
 	Call_StartForward(g_OnBossProfileUnloadedFwd);
 	Call_PushString(profile);
+	Call_PushCell(profileData);
 	Call_Finish();
-
-	PreUnloadBossProfile(profile);
 
 	int index = g_BossProfileList.FindString(profile);
 	if (index != -1)
@@ -423,22 +427,16 @@ void UnloadBossProfile(const char[] profile)
 		g_SelectableRenevantBossAdminProfileList.Erase(index);
 	}
 
-	SF2BossProfileData data;
-	g_BossProfileData.GetArray(profile, data, sizeof(data));
-	if (data.IsPvEBoss)
+	if (profileData.IsPvEBoss)
 	{
 		char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 		strcopy(setProfile, sizeof(setProfile), profile);
 		UnregisterPvESlenderBoss(setProfile);
 	}
 
-	g_BossProfileData.Remove(profile);
+	CleanupKeyMap(profileData);
 
-	g_Config.Rewind();
-	if (g_Config.JumpToKey(profile))
-	{
-		g_Config.DeleteThis();
-	}
+	g_BossProfileData.Remove(profile);
 }
 
 /**
@@ -461,11 +459,8 @@ void ClearBossProfiles()
 			continue;
 		}
 
-		Call_StartForward(g_OnBossProfileUnloadedFwd);
-		Call_PushString(profile);
-		Call_Finish();
-
-		PreUnloadBossProfile(profile);
+		UnloadBossProfile(profile);
+		i--;
 	}
 
 	if (g_SelectableBossProfileList != null)
@@ -723,11 +718,206 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 
 	kv.GetSectionName(profileName, profileNameLen);
 
-	bool result = LoadBossProfile(kv, profileName, errorReason, errorReasonLen, lookIntoLoads, originalDir);
+	BaseBossProfile profileData = view_as<BaseBossProfile>(KeyValuesToKeyMap(kv));
 
 	delete kv;
 
-	return result;
+	char path[PLATFORM_MAX_PATH];
+
+	if (lookIntoLoads)
+	{
+		bool skip = true;
+		if (profileData.GetBool("enable_random_selection", true))
+		{
+			skip = false;
+		}
+
+		if (profileData.GetBool("admin_only", false))
+		{
+			skip = false;
+		}
+
+		if (profileData.GetBool("enable_random_selection_boxing", false))
+		{
+			skip = false;
+		}
+
+		if (profileData.GetBool("enable_random_selection_renevant", false))
+		{
+			skip = false;
+		}
+
+		if (profileData.GetBool("enable_random_selection_renevant_admin", false))
+		{
+			skip = false;
+		}
+
+		if (profileData.GetBool("is_pve", false) && profileData.GetBool("pve_selectable", true))
+		{
+			skip = false;
+		}
+
+		if (profileData.GetBool("always_load", false))
+		{
+			skip = false;
+		}
+
+		ProfileObject pve = profileData.GetSection("pve");
+		if (pve != null && pve.GetBool("selectable", true))
+		{
+			skip = false;
+		}
+
+		if (skip)
+		{
+			FormatEx(errorReason, errorReasonLen, "is not selectable, skipping!");
+			//DeleteCfg(parent);
+			return false;
+		}
+	}
+
+	if (profileData.Type == SF2BossType_Unknown || profileData.Type >= SF2BossType_MaxTypes)
+	{
+		FormatEx(errorReason, errorReasonLen, "boss type is unknown!");
+		return false;
+	}
+
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		profileData.GetModel(i, path, sizeof(path));
+		if (path[0] == '\0')
+		{
+			FormatEx(errorReason, errorReasonLen, "model cannot be blank!");
+			//DeleteCfg(parent);
+			return false;
+		}
+	}
+
+	UnloadBossProfile(profileName);
+
+	profileData.Precache();
+
+	g_BossProfileData.SetValue(profileName, profileData);
+
+	int index = g_BossProfileList.FindString(profileName);
+	if (index == -1)
+	{
+		g_BossProfileList.PushString(profileName);
+	}
+
+	bool blacklisted = false;
+
+	if (profileData.GetBlacklistedMaps() != null)
+	{
+		char map[64], currentMap[64], key[64];
+		GetCurrentMap(currentMap, sizeof(currentMap));
+		for (int i = 0; i < profileData.GetBlacklistedMaps().Size; i++)
+		{
+			profileData.GetBlacklistedMaps().GetKeyNameFromIndex(i, key, sizeof(key));
+			profileData.GetBlacklistedMaps().GetString(key, map, sizeof(map));
+
+			if (StrContains(currentMap, map, false) != -1)
+			{
+				blacklisted = true;
+				break;
+			}
+		}
+	}
+
+	if (!blacklisted)
+	{
+		if (profileData.GetBool("enable_random_selection", true))
+		{
+			if (GetSelectableBossProfileList().FindString(profileName) == -1)
+			{
+				// Add to the selectable boss list if it isn't there already.
+				GetSelectableBossProfileList().PushString(profileName);
+			}
+		}
+		else
+		{
+			int selectIndex = GetSelectableBossProfileList().FindString(profileName);
+			if (selectIndex != -1)
+			{
+				GetSelectableBossProfileList().Erase(selectIndex);
+			}
+		}
+
+		if (profileData.GetBool("admin_only", false))
+		{
+			if (GetSelectableAdminBossProfileList().FindString(profileName) == -1)
+			{
+				// Add to the selectable boss list if it isn't there already.
+				GetSelectableAdminBossProfileList().PushString(profileName);
+			}
+		}
+		else
+		{
+			int selectIndex = GetSelectableAdminBossProfileList().FindString(profileName);
+			if (selectIndex != -1)
+			{
+				GetSelectableAdminBossProfileList().Erase(selectIndex);
+			}
+		}
+
+		if (profileData.GetBool("enable_random_selection_boxing", false))
+		{
+			if (GetSelectableBoxingBossProfileList().FindString(profileName) == -1)
+			{
+				// Add to the selectable boss list if it isn't there already.
+				GetSelectableBoxingBossProfileList().PushString(profileName);
+			}
+		}
+		else
+		{
+			int selectIndex = GetSelectableBoxingBossProfileList().FindString(profileName);
+			if (selectIndex != -1)
+			{
+				GetSelectableBoxingBossProfileList().Erase(selectIndex);
+			}
+		}
+
+		if (profileData.GetBool("enable_random_selection_renevant", false))
+		{
+			if (GetSelectableRenevantBossProfileList().FindString(profileName) == -1)
+			{
+				// Add to the selectable boss list if it isn't there already.
+				GetSelectableRenevantBossProfileList().PushString(profileName);
+			}
+		}
+		else
+		{
+			int selectIndex = GetSelectableRenevantBossProfileList().FindString(profileName);
+			if (selectIndex != -1)
+			{
+				GetSelectableRenevantBossProfileList().Erase(selectIndex);
+			}
+		}
+
+		if (profileData.GetBool("enable_random_selection_renevant_admin", false))
+		{
+			if (GetSelectableRenevantBossAdminProfileList().FindString(profileName) == -1)
+			{
+				// Add to the selectable boss list if it isn't there already.
+				GetSelectableRenevantBossAdminProfileList().PushString(profileName);
+			}
+		}
+		else
+		{
+			int selectIndex = GetSelectableRenevantBossAdminProfileList().FindString(profileName);
+			if (selectIndex != -1)
+			{
+				GetSelectableRenevantBossAdminProfileList().Erase(selectIndex);
+			}
+		}
+	}
+
+	Call_StartForward(g_OnBossProfileLoadedFwd);
+	Call_PushString(profileName);
+	Call_PushCell(profileData);
+	Call_Finish();
+
+	return true;
 }
 
 static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBosses = -1)
@@ -1416,21 +1606,6 @@ void RemoveBossProfileFromQueueList(const char[] profile)
 	}
 }
 
-static any Native_GetBossProfileData(Handle plugin,int numParams)
-{
-	return g_BossProfileData;
-}
-
-static any Native_GetChaserBossProfileData(Handle plugin,int numParams)
-{
-	return g_ChaserBossProfileData;
-}
-
-static any Native_GetStatueBossProfileData(Handle plugin,int numParams)
-{
-	return g_StatueBossProfileData;
-}
-
 static any Native_TranslateProfileActivityFromName(Handle plugin, int numParams)
 {
 	char activityName[64];
@@ -1608,4 +1783,26 @@ static any Native_GetBossAttributeValue(Handle plugin,int numParams)
 		return 0.0;
 	}
 	return NPCGetAttributeValue(GetNativeCell(1), attributeIndex);
+}
+
+static any Native_GetType(Handle plugin, int numParams)
+{
+	BaseBossProfile profileData = GetNativeCell(1);
+	if (profileData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", profileData);
+	}
+
+	return profileData.Type;
+}
+
+static any Native_GetIsPvEBoss(Handle plugin, int numParams)
+{
+	BaseBossProfile profileData = GetNativeCell(1);
+	if (profileData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", profileData);
+	}
+
+	return profileData.IsPvEBoss;
 }

@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -21,9 +22,8 @@ static int OnStart(SF2_StatueChaseAction action, SF2_StatueEntity actor, NextBot
 {
 	SF2NPC_Statue controller = actor.Controller;
 	int difficulty = controller.Difficulty;
-	SF2StatueBossProfileData data;
-	data = controller.GetProfileData();
-	actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+	StatueBossProfile data = controller.GetProfileDataEx();
+	actor.CurrentChaseDuration = data.GetChaseDuration(difficulty);
 	if (actor.InitialChaseDuration > 0.0)
 	{
 		actor.CurrentChaseDuration = actor.InitialChaseDuration;
@@ -57,10 +57,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	}
 
 	SF2NPC_Statue controller = actor.Controller;
-	SF2StatueBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	StatueBossProfile data = controller.GetProfileDataEx();
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
 	int difficulty = controller.Difficulty;
 	INextBot bot = actor.MyNextBotPointer();
@@ -86,20 +83,20 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 	if (visible)
 	{
-		float maxRange = data.ChaseDurationAddMaxRange[difficulty];
+		float maxRange = data.GetChaseDurationAddMaxRange(difficulty);
 		if (maxRange > 0.0 && player.IsValid && player.CanSeeSlender(controller.Index, false, _, !attackEliminated))
 		{
 			float distanceRatio = bot.GetRangeTo(player.index) / maxRange;
 			if (distanceRatio < 1.0)
 			{
-				float durationTimeAddMin = data.ChaseDurationAddVisibilityMin[difficulty];
-				float durationTimeAddMax = data.ChaseDurationAddVisibilityMax[difficulty];
+				float durationTimeAddMin = data.GetChaseDurationAddVisibilityMin(difficulty);
+				float durationTimeAddMax = data.GetChaseDurationAddVisibilityMax(difficulty);
 				float durationAdd = durationTimeAddMin + ((durationTimeAddMax - durationTimeAddMin) * distanceRatio);
 
 				actor.CurrentChaseDuration += durationAdd * GetGameFrameTime();
-				if (actor.CurrentChaseDuration > data.ChaseDuration[difficulty])
+				if (actor.CurrentChaseDuration > data.GetChaseDuration(difficulty))
 				{
-					actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+					actor.CurrentChaseDuration = data.GetChaseDuration(difficulty);
 				}
 			}
 		}
@@ -115,12 +112,12 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 	if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap())
 	{
-		actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+		actor.CurrentChaseDuration = data.GetChaseDuration(difficulty);
 	}
 
 	bool tooClose = target.IsValid() &&
 		visible &&
-		bot.IsRangeLessThan(target.index, 8.0);
+		bot.GetRangeSquaredTo(target.index) <= 32.0;
 
 	if ((tooClose || !actor.IsMoving) && path.IsValid())
 	{
@@ -128,19 +125,15 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	}
 	else
 	{
-		float pos[3];
-		target.GetAbsOrigin(pos);
+		int pathTo = target.index;
 		if (actor.Teleporters.Length > 0)
 		{
-			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
+			pathTo = actor.Teleporters.Get(0);
 		}
 
-		if (!bot.IsRangeLessThanEx(pos, 8.0) && actor.IsMoving)
+		if (path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
 		{
-			if (path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
-			{
-				path.ComputeToPos(bot, pos);
-			}
+			path.ComputeToTarget(bot, pathTo);
 		}
 	}
 
@@ -155,9 +148,9 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 	if (actor.IsMoving)
 	{
-		g_SlenderStatueIdleLifeTime[controller.Index] = gameTime + data.IdleLifeTime[difficulty];
+		g_SlenderStatueIdleLifeTime[controller.Index] = gameTime + data.GetIdleLifeTime(difficulty);
 
-		if (bot.GetRangeSquaredTo(target.index) <= Pow(originalData.InstantKillRadius, 2.0) && visible)
+		if (bot.GetRangeSquaredTo(target.index) <= Pow(data.InstantKillRadius, 2.0) && visible)
 		{
 			if (controller.Flags & SFF_FAKE)
 			{
@@ -166,7 +159,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 			}
 			else
 			{
-				actor.LastKillTime = gameTime + originalData.InstantKillCooldown[difficulty];
+				actor.LastKillTime = gameTime + data.GetInstantKillCooldown(difficulty);
 				player.StartDeathCam(controller.Index, myPos);
 			}
 		}

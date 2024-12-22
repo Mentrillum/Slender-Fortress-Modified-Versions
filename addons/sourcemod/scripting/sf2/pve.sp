@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static bool g_PlayerInPvE[MAXTF2PLAYERS];
 static bool g_PlayerIsLeavingPvE[MAXTF2PLAYERS];
@@ -438,9 +439,8 @@ static void OnPlayerAverageUpdate(SF2_BasePlayer client)
 		SF2_ChaserEntity chaser = SF2_ChaserEntity(EntRefToEntIndex(bosses.Get(i2)));
 		if (chaser.IsValid() && chaser.Controller.IsValid())
 		{
-			SF2BossProfileData data;
-			data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
-			data.Names.GetString(1, name, sizeof(name));
+			ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+			data.GetName(1, name, sizeof(name));
 			if (!data.DisplayPvEHealth)
 			{
 				continue;
@@ -875,13 +875,9 @@ static void SpawnPvEBoss(const char[] override = "")
 		if (npc.IsValid())
 		{
 			npc.Spawn(spawnPos);
-			SF2BossProfileData data;
-			data = npc.GetProfileData();
-			SF2BossProfileSoundInfo soundInfo;
-			soundInfo = data.MusicSoundsNormal;
-			SF2ChaserBossProfileData chaserData;
-			chaserData = view_as<SF2NPC_Chaser>(npc).GetProfileData();
-			g_PvEBoxingMode = chaserData.BoxingBoss;
+			ChaserBossProfile data = view_as<SF2NPC_Chaser>(npc).GetProfileDataEx();
+			ProfileSound soundInfo = data.GetGlobalMusic(1);
+			g_PvEBoxingMode = data.BoxingBoss;
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 			{
 				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), g_CustomMusicOverride, sizeof(g_CustomMusicOverride));
@@ -900,14 +896,13 @@ static void SpawnPvEBoss(const char[] override = "")
 					testNPC.Spawn(spawnPos);
 					g_ActiveBosses.Push(EntIndexToEntRef(testNPC.EntIndex));
 
-					SF2BossProfileData tempData;
-					tempData = testNPC.GetProfileData();
+					BaseBossProfile tempData = testNPC.GetProfileDataEx();
 
-					if (tempData.CopiesInfo.Enabled[1])
+					if (tempData.GetCopies().IsEnabled(1))
 					{
 						char tempProfile[SF2_MAX_PROFILE_NAME_LENGTH];
 						testNPC.GetProfile(tempProfile, sizeof(tempProfile));
-						for (int i2 = 0; i2 < tempData.CopiesInfo.MaxCopies[1]; i2++)
+						for (int i2 = 0; i2 < tempData.GetCopies().GetMaxCopies(1); i2++)
 						{
 							SF2NPC_BaseNPC copy = AddProfile(tempProfile, _, testNPC);
 							if (!copy.IsValid())
@@ -921,9 +916,9 @@ static void SpawnPvEBoss(const char[] override = "")
 				}
 			}
 
-			if (data.CopiesInfo.Enabled[1])
+			if (data.GetCopies().IsEnabled(1))
 			{
-				for (int i = 0; i < data.CopiesInfo.MaxCopies[1]; i++)
+				for (int i = 0; i < data.GetCopies().GetMaxCopies(1); i++)
 				{
 					SF2NPC_BaseNPC copy = AddProfile(profile, _, npc);
 					if (!copy.IsValid())
@@ -1259,9 +1254,7 @@ void KillPvEBoss(int boss)
 		float time = 5.0;
 		if (bossIndex != -1)
 		{
-			SF2BossProfileData data;
-			data = NPCGetProfileData(bossIndex);
-			time = data.PvETeleportEndTimer;
+			time = SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().PvETeleportEndTimer;
 		}
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -1314,9 +1307,7 @@ static Action Timer_RemoveAllPvEBosses(Handle timer)
 			continue;
 		}
 
-		SF2BossProfileData data;
-		data = npc.GetProfileData();
-		if (!data.IsPvEBoss)
+		if (!npc.GetProfileDataEx().IsPvEBoss)
 		{
 			continue;
 		}

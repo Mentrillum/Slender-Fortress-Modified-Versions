@@ -4,6 +4,7 @@
 #define _sf2_game_events_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 Action Event_RoundStart(Handle event, const char[] name, bool dB)
 {
@@ -38,8 +39,6 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	g_PageMax = 0;
 
 	g_VoteTimer = null;
-	//Stop the music if needed.
-	NPCStopMusic();
 	// Remove all bosses from the game.
 	NPCRemoveAll();
 	// Collect trigger_multiple to prevent touch bug.
@@ -145,7 +144,7 @@ Action Event_Audio(Event event, const char[] name, bool dB)
 			{
 				continue;
 			}
-			if (!g_SlenderCustomOutroSong[bossIndex])
+			if (!SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().OutroMusic)
 			{
 				continue;
 			}
@@ -193,12 +192,12 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 			continue;
 		}
 
-		if (g_SlenderCustomOutroSong[npcIndex])
+		BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileDataEx();
+		if (data.OutroMusic)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(npcIndex, profile, sizeof(profile));
-			SF2BossProfileSoundInfo soundInfo;
-			GetBossProfileOutroMusics(profile, soundInfo);
+			ProfileSound soundInfo = data.GetOutroMusics();
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 			{
 				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), music[npcIndex], sizeof(music[]));
@@ -446,15 +445,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 
 	if (IsPlayerAlive(client) && IsClientParticipating(client))
 	{
-		if (MusicActive()) //A boss is overriding the music.
-		{
-			char path[PLATFORM_MAX_PATH];
-			GetBossMusic(path, sizeof(path));
-			if (path[0] != '\0')
-			{
-				StopSound(client, MUSIC_CHAN, path);
-			}
-		}
 		g_PlayerBackStabbed[client] = false;
 		TF2_RemoveCondition(client, TFCond_HalloweenKart);
 		TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
@@ -530,12 +520,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 
-				// screen overlay timer
-				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
-				{
-					g_PlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-					TriggerTimer(g_PlayerOverlayCheck[client], true);
-				}
 				if (DidClientEscape(client))
 				{
 					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -548,6 +532,10 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				TF2Attrib_RemoveByDefIndex(client, 49);
 				TF2Attrib_RemoveByDefIndex(client, 28);
 			}
+
+			g_PlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_PlayerOverlayCheck[client], true);
+
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_PlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
@@ -702,7 +690,8 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 
 			char bossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(npcIndex, profile, sizeof(profile));
-			NPCGetBossName(npcIndex, bossName, sizeof(bossName));
+			BaseBossProfile data = GetBossProfile(profile);
+			data.GetName(GetLocalGlobalDifficulty(npcIndex), bossName, sizeof(bossName));
 
 			SetClientName(target, bossName);
 			SetEntPropString(target, Prop_Data, "m_szNetname", bossName);
@@ -710,22 +699,20 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			event.SetString("assister_fallback", "");
 			if ((NPCGetFlags(npcIndex) & SFF_WEAPONKILLS) || (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS))
 			{
+				char weaponType[64];
 				if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS && SF2_ChaserEntity(owner).IsValid())
 				{
 					SF2_ChaserEntity chaser = SF2_ChaserEntity(owner);
-					SF2ChaserBossProfileData data;
-					data = NPCChaserGetProfileData(npcIndex);
-					SF2ChaserBossProfileAttackData attackData;
-					data.GetAttack(chaser.GetAttackName(), attackData);
-					event.SetString("weapon_logclassname", attackData.WeaponString);
-					event.SetString("weapon", attackData.WeaponString);
+					ChaserBossProfileBaseAttack attackData = SF2NPC_Chaser(npcIndex).GetProfileDataEx().GetAttack(chaser.GetAttackName());
+					attackData.GetWeaponString(weaponType, sizeof(weaponType));
+					event.SetString("weapon_logclassname", weaponType);
+					event.SetString("weapon", weaponType);
 					event.SetInt("customkill", attackData.WeaponInt);
 				}
 				else if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
 				{
-					char weaponType[PLATFORM_MAX_PATH];
-					int weaponNum = GetBossProfileWeaponInt(profile);
-					GetBossProfileWeaponString(profile, weaponType, sizeof(weaponType));
+					int weaponNum = data.WeaponInt;
+					data.GetWeaponString(weaponType, sizeof(weaponType));
 					event.SetString("weapon_logclassname", weaponType);
 					event.SetString("weapon", weaponType);
 					event.SetInt("customkill", weaponNum);
@@ -777,8 +764,9 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 
 	if (npcIndex != -1)
 	{
-		SF2BossProfileData data;
-		data = NPCGetProfileData(npcIndex);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(npcIndex, profile, sizeof(profile));
+		BaseBossProfile data = GetBossProfile(profile);
 		g_PlayerBossKillSubject[client] = npcIndex;
 
 		if (!modify && (data.AshRagdoll || data.CloakRagdoll || data.DecapRagdoll || data.DeleteRagdoll || data.DissolveRagdoll ||
@@ -838,32 +826,6 @@ Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 	}
 	#endif
 
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if (attacker > 0)
-	{
-		if (g_PlayerProxy[attacker])
-		{
-			g_PlayerProxyControl[attacker] = 100;
-		}
-	}
-
-	// Play any sounds, if any.
-	if (g_PlayerProxy[client])
-	{
-		int proxyMaster = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
-		if (proxyMaster != -1)
-		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(proxyMaster, profile, sizeof(profile));
-
-			SF2BossProfileSoundInfo soundInfo;
-			GetBossProfileProxyHurtSounds(profile, soundInfo);
-			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
-			{
-				soundInfo.EmitSound(_, client);
-			}
-		}
-	}
 	delete event;
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)

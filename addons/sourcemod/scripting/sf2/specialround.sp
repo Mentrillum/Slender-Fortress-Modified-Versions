@@ -4,6 +4,7 @@
 #define _sf2_specialround_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SR_CYCLELENGTH 10.0
 #define SR_STARTDELAY 0.25
@@ -1010,7 +1011,6 @@ static ArrayList SpecialEnabledList()
 		{
 			AddSpecialRoundToList(SPECIALROUND_TRIPLEBOSSES, enabledRounds);
 		}
-
 		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRaidMap() && !SF_IsBoxingMap() && !SF_BossesChaseEndlessly() && !SF_IsProxyMap() && !SF_SpecialRound(SPECIALROUND_VOTE) && (GetSelectableAdminBossProfileList().Length > 0 || IsProfileValid(snatcher)))
 		{
 			AddSpecialRoundToList(SPECIALROUND_MODBOSSES, enabledRounds);
@@ -1345,7 +1345,6 @@ void SpecialRoundStart()
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH], nightmareDisplay[256];
 			if (!SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
 			{
-				NPCStopMusic();
 				NPCRemoveAll();
 			}
 			ArrayList selectableBosses = GetSelectableAdminBossProfileList().Clone();
@@ -1531,10 +1530,9 @@ void SpecialRoundStart()
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			int tripleBosses=0;
+			int tripleBosses = 0;
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
-				NPCStopMusic();
 				SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(i);
 				if (!Npc.IsValid())
 				{

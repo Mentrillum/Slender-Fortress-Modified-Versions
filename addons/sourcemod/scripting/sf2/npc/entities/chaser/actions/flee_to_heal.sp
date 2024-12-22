@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -135,20 +136,25 @@ methodmap SF2_ChaserFleeToHealAction < NextBotAction
 static NextBotAction InitialContainedAction(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserRageInfo rageInfo;
-	data.Rages.GetArray(actor.RageIndex, rageInfo, sizeof(rageInfo));
-	action.HealDuration = rageInfo.HealDuration;
-	action.HealTime = rageInfo.HealDelay;
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	char name[64];
+	data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
+	ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));
+	action.HealDuration = rageData.HealDuration;
+	action.HealTime = rageData.HealDelay;
 	char animName[64];
 	float rate = 1.0, duration = 0.0, cycle = 0.0;
 	int difficulty = controller.Difficulty;
 	action.IsHealing = false;
 	action.HasPath = false;
 	action.FleeTime = GetRandomFloat(5.0, 10.0);
-	if (rageInfo.Animations.GetAnimation("start", difficulty, animName, sizeof(animName), rate, duration, cycle))
+	ProfileAnimation section = rageData.GetAnimations().GetAnimation("start");
+	if (section != null)
 	{
+		section.GetAnimationName(difficulty, animName, sizeof(animName));
+		rate = section.GetAnimationPlaybackRate(difficulty);
+		duration = section.GetDuration(difficulty);
+		cycle = section.GetAnimationCycle(difficulty);
 		int sequence = LookupProfileAnimation(actor.index, animName);
 		if (sequence != -1)
 		{
@@ -169,12 +175,10 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	SF2ChaserRageInfo rageInfo;
-	data.Rages.GetArray(actor.RageIndex, rageInfo, sizeof(rageInfo));
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	char name[64];
+	data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
+	ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));
 	PathFollower path = controller.Path;
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
@@ -182,12 +186,12 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 	if (!action.IsHealing && !action.HasPath)
 	{
 		actor.IsRunningAway = true;
-		if (rageInfo.HealCloak)
+		if (rageData.HealCloak)
 		{
 			actor.StartCloak();
 		}
 		CNavArea area = actor.GetLastKnownArea();
-		SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, GetRandomFloat(rageInfo.FleeRange[0], rageInfo.FleeRange[1]));
+		SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, GetRandomFloat(rageData.FleeMinRange, rageData.FleeMaxRange));
 		int areaCount = collector.Count();
 		ArrayList areaArray = new ArrayList(1, areaCount);
 		int validAreaCount = 0;
@@ -239,10 +243,14 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 		if (!action.PlayedAnimation)
 		{
 			char animName[64];
-			float rate = 1.0, duration = 0.0, cycle = 0.0;
-			if (rageInfo.Animations.GetAnimation("healing", difficulty, animName, sizeof(animName), rate, duration, cycle))
+			float rate = 1.0, cycle = 0.0;
+			ProfileAnimation section = rageData.GetAnimations().GetAnimation("healing");
+			if (section != null)
 			{
-				action.HealAnimationDuration = duration;
+				section.GetAnimationName(difficulty, animName, sizeof(animName));
+				action.HealAnimationDuration = section.GetDuration(difficulty);
+				rate = section.GetAnimationPlaybackRate(difficulty);
+				cycle = section.GetAnimationCycle(difficulty);
 				int sequence = LookupProfileAnimation(actor.index, animName);
 				if (sequence != -1)
 				{
@@ -262,16 +270,16 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 		{
 			if (!action.PlayedSound)
 			{
-				actor.PerformVoiceEx(_, _, rageInfo.HealSounds, true);
+				actor.PerformVoiceEx(_, _, rageData.GetHealSounds(), true);
 				action.PlayedSound = true;
 			}
-			float amount = actor.MaxHealth * rageInfo.HealAmount;
-			if (!data.DeathData.Enabled[difficulty])
+			float amount = actor.MaxHealth * rageData.HealAmount;
+			if (!data.GetDeathBehavior().IsEnabled(difficulty))
 			{
-				amount = actor.MaxStunHealth * rageInfo.HealAmount;
+				amount = actor.MaxStunHealth * rageData.HealAmount;
 			}
-			float increase = LerpFloats(0.0, amount, GetGameFrameTime() * (1.0 / rageInfo.HealDuration));
-			if (data.DeathData.Enabled[difficulty])
+			float increase = LerpFloats(0.0, amount, GetGameFrameTime() * (1.0 / rageData.HealDuration));
+			if (data.GetDeathBehavior().IsEnabled(difficulty))
 			{
 				actor.SetProp(Prop_Data, "m_iHealth", RoundToFloor(increase + actor.GetProp(Prop_Data, "m_iHealth")));
 				if (float(actor.GetProp(Prop_Data, "m_iHealth")) > actor.MaxHealth)
@@ -287,7 +295,7 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 					actor.StunHealth = actor.MaxStunHealth;
 				}
 			}
-			if (originalData.Healthbar)
+			if (data.Healthbar)
 			{
 				UpdateHealthBar(controller.Index);
 				SetHealthBarColor(true);

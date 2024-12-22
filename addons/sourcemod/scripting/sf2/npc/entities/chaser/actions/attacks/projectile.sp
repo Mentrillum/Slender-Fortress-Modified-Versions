@@ -1,10 +1,102 @@
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap ChaserBossProfileProjectileAttack < ChaserBossProfileBaseAttack
+{
+	public float GetSpeed(int difficulty)
+	{
+		float def = 1100.0;
+		def = this.GetDifficultyFloat("projectile_speed", difficulty, def);
+		def = this.GetDifficultyFloat("attack_projectile_speed", difficulty, def);
+		return def;
+	}
+
+	public float GetBlastRadius(int difficulty)
+	{
+		float def = 128.0;
+		def = this.GetDifficultyFloat("projectile_radius", difficulty, def);
+		def = this.GetDifficultyFloat("attack_projectile_radius", difficulty, def);
+		return def;
+	}
+
+	public float GetDeviation(int difficulty)
+	{
+		float def = 0.0;
+		def = this.GetDifficultyFloat("projectile_deviation", difficulty, def);
+		def = this.GetDifficultyFloat("attack_projectile_deviation", difficulty, def);
+		return def;
+	}
+
+	public int GetProjectileCount(int difficulty)
+	{
+		int def = 1;
+		def = this.GetDifficultyInt("projectile_count", difficulty, def);
+		def = this.GetDifficultyInt("attack_projectile_count", difficulty, def);
+		return def;
+	}
+
+	public bool GetCrits(int difficulty)
+	{
+		bool def = false;
+		def = this.GetDifficultyBool("projectile_crits", difficulty, def);
+		def = this.GetDifficultyBool("attack_projectile_crits", difficulty, def);
+		return def;
+	}
+
+	property int ProjectileType
+	{
+		public get()
+		{
+			int def = SF2BossProjectileType_Fireball;
+			def = this.GetInt("projectiletype", def);
+			def = this.GetInt("attack_projectiletype", def);
+			return def;
+		}
+	}
+
+	public void GetOffset(float buffer[3])
+	{
+		this.GetVector("projectile_offset", buffer, buffer);
+		this.GetVector("attack_projectile_offset", buffer, buffer);
+	}
+
+	public void GetFireballTrail(char[] buffer, int bufferSize)
+	{
+		this.GetString("fire_trail", buffer, bufferSize, FIREBALL_TRAIL);
+	}
+
+	public void GetRocketModel(char[] buffer, int bufferSize)
+	{
+		this.GetString("rocket_model", buffer, bufferSize, ROCKET_MODEL);
+	}
+
+	public float GetIceballSlowPercent(int difficulty)
+	{
+		float def = 0.55;
+		def = this.GetDifficultyFloat("projectile_iceslow_percent", difficulty, def);
+		def = this.GetDifficultyFloat("attack_projectile_iceslow_percent", difficulty, def);
+		return def;
+	}
+
+	public float GetIceballSlowDuration(int difficulty)
+	{
+		float def = 2.0;
+		def = this.GetDifficultyFloat("projectile_iceslow_duration", difficulty, def);
+		def = this.GetDifficultyFloat("attack_projectile_iceslow_duration", difficulty, def);
+		return def;
+	}
+
+	public void GetIceballTrail(char[] buffer, int bufferSize)
+	{
+		this.GetString("fire_iceball_trail", buffer, bufferSize, ICEBALL_TRAIL);
+	}
+}
 
 static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_Projectile < NextBotAction
 {
-	public SF2_ChaserAttackAction_Projectile(int attackIndex, const char[] attackName, float fireDelay)
+	public SF2_ChaserAttackAction_Projectile(const char[] attackName, ChaserBossProfileProjectileAttack data, float fireDelay)
 	{
 		if (g_Factory == null)
 		{
@@ -13,8 +105,8 @@ methodmap SF2_ChaserAttackAction_Projectile < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
-				.DefineIntField("m_AttackIndex")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_ProfileData")
 				.DefineFloatField("m_NextFireTime")
 				.DefineIntField("m_RepeatIndex")
 				.EndDataMapDesc();
@@ -22,23 +114,10 @@ methodmap SF2_ChaserAttackAction_Projectile < NextBotAction
 		SF2_ChaserAttackAction_Projectile action = view_as<SF2_ChaserAttackAction_Projectile>(g_Factory.Create());
 
 		action.NextFireTime = fireDelay;
-		action.AttackIndex = attackIndex;
 		action.SetAttackName(attackName);
+		action.ProfileData = data;
 
 		return action;
-	}
-
-	property int AttackIndex
-	{
-		public get()
-		{
-			return this.GetData("m_AttackIndex");
-		}
-
-		public set(int value)
-		{
-			this.SetData("m_AttackIndex", value);
-		}
 	}
 
 	public static void Initialize()
@@ -56,6 +135,19 @@ methodmap SF2_ChaserAttackAction_Projectile < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property ChaserBossProfileProjectileAttack ProfileData
+	{
+		public get()
+		{
+			return this.GetData("m_ProfileData");
+		}
+
+		public set(ChaserBossProfileProjectileAttack value)
+		{
+			this.SetData("m_ProfileData", value);
+		}
 	}
 
 	property float NextFireTime
@@ -92,10 +184,8 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = chaser.Controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfileProjectileAttack attackData = view_as<ChaserBossProfileProjectileAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (attackData.Type != SF2BossAttackType_Projectile)
@@ -103,7 +193,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_Projectile(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_Projectile(attackName, attackData, attackData.GetDelay(difficulty) + GetGameTime());
 	return Plugin_Changed;
 }
 
@@ -125,38 +215,34 @@ static int Update(SF2_ChaserAttackAction_Projectile action, SF2_ChaserEntity act
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileProjectileAttack attackData = action.ProfileData;
 	int difficulty = controller.Difficulty;
 
 	float gameTime = GetGameTime();
 
-	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.EventNumber == -1)
+	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.GetEventNumber(difficulty) == -1)
 	{
-		FireProjectile(actor, action.GetAttackName());
+		FireProjectile(actor, action, action.GetAttackName());
 		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_ProjectileShoot], _, action.GetAttackName());
 
-		int repeatState = attackData.Repeat;
+		int repeatState = attackData.GetRepeatState(difficulty);
 		if (repeatState > 0)
 		{
 			switch (repeatState)
 			{
 				case 1:
 				{
-					action.NextFireTime = gameTime + attackData.DamageDelay[difficulty];
+					action.NextFireTime = gameTime + attackData.GetDelay(difficulty);
 				}
 				case 2:
 				{
-					if (action.RepeatIndex >= attackData.RepeatTimers.Length)
+					if (attackData.GetRepeatTimer(difficulty, action.RepeatIndex) < 0.0)
 					{
 						action.NextFireTime = -1.0;
 					}
 					else
 					{
-						float next = attackData.RepeatTimers.Get(action.RepeatIndex);
-						action.NextFireTime = next + gameTime;
+						action.NextFireTime = attackData.GetRepeatTimer(difficulty, action.RepeatIndex) + gameTime;
 						action.RepeatIndex++;
 					}
 				}
@@ -170,7 +256,7 @@ static int Update(SF2_ChaserAttackAction_Projectile action, SF2_ChaserEntity act
 	return action.Continue();
 }
 
-static void FireProjectile(SF2_ChaserEntity actor, const char[] attackName)
+static void FireProjectile(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Projectile action, const char[] attackName)
 {
 	SF2NPC_Chaser controller = actor.Controller;
 	float targetPos[3], myPos[3], myAng[3];
@@ -191,86 +277,94 @@ static void FireProjectile(SF2_ChaserEntity actor, const char[] attackName)
 		targetPos[2] = eyePos[2] + fwd[2] * 9001.0;
 	}
 	int difficulty = controller.Difficulty;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfileProjectileAttack attackData = action.ProfileData;
+	ChaserBossProjectileData projectileData = data.GetProjectiles();
 
 	bool attackWaiters = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	if (originalData.IsPvEBoss)
+	if (data.IsPvEBoss)
 	{
 		attackWaiters = true;
 	}
 
-	ArrayList projectileSounds = data.ProjectileShootSounds;
-	SF2BossProfileSoundInfo soundInfo;
-	if (actor.SearchSoundsWithSectionName(projectileSounds, attackName, soundInfo))
+	ProfileSound soundInfo;
+	if (actor.SearchSoundsWithSectionName(data.GetProjectileShootSounds(), attackName, soundInfo, "attackshootprojectile"))
 	{
 		soundInfo.EmitSound(_, actor.index);
 	}
 
 	float effectPos[3];
-	effectPos = attackData.ProjectileOffset;
+	attackData.GetOffset(effectPos);
 	VectorTransform(effectPos, myPos, myAng, effectPos);
 
-	for (int i = 0; i < attackData.ProjectileCount[difficulty]; i++)
+	for (int i = 0; i < attackData.GetProjectileCount(difficulty); i++)
 	{
 		float direction[3], angle[3];
 		SubtractVectors(targetPos, effectPos, direction);
-		float deviation = attackData.ProjectileDeviation[difficulty];
+		float deviation = attackData.GetDeviation(difficulty);
 
-		if (deviation != 0)
-		{
-			direction[0] += GetRandomFloat(-deviation, deviation);
-			direction[1] += GetRandomFloat(-deviation, deviation);
-			direction[2] += GetRandomFloat(-deviation, deviation);
-		}
 		NormalizeVector(direction, direction);
 		GetVectorAngles(direction, angle);
+		if (deviation != 0.0)
+		{
+			angle[0] += GetRandomFloat(-deviation, deviation);
+			angle[1] += GetRandomFloat(-deviation, deviation);
+			angle[2] += GetRandomFloat(-deviation, deviation);
+		}
 
 		switch (attackData.ProjectileType)
 		{
 			case SF2BossProjectileType_Fireball:
 			{
-				SF2_ProjectileFireball.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.ProjectileRadius[difficulty], data.FireballExplodeSound, attackData.FireballTrail, attackWaiters);
+				char trail[PLATFORM_MAX_PATH], explode[PLATFORM_MAX_PATH];
+				attackData.GetFireballTrail(trail, sizeof(trail));
+				projectileData.GetFireballExplodeSound(explode, sizeof(explode));
+				SF2_ProjectileFireball.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetBlastRadius(difficulty), explode, trail, attackWaiters);
 			}
 			case SF2BossProjectileType_Iceball:
 			{
-				SF2_ProjectileIceball.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.ProjectileRadius[difficulty], data.FireballExplodeSound, attackData.IceballTrail, attackData.IceballSlowdownDuration[difficulty], attackData.IceballSlowdownPercent[difficulty], data.IceballSlowSound, attackWaiters);
+				char trail[PLATFORM_MAX_PATH], explode[PLATFORM_MAX_PATH], slow[PLATFORM_MAX_PATH];
+				attackData.GetFireballTrail(trail, sizeof(trail));
+				projectileData.GetFireballExplodeSound(explode, sizeof(explode));
+				projectileData.GetIceballSlowSound(explode, sizeof(explode));
+				SF2_ProjectileIceball.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetBlastRadius(difficulty), explode, trail, attackData.GetIceballSlowDuration(difficulty), attackData.GetIceballSlowPercent(difficulty), slow, attackWaiters);
 			}
 			case SF2BossProjectileType_Rocket:
 			{
-				SF2_ProjectileRocket.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.ProjectileRadius[difficulty], attackData.CritProjectiles[difficulty], data.RocketTrail, data.RocketExplodeParticle, data.RocketExplodeSound, attackData.RocketModel, attackWaiters);
+				char model[PLATFORM_MAX_PATH], trail[PLATFORM_MAX_PATH], explodeSound[PLATFORM_MAX_PATH], explodeParticle[64];
+				attackData.GetRocketModel(model, sizeof(model));
+				projectileData.GetRocketTrail(trail, sizeof(trail));
+				projectileData.GetRocketExplodeSound(explodeSound, sizeof(explodeSound));
+				projectileData.GetRocketExplodeParticle(explodeParticle, sizeof(explodeParticle));
+				SF2_ProjectileRocket.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetBlastRadius(difficulty), attackData.GetCrits(difficulty), trail, explodeParticle, explodeSound, model, attackWaiters);
 			}
 			case SF2BossProjectileType_SentryRocket:
 			{
-				SF2_ProjectileSentryRocket.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.ProjectileRadius[difficulty], attackData.CritProjectiles[difficulty], attackWaiters);
+				SF2_ProjectileSentryRocket.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetBlastRadius(difficulty), attackData.GetCrits(difficulty), attackWaiters);
 			}
 			case SF2BossProjectileType_Mangler:
 			{
-				SF2_ProjectileCowMangler.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.ProjectileRadius[difficulty], attackWaiters);
+				SF2_ProjectileCowMangler.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetBlastRadius(difficulty), attackWaiters);
 			}
 			case SF2BossProjectileType_Grenade:
 			{
-				SF2_ProjectileGrenade.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.ProjectileRadius[difficulty], attackData.CritProjectiles[difficulty], "pipebombtrail_blue", ROCKET_EXPLODE_PARTICLE, ROCKET_IMPACT, "models/weapons/w_models/w_grenade_grenadelauncher.mdl", attackWaiters);
+				SF2_ProjectileGrenade.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetBlastRadius(difficulty), attackData.GetCrits(difficulty), "pipebombtrail_blue", ROCKET_EXPLODE_PARTICLE, ROCKET_IMPACT, "models/weapons/w_models/w_grenade_grenadelauncher.mdl", attackWaiters);
 			}
 			case SF2BossProjectileType_Arrow:
 			{
-				SF2_ProjectileArrow.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.CritProjectiles[difficulty], "pipebombtrail_blue", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
+				SF2_ProjectileArrow.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetCrits(difficulty), "pipebombtrail_blue", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
 			}
 			case SF2BossProjectileType_Baseball:
 			{
-				SF2_ProjectileBaseball.Create(actor, effectPos, angle, attackData.ProjectileSpeed[difficulty], attackData.ProjectileDamage[difficulty],
-					attackData.CritProjectiles[difficulty], "models/weapons/w_models/w_baseball.mdl", attackWaiters);
+				SF2_ProjectileBaseball.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
+					attackData.GetCrits(difficulty), "models/weapons/w_models/w_baseball.mdl", attackWaiters);
 			}
 		}
 	}
@@ -284,13 +378,10 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_Projectile action, SF2_Chase
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileProjectileAttack attackData = action.ProfileData;
 
-	if (event == attackData.EventNumber)
+	if (event == attackData.GetEventNumber(controller.Difficulty))
 	{
-		FireProjectile(actor, action.GetAttackName());
+		FireProjectile(actor, action, action.GetAttackName());
 	}
 }

@@ -1,10 +1,11 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_ForwardBased < NextBotAction
 {
-	public SF2_ChaserAttackAction_ForwardBased(int attackIndex, const char[] attackName, float damageDelay)
+	public SF2_ChaserAttackAction_ForwardBased(const char[] attackName, ChaserBossProfileBaseAttack data, float damageDelay)
 	{
 		if (g_Factory == null)
 		{
@@ -12,8 +13,8 @@ methodmap SF2_ChaserAttackAction_ForwardBased < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
-				.DefineIntField("m_AttackIndex")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_ProfileData")
 				.DefineFloatField("m_NextDamageTime")
 				.DefineIntField("m_RepeatIndex")
 				.EndDataMapDesc();
@@ -21,23 +22,10 @@ methodmap SF2_ChaserAttackAction_ForwardBased < NextBotAction
 		SF2_ChaserAttackAction_ForwardBased action = view_as<SF2_ChaserAttackAction_ForwardBased>(g_Factory.Create());
 
 		action.NextDamageTime = damageDelay;
-		action.AttackIndex = attackIndex;
 		action.SetAttackName(attackName);
+		action.ProfileData = data;
 
 		return action;
-	}
-
-	property int AttackIndex
-	{
-		public get()
-		{
-			return this.GetData("m_AttackIndex");
-		}
-
-		public set(int value)
-		{
-			this.SetData("m_AttackIndex", value);
-		}
 	}
 
 	public static void Initialize()
@@ -55,6 +43,19 @@ methodmap SF2_ChaserAttackAction_ForwardBased < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property ChaserBossProfileBaseAttack ProfileData
+	{
+		public get()
+		{
+			return this.GetData("m_ProfileData");
+		}
+
+		public set(ChaserBossProfileBaseAttack value)
+		{
+			this.SetData("m_ProfileData", value);
+		}
 	}
 
 	property float NextDamageTime
@@ -91,10 +92,8 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = chaser.Controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (attackData.Type >= SF2BossAttackType_Melee && attackData.Type <= SF2BossAttackType_Tongue)
@@ -102,7 +101,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_ForwardBased(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_ForwardBased(attackName, attackData, attackData.GetDelay(difficulty) + GetGameTime());
 	return Plugin_Changed;
 }
 
@@ -119,36 +118,32 @@ static int Update(SF2_ChaserAttackAction_ForwardBased action, SF2_ChaserEntity a
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileBaseAttack attackData = action.ProfileData;
 	int difficulty = controller.Difficulty;
 
 	float gameTime = GetGameTime();
-	if (action.NextDamageTime >= 0.0 && gameTime > action.NextDamageTime && attackData.EventNumber == -1)
+	if (action.NextDamageTime >= 0.0 && gameTime > action.NextDamageTime && attackData.GetEventNumber(difficulty) == -1)
 	{
-		RegisterForward(action, actor);
+		RegisterForward(actor);
 
-		int repeatState = attackData.Repeat;
+		int repeatState = attackData.GetRepeatState(difficulty);
 		if (repeatState > 0)
 		{
 			switch (repeatState)
 			{
 				case 1:
 				{
-					action.NextDamageTime = gameTime + attackData.DamageDelay[difficulty];
+					action.NextDamageTime = gameTime + attackData.GetDelay(difficulty);
 				}
 				case 2:
 				{
-					if (action.RepeatIndex >= attackData.RepeatTimers.Length)
+					if (attackData.GetRepeatTimer(difficulty, action.RepeatIndex) < 0.0)
 					{
 						action.NextDamageTime = -1.0;
 					}
 					else
 					{
-						float next = attackData.RepeatTimers.Get(action.RepeatIndex);
-						action.NextDamageTime = next + gameTime;
+						action.NextDamageTime = attackData.GetRepeatTimer(difficulty, action.RepeatIndex) + gameTime;
 						action.RepeatIndex++;
 					}
 				}
@@ -162,11 +157,11 @@ static int Update(SF2_ChaserAttackAction_ForwardBased action, SF2_ChaserEntity a
 	return action.Continue();
 }
 
-static void RegisterForward(SF2_ChaserAttackAction_ForwardBased action, SF2_ChaserEntity actor)
+static void RegisterForward(SF2_ChaserEntity actor)
 {
 	Call_StartForward(g_OnBossAttackedFwd);
 	Call_PushCell(actor.Controller.Index);
-	Call_PushCell(action.AttackIndex);
+	Call_PushCell(actor.AttackIndex);
 	Call_Finish();
 }
 
@@ -178,13 +173,10 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_ForwardBased action, SF2_Cha
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileBaseAttack attackData = action.ProfileData;
 
-	if (event == attackData.EventNumber)
+	if (event == attackData.GetEventNumber(controller.Difficulty))
 	{
-		RegisterForward(action, actor);
+		RegisterForward(actor);
 	}
 }

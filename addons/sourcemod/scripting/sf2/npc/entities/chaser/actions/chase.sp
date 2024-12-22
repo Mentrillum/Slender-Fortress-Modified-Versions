@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -38,10 +39,10 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 		return action.ChangeTo(SF2_ChaserIdleAction(), "My target is no longer valid!");
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
 
-	actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+	actor.CurrentChaseDuration = chaseData.GetMaxChaseDuration(difficulty);
 
 	if (actor.InitialChaseDuration > 0.0)
 	{
@@ -49,7 +50,7 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 		actor.InitialChaseDuration = 0.0;
 	}
 
-	if (data.AlertOnChaseInfo.OnChangeState[difficulty])
+	if (chaseData.GetChaseTogetherData().IsEnabled(difficulty) && chaseData.GetChaseTogetherData().ShouldStartOnStateChange(difficulty))
 	{
 		actor.ForceChaseOtherBosses();
 	}
@@ -67,12 +68,11 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		return action.Continue();
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
+	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
 
-	if (!originalData.IsPvEBoss && IsBeatBoxBeating(2) && actor.State != STATE_ATTACK && !actor.IsInChaseInitial)
+	if (!data.IsPvEBoss && IsBeatBoxBeating(2) && actor.State != STATE_ATTACK && !actor.IsInChaseInitial)
 	{
 		return action.SuspendFor(SF2_ChaserBeatBoxFreezeAction(actor.IsAttemptingToMove));
 	}
@@ -82,7 +82,7 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 	int difficulty = controller.Difficulty;
 	INextBot bot = actor.MyNextBotPointer();
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	if (originalData.IsPvEBoss)
+	if (data.IsPvEBoss)
 	{
 		attackEliminated = true;
 	}
@@ -105,14 +105,14 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			if (actor.CurrentChaseDuration <= 0.0)
 			{
 				actor.State = STATE_ALERT;
-				return action.ChangeTo(SF2_ChaserAlertAction(_, data.AlertData.RunOnSuspect[difficulty]), "Oh he got away...");
+				return action.ChangeTo(SF2_ChaserAlertAction(_, alertData.ShouldRunOnSuspect(difficulty)), "Oh he got away...");
 			}
 		}
 
 		actor.RegisterProjectiles();
 
 		SF2_BasePlayer player = SF2_BasePlayer(target.index);
-		if (!originalData.IsPvEBoss && player.IsValid && player.HasEscaped)
+		if (!data.IsPvEBoss && player.IsValid && player.HasEscaped)
 		{
 			actor.State = STATE_IDLE;
 			return action.ChangeTo(SF2_ChaserIdleAction(), "Our target escaped, that is no good!");
@@ -120,18 +120,18 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 
 		if (player.IsValid && player.CanSeeSlender(controller.Index, false, _, !attackEliminated))
 		{
-			float maxRange = data.ChaseDurationAddMaxRange[difficulty];
+			float maxRange = chaseData.GetDurationTargetRange(difficulty);
 			float distanceRatio = bot.GetRangeTo(player.index) / maxRange;
 			if (maxRange > 0.0 && distanceRatio < 1.0)
 			{
-				float durationTimeAddMin = data.ChaseDurationAddVisibleMin[difficulty];
-				float durationTimeAddMax = data.ChaseDurationAddVisibleMax[difficulty];
-				float durationAdd = durationTimeAddMin + ((durationTimeAddMax - durationTimeAddMin) * distanceRatio);
+				float addNear = chaseData.GetDurationAddVisibleTargetNear(difficulty);
+				float addFar = chaseData.GetDurationAddVisibleTargetFar(difficulty);
+				float durationAdd = addNear + ((addFar - addNear) * distanceRatio);
 
 				actor.CurrentChaseDuration += durationAdd * GetGameFrameTime();
-				if (actor.CurrentChaseDuration > data.ChaseDuration[difficulty])
+				if (actor.CurrentChaseDuration > chaseData.GetMaxChaseDuration(difficulty))
 				{
-					actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+					actor.CurrentChaseDuration = chaseData.GetMaxChaseDuration(difficulty);
 				}
 			}
 		}
@@ -153,9 +153,9 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		}
 	}
 
-	if (data.ChaseOnLookData.Enabled[difficulty] && controller.ChaseOnLookTargets.FindValue(target.index) != -1)
+	if (data.GetChaseOnLookData().IsEnabled(difficulty) && controller.ChaseOnLookTargets.FindValue(target.index) != -1)
 	{
-		actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+		actor.CurrentChaseDuration = chaseData.GetMaxChaseDuration(difficulty);
 	}
 
 	if (gameTime >= actor.NextVoiceTime && !actor.IsAttacking)
@@ -177,7 +177,7 @@ static void OnResume(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		SF2NPC_Chaser controller = actor.Controller;
 		if (controller.IsValid())
 		{
-			if (controller.GetProfileData().StunData.ChaseInitialOnEnd[controller.Difficulty])
+			if (controller.GetProfileDataEx().GetStunBehavior().CanChaseInitialOnEnd(controller.Difficulty))
 			{
 				actor.PerformVoice(SF2BossSound_ChaseInitial);
 			}
@@ -192,6 +192,7 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		return;
 	}
 	SF2NPC_Chaser controller = actor.Controller;
+	ChaserBossProfile data = controller.GetProfileDataEx();
 	actor.EndCloak();
 	PathFollower path = actor.Controller.Path;
 	float gameTime = GetGameTime();
@@ -204,18 +205,14 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 	int difficulty = actor.Controller.Difficulty;
 	if (actor.FollowedCompanionChase)
 	{
-		SF2ChaserBossProfileData data;
-		data = actor.Controller.GetProfileData();
-		actor.FollowCooldownChase = GetGameTime() + data.AlertOnChaseInfo.FollowCooldown[difficulty];
+		actor.FollowCooldownChase = GetGameTime() + data.GetChaseBehavior().GetChaseTogetherData().GetFollowCooldown(difficulty);
 	}
 	if (actor.Teleporters != null)
 	{
 		actor.Teleporters.Clear();
 	}
 
-	SF2ChaserBossProfileData chaserData;
-	chaserData = actor.Controller.GetProfileData();
-	float cooldown = chaserData.AutoChaseAfterChaseCooldown[difficulty];
+	float cooldown = data.GetAutoChaseData().GetCooldownAfterChase(difficulty);
 	if (cooldown > 0.0)
 	{
 		float nextTime = gameTime + cooldown;

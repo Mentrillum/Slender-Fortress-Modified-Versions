@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static CEntityFactory g_Factory;
 
@@ -437,16 +438,18 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 
 			float targetPos[3];
 			valid.WorldSpaceCenter(targetPos);
-			TR_TraceRayFilter(pos, targetPos,
+			Handle trace = TR_TraceRayFilterEx(pos, targetPos,
 					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE,
 					RayType_EndPoint, TraceRayDontHitAnyEntity, this.index);
 
-			if (TR_DidHit() && TR_GetEntityIndex() != valid.index)
+			if (TR_DidHit(trace) && TR_GetEntityIndex(trace) != valid.index)
 			{
+				delete trace;
 				continue;
 			}
 
-			TR_GetEndPosition(subtracted);
+			TR_GetEndPosition(subtracted, trace);
+			delete trace;
 
 			SubtractVectors(pos, subtracted, subtracted);
 			adjustedDamage = GetVectorLength(subtracted) * falloff;

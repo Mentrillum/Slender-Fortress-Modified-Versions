@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_baseball";
 
@@ -81,7 +82,7 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 		ball.SetProp(Prop_Send, "m_usSolidFlags", 12);
 		ball.KeyValue("solid", "2");
 		ball.KeyValue("spawnflags", "4");
-		SetEntityCollisionGroup(ball.index, COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(ball.index, 13);
 		ball.SetProp(Prop_Send, "m_usSolidFlags", 0);
 
 		ball.Spawn();
@@ -117,9 +118,10 @@ static void Think(int entity)
 	projectile.GetAbsOrigin(pos);
 	projectile.GetPropVector(Prop_Send, "m_vecMins", mins);
 	projectile.GetPropVector(Prop_Send, "m_vecMaxs", maxs);
-	TR_TraceHullFilter(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, projectile.index);
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, projectile.index);
 
-	int hitIndex = TR_GetEntityIndex();
+	int hitIndex = TR_GetEntityIndex(trace);
+	delete trace;
 	if (IsValidEntity(hitIndex))
 	{
 		Call_StartForward(g_OnProjectileTouchFwd);

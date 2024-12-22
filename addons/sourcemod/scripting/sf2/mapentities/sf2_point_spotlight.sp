@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 
 static const char g_Classname[] = "sf2_point_spotlight";
 
@@ -289,10 +291,10 @@ static void UpdateSpotlight(SF2PointSpotlightEntity entity)
 		endPos[0] = entity.Length;
 		VectorTransform(endPos, pos, dir, endPos);
 
-		TR_TraceRayFilter(pos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, Trace, entity.index);
+		Handle trace = TR_TraceRayFilterEx(pos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, Trace, entity.index);
 
 		float hitPos[3];
-		TR_GetEndPosition(hitPos);
+		TR_GetEndPosition(hitPos, trace);
 /*
 		int color[4] = { 255, 0, 0, 255 };
 		TE_SetupBeamPoints(pos,
@@ -311,6 +313,7 @@ static void UpdateSpotlight(SF2PointSpotlightEntity entity)
 		TE_SendToAll();
 */
 		spotlightEnd.SetAbsOrigin(hitPos);
+		delete trace;
 	}
 
 }
@@ -336,7 +339,7 @@ static bool Trace(int entity, int mask, any data)
 	{
 		return false;
 	}
-	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
+	if (SF2_ChaserEntity(entity).IsValid() || SF2_StatueEntity(entity).IsValid())
 	{
 		return false;
 	}

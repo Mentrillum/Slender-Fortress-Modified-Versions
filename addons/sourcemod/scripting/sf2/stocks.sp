@@ -4,6 +4,7 @@
 #define _sf2_stocks_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define VALID_MINIMUM_MEMORY_ADDRESS 0x10000
 
@@ -415,6 +416,31 @@ void GetBonePosition(int entity, int bone, float origin[3], float angles[3])
 bool CBaseAnimating_GetSequenceVelocity(Address studioHdr, int sequence, float cycle, Address poseParameter, float velocity[3])
 {
 	return SDKCall(g_SDKSequenceVelocity, studioHdr, sequence, cycle, poseParameter, velocity);
+}
+
+float GetDamageDistance(float start[3], float end[3], float baseDamage, float minRange, float maxRange, float minMultiplier, float maxMultiplier)
+{
+	float minDamage = baseDamage * minMultiplier;
+	float maxDamage = baseDamage * maxMultiplier;
+	float newDamage = baseDamage;
+
+	float distance = GetVectorDistance(start, end, true);
+	float percent = (distance - minRange) / (maxRange - minRange);
+	if (percent <= 0.0)
+	{
+		percent = distance / minRange;
+		newDamage = LerpFloats(maxDamage, baseDamage, percent);
+	}
+	else
+	{
+		if (percent > 1.0)
+		{
+			percent = 1.0;
+		}
+		newDamage = LerpFloats(baseDamage, minDamage, percent);
+	}
+
+	return newDamage;
 }
 
 //  =========================================================
@@ -1105,7 +1131,7 @@ void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float d
 		SF2_BasePlayer player = SF2_BasePlayer(i);
 		if (player.IsValid && !player.IsBot && !player.IsInGhostMode)
 		{
-			if (!airShake && command == 0 && !(player.GetFlags() && FL_ONGROUND))
+			if (!airShake && command == 0 && (player.GetFlags() & FL_ONGROUND) != 0)
 			{
 				continue;
 			}
@@ -1237,7 +1263,7 @@ void CopyVector(const float copy[3], float dest[3])
 	dest[2] = copy[2];
 }
 
-/*void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
+void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
 {
 	if (t < 0.0)
 	{
@@ -1251,7 +1277,7 @@ void CopyVector(const float copy[3], float dest[3])
 	c[0] = a[0] + (b[0] - a[0]) * t;
 	c[1] = a[1] + (b[1] - a[1]) * t;
 	c[2] = a[2] + (b[2] - a[2]) * t;
-}*/
+}
 
 /**
  *	Translates and re-orients a given offset vector into world space, given a world position and angle.
@@ -1470,19 +1496,6 @@ Action Timer_KillEntity(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-Action Timer_KillEdict(Handle timer, any entref)
-{
-	int ent = EntRefToEntIndex(entref);
-	if (!ent || ent == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	RemoveEdict(ent);
-
-	return Plugin_Stop;
-}
-
 //	==========================================================
 //	SPECIAL ROUND FUNCTIONS
 //	==========================================================
@@ -1565,15 +1578,9 @@ int GetLocalGlobalDifficulty(int npcIndex = -1)
 	{
 		return g_DifficultyConVar.IntValue;
 	}
-	SF2BossProfileData data;
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(npcIndex);
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileData chaserData;
-	if (data.Type == SF2BossType_Chaser)
-	{
-		chaserData = view_as<SF2NPC_Chaser>(controller).GetProfileData();
-	}
-	if (data.IsPvEBoss || chaserData.BoxingBoss)
+	ChaserBossProfile data = view_as<ChaserBossProfile>(controller.GetProfileDataEx());
+	if (data.IsPvEBoss || data.BoxingBoss)
 	{
 		if (NPCGetUniqueID(npcIndex) != -1)
 		{

@@ -4,6 +4,7 @@
 #define _sf2_natives_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 //	==========================================================
 //	GENERAL PLUGIN HOOK FUNCTIONS
@@ -57,8 +58,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnGroupEnterGameFwd = new GlobalForward("SF2_OnGroupEnterGame", ET_Hook, Param_Cell);
 	g_OnEverythingLoadedFwd = new GlobalForward("SF2_OnEverythingLoaded", ET_Ignore);
 	g_OnDifficultyVoteFinishedFwd = new GlobalForward("SF2_OnDifficultyVoteFinished", ET_Ignore, Param_Cell, Param_Cell);
-	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell);
-	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell, Param_CellByRef);
+	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell);
+	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnProjectileTouchFwd = new GlobalForward("SF2_OnProjectileTouch", ET_Ignore, Param_Cell, Param_Cell);
 
 	CreateNative("SF2_GetConfig", Native_GetConfig);
@@ -677,14 +678,12 @@ static any Native_SetBossTarget(Handle plugin, int numParams)
 
 static any Native_IsBossStunnable(Handle plugin, int numParams)
 {
-	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().StunData.Enabled[1];
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileDataEx().GetStunBehavior().IsEnabled(1);
 }
 
 static any Native_IsBossStunnableByFlashlight(Handle plugin, int numParams)
 {
-	SF2ChaserBossProfileData data;
-	data = NPCChaserGetProfileData(GetNativeCell(1));
-	return data.StunData.FlashlightStun[1];
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileDataEx().GetStunBehavior().CanFlashlightStun(1);
 }
 
 static any Native_IsBossCloaked(Handle plugin, int numParams)

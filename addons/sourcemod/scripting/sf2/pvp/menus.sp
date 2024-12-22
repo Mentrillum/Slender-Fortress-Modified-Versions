@@ -5,6 +5,7 @@
 #define _sf2_pvp_menus
 
 #pragma semicolon 1
+#pragma newdecls required
 
 Menu g_MenuSettingsPvP;
 

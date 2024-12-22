@@ -1,9 +1,14 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static bool g_PlayerSprint[MAXTF2PLAYERS] = { false, ... };
 static bool g_WantsToSprint[MAXTF2PLAYERS] = { false, ... };
 static float g_Stamina[MAXTF2PLAYERS] = { 1.0, ... };
 static float g_StaminaRechargeTime[MAXTF2PLAYERS] = { 1.0, ... };
+
+static char g_Player90sMusicString[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static float g_Player90sMusicVolumes[MAXTF2PLAYERS];
+static Handle g_Player90sMusicTimer[MAXTF2PLAYERS];
 
 static ConVar g_PlayerScareSprintBoost;
 
@@ -414,6 +419,8 @@ static void ClientResetSprint(SF2_BasePlayer client)
 		DebugMessage("END ClientResetSprint(%d)", client.index);
 	}
 	#endif
+
+	Client90sMusicReset(client.index);
 }
 
  /**
@@ -517,7 +524,7 @@ static void Hook_SpeedThink(int client)
 				continue;
 			}
 
-			if (NPCGetType(i) == SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(i).GetProfileDataEx().Type == SF2BossType_Chaser)
 			{
 				SF2_ChaserEntity chaser = SF2_ChaserEntity(ent);
 				bossTarget = chaser.Target;
@@ -563,7 +570,7 @@ static void Hook_SpeedThink(int client)
 				continue;
 			}
 
-			if (NPCGetType(i) == SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(i).GetProfileDataEx().Type == SF2BossType_Chaser)
 			{
 				if (state == STATE_ALERT)
 				{
@@ -853,6 +860,140 @@ static void Hook_SpeedThink(int client)
 		}
 		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 	}
+}
+
+static void Client90sMusicReset(int client)
+{
+	char oldMusic[PLATFORM_MAX_PATH];
+	strcopy(oldMusic, sizeof(oldMusic), g_Player90sMusicString[client]);
+	g_Player90sMusicString[client][0] = '\0';
+	if (IsValidClient(client) && oldMusic[0] != '\0')
+	{
+		StopSound(client, MUSIC_CHAN, oldMusic);
+	}
+
+	g_Player90sMusicTimer[client] = null;
+	g_Player90sMusicVolumes[client] = 0.0;
+
+	if (IsValidClient(client))
+	{
+		oldMusic = NINETYSMUSIC;
+		if (oldMusic[0] != '\0')
+		{
+			StopSound(client, MUSIC_CHAN, oldMusic);
+		}
+	}
+}
+
+static void Client90sMusicStart(int client)
+{
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
+	{
+		return;
+	}
+
+	char buffer[PLATFORM_MAX_PATH];
+	buffer = NINETYSMUSIC;
+
+	if (buffer[0] == '\0')
+	{
+		return;
+	}
+
+	strcopy(g_Player90sMusicString[client], sizeof(g_Player90sMusicString[]), buffer);
+	g_Player90sMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeIn90sMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	TriggerTimer(g_Player90sMusicTimer[client], true);
+}
+
+static void Client90sMusicStop(int client)
+{
+	if (!IsValidClient(client))
+	{
+		return;
+	}
+
+	if (!IsClientSprinting(client))
+	{
+		g_Player90sMusicString[client][0] = '\0';
+	}
+
+	g_Player90sMusicTimer[client]= CreateTimer(0.01, Timer_PlayerFadeOut90sMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	TriggerTimer(g_Player90sMusicTimer[client], true);
+}
+
+static Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0)
+	{
+		return Plugin_Stop;
+	}
+
+	if (g_Player90sMusicTimer[client] != timer)
+	{
+		return Plugin_Stop;
+	}
+
+	g_Player90sMusicVolumes[client] += 0.28;
+	if (g_Player90sMusicVolumes[client] > 0.5)
+	{
+		g_Player90sMusicVolumes[client] = 0.5;
+	}
+
+	if (g_Player90sMusicString[client][0] != '\0')
+	{
+		EmitSoundToClient(client, g_Player90sMusicString[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_Player90sMusicVolumes[client] * g_PlayerPreferences[client].PlayerPreference_MusicVolume, 100);
+	}
+
+	if (g_Player90sMusicVolumes[client] >= 0.5)
+	{
+		g_Player90sMusicTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
+}
+
+static Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0)
+	{
+		return Plugin_Stop;
+	}
+
+	if (g_Player90sMusicTimer[client] != timer)
+	{
+		return Plugin_Stop;
+	}
+
+	char buffer[PLATFORM_MAX_PATH];
+	buffer = NINETYSMUSIC;
+
+	if (strcmp(buffer, g_Player90sMusicString[client], false) == 0)
+	{
+		g_Player90sMusicTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	g_Player90sMusicVolumes[client] -= 0.28;
+	if (g_Player90sMusicVolumes[client] < 0.0)
+	{
+		g_Player90sMusicVolumes[client] = 0.0;
+	}
+
+	if (buffer[0] != '\0')
+	{
+		EmitSoundToClient(client, buffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_Player90sMusicVolumes[client] * g_PlayerPreferences[client].PlayerPreference_MusicVolume, 100);
+	}
+
+	if (g_Player90sMusicVolumes[client] <= 0.0)
+	{
+		g_Player90sMusicTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
 }
 
 void Sprint_SetupAPI()

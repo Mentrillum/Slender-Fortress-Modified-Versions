@@ -3,6 +3,9 @@
 #endif
 #define _sf2_client_flashlight_included
 
+#pragma semicolon 1
+#pragma newdecls required
+
 #define SF2_FLASHLIGHT_WIDTH 512.0 // How wide the player's Flashlight should be in world units.
 #define SF2_FLASHLIGHT_BRIGHTNESS 0 // Intensity of the players' Flashlight.
 #define SF2_FLASHLIGHT_DRAIN_RATE 0.65 // How long (in seconds) each bar on the player's Flashlight meter lasts.
@@ -10,8 +13,6 @@
 #define SF2_FLASHLIGHT_FLICKERAT 0.25 // The percentage of the Flashlight battery where the Flashlight will start to blink.
 #define SF2_FLASHLIGHT_ENABLEAT 0.3 // The percentage of the Flashlight battery where the Flashlight will be able to be used again (if the player shortens out the Flashlight from excessive use).
 #define SF2_FLASHLIGHT_COOLDOWN 0.4 // How much time players have to wait before being able to switch their flashlight on again after turning it off.
-
-#pragma semicolon 1
 
 static bool g_PlayerHasFlashlight[MAXTF2PLAYERS] = { false, ... };
 static bool g_PlayerFlashlightBroken[MAXTF2PLAYERS] = { false, ... };
@@ -664,10 +665,11 @@ void Hook_OnFlashlightThink(int client)
 			CBaseEntity spotlightEnd = CBaseEntity(endEnt);
 			if (spotlightEnd.IsValid())
 			{
-				TR_TraceRayFilter(entPos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitEntity, client);
+				Handle trace = TR_TraceRayFilterEx(entPos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitEntity, client);
 
 				float hitPos[3];
-				TR_GetEndPosition(hitPos);
+				TR_GetEndPosition(hitPos, trace);
+				delete trace;
 
 				hitPos[2] += 20.0;
 

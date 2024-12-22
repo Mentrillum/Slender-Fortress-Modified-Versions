@@ -4,6 +4,7 @@
 #define _sf2_client_classconfigs_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 float g_ClassRunSpeed[MAX_CLASSES + 1];
 float g_ClassWalkSpeed[MAX_CLASSES + 1];

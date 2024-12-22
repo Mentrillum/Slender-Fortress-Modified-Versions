@@ -1,6 +1,8 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include "actions/playsequenceandwait.sp"
+#include "actions/playsequenceandwait_ex.sp"
 #include "actions/deathcam.sp"
 
 static CEntityFactory g_Factory;
@@ -62,10 +64,13 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineVectorField("m_ForceWanderPos")
 			.DefineBoolField("m_IsKillingSomeone")
 			.DefineEntityField("m_KillTarget")
+			.DefineBoolField("m_FullDeathCamDuration")
 			.DefineBoolField("m_IsAttemptingToMove")
 			.DefineIntField("m_EyeBoneIndex")
 			.DefineBoolField("m_VelocityCancel")
 			.DefineIntField("m_Teleporters")
+			.DefineBoolField("m_ShouldAnimationSyncWithGround")
+			.DefineBoolField("m_LockAnimations")
 		.EndDataMapDesc();
 		g_Factory.Install();
 
@@ -125,9 +130,9 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
-	public SF2BossProfileData GetProfileData()
+	public BaseBossProfile GetProfileData()
 	{
-		return this.Controller.GetProfileData();
+		return this.Controller.GetProfileDataEx();
 	}
 
 	property CBaseEntity Target
@@ -430,6 +435,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property bool FullDeathCamDuration
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_FullDeathCamDuration") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_FullDeathCamDuration", value);
+		}
+	}
+
 	property bool IsAttemptingToMove
 	{
 		public get()
@@ -482,6 +500,32 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property bool ShouldAnimationSyncWithGround
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_ShouldAnimationSyncWithGround") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_ShouldAnimationSyncWithGround", value);
+		}
+	}
+
+	property bool LockAnimations
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_LockAnimations") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_LockAnimations", value);
+		}
+	}
+
 	public void EyePosition(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
 	{
 		this.Controller.GetEyePosition(buffer, defaultValue);
@@ -514,12 +558,14 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		CreateNative("SF2_BaseBossEntity.EyePosition", Native_EyePosition);
 		CreateNative("SF2_BaseBossEntity.GetProfileName", Native_GetProfileName);
 		CreateNative("SF2_BaseBossEntity.GetName", Native_GetName);
+		CreateNative("SF2_BaseBossEntity.LockAnimations.get", Native_GetLockAnimations);
+		CreateNative("SF2_BaseBossEntity.LockAnimations.set", Native_SetLockAnimations);
 		CreateNative("SF2_BaseBossEntity.ProfileData", Native_GetProfileData);
 		CreateNative("SF2_BaseBossEntity.ResetProfileAnimation", Native_ResetProfileAnimation);
 	}
 
 	public int SelectProfileAnimation(const char[] animType, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepInterval = 0.0,
-										int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0)
+										int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0, bool &sync = false)
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
 		int difficulty = controller.Difficulty;
@@ -527,31 +573,42 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		char animation[64];
 
 		bool found = false;
+		ProfileAnimation section = null;
 
-		if (controller.Type == SF2BossType_Chaser && !IsNullString(posture) && strcmp(posture, SF2_PROFILE_CHASER_DEFAULT_POSTURE) != 0)
+		if (controller.GetProfileDataEx().Type == SF2BossType_Chaser && !IsNullString(posture) && strcmp(posture, SF2_PROFILE_CHASER_DEFAULT_POSTURE) != 0)
 		{
-			SF2NPC_Chaser chaserController = view_as<SF2NPC_Chaser>(controller);
-			SF2ChaserBossProfileData data;
-			data = chaserController.GetProfileData();
-			SF2ChaserBossProfilePostureInfo postureInfo;
-			found = data.GetPosture(posture, postureInfo);
+			ChaserBossProfile data = view_as<ChaserBossProfile>(this.GetProfileData());
+			found = data.GetPosture(posture) != null;
 			if (found)
 			{
-				found = postureInfo.Animations.GetAnimation(animType, difficulty, animation, sizeof(animation),
-																			rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, overrideLoop, loop);
-				if (found)
+				section = data.GetPostureAnimations(posture).GetAnimation(animType, preDefinedIndex, preDefinedName, index);
+				if (section != null)
 				{
+					section.GetAnimationName(difficulty, animation, sizeof(animation));
+					section.GetAnimationName(difficulty, returnAnimation, rtnAnimationLength);
+					rate = section.GetAnimationPlaybackRate(difficulty);
+					duration = section.GetDuration(difficulty);
+					cycle = section.GetAnimationCycle(difficulty);
+					footstepInterval = section.GetFootstepInterval(difficulty);
+					overrideLoop = section.CanOverrideLoop(difficulty);
+					loop = section.GetLoopState(difficulty);
+					sync = section.ShouldSyncWithGround(difficulty);
 					this.AnimationPlaybackRate = rate;
-
 					return LookupProfileAnimation(this.index, animation);
 				}
 			}
 		}
 
-		found = controller.GetProfileData().AnimationData.GetAnimation(animType, difficulty, animation, sizeof(animation),
-																			rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, overrideLoop, loop);
+		section = controller.GetProfileDataEx().GetAnimations().GetAnimation(animType, preDefinedIndex, preDefinedName, index);
 
-		if (!found)
+		if (section == null)
+		{
+			return -1;
+		}
+
+		section.GetAnimationName(difficulty, animation, sizeof(animation));
+
+		if (animation[0] == '\0')
 		{
 			return -1;
 		}
@@ -559,6 +616,13 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		int sequence = LookupProfileAnimation(this.index, animation);
 
 		strcopy(returnAnimation, rtnAnimationLength, animation);
+		rate = section.GetAnimationPlaybackRate(difficulty);
+		duration = section.GetDuration(difficulty);
+		cycle = section.GetAnimationCycle(difficulty);
+		footstepInterval = section.GetFootstepInterval(difficulty);
+		overrideLoop = section.CanOverrideLoop(difficulty);
+		loop = section.GetLoopState(difficulty);
+		sync = section.ShouldSyncWithGround(difficulty);
 
 		this.AnimationPlaybackRate = rate;
 
@@ -572,31 +636,39 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 		char gesture[64];
 
-		bool found = controller.GetProfileData().AnimationData.GetGesture(definedIndex, definedName, animType, difficulty, gesture, sizeof(gesture),
-																			rate, cycle);
+		ProfileAnimation section = controller.GetProfileDataEx().GetAnimations().GetAnimation(animType, definedIndex, definedName);
 
-		if (!found)
+		if (section == null)
+		{
+			return -1;
+		}
+
+		section.GetGestureName(difficulty, gesture, sizeof(gesture));
+
+		if (gesture[0] == '\0')
 		{
 			return -1;
 		}
 
 		int sequence = LookupProfileAnimation(this.index, gesture);
+		rate = section.GetGesturePlaybackRate(difficulty);
+		cycle = section.GetGestureCycle(difficulty);
 
 		return sequence;
 	}
 
-	public bool ResetProfileAnimation(const char[] animType, int preDefinedIndex = -1, const char[] preDefinedName = "", float &duration = 0.0, const char[] posture = NULL_STRING)
+	public bool ResetProfileAnimation(const char[] animType, int preDefinedIndex = -1, const char[] preDefinedName = "", float &duration = 0.0, const char[] posture = NULL_STRING, int& sequence = -1, float &rate = 1.0, float &cycle = 0.0)
 	{
 		if (this.Controller.IsValid() && (this.Controller.Flags & SFF_MARKEDASFAKE) != 0)
 		{
 			return false;
 		}
-		float rate = 1.0, cycle = 0.0, footstepInterval = 0.0;
-		bool overrideLoop, loop;
+		float footstepInterval = 0.0;
+		bool overrideLoop, loop, sync;
 		int index = 0;
 		char animation[64];
 
-		int sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation));
+		sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation), sync);
 		if (sequence == -1)
 		{
 			return false;
@@ -617,14 +689,17 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		Call_PushString(animation);
 		Call_Finish(result);
 
-		if (result != Plugin_Handled)
+		if (result != Plugin_Handled && !this.LockAnimations)
 		{
 			bool isMovement = strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Walk]) == 0 ||
 							strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Run]) == 0;
 
 			bool shouldLoop = isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0;
-			this.ResetSequence(sequence);
-			this.SetPropFloat(Prop_Send, "m_flCycle", cycle);
+			if (sequence != this.GetProp(Prop_Send, "m_nSequence"))
+			{
+				this.ResetSequence(sequence);
+				this.SetPropFloat(Prop_Send, "m_flCycle", cycle);
+			}
 			if (strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Attack]) == 0 && this.MovementType == SF2NPCMoveType_Attack)
 			{
 				shouldLoop = true;
@@ -638,8 +713,9 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 				this.SetProp(Prop_Data, "m_bSequenceLoops", shouldLoop);
 			}
 			this.SetPropFloat(Prop_Send, "m_flPlaybackRate", rate);
-
+			this.LegacyFootstepTime = 0.0;
 			this.LegacyFootstepInterval = footstepInterval;
+			this.ShouldAnimationSyncWithGround = sync;
 		}
 
 		return true;
@@ -720,8 +796,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	public void ProcessRainbowOutline()
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
-		SF2BossProfileData data;
-		data = controller.GetProfileData();
+		BaseBossProfile data = controller.GetProfileDataEx();
 		int color[4];
 		color[0] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 0) * 127.5 + 127.5);
 		color[1] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 2) * 127.5 + 127.5);
@@ -1011,9 +1086,34 @@ static any Native_GetName(Handle plugin, int numParams)
 	}
 
 	char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-	controller.GetName(buffer, sizeof(buffer));
+	controller.GetProfileDataEx().GetName(controller.Difficulty, buffer, sizeof(buffer));
 	SetNativeString(2, buffer, sizeof(buffer));
 
+	return 0;
+}
+
+static any Native_GetLockAnimations(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	return bossEntity.LockAnimations;
+}
+
+static any Native_SetLockAnimations(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+	bossEntity.LockAnimations = GetNativeCell(2);
 	return 0;
 }
 
@@ -1032,10 +1132,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 		return 0;
 	}
 
-	SF2BossProfileData data;
-	data = bossEntity.Controller.GetProfileData();
-	SetNativeArray(2, data, sizeof(data));
-	return 0;
+	return bossEntity.Controller.GetProfileDataEx();
 }
 
 static any Native_ResetProfileAnimation(Handle plugin, int numParams)

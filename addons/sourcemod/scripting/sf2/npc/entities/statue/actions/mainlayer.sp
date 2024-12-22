@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -72,11 +73,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 		return action.Done("I'm a faker");
 	}
 
-	SF2StatueBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	SF2BossProfileSoundInfo soundInfo;
+	StatueBossProfile data = controller.GetProfileDataEx();
 	CBaseEntity target = actor.Target;
 	float myPos[3];
 	actor.GetAbsOrigin(myPos);
@@ -89,10 +86,8 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 
 	if (actor.IsMoving)
 	{
-		soundInfo = data.SingleMoveSounds;
-		soundInfo.EmitSound(_, actor.index);
-		soundInfo = data.MoveSounds;
-		soundInfo.EmitSound(_, actor.index);
+		data.GetSingleMoveSounds().EmitSound(_, actor.index, .difficulty = difficulty);
+		data.GetMoveSounds().EmitSound(_, actor.index, .difficulty = difficulty);
 
 		if (target.IsValid())
 		{
@@ -100,24 +95,24 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 			target.GetAbsOrigin(targetPos);
 
 			float distance = GetVectorSquareMagnitude(targetPos, myPos);
-			float maxRange = Pow(data.ModelChangeDistanceMax[difficulty], 2.0);
+			float maxRange = Pow(data.GetMaxModelChangeDistance(difficulty), 2.0);
 			char model[PLATFORM_MAX_PATH];
 			if (distance < maxRange * 0.33)
 			{
-				data.ModelsCloseDist.GetString(difficulty, model, sizeof(model));
+				data.GetCloseDistanceModel(difficulty, model, sizeof(model));
 			}
 			else if (distance < maxRange * 0.66)
 			{
-				data.ModelsAverageDist.GetString(difficulty, model, sizeof(model));
+				data.GetAverageDistanceModel(difficulty, model, sizeof(model));
 			}
 			else
 			{
-				originalData.Models.GetString(difficulty, model, sizeof(model));
+				data.GetModel(difficulty, model, sizeof(model));
 			}
 
 			if (model[0] == '\0' || strcmp(model, "models/") == 0)
 			{
-				originalData.Models.GetString(difficulty, model, sizeof(model));
+				data.GetModel(difficulty, model, sizeof(model));
 			}
 
 			actor.SetModel(model);
@@ -125,8 +120,12 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 	}
 	else
 	{
-		soundInfo = data.MoveSounds;
-		soundInfo.StopAllSounds(actor.index);
+		data.GetMoveSounds().StopAllSounds(actor.index, difficulty);
+	}
+
+	if (actor.IsKillingSomeone)
+	{
+		return action.SuspendFor(SF2_DeathCamAction());
 	}
 
 	UnstuckCheck(action, actor);

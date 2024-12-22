@@ -4,6 +4,7 @@
 #define _sf2_traps_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static float g_TrapDespawnTimer[2049];
 static bool g_TrapClosed[2049];
@@ -64,11 +65,11 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 	float yaw = GetAngleBetweenVectors(product2, cross, tempAngles);
 	RotateYaw(newAngles, yaw - 90.0);
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileDataEx();
 	int difficulty = controller.Difficulty;
+	char buffer[PLATFORM_MAX_PATH];
 
-	switch (data.TrapType[difficulty])
+	switch (data.GetTrapType(difficulty))
 	{
 		case SF2BossTrapType_BearTrap:
 		{
@@ -76,7 +77,8 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 			if (trapEntity != -1)
 			{
 				TeleportEntity(trapEntity, newPos, newAngles, NULL_VECTOR);
-				SetEntityModel(trapEntity, data.TrapModel);
+				data.GetTrapModel(buffer, sizeof(buffer));
+				SetEntityModel(trapEntity, buffer);
 				DispatchSpawn(trapEntity);
 				ActivateEntity(trapEntity);
 
@@ -104,16 +106,19 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 				g_TrapClosed[trapEntity] = false;
 				g_TrapAnimChange[trapEntity] = true;
 				SetEntProp(trapEntity, Prop_Data, "m_bSequenceLoops", false);
-				if (data.TrapAnimOpen[0] != '\0')
+
+				data.GetTrapOpenAnimation(buffer, sizeof(buffer));
+				if (buffer[0] != '\0')
 				{
-					SetVariantString(data.TrapAnimOpen);
+					SetVariantString(buffer);
 					AcceptEntityInput(trapEntity, "SetAnimation");
 					HookSingleEntityOutput(trapEntity, "OnAnimationDone", OnTrapOpenComplete, false);
 					g_TrapStartedOpenAnim[trapEntity] = true;
 				}
 				else
 				{
-					SetVariantString(data.TrapAnimIdle);
+					data.GetTrapIdleAnimation(buffer, sizeof(buffer));
+					SetVariantString(buffer);
 					AcceptEntityInput(trapEntity, "SetAnimation");
 				}
 
@@ -122,7 +127,8 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 				g_TrapDespawnTimer[trapEntity] = GetGameTime() + GetRandomFloat(20.0, 40.0);
 				g_TrapState[trapEntity] = 0;
 
-				EmitSoundToAll(data.TrapDeploySound, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				data.GetTrapDeploySound(buffer, sizeof(buffer));
+				EmitSoundToAll(buffer, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
 
 				SDKHook(trapEntity, SDKHook_OnTakeDamage, Hook_TrapOnTakeDamage);
 				g_TrapTimer[trapEntity] = CreateTimer(0.1, Timer_TrapThink, EntIndexToEntRef(trapEntity), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
@@ -211,10 +217,12 @@ static Action Timer_TrapThink(Handle timer, any entref)
 				player.TakeDamage(true, _, _, 10.0, 128);
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
-				SF2ChaserBossProfileData data;
-				data = controller.GetProfileData();
-				EmitSoundToAll(data.TrapCatchSound, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
-				SetVariantString(data.TrapAnimClose);
+				ChaserBossProfile data = controller.GetProfileDataEx();
+				char buffer[PLATFORM_MAX_PATH];
+				data.GetTrapCatchSound(buffer, sizeof(buffer));
+				EmitSoundToAll(buffer, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				data.GetTrapClosedAnimation(buffer, sizeof(buffer));
+				SetVariantString(buffer);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 				AcceptEntityInput(trapEntity, "DisableCollision");
 				g_TrapClosed[trapEntity] = true;
@@ -238,28 +246,31 @@ static void TrapUpdateAnimation(int trapEntity)
 	{
 		return;
 	}
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	char buffer[PLATFORM_MAX_PATH];
 	switch (state)
 	{
 		case 0:
 		{
-			if (!g_TrapStartedOpenAnim[trapEntity] && data.TrapAnimOpen[0] != '\0')
+			data.GetTrapOpenAnimation(buffer, sizeof(buffer));
+			if (!g_TrapStartedOpenAnim[trapEntity] && buffer[0] != '\0')
 			{
-				SetVariantString(data.TrapAnimOpen);
+				SetVariantString(buffer);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 				HookSingleEntityOutput(trapEntity, "OnAnimationDone", OnTrapOpenComplete, true);
 				g_TrapStartedOpenAnim[trapEntity] = true;
 			}
 			else if (g_TrapDoIdleAnim[trapEntity])
 			{
-				SetVariantString(data.TrapAnimIdle);
+				data.GetTrapIdleAnimation(buffer, sizeof(buffer));
+				SetVariantString(buffer);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 			}
 		}
 		case 1:
 		{
-			SetVariantString(data.TrapAnimClose);
+			data.GetTrapClosedAnimation(buffer, sizeof(buffer));
+			SetVariantString(buffer);
 			AcceptEntityInput(trapEntity, "SetAnimation");
 			AcceptEntityInput(trapEntity, "DisableCollision");
 		}
@@ -294,10 +305,12 @@ static Action Hook_TrapOnTakeDamage(int trapEntity, int &attacker, int &inflicto
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
 				SF2NPC_Chaser controller = g_TrapMaster[trapEntity];
-				SF2ChaserBossProfileData data;
-				data = controller.GetProfileData();
-				EmitSoundToAll(data.TrapMissSound, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
-				SetVariantString(data.TrapAnimClose);
+				ChaserBossProfile data = controller.GetProfileDataEx();
+				char buffer[PLATFORM_MAX_PATH];
+				data.GetTrapMissSound(buffer, sizeof(buffer));
+				EmitSoundToAll(buffer, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
+				data.GetTrapClosedAnimation(buffer, sizeof(buffer));
+				SetVariantString(buffer);
 				AcceptEntityInput(trapEntity, "SetAnimation");
 				AcceptEntityInput(trapEntity, "DisableCollision");
 				if (g_TrapDespawnTimer[trapEntity] > 5.0)

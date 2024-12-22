@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_OVERLAY_GHOST "overlays/slender/ghostcamera"
 
@@ -16,6 +17,7 @@ void SetupGhost()
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
 	g_OnPlayerTeamPFwd.AddFunction(null, OnPlayerTeam);
+	g_OnPlayerTakeDamagePFwd.AddFunction(null, OnPlayerTakeDamage);
 }
 
 static void OnPutInServer(SF2_BasePlayer client)
@@ -25,6 +27,7 @@ static void OnPutInServer(SF2_BasePlayer client)
 		return;
 	}
 	ClientSetGhostModeState(client.index, false);
+	SDKHook(client.index, SDKHook_PreThinkPost, GhostThink);
 }
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
@@ -65,6 +68,42 @@ static void OnPlayerTeam(SF2_BasePlayer client, int team)
 	{
 		ClientSetGhostModeState(client.index, false);
 	}
+}
+
+static void GhostThink(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsInGhostMode)
+	{
+		return;
+	}
+
+	player.SetPropFloat(Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
+	player.SetPropFloat(Prop_Send, "m_flMaxspeed", 520.0);
+	player.SetPropFloat(Prop_Send, "m_flModelScale", 1.0);
+	player.SetPropFloat(Prop_Send, "m_flHeadScale", 1.0);
+	player.SetPropFloat(Prop_Send, "m_flTorsoScale", 1.0);
+	player.SetPropFloat(Prop_Send, "m_flHandScale", 1.0);
+	if (IsClientInKart(player.index))
+	{
+		player.ChangeCondition(TFCond_HalloweenKart, true);
+		player.ChangeCondition(TFCond_HalloweenKartDash, true);
+		player.ChangeCondition(TFCond_HalloweenKartNoTurn, true);
+		player.ChangeCondition(TFCond_HalloweenKartCage, true);
+		ClientHandleGhostMode(player.index, true);
+	}
+	player.ChangeCondition(TFCond_Taunting, true);
+}
+
+static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &inflictor, float &damage, int &damageType, int damageCustom)
+{
+	if (client.IsInGhostMode)
+	{
+		damage = 0.0;
+		return Plugin_Changed;
+	}
+
+	return Plugin_Continue;
 }
 
 bool IsClientInGhostMode(int client)
@@ -314,7 +353,7 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 				continue;
 			}
 
-			if (NPCGetProfileData(bossIndex).IsPvEBoss)
+			if (SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().IsPvEBoss)
 			{
 				continue;
 			}

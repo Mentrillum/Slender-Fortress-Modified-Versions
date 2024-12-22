@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -17,10 +18,8 @@ methodmap SF2_ChaserTauntKillAction < NextBotAction
 
 	public static bool IsPossible(SF2_ChaserEntity actor)
 	{
-		SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
-		SF2BossProfileData data;
-		data = baseController.GetProfileData();
-		if (!data.AnimationData.HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_TauntKill]))
+		ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+		if (!data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_TauntKill]))
 		{
 			return false;
 		}
@@ -46,8 +45,7 @@ static int OnStart(SF2_ChaserTauntKillAction action, SF2_ChaserEntity actor, Nex
 	SF2NPC_Chaser controller = actor.Controller;
 	if (controller.IsValid())
 	{
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+		ChaserBossProfile data = controller.GetProfileDataEx();
 		if (data.NormalSoundHook)
 		{
 			actor.NextVoiceTime = 0.0;
@@ -62,8 +60,7 @@ static int OnResume(SF2_ChaserTauntKillAction action, SF2_ChaserEntity actor, Ne
 	SF2NPC_Chaser controller = actor.Controller;
 	if (controller.IsValid())
 	{
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+		ChaserBossProfile data = controller.GetProfileDataEx();
 		if (data.NormalSoundHook)
 		{
 			actor.NextVoiceTime = 0.0;

@@ -1,52 +1,5 @@
 #include <morecolors>
 
-enum
-{
-	SF2BossAttackType_Invalid = -1,
-	SF2BossAttackType_Melee = 0,
-	SF2BossAttackType_Ranged = 1,
-	SF2BossAttackType_Projectile = 2,
-	SF2BossAttackType_ExplosiveDance = 3,
-	SF2BossAttackType_LaserBeam = 4,
-	SF2BossAttackType_Custom = 5,
-	SF2BossAttackType_Tongue = 6
-};
-
-enum
-{
-	SF2BossProjectileType_Invalid = -1,
-	SF2BossProjectileType_Fireball = 0,
-	SF2BossProjectileType_Iceball = 1,
-	SF2BossProjectileType_Rocket = 2,
-	SF2BossProjectileType_Grenade = 3,
-	SF2BossProjectileType_SentryRocket = 4,
-	SF2BossProjectileType_Arrow = 5,
-	SF2BossProjectileType_Mangler = 6,
-	SF2BossProjectileType_Baseball = 7,
-	SF2BossProjectileType_Custom
-};
-
-enum
-{
-	SF2BossTrapType_Invalid = -1,
-	SF2BossTrapType_BearTrap = 0,
-	SF2BossTrapType_Custom
-};
-
-enum
-{
-	SF2DamageType_Invalid = -1,
-	SF2DamageType_Jarate = 0,
-	SF2DamageType_Milk,
-	SF2DamageType_Gas,
-	SF2DamageType_Mark,
-	SF2DamageType_Ignite,
-	SF2DamageType_Stun,
-	SF2DamageType_Bleed,
-	SF2DamageType_Smite,
-	SF2DamageType_Random
-}
-
 enum struct SF2BossProfileAttackGestureData // This one covers the gestures
 {
 	ArrayList Names;
@@ -374,7 +327,7 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 		this.Sounds.Destroy();
 	}
 
-	void Apply(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	void Apply(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = view_as<SF2_ChaserBossEntity>(-1))
 	{
 		if (!this.Enabled[difficulty])
 		{
@@ -600,7 +553,7 @@ enum struct SF2ChaserBossProfileShockwaveData
 		}
 	}
 
-	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = view_as<SF2_ChaserBossEntity>(-1))
 	{
 		if (this.DamageEffects == null)
 		{
@@ -1061,7 +1014,7 @@ enum struct SF2ChaserBossProfileAttackData
 		return strcmp(subType, this.SubType) == 0;
 	}
 
-	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = view_as<SF2_ChaserBossEntity>(-1))
 	{
 		if (this.DamageEffects == null)
 		{

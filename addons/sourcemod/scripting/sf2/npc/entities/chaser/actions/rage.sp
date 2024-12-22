@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -51,12 +52,12 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 {
 	actor.RageIndex++;
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	char name[64];
+	data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
+	ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
-	data = controller.GetProfileData();
-	SF2ChaserRageInfo rageInfo;
-	data.Rages.GetArray(actor.RageIndex, rageInfo, sizeof(rageInfo));
 	char animName[64];
 	float rate = 1.0, duration = 0.0, cycle = 0.0;
 	int difficulty = controller.Difficulty;
@@ -66,9 +67,9 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 
 	actor.IsRaging = true;
 
-	actor.OverrideInvincible = rageInfo.Invincible;
+	actor.OverrideInvincible = rageData.Invincible;
 
-	actor.PerformVoiceEx(_, _, rageInfo.StartSounds, true);
+	actor.PerformVoiceEx(_, _, rageData.GetStartSounds(), true);
 
 	actor.EndCloak();
 
@@ -77,7 +78,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 		actor.CancelAttack = true;
 	}
 
-	if (rageInfo.IsHealing)
+	if (rageData.IsHealing)
 	{
 		SetHealthBarColor(true);
 		action.IsHealing = true;
@@ -85,8 +86,13 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 		return SF2_ChaserFleeToHealAction();
 	}
 
-	if (rageInfo.Animations.GetAnimation("start", difficulty, animName, sizeof(animName), rate, duration, cycle))
+	ProfileAnimation section = rageData.GetAnimations().GetAnimation("start");
+	if (section != null)
 	{
+		section.GetAnimationName(difficulty, animName, sizeof(animName));
+		duration = section.GetDuration(difficulty);
+		rate = section.GetAnimationPlaybackRate(difficulty);
+		cycle = section.GetAnimationCycle(difficulty);
 		int sequence = LookupProfileAnimation(actor.index, animName);
 		if (sequence != -1)
 		{
@@ -124,11 +130,11 @@ static void OnEnd(SF2_ChaserRageAction action, SF2_ChaserEntity actor)
 	actor.IsGoingToHeal = false;
 	if (actor.Controller.IsValid())
 	{
-		SF2ChaserBossProfileData data;
-		data = actor.Controller.GetProfileData();
-		SF2ChaserRageInfo rageInfo;
-		data.Rages.GetArray(actor.RageIndex, rageInfo, sizeof(rageInfo));
-		if (rageInfo.IncreaseDifficulty)
+		ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+		char name[64];
+		data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
+		ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));
+		if (rageData.IncreaseDifficulty)
 		{
 			actor.Controller.Difficulty += 1;
 			if (actor.Controller.Difficulty > Difficulty_Apollyon)

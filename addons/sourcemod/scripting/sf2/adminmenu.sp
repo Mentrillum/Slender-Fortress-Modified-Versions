@@ -4,6 +4,7 @@
 #define _sf2_adminmenu_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static Handle g_TopMenu = null;
 static int g_PlayerAdminMenuTargetUserId[MAXTF2PLAYERS] = { -1, ... };
@@ -404,13 +405,12 @@ static void AddAllBossesToMenu(Menu menu)
 	for (int i = 0; i < bossList.Length; i++)
 	{
 		bossList.GetString(i, profile, sizeof(profile));
-		NPCGetBossName(_, displayName, sizeof(displayName), profile);
+		GetBossProfile(profile).GetName(1, displayName, sizeof(displayName));
 		if (displayName[0] == '\0')
 		{
 			strcopy(displayName, sizeof(displayName), profile);
 		}
-		SF2BossProfileData data;
-		g_BossProfileData.GetArray(profile, data, sizeof(data));
+		BaseBossProfile data = GetBossProfile(profile);
 		if (data.IsPvEBoss)
 		{
 			continue;
@@ -529,7 +529,7 @@ static int AddBossTargetsToMenu(Menu menuHandle)
 
 		NPCGetProfile(i, profile, sizeof(profile));
 
-		NPCGetBossName(_, buffer, sizeof(buffer), profile);
+		GetBossProfile(profile).GetName(1, buffer, sizeof(buffer));
 		if (buffer[0] == '\0')
 		{
 			strcopy(buffer, sizeof(buffer), profile);
@@ -547,10 +547,7 @@ static int AddBossTargetsToMenu(Menu menuHandle)
 			StrCat(display, sizeof(display), " (fake)");
 		}
 
-		SF2BossProfileData data;
-		data = NPCGetProfileData(i);
-
-		if (data.IsPvEBoss)
+		if (GetBossProfile(profile).IsPvEBoss)
 		{
 			continue;
 		}
@@ -726,7 +723,7 @@ static int AdminMenu_BossAttackWaiters(Menu menu, MenuAction action, int param1,
 			NPCGetProfile(index, profile, sizeof(profile));
 
 			char name[SF2_MAX_NAME_LENGTH];
-			NPCGetBossName(_, name, sizeof(name), profile);
+			GetBossProfile(profile).GetName(1, name, sizeof(name));
 			if (name[0] == '\0')
 			{
 				strcopy(name, sizeof(name), profile);
@@ -840,7 +837,7 @@ static int AdminMenu_BossTeleport(Menu menu, MenuAction action, int param1, int 
 			NPCGetProfile(index, profile, sizeof(profile));
 
 			char name[SF2_MAX_NAME_LENGTH];
-			NPCGetBossName(_, name, sizeof(name), profile);
+			GetBossProfile(profile).GetName(1, name, sizeof(name));
 			if (name[0] == '\0')
 			{
 				strcopy(name, sizeof(name), profile);
@@ -915,16 +912,10 @@ static bool DisplayOverrideBossAdminMenu(int client)
 		for (int i = 0; i < bossList.Length; i++)
 		{
 			bossList.GetString(i, profile, sizeof(profile));
-			NPCGetBossName(_, displayName, sizeof(displayName), profile);
+			GetBossProfile(profile).GetName(1, displayName, sizeof(displayName));
 			if (displayName[0] == '\0')
 			{
 				strcopy(displayName, sizeof(displayName), profile);
-			}
-			SF2BossProfileData data;
-			g_BossProfileData.GetArray(profile, data, sizeof(data));
-			if (data.IsPvEBoss)
-			{
-				continue;
 			}
 			menuHandle.AddItem(profile, displayName);
 		}
@@ -936,7 +927,7 @@ static bool DisplayOverrideBossAdminMenu(int client)
 
 		if (profileOverride[0] != '\0' && IsProfileValid(profileOverride))
 		{
-			NPCGetBossName(_, profileDisplayName, sizeof(profileDisplayName), profileOverride);
+			GetBossProfile(profileOverride).GetName(1, profileDisplayName, sizeof(profileDisplayName));
 
 			if (profileDisplayName[0] == '\0')
 			{
@@ -979,9 +970,8 @@ static int AdminMenu_OverrideBoss(Menu menu, MenuAction action, int param1, int 
 
 		g_BossProfileOverrideConVar.SetString(profile);
 
-		ArrayList arrayNames;
-		arrayNames = GetBossProfileNames(profile);
-		arrayNames.GetString(Difficulty_Normal, name, sizeof(name));
+		BaseBossProfile profileData = GetBossProfile(profile);
+		profileData.GetName(Difficulty_Normal, name, sizeof(name));
 
 		CPrintToChatAll("{royalblue}%t {collectors}%N {default}set the next boss to {valve}%s{default}.", "SF2 Prefix", param1, name);
 
@@ -1045,7 +1035,7 @@ static int AdminMenu_BossWanderToPos(Menu menu, MenuAction action, int param1, i
 			else
 			{
 				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(index);
-				switch (npc.Type)
+				switch (npc.GetProfileDataEx().Type)
 				{
 					case SF2BossType_Chaser:
 					{
@@ -1145,7 +1135,7 @@ static int AdminMenu_BossAlertToPos(Menu menu, MenuAction action, int param1, in
 			else
 			{
 				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(index);
-				switch (npc.Type)
+				switch (npc.GetProfileDataEx().Type)
 				{
 					case SF2BossType_Chaser:
 					{
@@ -1209,21 +1199,21 @@ static bool DisplayBossAttackAdminMenu(int client)
 				continue;
 			}
 
-			if (NPCGetType(i) != SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(i).GetProfileDataEx().Type != SF2BossType_Chaser)
 			{
 				continue;
 			}
 			SF2NPC_Chaser controller = SF2NPC_Chaser(i);
 
-			SF2ChaserBossProfileData chaserData;
-			chaserData = controller.GetProfileData();
-			if (chaserData.Attacks == null || chaserData.Attacks.Length == 0)
+			ChaserBossProfile chaserData = controller.GetProfileDataEx();
+			ProfileObject attacks = chaserData.GetSection("attacks");
+			if (attacks == null || attacks.Size == 0)
 			{
 				continue;
 			}
 
 			controller.GetProfile(profile, sizeof(profile));
-			controller.GetName(buffer, sizeof(buffer));
+			chaserData.GetName(1, buffer, sizeof(buffer));
 			if (buffer[0] == '\0')
 			{
 				strcopy(buffer, sizeof(buffer), profile);
@@ -1241,8 +1231,7 @@ static bool DisplayBossAttackAdminMenu(int client)
 				StrCat(display, sizeof(display), " (fake)");
 			}
 
-			SF2BossProfileData data;
-			data = NPCGetProfileData(i);
+			BaseBossProfile data = GetBossProfile(profile);
 
 			if (data.IsPvEBoss)
 			{
@@ -1332,14 +1321,17 @@ static bool DisplayBossAttackListAdminMenu(int client)
 		return false;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = g_SelectedBoss[client].GetProfileData();
+	ChaserBossProfile data = g_SelectedBoss[client].GetProfileDataEx();
+	ProfileObject attacks = data.GetSection("attacks");
 	Menu menuHandle = new Menu(AdminMenu_BossAttackList);
-	for (int i = 0; i < data.Attacks.Length; i++)
+	for (int i = 0; i < attacks.Size; i++)
 	{
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttackFromIndex(i, attackData);
-		menuHandle.AddItem(attackData.Name, attackData.Name);
+		char name[64];
+		data.GetAttackName(i, name, sizeof(name));
+		if (name[0] != '\0')
+		{
+			menuHandle.AddItem(name, name);
+		}
 	}
 
 	menuHandle.SetTitle("%t Make a boss use a attack\n \n", "SF2 Prefix");

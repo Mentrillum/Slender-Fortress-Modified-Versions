@@ -4,6 +4,7 @@
 #define _sf2_clients_think_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 void Hook_ClientPreThink(int client)
 {
@@ -12,220 +13,98 @@ void Hook_ClientPreThink(int client)
 		return;
 	}
 
-	ClientProcessFlashlightAngles(client);
-	ClientProcessStaticShake(client);
-	ClientProcessViewAngles(client);
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	float gameTime = GetGameTime();
 
-	if ((g_PlayerTrapped[client] || g_PlayerLatchedByTongue[client]) && !IsClientInGhostMode(client))
+	ClientProcessFlashlightAngles(player.index);
+	ClientProcessStaticShake(player.index);
+	ClientProcessViewAngles(player.index);
+
+	if ((player.IsTrapped || player.IsLatched) && !player.IsInGhostMode)
 	{
-		TF2Attrib_SetByName(client, "increased jump height", 0.0);
+		TF2Attrib_SetByName(player.index, "increased jump height", 0.0);
 	}
 	else
 	{
-		TF2Attrib_SetByName(client, "increased jump height", 1.0);
+		TF2Attrib_SetByName(player.index, "increased jump height", 1.0);
 	}
 
-	if (IsClientInGhostMode(client))
+	if (!player.IsEliminated && !player.HasEscaped)
 	{
-		SetEntityFlags(client, GetEntityFlags(client) ^ FL_EDICT_ALWAYS);
-		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 2.0);
-		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 520.0);
-		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
-		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
-		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
-		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-		if (IsClientInKart(client) || !TF2_IsPlayerInCondition(client, TFCond_Stealthed))
+		if (!IsRoundEnding() && !IsRoundInWarmup())
 		{
-			TF2_RemoveCondition(client,TFCond_HalloweenKart);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartDash);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartNoTurn);
-			TF2_RemoveCondition(client,TFCond_HalloweenKartCage);
-			TF2_RemoveCondition(client, TFCond_Taunting);
-			ClientHandleGhostMode(client, true);
-		}
-		TF2_RemoveCondition(client, TFCond_Taunting);
-	}
-	else if (!g_PlayerEliminated[client] || g_PlayerProxy[client])
-	{
-		if (!IsRoundEnding() && !IsRoundInWarmup() && !DidClientEscape(client))
-		{
-			SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
-			SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
-			SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
-			SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
+			player.SetPropFloat(Prop_Send, "m_flModelScale", 1.0);
+			player.SetPropFloat(Prop_Send, "m_flHeadScale", 1.0);
+			player.SetPropFloat(Prop_Send, "m_flTorsoScale", 1.0);
+			player.SetPropFloat(Prop_Send, "m_flHandScale", 1.0);
 
-			int roundState = view_as<int>(GameRules_GetRoundState());
-			TFClassType class = TF2_GetPlayerClass(client);
-
-			if (!g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Red)
+			if (player.InCondition(TFCond_Disguised))
 			{
-				if (TF2_IsPlayerInCondition(client, TFCond_Disguised))
-				{
-					TF2_RemoveCondition(client, TFCond_Disguised);
-				}
-
-				if (TF2_IsPlayerInCondition(client, TFCond_Taunting) && (g_PlayerTrapped[client] || g_PlayerLatchedByTongue[client]))
-				{
-					TF2_RemoveCondition(client, TFCond_Taunting);
-				}
-
-				if (TF2_IsPlayerInCondition(client, TFCond_Taunting) && class == TFClass_Soldier)
-				{
-					int weaponEnt = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-					if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
-					{
-						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if ((itemDefInt == 775 || itemDefInt == 128) && GetEntProp(client, Prop_Send, "m_iTauntIndex") == 0)
-						{
-							TF2_RemoveCondition(client, TFCond_Taunting); //Stop suiciding...
-						}
-					}
-				}
-
-				if (roundState == 4)
-				{
-
-				}
+				player.ChangeCondition(TFCond_Disguised, true);
 			}
-			else if (g_PlayerProxy[client] && GetClientTeam(client) == TFTeam_Blue)
+
+			if (player.InCondition(TFCond_Taunting) && (player.IsTrapped || player.IsLatched))
 			{
-				int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
+				player.ChangeCondition(TFCond_Taunting, true);
+			}
 
-				float maxSpeed;
-				bool override;
-
-				if (master != -1)
+			if (player.InCondition(TFCond_Taunting) && (player.IsTrapped || player.IsLatched))
+			{
+				int weaponEnt = player.GetWeaponSlot(TFWeaponSlot_Melee);
+				if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
 				{
-					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-					NPCGetProfile(master, profile, sizeof(profile));
-
-					override = GetBossProfileProxyOverrideMaxSpeed(profile);
-					if (override)
+					int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+					if ((itemDefInt == 775 || itemDefInt == 128) && GetEntProp(client, Prop_Send, "m_iTauntIndex") == 0)
 					{
-						int difficulty = GetLocalGlobalDifficulty(master);
-
-						maxSpeed = GetBossProfileProxyMaxSpeed(profile, difficulty);
-					}
-				}
-
-				bool speedup = TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly);
-
-				if (override)
-				{
-					if (speedup || g_InProxySurvivalRageMode)
-					{
-						float rageSpeed = maxSpeed + 30.0;
-						SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", rageSpeed);
-					}
-					else
-					{
-						SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", maxSpeed);
-					}
-				}
-				else
-				{
-					switch (class)
-					{
-						case TFClass_Scout:
-						{
-							if (speedup || g_InProxySurvivalRageMode)
-							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 390.0);
-							}
-							else
-							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
-							}
-						}
-						case TFClass_Medic:
-						{
-							if (speedup || g_InProxySurvivalRageMode)
-							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 370.0);
-							}
-							else
-							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
-							}
-						}
-						case TFClass_Spy:
-						{
-							if (speedup || g_InProxySurvivalRageMode)
-							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 370.0);
-							}
-							else
-							{
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
-							}
-						}
-						default:
-						{
-							if (g_InProxySurvivalRageMode)
-							{
-								float rageSpeed = ClientGetDefaultSprintSpeed(client) + 30.0;
-								SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", rageSpeed);
-							}
-						}
+						player.ChangeCondition(TFCond_Taunting, true); //Stop suiciding...
 					}
 				}
 			}
 		}
-	}
-	if (g_PlayerEliminated[client] && (IsClientInPvP(client) || IsClientInPvE(client)))
-	{
-		SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.0);
-		SetEntPropFloat(client, Prop_Send, "m_flHeadScale", 1.0);
-		SetEntPropFloat(client, Prop_Send, "m_flTorsoScale", 1.0);
-		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
-		if (IsClientInKart(client))
+
+		if (gameTime >= g_PlayerStressNextUpdateTime[player.index])
 		{
-			TF2_RemoveCondition(client, TFCond_HalloweenKart);
-			TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
-			TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
-			TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
+			g_PlayerStressNextUpdateTime[player.index] = gameTime + 0.33;
+			ClientAddStress(player.index, -0.01);
+
+			#if defined DEBUG
+			SendDebugMessageToPlayer(player.index, DEBUG_PLAYER_STRESS, 1, "g_PlayerStressAmount[%d]: %0.1f", player.index, g_PlayerStressAmount[player.index]);
+			#endif
 		}
 	}
-	if (IsRoundInWarmup() || (IsRoundInIntro() && !g_PlayerEliminated[client]) || IsRoundEnding()) //I told you, stop breaking my plugin
+	if (player.IsEliminated && (player.IsInPvP || player.IsInPvE))
 	{
-		if (IsClientInKart(client))
+		player.SetPropFloat(Prop_Send, "m_flModelScale", 1.0);
+		player.SetPropFloat(Prop_Send, "m_flHeadScale", 1.0);
+		player.SetPropFloat(Prop_Send, "m_flTorsoScale", 1.0);
+		player.SetPropFloat(Prop_Send, "m_flHandScale", 1.0);
+		if (IsClientInKart(player.index))
 		{
-			TF2_RemoveCondition(client, TFCond_HalloweenKart);
-			TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
-			TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
-			TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
+			player.ChangeCondition(TFCond_HalloweenKart, true);
+			player.ChangeCondition(TFCond_HalloweenKartDash, true);
+			player.ChangeCondition(TFCond_HalloweenKartNoTurn, true);
+			player.ChangeCondition(TFCond_HalloweenKartCage, true);
+		}
+	}
+	if (IsRoundInWarmup() || (IsRoundInIntro() && !player.IsEliminated) || IsRoundEnding()) //I told you, stop breaking my plugin
+	{
+		if (IsClientInKart(player.index))
+		{
+			player.ChangeCondition(TFCond_HalloweenKart, true);
+			player.ChangeCondition(TFCond_HalloweenKartDash, true);
+			player.ChangeCondition(TFCond_HalloweenKartNoTurn, true);
+			player.ChangeCondition(TFCond_HalloweenKartCage, true);
 		}
 	}
 
-	// Calculate player stress levels.
-	if (!g_PlayerEliminated[client] && !DidClientEscape(client) && GetGameTime() >= g_PlayerStressNextUpdateTime[client])
-	{
-		g_PlayerStressNextUpdateTime[client] = GetGameTime() + 0.33;
-		ClientAddStress(client, -0.01);
-
-		#if defined DEBUG
-		SendDebugMessageToPlayer(client, DEBUG_PLAYER_STRESS, 1, "g_PlayerStressAmount[%d]: %0.1f", client, g_PlayerStressAmount[client]);
-		#endif
-	}
-
-	if (g_LastVisibilityProcess[client] + 0.30 >= GetGameTime())
+	if (g_LastVisibilityProcess[player.index] + 0.30 >= GetGameTime())
 	{
 		return;
 	}
 
-	/*if (!g_PlayerEliminated[client])
-	{
-		CNavArea targetArea = SDK_GetLastKnownArea(client);//SDK_GetLastKnownArea(client) =/= g_lastNavArea[client], SDK_GetLastKnownArea() retrives the nav area stored by the server
-		if (targetArea != INVALID_NAV_AREA)
-		{
-			ClientNavAreaUpdate(client, g_lastNavArea[client], targetArea);
-			g_lastNavArea[client] = targetArea;
-		}
-	}*/
+	g_LastVisibilityProcess[player.index] = GetGameTime();
 
-	g_LastVisibilityProcess[client] = GetGameTime();
-
-	ClientProcessVisibility(client);
+	ClientProcessVisibility(player.index);
 }
 
 Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -263,6 +142,7 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 	Call_PushCellRef(inflictor);
 	Call_PushFloatRef(damage2);
 	Call_PushCellRef(damagetype);
+	Call_PushCell(damagecustom);
 	Call_Finish(action);
 
 	if (action == Plugin_Changed)
@@ -272,7 +152,6 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 	}
 
 	TFClassType class = victimPlayer.Class;
-	int classToInt = view_as<int>(class);
 
 	if (IsRoundInWarmup() && IsValidClient(attacker))
 	{
@@ -287,7 +166,7 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 		}
 	}
 
-	if (IsClientInKart(victim) && (attacker == -1 || inflictor == -1))
+	if (IsClientInKart(victimPlayer.index) && (attacker == -1 || inflictor == -1))
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -299,19 +178,19 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 		GetEdictClassname(inflictor, inflictorClass, sizeof(inflictorClass));
 	}
 
-	if (IsValidClient(attacker) && IsValidClient(victim) && g_PlayerProxy[attacker] && GetClientTeam(victim) == TFTeam_Red && TF2_IsPlayerInCondition(victim, TFCond_Gas))
+	if (IsValidClient(attacker) && victimPlayer.IsValid && g_PlayerProxy[attacker] && victimPlayer.Team == TFTeam_Red && victimPlayer.InCondition(TFCond_Gas))
 	{
-		TF2_IgnitePlayer(victim, victim);
-		TF2_RemoveCondition(victim, TFCond_Gas);
+		victimPlayer.Ignite(true);
+		victimPlayer.ChangeCondition(TFCond_Gas, true);
 	}
 
-	if (TF2_IsPlayerInCondition(victim, TFCond_Gas) && SF2_ChaserEntity(attacker).IsValid())
+	if (victimPlayer.InCondition(TFCond_Gas) && SF2_ChaserEntity(attacker).IsValid())
 	{
-		TF2_IgnitePlayer(victim, victim);
-		TF2_RemoveCondition(victim, TFCond_Gas);
+		victimPlayer.Ignite(true);
+		victimPlayer.ChangeCondition(TFCond_Gas, true);
 	}
 
-	if (IsValidClient(attacker) && IsValidClient(victim) && (IsClientInPvP(victim) || IsClientInPvE(victim)) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && victim != attacker)
+	if (IsValidClient(attacker) && victimPlayer.IsValid && (victimPlayer.IsInPvP || victimPlayer.IsInPvE) && victimPlayer.Team == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && victim != attacker)
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -362,7 +241,7 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 			int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
 			float zVelocity[3];
 			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", zVelocity);
-			if (itemDefInt == 416 && zVelocity[2] < 0.0 && weaponEnt == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon")) //A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
+			if (itemDefInt == 416 && zVelocity[2] < 0.0 && weaponEnt == GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon")) // A soldier has the market gardener and is currently falling down, like Minecraft with it's critical hits.
 			{
 				damagetype |= DMG_ACID;
 			}
@@ -502,141 +381,6 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 					}
 				}
 			}
-			else if (g_PlayerProxy[victim] || g_PlayerProxy[attacker])
-			{
-				if (g_PlayerEliminated[attacker] == g_PlayerEliminated[victim])
-				{
-					damage = 0.0;
-					return Plugin_Changed;
-				}
-
-				if (attacker == victim)//Don't allow proxy to self regenerate control.
-				{
-					return Plugin_Continue;
-				}
-
-				if (g_PlayerProxy[attacker])
-				{
-					int maxHealth = SDKCall(g_SDKGetMaxHealth, victim);
-					int master = NPCGetFromUniqueID(g_PlayerProxyMaster[attacker]);
-					if (master != -1)
-					{
-						int difficulty = GetLocalGlobalDifficulty(master);
-						if (damagecustom == TF_CUSTOM_TAUNT_GRAND_SLAM ||
-							damagecustom == TF_CUSTOM_TAUNT_FENCING ||
-							damagecustom == TF_CUSTOM_TAUNT_ARROW_STAB ||
-							damagecustom == TF_CUSTOM_TAUNT_GRENADE ||
-							damagecustom == TF_CUSTOM_TAUNT_BARBARIAN_SWING ||
-							damagecustom == TF_CUSTOM_TAUNT_ENGINEER_ARM ||
-							damagecustom == TF_CUSTOM_TAUNT_ARMAGEDDON)
-						{
-							if (damage >= float(maxHealth))
-							{
-								damage = float(maxHealth) * 0.5;
-							}
-							else
-							{
-								damage = 0.0;
-							}
-						}
-						else if (damagecustom == TF_CUSTOM_BACKSTAB) // Modify backstab damage.
-						{
-							damage = float(maxHealth) * g_SlenderProxyDamageVsBackstab[master][difficulty];
-							if (damagetype & DMG_ACID)
-							{
-								damage /= 2.0;
-							}
-						}
-
-						g_PlayerProxyControl[attacker] += g_SlenderProxyControlGainHitEnemy[master][difficulty];
-						if (g_PlayerProxyControl[attacker] > 100)
-						{
-							g_PlayerProxyControl[attacker] = 100;
-						}
-
-						float originalPercentage = g_SlenderProxyDamageVsEnemy[master][difficulty];
-						float additionPercentage = 0.15;
-						if (!IsClassConfigsValid())
-						{
-							if (class == TFClass_Medic)
-							{
-								damage *= (originalPercentage + additionPercentage);
-							}
-							else
-							{
-								damage *= originalPercentage;
-							}
-						}
-						else
-						{
-							damage *= originalPercentage + g_ClassProxyDamageVulnerability[classToInt];
-						}
-					}
-					return Plugin_Changed;
-				}
-				else if (g_PlayerProxy[victim])
-				{
-					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-					int master = NPCGetFromUniqueID(g_PlayerProxyMaster[victim]);
-					if (master != -1)
-					{
-						NPCGetProfile(master, profile, sizeof(profile));
-						int difficulty = GetLocalGlobalDifficulty(master);
-						g_PlayerProxyControl[attacker] += g_SlenderProxyControlGainHitByEnemy[master][difficulty];
-						if (g_PlayerProxyControl[attacker] > 100)
-						{
-							g_PlayerProxyControl[attacker] = 100;
-						}
-
-						damage *= g_SlenderProxyDamageVsSelf[master][difficulty];
-					}
-					if (TF2_IsPlayerInCondition(victim, view_as<TFCond>(87)))
-					{
-						damage = 0.0;
-					}
-					if (damage * (damagetype & DMG_CRIT ? 3.0 : 1.0) >= float(GetClientHealth(victim)) && !TF2_IsPlayerInCondition(victim, view_as<TFCond>(87)))//The proxy is about to die
-					{
-						char buffer[PLATFORM_MAX_PATH];
-						int classIndex = view_as<int>(TF2_GetPlayerClass(victim));
-						ArrayList deathAnims = GetBossProfileProxyDeathAnimations(profile);
-						if (deathAnims != null)
-						{
-							deathAnims.GetString(classIndex, buffer, sizeof(buffer));
-							if (buffer[0] == '\0')
-							{
-								deathAnims.GetString(0, buffer, sizeof(buffer));
-							}
-							if (buffer[0] != '\0')
-							{
-								g_ClientMaxFrameDeathAnim[victim]=GetBossProfileProxyDeathAnimFrames(profile, classIndex);
-								if (g_ClientMaxFrameDeathAnim[victim] == 0)
-								{
-									g_ClientMaxFrameDeathAnim[victim] = GetBossProfileProxyDeathAnimFrames(profile, 0);
-								}
-								if (g_ClientMaxFrameDeathAnim[victim] > 0)
-								{
-									// Cancel out any other taunts.
-									if (TF2_IsPlayerInCondition(victim, TFCond_Taunting))
-									{
-										TF2_RemoveCondition(victim, TFCond_Taunting);
-									}
-									//The model has a death anim play it.
-									SDK_PlaySpecificSequence(victim,buffer);
-									g_ClientFrame[victim] = 0;
-									RequestFrame(ProxyDeathAnimation,victim);
-									TF2_AddCondition(victim, view_as<TFCond>(87), 5.0);
-									//Prevent death, and show the damage to the attacker.
-									TF2_AddCondition(victim, view_as<TFCond>(70), 0.5);
-									return Plugin_Changed;
-								}
-							}
-						}
-
-						//the player has no death anim leave him die.
-					}
-					return Plugin_Changed;
-				}
-			}
 			else
 			{
 				damage = 0.0;
@@ -650,12 +394,6 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 				damage = 0.0;
 				return Plugin_Changed;
 			}
-		}
-
-		if (IsClientInGhostMode(victim))
-		{
-			damage = 0.0;
-			return Plugin_Changed;
 		}
 	}
 
@@ -1061,7 +799,6 @@ Action Timer_ClientAverageUpdate(Handle timer)
 			}
 		}
 		player.UpdateListeningFlags();
-		player.UpdateMusicSystem();
 
 		Call_StartForward(g_OnPlayerAverageUpdatePFwd);
 		Call_PushCell(player);

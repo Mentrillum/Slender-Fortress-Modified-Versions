@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include "actions/mainlayer.sp"
 #include "actions/idle.sp"
@@ -114,26 +115,27 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		controller.GetProfile(profile, sizeof(profile));
 		statue.Controller = view_as<SF2NPC_Statue>(controller);
 
-		SF2BossProfileData originalData;
-		originalData = view_as<SF2NPC_BaseNPC>(statue.Controller).GetProfileData();
+		StatueBossProfile profileData = statue.Controller.GetProfileDataEx();
+		int difficulty = g_DifficultyConVar.IntValue;
 
 		char buffer[PLATFORM_MAX_PATH];
 
 		GetSlenderModel(controller.Index, _, buffer, sizeof(buffer));
 		statue.SetModel(buffer);
-		statue.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[controller.Index]));
-		statue.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[controller.Index]));
-		statue.SetRenderColor(g_SlenderRenderColor[controller.Index][0], g_SlenderRenderColor[controller.Index][1],
-								g_SlenderRenderColor[controller.Index][2], g_SlenderRenderColor[controller.Index][3]);
+		statue.SetRenderMode(profileData.GetRenderMode(difficulty));
+		statue.SetRenderFx(profileData.GetRenderFx(difficulty));
+		int color[4];
+		profileData.GetRenderColor(difficulty, color);
+		statue.SetRenderColor(color[0], color[1], color[2], color[3]);
 
 		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 		{
-			float scaleModel = controller.ModelScale * 0.5;
+			float scaleModel = profileData.ModelScale * 0.5;
 			statue.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
 		}
 		else
 		{
-			statue.SetPropFloat(Prop_Send, "m_flModelScale", controller.ModelScale);
+			statue.SetPropFloat(Prop_Send, "m_flModelScale", profileData.ModelScale);
 		}
 
 		CBaseNPC npc = TheNPCs.FindNPCByEntIndex(statue.index);
@@ -144,7 +146,9 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		npc.flGravity = 800.0;
 		npc.flDeathDropHeight = 99999.0;
 		npc.flJumpHeight = 512.0;
-		npc.flMaxYawRate = originalData.TurnRate;
+		npc.flFrictionForward = profileData.GetForwardFriction(difficulty);
+		npc.flFrictionSideways = profileData.GetSidewaysFriction(difficulty);
+		npc.flMaxYawRate = profileData.TurnRate;
 		loco.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
 		loco.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
@@ -216,7 +220,7 @@ static void ThinkPost(int entIndex)
 
 	ProcessSpeed(statue);
 
-	if (NPCGetCustomOutlinesState(statue.Controller.Index) && NPCGetRainbowOutlineState(statue.Controller.Index))
+	if (statue.GetProfileData().CustomOutlines && statue.GetProfileData().RainbowOutline)
 	{
 		statue.ProcessRainbowOutline();
 	}
@@ -227,7 +231,7 @@ static void ThinkPost(int entIndex)
 	}
 
 	statue.InterruptConditions = 0;
-	statue.SetNextThink(GetGameTime());
+	statue.SetNextThink(GetGameTime() + statue.Controller.GetProfileDataEx().TickRate);
 }
 
 static MRESReturn UpdateTransmitState(int entIndex, DHookReturn ret, DHookParam params)
@@ -261,10 +265,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 		return CBaseEntity(-1);
 	}
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	SF2StatueBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	StatueBossProfile data = controller.GetProfileDataEx();
 	int difficulty = controller.Difficulty;
 
 	float playerDists[MAXTF2PLAYERS];
@@ -288,7 +289,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 	}
 
 	int bestNewTarget = oldTarget;
-	float searchRange = originalData.SearchRange[difficulty];
+	float searchRange = data.GetSearchRange(difficulty);
 	float bestNewTargetDist = Pow(searchRange, 2.0);
 	if (IsValidEntity(bestNewTarget))
 	{
@@ -337,7 +338,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 
 		bool isVisible = false;
 		int traceHitEntity;
-		TR_TraceHullFilter(traceStartPos,
+		Handle trace = TR_TraceHullFilterEx(traceStartPos,
 		traceEndPos,
 		traceMins,
 		traceMaxs,
@@ -345,13 +346,15 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 		TraceRayBossVisibility,
 		statue.index);
 
-		isVisible = !TR_DidHit();
-		traceHitEntity = TR_GetEntityIndex();
+		isVisible = !TR_DidHit(trace);
+		traceHitEntity = TR_GetEntityIndex(trace);
 
 		if (!isVisible && traceHitEntity == client.index)
 		{
 			isVisible = true;
 		}
+
+		delete trace;
 
 		if (isVisible)
 		{
@@ -373,7 +376,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 			}
 		}
 
-		if (dist > Pow(originalData.SearchRange[difficulty], 2.0))
+		if (dist > Pow(data.GetSearchRange(difficulty), 2.0))
 		{
 			isVisible = false;
 		}
@@ -449,7 +452,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 				delete arrayRaidTargets;
 			}
 		}
-		statue.CurrentChaseDuration = data.ChaseDuration[difficulty];
+		statue.CurrentChaseDuration = data.GetChaseDuration(difficulty);
 	}
 
 	if (bestNewTarget != INVALID_ENT_REFERENCE)
@@ -464,28 +467,26 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 static void ProcessSpeed(SF2_StatueEntity statue)
 {
 	SF2NPC_Statue controller = statue.Controller;
-	SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(controller);
 	int difficulty = controller.Difficulty;
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(statue.index);
-	SF2BossProfileData originalData;
-	originalData = baseController.GetProfileData();
+	StatueBossProfile data = controller.GetProfileDataEx();
 
 	float speed, acceleration;
 
-	acceleration = originalData.Acceleration[difficulty];
+	acceleration = data.GetAcceleration(difficulty);
 	if (controller.HasAttribute(SF2Attribute_ReducedAccelerationOnLook) && controller.CanBeSeen(_, true))
 	{
 		acceleration *= controller.GetAttributeValue(SF2Attribute_ReducedAccelerationOnLook);
 	}
 	acceleration += controller.GetAddAcceleration();
 
-	speed = originalData.RunSpeed[difficulty] * 10.0; // Backwards compatibility
+	speed = data.GetRunSpeed(difficulty) * 10.0; // Backwards compatibility
 	if (controller.HasAttribute(SF2Attribute_ReducedSpeedOnLook) && controller.CanBeSeen(_, true))
 	{
 		speed *= controller.GetAttributeValue(SF2Attribute_ReducedSpeedOnLook);
 	}
 
-	speed += baseController.GetAddSpeed();
+	speed += controller.GetAddSpeed();
 
 	float forwardSpeed = speed;
 	Action action = Plugin_Continue;
@@ -517,14 +518,14 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	if (SF_IsSlaughterRunMap())
 	{
 		float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
-		if (!originalData.SlaughterRunData.CustomMinimumSpeed[difficulty] && speed < slaughterSpeed)
+		if ((data.GetSlaughterRunData() == null || data.GetSlaughterRunData().ShouldUseCustomMinSpeed(difficulty)) && speed < slaughterSpeed)
 		{
 			speed = slaughterSpeed;
 		}
 		acceleration += 10000.0;
 	}
 
-	if ((!originalData.IsPvEBoss && IsBeatBoxBeating(2)) || statue.IsKillingSomeone || !statue.IsMoving)
+	if ((!data.IsPvEBoss && IsBeatBoxBeating(2)) || statue.IsKillingSomeone || !statue.IsMoving)
 	{
 		speed = 0.0;
 	}
@@ -575,8 +576,5 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 
 	SF2_StatueEntity bossEntity = SF2_StatueEntity(entity);
 
-	SF2StatueBossProfileData data;
-	data = bossEntity.Controller.GetProfileData();
-	SetNativeArray(2, data, sizeof(data));
-	return 0;
+	return bossEntity.Controller.GetProfileDataEx();
 }

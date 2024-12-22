@@ -5,6 +5,7 @@
 #define _sf2_menus
 
 #pragma semicolon 1
+#pragma newdecls required
 
 Menu g_MenuMain;
 Menu g_MenuVoteDifficulty;
@@ -1962,14 +1963,13 @@ void DisplayBossList(int client)
 		for (int i = 0; i < bossList.Length; i++)
 		{
 			bossList.GetString(i, profile, sizeof(profile));
-			NPCGetBossName(_, displayName, sizeof(displayName), profile);
+			BaseBossProfile data = GetBossProfile(profile);
+			data.GetName(1, displayName, sizeof(displayName));
 			if (displayName[0] == '\0')
 			{
 				strcopy(displayName, sizeof(displayName), profile);
 			}
-			SF2BossProfileData data;
-			g_BossProfileData.GetArray(profile, data, sizeof(data));
-			if (data.Description.Hidden)
+			if (data.GetDescription().Hidden)
 			{
 				continue;
 			}
@@ -2001,29 +2001,40 @@ static int Menu_BossList(Menu menu, MenuAction action, int param1, int param2)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			menu.GetItem(param2, profile, sizeof(profile));
-			SF2BossProfileData data;
-			g_BossProfileData.GetArray(profile, data, sizeof(data));
+			BaseBossProfile data = GetBossProfile(profile);
 			Menu newMenu = new Menu(Menu_BossDisplay);
-			char buffer[256], buffer2[128];
-			data.Names.GetString(Difficulty_Normal, buffer2, sizeof(buffer2));
+			char buffer[256], buffer2[128], buffer3[128], def[32];
+			data.GetName(Difficulty_Normal, buffer2, sizeof(buffer2));
 			FormatEx(buffer, sizeof(buffer), "%t %s\n \n", "SF2 Prefix", buffer2);
-			FormatEx(buffer2, sizeof(buffer2), "Type: %s\n \n", data.Description.Type);
-			StrCat(buffer, sizeof(buffer), buffer2);
-			SF2ChaserBossProfileData chaserData;
-			if (g_ChaserBossProfileData.GetArray(profile, chaserData, sizeof(chaserData)))
+			switch (data.Type)
 			{
-				FormatEx(buffer2, sizeof(buffer2), "Walk speed: %s\n", ConvertWalkSpeedToDescription(chaserData.WalkSpeed[Difficulty_Normal]));
+				case SF2BossType_Chaser:
+				{
+					def = "Chaser";
+				}
+
+				case SF2BossType_Statue:
+				{
+					def = "Statue";
+				}
+			}
+			data.GetDescription().GetType(buffer3, sizeof(buffer3), def);
+			FormatEx(buffer2, sizeof(buffer2), "Type: %s\n \n", buffer3);
+			StrCat(buffer, sizeof(buffer), buffer2);
+			if (data.Type == SF2BossType_Chaser)
+			{
+				FormatEx(buffer2, sizeof(buffer2), "Walk speed: %s\n", ConvertWalkSpeedToDescription(view_as<ChaserBossProfile>(data).GetWalkSpeed(Difficulty_Normal)));
 			}
 			StrCat(buffer, sizeof(buffer), buffer2);
-			float speed = data.RunSpeed[Difficulty_Normal];
-			SF2StatueBossProfileData statueData;
-			if (g_StatueBossProfileData.GetArray(profile, statueData, sizeof(statueData)))
+			float speed = data.GetRunSpeed(Difficulty_Normal);
+			if (data.Type == SF2BossType_Statue)
 			{
 				speed *= 10.0;
 			}
 			FormatEx(buffer2, sizeof(buffer2), "Run speed: %s\n \n", ConvertRunSpeedToDescription(speed));
 			StrCat(buffer, sizeof(buffer), buffer2);
-			FormatEx(buffer2, sizeof(buffer2), "%s", data.Description.Information);
+			data.GetDescription().GetDescription(buffer3, sizeof(buffer3));
+			FormatEx(buffer2, sizeof(buffer2), "%s", buffer3);
 			ReplaceString(buffer2, sizeof(buffer2), "\\n", "\n");
 			StrCat(buffer, sizeof(buffer), buffer2);
 			newMenu.SetTitle(buffer);

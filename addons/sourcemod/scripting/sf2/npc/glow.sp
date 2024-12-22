@@ -1,3 +1,6 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 static const int g_DefaultColor[4] = { 150, 0, 255, 255 };
 
 void SetupNPCGlows()
@@ -45,8 +48,7 @@ static void OnSpecialRoundStart(int specialRound)
 
 static void OnBossSpawn(SF2NPC_BaseNPC controller)
 {
-	SF2BossProfileData data;
-	data = controller.GetProfileData();
+	BaseBossProfile data = controller.GetProfileDataEx();
 	if (data.IsPvEBoss)
 	{
 		return;
@@ -56,7 +58,7 @@ static void OnBossSpawn(SF2NPC_BaseNPC controller)
 	color = g_DefaultColor;
 	if (data.CustomOutlines)
 	{
-		color = data.OutlineColor;
+		data.GetOutlineColor(color);
 	}
 	CreateGlowEntity(controller.EntIndex, color);
 	UpdateVisibility(controller);

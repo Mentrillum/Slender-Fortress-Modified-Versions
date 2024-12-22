@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 // Blink data.
 static Handle g_PlayerBlinkTimer[MAXTF2PLAYERS] = { null, ... };
@@ -263,14 +264,16 @@ static float ClientGetBlinkRate(int client)
 			continue;
 		}
 
+		BaseBossProfile profileData = SF2NPC_BaseNPC(i).GetProfileDataEx();
+
 		if (g_PlayerSeesSlender[client][i])
 		{
-			value *= NPCGetBlinkLookRate(i);
+			value *= profileData.BlinkLookRate;
 		}
 
 		else if (g_PlayerStaticMode[client][i] == Static_Increase)
 		{
-			value *= NPCGetBlinkStaticRate(i);
+			value *= profileData.BlinkStaticRate;
 		}
 	}
 

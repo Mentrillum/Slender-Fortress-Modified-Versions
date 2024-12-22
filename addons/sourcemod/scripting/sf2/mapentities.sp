@@ -4,6 +4,7 @@
 #define _sf2_mapentities_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 //#define DEBUG_MAPENTITIES
 

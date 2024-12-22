@@ -4,6 +4,7 @@
 #define _sf2_client_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
@@ -37,7 +38,7 @@ int g_ClientFrame[MAXTF2PLAYERS];
 #include "client/sprint.sp"
 #include "client/breathing.sp"
 #include "client/ghostmode.sp"
-#include "client/music.sp"
+#include "client/new_music.sp"
 #include "client/proxy.sp"
 
 void Client_SetupAPI()
@@ -454,12 +455,13 @@ void ClientProcessVisibility(int client)
 
 		NPCGetProfile(i, profile, sizeof(profile));
 
+		BaseBossProfile profileData = GetBossProfile(profile);
+
 		int boss = NPCGetEntIndex(i);
 
 		if (boss && boss != INVALID_ENT_REFERENCE)
 		{
 			CBaseEntity(boss).GetAbsOrigin(slenderPos);
-			NPCGetEyePosition(i, slenderEyePos);
 
 			float slenderMins[3], slenderMaxs[3];
 			GetEntPropVector(boss, Prop_Send, "m_vecMins", slenderMins);
@@ -479,6 +481,7 @@ void ClientProcessVisibility(int client)
 			if (boss && boss != INVALID_ENT_REFERENCE)
 			{
 				int copyMaster = NPCGetFromUniqueID(g_SlenderCopyMaster[i]);
+				NPCGetEyePosition(i, slenderEyePos);
 
 				if (!IsPointVisibleToPlayer(client, slenderEyePos, true, SlenderUsesBlink(i)))
 				{
@@ -489,7 +492,7 @@ void ClientProcessVisibility(int client)
 					g_PlayerSeesSlender[client][i] = true;
 				}
 
-				if ((GetGameTime() - g_PlayerSeesSlenderLastTime[client][i]) > g_SlenderStaticGraceTime[i][difficulty] ||
+				if ((GetGameTime() - g_PlayerSeesSlenderLastTime[client][i]) > profileData.GetStaticOnLookGraceTime(difficulty) ||
 					(oldStaticMode[i] == Static_Increase && g_PlayerStaticAmount[client] > 0.1))
 				{
 					if ((NPCGetFlags(i) & SFF_STATICONLOOK) &&
@@ -505,7 +508,7 @@ void ClientProcessVisibility(int client)
 						}
 					}
 					else if ((NPCGetFlags(i) & SFF_STATICONRADIUS) &&
-						GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(g_SlenderStaticRadius[i][difficulty]))
+						GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(profileData.GetStaticRadius(difficulty)))
 					{
 						bool noObstacles = IsPointVisibleToPlayer(client, slenderEyePos, false, false);
 						if (!noObstacles)
@@ -542,6 +545,7 @@ void ClientProcessVisibility(int client)
 		}
 
 		NPCGetProfile(master, masterProfile, sizeof(masterProfile));
+		BaseBossProfile masterData = GetBossProfile(masterProfile);
 
 		// Boss visiblity.
 		if (g_PlayerSeesSlender[client][i] && !wasSeeingSlender[i])
@@ -550,39 +554,36 @@ void ClientProcessVisibility(int client)
 
 			if (GetGameTime() >= g_PlayerScareNextTime[client][master])
 			{
-				if (GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(NPCGetScareRadius(i)))
+				if (GetVectorSquareMagnitude(myPos, slenderPos) <= SquareFloat(masterData.ScareRadius))
 				{
 					ClientPerformScare(client, master);
 
-					if (NPCGetSpeedBoostOnScare(master))
+					if (masterData.ScareSpeedBoostDuration > 0.0)
 					{
-						TF2_AddCondition(client, TFCond_SpeedBuffAlly, NPCGetScareSpeedBoostDuration(master), client);
+						TF2_AddCondition(client, TFCond_SpeedBuffAlly, masterData.ScareSpeedBoostDuration, client);
 					}
 
-					if (NPCGetScareReactionState(master))
+					switch (masterData.ScareReactionType)
 					{
-						switch (NPCGetScareReactionType(master))
+						case 1:
 						{
-							case 1:
-							{
-								SpeakResponseConcept(client, "TLK_PLAYER_SPELL_METEOR_SWARM");
-							}
-							case 2:
-							{
-								SpeakResponseConcept(client, "HalloweenLongFall");
-							}
-							case 3:
-							{
-								char scareReactionCustom[PLATFORM_MAX_PATH];
-								GetBossProfileScareReactionCustom(masterProfile, scareReactionCustom, sizeof(scareReactionCustom));
-								SpeakResponseConcept(client, scareReactionCustom);
-							}
+							SpeakResponseConcept(client, "TLK_PLAYER_SPELL_METEOR_SWARM");
+						}
+						case 2:
+						{
+							SpeakResponseConcept(client, "HalloweenLongFall");
+						}
+						case 3:
+						{
+							char scareReactionCustom[PLATFORM_MAX_PATH];
+							masterData.GetCustomScareReaction(scareReactionCustom, sizeof(scareReactionCustom));
+							SpeakResponseConcept(client, scareReactionCustom);
 						}
 					}
 
-					if (NPCGetScareReplenishSprintState(master))
+					if (masterData.ScareReplenishSprintAmount > 0.0)
 					{
-						SF2_BasePlayer(client).Stamina += NPCGetScareReplenishSprintAmount(master);
+						SF2_BasePlayer(client).Stamina += masterData.ScareReplenishSprintAmount;
 					}
 
 					float value = NPCGetAttributeValue(master, SF2Attribute_IgnitePlayerOnScare);
@@ -613,19 +614,18 @@ void ClientProcessVisibility(int client)
 						}
 					}
 
-					if (NPCGetJumpscareOnScare(master))
+					if (masterData.JumpscareOnScare)
 					{
-						float jumpScareDuration = NPCGetJumpscareDuration(master, difficulty);
-						ClientDoJumpScare(client, master, jumpScareDuration);
+						ClientDoJumpScare(client, master, masterData.GetJumpscareDuration(difficulty));
 					}
 				}
 				else
 				{
-					g_PlayerScareNextTime[client][master] = GetGameTime() + NPCGetScareCooldown(master);
+					g_PlayerScareNextTime[client][master] = GetGameTime() + masterData.ScareCooldown;
 				}
 			}
 
-			if (NPCGetType(i) == SF2BossType_Static)
+			if (profileData.Type == SF2BossType_Static)
 			{
 				if (NPCGetFlags(i) & SFF_FAKE)
 				{
@@ -668,11 +668,11 @@ void ClientProcessVisibility(int client)
 			if (NPCGetFlags(i) & SFF_HASSTATICLOOPLOCALSOUND)
 			{
 				char loopSound[PLATFORM_MAX_PATH];
-				GetBossProfileStaticLocalSound(profile, loopSound, sizeof(loopSound));
+				profileData.GetStaticLocalLoopSound(loopSound, sizeof(loopSound));
 
 				if (loopSound[0] != '\0')
 				{
-					EmitSoundToClient(client, loopSound, boss, SNDCHAN_STATIC, GetBossProfileStaticShakeLocalLevel(profile), SND_CHANGEVOL, 1.0);
+					EmitSoundToClient(client, loopSound, boss, SNDCHAN_STATIC, profileData.StaticShakeLocalLevel, SND_CHANGEVOL, 1.0);
 					ClientAddStress(client, 0.03);
 				}
 			}
@@ -685,7 +685,7 @@ void ClientProcessVisibility(int client)
 				if (boss && boss != INVALID_ENT_REFERENCE)
 				{
 					char loopSound[PLATFORM_MAX_PATH];
-					GetBossProfileStaticLocalSound(profile, loopSound, sizeof(loopSound));
+					profileData.GetStaticLocalLoopSound(loopSound, sizeof(loopSound));
 
 					if (loopSound[0] != '\0')
 					{
@@ -779,10 +779,12 @@ void ClientProcessVisibility(int client)
 		{
 			NPCGetProfile(bossNewStatic, profile, sizeof(profile));
 
+			BaseBossProfile profileData = GetBossProfile(profile);
+
 			g_PlayerStaticSound[client][0] = '\0';
 
 			char staticSound[PLATFORM_MAX_PATH];
-			GetBossProfileStaticSound(profile, staticSound, sizeof(staticSound));
+			profileData.GetStaticSound(staticSound, sizeof(staticSound));
 
 			if (staticSound[0] != '\0')
 			{
@@ -801,8 +803,8 @@ void ClientProcessVisibility(int client)
 			TriggerTimer(g_PlayerLastStaticTimer[client], true);
 
 			// Start up our own static timer.
-			float staticIncreaseRate = (g_SlenderStaticRate[bossNewStatic][difficulty] - (g_SlenderStaticRate[bossNewStatic][difficulty] * GetDifficultyModifier(difficulty)) / 10);
-			float staticDecreaseRate = (g_SlenderStaticRateDecay[bossNewStatic][difficulty] + (g_SlenderStaticRateDecay[bossNewStatic][difficulty] * GetDifficultyModifier(difficulty)) / 10);
+			float staticIncreaseRate = (profileData.GetStaticRate(difficulty) - (profileData.GetStaticRate(difficulty) * GetDifficultyModifier(difficulty)) / 10);
+			float staticDecreaseRate = (profileData.GetStaticRateDecay(difficulty) + (profileData.GetStaticRateDecay(difficulty) * GetDifficultyModifier(difficulty)) / 10);
 			if (!IsClassConfigsValid())
 			{
 				if (class == TFClass_Heavy)
@@ -1100,9 +1102,10 @@ void ClientDoJumpScare(int client, int bossIndex, float lifeTime)
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	BaseBossProfile profileData = GetBossProfile(profile);
 
 	char buffer[PLATFORM_MAX_PATH];
-	GetBossProfileJumpscareSound(profile, buffer, sizeof(buffer));
+	profileData.GetJumpscareSound(buffer, sizeof(buffer));
 
 	if (buffer[0] != '\0')
 	{
@@ -1122,14 +1125,19 @@ void ClientPerformScare(int client, int bossIndex)
 		return;
 	}
 
+	float gameTime = GetGameTime();
+
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	BaseBossProfile profileData = GetBossProfile(profile);
 
-	g_PlayerScareLastTime[client][bossIndex] = GetGameTime();
-	g_PlayerScareNextTime[client][bossIndex] = GetGameTime() + NPCGetScareCooldown(bossIndex);
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
+	g_PlayerScareLastTime[client][bossIndex] = gameTime;
+	g_PlayerScareNextTime[client][bossIndex] = gameTime + profileData.ScareCooldown;
 
 	// See how much Sanity should be drained from a scare.
-	float staticAmount = GetBossProfileStaticScareAmount(profile);
+	float staticAmount = profileData.GetScareStaticAmount(difficulty);
 	g_PlayerStaticAmount[client] += staticAmount;
 	if (g_PlayerStaticAmount[client] > 1.0)
 	{
@@ -1137,21 +1145,17 @@ void ClientPerformScare(int client, int bossIndex)
 	}
 
 	char scareSound[PLATFORM_MAX_PATH];
-	ArrayList soundList;
-	SF2BossProfileSoundInfo soundInfo;
-	GetBossProfileScareSounds(profile, soundInfo);
-	soundList = soundInfo.Paths;
-	if (soundList != null && soundList.Length > 0)
+	ProfileSound soundInfo = profileData.GetScareSounds();
+	if (soundInfo != null && soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
-		soundList.GetString(GetRandomInt(0, soundList.Length - 1), scareSound, sizeof(scareSound));
+		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), scareSound, sizeof(scareSound));
 	}
-	soundList = null;
 
 	if (scareSound[0] != '\0')
 	{
 		soundInfo.EmitSound(true, client);
 
-		g_PlayerSightSoundNextTime[client][bossIndex] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
+		g_PlayerSightSoundNextTime[client][bossIndex] = gameTime + profileData.ScareCooldown;
 
 		if (g_PlayerStressAmount[client] > 0.4)
 		{
@@ -1196,15 +1200,15 @@ static void ClientPerformSightSound(int client, int bossIndex)
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
-	SF2BossProfileSoundInfo soundInfo;
-	GetBossProfileSightSounds(profile, soundInfo);
+	ProfileSound soundInfo = GetBossProfile(profile).GetSightSounds();
 
-	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+	if (soundInfo != null && soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.EmitSound(true, client);
 
-		g_PlayerSightSoundNextTime[client][master] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
+		g_PlayerSightSoundNextTime[client][master] = GetGameTime() + GetRandomFloat(soundInfo.GetCooldownMin(difficulty), soundInfo.GetCooldownMax(difficulty));
 
 		float bossPos[3], myPos[3];
 		int boss = NPCGetEntIndex(bossIndex);
@@ -1300,11 +1304,6 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	if (IsRoundInWarmup())
-	{
-		return Plugin_Continue;
-	}
-
 	int deathCamBoss = NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]);
 	int jumpScareBoss = NPCGetFromUniqueID(g_PlayerJumpScareBoss[client]);
 
@@ -1314,12 +1313,12 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	if (IsClientInDeathCam(client) && deathCamBoss != -1 && g_PlayerDeathCamShowOverlay[client])
 	{
 		NPCGetProfile(deathCamBoss, profile, sizeof(profile));
-		GetBossProfileOverlayPlayerDeath(profile, material, sizeof(material));
+		GetBossProfile(profile).GetPlayerDeathOverlay(material, sizeof(material));
 	}
 	else if (jumpScareBoss != -1 && GetGameTime() <= g_PlayerJumpScareLifeTime[client])
 	{
 		NPCGetProfile(jumpScareBoss, profile, sizeof(profile));
-		GetBossProfileOverlayJumpscare(profile, material, sizeof(material));
+		GetBossProfile(profile).GetJumpscareOverlay(material, sizeof(material));
 	}
 	else if (IsClientInGhostMode(client) && !SF_IsBoxingMap())
 	{
@@ -1670,6 +1669,47 @@ void TF2_GetClassName(TFClassType class, char[] buffer, int bufferLen, bool alt 
 	}
 }
 
+TFClassType TF2_GetClassFromName(const char[] class)
+{
+	if (strcmp(class, "scout", false) == 0)
+	{
+		return TFClass_Scout;
+	}
+	else if (strcmp(class, "soldier", false) == 0)
+	{
+		return TFClass_Soldier;
+	}
+	else if (strcmp(class, "pyro", false) == 0)
+	{
+		return TFClass_Pyro;
+	}
+	else if (strcmp(class, "demoman", false) == 0)
+	{
+		return TFClass_DemoMan;
+	}
+	else if (strcmp(class, "heavyweapons", false) == 0 || strcmp(class, "heavy", false) == 0)
+	{
+		return TFClass_Heavy;
+	}
+	else if (strcmp(class, "engineer", false) == 0)
+	{
+		return TFClass_Engineer;
+	}
+	else if (strcmp(class, "medic", false) == 0)
+	{
+		return TFClass_Medic;
+	}
+	else if (strcmp(class, "sniper", false) == 0)
+	{
+		return TFClass_Sniper;
+	}
+	else if (strcmp(class, "spy", false) == 0)
+	{
+		return TFClass_Spy;
+	}
+	return TFClass_Unknown;
+}
+
 bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true, bool ignoreFog = false)
 {
 	for (int i = 1; i <= MaxClients; i++)
@@ -1721,8 +1761,9 @@ bool IsPointVisibleToPlayer(int client, const float pos[3], bool checkFOV = true
 		}
 	}
 
-	TR_TraceRayFilter(eyePos, pos, MASK_PLAYERSOLID_BRUSHONLY | CONTENTS_WINDOW, RayType_EndPoint, TraceRayDontHitAnything, client);
-	bool hit = TR_DidHit();
+	Handle trace = TR_TraceRayFilterEx(eyePos, pos, MASK_PLAYERSOLID_BRUSHONLY | CONTENTS_WINDOW, RayType_EndPoint, TraceRayDontHitAnything, client);
+	bool hit = TR_DidHit(trace);
+	delete trace;
 
 	if (hit)
 	{

@@ -1,10 +1,43 @@
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap ChaserBossProfileBulletAttack < ChaserBossProfileBaseAttack
+{
+	public int GetBulletCount(int difficulty)
+	{
+		int def = 4;
+		def = this.GetDifficultyInt("attack_bullet_count", difficulty, def);
+		def = this.GetDifficultyInt("bullet_count", difficulty, def);
+		return def;
+	}
+
+	public float GetBulletSpread(int difficulty)
+	{
+		float def = 0.1;
+		def = this.GetDifficultyFloat("bullet_spread", difficulty, def);
+		def = this.GetDifficultyFloat("attack_bullet_spread", difficulty, def);
+		return def;
+	}
+
+	public void GetBulletTrace(char[] buffer, int bufferSize)
+	{
+		FormatEx(buffer, bufferSize, "bullet_tracer02_blue");
+		this.GetString("bullet_tracer", buffer, bufferSize, buffer);
+		this.GetString("attack_bullet_tracer", buffer, bufferSize, buffer);
+	}
+
+	public void GetBulletOffset(float buffer[3])
+	{
+		this.GetVector("bullet_offset", buffer, buffer);
+		this.GetVector("attack_bullet_offset", buffer, buffer);
+	}
+}
 
 static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_Bullet < NextBotAction
 {
-	public SF2_ChaserAttackAction_Bullet(int attackIndex, const char[] attackName, float fireDelay)
+	public SF2_ChaserAttackAction_Bullet(const char[] attackName, ChaserBossProfileBulletAttack data, float fireDelay)
 	{
 		if (g_Factory == null)
 		{
@@ -13,8 +46,8 @@ methodmap SF2_ChaserAttackAction_Bullet < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
-				.DefineIntField("m_AttackIndex")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_ProfileData")
 				.DefineFloatField("m_NextFireTime")
 				.DefineIntField("m_RepeatIndex")
 				.EndDataMapDesc();
@@ -22,23 +55,10 @@ methodmap SF2_ChaserAttackAction_Bullet < NextBotAction
 		SF2_ChaserAttackAction_Bullet action = view_as<SF2_ChaserAttackAction_Bullet>(g_Factory.Create());
 
 		action.NextFireTime = fireDelay;
-		action.AttackIndex = attackIndex;
 		action.SetAttackName(attackName);
+		action.ProfileData = data;
 
 		return action;
-	}
-
-	property int AttackIndex
-	{
-		public get()
-		{
-			return this.GetData("m_AttackIndex");
-		}
-
-		public set(int value)
-		{
-			this.SetData("m_AttackIndex", value);
-		}
 	}
 
 	public static void Initialize()
@@ -56,6 +76,19 @@ methodmap SF2_ChaserAttackAction_Bullet < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property ChaserBossProfileBulletAttack ProfileData
+	{
+		public get()
+		{
+			return this.GetData("m_ProfileData");
+		}
+
+		public set(ChaserBossProfileBulletAttack value)
+		{
+			this.SetData("m_ProfileData", value);
+		}
 	}
 
 	property float NextFireTime
@@ -92,10 +125,8 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = chaser.Controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfileBulletAttack attackData = view_as<ChaserBossProfileBulletAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (attackData.Type != SF2BossAttackType_Ranged)
@@ -103,7 +134,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_Bullet(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_Bullet(attackName, attackData, attackData.GetDelay(difficulty) + GetGameTime());
 	return Plugin_Changed;
 }
 
@@ -125,36 +156,32 @@ static int Update(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntity actor, 
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileBulletAttack attackData = action.ProfileData;
 	float gameTime = GetGameTime();
 	int difficulty = controller.Difficulty;
 
-	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.EventNumber == -1)
+	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.GetEventNumber(difficulty) == -1)
 	{
-		DoBulletAttack(actor, action.GetAttackName());
+		DoBulletAttack(action, actor, action.GetAttackName());
 
-		int repeatState = attackData.Repeat;
+		int repeatState = attackData.GetRepeatState(difficulty);
 		if (repeatState > 0)
 		{
 			switch (repeatState)
 			{
 				case 1:
 				{
-					action.NextFireTime = gameTime + attackData.DamageDelay[difficulty];
+					action.NextFireTime = gameTime + attackData.GetDelay(difficulty);
 				}
 				case 2:
 				{
-					if (action.RepeatIndex >= attackData.RepeatTimers.Length)
+					if (attackData.GetRepeatTimer(difficulty, action.RepeatIndex) < 0.0)
 					{
 						action.NextFireTime = -1.0;
 					}
 					else
 					{
-						float next = attackData.RepeatTimers.Get(action.RepeatIndex);
-						action.NextFireTime = next + gameTime;
+						action.NextFireTime = attackData.GetRepeatTimer(difficulty, action.RepeatIndex) + gameTime;
 						action.RepeatIndex++;
 					}
 				}
@@ -168,22 +195,19 @@ static int Update(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntity actor, 
 	return action.Continue();
 }
 
-static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
+static void DoBulletAttack(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntity actor, const char[] attackName)
 {
 	SF2NPC_Chaser controller = actor.Controller;
 	CBaseEntity target = actor.Target;
 
 	int difficulty = controller.Difficulty;
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfileBulletAttack attackData = action.ProfileData;
 
-	float spread = attackData.BulletSpread[difficulty];
-	ArrayList bulletSounds = data.BulletShootSounds;
-	SF2BossProfileSoundInfo soundInfo;
-	if (actor.SearchSoundsWithSectionName(bulletSounds, attackName, soundInfo))
+	float spread = attackData.GetBulletSpread(difficulty);
+	ProfileSound soundInfo;
+	if (actor.SearchSoundsWithSectionName(data.GetBulletShootSounds(), attackName, soundInfo, "bulletshoot"))
 	{
 		soundInfo.EmitSound(_, actor.index);
 	}
@@ -206,7 +230,7 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 		targetPos[1] = eyePos[1] + fwd[1] * 9001.0;
 		targetPos[2] = eyePos[2] + fwd[2] * 9001.0;
 	}
-	effectPos = attackData.BulletOffset;
+	attackData.GetBulletOffset(effectPos);
 	VectorTransform(effectPos, basePos, baseAng, effectPos);
 	AddVectors(effectAng, baseAng, effectAng);
 
@@ -225,7 +249,8 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 	float dir[3], end[3];
 	float x, y;
 
-	for (int i = 0; i < attackData.BulletCount[difficulty]; i++)
+	ArrayList hitTargets = null;
+	for (int i = 0; i < attackData.GetBulletCount(difficulty); i++)
 	{
 		x = GetRandomFloat(-0.5, 0.5) + GetRandomFloat(-0.5, 0.5);
 		y = GetRandomFloat(-0.5, 0.5) + GetRandomFloat(-0.5, 0.5);
@@ -256,21 +281,29 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 			TE_SetupEffectDispatch(GetEffectDispatchStringTableIndex("Impact"),
 					.origin = endPos,
 					.start = effectPos,
-					.damageType = DMG_BULLET,
+					.damageType = attackData.GetDamageType(difficulty),
 					.surfaceProp = TR_GetSurfaceProps(trace),
 					.hitbox = TR_GetHitGroup(trace),
 					.entindex = TR_GetEntityIndex(trace));
 			TE_SendToAll();
+			delete trace;
 
-			SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.BulletDamage[difficulty], DMG_BULLET, _, CalculateBulletDamageForce(dir, 1.0), endPos);
-			if (SF2_BasePlayer(hitTarget).IsValid)
+			if (hitTargets == null)
 			{
-				attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, SF2_ChaserBossEntity(actor.index));
+				hitTargets = new ArrayList(2);
 			}
-
-			if (attackData.BulletTrace[0] == '\0')
+			int hitIndex = hitTargets.FindValue(hitTarget);
+			if (hitIndex == -1)
 			{
-				delete trace;
+				hitIndex = hitTargets.Push(hitTarget);
+				hitTargets.Set(hitIndex, 0, 1);
+			}
+			hitTargets.Set(hitIndex, hitTargets.Get(hitIndex, 1) + 1, 1);
+
+			char traceParticle[64];
+			attackData.GetBulletTrace(traceParticle, sizeof(traceParticle));
+			if (traceParticle[0] == '\0')
+			{
 				continue;
 			}
 
@@ -281,7 +314,7 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 			for (int i2 = 0; i2 < count; i2++)
 			{
 				ReadStringTable(table, i2, tmp, sizeof(tmp));
-				if (strcmp(tmp, attackData.BulletTrace, false) == 0)
+				if (strcmp(tmp, traceParticle, false) == 0)
 				{
 					index = i2;
 					break;
@@ -290,14 +323,33 @@ static void DoBulletAttack(SF2_ChaserEntity actor, const char[] attackName)
 
 			if (index == INVALID_STRING_INDEX)
 			{
-				LogError("Could not find particle: %s", attackData.BulletTrace);
-				delete trace;
+				LogError("Could not find particle: %s", traceParticle);
 				continue;
 			}
 			TE_Particle(index, effectPos, effectPos, dir, actor.index, view_as<int>(PATTACH_CUSTOMORIGIN), _, _, true, view_as<int>(PATTACH_CUSTOMORIGIN), endPos);
 			TE_SendToAll();
 		}
 		delete trace;
+	}
+
+	if (hitTargets != null)
+	{
+		for (int i = 0; i < hitTargets.Length; i++)
+		{
+			int hitTarget = hitTargets.Get(i);
+			float damage = attackData.GetDamage(difficulty) * float(hitTargets.Get(i, 1));
+			CBaseEntity(hitTargets.Get(i)).GetAbsOrigin(targetPos);
+			damage = GetDamageDistance(basePos, targetPos, damage,
+							attackData.GetDamageRampUpRange(difficulty), attackData.GetDamageFallOffRange(difficulty),
+							attackData.GetDamageRampUp(difficulty), attackData.GetDamageFallOff(difficulty));
+
+			SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, damage, attackData.GetDamageType(difficulty), _, CalculateBulletDamageForce(dir, 1.0), basePos);
+			if (SF2_BasePlayer(hitTarget).IsValid)
+			{
+				attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, actor);
+			}
+		}
+		delete hitTargets;
 	}
 }
 
@@ -319,13 +371,11 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEnt
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	int difficulty = controller.Difficulty;
+	ChaserBossProfileBulletAttack attackData = action.ProfileData;
 
-	if (event == attackData.EventNumber)
+	if (event == attackData.GetEventNumber(difficulty))
 	{
-		DoBulletAttack(actor, action.GetAttackName());
+		DoBulletAttack(action, actor, action.GetAttackName());
 	}
 }

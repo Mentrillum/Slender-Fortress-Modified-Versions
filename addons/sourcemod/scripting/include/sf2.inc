@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.7"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.7"
+#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 12-21-2024"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 12-21-2024"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -155,6 +155,7 @@ enum
 	SF2BossSound_RageTwo = 15,
 	SF2BossSound_RageThree,
 	SF2BossSound_Despawn,
+	SF2BossSound_Hurt,
 	SF2BossSound_MaxSounds
 };
 
@@ -223,7 +224,7 @@ enum
 	SF2Attribute_Max
 };
 
-char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
+stock char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
 {
 	"sound_none", // Placeholder
 	"sound_idle",
@@ -242,10 +243,11 @@ char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
 	"sound_rage",
 	"sound_rage_2",
 	"sound_rage_3",
-	"sound_despawn"
+	"sound_despawn",
+	"sound_hurt"
 };
 
-char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
+stock char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
 {
 	"idle",
 	"walk",
@@ -267,7 +269,7 @@ char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
 	"despawn"
 };
 
-char g_AttributesList[SF2Attribute_Max][] =
+stock char g_AttributesList[SF2Attribute_Max][] =
 {
 	"reduced speed on look",
 	"reduced walk speed on look",
@@ -374,6 +376,7 @@ enum RenevantWave
 #define COND_ENEMYRECHASE (1 << 13)
 #define COND_DEBUG (1 << 14)
 #define COND_ALERT_TRIGGER_POS (1 << 15)
+#define COND_ENEMYVISIBLE_NOGLASS (1 << 16)
 
 /**
  * Called after a boss profile is successfully loaded.
@@ -381,14 +384,14 @@ enum RenevantWave
  * @param profile		Profile name
  * @param kv			Key Values
  */
-forward void SF2_OnBossProfileLoaded(const char[] profile, KeyValues kv);
+forward void SF2_OnBossProfileLoaded(const char[] profile, SF2_BaseBossProfile data);
 
 /**
  * Called before a boss profile is unloaded.
  *
  * @param profile		Profile name
  */
-forward void SF2_OnBossProfileUnloaded(const char[] profile);
+forward void SF2_OnBossProfileUnloaded(const char[] profile, SF2_BaseBossProfile data);
 
 /**
  * Called when a boss is added into the game.
@@ -516,8 +519,8 @@ forward void SF2_OnBossAttacked(int bossIndex, int attackIndex);
 /**
  * Called when the boss finishes validating all attack indexes.
  *
- * @param bossIndex	Boss index.
- * @param attackArray ArrayList containing all valid attacks
+ * @param bossIndex			Boss index.
+ * @param attackArray		ArrayList containing all valid attack indexes.
  */
 forward void SF2_OnBossPreAttack(int bossIndex, ArrayList attackArray);
 
@@ -831,7 +834,7 @@ forward void SF2_OnDifficultyVoteFinished(ArrayList list, bool isRunOff);
  * @return					Returning a value other than Plugin_Continue will block the boss from using
  * 							the attack.
  */
-forward Action SF2_OnIsBossCustomAttackPossible(SF2_ChaserBossEntity chaser, const char[] attackName, SF2ChaserBossProfileAttackData data, CBaseEntity target);
+forward Action SF2_OnIsBossCustomAttackPossible(SF2_ChaserBossEntity chaser, const char[] attackName, SF2_ChaserBossProfileBaseAttack data, CBaseEntity target);
 
 /**
  * Called when the Chaser boss has selected the custom attack and is requesting a
@@ -844,7 +847,7 @@ forward Action SF2_OnIsBossCustomAttackPossible(SF2_ChaserBossEntity chaser, con
  * @param action			Parameter to fill with the NextBotAction
  * @return					Return a value other than Plugin_Continue to use `action`
  */
-forward Action SF2_OnBossGetCustomAttackAction(SF2_ChaserBossEntity chaser, const char[] attackName, SF2ChaserBossProfileAttackData data, CBaseEntity target, NextBotAction &action);
+forward Action SF2_OnBossGetCustomAttackAction(SF2_ChaserBossEntity chaser, const char[] attackName, SF2_ChaserBossProfileBaseAttack data, CBaseEntity target, NextBotAction &action);
 
 /**
  * Called when a projectile from SF2 has touched another entity successfully and has either exploded or dealt damage.
@@ -1026,6 +1029,7 @@ native bool SF2_IsClientUbercharged(int client);
  */
 native bool SF2_IsClientInKart(int client);
 
+#if defined _tf2_included
 /**
  * Returns whether or not the client is in a specific condition for SF2.
  *
@@ -1034,6 +1038,7 @@ native bool SF2_IsClientInKart(int client);
  * @return				True if the player is in a condition, false if not.
  */
 native bool SF2_IsClientInCondition(int client, TFCond condition);
+#endif
 
 /**
  * Returns a bool about the client's elimination state.
@@ -1365,7 +1370,7 @@ native void SF2_ForceBossJump(NextBotGroundLocomotion nextbotLocomotion, float s
  * @param playSpawnSound	Play spawn sound.
  * @return					Boss index, or -1 if failed.
  */
-native int SF2_AddBoss(const char[] profile, int flags=0, bool spawnCompanions=true, bool playSpawnSound=true);
+native int SF2_AddBoss(const char[] profile, int flags = 0, bool spawnCompanions = true, bool playSpawnSound = true);
 
 /**
  * Removes a boss from the game.
@@ -1515,10 +1520,10 @@ native void SF2_GetBossEyePosition(int bossIndex, float eyePos[3]);
  */
 native void SF2_GetBossEyePositionOffset(int bossIndex, float eyePosOffset[3]);
 
-#pragma deprecated Use SF2ChaserBossProfileAttackData.StunEnabled[Difficulty_Max] instead.
+#pragma deprecated Use SF2_ChaserBossProfile instead.
 native bool SF2_IsBossStunnable(int bossIndex);
 
-#pragma deprecated Use SF2ChaserBossProfileAttackData.StunFlashlight[Difficulty_Max] instead.
+#pragma deprecated Use SF2_ChaserBossProfile instead.
 native bool SF2_IsBossStunnableByFlashlight(int bossIndex);
 
 /**
@@ -1569,43 +1574,43 @@ native void SF2_GetBossGoalPosition(int bossIndex, float position[3]);
  */
 native bool SF2_IsBossProfileValid(const char[] profile);
 
-#pragma deprecated Use SF2BossProfileData instead.
-native int SF2_GetBossProfileNum(const char[] profile, const char[] key, int defaultValue=0);
+#pragma deprecated Use SF2_BaseBossProfile instead.
+native int SF2_GetBossProfileNum(const char[] profile, const char[] key, int defaultValue = 0);
 
-#pragma deprecated Use SF2BossProfileData instead.
-native float SF2_GetBossProfileFloat(const char[] profile, const char[] key, float defaultValue=0.0);
+#pragma deprecated Use SF2_BaseBossProfile instead.
+native float SF2_GetBossProfileFloat(const char[] profile, const char[] key, float defaultValue = 0.0);
 
-#pragma deprecated Use SF2BossProfileData instead.
-native bool SF2_GetBossProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue="");
+#pragma deprecated Use SF2_BaseBossProfile instead.
+native bool SF2_GetBossProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue = "");
 
-#pragma deprecated Use SF2BossProfileData instead.
-native bool SF2_GetBossProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR);
+#pragma deprecated Use SF2_BaseBossProfile instead.
+native bool SF2_GetBossProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3] = NULL_VECTOR);
 
-#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
-native int SF2_GetBossAttackProfileNum(const char[] profile, const char[] key, int defaultValue=0, const int attackIndex);
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
+native int SF2_GetBossAttackProfileNum(const char[] profile, const char[] key, int defaultValue = 0, const int attackIndex);
 
-#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
-native float SF2_GetBossAttackProfileFloat(const char[] profile, const char[] key, float defaultValue=0.0, const int attackIndex);
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
+native float SF2_GetBossAttackProfileFloat(const char[] profile, const char[] key, float defaultValue = 0.0, const int attackIndex);
 
-#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
-native bool SF2_GetBossAttackProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue="", const int attackIndex);
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
+native bool SF2_GetBossAttackProfileString(const char[] profile, const char[] key, char[] buffer, int bufferLen, const char[] defaultValue = "", const int attackIndex);
 
-#pragma deprecated Use SF2ChaserBossProfileData.Attacks instead.
-native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int attackIndex);
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
+native bool SF2_GetBossAttackProfileVector(const char[] profile, const char[] key, float buffer[3], const float defaultValue[3] = NULL_VECTOR, const int attackIndex);
 
-#pragma deprecated Use SF2BossProfileData instead.
-native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[] key, char[] buffer, int bufferLen, int index=-1);
+#pragma deprecated Use SF2_BaseBossProfile instead.
+native bool SF2_GetRandomStringFromBossProfile(const char[] profile, const char[] key, char[] buffer, int bufferLen, int index = -1);
 
-#pragma deprecated Use SF2BossProfileData instead.
+#pragma deprecated Use SF2_BaseBossProfile instead.
 native bool SF2_GetBossAttributeName(int bossIndex, int attribute);
 
-#pragma deprecated Use SF2BossProfileData instead.
+#pragma deprecated Use SF2_BaseBossProfile instead.
 native float SF2_GetBossAttributeValue(int bossIndex, int attribute);
 
 #pragma deprecated Use SF2_ChaserBossEntity.AttackIndex instead.
 native int SF2_GetBossCurrentAttackIndex(int bossIndex);
 
-#pragma deprecated Use SF2ChaserBossProfileAttackData.Type instead.
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
 native int SF2_GetBossAttackIndexType(int bossIndex, int attackIndex);
 
 #pragma deprecated This no longer does anything.
@@ -1626,10 +1631,10 @@ native void SF2_PerformBossVoice(int bossIndex, const int attackIndex = -1, int 
 #pragma deprecated Use SF2_ChaserBossEntity.CreateSoundHint instead.
 native void SF2_CreateBossSoundHint(int bossIndex, SoundType soundType, const float position[3], int difficulty);
 
-#pragma deprecated Use SF2ChaserBossProfileAttackData.Damage[Difficulty_Max] instead.
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
 native float SF2_GetBossAttackIndexDamage(int bossIndex, int attackIndex, int difficulty);
 
-#pragma deprecated Use SF2ChaserBossProfileAttackData.DamageType[Difficulty_Max] instead.
+#pragma deprecated Use SF2_ChaserBossProfileBaseAttack instead.
 native int SF2_GetBossAttackIndexDamageType(int bossIndex, int attackIndex);
 
 #pragma deprecated Use SF2_BaseBossEntity.ResetProfileAnimation instead.
@@ -1662,40 +1667,18 @@ native void SF2_SetBossTeleportThinkTimer(int bossIndex, Handle timer);
 native int SF2_GetBossTeleportTarget(int bossIndex);
 
 /**
- * Returns the StringMap variable containing every precached base boss profile
- *
- * @return		StringMap containing all base boss profile datas
-*/
-native StringMap SF2_GetBossProfileData();
-
-/**
- * Returns the StringMap variable containing every precached chaser boss profile
- *
- * @return		StringMap containing all chaser boss profile datas
-*/
-native StringMap SF2_GetChaserBossProfileData();
-
-/**
- * Returns the StringMap variable containing every precached statue boss profile
- *
- * @return		StringMap containing all statue boss profile datas
-*/
-native StringMap SF2_GetStatueBossProfileData();
-
-/**
  * Spawns boss effects based on the list of effects used.
  * Note this will not spawn the extra effects like the festive lights and the disco ball
  * Only use this best for spawning in temporary effects.
- * Note the array of effects must be an ArrayList that contains SF2BossProfileBaseEffectInfo.
  *
- * @param effects			The array of effects
+ * @param effects			The effects section to use
  * @param bossIndex			Boss to use
  * @param overridePos		Override the spawn position of the effects
  * @param overrideAng		Override the spawn angles of the effects
  * @param output			The ArrayList that will contain all of the outputted entities as entity references
  * @param entityOverride	If not INVALID_ENT_REFERENCE will attach all particles to the desired entity
  */
-native void SF2_SpawnBossEffects(ArrayList effects, int bossIndex, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE);
+native void SF2_SpawnBossEffects(SF2_ProfileEffectMaster effects, int bossIndex, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE);
 
 /**
  * Returns if a boss can be seen by any player
@@ -1710,7 +1693,7 @@ native bool SF2_CanBossBeSeen(int bossIndex, bool checkFOV = true, bool checkBli
 /**
  *	Translates an activity name string into an Activity.
  *
- *	@param sActivity
+ *	@param activity
  *	@return					Activity, or ACT_INVALID if not found.
  */
 native Activity SF2_TranslateProfileActivityFromName(const char[] activity);
@@ -1718,59 +1701,59 @@ native Activity SF2_TranslateProfileActivityFromName(const char[] activity);
 /**
  *	Given an activity or sequence, translates into a sequence index.
  *
- *	@param iEntity			Entity index
- *	@param sAnimation		Activity/sequence string
+ *	@param entity			Entity index
+ *	@param animation		Activity/sequence string
  *	@return					Sequence index, or -1 if not found.
  */
 native int SF2_LookupProfileAnimation(int entity, const char[] animation);
 
 /**
- * Returns the profile data found on a boss index, note this is the basic profile data, I.E. what all bosses use
+ * Returns the profile data found on a boss index
  *
  * @param bossIndex		Boss index.
- * @param data			Data to be stored in. Note this takes in SF2BossProfileData
+ * @return            Stored profile data, or null if it doesn't exist
  */
-native void SF2_GetProfileFromBossIndex(int bossIndex, any data[sizeof(SF2BossProfileData)]);
+native SF2_BaseBossProfile SF2_GetProfileFromBossIndex(int bossIndex);
 
 /**
  * Returns the chaser profile data found on a boss index.
  *
  * @param bossIndex		Boss index.
- * @param data			Data to be stored in. Note this takes in SF2ChaserBossProfileData
+ * @return            Stored profile data, or null if it doesn't exist
  */
-native void SF2_GetChaserProfileFromBossIndex(int bossIndex, any data[sizeof(SF2ChaserBossProfileData)]);
+native SF2_ChaserBossProfile SF2_GetChaserProfileFromBossIndex(int bossIndex);
 
 /**
  * Returns the statue profile data found on a boss index.
  *
  * @param bossIndex		Boss index.
- * @param data			Data to be stored in. Note this takes in SF2StatueBossProfileData
+ * @return            Stored profile data, or null if it doesn't exist
  */
-native void SF2_GetStatueProfileFromBossIndex(int bossIndex, any data[sizeof(SF2StatueBossProfileData)]);
+native SF2_StatueBossProfile SF2_GetStatueProfileFromBossIndex(int bossIndex);
 
 /**
- * Returns the profile data found from a profile name, note this is the basic profile data, I.E. what all bosses use
+ * Returns the profile data found from a profile name
  *
  * @param profile		Profile name.
- * @param data			Data to be stored in. Note this takes in SF2BossProfileData
+ * @return            Stored profile data, or null if it doesn't exist
  */
-native bool SF2_GetProfileFromName(const char[] profile, any data[sizeof(SF2BossProfileData)]);
+native SF2_BaseBossProfile SF2_GetProfileFromName(const char[] profile);
 
 /**
  * Returns the chaser profile data found from a profile name.
  *
  * @param profile		Profile name.
- * @param data			Data to be stored in. Note this takes in SF2ChaserBossProfileData
+ * @return            Stored profile data, or null if it doesn't exist
  */
-native bool SF2_GetChaserProfileFromName(const char[] profile, any data[sizeof(SF2ChaserBossProfileData)]);
+native SF2_ChaserBossProfile SF2_GetChaserProfileFromName(const char[] profile);
 
 /**
  * Returns the statue profile data found from a profile name.
  *
  * @param profile		Profile name.
- * @param data			Data to be stored in. Note this takes in SF2StatueBossProfileData
+ * @return            Stored profile data, or null if it doesn't exist
  */
-native bool SF2_GetStatueProfileFromName(const char[] profile, any data[sizeof(SF2ChaserBossProfileData)]);
+native SF2_StatueBossProfile SF2_GetStatueProfileFromName(const char[] profile);
 
 /**
  * Forces a boss to enter in the chase state and immediately go after the target.
@@ -1871,6 +1854,15 @@ methodmap SF2_BaseBossEntity < CBaseCombatCharacter
 	public native void GetName(char[] buffer, int bufferLen);
 
 	/**
+	 * Prevents any animation from being played
+	 */
+	property bool LockAnimations
+	{
+		public native get();
+		public native set(bool value);
+	}
+
+	/**
 	 *	Attempts to cast an entity to be this entity.
 	 *
 	 *	@param entity     Entity to use
@@ -1883,9 +1875,9 @@ methodmap SF2_BaseBossEntity < CBaseCombatCharacter
 	/**
 	 * Gets the boss's profile data.
 	 *
-	 * @param data		Data to be stored in. Note this takes in SF2BossProfileData
+	 * @return		Stored profile data, or null if it doesn't exist
 	 */
-	public native void ProfileData(any data[sizeof(SF2BossProfileData)]);
+	public native SF2_BaseBossProfile ProfileData();
 
 	/**
 	 * Plays an animation on the boss from a specific animation section, even custom ones. Note this is limited to the main "animations" section.
@@ -1930,9 +1922,9 @@ methodmap SF2_StatueBossEntity < SF2_BaseBossEntity
 	/**
 	 * Gets the boss's profile data.
 	 *
-	 * @param data		Data to be stored in. Note this takes in SF2StatueBossProfileData
+	 * @return		Stored profile data, or null if it doesn't exist
 	 */
-	public native void ProfileData(any data[sizeof(SF2StatueBossProfileData)]);
+	public native SF2_StatueBossProfile ProfileData();
 
 	/**
 	 *	Attempts to cast an entity to be this entity.
@@ -2052,9 +2044,9 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	/**
 	 * Gets the boss's profile data.
 	 *
-	 * @param data		Data to be stored in. Note this takes in SF2ChaserBossProfileData
+	 * @return		Stored profile data, or null if it doesn't exist
 	 */
-	public native void ProfileData(any data[sizeof(SF2ChaserBossProfileData)]);
+	public native SF2_ChaserBossProfile ProfileData();
 
 	/**
 	 * Forces the boss to perform a voice. Note custom sound sections will not work.
@@ -2063,15 +2055,15 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	 * @param attackName	Optional attack name to search for.
 	 * @return				Whether or not the boss performed a voice.
 	 */
-	public native bool PerformVoice(int soundType = -1, const char[] attackName = "")
+	public native bool PerformVoice(int soundType = -1, const char[] attackName = "");
 
 	/**
 	 * Forces the boss to perform a voice using a custom sound section.
 	 *
-	 * @param soundInfo		Sound section to use.
+	 * @param soundInfo		Sound data to use.
 	 * @return				Whether or not the boss performed a voice.
 	 */
-	public native bool PerformCustomVoice(any soundInfo[sizeof(SF2BossProfileSoundInfo)])
+	public native bool PerformCustomVoice(SF2_ProfileSound soundInfo);
 
 	/**
 	 *	Gets the default posture of the boss. The default posture of a boss
@@ -2086,10 +2078,11 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	/**
 	 *	Sets the default posture of the boss.
 	 *
-	 *	@param buffer	Posture to set to
-	 *	@return			True if successful, false otherwise
+	 *	@param buffer			Posture to set to
+	 *	@param updateAnimations	Optional bool to determine if the animations should update upon setting the posture.
+	 *	@return					True if successful, false otherwise
 	 */
-	public native void SetDefaultPosture(const char[] buffer);
+	public native bool SetDefaultPosture(const char[] buffer, bool updateAnimations = true);
 
 	/**
 	 *	Gets the current attack name of the boss.
@@ -2149,6 +2142,25 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	}
 
 	/**
+	 * Sets/returns the boss's current movement type
+	 */
+	property SF2NPCMoveTypes MovementType
+	{
+		public native get();
+		public native set(SF2NPCMoveTypes value);
+	}
+
+	/**
+	 * Prevents the plugin from setting the MovementType
+	 * Note that any attempts to set MovementType via a sub plugin will work as normal
+	 */
+	property bool LockMovementType
+	{
+		public native get();
+		public native set(bool value);
+	}
+
+	/**
 	 * Checks if an attack is possible the default way
 	 * This only includes FOV and range checks
 	 * Difficulty checks and health checks are not included by default
@@ -2156,12 +2168,12 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	 * And visibility checks are already handled in SF2_ChaserAttackLayerAction
 	 * You would use this primarily in SF2_OnIsBossCustomAttackPossible
 	 *
-	 * @param attackName			Name of the attack
+	 * @param attack			Attack data to use
 	 * @param includeDifficulties	Whether or not to include the difficulty checks
 	 * @param includeHealth			Whether or not to include target health checks
 	 * @return						Whether or not the attack is possible with the distance and FOV checks
 	 */
-	public bool IsAttackPossibleDefault(const char[] attackName, bool includeDifficulties = false, bool includeHealth = false)
+	public bool IsAttackPossibleDefault(SF2_ChaserBossProfileBaseAttack attackData, bool includeDifficulties = false, bool includeHealth = false)
 	{
 		if (!this.Target.IsValid())
 		{
@@ -2172,10 +2184,6 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 		int difficulty = SF2_GetBossDifficulty(controller);
 
 		INextBot bot = this.MyNextBotPointer();
-		SF2ChaserBossProfileData data;
-		this.ProfileData(data);
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attackName, attackData);
 		float eyePos[3], targetPos[3], direction[3], eyeAng[3];
 		this.GetAbsAngles(eyeAng);
 		SF2_GetBossEyePosition(controller, eyePos);
@@ -2187,12 +2195,12 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 		float distance = bot.GetRangeSquaredTo(this.Target.index);
 		float fov = FloatAbs(AngleDiff(direction[1], eyeAng[1]));
 
-		if (distance > Pow(attackData.BeginRange[difficulty], 2.0))
+		if (distance > Pow(attackData.GetBeginRange(difficulty), 2.0))
 		{
 			return false;
 		}
 
-		if (fov > attackData.BeginFOV[difficulty])
+		if (fov > attackData.GetBeginFOV(difficulty))
 		{
 			return false;
 		}
@@ -2213,17 +2221,849 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 		if (includeHealth)
 		{
 			float health = float(this.Target.GetProp(Prop_Send, "m_iHealth"));
-			if (attackData.UseOnHealth != -1.0 && health < attackData.UseOnHealth)
+			if (attackData.CanUseOnHealth(difficulty) != -1.0 && health < attackData.CanUseOnHealth(difficulty))
 			{
 				return false;
 			}
-			if (attackData.BlockOnHealth != -1.0 && health >= attackData.BlockOnHealth)
+
+			if (attackData.CanBlockOnHealth(difficulty) != -1.0 && health >= attackData.CanBlockOnHealth(difficulty))
 			{
 				return false;
 			}
 		}
 		return true;
 	}
+}
+
+/**
+ * An object that contains data from a profile.
+ */
+methodmap SF2_ProfileObject < Handle
+{
+	/**
+	 * Retrieve the parent section of this object.
+	 */
+	property SF2_ProfileObject Parent
+	{
+		public native get();
+	}
+
+	/**
+	 * Retrieve the number of keys (not sections) that exist in this section.
+	 */
+	property int KeyLength
+	{
+		public native get();
+	}
+
+	/**
+	 * Retrieve the number of sections (not keys) that exist in this section.
+	 */
+	property int SectionLength
+	{
+		public native get();
+	}
+
+	/**
+	 * Retrieves an integer value from the given key.
+	 *
+	 * @param key              Key name
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native int GetInt(const char[] key, int defaultValue = 0);
+
+	/**
+	 * Sets an integer value with the given key.
+	 *
+	 * @param key				Key name
+	 * @param value				Value to set
+	 */
+	public native void SetInt(const char[] key, int value);
+
+	/**
+	 * Retrieves a boolean value from the given key.
+	 *
+	 * @param key              Key name
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native bool GetBool(const char[] key, bool defaultValue = false);
+
+	/**
+	 * Sets an boolean value with the given key.
+	 *
+	 * @param key				Key name
+	 * @param value				Value to set
+	 */
+	public native void SetBool(const char[] key, bool value);
+
+	/**
+	 * Retrieves a float value from the given key.
+	 *
+	 * @param key              Key name
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native float GetFloat(const char[] key, float defaultValue = 0.0);
+
+	/**
+	 * Sets an bool value with the given key.
+	 *
+	 * @param key				Key name
+	 * @param value				Value to set
+	 */
+	public native void SetFloat(const char[] key, float value);
+
+	/**
+	 * Retrieves a section from the given key.
+	 *
+	 * @param key              Key name
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native SF2_ProfileObject GetSection(const char[] key, SF2_ProfileObject defaultValue = view_as<SF2_ProfileObject>(INVALID_HANDLE));
+
+	/**
+	 * Retrieves an array from the given key.
+	 *
+	 * @param key              Key name
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native SF2_ProfileArray GetArray(const char[] key, SF2_ProfileArray defaultValue = view_as<SF2_ProfileArray>(INVALID_HANDLE));
+
+	/**
+	 * Retrieves a string value from the given key.
+	 *
+	 * @param key              Key name
+	 * @param buffer           String buffer
+	 * @param bufferSize       Size of string buffer
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Number of chars copied to buffer, excluding null terminator
+	 */
+	public native void GetString(const char[] key, char[] buffer, int bufferSize, const char[] defaultValue = "");
+
+	/**
+	 * Sets an string value with the given key.
+	 *
+	 * @param key				Key name
+	 * @param value				Value to set
+	 */
+	public native void SetString(const char[] key, const char[] value);
+
+	/**
+	 * Retrieves a Vector value from the given key.
+	 *
+	 * @param key              Key name
+	 * @param buffer           Vector buffer
+	 * @param defaultValue     Value to return as a fallback
+	 */
+	public native void GetVector(const char[] key, float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 });
+
+	/**
+	 * Sets an Vector value with the given key.
+	 *
+	 * @param key				Key name
+	 * @param value				Value to set
+	 */
+	public native void SetVector(const char[] key, float value[3]);
+
+	/**
+	 * Retrieves a Color value from the given key.
+	 *
+	 * @param key              Key name
+	 * @param buffer           Color buffer
+	 * @param defaultValue     Value to return as a fallback
+	 */
+	public native void GetColor(const char[] key, int buffer[4], const int defaultValue[4] = { 0, 0, 0, 0 });
+
+	/**
+	 * Sets an Color value with the given key.
+	 *
+	 * @param key				Key name
+	 * @param value				Value to set
+	 */
+	public native void SetColor(const char[] key, int value[4]);
+
+	/**
+	 * Retrieves an integer value from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native int GetDifficultyInt(const char[] key, int difficulty, int defaultValue = 0);
+
+	/**
+	 * Sets an integer value with the given difficulty key.
+	 *
+	 * @param key				Key name
+	 * @param difficulty		Difficulty value
+	 * @param value				Value to set
+	 */
+	public native void SetDifficultyInt(const char[] key, int difficulty, int value);
+
+	/**
+	 * Retrieves a boolean value from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native bool GetDifficultyBool(const char[] key, int difficulty, bool defaultValue = false);
+
+	/**
+	 * Sets an boolean value with the given difficulty key.
+	 *
+	 * @param key				Key name
+	 * @param difficulty		Difficulty value
+	 * @param value				Value to set
+	 */
+	public native void SetDifficultyBool(const char[] key, int difficulty, bool value);
+
+	/**
+	 * Retrieves a float value from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native float GetDifficultyFloat(const char[] key, int difficulty, float defaultValue = 0.0);
+
+	/**
+	 * Sets an float value with the given difficulty key.
+	 *
+	 * @param key				Key name
+	 * @param difficulty		Difficulty value
+	 * @param value				Value to set
+	 */
+	public native void SetDifficultyFloat(const char[] key, int difficulty, int value);
+
+	/**
+	 * Retrieves a section from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native SF2_ProfileObject GetDifficultySection(const char[] key, int difficulty, SF2_ProfileObject defaultValue = view_as<SF2_ProfileObject>(INVALID_HANDLE));
+
+	/**
+	 * Retrieves a string value from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param buffer           String buffer
+	 * @param bufferSize       Size of string buffer
+	 * @param defaultValue     Value to return as a fallback
+	 */
+	public native void GetDifficultyString(const char[] key, int difficulty, char[] buffer, int bufferSize, const char[] defaultValue = "");
+
+	/**
+	 * Sets an string value with the given difficulty key.
+	 *
+	 * @param key				Key name
+	 * @param difficulty		Difficulty value
+	 * @param value				Value to set
+	 */
+	public native void SetDifficultyString(const char[] key, int difficulty, const char[] value);
+
+	/**
+	 * Retrieves a Vector value from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param buffer           Float buffer
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native void GetDifficultyVector(const char[] key, int difficulty, float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 });
+
+	/**
+	 * Sets an Vector value with the given difficulty key.
+	 *
+	 * @param key				Key name
+	 * @param difficulty		Difficulty value
+	 * @param value				Value to set
+	 */
+	public native void SetDifficultyVector(const char[] key, int difficulty, float value[3]);
+
+	/**
+	 * Retrieves a Color value from the given difficulty key.
+	 *
+	 * @param key              Key name
+	 * @param difficulty       Difficulty value
+	 * @param buffer           Float buffer
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native void GetDifficultyColor(const char[] key, int difficulty, int buffer[4], const int defaultValue[4] = { 0, 0, 0, 0 });
+
+	/**
+	 * Sets an Color value with the given difficulty key.
+	 *
+	 * @param key				Key name
+	 * @param difficulty		Difficulty value
+	 * @param value				Value to set
+	 */
+	public native void SetDifficultyColor(const char[] key, int difficulty, int value[4]);
+
+	/**
+	 * Helper function that converts a string index map to a string array.
+	 *
+	 * @param key     Key name
+	 */
+	public native void ConvertValuesSectionToArray(const char[] key);
+
+	/**
+	 * Helper function that converts an object index map to a string array.
+	 *
+	 * @param key     Key name
+	 */
+	public native void ConvertSectionsSectionToArray(const char[] key);
+}
+
+methodmap SF2_ProfileArray < Handle
+{
+	/**
+	 * Retrieve the size of the array.
+	 */
+	property int Length
+	{
+		public native get();
+	}
+
+	/**
+	 * Retrieves an integer value from the given key.
+	 *
+	 * @param index            Index number
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native int GetInt(int index, int defaultValue = 0);
+
+	/**
+	 * Retrieves a boolean value from the given key.
+	 *
+	 * @param index            Index number
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native bool GetBool(int index, bool defaultValue = false);
+
+	/**
+	 * Retrieves a float value from the given key.
+	 *
+	 * @param index            Index number
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native float GetFloat(int index, float defaultValue = 0.0);
+
+	/**
+	 * Retrieves a section from the given key.
+	 *
+	 * @param index            Index number
+	 * @param defaultValue     Value to return as a fallback
+	 * @return                 Value stored at key
+	 */
+	public native SF2_ProfileObject GetSection(int index, SF2_ProfileObject defaultValue = view_as<SF2_ProfileObject>(INVALID_HANDLE));
+
+	/**
+	 * Retrieves a string value from the given key.
+	 *
+	 * @param index            Index number
+	 * @param buffer           String buffer
+	 * @param bufferSize       Size of string buffer
+	 * @param defaultValue     Value to return as a fallback
+	 */
+	public native void GetString(int index, char[] buffer, int bufferSize, const char[] defaultValue = "");
+}
+
+/**
+ * Profile object that stores sound data of an animation.
+ */
+methodmap SF2_ProfileSound < SF2_ProfileObject
+{
+	/**
+	 * Returns the sound paths this object uses.
+	 */
+	property SF2_ProfileArray Paths
+	{
+		public native get();
+	}
+
+	/**
+	 * Sets the default channel value of this sound object.
+	 *
+	 * @param channel	Sound channel
+	 */
+	public native void SetDefaultChannel(int channel);
+
+	/**
+	 * Sets the default level value of this sound object.
+	 *
+	 * @param level		Sound level
+	 */
+	public native void SetDefaultLevel(int level);
+
+	/**
+	 * Sets the default flags value of this sound object.
+	 *
+	 * @param flags		Sound flags
+	 */
+	public native void SetDefaultFlags(int flags);
+
+	/**
+	 * Sets the default minimum cooldown value of this sound object.
+	 *
+	 * @param cooldown		Sound cooldown
+	 */
+	public native void SetDefaultCooldownMin(float cooldown);
+
+	/**
+	 * Sets the default maximum cooldown value of this sound object.
+	 *
+	 * @param cooldown		Sound cooldown
+	 */
+	public native void SetDefaultCooldownMax(float cooldown);
+
+	/**
+	 * Gets the channel.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound channel
+	 */
+	public native int GetChannel(int difficulty);
+
+	/**
+	 * Gets the volume.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound volume
+	 */
+	public native float GetVolume(int difficulty);
+
+	/**
+	 * Gets the flags.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound flags
+	 */
+	public native int GetFlags(int difficulty);
+
+	/**
+	 * Gets the level.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound level
+	 */
+	public native int GetLevel(int difficulty);
+
+	/**
+	 * Gets the pitch.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound pitch
+	 */
+	public native int GetPitch(int difficulty);
+
+	/**
+	 * Gets the minimum cooldown.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound min cooldown
+	 */
+	public native float GetCooldownMin(int difficulty);
+
+	/**
+	 * Gets the maximum cooldown.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Sound max cooldown
+	 */
+	public native float GetCooldownMax(int difficulty);
+
+	/**
+	 * Precaches all sounds and adds to downloads.
+	 */
+	public native void Precache();
+
+	/**
+	 * Helper function that calls EmitSoundToAll with the parameters given by this
+	 * object.
+	 *
+	 * @param entIndex       Entity index to emit sound from
+	 * @param difficulty     Difficulty value
+	 */
+	public native void EmitToAll(int entIndex = SOUND_FROM_PLAYER, int difficulty = Difficulty_Normal);
+
+	/**
+	 * Helper function that calls EmitSoundToClient with the parameters given by this
+	 * object.
+	 *
+	 * @param client         Client index
+	 * @param entIndex       Entity index to emit sound from
+	 * @param difficulty     Difficulty value
+	 */
+	public native void EmitToClient(int client, int entIndex = SOUND_FROM_PLAYER, int difficulty = Difficulty_Normal);
+
+	/**
+	 * Stops all sounds in this section from playing.
+	 *
+	 * @param entity		Entity index to stop the sounds from
+	 */
+	public native void StopAllSounds(int entity);
+}
+
+/**
+ * Profile object that stores data of an animation.
+ * Note this covers 1 animation index, not the whole animations section or an animation named section like "idle".
+ * Use this over SF2_ProfileMasterAnimation if you're for sure you're gonna only use 1 animation only.
+ */
+methodmap SF2_ProfileAnimation < SF2_ProfileObject
+{
+	/**
+	 * Retrieves a sequence or activity name.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @param buffer         String buffer to store the animation name
+	 * @param bufferSize     Size of buffer
+	 */
+	public native void GetAnimationName(int difficulty, char[] buffer, int bufferSize);
+
+	/**
+	 * Retrieves a gesture sequence or activity name.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @param buffer         String buffer to store the gesture name
+	 * @param bufferSize     Size of buffer
+	 */
+	public native void GetGestureName(int difficulty, char[] buffer, int bufferSize);
+
+	/**
+	 * Gets the playback rate of the animation.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Playback rate
+	 */
+	public native float GetAnimationPlaybackRate(int difficulty);
+
+	/**
+	 * Gets the playback rate of the gesture.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Playback rate
+	 */
+	public native float GetGesturePlaybackRate(int difficulty);
+
+	/**
+	 * Gets the duration of the animation.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Duration
+	 */
+	public native float GetDuration(int difficulty);
+
+	/**
+	 * Gets the starting cycle value of the animation.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Cycle
+	 */
+	public native float GetAnimationCycle(int difficulty);
+
+	/**
+	 * Gets the starting cycle value of the gesture.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Cycle
+	 */
+	public native float GetGestureCycle(int difficulty);
+
+	/**
+	 * Plays an animation on the entity using the parameters provided by the object.
+	 *
+	 * @param entIndex       Entity index to play on
+	 * @param difficulty     Difficulty value
+	 * @param loops          Whether the animation should loop or not
+	 * @return               True if successful, false otherwise.
+	 */
+	public native bool PlayAnimation(int entIndex, int difficulty, bool loops = false);
+
+	/**
+	 * Plays an gesture/layered animation on the entity using the parameters provided by the object.
+	 *
+	 * @note                 Layered animations can only be used on entities derived from CBaseAnimatingOverlay.
+	 * @param entIndex       Entity index to play on
+	 * @param difficulty     Difficulty value
+	 * @param loops          Whether the animation should loop or not
+	 * @param layer          Value to store the layer ID of the animation.
+	 * @return               True if successful, false otherwise.
+	 */
+	public native bool PlayGesture(int entIndex, int difficulty, bool loops = false, int& layer = -1);
+}
+
+/**
+ * Profile object that stores all animation sections
+ * Note this covers the "animations" section.
+ */
+methodmap SF2_ProfileMasterAnimation < SF2_ProfileObject
+{
+	/**
+	 * Returns if an animation section exists
+	 *
+	 * @param animType			Animation section to search for
+	 */
+	public native bool HasAnimationSection(const char[] animType);
+
+	/**
+	 * Returns an animation index section based off of the given animation section name
+	 *
+	 * @param animType			Animation section to search for
+	 * @param preDefinedIndex	If greater than -1 will pick a specified animation in the animation section based off the order in the config
+	 * @param preDefinedName	If not an empty string will pick a specified animation in the animation section based off the animation section name
+	 * @param index				Value to store the animation index in.
+	 * @return					Animation indexed section or null if the section does not exist
+	 */
+	public native SF2_ProfileAnimation GetAnimation(const char[] animType, int preDefinedIndex = -1, const char[] preDefinedName = "", int& index = -1);
+}
+
+/**
+ * A section that defines the properties of an entity or other special effect.
+ */
+methodmap SF2_ProfileEffect < SF2_ProfileObject
+{
+	/**
+	 * The effect type.
+	 */
+	property EffectType Type
+	{
+		public native get();
+	}
+
+	/**
+	 * Precaches all assets and adds them to the downloads.
+	 */
+	public native void Precache();
+}
+
+/**
+ * A section that contains `SF2_ProfileEffect` objects meant to be spawned
+ * together.
+ */
+methodmap SF2_ProfileEffectMaster < SF2_ProfileObject
+{
+	/**
+	 * Precaches all assets and adds them to the downloads.
+	 */
+	public native void Precache();
+
+	/**
+	 * Spawns boss effects based on the list of effects used.
+	 * Note this will not spawn the extra effects like the festive lights and the disco ball
+	 * Only use this best for spawning in temporary effects.
+	 *
+	 * @param bossIndex			Boss to use
+	 * @param overridePos		Override the spawn position of the effects
+	 * @param overrideAng		Override the spawn angles of the effects
+	 * @param output			The ArrayList that will contain all of the outputted entities as entity references
+	 * @param entityOverride	If not INVALID_ENT_REFERENCE will attach all particles to the desired entity
+	 */
+	public native void Spawn(int bossIndex, float overridePos[3] = NULL_VECTOR, float overrideAng[3] = NULL_VECTOR, ArrayList &output = null, int entityOverride = INVALID_ENT_REFERENCE);
+}
+
+methodmap SF2_BaseBossProfile < SF2_ProfileObject
+{
+	/**
+	 * The boss type.
+	 */
+	property int Type
+	{
+		public native get();
+	}
+
+	/**
+	 * Determines if the boss is for the PvE arenas.
+	 */
+	property bool IsPvEBoss
+	{
+		public native get();
+	}
+}
+
+methodmap SF2_StatueBossProfile < SF2_BaseBossProfile
+{
+
+}
+
+methodmap SF2_ChaserBossProfile < SF2_BaseBossProfile
+{
+	/**
+	 * Gets the amount of attacks stored in the Chaser boss profile.
+	 *
+	 * @return         Amount of attacks
+	 * @error          Profile data is null or is not a Chaser boss profile
+	 */
+	public native int GetAttackCount();
+
+	/**
+	 * Gets a Chaser boss profile's attack data with the given name.
+	 *
+	 * @param name     Attack name
+	 * @return         The attack data, or null if it doesn't exist
+	 * @error          Profile data is null or is not a Chaser boss profile
+	 */
+	public native SF2_ChaserBossProfileBaseAttack GetAttack(const char[] name);
+
+	/**
+	 * Gets a Chaser boss profile's attack data with the given index.
+	 *
+	 * @param index     Attack index
+	 * @return          The attack data, or null if it doesn't exist
+	 * @error           Profile data is null or is not a Chaser boss profile
+	 */
+	public native SF2_ChaserBossProfileBaseAttack GetAttackFromIndex(int index);
+}
+
+methodmap SF2_ChaserBossProfileBaseAttack < SF2_ProfileObject
+{
+	/**
+	 * The type of the attack.
+	 */
+	property int Type
+	{
+		public native get();
+	}
+
+	/**
+	 * How long to wait after starting the attack to damage targets.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Time to delay
+	 */
+	public native float GetDamageDelay(int difficulty);
+
+	/**
+	 * The range of the attack, in Hammer units.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Range of attack
+	 */
+	public native float GetRange(int difficulty);
+
+	/**
+	 * How much damage to inflict to players.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Damage of attack
+	 */
+	public native float GetDamage(int difficulty);
+
+	/**
+	 * The bitflag type value of the damage.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Bitflags
+	 */
+	public native int GetDamageType(int difficulty);
+
+	/**
+	 * How much damage force to inflict to players.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Damage force of attack
+	 */
+	public native float GetDamageForce(int difficulty);
+
+	/**
+	 * How much viewpunch to inflict on players that get hit by the attack.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @param viewPunch      Vector buffer to store punch angles
+	 */
+	public native void GetViewPunchAngles(int difficulty, float viewPunch[3]);
+
+	/**
+	 * How long the attack should last.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Time
+	 */
+	public native float GetDuration(int difficulty);
+
+	/**
+	 * How wide the attack is, in degrees.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               FOV of attack
+	 */
+	public native float GetFOV(int difficulty);
+
+	/**
+	 * The maximum distance where the boss should use the attack.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Range of atack
+	 */
+	public native float GetBeginRange(int difficulty);
+
+	/**
+	 * How much the player must be within this FOV should the boss use the attack.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               FOV of attack
+	 */
+	public native float GetBeginFOV(int difficulty);
+
+	/**
+	 * How long to wait until the boss can use this attack again.
+	 *
+	 * @param difficulty     Difficulty value
+	 * @return               Cooldown of attack
+	 */
+	public native float GetCooldown(int difficulty);
+
+	property int UseOnDifficulty
+	{
+		public native get();
+	}
+
+	property int BlockOnDifficulty
+	{
+		public native get();
+	}
+
+	public native float CanUseOnHealth(int difficulty);
+
+	public native float CanBlockOnHealth(int difficulty);
+}
+
+/**
+ * The data of an attack with type `SF2BossAttackType_Custom`.
+ */
+methodmap SF2_ChaserBossProfileCustomAttack < SF2_ChaserBossProfileBaseAttack
+{
+	/**
+	 * An identifier string of the custom attack.
+	 *
+	 * @param buffer         Buffer to store the string
+	 * @param bufferSize     Size of buffer
+	 */
+	public native void GetSubType(char[] buffer, int bufferSize);
+
+	/**
+	 * Gets if the attack matches the given subtype string.
+	 *
+	 * @param subType     String to check
+	 * @return            True if attack's subtype matches, false if not.
+	 */
+	public native bool IsSubType(const char[] subType);
 }
 
 /**
@@ -2375,6 +3215,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 */
 	public native int GetDataEnt(int offset);
 
+	#if defined _tf2_included
 	/**
 	 * Alias of TF2_GetPlayerClass()
 	 */
@@ -2382,6 +3223,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	{
 		public native get();
 	}
+	#endif
 
 	/**
 	 * Alias of GetClientTeam()
@@ -2401,6 +3243,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 		public native set(bool state);
 	}
 
+	#if defined _tf2_included
 	/**
 	 * Alias of TF2_IsPlayerInCondition()
 	 * Use this over TF2_IsPlayerInCondition() though as it has extra optimizations
@@ -2418,6 +3261,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 * @param inflictor		Inflictor of the condition
 	 */
 	public native bool ChangeCondition(TFCond condition, bool remove = false, float duration = -1.0, int inflictor = 0);
+	#endif
 
 	/**
 	 * Whether or not the client is crit boosted
@@ -2462,6 +3306,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 */
 	public native void Regenerate();
 
+	#if defined _tf2_included
 	/**
 	 * Alias of TF2_SetPlayerClass()
 	 *
@@ -2470,6 +3315,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 * @param persistent	Whether or not the class change should remain after death
 	 */
 	public native void SetClass(TFClassType classType, bool weapons = true, bool persistent = true);
+	#endif
 
 	/**
 	 * Alias of GetClientEyePosition()
@@ -2918,13 +3764,6 @@ methodmap SF2_Player < CBaseCombatCharacter
 
 		public native set(int value);
 	}
-
-	/**
-	 * Updates the player's music state
-	 *
-	 * @param initialize		Unknown????? Nobody knows what this actually does.
-	 */
-	public native void UpdateMusicSystem(bool initialize = false);
 
 	/**
 	 * Whether or not the player has a glow active
@@ -3657,7 +4496,6 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_Player.LatchCount.set");
 	MarkNativeAsOptional("SF2_Player.Latcher.get");
 	MarkNativeAsOptional("SF2_Player.Latcher.set");
-	MarkNativeAsOptional("SF2_Player.UpdateMusicSystem");
 	MarkNativeAsOptional("SF2_Player.HasConstantGlow.get");
 	MarkNativeAsOptional("SF2_Player.SetPlayState");
 	MarkNativeAsOptional("SF2_Player.CanSeeSlender");
@@ -3730,9 +4568,6 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_GetBossAttributeName");
 	MarkNativeAsOptional("SF2_GetBossAttributeValue");
 
-	MarkNativeAsOptional("SF2_GetBossProfileData");
-	MarkNativeAsOptional("SF2_GetChaserBossProfileData");
-	MarkNativeAsOptional("SF2_GetStatueBossProfileData");
 	MarkNativeAsOptional("SF2_TranslateProfileActivityFromName");
 	MarkNativeAsOptional("SF2_LookupProfileAnimation");
 
@@ -3906,6 +4741,8 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_BaseBossEntity.EyePosition");
 	MarkNativeAsOptional("SF2_BaseBossEntity.GetProfileName");
 	MarkNativeAsOptional("SF2_BaseBossEntity.GetName");
+	MarkNativeAsOptional("SF2_BaseBossEntity.LockAnimations.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.LockAnimations.set");
 	MarkNativeAsOptional("SF2_BaseBossEntity.ProfileData");
 	MarkNativeAsOptional("SF2_BaseBossEntity.ResetProfileAnimation");
 
@@ -3937,11 +4774,119 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_ChaserBossEntity.CreateSoundHint");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.GroundSpeedOverride.set");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.MovementType.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.MovementType.set");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.LockMovementType.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.LockMovementType.set");
 
 	// npc/entities/statue/entity.sp
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsValid.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsMoving.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.LastKillTime.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.ProfileData");
+
+	MarkNativeAsOptional("SF2_ProfileObject.Parent.get");
+	MarkNativeAsOptional("SF2_ProfileObject.KeyLength.get");
+	MarkNativeAsOptional("SF2_ProfileObject.SectionLength.get");
+	MarkNativeAsOptional("SF2_ProfileObject.GetInt");
+	MarkNativeAsOptional("SF2_ProfileObject.SetInt");
+	MarkNativeAsOptional("SF2_ProfileObject.GetBool");
+	MarkNativeAsOptional("SF2_ProfileObject.SetBool");
+	MarkNativeAsOptional("SF2_ProfileObject.GetFloat");
+	MarkNativeAsOptional("SF2_ProfileObject.SetFloat");
+	MarkNativeAsOptional("SF2_ProfileObject.GetSection");
+	MarkNativeAsOptional("SF2_ProfileObject.GetArray");
+	MarkNativeAsOptional("SF2_ProfileObject.GetString");
+	MarkNativeAsOptional("SF2_ProfileObject.SetString");
+	MarkNativeAsOptional("SF2_ProfileObject.GetVector");
+	MarkNativeAsOptional("SF2_ProfileObject.SetVector");
+	MarkNativeAsOptional("SF2_ProfileObject.GetColor");
+	MarkNativeAsOptional("SF2_ProfileObject.SetColor");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultyInt");
+	MarkNativeAsOptional("SF2_ProfileObject.SetDifficultyInt");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultyBool");
+	MarkNativeAsOptional("SF2_ProfileObject.SetDifficultyBool");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultyFloat");
+	MarkNativeAsOptional("SF2_ProfileObject.SetDifficultyFloat");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultySection");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultyString");
+	MarkNativeAsOptional("SF2_ProfileObject.SetDifficultyString");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultyVector");
+	MarkNativeAsOptional("SF2_ProfileObject.SetDifficultyVector");
+	MarkNativeAsOptional("SF2_ProfileObject.GetDifficultyColor");
+	MarkNativeAsOptional("SF2_ProfileObject.SetDifficultyColor");
+	MarkNativeAsOptional("SF2_ProfileObject.ConvertValuesSectionToArray");
+	MarkNativeAsOptional("SF2_ProfileObject.ConvertSectionsSectionToArray");
+
+	MarkNativeAsOptional("SF2_ProfileArray.Length.get");
+	MarkNativeAsOptional("SF2_ProfileArray.GetInt");
+	MarkNativeAsOptional("SF2_ProfileArray.GetBool");
+	MarkNativeAsOptional("SF2_ProfileArray.GetFloat");
+	MarkNativeAsOptional("SF2_ProfileArray.GetSection");
+	MarkNativeAsOptional("SF2_ProfileArray.GetString");
+
+	MarkNativeAsOptional("SF2_ProfileSound.Paths.get");
+	MarkNativeAsOptional("SF2_ProfileSound.SetDefaultChannel");
+	MarkNativeAsOptional("SF2_ProfileSound.SetDefaultLevel");
+	MarkNativeAsOptional("SF2_ProfileSound.SetDefaultFlags");
+	MarkNativeAsOptional("SF2_ProfileSound.SetDefaultCooldownMin");
+	MarkNativeAsOptional("SF2_ProfileSound.SetDefaultCooldownMax");
+	MarkNativeAsOptional("SF2_ProfileSound.GetChannel");
+	MarkNativeAsOptional("SF2_ProfileSound.GetVolume");
+	MarkNativeAsOptional("SF2_ProfileSound.GetFlags");
+	MarkNativeAsOptional("SF2_ProfileSound.GetLevel");
+	MarkNativeAsOptional("SF2_ProfileSound.GetPitch");
+	MarkNativeAsOptional("SF2_ProfileSound.GetCooldownMin");
+	MarkNativeAsOptional("SF2_ProfileSound.GetCooldownMax");
+	MarkNativeAsOptional("SF2_ProfileSound.Precache");
+	MarkNativeAsOptional("SF2_ProfileSound.EmitToAll");
+	MarkNativeAsOptional("SF2_ProfileSound.EmitToClient");
+	MarkNativeAsOptional("SF2_ProfileSound.StopAllSounds");
+
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetAnimationName");
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetGestureName");
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetAnimationPlaybackRate");
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetGesturePlaybackRate");
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetDuration");
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetAnimationCycle");
+	MarkNativeAsOptional("SF2_ProfileAnimation.GetGestureCycle");
+	MarkNativeAsOptional("SF2_ProfileAnimation.PlayAnimation");
+	MarkNativeAsOptional("SF2_ProfileAnimation.PlayGesture");
+
+	MarkNativeAsOptional("SF2_ProfileMasterAnimation.HasAnimationSection");
+	MarkNativeAsOptional("SF2_ProfileMasterAnimation.GetAnimation");
+
+	MarkNativeAsOptional("SF2_ProfileEffect.Type.get");
+	MarkNativeAsOptional("SF2_ProfileEffect.Precache");
+
+	MarkNativeAsOptional("SF2_ProfileEffectMaster.Precache");
+	MarkNativeAsOptional("SF2_ProfileEffectMaster.Spawn");
+
+	MarkNativeAsOptional("SF2_BaseBossProfile.Type.get");
+	MarkNativeAsOptional("SF2_BaseBossProfile.IsPvEBoss.get");
+
+	MarkNativeAsOptional("SF2_ChaserBossProfile.GetAttackCount");
+	MarkNativeAsOptional("SF2_ChaserBossProfile.GetAttack");
+	MarkNativeAsOptional("SF2_ChaserBossProfile.GetAttackFromIndex");
+
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.Type.get");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetDamageDelay");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetRange");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetDamage");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetDamageType");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetDamageForce");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetViewPunchAngles");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetDuration");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetFOV");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetBeginRange");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetBeginFOV");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetCooldown");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.UseOnDifficulty.get");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.BlockOnDifficulty.get");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.CanUseOnHealth");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.CanBlockOnHealth");
+
+	MarkNativeAsOptional("SF2_ChaserBossProfileCustomAttack.GetSubType");
+	MarkNativeAsOptional("SF2_ChaserBossProfileCustomAttack.IsSubType");
 }
 #endif

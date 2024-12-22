@@ -1,6 +1,7 @@
 // sf2_info_boss_spawn
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_info_boss_spawn"; // The custom classname of the entity. Should be prefixed with "sf2_"
 

@@ -1,10 +1,126 @@
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap ChaserBossProfileTongueAttack < ChaserBossProfileBaseAttack
+{
+	public float GetSpeed(int difficulty)
+	{
+		float def = 900.0;
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			def = obj.GetDifficultyFloat("speed", difficulty, def);
+		}
+		return def;
+	}
+
+	public float GetPullScale(int difficulty)
+	{
+		float def = 6.0;
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			def = obj.GetDifficultyFloat("pull_scale", difficulty, def);
+		}
+		return def;
+	}
+
+	public bool CanEscape(int difficulty)
+	{
+		bool def = true;
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			def = obj.GetDifficultyBool("can_escape", difficulty, def);
+		}
+		return def;
+	}
+
+	public void GetMaterial(char[] buffer, int bufferSize)
+	{
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			obj.GetString("material", buffer, bufferSize);
+		}
+	}
+
+	public void GetAttachment(char[] buffer, int bufferSize)
+	{
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			obj.GetString("attachment", buffer, bufferSize);
+		}
+	}
+
+	public void GetOffset(float buffer[3])
+	{
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			obj.GetVector("offset", buffer);
+		}
+	}
+
+	public ProfileSound GetLaunchSounds()
+	{
+		ProfileSound def = null;
+		ProfileObject obj = this.GetSection("tongue");
+		obj = obj != null ? obj.GetSection("sounds") : null;
+		if (obj != null)
+		{
+			def = view_as<ProfileSound>(obj.GetSection("launch"));
+		}
+		return def;
+	}
+
+	public ProfileSound GetTongueHitSounds()
+	{
+		ProfileSound def = null;
+		ProfileObject obj = this.GetSection("tongue");
+		obj = obj != null ? obj.GetSection("sounds") : null;
+		if (obj != null)
+		{
+			def = view_as<ProfileSound>(obj.GetSection("hit"));
+		}
+		return def;
+	}
+
+	public ProfileSound GetTiedSounds()
+	{
+		ProfileSound def = null;
+		ProfileObject obj = this.GetSection("tongue");
+		obj = obj != null ? obj.GetSection("sounds") : null;
+		if (obj != null)
+		{
+			def = view_as<ProfileSound>(obj.GetSection("tied"));
+		}
+		return def;
+	}
+
+	public ProfileMasterAnimations GetTongueAnimations()
+	{
+		ProfileMasterAnimations def = null;
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			def = view_as<ProfileMasterAnimations>(obj.GetSection("animations"));
+		}
+		return def;
+	}
+
+	public void Precache()
+	{
+
+	}
+}
 
 static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_Tongue < NextBotAction
 {
-	public SF2_ChaserAttackAction_Tongue(int attackIndex, const char[] attackName, float fireDelay)
+	public SF2_ChaserAttackAction_Tongue(const char[] attackName, ChaserBossProfileTongueAttack data, float fireDelay)
 	{
 		if (g_Factory == null)
 		{
@@ -15,8 +131,8 @@ methodmap SF2_ChaserAttackAction_Tongue < NextBotAction
 			g_Factory.SetEventCallback(EventResponderType_OnCommandString, OnCommandString);
 			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
-				.DefineIntField("m_AttackIndex")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_ProfileData")
 				.DefineFloatField("m_NextFireTime")
 				.DefineEntityField("m_TongueEntity")
 				.DefineEntityField("m_TongueEntityEnd")
@@ -30,23 +146,10 @@ methodmap SF2_ChaserAttackAction_Tongue < NextBotAction
 		SF2_ChaserAttackAction_Tongue action = view_as<SF2_ChaserAttackAction_Tongue>(g_Factory.Create());
 
 		action.NextFireTime = fireDelay;
-		action.AttackIndex = attackIndex;
 		action.SetAttackName(attackName);
+		action.ProfileData = data;
 
 		return action;
-	}
-
-	property int AttackIndex
-	{
-		public get()
-		{
-			return this.GetData("m_AttackIndex");
-		}
-
-		public set(int value)
-		{
-			this.SetData("m_AttackIndex", value);
-		}
 	}
 
 	public static void Initialize()
@@ -65,6 +168,19 @@ methodmap SF2_ChaserAttackAction_Tongue < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property ChaserBossProfileTongueAttack ProfileData
+	{
+		public get()
+		{
+			return this.GetData("m_ProfileData");
+		}
+
+		public set(ChaserBossProfileTongueAttack value)
+		{
+			this.SetData("m_ProfileData", value);
+		}
 	}
 
 	property float NextFireTime
@@ -179,10 +295,8 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = chaser.Controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfileTongueAttack attackData = view_as<ChaserBossProfileTongueAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (attackData.Type != SF2BossAttackType_Tongue)
@@ -190,7 +304,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_Tongue(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_Tongue(attackName, attackData, attackData.GetDelay(difficulty) + GetGameTime());
 	return Plugin_Changed;
 }
 
@@ -262,13 +376,9 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 
 	SF2NPC_Chaser controller = actor.Controller;
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	if (originalData.IsPvEBoss)
+	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfileTongueAttack attackData = action.ProfileData;
+	if (data.IsPvEBoss)
 	{
 		attackEliminated = true;
 	}
@@ -276,7 +386,7 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 
 	float gameTime = GetGameTime();
 
-	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.EventNumber == -1)
+	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.GetEventNumber(difficulty) == -1)
 	{
 		FireTongue(actor, action);
 
@@ -310,16 +420,19 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 
 			float worldSpace[3];
 			player.WorldSpaceCenter(worldSpace);
-			TR_TraceRayFilter(tonguePos, worldSpace,
+			Handle trace = TR_TraceRayFilterEx(tonguePos, worldSpace,
 			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_GRATE | CONTENTS_WINDOW,
 			RayType_EndPoint, TraceRayDontHitAnyEntity, tongueEnd.index);
 
-			if (TR_DidHit() && TR_GetEntityIndex() != player.index)
+			if (TR_DidHit(trace) && TR_GetEntityIndex(trace) != player.index)
 			{
+				delete trace;
 				continue;
 			}
 
-			if (!attackData.TongueCanEscape[difficulty])
+			delete trace;
+
+			if (!attackData.CanEscape(difficulty))
 			{
 				player.Stun(1.0, 1.0, TF_STUNFLAG_NOSOUNDOREFFECT | TF_STUNFLAG_BONKSTUCK);
 			}
@@ -327,7 +440,7 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 			{
 				player.Stun(2.0, 1.0, TF_STUNFLAG_SLOWDOWN);
 			}
-			player.TakeDamage(_, actor.index, actor.index, attackData.Damage[difficulty], DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE);
+			player.TakeDamage(_, actor.index, actor.index, attackData.GetDamage(difficulty), attackData.GetDamageType(difficulty));
 
 			tongueEnd.AcceptInput("ClearParent");
 			tongueEnd.Teleport(worldSpace, NULL_VECTOR, NULL_VECTOR);
@@ -337,11 +450,11 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 			action.TongueTime = 0.5 + gameTime;
 			action.LatchedTarget = player;
 			action.CaughtTarget = true;
-			attackData.TongueTiedSound.EmitSound(_, tongueEnd.index);
-			attackData.TongueHitSound.EmitSound(_, tongueEnd.index);
+			attackData.GetTiedSounds().EmitSound(_, tongueEnd.index);
+			attackData.GetTongueHitSounds().EmitSound(_, tongueEnd.index);
 			player.IsLatched = true;
 			player.LatchCount = GetRandomInt(6, 10);
-			if (!attackData.TongueCanEscape[difficulty])
+			if (!attackData.CanEscape(difficulty))
 			{
 				player.LatchCount = 999999; // I'm lazy
 			}
@@ -377,10 +490,7 @@ static void TongueThink(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity a
 	float gameTime = GetGameTime();
 	SF2NPC_Chaser controller = actor.Controller;
 	int difficulty = controller.Difficulty;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileTongueAttack attackData = action.ProfileData;
 
 	SF2_BasePlayer player = action.LatchedTarget;
 	if (!player.IsValid || !player.IsAlive)
@@ -394,15 +504,18 @@ static void TongueThink(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity a
 	tongueStart.GetAbsOrigin(tonguePos);
 	player.WorldSpaceCenter(worldSpace);
 
-	TR_TraceRayFilter(tonguePos, worldSpace,
+	Handle trace = TR_TraceRayFilterEx(tonguePos, worldSpace,
 	CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_GRATE | CONTENTS_WINDOW,
 	RayType_EndPoint, TraceRayDontHitAnyEntity, tongueStart.index);
 
-	if (TR_DidHit() && TR_GetEntityIndex() != player.index)
+	if (TR_DidHit(trace) && TR_GetEntityIndex(trace) != player.index)
 	{
 		Unlatch(action, true);
+		delete trace;
 		return;
 	}
+
+	delete trace;
 
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
@@ -413,7 +526,7 @@ static void TongueThink(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity a
 	if (action.TongueTime > -1.0 && action.TongueTime <= gameTime)
 	{
 		SF2_BasePlayer latched = action.LatchedTarget;
-		if (!attackData.TongueCanEscape[difficulty])
+		if (!attackData.CanEscape(difficulty))
 		{
 			latched.Stun(1.0, 1.0, TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT);
 		}
@@ -427,10 +540,10 @@ static void TongueThink(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity a
 		SubtractVectors(myPos, targetPos, velocity);
 		velocity[2] = 0.0;
 
-		ScaleVector(velocity, attackData.TonguePullScale[difficulty]);
+		ScaleVector(velocity, attackData.GetPullScale(difficulty));
 		player.SetPropVector(Prop_Data, "m_vecBaseVelocity", velocity);
 
-		player.TakeDamage(_, actor.index, actor.index, attackData.Damage[difficulty], DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE);
+		player.TakeDamage(_, actor.index, actor.index, attackData.GetDamage(difficulty), attackData.GetDamageType(difficulty));
 	}
 
 	loco.FaceTowards(targetPos);
@@ -479,12 +592,9 @@ static void FireTongue(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Tongue act
 	actor.GetAbsOrigin(myPos);
 	actor.GetAbsAngles(myAng);
 	int difficulty = controller.Difficulty;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileTongueAttack attackData = action.ProfileData;
 
-	effectPos = attackData.TongueOffset;
+	attackData.GetOffset(effectPos);
 	VectorTransform(effectPos, myPos, myAng, effectPos);
 
 	CBaseEntity tongue = CBaseEntity(CreateEntityByName("move_rope"));
@@ -502,14 +612,16 @@ static void FireTongue(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Tongue act
 
 	char buffer[PLATFORM_MAX_PATH];
 	tongue.KeyValue("Slack", "50");
-	tongue.KeyValue("RopeMaterial", attackData.TongueMaterial);
+	attackData.GetMaterial(buffer, sizeof(buffer));
+	tongue.KeyValue("RopeMaterial", buffer);
 	FormatEx(buffer, sizeof(buffer), "rope_%i", controller.Index);
 	tongue.KeyValue("NextKey", buffer);
 
 	CBaseEntity tongueEnd = CBaseEntity(CreateEntityByName("move_rope"));
 	tongueEnd.KeyValue("targetname", buffer);
 	tongueEnd.KeyValue("Slack", "50");
-	tongueEnd.KeyValue("RopeMaterial", attackData.TongueMaterial);
+	attackData.GetMaterial(buffer, sizeof(buffer));
+	tongueEnd.KeyValue("RopeMaterial", buffer);
 	tongueEnd.Teleport(effectPos, myAng, NULL_VECTOR);
 	tongueEnd.SetMoveType(MOVETYPE_FLY);
 
@@ -527,9 +639,9 @@ static void FireTongue(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Tongue act
 	NormalizeVector(shootAng, shootAng);
 	GetVectorAngles(shootAng, shootAng);
 	GetAngleVectors(shootAng, velocity, NULL_VECTOR, NULL_VECTOR);
-	ScaleVector(velocity, attackData.TongueSpeed[difficulty]);
+	ScaleVector(velocity, attackData.GetSpeed(difficulty));
 
-	attackData.TongueLaunchSound.EmitSound(_, actor.index);
+	attackData.GetLaunchSounds().EmitSound(_, actor.index);
 
 	CBaseEntity trail = CBaseEntity(CreateEntityByName("tf_projectile_grapplinghook"));
 	trail.SetModel("models/roller.mdl");
@@ -567,17 +679,20 @@ static Action Timer_Think(Handle timer, any ref)
 	}
 	float pos[3], mins[3] = {-8.0, ... }, maxs[3] = {8.0, ... };
 	trail.GetAbsOrigin(pos);
-	TR_TraceHullFilter(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, trail.index);
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, trail.index);
 
-	if (TR_GetEntityIndex() == 0)
+	if (TR_GetEntityIndex(trace) == 0)
 	{
 		if (IsValidEntity(owner))
 		{
 			RemoveEntity(owner);
 		}
 		RemoveEntity(trail.index);
+		delete trace;
 		return Plugin_Stop;
 	}
+
+	delete trace;
 
 	return Plugin_Continue;
 }
@@ -588,15 +703,18 @@ static int OnCommandString(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntit
 	int difficulty = controller.Difficulty;
 	char animName[64];
 	float rate = 1.0, duration = 0.0, cycle = 0.0;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileTongueAttack attackData = action.ProfileData;
+	ProfileAnimation section = null;
 	if (strcmp(command, "break tongue") == 0)
 	{
 		Unlatch(action, true);
-		if (attackData.Animations.GetAnimation("break", difficulty, animName, sizeof(animName), rate, duration, cycle))
+		section = attackData.GetTongueAnimations().GetAnimation("break");
+		if (section != null)
 		{
+			section.GetAnimationName(difficulty, animName, sizeof(animName));
+			rate = section.GetAnimationPlaybackRate(difficulty);
+			duration = section.GetDuration(difficulty);
+			cycle = section.GetAnimationCycle(difficulty);
 			int sequence = LookupProfileAnimation(actor.index, animName);
 			if (sequence != -1)
 			{
@@ -607,8 +725,13 @@ static int OnCommandString(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntit
 
 	if (strcmp(command, "latch tongue") == 0 && !action.InPullAnimation)
 	{
-		if (attackData.Animations.GetAnimation("pull", difficulty, animName, sizeof(animName), rate, duration, cycle))
+		section = attackData.GetTongueAnimations().GetAnimation("break");
+		if (section != null)
 		{
+			section.GetAnimationName(difficulty, animName, sizeof(animName));
+			rate = section.GetAnimationPlaybackRate(difficulty);
+			duration = section.GetDuration(difficulty);
+			cycle = section.GetAnimationCycle(difficulty);
 			int sequence = LookupProfileAnimation(actor.index, animName);
 			if (sequence != -1)
 			{
@@ -631,12 +754,9 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEnt
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileTongueAttack attackData = action.ProfileData;
 
-	if (event == attackData.EventNumber)
+	if (event == attackData.GetEventNumber(controller.Difficulty))
 	{
 		FireTongue(actor, action);
 	}
