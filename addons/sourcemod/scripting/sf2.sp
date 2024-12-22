@@ -746,7 +746,7 @@ int g_FlashlightHaloModel = -1;
 #include "sf2/entities/initialize.sp"
 #include "sf2/menus.sp"
 #include "sf2/npc.sp"
-#include "sf2/pvp.sp"
+#include "sf2/old_pvp.sp"
 #include "sf2/pve.sp"
 #include "sf2/client.sp"
 #include "sf2/specialround.sp"
