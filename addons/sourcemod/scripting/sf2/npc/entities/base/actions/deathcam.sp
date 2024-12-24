@@ -35,10 +35,6 @@ static NextBotAction InitialContainedAction(SF2_DeathCamAction action, SF2_BaseB
 	int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], rate, duration, cycle);
 	if (sequence != -1)
 	{
-		if (SF2_ChaserEntity(actor.index).IsValid())
-		{
-			SF2_ChaserEntity(actor.index).GroundSpeedOverride = true;
-		}
 		return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
 	}
 
@@ -63,11 +59,6 @@ static int Update(SF2_DeathCamAction action, SF2_BaseBoss actor, NextBotAction p
 
 static void OnEnd(SF2_DeathCamAction action, SF2_BaseBoss actor)
 {
-	if (SF2_ChaserEntity(actor.index).IsValid())
-	{
-		SF2_ChaserEntity(actor.index).GroundSpeedOverride = false;
-	}
-
 	actor.IsKillingSomeone = false;
 }
 
