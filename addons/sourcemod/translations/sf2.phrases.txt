@@ -706,6 +706,16 @@
 		"ko"	"HUD 버전 설정"
 	}
 
+	"SF2 Settings Hud New"
+	{
+		"en" "New"
+	}
+
+	"SF2 Settings Hud Legacy"
+	{
+		"en" "Legacy"
+	}
+
 	"SF2 Settings Music Volume Title"
 	{
 		"en" 	"Set music volume"
@@ -730,6 +740,11 @@
 		"chi"	"{lightblue}音乐音量已设为 {1}%% 。"
 		"pt"	"{lightblue}Volume da música definido para {1}%%."
 		"ko"	"{lightblue}음악 볼륨이 {1}%% 으로 설정 되었습니다."
+	}
+
+	"SF2 Settings Projected Flashlight Title"
+	{
+		"en" 	"Projected flashlight"
 	}
 
 	"SF2 Settings Flashlight Temperature Title"
@@ -1159,6 +1174,23 @@
 		"chi"	"当前Boss覆盖：{1}"
 		"pt"	"Substituição de chefão atual: {1}"
 		"ko"	"현재 보스 재정의 : {1}"
+	}
+
+	"SF2 Disabled Boss Pack"
+	{
+		"en"	"{red}Boss Pack vote is disabled on this server."
+	}
+
+	"SF2 Boss Pack Next"
+	{
+		"#format" "{1:s}"
+		"en"	"{dodgerblue}Next boss pack: {lightblue}{1}{default}."
+	}
+
+	"SF2 Current Boss Pack"
+	{
+		"#format" "{1:s}"
+		"en"	"{dodgerblue}Current boss pack: {lightblue}{1}{default}."
 	}
 
 	"SF2 Admin Menu Player Set Play State"
