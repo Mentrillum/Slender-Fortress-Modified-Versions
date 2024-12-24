@@ -701,8 +701,6 @@ Handle g_SDKSequenceVelocity;
 Handle g_SDKStartTouch;
 Handle g_SDKEndTouch;
 Handle g_SDKWeaponSwitch;
-Handle g_SDKGetWeaponID;
-Handle g_SDKIsWeapon;
 
 DynamicHook g_DHookWantsLagCompensationOnEntity;
 DynamicHook g_DHookShouldTransmit;
@@ -755,7 +753,7 @@ int g_FlashlightHaloModel = -1;
 #include "sf2/entities/initialize.sp"
 #include "sf2/menus.sp"
 #include "sf2/npc.sp"
-#include "sf2/pvp.sp"
+#include "sf2/old_pvp.sp"
 #include "sf2/pve.sp"
 #include "sf2/client.sp"
 #include "sf2/specialround.sp"
@@ -3654,7 +3652,6 @@ public void OnClientPutInServer(int client)
 	SDKHook(client, SDKHook_PreThink, Hook_ClientPreThink);
 	SDKHook(client, SDKHook_PreThinkPost, Hook_OnFlashlightThink);
 	SDKHook(client, SDKHook_SetTransmit, Hook_ClientSetTransmit);
-	SDKHook(client, SDKHook_TraceAttack, Hook_PvPPlayerTraceAttack);
 	SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 
 	g_DHookWantsLagCompensationOnEntity.HookEntity(Hook_Pre, client, Hook_ClientWantsLagCompensationOnEntity);

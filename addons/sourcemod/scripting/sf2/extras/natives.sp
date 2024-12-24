@@ -326,23 +326,6 @@ void SDK_Init()
 		LogError("Failed to setup Studio_SeqVelocity call from gamedata");
 	}
 
-	// From nosoop's TF2 Utils plugin
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFWeaponBase::GetWeaponID");
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-	if ((g_SDKGetWeaponID = EndPrepSDKCall()) == null)
-	{
-		SetFailState("Failed to setup CTFWeaponBase::GetWeaponID call from gamedata");
-	}
-
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseEntity::IsBaseCombatWeapon");
-	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
-	if ((g_SDKIsWeapon = EndPrepSDKCall()) == null)
-	{
-		SetFailState("Failed to setup CBaseEntity::IsBaseCombatWeapon call from gamedata");
-	}
-
 	//Hook_ClientWantsLagCompensationOnEntity
 	int offset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
 	g_DHookWantsLagCompensationOnEntity = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);

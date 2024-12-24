@@ -523,16 +523,6 @@ int SDK_SwitchWeapon(int client, int weapon)
 	return -1;
 }
 
-int GetWeaponID(int entity)
-{
-	return SDKCall(g_SDKGetWeaponID, entity);
-}
-
-bool IsEntityWeapon(int entity)
-{
-	return SDKCall(g_SDKIsWeapon, entity);
-}
-
 bool IsClientInKart(int client)
 {
 	if (TF2_IsPlayerInCondition(client, TFCond_HalloweenKart) ||
@@ -802,37 +792,6 @@ void ShowHealthRegen(int client, int amount, int weaponIndex = -1)
 	}
 }
 
-bool IsObjectFriendly(int obj, int entity)
-{
-	if (IsValidEntity(entity))
-	{
-		if (IsValidClient(entity))
-		{
-			if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == GetEntPropEnt(entity, Prop_Send, "m_hDisguiseTarget"))
-			{
-				return true;
-			}
-			else if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == entity)	// obj_dispenser
-			{
-				return true;
-			}
-			else if (GetEntPropEnt(obj, Prop_Data, "m_hParent") == entity)	// pd_dispenser
-			{
-				return true;
-			}
-		}
-		else
-		{
-			if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == GetEntPropEnt(entity, Prop_Send, "m_hBuilder"))
-			{
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 //	==========================================================
 //	TF2-SPECIFIC FUNCTIONS
 //	==========================================================
@@ -937,30 +896,6 @@ void SpecialRoundGameText(const char[] message, const char[] icon = "")
 	DispatchSpawn(entity);
 	AcceptEntityInput(entity, "Display", entity, entity); //The only time I keep this.
 	CreateTimer(2.0, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
-}
-
-TFTeam TF2_GetEntityTeam(int entity)
-{
-	return view_as<TFTeam>(GetEntProp(entity, Prop_Data, "m_iTeamNum"));
-}
-
-TFTeam GetEnemyTeam(TFTeam team)
-{
-	switch (team)
-	{
-		case view_as<TFTeam>(TFTeam_Red):
-		{
-			return view_as<TFTeam>(TFTeam_Blue);
-		}
-		case view_as<TFTeam>(TFTeam_Blue):
-		{
-			return view_as<TFTeam>(TFTeam_Red);
-		}
-		default:
-		{
-			return team;
-		}
-	}
 }
 
 // Removes wearables such as botkillers from weapons.
