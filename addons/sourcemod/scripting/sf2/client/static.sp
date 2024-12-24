@@ -153,34 +153,6 @@ void ClientProcessStaticShake(int client)
 		newPunchAng[i] = oldPunchAng[i];
 		newPunchAngVel[i] = oldPunchAngVel[i];
 	}
-	
-	int staticMaster = NPCGetFromUniqueID(g_PlayerStaticMaster[client]);
-	if (staticMaster != -1 && NPCGetFlags(staticMaster) & SFF_HASSTATICSHAKE)
-	{
-		if (g_PlayerStaticMode[client][staticMaster] == Static_Increase)
-		{
-			newStaticShakeMaster = staticMaster;
-		}
-	}
-	for (int i = 0; i < MAX_BOSSES; i++)
-	{
-		if (NPCGetUniqueID(i) == -1)
-		{
-			continue;
-		}
-
-
-		if (NPCGetFlags(i) & SFF_HASSTATICSHAKE)
-		{
-			int master = NPCGetFromUniqueID(g_SlenderCopyMaster[i]);
-			if (master == -1)
-			{
-				master = i;
-			}
-
-
-		}
-	}
 
 	int staticMaster = NPCGetFromUniqueID(g_PlayerStaticMaster[client]);
 	if (staticMaster != -1 && NPCGetFlags(staticMaster) & SFF_HASSTATICSHAKE)
