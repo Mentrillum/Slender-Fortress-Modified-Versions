@@ -264,7 +264,7 @@ static float ClientGetBlinkRate(int client)
 			continue;
 		}
 
-		BaseBossProfile profileData = SF2NPC_BaseNPC(i).GetProfileDataEx();
+		BaseBossProfile profileData = SF2NPC_BaseNPC(i).GetProfileData();
 
 		if (g_PlayerSeesSlender[client][i])
 		{

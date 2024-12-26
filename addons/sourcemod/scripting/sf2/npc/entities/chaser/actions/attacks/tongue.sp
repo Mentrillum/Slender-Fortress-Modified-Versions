@@ -295,7 +295,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 	ChaserBossProfileTongueAttack attackData = view_as<ChaserBossProfileTongueAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
@@ -376,7 +376,7 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 
 	SF2NPC_Chaser controller = actor.Controller;
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileTongueAttack attackData = action.ProfileData;
 	if (data.IsPvEBoss)
 	{

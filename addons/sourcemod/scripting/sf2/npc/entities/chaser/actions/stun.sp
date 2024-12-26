@@ -76,7 +76,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserStunnedAction action, SF2_
 	char posture[64];
 	actor.GetPosture(posture, sizeof(posture));
 
-	ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+	ChaserBossProfile data = actor.Controller.GetProfileData();
 	if (data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Stun]))
 	{
 		return SF2_PlaySequenceAndWaitEx(g_SlenderAnimationsList[SF2BossAnimation_Stun]);
@@ -88,7 +88,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserStunnedAction action, SF2_
 static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
 	ChaserBossProfileStunData stunData = data.GetStunBehavior();
 	int difficulty = controller.Difficulty;
@@ -98,7 +98,12 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(stunData.GetOnStartEffects(), controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(stunData.GetOnStartEffects(), controller.Index, false, pos, ang, _, _, false);
+	}
+
+	if (stunData.GetOnStartInputs() != null)
+	{
+		stunData.GetOnStartInputs().AcceptInputs(actor.index, action.Attacker.index, action.Attacker.index);
 	}
 
 	if (stunData.KeyDrop)
@@ -181,7 +186,7 @@ static int Update(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, float 
 		return action.Continue();
 	}
 
-	if (actor.Controller.GetProfileDataEx().GetStunBehavior().ShouldDisappear(actor.Controller.Difficulty))
+	if (actor.Controller.GetProfileData().GetStunBehavior().ShouldDisappear(actor.Controller.Difficulty))
 	{
 		actor.Controller.UnSpawn(true);
 	}
@@ -202,7 +207,7 @@ static void OnEnd(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 		return;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileStunData stunData = data.GetStunBehavior();
 
 	if (stunData.GetOnEndEffects() != null)
@@ -210,7 +215,12 @@ static void OnEnd(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(stunData.GetOnEndEffects(), controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(stunData.GetOnEndEffects(), controller.Index, false, pos, ang, _, _, false);
+	}
+
+	if (stunData.GetOnEndInputs() != null)
+	{
+		stunData.GetOnEndInputs().AcceptInputs(actor.index, action.Attacker.index, action.Attacker.index);
 	}
 
 	actor.IsStunned = false;

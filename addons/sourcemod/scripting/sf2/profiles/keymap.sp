@@ -422,12 +422,6 @@ methodmap KeyMap < StringMap
 	public KeyMap Clone()
 	{
 		KeyMap clone = CloneKeyMap(this);
-		clone.Parent = null;
-		KeyMap section = clone.GetSection("execution");
-		if (section != null)
-		{
-			section.GetSection("paths");
-		}
 		return clone;
 	}
 

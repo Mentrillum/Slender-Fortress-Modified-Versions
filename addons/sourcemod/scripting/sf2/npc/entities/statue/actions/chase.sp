@@ -22,7 +22,7 @@ static int OnStart(SF2_StatueChaseAction action, SF2_StatueEntity actor, NextBot
 {
 	SF2NPC_Statue controller = actor.Controller;
 	int difficulty = controller.Difficulty;
-	StatueBossProfile data = controller.GetProfileDataEx();
+	StatueBossProfile data = controller.GetProfileData();
 	actor.CurrentChaseDuration = data.GetChaseDuration(difficulty);
 	if (actor.InitialChaseDuration > 0.0)
 	{
@@ -57,7 +57,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	}
 
 	SF2NPC_Statue controller = actor.Controller;
-	StatueBossProfile data = controller.GetProfileDataEx();
+	StatueBossProfile data = controller.GetProfileData();
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
 	int difficulty = controller.Difficulty;
 	INextBot bot = actor.MyNextBotPointer();
@@ -150,7 +150,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	{
 		g_SlenderStatueIdleLifeTime[controller.Index] = gameTime + data.GetIdleLifeTime(difficulty);
 
-		if (bot.GetRangeSquaredTo(target.index) <= Pow(data.InstantKillRadius, 2.0) && visible)
+		if (bot.GetRangeSquaredTo(target.index) <= Pow(data.GetInstantKillRadius(difficulty), 2.0) && visible)
 		{
 			if (controller.Flags & SFF_FAKE)
 			{

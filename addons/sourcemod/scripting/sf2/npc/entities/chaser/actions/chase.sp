@@ -39,7 +39,7 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 		return action.ChangeTo(SF2_ChaserIdleAction(), "My target is no longer valid!");
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
 
 	actor.CurrentChaseDuration = chaseData.GetMaxChaseDuration(difficulty);
@@ -68,7 +68,7 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		return action.Continue();
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
 
@@ -177,7 +177,7 @@ static void OnResume(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		SF2NPC_Chaser controller = actor.Controller;
 		if (controller.IsValid())
 		{
-			if (controller.GetProfileDataEx().GetStunBehavior().CanChaseInitialOnEnd(controller.Difficulty))
+			if (controller.GetProfileData().GetStunBehavior().CanChaseInitialOnEnd(controller.Difficulty))
 			{
 				actor.PerformVoice(SF2BossSound_ChaseInitial);
 			}
@@ -192,7 +192,7 @@ static void OnEnd(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		return;
 	}
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	actor.EndCloak();
 	PathFollower path = actor.Controller.Path;
 	float gameTime = GetGameTime();

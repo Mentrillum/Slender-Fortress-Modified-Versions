@@ -672,7 +672,7 @@ static void StopDeathCam(int client)
 	SF2NPC_BaseNPC deathCamBoss = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]));
 	if (deathCamBoss != SF2_INVALID_NPC)
 	{
-		BossProfilePublicDeathCamData publicDeathCamData = deathCamBoss.GetProfileDataEx().GetDeathCamData().PublicDeathCam;
+		BossProfilePublicDeathCamData publicDeathCamData = deathCamBoss.GetProfileData().GetDeathCamData().PublicDeathCam;
 		if ((deathCamBoss.Flags & SFF_FAKE) == 0)
 		{
 			if (deathCamBoss.HasAttribute(SF2Attribute_IgnitePlayerOnDeath))
@@ -758,7 +758,7 @@ static void Hook_DeathCamThink(int client)
 			if (Npc.IsValid())
 			{
 				g_PlayerDeathCamShowOverlay[player.index] = true;
-				BaseBossProfile data = Npc.GetProfileDataEx();
+				BaseBossProfile data = Npc.GetProfileData();
 				data.GetOverlayDeathCamSounds().EmitSound(true, player.index, SOUND_FROM_PLAYER);
 				duration = data.GetDeathCamData().Duration;
 			}

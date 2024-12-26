@@ -570,6 +570,16 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return null;
 	}
 
+	public ProfileEntityInputsArray GetStartInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("start"));
+		}
+		return null;
+	}
+
 	public ProfileEffectMaster GetHitEffects()
 	{
 		ProfileObject obj = this.GetSection("effects");
@@ -579,6 +589,16 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 			return view_as<ProfileEffectMaster>(obj);
 		}
 
+		return null;
+	}
+
+	public ProfileEntityInputsArray GetHitInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("hit"));
+		}
 		return null;
 	}
 
@@ -594,6 +614,16 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return null;
 	}
 
+	public ProfileEntityInputsArray GetMissInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("miss"));
+		}
+		return null;
+	}
+
 	public ProfileEffectMaster GetOnKillEffects()
 	{
 		ProfileObject obj = this.GetSection("effects");
@@ -603,6 +633,16 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 			return view_as<ProfileEffectMaster>(obj);
 		}
 
+		return null;
+	}
+
+	public ProfileEntityInputsArray GetOnKillInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_kill"));
+		}
 		return null;
 	}
 
@@ -884,7 +924,7 @@ methodmap BossProfileDamageEffect < ProfileObject
 				{
 					char playerName[32], bossName[SF2_MAX_NAME_LENGTH];
 					GetClientName(player.index, playerName, sizeof(playerName));
-					controller.GetProfileDataEx().GetName(controller.Difficulty, bossName, sizeof(bossName));
+					controller.GetProfileData().GetName(controller.Difficulty, bossName, sizeof(bossName));
 					CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", bossName, playerName);
 				}
 			}
@@ -1269,6 +1309,7 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 		CreateNative("SF2_ChaserBossProfileBaseAttack.BlockOnDifficulty.get", Native_GetBlockOnDifficulty);
 		CreateNative("SF2_ChaserBossProfileBaseAttack.CanUseOnHealth", Native_GetCanUseOnHealth);
 		CreateNative("SF2_ChaserBossProfileBaseAttack.CanBlockOnHealth", Native_GetCanBlockOnHealth);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetEventNumber", Native_GetEventNumber);
 		ChaserBossProfileCustomAttack.SetupAPI();
 	}
 
@@ -1444,7 +1485,7 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
 	ChaserBossProfileBaseAttack attackData = action.ProfileData;
 	actor.AttackRunDelay = gameTime + attackData.GetRunDelay(difficulty);
@@ -1470,6 +1511,11 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 		SlenderSpawnEffects(attackData.GetStartEffects(), controller.Index, false);
 	}
 
+	if (attackData.GetStartInputs() != null)
+	{
+		attackData.GetStartInputs().AcceptInputs(actor.index);
+	}
+
 	if (attackData.GetRunSpeed(difficulty) <= 0.0)
 	{
 		actor.MyNextBotPointer().GetLocomotionInterface().Stop();
@@ -1486,7 +1532,6 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 		return action.Continue();
 	}
 
-	actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
 	actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
 
 	ProfileSound info;
@@ -1500,12 +1545,11 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 		action.PlayedBeginVoice = true;
 	}
 
-	float duration = 0.0;
-	NextBotAction newAction = actor.IsAttackTransitionPossible(action.GetAttackName(), _, duration);
+	NextBotAction newAction = actor.IsAttackTransitionPossible(action.GetAttackName());
 	action.ShouldReplayAnimation = newAction != NULL_ACTION;
-	if (newAction != NULL_ACTION)
+	if (newAction == NULL_ACTION)
 	{
-		action.EndTime += duration;
+		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
 	}
 	return newAction != NULL_ACTION ? action.SuspendFor(newAction) : action.Continue();
 }
@@ -1524,7 +1568,7 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 		return action.Done();
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileBaseAttack attackData = action.ProfileData;
 	int interrputConditions = actor.InterruptConditions;
 	bool end = false;
@@ -1608,7 +1652,9 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 		}
 	}
 
-	if (action.ActiveChild == NULL_ACTION || GetGameTime() > action.EndTime || end)
+	action.EndTime -= interval;
+
+	if (action.ActiveChild == NULL_ACTION || action.EndTime <= 0.0 || end)
 	{
 		NextBotAction newAction = actor.IsAttackTransitionPossible(action.GetAttackName(), true);
 		if (!action.DidEndAnimation && newAction != NULL_ACTION)
@@ -1685,7 +1731,7 @@ static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 	if (controller.IsValid())
 	{
 		float gameTime = GetGameTime();
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileBaseAttack attackData = action.ProfileData;
 		int difficulty = controller.Difficulty;
 
@@ -1912,4 +1958,17 @@ static any Native_GetCanBlockOnHealth(Handle plugin, int numParams)
 	int difficulty = GetNativeCell(2);
 
 	return attackData.CanBlockOnHealth(difficulty);
+}
+
+static any Native_GetEventNumber(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetEventNumber(difficulty);
 }

@@ -136,7 +136,7 @@ methodmap SF2_ChaserFleeToHealAction < NextBotAction
 static NextBotAction InitialContainedAction(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
 	ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));
@@ -175,7 +175,7 @@ static int Update(SF2_ChaserFleeToHealAction action, SF2_ChaserEntity actor, flo
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
 	ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));

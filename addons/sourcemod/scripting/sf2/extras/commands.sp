@@ -420,6 +420,7 @@ public void OnPluginStart()
 	g_OnPlayerJumpPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerSpawnPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerTakeDamagePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_Cell);
+	g_OnPlayerTakeDamagePostPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Cell);
 	g_OnPlayerDeathPrePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerDeathPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerPutInServerPFwd = new PrivateForward(ET_Ignore, Param_Cell);
@@ -471,6 +472,8 @@ public void OnPluginStart()
 	InitializeChangelog();
 
 	InitializeEffects();
+
+	SetupClients();
 
 	SetupAntiCamping();
 	SetupBlink();
@@ -1139,7 +1142,7 @@ static Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
 		if (master != -1)
 		{
 			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(master);
-			BossProfileProxyData proxyData = npc.GetProfileDataEx().GetProxies();
+			BossProfileProxyData proxyData = npc.GetProfileData().GetProxies();
 			BossProfileProxyClass classData = proxyData.GetClassData(TF2_GetPlayerClass(client));
 			ProfileSound soundInfo = classData.GetIdleSounds();
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0 && GetGameTime() >= g_PlayerProxyNextVoiceSound[client])
@@ -1200,7 +1203,7 @@ static Action Command_ClientKillDeathcam(int client, int args)
 		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(StringToInt(arg2));
 		if (npc.IsValid())
 		{
-			if ((npc.Flags & SFF_ATTACKWAITERS) != 0 || npc.GetProfileDataEx().IsPvEBoss)
+			if ((npc.Flags & SFF_ATTACKWAITERS) != 0 || npc.GetProfileData().IsPvEBoss)
 			{
 				eliminated = true;
 			}
@@ -1288,7 +1291,7 @@ static Action Command_SpawnSlender(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (npc.GetProfileDataEx().IsPvEBoss)
+	if (npc.GetProfileData().IsPvEBoss)
 	{
 		ReplyToCommand(client, "You may not spawn PvE bosses!");
 		return Plugin_Handled;
@@ -1352,7 +1355,7 @@ static Action Command_SpawnAllSlenders(int client, int args)
 			npc = SF2NPC_BaseNPC(npcIndex);
 			if (npc.IsValid())
 			{
-				if (npc.GetProfileDataEx().IsPvEBoss)
+				if (npc.GetProfileData().IsPvEBoss)
 				{
 					continue;
 				}
@@ -1407,7 +1410,7 @@ static Action Timer_SpawnAllSlenders(Handle timer, any userid)
 	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(g_SpawnAllBossesCount);
 	if (npc.IsValid())
 	{
-		if (!npc.GetProfileDataEx().IsPvEBoss)
+		if (!npc.GetProfileData().IsPvEBoss)
 		{
 			npc.Spawn(endPos);
 		}
@@ -1475,7 +1478,7 @@ static Action Command_RemoveAllSlenders(int client, int args)
 				continue;
 			}
 
-			if (npc.GetProfileDataEx().IsPvEBoss)
+			if (npc.GetProfileData().IsPvEBoss)
 			{
 				continue;
 			}

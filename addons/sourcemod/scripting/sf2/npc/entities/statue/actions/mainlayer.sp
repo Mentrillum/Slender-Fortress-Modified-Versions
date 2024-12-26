@@ -73,7 +73,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 		return action.Done("I'm a faker");
 	}
 
-	StatueBossProfile data = controller.GetProfileDataEx();
+	StatueBossProfile data = controller.GetProfileData();
 	CBaseEntity target = actor.Target;
 	float myPos[3];
 	actor.GetAbsOrigin(myPos);

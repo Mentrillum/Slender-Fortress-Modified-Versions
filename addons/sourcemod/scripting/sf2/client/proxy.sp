@@ -711,7 +711,7 @@ static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &infl
 			SF2NPC_BaseNPC master = SF2NPC_BaseNPC(attackerPlayer.ProxyMaster);
 			if (master.IsValid())
 			{
-				proxyData = master.GetProfileDataEx().GetProxies();
+				proxyData = master.GetProfileData().GetProxies();
 				classData = proxyData.GetClassData(attackerPlayer.Class);
 				int difficulty = master.Difficulty;
 
@@ -768,7 +768,7 @@ static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &infl
 			SF2NPC_BaseNPC master = SF2NPC_BaseNPC(client.ProxyMaster);
 			if (master.IsValid())
 			{
-				proxyData = master.GetProfileDataEx().GetProxies();
+				proxyData = master.GetProfileData().GetProxies();
 				classData = proxyData.GetClassData(client.Class);
 				int difficulty = master.Difficulty;
 
@@ -841,7 +841,7 @@ static void ProxyThink(int client)
 	int difficulty = controller.Difficulty;
 	TFClassType class = player.Class;
 
-	BossProfileProxyData proxyData = controller.GetProfileDataEx().GetProxies();
+	BossProfileProxyData proxyData = controller.GetProfileData().GetProxies();
 	BossProfileProxyClass classData = proxyData.GetClassData(class);
 
 	float speed = classData.GetRunSpeed(difficulty);
@@ -1249,7 +1249,7 @@ static TFClassType SelectProxyClass(SF2_BasePlayer client)
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(client.ProxyMaster);
 	int difficulty = controller.Difficulty;
 
-	BossProfileProxyData proxyData = controller.GetProfileDataEx().GetProxies();
+	BossProfileProxyData proxyData = controller.GetProfileData().GetProxies();
 	ArrayList allowed = new ArrayList();
 
 	int classCount[10] = { 0, ... };
@@ -1480,7 +1480,7 @@ static Action Timer_GiveWeaponAll(Handle timer, any userid)
 
 	if (g_PlayerProxy[client] && bossIndex != -1)
 	{
-		BossProfileProxyData proxyData = SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().GetProxies();
+		BossProfileProxyData proxyData = SF2NPC_BaseNPC(bossIndex).GetProfileData().GetProxies();
 		if (!proxyData.CustomWeapons)
 		{
 			return Plugin_Stop;

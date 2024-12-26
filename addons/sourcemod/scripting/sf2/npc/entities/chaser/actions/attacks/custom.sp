@@ -31,7 +31,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 	ChaserBossProfileCustomAttack attackData = view_as<ChaserBossProfileCustomAttack>(data.GetAttack(attackName));
 
 	if (attackData.Type != SF2BossAttackType_Custom)

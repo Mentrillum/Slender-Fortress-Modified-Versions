@@ -72,10 +72,12 @@ bool SF_IsRenevantMap()
 
 static bool Renevant_TryAddBossProfile(char profile[SF2_MAX_PROFILE_NAME_LENGTH], int profileLen, char[] name, int nameLen, bool playSpawnSound = true)
 {
-	if (!GetRandomRenevantBossProfile(profile, profileLen))
+	if (GetSelectableBossProfileList().Length == 0)
 	{
 		return false;
 	}
+
+	GetSelectableBossProfileList().GetString(GetRandomInt(0, GetSelectableBossProfileList().Length - 1), profile, profileLen);
 
 	GetBossProfile(profile).GetName(1, name, nameLen);
 	if (name[0] == '\0')

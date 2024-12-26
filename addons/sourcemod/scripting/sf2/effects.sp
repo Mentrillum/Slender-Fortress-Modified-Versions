@@ -188,6 +188,16 @@ methodmap ProfileEffect < ProfileObject
 		this.GetDifficultyColor("rendercolor", difficulty, buffer);
 	}
 
+	public ProfileEntityInputsArray GetInputs()
+	{
+		return view_as<ProfileEntityInputsArray>(this.GetSection("inputs"));
+	}
+
+	public ProfileEntityOutputsArray GetOutputs()
+	{
+		return view_as<ProfileEntityOutputsArray>(this.GetSection("outputs"));
+	}
+
 	public void Precache()
 	{
 		switch (this.Type)
@@ -1014,6 +1024,11 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 		DispatchKeyValueInt(entity, "renderfx", view_as<int>(effect.RenderEffect));
 		DispatchKeyValueInt(entity, "spawnflags", effect.SpawnFlags);
 
+		if (effect.GetOutputs() != null)
+		{
+			effect.GetOutputs().AddOutputs(entity);
+		}
+
 		switch (effect.Type)
 		{
 			case EffectType_Steam:
@@ -1223,9 +1238,16 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				AcceptEntityInput(entity, "ShowSprite");
 			}
 		}
+
 		SDKHook(entity, SDKHook_SetTransmit, Hook_EffectTransmit);
 		g_EntityEffectType[entity] = effect.Type;
 		g_EntityEffectEvent[entity] = effect.Event;
+
+		if (effect.GetInputs() != null)
+		{
+			effect.GetInputs().AcceptInputs(entity);
+		}
+
 		if (!noParenting)
 		{
 			g_NpcEffectsArray[bossIndex].Push(entity);

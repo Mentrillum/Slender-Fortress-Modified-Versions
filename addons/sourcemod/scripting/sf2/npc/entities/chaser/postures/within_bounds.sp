@@ -29,7 +29,7 @@ static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int
 
 	int difficulty = controller.Difficulty;
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ProfileObject obj = data.GetSection("postures");
 	if (obj == null)
 	{

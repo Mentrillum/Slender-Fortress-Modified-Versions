@@ -868,21 +868,10 @@ static ArrayList SpecialEnabledList()
 			}
 		}
 
-		if (!SF_IsBoxingMap())
+		if (GetSelectableBossProfileList().Length > 0)
 		{
-			if (GetSelectableBossProfileList().Length > 0)
-			{
-				AddSpecialRoundToList(SPECIALROUND_DOUBLETROUBLE, enabledRounds);
-				AddSpecialRoundToList(SPECIALROUND_SILENTSLENDER, enabledRounds);
-			}
-		}
-		else
-		{
-			if (GetSelectableBoxingBossProfileList().Length > 0)
-			{
-				AddSpecialRoundToList(SPECIALROUND_DOUBLETROUBLE, enabledRounds);
-				AddSpecialRoundToList(SPECIALROUND_SILENTSLENDER, enabledRounds);
-			}
+			AddSpecialRoundToList(SPECIALROUND_DOUBLETROUBLE, enabledRounds);
+			AddSpecialRoundToList(SPECIALROUND_SILENTSLENDER, enabledRounds);
 		}
 
 		if (GetActivePlayerCount() <= g_MaxPlayersConVar.IntValue * 2 && !SF_IsBoxingMap())
@@ -1066,27 +1055,13 @@ void SpecialRoundStart()
 		case SPECIALROUND_DOUBLETROUBLE:
 		{
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
-			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
+			ArrayList selectableBosses = GetSelectableBossProfileList();
 
-			if (!SF_IsBoxingMap())
+			if (selectableBosses.Length > 0)
 			{
-				if (selectableBosses.Length > 0)
-				{
-					selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
-					AddProfile(buffer);
-				}
+				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
+				AddProfile(buffer);
 			}
-			else
-			{
-				if (selectableBoxingBosses.Length > 0)
-				{
-					selectableBoxingBosses.GetString(GetRandomInt(0, selectableBoxingBosses.Length - 1), buffer, sizeof(buffer));
-					AddProfile(buffer);
-				}
-			}
-			delete selectableBosses;
-			delete selectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_DOUBLETROUBLE);
 		}
 		case SPECIALROUND_SILENTSLENDER:
@@ -1102,8 +1077,7 @@ void SpecialRoundStart()
 			}
 
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList selectableBosses = GetSelectableBossProfileList().Clone();
-			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList().Clone();
+			ArrayList selectableBosses = GetSelectableBossProfileList();
 
 			if (selectableBosses.Length > 0)
 			{
@@ -1119,8 +1093,6 @@ void SpecialRoundStart()
 				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
 				AddProfile(buffer, _, _, _, false);
 			}
-			delete selectableBosses;
-			delete selectableBoxingBosses;
 			SF_AddSpecialRound(SPECIALROUND_SILENTSLENDER);
 		}
 		case SPECIALROUND_THANATOPHOBIA:

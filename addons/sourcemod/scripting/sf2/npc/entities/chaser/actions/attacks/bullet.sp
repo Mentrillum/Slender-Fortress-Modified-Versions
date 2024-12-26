@@ -125,7 +125,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 	ChaserBossProfileBulletAttack attackData = view_as<ChaserBossProfileBulletAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
@@ -202,7 +202,7 @@ static void DoBulletAttack(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntit
 
 	int difficulty = controller.Difficulty;
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileBulletAttack attackData = action.ProfileData;
 
 	float spread = attackData.GetBulletSpread(difficulty);

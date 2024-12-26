@@ -26,7 +26,7 @@ methodmap SF2_ChaserChaseInitialAction < NextBotAction
 			return false;
 		}
 
-		ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+		ChaserBossProfile data = actor.Controller.GetProfileData();
 		if (!data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]))
 		{
 			return false;
@@ -39,7 +39,7 @@ methodmap SF2_ChaserChaseInitialAction < NextBotAction
 static NextBotAction InitialContainedAction(SF2_ChaserChaseInitialAction action, SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	actor.IsInChaseInitial = true;
 
 	ProfileAnimation section = data.GetAnimations().GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]);

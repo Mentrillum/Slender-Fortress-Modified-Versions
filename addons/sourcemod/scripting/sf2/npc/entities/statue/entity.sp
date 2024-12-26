@@ -115,7 +115,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		controller.GetProfile(profile, sizeof(profile));
 		statue.Controller = view_as<SF2NPC_Statue>(controller);
 
-		StatueBossProfile profileData = statue.Controller.GetProfileDataEx();
+		StatueBossProfile profileData = statue.Controller.GetProfileData();
 		int difficulty = g_DifficultyConVar.IntValue;
 
 		char buffer[PLATFORM_MAX_PATH];
@@ -217,10 +217,12 @@ static Action Think(int entIndex)
 static void ThinkPost(int entIndex)
 {
 	SF2_StatueEntity statue = SF2_StatueEntity(entIndex);
+	SF2NPC_Statue controller = statue.Controller;
+	StatueBossProfile data = controller.GetProfileData();
 
 	ProcessSpeed(statue);
 
-	if (statue.GetProfileData().CustomOutlines && statue.GetProfileData().RainbowOutline)
+	if (data.GetOutlineData() != null && data.GetOutlineData().GetRainbowState(controller.Difficulty))
 	{
 		statue.ProcessRainbowOutline();
 	}
@@ -231,7 +233,7 @@ static void ThinkPost(int entIndex)
 	}
 
 	statue.InterruptConditions = 0;
-	statue.SetNextThink(GetGameTime() + statue.Controller.GetProfileDataEx().TickRate);
+	statue.SetNextThink(GetGameTime() + statue.Controller.GetProfileData().TickRate);
 }
 
 static MRESReturn UpdateTransmitState(int entIndex, DHookReturn ret, DHookParam params)
@@ -265,7 +267,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 		return CBaseEntity(-1);
 	}
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	StatueBossProfile data = controller.GetProfileDataEx();
+	StatueBossProfile data = controller.GetProfileData();
 	int difficulty = controller.Difficulty;
 
 	float playerDists[MAXTF2PLAYERS];
@@ -469,7 +471,7 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	SF2NPC_Statue controller = statue.Controller;
 	int difficulty = controller.Difficulty;
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(statue.index);
-	StatueBossProfile data = controller.GetProfileDataEx();
+	StatueBossProfile data = controller.GetProfileData();
 
 	float speed, acceleration;
 
@@ -576,5 +578,5 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 
 	SF2_StatueEntity bossEntity = SF2_StatueEntity(entity);
 
-	return bossEntity.Controller.GetProfileDataEx();
+	return bossEntity.Controller.GetProfileData();
 }

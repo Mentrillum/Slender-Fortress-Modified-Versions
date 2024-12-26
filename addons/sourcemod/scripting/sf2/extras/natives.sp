@@ -678,12 +678,12 @@ static any Native_SetBossTarget(Handle plugin, int numParams)
 
 static any Native_IsBossStunnable(Handle plugin, int numParams)
 {
-	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileDataEx().GetStunBehavior().IsEnabled(1);
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().GetStunBehavior().IsEnabled(1);
 }
 
 static any Native_IsBossStunnableByFlashlight(Handle plugin, int numParams)
 {
-	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileDataEx().GetStunBehavior().CanFlashlightStun(1);
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().GetStunBehavior().CanFlashlightStun(1);
 }
 
 static any Native_IsBossCloaked(Handle plugin, int numParams)

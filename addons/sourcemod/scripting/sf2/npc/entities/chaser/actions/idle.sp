@@ -76,7 +76,7 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 {
 	INextBot bot = actor.MyNextBotPointer();
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileIdleData idleData = data.GetIdleBehavior();
 	ChaserBossProfileSmellData smellData = data.GetSmellData();
 	int difficulty = controller.Difficulty;
@@ -125,7 +125,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		return action.Continue();
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileIdleData idleData = data.GetIdleBehavior();
 	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 	ChaserBossProfileSmellData smellData = data.GetSmellData();

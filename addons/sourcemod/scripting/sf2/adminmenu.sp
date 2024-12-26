@@ -1035,7 +1035,7 @@ static int AdminMenu_BossWanderToPos(Menu menu, MenuAction action, int param1, i
 			else
 			{
 				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(index);
-				switch (npc.GetProfileDataEx().Type)
+				switch (npc.GetProfileData().Type)
 				{
 					case SF2BossType_Chaser:
 					{
@@ -1135,7 +1135,7 @@ static int AdminMenu_BossAlertToPos(Menu menu, MenuAction action, int param1, in
 			else
 			{
 				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(index);
-				switch (npc.GetProfileDataEx().Type)
+				switch (npc.GetProfileData().Type)
 				{
 					case SF2BossType_Chaser:
 					{
@@ -1199,13 +1199,13 @@ static bool DisplayBossAttackAdminMenu(int client)
 				continue;
 			}
 
-			if (SF2NPC_BaseNPC(i).GetProfileDataEx().Type != SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(i).GetProfileData().Type != SF2BossType_Chaser)
 			{
 				continue;
 			}
 			SF2NPC_Chaser controller = SF2NPC_Chaser(i);
 
-			ChaserBossProfile chaserData = controller.GetProfileDataEx();
+			ChaserBossProfile chaserData = controller.GetProfileData();
 			ProfileObject attacks = chaserData.GetSection("attacks");
 			if (attacks == null || attacks.Size == 0)
 			{
@@ -1321,7 +1321,7 @@ static bool DisplayBossAttackListAdminMenu(int client)
 		return false;
 	}
 
-	ChaserBossProfile data = g_SelectedBoss[client].GetProfileDataEx();
+	ChaserBossProfile data = g_SelectedBoss[client].GetProfileData();
 	ProfileObject attacks = data.GetSection("attacks");
 	Menu menuHandle = new Menu(AdminMenu_BossAttackList);
 	for (int i = 0; i < attacks.Size; i++)

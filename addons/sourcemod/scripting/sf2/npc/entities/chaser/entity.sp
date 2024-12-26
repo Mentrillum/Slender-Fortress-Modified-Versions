@@ -83,6 +83,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineFloatField("m_AlertSoundTriggerCooldown", MAXTF2PLAYERS)
 			.DefineVectorField("m_AlertTriggerPositionEx")
 			.DefineFloatField("m_AlertChangePositionCooldown")
+			.DefineIntField("m_TauntAlertStrikes", MAXTF2PLAYERS)
 			.DefineIntField("m_AutoChaseCount", MAXTF2PLAYERS)
 			.DefineFloatField("m_AutoChaseAddCooldown", MAXTF2PLAYERS)
 			.DefineFloatField("m_AutoChaseCooldown", MAXTF2PLAYERS)
@@ -122,7 +123,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		g_OnEntityCreatedPFwd.AddFunction(null, EntityCreated);
 		g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
-		g_OnPlayerTakeDamagePFwd.AddFunction(null, OnPlayerTakeDamage);
+		g_OnPlayerTakeDamagePostPFwd.AddFunction(null, OnPlayerTakeDamagePost);
 		g_OnPlayerDeathPrePFwd.AddFunction(null, OnPlayerDeathPre);
 		g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 
@@ -178,7 +179,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public bool CanBeStunned()
 	{
-		if (SF_IsSlaughterRunMap() && !this.Controller.GetProfileDataEx().IsPvEBoss)
+		if (SF_IsSlaughterRunMap() && !this.Controller.GetProfileData().IsPvEBoss)
 		{
 			return false;
 		}
@@ -188,7 +189,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return false;
 		}
 
-		if (!this.Controller.GetProfileDataEx().GetStunBehavior().IsEnabled(this.Controller.Difficulty))
+		if (!this.Controller.GetProfileData().GetStunBehavior().IsEnabled(this.Controller.Difficulty))
 		{
 			return false;
 		}
@@ -223,7 +224,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public bool CanTakeDamage(CBaseEntity attacker = view_as<CBaseEntity>(-1), CBaseEntity inflictor = view_as<CBaseEntity>(-1), float damage = 0.0)
 	{
-		if (SF_IsSlaughterRunMap() && !this.Controller.GetProfileDataEx().IsPvEBoss)
+		if (SF_IsSlaughterRunMap() && !this.Controller.GetProfileData().IsPvEBoss)
 		{
 			return false;
 		}
@@ -255,7 +256,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		int difficulty = this.Controller.Difficulty;
 
-		return !this.Controller.GetProfileDataEx().GetAttack(this.GetAttackName()).IsImmuneToDamage(difficulty);
+		return !this.Controller.GetProfileData().GetAttack(this.GetAttackName()).IsImmuneToDamage(difficulty);
 	}
 
 	property bool IsStunned
@@ -391,7 +392,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				return;
 			}
 
-			ChaserBossProfile data = this.Controller.GetProfileDataEx();
+			ChaserBossProfile data = this.Controller.GetProfileData();
 
 			if (data.GetPosture(posture) == null)
 			{
@@ -406,7 +407,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		if (this.Controller.IsValid() && strcmp(currentPosture, posture) != 0 && update)
 		{
-			this.UpdateMovementAnimation();
+			this.SetPosture(posture);
 		}
 	}
 
@@ -684,6 +685,16 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			this.SetPropFloat(Prop_Data, "m_AlertChangePositionCooldown", value);
 		}
+	}
+
+	public int GetTauntAlertStrikes(SF2_BasePlayer player)
+	{
+		return this.GetProp(Prop_Data, "m_TauntAlertStrikes", _, player.index);
+	}
+
+	public void SetTauntAlertStrikes(SF2_BasePlayer player, int value)
+	{
+		this.SetProp(Prop_Data, "m_TauntAlertStrikes", value, _, player.index);
 	}
 
 	public int GetAutoChaseCount(SF2_BasePlayer player)
@@ -1130,7 +1141,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		float myPos[3];
 		this.GetAbsOrigin(myPos);
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 
 		SF2_BasePlayer closest = SF2_INVALID_PLAYER;
 		float range = Pow(data.GetSearchRange(difficulty), 2.0);
@@ -1220,7 +1231,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return false;
 		}
 
-		ChaserBossProfile data = this.Controller.GetProfileDataEx();
+		ChaserBossProfile data = this.Controller.GetProfileData();
 		KeyMap_Array soundList;
 		if (!isSet)
 		{
@@ -1343,7 +1354,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public void CastAnimEvent(int event, bool footstep = false)
 	{
-		ChaserBossProfile data = this.Controller.GetProfileDataEx();
+		ChaserBossProfile data = this.Controller.GetProfileData();
 
 		ProfileSound soundInfo = data.GetEventSounds(event);
 
@@ -1376,7 +1387,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ProfileSound info = data.GetFootstepSounds();
 
 		info.EmitSound(_, this.index);
@@ -1396,7 +1407,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		int difficulty = this.Controller.Difficulty;
-		int threshold = this.Controller.GetProfileDataEx().GetSoundSenseData().GetThreshold(difficulty);
+		int threshold = this.Controller.GetProfileData().GetSoundSenseData().GetThreshold(difficulty);
 
 		if (threshold <= 0)
 		{
@@ -1459,7 +1470,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		int difficulty = this.Controller.Difficulty;
-		ChaserBossProfile data = this.Controller.GetProfileDataEx();
+		ChaserBossProfile data = this.Controller.GetProfileData();
 
 		if (data.GetAutoChaseData().GetThreshold(difficulty) <= 0)
 		{
@@ -1490,7 +1501,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			canAttack = false;
 		}
 
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ProfileObject attacks = data.GetSection("attacks");
 		if (attacks == null || attacks.Size == 0)
 		{
@@ -1637,7 +1648,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 			attackData.GetSectionName(attackName, sizeof(attackName));
 
-			return SF2_ChaserAttackAction(data, attackName, attackData.Index, attackData.GetDuration(difficulty) + gameTime);
+			return SF2_ChaserAttackAction(data, attackName, attackData.Index, attackData.GetDuration(difficulty));
 		}
 
 		delete arrayAttacks;
@@ -1648,7 +1659,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	{
 		NextBotAction nbAction = NULL_ACTION;
 		Action action = Plugin_Continue;
-		ChaserBossProfileBaseAttack attackData = this.Controller.GetProfileDataEx().GetAttack(attackName);
+		ChaserBossProfileBaseAttack attackData = this.Controller.GetProfileData().GetAttack(attackName);
 
 		Call_StartForward(g_OnBossGetCustomAttackActionFwd);
 		Call_PushCell(this);
@@ -1669,7 +1680,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public bool IsCustomAttackPossible(const char[] attackName, CBaseEntity target)
 	{
 		Action action = Plugin_Continue;
-		ChaserBossProfileBaseAttack attackData = this.Controller.GetProfileDataEx().GetAttack(attackName);
+		ChaserBossProfileBaseAttack attackData = this.Controller.GetProfileData().GetAttack(attackName);
 
 		Call_StartForward(g_OnIsBossCustomAttackPossibleFwd);
 		Call_PushCell(this);
@@ -1681,10 +1692,10 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		return action == Plugin_Continue;
 	}
 
-	public NextBotAction IsAttackTransitionPossible(const char[] attackName, bool end = false, float& duration = 0.0)
+	public NextBotAction IsAttackTransitionPossible(const char[] attackName, bool end = false)
 	{
 		SF2NPC_Chaser controller = this.Controller;
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		char section[32];
 		if (!end)
 		{
@@ -1705,7 +1716,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return NULL_ACTION;
 		}
 
-		return SF2_PlaySequenceAndWaitEx(section);
+		return SF2_PlaySequenceAndWaitEx(section, attackName);
 	}
 
 	public void DoAttackMiscConditions(const char[] attackName)
@@ -1717,7 +1728,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		ChaserBossProfileBaseAttack attackData = controller.GetProfileDataEx().GetAttack(attackName);
+		ChaserBossProfileBaseAttack attackData = controller.GetProfileData().GetAttack(attackName);
 		CBaseEntity target = this.Target;
 		int difficulty = controller.Difficulty;
 
@@ -1770,7 +1781,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 		BossProfileShockwave shockwaveData = attackData.GetShockwave();
 
@@ -1871,7 +1882,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return false;
 		}
-		ChaserBossProfile data = this.Controller.GetProfileDataEx();
+		ChaserBossProfile data = this.Controller.GetProfileData();
 		char arrayName[64];
 		FormatEx(arrayName, sizeof(arrayName), "__chaser_%s_sounds", section);
 		KeyMap_Array array = data.GetArray(arrayName);
@@ -1904,7 +1915,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProjectileData projectileData = data.GetProjectiles();
 		int difficulty = controller.Difficulty;
 		if (!projectileData.IsEnabled(difficulty))
@@ -1969,7 +1980,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		this.GetAbsAngles(myAng);
 		this.Target.WorldSpaceCenter(targetPos);
 		int difficulty = controller.Difficulty;
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProjectileData projectileData = data.GetProjectiles();
 		int randomPosMin = projectileData.MinRandomPos;
 		int randomPosMax = projectileData.MaxRandomPos;
@@ -1997,11 +2008,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			float direction[3], angle[3];
 			SubtractVectors(targetPos, effectPos, direction);
-			float deviation = projectileData.GetDeviation(difficulty);
+			float deviation = projectileData.GetDeviation(difficulty) / 10.0;
 
 			NormalizeVector(direction, direction);
 			GetVectorAngles(direction, angle);
-			if (deviation != 0)
+			if (deviation != 0.0)
 			{
 				angle[0] += GetRandomFloat(-deviation, deviation);
 				angle[1] += GetRandomFloat(-deviation, deviation);
@@ -2141,7 +2152,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
 		ChaserBossProfile data, otherData;
-		data = controller.GetProfileDataEx();
+		data = controller.GetProfileData();
 		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
 		if (data.GetAlertBehavior() == null)
 		{
@@ -2177,12 +2188,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.GetProfileDataEx().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
 
-			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileDataEx();
+			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
 			if (otherData.GetAlertBehavior() == null)
 			{
 				continue;
@@ -2285,7 +2296,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
 		ChaserBossProfile data, otherData;
-		data = controller.GetProfileDataEx();
+		data = controller.GetProfileData();
 		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
 		if (data.GetAlertBehavior() == null)
 		{
@@ -2322,7 +2333,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.GetProfileDataEx().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
@@ -2333,7 +2344,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
-			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileDataEx();
+			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
 			if (otherData.GetAlertBehavior() == null)
 			{
 				continue;
@@ -2448,7 +2459,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
 		ChaserBossProfile data, otherData;
-		data = controller.GetProfileDataEx();
+		data = controller.GetProfileData();
 		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
 		if (data.GetChaseBehavior() == null)
 		{
@@ -2474,12 +2485,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.GetProfileDataEx().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
 
-			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileDataEx();
+			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
 			if (otherData.GetChaseBehavior() == null)
 			{
 				continue;
@@ -2585,7 +2596,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
 		ChaserBossProfile data, otherData;
-		data = controller.GetProfileDataEx();
+		data = controller.GetProfileData();
 		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
 		if (data.GetChaseBehavior() == null)
 		{
@@ -2622,7 +2633,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.GetProfileDataEx().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
@@ -2633,7 +2644,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
-			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileDataEx();
+			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
 			if (otherData.GetChaseBehavior() == null)
 			{
 				continue;
@@ -2733,7 +2744,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileCloakData cloakData = data.GetCloakData();
 		int difficulty = controller.Difficulty;
 		float gameTime = GetGameTime();
@@ -2792,7 +2803,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		SF2NPC_Chaser controller = this.Controller;
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileCloakData cloakData = data.GetCloakData();
 		int difficulty = controller.Difficulty;
 		if (!cloakData.IsEnabled(difficulty))
@@ -2826,7 +2837,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 		SF2NPC_Chaser controller = this.Controller;
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileCloakData cloakData = data.GetCloakData();
 		int difficulty = controller.Difficulty;
 		if (!cloakData.IsEnabled(difficulty))
@@ -2856,7 +2867,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public void DropItem(bool death = false)
 	{
 		SF2NPC_Chaser controller = this.Controller;
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileStunData stunData = data.GetStunBehavior();
 		ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 		int difficulty = controller.Difficulty;
@@ -2910,6 +2921,9 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		this.GetAbsOrigin(myPos);
 		CBaseEntity item = CBaseEntity(CreateEntityByName(class));
 		item.KeyValue("OnPlayerTouch", "!self,Kill,,0,-1");
+		SetVariantString("OnUser1 !self:Kill::60.0:1");
+		item.AcceptInput("AddOutput");
+		item.AcceptInput("FireUser1");
 		item.Spawn();
 		item.SetProp(Prop_Send, "m_iTeamNum", 0);
 		item.Teleport(myPos, NULL_VECTOR, NULL_VECTOR);
@@ -2918,7 +2932,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public void ProcessTraps()
 	{
 		SF2NPC_Chaser controller = this.Controller;
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		int difficulty = controller.Difficulty;
 		if (!data.HasTraps(difficulty))
 		{
@@ -2959,7 +2973,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		controller.GetProfile(profile, sizeof(profile));
 		chaser.Controller = view_as<SF2NPC_Chaser>(controller);
-		ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+		ChaserBossProfile data = chaser.Controller.GetProfileData();
 		ChaserBossProfileStunData stunData = data.GetStunBehavior();
 
 		char buffer[PLATFORM_MAX_PATH];
@@ -3195,18 +3209,18 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 	}
 }
 
-static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &inflictor, float &damage, int &damageType, int damageCustom)
+static void OnPlayerTakeDamagePost(SF2_BasePlayer client, int attacker, int inflictor, float damage, int damageType)
 {
 	SF2_ChaserEntity boss = SF2_ChaserEntity(inflictor);
 	if (!boss.IsValid())
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	SF2NPC_Chaser controller = boss.Controller;
 	if (!controller.IsValid())
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	Call_StartForward(g_OnClientDamagedByBossFwd);
@@ -3217,7 +3231,7 @@ static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &infl
 	Call_PushCell(damageType);
 	Call_Finish();
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	char attack[64];
 	strcopy(attack, sizeof(attack), boss.GetAttackName());
@@ -3229,9 +3243,12 @@ static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &infl
 		{
 			SlenderSpawnEffects(attackData.GetHitEffects(), controller.Index, false, _, _, _, client.index);
 		}
-	}
 
-	return Plugin_Continue;
+		if (attackData.GetHitInputs() != null)
+		{
+			attackData.GetHitInputs().AcceptInputs(boss.index, client.index, client.index);
+		}
+	}
 }
 
 static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
@@ -3279,7 +3296,7 @@ static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor,
 		return;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	char attack[64];
 	strcopy(attack, sizeof(attack), boss.GetAttackName());
@@ -3290,6 +3307,11 @@ static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor,
 		if (attackData.GetOnKillEffects() != null)
 		{
 			SlenderSpawnEffects(attackData.GetOnKillEffects(), controller.Index, false, _, _, _, client.index);
+		}
+
+		if (attackData.GetOnKillInputs() != null)
+		{
+			attackData.GetOnKillInputs().AcceptInputs(boss.index, client.index, client.index);
 		}
 	}
 }
@@ -3340,7 +3362,7 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 
 	boss.PerformVoice(SF2BossSound_AttackKilled);
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ProfileSound info = data.GetAttackKilledClientSounds();
 	info.EmitSound(true, client.index);
 
@@ -3433,13 +3455,13 @@ static void ThinkPost(int entIndex)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(entIndex);
 	SF2NPC_Chaser controller = chaser.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	ProcessSpeed(chaser);
 
 	ProcessBody(chaser);
 
-	if (data.CustomOutlines && data.RainbowOutline)
+	if (data.GetOutlineData() != null && data.GetOutlineData().GetRainbowState(controller.Difficulty))
 	{
 		chaser.ProcessRainbowOutline();
 	}
@@ -3470,7 +3492,7 @@ static void SpawnPost(int entIndex)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(entIndex);
 	SF2NPC_Chaser controller = chaser.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 	int difficulty = controller.Difficulty;
 	if (!deathData.IsEnabled(difficulty))
@@ -3491,16 +3513,26 @@ static void SpawnPost(int entIndex)
 			{
 				continue;
 			}
-			if (data.IsPvEBoss)
+			if (g_Enabled)
 			{
-				if (!player.IsEliminated)
+				if (data.IsPvEBoss)
 				{
-					continue;
+					if (!player.IsEliminated)
+					{
+						continue;
+					}
+				}
+				else
+				{
+					if (player.IsEliminated || !player.IsAlive || player.HasEscaped)
+					{
+						continue;
+					}
 				}
 			}
 			else
 			{
-				if (player.IsEliminated || !player.IsAlive || player.HasEscaped)
+				if (player.Team != TFTeam_Red && player.Team != TFTeam_Blue)
 				{
 					continue;
 				}
@@ -3528,15 +3560,28 @@ static void SpawnPost(int entIndex)
 	if (data.Healthbar)
 	{
 		controller.Flags |= SFF_NOTELEPORT;
-		UpdateHealthBar(controller.Index);
+		CreateTimer(0.1, Timer_UpdateHealthBar, controller.UniqueID, TIMER_FLAG_NO_MAPCHANGE);
 	}
+}
+
+static Action Timer_UpdateHealthBar(Handle timer, any id)
+{
+	int bossIndex = NPCGetFromUniqueID(id);
+	if (bossIndex == -1)
+	{
+		return Plugin_Continue;
+	}
+
+	UpdateHealthBar(bossIndex);
+
+	return Plugin_Stop;
 }
 
 static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damageType, int &weapon, float damageForce[3], float damagePosition[3], int damageCustom)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(victim);
 	SF2_BasePlayer player = SF2_BasePlayer(attacker);
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 	float gameTime = GetGameTime();
 	int difficulty = chaser.Controller.Difficulty;
 
@@ -3760,7 +3805,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(victim);
 	SF2_BasePlayer player = SF2_BasePlayer(attacker);
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 
 	bool broadcastDamage = false;
 
@@ -4039,7 +4084,7 @@ static Action TraceOnHit(int victim, int& attacker, int& inflictor, float& damag
 
 	int difficulty = controller.Difficulty;
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	if (data.GetResistances() != null)
 	{
 		ChaserBossResistanceData resistanceData;
@@ -4100,7 +4145,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		return CBaseEntity(-1);
 	}
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	if (data.IsPvEBoss)
 	{
 		attackEliminated = data.IsPvEBoss;
@@ -4352,6 +4397,27 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			TF2_StunPlayer(player.index, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
 		}
 
+		if (!data.IsPvEBoss && player.IsValid && chaser.State < STATE_ALERT && player.InCondition(TFCond_Taunting) && !controller.HasAttribute(SF2Attribute_IgnoreNonMarkedForChase) && GetVectorSquareMagnitude(traceEndPos, traceStartPos) < SquareFloat(data.GetTauntAlertRange(difficulty)))
+		{
+			if (chaser.GetTauntAlertStrikes(player) < 3)
+			{
+				chaser.SetTauntAlertStrikes(player, chaser.GetTauntAlertStrikes(player) + 1);
+
+				chaser.InterruptConditions |= COND_ALERT_TRIGGER;
+
+				float pos[3];
+				player.GetAbsOrigin(pos);
+
+				chaser.SetAlertTriggerPosition(player, pos);
+				chaser.AlertTriggerTarget = player;
+			}
+			else
+			{
+				chaser.SetTauntAlertStrikes(player, 0);
+				player.SetForceChaseState(controller, true);
+			}
+		}
+
 		// FOV check.
 		SubtractVectors(traceEndPos, traceStartPos, buffer);
 		GetVectorAngles(buffer, buffer);
@@ -4505,7 +4571,9 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 	delete valids;
 
-	if (!data.IsPvEBoss && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
+	CNavArea myArea = chaser.GetLastKnownArea();
+
+	if (!data.IsPvEBoss && myArea != NULL_AREA && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
 	{
 		if (!IsTargetValidForSlender(chaser, CBaseEntity(bestNewTarget), attackEliminated))
 		{
@@ -4519,6 +4587,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 					{
 						continue;
 					}
+
 					arrayRaidTargets.Push(EntIndexToEntRef(i));
 				}
 
@@ -4537,6 +4606,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 						{
 							continue;
 						}
+
 						arrayRaidTargets.Push(g_Buildings.Get(i));
 					}
 
@@ -4546,6 +4616,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 						{
 							continue;
 						}
+
 						arrayRaidTargets.Push(g_WhitelistedEntities.Get(i));
 					}
 				}
@@ -4620,10 +4691,10 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(chaser.index);
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
-	ChaserBossProfile profileData = controller.GetProfileDataEx();
+	ChaserBossProfile profileData = controller.GetProfileData();
 
 	float gameTime = GetGameTime();
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	char posture[64];
 	if (data.GetSection("postures") != null)
@@ -4805,7 +4876,7 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		return;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	if (data.GetSection("postures") != null && chaser.CanUpdatePosture())
 	{
@@ -5015,7 +5086,7 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 			if (chaser.IsValid() && chaser.Controller.IsValid())
 			{
 				SF2NPC_BaseNPC controller = view_as<SF2NPC_BaseNPC>(chaser.Controller);
-				BaseBossProfile data = controller.GetProfileDataEx();
+				BaseBossProfile data = controller.GetProfileData();
 				if ((data.IsPvEBoss && player.IsInPvE) || (controller.Flags & SFF_ATTACKWAITERS) != 0)
 				{
 					return true;
@@ -5035,7 +5106,7 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 
 		if (chaser.IsValid() && chaser.Controller.IsValid())
 		{
-			ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+			ChaserBossProfile data = chaser.Controller.GetProfileData();
 			if (data.IsPvEBoss && SF2_ChaserEntity(other).IsValid())
 			{
 				return false;
@@ -5211,7 +5282,7 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 			continue;
 		}
 
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossSoundSenseData senseData = data.GetSoundSenseData();
 		ChaserBossAutoChaseData autoChaseData = data.GetAutoChaseData();
 
@@ -5583,7 +5654,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 
 	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
 
-	return bossEntity.Controller.GetProfileDataEx();
+	return bossEntity.Controller.GetProfileData();
 }
 
 static any Native_PerformVoice(Handle plugin, int numParams)

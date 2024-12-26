@@ -713,7 +713,7 @@ bool IsWeaponRestricted(SF2_BasePlayer client, int itemDefInt)
 		{
 			continue;
 		}
-		if (Npc.GetProfileDataEx().GetProxies().IsEnabled(Npc.Difficulty))
+		if (Npc.GetProfileData().GetProxies().IsEnabled(Npc.Difficulty))
 		{
 			proxyBoss = true;
 			break;

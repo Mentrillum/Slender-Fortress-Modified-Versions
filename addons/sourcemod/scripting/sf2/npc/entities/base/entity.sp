@@ -132,7 +132,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 	public BaseBossProfile GetProfileData()
 	{
-		return this.Controller.GetProfileDataEx();
+		return this.Controller.GetProfileData();
 	}
 
 	property CBaseEntity Target
@@ -575,7 +575,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		bool found = false;
 		ProfileAnimation section = null;
 
-		if (controller.GetProfileDataEx().Type == SF2BossType_Chaser && !IsNullString(posture) && strcmp(posture, SF2_PROFILE_CHASER_DEFAULT_POSTURE) != 0)
+		if (controller.GetProfileData().Type == SF2BossType_Chaser && !IsNullString(posture) && strcmp(posture, SF2_PROFILE_CHASER_DEFAULT_POSTURE) != 0)
 		{
 			ChaserBossProfile data = view_as<ChaserBossProfile>(this.GetProfileData());
 			found = data.GetPosture(posture) != null;
@@ -599,7 +599,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			}
 		}
 
-		section = controller.GetProfileDataEx().GetAnimations().GetAnimation(animType, preDefinedIndex, preDefinedName, index);
+		section = controller.GetProfileData().GetAnimations().GetAnimation(animType, preDefinedIndex, preDefinedName, index);
 
 		if (section == null)
 		{
@@ -636,7 +636,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 		char gesture[64];
 
-		ProfileAnimation section = controller.GetProfileDataEx().GetAnimations().GetAnimation(animType, definedIndex, definedName);
+		ProfileAnimation section = controller.GetProfileData().GetAnimations().GetAnimation(animType, definedIndex, definedName);
 
 		if (section == null)
 		{
@@ -796,11 +796,11 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	public void ProcessRainbowOutline()
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
-		BaseBossProfile data = controller.GetProfileDataEx();
+		BossProfileOutlineData data = controller.GetProfileData().GetOutlineData();
 		int color[4];
-		color[0] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 0) * 127.5 + 127.5);
-		color[1] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 2) * 127.5 + 127.5);
-		color[2] = RoundToNearest(Cosine((GetGameTime() * data.RainbowOutlineCycle) + controller.Index + 4) * 127.5 + 127.5);
+		color[0] = RoundToNearest(Cosine((GetGameTime() * data.GetRainbowCycle(controller.Difficulty)) + controller.Index + 0) * 127.5 + 127.5);
+		color[1] = RoundToNearest(Cosine((GetGameTime() * data.GetRainbowCycle(controller.Difficulty)) + controller.Index + 2) * 127.5 + 127.5);
+		color[2] = RoundToNearest(Cosine((GetGameTime() * data.GetRainbowCycle(controller.Difficulty)) + controller.Index + 4) * 127.5 + 127.5);
 		color[3] = 255;
 		SetGlowColor(this.index, color);
 	}
@@ -1086,7 +1086,7 @@ static any Native_GetName(Handle plugin, int numParams)
 	}
 
 	char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-	controller.GetProfileDataEx().GetName(controller.Difficulty, buffer, sizeof(buffer));
+	controller.GetProfileData().GetName(controller.Difficulty, buffer, sizeof(buffer));
 	SetNativeString(2, buffer, sizeof(buffer));
 
 	return 0;
@@ -1132,7 +1132,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 		return 0;
 	}
 
-	return bossEntity.Controller.GetProfileDataEx();
+	return bossEntity.Controller.GetProfileData();
 }
 
 static any Native_ResetProfileAnimation(Handle plugin, int numParams)

@@ -29,12 +29,12 @@ methodmap SF2_ChaserDeathAction < NextBotAction
 	{
 		public get()
 		{
-			return this.GetDataEnt("m_Attacker");
+			return EntRefToEntIndex(this.GetDataEnt("m_Attacker"));
 		}
 
 		public set(int value)
 		{
-			this.SetDataEnt("m_Attacker", value);
+			this.SetDataEnt("m_Attacker", EnsureEntRef(value));
 		}
 	}
 }
@@ -42,7 +42,7 @@ methodmap SF2_ChaserDeathAction < NextBotAction
 static NextBotAction InitialContainedAction(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
 
@@ -73,7 +73,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserDeathAction action, SF2_Ch
 static int OnStart(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 	actor.GroundSpeedOverride = true;
 	int difficulty = controller.Difficulty;
@@ -83,7 +83,12 @@ static int OnStart(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, NextBot
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(deathData.GetOnStartEffects(), controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(deathData.GetOnStartEffects(), controller.Index, false, pos, ang, _, _, false);
+	}
+
+	if (deathData.GetOnStartInputs() != null)
+	{
+		deathData.GetOnStartInputs().AcceptInputs(actor.index, action.Attacker, action.Attacker);
 	}
 
 	if (deathData.KeyDrop)
@@ -141,7 +146,7 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 		return;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 
 	if (deathData.GetOnEndEffects() != null)
@@ -149,8 +154,15 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(deathData.GetOnEndEffects(), controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(deathData.GetOnEndEffects(), controller.Index, false, pos, ang, _, _, false);
 	}
+
+	if (deathData.GetOnEndInputs() != null)
+	{
+		deathData.GetOnEndInputs().AcceptInputs(actor.index, action.Attacker, action.Attacker);
+	}
+
+	data.SetBool("__was_killed", true);
 
 	if (deathData.RemoveOnDeath)
 	{
@@ -248,7 +260,7 @@ static void OnAnimationEvent(SF2_ChaserDeathAction action, SF2_ChaserEntity acto
 static void SpawnGibs(SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 	if (deathData.GetGibs() == null)
 	{

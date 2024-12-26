@@ -18,7 +18,7 @@ methodmap SF2_ChaserTauntKillAction < NextBotAction
 
 	public static bool IsPossible(SF2_ChaserEntity actor)
 	{
-		ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+		ChaserBossProfile data = actor.Controller.GetProfileData();
 		if (!data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_TauntKill]))
 		{
 			return false;
@@ -45,7 +45,7 @@ static int OnStart(SF2_ChaserTauntKillAction action, SF2_ChaserEntity actor, Nex
 	SF2NPC_Chaser controller = actor.Controller;
 	if (controller.IsValid())
 	{
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		if (data.NormalSoundHook)
 		{
 			actor.NextVoiceTime = 0.0;
@@ -60,7 +60,7 @@ static int OnResume(SF2_ChaserTauntKillAction action, SF2_ChaserEntity actor, Ne
 	SF2NPC_Chaser controller = actor.Controller;
 	if (controller.IsValid())
 	{
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		if (data.NormalSoundHook)
 		{
 			actor.NextVoiceTime = 0.0;

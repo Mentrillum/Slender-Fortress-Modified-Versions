@@ -26,7 +26,34 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 
 static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 {
+	for (int i = 0; i < MAX_BOSSES; i++)
+	{
+		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+		if (!npc.IsValid())
+		{
+			continue;
+		}
 
+		if (!IsValidEntity(npc.EntIndex))
+		{
+			continue;
+		}
+
+		BaseBossProfile data = npc.GetProfileData();
+		if (data.IsPvEBoss)
+		{
+			continue;
+		}
+
+		int color[4];
+		color = g_DefaultColor;
+		if (data.GetOutlineData() != null)
+		{
+			data.GetOutlineData().GetOutlineColor(color, npc.Difficulty);
+		}
+		SetGlowColor(npc.EntIndex, color);
+		UpdateVisibility(npc);
+	}
 }
 
 static void OnSpecialRoundStart(int specialRound)
@@ -48,7 +75,7 @@ static void OnSpecialRoundStart(int specialRound)
 
 static void OnBossSpawn(SF2NPC_BaseNPC controller)
 {
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 	if (data.IsPvEBoss)
 	{
 		return;
@@ -56,9 +83,9 @@ static void OnBossSpawn(SF2NPC_BaseNPC controller)
 
 	int color[4];
 	color = g_DefaultColor;
-	if (data.CustomOutlines)
+	if (data.GetOutlineData() != null)
 	{
-		data.GetOutlineColor(color);
+		data.GetOutlineData().GetOutlineColor(color, controller.Difficulty);
 	}
 	CreateGlowEntity(controller.EntIndex, color);
 	UpdateVisibility(controller);

@@ -139,12 +139,9 @@ methodmap BaseBossProfile < ProfileObject
 		}
 	}
 
-	property float InstantKillRadius
+	public float GetInstantKillRadius(int difficulty)
 	{
-		public get()
-		{
-			return this.GetFloat("kill_radius", -1.0);
-		}
+		return this.GetDifficultyFloat("kill_radius", difficulty, -1.0);
 	}
 
 	public float GetInstantKillCooldown(int difficulty)
@@ -505,103 +502,22 @@ methodmap BaseBossProfile < ProfileObject
 		return view_as<BossProfileDeathCamData>(this);
 	}
 
+	public BossProfilePvEData GetPvEData()
+	{
+		return view_as<BossProfilePvEData>(this.GetSection("pve"));
+	}
+
 	property bool IsPvEBoss
 	{
 		public get()
 		{
-			bool val = this.GetBool("is_pve", false);
-			ProfileObject obj = this.GetSection("pve");
-			if (obj != null)
-			{
-				val = true;
-			}
-			return val;
+			return this.GetPvEData().IsEnabled;
 		}
 	}
 
-	property ProfileObject PvESpawnMessagesArray
+	public BossProfileOutlineData GetOutlineData()
 	{
-		public get()
-		{
-			ProfileObject obj = this.GetSection("pve");
-			if (obj != null)
-			{
-				return obj.GetSection("spawn_messages");
-			}
-			return this.GetSection("pve_spawn_messages");
-		}
-	}
-
-	public void GetPvESpawnMessagePrefix(char[] buffer, int bufferSize)
-	{
-		ProfileObject obj = this.GetSection("pve");
-		if (obj != null)
-		{
-			obj.GetString("spawn_message_prefix", buffer, bufferSize);
-		}
-		else
-		{
-			this.GetString("pve_spawn_message_prefix", buffer, bufferSize);
-		}
-	}
-
-	property bool DisplayPvEHealth
-	{
-		public get()
-		{
-			ProfileObject obj = this.GetSection("pve");
-			if (obj != null)
-			{
-				return obj.GetBool("health_bar", true);
-			}
-			return this.GetBool("pve_health_bar", true);
-		}
-	}
-
-	property float PvETeleportEndTimer
-	{
-		public get()
-		{
-			float def = 5.0;
-			ProfileObject obj = this.GetSection("pve");
-			if (obj != null)
-			{
-				return obj.GetFloat("teleport_players_time", def);
-			}
-			return def;
-		}
-	}
-
-	property bool CustomOutlines
-	{
-		public get()
-		{
-			return this.GetBool("customizable_outlines", false);
-		}
-	}
-
-	public void GetOutlineColor(int buffer[4])
-	{
-		buffer[0] = this.GetInt("outline_color_r", 255);
-		buffer[1] = this.GetInt("outline_color_g", 255);
-		buffer[2] = this.GetInt("outline_color_b", 255);
-		buffer[3] = this.GetInt("outline_color_transparency", 255);
-	}
-
-	property bool RainbowOutline
-	{
-		public get()
-		{
-			return this.GetBool("enable_rainbow_outline", false);
-		}
-	}
-
-	property float RainbowOutlineCycle
-	{
-		public get()
-		{
-			return this.GetFloat("rainbow_outline_cycle_rate", 1.0);
-		}
+		return view_as<BossProfileOutlineData>(this.GetSection("outline"));
 	}
 
 	public void GetStaticSound(char[] buffer, int bufferSize)
@@ -945,9 +861,34 @@ methodmap BaseBossProfile < ProfileObject
 		return this.GetArray("spawn_effects");
 	}
 
+	public ProfileEntityInputsArray GetSpawnInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("spawn"));
+		}
+		return null;
+	}
+
 	public KeyMap_Array GetDespawnEffects()
 	{
 		return this.GetArray("despawn_effects");
+	}
+
+	public ProfileEntityInputsArray GetDespawnInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("spawn"));
+		}
+		return null;
+	}
+
+	public ProfileEntityOutputsArray GetOutputs()
+	{
+		return view_as<ProfileEntityOutputsArray>(this.GetSection("outputs"));
 	}
 
 	property bool HideDespawnEffectsOnDeath
@@ -1111,9 +1052,23 @@ methodmap BaseBossProfile < ProfileObject
 		return view_as<BossKillSoundsData>(this.GetSection("client_kill_sounds"));
 	}
 
+	public ProfileObject GetMapSelectionBlacklist()
+	{
+		ProfileObject obj = this.GetSection("selection_blacklist");
+		obj = obj != null ? obj.GetSection("maps") : null;
+		return obj;
+	}
+
+	public ProfileObject GetModeSelectionBlacklist()
+	{
+		ProfileObject obj = this.GetSection("selection_blacklist");
+		obj = obj != null ? obj.GetSection("modes") : null;
+		return obj;
+	}
+
 	public void Precache()
 	{
-		char path[PLATFORM_MAX_PATH];
+		char path[PLATFORM_MAX_PATH], value[2048];
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
 			this.GetModel(i, path, sizeof(path));
@@ -1259,6 +1214,35 @@ methodmap BaseBossProfile < ProfileObject
 				temp4.SetString("1", sound);
 				temp3.SetFloat("volume", defFloat);
 				temp3.SetInt("pitch", defInt);
+			}
+		}
+
+		if (this.GetBool("customizable_outlines", false))
+		{
+			newObj = this.InsertNewSection("outline");
+			int color[4];
+			color[0] = this.GetInt("outline_color_r", 255);
+			color[1] = this.GetInt("outline_color_g", 255);
+			color[2] = this.GetInt("outline_color_b", 255);
+			color[3] = this.GetInt("outline_color_transparency", 255);
+			ColorToString(color, value, sizeof(value));
+			newObj.SetKeyValue("color", value);
+			newObj.TransferKey(this, "enable_rainbow_outline", "rainbow");
+			newObj.TransferKey(this, "rainbow_outline_cycle_rate", "rainbow_cycle");
+		}
+
+		if (this.GetBool("is_pve"))
+		{
+			newObj = this.InsertNewSection("pve");
+			newObj.TransferKey(this, "pve_spawn_message_prefix", "spawn_message_prefix");
+			newObj.TransferKey(this, "pve_health_bar", "health_bar");
+			newObj.TransferKey(this, "pve_selectable", "selectable");
+			if (this.GetSection("pve_spawn_messages") != null)
+			{
+				temp = view_as<ProfileObject>(this.GetSection("pve_spawn_messages").Clone());
+				temp.SetSectionName("spawn_messages");
+				newObj.AddExistingSection(temp);
+				this.RemoveKey("pve_spawn_messages");
 			}
 		}
 
@@ -1413,6 +1397,51 @@ methodmap BaseBossProfile < ProfileObject
 				FormatEx(formatter, sizeof(formatter), "animation_%s_footstepinterval", animName);
 				temp.SetDifficultyFloat("footstepinterval", i, this.GetDifficultyFloat(formatter, i, 0.0));
 			}
+		}
+	}
+}
+
+methodmap BossProfilePvEData < ProfileObject
+{
+	property bool IsEnabled
+	{
+		public get()
+		{
+			return this != null;
+		}
+	}
+
+	property bool IsSelectable
+	{
+		public get()
+		{
+			return this.GetBool("selectable", true);
+		}
+	}
+
+	public ProfileObject GetSpawnMessages()
+	{
+		return this.GetSection("spawn_messages");
+	}
+
+	public void GetSpawnMessagePrefix(char[] buffer, int bufferSize)
+	{
+		this.GetString("spawn_message_prefix", buffer, bufferSize);
+	}
+
+	property bool DisplayHealth
+	{
+		public get()
+		{
+			this.GetBool("health_bar", true);
+		}
+	}
+
+	property float TeleportEndTimer
+	{
+		public get()
+		{
+			return this.GetFloat("teleport_players_time", 5.0);
 		}
 	}
 }
@@ -1603,6 +1632,24 @@ methodmap BossProfileEyeData < ProfileObject
 	public void GetBone(char[] buffer, int bufferSize)
 	{
 		this.GetString("bone", buffer, bufferSize);
+	}
+}
+
+methodmap BossProfileOutlineData < ProfileObject
+{
+	public void GetOutlineColor(int buffer[4], int difficulty)
+	{
+		this.GetDifficultyColor("color", difficulty, buffer);
+	}
+
+	public bool GetRainbowState(int difficulty)
+	{
+		return this.GetDifficultyBool("rainbow", difficulty, false);
+	}
+
+	public float GetRainbowCycle(int difficulty)
+	{
+		return this.GetDifficultyFloat("rainbow_cycle", difficulty, 1.0);
 	}
 }
 

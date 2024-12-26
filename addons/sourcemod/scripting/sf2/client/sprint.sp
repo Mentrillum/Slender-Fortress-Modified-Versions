@@ -524,7 +524,7 @@ static void Hook_SpeedThink(int client)
 				continue;
 			}
 
-			if (SF2NPC_BaseNPC(i).GetProfileDataEx().Type == SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(i).GetProfileData().Type == SF2BossType_Chaser)
 			{
 				SF2_ChaserEntity chaser = SF2_ChaserEntity(ent);
 				bossTarget = chaser.Target;
@@ -570,7 +570,7 @@ static void Hook_SpeedThink(int client)
 				continue;
 			}
 
-			if (SF2NPC_BaseNPC(i).GetProfileDataEx().Type == SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(i).GetProfileData().Type == SF2BossType_Chaser)
 			{
 				if (state == STATE_ALERT)
 				{

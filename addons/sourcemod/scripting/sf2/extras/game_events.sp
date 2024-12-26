@@ -144,7 +144,7 @@ Action Event_Audio(Event event, const char[] name, bool dB)
 			{
 				continue;
 			}
-			if (!SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().OutroMusic)
+			if (!SF2NPC_BaseNPC(bossIndex).GetProfileData().OutroMusic)
 			{
 				continue;
 			}
@@ -192,7 +192,7 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 			continue;
 		}
 
-		BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileDataEx();
+		BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileData();
 		if (data.OutroMusic)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -352,22 +352,23 @@ Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 
 Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 {
-	if (!g_Enabled)
-	{
-		if (g_LoadOutsideMapsConVar.BoolValue && GetClientOfUserId(GetEventInt(event, "userid")) > 0)
-		{
-			Call_StartForward(g_OnPlayerSpawnPFwd);
-			Call_PushCell(SF2_BasePlayer(GetClientOfUserId(GetEventInt(event, "userid"))));
-			Call_Finish();
-		}
-		return Plugin_Continue;
-	}
-
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0)
 	{
 		return Plugin_Continue;
 	}
+
+	if (!g_Enabled)
+	{
+		if (g_LoadOutsideMapsConVar.BoolValue)
+		{
+			Call_StartForward(g_OnPlayerSpawnPFwd);
+			Call_PushCell(SF2_BasePlayer(client));
+			Call_Finish();
+		}
+		return Plugin_Continue;
+	}
+
 	#if defined DEBUG
 
 	Handle profiler = CreateProfiler();
@@ -703,7 +704,7 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 				if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS && SF2_ChaserEntity(owner).IsValid())
 				{
 					SF2_ChaserEntity chaser = SF2_ChaserEntity(owner);
-					ChaserBossProfileBaseAttack attackData = SF2NPC_Chaser(npcIndex).GetProfileDataEx().GetAttack(chaser.GetAttackName());
+					ChaserBossProfileBaseAttack attackData = SF2NPC_Chaser(npcIndex).GetProfileData().GetAttack(chaser.GetAttackName());
 					attackData.GetWeaponString(weaponType, sizeof(weaponType));
 					event.SetString("weapon_logclassname", weaponType);
 					event.SetString("weapon", weaponType);

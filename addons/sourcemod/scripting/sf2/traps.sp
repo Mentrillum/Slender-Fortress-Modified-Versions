@@ -65,7 +65,7 @@ void Trap_SpawnTrap(float position[3], float direction[3], SF2NPC_Chaser control
 	float yaw = GetAngleBetweenVectors(product2, cross, tempAngles);
 	RotateYaw(newAngles, yaw - 90.0);
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	int difficulty = controller.Difficulty;
 	char buffer[PLATFORM_MAX_PATH];
 
@@ -217,7 +217,7 @@ static Action Timer_TrapThink(Handle timer, any entref)
 				player.TakeDamage(true, _, _, 10.0, 128);
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
-				ChaserBossProfile data = controller.GetProfileDataEx();
+				ChaserBossProfile data = controller.GetProfileData();
 				char buffer[PLATFORM_MAX_PATH];
 				data.GetTrapCatchSound(buffer, sizeof(buffer));
 				EmitSoundToAll(buffer, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);
@@ -246,7 +246,7 @@ static void TrapUpdateAnimation(int trapEntity)
 	{
 		return;
 	}
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char buffer[PLATFORM_MAX_PATH];
 	switch (state)
 	{
@@ -305,7 +305,7 @@ static Action Hook_TrapOnTakeDamage(int trapEntity, int &attacker, int &inflicto
 				g_TrapState[trapEntity] = 1;
 				g_TrapAnimChange[trapEntity] = true;
 				SF2NPC_Chaser controller = g_TrapMaster[trapEntity];
-				ChaserBossProfile data = controller.GetProfileDataEx();
+				ChaserBossProfile data = controller.GetProfileData();
 				char buffer[PLATFORM_MAX_PATH];
 				data.GetTrapMissSound(buffer, sizeof(buffer));
 				EmitSoundToAll(buffer, trapEntity, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, _, 1.0);

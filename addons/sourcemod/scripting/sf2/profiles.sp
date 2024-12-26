@@ -17,8 +17,6 @@
 ArrayList g_BossProfileList = null;
 static ArrayList g_SelectableBossProfileList = null;
 static ArrayList g_SelectableAdminBossProfileList = null;
-static ArrayList g_SelectableBoxingBossProfileList = null;
-static ArrayList g_SelectableRenevantBossProfileList = null;
 static ArrayList g_SelectableRenevantBossAdminProfileList = null;
 static ArrayList g_SelectableBossProfileQueueList = null;
 
@@ -409,18 +407,6 @@ void UnloadBossProfile(const char[] profile)
 		g_SelectableAdminBossProfileList.Erase(index);
 	}
 
-	index = g_SelectableBoxingBossProfileList.FindString(profile);
-	if (index != -1)
-	{
-		g_SelectableBoxingBossProfileList.Erase(index);
-	}
-
-	index = g_SelectableRenevantBossProfileList.FindString(profile);
-	if (index != -1)
-	{
-		g_SelectableRenevantBossProfileList.Erase(index);
-	}
-
 	index = g_SelectableRenevantBossAdminProfileList.FindString(profile);
 	if (index != -1)
 	{
@@ -429,9 +415,7 @@ void UnloadBossProfile(const char[] profile)
 
 	if (profileData.IsPvEBoss)
 	{
-		char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		strcopy(setProfile, sizeof(setProfile), profile);
-		UnregisterPvESlenderBoss(setProfile);
+		UnregisterPvESlenderBoss(profile);
 	}
 
 	CleanupKeyMap(profileData);
@@ -471,16 +455,6 @@ void ClearBossProfiles()
 	if (g_SelectableAdminBossProfileList != null)
 	{
 		delete g_SelectableAdminBossProfileList;
-	}
-
-	if (g_SelectableBoxingBossProfileList != null)
-	{
-		delete g_SelectableBoxingBossProfileList;
-	}
-
-	if (g_SelectableRenevantBossProfileList != null)
-	{
-		delete g_SelectableRenevantBossProfileList;
 	}
 
 	if (g_SelectableRenevantBossAdminProfileList != null)
@@ -526,16 +500,6 @@ void ReloadBossProfiles()
 	if (g_SelectableAdminBossProfileList == null)
 	{
 		g_SelectableAdminBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
-	}
-
-	if (g_SelectableBoxingBossProfileList == null)
-	{
-		g_SelectableBoxingBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
-	}
-
-	if (g_SelectableRenevantBossProfileList == null)
-	{
-		g_SelectableRenevantBossProfileList = new ArrayList(SF2_MAX_PROFILE_NAME_LENGTH);
 	}
 
 	if (g_SelectableRenevantBossAdminProfileList == null)
@@ -722,27 +686,69 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 
 	delete kv;
 
+	bool selectable = true;
+	if (profileData.GetMapSelectionBlacklist() != null)
+	{
+		char currentMap[128];
+		GetCurrentMap(currentMap, sizeof(currentMap));
+
+		for (int i = 0; i < profileData.GetMapSelectionBlacklist().KeyLength; i++)
+		{
+			char key[64], map[128];
+			profileData.GetMapSelectionBlacklist().GetKeyNameFromIndex(i, key, sizeof(key));
+			profileData.GetMapSelectionBlacklist().GetString(key, map, sizeof(map));
+
+			if (StrContains(currentMap, map, false) != -1)
+			{
+				selectable = false;
+			}
+		}
+	}
+
+	if (profileData.GetModeSelectionBlacklist() != null)
+	{
+		if (selectable && SF_IsBoxingMap() && profileData.GetModeSelectionBlacklist().GetBool("boxing", false))
+		{
+			selectable = false;
+		}
+
+		if (selectable && SF_IsProxyMap() && profileData.GetModeSelectionBlacklist().GetBool("proxy", false))
+		{
+			selectable = false;
+		}
+
+		if (selectable && SF_IsRaidMap() && profileData.GetModeSelectionBlacklist().GetBool("raid", false))
+		{
+			selectable = false;
+		}
+
+		if (selectable && SF_IsRenevantMap() && profileData.GetModeSelectionBlacklist().GetBool("renevant", false))
+		{
+			selectable = false;
+		}
+
+		if (selectable && SF_IsSlaughterRunMap() && profileData.GetModeSelectionBlacklist().GetBool("slaughter_run", false))
+		{
+			selectable = false;
+		}
+
+		if (selectable && SF_IsSurvivalMap() && profileData.GetModeSelectionBlacklist().GetBool("survival", false))
+		{
+			selectable = false;
+		}
+	}
+
 	char path[PLATFORM_MAX_PATH];
 
 	if (lookIntoLoads)
 	{
 		bool skip = true;
-		if (profileData.GetBool("enable_random_selection", true))
+		if (selectable)
 		{
 			skip = false;
 		}
 
 		if (profileData.GetBool("admin_only", false))
-		{
-			skip = false;
-		}
-
-		if (profileData.GetBool("enable_random_selection_boxing", false))
-		{
-			skip = false;
-		}
-
-		if (profileData.GetBool("enable_random_selection_renevant", false))
 		{
 			skip = false;
 		}
@@ -771,12 +777,12 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 		if (skip)
 		{
 			FormatEx(errorReason, errorReasonLen, "is not selectable, skipping!");
-			//DeleteCfg(parent);
+			CleanupKeyMap(profileData);
 			return false;
 		}
 	}
 
-	if (profileData.Type == SF2BossType_Unknown || profileData.Type >= SF2BossType_MaxTypes)
+	if (profileData.Type <= SF2BossType_Unknown || profileData.Type >= SF2BossType_MaxTypes)
 	{
 		FormatEx(errorReason, errorReasonLen, "boss type is unknown!");
 		return false;
@@ -788,7 +794,7 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 		if (path[0] == '\0')
 		{
 			FormatEx(errorReason, errorReasonLen, "model cannot be blank!");
-			//DeleteCfg(parent);
+			CleanupKeyMap(profileData);
 			return false;
 		}
 	}
@@ -805,26 +811,16 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 		g_BossProfileList.PushString(profileName);
 	}
 
-	bool blacklisted = false;
-
-	if (profileData.GetBlacklistedMaps() != null)
+	if (profileData.IsPvEBoss)
 	{
-		char map[64], currentMap[64], key[64];
-		GetCurrentMap(currentMap, sizeof(currentMap));
-		for (int i = 0; i < profileData.GetBlacklistedMaps().Size; i++)
+		selectable = false;
+		if (profileData.GetPvEData().IsSelectable)
 		{
-			profileData.GetBlacklistedMaps().GetKeyNameFromIndex(i, key, sizeof(key));
-			profileData.GetBlacklistedMaps().GetString(key, map, sizeof(map));
-
-			if (StrContains(currentMap, map, false) != -1)
-			{
-				blacklisted = true;
-				break;
-			}
+			RegisterPvESlenderBoss(profileName);
 		}
 	}
 
-	if (!blacklisted)
+	if (selectable)
 	{
 		if (profileData.GetBool("enable_random_selection", true))
 		{
@@ -832,14 +828,6 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 			{
 				// Add to the selectable boss list if it isn't there already.
 				GetSelectableBossProfileList().PushString(profileName);
-			}
-		}
-		else
-		{
-			int selectIndex = GetSelectableBossProfileList().FindString(profileName);
-			if (selectIndex != -1)
-			{
-				GetSelectableBossProfileList().Erase(selectIndex);
 			}
 		}
 
@@ -851,48 +839,6 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 				GetSelectableAdminBossProfileList().PushString(profileName);
 			}
 		}
-		else
-		{
-			int selectIndex = GetSelectableAdminBossProfileList().FindString(profileName);
-			if (selectIndex != -1)
-			{
-				GetSelectableAdminBossProfileList().Erase(selectIndex);
-			}
-		}
-
-		if (profileData.GetBool("enable_random_selection_boxing", false))
-		{
-			if (GetSelectableBoxingBossProfileList().FindString(profileName) == -1)
-			{
-				// Add to the selectable boss list if it isn't there already.
-				GetSelectableBoxingBossProfileList().PushString(profileName);
-			}
-		}
-		else
-		{
-			int selectIndex = GetSelectableBoxingBossProfileList().FindString(profileName);
-			if (selectIndex != -1)
-			{
-				GetSelectableBoxingBossProfileList().Erase(selectIndex);
-			}
-		}
-
-		if (profileData.GetBool("enable_random_selection_renevant", false))
-		{
-			if (GetSelectableRenevantBossProfileList().FindString(profileName) == -1)
-			{
-				// Add to the selectable boss list if it isn't there already.
-				GetSelectableRenevantBossProfileList().PushString(profileName);
-			}
-		}
-		else
-		{
-			int selectIndex = GetSelectableRenevantBossProfileList().FindString(profileName);
-			if (selectIndex != -1)
-			{
-				GetSelectableRenevantBossProfileList().Erase(selectIndex);
-			}
-		}
 
 		if (profileData.GetBool("enable_random_selection_renevant_admin", false))
 		{
@@ -900,14 +846,6 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 			{
 				// Add to the selectable boss list if it isn't there already.
 				GetSelectableRenevantBossAdminProfileList().PushString(profileName);
-			}
-		}
-		else
-		{
-			int selectIndex = GetSelectableRenevantBossAdminProfileList().FindString(profileName);
-			if (selectIndex != -1)
-			{
-				GetSelectableRenevantBossAdminProfileList().Erase(selectIndex);
 			}
 		}
 	}
@@ -1547,35 +1485,14 @@ ArrayList GetSelectableBossProfileList()
 	return g_SelectableBossProfileList;
 }
 
-ArrayList GetSelectableBoxingBossProfileList()
-{
-	return g_SelectableBoxingBossProfileList;
-}
-
 ArrayList GetSelectableAdminBossProfileList()
 {
 	return g_SelectableAdminBossProfileList;
 }
 
-ArrayList GetSelectableRenevantBossProfileList()
-{
-	return g_SelectableRenevantBossProfileList;
-}
-
 ArrayList GetSelectableRenevantBossAdminProfileList()
 {
 	return g_SelectableRenevantBossAdminProfileList;
-}
-
-bool GetRandomRenevantBossProfile(char[] sBuffer, int iBufferLen)
-{
-	if (g_SelectableRenevantBossProfileList.Length == 0)
-	{
-		return false;
-	}
-
-	g_SelectableRenevantBossProfileList.GetString(GetRandomInt(0, g_SelectableRenevantBossProfileList.Length - 1), sBuffer, iBufferLen);
-	return true;
 }
 
 /**

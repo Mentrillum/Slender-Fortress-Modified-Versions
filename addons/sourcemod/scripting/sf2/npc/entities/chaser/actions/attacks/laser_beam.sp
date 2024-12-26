@@ -171,7 +171,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 	ChaserBossProfileLaserAttack attackData = view_as<ChaserBossProfileLaserAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 

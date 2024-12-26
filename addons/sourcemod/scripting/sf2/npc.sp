@@ -176,9 +176,9 @@ static void EntityTeleported(CBaseEntity teleporter, CBaseEntity activator)
 					controller.UnSpawn();
 				}
 
-				if (controller.GetProfileDataEx().Type == SF2BossType_Chaser)
+				if (controller.GetProfileData().Type == SF2BossType_Chaser)
 				{
-					if (view_as<SF2NPC_Chaser>(controller).GetProfileDataEx().ChasesEndlessly)
+					if (view_as<SF2NPC_Chaser>(controller).GetProfileData().ChasesEndlessly)
 					{
 						controller.UnSpawn();
 					}
@@ -190,7 +190,7 @@ static void EntityTeleported(CBaseEntity teleporter, CBaseEntity activator)
 
 static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 {
-	switch (boss.GetProfileDataEx().Type)
+	switch (boss.GetProfileData().Type)
 	{
 		case SF2BossType_Statue:
 		{
@@ -202,12 +202,12 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 	}
 }
 
-void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = false)
+void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
 	int bossIndex = controller.Index;
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 	Call_StartForward(g_OnBossDespawnFwd);
 	Call_PushCell(bossIndex);
 	Call_Finish();
@@ -231,22 +231,30 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = f
 
 	if (data.GetDespawnEffects() != null)
 	{
-		if (killed && data.HideDespawnEffectsOnDeath)
+		ProfileObject obj = view_as<ProfileObject>(data.GetDespawnEffects().GetSection(GetRandomInt(0, data.GetDespawnEffects().Length - 1)));
+		if (obj != null)
 		{
-			// Do nothing
-		}
-		else
-		{
-			ProfileObject obj = view_as<ProfileObject>(data.GetDespawnEffects().GetSection(GetRandomInt(0, data.GetDespawnEffects().Length - 1)));
-			obj = obj != null ? obj.GetSection("effects") : null;
-			if (obj != null)
+			if (data.GetBool("__was_killed") && obj.GetBool("hide_on_death", false))
 			{
-				float pos[3], ang[3];
-				CBaseEntity(NPCGetEntIndex(bossIndex)).GetAbsOrigin(pos);
-				CBaseEntity(NPCGetEntIndex(bossIndex)).GetAbsAngles(ang);
-				SlenderSpawnEffects(view_as<ProfileEffectMaster>(obj), bossIndex, false, pos, ang, _, _, true);
+				// Do nothing
+			}
+			else
+			{
+				obj = obj.GetSection("effects");
+				if (obj != null)
+				{
+					float pos[3], ang[3];
+					CBaseEntity(NPCGetEntIndex(bossIndex)).GetAbsOrigin(pos);
+					CBaseEntity(NPCGetEntIndex(bossIndex)).GetAbsAngles(ang);
+					SlenderSpawnEffects(view_as<ProfileEffectMaster>(obj), bossIndex, false, pos, ang, _, _, true);
+				}
 			}
 		}
+	}
+
+	if (data.GetDespawnInputs() != null)
+	{
+		data.GetDespawnInputs().AcceptInputs(entity.index);
 	}
 
 	char sound[PLATFORM_MAX_PATH];
@@ -281,7 +289,7 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = f
 			{
 				continue;
 			}
-			data = SF2NPC_BaseNPC(npcIndex).GetProfileDataEx();
+			data = SF2NPC_BaseNPC(npcIndex).GetProfileData();
 			if (view_as<ChaserBossProfile>(data).Healthbar)
 			{
 				int tempSlender = NPCGetEntIndex(npcIndex);
@@ -298,6 +306,8 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = f
 			UpdateHealthBar(bossIndex, 0);
 		}
 	}
+
+	data.SetBool("__was_killed", false);
 }
 
 void NPCOnConfigsExecuted()
@@ -528,7 +538,7 @@ bool NPCShouldHearEntity(int npcIndex, int entity, SoundType soundType)
 		return false;
 	}
 
-	if (SF2NPC_BaseNPC(npcIndex).GetProfileDataEx().Type == SF2BossType_Statue)
+	if (SF2NPC_BaseNPC(npcIndex).GetProfileData().Type == SF2BossType_Statue)
 	{
 		return false;
 	}
@@ -583,7 +593,7 @@ void NPCGetEyePosition(int npcIndex, float buffer[3], const float defaultValue[3
 
 	float pos[3], eyePosOffset[3];
 	CBaseEntity(npcEnt).GetAbsOrigin(pos);
-	SF2NPC_BaseNPC(npcIndex).GetProfileDataEx().GetEyes().GetOffsetPos(eyePosOffset);
+	SF2NPC_BaseNPC(npcIndex).GetProfileData().GetEyes().GetOffsetPos(eyePosOffset);
 
 	AddVectors(pos, eyePosOffset, buffer);
 }
@@ -831,17 +841,18 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	}
 	else
 	{
-		if (profileData.IsPvEBoss && showPvEMessage && profileData.PvESpawnMessagesArray != null && profileData.PvESpawnMessagesArray.Size > 0)
+		BossProfilePvEData pveData = profileData.GetPvEData();
+		if (pveData.IsEnabled && showPvEMessage && pveData.GetSpawnMessages() != null && pveData.GetSpawnMessages().KeyLength > 0)
 		{
 			char prefix[PLATFORM_MAX_PATH], message[PLATFORM_MAX_PATH], name[SF2_MAX_NAME_LENGTH], keyName[64];
-			profileData.GetPvESpawnMessagePrefix(prefix, sizeof(prefix));
+			pveData.GetSpawnMessagePrefix(prefix, sizeof(prefix));
 			if (prefix[0] == '\0')
 			{
 				prefix = "[SF2]";
 			}
-			int messageIndex = GetRandomInt(0, profileData.PvESpawnMessagesArray.Size - 1);
-			profileData.PvESpawnMessagesArray.GetKeyNameFromIndex(messageIndex, keyName, sizeof(keyName));
-			profileData.PvESpawnMessagesArray.GetString(keyName, message, sizeof(message));
+			int messageIndex = GetRandomInt(0, pveData.GetSpawnMessages().KeyLength - 1);
+			pveData.GetSpawnMessages().GetKeyNameFromIndex(messageIndex, keyName, sizeof(keyName));
+			pveData.GetSpawnMessages().GetString(keyName, message, sizeof(message));
 			if (StrContains(message, "[BOSS]", true) != -1)
 			{
 				profileData.GetName(1, name, sizeof(name));
@@ -973,7 +984,7 @@ void NPCAddCompanions(SF2NPC_BaseNPC npc)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	npc.GetProfile(profile, sizeof(profile));
-	BossProfileCompanions companions = npc.GetProfileDataEx().GetCompanions();
+	BossProfileCompanions companions = npc.GetProfileData().GetCompanions();
 	if (companions == null)
 	{
 		return;
@@ -1084,7 +1095,7 @@ bool GetSlenderModel(int bossIndex, int modelState = 0, char[] buffer, int buffe
 bool NPCFindUnstuckPosition(SF2_BaseBoss boss, float lastPos[3], float destination[3])
 {
 	SF2NPC_BaseNPC controller = boss.Controller;
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 	PathFollower path = controller.Path;
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(boss.index);
 	CNavArea area = TheNavMesh.GetNearestNavArea(lastPos, _, _, _, false);
@@ -1182,7 +1193,7 @@ bool NPCFindUnstuckPosition(SF2_BaseBoss boss, float lastPos[3], float destinati
 
 	int ent = -1;
 	char targetName[64];
-	if (controller.GetProfileDataEx().IsPvEBoss)
+	if (controller.GetProfileData().IsPvEBoss)
 	{
 		ArrayList spawnPointList = new ArrayList();
 
@@ -1323,7 +1334,7 @@ void RemoveProfile(int bossIndex)
 		KillPvEBoss(controller.EntIndex);
 	}
 
-	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && view_as<SF2NPC_Chaser>(controller).GetProfileDataEx().BoxingBoss)
+	if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && view_as<SF2NPC_Chaser>(controller).GetProfileData().BoxingBoss)
 	{
 		g_SlenderBoxingBossCount -= 1;
 	}
@@ -1418,7 +1429,7 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	npc.UnSpawn(true);
 	npc.GetProfile(profile, sizeof(profile));
 	npc.WasKilled = false;
-	BaseBossProfile data = npc.GetProfileDataEx();
+	BaseBossProfile data = npc.GetProfileData();
 
 	float truePos[3], trueAng[3];
 	trueAng[1] = GetRandomFloat(0.0, 360.0);
@@ -1518,6 +1529,11 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 		}
 	}
 
+	if (data.GetOutputs() != null)
+	{
+		data.GetOutputs().AddOutputs(entity.index);
+	}
+
 	int master = g_SlenderCopyMaster[bossIndex];
 	int flags = NPCGetFlags(bossIndex);
 
@@ -1538,6 +1554,11 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 
 	float teleportTime = GetRandomFloat(data.GetMinTeleportTime(difficulty), data.GetMaxTeleportTime(difficulty));
 	g_SlenderNextTeleportTime[bossIndex] = GetGameTime() + teleportTime;
+
+	if (data.GetSpawnInputs() != null)
+	{
+		data.GetSpawnInputs().AcceptInputs(entity.index);
+	}
 
 	// Call our forward.
 	Call_StartForward(g_OnBossSpawnFwd);
@@ -1582,6 +1603,10 @@ void UpdateHealthBar(int bossIndex, int optionalSetPercent = -1)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(NPCGetEntIndex(bossIndex));
 	if (!chaser.IsValid())
 	{
+		if (g_HealthBar != -1)
+		{
+			SetEntProp(g_HealthBar, Prop_Send, "m_iBossHealthPercentageByte", 0);
+		}
 		return;
 	}
 	float maxHealth = chaser.MaxHealth;
@@ -1785,7 +1810,7 @@ Action Timer_BossMarked(Handle timer, any entref)
 
 bool SlenderUsesBlink(int bossIndex)
 {
-	if (SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().Type == SF2BossType_Statue)
+	if (SF2NPC_BaseNPC(bossIndex).GetProfileData().Type == SF2BossType_Statue)
 	{
 		return true;
 	}
@@ -1919,7 +1944,7 @@ void SlenderCastFootstepAnimEvent(int bossIndex, int event, int slender)
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 
 	soundInfo.EmitSound(_, slender);
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data.EarthquakeFootsteps)
 	{
 		UTIL_ScreenShake(myPos, data.EarthquakeFootstepAmplitude,
@@ -1995,7 +2020,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 	}
 
 	float gameTime = GetGameTime();
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
@@ -2281,7 +2306,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 							SubtractVectors(spawnPos, offset, spawnPos);
 
 							// Look for copies
-							if (controller.GetProfileDataEx().GetCopies().IsEnabled(difficulty) && canSpawn)
+							if (controller.GetProfileData().GetCopies().IsEnabled(difficulty) && canSpawn)
 							{
 								float minDistBetweenBosses = data.GetCopies().GetTeleportDistanceSpacing(difficulty);
 
@@ -2426,7 +2451,7 @@ static Action Timer_SlenderRespawnThink(Handle timer, any id)
 	float gameTime = GetGameTime();
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 
 	bool cont = false;
 
@@ -2503,7 +2528,7 @@ bool SlenderMarkAsFake(int bossIndex)
 
 	NPCSetFlags(bossIndex, bossFlags | SFF_MARKEDASFAKE);
 
-	BaseBossProfile data = SF2NPC_BaseNPC(bossIndex).GetProfileDataEx();
+	BaseBossProfile data = SF2NPC_BaseNPC(bossIndex).GetProfileData();
 
 	g_SlenderFakeTimer[bossIndex] = CreateTimer(3.0, Timer_SlenderMarkedAsFake, bossIndex, TIMER_FLAG_NO_MAPCHANGE);
 
@@ -3232,7 +3257,7 @@ static any Native_GetBossName(Handle plugin, int numParams)
 
 static any Native_GetBossType(Handle plugin, int numParams)
 {
-	return SF2NPC_BaseNPC(GetNativeCell(1)).GetProfileDataEx().Type;
+	return SF2NPC_BaseNPC(GetNativeCell(1)).GetProfileData().Type;
 }
 
 static any Native_GetBossFlags(Handle plugin, int numParams)
@@ -3290,7 +3315,7 @@ static any Native_GetBossMaster(Handle plugin, int numParams)
 
 static any Native_GetBossIdleLifetime(Handle plugin, int numParams)
 {
-	return SF2NPC_BaseNPC(GetNativeCell(1)).GetProfileDataEx().GetIdleLifeTime(GetNativeCell(2));
+	return SF2NPC_BaseNPC(GetNativeCell(1)).GetProfileData().GetIdleLifeTime(GetNativeCell(2));
 }
 
 static any Native_GetBossState(Handle plugin, int numParams)
@@ -3342,7 +3367,7 @@ static any Native_GetBossEyePositionOffset(Handle plugin, int numParams)
 	}
 
 	float eyePos[3];
-	boss.GetProfileDataEx().GetEyes().GetOffsetPos(eyePos);
+	boss.GetProfileData().GetEyes().GetOffsetPos(eyePos);
 
 	SetNativeArray(2, eyePos, 3);
 	return 0;
@@ -3434,7 +3459,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
 	}
 
-	return controller.GetProfileDataEx();
+	return controller.GetProfileData();
 }
 
 static any Native_GetProfileDataEx(Handle plugin, int numParams)

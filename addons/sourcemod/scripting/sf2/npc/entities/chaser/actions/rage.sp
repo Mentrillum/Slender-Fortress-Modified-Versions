@@ -52,7 +52,7 @@ static NextBotAction InitialContainedAction(SF2_ChaserRageAction action, SF2_Cha
 {
 	actor.RageIndex++;
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
 	ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));
@@ -130,7 +130,7 @@ static void OnEnd(SF2_ChaserRageAction action, SF2_ChaserEntity actor)
 	actor.IsGoingToHeal = false;
 	if (actor.Controller.IsValid())
 	{
-		ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+		ChaserBossProfile data = actor.Controller.GetProfileData();
 		char name[64];
 		data.GetRages().GetSectionNameFromIndex(actor.RageIndex, name, sizeof(name));
 		ChaserBossProfileRageData rageData = view_as<ChaserBossProfileRageData>(data.GetRages().GetSection(name));

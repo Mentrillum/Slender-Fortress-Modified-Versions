@@ -21,7 +21,7 @@ methodmap SF2_ChaserSmellAction < NextBotAction
 
 	public static bool IsPossible(SF2_ChaserEntity actor)
 	{
-		ChaserBossProfile data = actor.Controller.GetProfileDataEx();
+		ChaserBossProfile data = actor.Controller.GetProfileData();
 		if (!data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Smell]))
 		{
 			return false;
@@ -58,7 +58,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 {
 	SF2NPC_Chaser controller = actor.Controller;
 	int difficulty = controller.Difficulty;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileSmellData smellData = data.GetSmellData();
 	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 	PathFollower path = controller.Path;

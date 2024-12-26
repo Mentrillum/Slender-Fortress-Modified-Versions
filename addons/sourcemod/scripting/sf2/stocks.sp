@@ -1579,7 +1579,7 @@ int GetLocalGlobalDifficulty(int npcIndex = -1)
 		return g_DifficultyConVar.IntValue;
 	}
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(npcIndex);
-	ChaserBossProfile data = view_as<ChaserBossProfile>(controller.GetProfileDataEx());
+	ChaserBossProfile data = view_as<ChaserBossProfile>(controller.GetProfileData());
 	if (data.IsPvEBoss || data.BoxingBoss)
 	{
 		if (NPCGetUniqueID(npcIndex) != -1)

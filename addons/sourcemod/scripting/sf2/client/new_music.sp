@@ -463,7 +463,7 @@ static void OnBossAdded(SF2NPC_BaseNPC npc)
 		return;
 	}
 
-	if (npc.GetProfileDataEx().IsPvEBoss)
+	if (npc.GetProfileData().IsPvEBoss)
 	{
 		return;
 	}
@@ -494,7 +494,7 @@ static void OnBossRemoved(SF2NPC_BaseNPC npc)
 		return;
 	}
 
-	if (npc.GetProfileDataEx().IsPvEBoss)
+	if (npc.GetProfileData().IsPvEBoss)
 	{
 		return;
 	}
@@ -532,7 +532,7 @@ static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 			continue;
 		}
 
-		if (npc.GetProfileDataEx().IsPvEBoss)
+		if (npc.GetProfileData().IsPvEBoss)
 		{
 			continue;
 		}
@@ -1152,7 +1152,7 @@ static void MusicThink()
 				continue;
 			}
 
-			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 			if (data.IsPvEBoss)
 			{
 				continue;
@@ -1268,7 +1268,7 @@ static void MusicThink()
 				continue;
 			}
 
-			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 			if (data.IsPvEBoss)
 			{
 				continue;
@@ -1401,7 +1401,7 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 		return;
 	}
 
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 	if (data.IsPvEBoss)
 	{
 		return;

@@ -15,13 +15,13 @@ void NPCStatueOnSelectProfile(int npcIndex)
 
 SF2_StatueEntity Spawn_Statue(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
 {
-	g_SlenderStatueIdleLifeTime[controller.Index] = GetGameTime() + view_as<SF2NPC_Statue>(controller).GetProfileDataEx().GetIdleLifeTime(controller.Difficulty);
+	g_SlenderStatueIdleLifeTime[controller.Index] = GetGameTime() + view_as<SF2NPC_Statue>(controller).GetProfileData().GetIdleLifeTime(controller.Difficulty);
 	return SF2_StatueEntity.Create(controller, pos, ang);
 }
 
 void Despawn_Statue(SF2NPC_Statue controller, CBaseEntity bossEnt)
 {
-	StatueBossProfile data = controller.GetProfileDataEx();
+	StatueBossProfile data = controller.GetProfileData();
 	// Stop all possible looping sounds.
 	for (int i = 0; i < Difficulty_Max; i++)
 	{
@@ -45,7 +45,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
 	}
 
-	return controller.GetProfileDataEx();
+	return controller.GetProfileData();
 }
 
 static any Native_GetProfileDataEx(Handle plugin, int numParams)

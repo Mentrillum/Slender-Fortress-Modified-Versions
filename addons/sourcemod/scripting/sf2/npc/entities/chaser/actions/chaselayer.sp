@@ -57,15 +57,16 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 	}
 	else if (target.IsValid())
 	{
-		int pathTo = target.index;
+		float pos[3];
+		target.GetAbsOrigin(pos);
 		if (actor.Teleporters.Length > 0)
 		{
-			pathTo = actor.Teleporters.Get(0);
+			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
 		}
 
 		if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
 		{
-			path.ComputeToTarget(bot, pathTo);
+			path.ComputeToPos(bot, pos);
 		}
 	}
 
@@ -124,7 +125,7 @@ static int OnResume(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, N
 		SF2NPC_Chaser controller = actor.Controller;
 		if (controller.IsValid())
 		{
-			if (controller.GetProfileDataEx().GetStunBehavior().CanChaseInitialOnEnd(controller.Difficulty) && SF2_ChaserChaseInitialAction.IsPossible(actor))
+			if (controller.GetProfileData().GetStunBehavior().CanChaseInitialOnEnd(controller.Difficulty) && SF2_ChaserChaseInitialAction.IsPossible(actor))
 			{
 				return action.SuspendFor(SF2_ChaserChaseInitialAction());
 			}

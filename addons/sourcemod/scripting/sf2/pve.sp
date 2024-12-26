@@ -14,6 +14,8 @@ static ArrayList g_ActiveBosses;
 static bool g_IsPvEActive;
 static bool g_DoesPvEExist;
 static char g_PlayerCurrentPvEMusic[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static char g_PlayerUsedPvEMusic[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static float g_PlayerUsedPvEMusicVolume[MAXTF2PLAYERS];
 static bool g_PvEBoxingMode;
 
 static float g_TimeUntilBossSpawns;
@@ -284,6 +286,18 @@ static void RoundStart()
 	g_HasBossSpawned = false;
 	g_ActiveBosses.Clear();
 
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		SF2_BasePlayer client = SF2_BasePlayer(i);
+		if (!client.IsValid)
+		{
+			continue;
+		}
+
+		g_PlayerUsedPvEMusic[client.index][0] = '\0';
+		g_PlayerUsedPvEMusicVolume[client.index] = 1.0;
+	}
+
 	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "trigger_multiple")) != -1)
 	{
@@ -333,6 +347,9 @@ static void OnPutInServer(SF2_BasePlayer client)
 	g_PlayerShowBossHealthPvE[client.index] = false;
 
 	PvE_ForceResetPlayerPvEData(client.index);
+
+	g_PlayerUsedPvEMusic[client.index][0] = '\0';
+	g_PlayerUsedPvEMusicVolume[client.index] = 1.0;
 
 	if (IsClientAuthorized(client.index))
 	{
@@ -439,9 +456,9 @@ static void OnPlayerAverageUpdate(SF2_BasePlayer client)
 		SF2_ChaserEntity chaser = SF2_ChaserEntity(EntRefToEntIndex(bosses.Get(i2)));
 		if (chaser.IsValid() && chaser.Controller.IsValid())
 		{
-			ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+			ChaserBossProfile data = chaser.Controller.GetProfileData();
 			data.GetName(1, name, sizeof(name));
-			if (!data.DisplayPvEHealth)
+			if (!data.GetPvEData().DisplayHealth)
 			{
 				continue;
 			}
@@ -658,33 +675,43 @@ void PvE_OnTriggerStartTouch(int trigger, int other)
 				PvE_SetPlayerPvEState(other, true);
 				if (g_IsPvEActive && g_PvETriggers.FindValue(entRef) != -1)
 				{
-					if (g_CustomMusicOverride[0] != '\0')
+					if (g_PlayerUsedPvEMusic[other][0] != '\0')
 					{
-						EmitSoundToClient(other, g_CustomMusicOverride, _, _, _, _, 0.75);
-						strcopy(g_PlayerCurrentPvEMusic[other], sizeof(g_PlayerCurrentPvEMusic[]), g_CustomMusicOverride);
+						EmitSoundToClient(other, g_PlayerUsedPvEMusic[other], _, _, _, _, g_PlayerUsedPvEMusicVolume[other]);
+						strcopy(g_PlayerCurrentPvEMusic[other], sizeof(g_PlayerCurrentPvEMusic[]), g_PlayerUsedPvEMusic[other]);
 					}
 					else
 					{
-						ArrayList musics = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
-						ArrayList volumes = new ArrayList();
+						ArrayList usableMusics = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+						ArrayList usableVolumes = new ArrayList();
+						if (g_CustomMusicOverride[0] != '\0')
+						{
+							usableMusics.PushString(g_CustomMusicOverride);
+							usableVolumes.Push(0.75);
+						}
+
 						for (int i = 0; i < MAX_MUSICS; i++)
 						{
 							if (g_MusicFile[other][i][0] != '\0')
 							{
-								musics.PushString(g_MusicFile[other][i]);
-								volumes.Push(g_MusicVolume[other][i]);
+								usableMusics.PushString(g_MusicFile[other][i]);
+								usableVolumes.Push(g_MusicVolume[other][i]);
 							}
 						}
-						if (musics.Length > 0)
+
+						if (usableMusics.Length > 0)
 						{
 							char preferredMusic[PLATFORM_MAX_PATH];
-							int random = GetRandomInt(0, musics.Length - 1);
-							musics.GetString(random, preferredMusic, sizeof(preferredMusic));
-							EmitSoundToClient(other, preferredMusic, _, _, _, _, volumes.Get(random));
+							int random = GetRandomInt(0, usableMusics.Length - 1);
+							usableMusics.GetString(random, preferredMusic, sizeof(preferredMusic));
+							EmitSoundToClient(other, preferredMusic, _, _, _, _, usableVolumes.Get(random));
 							strcopy(g_PlayerCurrentPvEMusic[other], sizeof(g_PlayerCurrentPvEMusic[]), preferredMusic);
+							strcopy(g_PlayerUsedPvEMusic[other], sizeof(g_PlayerUsedPvEMusic[]), preferredMusic);
+							g_PlayerUsedPvEMusicVolume[other] = usableVolumes.Get(random);
 						}
-						delete volumes;
-						delete musics;
+
+						delete usableVolumes;
+						delete usableMusics;
 					}
 				}
 			}
@@ -875,7 +902,7 @@ static void SpawnPvEBoss(const char[] override = "")
 		if (npc.IsValid())
 		{
 			npc.Spawn(spawnPos);
-			ChaserBossProfile data = view_as<SF2NPC_Chaser>(npc).GetProfileDataEx();
+			ChaserBossProfile data = view_as<SF2NPC_Chaser>(npc).GetProfileData();
 			ProfileSound soundInfo = data.GetGlobalMusic(1);
 			g_PvEBoxingMode = data.BoxingBoss;
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
@@ -896,7 +923,7 @@ static void SpawnPvEBoss(const char[] override = "")
 					testNPC.Spawn(spawnPos);
 					g_ActiveBosses.Push(EntIndexToEntRef(testNPC.EntIndex));
 
-					BaseBossProfile tempData = testNPC.GetProfileDataEx();
+					BaseBossProfile tempData = testNPC.GetProfileData();
 
 					if (tempData.GetCopies().IsEnabled(1))
 					{
@@ -984,12 +1011,14 @@ static Action Command_AddPvEMusic(int client, int args)
 	}
 
 	bool isAvailable = false;
+	int index = 0;
 	for (int i = 0; i < MAX_MUSICS; i++)
 	{
 		if (g_MusicFile[client][i][0] == '\0')
 		{
 			isAvailable = true;
 			strcopy(g_MusicFile[client][i], sizeof(g_MusicFile[][]), soundFile);
+			index = i;
 			break;
 		}
 
@@ -1008,6 +1037,8 @@ static Action Command_AddPvEMusic(int client, int args)
 
 	PrecacheSound(soundFile);
 	CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 PvE Added Track", client, soundFile);
+
+	UpdateMusicToDatabase(client, index);
 
 	ClientSaveCookies(client);
 
@@ -1155,10 +1186,12 @@ static int PvEMenu_SelectedMusic(Menu menu, MenuAction action, int param1, int p
 
 			case 1:
 			{
+				int index = 0;
 				for (int i = 0; i < MAX_MUSICS; i++)
 				{
 					if (strcmp(g_MusicFile[param1][i], g_MenuMusic[param1], false) == 0)
 					{
+						index = i;
 						g_MusicFile[param1][i][0] = '\0';
 						g_MusicVolume[param1][i] = 0.75;
 						g_MusicLoopTime[param1][i] = 0.0;
@@ -1167,6 +1200,7 @@ static int PvEMenu_SelectedMusic(Menu menu, MenuAction action, int param1, int p
 				}
 				CPrintToChat(param1, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 PvE Removed Music", param1, g_MenuMusic[param1]);
 				DisplayMusicSelectionPvE(param1);
+				UpdateMusicToDatabase(param1, index);
 			}
 		}
 	}
@@ -1189,20 +1223,50 @@ static int Panel_SettingsMusicVolume(Menu menu, MenuAction action, int param1, i
 		{
 			volume += 0.25;
 		}
+		int index = 0;
 		for (int i = 0; i < MAX_MUSICS; i++)
 		{
 			if (strcmp(g_MusicFile[param1][i], g_MenuMusic[param1], false) == 0)
 			{
 				g_MusicVolume[param1][i] = volume;
+				index = i;
 				break;
 			}
 		}
 		CPrintToChat(param1, "%t", "SF2 Music Volum Changed", RoundToNearest(volume * 100.0));
+
+		UpdateMusicToDatabase(param1, index);
+
 		ClientSaveCookies(param1);
 
 		DisplayMusicSelectionPvE(param1);
 	}
 	return 0;
+}
+
+static void UpdateMusicToDatabase(int client, int index)
+{
+	int id = GetSteamAccountID(client);
+	if (g_MusicDataBase != null && !IsFakeClient(client) && g_IsMusicCached[client] && id != 0)
+	{
+		Transaction action = new Transaction();
+
+		char formatter[512];
+		FormatEx(formatter, sizeof(formatter), "UPDATE music_selection_%i SET "
+		... "music_file = '%s', "
+		... "music_volume = %f, "
+		... "music_loop_time = %f "
+		... "WHERE steamid = %d;",
+		index,
+		g_MusicFile[client][index],
+		g_MusicVolume[client][index],
+		g_MusicLoopTime[client][index],
+		id);
+
+		action.AddQuery(formatter);
+
+		g_MusicDataBase.Execute(action, _, Database_Fail, _, DBPrio_High);
+	}
 }
 
 // These register boss entity names to choose from
@@ -1220,12 +1284,12 @@ void UnregisterPveBoss(char[] bossName)
 	}
 }
 
-void RegisterPvESlenderBoss(char profile[SF2_MAX_PROFILE_NAME_LENGTH])
+void RegisterPvESlenderBoss(const char[] profile)
 {
 	g_SlenderBosses.PushString(profile);
 }
 
-void UnregisterPvESlenderBoss(char profile[SF2_MAX_PROFILE_NAME_LENGTH])
+void UnregisterPvESlenderBoss(const char[] profile)
 {
 	int index = g_SlenderBosses.FindString(profile);
 	if (index != -1)
@@ -1254,12 +1318,20 @@ void KillPvEBoss(int boss)
 		float time = 5.0;
 		if (bossIndex != -1)
 		{
-			time = SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().PvETeleportEndTimer;
+			time = SF2NPC_BaseNPC(bossIndex).GetProfileData().GetPvEData().TeleportEndTimer;
 		}
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			SF2_BasePlayer client = SF2_BasePlayer(i);
-			if (!client.IsValid || !client.IsInPvE)
+			if (!client.IsValid)
+			{
+				continue;
+			}
+
+			g_PlayerUsedPvEMusic[client.index][0] = '\0';
+			g_PlayerUsedPvEMusicVolume[client.index] = 1.0;
+
+			if (!client.IsInPvE)
 			{
 				continue;
 			}
@@ -1307,7 +1379,7 @@ static Action Timer_RemoveAllPvEBosses(Handle timer)
 			continue;
 		}
 
-		if (!npc.GetProfileDataEx().IsPvEBoss)
+		if (!npc.GetProfileData().IsPvEBoss)
 		{
 			continue;
 		}

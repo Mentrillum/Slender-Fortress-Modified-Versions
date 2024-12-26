@@ -984,7 +984,7 @@ methodmap ProfileSound < ProfileObject
 				break;
 			}
 
-			TryPrecacheBossProfileSoundPath(path, g_FileCheckConVar.BoolValue);
+			PrecacheSound2(path, g_FileCheckConVar.BoolValue);
 			paths.PushString(path);
 			obj.RemoveKey(num);
 		}
@@ -1425,8 +1425,6 @@ methodmap ProfileMasterAnimations < ProfileObject // This covers the whole "anim
 					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_DeathCam]) == 0 ||
 					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Death]) == 0 ||
 					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_TauntKill]) == 0 ||
-					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_AttackBegin]) == 0 ||
-					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_AttackEnd]) == 0 ||
 					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_ProjectileShoot]) == 0 ||
 					strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Despawn]) == 0)
 				{
@@ -1747,6 +1745,9 @@ void SetupProfileObjectNatives()
 	CreateNative("SF2_ProfileObject.Parent.get", Native_GetObjectParent);
 	CreateNative("SF2_ProfileObject.KeyLength.get", Native_GetObjectKeyLength);
 	CreateNative("SF2_ProfileObject.SectionLength.get", Native_GetObjectSectionLength);
+	CreateNative("SF2_ProfileObject.GetSectionName", Native_GetObjectSectionName);
+	CreateNative("SF2_ProfileObject.GetKeyNameFromIndex", Native_GetObjectKeyNameFromIndex);
+	CreateNative("SF2_ProfileObject.GetSectionNameFromIndex", Native_GetObjectSectionNameFromIndex);
 	CreateNative("SF2_ProfileObject.GetInt", Native_GetObjectInt);
 	CreateNative("SF2_ProfileObject.SetInt", Native_SetObjectInt);
 	CreateNative("SF2_ProfileObject.GetBool", Native_GetObjectBool);
@@ -1847,6 +1848,57 @@ static any Native_GetObjectSectionLength(Handle plugin, int numParams)
 	}
 
 	return obj.SectionLength;
+}
+
+static any Native_GetObjectSectionName(Handle plugin, int numParams)
+{
+	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	int bufferSize = GetNativeCell(3);
+	char[] buffer = new char[bufferSize];
+
+	obj.GetSectionName(buffer, bufferSize);
+
+	SetNativeString(2, buffer, bufferSize);
+	return 0;
+}
+
+static any Native_GetObjectKeyNameFromIndex(Handle plugin, int numParams)
+{
+	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	int bufferSize = GetNativeCell(4);
+	char[] buffer = new char[bufferSize];
+
+	bool state = obj.GetKeyNameFromIndex(GetNativeCell(2), buffer, bufferSize);
+
+	SetNativeString(3, buffer, bufferSize);
+	return state;
+}
+
+static any Native_GetObjectSectionNameFromIndex(Handle plugin, int numParams)
+{
+	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	int bufferSize = GetNativeCell(4);
+	char[] buffer = new char[bufferSize];
+
+	bool state = obj.GetSectionNameFromIndex(GetNativeCell(2), buffer, bufferSize);
+
+	SetNativeString(3, buffer, bufferSize);
+	return state;
 }
 
 static any Native_GetObjectInt(Handle plugin, int numParams)

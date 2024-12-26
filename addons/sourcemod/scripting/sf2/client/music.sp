@@ -237,7 +237,7 @@ void ClientUpdateMusicSystem(int client, bool initialize = false)
 				continue;
 			}
 
-			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 			if (data.IsPvEBoss)
 			{
 				continue;
@@ -259,7 +259,7 @@ void ClientUpdateMusicSystem(int client, bool initialize = false)
 					}
 
 					ProfileSound soundInfo;
-					ChaserBossProfile chaserData = SF2NPC_Chaser(i).GetProfileDataEx();
+					ChaserBossProfile chaserData = SF2NPC_Chaser(i).GetProfileData();
 					GetClientAbsOrigin(client, buffer);
 					chaser.GetAbsOrigin(buffer3);
 					float pos[3];
@@ -740,13 +740,13 @@ void ClientAlertMusicReset(int client)
 		{
 			continue;
 		}
-		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 
 		if (data.Type != -1 && data.Type == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
-				SF2NPC_Chaser(i).GetProfileDataEx().GetAlertMusics().StopAllSounds(1, client);
+				SF2NPC_Chaser(i).GetProfileData().GetAlertMusics().StopAllSounds(1, client);
 			}
 		}
 	}
@@ -771,7 +771,7 @@ void ClientAlertMusicStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileDataEx().GetAlertMusics();
+	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileData().GetAlertMusics();
 	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
@@ -842,13 +842,13 @@ void ClientIdleMusicReset(int client)
 		{
 			continue;
 		}
-		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 
 		if (data.Type != -1 && data.Type == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
-				SF2NPC_Chaser(i).GetProfileDataEx().GetIdleMusics().StopAllSounds(1, client);
+				SF2NPC_Chaser(i).GetProfileData().GetIdleMusics().StopAllSounds(1, client);
 			}
 		}
 	}
@@ -873,7 +873,7 @@ void ClientIdleMusicStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileDataEx().GetIdleMusics();
+	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileData().GetIdleMusics();
 	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
@@ -944,13 +944,13 @@ void ClientChaseMusicReset(int client)
 		{
 			continue;
 		}
-		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 
 		if (data.Type != -1 && data.Type == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
-				SF2NPC_Chaser(i).GetProfileDataEx().GetChaseMusics().StopAllSounds(1, client);
+				SF2NPC_Chaser(i).GetProfileData().GetChaseMusics().StopAllSounds(1, client);
 			}
 		}
 	}
@@ -975,7 +975,7 @@ void ClientMusicChaseStart(int client,int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileDataEx().GetChaseMusics();
+	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileData().GetChaseMusics();
 	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
@@ -1047,13 +1047,13 @@ void ClientChaseMusicSeeReset(int client)
 		{
 			continue;
 		}
-		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+		BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 
 		if (data.Type != -1 && data.Type == SF2BossType_Chaser)
 		{
 			if (IsValidClient(client))
 			{
-				SF2NPC_Chaser(i).GetProfileDataEx().GetVisibleChaseMusics().StopAllSounds(1, client);
+				SF2NPC_Chaser(i).GetProfileData().GetVisibleChaseMusics().StopAllSounds(1, client);
 			}
 		}
 	}
@@ -1078,7 +1078,7 @@ void ClientMusicChaseSeeStart(int client, int bossIndex)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
 	char buffer[PLATFORM_MAX_PATH];
-	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileDataEx().GetVisibleChaseMusics();
+	ProfileSound soundInfo = SF2NPC_Chaser(bossIndex).GetProfileData().GetVisibleChaseMusics();
 	if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
 	{
 		soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), buffer, sizeof(buffer));
@@ -1223,7 +1223,7 @@ Action Timer_PlayerFadeInAlertMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerAlertMusicString[client][bossIndex]);
@@ -1283,7 +1283,7 @@ Action Timer_PlayerFadeOutAlertMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerAlertMusicString[client][bossIndex]);
@@ -1348,7 +1348,7 @@ Action Timer_PlayerFadeInIdleMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerIdleMusicString[client][bossIndex]);
@@ -1408,7 +1408,7 @@ Action Timer_PlayerFadeOutIdleMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerIdleMusicString[client][bossIndex]);
@@ -1473,7 +1473,7 @@ Action Timer_PlayerFadeInChaseMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerChaseMusicString[client][bossIndex]);
@@ -1533,7 +1533,7 @@ Action Timer_PlayerFadeInChaseMusicSee(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerChaseMusicSeeString[client][bossIndex]);
@@ -1593,7 +1593,7 @@ Action Timer_PlayerFadeOutChaseMusic(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerChaseMusicString[client][bossIndex]);
@@ -1658,7 +1658,7 @@ Action Timer_PlayerFadeOutChaseMusicSee(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileDataEx();
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 	if (data == null)
 	{
 		StopSound(client, MUSIC_CHAN, g_PlayerChaseMusicSeeString[client][bossIndex]);

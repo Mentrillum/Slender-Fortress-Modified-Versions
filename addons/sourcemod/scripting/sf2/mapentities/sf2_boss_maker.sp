@@ -247,7 +247,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				}
 			}
 
-			if (SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().Type == SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(bossIndex).GetProfileData().Type == SF2BossType_Chaser)
 			{
 				char spawnAnim[64];
 				this.GetSpawnAnimation(spawnAnim, sizeof(spawnAnim));

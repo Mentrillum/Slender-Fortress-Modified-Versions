@@ -184,7 +184,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	ChaserBossProfile data = chaser.Controller.GetProfileDataEx();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 	ChaserBossProfileProjectileAttack attackData = view_as<ChaserBossProfileProjectileAttack>(data.GetAttack(attackName));
 	int difficulty = chaser.Controller.Difficulty;
 
@@ -277,7 +277,7 @@ static void FireProjectile(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Projec
 		targetPos[2] = eyePos[2] + fwd[2] * 9001.0;
 	}
 	int difficulty = controller.Difficulty;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileProjectileAttack attackData = action.ProfileData;
 	ChaserBossProjectileData projectileData = data.GetProjectiles();
 
@@ -301,7 +301,7 @@ static void FireProjectile(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Projec
 	{
 		float direction[3], angle[3];
 		SubtractVectors(targetPos, effectPos, direction);
-		float deviation = attackData.GetDeviation(difficulty);
+		float deviation = attackData.GetDeviation(difficulty) / 10.0;
 
 		NormalizeVector(direction, direction);
 		GetVectorAngles(direction, angle);

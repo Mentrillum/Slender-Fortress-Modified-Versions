@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 12-21-2024"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 12-21-2024"
+#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 12-25-2024"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 12-25-2024"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -2249,7 +2249,7 @@ methodmap SF2_ProfileObject < Handle
 	}
 
 	/**
-	 * Retrieve the number of keys (not sections) that exist in this section.
+	 * Retrieve the number of keys (not sections) that exist in this object.
 	 */
 	property int KeyLength
 	{
@@ -2257,7 +2257,7 @@ methodmap SF2_ProfileObject < Handle
 	}
 
 	/**
-	 * Retrieve the number of sections (not keys) that exist in this section.
+	 * Retrieve the number of sections (not keys) that exist in this object.
 	 */
 	property int SectionLength
 	{
@@ -2265,11 +2265,39 @@ methodmap SF2_ProfileObject < Handle
 	}
 
 	/**
+	 * Retrieves the object's name
+	 *
+	 * @param buffer			String buffer
+	 * @param bufferSize		Size of string buffer
+	 */
+	public native void GetSectionName(char[] buffer, int bufferSize);
+
+	/**
+	 * Retrieves a key's name from a specified index.
+	 *
+	 * @param index				Index to use
+	 * @param buffer			String buffer
+	 * @param bufferSize		Size of string buffer
+	 * @return					True on success, false otherwise
+	 */
+	public native bool GetKeyNameFromIndex(int index, char[] buffer, int bufferSize);
+
+	/**
+	 * Retrieves a section's name from a specified index.
+	 *
+	 * @param index				Index to use
+	 * @param buffer			String buffer
+	 * @param bufferSize		Size of string buffer
+	 * @return					True on success, false otherwise
+	 */
+	public native bool GetSectionNameFromIndex(int index, char[] buffer, int bufferSize);
+
+	/**
 	 * Retrieves an integer value from the given key.
 	 *
-	 * @param key              Key name
-	 * @param defaultValue     Value to return as a fallback
-	 * @return                 Value stored at key
+	 * @param key				Key name
+	 * @param defaultValue		Value to return as a fallback
+	 * @return					Value stored at key
 	 */
 	public native int GetInt(const char[] key, int defaultValue = 0);
 
@@ -2480,7 +2508,6 @@ methodmap SF2_ProfileObject < Handle
 	 * @param difficulty       Difficulty value
 	 * @param buffer           Float buffer
 	 * @param defaultValue     Value to return as a fallback
-	 * @return                 Value stored at key
 	 */
 	public native void GetDifficultyVector(const char[] key, int difficulty, float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 });
 
@@ -2500,7 +2527,6 @@ methodmap SF2_ProfileObject < Handle
 	 * @param difficulty       Difficulty value
 	 * @param buffer           Float buffer
 	 * @param defaultValue     Value to return as a fallback
-	 * @return                 Value stored at key
 	 */
 	public native void GetDifficultyColor(const char[] key, int difficulty, int buffer[4], const int defaultValue[4] = { 0, 0, 0, 0 });
 
@@ -3029,19 +3055,49 @@ methodmap SF2_ChaserBossProfileBaseAttack < SF2_ProfileObject
 	 */
 	public native float GetCooldown(int difficulty);
 
+	/**
+	 * Determines what the minimum difficulty must be for this attack to be used on
+	 * Anything lower than this threshold blocks the attack.
+	 */
 	property int UseOnDifficulty
 	{
 		public native get();
 	}
 
+	/**
+	 * Determines what the maximum difficulty must not be for this attack to be used
+	 * Anything higher than this threshold blocks the attack.
+	 */
 	property int BlockOnDifficulty
 	{
 		public native get();
 	}
 
+	/**
+	 * Determines how much health the target must have at maximum for this attack to be used.
+	 * Anything higher than this threshold blocks the attack.
+	 *
+	 * @param difficulty		Difficulty value
+	 * @return					Maximum health threshold
+	 */
 	public native float CanUseOnHealth(int difficulty);
 
+	/**
+	 * Determines how much health the target must have at minimum for this attack to be used.
+	 * Anything lower than this threshold blocks the attack.
+	 *
+	 * @param difficulty		Difficulty value
+	 * @return					Minimum health threshold
+	 */
 	public native float CanBlockOnHealth(int difficulty);
+
+	/**
+	 * The animation's event index that'll be used for an attack to fire.
+	 * 
+	 * @param difficulty		Difficulty value
+	 * @return					Animation event index
+	 */
+	public native int GetEventNumber(int difficulty);
 }
 
 /**
@@ -4788,6 +4844,9 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_ProfileObject.Parent.get");
 	MarkNativeAsOptional("SF2_ProfileObject.KeyLength.get");
 	MarkNativeAsOptional("SF2_ProfileObject.SectionLength.get");
+	MarkNativeAsOptional("SF2_ProfileObject.GetSectionName");
+	MarkNativeAsOptional("SF2_ProfileObject.GetKeyNameFromIndex");
+	MarkNativeAsOptional("SF2_ProfileObject.GetSectionNameFromIndex");
 	MarkNativeAsOptional("SF2_ProfileObject.GetInt");
 	MarkNativeAsOptional("SF2_ProfileObject.SetInt");
 	MarkNativeAsOptional("SF2_ProfileObject.GetBool");
@@ -4885,6 +4944,7 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.BlockOnDifficulty.get");
 	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.CanUseOnHealth");
 	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.CanBlockOnHealth");
+	MarkNativeAsOptional("SF2_ChaserBossProfileBaseAttack.GetEventNumber");
 
 	MarkNativeAsOptional("SF2_ChaserBossProfileCustomAttack.GetSubType");
 	MarkNativeAsOptional("SF2_ChaserBossProfileCustomAttack.IsSubType");

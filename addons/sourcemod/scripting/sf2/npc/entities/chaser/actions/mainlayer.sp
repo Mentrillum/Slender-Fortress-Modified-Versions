@@ -113,7 +113,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		actor.DoAttackMiscConditions(actor.GetAttackName());
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileStunData stunData = data.GetStunBehavior();
 	if (stunData != null && stunData.CanFlashlightStun(difficulty) && actor.CanBeStunned() && actor.CanTakeDamage() && actor.FlashlightTick < gameTime &&
 		!IsNightVisionEnabled())
@@ -220,7 +220,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 		}
 	}
 
-	if (data.InstantKillRadius > 0.0)
+	if (data.GetInstantKillRadius(difficulty) > 0.0)
 	{
 		if (gameTime >= actor.LastKillTime && !actor.IsKillingSomeone)
 		{
@@ -228,7 +228,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 			actor.WorldSpaceCenter(worldSpace);
 			actor.GetAbsOrigin(myPos);
 			bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-			if (controller.GetProfileDataEx().IsPvEBoss)
+			if (controller.GetProfileData().IsPvEBoss)
 			{
 				attackEliminated = true;
 			}
@@ -245,7 +245,7 @@ static int Update(SF2_ChaserMainAction action, SF2_ChaserEntity actor)
 					continue;
 				}
 
-				if (actor.MyNextBotPointer().GetRangeSquaredTo(client.index) > Pow(data.InstantKillRadius, 2.0) ||
+				if (actor.MyNextBotPointer().GetRangeSquaredTo(client.index) > Pow(data.GetInstantKillRadius(difficulty), 2.0) ||
 					!client.CanSeeSlender(controller.Index, false, _, !attackEliminated))
 				{
 					continue;
@@ -387,7 +387,7 @@ static int OnInjured(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseE
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	int search = actor.RageIndex + 1;
 	if ((data.BoxingBoss || data.IsPvEBoss) &&
 		actor.CanTakeDamage(attacker, inflictor, damage) && data.GetRages() != null && search < data.GetRages().Size && !actor.IsRaging)
@@ -545,9 +545,9 @@ static int OnCommandString(SF2_ChaserMainAction action, SF2_ChaserEntity actor, 
 		char attack[128];
 		strcopy(attack, sizeof(attack), command);
 		ReplaceString(attack, sizeof(attack), "debug attack ", "");
-		ChaserBossProfile data = controller.GetProfileDataEx();
+		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileBaseAttack attackData = data.GetAttack(attack);
-		return action.TrySuspendFor(SF2_ChaserAttackAction(data, attack, data.IndexOfSection(attackData), attackData.GetDuration(difficulty) + GetGameTime()), RESULT_IMPORTANT);
+		return action.TrySuspendFor(SF2_ChaserAttackAction(data, attack, data.IndexOfSection(attackData), attackData.GetDuration(difficulty)), RESULT_IMPORTANT);
 	}
 
 	if (strcmp(command, "suspend for action") == 0)

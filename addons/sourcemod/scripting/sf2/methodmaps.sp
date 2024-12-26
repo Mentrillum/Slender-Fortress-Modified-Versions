@@ -80,7 +80,7 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	public BaseBossProfile GetProfileDataEx()
+	public BaseBossProfile GetProfileData()
 	{
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		this.GetProfile(profile, sizeof(profile));
@@ -440,6 +440,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		public get()
 		{
 			return SDKCall(g_SDKGetMaxHealth, this.index);
+		}
+	}
+
+	property int ModifiedMaxHealth
+	{
+		public get()
+		{
+			return ClientGetModifiedMaxHealth(this.index);
 		}
 	}
 
@@ -1031,7 +1039,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 {
-	public ChaserBossProfile GetProfileDataEx()
+	public ChaserBossProfile GetProfileData()
 	{
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		this.GetProfile(profile, sizeof(profile));
@@ -1087,7 +1095,7 @@ methodmap SF2NPC_Statue < SF2NPC_BaseNPC
 		return view_as<SF2NPC_Statue>(SF2NPC_BaseNPC(index));
 	}
 
-	public StatueBossProfile GetProfileDataEx()
+	public StatueBossProfile GetProfileData()
 	{
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		this.GetProfile(profile, sizeof(profile));

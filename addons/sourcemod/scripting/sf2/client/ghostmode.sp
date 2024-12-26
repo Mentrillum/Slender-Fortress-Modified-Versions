@@ -353,7 +353,7 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 				continue;
 			}
 
-			if (SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().IsPvEBoss)
+			if (SF2NPC_BaseNPC(bossIndex).GetProfileData().IsPvEBoss)
 			{
 				continue;
 			}

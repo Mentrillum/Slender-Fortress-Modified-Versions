@@ -5,7 +5,7 @@ static NextBotActionFactory g_Factory;
 
 methodmap SF2_PlaySequenceAndWaitEx < NextBotAction
 {
-	public SF2_PlaySequenceAndWaitEx(char[] section)
+	public SF2_PlaySequenceAndWaitEx(const char[] section, const char[] preDefinedName = "")
 	{
 		if (g_Factory == null)
 		{
@@ -16,6 +16,7 @@ methodmap SF2_PlaySequenceAndWaitEx < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
 			g_Factory.BeginDataMapDesc()
 				.DefineStringField("m_Section")
+				.DefineStringField("m_PreDefinedName")
 				.DefineFloatField("m_EndTime")
 				.EndDataMapDesc();
 		}
@@ -23,6 +24,7 @@ methodmap SF2_PlaySequenceAndWaitEx < NextBotAction
 		SF2_PlaySequenceAndWaitEx action = view_as<SF2_PlaySequenceAndWaitEx>(g_Factory.Create());
 
 		action.SetSection(section);
+		action.SetPreDefinedName(preDefinedName);
 
 		return action;
 	}
@@ -37,6 +39,18 @@ methodmap SF2_PlaySequenceAndWaitEx < NextBotAction
 	public void SetSection(const char[] name)
 	{
 		this.SetDataString("m_Section", name);
+	}
+
+	public char[] GetPreDefinedName()
+	{
+		char name[128];
+		this.GetDataString("m_PreDefinedName", name, sizeof(name));
+		return name;
+	}
+
+	public void SetPreDefinedName(const char[] name)
+	{
+		this.SetDataString("m_PreDefinedName", name);
 	}
 
 	property float EndTime
@@ -57,7 +71,7 @@ static int OnStart(SF2_PlaySequenceAndWaitEx action, SF2_BaseBoss actor, NextBot
 {
 	float duration = 0.0, cycle = 0.0, rate = 1.0;
 	int sequence = -1;
-	if (!actor.ResetProfileAnimation(action.GetSection(), .sequence = sequence, .duration = duration, .rate = rate, .cycle = cycle))
+	if (!actor.ResetProfileAnimation(action.GetSection(), .preDefinedName = action.GetPreDefinedName(), .sequence = sequence, .duration = duration, .rate = rate, .cycle = cycle))
 	{
 		return action.Done("Invalid section");
 	}

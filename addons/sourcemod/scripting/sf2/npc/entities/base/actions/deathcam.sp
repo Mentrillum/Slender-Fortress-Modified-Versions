@@ -43,7 +43,7 @@ static NextBotAction InitialContainedAction(SF2_DeathCamAction action, SF2_BaseB
 	actor.IsKillingSomeone = true;
 	float duration = 0.0, rate = 1.0, cycle = 0.0;
 	SF2NPC_BaseNPC controller = actor.Controller;
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 	data.GetLocalDeathCamSounds().EmitSound(_, actor.index, .difficulty = controller.Difficulty);
 
 	int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], rate, duration, cycle);

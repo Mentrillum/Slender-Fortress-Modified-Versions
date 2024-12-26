@@ -173,7 +173,7 @@ methodmap SF2_ChaserAlertAction < NextBotAction
 static int OnStart(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
@@ -222,7 +222,7 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 		return action.Continue();
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 
 	if (!data.IsPvEBoss && IsBeatBoxBeating(2))
@@ -273,6 +273,18 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 
 	if (target.IsValid())
 	{
+		if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly ||
+			data.IsPvEBoss)
+		{
+			actor.State = STATE_CHASE;
+			path.Invalidate();
+			if (data.NormalSoundHook)
+			{
+				actor.NextVoiceTime = 0.0;
+			}
+			return action.ChangeTo(SF2_ChaserChaseAction(), "We must endless chase, GET THEM!");
+		}
+
 		if ((interruptConditions & COND_ENEMYRECHASE) != 0)
 		{
 			actor.State = STATE_CHASE;
@@ -513,7 +525,7 @@ static void OnResume(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, NextB
 static void OnReachedAlertPosition(SF2_ChaserAlertAction action, SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();

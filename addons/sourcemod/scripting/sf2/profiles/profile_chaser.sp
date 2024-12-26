@@ -7,23 +7,6 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-/*for (int i = 0; i < Difficulty_Max; i++)
-		{
-			this.Enabled[i] = false;
-			this.Cooldown[i] = 8.0;
-			this.Duration[i] = 10.0;
-			this.CloakRange[i] = 350.0;
-			this.DecloakRange[i] = 150.0;
-		}
-
-		this.CloakRenderColor[0] = 0;
-		this.CloakRenderColor[1] = 0;
-		this.CloakRenderColor[2] = 0;
-		this.CloakRenderColor[3] = 0;
-		this.CloakRenderMode = 1;
-		this.CloakEffects = null;
-		this.DecloakEffects = null;*/
-
 methodmap ChaserBossProfile < BaseBossProfile
 {
 	property bool ClearLayersOnAnimUpdate
@@ -82,6 +65,11 @@ methodmap ChaserBossProfile < BaseBossProfile
 		value = this.GetDifficultyFloat("hearing_range", difficulty, value);
 		value = this.GetDifficultyFloat("search_sound_range", difficulty, value);
 		return value;
+	}
+
+	public float GetTauntAlertRange(int difficulty)
+	{
+		return this.GetDifficultyFloat("taunt_alert_range", difficulty, 512.0);
 	}
 
 	public bool ShouldIgnoreHearingPathChecking(int difficulty)
@@ -1781,6 +1769,16 @@ methodmap ChaserBossProfileStunData < ProfileObject
 		return null;
 	}
 
+	public ProfileEntityInputsArray GetOnStartInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_start"));
+		}
+		return null;
+	}
+
 	public ProfileEffectMaster GetOnEndEffects()
 	{
 		ProfileObject obj = this.GetSection("effects");
@@ -1790,6 +1788,16 @@ methodmap ChaserBossProfileStunData < ProfileObject
 			return view_as<ProfileEffectMaster>(obj);
 		}
 
+		return null;
+	}
+
+	public ProfileEntityInputsArray GetOnEndInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_end"));
+		}
 		return null;
 	}
 
@@ -2001,6 +2009,16 @@ methodmap ChaserBossProfileDeathData < ProfileObject
 		return null;
 	}
 
+	public ProfileEntityInputsArray GetOnStartInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_start"));
+		}
+		return null;
+	}
+
 	public ProfileEffectMaster GetOnEndEffects()
 	{
 		ProfileObject obj = this.GetSection("effects");
@@ -2010,6 +2028,16 @@ methodmap ChaserBossProfileDeathData < ProfileObject
 			return view_as<ProfileEffectMaster>(obj);
 		}
 
+		return null;
+	}
+
+	public ProfileEntityInputsArray GetOnEndInputs()
+	{
+		ProfileObject obj = this.GetSection("inputs");
+		if (obj != null)
+		{
+			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_end"));
+		}
 		return null;
 	}
 

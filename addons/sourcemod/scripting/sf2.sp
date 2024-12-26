@@ -577,6 +577,7 @@ PrivateForward g_OnAdminMenuCreateOptionsPFwd;
 PrivateForward g_OnPlayerJumpPFwd;
 PrivateForward g_OnPlayerSpawnPFwd;
 PrivateForward g_OnPlayerTakeDamagePFwd;
+PrivateForward g_OnPlayerTakeDamagePostPFwd;
 PrivateForward g_OnPlayerDeathPrePFwd;
 PrivateForward g_OnPlayerDeathPFwd;
 PrivateForward g_OnPlayerPutInServerPFwd;
@@ -837,7 +838,6 @@ public void OnConfigsExecuted()
 							continue;
 						}
 						g_ClientInGame[i] = true;
-						SDKHook(i, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 						Call_StartForward(g_OnPlayerPutInServerPFwd);
 						Call_PushCell(SF2_BasePlayer(i));
 						Call_Finish();
@@ -1427,17 +1427,17 @@ static Action Timer_GlobalGameFrame(Handle timer)
 			}
 
 			SF2NPC_Chaser controller = chaser.Controller;
-			if (!controller.GetProfileDataEx().BoxingBoss)
+			if (!controller.GetProfileData().BoxingBoss)
 			{
 				continue;
 			}
 
 			SF2NPC_BaseNPC baseNPC = view_as<SF2NPC_BaseNPC>(controller);
-			if (baseNPC.GetProfileDataEx().IsPvEBoss)
+			if (baseNPC.GetProfileData().IsPvEBoss)
 			{
 				continue;
 			}
-			baseNPC.GetProfileDataEx().GetName(1, boxingBossName, sizeof(boxingBossName));
+			baseNPC.GetProfileData().GetName(1, boxingBossName, sizeof(boxingBossName));
 			float health = float(chaser.GetProp(Prop_Data, "m_iHealth"));
 			float maxHealth = chaser.MaxHealth;
 			if (chaser.GetProp(Prop_Data, "m_takedamage") == DAMAGE_EVENTS_ONLY)
@@ -1477,7 +1477,7 @@ static Action Timer_GlobalGameFrame(Handle timer)
 			}
 
 			int difficulty = GetLocalGlobalDifficulty(bossIndex);
-			BossProfileProxyData proxyData = SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().GetProxies();
+			BossProfileProxyData proxyData = SF2NPC_BaseNPC(bossIndex).GetProfileData().GetProxies();
 
 			if (!proxyData.IsEnabled(difficulty))
 			{
@@ -1756,7 +1756,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 		SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(i);
 		if (Npc.UniqueID == -1 ||
 			Npc.IsCopy ||
-			(Npc.Flags & SFF_FAKE) || Npc.GetProfileDataEx().IsPvEBoss)
+			(Npc.Flags & SFF_FAKE) || Npc.GetProfileData().IsPvEBoss)
 		{
 			continue;
 		}
@@ -1764,7 +1764,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 		bossPreferredCount++;
 
 		int difficulty = GetLocalGlobalDifficulty(Npc.Index);
-		BaseBossProfile data = Npc.GetProfileDataEx();
+		BaseBossProfile data = Npc.GetProfileData();
 		if (!data.GetCopies().IsEnabled(GetLocalGlobalDifficulty(i)) || (Npc.Flags & SFF_NOCOPIES) != 0)
 		{
 			continue;
@@ -1889,7 +1889,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 				{
 					continue;
 				}
-				if (Npc.GetProfileDataEx().IsPvEBoss)
+				if (Npc.GetProfileData().IsPvEBoss)
 				{
 					continue;
 				}
@@ -1957,7 +1957,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 					continue;
 				}
 
-				if (Npc.GetProfileDataEx().IsPvEBoss)
+				if (Npc.GetProfileData().IsPvEBoss)
 				{
 					continue;
 				}
@@ -1965,7 +1965,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 				if (Npc.CanRemove)
 				{
 					SF2NPC_BaseNPC master = Npc.CopyMaster;
-					BaseBossProfile data = master.GetProfileDataEx();
+					BaseBossProfile data = master.GetProfileData();
 					int difficulty = GetLocalGlobalDifficulty(master.Index);
 					if (data.GetCopies().GetMinCopies(difficulty) > 0)
 					{
@@ -2031,7 +2031,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 					continue;
 				}
 
-				BaseBossProfile data = Npc.GetProfileDataEx();
+				BaseBossProfile data = Npc.GetProfileData();
 				if (!data.GetCopies().IsEnabled(GetLocalGlobalDifficulty(i)) || (Npc.Flags & SFF_NOCOPIES) != 0)
 				{
 					continue;
@@ -3507,7 +3507,6 @@ public void OnClientPutInServer(int client)
 	{
 		if (g_LoadOutsideMapsConVar.BoolValue)
 		{
-			SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 			Call_StartForward(g_OnPlayerPutInServerPFwd);
 			Call_PushCell(SF2_BasePlayer(client));
 			Call_Finish();
@@ -3551,7 +3550,6 @@ public void OnClientPutInServer(int client)
 	SDKHook(client, SDKHook_PreThink, Hook_ClientPreThink);
 	SDKHook(client, SDKHook_PreThinkPost, Hook_OnFlashlightThink);
 	SDKHook(client, SDKHook_SetTransmit, Hook_ClientSetTransmit);
-	SDKHook(client, SDKHook_OnTakeDamage, Hook_ClientOnTakeDamage);
 
 	g_DHookWantsLagCompensationOnEntity.HookEntity(Hook_Pre, client, Hook_ClientWantsLagCompensationOnEntity);
 
@@ -4051,7 +4049,7 @@ void SetRoundState(SF2RoundState roundState)
 					{
 						continue;
 					}
-					if (view_as<SF2NPC_Chaser>(Npc).GetProfileDataEx().BoxingBoss && !Npc.GetProfileDataEx().IsPvEBoss)
+					if (view_as<SF2NPC_Chaser>(Npc).GetProfileData().BoxingBoss && !Npc.GetProfileData().IsPvEBoss)
 					{
 						g_SlenderBoxingBossCount++;
 					}
@@ -4580,7 +4578,7 @@ void SlenderOnClientStressUpdate(int client)
 		}
 
 		Npc.GetProfile(profile, sizeof(profile));
-		BaseBossProfile profileData = Npc.GetProfileDataEx();
+		BaseBossProfile profileData = Npc.GetProfileData();
 
 		int teleportTarget = EntRefToEntIndex(g_SlenderProxyTarget[Npc.Index]);
 		if (teleportTarget && teleportTarget != INVALID_ENT_REFERENCE)
@@ -4915,7 +4913,7 @@ void SetPageCount(int num)
 						{
 							continue;
 						}
-						BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileDataEx();
+						BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileData();
 
 						if (data.GetSlaughterRunData() != null && data.GetSlaughterRunData().GetCustomSpawnTime(difficulty) > 0.0)
 						{
@@ -8085,38 +8083,24 @@ void InitializeNewGame()
 	else
 	{
 		// Spawn the boss!
-		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES))
+		if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRenevantMap())
 		{
-			if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
+			if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_SILENTSLENDER) || SF_SpecialRound(SPECIALROUND_2DOUBLE))
 			{
-				if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_SILENTSLENDER) || SF_SpecialRound(SPECIALROUND_2DOUBLE))
-				{
-					AddProfile(g_RoundBossProfile);
-					RemoveBossProfileFromQueueList(g_RoundBossProfile);
-				}
-				else if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
-				{
-					AddProfile(g_RoundBossProfile);
-					AddProfile(g_RoundBossProfile, _, _, _, false);
-					AddProfile(g_RoundBossProfile, _, _, _, false);
-					RemoveBossProfileFromQueueList(g_RoundBossProfile);
-				}
-				else if (!SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_SILENTSLENDER) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
-				{
-					AddProfile(g_RoundBossProfile);
-					RemoveBossProfileFromQueueList(g_RoundBossProfile);
-				}
+				AddProfile(g_RoundBossProfile);
+				RemoveBossProfileFromQueueList(g_RoundBossProfile);
 			}
-			else if (SF_IsBoxingMap())
+			else if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 			{
-				char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-				ArrayList selectableBosses = GetSelectableBoxingBossProfileList().Clone();
-				if (selectableBosses.Length > 0)
-				{
-					selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
-					AddProfile(buffer);
-				}
-				delete selectableBosses;
+				AddProfile(g_RoundBossProfile);
+				AddProfile(g_RoundBossProfile, _, _, _, false);
+				AddProfile(g_RoundBossProfile, _, _, _, false);
+				RemoveBossProfileFromQueueList(g_RoundBossProfile);
+			}
+			else if (!SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) &&!SF_SpecialRound(SPECIALROUND_SILENTSLENDER) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+			{
+				AddProfile(g_RoundBossProfile);
+				RemoveBossProfileFromQueueList(g_RoundBossProfile);
 			}
 		}
 	}
@@ -8329,38 +8313,24 @@ static Action Timer_ActivateRoundFromIntro(Handle timer)
 	SF2_RefreshRestrictions();
 
 	// Spawn the boss!
-	if (!SF_SpecialRound(SPECIALROUND_MODBOSSES))
+	if (!SF_SpecialRound(SPECIALROUND_MODBOSSES) && !SF_IsRenevantMap())
 	{
-		if (!SF_IsBoxingMap() && !SF_IsRenevantMap())
+		if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_SILENTSLENDER) || SF_SpecialRound(SPECIALROUND_2DOUBLE))
 		{
-			if (SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) || SF_SpecialRound(SPECIALROUND_SILENTSLENDER) || SF_SpecialRound(SPECIALROUND_2DOUBLE))
-			{
-				AddProfile(g_RoundBossProfile);
-				RemoveBossProfileFromQueueList(g_RoundBossProfile);
-			}
-			else if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
-			{
-				AddProfile(g_RoundBossProfile);
-				AddProfile(g_RoundBossProfile, _, _, _, false);
-				AddProfile(g_RoundBossProfile, _, _, _, false);
-				RemoveBossProfileFromQueueList(g_RoundBossProfile);
-			}
-			else if (!SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_SILENTSLENDER) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
-			{
-				AddProfile(g_RoundBossProfile);
-				RemoveBossProfileFromQueueList(g_RoundBossProfile);
-			}
+			AddProfile(g_RoundBossProfile);
+			RemoveBossProfileFromQueueList(g_RoundBossProfile);
 		}
-		else if (SF_IsBoxingMap())
+		else if (SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
 		{
-			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			ArrayList selectableBosses = GetSelectableBoxingBossProfileList().Clone();
-			if (selectableBosses.Length > 0)
-			{
-				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
-				AddProfile(buffer);
-			}
-			delete selectableBosses;
+			AddProfile(g_RoundBossProfile);
+			AddProfile(g_RoundBossProfile, _, _, _, false);
+			AddProfile(g_RoundBossProfile, _, _, _, false);
+			RemoveBossProfileFromQueueList(g_RoundBossProfile);
+		}
+		else if (!SF_SpecialRound(SPECIALROUND_DOUBLETROUBLE) && !SF_SpecialRound(SPECIALROUND_SILENTSLENDER) && !SF_SpecialRound(SPECIALROUND_2DOUBLE) && !SF_SpecialRound(SPECIALROUND_TRIPLEBOSSES))
+		{
+			AddProfile(g_RoundBossProfile);
+			RemoveBossProfileFromQueueList(g_RoundBossProfile);
 		}
 	}
 	return Plugin_Stop;

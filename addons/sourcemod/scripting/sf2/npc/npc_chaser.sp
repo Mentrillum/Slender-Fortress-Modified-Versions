@@ -74,7 +74,7 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 
 static void OnBossRemoved(SF2NPC_BaseNPC npc)
 {
-	if (npc.GetProfileDataEx().Type == SF2BossType_Chaser)
+	if (npc.GetProfileData().Type == SF2BossType_Chaser)
 	{
 		NPCChaserOnRemoveProfile(npc.Index);
 	}
@@ -153,7 +153,7 @@ void NPCChaserOnSelectProfile(int npcIndex)
 	SF2NPC_Chaser chaser = SF2NPC_Chaser(npcIndex);
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(npcIndex, profile, sizeof(profile));
-	ChaserBossProfile profileData = chaser.GetProfileDataEx();
+	ChaserBossProfile profileData = chaser.GetProfileData();
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
@@ -352,7 +352,7 @@ bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEl
 			return false;
 		}
 
-		if (!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !SF2NPC_BaseNPC(bossIndex).GetProfileDataEx().TeleportIgnoreChases)
+		if (!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !SF2NPC_BaseNPC(bossIndex).GetProfileData().TeleportIgnoreChases)
 		{
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
@@ -369,7 +369,7 @@ bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEl
 				}
 
 				int state = chaser.State;
-				if (!npc.GetProfileDataEx().IsPvEBoss && (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN))
+				if (!npc.GetProfileData().IsPvEBoss && (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN))
 				{
 					return false;
 				}
@@ -648,7 +648,7 @@ static any Native_PerformVoice(Handle plugin, int numParams)
 		return 0;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetAttackName(GetNativeCell(3), name, sizeof(name));
 
@@ -691,7 +691,7 @@ static any Native_GetBossAttackIndexType(Handle plugin, int numParams)
 		return 0;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetAttackName(GetNativeCell(2), name, sizeof(name));
 	return data.GetAttack(name).Type;
@@ -711,7 +711,7 @@ static any Native_GetBossAttackIndexDamage(Handle plugin, int numParams)
 		return 0;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetAttackName(GetNativeCell(2), name, sizeof(name));
 	return data.GetAttack(name).GetDamage(GetNativeCell(3));
@@ -793,7 +793,7 @@ static any Native_GetBossAttackIndexDamageType(Handle plugin, int numParams)
 		return 0;
 	}
 
-	ChaserBossProfile data = controller.GetProfileDataEx();
+	ChaserBossProfile data = controller.GetProfileData();
 	char name[64];
 	data.GetAttackName(GetNativeCell(2), name, sizeof(name));
 	return data.GetAttack(name).GetDamageType(1);
@@ -807,7 +807,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
 	}
 
-	return controller.GetProfileDataEx();
+	return controller.GetProfileData();
 }
 
 static any Native_GetProfileDataEx(Handle plugin, int numParams)
