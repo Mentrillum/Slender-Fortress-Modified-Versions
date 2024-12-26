@@ -1246,6 +1246,16 @@ methodmap BaseBossProfile < ProfileObject
 			}
 		}
 
+		if (this.GetBool("enable_random_selection_boxing"))
+		{
+			this.TransferKey(this, "enable_random_selection_boxing", "enable_random_selection");
+		}
+
+		if (this.GetBool("enable_random_selection_renevant"))
+		{
+			this.TransferKey(this, "enable_random_selection_renevant", "enable_random_selection");
+		}
+
 		this.ConvertSectionsSectionToArray("spawn_effects");
 		this.ConvertSectionsSectionToArray("despawn_effects");
 

@@ -846,7 +846,14 @@ methodmap ProfileObject < KeyMap
 		{
 			return;
 		}
-		this.SetKeyValue(newKey, keyValue);
+		if (this.ContainsKey(newKey))
+		{
+			this.Super.Super.SetString(newKey, keyValue);
+		}
+		else
+		{
+			this.SetKeyValue(newKey, keyValue);
+		}
 	}
 
 	public void TransferDifficultyKey(ProfileObject target, const char[] oldKey, const char[] newKey, int difficulty)
