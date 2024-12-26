@@ -1625,8 +1625,6 @@ methodmap ProfileEntityOutputObject < ProfileObject
 		char[] addOutput = new char[size];
 		FormatEx(addOutput, size, "EntityOutputs.AddOutput(self, `%s`, `%s`, `%s`, `%s`, %0.3f, %d)", output, target, input, parameter, this.GetDelay(), this.GetTimesToFire());
 
-		PrintToChatAll("%s", addOutput);
-
 		SetVariantString(addOutput);
 		AcceptEntityInput(entity, "RunScriptCode");
 	}
