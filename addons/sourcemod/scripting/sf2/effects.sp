@@ -328,6 +328,19 @@ methodmap ProfileEffect_Particle < ProfileEffect
 	{
 		this.GetString("particlename", buffer, bufferSize);
 	}
+
+	property bool HasControlPoint
+	{
+		public get()
+		{
+			return this.GetBool("control_point", false);
+		}
+	}
+
+	public void GetControlPointOffset(float buffer[3])
+	{
+		this.GetVector("control_point_offset", buffer);
+	}
 }
 
 methodmap ProfileEffect_Trail < ProfileEffect
@@ -706,7 +719,7 @@ static void EntityDestroyed(CBaseEntity ent, const char[] classname)
 			continue;
 		}
 
-		int index = g_NpcEffectsArray[i].FindValue(ent.index);
+		int index = g_NpcEffectsArray[i].FindValue(EntIndexToEntRef(ent.index));
 		if (index != -1)
 		{
 			g_NpcEffectsArray[i].Erase(index);
@@ -774,7 +787,7 @@ void SlenderSpawnEffects(ProfileEffectMaster effects, int bossIndex, bool nonEff
 				CreateTimer(0.1, Timer_DiscoLight, EntIndexToEntRef(light), TIMER_REPEAT);
 				SDKHook(light, SDKHook_SetTransmit, Hook_EffectTransmitX);
 				g_EntityEffectType[light] = EffectType_DynamicLight;
-				g_NpcEffectsArray[bossIndex].Push(light);
+				g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(light));
 			}
 
 			if (particle != -1)
@@ -795,7 +808,7 @@ void SlenderSpawnEffects(ProfileEffectMaster effects, int bossIndex, bool nonEff
 				AcceptEntityInput(particle, "SetParent", slenderEnt);
 				SDKHook(particle, SDKHook_SetTransmit, Hook_EffectTransmitX);
 				g_EntityEffectType[particle] = EffectType_Particle;
-				g_NpcEffectsArray[bossIndex].Push(particle);
+				g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(particle));
 			}
 		}
 		if (profileData.FestiveLights)
@@ -844,7 +857,7 @@ void SlenderSpawnEffects(ProfileEffectMaster effects, int bossIndex, bool nonEff
 				AcceptEntityInput(light, "SetParent", slenderEnt);
 				SDKHook(light, SDKHook_SetTransmit, Hook_EffectTransmitX);
 				g_EntityEffectType[light] = EffectType_Particle;
-				g_NpcEffectsArray[bossIndex].Push(light);
+				g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(light));
 			}
 		}
 	}
@@ -874,7 +887,7 @@ void SlenderSpawnEffects(ProfileEffectMaster effects, int bossIndex, bool nonEff
 				// Check base position behavior.
 				if (!slenderEnt || slenderEnt == INVALID_ENT_REFERENCE)
 				{
-					LogError("Could not spawn effect %s for boss %d: unable to read position and angles due to boss entity not in game!");
+					LogError("Could not spawn effect %s for boss %d: unable to read position and angles due to boss entity not in game!", key, bossIndex);
 					continue;
 				}
 
@@ -1023,6 +1036,11 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 		DispatchKeyValueInt(entity, "rendermode", view_as<int>(effect.RenderMode));
 		DispatchKeyValueInt(entity, "renderfx", view_as<int>(effect.RenderEffect));
 		DispatchKeyValueInt(entity, "spawnflags", effect.SpawnFlags);
+		float lifeTime = effect.LifeTime;
+
+		char value[PLATFORM_MAX_PATH];
+		FormatEx(value, sizeof(value), "%s%u", section, EntIndexToEntRef(attacher));
+		SetEntPropString(entity, Prop_Data, "m_iName", value);
 
 		if (effect.GetOutputs() != null)
 		{
@@ -1071,6 +1089,33 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				char name[64];
 				particle.GetName(name, sizeof(name));
 				DispatchKeyValue(entity, "effect_name", name);
+				if (particle.HasControlPoint)
+				{
+					int point = CreateEntityByName("info_particle_system"); // Sadly cannot use info_targets
+					if (IsValidEntity(point))
+					{
+						float pointPos[3];
+						particle.GetControlPointOffset(pointPos);
+						TeleportEntity(point, pointPos);
+						FormatEx(value, sizeof(value), "%s%u_controlpoint", section, EntIndexToEntRef(attacher));
+						DispatchKeyValue(point, "targetname", value);
+						DispatchKeyValue(entity, "cpoint1", value);
+						if (lifeTime > 0.0)
+						{
+							CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(point), TIMER_FLAG_NO_MAPCHANGE);
+						}
+
+						if (!noParenting)
+						{
+							g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(point));
+						}
+
+						if (output != null)
+						{
+							output.Push(EntIndexToEntRef(point));
+						}
+					}
+				}
 				DispatchSpawn(entity);
 				ActivateEntity(entity);
 			}
@@ -1182,7 +1227,6 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 			}
 		}
 
-		float lifeTime = effect.LifeTime;
 		if (lifeTime > 0.0)
 		{
 			CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
@@ -1250,7 +1294,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 
 		if (!noParenting)
 		{
-			g_NpcEffectsArray[bossIndex].Push(entity);
+			g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(entity));
 		}
 
 		if (output != null)
@@ -1289,7 +1333,11 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 
 				char attachment[64];
 				particle.GetAttachment(attachment, sizeof(attachment));
-				int attachmentIndex = LookupEntityAttachment(attacher, attachment);
+				int attachmentIndex = -1;
+				if (!noParenting)
+				{
+					attachmentIndex = LookupEntityAttachment(attacher, attachment);
+				}
 
 				float start[3], pos[3], ang[3], offset[3];
 				particle.GetStartPos(start);
@@ -1305,7 +1353,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 					pos = effectPos;
 					ang = effectAng;
 				}
-				TE_Particle(particleIndex, pos, start, ang, attacher, particle.AttachType, attachmentIndex, particle.ResetParticles, particle.HasControlPoint, particle.ControlPointAttachType, offset);
+				TE_Particle(particleIndex, pos, start, ang, noParenting ? -1 : attacher, particle.AttachType, attachmentIndex, particle.ResetParticles, particle.HasControlPoint, particle.ControlPointAttachType, offset);
 				TE_SendToAll();
 			}
 			case EffectType_Sound:
@@ -1400,9 +1448,9 @@ void SlenderRemoveEffects(int bossIndex, bool kill = false)
 		return;
 	}
 
-	for (int effect = 0; effect < g_NpcEffectsArray[bossIndex].Length; effect++)
+	for (int effect = 0; effect < g_NpcEffectsArray[bossIndex].Length;)
 	{
-		int ent = g_NpcEffectsArray[bossIndex].Get(effect);
+		int ent = EntRefToEntIndex(g_NpcEffectsArray[bossIndex].Get(effect));
 		if (!IsValidEntity(ent))
 		{
 			continue;

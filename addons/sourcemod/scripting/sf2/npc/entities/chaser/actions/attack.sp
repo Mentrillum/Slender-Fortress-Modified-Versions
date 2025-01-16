@@ -831,13 +831,13 @@ methodmap BossProfileDamageEffect < ProfileObject
 		return this.GetSection("particles");
 	}
 
-	public void Apply(CBaseCombatCharacter player, int difficulty, SF2_ChaserEntity chaser = view_as<SF2_ChaserEntity>(-1))
+	public void Apply(CBaseCombatCharacter player, int difficulty, CBaseAnimating attacker = view_as<CBaseAnimating>(-1), SF2NPC_Chaser parentController = SF2_INVALID_NPC_CHASER)
 	{
 		if (!this.IsEnabled(difficulty))
 		{
 			return;
 		}
-		this.GetSounds().EmitSound(_, chaser.index);
+		this.GetSounds().EmitSound(_, attacker.index);
 		if (this.GetParticles() != null)
 		{
 			char name[64];
@@ -845,7 +845,7 @@ methodmap BossProfileDamageEffect < ProfileObject
 			ProfileObject obj = this.GetParticles().GetSection(name);
 			if (obj != null)
 			{
-				view_as<BossProfileParticleData>(obj).Apply(player, chaser);
+				view_as<BossProfileParticleData>(obj).Apply(player, attacker);
 			}
 		}
 		int type = this.Type;
@@ -917,15 +917,19 @@ methodmap BossProfileDamageEffect < ProfileObject
 				char sound[PLATFORM_MAX_PATH];
 				smiteData.GetHitSound(sound, sizeof(sound));
 				EmitAmbientSound(sound, startPos, player.index, SNDLEVEL_SCREAMING);
-				SDKHooks_TakeDamage(player.index, chaser.index, chaser.index, smiteData.GetDamage(difficulty), smiteData.GetDamageType(difficulty));
+				SDKHooks_TakeDamage(player.index, attacker.index, attacker.index, smiteData.GetDamage(difficulty), smiteData.GetDamageType(difficulty));
 
-				SF2NPC_Chaser controller = chaser.Controller;
-				if (smiteData.SmiteMessage && controller.IsValid() && GetClientTeam(player.index) == 2)
+				SF2NPC_Chaser controller = parentController;
+				if (!controller.IsValid() && SF2_ChaserEntity(attacker.index).IsValid())
 				{
-					char playerName[32], bossName[SF2_MAX_NAME_LENGTH];
-					GetClientName(player.index, playerName, sizeof(playerName));
-					controller.GetProfileData().GetName(controller.Difficulty, bossName, sizeof(bossName));
-					CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", bossName, playerName);
+					controller = SF2_ChaserEntity(attacker.index).Controller;
+					if (smiteData.SmiteMessage && controller.IsValid() && GetClientTeam(player.index) == 2)
+					{
+						char playerName[32], bossName[SF2_MAX_NAME_LENGTH];
+						GetClientName(player.index, playerName, sizeof(playerName));
+						controller.GetProfileData().GetName(controller.Difficulty, bossName, sizeof(bossName));
+						CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", bossName, playerName);
+					}
 				}
 			}
 		}
@@ -1714,6 +1718,8 @@ static int OnResume(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextB
 
 static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 {
+	CBaseNPC_RemoveAllLayers(actor.index, false);
+
 	actor.IsAttacking = false;
 	actor.IsAttemptingToMove = false;
 	actor.CancelAttack = false;

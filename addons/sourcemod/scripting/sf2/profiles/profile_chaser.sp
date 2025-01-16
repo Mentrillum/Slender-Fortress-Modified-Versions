@@ -338,6 +338,11 @@ methodmap ChaserBossProfile < BaseBossProfile
 		return view_as<ProfileMusic>(this.GetSection("sound_chase_visible"));
 	}
 
+	public BossProfileTrapData GetTrapData()
+	{
+		return view_as<BossProfileTrapData>(this.GetSection("traps"));
+	}
+
 	public bool HasTraps(int difficulty)
 	{
 		return this.GetDifficultyBool("traps_enabled", difficulty, false);
@@ -598,6 +603,7 @@ methodmap ChaserBossProfile < BaseBossProfile
 
 	public void Precache()
 	{
+		char path[PLATFORM_MAX_PATH];
 		// ========================
 		// LEGACY KEY CONVERSION
 		// ========================
@@ -633,7 +639,7 @@ methodmap ChaserBossProfile < BaseBossProfile
 		}
 
 		keys.Clear();
-		ProfileObject temp = null, temp2 = null;
+		ProfileObject temp = null, temp2 = null, temp3 = null;
 		keys.PushString("chase_duration");
 		keys.PushString("search_chase_duration");
 		keys.PushString("chase_duration_add_max_range");
@@ -1053,6 +1059,72 @@ methodmap ChaserBossProfile < BaseBossProfile
 			}
 		}
 
+		bool exists = false;
+		bool state[Difficulty_Max] = { false, false, false, false, false, false };
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			state[i] = this.GetDifficultyBool("traps_enabled", i, false);
+			if (state[i])
+			{
+				exists = true;
+			}
+		}
+
+		if (exists)
+		{
+			newObj = this.InsertNewSection("traps");
+			for (int i = 0; i < Difficulty_Max; i++)
+			{
+				if (!state[i])
+				{
+					this.SetDifficultyKeyValue("enabled", i, "0");
+				}
+				newObj.TransferDifficultyKey(this, "trap_spawn_cooldown", "spawn_cooldown", i);
+			}
+			this.GetString("trap_model", path, sizeof(path), TRAP_MODEL);
+			temp = newObj.InsertNewSection("types");
+			temp = temp.InsertNewSection("bear_trap");
+			temp.SetKeyValue("type", "bear_trap");
+			temp.SetKeyValue("model", path);
+			this.RemoveKey("trap_model");
+			temp2 = temp.InsertNewSection("sounds");
+			this.GetString("trap_deploy_sound", path, sizeof(path), TRAP_DEPLOY);
+			temp3 = temp2.InsertNewSection("spawn");
+			temp3 = temp3.InsertNewSection("paths");
+			temp3.SetKeyValue("1", path);
+			this.RemoveKey("trap_deploy_sound");
+			this.GetString("trap_miss_sound", path, sizeof(path), TRAP_CLOSE);
+			temp3 = temp2.InsertNewSection("miss");
+			temp3 = temp3.InsertNewSection("paths");
+			temp3.SetKeyValue("1", path);
+			this.RemoveKey("trap_miss_sound");
+			this.GetString("trap_catch_sound", path, sizeof(path), TRAP_CLOSE);
+			temp3 = temp2.InsertNewSection("catch");
+			temp3 = temp3.InsertNewSection("paths");
+			temp3.SetKeyValue("1", path);
+			this.RemoveKey("trap_catch_sound");
+
+			temp2 = temp.InsertNewSection("animations");
+			this.GetString("trap_animation_idle", path, sizeof(path), "trapopened");
+			temp3 = temp2.InsertNewSection("opened");
+			temp3 = temp3.InsertNewSection("1");
+			temp3.SetKeyValue("name", path);
+			this.RemoveKey("trap_animation_idle");
+			this.GetString("trap_animation_closed", path, sizeof(path), "trapclosed");
+			temp3 = temp2.InsertNewSection("closed");
+			temp3 = temp3.InsertNewSection("1");
+			temp3.SetKeyValue("name", path);
+			this.RemoveKey("trap_animation_closed");
+			this.GetString("trap_animation_open", path, sizeof(path), "trapclosed");
+			if (path[0] != '\0')
+			{
+				temp3 = temp2.InsertNewSection("open");
+				temp3 = temp3.InsertNewSection("1");
+				temp3.SetKeyValue("name", path);
+				this.RemoveKey("trap_animation_open");
+			}
+		}
+
 		if (this.GetProjectiles() != null)
 		{
 			this.GetProjectiles().Precache();
@@ -1243,6 +1315,11 @@ methodmap ChaserBossProfile < BaseBossProfile
 		if (this.GetDeathBehavior() != null)
 		{
 			this.GetDeathBehavior().Precache();
+		}
+
+		if (this.GetTrapData() != null)
+		{
+			this.GetTrapData().Precache();
 		}
 
 		this.PrecacheAttackSounds(this.GetAttackSounds(), "attack", this.NormalSoundHook);

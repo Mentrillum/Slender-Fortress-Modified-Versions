@@ -181,6 +181,7 @@ methodmap BossProfileProxyClass < ProfileObject
 		}
 
 		this.GetDifficultyString("model", difficulty, buffer, bufferSize, buffer);
+		ReplaceString(buffer, bufferSize, "\\", "/", false);
 	}
 
 	public int GetMax(int difficulty, int defValue = 8)

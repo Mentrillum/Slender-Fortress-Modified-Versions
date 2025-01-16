@@ -1592,7 +1592,6 @@ MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, DHookParam params)
 	if (event > 0 && IsValidEntity(thisInt) &&
 		bossIndex != -1 && NPCGetUniqueID(bossIndex) != -1)
 	{
-		SlenderCastFootstepAnimEvent(bossIndex, event, thisInt);
 		SlenderCastAnimEvent(bossIndex, event, thisInt);
 	}
 	return MRES_Ignored;
@@ -1916,26 +1915,17 @@ void SlenderPrintChatMessage(int bossIndex, int player)
 	}
 }
 
-void SlenderCastFootstepAnimEvent(int bossIndex, int event, int slender)
+void SlenderCastAnimEvent(int bossIndex, int index, int slender)
 {
-	if (bossIndex == -1)
+	if (bossIndex == -1 || !IsValidEntity(slender))
 	{
 		return;
 	}
 
-	if (!IsValidEntity(slender))
-	{
-		return;
-	}
+	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
 
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	BaseBossProfile profileData = GetBossProfile(profile);
-
-	ProfileSound soundInfo = profileData.GetFootstepEventSounds(event);
-
-	KeyMap_Array soundPaths = soundInfo.Paths;
-	if (soundPaths == null)
+	BossProfileEventData event = data.GetEvents(index);
+	if (event == null)
 	{
 		return;
 	}
@@ -1943,40 +1933,22 @@ void SlenderCastFootstepAnimEvent(int bossIndex, int event, int slender)
 	float myPos[3];
 	GetEntPropVector(slender, Prop_Data, "m_vecAbsOrigin", myPos);
 
-	soundInfo.EmitSound(_, slender);
-	ChaserBossProfile data = SF2NPC_Chaser(bossIndex).GetProfileData();
-	if (data.EarthquakeFootsteps)
+	if (event.GetSounds() != null)
+	{
+		event.GetSounds().EmitSound(.entity = slender);
+	}
+
+	if (event.GetEffects() != null)
+	{
+		SlenderSpawnEffects(event.GetEffects(), bossIndex, false);
+	}
+
+	if (event.IsFootsteps && data.EarthquakeFootsteps)
 	{
 		UTIL_ScreenShake(myPos, data.EarthquakeFootstepAmplitude,
 		data.EarthquakeFootstepFrequency, data.EarthquakeFootstepDuration,
 		data.EarthquakeFootstepRadius, 0, data.EarthquakeFootstepAirShake);
 	}
-}
-
-void SlenderCastAnimEvent(int bossIndex, int event, int slender)
-{
-	if (bossIndex == -1)
-	{
-		return;
-	}
-
-	if (!IsValidEntity(slender))
-	{
-		return;
-	}
-
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	NPCGetProfile(bossIndex, profile, sizeof(profile));
-	BaseBossProfile profileData = GetBossProfile(profile);
-
-	ProfileSound soundInfo = profileData.GetEventSounds(event);
-
-	KeyMap_Array soundPaths = soundInfo.Paths;
-	if (soundPaths == null)
-	{
-		return;
-	}
-	soundInfo.EmitSound(_, slender);
 }
 
 // As time passes on, we have to get more aggressive in order to successfully peak the target's

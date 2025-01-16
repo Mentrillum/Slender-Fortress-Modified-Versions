@@ -245,7 +245,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 							float p[3], s[3];
 							MakeVectorFromPoints(myPos, hisPos, p);
 							MakeVectorFromPoints(myPos, myDirection, s);
-							if (GetVectorDotProduct(p, s) <= 0.0)//We can backstab him m8
+							if (GetVectorDotProduct(p, s) <= 0.0) // We can backstab him m8
 							{
 								if (GetClientTeam(victim) == GetClientTeam(attacker) && class == TFClass_Sniper)
 								{

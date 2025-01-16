@@ -467,6 +467,37 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	property float MaxSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Send, "m_flMaxspeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Send, "m_flMaxspeed", value);
+		}
+	}
+
+	property float CurrentTauntMoveSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", value);
+		}
+	}
+
+	public void UpdateSpeed()
+	{
+		SDKCall(g_SDKUpdateSpeed, this.index);
+	}
+
 	public int GetDataEnt(int offset)
 	{
 		return GetEntDataEnt2(this.index, offset);

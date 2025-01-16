@@ -14,7 +14,6 @@ methodmap SF2_ChaserDeathAction < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_OnStart, OnStart);
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
-			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
 				.DefineEntityField("m_Attacker")
 				.EndDataMapDesc();
@@ -244,17 +243,6 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 	{
 		actor.AcceptInput("BecomeRagdoll");
 	}
-}
-
-static void OnAnimationEvent(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, int event)
-{
-	if (event == 0)
-	{
-		return;
-	}
-
-	actor.CastAnimEvent(event);
-	actor.CastAnimEvent(event, true);
 }
 
 static void SpawnGibs(SF2_ChaserEntity actor)

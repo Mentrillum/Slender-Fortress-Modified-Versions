@@ -21,7 +21,6 @@ methodmap SF2_ChaserMainAction < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnResume, OnResume);
 			g_Factory.SetEventCallback(EventResponderType_OnInjured, OnInjured);
-			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.SetEventCallback(EventResponderType_OnContact, OnContact);
 			g_Factory.SetEventCallback(EventResponderType_OnKilled, OnKilled);
 			g_Factory.SetEventCallback(EventResponderType_OnLeaveGround, OnLeaveGround);
@@ -409,17 +408,6 @@ static int OnInjured(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseE
 	}
 
 	return action.TryContinue();
-}
-
-static void OnAnimationEvent(SF2_ChaserMainAction action, SF2_ChaserEntity actor, int event)
-{
-	if (event == 0)
-	{
-		return;
-	}
-
-	actor.CastAnimEvent(event);
-	actor.CastAnimEvent(event, true);
 }
 
 static void UnstuckCheck(SF2_ChaserMainAction action, SF2_ChaserEntity actor)

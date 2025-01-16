@@ -154,6 +154,7 @@ methodmap SF2_ChaserAttackAction_Tongue < NextBotAction
 
 	public static void Initialize()
 	{
+		g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 		g_OnPlayerJumpPFwd.AddFunction(null, OnJump);
 		g_OnChaserGetAttackActionPFwd.AddFunction(null, OnChaserGetAttackAction);
 	}
@@ -308,41 +309,54 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 	return Plugin_Changed;
 }
 
+static void OnPlayerSpawn(SF2_BasePlayer client)
+{
+	if (IsClientParticipating(client.index) && client.IsLatched)
+	{
+		TF2Attrib_RemoveByName(client.index, "increased jump height");
+		TF2Attrib_RemoveByName(client.index, "move speed bonus");
+		client.UpdateSpeed();
+	}
+	client.IsLatched = false;
+	client.LatchCount = 0;
+	client.Latcher = -1;
+}
+
 static void OnJump(SF2_BasePlayer client)
 {
-	if (client.IsEliminated || IsRoundEnding() || IsRoundInWarmup() || client.HasEscaped)
+	if (!client.IsLatched)
 	{
 		return;
 	}
 
-	if (client.IsLatched)
+	client.LatchCount--;
+	if (client.LatchCount <= 0)
 	{
-		client.LatchCount--;
-		if (client.LatchCount <= 0)
+		client.IsLatched = false;
+		client.LatchCount = 0;
+		TF2Attrib_RemoveByName(client.index, "increased jump height");
+		TF2Attrib_RemoveByName(client.index, "move speed bonus");
+		client.UpdateSpeed();
+		for (int i = 0; i < MAX_BOSSES; i++)
 		{
-			client.IsLatched = false;
-			client.LatchCount = 0;
-			for (int i = 0; i < MAX_BOSSES; i++)
+			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+			if (!npc.IsValid())
 			{
-				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
-				if (!npc.IsValid())
-				{
-					continue;
-				}
-
-				if (client.Latcher != npc.Index)
-				{
-					continue;
-				}
-
-				SF2_ChaserEntity chaser = SF2_ChaserEntity(npc.EntIndex);
-				if (!chaser.IsValid())
-				{
-					continue;
-				}
-
-				chaser.MyNextBotPointer().GetIntentionInterface().OnCommandString("break tongue");
+				continue;
 			}
+
+			if (client.Latcher != npc.Index)
+			{
+				continue;
+			}
+
+			SF2_ChaserEntity chaser = SF2_ChaserEntity(npc.EntIndex);
+			if (!chaser.IsValid())
+			{
+				continue;
+			}
+
+			chaser.MyNextBotPointer().GetIntentionInterface().OnCommandString("break tongue");
 		}
 	}
 }
@@ -453,6 +467,9 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 			attackData.GetTiedSounds().EmitSound(_, tongueEnd.index);
 			attackData.GetTongueHitSounds().EmitSound(_, tongueEnd.index);
 			player.IsLatched = true;
+			TF2Attrib_SetByName(player.index, "increased jump height", 0.0);
+			TF2Attrib_SetByName(player.index, "move speed bonus", 0.0001);
+			player.UpdateSpeed();
 			player.LatchCount = GetRandomInt(6, 10);
 			if (!attackData.CanEscape(difficulty))
 			{
@@ -565,6 +582,9 @@ static void Unlatch(SF2_ChaserAttackAction_Tongue action, bool removeSlow = fals
 	{
 		action.LatchedTarget.IsLatched = false;
 		action.LatchedTarget.LatchCount = 0;
+		TF2Attrib_RemoveByName(action.LatchedTarget.index, "increased jump height");
+		TF2Attrib_RemoveByName(action.LatchedTarget.index, "move speed bonus");
+		action.LatchedTarget.UpdateSpeed();
 		if (removeSlow)
 		{
 			action.LatchedTarget.ChangeCondition(TFCond_Dazed, true);

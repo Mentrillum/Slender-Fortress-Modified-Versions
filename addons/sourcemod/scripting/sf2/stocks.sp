@@ -350,7 +350,7 @@ bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float max
 	return hit;
 }
 
-void CBaseNPC_RemoveAllLayers(int entity)
+void CBaseNPC_RemoveAllLayers(int entity, bool instant = true)
 {
 	if (!IsValidEntity(entity))
 	{
@@ -365,7 +365,16 @@ void CBaseNPC_RemoveAllLayers(int entity)
 		{
 			continue;
 		}
-		overlay.KillMe();
+		if (instant)
+		{
+			overlay.KillMe();
+		}
+		else
+		{
+			overlay.m_flBlendOut = 0.2;
+			overlay.m_flCycle = 0.7;
+			overlay.AutoKill();
+		}
 	}
 }
 

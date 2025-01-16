@@ -1352,24 +1352,28 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		return false;
 	}
 
-	public void CastAnimEvent(int event, bool footstep = false)
+	public void CastAnimEvent(int index)
 	{
 		ChaserBossProfile data = this.Controller.GetProfileData();
 
-		ProfileSound soundInfo = data.GetEventSounds(event);
+		BossProfileEventData event = data.GetEvents(index);
 
-		if (footstep)
-		{
-			soundInfo = data.GetFootstepEventSounds(event);
-		}
-
-		if (soundInfo == null || soundInfo.Paths == null)
+		if (event == null)
 		{
 			return;
 		}
 
-		soundInfo.EmitSound(_, this.index);
-		if (footstep && data.EarthquakeFootsteps)
+		if (event.GetSounds() != null)
+		{
+			event.GetSounds().EmitSound(.entity = this.index);
+		}
+
+		if (event.GetEffects() != null)
+		{
+			SlenderSpawnEffects(event.GetEffects(), this.Controller.Index, false, .noParenting = true);
+		}
+
+		if (event.IsFootsteps && data.EarthquakeFootsteps)
 		{
 			float myPos[3];
 			this.GetAbsOrigin(myPos);
@@ -2933,13 +2937,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	{
 		SF2NPC_Chaser controller = this.Controller;
 		ChaserBossProfile data = controller.GetProfileData();
-		int difficulty = controller.Difficulty;
-		if (!data.HasTraps(difficulty))
+		BossProfileTrapData trapData = data.GetTrapData();
+		if (trapData == null)
 		{
 			return;
 		}
 
-		if (this.State != STATE_IDLE && this.State != STATE_ALERT)
+		int difficulty = controller.Difficulty;
+		if (!trapData.IsEnabled(difficulty))
+		{
+			return;
+		}
+
+		if (!trapData.CanPlaceOnState(difficulty, this.State))
 		{
 			return;
 		}
@@ -2954,7 +2964,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		this.GetAbsOrigin(myPos);
 		this.GetAbsAngles(myAng);
 		Trap_SpawnTrap(myPos, myAng, controller);
-		this.TrapCooldown = gameTime + data.GetTrapCooldown(difficulty);
+		this.TrapCooldown = gameTime + trapData.GetSpawnCooldown(difficulty);
 	}
 
 	public static SF2_ChaserEntity Create(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
@@ -3089,12 +3099,20 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		chaser.NextAttackTime = new StringMap();
 
-		chaser.TrapCooldown = GetGameTime() + data.GetTrapCooldown(difficulty);
+		if (data.GetTrapData() != null)
+		{
+			chaser.TrapCooldown = GetGameTime() + data.GetTrapData().GetSpawnCooldown(difficulty);
+		}
 
 		chaser.Teleport(pos, ang, NULL_VECTOR);
 
 		chaser.Spawn();
 		chaser.Activate();
+
+		if (data.GetSection("events") != null)
+		{
+			chaser.Hook_HandleAnimEvent(HandleAnimationEvent);
+		}
 
 		return chaser;
 	}
@@ -3597,7 +3615,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 	if (player.IsValid || g_Buildings.FindValue(EntIndexToEntRef(inflictor)) != -1)
 	{
-		if (CBaseEntity(inflictor).GetProp(Prop_Data, "m_iTeamNum") == chaser.Team && (chaser.Controller.Flags & SFF_ATTACKWAITERS) == 0)
+		if (CBaseEntity(inflictor).IsValid() && CBaseEntity(inflictor).GetProp(Prop_Data, "m_iTeamNum") == chaser.Team && (chaser.Controller.Flags & SFF_ATTACKWAITERS) == 0)
 		{
 			return Plugin_Handled;
 		}
@@ -4133,6 +4151,28 @@ static MRESReturn ShouldTransmit(int entIndex, DHookReturn ret, DHookParam param
 
 	ret.Value = FL_EDICT_ALWAYS;
 	return MRES_Supercede;
+}
+
+static MRESReturn HandleAnimationEvent(int entIndex, DHookParam params)
+{
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entIndex);
+	if (!bossEntity.IsValid() || !bossEntity.Controller.IsValid())
+	{
+		return MRES_Ignored;
+	}
+
+	ChaserBossProfile data = bossEntity.Controller.GetProfileData();
+
+	int index = params.GetObjectVar(1, 0, ObjectValueType_Int);
+	BossProfileEventData event = data.GetEvents(index);
+	if (event == null)
+	{
+		return MRES_Ignored;
+	}
+
+	bossEntity.CastAnimEvent(index);
+
+	return MRES_Ignored;
 }
 
 static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditions = 0)

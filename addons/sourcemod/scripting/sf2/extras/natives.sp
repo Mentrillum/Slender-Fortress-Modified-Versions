@@ -226,7 +226,7 @@ void SDK_Init()
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFPlayer::EquipWearable");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 	g_SDKEquipWearable = EndPrepSDKCall();
-	if (g_SDKEquipWearable == null)//In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
+	if (g_SDKEquipWearable == null) // In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
 	{
 		char strFilePath[PLATFORM_MAX_PATH];
 		BuildPath(Path_SM, strFilePath, sizeof(strFilePath), "gamedata/tf2items.randomizer.txt");
@@ -257,13 +257,20 @@ void SDK_Init()
 	}
 
 	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::TeamFortress_SetSpeed");
+	if ((g_SDKUpdateSpeed = EndPrepSDKCall()) == null)
+	{
+		LogError("Failed to retrieve CTFPlayer::TeamFortress_SetSpeed offset from SDKHooks gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::PlaySpecificSequence");
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
 	g_SDKPlaySpecificSequence = EndPrepSDKCall();
 	if (g_SDKPlaySpecificSequence == null)
 	{
 		PrintToServer("Failed to retrieve CTFPlayer::PlaySpecificSequence signature from SF2 gamedata!");
-		//Don't have to call SetFailState, since this function is used in a minor part of the code.
+		// Don't have to call SetFailState, since this function is used in a minor part of the code.
 	}
 
 	StartPrepSDKCall(SDKCall_Entity);
@@ -274,7 +281,7 @@ void SDK_Init()
 	if (g_SDKPointIsWithin == null)
 	{
 		PrintToServer("Failed to retrieve CBaseTrigger::PointIsWithin signature from SF2 gamedata!");
-		//Don't have to call SetFailState, since this function is used in a minor part of the code.
+		// Don't have to call SetFailState, since this function is used in a minor part of the code.
 	}
 
 	StartPrepSDKCall(SDKCall_Entity);
@@ -327,7 +334,7 @@ void SDK_Init()
 		LogError("Failed to setup Studio_SeqVelocity call from gamedata");
 	}
 
-	//Hook_ClientWantsLagCompensationOnEntity
+	// Hook_ClientWantsLagCompensationOnEntity
 	int offset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
 	g_DHookWantsLagCompensationOnEntity = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	if (g_DHookWantsLagCompensationOnEntity == null)
@@ -338,7 +345,7 @@ void SDK_Init()
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_Unknown);
-	//Hook_EntityShouldTransmit
+	// Hook_EntityShouldTransmit
 	offset = gameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_DHookShouldTransmit = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_DHookShouldTransmit == null)
@@ -353,7 +360,7 @@ void SDK_Init()
 	{
 		SetFailState("Failed to create hook CBaseEntity::UpdateTransmitState offset from SF2 gamedata!");
 	}
-	//Hook_WeaponGetCustomDamageType
+	// Hook_WeaponGetCustomDamageType
 	offset = gameData.GetOffset("CTFWeaponBase::GetCustomDamageType");
 	g_DHookWeaponGetCustomDamageType = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_DHookWeaponGetCustomDamageType == null)

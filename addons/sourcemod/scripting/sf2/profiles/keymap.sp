@@ -324,7 +324,7 @@ methodmap KeyMap < StringMap
 		return newValue;
 	}
 
-	public void RemoveKey(const char[] key)
+	public void RemoveKey(const char[] key, bool del = true)
 	{
 		int index = -1, currentIndex = -1, size;
 		if (this.GetType(key) == Key_Type_Section)
@@ -346,7 +346,11 @@ methodmap KeyMap < StringMap
 				currentIndex++;
 			}
 
-			CleanupKeyMap(section);
+			if (del)
+			{
+				CleanupKeyMap(section);
+			}
+
 			char formatter4[128];
 			FormatEx(formatter4, sizeof(formatter4), "%i||__keyindex", currentIndex - 1);
 			this.Super.Remove(formatter4);
@@ -407,7 +411,7 @@ methodmap KeyMap < StringMap
 			this.Super.SetString(newKey, value);
 			index = this.GetIndexFromKey(key);
 		}
-		this.RemoveKey(key);
+		this.RemoveKey(key, false);
 
 		this.SetKeyIndex(newKey, index);
 		this.SetIndexKey(newKey, index);

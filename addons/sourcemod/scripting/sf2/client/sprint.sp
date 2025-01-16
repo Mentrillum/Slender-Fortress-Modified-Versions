@@ -615,10 +615,10 @@ static void Hook_SpeedThink(int client)
 		}
 	}
 
-	if (player.IsTrapped || g_PlayerPeeking[player.index])
+	if (player.IsTrapped || player.IsLatched || g_PlayerPeeking[player.index])
 	{
-		player.SetPropFloat(Prop_Send, "m_flMaxspeed", 0.1);
-		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 0.1);
+		player.MaxSpeed = 0.1;
+		player.CurrentTauntMoveSpeed = 0.1;
 		return;
 	}
 
@@ -820,46 +820,44 @@ static void Hook_SpeedThink(int client)
 		{
 			if (!player.InCondition(TFCond_Charging))
 			{
-				player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed);
+				player.MaxSpeed = sprintSpeed;
 			}
 			else
 			{
 				if (SF_IsBoxingMap() || SF_IsRaidMap())
 				{
-					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed * 2.5);
+					player.MaxSpeed = sprintSpeed * 2.5;
 				}
 				else
 				{
-					player.SetPropFloat(Prop_Send, "m_flMaxspeed", sprintSpeed / 2.5);
+					player.MaxSpeed = sprintSpeed / 2.5;
 				}
 			}
-			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 		}
 		else
 		{
-			player.SetPropFloat(Prop_Send, "m_flMaxspeed", 520.0);
-			player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
+			player.MaxSpeed = 520.0;
 		}
 	}
 	else
 	{
 		if (!player.InCondition(TFCond_Charging))
 		{
-			player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed);
+			player.MaxSpeed = walkSpeed;
 		}
 		else
 		{
 			if (SF_IsBoxingMap() || SF_IsRaidMap())
 			{
-				player.SetPropFloat(Prop_Send, "m_flMaxspeed", walkSpeed * 2.5);
+				player.MaxSpeed = walkSpeed * 2.5;
 			}
 			else
 			{
-				player.SetPropFloat(Prop_Send, "m_flMaxspeed", 190.0);
+				player.MaxSpeed = walkSpeed / 2.5;
 			}
 		}
-		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 	}
+	player.CurrentTauntMoveSpeed = 190.0;
 }
 
 static void Client90sMusicReset(int client)

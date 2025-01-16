@@ -1000,17 +1000,14 @@ methodmap BaseBossProfile < ProfileObject
 		return null;
 	}
 
-	property bool OutroMusic
+	public ProfileSound GetOutroWinSounds()
 	{
-		public get()
-		{
-			return this.GetBool("sound_music_outro_enabled", false);
-		}
+		return view_as<ProfileSound>(this.GetSection("sound_outro_win"));
 	}
 
-	public ProfileSound GetOutroMusics()
+	public ProfileSound GetOutroLoseSounds()
 	{
-		return view_as<ProfileSound>(this.GetSection("sound_music_outro"));
+		return view_as<ProfileSound>(this.GetSection("sound_outro_lose"));
 	}
 
 	public BossProfileAttributes GetAttributes()
@@ -1035,6 +1032,18 @@ methodmap BaseBossProfile < ProfileObject
 		char formatter[64];
 		FormatEx(formatter, sizeof(formatter), "sound_event_%i", index);
 		return view_as<ProfileSound>(this.GetSection(formatter));
+	}
+
+	public BossProfileEventData GetEvents(int index)
+	{
+		char formatter[64];
+		FormatEx(formatter, sizeof(formatter), "%d", index);
+		ProfileObject obj = this.GetSection("events");
+		if (obj != null)
+		{
+			return view_as<BossProfileEventData>(obj.GetSection(formatter));
+		}
+		return null;
 	}
 
 	public BossKillSoundsData GetLocalKillSounds()
@@ -1068,7 +1077,7 @@ methodmap BaseBossProfile < ProfileObject
 
 	public void Precache()
 	{
-		char path[PLATFORM_MAX_PATH], value[2048];
+		char path[PLATFORM_MAX_PATH], key[512], value[2048];
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
 			this.GetModel(i, path, sizeof(path));
@@ -1085,6 +1094,9 @@ methodmap BaseBossProfile < ProfileObject
 			PrecacheSound2(path, g_FileCheckConVar.BoolValue);
 		}
 
+		// ========================
+		// LEGACY KEY CONVERSION
+		// ========================
 		ProfileObject newObj = null, temp = null, temp2 = null, temp3 = null, temp4 = null;
 		ArrayList keys = new ArrayList(ByteCountToCells(256));
 		if (this.GetAnimations() != null)
@@ -1256,6 +1268,45 @@ methodmap BaseBossProfile < ProfileObject
 			this.TransferKey(this, "enable_random_selection_renevant", "enable_random_selection");
 		}
 
+		for (int i = 0; i < this.SectionLength; i++)
+		{
+			this.GetSectionNameFromIndex(i, key, sizeof(key));
+			if (StrContains(key, "sound_footsteps_event_", false)  != -1)
+			{
+				newObj = this.InsertNewSection("events");
+				temp = view_as<ProfileObject>(this.GetSection(key).Clone());
+				this.RemoveKey(key);
+				ReplaceStringEx(key, sizeof(key), "sound_footsteps_event_", "", .caseSensitive = false);
+				temp.SetSectionName("sounds");
+				temp2 = newObj.InsertNewSection(key);
+				temp2.AddExistingSection(temp);
+				temp2.SetKeyValue("footsteps", "1");
+				i--;
+				continue;
+			}
+
+			if (StrContains(key, "sound_event_", false) != -1)
+			{
+				newObj = this.InsertNewSection("events");
+				temp = view_as<ProfileObject>(this.GetSection(key).Clone());
+				this.RemoveKey(key);
+				ReplaceStringEx(key, sizeof(key), "sound_event_", "", .caseSensitive = false);
+				temp.SetSectionName("sounds");
+				temp2 = newObj.InsertNewSection(key);
+				temp2.AddExistingSection(temp);
+				i--;
+				continue;
+			}
+		}
+
+		if (this.GetSection("sound_music_outro") != null)
+		{
+			this.RenameKey("sound_music_outro", "sound_outro_lose");
+			newObj = view_as<ProfileObject>(this.GetSection("sound_outro_lose").Clone());
+			newObj.SetSectionName("sound_outro_win");
+			this.AddExistingSection(newObj);
+		}
+
 		this.ConvertSectionsSectionToArray("spawn_effects");
 		this.ConvertSectionsSectionToArray("despawn_effects");
 
@@ -1327,23 +1378,6 @@ methodmap BaseBossProfile < ProfileObject
 			}
 		}
 
-		for (int i = 0; i < this.SectionLength; i++)
-		{
-			char key[256];
-			this.GetSectionNameFromIndex(i, key, sizeof(key));
-
-			ProfileObject obj = this.GetSection(key);
-			if (obj != null && StrContains(key, "sound_footsteps_event_") != -1)
-			{
-				view_as<ProfileSound>(obj).Precache();
-			}
-
-			if (obj != null && StrContains(key, "sound_event_") != -1)
-			{
-				view_as<ProfileSound>(obj).Precache();
-			}
-		}
-
 		for (int i = 1; i < Difficulty_Max; i++)
 		{
 			if (this.GetGlobalMusic(i) != null)
@@ -1355,6 +1389,16 @@ methodmap BaseBossProfile < ProfileObject
 		if (this.GetGlobalTracks() != null)
 		{
 			this.GetGlobalTracks().Precache();
+		}
+
+		if (this.GetOutroLoseSounds() != null)
+		{
+			this.GetOutroLoseSounds().Precache();
+		}
+
+		if (this.GetOutroWinSounds() != null)
+		{
+			this.GetOutroWinSounds().Precache();
 		}
 
 		if (this.GetLocalKillSounds() != null)
@@ -1370,6 +1414,23 @@ methodmap BaseBossProfile < ProfileObject
 		if (this.GetClientKillSounds() != null)
 		{
 			this.GetClientKillSounds().Precache();
+		}
+
+		newObj = this.GetSection("events");
+		if (newObj != null)
+		{
+			for (int i = 0; i < newObj.SectionLength; i++)
+			{
+				char index[64];
+				newObj.GetSectionNameFromIndex(i, index, sizeof(index));
+				BossProfileEventData event = view_as<BossProfileEventData>(newObj.GetSection(index));
+				if (event == null)
+				{
+					continue;
+				}
+
+				event.Precache();
+			}
 		}
 
 		switch (this.Type)
@@ -1407,6 +1468,40 @@ methodmap BaseBossProfile < ProfileObject
 				FormatEx(formatter, sizeof(formatter), "animation_%s_footstepinterval", animName);
 				temp.SetDifficultyFloat("footstepinterval", i, this.GetDifficultyFloat(formatter, i, 0.0));
 			}
+		}
+	}
+}
+
+methodmap BossProfileEventData < ProfileObject
+{
+	property bool IsFootsteps
+	{
+		public get()
+		{
+			return this.GetBool("footsteps");
+		}
+	}
+
+	public ProfileSound GetSounds()
+	{
+		return view_as<ProfileSound>(this.GetSection("sounds"));
+	}
+
+	public ProfileEffectMaster GetEffects()
+	{
+		return view_as<ProfileEffectMaster>(this.GetSection("effects"));
+	}
+
+	public void Precache()
+	{
+		if (this.GetSounds() != null)
+		{
+			this.GetSounds().Precache();
+		}
+
+		if (this.GetEffects() != null)
+		{
+			this.GetEffects().Precache();
 		}
 	}
 }

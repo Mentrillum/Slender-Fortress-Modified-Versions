@@ -620,6 +620,7 @@ Handle g_SDKSequenceVelocity;
 Handle g_SDKStartTouch;
 Handle g_SDKEndTouch;
 Handle g_SDKWeaponSwitch;
+Handle g_SDKUpdateSpeed;
 
 DynamicHook g_DHookWantsLagCompensationOnEntity;
 DynamicHook g_DHookShouldTransmit;

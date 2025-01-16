@@ -20,15 +20,6 @@ void Hook_ClientPreThink(int client)
 	ClientProcessStaticShake(player.index);
 	ClientProcessViewAngles(player.index);
 
-	if ((player.IsTrapped || player.IsLatched) && !player.IsInGhostMode)
-	{
-		TF2Attrib_SetByName(player.index, "increased jump height", 0.0);
-	}
-	else
-	{
-		TF2Attrib_SetByName(player.index, "increased jump height", 1.0);
-	}
-
 	if (!player.IsEliminated && !player.HasEscaped)
 	{
 		if (!IsRoundEnding() && !IsRoundInWarmup())
@@ -43,12 +34,7 @@ void Hook_ClientPreThink(int client)
 				player.ChangeCondition(TFCond_Disguised, true);
 			}
 
-			if (player.InCondition(TFCond_Taunting) && (player.IsTrapped || player.IsLatched))
-			{
-				player.ChangeCondition(TFCond_Taunting, true);
-			}
-
-			if (player.InCondition(TFCond_Taunting) && (player.IsTrapped || player.IsLatched))
+			if (player.InCondition(TFCond_Taunting))
 			{
 				int weaponEnt = player.GetWeaponSlot(TFWeaponSlot_Melee);
 				if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)

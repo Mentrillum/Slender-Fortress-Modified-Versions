@@ -441,6 +441,19 @@ methodmap ProfileObject < KeyMap
 		this.SetSection(diffKey, value);
 	}
 
+	public void SetDifficultyKeyValue(const char[] key, int difficulty, char[] value)
+	{
+		int diffKeySize = strlen(key) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(key, difficulty, diffKey, diffKeySize);
+		this.SetType(diffKey, Key_Type_Value);
+		this.Super.Super.SetString(diffKey, value);
+		this.SetKeyIndex(diffKey, this.KeyLength);
+		this.SetIndexKey(diffKey, this.KeyLength);
+		this.KeyLength++;
+		this.SetKeyValueLength(diffKey, strlen(value) + 1);
+	}
+
 	public int GetDifficultyInt(const char[] key, int difficulty, int def = 0)
 	{
 		if (this == null)
@@ -856,7 +869,7 @@ methodmap ProfileObject < KeyMap
 		}
 	}
 
-	public void TransferDifficultyKey(ProfileObject target, const char[] oldKey, const char[] newKey, int difficulty)
+	public void TransferDifficultyKey(ProfileObject origin, const char[] oldKey, const char[] newKey, int difficulty)
 	{
 		int oldDiffKeySize = strlen(oldKey) + GetMaxProfileDifficultySuffixSize();
 		char[] oldDiffKey = new char[oldDiffKeySize];
@@ -867,11 +880,18 @@ methodmap ProfileObject < KeyMap
 		GetProfileKeyWithDifficultySuffix(newKey, difficulty, newDiffKey, newDiffKeySize);
 
 		char keyValue[2048];
-		if (!this.Super.GetString(oldDiffKey, keyValue, sizeof(keyValue)))
+		if (!origin.Super.Super.GetString(oldDiffKey, keyValue, sizeof(keyValue)))
 		{
 			return;
 		}
-		target.SetKeyValue(newDiffKey, keyValue);
+		if (this.ContainsKey(newDiffKey))
+		{
+			this.Super.Super.SetString(newDiffKey, keyValue);
+		}
+		else
+		{
+			this.SetKeyValue(newDiffKey, keyValue);
+		}
 	}
 }
 

@@ -133,29 +133,37 @@ Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 
 Action Event_Audio(Event event, const char[] name, bool dB)
 {
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
 	char audio[PLATFORM_MAX_PATH];
 
-	GetEventString(event, "sound", audio, sizeof(audio));
-	if (strncmp(audio, "Game.Your", 9) == 0 || strcmp(audio, "Game.Stalemate") == 0)
+	event.GetString("sound", audio, sizeof(audio));
+	if (StrContains(audio, "Game.Your", false) == -1)
 	{
-		for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
-		{
-			if (NPCGetUniqueID(bossIndex) == -1)
-			{
-				continue;
-			}
-			if (!SF2NPC_BaseNPC(bossIndex).GetProfileData().OutroMusic)
-			{
-				continue;
-			}
+		return Plugin_Continue;
+	}
 
-			return Plugin_Handled;
+	for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
+	{
+		if (NPCGetUniqueID(bossIndex) == -1)
+		{
+			continue;
 		}
+		BaseBossProfile data = SF2NPC_BaseNPC(bossIndex).GetProfileData();
+		if (data.GetOutroLoseSounds() == null && data.GetOutroWinSounds() == null)
+		{
+			continue;
+		}
+
+		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
 
-Action Event_RoundEnd(Handle event, const char[] name, bool dB)
+Action Event_RoundEnd(Event event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -182,8 +190,9 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		g_PlayerFullyDied1Up[i] = true;
 	}
 
+	int wonTeam = event.GetInt("team");
+
 	ArrayList randomBosses = new ArrayList();
-	char music[MAX_BOSSES][PLATFORM_MAX_PATH];
 
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
@@ -193,27 +202,39 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		}
 
 		BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileData();
-		if (data.OutroMusic)
+		if (data.IsPvEBoss)
 		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(npcIndex, profile, sizeof(profile));
-			ProfileSound soundInfo = data.GetOutroMusics();
-			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+			continue;
+		}
+
+		if (wonTeam == TFTeam_Blue)
+		{
+			if (data.GetOutroLoseSounds() == null)
 			{
-				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), music[npcIndex], sizeof(music[]));
+				continue;
 			}
-			if (music[npcIndex][0] != '\0')
+			randomBosses.Push(data.GetOutroLoseSounds());
+		}
+		else
+		{
+			if (data.GetOutroWinSounds() == null)
 			{
-				randomBosses.Push(npcIndex);
+				continue;
 			}
+			randomBosses.Push(data.GetOutroWinSounds());
 		}
 	}
+
 	if (randomBosses.Length > 0)
 	{
-		int newBossIndex = randomBosses.Get(GetRandomInt(0, randomBosses.Length - 1));
-		if (NPCGetUniqueID(newBossIndex) != -1)
+		ProfileSound sound = randomBosses.Get(GetRandomInt(0, randomBosses.Length - 1));
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			EmitSoundToAll(music[newBossIndex], _, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+			if (!IsValidClient(i))
+			{
+				continue;
+			}
+			sound.EmitSound(true, i);
 		}
 	}
 
@@ -235,7 +256,6 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		DebugMessage("EVENT END: Event_RoundEnd");
 	}
 	#endif
-	delete event;
 
 	return Plugin_Continue;
 }
@@ -392,7 +412,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	}
 	if (!IsClientParticipating(client))
 	{
-		TF2Attrib_SetByName(client, "increased jump height", 1.0);
 		TF2Attrib_RemoveByDefIndex(client, 10);
 
 		SetEntityGravity(client, 1.0);
@@ -434,13 +453,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	g_PlayerGettingPageReward[client] = false;
 	g_PlayerHitsToCrits[client] = 0;
 	g_PlayerHitsToHeads[client] = 0;
-
-	g_PlayerTrapped[client] = false;
-	g_PlayerTrapCount[client] = 0;
-
-	g_PlayerLatchedByTongue[client] = false;
-	g_PlayerLatchCount[client] = 0;
-	g_PlayerLatcher[client] = -1;
 
 	g_PlayerRandomClassNumber[client] = 1;
 
@@ -488,8 +500,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					g_NpcChaseOnLookTarget[npcIndex].Erase(foundClient);
 				}
 			}
-
-			TF2Attrib_SetByName(client, "increased jump height", 1.0);
 
 			if (!g_PlayerEliminated[client])
 			{

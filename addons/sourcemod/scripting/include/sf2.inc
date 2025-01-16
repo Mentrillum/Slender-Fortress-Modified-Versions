@@ -16,7 +16,7 @@
 
 #define MAX_BOSSES 64
 #define MAX_NPCTELEPORTER 5
-#define MAX_TRAPS 64
+#define MAX_TRAPS 32
 #define MAX_CLASSES 9
 
 // Difficulty modifiers.
@@ -3093,7 +3093,7 @@ methodmap SF2_ChaserBossProfileBaseAttack < SF2_ProfileObject
 
 	/**
 	 * The animation's event index that'll be used for an attack to fire.
-	 * 
+	 *
 	 * @param difficulty		Difficulty value
 	 * @return					Animation event index
 	 */
