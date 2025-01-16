@@ -233,7 +233,7 @@ public void OnPluginStart()
 	g_DefaultBossTeamConVar = CreateConVar("sf2_default_boss_team", "1", "If bosses are loaded outside of SF2, determine what default team bosses should be with.", _, true, 1.0, true, 5.0);
 
 	g_EngineerBuildInBLUConVar = CreateConVar("sf2_engineer_build_in_blue", "0", "Allows BLU engineers to build outside of the PvP and PvE arena.", _, true, 0.0, true, 1.0);
-	g_DisableTauntLoopsConVar = CreateConVar("sf2_engineer_build_in_blue", "0", "Enables/Disables the ability for proxies and REDs to hear taunt sounds.", _, true, 0.0, true, 1.0);
+	g_DisableTauntLoopsConVar = CreateConVar("sf2_disable_taunt_loop_sounds", "0", "Enables/Disables the ability for proxies and REDs to hear taunt sounds.", _, true, 0.0, true, 1.0);
 
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
