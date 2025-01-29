@@ -227,6 +227,8 @@ enum struct SF2PageEntityData
 	int EntRef;
 	char CollectSound[PLATFORM_MAX_PATH];
 	int CollectSoundPitch;
+	float Pos[3];
+	float Ang[3];
 }
 
 ArrayList g_Pages;
@@ -557,6 +559,7 @@ ConVar g_LoadOutsideMapsConVar;
 ConVar g_DefaultBossTeamConVar;
 ConVar g_EngineerBuildInBLUConVar;
 ConVar g_ShowStaticMeterConVar;
+ConVar g_DisableTauntLoopsConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -738,6 +741,10 @@ stock ArrayList g_FuncNavPrefer;
 
 int g_FlashlightHaloModel = -1;
 
+bool g_PagesRevealed = false;
+ArrayList g_PageLocations;
+ArrayList g_PageLocationsGlow;
+
 #if defined DEBUG
 #include "sf2/debug.sp"
 #endif
@@ -807,8 +814,12 @@ public void OnLibraryRemoved(const char[] name)
 public void OnMapStart()
 {
 	g_TimerFail = null;
+	g_PagesRevealed = false;
+	g_PageLocations.Clear();
+	g_PageLocationsGlow.Clear();
 	FindHealthBar();
 	PrecacheSound(SOUND_THUNDER, true);
+	PrecacheSound(DEBUG_PAGEREVEALSOUND);
 	PrecacheSound("weapons/teleporter_send.wav");
 	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
 	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
@@ -2668,6 +2679,11 @@ Action Hook_TauntUserMessage(UserMsg msg_id, BfRead msg, const int[] players, in
 	if (client.IsProxy)
 	{
 		return Plugin_Handled; //Don't allow proxies to play a taunt sound
+	}
+
+	if (g_DisableTauntLoopsConVar.BoolValue)
+	{
+		return Plugin_Continue;
 	}
 
 	char tauntSound[PLATFORM_MAX_PATH];
@@ -7634,6 +7650,8 @@ static void SpawnPages()
 
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
+				pageData.Pos = pos;
+				pageData.Ang = angle;
 
 				if (spawnPoint.IsValid())
 				{

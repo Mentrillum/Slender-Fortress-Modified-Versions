@@ -17,6 +17,7 @@
 #define FIREWORKSRED_PARTICLENAME "utaunt_firework_teamcolor_red"
 #define TELEPORTEDINBLU_PARTICLENAME "teleported_red"
 #define SOUND_THUNDER ")ambient/explosions/explode_9.wav"
+#define DEBUG_PAGEREVEALSOUND "#ui/cyoa_node_activate.wav"
 
 #define SPECIAL1UPSOUND "mvm/mvm_revive.wav"
 
