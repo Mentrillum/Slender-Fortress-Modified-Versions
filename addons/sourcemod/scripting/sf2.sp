@@ -2789,7 +2789,7 @@ void SF_CollectTriggersMultiple()
 
 static Action Hook_TriggerOnStartTouchEx(int trigger, int other)
 {
-	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
+	if (IsValidClient(other) && IsClientInGhostMode(other))
 	{
 		return Plugin_Handled;
 	}
@@ -2799,7 +2799,7 @@ static Action Hook_TriggerOnStartTouchEx(int trigger, int other)
 
 static Action Hook_TriggerOnTouchEx(int trigger, int other)
 {
-	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
+	if (IsValidClient(other) && IsClientInGhostMode(other))
 	{
 		return Plugin_Handled;
 	}
@@ -2808,7 +2808,7 @@ static Action Hook_TriggerOnTouchEx(int trigger, int other)
 
 static Action Hook_TriggerOnEndTouchEx(int trigger, int other)
 {
-	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
+	if (IsValidClient(other) && IsClientInGhostMode(other))
 	{
 		return Plugin_Handled;
 	}
@@ -2816,27 +2816,27 @@ static Action Hook_TriggerOnEndTouchEx(int trigger, int other)
 	return Plugin_Continue;
 }
 
-static Action Hook_FuncOnStartTouchEx(int iFunc, int other)
+static Action Hook_FuncOnStartTouchEx(int func, int other)
 {
-	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
+	if (IsValidClient(other) && IsClientInGhostMode(other))
 	{
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
 
-static Action Hook_FuncOnTouchEx(int iFunc, int other)
+static Action Hook_FuncOnTouchEx(int func, int other)
 {
-	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
+	if (IsValidClient(other) && IsClientInGhostMode(other))
 	{
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
 
-static Action Hook_FuncOnEndTouchEx(int iFunc, int other)
+static Action Hook_FuncOnEndTouchEx(int func, int other)
 {
-	if (MaxClients >= other >= 1 && IsClientInGhostMode(other))
+	if (IsValidClient(other) && IsClientInGhostMode(other))
 	{
 		return Plugin_Handled;
 	}

@@ -281,7 +281,7 @@ methodmap SF2NPC_BaseNPC
 
 	public bool CanBeSeen(bool fov = true, bool blink = false, bool checkEliminated = true)
 	{
-		return PeopleCanSeeSlender(this.Index, fov, blink);
+		return PeopleCanSeeSlender(this.Index, fov, blink, checkEliminated);
 	}
 
 	public bool PlayerCanSee(int client, bool fov = true, bool blink = false, bool eliminated = false)
@@ -648,7 +648,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 	public void UpdateListeningFlags(bool reset = false)
 	{
-		ClientUpdateListeningFlags(this.index, false);
+		ClientUpdateListeningFlags(this.index, reset);
 	}
 
 	property bool IsParticipating
@@ -768,6 +768,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		public get()
 		{
 			return IsClientInPvE(this.index);
+		}
+	}
+
+	property bool IsInWeaponsTriggers
+	{
+		public get()
+		{
+			return IsClientInWeaponsTrigger(this.index);
 		}
 	}
 
@@ -1039,7 +1047,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 	public void SetAFKTime(bool reset = true)
 	{
-		AFK_SetTime(this.index);
+		AFK_SetTime(this.index, reset);
 	}
 
 	public void SetAFKState()

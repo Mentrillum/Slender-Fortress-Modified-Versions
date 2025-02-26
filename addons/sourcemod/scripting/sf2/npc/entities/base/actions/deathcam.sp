@@ -43,22 +43,34 @@ static NextBotAction InitialContainedAction(SF2_DeathCamAction action, SF2_BaseB
 	actor.IsKillingSomeone = true;
 	float duration = 0.0, rate = 1.0, cycle = 0.0;
 	SF2NPC_BaseNPC controller = actor.Controller;
+	int difficulty = controller.Difficulty;
 	BaseBossProfile data = controller.GetProfileData();
 	data.GetLocalDeathCamSounds().EmitSound(_, actor.index, .difficulty = controller.Difficulty);
-
-	int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], rate, duration, cycle);
-	if (sequence != -1)
+	BossProfileDeathCamData deathCamData = data.GetDeathCamData();
+	DeathCamAnimation section = view_as<DeathCamAnimation>(deathCamData.GetAnimations().GetAnimation("start"));
+	char animation[64];
+	if (section == null)
 	{
-		if (duration <= 0.0)
-		{
-			duration = actor.SequenceDuration(sequence) / rate;
-			duration *= (1.0 - cycle);
-		}
-		action.Duration = duration;
-		return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
+		return NULL_ACTION;
 	}
 
-	return NULL_ACTION;
+	section.GetAnimationName(difficulty, animation, sizeof(animation));
+	rate = section.GetAnimationPlaybackRate(difficulty);
+	cycle = section.GetAnimationCycle(difficulty);
+	duration = section.GetDuration(difficulty);
+	int sequence = actor.LookupSequence(animation);
+	if (sequence == -1)
+	{
+		return NULL_ACTION;
+	}
+
+	if (duration <= 0.0)
+	{
+		duration = actor.SequenceDuration(sequence) / rate;
+		duration *= (1.0 - cycle);
+	}
+	action.Duration = duration;
+	return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
 }
 
 static int Update(SF2_DeathCamAction action, SF2_BaseBoss actor, float interval)
@@ -90,6 +102,17 @@ static void OnEnd(SF2_DeathCamAction action, SF2_BaseBoss actor)
 {
 	actor.IsKillingSomeone = false;
 	actor.FullDeathCamDuration = false;
+	if (!actor.Controller.IsValid())
+	{
+		return;
+	}
+	SF2NPC_BaseNPC controller = actor.Controller;
+	BaseBossProfile data = controller.GetProfileData();
+	BossProfileDeathCamData deathCamData = data.GetDeathCamData();
+	if (deathCamData.StopSounds)
+	{
+		data.GetLocalDeathCamSounds().StopAllSounds(actor.index);
+	}
 }
 
 static void OnOtherKilled(SF2_DeathCamAction action, SF2_BaseBoss actor, CBaseCombatCharacter victim, CBaseEntity attacker, CBaseEntity inflictor, float damage, int damagetype)

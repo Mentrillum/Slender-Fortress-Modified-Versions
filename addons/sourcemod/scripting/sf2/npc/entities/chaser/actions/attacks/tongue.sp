@@ -373,7 +373,7 @@ static int Update(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntity actor, 
 		return action.Done("No longer firing a tongue");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}

@@ -313,31 +313,29 @@ methodmap BaseBossProfile < ProfileObject
 		}
 	}
 
-	public void GetJumpscareSound(char[] buffer, int bufferSize)
+	public ProfileSound GetJumpscareSounds()
 	{
-		ProfileObject obj = this.GetSection("sound_jumpscare");
-		if (obj != null)
-		{
-			obj.GetString("1", buffer, bufferSize);
-		}
+		return view_as<ProfileSound>(this.GetSection("sound_jumpscare"));
 	}
 
-	public void GetJumpscareOverlay(char[] buffer, int bufferSize)
+	public KeyMap_Array GetJumpscareOverlays()
 	{
-		ProfileObject obj = this.GetSection("overlay_jumpscare");
-		if (obj != null)
-		{
-			obj.GetString("1", buffer, bufferSize);
-		}
+		return this.GetArray("overlay_jumpscare");
 	}
 
-	public void GetPlayerDeathOverlay(char[] buffer, int bufferSize)
+	public KeyMap_Array GetRedCameraOverlays()
 	{
-		ProfileObject obj = this.GetSection("overlay_player_death");
-		if (obj != null)
-		{
-			obj.GetString("1", buffer, bufferSize);
-		}
+		return this.GetArray("overlay_red_camera");
+	}
+
+	public void GetActiveRedCameraOverlay(char[] buffer, int bufferSize)
+	{
+		this.GetString("__active_red_camera_overlay", buffer, bufferSize);
+	}
+
+	public void SetActiveRedCameraOverlay(char[] value)
+	{
+		this.SetString("__active_red_camera_overlay", value);
 	}
 
 	public void GetHullMins(float vec[3])
@@ -499,7 +497,7 @@ methodmap BaseBossProfile < ProfileObject
 
 	public BossProfileDeathCamData GetDeathCamData()
 	{
-		return view_as<BossProfileDeathCamData>(this);
+		return view_as<BossProfileDeathCamData>(this.GetSection("death_cam"));
 	}
 
 	public BossProfilePvEData GetPvEData()
@@ -861,12 +859,12 @@ methodmap BaseBossProfile < ProfileObject
 		return this.GetArray("spawn_effects");
 	}
 
-	public ProfileEntityInputsArray GetSpawnInputs()
+	public ProfileInputsList GetSpawnInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("spawn"));
+			return view_as<ProfileInputsList>(obj.GetSection("spawn"));
 		}
 		return null;
 	}
@@ -876,19 +874,19 @@ methodmap BaseBossProfile < ProfileObject
 		return this.GetArray("despawn_effects");
 	}
 
-	public ProfileEntityInputsArray GetDespawnInputs()
+	public ProfileInputsList GetDespawnInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("spawn"));
+			return view_as<ProfileInputsList>(obj.GetSection("spawn"));
 		}
 		return null;
 	}
 
-	public ProfileEntityOutputsArray GetOutputs()
+	public ProfileOutputsList GetOutputs()
 	{
-		return view_as<ProfileEntityOutputsArray>(this.GetSection("outputs"));
+		return view_as<ProfileOutputsList>(this.GetSection("outputs"));
 	}
 
 	property bool HideDespawnEffectsOnDeath
@@ -981,11 +979,6 @@ methodmap BaseBossProfile < ProfileObject
 	public ProfileMusic GetGlobalMusic(int difficulty)
 	{
 		return view_as<ProfileMusic>(this.GetDifficultySection("sound_music", difficulty));
-	}
-
-	public float GetGlobalMusicLoop(int difficulty)
-	{
-		return this.GetDifficultyFloat("sound_music_loop", difficulty, 0.0);
 	}
 
 	public ProfileGlobalTracks GetGlobalTracks()
@@ -1280,7 +1273,7 @@ methodmap BaseBossProfile < ProfileObject
 				temp.SetSectionName("sounds");
 				temp2 = newObj.InsertNewSection(key);
 				temp2.AddExistingSection(temp);
-				temp2.SetKeyValue("footsteps", "1");
+				temp2.SetKeyValue("footstep", "1");
 				i--;
 				continue;
 			}
@@ -1307,8 +1300,232 @@ methodmap BaseBossProfile < ProfileObject
 			this.AddExistingSection(newObj);
 		}
 
+		if (this.GetBool("death_cam"))
+		{
+			this.RemoveKey("death_cam");
+			newObj = this.InsertNewSection("death_cam");
+			newObj.TransferKey(this, "death_cam_pos", "look_position");
+			newObj.TransferKey(this, "death_cam_play_scare_sound", "scare_sound");
+			newObj.SetFloat("__legacy_duration", this.GetFloat("death_cam_time_death") + this.GetFloat("death_cam_time_overlay_start"));
+			newObj.SetFloat("__legacy_overlay_start", this.GetFloat("death_cam_time_overlay_start"));
+			if (this.GetSection("overlay_player_death") != null)
+			{
+				temp3 = view_as<ProfileObject>(this.GetSection("overlay_player_death").Clone());
+				temp3.SetSectionName("overlays");
+				newObj.AddExistingSection(temp3);
+			}
+			if (this.GetSection("animations") != null)
+			{
+				temp = this.GetSection("animations");
+				temp2 = newObj.InsertNewSection("animations");
+				if (temp.GetSection("deathcam") != null)
+				{
+					temp2.AddExistingSection(view_as<ProfileObject>(temp.GetSection("deathcam").Clone()));
+				}
+				else if (temp.GetSection("idle") != null)
+				{
+					temp2.AddExistingSection(view_as<ProfileObject>(temp.GetSection("idle").Clone()));
+				}
+			}
+			if (this.GetBool("death_cam_public") || this.GetSection("public_death_cam") != null)
+			{
+				temp = newObj.InsertNewSection("public");
+				temp.TransferKey(this, "death_cam_acceleration", "acceleration");
+				temp.TransferKey(this, "death_cam_deceleration", "deceleration");
+				temp.TransferKey(this, "death_cam_speed", "speed");
+				if (this.GetSection("public_death_cam") == null)
+				{
+					this.GetString("death_cam_attachtment_target_point", value, sizeof(value));
+					this.GetString("death_cam_attachment_target_point", value, sizeof(value));
+					temp.SetKeyValue("target_attachment", value);
+					this.GetString("death_cam_attachtment_target_point", value, sizeof(value));
+					this.GetString("death_cam_attachment_target_point", value, sizeof(value));
+					temp.SetKeyValue("attachment", value);
+					temp = temp.InsertNewSection("offset");
+					temp.TransferKey(this, "deathcam_death_backward_offset", "backward");
+					temp.TransferKey(this, "deathcam_death_downward_offset", "downward");
+				}
+				else
+				{
+					temp2 = this.GetSection("public_death_cam");
+					temp.TransferKey(temp2, "acceleration", "acceleration");
+					temp.TransferKey(temp2, "deceleration", "deceleration");
+					temp.TransferKey(temp2, "target_attachment", "target_attachment");
+					temp.TransferKey(temp2, "attachment", "attachment");
+					if (temp2.GetSection("offset") != null)
+					{
+						temp.AddExistingSection(view_as<ProfileObject>(temp2.GetSection("offset").Clone()));
+					}
+					if (temp2.GetSection("sounds") != null)
+					{
+						newObj.AddExistingSection(view_as<ProfileObject>(temp2.GetSection("sounds").Clone()));
+					}
+				}
+			}
+		}
+
+		bool exists = false;
+		for (int i = 1; i < Difficulty_Max; i++)
+		{
+			if (this.GetDifficultySection("sound_music", i) != null)
+			{
+				exists = true;
+				break;
+			}
+		}
+
+		if (exists)
+		{
+			newObj = this.InsertNewSection("music");
+			newObj = newObj.InsertNewSection("global");
+
+			for (int i = 1; i < Difficulty_Max; i++)
+			{
+				temp = this.GetDifficultySection("sound_music", i);
+				if (temp == null)
+				{
+					continue;
+				}
+
+				temp = temp.GetSection("paths");
+				if (temp == null)
+				{
+					continue;
+				}
+
+				temp2 = newObj.InsertDifficultySection("tracks", i);
+				for (int i2 = 0; i2 < temp.KeyLength; i2++)
+				{
+					temp.GetKeyNameFromIndex(i2, key, sizeof(key));
+					temp.GetString(key, path, sizeof(path));
+					temp3 = temp2.InsertNewSection(key);
+					temp3.SetKeyValue("path", path);
+				}
+			}
+		}
+
 		this.ConvertSectionsSectionToArray("spawn_effects");
 		this.ConvertSectionsSectionToArray("despawn_effects");
+		this.ConvertValuesSectionToArray("overlay_jumpscare");
+		this.ConvertValuesSectionToArray("overlay_red_camera");
+		this.ConvertValuesSectionToArray("mat_download");
+		this.ConvertValuesSectionToArray("mod_download");
+		this.ConvertValuesSectionToArray("mod_precache");
+		this.ConvertValuesSectionToArray("download");
+
+		KeyMap_Array arr = this.GetArray("mat_download");
+		if (arr != null)
+		{
+			for (int i = 0; i < arr.Length; i++)
+			{
+				char asset[PLATFORM_MAX_PATH], file[PLATFORM_MAX_PATH];
+				arr.GetString(i, asset, sizeof(asset));
+
+				FormatEx(file, sizeof(file), "%s.vtf", asset);
+				if (g_FileCheckConVar.BoolValue)
+				{
+					if (FileExists(file) || FileExists(file, true))
+					{
+						AddFileToDownloadsTable(file);
+					}
+					else
+					{
+						LogSF2Message("Texture file %s does not exist, please fix this download or remove it from the array.", file);
+					}
+				}
+				else
+				{
+					AddFileToDownloadsTable(file);
+				}
+
+				FormatEx(file, sizeof(file), "%s.vmt", asset);
+				if (g_FileCheckConVar.BoolValue)
+				{
+					if (FileExists(file) || FileExists(file, true))
+					{
+						AddFileToDownloadsTable(file);
+					}
+					else
+					{
+						LogSF2Message("Material file %s does not exist, please fix this download or remove it from the array.", file);
+					}
+				}
+				else
+				{
+					AddFileToDownloadsTable(file);
+				}
+			}
+		}
+
+		arr = this.GetArray("mod_download");
+		if (arr != null)
+		{
+			for (int i = 0; i < arr.Length; i++)
+			{
+				char asset[PLATFORM_MAX_PATH];
+				arr.GetString(i, asset, sizeof(asset));
+				if (asset[0] != '\0')
+				{
+					PrecacheModel2(path, _, _, g_FileCheckConVar.BoolValue);
+				}
+			}
+		}
+
+		arr = this.GetArray("mod_precache");
+		if (arr != null)
+		{
+			for (int i = 0; i < arr.Length; i++)
+			{
+				char asset[PLATFORM_MAX_PATH];
+				arr.GetString(i, asset, sizeof(asset));
+				if (asset[0] != '\0')
+				{
+					PrecacheModel(asset, true);
+				}
+			}
+		}
+
+		arr = this.GetArray("download");
+		if (arr != null)
+		{
+			for (int i = 0; i < arr.Length; i++)
+			{
+				char asset[PLATFORM_MAX_PATH];
+				arr.GetString(i, asset, sizeof(asset));
+				if (asset[0] != '\0')
+				{
+					AddFileToDownloadsTable(asset);
+				}
+			}
+		}
+
+		arr = this.GetJumpscareOverlays();
+		if (arr != null)
+		{
+			for (int i = 0; i < arr.Length; i++)
+			{
+				char asset[PLATFORM_MAX_PATH];
+				arr.GetString(i, asset, sizeof(asset));
+				if (asset[0] != '\0')
+				{
+					PrecacheMaterial2(asset, g_FileCheckConVar.BoolValue);
+				}
+			}
+		}
+
+		arr = this.GetRedCameraOverlays();
+		if (arr != null)
+		{
+			for (int i = 0; i < arr.Length; i++)
+			{
+				char asset[PLATFORM_MAX_PATH];
+				arr.GetString(i, asset, sizeof(asset));
+				if (asset[0] != '\0')
+				{
+					PrecacheMaterial2(asset, g_FileCheckConVar.BoolValue);
+				}
+			}
+		}
 
 		if (this.GetIntroSounds() != null)
 		{
@@ -1323,6 +1540,11 @@ methodmap BaseBossProfile < ProfileObject
 		if (this.GetScareSounds() != null)
 		{
 			this.GetScareSounds().Precache();
+		}
+
+		if (this.GetJumpscareSounds() != null)
+		{
+			this.GetJumpscareSounds().Precache();
 		}
 
 		if (this.GetClientDeathCamSounds() != null)
@@ -1378,12 +1600,9 @@ methodmap BaseBossProfile < ProfileObject
 			}
 		}
 
-		for (int i = 1; i < Difficulty_Max; i++)
+		if (this.GetGlobalMusic(1) != null)
 		{
-			if (this.GetGlobalMusic(i) != null)
-			{
-				this.GetGlobalMusic(i).Precache();
-			}
+			this.GetGlobalMusic(1).Precache();
 		}
 
 		if (this.GetGlobalTracks() != null)
@@ -1414,6 +1633,11 @@ methodmap BaseBossProfile < ProfileObject
 		if (this.GetClientKillSounds() != null)
 		{
 			this.GetClientKillSounds().Precache();
+		}
+
+		if (this.GetDeathCamData() != null)
+		{
+			this.GetDeathCamData().Precache();
 		}
 
 		newObj = this.GetSection("events");
@@ -1478,7 +1702,7 @@ methodmap BossProfileEventData < ProfileObject
 	{
 		public get()
 		{
-			return this.GetBool("footsteps");
+			return this.GetBool("footstep");
 		}
 	}
 
@@ -1766,7 +1990,7 @@ methodmap BossProfileSlaughterRunData < ProfileObject
 		{
 			return false;
 		}
-		return this.GetDifficultyBool("custom_minimum_speed", false);
+		return this.GetDifficultyBool("custom_minimum_speed", difficulty, false);
 	}
 
 	public float GetCustomSpawnTime(int difficulty)

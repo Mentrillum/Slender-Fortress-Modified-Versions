@@ -21,6 +21,7 @@ methodmap SF2_ChaserSpawnAction < NextBotAction
 static int OnStart(SF2_ChaserSpawnAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	actor.State = STATE_IDLE;
+	actor.IsSpawning = true;
 
 	float rate = 1.0, duration = 0.0, cycle = 0.0;
 	if (actor.GetOverrideSpawnAnimation()[0] != '\0')

@@ -114,6 +114,8 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 
 	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + data.GetIdleLifeTime(difficulty);
 
+	actor.IsSpawning = false;
+
 	return action.Continue();
 }
 

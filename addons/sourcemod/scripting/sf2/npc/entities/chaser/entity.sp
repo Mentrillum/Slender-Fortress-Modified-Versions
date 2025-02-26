@@ -53,6 +53,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		g_Factory.SetInitialActionFactory(SF2_ChaserMainAction.GetFactory());
 		g_Factory.BeginDataMapDesc()
 			.DefineBoolField("m_IsAllowedToDespawn")
+			.DefineBoolField("m_IsSpawning")
+			.DefineBoolField("m_IsInAirAnimation")
 			.DefineStringField("m_OverrideSpawnAnimation")
 			.DefineFloatField("m_OverrideSpawnAnimationRate")
 			.DefineFloatField("m_OverrideSpawnAnimationDuration")
@@ -68,6 +70,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineStringField("m_DefaultPosture")
 			.DefineBoolField("m_IsAttacking")
 			.DefineBoolField("m_CancelAttack")
+			.DefineBoolField("m_ClearCurrentAttack")
 			.DefineStringField("m_AttackName")
 			.DefineIntField("m_AttackIndex")
 			.DefineIntField("m_NextAttackTime")
@@ -160,6 +163,32 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "m_IsAllowedToDespawn", value);
+		}
+	}
+
+	property bool IsSpawning
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_IsSpawning") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_IsSpawning", value);
+		}
+	}
+
+	property bool IsInAirAnimation
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_IsInAirAnimation") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_IsInAirAnimation", value);
 		}
 	}
 
@@ -459,6 +488,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "m_CancelAttack", value);
+		}
+	}
+
+	property bool ClearCurrentAttack
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_ClearCurrentAttack") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_ClearCurrentAttack", value);
 		}
 	}
 
@@ -1215,7 +1257,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		char posture[64];
 		this.GetPosture(posture, sizeof(posture));
-		this.ResetProfileAnimation(animation, _, _, _, posture);
+		this.ResetProfileAnimation(animation, .posture = posture);
 	}
 
 	public bool PerformVoice(int soundType = -1, const char[] attackName = "")
@@ -1308,6 +1350,10 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				case SF2BossSound_Hurt:
 				{
 					soundInfo = data.GetHurtSounds();
+				}
+				case SF2BossSound_Jump:
+				{
+					soundInfo = data.GetJumpSounds();
 				}
 			}
 		}
@@ -1541,6 +1587,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			attackData.GetSectionName(attackName, sizeof(attackName));
+			if (!attackData.IsEnabled(difficulty))
+			{
+				continue;
+			}
+
 			if (gameTime < this.GetNextAttackTime(attackName))
 			{
 				continue;
@@ -1700,27 +1751,33 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	{
 		SF2NPC_Chaser controller = this.Controller;
 		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 		char section[32];
 		if (!end)
 		{
-			strcopy(section, sizeof(section), g_SlenderAnimationsList[SF2BossAnimation_AttackBegin]);
+			strcopy(section, sizeof(section), attackData.GetAnimations() == null ? g_SlenderAnimationsList[SF2BossAnimation_AttackBegin] : "begin");
 		}
 		else
 		{
-			strcopy(section, sizeof(section), g_SlenderAnimationsList[SF2BossAnimation_AttackEnd]);
+			strcopy(section, sizeof(section), attackData.GetAnimations() == null ? g_SlenderAnimationsList[SF2BossAnimation_AttackEnd] : "end");
 		}
-		if (!data.GetAnimations().HasAnimationSection(section))
+		ProfileMasterAnimations animations = attackData.GetAnimations();
+		if (animations == null)
+		{
+			animations = data.GetAnimations();
+		}
+		if (!animations.HasAnimationSection(section))
 		{
 			return NULL_ACTION;
 		}
 
-		ProfileAnimation animSection = data.GetAnimations().GetAnimation(section, .preDefinedName = attackName);
+		ProfileAnimation animSection = animations.GetAnimation(section, .preDefinedName = attackData.GetAnimations() == null ? attackName : "");
 		if (animSection == null)
 		{
 			return NULL_ACTION;
 		}
 
-		return SF2_PlaySequenceAndWaitEx(section, attackName);
+		return SF2_PlaySequenceAndWaitEx(section, attackName, animations);
 	}
 
 	public void DoAttackMiscConditions(const char[] attackName)
@@ -1740,8 +1797,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			bool aimAtTarget = false;
 
-			if ((controller.HasAttribute(SF2Attribute_AlwaysLookAtTarget) || controller.HasAttribute(SF2Attribute_AlwaysLookAtTargetWhileAttacking))
-				&& !attackData.ShouldNotAlwaysLook(difficulty))
+			if (attackData.ShouldAutoAim(difficulty))
 			{
 				aimAtTarget = true;
 			}
@@ -2103,7 +2159,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				{
 					projectileData.GetArrowShootSound(sound, sizeof(sound));
 					SF2_ProjectileArrow.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
-						projectileData.GetCritState(difficulty), "pipebombtrail_blue", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
+						projectileData.GetCritState(difficulty), "effects/arrowtrail_red.vmt", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
 					if (i == 0)
 					{
 						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
@@ -3056,7 +3112,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		chaser.MaxStunHealth = chaser.StunHealth;
 
 		locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
-		locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
+		locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpToLedge);
+		locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGap);
 
 		float pathingMins[3], pathingMaxs[3];
 
@@ -3264,7 +3321,7 @@ static void OnPlayerTakeDamagePost(SF2_BasePlayer client, int attacker, int infl
 
 		if (attackData.GetHitInputs() != null)
 		{
-			attackData.GetHitInputs().AcceptInputs(boss.index, client.index, client.index);
+			attackData.GetHitInputs().AcceptInputs(boss, client, client);
 		}
 	}
 }
@@ -3329,7 +3386,7 @@ static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor,
 
 		if (attackData.GetOnKillInputs() != null)
 		{
-			attackData.GetOnKillInputs().AcceptInputs(boss.index, client.index, client.index);
+			attackData.GetOnKillInputs().AcceptInputs(boss, client, client);
 		}
 	}
 }
@@ -3486,6 +3543,16 @@ static void ThinkPost(int entIndex)
 
 	chaser.InterruptConditions = 0;
 	chaser.SetNextThink(GetGameTime() + data.TickRate);
+
+	if (!chaser.MyNextBotPointer().GetLocomotionInterface().IsOnGround() && (chaser.State == STATE_IDLE || chaser.State == STATE_ALERT || chaser.State == STATE_CHASE))
+	{
+		chaser.AirTime -= GetGameFrameTime();
+		if (chaser.AirTime > -1.0 && chaser.AirTime <= 0.0 && chaser.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Air]))
+		{
+			chaser.AirTime = -1.0;
+			chaser.IsInAirAnimation = true;
+		}
+	}
 
 	#if defined DEBUG
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(chaser.index);
@@ -4173,6 +4240,28 @@ static MRESReturn HandleAnimationEvent(int entIndex, DHookParam params)
 	bossEntity.CastAnimEvent(index);
 
 	return MRES_Ignored;
+}
+
+static void JumpAcrossGap(CBaseNPC_Locomotion loco, const float landingGoal[3], const float landingForward[3])
+{
+	INextBot bot = loco.GetBot();
+	SF2_ChaserEntity boss = SF2_ChaserEntity(bot.GetEntity());
+	if (boss.IsValid())
+	{
+		boss.IsJumping = true;
+	}
+}
+
+static bool ClimbUpToLedge(CBaseNPC_Locomotion loco, const float goal[3], const float fwd[3], int entity)
+{
+	INextBot bot = loco.GetBot();
+	SF2_ChaserEntity boss = SF2_ChaserEntity(bot.GetEntity());
+
+	if (boss.IsValid())
+	{
+		boss.IsJumping = true;
+	}
+	return loco.CallBaseFunction(goal, fwd, entity);
 }
 
 static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditions = 0)

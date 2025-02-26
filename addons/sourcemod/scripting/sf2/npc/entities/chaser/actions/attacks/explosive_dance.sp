@@ -151,7 +151,7 @@ static int Update(SF2_ChaserAttackAction_ExplosiveDance action, SF2_ChaserEntity
 		return action.Done("No longer explosion dancing");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}

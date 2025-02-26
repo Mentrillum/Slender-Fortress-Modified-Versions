@@ -79,12 +79,6 @@ methodmap SF2_ProjectileIceball < SF2_ProjectileBase
 		this.SetPropString(Prop_Data, "m_FreezeSound", value);
 	}
 
-	public void OnPlayerDamaged(SF2_BasePlayer player)
-	{
-		EmitSoundToClient(player.index, this.GetFreezeSound(), _, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
-		player.Stun(this.SlowDuration, this.SlowMultiplier, TF_STUNFLAG_SLOWDOWN, player.index);
-	}
-
 	public static SF2_ProjectileIceball Create(
 		const CBaseEntity owner,
 		const float pos[3],
@@ -109,7 +103,7 @@ methodmap SF2_ProjectileIceball < SF2_ProjectileBase
 		iceball.SlowMultiplier = slowMultiplier;
 		iceball.SetFreezeSound(freezeSound);
 		iceball.InitializeProjectile(SF2BossProjectileType_Iceball, owner, pos, ang, speed, damage, blastRadius,
-									false, "spell_fireball_small_blue", "spell_batball_impact_blue", impactSound, "models/roller.mdl", attackWaiters);
+									false, trail, "spell_batball_impact_blue", impactSound, "models/roller.mdl", attackWaiters);
 		return iceball;
 	}
 }

@@ -103,7 +103,7 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 
 	if (stunData.GetOnStartInputs() != null)
 	{
-		stunData.GetOnStartInputs().AcceptInputs(actor.index, action.Attacker.index, action.Attacker.index);
+		stunData.GetOnStartInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
 	}
 
 	if (stunData.KeyDrop)
@@ -220,7 +220,7 @@ static void OnEnd(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 
 	if (stunData.GetOnEndInputs() != null)
 	{
-		stunData.GetOnEndInputs().AcceptInputs(actor.index, action.Attacker.index, action.Attacker.index);
+		stunData.GetOnEndInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
 	}
 
 	actor.IsStunned = false;

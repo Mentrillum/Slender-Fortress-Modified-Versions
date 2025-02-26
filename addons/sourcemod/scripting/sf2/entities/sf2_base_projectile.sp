@@ -317,11 +317,6 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		ScaleVector(buffer, 2.0);
 	}
 
-	public void OnPlayerDamaged(SF2_BasePlayer player)
-	{
-		// Do nothing
-	}
-
 	public void DoExplosion()
 	{
 		int owner = this.GetPropEnt(Prop_Send, "m_hOwnerEntity");

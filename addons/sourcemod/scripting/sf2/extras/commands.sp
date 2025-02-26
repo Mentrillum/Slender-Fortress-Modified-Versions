@@ -354,6 +354,7 @@ public void OnPluginStart()
 	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("-slalltalk", Command_AllTalkOff, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("sm_sf2_do_trace", Command_DoTrace, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_steamid", Command_SteamID, ADMFLAG_CHEATS);
 
 	RegServerCmd("load_itempreset", Command_BlockCommand);
 
@@ -1314,6 +1315,7 @@ static Action Command_SpawnSlender(int client, int args)
 	{
 		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
 	}
+	LogAction(client, -1, "%N spawned boss %d! (%s)", client, npc.Index, profile);
 
 	return Plugin_Handled;
 }
@@ -1457,6 +1459,7 @@ static Action Command_RemoveSlender(int client, int args)
 	{
 		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
 	}
+	LogAction(client, -1, "%N removed boss %d! (%s)", client, bossIndex, profile);
 
 	return Plugin_Handled;
 }
@@ -2272,6 +2275,8 @@ static Action Command_AddSlender(int client, int args)
 		{
 			g_SlenderBoxingBossCount++;
 		}
+
+		LogAction(client, -1, "%N added a boss! (%s)", client, profile);
 	}
 
 	return Plugin_Handled;
@@ -2394,6 +2399,8 @@ static Action Command_AddSlenderFake(int client, int args)
 		delete trace;
 
 		npc.Spawn(pos);
+
+		LogAction(client, -1, "%N added a fake boss! (%s)", client, profile);
 	}
 
 	return Plugin_Handled;
@@ -2583,6 +2590,26 @@ static Action Command_DoTrace(int client, int args)
 
 	delete trace;
 	delete profiler;
+	return Plugin_Handled;
+}
+
+static Action Command_SteamID(int client, int args)
+{
+	if (!IsValidClient(client))
+	{
+		return Plugin_Handled;
+	}
+
+	char authA[64], authB[64], authC[64], authD[4];
+	GetClientAuthId(client, AuthId_Engine, authA, sizeof(authA));
+	GetClientAuthId(client, AuthId_Steam2, authB, sizeof(authB));
+	GetClientAuthId(client, AuthId_Steam3, authC, sizeof(authC));
+	GetClientAuthId(client, AuthId_SteamID64, authD, sizeof(authD));
+	PrintToChatAll("Engine: %s", authA);
+	PrintToChatAll("Steam2: %s", authB);
+	PrintToChatAll("Steam3: %s", authC);
+	PrintToChatAll("Steam64: %s", authD);
+	PrintToChatAll("SteamID: %i", GetSteamAccountID(client));
 	return Plugin_Handled;
 }
 

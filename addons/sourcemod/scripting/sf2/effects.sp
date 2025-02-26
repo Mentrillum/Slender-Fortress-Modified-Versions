@@ -188,14 +188,14 @@ methodmap ProfileEffect < ProfileObject
 		this.GetDifficultyColor("rendercolor", difficulty, buffer);
 	}
 
-	public ProfileEntityInputsArray GetInputs()
+	public ProfileInputsList GetInputs()
 	{
-		return view_as<ProfileEntityInputsArray>(this.GetSection("inputs"));
+		return view_as<ProfileInputsList>(this.GetSection("inputs"));
 	}
 
-	public ProfileEntityOutputsArray GetOutputs()
+	public ProfileOutputsList GetOutputs()
 	{
-		return view_as<ProfileEntityOutputsArray>(this.GetSection("outputs"));
+		return view_as<ProfileOutputsList>(this.GetSection("outputs"));
 	}
 
 	public void Precache()
@@ -979,7 +979,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 		}
 	}
 
-	int entity = -1;
+	CBaseEntity entity = view_as<CBaseEntity>(-1);
 	bool isEntity = true;
 
 	char section[64];
@@ -989,31 +989,31 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 	{
 		case EffectType_Steam:
 		{
-			entity = CreateEntityByName("env_steam");
+			entity = CBaseEntity(CreateEntityByName("env_steam"));
 		}
 		case EffectType_DynamicLight:
 		{
-			entity = CreateEntityByName("light_dynamic");
+			entity = CBaseEntity(CreateEntityByName("light_dynamic"));
 		}
 		case EffectType_Particle:
 		{
-			entity = CreateEntityByName("info_particle_system");
+			entity = CBaseEntity(CreateEntityByName("info_particle_system"));
 		}
 		case EffectType_Trail:
 		{
-			entity = CreateEntityByName("env_spritetrail");
+			entity = CBaseEntity(CreateEntityByName("env_spritetrail"));
 		}
 		case EffectType_PropDynamic:
 		{
-			entity = CreateEntityByName("prop_dynamic");
+			entity = CBaseEntity(CreateEntityByName("prop_dynamic"));
 		}
 		case EffectType_PointSpotlight:
 		{
-			entity = CreateEntityByName("sf2_point_spotlight");
+			entity = CBaseEntity(CreateEntityByName("sf2_point_spotlight"));
 		}
 		case EffectType_Sprite:
 		{
-			entity = CreateEntityByName("env_sprite");
+			entity = CBaseEntity(CreateEntityByName("env_sprite"));
 		}
 		case EffectType_TempEntBeamRing, EffectType_TempEntParticle, EffectType_Sound:
 		{
@@ -1029,18 +1029,18 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 	VectorTransform(effectPos, basePos, baseAng, effectPos);
 	AddVectors(effectAng, baseAng, effectAng);
 
-	if (entity != -1 && isEntity)
+	if (entity.IsValid() && isEntity)
 	{
-		TeleportEntity(entity, effectPos, effectAng, NULL_VECTOR);
-		DispatchKeyValueInt(entity, "renderamt", effect.FadeAlpha);
-		DispatchKeyValueInt(entity, "rendermode", view_as<int>(effect.RenderMode));
-		DispatchKeyValueInt(entity, "renderfx", view_as<int>(effect.RenderEffect));
-		DispatchKeyValueInt(entity, "spawnflags", effect.SpawnFlags);
+		entity.Teleport(effectPos, effectAng, NULL_VECTOR);
+		DispatchKeyValueInt(entity.index, "renderamt", effect.FadeAlpha);
+		DispatchKeyValueInt(entity.index, "rendermode", view_as<int>(effect.RenderMode));
+		DispatchKeyValueInt(entity.index, "renderfx", view_as<int>(effect.RenderEffect));
+		DispatchKeyValueInt(entity.index, "spawnflags", effect.SpawnFlags);
 		float lifeTime = effect.LifeTime;
 
 		char value[PLATFORM_MAX_PATH];
 		FormatEx(value, sizeof(value), "%s%u", section, EntIndexToEntRef(attacher));
-		SetEntPropString(entity, Prop_Data, "m_iName", value);
+		entity.SetPropString(Prop_Data, "m_iName", value);
 
 		if (effect.GetOutputs() != null)
 		{
@@ -1052,43 +1052,43 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 			case EffectType_Steam:
 			{
 				ProfileEffect_Steam steam = view_as<ProfileEffect_Steam>(effect);
-				DispatchKeyValueInt(entity, "SpreadSpeed", steam.SpreadSpeed);
-				DispatchKeyValueInt(entity, "Speed", steam.Speed);
-				DispatchKeyValueInt(entity, "StartSize", steam.StartSize);
-				DispatchKeyValueInt(entity, "EndSize", steam.EndSize);
-				DispatchKeyValueInt(entity, "Rate", steam.Rate);
-				DispatchKeyValueInt(entity, "Jetlength", steam.JetLength);
-				DispatchKeyValueFloat(entity, "RollSpeed", steam.RollSpeed);
-				DispatchKeyValueInt(entity, "type", steam.ParticleType);
-				DispatchSpawn(entity);
-				ActivateEntity(entity);
+				DispatchKeyValueInt(entity.index, "SpreadSpeed", steam.SpreadSpeed);
+				DispatchKeyValueInt(entity.index, "Speed", steam.Speed);
+				DispatchKeyValueInt(entity.index, "StartSize", steam.StartSize);
+				DispatchKeyValueInt(entity.index, "EndSize", steam.EndSize);
+				DispatchKeyValueInt(entity.index, "Rate", steam.Rate);
+				DispatchKeyValueInt(entity.index, "Jetlength", steam.JetLength);
+				entity.KeyValueFloat("RollSpeed", steam.RollSpeed);
+				DispatchKeyValueInt(entity.index, "type", steam.ParticleType);
+				entity.Spawn();
+				entity.Activate();
 			}
 			case EffectType_DynamicLight:
 			{
 				ProfileEffect_DynamicLight light = view_as<ProfileEffect_DynamicLight>(effect);
 				SetVariantInt(light.Brightness);
-				AcceptEntityInput(entity, "Brightness");
+				entity.AcceptInput("Brightness");
 				SetVariantFloat(light.Distance);
-				AcceptEntityInput(entity, "Distance");
+				entity.AcceptInput("Distance");
 				SetVariantFloat(light.Distance);
-				AcceptEntityInput(entity, "spotlight_radius");
+				entity.AcceptInput("spotlight_radius");
 				SetVariantInt(light.Cone);
-				AcceptEntityInput(entity, "cone");
-				DispatchSpawn(entity);
-				ActivateEntity(entity);
+				entity.AcceptInput("cone");
+				entity.Spawn();
+				entity.Activate();
 
 				int renderColor[4];
 				light.GetRenderColor(difficulty, renderColor);
 
-				SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
-				SetEntProp(entity, Prop_Data, "m_LightStyle", light.LightStyle);
+				entity.SetRenderColor(renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+				entity.SetProp(Prop_Data, "m_LightStyle", light.LightStyle);
 			}
 			case EffectType_Particle:
 			{
 				ProfileEffect_Particle particle = view_as<ProfileEffect_Particle>(effect);
 				char name[64];
 				particle.GetName(name, sizeof(name));
-				DispatchKeyValue(entity, "effect_name", name);
+				entity.KeyValue("effect_name", name);
 				if (particle.HasControlPoint)
 				{
 					int point = CreateEntityByName("info_particle_system"); // Sadly cannot use info_targets
@@ -1099,7 +1099,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 						TeleportEntity(point, pointPos);
 						FormatEx(value, sizeof(value), "%s%u_controlpoint", section, EntIndexToEntRef(attacher));
 						DispatchKeyValue(point, "targetname", value);
-						DispatchKeyValue(entity, "cpoint1", value);
+						entity.KeyValue("cpoint1", value);
 						if (lifeTime > 0.0)
 						{
 							CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(point), TIMER_FLAG_NO_MAPCHANGE);
@@ -1116,55 +1116,55 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 						}
 					}
 				}
-				DispatchSpawn(entity);
-				ActivateEntity(entity);
+				entity.Spawn();
+				entity.Activate();
 			}
 			case EffectType_Trail:
 			{
 				ProfileEffect_Trail trail = view_as<ProfileEffect_Trail>(effect);
 				char name[64];
 				trail.GetName(name, sizeof(name));
-				DispatchKeyValueFloat(entity, "lifetime", trail.Time);
-				DispatchKeyValueFloat(entity, "startwidth", trail.StartWidth);
-				DispatchKeyValueFloat(entity, "endwidth", trail.EndWidth);
-				DispatchKeyValue(entity, "spritename", name);
+				entity.KeyValueFloat("lifetime", trail.Time);
+				entity.KeyValueFloat("startwidth", trail.StartWidth);
+				entity.KeyValueFloat("endwidth", trail.EndWidth);
+				entity.KeyValue("spritename", name);
 				SetEntPropFloat(entity, Prop_Send, "m_flTextureRes", 0.05);
 
 				int renderColor[4];
 				trail.GetRenderColor(difficulty, renderColor);
 
-				SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
-				DispatchSpawn(entity);
-				ActivateEntity(entity);
+				entity.SetRenderColor(renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+				entity.Spawn();
+				entity.Activate();
 			}
 			case EffectType_PropDynamic:
 			{
 				ProfileEffect_PropDynamic prop = view_as<ProfileEffect_PropDynamic>(effect);
 				char name[64];
 				prop.GetName(name, sizeof(name));
-				DispatchKeyValue(entity, "model", name);
+				entity.KeyValue("model", name);
 				float modelScale = prop.Scale;
 				if (SF_SpecialRound(SPECIALROUND_TINYBOSSES) && modelScale != GetEntPropFloat(attacher, Prop_Send, "m_flModelScale") && !prop.AttachPlayer)
 				{
 					modelScale *= 0.5;
 				}
-				DispatchKeyValueFloat(entity, "modelscale", modelScale);
-				SetEntProp(entity, Prop_Send, "m_nSkin", prop.Skin);
-				SetEntProp(entity, Prop_Send, "m_fEffects", EF_BONEMERGE | EF_PARENT_ANIMATES);
+				entity.KeyValueFloat("modelscale", modelScale);
+				entity.SetProp(Prop_Send, "m_nSkin", prop.Skin);
+				entity.SetProp(Prop_Send, "m_fEffects", EF_BONEMERGE | EF_PARENT_ANIMATES);
 				char animation[64];
 				prop.GetAnimation(animation, sizeof(animation));
 				if (animation[0] != '\0')
 				{
 					SetVariantString(animation);
-					AcceptEntityInput(entity, "SetAnimation");
+					entity.AcceptInput("SetAnimation");
 				}
 
 				int renderColor[4];
 				prop.GetRenderColor(difficulty, renderColor);
 
-				SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
-				DispatchSpawn(entity);
-				ActivateEntity(entity);
+				entity.SetRenderColor(renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+				entity.Spawn();
+				entity.Activate();
 			}
 			case EffectType_PointSpotlight:
 			{
@@ -1213,23 +1213,23 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				ProfileEffect_Sprite sprite = view_as<ProfileEffect_Sprite>(effect);
 				char name[64];
 				sprite.GetName(name, sizeof(name));
-				DispatchKeyValue(entity, "classname", "env_sprite");
-				DispatchKeyValue(entity, "model", name);
-				DispatchKeyValueFloat(entity, "scale", sprite.Scale);
+				entity.KeyValue("classname", "env_sprite");
+				entity.KeyValue("model", name);
+				entity.KeyValueFloat("scale", sprite.Scale);
 
 				int renderColor[4];
 				sprite.GetRenderColor(difficulty, renderColor);
 
-				SetEntityRenderColor(entity, renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
+				entity.SetRenderColor(renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
 
-				DispatchSpawn(entity);
-				ActivateEntity(entity);
+				entity.Spawn();
+				entity.Activate();
 			}
 		}
 
 		if (lifeTime > 0.0)
 		{
-			CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(lifeTime, Timer_KillEntity, EntIndexToEntRef(entity.index), TIMER_FLAG_NO_MAPCHANGE);
 		}
 
 		if (!noParenting)
@@ -1241,7 +1241,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 			}
 
 			SetVariantString("!activator");
-			AcceptEntityInput(entity, "SetParent", attacher);
+			entity.AcceptInput("SetParent", attacher);
 			char attachment[64];
 			effect.GetAttachment(attachment, sizeof(attachment));
 			if (attachment[0] != '\0')
@@ -1249,11 +1249,11 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				SetVariantString(attachment);
 				if (effect.Type != EffectType_PropDynamic && effect.Type != EffectType_PointSpotlight)
 				{
-					AcceptEntityInput(entity, "SetParentAttachment");
+					entity.AcceptInput("SetParentAttachment");
 				}
 				else
 				{
-					AcceptEntityInput(entity, "SetParentAttachmentMaintainOffset");
+					entity.AcceptInput("SetParentAttachmentMaintainOffset");
 				}
 			}
 		}
@@ -1263,29 +1263,29 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 			case EffectType_Steam,
 				EffectType_DynamicLight:
 			{
-				AcceptEntityInput(entity, "TurnOn");
+				entity.AcceptInput("TurnOn");
 			}
 			case EffectType_Particle:
 			{
-				AcceptEntityInput(entity, "start");
+				entity.AcceptInput("start");
 			}
 			case EffectType_Trail:
 			{
-				AcceptEntityInput(entity, "showsprite");
+				entity.AcceptInput("showsprite");
 			}
 			case EffectType_PointSpotlight:
 			{
-				AcceptEntityInput(entity, "TurnOn");
+				entity.AcceptInput("TurnOn");
 			}
 			case EffectType_Sprite:
 			{
-				AcceptEntityInput(entity, "ShowSprite");
+				entity.AcceptInput("ShowSprite");
 			}
 		}
 
-		SDKHook(entity, SDKHook_SetTransmit, Hook_EffectTransmit);
-		g_EntityEffectType[entity] = effect.Type;
-		g_EntityEffectEvent[entity] = effect.Event;
+		SDKHook(entity.index, SDKHook_SetTransmit, Hook_EffectTransmit);
+		g_EntityEffectType[entity.index] = effect.Type;
+		g_EntityEffectEvent[entity.index] = effect.Event;
 
 		if (effect.GetInputs() != null)
 		{
@@ -1294,12 +1294,12 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 
 		if (!noParenting)
 		{
-			g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(entity));
+			g_NpcEffectsArray[bossIndex].Push(EntIndexToEntRef(entity.index));
 		}
 
 		if (output != null)
 		{
-			output.Push(EntIndexToEntRef(entity));
+			output.Push(EntIndexToEntRef(entity.index));
 		}
 	}
 	else

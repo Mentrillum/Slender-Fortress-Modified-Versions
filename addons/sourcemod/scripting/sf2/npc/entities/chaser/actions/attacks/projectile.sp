@@ -90,6 +90,31 @@ methodmap ChaserBossProfileProjectileAttack < ChaserBossProfileBaseAttack
 	{
 		this.GetString("fire_iceball_trail", buffer, bufferSize, ICEBALL_TRAIL);
 	}
+
+	public ProfileSound GetShootSounds()
+	{
+		ProfileObject obj = this.GetSection("sounds");
+		if (obj == null)
+		{
+			return null;
+		}
+
+		ProfileSound sound = view_as<ProfileSound>(obj.GetSection("shoot"));
+		if (sound == null)
+		{
+			return null;
+		}
+
+		return sound;
+	}
+
+	public void Precache()
+	{
+		if (this.GetShootSounds() != null)
+		{
+			this.GetShootSounds().Precache();
+		}
+	}
 }
 
 static NextBotActionFactory g_Factory;
@@ -209,13 +234,14 @@ static int Update(SF2_ChaserAttackAction_Projectile action, SF2_ChaserEntity act
 		return action.Done("No longer firing projectiles");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
 	ChaserBossProfileProjectileAttack attackData = action.ProfileData;
+	ProfileMasterAnimations animations = attackData.GetAnimations();
 	int difficulty = controller.Difficulty;
 
 	float gameTime = GetGameTime();
@@ -223,7 +249,7 @@ static int Update(SF2_ChaserAttackAction_Projectile action, SF2_ChaserEntity act
 	if (action.NextFireTime >= 0.0 && gameTime > action.NextFireTime && attackData.GetEventNumber(difficulty) == -1)
 	{
 		FireProjectile(actor, action, action.GetAttackName());
-		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_ProjectileShoot], _, action.GetAttackName());
+		actor.ResetProfileAnimation(animations == null ? g_SlenderAnimationsList[SF2BossAnimation_ProjectileShoot] : "shoot", .preDefinedName = animations == null ? action.GetAttackName() : "", .animations = animations);
 
 		int repeatState = attackData.GetRepeatState(difficulty);
 		if (repeatState > 0)
@@ -287,8 +313,12 @@ static void FireProjectile(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Projec
 		attackWaiters = true;
 	}
 
-	ProfileSound soundInfo;
-	if (actor.SearchSoundsWithSectionName(data.GetProjectileShootSounds(), attackName, soundInfo, "attackshootprojectile"))
+	ProfileSound soundInfo = attackData.GetShootSounds();
+	if (soundInfo == null)
+	{
+		actor.SearchSoundsWithSectionName(data.GetProjectileShootSounds(), attackName, soundInfo, "attackshootprojectile");
+	}
+	if (soundInfo != null)
 	{
 		soundInfo.EmitSound(_, actor.index);
 	}
@@ -325,9 +355,9 @@ static void FireProjectile(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Projec
 			case SF2BossProjectileType_Iceball:
 			{
 				char trail[PLATFORM_MAX_PATH], explode[PLATFORM_MAX_PATH], slow[PLATFORM_MAX_PATH];
-				attackData.GetFireballTrail(trail, sizeof(trail));
+				attackData.GetIceballTrail(trail, sizeof(trail));
 				projectileData.GetFireballExplodeSound(explode, sizeof(explode));
-				projectileData.GetIceballSlowSound(explode, sizeof(explode));
+				projectileData.GetIceballSlowSound(slow, sizeof(slow));
 				SF2_ProjectileIceball.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
 					attackData.GetBlastRadius(difficulty), explode, trail, attackData.GetIceballSlowDuration(difficulty), attackData.GetIceballSlowPercent(difficulty), slow, attackWaiters);
 			}
@@ -359,7 +389,7 @@ static void FireProjectile(SF2_ChaserEntity actor, SF2_ChaserAttackAction_Projec
 			case SF2BossProjectileType_Arrow:
 			{
 				SF2_ProjectileArrow.Create(actor, effectPos, angle, attackData.GetSpeed(difficulty), attackData.GetDamage(difficulty),
-					attackData.GetCrits(difficulty), "pipebombtrail_blue", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
+					attackData.GetCrits(difficulty), "effects/arrowtrail_red.vmt", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
 			}
 			case SF2BossProjectileType_Baseball:
 			{

@@ -1200,7 +1200,7 @@ float ComputeShakeAmplitude(float center[3], float playerPos[3], float amplitude
 /**
  *	Converts a given timestamp into hours, minutes, and seconds.
  */
-void FloatToTimeHMS(float time, int &h=0, int &m=0, int &s=0)
+void FloatToTimeHMS(float time, int &h = 0, int &m = 0, int &s = 0)
 {
 	s = RoundFloat(time);
 	h = s / 3600;

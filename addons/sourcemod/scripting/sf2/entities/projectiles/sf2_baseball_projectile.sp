@@ -70,6 +70,7 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 		ball.Type = SF2BossProjectileType_Baseball;
 		ball.Speed = speed;
 		ball.Damage = damage;
+		ball.IsCrits = isCrits;
 		if (ball.IsCrits)
 		{
 			CBaseEntity critParticle = ball.CreateParticle("critical_rocket_blue");

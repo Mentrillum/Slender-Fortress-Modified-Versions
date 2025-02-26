@@ -44,6 +44,8 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineEntityField("m_OldTarget")
 			.DefineIntField("m_InterruptConditions")
 			.DefineBoolField("m_IsJumping")
+			.DefineFloatField("m_AirTime")
+			.DefineBoolField("m_CanLand")
 			.DefineBoolField("m_IsEntityVisible", 2049)
 			.DefineBoolField("m_IsEntityInFOV", 2049)
 			.DefineBoolField("m_IsEntityNear", 2049)
@@ -184,6 +186,32 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "m_IsJumping", value);
+		}
+	}
+
+	property float AirTime
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_AirTime");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_AirTime", value);
+		}
+	}
+
+	property bool CanLand
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_CanLand") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_CanLand", value);
 		}
 	}
 
@@ -564,8 +592,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		CreateNative("SF2_BaseBossEntity.ResetProfileAnimation", Native_ResetProfileAnimation);
 	}
 
-	public int SelectProfileAnimation(const char[] animType, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepInterval = 0.0,
-										int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0, bool &sync = false)
+	public int SelectProfileAnimation(const char[] animType, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepInterval = 0.0, int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0, bool &sync = false, ProfileMasterAnimations animations = null)
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
 		int difficulty = controller.Difficulty;
@@ -599,7 +626,12 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			}
 		}
 
-		section = controller.GetProfileData().GetAnimations().GetAnimation(animType, preDefinedIndex, preDefinedName, index);
+		if (animations == null)
+		{
+			animations = controller.GetProfileData().GetAnimations();
+		}
+
+		section = animations.GetAnimation(animType, preDefinedIndex, preDefinedName, index);
 
 		if (section == null)
 		{
@@ -629,14 +661,18 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		return sequence;
 	}
 
-	public int SelectProfileGesture(int definedIndex = -1, const char[] definedName = "", const char[] animType, float &rate = 1.0, float &cycle = 0.0)
+	public int SelectProfileGesture(int definedIndex = -1, const char[] definedName = "", const char[] animType, float &rate = 1.0, float &cycle = 0.0, ProfileMasterAnimations animations = null)
 	{
 		SF2NPC_BaseNPC controller = view_as<SF2NPC_BaseNPC>(this.Controller);
 		int difficulty = GetLocalGlobalDifficulty(controller.Index);
 
 		char gesture[64];
 
-		ProfileAnimation section = controller.GetProfileData().GetAnimations().GetAnimation(animType, definedIndex, definedName);
+		if (animations == null)
+		{
+			animations = controller.GetProfileData().GetAnimations();
+		}
+		ProfileAnimation section = animations.GetAnimation(animType, definedIndex, definedName);
 
 		if (section == null)
 		{
@@ -657,7 +693,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		return sequence;
 	}
 
-	public bool ResetProfileAnimation(const char[] animType, int preDefinedIndex = -1, const char[] preDefinedName = "", float &duration = 0.0, const char[] posture = NULL_STRING, int& sequence = -1, float &rate = 1.0, float &cycle = 0.0)
+	public bool ResetProfileAnimation(const char[] animType, int preDefinedIndex = -1, const char[] preDefinedName = "", float &duration = 0.0, const char[] posture = NULL_STRING, int& sequence = -1, float &rate = 1.0, float &cycle = 0.0, ProfileMasterAnimations animations = null)
 	{
 		if (this.Controller.IsValid() && (this.Controller.Flags & SFF_MARKEDASFAKE) != 0)
 		{
@@ -668,7 +704,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		int index = 0;
 		char animation[64];
 
-		sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation), sync);
+		sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation), sync, animations);
 		if (sequence == -1)
 		{
 			return false;
@@ -694,7 +730,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			bool isMovement = strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Walk]) == 0 ||
 							strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Run]) == 0;
 
-			bool shouldLoop = isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0;
+			bool shouldLoop = isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0 || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Air]) == 0;
 			if (sequence != this.GetProp(Prop_Send, "m_nSequence"))
 			{
 				this.ResetSequence(sequence);
@@ -721,10 +757,10 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		return true;
 	}
 
-	public bool AddGesture(const char[] animType, int definedIndex = -1, const char[] definedName = "")
+	public bool AddGesture(const char[] animType, int definedIndex = -1, const char[] definedName = "", ProfileMasterAnimations animations = null)
 	{
 		float rate = 1.0, duration = 0.0, cycle = 0.0;
-		int sequence = this.SelectProfileGesture(definedIndex, definedName, animType, rate, cycle);
+		int sequence = this.SelectProfileGesture(definedIndex, definedName, animType, rate, cycle, animations);
 		if (sequence == -1)
 		{
 			return false;

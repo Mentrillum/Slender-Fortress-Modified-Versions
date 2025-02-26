@@ -72,6 +72,7 @@ methodmap SF2_ProjectileArrow < SF2_ProjectileBase
 		arrow.Type = SF2BossProjectileType_Arrow;
 		arrow.Speed = speed;
 		arrow.Damage = damage;
+		arrow.IsCrits = isCrits;
 		if (arrow.IsCrits)
 		{
 			CBaseEntity critParticle = arrow.CreateParticle("critical_rocket_blue");
@@ -88,7 +89,7 @@ methodmap SF2_ProjectileArrow < SF2_ProjectileBase
 		arrow.SetMoveType(MOVETYPE_FLYGRAVITY);
 		arrow.SetProp(Prop_Send, "m_usSolidFlags", 12);
 		arrow.Teleport(pos, ang, NULL_VECTOR);
-		arrow.CreateTrail(true, "effects/arrowtrail_red.vmt", "255", "1");
+		arrow.CreateTrail(true, trail, "255", "1");
 		arrow.SetVelocity();
 
 		SDKHook(arrow.index, SDKHook_StartTouch, StartTouch);

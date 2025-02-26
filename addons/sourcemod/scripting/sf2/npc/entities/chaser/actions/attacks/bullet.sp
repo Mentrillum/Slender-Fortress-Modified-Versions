@@ -31,6 +31,31 @@ methodmap ChaserBossProfileBulletAttack < ChaserBossProfileBaseAttack
 		this.GetVector("bullet_offset", buffer, buffer);
 		this.GetVector("attack_bullet_offset", buffer, buffer);
 	}
+
+	public ProfileSound GetShootSounds()
+	{
+		ProfileObject obj = this.GetSection("sounds");
+		if (obj == null)
+		{
+			return null;
+		}
+
+		ProfileSound sound = view_as<ProfileSound>(obj.GetSection("shoot"));
+		if (sound == null)
+		{
+			return null;
+		}
+
+		return sound;
+	}
+
+	public void Precache()
+	{
+		if (this.GetShootSounds() != null)
+		{
+			this.GetShootSounds().Precache();
+		}
+	}
 }
 
 static NextBotActionFactory g_Factory;
@@ -150,7 +175,7 @@ static int Update(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntity actor, 
 		return action.Done("No longer firing bullets");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}
@@ -206,8 +231,12 @@ static void DoBulletAttack(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntit
 	ChaserBossProfileBulletAttack attackData = action.ProfileData;
 
 	float spread = attackData.GetBulletSpread(difficulty);
-	ProfileSound soundInfo;
-	if (actor.SearchSoundsWithSectionName(data.GetBulletShootSounds(), attackName, soundInfo, "bulletshoot"))
+	ProfileSound soundInfo = attackData.GetShootSounds();
+	if (soundInfo == null)
+	{
+		actor.SearchSoundsWithSectionName(data.GetBulletShootSounds(), attackName, soundInfo, "bulletshoot");
+	}
+	if (soundInfo != null)
 	{
 		soundInfo.EmitSound(_, actor.index);
 	}

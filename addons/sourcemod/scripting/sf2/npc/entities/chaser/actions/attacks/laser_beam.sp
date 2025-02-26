@@ -196,7 +196,7 @@ static int Update(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity actor, f
 		return action.Done("No longer firing my super laser beam");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}

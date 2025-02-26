@@ -103,7 +103,7 @@ static void EntityDestroyed(CBaseEntity ent, const char[] classname)
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC.FromEntity(ent.index);
 	if (controller.IsValid())
 	{
-		NPCOnDespawn(controller, ent);
+		NPCOnDespawn(controller, view_as<CBaseCombatCharacter>(ent));
 	}
 }
 
@@ -202,7 +202,7 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 	}
 }
 
-void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
+void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseCombatCharacter entity)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
@@ -254,7 +254,7 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
 
 	if (data.GetDespawnInputs() != null)
 	{
-		data.GetDespawnInputs().AcceptInputs(entity.index);
+		data.GetDespawnInputs().AcceptInputs(entity);
 	}
 
 	char sound[PLATFORM_MAX_PATH];
@@ -939,6 +939,13 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 				}
 			}
 		}
+
+		if (profileData.GetRedCameraOverlays() != null)
+		{
+			char value[PLATFORM_MAX_PATH];
+			profileData.GetRedCameraOverlays().GetString(GetRandomInt(0, profileData.GetRedCameraOverlays().Length - 1), value, sizeof(value));
+			profileData.SetActiveRedCameraOverlay(value);
+		}
 	}
 
 	Call_StartForward(g_OnBossAddedFwd);
@@ -1531,7 +1538,12 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 
 	if (data.GetOutputs() != null)
 	{
-		data.GetOutputs().AddOutputs(entity.index);
+		data.GetOutputs().AddOutputs(entity);
+	}
+
+	if (data.GetSpawnInputs() != null)
+	{
+		data.GetSpawnInputs().AcceptInputs(entity);
 	}
 
 	int master = g_SlenderCopyMaster[bossIndex];
@@ -1555,11 +1567,6 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	float teleportTime = GetRandomFloat(data.GetMinTeleportTime(difficulty), data.GetMaxTeleportTime(difficulty));
 	g_SlenderNextTeleportTime[bossIndex] = GetGameTime() + teleportTime;
 
-	if (data.GetSpawnInputs() != null)
-	{
-		data.GetSpawnInputs().AcceptInputs(entity.index);
-	}
-
 	// Call our forward.
 	Call_StartForward(g_OnBossSpawnFwd);
 	Call_PushCell(bossIndex);
@@ -1568,17 +1575,6 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 	Call_StartForward(g_OnBossSpawnPFwd);
 	Call_PushCell(npc);
 	Call_Finish();
-}
-
-bool ClimbUpCBase(CBaseNPC_Locomotion loco, const float goal[3], const float fwd[3], int entity)
-{
-	INextBot bot = loco.GetBot();
-	SF2_BaseBoss boss = SF2_BaseBoss(bot.GetEntity());
-	if (boss.IsValid())
-	{
-		boss.IsJumping = true;
-	}
-	return loco.CallBaseFunction(goal, fwd, entity);
 }
 
 MRESReturn CBaseAnimating_HandleAnimEvent(int thisInt, DHookParam params)

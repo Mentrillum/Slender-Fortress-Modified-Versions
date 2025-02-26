@@ -1039,6 +1039,7 @@ static Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 
 	return Plugin_Continue;
 }
+
 bool IsClientInPvP(int client)
 {
 	return g_PlayerInPvP[client];

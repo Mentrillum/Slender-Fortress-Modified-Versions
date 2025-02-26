@@ -26,6 +26,11 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		}
 	}
 
+	public bool IsEnabled(int difficulty)
+	{
+		return this.GetDifficultyBool("enabled", difficulty, true);
+	}
+
 	public bool CanUseWithPosture(const char[] posture)
 	{
 		bool ret = true;
@@ -57,6 +62,11 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 			def = this.GetBool("attack_props", def);
 			return def;
 		}
+	}
+
+	public bool ShouldAutoAim(int difficulty)
+	{
+		return this.GetDifficultyBool("autoaim", difficulty, true);
 	}
 
 	property int UseOnDifficulty
@@ -421,14 +431,6 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return this.GetDifficultyBool("invulnerable", difficulty, false);
 	}
 
-	public bool ShouldNotAlwaysLook(int difficulty)
-	{
-		bool def = false;
-		def = this.GetDifficultyBool("ignore_always_looking", difficulty, def);
-		def = this.GetDifficultyBool("attack_ignore_always_looking", difficulty, def);
-		return def;
-	}
-
 	public bool ShouldNotInterruptChaseInitial(int difficulty)
 	{
 		return this.GetDifficultyBool("dont_interrupt_chaseinitial", difficulty, false);
@@ -570,12 +572,12 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetStartInputs()
+	public ProfileInputsList GetStartInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("start"));
+			return view_as<ProfileInputsList>(obj.GetSection("start"));
 		}
 		return null;
 	}
@@ -592,12 +594,12 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetHitInputs()
+	public ProfileInputsList GetHitInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("hit"));
+			return view_as<ProfileInputsList>(obj.GetSection("hit"));
 		}
 		return null;
 	}
@@ -614,12 +616,12 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetMissInputs()
+	public ProfileInputsList GetMissInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("miss"));
+			return view_as<ProfileInputsList>(obj.GetSection("miss"));
 		}
 		return null;
 	}
@@ -636,12 +638,12 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetOnKillInputs()
+	public ProfileInputsList GetOnKillInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_kill"));
+			return view_as<ProfileInputsList>(obj.GetSection("on_kill"));
 		}
 		return null;
 	}
@@ -748,6 +750,29 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 				{
 					effect.Precache();
 				}
+			}
+		}
+
+		switch (this.Type)
+		{
+			case SF2BossAttackType_Ranged:
+			{
+				view_as<ChaserBossProfileBulletAttack>(this).Precache();
+			}
+
+			case SF2BossAttackType_Projectile:
+			{
+				view_as<ChaserBossProfileProjectileAttack>(this).Precache();
+			}
+
+			case SF2BossAttackType_Tongue:
+			{
+				view_as<ChaserBossProfileTongueAttack>(this).Precache();
+			}
+
+			case SF2BossAttackType_Combo:
+			{
+				view_as<ChaserBossProfileComboAttack>(this).Precache();
 			}
 		}
 	}
@@ -1093,7 +1118,7 @@ methodmap BossProfileDamageEffect_Smite < BossProfileDamageEffect
 		{
 			return;
 		}
-		this.GetString("hit_sound", buffer, bufferSize);
+		this.GetString("hit_sound", buffer, bufferSize, SOUND_THUNDER);
 	}
 }
 
@@ -1242,6 +1267,7 @@ methodmap BossProfileShockwave < ProfileObject
 #include "attacks/explosive_dance.sp"
 #include "attacks/custom.sp"
 #include "attacks/tongue.sp"
+#include "attacks/combo.sp"
 #include "attacks/forward_based.sp"
 
 static NextBotActionFactory g_Factory;
@@ -1292,6 +1318,7 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 		SF2_ChaserAttackAction_Laser.Initialize();
 		SF2_ChaserAttackAction_Custom.Initialize();
 		SF2_ChaserAttackAction_Tongue.Initialize();
+		SF2_ChaserAttackAction_Combo.Initialize();
 		SF2_ChaserAttackAction_ForwardBased.Initialize();
 	}
 
@@ -1517,7 +1544,7 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 
 	if (attackData.GetStartInputs() != null)
 	{
-		attackData.GetStartInputs().AcceptInputs(actor.index);
+		attackData.GetStartInputs().AcceptInputs(actor);
 	}
 
 	if (attackData.GetRunSpeed(difficulty) <= 0.0)
@@ -1536,24 +1563,39 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 		return action.Continue();
 	}
 
-	actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
-
 	ProfileSound info;
-	if (actor.SearchSoundsWithSectionName(data.GetAttackBeginSounds(), action.GetAttackName(), info, "attack_begin"))
+	if (attackData.GetStartSounds() == null && attackData.GetBeginSounds() == null)
 	{
-		action.PlayedBeginVoice = actor.PerformVoice(SF2BossSound_AttackBegin, action.GetAttackName());
+		actor.SearchSoundsWithSectionName(data.GetAttackBeginSounds(), action.GetAttackName(), info, "attack_begin");
+		if (info != null)
+		{
+			action.PlayedBeginVoice = actor.PerformVoice(SF2BossSound_AttackBegin, action.GetAttackName());
+		}
+		else
+		{
+			actor.PerformVoice(SF2BossSound_Attack, action.GetAttackName());
+			action.PlayedBeginVoice = true;
+		}
 	}
 	else
 	{
-		actor.PerformVoice(SF2BossSound_Attack, action.GetAttackName());
-		action.PlayedBeginVoice = true;
+		if (attackData.GetBeginSounds() != null)
+		{
+			action.PlayedBeginVoice = actor.PerformVoiceCooldown(attackData.GetBeginSounds(), attackData.GetBeginSounds().Paths);
+		}
+		else
+		{
+			actor.PerformVoiceCooldown(attackData.GetStartSounds(), attackData.GetStartSounds().Paths);
+			action.PlayedBeginVoice = true;
+		}
 	}
 
 	NextBotAction newAction = actor.IsAttackTransitionPossible(action.GetAttackName());
 	action.ShouldReplayAnimation = newAction != NULL_ACTION;
 	if (newAction == NULL_ACTION)
 	{
-		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
+		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], .preDefinedName = attackData.GetAnimations() == null ? action.GetAttackName() : "", .animations = attackData.GetAnimations());
+		actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Attack], .definedName = attackData.GetAnimations() == null ? action.GetAttackName() : "", .animations = attackData.GetAnimations());
 	}
 	return newAction != NULL_ACTION ? action.SuspendFor(newAction) : action.Continue();
 }
@@ -1639,12 +1681,16 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 		return action.Continue();
 	}
 
-	ProfileSound info;
+	ProfileSound info = attackData.GetLoopSounds();
 	char value[PLATFORM_MAX_PATH];
 	value = action.GetLoopSound();
 	if (value[0] == '\0')
 	{
-		if (actor.SearchSoundsWithSectionName(data.GetAttackLoopSounds(), action.GetAttackName(), info, "attack_loop"))
+		if (info == null)
+		{
+			actor.SearchSoundsWithSectionName(data.GetAttackLoopSounds(), action.GetAttackName(), info, "attack_loop");
+		}
+		if (info != null)
 		{
 			char sound[PLATFORM_MAX_PATH];
 			info.EmitSound(_, actor.index, _, _, _, sound);
@@ -1658,12 +1704,19 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 
 	action.EndTime -= interval;
 
-	if (action.ActiveChild == NULL_ACTION || action.EndTime <= 0.0 || end)
+	if (action.ActiveChild == NULL_ACTION || (action.EndTime > -1.0 && action.EndTime <= 0.0) || end)
 	{
 		NextBotAction newAction = actor.IsAttackTransitionPossible(action.GetAttackName(), true);
 		if (!action.DidEndAnimation && newAction != NULL_ACTION)
 		{
-			actor.PerformVoice(SF2BossSound_AttackEnd, action.GetAttackName());
+			if (attackData.GetEndSounds() == null)
+			{
+				actor.PerformVoice(SF2BossSound_AttackEnd, action.GetAttackName());
+			}
+			else
+			{
+				actor.PerformVoiceCooldown(attackData.GetEndSounds(), attackData.GetEndSounds().Paths);
+			}
 			action.DidEndAnimation = true;
 			if (newAction != NULL_ACTION)
 			{
@@ -1697,15 +1750,24 @@ static int OnSuspend(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, Next
 
 static int OnResume(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
+	ChaserBossProfileBaseAttack attackData = action.ProfileData;
+	ProfileMasterAnimations animations = attackData.GetAnimations();
 	if (!action.PlayedBeginVoice)
 	{
-		actor.PerformVoice(SF2BossSound_Attack, action.GetAttackName());
+		if (attackData.GetStartSounds() == null)
+		{
+			actor.PerformVoice(SF2BossSound_Attack, action.GetAttackName());
+		}
+		else
+		{
+			actor.PerformVoiceCooldown(attackData.GetStartSounds(), attackData.GetStartSounds().Paths);
+		}
 		action.PlayedBeginVoice = true;
 	}
 	if (action.ShouldReplayAnimation)
 	{
-		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
-		actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Attack], _, action.GetAttackName());
+		actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Attack], .preDefinedName = animations == null ? action.GetAttackName() : "", .animations = animations);
+		actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Attack], .definedName = animations == null ? action.GetAttackName() : "", .animations = animations);
 		action.ShouldReplayAnimation = false;
 	}
 

@@ -513,7 +513,12 @@ methodmap ChaserBossProfile < BaseBossProfile
 
 	public ProfileSound GetHurtSounds()
 	{
-		return view_as<ProfileSound>(this.GetSection("sound_hurt"));
+		return view_as<ProfileSound>(this.GetSection(g_SlenderVoiceList[SF2BossSound_Hurt]));
+	}
+
+	public ProfileSound GetJumpSounds()
+	{
+		return view_as<ProfileSound>(this.GetSection(g_SlenderVoiceList[SF2BossSound_Jump]));
 	}
 
 	public ProfileSound GetDeathSounds()
@@ -604,6 +609,28 @@ methodmap ChaserBossProfile < BaseBossProfile
 	public void Precache()
 	{
 		char path[PLATFORM_MAX_PATH];
+
+		ProfileObject obj = this.GetSection("attacks");
+		if (obj != null)
+		{
+			KeyMap_Array attackNames = new KeyMap_Array(Key_Type_Value);
+			this.SetSection("__chaser_attack_names", attackNames);
+			this.SetType("__chaser_attack_names", Key_Type_Section);
+			attackNames.Parent = this;
+
+			for (int i = 0; i < obj.SectionLength; i++)
+			{
+				char name[64];
+				obj.GetSectionNameFromIndex(i, name, sizeof(name));
+
+				ChaserBossProfileBaseAttack attack = view_as<ChaserBossProfileBaseAttack>(obj.GetSection(name));
+				if (attack != null)
+				{
+					attackNames.PushString(name);
+				}
+			}
+		}
+
 		// ========================
 		// LEGACY KEY CONVERSION
 		// ========================
@@ -1033,27 +1060,25 @@ methodmap ChaserBossProfile < BaseBossProfile
 			}
 		}
 
-		if (this.GetSection("attacks") != null)
+		temp = this.GetSection("attacks");
+		if (temp != null)
 		{
-			if (this.GetAttackSounds() != null)
+			for (int i = 0; i < this.GetAttackCount(); i++)
 			{
-				ProfileObject obj = this.GetAttackSounds().GetSection("paths");
-				if (obj != null)
-				{
-					for (int i = 0; i < this.GetAttackCount(); i++)
-					{
-						ChaserBossProfileBaseAttack attack = this.GetAttackFromIndex(i);
-					}
-				}
-				else
-				{
-					if (this.GetAttackSounds().SectionLength > 0)
-					{
+				ChaserBossProfileBaseAttack attack = this.GetAttackFromIndex(i);
 
-					}
-					else
-					{
+				keys.Clear();
+				keys.PushString("ignore_always_looking");
+				keys.PushString("attack_ignore_always_looking");
 
+				if (this.GetAttributes() != null && (this.GetAttributes().GetValue(SF2Attribute_AlwaysLookAtTargetWhileAttacking) >= 0.0 || this.GetAttributes().GetValue(SF2Attribute_AlwaysLookAtTarget) >= 0.0))
+				{
+					for (int i2 = 0; i2 < Difficulty_Max; i2++)
+					{
+						if (!attack.ContainsAnyDifficultyKey(keys, i2))
+						{
+							attack.SetDifficultyBool("autoaim", i2, true);
+						}
 					}
 				}
 			}
@@ -1125,6 +1150,64 @@ methodmap ChaserBossProfile < BaseBossProfile
 			}
 		}
 
+		if (this.GetBool("player_damage_effects"))
+		{
+			if (this.GetBool("player_damage_random_effects"))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Random);
+			}
+
+			if (this.GetBool("player_jarate_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Jarate);
+			}
+
+			if (this.GetBool("player_milk_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Milk);
+			}
+
+			if (this.GetBool("player_gas_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Gas);
+			}
+
+			if (this.GetBool("player_mark_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Mark);
+			}
+
+			if (this.GetBool("player_silent_mark_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Mark, true);
+			}
+
+			if (this.GetBool("player_ignite_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Ignite);
+			}
+
+			if (this.GetBool("player_stun_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Stun);
+			}
+
+			if (this.GetBool("player_bleed_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Bleed);
+			}
+
+			if (this.GetBool("player_electric_slow_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Stun, true);
+			}
+
+			if (this.GetBool("player_smite_on_hit", false))
+			{
+				this.LoadLegacyEffects(SF2DamageType_Smite);
+			}
+		}
+
 		if (this.GetProjectiles() != null)
 		{
 			this.GetProjectiles().Precache();
@@ -1182,6 +1265,15 @@ methodmap ChaserBossProfile < BaseBossProfile
 				this.GetHurtSounds().SetDefaultChannel(SNDCHAN_VOICE);
 			}
 			this.GetHurtSounds().Precache();
+		}
+
+		if (this.GetJumpSounds() != null)
+		{
+			if (this.NormalSoundHook)
+			{
+				this.GetJumpSounds().SetDefaultChannel(SNDCHAN_VOICE);
+			}
+			this.GetJumpSounds().Precache();
 		}
 
 		if (this.GetDeathSounds() != null)
@@ -1338,23 +1430,13 @@ methodmap ChaserBossProfile < BaseBossProfile
 
 		this.PrecacheAttackSounds(this.GetProjectileShootSounds(), "attackshootprojectile", false);
 
-		ProfileObject obj = this.GetSection("attacks");
-		if (obj != null)
+		if (this.GetSection("attacks") != null)
 		{
-			KeyMap_Array attackNames = new KeyMap_Array(Key_Type_Value);
-			this.SetSection("__chaser_attack_names", attackNames);
-			this.SetType("__chaser_attack_names", Key_Type_Section);
-			attackNames.Parent = this;
-
-			for (int i = 0; i < obj.SectionLength; i++)
+			for (int i = 0; i < this.GetAttackCount(); i++)
 			{
-				char name[64];
-				obj.GetSectionNameFromIndex(i, name, sizeof(name));
-
-				ChaserBossProfileBaseAttack attack = view_as<ChaserBossProfileBaseAttack>(obj.GetSection(name));
+				ChaserBossProfileBaseAttack attack = this.GetAttackFromIndex(i);
 				if (attack != null)
 				{
-					attackNames.PushString(name);
 					attack.Precache();
 				}
 			}
@@ -1442,6 +1524,420 @@ methodmap ChaserBossProfile < BaseBossProfile
 							view_as<ProfileSound>(obj).SetDefaultChannel(SNDCHAN_VOICE);
 						}
 						view_as<ProfileSound>(obj).Precache();
+					}
+				}
+			}
+		}
+	}
+
+	// #define THIS_IS_A_FUCKING_MESS
+	public void LoadLegacyEffects(int type = SF2DamageType_Jarate, bool alt = false)
+	{
+		char key[64], path[PLATFORM_MAX_PATH];
+		bool attach = this.GetBool("player_attach_particle", true);
+		char flag[32];
+		flag[0] = '\0';
+		switch (this.GetInt("player_stun_type", 0))
+		{
+			case 1:
+			{
+				flag = "slow";
+			}
+
+			case 2:
+			{
+				flag = "loser";
+			}
+
+			case 3:
+			{
+				flag = "no_fx stuck";
+			}
+
+			case 4:
+			{
+				flag = "boo";
+			}
+		}
+
+		switch (type)
+		{
+			case SF2DamageType_Bleed:
+			{
+				key = "player_bleed_attack_indexs";
+			}
+
+			case SF2DamageType_Gas:
+			{
+				key = "player_gas_attack_indexs";
+			}
+
+			case SF2DamageType_Ignite:
+			{
+				key = "player_ignite_attack_indexs";
+			}
+
+			case SF2DamageType_Jarate:
+			{
+				key = "player_jarate_attack_indexs";
+			}
+
+			case SF2DamageType_Mark:
+			{
+				key = "player_mark_attack_indexs";
+				if (alt)
+				{
+					key = "player_silent_mark_attack_indexs";
+				}
+			}
+
+			case SF2DamageType_Milk:
+			{
+				key = "player_milk_attack_indexs";
+			}
+
+			case SF2DamageType_Random:
+			{
+				key = "player_random_attack_indexes";
+			}
+
+			case SF2DamageType_Smite:
+			{
+				key = "player_smite_attack_indexs";
+			}
+
+			case SF2DamageType_Stun:
+			{
+				key = "player_stun_attack_indexs";
+				if (alt)
+				{
+					key = "player_electrocute_attack_indexs";
+				}
+			}
+		}
+
+		char indexes[128], index[64][64];
+		this.GetString(key, indexes, sizeof(indexes), "1");
+		int nums = ExplodeString(indexes, " ", index, sizeof(index), sizeof(index));
+
+		for (int i = 0; i < this.GetAttackCount(); i++)
+		{
+			ChaserBossProfileBaseAttack attack = this.GetAttackFromIndex(i);
+			ProfileObject temp = attack.InsertNewSection("apply_conditions");
+
+			char name[64];
+			attack.GetSectionName(name, sizeof(name));
+			for (int i2 = 0; i2 < nums; i2++)
+			{
+				if (strcmp(name, index[i2]) != 0)
+				{
+					continue;
+				}
+
+				BossProfileDamageEffect damageEffect = null;
+				switch (type)
+				{
+					case SF2DamageType_Bleed:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("bleed"));
+					}
+
+					case SF2DamageType_Gas:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("gas"));
+					}
+
+					case SF2DamageType_Ignite:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("ignite"));
+					}
+
+					case SF2DamageType_Jarate:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("jarate"));
+					}
+
+					case SF2DamageType_Mark:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("mark"));
+					}
+
+					case SF2DamageType_Milk:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("milk"));
+					}
+
+					case SF2DamageType_Random:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("random"));
+					}
+
+					case SF2DamageType_Smite:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("smite"));
+					}
+
+					case SF2DamageType_Stun:
+					{
+						damageEffect = view_as<BossProfileDamageEffect>(temp.InsertNewSection("stun"));
+					}
+				}
+
+				if (damageEffect == null)
+				{
+					continue;
+				}
+
+				switch (damageEffect.Type)
+				{
+					case SF2DamageType_Bleed:
+					{
+						key = "player_bleed_duration";
+					}
+
+					case SF2DamageType_Gas:
+					{
+						key = "player_gas_duration";
+					}
+
+					case SF2DamageType_Ignite:
+					{
+						key = "player_ignite_duration";
+					}
+
+					case SF2DamageType_Jarate:
+					{
+						key = "player_jarate_duration";
+					}
+
+					case SF2DamageType_Mark:
+					{
+						key = "player_mark_duration";
+						if (alt)
+						{
+							key = "player_silent_mark_duration";
+						}
+					}
+
+					case SF2DamageType_Milk:
+					{
+						key = "player_milk_duration";
+					}
+
+					case SF2DamageType_Random:
+					{
+						key = "player_random_duration";
+					}
+
+					case SF2DamageType_Stun:
+					{
+						key = "player_stun_duration";
+						if (alt)
+						{
+							key = "player_electric_slow_duration";
+						}
+					}
+
+					default:
+					{
+						key[0] = '\0';
+					}
+				}
+
+				if (key[0] != '\0')
+				{
+					for (int i3 = 0; i3 < Difficulty_Max; i3++)
+					{
+						damageEffect.SetDifficultyFloat("duration", i3, this.GetDifficultyFloat(key, i3, 8.0));
+					}
+				}
+
+				if (type == SF2DamageType_Mark && alt)
+				{
+					for (int i3 = 0; i3 < Difficulty_Max; i3++)
+					{
+						damageEffect.SetDifficultyBool("silent", i3, true);
+					}
+				}
+
+				if (type == SF2DamageType_Stun)
+				{
+					if (alt)
+					{
+						key = "player_electric_slow_slowdown";
+					}
+					else
+					{
+						key = "player_stun_slowdown";
+					}
+
+					for (int i3 = 0; i3 < Difficulty_Max; i3++)
+					{
+						damageEffect.SetDifficultyFloat("slow_multiplier", i3, this.GetDifficultyFloat(key, i3, 0.5));
+						damageEffect.SetDifficultyString("flags", i3, flag);
+					}
+				}
+
+				if (type == SF2DamageType_Random)
+				{
+					damageEffect.SetString("random_types", "ignite gas bleed mark jarate milk stun");
+					switch (this.GetInt("player_random_stun_type", 0))
+					{
+						case 1:
+						{
+							flag = "slow";
+						}
+
+						case 2:
+						{
+							flag = "loser";
+						}
+
+						case 3:
+						{
+							flag = "no_fx stuck";
+						}
+
+						case 4:
+						{
+							flag = "boo";
+						}
+					}
+
+					for (int i3 = 0; i3 < Difficulty_Max; i3++)
+					{
+						damageEffect.SetDifficultyFloat("slow_multiplier", i3, this.GetDifficultyFloat("player_random_slowdown", i3, 0.5));
+						damageEffect.SetDifficultyString("flags", i3, flag);
+					}
+				}
+
+				if (type == SF2DamageType_Smite)
+				{
+					for (int i3 = 0; i3 < Difficulty_Max; i3++)
+					{
+						damageEffect.SetDifficultyFloat("damage", i3, this.GetDifficultyFloat("player_smite_damage", i3, 9001.0));
+
+						damageEffect.SetDifficultyInt("damagetype", i3, this.GetDifficultyInt("player_smite_damage_type", i3, (1 << 20)));
+					}
+
+					int color[4];
+					color[0] = this.GetInt("player_smite_color_r", 255);
+					color[1] = this.GetInt("player_smite_color_g", 255);
+					color[2] = this.GetInt("player_smite_color_b", 255);
+					color[3] = this.GetInt("player_smite_transparency", 255);
+					damageEffect.SetColor("color", color);
+					damageEffect.SetBool("message", this.GetBool("player_smite_message"));
+					this.GetString("player_smite_sound", path, sizeof(path), SOUND_THUNDER);
+					damageEffect.SetString("hit_sound", path);
+				}
+
+				if (type == SF2DamageType_Gas || type == SF2DamageType_Jarate || type == SF2DamageType_Milk || type == SF2DamageType_Stun)
+				{
+					char particleName[128];
+					switch (type)
+					{
+						case SF2DamageType_Gas:
+						{
+							key = "player_gas_particle";
+							particleName = "gas_can_impact_blue";
+						}
+
+						case SF2DamageType_Jarate:
+						{
+							key = "player_jarate_particle";
+							particleName = "peejar_impact";
+						}
+
+						case SF2DamageType_Milk:
+						{
+							key = "player_milk_particle";
+							particleName = "peejar_impact_milk";
+						}
+
+						case SF2DamageType_Stun:
+						{
+							key = "player_stun_particle";
+							particleName = "xms_icicle_melt";
+							if (alt)
+							{
+								key = "player_electric_red_particle";
+								particleName = "electrocuted_gibbed_red";
+							}
+						}
+					}
+
+					this.GetString(key, particleName, sizeof(particleName), particleName);
+					if (particleName[0] != '\0')
+					{
+						ProfileObject temp2 = damageEffect.InsertNewSection("particles");
+						BossProfileParticleData particle = view_as<BossProfileParticleData>(temp2.InsertNewSection("Legacy Particle"));
+						particle.SetString("particle", particleName);
+						switch (type)
+						{
+							case SF2DamageType_Gas:
+							{
+								key = "player_gas_beam_particle";
+							}
+
+							case SF2DamageType_Jarate:
+							{
+								key = "player_jarate_beam_particle";
+							}
+
+							case SF2DamageType_Milk:
+							{
+								key = "player_milk_beam_particle";
+							}
+
+							case SF2DamageType_Stun:
+							{
+								key = "player_stun_beam_particle";
+								if (alt)
+								{
+									key = "player_electric_beam_particle";
+								}
+							}
+						}
+						particle.SetBool("beam", this.GetBool(key, false));
+						particle.SetBool("attach", attach);
+					}
+
+					switch (type)
+					{
+						case SF2DamageType_Gas:
+						{
+							key = "player_gas_sound";
+							path = "weapons/jar_single.wav";
+						}
+
+						case SF2DamageType_Jarate:
+						{
+							key = "player_jarate_sound";
+							path = "weapons/jar_single.wav";
+						}
+
+						case SF2DamageType_Milk:
+						{
+							key = "player_milk_sound";
+							path = "weapons/jar_single.wav";
+						}
+
+						case SF2DamageType_Stun:
+						{
+							key = "player_stun_sound";
+							path = "weapons/icicle_freeze_victim_01.wav";
+						}
+					}
+
+					if (!alt)
+					{
+						this.GetString(key, path, sizeof(path), path);
+						if (path[0] != '\0')
+						{
+							ProfileObject temp2 = damageEffect.InsertNewSection("sounds");
+							temp2 = temp2.InsertNewSection("paths");
+							temp2.SetKeyValue("1", path);
+						}
 					}
 				}
 			}
@@ -1846,12 +2342,12 @@ methodmap ChaserBossProfileStunData < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetOnStartInputs()
+	public ProfileInputsList GetOnStartInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_start"));
+			return view_as<ProfileInputsList>(obj.GetSection("on_start"));
 		}
 		return null;
 	}
@@ -1868,12 +2364,12 @@ methodmap ChaserBossProfileStunData < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetOnEndInputs()
+	public ProfileInputsList GetOnEndInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_end"));
+			return view_as<ProfileInputsList>(obj.GetSection("on_end"));
 		}
 		return null;
 	}
@@ -2086,12 +2582,12 @@ methodmap ChaserBossProfileDeathData < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetOnStartInputs()
+	public ProfileInputsList GetOnStartInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_start"));
+			return view_as<ProfileInputsList>(obj.GetSection("on_start"));
 		}
 		return null;
 	}
@@ -2108,12 +2604,12 @@ methodmap ChaserBossProfileDeathData < ProfileObject
 		return null;
 	}
 
-	public ProfileEntityInputsArray GetOnEndInputs()
+	public ProfileInputsList GetOnEndInputs()
 	{
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileEntityInputsArray>(obj.GetSection("on_end"));
+			return view_as<ProfileInputsList>(obj.GetSection("on_end"));
 		}
 		return null;
 	}
@@ -2291,7 +2787,7 @@ methodmap ChaserBossProfileCloakData < ProfileObject
 		{
 			return false;
 		}
-		return this.GetDifficultyBool("enabled", false);
+		return this.GetDifficultyBool("enabled", difficulty, false);
 	}
 
 	public float GetDuration(int difficulty)
@@ -2375,7 +2871,7 @@ methodmap ChaserBossProfileSmellData < ProfileObject
 		{
 			return false;
 		}
-		return this.GetDifficultyBool("enabled", false);
+		return this.GetDifficultyBool("enabled", difficulty, false);
 	}
 
 	public float GetMinCooldown(int difficulty)
@@ -2415,7 +2911,7 @@ methodmap ChaserBossProfileSmellData < ProfileObject
 
 	public bool GetShouldChaseState(int difficulty)
 	{
-		return this.GetDifficultyBool("should_chase_upon_smelled", false);
+		return this.GetDifficultyBool("should_chase_upon_smelled", difficulty, false);
 	}
 }
 
@@ -3066,7 +3562,7 @@ methodmap ChaserBossProjectileData < ProfileObject
 
 	public void GetIceballTrail(char[] buffer, int bufferSize)
 	{
-		this.GetString("fire_iceball_slow_sound", buffer, bufferSize, ICEBALL_TRAIL);
+		this.GetString("fire_iceball_trail", buffer, bufferSize, ICEBALL_TRAIL);
 	}
 
 	public void GetGrenadeShootSound(char[] buffer, int bufferSize)

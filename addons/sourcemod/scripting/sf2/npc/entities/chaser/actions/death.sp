@@ -20,20 +20,20 @@ methodmap SF2_ChaserDeathAction < NextBotAction
 		}
 		SF2_ChaserDeathAction action = view_as<SF2_ChaserDeathAction>(g_Factory.Create());
 
-		action.Attacker = attacker.index;
+		action.Attacker = attacker;
 		return action;
 	}
 
-	property int Attacker
+	property CBaseEntity Attacker
 	{
 		public get()
 		{
-			return EntRefToEntIndex(this.GetDataEnt("m_Attacker"));
+			return CBaseEntity(EntRefToEntIndex(this.GetDataEnt("m_Attacker")));
 		}
 
-		public set(int value)
+		public set(CBaseEntity value)
 		{
-			this.SetDataEnt("m_Attacker", EnsureEntRef(value));
+			this.SetDataEnt("m_Attacker", EnsureEntRef(value.index));
 		}
 	}
 }
@@ -87,7 +87,7 @@ static int OnStart(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, NextBot
 
 	if (deathData.GetOnStartInputs() != null)
 	{
-		deathData.GetOnStartInputs().AcceptInputs(actor.index, action.Attacker, action.Attacker);
+		deathData.GetOnStartInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
 	}
 
 	if (deathData.KeyDrop)
@@ -158,7 +158,7 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 
 	if (deathData.GetOnEndInputs() != null)
 	{
-		deathData.GetOnEndInputs().AcceptInputs(actor.index, action.Attacker, action.Attacker);
+		deathData.GetOnEndInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
 	}
 
 	data.SetBool("__was_killed", true);

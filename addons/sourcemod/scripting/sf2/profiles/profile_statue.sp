@@ -65,6 +65,8 @@ methodmap StatueBossProfile < BaseBossProfile
 
 		if (this.GetSingleMoveSounds() != null)
 		{
+			this.GetSingleMoveSounds().SetDefaultCooldownMin(0.125);
+			this.GetSingleMoveSounds().SetDefaultCooldownMax(0.125);
 			this.GetSingleMoveSounds().Precache();
 		}
 

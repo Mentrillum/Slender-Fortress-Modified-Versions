@@ -2021,7 +2021,7 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 
 	// pvp
-	if (IsClientInPvP(client))
+	if (IsClientInPvP(client) || IsClientInWeaponsTrigger(client))
 	{
 		removeWeapons = false;
 		restrictWeapons = false;

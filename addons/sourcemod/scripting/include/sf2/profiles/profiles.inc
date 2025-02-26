@@ -824,7 +824,8 @@ enum
 	SF2BossAttackType_ExplosiveDance = 3,
 	SF2BossAttackType_LaserBeam = 4,
 	SF2BossAttackType_Custom = 5,
-	SF2BossAttackType_Tongue = 6
+	SF2BossAttackType_Tongue = 6,
+	SF2BossAttackType_Combo = 7
 };
 
 enum

@@ -96,7 +96,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 	ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 	int difficulty = chaser.Controller.Difficulty;
 
-	if (attackData.Type >= SF2BossAttackType_Melee && attackData.Type <= SF2BossAttackType_Tongue)
+	if (attackData.Type >= SF2BossAttackType_Melee && attackData.Type <= SF2BossAttackType_Combo)
 	{
 		return Plugin_Continue;
 	}
@@ -112,7 +112,7 @@ static int Update(SF2_ChaserAttackAction_ForwardBased action, SF2_ChaserEntity a
 		return action.Done("No longer forward attacking");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}

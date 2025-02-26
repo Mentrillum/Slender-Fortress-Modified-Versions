@@ -592,6 +592,18 @@ static void TriggerKey(int caller)
 			AcceptEntityInput(ent, "Enable");
 		}
 	}
+	ent = -1;
+	if (strcmp(targetName, "sf2_trigger_escape", false) == 0)
+	{
+		while ((ent = FindEntityByClassname(ent, "sf2_trigger_escape")) != -1)
+		{
+			SF2TriggerEscapeEntity trigger = SF2TriggerEscapeEntity(ent);
+			if (trigger.IsValid())
+			{
+				trigger.AcceptInput("Enable");
+			}
+		}
+	}
 	RemoveEntity(caller);
 	EmitSoundToAll("ui/itemcrate_smash_ultrarare_short.wav", caller, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 }

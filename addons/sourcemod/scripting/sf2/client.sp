@@ -17,6 +17,7 @@ static Handle g_ClientSpecialRoundTimer[MAXTF2PLAYERS];
 // Jumpscare data.
 static int g_PlayerJumpScareBoss[MAXTF2PLAYERS] = { -1, ... };
 static float g_PlayerJumpScareLifeTime[MAXTF2PLAYERS] = { -1.0, ... };
+static char g_PlayerJumpScareOverlay[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
 
 static float g_PlayerScareBoostEndTime[MAXTF2PLAYERS] = { -1.0, ... };
 
@@ -1437,12 +1438,10 @@ void ClientDoJumpScare(int client, int bossIndex, float lifeTime)
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 	BaseBossProfile profileData = GetBossProfile(profile);
 
-	char buffer[PLATFORM_MAX_PATH];
-	profileData.GetJumpscareSound(buffer, sizeof(buffer));
-
-	if (buffer[0] != '\0')
+	profileData.GetJumpscareSounds().EmitSound(true, client);
+	if (profileData.GetJumpscareOverlays() != null)
 	{
-		EmitSoundToClient(client, buffer, _, MUSIC_CHAN);
+		profileData.GetJumpscareOverlays().GetString(GetRandomInt(0, profileData.GetJumpscareOverlays().Length - 1), g_PlayerJumpScareOverlay[client], sizeof(g_PlayerJumpScareOverlay[]));
 	}
 }
 
@@ -1640,18 +1639,15 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	int deathCamBoss = NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]);
 	int jumpScareBoss = NPCGetFromUniqueID(g_PlayerJumpScareBoss[client]);
 
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	char material[PLATFORM_MAX_PATH], overlay[PLATFORM_MAX_PATH];
 
-	if (IsClientInDeathCam(client) && deathCamBoss != -1 && g_PlayerDeathCamShowOverlay[client])
+	if (IsClientInDeathCam(client) && deathCamBoss != -1 && g_PlayerDeathCamCurrentOverlay[client][0] != '\0' && g_PlayerDeathCamShowOverlay[client])
 	{
-		NPCGetProfile(deathCamBoss, profile, sizeof(profile));
-		GetBossProfile(profile).GetPlayerDeathOverlay(material, sizeof(material));
+		strcopy(material, sizeof(material), g_PlayerDeathCamCurrentOverlay[client]);
 	}
-	else if (jumpScareBoss != -1 && GetGameTime() <= g_PlayerJumpScareLifeTime[client])
+	else if (jumpScareBoss != -1 && g_PlayerJumpScareOverlay[client] [0] != '\0' && GetGameTime() <= g_PlayerJumpScareLifeTime[client])
 	{
-		NPCGetProfile(jumpScareBoss, profile, sizeof(profile));
-		GetBossProfile(profile).GetJumpscareOverlay(material, sizeof(material));
+		strcopy(material, sizeof(material), g_PlayerJumpScareOverlay[client]);
 	}
 	else if (IsClientInGhostMode(client) && !SF_IsBoxingMap())
 	{
@@ -1664,15 +1660,35 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	}
 	else
 	{
-		if (!g_PlayerPreferences[client].PlayerPreference_FilmGrain)
+		for (int i = 0; i < MAX_BOSSES; i++)
 		{
-			g_OverlayNoGrainConVar.GetString(overlay, sizeof(overlay));
-			strcopy(material, sizeof(material), overlay);
+			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+			if (!npc.IsValid())
+			{
+				continue;
+			}
+
+			BaseBossProfile profile = npc.GetProfileData();
+			if (profile.GetRedCameraOverlays() == null)
+			{
+				continue;
+			}
+
+			profile.GetActiveRedCameraOverlay(material, sizeof(material));
+			break;
 		}
-		else
+		if (material[0] == '\0')
 		{
-			g_CameraOverlayConVar.GetString(overlay, sizeof(overlay));
-			strcopy(material, sizeof(material), overlay);
+			if (!g_PlayerPreferences[client].PlayerPreference_FilmGrain)
+			{
+				g_OverlayNoGrainConVar.GetString(overlay, sizeof(overlay));
+				strcopy(material, sizeof(material), overlay);
+			}
+			else
+			{
+				g_CameraOverlayConVar.GetString(overlay, sizeof(overlay));
+				strcopy(material, sizeof(material), overlay);
+			}
 		}
 	}
 

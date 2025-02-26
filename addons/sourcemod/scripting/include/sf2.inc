@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 1-16-2025"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 1-16-2025"
+#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 2-25-2025"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 2-25-2025"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -156,6 +156,7 @@ enum
 	SF2BossSound_RageThree,
 	SF2BossSound_Despawn,
 	SF2BossSound_Hurt,
+	SF2BossSound_Jump,
 	SF2BossSound_MaxSounds
 };
 
@@ -179,6 +180,9 @@ enum
 	SF2BossAnimation_AttackEnd = 15,
 	SF2BossAnimation_ProjectileShoot,
 	SF2BossAnimation_Despawn,
+	SF2BossAnimation_Jump,
+	SF2BossAnimation_Air,
+	SF2BossAnimation_Land,
 	SF2BossAnimation_MaxAnimations
 }
 
@@ -244,7 +248,8 @@ stock char g_SlenderVoiceList[SF2BossSound_MaxSounds][] =
 	"sound_rage_2",
 	"sound_rage_3",
 	"sound_despawn",
-	"sound_hurt"
+	"sound_hurt",
+	"sound_jump"
 };
 
 stock char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
@@ -266,7 +271,10 @@ stock char g_SlenderAnimationsList[SF2BossAnimation_MaxAnimations][] =
 	"attack_begin",
 	"attack_end",
 	"shoot",
-	"despawn"
+	"despawn",
+	"jump",
+	"air",
+	"land"
 };
 
 stock char g_AttributesList[SF2Attribute_Max][] =
@@ -543,7 +551,6 @@ forward Action SF2_OnBossPreTakeDamage(SF2_ChaserBossEntity chaser, CBaseEntity 
  * @return					Returning Plugin_Stop will invalidate any flashlight damage taken by the boss from the specified player.
  */
 forward Action SF2_OnBossPreFlashlightDamage(SF2_ChaserBossEntity chaser, SF2_Player player);
-
 
 /**
  * Called whenever a chaser boss gets a command string "suspend for action" using INextBotEventResponder.OnCommandString()

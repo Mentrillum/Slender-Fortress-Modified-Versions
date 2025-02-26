@@ -377,6 +377,57 @@ methodmap ProfileObject < KeyMap
 		return value;
 	}
 
+	public KeyMap_Array GetDifficultyArray(const char[] key, int difficulty, KeyMap_Array def = view_as<KeyMap_Array>(INVALID_HANDLE))
+	{
+		if (this == null)
+		{
+			return def;
+		}
+		KeyMap_Array value = def;
+
+		if (this.ContainsKey(key))
+		{
+			value = this.GetArray(key, def);
+		}
+
+		int diffKeySize = strlen(key) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(key, difficulty, diffKey, diffKeySize);
+		if (this.ContainsKey(diffKey))
+		{
+			value = this.GetArray(diffKey, def);
+		}
+		else
+		{
+			if (difficulty > 0)
+			{
+				for (int i2 = difficulty; i2 >= 0; i2--)
+				{
+					GetProfileKeyWithDifficultySuffix(key, i2, diffKey, diffKeySize);
+					if (this.ContainsKey(diffKey))
+					{
+						value = this.GetArray(diffKey, def);
+						return value;
+					}
+				}
+			}
+			else
+			{
+				for (int i2 = 0; i2 < difficulty; i2++)
+				{
+					GetProfileKeyWithDifficultySuffix(key, i2, diffKey, diffKeySize);
+					if (this.ContainsKey(diffKey))
+					{
+						value = this.GetArray(diffKey, def);
+						return value;
+					}
+				}
+			}
+		}
+
+		return value;
+	}
+
 	public ProfileObject GetDifficultySection(const char[] key, int difficulty, ProfileObject def = null)
 	{
 		if (this == null)
@@ -836,6 +887,15 @@ methodmap ProfileObject < KeyMap
 		return newObj;
 	}
 
+	public ProfileObject InsertDifficultySection(const char[] name, int difficulty)
+	{
+		int diffKeySize = strlen(name) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(name, difficulty, diffKey, diffKeySize);
+
+		return this.InsertNewSection(diffKey);
+	}
+
 	public void AddExistingSection(ProfileObject newObj)
 	{
 		if (newObj == null)
@@ -891,6 +951,28 @@ methodmap ProfileObject < KeyMap
 		else
 		{
 			this.SetKeyValue(newDiffKey, keyValue);
+		}
+	}
+
+	public void ConvertDifficultyValuesSectionToArray(const char[] key)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			int diffKeySize = strlen(key) + GetMaxProfileDifficultySuffixSize();
+			char[] diffKey = new char[diffKeySize];
+			GetProfileKeyWithDifficultySuffix(key, i, diffKey, diffKeySize);
+			this.ConvertValuesSectionToArray(diffKey);
+		}
+	}
+
+	public void ConvertDifficultySectionsSectionToArray(const char[] key)
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			int diffKeySize = strlen(key) + GetMaxProfileDifficultySuffixSize();
+			char[] diffKey = new char[diffKeySize];
+			GetProfileKeyWithDifficultySuffix(key, i, diffKey, diffKeySize);
+			this.ConvertSectionsSectionToArray(diffKey);
 		}
 	}
 }
@@ -1531,80 +1613,16 @@ methodmap ProfileMasterAnimations < ProfileObject // This covers the whole "anim
 	}
 }
 
-methodmap ProfileEntityInputObject < ProfileObject
-{
-	public void GetInput(char[] buffer, int bufferSize)
-	{
-		this.GetString("input", buffer, bufferSize);
-	}
-
-	public void GetParameter(char[] buffer, int bufferSize)
-	{
-		this.GetString("parameter", buffer, bufferSize);
-	}
-
-	public int GetParameterSize()
-	{
-		return this.GetKeyValueLength("parameter");
-	}
-
-	public bool AcceptInput(int entity, int activator = -1, int caller = -1)
-	{
-		char input[64];
-		this.GetInput(input, sizeof(input));
-
-		bool result = false;
-
-		int size = this.GetParameterSize();
-		char[] parameter = new char[size];
-		this.GetParameter(parameter, size);
-
-		SetVariantString(parameter);
-		result = AcceptEntityInput(entity, input, activator, caller);
-
-		return result;
-	}
-}
-
-methodmap ProfileEntityInputsArray < ProfileObject
-{
-	public void AcceptInputs(int entity, int activator = -1, int caller = -1)
-	{
-		for (int i = 0; i < this.SectionLength; i++)
-		{
-			char section[64];
-			this.GetSectionNameFromIndex(i, section, sizeof(section));
-			ProfileEntityInputObject output = view_as<ProfileEntityInputObject>(this.GetSection(section));
-			if (output == null)
-			{
-				continue;
-			}
-
-			output.AcceptInput(entity, activator, caller);
-		}
-	}
-}
-
-methodmap ProfileEntityOutputObject < ProfileObject
+methodmap ProfileInput < ProfileObject
 {
 	public void GetTarget(char[] buffer, int bufferSize)
 	{
 		this.GetString("target", buffer, bufferSize);
 	}
 
-	public int GetTargetSize()
-	{
-		return this.GetKeyValueLength("target");
-	}
-
 	public void GetInput(char[] buffer, int bufferSize)
 	{
 		this.GetString("input", buffer, bufferSize);
-	}
-
-	public int GetInputSize()
-	{
-		return this.GetKeyValueLength("input");
 	}
 
 	public void GetParameter(char[] buffer, int bufferSize)
@@ -1612,9 +1630,88 @@ methodmap ProfileEntityOutputObject < ProfileObject
 		this.GetString("parameter", buffer, bufferSize);
 	}
 
-	public int GetParameterSize()
+	public float GetDelay()
 	{
-		return this.GetKeyValueLength("parameter");
+		return this.GetFloat("delay");
+	}
+
+	public void AcceptInput(CBaseEntity entity, CBaseEntity activator = view_as<CBaseEntity>(-1), CBaseEntity caller = view_as<CBaseEntity>(-1))
+	{
+		char targetName[128], input[64], parameter[512];
+		this.GetTarget(targetName, sizeof(targetName));
+		CBaseEntity target = entity;
+		if (targetName[0] != '\0')
+		{
+			int ent = -1;
+			char name[128];
+			while ((ent = FindEntityByClassname(ent, "*")) != -1)
+			{
+				if (!IsValidEntity(ent))
+				{
+					continue;
+				}
+
+				GetEntPropString(ent, Prop_Data, "m_iName", name, sizeof(name));
+				if (strcmp(name, targetName, false) == 0)
+				{
+					target = CBaseEntity(ent);
+					break;
+				}
+			}
+		}
+		this.GetInput(input, sizeof(input));
+		this.GetParameter(parameter, sizeof(parameter));
+		if (this.GetDelay() > 0.0)
+		{
+			DataPack pack;
+			CreateDataTimer(this.GetDelay(), Timer_DelayInput, pack, TIMER_FLAG_NO_MAPCHANGE);
+			pack.WriteCell(EnsureEntRef(target.index));
+			pack.WriteCell(EnsureEntRef(activator.index));
+			pack.WriteCell(EnsureEntRef(caller.index));
+			pack.WriteString(input);
+			pack.WriteString(parameter);
+			return;
+		}
+
+		SetVariantString(parameter);
+		target.AcceptInput(input, activator.index, caller.index);
+	}
+}
+
+methodmap ProfileInputsList < ProfileObject
+{
+	public void AcceptInputs(CBaseEntity entity, CBaseEntity activator = view_as<CBaseEntity>(-1), CBaseEntity caller = view_as<CBaseEntity>(-1))
+	{
+		for (int i = 0; i < this.SectionLength; i++)
+		{
+			char section[64];
+			this.GetSectionNameFromIndex(i, section, sizeof(section));
+			ProfileInput input = view_as<ProfileInput>(this.GetSection(section));
+			if (input == null)
+			{
+				continue;
+			}
+
+			input.AcceptInput(entity, activator, caller);
+		}
+	}
+}
+
+methodmap ProfileOutput < ProfileObject
+{
+	public void GetTarget(char[] buffer, int bufferSize)
+	{
+		this.GetString("target", buffer, bufferSize);
+	}
+
+	public void GetInput(char[] buffer, int bufferSize)
+	{
+		this.GetString("input", buffer, bufferSize);
+	}
+
+	public void GetParameter(char[] buffer, int bufferSize)
+	{
+		this.GetString("parameter", buffer, bufferSize);
 	}
 
 	public float GetDelay()
@@ -1627,32 +1724,21 @@ methodmap ProfileEntityOutputObject < ProfileObject
 		return this.GetInt("times_to_fire", -1);
 	}
 
-	public void AddOutput(int entity, const char[] output)
+	public void AddOutput(CBaseEntity entity, const char[] output)
 	{
-		int size = this.GetTargetSize();
-		char[] target = new char[size];
-		this.GetTarget(target, size);
-
-		size = this.GetInputSize();
-		char[] input = new char[size];
-		this.GetInput(input, size);
-
-		size = this.GetParameterSize();
-		char[] parameter = new char[size];
-		this.GetParameter(parameter, size);
-
-		size = 98 + strlen(output) + strlen(target) + strlen(input) + strlen(parameter);
-		char[] addOutput = new char[size];
-		FormatEx(addOutput, size, "EntityOutputs.AddOutput(self, `%s`, `%s`, `%s`, `%s`, %0.3f, %d)", output, target, input, parameter, this.GetDelay(), this.GetTimesToFire());
-
-		SetVariantString(addOutput);
-		AcceptEntityInput(entity, "RunScriptCode");
+		char target[128], input[64], parameter[512], formatter[2048];
+		this.GetTarget(target, sizeof(target));
+		this.GetInput(input, sizeof(input));
+		this.GetParameter(parameter, sizeof(parameter));
+		FormatEx(formatter, sizeof(formatter), "EntityOutputs.AddOutput(self, `%s`, `%s`, `%s`, `%s`, %f, %d)", output, target, input, parameter, this.GetDelay(), this.GetTimesToFire());
+		SetVariantString(formatter);
+		entity.AcceptInput("RunScriptCode");
 	}
 }
 
-methodmap ProfileEntityOutputsArray < ProfileObject
+methodmap ProfileOutputsList < ProfileObject
 {
-	public void AddOutputs(int entity)
+	public void AddOutputs(CBaseEntity entity)
 	{
 		for (int i = 0; i < this.SectionLength; i++)
 		{
@@ -1668,7 +1754,7 @@ methodmap ProfileEntityOutputsArray < ProfileObject
 			{
 				char subSection[64];
 				obj.GetSectionNameFromIndex(i2, subSection, sizeof(subSection));
-				ProfileEntityOutputObject output = view_as<ProfileEntityOutputObject>(obj.GetSection(subSection));
+				ProfileOutput output = view_as<ProfileOutput>(obj.GetSection(subSection));
 				if (output == null)
 				{
 					continue;
@@ -1678,6 +1764,33 @@ methodmap ProfileEntityOutputsArray < ProfileObject
 			}
 		}
 	}
+}
+
+static Action Timer_DelayInput(Handle timer, DataPack pack)
+{
+	pack.Reset();
+	int entity = EntRefToEntIndex(pack.ReadCell());
+	if (entity == INVALID_ENT_REFERENCE || !entity)
+	{
+		return Plugin_Stop;
+	}
+
+	int activator = EntRefToEntIndex(pack.ReadCell());
+	if (activator == INVALID_ENT_REFERENCE || !activator)
+	{
+		activator = -1;
+	}
+	int caller = EntRefToEntIndex(pack.ReadCell());
+	if (caller == INVALID_ENT_REFERENCE || !caller)
+	{
+		caller = -1;
+	}
+	char input[64], parameter[512];
+	pack.ReadString(input, sizeof(input));
+	pack.ReadString(parameter, sizeof(parameter));
+	SetVariantString(parameter);
+	CBaseEntity(entity).AcceptInput(input, activator, caller);
+	return Plugin_Stop;
 }
 
 int ColorToString(int buffer[4], char[] string, int maxlength)
@@ -1743,26 +1856,12 @@ void StringToColor(const char[] string, int buffer[4])
 
 bool StringToBool(const char[] string)
 {
-	return strcmp(string, "1", false) == 0;
+	return strcmp(string, "1", false) == 0 || strcmp(string, "true", false) == 0;
 }
 
 int BoolToString(bool value, char[] buffer, int bufferSize)
 {
 	return FormatEx(buffer, bufferSize, "%b", value);
-}
-
-void RunScriptCode(int entity, int activator, int caller, const char[] format, any ...)
-{
-	if (!IsValidEntity(entity))
-	{
-		return;
-	}
-
-	static char buffer[1024];
-	VFormat(buffer, sizeof(buffer), format, 5);
-
-	SetVariantString(buffer);
-	AcceptEntityInput(entity, "RunScriptCode", activator, caller);
 }
 
 void SetupProfileObjectNatives()

@@ -375,9 +375,6 @@ void SDK_Init()
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
 
-	//Initialize tutorial detours & calls
-	//Tutorial_SetupSDK(gameData);
-
 	delete gameData;
 }
 

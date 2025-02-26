@@ -24,6 +24,7 @@ methodmap SF2_ChaserMainAction < NextBotAction
 			g_Factory.SetEventCallback(EventResponderType_OnContact, OnContact);
 			g_Factory.SetEventCallback(EventResponderType_OnKilled, OnKilled);
 			g_Factory.SetEventCallback(EventResponderType_OnLeaveGround, OnLeaveGround);
+			g_Factory.SetEventCallback(EventResponderType_OnLandOnGround, OnLandOnGround);
 			g_Factory.SetEventCallback(EventResponderType_OnCommandString, OnCommandString);
 			g_Factory.BeginDataMapDesc()
 				.DefineFloatField("m_LastStuckTime")
@@ -510,6 +511,16 @@ static int OnKilled(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseEn
 
 static void OnLeaveGround(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseEntity ground)
 {
+	if (actor.State != STATE_IDLE && actor.State != STATE_ALERT && actor.State != STATE_CHASE)
+	{
+		return;
+	}
+
+	if (actor.IsSpawning)
+	{
+		return;
+	}
+
 	if (!actor.IsJumping)
 	{
 		return;
@@ -520,12 +531,72 @@ static void OnLeaveGround(SF2_ChaserMainAction action, SF2_ChaserEntity actor, C
 	float velocity[3];
 	actor.MyNextBotPointer().GetLocomotionInterface().GetVelocity(velocity);
 	velocity[2] += loco.GetStepHeight() * 4.0;
-	loco.SetVelocity(velocity);
-	actor.IsJumping = false;
+	//loco.SetVelocity(velocity);
+
+	float duration = 0.0, rate = 1.0, cycle = 0.0;
+	int sequence = -1;
+	if (actor.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Jump], .sequence = sequence, .duration = duration, .rate = rate, .cycle = cycle))
+	{
+		if (duration <= 0.0)
+		{
+			duration = actor.SequenceDuration(sequence) / rate;
+			duration *= (1.0 - cycle);
+		}
+		actor.AirTime = duration;
+		actor.IsInAirAnimation = true;
+	}
+
+	actor.PerformVoice(SF2BossSound_Jump);
+}
+
+static int OnLandOnGround(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseEntity ground)
+{
+	if (!actor.CanLand)
+	{
+		actor.CanLand = true;
+		return action.TryContinue();
+	}
+
+	if (actor.State != STATE_IDLE && actor.State != STATE_ALERT && actor.State != STATE_CHASE)
+	{
+		return action.TryContinue();
+	}
+
+	if (actor.IsSpawning)
+	{
+		return action.TryContinue();
+	}
+
+	if (actor.IsJumping)
+	{
+		actor.IsJumping = false;
+	}
+
+	if (actor.IsInAirAnimation)
+	{
+		actor.IsInAirAnimation = false;
+		actor.UpdateMovementAnimation();
+	}
+
+	actor.AirTime = 0.0;
+
+	SF2NPC_Chaser controller = actor.Controller;
+	if (controller.GetProfileData().GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Land]))
+	{
+		actor.AddGesture(g_SlenderAnimationsList[SF2BossAnimation_Land]);
+		return action.TrySuspendFor(SF2_PlaySequenceAndWaitEx(g_SlenderAnimationsList[SF2BossAnimation_Land]), RESULT_CRITICAL);
+	}
+
+	return action.TryContinue();
 }
 
 static int OnCommandString(SF2_ChaserMainAction action, SF2_ChaserEntity actor, const char[] command)
 {
+	if (actor.IsSpawning)
+	{
+		return action.TryContinue();
+	}
+
 	if (StrContains(command, "debug attack ") == 0 && !actor.IsAttacking)
 	{
 		SF2NPC_Chaser controller = actor.Controller;

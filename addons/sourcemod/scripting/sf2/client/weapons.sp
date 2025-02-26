@@ -16,7 +16,7 @@ void SF2_RefreshRestrictions()
 {
 	for(int client = 1; client <= MaxClients; client++)
 	{
-		if (IsValidClient(client) && (!g_PlayerEliminated[client] || (g_PlayerEliminated[client] && !IsClientInPvP(client) && !IsClientInPvE(client))))
+		if (IsValidClient(client) && (!g_PlayerEliminated[client] || (g_PlayerEliminated[client] && !IsClientInPvP(client) && !IsClientInPvE(client) && !IsClientInWeaponsTrigger(client))))
 		{
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_PlayerPostWeaponsTimer[client] = CreateTimer(1.0, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -165,7 +165,7 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 
 	// pvp
-	if (client.IsInPvP || (SF_IsRaidMap() && !client.IsEliminated))
+	if (client.IsInPvP || (SF_IsRaidMap() && !client.IsEliminated) || IsClientInWeaponsTrigger(client.index))
 	{
 		removeWeapons = false;
 		restrictWeapons = true;

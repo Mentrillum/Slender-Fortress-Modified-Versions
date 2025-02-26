@@ -118,7 +118,7 @@ static int Update(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity actor, f
 		return action.Done("No longer melee attacking");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}
@@ -397,8 +397,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	}
 
 	ProfileObject hitSounds = hit ? data.GetHitSounds() : data.GetMissSounds();
-	ProfileSound info;
-	if (actor.SearchSoundsWithSectionName(hitSounds, action.GetAttackName(), info, hit ? "hitenemy" : "missenemy"))
+	ProfileSound info = hit ? attackData.GetHitSounds() : attackData.GetMissSounds();
+	if (info == null)
+	{
+		actor.SearchSoundsWithSectionName(hitSounds, action.GetAttackName(), info, hit ? "hitenemy" : "missenemy");
+	}
+	if (info != null)
 	{
 		info.EmitSound(_, actor.index);
 	}
@@ -431,7 +435,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 
 		if (attackData.GetMissInputs() != null)
 		{
-			attackData.GetMissInputs().AcceptInputs(actor.index);
+			attackData.GetMissInputs().AcceptInputs(actor);
 		}
 	}
 

@@ -32,6 +32,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		g_Factory.BeginDataMapDesc()
 			.DefineBoolField("m_IsMoving")
 			.DefineFloatField("m_LastKillTime")
+			.DefineFloatField("m_NextMoveTime")
 		.EndDataMapDesc();
 		g_Factory.Install();
 	}
@@ -61,6 +62,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 			this.SetProp(Prop_Data, "m_IsMoving", value);
 		}
 	}
+
 	property float LastKillTime
 	{
 		public get()
@@ -71,6 +73,19 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "m_LastKillTime", value);
+		}
+	}
+
+	property float NextMoveTime
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_NextMoveTime");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_NextMoveTime", value);
 		}
 	}
 
@@ -150,7 +165,6 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		npc.flFrictionSideways = profileData.GetSidewaysFriction(difficulty);
 		npc.flMaxYawRate = profileData.TurnRate;
 		loco.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
-		loco.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
 
 		statue.SetPropVector(Prop_Send, "m_vecMins", HULL_HUMAN_MINS);
 		statue.SetPropVector(Prop_Send, "m_vecMaxs", HULL_HUMAN_MAXS);

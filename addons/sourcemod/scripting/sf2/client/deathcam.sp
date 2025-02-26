@@ -7,7 +7,7 @@ methodmap BossProfileDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			return this.GetBool("death_cam", false);
+			return this != null;
 		}
 	}
 
@@ -15,67 +15,44 @@ methodmap BossProfileDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			return this.GetBool("death_cam_play_scare_sound", false);
+			return this.GetBool("scare_sound", false);
 		}
 	}
 
-	property bool Overlay
+	property KeyMap_Array Overlays
 	{
 		public get()
 		{
-			return this.GetBool("death_cam_overlay", false);
+			return this.GetArray("overlays");
 		}
 	}
 
-	property float OverlayStartTime
+	property float LegacyOverlayStartTime
 	{
 		public get()
 		{
-			return this.GetFloat("death_cam_time_overlay_start", 0.0);
+			return this.GetFloat("__legacy_overlay_start", 0.0);
 		}
 	}
 
-	property float Duration
+	property float LegacyDuration
 	{
 		public get()
 		{
-			return this.GetFloat("death_cam_time_death", 0.0);
-		}
-	}
-
-	property bool ShouldLastForAnimationDuration
-	{
-		public get()
-		{
-			return this.GetBool("death_cam_hold_until_anim_duration", false);
+			return this.GetFloat("__legacy_duration", 0.0);
 		}
 	}
 
 	public void GetLookPosition(float buffer[3])
 	{
-		this.GetVector("death_cam_pos", buffer);
+		this.GetVector("look_position", buffer);
 	}
 
-	property BossProfilePublicDeathCamData PublicDeathCam
+	property bool IsPublicDeathCamEnabled
 	{
 		public get()
 		{
-			return view_as<BossProfilePublicDeathCamData>(this);
-		}
-	}
-}
-
-methodmap BossProfilePublicDeathCamData < ProfileObject
-{
-	property bool IsEnabled
-	{
-		public get()
-		{
-			if (this.GetSection("public_death_cam") != null)
-			{
-				return true;
-			}
-			return this.GetBool("death_cam_public", false);
+			return this.GetSection("public") != null;
 		}
 	}
 
@@ -83,7 +60,13 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			return this.GetFloat("death_cam_speed", 1000.0);
+			float def = 1000.0;
+			ProfileObject obj = this.GetSection("public");
+			if (obj != null)
+			{
+				def = obj.GetFloat("speed", def);
+			}
+			return def;
 		}
 	}
 
@@ -91,7 +74,13 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			return this.GetFloat("death_cam_acceleration", 1000.0);
+			float def = 1000.0;
+			ProfileObject obj = this.GetSection("public");
+			if (obj != null)
+			{
+				def = obj.GetFloat("acceleration", def);
+			}
+			return def;
 		}
 	}
 
@@ -99,7 +88,13 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			return this.GetFloat("death_cam_deceleration", 1000.0);
+			float def = 1000.0;
+			ProfileObject obj = this.GetSection("public");
+			if (obj != null)
+			{
+				def = obj.GetFloat("deceleration", def);
+			}
+			return def;
 		}
 	}
 
@@ -108,15 +103,11 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 		public get()
 		{
 			float def = 0.0;
-			ProfileObject obj = this.GetSection("public_death_cam");
+			ProfileObject obj = this.GetSection("public");
 			obj = obj != null ? obj.GetSection("offset") : null;
 			if (obj != null)
 			{
 				def = obj.GetFloat("backward", def);
-			}
-			else
-			{
-				def = this.GetFloat("deathcam_death_backward_offset", def);
 			}
 			return def;
 		}
@@ -127,15 +118,11 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 		public get()
 		{
 			float def = 0.0;
-			ProfileObject obj = this.GetSection("public_death_cam");
+			ProfileObject obj = this.GetSection("public");
 			obj = obj != null ? obj.GetSection("offset") : null;
 			if (obj != null)
 			{
-				def = obj.GetFloat("backward", def);
-			}
-			else
-			{
-				def = this.GetFloat("deathcam_death_downward_offset", def);
+				def = obj.GetFloat("downward", def);
 			}
 			return def;
 		}
@@ -143,28 +130,19 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 
 	public void GetAttachment(char[] buffer, int bufferSize)
 	{
-		ProfileObject obj = this.GetSection("public_death_cam");
+		ProfileObject obj = this.GetSection("public");
 		if (obj != null)
 		{
 			obj.GetString("attachment", buffer, bufferSize);
-		}
-		else
-		{
-			this.GetString("death_cam_attachment_point", buffer, bufferSize);
-			this.GetString("death_cam_attachtment_point", buffer, bufferSize);
 		}
 	}
 
 	public void GetTargetAttachment(char[] buffer, int bufferSize)
 	{
-		ProfileObject obj = this.GetSection("public_death_cam");
+		ProfileObject obj = this.GetSection("public");
 		if (obj != null)
 		{
 			obj.GetString("target_attachment", buffer, bufferSize);
-		}
-		else
-		{
-			this.GetString("death_cam_attachment_target_point", buffer, bufferSize);
 		}
 	}
 
@@ -172,12 +150,15 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			ProfileObject obj = this.GetSection("public_death_cam");
-			if (obj != null)
-			{
-				return obj.GetBool("blackout", false);
-			}
-			return false;
+			return this.GetBool("blackout", false);
+		}
+	}
+
+	property bool StopSounds
+	{
+		public get()
+		{
+			return this.GetBool("stop_sounds", false);
 		}
 	}
 
@@ -185,8 +166,7 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 	{
 		public get()
 		{
-			ProfileObject obj = this.GetSection("public_death_cam");
-			obj = obj != null ? obj.GetSection("sounds") : null;
+			ProfileObject obj = this.GetSection("sounds");
 			if (obj != null)
 			{
 				return view_as<ProfileSound>(obj.GetSection("execution"));
@@ -195,20 +175,43 @@ methodmap BossProfilePublicDeathCamData < ProfileObject
 		}
 	}
 
-	property bool ShouldLastForAnimationDuration
+	public ProfileMasterAnimations GetAnimations()
 	{
-		public get()
-		{
-			return this.GetBool("death_cam_hold_until_anim_duration", false);
-		}
+		return view_as<ProfileMasterAnimations>(this.GetSection("animations"));
 	}
 
 	public void Precache()
 	{
+		this.ConvertValuesSectionToArray("overlays");
+		if (this.Overlays != null)
+		{
+			for (int i = 0; i < this.Overlays.Length; i++)
+			{
+				char value[PLATFORM_MAX_PATH];
+				this.Overlays.GetString(i, value, sizeof(value));
+				if (value[0] != '\0')
+				{
+					PrecacheMaterial2(value, g_FileCheckConVar.BoolValue);
+				}
+			}
+		}
 		if (this.ExecutionSounds != null)
 		{
 			this.ExecutionSounds.Precache();
 		}
+	}
+}
+
+methodmap DeathCamAnimation < ProfileAnimation
+{
+	public float GetPlayerDuration(int difficulty)
+	{
+		return this.GetDifficultyFloat("player_duration", difficulty, -1.0);
+	}
+
+	public float GetOverlayStartTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("overlay_start_time", difficulty, -1.0);
 	}
 }
 
@@ -217,10 +220,13 @@ int g_PlayerDeathCamBoss[MAXTF2PLAYERS] = { -1, ... };
 static bool g_PlayerDeathCam[MAXTF2PLAYERS] = { false, ... };
 static float g_PlayerDeathCamTimer[MAXTF2PLAYERS];
 static bool g_PlayerDeathCamMustDoOverlay[MAXTF2PLAYERS];
+static float g_PlayerDeathCamOverlayTimer[MAXTF2PLAYERS];
 bool g_PlayerDeathCamShowOverlay[MAXTF2PLAYERS] = { false, ... };
+char g_PlayerDeathCamCurrentOverlay[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
 int g_PlayerDeathCamEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 static int g_PlayerDeathCamEnt2[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 static int g_PlayerDeathCamTarget[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static ProfileSound g_PlayerDeathCamSound[MAXTF2PLAYERS] = { null, ... };
 bool g_CameraInDeathCamAdvanced[2049] = { false, ... };
 float g_CameraPlayerOffsetBackward[2049] = { 0.0, ... };
 float g_CameraPlayerOffsetDownward[2049] = { 0.0, ... };
@@ -333,24 +339,33 @@ static void ClientResetDeathCam(int client)
 	{
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(deathCamBoss, profile, sizeof(profile));
+		BossProfileDeathCamData data = GetBossProfile(profile).GetDeathCamData();
 		if ((NPCGetFlags(deathCamBoss) & SFF_FAKE) == 0)
 		{
-			BossProfilePublicDeathCamData data = GetBossProfile(profile).GetDeathCamData().PublicDeathCam;
-			if (data.IsEnabled && data.Blackout)
+			if (data.IsEnabled)
 			{
-				UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
-				CreateTimer(0.1, Timer_DeleteRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-				TeleportEntity(client, {16000.0, 16000.0, 16000.0});
+				if (data.Blackout)
+				{
+					UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+					CreateTimer(0.1, Timer_DeleteRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+					TeleportEntity(client, {16000.0, 16000.0, 16000.0});
+
+					UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+				}
 
 				if (data.ExecutionSounds != null)
 				{
-					for (int i = 0; i < data.ExecutionSounds.Paths.KeyLength; i++)
+					for (int i = 0; i < data.ExecutionSounds.Paths.Length; i++)
 					{
 						data.ExecutionSounds.EmitSound(true, client, SOUND_FROM_PLAYER, _, _, _, i);
 					}
 				}
 
-				UTIL_ScreenFade(client, 10, 0, 0x0002 | 0x0010 | 0x0008, 0, 0, 0, 255);
+				if (data.StopSounds && g_PlayerDeathCamSound[client] != null)
+				{
+					g_PlayerDeathCamSound[client].StopAllSounds(client);
+					g_PlayerDeathCamSound[client] = null;
+				}
 			}
 		}
 
@@ -429,14 +444,14 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 
 	BaseBossProfile data = GetBossProfile(profile);
 	BossProfileDeathCamData deathCamData = data.GetDeathCamData();
-	BossProfilePublicDeathCamData publicDeathCamData = deathCamData.PublicDeathCam;
 
 	if (deathCamData.PlayScareSound)
 	{
 		data.GetScareSounds().EmitSound(true, client, SOUND_FROM_PLAYER);
 	}
 
-	data.GetClientDeathCamSounds().EmitSound(true, client, SOUND_FROM_PLAYER);
+	g_PlayerDeathCamSound[client] = data.GetClientDeathCamSounds();
+	g_PlayerDeathCamSound[client].EmitSound(true, client, SOUND_FROM_PLAYER);
 
 	if ((NPCGetFlags(bossIndex) & SFF_FAKE) == 0)
 	{
@@ -497,7 +512,7 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 
 	// Create fake model.
 	int slender = -1;
-	bool publicDeathcam = publicDeathCamData.IsEnabled;
+	bool publicDeathcam = deathCamData.IsPublicDeathCamEnabled;
 	if (!publicDeathcam)
 	{
 		slender = SpawnSlenderModel(bossIndex, lookPos, true);
@@ -512,7 +527,7 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 		{
 			SF2_BaseBoss(slender).IsKillingSomeone = true;
 			SF2_BaseBoss(slender).KillTarget = CBaseEntity(client);
-			SF2_BaseBoss(slender).FullDeathCamDuration = publicDeathCamData.ShouldLastForAnimationDuration;
+			SF2_BaseBoss(slender).FullDeathCamDuration = deathCamData.LegacyDuration <= 0.0;
 		}
 	}
 	g_PlayerDeathCamEnt2[client] = EntIndexToEntRef(slender);
@@ -539,7 +554,7 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 		DispatchKeyValue(target, "targetname", name);
 		SetVariantString("!activator");
 		AcceptEntityInput(target, "SetParent", slender);
-		publicDeathCamData.GetAttachment(boneName, sizeof(boneName));
+		deathCamData.GetAttachment(boneName, sizeof(boneName));
 		if (boneName[0] != '\0')
 		{
 			SetVariantString(boneName);
@@ -569,9 +584,9 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 	{
 		float camSpeed, camAcceleration, camDeceleration;
 
-		camSpeed = publicDeathCamData.Speed;
-		camAcceleration = publicDeathCamData.Acceleration;
-		camDeceleration = publicDeathCamData.Deceleration;
+		camSpeed = deathCamData.Speed;
+		camAcceleration = deathCamData.Acceleration;
+		camDeceleration = deathCamData.Deceleration;
 		FloatToString(camSpeed, buffer, sizeof(buffer));
 		DispatchKeyValue(camera, "acceleration", buffer);
 		FloatToString(camAcceleration, buffer, sizeof(buffer));
@@ -582,32 +597,29 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 		SetVariantString("!activator");
 		AcceptEntityInput(camera, "SetParent", slender);
 		char attachmentName[PLATFORM_MAX_PATH];
-		publicDeathCamData.GetAttachment(attachmentName, sizeof(attachmentName));
+		deathCamData.GetAttachment(attachmentName, sizeof(attachmentName));
 		if (attachmentName[0] != '\0')
 		{
 			SetVariantString(attachmentName);
 			AcceptEntityInput(camera, "SetParentAttachment");
 		}
 
-		publicDeathCamData.GetTargetAttachment(attachmentName, sizeof(attachmentName));
+		deathCamData.GetTargetAttachment(attachmentName, sizeof(attachmentName));
 		DispatchKeyValue(camera, "targetname", attachmentName);
 
 		g_CameraInDeathCamAdvanced[camera] = true;
-		g_CameraPlayerOffsetBackward[camera] = publicDeathCamData.BackwardOffset;
-		g_CameraPlayerOffsetDownward[camera] = publicDeathCamData.DownwardOffset;
+		g_CameraPlayerOffsetBackward[camera] = deathCamData.BackwardOffset;
+		g_CameraPlayerOffsetDownward[camera] = deathCamData.DownwardOffset;
 		RequestFrame(Frame_PublicDeathCam, camera); //Resend taunt sound to eliminated players only
 	}
 
-	float duration = deathCamData.Duration;
-	if (deathCamData.Overlay && deathCamData.OverlayStartTime >= 0.0)
-	{
-		duration = deathCamData.OverlayStartTime;
-	}
-	if (duration <= 0.0 && publicDeathcam)
+	float duration = deathCamData.LegacyDuration;
+	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlays != null;
+	if (duration <= 0.0)
 	{
 		char animation[64];
 		float rate = 1.0, cycle = 0.0;
-		ProfileAnimation section = data.GetAnimations().GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam]);
+		DeathCamAnimation section = view_as<DeathCamAnimation>(deathCamData.GetAnimations().GetAnimation("start"));
 		if (section != null)
 		{
 			CBaseAnimating animator = CBaseAnimating(slender);
@@ -621,11 +633,19 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 				duration = animator.SequenceDuration(sequence) / rate;
 				duration *= (1.0 - cycle);
 			}
+			if (section.GetPlayerDuration(difficulty) > 0.0)
+			{
+				duration = section.GetPlayerDuration(difficulty);
+			}
 		}
 	}
 
 	g_PlayerDeathCamTimer[client] = duration;
-	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlay;
+	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlays != null;
+	if (g_PlayerDeathCamMustDoOverlay[client])
+	{
+		deathCamData.Overlays.GetString(GetRandomInt(0, deathCamData.Overlays.Length - 1), g_PlayerDeathCamCurrentOverlay[client], sizeof(g_PlayerDeathCamCurrentOverlay[]));
+	}
 	g_PlayerDeathCam[client] = true;
 
 	TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, { 0.0, 0.0, 0.0 });
@@ -672,7 +692,7 @@ static void StopDeathCam(int client)
 	SF2NPC_BaseNPC deathCamBoss = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]));
 	if (deathCamBoss != SF2_INVALID_NPC)
 	{
-		BossProfilePublicDeathCamData publicDeathCamData = deathCamBoss.GetProfileData().GetDeathCamData().PublicDeathCam;
+		BossProfileDeathCamData deathCamData = deathCamBoss.GetProfileData().GetDeathCamData();
 		if ((deathCamBoss.Flags & SFF_FAKE) == 0)
 		{
 			if (deathCamBoss.HasAttribute(SF2Attribute_IgnitePlayerOnDeath))
@@ -680,7 +700,7 @@ static void StopDeathCam(int client)
 				TF2_IgnitePlayer(client, client);
 			}
 
-			if (publicDeathCamData.IsEnabled && publicDeathCamData.Blackout && !g_Hooked)
+			if (deathCamData.IsEnabled && deathCamData.Blackout && !g_Hooked)
 			{
 				AddNormalSoundHook(NoPlayerVoiceHook);
 				g_Hooked = true;
@@ -749,26 +769,14 @@ static void Hook_DeathCamThink(int client)
 	}
 
 	g_PlayerDeathCamTimer[player.index] -= GetGameFrameTime();
+	g_PlayerDeathCamOverlayTimer[player.index] -= GetGameFrameTime();
+	if (g_PlayerDeathCamMustDoOverlay[player.index] && g_PlayerDeathCamOverlayTimer[player.index] <= 0.0)
+	{
+		g_PlayerDeathCamShowOverlay[player.index] = true;
+		g_PlayerDeathCamMustDoOverlay[player.index] = false;
+	}
 	if (g_PlayerDeathCamTimer[player.index] <= 0.0)
 	{
-		if (g_PlayerDeathCamMustDoOverlay[player.index])
-		{
-			SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[player.index]));
-			float duration = 0.0;
-			if (Npc.IsValid())
-			{
-				g_PlayerDeathCamShowOverlay[player.index] = true;
-				BaseBossProfile data = Npc.GetProfileData();
-				data.GetOverlayDeathCamSounds().EmitSound(true, player.index, SOUND_FROM_PLAYER);
-				duration = data.GetDeathCamData().Duration;
-			}
-			g_PlayerDeathCamTimer[player.index] = duration;
-			g_PlayerDeathCamMustDoOverlay[player.index] = false;
-			return;
-		}
-		else
-		{
-			StopDeathCam(player.index);
-		}
+		StopDeathCam(player.index);
 	}
 }
