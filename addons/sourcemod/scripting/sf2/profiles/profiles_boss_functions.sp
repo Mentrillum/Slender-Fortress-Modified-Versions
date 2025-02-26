@@ -879,7 +879,7 @@ methodmap BaseBossProfile < ProfileObject
 		ProfileObject obj = this.GetSection("inputs");
 		if (obj != null)
 		{
-			return view_as<ProfileInputsList>(obj.GetSection("spawn"));
+			return view_as<ProfileInputsList>(obj.GetSection("despawn"));
 		}
 		return null;
 	}

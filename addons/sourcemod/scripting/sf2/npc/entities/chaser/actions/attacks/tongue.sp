@@ -745,7 +745,7 @@ static int OnCommandString(SF2_ChaserAttackAction_Tongue action, SF2_ChaserEntit
 
 	if (strcmp(command, "latch tongue") == 0 && !action.InPullAnimation)
 	{
-		section = attackData.GetTongueAnimations().GetAnimation("break");
+		section = attackData.GetTongueAnimations().GetAnimation("pull");
 		if (section != null)
 		{
 			section.GetAnimationName(difficulty, animName, sizeof(animName));
