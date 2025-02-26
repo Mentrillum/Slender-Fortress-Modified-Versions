@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_fireball";
 
@@ -35,11 +36,6 @@ methodmap SF2_ProjectileFireball < SF2_ProjectileBase
 		CreateNative("SF2_Projectile_Fireball.IsValid.get", Native_IsValid);
 	}
 
-	public void OnPlayerDamaged(SF2_BasePlayer player)
-	{
-		player.Ignite(true);
-	}
-
 	public static SF2_ProjectileFireball Create(
 		const CBaseEntity owner,
 		const float pos[3],
@@ -58,7 +54,7 @@ methodmap SF2_ProjectileFireball < SF2_ProjectileBase
 		}
 
 		fireball.InitializeProjectile(SF2BossProjectileType_Fireball, owner, pos, ang, speed, damage, blastRadius,
-									false, "spell_fireball_small_red", "bombinomicon_burningdebris", impactSound, "models/roller.mdl", attackWaiters);
+									false, trail, "bombinomicon_burningdebris", impactSound, "models/roller.mdl", attackWaiters);
 
 		return fireball;
 	}

@@ -6,6 +6,7 @@
 // constant displaying of HUD text by SF2, rendering the text unreadable and useless.
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_game_text"; // The custom classname of the entity. Should be prefixed with "sf2_"
 

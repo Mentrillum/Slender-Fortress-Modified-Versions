@@ -4,6 +4,7 @@
 #define _sf2_playergroups_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_MAX_PLAYER_GROUPS MAXPLAYERS
 #define SF2_MAX_PLAYER_GROUP_NAME_LENGTH 32

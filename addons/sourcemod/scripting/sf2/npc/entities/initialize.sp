@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include "base/entity.sp"
 #include "chaser/entity.sp"

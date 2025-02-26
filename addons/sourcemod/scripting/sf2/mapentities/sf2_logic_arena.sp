@@ -1,6 +1,7 @@
 // sf2_logic_arena
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_logic_arena"; // The custom classname of the entity. Should be prefixed with "sf2_"
 

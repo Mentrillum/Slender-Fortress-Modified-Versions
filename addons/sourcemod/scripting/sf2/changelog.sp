@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static Menu g_ChangelogUpdate;
 static KeyValues g_ChangelogConfig;

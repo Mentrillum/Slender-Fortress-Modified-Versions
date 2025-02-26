@@ -1,3 +1,6 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 static int g_PlayerInteractiveGlowEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 static int g_PlayerInteractiveGlowTargetEntity[MAXPLAYERS + 1] = { INVALID_ENT_REFERENCE, ... };
 static float g_NextInteractiveThink[MAXPLAYERS + 1] = { 0.0, ... };
@@ -189,9 +192,10 @@ static void UpdateInteractiveGlow(SF2_BasePlayer client)
 	ScaleVector(endPos, maxRange);
 	AddVectors(startPos, endPos, endPos);
 
-	TR_TraceRayFilter(startPos, endPos, MASK_VISIBLE, RayType_EndPoint, TraceRayDontHitPlayers, -1);
+	Handle trace = TR_TraceRayFilterEx(startPos, endPos, MASK_VISIBLE, RayType_EndPoint, TraceRayDontHitPlayers, -1);
 	int oldTargetEnt = EntRefToEntIndex(g_PlayerInteractiveGlowTargetEntity[client.index]);
-	int targetEnt = TR_GetEntityIndex();
+	int targetEnt = TR_GetEntityIndex(trace);
+	delete trace;
 	if (!IsEntityInteractable(targetEnt))
 	{
 		targetEnt = -1;

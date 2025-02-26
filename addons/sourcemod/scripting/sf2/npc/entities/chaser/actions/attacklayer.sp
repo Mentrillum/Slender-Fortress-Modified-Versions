@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 // This is for detecting attacks
 
 static NextBotActionFactory g_Factory;
@@ -32,7 +33,6 @@ static int Update(SF2_ChaserAttackLayerAction action, SF2_ChaserEntity actor)
 		NextBotAction attackAction = actor.GetAttackAction(target);
 		if (attackAction != NULL_ACTION)
 		{
-			actor.EndCloak();
 			return action.SuspendFor(attackAction, "Time to die!");
 		}
 	}

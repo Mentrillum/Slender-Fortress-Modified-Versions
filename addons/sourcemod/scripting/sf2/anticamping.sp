@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 // Anti-camping data.
 int g_PlayerCampingStrikes[MAXTF2PLAYERS] = { 0, ... };

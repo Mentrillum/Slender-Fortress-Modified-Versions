@@ -1,6 +1,6 @@
 #pragma semicolon 1
 
-bool DispatchParticleEffect(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
+stock bool DispatchParticleEffect(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
 							int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
 {
 	char particleReal[PLATFORM_MAX_PATH];
@@ -55,7 +55,7 @@ bool DispatchParticleEffect(int entity, const char[] particle, float startPos[3]
 	return true;
 }
 
-bool DispatchParticleEffectBeam(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
+stock bool DispatchParticleEffectBeam(int entity, const char[] particle, float startPos[3], float angles[3], float endPos[3],
 								int attachmentPointIndex = 0, ParticleAttachment attachType = PATTACH_CUSTOMORIGIN, bool resetAllParticlesOnEntity = false)
 {
 	char particleReal[PLATFORM_MAX_PATH];

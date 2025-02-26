@@ -1,6 +1,7 @@
 // sf2_gamerules
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_gamerules";
 

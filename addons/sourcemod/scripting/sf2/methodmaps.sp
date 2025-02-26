@@ -1,10 +1,11 @@
 #if defined _sf2_methodmaps_included
- #endinput
+#endinput
 #endif
 
 #define _sf2_methodmaps_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 const SF2NPC_BaseNPC SF2_INVALID_NPC = view_as<SF2NPC_BaseNPC>(-1);
 const SF2_BasePlayer SF2_INVALID_PLAYER = view_as<SF2_BasePlayer>(-1);
@@ -18,14 +19,6 @@ methodmap SF2NPC_BaseNPC
 		public get()
 		{
 			return view_as<int>(this);
-		}
-	}
-
-	property int Type
-	{
-		public get()
-		{
-			return NPCGetType(this.Index);
 		}
 	}
 
@@ -87,9 +80,11 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	public SF2BossProfileData GetProfileData()
+	public BaseBossProfile GetProfileData()
 	{
-		return NPCGetProfileData(this.Index);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetProfile(profile, sizeof(profile));
+		return GetBossProfile(profile);
 	}
 
 	property int Difficulty
@@ -108,9 +103,9 @@ methodmap SF2NPC_BaseNPC
 	property int Flags
 	{
 		public get()
-        {
-            return NPCGetFlags(this.Index);
-        }
+		{
+			return NPCGetFlags(this.Index);
+		}
 
 		public set(int flags)
 		{
@@ -118,54 +113,9 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	property float ModelScale
-	{
-		public get()
-        {
-            return NPCGetModelScale(this.Index);
-        }
-	}
-
-	property int Skin
-	{
-		public get()
-		{
-			return NPCGetModelSkin(this.Index);
-		}
-	}
-
 	public bool GetModel(int modelState = 0, char[] buffer, int bufferLen)
 	{
 		return GetSlenderModel(this.Index, modelState, buffer, bufferLen);
-	}
-
-	public int GetMaxCopies(int difficulty)
-	{
-		return g_SlenderMaxCopies[this.Index][difficulty];
-	}
-
-	property bool RaidHitbox
-	{
-		public get()
-		{
-			return NPCGetRaidHitbox(this.Index);
-		}
-	}
-
-	property float ScareRadius
-	{
-		public get()
-		{
-			return NPCGetScareRadius(this.Index);
-		}
-	}
-
-	property float ScareCooldown
-	{
-		public get()
-		{
-			return NPCGetScareCooldown(this.Index);
-		}
 	}
 
 	property SF2NPC_BaseNPC CopyMaster
@@ -202,34 +152,6 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	property int TeleportType
-	{
-		public get()
-		{
-			return NPCGetTeleportType(this.Index);
-		}
-	}
-
-	public float GetTeleportRestPeriod(int difficulty)
-	{
-		return NPCGetTeleportRestPeriod(this.Index, difficulty);
-	}
-
-	public float GetTeleportStressMin(int difficulty)
-	{
-		return NPCGetTeleportStressMin(this.Index, difficulty);
-	}
-
-	public float GetTeleportStressMax(int difficulty)
-	{
-		return NPCGetTeleportStressMax(this.Index, difficulty);
-	}
-
-	public float GetTeleportPersistencyPeriod(int difficulty)
-	{
-		return NPCGetTeleportPersistencyPeriod(this.Index, difficulty);
-	}
-
 	public int GetTeleporter(int teleporterNumber)
 	{
 		return NPCGetTeleporter(this.Index, teleporterNumber);
@@ -238,19 +160,6 @@ methodmap SF2NPC_BaseNPC
 	public void SetTeleporter(int teleporterNumber, int entity)
 	{
 		NPCSetTeleporter(this.Index, teleporterNumber, entity);
-	}
-
-	property bool DeathCamEnabled
-	{
-		public get()
-		{
-			return NPCHasDeathCamEnabled(this.Index);
-		}
-
-		public set(bool state)
-		{
-			NPCSetDeathCamEnabled(this.Index, state);
-		}
 	}
 
 	public SF2NPC_BaseNPC(int index)
@@ -292,10 +201,10 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-    public void MarkAsFake()
-    {
-        SlenderMarkAsFake(this.Index);
-    }
+	public void MarkAsFake()
+	{
+		SlenderMarkAsFake(this.Index);
+	}
 
 	public bool IsValid()
 	{
@@ -310,11 +219,6 @@ methodmap SF2NPC_BaseNPC
 	public void SetProfile(const char[] profileName)
 	{
 		NPCSetProfile(this.Index, profileName);
-	}
-
-	public void GetName(char[] buffer, int bufferLen)
-	{
-		NPCGetBossName(this.Index, buffer, bufferLen);
 	}
 
 	public void RemoveFromGame()
@@ -365,32 +269,6 @@ methodmap SF2NPC_BaseNPC
 		NPCGetEyePosition(this.Index, buffer, defaultValue);
 	}
 
-	public void GetEyePositionOffset(float buffer[3])
-	{
-		NPCGetEyePositionOffset(this.Index, buffer);
-	}
-
-    public int GetRenderColor(int cell)
-    {
-        return g_SlenderRenderColor[this.Index][cell];
-    }
-
-    property int GetRenderMode
-    {
-        public get()
-        {
-            return g_SlenderRenderMode[this.Index];
-        }
-    }
-
-    property int GetRenderFX
-    {
-        public get()
-        {
-            return g_SlenderRenderFX[this.Index];
-        }
-    }
-
 	public bool HasAttribute(int attributeIndex)
 	{
 		return NPCHasAttribute(this.Index, attributeIndex);
@@ -403,7 +281,7 @@ methodmap SF2NPC_BaseNPC
 
 	public bool CanBeSeen(bool fov = true, bool blink = false, bool checkEliminated = true)
 	{
-		return PeopleCanSeeSlender(this.Index, fov, blink);
+		return PeopleCanSeeSlender(this.Index, fov, blink, checkEliminated);
 	}
 
 	public bool PlayerCanSee(int client, bool fov = true, bool blink = false, bool eliminated = false)
@@ -565,6 +443,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	property int ModifiedMaxHealth
+	{
+		public get()
+		{
+			return ClientGetModifiedMaxHealth(this.index);
+		}
+	}
+
 	property bool Ducking
 	{
 		public get()
@@ -579,6 +465,37 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		{
 			return this.GetProp(Prop_Send, "m_bDucked") != 0;
 		}
+	}
+
+	property float MaxSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Send, "m_flMaxspeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Send, "m_flMaxspeed", value);
+		}
+	}
+
+	property float CurrentTauntMoveSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", value);
+		}
+	}
+
+	public void UpdateSpeed()
+	{
+		SDKCall(g_SDKUpdateSpeed, this.index);
 	}
 
 	public int GetDataEnt(int offset)
@@ -731,7 +648,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 	public void UpdateListeningFlags(bool reset = false)
 	{
-		ClientUpdateListeningFlags(this.index, false);
+		ClientUpdateListeningFlags(this.index, reset);
 	}
 
 	property bool IsParticipating
@@ -851,6 +768,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		public get()
 		{
 			return IsClientInPvE(this.index);
+		}
+	}
+
+	property bool IsInWeaponsTriggers
+	{
+		public get()
+		{
+			return IsClientInWeaponsTrigger(this.index);
 		}
 	}
 
@@ -1110,11 +1035,6 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void UpdateMusicSystem(bool initialize = false)
-	{
-		ClientUpdateMusicSystem(this.index, initialize);
-	}
-
 	public void SetPlayState(bool state, bool enablePlay = true)
 	{
 		SetClientPlayState(this.index, state, enablePlay);
@@ -1127,7 +1047,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 	public void SetAFKTime(bool reset = true)
 	{
-		AFK_SetTime(this.index);
+		AFK_SetTime(this.index, reset);
 	}
 
 	public void SetAFKState()
@@ -1158,9 +1078,11 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 {
-	public SF2ChaserBossProfileData GetProfileData()
+	public ChaserBossProfile GetProfileData()
 	{
-		return NPCChaserGetProfileData(this.Index);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetProfile(profile, sizeof(profile));
+		return view_as<ChaserBossProfile>(GetBossProfile(profile));
 	}
 
 	public float GetInitialDeathHealth(int difficulty)
@@ -1212,14 +1134,11 @@ methodmap SF2NPC_Statue < SF2NPC_BaseNPC
 		return view_as<SF2NPC_Statue>(SF2NPC_BaseNPC(index));
 	}
 
-	public SF2StatueBossProfileData GetProfileData()
+	public StatueBossProfile GetProfileData()
 	{
-		return NPCStatueGetProfileData(this.Index);
-	}
-
-	public float GetIdleLifetime(int difficulty)
-	{
-		return NPCStatueGetIdleLifetime(this.Index, difficulty);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetProfile(profile, sizeof(profile));
+		return view_as<StatueBossProfile>(GetBossProfile(profile));
 	}
 }
 
@@ -1324,7 +1243,6 @@ void SetupMethodmapAPI()
 	CreateNative("SF2_Player.LatchCount.set", Native_SetClientLatchCount);
 	CreateNative("SF2_Player.Latcher.get", Native_GetClientLatcher);
 	CreateNative("SF2_Player.Latcher.set", Native_SetClientLatcher);
-	CreateNative("SF2_Player.UpdateMusicSystem", Native_ClientUpdateMusicSystem);
 	CreateNative("SF2_Player.HasConstantGlow.get", Native_GetClientHasConstantGlow);
 	CreateNative("SF2_Player.SetPlayState", Native_SetClientPlayState);
 	CreateNative("SF2_Player.CanSeeSlender", Native_GetClientCanSeeSlender);
@@ -2581,19 +2499,6 @@ static any Native_SetClientLatcher(Handle plugin, int numParams)
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	player.Latcher = GetNativeCell(2);
-	return 0;
-}
-
-static any Native_ClientUpdateMusicSystem(Handle plugin, int numParams)
-{
-	int client = GetNativeCell(1);
-	if (!IsValidClient(client))
-	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", client);
-	}
-
-	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.UpdateMusicSystem(GetNativeCell(2));
 	return 0;
 }
 

@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_ULTRAVISION_CONE 180.0
 #define SF2_ULTRAVISION_WIDTH 800.0

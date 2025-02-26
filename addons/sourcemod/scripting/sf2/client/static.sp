@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 // Player static data.
 int g_PlayerStaticMode[MAXTF2PLAYERS][MAX_BOSSES];
@@ -154,31 +155,6 @@ void ClientProcessStaticShake(int client)
 		newPunchAngVel[i] = oldPunchAngVel[i];
 	}
 
-	int staticMaster = NPCGetFromUniqueID(g_PlayerStaticMaster[client]);
-	if (staticMaster != -1 && NPCGetFlags(staticMaster) & SFF_HASSTATICSHAKE)
-	{
-		if (g_PlayerStaticMode[client][staticMaster] == Static_Increase)
-		{
-			newStaticShakeMaster = staticMaster;
-		}
-	}
-	for (int i = 0; i < MAX_BOSSES; i++)
-	{
-		if (NPCGetUniqueID(i) == -1)
-		{
-			continue;
-		}
-
-		if (NPCGetFlags(i) & SFF_HASSTATICSHAKE)
-		{
-			int master = NPCGetFromUniqueID(g_SlenderCopyMaster[i]);
-			if (master == -1)
-			{
-				master = i;
-			}
-		}
-	}
-
 	if (newStaticShakeMaster != -1)
 	{
 		g_PlayerStaticShakeMaster[client] = NPCGetUniqueID(newStaticShakeMaster);
@@ -187,17 +163,18 @@ void ClientProcessStaticShake(int client)
 		{
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(newStaticShakeMaster, profile, sizeof(profile));
+			BaseBossProfile profileData = GetBossProfile(profile);
 
 			if (g_PlayerStaticShakeSound[client][0] != '\0')
 			{
 				StopSound(client, SNDCHAN_STATIC, g_PlayerStaticShakeSound[client]);
 			}
 
-			g_PlayerStaticShakeMinVolume[client] = GetBossProfileStaticShakeLocalVolumeMin(profile);
-			g_PlayerStaticShakeMaxVolume[client] = GetBossProfileStaticShakeLocalVolumeMax(profile);
+			g_PlayerStaticShakeMinVolume[client] = profileData.StaticShakeMinVolume;
+			g_PlayerStaticShakeMaxVolume[client] = profileData.StaticShakeMaxVolume;
 
 			char staticSound[PLATFORM_MAX_PATH];
-			GetBossProfileStaticShakeSound(profile, staticSound, sizeof(staticSound));
+			profileData.GetStaticShakeLocalSound(staticSound, sizeof(staticSound));
 			if (staticSound[0] != '\0')
 			{
 				strcopy(g_PlayerStaticShakeSound[client], sizeof(g_PlayerStaticShakeSound[]), staticSound);
@@ -292,9 +269,9 @@ void ClientProcessStaticShake(int client)
 		NormalizeVector(newPunchAng, newPunchAng);
 
 		float angVelocityScalar = 5.0 * g_PlayerStaticAmount[client];
-		if (angVelocityScalar < 0.0)
+		if (angVelocityScalar < 1.0)
 		{
-			angVelocityScalar = 0.0;
+			angVelocityScalar = 1.0;
 		}
 		ScaleVector(newPunchAng, angVelocityScalar);
 

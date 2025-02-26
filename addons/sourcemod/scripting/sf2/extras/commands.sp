@@ -4,6 +4,7 @@
 #define _sf2_commands_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 public void OnPluginStart()
 {
@@ -71,7 +72,6 @@ public void OnPluginStart()
 	}
 
 	g_Pages = new ArrayList(sizeof(SF2PageEntityData));
-	g_PageMusicRanges = new ArrayList(3);
 	g_EmptySpawnPagePoints = new ArrayList();
 	g_PageLocations = new ArrayList();
 	g_PageLocationsGlow = new ArrayList();
@@ -113,6 +113,8 @@ public void OnPluginStart()
 
 	g_DragonsFuryBurningBonusConVar = FindConVar("tf_fireball_burning_bonus");
 	g_DragonsFuryBurnDurationConVar = FindConVar("tf_fireball_burn_duration");
+
+	g_TFBotForceClassConVar = FindConVar("tf_bot_force_class");
 
 	g_PlayerShakeEnabledConVar = CreateConVar("sf2_player_shake_enabled", "1", "Enable/Disable player view shake during boss encounters.", _, true, 0.0, true, 1.0);
 	g_PlayerShakeEnabledConVar.AddChangeHook(OnConVarChanged);
@@ -355,6 +357,8 @@ public void OnPluginStart()
 	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
 	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
 	RegAdminCmd("-slalltalk", Command_AllTalkOff, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
+	RegAdminCmd("sm_sf2_do_trace", Command_DoTrace, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_sf2_steamid", Command_SteamID, ADMFLAG_CHEATS);
 
 	RegServerCmd("load_itempreset", Command_BlockCommand);
 
@@ -411,12 +415,17 @@ public void OnPluginStart()
 	g_OnGameFramePFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundStartPFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundEndPFwd = new PrivateForward(ET_Ignore);
+	g_OnConfigsExecutedPFwd = new PrivateForward(ET_Ignore);
 	g_OnEntityCreatedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_OnEntityDestroyedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_OnEntityTeleportedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	g_OnPostInitMapEntitiesPFwd = new PrivateForward(ET_Ignore);
+	g_OnPostInitNewGamePFwd = new PrivateForward(ET_Ignore);
+	g_OnRoundStateChangePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerJumpPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerSpawnPFwd = new PrivateForward(ET_Ignore, Param_Cell);
-	g_OnPlayerTakeDamagePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef);
+	g_OnPlayerTakeDamagePFwd = new PrivateForward(ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_Cell);
+	g_OnPlayerTakeDamagePostPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Cell);
 	g_OnPlayerDeathPrePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerDeathPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerPutInServerPFwd = new PrivateForward(ET_Ignore, Param_Cell);
@@ -434,7 +443,10 @@ public void OnPluginStart()
 	g_OnPlayerTurnOffFlashlightPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerFlashlightBreakPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerAverageUpdatePFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnPlayerPostWeaponsPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnPageCountChangedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnSpecialRoundStartPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnBossAddedPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnBossSpawnPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnBossRemovedPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnChaserGetAttackActionPFwd = new PrivateForward(ET_Hook, Param_Cell, Param_String, Param_CellByRef);
@@ -466,6 +478,8 @@ public void OnPluginStart()
 
 	InitializeEffects();
 
+	SetupClients();
+
 	SetupAntiCamping();
 	SetupBlink();
 	SetupBreathing();
@@ -475,7 +489,7 @@ public void OnPluginStart()
 	SetupHints();
 	SetupStatic();
 	SetupFlashlight();
-	SetupMusic();
+	SetupNewMusic();
 	SetupSprint();
 	SetupUltravision();
 	SetupPlayerGlows();
@@ -1132,14 +1146,14 @@ static Action Hook_CommandVoiceMenu(int client, const char[] command,int argc)
 		int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 		if (master != -1)
 		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(master, profile, sizeof(profile));
-			SF2BossProfileSoundInfo soundInfo;
-			GetBossProfileProxyIdleSounds(profile, soundInfo);
+			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(master);
+			BossProfileProxyData proxyData = npc.GetProfileData().GetProxies();
+			BossProfileProxyClass classData = proxyData.GetClassData(TF2_GetPlayerClass(client));
+			ProfileSound soundInfo = classData.GetIdleSounds();
 			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0 && GetGameTime() >= g_PlayerProxyNextVoiceSound[client])
 			{
 				soundInfo.EmitSound(_, client);
-				g_PlayerProxyNextVoiceSound[client] = GetGameTime() + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
+				g_PlayerProxyNextVoiceSound[client] = GetGameTime() + GetRandomFloat(soundInfo.GetCooldownMin(npc.Difficulty), soundInfo.GetCooldownMax(npc.Difficulty));
 			}
 		}
 	}
@@ -1185,7 +1199,22 @@ static Action Command_ClientKillDeathcam(int client, int args)
 	for (int i = 0; i < target_count; i++)
 	{
 		int target = target_list[i];
-		if (!IsValidClient(target) || !IsPlayerAlive(target) || g_PlayerEliminated[target] || IsClientInGhostMode(target))
+		if (!IsValidClient(target) || !IsPlayerAlive(target) || IsClientInGhostMode(target))
+		{
+			continue;
+		}
+
+		bool eliminated = false;
+		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(StringToInt(arg2));
+		if (npc.IsValid())
+		{
+			if ((npc.Flags & SFF_ATTACKWAITERS) != 0 || npc.GetProfileData().IsPvEBoss)
+			{
+				eliminated = true;
+			}
+		}
+
+		if (!eliminated && g_PlayerEliminated[target])
 		{
 			continue;
 		}
@@ -1267,9 +1296,7 @@ static Action Command_SpawnSlender(int client, int args)
 		return Plugin_Handled;
 	}
 
-	SF2BossProfileData data;
-	data = npc.GetProfileData();
-	if (data.IsPvEBoss)
+	if (npc.GetProfileData().IsPvEBoss)
 	{
 		ReplyToCommand(client, "You may not spawn PvE bosses!");
 		return Plugin_Handled;
@@ -1292,6 +1319,7 @@ static Action Command_SpawnSlender(int client, int args)
 	{
 		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Spawned Boss", client);
 	}
+	LogAction(client, -1, "%N spawned boss %d! (%s)", client, npc.Index, profile);
 
 	return Plugin_Handled;
 }
@@ -1333,9 +1361,7 @@ static Action Command_SpawnAllSlenders(int client, int args)
 			npc = SF2NPC_BaseNPC(npcIndex);
 			if (npc.IsValid())
 			{
-				SF2BossProfileData data;
-				data = npc.GetProfileData();
-				if (data.IsPvEBoss)
+				if (npc.GetProfileData().IsPvEBoss)
 				{
 					continue;
 				}
@@ -1390,9 +1416,7 @@ static Action Timer_SpawnAllSlenders(Handle timer, any userid)
 	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(g_SpawnAllBossesCount);
 	if (npc.IsValid())
 	{
-		SF2BossProfileData data;
-		data = npc.GetProfileData();
-		if (!data.IsPvEBoss)
+		if (!npc.GetProfileData().IsPvEBoss)
 		{
 			npc.Spawn(endPos);
 		}
@@ -1426,8 +1450,7 @@ static Action Command_RemoveSlender(int client, int args)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	SF2BossProfileData data;
-	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	BaseBossProfile data = GetBossProfile(profile);
 	if (data.IsPvEBoss)
 	{
 		ReplyToCommand(client, "You may not remove PvE bosses!");
@@ -1440,6 +1463,7 @@ static Action Command_RemoveSlender(int client, int args)
 	{
 		CPrintToChat(client, "{royalblue}%t {default}%T", "SF2 Prefix", "SF2 Removed Boss", client);
 	}
+	LogAction(client, -1, "%N removed boss %d! (%s)", client, bossIndex, profile);
 
 	return Plugin_Handled;
 }
@@ -1461,9 +1485,7 @@ static Action Command_RemoveAllSlenders(int client, int args)
 				continue;
 			}
 
-			SF2BossProfileData data;
-			data = npc.GetProfileData();
-			if (data.IsPvEBoss)
+			if (npc.GetProfileData().IsPvEBoss)
 			{
 				continue;
 			}
@@ -1480,11 +1502,6 @@ static Action Command_RemoveAllSlenders(int client, int args)
 		{
 			CPrintToChat(client, "{royalblue}%t {default}Cannot use this command in Boxing maps.", "SF2 Prefix", client);
 		}
-	}
-
-	if (MusicActive())
-	{
-		NPCStopMusic();
 	}
 
 	return Plugin_Handled;
@@ -1774,34 +1791,6 @@ static Action Command_ReloadProfiles(int client, int args)
 		ReloadClassConfigs();
 	}
 
-	for (int i = 0; i < MAX_BOSSES; i++)
-	{
-		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
-
-		if (!npc.IsValid())
-		{
-			continue;
-		}
-
-		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-		npc.GetProfile(profile, sizeof(profile));
-		SF2BossProfileData data;
-		g_BossProfileData.GetArray(profile, data, sizeof(data));
-		NPCSetProfileData(npc.Index, data);
-
-		if (npc.Type == SF2BossType_Chaser)
-		{
-			SF2ChaserBossProfileData chaserData;
-			g_ChaserBossProfileData.GetArray(profile, chaserData, sizeof(chaserData));
-			NPCChaserSetProfileData(npc.Index, chaserData);
-		}
-		else if (npc.Type == SF2BossType_Statue)
-		{
-			SF2StatueBossProfileData statueData;
-			g_StatueBossProfileData.GetArray(profile, statueData, sizeof(statueData));
-			NPCStatueSetProfileData(npc.Index, statueData);
-		}
-	}
 	CPrintToChatAll("{royalblue}%t {default} Reloaded all profiles successfully.", "SF2 Prefix");
 
 	return Plugin_Handled;
@@ -2276,8 +2265,7 @@ static Action Command_AddSlender(int client, int args)
 		return Plugin_Handled;
 	}
 
-	SF2BossProfileData data;
-	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	BaseBossProfile data = GetBossProfile(profile);
 	if (data.IsPvEBoss)
 	{
 		ReplyToCommand(client, "You may not spawn PvE bosses!");
@@ -2287,10 +2275,12 @@ static Action Command_AddSlender(int client, int args)
 	SF2NPC_BaseNPC npc = AddProfile(profile);
 	if (npc.IsValid())
 	{
-		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && NPCChaserIsBoxingBoss(npc.Index))
+		if (SF_IsBoxingMap() && (GetRoundState() == SF2RoundState_Escape) && view_as<ChaserBossProfile>(data).BoxingBoss)
 		{
 			g_SlenderBoxingBossCount++;
 		}
+
+		LogAction(client, -1, "%N added a boss! (%s)", client, profile);
 	}
 
 	return Plugin_Handled;
@@ -2394,8 +2384,7 @@ static Action Command_AddSlenderFake(int client, int args)
 		return Plugin_Handled;
 	}
 
-	SF2BossProfileData data;
-	g_BossProfileData.GetArray(profile, data, sizeof(data));
+	BaseBossProfile data = GetBossProfile(profile);
 	if (data.IsPvEBoss)
 	{
 		ReplyToCommand(client, "You may not spawn PvE bosses!");
@@ -2414,6 +2403,8 @@ static Action Command_AddSlenderFake(int client, int args)
 		delete trace;
 
 		npc.Spawn(pos);
+
+		LogAction(client, -1, "%N added a fake boss! (%s)", client, profile);
 	}
 
 	return Plugin_Handled;
@@ -2557,6 +2548,72 @@ static Action Command_AllTalkOff(int client, int args)
 	{
 		ClientUpdateListeningFlags(target);
 	}
+	return Plugin_Handled;
+}
+
+static Action Command_DoTrace(int client, int args)
+{
+	if (!IsValidClient(client))
+	{
+		return Plugin_Handled;
+	}
+
+	float eyes[3], end[3], ang[3];
+	end[0] = 5000.0;
+	GetClientEyePosition(client, eyes);
+	GetClientEyeAngles(client, ang);
+	VectorTransform(end, eyes, ang, end);
+
+	Profiler profiler = new Profiler();
+
+	profiler.Start();
+	Handle trace = TR_TraceHullFilterEx(eyes, end, { -16.0, -16.0, -16.0 }, { 16.0, 16.0, 16.0 }, MASK_NPCSOLID, TraceRayBossVisibility, client);
+	PrintToServer("%b %i", TR_DidHit(trace), TR_GetEntityIndex(trace));
+	profiler.Stop();
+	PrintToServer("Time it took to trace handle 1: %f", profiler.Time);
+
+	profiler.Start();
+	TR_TraceHullFilter(eyes, end, { -16.0, -16.0, -16.0 }, { 16.0, 16.0, 16.0 }, MASK_NPCSOLID, TraceRayBossVisibility, client);
+	PrintToServer("%b %i", TR_DidHit(), TR_GetEntityIndex());
+	profiler.Stop();
+	PrintToServer("Time it took to trace global 1: %f", profiler.Time);
+
+	delete trace;
+
+	profiler.Start();
+	trace = TR_TraceHullFilterEx(eyes, end, { -16.0, -16.0, -16.0 }, { 16.0, 16.0, 16.0 }, MASK_NPCSOLID, TraceRayBossVisibility, client);
+	PrintToServer("%b %i", TR_DidHit(trace), TR_GetEntityIndex(trace));
+	profiler.Stop();
+	PrintToServer("Time it took to trace handle 2: %f", profiler.Time);
+
+	profiler.Start();
+	TR_TraceHullFilter(eyes, end, { -16.0, -16.0, -16.0 }, { 16.0, 16.0, 16.0 }, MASK_NPCSOLID, TraceRayBossVisibility, client);
+	PrintToServer("%b %i", TR_DidHit(), TR_GetEntityIndex());
+	profiler.Stop();
+	PrintToServer("Time it took to trace global 2: %f", profiler.Time);
+
+	delete trace;
+	delete profiler;
+	return Plugin_Handled;
+}
+
+static Action Command_SteamID(int client, int args)
+{
+	if (!IsValidClient(client))
+	{
+		return Plugin_Handled;
+	}
+
+	char authA[64], authB[64], authC[64], authD[4];
+	GetClientAuthId(client, AuthId_Engine, authA, sizeof(authA));
+	GetClientAuthId(client, AuthId_Steam2, authB, sizeof(authB));
+	GetClientAuthId(client, AuthId_Steam3, authC, sizeof(authC));
+	GetClientAuthId(client, AuthId_SteamID64, authD, sizeof(authD));
+	PrintToChatAll("Engine: %s", authA);
+	PrintToChatAll("Steam2: %s", authB);
+	PrintToChatAll("Steam3: %s", authC);
+	PrintToChatAll("Steam64: %s", authD);
+	PrintToChatAll("SteamID: %i", GetSteamAccountID(client));
 	return Plugin_Handled;
 }
 

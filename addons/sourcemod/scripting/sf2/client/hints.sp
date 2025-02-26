@@ -3,6 +3,9 @@
 #endif
 #define _sf2_client_hints_included
 
+#pragma semicolon 1
+#pragma newdecls required
+
 bool g_PlayerHints[MAXTF2PLAYERS][PlayerHint_MaxNum];
 static Handle g_ShowHintTimer[MAXPLAYERS + 1];
 

@@ -1,4 +1,18 @@
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap ChaserBossPostureCondition_WithinBounds < ChaserBossPostureCondition
+{
+	public void GetMins(int difficulty, float buffer[3])
+	{
+		this.GetDifficultyVector("mins", difficulty, buffer);
+	}
+
+	public void GetMaxs(int difficulty, float buffer[3])
+	{
+		this.GetDifficultyVector("maxs", difficulty, buffer);
+	}
+}
 
 void InitializePostureWithinBounds()
 {
@@ -7,45 +21,62 @@ void InitializePostureWithinBounds()
 
 static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int bufferSize)
 {
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	StringMap postures = data.Postures;
-	if (postures == null)
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
 	{
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfilePostureInfo postureInfo;
-	StringMapSnapshot snapshot = postures.Snapshot();
-	for (int i = 0; i < snapshot.Length; i++)
+	int difficulty = controller.Difficulty;
+
+	ChaserBossProfile data = controller.GetProfileData();
+	ProfileObject obj = data.GetSection("postures");
+	if (obj == null)
 	{
-		if (!data.GetPostureFromIndex(i, postureInfo))
+		return Plugin_Continue;
+	}
+
+	for (int i = 0; i < obj.SectionLength; i++)
+	{
+		ProfileObject posture = data.GetPostureFromIndex(i);
+		if (posture == null)
 		{
 			continue;
 		}
 
-		SF2PostureConditionWithinBoundsInfo boundsInfo;
-		boundsInfo = postureInfo.BoundsInfo;
-		if (!boundsInfo.Enabled)
+		ProfileObject conditions = posture.GetSection("conditions");
+		if (conditions == null || conditions.SectionLength == 0)
 		{
 			continue;
 		}
 
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
-		if (!chaser.IsValid())
+		for (int j = 0; j < conditions.SectionLength; j++)
 		{
-			continue;
-		}
-		float myPos[3];
-		chaser.GetAbsOrigin(myPos);
-		if (IsSpaceOccupiedIgnorePlayersAndEnts(myPos, boundsInfo.Mins, boundsInfo.Maxs, chaser.index))
-		{
-			strcopy(buffer, bufferSize, postureInfo.Name);
-			delete snapshot;
-			return Plugin_Changed;
+			char name[64];
+			conditions.GetSectionNameFromIndex(j, name, sizeof(name));
+			if (strcmp(name, "within_bounds") != 0)
+			{
+				continue;
+			}
+
+			ChaserBossPostureCondition_WithinBounds condition = view_as<ChaserBossPostureCondition_WithinBounds>(conditions.GetSection(name));
+			if (condition == null || !condition.GetEnabled(difficulty))
+			{
+				continue;
+			}
+
+			float mins[3], maxs[3], myPos[3];
+			condition.GetMins(difficulty, mins);
+			condition.GetMaxs(difficulty, maxs);
+			chaser.GetAbsOrigin(myPos);
+			if (IsSpaceOccupiedIgnorePlayersAndEnts(myPos, mins, maxs, chaser.index))
+			{
+				posture.GetSectionName(name, sizeof(name));
+				strcopy(buffer, bufferSize, name);
+				return Plugin_Changed;
+			}
 		}
 	}
 
-	delete snapshot;
 	return Plugin_Continue;
 }

@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -54,14 +55,8 @@ methodmap SF2_ChaserStunnedAction < NextBotAction
 
 static NextBotAction InitialContainedAction(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 {
-	SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
-	SF2BossProfileData data;
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
-	data = baseController.GetProfileData();
-	char animName[64];
-	float rate = 1.0, duration = 0.0, cycle = 0.0;
-	int difficulty = baseController.Difficulty;
 	actor.IsAttemptingToMove = false;
 	loco.Stop();
 
@@ -78,14 +73,13 @@ static NextBotAction InitialContainedAction(SF2_ChaserStunnedAction action, SF2_
 	actor.PerformVoice(SF2BossSound_Stun);
 
 	actor.EndCloak();
+	char posture[64];
+	actor.GetPosture(posture, sizeof(posture));
 
-	if (data.AnimationData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Stun], difficulty, animName, sizeof(animName), rate, duration, cycle))
+	ChaserBossProfile data = actor.Controller.GetProfileData();
+	if (data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Stun]))
 	{
-		int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Stun], rate, duration, cycle);
-		if (sequence != -1)
-		{
-			return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
-		}
+		return SF2_PlaySequenceAndWaitEx(g_SlenderAnimationsList[SF2BossAnimation_Stun]);
 	}
 
 	return NULL_ACTION;
@@ -94,32 +88,41 @@ static NextBotAction InitialContainedAction(SF2_ChaserStunnedAction action, SF2_
 static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileChaseData chaseData = data.GetChaseBehavior();
+	ChaserBossProfileStunData stunData = data.GetStunBehavior();
 	int difficulty = controller.Difficulty;
-	data = controller.GetProfileData();
 
-	if (data.StunData.StartEffects != null)
+	if (stunData.GetOnStartEffects() != null)
 	{
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(data.StunData.StartEffects, controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(stunData.GetOnStartEffects(), controller.Index, false, pos, ang, _, _, false);
 	}
 
-	if (data.KeyDrop)
+	if (stunData.GetOnStartInputs() != null)
 	{
-		if (SF_IsBoxingMap() && data.StunData.Disappear[difficulty] && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && !view_as<SF2NPC_BaseNPC>(controller).GetProfileData().IsPvEBoss)
+		stunData.GetOnStartInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
+	}
+
+	if (stunData.KeyDrop)
+	{
+		char model[PLATFORM_MAX_PATH], trigger[64];
+		stunData.GetKeyModel(model, sizeof(model));
+		stunData.GetKeyTrigger(trigger, sizeof(trigger));
+		if (SF_IsBoxingMap() && stunData.ShouldDisappear(difficulty) && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && data.IsPvEBoss)
 		{
 			g_SlenderBoxingBossKilled++;
 			if ((g_SlenderBoxingBossKilled == g_SlenderBoxingBossCount))
 			{
-				NPC_DropKey(controller.Index, data.KeyModel, data.KeyTrigger);
+				NPC_DropKey(controller.Index, model, trigger);
 			}
 			g_SlenderBoxingBossIsKilled[controller.Index] = true;
 		}
 		else
 		{
-			NPC_DropKey(controller.Index, data.KeyModel, data.KeyTrigger);
+			NPC_DropKey(controller.Index, model, trigger);
 		}
 	}
 
@@ -130,10 +133,10 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 
 	if (actor.State == STATE_CHASE)
 	{
-		actor.CurrentChaseDuration += data.ChaseDurationAddOnStun[difficulty];
-		if (actor.CurrentChaseDuration > data.ChaseDuration[difficulty])
+		actor.CurrentChaseDuration += chaseData.GetDurationAddOnStunned(difficulty);
+		if (actor.CurrentChaseDuration > chaseData.GetMaxChaseDuration(difficulty))
 		{
-			actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
+			actor.CurrentChaseDuration = chaseData.GetMaxChaseDuration(difficulty);
 		}
 	}
 
@@ -145,7 +148,7 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 	}
 	else
 	{
-		actor.MaxStunHealth += data.StunData.AddHealthPerStun[difficulty];
+		actor.MaxStunHealth += stunData.GetAddHealthPerStun(difficulty);
 	}
 
 	if (controller.HasAttribute(SF2Attribute_AddSpeedOnStun))
@@ -154,7 +157,7 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 	}
 	else
 	{
-		controller.SetAddSpeed(data.StunData.AddSpeedPerStun[difficulty]);
+		controller.SetAddSpeed(stunData.GetAddRunSpeed(difficulty));
 	}
 
 	if (controller.HasAttribute(SF2Attribute_AddAccelerationOnStun))
@@ -163,7 +166,7 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 	}
 	else
 	{
-		controller.SetAddAcceleration(data.StunData.AddAccelerationPerStun[difficulty]);
+		controller.SetAddAcceleration(stunData.GetAddAcceleration(difficulty));
 	}
 
 	actor.GroundSpeedOverride = true;
@@ -183,7 +186,7 @@ static int Update(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, float 
 		return action.Continue();
 	}
 
-	if (actor.Controller.GetProfileData().StunData.Disappear[actor.Controller.Difficulty])
+	if (actor.Controller.GetProfileData().GetStunBehavior().ShouldDisappear(actor.Controller.Difficulty))
 	{
 		actor.Controller.UnSpawn(true);
 	}
@@ -204,22 +207,27 @@ static void OnEnd(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor)
 		return;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileStunData stunData = data.GetStunBehavior();
 
-	if (data.StunData.EndEffects != null)
+	if (stunData.GetOnEndEffects() != null)
 	{
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(data.StunData.EndEffects, controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(stunData.GetOnEndEffects(), controller.Index, false, pos, ang, _, _, false);
+	}
+
+	if (stunData.GetOnEndInputs() != null)
+	{
+		stunData.GetOnEndInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
 	}
 
 	actor.IsStunned = false;
 	actor.GroundSpeedOverride = false;
 	actor.StunHealth = actor.MaxStunHealth;
 
-	actor.NextStunTime = GetGameTime() + data.StunData.Cooldown[actor.Controller.Difficulty];
+	actor.NextStunTime = GetGameTime() + stunData.GetCooldown(actor.Controller.Difficulty);
 
 	actor.UpdateMovementAnimation();
 

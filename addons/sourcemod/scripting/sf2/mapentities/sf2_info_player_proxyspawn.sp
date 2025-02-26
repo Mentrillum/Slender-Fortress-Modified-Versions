@@ -1,6 +1,7 @@
 // sf2_info_player_proxyspawn
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static CEntityFactory g_EntityFactory;
 

@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_PLAYER_BREATH_COOLDOWN_MIN 0.8
 #define SF2_PLAYER_BREATH_COOLDOWN_MAX 2.0
