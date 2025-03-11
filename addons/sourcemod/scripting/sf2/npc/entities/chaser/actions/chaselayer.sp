@@ -61,7 +61,7 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 		target.GetAbsOrigin(pos);
 		if (actor.Teleporters.Length > 0)
 		{
-			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
+			CBaseEntity(EntRefToEntIndex(actor.Teleporters.Get(0))).GetAbsOrigin(pos);
 		}
 
 		if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))

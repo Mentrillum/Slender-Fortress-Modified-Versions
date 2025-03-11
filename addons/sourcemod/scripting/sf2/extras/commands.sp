@@ -73,6 +73,8 @@ public void OnPluginStart()
 
 	g_Pages = new ArrayList(sizeof(SF2PageEntityData));
 	g_EmptySpawnPagePoints = new ArrayList();
+	g_PageLocations = new ArrayList();
+	g_PageLocationsGlow = new ArrayList();
 
 	char valueToString[32];
 
@@ -299,7 +301,6 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_slviewbosslist", Command_BossList);
 	RegConsoleCmd("sm_slbosslist", Command_BossList);
 	RegConsoleCmd("sm_slafk", Command_NoPoints);
-	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
 	RegConsoleCmd("sm_slhud", Command_MenuSwitchHud);
 	RegConsoleCmd("sm_slviewbob", Command_MenuViewBob);
 	RegConsoleCmd("+sprint", Command_SprintOn);
@@ -349,6 +350,7 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf2_player_infinite_blink_override", Command_InfiniteBlink, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_wall_hax", Command_WallHax, ADMFLAG_SLAY);
 	RegAdminCmd("sm_sf2_keep_weapons", Command_KeepWeapons, ADMFLAG_SLAY);
+	RegAdminCmd("sm_sf2_reveal_page_locations", Command_RevealPageLocations, ADMFLAG_CHEATS);
 	RegAdminCmd("+alltalk", Command_AllTalkOn, ADMFLAG_SLAY);
 	RegAdminCmd("-alltalk", Command_AllTalkOff, ADMFLAG_SLAY);
 	RegAdminCmd("+slalltalk", Command_AllTalkOn, ADMFLAG_SLAY, _, _, FCVAR_HIDDEN);
@@ -415,6 +417,7 @@ public void OnPluginStart()
 	g_OnEntityCreatedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_OnEntityDestroyedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_String);
 	g_OnEntityTeleportedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	g_OnBuildingDestroyedPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPostInitMapEntitiesPFwd = new PrivateForward(ET_Ignore);
 	g_OnPostInitNewGamePFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundStateChangePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
@@ -429,6 +432,8 @@ public void OnPluginStart()
 	g_OnPlayerEscapePFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnPlayerTeamPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerClassPFwd = new PrivateForward(ET_Ignore, Param_Cell);
+	g_OnPlayerPressButtonPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
+	g_OnPlayerReleaseButtonPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerLookAtBossPFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPlayerChangePlayStatePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	g_OnPlayerChangeGhostStatePFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell);
@@ -482,6 +487,7 @@ public void OnPluginStart()
 	SetupDeathCams();
 	SetupGhost();
 	SetupProxy();
+	SetupPlayerWeapons();
 	SetupHints();
 	SetupStatic();
 	SetupFlashlight();
@@ -668,29 +674,6 @@ static Action Command_NoPoints(int client, int args)
 		g_PlayerNoPoints[client] = false;
 		AFK_SetTime(client);
 	}
-	return Plugin_Handled;
-}
-
-static Action Command_ToggleFlashlight(int client, int args)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	if (!IsValidClient(client) || !IsPlayerAlive(client))
-	{
-		return Plugin_Handled;
-	}
-
-	if (!IsRoundInWarmup() && !IsRoundInIntro() && !IsRoundEnding() && !DidClientEscape(client))
-	{
-		if (GetGameTime() >= ClientGetFlashlightNextInputTime(client))
-		{
-			ClientHandleFlashlight(client);
-		}
-	}
-
 	return Plugin_Handled;
 }
 
@@ -2934,5 +2917,115 @@ static Action Command_KeepWeapons(int client, int args)
 {
 	g_PlayerKeepWeaponsConVar.BoolValue = !g_PlayerKeepWeaponsConVar.BoolValue;
 	CPrintToChat(client, "{royalblue}%t {default}Lobby players can %s keep their weapons.", "SF2 Prefix", g_PlayerKeepWeaponsConVar.BoolValue ? "now" : "no longer");
+	return Plugin_Handled;
+}
+
+static Action Command_RevealPageLocations(int client, int args)
+{
+	if (!IsValidClient(client))
+	{
+		return Plugin_Handled;
+	}
+
+	if (!g_PagesRevealed)
+	{
+		int count = 0;
+		EmitSoundToClient(client, DEBUG_PAGEREVEALSOUND);
+		for (int i = 0; i < g_EmptySpawnPagePoints.Length; i++)
+		{
+			float pos[3], ang[3];
+			CBaseEntity location = CBaseEntity(g_EmptySpawnPagePoints.Get(i));
+			location.GetAbsOrigin(pos);
+			location.GetAbsAngles(ang);
+			CBaseEntity page = CBaseEntity(CreateEntityByName("prop_dynamic_override"));
+			page.KeyValue("solid", "0");
+			page.SetModel(PAGE_MODEL);
+			page.Teleport(pos, ang);
+			page.Spawn();
+			page.Activate();
+			page.AcceptInput("DisableCollision");
+			page.SetPropFloat(Prop_Send, "m_flModelScale", PAGE_MODELSCALE);
+			SetEntityTransmitState(page.index, FL_EDICT_ALWAYS);
+
+			g_PageLocations.Push(EntIndexToEntRef(page.index));
+			CBaseEntity glow = CBaseEntity(CreateGlowEntityDataless(page.index));
+			glow.SetPropEnt(Prop_Data, "m_hOwnerEntity", page.index);
+			g_PageLocationsGlow.Push(EntIndexToEntRef(glow.index));
+			count++;
+		}
+
+		for (int i = 0; i < g_Pages.Length; i++)
+		{
+			SF2PageEntityData pageData;
+			g_Pages.GetArray(i, pageData, sizeof(pageData));
+
+			CBaseEntity page = CBaseEntity(EntRefToEntIndex(pageData.EntRef));
+			if (!page.IsValid())
+			{
+				page = CBaseEntity(CreateEntityByName("prop_dynamic_override"));
+				page.KeyValue("solid", "0");
+				page.SetModel(PAGE_MODEL);
+				page.Teleport(pageData.Pos, pageData.Ang);
+				page.Spawn();
+				page.Activate();
+				page.AcceptInput("DisableCollision");
+				page.SetPropFloat(Prop_Send, "m_flModelScale", PAGE_MODELSCALE);
+				SetEntityTransmitState(page.index, FL_EDICT_ALWAYS);
+				g_PageLocations.Push(EntIndexToEntRef(page.index));
+			}
+			else
+			{
+				page = CBaseEntity(page.GetPropEnt(Prop_Send, "m_hOwnerEntity"));
+				SetEntityTransmitState(page.index, FL_EDICT_ALWAYS);
+			}
+
+			CBaseEntity glow = CBaseEntity(CreateGlowEntityDataless(page.index, { 255, 0, 0, 255 }));
+			glow.SetPropEnt(Prop_Data, "m_hOwnerEntity", page.index);
+			g_PageLocationsGlow.Push(EntIndexToEntRef(glow.index));
+			count++;
+		}
+		CPrintToChat(client, "{royalblue}%t {default}Revealed %i page locations.", "SF2 Prefix", count);
+		g_PagesRevealed = true;
+	}
+	else
+	{
+		for (int i = 0; i < g_PageLocations.Length; i++)
+		{
+			int entity = EntRefToEntIndex(g_PageLocations.Get(i));
+			if (!entity || entity == INVALID_ENT_REFERENCE)
+			{
+				continue;
+			}
+
+			RemoveEntity(entity);
+		}
+
+		for (int i = 0; i < g_PageLocationsGlow.Length; i++)
+		{
+			int entity = EntRefToEntIndex(g_PageLocationsGlow.Get(i));
+			if (!entity || entity == INVALID_ENT_REFERENCE)
+			{
+				continue;
+			}
+
+			RemoveEntity(entity);
+		}
+
+		for (int i = 0; i < g_Pages.Length; i++)
+		{
+			SF2PageEntityData pageData;
+			g_Pages.GetArray(i, pageData, sizeof(pageData));
+
+			CBaseEntity page = CBaseEntity(EntRefToEntIndex(pageData.EntRef));
+			if (page.IsValid())
+			{
+				page = CBaseEntity(page.GetPropEnt(Prop_Send, "m_hOwnerEntity"));
+				page.DispatchUpdateTransmitState();
+			}
+		}
+		g_PageLocations.Clear();
+		g_PageLocationsGlow.Clear();
+		g_PagesRevealed = false;
+	}
 	return Plugin_Handled;
 }

@@ -3789,7 +3789,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 				}
 			}
 
-			if (player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap()) && chaser.State != STATE_DEATH)
+			if (player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap() || SF_IsRaidMap()) && chaser.State != STATE_DEATH)
 			{
 				if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 75.0 && data.BackstabDamageScale > 0.0)
 				{
@@ -4064,7 +4064,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 		}
 	}
 
-	if (damage > 0.0 && player.IsValid && player.InCondition(TFCond_RegenBuffed) && (SF_IsBoxingMap() || data.IsPvEBoss))
+	if (damage > 0.0 && player.IsValid && player.InCondition(TFCond_RegenBuffed) && (SF_IsBoxingMap() || data.IsPvEBoss || SF_IsRaidMap()))
 	{
 		int health = player.Health;
 		int maxHealth = player.GetProp(Prop_Data, "m_iMaxHealth");
@@ -4377,7 +4377,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		valids.Push(EntIndexToEntRef(client.index));
 	}
 
-	if (!g_Enabled || data.IsPvEBoss)
+	if (!g_Enabled || data.IsPvEBoss || SF_IsRaidMap())
 	{
 		for (int i = 0; i < g_Buildings.Length; i++)
 		{
@@ -4844,6 +4844,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		acceleration *= controller.GetAttributeValue(SF2Attribute_ReducedAccelerationOnLook);
 	}
 	acceleration += controller.GetAddAcceleration();
+	acceleration += controller.GetPersistentAddAcceleration();
 
 	Action action = Plugin_Continue;
 	float forwardSpeed;
@@ -4862,6 +4863,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 				speed *= controller.GetAttributeValue(SF2Attribute_ReducedWalkSpeedOnLook);
 			}
 
+			speed += baseController.GetPersistentAddWalkSpeed();
 			forwardSpeed = speed;
 			Call_StartForward(g_OnBossGetWalkSpeedFwd);
 			Call_PushCell(controller.Index);
@@ -4886,6 +4888,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 			}
 
 			speed += baseController.GetAddSpeed();
+			speed += baseController.GetPersistentAddSpeed();
 			forwardSpeed = speed;
 
 			Call_StartForward(g_OnBossGetSpeedFwd);
@@ -5049,6 +5052,11 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		{
 			chaser.SetPoseParameter(chaser.MoveScaleParameter, 0.0);
 		}
+
+		if (chaser.ShouldAnimationSyncWithGround)
+		{
+			chaser.SetPropFloat(Prop_Send, "m_flPlaybackRate", 0.0);
+		}
 		return;
 	}
 
@@ -5081,7 +5089,12 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		}
 		else
 		{
-			velocity = (velocity + ((npc.flRunSpeed * GetDifficultyModifier(controller.Difficulty)) / 15.0)) / npc.flRunSpeed;
+			float syncSpeed = chaser.GroundSyncSpeed;
+			if (syncSpeed <= 0.0)
+			{
+				syncSpeed = npc.flRunSpeed;
+			}
+			velocity = (velocity + ((syncSpeed * GetDifficultyModifier(controller.Difficulty)) / 15.0)) / syncSpeed;
 
 			if (loco.IsOnGround() && chaser.IsAttemptingToMove)
 			{

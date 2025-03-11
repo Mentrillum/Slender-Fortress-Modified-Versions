@@ -25,6 +25,12 @@
 #define	HIDEHUD_VEHICLE_CROSSHAIR	( 1<<9 )	// Hide vehicle crosshair
 #define HIDEHUD_INVEHICLE			( 1<<10 )
 #define HIDEHUD_BONUS_PROGRESS		( 1<<11 )	// Hide bonus progress display (for bonus map challenges)
+#define HIDEHUD_BUILDING_STATUS		(1 << 12)
+#define HIDEHUD_CLOAK_AND_FEIGN		(1 << 13)
+#define HIDEHUD_PIPES_AND_CHARGE	(1 << 14)
+#define HIDEHUD_METAL				(1 << 15)
+#define HIDEHUD_TARGET_ID			(1 << 16)
+#define HIDEHUD_MATCH_STATUS		(1 << 17)
 
 #define FFADE_IN			0x0001		// Just here so we don't pass 0 into the function
 #define FFADE_OUT			0x0002		// Fade out (not in)
@@ -513,9 +519,10 @@ void KillClient(int client)
 {
 	if (client != -1)
 	{
-		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+		int health = GetEntProp(client, Prop_Send, "m_iHealth") * 1000;
+		SDKHooks_TakeDamage(client, 0, 0, float(health), 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
 		ForcePlayerSuicide(client);
-		SetVariantInt(9001);
+		SetVariantInt(health);
 		AcceptEntityInput(client, "RemoveHealth");
 	}
 }
@@ -885,9 +892,14 @@ void ForceTeamWin(int team)
 	AcceptEntityInput(ent, "SetWinner");
 }
 
-Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att)
+Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att, bool preserveAttributes = false)
 {
-	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
+	int flags = OVERRIDE_ALL | FORCE_GENERATION;
+	if (preserveAttributes)
+	{
+		flags |= PRESERVE_ATTRIBUTES;
+	}
+	Handle item = TF2Items_CreateItem(flags);
 	TF2Items_SetClassname(item, classname);
 	TF2Items_SetItemIndex(item, index);
 	TF2Items_SetLevel(item, level);
@@ -1510,17 +1522,17 @@ Action Timer_KillEntity(Handle timer, any entref)
 //	==========================================================
 bool IsInfiniteFlashlightEnabled()
 {
-	return (g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || (IsNightVisionEnabled() && g_NightVisionType == 1));
+	return ((g_RoundInfiniteFlashlight && g_PlayerInfiniteFlashlightOverrideConVar.IntValue != 0) || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || (IsNightVisionEnabled() && g_NightVisionType == 1));
 }
 
 bool IsInfiniteBlinkEnabled()
 {
-	return g_RoundInfiniteBlink || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
+	return (g_RoundInfiniteBlink && g_PlayerInfiniteBlinkOverrideConVar.IntValue != 0) || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
 }
 
 bool IsInfiniteSprintEnabled()
 {
-	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap();
+	return (g_IsRoundInfiniteSprint && g_PlayerInfiniteSprintOverrideConVar.IntValue != 0) || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap();
 }
 
 bool IsNightVisionEnabled()

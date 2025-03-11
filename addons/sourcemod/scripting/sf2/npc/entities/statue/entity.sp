@@ -495,6 +495,7 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 		acceleration *= controller.GetAttributeValue(SF2Attribute_ReducedAccelerationOnLook);
 	}
 	acceleration += controller.GetAddAcceleration();
+	acceleration += controller.GetPersistentAddAcceleration();
 
 	speed = data.GetRunSpeed(difficulty) * 10.0; // Backwards compatibility
 	if (controller.HasAttribute(SF2Attribute_ReducedSpeedOnLook) && controller.CanBeSeen(_, true))
@@ -503,6 +504,7 @@ static void ProcessSpeed(SF2_StatueEntity statue)
 	}
 
 	speed += controller.GetAddSpeed();
+	speed += controller.GetPersistentAddSpeed();
 
 	float forwardSpeed = speed;
 	Action action = Plugin_Continue;

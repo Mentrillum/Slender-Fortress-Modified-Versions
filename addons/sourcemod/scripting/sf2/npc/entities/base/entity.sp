@@ -72,6 +72,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineBoolField("m_VelocityCancel")
 			.DefineIntField("m_Teleporters")
 			.DefineBoolField("m_ShouldAnimationSyncWithGround")
+			.DefineFloatField("m_GroundSyncSpeed")
 			.DefineBoolField("m_LockAnimations")
 		.EndDataMapDesc();
 		g_Factory.Install();
@@ -541,6 +542,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property float GroundSyncSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_GroundSyncSpeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_GroundSyncSpeed", value);
+		}
+	}
+
 	property bool LockAnimations
 	{
 		public get()
@@ -592,7 +606,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		CreateNative("SF2_BaseBossEntity.ResetProfileAnimation", Native_ResetProfileAnimation);
 	}
 
-	public int SelectProfileAnimation(const char[] animType, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepInterval = 0.0, int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0, bool &sync = false, ProfileMasterAnimations animations = null)
+	public int SelectProfileAnimation(const char[] animType, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepInterval = 0.0, int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", const char[] posture = NULL_STRING, bool &overrideLoop = false, bool &loop = false, char[] returnAnimation = "", int rtnAnimationLength = 0, bool &sync = false, float &syncSpeed = -1.0, ProfileMasterAnimations animations = null)
 	{
 		SF2NPC_BaseNPC controller = this.Controller;
 		int difficulty = controller.Difficulty;
@@ -620,6 +634,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 					overrideLoop = section.CanOverrideLoop(difficulty);
 					loop = section.GetLoopState(difficulty);
 					sync = section.ShouldSyncWithGround(difficulty);
+					syncSpeed = section.GetGroundSyncSpeed(difficulty);
 					this.AnimationPlaybackRate = rate;
 					return LookupProfileAnimation(this.index, animation);
 				}
@@ -655,6 +670,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		overrideLoop = section.CanOverrideLoop(difficulty);
 		loop = section.GetLoopState(difficulty);
 		sync = section.ShouldSyncWithGround(difficulty);
+		syncSpeed = section.GetGroundSyncSpeed(difficulty);
 
 		this.AnimationPlaybackRate = rate;
 
@@ -699,12 +715,12 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		{
 			return false;
 		}
-		float footstepInterval = 0.0;
+		float footstepInterval = 0.0, syncSpeed = -1.0;
 		bool overrideLoop, loop, sync;
 		int index = 0;
 		char animation[64];
 
-		sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation), sync, animations);
+		sequence = this.SelectProfileAnimation(animType, rate, duration, cycle, footstepInterval, index, preDefinedIndex, preDefinedName, posture, overrideLoop, loop, animation, sizeof(animation), sync, syncSpeed, animations);
 		if (sequence == -1)
 		{
 			return false;
@@ -752,6 +768,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			this.LegacyFootstepTime = 0.0;
 			this.LegacyFootstepInterval = footstepInterval;
 			this.ShouldAnimationSyncWithGround = sync;
+			this.GroundSyncSpeed = syncSpeed;
 		}
 
 		return true;

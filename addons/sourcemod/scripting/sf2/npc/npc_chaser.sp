@@ -352,7 +352,7 @@ bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEl
 			return false;
 		}
 
-		if (!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !SF2NPC_BaseNPC(bossIndex).GetProfileData().TeleportIgnoreChases)
+		if (!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !SF_IsRaidMap() && !SF2NPC_BaseNPC(bossIndex).GetProfileData().TeleportIgnoreChases)
 		{
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{

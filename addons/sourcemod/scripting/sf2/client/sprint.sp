@@ -322,7 +322,7 @@ void SetPlayerStaminaRechargeTime(SF2_BasePlayer client, float time, bool checkT
 	g_StaminaRechargeTime[client.index] = time;
 }
 
-float GetStaminaDecreaseRate(SF2_BasePlayer client)
+static float GetStaminaDecreaseRate(SF2_BasePlayer client)
 {
 	float rate = 0.03;
 
@@ -357,7 +357,7 @@ float GetStaminaDecreaseRate(SF2_BasePlayer client)
 	return rate;
 }
 
-float GetStaminaRechargeRate(SF2_BasePlayer client)
+static float GetStaminaRechargeRate(SF2_BasePlayer client)
 {
 	float rate = 0.02;
 

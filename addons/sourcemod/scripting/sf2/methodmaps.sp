@@ -236,9 +236,29 @@ methodmap SF2NPC_BaseNPC
 		return NPCGetAddSpeed(this.Index);
 	}
 
+	public float GetPersistentAddSpeed()
+	{
+		return NPCGetPersistentAddSpeed(this.Index);
+	}
+
 	public void SetAddSpeed(float value)
 	{
 		NPCSetAddSpeed(this.Index, value);
+	}
+
+	public void SetPersistentAddSpeed(float value)
+	{
+		NPCSetPersistentAddSpeed(this.Index, value);
+	}
+
+	public float GetPersistentAddWalkSpeed()
+	{
+		return NPCGetPersistentAddWalkSpeed(this.Index);
+	}
+
+	public void SetPersistentAddWalkSpeed(float value)
+	{
+		NPCSetPersistentAddWalkSpeed(this.Index, value);
 	}
 
 	public float GetAddAcceleration()
@@ -246,9 +266,19 @@ methodmap SF2NPC_BaseNPC
 		return NPCGetAddAcceleration(this.Index);
 	}
 
+	public float GetPersistentAddAcceleration()
+	{
+		return NPCGetPersistentAddAcceleration(this.Index);
+	}
+
 	public void SetAddAcceleration(float value)
 	{
 		NPCSetAddAcceleration(this.Index, value);
+	}
+
+	public void SetPersistentAddAcceleration(float value)
+	{
+		NPCSetPersistentAddAcceleration(this.Index, value);
 	}
 
 	property float AddAcceleration
@@ -818,9 +848,9 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void HandleFlashlight()
+	public void ToggleFlashlight()
 	{
-		ClientHandleFlashlight(this.index);
+		ClientToggleFlashlight(this);
 	}
 
 	property float FlashlightBatteryLife
@@ -1209,7 +1239,7 @@ void SetupMethodmapAPI()
 	CreateNative("SF2_Player.TeleportToEscapePoint", Native_ClientTeleportToEscapePoint);
 	CreateNative("SF2_Player.ForceEscape", Native_ClientForceEscape);
 	CreateNative("SF2_Player.UsingFlashlight.get", Native_GetClientUsingFlashlight);
-	CreateNative("SF2_Player.HandleFlashlight", Native_ClientHandleFlashlight);
+	CreateNative("SF2_Player.ToggleFlashlight", Native_ClientToggleFlashlight);
 	CreateNative("SF2_Player.FlashlightBatteryLife.get", Native_GetClientFlashlightBatteryLife);
 	CreateNative("SF2_Player.FlashlightBatteryLife.set", Native_SetClientFlashlightBatteryLife);
 	CreateNative("SF2_Player.ResetFlashlight", Native_ClientResetFlashlight);
@@ -2076,7 +2106,7 @@ static any Native_GetClientUsingFlashlight(Handle plugin, int numParams)
 	return player.UsingFlashlight;
 }
 
-static any Native_ClientHandleFlashlight(Handle plugin, int numParams)
+static any Native_ClientToggleFlashlight(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	if (!IsValidClient(client))
@@ -2085,7 +2115,7 @@ static any Native_ClientHandleFlashlight(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.HandleFlashlight();
+	player.ToggleFlashlight();
 	return 0;
 }
 

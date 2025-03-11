@@ -116,7 +116,7 @@ methodmap ChaserBossProfile < BaseBossProfile
 	{
 		public get()
 		{
-			return this.GetFloat("backstab_damage_scale", 0.05);
+			return this.GetFloat("backstab_damage_scale", 0.025);
 		}
 	}
 
@@ -1071,7 +1071,7 @@ methodmap ChaserBossProfile < BaseBossProfile
 				keys.PushString("ignore_always_looking");
 				keys.PushString("attack_ignore_always_looking");
 
-				if (this.GetAttributes() != null && (this.GetAttributes().GetValue(SF2Attribute_AlwaysLookAtTargetWhileAttacking) >= 0.0 || this.GetAttributes().GetValue(SF2Attribute_AlwaysLookAtTarget) >= 0.0))
+				if (this.GetAttributes() != null && (this.GetAttributes().GetValue(SF2Attribute_AlwaysLookAtTargetWhileAttacking) > 0.0 || this.GetAttributes().GetValue(SF2Attribute_AlwaysLookAtTarget) > 0.0))
 				{
 					for (int i2 = 0; i2 < Difficulty_Max; i2++)
 					{

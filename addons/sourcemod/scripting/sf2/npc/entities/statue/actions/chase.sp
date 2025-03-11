@@ -125,15 +125,16 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	}
 	else
 	{
-		int pathTo = target.index;
+		float pos[3];
+		target.GetAbsOrigin(pos);
 		if (actor.Teleporters.Length > 0)
 		{
-			pathTo = actor.Teleporters.Get(0);
+			CBaseEntity(EntRefToEntIndex(actor.Teleporters.Get(0))).GetAbsOrigin(pos);
 		}
 
 		if (path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
 		{
-			path.ComputeToTarget(bot, pathTo);
+			path.ComputeToPos(bot, pos);
 		}
 	}
 

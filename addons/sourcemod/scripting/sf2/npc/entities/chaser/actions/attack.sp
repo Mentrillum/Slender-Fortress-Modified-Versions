@@ -66,7 +66,7 @@ methodmap ChaserBossProfileBaseAttack < ProfileObject
 
 	public bool ShouldAutoAim(int difficulty)
 	{
-		return this.GetDifficultyBool("autoaim", difficulty, true);
+		return this.GetDifficultyBool("autoaim", difficulty, false);
 	}
 
 	property int UseOnDifficulty
@@ -1648,15 +1648,16 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 
 		if (actor.MovementType == SF2NPCMoveType_Attack)
 		{
-			int pathTo = target.index;
+			float pos[3];
+			target.GetAbsOrigin(pos);
 			if (actor.Teleporters.Length > 0)
 			{
-				pathTo = actor.Teleporters.Get(0);
+				CBaseEntity(EntRefToEntIndex(actor.Teleporters.Get(0))).GetAbsOrigin(pos);
 			}
 
 			if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
 			{
-				path.ComputeToTarget(bot, pathTo);
+				path.ComputeToPos(bot, pos);
 			}
 		}
 	}

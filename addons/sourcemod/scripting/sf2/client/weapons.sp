@@ -165,7 +165,7 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 
 	// pvp
-	if (client.IsInPvP || (SF_IsRaidMap() && !client.IsEliminated) || IsClientInWeaponsTrigger(client.index))
+	if (client.IsInPvP || (SF_IsRaidMap() && !client.IsEliminated && !client.HasEscaped) || IsClientInWeaponsTrigger(client.index))
 	{
 		removeWeapons = false;
 		restrictWeapons = true;
@@ -511,7 +511,7 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 
 	//Remove the teleport ability
-	if (client.IsInPvP || client.IsInPvE || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !client.IsEliminated))
+	if (client.IsInPvP || client.IsInPvE || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !client.IsEliminated && !client.HasEscaped))
 	{
 		int weaponEnt = INVALID_ENT_REFERENCE;
 		Handle weaponHandle = null;

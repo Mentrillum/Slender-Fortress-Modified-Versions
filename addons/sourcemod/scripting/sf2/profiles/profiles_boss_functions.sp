@@ -360,7 +360,7 @@ methodmap BaseBossProfile < ProfileObject
 	{
 		public get()
 		{
-			return this.GetFloat("search_node_dist_lookahead", 128.0);
+			return this.GetFloat("search_node_dist_lookahead", 256.0);
 		}
 	}
 
@@ -1068,6 +1068,33 @@ methodmap BaseBossProfile < ProfileObject
 		return obj;
 	}
 
+	public BossOnPageCountChangedData GetPageCountChagedData(int count, float highest = -1.0, float& newHighest = 0.0)
+	{
+		ProfileObject obj = this.GetSection("on_page_collected");
+		if (obj == null)
+		{
+			return null;
+		}
+
+		float percent = float(count) / float(g_PageMax);
+		char highestName[64];
+		for (int i = 0; i < obj.SectionLength; i++)
+		{
+			char name[64];
+			obj.GetSectionNameFromIndex(i, name, sizeof(name));
+			float value = StringToFloat(name);
+			if (value > highest && value <= percent)
+			{
+				highest = value;
+				highestName = name;
+			}
+		}
+
+		newHighest = highest;
+
+		return view_as<BossOnPageCountChangedData>(obj.GetSection(highestName));
+	}
+
 	public void Precache()
 	{
 		char path[PLATFORM_MAX_PATH], key[512], value[2048];
@@ -1085,6 +1112,23 @@ methodmap BaseBossProfile < ProfileObject
 		if (path[0] != '\0')
 		{
 			PrecacheSound2(path, g_FileCheckConVar.BoolValue);
+		}
+
+		ProfileObject obj = this.GetSection("on_page_collected");
+		if (obj != null)
+		{
+			for (int i = 0; i < obj.SectionLength; i++)
+			{
+				char name[64];
+				obj.GetSectionNameFromIndex(i, name, sizeof(name));
+				BossOnPageCountChangedData pageData = view_as<BossOnPageCountChangedData>(obj.GetSection(name));
+				if (pageData == null)
+				{
+					continue;
+				}
+
+				pageData.Precache();
+			}
 		}
 
 		// ========================
@@ -1320,11 +1364,15 @@ methodmap BaseBossProfile < ProfileObject
 				temp2 = newObj.InsertNewSection("animations");
 				if (temp.GetSection("deathcam") != null)
 				{
-					temp2.AddExistingSection(view_as<ProfileObject>(temp.GetSection("deathcam").Clone()));
+					temp4 = view_as<ProfileObject>(temp.GetSection("deathcam").Clone());
+					temp4.SetSectionName("start");
+					temp2.AddExistingSection(temp4);
 				}
 				else if (temp.GetSection("idle") != null)
 				{
-					temp2.AddExistingSection(view_as<ProfileObject>(temp.GetSection("idle").Clone()));
+					temp4 = view_as<ProfileObject>(temp.GetSection("idle").Clone());
+					temp4.SetSectionName("start");
+					temp2.AddExistingSection(temp4);
 				}
 			}
 			if (this.GetBool("death_cam_public") || this.GetSection("public_death_cam") != null)
@@ -1336,10 +1384,10 @@ methodmap BaseBossProfile < ProfileObject
 				if (this.GetSection("public_death_cam") == null)
 				{
 					this.GetString("death_cam_attachtment_target_point", value, sizeof(value));
-					this.GetString("death_cam_attachment_target_point", value, sizeof(value));
+					this.GetString("death_cam_attachment_target_point", value, sizeof(value), value);
 					temp.SetKeyValue("target_attachment", value);
-					this.GetString("death_cam_attachtment_target_point", value, sizeof(value));
-					this.GetString("death_cam_attachment_target_point", value, sizeof(value));
+					this.GetString("death_cam_attachtment_point", value, sizeof(value));
+					this.GetString("death_cam_attachment_point", value, sizeof(value), value);
 					temp.SetKeyValue("attachment", value);
 					temp = temp.InsertNewSection("offset");
 					temp.TransferKey(this, "deathcam_death_backward_offset", "backward");
@@ -1418,41 +1466,12 @@ methodmap BaseBossProfile < ProfileObject
 		{
 			for (int i = 0; i < arr.Length; i++)
 			{
-				char asset[PLATFORM_MAX_PATH], file[PLATFORM_MAX_PATH];
+				char asset[PLATFORM_MAX_PATH];
 				arr.GetString(i, asset, sizeof(asset));
 
-				FormatEx(file, sizeof(file), "%s.vtf", asset);
-				if (g_FileCheckConVar.BoolValue)
+				if (asset[0] != '\0')
 				{
-					if (FileExists(file) || FileExists(file, true))
-					{
-						AddFileToDownloadsTable(file);
-					}
-					else
-					{
-						LogSF2Message("Texture file %s does not exist, please fix this download or remove it from the array.", file);
-					}
-				}
-				else
-				{
-					AddFileToDownloadsTable(file);
-				}
-
-				FormatEx(file, sizeof(file), "%s.vmt", asset);
-				if (g_FileCheckConVar.BoolValue)
-				{
-					if (FileExists(file) || FileExists(file, true))
-					{
-						AddFileToDownloadsTable(file);
-					}
-					else
-					{
-						LogSF2Message("Material file %s does not exist, please fix this download or remove it from the array.", file);
-					}
-				}
-				else
-				{
-					AddFileToDownloadsTable(file);
+					PrecacheMaterial2(asset, g_FileCheckConVar.BoolValue);
 				}
 			}
 		}
@@ -1466,7 +1485,7 @@ methodmap BaseBossProfile < ProfileObject
 				arr.GetString(i, asset, sizeof(asset));
 				if (asset[0] != '\0')
 				{
-					PrecacheModel2(path, _, _, g_FileCheckConVar.BoolValue);
+					PrecacheModel2(asset, _, _, g_FileCheckConVar.BoolValue);
 				}
 			}
 		}
@@ -1576,7 +1595,7 @@ methodmap BaseBossProfile < ProfileObject
 		{
 			for (int i = 0; i < this.GetSpawnEffects().Length; i++)
 			{
-				ProfileObject obj = view_as<ProfileObject>(this.GetSpawnEffects().GetSection(i));
+				obj = view_as<ProfileObject>(this.GetSpawnEffects().GetSection(i));
 				obj = obj != null ? obj.GetSection("effects") : null;
 				if (obj == null)
 				{
@@ -1590,7 +1609,7 @@ methodmap BaseBossProfile < ProfileObject
 		{
 			for (int i = 0; i < this.GetDespawnEffects().Length; i++)
 			{
-				ProfileObject obj = view_as<ProfileObject>(this.GetDespawnEffects().GetSection(i));
+				obj = view_as<ProfileObject>(this.GetDespawnEffects().GetSection(i));
 				obj = obj != null ? obj.GetSection("effects") : null;
 				if (obj == null)
 				{
@@ -2235,6 +2254,47 @@ methodmap BossKillSoundsData < ProfileObject
 			{
 				this.GetKilledClassSounds(view_as<TFClassType>(i)).Precache();
 			}
+		}
+	}
+}
+
+methodmap BossOnPageCountChangedData < ProfileObject
+{
+	public float GetAddSpeed(int difficulty)
+	{
+		return this.GetDifficultyFloat("add_run_speed", difficulty, 0.0);
+	}
+
+	public float GetAddWalkSpeed(int difficulty)
+	{
+		return this.GetDifficultyFloat("add_walk_speed", difficulty, 0.0);
+	}
+
+	public float GetAddAcceleration(int difficulty)
+	{
+		return this.GetDifficultyFloat("add_acceleration", difficulty, 0.0);
+	}
+
+	public ProfileSound GetLocalSounds()
+	{
+		return view_as<ProfileSound>(this.GetSection("local_sounds"));
+	}
+
+	public ProfileSound GetGlobalSounds()
+	{
+		return view_as<ProfileSound>(this.GetSection("global_sounds"));
+	}
+
+	public void Precache()
+	{
+		if (this.GetLocalSounds() != null)
+		{
+			this.GetLocalSounds().Precache();
+		}
+
+		if (this.GetGlobalSounds() != null)
+		{
+			this.GetGlobalSounds().Precache();
 		}
 	}
 }

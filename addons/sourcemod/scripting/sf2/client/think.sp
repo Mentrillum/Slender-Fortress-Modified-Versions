@@ -97,22 +97,6 @@ void ClientOnButtonPress(SF2_BasePlayer client, int button)
 {
 	switch (button)
 	{
-		case IN_ATTACK2:
-		{
-			if (client.IsAlive)
-			{
-				if (!IsRoundInWarmup() &&
-					!IsRoundInIntro() &&
-					!IsRoundEnding() &&
-					!client.HasEscaped)
-				{
-					if (GetGameTime() >= client.GetFlashlightNextInputTime())
-					{
-						client.HandleFlashlight();
-					}
-				}
-			}
-		}
 		case IN_ATTACK3:
 		{
 			client.HandleSprint(true);
@@ -286,28 +270,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 				char buffer2[64];
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					float percent = float(player.Health) / float(player.MaxHealth);
-					if (percent > 1.0)
-					{
-						percent = 1.0;
-					}
-					bars = RoundToCeil(float(maxBars) * percent);
-					if (bars > maxBars)
-					{
-						bars = maxBars;
-					}
-					FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_HEALTH_SYMBOL);
-					for (int i2 = 0; i2 < maxBars; i2++)
-					{
-						if (i2 < bars)
-						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
-						}
-						else
-						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
-						}
-					}
+					FormatEx(buffer, sizeof(buffer), "%s  %i/%i", SF2_PLAYER_HUD_HEALTH_SYMBOL, player.Health, player.MaxHealth);
 				}
 
 				if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !SF_IsRaidMap() && !SF_IsBoxingMap())

@@ -181,6 +181,8 @@ enum struct SF2PageEntityData
 	int EntRef;
 	char CollectSound[PLATFORM_MAX_PATH];
 	int CollectSoundPitch;
+	float Pos[3];
+	float Ang[3];
 }
 
 ArrayList g_Pages;
@@ -570,6 +572,7 @@ PrivateForward g_OnConfigsExecutedPFwd;
 PrivateForward g_OnEntityCreatedPFwd;
 PrivateForward g_OnEntityDestroyedPFwd;
 PrivateForward g_OnEntityTeleportedPFwd;
+PrivateForward g_OnBuildingDestroyedPFwd;
 PrivateForward g_OnPostInitMapEntitiesPFwd;
 PrivateForward g_OnPostInitNewGamePFwd;
 PrivateForward g_OnRoundStateChangePFwd;
@@ -585,6 +588,8 @@ PrivateForward g_OnPlayerDisconnectedPFwd;
 PrivateForward g_OnPlayerEscapePFwd;
 PrivateForward g_OnPlayerTeamPFwd;
 PrivateForward g_OnPlayerClassPFwd;
+PrivateForward g_OnPlayerPressButtonPFwd;
+PrivateForward g_OnPlayerReleaseButtonPFwd;
 PrivateForward g_OnPlayerLookAtBossPFwd;
 PrivateForward g_OnPlayerChangePlayStatePFwd;
 PrivateForward g_OnPlayerChangeGhostStatePFwd;
@@ -658,6 +663,10 @@ stock ArrayList g_FuncNavPrefer;
 
 int g_FlashlightHaloModel = -1;
 
+bool g_PagesRevealed = false;
+ArrayList g_PageLocations;
+ArrayList g_PageLocationsGlow;
+
 #if defined DEBUG
 #include "sf2/debug.sp"
 #endif
@@ -727,8 +736,12 @@ public void OnLibraryRemoved(const char[] name)
 public void OnMapStart()
 {
 	g_TimerFail = null;
+	g_PagesRevealed = false;
+	g_PageLocations.Clear();
+	g_PageLocationsGlow.Clear();
 	FindHealthBar();
 	PrecacheSound(SOUND_THUNDER, true);
+	PrecacheSound(DEBUG_PAGEREVEALSOUND);
 	PrecacheSound("weapons/teleporter_send.wav");
 	g_ShockwaveBeam = PrecacheModel("sprites/laser.vmt");
 	g_ShockwaveHalo = PrecacheModel("sprites/halo01.vmt");
@@ -785,18 +798,21 @@ public void OnConfigsExecuted()
 					while ((ent = FindEntityByClassname(ent, "obj_sentrygun")) != -1)
 					{
 						g_Buildings.Push(EntIndexToEntRef(ent));
+						HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 					}
 
 					ent = -1;
 					while ((ent = FindEntityByClassname(ent, "obj_teleporter")) != -1)
 					{
 						g_Buildings.Push(EntIndexToEntRef(ent));
+						HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 					}
 
 					ent = -1;
 					while ((ent = FindEntityByClassname(ent, "obj_dispenser")) != -1)
 					{
 						g_Buildings.Push(EntIndexToEntRef(ent));
+						HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 					}
 
 					ent = -1;
@@ -1349,11 +1365,6 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 		if (player.IsProxy)
 		{
 			player.ProxyControl -= 20;
-		}
-
-		if (player.UsingFlashlight)
-		{
-			player.HandleFlashlight();
 		}
 	}
 
@@ -2080,36 +2091,6 @@ static Action Timer_BossCountUpdate(Handle timer)
 		}
 	}
 	return Plugin_Continue;
-}
-
-void ReloadRestrictedWeapons()
-{
-	if (g_RestrictedWeaponsConfig != null)
-	{
-		delete g_RestrictedWeaponsConfig;
-		g_RestrictedWeaponsConfig = null;
-	}
-
-	char buffer[PLATFORM_MAX_PATH];
-	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
-	{
-		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_RESTRICTEDWEAPONS);
-	}
-	else
-	{
-		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_RESTRICTEDWEAPONS_DATA);
-	}
-	KeyValues kv = new KeyValues("root");
-	if (!FileToKeyValues(kv, buffer))
-	{
-		delete kv;
-		LogError("Failed to load restricted weapons list! File not found!");
-	}
-	else
-	{
-		g_RestrictedWeaponsConfig = kv;
-		LogSF2Message("Reloaded restricted weapons configuration file successfully");
-	}
 }
 
 static Action Timer_RoundMessages(Handle timer)
@@ -3345,6 +3326,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 			{
 				player.SetAFKTime();
 				ClientOnButtonPress(player, button);
+				Call_StartForward(g_OnPlayerPressButtonPFwd);
+				Call_PushCell(player);
+				Call_PushCell(button);
+				Call_Finish();
 				if (button == IN_ATTACK2)
 				{
 					if (player.IsInPvP && !(buttons & IN_ATTACK))
@@ -3393,6 +3378,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		else if ((player.LastButtons & button))
 		{
 			ClientOnButtonRelease(player, button);
+			Call_StartForward(g_OnPlayerReleaseButtonPFwd);
+			Call_PushCell(player);
+			Call_PushCell(button);
+			Call_Finish();
 		}
 	}
 
@@ -4594,7 +4583,7 @@ void SlenderOnClientStressUpdate(int client)
 		if (teleportTarget && teleportTarget != INVALID_ENT_REFERENCE && !g_PlayerIsExitCamping[teleportTarget])
 		{
 			if (g_PlayerEliminated[teleportTarget] || DidClientEscape(teleportTarget) ||
-				(!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !profileData.TeleportIgnoreChases && stress >= g_SlenderTeleportMaxTargetStress[bossIndex]) ||
+				(!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !SF_IsRaidMap() && !profileData.TeleportIgnoreChases && stress >= g_SlenderTeleportMaxTargetStress[bossIndex]) ||
 				(g_SlenderTeleportMaxTargetTime[Npc.Index] > 0.0 && gameTime >= g_SlenderTeleportMaxTargetTime[Npc.Index]))
 			{
 				// Queue for a new target and mark the old target in the rest period.
@@ -4638,7 +4627,7 @@ void SlenderOnClientStressUpdate(int client)
 							break;
 						}
 					}
-					if (g_PlayerStressAmount[i] < preferredTeleportTargetStress || g_RestartSessionEnabled || profileData.TeleportIgnoreChases || SF_BossesChaseEndlessly() || SF_IsRenevantMap() || SF_IsSurvivalMap())
+					if (g_PlayerStressAmount[i] < preferredTeleportTargetStress || g_RestartSessionEnabled || profileData.TeleportIgnoreChases || SF_BossesChaseEndlessly() || SF_IsRenevantMap() || SF_IsSurvivalMap() || SF_IsRaidMap())
 					{
 						if (g_SlenderTeleportPlayersRestTime[Npc.Index][i] <= gameTime)
 						{
@@ -5475,43 +5464,32 @@ void HandlePlayerIntroState(int client)
 
 void HandlePlayerHUD(int client)
 {
-	if (SF_IsRaidMap() || SF_IsBoxingMap())
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (SF_IsRaidMap() || SF_IsBoxingMap() || IsRoundInWarmup())
 	{
+		player.SetProp(Prop_Send, "m_iHideHUD", HIDEHUD_MATCH_STATUS);
 		return;
 	}
-	if (IsRoundInWarmup() || IsClientInGhostMode(client))
+	int flags = HIDEHUD_MATCH_STATUS | HIDEHUD_CROSSHAIR | HIDEHUD_HEALTH | HIDEHUD_BUILDING_STATUS | HIDEHUD_CLOAK_AND_FEIGN | HIDEHUD_PIPES_AND_CHARGE | HIDEHUD_METAL | HIDEHUD_TARGET_ID | HIDEHUD_WEAPONSELECTION | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_BONUS_PROGRESS;
+	if (!player.IsEliminated)
 	{
-		SetEntProp(client, Prop_Send, "m_iHideHUD", 0);
+		if (player.HasEscaped)
+		{
+			flags = HIDEHUD_MATCH_STATUS;
+		}
 	}
 	else
 	{
-		if (!g_PlayerEliminated[client])
+		if (!player.IsProxy && !player.IsInGhostMode)
 		{
-			if (!DidClientEscape(client))
-			{
-				// Player is in the game; disable normal HUD.
-				SetEntProp(client, Prop_Send, "m_iHideHUD", HIDEHUD_CROSSHAIR | HIDEHUD_HEALTH);
-			}
-			else
-			{
-				// Player isn't in the game; enable normal HUD behavior.
-				SetEntProp(client, Prop_Send, "m_iHideHUD", 0);
-			}
+			flags = HIDEHUD_MATCH_STATUS;
 		}
-		else
+		else if (player.IsProxy)
 		{
-			if (g_PlayerProxy[client])
-			{
-				// Player is in the game; disable normal HUD.
-				SetEntProp(client, Prop_Send, "m_iHideHUD", HIDEHUD_CROSSHAIR | HIDEHUD_HEALTH);
-			}
-			else
-			{
-				// Player isn't in the game; enable normal HUD behavior.
-				SetEntProp(client, Prop_Send, "m_iHideHUD", 0);
-			}
+			flags &= ~(HIDEHUD_HEALTH);
 		}
 	}
+	player.SetProp(Prop_Send, "m_iHideHUD", flags);
 }
 
 Action Timer_StopAirDash(Handle timer, any userid)
@@ -6430,6 +6408,14 @@ Action Timer_PlayerSwitchToBlue(Handle timer, any userid)
 	}
 
 	return Plugin_Stop;
+}
+
+static void Output_OnBuildingDestroyed(const char[] output, int caller, int activator, float delay)
+{
+	Call_StartForward(g_OnBuildingDestroyedPFwd);
+	Call_PushCell(CBaseEntity(caller));
+	Call_PushCell(CBaseEntity(activator));
+	Call_Finish();
 }
 
 static Action Timer_RoundStart(Handle timer)
@@ -7404,6 +7390,8 @@ static void SpawnPages()
 
 				SF2PageEntityData pageData;
 				pageData.EntRef = EnsureEntRef(page);
+				pageData.Pos = pos;
+				pageData.Ang = angle;
 
 				if (spawnPoint.IsValid())
 				{
@@ -7903,12 +7891,6 @@ void InitializeNewGame()
 		DebugMessage("START InitializeNewGame()");
 	}
 	#endif
-
-	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-	{
-		AcceptEntityInput(ent, "Enable");
-	}
 
 	InitializeMapEntities();
 

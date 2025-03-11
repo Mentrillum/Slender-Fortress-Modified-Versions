@@ -1455,6 +1455,15 @@ methodmap ProfileAnimation < ProfileObject // This covers each animation index i
 		return this.GetDifficultyBool("ground_sync", difficulty);
 	}
 
+	public float GetGroundSyncSpeed(int difficulty, bool legacy = false)
+	{
+		if (legacy)
+		{
+			return 0.0;
+		}
+		return this.GetDifficultyFloat("ground_sync_speed", difficulty, -1.0);
+	}
+
 	public bool PlayAnimation(CBaseAnimating actor, int difficulty, bool loops = false)
 	{
 		int sequence;
@@ -1701,7 +1710,7 @@ methodmap ProfileOutput < ProfileObject
 {
 	public void GetTarget(char[] buffer, int bufferSize)
 	{
-		this.GetString("target", buffer, bufferSize);
+		this.GetString("target", buffer, bufferSize, "!self");
 	}
 
 	public void GetInput(char[] buffer, int bufferSize)

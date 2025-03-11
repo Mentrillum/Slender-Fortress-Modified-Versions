@@ -192,23 +192,6 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
 		}
 	}
 
-	FormatEx(buffer, sizeof(buffer), "models/%s.sw.vtx", fixedPath);
-	if (checkFile)
-	{
-		if (FileExists(buffer, true))
-		{
-			AddFileToDownloadsTable(buffer);
-		}
-		else
-		{
-			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
-		}
-	}
-	else
-	{
-		AddFileToDownloadsTable(buffer);
-	}
-
 	FormatEx(buffer, sizeof(buffer), "models/%s.vvd", fixedPath);
 	if (checkFile)
 	{
@@ -260,8 +243,19 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
  */
 stock void PrecacheMaterial2(const char[] path, bool checkFile)
 {
-	char buffer[PLATFORM_MAX_PATH];
-	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", path);
+	char buffer[PLATFORM_MAX_PATH], fixedPath[PLATFORM_MAX_PATH];
+	if (strncmp(path, "materials/", 10, false) == 0 || strncmp(path, "materials\\", 10, false) == 0)
+	{
+		strcopy(fixedPath, sizeof(fixedPath), path[10]);
+	}
+	else
+	{
+		strcopy(fixedPath, sizeof(fixedPath), path);
+	}
+	ReplaceString(fixedPath, sizeof(fixedPath), "\\", "/", false);
+	ReplaceString(fixedPath, sizeof(fixedPath), ".vmt", "", false);
+	ReplaceString(fixedPath, sizeof(fixedPath), ".vtf", "", false);
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", fixedPath);
 	if (checkFile)
 	{
 		if (FileExists(buffer, true))
@@ -277,7 +271,7 @@ stock void PrecacheMaterial2(const char[] path, bool checkFile)
 	{
 		AddFileToDownloadsTable(buffer);
 	}
-	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", path);
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", fixedPath);
 	if (checkFile)
 	{
 		if (FileExists(buffer, true))
@@ -293,6 +287,22 @@ stock void PrecacheMaterial2(const char[] path, bool checkFile)
 	{
 		AddFileToDownloadsTable(buffer);
 	}
+}
+
+/**
+ * Removes the materials/ characters from a directory. Some materials like overlay
+ * or rope materials break if you try to use materials/.
+ * This also removes the .vmt or .vtf extensions.
+ *
+ * @param path			Path to remove the characters from
+ * @param bufferSize	Size of path
+ */
+stock void StripMaterialsFolder(char[] path, int bufferSize)
+{
+	ReplaceString(path, bufferSize, "\\", "/", false);
+	ReplaceString(path, bufferSize, ".vmt", "", false);
+	ReplaceString(path, bufferSize, ".vtf", "", false);
+	ReplaceString(path, bufferSize, "materials/", "", false);
 }
 
 /**

@@ -45,6 +45,15 @@ methodmap ChaserBossProfileTongueAttack < ChaserBossProfileBaseAttack
 		}
 	}
 
+	public void SetMaterial(char[] buffer)
+	{
+		ProfileObject obj = this.GetSection("tongue");
+		if (obj != null)
+		{
+			obj.SetString("material", buffer);
+		}
+	}
+
 	public void GetAttachment(char[] buffer, int bufferSize)
 	{
 		ProfileObject obj = this.GetSection("tongue");
@@ -112,7 +121,14 @@ methodmap ChaserBossProfileTongueAttack < ChaserBossProfileBaseAttack
 
 	public void Precache()
 	{
-
+		char asset[PLATFORM_MAX_PATH];
+		this.GetMaterial(asset, sizeof(asset));
+		if (asset[0] != '\0')
+		{
+			PrecacheMaterial2(asset, g_FileCheckConVar.BoolValue);
+			StripMaterialsFolder(asset, sizeof(asset));
+			this.SetMaterial(asset);
+		}
 	}
 }
 

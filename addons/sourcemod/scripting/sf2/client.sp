@@ -42,6 +42,7 @@ int g_ClientFrame[MAXTF2PLAYERS];
 #include "client/breathing.sp"
 #include "client/ghostmode.sp"
 #include "client/new_music.sp"
+#include "client/weapons.sp"
 #include "client/proxy.sp"
 
 void SetupClients()

@@ -192,6 +192,8 @@ methodmap BossProfileDeathCamData < ProfileObject
 				if (value[0] != '\0')
 				{
 					PrecacheMaterial2(value, g_FileCheckConVar.BoolValue);
+					StripMaterialsFolder(value, sizeof(value));
+					this.Overlays.SetString(i, value);
 				}
 			}
 		}
@@ -614,6 +616,7 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 	}
 
 	float duration = deathCamData.LegacyDuration;
+	float overlayDuration = deathCamData.LegacyOverlayStartTime;
 	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlays != null;
 	if (duration <= 0.0)
 	{
@@ -637,11 +640,15 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 			{
 				duration = section.GetPlayerDuration(difficulty);
 			}
+			if (section.GetOverlayStartTime(difficulty) > 0.0)
+			{
+				overlayDuration = section.GetOverlayStartTime(difficulty);
+			}
 		}
 	}
 
 	g_PlayerDeathCamTimer[client] = duration;
-	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlays != null;
+	g_PlayerDeathCamOverlayTimer[client] = overlayDuration;
 	if (g_PlayerDeathCamMustDoOverlay[client])
 	{
 		deathCamData.Overlays.GetString(GetRandomInt(0, deathCamData.Overlays.Length - 1), g_PlayerDeathCamCurrentOverlay[client], sizeof(g_PlayerDeathCamCurrentOverlay[]));
@@ -772,6 +779,11 @@ static void Hook_DeathCamThink(int client)
 	g_PlayerDeathCamOverlayTimer[player.index] -= GetGameFrameTime();
 	if (g_PlayerDeathCamMustDoOverlay[player.index] && g_PlayerDeathCamOverlayTimer[player.index] <= 0.0)
 	{
+		SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_PlayerDeathCamBoss[player.index]));
+		if (Npc.IsValid())
+		{
+			Npc.GetProfileData().GetOverlayDeathCamSounds().EmitSound(true, player.index);
+		}
 		g_PlayerDeathCamShowOverlay[player.index] = true;
 		g_PlayerDeathCamMustDoOverlay[player.index] = false;
 	}

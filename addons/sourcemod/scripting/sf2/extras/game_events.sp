@@ -63,21 +63,10 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	// Calculate the new round state.
 	if (g_RoundWaitingForPlayers)
 	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-		{
-			AcceptEntityInput(ent, "Disable");
-		}
 		SetRoundState(SF2RoundState_Waiting);
 	}
 	else if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
 	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-		{
-			AcceptEntityInput(ent, "Disable");
-		}
-
 		g_RoundWarmupRoundCount++;
 
 		SetRoundState(SF2RoundState_Waiting);

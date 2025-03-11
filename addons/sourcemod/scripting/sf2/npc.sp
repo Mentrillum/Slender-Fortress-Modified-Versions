@@ -17,11 +17,15 @@ static int g_NpcUniqueProfileIndex[MAX_BOSSES] = { -1, ... };
 static int g_NpcFlags[MAX_BOSSES] = { 0, ... };
 static int g_NpcTeleporters[MAX_BOSSES][MAX_NPCTELEPORTER];
 static int g_NpcModelMaster[2049];
+static float g_NpcHighestPagePercent[MAX_BOSSES] = { -1.0, ... };
 
 int g_SlenderEnt[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 
 static float g_NpcAddSpeed[MAX_BOSSES];
+static float g_NpcAddSpeedPersistent[MAX_BOSSES];
+static float g_NpcAddWalkSpeedPersistent[MAX_BOSSES];
 static float g_NpcAddAcceleration[MAX_BOSSES];
+static float g_NpcAddAccelerationPersistent[MAX_BOSSES];
 
 static bool g_NpcShouldBeAffectedBySight[MAX_BOSSES];
 
@@ -34,6 +38,7 @@ void NPCInitialize()
 	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
 	g_OnEntityTeleportedPFwd.AddFunction(null, EntityTeleported);
 	g_OnPlayerLookAtBossPFwd.AddFunction(null, OnPlayerLookAtBoss);
+	g_OnPageCountChangedPFwd.AddFunction(null, OnPageCountChanged);
 
 	NPCChaserInitialize();
 	SetupNPCGlows();
@@ -118,7 +123,7 @@ static void EntityTeleported(CBaseEntity teleporter, CBaseEntity activator)
 			// A boss took a teleporter, remove it from our list if possible
 			SF2_BaseBoss boss = SF2_BaseBoss(controller.EntIndex);
 			ArrayList teleporters = boss.Teleporters;
-			int index = teleporters.FindValue(teleporter.index);
+			int index = teleporters.FindValue(EntIndexToEntRef(teleporter.index));
 			if (index != -1)
 			{
 				teleporters.Erase(index);
@@ -143,7 +148,7 @@ static void EntityTeleported(CBaseEntity teleporter, CBaseEntity activator)
 				if (boss.Target == activator)
 				{
 					// The boss target took a teleporter and the boss can follow, add the teleporter to the list of teleporters
-					boss.Teleporters.Push(teleporter.index);
+					boss.Teleporters.Push(EntIndexToEntRef(teleporter.index));
 				}
 			}
 		}
@@ -199,6 +204,92 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 				client.ShowHint(PlayerHint_Blink);
 			}
 		}
+	}
+}
+
+static void OnPageCountChanged(int pageCount, int oldPageCount)
+{
+	ArrayList indexes = null;
+	for (int i = 0; i < MAX_BOSSES; i++)
+	{
+		SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(i);
+		if (!controller.IsValid())
+		{
+			continue;
+		}
+
+		int difficulty = controller.Difficulty;
+		BaseBossProfile profileData = controller.GetProfileData();
+		if (profileData.IsPvEBoss)
+		{
+			continue;
+		}
+
+		float old = g_NpcHighestPagePercent[controller.Index];
+		float newValue = -1.0;
+		BossOnPageCountChangedData pageChangeData = profileData.GetPageCountChagedData(pageCount, old, newValue);
+		if (pageChangeData == null)
+		{
+			continue;
+		}
+
+		int entity = NPCGetEntIndex(i);
+		if (entity && entity != INVALID_ENT_REFERENCE && pageChangeData.GetLocalSounds() != null)
+		{
+			pageChangeData.GetLocalSounds().EmitSound(_, entity);
+		}
+		if (pageChangeData.GetGlobalSounds() != null)
+		{
+			if (indexes == null)
+			{
+				indexes = new ArrayList();
+			}
+			indexes.Push(NPCGetUniqueID(i));
+		}
+		else
+		{
+			g_NpcHighestPagePercent[controller.Index] = newValue;
+		}
+
+		controller.SetPersistentAddSpeed(pageChangeData.GetAddSpeed(difficulty));
+		controller.SetPersistentAddWalkSpeed(pageChangeData.GetAddWalkSpeed(difficulty));
+		controller.SetPersistentAddAcceleration(pageChangeData.GetAddAcceleration(difficulty));
+	}
+
+	if (indexes != null)
+	{
+		indexes.Sort(Sort_Random, Sort_Integer);
+		SF2NPC_BaseNPC controller = SF2_INVALID_NPC;
+		int index = 0;
+		while (!controller.IsValid())
+		{
+			controller = SF2NPC_BaseNPC(NPCGetFromUniqueID(indexes.Get(index)));
+			index++;
+		}
+
+		BaseBossProfile profileData = controller.GetProfileData();
+		BossOnPageCountChangedData pageChangeData = profileData.GetPageCountChagedData(pageCount, g_NpcHighestPagePercent[controller.Index], g_NpcHighestPagePercent[controller.Index]);
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			SF2_BasePlayer player = SF2_BasePlayer(i);
+			if (!player.IsValid)
+			{
+				continue;
+			}
+
+			if (player.IsEliminated && !player.IsInGhostMode && !player.IsProxy)
+			{
+				continue;
+			}
+
+			if (!player.IsEliminated && player.HasEscaped)
+			{
+				continue;
+			}
+
+			pageChangeData.GetGlobalSounds().EmitSound(true, i);
+		}
+		delete indexes;
 	}
 }
 
@@ -445,9 +536,24 @@ void NPCSetAddSpeed(int npcIndex, float amount)
 	g_NpcAddSpeed[npcIndex] += amount;
 }
 
+void NPCSetPersistentAddSpeed(int npcIndex, float amount)
+{
+	g_NpcAddSpeedPersistent[npcIndex] += amount;
+}
+
+void NPCSetPersistentAddWalkSpeed(int npcIndex, float amount)
+{
+	g_NpcAddWalkSpeedPersistent[npcIndex] += amount;
+}
+
 void NPCSetAddAcceleration(int npcIndex, float amount)
 {
 	g_NpcAddAcceleration[npcIndex] += amount;
+}
+
+void NPCSetPersistentAddAcceleration(int npcIndex, float amount)
+{
+	g_NpcAddAccelerationPersistent[npcIndex] += amount;
 }
 
 float NPCGetAddSpeed(int npcIndex)
@@ -455,9 +561,24 @@ float NPCGetAddSpeed(int npcIndex)
 	return g_NpcAddSpeed[npcIndex];
 }
 
+float NPCGetPersistentAddSpeed(int npcIndex)
+{
+	return g_NpcAddSpeedPersistent[npcIndex];
+}
+
+float NPCGetPersistentAddWalkSpeed(int npcIndex)
+{
+	return g_NpcAddWalkSpeedPersistent[npcIndex];
+}
+
 float NPCGetAddAcceleration(int npcIndex)
 {
 	return g_NpcAddAcceleration[npcIndex];
+}
+
+float NPCGetPersistentAddAcceleration(int npcIndex)
+{
+	return g_NpcAddAccelerationPersistent[npcIndex];
 }
 
 void NPCSetTeleporter(int bossIndex, int teleporterNumber, int entity)
@@ -777,8 +898,13 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 
 	g_NpcDefaultTeam[npc.Index] = g_DefaultBossTeamConVar.IntValue;
 
+	g_NpcHighestPagePercent[npc.Index] = -1.0;
+
 	g_NpcAddSpeed[npc.Index] = 0.0;
+	g_NpcAddSpeedPersistent[npc.Index] = 0.0;
+	g_NpcAddWalkSpeedPersistent[npc.Index] = 0.0;
 	g_NpcAddAcceleration[npc.Index] = 0.0;
+	g_NpcAddAccelerationPersistent[npc.Index] = 0.0;
 
 	g_SlenderFakeTimer[npc.Index] = null;
 	g_SlenderEntityThink[npc.Index] = null;
@@ -2121,7 +2247,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 							continue;
 						}
 
-						if (view_as<CTFNavArea>(collector.Get(i)).HasAttributeTF(NO_SPAWNING))
+						if (area.HasAttributes(NAV_MESH_NO_HOSTAGES) || view_as<CTFNavArea>(area).HasAttributeTF(NO_SPAWNING))
 						{
 							continue;
 						}
@@ -2937,17 +3063,17 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 
 			for (int areaIndex = 0, maxCount = collector.Count(); areaIndex < maxCount; areaIndex++)
 			{
-				CNavArea Area = collector.Get(areaIndex);
+				CNavArea area = collector.Get(areaIndex);
 
 				// Check flags.
-				if (Area.GetAttributes() & NAV_MESH_NO_HOSTAGES)
+				if (area.HasAttributes(NAV_MESH_NO_HOSTAGES) || view_as<CTFNavArea>(area).HasAttributeTF(NO_SPAWNING))
 				{
 					// Don't spawn/teleport at areas marked with the "NO HOSTAGES" flag.
 					continue;
 				}
 
-				int index = areaArray.Push(Area);
-				areaArray.Set(index, Area.GetCostSoFar(), 1);
+				int index = areaArray.Push(area);
+				areaArray.Set(index, area.GetCostSoFar(), 1);
 				poppedAreas++;
 			}
 
