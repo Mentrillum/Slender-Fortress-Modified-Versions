@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_grenade";
 
@@ -258,6 +259,7 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		grenade.Speed = speed;
 		grenade.Damage = damage;
 		grenade.BlastRadius = blastRadius;
+		grenade.IsCrits = isCrits;
 		if (grenade.IsCrits)
 		{
 			CBaseEntity critParticle = grenade.CreateParticle("critical_grenade_blue");
@@ -272,7 +274,7 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		grenade.SetProp(Prop_Send, "m_nSkin", 1);
 		grenade.KeyValue("solid", "2");
 		grenade.KeyValue("spawnflags", "4");
-		SetEntityCollisionGroup(grenade.index, COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(grenade.index, 13);
 		grenade.SetProp(Prop_Send, "m_usSolidFlags", 0);
 
 		CBaseEntity particle = grenade.CreateParticle(grenade.GetTrailName());
@@ -287,39 +289,29 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		grenade.Timer = GetGameTime() + 2.0;
 
 		CreateTimer(0.1, Timer_Think, EntIndexToEntRef(grenade.index), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+		SDKHook(grenade.index, SDKHook_VPhysicsUpdate, OnVPhysicsUpdate);
 	}
 }
 
-static Action Timer_Think(Handle timer, any ref)
+static void OnVPhysicsUpdate(int entity)
 {
-	int entity = EntRefToEntIndex(ref);
-	if (!entity || entity == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
 	SF2_ProjectileGrenade projectile = SF2_ProjectileGrenade(entity);
-
-	if (projectile.Timer < GetGameTime())
-	{
-		projectile.DoExplosion();
-		if (projectile.IsValid())
-		{
-			RemoveEdict(projectile.index);
-		}
-	}
 
 	if (projectile.Touched)
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	float pos[3], mins[3], maxs[3];
 	projectile.GetAbsOrigin(pos);
 	projectile.GetPropVector(Prop_Send, "m_vecMins", mins);
 	projectile.GetPropVector(Prop_Send, "m_vecMaxs", maxs);
-	TR_TraceHullFilter(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, projectile.index);
+	ScaleVector(mins, 1.1);
+	ScaleVector(maxs, 1.1);
+	Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, TraceRayGrenade, projectile.index);
 
-	int hitIndex = TR_GetEntityIndex();
+	int hitIndex = TR_GetEntityIndex(trace);
+	delete trace;
 	if (IsValidEntity(hitIndex))
 	{
 		Call_StartForward(g_OnProjectileTouchFwd);
@@ -330,7 +322,7 @@ static Action Timer_Think(Handle timer, any ref)
 		if (hitIndex == 0)
 		{
 			projectile.Touched = true;
-			return Plugin_Continue;
+			return;
 		}
 		else
 		{
@@ -357,6 +349,30 @@ static Action Timer_Think(Handle timer, any ref)
 				}
 			}
 		}
+	}
+}
+
+static Action Timer_Think(Handle timer, any ref)
+{
+	int entity = EntRefToEntIndex(ref);
+	if (!entity || entity == INVALID_ENT_REFERENCE)
+	{
+		return Plugin_Stop;
+	}
+	SF2_ProjectileGrenade projectile = SF2_ProjectileGrenade(entity);
+
+	if (projectile.Timer < GetGameTime())
+	{
+		projectile.DoExplosion();
+		if (projectile.IsValid())
+		{
+			RemoveEdict(projectile.index);
+		}
+	}
+
+	if (projectile.Touched)
+	{
+		return Plugin_Continue;
 	}
 
 	return Plugin_Continue;

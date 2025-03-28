@@ -4,6 +4,7 @@
 #define _sf2_game_events_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 Action Event_RoundStart(Handle event, const char[] name, bool dB)
 {
@@ -38,8 +39,6 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	g_PageMax = 0;
 
 	g_VoteTimer = null;
-	//Stop the music if needed.
-	NPCStopMusic();
 	// Remove all bosses from the game.
 	NPCRemoveAll();
 	// Collect trigger_multiple to prevent touch bug.
@@ -64,21 +63,10 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	// Calculate the new round state.
 	if (g_RoundWaitingForPlayers)
 	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-		{
-			AcceptEntityInput(ent, "Disable");
-		}
 		SetRoundState(SF2RoundState_Waiting);
 	}
 	else if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
 	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-		{
-			AcceptEntityInput(ent, "Disable");
-		}
-
 		g_RoundWarmupRoundCount++;
 
 		SetRoundState(SF2RoundState_Waiting);
@@ -134,29 +122,37 @@ Action Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 
 Action Event_Audio(Event event, const char[] name, bool dB)
 {
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
 	char audio[PLATFORM_MAX_PATH];
 
-	GetEventString(event, "sound", audio, sizeof(audio));
-	if (strncmp(audio, "Game.Your", 9) == 0 || strcmp(audio, "Game.Stalemate") == 0)
+	event.GetString("sound", audio, sizeof(audio));
+	if (StrContains(audio, "Game.Your", false) == -1)
 	{
-		for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
-		{
-			if (NPCGetUniqueID(bossIndex) == -1)
-			{
-				continue;
-			}
-			if (!g_SlenderCustomOutroSong[bossIndex])
-			{
-				continue;
-			}
+		return Plugin_Continue;
+	}
 
-			return Plugin_Handled;
+	for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
+	{
+		if (NPCGetUniqueID(bossIndex) == -1)
+		{
+			continue;
 		}
+		BaseBossProfile data = SF2NPC_BaseNPC(bossIndex).GetProfileData();
+		if (data.GetOutroLoseSounds() == null && data.GetOutroWinSounds() == null)
+		{
+			continue;
+		}
+
+		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
 
-Action Event_RoundEnd(Handle event, const char[] name, bool dB)
+Action Event_RoundEnd(Event event, const char[] name, bool dB)
 {
 	if (!g_Enabled)
 	{
@@ -183,8 +179,9 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		g_PlayerFullyDied1Up[i] = true;
 	}
 
+	int wonTeam = event.GetInt("team");
+
 	ArrayList randomBosses = new ArrayList();
-	char music[MAX_BOSSES][PLATFORM_MAX_PATH];
 
 	for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 	{
@@ -193,28 +190,40 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 			continue;
 		}
 
-		if (g_SlenderCustomOutroSong[npcIndex])
+		BaseBossProfile data = SF2NPC_BaseNPC(npcIndex).GetProfileData();
+		if (data.IsPvEBoss)
 		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(npcIndex, profile, sizeof(profile));
-			SF2BossProfileSoundInfo soundInfo;
-			GetBossProfileOutroMusics(profile, soundInfo);
-			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
+			continue;
+		}
+
+		if (wonTeam == TFTeam_Blue)
+		{
+			if (data.GetOutroLoseSounds() == null)
 			{
-				soundInfo.Paths.GetString(GetRandomInt(0, soundInfo.Paths.Length - 1), music[npcIndex], sizeof(music[]));
+				continue;
 			}
-			if (music[npcIndex][0] != '\0')
+			randomBosses.Push(data.GetOutroLoseSounds());
+		}
+		else
+		{
+			if (data.GetOutroWinSounds() == null)
 			{
-				randomBosses.Push(npcIndex);
+				continue;
 			}
+			randomBosses.Push(data.GetOutroWinSounds());
 		}
 	}
+
 	if (randomBosses.Length > 0)
 	{
-		int newBossIndex = randomBosses.Get(GetRandomInt(0, randomBosses.Length - 1));
-		if (NPCGetUniqueID(newBossIndex) != -1)
+		ProfileSound sound = randomBosses.Get(GetRandomInt(0, randomBosses.Length - 1));
+		for (int i = 1; i <= MaxClients; i++)
 		{
-			EmitSoundToAll(music[newBossIndex], _, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
+			if (!IsValidClient(i))
+			{
+				continue;
+			}
+			sound.EmitSound(true, i);
 		}
 	}
 
@@ -236,7 +245,6 @@ Action Event_RoundEnd(Handle event, const char[] name, bool dB)
 		DebugMessage("EVENT END: Event_RoundEnd");
 	}
 	#endif
-	delete event;
 
 	return Plugin_Continue;
 }
@@ -353,22 +361,23 @@ Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 
 Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 {
-	if (!g_Enabled)
-	{
-		if (g_LoadOutsideMapsConVar.BoolValue && GetClientOfUserId(GetEventInt(event, "userid")) > 0)
-		{
-			Call_StartForward(g_OnPlayerSpawnPFwd);
-			Call_PushCell(SF2_BasePlayer(GetClientOfUserId(GetEventInt(event, "userid"))));
-			Call_Finish();
-		}
-		return Plugin_Continue;
-	}
-
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0)
 	{
 		return Plugin_Continue;
 	}
+
+	if (!g_Enabled)
+	{
+		if (g_LoadOutsideMapsConVar.BoolValue)
+		{
+			Call_StartForward(g_OnPlayerSpawnPFwd);
+			Call_PushCell(SF2_BasePlayer(client));
+			Call_Finish();
+		}
+		return Plugin_Continue;
+	}
+
 	#if defined DEBUG
 
 	Handle profiler = CreateProfiler();
@@ -392,7 +401,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	}
 	if (!IsClientParticipating(client))
 	{
-		TF2Attrib_SetByName(client, "increased jump height", 1.0);
 		TF2Attrib_RemoveByDefIndex(client, 10);
 
 		SetEntityGravity(client, 1.0);
@@ -435,26 +443,10 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	g_PlayerHitsToCrits[client] = 0;
 	g_PlayerHitsToHeads[client] = 0;
 
-	g_PlayerTrapped[client] = false;
-	g_PlayerTrapCount[client] = 0;
-
-	g_PlayerLatchedByTongue[client] = false;
-	g_PlayerLatchCount[client] = 0;
-	g_PlayerLatcher[client] = -1;
-
 	g_PlayerRandomClassNumber[client] = 1;
 
 	if (IsPlayerAlive(client) && IsClientParticipating(client))
 	{
-		if (MusicActive()) //A boss is overriding the music.
-		{
-			char path[PLATFORM_MAX_PATH];
-			GetBossMusic(path, sizeof(path));
-			if (path[0] != '\0')
-			{
-				StopSound(client, MUSIC_CHAN, path);
-			}
-		}
 		g_PlayerBackStabbed[client] = false;
 		TF2_RemoveCondition(client, TFCond_HalloweenKart);
 		TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
@@ -498,8 +490,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				}
 			}
 
-			TF2Attrib_SetByName(client, "increased jump height", 1.0);
-
 			if (!g_PlayerEliminated[client])
 			{
 				if (IsFakeClient(client))
@@ -530,12 +520,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 					CreateTimer(0.1, Timer_SwitchBot, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 				}
 
-				// screen overlay timer
-				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
-				{
-					g_PlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-					TriggerTimer(g_PlayerOverlayCheck[client], true);
-				}
 				if (DidClientEscape(client))
 				{
 					CreateTimer(0.1, Timer_TeleportPlayerToEscapePoint, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -548,6 +532,10 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				TF2Attrib_RemoveByDefIndex(client, 49);
 				TF2Attrib_RemoveByDefIndex(client, 28);
 			}
+
+			g_PlayerOverlayCheck[client] = CreateTimer(0.0, Timer_PlayerOverlayCheck, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			TriggerTimer(g_PlayerOverlayCheck[client], true);
+
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_PlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
@@ -702,7 +690,8 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 
 			char bossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(npcIndex, profile, sizeof(profile));
-			NPCGetBossName(npcIndex, bossName, sizeof(bossName));
+			BaseBossProfile data = GetBossProfile(profile);
+			data.GetName(GetLocalGlobalDifficulty(npcIndex), bossName, sizeof(bossName));
 
 			SetClientName(target, bossName);
 			SetEntPropString(target, Prop_Data, "m_szNetname", bossName);
@@ -710,22 +699,20 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			event.SetString("assister_fallback", "");
 			if ((NPCGetFlags(npcIndex) & SFF_WEAPONKILLS) || (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS))
 			{
+				char weaponType[64];
 				if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLS && SF2_ChaserEntity(owner).IsValid())
 				{
 					SF2_ChaserEntity chaser = SF2_ChaserEntity(owner);
-					SF2ChaserBossProfileData data;
-					data = NPCChaserGetProfileData(npcIndex);
-					SF2ChaserBossProfileAttackData attackData;
-					data.GetAttack(chaser.GetAttackName(), attackData);
-					event.SetString("weapon_logclassname", attackData.WeaponString);
-					event.SetString("weapon", attackData.WeaponString);
+					ChaserBossProfileBaseAttack attackData = SF2NPC_Chaser(npcIndex).GetProfileData().GetAttack(chaser.GetAttackName());
+					attackData.GetWeaponString(weaponType, sizeof(weaponType));
+					event.SetString("weapon_logclassname", weaponType);
+					event.SetString("weapon", weaponType);
 					event.SetInt("customkill", attackData.WeaponInt);
 				}
 				else if (NPCGetFlags(npcIndex) & SFF_WEAPONKILLSONRADIUS)
 				{
-					char weaponType[PLATFORM_MAX_PATH];
-					int weaponNum = GetBossProfileWeaponInt(profile);
-					GetBossProfileWeaponString(profile, weaponType, sizeof(weaponType));
+					int weaponNum = data.WeaponInt;
+					data.GetWeaponString(weaponType, sizeof(weaponType));
 					event.SetString("weapon_logclassname", weaponType);
 					event.SetString("weapon", weaponType);
 					event.SetInt("customkill", weaponNum);
@@ -777,8 +764,9 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 
 	if (npcIndex != -1)
 	{
-		SF2BossProfileData data;
-		data = NPCGetProfileData(npcIndex);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(npcIndex, profile, sizeof(profile));
+		BaseBossProfile data = GetBossProfile(profile);
 		g_PlayerBossKillSubject[client] = npcIndex;
 
 		if (!modify && (data.AshRagdoll || data.CloakRagdoll || data.DecapRagdoll || data.DeleteRagdoll || data.DissolveRagdoll ||
@@ -838,32 +826,6 @@ Action Event_PlayerHurt(Handle event, const char[] name, bool dB)
 	}
 	#endif
 
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if (attacker > 0)
-	{
-		if (g_PlayerProxy[attacker])
-		{
-			g_PlayerProxyControl[attacker] = 100;
-		}
-	}
-
-	// Play any sounds, if any.
-	if (g_PlayerProxy[client])
-	{
-		int proxyMaster = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
-		if (proxyMaster != -1)
-		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(proxyMaster, profile, sizeof(profile));
-
-			SF2BossProfileSoundInfo soundInfo;
-			GetBossProfileProxyHurtSounds(profile, soundInfo);
-			if (soundInfo.Paths != null && soundInfo.Paths.Length > 0)
-			{
-				soundInfo.EmitSound(_, client);
-			}
-		}
-	}
 	delete event;
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 0)

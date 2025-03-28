@@ -4,8 +4,581 @@
 #define _sf2_client_proxy_functions_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
-static int g_ActionItemIndexes[] = { 57, 231 };
+methodmap BossProfileProxyData < ProfileObject
+{
+	public bool IsEnabled(int difficulty)
+	{
+		if (this == null)
+		{
+			return false;
+		}
+		return this.GetDifficultyBool("enabled", difficulty, true);
+	}
+
+	public int GetMaxProxies(int difficulty)
+	{
+		return this.GetDifficultyInt("__proxies_max", difficulty);
+	}
+
+	public void SetMaxProxies(int difficulty, int value)
+	{
+		this.SetDifficultyInt("__proxies_max", difficulty, value);
+	}
+
+	public float GetMinSpawnChance(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_chance_min", difficulty, 0.0);
+	}
+
+	public float GetMaxSpawnChance(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_chance_max", difficulty, 0.0);
+	}
+
+	public float GetSpawnChanceThreshold(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_chance_threshold", difficulty, 0.25);
+	}
+
+	public int GetMinSpawnedProxies(int difficulty)
+	{
+		return this.GetDifficultyInt("spawn_num_min", difficulty, 0);
+	}
+
+	public int GetMaxSpawnedProxies(int difficulty)
+	{
+		return this.GetDifficultyInt("spawn_num_max", difficulty, 0);
+	}
+
+	public float GetMinSpawnCooldown(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_cooldown_min", difficulty, 4.0);
+	}
+
+	public float GetMaxSpawnCooldown(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_cooldown_max", difficulty, 8.0);
+	}
+
+	public float GetMinTeleportRange(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_range_min", difficulty, 500.0);
+	}
+
+	public float GetMaxTeleportRange(int difficulty)
+	{
+		return this.GetDifficultyFloat("spawn_range_max", difficulty, 3200.0);
+	}
+
+	public BossProfileProxyClass GetDefaultClassData()
+	{
+		ProfileObject obj = this.GetSection("classes");
+		if (obj == null)
+		{
+			return null;
+		}
+
+		return view_as<BossProfileProxyClass>(obj.GetSection("default"));
+	}
+
+	public BossProfileProxyClass GetClassData(TFClassType class)
+	{
+		ProfileObject obj = this.GetSection("classes");
+		if (obj == null)
+		{
+			return null;
+		}
+
+		switch (class)
+		{
+			case TFClass_Scout:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("scout"));
+			}
+			case TFClass_Soldier:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("soldier"));
+			}
+			case TFClass_Pyro:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("pyro"));
+			}
+			case TFClass_DemoMan:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("demoman"));
+			}
+			case TFClass_Heavy:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("heavy"));
+			}
+			case TFClass_Engineer:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("engineer"));
+			}
+			case TFClass_Medic:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("medic"));
+			}
+			case TFClass_Sniper:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("sniper"));
+			}
+			case TFClass_Spy:
+			{
+				return view_as<BossProfileProxyClass>(obj.GetSection("spy"));
+			}
+		}
+
+		return null;
+	}
+
+	public void Precache()
+	{
+		BossProfileProxyClass classData = this.GetDefaultClassData();
+		if (classData != null)
+		{
+			classData.Precache();
+		}
+
+		for (int i = view_as<int>(TFClass_Scout); i <= view_as<int>(TFClass_Engineer); i++)
+		{
+			TFClassType class = view_as<TFClassType>(i);
+			classData = this.GetClassData(class);
+			if (classData != null)
+			{
+				classData.Precache();
+			}
+
+			for (int i2 = 0; i2 < Difficulty_Max; i2++)
+			{
+				int max = this.GetMaxProxies(i2);
+				if (classData.GetMax(i2) >= 0)
+				{
+					max += classData.GetMax(i2);
+					this.SetMaxProxies(i2, max);
+				}
+			}
+		}
+	}
+}
+
+methodmap BossProfileProxyClass < ProfileObject
+{
+	public BossProfileProxyClass GetDefaultClassData()
+	{
+		BossProfileProxyData parent = view_as<BossProfileProxyData>(this.Parent);
+		return parent.GetDefaultClassData();
+	}
+
+	public void GetModel(int difficulty, char[] buffer, int bufferSize, const char[] defaultValue = "")
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			def.GetModel(difficulty, buffer, bufferSize, defaultValue);
+		}
+
+		this.GetDifficultyString("model", difficulty, buffer, bufferSize, buffer);
+		ReplaceString(buffer, bufferSize, "\\", "/", false);
+	}
+
+	public int GetMax(int difficulty, int defValue = 8)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyInt("max", difficulty, defValue);
+		}
+
+		return this.GetDifficultyInt("max", difficulty, defValue);
+	}
+
+	public float GetWeight(int difficulty, float defValue = 1.0)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyFloat("weight", difficulty, defValue);
+		}
+
+		return this.GetDifficultyFloat("weight", difficulty, defValue);
+	}
+
+	public int GetHealth(int difficulty, int defValue = 0)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyInt("health", difficulty, defValue);
+		}
+
+		return this.GetDifficultyInt("health", difficulty, defValue);
+	}
+
+	public float GetWalkSpeed(int difficulty, float defValue = 150.0)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyFloat("walkspeed", difficulty, defValue);
+		}
+
+		return this.GetDifficultyFloat("walkspeed", difficulty, defValue);
+	}
+
+	public float GetRunSpeed(int difficulty, float defValue = 300.0)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyFloat("runspeed", difficulty, defValue);
+		}
+
+		return this.GetDifficultyFloat("runspeed", difficulty, defValue);
+	}
+
+	public float GetDamageScale(int difficulty, float defValue = 1.0)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyFloat("damage_scale", difficulty, defValue);
+		}
+
+		return this.GetDifficultyFloat("damage_scale", difficulty, defValue);
+	}
+
+	public float GetSelfDamageScale(int difficulty, float defValue = 1.0)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyFloat("self_damage_scale", difficulty, defValue);
+		}
+
+		return this.GetDifficultyFloat("self_damage_scale", difficulty, defValue);
+	}
+
+	public float GetBackstabDamageScale(int difficulty, float defValue = 0.2)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetDifficultyFloat("backstab_damage_scale", difficulty, defValue);
+		}
+
+		return this.GetDifficultyFloat("backstab_damage_scale", difficulty, defValue);
+	}
+
+	public bool AllowVoices(bool defValue = false)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetBool("allow_voices", defValue);
+		}
+
+		return this.GetBool("allow_voices", defValue);
+	}
+
+	public bool Zombies(bool defValue = false)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetBool("zombie", defValue);
+		}
+
+		return this.GetBool("zombie", defValue);
+	}
+
+	public bool Robots(bool defValue = false)
+	{
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			defValue = def.GetBool("robot", defValue);
+		}
+
+		return this.GetBool("robot", defValue);
+	}
+
+	public float GetControlDrainRate(int difficulty, float defValue = 0.0)
+	{
+		float value = defValue;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetControlDrainRate(difficulty, value);
+		}
+
+		ProfileObject obj = this.GetSection("control");
+		if (obj != null)
+		{
+			value = obj.GetDifficultyFloat("level", difficulty, value);
+		}
+
+		return value;
+	}
+
+	public int GetControlGainHitEnemy(int difficulty, int defValue = 0)
+	{
+		int value = defValue;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetControlGainHitEnemy(difficulty, value);
+		}
+
+		ProfileObject obj = this.GetSection("control");
+		if (obj != null)
+		{
+			value = obj.GetDifficultyInt("hit_enemy", difficulty, value);
+		}
+
+		return value;
+	}
+
+	public int GetControlGainHitByEnemy(int difficulty, int defValue = 0)
+	{
+		int value = defValue;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetControlGainHitByEnemy(difficulty, value);
+		}
+
+		ProfileObject obj = this.GetSection("control");
+		if (obj != null)
+		{
+			value = obj.GetDifficultyInt("hit_by_enemy", difficulty, value);
+		}
+
+		return value;
+	}
+
+	public ProfileSound GetSpawnSounds()
+	{
+		ProfileSound value = null;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetSpawnSounds();
+		}
+
+		ProfileObject obj = this.GetSection("sounds");
+		if (obj != null)
+		{
+			value = view_as<ProfileSound>(obj.GetSection("spawn"));
+		}
+
+		return value;
+	}
+
+	public ProfileSound GetIdleSounds()
+	{
+		ProfileSound value = null;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetIdleSounds();
+		}
+
+		ProfileObject obj = this.GetSection("sounds");
+		if (obj != null)
+		{
+			value = view_as<ProfileSound>(obj.GetSection("idle"));
+		}
+
+		return value;
+	}
+
+	public ProfileSound GetHurtSounds()
+	{
+		ProfileSound value = null;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetHurtSounds();
+		}
+
+		ProfileObject obj = this.GetSection("sounds");
+		if (obj != null)
+		{
+			value = view_as<ProfileSound>(obj.GetSection("hurt"));
+		}
+
+		return value;
+	}
+
+	public ProfileSound GetDeathSounds()
+	{
+		ProfileSound value = null;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetDeathSounds();
+		}
+
+		ProfileObject obj = this.GetSection("sounds");
+		if (obj != null)
+		{
+			value = view_as<ProfileSound>(obj.GetSection("death"));
+		}
+
+		return value;
+	}
+
+	public KeyMap_Array GetDeathAnimations()
+	{
+		KeyMap_Array value = null;
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetArray("death_animations", value);
+		}
+
+		return this.GetArray("death_animations", value);
+	}
+
+	public BossProfileProxyWeapon GetWeapon(int weaponSlot)
+	{
+		ProfileObject value = null;
+
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetWeapon(weaponSlot);
+		}
+
+		ProfileObject obj = this.GetSection("weapons");
+		if (obj != null)
+		{
+			value = obj.GetSection("death");
+			switch (weaponSlot)
+			{
+				case TFWeaponSlot_Primary:
+				{
+					value = obj.GetSection("primary");
+				}
+
+				case TFWeaponSlot_Secondary:
+				{
+					value = obj.GetSection("secondary");
+				}
+
+				case TFWeaponSlot_Melee:
+				{
+					value = obj.GetSection("melee");
+				}
+
+				case TFWeaponSlot_Grenade: // Yes, this is the fucking building PDA and the disguise kit
+				{
+					value = obj.GetSection("pda_build");
+					value = obj.GetSection("disguise", value);
+				}
+
+				case TFWeaponSlot_Building: // Yes, this is the fucking destruction PDA and the invis watch
+				{
+					value = obj.GetSection("pda_destroy");
+					value = obj.GetSection("invis_watch", value);
+				}
+			}
+		}
+
+		return view_as<BossProfileProxyWeapon>(value);
+	}
+
+	public KeyMap_Array GetSpawnEffects()
+	{
+		KeyMap_Array value = null;
+		BossProfileProxyClass def = this.GetDefaultClassData();
+		if (def != null && def != this)
+		{
+			value = def.GetArray("spawn_effects", value);
+		}
+
+		return this.GetArray("spawn_effects", value);
+	}
+
+	public void Precache()
+	{
+		char path[PLATFORM_MAX_PATH];
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.GetModel(i, path, sizeof(path));
+			if (path[0] != '\0')
+			{
+				PrecacheModel2(path, _, _, g_FileCheckConVar.BoolValue);
+			}
+		}
+
+		this.ConvertSectionsSectionToArray("spawn_effects");
+		this.ConvertSectionsSectionToArray("death_animations");
+
+		if (this.GetSpawnSounds() != null)
+		{
+			this.GetSpawnSounds().Precache();
+		}
+
+		if (this.GetIdleSounds() != null)
+		{
+			this.GetIdleSounds().Precache();
+		}
+
+		if (this.GetHurtSounds() != null)
+		{
+			this.GetHurtSounds().Precache();
+		}
+
+		if (this.GetDeathSounds() != null)
+		{
+			this.GetDeathSounds().Precache();
+		}
+	}
+}
+
+methodmap BossProfileProxyWeapon < ProfileObject
+{
+	public void GetClassname(int difficulty, char[] buffer, int bufferSize)
+	{
+		this.GetDifficultyString("classname", difficulty, buffer, bufferSize);
+	}
+
+	public int GetIndex(int difficulty)
+	{
+		return this.GetDifficultyInt("index", difficulty, -1);
+	}
+
+	public void GetAttributes(int difficulty, char[] buffer, int bufferSize)
+	{
+		this.GetDifficultyString("stats", difficulty, buffer, bufferSize);
+	}
+
+	public int GetLevel(int difficulty)
+	{
+		return this.GetDifficultyInt("level", difficulty, 0);
+	}
+
+	public int GetQuality(int difficulty)
+	{
+		return this.GetDifficultyInt("quality", difficulty, 0);
+	}
+
+	public bool ShouldPreserveAttributes(int difficulty)
+	{
+		return this.GetDifficultyBool("preserve_default_attributes", difficulty, true);
+	}
+}
 
 //Proxy model
 static char g_ClientProxyModel[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
@@ -22,6 +595,7 @@ void SetupProxy()
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
+	g_OnPlayerTakeDamagePFwd.AddFunction(null, OnPlayerTakeDamage);
 
 	AddNormalSoundHook(Hook_ProxySoundHook);
 }
@@ -44,6 +618,7 @@ static void OnPutInServer(SF2_BasePlayer client)
 	}
 	ClientResetProxy(client.index);
 	ClientStartProxyAvailableTimer(client.index);
+	SDKHook(client.index, SDKHook_PreThinkPost, ProxyThink);
 }
 
 static void OnDisconnected(SF2_BasePlayer client)
@@ -81,9 +656,9 @@ static void OnPlayerDeath(SF2_BasePlayer client)
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(proxyMaster, profile, sizeof(profile));
 
-		SF2BossProfileSoundInfo soundInfo;
-		GetBossProfileProxyDeathSounds(profile, soundInfo);
-		soundInfo.EmitSound(_, client.index);
+		BossProfileProxyData proxyData = GetBossProfile(profile).GetProxies();
+		BossProfileProxyClass classData = proxyData.GetClassData(client.Class);
+		classData.GetDeathSounds().EmitSound(_, client.index);
 	}
 
 	CreateTimer(0.1, Timer_ResetProxy, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
@@ -106,6 +681,177 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 	ClientResetProxy(client.index);
 }
 
+static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &inflictor, float &damage, int &damageType, int damageCustom)
+{
+	SF2_BasePlayer attackerPlayer = SF2_BasePlayer(attacker);
+	if (!attackerPlayer.IsValid)
+	{
+		return Plugin_Continue;
+	}
+
+	if (attackerPlayer.index == client.index)
+	{
+		return Plugin_Continue;
+	}
+
+	if (client.IsProxy || attackerPlayer.IsProxy)
+	{
+		if (client.IsEliminated && attackerPlayer.IsEliminated)
+		{
+			damage = 0.0;
+			return Plugin_Changed;
+		}
+
+		BossProfileProxyData proxyData;
+		BossProfileProxyClass classData;
+		if (attackerPlayer.IsProxy)
+		{
+			int maxHealth = attackerPlayer.MaxHealth;
+			SF2NPC_BaseNPC master = SF2NPC_BaseNPC(attackerPlayer.ProxyMaster);
+			if (master.IsValid())
+			{
+				proxyData = master.GetProfileData().GetProxies();
+				classData = proxyData.GetClassData(attackerPlayer.Class);
+				int difficulty = master.Difficulty;
+
+				if (damageCustom == TF_CUSTOM_TAUNT_GRAND_SLAM ||
+					damageCustom == TF_CUSTOM_TAUNT_FENCING ||
+					damageCustom == TF_CUSTOM_TAUNT_ARROW_STAB ||
+					damageCustom == TF_CUSTOM_TAUNT_GRENADE ||
+					damageCustom == TF_CUSTOM_TAUNT_BARBARIAN_SWING ||
+					damageCustom == TF_CUSTOM_TAUNT_ENGINEER_ARM ||
+					damageCustom == TF_CUSTOM_TAUNT_ARMAGEDDON)
+				{
+					if (damage >= float(maxHealth))
+					{
+						damage = float(maxHealth) * 0.5;
+					}
+					else
+					{
+						damage = 0.0;
+					}
+				}
+				else if (damageCustom == TF_CUSTOM_BACKSTAB) // Modify backstab damage.
+				{
+					damage = float(maxHealth) * classData.GetBackstabDamageScale(difficulty);
+					if (damageType & DMG_ACID)
+					{
+						damage /= 2.0;
+					}
+				}
+
+				attackerPlayer.ProxyControl += classData.GetControlGainHitEnemy(difficulty);
+
+				float originalPercentage = classData.GetDamageScale(difficulty);
+				float additionPercentage = 0.15;
+				if (!IsClassConfigsValid())
+				{
+					if (client.Class == TFClass_Medic)
+					{
+						damage *= (originalPercentage + additionPercentage);
+					}
+					else
+					{
+						damage *= originalPercentage;
+					}
+				}
+				else
+				{
+					damage *= originalPercentage + g_ClassProxyDamageVulnerability[view_as<int>(client.Class)];
+				}
+			}
+			return Plugin_Changed;
+		}
+		else if (client.IsProxy)
+		{
+			SF2NPC_BaseNPC master = SF2NPC_BaseNPC(client.ProxyMaster);
+			if (master.IsValid())
+			{
+				proxyData = master.GetProfileData().GetProxies();
+				classData = proxyData.GetClassData(client.Class);
+				int difficulty = master.Difficulty;
+
+				client.ProxyControl += classData.GetControlGainHitByEnemy(difficulty);
+
+				damage *= classData.GetSelfDamageScale(difficulty);
+				if (classData.GetHurtSounds() != null)
+				{
+					classData.GetHurtSounds().EmitSound(_, client.index);
+				}
+
+				if (damage * (damageType & DMG_CRIT ? 3.0 : 1.0) >= float(client.Health) && !client.InCondition(TFCond_FreezeInput)) // The proxy is about to die
+				{
+					char buffer[PLATFORM_MAX_PATH];
+					KeyMap_Array array = classData.GetDeathAnimations();
+					ProfileAnimation animation = null;
+					if (array != null && array.Length > 0)
+					{
+						animation = view_as<ProfileAnimation>(array.GetSection(GetRandomInt(0, array.Length - 1)));
+					}
+					if (animation != null)
+					{
+						animation.GetAnimationName(difficulty, buffer, sizeof(buffer));
+						if (buffer[0] != '\0')
+						{
+							g_ClientMaxFrameDeathAnim[client.index] = animation.GetDifficultyInt("frames", difficulty, 0);
+							if (g_ClientMaxFrameDeathAnim[client.index] > 0)
+							{
+								// Cancel out any other taunts.
+								if (client.InCondition(TFCond_Taunting))
+								{
+									client.ChangeCondition(TFCond_Taunting, true);
+								}
+								//The model has a death anim play it.
+								SDK_PlaySpecificSequence(client.index, buffer);
+								g_ClientFrame[client.index] = 0;
+								RequestFrame(ProxyDeathAnimation, client.index);
+								client.ChangeCondition(TFCond_FreezeInput, _, 5.0);
+								//Prevent death, and show the damage to the attacker.
+								client.ChangeCondition(TFCond_PreventDeath, _, 0.5);
+								return Plugin_Changed;
+							}
+						}
+					}
+
+					// The player has no death anim leave him die.
+				}
+			}
+			return Plugin_Changed;
+		}
+	}
+
+	return Plugin_Continue;
+}
+
+static void ProxyThink(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsProxy)
+	{
+		return;
+	}
+
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(player.ProxyMaster);
+	if (!controller.IsValid())
+	{
+		return;
+	}
+
+	int difficulty = controller.Difficulty;
+	TFClassType class = player.Class;
+
+	BossProfileProxyData proxyData = controller.GetProfileData().GetProxies();
+	BossProfileProxyClass classData = proxyData.GetClassData(class);
+
+	float speed = classData.GetRunSpeed(difficulty);
+	if (player.InCondition(TFCond_SpeedBuffAlly) || g_InProxySurvivalRageMode)
+	{
+		speed += 30.0;
+	}
+
+	player.SetPropFloat(Prop_Send, "m_flMaxspeed", speed);
+}
+
 static Action Hook_ProxySoundHook(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	if (!g_Enabled)
@@ -125,21 +871,23 @@ static Action Hook_ProxySoundHook(int clients[64], int &numClients, char sample[
 		return Plugin_Continue;
 	}
 
-	SF2BossProfileData data;
-	data = NPCGetProfileData(master);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	NPCGetProfile(master, profile, sizeof(profile));
+	BossProfileProxyData proxyData = GetBossProfile(profile).GetProxies();
+	BossProfileProxyClass classData = proxyData.GetClassData(client.Class);
 
 	switch (channel)
 	{
 		case SNDCHAN_VOICE:
 		{
-			if (!data.ProxyAllowVoices)
+			if (!classData.AllowVoices())
 			{
 				return Plugin_Handled;
 			}
 		}
 	}
 
-	if (data.ProxyRobots)
+	if (classData.Robots())
 	{
 		switch (channel)
 		{
@@ -306,7 +1054,7 @@ Action Timer_ClientForceProxy(Handle timer, any userid)
 			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 			NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-			int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
+			int maxProxies = GetBossProfile(profile).GetProxies().GetMaxProxies(difficulty);
 			int numProxies = 0;
 
 			for (int i = 1; i <= MaxClients; i++)
@@ -404,7 +1152,7 @@ int Menu_ProxyAsk(Menu menu, MenuAction action, int param1, int param2)
 					char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 					NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-					int maxProxies = g_SlenderMaxProxies[bossIndex][difficulty];
+					int maxProxies = GetBossProfile(profile).GetProxies().GetMaxProxies(difficulty);
 					int numProxies;
 
 					for (int client = 1; client <= MaxClients; client++)
@@ -495,13 +1243,106 @@ Action Timer_ClientProxyAvailable(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
+static TFClassType SelectProxyClass(SF2_BasePlayer client)
+{
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(client.ProxyMaster);
+	int difficulty = controller.Difficulty;
+
+	BossProfileProxyData proxyData = controller.GetProfileData().GetProxies();
+	ArrayList allowed = new ArrayList();
+
+	int classCount[10] = { 0, ... };
+	for (int otherIndex = 1; otherIndex <= MaxClients; otherIndex++)
+	{
+		SF2_BasePlayer other = SF2_BasePlayer(otherIndex);
+		if (other == client || !other.IsValid)
+		{
+			continue;
+		}
+
+		if (other.IsProxy && other.ProxyMaster == controller.Index)
+		{
+			classCount[view_as<int>(other.Class)]++;
+		}
+	}
+
+	for (int classIndex = view_as<int>(TFClass_Scout); classIndex <= view_as<int>(TFClass_Engineer); classIndex++)
+	{
+		if (proxyData.GetClassData(view_as<TFClassType>(classIndex)) == null)
+		{
+			continue;
+		}
+
+		allowed.Push(view_as<TFClassType>(classIndex));
+	}
+
+	if (allowed.Length == 0)
+	{
+		// If no classes specified then assume all classes.
+		// We really don't have a choice here anyway.
+		allowed.Push(TFClass_Scout);
+		allowed.Push(TFClass_Sniper);
+		allowed.Push(TFClass_Soldier);
+		allowed.Push(TFClass_DemoMan);
+		allowed.Push(TFClass_Medic);
+		allowed.Push(TFClass_Heavy);
+		allowed.Push(TFClass_Pyro);
+		allowed.Push(TFClass_Spy);
+		allowed.Push(TFClass_Engineer);
+	}
+
+	float maxWeight = 0.0;
+	for (int i = 0; i < allowed.Length; i++)
+	{
+		TFClassType tfClass = allowed.Get(i);
+		BossProfileProxyClass classData = proxyData.GetClassData(tfClass);
+
+		int classLimit = classData.GetMax(difficulty);
+		if (classCount[view_as<int>(tfClass)] < classLimit)
+		{
+			allowed.Erase(i);
+			i--;
+			continue;
+		}
+		maxWeight += classData.GetWeight(difficulty);
+	}
+
+	float randomWeight = GetRandomFloat(0.0, maxWeight);
+	TFClassType newClass = client.Class;
+
+	for (int i = 0; i < allowed.Length; i++)
+	{
+		TFClassType tfClass = allowed.Get(i);
+		BossProfileProxyClass classData = proxyData.GetClassData(tfClass);
+
+		float weight = classData.GetWeight(difficulty);
+		if (weight <= 0.0)
+		{
+			continue;
+		}
+
+		randomWeight -= weight;
+		if (randomWeight >= 0.0)
+		{
+			continue;
+		}
+
+		newClass = tfClass;
+		break;
+	}
+
+	delete allowed;
+	return newClass;
+}
+
 /**
  *	Respawns a player as a proxy.
  *
  *	@noreturn
  */
-void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnPointEnt=-1)
+void ClientEnableProxy(int clientIndex, int bossIndex, const float pos[3], int spawnPointEnt=-1)
 {
+	SF2_BasePlayer client = SF2_BasePlayer(clientIndex);
 	if (NPCGetUniqueID(bossIndex) == -1)
 	{
 		return;
@@ -512,88 +1353,81 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		return;
 	}
 
-	if (GetClientTeam(client) != TFTeam_Blue)
+	if (client.Team != TFTeam_Blue)
 	{
 		return;
 	}
 
-	if (g_PlayerProxy[client])
+	if (client.IsProxy)
 	{
 		return;
 	}
 
-	TF2_RemovePlayerDisguise(client);
+	TF2_RemovePlayerDisguise(client.index);
 
 	int difficulty = GetLocalGlobalDifficulty(bossIndex);
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	BossProfileProxyData proxyData = GetBossProfile(profile).GetProxies();
+	TFClassType class = SelectProxyClass(client);
+	BossProfileProxyClass classData = proxyData.GetClassData(class);
 
-	ClientSetGhostModeState(client, false);
+	client.SetGhostState(false);
 
-	ClientStopProxyForce(client);
+	ClientStopProxyForce(client.index);
 
-	if (IsClientInKart(client))
+	if (IsClientInKart(client.index))
 	{
-		TF2_RemoveCondition(client, TFCond_HalloweenKart);
-		TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
-		TF2_RemoveCondition(client, TFCond_HalloweenKartNoTurn);
-		TF2_RemoveCondition(client, TFCond_HalloweenKartCage);
+		client.ChangeCondition(TFCond_HalloweenKart, true);
+		client.ChangeCondition(TFCond_HalloweenKartDash, true);
+		client.ChangeCondition(TFCond_HalloweenKartNoTurn, true);
+		client.ChangeCondition(TFCond_HalloweenKartCage, true);
 	}
 
-	g_PlayerProxy[client] = true;
+	client.IsProxy = true;
 
-	ChangeClientTeamNoSuicide(client, TFTeam_Blue);
-	PvP_SetPlayerPvPState(client, false, true, false);
-	PvE_SetPlayerPvEState(client, false, false);
-	TF2_RespawnPlayer(client);
+	ChangeClientTeamNoSuicide(client.index, TFTeam_Blue);
+	PvP_SetPlayerPvPState(client.index, false, true, false);
+	PvE_SetPlayerPvEState(client.index, false, false);
+	client.Respawn();
 
 	// Speed recalculation. Props to the creators of FF2/VSH for this snippet.
-	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
+	client.ChangeCondition(TFCond_SpeedBuffAlly, _, 0.001);
 
-	g_PlayerProxy[client] = true;
+	client.ProxyMaster = NPCGetUniqueID(bossIndex);
+	client.ProxyControl = 100;
+	g_PlayerProxyControlRate[client.index] = classData.GetControlDrainRate(difficulty);
+	g_PlayerProxyControlTimer[client.index] = CreateTimer(g_PlayerProxyControlRate[client.index], Timer_ClientProxyControl, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
+	g_PlayerProxyAvailable[client.index] = false;
+	g_PlayerProxyAvailableTimer[client.index] = null;
 
-	g_PlayerProxyMaster[client] = NPCGetUniqueID(bossIndex);
-	g_PlayerProxyControl[client] = 100;
-	g_PlayerProxyControlRate[client] = g_SlenderProxyControlDrainRate[bossIndex][difficulty];
-	g_PlayerProxyControlTimer[client] = CreateTimer(g_PlayerProxyControlRate[client], Timer_ClientProxyControl, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	g_PlayerProxyAvailable[client] = false;
-	g_PlayerProxyAvailableTimer[client] = null;
-
-	char allowedClasses[512];
-	GetBossProfileProxyClasses(profile, allowedClasses, sizeof(allowedClasses));
-
-	char className[64];
-	TF2_GetClassName(TF2_GetPlayerClass(client), className, sizeof(className));
-	if (allowedClasses[0] != '\0' && className[0] != '\0' && StrContains(allowedClasses, className, false) == -1)
+	int health = classData.GetHealth(difficulty);
+	if (health <= 0)
 	{
-		// Pick the first class that's allowed.
-		char allowedClassesList[32][32];
-		int classCount = ExplodeString(allowedClasses, " ", allowedClassesList, 32, 32);
-		if (classCount)
-		{
-			TF2_SetPlayerClass(client, TF2_GetClass(allowedClassesList[0]), _, false);
-
-			int maxHealth = GetEntProp(client, Prop_Send, "m_iHealth");
-			TF2_RegeneratePlayer(client);
-			SetEntProp(client, Prop_Data, "m_iHealth", maxHealth);
-			SetEntProp(client, Prop_Send, "m_iHealth", maxHealth);
-		}
+		health = client.Health;
 	}
 
-	UTIL_ScreenFade(client, 200, 1, FFADE_IN, 255, 255, 255, 100);
-	EmitSoundToClient(client, "weapons/teleporter_send.wav", _, SNDCHAN_STATIC);
+	client.Regenerate();
+	client.Health = health;
 
-	ClientActivateUltravision(client);
+	client.ScreenFade(200, 1, FFADE_IN, 255, 255, 255, 100);
+	EmitSoundToClient(client.index, "weapons/teleporter_send.wav", _, SNDCHAN_STATIC);
 
-	TF2Attrib_SetByDefIndex(client, 28, 1.0);
+	ClientActivateUltravision(client.index);
 
-	CreateTimer(0.33, Timer_ApplyCustomModel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	TF2Attrib_SetByDefIndex(client.index, 28, 1.0);
 
-	if (NPCHasProxyWeapons(bossIndex))
+	char path[PLATFORM_MAX_PATH];
+	classData.GetModel(difficulty, path, sizeof(path));
+	SetVariantString(path);
+	client.AcceptInput("SetCustomModel");
+	client.SetProp(Prop_Send, "m_bUseClassAnimations", true);
+
+	/*if (proxyData.CustomWeapons)
 	{
 		CreateTimer(1.0, Timer_GiveWeaponAll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
+	}*/
 
 	//SDKHook(client, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
 
@@ -603,27 +1437,27 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		float spawnPos[3]; float ang[3];
 		GetEntPropVector(spawnPointEnt, Prop_Data, "m_vecAbsOrigin", spawnPos);
 		GetEntPropVector(spawnPointEnt, Prop_Data, "m_angAbsRotation", ang);
-		TeleportEntity(client, spawnPos, ang, view_as<float>({ 0.0, 0.0, 0.0 }));
-		spawnPoint.FireOutput("OnSpawn", client);
+		TeleportEntity(client.index, spawnPos, ang, view_as<float>({ 0.0, 0.0, 0.0 }));
+		spawnPoint.FireOutput("OnSpawn", client.index);
 	}
 	else
 	{
-		TeleportEntity(client, pos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
+		TeleportEntity(client.index, pos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 	}
 
-	if (NPCGetProxySpawnEffectState(bossIndex))
+	/*if (proxyData.SpawnEffect)
 	{
 		char spawnEffect[PLATFORM_MAX_PATH];
-		GetBossProfileProxySpawnEffectName(profile, spawnEffect, sizeof(spawnEffect));
-		CreateGeneralParticle(client, spawnEffect, NPCGetProxySpawnEffectZOffset(bossIndex));
-	}
+		proxyData.GetSpawnEffectName(spawnEffect, sizeof(spawnEffect));
+		CreateGeneralParticle(client, spawnEffect, proxyData.SpawnEffectZOffset);
+	}*/
 
 	Call_StartForward(g_OnClientSpawnedAsProxyFwd);
 	Call_PushCell(client);
 	Call_Finish();
 
 	Call_StartForward(g_OnPlayerChangeProxyStatePFwd);
-	Call_PushCell(SF2_BasePlayer(client));
+	Call_PushCell(client);
 	Call_PushCell(true);
 	Call_Finish();
 }
@@ -641,35 +1475,30 @@ static Action Timer_GiveWeaponAll(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	int bossIndex = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
+	/*int bossIndex = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 
 	if (g_PlayerProxy[client] && bossIndex != -1)
 	{
-		if (!NPCHasProxyWeapons(bossIndex))
+		BossProfileProxyData proxyData = SF2NPC_BaseNPC(bossIndex).GetProfileData().GetProxies();
+		if (!proxyData.CustomWeapons)
 		{
 			return Plugin_Stop;
 		}
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(bossIndex, profile, sizeof(profile));
+		BossProfileProxyClass classData = proxyData.GetClassData();
 
 		int weaponIndex, weaponSlot;
 		char weaponName[PLATFORM_MAX_PATH], weaponStats[PLATFORM_MAX_PATH];
-		int classIndex = view_as<int>(TF2_GetPlayerClass(client));
-		classIndex--;
-		ArrayList weaponArray = GetBossProfileProxyWeaponClassNames(profile);
-		if (weaponArray == null)
+		TFClassType class = TF2_GetPlayerClass(client);
+		classData.GetWeaponClassname(class, weaponName, sizeof(weaponName));
+		if (weaponName[0] == '\0')
 		{
 			return Plugin_Stop;
 		}
-		weaponArray.GetString(classIndex, weaponName, sizeof(weaponName));
-		weaponArray = GetBossProfileProxyWeaponStats(profile);
-		if (weaponArray == null)
-		{
-			return Plugin_Stop;
-		}
-		weaponArray.GetString(classIndex, weaponStats, sizeof(weaponStats));
-		weaponIndex = GetBossProfileProxyWeaponIndexes(profile, classIndex + 1);
-		weaponSlot = GetBossProfileProxyWeaponSlots(profile, classIndex + 1);
+		classData.GetWeaponClassname(class, weaponStats, sizeof(weaponStats));
+		weaponIndex = classData.GetWeaponIndex(class);
+		weaponSlot = classData.GetWeaponSlot(class);
 
 		switch (weaponSlot)
 		{
@@ -691,24 +1520,10 @@ static Action Timer_GiveWeaponAll(Handle timer, any userid)
 		delete weaponHandle;
 		EquipPlayerWeapon(client, entity);
 		SetEntProp(entity, Prop_Send, "m_bValidatedAttachedEntity", 1);
-	}
+	}*/
 	return Plugin_Stop;
 }
 
-bool Hook_ClientProxyShouldCollide(int ent, int collisiongroup, int contentsmask, bool originalResult)
-{
-	if (!g_Enabled || !g_PlayerProxy[ent] || IsClientInPvP(ent) || IsClientInPvE(ent))
-	{
-		SDKUnhook(ent, SDKHook_ShouldCollide, Hook_ClientProxyShouldCollide);
-		return originalResult;
-	}
-	if ((contentsmask & MASK_RED))
-	{
-		return true;
-	}
-	//To-do add no collision proxy-boss here, the collision boss-proxy is done, see npc_chaser.sp
-	return originalResult;
-}
 //RequestFrame//
 void ProxyDeathAnimation(any client)
 {
@@ -767,12 +1582,14 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 
 	SetEntProp(client, Prop_Send, "m_iAirDash", 99999);
 
-	int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
+	/*int master = NPCGetFromUniqueID(g_PlayerProxyMaster[client]);
 
 	if (g_PlayerProxy[client] && master != -1)
 	{
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		NPCGetProfile(master, profile, sizeof(profile));
+		BossProfileProxyData proxyData = GetBossProfile(profile).GetProxies();
+		BossProfileProxyClass classData = proxyData.GetClassData();
 
 		int difficulty = GetLocalGlobalDifficulty(master);
 
@@ -781,95 +1598,97 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 
 		TF2_RegeneratePlayer(client);
 
-		char className[64];
+		char className[64], keyName[64];
 		TFClassType playerClass = TF2_GetPlayerClass(client);
-		int classToInt = view_as<int>(playerClass);
 		TF2_GetClassName(playerClass, className, sizeof(className));
 
-		ArrayList modelsArray;
+		ProfileObject modelsArray;
 
-		if (GetBossProfileProxyDifficultyModelsState(profile))
+		if (proxyData.DifficultyModels)
 		{
 			switch (difficulty)
 			{
 				case Difficulty_Normal:
 				{
-					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					modelsArray = classData.GetModel(playerClass, difficulty);
 					if (modelsArray == null)
 					{
-						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						modelsArray = proxyData.GetUniversalModel(difficulty);
 					}
-					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
-					strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
+					modelsArray.GetKeyNameFromIndex(GetRandomInt(0, modelsArray.Size - 1), keyName, sizeof(keyName));
+					modelsArray.GetString(keyName, buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModel[client], sizeof(g_ClientProxyModel[]), buffer);
 				}
 				case Difficulty_Hard:
 				{
-					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					modelsArray = classData.GetModel(playerClass, difficulty);
 					if (modelsArray == null)
 					{
-						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						modelsArray = proxyData.GetUniversalModel(difficulty);
 						if (modelsArray == null)
 						{
-							modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+							modelsArray = classData.GetModel(playerClass, 1);
 							if (modelsArray == null)
 							{
-								modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+								modelsArray = proxyData.GetUniversalModel(1);
 							}
 						}
 					}
-					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
-					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),buffer);
+					modelsArray.GetKeyNameFromIndex(GetRandomInt(0, modelsArray.Size - 1), keyName, sizeof(keyName));
+					modelsArray.GetString(keyName, buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelHard[client], sizeof(g_ClientProxyModelHard[]), buffer);
 				}
 				case Difficulty_Insane:
 				{
-					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					modelsArray = classData.GetModel(playerClass, difficulty);
 					if (modelsArray == null)
 					{
-						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						modelsArray = proxyData.GetUniversalModel(difficulty);
 						if (modelsArray == null)
 						{
-							modelsArray = GetBossProfileProxyModels(profile, classToInt, 2);
+							modelsArray = classData.GetModel(playerClass, 2);
 							if (modelsArray == null)
 							{
-								modelsArray = GetBossProfileProxyModels(profile, 0, 2);
+								modelsArray = proxyData.GetUniversalModel(2);
 								if (modelsArray == null)
 								{
-									modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+									modelsArray = classData.GetModel(playerClass, 1);
 									if (modelsArray == null)
 									{
-										modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+										modelsArray = proxyData.GetUniversalModel(1);
 									}
 								}
 							}
 						}
 					}
-					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
-					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),buffer);
+					modelsArray.GetKeyNameFromIndex(GetRandomInt(0, modelsArray.Size - 1), keyName, sizeof(keyName));
+					modelsArray.GetString(keyName, buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelInsane[client], sizeof(g_ClientProxyModelInsane[]), buffer);
 				}
 				case Difficulty_Nightmare:
 				{
-					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					modelsArray = classData.GetModel(playerClass, difficulty);
 					if (modelsArray == null)
 					{
-						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						modelsArray = proxyData.GetUniversalModel(difficulty);
 						if (modelsArray == null)
 						{
-							modelsArray = GetBossProfileProxyModels(profile, classToInt, 3);
+							modelsArray = classData.GetModel(playerClass, 3);
 							if (modelsArray == null)
 							{
-								modelsArray = GetBossProfileProxyModels(profile, 0, 3);
+								modelsArray = proxyData.GetUniversalModel(3);
 								if (modelsArray == null)
 								{
-									modelsArray = GetBossProfileProxyModels(profile, classToInt, 2);
+									modelsArray = classData.GetModel(playerClass, 2);
 									if (modelsArray == null)
 									{
-										modelsArray = GetBossProfileProxyModels(profile, 0, 2);
+										modelsArray = proxyData.GetUniversalModel(2);
 										if (modelsArray == null)
 										{
-											modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+											modelsArray = classData.GetModel(playerClass, 1);
 											if (modelsArray == null)
 											{
-												modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+												modelsArray = proxyData.GetUniversalModel(1);
 											}
 										}
 									}
@@ -877,39 +1696,40 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 							}
 						}
 					}
-					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
-					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),buffer);
+					modelsArray.GetKeyNameFromIndex(GetRandomInt(0, modelsArray.Size - 1), keyName, sizeof(keyName));
+					modelsArray.GetString(keyName, buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelNightmare[client], sizeof(g_ClientProxyModelNightmare[]), buffer);
 				}
 				case Difficulty_Apollyon:
 				{
-					modelsArray = GetBossProfileProxyModels(profile, classToInt, difficulty);
+					modelsArray = classData.GetModel(playerClass, difficulty);
 					if (modelsArray == null)
 					{
-						modelsArray = GetBossProfileProxyModels(profile, 0, difficulty);
+						modelsArray = proxyData.GetUniversalModel(difficulty);
 						if (modelsArray == null)
 						{
-							modelsArray = GetBossProfileProxyModels(profile, classToInt, 4);
+							modelsArray = classData.GetModel(playerClass, 4);
 							if (modelsArray == null)
 							{
-								modelsArray = GetBossProfileProxyModels(profile, 0, 4);
+								modelsArray = proxyData.GetUniversalModel(4);
 								if (modelsArray == null)
 								{
-									modelsArray = GetBossProfileProxyModels(profile, classToInt, 3);
+									modelsArray = classData.GetModel(playerClass, 3);
 									if (modelsArray == null)
 									{
-										modelsArray = GetBossProfileProxyModels(profile, 0, 3);
+										modelsArray = proxyData.GetUniversalModel(3);
 										if (modelsArray == null)
 										{
-											modelsArray = GetBossProfileProxyModels(profile, classToInt, 2);
+											modelsArray = classData.GetModel(playerClass, 2);
 											if (modelsArray == null)
 											{
-												modelsArray = GetBossProfileProxyModels(profile, 0, 2);
+												modelsArray = proxyData.GetUniversalModel(2);
 												if (modelsArray == null)
 												{
-													modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+													modelsArray = classData.GetModel(playerClass, 1);
 													if (modelsArray == null)
 													{
-														modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+														modelsArray = proxyData.GetUniversalModel(1);
 													}
 												}
 											}
@@ -919,8 +1739,9 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 							}
 						}
 					}
-					modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
-					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),buffer);
+					modelsArray.GetKeyNameFromIndex(GetRandomInt(0, modelsArray.Size - 1), keyName, sizeof(keyName));
+					modelsArray.GetString(keyName, buffer, sizeof(buffer));
+					strcopy(g_ClientProxyModelApollyon[client], sizeof(g_ClientProxyModelApollyon[]), buffer);
 				}
 			}
 
@@ -935,24 +1756,25 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 		}
 		else
 		{
-			modelsArray = GetBossProfileProxyModels(profile, classToInt, 1);
+			modelsArray = classData.GetModel(playerClass, 1);
 			if (modelsArray == null)
 			{
-				modelsArray = GetBossProfileProxyModels(profile, 0, 1);
+				modelsArray = proxyData.GetUniversalModel(1);
 			}
 			if (modelsArray != null)
 			{
-				modelsArray.GetString(GetRandomInt(0, modelsArray.Length - 1), buffer, sizeof(buffer));
+				modelsArray.GetKeyNameFromIndex(GetRandomInt(0, modelsArray.Size - 1), keyName, sizeof(keyName));
+				modelsArray.GetString(keyName, buffer, sizeof(buffer));
 				if (buffer[0] != '\0')
 				{
 					SetVariantString(buffer);
 					AcceptEntityInput(client, "SetCustomModel");
 					SetEntProp(client, Prop_Send, "m_bUseClassAnimations", true);
-					strcopy(g_ClientProxyModel[client],sizeof(g_ClientProxyModel[]),buffer);
-					strcopy(g_ClientProxyModelHard[client],sizeof(g_ClientProxyModelHard[]),buffer);
-					strcopy(g_ClientProxyModelInsane[client],sizeof(g_ClientProxyModelInsane[]),buffer);
-					strcopy(g_ClientProxyModelNightmare[client],sizeof(g_ClientProxyModelNightmare[]),buffer);
-					strcopy(g_ClientProxyModelApollyon[client],sizeof(g_ClientProxyModelApollyon[]),buffer);
+					strcopy(g_ClientProxyModel[client], sizeof(g_ClientProxyModel[]), buffer);
+					strcopy(g_ClientProxyModelHard[client], sizeof(g_ClientProxyModelHard[]), buffer);
+					strcopy(g_ClientProxyModelInsane[client], sizeof(g_ClientProxyModelInsane[]), buffer);
+					strcopy(g_ClientProxyModelNightmare[client], sizeof(g_ClientProxyModelNightmare[]), buffer);
+					strcopy(g_ClientProxyModelApollyon[client], sizeof(g_ClientProxyModelApollyon[]), buffer);
 					//Prevent plugins like Model manager to override proxy model.
 					CreateTimer(0.5, ClientCheckProxyModel, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 				}
@@ -962,12 +1784,10 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 		if (IsPlayerAlive(client))
 		{
 			g_PlayerProxyNextVoiceSound[client] = GetGameTime();
-			SF2BossProfileSoundInfo soundInfo;
-			GetBossProfileProxySpawnSounds(profile, soundInfo);
 			// Play any sounds, if any.
-			soundInfo.EmitSound(_, client);
+			proxyData.GetSpawnSounds().EmitSound(_, client);
 
-			bool zombie = GetBossProfileProxyZombiesState(profile);
+			bool zombie = proxyData.Zombies;
 			if (zombie)
 			{
 				int value = g_ForcedHolidayConVar.IntValue;
@@ -1036,7 +1856,7 @@ Action Timer_ApplyCustomModel(Handle timer, any userid)
 
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 		}
-	}
+	}*/
 	return Plugin_Stop;
 }
 
@@ -1114,824 +1934,6 @@ Action ClientCheckProxyModel(Handle timer, any userid)
 	return Plugin_Continue;
 }
 
-void SF2_RefreshRestrictions()
-{
-	for(int client = 1; client <= MaxClients; client++)
-	{
-		if (IsValidClient(client) && (!g_PlayerEliminated[client] || (g_PlayerEliminated[client] && !IsClientInPvP(client) && !IsClientInPvE(client))))
-		{
-			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-			g_PlayerPostWeaponsTimer[client] = CreateTimer(1.0, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-		}
-	}
-}
-
-Action Timer_ClientPostWeapons(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
-	{
-		return Plugin_Stop;
-	}
-
-	if (IsValidClient(client) && !IsPlayerAlive(client))
-	{
-		return Plugin_Stop;
-	}
-
-	if (!IsValidClient(client))
-	{
-		return Plugin_Stop;
-	}
-
-	if (timer != g_PlayerPostWeaponsTimer[client])
-	{
-		return Plugin_Stop;
-	}
-
-	g_PlayerHasRegenerationItem[client] = false;
-
-	#if defined DEBUG
-	if (g_DebugDetailConVar.IntValue > 0)
-	{
-		DebugMessage("START Timer_ClientPostWeapons(%d)", client);
-	}
-
-	int oldWeaponItemIndexes[6] = { -1, ... };
-	int newWeaponItemIndexes[6] = { -1, ... };
-
-	for (int i = 0; i <= 5; i++)
-	{
-		if (IsValidClient(client))
-		{
-			int weaponEnt = GetPlayerWeaponSlot(client, i);
-			if (!IsValidEdict(weaponEnt))
-			{
-				continue;
-			}
-
-			oldWeaponItemIndexes[i] = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-		}
-	}
-	#endif
-
-	bool removeWeapons = true;
-	bool keepUtilityItems = false;
-	bool restrictWeapons = true;
-	bool useStock = false;
-	bool removeWearables = false;
-	bool preventAttack = false;
-
-	if (IsRoundEnding())
-	{
-		if (!g_PlayerEliminated[client])
-		{
-			removeWeapons = false;
-			restrictWeapons = false;
-		}
-	}
-
-	if (g_PlayerEliminated[client] && g_PlayerKeepWeaponsConVar.BoolValue)
-	{
-		removeWeapons = false;
-		restrictWeapons = false;
-		preventAttack = true;
-	}
-
-	// pvp
-	if (IsClientInPvP(client))
-	{
-		removeWeapons = false;
-		restrictWeapons = false;
-		keepUtilityItems = false;
-		preventAttack = false;
-	}
-
-	if (IsClientInPvE(client))
-	{
-		if (IsPvEBoxing())
-		{
-			restrictWeapons = false;
-			keepUtilityItems = true;
-			preventAttack = false;
-		}
-		else
-		{
-			removeWeapons = false;
-			restrictWeapons = false;
-			keepUtilityItems = false;
-			preventAttack = false;
-		}
-	}
-
-	if (g_PlayerProxy[client])
-	{
-		restrictWeapons = true;
-		removeWeapons = true;
-		useStock = true;
-		removeWearables = true;
-		keepUtilityItems = false;
-	}
-
-	if (IsRoundInWarmup())
-	{
-		removeWeapons = false;
-		restrictWeapons = false;
-		keepUtilityItems = false;
-		preventAttack = false;
-	}
-
-	if (IsClientInGhostMode(client))
-	{
-		removeWeapons = true;
-	}
-
-	if (SF_IsRaidMap() && !g_PlayerEliminated[client])
-	{
-		removeWeapons = false;
-		restrictWeapons = false;
-		keepUtilityItems = false;
-		preventAttack = false;
-	}
-
-	if (SF_IsBoxingMap() && !g_PlayerEliminated[client] && !IsRoundEnding())
-	{
-		restrictWeapons = false;
-		keepUtilityItems = true;
-		preventAttack = false;
-	}
-
-	if (removeWeapons && !keepUtilityItems)
-	{
-		for (int i = 0; i <= 5; i++)
-		{
-			if (i == TFWeaponSlot_Melee && !IsClientInGhostMode(client))
-			{
-				continue;
-			}
-			TF2_RemoveWeaponSlotAndWearables(client, i);
-		}
-
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_weapon_builder")) != -1)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(ent);
-			}
-		}
-
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(ent);
-			}
-		}
-
-		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-	}
-
-	if (keepUtilityItems)
-	{
-		for (int i = 0; i <= 5; i++)
-		{
-			if ((i == TFWeaponSlot_Melee || i == TFWeaponSlot_Secondary) && !IsClientInGhostMode(client))
-			{
-				continue;
-			}
-			TF2_RemoveWeaponSlotAndWearables(client, i);
-		}
-
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_weapon_builder")) != -1)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(ent);
-			}
-		}
-
-		int weaponEnt = INVALID_ENT_REFERENCE;
-		weaponEnt = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-
-		if (IsValidEdict(weaponEnt))
-		{
-			int itemIndex = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-			switch (itemIndex)
-			{
-				case 163, 129, 226, 354, 1001, 131, 406, 1099, 42, 159, 311, 433, 863, 1002, 1190:
-				{
-					//Do nothing
-				}
-				default:
-				{
-					TF2_RemoveWeaponSlotAndWearables(client, TFWeaponSlot_Secondary);
-				}
-			}
-		}
-
-		ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-	}
-
-	if (removeWearables)
-	{
-		TF2_StripWearables(client);
-	}
-
-	TFClassType playerClass = TF2_GetPlayerClass(client);
-	int classToInt = view_as<int>(playerClass);
-
-	if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
-	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
-		{
-			int itemIndex = GetEntProp(ent, Prop_Send, "m_iItemDefinitionIndex");
-
-			if (642 == itemIndex)
-			{
-				if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-				{
-					RemoveEntity(ent);
-				}
-			}
-		}
-	}
-
-	if (restrictWeapons)
-	{
-		int health = GetEntProp(client, Prop_Send, "m_iHealth");
-
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
-		{
-			int itemIndex = GetEntProp(ent, Prop_Send, "m_iItemDefinitionIndex");
-
-			for (int i = 0; i < sizeof(g_ActionItemIndexes); i++)
-			{
-				if (g_ActionItemIndexes[i] == itemIndex)
-				{
-					if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-					{
-						RemoveEntity(ent);
-					}
-				}
-			}
-		}
-
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_razorback")) != -1)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(ent);
-			}
-		}
-
-		if (g_RestrictedWeaponsConfig != null)
-		{
-			int weaponEnt = INVALID_ENT_REFERENCE;
-			for (int slot = 0; slot <= 5; slot++)
-			{
-				Handle itemHandle = null;
-				weaponEnt = GetPlayerWeaponSlot(client, slot);
-
-				if (IsValidEdict(weaponEnt))
-				{
-					if (useStock || IsWeaponRestricted(playerClass, GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex")))
-					{
-						TF2_RemoveWeaponSlotAndWearables(client, slot);
-						switch (slot)
-						{
-							case TFWeaponSlot_Primary:
-							{
-								switch (playerClass)
-								{
-									case TFClass_Scout:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_scattergun", 13, 0, 0, "");
-									}
-									case TFClass_Sniper:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_sniperrifle", 14, 0, 0, "");
-									}
-									case TFClass_Soldier:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_rocketlauncher", 18, 0, 0, "");
-									}
-									case TFClass_DemoMan:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_grenadelauncher", 19, 0, 0, "");
-									}
-									case TFClass_Heavy:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_minigun", 15, 0, 0, "");
-									}
-									case TFClass_Medic:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_syringegun_medic", 17, 0, 0, "");
-									}
-									case TFClass_Pyro:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_flamethrower", 21, 0, 0, "254 ; 4.0");
-									}
-									case TFClass_Spy:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_revolver", 24, 0, 0, "");
-									}
-									case TFClass_Engineer:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_shotgun", 9, 0, 0, "");
-									}
-								}
-							}
-							case TFWeaponSlot_Secondary:
-							{
-								switch (playerClass)
-								{
-									case TFClass_Scout:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_pistol", 23, 0, 0, "");
-									}
-									case TFClass_Sniper:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_smg", 16, 0, 0, "");
-									}
-									case TFClass_Soldier:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_shotgun", 10, 0, 0, "");
-									}
-									case TFClass_DemoMan:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_pipebomblauncher", 20, 0, 0, "");
-									}
-									case TFClass_Heavy:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_shotgun", 11, 0, 0, "");
-									}
-									case TFClass_Medic:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_medigun", 29, 0, 0, "");
-									}
-									case TFClass_Pyro:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_shotgun", 12, 0, 0, "");
-									}
-									case TFClass_Engineer:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_pistol", 22, 0, 0, "");
-									}
-								}
-							}
-							case TFWeaponSlot_Melee:
-							{
-								switch (playerClass)
-								{
-									case TFClass_Scout:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_bat", 0, 0, 0, "");
-									}
-									case TFClass_Sniper:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_club", 3, 0, 0, "");
-									}
-									case TFClass_Soldier:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_shovel", 6, 0, 0, "");
-									}
-									case TFClass_DemoMan:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_bottle", 1, 0, 0, "");
-									}
-									case TFClass_Heavy:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_fists", 5, 0, 0, "");
-									}
-									case TFClass_Medic:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_bonesaw", 8, 0, 0, "");
-									}
-									case TFClass_Pyro:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_fireaxe", 2, 0, 0, "");
-									}
-									case TFClass_Spy:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_knife", 4, 0, 0, "");
-									}
-									case TFClass_Engineer:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_wrench", 7, 0, 0, "");
-									}
-								}
-							}
-							case 4:
-							{
-								switch (playerClass)
-								{
-									case TFClass_Spy:
-									{
-										itemHandle = PrepareItemHandle("tf_weapon_invis", 297, 0, 0, "");
-									}
-								}
-							}
-						}
-
-						if (itemHandle != null)
-						{
-							int newWeapon = TF2Items_GiveNamedItem(client, itemHandle);
-							if (IsValidEntity(newWeapon))
-							{
-								EquipPlayerWeapon(client, newWeapon);
-							}
-						}
-					}
-					else
-					{
-						if (!g_PlayerHasRegenerationItem[client])
-						{
-							g_PlayerHasRegenerationItem[client] = IsRegenWeapon(weaponEnt);
-						}
-					}
-				}
-				delete itemHandle;
-				itemHandle = null;
-			}
-		}
-
-		// Fixes the Pretty Boy's Pocket Pistol glitch.
-		int maxHealth = SDKCall(g_SDKGetMaxHealth, client);
-		if (health > maxHealth)
-		{
-			SetEntProp(client, Prop_Data, "m_iHealth", maxHealth);
-			SetEntProp(client, Prop_Send, "m_iHealth", maxHealth);
-		}
-	}
-
-	// Change stats on some weapons.
-	if (!g_PlayerEliminated[client] || g_PlayerProxy[client])
-	{
-		int weaponEnt = INVALID_ENT_REFERENCE;
-		Handle weaponHandle = null;
-		for (int slot = 0; slot <= 5; slot++)
-		{
-			weaponEnt = GetPlayerWeaponSlot(client, slot);
-			if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
-			{
-				continue;
-			}
-
-			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-			switch (itemDef)
-			{
-				case 214: // Powerjack
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 12.0 ; 412 ; 1.2");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 310: //The Warrior's Spirit
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 310, 0, 0, "2 ; 1.3 ; 412 ; 1.3");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 326: // The Back Scratcher
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 304: // Amputator
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					if (!SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
-					{
-						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
-					}
-					else
-					{
-						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "1 ; 0.8");
-					}
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 239: //GRU
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-					if (!IsRoundPlaying())
-					{
-						SetEntityHealth(client, 300);
-					}
-				}
-				case 1100: //Bread Bite
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 426: //Eviction Notice
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-					if (!IsRoundPlaying())
-					{
-						SetEntityHealth(client, 300);
-					}
-				}
-				case 775: //The Escape Plan (Its like, real buggy on wearer)
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_shovel", 775, 0, 0, "414 ; 1 ; 734 ; 0.1");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 452: //Three Rune Blade
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_bat", 452, 0, 0, "");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 325: //Boston Basher
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_bat", 325, 0, 0, "");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 450: //Atomizer
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_bat", 450, 0, 0, "");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 225: //Your Eternal Reward
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_knife", 225, 0, 0, "");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 649: //Spy-cicle
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_knife", 649, 0, 0, "");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-				case 574: //Spy-cicle
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_knife", 574, 0, 0, "");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-			}
-		}
-		delete weaponHandle;
-	}
-
-	if (preventAttack)
-	{
-		int weaponEnt = INVALID_ENT_REFERENCE;
-		while ((weaponEnt = FindEntityByClassname(weaponEnt, "tf_wearable_demoshield")) != INVALID_ENT_REFERENCE)
-		{
-			if (GetEntPropEnt(weaponEnt, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(weaponEnt);
-			}
-		}
-
-		for (int slot = 0; slot <= 5; slot++)
-		{
-			if (slot == TFWeaponSlot_Melee)
-			{
-				continue;
-			}
-
-			weaponEnt = GetPlayerWeaponSlot(client, slot);
-			if (!IsValidEntity(weaponEnt))
-			{
-				continue;
-			}
-
-			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-			switch (itemDef)
-			{
-				case 30, 212, 59, 60, 297, 947, 1101:	// Invis Watch, Base Jumper
-				{
-					TF2_RemoveWeaponSlotAndWearables(client, slot);
-				}
-				default:
-				{
-					SetEntPropFloat(weaponEnt, Prop_Send, "m_flNextPrimaryAttack", 99999999.9);
-					SetEntPropFloat(weaponEnt, Prop_Send, "m_flNextSecondaryAttack", 99999999.9);
-				}
-			}
-		}
-	}
-
-	//Remove the teleport ability
-	if (IsClientInPvP(client) || IsClientInPvE(client) || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !g_PlayerEliminated[client])) //DidClientEscape(client)
-	{
-		int weaponEnt = INVALID_ENT_REFERENCE;
-		Handle weaponHandle = null;
-		for (int slot = 0; slot <= 5; slot++)
-		{
-			weaponEnt = GetPlayerWeaponSlot(client, slot);
-			if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
-			{
-				continue;
-			}
-
-			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-			switch (itemDef)
-			{
-				case 589: // Eureka Effect
-				{
-					TF2_RemoveWeaponSlot(client, slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_wrench", 589, 0, 0, "93 ; 0.5 ; 732 ; 0.5");
-					int entity = TF2Items_GiveNamedItem(client, weaponHandle);
-					delete weaponHandle;
-					weaponHandle = null;
-					EquipPlayerWeapon(client, entity);
-				}
-			}
-		}
-		delete weaponHandle;
-	}
-	//Force them to take their melee wep, it prevents the civilian bug.
-	ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
-
-	// Remove all hats.
-	if (IsClientInGhostMode(client))
-	{
-		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(ent);
-			}
-		}
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_campaign_item")) != -1)
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-			{
-				RemoveEntity(ent);
-			}
-		}
-	}
-
-	float healthFromPack = 1.0;
-	if (!IsClassConfigsValid())
-	{
-		if (!g_PlayerEliminated[client] && !SF_IsBoxingMap())
-		{
-			if (g_PlayerHasRegenerationItem[client])
-			{
-				healthFromPack = 0.40;
-			}
-			if (TF2_GetPlayerClass(client) == TFClass_Medic)
-			{
-				healthFromPack = 0.0;
-			}
-		}
-	}
-	else
-	{
-		if (!g_PlayerEliminated[client] && !SF_IsBoxingMap())
-		{
-			healthFromPack = g_ClassHealthPickupMultiplier[classToInt];
-			if (g_PlayerHasRegenerationItem[client])
-			{
-				healthFromPack -= 0.6;
-			}
-			if (healthFromPack <= 0.0)
-			{
-				healthFromPack = 0.0;
-			}
-		}
-	}
-
-	TF2Attrib_SetByDefIndex(client, 109, healthFromPack);
-
-	#if defined DEBUG
-	int weaponEnt = INVALID_ENT_REFERENCE;
-
-	for (int i = 0; i <= 5; i++)
-	{
-		weaponEnt = GetPlayerWeaponSlot(client, i);
-		if (!IsValidEdict(weaponEnt))
-		{
-			continue;
-		}
-
-		newWeaponItemIndexes[i] = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-	}
-
-	if (g_DebugDetailConVar.IntValue > 0)
-	{
-		for (int i = 0; i <= 5; i++)
-		{
-			DebugMessage("-> slot %d: %d (old: %d)", i, newWeaponItemIndexes[i], oldWeaponItemIndexes[i]);
-		}
-
-		DebugMessage("END Timer_ClientPostWeapons(%d) -> remove = %d, restrict = %d", client, removeWeapons, restrictWeapons);
-	}
-	#endif
-	return Plugin_Stop;
-}
-
-public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDefinitionIndex, Handle &itemHandle)
-{
-	if (!g_Enabled)
-	{
-		return Plugin_Continue;
-	}
-
-	/*if (itemDefinitionIndex == 649)
-	{
-		RequestFrame(Frame_ReplaceSpyCicle, client);
-		return Plugin_Handled;
-	}*/
-	switch (itemDefinitionIndex)
-	{
-		case 642:
-		{
-			Handle itemOverride = PrepareItemHandle("tf_wearable", 642, 0, 0, "376 ; 1.0 ; 377 ; 0.2 ; 57 ; 2 ; 412 ; 1.10");
-
-			if (itemOverride != null)
-			{
-				itemHandle = itemOverride;
-
-				return Plugin_Changed;
-			}
-			delete itemOverride;
-			itemOverride = null;
-		}
-	}
-
-	return Plugin_Continue;
-}
-
 void Frame_ClientHealArrow(int client)
 {
 	if (IsValidClient(client) && IsClientInPvP(client))
@@ -1952,153 +1954,4 @@ void Frame_ClientHealArrow(int client)
 			}
 		}
 	}
-}
-
-bool IsRegenWeapon(int weaponEnt)
-{
-	Address attribRegen = TF2Attrib_GetByDefIndex(weaponEnt, 1003);
-	if (attribRegen != Address_Null)
-	{
-		return true;
-	}
-	attribRegen = TF2Attrib_GetByDefIndex(weaponEnt, 490);
-	if (attribRegen != Address_Null)
-	{
-		return true;
-	}
-	attribRegen = TF2Attrib_GetByDefIndex(weaponEnt, 190);
-	if (attribRegen != Address_Null)
-	{
-		return true;
-	}
-	attribRegen = TF2Attrib_GetByDefIndex(weaponEnt, 130);
-	if (attribRegen != Address_Null)
-	{
-		return true;
-	}
-	attribRegen = TF2Attrib_GetByDefIndex(weaponEnt, 57);
-	if (attribRegen != Address_Null)
-	{
-		return true;
-	}
-	attribRegen = TF2Attrib_GetByDefIndex(weaponEnt, 220);
-	if (attribRegen != Address_Null)
-	{
-		return true;
-	}
-	return false;
-}
-
-bool IsWeaponRestricted(TFClassType class,int itemDefInt)
-{
-	if (g_RestrictedWeaponsConfig == null)
-	{
-		return false;
-	}
-
-	bool returnBool = false;
-
-	char itemDef[32];
-	FormatEx(itemDef, sizeof(itemDef), "%d", itemDefInt);
-
-	g_RestrictedWeaponsConfig.Rewind();
-	bool proxyBoss = false;
-	for (int i = 0; i < MAX_BOSSES; i++)
-	{
-		SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(i);
-		if (!Npc.IsValid())
-		{
-			continue;
-		}
-		if (Npc.Flags & SFF_PROXIES)
-		{
-			proxyBoss = true;
-			break;
-		}
-	}
-	if (g_RestrictedWeaponsConfig.JumpToKey("all"))
-	{
-		//returnBool = (g_RestrictedWeaponsConfig.GetNum(itemDef)) != 0;
-		//view_as bool value turn to 2 into a true value.
-		if (g_RestrictedWeaponsConfig.GetNum(itemDef)==1)
-		{
-			returnBool=true;
-		}
-		if (proxyBoss && !returnBool)
-		{
-			int proxyRestricted = g_RestrictedWeaponsConfig.GetNum(itemDef, 0);
-			if (proxyRestricted==2)
-			{
-				returnBool = true;
-			}
-		}
-	}
-
-	bool bFoundSection = false;
-	g_RestrictedWeaponsConfig.Rewind();
-
-	switch (class)
-	{
-		case TFClass_Scout:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("scout");
-		}
-		case TFClass_Soldier:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("soldier");
-		}
-		case TFClass_Sniper:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("sniper");
-		}
-		case TFClass_DemoMan:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("demoman");
-		}
-		case TFClass_Heavy:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("heavy");
-
-			if (!bFoundSection)
-			{
-				g_RestrictedWeaponsConfig.Rewind();
-				bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("heavyweapons");
-			}
-		}
-		case TFClass_Medic:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("medic");
-		}
-		case TFClass_Spy:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("spy");
-		}
-		case TFClass_Pyro:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("pyro");
-		}
-		case TFClass_Engineer:
-		{
-			bFoundSection = g_RestrictedWeaponsConfig.JumpToKey("engineer");
-		}
-	}
-
-	if (bFoundSection)
-	{
-		//returnBool = (g_RestrictedWeaponsConfig.GetNum(itemDef, returnBool)) != 0;
-		if (g_RestrictedWeaponsConfig.GetNum(itemDef)==1)
-		{
-			returnBool = true;
-		}
-		if (proxyBoss && !returnBool)
-		{
-			int proxyRestricted = g_RestrictedWeaponsConfig.GetNum(itemDef, 0);
-			if (proxyRestricted==2)
-			{
-				returnBool = true;
-			}
-		}
-	}
-
-	return returnBool;
 }

@@ -5,6 +5,7 @@
 #define _sf2_profiles_chaser_precache
 
 #pragma semicolon 1
+#pragma newdecls required
 
 /**
  *	Parses and stores the unique values of a chaser profile from the current position in the profiles config.

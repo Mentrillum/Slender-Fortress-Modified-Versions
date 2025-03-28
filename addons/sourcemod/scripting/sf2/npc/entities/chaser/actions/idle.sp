@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -75,13 +76,14 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 {
 	INextBot bot = actor.MyNextBotPointer();
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileIdleData idleData = data.GetIdleBehavior();
+	ChaserBossProfileSmellData smellData = data.GetSmellData();
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
 
-	action.NextTurnTime = gameTime + GetRandomFloat(data.IdleData.TurnMinTime[difficulty], data.IdleData.TurnMaxTime[difficulty]);
-	action.NextWanderTime = gameTime + GetRandomFloat(data.WanderEnterTimeMin[difficulty], data.WanderEnterTimeMax[difficulty]);
+	action.NextTurnTime = gameTime + GetRandomFloat(idleData.GetTurnMinCooldown(difficulty), idleData.GetTurnMaxCooldown(difficulty));
+	action.NextWanderTime = gameTime + GetRandomFloat(data.GetWanderEnterMinTime(difficulty), data.GetWanderEnterMaxTime(difficulty));
 	action.InitialState = true;
 
 	bot.GetLocomotionInterface().Stop();
@@ -98,16 +100,21 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 		}
 	}
 
-	if (!actor.HasSmelled)
+	if (data.GetSmellData() != null)
 	{
-		actor.SmellCooldown = gameTime + GetRandomFloat(data.SmellData.CooldownMin[difficulty], data.SmellData.CooldownMax[difficulty]);
-	}
-	else
-	{
-		actor.SmellCooldown = gameTime + GetRandomFloat(data.SmellData.CooldownAfterStateMin[difficulty], data.SmellData.CooldownAfterStateMax[difficulty]);
+		if (!actor.HasSmelled)
+		{
+			actor.SmellCooldown = gameTime + GetRandomFloat(smellData.GetMinCooldown(difficulty), smellData.GetMaxCooldown(difficulty));
+		}
+		else
+		{
+			actor.SmellCooldown = gameTime + GetRandomFloat(smellData.GetMinCooldownAfterState(difficulty), smellData.GetMaxCooldownAfterState(difficulty));
+		}
 	}
 
-	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + NPCGetIdleLifetime(controller.Index, difficulty);
+	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + data.GetIdleLifeTime(difficulty);
+
+	actor.IsSpawning = false;
 
 	return action.Continue();
 }
@@ -120,12 +127,12 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		return action.Continue();
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileIdleData idleData = data.GetIdleBehavior();
+	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
+	ChaserBossProfileSmellData smellData = data.GetSmellData();
 
-	if (!originalData.IsPvEBoss && IsBeatBoxBeating(2))
+	if (!data.IsPvEBoss && IsBeatBoxBeating(2))
 	{
 		return action.SuspendFor(SF2_ChaserBeatBoxFreezeAction(actor.IsAttemptingToMove));
 	}
@@ -138,7 +145,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 
 	PathFollower path = controller.Path;
 
-	if (data.ChaseOnLookData.Enabled[difficulty] && controller.ChaseOnLookTargets.Length > 0)
+	if (data.GetChaseOnLookData().IsEnabled(difficulty) && controller.ChaseOnLookTargets.Length > 0)
 	{
 		SF2_BasePlayer lookTarget = SF2_BasePlayer(controller.ChaseOnLookTargets.Get(0));
 		if (lookTarget.IsValid && !lookTarget.IsEliminated && lookTarget.IsAlive && !lookTarget.IsInGhostMode && !lookTarget.HasEscaped)
@@ -158,7 +165,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 	if (target.IsValid())
 	{
 		if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly ||
-			view_as<SF2NPC_BaseNPC>(controller).GetProfileData().IsPvEBoss)
+			data.IsPvEBoss)
 		{
 			actor.State = STATE_CHASE;
 			path.Invalidate();
@@ -199,7 +206,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 			{
 				actor.NextVoiceTime = 0.0;
 			}
-			return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "I saw someone!");
+			return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "I saw someone!");
 		}
 	}
 
@@ -215,7 +222,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		{
 			actor.NextVoiceTime = 0.0;
 		}
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Someone made noise, let's go!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "Someone made noise, let's go!");
 	}
 	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0 || actor.QueueForAlertState)
 	{
@@ -229,7 +236,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 			actor.NextVoiceTime = 0.0;
 		}
 		actor.QueueForAlertState = false;
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "We got a sound hint, let's go!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "We got a sound hint, let's go!");
 	}
 
 	if ((interruptConditions & COND_DEBUG) != 0)
@@ -243,7 +250,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		{
 			actor.NextVoiceTime = 0.0;
 		}
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnWander[difficulty]), "An admin told me to go here!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnWander(difficulty)), "An admin told me to go here!");
 	}
 
 	if (actor.FollowedCompanionAlert || actor.AlertWithBoss)
@@ -262,13 +269,13 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 			{
 				actor.NextVoiceTime = 0.0;
 			}
-			return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnWander[difficulty]), "One of my mates found something!");
+			return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnWander(difficulty)), "One of my mates found something!");
 		}
 	}
 
-	if (data.SmellData.Enabled[difficulty] && actor.SmellCooldown <= gameTime && actor.SmellPlayerList != null)
+	if (smellData.IsEnabled(difficulty) && actor.SmellCooldown <= gameTime && actor.SmellPlayerList != null)
 	{
-		if (actor.SmellPlayerList.Length >= data.SmellData.PlayerCount[difficulty])
+		if (actor.SmellPlayerList.Length >= smellData.GetRequiredPlayers(difficulty))
 		{
 			actor.State = STATE_ALERT;
 			path.Invalidate();
@@ -276,7 +283,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		}
 	}
 
-	bool isAbleToWander = data.CanWander[difficulty];
+	bool isAbleToWander = data.CanWander(difficulty);
 	bool canWalk = true;
 	if (controller.HasAttribute(SF2Attribute_BlockWalkSpeedUnderDifficulty))
 	{
@@ -293,8 +300,8 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 		float debugPos[3];
 		actor.GetForceWanderPosition(debugPos);
 		path.Invalidate();
-		float min = data.WanderTimeMin[difficulty];
-		float max = data.WanderTimeMax[difficulty];
+		float min = data.GetWanderMinTime(difficulty);
+		float max = data.GetWanderMaxTime(difficulty);
 
 		action.NextWanderTime = gameTime + GetRandomFloat(min, max);
 		path.ComputeToPos(bot, debugPos);
@@ -315,7 +322,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 				actor.NextVoiceTime = 0.0;
 			}
 			actor.WasInBacon = true;
-			return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "What is this smell of bacon?");
+			return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "What is this smell of bacon?");
 		}
 	}
 
@@ -323,13 +330,13 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 	{
 		if (gameTime >= action.NextWanderTime && GetRandomFloat(0.0, 1.0) <= 0.25)
 		{
-			float min = data.WanderTimeMin[difficulty];
-			float max = data.WanderTimeMax[difficulty];
+			float min = data.GetWanderMinTime(difficulty);
+			float max = data.GetWanderMaxTime(difficulty);
 
 			action.NextWanderTime = gameTime + GetRandomFloat(min, max);
 
-			float rangeMin = data.WanderRangeMin[difficulty];
-			float rangeMax = data.WanderRangeMax[difficulty];
+			float rangeMin = data.GetWanderMinRange(difficulty);
+			float rangeMax = data.GetWanderMaxRange(difficulty);
 			float range = GetRandomFloat(rangeMin, rangeMax);
 
 			CNavArea area = actor.GetLastKnownArea();
@@ -386,7 +393,7 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 	}
 	else
 	{
-		if (data.IdleData.TurnEnabled[difficulty])
+		if (idleData.IsTurnEnabled(difficulty))
 		{
 			if (!action.InitialState)
 			{
@@ -396,22 +403,22 @@ static int Update(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, float int
 			}
 			if (action.NextTurnTime <= 0.0)
 			{
-				action.NextTurnTime = gameTime + GetRandomFloat(data.IdleData.TurnMinTime[difficulty], data.IdleData.TurnMaxTime[difficulty]);
+				action.NextTurnTime = gameTime + GetRandomFloat(idleData.GetTurnMinCooldown(difficulty), idleData.GetTurnMaxCooldown(difficulty));
 			}
 		}
 	}
 
-	if (data.IdleData.TurnEnabled[difficulty] && action.NextTurnTime > 0.0 && action.NextTurnTime <= gameTime)
+	if (action.NextTurnTime > 0.0 && action.NextTurnTime <= gameTime && idleData.IsTurnEnabled(difficulty))
 	{
 		float myPos[3], myAng[3];
 		actor.GetAbsOrigin(myPos);
 		actor.GetAbsAngles(myAng);
-		myAng[1] += GetRandomFloat(-data.IdleData.TurnAngle[difficulty], data.IdleData.TurnAngle[difficulty]);
+		myAng[1] += GetRandomFloat(-idleData.GetTurnAngle(difficulty), idleData.GetTurnAngle(difficulty));
 		float lookAt[3];
 		lookAt[0] = 50.0;
 		VectorTransform(lookAt, myPos, myAng, lookAt);
 		action.SetLookPosition(lookAt);
-		action.NextTurnTime = gameTime + GetRandomFloat(data.IdleData.TurnMinTime[difficulty], data.IdleData.TurnMaxTime[difficulty]);
+		action.NextTurnTime = gameTime + GetRandomFloat(idleData.GetTurnMinCooldown(difficulty), idleData.GetTurnMaxCooldown(difficulty));
 		action.InitialState = false;
 	}
 

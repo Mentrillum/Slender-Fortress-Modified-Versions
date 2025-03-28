@@ -4,6 +4,7 @@
 #define _sf2_stocks_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define VALID_MINIMUM_MEMORY_ADDRESS 0x10000
 
@@ -24,6 +25,12 @@
 #define	HIDEHUD_VEHICLE_CROSSHAIR	( 1<<9 )	// Hide vehicle crosshair
 #define HIDEHUD_INVEHICLE			( 1<<10 )
 #define HIDEHUD_BONUS_PROGRESS		( 1<<11 )	// Hide bonus progress display (for bonus map challenges)
+#define HIDEHUD_BUILDING_STATUS		(1 << 12)
+#define HIDEHUD_CLOAK_AND_FEIGN		(1 << 13)
+#define HIDEHUD_PIPES_AND_CHARGE	(1 << 14)
+#define HIDEHUD_METAL				(1 << 15)
+#define HIDEHUD_TARGET_ID			(1 << 16)
+#define HIDEHUD_MATCH_STATUS		(1 << 17)
 
 #define FFADE_IN			0x0001		// Just here so we don't pass 0 into the function
 #define FFADE_OUT			0x0002		// Fade out (not in)
@@ -349,7 +356,7 @@ bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float max
 	return hit;
 }
 
-void CBaseNPC_RemoveAllLayers(int entity)
+void CBaseNPC_RemoveAllLayers(int entity, bool instant = true)
 {
 	if (!IsValidEntity(entity))
 	{
@@ -364,7 +371,16 @@ void CBaseNPC_RemoveAllLayers(int entity)
 		{
 			continue;
 		}
-		overlay.KillMe();
+		if (instant)
+		{
+			overlay.KillMe();
+		}
+		else
+		{
+			overlay.m_flBlendOut = 0.2;
+			overlay.m_flCycle = 0.7;
+			overlay.AutoKill();
+		}
 	}
 }
 
@@ -415,6 +431,31 @@ void GetBonePosition(int entity, int bone, float origin[3], float angles[3])
 bool CBaseAnimating_GetSequenceVelocity(Address studioHdr, int sequence, float cycle, Address poseParameter, float velocity[3])
 {
 	return SDKCall(g_SDKSequenceVelocity, studioHdr, sequence, cycle, poseParameter, velocity);
+}
+
+float GetDamageDistance(float start[3], float end[3], float baseDamage, float minRange, float maxRange, float minMultiplier, float maxMultiplier)
+{
+	float minDamage = baseDamage * minMultiplier;
+	float maxDamage = baseDamage * maxMultiplier;
+	float newDamage = baseDamage;
+
+	float distance = GetVectorDistance(start, end, true);
+	float percent = (distance - minRange) / (maxRange - minRange);
+	if (percent <= 0.0)
+	{
+		percent = distance / minRange;
+		newDamage = LerpFloats(maxDamage, baseDamage, percent);
+	}
+	else
+	{
+		if (percent > 1.0)
+		{
+			percent = 1.0;
+		}
+		newDamage = LerpFloats(baseDamage, minDamage, percent);
+	}
+
+	return newDamage;
 }
 
 //  =========================================================
@@ -478,9 +519,10 @@ void KillClient(int client)
 {
 	if (client != -1)
 	{
-		SDKHooks_TakeDamage(client, 0, 0, 9001.0, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+		int health = GetEntProp(client, Prop_Send, "m_iHealth") * 1000;
+		SDKHooks_TakeDamage(client, 0, 0, float(health), 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 }, .bypassHooks = false);
 		ForcePlayerSuicide(client);
-		SetVariantInt(9001);
+		SetVariantInt(health);
 		AcceptEntityInput(client, "RemoveHealth");
 	}
 }
@@ -497,7 +539,7 @@ void Explode(float pos[3], float damage, float radius, int attacker, const char[
 	SetEntityOwner(bomb, attacker);
 	DispatchSpawn(bomb);
 
-	SDKHooks_TakeDamage(bomb, attacker, attacker, 9001.0, DMG_BLAST);
+	SDKHooks_TakeDamage(bomb, attacker, attacker, 9001.0, DMG_BLAST, .bypassHooks = false);
 }
 
 void DestroyAllActiveWeapons(int client)
@@ -850,9 +892,14 @@ void ForceTeamWin(int team)
 	AcceptEntityInput(ent, "SetWinner");
 }
 
-Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att)
+Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att, bool preserveAttributes = false)
 {
-	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
+	int flags = OVERRIDE_ALL | FORCE_GENERATION;
+	if (preserveAttributes)
+	{
+		flags |= PRESERVE_ATTRIBUTES;
+	}
+	Handle item = TF2Items_CreateItem(flags);
 	TF2Items_SetClassname(item, classname);
 	TF2Items_SetItemIndex(item, index);
 	TF2Items_SetLevel(item, level);
@@ -1105,7 +1152,7 @@ void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float d
 		SF2_BasePlayer player = SF2_BasePlayer(i);
 		if (player.IsValid && !player.IsBot && !player.IsInGhostMode)
 		{
-			if (!airShake && command == 0 && !(player.GetFlags() && FL_ONGROUND))
+			if (!airShake && command == 0 && (player.GetFlags() & FL_ONGROUND) != 0)
 			{
 				continue;
 			}
@@ -1165,7 +1212,7 @@ float ComputeShakeAmplitude(float center[3], float playerPos[3], float amplitude
 /**
  *	Converts a given timestamp into hours, minutes, and seconds.
  */
-void FloatToTimeHMS(float time, int &h=0, int &m=0, int &s=0)
+void FloatToTimeHMS(float time, int &h = 0, int &m = 0, int &s = 0)
 {
 	s = RoundFloat(time);
 	h = s / 3600;
@@ -1237,7 +1284,7 @@ void CopyVector(const float copy[3], float dest[3])
 	dest[2] = copy[2];
 }
 
-/*void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
+void LerpVectors(const float a[3] , const float b[3], float c[3], float t)
 {
 	if (t < 0.0)
 	{
@@ -1251,7 +1298,7 @@ void CopyVector(const float copy[3], float dest[3])
 	c[0] = a[0] + (b[0] - a[0]) * t;
 	c[1] = a[1] + (b[1] - a[1]) * t;
 	c[2] = a[2] + (b[2] - a[2]) * t;
-}*/
+}
 
 /**
  *	Translates and re-orients a given offset vector into world space, given a world position and angle.
@@ -1470,35 +1517,22 @@ Action Timer_KillEntity(Handle timer, any entref)
 	return Plugin_Stop;
 }
 
-Action Timer_KillEdict(Handle timer, any entref)
-{
-	int ent = EntRefToEntIndex(entref);
-	if (!ent || ent == INVALID_ENT_REFERENCE)
-	{
-		return Plugin_Stop;
-	}
-
-	RemoveEdict(ent);
-
-	return Plugin_Stop;
-}
-
 //	==========================================================
 //	SPECIAL ROUND FUNCTIONS
 //	==========================================================
 bool IsInfiniteFlashlightEnabled()
 {
-	return (g_RoundInfiniteFlashlight || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || (IsNightVisionEnabled() && g_NightVisionType == 1));
+	return ((g_RoundInfiniteFlashlight && g_PlayerInfiniteFlashlightOverrideConVar.IntValue != 0) || (g_PlayerInfiniteFlashlightOverrideConVar.IntValue == 1) || SF_SpecialRound(SPECIALROUND_INFINITEFLASHLIGHT) || (IsNightVisionEnabled() && g_NightVisionType == 1));
 }
 
 bool IsInfiniteBlinkEnabled()
 {
-	return g_RoundInfiniteBlink || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
+	return (g_RoundInfiniteBlink && g_PlayerInfiniteBlinkOverrideConVar.IntValue != 0) || (g_PlayerInfiniteBlinkOverrideConVar.IntValue == 1);
 }
 
 bool IsInfiniteSprintEnabled()
 {
-	return g_IsRoundInfiniteSprint || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap();
+	return (g_IsRoundInfiniteSprint && g_PlayerInfiniteSprintOverrideConVar.IntValue != 0) || (g_PlayerInfiniteSprintOverrideConVar.IntValue == 1) || SF_IsSlaughterRunMap() || SF_IsBoxingMap() || SF_IsRaidMap();
 }
 
 bool IsNightVisionEnabled()
@@ -1565,15 +1599,9 @@ int GetLocalGlobalDifficulty(int npcIndex = -1)
 	{
 		return g_DifficultyConVar.IntValue;
 	}
-	SF2BossProfileData data;
 	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(npcIndex);
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileData chaserData;
-	if (data.Type == SF2BossType_Chaser)
-	{
-		chaserData = view_as<SF2NPC_Chaser>(controller).GetProfileData();
-	}
-	if (data.IsPvEBoss || chaserData.BoxingBoss)
+	ChaserBossProfile data = view_as<ChaserBossProfile>(controller.GetProfileData());
+	if (data.IsPvEBoss || data.BoxingBoss)
 	{
 		if (NPCGetUniqueID(npcIndex) != -1)
 		{

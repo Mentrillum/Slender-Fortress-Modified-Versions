@@ -1,6 +1,7 @@
 // sf2_logic_boxing
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static CEntityFactory g_EntityFactory;
 

@@ -3,25 +3,27 @@
 #endif
 #define _sf2_client_flashlight_included
 
+#pragma semicolon 1
+#pragma newdecls required
+
 #define SF2_FLASHLIGHT_WIDTH 512.0 // How wide the player's Flashlight should be in world units.
 #define SF2_FLASHLIGHT_BRIGHTNESS 0 // Intensity of the players' Flashlight.
-#define SF2_FLASHLIGHT_DRAIN_RATE 0.65 // How long (in seconds) each bar on the player's Flashlight meter lasts.
-#define SF2_FLASHLIGHT_RECHARGE_RATE 0.68 // How long (in seconds) it takes each bar on the player's Flashlight meter to recharge.
+#define SF2_FLASHLIGHT_DRAIN_RATE 0.12 // How long (in seconds) each bar on the player's Flashlight meter lasts.
+#define SF2_FLASHLIGHT_RECHARGE_RATE 0.1 // How long (in seconds) it takes each bar on the player's Flashlight meter to recharge.
 #define SF2_FLASHLIGHT_FLICKERAT 0.25 // The percentage of the Flashlight battery where the Flashlight will start to blink.
 #define SF2_FLASHLIGHT_ENABLEAT 0.3 // The percentage of the Flashlight battery where the Flashlight will be able to be used again (if the player shortens out the Flashlight from excessive use).
 #define SF2_FLASHLIGHT_COOLDOWN 0.4 // How much time players have to wait before being able to switch their flashlight on again after turning it off.
-
-#pragma semicolon 1
 
 static bool g_PlayerHasFlashlight[MAXTF2PLAYERS] = { false, ... };
 static bool g_PlayerFlashlightBroken[MAXTF2PLAYERS] = { false, ... };
 static float g_PlayerFlashlightBatteryLife[MAXTF2PLAYERS] = { 1.0, ... };
 static Handle g_PlayerFlashlightBatteryTimer[MAXTF2PLAYERS] = { null, ... };
 static float g_PlayerFlashlightNextInputTime[MAXTF2PLAYERS] = { -1.0, ... };
+static bool g_PlayerFlashlightIsFlickering[MAXTF2PLAYERS] = { false, ... };
+static bool g_PlayerFlashlightFlickerState[MAXTF2PLAYERS] = { false, ... };
+static float g_PlayerFlashlightNextFlickerTime[MAXTF2PLAYERS] = { -1.0, ... };
 static int g_PlayerFlashlightEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
-static int g_PlayerFlashlightEntAng[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
-static int g_ClientFlashlightStartEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
-static int g_ClientFlashlightEndEntity[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
+static int g_PlayerFlashlightLightEnt[MAXTF2PLAYERS] = { INVALID_ENT_REFERENCE, ... };
 
 void SetupFlashlight()
 {
@@ -29,7 +31,11 @@ void SetupFlashlight()
 	g_OnPlayerDisconnectedPFwd.AddFunction(null, OnDisconnected);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+	g_OnPlayerPressButtonPFwd.AddFunction(null, OnPlayerPressButton);
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
+	g_OnPlayerConditionAddedPFwd.AddFunction(null, OnPlayerConditionAdded);
+
+	RegConsoleCmd("sm_flashlight", Command_ToggleFlashlight);
 }
 
 static void OnPutInServer(SF2_BasePlayer client)
@@ -39,6 +45,8 @@ static void OnPutInServer(SF2_BasePlayer client)
 		return;
 	}
 	ClientResetFlashlight(client.index);
+
+	SDKHook(client.index, SDKHook_PreThink, Hook_FlashlightThink);
 }
 
 static void OnDisconnected(SF2_BasePlayer client)
@@ -64,76 +72,232 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 	}
 }
 
+static void OnPlayerPressButton(SF2_BasePlayer client, int button)
+{
+	if (!client.IsAlive || client.IsInDeathCam || button != IN_ATTACK2 || IsRoundInWarmup() || IsRoundInIntro() || IsRoundEnding() || client.IsEliminated || client.HasEscaped)
+	{
+		return;
+	}
+
+	if (GetGameTime() >= client.GetFlashlightNextInputTime())
+	{
+		client.ToggleFlashlight();
+	}
+}
+
 static void OnPlayerEscape(SF2_BasePlayer client)
 {
 	ClientResetFlashlight(client.index);
 }
 
-static Action Timer_DrainFlashlight(Handle timer, any userid)
+static void OnPlayerConditionAdded(SF2_BasePlayer client, TFCond condition)
 {
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
+	if (!g_Enabled)
 	{
-		return Plugin_Stop;
+		return;
 	}
 
-	if (timer != g_PlayerFlashlightBatteryTimer[client])
+	if (condition == TFCond_Taunting && client.UsingFlashlight)
 	{
-		return Plugin_Stop;
+		client.ToggleFlashlight();
+	}
+}
+
+static Action Command_ToggleFlashlight(int client, int args)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
 	}
 
-	if (!IsInfiniteFlashlightEnabled())
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsValid || !player.IsAlive || player.IsInDeathCam || IsRoundInWarmup() || IsRoundInIntro() || IsRoundEnding() || player.IsEliminated || player.HasEscaped)
 	{
-		ClientSetFlashlightBatteryLife(client, ClientGetFlashlightBatteryLife(client) - 0.01);
+		return Plugin_Handled;
 	}
 
-	if (ClientGetFlashlightBatteryLife(client) <= 0.0)
+	if (GetGameTime() >= player.GetFlashlightNextInputTime())
 	{
-		// Break the player's flashlight, but also start recharging.
-		ClientBreakFlashlight(client);
-		ClientStartRechargingFlashlightBattery(client);
-		ClientActivateUltravision(client);
-		return Plugin_Stop;
+		player.ToggleFlashlight();
+	}
+
+	return Plugin_Handled;
+}
+
+static void Hook_FlashlightThink(int client)
+{
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsAlive || player.IsEliminated || player.HasEscaped || player.IsInGhostMode || player.IsInDeathCam)
+	{
+		return;
+	}
+
+	if (player.InCondition(TFCond_Taunting) && player.UsingFlashlight)
+	{
+		player.ToggleFlashlight();
+		return;
+	}
+
+	if (player.UsingFlashlight)
+	{
+		ClientProcessFlashlightAngles(player.index);
+		if (!IsInfiniteFlashlightEnabled())
+		{
+			player.FlashlightBatteryLife -= GetFlashlightDecreaseRate(player) * GetGameFrameTime();
+			if (player.FlashlightBatteryLife <= 0.0)
+			{
+				ClientBreakFlashlight(player.index);
+				player.FlashlightBatteryLife = 0.0;
+			}
+		}
 	}
 	else
 	{
-		ClientHandleFlashlightFlickerState(client);
+		player.FlashlightBatteryLife += GetFlashlightRechargeRate(player) * GetGameFrameTime();
+		if (player.FlashlightBatteryLife >= 1.0)
+		{
+			player.FlashlightBatteryLife = 1.0;
+		}
+		if (IsClientFlashlightBroken(player.index) && player.FlashlightBatteryLife >= SF2_FLASHLIGHT_ENABLEAT)
+		{
+			g_PlayerFlashlightBroken[player.index] = false;
+		}
 	}
-
-	return Plugin_Continue;
+	ClientHandleFlashlightFlickerState(player.index);
 }
 
-static Action Timer_RechargeFlashlight(Handle timer, any userid)
+void ClientToggleFlashlight(SF2_BasePlayer client)
 {
-	int client = GetClientOfUserId(userid);
-	if (client <= 0)
+	g_PlayerFlashlightNextInputTime[client.index] = GetGameTime() + SF2_FLASHLIGHT_COOLDOWN;
+
+	bool nightVision = IsNightVisionEnabled();
+
+	if (client.UsingFlashlight)
 	{
-		return Plugin_Stop;
-	}
+		ClientTurnOffFlashlight(client.index);
+		ClientDeactivateUltravision(client.index);
+		ClientActivateUltravision(client.index);
 
-	if (timer != g_PlayerFlashlightBatteryTimer[client])
+		if (!nightVision)
+		{
+			if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+			{
+				EmitSoundToAll(FLASHLIGHT_CLICKSOUND, client.index, SNDCHAN_ITEM, SNDLEVEL_DRYER);
+			}
+			else
+			{
+				EmitSoundToClient(client.index, FLASHLIGHT_CLICKSOUND, client.index, SNDCHAN_ITEM, SNDLEVEL_DRYER);
+			}
+		}
+
+		Call_StartForward(g_OnPlayerTurnOffFlashlightPFwd);
+		Call_PushCell(client);
+		Call_Finish();
+	}
+	else
 	{
-		return Plugin_Stop;
+		if (client.IsEliminated || SF_SpecialRound(SPECIALROUND_LIGHTSOUT) || SF_IsRaidMap() || SF_IsBoxingMap())
+		{
+			return;
+		}
+
+		if (IsClientFlashlightBroken(client.index))
+		{
+			EmitSoundToClient(client.index, FLASHLIGHT_NOSOUND, _, SNDCHAN_ITEM, SNDLEVEL_NONE);
+			return;
+		}
+
+		ClientDeactivateUltravision(client.index);
+		if (nightVision)
+		{
+			g_PlayerHasFlashlight[client.index] = true;
+			ClientActivateUltravision(client.index, nightVision);
+		}
+		else
+		{
+			ClientTurnOnFlashlight(client.index);
+		}
+
+		if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+		{
+			EmitSoundToAll((nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client.index, SNDCHAN_ITEM, SNDLEVEL_DRYER);
+		}
+		else
+		{
+			EmitSoundToClient(client.index, (nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client.index, SNDCHAN_ITEM, SNDLEVEL_DRYER);
+		}
+
+		Call_StartForward(g_OnPlayerTurnOnFlashlightPFwd);
+		Call_PushCell(client);
+		Call_Finish();
 	}
+}
 
-	ClientSetFlashlightBatteryLife(client, ClientGetFlashlightBatteryLife(client) + 0.01);
+static float GetFlashlightDecreaseRate(SF2_BasePlayer client)
+{
+	float drainRate = SF2_FLASHLIGHT_DRAIN_RATE;
 
-	if (IsClientFlashlightBroken(client) && ClientGetFlashlightBatteryLife(client) >= SF2_FLASHLIGHT_ENABLEAT)
+	TFClassType class = client.Class;
+	int classToInt = view_as<int>(class);
+
+	if (!IsClassConfigsValid())
 	{
-		// Repair the flashlight.
-		g_PlayerFlashlightBroken[client] = false;
+		if (class == TFClass_Engineer)
+		{
+			// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
+			drainRate *= 1.5;
+		}
 	}
-
-	if (ClientGetFlashlightBatteryLife(client) >= 1.0)
+	else
 	{
-		// I am fully charged!
-		ClientSetFlashlightBatteryLife(client, 1.0);
-		g_PlayerFlashlightBatteryTimer[client] = null;
-
-		return Plugin_Stop;
+		drainRate *= g_ClassFlashlightDrainRate[classToInt];
 	}
+	if (IsNightVisionEnabled() && g_NightVisionType == 2) //Blue nightvision
+	{
+		switch (g_DifficultyConVar.IntValue)
+		{
+			case Difficulty_Normal:
+			{
+				drainRate *= 0.3;
+			}
+			case Difficulty_Hard:
+			{
+				drainRate *= 0.25;
+			}
+			case Difficulty_Insane:
+			{
+				drainRate *= 0.2;
+			}
+			case Difficulty_Nightmare:
+			{
+				drainRate *= 0.15;
+			}
+			case Difficulty_Apollyon:
+			{
+				drainRate *= 0.1;
+			}
+		}
+	}
+	return drainRate;
+}
 
-	return Plugin_Continue;
+static float GetFlashlightRechargeRate(SF2_BasePlayer client)
+{
+	TFClassType class = client.Class;
+	int classToInt = view_as<int>(class);
+	float rechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
+	if (!IsClassConfigsValid())
+	{
+		if (class == TFClass_Engineer)
+		{
+			rechargeRate *= 1.2;
+		}
+	}
+	else
+	{
+		rechargeRate *= g_ClassFlashlightRechargeRate[classToInt];
+	}
+	return rechargeRate;
 }
 
 bool IsClientUsingFlashlight(int client)
@@ -163,20 +327,15 @@ void ClientProcessFlashlightAngles(int client)
 
 	int fl;
 
-	if (IsClientUsingFlashlight(client))
+	fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
+	if (fl && fl != INVALID_ENT_REFERENCE)
 	{
-		fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
-		if (fl && fl != INVALID_ENT_REFERENCE)
-		{
-			TeleportEntity(fl, NULL_VECTOR, { 0.0, 0.0, 0.0 }, NULL_VECTOR);
-		}
-		fl = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
-		if (fl && fl != INVALID_ENT_REFERENCE)
-		{
-			float ang[3];
-			GetClientEyeAngles(client, ang);
-			TeleportEntity(fl, NULL_VECTOR, ang, NULL_VECTOR);
-		}
+		float pos[3], ang[3];
+		GetClientEyePosition(client, pos);
+		GetClientEyeAngles(client, ang);
+		SF2PointSpotlightEntity(fl).SetLocalOrigin(pos);
+		SF2PointSpotlightEntity(fl).Start.SetLocalOrigin(pos);
+		SF2PointSpotlightEntity(fl).SetLocalAngles(ang);
 	}
 }
 
@@ -193,30 +352,37 @@ void ClientHandleFlashlightFlickerState(int client)
 	if (IsClientUsingFlashlight(client))
 	{
 		bool flicker = ClientGetFlashlightBatteryLife(client) <= SF2_FLASHLIGHT_FLICKERAT;
+		float gameTime = GetGameTime();
 
-		int fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
-		if (fl && fl != INVALID_ENT_REFERENCE)
+		if (flicker && g_PlayerFlashlightNextFlickerTime[client] <= gameTime)
 		{
-			if (flicker)
+			g_PlayerFlashlightFlickerState[client] = !g_PlayerFlashlightFlickerState[client];
+			g_PlayerFlashlightNextFlickerTime[client] = gameTime + GetRandomFloat(0.1, 0.2);
+			int effects = GetEntProp(client, Prop_Send, "m_fEffects");
+			int fl = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
+			if (g_PlayerFlashlightFlickerState[client])
 			{
-				SetEntProp(fl, Prop_Data, "m_LightStyle", 10);
+				if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
+				{
+					SetEntProp(client, Prop_Send, "m_fEffects", effects | (1 << 2));
+				}
+
+				if (fl && fl != INVALID_ENT_REFERENCE)
+				{
+					SF2PointSpotlightEntity(fl).TurnOn();
+				}
 			}
 			else
 			{
-				SetEntProp(fl, Prop_Data, "m_LightStyle", 0);
-			}
-		}
+				if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
+				{
+					SetEntProp(client, Prop_Send, "m_fEffects", effects &= ~(1 << 2));
+				}
 
-		fl = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
-		if (fl && fl != INVALID_ENT_REFERENCE)
-		{
-			if (flicker)
-			{
-				SetEntityRenderFx(fl, view_as<RenderFx>(13));
-			}
-			else
-			{
-				SetEntityRenderFx(fl, view_as<RenderFx>(0));
+				if (fl && fl != INVALID_ENT_REFERENCE)
+				{
+					SF2PointSpotlightEntity(fl).TurnOff();
+				}
 			}
 		}
 	}
@@ -253,6 +419,8 @@ void ClientBreakFlashlight(int client)
 
 	ClientSetFlashlightBatteryLife(client, 0.0);
 	ClientTurnOffFlashlight(client);
+	ClientDeactivateUltravision(client);
+	ClientActivateUltravision(client);
 
 	ClientAddStress(client, 0.2);
 
@@ -284,14 +452,9 @@ void ClientResetFlashlight(int client)
 	g_PlayerFlashlightBroken[client] = false;
 	g_PlayerFlashlightBatteryTimer[client] = null;
 	g_PlayerFlashlightNextInputTime[client] = -1.0;
-
-	SF2PointSpotlightEntity spotlight = SF2PointSpotlightEntity(EntRefToEntIndex(g_PlayerFlashlightEntAng[client]));
-	if (spotlight.IsValid())
-	{
-		spotlight.TurnOff();
-		RemoveEntity(spotlight.index);
-	}
-	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
+	g_PlayerFlashlightIsFlickering[client] = false;
+	g_PlayerFlashlightFlickerState[client] = false;
+	g_PlayerFlashlightNextFlickerTime[client] = -1.0;
 
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
@@ -301,20 +464,29 @@ void ClientResetFlashlight(int client)
 	#endif
 }
 
-static Action Hook_FlashlightSetTransmit(int ent,int other)
+static Action FlashlightBeamSetTransmit(int ent, int other)
 {
 	if (!g_Enabled)
 	{
 		return Plugin_Continue;
 	}
 
-	if (EntRefToEntIndex(g_PlayerFlashlightEnt[other]) != ent)
+	if (IsValidClient(other) && g_PlayerFlashlightEnt[other] == EntIndexToEntRef(ent))
 	{
 		return Plugin_Handled;
 	}
 
-	// We've already checked for flashlight ownership in the last statement. So we can do just this.
-	if (g_PlayerPreferences[other].PlayerPreference_ProjectedFlashlight)
+	return Plugin_Continue;
+}
+
+static Action FlashlightLightSetTransmit(int ent, int other)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	if (IsValidClient(other) && g_PlayerFlashlightLightEnt[other] == EntIndexToEntRef(ent))
 	{
 		return Plugin_Handled;
 	}
@@ -408,273 +580,112 @@ void ClientTurnOnFlashlight(int client)
 	else
 	{
 		// Spawn the light which only the user will see.
-		int ent = CreateEntityByName("light_dynamic");
-		if (ent != -1)
+		SF2PointSpotlightEntity ent = SF2PointSpotlightEntity(CreateEntityByName("sf2_point_spotlight"));
+		if (ent.IsValid())
 		{
-			TeleportEntity(ent, eyePos, eyeAng, NULL_VECTOR);
-			DispatchKeyValue(ent, "targetname", "WUBADUBDUBMOTHERBUCKERS");
+			ent.Teleport(eyePos, eyeAng, NULL_VECTOR);
 			switch (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature)
 			{
 				case 1:
 				{
-					DispatchKeyValue(ent, "rendercolor", "255 150 50");
+					ent.SetColor({ 255, 150, 50, 255 });
 				}
 				case 2:
 				{
-					DispatchKeyValue(ent, "rendercolor", "255 210 100");
+					ent.SetColor({ 255, 210, 100, 255 });
 				}
 				case 3:
 				{
-					DispatchKeyValue(ent, "rendercolor", "255 255 120");
+					ent.SetColor({ 255, 255, 120, 255 });
 				}
 				case 4:
 				{
-					DispatchKeyValue(ent, "rendercolor", "255 255 185");
+					ent.SetColor({ 255, 255, 185, 255 });
 				}
 				case 5:
 				{
-					DispatchKeyValue(ent, "rendercolor", "255 255 210");
+					ent.SetColor({ 255, 255, 210, 255 });
 				}
 				case 6:
 				{
-					DispatchKeyValue(ent, "rendercolor", "255 255 255");
+					ent.SetColor({ 255, 255, 255, 255 });
 				}
 				case 7:
 				{
-					DispatchKeyValue(ent, "rendercolor", "210 255 255");
+					ent.SetColor({ 210, 255, 255, 255 });
 				}
 				case 8:
 				{
-					DispatchKeyValue(ent, "rendercolor", "185 255 255");
+					ent.SetColor({ 185, 255, 255, 255 });
 				}
 				case 9:
 				{
-					DispatchKeyValue(ent, "rendercolor", "150 255 255");
+					ent.SetColor({ 150, 255, 255, 255 });
 				}
 				case 10:
 				{
-					DispatchKeyValue(ent, "rendercolor", "125 255 255");
+					ent.SetColor({ 125, 255, 255, 255 });
 				}
 			}
+			float value = radius;
 			if (!IsClassConfigsValid())
 			{
-				if (class != TFClass_Engineer)
+				if (class == TFClass_Engineer)
 				{
-					SetVariantFloat(radius);
-				}
-				else
-				{
-					SetVariantFloat(doubleRadius);
+					value = doubleRadius;
 				}
 			}
 			else
 			{
-				float customRadius = radius * g_ClassFlashlightRadius[classToInt];
-				SetVariantFloat(customRadius);
+				value = radius * g_ClassFlashlightRadius[classToInt];
 			}
-			AcceptEntityInput(ent, "spotlight_radius");
+			ent.Distance = value;
+			ent.SpotlightRadius = value;
+			value = length;
 			if (!IsClassConfigsValid())
 			{
-				if (class != TFClass_Engineer)
+				if (class == TFClass_Engineer)
 				{
-					SetVariantFloat(length);
-				}
-				else
-				{
-					SetVariantFloat(doubleLength);
+					value = doubleLength;
 				}
 			}
 			else
 			{
-				float customLength = length * g_ClassFlashlightLength[classToInt];
-				SetVariantFloat(customLength);
+				value = length * g_ClassFlashlightLength[classToInt];
 			}
-			AcceptEntityInput(ent, "distance");
-			if (!IsClassConfigsValid())
+			ent.Length = value;
+			int intValue = SF2_FLASHLIGHT_BRIGHTNESS;
+			if (IsClassConfigsValid())
 			{
-				SetVariantInt(SF2_FLASHLIGHT_BRIGHTNESS);
+				intValue = SF2_FLASHLIGHT_BRIGHTNESS + g_ClassFlashlightBrightness[classToInt];
 			}
-			else
-			{
-				int customBrightness = SF2_FLASHLIGHT_BRIGHTNESS + g_ClassFlashlightBrightness[classToInt];
-				SetVariantInt(customBrightness);
-			}
-			AcceptEntityInput(ent, "brightness");
-
-			SetVariantInt(RoundToFloor(cone));
-			AcceptEntityInput(ent, "_inner_cone");
-			SetVariantInt(RoundToFloor(cone));
-			AcceptEntityInput(ent, "_cone");
-			DispatchSpawn(ent);
-			ActivateEntity(ent);
+			ent.Brightness = intValue;
+			ent.Cone = RoundToFloor(cone);
+			ent.Width = 40.0;
+			ent.EndWidth = ent.Width * 2.0;
+			ent.HaloScale = 40.0;
+			ent.Spawn();
+			ent.Activate();
 			SetVariantString("!activator");
-			AcceptEntityInput(ent, "SetParent", client);
-			AcceptEntityInput(ent, "TurnOn");
+			ent.Start.AcceptInput("ClearParent");
+			SetVariantString("!activator");
+			ent.End.AcceptInput("ClearParent");
+			ent.TurnOn();
 
-			g_PlayerFlashlightEnt[client] = EntIndexToEntRef(ent);
+			g_PlayerFlashlightEnt[client] = EntIndexToEntRef(ent.index);
+			g_PlayerFlashlightLightEnt[client] = EntIndexToEntRef(ent.End.index);
+			SDKHook(ent.index, SDKHook_SetTransmit, FlashlightBeamSetTransmit);
 
-			SDKHook(ent, SDKHook_SetTransmit, Hook_FlashlightSetTransmit);
+			if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
+			{
+				SDKHook(ent.End.index, SDKHook_SetTransmit, FlashlightLightSetTransmit);
+			}
 		}
 	}
-
-	// Spawn the light that only everyone else will see.
-	/*SF2PointSpotlightEntity spotlight = SF2PointSpotlightEntity(CreateEntityByName("sf2_point_spotlight"));
-	if (spotlight.IsValid())
-	{
-		TeleportEntity(spotlight.index, eyePos, eyeAng);
-		switch (g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature)
-		{
-			case 1:
-			{
-				spotlight.SetRenderColor(255, 150, 50, 255);
-			}
-			case 2:
-			{
-				spotlight.SetRenderColor(255, 210, 100, 255);
-			}
-			case 3:
-			{
-				spotlight.SetRenderColor(255, 255, 120, 255);
-			}
-			case 4:
-			{
-				spotlight.SetRenderColor(255, 255, 185, 255);
-			}
-			case 5:
-			{
-				spotlight.SetRenderColor(255, 255, 210, 255);
-			}
-			case 6:
-			{
-				spotlight.SetRenderColor(255, 255, 255, 255);
-			}
-			case 7:
-			{
-				spotlight.SetRenderColor(210, 255, 255, 255);
-			}
-			case 8:
-			{
-				spotlight.SetRenderColor(185, 255, 255, 255);
-			}
-			case 9:
-			{
-				spotlight.SetRenderColor(150, 255, 255, 255);
-			}
-			case 10:
-			{
-				spotlight.SetRenderColor(125, 255, 255, 255);
-			}
-		}
-		if (!IsClassConfigsValid())
-		{
-			if (class != TFClass_Engineer)
-			{
-				spotlight.Length = length;
-			}
-			else
-			{
-				spotlight.Length = doubleLength;
-			}
-		}
-		else
-		{
-			float customLength = length * g_ClassFlashlightLength[classToInt];
-			spotlight.Length = customLength;
-		}
-		if (!IsClassConfigsValid())
-		{
-			if (class != TFClass_Engineer)
-			{
-				spotlight.Width = radius;
-			}
-			else
-			{
-				spotlight.Width = doubleRadius;
-			}
-		}
-		else
-		{
-			float customRadius = radius * g_ClassFlashlightRadius[classToInt];
-			spotlight.Width = customRadius;
-		}
-		if (!IsClassConfigsValid())
-		{
-			spotlight.Brightness = SF2_FLASHLIGHT_BRIGHTNESS;
-		}
-		else
-		{
-			int customBrightness = SF2_FLASHLIGHT_BRIGHTNESS + g_ClassFlashlightBrightness[classToInt];
-			spotlight.Brightness = customBrightness;
-		}
-		spotlight.Cone = RoundToFloor(cone);
-		spotlight.EndWidth = spotlight.Width * 2.0;
-		spotlight.Distance = spotlight.EndWidth;
-		spotlight.SpotlightRadius = spotlight.Length;
-		spotlight.HaloScale = 20.0;
-		spotlight.Spawn();
-		spotlight.Activate();
-		SetVariantString("!activator");
-		spotlight.AcceptInput("SetParent", client);
-		spotlight.TurnOn();
-		g_PlayerFlashlightEntAng[client] = EntIndexToEntRef(spotlight.index);
-	}*/
 
 	Call_StartForward(g_OnClientActivateFlashlightFwd);
 	Call_PushCell(client);
 	Call_Finish();
-}
-
-void Hook_OnFlashlightThink(int client)
-{
-	TFClassType class = TF2_GetPlayerClass(client);
-	int classToInt = view_as<int>(class);
-	float length;
-	if (!IsClassConfigsValid())
-	{
-		if (class != TFClass_Engineer)
-		{
-			length = SF2_FLASHLIGHT_LENGTH;
-		}
-		else
-		{
-			length = SF2_FLASHLIGHT_LENGTH * 3.0;
-		}
-	}
-	else
-	{
-		length = SF2_FLASHLIGHT_LENGTH * g_ClassFlashlightLength[classToInt];
-	}
-	if (IsClientUsingFlashlight(client))
-	{
-		int endEnt = EntRefToEntIndex(g_ClientFlashlightEndEntity[client]);
-		if (IsValidEntity(endEnt))
-		{
-			float entPos[3], entRot[3], tempRot[3], endPos[3];
-			GetClientEyePosition(client, entPos);
-			GetClientEyeAngles(client, entRot);
-			GetEntPropVector(client, Prop_Data, "m_angAbsRotation", tempRot);
-			tempRot[0] = 0.0;
-			tempRot[2] = 0.0;
-			AddVectors(entRot, tempRot, entRot);
-			GetAngleVectors(entRot, entRot, NULL_VECTOR, NULL_VECTOR);
-			endPos = entRot;
-			ScaleVector(endPos, length);
-			AddVectors(endPos, entPos, endPos);
-
-			CBaseEntity spotlightEnd = CBaseEntity(endEnt);
-			if (spotlightEnd.IsValid())
-			{
-				TR_TraceRayFilter(entPos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitEntity, client);
-
-				float hitPos[3];
-				TR_GetEndPosition(hitPos);
-
-				hitPos[2] += 20.0;
-
-				spotlightEnd.SetAbsOrigin(hitPos);
-			}
-		}
-	}
 }
 
 /**
@@ -694,31 +705,11 @@ void ClientTurnOffFlashlight(int client)
 	int ent = EntRefToEntIndex(g_PlayerFlashlightEnt[client]);
 	if (ent && ent != INVALID_ENT_REFERENCE)
 	{
-		AcceptEntityInput(ent, "TurnOff");
 		RemoveEntity(ent);
-	}
-
-	// Remove everyone-else-only light.
-	ent = EntRefToEntIndex(g_PlayerFlashlightEntAng[client]);
-	if (ent && ent != INVALID_ENT_REFERENCE)
-	{
-		RemoveEntity(ent);
-	}
-	ent = EntRefToEntIndex(g_ClientFlashlightStartEntity[client]);
-	if (ent && ent != INVALID_ENT_REFERENCE)
-	{
-		CreateTimer(0.1, Timer_KillEntity, g_ClientFlashlightStartEntity[client], TIMER_FLAG_NO_MAPCHANGE);
-	}
-	ent = EntRefToEntIndex(g_ClientFlashlightEndEntity[client]);
-	if (ent && ent != INVALID_ENT_REFERENCE)
-	{
-		CreateTimer(0.1, Timer_KillEntity, g_ClientFlashlightEndEntity[client], TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	g_PlayerFlashlightEnt[client] = INVALID_ENT_REFERENCE;
-	g_ClientFlashlightStartEntity[client] = INVALID_ENT_REFERENCE;
-	g_ClientFlashlightEndEntity[client] = INVALID_ENT_REFERENCE;
-	g_PlayerFlashlightEntAng[client] = INVALID_ENT_REFERENCE;
+	g_PlayerFlashlightLightEnt[client] = INVALID_ENT_REFERENCE;
 
 	if (IsValidClient(client))
 	{
@@ -735,162 +726,6 @@ void ClientTurnOffFlashlight(int client)
 	Call_StartForward(g_OnClientDeactivateFlashlightFwd);
 	Call_PushCell(client);
 	Call_Finish();
-}
-
-void ClientStartRechargingFlashlightBattery(int client)
-{
-	TFClassType class = TF2_GetPlayerClass(client);
-	int classToInt = view_as<int>(class);
-	float rechargeRate = SF2_FLASHLIGHT_RECHARGE_RATE;
-	if (!IsClassConfigsValid())
-	{
-		if (class == TFClass_Engineer)
-		{
-			rechargeRate *= 0.8;
-		}
-	}
-	else
-	{
-		rechargeRate *= g_ClassFlashlightRechargeRate[classToInt];
-	}
-
-	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(rechargeRate, Timer_RechargeFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-}
-
-void ClientStartDrainingFlashlightBattery(int client)
-{
-	float drainRate = SF2_FLASHLIGHT_DRAIN_RATE;
-
-	TFClassType class = TF2_GetPlayerClass(client);
-	int classToInt = view_as<int>(class);
-
-	if (!IsClassConfigsValid())
-	{
-		if (class == TFClass_Engineer)
-		{
-			// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
-			drainRate *= 1.5;
-		}
-	}
-	else
-	{
-		drainRate *= g_ClassFlashlightDrainRate[classToInt];
-	}
-	if (IsNightVisionEnabled() && g_NightVisionType == 2) //Blue nightvision
-	{
-		switch (g_DifficultyConVar.IntValue)
-		{
-			case Difficulty_Normal:
-			{
-				drainRate *= 0.3;
-			}
-			case Difficulty_Hard:
-			{
-				drainRate *= 0.25;
-			}
-			case Difficulty_Insane:
-			{
-				drainRate *= 0.2;
-			}
-			case Difficulty_Nightmare:
-			{
-				drainRate *= 0.15;
-			}
-			case Difficulty_Apollyon:
-			{
-				drainRate *= 0.1;
-			}
-		}
-	}
-
-	g_PlayerFlashlightBatteryTimer[client] = CreateTimer(drainRate, Timer_DrainFlashlight, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-}
-
-void ClientHandleFlashlight(int client)
-{
-	if (!IsValidClient(client) || !IsPlayerAlive(client) || (TF2_IsPlayerInCondition(client, TFCond_Taunting) && !IsClientUsingFlashlight(client)))
-	{
-		return;
-	}
-
-	if (IsClientInDeathCam(client))
-	{
-		return;
-	}
-
-	bool nightVision = IsNightVisionEnabled();
-
-	if (IsClientUsingFlashlight(client) || TF2_IsPlayerInCondition(client, TFCond_Taunting))
-	{
-		ClientTurnOffFlashlight(client);
-		ClientStartRechargingFlashlightBattery(client);
-		ClientDeactivateUltravision(client);
-		ClientActivateUltravision(client);
-
-		g_PlayerFlashlightNextInputTime[client] = GetGameTime() + SF2_FLASHLIGHT_COOLDOWN;
-
-		if (!nightVision)
-		{
-			if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
-			{
-				EmitSoundToAll(FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
-			}
-			else
-			{
-				EmitSoundToClient(client, FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
-			}
-		}
-
-		Call_StartForward(g_OnPlayerTurnOffFlashlightPFwd);
-		Call_PushCell(SF2_BasePlayer(client));
-		Call_Finish();
-	}
-	else
-	{
-		// Only players in the "game" can use the flashlight.
-		if (!g_PlayerEliminated[client])
-		{
-			bool canUseFlashlight = true;
-			if (SF_SpecialRound(SPECIALROUND_LIGHTSOUT) || SF_IsRaidMap() || SF_IsBoxingMap())
-			{
-				// Unequip the flashlight please.
-				canUseFlashlight = false;
-			}
-
-			if (!IsClientFlashlightBroken(client) && canUseFlashlight)
-			{
-				ClientDeactivateUltravision(client);
-				if (nightVision)
-				{
-					g_PlayerHasFlashlight[client] = true;
-					ClientActivateUltravision(client, nightVision);
-				}
-				else
-				{
-					ClientTurnOnFlashlight(client);
-				}
-				ClientStartDrainingFlashlightBattery(client);
-
-				g_PlayerFlashlightNextInputTime[client] = GetGameTime();
-				if (!SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
-				{
-					EmitSoundToAll((nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
-				}
-				else
-				{
-					EmitSoundToClient(client, (nightVision) ? FLASHLIGHT_CLICKSOUND_NIGHTVISION : FLASHLIGHT_CLICKSOUND, client, SNDCHAN_ITEM, SNDLEVEL_DRYER);
-				}
-
-				Call_StartForward(g_OnPlayerTurnOnFlashlightPFwd);
-				Call_PushCell(SF2_BasePlayer(client));
-				Call_Finish();
-			}
-			else
-			{
-				EmitSoundToClient(client, FLASHLIGHT_NOSOUND, _, SNDCHAN_ITEM, SNDLEVEL_NONE);
-			}
-		}
-	}
 }
 
 /*

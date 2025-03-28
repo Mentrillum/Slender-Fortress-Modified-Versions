@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -20,10 +21,8 @@ methodmap SF2_ChaserSmellAction < NextBotAction
 
 	public static bool IsPossible(SF2_ChaserEntity actor)
 	{
-		SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
-		SF2BossProfileData data;
-		data = baseController.GetProfileData();
-		if (!data.AnimationData.HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Smell]))
+		ChaserBossProfile data = actor.Controller.GetProfileData();
+		if (!data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Smell]))
 		{
 			return false;
 		}
@@ -34,23 +33,15 @@ methodmap SF2_ChaserSmellAction < NextBotAction
 
 static NextBotAction InitialContainedAction(SF2_ChaserSmellAction action, SF2_ChaserEntity actor)
 {
-	SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
-	SF2BossProfileData data;
-	data = baseController.GetProfileData();
-	char animName[64];
 	float rate = 1.0, duration = 0.0, cycle = 0.0;
-	int difficulty = baseController.Difficulty;
 	actor.IsAttemptingToMove = false;
 
 	actor.PerformVoice(SF2BossSound_Smell);
 
-	if (data.AnimationData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Smell], difficulty, animName, sizeof(animName), rate, duration, cycle))
+	int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Smell], rate, duration, cycle);
+	if (sequence != -1)
 	{
-		int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Smell], rate, duration, cycle);
-		if (sequence != -1)
-		{
-			return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
-		}
+		return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
 	}
 
 	return NULL_ACTION;
@@ -67,13 +58,14 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 {
 	SF2NPC_Chaser controller = actor.Controller;
 	int difficulty = controller.Difficulty;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileSmellData smellData = data.GetSmellData();
+	ChaserBossProfileAlertData alertData = data.GetAlertBehavior();
 	PathFollower path = controller.Path;
-	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + NPCGetIdleLifetime(controller.Index, difficulty);
+	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + data.GetIdleLifeTime(difficulty);
 	if (action.ActiveChild == NULL_ACTION)
 	{
-		float bestDistance = Pow(data.SmellData.SmellRange[difficulty], 2.0);
+		float bestDistance = Pow(smellData.GetSmellRange(difficulty), 2.0);
 		bool found = false;
 		float pos[3], myPos[3], bestPos[3];
 		actor.GetAbsOrigin(myPos);
@@ -98,7 +90,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 		}
 		if (found)
 		{
-			if (!data.SmellData.ShouldChase[difficulty])
+			if (!smellData.GetShouldChaseState(difficulty))
 			{
 				actor.State = STATE_ALERT;
 				path.Invalidate();
@@ -106,7 +98,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 				{
 					actor.NextVoiceTime = 0.0;
 				}
-				return action.ChangeTo(SF2_ChaserAlertAction(bestPos, data.AlertData.RunOnSuspect[difficulty]), "I smelled someone, what is it?");
+				return action.ChangeTo(SF2_ChaserAlertAction(bestPos, alertData.ShouldRunOnSuspect(difficulty)), "I smelled someone, what is it?");
 			}
 			else
 			{
@@ -144,7 +136,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 			{
 				actor.NextVoiceTime = 0.0;
 			}
-			return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Abort abort, I saw someone!");
+			return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "Abort abort, I saw someone!");
 		}
 	}
 
@@ -160,7 +152,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 		{
 			actor.NextVoiceTime = 0.0;
 		}
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Stop! I heard someone!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "Stop! I heard someone!");
 	}
 	else if ((interruptConditions & COND_ALERT_TRIGGER_POS) != 0)
 	{
@@ -173,7 +165,7 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 		{
 			actor.NextVoiceTime = 0.0;
 		}
-		return action.ChangeTo(SF2_ChaserAlertAction(pos, data.AlertData.RunOnSuspect[difficulty]), "Stop! I got a sound hint!");
+		return action.ChangeTo(SF2_ChaserAlertAction(pos, alertData.ShouldRunOnSuspect(difficulty)), "Stop! I got a sound hint!");
 	}
 
 	return action.Continue();

@@ -1,10 +1,11 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
 methodmap SF2_ChaserAttackAction_Melee < NextBotAction
 {
-	public SF2_ChaserAttackAction_Melee(int attackIndex, const char[] attackName, float damageDelay)
+	public SF2_ChaserAttackAction_Melee(const char[] attackName, ChaserBossProfileBaseAttack data, float damageDelay)
 	{
 		if (g_Factory == null)
 		{
@@ -13,8 +14,8 @@ methodmap SF2_ChaserAttackAction_Melee < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
-				.DefineIntField("m_AttackIndex")
 				.DefineStringField("m_AttackName")
+				.DefineIntField("m_ProfileData")
 				.DefineFloatField("m_NextDamageTime")
 				.DefineIntField("m_RepeatIndex")
 				.EndDataMapDesc();
@@ -22,23 +23,10 @@ methodmap SF2_ChaserAttackAction_Melee < NextBotAction
 		SF2_ChaserAttackAction_Melee action = view_as<SF2_ChaserAttackAction_Melee>(g_Factory.Create());
 
 		action.NextDamageTime = damageDelay;
-		action.AttackIndex = attackIndex;
 		action.SetAttackName(attackName);
+		action.ProfileData = data;
 
 		return action;
-	}
-
-	property int AttackIndex
-	{
-		public get()
-		{
-			return this.GetData("m_AttackIndex");
-		}
-
-		public set(int value)
-		{
-			this.SetData("m_AttackIndex", value);
-		}
 	}
 
 	public static void Initialize()
@@ -56,6 +44,19 @@ methodmap SF2_ChaserAttackAction_Melee < NextBotAction
 	public void SetAttackName(const char[] name)
 	{
 		this.SetDataString("m_AttackName", name);
+	}
+
+	property ChaserBossProfileBaseAttack ProfileData
+	{
+		public get()
+		{
+			return this.GetData("m_ProfileData");
+		}
+
+		public set(ChaserBossProfileBaseAttack value)
+		{
+			this.SetData("m_ProfileData", value);
+		}
 	}
 
 	property float NextDamageTime
@@ -92,10 +93,8 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = chaser.Controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(attackName, attackData);
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
+	ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 	int difficulty = chaser.Controller.Difficulty;
 
 	if (attackData.Type != SF2BossAttackType_Melee)
@@ -103,7 +102,7 @@ static Action OnChaserGetAttackAction(SF2_ChaserEntity chaser, const char[] atta
 		return Plugin_Continue;
 	}
 
-	result = SF2_ChaserAttackAction_Melee(attackData.Index, attackData.Name, attackData.DamageDelay[difficulty] + GetGameTime());
+	result = SF2_ChaserAttackAction_Melee(attackName, attackData, attackData.GetDelay(difficulty) + GetGameTime());
 	return Plugin_Changed;
 }
 
@@ -119,42 +118,38 @@ static int Update(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity actor, f
 		return action.Done("No longer melee attacking");
 	}
 
-	if (actor.CancelAttack)
+	if (actor.CancelAttack || actor.ClearCurrentAttack)
 	{
 		return action.Done();
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	ChaserBossProfileBaseAttack attackData = action.ProfileData;
 	int difficulty = controller.Difficulty;
 
 	float gameTime = GetGameTime();
-	if (action.NextDamageTime >= 0.0 && gameTime > action.NextDamageTime && attackData.EventNumber == -1)
+	if (action.NextDamageTime >= 0.0 && gameTime >= action.NextDamageTime && attackData.GetEventNumber(difficulty) == -1)
 	{
 		DoMeleeAttack(action, actor);
 
-		int repeatState = attackData.Repeat;
+		int repeatState = attackData.GetRepeatState(difficulty);
 		if (repeatState > 0)
 		{
 			switch (repeatState)
 			{
 				case 1:
 				{
-					action.NextDamageTime = gameTime + attackData.DamageDelay[difficulty];
+					action.NextDamageTime = gameTime + attackData.GetDelay(difficulty);
 				}
 				case 2:
 				{
-					if (action.RepeatIndex >= attackData.RepeatTimers.Length)
+					if (attackData.GetRepeatTimer(difficulty, action.RepeatIndex) < 0.0)
 					{
 						action.NextDamageTime = -1.0;
 					}
 					else
 					{
-						float next = attackData.RepeatTimers.Get(action.RepeatIndex);
-						action.NextDamageTime = next + gameTime;
+						action.NextDamageTime = attackData.GetRepeatTimer(difficulty, action.RepeatIndex) + gameTime;
 						action.RepeatIndex++;
 					}
 				}
@@ -175,36 +170,33 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	int difficulty = controller.Difficulty;
 
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	if (originalData.IsPvEBoss)
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileBaseAttack attackData = action.ProfileData;
+	if (data.IsPvEBoss)
 	{
 		attackEliminated = true;
 	}
-	float damage = attackData.Damage[difficulty];
+	float damage = attackData.GetDamage(difficulty);
 	if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 	{
 		damage *= 0.5;
 	}
-	int damageType = attackData.DamageType[difficulty];
+	int damageType = attackData.GetDamageType(difficulty);
 
-	float myPos[3], myEyePos[3], myEyeAng[3];
+	float myPos[3], myEyePos[3], myEyeAng[3], offset[3];
 	actor.GetAbsOrigin(myPos);
 	controller.GetEyePosition(myEyePos);
 	actor.GetAbsAngles(myEyeAng);
+	data.GetEyes().GetOffsetPos(offset);
 
-	AddVectors(g_SlenderEyePosOffset[controller.Index], myEyeAng, myEyeAng);
+	AddVectors(offset, myEyeAng, myEyeAng);
 
 	float viewPunch[3];
-	viewPunch = attackData.PunchVelocity;
+	attackData.GetViewPunchAngles(difficulty, viewPunch);
 
-	float range = attackData.Range[difficulty];
-	float spread = attackData.Spread[difficulty];
-	float force = attackData.DamageForce[difficulty];
+	float range = attackData.GetRange(difficulty);
+	float spread = attackData.GetFOV(difficulty);
+	float force = attackData.GetDamageForce(difficulty);
 
 	bool hit = false;
 
@@ -219,12 +211,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			continue;
 		}
 
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
+		if (!data.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
 		{
 			continue;
 		}
 
-		if (originalData.IsPvEBoss && !IsPvETargetValid(building))
+		if (data.IsPvEBoss && !IsPvETargetValid(building))
 		{
 			continue;
 		}
@@ -245,12 +237,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			continue;
 		}
 
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
+		if (!data.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
 		{
 			continue;
 		}
 
-		if (originalData.IsPvEBoss && !IsPvETargetValid(building))
+		if (data.IsPvEBoss && !IsPvETargetValid(building))
 		{
 			continue;
 		}
@@ -271,12 +263,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			continue;
 		}
 
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
+		if (!data.IsPvEBoss && !IsTargetValidForSlender(actor, building, attackEliminated))
 		{
 			continue;
 		}
 
-		if (originalData.IsPvEBoss && !IsPvETargetValid(building))
+		if (data.IsPvEBoss && !IsPvETargetValid(building))
 		{
 			continue;
 		}
@@ -303,12 +295,30 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		prop.GetClassname(class, sizeof(class));
 
 		float realDamage = damage;
-		if (attackData.DamagePercent[difficulty] > 0.0)
+		if (attackData.GetDamagePercent(difficulty) > 0.0)
 		{
-			realDamage = strcmp(class, "tank_boss", false) != 0 ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
-			realDamage *= attackData.DamagePercent[difficulty];
+			if (SF2_BasePlayer(targets.Get(i)).IsValid)
+			{
+				realDamage = float(SF2_BasePlayer(targets.Get(i)).ModifiedMaxHealth);
+				realDamage *= attackData.GetDamagePercent(difficulty);
+			}
+			else
+			{
+				realDamage = (strcmp(class, "tank_boss", false) != 0 && strcmp(class, "func_breakable", false) != 0) ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
+				realDamage *= attackData.GetDamagePercent(difficulty);
+			}
 		}
-		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, realDamage, 64, _, _, myEyePos, false);
+		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, realDamage, 64, _, _, myEyePos, .bypassHooks = false);
+
+		if (attackData.GetHitEffects() != null)
+		{
+			SlenderSpawnEffects(attackData.GetHitEffects(), controller.Index, false, _, _, _, prop.index);
+		}
+
+		if (attackData.GetHitInputs() != null)
+		{
+			attackData.GetHitInputs().AcceptInputs(actor, prop, prop);
+		}
 	}
 	delete targets;
 
@@ -317,12 +327,12 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	{
 		SF2_BasePlayer player = SF2_BasePlayer(i);
 
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(actor, player, attackEliminated))
+		if (!data.IsPvEBoss && !IsTargetValidForSlender(actor, player, attackEliminated))
 		{
 			continue;
 		}
 
-		if (originalData.IsPvEBoss && !IsPvETargetValid(player))
+		if (data.IsPvEBoss && !IsPvETargetValid(player))
 		{
 			continue;
 		}
@@ -343,9 +353,9 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		ScaleVector(direction, force);
 
 		float realDamage = damage;
-		if (attackData.DamagePercent[difficulty] > 0.0)
+		if (attackData.GetDamagePercent(difficulty) > 0.0)
 		{
-			realDamage = float(player.GetProp(Prop_Data, "m_iMaxHealth")) * attackData.DamagePercent[difficulty];
+			realDamage = float(player.ModifiedMaxHealth) * attackData.GetDamagePercent(difficulty);
 		}
 
 		if (controller.HasAttribute(SF2Attribute_DeathCamOnLowHealth) || attackData.DeathCamLowHealth)
@@ -385,7 +395,7 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			TF2_SetPlayerPowerPlay(player.index, false);
 		}
 
-		attackData.ApplyDamageEffects(player, difficulty, SF2_ChaserBossEntity(actor.index));
+		attackData.ApplyDamageEffects(player, difficulty, actor);
 
 		// Add stress
 		float stressScalar = damage / 125.0;
@@ -396,9 +406,13 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		ClientAddStress(player.index, 0.33 * stressScalar);
 	}
 
-	ArrayList hitSounds = hit ? data.HitSounds : data.MissSounds;
-	SF2BossProfileSoundInfo info;
-	if (actor.SearchSoundsWithSectionName(hitSounds, action.GetAttackName(), info))
+	ProfileObject hitSounds = hit ? data.GetHitSounds() : data.GetMissSounds();
+	ProfileSound info = hit ? attackData.GetHitSounds() : attackData.GetMissSounds();
+	if (info == null)
+	{
+		actor.SearchSoundsWithSectionName(hitSounds, action.GetAttackName(), info, hit ? "hitenemy" : "missenemy");
+	}
+	if (info != null)
 	{
 		info.EmitSound(_, actor.index);
 	}
@@ -424,21 +438,26 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 	}
 	else
 	{
-		if (attackData.MissEffects != null)
+		if (attackData.GetMissEffects() != null)
 		{
-			SlenderSpawnEffects(attackData.MissEffects, controller.Index, false);
+			SlenderSpawnEffects(attackData.GetMissEffects(), controller.Index, false);
+		}
+
+		if (attackData.GetMissInputs() != null)
+		{
+			attackData.GetMissInputs().AcceptInputs(actor);
 		}
 	}
 
 	if (!SF_IsSlaughterRunMap())
 	{
-		if (attackData.Disappear[difficulty])
+		if (attackData.GetDisappearAfterAttack(difficulty))
 		{
 			controller.UnSpawn(true);
 		}
 		else
 		{
-			if (hit && attackData.DisappearOnHit[difficulty])
+			if (hit && attackData.GetDisappearAfterHit(difficulty))
 			{
 				controller.UnSpawn(true);
 			}
@@ -454,30 +473,28 @@ static void OnAnimationEvent(SF2_ChaserAttackAction_Melee action, SF2_ChaserEnti
 	}
 
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttack(action.GetAttackName(), attackData);
+	int difficulty = controller.Difficulty;
 
-	if (event == attackData.EventNumber)
+	if (event == action.ProfileData.GetEventNumber(difficulty))
 	{
 		DoMeleeAttack(action, actor);
 	}
 }
 
-static bool IsTargetInMeleeChecks(SF2_ChaserEntity actor, SF2ChaserBossProfileAttackData data, CBaseEntity target, float range, float fov)
+static bool IsTargetInMeleeChecks(SF2_ChaserEntity actor, ChaserBossProfileBaseAttack attack, CBaseEntity target, float range, float fov)
 {
 	if (!target.IsValid())
 	{
 		return false;
 	}
 
-	float myPos[3], myEyePos[3], myEyeAng[3];
+	float myPos[3], myEyePos[3], myEyeAng[3], offset[3];
 	actor.GetAbsOrigin(myPos);
 	actor.Controller.GetEyePosition(myEyePos);
 	actor.GetAbsAngles(myEyeAng);
+	actor.Controller.GetProfileData().GetEyes().GetOffsetPos(offset);
 
-	AddVectors(g_SlenderEyePosOffset[actor.Controller.Index], myEyeAng, myEyeAng);
+	AddVectors(offset, myEyeAng, myEyeAng);
 
 	float targetPos[3];
 	target.WorldSpaceCenter(targetPos);
@@ -497,16 +514,18 @@ static bool IsTargetInMeleeChecks(SF2_ChaserEntity actor, SF2ChaserBossProfileAt
 		return false;
 	}
 
-	if (!data.HitThroughWalls[actor.Controller.Difficulty])
+	if (!attack.GetHitThroughWalls(actor.Controller.Difficulty))
 	{
-		TR_TraceRayFilter(myEyePos, targetPos,
+		Handle trace = TR_TraceRayFilterEx(myEyePos, targetPos,
 		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_GRATE | CONTENTS_WINDOW,
 		RayType_EndPoint, TraceRayDontHitAnyEntity, actor.index);
 
-		if (TR_DidHit() && TR_GetEntityIndex() != target.index)
+		if (TR_DidHit(trace) && TR_GetEntityIndex(trace) != target.index)
 		{
+			delete trace;
 			return false;
 		}
+		delete trace;
 	}
 
 	return true;

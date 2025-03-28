@@ -998,24 +998,6 @@ void PvP_OnClientGhostModeEnable(int client)
 	g_PlayerPvPRespawnTimer[client] = null;
 }
 
-static bool Hook_ClientPvPShouldCollide(int ent,int collisiongroup,int contentsmask, bool originalResult)
-{
-	if (!g_Enabled || g_PlayerProxy[ent] || !IsClientInPvP(ent) || !g_PlayerEliminated[ent])
-	{
-		SDKUnhook(ent, SDKHook_ShouldCollide, Hook_ClientPvPShouldCollide);
-		if (collisiongroup == 8)
-		{
-			return false;
-		}
-		return originalResult;
-	}
-	if (IsClientInPvP(ent) && GetClientTeam(ent) == TFTeam_Blue && collisiongroup == 8)
-	{
-		return true;
-	}
-	return originalResult;
-}
-
 void PvP_OnTriggerStartTouch(int trigger, int other)
 {
 	char name[64];

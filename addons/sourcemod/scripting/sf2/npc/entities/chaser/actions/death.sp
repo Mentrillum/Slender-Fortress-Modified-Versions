@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -13,27 +14,26 @@ methodmap SF2_ChaserDeathAction < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_OnStart, OnStart);
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
-			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 			g_Factory.BeginDataMapDesc()
 				.DefineEntityField("m_Attacker")
 				.EndDataMapDesc();
 		}
 		SF2_ChaserDeathAction action = view_as<SF2_ChaserDeathAction>(g_Factory.Create());
 
-		action.Attacker = attacker.index;
+		action.Attacker = attacker;
 		return action;
 	}
 
-	property int Attacker
+	property CBaseEntity Attacker
 	{
 		public get()
 		{
-			return this.GetDataEnt("m_Attacker");
+			return CBaseEntity(EntRefToEntIndex(this.GetDataEnt("m_Attacker")));
 		}
 
-		public set(int value)
+		public set(CBaseEntity value)
 		{
-			this.SetDataEnt("m_Attacker", value);
+			this.SetDataEnt("m_Attacker", EnsureEntRef(value.index));
 		}
 	}
 }
@@ -41,9 +41,7 @@ methodmap SF2_ChaserDeathAction < NextBotAction
 static NextBotAction InitialContainedAction(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	int difficulty = controller.Difficulty;
+	ChaserBossProfile data = controller.GetProfileData();
 	INextBot bot = actor.MyNextBotPointer();
 	ILocomotion loco = bot.GetLocomotionInterface();
 
@@ -54,24 +52,18 @@ static NextBotAction InitialContainedAction(SF2_ChaserDeathAction action, SF2_Ch
 
 	actor.EndCloak();
 
-	char animName[64];
-	float rate = 1.0, duration = 0.0, cycle = 0.0;
 	actor.PerformVoice(SF2BossSound_Death);
 
 	actor.State = STATE_DEATH;
 
-	if (originalData.IsPvEBoss)
+	if (data.IsPvEBoss)
 	{
 		KillPvEBoss(actor.index);
 	}
 
-	if (originalData.AnimationData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_Death], difficulty, animName, sizeof(animName), rate, duration, cycle))
+	if (data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_Death]))
 	{
-		int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Death], rate, duration, cycle);
-		if (sequence != -1)
-		{
-			return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
-		}
+		return SF2_PlaySequenceAndWaitEx(g_SlenderAnimationsList[SF2BossAnimation_Death]);
 	}
 
 	return NULL_ACTION;
@@ -80,33 +72,41 @@ static NextBotAction InitialContainedAction(SF2_ChaserDeathAction action, SF2_Ch
 static int OnStart(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, NextBotAction priorAction)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 	actor.GroundSpeedOverride = true;
 	int difficulty = controller.Difficulty;
 
-	if (data.DeathData.StartEffects != null)
+	if (deathData.GetOnStartEffects() != null)
 	{
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(data.DeathData.StartEffects, controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(deathData.GetOnStartEffects(), controller.Index, false, pos, ang, _, _, false);
 	}
 
-	if (data.DeathData.KeyDrop)
+	if (deathData.GetOnStartInputs() != null)
 	{
-		if (SF_IsBoxingMap() && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && !view_as<SF2NPC_BaseNPC>(controller).GetProfileData().IsPvEBoss)
+		deathData.GetOnStartInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
+	}
+
+	if (deathData.KeyDrop)
+	{
+		char model[PLATFORM_MAX_PATH], trigger[64];
+		deathData.GetKeyModel(model, sizeof(model));
+		deathData.GetKeyTrigger(trigger, sizeof(trigger));
+		if (SF_IsBoxingMap() && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && data.IsPvEBoss)
 		{
 			g_SlenderBoxingBossKilled++;
 			if ((g_SlenderBoxingBossKilled == g_SlenderBoxingBossCount))
 			{
-				NPC_DropKey(controller.Index, data.DeathData.KeyModel, data.DeathData.KeyTrigger);
+				NPC_DropKey(controller.Index, model, trigger);
 			}
 			g_SlenderBoxingBossIsKilled[controller.Index] = true;
 		}
 		else
 		{
-			NPC_DropKey(controller.Index, data.DeathData.KeyModel, data.DeathData.KeyTrigger);
+			NPC_DropKey(controller.Index, model, trigger);
 		}
 	}
 
@@ -115,10 +115,13 @@ static int OnStart(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, NextBot
 	actor.RemoveAllGestures();
 	CBaseNPC_RemoveAllLayers(actor.index);
 
-	if (data.DeathData.AddHealthPerDeath[difficulty] > 0.0)
+	if (deathData.GetAddHealthPerDeath(difficulty) > 0.0)
 	{
-		controller.SetDeathHealth(difficulty, controller.GetDeathHealth(difficulty) + data.DeathData.AddHealthPerDeath[difficulty]);
+		controller.SetDeathHealth(difficulty, controller.GetDeathHealth(difficulty) + deathData.GetAddHealthPerDeath(difficulty));
 	}
+
+	controller.SetAddSpeed(deathData.GetAddRunSpeed(difficulty));
+	controller.SetAddAcceleration(deathData.GetAddAcceleration(difficulty));
 
 	return action.Continue();
 }
@@ -142,21 +145,28 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 		return;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 
-	if (data.DeathData.EndEffects != null)
+	if (deathData.GetOnEndEffects() != null)
 	{
 		float pos[3], ang[3];
 		actor.GetAbsOrigin(pos);
 		actor.GetAbsAngles(ang);
-		SlenderSpawnEffects(data.DeathData.EndEffects, controller.Index, false, pos, ang, _, _, true);
+		SlenderSpawnEffects(deathData.GetOnEndEffects(), controller.Index, false, pos, ang, _, _, false);
 	}
 
-	if (data.DeathData.RemoveOnDeath)
+	if (deathData.GetOnEndInputs() != null)
+	{
+		deathData.GetOnEndInputs().AcceptInputs(actor, action.Attacker, action.Attacker);
+	}
+
+	data.SetBool("__was_killed", true);
+
+	if (deathData.RemoveOnDeath)
 	{
 		SpawnGibs(actor);
-		if (data.DeathData.RagdollOnDeath)
+		if (deathData.RagdollOnDeath)
 		{
 			actor.AcceptInput("BecomeRagdoll");
 		}
@@ -224,34 +234,23 @@ static void OnEnd(SF2_ChaserDeathAction action, SF2_ChaserEntity actor)
 			controller.Remove();
 		}
 	}
-	else if (data.DeathData.DisappearOnDeath)
+	else if (deathData.DisappearOnDeath)
 	{
 		SpawnGibs(actor);
 		controller.UnSpawn(true);
 	}
-	else if (data.DeathData.RagdollOnDeath)
+	else if (deathData.RagdollOnDeath)
 	{
 		actor.AcceptInput("BecomeRagdoll");
 	}
 }
 
-static void OnAnimationEvent(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, int event)
-{
-	if (event == 0)
-	{
-		return;
-	}
-
-	actor.CastAnimEvent(event);
-	actor.CastAnimEvent(event, true);
-}
-
 static void SpawnGibs(SF2_ChaserEntity actor)
 {
 	SF2NPC_Chaser controller = actor.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	if (data.DeathData.Gibs == null)
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
+	if (deathData.GetGibs() == null)
 	{
 		return;
 	}
@@ -259,7 +258,7 @@ static void SpawnGibs(SF2_ChaserEntity actor)
 	char model[PLATFORM_MAX_PATH];
 	actor.WorldSpaceCenter(pos);
 	actor.GetAbsAngles(ang);
-	for (int i = 0; i < data.DeathData.Gibs.Length; i++)
+	for (int i = 0; i < deathData.GetGibs().Size; i++)
 	{
 		ang[1] = GetRandomFloat(-180.0, 180.0);
 
@@ -269,7 +268,13 @@ static void SpawnGibs(SF2_ChaserEntity actor)
 		}
 		vel[2] = GetRandomFloat(-300.0, 300.0);
 
-		data.DeathData.Gibs.GetString(i, model, sizeof(model));
+		char name[64];
+		data.GetRages().GetKeyNameFromIndex(i, name, sizeof(name));
+		if (strcmp(name, "skin") == 0)
+		{
+			continue;
+		}
+		deathData.GetGibs().GetString(name, model, sizeof(model));
 
 		if (strlen(model) > 0)
 		{
@@ -284,7 +289,7 @@ static void SpawnGibs(SF2_ChaserEntity actor)
 			SetEntityCollisionGroup(gib.index, 1);
 			gib.SetProp(Prop_Send, "m_usSolidFlags", 0);
 			gib.SetProp(Prop_Send, "m_nSolidType", 2);
-			gib.SetProp(Prop_Send, "m_nSkin", data.DeathData.GibSkin);
+			gib.SetProp(Prop_Send, "m_nSkin", deathData.GibSkin);
 
 			int effects = 16 | 64;
 			gib.SetProp(Prop_Send, "m_fEffects", effects);

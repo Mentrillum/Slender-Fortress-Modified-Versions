@@ -4,6 +4,7 @@
 #define _sf2_natives_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 //	==========================================================
 //	GENERAL PLUGIN HOOK FUNCTIONS
@@ -57,11 +58,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnGroupEnterGameFwd = new GlobalForward("SF2_OnGroupEnterGame", ET_Hook, Param_Cell);
 	g_OnEverythingLoadedFwd = new GlobalForward("SF2_OnEverythingLoaded", ET_Ignore);
 	g_OnDifficultyVoteFinishedFwd = new GlobalForward("SF2_OnDifficultyVoteFinished", ET_Ignore, Param_Cell, Param_Cell);
-	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell);
-	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell, Param_CellByRef);
+	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell);
+	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnProjectileTouchFwd = new GlobalForward("SF2_OnProjectileTouch", ET_Ignore, Param_Cell, Param_Cell);
 
-	CreateNative("SF2_GetConfig", Native_GetConfig);
 	CreateNative("SF2_IsRunning", Native_IsRunning);
 	CreateNative("SF2_GetRoundState", Native_GetRoundState);
 	CreateNative("SF2_IsRoundInGracePeriod", Native_IsRoundInGracePeriod);
@@ -225,7 +225,7 @@ void SDK_Init()
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFPlayer::EquipWearable");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 	g_SDKEquipWearable = EndPrepSDKCall();
-	if (g_SDKEquipWearable == null)//In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
+	if (g_SDKEquipWearable == null) // In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
 	{
 		char strFilePath[PLATFORM_MAX_PATH];
 		BuildPath(Path_SM, strFilePath, sizeof(strFilePath), "gamedata/tf2items.randomizer.txt");
@@ -256,13 +256,20 @@ void SDK_Init()
 	}
 
 	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::TeamFortress_SetSpeed");
+	if ((g_SDKUpdateSpeed = EndPrepSDKCall()) == null)
+	{
+		LogError("Failed to retrieve CTFPlayer::TeamFortress_SetSpeed offset from SDKHooks gamedata!");
+	}
+
+	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Signature, "CTFPlayer::PlaySpecificSequence");
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
 	g_SDKPlaySpecificSequence = EndPrepSDKCall();
 	if (g_SDKPlaySpecificSequence == null)
 	{
 		PrintToServer("Failed to retrieve CTFPlayer::PlaySpecificSequence signature from SF2 gamedata!");
-		//Don't have to call SetFailState, since this function is used in a minor part of the code.
+		// Don't have to call SetFailState, since this function is used in a minor part of the code.
 	}
 
 	StartPrepSDKCall(SDKCall_Entity);
@@ -273,7 +280,7 @@ void SDK_Init()
 	if (g_SDKPointIsWithin == null)
 	{
 		PrintToServer("Failed to retrieve CBaseTrigger::PointIsWithin signature from SF2 gamedata!");
-		//Don't have to call SetFailState, since this function is used in a minor part of the code.
+		// Don't have to call SetFailState, since this function is used in a minor part of the code.
 	}
 
 	StartPrepSDKCall(SDKCall_Entity);
@@ -326,7 +333,7 @@ void SDK_Init()
 		LogError("Failed to setup Studio_SeqVelocity call from gamedata");
 	}
 
-	//Hook_ClientWantsLagCompensationOnEntity
+	// Hook_ClientWantsLagCompensationOnEntity
 	int offset = gameData.GetOffset("CTFPlayer::WantsLagCompensationOnEntity");
 	g_DHookWantsLagCompensationOnEntity = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	if (g_DHookWantsLagCompensationOnEntity == null)
@@ -337,7 +344,7 @@ void SDK_Init()
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
 	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_Unknown);
-	//Hook_EntityShouldTransmit
+	// Hook_EntityShouldTransmit
 	offset = gameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_DHookShouldTransmit = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_DHookShouldTransmit == null)
@@ -352,7 +359,7 @@ void SDK_Init()
 	{
 		SetFailState("Failed to create hook CBaseEntity::UpdateTransmitState offset from SF2 gamedata!");
 	}
-	//Hook_WeaponGetCustomDamageType
+	// Hook_WeaponGetCustomDamageType
 	offset = gameData.GetOffset("CTFWeaponBase::GetCustomDamageType");
 	g_DHookWeaponGetCustomDamageType = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_DHookWeaponGetCustomDamageType == null)
@@ -367,20 +374,12 @@ void SDK_Init()
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
 
-	//Initialize tutorial detours & calls
-	//Tutorial_SetupSDK(gameData);
-
 	delete gameData;
 }
 
 //	==========================================================
 //	API
 //	==========================================================
-
-static any Native_GetConfig(Handle plugin, int numParams)
-{
-	return g_Config;
-}
 
 static any Native_IsRunning(Handle plugin, int numParams)
 {
@@ -677,14 +676,12 @@ static any Native_SetBossTarget(Handle plugin, int numParams)
 
 static any Native_IsBossStunnable(Handle plugin, int numParams)
 {
-	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().StunData.Enabled[1];
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().GetStunBehavior().IsEnabled(1);
 }
 
 static any Native_IsBossStunnableByFlashlight(Handle plugin, int numParams)
 {
-	SF2ChaserBossProfileData data;
-	data = NPCChaserGetProfileData(GetNativeCell(1));
-	return data.StunData.FlashlightStun[1];
+	return SF2NPC_Chaser(GetNativeCell(1)).GetProfileData().GetStunBehavior().CanFlashlightStun(1);
 }
 
 static any Native_IsBossCloaked(Handle plugin, int numParams)

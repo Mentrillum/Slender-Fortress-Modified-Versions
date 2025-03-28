@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 void InitializePostureOnAlert()
 {
@@ -7,41 +8,58 @@ void InitializePostureOnAlert()
 
 static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int bufferSize)
 {
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	StringMap postures = data.Postures;
-	if (postures == null)
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid())
 	{
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfilePostureInfo postureInfo;
-	StringMapSnapshot snapshot = postures.Snapshot();
-	for (int i = 0; i < snapshot.Length; i++)
+	int difficulty = controller.Difficulty;
+
+	ChaserBossProfile data = controller.GetProfileData();
+	ProfileObject obj = data.GetSection("postures");
+	if (obj == null)
 	{
-		if (!data.GetPostureFromIndex(i, postureInfo))
+		return Plugin_Continue;
+	}
+
+	for (int i = 0; i < obj.SectionLength; i++)
+	{
+		ProfileObject posture = data.GetPostureFromIndex(i);
+		if (posture == null)
 		{
 			continue;
 		}
 
-		int difficulty = controller.Difficulty;
-
-		SF2PostureConditionAlertInfo alertInfo;
-		alertInfo = postureInfo.AlertInfo;
-		if (!alertInfo.Enabled[difficulty])
+		ProfileObject conditions = posture.GetSection("conditions");
+		if (conditions == null || conditions.SectionLength == 0)
 		{
 			continue;
 		}
 
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
-		if (chaser.IsValid() && chaser.State == STATE_ALERT)
+		for (int j = 0; j < conditions.SectionLength; j++)
 		{
-			strcopy(buffer, bufferSize, postureInfo.Name);
-			delete snapshot;
-			return Plugin_Changed;
+			char name[64];
+			conditions.GetSectionNameFromIndex(j, name, sizeof(name));
+			if (strcmp(name, "on_alert") != 0)
+			{
+				continue;
+			}
+
+			ChaserBossPostureCondition condition = view_as<ChaserBossPostureCondition>(conditions.GetSection(name));
+			if (condition == null || !condition.GetEnabled(difficulty))
+			{
+				continue;
+			}
+
+			if (chaser.State == STATE_ALERT)
+			{
+				posture.GetSectionName(name, sizeof(name));
+				strcopy(buffer, bufferSize, name);
+				return Plugin_Changed;
+			}
 		}
 	}
 
-	delete snapshot;
 	return Plugin_Continue;
 }

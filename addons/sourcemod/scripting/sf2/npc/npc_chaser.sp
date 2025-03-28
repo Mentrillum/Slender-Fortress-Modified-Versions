@@ -4,26 +4,16 @@
 #define _sf2_npc_chaser_included
 
 #pragma semicolon 1
-
-static SF2ChaserBossProfileData g_NpcChaserProfileData[MAX_BOSSES];
+#pragma newdecls required
 
 static float g_NpcStunAddHealth[MAX_BOSSES];
 
 static float g_NpcDeathInitialHealth[MAX_BOSSES][Difficulty_Max];
 static float g_NpcDeathHealth[MAX_BOSSES][Difficulty_Max];
 
-static float g_NpcAlertGracetime[MAX_BOSSES][Difficulty_Max];
-static float g_NpcAlertDuration[MAX_BOSSES][Difficulty_Max];
-static float g_NpcChaseDuration[MAX_BOSSES][Difficulty_Max];
-
 ArrayList g_NpcChaseOnLookTarget[MAX_BOSSES] = { null, ... };
 
-static float g_NpcSearchWanderRangeMin[MAX_BOSSES][Difficulty_Max];
-static float g_NpcSearchWanderRangeMax[MAX_BOSSES][Difficulty_Max];
-
 bool g_NpcCopyAlerted[MAX_BOSSES];
-
-static bool g_NpcHasIsBoxingBoss[MAX_BOSSES] = { false, ... };
 
 bool g_NpcStealingLife[MAX_BOSSES];
 Handle g_NpcLifeStealTimer[MAX_BOSSES];
@@ -32,7 +22,6 @@ static Handle g_NpcInstantKillThink[MAX_BOSSES];
 
 //Boxing stuff
 static int g_NpcBoxingCurrentDifficulty[MAX_BOSSES];
-static int g_NpcBoxingRagePhase[MAX_BOSSES];
 
 static bool g_ClientShouldBeForceChased[MAX_BOSSES][2049];
 static bool g_IsTargetMarked[MAX_BOSSES][2049];
@@ -85,20 +74,10 @@ static void OnPlayerEscape(SF2_BasePlayer client)
 
 static void OnBossRemoved(SF2NPC_BaseNPC npc)
 {
-	if (npc.Type == SF2BossType_Chaser)
+	if (npc.GetProfileData().Type == SF2BossType_Chaser)
 	{
 		NPCChaserOnRemoveProfile(npc.Index);
 	}
-}
-
-SF2ChaserBossProfileData NPCChaserGetProfileData(int npcIndex)
-{
-	return g_NpcChaserProfileData[npcIndex];
-}
-
-void NPCChaserSetProfileData(int npcIndex, SF2ChaserBossProfileData value)
-{
-	g_NpcChaserProfileData[npcIndex] = value;
 }
 
 float NPCChaserGetAddStunHealth(int npcIndex)
@@ -124,11 +103,6 @@ float NPCChaserGetDeathHealth(int npcIndex, int difficulty)
 void NPCChaserSetDeathHealth(int npcIndex, int difficulty, float amount)
 {
 	g_NpcDeathHealth[npcIndex][difficulty] = amount;
-}
-
-bool NPCChaserIsBoxingBoss(int npcIndex)
-{
-	return g_NpcHasIsBoxingBoss[npcIndex];
 }
 
 int NPCChaserGetBoxingDifficulty(int npcIndex)
@@ -179,13 +153,11 @@ void NPCChaserOnSelectProfile(int npcIndex)
 	SF2NPC_Chaser chaser = SF2NPC_Chaser(npcIndex);
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(npcIndex, profile, sizeof(profile));
-	SF2ChaserBossProfileData profileData;
-	g_ChaserBossProfileData.GetArray(profile, profileData, sizeof(profileData));
-	g_NpcChaserProfileData[npcIndex] = profileData;
+	ChaserBossProfile profileData = chaser.GetProfileData();
 
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_NpcDeathInitialHealth[npcIndex][difficulty] = GetChaserProfileDeathHealth(profile, difficulty);
+		g_NpcDeathInitialHealth[npcIndex][difficulty] = profileData.GetDeathBehavior().GetHealth(difficulty);
 		g_NpcDeathHealth[npcIndex][difficulty] = g_NpcDeathInitialHealth[npcIndex][difficulty];
 	}
 
@@ -196,15 +168,12 @@ void NPCChaserOnSelectProfile(int npcIndex)
 
 	chaser.SetAddSpeed(-chaser.GetAddSpeed());
 	chaser.SetAddAcceleration(-chaser.GetAddAcceleration());
-	chaser.StunHealthAdd = -chaser.StunHealthAdd;
-
-	g_NpcHasIsBoxingBoss[npcIndex] = GetChaserProfileBoxingState(profile);
+	chaser.SetAddStunHealth(-chaser.GetAddStunHealth());
 
 	g_NpcStealingLife[npcIndex] = false;
 	g_NpcLifeStealTimer[npcIndex] = null;
 
 	g_NpcBoxingCurrentDifficulty[npcIndex] = 1;
-	g_NpcBoxingRagePhase[npcIndex] = 0;
 
 	g_NpcCopyAlerted[npcIndex] = false;
 
@@ -226,18 +195,9 @@ static void NPCChaserResetValues(int npcIndex)
 {
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
-		g_NpcAlertGracetime[npcIndex][difficulty] = 0.0;
-		g_NpcAlertDuration[npcIndex][difficulty] = 0.0;
-		g_NpcChaseDuration[npcIndex][difficulty] = 0.0;
-
-		g_NpcSearchWanderRangeMin[npcIndex][difficulty] = 0.0;
-		g_NpcSearchWanderRangeMax[npcIndex][difficulty] = 0.0;
-
 		g_NpcDeathInitialHealth[npcIndex][difficulty] = 0.0;
 		NPCChaserSetDeathHealth(npcIndex, difficulty, 0.0);
 	}
-
-	g_NpcHasIsBoxingBoss[npcIndex] = false;
 
 	g_NpcStunAddHealth[npcIndex] = 0.0;
 
@@ -254,7 +214,6 @@ static void NPCChaserResetValues(int npcIndex)
 	NPCChaserSetAddStunHealth(npcIndex, -NPCChaserGetAddStunHealth(npcIndex));
 
 	g_NpcBoxingCurrentDifficulty[npcIndex] = 0;
-	g_NpcBoxingRagePhase[npcIndex] = 0;
 
 	g_NpcCopyAlerted[npcIndex] = false;
 }
@@ -393,7 +352,7 @@ bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEl
 			return false;
 		}
 
-		if (!g_SlenderTeleportIgnoreChases[bossIndex])
+		if (!SF_BossesChaseEndlessly() && !SF_IsRenevantMap() && !SF_IsSurvivalMap() && !SF_IsRaidMap() && !SF2NPC_BaseNPC(bossIndex).GetProfileData().TeleportIgnoreChases)
 		{
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
@@ -409,11 +368,8 @@ bool IsTargetValidForSlenderEx(CBaseEntity target, int bossIndex, bool includeEl
 					continue;
 				}
 
-				SF2BossProfileData data;
-				data = view_as<SF2NPC_BaseNPC>(npc).GetProfileData();
-
 				int state = chaser.State;
-				if (!data.IsPvEBoss && (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN))
+				if (!npc.GetProfileData().IsPvEBoss && (state == STATE_CHASE || state == STATE_ATTACK || state == STATE_STUN))
 				{
 					return false;
 				}
@@ -636,6 +592,18 @@ static void TriggerKey(int caller)
 			AcceptEntityInput(ent, "Enable");
 		}
 	}
+	ent = -1;
+	if (strcmp(targetName, "sf2_trigger_escape", false) == 0)
+	{
+		while ((ent = FindEntityByClassname(ent, "sf2_trigger_escape")) != -1)
+		{
+			SF2TriggerEscapeEntity trigger = SF2TriggerEscapeEntity(ent);
+			if (trigger.IsValid())
+			{
+				trigger.AcceptInput("Enable");
+			}
+		}
+	}
 	RemoveEntity(caller);
 	EmitSoundToAll("ui/itemcrate_smash_ultrarare_short.wav", caller, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
 }
@@ -692,12 +660,11 @@ static any Native_PerformVoice(Handle plugin, int numParams)
 		return 0;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttackFromIndex(GetNativeCell(3), attackData);
+	ChaserBossProfile data = controller.GetProfileData();
+	char name[64];
+	data.GetAttackName(GetNativeCell(3), name, sizeof(name));
 
-	return chaser.PerformVoice(GetNativeCell(2), attackData.Name);
+	return chaser.PerformVoice(GetNativeCell(2), name);
 }
 
 static any Native_CreateBossSoundHint(Handle plugin, int numParams)
@@ -736,12 +703,10 @@ static any Native_GetBossAttackIndexType(Handle plugin, int numParams)
 		return 0;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttackFromIndex(GetNativeCell(2), attackData);
-
-	return attackData.Type;
+	ChaserBossProfile data = controller.GetProfileData();
+	char name[64];
+	data.GetAttackName(GetNativeCell(2), name, sizeof(name));
+	return data.GetAttack(name).Type;
 }
 
 static any Native_GetBossAttackIndexDamage(Handle plugin, int numParams)
@@ -758,12 +723,10 @@ static any Native_GetBossAttackIndexDamage(Handle plugin, int numParams)
 		return 0;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttackFromIndex(GetNativeCell(2), attackData);
-
-	return attackData.Damage[GetNativeCell(3)];
+	ChaserBossProfile data = controller.GetProfileData();
+	char name[64];
+	data.GetAttackName(GetNativeCell(2), name, sizeof(name));
+	return data.GetAttack(name).GetDamage(GetNativeCell(3));
 }
 
 static any Native_UpdateBossAnimation(Handle plugin, int numParams)
@@ -842,12 +805,10 @@ static any Native_GetBossAttackIndexDamageType(Handle plugin, int numParams)
 		return 0;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2ChaserBossProfileAttackData attackData;
-	data.GetAttackFromIndex(GetNativeCell(2), attackData);
-
-	return attackData.DamageType[1];
+	ChaserBossProfile data = controller.GetProfileData();
+	char name[64];
+	data.GetAttackName(GetNativeCell(2), name, sizeof(name));
+	return data.GetAttack(name).GetDamageType(1);
 }
 
 static any Native_GetProfileData(Handle plugin, int numParams)
@@ -858,24 +819,14 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SetNativeArray(2, data, sizeof(data));
-	return 0;
+	return controller.GetProfileData();
 }
 
 static any Native_GetProfileDataEx(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, sizeof(profile));
-	SF2ChaserBossProfileData data;
-	if (!g_ChaserBossProfileData.GetArray(profile, data, sizeof(data)))
-	{
-		return false;
-	}
-
-	SetNativeArray(2, data, sizeof(data));
-	return true;
+	return view_as<ChaserBossProfile>(GetBossProfile(profile));
 }
 
 static any Native_SetForceChaseState(Handle plugin, int numParams)

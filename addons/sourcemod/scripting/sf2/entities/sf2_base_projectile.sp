@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static CEntityFactory g_Factory;
 
@@ -316,11 +317,6 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		ScaleVector(buffer, 2.0);
 	}
 
-	public void OnPlayerDamaged(SF2_BasePlayer player)
-	{
-		// Do nothing
-	}
-
 	public void DoExplosion()
 	{
 		int owner = this.GetPropEnt(Prop_Send, "m_hOwnerEntity");
@@ -437,16 +433,18 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 
 			float targetPos[3];
 			valid.WorldSpaceCenter(targetPos);
-			TR_TraceRayFilter(pos, targetPos,
+			Handle trace = TR_TraceRayFilterEx(pos, targetPos,
 					CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE,
 					RayType_EndPoint, TraceRayDontHitAnyEntity, this.index);
 
-			if (TR_DidHit() && TR_GetEntityIndex() != valid.index)
+			if (TR_DidHit(trace) && TR_GetEntityIndex(trace) != valid.index)
 			{
+				delete trace;
 				continue;
 			}
 
-			TR_GetEndPosition(subtracted);
+			TR_GetEndPosition(subtracted, trace);
+			delete trace;
 
 			SubtractVectors(pos, subtracted, subtracted);
 			adjustedDamage = GetVectorLength(subtracted) * falloff;
@@ -464,7 +462,7 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 			}
 			float force[3];
 			this.GetDamageForce(valid, force);
-			SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, adjustedDamage, flags, _, force, pos);
+			SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, adjustedDamage, flags, _, force, pos, .bypassHooks = false);
 			if (SF2_BasePlayer(valid.index).IsValid)
 			{
 				Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);

@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -9,12 +10,28 @@ methodmap SF2_DeathCamAction < NextBotAction
 		if (g_Factory == null)
 		{
 			g_Factory = new NextBotActionFactory("SF2_Deathcam");
+			g_Factory.BeginDataMapDesc()
+				.DefineFloatField("m_Duration")
+				.EndDataMapDesc();
 			g_Factory.SetCallback(NextBotActionCallbackType_InitialContainedAction, InitialContainedAction);
 			g_Factory.SetCallback(NextBotActionCallbackType_Update, Update);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
 			g_Factory.SetEventCallback(EventResponderType_OnOtherKilled, OnOtherKilled);
 		}
 		return view_as<SF2_DeathCamAction>(g_Factory.Create());
+	}
+
+	property float Duration
+	{
+		public get()
+		{
+			return this.GetDataFloat("m_Duration");
+		}
+
+		public set(float value)
+		{
+			this.SetDataFloat("m_Duration", value);
+		}
 	}
 }
 
@@ -26,23 +43,47 @@ static NextBotAction InitialContainedAction(SF2_DeathCamAction action, SF2_BaseB
 	actor.IsKillingSomeone = true;
 	float duration = 0.0, rate = 1.0, cycle = 0.0;
 	SF2NPC_BaseNPC controller = actor.Controller;
-	SF2BossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileSoundInfo info;
-	info = data.LocalDeathCamSounds;
-	info.EmitSound(_, actor.index);
-
-	int sequence = actor.SelectProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], rate, duration, cycle);
-	if (sequence != -1)
+	int difficulty = controller.Difficulty;
+	BaseBossProfile data = controller.GetProfileData();
+	data.GetLocalDeathCamSounds().EmitSound(_, actor.index, .difficulty = controller.Difficulty);
+	BossProfileDeathCamData deathCamData = data.GetDeathCamData();
+	DeathCamAnimation section = view_as<DeathCamAnimation>(deathCamData.GetAnimations().GetAnimation("start"));
+	char animation[64];
+	if (section == null)
 	{
-		return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
+		return NULL_ACTION;
 	}
 
-	return NULL_ACTION;
+	section.GetAnimationName(difficulty, animation, sizeof(animation));
+	rate = section.GetAnimationPlaybackRate(difficulty);
+	cycle = section.GetAnimationCycle(difficulty);
+	duration = section.GetDuration(difficulty);
+	int sequence = actor.LookupSequence(animation);
+	if (sequence == -1)
+	{
+		return NULL_ACTION;
+	}
+
+	if (duration <= 0.0)
+	{
+		duration = actor.SequenceDuration(sequence) / rate;
+		duration *= (1.0 - cycle);
+	}
+	action.Duration = duration;
+	return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
 }
 
-static int Update(SF2_DeathCamAction action, SF2_BaseBoss actor, NextBotAction priorAction)
+static int Update(SF2_DeathCamAction action, SF2_BaseBoss actor, float interval)
 {
+	if (actor.FullDeathCamDuration)
+	{
+		action.Duration -= interval;
+		if (action.Duration > 0.0)
+		{
+			return action.Continue();
+		}
+	}
+
 	if (!actor.KillTarget.IsValid())
 	{
 		return action.Done();
@@ -60,6 +101,18 @@ static int Update(SF2_DeathCamAction action, SF2_BaseBoss actor, NextBotAction p
 static void OnEnd(SF2_DeathCamAction action, SF2_BaseBoss actor)
 {
 	actor.IsKillingSomeone = false;
+	actor.FullDeathCamDuration = false;
+	if (!actor.Controller.IsValid())
+	{
+		return;
+	}
+	SF2NPC_BaseNPC controller = actor.Controller;
+	BaseBossProfile data = controller.GetProfileData();
+	BossProfileDeathCamData deathCamData = data.GetDeathCamData();
+	if (deathCamData.StopSounds)
+	{
+		data.GetLocalDeathCamSounds().StopAllSounds(actor.index);
+	}
 }
 
 static void OnOtherKilled(SF2_DeathCamAction action, SF2_BaseBoss actor, CBaseCombatCharacter victim, CBaseEntity attacker, CBaseEntity inflictor, float damage, int damagetype)

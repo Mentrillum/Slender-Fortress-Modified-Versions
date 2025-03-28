@@ -1,10 +1,11 @@
 #if defined _sf2_methodmaps_included
- #endinput
+#endinput
 #endif
 
 #define _sf2_methodmaps_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 const SF2NPC_BaseNPC SF2_INVALID_NPC = view_as<SF2NPC_BaseNPC>(-1);
 const SF2_BasePlayer SF2_INVALID_PLAYER = view_as<SF2_BasePlayer>(-1);
@@ -21,35 +22,11 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	property int Type
-	{
-		public get()
-		{
-			return NPCGetType(this.Index);
-		}
-	}
-
 	property PathFollower Path
 	{
 		public get()
 		{
 			return g_BossPathFollower[this.Index];
-		}
-	}
-
-	property int ProfileIndex
-	{
-		public get()
-		{
-			return NPCGetProfileIndex(this.Index);
-		}
-	}
-
-	property int uniqueProfileIndex
-	{
-		public get()
-		{
-			return NPCGetUniqueProfileIndex(this.Index);
 		}
 	}
 
@@ -87,9 +64,11 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	public SF2BossProfileData GetProfileData()
+	public BaseBossProfile GetProfileData()
 	{
-		return NPCGetProfileData(this.Index);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetProfile(profile, sizeof(profile));
+		return GetBossProfile(profile);
 	}
 
 	property int Difficulty
@@ -108,9 +87,9 @@ methodmap SF2NPC_BaseNPC
 	property int Flags
 	{
 		public get()
-        {
-            return NPCGetFlags(this.Index);
-        }
+		{
+			return NPCGetFlags(this.Index);
+		}
 
 		public set(int flags)
 		{
@@ -118,54 +97,9 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	property float ModelScale
-	{
-		public get()
-        {
-            return NPCGetModelScale(this.Index);
-        }
-	}
-
-	property int Skin
-	{
-		public get()
-		{
-			return NPCGetModelSkin(this.Index);
-		}
-	}
-
 	public bool GetModel(int modelState = 0, char[] buffer, int bufferLen)
 	{
 		return GetSlenderModel(this.Index, modelState, buffer, bufferLen);
-	}
-
-	public int GetMaxCopies(int difficulty)
-	{
-		return g_SlenderMaxCopies[this.Index][difficulty];
-	}
-
-	property bool RaidHitbox
-	{
-		public get()
-		{
-			return NPCGetRaidHitbox(this.Index);
-		}
-	}
-
-	property float ScareRadius
-	{
-		public get()
-		{
-			return NPCGetScareRadius(this.Index);
-		}
-	}
-
-	property float ScareCooldown
-	{
-		public get()
-		{
-			return NPCGetScareCooldown(this.Index);
-		}
 	}
 
 	property SF2NPC_BaseNPC CopyMaster
@@ -202,34 +136,6 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-	property int TeleportType
-	{
-		public get()
-		{
-			return NPCGetTeleportType(this.Index);
-		}
-	}
-
-	public float GetTeleportRestPeriod(int difficulty)
-	{
-		return NPCGetTeleportRestPeriod(this.Index, difficulty);
-	}
-
-	public float GetTeleportStressMin(int difficulty)
-	{
-		return NPCGetTeleportStressMin(this.Index, difficulty);
-	}
-
-	public float GetTeleportStressMax(int difficulty)
-	{
-		return NPCGetTeleportStressMax(this.Index, difficulty);
-	}
-
-	public float GetTeleportPersistencyPeriod(int difficulty)
-	{
-		return NPCGetTeleportPersistencyPeriod(this.Index, difficulty);
-	}
-
 	public int GetTeleporter(int teleporterNumber)
 	{
 		return NPCGetTeleporter(this.Index, teleporterNumber);
@@ -238,19 +144,6 @@ methodmap SF2NPC_BaseNPC
 	public void SetTeleporter(int teleporterNumber, int entity)
 	{
 		NPCSetTeleporter(this.Index, teleporterNumber, entity);
-	}
-
-	property bool DeathCamEnabled
-	{
-		public get()
-		{
-			return NPCHasDeathCamEnabled(this.Index);
-		}
-
-		public set(bool state)
-		{
-			NPCSetDeathCamEnabled(this.Index, state);
-		}
 	}
 
 	public SF2NPC_BaseNPC(int index)
@@ -284,7 +177,7 @@ methodmap SF2NPC_BaseNPC
 		NPCRemove(this.Index);
 	}
 
-	property bool CanRemove
+	property bool CanDespawn
 	{
 		public get()
 		{
@@ -292,10 +185,10 @@ methodmap SF2NPC_BaseNPC
 		}
 	}
 
-    public void MarkAsFake()
-    {
-        SlenderMarkAsFake(this.Index);
-    }
+	public void MarkAsFake()
+	{
+		SlenderMarkAsFake(this.Index);
+	}
 
 	public bool IsValid()
 	{
@@ -312,19 +205,9 @@ methodmap SF2NPC_BaseNPC
 		NPCSetProfile(this.Index, profileName);
 	}
 
-	public void GetName(char[] buffer, int bufferLen)
-	{
-		NPCGetBossName(this.Index, buffer, bufferLen);
-	}
-
-	public void RemoveFromGame()
-	{
-		RemoveProfile(this.Index);
-	}
-
 	public float GetDistanceFrom(int entity)
 	{
-		NPCGetDistanceFromEntity(this.Index, entity);
+		return NPCGetDistanceFromEntity(this.Index, entity);
 	}
 
 	public float GetAddSpeed()
@@ -332,9 +215,29 @@ methodmap SF2NPC_BaseNPC
 		return NPCGetAddSpeed(this.Index);
 	}
 
+	public float GetPersistentAddSpeed()
+	{
+		return NPCGetPersistentAddSpeed(this.Index);
+	}
+
 	public void SetAddSpeed(float value)
 	{
 		NPCSetAddSpeed(this.Index, value);
+	}
+
+	public void SetPersistentAddSpeed(float value)
+	{
+		NPCSetPersistentAddSpeed(this.Index, value);
+	}
+
+	public float GetPersistentAddWalkSpeed()
+	{
+		return NPCGetPersistentAddWalkSpeed(this.Index);
+	}
+
+	public void SetPersistentAddWalkSpeed(float value)
+	{
+		NPCSetPersistentAddWalkSpeed(this.Index, value);
 	}
 
 	public float GetAddAcceleration()
@@ -342,54 +245,25 @@ methodmap SF2NPC_BaseNPC
 		return NPCGetAddAcceleration(this.Index);
 	}
 
+	public float GetPersistentAddAcceleration()
+	{
+		return NPCGetPersistentAddAcceleration(this.Index);
+	}
+
 	public void SetAddAcceleration(float value)
 	{
 		NPCSetAddAcceleration(this.Index, value);
 	}
 
-	property float AddAcceleration
+	public void SetPersistentAddAcceleration(float value)
 	{
-		public get()
-		{
-			NPCGetAddAcceleration(this.Index);
-		}
-
-		public set(float amount)
-		{
-			NPCSetAddAcceleration(this.Index, amount);
-		}
+		NPCSetPersistentAddAcceleration(this.Index, value);
 	}
 
 	public void GetEyePosition(float buffer[3], const float defaultValue[3] = { 0.0, 0.0, 0.0 })
 	{
 		NPCGetEyePosition(this.Index, buffer, defaultValue);
 	}
-
-	public void GetEyePositionOffset(float buffer[3])
-	{
-		NPCGetEyePositionOffset(this.Index, buffer);
-	}
-
-    public int GetRenderColor(int cell)
-    {
-        return g_SlenderRenderColor[this.Index][cell];
-    }
-
-    property int GetRenderMode
-    {
-        public get()
-        {
-            return g_SlenderRenderMode[this.Index];
-        }
-    }
-
-    property int GetRenderFX
-    {
-        public get()
-        {
-            return g_SlenderRenderFX[this.Index];
-        }
-    }
 
 	public bool HasAttribute(int attributeIndex)
 	{
@@ -403,7 +277,7 @@ methodmap SF2NPC_BaseNPC
 
 	public bool CanBeSeen(bool fov = true, bool blink = false, bool checkEliminated = true)
 	{
-		return PeopleCanSeeSlender(this.Index, fov, blink);
+		return PeopleCanSeeSlender(this.Index, fov, blink, checkEliminated);
 	}
 
 	public bool PlayerCanSee(int client, bool fov = true, bool blink = false, bool eliminated = false)
@@ -565,6 +439,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	property int ModifiedMaxHealth
+	{
+		public get()
+		{
+			return ClientGetModifiedMaxHealth(this.index);
+		}
+	}
+
 	property bool Ducking
 	{
 		public get()
@@ -579,6 +461,37 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		{
 			return this.GetProp(Prop_Send, "m_bDucked") != 0;
 		}
+	}
+
+	property float MaxSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Send, "m_flMaxspeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Send, "m_flMaxspeed", value);
+		}
+	}
+
+	property float CurrentTauntMoveSpeed
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", value);
+		}
+	}
+
+	public void UpdateSpeed()
+	{
+		SDKCall(g_SDKUpdateSpeed, this.index);
 	}
 
 	public int GetDataEnt(int offset)
@@ -731,7 +644,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 	public void UpdateListeningFlags(bool reset = false)
 	{
-		ClientUpdateListeningFlags(this.index, false);
+		ClientUpdateListeningFlags(this.index, reset);
 	}
 
 	property bool IsParticipating
@@ -854,6 +767,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	property bool IsInWeaponsTriggers
+	{
+		public get()
+		{
+			return IsClientInWeaponsTrigger(this.index);
+		}
+	}
+
 	property bool IsInDeathCam
 	{
 		public get()
@@ -893,9 +814,9 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void HandleFlashlight()
+	public void ToggleFlashlight()
 	{
-		ClientHandleFlashlight(this.index);
+		ClientToggleFlashlight(this);
 	}
 
 	property float FlashlightBatteryLife
@@ -1110,11 +1031,6 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void UpdateMusicSystem(bool initialize = false)
-	{
-		ClientUpdateMusicSystem(this.index, initialize);
-	}
-
 	public void SetPlayState(bool state, bool enablePlay = true)
 	{
 		SetClientPlayState(this.index, state, enablePlay);
@@ -1127,7 +1043,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 	public void SetAFKTime(bool reset = true)
 	{
-		AFK_SetTime(this.index);
+		AFK_SetTime(this.index, reset);
 	}
 
 	public void SetAFKState()
@@ -1158,9 +1074,11 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 
 methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 {
-	public SF2ChaserBossProfileData GetProfileData()
+	public ChaserBossProfile GetProfileData()
 	{
-		return NPCChaserGetProfileData(this.Index);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetProfile(profile, sizeof(profile));
+		return view_as<ChaserBossProfile>(GetBossProfile(profile));
 	}
 
 	public float GetInitialDeathHealth(int difficulty)
@@ -1178,17 +1096,14 @@ methodmap SF2NPC_Chaser < SF2NPC_BaseNPC
 		NPCChaserSetDeathHealth(this.Index, difficulty, amount);
 	}
 
-	property float StunHealthAdd
+	public float GetAddStunHealth()
 	{
-		public get()
-		{
-			return NPCChaserGetAddStunHealth(this.Index);
-		}
+		return NPCChaserGetAddStunHealth(this.Index);
+	}
 
-		public set(float value)
-		{
-			NPCChaserSetAddStunHealth(this.Index, value);
-		}
+	public void SetAddStunHealth(float value)
+	{
+		NPCChaserSetAddStunHealth(this.Index, value);
 	}
 
 	property ArrayList ChaseOnLookTargets
@@ -1212,19 +1127,58 @@ methodmap SF2NPC_Statue < SF2NPC_BaseNPC
 		return view_as<SF2NPC_Statue>(SF2NPC_BaseNPC(index));
 	}
 
-	public SF2StatueBossProfileData GetProfileData()
+	public StatueBossProfile GetProfileData()
 	{
-		return NPCStatueGetProfileData(this.Index);
-	}
-
-	public float GetIdleLifetime(int difficulty)
-	{
-		return NPCStatueGetIdleLifetime(this.Index, difficulty);
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		this.GetProfile(profile, sizeof(profile));
+		return view_as<StatueBossProfile>(GetBossProfile(profile));
 	}
 }
 
 void SetupMethodmapAPI()
 {
+	CreateNative("SF2_BaseBossController.IsValid", Native_GetControllerIsValid);
+	CreateNative("SF2_BaseBossController.Index.get", Native_GetControllerIndex);
+	CreateNative("SF2_BaseBossController.Path.get", Native_GetControllerPathFollower);
+	CreateNative("SF2_BaseBossController.UniqueID.get", Native_GetControllerUniqueID);
+	CreateNative("SF2_BaseBossController.FromUniqueID", Native_GetControllerFromUniqueID);
+	CreateNative("SF2_BaseBossController.FromEntity", Native_GetControllerFromEntity);
+	CreateNative("SF2_BaseBossController.EntRef.get", Native_GetControllerEntRef);
+	CreateNative("SF2_BaseBossController.EntIndex.get", Native_GetControllerEntIndex);
+	CreateNative("SF2_BaseBossController.ProfileData", Native_GetControllerProfileData);
+	CreateNative("SF2_BaseBossController.Difficulty.get", Native_GetControllerDifficulty);
+	CreateNative("SF2_BaseBossController.Difficulty.set", Native_SetControllerDifficulty);
+	CreateNative("SF2_BaseBossController.Flags.get", Native_GetControllerFlags);
+	CreateNative("SF2_BaseBossController.Flags.set", Native_SetControllerFlags);
+	CreateNative("SF2_BaseBossController.CopyMaster.get", Native_GetControllerCopyMaster);
+	CreateNative("SF2_BaseBossController.CopyMaster.set", Native_SetControllerCopyMaster);
+	CreateNative("SF2_BaseBossController.IsCopy.get", Native_GetControllerIsCopy);
+	CreateNative("SF2_BaseBossController.CompanionMaster.get", Native_GetControllerCompanionMaster);
+	CreateNative("SF2_BaseBossController.CompanionMaster.set", Native_SetControllerCompanionMaster);
+	CreateNative("SF2_BaseBossController.GetTeleporter", Native_GetControllerTeleporter);
+	CreateNative("SF2_BaseBossController.SetTeleporter", Native_SetControllerTeleporter);
+	CreateNative("SF2_BaseBossController.Spawn", Native_ControllerSpawn);
+	CreateNative("SF2_BaseBossController.UnSpawn", Native_ControllerUnSpawn);
+	CreateNative("SF2_BaseBossController.Remove", Native_ControllerRemove);
+	CreateNative("SF2_BaseBossController.CanDespawn.get", Native_GetControllerCanDespawn);
+	CreateNative("SF2_BaseBossController.MarkAsFake", Native_ControllerMarkAsFake);
+	CreateNative("SF2_BaseBossController.GetProfile", Native_GetControllerProfile);
+	CreateNative("SF2_BaseBossController.SetProfile", Native_SetControllerProfile);
+	CreateNative("SF2_BaseBossController.GetAddSpeed", Native_GetControllerAddSpeed);
+	CreateNative("SF2_BaseBossController.GetPersistentAddSpeed", Native_GetControllerPersistentAddSpeed);
+	CreateNative("SF2_BaseBossController.SetAddSpeed", Native_SetControllerAddSpeed);
+	CreateNative("SF2_BaseBossController.SetPersistentAddSpeed", Native_SetControllerPersistentAddSpeed);
+	CreateNative("SF2_BaseBossController.GetPersistentAddWalkSpeed", Native_GetControllerPersistentAddWalkSpeed);
+	CreateNative("SF2_BaseBossController.SetPersistentAddWalkSpeed", Native_SetControllerPersistentAddWalkSpeed);
+	CreateNative("SF2_BaseBossController.GetAddAcceleration", Native_GetControllerAddAcceleration);
+	CreateNative("SF2_BaseBossController.GetPersistentAddAcceleration", Native_GetControllerPersistentAddAcceleration);
+	CreateNative("SF2_BaseBossController.SetAddAcceleration", Native_SetControllerAddAcceleration);
+	CreateNative("SF2_BaseBossController.SetPersistentAddAcceleration", Native_SetControllerPersistentAddAcceleration);
+	CreateNative("SF2_BaseBossController.CanBeSeen", Native_GetControllerCanBeSeen);
+	CreateNative("SF2_BaseBossController.PlayerCanSee", Native_GetControllerPlayerCanSee);
+	CreateNative("SF2_BaseBossController.IsAffectedBySight", Native_GetControllerIsAffectedBySight);
+	CreateNative("SF2_BaseBossController.SetAffectedBySight", Native_SetControllerAffectedBySight);
+
 	CreateNative("SF2_Player.UserID.get", Native_GetClientUserID);
 	CreateNative("SF2_Player.IsValid.get", Native_GetIsValidClient);
 	CreateNative("SF2_Player.IsAlive.get", Native_GetIsClientAlive);
@@ -1290,7 +1244,7 @@ void SetupMethodmapAPI()
 	CreateNative("SF2_Player.TeleportToEscapePoint", Native_ClientTeleportToEscapePoint);
 	CreateNative("SF2_Player.ForceEscape", Native_ClientForceEscape);
 	CreateNative("SF2_Player.UsingFlashlight.get", Native_GetClientUsingFlashlight);
-	CreateNative("SF2_Player.HandleFlashlight", Native_ClientHandleFlashlight);
+	CreateNative("SF2_Player.ToggleFlashlight", Native_ClientToggleFlashlight);
 	CreateNative("SF2_Player.FlashlightBatteryLife.get", Native_GetClientFlashlightBatteryLife);
 	CreateNative("SF2_Player.FlashlightBatteryLife.set", Native_SetClientFlashlightBatteryLife);
 	CreateNative("SF2_Player.ResetFlashlight", Native_ClientResetFlashlight);
@@ -1324,7 +1278,6 @@ void SetupMethodmapAPI()
 	CreateNative("SF2_Player.LatchCount.set", Native_SetClientLatchCount);
 	CreateNative("SF2_Player.Latcher.get", Native_GetClientLatcher);
 	CreateNative("SF2_Player.Latcher.set", Native_SetClientLatcher);
-	CreateNative("SF2_Player.UpdateMusicSystem", Native_ClientUpdateMusicSystem);
 	CreateNative("SF2_Player.HasConstantGlow.get", Native_GetClientHasConstantGlow);
 	CreateNative("SF2_Player.SetPlayState", Native_SetClientPlayState);
 	CreateNative("SF2_Player.CanSeeSlender", Native_GetClientCanSeeSlender);
@@ -1334,6 +1287,568 @@ void SetupMethodmapAPI()
 	CreateNative("SF2_Player.ShouldBeForceChased", Native_GetClientShouldBeForceChased);
 	CreateNative("SF2_Player.SetForceChaseState", Native_SetClientForceChaseState);
 	CreateNative("SF2_Player.IsLookingAtBoss", Native_GetClientIsLookingAtBoss);
+
+	CreateNative("SF2_ChaserBossController.ProfileData", Native_GetChaserControllerProfileData);
+	CreateNative("SF2_ChaserBossController.GetDeathHealth", Native_GetChaserControllerDeathHealth);
+	CreateNative("SF2_ChaserBossController.SetDeathHealth", Native_SetChaserControllerDeathHealth);
+	CreateNative("SF2_ChaserBossController.GetAddStunHealth", Native_GetChaserControllerAddStunHealth);
+	CreateNative("SF2_ChaserBossController.SetAddStunHealth", Native_SetChaserControllerAddStunHealth);
+	CreateNative("SF2_ChaserBossController.ChaseOnLookTargets", Native_GetChaserControllerChaseOnLookTargets);
+
+	CreateNative("SF2_StatueBossController.ProfileData", Native_GetStatueControllerProfileData);
+}
+
+static any Native_GetControllerIsValid(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	return npc.IsValid();
+}
+
+static any Native_GetControllerIndex(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.Index;
+}
+
+static any Native_GetControllerPathFollower(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.Path;
+}
+
+static any Native_GetControllerUniqueID(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.UniqueID;
+}
+
+static any Native_GetControllerFromUniqueID(Handle plugin, int numParams)
+{
+	return SF2NPC_BaseNPC.FromUniqueId(GetNativeCell(1));
+}
+
+static any Native_GetControllerFromEntity(Handle plugin, int numParams)
+{
+	return SF2NPC_BaseNPC.FromEntity(GetNativeCell(1));
+}
+
+static any Native_GetControllerEntRef(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.EntRef;
+}
+
+static any Native_GetControllerEntIndex(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.EntIndex;
+}
+
+static any Native_GetControllerProfileData(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetProfileData();
+}
+
+static any Native_GetControllerDifficulty(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.Difficulty;
+}
+
+static any Native_SetControllerDifficulty(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.Difficulty = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_GetControllerFlags(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.Flags;
+}
+
+static any Native_SetControllerFlags(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.Flags = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_GetControllerCopyMaster(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.CopyMaster;
+}
+
+static any Native_SetControllerCopyMaster(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.CopyMaster = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_GetControllerIsCopy(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.IsCopy;
+}
+
+static any Native_GetControllerCompanionMaster(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.CompanionMaster;
+}
+
+static any Native_SetControllerCompanionMaster(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.CompanionMaster = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_GetControllerTeleporter(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetTeleporter(GetNativeCell(2));
+}
+
+static any Native_SetControllerTeleporter(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	int entity = EntRefToEntIndex(GetNativeCell(3));
+	if (entity && entity != INVALID_ENT_REFERENCE)
+	{
+		char classname[64];
+		GetEntityClassname(entity, classname, sizeof(classname));
+		if (strcmp(classname, "trigger_teleport", false) != 0)
+		{
+			return ThrowNativeError(SP_ERROR_NATIVE, "Entity index %d is not a trigger_teleport or INVALID_ENT_REFERENCE", entity);
+		}
+	}
+	npc.SetTeleporter(GetNativeCell(2), entity);
+	return 0;
+}
+
+static any Native_ControllerSpawn(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	float pos[3];
+	GetNativeArray(2, pos, 3);
+	npc.Spawn(pos);
+	return 0;
+}
+
+static any Native_ControllerUnSpawn(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.UnSpawn(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_ControllerRemove(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.Remove();
+	return 0;
+}
+
+static any Native_GetControllerCanDespawn(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.CanDespawn;
+}
+
+static any Native_ControllerMarkAsFake(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.MarkAsFake();
+	return 0;
+}
+
+static any Native_GetControllerProfile(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	int size;
+	GetNativeStringLength(2, size);
+	size++;
+	char[] buffer = new char[size];
+	GetNativeString(2, buffer, size);
+	npc.GetProfile(buffer, size);
+	SetNativeString(2, buffer, size);
+	return 0;
+}
+
+static any Native_SetControllerProfile(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	int size;
+	GetNativeStringLength(2, size);
+	size++;
+	char[] buffer = new char[size];
+	GetNativeString(2, buffer, size);
+	npc.SetProfile(buffer);
+	return 0;
+}
+
+static any Native_GetControllerAddSpeed(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetAddSpeed();
+}
+
+static any Native_GetControllerPersistentAddSpeed(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetPersistentAddSpeed();
+}
+
+static any Native_SetControllerAddSpeed(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.SetAddSpeed(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_SetControllerPersistentAddSpeed(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.SetPersistentAddSpeed(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_GetControllerPersistentAddWalkSpeed(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetPersistentAddWalkSpeed();
+}
+
+static any Native_SetControllerPersistentAddWalkSpeed(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.SetPersistentAddWalkSpeed(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_GetControllerAddAcceleration(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetAddAcceleration();
+}
+
+static any Native_GetControllerPersistentAddAcceleration(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.GetPersistentAddAcceleration();
+}
+
+static any Native_SetControllerAddAcceleration(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.SetAddAcceleration(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_SetControllerPersistentAddAcceleration(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.SetPersistentAddAcceleration(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_GetControllerCanBeSeen(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.CanBeSeen(GetNativeCell(2), GetNativeCell(3), GetNativeCell(4));
+}
+
+static any Native_GetControllerPlayerCanSee(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.PlayerCanSee(GetNativeCell(2), GetNativeCell(3), GetNativeCell(4), GetNativeCell(5));
+}
+
+static any Native_GetControllerIsAffectedBySight(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	return npc.IsAffectedBySight();
+}
+
+static any Native_SetControllerAffectedBySight(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", npc);
+	}
+
+	npc.SetAffectedBySight(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_GetChaserControllerProfileData(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser npc = SF2NPC_Chaser(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid chaser boss index %d", npc);
+	}
+
+	return npc.GetProfileData();
+}
+
+static any Native_GetChaserControllerDeathHealth(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser npc = SF2NPC_Chaser(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid chaser boss index %d", npc);
+	}
+
+	return npc.GetDeathHealth(GetNativeCell(2));
+}
+
+static any Native_SetChaserControllerDeathHealth(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser npc = SF2NPC_Chaser(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid chaser boss index %d", npc);
+	}
+
+	npc.SetDeathHealth(GetNativeCell(2), GetNativeCell(3));
+	return 0;
+}
+
+static any Native_GetChaserControllerAddStunHealth(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser npc = SF2NPC_Chaser(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid chaser boss index %d", npc);
+	}
+
+	return npc.GetAddStunHealth();
+}
+
+static any Native_SetChaserControllerAddStunHealth(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser npc = SF2NPC_Chaser(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid chaser boss index %d", npc);
+	}
+
+	npc.SetAddStunHealth(GetNativeCell(2));
+	return 0;
+}
+
+static any Native_GetChaserControllerChaseOnLookTargets(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser npc = SF2NPC_Chaser(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid chaser boss index %d", npc);
+	}
+
+	return npc.ChaseOnLookTargets;
+}
+
+static any Native_GetStatueControllerProfileData(Handle plugin, int numParams)
+{
+	SF2NPC_Statue npc = SF2NPC_Statue(GetNativeCell(1));
+	if (!npc.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid statue boss index %d", npc);
+	}
+
+	return npc.GetProfileData();
 }
 
 static any Native_GetClientUserID(Handle plugin, int numParams)
@@ -2158,7 +2673,7 @@ static any Native_GetClientUsingFlashlight(Handle plugin, int numParams)
 	return player.UsingFlashlight;
 }
 
-static any Native_ClientHandleFlashlight(Handle plugin, int numParams)
+static any Native_ClientToggleFlashlight(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	if (!IsValidClient(client))
@@ -2167,7 +2682,7 @@ static any Native_ClientHandleFlashlight(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.HandleFlashlight();
+	player.ToggleFlashlight();
 	return 0;
 }
 
@@ -2581,19 +3096,6 @@ static any Native_SetClientLatcher(Handle plugin, int numParams)
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	player.Latcher = GetNativeCell(2);
-	return 0;
-}
-
-static any Native_ClientUpdateMusicSystem(Handle plugin, int numParams)
-{
-	int client = GetNativeCell(1);
-	if (!IsValidClient(client))
-	{
-		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", client);
-	}
-
-	SF2_BasePlayer player = SF2_BasePlayer(client);
-	player.UpdateMusicSystem(GetNativeCell(2));
 	return 0;
 }
 

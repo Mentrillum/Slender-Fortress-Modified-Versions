@@ -1,3 +1,6 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 #include "sf2_base_projectile.sp"
 
 void InitializeCustomEntities()

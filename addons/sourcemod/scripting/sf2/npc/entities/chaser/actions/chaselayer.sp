@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -47,8 +48,8 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 	ILocomotion loco = bot.GetLocomotionInterface();
 
 	bool tooClose = target.IsValid() &&
-		(interrputConditions & COND_ENEMYVISIBLE) != 0 &&
-		bot.IsRangeLessThan(target.index, 8.0);
+		(interrputConditions & COND_ENEMYVISIBLE_NOGLASS) != 0 &&
+		bot.GetRangeSquaredTo(target.index) <= 32.0;
 
 	if (tooClose && path.IsValid())
 	{
@@ -60,15 +61,12 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 		target.GetAbsOrigin(pos);
 		if (actor.Teleporters.Length > 0)
 		{
-			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
+			CBaseEntity(EntRefToEntIndex(actor.Teleporters.Get(0))).GetAbsOrigin(pos);
 		}
 
-		if (!bot.IsRangeLessThanEx(pos, 8.0))
+		if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
 		{
-			if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
-			{
-				path.ComputeToPos(bot, pos);
-			}
+			path.ComputeToPos(bot, pos);
 		}
 	}
 
@@ -81,6 +79,32 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 	{
 		path.Update(bot);
 		actor.IsAttemptingToMove = true;
+	}
+
+	if (target.IsValid())
+	{
+		bool lookAt = false;
+		if (tooClose || controller.HasAttribute(SF2Attribute_AlwaysLookAtTarget) || controller.HasAttribute(SF2Attribute_AlwaysLookAtTargetWhileChasing))
+		{
+			lookAt = true;
+		}
+
+		if ((interrputConditions & COND_ENEMYVISIBLE) == 0)
+		{
+			lookAt = false;
+		}
+
+		if (actor.IsKillingSomeone)
+		{
+			lookAt = false;
+		}
+
+		if (lookAt)
+		{
+			float pos[3];
+			target.GetAbsOrigin(pos);
+			loco.FaceTowards(pos);
+		}
 	}
 
 	return action.Continue();
@@ -101,7 +125,7 @@ static int OnResume(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, N
 		SF2NPC_Chaser controller = actor.Controller;
 		if (controller.IsValid())
 		{
-			if (controller.GetProfileData().StunData.ChaseInitialOnEnd[controller.Difficulty] && SF2_ChaserChaseInitialAction.IsPossible(actor))
+			if (controller.GetProfileData().GetStunBehavior().CanChaseInitialOnEnd(controller.Difficulty) && SF2_ChaserChaseInitialAction.IsPossible(actor))
 			{
 				return action.SuspendFor(SF2_ChaserChaseInitialAction());
 			}

@@ -4,6 +4,7 @@
 #define _sf2_debug_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <profiler>
 

@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include "actions/mainlayer.sp"
 #include "actions/idle.sp"
@@ -52,6 +53,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		g_Factory.SetInitialActionFactory(SF2_ChaserMainAction.GetFactory());
 		g_Factory.BeginDataMapDesc()
 			.DefineBoolField("m_IsAllowedToDespawn")
+			.DefineBoolField("m_IsSpawning")
+			.DefineBoolField("m_IsInAirAnimation")
 			.DefineStringField("m_OverrideSpawnAnimation")
 			.DefineFloatField("m_OverrideSpawnAnimationRate")
 			.DefineFloatField("m_OverrideSpawnAnimationDuration")
@@ -67,19 +70,23 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineStringField("m_DefaultPosture")
 			.DefineBoolField("m_IsAttacking")
 			.DefineBoolField("m_CancelAttack")
+			.DefineBoolField("m_ClearCurrentAttack")
 			.DefineStringField("m_AttackName")
 			.DefineIntField("m_AttackIndex")
 			.DefineIntField("m_NextAttackTime")
 			.DefineFloatField("m_AttackRunDuration")
 			.DefineFloatField("m_AttackRunDelay")
 			.DefineFloatField("m_NextVoiceTime")
+			.DefineFloatField("m_NextHurtVoiceTime")
 			.DefineIntField("m_MovementType")
+			.DefineBoolField("m_LockMovementType")
 			.DefineIntField("m_AlertTriggerCount", MAXTF2PLAYERS)
 			.DefineVectorField("m_AlertTriggerPosition", MAXTF2PLAYERS)
 			.DefineEntityField("m_AlertTriggerTarget")
 			.DefineFloatField("m_AlertSoundTriggerCooldown", MAXTF2PLAYERS)
 			.DefineVectorField("m_AlertTriggerPositionEx")
 			.DefineFloatField("m_AlertChangePositionCooldown")
+			.DefineIntField("m_TauntAlertStrikes", MAXTF2PLAYERS)
 			.DefineIntField("m_AutoChaseCount", MAXTF2PLAYERS)
 			.DefineFloatField("m_AutoChaseAddCooldown", MAXTF2PLAYERS)
 			.DefineFloatField("m_AutoChaseCooldown", MAXTF2PLAYERS)
@@ -119,9 +126,10 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		g_OnEntityCreatedPFwd.AddFunction(null, EntityCreated);
 		g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
-		g_OnPlayerTakeDamagePFwd.AddFunction(null, OnPlayerTakeDamage);
+		g_OnPlayerTakeDamagePostPFwd.AddFunction(null, OnPlayerTakeDamagePost);
 		g_OnPlayerDeathPrePFwd.AddFunction(null, OnPlayerDeathPre);
 		g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+		g_OnBuildingDestroyedPFwd.AddFunction(null, OnBuildingDestroyed);
 
 		SF2_ChaserAttackAction.Initialize();
 		InitializePostureRagePhase();
@@ -159,6 +167,32 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 	}
 
+	property bool IsSpawning
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_IsSpawning") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_IsSpawning", value);
+		}
+	}
+
+	property bool IsInAirAnimation
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_IsInAirAnimation") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_IsInAirAnimation", value);
+		}
+	}
+
 	public char[] GetOverrideSpawnAnimation()
 	{
 		char buffer[128];
@@ -175,7 +209,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public bool CanBeStunned()
 	{
-		if (SF_IsSlaughterRunMap() && !view_as<SF2NPC_BaseNPC>(this.Controller).GetProfileData().IsPvEBoss)
+		if (SF_IsSlaughterRunMap() && !this.Controller.GetProfileData().IsPvEBoss)
 		{
 			return false;
 		}
@@ -185,7 +219,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return false;
 		}
 
-		if (!this.Controller.GetProfileData().StunData.Enabled[this.Controller.Difficulty])
+		if (!this.Controller.GetProfileData().GetStunBehavior().IsEnabled(this.Controller.Difficulty))
 		{
 			return false;
 		}
@@ -220,7 +254,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 	public bool CanTakeDamage(CBaseEntity attacker = view_as<CBaseEntity>(-1), CBaseEntity inflictor = view_as<CBaseEntity>(-1), float damage = 0.0)
 	{
-		if (SF_IsSlaughterRunMap() && !view_as<SF2NPC_BaseNPC>(this.Controller).GetProfileData().IsPvEBoss)
+		if (SF_IsSlaughterRunMap() && !this.Controller.GetProfileData().IsPvEBoss)
 		{
 			return false;
 		}
@@ -251,12 +285,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		int difficulty = this.Controller.Difficulty;
-		SF2ChaserBossProfileData data;
-		data = this.Controller.GetProfileData();
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(this.GetAttackName(), attackData);
 
-		return !attackData.ImmuneToDamage[difficulty];
+		return !this.Controller.GetProfileData().GetAttack(this.GetAttackName()).IsImmuneToDamage(difficulty);
 	}
 
 	property bool IsStunned
@@ -367,7 +397,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		this.SetPropString(Prop_Data, "m_Posture", posture);
 
-		if (this.Controller.IsValid() && strcmp(currentPosture, posture) != 0 && this.IsAttemptingToMove)
+		if (this.Controller.IsValid() && strcmp(currentPosture, posture) != 0)
 		{
 			this.UpdateMovementAnimation();
 		}
@@ -378,7 +408,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		return this.GetPropString(Prop_Data, "m_DefaultPosture", buffer, bufferSize);
 	}
 
-	public void SetDefaultPosture(const char[] posture)
+	public void SetDefaultPosture(const char[] posture, bool update = true)
 	{
 		if (posture[0] == '\0')
 		{
@@ -392,17 +422,23 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				return;
 			}
 
-			SF2ChaserBossProfileData data;
-			data = this.Controller.GetProfileData();
-			SF2ChaserBossProfilePostureInfo postureInfo;
+			ChaserBossProfile data = this.Controller.GetProfileData();
 
-			if (!data.GetPosture(posture, postureInfo))
+			if (data.GetPosture(posture) == null)
 			{
 				return;
 			}
 		}
 
+		char currentPosture[64];
+		this.GetDefaultPosture(currentPosture, sizeof(currentPosture));
+
 		this.SetPropString(Prop_Data, "m_DefaultPosture", posture);
+
+		if (this.Controller.IsValid() && strcmp(currentPosture, posture) != 0 && update)
+		{
+			this.SetPosture(posture);
+		}
 	}
 
 	public bool CanUpdatePosture()
@@ -453,6 +489,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		public set(bool value)
 		{
 			this.SetProp(Prop_Data, "m_CancelAttack", value);
+		}
+	}
+
+	property bool ClearCurrentAttack
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_ClearCurrentAttack") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_ClearCurrentAttack", value);
 		}
 	}
 
@@ -559,6 +608,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 	}
 
+	property float NextHurtVoiceTime
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_NextHurtVoiceTime");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_NextHurtVoiceTime", value);
+		}
+	}
+
 	property bool IsAttemptingToMove
 	{
 		public get()
@@ -587,6 +649,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		public set(SF2NPCMoveTypes value)
 		{
+			if (this.LockMovementType)
+			{
+				return;
+			}
+
 			SF2NPCMoveTypes oldType = this.MovementType;
 			this.SetProp(Prop_Data, "m_MovementType", value);
 
@@ -594,6 +661,19 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			{
 				this.UpdateMovementAnimation();
 			}
+		}
+	}
+
+	property bool LockMovementType
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_LockMovementType") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_LockMovementType", value);
 		}
 	}
 
@@ -648,6 +728,16 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			this.SetPropFloat(Prop_Data, "m_AlertChangePositionCooldown", value);
 		}
+	}
+
+	public int GetTauntAlertStrikes(SF2_BasePlayer player)
+	{
+		return this.GetProp(Prop_Data, "m_TauntAlertStrikes", _, player.index);
+	}
+
+	public void SetTauntAlertStrikes(SF2_BasePlayer player, int value)
+	{
+		this.SetProp(Prop_Data, "m_TauntAlertStrikes", value, _, player.index);
 	}
 
 	public int GetAutoChaseCount(SF2_BasePlayer player)
@@ -1094,11 +1184,10 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		float myPos[3];
 		this.GetAbsOrigin(myPos);
-		SF2BossProfileData data;
-		data = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+		ChaserBossProfile data = controller.GetProfileData();
 
 		SF2_BasePlayer closest = SF2_INVALID_PLAYER;
-		float range = Pow(data.SearchRange[difficulty], 2.0);
+		float range = Pow(data.GetSearchRange(difficulty), 2.0);
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -1140,6 +1229,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
+		if (this.MovementType == SF2NPCMoveType_Attack)
+		{
+			return;
+		}
+
 		char animation[64];
 		strcopy(animation, sizeof(animation), g_SlenderAnimationsList[SF2BossAnimation_Idle]);
 
@@ -1155,10 +1249,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				{
 					strcopy(animation, sizeof(animation), g_SlenderAnimationsList[SF2BossAnimation_Run]);
 				}
-				case SF2NPCMoveType_Attack:
-				{
-					return;
-				}
 			}
 		}
 		if (this.IsKillingSomeone)
@@ -1168,99 +1258,112 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		char posture[64];
 		this.GetPosture(posture, sizeof(posture));
-		this.ResetProfileAnimation(animation, _, _, _, posture);
+		this.ResetProfileAnimation(animation, .posture = posture);
 	}
 
 	public bool PerformVoice(int soundType = -1, const char[] attackName = "")
 	{
-		SF2BossProfileSoundInfo soundInfo;
+		ProfileSound soundInfo;
 		return this.PerformVoiceEx(soundType, attackName, soundInfo);
 	}
 
-	public bool PerformVoiceEx(int soundType = -1, const char[] attackName = "", SF2BossProfileSoundInfo soundInfo, bool isSet = false)
+	public bool PerformVoiceEx(int soundType = -1, const char[] attackName = "", ProfileSound soundInfo, bool isSet = false)
 	{
 		if (soundType == -1 && !isSet)
 		{
 			return false;
 		}
 
-		SF2ChaserBossProfileData data;
-		data = this.Controller.GetProfileData();
-		ArrayList soundList;
+		ChaserBossProfile data = this.Controller.GetProfileData();
+		KeyMap_Array soundList;
 		if (!isSet)
 		{
 			switch (soundType)
 			{
 				case SF2BossSound_Idle:
 				{
-					soundInfo = data.IdleSounds;
+					soundInfo = data.GetIdleSounds();
 				}
 				case SF2BossSound_Alert:
 				{
-					soundInfo = data.AlertSounds;
+					soundInfo = data.GetAlertSounds();
 				}
 				case SF2BossSound_Chasing:
 				{
-					soundInfo = data.ChasingSounds;
+					soundInfo = data.GetChasingSounds();
 				}
 				case SF2BossSound_ChaseInitial:
 				{
-					soundInfo = data.ChaseInitialSounds;
+					soundInfo = data.GetChaseInitialSounds();
 				}
 				case SF2BossSound_Stun:
 				{
-					soundInfo = data.StunnedSounds;
+					soundInfo = data.GetStunSounds();
 				}
 				case SF2BossSound_Death:
 				{
-					soundInfo = data.DeathSounds;
+					soundInfo = data.GetDeathSounds();
 				}
 				case SF2BossSound_Attack:
 				{
-					return this.CheckNestedSoundSection(data.AttackSounds, attackName, soundInfo, soundList);
+					return this.CheckNestedSoundSection(data.GetAttackSounds(), attackName, soundInfo, soundList, "attack");
 				}
 				case SF2BossSound_AttackKilled:
 				{
-					soundInfo = data.AttackKilledSounds;
+					soundInfo = data.GetAttackKilledSounds();
 				}
 				case SF2BossSound_TauntKill:
 				{
-					soundInfo = data.TauntKillSounds;
+					soundInfo = data.GetTauntKillSounds();
 				}
 				case SF2BossSound_Smell:
 				{
-					soundInfo = data.SmellSounds;
+					soundInfo = data.GetSmellSounds();
 				}
 				case SF2BossSound_AttackBegin:
 				{
-					return this.CheckNestedSoundSection(data.AttackBeginSounds, attackName, soundInfo, soundList);
+					return this.CheckNestedSoundSection(data.GetAttackBeginSounds(), attackName, soundInfo, soundList, "attack_begin");
 				}
 				case SF2BossSound_AttackEnd:
 				{
-					return this.CheckNestedSoundSection(data.AttackEndSounds, attackName, soundInfo, soundList);
+					return this.CheckNestedSoundSection(data.GetAttackEndSounds(), attackName, soundInfo, soundList, "attack_end");
 				}
 				case SF2BossSound_SelfHeal:
 				{
-					soundInfo = data.SelfHealSounds;
+					soundInfo = data.GetSelfHealSounds();
 				}
 				case SF2BossSound_RageAll:
 				{
-					soundInfo = data.RageSounds1;
+					soundInfo = data.GetRageAllSounds();
 				}
 				case SF2BossSound_RageTwo:
 				{
-					soundInfo = data.RageSounds2;
+					soundInfo = data.GetRageTwoSounds();
 				}
 				case SF2BossSound_RageThree:
 				{
-					soundInfo = data.RageSounds3;
+					soundInfo = data.GetRageThreeSounds();
 				}
 				case SF2BossSound_Despawn:
 				{
-					soundInfo = data.DespawnSounds;
+					soundInfo = data.GetDespawnSounds();
+				}
+				case SF2BossSound_Hurt:
+				{
+					soundInfo = data.GetHurtSounds();
+				}
+				case SF2BossSound_Jump:
+				{
+					soundInfo = data.GetJumpSounds();
 				}
 			}
 		}
+
+		if (soundInfo == null)
+		{
+			return false;
+		}
+
 		soundList = soundInfo.Paths;
 		if (soundList != null && soundList.Length > 0)
 		{
@@ -1269,9 +1372,9 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		return false;
 	}
 
-	public bool CheckNestedSoundSection(ArrayList list, const char[] attackName, SF2BossProfileSoundInfo soundInfo, ArrayList soundList)
+	public bool CheckNestedSoundSection(ProfileObject list, const char[] attackName, ProfileSound soundInfo, KeyMap_Array soundList, char[] section)
 	{
-		if (this.SearchSoundsWithSectionName(list, attackName, soundInfo))
+		if (this.SearchSoundsWithSectionName(list, attackName, soundInfo, section))
 		{
 			soundList = soundInfo.Paths;
 			if (soundList != null && soundList.Length > 0)
@@ -1282,71 +1385,49 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		return false;
 	}
 
-	public bool PerformVoiceCooldown(SF2BossProfileSoundInfo soundInfo, ArrayList soundList)
+	public bool PerformVoiceCooldown(ProfileSound soundInfo, KeyMap_Array soundList)
 	{
 		char buffer[PLATFORM_MAX_PATH];
 		float gameTime = GetGameTime();
 		soundList.GetString(GetRandomInt(0, soundList.Length - 1), buffer, sizeof(buffer));
 		if (buffer[0] != '\0')
 		{
-			float threshold = GetRandomFloat(0.0, 1.0);
-			float cooldown = GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
-			if (threshold > soundInfo.Chance)
-			{
-				this.NextVoiceTime = gameTime + cooldown;
-				return false;
-			}
-			soundInfo.EmitSound(_, this.index, _, _, SF_SpecialRound(SPECIALROUND_TINYBOSSES) ? 25 : 0);
+			float cooldown = GetRandomFloat(soundInfo.GetCooldownMin(this.Controller.Difficulty), soundInfo.GetCooldownMax(this.Controller.Difficulty));
 			this.NextVoiceTime = gameTime + cooldown;
-			return true;
+			return soundInfo.EmitSound(_, this.index, _, _, SF_SpecialRound(SPECIALROUND_TINYBOSSES) ? 25 : 0);
 		}
 		return false;
 	}
 
-	public void CastAnimEvent(int event, bool footstep = false)
+	public void CastAnimEvent(int index)
 	{
-		SF2BossProfileData data;
-		data = view_as<SF2NPC_BaseNPC>(this.Controller).GetProfileData();
+		ChaserBossProfile data = this.Controller.GetProfileData();
 
-		ArrayList arraySounds = data.EventSounds;
-		ArrayList arrayEvents = data.EventIndexes;
+		BossProfileEventData event = data.GetEvents(index);
 
-		if (footstep)
-		{
-			arraySounds = data.FootstepEventSounds;
-			arrayEvents = data.FootstepEventIndexes;
-		}
-
-		if (arraySounds == null || arrayEvents == null)
+		if (event == null)
 		{
 			return;
 		}
 
-		int foundIndex = arrayEvents.FindValue(event);
-		if (foundIndex == -1)
+		if (event.GetSounds() != null)
 		{
-			return;
+			event.GetSounds().EmitSound(.entity = this.index);
 		}
 
-		SF2BossProfileSoundInfo soundInfo;
-		arraySounds.GetArray(foundIndex, soundInfo, sizeof(soundInfo));
-
-		if (soundInfo.Paths == null)
+		if (event.GetEffects() != null)
 		{
-			return;
+			SlenderSpawnEffects(event.GetEffects(), this.Controller.Index, false, .noParenting = true);
 		}
 
-		soundInfo.EmitSound(_, this.index);
-		SF2ChaserBossProfileData chaserData;
-		chaserData = this.Controller.GetProfileData();
-		if (footstep && chaserData.EarthquakeFootsteps)
+		if (event.IsFootsteps && data.EarthquakeFootsteps)
 		{
 			float myPos[3];
 			this.GetAbsOrigin(myPos);
 
-			UTIL_ScreenShake(myPos, chaserData.EarthquakeFootstepAmplitude,
-			chaserData.EarthquakeFootstepFrequency, chaserData.EarthquakeFootstepDuration,
-			chaserData.EarthquakeFootstepRadius, 0, chaserData.EarthquakeFootstepAirShake);
+			UTIL_ScreenShake(myPos, data.EarthquakeFootstepAmplitude,
+			data.EarthquakeFootstepFrequency, data.EarthquakeFootstepDuration,
+			data.EarthquakeFootstepRadius, 0, data.EarthquakeFootstepAirShake);
 		}
 	}
 
@@ -1357,10 +1438,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
-		SF2BossProfileSoundInfo info;
-		info = data.FootstepSounds;
+		ChaserBossProfile data = controller.GetProfileData();
+		ProfileSound info = data.GetFootstepSounds();
 
 		info.EmitSound(_, this.index);
 		this.LegacyFootstepTime = this.LegacyFootstepInterval + GetGameTime();
@@ -1379,9 +1458,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		int difficulty = this.Controller.Difficulty;
-		SF2ChaserBossProfileData data;
-		data = this.Controller.GetProfileData();
-		int threshold = data.SoundCountToAlert[difficulty];
+		int threshold = this.Controller.GetProfileData().GetSoundSenseData().GetThreshold(difficulty);
 
 		if (threshold <= 0)
 		{
@@ -1444,17 +1521,16 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		int difficulty = this.Controller.Difficulty;
-		SF2ChaserBossProfileData data;
-		data = this.Controller.GetProfileData();
+		ChaserBossProfile data = this.Controller.GetProfileData();
 
-		if (data.AutoChaseCount[difficulty] <= 0)
+		if (data.GetAutoChaseData().GetThreshold(difficulty) <= 0)
 		{
 			return;
 		}
 
 		this.SetAutoChaseCount(player, amount);
 
-		if (this.GetAutoChaseCount(player) >= data.AutoChaseCount[difficulty])
+		if (this.GetAutoChaseCount(player) >= data.GetAutoChaseData().GetThreshold(difficulty))
 		{
 			player.SetForceChaseState(this.Controller, true);
 			SetTargetMarkState(this.Controller, player, true);
@@ -1476,6 +1552,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			canAttack = false;
 		}
 
+		ChaserBossProfile data = controller.GetProfileData();
+		ProfileObject attacks = data.GetSection("attacks");
+		if (attacks == null || attacks.Size == 0)
+		{
+			canAttack = false;
+		}
+
 		if (!canAttack)
 		{
 			return NULL_ACTION;
@@ -1486,21 +1569,31 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		float gameTime = GetGameTime();
 		char attackName[64], posture[64];
 		this.GetPosture(posture, sizeof(posture));
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
 		int difficulty = controller.Difficulty;
 		ArrayList arrayAttacks = new ArrayList();
-		SF2ChaserBossProfileAttackData attackData;
-		for (int index = 0; index < data.Attacks.Length; index++)
+		ChaserBossProfileBaseAttack attackData;
+		for (int index = 0; index < data.GetAttackCount(); index++)
 		{
-			data.GetAttackFromIndex(index, attackData);
+			attackData = data.GetAttackFromIndex(index);
+			if (attackData == null)
+			{
+				continue;
+			}
+
+			attackData.Index = index;
 
 			if (attackData.Type == SF2BossAttackType_Invalid)
 			{
 				continue;
 			}
 
-			if (gameTime < this.GetNextAttackTime(attackData.Name))
+			attackData.GetSectionName(attackName, sizeof(attackName));
+			if (!attackData.IsEnabled(difficulty))
+			{
+				continue;
+			}
+
+			if (gameTime < this.GetNextAttackTime(attackName))
 			{
 				continue;
 			}
@@ -1510,17 +1603,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
-			if (attackData.DontInterruptChaseInitial[difficulty] && this.IsInChaseInitial)
+			if (attackData.ShouldNotInterruptChaseInitial(difficulty) && this.IsInChaseInitial)
 			{
 				continue;
 			}
 
-			if (!attackData.CanBeUsedWithPosture(posture))
+			if (!attackData.CanUseWithPosture(posture))
 			{
 				continue;
 			}
 
-			if (!attackData.StartThroughWalls[difficulty] && (this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
+			if (!attackData.GetStartThroughWalls(difficulty) && (this.InterruptConditions & COND_ENEMYVISIBLE_NOGLASS) == 0)
 			{
 				continue;
 			}
@@ -1530,7 +1623,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				Action result = Plugin_Continue;
 				Call_StartForward(g_OnChaserGetCustomAttackPossibleStatePFwd);
 				Call_PushCell(this);
-				Call_PushString(attackData.Name);
+				Call_PushString(attackName);
 				Call_PushCell(target);
 				Call_Finish(result);
 
@@ -1555,17 +1648,15 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			{
 				// Why must tanks use a different prop data, WHY?
 				float health = strcmp(class, "tank_boss", false) != 0 ? float(target.GetProp(Prop_Send, "m_iHealth")) : float(target.GetProp(Prop_Data, "m_iHealth"));
-				if (attackData.UseOnHealth != -1.0 && health < attackData.UseOnHealth)
+				if (attackData.CanUseOnHealth(difficulty) != -1.0 && health < attackData.CanUseOnHealth(difficulty))
 				{
 					continue;
 				}
-				if (attackData.BlockOnHealth != -1.0 && health >= attackData.BlockOnHealth)
+				if (attackData.CanBlockOnHealth(difficulty) != -1.0 && health >= attackData.CanBlockOnHealth(difficulty))
 				{
 					continue;
 				}
 			}
-
-			attackName = attackData.Name;
 
 			arrayAttacks.Push(index);
 		}
@@ -1595,11 +1686,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		arrayAttacks.Sort(Sort_Random, Sort_Integer);
 		for (int i = 0; i < arrayAttacks.Length; i++)
 		{
-			data.GetAttackFromIndex(arrayAttacks.Get(i), attackData);
+			data.GetAttackName(arrayAttacks.Get(i), attackName, sizeof(attackName));
+			attackData = data.GetAttack(attackName);
 			if (attackData.Type != SF2BossAttackType_Custom)
 			{
-				float beginRange = attackData.BeginRange[difficulty];
-				float beginFOV = attackData.BeginFOV[difficulty];
+				float beginRange = attackData.GetBeginRange(difficulty);
+				float beginFOV = attackData.GetBeginFOV(difficulty);
 				if (distance > Pow(beginRange, 2.0))
 				{
 					continue;
@@ -1610,9 +1702,9 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				}
 			}
 
-			attackName = attackData.Name;
+			attackData.GetSectionName(attackName, sizeof(attackName));
 
-			return SF2_ChaserAttackAction(attackName, attackData.Index, attackData.Duration[difficulty] + gameTime);
+			return SF2_ChaserAttackAction(data, attackName, attackData.Index, attackData.GetDuration(difficulty));
 		}
 
 		delete arrayAttacks;
@@ -1623,15 +1715,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	{
 		NextBotAction nbAction = NULL_ACTION;
 		Action action = Plugin_Continue;
-		SF2ChaserBossProfileData data;
-		data = this.Controller.GetProfileData();
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attackName, attackData);
+		ChaserBossProfileBaseAttack attackData = this.Controller.GetProfileData().GetAttack(attackName);
 
 		Call_StartForward(g_OnBossGetCustomAttackActionFwd);
 		Call_PushCell(this);
 		Call_PushString(attackName);
-		Call_PushArrayEx(attackData, sizeof(SF2ChaserBossProfileAttackData), SM_PARAM_COPYBACK);
+		Call_PushCell(attackData);
 		Call_PushCell(target);
 		Call_PushCellRef(nbAction);
 		Call_Finish(action);
@@ -1647,61 +1736,49 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public bool IsCustomAttackPossible(const char[] attackName, CBaseEntity target)
 	{
 		Action action = Plugin_Continue;
-		SF2ChaserBossProfileData data;
-		data = this.Controller.GetProfileData();
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attackName, attackData);
+		ChaserBossProfileBaseAttack attackData = this.Controller.GetProfileData().GetAttack(attackName);
 
 		Call_StartForward(g_OnIsBossCustomAttackPossibleFwd);
 		Call_PushCell(this);
 		Call_PushString(attackName);
-		Call_PushArrayEx(attackData, sizeof(SF2ChaserBossProfileAttackData), SM_PARAM_COPYBACK);
+		Call_PushCell(attackData);
 		Call_PushCell(target);
 		Call_Finish(action);
 
 		return action == Plugin_Continue;
 	}
 
-	public NextBotAction IsAttackTransitionPossible(const char[] attackName, bool end = false, float& duration = 0.0)
+	public NextBotAction IsAttackTransitionPossible(const char[] attackName, bool end = false)
 	{
-		SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(this.Controller);
-		SF2BossProfileData data;
-		data = baseController.GetProfileData();
+		SF2NPC_Chaser controller = this.Controller;
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 		char section[32];
 		if (!end)
 		{
-			strcopy(section, sizeof(section), g_SlenderAnimationsList[SF2BossAnimation_AttackBegin]);
+			strcopy(section, sizeof(section), attackData.GetAnimations() == null ? g_SlenderAnimationsList[SF2BossAnimation_AttackBegin] : "begin");
 		}
 		else
 		{
-			strcopy(section, sizeof(section), g_SlenderAnimationsList[SF2BossAnimation_AttackEnd]);
+			strcopy(section, sizeof(section), attackData.GetAnimations() == null ? g_SlenderAnimationsList[SF2BossAnimation_AttackEnd] : "end");
 		}
-		if (!data.AnimationData.HasAnimationSection(section))
+		ProfileMasterAnimations animations = attackData.GetAnimations();
+		if (animations == null)
+		{
+			animations = data.GetAnimations();
+		}
+		if (!animations.HasAnimationSection(section))
 		{
 			return NULL_ACTION;
 		}
 
-		char animName[64];
-		float rate = 1.0, cycle = 0.0;
-		int difficulty = baseController.Difficulty;
-		if (!data.AnimationData.GetAnimation(section, difficulty, animName, sizeof(animName), rate, duration, cycle, _, _, _, attackName))
+		ProfileAnimation animSection = animations.GetAnimation(section, .preDefinedName = attackData.GetAnimations() == null ? attackName : "");
+		if (animSection == null)
 		{
 			return NULL_ACTION;
 		}
 
-		int sequence = this.SelectProfileAnimation(section, rate, duration, cycle, _, _, _, attackName);
-		if (sequence == -1)
-		{
-			return NULL_ACTION;
-		}
-
-		if (duration <= 0.0)
-		{
-			duration = this.SequenceDuration(sequence) / rate;
-			duration *= (1.0 - cycle);
-		}
-
-		return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
+		return SF2_PlaySequenceAndWaitEx(section, attackName, animations);
 	}
 
 	public void DoAttackMiscConditions(const char[] attackName)
@@ -1713,10 +1790,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attackName, attackData);
+		ChaserBossProfileBaseAttack attackData = controller.GetProfileData().GetAttack(attackName);
 		CBaseEntity target = this.Target;
 		int difficulty = controller.Difficulty;
 
@@ -1724,8 +1798,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			bool aimAtTarget = false;
 
-			if ((controller.HasAttribute(SF2Attribute_AlwaysLookAtTarget) || controller.HasAttribute(SF2Attribute_AlwaysLookAtTargetWhileAttacking))
-				&& !attackData.IgnoreAlwaysLooking[difficulty])
+			if (attackData.ShouldAutoAim(difficulty))
 			{
 				aimAtTarget = true;
 			}
@@ -1769,39 +1842,34 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
-		SF2BossProfileData originalData;
-		originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attackName, attackData);
-		SF2ChaserBossProfileShockwaveData shockwaveData;
-		shockwaveData = attackData.Shockwave;
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
+		BossProfileShockwave shockwaveData = attackData.GetShockwave();
 
-		if (!shockwaveData.Enabled)
+		if (shockwaveData == null)
 		{
 			return;
 		}
 
 		int difficulty = controller.Difficulty;
-		float radius = shockwaveData.Radius[difficulty];
+		float radius = shockwaveData.GetRadius(difficulty);
 		if (radius <= 0.0)
 		{
 			return;
 		}
 
-		if (shockwaveData.Effects != null)
+		if (shockwaveData.GetEffects() != null)
 		{
-			SlenderSpawnEffects(shockwaveData.Effects, controller.Index, false);
+			SlenderSpawnEffects(shockwaveData.GetEffects(), controller.Index, false);
 		}
 
-		float force = shockwaveData.Force[difficulty];
+		float force = shockwaveData.GetForce(difficulty);
 
 		float myWorldSpace[3], myPos[3];
 		this.WorldSpaceCenter(myWorldSpace);
 		this.GetAbsOrigin(myPos);
 		bool eliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-		if (originalData.IsPvEBoss)
+		if (data.IsPvEBoss)
 		{
 			eliminated = true;
 		}
@@ -1823,16 +1891,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
-			TR_TraceRayFilter(myWorldSpace, clientWorldSpace,
+			Handle trace = TR_TraceRayFilterEx(myWorldSpace, clientWorldSpace,
 			CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP, RayType_EndPoint,
 			TraceRayDontHitAnyEntity, this.index);
 
-			if (!TR_DidHit() || TR_GetEntityIndex() == player.index)
+			if (!TR_DidHit(trace) || TR_GetEntityIndex(trace) == player.index)
 			{
 				float targetPos[3];
 				player.GetAbsOrigin(targetPos);
-				if (targetPos[2] > myPos[2] + shockwaveData.Height[difficulty])
+				if (targetPos[2] > myPos[2] + shockwaveData.GetHeight(difficulty))
 				{
+					delete trace;
 					continue;
 				}
 
@@ -1849,82 +1918,51 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 					player.SetPropVector(Prop_Data, "m_vecBaseVelocity", velocity);
 				}
 
-				float amount = shockwaveData.BatteryDrainPercent[difficulty];
+				float amount = shockwaveData.GetBatteryDrainPercent(difficulty);
 				if (!IsInfiniteFlashlightEnabled() && amount > 0.0)
 				{
 					player.FlashlightBatteryLife -= amount;
 				}
 
-				float sprintAmount = shockwaveData.StaminaDrainPercent[difficulty];
+				float sprintAmount = shockwaveData.GetStaminaDrainPercent(difficulty);
 				if (!IsInfiniteSprintEnabled() && sprintAmount > 0.0)
 				{
 					player.Stamina -= sprintAmount;
 				}
 
-				shockwaveData.ApplyDamageEffects(player, difficulty, SF2_ChaserBossEntity(this.index));
+				shockwaveData.ApplyDamageEffects(player, difficulty, this);
 			}
+
+			delete trace;
 		}
 	}
 
-	public bool SearchSoundsWithSectionName(ArrayList base, const char[] name, SF2BossProfileSoundInfo output)
+	public bool SearchSoundsWithSectionName(ProfileObject base, const char[] name, ProfileSound& output, char[] section)
 	{
-		if (base == null || base.Length <= 0)
+		if (base == null)
 		{
 			return false;
 		}
-		if (base.Length == 1)
+		ChaserBossProfile data = this.Controller.GetProfileData();
+		char arrayName[64];
+		FormatEx(arrayName, sizeof(arrayName), "__chaser_%s_sounds", section);
+		KeyMap_Array array = data.GetArray(arrayName);
+		if (array == null)
 		{
-			base.GetArray(0, output, sizeof(output));
-			if (output.SectionName[0] == '\0')
-			{
-				return true;
-			}
+			output = view_as<ProfileSound>(base);
+			return true;
 		}
-		for (int i = 0; i < base.Length; i++)
+		for (int i = 0; i < array.Length; i++)
 		{
-			base.GetArray(i, output, sizeof(output));
-			if (strcmp(output.SectionName, name) == 0)
+			char keyName[64];
+			array.GetString(i, keyName, sizeof(keyName));
+			if (keyName[0] != '\0' && strcmp(keyName, name) == 0)
 			{
+				output = view_as<ProfileSound>(base.GetSection(keyName));
 				return true;
 			}
 		}
 		return false;
-	}
-
-	public void DoAlwaysLookAt(CBaseEntity target)
-	{
-		if (!target.IsValid())
-		{
-			return;
-		}
-
-		SF2_BasePlayer player = SF2_BasePlayer(target.index);
-		if (player.IsValid && !player.IsAlive)
-		{
-			return;
-		}
-
-		INextBot bot = this.MyNextBotPointer();
-		ILocomotion loco = bot.GetLocomotionInterface();
-		bool tooClose = this.GetIsVisible(player) && bot.IsRangeLessThan(target.index, 16.0) && this.State != STATE_STUN && this.State != STATE_DEATH && !this.IsKillingSomeone;
-		SF2NPC_Chaser controller = this.Controller;
-		if (!controller.IsValid())
-		{
-			return;
-		}
-		if (!tooClose && !controller.HasAttribute(SF2Attribute_AlwaysLookAtTarget) && !controller.HasAttribute(SF2Attribute_AlwaysLookAtTargetWhileChasing))
-		{
-			return;
-		}
-
-		if ((this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
-		{
-			return;
-		}
-
-		float pos[3];
-		target.GetAbsOrigin(pos);
-		loco.FaceTowards(pos);
 	}
 
 	public void RegisterProjectiles(bool &isFake = false)
@@ -1938,14 +1976,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
-		if (!data.ProjectilesEnabled)
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProjectileData projectileData = data.GetProjectiles();
+		int difficulty = controller.Difficulty;
+		if (!projectileData.IsEnabled(difficulty))
 		{
 			return;
 		}
-
-		int difficulty = controller.Difficulty;
 
 		float gameTime = GetGameTime();
 
@@ -1954,12 +1991,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
-		if ((this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
+		if ((this.InterruptConditions & COND_ENEMYVISIBLE_NOGLASS) == 0)
 		{
 			return;
 		}
 
-		if (!data.ProjectileClips)
+		if (!projectileData.ProjectileClips)
 		{
 			if (controller.Flags & SFF_FAKE)
 			{
@@ -1980,12 +2017,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			{
 				if (!this.IsReloadingProjectiles)
 				{
-					this.ProjectileReloadTime = gameTime + data.ProjectileReloadTime[difficulty];
+					this.ProjectileReloadTime = gameTime + projectileData.GetReloadTime(difficulty);
 					this.IsReloadingProjectiles = true;
 				}
 				if (this.ProjectileReloadTime <= gameTime && this.IsReloadingProjectiles)
 				{
-					this.ProjectileAmmo = data.ProjectileClipSize[difficulty];
+					this.ProjectileAmmo = projectileData.GetClipSize(difficulty);
 					this.IsReloadingProjectiles = false;
 				}
 			}
@@ -2004,16 +2041,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		this.GetAbsAngles(myAng);
 		this.Target.WorldSpaceCenter(targetPos);
 		int difficulty = controller.Difficulty;
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
-		SF2BossProfileData originalData;
-		originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-		int randomPosMin = data.ProjectileRandomPosMin;
-		int randomPosMax = data.ProjectileRandomPosMax;
-		ArrayList array = data.ProjectilePosOffsets;
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProjectileData projectileData = data.GetProjectiles();
+		int randomPosMin = projectileData.MinRandomPos;
+		int randomPosMax = projectileData.MaxRandomPos;
 
 		bool attackWaiters = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-		if (originalData.IsPvEBoss)
+		if (data.IsPvEBoss)
 		{
 			attackWaiters = true;
 		}
@@ -2022,121 +2056,142 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		if (randomPosMin == randomPosMax)
 		{
-			array.GetArray(0, effectPos);
+			projectileData.GetOffset(1, effectPos);
 		}
 		else
 		{
-			array.GetArray(GetRandomInt(randomPosMin, randomPosMax), effectPos);
+			projectileData.GetOffset(GetRandomInt(randomPosMin, randomPosMax), effectPos);
 		}
 
 		VectorTransform(effectPos, myPos, myAng, effectPos);
 
-		for (int i = 0; i < data.ProjectileCount[difficulty]; i++)
+		for (int i = 0; i < projectileData.GetCount(difficulty); i++)
 		{
 			float direction[3], angle[3];
 			SubtractVectors(targetPos, effectPos, direction);
-			float deviation = data.ProjectileDeviation[difficulty];
+			float deviation = projectileData.GetDeviation(difficulty) / 10.0;
 
-			if (deviation != 0)
-			{
-				direction[0] += GetRandomFloat(-deviation, deviation);
-				direction[1] += GetRandomFloat(-deviation, deviation);
-				direction[2] += GetRandomFloat(-deviation, deviation);
-			}
 			NormalizeVector(direction, direction);
 			GetVectorAngles(direction, angle);
+			if (deviation != 0.0)
+			{
+				angle[0] += GetRandomFloat(-deviation, deviation);
+				angle[1] += GetRandomFloat(-deviation, deviation);
+				angle[2] += GetRandomFloat(-deviation, deviation);
+			}
 
-			switch (data.ProjectileType)
+			char sound[PLATFORM_MAX_PATH];
+
+			switch (projectileData.Type)
 			{
 				case SF2BossProjectileType_Fireball:
 				{
-					SF2_ProjectileFireball.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.ProjectileRadius[difficulty], data.FireballExplodeSound, data.FireballTrail, attackWaiters);
+					char trail[PLATFORM_MAX_PATH];
+					projectileData.GetFireballExplodeSound(sound, sizeof(sound));
+					projectileData.GetFireballTrail(trail, sizeof(trail));
+					SF2_ProjectileFireball.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetRadius(difficulty), sound, trail, attackWaiters);
+					projectileData.GetFireballShootSound(sound, sizeof(sound));
 					if (i == 0)
 					{
-						EmitSoundToAll(data.FireballShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_Iceball:
 				{
-					SF2_ProjectileIceball.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.ProjectileRadius[difficulty], data.FireballExplodeSound, data.IceballTrail, data.IceballSlowDuration[difficulty], data.IceballSlowPercent[difficulty], data.IceballSlowSound, attackWaiters);
+					char trail[PLATFORM_MAX_PATH], slow[PLATFORM_MAX_PATH];
+					projectileData.GetFireballExplodeSound(sound, sizeof(sound));
+					projectileData.GetIceballTrail(trail, sizeof(trail));
+					projectileData.GetIceballSlowSound(slow, sizeof(slow));
+					SF2_ProjectileIceball.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetRadius(difficulty), sound, trail, projectileData.GetIceballSlowDuration(difficulty), projectileData.GetIceballSlowPercent(difficulty), slow, attackWaiters);
+					projectileData.GetIceballSlowSound(sound, sizeof(sound));
 					if (i == 0)
 					{
-						EmitSoundToAll(data.FireballShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_Rocket:
 				{
-					SF2_ProjectileRocket.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.ProjectileRadius[difficulty], data.CriticalProjectiles, data.RocketTrail, data.RocketExplodeParticle, data.RocketExplodeSound, data.RocketModel, attackWaiters);
+					char trail[PLATFORM_MAX_PATH], particle[PLATFORM_MAX_PATH], model[PLATFORM_MAX_PATH];
+					projectileData.GetRocketExplodeSound(sound, sizeof(sound));
+					projectileData.GetRocketTrail(trail, sizeof(trail));
+					projectileData.GetRocketExplodeParticle(particle, sizeof(particle));
+					projectileData.GetRocketModel(model, sizeof(model));
+					SF2_ProjectileRocket.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetRadius(difficulty), projectileData.GetCritState(difficulty), trail, particle, sound, model, attackWaiters);
+					projectileData.GetRocketShootSound(sound, sizeof(sound));
 					if (i == 0)
 					{
-						EmitSoundToAll(data.RocketShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_SentryRocket:
 				{
-					SF2_ProjectileSentryRocket.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.ProjectileRadius[difficulty], data.CriticalProjectiles, attackWaiters);
+					projectileData.GetSentryRocketShootSound(sound, sizeof(sound));
+					SF2_ProjectileSentryRocket.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetRadius(difficulty), projectileData.GetCritState(difficulty), attackWaiters);
 					if (i == 0)
 					{
-						EmitSoundToAll(data.SentryRocketShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_Mangler:
 				{
-					SF2_ProjectileCowMangler.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.ProjectileRadius[difficulty], attackWaiters);
+					projectileData.GetManglerShootSound(sound, sizeof(sound));
+					SF2_ProjectileCowMangler.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetRadius(difficulty), attackWaiters);
 					if (i == 0)
 					{
-						EmitSoundToAll(data.ManglerShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_Grenade:
 				{
-					SF2_ProjectileGrenade.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.ProjectileRadius[difficulty], data.CriticalProjectiles, "pipebombtrail_blue", ROCKET_EXPLODE_PARTICLE, ROCKET_IMPACT, "models/weapons/w_models/w_grenade_grenadelauncher.mdl", attackWaiters);
+					projectileData.GetGrenadeShootSound(sound, sizeof(sound));
+					SF2_ProjectileGrenade.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetRadius(difficulty), projectileData.GetCritState(difficulty), "pipebombtrail_blue", ROCKET_EXPLODE_PARTICLE, ROCKET_IMPACT, "models/weapons/w_models/w_grenade_grenadelauncher.mdl", attackWaiters);
 					if (i == 0)
 					{
-						EmitSoundToAll(data.GrenadeShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_Arrow:
 				{
-					SF2_ProjectileArrow.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.CriticalProjectiles, "pipebombtrail_blue", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
+					projectileData.GetArrowShootSound(sound, sizeof(sound));
+					SF2_ProjectileArrow.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetCritState(difficulty), "effects/arrowtrail_red.vmt", "weapons/fx/rics/arrow_impact_flesh2.wav", "models/weapons/w_models/w_arrow.mdl", attackWaiters);
 					if (i == 0)
 					{
-						EmitSoundToAll(data.ArrowShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 				case SF2BossProjectileType_Baseball:
 				{
-					SF2_ProjectileBaseball.Create(this, effectPos, angle, data.ProjectileSpeed[difficulty], data.ProjectileDamage[difficulty],
-						data.CriticalProjectiles, "models/weapons/w_models/w_baseball.mdl", attackWaiters);
+					projectileData.GetBaseballShootSound(sound, sizeof(sound));
+					SF2_ProjectileBaseball.Create(this, effectPos, angle, projectileData.GetSpeed(difficulty), projectileData.GetDamage(difficulty),
+						projectileData.GetCritState(difficulty), "models/weapons/w_models/w_baseball.mdl", attackWaiters);
 					if (i == 0)
 					{
-						EmitSoundToAll(data.BaseballShootSound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
+						EmitSoundToAll(sound, this.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 					}
 				}
 			}
 		}
 
-		if (data.ShootGestures)
+		char gesture[64];
+		projectileData.GetShootGesture(gesture, sizeof(gesture));
+		if (gesture[0] != '\0')
 		{
-			this.RemoveAllGestures();
-			char gesture[64];
-			strcopy(gesture, sizeof(gesture), data.ShootGestureName);
-
 			int sequence = this.LookupSequence(gesture);
 			if (sequence != -1)
 			{
+				this.RemoveAllGestures();
 				this.AddGestureSequence(sequence);
 			}
 		}
 
-		this.ProjectileCooldown = GetRandomFloat(data.ProjectileCooldownMin[difficulty], data.ProjectileCooldownMax[difficulty]) + GetGameTime();
+		this.ProjectileCooldown = GetRandomFloat(projectileData.GetMinCooldown(difficulty), projectileData.GetMaxCooldown(difficulty)) + GetGameTime();
 	}
 
 	public void CheckTauntKill(SF2_BasePlayer player)
@@ -2157,15 +2212,21 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
-		SF2ChaserBossProfileData data, otherData;
+		ChaserBossProfile data, otherData;
 		data = controller.GetProfileData();
+		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
+		if (data.GetAlertBehavior() == null)
+		{
+			return;
+		}
+		alertStateData = data.GetAlertBehavior().GetAlertSyncData();
 
-		if (!data.AlertOnAlertInfo.Enabled[difficulty])
+		if (!alertStateData.IsEnabled(difficulty))
 		{
 			return;
 		}
 
-		if (!data.AlertOnAlertInfo.Copies[difficulty] && !data.AlertOnAlertInfo.Companions[difficulty])
+		if (!alertStateData.GetCopies(difficulty) && !alertStateData.GetCompanions(difficulty))
 		{
 			return;
 		}
@@ -2188,12 +2249,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
 
 			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
+			if (otherData.GetAlertBehavior() == null)
+			{
+				continue;
+			}
+			otherAlertStateData = otherData.GetAlertBehavior().GetAlertSyncData();
 			SF2_ChaserEntity otherChaser = SF2_ChaserEntity(otherController.EntIndex);
 			if (!otherChaser.IsValid())
 			{
@@ -2208,7 +2274,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			SF2NPC_BaseNPC otherCopyMaster = otherController.CopyMaster;
 			SF2NPC_BaseNPC otherCompanionMaster = otherController.CompanionMaster;
 			bool doContinue = false;
-			if (data.AlertOnAlertInfo.Copies[difficulty])
+			if (alertStateData.GetCopies(difficulty))
 			{
 				if (copyMaster != otherController && otherCopyMaster != copyMaster && otherCopyMaster != controller)
 				{
@@ -2216,7 +2282,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				}
 			}
 
-			if (data.AlertOnAlertInfo.Companions[difficulty])
+			if (alertStateData.GetCompanions(difficulty))
 			{
 				SF2NPC_BaseNPC tempCompanionMaster = companionMaster, tempOtherCompanionMaster = otherCompanionMaster;
 				if (otherController.IsCopy)
@@ -2265,12 +2331,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			float distance = this.MyNextBotPointer().GetRangeSquaredTo(otherController.EntIndex);
-			if (distance > Pow(otherData.AlertOnAlertInfo.Radius[difficulty], 2.0))
+			if (distance > Pow(otherAlertStateData.GetRadius(difficulty), 2.0))
 			{
 				continue;
 			}
 
-			if (otherData.AlertOnAlertInfo.ShouldBeVisible[difficulty] && !otherChaser.IsLOSClearFromTarget(this))
+			if (otherAlertStateData.ShouldBeVisible(difficulty) && !otherChaser.IsLOSClearFromTarget(this))
 			{
 				continue;
 			}
@@ -2290,21 +2356,27 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
-		SF2ChaserBossProfileData data, otherData;
+		ChaserBossProfile data, otherData;
 		data = controller.GetProfileData();
+		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
+		if (data.GetAlertBehavior() == null)
+		{
+			return;
+		}
+		alertStateData = data.GetAlertBehavior().GetAlertSyncData();
 		float gameTime = GetGameTime();
 
-		if (!data.AlertOnAlertInfo.Enabled[difficulty])
+		if (!alertStateData.IsEnabled(difficulty))
 		{
 			return;
 		}
 
-		if (!data.AlertOnAlertInfo.Copies[difficulty] && !data.AlertOnAlertInfo.Companions[difficulty])
+		if (!alertStateData.GetCopies(difficulty) && !alertStateData.GetCompanions(difficulty))
 		{
 			return;
 		}
 
-		if (!data.AlertOnAlertInfo.Follow[difficulty] || this.FollowedCompanionAlert || gameTime < this.FollowCooldownAlert)
+		if (!alertStateData.ShouldFollow(difficulty) || this.FollowedCompanionAlert || gameTime < this.FollowCooldownAlert)
 		{
 			return;
 		}
@@ -2322,7 +2394,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
@@ -2334,8 +2406,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
+			if (otherData.GetAlertBehavior() == null)
+			{
+				continue;
+			}
+			otherAlertStateData = otherData.GetAlertBehavior().GetAlertSyncData();
 
-			if (!otherData.AlertOnAlertInfo.Copies[difficulty] && !otherData.AlertOnAlertInfo.Companions[difficulty])
+			if (!otherAlertStateData.GetCopies(difficulty) && !otherAlertStateData.GetCompanions(difficulty))
 			{
 				continue;
 			}
@@ -2343,7 +2420,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			SF2NPC_BaseNPC otherCopyMaster = otherController.CopyMaster;
 			SF2NPC_BaseNPC otherCompanionMaster = otherController.CompanionMaster;
 			bool doContinue = false;
-			if (data.AlertOnAlertInfo.Copies[difficulty])
+			if (alertStateData.GetCopies(difficulty))
 			{
 				if (copyMaster != otherController && otherCopyMaster != copyMaster && otherCopyMaster != controller)
 				{
@@ -2351,7 +2428,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				}
 			}
 
-			if (data.AlertOnAlertInfo.Companions[difficulty])
+			if (alertStateData.GetCompanions(difficulty))
 			{
 				SF2NPC_BaseNPC tempCompanionMaster = companionMaster, tempOtherCompanionMaster = otherCompanionMaster;
 				if (otherController.IsCopy)
@@ -2400,12 +2477,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			float distance = this.MyNextBotPointer().GetRangeSquaredTo(otherController.EntIndex);
-			if (distance > Pow(otherData.AlertOnAlertInfo.Radius[difficulty], 2.0))
+			if (distance > Pow(otherAlertStateData.GetRadius(difficulty), 2.0))
 			{
 				continue;
 			}
 
-			if (otherData.AlertOnAlertInfo.ShouldBeVisible[difficulty] && !otherChaser.IsLOSClearFromTarget(this))
+			if (otherAlertStateData.ShouldBeVisible(difficulty) && !otherChaser.IsLOSClearFromTarget(this))
 			{
 				continue;
 			}
@@ -2442,15 +2519,21 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
-		SF2ChaserBossProfileData data, otherData;
+		ChaserBossProfile data, otherData;
 		data = controller.GetProfileData();
+		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
+		if (data.GetChaseBehavior() == null)
+		{
+			return;
+		}
+		alertStateData = data.GetChaseBehavior().GetChaseTogetherData();
 
-		if (!data.AlertOnChaseInfo.Enabled[difficulty])
+		if (!alertStateData.IsEnabled(difficulty))
 		{
 			return;
 		}
 
-		if (!data.AlertOnChaseInfo.Copies[difficulty] && !data.AlertOnChaseInfo.Companions[difficulty])
+		if (!alertStateData.GetCopies(difficulty) && !alertStateData.GetCompanions(difficulty))
 		{
 			return;
 		}
@@ -2463,12 +2546,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
 
 			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
+			if (otherData.GetChaseBehavior() == null)
+			{
+				continue;
+			}
+			otherAlertStateData = otherData.GetChaseBehavior().GetChaseTogetherData();
 			SF2_ChaserEntity otherChaser = SF2_ChaserEntity(otherController.EntIndex);
 			if (!otherChaser.IsValid())
 			{
@@ -2483,7 +2571,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			SF2NPC_BaseNPC otherCopyMaster = otherController.CopyMaster;
 			SF2NPC_BaseNPC otherCompanionMaster = otherController.CompanionMaster;
 			bool doContinue = false;
-			if (data.AlertOnChaseInfo.Copies[difficulty])
+			if (alertStateData.GetCopies(difficulty))
 			{
 				if (copyMaster != otherController && otherCopyMaster != copyMaster && otherCopyMaster != controller)
 				{
@@ -2491,7 +2579,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				}
 			}
 
-			if (data.AlertOnChaseInfo.Companions[difficulty])
+			if (alertStateData.GetCompanions(difficulty))
 			{
 				SF2NPC_BaseNPC tempCompanionMaster = companionMaster, tempOtherCompanionMaster = otherCompanionMaster;
 				if (otherController.IsCopy)
@@ -2540,12 +2628,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			float distance = this.MyNextBotPointer().GetRangeSquaredTo(otherController.EntIndex);
-			if (distance > Pow(otherData.AlertOnChaseInfo.Radius[difficulty], 2.0))
+			if (distance > Pow(otherAlertStateData.GetRadius(difficulty), 2.0))
 			{
 				continue;
 			}
 
-			if (otherData.AlertOnChaseInfo.ShouldBeVisible[difficulty] && !otherChaser.IsLOSClearFromTarget(this))
+			if (otherAlertStateData.ShouldBeVisible(difficulty) && !otherChaser.IsLOSClearFromTarget(this))
 			{
 				continue;
 			}
@@ -2568,16 +2656,22 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		SF2NPC_BaseNPC copyMaster = controller.CopyMaster;
 		SF2NPC_BaseNPC companionMaster = controller.CompanionMaster;
-		SF2ChaserBossProfileData data, otherData;
+		ChaserBossProfile data, otherData;
 		data = controller.GetProfileData();
+		ChaserBossAlertOnStateData alertStateData, otherAlertStateData;
+		if (data.GetChaseBehavior() == null)
+		{
+			return;
+		}
+		alertStateData = data.GetChaseBehavior().GetChaseTogetherData();
 		float gameTime = GetGameTime();
 
-		if (!data.AlertOnChaseInfo.Enabled[difficulty] || !data.AlertOnChaseInfo.Follow[difficulty])
+		if (!alertStateData.IsEnabled(difficulty) || !alertStateData.ShouldFollow(difficulty))
 		{
 			return;
 		}
 
-		if (!data.AlertOnChaseInfo.Copies[difficulty] && !data.AlertOnChaseInfo.Companions[difficulty])
+		if (!alertStateData.GetCopies(difficulty) && !alertStateData.GetCompanions(difficulty))
 		{
 			return;
 		}
@@ -2600,7 +2694,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			SF2NPC_BaseNPC otherController = SF2NPC_BaseNPC(index);
-			if (!otherController.IsValid() || otherController.Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
+			if (!otherController.IsValid() || otherController.GetProfileData().Type != SF2BossType_Chaser || otherController.EntIndex == INVALID_ENT_REFERENCE)
 			{
 				continue;
 			}
@@ -2612,8 +2706,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			otherData = view_as<SF2NPC_Chaser>(otherController).GetProfileData();
+			if (otherData.GetChaseBehavior() == null)
+			{
+				continue;
+			}
+			otherAlertStateData = otherData.GetChaseBehavior().GetChaseTogetherData();
 
-			if (!otherData.AlertOnChaseInfo.Copies[difficulty] && !otherData.AlertOnChaseInfo.Companions[difficulty])
+			if (!otherAlertStateData.GetCopies(difficulty) && !otherAlertStateData.GetCompanions(difficulty))
 			{
 				continue;
 			}
@@ -2621,7 +2720,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			SF2NPC_BaseNPC otherCopyMaster = otherController.CopyMaster;
 			SF2NPC_BaseNPC otherCompanionMaster = otherController.CompanionMaster;
 			bool doContinue = false;
-			if (data.AlertOnChaseInfo.Copies[difficulty])
+			if (alertStateData.GetCopies(difficulty))
 			{
 				if (copyMaster != otherController && otherCopyMaster != copyMaster && otherCopyMaster != controller)
 				{
@@ -2629,7 +2728,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				}
 			}
 
-			if (data.AlertOnChaseInfo.Companions[difficulty])
+			if (alertStateData.GetCompanions(difficulty))
 			{
 				SF2NPC_BaseNPC tempCompanionMaster = companionMaster, tempOtherCompanionMaster = otherCompanionMaster;
 				if (otherController.IsCopy)
@@ -2678,12 +2777,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			float distance = this.MyNextBotPointer().GetRangeSquaredTo(otherController.EntIndex);
-			if (distance > Pow(otherData.AlertOnChaseInfo.Radius[difficulty], 2.0))
+			if (distance > Pow(otherAlertStateData.GetRadius(difficulty), 2.0))
 			{
 				continue;
 			}
 
-			if (otherData.AlertOnChaseInfo.ShouldBeVisible[difficulty] && !otherChaser.IsLOSClearFromTarget(this))
+			if (otherAlertStateData.ShouldBeVisible(difficulty) && !otherChaser.IsLOSClearFromTarget(this))
 			{
 				continue;
 			}
@@ -2706,11 +2805,11 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		{
 			return;
 		}
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileCloakData cloakData = data.GetCloakData();
 		int difficulty = controller.Difficulty;
 		float gameTime = GetGameTime();
-		if (!data.CloakData.Enabled[difficulty])
+		if (!cloakData.IsEnabled(difficulty))
 		{
 			return;
 		}
@@ -2733,13 +2832,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		float targetPos[3], myPos[3];
 		target.GetAbsOrigin(targetPos);
 		this.GetAbsOrigin(myPos);
-		if (this.HasCloaked && GetVectorSquareMagnitude(targetPos, myPos) <= Pow(data.CloakData.DecloakRange[difficulty], 2.0))
+		if (this.HasCloaked && GetVectorSquareMagnitude(targetPos, myPos) <= Pow(cloakData.GetDecloakRange(difficulty), 2.0))
 		{
 			this.EndCloak();
 			return;
 		}
 
-		if (!this.HasCloaked && GetVectorSquareMagnitude(targetPos, myPos) > Pow(data.CloakData.CloakRange[difficulty], 2.0))
+		if (!this.HasCloaked && GetVectorSquareMagnitude(targetPos, myPos) > Pow(cloakData.GetCloakRange(difficulty), 2.0))
 		{
 			return;
 		}
@@ -2765,22 +2864,28 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		}
 
 		SF2NPC_Chaser controller = this.Controller;
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileCloakData cloakData = data.GetCloakData();
 		int difficulty = controller.Difficulty;
-		if (!data.CloakData.Enabled[difficulty])
+		if (!cloakData.IsEnabled(difficulty))
 		{
 			return;
 		}
 
-		this.SetRenderMode(view_as<RenderMode>(data.CloakData.CloakRenderMode));
-		this.SetRenderColor(data.CloakData.CloakRenderColor[0], data.CloakData.CloakRenderColor[1], data.CloakData.CloakRenderColor[2], data.CloakData.CloakRenderColor[3]);
+		this.SetRenderMode(cloakData.GetRenderMode(difficulty));
+		this.SetRenderFx(cloakData.GetRenderFx(difficulty));
+		int color[4];
+		cloakData.GetRenderColor(color);
+		this.SetRenderColor(color[0], color[1], color[2], color[3]);
 		this.HasCloaked = true;
-		this.CloakTime = GetGameTime() + data.CloakData.Duration[difficulty];
+		this.CloakTime = GetGameTime() + cloakData.GetDuration(difficulty);
 		float worldPos[3];
 		this.WorldSpaceCenter(worldPos);
 		SlenderToggleParticleEffects(this.index);
-		SlenderSpawnEffects(data.CloakData.CloakEffects, controller.Index, false);
+		if (cloakData.GetCloakEffects() != null)
+		{
+			SlenderSpawnEffects(cloakData.GetCloakEffects(), controller.Index, false);
+		}
 		Call_StartForward(g_OnBossCloakedFwd);
 		Call_PushCell(controller.Index);
 		Call_Finish();
@@ -2793,22 +2898,28 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 		SF2NPC_Chaser controller = this.Controller;
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileCloakData cloakData = data.GetCloakData();
 		int difficulty = controller.Difficulty;
-		if (!data.CloakData.Enabled[difficulty])
+		if (!cloakData.IsEnabled(difficulty))
 		{
 			return;
 		}
 
-		this.SetRenderMode(view_as<RenderMode>(controller.GetRenderMode));
-		this.SetRenderColor(controller.GetRenderColor(0), controller.GetRenderColor(1), controller.GetRenderColor(2), controller.GetRenderColor(3));
+		this.SetRenderMode(data.GetRenderMode(difficulty));
+		this.SetRenderFx(data.GetRenderFx(difficulty));
+		int color[4];
+		data.GetRenderColor(difficulty, color);
+		this.SetRenderColor(color[0], color[1], color[2], color[3]);
 		this.HasCloaked = false;
-		this.CloakTime = GetGameTime() + data.CloakData.Cooldown[difficulty];
+		this.CloakTime = GetGameTime() + cloakData.GetCooldown(difficulty);
 		float worldPos[3];
 		this.WorldSpaceCenter(worldPos);
 		SlenderToggleParticleEffects(this.index, true);
-		SlenderSpawnEffects(data.CloakData.DecloakEffects, controller.Index, false);
+		if (cloakData.GetDecloakEffects() != null)
+		{
+			SlenderSpawnEffects(cloakData.GetDecloakEffects(), controller.Index, false);
+		}
 		Call_StartForward(g_OnBossDecloakedFwd);
 		Call_PushCell(controller.Index);
 		Call_Finish();
@@ -2817,16 +2928,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public void DropItem(bool death = false)
 	{
 		SF2NPC_Chaser controller = this.Controller;
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossProfileStunData stunData = data.GetStunBehavior();
+		ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 		int difficulty = controller.Difficulty;
-		bool check = !death ? data.StunData.ItemDrop[difficulty] : data.DeathData.ItemDrop[difficulty];
+		bool check = !death ? stunData.CanDropItem(difficulty) : deathData.CanDropItem(difficulty);
 		if (!check)
 		{
 			return;
 		}
 
-		int type = !death ? data.StunData.ItemDropType[difficulty] : data.DeathData.ItemDropType[difficulty];
+		int type = !death ? stunData.GetItemDropType(difficulty) : deathData.GetItemDropType(difficulty);
 		char class[64];
 		switch (type)
 		{
@@ -2870,6 +2982,9 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		this.GetAbsOrigin(myPos);
 		CBaseEntity item = CBaseEntity(CreateEntityByName(class));
 		item.KeyValue("OnPlayerTouch", "!self,Kill,,0,-1");
+		SetVariantString("OnUser1 !self:Kill::60.0:1");
+		item.AcceptInput("AddOutput");
+		item.AcceptInput("FireUser1");
 		item.Spawn();
 		item.SetProp(Prop_Send, "m_iTeamNum", 0);
 		item.Teleport(myPos, NULL_VECTOR, NULL_VECTOR);
@@ -2878,15 +2993,20 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public void ProcessTraps()
 	{
 		SF2NPC_Chaser controller = this.Controller;
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
-		int difficulty = controller.Difficulty;
-		if (!data.Traps[difficulty])
+		ChaserBossProfile data = controller.GetProfileData();
+		BossProfileTrapData trapData = data.GetTrapData();
+		if (trapData == null)
 		{
 			return;
 		}
 
-		if (this.State != STATE_IDLE && this.State != STATE_ALERT)
+		int difficulty = controller.Difficulty;
+		if (!trapData.IsEnabled(difficulty))
+		{
+			return;
+		}
+
+		if (!trapData.CanPlaceOnState(difficulty, this.State))
 		{
 			return;
 		}
@@ -2901,7 +3021,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		this.GetAbsOrigin(myPos);
 		this.GetAbsAngles(myAng);
 		Trap_SpawnTrap(myPos, myAng, controller);
-		this.TrapCooldown = gameTime + data.TrapCooldown[difficulty];
+		this.TrapCooldown = gameTime + trapData.GetSpawnCooldown(difficulty);
 	}
 
 	public static SF2_ChaserEntity Create(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
@@ -2920,10 +3040,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		controller.GetProfile(profile, sizeof(profile));
 		chaser.Controller = view_as<SF2NPC_Chaser>(controller);
-		SF2ChaserBossProfileData data;
-		data = chaser.Controller.GetProfileData();
-		SF2BossProfileData originalData;
-		originalData = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
+		ChaserBossProfile data = chaser.Controller.GetProfileData();
+		ChaserBossProfileStunData stunData = data.GetStunBehavior();
 
 		char buffer[PLATFORM_MAX_PATH];
 
@@ -2931,22 +3049,23 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		GetSlenderModel(controller.Index, _, buffer, sizeof(buffer));
 		chaser.SetModel(buffer);
-		chaser.SetRenderMode(view_as<RenderMode>(g_SlenderRenderMode[controller.Index]));
-		chaser.SetRenderFx(view_as<RenderFx>(g_SlenderRenderFX[controller.Index]));
-		chaser.SetRenderColor(g_SlenderRenderColor[controller.Index][0], g_SlenderRenderColor[controller.Index][1],
-								g_SlenderRenderColor[controller.Index][2], g_SlenderRenderColor[controller.Index][3]);
+		chaser.SetRenderMode(data.GetRenderMode(difficulty));
+		chaser.SetRenderFx(data.GetRenderFx(difficulty));
+		int color[4];
+		data.GetRenderColor(difficulty, color);
+		chaser.SetRenderColor(color[0], color[1], color[2], color[3]);
 
 		chaser.SetDefaultPosture(SF2_PROFILE_CHASER_DEFAULT_POSTURE);
 		chaser.SetPosture(SF2_PROFILE_CHASER_DEFAULT_POSTURE);
 
 		if (SF_SpecialRound(SPECIALROUND_TINYBOSSES))
 		{
-			float scaleModel = controller.ModelScale * 0.5;
+			float scaleModel = data.ModelScale * 0.5;
 			chaser.SetPropFloat(Prop_Send, "m_flModelScale", scaleModel);
 		}
 		else
 		{
-			chaser.SetPropFloat(Prop_Send, "m_flModelScale", controller.ModelScale);
+			chaser.SetPropFloat(Prop_Send, "m_flModelScale", data.ModelScale);
 		}
 
 		CBaseNPC npc = TheNPCs.FindNPCByEntIndex(chaser.index);
@@ -2956,101 +3075,59 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		npc.flGravity = 800.0;
 		npc.flDeathDropHeight = 99999.0;
 		npc.flJumpHeight = 512.0;
-		npc.flFrictionForward = 0.0;
-		npc.flFrictionSideways = 3.0;
+		npc.flFrictionForward = data.GetForwardFriction(difficulty);
+		npc.flFrictionSideways = data.GetSidewaysFriction(difficulty);
 
-		npc.flMaxYawRate = originalData.TurnRate;
+		npc.flMaxYawRate = data.TurnRate;
 
-		float addStunHealth = data.StunData.AddHealthPerPlayer[difficulty];
+		float addStunHealth = 0.0;
 		float classAdd;
 		int count;
-		for (int i = 1; i <= MaxClients; i++)
+		if (stunData != null)
 		{
-			SF2_BasePlayer player = SF2_BasePlayer(i);
-			if (!player.IsValid)
+			addStunHealth = stunData.GetAddHealthPerPlayer(difficulty);
+			for (int i = 1; i <= MaxClients; i++)
 			{
-				continue;
-			}
-
-			if (originalData.IsPvEBoss && !player.IsEliminated)
-			{
-				continue;
-			}
-
-			if (!originalData.IsPvEBoss && (player.IsEliminated || player.HasEscaped))
-			{
-				continue;
-			}
-			count++;
-
-			switch (player.Class)
-			{
-				case TFClass_Scout:
+				SF2_BasePlayer player = SF2_BasePlayer(i);
+				if (!player.IsValid)
 				{
-					classAdd += data.StunData.AddHealthPerScout[difficulty];
+					continue;
 				}
 
-				case TFClass_Soldier:
+				if (data.IsPvEBoss && !player.IsEliminated)
 				{
-					classAdd += data.StunData.AddHealthPerSoldier[difficulty];
+					continue;
 				}
 
-				case TFClass_Pyro:
+				if (!data.IsPvEBoss && (player.IsEliminated || player.HasEscaped))
 				{
-					classAdd += data.StunData.AddHealthPerPyro[difficulty];
+					continue;
 				}
-
-				case TFClass_DemoMan:
-				{
-					classAdd += data.StunData.AddHealthPerDemoman[difficulty];
-				}
-
-				case TFClass_Heavy:
-				{
-					classAdd += data.StunData.AddHealthPerHeavy[difficulty];
-				}
-
-				case TFClass_Engineer:
-				{
-					classAdd += data.StunData.AddHealthPerEngineer[difficulty];
-				}
-
-				case TFClass_Medic:
-				{
-					classAdd += data.StunData.AddHealthPerMedic[difficulty];
-				}
-
-				case TFClass_Sniper:
-				{
-					classAdd += data.StunData.AddHealthPerSniper[difficulty];
-				}
-
-				case TFClass_Spy:
-				{
-					classAdd += data.StunData.AddHealthPerSpy[difficulty];
-				}
+				count++;
+				classAdd += stunData.GetAddHealthPerClass(difficulty, player.Class);
 			}
 		}
 
 		addStunHealth *= float(count);
-		chaser.StunHealth = data.StunData.Health[controller.Difficulty] + addStunHealth + classAdd;
+		chaser.StunHealth = stunData.GetHealth(difficulty) + addStunHealth + classAdd;
 		chaser.MaxStunHealth = chaser.StunHealth;
 
 		locomotion.SetCallback(LocomotionCallback_ShouldCollideWith, LocoCollideWith);
-		locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpCBase);
+		locomotion.SetCallback(LocomotionCallback_ClimbUpToLedge, ClimbUpToLedge);
+		locomotion.SetCallback(LocomotionCallback_JumpAcrossGap, JumpAcrossGap);
 
 		float pathingMins[3], pathingMaxs[3];
 
-		if (controller.RaidHitbox)
+		if (data.RaidHitbox)
 		{
-			pathingMins = g_SlenderDetectMins[controller.Index];
-			pathingMaxs = g_SlenderDetectMaxs[controller.Index];
+			data.GetHullMins(pathingMins);
+			data.GetHullMaxs(pathingMaxs);
 
-			chaser.SetPropVector(Prop_Send, "m_vecMins", g_SlenderDetectMins[controller.Index]);
-			chaser.SetPropVector(Prop_Send, "m_vecMaxs", g_SlenderDetectMaxs[controller.Index]);
+			chaser.SetPropVector(Prop_Send, "m_vecMins", pathingMins);
+			chaser.SetPropVector(Prop_Send, "m_vecMaxs", pathingMaxs);
 
-			chaser.SetPropVector(Prop_Send, "m_vecMinsPreScaled", g_SlenderDetectMins[controller.Index]);
-			chaser.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", g_SlenderDetectMaxs[controller.Index]);
+			chaser.SetPropVector(Prop_Send, "m_vecMinsPreScaled", pathingMins);
+			chaser.SetPropVector(Prop_Send, "m_vecMaxsPreScaled", pathingMaxs);
 		}
 		else
 		{
@@ -3067,28 +3144,33 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		npc.SetBodyMins(pathingMins);
 		npc.SetBodyMaxs(pathingMaxs);
 
-		if (SF_IsBoxingMap() || originalData.IsPvEBoss)
+		if (SF_IsBoxingMap() || data.IsPvEBoss)
 		{
 			SetEntityCollisionGroup(chaser.index, COLLISION_GROUP_DEBRIS_TRIGGER);
 		}
 
-		for (int difficulty2 = 0; difficulty2 < Difficulty_Max; difficulty2++)
-		{
-			g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + NPCGetIdleLifetime(controller.Index, difficulty2);
-		}
+		g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + data.GetIdleLifeTime(difficulty);
 
 		IVision vision = chaser.MyNextBotPointer().GetVisionInterface();
-		vision.SetFieldOfView(originalData.FOV);
+		vision.SetFieldOfView(data.FOV);
 		vision.ForgetAllKnownEntities();
 
 		chaser.NextAttackTime = new StringMap();
 
-		chaser.TrapCooldown = GetGameTime() + data.TrapCooldown[controller.Difficulty];
+		if (data.GetTrapData() != null)
+		{
+			chaser.TrapCooldown = GetGameTime() + data.GetTrapData().GetSpawnCooldown(difficulty);
+		}
 
 		chaser.Teleport(pos, ang, NULL_VECTOR);
 
 		chaser.Spawn();
 		chaser.Activate();
+
+		if (data.GetSection("events") != null)
+		{
+			chaser.Hook_HandleAnimEvent(HandleAnimationEvent);
+		}
 
 		return chaser;
 	}
@@ -3112,6 +3194,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_ChaserBossEntity.IsValid.get", Native_GetIsValid);
+		CreateNative("SF2_ChaserBossEntity.Controller.get", Native_GetController);
 		CreateNative("SF2_ChaserBossEntity.IsAttemptingToMove.get", Native_GetIsAttemptingToMove);
 		CreateNative("SF2_ChaserBossEntity.IsAttacking.get", Native_GetIsAttacking);
 		CreateNative("SF2_ChaserBossEntity.IsStunned.get", Native_GetIsStunned);
@@ -3135,6 +3218,12 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		CreateNative("SF2_ChaserBossEntity.CreateSoundHint", Native_CreateSoundHint);
 		CreateNative("SF2_ChaserBossEntity.GroundSpeedOverride.get", Native_GetGroundSpeedOverride);
 		CreateNative("SF2_ChaserBossEntity.GroundSpeedOverride.set", Native_SetGroundSpeedOverride);
+		CreateNative("SF2_ChaserBossEntity.MovementType.get", Native_GetMovementType);
+		CreateNative("SF2_ChaserBossEntity.MovementType.set", Native_SetMovementType);
+		CreateNative("SF2_ChaserBossEntity.LockMovementType.get", Native_GetLockMovementType);
+		CreateNative("SF2_ChaserBossEntity.LockMovementType.set", Native_SetLockMovementType);
+
+		SF2_ChaserAttackAction.SetupAPI();
 	}
 }
 
@@ -3197,18 +3286,18 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 	}
 }
 
-static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &inflictor, float &damage, int &damageType)
+static void OnPlayerTakeDamagePost(SF2_BasePlayer client, int attacker, int inflictor, float damage, int damageType)
 {
 	SF2_ChaserEntity boss = SF2_ChaserEntity(inflictor);
 	if (!boss.IsValid())
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	SF2NPC_Chaser controller = boss.Controller;
 	if (!controller.IsValid())
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	Call_StartForward(g_OnClientDamagedByBossFwd);
@@ -3219,23 +3308,24 @@ static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &infl
 	Call_PushCell(damageType);
 	Call_Finish();
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	char attack[64];
 	strcopy(attack, sizeof(attack), boss.GetAttackName());
 	if (attack[0] != '\0')
 	{
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attack, attackData);
+		ChaserBossProfileBaseAttack attackData = data.GetAttack(attack);
 
-		if (attackData.HitEffects != null)
+		if (attackData.GetHitEffects() != null)
 		{
-			SlenderSpawnEffects(attackData.HitEffects, controller.Index, false, _, _, _, client.index);
+			SlenderSpawnEffects(attackData.GetHitEffects(), controller.Index, false, _, _, _, client.index);
+		}
+
+		if (attackData.GetHitInputs() != null)
+		{
+			attackData.GetHitInputs().AcceptInputs(boss, client, client);
 		}
 	}
-
-	return Plugin_Continue;
 }
 
 static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
@@ -3283,19 +3373,22 @@ static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor,
 		return;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	char attack[64];
 	strcopy(attack, sizeof(attack), boss.GetAttackName());
 	if (attack[0] != '\0')
 	{
-		SF2ChaserBossProfileAttackData attackData;
-		data.GetAttack(attack, attackData);
+		ChaserBossProfileBaseAttack attackData = data.GetAttack(attack);
 
-		if (attackData.KillEffects != null)
+		if (attackData.GetOnKillEffects() != null)
 		{
-			SlenderSpawnEffects(attackData.KillEffects, controller.Index, false, _, _, _, client.index);
+			SlenderSpawnEffects(attackData.GetOnKillEffects(), controller.Index, false, _, _, _, client.index);
+		}
+
+		if (attackData.GetOnKillInputs() != null)
+		{
+			attackData.GetOnKillInputs().AcceptInputs(boss, client, client);
 		}
 	}
 }
@@ -3346,20 +3439,75 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 
 	boss.PerformVoice(SF2BossSound_AttackKilled);
 
-	SF2BossProfileSoundInfo info;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	info = data.AttackKilledClientSounds;
+	ChaserBossProfile data = controller.GetProfileData();
+	ProfileSound info = data.GetAttackKilledClientSounds();
 	info.EmitSound(true, client.index);
 
-	info = data.AttackKilledAllSounds;
-	for (int i = 1; i <= MaxClients; i++)
+	info = data.GetAttackKilledAllSounds();
+	info.EmitToAllPlayers();
+
+	bool played = false;
+	TFClassType class = client.Class;
+
+	if (data.GetLocalKillSounds() != null)
 	{
-		if (!IsValidClient(i))
+		info = data.GetLocalKillSounds().GetKilledClassSounds(class);
+		if (!info.EmitSound(_, boss.index))
 		{
-			continue;
+			info = data.GetLocalKillSounds().GetKilledAllSounds();
+			info.EmitSound(_, boss.index);
 		}
-		info.EmitSound(true, i);
+	}
+
+	if (data.GetGlobalKillSounds() != null)
+	{
+		info = data.GetGlobalKillSounds().GetKilledClassSounds(class);
+		played = info.EmitToAllPlayers();
+		if (!played)
+		{
+			info = data.GetGlobalKillSounds().GetKilledAllSounds();
+			info.EmitToAllPlayers();
+		}
+	}
+
+	if (data.GetClientKillSounds() != null)
+	{
+		info = data.GetClientKillSounds().GetKilledClassSounds(class);
+		if (!info.EmitSound(true, client.index))
+		{
+			info = data.GetClientKillSounds().GetKilledAllSounds();
+			info.EmitSound(true, client.index);
+		}
+	}
+}
+
+static void OnBuildingDestroyed(CBaseEntity building, CBaseEntity killer)
+{
+	SF2_ChaserEntity boss = SF2_ChaserEntity(killer.index);
+	if (!boss.IsValid())
+	{
+		return;
+	}
+
+	SF2NPC_Chaser controller = boss.Controller;
+	if (!controller.IsValid())
+	{
+		return;
+	}
+
+	ChaserBossProfile data = controller.GetProfileData();
+	ProfileSound info = null;
+
+	if (data.GetLocalKillSounds() != null)
+	{
+		info = data.GetLocalKillSounds().GetKilledBuildingSounds();
+		info.EmitSound(_, boss.index);
+	}
+
+	if (data.GetGlobalKillSounds() != null)
+	{
+		info = data.GetGlobalKillSounds().GetKilledBuildingSounds();
+		info.EmitToAllPlayers();
 	}
 }
 
@@ -3399,18 +3547,13 @@ static Action Think(int entIndex)
 	chaser.InterruptConditions |= interruptConditions;
 	chaser.Target = target;
 
-	if (chaser.State == STATE_CHASE && !chaser.IsRaging)
-	{
-		chaser.DoAlwaysLookAt(chaser.Target);
-	}
-
 	float gameTime = GetGameTime();
 	if (chaser.LegacyFootstepInterval > 0.0 && chaser.LegacyFootstepTime < gameTime)
 	{
 		chaser.CastFootstep();
 	}
 
-	chaser.CheckVelocityCancel();
+	//chaser.CheckVelocityCancel();
 
 	return Plugin_Continue;
 }
@@ -3419,25 +3562,29 @@ static void ThinkPost(int entIndex)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(entIndex);
 	SF2NPC_Chaser controller = chaser.Controller;
-	SF2BossProfileData data;
-	data = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
 
 	ProcessSpeed(chaser);
 
 	ProcessBody(chaser);
 
-	if (data.CustomOutlines && data.RainbowOutline)
+	if (data.GetOutlineData() != null && data.GetOutlineData().GetRainbowState(controller.Difficulty))
 	{
 		chaser.ProcessRainbowOutline();
 	}
 
-	if (chaser.State == STATE_CHASE && !chaser.IsRaging)
-	{
-		chaser.DoAlwaysLookAt(chaser.Target);
-	}
-
 	chaser.InterruptConditions = 0;
-	chaser.SetNextThink(GetGameTime());
+	chaser.SetNextThink(GetGameTime() + data.TickRate);
+
+	if (!chaser.MyNextBotPointer().GetLocomotionInterface().IsOnGround() && (chaser.State == STATE_IDLE || chaser.State == STATE_ALERT || chaser.State == STATE_CHASE))
+	{
+		chaser.AirTime -= GetGameFrameTime();
+		if (chaser.AirTime > -1.0 && chaser.AirTime <= 0.0 && chaser.ResetProfileAnimation(g_SlenderAnimationsList[SF2BossAnimation_Air]))
+		{
+			chaser.AirTime = -1.0;
+			chaser.IsInAirAnimation = true;
+		}
+	}
 
 	#if defined DEBUG
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(chaser.index);
@@ -3462,19 +3609,17 @@ static void SpawnPost(int entIndex)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(entIndex);
 	SF2NPC_Chaser controller = chaser.Controller;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
+	ChaserBossProfileDeathData deathData = data.GetDeathBehavior();
 	int difficulty = controller.Difficulty;
-	if (!data.DeathData.Enabled[difficulty])
+	if (!deathData.IsEnabled(difficulty))
 	{
 		chaser.SetProp(Prop_Data, "m_iHealth", 2000000000);
 		chaser.SetProp(Prop_Data, "m_takedamage", DAMAGE_EVENTS_ONLY);
 	}
 	else
 	{
-		float addDeathHealth = data.DeathData.AddHealthPerPlayer[difficulty];
+		float addDeathHealth = deathData.GetAddHealthPerPlayer(difficulty);
 		int count;
 		float add = 0.0;
 		float result = controller.GetDeathHealth(difficulty);
@@ -3485,69 +3630,32 @@ static void SpawnPost(int entIndex)
 			{
 				continue;
 			}
-			if (originalData.IsPvEBoss)
+			if (g_Enabled)
 			{
-				if (!player.IsEliminated)
+				if (data.IsPvEBoss)
 				{
-					continue;
+					if (!player.IsEliminated)
+					{
+						continue;
+					}
+				}
+				else
+				{
+					if (player.IsEliminated || !player.IsAlive || player.HasEscaped)
+					{
+						continue;
+					}
 				}
 			}
 			else
 			{
-				if (player.IsEliminated || !player.IsAlive || player.HasEscaped)
+				if (player.Team != TFTeam_Red && player.Team != TFTeam_Blue)
 				{
 					continue;
 				}
 			}
 			count++;
-
-			switch (player.Class)
-			{
-				case TFClass_Scout:
-				{
-					add += data.DeathData.AddHealthPerScout[difficulty];
-				}
-
-				case TFClass_Soldier:
-				{
-					add += data.DeathData.AddHealthPerSoldier[difficulty];
-				}
-
-				case TFClass_Pyro:
-				{
-					add += data.DeathData.AddHealthPerPyro[difficulty];
-				}
-
-				case TFClass_DemoMan:
-				{
-					add += data.DeathData.AddHealthPerDemoman[difficulty];
-				}
-
-				case TFClass_Heavy:
-				{
-					add += data.DeathData.AddHealthPerHeavy[difficulty];
-				}
-
-				case TFClass_Engineer:
-				{
-					add += data.DeathData.AddHealthPerEngineer[difficulty];
-				}
-
-				case TFClass_Medic:
-				{
-					add += data.DeathData.AddHealthPerMedic[difficulty];
-				}
-
-				case TFClass_Sniper:
-				{
-					add += data.DeathData.AddHealthPerSniper[difficulty];
-				}
-
-				case TFClass_Spy:
-				{
-					add += data.DeathData.AddHealthPerSpy[difficulty];
-				}
-			}
+			add += deathData.GetAddHealthPerClass(difficulty, player.Class);
 		}
 		addDeathHealth *= float(count);
 		result += addDeathHealth + add;
@@ -3566,19 +3674,33 @@ static void SpawnPost(int entIndex)
 	}
 	chaser.RageIndex = -1;
 
-	if (originalData.Healthbar)
+	if (data.Healthbar)
 	{
 		controller.Flags |= SFF_NOTELEPORT;
-		UpdateHealthBar(controller.Index);
+		CreateTimer(0.1, Timer_UpdateHealthBar, controller.UniqueID, TIMER_FLAG_NO_MAPCHANGE);
 	}
+}
+
+static Action Timer_UpdateHealthBar(Handle timer, any id)
+{
+	int bossIndex = NPCGetFromUniqueID(id);
+	if (bossIndex == -1)
+	{
+		return Plugin_Continue;
+	}
+
+	UpdateHealthBar(bossIndex);
+
+	return Plugin_Stop;
 }
 
 static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damageType, int &weapon, float damageForce[3], float damagePosition[3], int damageCustom)
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(victim);
 	SF2_BasePlayer player = SF2_BasePlayer(attacker);
-	SF2BossProfileData data;
-	data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
+	float gameTime = GetGameTime();
+	int difficulty = chaser.Controller.Difficulty;
 
 	if (player.IsValid && player.IsProxy)
 	{
@@ -3592,40 +3714,40 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 	if (player.IsValid || g_Buildings.FindValue(EntIndexToEntRef(inflictor)) != -1)
 	{
-		if (CBaseEntity(inflictor).GetProp(Prop_Data, "m_iTeamNum") == chaser.Team && (chaser.Controller.Flags & SFF_ATTACKWAITERS) == 0)
+		if (CBaseEntity(inflictor).IsValid() && CBaseEntity(inflictor).GetProp(Prop_Data, "m_iTeamNum") == chaser.Team && (chaser.Controller.Flags & SFF_ATTACKWAITERS) == 0)
 		{
 			return Plugin_Handled;
 		}
 
 		if (data.IsPvEBoss && player.IsValid && !player.IsInPvE)
 		{
-			SDKHooks_TakeDamage(inflictor, chaser.index, chaser.index, CBaseEntity(inflictor).GetProp(Prop_Data, "m_iHealth") * 4.0);
+			SDKHooks_TakeDamage(inflictor, chaser.index, chaser.index, CBaseEntity(inflictor).GetProp(Prop_Data, "m_iHealth") * 4.0, .bypassHooks = false);
 			return Plugin_Handled;
 		}
 	}
 
-	SF2ChaserBossProfileData chaserData;
-	chaserData = chaser.Controller.GetProfileData();
-	int difficulty = chaser.Controller.Difficulty;
 	bool changed = false;
 
-	if (chaserData.DamageResistances != null)
+	if (data.GetResistances() != null)
 	{
-		SF2ChaserBossProfileResistanceData resistanceData;
-		for (int i = 0; i < chaserData.DamageResistances.Length; i++)
+		ChaserBossResistanceData resistanceData;
+		for (int i = 0; i < data.GetResistances().Size; i++)
 		{
-			chaserData.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
-			if (resistanceData.DamageTypes == null)
+			char name[64];
+			data.GetResistances().GetSectionNameFromIndex(i, name, sizeof(name));
+			resistanceData = view_as<ChaserBossResistanceData>(data.GetResistances().GetSection(name));
+			if (resistanceData.GetDamageTypes() == null)
 			{
 				continue;
 			}
 
-			for (int i2 = 0; i2 < resistanceData.DamageTypes.Length; i++)
+			for (int i2 = 0; i2 < resistanceData.GetDamageTypes().Size; i++)
 			{
-				int type = resistanceData.DamageTypes.Get(i);
+				resistanceData.GetDamageTypes().GetKeyNameFromIndex(i2, name, sizeof(name));
+				int type = resistanceData.GetDamageTypes().GetInt(name);
 				if (damageType & type || damageType == type)
 				{
-					damage *= resistanceData.Multiplier[difficulty];
+					damage *= resistanceData.GetMultiplier(difficulty);
 					changed = true;
 					break;
 				}
@@ -3641,24 +3763,28 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	if (player.IsValid)
 	{
 		CBaseEntity activeWeapon = CBaseEntity(player.GetPropEnt(Prop_Send, "m_hActiveWeapon"));
-		if (activeWeapon.IsValid() && chaserData.DamageResistances != null)
+		if (activeWeapon.IsValid() && data.GetResistances() != null)
 		{
-			SF2ChaserBossProfileResistanceData resistanceData;
+			ChaserBossResistanceData resistanceData;
 			int itemIndex = activeWeapon.GetProp(Prop_Send, "m_iItemDefinitionIndex");
-			for (int i = 0; i < chaserData.DamageResistances.Length; i++)
+			for (int i = 0; i < data.GetResistances().Size; i++)
 			{
-				chaserData.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
-				if (resistanceData.Weapons == null)
+				char name[64];
+				data.GetResistances().GetSectionNameFromIndex(i, name, sizeof(name));
+				resistanceData = view_as<ChaserBossResistanceData>(data.GetResistances().GetSection(name));
+				if (resistanceData.GetWeapons() == null)
 				{
 					continue;
 				}
 
-				if (resistanceData.Weapons.FindValue(itemIndex) == -1)
+				char itemIndexString[8];
+				IntToString(itemIndex, itemIndexString, sizeof(itemIndexString));
+				if (!resistanceData.GetWeapons().ContainsString(itemIndexString))
 				{
 					continue;
 				}
 
-				damage *= resistanceData.Multiplier[difficulty];
+				damage *= resistanceData.GetMultiplier(difficulty);
 				changed = true;
 				break;
 			}
@@ -3695,9 +3821,9 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 				}
 			}
 
-			if (player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap()) && chaser.State != STATE_DEATH)
+			if (player.Class == TFClass_Spy && (data.IsPvEBoss || SF_IsBoxingMap() || SF_IsRaidMap()) && chaser.State != STATE_DEATH)
 			{
-				if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 75.0 && chaserData.BackstabDamageScale > 0.0)
+				if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 75.0 && data.BackstabDamageScale > 0.0)
 				{
 					damageType = DMG_CRIT;
 					EmitSoundToClient(player.index, "player/spy_shield_break.wav", _, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, 0.7, 100);
@@ -3730,10 +3856,10 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 						model.SetProp(Prop_Send, "m_nSequence", sequence);
 					}
 
-					damage = chaser.MaxHealth * chaserData.BackstabDamageScale;
-					if (!chaserData.DeathData.Enabled[difficulty])
+					damage = chaser.MaxHealth * data.BackstabDamageScale;
+					if (!data.GetDeathBehavior().IsEnabled(difficulty))
 					{
-						damage = chaser.MaxStunHealth * chaserData.BackstabDamageScale;
+						damage = chaser.MaxStunHealth * data.BackstabDamageScale;
 					}
 					switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 					{
@@ -3773,7 +3899,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 				case 40, 1146: // Backburner
 				{
-					if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 60.0 && chaserData.BackstabDamageScale > 0.0)
+					if (FloatAbs(AngleDiff(myAng[1], buffer[1])) >= 60.0 && data.BackstabDamageScale > 0.0)
 					{
 						damageType |= DMG_CRIT;
 						changed = true;
@@ -3783,6 +3909,12 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		}
 	}
 
+	if (damage > 0.0 && chaser.GetProp(Prop_Data, "m_iHealth") > damage && data.GetHurtSounds() != null && gameTime >= chaser.NextHurtVoiceTime)
+	{
+		chaser.NextHurtVoiceTime = gameTime + GetRandomFloat(data.GetHurtSounds().GetHurtCooldownMin(difficulty), data.GetHurtSounds().GetHurtCooldownMax(difficulty));
+		chaser.PerformVoice(SF2BossSound_Hurt);
+	}
+
 	return changed ? Plugin_Changed : Plugin_Continue;
 }
 
@@ -3790,8 +3922,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 {
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(victim);
 	SF2_BasePlayer player = SF2_BasePlayer(attacker);
-	SF2BossProfileData data;
-	data = view_as<SF2NPC_BaseNPC>(chaser.Controller).GetProfileData();
+	ChaserBossProfile data = chaser.Controller.GetProfileData();
 
 	bool broadcastDamage = false;
 
@@ -3965,7 +4096,7 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 		}
 	}
 
-	if (damage > 0.0 && player.IsValid && player.InCondition(TFCond_RegenBuffed) && (SF_IsBoxingMap() || data.IsPvEBoss))
+	if (damage > 0.0 && player.IsValid && player.InCondition(TFCond_RegenBuffed) && (SF_IsBoxingMap() || data.IsPvEBoss || SF_IsRaidMap()))
 	{
 		int health = player.Health;
 		int maxHealth = player.GetProp(Prop_Data, "m_iMaxHealth");
@@ -4070,25 +4201,28 @@ static Action TraceOnHit(int victim, int& attacker, int& inflictor, float& damag
 
 	int difficulty = controller.Difficulty;
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	if (data.DamageResistances != null)
+	ChaserBossProfile data = controller.GetProfileData();
+	if (data.GetResistances() != null)
 	{
-		SF2ChaserBossProfileResistanceData resistanceData;
-		for (int i = 0; i < data.DamageResistances.Length; i++)
+		ChaserBossResistanceData resistanceData;
+		for (int i = 0; i < data.GetResistances().Size; i++)
 		{
-			data.DamageResistances.GetArray(i, resistanceData, sizeof(resistanceData));
-			if (resistanceData.HitboxGroups == null)
+			char name[64];
+			data.GetResistances().GetSectionNameFromIndex(i, name, sizeof(name));
+			resistanceData = view_as<ChaserBossResistanceData>(data.GetResistances().GetSection(name));
+			if (resistanceData.GetHitboxes() == null)
 			{
 				continue;
 			}
 
-			if (resistanceData.HitboxGroups.FindValue(hitgroup) == -1)
+			char hitgroupString[8];
+			IntToString(hitgroup, hitgroupString, sizeof(hitgroupString));
+			if (!resistanceData.GetHitboxes().ContainsString(hitgroupString))
 			{
 				continue;
 			}
 
-			damage *= resistanceData.Multiplier[difficulty];
+			damage *= resistanceData.GetMultiplier(difficulty);
 			changed = true;
 			break;
 		}
@@ -4118,6 +4252,50 @@ static MRESReturn ShouldTransmit(int entIndex, DHookReturn ret, DHookParam param
 	return MRES_Supercede;
 }
 
+static MRESReturn HandleAnimationEvent(int entIndex, DHookParam params)
+{
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entIndex);
+	if (!bossEntity.IsValid() || !bossEntity.Controller.IsValid())
+	{
+		return MRES_Ignored;
+	}
+
+	ChaserBossProfile data = bossEntity.Controller.GetProfileData();
+
+	int index = params.GetObjectVar(1, 0, ObjectValueType_Int);
+	BossProfileEventData event = data.GetEvents(index);
+	if (event == null)
+	{
+		return MRES_Ignored;
+	}
+
+	bossEntity.CastAnimEvent(index);
+
+	return MRES_Ignored;
+}
+
+static void JumpAcrossGap(CBaseNPC_Locomotion loco, const float landingGoal[3], const float landingForward[3])
+{
+	INextBot bot = loco.GetBot();
+	SF2_ChaserEntity boss = SF2_ChaserEntity(bot.GetEntity());
+	if (boss.IsValid())
+	{
+		boss.IsJumping = true;
+	}
+}
+
+static bool ClimbUpToLedge(CBaseNPC_Locomotion loco, const float goal[3], const float fwd[3], int entity)
+{
+	INextBot bot = loco.GetBot();
+	SF2_ChaserEntity boss = SF2_ChaserEntity(bot.GetEntity());
+
+	if (boss.IsValid())
+	{
+		boss.IsJumping = true;
+	}
+	return loco.CallBaseFunction(goal, fwd, entity);
+}
+
 static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditions = 0)
 {
 	interruptConditions = 0;
@@ -4128,13 +4306,10 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		return CBaseEntity(-1);
 	}
 	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
-	if (originalData.IsPvEBoss)
+	ChaserBossProfile data = controller.GetProfileData();
+	if (data.IsPvEBoss)
 	{
-		attackEliminated = originalData.IsPvEBoss;
+		attackEliminated = data.IsPvEBoss;
 	}
 	float gameTime = GetGameTime();
 
@@ -4155,26 +4330,29 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 	int state = chaser.State;
 
-	if (originalData.EyeData.Type == 1)
+	if (data.GetEyes().Type == 1)
 	{
 		if (chaser.EyeBoneIndex <= 0)
 		{
-			chaser.EyeBoneIndex = LookupBone(chaser.index, originalData.EyeData.Bone);
+			char bone[128];
+			data.GetEyes().GetBone(bone, sizeof(bone));
+			chaser.EyeBoneIndex = LookupBone(chaser.index, bone);
 		}
 		GetBonePosition(chaser.index, chaser.EyeBoneIndex, traceStartPos, myEyeAng);
-		float offset[3];
-		controller.GetEyePositionOffset(offset);
-		AddVectors(originalData.EyeData.OffsetAng, myEyeAng, myEyeAng);
+		float offset[3], angOffset[3];
+		data.GetEyes().GetOffsetPos(offset);
+		data.GetEyes().GetOffsetAng(angOffset);
+		AddVectors(angOffset, myEyeAng, myEyeAng);
 		VectorTransform(offset, traceStartPos, myEyeAng, traceStartPos);
 	}
 
 	int oldTarget = chaser.OldTarget.index;
-	if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, CBaseEntity(oldTarget), attackEliminated))
+	if (!data.IsPvEBoss && !IsTargetValidForSlender(chaser, CBaseEntity(oldTarget), attackEliminated))
 	{
 		chaser.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
 		oldTarget = INVALID_ENT_REFERENCE;
 	}
-	if (originalData.IsPvEBoss && !IsPvETargetValid(CBaseEntity(oldTarget)))
+	if (data.IsPvEBoss && !IsPvETargetValid(CBaseEntity(oldTarget)))
 	{
 		chaser.OldTarget = CBaseEntity(INVALID_ENT_REFERENCE);
 		oldTarget = INVALID_ENT_REFERENCE;
@@ -4197,16 +4375,12 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	}
 
 	int bestNewTarget = oldTarget;
-	float searchRange = originalData.SearchRange[difficulty];
-	float bestNewTargetDist = Pow(searchRange, 2.0);
+	float searchRange = data.GetSearchRange(difficulty);
+	float bestNewTargetDist = 1999999999.0;
 	if (IsValidEntity(bestNewTarget))
 	{
 		CBaseEntity(bestNewTarget).GetAbsOrigin(targetPos);
 		bestNewTargetDist = GetVectorSquareMagnitude(myPos, targetPos);
-		if (bestNewTargetDist > Pow(searchRange, 2.0))
-		{
-			bestNewTargetDist = Pow(searchRange, 2.0);
-		}
 	}
 
 	if (chaser.SmellPlayerList != null)
@@ -4219,11 +4393,11 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 	{
 		SF2_BasePlayer client = SF2_BasePlayer(i);
 
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, client, attackEliminated))
+		if (!data.IsPvEBoss && !IsTargetValidForSlender(chaser, client, attackEliminated))
 		{
 			continue;
 		}
-		if (originalData.IsPvEBoss && !IsPvETargetValid(client))
+		if (data.IsPvEBoss && !IsPvETargetValid(client))
 		{
 			continue;
 		}
@@ -4231,34 +4405,37 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		valids.Push(EntIndexToEntRef(client.index));
 	}
 
-	for (int i = 0; i < g_Buildings.Length; i++)
+	if (!g_Enabled || data.IsPvEBoss || SF_IsRaidMap())
 	{
-		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
+		for (int i = 0; i < g_Buildings.Length; i++)
 		{
-			continue;
-		}
-		if (originalData.IsPvEBoss && !IsPvETargetValid(entity))
-		{
-			continue;
+			CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_Buildings.Get(i)));
+			if (!data.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
+			{
+				continue;
+			}
+			if (data.IsPvEBoss && !IsPvETargetValid(entity))
+			{
+				continue;
+			}
+
+			valids.Push(EntIndexToEntRef(entity.index));
 		}
 
-		valids.Push(EntIndexToEntRef(entity.index));
-	}
-
-	for (int i = 0; i < g_WhitelistedEntities.Length; i++)
-	{
-		CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
-		if (!originalData.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
+		for (int i = 0; i < g_WhitelistedEntities.Length; i++)
 		{
-			continue;
-		}
-		if (originalData.IsPvEBoss && !IsPvETargetValid(entity))
-		{
-			continue;
-		}
+			CBaseEntity entity = CBaseEntity(EntRefToEntIndex(g_WhitelistedEntities.Get(i)));
+			if (!data.IsPvEBoss && !IsTargetValidForSlender(chaser, entity, attackEliminated))
+			{
+				continue;
+			}
+			if (data.IsPvEBoss && !IsPvETargetValid(entity))
+			{
+				continue;
+			}
 
-		valids.Push(EntIndexToEntRef(entity.index));
+			valids.Push(EntIndexToEntRef(entity.index));
+		}
 	}
 
 	for (int i = 0; i < valids.Length; i++)
@@ -4297,9 +4474,9 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		entity.GetAbsOrigin(targetPos);
 
-		bool isVisible, isTraceVisible;
-		int traceHitEntity;
-		TR_TraceHullFilter(traceStartPos,
+		bool isVisible, isTraceVisible, isGlasslessVisible, isGlasslessTraceVisible;
+		int traceHitEntity, glasslesTraceHitEntity;
+		Handle trace = TR_TraceHullFilterEx(traceStartPos,
 		traceEndPos,
 		traceMins,
 		traceMaxs,
@@ -4307,13 +4484,32 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		TraceRayBossVisibility,
 		chaser.index);
 
-		isVisible = !TR_DidHit();
-		traceHitEntity = TR_GetEntityIndex();
+		isVisible = !TR_DidHit(trace);
+		traceHitEntity = TR_GetEntityIndex(trace);
+		delete trace;
+
+		trace = TR_TraceHullFilterEx(traceStartPos,
+		traceEndPos,
+		traceMins,
+		traceMaxs,
+		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_GRATE | CONTENTS_WINDOW,
+		TraceRayBossVisibility,
+		chaser.index);
+
+		isGlasslessVisible = !TR_DidHit(trace);
+		glasslesTraceHitEntity = TR_GetEntityIndex(trace);
+		delete trace;
 
 		if (!isVisible && traceHitEntity == entity.index)
 		{
 			isVisible = true;
 			isTraceVisible = true;
+		}
+
+		if (!isGlasslessVisible && glasslesTraceHitEntity == entity.index)
+		{
+			isGlasslessVisible = true;
+			isGlasslessTraceVisible = true;
 		}
 
 		if (isVisible)
@@ -4322,6 +4518,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		}
 
 		float dist = GetVectorSquareMagnitude(myPos, targetPos);
+		float flashlightDist = -1.0;
 
 		if (player.IsValid && g_PlayerFogCtrlOffset != -1 && g_FogCtrlEnableOffset != -1 && g_FogCtrlEndOffset != -1)
 		{
@@ -4337,7 +4534,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			}
 		}
 
-		if (dist > Pow(originalData.SearchRange[difficulty], 2.0))
+		if (dist > Pow(data.GetSearchRange(difficulty), 2.0))
 		{
 			isVisible = false;
 		}
@@ -4348,14 +4545,35 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		// Near radius check.
 		if (chaser.GetIsVisible(entity) &&
-			dist <= SquareFloat(data.WakeRadius))
+			dist <= SquareFloat(data.GetWakeRadius(difficulty)))
 		{
 			chaser.SetIsNear(entity, true);
 			playerInterruptFlags[entity.index] |= COND_ENEMYNEAR;
 		}
-		if (player.IsValid && chaser.GetIsVisible(player) && SF_SpecialRound(SPECIALROUND_BOO) && GetVectorSquareMagnitude(traceEndPos, traceStartPos) < SquareFloat(SPECIALROUND_BOO_DISTANCE))
+		if (!data.IsPvEBoss && player.IsValid && chaser.GetIsVisible(player) && SF_SpecialRound(SPECIALROUND_BOO) && GetVectorSquareMagnitude(traceEndPos, traceStartPos) < SquareFloat(SPECIALROUND_BOO_DISTANCE))
 		{
 			TF2_StunPlayer(player.index, SPECIALROUND_BOO_DURATION, _, TF_STUNFLAGS_GHOSTSCARE);
+		}
+
+		if (!data.IsPvEBoss && player.IsValid && chaser.State < STATE_ALERT && player.InCondition(TFCond_Taunting) && !controller.HasAttribute(SF2Attribute_IgnoreNonMarkedForChase) && GetVectorSquareMagnitude(traceEndPos, traceStartPos) < SquareFloat(data.GetTauntAlertRange(difficulty)))
+		{
+			if (chaser.GetTauntAlertStrikes(player) < 3)
+			{
+				chaser.SetTauntAlertStrikes(player, chaser.GetTauntAlertStrikes(player) + 1);
+
+				chaser.InterruptConditions |= COND_ALERT_TRIGGER;
+
+				float pos[3];
+				player.GetAbsOrigin(pos);
+
+				chaser.SetAlertTriggerPosition(player, pos);
+				chaser.AlertTriggerTarget = player;
+			}
+			else
+			{
+				chaser.SetTauntAlertStrikes(player, 0);
+				player.SetForceChaseState(controller, true);
+			}
 		}
 
 		// FOV check.
@@ -4365,6 +4583,33 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		if (FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) <= (vision.GetFieldOfView() * 0.5))
 		{
 			chaser.SetInFOV(entity, true);
+		}
+
+		if ((state == STATE_IDLE || state == STATE_ALERT || state == STATE_CHASE) && data.GetVisionSenseData().CanSeeFlashlights(difficulty) && player.IsValid && player.UsingFlashlight)
+		{
+			SF2PointSpotlightEntity flashlight = SF2PointSpotlightEntity(ClientGetFlashlightEntity(player.index));
+			float flashlightPos[3], fov[3];
+			flashlight.End.GetAbsOrigin(flashlightPos);
+			flashlightDist = controller.GetDistanceFrom(flashlight.End.index);
+			if (flashlight.IsValid() && flashlightDist <= Pow(data.GetSearchRange(difficulty), 2.0))
+			{
+				trace = TR_TraceRayFilterEx(traceStartPos,
+				flashlightPos,
+				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP,
+				RayType_EndPoint,
+				TraceRayBossVisibility,
+				chaser.index);
+
+				SubtractVectors(flashlightPos, traceStartPos, fov);
+				GetVectorAngles(fov, fov);
+
+				if (!TR_DidHit(trace) && FloatAbs(AngleDiff(myEyeAng[1], fov[1])) <= (vision.GetFieldOfView() * 0.5))
+				{
+					chaser.SetIsVisible(player, true);
+					chaser.SetInFOV(player, true);
+				}
+				delete trace;
+			}
 		}
 
 		if (chaser.GetIsVisible(entity))
@@ -4380,57 +4625,60 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			playerInterruptFlags[entity.index] |= COND_ENEMYVISIBLE;
 		}
 
+		if (isGlasslessTraceVisible)
+		{
+			playerInterruptFlags[entity.index] |= COND_ENEMYVISIBLE_NOGLASS;
+		}
+
 		playerDists[entity.index] = dist;
 
-		if (chaser.SmellPlayerList != null && data.SmellData.Enabled[difficulty])
+		if (chaser.SmellPlayerList != null && data.GetSmellData() != null && data.GetSmellData().IsEnabled(difficulty))
 		{
-			if (player.IsValid && dist < Pow(data.SmellData.PlayerRange[difficulty], 2.0))
+			if (player.IsValid && dist < Pow(data.GetSmellData().GetRequiredPlayerRange(difficulty), 2.0))
 			{
 				chaser.SmellPlayerList.Push(player.index);
 			}
 		}
 
-		if (player.IsValid && (player.IsTrapped || (player.IsReallySprinting && data.AutoChaseSprinters[difficulty] && chaser.GetAutoChaseCooldown(player) < gameTime))
+		if (player.IsValid && (player.IsTrapped || (player.IsReallySprinting && data.GetAutoChaseData().ShouldChaseSprinters(difficulty) && chaser.GetAutoChaseCooldown(player) < gameTime))
 			&& (chaser.State == STATE_IDLE || chaser.State == STATE_ALERT) && dist <= SquareFloat(searchRange))
 		{
 			player.SetForceChaseState(controller, true);
 			SetTargetMarkState(controller, player, true);
 		}
 
-		if (data.ChaseOnLookData.Enabled[difficulty] && isTraceVisible && player.IsValid && controller.ChaseOnLookTargets.FindValue(player.index) == -1)
+		if (data.GetChaseOnLookData().IsEnabled(difficulty) && isTraceVisible && player.IsValid && controller.ChaseOnLookTargets.FindValue(player.index) == -1)
 		{
 			bool shouldCalculate = false;
-			if (data.ChaseOnLookData.RequiredFOV[difficulty] <= 0.0)
+			if (data.GetChaseOnLookData().GetRequiredFOV(difficulty) <= 0.0)
 			{
 				shouldCalculate = chaser.GetInFOV(player);
 			}
 			else
 			{
-				shouldCalculate = FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) <= (data.ChaseOnLookData.RequiredFOV[difficulty] * 0.5);
+				shouldCalculate = FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) <= (data.GetChaseOnLookData().GetRequiredFOV(difficulty) * 0.5);
 			}
 			if (shouldCalculate)
 			{
 				float eyeAng[3], expectedAng[3], lookPos[3];
 				player.GetEyeAngles(eyeAng);
 				chaser.GetAbsOrigin(myPos);
-				lookPos = data.ChaseOnLookData.RequiredLookPosition;
+				data.GetChaseOnLookData().GetRequiredLookPosition(lookPos);
 				VectorTransform(lookPos, myPos, myEyeAng, lookPos);
 				SubtractVectors(lookPos, traceEndPos, expectedAng);
 				GetVectorAngles(expectedAng, expectedAng);
-				float minimumXAng = data.ChaseOnLookData.MinimumXAngle[difficulty] * 0.5;
-				float maximumXAng = data.ChaseOnLookData.MaximumXAngle[difficulty] * 0.5;
-				float minimumYAng = data.ChaseOnLookData.MinimumYAngle[difficulty] * 0.5;
-				float maximumYAng = data.ChaseOnLookData.MaximumYAngle[difficulty] * 0.5;
+				float minimumXAng = data.GetChaseOnLookData().GetMinXAngle(difficulty) * 0.5;
+				float maximumXAng = data.GetChaseOnLookData().GetMaxXAngle(difficulty) * 0.5;
+				float minimumYAng = data.GetChaseOnLookData().GetMinYAngle(difficulty) * 0.5;
+				float maximumYAng = data.GetChaseOnLookData().GetMaxYAngle(difficulty) * 0.5;
 				float xAng, yAng;
 				xAng = AngleDiff(eyeAng[0], expectedAng[0]);
 				yAng = FloatAbs(AngleDiff(eyeAng[1], expectedAng[1]));
 				if ((xAng >= minimumXAng && xAng < maximumXAng) && (yAng >= minimumYAng && yAng < maximumYAng) &&
-					((data.ChaseOnLookData.AddTargets[difficulty]) || (!data.ChaseOnLookData.AddTargets[difficulty] && controller.ChaseOnLookTargets.Length == 0)))
+					((data.GetChaseOnLookData().ShouldAddTargets(difficulty)) || (!data.GetChaseOnLookData().ShouldAddTargets(difficulty) && controller.ChaseOnLookTargets.Length == 0)))
 				{
 					controller.ChaseOnLookTargets.Push(player.index);
-					SF2BossProfileSoundInfo soundInfo;
-					soundInfo = originalData.ScareSounds;
-					soundInfo.EmitSound(true, player.index);
+					data.GetScareSounds().EmitSound(true, player.index);
 					player.ChangeCondition(TFCond_MarkedForDeathSilent);
 					player.SetForceChaseState(controller, true);
 					SetTargetMarkState(controller, player, true);
@@ -4491,7 +4739,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		if (chaser.GetIsNear(entity) || (chaser.GetIsVisible(entity) && chaser.GetInFOV(entity)))
 		{
-			if (dist <= SquareFloat(searchRange))
+			if (dist <= SquareFloat(searchRange) || (flashlightDist > 0.0 && flashlightDist <= SquareFloat(searchRange)))
 			{
 				// Subtract distance to increase priority.
 				dist -= ((dist * priorityValue));
@@ -4508,11 +4756,13 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 	delete valids;
 
-	if (!originalData.IsPvEBoss && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
+	CNavArea myArea = chaser.GetLastKnownArea();
+
+	if (!data.IsPvEBoss && myArea != NULL_AREA && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
 	{
 		if (!IsTargetValidForSlender(chaser, CBaseEntity(bestNewTarget), attackEliminated))
 		{
-			if (state != STATE_CHASE && (NPCAreAvailablePlayersAlive() || g_Buildings.Length > 0 || g_WhitelistedEntities.Length > 0))
+			if (state != STATE_CHASE)
 			{
 				ArrayList arrayRaidTargets = new ArrayList();
 
@@ -4522,6 +4772,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 					{
 						continue;
 					}
+
 					arrayRaidTargets.Push(EntIndexToEntRef(i));
 				}
 
@@ -4540,6 +4791,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 						{
 							continue;
 						}
+
 						arrayRaidTargets.Push(g_Buildings.Get(i));
 					}
 
@@ -4549,6 +4801,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 						{
 							continue;
 						}
+
 						arrayRaidTargets.Push(g_WhitelistedEntities.Get(i));
 					}
 				}
@@ -4556,27 +4809,16 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 				if (arrayRaidTargets.Length > 0)
 				{
 					int raidTarget = EntRefToEntIndex(arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1)));
-					if (IsValidClient(raidTarget))
-					{
-						if (!g_PlayerEliminated[raidTarget])
-						{
-							bestNewTarget = raidTarget;
-							SetClientForceChaseState(controller, CBaseEntity(bestNewTarget), true);
-						}
-					}
-					else
-					{
-						bestNewTarget = raidTarget;
-						SetClientForceChaseState(controller, CBaseEntity(bestNewTarget), true);
-					}
+					bestNewTarget = raidTarget;
+					SetClientForceChaseState(controller, CBaseEntity(bestNewTarget), true);
 				}
 				delete arrayRaidTargets;
 			}
 		}
-		chaser.CurrentChaseDuration = data.ChaseDuration[difficulty] + GetGameTime();
+		chaser.CurrentChaseDuration = data.GetChaseBehavior().GetMaxChaseDuration(difficulty) + GetGameTime();
 	}
 
-	if (originalData.IsPvEBoss)
+	if (data.IsPvEBoss)
 	{
 		if (!IsPvETargetValid(SF2_BasePlayer(bestNewTarget)))
 		{
@@ -4605,7 +4847,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 				delete arrayRaidTargets;
 			}
 		}
-		chaser.CurrentChaseDuration = data.ChaseDuration[difficulty] + GetGameTime();
+		chaser.CurrentChaseDuration = data.GetChaseBehavior().GetMaxChaseDuration(difficulty) + GetGameTime();
 	}
 
 	if (bestNewTarget != INVALID_ENT_REFERENCE)
@@ -4632,24 +4874,25 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 	int difficulty = controller.Difficulty;
 	SF2NPCMoveTypes moveType = chaser.MovementType;
 	CBaseNPC npc = TheNPCs.FindNPCByEntIndex(chaser.index);
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	controller.GetProfile(profile, sizeof(profile));
+	ChaserBossProfile profileData = controller.GetProfileData();
+
 	float gameTime = GetGameTime();
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	SF2BossProfileData originalData;
-	originalData = baseController.GetProfileData();
-	SF2ChaserBossProfilePostureInfo postureInfo;
+	ChaserBossProfile data = controller.GetProfileData();
+
 	char posture[64];
-	if (data.Postures != null)
+	if (data.GetSection("postures") != null)
 	{
 		chaser.GetPosture(posture, sizeof(posture));
 	}
 
 	float speed, acceleration;
 
-	acceleration = originalData.Acceleration[difficulty];
-	if (!IsNullString(posture) && data.GetPosture(posture, postureInfo))
+	acceleration = profileData.GetAcceleration(difficulty);
+	if (!IsNullString(posture) && data.GetPosture(posture) != null)
 	{
-		speed = postureInfo.Acceleration[difficulty];
+		acceleration = data.GetPostureAcceleration(posture, difficulty);
 	}
 
 	if (controller.HasAttribute(SF2Attribute_ReducedAccelerationOnLook) && controller.CanBeSeen(_, true))
@@ -4657,6 +4900,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		acceleration *= controller.GetAttributeValue(SF2Attribute_ReducedAccelerationOnLook);
 	}
 	acceleration += controller.GetAddAcceleration();
+	acceleration += controller.GetPersistentAddAcceleration();
 
 	Action action = Plugin_Continue;
 	float forwardSpeed;
@@ -4664,10 +4908,10 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 	{
 		case SF2NPCMoveType_Walk:
 		{
-			speed = data.WalkSpeed[difficulty];
-			if (!IsNullString(posture) && data.GetPosture(posture, postureInfo))
+			speed = profileData.GetWalkSpeed(difficulty);
+			if (!IsNullString(posture) && data.GetPosture(posture) != null)
 			{
-				speed = postureInfo.WalkSpeed[difficulty];
+				speed = data.GetPostureWalkSpeed(posture, difficulty);
 			}
 
 			if (controller.HasAttribute(SF2Attribute_ReducedWalkSpeedOnLook) && controller.CanBeSeen(_, true))
@@ -4675,6 +4919,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 				speed *= controller.GetAttributeValue(SF2Attribute_ReducedWalkSpeedOnLook);
 			}
 
+			speed += baseController.GetPersistentAddWalkSpeed();
 			forwardSpeed = speed;
 			Call_StartForward(g_OnBossGetWalkSpeedFwd);
 			Call_PushCell(controller.Index);
@@ -4687,10 +4932,10 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		}
 		case SF2NPCMoveType_Run:
 		{
-			speed = originalData.RunSpeed[difficulty];
-			if (!IsNullString(posture) && data.GetPosture(posture, postureInfo))
+			speed = profileData.GetRunSpeed(difficulty);
+			if (!IsNullString(posture) && data.GetPosture(posture) != null)
 			{
-				speed = postureInfo.Speed[difficulty];
+				speed = data.GetPostureRunSpeed(posture, difficulty);
 			}
 
 			if (controller.HasAttribute(SF2Attribute_ReducedSpeedOnLook) && controller.CanBeSeen(_, true))
@@ -4699,6 +4944,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 			}
 
 			speed += baseController.GetAddSpeed();
+			speed += baseController.GetPersistentAddSpeed();
 			forwardSpeed = speed;
 
 			Call_StartForward(g_OnBossGetSpeedFwd);
@@ -4712,23 +4958,22 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		}
 		case SF2NPCMoveType_Attack:
 		{
-			SF2ChaserBossProfileAttackData attackData;
-			data.GetAttack(chaser.GetAttackName(), attackData);
-			float attackSpeed = attackData.RunSpeed[difficulty];
-			if (attackData.RunDelay[difficulty] > 0.0 && chaser.AttackRunDelay > gameTime)
+			ChaserBossProfileBaseAttack attackData = data.GetAttack(chaser.GetAttackName());
+			float attackSpeed = attackData.GetRunSpeed(difficulty);
+			if (attackData.GetRunDelay(difficulty) > 0.0 && chaser.AttackRunDelay > gameTime)
 			{
 				attackSpeed = 0.0;
 			}
-			if (attackData.RunDuration[difficulty] > 0.0 && chaser.AttackRunDuration < gameTime)
+			if (attackData.GetRunDuration(difficulty) > 0.0 && chaser.AttackRunDuration < gameTime)
 			{
 				attackSpeed = 0.0;
 			}
-			if (attackData.RunGroundSpeed[difficulty])
+			if (attackData.GetGroundSpeedOverride(difficulty))
 			{
 				chaser.GroundSpeedOverride = true;
 			}
 			speed = attackSpeed;
-			acceleration = attackData.RunAcceleration[difficulty];
+			acceleration = attackData.GetAcceleration(difficulty);
 		}
 	}
 
@@ -4756,7 +5001,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		if (SF_IsSlaughterRunMap())
 		{
 			float slaughterSpeed = g_SlaughterRunMinimumBossRunSpeedConVar.FloatValue;
-			if (!originalData.SlaughterRunData.CustomMinimumSpeed[difficulty] && speed < slaughterSpeed)
+			if (!data.GetSlaughterRunData().ShouldUseCustomMinSpeed(difficulty) && speed < slaughterSpeed)
 			{
 				speed = slaughterSpeed;
 			}
@@ -4764,7 +5009,7 @@ static void ProcessSpeed(SF2_ChaserEntity chaser)
 		}
 	}
 
-	if ((!originalData.IsPvEBoss && IsBeatBoxBeating(2)) || chaser.IsKillingSomeone)
+	if ((!data.IsPvEBoss && IsBeatBoxBeating(2)) || chaser.IsKillingSomeone)
 	{
 		speed = 0.0;
 	}
@@ -4819,10 +5064,9 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		return;
 	}
 
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
+	ChaserBossProfile data = controller.GetProfileData();
 
-	if (data.Postures != null && chaser.CanUpdatePosture())
+	if (data.GetSection("postures") != null && chaser.CanUpdatePosture())
 	{
 		char posture[64], resultPosture[64];
 		chaser.GetDefaultPosture(posture, sizeof(posture));
@@ -4864,12 +5108,64 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		{
 			chaser.SetPoseParameter(chaser.MoveScaleParameter, 0.0);
 		}
+
+		if (chaser.ShouldAnimationSyncWithGround)
+		{
+			chaser.SetPropFloat(Prop_Send, "m_flPlaybackRate", 0.0);
+		}
 		return;
 	}
 
 	if (!chaser.IsAttemptingToMove)
 	{
 		return;
+	}
+
+	if (chaser.ShouldAnimationSyncWithGround)
+	{
+		float velocity, returnFloat, groundSpeed;
+		velocity = loco.GetGroundSpeed();
+		groundSpeed = chaser.GetPropFloat(Prop_Data, "m_flGroundSpeed");
+		if (groundSpeed != 0.0 && groundSpeed > 10.0)
+		{
+			returnFloat = (velocity / groundSpeed) * chaser.AnimationPlaybackRate;
+
+			if (loco.IsOnGround() && chaser.IsAttemptingToMove)
+			{
+				if (returnFloat > 12.0)
+				{
+					returnFloat = 12.0;
+				}
+				if (returnFloat < -4.0)
+				{
+					returnFloat = -4.0;
+				}
+				chaser.SetPropFloat(Prop_Send, "m_flPlaybackRate", returnFloat);
+			}
+		}
+		else
+		{
+			float syncSpeed = chaser.GroundSyncSpeed;
+			if (syncSpeed <= 0.0)
+			{
+				syncSpeed = npc.flRunSpeed;
+			}
+			velocity = (velocity + ((syncSpeed * GetDifficultyModifier(controller.Difficulty)) / 15.0)) / syncSpeed;
+
+			if (loco.IsOnGround() && chaser.IsAttemptingToMove)
+			{
+				float playbackSpeed = velocity * chaser.AnimationPlaybackRate;
+				if (playbackSpeed > 12.0)
+				{
+					playbackSpeed = 12.0;
+				}
+				if (playbackSpeed < -4.0)
+				{
+					playbackSpeed = -4.0;
+				}
+				chaser.SetPropFloat(Prop_Send, "m_flPlaybackRate", playbackSpeed);
+			}
+		}
 	}
 
 	switch (chaser.MoveParameterType)
@@ -4951,48 +5247,6 @@ static void ProcessBody(SF2_ChaserEntity chaser)
 		float scale = npc.flRunSpeed / speed;
 		chaser.SetPoseParameter(chaser.MoveScaleParameter, scale);
 	}
-
-	if (data.OldAnimationAI)
-	{
-		float velocity, returnFloat, groundSpeed;
-		velocity = loco.GetGroundSpeed();
-		groundSpeed = chaser.GetPropFloat(Prop_Data, "m_flGroundSpeed");
-		if (groundSpeed != 0.0 && groundSpeed > 10.0)
-		{
-			returnFloat = (velocity / groundSpeed) * chaser.AnimationPlaybackRate;
-
-			if (loco.IsOnGround() && chaser.IsAttemptingToMove && chaser.State != STATE_ATTACK)
-			{
-				if (returnFloat > 12.0)
-				{
-					returnFloat = 12.0;
-				}
-				if (returnFloat < -4.0)
-				{
-					returnFloat = -4.0;
-				}
-				chaser.SetPropFloat(Prop_Send, "m_flPlaybackRate", returnFloat);
-			}
-		}
-		else
-		{
-			velocity = (velocity + ((npc.flRunSpeed * GetDifficultyModifier(controller.Difficulty)) / 15.0)) / npc.flRunSpeed;
-
-			if (loco.IsOnGround() && chaser.IsAttemptingToMove && chaser.State != STATE_ATTACK)
-			{
-				float playbackSpeed = velocity * chaser.AnimationPlaybackRate;
-				if (playbackSpeed > 12.0)
-				{
-					playbackSpeed = 12.0;
-				}
-				if (playbackSpeed < -4.0)
-				{
-					playbackSpeed = -4.0;
-				}
-				chaser.SetPropFloat(Prop_Send, "m_flPlaybackRate", playbackSpeed);
-			}
-		}
-	}
 }
 
 static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
@@ -5029,9 +5283,8 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 
 			if (chaser.IsValid() && chaser.Controller.IsValid())
 			{
-				SF2BossProfileData data;
 				SF2NPC_BaseNPC controller = view_as<SF2NPC_BaseNPC>(chaser.Controller);
-				data = controller.GetProfileData();
+				BaseBossProfile data = controller.GetProfileData();
 				if ((data.IsPvEBoss && player.IsInPvE) || (controller.Flags & SFF_ATTACKWAITERS) != 0)
 				{
 					return true;
@@ -5051,9 +5304,7 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 
 		if (chaser.IsValid() && chaser.Controller.IsValid())
 		{
-			SF2BossProfileData data;
-			SF2NPC_BaseNPC controller = view_as<SF2NPC_BaseNPC>(chaser.Controller);
-			data = controller.GetProfileData();
+			ChaserBossProfile data = chaser.Controller.GetProfileData();
 			if (data.IsPvEBoss && SF2_ChaserEntity(other).IsValid())
 			{
 				return false;
@@ -5138,27 +5389,58 @@ static Action Hook_ChaserSoundHook(int clients[64], int &numClients, char sample
 
 			OnPlayerEmitSound(client, soundType);
 		}
-		case SNDCHAN_ITEM, SNDCHAN_WEAPON:
+		case SNDCHAN_ITEM, SNDCHAN_WEAPON, SNDCHAN_STATIC:
 		{
-			if (StrContains(sample, "swing", false) == -1 && StrContains(sample, "impact", false) == -1 &&
-				StrContains(sample, "hit", false) == -1 && StrContains(sample, "slice", false) == -1 &&
-				StrContains(sample, "reload", false) == -1 && StrContains(sample, "woosh", false) == -1 &&
-				StrContains(sample, "eviction", false) == -1 && StrContains(sample, "holy", false) == -1 &&
-				StrContains(sample, "flashlight", false) == -1)
+			static char matchSoundStrings[][] = {
+					"tf",
+					"flashlight",
+					"impact",
+					"hit",
+					"swing",
+					"slice",
+					"crit",
+					"shot",
+					"shoot",
+					"fire",
+					"doom",
+					"single",
+					"tf2",
+					"heal",
+					"break",
+					"diamond",
+					"start",
+					"loop",
+					"minigun",
+					"reload",
+					"woosh",
+					"eviction",
+					"holy",
+					"cbar",
+					"jingle_bells_nm",
+					"happy_birthday_tf"
+				};
+
+			bool isWeaponSound = false;
+
+			for (int i = 0; !isWeaponSound && i < sizeof(matchSoundStrings); i++)
 			{
-				return Plugin_Continue;
+				if (StrContains(sample, matchSoundStrings[i], false) != -1)
+				{
+					isWeaponSound = true;
+				}
 			}
 
-			OnPlayerEmitSound(client, StrContains(sample, "flashlight", false) != -1 ? SoundType_Flashlight : SoundType_Weapon);
-		}
-		case SNDCHAN_STATIC:
-		{
-			if (StrContains(sample, "happy_birthday_tf", false) == -1 && StrContains(sample, "jingle_bells_nm", false) == -1)
+			bool voice = false;
+			if (StrContains(sample, "flashlight", false) != -1 || StrContains(sample, "happy_birthday_tf", false) != -1 ||
+				StrContains(sample, "jingle_bells_nm", false) != -1)
 			{
-				return Plugin_Continue;
+				voice = true;
 			}
 
-			OnPlayerEmitSound(client, SoundType_Voice);
+			if (isWeaponSound)
+			{
+				OnPlayerEmitSound(client, voice ? SoundType_Flashlight : SoundType_Weapon);
+			}
 		}
 	}
 
@@ -5192,8 +5474,15 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 		{
 			continue;
 		}
-		SF2ChaserBossProfileData data;
-		data = controller.GetProfileData();
+
+		if (chaser.State != STATE_IDLE && chaser.State != STATE_ALERT)
+		{
+			continue;
+		}
+
+		ChaserBossProfile data = controller.GetProfileData();
+		ChaserBossSoundSenseData senseData = data.GetSoundSenseData();
+		ChaserBossAutoChaseData autoChaseData = data.GetAutoChaseData();
 
 		TFClassType class = client.Class;
 		int classToInt = view_as<int>(class);
@@ -5204,7 +5493,7 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 
 		int difficulty = controller.Difficulty;
 
-		float hearRadius = view_as<SF2NPC_BaseNPC>(controller).GetProfileData().SearchSoundRange[difficulty];
+		float hearRadius = data.GetHearingRange(difficulty);
 		if (hearRadius <= 0.0)
 		{
 			continue;
@@ -5232,32 +5521,32 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 
 				if (soundType == SoundType_QuietFootstep)
 				{
-					addThreshold = data.QuietFootstepSenses.AddCount[difficulty];
+					addThreshold = senseData.GetQuietFootstepAdd(difficulty);
 					if (addThreshold <= 0)
 					{
 						continue;
 					}
-					cooldown = data.QuietFootstepSenses.Cooldown[difficulty];
+					cooldown = senseData.GetQuietFootstepCooldown(difficulty);
 					distance *= 1.85;
 				}
 				else if (soundType == SoundType_LoudFootstep)
 				{
-					addThreshold = data.LoudFootstepSenses.AddCount[difficulty];
+					addThreshold = senseData.GetLoudFootstepAdd(difficulty);
 					if (addThreshold <= 0)
 					{
 						continue;
 					}
-					cooldown = data.LoudFootstepSenses.Cooldown[difficulty];
+					cooldown = senseData.GetLoudFootstepCooldown(difficulty);
 					distance *= 0.66;
 				}
 				else
 				{
-					addThreshold = data.FootstepSenses.AddCount[difficulty];
+					addThreshold = senseData.GetFootstepAdd(difficulty);
 					if (addThreshold <= 0)
 					{
 						continue;
 					}
-					cooldown = data.FootstepSenses.Cooldown[difficulty];
+					cooldown = senseData.GetFootstepCooldown(difficulty);
 				}
 
 				trace = TR_TraceRayFilterEx(myPos, hisPos, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_GRATE | CONTENTS_WINDOW, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, chaser.index);
@@ -5284,26 +5573,26 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 
 				if (soundType == SoundType_Voice)
 				{
-					addThreshold = data.VoiceSenses.AddCount[difficulty];
+					addThreshold = senseData.GetVoiceAdd(difficulty);
 					if (addThreshold <= 0)
 					{
 						continue;
 					}
-					cooldown = data.VoiceSenses.Cooldown[difficulty];
+					cooldown = senseData.GetVoiceCooldown(difficulty);
 				}
 				else if (soundType == SoundType_Flashlight)
 				{
-					addThreshold = data.FlashlightSenses.AddCount[difficulty];
+					addThreshold = senseData.GetFlashlightAdd(difficulty);
 					if (addThreshold <= 0)
 					{
 						continue;
 					}
-					cooldown = data.FlashlightSenses.Cooldown[difficulty];
+					cooldown = senseData.GetFlashlightCooldown(difficulty);
 				}
 			}
 			case SoundType_Weapon:
 			{
-				addThreshold = data.WeaponSenses.AddCount[difficulty];
+				addThreshold = senseData.GetWeaponAdd(difficulty);
 				if (addThreshold <= 0)
 				{
 					continue;
@@ -5329,7 +5618,7 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 
 				distance *= 0.66;
 
-				cooldown = data.WeaponSenses.Cooldown[difficulty];
+				cooldown = senseData.GetWeaponCooldown(difficulty);
 			}
 		}
 
@@ -5360,38 +5649,51 @@ static void OnPlayerEmitSound(SF2_BasePlayer client, SoundType soundType)
 			continue;
 		}
 
-		if (chaser.GetAlertSoundTriggerCooldown(client) > gameTime && cooldown > 0.0)
+		if (!data.ShouldIgnoreHearingPathChecking(difficulty))
 		{
-			continue;
+			CNavArea myArea = chaser.GetLastKnownArea();
+			CNavArea theirArea = client.GetLastKnownArea();
+			if (myArea != NULL_AREA && theirArea != NULL_AREA && myArea != theirArea)
+			{
+				CNavArea closestArea = NULL_AREA;
+				TheNavMesh.BuildPath(myArea, NULL_AREA, hisPos, .closestArea = closestArea, .maxPathLength = hearRadius * 1.5);
+				if (closestArea != theirArea)
+				{
+					continue;
+				}
+			}
 		}
 
-		chaser.SetAlertSoundTriggerCooldown(client, gameTime + cooldown);
-		chaser.UpdateAlertTriggerCount(client, addThreshold);
+		if (gameTime > chaser.GetAlertSoundTriggerCooldown(client))
+		{
+			chaser.SetAlertSoundTriggerCooldown(client, gameTime + cooldown);
+			chaser.UpdateAlertTriggerCount(client, addThreshold);
+		}
 
-		if (data.AutoChaseEnabled[difficulty] && chaser.GetAutoChaseAddCooldown(client) < gameTime)
+		if (autoChaseData.IsEnabled(difficulty) && chaser.GetAutoChaseAddCooldown(client) < gameTime)
 		{
 			int count = 0;
 			switch (soundType)
 			{
 				case SoundType_Footstep:
 				{
-					count = data.AutoChaseAddFootstep[difficulty];
+					count = autoChaseData.GetAddFootsteps(difficulty);
 				}
 				case SoundType_QuietFootstep:
 				{
-					count = data.AutoChaseAddQuietFootstep[difficulty];
+					count = autoChaseData.GetAddQuietFootsteps(difficulty);
 				}
 				case SoundType_LoudFootstep:
 				{
-					count = data.AutoChaseAddLoudFootstep[difficulty];
+					count = autoChaseData.GetAddLoudFootsteps(difficulty);
 				}
 				case SoundType_Voice:
 				{
-					count = data.AutoChaseAddVoice[difficulty];
+					count = autoChaseData.GetAddVoice(difficulty);
 				}
 				case SoundType_Flashlight, SoundType_Weapon:
 				{
-					count = data.AutoChaseAddWeapon[difficulty];
+					count = autoChaseData.GetAddWeapon(difficulty);
 				}
 			}
 			if (count > 0)
@@ -5408,6 +5710,22 @@ static any Native_GetIsValid(Handle plugin, int numParams)
 	int entity = GetNativeCell(1);
 	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
 	return bossEntity.IsValid();
+}
+
+static any Native_GetController(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	if (!IsValidEntity(ent))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", ent);
+	}
+
+	SF2_ChaserEntity boss = SF2_ChaserEntity(ent);
+	if (!boss.Controller.IsValid())
+	{
+		return -1;
+	}
+	return boss.Controller;
 }
 
 static any Native_GetIsAttemptingToMove(Handle plugin, int numParams)
@@ -5550,10 +5868,7 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 
 	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
 
-	SF2ChaserBossProfileData data;
-	data = bossEntity.Controller.GetProfileData();
-	SetNativeArray(2, data, sizeof(data));
-	return 0;
+	return bossEntity.Controller.GetProfileData();
 }
 
 static any Native_PerformVoice(Handle plugin, int numParams)
@@ -5581,8 +5896,7 @@ static any Native_PerformCustomVoice(Handle plugin, int numParams)
 
 	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
 
-	SF2BossProfileSoundInfo soundInfo;
-	GetNativeArray(2, soundInfo, sizeof(soundInfo));
+	ProfileSound soundInfo = GetNativeCell(2);
 	return bossEntity.PerformVoiceCooldown(soundInfo, soundInfo.Paths);
 }
 
@@ -5617,7 +5931,7 @@ static any Native_SetDefaultPosture(Handle plugin, int numParams)
 	bufferSize++;
 	char[] buffer = new char[bufferSize];
 	GetNativeString(2, buffer, bufferSize);
-	bossEntity.SetDefaultPosture(buffer);
+	bossEntity.SetDefaultPosture(buffer, GetNativeCell(3));
 
 	return 0;
 }
@@ -5746,5 +6060,58 @@ static any Native_SetGroundSpeedOverride(Handle plugin, int numParams)
 
 	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
 	bossEntity.GroundSpeedOverride = GetNativeCell(2);
+	return 0;
+}
+
+static any Native_GetMovementType(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+	return bossEntity.MovementType;
+}
+
+static any Native_SetMovementType(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+	bool old = bossEntity.LockMovementType;
+	bossEntity.LockMovementType = false;
+	bossEntity.MovementType = GetNativeCell(2);
+	bossEntity.LockMovementType = old;
+	return 0;
+}
+
+static any Native_GetLockMovementType(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+	return bossEntity.LockMovementType;
+}
+
+static any Native_SetLockMovementType(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
+	bossEntity.LockMovementType = GetNativeCell(2);
 	return 0;
 }

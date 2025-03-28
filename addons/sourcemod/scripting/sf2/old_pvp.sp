@@ -102,7 +102,7 @@ enum struct PvPProjectile_BallOfFire
 					}
 
 					TF2_IgnitePlayer(otherEntity, ownerEntity);
-					SDKHooks_TakeDamage(otherEntity, ownerEntity, ownerEntity, damage * damageBonus, 0x1220000, GetEntPropEnt(ownerEntity, Prop_Send, "m_hActiveWeapon"), NULL_VECTOR, damagePos);
+					SDKHooks_TakeDamage(otherEntity, ownerEntity, ownerEntity, damage * damageBonus, 0x1220000, GetEntPropEnt(ownerEntity, Prop_Send, "m_hActiveWeapon"), NULL_VECTOR, damagePos, .bypassHooks = false);
 				}
 			}
 		}
@@ -1039,6 +1039,7 @@ static Action Timer_PlayerPvPLeaveCountdown(Handle timer, any userid)
 
 	return Plugin_Continue;
 }
+
 bool IsClientInPvP(int client)
 {
 	return g_PlayerInPvP[client];

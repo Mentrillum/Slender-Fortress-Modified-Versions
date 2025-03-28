@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -25,10 +26,8 @@ methodmap SF2_ChaserChaseInitialAction < NextBotAction
 			return false;
 		}
 
-		SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
-		SF2BossProfileData data;
-		data = baseController.GetProfileData();
-		if (!data.AnimationData.HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]))
+		ChaserBossProfile data = actor.Controller.GetProfileData();
+		if (!data.GetAnimations().HasAnimationSection(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]))
 		{
 			return false;
 		}
@@ -39,21 +38,14 @@ methodmap SF2_ChaserChaseInitialAction < NextBotAction
 
 static NextBotAction InitialContainedAction(SF2_ChaserChaseInitialAction action, SF2_ChaserEntity actor)
 {
-	SF2NPC_BaseNPC baseController = view_as<SF2NPC_BaseNPC>(actor.Controller);
-	SF2BossProfileData data;
-	data = baseController.GetProfileData();
-	char animName[64];
-	float rate = 1.0, duration = 0.0, cycle = 0.0;
-	int difficulty = baseController.Difficulty;
+	SF2NPC_Chaser controller = actor.Controller;
+	ChaserBossProfile data = controller.GetProfileData();
 	actor.IsInChaseInitial = true;
 
-	if (data.AnimationData.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial], difficulty, animName, sizeof(animName), rate, duration, cycle))
+	ProfileAnimation section = data.GetAnimations().GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]);
+	if (section != null)
 	{
-		int sequence = LookupProfileAnimation(actor.index, animName);
-		if (sequence != -1)
-		{
-			return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
-		}
+		return SF2_PlaySequenceAndWaitEx(g_SlenderAnimationsList[SF2BossAnimation_ChaseInitial]);
 	}
 
 	return NULL_ACTION;

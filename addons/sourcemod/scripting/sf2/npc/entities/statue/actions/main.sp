@@ -61,7 +61,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 	}
 
 	SF2_BasePlayer origTarget = SF2_BasePlayer(actor.Target);
-	if (SF_BossesChaseEndlessly() || SF_IsSlaughterRunMap() && origTarget.IsValid)
+	if ((SF_BossesChaseEndlessly() || SF_IsSlaughterRunMap()) && origTarget.IsValid)
 	{
 		actor.ChaseTime = gameTime + controller.GetChaseDuration(difficulty);
 	}

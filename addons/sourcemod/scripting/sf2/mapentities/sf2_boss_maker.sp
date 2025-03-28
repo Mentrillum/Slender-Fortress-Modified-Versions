@@ -1,6 +1,7 @@
 // sf2_boss_maker
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_boss_maker"; // The custom classname of the entity. Should be prefixed with "sf2_"
 
@@ -235,9 +236,10 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				endPos[1] = pos[1];
 				endPos[2] = pos[2] - 1024.0;
 
-				TR_TraceHullFilter(pos, endPos, mins, maxs, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitEntity, bossEntity.index);
-				bool traceHit = TR_DidHit();
-				TR_GetEndPosition(endPos);
+				Handle trace = TR_TraceHullFilterEx(pos, endPos, mins, maxs, MASK_PLAYERSOLID_BRUSHONLY, TraceRayDontHitEntity, bossEntity.index);
+				bool traceHit = TR_DidHit(trace);
+				TR_GetEndPosition(endPos, trace);
+				delete trace;
 
 				if (traceHit)
 				{
@@ -245,7 +247,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				}
 			}
 
-			if (NPCGetType(bossIndex) == SF2BossType_Chaser)
+			if (SF2NPC_BaseNPC(bossIndex).GetProfileData().Type == SF2BossType_Chaser)
 			{
 				char spawnAnim[64];
 				this.GetSpawnAnimation(spawnAnim, sizeof(spawnAnim));
@@ -304,7 +306,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				continue;
 			}
 
-			boss.RemoveFromGame();
+			boss.Remove();
 		}
 
 		this.Bosses.Clear();

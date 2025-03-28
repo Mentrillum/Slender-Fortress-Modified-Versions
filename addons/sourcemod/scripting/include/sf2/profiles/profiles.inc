@@ -100,7 +100,7 @@ stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool checkFil
  * @param xbox	Determines if the .xbox file extension should be checked.
  * @param checkFile		Determines if missing files should be checked.
  */
-stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile)
+stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile = false)
 {
 	if (path[0] == '\0')
 	{
@@ -117,6 +117,7 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
 	{
 		strcopy(fixedPath, sizeof(fixedPath), path);
 	}
+	ReplaceString(fixedPath, sizeof(fixedPath), "\\", "/", false);
 
 	ReplaceString(fixedPath, sizeof(fixedPath), ".mdl", "", false);
 
@@ -191,23 +192,6 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
 		}
 	}
 
-	FormatEx(buffer, sizeof(buffer), "models/%s.sw.vtx", fixedPath);
-	if (checkFile)
-	{
-		if (FileExists(buffer, true))
-		{
-			AddFileToDownloadsTable(buffer);
-		}
-		else
-		{
-			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
-		}
-	}
-	else
-	{
-		AddFileToDownloadsTable(buffer);
-	}
-
 	FormatEx(buffer, sizeof(buffer), "models/%s.vvd", fixedPath);
 	if (checkFile)
 	{
@@ -259,8 +243,19 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
  */
 stock void PrecacheMaterial2(const char[] path, bool checkFile)
 {
-	char buffer[PLATFORM_MAX_PATH];
-	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", path);
+	char buffer[PLATFORM_MAX_PATH], fixedPath[PLATFORM_MAX_PATH];
+	if (strncmp(path, "materials/", 10, false) == 0 || strncmp(path, "materials\\", 10, false) == 0)
+	{
+		strcopy(fixedPath, sizeof(fixedPath), path[10]);
+	}
+	else
+	{
+		strcopy(fixedPath, sizeof(fixedPath), path);
+	}
+	ReplaceString(fixedPath, sizeof(fixedPath), "\\", "/", false);
+	ReplaceString(fixedPath, sizeof(fixedPath), ".vmt", "", false);
+	ReplaceString(fixedPath, sizeof(fixedPath), ".vtf", "", false);
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vmt", fixedPath);
 	if (checkFile)
 	{
 		if (FileExists(buffer, true))
@@ -276,7 +271,7 @@ stock void PrecacheMaterial2(const char[] path, bool checkFile)
 	{
 		AddFileToDownloadsTable(buffer);
 	}
-	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", path);
+	FormatEx(buffer, sizeof(buffer), "materials/%s.vtf", fixedPath);
 	if (checkFile)
 	{
 		if (FileExists(buffer, true))
@@ -292,6 +287,22 @@ stock void PrecacheMaterial2(const char[] path, bool checkFile)
 	{
 		AddFileToDownloadsTable(buffer);
 	}
+}
+
+/**
+ * Removes the materials/ characters from a directory. Some materials like overlay
+ * or rope materials break if you try to use materials/.
+ * This also removes the .vmt or .vtf extensions.
+ *
+ * @param path			Path to remove the characters from
+ * @param bufferSize	Size of path
+ */
+stock void StripMaterialsFolder(char[] path, int bufferSize)
+{
+	ReplaceString(path, bufferSize, "\\", "/", false);
+	ReplaceString(path, bufferSize, ".vmt", "", false);
+	ReplaceString(path, bufferSize, ".vtf", "", false);
+	ReplaceString(path, bufferSize, "materials/", "", false);
 }
 
 /**
@@ -327,7 +338,7 @@ stock int PrecacheParticleSystem(const char[] particleSystem)
 	return index;
 }
 
-int FindStringIndex2(int tableidx, const char[] str)
+stock int FindStringIndex2(int tableidx, const char[] str)
 {
 	char buf[1024];
 
@@ -634,7 +645,7 @@ static const char g_DifficultyDefaultStringValues[Difficulty_Max][] =
  * @param maxStringLen            Maximum length of strings in buffer array
  * @param defaultValueStrings     Array of default values if no key with the base key name is found
  */
-void GetProfileDifficultyStringValues(KeyValues kv, const char[] baseKeyName, char[][] bufferArray, int maxStringLen, const char[][] defaultValueStrings = g_DifficultyDefaultStringValues)
+stock void GetProfileDifficultyStringValues(KeyValues kv, const char[] baseKeyName, char[][] bufferArray, int maxStringLen, const char[][] defaultValueStrings = g_DifficultyDefaultStringValues)
 {
 	for (int i = 0; i < Difficulty_Max; i++)
 	{
@@ -704,7 +715,7 @@ stock void SetProfileDifficultyStringArrayValues(KeyValues kv, const char[] base
 	}
 }
 
-bool GetProfileColorNoBacks(KeyValues kv,
+stock bool GetProfileColorNoBacks(KeyValues kv,
 	const char[] keyValue,
 	int &r,
 	int &g,
@@ -749,7 +760,7 @@ static const int g_DifficultyDefaultColorValues[Difficulty_Max][4] =
  * @param buffer				  Array to store evaluated values
  * @param defaultValueStrings     Array of default values if no key with the base key name is found
  */
-void GetProfileDifficultyColorValues(KeyValues kv, const char[] baseKeyName, int buffer[Difficulty_Max][4], const int defaultColorValues[Difficulty_Max][4] = g_DifficultyDefaultColorValues)
+stock void GetProfileDifficultyColorValues(KeyValues kv, const char[] baseKeyName, int buffer[Difficulty_Max][4], const int defaultColorValues[Difficulty_Max][4] = g_DifficultyDefaultColorValues)
 {
 	for (int i = 0; i < Difficulty_Max; i++)
 	{
@@ -791,11 +802,82 @@ void GetProfileDifficultyColorValues(KeyValues kv, const char[] baseKeyName, int
 	}
 }
 
+enum EffectEvent
+{
+	EffectEvent_Invalid = -1,
+	EffectEvent_Constant = 0,
+	EffectEvent_HitPlayer,
+	EffectEvent_PlayerSeesBoss
+};
+
+enum EffectType
+{
+	EffectType_Invalid = -1,
+	EffectType_Steam = 0,
+	EffectType_DynamicLight,
+	EffectType_Particle,
+	EffectType_Trail,
+	EffectType_PropDynamic,
+	EffectType_PointSpotlight,
+	EffectType_Sprite,
+	EffectType_TempEntBeamRing,
+	EffectType_TempEntParticle,
+	EffectType_Sound
+};
+
+enum
+{
+	SF2BossAttackType_Invalid = -1,
+	SF2BossAttackType_Melee = 0,
+	SF2BossAttackType_Ranged = 1,
+	SF2BossAttackType_Projectile = 2,
+	SF2BossAttackType_ExplosiveDance = 3,
+	SF2BossAttackType_LaserBeam = 4,
+	SF2BossAttackType_Custom = 5,
+	SF2BossAttackType_Tongue = 6,
+	SF2BossAttackType_Combo = 7
+};
+
+enum
+{
+	SF2BossProjectileType_Invalid = -1,
+	SF2BossProjectileType_Fireball = 0,
+	SF2BossProjectileType_Iceball = 1,
+	SF2BossProjectileType_Rocket = 2,
+	SF2BossProjectileType_Grenade = 3,
+	SF2BossProjectileType_SentryRocket = 4,
+	SF2BossProjectileType_Arrow = 5,
+	SF2BossProjectileType_Mangler = 6,
+	SF2BossProjectileType_Baseball = 7,
+	SF2BossProjectileType_Custom
+};
+
+enum
+{
+	SF2BossTrapType_Invalid = -1,
+	SF2BossTrapType_BearTrap = 0,
+	SF2BossTrapType_Custom
+};
+
+enum
+{
+	SF2DamageType_Invalid = -1,
+	SF2DamageType_Jarate = 0,
+	SF2DamageType_Milk,
+	SF2DamageType_Gas,
+	SF2DamageType_Mark,
+	SF2DamageType_Ignite,
+	SF2DamageType_Stun,
+	SF2DamageType_Bleed,
+	SF2DamageType_Smite,
+	SF2DamageType_Random
+}
+
 // ======================================
 // ENUM STRUCTS
 // ======================================
 
-enum struct SF2BossProfileSoundInfo
+/*enum struct SF2BossProfileSoundInfo
 {
 	char SectionName[64];
 	int Channel;
@@ -1143,32 +1225,9 @@ enum struct SF2ParticleData
 			}
 		}
 	}
-}
+}*/
 
-enum EffectEvent
-{
-	EffectEvent_Invalid = -1,
-	EffectEvent_Constant = 0,
-	EffectEvent_HitPlayer,
-	EffectEvent_PlayerSeesBoss
-};
-
-enum EffectType
-{
-	EffectType_Invalid = -1,
-	EffectType_Steam = 0,
-	EffectType_DynamicLight,
-	EffectType_Particle,
-	EffectType_Trail,
-	EffectType_PropDynamic,
-	EffectType_PointSpotlight,
-	EffectType_Sprite,
-	EffectType_TempEntBeamRing,
-	EffectType_TempEntParticle,
-	EffectType_Sound
-};
-
-enum struct SF2BossProfileBaseEffectInfo
+/*enum struct SF2BossProfileBaseEffectInfo
 {
 	char SectionName[64];
 	EffectEvent Event;
@@ -3144,4 +3203,4 @@ enum struct SF2BossProfileData
 }
 
 #include <sf2/profiles/profiles_chaser>
-#include <sf2/profiles/profiles_statue>
+#include <sf2/profiles/profiles_statue>*/

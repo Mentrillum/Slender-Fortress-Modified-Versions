@@ -5,7 +5,7 @@ enum SF2MusicFadeState
 {
 	SF2MusicFadeState_None = 0,
 	SF2MusicFadeState_FadeIn = 1,
-	SF2MusicFadeState_FadeOut = 2
+	SF2MusicFadeState_FadeOut = 2,
 }
 
 enum SF2BossMusicState
@@ -66,24 +66,32 @@ methodmap ProfileGlobalTracks < ProfileObject
 		return SF2BossGlobalMusicShuffleType_None;
 	}
 
-	public KeyMap_Array GetTracks()
+	public float GetChance(int difficulty)
 	{
-		return this.GetArray("tracks");
+		return this.GetDifficultyFloat("chance", difficulty, 1.0);
+	}
+
+	public KeyMap_Array GetTracks(int difficulty)
+	{
+		return this.GetDifficultyArray("tracks", difficulty);
 	}
 
 	public void Precache()
 	{
-		this.ConvertSectionsSectionToArray("tracks");
-		if (this.GetTracks() != null)
+		this.ConvertDifficultySectionsSectionToArray("tracks");
+		for (int i = 0; i < Difficulty_Max; i++)
 		{
-			for (int i = 0; i < this.GetTracks().Length; i++)
+			if (this.GetTracks(i) != null)
 			{
-				ProfileGlobalTrack track = view_as<ProfileGlobalTrack>(this.GetTracks().GetSection(i));
-				if (track == null)
+				for (int i2 = 0; i2 < this.GetTracks(i).Length; i2++)
 				{
-					continue;
+					ProfileGlobalTrack track = view_as<ProfileGlobalTrack>(this.GetTracks(i).GetSection(i2));
+					if (track == null)
+					{
+						continue;
+					}
+					track.Precache();
 				}
-				track.Precache();
 			}
 		}
 	}
@@ -91,55 +99,57 @@ methodmap ProfileGlobalTracks < ProfileObject
 
 methodmap ProfileGlobalTrack < ProfileObject
 {
-	public bool IsEnabled(int difficulty)
+	public bool IsEnabled()
 	{
 		if (this == null)
 		{
 			return false;
 		}
-		return this.GetDifficultyBool("enabled", difficulty, true);
+		return this.GetBool("enabled", true);
 	}
 
-	public void GetPath(int difficulty, char[] buffer, int bufferSize)
+	public void GetPath(char[] buffer, int bufferSize)
 	{
-		this.GetDifficultyString("path", difficulty, buffer, bufferSize);
+		this.GetString("path", buffer, bufferSize);
 	}
 
-	public float GetVolume(int difficulty)
+	public float GetVolume()
 	{
-		return this.GetDifficultyFloat("volume", difficulty, SNDVOL_NORMAL);
+		return this.GetFloat("volume", SNDVOL_NORMAL);
 	}
 
-	public int GetPitch(int difficulty)
+	public int GetPitch()
 	{
-		return this.GetDifficultyInt("pitch", difficulty, SNDPITCH_NORMAL);
+		return this.GetInt("pitch", SNDPITCH_NORMAL);
 	}
 
-	public float GetLength(int difficulty)
+	public float GetLength()
 	{
-		return this.GetDifficultyFloat("length", difficulty, -1.0);
+		return this.GetFloat("length", -1.0);
 	}
 
-	public float GetMinPageRange(int difficulty)
+	public float GetMinPageRange()
 	{
-		return this.GetDifficultyFloat("min_range", difficulty, 0.0);
+		return this.GetFloat("min_range", 0.0);
 	}
 
-	public float GetMaxPageRange(int difficulty)
+	public float GetMaxPageRange()
 	{
-		return this.GetDifficultyFloat("max_range", difficulty, 0.0);
+		return this.GetFloat("max_range", 0.0);
+	}
+
+	public bool CanInstantFade(int difficulty = Difficulty_Normal)
+	{
+		return this.GetDifficultyBool("instant_fade", difficulty, false);
 	}
 
 	public void Precache()
 	{
 		char path[PLATFORM_MAX_PATH];
-		for (int i = 0; i < Difficulty_Max; i++)
+		this.GetPath(path, sizeof(path));
+		if (path[0] != '\0')
 		{
-			this.GetPath(i, path, sizeof(path));
-			if (path[0] != '\0')
-			{
-				PrecacheSound2(path, g_FileCheckConVar.BoolValue);
-			}
+			PrecacheSound2(path, g_FileCheckConVar.BoolValue);
 		}
 	}
 }
@@ -176,8 +186,10 @@ enum struct MusicState
 	int Pitch;
 	float FadeSpeed;
 	SF2MusicFadeState FadeState;
+	bool InstantFade;
 	float Length;
 	bool StopAfterFade;
+	bool ShouldConstantReplay;
 
 	void Init()
 	{
@@ -188,11 +200,13 @@ enum struct MusicState
 		this.Pitch = 100;
 		this.FadeSpeed = 1.0;
 		this.FadeState = SF2MusicFadeState_None;
+		this.InstantFade = false;
 		this.Length = -1.0;
 		this.StopAfterFade = false;
+		this.ShouldConstantReplay = false;
 	}
 
-	void FadeIn(SF2_BasePlayer client, float delta, bool instant = false)
+	void FadeIn(SF2_BasePlayer client, float delta)
 	{
 		if (this.IsNull)
 		{
@@ -211,7 +225,7 @@ enum struct MusicState
 		}
 
 		this.CurrentVolume += this.FadeSpeed * delta;
-		if (instant)
+		if (this.InstantFade)
 		{
 			this.CurrentVolume = this.MaxVolume;
 		}
@@ -224,7 +238,7 @@ enum struct MusicState
 		EmitSoundToClient(client.index, this.MusicPath, _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, volume, this.Pitch);
 	}
 
-	void FadeOut(SF2_BasePlayer client, float delta, bool instant = false)
+	void FadeOut(SF2_BasePlayer client, float delta)
 	{
 		if (this.IsNull)
 		{
@@ -237,7 +251,7 @@ enum struct MusicState
 		}
 
 		this.CurrentVolume -= this.FadeSpeed * delta;
-		if (instant)
+		if (this.InstantFade)
 		{
 			this.CurrentVolume = 0.0;
 		}
@@ -299,6 +313,27 @@ enum struct MusicState
 		this.Init();
 	}
 
+	void Replay(SF2_BasePlayer client)
+	{
+		if (this.IsNull)
+		{
+			return;
+		}
+
+		if (this.MusicPath[0] == '\0')
+		{
+			return;
+		}
+
+		if (this.FadeState != SF2MusicFadeState_None)
+		{
+			return;
+		}
+
+		float volume = this.MaxVolume * g_PlayerPreferences[client.index].PlayerPreference_MusicVolume;
+		EmitSoundToClient(client.index, this.MusicPath, _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, volume, this.Pitch);
+	}
+
 	void SetFadeState(SF2MusicFadeState state)
 	{
 		if (this.IsNull)
@@ -323,7 +358,9 @@ enum struct PageMusicInfo
 }
 
 static ArrayList g_PageMusicRanges = null;
+static ArrayList g_BossPageMusicRanges = null;
 static ArrayList g_BossesWithGlobalMusic = null;
+static ArrayList g_BossesWithPageMusic = null;
 static bool g_CanSwapBackToDefault[MAXTF2PLAYERS] = { true, ... };
 static float g_CurrentTrackLength[MAXTF2PLAYERS];
 static StringMap g_QueuedThemes[MAXTF2PLAYERS]; // Fade out queue
@@ -349,6 +386,7 @@ void SetupNewMusic()
 {
 	g_OnGamemodeEndPFwd.AddFunction(null, OnGamemodeEnd);
 	g_OnMapStartPFwd.AddFunction(null, MapStart);
+	g_OnRoundEndPFwd.AddFunction(null, OnRoundEnd);
 	g_OnConfigsExecutedPFwd.AddFunction(null, ConfigsExecuted);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
@@ -363,7 +401,9 @@ void SetupNewMusic()
 	g_OnDifficultyChangePFwd.AddFunction(null, OnDifficultyChange);
 
 	g_PageMusicRanges = new ArrayList(sizeof(PageMusicInfo));
+	g_BossPageMusicRanges = new ArrayList(sizeof(PageMusicInfo));
 	g_BossesWithGlobalMusic = new ArrayList();
+	g_BossesWithPageMusic = new ArrayList();
 	g_NullMusicState.Init();
 	g_NullMusicState.IsNull = true;
 }
@@ -386,6 +426,15 @@ static void MapStart()
 	g_LastMusicThink = -1.0;
 	RequestFrame(MusicThink);
 	g_BossesWithGlobalMusic.Clear();
+	g_BossesWithPageMusic.Clear();
+	g_BossPageMusicRanges.Clear();
+}
+
+static void OnRoundEnd()
+{
+	g_BossesWithGlobalMusic.Clear();
+	g_BossesWithPageMusic.Clear();
+	g_BossPageMusicRanges.Clear();
 }
 
 static void ConfigsExecuted()
@@ -463,7 +512,7 @@ static void OnBossAdded(SF2NPC_BaseNPC npc)
 		return;
 	}
 
-	if (npc.GetProfileDataEx().IsPvEBoss)
+	if (npc.GetProfileData().IsPvEBoss)
 	{
 		return;
 	}
@@ -475,11 +524,16 @@ static void OnBossAdded(SF2NPC_BaseNPC npc)
 
 	int oldId = g_GlobalMusicTrackMasterID;
 	char path[PLATFORM_MAX_PATH];
-	GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, path, sizeof(path));
+	bool isPageMusic = false;
+	GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, path, sizeof(path), .isPageMusic = isPageMusic, .checkRanges = false);
 
-	if (path[0] != '\0')
+	if (path[0] != '\0' || isPageMusic)
 	{
 		g_BossesWithGlobalMusic.Push(npc.UniqueID);
+		if (isPageMusic)
+		{
+			g_BossesWithPageMusic.Push(npc.UniqueID);
+		}
 		if (NPCGetFromUniqueID(oldId) == -1)
 		{
 			UpdateBossGlobalTracks();
@@ -494,7 +548,7 @@ static void OnBossRemoved(SF2NPC_BaseNPC npc)
 		return;
 	}
 
-	if (npc.GetProfileDataEx().IsPvEBoss)
+	if (npc.GetProfileData().IsPvEBoss)
 	{
 		return;
 	}
@@ -504,10 +558,17 @@ static void OnBossRemoved(SF2NPC_BaseNPC npc)
 		return;
 	}
 
-	int index;
+	int index = -1;
 	if ((index = g_BossesWithGlobalMusic.FindValue(npc.UniqueID)) != -1)
 	{
 		g_BossesWithGlobalMusic.Erase(index);
+	}
+
+	index = -1;
+	if ((index = g_BossesWithPageMusic.FindValue(npc.UniqueID)) != -1)
+	{
+		g_BossesWithPageMusic.Erase(index);
+		g_BossPageMusicRanges.Clear();
 	}
 
 	if (g_GlobalMusicTrackMasterID == npc.UniqueID)
@@ -524,6 +585,8 @@ static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 	}
 
 	g_BossesWithGlobalMusic.Clear();
+	g_BossesWithPageMusic.Clear();
+	g_BossPageMusicRanges.Clear();
 	for (int i = 0; i < MAX_BOSSES; i++)
 	{
 		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
@@ -532,17 +595,22 @@ static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 			continue;
 		}
 
-		if (npc.GetProfileDataEx().IsPvEBoss)
+		if (npc.GetProfileData().IsPvEBoss)
 		{
 			continue;
 		}
 
 		char path[PLATFORM_MAX_PATH];
-		GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, path, sizeof(path));
+		bool isPageMusic = false;
+		GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, path, sizeof(path), .isPageMusic = isPageMusic, .checkRanges = false);
 
-		if (path[0] != '\0')
+		if (path[0] != '\0' || isPageMusic)
 		{
 			g_BossesWithGlobalMusic.Push(npc.UniqueID);
+			if (isPageMusic)
+			{
+				g_BossesWithPageMusic.Push(npc.UniqueID);
+			}
 			UpdateBossGlobalTracks();
 		}
 	}
@@ -574,6 +642,7 @@ static void GetPageMusicRanges()
 				continue;
 			}
 
+			musicInfo.State.Init();
 			if (path[0] != '#' && path[1] != '#')
 			{
 				Format(path, sizeof(path), "#%s", path);
@@ -718,7 +787,7 @@ static void ClearMusic(SF2_BasePlayer client)
 
 static void UpdatePageMusic()
 {
-	if (g_BossesWithGlobalMusic.Length != 0)
+	if (g_BossesWithGlobalMusic.Length != 0 && g_BossesWithPageMusic.Length == 0)
 	{
 		return;
 	}
@@ -727,14 +796,19 @@ static void UpdatePageMusic()
 	oldState = g_DefaultMusicState;
 	g_OldDefaultMusicState = g_DefaultMusicState;
 	g_DefaultMusicState = g_NullMusicState;
+	ArrayList ranges = g_PageMusicRanges;
+	if (g_BossesWithPageMusic.Length > 0)
+	{
+		ranges = g_BossPageMusicRanges;
+	}
 
 	if (g_PageCount < g_PageMax || !g_RoundStopPageMusicOnEscape)
 	{
 		PageMusicInfo info;
 
-		for (int i = 0; i < g_PageMusicRanges.Length; i++)
+		for (int i = 0; i < ranges.Length; i++)
 		{
-			g_PageMusicRanges.GetArray(i, info);
+			ranges.GetArray(i, info);
 			if (g_PageCount >= info.MinRequiredPages && g_PageCount <= info.MaxRequiredPages)
 			{
 				g_DefaultMusicState = info.State;
@@ -785,6 +859,22 @@ static void UpdateBossGlobalTrackForPlayer(SF2_BasePlayer client)
 	{
 		return;
 	}
+	for (int i = 0; i < g_BossesWithPageMusic.Length; i++)
+	{
+		SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(NPCGetFromUniqueID(g_BossesWithPageMusic.Get(i)));
+		if (!npc.IsValid())
+		{
+			g_BossesWithPageMusic.Erase(i);
+			i--;
+			continue;
+		}
+
+		GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, .checkRanges = true);
+		if (g_BossPageMusicRanges.Length > 0)
+		{
+			return;
+		}
+	}
 	g_OldGlobalMusicState[client.index] = g_GlobalMusicState[client.index];
 	g_OldGlobalMusicState[client.index].StopAfterFade = true;
 
@@ -801,8 +891,13 @@ static void UpdateBossGlobalTrackForPlayer(SF2_BasePlayer client)
 		char path[PLATFORM_MAX_PATH];
 		float volume = 1.0, length = -1.0;
 		int pitch = 100;
+		bool isPageMusic = false;
 		SF2BossMusicState priority = SF2BossMusicState_Max;
-		GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, path, sizeof(path), volume, pitch, .priority = priority, .length = length, .client = client);
+		GetBossMusicTrack(npc, SF2BossMusicTrackType_Global, path, sizeof(path), volume, pitch, .priority = priority, .length = length, .client = client, .isPageMusic = isPageMusic, .checkRanges = false);
+		if (isPageMusic)
+		{
+			continue;
+		}
 
 		if (path[0] != '\0')
 		{
@@ -812,6 +907,10 @@ static void UpdateBossGlobalTrackForPlayer(SF2_BasePlayer client)
 			state.MaxVolume = volume;
 			state.Pitch = pitch;
 			state.Length = length;
+			if (state.Length <= 0.0)
+			{
+				state.ShouldConstantReplay = true;
+			}
 			g_GlobalMusicState[client.index] = state;
 			g_GlobalMusicUpdateLimit[client.index] = priority;
 			g_CurrentTrackLength[client.index] = 0.0;
@@ -869,8 +968,29 @@ static void AddMusicToQueue(SF2_BasePlayer client, MusicState state)
 		{
 			currentState.StopAfterFade = true;
 		}
+		if (state.InstantFade)
+		{
+			currentState.InstantFade = true;
+			if (g_QueuedThemes[client.index] != null)
+			{
+				MusicState temp;
+				StringMapSnapshot snapshot = g_QueuedThemes[client.index].Snapshot();
+
+				for (int i = 0; i < snapshot.Length; i++)
+				{
+					char key[PLATFORM_MAX_PATH];
+					snapshot.GetKey(i, key, sizeof(key));
+					g_QueuedThemes[client.index].GetArray(key, temp, sizeof(temp));
+					temp.InstantFade = true;
+					g_QueuedThemes[client.index].SetArray(key, temp, sizeof(temp));
+				}
+
+				delete snapshot;
+			}
+		}
 		currentState.SetFadeState(SF2MusicFadeState_FadeOut);
 		g_QueuedThemes[client.index].SetArray(currentState.MusicPath, currentState, sizeof(currentState));
+
 		if (g_LayeredThemes[client.index] != null)
 		{
 			StringMapSnapshot snapshot = g_LayeredThemes[client.index].Snapshot();
@@ -885,6 +1005,7 @@ static void AddMusicToQueue(SF2_BasePlayer client, MusicState state)
 			delete g_LayeredThemes[client.index];
 			delete snapshot;
 		}
+
 		g_QueuedThemes[client.index].Remove(state.MusicPath);
 	}
 	state.SetFadeState(SF2MusicFadeState_FadeIn);
@@ -1004,6 +1125,10 @@ static void MusicThink()
 	float delta = g_LastMusicThink < 0.0 ? 0.0 : gameTime - g_LastMusicThink;
 	g_LastMusicThink = gameTime;
 	bool globalMusic = g_BossesWithGlobalMusic.Length > 0;
+	if (globalMusic && g_BossesWithPageMusic.Length > 0)
+	{
+		globalMusic = false;
+	}
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -1035,6 +1160,11 @@ static void MusicThink()
 			if (g_GlobalMusicState[client.index].Length > 0.0 && g_CurrentTrackLength[client.index] > g_GlobalMusicState[client.index].Length)
 			{
 				UpdateBossGlobalTrackForPlayer(client);
+			}
+
+			if (g_CurrentTheme[client.index].ShouldConstantReplay)
+			{
+				g_CurrentTheme[client.index].Replay(client);
 			}
 		}
 
@@ -1152,7 +1282,7 @@ static void MusicThink()
 				continue;
 			}
 
-			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 			if (data.IsPvEBoss)
 			{
 				continue;
@@ -1268,7 +1398,7 @@ static void MusicThink()
 				continue;
 			}
 
-			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
+			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileData();
 			if (data.IsPvEBoss)
 			{
 				continue;
@@ -1384,8 +1514,8 @@ static int ConvertMusicStateToBossState(SF2BossMusicState state)
 
 static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 	SF2BossMusicTrackType trackType,
-	char[] buffer,
-	int bufferSize,
+	char[] buffer = "",
+	int bufferSize = 0,
 	float& volume = 1.0,
 	int& pitch = 100,
 	float& radius = 850.0,
@@ -1394,14 +1524,16 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 	SF2BossMusicState& priority = SF2BossMusicState_Max,
 	float& length = -1.0,
 	SF2BossGlobalMusicShuffleType& shuffleType = SF2BossGlobalMusicShuffleType_None,
-	SF2_BasePlayer client = SF2_INVALID_PLAYER)
+	SF2_BasePlayer client = SF2_INVALID_PLAYER,
+	bool& isPageMusic = false,
+	bool checkRanges = false)
 {
 	if (!controller.IsValid())
 	{
 		return;
 	}
 
-	BaseBossProfile data = controller.GetProfileDataEx();
+	BaseBossProfile data = controller.GetProfileData();
 	if (data.IsPvEBoss)
 	{
 		return;
@@ -1448,6 +1580,9 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 					soundInfo = view_as<ChaserBossProfile>(data).GetChaseMusics();
 				}
 			}
+			pitch = soundInfo.GetPitch();
+			volume = soundInfo.GetVolume();
+			radius = soundInfo.GetRadius();
 		}
 
 		case SF2BossMusicTrackType_Visible:
@@ -1479,6 +1614,9 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 					soundInfo = view_as<ChaserBossProfile>(data).GetVisibleChaseMusics();
 				}
 			}
+			pitch = soundInfo.GetPitch();
+			volume = soundInfo.GetVolume();
+			radius = soundInfo.GetRadius();
 		}
 
 		case SF2BossMusicTrackType_Global:
@@ -1488,8 +1626,12 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 			{
 				return;
 			}
-			KeyMap_Array tracks = globalTrack.GetTracks();
+			KeyMap_Array tracks = globalTrack.GetTracks(difficulty);
 			if (tracks == null || tracks.Length == 0)
+			{
+				return;
+			}
+			if (globalTrack.GetChance(difficulty) < GetRandomFloat())
 			{
 				return;
 			}
@@ -1517,7 +1659,7 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 					{
 						continue;
 					}
-					if (!track.IsEnabled(difficulty))
+					if (!track.IsEnabled())
 					{
 						continue;
 					}
@@ -1561,7 +1703,7 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 								continue;
 							}
 							char temp[PLATFORM_MAX_PATH];
-							tempTrack.GetPath(difficulty, temp, sizeof(temp));
+							tempTrack.GetPath(temp, sizeof(temp));
 							if (client.IsValid && !client.IsBot && strcmp(g_GlobalMusicState[client.index].MusicPath, temp, false) == 0)
 							{
 								tempTracks.Erase(i);
@@ -1597,11 +1739,40 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 					}
 					track = g_CurrentTracks.Get(g_CurrentTrackIndex);
 				}
+
+				case SF2BossGlobalMusicShuffleType_Range:
+				{
+					if (checkRanges && g_BossPageMusicRanges.Length == 0)
+					{
+						ArrayList tempTracks = g_CurrentTracks.Clone();
+						for (int i = 0; i < tempTracks.Length; i++)
+						{
+							ProfileGlobalTrack tempTrack = view_as<ProfileGlobalTrack>(tempTracks.Get(i));
+							if (tempTrack == null)
+							{
+								continue;
+							}
+							char temp[PLATFORM_MAX_PATH];
+							tempTrack.GetPath(temp, sizeof(temp));
+
+							PageMusicInfo musicInfo;
+							musicInfo.State.Init();
+							musicInfo.MinRequiredPages = RoundToFloor(float(g_PageMax) * tempTrack.GetMinPageRange());
+							musicInfo.MaxRequiredPages = RoundToFloor(float(g_PageMax) * tempTrack.GetMaxPageRange());
+							musicInfo.State.MusicPath = temp;
+							musicInfo.State.InstantFade = tempTrack.CanInstantFade();
+							g_BossPageMusicRanges.PushArray(musicInfo);
+						}
+						delete tempTracks;
+					}
+					isPageMusic = true;
+					return;
+				}
 			}
-			track.GetPath(difficulty, buffer, bufferSize);
-			volume = track.GetVolume(difficulty);
-			pitch = track.GetPitch(difficulty);
-			length = track.GetLength(difficulty);
+			track.GetPath(buffer, bufferSize);
+			volume = track.GetVolume();
+			pitch = track.GetPitch();
+			length = track.GetLength();
 			return;
 		}
 	}
