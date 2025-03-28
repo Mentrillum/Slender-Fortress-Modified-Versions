@@ -1191,7 +1191,6 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 					SetVariantString(attachment);
 					spotlight.End.AcceptInput("SetParentAttachmentMaintainOffset");
 				}
-				spotlight.SetRenderColor(renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
 				spotlight.Length = light.Length;
 				spotlight.Width = light.Width;
 				spotlight.EndWidth = spotlight.Width * 2.0;
@@ -1201,12 +1200,12 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				spotlight.Cone = light.Cone;
 				spotlight.HaloScale = light.HaloScale;
 
+				spotlight.SetColor(renderColor);
+
 				spotlight.Spawn();
 				spotlight.Activate();
 
 				spotlight.TurnOn();
-
-				//SDKHook(spotlight.Spotlight.index, SDKHook_SetTransmit, Hook_FlashlightSpotlightEffectSetTransmit);
 			}
 			case EffectType_Sprite:
 			{

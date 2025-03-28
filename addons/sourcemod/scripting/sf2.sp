@@ -122,8 +122,6 @@ float g_LastCommandTime[MAXTF2PLAYERS];
 
 bool g_Enabled;
 
-KeyValues g_Config;
-KeyValues g_RestrictedWeaponsConfig;
 KeyValues g_SpecialRoundsConfig;
 KeyValues g_ClassStatsConfig;
 
@@ -1030,18 +1028,21 @@ static void StartPlugin()
 	while ((ent = FindEntityByClassname(ent, "obj_sentrygun")) != -1)
 	{
 		g_Buildings.Push(EntIndexToEntRef(ent));
+		HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 	}
 
 	ent = -1;
 	while ((ent = FindEntityByClassname(ent, "obj_teleporter")) != -1)
 	{
 		g_Buildings.Push(EntIndexToEntRef(ent));
+		HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 	}
 
 	ent = -1;
 	while ((ent = FindEntityByClassname(ent, "obj_dispenser")) != -1)
 	{
 		g_Buildings.Push(EntIndexToEntRef(ent));
+		HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 	}
 
 	ent = -1;
@@ -1300,6 +1301,8 @@ static void StopPlugin()
 		}
 	}
 
+	NPCRemoveAll();
+
 	Call_StartForward(g_OnGamemodeEndPFwd);
 	Call_Finish();
 
@@ -1307,8 +1310,6 @@ static void StopPlugin()
 	{
 		delete g_FuncNavPrefer;
 	}
-
-	delete g_Config;
 }
 
 public void OnMapEnd()
@@ -1331,7 +1332,6 @@ public void OnMapEnd()
 	g_RenevantWallHax = false;
 
 	BossProfilesOnMapEnd();
-	NPCRemoveAll();
 
 	Call_StartForward(g_OnMapEndPFwd);
 	Call_Finish();
@@ -1974,7 +1974,7 @@ static Action Timer_BossCountUpdate(Handle timer)
 					continue;
 				}
 
-				if (Npc.CanRemove)
+				if (Npc.CanDespawn)
 				{
 					SF2NPC_BaseNPC master = Npc.CopyMaster;
 					BaseBossProfile data = master.GetProfileData();
@@ -2198,7 +2198,7 @@ void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] intValue)
 			SF2NPC_BaseNPC masterNpc = Npc.CompanionMaster;
 			if (masterNpc.IsValid() && g_SlenderAddCompanionsOnDifficulty[masterNpc.Index])
 			{
-				Npc.RemoveFromGame();
+				Npc.Remove();
 			}
 		}
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
@@ -2427,6 +2427,7 @@ public void OnEntityCreated(int ent, const char[] classname)
 		strcmp(classname, "obj_teleporter", false) == 0)
 	{
 		g_Buildings.Push(EntIndexToEntRef(ent));
+		HookSingleEntityOutput(ent, "OnDestroyed", Output_OnBuildingDestroyed, true);
 	}
 
 	if (strcmp(classname, "tank_boss", false) == 0)
@@ -3538,7 +3539,6 @@ public void OnClientPutInServer(int client)
 	g_PlayerDesiredFOV[client] = 90;
 
 	SDKHook(client, SDKHook_PreThink, Hook_ClientPreThink);
-	SDKHook(client, SDKHook_PreThinkPost, Hook_OnFlashlightThink);
 	SDKHook(client, SDKHook_SetTransmit, Hook_ClientSetTransmit);
 
 	g_DHookWantsLagCompensationOnEntity.HookEntity(Hook_Pre, client, Hook_ClientWantsLagCompensationOnEntity);

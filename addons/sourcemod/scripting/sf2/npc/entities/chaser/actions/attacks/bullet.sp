@@ -372,7 +372,7 @@ static void DoBulletAttack(SF2_ChaserAttackAction_Bullet action, SF2_ChaserEntit
 							attackData.GetDamageRampUpRange(difficulty), attackData.GetDamageFallOffRange(difficulty),
 							attackData.GetDamageRampUp(difficulty), attackData.GetDamageFallOff(difficulty));
 
-			SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, damage, attackData.GetDamageType(difficulty), _, CalculateBulletDamageForce(dir, 1.0), basePos);
+			SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, damage, attackData.GetDamageType(difficulty), _, CalculateBulletDamageForce(dir, 1.0), basePos, .bypassHooks = false);
 			if (SF2_BasePlayer(hitTarget).IsValid)
 			{
 				attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, actor);

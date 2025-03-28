@@ -181,7 +181,7 @@ static void StartTouch(int entity, int other)
 		}
 		else
 		{
-			SDKHooks_TakeDamage(other, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
+			SDKHooks_TakeDamage(other, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos, .bypassHooks = false);
 		}
 		EmitSoundToAll(projectile.GetImpactSound(), projectile.index, SNDCHAN_ITEM, SNDLEVEL_SCREAMING);
 		RemoveEntity(projectile.index);

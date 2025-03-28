@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 2-26-2025"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 2-26-2025"
+#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 3-28-2025"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 3-28-2025"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -443,8 +443,8 @@ forward Action SF2_OnBossAnimationUpdate(int bossIndex, const char[] animation);
 /**
  * Called to determine the boss's run speed.
  *
- * @param bossIndex	Boss index.
- * @param speed		The boss's run speed.
+ * @param bossIndex		Boss index.
+ * @param speed			The boss's run speed.
  * @return				If Plugin_Changed, speed is used as the boss's run speed.
  */
 forward Action SF2_OnBossGetSpeed(int bossIndex, float &speed);
@@ -452,7 +452,7 @@ forward Action SF2_OnBossGetSpeed(int bossIndex, float &speed);
 /**
  * Called to determine the boss's walk speed.
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param walkSpeed		The boss's walk speed.
  * @return				If Plugin_Changed, speed is used as the boss's walk speed.
  */
@@ -461,9 +461,9 @@ forward Action SF2_OnBossGetWalkSpeed(int bossIndex, float &walkSpeed);
 /**
  * Called after the boss has determined it can hear the entity.
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param entity		Entity index.
- * @param soundType			The type of sound to check.
+ * @param soundType		The type of sound to check.
  * @return				Returning a value other than Plugin_Continue will block hearing to the entity.
  */
 forward Action SF2_OnBossHearEntity(int bossIndex, int entity, SoundType soundType);
@@ -471,7 +471,7 @@ forward Action SF2_OnBossHearEntity(int bossIndex, int entity, SoundType soundTy
 /**
  * Called after the boss has determined it can see the entity.
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param entity		Entity index.
  * @return				Returning a value other than Plugin_Continue will block vision to the entity.
  */
@@ -593,7 +593,7 @@ forward void SF2_OnClientBlink(int client);
  * Called when a player gets scared from a boss.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  */
 forward void SF2_OnClientScare(int client, int bossIndex);
 
@@ -602,7 +602,7 @@ forward void SF2_OnClientScare(int client, int bossIndex);
  * a boss's kill radius, or dies from too much camping. This is also called for fake bosses.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  */
 forward void SF2_OnClientCaughtByBoss(int client, int bossIndex);
 
@@ -610,7 +610,7 @@ forward void SF2_OnClientCaughtByBoss(int client, int bossIndex);
  * Called when giving queue points to the player at the end of the round.
  *
  * @param client		Client index.
- * @param addAmount	The amount of queue points to give.
+ * @param addAmount		The amount of queue points to give.
  * @return				If Plugin_Changed, addAmount will be used as the amount to give.
  */
 forward Action SF2_OnClientGiveQueuePoints(int client, int &addAmount);
@@ -661,7 +661,7 @@ forward void SF2_OnClientEscape(int client);
  * Called when the player looks at the boss.
  *
  * @param client		Client index.
- * @param bossIndex	Boss the client is looking at.
+ * @param bossIndex		Boss the client is looking at.
  */
 forward void SF2_OnClientLooksAtBoss(int client, int bossIndex);
 
@@ -669,7 +669,7 @@ forward void SF2_OnClientLooksAtBoss(int client, int bossIndex);
  * Called when the player looks away from the boss.
  *
  * @param client		Client index.
- * @param bossIndex	Boss the client is no longer looking at.
+ * @param bossIndex		Boss the client is no longer looking at.
  */
 forward void SF2_OnClientLooksAwayFromBoss(int client, int bossIndex);
 
@@ -677,7 +677,7 @@ forward void SF2_OnClientLooksAwayFromBoss(int client, int bossIndex);
  * Called when the player gets caught in a boss's deathcam.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  */
 forward void SF2_OnClientStartDeathCam(int client, int bossIndex);
 
@@ -701,18 +701,18 @@ forward void SF2_OnClientEndDeathCam(int client, int bossIndex, bool antiCamp);
 /**
  * Called to determine a player's default walk speed.
  *
- * @param client		Client index.
+ * @param client			Client index.
  * @param defaultFloat		The default walk speed.
- * @return				If Plugin_Changed, defaultFloat is used as player's default walk speed.
+ * @return					If Plugin_Changed, defaultFloat is used as player's default walk speed.
  */
 forward Action SF2_OnClientGetDefaultWalkSpeed(int client, float &defaultFloat);
 
 /**
  * Called to determine a player's default sprint speed.
  *
- * @param client		Client index.
+ * @param client			Client index.
  * @param defaultFloat		The default sprint speed.
- * @return				If Plugin_Changed, defaultFloat is used as player's default sprint speed.
+ * @return					If Plugin_Changed, defaultFloat is used as player's default sprint speed.
  */
 forward Action SF2_OnClientGetDefaultSprintSpeed(int client, float &defaultFloat);
 
@@ -731,7 +731,7 @@ forward Action SF2_OnClientTakeDamage(int victim, int &attacker, int &inflictor,
  * Called when giving queue points to the group at the end of the round.
  *
  * @param groupIndex		Group index.
- * @param addAmount		The amount of queue points to give.
+ * @param addAmount			The amount of queue points to give.
  * @return					If Plugin_Changed, addAmount will be used as the amount to give.
  */
 forward Action SF2_OnGroupGiveQueuePoints(int groupIndex, int &addAmount);
@@ -740,7 +740,7 @@ forward Action SF2_OnGroupGiveQueuePoints(int groupIndex, int &addAmount);
  * Called when a player gets damaged by the boss.
  *
  * @param client		The player who got damaged.
- * @param bossIndex	Boss that damaged the player.
+ * @param bossIndex		Boss that damaged the player.
  * @param inflictor		The inflictor of the damage.
  * @param damage		The amount of damage taken.
  * @param damageType	The damage type.
@@ -807,7 +807,7 @@ forward void SF2_OnDifficultyChanged(int difficulty, int oldDifficulty);
  * Called when a player is choosen to play
  *
  * @param client	Client index.
- * @return		If Plugin_Handled, player is blocked from playing.
+ * @return			If Plugin_Handled, player is blocked from playing.
  */
 forward Action SF2_OnClientEnterGame(int client);
 
@@ -815,7 +815,7 @@ forward Action SF2_OnClientEnterGame(int client);
  * Called when a player is choosen to play
  *
  * @param groupIndex	Group index.
- * @return		If Plugin_Handled, group is blocked from playing.
+ * @return				If Plugin_Handled, group is blocked from playing.
  */
 forward Action SF2_OnGroupEnterGame(int groupIndex);
 
@@ -888,13 +888,6 @@ forward void SF2_OnChaserBossEndAttack(SF2_ChaserBossEntity chaser, const char[]
  * @param ang		The selected angle the boss will spawn on
  */
 forward void SF2_OnSelectedPvEBoss(const char[] boss, const float pos[3], const float ang[3]);
-
-/**
- * Returns the global variable g_Config.
- *
- * @return				g_Config.
- */
-native KeyValues SF2_GetConfig();
 
 /**
  * Returns a bool about the gamemode's state.
@@ -976,7 +969,7 @@ native int SF2_GetCurrentBossPack(char[] buffer, int bufferLen);
  * Returns the current group a player is in.
  *
  * @param client	Client index.
- * @return		Group index the player is in, -1 otherwise.
+ * @return			Group index the player is in, -1 otherwise.
  */
 native int SF2_GetClientGroup(int client);
 
@@ -984,7 +977,7 @@ native int SF2_GetClientGroup(int client);
  * Returns the amount of a queue points a player has.
  *
  * @param client	Client index.
- * @return		Amount of queue points.
+ * @return			Amount of queue points.
  */
 native int SF2_GetClientQueuePoints(int client);
 
@@ -1091,7 +1084,7 @@ native bool SF2_IsClientProxy(int client);
  * Tells whether or not the client is looking at the boss.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @return				True if the player is looking at a boss, false if not.
  */
 native bool SF2_IsClientLookingAtBoss(int client, int bossIndex);
@@ -1138,7 +1131,7 @@ native int SF2_GetClientProxyMaster(int client);
  * If the client is a Proxy, then this sets the boss index that the client is associated with.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  */
 native void SF2_SetClientProxyMaster(int client, int bossIndex);
 
@@ -1170,7 +1163,7 @@ native float SF2_GetClientProxyControlRate(int client);
  * If the client is a Proxy, then this sets the interval which each Control point will drain for the client.
  *
  * @param client		Client index.
- * @param interval	Interval to subtract one Control point from the client.
+ * @param interval		Interval to subtract one Control point from the client.
  */
 native float SF2_SetClientProxyControlRate(int client, float interval);
 
@@ -1283,7 +1276,7 @@ native void SF2_ClientStartDeathCam(int client, int bossIndex, const float lookP
  * Returns whether or not a proxy can be spawned, returns a teleport position or spawn point if defined and the result is true, works well with SF2_ClientForceProxy.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param teleportPos	Position to return
  * @param spawnPoint	Spawn point to return, defaults to -1.
  */
@@ -1293,7 +1286,7 @@ native bool SF2_ClientSpawnProxy(int client, int bossIndex, float teleportPos[3]
  * Spawns a player as a proxy at a given position or spawn point.
  *
  * @param client		Client index.
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param teleportPos	Position to return
  * @param spawnPoint	Spawn point to return, defaults to -1.
  */
@@ -1330,7 +1323,7 @@ native int SF2_EntIndexToBossIndex(int entIndex);
 /**
  * Returns the entity index of a boss using EntRefToEntIndex().
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @return				Entity index, or -1 if the boss has not spawned.
  */
 native int SF2_BossIndexToEntIndex(int bossIndex);
@@ -1338,7 +1331,7 @@ native int SF2_BossIndexToEntIndex(int bossIndex);
 /**
  * Returns the entity index of a boss using NPCGetEntIndex() rather than EntRefToEntIndex().
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @return				Entity index, or -1 if the boss has not spawned.
  */
 native int SF2_BossIndexToEntIndexEx(int bossIndex);
@@ -1355,7 +1348,7 @@ native int SF2_BossIDToBossIndex(int bossID);
  * Returns the unique ID of a boss. A unique ID to a boss index is the equivalent of an entity reference to an entity index.
  *
  * @param bossIndex		Boss index.
- * @return					Unique id.
+ * @return				Unique ID.
  */
 native int SF2_BossIndexToBossID(int bossIndex);
 
@@ -1396,16 +1389,16 @@ native void SF2_DespawnBoss(int bossIndex);
 /**
  * Retrieves the profile name of the boss.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param buffer			Buffer to store the profile name.
- * @param bufferLen		Max length of buffer.
+ * @param bufferLen			Max length of buffer.
  */
 native void SF2_GetBossName(int bossIndex, char[] buffer, int bufferLen);
 
 /**
  * Returns the type of the boss. See the SF2BossType enumeration for possible values.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					Entity index.
  */
 native int SF2_GetBossType(int bossIndex);
@@ -1413,7 +1406,7 @@ native int SF2_GetBossType(int bossIndex);
 /**
  * Returns the flags of the boss.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					Flags.
  */
 native int SF2_GetBossFlags(int bossIndex);
@@ -1421,7 +1414,7 @@ native int SF2_GetBossFlags(int bossIndex);
 /**
  * Sets the flags of the boss.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param flags				Flags.
  */
 native void SF2_SetBossFlags(int bossIndex, int flags);
@@ -1444,7 +1437,7 @@ native bool SF2_IsBossSpawning(int bossIndex);
 /**
  * Returns the entity index of the boss's model.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					Entity index.
  */
 native int SF2_GetBossModelEntity(int bossIndex);
@@ -1452,7 +1445,7 @@ native int SF2_GetBossModelEntity(int bossIndex);
 /**
  * Returns the boss's current target.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					Entity index.
  */
 native int SF2_GetBossTarget(int bossIndex);
@@ -1462,23 +1455,25 @@ native int SF2_GetBossTarget(int bossIndex);
  *
  * Only used with Chaser bosses.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param client			The new target.
  */
 native void SF2_SetBossTarget(int bossIndex, int client);
 
+#if defined _CBASENPC_EXTENSION_INC_
 /**
  * Returns the boss's default path follower.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					Path Follower.
  */
 native PathFollower SF2_GetBossPathFollower(int bossIndex);
+#endif
 
 /**
  * If the boss is a copy, this returns the boss that this copy is associated with.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					Boss index of master boss.
  */
 native int SF2_GetBossMaster(int bossIndex);
@@ -1486,8 +1481,8 @@ native int SF2_GetBossMaster(int bossIndex);
 /**
  * Returns the boss's idle lifetime.
  *
- * @param bossIndex		Boss index.
- * @param difficulty	The difficulty index.
+ * @param bossIndex			Boss index.
+ * @param difficulty		The difficulty index.
  * @return					The boss's default idle lifetime
  */
 native float SF2_GetBossIdleLifetime(int bossIndex, int difficulty);
@@ -1497,7 +1492,7 @@ native float SF2_GetBossIdleLifetime(int bossIndex, int difficulty);
  *
  * Only used with Chaser bosses.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					The boss's state.
  */
 native int SF2_GetBossState(int bossIndex);
@@ -1514,7 +1509,7 @@ native void SF2_SetBossState(int bossIndex, int state);
 /**
  * Returns the boss's eye position in the world. Used for visibility checks.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param eyePos			Buffer to store result.
  */
 native void SF2_GetBossEyePosition(int bossIndex, float eyePos[3]);
@@ -1522,7 +1517,7 @@ native void SF2_GetBossEyePosition(int bossIndex, float eyePos[3]);
 /**
  * Returns the boss's eye position offset. This is a local offset vector.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param eyePosOffset		Buffer to store result.
  */
 native void SF2_GetBossEyePositionOffset(int bossIndex, float eyePosOffset[3]);
@@ -1538,7 +1533,7 @@ native bool SF2_IsBossStunnableByFlashlight(int bossIndex);
  *
  * Only used with Chaser bosses.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					True if cloaked, false otherwise.
  */
 native bool SF2_IsBossCloaked(int bossIndex);
@@ -1548,7 +1543,7 @@ native bool SF2_IsBossCloaked(int bossIndex);
  *
  * Only used with Chaser bosses.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @return					The health amount.
  */
 native float SF2_GetBossStunHealth(int bossIndex);
@@ -1558,7 +1553,7 @@ native float SF2_GetBossStunHealth(int bossIndex);
  *
  * Only used with Chaser bosses.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param health			The health amount.
  */
 native void SF2_SetBossStunHealth(int bossIndex, float health);
@@ -1568,7 +1563,7 @@ native void SF2_SetBossStunHealth(int bossIndex, float health);
  *
  * Only used with Chaser bosses.
  *
- * @param bossIndex		Boss index.
+ * @param bossIndex			Boss index.
  * @param position			Buffer to store position.
  */
 native void SF2_GetBossGoalPosition(int bossIndex, float position[3]);
@@ -1667,9 +1662,9 @@ native void SF2_SetBossTeleportThinkTimer(int bossIndex, Handle timer);
 /**
  * Returns the boss' teleport target
  *
- * @param bossIndex	Boss index.
+ * @param bossIndex		Boss index.
  * @param difficulty	The difficulty index.
- * @return		Teleport entity index.
+ * @return				Teleport entity index.
 */
 native int SF2_GetBossTeleportTarget(int bossIndex);
 
@@ -1718,7 +1713,7 @@ native int SF2_LookupProfileAnimation(int entity, const char[] animation);
  * Returns the profile data found on a boss index
  *
  * @param bossIndex		Boss index.
- * @return            Stored profile data, or null if it doesn't exist
+ * @return				Stored profile data, or null if it doesn't exist
  */
 native SF2_BaseBossProfile SF2_GetProfileFromBossIndex(int bossIndex);
 
@@ -1726,7 +1721,7 @@ native SF2_BaseBossProfile SF2_GetProfileFromBossIndex(int bossIndex);
  * Returns the chaser profile data found on a boss index.
  *
  * @param bossIndex		Boss index.
- * @return            Stored profile data, or null if it doesn't exist
+ * @return				Stored profile data, or null if it doesn't exist
  */
 native SF2_ChaserBossProfile SF2_GetChaserProfileFromBossIndex(int bossIndex);
 
@@ -1734,7 +1729,7 @@ native SF2_ChaserBossProfile SF2_GetChaserProfileFromBossIndex(int bossIndex);
  * Returns the statue profile data found on a boss index.
  *
  * @param bossIndex		Boss index.
- * @return            Stored profile data, or null if it doesn't exist
+ * @return				Stored profile data, or null if it doesn't exist
  */
 native SF2_StatueBossProfile SF2_GetStatueProfileFromBossIndex(int bossIndex);
 
@@ -1742,7 +1737,7 @@ native SF2_StatueBossProfile SF2_GetStatueProfileFromBossIndex(int bossIndex);
  * Returns the profile data found from a profile name
  *
  * @param profile		Profile name.
- * @return            Stored profile data, or null if it doesn't exist
+ * @return				Stored profile data, or null if it doesn't exist
  */
 native SF2_BaseBossProfile SF2_GetProfileFromName(const char[] profile);
 
@@ -1750,7 +1745,7 @@ native SF2_BaseBossProfile SF2_GetProfileFromName(const char[] profile);
  * Returns the chaser profile data found from a profile name.
  *
  * @param profile		Profile name.
- * @return            Stored profile data, or null if it doesn't exist
+ * @return				Stored profile data, or null if it doesn't exist
  */
 native SF2_ChaserBossProfile SF2_GetChaserProfileFromName(const char[] profile);
 
@@ -1758,7 +1753,7 @@ native SF2_ChaserBossProfile SF2_GetChaserProfileFromName(const char[] profile);
  * Returns the statue profile data found from a profile name.
  *
  * @param profile		Profile name.
- * @return            Stored profile data, or null if it doesn't exist
+ * @return				Stored profile data, or null if it doesn't exist
  */
 native SF2_StatueBossProfile SF2_GetStatueProfileFromName(const char[] profile);
 
@@ -1789,6 +1784,14 @@ methodmap SF2_BaseBossEntity < CBaseCombatCharacter
 	 *	Gets the controller index that owns this entity.
 	 */
 	property int Controller
+	{
+		public native get();
+	}
+
+	/**
+	 *	Gets the controller methodmap that owns this entity.
+	 */
+	property SF2_BaseBossController ControllerEx
 	{
 		public native get();
 	}
@@ -1911,6 +1914,14 @@ methodmap SF2_StatueBossEntity < SF2_BaseBossEntity
 	}
 
 	/**
+	 *	Gets the controller methodmap that owns this entity.
+	 */
+	property SF2_StatueBossController Controller
+	{
+		public native get();
+	}
+
+	/**
 	 * Returns whether or not the statue is moving.
 	 */
 	property bool IsMoving
@@ -1950,6 +1961,14 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	 * Whether or not the entity is actually a chaser boss
 	 */
 	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
+	 *	Gets the controller methodmap that owns this entity.
+	 */
+	property SF2_ChaserBossController Controller
 	{
 		public native get();
 	}
@@ -3146,6 +3165,371 @@ methodmap SF2_PlaySequenceAndWaitAction < NextBotAction
 }
 
 /**
+ * Interface to SF2NPC_BaseNPC
+ */
+const SF2_BaseBossController SF2_INVALID_BASE_CONTROLLER = view_as<SF2_BaseBossController>(-1);
+methodmap SF2_BaseBossController
+{
+	/**
+	 *	Casts an boss index to this methodmap
+	 *
+	 *	@param index	Boss index to use
+	 *	@return			Casted controller
+	 */
+	public SF2_BaseBossController(int index)
+	{
+		return view_as<SF2_BaseBossController>(index);
+	}
+
+	/**
+	 * Returns if the boss controller is valid
+	 */
+	public native bool IsValid();
+
+	/**
+	 * Returns the boss index this controller is associated with
+	 */
+	property int Index
+	{
+		public native get();
+	}
+
+	/**
+	 * Returns the boss's PathFollower variable
+	 * Requires CBaseNPC to be included in the sub plugin
+	 */
+	#if defined _CBASENPC_EXTENSION_INC_
+	property PathFollower Path
+	{
+		public native get();
+	}
+	#endif
+
+	/**
+	 * Returns the boss's unique ID
+	 */
+	property int UniqueID
+	{
+		public native get();
+	}
+
+	/**
+	 * Returns a controller when given an unique ID
+	 *
+	 * @param uniqueID	Unique ID, cannot be negative
+	 */
+	public static native SF2_BaseBossController FromUniqueID(int uniqueID);
+
+	/**
+	 * Returns a controller when given an entity index
+	 *
+	 * @param entity	Entity index
+	 */
+	public static native SF2_BaseBossController FromEntity(int entity);
+
+	/**
+	 * Returns the boss's entity reference or INVALID_ENT_REFERENCE if the boss is not on the map
+	 */
+	property int EntRef
+	{
+		public native get();
+	}
+
+	/**
+	 * Returns the boss's entity index
+	 */
+	property int EntIndex
+	{
+		public native get();
+	}
+
+	/**
+	 * Returns the boss's profile data
+	 */
+	public native SF2_BaseBossProfile GetProfileData();
+
+	/**
+	 * Gets/Sets the current difficulty by default
+	 * If the map is a boxing map or the boss is a PvE boss, this Gets/Sets the boss's local difficulty
+	 */
+	property int Difficulty
+	{
+		public native get();
+		public native set(int value);
+	}
+
+	/**
+	 * Gets/Sets the boss's flags
+	 */
+	property int Flags
+	{
+		public native get();
+		public native set(int value);
+	}
+
+	/**
+	 * Gets/Sets the boss's copy master
+	 */
+	property SF2_BaseBossController CopyMaster
+	{
+		public native get();
+		public native set(SF2_BaseBossController value);
+	}
+
+	/**
+	 * Returns if the boss is a copy or not
+	 */
+	property bool IsCopy
+	{
+		public native get();
+	}
+
+	/**
+	 * Gets/Sets the boss's companion master
+	 */
+	property SF2_BaseBossController CompanionMaster
+	{
+		public native get();
+		public native set(SF2_BaseBossController value);
+	}
+
+	/**
+	 * Returns the boss's queued teleporter it should go to as an entity reference
+	 * The max teleporters the boss can use is 5 defined by MAX_NPCTELEPORTER
+	 *
+	 * @param teleporterNumber	Index to search
+	 */
+	public native int GetTeleporter(int teleporterNumber);
+
+	/**
+	 * Sets the boss's queued teleporter via an entity reference
+	 * Use INVALID_ENT_REFERENCE to clear a boss's queued teleporter
+	 * The max teleporters the boss can use is 5 defined by MAX_NPCTELEPORTER
+	 *
+	 * @param teleporterNumber	Index to use
+	 * @param ref				Teleporter entity reference
+	 * @error					Entity is not a trigger_teleporter or INVALID_ENT_REFERENCE
+	 */
+	public native void SetTeleporter(int teleporterNumber, int ref);
+
+	/**
+	 * Spawns the boss on a set position
+	 *
+	 * @param pos	Position
+	 */
+	public native void Spawn(float pos[3]);
+
+	/**
+	 * Despawns the boss
+	 *
+	 * @param instant		Some bosses have despawn animation, this determines if the boss shouldn't use the despawn animations
+	 */
+	public native void UnSpawn(bool instant = false);
+
+	/**
+	 * Despawns the boss and removes it from the game
+	 */
+	public native void Remove();
+
+	/**
+	 * Returns if the boss is able to despawn
+	 */
+	property bool CanDespawn
+	{
+		public native get();
+	}
+
+	/**
+	 * Marks the boss as a fake boss even if the boss is not a fake boss
+	 */
+	public native void MarkAsFake();
+
+	/**
+	 * Gets the boss's profile name
+	 *
+	 * @param buffer		Buffer to store the boss's profile name
+	 * @param bufferLen		Maximum length of string buffer
+	 */
+	public native void GetProfile(char[] buffer, int bufferLen);
+
+	/**
+	 * Sets the boss's profile name
+	 *
+	 * @param profileName	New profile name
+	 */
+	public native void SetProfile(const char[] profileName);
+
+	/**
+	 * Returns the boss's current added run speed
+	 */
+	public native float GetAddSpeed();
+
+	/**
+	 * Returns the boss's current added run speed that doesn't reset when the boss despawn
+	 */
+	public native float GetPersistentAddSpeed();
+
+	/**
+	 * Adds onto the boss's current added run speed
+	 *
+	 * @param value		Value
+	 */
+	public native void SetAddSpeed(float value);
+
+	/**
+	 * Adds onto the boss's current added run speed that doesn't reset when the boss despawn
+	 *
+	 * @param value		Value
+	 */
+	public native void SetPersistentAddSpeed(float value);
+
+	/**
+	 * Returns the boss's current added walk speed that doesn't reset when the boss despawn
+	 */
+	public native float GetPersistentAddWalkSpeed();
+
+	/**
+	 * Adds onto the boss's current added walk speed that doesn't reset when the boss despawn
+	 *
+	 * @param value		Value
+	 */
+	public native void SetPersistentAddWalkSpeed(float value);
+
+	/**
+	 * Returns the boss's current added acceleration
+	 */
+	public native float GetAddAcceleration();
+
+	/**
+	 * Returns the boss's current added acceleration that doesn't reset when the boss despawn
+	 */
+	public native float GetPersistentAddAcceleration();
+
+	/**
+	 * Adds onto the boss's current added acceleration
+	 *
+	 * @param value		Value
+	 */
+	public native void SetAddAcceleration(float value);
+
+	/**
+	 * Adds onto the boss's current added acceleration that doesn't reset when the boss despawn
+	 *
+	 * @param value		Value
+	 */
+	public native void SetPersistentAddAcceleration(float value);
+
+	/**
+	 * Determines if any player can see the boss
+	 *
+	 * @param fov				Determines if player FOV should be considered
+	 * @param blink				Determines if player blink states should be considered
+	 * @param checkEliminated	Determines if eliminated players should be considered
+	 */
+	public native bool CanBeSeen(bool fov = true, bool blink = false, bool checkEliminated = true);
+
+	/**
+	 * Determines if a specified player can see the boss
+	 *
+	 * @param client			Client to check
+	 * @param fov				Determines if player FOV should be considered
+	 * @param blink				Determines if player blink states should be considered
+	 * @param checkEliminated	Determines if eliminated players should be considered
+	 */
+	public native bool PlayerCanSee(int client, bool fov = true, bool blink = false, bool checkEliminated = false);
+
+	/**
+	 * Returns if the boss should force a player to start blinking when they look at this boss
+	 */
+	public native bool IsAffectedBySight();
+
+	/**
+	 * Sets if a player should start blinking when looking at this boss
+	 *
+	 * @param state		State
+	 */
+	public native void SetAffectedBySight(bool state);
+}
+
+/**
+ * Interface to SF2NPC_Chaser
+ */
+const SF2_ChaserBossController SF2_INVALID_CHASER_CONTROLLER = view_as<SF2_ChaserBossController>(-1);
+methodmap SF2_ChaserBossController < SF2_BaseBossController
+{
+	/**
+	 *	Casts an boss index to this methodmap
+	 *
+	 *	@param index	Boss index to use
+	 */
+	public SF2_ChaserBossController(int index)
+	{
+		return view_as<SF2_ChaserBossController>(SF2_BaseBossController(index));
+	}
+
+	/**
+	 * Returns the boss's profile data as an SF2_ChaserBossProfile
+	 */
+	public native SF2_ChaserBossProfile ProfileData();
+
+	/**
+	 * Returns the boss's current on spawned death health
+	 *
+	 * @param difficulty	Difficulty to check
+	 */
+	public native float GetDeathHealth(int difficulty);
+
+	/**
+	 * Sets the boss's current on spawned death health
+	 *
+	 * @param difficulty	Difficulty to check
+	 */
+	public native void SetDeathHealth(int difficulty, float amount);
+
+	/**
+	 * Returns the boss's current added stun health
+	 */
+	public native float GetAddStunHealth();
+
+	/**
+	 * Adds onto the boss's current added stun health
+	 *
+	 * @param value		Value
+	 */
+	public native void SetAddStunHealth(float value);
+
+	/**
+	 * Returns an ArrayList of targets that looked at the boss if it is meant to auto chase targets upon looking
+	 */
+	property ArrayList ChaseOnLookTargets
+	{
+		public native get();
+	}
+}
+
+/**
+ * Interface to SF2NPC_Statue
+ */
+const SF2_StatueBossController SF2_INVALID_STATUE_CONTROLLER = view_as<SF2_StatueBossController>(-1);
+methodmap SF2_StatueBossController < SF2_BaseBossController
+{
+	/**
+	 *	Casts an boss index to this methodmap
+	 *
+	 *	@param index	Boss index to use
+	 */
+	public SF2_StatueBossController(int index)
+	{
+		return view_as<SF2_StatueBossController>(SF2_BaseBossController(index));
+	}
+
+	/**
+	 * Returns the boss's profile data as an SF2_StatueBossProfile
+	 */
+	public native SF2_StatueBossProfile ProfileData();
+}
+
+/**
  * Interface to SF2_BasePlayer
  */
 methodmap SF2_Player < CBaseCombatCharacter
@@ -3187,7 +3571,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 
 	/**
 	 * Alias of IsClientInGame()
-	 * Use this over IsClientInGame() though as it has extra optimizations
+	 * Use this over IsClientInGame() as it has extra optimizations
 	 */
 	property bool IsInGame
 	{
@@ -3682,7 +4066,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	public native void HandleSprint(bool sprint);
 
 	/**
-	 * Gets/sets the player's stamina
+	 * Gets/Sets the player's stamina
 	 */
 	property float Stamina
 	{
@@ -4460,6 +4844,48 @@ public SharedPlugin __pl_sf2 =
 public void __pl_sf2_SetNTVOptional()
 {
 	// sf2/methodmaps.sp
+	MarkNativeAsOptional("SF2_BaseBossController.IsValid");
+	MarkNativeAsOptional("SF2_BaseBossController.Index.get");
+	MarkNativeAsOptional("SF2_BaseBossController.Path.get");
+	MarkNativeAsOptional("SF2_BaseBossController.UniqueID.get");
+	MarkNativeAsOptional("SF2_BaseBossController.FromUniqueID");
+	MarkNativeAsOptional("SF2_BaseBossController.FromEntity");
+	MarkNativeAsOptional("SF2_BaseBossController.EntRef.get");
+	MarkNativeAsOptional("SF2_BaseBossController.EntIndex.get");
+	MarkNativeAsOptional("SF2_BaseBossController.ProfileData");
+	MarkNativeAsOptional("SF2_BaseBossController.Difficulty.get");
+	MarkNativeAsOptional("SF2_BaseBossController.Difficulty.set");
+	MarkNativeAsOptional("SF2_BaseBossController.Flags.get");
+	MarkNativeAsOptional("SF2_BaseBossController.Flags.set");
+	MarkNativeAsOptional("SF2_BaseBossController.CopyMaster.get");
+	MarkNativeAsOptional("SF2_BaseBossController.CopyMaster.set");
+	MarkNativeAsOptional("SF2_BaseBossController.IsCopy.get");
+	MarkNativeAsOptional("SF2_BaseBossController.CompanionMaster.get");
+	MarkNativeAsOptional("SF2_BaseBossController.CompanionMaster.set");
+	MarkNativeAsOptional("SF2_BaseBossController.GetTeleporter");
+	MarkNativeAsOptional("SF2_BaseBossController.SetTeleporter");
+	MarkNativeAsOptional("SF2_BaseBossController.Spawn");
+	MarkNativeAsOptional("SF2_BaseBossController.UnSpawn");
+	MarkNativeAsOptional("SF2_BaseBossController.Remove");
+	MarkNativeAsOptional("SF2_BaseBossController.CanDespawn.get");
+	MarkNativeAsOptional("SF2_BaseBossController.MarkAsFake");
+	MarkNativeAsOptional("SF2_BaseBossController.GetProfile");
+	MarkNativeAsOptional("SF2_BaseBossController.SetProfile");
+	MarkNativeAsOptional("SF2_BaseBossController.GetAddSpeed");
+	MarkNativeAsOptional("SF2_BaseBossController.GetPersistentAddSpeed");
+	MarkNativeAsOptional("SF2_BaseBossController.SetAddSpeed");
+	MarkNativeAsOptional("SF2_BaseBossController.SetPersistentAddSpeed");
+	MarkNativeAsOptional("SF2_BaseBossController.GetPersistentAddWalkSpeed");
+	MarkNativeAsOptional("SF2_BaseBossController.SetPersistentAddWalkSpeed");
+	MarkNativeAsOptional("SF2_BaseBossController.GetAddAcceleration");
+	MarkNativeAsOptional("SF2_BaseBossController.GetPersistentAddAcceleration");
+	MarkNativeAsOptional("SF2_BaseBossController.SetAddAcceleration");
+	MarkNativeAsOptional("SF2_BaseBossController.SetPersistentAddAcceleration");
+	MarkNativeAsOptional("SF2_BaseBossController.CanBeSeen");
+	MarkNativeAsOptional("SF2_BaseBossController.PlayerCanSee");
+	MarkNativeAsOptional("SF2_BaseBossController.IsAffectedBySight");
+	MarkNativeAsOptional("SF2_BaseBossController.SetAffectedBySight");
+
 	MarkNativeAsOptional("SF2_Player.UserID.get");
 	MarkNativeAsOptional("SF2_Player.IsValid.get");
 	MarkNativeAsOptional("SF2_Player.IsAlive.get");
@@ -4568,6 +4994,15 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_Player.ShouldBeForceChased");
 	MarkNativeAsOptional("SF2_Player.SetForceChaseState");
 	MarkNativeAsOptional("SF2_Player.IsLookingAtBoss");
+
+	MarkNativeAsOptional("SF2_ChaserBossController.ProfileData");
+	MarkNativeAsOptional("SF2_ChaserBossController.GetDeathHealth");
+	MarkNativeAsOptional("SF2_ChaserBossController.SetDeathHealth");
+	MarkNativeAsOptional("SF2_ChaserBossController.GetAddStunHealth");
+	MarkNativeAsOptional("SF2_ChaserBossController.SetAddStunHealth");
+	MarkNativeAsOptional("SF2_ChaserBossController.ChaseOnLookTargets");
+
+	MarkNativeAsOptional("SF2_StatueBossController.ProfileData");
 
 	// sf2/npc.sp
 	MarkNativeAsOptional("SF2_GetMaxBossCount");
@@ -4695,7 +5130,6 @@ public void __pl_sf2_SetNTVOptional()
 	MarkNativeAsOptional("SF2_Projectile_SentryRocket.IsValid.get");
 
 	// extras/natives.sp
-	MarkNativeAsOptional("SF2_GetConfig");
 	MarkNativeAsOptional("SF2_IsRunning");
 	MarkNativeAsOptional("SF2_GetRoundState");
 	MarkNativeAsOptional("SF2_IsRoundInGracePeriod");
@@ -4794,6 +5228,7 @@ public void __pl_sf2_SetNTVOptional()
 	// npc/entities/base/entity.sp
 	MarkNativeAsOptional("SF2_BaseBossEntity.IsValid.get");
 	MarkNativeAsOptional("SF2_BaseBossEntity.Controller.get");
+	MarkNativeAsOptional("SF2_BaseBossEntity.ControllerEx.get");
 	MarkNativeAsOptional("SF2_BaseBossEntity.Target.get");
 	MarkNativeAsOptional("SF2_BaseBossEntity.State.get");
 	MarkNativeAsOptional("SF2_BaseBossEntity.CurrentChaseDuration.get");
@@ -4814,6 +5249,7 @@ public void __pl_sf2_SetNTVOptional()
 
 	// npc/entities/chaser/entity.sp
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.Controller.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsAttemptingToMove.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsAttacking.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsStunned.get");
@@ -4844,6 +5280,7 @@ public void __pl_sf2_SetNTVOptional()
 
 	// npc/entities/statue/entity.sp
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_StatueBossEntity.Controller.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsMoving.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.LastKillTime.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.ProfileData");

@@ -12,8 +12,6 @@ static int g_NpcGlobalUniqueID = 0;
 
 static int g_NpcUniqueID[MAX_BOSSES] = { -1, ... };
 static char g_SlenderProfile[MAX_BOSSES][SF2_MAX_PROFILE_NAME_LENGTH];
-static int g_NpcProfileIndex[MAX_BOSSES] = { -1, ... };
-static int g_NpcUniqueProfileIndex[MAX_BOSSES] = { -1, ... };
 static int g_NpcFlags[MAX_BOSSES] = { 0, ... };
 static int g_NpcTeleporters[MAX_BOSSES][MAX_NPCTELEPORTER];
 static int g_NpcModelMaster[2049];
@@ -480,16 +478,6 @@ int NPCGetCount()
 	}
 
 	return count;
-}
-
-int NPCGetProfileIndex(int npcIndex)
-{
-	return g_NpcProfileIndex[npcIndex];
-}
-
-int NPCGetUniqueProfileIndex(int npcIndex)
-{
-	return g_NpcUniqueProfileIndex[npcIndex];
 }
 
 bool NPCGetProfile(int npcIndex, char[] buffer, int bufferLen)
@@ -1522,9 +1510,6 @@ void RemoveProfile(int bossIndex)
 		g_SlenderProxyTeleportMaxRange[bossIndex][difficulty] = 0.0;
 	}
 
-	g_NpcProfileIndex[bossIndex] = -1;
-	g_NpcUniqueProfileIndex[bossIndex] = -1;
-
 	controller.Flags = 0;
 
 	controller.SetAddSpeed(0.0);
@@ -1984,7 +1969,7 @@ void SlenderPrintChatMessage(int bossIndex, int player)
 		{
 			char buffer[PLATFORM_MAX_PATH], prefix[PLATFORM_MAX_PATH], name[SF2_MAX_NAME_LENGTH], time[PLATFORM_MAX_PATH], keyName[64];
 			int roundTime = RoundToNearest(g_RoundTimeMessage);
-			int randomMessage = GetRandomInt(0, deathMessages.Size - 1);
+			int randomMessage = GetRandomInt(0, deathMessages.KeyLength - 1);
 			profileData.GetString("chat_message_upon_death_prefix", prefix, sizeof(prefix), "[SF2]");
 			deathMessages.GetKeyNameFromIndex(randomMessage, keyName, sizeof(keyName));
 			deathMessages.GetString(keyName, buffer, sizeof(buffer));
@@ -1992,10 +1977,6 @@ void SlenderPrintChatMessage(int bossIndex, int player)
 			FormatEx(time, sizeof(time), "%d", roundTime);
 			char playerName[32], replacePlayer[64];
 			FormatEx(playerName, sizeof(playerName), "%N", player);
-			if (prefix[0] == '\0')
-			{
-				prefix = "[SF2]";
-			}
 			if (buffer[0] != '\0')
 			{
 				if (StrContains(buffer, "[PLAYER]", true) != -1)
@@ -2030,7 +2011,14 @@ void SlenderPrintChatMessage(int bossIndex, int player)
 				}
 				else
 				{
-					CPrintToChatAll("{royalblue}%s{default} %s", prefix, buffer);
+					if (prefix[0] == '\0')
+					{
+						CPrintToChatAll("%s", buffer);
+					}
+					else
+					{
+						CPrintToChatAll("{royalblue}%s {default}%s", prefix, buffer);
+					}
 				}
 			}
 		}
@@ -2839,7 +2827,7 @@ float NPCGetDistanceFromPoint(int npcIndex, const float point[3])
 		float pos[3];
 		CBaseEntity(npcEnt).GetAbsOrigin(pos);
 
-		return GetVectorSquareMagnitude(pos, point);
+		return GetVectorDistance(pos, point, true);
 	}
 
 	return -1.0;
@@ -2853,7 +2841,7 @@ float NPCGetDistanceFromEntity(int npcIndex, int ent)
 	}
 
 	float pos[3];
-	GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", pos);
+	CBaseEntity(ent).GetAbsOrigin(pos);
 
 	return NPCGetDistanceFromPoint(npcIndex, pos);
 }

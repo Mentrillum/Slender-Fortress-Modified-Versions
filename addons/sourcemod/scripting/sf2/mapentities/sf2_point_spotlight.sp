@@ -194,7 +194,9 @@ methodmap SF2PointSpotlightEntity < CBaseEntity
 
 		this.IsOn = true;
 
-		this.AcceptInput("TurnOn");
+		int color[4];
+		this.End.GetRenderColor(color[0], color[1], color[2], color[3]);
+		this.SetRenderColor(color[0], color[1], color[2], color[3]);
 		this.End.AcceptInput("TurnOn");
 	}
 
@@ -207,7 +209,7 @@ methodmap SF2PointSpotlightEntity < CBaseEntity
 
 		this.IsOn = false;
 
-		this.AcceptInput("TurnOff");
+		this.SetRenderColor(0, 0, 0, 0);
 		this.End.AcceptInput("TurnOff");
 	}
 
@@ -221,6 +223,12 @@ methodmap SF2PointSpotlightEntity < CBaseEntity
 		this.End.AcceptInput("spotlight_radius");
 		SetVariantInt(this.Cone);
 		this.End.AcceptInput("cone");
+	}
+
+	public void SetColor(int color[4])
+	{
+		this.SetRenderColor(color[0], color[1], color[2], color[3]);
+		this.End.SetRenderColor(color[0], color[1], color[2], color[3]);
 	}
 }
 
@@ -255,8 +263,8 @@ static void OnSpawn(int entIndex)
 {
 	SF2PointSpotlightEntity entity = SF2PointSpotlightEntity(entIndex);
 
-	entity.SetPropEnt(Prop_Send, "m_hAttachEntity", entity.Start.index, 0);
-	entity.SetPropEnt(Prop_Send, "m_hAttachEntity", entity.End.index, 1);
+	entity.SetPropEnt(Prop_Send, "m_hAttachEntity", EntIndexToEntRef(entity.Start.index), 0);
+	entity.SetPropEnt(Prop_Send, "m_hAttachEntity", EntIndexToEntRef(entity.End.index), 1);
 	entity.SetProp(Prop_Send, "m_nNumBeamEnts", 2);
 	entity.SetProp(Prop_Send, "m_nBeamType", 2);
 
@@ -284,21 +292,22 @@ static void UpdateSpotlight(SF2PointSpotlightEntity entity)
 	CBaseEntity spotlightEnd = entity.End;
 	if (spotlightEnd.IsValid())
 	{
-		float pos[3], dir[3];
+		float pos[3], dir[3], startPos[3];
+		entity.Start.GetAbsOrigin(startPos);
 		entity.GetAbsOrigin(pos);
 		entity.GetAbsAngles(dir);
 		float endPos[3];
 		endPos[0] = entity.Length;
 		VectorTransform(endPos, pos, dir, endPos);
 
-		Handle trace = TR_TraceRayFilterEx(pos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, Trace, entity.index);
+		Handle trace = TR_TraceRayFilterEx(pos, endPos, MASK_OPAQUE_AND_NPCS, RayType_EndPoint, Trace, entity.index);
 
 		float hitPos[3];
 		TR_GetEndPosition(hitPos, trace);
-/*
-		int color[4] = { 255, 0, 0, 255 };
+
+		/*int color[4] = { 255, 0, 0, 255 };
 		TE_SetupBeamPoints(pos,
-		endPos,
+		hitPos,
 		g_ShockwaveBeam,
 		g_ShockwaveHalo,
 		0,
@@ -310,9 +319,10 @@ static void UpdateSpotlight(SF2PointSpotlightEntity entity)
 		0.0,
 		color,
 		1);
-		TE_SendToAll();
-*/
+		TE_SendToAll();*/
+
 		spotlightEnd.SetAbsOrigin(hitPos);
+		entity.Start.SetAbsOrigin(pos);
 		delete trace;
 	}
 

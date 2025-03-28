@@ -16,7 +16,6 @@ void Hook_ClientPreThink(int client)
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	float gameTime = GetGameTime();
 
-	ClientProcessFlashlightAngles(player.index);
 	ClientProcessStaticShake(player.index);
 	ClientProcessViewAngles(player.index);
 

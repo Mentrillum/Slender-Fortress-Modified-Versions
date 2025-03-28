@@ -190,7 +190,7 @@ static void Think(int entity)
 			}
 			else
 			{
-				SDKHooks_TakeDamage(hitIndex, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos);
+				SDKHooks_TakeDamage(hitIndex, !IsValidEntity(owner) ? projectile.index : owner, !IsValidEntity(owner) ? projectile.index : owner, projectile.Damage, flags, _, _, pos, .bypassHooks = false);
 			}
 		}
 	}

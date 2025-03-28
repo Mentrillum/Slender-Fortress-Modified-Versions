@@ -942,7 +942,7 @@ methodmap BossProfileDamageEffect < ProfileObject
 				char sound[PLATFORM_MAX_PATH];
 				smiteData.GetHitSound(sound, sizeof(sound));
 				EmitAmbientSound(sound, startPos, player.index, SNDLEVEL_SCREAMING);
-				SDKHooks_TakeDamage(player.index, attacker.index, attacker.index, smiteData.GetDamage(difficulty), smiteData.GetDamageType(difficulty));
+				SDKHooks_TakeDamage(player.index, attacker.index, attacker.index, smiteData.GetDamage(difficulty), smiteData.GetDamageType(difficulty), .bypassHooks = false);
 
 				SF2NPC_Chaser controller = parentController;
 				if (!controller.IsValid() && SF2_ChaserEntity(attacker.index).IsValid())

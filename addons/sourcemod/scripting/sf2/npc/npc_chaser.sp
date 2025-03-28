@@ -168,7 +168,7 @@ void NPCChaserOnSelectProfile(int npcIndex)
 
 	chaser.SetAddSpeed(-chaser.GetAddSpeed());
 	chaser.SetAddAcceleration(-chaser.GetAddAcceleration());
-	chaser.StunHealthAdd = -chaser.StunHealthAdd;
+	chaser.SetAddStunHealth(-chaser.GetAddStunHealth());
 
 	g_NpcStealingLife[npcIndex] = false;
 	g_NpcLifeStealTimer[npcIndex] = null;

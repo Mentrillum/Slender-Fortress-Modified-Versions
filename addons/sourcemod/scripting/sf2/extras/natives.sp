@@ -62,7 +62,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnProjectileTouchFwd = new GlobalForward("SF2_OnProjectileTouch", ET_Ignore, Param_Cell, Param_Cell);
 
-	CreateNative("SF2_GetConfig", Native_GetConfig);
 	CreateNative("SF2_IsRunning", Native_IsRunning);
 	CreateNative("SF2_GetRoundState", Native_GetRoundState);
 	CreateNative("SF2_IsRoundInGracePeriod", Native_IsRoundInGracePeriod);
@@ -381,11 +380,6 @@ void SDK_Init()
 //	==========================================================
 //	API
 //	==========================================================
-
-static any Native_GetConfig(Handle plugin, int numParams)
-{
-	return g_Config;
-}
 
 static any Native_IsRunning(Handle plugin, int numParams)
 {

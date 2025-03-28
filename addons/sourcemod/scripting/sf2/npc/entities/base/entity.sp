@@ -590,6 +590,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	{
 		CreateNative("SF2_BaseBossEntity.IsValid.get", Native_GetIsValid);
 		CreateNative("SF2_BaseBossEntity.Controller.get", Native_GetController);
+		CreateNative("SF2_BaseBossEntity.ControllerEx.get", Native_GetController);
 		CreateNative("SF2_BaseBossEntity.Target.get", Native_GetTarget);
 		CreateNative("SF2_BaseBossEntity.State.get", Native_GetState);
 		CreateNative("SF2_BaseBossEntity.CurrentChaseDuration.get", Native_GetCurrentChaseDuration);

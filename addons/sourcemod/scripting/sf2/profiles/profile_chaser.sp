@@ -308,6 +308,18 @@ methodmap ChaserBossProfile < BaseBossProfile
 		return null;
 	}
 
+	public ChaserBossVisionSenseData GetVisionSenseData()
+	{
+		ProfileObject obj = this.GetSection("senses");
+		obj = obj != null ? obj.GetSection("vision") : null;
+		if (obj != null)
+		{
+			return view_as<ChaserBossVisionSenseData>(obj);
+		}
+
+		return null;
+	}
+
 	public ProfileMusic GetIdleMusics()
 	{
 		return view_as<ProfileMusic>(this.GetSection("sound_idle_music"));
@@ -2959,7 +2971,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyFloat("footstep", difficulty, def);
+		return obj.GetDifficultyFloat("footstep", difficulty, def);
 	}
 
 	public float GetLoudFootstepCooldown(int difficulty)
@@ -2974,7 +2986,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyFloat("footstep_loud", difficulty, def);
+		return obj.GetDifficultyFloat("footstep_loud", difficulty, def);
 	}
 
 	public float GetQuietFootstepCooldown(int difficulty)
@@ -2989,7 +3001,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyFloat("footstep_quiet", difficulty, def);
+		return obj.GetDifficultyFloat("footstep_quiet", difficulty, def);
 	}
 
 	public float GetVoiceCooldown(int difficulty)
@@ -3004,7 +3016,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyFloat("voice", difficulty, def);
+		return obj.GetDifficultyFloat("voice", difficulty, def);
 	}
 
 	public float GetWeaponCooldown(int difficulty)
@@ -3019,7 +3031,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyFloat("weapon", difficulty, def);
+		return obj.GetDifficultyFloat("weapon", difficulty, def);
 	}
 
 	public float GetFlashlightCooldown(int difficulty)
@@ -3034,7 +3046,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyFloat("flashlight", difficulty, def);
+		return obj.GetDifficultyFloat("flashlight", difficulty, def);
 	}
 
 	public int GetFootstepAdd(int difficulty)
@@ -3049,7 +3061,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyInt("footstep", difficulty, def);
+		return obj.GetDifficultyInt("footstep", difficulty, def);
 	}
 
 	public int GetLoudFootstepAdd(int difficulty)
@@ -3064,7 +3076,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyInt("footstep_loud", difficulty, def);
+		return obj.GetDifficultyInt("footstep_loud", difficulty, def);
 	}
 
 	public int GetQuietFootstepAdd(int difficulty)
@@ -3079,7 +3091,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyInt("footstep_quiet", difficulty, def);
+		return obj.GetDifficultyInt("footstep_quiet", difficulty, def);
 	}
 
 	public int GetVoiceAdd(int difficulty)
@@ -3094,7 +3106,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyInt("voice", difficulty, def);
+		return obj.GetDifficultyInt("voice", difficulty, def);
 	}
 
 	public int GetWeaponAdd(int difficulty)
@@ -3109,7 +3121,7 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyInt("weapon", difficulty, def);
+		return obj.GetDifficultyInt("weapon", difficulty, def);
 	}
 
 	public int GetFlashlightAdd(int difficulty)
@@ -3124,7 +3136,21 @@ methodmap ChaserBossSoundSenseData < ProfileObject
 		{
 			return def;
 		}
-		return this.GetDifficultyInt("flashlight", difficulty, def);
+		return obj.GetDifficultyInt("flashlight", difficulty, def);
+	}
+}
+
+methodmap ChaserBossVisionSenseData < ProfileObject
+{
+	public bool CanSeeFlashlights(int difficulty)
+	{
+		bool def[Difficulty_Max] = { false, false, false, false, true, true };
+		if (this == null)
+		{
+			return def[difficulty];
+		}
+
+		return this.GetDifficultyBool("can_see_flashlights", difficulty, def[difficulty]);
 	}
 }
 
@@ -3666,56 +3692,62 @@ methodmap ChaserBossProjectileData < ProfileObject
 	}
 }
 
-int GetProfileAttackNum(const char[] profile, const char[] keyValue, int defaultValue=0, const int attackIndex)
+int GetProfileAttackNum(const char[] profile, const char[] keyValue, int defaultValue = 0, const int attackIndex)
 {
 	if (!IsProfileValid(profile))
 	{
 		return defaultValue;
 	}
 
-	char key[4];
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-	g_Config.JumpToKey("attacks");
-	FormatEx(key, sizeof(key), "%d", attackIndex);
-	g_Config.JumpToKey(key);
-	return g_Config.GetNum(keyValue, defaultValue);
+	ChaserBossProfile profileData = view_as<ChaserBossProfile>(GetBossProfile(profile));
+	if (profileData.GetSection("attacks") == null)
+	{
+		return defaultValue;
+	}
+
+	ChaserBossProfileBaseAttack attack = profileData.GetAttackFromIndex(attackIndex);
+	return attack.GetInt(keyValue, defaultValue);
 }
 
-float GetProfileAttackFloat(const char[] profile, const char[] keyValue,float defaultValue=0.0, const int attackIndex)
+float GetProfileAttackFloat(const char[] profile, const char[] keyValue, float defaultValue = 0.0, const int attackIndex)
 {
 	if (!IsProfileValid(profile))
 	{
 		return defaultValue;
 	}
 
-	char key[4];
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-	g_Config.JumpToKey("attacks");
-	FormatEx(key, sizeof(key), "%d", attackIndex);
-	g_Config.JumpToKey(key);
-	return g_Config.GetFloat(keyValue, defaultValue);
+	ChaserBossProfile profileData = view_as<ChaserBossProfile>(GetBossProfile(profile));
+	if (profileData.GetSection("attacks") == null)
+	{
+		return defaultValue;
+	}
+
+	ChaserBossProfileBaseAttack attack = profileData.GetAttackFromIndex(attackIndex);
+	return attack.GetFloat(keyValue, defaultValue);
 }
 
 bool GetProfileAttackString(const char[] profile, const char[] keyValue, char[] buffer, int length, const char[] defaultValue = "", const int attackIndex)
 {
+	strcopy(buffer, length, defaultValue);
+
 	if (!IsProfileValid(profile))
 	{
 		return false;
 	}
 
-	char key[4];
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-	g_Config.JumpToKey("attacks");
-	FormatEx(key, sizeof(key), "%d", attackIndex);
-	g_Config.JumpToKey(key);
-	g_Config.GetString(keyValue, buffer, length, defaultValue);
+	ChaserBossProfile profileData = view_as<ChaserBossProfile>(GetBossProfile(profile));
+	if (profileData.GetSection("attacks") == null)
+	{
+		return false;
+	}
+
+	ChaserBossProfileBaseAttack attack = profileData.GetAttackFromIndex(attackIndex);
+	attack.GetString(keyValue, buffer, length, defaultValue);
+
 	return true;
 }
 
-bool GetProfileAttackVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR, const int attackIndex)
+bool GetProfileAttackVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3] = NULL_VECTOR, const int attackIndex)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -3727,13 +3759,15 @@ bool GetProfileAttackVector(const char[] profile, const char[] keyValue, float b
 		return false;
 	}
 
-	char key[4];
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-	g_Config.JumpToKey("attacks");
-	FormatEx(key, sizeof(key), "%d", attackIndex);
-	g_Config.JumpToKey(key);
-	g_Config.GetVector(keyValue, buffer, defaultValue);
+	ChaserBossProfile profileData = view_as<ChaserBossProfile>(GetBossProfile(profile));
+	if (profileData.GetSection("attacks") == null)
+	{
+		return false;
+	}
+
+	ChaserBossProfileBaseAttack attack = profileData.GetAttackFromIndex(attackIndex);
+	attack.GetVector(keyValue, buffer, defaultValue);
+
 	return true;
 }
 

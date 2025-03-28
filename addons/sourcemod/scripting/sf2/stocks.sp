@@ -520,7 +520,7 @@ void KillClient(int client)
 	if (client != -1)
 	{
 		int health = GetEntProp(client, Prop_Send, "m_iHealth") * 1000;
-		SDKHooks_TakeDamage(client, 0, 0, float(health), 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+		SDKHooks_TakeDamage(client, 0, 0, float(health), 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 }, .bypassHooks = false);
 		ForcePlayerSuicide(client);
 		SetVariantInt(health);
 		AcceptEntityInput(client, "RemoveHealth");
@@ -539,7 +539,7 @@ void Explode(float pos[3], float damage, float radius, int attacker, const char[
 	SetEntityOwner(bomb, attacker);
 	DispatchSpawn(bomb);
 
-	SDKHooks_TakeDamage(bomb, attacker, attacker, 9001.0, DMG_BLAST);
+	SDKHooks_TakeDamage(bomb, attacker, attacker, 9001.0, DMG_BLAST, .bypassHooks = false);
 }
 
 void DestroyAllActiveWeapons(int client)

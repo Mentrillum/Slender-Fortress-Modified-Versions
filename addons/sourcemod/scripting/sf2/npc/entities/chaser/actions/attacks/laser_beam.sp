@@ -310,7 +310,7 @@ static void FireLaser(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity acto
 			TE_SendToAll();
 		}
 
-		SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.GetDamage(difficulty), attackData.GetDamageType(difficulty), _, _, endPos);
+		SDKHooks_TakeDamage(hitTarget, actor.index, actor.index, attackData.GetDamage(difficulty), attackData.GetDamageType(difficulty), _, _, endPos, .bypassHooks = false);
 
 		attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, actor);
 	}

@@ -486,7 +486,7 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 
 			CBaseEntity boss = CBaseEntity(NPCGetEntIndex(bossIndex));
 			float damage = float(GetEntProp(client, Prop_Send, "m_iHealth")) * 4.0;
-			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 }, .bypassHooks = false);
 			ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 			KillClient(client);
 			return;
@@ -720,7 +720,7 @@ static void StopDeathCam(int client)
 
 			CBaseEntity boss = CBaseEntity(deathCamBoss.EntIndex);
 			float damage = float(GetEntProp(client, Prop_Send, "m_iHealth")) * 4.0;
-			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 });
+			SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 }, .bypassHooks = false);
 			ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
 			KillClient(client);
 		}

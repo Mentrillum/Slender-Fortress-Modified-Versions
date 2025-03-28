@@ -308,7 +308,17 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 				realDamage *= attackData.GetDamagePercent(difficulty);
 			}
 		}
-		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, realDamage, 64, _, _, myEyePos, false);
+		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, realDamage, 64, _, _, myEyePos, .bypassHooks = false);
+
+		if (attackData.GetHitEffects() != null)
+		{
+			SlenderSpawnEffects(attackData.GetHitEffects(), controller.Index, false, _, _, _, prop.index);
+		}
+
+		if (attackData.GetHitInputs() != null)
+		{
+			attackData.GetHitInputs().AcceptInputs(actor, prop, prop);
+		}
 	}
 	delete targets;
 

@@ -2241,6 +2241,11 @@ methodmap BossKillSoundsData < ProfileObject
 		return this.GetKilledAllSounds();
 	}
 
+	public ProfileSound GetKilledBuildingSounds()
+	{
+		return view_as<ProfileSound>(this.GetSection("building"));
+	}
+
 	public void Precache()
 	{
 		if (this.GetKilledAllSounds() != null)
@@ -2254,6 +2259,11 @@ methodmap BossKillSoundsData < ProfileObject
 			{
 				this.GetKilledClassSounds(view_as<TFClassType>(i)).Precache();
 			}
+		}
+
+		if (this.GetKilledBuildingSounds() != null)
+		{
+			this.GetKilledBuildingSounds().Precache();
 		}
 	}
 }

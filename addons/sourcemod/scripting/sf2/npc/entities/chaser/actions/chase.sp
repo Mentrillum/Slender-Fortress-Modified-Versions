@@ -81,11 +81,7 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 	float gameTime = GetGameTime();
 	int difficulty = controller.Difficulty;
 	INextBot bot = actor.MyNextBotPointer();
-	bool attackEliminated = (controller.Flags & SFF_ATTACKWAITERS) != 0;
-	if (data.IsPvEBoss)
-	{
-		attackEliminated = true;
-	}
+	int interruptConditions = actor.InterruptConditions;
 
 	if (target.IsValid())
 	{
@@ -118,7 +114,7 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			return action.ChangeTo(SF2_ChaserIdleAction(), "Our target escaped, that is no good!");
 		}
 
-		if (player.IsValid && player.CanSeeSlender(controller.Index, false, _, !attackEliminated))
+		if ((interruptConditions & COND_SAWENEMY) != 0 || (interruptConditions & COND_ENEMYVISIBLE) != 0)
 		{
 			float maxRange = chaseData.GetDurationTargetRange(difficulty);
 			float distanceRatio = bot.GetRangeTo(player.index) / maxRange;

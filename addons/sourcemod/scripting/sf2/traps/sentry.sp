@@ -208,7 +208,7 @@ static Action Timer_Think(Handle timer, int ref)
 	int difficulty = controller.Difficulty;
 	if (trap.TimeUntilRemove < gameTime || !controller.IsValid())
 	{
-		SDKHooks_TakeDamage(trap.index, 0, 0, trap.Health * 4.0);
+		SDKHooks_TakeDamage(trap.index, 0, 0, trap.Health * 4.0, .bypassHooks = false);
 		return Plugin_Stop;
 	}
 

@@ -481,20 +481,20 @@ static void OnContact(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBase
 	if (strcmp(classname, "obj_dispenser", false) == 0 ||
 		strcmp(classname, "obj_teleporter", false) == 0 || strcmp(classname, "func_breakable", false) == 0)
 	{
-		SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0);
+		SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0, .bypassHooks = false);
 	}
 
 	// Destroy mini sentires, not non-mini sentries
 	if (strcmp(classname, "obj_sentrygun", false) == 0 && other.GetProp(Prop_Send, "m_bMiniBuilding"))
 	{
-		SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0);
+		SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0, .bypassHooks = false);
 	}
 
 	if (strcmp(classname, "prop_physics") == 0 || strcmp(classname, "prop_dynamic") == 0)
 	{
 		if (other.GetProp(Prop_Data, "m_iHealth") > 0)
 		{
-			SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0);
+			SDKHooks_TakeDamage(other.index, actor.index, actor.index, other.GetProp(Prop_Data, "m_iHealth") * 4.0, .bypassHooks = false);
 		}
 	}
 }

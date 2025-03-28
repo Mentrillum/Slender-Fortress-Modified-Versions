@@ -468,11 +468,6 @@ void ClearBossProfiles()
 
 void ReloadBossProfiles()
 {
-	if (g_Config != null)
-	{
-		delete g_Config;
-	}
-
 	if (g_BossPackConfig != null)
 	{
 		delete g_BossPackConfig;
@@ -484,7 +479,6 @@ void ReloadBossProfiles()
 	// Clear and reload the lists.
 	ClearBossProfiles();
 
-	g_Config = new KeyValues("root");
 	g_BossPackConfig = new KeyValues("root");
 
 	if (g_BossProfileList == null)
@@ -1273,33 +1267,27 @@ bool IsProfileValid(const char[] profile)
 	return GetBossProfileList().FindString(profile) != -1;
 }
 
-int GetProfileNum(const char[] profile, const char[] keyValue,int defaultValue=0)
+int GetProfileNum(const char[] profile, const char[] keyValue, int defaultValue = 0)
 {
 	if (!IsProfileValid(profile))
 	{
 		return defaultValue;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	return g_Config.GetNum(keyValue, defaultValue);
+	return GetBossProfile(profile).GetInt(keyValue, defaultValue);
 }
 
-float GetProfileFloat(const char[] profile, const char[] keyValue, float defaultValue=0.0)
+float GetProfileFloat(const char[] profile, const char[] keyValue, float defaultValue = 0.0)
 {
 	if (!IsProfileValid(profile))
 	{
 		return defaultValue;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	return g_Config.GetFloat(keyValue, defaultValue);
+	return GetBossProfile(profile).GetFloat(keyValue, defaultValue);
 }
 
-bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR)
+bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3] = NULL_VECTOR)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -1311,49 +1299,11 @@ bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[
 		return false;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	g_Config.GetVector(keyValue, buffer, defaultValue);
+	GetBossProfile(profile).GetVector(keyValue, buffer, defaultValue);
 	return true;
 }
-/*
-bool GetProfileColor(const char[] profile,
-	const char[] keyValue,
-	int &r,
-	int &g,
-	int &b,
-	int &a,
-	int dr=255,
-	int dg=255,
-	int db=255,
-	int da=255)
-{
-	r = dr;
-	g = dg;
-	b = db;
-	a = da;
 
-	if (!IsProfileValid(profile))
-	{
-		return false;
-	}
-
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	char value[64];
-	g_Config.GetString(keyValue, value, sizeof(value));
-
-	if (value[0] != '\0')
-	{
-		g_Config.GetColor(keyValue, r, g, b, a);
-	}
-
-	return true;
-}
-*/
-bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer,int bufferLen, const char[] defaultValue="")
+bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer, int bufferLen, const char[] defaultValue = "")
 {
 	strcopy(buffer, bufferLen, defaultValue);
 
@@ -1362,15 +1312,12 @@ bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer
 		return false;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	g_Config.GetString(keyValue, buffer, bufferLen, defaultValue);
+	GetBossProfile(profile).GetString(keyValue, buffer, bufferLen, defaultValue);
 	return true;
 }
 
 // Code originally from FF2. Credits to the original authors Rainbolt Dash and FlaminSarge.
-bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, char[] buffer,int bufferLen,int index = -1,int attackIndex = -1,int &result = 0)
+bool GetRandomStringFromProfile(const char[] profile, const char[] keyValue, char[] buffer, int bufferLen, int index = -1, int attackIndex = -1, int &result = 0)
 {
 	buffer[0] = '\0';
 	result = 0;
@@ -1380,60 +1327,42 @@ bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, 
 		return false;
 	}
 
-	g_Config.Rewind();
-	if (!g_Config.JumpToKey(profile))
+	BaseBossProfile profileData = GetBossProfile(profile);
+	ProfileObject section = profileData.GetSection(keyValue);
+	if (section == null)
 	{
 		return false;
 	}
-	if (!g_Config.JumpToKey(strKeyValue))
-	{
-		return false;
-	}
+	ProfileObject selectedSection = null;
 
-	char s[32], s2[PLATFORM_MAX_PATH], s3[3], s4[PLATFORM_MAX_PATH], s5[3];
+	char s[32], s2[PLATFORM_MAX_PATH], s3[64];
 	int i = 1;
 	if (attackIndex != -1)
 	{
 		FormatEx(s3, sizeof(s3), "%d", attackIndex);
-		FormatEx(s5, sizeof(s5), "%d", attackIndex);
-		g_Config.GetString(s5, s4, sizeof(s4));
-		if (s4[0] == '\0')
+		ProfileObject attack = section.GetSection(s3);
+		if (attack == null)
 		{
-			if (g_Config.JumpToKey(s3))
+			selectedSection = attack;
+			for (;;)
 			{
-				for (;;)
+				FormatEx(s, sizeof(s), "%d", i);
+				attack.GetString(s, s2, sizeof(s2));
+				if (s2[0] == '\0')
 				{
-					FormatEx(s, sizeof(s), "%d", i);
-					g_Config.GetString(s, s2, sizeof(s2));
-					if (s2[0] == '\0')
-					{
-						break;
-					}
-
-					i++;
+					break;
 				}
-			}
-			else
-			{
-				for (;;)
-				{
-					FormatEx(s, sizeof(s), "%d", i);
-					g_Config.GetString(s, s2, sizeof(s2));
-					if (s2[0] == '\0')
-					{
-						break;
-					}
 
-					i++;
-				}
+				i++;
 			}
 		}
 		else
 		{
+			selectedSection = section;
 			for (;;)
 			{
 				FormatEx(s, sizeof(s), "%d", i);
-				g_Config.GetString(s, s2, sizeof(s2));
+				section.GetString(s, s2, sizeof(s2));
 				if (s2[0] == '\0')
 				{
 					break;
@@ -1445,10 +1374,11 @@ bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, 
 	}
 	else
 	{
+		selectedSection = section;
 		for (;;)
 		{
 			FormatEx(s, sizeof(s), "%d", i);
-			g_Config.GetString(s, s2, sizeof(s2));
+			section.GetString(s, s2, sizeof(s2));
 			if (s2[0] == '\0')
 			{
 				break;
@@ -1464,7 +1394,7 @@ bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, 
 	}
 	int randomReturn = GetRandomInt(1, i - 1);
 	FormatEx(s, sizeof(s), "%d", index < 0 ? randomReturn : index);
-	g_Config.GetString(s, buffer, bufferLen);
+	selectedSection.GetString(s, buffer, bufferLen);
 	result = randomReturn;
 	return true;
 }
@@ -1537,7 +1467,7 @@ static any Native_LookupProfileAnimation(Handle plugin, int numParams)
 	return LookupProfileAnimation(GetNativeCell(1), animationName);
 }
 
-static any Native_IsBossProfileValid(Handle plugin,int numParams)
+static any Native_IsBossProfileValid(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1545,7 +1475,7 @@ static any Native_IsBossProfileValid(Handle plugin,int numParams)
 	return IsProfileValid(profile);
 }
 
-static any Native_GetBossProfileNum(Handle plugin,int numParams)
+static any Native_GetBossProfileNum(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1556,7 +1486,7 @@ static any Native_GetBossProfileNum(Handle plugin,int numParams)
 	return GetProfileNum(profile, keyValue, GetNativeCell(3));
 }
 
-static any Native_GetBossProfileFloat(Handle plugin,int numParams)
+static any Native_GetBossProfileFloat(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1567,7 +1497,7 @@ static any Native_GetBossProfileFloat(Handle plugin,int numParams)
 	return GetProfileFloat(profile, keyValue, GetNativeCell(3));
 }
 
-static any Native_GetBossProfileString(Handle plugin,int numParams)
+static any Native_GetBossProfileString(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1587,7 +1517,7 @@ static any Native_GetBossProfileString(Handle plugin,int numParams)
 	return success;
 }
 
-static any Native_GetBossProfileVector(Handle plugin,int numParams)
+static any Native_GetBossProfileVector(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1605,7 +1535,7 @@ static any Native_GetBossProfileVector(Handle plugin,int numParams)
 	return success;
 }
 
-static any Native_GetBossAttackProfileNum(Handle plugin,int numParams)
+static any Native_GetBossAttackProfileNum(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1616,7 +1546,7 @@ static any Native_GetBossAttackProfileNum(Handle plugin,int numParams)
 	return GetProfileAttackNum(profile, keyValue, GetNativeCell(3), GetNativeCell(4));
 }
 
-static any Native_GetBossAttackProfileFloat(Handle plugin,int numParams)
+static any Native_GetBossAttackProfileFloat(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1627,7 +1557,7 @@ static any Native_GetBossAttackProfileFloat(Handle plugin,int numParams)
 	return GetProfileAttackFloat(profile, keyValue, GetNativeCell(3), GetNativeCell(4));
 }
 
-static any Native_GetBossAttackProfileString(Handle plugin,int numParams)
+static any Native_GetBossAttackProfileString(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1647,7 +1577,7 @@ static any Native_GetBossAttackProfileString(Handle plugin,int numParams)
 	return success;
 }
 
-static any Native_GetBossAttackProfileVector(Handle plugin,int numParams)
+static any Native_GetBossAttackProfileVector(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1665,7 +1595,7 @@ static any Native_GetBossAttackProfileVector(Handle plugin,int numParams)
 	return success;
 }
 
-static any Native_GetRandomStringFromBossProfile(Handle plugin,int numParams)
+static any Native_GetRandomStringFromBossProfile(Handle plugin, int numParams)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	GetNativeString(1, profile, SF2_MAX_PROFILE_NAME_LENGTH);
@@ -1683,7 +1613,7 @@ static any Native_GetRandomStringFromBossProfile(Handle plugin,int numParams)
 	return success;
 }
 
-static any Native_GetBossAttributeName(Handle plugin,int numParams)
+static any Native_GetBossAttributeName(Handle plugin, int numParams)
 {
 	int attributeIndex = GetNativeCell(2);
 
@@ -1691,7 +1621,7 @@ static any Native_GetBossAttributeName(Handle plugin,int numParams)
 	return success;
 }
 
-static any Native_GetBossAttributeValue(Handle plugin,int numParams)
+static any Native_GetBossAttributeValue(Handle plugin, int numParams)
 {
 	int attributeIndex = GetNativeCell(2);
 

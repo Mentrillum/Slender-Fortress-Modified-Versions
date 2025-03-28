@@ -306,7 +306,7 @@ methodmap SF2BossMakerEntity < SF2SpawnPointBaseEntity
 				continue;
 			}
 
-			boss.RemoveFromGame();
+			boss.Remove();
 		}
 
 		this.Bosses.Clear();

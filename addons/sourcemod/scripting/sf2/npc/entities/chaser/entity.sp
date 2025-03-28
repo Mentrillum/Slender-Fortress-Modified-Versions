@@ -129,6 +129,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		g_OnPlayerTakeDamagePostPFwd.AddFunction(null, OnPlayerTakeDamagePost);
 		g_OnPlayerDeathPrePFwd.AddFunction(null, OnPlayerDeathPre);
 		g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
+		g_OnBuildingDestroyedPFwd.AddFunction(null, OnBuildingDestroyed);
 
 		SF2_ChaserAttackAction.Initialize();
 		InitializePostureRagePhase();
@@ -3193,6 +3194,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_ChaserBossEntity.IsValid.get", Native_GetIsValid);
+		CreateNative("SF2_ChaserBossEntity.Controller.get", Native_GetController);
 		CreateNative("SF2_ChaserBossEntity.IsAttemptingToMove.get", Native_GetIsAttemptingToMove);
 		CreateNative("SF2_ChaserBossEntity.IsAttacking.get", Native_GetIsAttacking);
 		CreateNative("SF2_ChaserBossEntity.IsStunned.get", Native_GetIsStunned);
@@ -3479,6 +3481,36 @@ static void OnPlayerDeath(SF2_BasePlayer client, int attacker, int inflictor, bo
 	}
 }
 
+static void OnBuildingDestroyed(CBaseEntity building, CBaseEntity killer)
+{
+	SF2_ChaserEntity boss = SF2_ChaserEntity(killer.index);
+	if (!boss.IsValid())
+	{
+		return;
+	}
+
+	SF2NPC_Chaser controller = boss.Controller;
+	if (!controller.IsValid())
+	{
+		return;
+	}
+
+	ChaserBossProfile data = controller.GetProfileData();
+	ProfileSound info = null;
+
+	if (data.GetLocalKillSounds() != null)
+	{
+		info = data.GetLocalKillSounds().GetKilledBuildingSounds();
+		info.EmitSound(_, boss.index);
+	}
+
+	if (data.GetGlobalKillSounds() != null)
+	{
+		info = data.GetGlobalKillSounds().GetKilledBuildingSounds();
+		info.EmitToAllPlayers();
+	}
+}
+
 static void OnCreate(SF2_ChaserEntity ent)
 {
 	ent.AttackIndex = -1;
@@ -3689,7 +3721,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 		if (data.IsPvEBoss && player.IsValid && !player.IsInPvE)
 		{
-			SDKHooks_TakeDamage(inflictor, chaser.index, chaser.index, CBaseEntity(inflictor).GetProp(Prop_Data, "m_iHealth") * 4.0);
+			SDKHooks_TakeDamage(inflictor, chaser.index, chaser.index, CBaseEntity(inflictor).GetProp(Prop_Data, "m_iHealth") * 4.0, .bypassHooks = false);
 			return Plugin_Handled;
 		}
 	}
@@ -4344,15 +4376,11 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 	int bestNewTarget = oldTarget;
 	float searchRange = data.GetSearchRange(difficulty);
-	float bestNewTargetDist = Pow(searchRange, 2.0);
+	float bestNewTargetDist = 1999999999.0;
 	if (IsValidEntity(bestNewTarget))
 	{
 		CBaseEntity(bestNewTarget).GetAbsOrigin(targetPos);
 		bestNewTargetDist = GetVectorSquareMagnitude(myPos, targetPos);
-		if (bestNewTargetDist > Pow(searchRange, 2.0))
-		{
-			bestNewTargetDist = Pow(searchRange, 2.0);
-		}
 	}
 
 	if (chaser.SmellPlayerList != null)
@@ -4490,6 +4518,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		}
 
 		float dist = GetVectorSquareMagnitude(myPos, targetPos);
+		float flashlightDist = -1.0;
 
 		if (player.IsValid && g_PlayerFogCtrlOffset != -1 && g_FogCtrlEnableOffset != -1 && g_FogCtrlEndOffset != -1)
 		{
@@ -4554,6 +4583,33 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		if (FloatAbs(AngleDiff(myEyeAng[1], buffer[1])) <= (vision.GetFieldOfView() * 0.5))
 		{
 			chaser.SetInFOV(entity, true);
+		}
+
+		if ((state == STATE_IDLE || state == STATE_ALERT || state == STATE_CHASE) && data.GetVisionSenseData().CanSeeFlashlights(difficulty) && player.IsValid && player.UsingFlashlight)
+		{
+			SF2PointSpotlightEntity flashlight = SF2PointSpotlightEntity(ClientGetFlashlightEntity(player.index));
+			float flashlightPos[3], fov[3];
+			flashlight.End.GetAbsOrigin(flashlightPos);
+			flashlightDist = controller.GetDistanceFrom(flashlight.End.index);
+			if (flashlight.IsValid() && flashlightDist <= Pow(data.GetSearchRange(difficulty), 2.0))
+			{
+				trace = TR_TraceRayFilterEx(traceStartPos,
+				flashlightPos,
+				CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP,
+				RayType_EndPoint,
+				TraceRayBossVisibility,
+				chaser.index);
+
+				SubtractVectors(flashlightPos, traceStartPos, fov);
+				GetVectorAngles(fov, fov);
+
+				if (!TR_DidHit(trace) && FloatAbs(AngleDiff(myEyeAng[1], fov[1])) <= (vision.GetFieldOfView() * 0.5))
+				{
+					chaser.SetIsVisible(player, true);
+					chaser.SetInFOV(player, true);
+				}
+				delete trace;
+			}
 		}
 
 		if (chaser.GetIsVisible(entity))
@@ -4683,7 +4739,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		if (chaser.GetIsNear(entity) || (chaser.GetIsVisible(entity) && chaser.GetInFOV(entity)))
 		{
-			if (dist <= SquareFloat(searchRange))
+			if (dist <= SquareFloat(searchRange) || (flashlightDist > 0.0 && flashlightDist <= SquareFloat(searchRange)))
 			{
 				// Subtract distance to increase priority.
 				dist -= ((dist * priorityValue));
@@ -5654,6 +5710,22 @@ static any Native_GetIsValid(Handle plugin, int numParams)
 	int entity = GetNativeCell(1);
 	SF2_ChaserEntity bossEntity = SF2_ChaserEntity(entity);
 	return bossEntity.IsValid();
+}
+
+static any Native_GetController(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	if (!IsValidEntity(ent))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", ent);
+	}
+
+	SF2_ChaserEntity boss = SF2_ChaserEntity(ent);
+	if (!boss.Controller.IsValid())
+	{
+		return -1;
+	}
+	return boss.Controller;
 }
 
 static any Native_GetIsAttemptingToMove(Handle plugin, int numParams)

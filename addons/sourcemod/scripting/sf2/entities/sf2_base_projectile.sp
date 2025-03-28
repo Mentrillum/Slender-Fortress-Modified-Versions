@@ -462,7 +462,7 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 			}
 			float force[3];
 			this.GetDamageForce(valid, force);
-			SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, adjustedDamage, flags, _, force, pos);
+			SDKHooks_TakeDamage(valid.index, !IsValidEntity(owner) ? this.index : owner, !IsValidEntity(owner) ? this.index : owner, adjustedDamage, flags, _, force, pos, .bypassHooks = false);
 			if (SF2_BasePlayer(valid.index).IsValid)
 			{
 				Call_StartForward(g_OnPlayerDamagedByProjectilePFwd);
