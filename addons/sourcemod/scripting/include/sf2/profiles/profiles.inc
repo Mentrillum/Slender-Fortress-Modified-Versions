@@ -1708,10 +1708,7 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 	void Load(KeyValues kv, bool newStuff = false)
 	{
 		SF2BossProfileAnimationSectionNameData animData;
-		this.Animations = new StringMap();
-		ArrayList temp = new ArrayList(sizeof(animData));
-		temp.PushArray(animData);
-		this.Animations.SetValue("deathcorridor", temp);
+		this.Animations = null;
 		if (kv.JumpToKey("animations"))
 		{
 			this.Gestures = new StringMap();
@@ -1720,6 +1717,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 			if (kv.GotoFirstSubKey()) // Find the animation name
 			{
+				if (this.Animations == null)
+				{
+					this.Animations = new StringMap();
+				}
 				do
 				{
 					kv.GetSectionName(animType, sizeof(animType));
@@ -1729,6 +1730,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 						if (kv.GotoFirstSubKey())
 						{
+							if (this.Gestures == null)
+							{
+								this.Gestures = new StringMap();
+							}
 							do
 							{
 								char animType2[64];
@@ -1782,6 +1787,10 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 				{
 					continue;
 				}
+				if (this.Animations == null)
+				{
+					this.Animations = new StringMap();
+				}
 				ArrayList animDataArray = new ArrayList(sizeof(animData));
 				strcopy(section, sizeof(section), g_SlenderAnimationsList[i]);
 				animData.Init(section);
@@ -1795,54 +1804,53 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 
 	void Destroy()
 	{
-		if (this.Animations == null || this.Gestures == null)
-		{
-			return;
-		}
-		StringMapSnapshot snapshot = this.Animations.Snapshot();
-		StringMapSnapshot gestureSnapshot = this.Gestures.Snapshot();
-
 		char animType[64];
 		ArrayList animDataArray;
 		SF2BossProfileAnimationSectionNameData animData;
 		SF2BossProfileAttackGestureData gestureData;
-
-		for (int i = 0; i < snapshot.Length; i++)
+		if (this.Animations != null)
 		{
-			snapshot.GetKey(i, animType, sizeof(animType));
-			this.Animations.GetValue(animType, animDataArray);
+			StringMapSnapshot snapshot = this.Animations.Snapshot();
+			for (int i = 0; i < snapshot.Length; i++)
+			{
+				snapshot.GetKey(i, animType, sizeof(animType));
+				this.Animations.GetValue(animType, animDataArray);
 
-			for (int j = 0; j < animDataArray.Length; j++)
-			{
-				animDataArray.GetArray(j, animData, sizeof(animData));
-				animData.Destroy();
+				for (int j = 0; j < animDataArray.Length; j++)
+				{
+					animDataArray.GetArray(j, animData, sizeof(animData));
+					animData.Destroy();
+				}
+				if (animDataArray != null)
+				{
+					delete animDataArray;
+				}
 			}
-			if (animDataArray != null)
-			{
-				delete animDataArray;
-			}
+			delete snapshot;
+			delete this.Animations;
 		}
 
-		for (int i = 0; i < gestureSnapshot.Length; i++)
+		if (this.Gestures != null)
 		{
-			gestureSnapshot.GetKey(i, animType, sizeof(animType));
-			this.Gestures.GetValue(animType, animDataArray);
+			StringMapSnapshot gestureSnapshot = this.Gestures.Snapshot();
+			for (int i = 0; i < gestureSnapshot.Length; i++)
+			{
+				gestureSnapshot.GetKey(i, animType, sizeof(animType));
+				this.Gestures.GetValue(animType, animDataArray);
 
-			for (int j = 0; j < animDataArray.Length; j++)
-			{
-				animDataArray.GetArray(j, gestureData, sizeof(gestureData));
-				gestureData.Destroy();
+				for (int j = 0; j < animDataArray.Length; j++)
+				{
+					animDataArray.GetArray(j, gestureData, sizeof(gestureData));
+					gestureData.Destroy();
+				}
+				if (animDataArray != null)
+				{
+					delete animDataArray;
+				}
 			}
-			if (animDataArray != null)
-			{
-				delete animDataArray;
-			}
+			delete gestureSnapshot;
+			delete this.Gestures;
 		}
-
-		delete snapshot;
-		delete gestureSnapshot;
-		delete this.Animations;
-		delete this.Gestures;
 	}
 
 	bool HasAnimationSection(const char[] animType)

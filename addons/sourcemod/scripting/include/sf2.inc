@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.7"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.7"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.73b"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.73b"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -540,7 +540,6 @@ forward Action SF2_OnBossPreTakeDamage(SF2_ChaserBossEntity chaser, CBaseEntity 
  * @return					Returning Plugin_Stop will invalidate any flashlight damage taken by the boss from the specified player.
  */
 forward Action SF2_OnBossPreFlashlightDamage(SF2_ChaserBossEntity chaser, SF2_Player player);
-
 
 /**
  * Called whenever a chaser boss gets a command string "suspend for action" using INextBotEventResponder.OnCommandString()

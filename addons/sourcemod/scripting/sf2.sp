@@ -1398,8 +1398,8 @@ public void OnMapEnd()
 	g_RenevantBossesChaseEndlessly = false;
 	g_RenevantWallHax = false;
 
-	BossProfilesOnMapEnd();
 	NPCRemoveAll();
+	BossProfilesOnMapEnd();
 
 	Call_StartForward(g_OnMapEndPFwd);
 	Call_Finish();

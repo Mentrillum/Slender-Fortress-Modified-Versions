@@ -607,7 +607,7 @@ enum struct SF2ChaserBossProfileShockwaveData
 			return;
 		}
 
-		if (!player.IsValid())
+		if (!SF2_Player(player.index).IsValid)
 		{
 			return;
 		}
@@ -1068,7 +1068,7 @@ enum struct SF2ChaserBossProfileAttackData
 			return;
 		}
 
-		if (!player.IsValid())
+		if (!SF2_Player(player.index).IsValid)
 		{
 			return;
 		}
