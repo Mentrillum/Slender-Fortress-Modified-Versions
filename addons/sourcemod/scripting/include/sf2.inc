@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.73b"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.73b"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.73c"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.73c"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
