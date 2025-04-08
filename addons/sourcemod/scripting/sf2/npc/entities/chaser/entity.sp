@@ -1778,7 +1778,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return NULL_ACTION;
 		}
 
-		return SF2_PlaySequenceAndWaitEx(section, attackName, animations);
+		return SF2_PlaySequenceAndWaitEx(section, attackData.GetAnimations() == null ? attackName : "", attackData.GetAnimations() == null ? null : attackData.GetAnimations());
 	}
 
 	public void DoAttackMiscConditions(const char[] attackName)
@@ -1845,13 +1845,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		ChaserBossProfile data = controller.GetProfileData();
 		ChaserBossProfileBaseAttack attackData = data.GetAttack(attackName);
 		BossProfileShockwave shockwaveData = attackData.GetShockwave();
+		int difficulty = controller.Difficulty;
 
-		if (shockwaveData == null)
+		if (shockwaveData == null || !shockwaveData.IsEnabled(difficulty))
 		{
 			return;
 		}
 
-		int difficulty = controller.Difficulty;
 		float radius = shockwaveData.GetRadius(difficulty);
 		if (radius <= 0.0)
 		{

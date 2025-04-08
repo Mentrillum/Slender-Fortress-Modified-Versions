@@ -1178,6 +1178,16 @@ methodmap BossProfileDamageEffect_Random < BossProfileDamageEffect
 
 methodmap BossProfileShockwave < ProfileObject
 {
+	public bool IsEnabled(int difficulty)
+	{
+		if (this == null)
+		{
+			return false;
+		}
+
+		return this.GetDifficultyBool("enabled", difficulty, true);
+	}
+
 	public float GetHeight(int difficulty)
 	{
 		return this.GetDifficultyFloat("height", difficulty, 80.0);

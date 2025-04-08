@@ -87,7 +87,7 @@ static int OnStart(SF2_PlaySequenceAndWaitEx action, SF2_BaseBoss actor, NextBot
 	float duration = 0.0, cycle = 0.0, rate = 1.0;
 	int sequence = -1;
 	ProfileMasterAnimations animations = action.Animations;
-	if (!actor.ResetProfileAnimation(action.GetSection(), .preDefinedName = animations == null ? action.GetPreDefinedName() : "", .sequence = sequence, .duration = duration, .rate = rate, .cycle = cycle, .animations = animations))
+	if (!actor.ResetProfileAnimation(action.GetSection(), .preDefinedName = action.GetPreDefinedName(), .sequence = sequence, .duration = duration, .rate = rate, .cycle = cycle, .animations = animations))
 	{
 		return action.Done("Invalid section");
 	}

@@ -75,6 +75,10 @@ methodmap ProfileEffect < ProfileObject
 			{
 				return EffectType_Sound;
 			}
+			else if (strcmp(effectTypeString, "screen_shake", false) == 0)
+			{
+				return EffectType_ScreenShake;
+			}
 		}
 	}
 
@@ -705,6 +709,63 @@ methodmap ProfileEffect_Sound < ProfileEffect
 	}
 }
 
+methodmap ProfileEffect_ScreenShake < ProfileEffect
+{
+	property float Amplitude
+	{
+		public get()
+		{
+			return this.GetFloat("amplitude", 25.0);
+		}
+	}
+
+	property float Frequency
+	{
+		public get()
+		{
+			return this.GetFloat("frequency", 5.0);
+		}
+	}
+
+	property float Duration
+	{
+		public get()
+		{
+			return this.GetFloat("duration", 1.0);
+		}
+	}
+
+	property float Radius
+	{
+		public get()
+		{
+			return this.GetFloat("radius", 1000.0);
+		}
+	}
+
+	/*SHAKE_START = 0,		// Starts the screen shake for all players within the radius.
+	SHAKE_STOP,				// Stops the screen shake for all players within the radius.
+	SHAKE_AMPLITUDE,		// Modifies the amplitude of an active screen shake for all players within the radius.
+	SHAKE_FREQUENCY,		// Modifies the frequency of an active screen shake for all players within the radius.
+	SHAKE_START_RUMBLEONLY,	// Starts a shake effect that only rumbles the controller, no screen effect.
+	SHAKE_START_NORUMBLE,	// Starts a shake that does NOT rumble the controller.*/
+	property int Command
+	{
+		public get()
+		{
+			return this.GetInt("command", 0);
+		}
+	}
+
+	property bool AirShake
+	{
+		public get()
+		{
+			return this.GetBool("air_shake", true);
+		}
+	}
+}
+
 void InitializeEffects()
 {
 	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
@@ -1015,7 +1076,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 		{
 			entity = CBaseEntity(CreateEntityByName("env_sprite"));
 		}
-		case EffectType_TempEntBeamRing, EffectType_TempEntParticle, EffectType_Sound:
+		case EffectType_TempEntBeamRing, EffectType_TempEntParticle, EffectType_Sound, EffectType_ScreenShake:
 		{
 			isEntity = false;
 		}
@@ -1359,6 +1420,11 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 			{
 				ProfileEffect_Sound sound = view_as<ProfileEffect_Sound>(effect);
 				sound.Sounds.EmitSound(_, attacher);
+			}
+			case EffectType_ScreenShake:
+			{
+				ProfileEffect_ScreenShake shake = view_as<ProfileEffect_ScreenShake>(effect);
+				UTIL_ScreenShake(effectPos, shake.Amplitude, shake.Frequency, shake.Duration, shake.Radius, shake.Command, shake.AirShake);
 			}
 		}
 	}

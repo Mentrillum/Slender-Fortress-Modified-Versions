@@ -195,7 +195,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		}
 	}
 
-	if (!SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
+	if (IsValidEntity(inflictor) && !SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
 	{
 		int npcIndex = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 		if (npcIndex != -1)

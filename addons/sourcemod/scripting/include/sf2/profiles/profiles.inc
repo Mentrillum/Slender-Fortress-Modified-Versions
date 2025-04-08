@@ -822,7 +822,8 @@ enum EffectType
 	EffectType_Sprite,
 	EffectType_TempEntBeamRing,
 	EffectType_TempEntParticle,
-	EffectType_Sound
+	EffectType_Sound,
+	EffectType_ScreenShake
 };
 
 enum

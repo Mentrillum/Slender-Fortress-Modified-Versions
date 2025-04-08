@@ -304,7 +304,14 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 			}
 			else
 			{
-				realDamage = (strcmp(class, "tank_boss", false) != 0 && strcmp(class, "func_breakable", false) != 0) ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
+				if (strcmp(class, "prop_dynamic", false) != 0)
+				{
+					realDamage = (strcmp(class, "tank_boss", false) != 0 && strcmp(class, "func_breakable", false) != 0) ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
+				}
+				else
+				{
+					realDamage = float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
+				}
 				realDamage *= attackData.GetDamagePercent(difficulty);
 			}
 		}
