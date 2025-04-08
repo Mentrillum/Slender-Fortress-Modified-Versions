@@ -375,7 +375,7 @@ Action Hook_ClientOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 		if (npcIndex != -1)
 		{
 			bool attackEliminated = (NPCGetFlags(npcIndex) & SFF_ATTACKWAITERS) != 0;
-			if (!attackEliminated && (GetClientTeam(victim) == TFTeam_Blue) && IsValidClient(victim) )
+			if (!attackEliminated && IsValidClient(victim) && GetClientTeam(victim) == TFTeam_Blue)
 			{
 				damage = 0.0;
 				return Plugin_Changed;
