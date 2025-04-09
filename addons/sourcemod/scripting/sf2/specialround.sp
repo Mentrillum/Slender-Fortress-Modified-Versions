@@ -1101,7 +1101,6 @@ void SpecialRoundStart()
 
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
 			ArrayList selectableBosses = GetSelectableBossProfileList();
-			ArrayList selectableBoxingBosses = GetSelectableBoxingBossProfileList();
 
 			if (selectableBosses.Length > 0)
 			{
