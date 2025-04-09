@@ -1489,7 +1489,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		SF2ChaserBossProfileData data;
 		data = controller.GetProfileData();
 		int difficulty = controller.Difficulty;
-		ArrayList arrayAttacks = new ArrayList();
+		ArrayList arrayAttacks = null;
 		SF2ChaserBossProfileAttackData attackData;
 		for (int index = 0; index < data.Attacks.Length; index++)
 		{
@@ -1536,6 +1536,10 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 				if (result != Plugin_Continue)
 				{
+					if (arrayAttacks == null)
+					{
+						arrayAttacks = new ArrayList();
+					}
 					arrayAttacks.Push(index);
 				}
 				continue;
@@ -1567,19 +1571,26 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 			attackName = attackData.Name;
 
+			if (arrayAttacks == null)
+			{
+				arrayAttacks = new ArrayList();
+			}
 			arrayAttacks.Push(index);
+		}
+
+		if (arrayAttacks == null || arrayAttacks.Length == 0)
+		{
+			if (arrayAttacks != null)
+			{
+				delete arrayAttacks;
+			}
+			return NULL_ACTION;
 		}
 
 		Call_StartForward(g_OnBossPreAttackFwd);
 		Call_PushCell(controller.Index);
 		Call_PushCell(arrayAttacks);
 		Call_Finish();
-
-		if (arrayAttacks.Length == 0)
-		{
-			delete arrayAttacks;
-			return NULL_ACTION;
-		}
 
 		float eyePos[3], targetPos[3], direction[3], eyeAng[3];
 		this.GetAbsAngles(eyeAng);
