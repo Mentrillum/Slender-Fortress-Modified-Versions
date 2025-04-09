@@ -1611,6 +1611,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			}
 
 			attackName = attackData.Name;
+			delete arrayAttacks;
 
 			return SF2_ChaserAttackAction(attackName, attackData.Index, attackData.Duration[difficulty] + gameTime);
 		}

@@ -956,6 +956,7 @@ void InitiateBossPackVote(int initiator)
 	{
 		return;
 	}
+
 	Handle voteMenu = NativeVotes_Create(Menu_BossPackVote, NativeVotesType_Custom_Mult);
 	NativeVotes_SetInitiator(voteMenu, initiator);
 	char title[255];

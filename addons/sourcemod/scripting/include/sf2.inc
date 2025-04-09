@@ -10,8 +10,8 @@
 #include <tf2_stocks>
 #include <sdkhooks>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 2.73c"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.73c"
+#define PLUGIN_VERSION "1.8.0 M Alpha 2.73d"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 2.73d"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
