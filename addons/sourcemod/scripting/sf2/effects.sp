@@ -669,7 +669,7 @@ void SlenderRemoveEffects(int bossIndex, bool kill = false)
 		return;
 	}
 
-	for (int effect = 0; effect < g_NpcEffectsArray[bossIndex].Length; effect++)
+	for (int effect = 0; effect < g_NpcEffectsArray[bossIndex].Length;)
 	{
 		int ent = g_NpcEffectsArray[bossIndex].Get(effect);
 		if (!IsValidEntity(ent))
