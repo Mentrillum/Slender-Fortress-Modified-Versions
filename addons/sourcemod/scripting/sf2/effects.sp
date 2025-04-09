@@ -1189,7 +1189,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				entity.KeyValueFloat("startwidth", trail.StartWidth);
 				entity.KeyValueFloat("endwidth", trail.EndWidth);
 				entity.KeyValue("spritename", name);
-				SetEntPropFloat(entity, Prop_Send, "m_flTextureRes", 0.05);
+				entity.SetPropFloat(Prop_Send, "m_flTextureRes", 0.05);
 
 				int renderColor[4];
 				trail.GetRenderColor(difficulty, renderColor);
@@ -1236,7 +1236,7 @@ static void SpawnEffect(ProfileEffect effect, int bossIndex, const float overrid
 				char attachment[64];
 				light.GetAttachment(attachment, sizeof(attachment));
 
-				SF2PointSpotlightEntity spotlight = SF2PointSpotlightEntity(entity);
+				SF2PointSpotlightEntity spotlight = SF2PointSpotlightEntity(entity.index);
 				if (attachment[0] != '\0')
 				{
 					SetVariantString("!activator");
@@ -1504,11 +1504,6 @@ void SlenderToggleParticleEffects(int slenderEnt, bool reverse = false)
 void SlenderRemoveEffects(int bossIndex, bool kill = false)
 {
 	if (g_NpcEffectsArray[bossIndex] == null)
-	{
-		return;
-	}
-
-	if (g_NpcEffectsArray[bossIndex] != null && g_NpcEffectsArray[bossIndex].Length <= 0)
 	{
 		return;
 	}

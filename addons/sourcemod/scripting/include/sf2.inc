@@ -7,8 +7,8 @@
 #include <cbasenpc/util>
 #include <cbasenpc/matrix>
 
-#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 3-28-2025"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 3-28-2025"
+#define PLUGIN_VERSION "1.8.0 M Alpha 3 Indev 4-9-2025"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M Alpha 3 Indev 4-9-2025"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -2206,13 +2206,13 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 			return false;
 		}
 
-		int controller = this.Controller;
-		int difficulty = SF2_GetBossDifficulty(controller);
+		SF2_ChaserBossController controller = this.Controller;
+		int difficulty = controller.Difficulty;
 
 		INextBot bot = this.MyNextBotPointer();
 		float eyePos[3], targetPos[3], direction[3], eyeAng[3];
 		this.GetAbsAngles(eyeAng);
-		SF2_GetBossEyePosition(controller, eyePos);
+		SF2_GetBossEyePosition(controller.Index, eyePos);
 		this.Target.GetAbsOrigin(targetPos);
 		SubtractVectors(targetPos, eyePos, direction);
 		GetVectorAngles(direction, direction);
