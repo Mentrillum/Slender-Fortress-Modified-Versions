@@ -376,7 +376,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		}
 		case RenevantWave_AdminBoss:
 		{
-			ArrayList selectableBosses = GetSelectableRenevantBossAdminProfileList().Clone();
+			ArrayList selectableBosses = GetSelectableRenevantBossAdminProfileList();
 			if (selectableBosses.Length > 0)
 			{
 				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
@@ -405,7 +405,6 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			{
 				g_RenevantWaveList.Erase(eraseWave);
 			}
-			delete selectableBosses;
 		}
 		case RenevantWave_WallHax:
 		{
@@ -473,7 +472,7 @@ void Renevant_SetWave(int wave, bool resetTimer = false)
 					g_RenevantWaveList.Erase(eraseWave);
 				}
 			}
-			ArrayList selectableBosses = GetSelectableRenevantBossAdminProfileList().Clone();
+			ArrayList selectableBosses = GetSelectableRenevantBossAdminProfileList();
 			if (selectableBosses.Length <= 0)
 			{
 				int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_AdminBoss);
@@ -482,7 +481,6 @@ void Renevant_SetWave(int wave, bool resetTimer = false)
 					g_RenevantWaveList.Erase(eraseWave);
 				}
 			}
-			delete selectableBosses;
 		}
 		case 0:
 		{
