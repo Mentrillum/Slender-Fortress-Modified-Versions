@@ -6,18 +6,18 @@
 		{
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
-				"linux" "335"
-				"linux64" "335"
-				"windows" "334"
-				"windows64" "334"
+				"linux" "336"
+				"linux64" "336"
+				"windows" "335"
+				"windows64" "335"
 			}
 
 			"CTFWeaponBase::GetCustomDamageType"
 			{
-				"linux" "387"
-				"linux64" "387"
-				"windows" "381"
-				"windows64" "381"
+				"linux" "388"
+				"linux64" "388"
+				"windows" "382"
+				"windows64" "382"
 			}
 
 			"CBaseEntity::ShouldTransmit"
@@ -38,26 +38,26 @@
 
 			"CBaseProjectile::CanCollideWithTeammates"
 			{
-				"linux" "230"
-				"linux64" "230"
-				"windows" "229"
-				"windows64" "229"
+				"linux" "231"
+				"linux64" "231"
+				"windows" "230"
+				"windows64" "230"
 			}
 
 			"CTFPlayer::EquipWearable"
 			{
-				"linux" "439"
-				"linux64" "439"
-				"windows" "438"
-				"windows64" "438"
+				"linux" "440"
+				"linux64" "440"
+				"windows" "439"
+				"windows64" "439"
 			}
 
 			"CBaseTrigger::PassesTriggerFilters"
 			{
-				"linux" "208"
-				"linux64" "208"
-				"windows" "207"
-				"windows64" "207"
+				"linux" "209"
+				"linux64" "209"
+				"windows" "208"
+				"windows64" "208"
 			}
 
 			"CTFWeaponBase::GetWeaponID"
