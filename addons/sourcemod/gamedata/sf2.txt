@@ -6,103 +6,159 @@
 		{
 			"CTFPlayer::WantsLagCompensationOnEntity"
 			{
-				"linux" "335"
-				"windows" "334"
+				"linux" "336"
+				"linux64" "336"
+				"windows" "335"
+				"windows64" "335"
 			}
 
 			"CTFWeaponBase::GetCustomDamageType"
 			{
-				"linux" "387"
-				"windows" "381"
+				"linux" "388"
+				"linux64" "388"
+				"windows" "382"
+				"windows64" "382"
 			}
 
 			"CBaseEntity::ShouldTransmit"
 			{
 				"linux"	"21"
+				"linux64" "21"
 				"windows" "20"
+				"windows64" "20"
 			}
 
 			"CBaseEntity::UpdateTransmitState"
 			{
 				"linux" "22"
+				"linux64" "22"
 				"windows" "21"
+				"windows64" "21"
 			}
 
 			"CBaseProjectile::CanCollideWithTeammates"
 			{
-				"linux" "230"
-				"windows" "229"
+				"linux" "231"
+				"linux64" "231"
+				"windows" "230"
+				"windows64" "230"
 			}
 
 			"CTFPlayer::EquipWearable"
 			{
-				"linux" "439"
-				"windows" "438"
+				"linux" "440"
+				"linux64" "440"
+				"windows" "439"
+				"windows64" "439"
 			}
 
 			"CBaseTrigger::PassesTriggerFilters"
 			{
-				"linux" "208"
-				"windows" "207"
+				"linux" "209"
+				"linux64" "209"
+				"windows" "208"
+				"windows64" "208"
 			}
 
 			"CTFWeaponBase::GetWeaponID"
 			{
 				"windows" "380"
 				"linux"	"386"
+				"linux64" "386"
+				"windows64" "380"
 			}
 
 			"CBaseEntity::IsBaseCombatWeapon"
 			{
 				"windows" "91"
 				"linux"	"92"
+				"linux64" "92"
+				"windows64" "91"
 			}
 
 			"CBaseEntity::ChangeTeam"
 			{
 				"library" "server"
 				"linux"	"97"
+				"linux64" "97"
 				"windows" "96"
+				"windows64" "96"
 			}
 
 			"CTeam::AddPlayer"
 			{
 				"linux"	"209"
+				"linux64" "209"
 				"windows" "208"
+				"windows64" "208"
 			}
 
 			"CTeam::RemovePlayer"
 			{
 				"linux"	"210"
+				"linux64" "210"
 				"windows" "209"
+				"windows64" "209"
 			}
 
 			"CBaseGrenade::Explode"
 			{
 				"library" "server"
 				"linux"	"236"
+				"linux64" "236"
 				"windows" "235"
+				"windows64" "235"
 			}
 
 			"CTFBaseRocket::Explode"
 			{
 				"library" "server"
 				"linux"	"240"
+				"linux64" "240"
 				"windows" "239"
+				"windows64" "239"
 			}
 
 			"CBaseEntity::VPhysicsUpdate"
 			{
 				"library" "server"
 				"linux"	"164"
+				"linux64" "164"
 				"windows" "163"
+				"windows64" "163"
 			}
 
 			"CTFSniperRifle::GetPenetrateType"
 			{
 				"library" "server"
 				"linux"	"407"
+				"linux64" "407"
 				"windows" "400"
+				"windows64" "400"
+			}
+
+			"CBaseEntity::Deflected"
+			{
+				"linux"	"160"
+				"linux64" "160"
+				"windows" "159"
+				"windows64" "159"
+			}
+
+			"CBasePlayer::Event_Killed"
+			{
+				"linux"	"69"
+				"linux64" "69"
+				"windows" "68"
+				"windows64" "68"
+			}
+
+			"CBaseObject::OnTakeDamage"
+			{
+				"linux" "65"
+				"linux64" "65"
+				"windows" "65"
+				"windows64" "65"
 			}
 		}
 
@@ -216,6 +272,14 @@
 				"windows" "\x55\x8B\xEC\x53\x8B\xD9\x56\x57\x8B\x93\x10\x02\x00\x00\x85\xD2\x0F\x84\x2A\x2A\x2A\x2A\xB9\xFF\x1F\x00\x00\x83\xFA\xFF\x74\x2A\x0F\xB7\xCA\xA1\x2A\x2A\x2A\x2A\xC1\xE1\x04\x8D\x78\x04\x03\xF9\x0F\x84\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x57\x04\x0F\x85\x2A\x2A\x2A\x2A\x8B\x3F\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x07\x8B\xCF\x8B\x80\x48\x01\x00\x00\xFF\xD0\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\x8B\x75\x08\x85\xF6\x74\x2A"
 				"windows64" "\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x48\x89\x74\x24\x20\x57\x48\x83\xEC\x30\x48\x8B\xDA"
 			}
+
+			"CTFPlayer::TeamFortress_SetSpeed"
+			{
+				"linux"		"@_ZN9CTFPlayer21TeamFortress_SetSpeedEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x24\xA1\x2A\x2A\x2A\x2A\x56\x8B\xF1\x89\x75\xF0"
+				"linux64"	"@_ZN9CTFPlayer21TeamFortress_SetSpeedEv"
+				"windows64"	"\x40\x55\x48\x83\xEC\x60\x48\x8B\x05\x03\x3D\x7A\x00"
+			}
 		}
 
 		"Functions"
@@ -321,6 +385,55 @@
 				"arguments"
 				{
 					"pPhysics"
+					{
+						"type" "objectptr"
+					}
+				}
+			}
+
+			"CBaseEntity::Deflected"
+			{
+				"offset" "CBaseEntity::Deflected"
+				"hooktype" "entity"
+				"return" "void"
+				"this" "entity"
+				"arguments"
+				{
+					"pDeflectedBy"
+					{
+						"type" "cbaseentity"
+					}
+					"vecDir"
+					{
+						"type" "vectorptr"
+					}
+				}
+			}
+
+			"CBasePlayer::Event_Killed"
+			{
+				"offset" "CBasePlayer::Event_Killed"
+				"hooktype" "entity"
+				"return" "void"
+				"this" "entity"
+				"arguments"
+				{
+					"info"
+					{
+						"type" "objectptr"
+					}
+				}
+			}
+
+			"CBaseObject::OnTakeDamage"
+			{
+				"offset" "CBaseObject::OnTakeDamage"
+				"hooktype" "entity"
+				"return" "int"
+				"this" "entity"
+				"arguments"
+				{
+					"info"
 					{
 						"type" "objectptr"
 					}
