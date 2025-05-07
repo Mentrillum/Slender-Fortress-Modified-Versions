@@ -2090,7 +2090,7 @@ static any Native_ClientStartDeathCam(Handle plugin, int numParams)
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	float buffer[3];
 	GetNativeArray(3, buffer, 3);
-	player.StartDeathCam(GetNativeCell(2), buffer, GetNativeCell(4), GetNativeArray(5));
+	player.StartDeathCam(GetNativeCell(2), buffer, GetNativeCell(4), GetNativeCell(5));
 	return 0;
 }
 
