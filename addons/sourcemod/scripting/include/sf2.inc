@@ -1268,8 +1268,9 @@ native bool SF2_IsClientInDeathCam(int client);
  * @param bossIndex			Boss index.
  * @param vecLookPos		The position the player should look at.
  * @param antiCamp			Whether the player was camping or not.
+ * @param staticDeath		Whether or not the player's death was caused by static.
  */
-native void SF2_ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool antiCamp = false);
+native void SF2_ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool antiCamp = false, bool staticDeath = false);
 
 /**
  * Returns whether or not a proxy can be spawned, returns a teleport position or spawn point if defined and the result is true, works well with SF2_ClientForceProxy.

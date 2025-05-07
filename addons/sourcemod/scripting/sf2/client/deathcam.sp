@@ -196,7 +196,7 @@ static Action Timer_DeleteRagdoll(Handle timer, int client)
 	return Plugin_Continue;
 }
 
-void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool antiCamp = false)
+void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool antiCamp = false, bool staticDeath = false)
 {
 	if (IsClientInDeathCam(client))
 	{
@@ -248,9 +248,10 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 	Call_PushCell(bossIndex);
 	Call_Finish();
 
+	bool publicDeathcam = data.PublicDeathCam || data.DeathCamData.Enabled;
 	if ((NPCGetFlags(bossIndex) & SFF_FAKE) == 0)
 	{
-		if ((!NPCHasDeathCamEnabled(bossIndex) || antiCamp))
+		if ((!NPCHasDeathCamEnabled(bossIndex) || antiCamp || (staticDeath && publicDeathcam)))
 		{
 			SetEntProp(client, Prop_Data, "m_takedamage", 2); // We do this because the point_viewcontrol changes our lifestate.
 
@@ -289,7 +290,6 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 
 	// Create fake model.
 	int slender = -1;
-	bool publicDeathcam = data.PublicDeathCam || data.DeathCamData.Enabled;
 	if (!publicDeathcam)
 	{
 		slender = SpawnSlenderModel(bossIndex, lookPos, true);
