@@ -357,7 +357,7 @@
 		"ru"	"\"ЛКМ\" - Взять предмет\n\"ПКМ\" - Вкл./выкл. Фонарик\n\"Перезарядка\" - Моргнуть\nУдерж. \"Специальная атака\" - Бег"
 		"fi"	"Ensisijainen hyökkäys - Kerää lappu\nToissijainen hyökkäys - Ottaa taskulampun käyttöön\nLataa - Räpäyttää\nErityis hyökkäys - Juokse"
 		"chi"	"主要攻击键 - 拾取物品\n次要攻击键 - 开关闪光灯\n装填弹药键 - 眨眼\n按住特殊攻击键 - 冲刺"
-		"pt"	"Ataque primário — coletar página\nAtaque secundário — alternar lanterna\nRecarregar — piscar\nSEGURAR \"ataque especial\" — correr"
+		"pt"	"Ataque primário — Coletar página\nAtaque secundário — Alternar lanterna\nRecarregar — Piscar\nSEGURAR \"Ataque especial\" — Correr"
 	}
 
 	"SF2 Help Sprinting And Stamina Menu Title"
@@ -411,7 +411,7 @@
 		"ru"	"[+] На 15%% увеличена продолжительность бега\n[-] Мало здоровья, наиболее подвержен внушению"
 		"fi"	"[+] 15%% lisäys juoksun kestoon\n[-] Heikko terveys, ottaa eniten vaikustusta näytön keikkumisesta"
 		"chi"	"[+] 增加 15%% 冲刺持续时间\n[-] 低生命值，更容易受到屏幕震动效果"
-		"pt"	"[+] Aumento de 15%% na duração da corrida\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+		"pt"	"[+] Aumento de 15%% na duração da corrida\n[+] Velocidade base da corrida mais rápida\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
 	}
 
 	"SF2 Help Soldier Class Info Menu Title"
@@ -425,11 +425,11 @@
 
 	"SF2 Help Soldier Class Info Description"
 	{
-		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] 5%% higher static resistance and recovery rate\n[+] Market Gardener crits in midair\n[+] Jumping while walking doesn't cost stamina\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] Slowest sprint speed along with Heavy and Demoman\n[-] The Escape Plan only affects sprinting speed"
+		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] 5%% higher static resistance and recovery rate\n[+] Market Gardener crits in midair\n[+] Jumping while walking doesn't cost stamina\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] Slowest sprint speed along with Demoman and Heavy\n[-] The Escape Plan only affects sprinting speed"
 		"ru"	"[+] Дисциплинарное взыскание увеличивает скорость бега и ходьбы\n[-] Полудзатоити восстанавливает только 5 ед. за убийство\n[-] План эвакуации влияет только на скорость бега"
 		"fi"	"[+] Kuritoimenpide lisää kävelyn ja juoksemisen nopeutta\nPuolisokea Samurai antaa vain 5 terveyttä taposta\n[-] Pakosuunnitelma vaikuttaa vain ja ainostaan juoksu nopeuteen"
 		"chi"	"[+] 指挥官的军鞭同时增加走路和冲刺速度\n[-] 座头市之刀击杀后只恢复5HP\n[-] 逃生计划镐只影响冲刺速度"
-    "pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de correr\n[-] A Quase-Zatoichi restaura apenas 5 de vida ao matar\n[-] O Plano de Fuga afeta somente a velocidade de correr"
+        "pt"	"[+] A Ação Disciplinar aumenta a velocidade de andar e de corrida\n[+] Resistência estática e taxa de recuperação 5%% maiores\n[+] O Pá-raquedista causa críticos no ar\n[+] Pular enquanto anda não consome energia\n[-] A Quase-Zatoichi restaura apenas 5 de vida ao matar\n[-] Velocidade de corrida mais lerda (junto com Demoman e Heavy)\n[-] O Plano de Fuga afeta somente a velocidade de corrida"
 	}
 
 	"SF2 Help Sniper Class Info Menu Title"
@@ -465,7 +465,7 @@
 		"ru"	"[+] На 66%% увеличена продолжительность бега при испуге\n[-] Полудзатоити восстанавливает только 20 ед. за убийство"
 		"fi"	"[+] 66%% lisäys pelottamisen juoksunopeuteen\n[-] Puolisokea Samurai palauttaa vain 20 terveyttä taposta"
 		"chi"	"[+] 惊吓状态下增加 66%% 冲刺持续时间\n[-] 座头市之刀击杀后只恢复20HP"
-		"pt"	"[+] Aumento de 66%% na duração da corrida quando assustado\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar"
+		"pt"	"[+] Aumento de 66%% na duração da corrida quando assustado\n[-] Velocidade de corrida mais lerda (junto com Soldier e Heavy)\n[-] A Quase-Zatoichi restaura apenas 20 de vida ao matar"
 	}
 
 	"SF2 Help Heavy Class Info Menu Title"
@@ -479,11 +479,11 @@
 
 	"SF2 Help Heavy Class Info Description"
 	{
-		"en"	"[+] Large health, least affected by screen wobbling\n [+] Unable to be trapped by bear traps\n [-] Slowest sprint speed along with Soldier and Demoman\n[-] The Gloves of Running Urgently only affects sprinting speed"
+		"en"	"[+] Large health, least affected by screen wobbling\n[+] Unable to be trapped by bear traps\n[-] Slowest sprint speed along with Soldier and Demoman\n[-] The Gloves of Running Urgently only affects sprinting speed"
 		"ru"	"[+] Много здоровья, мало подвержен внушению\n[-] ГРУ влияют только на скорость бега"
 		"fi"	"[+] Suuri terveys, vähiten vaikutusta näytön keikkumisesta\n Pikajuoksuhanskat vaikuttaa vain juoksunopeuteen"
 		"chi"	"[+] 很多生命值，不容易受到屏幕震动效果\n[-] 紧急逃跑手套只影响冲刺速度"
-		"pt"	"[+] Mais vida e o balanço da tela afeta menos\n[-] As Geradoras de Rapidez Urgente afetam somente a velocidade de correr"
+		"pt"	"[+] Mais vida e o balanço da tela afeta menos\n[+] Imune a armadilhas de urso\n[-] Velocidade de corrida mais lerda (junto com Soldier e Demoman)\n[-] As Geradoras de Rapidez Urgente afetam somente a velocidade de corrida"
 	}
 
 	"SF2 Help Medic Class Info Menu Title"
@@ -501,7 +501,7 @@
 		"ru"	"[+] Со временем восстанавливает здоровье\n[-] Приоритетная цель"
 		"fi"	"[+] Terveys palautuu ajan myötä\n[-] Ensisijainen kohde bosseille"
 		"chi"	"[+] 随时间恢复生命值\n[-] Boss们的优先目标"
-		"pt"	"[+] Regenera vida ao longo do tempo\n[-] Torna-se o alvo prioritário de chefões"
+		"pt"	"[+] Regenera vida ao longo do tempo\n[-] Torna-se o alvo prioritário de chefões\n[-] Não pode pegar kits médicos\n[-] Dano sofrido de proxies 15%% maior"
 	}
 
 	"SF2 Help Pyro Class Info Menu Title"
@@ -537,7 +537,7 @@
 		"ru"	"[+] Все издаваемые звуки на 30%% тише\n[-] Мало здоровья, наиболее подвержен внушению"
 		"fi"	"[+] Kaikki äänet jota teet ovat 30%% hiljaisempia bosseille\n[-] Vähemmän terveyttä ja eniten vaikutusta näytön keikkumisesta"
 		"chi"	"[+] 你发出的声音对Boss来说有 30%% 安静加成\n[-] 低生命值，最容易受到屏幕震动效果"
-    "pt"	"[+] Todos os sons que você faz são 30%% mais silenciosos\npara os chefões\n[-] Menos vida (afetado principalmente pelo balanço da tela)"
+        "pt"	"[+] Todos os sons que você faz são 30%% mais silenciosos\npara os chefões\n[+] Duração da corrida 5%% maior\n[-] Menos vida (afetado principalmente pelo balanço da tela)\n[-] Torna-se o alvo prioritário de chefões\n[-] Menor quantidade de aumento de velocidade em corridas de adrenalina\n[-] O Grande Ganhador e a Kunai só funcionam contra proxies"
 	}
 
 	"SF2 Help Engineer Class Info Menu Title"
@@ -935,7 +935,7 @@
 		"ru"	"Бег - Удерж. кнопку \"Специальная атака\""
 		"fi"	"Juokse - Pidä Pohjassa Erityis Hyökkäystäsi"
 		"chi"	"冲刺 - 按住特殊攻击键"
-		"pt"	"Correr — SEGURAR \"ataque especial\""
+		"pt"	"Correr — SEGURAR \"Ataque especial\""
 	}
 
 	"SF2 Hint Flashlight"
@@ -944,7 +944,7 @@
 		"ru"	"Фонарик - ПКМ"
 		"fi"	"Taskulamppu - Toissijainen Hyökkäys"
 		"chi"	"闪光灯 - 次要攻击键"
-		"pt"	"Lanterna — ataque secundário"
+		"pt"	"Lanterna — Ataque secundário"
 	}
 
 	"SF2 Hint Blink"
@@ -953,7 +953,7 @@
 		"ru"	"Моргнуть - \"Перезарядка\""
 		"fi"	"Räpäytys - Lataa"
 		"chi"	"眨眼 - 装填弹药键"
-		"pt"	"Piscar — recarregar"
+		"pt"	"Piscar — Recarregar"
 	}
 
 	"SF2 Hint Main Menu"
