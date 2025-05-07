@@ -617,7 +617,7 @@ static any Native_ClientStartDeathCam(Handle plugin, int numParams)
 {
 	float pos[3];
 	GetNativeArray(3, pos, sizeof(pos));
-	ClientStartDeathCam(GetNativeCell(1), GetNativeCell(2), pos, GetNativeCell(4));
+	ClientStartDeathCam(GetNativeCell(1), GetNativeCell(2), pos, GetNativeCell(4), GetNativeCell(5));
 	return 0;
 }
 

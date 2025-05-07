@@ -530,7 +530,7 @@ void ClientProcessVisibility(int client)
 				// Process death cam sequence with static
 				if (g_PlayerStaticAmount[client] >= 1.0)
 				{
-					ClientStartDeathCam(client, NPCGetFromUniqueID(g_PlayerStaticMaster[client]), slenderPos, true);
+					ClientStartDeathCam(client, NPCGetFromUniqueID(g_PlayerStaticMaster[client]), slenderPos, false, true);
 				}
 			}
 		}

@@ -862,9 +862,9 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
-	public void StartDeathCam(int bossIndex, const float lookPos[3], bool antiCamp = false)
+	public void StartDeathCam(int bossIndex, const float lookPos[3], bool antiCamp = false, bool staticDeath = false)
 	{
-		ClientStartDeathCam(this.index, bossIndex, lookPos, antiCamp);
+		ClientStartDeathCam(this.index, bossIndex, lookPos, antiCamp, staticDeath);
 	}
 
 	property bool HasEscaped
@@ -2090,7 +2090,7 @@ static any Native_ClientStartDeathCam(Handle plugin, int numParams)
 	SF2_BasePlayer player = SF2_BasePlayer(client);
 	float buffer[3];
 	GetNativeArray(3, buffer, 3);
-	player.StartDeathCam(GetNativeCell(2), buffer, GetNativeCell(4));
+	player.StartDeathCam(GetNativeCell(2), buffer, GetNativeCell(4), GetNativeCell(5));
 	return 0;
 }
 
