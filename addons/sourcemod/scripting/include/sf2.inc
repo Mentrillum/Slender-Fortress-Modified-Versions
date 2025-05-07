@@ -2700,8 +2700,9 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 * @param bossIndex			Boss index to use
 	 * @param lookPos			What position the player should look at
 	 * @param antiCamp			Whether or not this was an anticamping death, only useful for public death cams
+	 * @param staticDeath		Whether or not the player's death was caused by static.
 	 */
-	public native void StartDeathCam(int bossIndex, const float lookPos[3], bool antiCamp = false);
+	public native void StartDeathCam(int bossIndex, const float lookPos[3], bool antiCamp = false, bool staticDeath = false);
 
 	/**
 	 * Whether or not the player has escaped
