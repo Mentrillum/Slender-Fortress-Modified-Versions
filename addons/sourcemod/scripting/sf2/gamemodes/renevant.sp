@@ -255,7 +255,6 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_MultiEffect:
 		{
 			g_RenevantMultiEffect = true;
-//			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nNow Bosses can now inflict Multieffect on damage.");
 			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Multieffects");
 			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_MultiEffect);
@@ -267,7 +266,6 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_BaconSpray:
 		{
 			g_RenevantBeaconEffect = true;
-//			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nNow Bosses are now alerted on spawn.");
 			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Bacon");
 			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_BaconSpray);
@@ -328,18 +326,13 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		}
 		case RenevantWave_90s:
 		{
-			int RGNValue = GetRandomInt(1,10);
-			if(RGNValue == 10)
+			g_Renevant90sEffect = true;
+			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant 90s");
+			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
+			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_90s);
+			if (eraseWave != -1)
 			{
-				g_Renevant90sEffect = true;
-//				StrCat(broadcastMessage, sizeof(broadcastMessage), "\nEveryone run more faster.");
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant 90s");
-				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
-				int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_90s);
-				if (eraseWave != -1)
-				{
-					g_RenevantWaveList.Erase(eraseWave);
-				}
+				g_RenevantWaveList.Erase(eraseWave);
 			}
 		}
 		case RenevantWave_MarkForDeath:
@@ -361,7 +354,6 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				}
 				TF2_AddCondition(client, TFCond_MarkedForDeathSilent, -1.0);
 			}
-//			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nEveryone is marked for death permanently.");
 			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Marked");
 			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_MarkForDeath);
@@ -372,10 +364,6 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		}
 		case RenevantWave_SingleBoss:
 		{
-			if (g_DifficultyConVar.IntValue < 2)
-			{
-				g_DifficultyConVar.IntValue = Difficulty_Hard; // Override difficulty to Insane.
-			}
 			char bufferSingle[SF2_MAX_PROFILE_NAME_LENGTH], singleBossName[SF2_MAX_NAME_LENGTH];
 			g_DefaultRenevantBossConVar.GetString(bufferSingle, sizeof(bufferSingle));
 			if (Renevant_TryAddBossProfile(bufferSingle, sizeof(bufferSingle), singleBossName, sizeof(singleBossName)))
@@ -393,7 +381,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_AdminBoss:
 		{
 			ArrayList selectableBosses = GetSelectableRenevantBossAdminProfileList();
-			if (selectableBosses.Length > 0 && g_RenevantWaveNumber > 4)
+			if (selectableBosses.Length > 0)
 			{
 				selectableBosses.GetString(GetRandomInt(0, selectableBosses.Length - 1), buffer, sizeof(buffer));
 				SF2NPC_BaseNPC Npc = AddProfile(buffer);
@@ -434,11 +422,6 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		}
 		case RenevantWave_WallHax:
 		{	
-			if (g_DifficultyConVar.IntValue < 3)
-			{
-				g_DifficultyConVar.IntValue = Difficulty_Insane; // Override difficulty to Insane.
-			}
-			
 			g_RenevantWallHax = true;
 			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Wall Hax");
 			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
