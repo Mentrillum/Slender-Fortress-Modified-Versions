@@ -9,7 +9,42 @@
 		"pt"	"Selecione uma dificuldade:"
 		"ko"	"난이도 선택:"
 	}
-
+	"SF2 Renevant Wall Hax"
+	{
+		"en" "You can now see everything through walls"
+	}
+	"SF2 Renevant Marked"
+	{
+		"en" "Everyone is marked for death permanently"
+	}
+	"SF2 Renevant 90s"
+	{
+		"en" "Everyone run more faster"
+	}
+	"SF2 Renevant Bacon"
+	{
+		"en" "Now Bosses are now alerted on spawn"
+	}
+	"SF2 Renevant Multieffects"
+	{
+		"en" "Now Bosses can now inflict Multieffect on damage"
+	}
+	"SF2 Renevant Difficulty"
+	{
+		"en" "Now difficulty got changed to"
+	}
+	"SF2 Boss Added"
+	{
+		"en" "New Boss"
+	}
+	"SF2 Bosses Added"
+	{
+		"en" "New Bosses Added"
+	}
+	"SF2 Admin Boss"
+	{
+		"en" "Special Boss Added"
+	}
 	"SF2 Difficulty Vote Finished"
 	{
 		"en"	"Vote successful! The difficulty has been changed to:"
