@@ -139,7 +139,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 	if (addedBossCount == 1 && action != RenevantWave_DoubleTrouble && action != RenevantWave_DoomBox && action != RenevantWave_SingleBoss && action != RenevantWave_AdminBoss)
 	{
-		FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
+		FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s","SF2 Boss Added", name);
 		StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 	}
 
@@ -157,21 +157,21 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Hard;
 
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Hard Difficulty");
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %t", "SF2 Renevant Difficulty",  "SF2 Hard Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Hard:
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Insane;
 
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Insane Difficulty");
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %t", "SF2 Renevant Difficulty",  "SF2 Insane Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Insane:
 				{
 					g_DifficultyConVar.IntValue = Difficulty_Nightmare;
 
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nDifficulty set to: %t",  "SF2 Nightmare Difficulty");
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %t", "SF2 Renevant Difficulty",  "SF2 Nightmare Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Nightmare:
@@ -255,7 +255,8 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_MultiEffect:
 		{
 			g_RenevantMultiEffect = true;
-			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nBosses can now inflict Multieffect.");
+			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Multieffects");
+			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_MultiEffect);
 			if (eraseWave != -1)
 			{
@@ -265,7 +266,8 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_BaconSpray:
 		{
 			g_RenevantBeaconEffect = true;
-			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nBosses are now alerted on spawn.");
+			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Bacon");
+			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_BaconSpray);
 			if (eraseWave != -1)
 			{
@@ -281,12 +283,12 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 			if (addedBossCount == 1)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s","SF2 Boss Added", name);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			else if (addedBossCount == 2)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s and %s", name, name2);
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s and %s","SF2 Bosses Added", name, name2);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 		}
@@ -303,17 +305,17 @@ static void Renevant_DoWaveAction(RenevantWave action)
 
 			if (addedBossCount == 1)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s","SF2 Boss Added", name);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			else if (addedBossCount == 2)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s and %s", name, name2);
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s and %s","SF2 Bosses Added", name, name2);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			else if (addedBossCount == 3)
 			{
-				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBosses: %s, %s, and %s", name, name2, name3);
+				FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s, %s, and %s","SF2 Bosses Added", name, name2, name3);
 				StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			}
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_DoomBox);
@@ -325,7 +327,8 @@ static void Renevant_DoWaveAction(RenevantWave action)
 		case RenevantWave_90s:
 		{
 			g_Renevant90sEffect = true;
-			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nYou feel very nervous.");
+			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant 90s");
+			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_90s);
 			if (eraseWave != -1)
 			{
@@ -351,7 +354,8 @@ static void Renevant_DoWaveAction(RenevantWave action)
 				}
 				TF2_AddCondition(client, TFCond_MarkedForDeathSilent, -1.0);
 			}
-			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nEveryone is marked for death permanently.");
+			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Marked");
+			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_MarkForDeath);
 			if (eraseWave != -1)
 			{
@@ -388,15 +392,25 @@ static void Renevant_DoWaveAction(RenevantWave action)
 					{
 						strcopy(name, sizeof(name), buffer);
 					}
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s", "SF2 Admin Boss", name);
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
+					char nightmareDisplay[256];
+
+					for (int i = 0; i < sizeof(g_SoundNightmareMode)-1; i++)
+					{
+						EmitSoundToAll(g_SoundNightmareMode[i]);
+					}
+
+					FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%s", name);
+
+					SpecialRoundGameText(nightmareDisplay, "d_purgatory");
 				}
 			}
 			else
 			{
 				if (Renevant_TryAddBossProfile(buffer, sizeof(buffer), name, sizeof(name), false))
 				{
-					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\nBoss: %s", name);
+					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %s", "SF2 Boss Added", name);
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 			}
@@ -407,9 +421,10 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			}
 		}
 		case RenevantWave_WallHax:
-		{
+		{	
 			g_RenevantWallHax = true;
-			StrCat(broadcastMessage, sizeof(broadcastMessage), "\nYou can now see players and bosses through walls.");
+			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Wall Hax");
+			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 			int eraseWave = g_RenevantWaveList.FindValue(RenevantWave_WallHax);
 			if (eraseWave != -1)
 			{
