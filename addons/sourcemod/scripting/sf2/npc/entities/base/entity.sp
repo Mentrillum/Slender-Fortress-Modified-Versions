@@ -184,32 +184,32 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 	public bool GetIsVisible(CBaseEntity entity)
 	{
-		return this.GetProp(Prop_Data, "m_IsEntityVisible", entity.index) != 0;
+		return this.GetProp(Prop_Data, "m_IsEntityVisible", _, entity.index) != 0;
 	}
 
 	public void SetIsVisible(CBaseEntity entity, bool value)
 	{
-		this.SetProp(Prop_Data, "m_IsEntityVisible", value, entity.index);
+		this.SetProp(Prop_Data, "m_IsEntityVisible", value, _, entity.index);
 	}
 
 	public bool GetInFOV(CBaseEntity entity)
 	{
-		return this.GetProp(Prop_Data, "m_IsEntityInFOV", entity.index) != 0;
+		return this.GetProp(Prop_Data, "m_IsEntityInFOV", _, entity.index) != 0;
 	}
 
 	public void SetInFOV(CBaseEntity entity, bool value)
 	{
-		this.SetProp(Prop_Data, "m_IsEntityInFOV", value, entity.index);
+		this.SetProp(Prop_Data, "m_IsEntityInFOV", value, _, entity.index);
 	}
 
 	public bool GetIsNear(CBaseEntity entity)
 	{
-		return this.GetProp(Prop_Data, "m_IsEntityNear", entity.index) != 0;
+		return this.GetProp(Prop_Data, "m_IsEntityNear", _, entity.index) != 0;
 	}
 
 	public void SetIsNear(CBaseEntity entity, bool value)
 	{
-		this.SetProp(Prop_Data, "m_IsEntityNear", value, entity.index);
+		this.SetProp(Prop_Data, "m_IsEntityNear", value, _, entity.index);
 	}
 
 	property float CurrentChaseDuration
