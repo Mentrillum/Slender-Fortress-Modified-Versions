@@ -291,7 +291,7 @@ static int AdminMenu_PlayerSetPlayStateConfirm(Menu menu, MenuAction action, int
 	return 0;
 }
 
-static void DisplayBossMainAdminMenu(int client)
+void DisplayBossMainAdminMenu(int client)
 {
 	Menu menuHandle = new Menu(AdminMenu_BossMain);
 	menuHandle.SetTitle("%t %T\n \n", "SF2 Prefix", "SF2 Admin Menu Boss Main", client);
@@ -317,6 +317,8 @@ static void DisplayBossMainAdminMenu(int client)
 	menuHandle.AddItem("force_alert", buffer);
 	FormatEx(buffer, sizeof(buffer), "Make a boss use a attack");
 	menuHandle.AddItem("force_attack", buffer);
+	FormatEx(buffer, sizeof(buffer), "Force a mod boss to be loaded next pack");
+	menuHandle.AddItem("force_bossload", buffer);
 
 	menuHandle.ExitBackButton = true;
 	menuHandle.Display(client, MENU_TIME_FOREVER);
@@ -378,6 +380,10 @@ static int AdminMenu_BossMain(Menu menu, MenuAction action, int param1, int para
 		else if (strcmp(info, "force_attack") == 0)
 		{
 			DisplayBossAttackAdminMenu(param1);
+		}
+		else if (strcmp(info, "force_bossload") == 0)
+		{
+			Command_BossOverride(param1, 0);
 		}
 	}
 	return 0;

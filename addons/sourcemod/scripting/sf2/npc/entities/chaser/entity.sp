@@ -119,7 +119,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 
 		g_OnEntityCreatedPFwd.AddFunction(null, EntityCreated);
 		g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
-		g_OnPlayerTakeDamagePFwd.AddFunction(null, OnPlayerTakeDamage);
+		g_OnPlayerTakeDamagePostPFwd.AddFunction(null, OnPlayerTakeDamagePost);
 		g_OnPlayerDeathPrePFwd.AddFunction(null, OnPlayerDeathPre);
 		g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
 
@@ -3209,18 +3209,18 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 	}
 }
 
-static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &inflictor, float &damage, int &damageType)
+static void OnPlayerTakeDamagePost(SF2_BasePlayer client, int attacker, int inflictor, float damage, int damageType)
 {
 	SF2_ChaserEntity boss = SF2_ChaserEntity(inflictor);
 	if (!boss.IsValid())
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	SF2NPC_Chaser controller = boss.Controller;
 	if (!controller.IsValid())
 	{
-		return Plugin_Continue;
+		return;
 	}
 
 	Call_StartForward(g_OnClientDamagedByBossFwd);
@@ -3246,8 +3246,6 @@ static Action OnPlayerTakeDamage(SF2_BasePlayer client, int &attacker, int &infl
 			SlenderSpawnEffects(attackData.HitEffects, controller.Index, false, _, _, _, client.index);
 		}
 	}
-
-	return Plugin_Continue;
 }
 
 static void OnPlayerDeathPre(SF2_BasePlayer client, int attacker, int inflictor, bool fake)
@@ -3497,16 +3495,26 @@ static void SpawnPost(int entIndex)
 			{
 				continue;
 			}
-			if (originalData.IsPvEBoss)
+			if (g_Enabled)
 			{
-				if (!player.IsEliminated)
+				if (originalData.IsPvEBoss)
 				{
-					continue;
+					if (!player.IsEliminated)
+					{
+						continue;
+					}
+				}
+				else
+				{
+					if (player.IsEliminated || !player.IsAlive || player.HasEscaped)
+					{
+						continue;
+					}
 				}
 			}
 			else
 			{
-				if (player.IsEliminated || !player.IsAlive || player.HasEscaped)
+				if (player.Team != TFTeam_Red && player.Team != TFTeam_Blue)
 				{
 					continue;
 				}
@@ -3581,8 +3589,21 @@ static void SpawnPost(int entIndex)
 	if (originalData.Healthbar)
 	{
 		controller.Flags |= SFF_NOTELEPORT;
-		UpdateHealthBar(controller.Index);
+		CreateTimer(0.1, Timer_UpdateHealthBar, controller.UniqueID, TIMER_FLAG_NO_MAPCHANGE);
 	}
+}
+
+static Action Timer_UpdateHealthBar(Handle timer, any id)
+{
+	int bossIndex = NPCGetFromUniqueID(id);
+	if (bossIndex == -1)
+	{
+		return Plugin_Continue;
+	}
+
+	UpdateHealthBar(bossIndex);
+
+	return Plugin_Stop;
 }
 
 static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damageType, int &weapon, float damageForce[3], float damagePosition[3], int damageCustom)
@@ -4518,9 +4539,9 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		}
 	}
 
-	delete valids;
+	CNavArea myArea = chaser.GetLastKnownArea();
 
-	if (!originalData.IsPvEBoss && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
+	if (!originalData.IsPvEBoss && myArea != NULL_AREA && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
 	{
 		if (!IsTargetValidForSlender(chaser, CBaseEntity(bestNewTarget), attackEliminated))
 		{

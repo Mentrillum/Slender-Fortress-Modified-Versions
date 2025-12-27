@@ -305,8 +305,16 @@ static void DoMeleeAttack(SF2_ChaserAttackAction_Melee action, SF2_ChaserEntity 
 		float realDamage = damage;
 		if (attackData.DamagePercent[difficulty] > 0.0)
 		{
-			realDamage = strcmp(class, "tank_boss", false) != 0 ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
-			realDamage *= attackData.DamagePercent[difficulty];
+			if (SF2_BasePlayer(targets.Get(i)).IsValid)
+			{
+				realDamage = float(SF2_BasePlayer(targets.Get(i)).ModifiedMaxHealth);
+				realDamage *= attackData.DamagePercent[difficulty];
+			}
+			else
+			{
+				realDamage = (strcmp(class, "tank_boss", false) != 0 && strcmp(class, "func_breakable", false) != 0) ? float(prop.GetProp(Prop_Send, "m_iMaxHealth")) : float(prop.GetProp(Prop_Data, "m_iMaxHealth"));
+				realDamage *= attackData.DamagePercent[difficulty];
+			}
 		}
 		SDKHooks_TakeDamage(prop.index, actor.index, actor.index, realDamage, 64, _, _, myEyePos, false);
 	}

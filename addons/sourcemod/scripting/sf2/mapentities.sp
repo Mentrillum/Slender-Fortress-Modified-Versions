@@ -99,6 +99,7 @@ void SF2MapEntity_AddHook(SF2MapEntityHook hookType, Function hookFunc)
 #include "mapentities/sf2_info_player_escapespawn.sp"
 #include "mapentities/sf2_trigger_pvp.sp"
 #include "mapentities/sf2_trigger_pve.sp"
+#include "mapentities/sf2_trigger_weapons.sp"
 #include "mapentities/sf2_info_player_pvpspawn.sp"
 #include "mapentities/sf2_info_player_proxyspawn.sp"
 #include "mapentities/sf2_info_boss_spawn.sp"
@@ -150,6 +151,9 @@ void SetupCustomMapEntities()
 
 	// sf2_trigger_pve
 	SF2TriggerPvEEntity.Initialize();
+
+	// sf2_trigger_weapons
+	SF2TriggerWeaponsEntity.Initialize();
 
 	// sf2_info_player_pvpspawn
 	SF2PlayerPvPSpawnEntity.Initialize();

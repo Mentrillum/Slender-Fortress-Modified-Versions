@@ -60,6 +60,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell);
 	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell, Param_CellByRef);
 	g_OnProjectileTouchFwd = new GlobalForward("SF2_OnProjectileTouch", ET_Ignore, Param_Cell, Param_Cell);
+	g_OnPreSelectStartingBosses = new GlobalForward("SF2_OnSelectStartingBosses", ET_Ignore);
+	g_OnPostSelectStartingBosses = new GlobalForward("SF2_OnFinishStartingBosses", ET_Ignore, Param_String);
 
 	CreateNative("SF2_GetConfig", Native_GetConfig);
 	CreateNative("SF2_IsRunning", Native_IsRunning);

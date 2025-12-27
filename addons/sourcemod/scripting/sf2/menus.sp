@@ -480,7 +480,7 @@ static int Menu_Main(Menu menu, MenuAction action, int param1, int param2)
 			}
 			case 8:
 			{
-				DisplayBossList(param1);
+				BossPreview_MainMenu(param1, 0);
 			}
 		}
 	}
@@ -496,10 +496,6 @@ static void Menu_VoteRunoffDifficulty(Menu oldmenu, int votes, int clients, cons
 		{
 			if (float(itemInfo[0][VOTEINFO_ITEM_VOTES]) <= (votes * runoff))
 			{
-				g_IsRunOff = true;
-				Menu newmenu = new Menu(Menu_VoteDifficulty);
-				newmenu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
-
 				ArrayList list = new ArrayList();
 				for(int i = 0; i < items; i++)
 				{
@@ -509,7 +505,46 @@ static void Menu_VoteRunoffDifficulty(Menu oldmenu, int votes, int clients, cons
 					}
 				}
 
-				char data[64], display[64];
+				char data[64];
+				if (g_HighDifficultyPercentConVar.FloatValue > 0.0)
+				{
+					bool hard, easy;
+					int length = list.Length;
+					for (int i = 0; i < length; i++)
+					{
+						int index = list.Get(i);
+						oldmenu.GetItem(index, data, sizeof(data));
+
+						if ((strcmp(data, "4") == 0 || strcmp(data, "5") == 0))
+						{
+							hard = true;
+						}
+						else
+						{
+							easy = true;
+						}
+
+						if(easy && hard)
+						{
+							delete list;
+
+							Call_StartForward(g_OnDifficultyVoteFinishedFwd);
+							Call_PushCell(g_Voters);
+							Call_PushCell(false);
+							Call_Finish();
+
+							CPrintToChatAll("%t", "SF2 Difficulty Vote Finished Unsuccessful Runoff", RoundToFloor(g_HighDifficultyPercentConVar.FloatValue * 100.0));
+							g_VoteTimer = CreateTimer(1.0, Timer_HighVoteDifficulty, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+							return;
+						}
+					}
+				}
+
+				g_IsRunOff = true;
+				Menu newmenu = new Menu(Menu_VoteDifficulty);
+				newmenu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Difficulty Vote Menu Title");
+
+				char display[64];
 				int length = list.Length;
 				for (int i = 0; i < length; i++)
 				{
@@ -701,6 +736,11 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 				{
 					if (values > 0.5)
 					{
+						Call_StartForward(g_OnDifficultyVoteFinishedFwd);
+						Call_PushCell(g_Voters);
+						Call_PushCell(g_IsRunOff);
+						Call_Finish();
+
 						CPrintToChatAll("%t", "SF2 Difficulty Vote Finished Unsuccessful Runoff", RoundToFloor(g_HighDifficultyPercentConVar.FloatValue * 100.0));
 						g_VoteTimer = CreateTimer(1.0, Timer_HighVoteDifficulty, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 						return 0;
@@ -938,7 +978,7 @@ static int Menu_VoteDifficulty(Menu menu, MenuAction action, int param1, int par
 			}
 		}
 
-		g_DifficultyConVar.SetInt(difficulty);
+		SetDifficulty(difficulty);
 
 		if (!change)
 		{

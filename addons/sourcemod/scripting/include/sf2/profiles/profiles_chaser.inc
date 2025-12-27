@@ -409,7 +409,10 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 			}
 			case SF2DamageType_Bleed:
 			{
-				TF2_MakeBleed(player.index, player.index, this.Duration[difficulty]);
+				if (!TF2_IsPlayerInCondition(player.index, TFCond_Bleeding))
+				{
+					TF2_MakeBleed(player.index, player.index, this.Duration[difficulty]);
+				}
 			}
 			case SF2DamageType_Milk:
 			{

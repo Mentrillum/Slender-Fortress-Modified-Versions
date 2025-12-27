@@ -2413,6 +2413,12 @@ enum struct SF2BossProfileData
 
 	SF2BossProfileSlaughterRunData SlaughterRunData;
 
+	bool EnableRandomSelection;
+	bool AdminOnly;
+	bool EnableRandomSelectionBoxing;
+	bool EnableRandomSelectionRenevant;
+	bool EnableRandomSelectionRenevantAdmin;
+
 	void Init()
 	{
 		this.Models = null;
@@ -2642,6 +2648,12 @@ enum struct SF2BossProfileData
 		this.EyeData.Init();
 
 		this.SlaughterRunData.Init();
+
+		this.EnableRandomSelection = false;
+		this.AdminOnly = false;
+		this.EnableRandomSelectionBoxing = false;
+		this.EnableRandomSelectionRenevant = false;
+		this.EnableRandomSelectionRenevantAdmin = false;
 
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{

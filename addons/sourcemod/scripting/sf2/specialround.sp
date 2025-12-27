@@ -1092,7 +1092,7 @@ void SpecialRoundStart()
 			ForceInNextPlayersInQueue(g_MaxPlayersConVar.IntValue);
 			if (g_DifficultyConVar.IntValue < 2)
 			{
-				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
+				SetDifficulty(Difficulty_Hard); // Override difficulty to Hardcore.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 2)
 			{
@@ -1231,7 +1231,7 @@ void SpecialRoundStart()
 		{
 			if (g_DifficultyConVar.IntValue < 3)
 			{
-				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+				SetDifficulty(Difficulty_Insane); // Override difficulty to Insane.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
 			{
@@ -1243,7 +1243,7 @@ void SpecialRoundStart()
 		{
 			if (g_DifficultyConVar.IntValue < 2)
 			{
-				g_DifficultyConVar.SetString("2"); // Override difficulty to Hardcore.
+				SetDifficulty(Difficulty_Hard); // Override difficulty to Insane.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 2)
 			{
@@ -1259,7 +1259,7 @@ void SpecialRoundStart()
 		{
 			if (g_DifficultyConVar.IntValue < 3)
 			{
-				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+				SetDifficulty(Difficulty_Insane); // Override difficulty to Insane.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
 			{
@@ -1276,7 +1276,7 @@ void SpecialRoundStart()
 			ForceInNextPlayersInQueue(g_MaxPlayersConVar.IntValue);
 			if (g_DifficultyConVar.IntValue < 3 && !SF_IsBoxingMap())
 			{
-				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+				SetDifficulty(Difficulty_Insane); // Override difficulty to Insane.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
 			{
@@ -1313,7 +1313,7 @@ void SpecialRoundStart()
 			ForceInNextPlayersInQueue(g_MaxPlayersConVar.IntValue);
 			if (g_DifficultyConVar.IntValue < 3)
 			{
-				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+				SetDifficulty(Difficulty_Insane); // Override difficulty to Insane.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
 			{
@@ -1353,17 +1353,17 @@ void SpecialRoundStart()
 					{
 						case 1:
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Normal);
+							SetDifficulty(Difficulty_Normal);
 							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
 						}
 						case 2:
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Hard);
+							SetDifficulty(Difficulty_Hard);
 							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
 						}
 						case 3:
 						{
-							g_DifficultyConVar.SetInt(Difficulty_Insane);
+							SetDifficulty(Difficulty_Insane);
 							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
 						}
 						case 4:
@@ -1371,7 +1371,7 @@ void SpecialRoundStart()
 							PlayNightmareSound();
 							FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 							SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
-							g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+							SetDifficulty(Difficulty_Nightmare);
 							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
 						}
 						case 5:
@@ -1379,7 +1379,7 @@ void SpecialRoundStart()
 							PlayNightmareSound();
 							FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 							SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
-							g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+							SetDifficulty(Difficulty_Apollyon);
 							CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
 							int randomQuote = GetRandomInt(1, 8);
 							switch (randomQuote)
@@ -1436,17 +1436,17 @@ void SpecialRoundStart()
 						{
 							case 1:
 							{
-								g_DifficultyConVar.SetInt(Difficulty_Normal);
+								SetDifficulty(Difficulty_Normal);
 								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {yellow}%t{default}.", "SF2 Prefix", "SF2 Normal Difficulty");
 							}
 							case 2:
 							{
-								g_DifficultyConVar.SetInt(Difficulty_Hard);
+								SetDifficulty(Difficulty_Hard);
 								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {orange}%t{default}.", "SF2 Prefix", "SF2 Hard Difficulty");
 							}
 							case 3:
 							{
-								g_DifficultyConVar.SetInt(Difficulty_Insane);
+								SetDifficulty(Difficulty_Insane);
 								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {red}%t{default}.", "SF2 Prefix", "SF2 Insane Difficulty");
 							}
 							case 4:
@@ -1454,7 +1454,7 @@ void SpecialRoundStart()
 								PlayNightmareSound();
 								FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Nightmare Difficulty");
 								SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
-								g_DifficultyConVar.SetInt(Difficulty_Nightmare);
+								SetDifficulty(Difficulty_Nightmare);
 								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {valve}%t!", "SF2 Prefix", "SF2 Nightmare Difficulty");
 							}
 							case 5:
@@ -1462,7 +1462,7 @@ void SpecialRoundStart()
 								PlayNightmareSound();
 								FormatEx(nightmareDisplay, sizeof(nightmareDisplay), "%t mode!", "SF2 Apollyon Difficulty");
 								SpecialRoundGameText(nightmareDisplay, "leaderboard_streak");
-								g_DifficultyConVar.SetInt(Difficulty_Apollyon);
+								SetDifficulty(Difficulty_Apollyon);
 								CPrintToChatAll("{royalblue}%t {default}The difficulty has been set to {darkgray}%t!", "SF2 Prefix", "SF2 Apollyon Difficulty");
 								int randomQuote = GetRandomInt(1, 8);
 								switch (randomQuote)
@@ -1523,7 +1523,7 @@ void SpecialRoundStart()
 		case SPECIALROUND_TRIPLEBOSSES:
 		{
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH];
-			int tripleBosses=0;
+			int tripleBosses = 0;
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
 				NPCStopMusic();
@@ -1576,7 +1576,7 @@ void SpecialRoundStart()
 		{
 			if (g_DifficultyConVar.IntValue < 3)
 			{
-				g_DifficultyConVar.SetString("3"); // Override difficulty to Insane.
+				SetDifficulty(Difficulty_Insane); // Override difficulty to Insane.
 			}
 			if (g_OverrideDifficulty == -1 || g_OverrideDifficulty < 3)
 			{

@@ -155,28 +155,28 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			{
 				case Difficulty_Normal:
 				{
-					g_DifficultyConVar.IntValue = Difficulty_Hard;
+					SetDifficulty(Difficulty_Hard);
 
 					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %t", "SF2 Renevant Difficulty",  "SF2 Hard Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Hard:
 				{
-					g_DifficultyConVar.IntValue = Difficulty_Insane;
+					SetDifficulty(Difficulty_Insane);
 
 					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %t", "SF2 Renevant Difficulty",  "SF2 Insane Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Insane:
 				{
-					g_DifficultyConVar.IntValue = Difficulty_Nightmare;
+					SetDifficulty(Difficulty_Nightmare);
 
 					FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t: %t", "SF2 Renevant Difficulty",  "SF2 Nightmare Difficulty");
 					StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
 				}
 				case Difficulty_Nightmare:
 				{
-					g_DifficultyConVar.IntValue = Difficulty_Apollyon;
+					SetDifficulty(Difficulty_Apollyon);
 
 					g_RenevantBossesChaseEndlessly = true;
 					g_IsRoundInfiniteSprint = true;
@@ -421,7 +421,7 @@ static void Renevant_DoWaveAction(RenevantWave action)
 			}
 		}
 		case RenevantWave_WallHax:
-		{	
+		{
 			g_RenevantWallHax = true;
 			FormatEx(broadcastBuffer, sizeof(broadcastBuffer), "\n%t.", "SF2 Renevant Wall Hax");
 			StrCat(broadcastMessage, sizeof(broadcastMessage), broadcastBuffer);
@@ -467,7 +467,7 @@ void Renevant_SetWave(int wave, bool resetTimer = false)
 	{
 		case 1: //Wave 1
 		{
-			g_DifficultyConVar.IntValue = Difficulty_Normal;
+			SetDifficulty(Difficulty_Normal);
 
 			Renevant_DoWaveAction(RenevantWave_Normal);
 

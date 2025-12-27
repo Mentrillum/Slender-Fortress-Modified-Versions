@@ -555,6 +555,8 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 		}
 	}
 
+	BossPreview_Remove(client);
+
 	Call_StartForward(g_OnPlayerSpawnPFwd);
 	Call_PushCell(SF2_BasePlayer(client));
 	Call_Finish();
@@ -920,6 +922,7 @@ Action Event_PlayerDeath(Event event, const char[] name, bool dB)
 		ClientResetSlenderStats(client);
 		ClientResetOverlay(client);
 		ClientResetJumpScare(client);
+		BossPreview_Remove(client);
 
 		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 		{

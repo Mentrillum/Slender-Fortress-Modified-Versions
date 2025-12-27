@@ -20,6 +20,7 @@ static ArrayList g_SelectableBoxingBossProfileList = null;
 static ArrayList g_SelectableRenevantBossProfileList = null;
 static ArrayList g_SelectableRenevantBossAdminProfileList = null;
 static ArrayList g_SelectableBossProfileQueueList = null;
+ArrayList g_BossProfileRequested = null;
 
 StringMap g_BossProfileData = null;
 
@@ -42,6 +43,9 @@ static char mapBossPack[64];
 
 GlobalForward g_OnBossProfileLoadedFwd;
 static GlobalForward g_OnBossProfileUnloadedFwd;
+
+static ArrayList g_AllBosses;
+static StringMap g_AllBossesName;
 
 #include "profiles/profiles_boss_functions.sp"
 #include "profiles/profile_chaser.sp"
@@ -297,20 +301,7 @@ void GetCurrentBossPack(char[] bossPackName, int length)
 /*
 Command
 */
-Action Command_Pack(int client,int args)
-{
-	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
-	{
-		CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Disabled Boss Pack");
-		return Plugin_Handled;
-	}
-	char bossPackName[64];
-	GetCurrentBossPack(bossPackName, sizeof(bossPackName));
-	CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Current Boss Pack", bossPackName);
-	return Plugin_Handled;
-}
-
-Action Command_NextPack(int client,int args)
+Action Command_NextPack(int client, int args)
 {
 	if (!g_BossPackEndOfMapVoteConVar.BoolValue || !g_BossPackVoteEnabled)
 	{
@@ -344,6 +335,101 @@ Action Command_NextPack(int client,int args)
 	}
 	CPrintToChat(client, "{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Boss Pack Next", bossPackName);
 	return Plugin_Handled;
+}
+
+Action Command_BossOverride(int client, int args)
+{
+	if (args)
+	{
+		ArrayList bossList = GetBossProfileList();
+
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		GetCmdArgString(profile, sizeof(profile));
+
+		if(bossList.FindString(profile) == -1)
+		{
+			CReplyToCommand(client, "{royalblue}%t {default}Added profile \"%s\" to be forced loaded next pack", "SF2 Prefix", profile);
+		}
+		else
+		{
+			char displayName[SF2_MAX_NAME_LENGTH];
+			NPCGetBossName(_, displayName, sizeof(displayName), profile);
+			CReplyToCommand(client, "{royalblue}%t {default}Added boss \"%s\" (%s) to be forced loaded next pack", "SF2 Prefix", displayName, profile);
+		}
+
+		if(!g_BossProfileRequested)
+		{
+			g_BossProfileRequested = new ArrayList(sizeof(profile));
+		}
+
+		g_BossProfileRequested.PushString(profile);
+	}
+	else if (client)
+	{
+		Menu menu = new Menu(Command_BossOverrideHandle);
+
+		ArrayList bossList = g_AllBosses;
+
+		if (bossList != null)
+		{
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			char displayName[SF2_MAX_NAME_LENGTH];
+			for (int i = 0; i < bossList.Length; i++)
+			{
+				bossList.GetString(i, profile, sizeof(profile));
+				displayName[0] = 0;
+				//NPCGetBossName(_, displayName, sizeof(displayName), profile);
+				g_AllBossesName.GetString(profile, displayName, sizeof(displayName));
+				if (displayName[0] == '\0')
+				{
+					strcopy(displayName, sizeof(displayName), profile);
+				}
+				SF2BossProfileData data;
+				g_BossProfileData.GetArray(profile, data, sizeof(data));
+				/*if (data.Description.Hidden || data.IsPvEBoss)
+				{
+					continue;
+				}*/
+				menu.AddItem(profile, displayName);
+			}
+		}
+
+		menu.SetTitle("Force Load Next Pack\nUsage: sm_sf2_set_modboss <profile>\n ");
+		menu.ExitBackButton = true;
+		menu.Display(client, MENU_TIME_FOREVER);
+	}
+	else
+	{
+		PrintToServer("[SM] Usage: sm_sf2_set_modboss <profile>");
+	}
+	return Plugin_Handled;
+}
+
+static int Command_BossOverrideHandle(Menu menu, MenuAction action, int param1, int param2)
+{
+	switch (action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+		case MenuAction_Cancel:
+		{
+			if(param2 == MenuCancel_ExitBack)
+			{
+				DisplayBossMainAdminMenu(param1);
+			}
+		}
+		case MenuAction_Select:
+		{
+			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+			menu.GetItem(param2, profile, sizeof(profile));
+
+			FakeClientCommand(param1, "sm_sf2_set_modboss %s", profile);
+		}
+	}
+
+	return 0;
 }
 
 void BossProfilesOnMapEnd()
@@ -553,6 +639,12 @@ void ReloadBossProfiles()
 		delete g_SelectableBossProfileQueueList;
 	}
 
+	delete g_AllBosses;
+	g_AllBosses = new ArrayList(PLATFORM_MAX_PATH);
+
+	delete g_AllBossesName;
+	g_AllBossesName = new StringMap();
+
 	char configPath[PLATFORM_MAX_PATH];
 
 	// Only load profiles individually from configs/sf2/profiles or data/sf2/profiles directory.
@@ -620,6 +712,7 @@ void ReloadBossProfiles()
 						if (g_BossPackConfig.JumpToKey("shuffler"))
 						{
 							maxLoadedBosses = g_BossPackConfig.GetNum("max", maxLoadedBosses);
+							g_BossPackConfig.GoBack();
 						}
 						LoadProfilesFromDirectory(packConfigFilePath, maxLoadedBosses);
 					}
@@ -671,6 +764,7 @@ void ReloadBossProfiles()
 							if (g_BossPackConfig.JumpToKey("shuffler"))
 							{
 								maxLoadedBosses = g_BossPackConfig.GetNum("max", maxLoadedBosses);
+								g_BossPackConfig.GoBack();
 							}
 							LoadProfilesFromDirectory(packConfigFilePath, maxLoadedBosses);
 						}
@@ -700,6 +794,8 @@ void ReloadBossProfiles()
 	LogSF2Message("Time to take to load all boss configs: %f", profiler.Time);
 
 	delete profiler;
+
+	delete g_BossProfileRequested;
 }
 
 /**
@@ -752,11 +848,11 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 
 	int count = 0;
 
-	char filePath[PLATFORM_MAX_PATH];
-	char fileName[PLATFORM_MAX_PATH];
+	char filePath[PLATFORM_MAX_PATH], filePathEx[PLATFORM_MAX_PATH];
+	char fileName[PLATFORM_MAX_PATH], fileNameEx[PLATFORM_MAX_PATH];
 	char profileName[SF2_MAX_PROFILE_NAME_LENGTH];
 	char errorReason[512];
-	FileType fileType;
+	FileType fileType, fileTypeEx;
 
 	ArrayList directories = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 
@@ -773,36 +869,110 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 		directories.PushString(filePath);
 	}
 
-	delete directory;
-
 	ArrayList alwaysLoad;
+	ArrayList prioLoad;
 
-	if (maxLoadedBosses > 0)
+	//if (maxLoadedBosses > 0 || g_BossProfileRequested)
 	{
 		alwaysLoad = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+		prioLoad = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 
 		for (int i = 0; i < directories.Length; i++)
 		{
 			directories.GetString(i, filePath, sizeof(filePath));
 
-			if (FileExists(filePath))
+			if (!FileExists(filePath))
 			{
-				KeyValues kv = new KeyValues("root");
-				if (FileToKeyValues(kv, filePath) && kv.GetNum("always_load", false) != 0)
-				{
-					int index = directories.FindString(filePath);
-					if (index != -1)
-					{
-						directories.Erase(index);
-					}
-					alwaysLoad.PushString(filePath);
-					i--;
-				}
-
-				delete kv;
+				continue;
 			}
+			KeyValues kv = new KeyValues("root");
+			if (!FileToKeyValues(kv, filePath))
+			{
+				delete kv;
+				continue;
+			}
+			kv.GetSectionName(profileName, sizeof(profileName));
+			if(kv.GetNum("admin_only"))
+			{
+				g_AllBosses.PushString(profileName);
+				kv.GetString("name", fileName, sizeof(fileName));
+				g_AllBossesName.SetString(profileName, fileName);
+			}
+
+			if (kv.GetNum("always_load", false) != 0)
+			{
+				int index = directories.FindString(filePath);
+				if (index != -1)
+				{
+					directories.Erase(index);
+				}
+				alwaysLoad.PushString(filePath);
+				i--;
+			}
+			else if (g_BossProfileRequested && g_BossProfileRequested.FindString(profileName) != -1)
+			{
+				int index = directories.FindString(filePath);
+				if (index != -1)
+				{
+					directories.Erase(index);
+				}
+				prioLoad.PushString(filePath);
+				i--;
+			}
+
+			if (kv.JumpToKey("always_load_with") && kv.GotoFirstSubKey(false))
+			{
+				char key[64], boss[SF2_MAX_PROFILE_NAME_LENGTH];
+				do
+				{
+					kv.GetSectionName(key, sizeof(key));
+					kv.GetString(NULL_STRING, boss, sizeof(boss));
+					if (boss[0] == '\0')
+					{
+						continue;
+					}
+
+					delete directory;
+					directory = OpenDirectory(dirPath);
+					while (directory.GetNext(fileNameEx, sizeof(fileNameEx), fileTypeEx))
+					{
+						if (fileTypeEx == FileType_Directory)
+						{
+							continue;
+						}
+
+						FormatEx(filePathEx, sizeof(filePathEx), "%s/%s", relDirPath, fileNameEx);
+						BuildPath(Path_SM, filePathEx, sizeof(filePathEx), filePathEx);
+
+						KeyValues kvEx = new KeyValues("root");
+						if (!FileToKeyValues(kvEx, filePathEx))
+						{
+							delete kvEx;
+							continue;
+						}
+
+						char section[SF2_MAX_PROFILE_NAME_LENGTH];
+						kvEx.GetSectionName(section, sizeof(section));
+
+						if (strcmp(section, boss, false) != 0)
+						{
+							delete kvEx;
+							continue;
+						}
+
+						alwaysLoad.PushString(filePathEx);
+						delete kvEx;
+						break;
+					}
+				}
+				while (kv.GotoNextKey(false));
+			}
+
+			delete kv;
 		}
 	}
+
+	delete directory;
 
 	if (alwaysLoad != null)
 	{
@@ -823,6 +993,31 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 		delete alwaysLoad;
 	}
 
+	if (prioLoad != null)
+	{
+		for (int i = 0; i < prioLoad.Length; i++)
+		{
+			if (maxLoadedBosses > 0 && count >= maxLoadedBosses)
+			{
+				break;
+			}
+
+			prioLoad.GetString(i, filePath, sizeof(filePath));
+
+			if (!LoadProfileFile(filePath, profileName, sizeof(profileName), errorReason, sizeof(errorReason), maxLoadedBosses > 0, dirPath))
+			{
+				LogSF2Message("(ADMIN LOAD) %s...FAILED (reason: %s)", filePath, errorReason);
+			}
+			else
+			{
+				LogSF2Message("(ADMIN LOAD) %s...", profileName, filePath);
+				count++;
+			}
+		}
+
+		delete prioLoad;
+	}
+
 	if (maxLoadedBosses > 0)
 	{
 		directories.Sort(Sort_Random, Sort_String);
@@ -830,7 +1025,7 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 
 	for (int i = 0; i < directories.Length; i++)
 	{
-		if (maxLoadedBosses > 0 && count == maxLoadedBosses)
+		if (maxLoadedBosses > 0 && count >= maxLoadedBosses)
 		{
 			break;
 		}

@@ -565,6 +565,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		}
 	}
 
+	property int ModifiedMaxHealth
+	{
+		public get()
+		{
+			return ClientGetModifiedMaxHealth(this.index);
+		}
+	}
+
 	property bool Ducking
 	{
 		public get()
@@ -851,6 +859,14 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		public get()
 		{
 			return IsClientInPvE(this.index);
+		}
+	}
+
+	property bool IsInWeaponsTriggers
+	{
+		public get()
+		{
+			return IsClientInWeaponsTrigger(this.index);
 		}
 	}
 

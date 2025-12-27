@@ -10,6 +10,12 @@
  */
 bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBuffer, int loadFailReasonBufferLen, bool lookIntoLoads = false, const char[] originalDir = "")
 {
+	if (IsProfileValid(profile))
+	{
+		FormatEx(loadFailReasonBuffer, loadFailReasonBufferLen, "is already loaded or matches another boss's profile name!");
+		return false;
+	}
+
 	SF2BossProfileData profileData;
 	profileData.Init();
 
@@ -869,7 +875,13 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		g_BossProfileList.PushString(profile);
 	}
 
-	if (kv.GetNum("enable_random_selection", true) != 0)
+	profileData.EnableRandomSelection = kv.GetNum("enable_random_selection", true) != 0;
+	profileData.AdminOnly = kv.GetNum("admin_only", false) != 0;
+	profileData.EnableRandomSelectionBoxing = kv.GetNum("enable_random_selection_boxing", false) != 0;
+	profileData.EnableRandomSelectionRenevant = kv.GetNum("enable_random_selection_renevant", false) != 0;
+	profileData.EnableRandomSelectionRenevantAdmin = kv.GetNum("enable_random_selection_renevant_admin", false) != 0;
+
+	if (profileData.EnableRandomSelection)
 	{
 		if (GetSelectableBossProfileList().FindString(profile) == -1)
 		{
@@ -886,7 +898,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (kv.GetNum("admin_only", false) != 0)
+	if (profileData.AdminOnly)
 	{
 		if (GetSelectableAdminBossProfileList().FindString(profile) == -1)
 		{
@@ -903,7 +915,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (kv.GetNum("enable_random_selection_boxing", false) != 0)
+	if (profileData.EnableRandomSelectionBoxing)
 	{
 		if (GetSelectableBoxingBossProfileList().FindString(profile) == -1)
 		{
@@ -920,7 +932,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (kv.GetNum("enable_random_selection_renevant", false) != 0)
+	if (profileData.EnableRandomSelectionRenevant)
 	{
 		if (GetSelectableRenevantBossProfileList().FindString(profile) == -1)
 		{
@@ -937,7 +949,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		}
 	}
 
-	if (kv.GetNum("enable_random_selection_renevant_admin", false) != 0)
+	if (profileData.EnableRandomSelectionRenevantAdmin)
 	{
 		if (GetSelectableRenevantBossAdminProfileList().FindString(profile) == -1)
 		{
@@ -1294,6 +1306,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 		profileData.CompanionsArray = new ArrayList(sizeof(SF2BossProfileCompanionsInfo));
 
 		kv.GetString("type", profileData.CompanionSpawnType, sizeof(profileData.CompanionSpawnType));
+		ArrayList validProfiles = null;
 		if (kv.GotoFirstSubKey())
 		{
 			do
@@ -1331,25 +1344,38 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 
 							if (strcmp(compProfile, otherProfile) == 0)
 							{
-								if (!LoadBossProfile(otherKeys, otherProfile, loadFailReasonBuffer, loadFailReasonBufferLen))
+								if (validProfiles == null)
 								{
-									LogSF2Message("(COMPANION) %s...FAILED (reason: %s)", dir, loadFailReasonBuffer);
+									validProfiles = new ArrayList(ByteCountToCells(SF2_MAX_PROFILE_NAME_LENGTH));
 								}
-								else
+								if (validProfiles.FindString(otherProfile) == -1)
 								{
-									LogSF2Message("(COMPANION) %s...", otherProfile);
+									if (!LoadBossProfile(otherKeys, otherProfile, loadFailReasonBuffer, loadFailReasonBufferLen))
+									{
+										LogSF2Message("(COMPANION) %s...FAILED (reason: %s)", dir, loadFailReasonBuffer);
+									}
+									else
+									{
+										LogSF2Message("(COMPANION) %s...", otherProfile);
+									}
+									validProfiles.PushString(otherProfile);
 								}
 							}
 
 							delete otherKeys;
 						}
 					}
+					delete directory;
 				}
 			}
 			while (kv.GotoNextKey());
 			kv.GoBack();
 		}
 		kv.GoBack();
+		if (validProfiles != null)
+		{
+			delete validProfiles;
+		}
 	}
 
 	if (kv.JumpToKey("attributes"))

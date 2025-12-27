@@ -257,6 +257,8 @@ static void FireLaser(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity acto
 
 		attackData.ApplyDamageEffects(SF2_BasePlayer(hitTarget), difficulty, SF2_ChaserBossEntity(actor.index));
 	}
+
+	delete trace;
 }
 
 static void OnAnimationEvent(SF2_ChaserAttackAction_Laser action, SF2_ChaserEntity actor, int event)

@@ -81,7 +81,7 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 		ball.SetProp(Prop_Send, "m_usSolidFlags", 12);
 		ball.KeyValue("solid", "2");
 		ball.KeyValue("spawnflags", "4");
-		SetEntityCollisionGroup(ball.index, COLLISION_GROUP_DEBRIS_TRIGGER);
+		SetEntityCollisionGroup(ball.index, 13);
 		ball.SetProp(Prop_Send, "m_usSolidFlags", 0);
 
 		ball.Spawn();

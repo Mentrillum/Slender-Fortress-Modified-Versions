@@ -820,7 +820,7 @@ static void InputSetDifficulty(int entity, int activator, int caller, int value)
 		value = Difficulty_Max - 1;
 	}
 
-	g_DifficultyConVar.SetInt(value);
+	SetDifficulty(value);
 }
 
 static void InputEndGracePeriod(int entity, int activator, int caller)
