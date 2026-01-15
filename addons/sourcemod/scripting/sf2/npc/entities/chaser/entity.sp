@@ -4539,6 +4539,7 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		}
 	}
 
+	delete valids;
 	CNavArea myArea = chaser.GetLastKnownArea();
 
 	if (!originalData.IsPvEBoss && myArea != NULL_AREA && (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap() || data.ChasesEndlessly || g_RenevantBossesChaseEndlessly))
