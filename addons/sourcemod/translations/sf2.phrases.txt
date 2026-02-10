@@ -11,39 +11,39 @@
 	}
 	"SF2 Renevant Wall Hax"
 	{
-		"en" "You can now see everything through walls"
+		"en" "You can now see bosses and players through walls."
 	}
 	"SF2 Renevant Marked"
 	{
-		"en" "Everyone is marked for death permanently"
+		"en" "Everyone is marked for death permanently."
 	}
 	"SF2 Renevant 90s"
 	{
-		"en" "Everyone run more faster"
+		"en" "You feel really nervous, now run faster."
 	}
 	"SF2 Renevant Bacon"
 	{
-		"en" "Now Bosses are now alerted on spawn"
+		"en" "Bosses are now alerted on spawn."
 	}
 	"SF2 Renevant Multieffects"
 	{
-		"en" "Now Bosses can now inflict Multieffect on damage"
+		"en" "Bosses can now inflict Multieffect."
 	}
 	"SF2 Renevant Difficulty"
 	{
-		"en" "Now difficulty got changed to"
+		"en" "Difficulty has been set to"
 	}
 	"SF2 Boss Added"
 	{
-		"en" "New Boss"
+		"en" "Next Boss"
 	}
 	"SF2 Bosses Added"
 	{
-		"en" "New Bosses Added"
+		"en" "Next Bosses"
 	}
 	"SF2 Admin Boss"
 	{
-		"en" "Special Boss Added"
+		"en" "Next Exclusive Boss"
 	}
 	"SF2 Difficulty Vote Finished"
 	{
@@ -2338,4 +2338,5 @@
 		"en" "Removed music {1}."
 	}
 }
+
 
