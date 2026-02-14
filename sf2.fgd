@@ -406,3 +406,7 @@
 		1 : "Enabled"
 	]
 ]
+
+@SolidClass base(trigger_multiple) = sf2_trigger_weapons : "(Modified only) A trigger brush that when touched by a player will automatically give them all weapons but cannot damage other players. The substitude for sf2_trigger_pve"
+[
+]
