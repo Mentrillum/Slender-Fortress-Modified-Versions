@@ -374,7 +374,7 @@ enum struct SF2ChaserBossProfileDamageEffectData // Can be any data
 		this.Sounds.Destroy();
 	}
 
-	void Apply(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	void Apply(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = view_as<SF2_ChaserBossEntity>(-1))
 	{
 		if (!this.Enabled[difficulty])
 		{
@@ -603,7 +603,7 @@ enum struct SF2ChaserBossProfileShockwaveData
 		}
 	}
 
-	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = view_as<SF2_ChaserBossEntity>(-1))
 	{
 		if (this.DamageEffects == null)
 		{
@@ -1064,7 +1064,7 @@ enum struct SF2ChaserBossProfileAttackData
 		return strcmp(subType, this.SubType) == 0;
 	}
 
-	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = SF2_ChaserBossEntity(-1))
+	void ApplyDamageEffects(CBaseCombatCharacter player, int difficulty, SF2_ChaserBossEntity chaser = view_as<SF2_ChaserBossEntity>(-1))
 	{
 		if (this.DamageEffects == null)
 		{
