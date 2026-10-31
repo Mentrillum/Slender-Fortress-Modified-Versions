@@ -1791,6 +1791,7 @@ void ClientResetOverlay(int client)
 	#endif
 
 	g_PlayerOverlayCheck[client] = null;
+	g_PlayerSecondaryOverlay[client][0] = '\0';
 
 	if (IsValidClient(client))
 	{
@@ -1898,7 +1899,11 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 	}
 
 	ClientCommand(player.index, "r_screenoverlay %s", material);
-	RunScriptCode(player.index, _, _, "self.SetScriptOverlayMaterial(\"%s\")", lowerOverlay);
+	if (strcmp(g_PlayerSecondaryOverlay[player.index], lowerOverlay, false) != 0)
+	{
+		strcopy(g_PlayerSecondaryOverlay[player.index], sizeof(g_PlayerSecondaryOverlay[]), lowerOverlay);
+		RunScriptCode(player.index, _, _, "self.SetScriptOverlayMaterial(\"%s\")", lowerOverlay);
+	}
 	return Plugin_Continue;
 }
 

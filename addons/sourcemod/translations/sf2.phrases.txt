@@ -2164,7 +2164,7 @@
 		"ko" 	"유령 모드 텔레포트 상태 변경"
 	}
 
-	"SF2 Teleport Ghost Players"
+	"SF2 Teleport Ghost Both"
 	{
 		"en"	"{lightblue}You can now teleport to both players and bosses during ghost mode."
 	}

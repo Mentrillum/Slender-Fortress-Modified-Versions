@@ -433,7 +433,7 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 		}
 	}
 
-	g_PlayerDeathCamTimer[client] = duration;
+	g_PlayerDeathCamTimer[client] = duration + overlayDuration;
 	g_PlayerDeathCamOverlayTimer[client] = overlayDuration;
 	if (g_PlayerDeathCamMustDoOverlay[client])
 	{

@@ -56,7 +56,11 @@ static NextBotAction InitialContainedAction(SF2_DeathCamAction action, SF2_BaseB
 	char animation[64];
 	if (!animations.GetAnimation("start", difficulty, animation, sizeof(animation), rate, duration, cycle))
 	{
-		return NULL_ACTION;
+		animations = data.AnimationData;
+		if (!animations.GetAnimation(g_SlenderAnimationsList[SF2BossAnimation_DeathCam], difficulty, animation, sizeof(animation), rate, duration, cycle))
+		{
+			return NULL_ACTION;
+		}
 	}
 
 	int sequence = actor.LookupSequence(animation);

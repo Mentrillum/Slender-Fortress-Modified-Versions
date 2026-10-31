@@ -313,6 +313,7 @@ int g_PlayerQueuePoints[MAXTF2PLAYERS];
 bool g_PlayerPlaying[MAXTF2PLAYERS];
 bool g_PlayerBackStabbed[MAXTF2PLAYERS];
 Handle g_PlayerOverlayCheck[MAXTF2PLAYERS];
+char g_PlayerSecondaryOverlay[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
 
 Handle g_PlayerSwitchBlueTimer[MAXTF2PLAYERS];
 

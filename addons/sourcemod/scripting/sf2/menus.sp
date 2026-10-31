@@ -1692,14 +1692,14 @@ static int Panel_SettingsGhostModeTeleport(Menu menu, MenuAction action, int par
 			}
 			case 2:
 			{
-				g_PlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 0;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 1;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Teleport Ghost Players", param1);
 			}
 			case 3:
 			{
-				g_PlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 1;
+				g_PlayerPreferences[param1].PlayerPreference_GhostModeTeleportState = 2;
 				ClientUpdateListeningFlags(param1);
 				ClientSaveCookies(param1);
 				CPrintToChat(param1, "%T", "SF2 Teleport Ghost Bosses", param1);
