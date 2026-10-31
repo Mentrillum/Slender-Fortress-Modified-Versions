@@ -4,6 +4,7 @@
 #define _sf2_client_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_OVERLAY_DEFAULT "overlays/slender/newcamerahud_3"
 #define SF2_OVERLAY_DEFAULT_NO_FILMGRAIN "overlays/slender/nofilmgrain"
@@ -16,6 +17,7 @@ static Handle g_ClientSpecialRoundTimer[MAXTF2PLAYERS];
 // Jumpscare data.
 static int g_PlayerJumpScareBoss[MAXTF2PLAYERS] = { -1, ... };
 static float g_PlayerJumpScareLifeTime[MAXTF2PLAYERS] = { -1.0, ... };
+static char g_PlayerJumpScareOverlay[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
 
 static float g_PlayerScareBoostEndTime[MAXTF2PLAYERS] = { -1.0, ... };
 
@@ -39,8 +41,9 @@ int g_ClientFrame[MAXTF2PLAYERS];
 #include "client/sprint.sp"
 #include "client/breathing.sp"
 #include "client/ghostmode.sp"
-#include "client/music.sp"
+#include "client/new_music.sp"
 #include "client/proxy.sp"
+#include "client/weapons.sp"
 
 void SetupClients()
 {
@@ -57,6 +60,10 @@ static void OnPutInServer(SF2_BasePlayer client)
 {
 	SDKHook(client.index, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(client.index, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
+	if (g_DHookTakeHealth != null)
+	{
+		g_DHookTakeHealth.HookEntity(Hook_Pre, client, TakeHealth);
+	}
 }
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
@@ -205,7 +212,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		}
 	}
 
-	if (IsValidEntity(inflictor) && !SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
+	if (IsValidEntity(inflictor) && !SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor) && HasEntProp(inflictor, Prop_Send, "m_hOwnerEntity"))
 	{
 		int npcIndex = NPCGetFromEntIndex(GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity"));
 		if (npcIndex != -1)
@@ -507,6 +514,31 @@ static void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float
 	Call_PushFloat(damage);
 	Call_PushCell(damageType);
 	Call_Finish();
+}
+
+static MRESReturn TakeHealth(int entity, DHookReturn retValue, DHookParam params)
+{
+	if (!g_Enabled || !IsValidClient(entity))
+	{
+		return MRES_Ignored;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(entity);
+	TFClassType playerClass = player.Class;
+	int classToInt = view_as<int>(playerClass);
+	if (!player.IsEliminated && playerClass == TFClass_Medic && IsClassConfigsValid())
+	{
+		float health = params.Get(1);
+		health += g_ClassMedicAddedHealthRegen[classToInt];
+		if (health <= 0.0)
+		{
+			health = 0.0;
+		}
+		params.Set(1, health);
+		return MRES_ChangedHandled;
+	}
+
+	return MRES_Ignored;
 }
 
 static Action Timer_CheckHealth(Handle timer, any id)
@@ -1014,7 +1046,7 @@ void ClientProcessVisibility(int client)
 				// Process death cam sequence with static
 				if (g_PlayerStaticAmount[client] >= 1.0)
 				{
-					ClientStartDeathCam(client, NPCGetFromUniqueID(g_PlayerStaticMaster[client]), slenderPos, false, true);
+					ClientStartDeathCam(client, NPCGetFromUniqueID(g_PlayerStaticMaster[client]), slenderPos, false);
 				}
 			}
 		}
@@ -1584,13 +1616,15 @@ void ClientDoJumpScare(int client, int bossIndex, float lifeTime)
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
+	SF2BossProfileData data;
+	data = SF2NPC_BaseNPC(bossIndex).GetProfileData();
+	SF2BossProfileSoundInfo soundInfo;
+	soundInfo = data.JumpscareSounds;
 
-	char buffer[PLATFORM_MAX_PATH];
-	GetBossProfileJumpscareSound(profile, buffer, sizeof(buffer));
-
-	if (buffer[0] != '\0')
+	soundInfo.EmitSound(true, client);
+	if (data.OverlayJumpscares != null)
 	{
-		EmitSoundToClient(client, buffer, _, MUSIC_CHAN);
+		data.OverlayJumpscares.GetString(GetRandomInt(0, data.OverlayJumpscares.Length - 1), g_PlayerJumpScareOverlay[client], sizeof(g_PlayerJumpScareOverlay[]));
 	}
 }
 
@@ -1761,6 +1795,7 @@ void ClientResetOverlay(int client)
 	if (IsValidClient(client))
 	{
 		ClientCommand(client, "r_screenoverlay \"\"");
+		RunScriptCode(client, _, _, "self.SetScriptOverlayMaterial(\"\")");
 	}
 
 	#if defined DEBUG
@@ -1779,7 +1814,9 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	if (timer != g_PlayerOverlayCheck[client])
+	SF2_BasePlayer player = SF2_BasePlayer(client);
+
+	if (timer != g_PlayerOverlayCheck[player.index])
 	{
 		return Plugin_Stop;
 	}
@@ -1789,46 +1826,79 @@ Action Timer_PlayerOverlayCheck(Handle timer, any userid)
 		return Plugin_Continue;
 	}
 
-	int deathCamBoss = NPCGetFromUniqueID(g_PlayerDeathCamBoss[client]);
-	int jumpScareBoss = NPCGetFromUniqueID(g_PlayerJumpScareBoss[client]);
+	int deathCamBoss = NPCGetFromUniqueID(g_PlayerDeathCamBoss[player.index]);
+	int jumpScareBoss = NPCGetFromUniqueID(g_PlayerJumpScareBoss[player.index]);
 
-	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-	char material[PLATFORM_MAX_PATH], overlay[PLATFORM_MAX_PATH];
+	char material[PLATFORM_MAX_PATH], lowerOverlay[PLATFORM_MAX_PATH];
 
-	if (IsClientInDeathCam(client) && deathCamBoss != -1 && g_PlayerDeathCamShowOverlay[client])
+	if (player.IsInDeathCam && deathCamBoss != -1 && g_PlayerDeathCamShowOverlay[player.index])
 	{
-		NPCGetProfile(deathCamBoss, profile, sizeof(profile));
-		GetBossProfileOverlayPlayerDeath(profile, material, sizeof(material));
+		strcopy(material, sizeof(material), g_PlayerDeathCamCurrentOverlay[player.index]);
 	}
-	else if (jumpScareBoss != -1 && GetGameTime() <= g_PlayerJumpScareLifeTime[client])
+	else if (jumpScareBoss != -1 && GetGameTime() <= g_PlayerJumpScareLifeTime[player.index])
 	{
-		NPCGetProfile(jumpScareBoss, profile, sizeof(profile));
-		GetBossProfileOverlayJumpscare(profile, material, sizeof(material));
+		strcopy(material, sizeof(material), g_PlayerJumpScareOverlay[player.index]);
 	}
-	else if (IsClientInGhostMode(client) && !SF_IsBoxingMap())
+	else if (player.IsInGhostMode && !SF_IsBoxingMap())
 	{
-		g_GhostOverlayConVar.GetString(overlay, sizeof(overlay));
-		strcopy(material, sizeof(material), overlay);
+		player.GetGhostOverlay(material, sizeof(material));
 	}
-	else if (IsRoundInWarmup() || g_PlayerEliminated[client] || DidClientEscape(client) && !IsClientInGhostMode(client))
+	else if (IsRoundInWarmup() || player.IsEliminated || player.HasEscaped && !player.IsInGhostMode)
 	{
 		return Plugin_Continue;
 	}
 	else
 	{
-		if (!g_PlayerPreferences[client].PlayerPreference_FilmGrain)
+		char subPluginMaterial[PLATFORM_MAX_PATH], subPluginLowerOverlay[PLATFORM_MAX_PATH];
+		Action action = Plugin_Continue;
+		Call_StartForward(g_OnClientOverlayUpdateFwd);
+		Call_PushCell(client);
+		Call_PushStringEx(subPluginLowerOverlay, sizeof(subPluginLowerOverlay), 0, SM_PARAM_COPYBACK);
+		Call_PushCell(sizeof(subPluginLowerOverlay));
+		Call_PushStringEx(subPluginMaterial, sizeof(subPluginMaterial), 0, SM_PARAM_COPYBACK);
+		Call_PushCell(sizeof(subPluginMaterial));
+		Call_Finish(action);
+
+		if (action != Plugin_Continue)
 		{
-			g_OverlayNoGrainConVar.GetString(overlay, sizeof(overlay));
-			strcopy(material, sizeof(material), overlay);
+			if (subPluginMaterial[0] != '\0')
+			{
+				strcopy(material, sizeof(material), subPluginMaterial);
+			}
+
+			if (subPluginLowerOverlay[0] != '\0')
+			{
+				strcopy(lowerOverlay, sizeof(lowerOverlay), subPluginLowerOverlay);
+			}
 		}
-		else
+		if (material[0] == '\0')
 		{
-			g_CameraOverlayConVar.GetString(overlay, sizeof(overlay));
-			strcopy(material, sizeof(material), overlay);
+			for (int i = 0; i < MAX_BOSSES; i++)
+			{
+				SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(i);
+				if (!npc.IsValid())
+				{
+					continue;
+				}
+
+				BaseBossProfile profile = npc.GetProfileDataEx();
+				if (profile.GetRedCameraOverlays() == null)
+				{
+					continue;
+				}
+
+				profile.GetActiveRedCameraOverlay(material, sizeof(material));
+				break;
+			}
+		}
+		if (material[0] == '\0')
+		{
+			player.GetCameraOverlay(material, sizeof(material));
 		}
 	}
 
-	ClientCommand(client, "r_screenoverlay %s", material);
+	ClientCommand(player.index, "r_screenoverlay %s", material);
+	RunScriptCode(player.index, _, _, "self.SetScriptOverlayMaterial(\"%s\")", lowerOverlay);
 	return Plugin_Continue;
 }
 
@@ -2045,7 +2115,7 @@ void ClientSaveCookies(int client)
 
 	// Save and reset our queue points.
 	char s[512];
-	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d",
+	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d",
 		g_PlayerQueuePoints[client],
 		g_PlayerPreferences[client].PlayerPreference_PvPAutoSpawn,
 		g_PlayerPreferences[client].PlayerPreference_ShowHints,
@@ -2060,7 +2130,9 @@ void ClientSaveCookies(int client)
 		g_PlayerPreferences[client].PlayerPreference_GroupOutline,
 		g_PlayerPreferences[client].PlayerPreference_GhostModeTeleportState,
 		g_PlayerPreferences[client].PlayerPreference_LegacyHud,
-		RoundToNearest(g_PlayerPreferences[client].PlayerPreference_MusicVolume * 100));
+		RoundToNearest(g_PlayerPreferences[client].PlayerPreference_MusicVolume * 100),
+		g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc,
+		g_PlayerPreferences[client].PlayerPreference_FlashlightType);
 
 	SetClientCookie(client, g_Cookie, s);
 }
@@ -2154,7 +2226,48 @@ void TF2_GetClassName(TFClassType class, char[] buffer, int bufferLen, bool alt 
 	}
 }
 
-bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true, bool ignoreFog = false)
+TFClassType TF2_GetClassFromName(const char[] class)
+{
+	if (strcmp(class, "scout", false) == 0)
+	{
+		return TFClass_Scout;
+	}
+	else if (strcmp(class, "soldier", false) == 0)
+	{
+		return TFClass_Soldier;
+	}
+	else if (strcmp(class, "pyro", false) == 0)
+	{
+		return TFClass_Pyro;
+	}
+	else if (strcmp(class, "demoman", false) == 0)
+	{
+		return TFClass_DemoMan;
+	}
+	else if (strcmp(class, "heavyweapons", false) == 0 || strcmp(class, "heavy", false) == 0)
+	{
+		return TFClass_Heavy;
+	}
+	else if (strcmp(class, "engineer", false) == 0)
+	{
+		return TFClass_Engineer;
+	}
+	else if (strcmp(class, "medic", false) == 0)
+	{
+		return TFClass_Medic;
+	}
+	else if (strcmp(class, "sniper", false) == 0)
+	{
+		return TFClass_Sniper;
+	}
+	else if (strcmp(class, "spy", false) == 0)
+	{
+		return TFClass_Spy;
+	}
+	return TFClass_Unknown;
+}
+
+bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true, bool ignoreFog = false, bool playerClips = false)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -2162,7 +2275,7 @@ bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool chec
 		{
 			continue;
 		}
-		if (IsPointVisibleToPlayer(i, pos, checkFOV, checkBlink, checkEliminated, ignoreFog))
+		if (IsPointVisibleToPlayer(i, pos, checkFOV, checkBlink, checkEliminated, ignoreFog, playerClips))
 		{
 			return true;
 		}
@@ -2171,7 +2284,7 @@ bool IsPointVisibleToAPlayer(const float pos[3], bool checkFOV = true, bool chec
 	return false;
 }
 
-bool IsPointVisibleToPlayer(int client, const float pos[3], bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true, bool ignoreFog = false)
+bool IsPointVisibleToPlayer(int client, const float pos[3], bool checkFOV = true, bool checkBlink = false, bool checkEliminated = true, bool ignoreFog = false, bool playerClips = false)
 {
 	if (!IsValidClient(client) || !IsPlayerAlive(client) || IsClientInGhostMode(client))
 	{
@@ -2205,7 +2318,12 @@ bool IsPointVisibleToPlayer(int client, const float pos[3], bool checkFOV = true
 		}
 	}
 
-	TR_TraceRayFilter(eyePos, pos, MASK_PLAYERSOLID_BRUSHONLY | CONTENTS_WINDOW, RayType_EndPoint, TraceRayDontHitAnything, client);
+	int flags = MASK_PLAYERSOLID_BRUSHONLY | CONTENTS_WINDOW;
+	if (playerClips)
+	{
+		flags = CONTENTS_MOVEABLE | CONTENTS_SOLID | CONTENTS_MIST;
+	}
+	TR_TraceRayFilter(eyePos, pos, flags, RayType_EndPoint, TraceRayDontHitAnything, client);
 	bool hit = TR_DidHit();
 
 	if (hit)

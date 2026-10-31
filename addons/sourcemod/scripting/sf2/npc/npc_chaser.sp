@@ -4,6 +4,7 @@
 #define _sf2_npc_chaser_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static SF2ChaserBossProfileData g_NpcChaserProfileData[MAX_BOSSES];
 
@@ -653,6 +654,8 @@ void NPCChaser_InitializeAPI()
 
 	CreateNative("SF2_GetChaserProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetChaserProfileFromName", Native_GetProfileDataEx);
+	CreateNative("SF2_GetChaserProfileFromBossIndexEx", Native_GetProfileDataNew);
+	CreateNative("SF2_GetChaserProfileFromNameEx", Native_GetProfileDataNewEx);
 	CreateNative("SF2_SetEntityForceChaseState", Native_SetForceChaseState);
 
 	g_OnChaserBossStartAttackFwd = new GlobalForward("SF2_OnChaserBossStartAttack", ET_Ignore, Param_Cell, Param_String);
@@ -876,6 +879,24 @@ static any Native_GetProfileDataEx(Handle plugin, int numParams)
 
 	SetNativeArray(2, data, sizeof(data));
 	return true;
+}
+
+static any Native_GetProfileDataNew(Handle plugin, int numParams)
+{
+	SF2NPC_Chaser controller = SF2NPC_Chaser(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	return controller.GetProfileDataEx();
+}
+
+static any Native_GetProfileDataNewEx(Handle plugin, int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, sizeof(profile));
+	return view_as<ChaserBossProfile>(GetBossProfile(profile));
 }
 
 static any Native_SetForceChaseState(Handle plugin, int numParams)

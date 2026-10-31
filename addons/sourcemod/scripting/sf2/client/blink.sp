@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 // Blink data.
 static Handle g_PlayerBlinkTimer[MAXTF2PLAYERS] = { null, ... };

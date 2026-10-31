@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 // Anti-camping data.
 int g_PlayerCampingStrikes[MAXTF2PLAYERS] = { 0, ... };
@@ -23,7 +24,7 @@ void SetupAntiCamping()
 	g_OnPlayerEscapePFwd.AddFunction(null, OnPlayerEscape);
 
 	g_CampingEnabledConVar = CreateConVar("sf2_anticamping_enabled", "1", "Enable/Disable anti-camping system for RED.", _, true, 0.0, true, 1.0);
-	g_CampingMaxStrikesConVar = CreateConVar("sf2_anticamping_maxstrikes", "4", "How many 5-second intervals players are allowed to stay in one spot before he/she is forced to suicide.", _, true, 0.0);
+	g_CampingMaxStrikesConVar = CreateConVar("sf2_anticamping_maxstrikes", "8", "How many 5-second intervals players are allowed to stay in one spot before he/she is forced to suicide.", _, true, 0.0);
 	g_CampingStrikesWarnConVar = CreateConVar("sf2_anticamping_strikeswarn", "2", "The amount of strikes left where the player will be warned of camping.");
 	g_ExitCampingTimeAllowedConVar = CreateConVar("sf2_exitcamping_allowedtime", "25.0", "The amount of time a player can stay near the exit before being flagged as camper.");
 	g_CampingMinDistanceConVar = CreateConVar("sf2_anticamping_mindistance", "128.0", "Every 5 seconds the player has to be at least this far away from his last position 5 seconds ago or else he'll get a strike.");

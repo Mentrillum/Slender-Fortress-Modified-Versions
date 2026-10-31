@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -85,4 +86,5 @@ static void OnEnd(SF2_ChaserBeatBoxFreezeAction action, SF2_ChaserEntity actor)
 {
 	actor.IsAttemptingToMove = action.WasMoving;
 	actor.UpdateMovementAnimation();
+	actor.MyNextBotPointer().GetLocomotionInterface().ClearStuckStatus();
 }

@@ -4,6 +4,7 @@
 #define _sf2_profiles_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define FILE_PROFILES_DIR "configs/sf2/profiles"
 #define FILE_PROFILES_PACKS "configs/sf2/profiles_packs.cfg"
@@ -23,6 +24,7 @@ static ArrayList g_SelectableBossProfileQueueList = null;
 ArrayList g_BossProfileRequested = null;
 
 StringMap g_BossProfileData = null;
+StringMap g_BossProfileDataKeyMap = null;
 
 ConVar g_BossProfilePackConVar = null;
 ConVar g_BossProfilePackDefaultConVar = null;
@@ -43,10 +45,14 @@ static char mapBossPack[64];
 
 GlobalForward g_OnBossProfileLoadedFwd;
 static GlobalForward g_OnBossProfileUnloadedFwd;
+GlobalForward g_OnBossProfileLoadedExFwd;
+static GlobalForward g_OnBossProfileUnloadedExFwd;
 
 static ArrayList g_AllBosses;
 static StringMap g_AllBossesName;
 
+#include "profiles/keymap.sp"
+#include "profiles/objects.sp"
 #include "profiles/profiles_boss_functions.sp"
 #include "profiles/profile_chaser.sp"
 #include "profiles/profile_statue.sp"
@@ -71,17 +77,26 @@ void SetupBossProfileNatives()
 	CreateNative("SF2_GetStatueBossProfileData", Native_GetStatueBossProfileData);
 	CreateNative("SF2_TranslateProfileActivityFromName", Native_TranslateProfileActivityFromName);
 	CreateNative("SF2_LookupProfileAnimation", Native_LookupProfileAnimation);
+
+	CreateNative("SF2_BaseBossProfile.Type.get", Native_GetType);
+	CreateNative("SF2_BaseBossProfile.IsPvEBoss.get", Native_GetIsPvEBoss);
+
+	SetupProfileObjectNatives();
+	ProfileChaser_InititalizeAPI();
 }
 
 void InitializeBossProfiles()
 {
 	g_BossProfileList = new ArrayList(ByteCountToCells(SF2_MAX_PROFILE_NAME_LENGTH));
 	g_BossProfileData = new StringMap();
+	g_BossProfileDataKeyMap = new StringMap();
 
 	g_Activities = new StringMap();
 
 	g_OnBossProfileLoadedFwd = new GlobalForward("SF2_OnBossProfileLoaded", ET_Ignore, Param_String, Param_Any);
 	g_OnBossProfileUnloadedFwd = new GlobalForward("SF2_OnBossProfileUnloaded", ET_Ignore, Param_String);
+	g_OnBossProfileLoadedExFwd = new GlobalForward("SF2_OnBossProfileLoadedEx", ET_Ignore, Param_String, Param_Cell);
+	g_OnBossProfileUnloadedExFwd = new GlobalForward("SF2_OnBossProfileUnloadedEx", ET_Ignore, Param_String, Param_Cell);
 
 	AddProfileActivities();
 
@@ -280,6 +295,11 @@ int LookupProfileAnimation(int entity, const char[] animName)
 	return sequence;
 }
 
+int GetMaxProfileDifficultySuffixSize()
+{
+	return 11;
+}
+
 void GetCurrentBossPack(char[] bossPackName, int length)
 {
 	g_BossPackConfig.Rewind();
@@ -437,6 +457,17 @@ void BossProfilesOnMapEnd()
 	ClearBossProfiles();
 }
 
+BaseBossProfile GetBossProfile(const char[] profile)
+{
+	BaseBossProfile data = null;
+	if (g_BossProfileDataKeyMap.GetValue(profile, data))
+	{
+		return data;
+	}
+
+	return null;
+}
+
 static void PreUnloadBossProfile(const char[] profile)
 {
 	SF2BossProfileData profileData;
@@ -470,6 +501,19 @@ void UnloadBossProfile(const char[] profile)
 	Call_StartForward(g_OnBossProfileUnloadedFwd);
 	Call_PushString(profile);
 	Call_Finish();
+
+	BaseBossProfile profileData;
+	if (g_BossProfileDataKeyMap.GetValue(profile, profileData))
+	{
+		Call_StartForward(g_OnBossProfileUnloadedExFwd);
+		Call_PushString(profile);
+		Call_PushCell(profileData);
+		Call_Finish();
+
+		CleanupKeyMap(profileData);
+
+		g_BossProfileDataKeyMap.Remove(profile);
+	}
 
 	PreUnloadBossProfile(profile);
 
@@ -509,22 +553,11 @@ void UnloadBossProfile(const char[] profile)
 		g_SelectableRenevantBossAdminProfileList.Erase(index);
 	}
 
-	SF2BossProfileData data;
-	g_BossProfileData.GetArray(profile, data, sizeof(data));
-	if (data.IsPvEBoss)
-	{
-		char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
-		strcopy(setProfile, sizeof(setProfile), profile);
-		UnregisterPvESlenderBoss(setProfile);
-	}
+	char setProfile[SF2_MAX_PROFILE_NAME_LENGTH];
+	strcopy(setProfile, sizeof(setProfile), profile);
+	UnregisterPvESlenderBoss(setProfile);
 
 	g_BossProfileData.Remove(profile);
-
-	g_Config.Rewind();
-	if (g_Config.JumpToKey(profile))
-	{
-		g_Config.DeleteThis();
-	}
 }
 
 /**
@@ -547,11 +580,8 @@ void ClearBossProfiles()
 			continue;
 		}
 
-		Call_StartForward(g_OnBossProfileUnloadedFwd);
-		Call_PushString(profile);
-		Call_Finish();
-
-		PreUnloadBossProfile(profile);
+		UnloadBossProfile(profile);
+		i--;
 	}
 
 	if (g_SelectableBossProfileList != null)
@@ -581,15 +611,13 @@ void ClearBossProfiles()
 
 	g_BossProfileList.Clear();
 	g_BossProfileData.Clear();
+	g_BossProfileDataKeyMap.Clear();
+
+	UnregisterPvESlenderBosses();
 }
 
 void ReloadBossProfiles()
 {
-	if (g_Config != null)
-	{
-		delete g_Config;
-	}
-
 	if (g_BossPackConfig != null)
 	{
 		delete g_BossPackConfig;
@@ -601,7 +629,6 @@ void ReloadBossProfiles()
 	// Clear and reload the lists.
 	ClearBossProfiles();
 
-	g_Config = new KeyValues("root");
 	g_BossPackConfig = new KeyValues("root");
 
 	if (g_BossProfileList == null)
@@ -820,6 +847,20 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 	kv.GetSectionName(profileName, profileNameLen);
 
 	bool result = LoadBossProfile(kv, profileName, errorReason, errorReasonLen, lookIntoLoads, originalDir);
+
+	if (result)
+	{
+		BaseBossProfile profileData = view_as<BaseBossProfile>(KeyValuesToKeyMap(kv));
+
+		profileData.Precache();
+
+		Call_StartForward(g_OnBossProfileLoadedExFwd);
+		Call_PushString(profileName);
+		Call_PushCell(profileData);
+		Call_Finish();
+
+		g_BossProfileDataKeyMap.SetValue(profileName, profileData);
+	}
 
 	delete kv;
 
@@ -1341,33 +1382,27 @@ bool IsProfileValid(const char[] profile)
 	return GetBossProfileList().FindString(profile) != -1;
 }
 
-int GetProfileNum(const char[] profile, const char[] keyValue,int defaultValue=0)
+int GetProfileNum(const char[] profile, const char[] keyValue, int defaultValue = 0)
 {
 	if (!IsProfileValid(profile))
 	{
 		return defaultValue;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	return g_Config.GetNum(keyValue, defaultValue);
+	return GetBossProfile(profile).GetInt(keyValue, defaultValue);
 }
 
-float GetProfileFloat(const char[] profile, const char[] keyValue, float defaultValue=0.0)
+float GetProfileFloat(const char[] profile, const char[] keyValue, float defaultValue = 0.0)
 {
 	if (!IsProfileValid(profile))
 	{
 		return defaultValue;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	return g_Config.GetFloat(keyValue, defaultValue);
+	return GetBossProfile(profile).GetFloat(keyValue, defaultValue);
 }
 
-bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3]=NULL_VECTOR)
+bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[3], const float defaultValue[3] = NULL_VECTOR)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -1379,49 +1414,11 @@ bool GetProfileVector(const char[] profile, const char[] keyValue, float buffer[
 		return false;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	g_Config.GetVector(keyValue, buffer, defaultValue);
+	GetBossProfile(profile).GetVector(keyValue, buffer, defaultValue);
 	return true;
 }
-/*
-bool GetProfileColor(const char[] profile,
-	const char[] keyValue,
-	int &r,
-	int &g,
-	int &b,
-	int &a,
-	int dr=255,
-	int dg=255,
-	int db=255,
-	int da=255)
-{
-	r = dr;
-	g = dg;
-	b = db;
-	a = da;
 
-	if (!IsProfileValid(profile))
-	{
-		return false;
-	}
-
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	char value[64];
-	g_Config.GetString(keyValue, value, sizeof(value));
-
-	if (value[0] != '\0')
-	{
-		g_Config.GetColor(keyValue, r, g, b, a);
-	}
-
-	return true;
-}
-*/
-bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer,int bufferLen, const char[] defaultValue="")
+bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer, int bufferLen, const char[] defaultValue = "")
 {
 	strcopy(buffer, bufferLen, defaultValue);
 
@@ -1430,15 +1427,12 @@ bool GetProfileString(const char[] profile, const char[] keyValue, char[] buffer
 		return false;
 	}
 
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile);
-
-	g_Config.GetString(keyValue, buffer, bufferLen, defaultValue);
+	GetBossProfile(profile).GetString(keyValue, buffer, bufferLen, defaultValue);
 	return true;
 }
 
 // Code originally from FF2. Credits to the original authors Rainbolt Dash and FlaminSarge.
-bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, char[] buffer,int bufferLen,int index = -1,int attackIndex = -1,int &result = 0)
+bool GetRandomStringFromProfile(const char[] profile, const char[] keyValue, char[] buffer, int bufferLen, int index = -1, int attackIndex = -1, int &result = 0)
 {
 	buffer[0] = '\0';
 	result = 0;
@@ -1448,60 +1442,42 @@ bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, 
 		return false;
 	}
 
-	g_Config.Rewind();
-	if (!g_Config.JumpToKey(profile))
+	BaseBossProfile profileData = GetBossProfile(profile);
+	ProfileObject section = profileData.GetSection(keyValue);
+	if (section == null)
 	{
 		return false;
 	}
-	if (!g_Config.JumpToKey(strKeyValue))
-	{
-		return false;
-	}
+	ProfileObject selectedSection = null;
 
-	char s[32], s2[PLATFORM_MAX_PATH], s3[3], s4[PLATFORM_MAX_PATH], s5[3];
+	char s[32], s2[PLATFORM_MAX_PATH], s3[64];
 	int i = 1;
 	if (attackIndex != -1)
 	{
 		FormatEx(s3, sizeof(s3), "%d", attackIndex);
-		FormatEx(s5, sizeof(s5), "%d", attackIndex);
-		g_Config.GetString(s5, s4, sizeof(s4));
-		if (s4[0] == '\0')
+		ProfileObject attack = section.GetSection(s3);
+		if (attack == null)
 		{
-			if (g_Config.JumpToKey(s3))
+			selectedSection = attack;
+			for (;;)
 			{
-				for (;;)
+				FormatEx(s, sizeof(s), "%d", i);
+				attack.GetString(s, s2, sizeof(s2));
+				if (s2[0] == '\0')
 				{
-					FormatEx(s, sizeof(s), "%d", i);
-					g_Config.GetString(s, s2, sizeof(s2));
-					if (s2[0] == '\0')
-					{
-						break;
-					}
-
-					i++;
+					break;
 				}
-			}
-			else
-			{
-				for (;;)
-				{
-					FormatEx(s, sizeof(s), "%d", i);
-					g_Config.GetString(s, s2, sizeof(s2));
-					if (s2[0] == '\0')
-					{
-						break;
-					}
 
-					i++;
-				}
+				i++;
 			}
 		}
 		else
 		{
+			selectedSection = section;
 			for (;;)
 			{
 				FormatEx(s, sizeof(s), "%d", i);
-				g_Config.GetString(s, s2, sizeof(s2));
+				section.GetString(s, s2, sizeof(s2));
 				if (s2[0] == '\0')
 				{
 					break;
@@ -1513,10 +1489,11 @@ bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, 
 	}
 	else
 	{
+		selectedSection = section;
 		for (;;)
 		{
 			FormatEx(s, sizeof(s), "%d", i);
-			g_Config.GetString(s, s2, sizeof(s2));
+			section.GetString(s, s2, sizeof(s2));
 			if (s2[0] == '\0')
 			{
 				break;
@@ -1532,7 +1509,7 @@ bool GetRandomStringFromProfile(const char[] profile, const char[] strKeyValue, 
 	}
 	int randomReturn = GetRandomInt(1, i - 1);
 	FormatEx(s, sizeof(s), "%d", index < 0 ? randomReturn : index);
-	g_Config.GetString(s, buffer, bufferLen);
+	selectedSection.GetString(s, buffer, bufferLen);
 	result = randomReturn;
 	return true;
 }
@@ -1804,4 +1781,26 @@ static any Native_GetBossAttributeValue(Handle plugin,int numParams)
 		return 0.0;
 	}
 	return NPCGetAttributeValue(GetNativeCell(1), attributeIndex);
+}
+
+static any Native_GetType(Handle plugin, int numParams)
+{
+	BaseBossProfile profileData = GetNativeCell(1);
+	if (profileData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", profileData);
+	}
+
+	return profileData.Type;
+}
+
+static any Native_GetIsPvEBoss(Handle plugin, int numParams)
+{
+	BaseBossProfile profileData = GetNativeCell(1);
+	if (profileData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", profileData);
+	}
+
+	return profileData.IsPvEBoss;
 }

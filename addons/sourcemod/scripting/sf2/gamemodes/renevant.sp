@@ -4,6 +4,7 @@
 #define _sf2_renevant_mode_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static GlobalForward g_OnRenevantTriggerWaveFwd;
 
@@ -105,7 +106,7 @@ static void ShowRenevantMessageToClient(int client, const char[] message, int pa
 	ShowSyncHudText(client, g_HudSync3, messageDisplay);
 }
 
-static void Renevant_BroadcastMessage(const char[] message, int params, ...)
+static void Renevant_BroadcastMessage(const char[] message, int params, any ...)
 {
 	char format[512];
 	VFormat(format, sizeof(format), message, params);

@@ -4,6 +4,7 @@
 #define _sf2_debug_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <profiler>
 
@@ -131,7 +132,28 @@ void SendDebugMessageToPlayers(int debugFlags, int type, const char[] message, a
 				{
 					PrintHintText(i, msg);
 				}
+				case 3:
+				{
+					PrintToConsole(i, msg);
+				}
 			}
+		}
+	}
+}
+
+void TraceDebugLineToPlayers(int debugFlags, float start[3], float end[3], float time = 10.0, int color[4] = { 0, 255, 0, 255 })
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i) || IsFakeClient(i))
+		{
+			continue;
+		}
+
+		if (g_PlayerDebugFlags[i] & debugFlags)
+		{
+			TE_SetupBeamPoints(start, end, g_ShockwaveBeam, g_ShockwaveHalo, 0, 30, time, 6.0, 6.0, 5, 0.0, color, 1);
+			TE_SendToClient(i);
 		}
 	}
 }
@@ -465,18 +487,13 @@ static Action Command_DebugKillIcons(int client, int args)
 	return Plugin_Handled;
 }
 
-void TE_DrawBox(int client, float origin[3], float endOrigin[3], float mins[3], float maxs[3], float duration = 0.1, int laserIndex, int color[4])
+stock void TE_DrawBox(int client, const float origin[3], const float endOrigin[3], const float constMins[3], const float constMaxs[3], float duration = 0.1, int laserIndex, int color[4])
 {
-	if( mins[0] == maxs[0] && mins[1] == maxs[1] && mins[2] == maxs[2] )
-	{
-		mins = {-15.0, -15.0, -15.0};
-		maxs = {15.0, 15.0, 15.0};
-	}
-	else
-	{
-		AddVectors(endOrigin, maxs, maxs);
-		AddVectors(origin, mins, mins);
-	}
+	float mins[3], maxs[3];
+	CopyVector(constMins, mins);
+	CopyVector(constMaxs, maxs);
+	AddVectors(endOrigin, maxs, maxs);
+	AddVectors(origin, mins, mins);
 
 	float pos1[3], pos2[3], pos3[3], pos4[3], pos5[3], pos6[3];
 	pos1 = maxs;
@@ -506,8 +523,19 @@ void TE_DrawBox(int client, float origin[3], float endOrigin[3], float mins[3], 
 	TE_SendBeam(client, pos4, pos2, duration, laserIndex, color);
 }
 
-void TE_SendBeam(int client, float mins[3], float maxs[3], float duration = 0.1, int laserIndex, int color[4])
+stock void TE_SendBeam(int client, float mins[3], float maxs[3], float duration = 0.1, int laserIndex, int color[4])
 {
 	TE_SetupBeamPoints(mins, maxs, laserIndex, laserIndex, 0, 30, duration, 1.0, 1.0, 1, 0.0, color, 30);
 	TE_SendToClient(client);
+}
+
+stock void TE_DrawBoxToAll(float origin[3], float endOrigin[3], float mins[3], float maxs[3], float duration = 0.1, int laserIndex, int color[4])
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			TE_DrawBox(i, origin, endOrigin, mins, maxs, duration, laserIndex, color);
+		}
+	}
 }

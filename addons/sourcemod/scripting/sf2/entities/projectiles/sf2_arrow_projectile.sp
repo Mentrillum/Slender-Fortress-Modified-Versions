@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_arrow";
 
@@ -71,6 +72,8 @@ methodmap SF2_ProjectileArrow < SF2_ProjectileBase
 		arrow.Type = SF2BossProjectileType_Arrow;
 		arrow.Speed = speed;
 		arrow.Damage = damage;
+		arrow.IsCrits = isCrits;
+		arrow.SetTrailName(trail);
 		if (arrow.IsCrits)
 		{
 			CBaseEntity critParticle = arrow.CreateParticle("critical_rocket_blue");

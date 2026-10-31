@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 // This is for detecting attacks
 
 static NextBotActionFactory g_Factory;

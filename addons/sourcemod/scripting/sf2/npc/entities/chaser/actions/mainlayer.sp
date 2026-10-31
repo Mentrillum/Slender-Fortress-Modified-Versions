@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 // The purpose of this action is to be the master action
 
 static NextBotActionFactory g_Factory;

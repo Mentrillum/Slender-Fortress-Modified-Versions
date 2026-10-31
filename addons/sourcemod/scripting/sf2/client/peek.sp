@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 //Peeking Data
 bool g_PlayerPeeking[MAXTF2PLAYERS] = { false, ... };

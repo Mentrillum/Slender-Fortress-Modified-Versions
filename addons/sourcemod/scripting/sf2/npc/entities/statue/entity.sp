@@ -31,6 +31,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		g_Factory.BeginDataMapDesc()
 			.DefineBoolField("m_IsMoving")
 			.DefineFloatField("m_LastKillTime")
+			.DefineFloatField("m_NextMoveTime")
 		.EndDataMapDesc();
 		g_Factory.Install();
 	}
@@ -70,6 +71,19 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		public set(float value)
 		{
 			this.SetPropFloat(Prop_Data, "m_LastKillTime", value);
+		}
+	}
+
+	property float NextMoveTime
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_NextMoveTime");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_NextMoveTime", value);
 		}
 	}
 
@@ -171,9 +185,11 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_StatueBossEntity.IsValid.get", Native_GetIsValid);
+		CreateNative("SF2_StatueBossEntity.Controller.get", Native_GetController);
 		CreateNative("SF2_StatueBossEntity.IsMoving.get", Native_GetIsMoving);
 		CreateNative("SF2_StatueBossEntity.LastKillTime.get", Native_GetLastKillTime);
 		CreateNative("SF2_StatueBossEntity.ProfileData", Native_GetProfileData);
+		CreateNative("SF2_StatueBossEntity.GetProfileData", Native_GetProfileDataEx);
 	}
 }
 
@@ -265,6 +281,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 	data = controller.GetProfileData();
 	SF2BossProfileData originalData;
 	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
+	StatueBossProfile profileData = controller.GetProfileDataEx();
 	int difficulty = controller.Difficulty;
 
 	float playerDists[MAXTF2PLAYERS];
@@ -331,6 +348,16 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 		statue.SetInFOV(client, false);
 		statue.SetIsNear(client, false);
 
+		Action result = Plugin_Continue;
+		Call_StartForward(g_OnBossPreValidateTargetFwd);
+		Call_PushCell(statue);
+		Call_PushCell(client);
+		Call_Finish(result);
+		if (result != Plugin_Continue)
+		{
+			continue;
+		}
+
 		client.GetEyePosition(traceEndPos);
 
 		float dist = 99999999999.9;
@@ -360,7 +387,7 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 
 		dist = GetVectorSquareMagnitude(traceStartPos, traceEndPos);
 
-		if (g_PlayerFogCtrlOffset != -1 && g_FogCtrlEnableOffset != -1 && g_FogCtrlEndOffset != -1)
+		if (!profileData.CanSeeThroughFog(difficulty) && g_PlayerFogCtrlOffset != -1 && g_FogCtrlEnableOffset != -1 && g_FogCtrlEndOffset != -1)
 		{
 			int fogEntity = client.GetDataEnt(g_PlayerFogCtrlOffset);
 			if (IsValidEdict(fogEntity))
@@ -541,6 +568,22 @@ static any Native_GetIsValid(Handle plugin, int numParams)
 	return bossEntity.IsValid();
 }
 
+static any Native_GetController(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	if (!IsValidEntity(ent))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", ent);
+	}
+
+	SF2_StatueEntity boss = SF2_StatueEntity(ent);
+	if (!boss.Controller.IsValid())
+	{
+		return -1;
+	}
+	return boss.Controller;
+}
+
 static any Native_GetIsMoving(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
@@ -579,4 +622,17 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 	data = bossEntity.Controller.GetProfileData();
 	SetNativeArray(2, data, sizeof(data));
 	return 0;
+}
+
+static any Native_GetProfileDataEx(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_StatueEntity bossEntity = SF2_StatueEntity(entity);
+
+	return bossEntity.Controller.GetProfileDataEx();
 }

@@ -4,6 +4,9 @@
 #define FILE_RESTRICTEDWEAPONS "configs/sf2/restrictedweapons.cfg"
 #define FILE_RESTRICTEDWEAPONS_DATA "data/sf2/restrictedweapons.cfg"
 
+#define FILE_MODIFIEDWEAPONS "configs/sf2/modifiedweapons.cfg"
+#define FILE_MODIFIEDWEAPONS_DATA "data/sf2/modifiedweapons.cfg"
+
 #define FILE_CLASSCONFIGS "configs/sf2/class_stats.cfg"
 #define FILE_CLASSCONFIGS_DATA "data/sf2/class_stats.cfg"
 
@@ -34,17 +37,17 @@
 
 #define SF_KEYMODEL "models/demani_sf/key_australium.mdl"
 
-#define FLASHLIGHT_CLICKSOUND "slender/slenderflashlightclick.wav"
-#define FLASHLIGHT_CLICKSOUND_NIGHTVISION "slender/nightvision.mp3"
-#define FLASHLIGHT_BREAKSOUND "ambient/energy/spark6.wav"
+#define FLASHLIGHT_CLICKSOUND ")slender/slenderflashlightclick.wav"
+#define FLASHLIGHT_CLICKSOUND_NIGHTVISION ")slender/nightvision.mp3"
+#define FLASHLIGHT_BREAKSOUND ")ambient/energy/spark6.wav"
 #define FLASHLIGHT_NOSOUND "player/suit_denydevice.wav"
 #define PAGE_GRABSOUND ")slender/slenderpagegrab.wav"
 
 #define MUSIC_CHAN SNDCHAN_AUTO
-#define MUSIC_GOTPAGES1_SOUND "slender/newambience_1.wav"
-#define MUSIC_GOTPAGES2_SOUND "slender/newambience_2.wav"
-#define MUSIC_GOTPAGES3_SOUND "slender/newambience_3.wav"
-#define MUSIC_GOTPAGES4_SOUND "slender/newambience_4.wav"
+#define MUSIC_GOTPAGES1_SOUND "#slender/newambience_1.wav"
+#define MUSIC_GOTPAGES2_SOUND "#slender/newambience_2.wav"
+#define MUSIC_GOTPAGES3_SOUND "#slender/newambience_3.wav"
+#define MUSIC_GOTPAGES4_SOUND "#slender/newambience_4.wav"
 #define MUSIC_PAGE_VOLUME 1.0
 
 #define SF2_INTRO_DEFAULT_MUSIC "slender/intro.mp3"
@@ -110,7 +113,7 @@
 
 #define NULLSOUND "misc/null.wav"
 
-#define NINETYSMUSIC "slender/sf2modified_runninginthe90s_v2.wav"
+#define NINETYSMUSIC "#slender/sf2modified_runninginthe90s_v2.wav"
 
 #define TRAP_DEPLOY ")slender/modified_traps/beartrap/trap_deploy.mp3"
 #define TRAP_CLOSE ")slender/modified_traps/beartrap/trap_close.mp3"

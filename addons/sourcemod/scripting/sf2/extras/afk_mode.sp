@@ -4,6 +4,7 @@
 #define _sf2_afk_mode_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static float g_AfkAtGameTime[MAXTF2PLAYERS];
 

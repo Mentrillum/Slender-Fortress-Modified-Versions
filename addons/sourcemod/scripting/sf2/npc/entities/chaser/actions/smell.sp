@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -122,7 +123,6 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 				return action.ChangeTo(SF2_ChaserChaseAction(), "I smelled someone and I need to chase them, GO GO GO!");
 			}
 		}
-		actor.State = STATE_IDLE;
 		return action.ChangeTo(SF2_ChaserIdleAction(), "Sniffers found nothing, go back to idle.");
 	}
 
@@ -186,6 +186,7 @@ static int OnSuspend(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextB
 
 static void OnEnd(SF2_ChaserSmellAction action, SF2_ChaserEntity actor)
 {
+	actor.MyNextBotPointer().GetLocomotionInterface().ClearStuckStatus();
 	actor.IsAllowedToDespawn = true;
 	actor.HasSmelled = true;
 }

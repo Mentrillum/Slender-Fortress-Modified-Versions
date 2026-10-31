@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include "actions/playsequenceandwait.sp"
 #include "actions/deathcam.sp"
@@ -62,6 +63,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineVectorField("m_ForceWanderPos")
 			.DefineBoolField("m_IsKillingSomeone")
 			.DefineEntityField("m_KillTarget")
+			.DefineBoolField("m_FullDeathCamDuration")
 			.DefineBoolField("m_IsAttemptingToMove")
 			.DefineIntField("m_EyeBoneIndex")
 			.DefineBoolField("m_VelocityCancel")
@@ -430,6 +432,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property bool FullDeathCamDuration
+	{
+		public get()
+		{
+			return this.GetProp(Prop_Data, "m_FullDeathCamDuration") != 0;
+		}
+
+		public set(bool value)
+		{
+			this.SetProp(Prop_Data, "m_FullDeathCamDuration", value);
+		}
+	}
+
 	property bool IsAttemptingToMove
 	{
 		public get()
@@ -504,6 +519,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	{
 		CreateNative("SF2_BaseBossEntity.IsValid.get", Native_GetIsValid);
 		CreateNative("SF2_BaseBossEntity.Controller.get", Native_GetController);
+		CreateNative("SF2_BaseBossEntity.ControllerEx.get", Native_GetController);
 		CreateNative("SF2_BaseBossEntity.Target.get", Native_GetTarget);
 		CreateNative("SF2_BaseBossEntity.State.get", Native_GetState);
 		CreateNative("SF2_BaseBossEntity.CurrentChaseDuration.get", Native_GetCurrentChaseDuration);
@@ -515,6 +531,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		CreateNative("SF2_BaseBossEntity.GetProfileName", Native_GetProfileName);
 		CreateNative("SF2_BaseBossEntity.GetName", Native_GetName);
 		CreateNative("SF2_BaseBossEntity.ProfileData", Native_GetProfileData);
+		CreateNative("SF2_BaseBossEntity.GetProfileData", Native_GetProfileDataEx);
 		CreateNative("SF2_BaseBossEntity.ResetProfileAnimation", Native_ResetProfileAnimation);
 	}
 
@@ -624,7 +641,14 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 
 			bool shouldLoop = isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0;
 			this.ResetSequence(sequence);
-			this.SetPropFloat(Prop_Send, "m_flCycle", cycle);
+			if ((isMovement || strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Idle]) == 0) && sequence == this.GetProp(Prop_Send, "m_nSequence"))
+			{
+				// Do nothing
+			}
+			else
+			{
+				this.SetPropFloat(Prop_Send, "m_flCycle", cycle);
+			}
 			if (strcmp(animType, g_SlenderAnimationsList[SF2BossAnimation_Attack]) == 0 && this.MovementType == SF2NPCMoveType_Attack)
 			{
 				shouldLoop = true;
@@ -753,7 +777,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		float myPos[3];
 		this.GetAbsOrigin(myPos);
 
-		if (!this.VelocityCancel && IsSpaceOccupiedIgnorePlayersAndEnts(myPos, mins, maxs, this.index))
+		if (!this.VelocityCancel && IsSpaceOccupiedIgnorePlayersAndNPCs(myPos, mins, maxs, this.index, _, false))
 		{
 			float origin[3];
 			loco.SetVelocity(origin);
@@ -1036,6 +1060,24 @@ static any Native_GetProfileData(Handle plugin, int numParams)
 	data = bossEntity.Controller.GetProfileData();
 	SetNativeArray(2, data, sizeof(data));
 	return 0;
+}
+
+static any Native_GetProfileDataEx(Handle plugin, int numParams)
+{
+	int entity = GetNativeCell(1);
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", entity);
+	}
+
+	SF2_BaseBoss bossEntity = SF2_BaseBoss(entity);
+
+	if (!bossEntity.Controller.IsValid())
+	{
+		return 0;
+	}
+
+	return bossEntity.Controller.GetProfileDataEx();
 }
 
 static any Native_ResetProfileAnimation(Handle plugin, int numParams)

@@ -4,6 +4,7 @@
 #define _sf2_logging_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static char g_LogFilePath[512] = "";
 

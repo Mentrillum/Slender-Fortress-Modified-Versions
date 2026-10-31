@@ -97,10 +97,10 @@ stock void TryPrecacheBossProfileSoundPath(const char[] soundPath, bool checkFil
  *
  * @param path		Path to model, relative to models/ folder.
  * @param phy	Determines if the .phy file extension should be checked.
- * @param xbox	Determines if the .xbox file extension should be checked.
+ * @param dx8	Determines if the .dx8 file extension should be checked.
  * @param checkFile		Determines if missing files should be checked.
  */
-stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, bool checkFile)
+stock int PrecacheModel2(const char[] path, bool phy = true, bool dx8 = false, bool checkFile)
 {
 	if (path[0] == '\0')
 	{
@@ -121,21 +121,24 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
 	ReplaceString(fixedPath, sizeof(fixedPath), ".mdl", "", false);
 
 	char buffer[PLATFORM_MAX_PATH];
-	FormatEx(buffer, sizeof(buffer), "models/%s.dx80.vtx", fixedPath);
-	if (checkFile)
+	if (dx8)
 	{
-		if (FileExists(buffer, true))
+		FormatEx(buffer, sizeof(buffer), "models/%s.dx80.vtx", fixedPath);
+		if (checkFile)
 		{
-			AddFileToDownloadsTable(buffer);
+			if (FileExists(buffer, true))
+			{
+				AddFileToDownloadsTable(buffer);
+			}
+			else
+			{
+				PrintToServer("[SF2] File %s is missing from the server files!", buffer);
+			}
 		}
 		else
 		{
-			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
+			AddFileToDownloadsTable(buffer);
 		}
-	}
-	else
-	{
-		AddFileToDownloadsTable(buffer);
 	}
 
 	FormatEx(buffer, sizeof(buffer), "models/%s.dx90.vtx", fixedPath);
@@ -191,23 +194,6 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
 		}
 	}
 
-	FormatEx(buffer, sizeof(buffer), "models/%s.sw.vtx", fixedPath);
-	if (checkFile)
-	{
-		if (FileExists(buffer, true))
-		{
-			AddFileToDownloadsTable(buffer);
-		}
-		else
-		{
-			PrintToServer("[SF2] File %s is missing from the server files!", buffer);
-		}
-	}
-	else
-	{
-		AddFileToDownloadsTable(buffer);
-	}
-
 	FormatEx(buffer, sizeof(buffer), "models/%s.vvd", fixedPath);
 	if (checkFile)
 	{
@@ -223,29 +209,6 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool xbox = false, 
 	else
 	{
 		AddFileToDownloadsTable(buffer);
-	}
-
-	if (xbox)
-	{
-		// Due to some super old legacy thingy, some really old models were compiled with a setup for xbox.
-		// So just to keep everyone happy, incase this is magically a problem, we'll include xbox files if set.
-		// I mean it really shouldn't be an issue but, better safe than sorry...
-		FormatEx(buffer, sizeof(buffer), "models/%s.xbox", fixedPath);
-		if (checkFile)
-		{
-			if (FileExists(buffer, true))
-			{
-				AddFileToDownloadsTable(buffer);
-			}
-			else
-			{
-				PrintToServer("[SF2] File %s is missing from the server files!", buffer);
-			}
-		}
-		else
-		{
-			AddFileToDownloadsTable(buffer);
-		}
 	}
 
 	return returnValue;
@@ -980,7 +943,7 @@ enum struct SF2BossProfileSoundInfo
 			this.Paths.GetString(GetRandomInt(0, this.Paths.Length - 1), buffer, sizeof(buffer));
 		}
 		returnSound = buffer;
-		if (StrContains(buffer, ".mp3", true) == -1 && StrContains(buffer, ".wav", true) == -1)
+		if (StrContains(buffer, ".mp3", false) == -1 && StrContains(buffer, ".wav", false) == -1)
 		{
 			if (!toClient)
 			{
@@ -1611,6 +1574,10 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 	char SectionName[64];
 	char SubSectionName[64];
 
+	// Death cams
+	float PlayerDuration[Difficulty_Max];
+	float OverlayStartTime[Difficulty_Max];
+
 	void Init(char optionalSectionName[64] = "", char optionalSubSection[64] = "")
 	{
 		this.Sequences = null;
@@ -1632,6 +1599,9 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 			this.FootstepInterval[i] = -1.0;
 			this.OverrideLoop[i] = false;
 			this.Loop[i] = false;
+
+			this.PlayerDuration[i] = 0.0;
+			this.OverlayStartTime[i] = 0.0;
 		}
 	}
 
@@ -1650,6 +1620,9 @@ enum struct SF2BossProfileAnimationSectionNameData // This does NOT cover the en
 			GetProfileDifficultyFloatValues(kv, "footstepinterval", this.FootstepInterval, this.FootstepInterval);
 			GetProfileDifficultyBoolValues(kv, "override_loop", this.OverrideLoop, this.OverrideLoop);
 			GetProfileDifficultyBoolValues(kv, "loop", this.Loop, this.Loop);
+
+			GetProfileDifficultyFloatValues(kv, "player_duration", this.PlayerDuration, this.PlayerDuration);
+			GetProfileDifficultyFloatValues(kv, "overlay_start_time", this.OverlayStartTime, this.OverlayStartTime);
 		}
 
 		FormatEx(formatter, sizeof(formatter), "animation_%s", this.SectionName);
@@ -1864,7 +1837,7 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 		return this.Animations.GetValue(animType, tempArray);
 	}
 
-	bool GetAnimation(const char[] animType, int difficulty, char[] buffer, int bufferLen, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepinterval = 0.0, int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", bool &overrideLoop = false, bool &loop = false, int findIndex = -1)
+	bool GetAnimation(const char[] animType, int difficulty, char[] buffer, int bufferLen, float &rate = 1.0, float &duration = 0.0, float &cycle = 0.0, float &footstepinterval = 0.0, int &index = 0, int preDefinedIndex = -1, const char[] preDefinedName = "", bool &overrideLoop = false, bool &loop = false, int findIndex = -1, float &playerDuration = 0.0, float &overlayStartTime = 0.0)
 	{
 		if (this.Animations == null)
 		{
@@ -1928,6 +1901,8 @@ enum struct SF2BossProfileMasterAnimationsData // This one DOES cover the "anima
 			overrideLoop = animData.OverrideLoop[difficulty];
 			loop = animData.Loop[difficulty];
 			index = randomAnimation;
+			playerDuration = animData.PlayerDuration[difficulty];
+			overlayStartTime = animData.OverlayStartTime[difficulty];
 
 			return true;
 		}
@@ -2020,31 +1995,96 @@ enum struct SF2BossProfileCopiesInfo
 	}
 }
 
-enum struct SF2BossProfilePublicDeathCamData
+enum struct SF2BossProfileDeathCamData
 {
-	bool Enabled;
-	bool Blackout;
-	SF2BossProfileSoundInfo ExecutionSounds;
+	bool IsEnabled;
+	bool PlayScareSound;
+	ArrayList Overlays;
+	float LegacyOverlayStartTime;
+	float LegacyDuration;
+	float LookPosition[3];
+
+	bool PublicDeathCam;
+	float Speed;
+	float Acceleration;
+	float Deceleration;
+	float BackwardOffset;
+	float DownwardOffset;
 	char Attachment[64];
 	char TargetAttachment[64];
-	float DownwardOffset;
-	float BackwardOffset;
+	bool Blackout;
+	bool StopSounds;
+	SF2BossProfileSoundInfo ExecutionSounds;
+	SF2BossProfileMasterAnimationsData Animations;
 
 	void Init()
 	{
-		this.Enabled = false;
-		this.Blackout = false;
-		this.ExecutionSounds.Init();
+		this.IsEnabled = false;
+		this.PlayScareSound = false;
+		this.Overlays = null;
+		this.LegacyOverlayStartTime = 0.0;
+		this.LegacyDuration = 0.0;
+		for (int i = 0; i < 3; i++)
+		{
+			this.LookPosition[i] = 0.0;
+		}
+
+		this.PublicDeathCam = false;
+		this.Speed = 1000.0;
+		this.Acceleration = 1000.0;
+		this.Deceleration = 1000.0;
+		this.BackwardOffset = 0.0;
+		this.DownwardOffset = 0.0;
 		this.Attachment[0] = '\0';
 		this.TargetAttachment[0] = '\0';
-		this.DownwardOffset = 0.0;
-		this.BackwardOffset = 0.0;
+		this.Blackout = false;
+		this.StopSounds = false;
+		this.ExecutionSounds.Init();
+		this.Animations.Init();
 	}
 
 	void Load(KeyValues kv, bool checkFile)
 	{
-		this.Enabled = true;
+		this.IsEnabled = true;
+		this.PlayScareSound = kv.GetNum("scare_sound", this.PlayScareSound) != 0;
+		if (kv.JumpToKey("overlays"))
+		{
+			char overlay[PLATFORM_MAX_PATH], num[32];
+			this.Overlays = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+			for (int i = 1;; i++)
+			{
+				FormatEx(num, sizeof(num), "%d", i);
+				kv.GetString(num, overlay, sizeof(overlay));
+				if (overlay[0] == '\0')
+				{
+					break;
+				}
+				this.Overlays.PushString(overlay);
+			}
+			kv.GoBack();
+		}
+		kv.GetVector("look_position", this.LookPosition, this.LookPosition);
+
+		if (kv.JumpToKey("public"))
+		{
+			this.PublicDeathCam = true;
+			this.Speed = kv.GetFloat("speed", this.Speed);
+			this.Acceleration = kv.GetFloat("acceleration", this.Acceleration);
+			this.Deceleration = kv.GetFloat("deceleration", this.Deceleration);
+			if (kv.JumpToKey("offset"))
+			{
+				this.BackwardOffset = kv.GetFloat("backward", this.BackwardOffset);
+				this.DownwardOffset = kv.GetFloat("downward", this.DownwardOffset);
+				kv.GoBack();
+			}
+			kv.GetString("attachment", this.Attachment, sizeof(this.Attachment), this.Attachment);
+			kv.GetString("target_attachment", this.TargetAttachment, sizeof(this.TargetAttachment), this.TargetAttachment);
+			kv.GoBack();
+		}
+
 		this.Blackout = kv.GetNum("blackout", this.Blackout) != 0;
+		this.StopSounds = kv.GetNum("stop_sounds", this.StopSounds) != 0;
+
 		if (kv.JumpToKey("sounds"))
 		{
 			if (kv.JumpToKey("execution"))
@@ -2054,14 +2094,8 @@ enum struct SF2BossProfilePublicDeathCamData
 			}
 			kv.GoBack();
 		}
-		kv.GetString("attachment", this.Attachment, sizeof(this.Attachment), this.Attachment);
-		kv.GetString("target_attachment", this.TargetAttachment, sizeof(this.TargetAttachment), this.TargetAttachment);
-		if (kv.JumpToKey("offset"))
-		{
-			this.DownwardOffset = kv.GetFloat("downward", this.DownwardOffset);
-			this.BackwardOffset = kv.GetFloat("backward", this.BackwardOffset);
-			kv.GoBack();
-		}
+
+		this.Animations.Load(kv, false);
 	}
 
 	void PostLoad()
@@ -2071,7 +2105,13 @@ enum struct SF2BossProfilePublicDeathCamData
 
 	void Destroy()
 	{
+		if (this.Overlays != null)
+		{
+			delete this.Overlays;
+		}
+
 		this.ExecutionSounds.Destroy();
+		this.Animations.Destroy();
 	}
 }
 
@@ -2113,8 +2153,8 @@ enum struct SF2BossProfileEyeData
 enum struct SF2BossProfileDescriptionData
 {
 	bool Hidden;
-	char Type[32];
-	char Information[128];
+	char Type[64];
+	char Information[1024];
 
 	void Init()
 	{
@@ -2198,22 +2238,7 @@ enum struct SF2BossProfileData
 
 	float SoundMusicLoop[Difficulty_Max];
 
-	bool DeathCam;
-	bool DeathCamScareSound;
-	bool PublicDeathCam;
-	float PublicDeathCamSpeed;
-	float PublicDeathCamAcceleration;
-	float PublicDeathCamDeceleration;
-	float PublicDeathCamBackwardOffset;
-	float PublicDeathCamDownwardOffset;
-	char PublicDeathCamAttachmentTarget[PLATFORM_MAX_PATH];
-	char PublicDeathCamAttachment[PLATFORM_MAX_PATH];
-	bool DeathCamOverlay;
-	float DeathCamOverlayStartTime;
-	float DeathCamTime;
-	float DeathCamPos[3];
-
-	SF2BossProfilePublicDeathCamData DeathCamData;
+	SF2BossProfileDeathCamData DeathCamData;
 
 	float RunSpeed[Difficulty_Max];
 	float Acceleration[Difficulty_Max];
@@ -2372,15 +2397,14 @@ enum struct SF2BossProfileData
 	SF2BossProfileSoundInfo SightSounds;
 	SF2BossProfileSoundInfo IntroSounds;
 	SF2BossProfileSoundInfo SpawnLocalSounds;
-	char JumpscareSound[PLATFORM_MAX_PATH];
+	SF2BossProfileSoundInfo JumpscareSounds;
 	char StaticSound[PLATFORM_MAX_PATH];
 	char StaticLocalSound[PLATFORM_MAX_PATH];
 	char StaticShakeLocal[PLATFORM_MAX_PATH];
 	float StaticShakeVolumeMin;
 	float StaticShakeVolumeMax;
 	int StaticShakeLocalLevel;
-	char OverlayJumpscare[PLATFORM_MAX_PATH];
-	char OverlayPlayerDeath[PLATFORM_MAX_PATH];
+	ArrayList OverlayJumpscares;
 	SF2BossProfileSoundInfo PlayerDeathCamOverlaySounds;
 	SF2BossProfileSoundInfo OutroMusics;
 
@@ -2459,20 +2483,6 @@ enum struct SF2BossProfileData
 		this.BlinkLookRate = 1.0;
 		this.BlinkStaticRate = 1.0;
 
-		this.DeathCam = false;
-		this.DeathCamScareSound = false;
-		this.PublicDeathCam = false;
-		this.PublicDeathCamSpeed = 1000.0;
-		this.PublicDeathCamAcceleration = 1000.0;
-		this.PublicDeathCamDeceleration = 1000.0;
-		this.PublicDeathCamBackwardOffset = 0.0;
-		this.PublicDeathCamDownwardOffset = 0.0;
-		this.PublicDeathCamAttachmentTarget[0] = '\0';
-		this.PublicDeathCamAttachment[0] = '\0';
-		this.DeathCamOverlay = false;
-		this.DeathCamOverlayStartTime = 0.0;
-		this.DeathCamTime = 0.0;
-
 		this.DeathCamData.Init();
 
 		this.FOV = 90.0;
@@ -2503,7 +2513,7 @@ enum struct SF2BossProfileData
 
 		this.StaticScareAmount = 0.0;
 
-		this.TeleportType = 2;
+		this.TeleportType = SF2BossTeleportType_Default;
 		this.TeleportIgnoreChases = false;
 		this.TeleportIgnoreVis = false;
 
@@ -2603,15 +2613,14 @@ enum struct SF2BossProfileData
 		this.MusicSoundsNightmare.Init();
 		this.MusicSoundsApollyon.Init();
 		this.OutroMusics.Init();
-		this.JumpscareSound[0] = '\0';
+		this.JumpscareSounds.Init();
 		this.StaticSound[0] = '\0';
 		this.StaticLocalSound[0] = '\0';
 		this.StaticShakeLocal[0] = '\0';
 		this.StaticShakeLocalLevel = SNDLEVEL_NORMAL;
 		this.StaticShakeVolumeMin = 0.0;
 		this.StaticShakeVolumeMax = 0.0;
-		this.OverlayJumpscare[0] = '\0';
-		this.OverlayPlayerDeath[0] = '\0';
+		this.OverlayJumpscares = null;
 		this.PlayerDeathCamOverlaySounds.Init();
 		this.PlayerDeathCamOverlaySounds.Channel = SNDCHAN_STATIC;
 		this.PlayerDeathCamOverlaySounds.Level = SNDLEVEL_NONE;
@@ -2723,8 +2732,6 @@ enum struct SF2BossProfileData
 			this.FestiveLightPos[i] = 0.0;
 			this.FestiveLightAng[i] = 0.0;
 
-			this.DeathCamPos[i] = 0.0;
-
 			this.PushRagdollForce[i] = 0.0;
 
 			this.EyePosOffset[i] = 0.0;
@@ -2754,6 +2761,7 @@ enum struct SF2BossProfileData
 		this.ProxyDeathSounds.PostLoad();
 		this.PlayerDeathCamOverlaySounds.PostLoad();
 		this.OutroMusics.PostLoad();
+		this.JumpscareSounds.PostLoad();
 
 		if (this.CompanionsArray != null && this.CompanionsArray.Length <= 0)
 		{
@@ -2921,6 +2929,11 @@ enum struct SF2BossProfileData
 		this.PlayerDeathCamOverlaySounds.Destroy();
 		this.OutroMusics.Destroy();
 		this.AnimationData.Destroy();
+		this.JumpscareSounds.Destroy();
+		if (this.OverlayJumpscares != null)
+		{
+			delete this.OverlayJumpscares;
+		}
 
 		if (this.CompanionsArray != null)
 		{

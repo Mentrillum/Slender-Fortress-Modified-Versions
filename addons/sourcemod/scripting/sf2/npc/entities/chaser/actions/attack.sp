@@ -1,5 +1,664 @@
 #pragma semicolon 1
+#pragma newdecls required
 // This manages the end time and getting a attack
+
+methodmap ChaserBossProfileBaseAttack < ProfileObject
+{
+	property int Type
+	{
+		public get()
+		{
+			return this.GetInt("type", view_as<int>(SF2BossAttackType_Melee));
+		}
+	}
+
+	property int UseOnDifficulty
+	{
+		public get()
+		{
+			int def = 0;
+			def = this.GetInt("use_on_difficulty", def);
+			def = this.GetInt("attack_use_on_difficulty", def);
+			return def;
+		}
+	}
+
+	property int BlockOnDifficulty
+	{
+		public get()
+		{
+			int def = 6;
+			def = this.GetInt("block_on_difficulty", def);
+			def = this.GetInt("attack_block_on_difficulty", def);
+			return def;
+		}
+	}
+
+	public float CanUseOnHealth(int difficulty)
+	{
+		float def = -1.0;
+		def = this.GetDifficultyFloat("use_on_health", difficulty, def);
+		def = this.GetDifficultyFloat("attack_use_on_health", difficulty, def);
+		return def;
+	}
+
+	public float CanBlockOnHealth(int difficulty)
+	{
+		float def = -1.0;
+		def = this.GetDifficultyFloat("block_on_health", difficulty, def);
+		def = this.GetDifficultyFloat("attack_block_on_health", difficulty, def);
+		return def;
+	}
+
+	public float GetDamage(int difficulty)
+	{
+		float defaultValue;
+
+		switch (this.Type)
+		{
+			case SF2BossAttackType_Melee:
+			{
+				defaultValue = 50.0;
+			}
+
+			case SF2BossAttackType_Ranged:
+			{
+				defaultValue = 8.0;
+				defaultValue = this.GetDifficultyFloat("bullet_damage", difficulty, defaultValue);
+				defaultValue = this.GetDifficultyFloat("attack_bullet_damage", difficulty, defaultValue);
+			}
+
+			case SF2BossAttackType_Projectile:
+			{
+				defaultValue = 60.0;
+				defaultValue = this.GetDifficultyFloat("projectile_damage", difficulty, defaultValue);
+				defaultValue = this.GetDifficultyFloat("attack_projectile_damage", difficulty, defaultValue);
+			}
+
+			case SF2BossAttackType_LaserBeam:
+			{
+				defaultValue = 25.0;
+				defaultValue = this.GetDifficultyFloat("laser_damage", difficulty, defaultValue);
+				defaultValue = this.GetDifficultyFloat("attack_laser_damage", difficulty, defaultValue);
+			}
+
+			case SF2BossAttackType_ExplosiveDance:
+			{
+				defaultValue = 25.0;
+			}
+
+			case SF2BossAttackType_Tongue:
+			{
+				defaultValue = 10.0;
+			}
+		}
+
+		defaultValue = this.GetDifficultyFloat("damage", difficulty, defaultValue);
+		defaultValue = this.GetDifficultyFloat("attack_damage", difficulty, defaultValue);
+
+		return defaultValue;
+	}
+
+	public int GetDamageType(int difficulty)
+	{
+		int defaultValue;
+
+		switch (this.Type)
+		{
+			case SF2BossAttackType_Melee:
+			{
+				defaultValue = DMG_CLUB;
+			}
+
+			case SF2BossAttackType_Ranged:
+			{
+				defaultValue = DMG_BULLET;
+			}
+
+			case SF2BossAttackType_Projectile, SF2BossAttackType_ExplosiveDance:
+			{
+				defaultValue = DMG_BLAST;
+			}
+
+			case SF2BossAttackType_LaserBeam:
+			{
+				defaultValue = DMG_SHOCK | DMG_ALWAYSGIB;
+			}
+
+			case SF2BossAttackType_Tongue:
+			{
+				defaultValue = DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE;
+			}
+		}
+		defaultValue = this.GetDifficultyInt("damagetype", difficulty, defaultValue);
+		defaultValue = this.GetDifficultyInt("attack_damagetype", difficulty, defaultValue);
+
+		return defaultValue;
+	}
+
+	public float GetDelay(int difficulty)
+	{
+		float def = 0.0;
+		def = this.GetDifficultyFloat("delay", difficulty, def);
+		def = this.GetDifficultyFloat("attack_delay", difficulty, def);
+		return def;
+	}
+
+	public float GetDuration(int difficulty)
+	{
+		float value = this.GetDifficultyFloat("duration", difficulty);
+		float endAfter = this.GetDifficultyFloat("endafter", difficulty);
+		value = this.GetDifficultyFloat("attack_duration", difficulty, value);
+		endAfter = this.GetDifficultyFloat("attack_endafter", difficulty, endAfter);
+
+		if (value <= 0.0)
+		{
+			value = this.GetDelay(difficulty) + endAfter;
+		}
+
+		return value;
+	}
+
+	public float GetBeginRange(int difficulty)
+	{
+		float def = 80.0;
+		def = this.GetDifficultyFloat("begin_range", difficulty, def);
+		def = this.GetDifficultyFloat("attack_begin_range", difficulty, def);
+		return def;
+	}
+
+	public float GetBeginFOV(int difficulty)
+	{
+		float def = this.GetFOV(difficulty);
+		def = this.GetDifficultyFloat("begin_fov", difficulty, def);
+		def = this.GetDifficultyFloat("attack_begin_fov", difficulty, def);
+		return def;
+	}
+
+	public float GetFOV(int difficulty)
+	{
+		float def = 45.0;
+		def = this.GetDifficultyFloat("spread", difficulty, def);
+		def = this.GetDifficultyFloat("attack_spread", difficulty, def);
+		return def;
+	}
+
+	public float GetRange(int difficulty)
+	{
+		float def = 180.0;
+		def = this.GetDifficultyFloat("range", difficulty, def);
+		def = this.GetDifficultyFloat("attack_range", difficulty, def);
+		return def;
+	}
+
+	public float GetCooldown(int difficulty)
+	{
+		float def = 0.0;
+		def = this.GetDifficultyFloat("cooldown", difficulty, def);
+		def = this.GetDifficultyFloat("attack_cooldown", difficulty, def);
+		return def;
+	}
+
+	public void GetViewPunchAngles(int difficulty, float viewPunch[3])
+	{
+		this.GetDifficultyVector("punchvel", difficulty, viewPunch, viewPunch);
+		this.GetDifficultyVector("attack_punchvel", difficulty, viewPunch, viewPunch);
+	}
+
+	public float GetDamageForce(int difficulty)
+	{
+		float def = 0.0;
+		def = this.GetDifficultyFloat("damageforce", difficulty);
+		def = this.GetDifficultyFloat("attack_damageforce", difficulty);
+		return def;
+	}
+
+	public int GetEventNumber(int difficulty)
+	{
+		return this.GetDifficultyInt("event", difficulty, -1);
+	}
+}
+
+methodmap BossProfileDamageEffectSection < KeyMap_Array
+{
+	public void Apply(SF2_BasePlayer player, int difficulty, CBaseAnimating attacker = view_as<CBaseAnimating>(-1))
+	{
+		if (!player.IsValid)
+		{
+			return;
+		}
+
+		for (int i = 0; i < this.Length; i++)
+		{
+			BossProfileDamageEffect effect = view_as<BossProfileDamageEffect>(this.GetSection(i));
+			if (effect != null)
+			{
+				effect.Apply(player, difficulty, attacker);
+			}
+		}
+	}
+
+	public void Precache()
+	{
+		for (int i = 0; i < this.Length; i++)
+		{
+			BossProfileDamageEffect effect = view_as<BossProfileDamageEffect>(this.GetSection(i));
+			if (effect != null)
+			{
+				effect.Precache();
+			}
+		}
+	}
+}
+
+methodmap BossProfileDamageEffect < ProfileObject
+{
+	property int Type
+	{
+		public get()
+		{
+			char section[64];
+			this.GetSectionName(section, sizeof(section));
+			if (strcmp(section, "ignite", false) == 0)
+			{
+				return SF2DamageType_Ignite;
+			}
+			else if (strcmp(section, "gas", false) == 0)
+			{
+				return SF2DamageType_Gas;
+			}
+			else if (strcmp(section, "bleed", false) == 0)
+			{
+				return SF2DamageType_Bleed;
+			}
+			else if (strcmp(section, "mark", false) == 0)
+			{
+				return SF2DamageType_Mark;
+			}
+			else if (strcmp(section, "jarate", false) == 0)
+			{
+				return SF2DamageType_Jarate;
+			}
+			else if (strcmp(section, "milk", false) == 0)
+			{
+				return SF2DamageType_Milk;
+			}
+			else if (strcmp(section, "stun", false) == 0)
+			{
+				return SF2DamageType_Stun;
+			}
+			else if (strcmp(section, "smite", false) == 0)
+			{
+				return SF2DamageType_Smite;
+			}
+			else if (strcmp(section, "random", false) == 0)
+			{
+				return SF2DamageType_Random;
+			}
+
+			return SF2DamageType_Invalid;
+		}
+	}
+
+	public bool IsEnabled(int difficulty)
+	{
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return false;
+		}
+		return this.GetDifficultyBool("enabled", difficulty, true);
+	}
+
+	public float GetDuration(int difficulty)
+	{
+		float def = 8.0;
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return def;
+		}
+		return this.GetDifficultyFloat("duration", difficulty, def);
+	}
+
+	public ProfileSound GetSounds()
+	{
+		return view_as<ProfileSound>(this.GetSection("sounds"));
+	}
+
+	public ProfileObject GetParticles()
+	{
+		return this.GetSection("particles");
+	}
+
+	public void Apply(SF2_BasePlayer player, int difficulty, CBaseAnimating attacker = view_as<CBaseAnimating>(-1), SF2NPC_Chaser parentController = SF2_INVALID_NPC_CHASER)
+	{
+		if (!this.IsEnabled(difficulty))
+		{
+			return;
+		}
+		this.GetSounds().EmitSound(_, attacker.index);
+		if (this.GetParticles() != null)
+		{
+			char name[64];
+			this.GetParticles().GetSectionNameFromIndex(GetRandomInt(0, this.GetParticles().SectionLength - 1), name, sizeof(name));
+			ProfileObject obj = this.GetParticles().GetSection(name);
+			if (obj != null)
+			{
+				view_as<BossProfileParticleData>(obj).Apply(player, attacker);
+			}
+		}
+		int type = this.Type;
+		if (type == SF2DamageType_Random)
+		{
+			type = view_as<BossProfileDamageEffect_Random>(this).GetRandomType();
+		}
+
+		switch (type)
+		{
+			case SF2DamageType_Ignite:
+			{
+				TF2_IgnitePlayer(player.index, player.index, this.GetDuration(difficulty));
+			}
+			case SF2DamageType_Gas:
+			{
+				TF2_AddCondition(player.index, TFCond_Gas, this.GetDuration(difficulty), player.index);
+			}
+			case SF2DamageType_Mark:
+			{
+				TF2_AddCondition(player.index, view_as<BossProfileDamageEffect_Mark>(this).GetSilentMark(difficulty) ? TFCond_MarkedForDeathSilent : TFCond_MarkedForDeath, this.GetDuration(difficulty), player.index);
+			}
+			case SF2DamageType_Bleed:
+			{
+				TF2_MakeBleed(player.index, player.index, this.GetDuration(difficulty));
+			}
+			case SF2DamageType_Milk:
+			{
+				TF2_AddCondition(player.index, TFCond_Milked, this.GetDuration(difficulty), player.index);
+			}
+			case SF2DamageType_Jarate:
+			{
+				TF2_AddCondition(player.index, TFCond_Jarated, this.GetDuration(difficulty), player.index);
+			}
+			case SF2DamageType_Stun:
+			{
+				TF2_StunPlayer(player.index, this.GetDuration(difficulty), view_as<BossProfileDamageEffect_Stun>(this).GetSlowdown(difficulty), view_as<BossProfileDamageEffect_Stun>(this).GetFlags(difficulty));
+			}
+			case SF2DamageType_Smite:
+			{
+				BossProfileDamageEffect_Smite smiteData = view_as<BossProfileDamageEffect_Smite>(this);
+				float targetPos[3];
+				player.GetAbsOrigin(targetPos);
+				targetPos[2] -= 26.0;
+
+				int randomX = GetRandomInt(-500, 500);
+				int randomY = GetRandomInt(-500, 500);
+
+				float startPos[3];
+				startPos[0] = targetPos[0] + randomX;
+				startPos[1] = targetPos[1] + randomY;
+				startPos[2] = targetPos[2] + 800.0;
+
+				float origin[3];
+				int color[4];
+				smiteData.GetSmiteColor(color);
+				TE_SetupBeamPoints(startPos, targetPos, smiteData.SmiteSprite, 0, 0, 0, 0.2, 20.0, 10.0, 0, 1.0, color, 3);
+				TE_SendToAll();
+
+				TE_SetupSparks(targetPos, origin, 5000, 1000);
+				TE_SendToAll();
+
+				TE_SetupEnergySplash(targetPos, origin, false);
+				TE_SendToAll();
+
+				TE_SetupSmoke(targetPos, smiteData.SmiteSmokeSprite, 5.0, 10);
+				TE_SendToAll();
+
+				char sound[PLATFORM_MAX_PATH];
+				smiteData.GetHitSound(sound, sizeof(sound));
+				EmitAmbientSound(sound, startPos, player.index, SNDLEVEL_SCREAMING);
+				SDKHooks_TakeDamage(player.index, attacker.index, attacker.index, smiteData.GetDamage(difficulty), smiteData.GetDamageType(difficulty), .bypassHooks = false);
+
+				SF2NPC_Chaser controller = parentController;
+				if (!controller.IsValid() && SF2_ChaserEntity(attacker.index).IsValid())
+				{
+					controller = SF2_ChaserEntity(attacker.index).Controller;
+					if (smiteData.SmiteMessage && controller.IsValid() && GetClientTeam(player.index) == 2)
+					{
+						char playerName[32], bossName[SF2_MAX_NAME_LENGTH];
+						GetClientName(player.index, playerName, sizeof(playerName));
+						controller.GetProfileDataEx().GetName(controller.Difficulty, bossName, sizeof(bossName));
+						CPrintToChatAll("{royalblue}%t {default}%t", "SF2 Prefix", "SF2 Smote target", bossName, playerName);
+					}
+				}
+			}
+		}
+	}
+
+	public void Precache()
+	{
+		if (this.GetSounds() != null)
+		{
+			this.GetSounds().Precache();
+		}
+
+		if (this.Type == SF2DamageType_Smite)
+		{
+			view_as<BossProfileDamageEffect_Smite>(this).Precache();
+		}
+	}
+}
+
+methodmap BossProfileDamageEffect_Mark < BossProfileDamageEffect
+{
+	public bool GetSilentMark(int difficulty)
+	{
+		bool def = false;
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return def;
+		}
+		return this.GetDifficultyBool("silent", difficulty, def);
+	}
+}
+
+methodmap BossProfileDamageEffect_Stun < BossProfileDamageEffect
+{
+	public float GetSlowdown(int difficulty)
+	{
+		float def = 0.5;
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return def;
+		}
+		return this.GetDifficultyFloat("slow_multiplier", difficulty, def);
+	}
+
+	public int GetFlags(int difficulty)
+	{
+		char flag[256];
+		this.GetDifficultyString("flags", difficulty, flag, sizeof(flag), "slow");
+		char flags[32][64];
+		int nums = ExplodeString(flag, " ", flags, sizeof(flags), sizeof(flags[]));
+		int value = 0;
+
+		for (int i = 0; i < nums; i++)
+		{
+			if (strcmp(flags[i], "slow", false) == 0)
+			{
+				value |= (1 << 0);
+			}
+			else if (strcmp(flags[i], "stuck", false) == 0)
+			{
+				value |= (1 << 1);
+			}
+			else if (strcmp(flags[i], "cheer_fx", false) == 0)
+			{
+				value |= (1 << 3);
+			}
+			else if (strcmp(flags[i], "no_fx", false) == 0)
+			{
+				value |= (1 << 5);
+			}
+			else if (strcmp(flags[i], "thirdperson", false) == 0)
+			{
+				value |= (1 << 6);
+			}
+			else if (strcmp(flags[i], "ghost_fx", false) == 0)
+			{
+				value |= (1 << 7);
+			}
+			else if (strcmp(flags[i], "loser", false) == 0)
+			{
+				value |= (1 << 0) | (1 << 5) | (1 << 6);
+			}
+			else if (strcmp(flags[i], "boo", false) == 0)
+			{
+				value |= (1 << 7) | (1 << 6);
+			}
+		}
+
+		return value;
+	}
+}
+
+methodmap BossProfileDamageEffect_Smite < BossProfileDamageEffect
+{
+	property int SmiteSprite
+	{
+		public get()
+		{
+			int val = 0;
+			this.GetValue("__smite_sprite", val);
+			return val;
+		}
+
+		public set(int value)
+		{
+			this.SetValue("__smite_sprite", value);
+		}
+	}
+
+	property int SmiteSmokeSprite
+	{
+		public get()
+		{
+			int val = 0;
+			this.GetValue("__smite_smoke_sprite", val);
+			return val;
+		}
+
+		public set(int value)
+		{
+			this.SetValue("__smite_smoke_sprite", value);
+		}
+	}
+
+	public float GetDamage(int difficulty)
+	{
+		float def = 9001.0;
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return def;
+		}
+		return this.GetDifficultyFloat("damage", difficulty, def);
+	}
+
+	public int GetDamageType(int difficulty)
+	{
+		int def = (1 << 20);
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return def;
+		}
+		return this.GetDifficultyInt("damagetype", difficulty, def);
+	}
+
+	public void GetSmiteColor(int buffer[4])
+	{
+		this.GetColor("color", buffer, { 255, 255, 255, 255 });
+	}
+
+	property bool SmiteMessage
+	{
+		public get()
+		{
+			bool def = false;
+			if (this.Type == SF2DamageType_Invalid)
+			{
+				return def;
+			}
+			return this.GetBool("message", def);
+		}
+	}
+
+	public void GetHitSound(char[] buffer, int bufferSize)
+	{
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return;
+		}
+		this.GetString("hit_sound", buffer, bufferSize, SOUND_THUNDER);
+	}
+
+	public void Precache()
+	{
+		this.SmiteSprite = PrecacheModel("sprites/lgtning.vmt");
+		this.SmiteSmokeSprite = PrecacheModel("sprites/steam1.vmt");
+	}
+}
+
+methodmap BossProfileDamageEffect_Random < BossProfileDamageEffect
+{
+	public int GetRandomType()
+	{
+		if (this.Type == SF2DamageType_Invalid)
+		{
+			return SF2DamageType_Invalid;
+		}
+		char type[256];
+		this.GetString("random_types", type, sizeof(type));
+		ArrayList random = new ArrayList();
+		char types[32][32];
+		int nums = ExplodeString(type, " ", types, sizeof(types), sizeof(types[]));
+		for (int i = 0; i < nums; i++)
+		{
+			if (strcmp(types[i], "ignite", false) == 0)
+			{
+				random.Push(SF2DamageType_Ignite);
+			}
+			else if (strcmp(types[i], "gas", false) == 0)
+			{
+				random.Push(SF2DamageType_Gas);
+			}
+			else if (strcmp(types[i], "bleed", false) == 0)
+			{
+				random.Push(SF2DamageType_Bleed);
+			}
+			else if (strcmp(types[i], "mark", false) == 0)
+			{
+				random.Push(SF2DamageType_Mark);
+			}
+			else if (strcmp(types[i], "jarate", false) == 0)
+			{
+				random.Push(SF2DamageType_Jarate);
+			}
+			else if (strcmp(types[i], "milk", false) == 0)
+			{
+				random.Push(SF2DamageType_Milk);
+			}
+			else if (strcmp(types[i], "stun", false) == 0)
+			{
+				random.Push(SF2DamageType_Stun);
+			}
+			else if (strcmp(types[i], "smite", false) == 0)
+			{
+				random.Push(SF2DamageType_Smite);
+			}
+		}
+		int val = random.Get(GetRandomInt(0, random.Length - 1));
+		delete random;
+		return val;
+	}
+}
 
 #include "attacks/melee.sp"
 #include "attacks/bullet.sp"
@@ -42,6 +701,7 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 
 		action.SetAttackName(attackName);
 		action.EndTime = endTime;
+		action.AttackIndex = attackIndex;
 
 		return action;
 	}
@@ -56,6 +716,33 @@ methodmap SF2_ChaserAttackAction < NextBotAction
 		SF2_ChaserAttackAction_Custom.Initialize();
 		SF2_ChaserAttackAction_Tongue.Initialize();
 		SF2_ChaserAttackAction_ForwardBased.Initialize();
+	}
+
+	public static void SetupAPI()
+	{
+		CreateNative("SF2_ChaserBossProfileBaseAttack.Type.get", Native_GetType);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetDamageDelay", Native_GetDamageDelay);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetRange", Native_GetRange);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetDamage", Native_GetDamage);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetDamageType", Native_GetDamageType);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetDamageForce", Native_GetDamageForce);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetViewPunchAngles", Native_GetViewPunchAngles);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetDuration", Native_GetDuration);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetFOV", Native_GetFOV);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetBeginRange", Native_GetBeginRange);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetBeginFOV", Native_GetBeginFOV);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetCooldown", Native_GetCooldown);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.UseOnDifficulty.get", Native_GetUseOnDifficulty);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.BlockOnDifficulty.get", Native_GetBlockOnDifficulty);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.CanUseOnHealth", Native_GetCanUseOnHealth);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.CanBlockOnHealth", Native_GetCanBlockOnHealth);
+		CreateNative("SF2_ChaserBossProfileBaseAttack.GetEventNumber", Native_GetEventNumber);
+
+		CreateNative("SF2_DamageEffectProfile.Apply", Native_DamageEffectApply);
+		CreateNative("SF2_DamageEffectProfile.Precache", Native_DamageEffectPrecache);
+		CreateNative("SF2_MasterDamageEffectProfile.Apply", Native_MasterDamageEffectApply);
+		CreateNative("SF2_MasterDamageEffectProfile.Precache", Native_MasterDamageEffectPrecache);
+		ChaserBossProfileCustomAttack.SetupAPI();
 	}
 
 	property int OldState
@@ -227,6 +914,7 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 	actor.AttackRunDuration = gameTime + attackData.RunDuration[difficulty];
 	actor.MyNextBotPointer().GetLocomotionInterface().Stop();
 	controller.Path.Invalidate();
+	BaseBossProfile profileData = actor.Controller.GetProfileDataEx();
 
 	if (actor.State == STATE_CHASE)
 	{
@@ -251,6 +939,15 @@ static int OnStart(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextBo
 	if (attackData.RunSpeed[difficulty] > 0.0)
 	{
 		actor.MovementType = SF2NPCMoveType_Attack;
+	}
+
+	if (controller.TeleportType == SF2BossTeleportType_Vanisher)
+	{
+		BossProfileTeleportVanishingData vanishingData = profileData.GetVanishingData();
+		if (vanishingData != null)
+		{
+			g_SlenderTimeUntilKill[controller.Index] += vanishingData.GetAddTimeOnAttack(difficulty);
+		}
 	}
 
 	if (attackData.Type == SF2BossAttackType_Custom)
@@ -325,7 +1022,7 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 			end = true;
 		}
 
-		if (attackData.CancelLos[difficulty] && (actor.InterruptConditions & COND_ENEMYVISIBLE) == 0)
+		if (attackData.CancelLos[difficulty] && (actor.InterruptConditions & COND_ENEMYVISIBLE_NOGLASS) == 0)
 		{
 			end = true;
 		}
@@ -444,6 +1141,7 @@ static int OnResume(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, NextB
 
 static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 {
+	actor.MyNextBotPointer().GetLocomotionInterface().ClearStuckStatus();
 	actor.IsAttacking = false;
 	actor.IsAttemptingToMove = false;
 	actor.CancelAttack = false;
@@ -486,4 +1184,269 @@ static void OnEnd(SF2_ChaserAttackAction action, SF2_ChaserEntity actor)
 static void OnOtherKilled(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseCombatCharacter victim, CBaseEntity attacker, CBaseEntity inflictor, float damage, int damagetype)
 {
 	actor.CheckTauntKill(SF2_BasePlayer(victim.index));
+}
+
+static any Native_GetType(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	return attackData.Type;
+}
+
+static any Native_GetDamageDelay(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetDelay(difficulty);
+}
+
+static any Native_GetRange(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetRange(difficulty);
+}
+
+static any Native_GetDamage(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetDamage(difficulty);
+}
+
+static any Native_GetDamageType(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetDamageType(difficulty);
+}
+
+static any Native_GetDamageForce(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetDamageForce(difficulty);
+}
+
+static any Native_GetViewPunchAngles(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+	float vec[3];
+	attackData.GetViewPunchAngles(difficulty, vec);
+	SetNativeArray(3, vec, 3);
+	return 0;
+}
+
+static any Native_GetDuration(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetDuration(difficulty);
+}
+
+static any Native_GetFOV(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetFOV(difficulty);
+}
+
+static any Native_GetBeginRange(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetBeginRange(difficulty);
+}
+
+static any Native_GetBeginFOV(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetBeginFOV(difficulty);
+}
+
+static any Native_GetCooldown(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetCooldown(difficulty);
+}
+
+static any Native_GetUseOnDifficulty(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	return attackData.UseOnDifficulty;
+}
+
+static any Native_GetBlockOnDifficulty(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	return attackData.BlockOnDifficulty;
+}
+
+static any Native_GetCanUseOnHealth(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.CanUseOnHealth(difficulty);
+}
+
+static any Native_GetCanBlockOnHealth(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.CanBlockOnHealth(difficulty);
+}
+
+static any Native_GetEventNumber(Handle plugin, int numParams)
+{
+	ChaserBossProfileBaseAttack attackData = GetNativeCell(1);
+	if (attackData == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", attackData);
+	}
+
+	int difficulty = GetNativeCell(2);
+
+	return attackData.GetEventNumber(difficulty);
+}
+
+static any Native_DamageEffectApply(Handle plugin, int numParams)
+{
+	BossProfileDamageEffect damageEffect = GetNativeCell(1);
+	if (damageEffect == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", damageEffect);
+	}
+
+	damageEffect.Apply(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
+	return 0;
+}
+
+static any Native_DamageEffectPrecache(Handle plugin, int numParams)
+{
+	BossProfileDamageEffect damageEffect = GetNativeCell(1);
+	if (damageEffect == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", damageEffect);
+	}
+
+	damageEffect.Precache();
+	return 0;
+}
+
+static any Native_MasterDamageEffectApply(Handle plugin, int numParams)
+{
+	BossProfileDamageEffectSection damageEffect = GetNativeCell(1);
+	if (damageEffect == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", damageEffect);
+	}
+
+	damageEffect.Apply(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
+	return 0;
+}
+
+static any Native_MasterDamageEffectPrecache(Handle plugin, int numParams)
+{
+	BossProfileDamageEffectSection damageEffect = GetNativeCell(1);
+	if (damageEffect == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", damageEffect);
+	}
+
+	damageEffect.Precache();
+	return 0;
 }

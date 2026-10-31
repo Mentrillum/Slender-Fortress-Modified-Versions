@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -34,12 +35,13 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 	CBaseEntity target = actor.Target;
 	if (!target.IsValid())
 	{
-		actor.State = STATE_IDLE;
 		return action.ChangeTo(SF2_ChaserIdleAction(), "My target is no longer valid!");
 	}
 
 	SF2ChaserBossProfileData data;
 	data = controller.GetProfileData();
+	BaseBossProfile profileData = controller.GetProfileDataEx();
+	float gameTime = GetGameTime();
 
 	actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
 
@@ -55,6 +57,19 @@ static int OnStart(SF2_ChaserChaseAction action, SF2_ChaserEntity actor, NextBot
 	}
 
 	actor.AlertWithBoss = false;
+
+	if (controller.TeleportType == SF2BossTeleportType_Vanisher)
+	{
+		BossProfileTeleportVanishingData vanishingData = profileData.GetVanishingData();
+		if (vanishingData != null && vanishingData.ShouldUpdateDespawnTimeOnStateChange(difficulty))
+		{
+			float time = GetRandomFloat(vanishingData.GetMinChaseDespawnTime(difficulty), vanishingData.GetMaxChaseDespawnTime(difficulty));
+			if (time > 0.0)
+			{
+				g_SlenderTimeUntilKill[controller.Index] = gameTime + time;
+			}
+		}
+	}
 
 	return action.Continue();
 }
@@ -114,7 +129,6 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 		SF2_BasePlayer player = SF2_BasePlayer(target.index);
 		if (!originalData.IsPvEBoss && player.IsValid && player.HasEscaped)
 		{
-			actor.State = STATE_IDLE;
 			return action.ChangeTo(SF2_ChaserIdleAction(), "Our target escaped, that is no good!");
 		}
 
@@ -148,7 +162,6 @@ static int Update(SF2_ChaserChaseAction action, SF2_ChaserEntity actor)
 			{
 				return action.SuspendFor(SF2_ChaserTauntKillAction(), "Let's taunt the kill victim cause funny.");
 			}
-			actor.State = STATE_IDLE;
 			return action.ChangeTo(SF2_ChaserIdleAction(), "No valid target? No problem!");
 		}
 	}

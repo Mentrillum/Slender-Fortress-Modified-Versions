@@ -4,6 +4,7 @@
 #define _sf2_npc_creeper_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static float g_NpcStatueIdleLifetime[MAX_BOSSES][Difficulty_Max];
 static SF2StatueBossProfileData g_StatueProfileData[MAX_BOSSES];
@@ -39,7 +40,7 @@ void NPCStatueOnSelectProfile(int npcIndex)
 
 SF2_StatueEntity Spawn_Statue(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
 {
-	g_SlenderStatueIdleLifeTime[controller.Index] = GetGameTime() + g_NpcStatueIdleLifetime[controller.Index][controller.Difficulty];
+	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + g_NpcStatueIdleLifetime[controller.Index][controller.Difficulty];
 	return SF2_StatueEntity.Create(controller, pos, ang);
 }
 
@@ -57,6 +58,8 @@ void NPCStatue_InitializeAPI()
 {
 	CreateNative("SF2_GetStatueProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetStatueProfileFromName", Native_GetProfileDataEx);
+	CreateNative("SF2_GetStatueProfileFromBossIndexEx", Native_GetProfileDataNew);
+	CreateNative("SF2_GetStatueProfileFromNameEx", Native_GetProfileDataNewEx);
 
 	SF2_StatueEntity.SetupAPI();
 }
@@ -87,4 +90,22 @@ static any Native_GetProfileDataEx(Handle plugin, int numParams)
 
 	SetNativeArray(2, data, sizeof(data));
 	return true;
+}
+
+static any Native_GetProfileDataNew(Handle plugin, int numParams)
+{
+	SF2NPC_Statue controller = SF2NPC_Statue(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	return controller.GetProfileDataEx();
+}
+
+static any Native_GetProfileDataNewEx(Handle plugin, int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, sizeof(profile));
+	return view_as<StatueBossProfile>(GetBossProfile(profile));
 }

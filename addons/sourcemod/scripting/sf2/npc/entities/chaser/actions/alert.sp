@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -174,6 +175,7 @@ static int OnStart(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, NextBot
 	SF2NPC_Chaser controller = actor.Controller;
 	SF2ChaserBossProfileData data;
 	data = controller.GetProfileData();
+	BaseBossProfile profileData = controller.GetProfileDataEx();
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
 	if (!action.IsRunning)
@@ -209,6 +211,19 @@ static int OnStart(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, NextBot
 	UpdateAlertPosition(action, actor, goalPos, action.IsRunning);
 
 	actor.AlertWithBoss = false;
+
+	if (controller.TeleportType == SF2BossTeleportType_Vanisher)
+	{
+		BossProfileTeleportVanishingData vanishingData = profileData.GetVanishingData();
+		if (vanishingData != null && vanishingData.ShouldUpdateDespawnTimeOnStateChange(difficulty))
+		{
+			float time = GetRandomFloat(vanishingData.GetMinAlertDespawnTime(difficulty), vanishingData.GetMaxAlertDespawnTime(difficulty));
+			if (time > 0.0)
+			{
+				g_SlenderTimeUntilKill[controller.Index] = gameTime + time;
+			}
+		}
+	}
 
 	return action.Continue();
 }
@@ -257,7 +272,6 @@ static int Update(SF2_ChaserAlertAction action, SF2_ChaserEntity actor, float in
 
 	if (gameTime >= action.EndTime)
 	{
-		actor.State = STATE_IDLE;
 		path.Invalidate();
 		if (data.NormalSoundHook)
 		{

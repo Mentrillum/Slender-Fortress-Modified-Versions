@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_fireball";
 
@@ -57,6 +58,7 @@ methodmap SF2_ProjectileFireball < SF2_ProjectileBase
 			return SF2_ProjectileFireball(-1);
 		}
 
+		fireball.SetTrailName(trail);
 		fireball.InitializeProjectile(SF2BossProjectileType_Fireball, owner, pos, ang, speed, damage, blastRadius,
 									false, "spell_fireball_small_red", "bombinomicon_burningdebris", impactSound, "models/roller.mdl", attackWaiters);
 

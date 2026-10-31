@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static bool g_PlayerInPvE[MAXTF2PLAYERS];
 static bool g_PlayerIsLeavingPvE[MAXTF2PLAYERS];
@@ -587,6 +588,17 @@ void PvE_SetPlayerPvEState(int client, bool status, bool regenerate = true)
 		player.ChangeCondition(TFCond_UberchargedOnTakeDamage, true);
 		player.ChangeCondition(TFCond_Taunting, true);
 		player.ChangeCondition(TFCond_UberchargedCanteen, _, 1.0);
+
+		int ent = -1;
+		while ((ent = FindEntityByClassname(ent, "obj_*")) != -1)
+		{
+			CBaseEntity building = CBaseEntity(ent);
+			int owner = building.GetPropEnt(Prop_Send, "m_hBuilder");
+			if (IsValidClient(owner))
+			{
+				SDKHooks_TakeDamage(building.index, 0, 0, building.GetProp(Prop_Data, "m_iHealth") * 4.0);
+			}
+		}
 
 		Call_StartForward(g_OnPlayerEnterPvE);
 		Call_PushCell(player.index);
@@ -1239,6 +1251,11 @@ void UnregisterPvESlenderBoss(char profile[SF2_MAX_PROFILE_NAME_LENGTH])
 	}
 }
 
+void UnregisterPvESlenderBosses()
+{
+	g_SlenderBosses.Clear();
+}
+
 void KillPvEBoss(int boss)
 {
 	int index = g_ActiveBosses.FindValue(EntIndexToEntRef(boss));
@@ -1323,6 +1340,9 @@ static Action Timer_RemoveAllPvEBosses(Handle timer)
 
 		npc.Remove();
 	}
+
+	g_TimeUntilBossSpawns = 30.0 + GetGameTime();
+	g_HasBossSpawned = false;
 
 	return Plugin_Stop;
 }

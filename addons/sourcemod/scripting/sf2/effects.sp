@@ -4,10 +4,696 @@
 #define _sf2_effects_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static EffectEvent g_EntityEffectEvent[2049];
 static EffectType g_EntityEffectType[2049];
 static ArrayList g_NpcEffectsArray[MAX_BOSSES];
+
+methodmap ProfileEffectMaster < ProfileObject
+{
+	public void Precache()
+	{
+		for (int i = 0; i < this.SectionLength; i++)
+		{
+			char key[128];
+			this.GetSectionNameFromIndex(i, key, sizeof(key));
+			ProfileEffect effect = view_as<ProfileEffect>(this.GetSection(key));
+			if (effect != null)
+			{
+				effect.Precache();
+			}
+		}
+	}
+}
+
+methodmap ProfileEffect < ProfileObject
+{
+	property EffectType Type
+	{
+		public get()
+		{
+			char effectTypeString[64];
+			this.GetString("type", effectTypeString, sizeof(effectTypeString));
+			if (strcmp(effectTypeString, "steam", false) == 0)
+			{
+				return EffectType_Steam;
+			}
+			else if (strcmp(effectTypeString, "dynamiclight", false) == 0)
+			{
+				return EffectType_DynamicLight;
+			}
+			else if (strcmp(effectTypeString, "particle", false) == 0)
+			{
+				return EffectType_Particle;
+			}
+			else if (strcmp(effectTypeString, "trail", false) == 0)
+			{
+				return EffectType_Trail;
+			}
+			else if (strcmp(effectTypeString, "propdynamic", false) == 0)
+			{
+				return EffectType_PropDynamic;
+			}
+			else if (strcmp(effectTypeString, "pointspotlight", false) == 0)
+			{
+				return EffectType_PointSpotlight;
+			}
+			else if (strcmp(effectTypeString, "sprite", false) == 0)
+			{
+				return EffectType_Sprite;
+			}
+			else if (strcmp(effectTypeString, "te_beamring", false) == 0)
+			{
+				return EffectType_TempEntBeamRing;
+			}
+			else if (strcmp(effectTypeString, "te_particle", false) == 0)
+			{
+				return EffectType_TempEntParticle;
+			}
+			else if (strcmp(effectTypeString, "sound", false) == 0)
+			{
+				return EffectType_Sound;
+			}
+		}
+	}
+
+	property EffectEvent Event
+	{
+		public get()
+		{
+			char effectTypeString[64];
+			this.GetString("event", effectTypeString, sizeof(effectTypeString), "constant");
+			if (strcmp(effectTypeString, "constant", false) == 0)
+			{
+				return EffectEvent_Constant;
+			}
+			if (strcmp(effectTypeString, "boss_hitplayer", false) == 0)
+			{
+				return EffectEvent_HitPlayer;
+			}
+			if (strcmp(effectTypeString, "boss_seenbyplayer", false) == 0)
+			{
+				return EffectEvent_PlayerSeesBoss;
+			}
+		}
+	}
+
+	property int DifficultyIndexes
+	{
+		public get()
+		{
+			return this.GetInt("difficulty_indexes", 123456);
+		}
+	}
+
+	property RenderMode RenderMode
+	{
+		public get()
+		{
+			RenderMode val = view_as<RenderMode>(this.GetInt("rendermode", view_as<int>(RENDER_TRANSCOLOR)));
+			if (this.Type == EffectType_PointSpotlight)
+			{
+				val = RENDER_TRANSCOLOR;
+			}
+			return val;
+		}
+	}
+
+	property RenderFx RenderEffect
+	{
+		public get()
+		{
+			return view_as<RenderFx>(this.GetInt("renderfx", view_as<int>(RENDERFX_NONE)));
+		}
+	}
+
+	property int SpawnFlags
+	{
+		public get()
+		{
+			return this.GetInt("spawnflags", 0);
+		}
+	}
+
+	property int FadeAlpha
+	{
+		public get()
+		{
+			return this.GetInt("renderamt", 255);
+		}
+	}
+
+	property float LifeTime
+	{
+		public get()
+		{
+			return this.GetFloat("lifetime", -1.0);
+		}
+	}
+
+	property float Delay
+	{
+		public get()
+		{
+			return this.GetFloat("delay", 0.0);
+		}
+	}
+
+	property bool AttachPlayer
+	{
+		public get()
+		{
+			return this.GetBool("attach_player", false);
+		}
+	}
+
+	public void GetOrigin(float buffer[3])
+	{
+		this.GetVector("origin", buffer);
+	}
+
+	public void GetAngles(float buffer[3])
+	{
+		this.GetVector("angles", buffer);
+	}
+
+	public void GetAttachment(char[] buffer, int bufferSize)
+	{
+		this.GetString("attachment_point", buffer, bufferSize);
+	}
+
+	public void GetRenderColor(int difficulty, int buffer[4])
+	{
+		this.GetDifficultyColor("rendercolor", difficulty, buffer);
+	}
+
+	public void Precache()
+	{
+		switch (this.Type)
+		{
+			case EffectType_PropDynamic:
+			{
+				view_as<ProfileEffect_PropDynamic>(this).Precache();
+			}
+
+			case EffectType_TempEntBeamRing:
+			{
+				view_as<ProfileEffect_TEBeamRing>(this).Precache();
+			}
+
+			case EffectType_Sound:
+			{
+				view_as<ProfileEffect_Sound>(this).Precache();
+			}
+		}
+	}
+}
+
+methodmap ProfileEffect_Steam < ProfileEffect
+{
+	property int SpreadSpeed
+	{
+		public get()
+		{
+			return this.GetInt("spreadspeed", 0);
+		}
+	}
+
+	property int Speed
+	{
+		public get()
+		{
+			return this.GetInt("speed", 0);
+		}
+	}
+
+	property int StartSize
+	{
+		public get()
+		{
+			return this.GetInt("startsize", 0);
+		}
+	}
+
+	property int EndSize
+	{
+		public get()
+		{
+			return this.GetInt("endsize", 0);
+		}
+	}
+
+	property int Rate
+	{
+		public get()
+		{
+			return this.GetInt("rate", 0);
+		}
+	}
+
+	property int JetLength
+	{
+		public get()
+		{
+			return this.GetInt("jetlength", 0);
+		}
+	}
+
+	property float RollSpeed
+	{
+		public get()
+		{
+			return this.GetFloat("rollspeed", 0.0);
+		}
+	}
+
+	property int ParticleType
+	{
+		public get()
+		{
+			return this.GetInt("particletype", 0);
+		}
+	}
+}
+
+methodmap ProfileEffect_DynamicLight < ProfileEffect
+{
+	property int Brightness
+	{
+		public get()
+		{
+			return this.GetInt("brightness", 0);
+		}
+	}
+
+	property float Distance
+	{
+		public get()
+		{
+			return this.GetFloat("distance", 0.0);
+		}
+	}
+
+	property int Cone
+	{
+		public get()
+		{
+			return this.GetInt("cone", 0);
+		}
+	}
+
+	property int LightStyle
+	{
+		public get()
+		{
+			return this.GetInt("lightstyle", 0);
+		}
+	}
+}
+
+methodmap ProfileEffect_Particle < ProfileEffect
+{
+	public void GetName(char[] buffer, int bufferSize)
+	{
+		this.GetString("particlename", buffer, bufferSize);
+	}
+
+	property bool HasControlPoint
+	{
+		public get()
+		{
+			return this.GetBool("control_point", false);
+		}
+	}
+
+	public void GetControlPointOffset(float buffer[3])
+	{
+		this.GetVector("control_point_offset", buffer);
+	}
+}
+
+methodmap ProfileEffect_Trail < ProfileEffect
+{
+	property float Time
+	{
+		public get()
+		{
+			return this.GetFloat("trailtime", 1.0);
+		}
+	}
+
+	property float StartWidth
+	{
+		public get()
+		{
+			return this.GetFloat("startwidth", 6.0);
+		}
+	}
+
+	property float EndWidth
+	{
+		public get()
+		{
+			return this.GetFloat("endwidth", 15.0);
+		}
+	}
+
+	public void GetName(char[] buffer, int bufferSize)
+	{
+		this.GetString("spritename", buffer, bufferSize);
+	}
+}
+
+methodmap ProfileEffect_PropDynamic < ProfileEffect
+{
+	property float Scale
+	{
+		public get()
+		{
+			return this.GetFloat("modelscale", 1.0);
+		}
+	}
+
+	property int Skin
+	{
+		public get()
+		{
+			return this.GetInt("modelskin", 0);
+		}
+	}
+
+	public void GetName(char[] buffer, int bufferSize)
+	{
+		this.GetString("modelname", buffer, bufferSize);
+	}
+
+	public void GetAnimation(char[] buffer, int bufferSize)
+	{
+		this.GetString("modelanimation", buffer, bufferSize);
+	}
+
+	public void Precache()
+	{
+		char path[PLATFORM_MAX_PATH];
+		this.GetName(path, sizeof(path));
+		if (path[0] != '\0')
+		{
+			PrecacheModel2(path, _, _, g_FileCheckConVar.BoolValue);
+		}
+	}
+}
+
+methodmap ProfileEffect_PointSpotlight < ProfileEffect
+{
+	property float Width
+	{
+		public get()
+		{
+			return this.GetFloat("spotlightwidth", 40.0);
+		}
+	}
+
+	property float Length
+	{
+		public get()
+		{
+			return this.GetFloat("spotlightlength", 512.0);
+		}
+	}
+
+	property float HaloScale
+	{
+		public get()
+		{
+			return this.GetFloat("halo_scale", 40.0);
+		}
+	}
+
+	property int Brightness
+	{
+		public get()
+		{
+			return this.GetInt("brightness", 0);
+		}
+	}
+
+	property float Distance
+	{
+		public get()
+		{
+			return this.GetFloat("distance", 0.0);
+		}
+	}
+
+	property int Cone
+	{
+		public get()
+		{
+			return this.GetInt("cone", 0);
+		}
+	}
+}
+
+methodmap ProfileEffect_Sprite < ProfileEffect
+{
+	property float Scale
+	{
+		public get()
+		{
+			return this.GetFloat("spritescale", 1.0);
+		}
+	}
+
+	public void GetName(char[] buffer, int bufferSize)
+	{
+		this.GetString("spritename", buffer, bufferSize);
+	}
+}
+
+methodmap ProfileEffect_TEBeamRing < ProfileEffect
+{
+	property float StartRadius
+	{
+		public get()
+		{
+			return this.GetFloat("start_radius", 5.0);
+		}
+	}
+
+	property float EndRadius
+	{
+		public get()
+		{
+			return this.GetFloat("end_radius", 10.0);
+		}
+	}
+
+	property int StartFrame
+	{
+		public get()
+		{
+			return this.GetInt("start_frame", 0);
+		}
+	}
+
+	property int FrameRate
+	{
+		public get()
+		{
+			return this.GetInt("framerate", 12);
+		}
+	}
+
+	property float Width
+	{
+		public get()
+		{
+			return this.GetFloat("width", 100.0);
+		}
+	}
+
+	property float Amplitude
+	{
+		public get()
+		{
+			return this.GetFloat("amplitude", 1.0);
+		}
+	}
+
+	property int Speed
+	{
+		public get()
+		{
+			return this.GetInt("speed", 5);
+		}
+	}
+
+	property int Flags
+	{
+		public get()
+		{
+			return this.GetInt("flags", 0);
+		}
+	}
+
+	public void GetRingColor(int buffer[4])
+	{
+		this.GetColor("color", buffer);
+	}
+
+	public void GetBeamSprite(char[] buffer, int bufferSize)
+	{
+		this.GetString("beam_sprite", buffer, bufferSize, "sprites/laser.vmt");
+	}
+
+	public void GetHaloSprite(char[] buffer, int bufferSize)
+	{
+		this.GetString("halo_sprite", buffer, bufferSize, "sprites/halo01.vmt");
+	}
+
+	property int BeamModel
+	{
+		public get()
+		{
+			return this.GetInt("__beam_model", -1);
+		}
+
+		public set(int value)
+		{
+			this.SetInt("__beam_model", value);
+		}
+	}
+
+	property int HaloModel
+	{
+		public get()
+		{
+			return this.GetInt("__halo_model", -1);
+		}
+
+		public set(int value)
+		{
+			this.SetInt("__halo_model", value);
+		}
+	}
+
+	public void Precache()
+	{
+		char sprite[PLATFORM_MAX_PATH], buffer[PLATFORM_MAX_PATH];
+		this.GetBeamSprite(sprite, sizeof(sprite));
+		if (sprite[0] != '\0')
+		{
+			this.BeamModel = PrecacheModel(sprite, true);
+			FormatEx(buffer, sizeof(buffer), "materials/%s", sprite);
+			AddFileToDownloadsTable(buffer);
+		}
+
+		this.GetHaloSprite(sprite, sizeof(sprite));
+		if (sprite[0] != '\0')
+		{
+			this.HaloModel = PrecacheModel(sprite, true);
+			FormatEx(buffer, sizeof(buffer), "materials/%s", sprite);
+			AddFileToDownloadsTable(buffer);
+		}
+	}
+}
+
+methodmap ProfileEffect_TEParticle < ProfileEffect
+{
+	property int AttachType
+	{
+		public get()
+		{
+			int val = 0;
+			char attachType[64];
+			this.GetString("attach_type", attachType, sizeof(attachType));
+			if (strcmp(attachType, "follow_origin", false) == 0)
+			{
+				val = 1;
+			}
+			else if (strcmp(attachType, "start_at_customorigin", false) == 0)
+			{
+				val = 2;
+			}
+			else if (strcmp(attachType, "start_at_attachment", false) == 0)
+			{
+				val = 3;
+			}
+			else if (strcmp(attachType, "follow_attachment", false) == 0)
+			{
+				val = 4;
+			}
+			else if (strcmp(attachType, "start_at_worldorigin", false) == 0)
+			{
+				val = 5;
+			}
+			else if (strcmp(attachType, "follow_rootbone", false) == 0)
+			{
+				val = 6;
+			}
+			return val;
+		}
+	}
+
+	property bool ResetParticles
+	{
+		public get()
+		{
+			return this.GetBool("reset_particles", true);
+		}
+	}
+
+	property bool HasControlPoint
+	{
+		public get()
+		{
+			return this.GetBool("control_point", false);
+		}
+	}
+
+	property int ControlPointAttachType
+	{
+		public get()
+		{
+			return this.GetInt("control_point_attach_type", 0);
+		}
+	}
+
+	public void GetName(char[] buffer, int bufferSize)
+	{
+		this.GetString("particlename", buffer, bufferSize);
+	}
+
+	public void GetStartPos(float buffer[3])
+	{
+		this.GetVector("start", buffer);
+	}
+
+	public void GetControlPointOffset(float buffer[3])
+	{
+		this.GetVector("control_point_offset", buffer);
+	}
+}
+
+methodmap ProfileEffect_Sound < ProfileEffect
+{
+	property ProfileSound Sounds
+	{
+		public get()
+		{
+			return view_as<ProfileSound>(this);
+		}
+	}
+
+	public void Precache()
+	{
+		if (this.Sounds != null)
+		{
+			this.Sounds.Precache();
+		}
+	}
+}
 
 void InitializeEffects()
 {
@@ -430,7 +1116,6 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 					SetVariantString(effectsInfo.AttachmentName);
 					spotlight.End.AcceptInput("SetParentAttachmentMaintainOffset");
 				}
-				spotlight.SetRenderColor(renderColor[0], renderColor[1], renderColor[2], renderColor[3]);
 				spotlight.Length = effectsInfo.SpotlightLength;
 				spotlight.Width = effectsInfo.SpotlightWidth;
 				spotlight.EndWidth = spotlight.Width * 2.0;
@@ -440,12 +1125,12 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 				spotlight.Cone = effectsInfo.LightCone;
 				spotlight.HaloScale = effectsInfo.SpotlightHaloScale;
 
+				spotlight.SetColor(renderColor);
+
 				spotlight.Spawn();
 				spotlight.Activate();
 
 				spotlight.TurnOn();
-
-				//SDKHook(spotlight.Spotlight.index, SDKHook_SetTransmit, Hook_FlashlightSpotlightEffectSetTransmit);
 			}
 			case EffectType_Sprite:
 			{
@@ -782,4 +1467,238 @@ static Action Timer_FestiveLight(Handle timer, any effect)
 	}
 
 	return Plugin_Continue;
+}
+
+void SetupNPCEffectsAPI()
+{
+	CreateNative("SF2_ProfileEffect.Type.get", Native_GetEffectType);
+	CreateNative("SF2_ProfileEffect.Precache", Native_EffectPrecache);
+
+	CreateNative("SF2_ProfileEffectMaster.Precache", Native_MasterEffectPrecache);
+	CreateNative("SF2_ProfileEffectMaster.Spawn", Native_MasterEffectSpawn);
+}
+
+static any Native_GetEffectType(Handle plugin, int numParams)
+{
+	ProfileEffect effect = GetNativeCell(1);
+	if (effect == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Handle %x", effect);
+	}
+
+	return effect.Type;
+}
+
+static any Native_EffectPrecache(Handle plugin, int numParams)
+{
+	ProfileEffect effect = GetNativeCell(1);
+	if (effect == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Handle %x", effect);
+	}
+
+	effect.Precache();
+	return 0;
+}
+
+static any Native_MasterEffectPrecache(Handle plugin, int numParams)
+{
+	ProfileEffectMaster master = GetNativeCell(1);
+	if (master == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Handle %x", master);
+	}
+
+	master.Precache();
+	return 0;
+}
+
+static any Native_MasterEffectSpawn(Handle plugin, int numParams)
+{
+	ProfileEffectMaster master = GetNativeCell(1);
+	if (master == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Handle %x", master);
+	}
+
+	float pos[3], ang[3];
+	GetNativeArray(3, pos, 3);
+	GetNativeArray(4, ang, 3);
+	ArrayList output = GetNativeCellRef(5);
+	ArrayList effectsArray = new ArrayList(sizeof(SF2BossProfileBaseEffectInfo));
+	ProfileEffect effect;
+	for (int i = 0, size = master.SectionLength; i < size; i++)
+	{
+		char key[128];
+		master.GetSectionNameFromIndex(i, key, sizeof(key));
+		effect = view_as<ProfileEffect>(master.GetSection(key));
+
+		if (effect == null)
+		{
+			continue;
+		}
+
+		// #define THIS_IS_A_FUCKING_MESS
+		SF2BossProfileBaseEffectInfo info;
+		info.Init();
+		strcopy(info.SectionName, sizeof(info.SectionName), key);
+		info.Type = effect.Type;
+		info.Event = effect.Event;
+		effect.GetOrigin(info.Origin);
+		effect.GetAngles(info.Angles);
+		info.RenderModes = effect.RenderMode;
+		info.RenderEffects = effect.RenderEffect;
+		info.SpawnFlags = effect.SpawnFlags;
+		info.FadeAlpha = effect.FadeAlpha;
+		info.LifeTime = effect.LifeTime;
+		info.Attachment = effect.AttachPlayer;
+		effect.GetAttachment(info.AttachmentName, sizeof(info.AttachmentName));
+		if (info.AttachmentName[0] != '\0')
+		{
+			info.Attachment = true;
+		}
+		info.DifficultyIndexes = effect.DifficultyIndexes;
+		info.Delay = effect.Delay;
+		info.AttachPlayer = effect.AttachPlayer;
+		info.Colors = new ArrayList(4);
+		for (int i2 = 0; i2 < Difficulty_Max; i2++)
+		{
+			int color[4];
+			effect.GetRenderColor(i2, color);
+			info.Colors.PushArray(color);
+		}
+
+		switch (effect.Type)
+		{
+			case EffectType_Steam:
+			{
+				ProfileEffect_Steam steam = view_as<ProfileEffect_Steam>(effect);
+				info.SteamSpreadSpeed = steam.SpreadSpeed;
+				info.SteamSpeed = steam.Speed;
+				info.SteamStartSize = steam.StartSize;
+				info.SteamEndSize = steam.EndSize;
+				info.SteamRate = steam.Rate;
+				info.SteamJetLength = steam.JetLength;
+				info.SteamRollSpeed = steam.RollSpeed;
+				info.SteamType = steam.ParticleType;
+			}
+
+			case EffectType_DynamicLight:
+			{
+				ProfileEffect_DynamicLight light = view_as<ProfileEffect_DynamicLight>(effect);
+				info.LightBrightness = light.Brightness;
+				info.LightMaxDistance = light.Distance;
+				info.LightCone = light.Cone;
+				info.LightStyle = light.LightStyle;
+			}
+
+			case EffectType_Particle:
+			{
+				ProfileEffect_Particle particle = view_as<ProfileEffect_Particle>(effect);
+				particle.GetName(info.ParticleName, sizeof(info.ParticleName));
+			}
+
+			case EffectType_Trail:
+			{
+				ProfileEffect_Trail trail = view_as<ProfileEffect_Trail>(effect);
+				info.TrailTime = trail.Time;
+				info.TrailStartWidth = trail.StartWidth;
+				info.TrailEndWidth = trail.EndWidth;
+				trail.GetName(info.TrailName, sizeof(info.TrailName));
+			}
+
+			case EffectType_PropDynamic:
+			{
+				ProfileEffect_PropDynamic prop = view_as<ProfileEffect_PropDynamic>(effect);
+				prop.GetName(info.ModelName, sizeof(info.ModelName));
+				info.ModelScale = prop.Scale;
+				info.ModelSkin = prop.Skin;
+				prop.GetAnimation(info.ModelAnimation, sizeof(info.ModelAnimation));
+			}
+
+			case EffectType_PointSpotlight:
+			{
+				ProfileEffect_PointSpotlight spotlight = view_as<ProfileEffect_PointSpotlight>(effect);
+				info.SpotlightWidth = spotlight.Width;
+				info.SpotlightLength = spotlight.Length;
+				info.SpotlightHaloScale = spotlight.HaloScale;
+				info.LightBrightness = spotlight.Brightness;
+				info.LightMaxDistance = spotlight.Distance;
+				info.LightCone = spotlight.Cone;
+			}
+
+			case EffectType_Sprite:
+			{
+				ProfileEffect_Sprite sprite = view_as<ProfileEffect_Sprite>(effect);
+				sprite.GetName(info.SpriteName, sizeof(info.SpriteName));
+				info.SpriteScale = sprite.Scale;
+			}
+
+			case EffectType_TempEntBeamRing:
+			{
+				ProfileEffect_TEBeamRing ring = view_as<ProfileEffect_TEBeamRing>(effect);
+				info.BeamRingStartRadius = ring.StartRadius;
+				info.BeamRingEndRadius = ring.EndRadius;
+				info.BeamRingStartFrame = ring.StartFrame;
+				info.BeamRingFrameRate = ring.FrameRate;
+				info.BeamRingWidth = ring.Width;
+				info.BeamRingAmplitude = ring.Amplitude;
+				info.BeamRingSpeed = ring.Speed;
+				info.BeamRingFlags = ring.Flags;
+				ring.GetBeamSprite(info.BeamRingBeamSprite, sizeof(info.BeamRingBeamSprite));
+				ring.GetHaloSprite(info.BeamRingHaloSprite, sizeof(info.BeamRingHaloSprite));
+				info.BeamRingBeamModel = ring.BeamModel;
+				info.BeamRingHaloModel = ring.HaloModel;
+				int color[4];
+				ring.GetRingColor(color);
+				char colorString[32];
+				FormatEx(colorString, sizeof(colorString), "%i %i %i %i", color[0], color[1], color[2], color[3]);
+			}
+
+			case EffectType_TempEntParticle:
+			{
+				ProfileEffect_TEParticle teParticle = view_as<ProfileEffect_TEParticle>(effect);
+				teParticle.GetStartPos(info.TEParticleStartPos);
+				info.TEParticleAttachType = teParticle.AttachType;
+				info.TEParticleReset = teParticle.ResetParticles;
+				info.TEParticleHasControlPoint = teParticle.HasControlPoint;
+				info.TEParticleControlPointAttachType = teParticle.ControlPointAttachType;
+				teParticle.GetControlPointOffset(info.TEParticleControlPointOffset);
+			}
+
+			case EffectType_Sound:
+			{
+				ProfileEffect_Sound sound = view_as<ProfileEffect_Sound>(effect);
+				info.SoundSounds.Init();
+				info.SoundSounds.Channel = sound.Sounds.GetChannel(1);
+				info.SoundSounds.Volume = sound.Sounds.GetVolume(1);
+				info.SoundSounds.Flags = sound.Sounds.GetFlags(1);
+				info.SoundSounds.Level = sound.Sounds.GetLevel(1);
+				info.SoundSounds.Pitch = sound.Sounds.GetPitch(1);
+				info.SoundSounds.CooldownMin = sound.Sounds.GetCooldownMin(1);
+				info.SoundSounds.CooldownMax = sound.Sounds.GetCooldownMax(1);
+				info.SoundSounds.PitchRandomMin = sound.Sounds.GetPitchRandomMin(1);
+				info.SoundSounds.PitchRandomMax = sound.Sounds.GetPitchRandomMax(1);
+				info.SoundSounds.Chance = sound.Sounds.GetChance(1);
+				info.SoundSounds.Paths = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+				for (int i2 = 0; i2 < sound.Sounds.GetPaths().Length; i2++)
+				{
+					char soundValue[PLATFORM_MAX_PATH];
+					sound.Sounds.GetPaths().GetString(i2, soundValue, sizeof(soundValue));
+					info.SoundSounds.Paths.PushString(soundValue);
+				}
+			}
+		}
+
+		effectsArray.PushArray(info);
+	}
+	SlenderSpawnEffects(effectsArray, GetNativeCell(2), false, pos, ang, output, GetNativeCell(6));
+	for (int i = 0; i < effectsArray.Length; i++)
+	{
+		SF2BossProfileBaseEffectInfo effects;
+		effectsArray.GetArray(i, effects, sizeof(effects));
+		effects.Destroy();
+	}
+	delete effectsArray;
+	return 0;
 }

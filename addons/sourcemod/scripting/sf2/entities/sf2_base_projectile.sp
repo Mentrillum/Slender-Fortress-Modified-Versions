@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static CEntityFactory g_Factory;
 
@@ -316,10 +317,10 @@ methodmap SF2_ProjectileBase < CBaseAnimating
 		ScaleVector(buffer, 2.0);
 	}
 
-	public void OnPlayerDamaged(SF2_BasePlayer player)
+	/*public void OnPlayerDamaged(SF2_BasePlayer player)
 	{
 		// Do nothing
-	}
+	}*/
 
 	public void DoExplosion()
 	{

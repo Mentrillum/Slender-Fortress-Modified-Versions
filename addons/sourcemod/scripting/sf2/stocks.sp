@@ -4,6 +4,7 @@
 #define _sf2_stocks_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define VALID_MINIMUM_MEMORY_ADDRESS 0x10000
 
@@ -160,6 +161,16 @@ bool SDK_PointIsWithin(int func, float pos[3])
 
 	return false;
 }
+
+bool SDK_IsTouching(int trigger, int entity)
+{
+	if (g_SDKIsTouching != null)
+	{
+		return SDKCall(g_SDKIsTouching, trigger, entity);
+	}
+
+	return false;
+}
 //	==========================================================
 //	ENTITY & ENTITY NETWORK FUNCTIONS
 //	==========================================================
@@ -237,21 +248,29 @@ float EntityDistanceFromEntity(int ent1, int ent2)
 	return GetVectorSquareMagnitude(myPos, hisPos);
 }
 
-bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+stock bool IsSpaceOccupied(const float pos[3], const float mins[3], const float maxs[3], int entity = -1, int &ref = -1, bool enumerate = true)
 {
 	bool check = false;
 	bool hit = false;
-	ArrayList list = new ArrayList();
-	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
-	for (int i = 0; i < list.Length; i++)
+	if (enumerate)
 	{
-		if (list.Get(i) == entity)
+		ArrayList list = new ArrayList();
+		TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
+		for (int i = 0; i < list.Length; i++)
 		{
-			continue;
-		}
+			if (list.Get(i) == entity)
+			{
+				continue;
+			}
 
+			check = true;
+			break;
+		}
+		delete list;
+	}
+	else
+	{
 		check = true;
-		break;
 	}
 	if (check)
 	{
@@ -261,25 +280,102 @@ bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const
 		delete trace;
 	}
 
-	delete list;
 	return hit;
 }
 
-bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+stock bool IsSpaceOccupiedIgnorePlayers(const float pos[3], const float mins[3], const float maxs[3], int entity = -1, int &ref = -1, bool enumerate = true)
 {
 	bool check = false;
 	bool hit = false;
-	ArrayList list = new ArrayList();
-	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
-	for (int i = 0; i < list.Length; i++)
+	if (enumerate)
 	{
-		if (list.Get(i) == entity)
+		ArrayList list = new ArrayList();
+		TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateNotLivingPlayers, list);
+		for (int i = 0; i < list.Length; i++)
 		{
-			continue;
-		}
+			if (list.Get(i) == entity)
+			{
+				continue;
+			}
 
+			check = true;
+			break;
+		}
+		delete list;
+	}
+	else
+	{
 		check = true;
-		break;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntity, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	return hit;
+}
+
+stock bool IsSpaceOccupiedIgnoreNPCs(const float pos[3], const float mins[3], const float maxs[3], int entity = -1, int &ref = -1, bool enumerate = true)
+{
+	bool check = false;
+	bool hit = false;
+	if (enumerate)
+	{
+		ArrayList list = new ArrayList();
+		TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateNotNPCs, list);
+		for (int i = 0; i < list.Length; i++)
+		{
+			if (list.Get(i) == entity)
+			{
+				continue;
+			}
+
+			check = true;
+			break;
+		}
+		delete list;
+	}
+	else
+	{
+		check = true;
+	}
+	if (check)
+	{
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_VISIBLE, TraceRayDontHitPlayersOrEntityEx, entity);
+		hit = TR_DidHit(trace);
+		ref = TR_GetEntityIndex(trace);
+		delete trace;
+	}
+
+	return hit;
+}
+
+stock bool IsSpaceOccupiedIgnorePlayersAndNPCs(const float pos[3], const float mins[3], const float maxs[3], int entity = -1, int &ref = -1, bool enumerate = true)
+{
+	bool check = false;
+	bool hit = false;
+	if (enumerate)
+	{
+		ArrayList list = new ArrayList();
+		TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateNotNPCsAndPlayers, list);
+		for (int i = 0; i < list.Length; i++)
+		{
+			if (list.Get(i) == entity)
+			{
+				continue;
+			}
+
+			check = true;
+			break;
+		}
+		delete list;
+	}
+	else
+	{
+		check = true;
 	}
 	if (check)
 	{
@@ -289,25 +385,32 @@ bool IsSpaceOccupiedIgnorePlayersAndEnts(const float pos[3], const float mins[3]
 		delete trace;
 	}
 
-	delete list;
 	return hit;
 }
 
-bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+stock bool IsSpaceOccupiedByPlayer(const float pos[3], const float mins[3], const float maxs[3], int entity = -1, int &ref = -1, bool enumerate = true)
 {
 	bool check = false;
 	bool hit = false;
-	ArrayList list = new ArrayList();
-	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
-	for (int i = 0; i < list.Length; i++)
+	if (enumerate)
 	{
-		if (list.Get(i) == entity)
+		ArrayList list = new ArrayList();
+		TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateLivingPlayers, list);
+		for (int i = 0; i < list.Length; i++)
 		{
-			continue;
-		}
+			if (list.Get(i) == entity)
+			{
+				continue;
+			}
 
+			check = true;
+			break;
+		}
+		delete list;
+	}
+	else
+	{
 		check = true;
-		break;
 	}
 	if (check)
 	{
@@ -317,35 +420,41 @@ bool IsSpaceOccupiedPlayer(const float pos[3], const float mins[3], const float 
 		delete trace;
 	}
 
-	delete list;
 	return hit;
 }
 
-bool IsSpaceOccupiedNPC(const float pos[3], const float mins[3], const float maxs[3],int entity=-1,int &ref=-1)
+stock bool IsSpaceOccupiedByNPC(const float pos[3], const float mins[3], const float maxs[3], int entity = -1, int &ref = -1, bool enumerate = true)
 {
 	bool check = false;
 	bool hit = false;
-	ArrayList list = new ArrayList();
-	TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateEverything, list);
-	for (int i = 0; i < list.Length; i++)
+	if (enumerate)
 	{
-		if (list.Get(i) == entity)
+		ArrayList list = new ArrayList();
+		TR_EnumerateEntitiesHull(pos, pos, mins, maxs, PARTITION_SOLID_EDICTS, EnumerateNPCs, list);
+		for (int i = 0; i < list.Length; i++)
 		{
-			continue;
-		}
+			if (list.Get(i) == entity)
+			{
+				continue;
+			}
 
+			check = true;
+			break;
+		}
+		delete list;
+	}
+	else
+	{
 		check = true;
-		break;
 	}
 	if (check)
 	{
-		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitEntity, entity);
+		Handle trace = TR_TraceHullFilterEx(pos, pos, mins, maxs, MASK_NPCSOLID, TraceRayDontHitPlayersOrEntityEx, entity);
 		hit = TR_DidHit(trace);
 		ref = TR_GetEntityIndex(trace);
 		delete trace;
 	}
 
-	delete list;
 	return hit;
 }
 
@@ -850,9 +959,14 @@ void ForceTeamWin(int team)
 	AcceptEntityInput(ent, "SetWinner");
 }
 
-Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att)
+Handle PrepareItemHandle(char[] classname, int index, int level, int quality, char[] att, bool preserveAttributes = false)
 {
-	Handle item = TF2Items_CreateItem(OVERRIDE_ALL | FORCE_GENERATION);
+	int flags = OVERRIDE_ALL | FORCE_GENERATION;
+	if (preserveAttributes)
+	{
+		flags |= PRESERVE_ATTRIBUTES;
+	}
+	Handle item = TF2Items_CreateItem(flags);
 	TF2Items_SetClassname(item, classname);
 	TF2Items_SetItemIndex(item, index);
 	TF2Items_SetLevel(item, level);
@@ -1100,12 +1214,12 @@ int GetEffectDispatchStringTableIndex(const char[] effectName)
 
 void UTIL_ScreenShake(float center[3], float amplitude, float frequency, float duration, float radius, int command, bool airShake)
 {
-	for(int i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		SF2_BasePlayer player = SF2_BasePlayer(i);
 		if (player.IsValid && !player.IsBot && !player.IsInGhostMode)
 		{
-			if (!airShake && command == 0 && !(player.GetFlags() && FL_ONGROUND))
+			if (!airShake && command == 0 && (player.GetFlags() & FL_ONGROUND) == 0)
 			{
 				continue;
 			}
@@ -1434,7 +1548,7 @@ bool TraceRayDontHitPlayersOrEntityEx(int entity, int mask, any data)
 	return true;
 }
 
-bool EnumerateEverything(int entIndex, ArrayList array)
+stock bool EnumerateEverything(int entIndex, ArrayList array)
 {
 	if (IsValidEntity(entIndex))
 	{
@@ -1444,13 +1558,61 @@ bool EnumerateEverything(int entIndex, ArrayList array)
 	return true;
 }
 
-bool EnumerateLivingPlayers(int entIndex, ArrayList players)
+stock bool EnumerateLivingPlayers(int entIndex, ArrayList players)
 {
 	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
 	{
 		players.Push(entIndex);
 	}
 
+	return true;
+}
+
+stock bool EnumerateNotLivingPlayers(int entIndex, ArrayList players)
+{
+	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
+	{
+		return false;
+	}
+
+	players.Push(entIndex);
+	return true;
+}
+
+stock bool EnumerateNPCs(int entIndex, ArrayList array)
+{
+	if (IsValidEntity(entIndex) && NPCGetFromEntIndex(entIndex) != -1)
+	{
+		array.Push(entIndex);
+	}
+
+	return true;
+}
+
+stock bool EnumerateNotNPCs(int entIndex, ArrayList array)
+{
+	if (IsValidEntity(entIndex) && NPCGetFromEntIndex(entIndex) != -1)
+	{
+		return false;
+	}
+
+	array.Push(entIndex);
+	return true;
+}
+
+stock bool EnumerateNotNPCsAndPlayers(int entIndex, ArrayList array)
+{
+	if (IsValidEntity(entIndex) && NPCGetFromEntIndex(entIndex) != -1)
+	{
+		return false;
+	}
+
+	if (IsValidClient(entIndex) && IsPlayerAlive(entIndex) && !IsClientInGhostMode(entIndex))
+	{
+		return false;
+	}
+
+	array.Push(entIndex);
 	return true;
 }
 

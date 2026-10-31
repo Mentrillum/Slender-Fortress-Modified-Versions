@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_OVERLAY_GHOST "overlays/slender/ghostcamera"
 
@@ -209,7 +210,7 @@ void ClientHandleGhostMode(int client, bool forceSpawn = false)
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 
 		// Set first observer target.
-		ClientGhostModeNextTarget(client, true);
+		ClientGhostModeNextTarget(client);
 		ClientActivateUltravision(client);
 
 		// screen overlay timer
@@ -244,7 +245,7 @@ static Action Timer_ClientGhostStripWearables(Handle timer, int userid)
 	return Plugin_Stop;
 }
 
-void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
+void ClientGhostModeNextTarget(int client)
 {
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
@@ -253,111 +254,95 @@ void ClientGhostModeNextTarget(int client, bool ignoreSetting = false)
 	}
 	#endif
 
-	if (g_PlayerPreferences[client].PlayerPreference_GhostModeTeleportState == 0 || ignoreSetting)
+	int state = g_PlayerPreferences[client].PlayerPreference_GhostModeTeleportState;
+	ArrayList targets = new ArrayList();
+
+	int lastTarget = EntRefToEntIndex(g_PlayerGhostModeTarget[client]);
+	int nextTarget = -1;
+	int firstTarget = -1;
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		int lastTarget = EntRefToEntIndex(g_PlayerGhostModeTarget[client]);
-		int nextTarget = -1;
-		int firstTarget = -1;
-		for (int i = 1; i <= MaxClients; i++)
+		if (state == 2)
 		{
-			if (IsValidClient(i) && (!g_PlayerEliminated[i] || g_PlayerProxy[i]) && !IsClientInGhostMode(i) && !DidClientEscape(i) && IsPlayerAlive(i))
-			{
-				if (firstTarget == -1)
-				{
-					firstTarget = i;
-				}
-				if (i > lastTarget)
-				{
-					nextTarget = i;
-					break;
-				}
-			}
+			break;
 		}
-
-		int target = -1;
-		if (IsValidClient(nextTarget))
+		if (IsValidClient(i) && (!g_PlayerEliminated[i] || g_PlayerProxy[i]) && !IsClientInGhostMode(i) && !DidClientEscape(i) && IsPlayerAlive(i))
 		{
-			target = nextTarget;
-		}
-		else
-		{
-			target = firstTarget;
-		}
-
-		if (IsValidClient(target))
-		{
-			g_PlayerGhostModeTarget[client] = EntIndexToEntRef(target);
-
-			float pos[3], ang[3], velocity[3];
-			GetClientAbsOrigin(target, pos);
-			GetClientEyeAngles(target, ang);
-			GetEntPropVector(target, Prop_Data, "m_vecAbsVelocity", velocity);
-			TeleportEntity(client, pos, ang, velocity);
-		}
-
-		#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("END ClientGhostModeNextTarget(%d)", client);
-		}
-		#endif
-	}
-	else
-	{
-		int lastTarget = NPCGetFromEntIndex(EntRefToEntIndex(g_PlayerGhostModeBossTarget[client]));
-		int nextTarget = -1;
-		int firstTarget = -1;
-		for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
-		{
-			if (NPCGetUniqueID(bossIndex) == -1 || !IsValidEntity(NPCGetEntIndex(bossIndex)))
-			{
-				continue;
-			}
-
-			if (NPCGetProfileData(bossIndex).IsPvEBoss)
-			{
-				continue;
-			}
-
+			targets.Push(i);
 			if (firstTarget == -1)
 			{
-				firstTarget = bossIndex;
+				firstTarget = i;
 			}
-			if (bossIndex > lastTarget)
+			if (i > lastTarget)
 			{
-				nextTarget = bossIndex;
+				nextTarget = i;
 				break;
 			}
 		}
-
-		int target = -1;
-		if (nextTarget != - 1 && NPCGetEntIndex(nextTarget) && NPCGetEntIndex(nextTarget) != INVALID_ENT_REFERENCE)
-		{
-			target = nextTarget;
-		}
-		else
-		{
-			target = firstTarget;
-		}
-
-		if (target != -1 && IsValidEntity(NPCGetEntIndex(target)))
-		{
-			g_PlayerGhostModeBossTarget[client] = EntIndexToEntRef(NPCGetEntIndex(target));
-
-			float pos[3], ang[3], velocity[3];
-			GetEntPropVector(NPCGetEntIndex(target), Prop_Data, "m_vecAbsOrigin", pos);
-			GetEntPropVector(NPCGetEntIndex(target), Prop_Data, "m_angAbsRotation", ang);
-			GetEntPropVector(NPCGetEntIndex(target), Prop_Data, "m_vecAbsVelocity", velocity);
-			TeleportEntity(client, pos, ang, velocity);
-		}
-
-		#if defined DEBUG
-		if (g_DebugDetailConVar.IntValue > 2)
-		{
-			DebugMessage("END ClientGhostModeNextTarget(%d)", client);
-		}
-		#endif
 	}
+
+	for (int bossIndex = 0; bossIndex < MAX_BOSSES; bossIndex++)
+	{
+		if (state == 1)
+		{
+			break;
+		}
+
+		if (NPCGetUniqueID(bossIndex) == -1 || !IsValidEntity(NPCGetEntIndex(bossIndex)))
+		{
+			continue;
+		}
+
+		if (NPCGetProfileData(bossIndex).IsPvEBoss)
+		{
+			continue;
+		}
+
+		targets.Push(NPCGetEntIndex(bossIndex));
+	}
+
+	for (int i = 0; i < targets.Length; i++)
+	{
+		if (firstTarget == -1)
+		{
+			firstTarget = targets.Get(i);
+		}
+		if (targets.Get(i) > lastTarget)
+		{
+			nextTarget = targets.Get(i);
+			break;
+		}
+	}
+	delete targets;
+
+	int target = -1;
+	if (IsValidEntity(nextTarget))
+	{
+		target = nextTarget;
+	}
+	else
+	{
+		target = firstTarget;
+	}
+
+	if (IsValidEntity(target))
+	{
+		g_PlayerGhostModeTarget[client] = EntIndexToEntRef(target);
+
+		float pos[3], ang[3], velocity[3];
+		GetEntPropVector(target, Prop_Data, "m_vecAbsOrigin", pos);
+		GetEntPropVector(target, Prop_Data, "m_angAbsRotation", ang);
+		GetEntPropVector(target, Prop_Data, "m_vecAbsVelocity", velocity);
+		TeleportEntity(client, pos, ang, velocity);
+	}
+
+	#if defined DEBUG
+	if (g_DebugDetailConVar.IntValue > 2)
+	{
+		DebugMessage("END ClientGhostModeNextTarget(%d)", client);
+	}
+	#endif
+
 }
 
 Action Hook_GhostNoTouch(int entity, int other)

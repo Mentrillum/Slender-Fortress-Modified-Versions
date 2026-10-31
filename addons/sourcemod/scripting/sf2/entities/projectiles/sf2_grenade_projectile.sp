@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_grenade";
 
@@ -258,6 +259,7 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		grenade.Speed = speed;
 		grenade.Damage = damage;
 		grenade.BlastRadius = blastRadius;
+		grenade.IsCrits = isCrits;
 		if (grenade.IsCrits)
 		{
 			CBaseEntity critParticle = grenade.CreateParticle("critical_grenade_blue");

@@ -4,6 +4,7 @@
 #define _sf2_pvp_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_PVP_SPAWN_SOUND "items/pumpkin_drop.wav"
 
@@ -1988,7 +1989,7 @@ static Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", myPos);
 
 				spawnPointList.Push(ent);
-				if (!IsSpaceOccupiedPlayer(myPos, mins, maxs, client))
+				if (!IsSpaceOccupied(myPos, mins, maxs, client))
 				{
 					clearSpawnPointList.Push(ent);
 				}
@@ -2007,7 +2008,7 @@ static Action Timer_TeleportPlayerToPvP(Handle timer, any userid)
 			GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", myPos);
 
 			spawnPointList.Push(ent);
-			if (!IsSpaceOccupiedPlayer(myPos, mins, maxs, client))
+			if (!IsSpaceOccupied(myPos, mins, maxs, client))
 			{
 				clearSpawnPointList.Push(ent);
 			}

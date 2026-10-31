@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -124,6 +125,7 @@ static int OnStart(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, NextBotAc
 	if (SF2_ChaserEntity(actor.index).IsValid())
 	{
 		SF2_ChaserEntity(actor.index).GroundSpeedOverride = true;
+		SF2_ChaserEntity(actor.index).IsPostureLocked = true;
 	}
 
 	action.EndTime = GetGameTime() + duration;
@@ -148,9 +150,11 @@ static int OnSuspend(SF2_PlaySequenceAndWait action, SF2_BaseBoss actor, NextBot
 
 static void OnEnd(SF2_PlaySequenceAndWait action, SF2_ChaserEntity actor)
 {
+	actor.MyNextBotPointer().GetLocomotionInterface().ClearStuckStatus();
 	if (SF2_ChaserEntity(actor.index).IsValid())
 	{
 		SF2_ChaserEntity(actor.index).GroundSpeedOverride = false;
+		SF2_ChaserEntity(actor.index).IsPostureLocked = false;
 	}
 }
 

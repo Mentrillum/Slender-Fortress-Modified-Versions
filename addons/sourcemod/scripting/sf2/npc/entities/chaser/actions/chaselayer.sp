@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -42,6 +43,8 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 	int interrputConditions = actor.InterruptConditions;
 	INextBot bot = actor.MyNextBotPointer();
 	CBaseEntity target = actor.Target;
+	SF2BossProfileData originalData;
+	originalData = view_as<SF2NPC_BaseNPC>(controller).GetProfileData();
 
 	PathFollower path = controller.Path;
 	ILocomotion loco = bot.GetLocomotionInterface();
@@ -61,13 +64,61 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 		if (actor.Teleporters.Length > 0)
 		{
 			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
+			if ((interrputConditions & COND_ENEMYVISIBLE) != 0 && actor.GetInFOV(target))
+			{
+				actor.Teleporters.Clear();
+			}
 		}
 
 		if (!bot.IsRangeLessThanEx(pos, 8.0))
 		{
 			if ((interrputConditions & COND_NEWENEMY) != 0 || path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
 			{
-				path.ComputeToPos(bot, pos);
+				bool success = path.ComputeToPos(bot, pos);
+				if (originalData.IsPvEBoss && !success)
+				{
+					int ent = -1;
+					while ((ent = FindEntityByClassname(ent, "obj_*")) != -1)
+					{
+						CBaseEntity building = CBaseEntity(ent);
+						int owner = building.GetPropEnt(Prop_Send, "m_hBuilder");
+						if (IsValidClient(owner))
+						{
+							SDKHooks_TakeDamage(building.index, 0, 0, building.GetProp(Prop_Data, "m_iHealth") * 4.0);
+						}
+					}
+
+					ArrayList arrayRaidTargets = new ArrayList();
+
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!IsPvETargetValid(CBaseEntity(i)))
+						{
+							continue;
+						}
+
+						if (i == actor.Target.index)
+						{
+							continue;
+						}
+						arrayRaidTargets.Push(EntIndexToEntRef(i));
+					}
+
+					if (arrayRaidTargets.Length > 0)
+					{
+						int raidTarget = EntRefToEntIndex(arrayRaidTargets.Get(GetRandomInt(0, arrayRaidTargets.Length - 1)));
+						if (IsValidClient(raidTarget) && IsClientInPvE(raidTarget))
+						{
+							actor.SetIsVisible(target, false);
+							actor.SetInFOV(target, false);
+							actor.SetIsNear(target, false);
+							actor.Target = CBaseEntity(raidTarget);
+							actor.OldTarget = CBaseEntity(raidTarget);
+							SetClientForceChaseState(controller, actor.Target, true);
+						}
+					}
+					delete arrayRaidTargets;
+				}
 			}
 		}
 	}

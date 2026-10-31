@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static const char g_EntityClassname[] = "sf2_projectile_iceball";
 
@@ -107,6 +108,7 @@ methodmap SF2_ProjectileIceball < SF2_ProjectileBase
 		iceball.SlowDuration = slowDuration;
 		iceball.SlowMultiplier = slowMultiplier;
 		iceball.SetFreezeSound(freezeSound);
+		iceball.SetTrailName(trail);
 		iceball.InitializeProjectile(SF2BossProjectileType_Iceball, owner, pos, ang, speed, damage, blastRadius,
 									false, "spell_fireball_small_blue", "spell_batball_impact_blue", impactSound, "models/roller.mdl", attackWaiters);
 		return iceball;

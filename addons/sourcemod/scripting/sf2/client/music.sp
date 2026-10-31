@@ -4,6 +4,7 @@
 #define _sf2_client_music_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 void SetupMusic()
 {
@@ -276,7 +277,7 @@ void ClientUpdateMusicSystem(int client, bool initialize = false)
 
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 
-		for (int i = 0; i < MAX_BOSSES; i++)
+		for (int i = MAX_BOSSES - 1; i >= 0; i--)
 		{
 			if (NPCGetUniqueID(i) == -1)
 			{

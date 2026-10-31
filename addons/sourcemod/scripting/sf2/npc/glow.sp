@@ -1,3 +1,6 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 static const int g_DefaultColor[4] = { 150, 0, 255, 255 };
 
 void SetupNPCGlows()

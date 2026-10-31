@@ -4,6 +4,7 @@
 #define _sf2_clients_think_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 void Hook_ClientPreThink(int client)
 {
@@ -69,15 +70,17 @@ void Hook_ClientPreThink(int client)
 					TF2_RemoveCondition(client, TFCond_Taunting);
 				}
 
-				if (TF2_IsPlayerInCondition(client, TFCond_Taunting) && class == TFClass_Soldier)
+				KeyMap modifiedWeapons = GetModifiedWeapons();
+				if (modifiedWeapons != null && TF2_IsPlayerInCondition(client, TFCond_Taunting) && GetEntProp(client, Prop_Send, "m_iTauntIndex") == 0)
 				{
-					int weaponEnt = GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+					int weaponEnt = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 					if (weaponEnt && weaponEnt != INVALID_ENT_REFERENCE)
 					{
 						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if ((itemDefInt == 775 || itemDefInt == 128) && GetEntProp(client, Prop_Send, "m_iTauntIndex") == 0)
+						ModifiedWeaponObject usedObject = GetModifiedWeaponFromIndex(client, itemDefInt);
+						if (usedObject != null && usedObject.BlockTaunts)
 						{
-							TF2_RemoveCondition(client, TFCond_Taunting); //Stop suiciding...
+							TF2_RemoveCondition(client, TFCond_Taunting);
 						}
 					}
 				}
@@ -232,22 +235,6 @@ void ClientOnButtonPress(SF2_BasePlayer client, int button)
 {
 	switch (button)
 	{
-		case IN_ATTACK2:
-		{
-			if (client.IsAlive)
-			{
-				if (!IsRoundInWarmup() &&
-					!IsRoundInIntro() &&
-					!IsRoundEnding() &&
-					!client.HasEscaped)
-				{
-					if (GetGameTime() >= client.GetFlashlightNextInputTime())
-					{
-						client.HandleFlashlight();
-					}
-				}
-			}
-		}
 		case IN_ATTACK3:
 		{
 			client.HandleSprint(true);
@@ -385,6 +372,75 @@ Action Timer_ClientAverageUpdate(Handle timer)
 		return Plugin_Continue;
 	}
 
+	int hours, minutes, seconds;
+	FloatToTimeHMS(float(g_RoundTime), hours, minutes, seconds);
+	char addon[16];
+	if (g_RoundTimer != null)
+	{
+		if (SF_SpecialRound(SPECIALROUND_EYESONTHECLOACK))
+		{
+			FormatEx(addon, sizeof(addon), "\n??:??");
+		}
+		else
+		{
+			FormatEx(addon, sizeof(addon), "\n%d:%02d", minutes, seconds);
+		}
+	}
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (g_RoundState != SF2RoundState_Active && g_RoundState != SF2RoundState_Escape)
+		{
+			continue;
+		}
+		SF2_BasePlayer player = SF2_BasePlayer(i);
+		if (!player.IsValid || player.IsBot || (player.IsEliminated && !player.IsInGhostMode))
+		{
+			continue;
+		}
+
+		SetHudTextParams(-1.0, 0.1,
+			0.26,
+			SF2_HUD_TEXT_COLOR_R,
+			SF2_HUD_TEXT_COLOR_G,
+			SF2_HUD_TEXT_COLOR_B,
+			40,
+			_,
+			1.0,
+			0.07,
+			0.07);
+
+		char text[512];
+		switch (g_RoundState)
+		{
+			case SF2RoundState_Active:
+			{
+				FormatEx(text, sizeof(text), "%d/%d", g_PageCount, g_PageMax);
+			}
+
+			case SF2RoundState_Escape:
+			{
+				if (SF_IsBoxingMap())
+				{
+					FormatEx(text, sizeof(text), "%T", "SF2 Default Boxing Message", i);
+				}
+				else
+				{
+					if (SF_IsSurvivalMap() && g_RoundTime > g_TimeEscape)
+					{
+						FormatEx(text, sizeof(text), "%T", "SF2 Default Survive Message", i);
+					}
+					else
+					{
+						FormatEx(text, sizeof(text), "%T", "SF2 Default Escape Message", i);
+					}
+				}
+			}
+		}
+		StrCat(text, sizeof(text), addon);
+		ShowSyncHudText(player.index, g_RoundTimerSync, text);
+	}
+
 	// First, process through HUD stuff.
 	char buffer[256];
 
@@ -419,6 +475,44 @@ Action Timer_ClientAverageUpdate(Handle timer)
 				int maxBars = 12;
 				int bars;
 				char buffer2[64];
+				if (!SF_IsRaidMap() && !SF_IsBoxingMap() && !IsInfiniteBlinkEnabled() && player.HasStartedBlinking)
+				{
+					bars = RoundToCeil(float(maxBars) * player.BlinkMeter);
+					if (bars > maxBars)
+					{
+						bars = maxBars;
+					}
+
+					if (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud)
+					{
+						if (bars != 0)
+						{
+							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
+						}
+						else
+						{
+							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
+						}
+					}
+					else
+					{
+						FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
+					}
+
+					for (int i2 = 0; i2 < maxBars; i2++)
+					{
+						if (i2 < bars)
+						{
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+						}
+						else
+						{
+							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+						}
+					}
+					StrCat(buffer, sizeof(buffer), "\n");
+				}
+
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
 					float percent = float(player.Health) / float(player.MaxHealth);
@@ -431,7 +525,8 @@ Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						bars = maxBars;
 					}
-					FormatEx(buffer, sizeof(buffer), "%s  ", SF2_PLAYER_HUD_HEALTH_SYMBOL);
+					FormatEx(buffer2, sizeof(buffer2), "%s  ", SF2_PLAYER_HUD_HEALTH_SYMBOL);
+					StrCat(buffer, sizeof(buffer), buffer2);
 					for (int i2 = 0; i2 < maxBars; i2++)
 					{
 						if (i2 < bars)
@@ -512,7 +607,12 @@ Action Timer_ClientAverageUpdate(Handle timer)
 				}
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					SetHudTextParams(0.035, 0.83,
+					float yPos = 0.83;
+					if (player.HasStartedBlinking)
+					{
+						yPos = 0.756;
+					}
+					SetHudTextParams(0.035, yPos,
 						0.3,
 						color[0],
 						color[1],
@@ -537,54 +637,6 @@ Action Timer_ClientAverageUpdate(Handle timer)
 						0.5);
 				}
 				ShowSyncHudText(player.index, g_HudSync2, buffer);
-				if (!SF_IsRaidMap() && !SF_IsBoxingMap() && !IsInfiniteBlinkEnabled() && player.HasStartedBlinking)
-				{
-					bars = RoundToCeil(float(maxBars) * player.BlinkMeter);
-					if (bars > maxBars)
-					{
-						bars = maxBars;
-					}
-
-					if (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud)
-					{
-						if (bars != 0)
-						{
-							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
-						}
-						else
-						{
-							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
-						}
-					}
-					else
-					{
-						FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
-					}
-
-					for (int i2 = 0; i2 < maxBars; i2++)
-					{
-						if (i2 < bars)
-						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
-						}
-						else
-						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
-						}
-					}
-
-					SetHudTextParams(0.8, 0.83,
-						0.3,
-						color[0],
-						color[1],
-						color[2],
-						40,
-						_,
-						1.0,
-						0.07,
-						0.5);
-					ShowSyncHudText(player.index, g_HudSync4, buffer);
-				}
 				buffer[0] = '\0';
 			}
 			else
@@ -627,7 +679,6 @@ Action Timer_ClientAverageUpdate(Handle timer)
 			}
 		}
 		player.UpdateListeningFlags();
-		player.UpdateMusicSystem();
 
 		Call_StartForward(g_OnPlayerAverageUpdatePFwd);
 		Call_PushCell(player);

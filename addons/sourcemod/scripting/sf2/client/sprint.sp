@@ -1,9 +1,14 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static bool g_PlayerSprint[MAXTF2PLAYERS] = { false, ... };
 static bool g_WantsToSprint[MAXTF2PLAYERS] = { false, ... };
 static float g_Stamina[MAXTF2PLAYERS] = { 1.0, ... };
 static float g_StaminaRechargeTime[MAXTF2PLAYERS] = { 1.0, ... };
+
+static char g_Player90sMusicString[MAXTF2PLAYERS][PLATFORM_MAX_PATH];
+static float g_Player90sMusicVolumes[MAXTF2PLAYERS];
+static Handle g_Player90sMusicTimer[MAXTF2PLAYERS];
 
 static ConVar g_PlayerScareSprintBoost;
 
@@ -337,11 +342,15 @@ float GetStaminaDecreaseRate(SF2_BasePlayer client)
 	{
 		if (class == TFClass_DemoMan)
 		{
-			rate *= 0.9; // Demoman gets a 10% sprint duration increase
+			rate *= 0.8;
 		}
 		else if (class == TFClass_Scout)
 		{
-			rate *= 0.95; // Scout gets a 5% sprint duration increase
+			rate *= 0.95;
+		}
+		else if (class == TFClass_Soldier || class == TFClass_Heavy)
+		{
+			rate *= 0.85;
 		}
 	}
 	else
@@ -414,6 +423,8 @@ static void ClientResetSprint(SF2_BasePlayer client)
 		DebugMessage("END ClientResetSprint(%d)", client.index);
 	}
 	#endif
+
+	Client90sMusicReset(client.index);
 }
 
  /**
@@ -632,6 +643,11 @@ static void Hook_SpeedThink(int client)
 
 	for (int slot = 0; slot <= 5; slot++)
 	{
+		if (GetModifiedWeapons() == null)
+		{
+			break;
+		}
+
 		weaponEnt = player.GetWeaponSlot(slot);
 		if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
 		{
@@ -639,57 +655,56 @@ static void Hook_SpeedThink(int client)
 		}
 
 		int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-		switch (itemDefInt)
+		ModifiedWeaponObject usedObject = GetModifiedWeaponFromIndex(client, itemDefInt);
+		if (usedObject == null)
 		{
-			case 172: // Scotsman's Skullcutter
-			{
-				if (player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
-				{
-					sprintSpeed -= (sprintSpeed * 0.05);
-					walkSpeed -= (walkSpeed * 0.05);
-				}
-			}
-			case 214: // The Powerjack
-			{
-				if (player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
-				{
-					sprintSpeed += (sprintSpeed * 0.03);
-				}
-			}
-			case 239: // Gloves of Running Urgently
-			{
-				if (player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
-				{
-					sprintSpeed += (sprintSpeed * 0.075);
-				}
-			}
-			case 775: // Escape Plan
-			{
-				float health = float(player.GetProp(Prop_Send, "m_iHealth"));
-				float maxHealth = float(SDKCall(g_SDKGetMaxHealth, player.index));
-				float percentage = health / maxHealth;
+			continue;
+		}
 
-				if (percentage < 0.805 && percentage >= 0.605)
+		KeyMap modifySpeed = usedObject.ModifySpeed;
+		if (modifySpeed == null)
+		{
+			continue;
+		}
+
+		if (usedObject.CanModifySpeedWhenActive && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") != weaponEnt)
+		{
+			continue;
+		}
+
+		if (modifySpeed.SectionLength <= 0)
+		{
+			walkSpeed += (walkSpeed * modifySpeed.GetFloat("walkspeed"));
+			sprintSpeed += (sprintSpeed * modifySpeed.GetFloat("runspeed"));
+		}
+		else
+		{
+			float health = float(player.GetProp(Prop_Send, "m_iHealth"));
+			float maxHealth = float(SDKCall(g_SDKGetMaxHealth, player.index));
+			float percentage = health / maxHealth;
+			float bestWalkSpeed = 0.0;
+			float bestRunSpeed = 0.0;
+
+			for (int i2 = 0; i2 < modifySpeed.SectionLength; i2++)
+			{
+				char key[64];
+				char speeds[2][16];
+				modifySpeed.GetSectionNameFromIndex(i2, key, sizeof(key));
+				if (ExplodeString(key, " ; ", speeds, sizeof(speeds), sizeof(speeds[])) > 1)
 				{
-					walkSpeed += (walkSpeed * 0.05);
-					sprintSpeed += (sprintSpeed * 0.05);
-				}
-				else if (percentage < 0.605 && percentage >= 0.405)
-				{
-					walkSpeed += (walkSpeed * 0.1);
-					sprintSpeed += (sprintSpeed * 0.1);
-				}
-				else if (percentage < 0.405 && percentage >= 0.205)
-				{
-					walkSpeed += (walkSpeed * 0.15);
-					sprintSpeed += (sprintSpeed * 0.15);
-				}
-				else if (percentage < 0.205)
-				{
-					walkSpeed += (walkSpeed * 0.2);
-					sprintSpeed += (sprintSpeed * 0.2);
+					float max = StringToFloat(speeds[0]);
+					float min = StringToFloat(speeds[1]);
+					if (percentage < max && percentage >= min)
+					{
+						bestWalkSpeed = modifySpeed.GetSection(key).GetFloat("walkspeed");
+						bestRunSpeed = modifySpeed.GetSection(key).GetFloat("runspeed");
+
+					}
 				}
 			}
+
+			walkSpeed += (walkSpeed * bestWalkSpeed);
+			sprintSpeed += (sprintSpeed * bestRunSpeed);
 		}
 	}
 
@@ -724,61 +739,18 @@ static void Hook_SpeedThink(int client)
 		{
 			if (!IsClassConfigsValid())
 			{
-				if (class != TFClass_Spy && class != TFClass_Pyro)
+				if (class != TFClass_Spy)
 				{
 					walkSpeed *= 1.34;
 				}
 				else
 				{
-					if (class == TFClass_Spy)
-					{
-						walkSpeed *= 1.28;
-					}
-					else
-					{
-						weaponEnt = INVALID_ENT_REFERENCE;
-						for (int slot = 0; slot <= 5; slot++)
-						{
-							weaponEnt = player.GetWeaponSlot(slot);
-							if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
-							{
-								continue;
-							}
-
-							int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-							if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
-							{
-								walkSpeed *= 1.32;
-							}
-							else
-							{
-								walkSpeed *= 1.34;
-							}
-						}
-					}
+					walkSpeed *= 1.28;
 				}
 			}
 			else
 			{
 				float multiplier = g_ClassDangerSpeedMultipler[classToInt];
-				if (class == TFClass_Pyro)
-				{
-					weaponEnt = INVALID_ENT_REFERENCE;
-					for (int slot = 0; slot <= 5; slot++)
-					{
-						weaponEnt = player.GetWeaponSlot(slot);
-						if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
-						{
-							continue;
-						}
-
-						int itemDefInt = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-						if (itemDefInt == 214 && player.GetPropEnt(Prop_Send, "m_hActiveWeapon") == weaponEnt)
-						{
-							multiplier -= 0.02;
-						}
-					}
-				}
 				walkSpeed *= multiplier;
 			}
 		}
@@ -853,6 +825,140 @@ static void Hook_SpeedThink(int client)
 		}
 		player.SetPropFloat(Prop_Send, "m_flCurrentTauntMoveSpeed", 190.0);
 	}
+}
+
+static void Client90sMusicReset(int client)
+{
+	char oldMusic[PLATFORM_MAX_PATH];
+	strcopy(oldMusic, sizeof(oldMusic), g_Player90sMusicString[client]);
+	g_Player90sMusicString[client][0] = '\0';
+	if (IsValidClient(client) && oldMusic[0] != '\0')
+	{
+		StopSound(client, MUSIC_CHAN, oldMusic);
+	}
+
+	g_Player90sMusicTimer[client] = null;
+	g_Player90sMusicVolumes[client] = 0.0;
+
+	if (IsValidClient(client))
+	{
+		oldMusic = NINETYSMUSIC;
+		if (oldMusic[0] != '\0')
+		{
+			StopSound(client, MUSIC_CHAN, oldMusic);
+		}
+	}
+}
+
+static void Client90sMusicStart(int client)
+{
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
+	{
+		return;
+	}
+
+	char buffer[PLATFORM_MAX_PATH];
+	buffer = NINETYSMUSIC;
+
+	if (buffer[0] == '\0')
+	{
+		return;
+	}
+
+	strcopy(g_Player90sMusicString[client], sizeof(g_Player90sMusicString[]), buffer);
+	g_Player90sMusicTimer[client] = CreateTimer(0.01, Timer_PlayerFadeIn90sMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	TriggerTimer(g_Player90sMusicTimer[client], true);
+}
+
+static void Client90sMusicStop(int client)
+{
+	if (!IsValidClient(client))
+	{
+		return;
+	}
+
+	if (!IsClientSprinting(client))
+	{
+		g_Player90sMusicString[client][0] = '\0';
+	}
+
+	g_Player90sMusicTimer[client]= CreateTimer(0.01, Timer_PlayerFadeOut90sMusic, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	TriggerTimer(g_Player90sMusicTimer[client], true);
+}
+
+static Action Timer_PlayerFadeIn90sMusic(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0)
+	{
+		return Plugin_Stop;
+	}
+
+	if (g_Player90sMusicTimer[client] != timer)
+	{
+		return Plugin_Stop;
+	}
+
+	g_Player90sMusicVolumes[client] += 0.28;
+	if (g_Player90sMusicVolumes[client] > 0.5)
+	{
+		g_Player90sMusicVolumes[client] = 0.5;
+	}
+
+	if (g_Player90sMusicString[client][0] != '\0')
+	{
+		EmitSoundToClient(client, g_Player90sMusicString[client], _, MUSIC_CHAN, _, SND_CHANGEVOL, g_Player90sMusicVolumes[client] * g_PlayerPreferences[client].PlayerPreference_MusicVolume, 100);
+	}
+
+	if (g_Player90sMusicVolumes[client] >= 0.5)
+	{
+		g_Player90sMusicTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
+}
+
+static Action Timer_PlayerFadeOut90sMusic(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0)
+	{
+		return Plugin_Stop;
+	}
+
+	if (g_Player90sMusicTimer[client] != timer)
+	{
+		return Plugin_Stop;
+	}
+
+	char buffer[PLATFORM_MAX_PATH];
+	buffer = NINETYSMUSIC;
+
+	if (strcmp(buffer, g_Player90sMusicString[client], false) == 0)
+	{
+		g_Player90sMusicTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	g_Player90sMusicVolumes[client] -= 0.28;
+	if (g_Player90sMusicVolumes[client] < 0.0)
+	{
+		g_Player90sMusicVolumes[client] = 0.0;
+	}
+
+	if (buffer[0] != '\0')
+	{
+		EmitSoundToClient(client, buffer, _, MUSIC_CHAN, _, SND_CHANGEVOL, g_Player90sMusicVolumes[client] * g_PlayerPreferences[client].PlayerPreference_MusicVolume, 100);
+	}
+
+	if (g_Player90sMusicVolumes[client] <= 0.0)
+	{
+		g_Player90sMusicTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
 }
 
 void Sprint_SetupAPI()

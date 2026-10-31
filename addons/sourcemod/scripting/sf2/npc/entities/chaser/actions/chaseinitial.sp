@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -88,4 +89,5 @@ static int OnSuspend(SF2_ChaserChaseInitialAction action, SF2_ChaserEntity actor
 static void OnEnd(SF2_ChaserChaseInitialAction action, SF2_ChaserEntity actor)
 {
 	actor.IsInChaseInitial = false;
+	actor.MyNextBotPointer().GetLocomotionInterface().ClearStuckStatus();
 }

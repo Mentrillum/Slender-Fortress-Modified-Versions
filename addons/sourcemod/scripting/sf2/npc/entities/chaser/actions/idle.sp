@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -77,6 +78,7 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 	SF2NPC_Chaser controller = actor.Controller;
 	SF2ChaserBossProfileData data;
 	data = controller.GetProfileData();
+	BaseBossProfile profileData = controller.GetProfileDataEx();
 	int difficulty = controller.Difficulty;
 	float gameTime = GetGameTime();
 
@@ -107,7 +109,28 @@ static int OnStart(SF2_ChaserIdleAction action, SF2_ChaserEntity actor, NextBotA
 		actor.SmellCooldown = gameTime + GetRandomFloat(data.SmellData.CooldownAfterStateMin[difficulty], data.SmellData.CooldownAfterStateMax[difficulty]);
 	}
 
-	g_SlenderTimeUntilKill[controller.Index] = GetGameTime() + NPCGetIdleLifetime(controller.Index, difficulty);
+	switch (controller.TeleportType)
+	{
+		case SF2BossTeleportType_Vanisher:
+		{
+			BossProfileTeleportVanishingData vanishingData = profileData.GetVanishingData();
+			if (vanishingData != null && vanishingData.ShouldUpdateDespawnTimeOnStateChange(difficulty))
+			{
+				float time = GetRandomFloat(vanishingData.GetMinIdleDespawnTime(difficulty), vanishingData.GetMaxIdleDespawnTime(difficulty));
+				if (time > 0.0)
+				{
+					g_SlenderTimeUntilKill[controller.Index] = gameTime + time;
+				}
+			}
+		}
+
+		case SF2BossTeleportType_Default:
+		{
+			g_SlenderTimeUntilKill[controller.Index] = gameTime + NPCGetIdleLifetime(controller.Index, difficulty);
+		}
+	}
+
+	actor.State = STATE_IDLE;
 
 	return action.Continue();
 }

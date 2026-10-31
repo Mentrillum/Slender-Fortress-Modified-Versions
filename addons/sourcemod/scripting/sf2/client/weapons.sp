@@ -2,13 +2,102 @@
 #pragma semicolon 1
 
 static KeyMap g_RestrictedWeapons = null;
+static KeyMap g_ModifiedWeapons = null;
 
 // Weapon Handles
 static Handle g_WeaponHandles[10][10];
 
+methodmap ModifiedWeaponObject < KeyMap
+{
+	property KeyMap Super
+	{
+		public get()
+		{
+			return view_as<KeyMap>(this);
+		}
+	}
+
+	property int ItemIndex
+	{
+		public get()
+		{
+			return this.GetInt("item_index");
+		}
+	}
+
+	public void GetItemName(char[] buffer, int bufferSize)
+	{
+		this.GetString("item_name", buffer, bufferSize);
+	}
+
+	property bool BlockTaunts
+	{
+		public get()
+		{
+			return this.GetBool("block_taunts");
+		}
+	}
+
+	property bool ResetHealth
+	{
+		public get()
+		{
+			return this.GetBool("reset_health");
+		}
+	}
+
+	property KeyMap Attributes
+	{
+		public get()
+		{
+			return this.GetSection("attributes");
+		}
+	}
+
+	property KeyMap AttributesThanatophobia
+	{
+		public get()
+		{
+			return this.GetSection("attributes_thanatophobia");
+		}
+	}
+
+	property KeyMap ModifySpeed
+	{
+		public get()
+		{
+			return this.GetSection("modify_speed");
+		}
+	}
+
+	property KeyMap ModifiedIn
+	{
+		public get()
+		{
+			return this.GetSection("modified_in");
+		}
+	}
+
+	property bool CanModifySpeedWhenActive
+	{
+		public get()
+		{
+			bool def = false;
+			KeyMap obj = this.ModifySpeed;
+			if (obj == null)
+			{
+				return def;
+			}
+
+			return obj.GetBool("when_active", def);
+		}
+	}
+}
+
 void SetupPlayerWeapons()
 {
 	ReloadRestrictedWeapons();
+	ReloadModifiedWeapons();
 	SetupClassDefaultWeapons();
 }
 
@@ -102,7 +191,90 @@ void ReloadRestrictedWeapons()
 	}
 
 	g_RestrictedWeapons = KeyValuesToKeyMap(kv);
+
 	delete kv;
+}
+
+void ReloadModifiedWeapons()
+{
+	if (g_ModifiedWeapons != null)
+	{
+		CleanupKeyMap(g_ModifiedWeapons);
+	}
+
+	char buffer[PLATFORM_MAX_PATH];
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
+	{
+		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_MODIFIEDWEAPONS);
+	}
+	else
+	{
+		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_MODIFIEDWEAPONS_DATA);
+	}
+	KeyValues kv = new KeyValues("root");
+	if (!FileToKeyValues(kv, buffer))
+	{
+		delete kv;
+		LogError("Failed to load modified weapons list! File not found!");
+		return;
+	}
+
+	g_ModifiedWeapons = KeyValuesToKeyMap(kv);
+
+	delete kv;
+}
+
+KeyMap GetModifiedWeapons()
+{
+	return g_ModifiedWeapons;
+}
+
+ModifiedWeaponObject GetModifiedWeaponFromIndex(int client, int index)
+{
+	if (g_ModifiedWeapons == null)
+	{
+		return null;
+	}
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	ModifiedWeaponObject usedObject = null;
+	char name[64];
+	TF2_GetClassName(class, name, sizeof(name), true);
+	KeyMap classObj = g_ModifiedWeapons.GetSection(name);
+	if (classObj == null && class == TFClass_Heavy)
+	{
+		TF2_GetClassName(class, name, sizeof(name), false);
+		classObj = g_ModifiedWeapons.GetSection(name);
+	}
+
+	KeyMap allObj = g_ModifiedWeapons.GetSection("all");
+	if (allObj == null && classObj == null)
+	{
+		return null;
+	}
+
+	char itemDefString[6];
+	IntToString(index, itemDefString, sizeof(itemDefString));
+	ModifiedWeaponObject tempObj = null;
+	if (classObj != null)
+	{
+		tempObj = view_as<ModifiedWeaponObject>(classObj.GetSection(itemDefString));
+		if (tempObj != null)
+		{
+			usedObject = tempObj;
+		}
+	}
+
+	if (usedObject == null && allObj != null)
+	{
+		tempObj = view_as<ModifiedWeaponObject>(allObj.GetSection(itemDefString));
+		if (tempObj != null)
+		{
+			usedObject = tempObj;
+		}
+	}
+
+	return usedObject;
 }
 
 Action Timer_ClientPostWeapons(Handle timer, any userid)
@@ -373,100 +545,114 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 	}
 
 	// Change stats on some weapons.
-	if (!client.IsEliminated)
+	bool resetHealth = false;
+	for (int slot = 0; slot <= 5; slot++)
 	{
-		int weaponEnt = INVALID_ENT_REFERENCE;
+		int weaponEnt = client.GetWeaponSlot(slot);
 		Handle weaponHandle = null;
-		for (int slot = 0; slot <= 5; slot++)
+		if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
 		{
-			weaponEnt = client.GetWeaponSlot(slot);
-			if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
+			continue;
+		}
+
+		char name[64];
+		TF2_GetClassName(playerClass, name, sizeof(name), true);
+		int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
+		ModifiedWeaponObject usedObject = GetModifiedWeaponFromIndex(client.index, itemDef);
+
+		if (usedObject == null)
+		{
+			continue;
+		}
+
+		KeyMap attributes = usedObject.Attributes;
+		if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && usedObject.AttributesThanatophobia != null)
+		{
+			attributes = usedObject.AttributesThanatophobia;
+		}
+		if (attributes == null)
+		{
+			continue;
+		}
+
+		bool allowed = !client.IsEliminated;
+		KeyMap modified = usedObject.ModifiedIn;
+		KeyMap teamModified = null;
+		if (modified != null)
+		{
+			if (!client.IsEliminated && modified.GetBool("red", true))
 			{
-				continue;
+				teamModified = modified.GetSection("red");
+			}
+			else
+			{
+				teamModified = modified.GetSection("blue");
 			}
 
-			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-			bool resetHealth = false;
-			switch (itemDef)
+			if (teamModified != null)
 			{
-				case 214: // Powerjack
+				if (client.IsInPvP)
 				{
-					weaponHandle = PrepareItemHandle("tf_weapon_fireaxe", 214, 0, 0, "180 ; 12.0 ; 412 ; 1.2");
+					allowed = modified.GetBool("pvp");
 				}
-				case 310: //The Warrior's Spirit
+				else if (client.IsInPvE)
 				{
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 310, 0, 0, "2 ; 1.3 ; 412 ; 1.3");
+					allowed = modified.GetBool("pve");
 				}
-				case 326: // The Back Scratcher
+				else if (client.IsInWeaponsTriggers)
 				{
-					weaponHandle = PrepareItemHandle("tf_weapon_fireaxe", 326, 0, 0, "2 ; 1.25 ; 412 ; 1.25 ; 69 ; 0.25 ; 108 ; 1.25");
+					allowed = modified.GetBool("weapons_trigger");
 				}
-				case 304: // Amputator
+				else if (!client.IsEliminated && SF_IsBoxingMap())
 				{
-					if (!SF_SpecialRound(SPECIALROUND_THANATOPHOBIA))
-					{
-						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "200 ; 0.0 ; 57 ; 2 ; 1 ; 0.8");
-					}
-					else
-					{
-						weaponHandle = PrepareItemHandle("tf_weapon_bonesaw", 304, 0, 0, "1 ; 0.8");
-					}
+					allowed = modified.GetBool("boxing", true);
 				}
-				case 239: //GRU
+				else if (client.IsEliminated && SF_IsRaidMap())
 				{
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 239, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
-					resetHealth = true;
+					allowed = modified.GetBool("raid", true);
 				}
-				case 1100: //Bread Bite
+				else
 				{
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 1100, 0, 0, "107 ; 1.3 ; 772 ; 1.5 ; 129 ; 0.0 ; 414 ; 1.0 ; 1 ; 0.75");
-					resetHealth = true;
+					allowed = modified.GetBool("everything_else", !client.IsEliminated);
 				}
-				case 426: //Eviction Notice
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_fists", 426, 0, 0, "6 ; 0.6 ; 107 ; 1.15 ; 737 ; 4.0 ; 1 ; 0.4 ; 412 ; 1.2");
-				}
-				case 775: //The Escape Plan (Its like, real buggy on wearer)
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_shovel", 775, 0, 0, "414 ; 1 ; 734 ; 0.1");
-				}
-				case 452: //Three Rune Blade
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_bat", 452, 0, 0, "");
-				}
-				case 325: //Boston Basher
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_bat", 325, 0, 0, "");
-				}
-				case 450: //Atomizer
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_bat", 450, 0, 0, "");
-				}
-				case 225: //Your Eternal Reward
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_knife", 225, 0, 0, "");
-				}
-				case 649: //Spy-cicle
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_knife", 649, 0, 0, "");
-				}
-				case 574: //Spy-cicle
-				{
-					weaponHandle = PrepareItemHandle("tf_weapon_knife", 574, 0, 0, "");
-				}
-			}
-			if (weaponHandle != null)
-			{
-				client.RemoveWeaponSlot(slot);
-				int entity = TF2Items_GiveNamedItem(client.index, weaponHandle);
-				EquipPlayerWeapon(client.index, entity);
-				if (resetHealth && !IsRoundPlaying())
-				{
-					SetEntityHealth(client.index, client.MaxHealth);
-				}
-				delete weaponHandle;
 			}
 		}
+		if (!allowed)
+		{
+			continue;
+		}
+
+		char itemName[64], attributeList[1024];
+		usedObject.GetItemName(itemName, sizeof(itemName));
+		for (int i2 = 0; i2 < attributes.KeyLength; i2++)
+		{
+			if (i2 != 0)
+			{
+				StrCat(attributeList, sizeof(attributeList), " ; ");
+			}
+			char key[64], value[64];
+			attributes.GetKeyNameFromIndex(i2, key, sizeof(key));
+			FloatToString(attributes.GetFloat(key, 0.0), value, sizeof(value));
+			StrCat(attributeList, sizeof(attributeList), key);
+			StrCat(attributeList, sizeof(attributeList), " ; ");
+			StrCat(attributeList, sizeof(attributeList), value);
+		}
+		weaponHandle = PrepareItemHandle(itemName, itemDef, 0, 0, attributeList);
+		if (weaponHandle != null)
+		{
+			client.RemoveWeaponSlot(slot);
+			int entity = TF2Items_GiveNamedItem(client.index, weaponHandle);
+			EquipPlayerWeapon(client.index, entity);
+			if (usedObject.ResetHealth)
+			{
+				resetHealth = true;
+			}
+			delete weaponHandle;
+		}
+	}
+	if (resetHealth && !IsRoundPlaying())
+	{
+		SetEntityHealth(client.index, client.MaxHealth);
 	}
 
 	if (preventAttack)
@@ -510,37 +696,6 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 	}
 
-	//Remove the teleport ability
-	if (client.IsInPvP || client.IsInPvE || ((SF_IsRaidMap() || SF_IsBoxingMap()) && !client.IsEliminated) || IsClientInWeaponsTrigger(client.index))
-	{
-		int weaponEnt = INVALID_ENT_REFERENCE;
-		Handle weaponHandle = null;
-		for (int slot = 0; slot <= 5; slot++)
-		{
-			weaponEnt = client.GetWeaponSlot(slot);
-			if (!weaponEnt || weaponEnt == INVALID_ENT_REFERENCE)
-			{
-				continue;
-			}
-
-			int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
-			switch (itemDef)
-			{
-				case 589: // Eureka Effect
-				{
-					client.RemoveWeaponSlot(slot);
-
-					weaponHandle = PrepareItemHandle("tf_weapon_wrench", 589, 0, 0, "93 ; 0.5 ; 732 ; 0.5");
-					int entity = TF2Items_GiveNamedItem(client.index, weaponHandle);
-					EquipPlayerWeapon(client.index, entity);
-				}
-			}
-			if (weaponHandle != null)
-			{
-				delete weaponHandle;
-			}
-		}
-	}
 	//Force them to take their melee wep, it prevents the civilian bug.
 	client.SwitchToWeaponSlot(TFWeaponSlot_Melee);
 
@@ -566,38 +721,41 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 		}
 	}
 
-	float healthFromPack = 1.0;
-	if (!IsClassConfigsValid())
+	TF2Attrib_RemoveByDefIndex(client.index, 109);
+	if (!client.IsEliminated)
 	{
-		if (!client.IsEliminated && !SF_IsBoxingMap())
+		float healthFromPack = 1.0;
+		if (!IsClassConfigsValid())
 		{
-			if (client.HasRegenItem)
+			if (!SF_IsBoxingMap())
 			{
-				healthFromPack = 0.40;
-			}
-			if (client.Class == TFClass_Medic)
-			{
-				healthFromPack = 0.0;
+				if (client.HasRegenItem)
+				{
+					healthFromPack = 0.40;
+				}
+				if (client.Class == TFClass_Medic)
+				{
+					healthFromPack = 0.0;
+				}
 			}
 		}
-	}
-	else
-	{
-		if (!client.IsEliminated && !SF_IsBoxingMap())
+		else
 		{
-			healthFromPack = g_ClassHealthPickupMultiplier[classToInt];
-			if (client.HasRegenItem)
+			if (!SF_IsBoxingMap())
 			{
-				healthFromPack -= 0.6;
-			}
-			if (healthFromPack <= 0.0)
-			{
-				healthFromPack = 0.0;
+				healthFromPack = g_ClassHealthPickupMultiplier[classToInt];
+				if (client.HasRegenItem)
+				{
+					healthFromPack -= 0.6;
+				}
+				if (healthFromPack <= 0.0)
+				{
+					healthFromPack = 0.0;
+				}
 			}
 		}
+		TF2Attrib_SetByDefIndex(client.index, 109, healthFromPack);
 	}
-
-	TF2Attrib_SetByDefIndex(client.index, 109, healthFromPack);
 
 	#if defined DEBUG
 	int weaponEnt = INVALID_ENT_REFERENCE;
@@ -713,7 +871,7 @@ bool IsWeaponRestricted(SF2_BasePlayer client, int itemDefInt)
 		{
 			continue;
 		}
-		if (Npc.GetProfileDataEx().GetProxies().IsEnabled(Npc.Difficulty))
+		if ((Npc.Flags & SFF_PROXIES) != 0)
 		{
 			proxyBoss = true;
 			break;

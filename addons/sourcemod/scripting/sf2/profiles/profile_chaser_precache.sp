@@ -5,6 +5,7 @@
 #define _sf2_profiles_chaser_precache
 
 #pragma semicolon 1
+#pragma newdecls required
 
 /**
  *	Parses and stores the unique values of a chaser profile from the current position in the profiles config.
@@ -1651,7 +1652,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 	if (!kv.JumpToKey("attacks"))
 	{
 		oldStuff = true;
-		if (kv.GetDataType("attack_damage") == KvData_None)
+		if (kv.GetDataType("attack_damage") == KvData_None && kv.GetDataType("attack_type") == KvData_None)
 		{
 			return -1;
 		}
@@ -1676,6 +1677,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 		attackData.Index = index;
 		attackData.Name = attackName;
 
+		bool wasSet = false;
 		if (!oldStuff)
 		{
 			attackData.Type = kv.GetNum("type", attackData.Type);
@@ -1702,6 +1704,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 
 			GetProfileDifficultyBoolValues(kv, "disappear", attackData.Disappear, attackData.Disappear);
 			GetProfileDifficultyBoolValues(kv, "disappear_upon_damaging", attackData.DisappearOnHit, attackData.DisappearOnHit);
+			wasSet = true;
 		}
 		attackData.Type = kv.GetNum("attack_type", attackData.Type);
 
@@ -1748,7 +1751,7 @@ static int ParseChaserProfileAttacks(KeyValues kv, SF2ChaserBossProfileData chas
 
 		GetProfileDifficultyFloatValues(kv, "attack_begin_range", attackData.BeginRange, attackData.BeginRange);
 
-		GetProfileDifficultyFloatValues(kv, "attack_begin_fov", attackData.BeginFOV, attackData.Spread);
+		GetProfileDifficultyFloatValues(kv, "attack_begin_fov", attackData.BeginFOV, !wasSet ? attackData.Spread : attackData.BeginFOV);
 
 		GetProfileDifficultyFloatValues(kv, "attack_cooldown", attackData.Cooldown, attackData.Cooldown);
 

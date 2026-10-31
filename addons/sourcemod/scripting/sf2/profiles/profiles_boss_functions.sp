@@ -4,6 +4,370 @@
 #define _sf2_profiles_precache_included
 
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap BaseBossProfile < ProfileObject
+{
+	property int Type
+	{
+		public get()
+		{
+			return this.GetInt("type", SF2BossType_Chaser);
+		}
+	}
+
+	property bool IsPvEBoss
+	{
+		public get()
+		{
+			bool ret = false;
+			if (this.GetSection("pve") != null || this.GetBool("is_pve"))
+			{
+				ret = true;
+			}
+			return ret;
+		}
+	}
+
+	public void GetName(int difficulty, char[] buffer, int bufferSize)
+	{
+		this.GetDifficultyString("name", difficulty, buffer, bufferSize);
+	}
+
+	public bool CannotDespawnLooking(int difficulty)
+	{
+		return this.GetDifficultyBool("teleport_no_looking", difficulty, true);
+	}
+
+	public KeyMap_Array GetRedCameraOverlays()
+	{
+		return this.GetArray("overlay_red_camera");
+	}
+
+	public void GetActiveRedCameraOverlay(char[] buffer, int bufferSize)
+	{
+		this.GetString("__active_red_camera_overlay", buffer, bufferSize);
+	}
+
+	public void SetActiveRedCameraOverlay(char[] value)
+	{
+		this.SetString("__active_red_camera_overlay", value);
+	}
+
+	public ProfileMusic GetGlobalMusic(int difficulty)
+	{
+		return view_as<ProfileMusic>(this.GetDifficultySection("sound_music", difficulty));
+	}
+
+	public ProfileGlobalTracks GetGlobalTracks()
+	{
+		ProfileObject obj = this.GetSection("music");
+		obj = obj != null ? obj.GetSection("global") : null;
+		if (obj != null)
+		{
+			return view_as<ProfileGlobalTracks>(obj);
+		}
+
+		return null;
+	}
+
+	public bool CanSeeThroughFog(int difficulty)
+	{
+		return this.GetDifficultyBool("can_see_through_fog", difficulty);
+	}
+
+	public KeyMap_Array GetWhitelistedTeleportMaps()
+	{
+		ProfileObject obj = this.GetSection("teleport_whitelist");
+		KeyMap_Array arr = obj != null ? obj.GetArray("maps") : null;
+		return arr;
+	}
+
+	property bool IsInWhitelistedMap
+	{
+		public get()
+		{
+			return this.GetBool("__whitelisted_map", true);
+		}
+
+		public set(bool value)
+		{
+			this.SetBool("__whitelisted_map", value);
+		}
+	}
+
+	public BossProfileTeleportVanishingData GetVanishingData()
+	{
+		return view_as<BossProfileTeleportVanishingData>(this.GetSection("vanisher"));
+	}
+
+	public void Precache()
+	{
+		char path[PLATFORM_MAX_PATH], key[512];
+		this.ConvertValuesSectionToArray("overlay_red_camera");
+
+		ProfileObject newObj = null, temp = null, temp2 = null, temp3 = null;
+		newObj = this.GetSection("teleport_whitelist");
+		if (newObj != null)
+		{
+			newObj.ConvertValuesSectionToArray("maps");
+		}
+		bool exists = false;
+		for (int i = 1; i < Difficulty_Max; i++)
+		{
+			if (this.GetDifficultySection("sound_music", i) != null)
+			{
+				exists = true;
+				break;
+			}
+		}
+
+		if (exists)
+		{
+			newObj = this.InsertNewSection("music");
+			newObj = newObj.InsertNewSection("global");
+
+			for (int i = 1; i < Difficulty_Max; i++)
+			{
+				temp = this.GetDifficultySection("sound_music", i);
+				if (temp == null)
+				{
+					continue;
+				}
+
+				temp = temp.GetSection("paths");
+				if (temp == null)
+				{
+					continue;
+				}
+
+				temp2 = newObj.InsertDifficultySection("tracks", i);
+				for (int i2 = 0; i2 < temp.KeyLength; i2++)
+				{
+					temp.GetKeyNameFromIndex(i2, key, sizeof(key));
+					temp.GetString(key, path, sizeof(path));
+					temp3 = temp2.InsertNewSection(key);
+					temp3.SetKeyValue("path", path);
+				}
+			}
+		}
+
+		if (this.GetGlobalMusic(1) != null)
+		{
+			this.GetGlobalMusic(1).Precache();
+		}
+
+		if (this.GetGlobalTracks() != null)
+		{
+			this.GetGlobalTracks().Precache();
+		}
+
+		switch (this.Type)
+		{
+			case SF2BossType_Chaser:
+			{
+				view_as<ChaserBossProfile>(this).Precache();
+			}
+		}
+	}
+}
+
+methodmap BossProfileParticleData < ProfileObject
+{
+	public void GetName(char[] buffer, int bufferSize)
+	{
+		this.GetString("particle", buffer, bufferSize);
+	}
+
+	property bool AttachParticles
+	{
+		public get()
+		{
+			return this.GetBool("attach", true);
+		}
+	}
+
+	property bool BeamParticles
+	{
+		public get()
+		{
+			return this.GetBool("beam", false);
+		}
+	}
+
+	property ParticleAttachment Type
+	{
+		public get()
+		{
+			return view_as<ParticleAttachment>(this.GetInt("attach_type", view_as<int>(PATTACH_CUSTOMORIGIN)));
+		}
+	}
+
+	public void GetAttachment(char[] buffer, int bufferSize)
+	{
+		this.GetString("attachment", buffer, bufferSize);
+	}
+
+	public void Apply(CBaseAnimating target, CBaseAnimating caster)
+	{
+		CBaseAnimating castTo;
+		float myPos[3], myAng[3], targetPos[3];
+		if (!this.AttachParticles || this.BeamParticles)
+		{
+			caster.WorldSpaceCenter(myPos);
+			caster.GetAbsAngles(myAng);
+			target.WorldSpaceCenter(targetPos);
+			if (this.AttachParticles)
+			{
+				castTo = caster;
+			}
+		}
+		else
+		{
+			target.WorldSpaceCenter(myPos);
+			target.GetAbsAngles(myAng);
+			castTo = target;
+		}
+
+		int attachment = 0;
+		char name[128], attachmentName[64];
+		this.GetAttachment(attachmentName, sizeof(attachmentName));
+		this.GetName(name, sizeof(name));
+		if (attachmentName[0] != '\0')
+		{
+			attachment = castTo.LookupAttachment(attachmentName);
+		}
+		if (attachment != 0)
+		{
+			castTo.GetAttachment(attachment, myPos, myAng);
+		}
+
+		if (this.Type == PATTACH_ROOTBONE_FOLLOW)
+		{
+			myPos = NULL_VECTOR;
+			myAng = NULL_VECTOR;
+		}
+
+		if (this.BeamParticles)
+		{
+			DispatchParticleEffectBeam(castTo.index, name, myPos, myAng, targetPos, attachment, this.Type, true);
+		}
+		else
+		{
+			if (!DispatchParticleEffect(castTo.index, name, myPos, myAng, myPos, attachment, this.Type, true))
+			{
+				if (this.Type == PATTACH_ROOTBONE_FOLLOW)
+				{
+					castTo.WorldSpaceCenter(myPos);
+					castTo.GetAbsAngles(myAng);
+				}
+				CBaseEntity particleEnt = CBaseEntity(CreateEntityByName("info_particle_system"));
+				if (particleEnt.IsValid())
+				{
+					particleEnt.Teleport(myPos, myAng, NULL_VECTOR);
+
+					particleEnt.KeyValue("effect_name", name);
+					particleEnt.Spawn();
+					particleEnt.Activate();
+					particleEnt.AcceptInput("start");
+					RemoveEntity(particleEnt.index);
+				}
+			}
+		}
+	}
+}
+
+methodmap BossProfileTeleportVanishingData < ProfileObject
+{
+	public bool ShouldUpdateDespawnTimeOnStateChange(int difficulty)
+	{
+		return this.GetDifficultyBool("refresh_despawn_time_state_change", difficulty);
+	}
+
+	public float GetMinDefaultDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("despawn_time_min", difficulty, 6.0);
+	}
+
+	public float GetMaxDefaultDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("despawn_time_max", difficulty, 8.0);
+	}
+
+	public float GetMinIdleDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("idle_despawn_time_min", difficulty, 3.0);
+	}
+
+	public float GetMaxIdleDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("idle_despawn_time_max", difficulty, 6.0);
+	}
+
+	public float GetMinAlertDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("alert_despawn_time_min", difficulty, -1.0);
+	}
+
+	public float GetMaxAlertDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("alert_despawn_time_max", difficulty, -1.0);
+	}
+
+	public float GetMinChaseDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("chase_despawn_time_min", difficulty, 6.0);
+	}
+
+	public float GetMaxChaseDespawnTime(int difficulty)
+	{
+		return this.GetDifficultyFloat("chase_despawn_time_max", difficulty, 8.0);
+	}
+
+	public float GetAddTimeOnAttack(int difficulty)
+	{
+		float def = 0.0;
+		ProfileObject obj = this.GetSection("add");
+		if (obj != null)
+		{
+			return obj.GetDifficultyFloat("on_attack", difficulty, def);
+		}
+		return def;
+	}
+
+	public float GetAddTimeOnStun(int difficulty)
+	{
+		float def = 0.0;
+		ProfileObject obj = this.GetSection("add");
+		if (obj != null)
+		{
+			return obj.GetDifficultyFloat("on_stun", difficulty, def);
+		}
+		return def;
+	}
+
+	public bool ShouldPauseDespawnTimeOnAttack(int difficulty)
+	{
+		bool def = false;
+		ProfileObject obj = this.GetSection("pause");
+		if (obj != null)
+		{
+			return obj.GetDifficultyBool("on_attack", difficulty, def);
+		}
+		return def;
+	}
+
+	public bool ShouldPauseDespawnTimeOnStun(int difficulty)
+	{
+		bool def = false;
+		ProfileObject obj = this.GetSection("pause");
+		if (obj != null)
+		{
+			return obj.GetDifficultyBool("on_stun", difficulty, def);
+		}
+		return def;
+	}
+}
 
 /**
  *	Loads a profile in the current KeyValues position in kv.
@@ -169,7 +533,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	}
 
 	profileData.TeleportType = kv.GetNum("teleport_type", profileData.TeleportType);
-	if (profileData.TeleportType < 0)
+	if (profileData.TeleportType < 0 || profileData.TeleportType > SF2BossTeleportType_Default)
 	{
 		FormatEx(loadFailReasonBuffer, loadFailReasonBufferLen, "unknown teleport type!");
 		return false;
@@ -324,38 +688,97 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	profileData.BlinkLookRate = kv.GetFloat("blink_look_rate_multiply", profileData.BlinkLookRate);
 	profileData.BlinkStaticRate = kv.GetFloat("blink_static_rate_multiply", profileData.BlinkStaticRate);
 
-	profileData.DeathCam = kv.GetNum("death_cam", profileData.DeathCam) != 0;
-	if (profileData.DeathCam)
+	if (kv.GetNum("death_cam", profileData.DeathCamData.IsEnabled) != 0)
 	{
-		profileData.DeathCamScareSound = kv.GetNum("death_cam_play_scare_sound", profileData.DeathCamScareSound) != 0;
-		profileData.PublicDeathCam = kv.GetNum("death_cam_public", profileData.PublicDeathCam) != 0;
-		if (profileData.PublicDeathCam)
+		profileData.DeathCamData.IsEnabled = true;
+		profileData.DeathCamData.PlayScareSound = kv.GetNum("death_cam_play_scare_sound", profileData.DeathCamData.PlayScareSound) != 0;
+		profileData.DeathCamData.PublicDeathCam = kv.GetNum("death_cam_public", profileData.DeathCamData.PublicDeathCam) != 0;
+		if (profileData.DeathCamData.PublicDeathCam)
 		{
-			profileData.PublicDeathCamSpeed = kv.GetFloat("death_cam_speed", profileData.PublicDeathCamSpeed);
-			profileData.PublicDeathCamAcceleration = kv.GetFloat("death_cam_acceleration", profileData.PublicDeathCamAcceleration);
-			profileData.PublicDeathCamDeceleration = kv.GetFloat("death_cam_deceleration", profileData.PublicDeathCamDeceleration);
-			profileData.PublicDeathCamBackwardOffset = kv.GetFloat("deathcam_death_backward_offset", profileData.PublicDeathCamBackwardOffset);
-			profileData.PublicDeathCamDownwardOffset = kv.GetFloat("deathcam_death_downward_offset", profileData.PublicDeathCamDownwardOffset);
+			profileData.DeathCamData.Speed = kv.GetFloat("death_cam_speed", profileData.DeathCamData.Speed);
+			profileData.DeathCamData.Acceleration = kv.GetFloat("death_cam_acceleration", profileData.DeathCamData.Acceleration);
+			profileData.DeathCamData.Deceleration = kv.GetFloat("death_cam_deceleration", profileData.DeathCamData.Deceleration);
+			profileData.DeathCamData.BackwardOffset = kv.GetFloat("deathcam_death_backward_offset", profileData.DeathCamData.BackwardOffset);
+			profileData.DeathCamData.DownwardOffset = kv.GetFloat("deathcam_death_downward_offset", profileData.DeathCamData.DownwardOffset);
 		}
-		profileData.DeathCamOverlay = kv.GetNum("death_cam_overlay", profileData.DeathCamOverlay) != 0;
-		profileData.DeathCamOverlayStartTime = kv.GetFloat("death_cam_time_overlay_start", profileData.DeathCamOverlayStartTime);
-		if (profileData.DeathCamOverlayStartTime < 0.0)
+
+		profileData.DeathCamData.LegacyOverlayStartTime = kv.GetFloat("death_cam_time_overlay_start", profileData.DeathCamData.LegacyOverlayStartTime);
+		if (profileData.DeathCamData.LegacyOverlayStartTime < 0.0)
 		{
-			profileData.DeathCamOverlayStartTime = 0.0;
+			profileData.DeathCamData.LegacyOverlayStartTime = 0.0;
 		}
-		profileData.DeathCamTime = kv.GetFloat("death_cam_time_death", profileData.DeathCamTime);
-		if (profileData.DeathCamTime < 0.0)
+		profileData.DeathCamData.LegacyDuration = kv.GetFloat("death_cam_time_death", profileData.DeathCamData.LegacyDuration);
+		if (profileData.DeathCamData.LegacyDuration < 0.0)
 		{
-			profileData.DeathCamTime = 0.0;
+			profileData.DeathCamData.LegacyDuration = 0.0;
 		}
-		kv.GetVector("death_cam_pos", profileData.DeathCamPos, profileData.DeathCamPos);
-		kv.GetString("death_cam_attachtment_target_point", profileData.PublicDeathCamAttachmentTarget, sizeof(profileData.PublicDeathCamAttachmentTarget), profileData.PublicDeathCamAttachmentTarget);
-		kv.GetString("death_cam_attachtment_point", profileData.PublicDeathCamAttachment, sizeof(profileData.PublicDeathCamAttachment), profileData.PublicDeathCamAttachment);
+		kv.GetVector("death_cam_pos", profileData.DeathCamData.LookPosition, profileData.DeathCamData.LookPosition);
+		kv.GetString("death_cam_attachtment_target_point", profileData.DeathCamData.TargetAttachment, sizeof(profileData.DeathCamData.TargetAttachment), profileData.DeathCamData.TargetAttachment);
+		kv.GetString("death_cam_attachtment_point", profileData.DeathCamData.Attachment, sizeof(profileData.DeathCamData.Attachment), profileData.DeathCamData.Attachment);
+
+		if (kv.JumpToKey("public_death_cam"))
+		{
+			profileData.DeathCamData.Blackout = kv.GetNum("blackout", profileData.DeathCamData.Blackout) != 0;
+			if (kv.JumpToKey("sounds"))
+			{
+				if (kv.JumpToKey("execution"))
+				{
+					profileData.DeathCamData.ExecutionSounds.Load(kv, g_FileCheckConVar.BoolValue);
+					kv.GoBack();
+				}
+				kv.GoBack();
+			}
+			kv.GetString("attachment", profileData.DeathCamData.Attachment, sizeof(profileData.DeathCamData.Attachment), profileData.DeathCamData.Attachment);
+			kv.GetString("target_attachment", profileData.DeathCamData.TargetAttachment, sizeof(profileData.DeathCamData.TargetAttachment), profileData.DeathCamData.TargetAttachment);
+			if (kv.JumpToKey("offset"))
+			{
+				profileData.DeathCamData.DownwardOffset = kv.GetFloat("downward", profileData.DeathCamData.DownwardOffset);
+				profileData.DeathCamData.BackwardOffset = kv.GetFloat("backward", profileData.DeathCamData.BackwardOffset);
+				kv.GoBack();
+			}
+			kv.GoBack();
+		}
+
+		if (kv.JumpToKey("overlay_player_death"))
+		{
+			char overlay[PLATFORM_MAX_PATH], num[32];
+			profileData.DeathCamData.Overlays = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+			for (int i = 1;; i++)
+			{
+				FormatEx(num, sizeof(num), "%d", i);
+				kv.GetString(num, overlay, sizeof(overlay));
+				if (overlay[0] == '\0')
+				{
+					break;
+				}
+				profileData.DeathCamData.Overlays.PushString(overlay);
+			}
+			kv.GoBack();
+		}
+	}
+	else
+	{
+		if (kv.JumpToKey("death_cam"))
+		{
+			profileData.DeathCamData.Load(kv, g_FileCheckConVar.BoolValue);
+			kv.GoBack();
+		}
 	}
 
-	if (kv.JumpToKey("public_death_cam"))
+	if (kv.JumpToKey("overlay_jumpscare"))
 	{
-		profileData.DeathCamData.Load(kv, g_FileCheckConVar.BoolValue);
+		char overlay[PLATFORM_MAX_PATH], num[32];
+		profileData.OverlayJumpscares = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+		for (int i = 1;; i++)
+		{
+			FormatEx(num, sizeof(num), "%d", i);
+			kv.GetString(num, overlay, sizeof(overlay));
+			if (overlay[0] == '\0')
+			{
+				break;
+			}
+			profileData.OverlayJumpscares.PushString(overlay);
+		}
 		kv.GoBack();
 	}
 
@@ -859,10 +1282,6 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			}
 		}
 	}
-	// Add the section to our config.
-	g_Config.Rewind();
-	g_Config.JumpToKey(profile, true);
-	g_Config.Import(kv);
 
 	kv.GetString("constant_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
 	kv.GetString("engine_sound", profileData.EngineSound, sizeof(profileData.EngineSound), profileData.EngineSound);
@@ -1101,17 +1520,7 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 					TryPrecacheBossProfileSoundPath(s4, g_FileCheckConVar.BoolValue);
 
 					// Here comes an if else mess, I'm very sorry
-					if (strcmp(s2, "sound_jumpscare") == 0)
-					{
-						profileData.JumpscareSound = s4;
-						break;
-					}
-					else if (strcmp(s2, "sound_static") == 0)
-					{
-						profileData.StaticSound = s4;
-						break;
-					}
-					else if (strcmp(s2, "sound_static_loop_local") == 0)
+					if (strcmp(s2, "sound_static_loop_local") == 0)
 					{
 						profileData.StaticLocalSound = s4;
 						break;
@@ -1235,13 +1644,31 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			}
 			else if (strcmp(s2, "overlay_player_death") == 0)
 			{
-				kv.GetString("1", s4, sizeof(s4));
-				profileData.OverlayPlayerDeath = s4;
+				for (int i = 1;; i++)
+				{
+					FormatEx(s3, sizeof(s3), "%d", i);
+					kv.GetString(s3, s4, sizeof(s4));
+					if (s4[0] == '\0')
+					{
+						break;
+					}
+
+					PrecacheMaterial2(s4, g_FileCheckConVar.BoolValue);
+				}
 			}
 			else if (strcmp(s2, "overlay_jumpscare") == 0)
 			{
-				kv.GetString("1", s4, sizeof(s4));
-				profileData.OverlayJumpscare = s4;
+				for (int i = 1;; i++)
+				{
+					FormatEx(s3, sizeof(s3), "%d", i);
+					kv.GetString(s3, s4, sizeof(s4));
+					if (s4[0] == '\0')
+					{
+						break;
+					}
+
+					PrecacheMaterial2(s4, g_FileCheckConVar.BoolValue);
+				}
 			}
 			if (StrContains(s2, "sound_footsteps_event_") != -1)
 			{
@@ -1564,12 +1991,6 @@ bool GetBossProfileIgnoreNavPrefer(const char[] profile)
 	return g_CachedProfileData.IgnoreNavPrefer;
 }
 
-float GetBossProfileSoundMusicLoop(const char[] profile, int difficulty)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.SoundMusicLoop[difficulty];
-}
-
 int GetBossProfileMaxCopies(const char[] profile, int difficulty)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -1730,72 +2151,6 @@ float GetBossProfileBlinkStaticRate(const char[] profile)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return g_CachedProfileData.BlinkStaticRate;
-}
-
-bool GetBossProfileDeathCamState(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DeathCam;
-}
-
-bool GetBossProfileDeathCamScareSound(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DeathCamScareSound;
-}
-
-bool GetBossProfilePublicDeathCamState(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.PublicDeathCam;
-}
-
-float GetBossProfilePublicDeathCamSpeed(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.PublicDeathCamSpeed;
-}
-
-float GetBossProfilePublicDeathCamAcceleration(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.PublicDeathCamAcceleration;
-}
-
-float GetBossProfilePublicDeathCamDeceleration(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.PublicDeathCamDeceleration;
-}
-
-float GetBossProfilePublicDeathCamBackwardOffset(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.PublicDeathCamBackwardOffset;
-}
-
-float GetBossProfilePublicDeathCamDownwardOffset(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.PublicDeathCamDownwardOffset;
-}
-
-bool GetBossProfileDeathCamOverlayState(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DeathCamOverlay;
-}
-
-float GetBossProfileDeathCamOverlayStartTime(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DeathCamOverlayStartTime;
-}
-
-float GetBossProfileDeathCamTime(const char[] profile)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return g_CachedProfileData.DeathCamTime;
 }
 
 float GetBossProfileIdleLifetime(const char[] profile, int difficulty)
@@ -2291,34 +2646,6 @@ int GetBossProfileChatDeathMessagePrefix(const char[] profile, char[] buffer, in
 	return strcopy(buffer, bufferlen, g_CachedProfileData.DeathMessagePrefix);
 }
 
-void GetBossProfileMusicSounds(const char[] profile, SF2BossProfileSoundInfo params, int difficulty)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	switch (difficulty)
-	{
-		case Difficulty_Normal:
-		{
-			params = g_CachedProfileData.MusicSoundsNormal;
-		}
-		case Difficulty_Hard:
-		{
-			params = g_CachedProfileData.MusicSoundsHard;
-		}
-		case Difficulty_Insane:
-		{
-			params = g_CachedProfileData.MusicSoundsInsane;
-		}
-		case Difficulty_Nightmare:
-		{
-			params = g_CachedProfileData.MusicSoundsNightmare;
-		}
-		case Difficulty_Apollyon:
-		{
-			params = g_CachedProfileData.MusicSoundsApollyon;
-		}
-	}
-}
-
 void GetBossProfileScareSounds(const char[] profile, SF2BossProfileSoundInfo params)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -2403,12 +2730,6 @@ void GetBossProfileAttributesInfo(const char[] profile, SF2BossProfileAttributes
 	params = g_CachedProfileData.AttributesInfo;
 }
 
-int GetBossProfileJumpscareSound(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.JumpscareSound);
-}
-
 int GetBossProfileStaticSound(const char[] profile, char[] buffer, int bufferlen)
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
@@ -2425,18 +2746,6 @@ int GetBossProfileStaticShakeSound(const char[] profile, char[] buffer, int buff
 {
 	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
 	return strcopy(buffer, bufferlen, g_CachedProfileData.StaticShakeLocal);
-}
-
-int GetBossProfileOverlayJumpscare(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.OverlayJumpscare);
-}
-
-int GetBossProfileOverlayPlayerDeath(const char[] profile, char[] buffer, int bufferlen)
-{
-	g_BossProfileData.GetArray(profile, g_CachedProfileData, sizeof(g_CachedProfileData));
-	return strcopy(buffer, bufferlen, g_CachedProfileData.OverlayPlayerDeath);
 }
 
 ArrayList GetBossProfileCompanions(const char[] profile)

@@ -4,6 +4,7 @@
 #define _sf2_client_classconfigs_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 float g_ClassRunSpeed[MAX_CLASSES + 1];
 float g_ClassWalkSpeed[MAX_CLASSES + 1];
@@ -42,6 +43,8 @@ float g_ClassFlashlightSoundRadius[MAX_CLASSES + 1];
 bool g_ClassBlockedOnThanatophobia[MAX_CLASSES + 1];
 
 bool g_ClassInvulnerableToTraps[MAX_CLASSES + 1];
+
+float g_ClassMedicAddedHealthRegen[MAX_CLASSES + 1];
 
 void ReloadClassConfigs()
 {
@@ -95,7 +98,7 @@ static float GetClassStatFloat(const char[] class, const char[] keyValue, float 
     return g_ClassStatsConfig.GetFloat(keyValue, defaultValue);
 }
 
-static bool GetClassProfileName(TFClassType class, char[] buffer,int bufferLen)
+static bool GetClassProfileName(TFClassType class, char[] buffer, int bufferLen)
 {
 	if (!IsClassConfigsValid())
 	{
@@ -274,5 +277,7 @@ static void PrecacheClassProfiles()
 		g_ClassBlockedOnThanatophobia[i] = GetClassStatNum(className, "blocked_on_thanatophobia") != 0;
 
 		g_ClassInvulnerableToTraps[i] = GetClassStatNum(className, "immune_to_traps") != 0;
+
+		g_ClassMedicAddedHealthRegen[i] = GetClassStatFloat(className, "medic_add_health_regen");
 	}
 }

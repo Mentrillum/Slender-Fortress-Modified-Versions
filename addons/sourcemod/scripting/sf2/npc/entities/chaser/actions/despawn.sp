@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -12,6 +13,7 @@ methodmap SF2_ChaserDespawnAction < NextBotAction
 			g_Factory.SetCallback(NextBotActionCallbackType_OnStart, OnStart);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnResume, OnResume);
 			g_Factory.SetCallback(NextBotActionCallbackType_OnEnd, OnEnd);
+			g_Factory.SetEventCallback(EventResponderType_OnAnimationEvent, OnAnimationEvent);
 		}
 		return view_as<SF2_ChaserDespawnAction>(g_Factory.Create());
 	}
@@ -41,4 +43,15 @@ static int OnResume(SF2_ChaserDespawnAction action, SF2_ChaserEntity actor, Next
 static void OnEnd(SF2_ChaserSpawnAction action, SF2_ChaserEntity actor)
 {
 	RemoveEntity(actor.index);
+}
+
+static void OnAnimationEvent(SF2_ChaserDeathAction action, SF2_ChaserEntity actor, int event)
+{
+	if (event == 0)
+	{
+		return;
+	}
+
+	actor.CastAnimEvent(event);
+	actor.CastAnimEvent(event, true);
 }

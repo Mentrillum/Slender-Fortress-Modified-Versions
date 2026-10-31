@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 // Player static data.
 int g_PlayerStaticMode[MAXTF2PLAYERS][MAX_BOSSES];

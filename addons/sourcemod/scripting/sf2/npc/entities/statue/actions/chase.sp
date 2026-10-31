@@ -155,7 +155,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 	if (actor.IsMoving)
 	{
-		g_SlenderStatueIdleLifeTime[controller.Index] = gameTime + data.IdleLifeTime[difficulty];
+		g_SlenderTimeUntilKill[controller.Index] = gameTime + data.IdleLifeTime[difficulty];
 
 		if (bot.GetRangeSquaredTo(target.index) <= Pow(originalData.InstantKillRadius, 2.0) && visible)
 		{
@@ -171,6 +171,10 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 			}
 		}
 	}
+
+	#if defined DEBUG
+	SendDebugMessageToPlayer(target.index, DEBUG_BOSS_CHASE, 1, "actor[%i].CurrentChaseDuration: %f", actor.index, actor.CurrentChaseDuration);
+	#endif
 	return action.Continue();
 }
 

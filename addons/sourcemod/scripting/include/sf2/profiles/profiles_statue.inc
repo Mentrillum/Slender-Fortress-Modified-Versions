@@ -23,6 +23,8 @@ enum struct SF2StatueBossProfileData
 		this.MoveSounds.Init();
 		this.MoveSounds.Flags = SND_CHANGEVOL;
 		this.SingleMoveSounds.Init();
+		this.SingleMoveSounds.CooldownMin = 0.125;
+		this.SingleMoveSounds.CooldownMax = 0.125;
 		for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 		{
 			this.ChaseDuration[difficulty] = 5.0;

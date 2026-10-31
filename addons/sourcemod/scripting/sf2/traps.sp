@@ -4,6 +4,7 @@
 #define _sf2_traps_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static float g_TrapDespawnTimer[2049];
 static bool g_TrapClosed[2049];

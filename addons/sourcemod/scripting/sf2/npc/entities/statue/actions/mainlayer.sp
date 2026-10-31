@@ -81,16 +81,22 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 	float myPos[3];
 	actor.GetAbsOrigin(myPos);
 	int difficulty = controller.Difficulty;
+	float gameTime = GetGameTime();
 
-	if (actor.LastKillTime > GetGameTime())
+	if (actor.LastKillTime > gameTime)
 	{
 		actor.IsMoving = false;
 	}
 
 	if (actor.IsMoving)
 	{
-		soundInfo = data.SingleMoveSounds;
-		soundInfo.EmitSound(_, actor.index);
+		if (actor.NextMoveTime <= gameTime)
+		{
+			soundInfo = data.SingleMoveSounds;
+			soundInfo.EmitSound(_, actor.index);
+			actor.NextMoveTime = gameTime + GetRandomFloat(soundInfo.CooldownMin, soundInfo.CooldownMax);
+		}
+
 		soundInfo = data.MoveSounds;
 		soundInfo.EmitSound(_, actor.index);
 

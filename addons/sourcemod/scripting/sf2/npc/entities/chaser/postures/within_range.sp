@@ -1,76 +1,56 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 void InitializePostureWithinRange()
 {
 	g_OnChaserUpdatePosturePFwd.AddFunction(null, OnChaserUpdatePosture);
 }
 
-static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int bufferSize)
+static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int bufferSize, SF2ChaserBossProfilePostureInfo posture)
 {
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	StringMap postures = data.Postures;
-	if (postures == null)
+	float gameTime = GetGameTime();
+	int difficulty = controller.Difficulty;
+
+	SF2PostureConditionWithinRangeInfo rangeInfo;
+	rangeInfo = posture.RangeInfo;
+	if (!rangeInfo.Enabled[difficulty])
 	{
 		return Plugin_Continue;
 	}
 
-	float gameTime = GetGameTime();
-
-	SF2ChaserBossProfilePostureInfo postureInfo;
-	StringMapSnapshot snapshot = postures.Snapshot();
-	for (int i = 0; i < snapshot.Length; i++)
+	if (rangeInfo.CurrentCooldown > gameTime)
 	{
-		if (!data.GetPostureFromIndex(i, postureInfo))
-		{
-			continue;
-		}
-
-		int difficulty = controller.Difficulty;
-
-		SF2PostureConditionWithinRangeInfo rangeInfo;
-		rangeInfo = postureInfo.RangeInfo;
-		if (!rangeInfo.Enabled[difficulty])
-		{
-			continue;
-		}
-
-		if (rangeInfo.CurrentCooldown > gameTime)
-		{
-			continue;
-		}
-
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
-		if (!chaser.IsValid() || chaser.State != STATE_CHASE)
-		{
-			continue;
-		}
-
-		if (chaser.MyNextBotPointer().GetLocomotionInterface().GetGroundSpeed() < 0.01)
-		{
-			continue;
-		}
-
-		CBaseEntity target = chaser.Target;
-		if (!target.IsValid())
-		{
-			continue;
-		}
-
-		float range = controller.Path.GetLength() - controller.Path.GetCursorPosition();
-
-		if (range > rangeInfo.MinRange[difficulty] && range < rangeInfo.MaxRange[difficulty])
-		{
-			strcopy(buffer, bufferSize, postureInfo.Name);
-			delete snapshot;
-			return Plugin_Changed;
-		}
-		else
-		{
-			rangeInfo.CurrentCooldown = gameTime + rangeInfo.Cooldown[difficulty];
-		}
+		return Plugin_Continue;
 	}
 
-	delete snapshot;
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (!chaser.IsValid() || chaser.State != STATE_CHASE)
+	{
+		return Plugin_Continue;
+	}
+
+	if (chaser.MyNextBotPointer().GetLocomotionInterface().GetGroundSpeed() < 0.01)
+	{
+		return Plugin_Continue;
+	}
+
+	CBaseEntity target = chaser.Target;
+	if (!target.IsValid())
+	{
+		return Plugin_Continue;
+	}
+
+	float range = controller.Path.GetLength() - controller.Path.GetCursorPosition();
+
+	if (range > rangeInfo.MinRange[difficulty] && range < rangeInfo.MaxRange[difficulty])
+	{
+		strcopy(buffer, bufferSize, posture.Name);
+		return Plugin_Changed;
+	}
+	else
+	{
+		rangeInfo.CurrentCooldown = gameTime + rangeInfo.Cooldown[difficulty];
+	}
+
 	return Plugin_Continue;
 }

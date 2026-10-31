@@ -239,7 +239,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 				}
 			}
 
-			g_SlenderStatueIdleLifeTime[bossIndex] = gameTime + controller.GetIdleLifetime(difficulty);
+			g_SlenderTimeUntilKill[bossIndex] = gameTime + controller.GetIdleLifetime(difficulty);
 		}
 		else
 		{

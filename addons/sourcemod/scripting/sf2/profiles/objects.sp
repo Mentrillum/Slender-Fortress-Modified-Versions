@@ -281,15 +281,15 @@ methodmap ProfileObject < KeyMap
 		this.Super.SetBool(key, value);
 	}
 
-	public void GetString(const char[] key, char[] buffer, int bufferSize, const char[] def = "")
+	public bool GetString(const char[] key, char[] buffer, int bufferSize, const char[] def = "")
 	{
 		if (this == null)
 		{
 			strcopy(buffer, bufferSize, def);
-			return;
+			return false;
 		}
 
-		this.Super.GetString(key, buffer, bufferSize, def);
+		return this.Super.GetString(key, buffer, bufferSize, def);
 	}
 
 	public bool SetString(const char[] key, const char[] value, bool check = false)
@@ -429,6 +429,70 @@ methodmap ProfileObject < KeyMap
 	}
 
 	public void SetDifficultySection(const char[] key, int difficulty, ProfileObject value)
+	{
+		if (difficulty < Difficulty_Easy || difficulty >= Difficulty_Max)
+		{
+			return;
+		}
+
+		int diffKeySize = strlen(key) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(key, difficulty, diffKey, diffKeySize);
+		this.SetSection(diffKey, value);
+	}
+
+	public KeyMap_Array GetDifficultyArray(const char[] key, int difficulty, KeyMap_Array def = null)
+	{
+		if (this == null)
+		{
+			return def;
+		}
+		KeyMap_Array value = def;
+
+		if (this.ContainsKey(key))
+		{
+			value = this.GetArray(key, def);
+		}
+
+		int diffKeySize = strlen(key) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(key, difficulty, diffKey, diffKeySize);
+		if (this.ContainsKey(diffKey))
+		{
+			value = this.GetArray(diffKey, def);
+		}
+		else
+		{
+			if (difficulty > 0)
+			{
+				for (int i2 = difficulty; i2 >= 0; i2--)
+				{
+					GetProfileKeyWithDifficultySuffix(key, i2, diffKey, diffKeySize);
+					if (this.ContainsKey(diffKey))
+					{
+						value = this.GetArray(diffKey, def);
+						return value;
+					}
+				}
+			}
+			else
+			{
+				for (int i2 = 0; i2 < difficulty; i2++)
+				{
+					GetProfileKeyWithDifficultySuffix(key, i2, diffKey, diffKeySize);
+					if (this.ContainsKey(diffKey))
+					{
+						value = this.GetArray(diffKey, def);
+						return value;
+					}
+				}
+			}
+		}
+
+		return value;
+	}
+
+	public void SetDifficultyArray(const char[] key, int difficulty, KeyMap_Array value)
 	{
 		if (difficulty < Difficulty_Easy || difficulty >= Difficulty_Max)
 		{
@@ -823,6 +887,15 @@ methodmap ProfileObject < KeyMap
 		return newObj;
 	}
 
+	public ProfileObject InsertDifficultySection(const char[] name, int difficulty)
+	{
+		int diffKeySize = strlen(name) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(name, difficulty, diffKey, diffKeySize);
+
+		return this.InsertNewSection(diffKey);
+	}
+
 	public void AddExistingSection(ProfileObject newObj)
 	{
 		if (newObj == null)
@@ -866,16 +939,39 @@ methodmap ProfileObject < KeyMap
 		}
 		target.SetKeyValue(newDiffKey, keyValue);
 	}
+
+	public void ConvertValuesSectionToDifficultyArrays(const char[] name, int difficulty)
+	{
+		if (difficulty < Difficulty_Easy || difficulty >= Difficulty_Max)
+		{
+			return;
+		}
+
+		int diffKeySize = strlen(name) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(name, difficulty, diffKey, diffKeySize);
+		this.ConvertValuesSectionToArray(diffKey);
+	}
+
+	public void ConvertSectionsSectionToDifficultyArrays(const char[] name, int difficulty)
+	{
+		if (difficulty < Difficulty_Easy || difficulty >= Difficulty_Max)
+		{
+			return;
+		}
+
+		int diffKeySize = strlen(name) + GetMaxProfileDifficultySuffixSize();
+		char[] diffKey = new char[diffKeySize];
+		GetProfileKeyWithDifficultySuffix(name, difficulty, diffKey, diffKeySize);
+		this.ConvertSectionsSectionToArray(diffKey);
+	}
 }
 
 methodmap ProfileSound < ProfileObject
 {
-	property KeyMap_Array Paths
+	public KeyMap_Array GetPaths(int difficulty = Difficulty_Normal)
 	{
-		public get()
-		{
-			return this.GetArray("paths");
-		}
+		return this.GetDifficultyArray("paths", difficulty);
 	}
 
 	public int GetChannel(int difficulty = Difficulty_Normal)
@@ -974,19 +1070,19 @@ methodmap ProfileSound < ProfileObject
 
 		KeyMap_Array paths = new KeyMap_Array(Key_Type_Value);
 		char path[PLATFORM_MAX_PATH];
-		for (int i2 = 1;; i2++)
+		for (int i2 = 0; i2 < obj.KeyLength; i2++)
 		{
-			char num[16];
-			IntToString(i2, num, sizeof(num));
-			obj.GetString(num, path, sizeof(path));
+			char key[64];
+			obj.GetKeyNameFromIndex(i2, key, sizeof(key));
+			obj.GetString(key, path, sizeof(path));
 			if (path[0] == '\0')
 			{
-				break;
+				continue;
 			}
 
 			TryPrecacheBossProfileSoundPath(path, g_FileCheckConVar.BoolValue);
 			paths.PushString(path);
-			obj.RemoveKey(num);
+			obj.RemoveKey(key);
 		}
 		if (doDelete)
 		{
@@ -1002,6 +1098,24 @@ methodmap ProfileSound < ProfileObject
 		this.GetSectionName(section, sizeof(section));
 		for (int i = 0; i < Difficulty_Max; i++)
 		{
+			if (i != Difficulty_Normal)
+			{
+				this.ConvertValuesSectionToDifficultyArrays("paths", i);
+				KeyMap_Array arr = this.GetPaths(i);
+				if (arr != null)
+				{
+					for (int i2 = 0; i2 < arr.Length; i2++)
+					{
+						arr.GetString(i2, path, sizeof(path));
+						if (path[0] == '\0')
+						{
+							continue;
+						}
+
+						TryPrecacheBossProfileSoundPath(path, g_FileCheckConVar.BoolValue);
+					}
+				}
+			}
 			FormatEx(formatter, sizeof(formatter), "%s_channel", section);
 			if (parent.ContainsDifficultyKey(formatter, i))
 			{
@@ -1060,7 +1174,7 @@ methodmap ProfileSound < ProfileObject
 			return;
 		}
 
-		KeyMap_Array paths = this.Paths;
+		KeyMap_Array paths = this.GetPaths(difficulty);
 		if (paths == null)
 		{
 			return;
@@ -1091,7 +1205,7 @@ methodmap ProfileSound < ProfileObject
 			return false;
 		}
 
-		KeyMap_Array paths = this.Paths;
+		KeyMap_Array paths = this.GetPaths(difficulty);
 		if (paths == null)
 		{
 			return false;
@@ -1506,6 +1620,7 @@ methodmap ProfileMasterAnimations < ProfileObject // This covers the whole "anim
 	}
 }
 
+//#define I_MUST_REWRITE_THIS_AGABUSINESS
 methodmap ProfileEntityInputObject < ProfileObject
 {
 	public void GetInput(char[] buffer, int bufferSize)
@@ -1728,14 +1843,14 @@ int BoolToString(bool value, char[] buffer, int bufferSize)
 	return FormatEx(buffer, bufferSize, "%b", value);
 }
 
-void RunScriptCode(int entity, int activator, int caller, const char[] format, any ...)
+void RunScriptCode(int entity, int activator = -1, int caller = -1, const char[] format, any ...)
 {
 	if (!IsValidEntity(entity))
 	{
 		return;
 	}
 
-	static char buffer[1024];
+	static char buffer[4096];
 	VFormat(buffer, sizeof(buffer), format, 5);
 
 	SetVariantString(buffer);
@@ -1768,6 +1883,7 @@ void SetupProfileObjectNatives()
 	CreateNative("SF2_ProfileObject.GetDifficultyFloat", Native_GetObjectDifficultyFloat);
 	CreateNative("SF2_ProfileObject.SetDifficultyFloat", Native_SetObjectDifficultyFloat);
 	CreateNative("SF2_ProfileObject.GetDifficultySection", Native_GetObjectDifficultySection);
+	CreateNative("SF2_ProfileObject.GetDifficultyArray", Native_GetObjectDifficultyArray);
 	CreateNative("SF2_ProfileObject.GetDifficultyString", Native_GetObjectDifficultyString);
 	CreateNative("SF2_ProfileObject.SetDifficultyString", Native_SetObjectDifficultyString);
 	CreateNative("SF2_ProfileObject.GetDifficultyVector", Native_GetObjectDifficultyVector);
@@ -1776,6 +1892,8 @@ void SetupProfileObjectNatives()
 	CreateNative("SF2_ProfileObject.SetDifficultyColor", Native_SetObjectDifficultyColor);
 	CreateNative("SF2_ProfileObject.ConvertValuesSectionToArray", Native_ConvertValuesSectionToArray);
 	CreateNative("SF2_ProfileObject.ConvertSectionsSectionToArray", Native_ConvertSectionsSectionToArray);
+	CreateNative("SF2_ProfileObject.ConvertValuesSectionToDifficultyArrays", Native_ConvertValuesSectionToDifficultyArrays);
+	CreateNative("SF2_ProfileObject.ConvertSectionsSectionToDifficultyArrays", Native_ConvertSectionsSectionToDifficultyArrays);
 
 	CreateNative("SF2_ProfileArray.Length.get", Native_GetArrayLength);
 	CreateNative("SF2_ProfileArray.GetInt", Native_GetArrayInt);
@@ -1785,6 +1903,7 @@ void SetupProfileObjectNatives()
 	CreateNative("SF2_ProfileArray.GetString", Native_GetArrayString);
 
 	CreateNative("SF2_ProfileSound.Paths.get", Native_GetSoundPaths);
+	CreateNative("SF2_ProfileSound.GetPaths", Native_GetSoundPathsDifficulty);
 	CreateNative("SF2_ProfileSound.SetDefaultChannel", Native_SetSoundDefaultChannel);
 	CreateNative("SF2_ProfileSound.SetDefaultLevel", Native_SetSoundDefaultLevel);
 	CreateNative("SF2_ProfileSound.SetDefaultFlags", Native_SetSoundDefaultFlags);
@@ -2294,6 +2413,26 @@ static any Native_GetObjectDifficultySection(Handle plugin, int numParams)
 	return obj.GetDifficultySection(key, difficulty, def);
 }
 
+static any Native_GetObjectDifficultyArray(Handle plugin, int numParams)
+{
+	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	int keySize;
+	GetNativeStringLength(2, keySize);
+	keySize++;
+	char[] key = new char[keySize];
+	GetNativeString(2, key, keySize);
+
+	int difficulty = GetNativeCell(3);
+	KeyMap_Array def = GetNativeCell(4);
+
+	return obj.GetDifficultyArray(key, difficulty, def);
+}
+
 static any Native_GetObjectDifficultyString(Handle plugin, int numParams)
 {
 	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
@@ -2484,6 +2623,42 @@ static any Native_ConvertSectionsSectionToArray(Handle plugin, int numParams)
 	return 0;
 }
 
+static any Native_ConvertValuesSectionToDifficultyArrays(Handle plugin, int numParams)
+{
+	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	int keySize;
+	GetNativeStringLength(2, keySize);
+	keySize++;
+	char[] key = new char[keySize];
+	GetNativeString(2, key, keySize);
+
+	obj.ConvertValuesSectionToDifficultyArrays(key, GetNativeCell(3));
+	return 0;
+}
+
+static any Native_ConvertSectionsSectionToDifficultyArrays(Handle plugin, int numParams)
+{
+	ProfileObject obj = view_as<ProfileObject>(GetNativeCell(1));
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	int keySize;
+	GetNativeStringLength(2, keySize);
+	keySize++;
+	char[] key = new char[keySize];
+	GetNativeString(2, key, keySize);
+
+	obj.ConvertSectionsSectionToDifficultyArrays(key, GetNativeCell(3));
+	return 0;
+}
+
 static any Native_GetArrayLength(Handle plugin, int numParams)
 {
 	KeyMap_Array obj = GetNativeCell(1);
@@ -2572,7 +2747,18 @@ static any Native_GetSoundPaths(Handle plugin, int numParams)
 		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
 	}
 
-	return obj.Paths;
+	return obj.GetPaths();
+}
+
+static any Native_GetSoundPathsDifficulty(Handle plugin, int numParams)
+{
+	ProfileSound obj = GetNativeCell(1);
+	if (obj == null)
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid profile object handle %x", obj);
+	}
+
+	return obj.GetPaths(GetNativeCell(2));
 }
 
 static any Native_SetSoundDefaultChannel(Handle plugin, int numParams)

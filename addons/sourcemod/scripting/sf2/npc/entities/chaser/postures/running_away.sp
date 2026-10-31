@@ -1,44 +1,26 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 void InitializePostureRunningAway()
 {
 	g_OnChaserUpdatePosturePFwd.AddFunction(null, OnChaserUpdatePosture);
 }
 
-static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int bufferSize)
+static Action OnChaserUpdatePosture(SF2NPC_Chaser controller, char[] buffer, int bufferSize, SF2ChaserBossProfilePostureInfo posture)
 {
-	SF2ChaserBossProfileData data;
-	data = controller.GetProfileData();
-	StringMap postures = data.Postures;
-	if (postures == null)
+	SF2PostureConditionRunAwayInfo runAwayInfo;
+	runAwayInfo = posture.RunAwayInfo;
+	if (!runAwayInfo.Enabled)
 	{
 		return Plugin_Continue;
 	}
 
-	SF2ChaserBossProfilePostureInfo postureInfo;
-	StringMapSnapshot snapshot = postures.Snapshot();
-	for (int i = 0; i < snapshot.Length; i++)
+	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
+	if (chaser.IsValid() && chaser.IsRunningAway)
 	{
-		if (!data.GetPostureFromIndex(i, postureInfo))
-		{
-			continue;
-		}
-
-		SF2PostureConditionRunAwayInfo runAwayInfo;
-		runAwayInfo = postureInfo.RunAwayInfo;
-		if (!runAwayInfo.Enabled)
-		{
-			continue;
-		}
-
-		SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
-		if (chaser.IsValid() && chaser.IsRunningAway)
-		{
-			strcopy(buffer, bufferSize, postureInfo.Name);
-			delete snapshot;
-			return Plugin_Changed;
-		}
+		strcopy(buffer, bufferSize, posture.Name);
+		return Plugin_Changed;
 	}
-	delete snapshot;
+
 	return Plugin_Continue;
 }

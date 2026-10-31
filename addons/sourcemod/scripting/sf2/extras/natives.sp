@@ -4,6 +4,7 @@
 #define _sf2_natives_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 //	==========================================================
 //	GENERAL PLUGIN HOOK FUNCTIONS
@@ -27,6 +28,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnBossPreTakeDamageFwd = new GlobalForward("SF2_OnBossPreTakeDamage", ET_Hook, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_OnBossPreFlashlightDamageFwd = new GlobalForward("SF2_OnBossPreFlashlightDamage", ET_Hook, Param_Cell, Param_Cell);
 	g_OnBossAnimationUpdateFwd = new GlobalForward("SF2_OnBossAnimationUpdate", ET_Hook, Param_Cell, Param_String);
+	g_OnBossPreValidateTargetFwd = new GlobalForward("SF2_OnBossPreValidateTarget", ET_Hook, Param_Cell, Param_Cell);
 	g_OnChaserBossGetSuspendActionFwd = new GlobalForward("SF2_OnChaserBossGetSuspendAction", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnPagesSpawnedFwd = new GlobalForward("SF2_OnPagesSpawned", ET_Ignore);
 	g_OnRoundStateChangeFwd = new GlobalForward("SF2_OnRoundStateChange", ET_Ignore, Param_Cell, Param_Cell);
@@ -50,6 +52,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnClientTakeDamageFwd = new GlobalForward("SF2_OnClientTakeDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_FloatByRef);
 	g_OnClientSpawnedAsProxyFwd = new GlobalForward("SF2_OnClientSpawnedAsProxy", ET_Ignore, Param_Cell);
 	g_OnClientDamagedByBossFwd = new GlobalForward("SF2_OnClientDamagedByBoss", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Cell);
+	g_OnClientOverlayUpdateFwd = new GlobalForward("SF2_OnClientOverlayUpdate", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_String, Param_Cell);
 	g_OnGroupGiveQueuePointsFwd = new GlobalForward("SF2_OnGroupGiveQueuePoints", ET_Hook, Param_Cell, Param_CellByRef);
 	g_OnBossPackVoteStartFwd = new GlobalForward("SF2_OnBossPackVoteStart", ET_Ignore);
 	g_OnDifficultyChangeFwd = new GlobalForward("SF2_OnDifficultyChanged", ET_Ignore, Param_Cell, Param_Cell);
@@ -59,6 +62,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_OnDifficultyVoteFinishedFwd = new GlobalForward("SF2_OnDifficultyVoteFinished", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnIsBossCustomAttackPossibleFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossible", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell);
 	g_OnBossGetCustomAttackActionFwd = new GlobalForward("SF2_OnBossGetCustomAttackAction", ET_Hook, Param_Cell, Param_String, Param_Array, Param_Cell, Param_CellByRef);
+	g_OnIsBossCustomAttackPossibleExFwd = new GlobalForward("SF2_OnIsBossCustomAttackPossibleEx", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell);
+	g_OnBossGetCustomAttackActionExFwd = new GlobalForward("SF2_OnBossGetCustomAttackActionEx", ET_Hook, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_CellByRef);
 	g_OnProjectileTouchFwd = new GlobalForward("SF2_OnProjectileTouch", ET_Ignore, Param_Cell, Param_Cell);
 	g_OnPreSelectStartingBosses = new GlobalForward("SF2_OnSelectStartingBosses", ET_Ignore);
 	g_OnPostSelectStartingBosses = new GlobalForward("SF2_OnFinishStartingBosses", ET_Ignore, Param_String);
@@ -159,6 +164,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	SetupBossProfileNatives();
 
+	SetupNewMusicAPI();
+
 	#if defined _steamtools_included
 	MarkNativeAsOptional("Steam_SetGameDescription");
 	#endif
@@ -227,7 +234,7 @@ void SDK_Init()
 	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CTFPlayer::EquipWearable");
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
 	g_SDKEquipWearable = EndPrepSDKCall();
-	if (g_SDKEquipWearable == null)//In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
+	if (g_SDKEquipWearable == null) //In case the offset is missing, look if the server has the tf2 randomizer's gamedata.
 	{
 		char strFilePath[PLATFORM_MAX_PATH];
 		BuildPath(Path_SM, strFilePath, sizeof(strFilePath), "gamedata/tf2items.randomizer.txt");
@@ -284,7 +291,7 @@ void SDK_Init()
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 	if ((g_SDKPassesTriggerFilters = EndPrepSDKCall()) == null)
 	{
-		SetFailState("Failed to setup CBaseTrigger::PassesTriggerFilters call from gamedata!");
+		SetFailState("Failed to setup CBaseTrigger::PassesTriggerFilters call from SF2 gamedata!");
 	}
 
 	/*StartPrepSDKCall(SDKCall_Entity);
@@ -301,7 +308,7 @@ void SDK_Init()
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 	if ((g_SDKLookupBone = EndPrepSDKCall()) == null)
 	{
-		LogError("Failed to setup CBaseAnimating::LookupBone call from gamedata!");
+		LogError("Failed to setup CBaseAnimating::LookupBone call from SF2 gamedata!");
 	}
 
 	// void CBaseAnimating::GetBonePosition ( int iBone, Vector &origin, QAngle &angles )
@@ -312,7 +319,7 @@ void SDK_Init()
 	PrepSDKCall_AddParameter(SDKType_QAngle, SDKPass_ByRef, .encflags = VENCODE_FLAG_COPYBACK);
 	if ((g_SDKGetBonePosition = EndPrepSDKCall()) == null)
 	{
-		LogError("Failed to setup CBaseAnimating::GetBonePosition call from gamedata");
+		LogError("Failed to setup CBaseAnimating::GetBonePosition call from SF2 gamedata");
 	}
 
 	StartPrepSDKCall(SDKCall_Static);
@@ -325,7 +332,16 @@ void SDK_Init()
 	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
 	if ((g_SDKSequenceVelocity = EndPrepSDKCall()) == null)
 	{
-		LogError("Failed to setup Studio_SeqVelocity call from gamedata");
+		LogError("Failed to setup Studio_SeqVelocity call from SF2 gamedata");
+	}
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gameData, SDKConf_Virtual, "CBaseTrigger::IsTouching");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+	if ((g_SDKIsTouching = EndPrepSDKCall()) == null)
+	{
+		LogError("Failed to setup Studio_SeqVelocity call from SF2 gamedata");
 	}
 
 	//Hook_ClientWantsLagCompensationOnEntity
@@ -336,9 +352,9 @@ void SDK_Init()
 		SetFailState("Failed to create hook CTFPlayer::WantsLagCompensationOnEntity offset from SF2 gamedata!");
 	}
 
-	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_CBaseEntity);
-	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_ObjectPtr);
-	DHookAddParam(g_DHookWantsLagCompensationOnEntity, HookParamType_Unknown);
+	g_DHookWantsLagCompensationOnEntity.AddParam(HookParamType_CBaseEntity);
+	g_DHookWantsLagCompensationOnEntity.AddParam(HookParamType_ObjectPtr);
+	g_DHookWantsLagCompensationOnEntity.AddParam(HookParamType_Unknown);
 	//Hook_EntityShouldTransmit
 	offset = gameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_DHookShouldTransmit = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
@@ -346,7 +362,7 @@ void SDK_Init()
 	{
 		SetFailState("Failed to create hook CBaseEntity::ShouldTransmit offset from SF2 gamedata!");
 	}
-	DHookAddParam(g_DHookShouldTransmit, HookParamType_ObjectPtr);
+	g_DHookShouldTransmit.AddParam(HookParamType_ObjectPtr);
 
 	offset = gameData.GetOffset("CBaseEntity::UpdateTransmitState");
 	g_DHookUpdateTransmitState = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
@@ -369,6 +385,16 @@ void SDK_Init()
 		SetFailState("Failed to create hook CBaseProjectile::CanCollideWithTeammates offset from SF2 gamedata!");
 	}
 
+	offset = gameData.GetOffset("CBaseEntity::TakeHealth");
+	g_DHookTakeHealth = new DynamicHook(offset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
+	if (g_DHookTakeHealth == null)
+	{
+		// Not too important, log the error
+		LogError("Failed to create hook CBaseEntity::TakeHealth offset from SF2 gamedata!");
+	}
+	g_DHookTakeHealth.AddParam(HookParamType_Float);
+	g_DHookTakeHealth.AddParam(HookParamType_Int);
+
 	//Initialize tutorial detours & calls
 	//Tutorial_SetupSDK(gameData);
 
@@ -381,7 +407,7 @@ void SDK_Init()
 
 static any Native_GetConfig(Handle plugin, int numParams)
 {
-	return g_Config;
+	return 0;
 }
 
 static any Native_IsRunning(Handle plugin, int numParams)
@@ -619,7 +645,7 @@ static any Native_ClientStartDeathCam(Handle plugin, int numParams)
 {
 	float pos[3];
 	GetNativeArray(3, pos, sizeof(pos));
-	ClientStartDeathCam(GetNativeCell(1), GetNativeCell(2), pos, GetNativeCell(4), GetNativeCell(5));
+	ClientStartDeathCam(GetNativeCell(1), GetNativeCell(2), pos, GetNativeCell(4));
 	return 0;
 }
 

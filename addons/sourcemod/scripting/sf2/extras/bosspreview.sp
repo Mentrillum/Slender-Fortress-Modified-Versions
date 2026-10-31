@@ -1,13 +1,17 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 enum struct BossData
 {
 	char Name[64];
 	char Profile[64];
 	char Pack[64];
 	char Type[32];
-	char Description[128];
+	char Description[1024];
 	char WalkSpeed[32];
 	char RunSpeed[32];
 	char Filepath[PLATFORM_MAX_PATH];
+	bool EnableRandomSelection;
 }
 
 enum struct PackData
@@ -26,6 +30,7 @@ enum struct EquipData
 static ArrayList g_BossPacks;
 static ArrayList g_BossList;
 
+static bool g_CompanionHide[MAXPLAYERS+1];
 static int g_MainMenuPage[MAXPLAYERS + 1];
 static int g_PackMenuPage[MAXPLAYERS + 1];
 static char g_ViewingPack[MAXPLAYERS + 1][64];
@@ -104,7 +109,7 @@ Action BossPreview_MainMenu(int client, int args)
 			BossData boss;
 			int i;
 			int length = g_BossList.Length;
-			for (;i < length; i++)
+			for (; i < length; i++)
 			{
 				g_BossList.GetArray(i, boss);
 				if (StrContains(boss.Name, buffer, false) != -1)
@@ -138,27 +143,46 @@ static void MainMenu(int client)
 
 	menu.SetTitle("Boss List:\n ");
 
+	menu.AddItem(NULL_STRING, g_CompanionHide[client] ? "Show Companion Bosses\n " : "Hide Companion Bosses\n ");
+
 	char buffer[64], current[64];
 	GetCurrentBossPack(current, sizeof(current));
 
 	PackData pack;
+	BossData boss;
 	int length = g_BossPacks.Length;
 	for (int i; i < length; i++)
 	{
 		g_BossPacks.GetArray(i, pack);
+
+		int bosses;
+		int length2 = g_BossList.Length;
+		for (int b = 0; b < length2; b++)
+		{
+			g_BossList.GetArray(b, boss);
+			if (strcmp(boss.Pack, pack.Name) == 0)
+			{
+				if (!g_CompanionHide[client] || boss.EnableRandomSelection)
+				{
+					bosses++;
+				}
+			}
+		}
+
 		if (!pack.AutoLoad && strcmp(pack.Name, current) == 0)
 		{
-			Format(buffer, sizeof(buffer), "Current: %s\n ", pack.Name);
-			menu.InsertItem(0, pack.Name, buffer);
+			Format(buffer, sizeof(buffer), "Current: %s (%d bosses)\n ", pack.Name, bosses);
+			menu.InsertItem(1, pack.Name, buffer);
 		}
 		else if (pack.AutoLoad)
 		{
-			Format(buffer, sizeof(buffer), "%s\n ", pack.Name);
+			Format(buffer, sizeof(buffer), "%s (%d bosses)\n ", pack.Name, bosses);
 			menu.AddItem(pack.Name, buffer);
 		}
 		else
 		{
-			menu.AddItem(pack.Name, pack.Name);
+			Format(buffer, sizeof(buffer), "%s (%d bosses)", pack.Name, bosses);
+			menu.AddItem(pack.Name, buffer);
 		}
 	}
 
@@ -167,7 +191,7 @@ static void MainMenu(int client)
 
 static int MainMenuH(Menu menu, MenuAction action, int client, int choice)
 {
-	switch(action)
+	switch (action)
 	{
 		case MenuAction_End:
 		{
@@ -177,9 +201,17 @@ static int MainMenuH(Menu menu, MenuAction action, int client, int choice)
 		{
 			g_MainMenuPage[client] = choice / 7 * 7;
 
-			char buffer[64];
-			menu.GetItem(choice, buffer, sizeof(buffer));
-			PackMenu(client, buffer);
+			if(!choice)
+			{
+				g_CompanionHide[client] = !g_CompanionHide[client];
+				MainMenu(client);
+			}
+			else
+			{
+				char buffer[64];
+				menu.GetItem(choice, buffer, sizeof(buffer));
+				PackMenu(client, buffer);
+			}
 		}
 	}
 	return 0;
@@ -211,7 +243,10 @@ static void PackMenu(int client, const char[] pack)
 		g_BossList.GetArray(i, boss);
 		if (strcmp(boss.Pack, pack) == 0)
 		{
-			menu.AddItem(boss.Profile, boss.Name);
+			if (!g_CompanionHide[client] || boss.EnableRandomSelection)
+			{
+				menu.AddItem(boss.Profile, boss.Name);
+			}
 		}
 	}
 
@@ -257,7 +292,7 @@ static void BossMenu(int client, const char[] profile)
 {
 	BossData boss;
 	int flags = g_BossList.Length;
-	for (int i; i < flags; i++)
+	for (int i = 0; i < flags; i++)
 	{
 		g_BossList.GetArray(i, boss);
 		if (strcmp(boss.Profile, profile) == 0)
@@ -267,7 +302,7 @@ static void BossMenu(int client, const char[] profile)
 	}
 
 	Menu menu = new Menu(BossMenuH);
-	char buffer[256], buffer2[128];
+	char buffer[1024], buffer2[1024];
 	FormatEx(buffer, sizeof(buffer), "%s\n \n%s\n", g_ViewingPack[client], boss.Name);
 	FormatEx(buffer2, sizeof(buffer2), "Type: %s\n \n", boss.Type);
 	StrCat(buffer, sizeof(buffer), buffer2);
@@ -317,7 +352,7 @@ static int BossMenuH(Menu menu, MenuAction action, int client, int option)
 
 			BossData boss;
 			int length = g_BossList.Length;
-			for (int i; i < length; i++)
+			for (int i = 0; i < length; i++)
 			{
 				g_BossList.GetArray(i, boss);
 				if (strcmp(boss.Profile, profile) == 0)
@@ -373,6 +408,7 @@ static void AddSlenderPack(BossData data, const char[] pack, const char[] path, 
 				{
 					kv.GetSectionName(data.Profile, sizeof(data.Profile));
 					kv.GetString("name", data.Name, sizeof(data.Name));
+					data.EnableRandomSelection = kv.GetNum("enable_random_selection", 1) || kv.GetNum("admin_only");
 					data.Description = "No description provided.";
 					int bossType = kv.GetNum("type", SF2BossType_Chaser);
 					switch (bossType)
@@ -494,7 +530,7 @@ static Action PreviewTransmit(int entity, int client)
 		return Plugin_Continue;
 	}
 
-	if(owner == client)
+	if (owner == client)
 	{
 		if (GetClientMenu(client) == MenuSource_None)
 		{
@@ -512,7 +548,10 @@ static void SetDefaultAnimation(int entity, const char[] profile)
 	SF2BossProfileMasterAnimationsData masterData;
 	GetBossProfileAnimationsData(profile, masterData);
 	char animation[64];
-	masterData.GetAnimation("idle", Difficulty_Normal, animation, sizeof(animation));
+	if (!masterData.GetAnimation("idle", Difficulty_Normal, animation, sizeof(animation)))
+	{
+		return;
+	}
 
 	ArrayList animations, validAnimations;
 	validAnimations = new ArrayList();
@@ -559,14 +598,20 @@ void BossPreview_OnClientAttack(int client)
 	masterData.GetAnimation("attack", Difficulty_Normal, animation, sizeof(animation));
 
 	ArrayList animations, validAnimations;
-	validAnimations = new ArrayList();
 	masterData.Animations.GetValue("attack", animations);
+	if (animations == null)
+	{
+		return;
+	}
+
+	validAnimations = new ArrayList();
 	for (int i = 0; i < animations.Length; i++)
 	{
 		validAnimations.Push(i);
 	}
 	if (validAnimations.Length <= 0)
 	{
+		delete validAnimations;
 		return;
 	}
 

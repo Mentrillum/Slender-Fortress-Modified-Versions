@@ -4,6 +4,7 @@
 #define _sf2_npc_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SF2_BOSS_PAGE_CALCULATION 512.0
 #define SF2_BOSS_COPY_SPAWN_MIN_DISTANCE 800.0 // The default minimum distance boss copies can spawn from each other.
@@ -28,8 +29,6 @@ static int g_NpcModelBodyGroups[MAX_BOSSES] = { 0, ... };
 static int g_NpcModelBodyGroupsDifficulty[MAX_BOSSES][Difficulty_Max];
 static int g_NpcModelBodyGroupsMax[MAX_BOSSES] = { 0, ... };
 bool g_NpcRaidHitbox[MAX_BOSSES] = { false, ... };
-static float g_NpcSoundMusicLoop[MAX_BOSSES][Difficulty_Max];
-static int g_NpcAllowMusicOnDifficulty[MAX_BOSSES];
 static char g_NpcName[MAX_BOSSES][Difficulty_Max][SF2_MAX_PROFILE_NAME_LENGTH];
 static bool g_NpcHasFakeCopiesEnabled[MAX_BOSSES][Difficulty_Max];
 static float g_NpcBlinkLookRate[MAX_BOSSES];
@@ -84,8 +83,6 @@ static float g_NpcPlayerScareReplenishSprintAmount[MAX_BOSSES];
 
 static int g_NpcTeleportType[MAX_BOSSES] = { -1, ... };
 
-static bool g_NpcHasDeathCamEnabled[MAX_BOSSES] = { false, ... };
-
 static bool g_NpcHasProxyWeaponsEnabled[MAX_BOSSES] = { false, ... };
 
 static float g_NpcProxySpawnChanceMin[MAX_BOSSES][Difficulty_Max];
@@ -111,8 +108,6 @@ static bool g_NpcShouldBeAffectedBySight[MAX_BOSSES];
 static int g_NpcDefaultTeam[MAX_BOSSES];
 
 static bool g_NpcWasKilled[MAX_BOSSES];
-
-Handle timerMusic = null; //Planning to add a bosses array on.
 
 bool NPCGetBossName(int npcIndex = -1, char[] buffer, int bufferLen, char profile[SF2_MAX_PROFILE_NAME_LENGTH] = "")
 {
@@ -184,16 +179,6 @@ bool NPCHasProxyWeapons(int npcIndex)
 	return g_NpcHasProxyWeaponsEnabled[npcIndex];
 }
 
-bool NPCHasDeathCamEnabled(int npcIndex)
-{
-	return g_NpcHasDeathCamEnabled[npcIndex];
-}
-
-void NPCSetDeathCamEnabled(int npcIndex, bool state)
-{
-	g_NpcHasDeathCamEnabled[npcIndex] = state;
-}
-
 void NPCInitialize()
 {
 	g_OnEntityDestroyedPFwd.AddFunction(null, EntityDestroyed);
@@ -255,10 +240,14 @@ void NPC_InitializeAPI()
 
 	CreateNative("SF2_GetProfileFromBossIndex", Native_GetProfileData);
 	CreateNative("SF2_GetProfileFromName", Native_GetProfileDataEx);
+	CreateNative("SF2_GetProfileFromBossIndexEx", Native_GetProfileDataNew);
+	CreateNative("SF2_GetProfileFromNameEx", Native_GetProfileDataNewEx);
 
 	CreateNative("SF2_SpawnBossEffects", Native_SpawnBossEffects);
 
 	CreateNative("SF2_CanBossBeSeen", Native_CanBossBeSeen);
+
+	SetupNPCEffectsAPI();
 }
 
 static void EntityDestroyed(CBaseEntity ent, const char[] classname)
@@ -365,7 +354,7 @@ static void OnPlayerLookAtBoss(SF2_BasePlayer client, SF2NPC_BaseNPC boss)
 	}
 }
 
-void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = false)
+void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity)
 {
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
@@ -375,6 +364,10 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = f
 	Call_StartForward(g_OnBossDespawnFwd);
 	Call_PushCell(bossIndex);
 	Call_Finish();
+
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+	float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
+	g_SlenderNextTeleportTime[bossIndex] = GetGameTime() + teleportTime;
 
 	//Turn off all slender's effects in order to prevent some bugs.
 	SlenderRemoveEffects(bossIndex, true);
@@ -395,7 +388,7 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = f
 
 	if (data.DespawnEffects != null)
 	{
-		if (killed && data.HideDespawnEffectsOnDeath)
+		if (controller.WasKilled && data.HideDespawnEffectsOnDeath)
 		{
 			// Do nothing
 		}
@@ -461,6 +454,8 @@ void NPCOnDespawn(SF2NPC_BaseNPC controller, CBaseEntity entity, bool killed = f
 			UpdateHealthBar(bossIndex, 0);
 		}
 	}
+
+	controller.WasKilled = false;
 }
 
 void NPCOnConfigsExecuted()
@@ -585,630 +580,6 @@ void NPCRemove(int npcIndex)
 	RemoveProfile(npcIndex);
 }
 
-void NPCStopMusic()
-{
-	//Stop the music timer
-	if (timerMusic != null)
-	{
-		delete timerMusic;
-	}
-	//Stop the music for all players.
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsValidClient(i))
-		{
-			if (currentMusicTrack[0] != '\0')
-			{
-				StopSound(i, MUSIC_CHAN, currentMusicTrack);
-			}
-			ClientUpdateMusicSystem(i);
-		}
-	}
-}
-
-void CheckIfMusicValid()
-{
-	int difficulty = g_DifficultyConVar.IntValue;
-	for (int i = 0; i < MAX_BOSSES; i++)
-	{
-		if (NPCGetUniqueID(i) == -1)
-		{
-			continue;
-		}
-		SF2BossProfileData data;
-		data = NPCGetProfileData(i);
-		if (data.IsPvEBoss)
-		{
-			continue;
-		}
-		if (g_NpcAllowMusicOnDifficulty[i] & difficulty)
-		{
-			currentMusicTrackNormal[0] = '\0';
-			currentMusicTrackHard[0] = '\0';
-			currentMusicTrackInsane[0] = '\0';
-			currentMusicTrackNightmare[0] = '\0';
-			currentMusicTrackApollyon[0] = '\0';
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(i, profile, sizeof(profile));
-			for(int client = 1;client <= MaxClients; client++)
-			{
-				if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
-				{
-					SF2BossProfileSoundInfo soundInfo;
-					GetBossProfileMusicSounds(profile, soundInfo, 1);
-					ArrayList soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNormal, sizeof(currentMusicTrackNormal));
-					}
-					soundList = null;
-
-					GetBossProfileMusicSounds(profile, soundInfo, 2);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackHard, sizeof(currentMusicTrackHard));
-					}
-					if (currentMusicTrackHard[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 1);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackHard, sizeof(currentMusicTrackHard));
-						}
-					}
-					soundList = null;
-
-					GetBossProfileMusicSounds(profile, soundInfo, 3);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackInsane, sizeof(currentMusicTrackInsane));
-					}
-					if (currentMusicTrackInsane[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 2);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackInsane, sizeof(currentMusicTrackInsane));
-						}
-						if (currentMusicTrackInsane[0] == '\0')
-						{
-							GetBossProfileMusicSounds(profile, soundInfo, 1);
-							soundList = soundInfo.Paths;
-							if (soundList != null && soundList.Length > 0)
-							{
-								soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackInsane, sizeof(currentMusicTrackInsane));
-							}
-						}
-					}
-					soundList = null;
-
-					GetBossProfileMusicSounds(profile, soundInfo, 4);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-					}
-					if (currentMusicTrackNightmare[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 3);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-						}
-						if (currentMusicTrackNightmare[0] == '\0')
-						{
-							GetBossProfileMusicSounds(profile, soundInfo, 2);
-							soundList = soundInfo.Paths;
-							if (soundList != null && soundList.Length > 0)
-							{
-								soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-							}
-							if (currentMusicTrackNightmare[0] == '\0')
-							{
-								GetBossProfileMusicSounds(profile, soundInfo, 1);
-								soundList = soundInfo.Paths;
-								if (soundList != null && soundList.Length > 0)
-								{
-									soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-								}
-							}
-						}
-					}
-					soundList = null;
-
-					GetBossProfileMusicSounds(profile, soundInfo, 5);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-					}
-					if (currentMusicTrackApollyon[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 4);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-						}
-						if (currentMusicTrackApollyon[0] == '\0')
-						{
-							GetBossProfileMusicSounds(profile, soundInfo, 3);
-							soundList = soundInfo.Paths;
-							if (soundList != null && soundList.Length > 0)
-							{
-								soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-							}
-							if (currentMusicTrackApollyon[0] == '\0')
-							{
-								GetBossProfileMusicSounds(profile, soundInfo, 2);
-								soundList = soundInfo.Paths;
-								if (soundList != null && soundList.Length > 0)
-								{
-									soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-								}
-								if (currentMusicTrackApollyon[0] == '\0')
-								{
-									GetBossProfileMusicSounds(profile, soundInfo, 1);
-									soundList = soundInfo.Paths;
-									if (soundList != null && soundList.Length > 0)
-									{
-										soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-									}
-								}
-							}
-						}
-					}
-					soundList = null;
-
-					switch (g_DifficultyConVar.IntValue)
-					{
-						case Difficulty_Normal:
-						{
-							strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackNormal);
-						}
-						case Difficulty_Hard:
-						{
-							strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackHard);
-						}
-						case Difficulty_Insane:
-						{
-							strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackInsane);
-						}
-						case Difficulty_Nightmare:
-						{
-							strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackNightmare);
-						}
-						case Difficulty_Apollyon:
-						{
-							strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackApollyon);
-						}
-					}
-					if (currentMusicTrack[0] != '\0')
-					{
-						timerMusic = CreateTimer(NPCGetSoundMusicLoop(i, difficulty), BossMusic, i, TIMER_FLAG_NO_MAPCHANGE);
-						StopSound(client, MUSIC_CHAN, currentMusicTrack);
-						ClientChaseMusicReset(client);
-						ClientChaseMusicSeeReset(client);
-						ClientAlertMusicReset(client);
-						ClientIdleMusicReset(client);
-						GetChaserProfileChaseMusics(profile, soundInfo);
-						soundInfo.StopAllSounds(client);
-						GetChaserProfileChaseVisibleMusics(profile, soundInfo);
-						soundInfo.StopAllSounds(client);
-						GetChaserProfileAlertMusics(profile, soundInfo);
-						soundInfo.StopAllSounds(client);
-						GetChaserProfileIdleMusics(profile, soundInfo);
-						soundInfo.StopAllSounds(client);
-						if (g_PlayerMusicString[client][0] != '\0')
-						{
-							EmitSoundToClient(client, g_PlayerMusicString[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
-						}
-						ClientMusicStart(client, currentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
-						ClientUpdateMusicSystem(client);
-						break;
-					}
-				}
-			}
-			break;
-		}
-	}
-}
-
-bool MusicActive()
-{
-	if (timerMusic != null)
-	{
-		return true;
-	}
-	return false;
-}
-
-bool BossHasMusic(char[] profile)
-{
-	int difficulty = g_DifficultyConVar.IntValue;
-	char temp[512];
-	ArrayList soundList;
-	SF2BossProfileSoundInfo soundInfo;
-	switch (difficulty)
-	{
-		case Difficulty_Normal:
-		{
-			GetBossProfileMusicSounds(profile, soundInfo, 1);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-			}
-			if (temp[0] != '\0')
-			{
-				return true;
-			}
-		}
-		case Difficulty_Hard:
-		{
-			GetBossProfileMusicSounds(profile, soundInfo, 2);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-			}
-			if (temp[0] != '\0')
-			{
-				return true;
-			}
-			else
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, 1);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-				}
-				if (temp[0] != '\0')
-				{
-					return true;
-				}
-			}
-		}
-		case Difficulty_Insane:
-		{
-			GetBossProfileMusicSounds(profile, soundInfo, 3);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-			}
-			if (temp[0] != '\0')
-			{
-				return true;
-			}
-			else
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, 2);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-				}
-				if (temp[0] != '\0')
-				{
-					return true;
-				}
-				else
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 1);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-					}
-					if (temp[0] != '\0')
-					{
-						return true;
-					}
-				}
-			}
-		}
-		case Difficulty_Nightmare:
-		{
-			GetBossProfileMusicSounds(profile, soundInfo, 4);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-			}
-			if (temp[0] != '\0')
-			{
-				return true;
-			}
-			else
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, 3);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-				}
-				if (temp[0] != '\0')
-				{
-					return true;
-				}
-				else
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 2);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-					}
-					if (temp[0] != '\0')
-					{
-						return true;
-					}
-					else
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 1);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-						}
-						if (temp[0] != '\0')
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-		case Difficulty_Apollyon:
-		{
-			GetBossProfileMusicSounds(profile, soundInfo, 5);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-			}
-			if (temp[0] != '\0')
-			{
-				return true;
-			}
-			else
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, 4);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-				}
-				if (temp[0] != '\0')
-				{
-					return true;
-				}
-				else
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 3);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-					}
-					if (temp[0] != '\0')
-					{
-						return true;
-					}
-					else
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 2);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-						}
-						if (temp[0] != '\0')
-						{
-							return true;
-						}
-						else
-						{
-							GetBossProfileMusicSounds(profile, soundInfo, 1);
-							soundList = soundInfo.Paths;
-							if (soundList != null && soundList.Length > 0)
-							{
-								soundList.GetString(GetRandomInt(0, soundList.Length - 1), temp, sizeof(temp));
-							}
-							if (temp[0] != '\0')
-							{
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return false;
-}
-
-bool BossMatchesCurrentMusic(char[] profile)
-{
-	if (!IsProfileValid(profile))
-	{
-		return false;
-	}
-
-	char buffer[PLATFORM_MAX_PATH], currentMusic[PLATFORM_MAX_PATH];
-	int difficulty = g_DifficultyConVar.IntValue;
-
-	GetBossMusic(currentMusic, sizeof(currentMusic));
-
-	ArrayList soundList;
-	SF2BossProfileSoundInfo soundInfo;
-	switch (difficulty)
-	{
-		case Difficulty_Normal:
-		{
-			GetBossProfileMusicSounds(profile, soundInfo, 1);
-			soundList = soundInfo.Paths;
-			if (soundList != null && soundList.Length > 0)
-			{
-				for (int i = 0; i < soundList.Length; i++)
-				{
-					soundList.GetString(i, buffer, sizeof(buffer));
-					if (strcmp(buffer, currentMusic, false) == 0)
-					{
-						return true;
-					}
-				}
-			}
-		}
-		case Difficulty_Hard:
-		{
-			for (int section = 1; section <= Difficulty_Hard; section++)
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, section);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					for (int i = 0; i < soundList.Length; i++)
-					{
-						soundList.GetString(i, buffer, sizeof(buffer));
-						if (strcmp(buffer, currentMusic, false) == 0)
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-		case Difficulty_Insane:
-		{
-			for (int section = 1; section <= Difficulty_Insane; section++)
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, section);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					for (int i = 0; i < soundList.Length; i++)
-					{
-						soundList.GetString(i, buffer, sizeof(buffer));
-						if (strcmp(buffer, currentMusic, false) == 0)
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-		case Difficulty_Nightmare:
-		{
-			for (int section = 1; section <= Difficulty_Nightmare; section++)
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, section);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					for (int i = 0; i < soundList.Length; i++)
-					{
-						soundList.GetString(i, buffer, sizeof(buffer));
-						if (strcmp(buffer, currentMusic, false) == 0)
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-		case Difficulty_Apollyon:
-		{
-			for (int section = 1; section <= Difficulty_Apollyon; section++)
-			{
-				GetBossProfileMusicSounds(profile, soundInfo, section);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					for (int i = 0; i < soundList.Length; i++)
-					{
-						soundList.GetString(i, buffer, sizeof(buffer));
-						if (strcmp(buffer, currentMusic, false) == 0)
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return false;
-}
-
-void GetBossMusic(char[] buffer,int bufferLen)
-{
-	int difficulty = g_DifficultyConVar.IntValue;
-	switch (difficulty)
-	{
-		case Difficulty_Normal:
-		{
-			strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackNormal);
-			strcopy(buffer, bufferLen, currentMusicTrackNormal);
-		}
-		case Difficulty_Hard:
-		{
-			strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackHard);
-			strcopy(buffer, bufferLen, currentMusicTrackHard);
-		}
-		case Difficulty_Insane:
-		{
-			strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackInsane);
-			strcopy(buffer, bufferLen, currentMusicTrackInsane);
-		}
-		case Difficulty_Nightmare:
-		{
-			strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackNightmare);
-			strcopy(buffer, bufferLen, currentMusicTrackNightmare);
-		}
-		case Difficulty_Apollyon:
-		{
-			strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackApollyon);
-			strcopy(buffer, bufferLen, currentMusicTrackApollyon);
-		}
-	}
-}
-
-static Action BossMusic(Handle timer, any bossIndex)
-{
-	int difficulty = g_DifficultyConVar.IntValue;
-	float time = NPCGetSoundMusicLoop(bossIndex, difficulty);
-	SF2BossProfileData data;
-	data = NPCGetProfileData(bossIndex);
-	if (!data.IsPvEBoss && time > 0.0 && (g_NpcAllowMusicOnDifficulty[bossIndex] & difficulty))
-	{
-		if (bossIndex > -1)
-		{
-			char profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(bossIndex, profile, sizeof(profile));
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (IsValidClient(i) && currentMusicTrack[0] != '\0')
-				{
-					StopSound(i, MUSIC_CHAN, currentMusicTrack);
-				}
-			}
-			timerMusic = CreateTimer(time, BossMusic, bossIndex, TIMER_FLAG_NO_MAPCHANGE);
-			return Plugin_Continue;
-		}
-		NPCStopMusic();
-	}
-	timerMusic = null;
-	return Plugin_Continue;
-}
-
 void NPCRemoveAll()
 {
 	for (int i = 0; i < MAX_BOSSES; i++)
@@ -1227,14 +598,9 @@ int NPCGetFlags(int npcIndex)
 	return g_NpcFlags[npcIndex];
 }
 
-void NPCSetFlags(int npcIndex,int flags)
+void NPCSetFlags(int npcIndex, int flags)
 {
 	g_NpcFlags[npcIndex] = flags;
-}
-
-float NPCGetSoundMusicLoop(int npcIndex, int difficulty)
-{
-	return g_NpcSoundMusicLoop[npcIndex][difficulty];
 }
 
 float NPCGetModelScale(int npcIndex)
@@ -1724,11 +1090,6 @@ bool SlenderCanRemove(int bossIndex)
 		return false;
 	}
 
-	if (PeopleCanSeeSlender(bossIndex, _, false))
-	{
-		return false;
-	}
-
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
@@ -1738,9 +1099,15 @@ bool SlenderCanRemove(int bossIndex)
 
 	int slender = NPCGetEntIndex(bossIndex);
 
+	BaseBossProfile profileData = SF2NPC_BaseNPC(bossIndex).GetProfileDataEx();
+	if (profileData.CannotDespawnLooking(difficulty) && PeopleCanSeeSlender(bossIndex, _, false))
+	{
+		return false;
+	}
+
 	switch (teleportType)
 	{
-		case 0:
+		case SF2BossTeleportType_Vanisher:
 		{
 			if (NPCGetFlags(bossIndex) & SFF_STATICONRADIUS && slender != INVALID_ENT_REFERENCE && slender)
 			{
@@ -1771,25 +1138,34 @@ bool SlenderCanRemove(int bossIndex)
 					}
 				}
 			}
+
+			SF2_ChaserEntity chaser = SF2_ChaserEntity(slender);
+			if (chaser.IsValid())
+			{
+				if (chaser.State == STATE_ATTACK || chaser.State == STATE_STUN || chaser.State == STATE_DEATH)
+				{
+					return false;
+				}
+			}
 		}
-		case 1:
+		case SF2BossTeleportType_Visible:
 		{
 			if (PeopleCanSeeSlender(bossIndex, _, SlenderUsesBlink(bossIndex)) || PeopleCanSeeSlender(bossIndex, false, false))
 			{
 				return false;
 			}
 		}
-		case 2:
+		case SF2BossTeleportType_Default:
 		{
 			SF2_ChaserEntity chaser = SF2_ChaserEntity(slender);
 			if (chaser.IsValid())
 			{
-				if (chaser.State == STATE_ALERT || chaser.State == STATE_CHASE || chaser.State == STATE_ATTACK || chaser.State == STATE_STUN || chaser.State == STATE_DEATH)
+				if (chaser.State == STATE_IDLE && !chaser.IsAllowedToDespawn)
 				{
 					return false;
 				}
 
-				if (GetGameTime() < g_SlenderTimeUntilKill[bossIndex])
+				if (chaser.State == STATE_ALERT || chaser.State == STATE_CHASE || chaser.State == STATE_ATTACK || chaser.State == STATE_STUN || chaser.State == STATE_DEATH)
 				{
 					return false;
 				}
@@ -1802,13 +1178,13 @@ bool SlenderCanRemove(int bossIndex)
 				{
 					return false;
 				}
-
-				if (GetGameTime() < g_SlenderStatueIdleLifeTime[bossIndex])
-				{
-					return false;
-				}
 			}
 		}
+	}
+
+	if (g_SlenderTimeUntilKill[bossIndex] > 0.0 && GetGameTime() < g_SlenderTimeUntilKill[bossIndex])
+	{
+		return false;
 	}
 
 	return true;
@@ -1830,6 +1206,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 
 	SF2BossProfileData profileData;
 	g_BossProfileData.GetArray(profile, profileData, sizeof(profileData));
+	BaseBossProfile profileDataEx = GetBossProfile(profile);
 
 	int bossType = GetBossProfileType(profile);
 
@@ -1907,7 +1284,6 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 	for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
 	{
 		g_NpcHasFakeCopiesEnabled[npc.Index][difficulty] = GetBossProfileFakeCopies(profile, difficulty);
-		g_NpcSoundMusicLoop[npc.Index][difficulty] = GetBossProfileSoundMusicLoop(profile, difficulty);
 		g_NpcIdleLifetime[npc.Index][difficulty] = GetBossProfileIdleLifetime(profile, difficulty);
 		g_SlenderStaticRadius[npc.Index][difficulty] = GetBossProfileStaticRadius(profile, difficulty);
 		g_SlenderStaticRate[npc.Index][difficulty] = GetBossProfileStaticRate(profile, difficulty);
@@ -1991,19 +1367,6 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 
 	g_NpcAddSpeed[npc.Index] = 0.0;
 	g_NpcAddAcceleration[npc.Index] = 0.0;
-
-	// Deathcam values.
-	npc.DeathCamEnabled = GetBossProfileDeathCamState(profile);
-	g_SlenderDeathCamScareSound[npc.Index] = GetBossProfileDeathCamScareSound(profile);
-	g_SlenderPublicDeathCam[npc.Index] = GetBossProfilePublicDeathCamState(profile);
-	g_SlenderPublicDeathCamSpeed[npc.Index] = GetBossProfilePublicDeathCamSpeed(profile);
-	g_SlenderPublicDeathCamAcceleration[npc.Index] = GetBossProfilePublicDeathCamAcceleration(profile);
-	g_SlenderPublicDeathCamDeceleration[npc.Index] = GetBossProfilePublicDeathCamDeceleration(profile);
-	g_SlenderPublicDeathCamBackwardOffset[npc.Index] = GetBossProfilePublicDeathCamBackwardOffset(profile);
-	g_SlenderPublicDeathCamDownwardOffset[npc.Index] = GetBossProfilePublicDeathCamDownwardOffset(profile);
-	g_SlenderDeathCamOverlay[npc.Index] = GetBossProfileDeathCamOverlayState(profile);
-	g_SlenderDeathCamOverlayTimeStart[npc.Index] = GetBossProfileDeathCamOverlayStartTime(profile);
-	g_SlenderDeathCamTime[npc.Index] = GetBossProfileDeathCamTime(profile);
 
 	g_SlenderFakeTimer[npc.Index] = null;
 	g_SlenderEntityThink[npc.Index] = null;
@@ -2119,215 +1482,6 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 				soundInfo.EmitSound(true, i);
 			}
 		}
-		if (g_Enabled && !profileData.IsPvEBoss && timerMusic == null)
-		{
-			bool allowMusic = false;
-			float time;
-			for (int difficulty = 0; difficulty < Difficulty_Max; difficulty++)
-			{
-				if (g_NpcSoundMusicLoop[npc.Index][difficulty] > 0.0)
-				{
-					allowMusic = true;
-					g_NpcAllowMusicOnDifficulty[npc.Index] |= difficulty;
-				}
-			}
-			if (allowMusic)
-			{
-				time = g_NpcSoundMusicLoop[npc.Index][g_DifficultyConVar.IntValue];
-				currentMusicTrackNormal[0] = '\0';
-				currentMusicTrackHard[0] = '\0';
-				currentMusicTrackInsane[0] = '\0';
-				currentMusicTrackNightmare[0] = '\0';
-				currentMusicTrackApollyon[0] = '\0';
-				ArrayList soundList;
-				SF2BossProfileSoundInfo soundInfo;
-				GetBossProfileMusicSounds(profile, soundInfo, 1);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNormal, sizeof(currentMusicTrackNormal));
-				}
-				soundList = null;
-
-				GetBossProfileMusicSounds(profile, soundInfo, 2);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackHard, sizeof(currentMusicTrackHard));
-				}
-				if (currentMusicTrackHard[0] == '\0')
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 1);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackHard, sizeof(currentMusicTrackHard));
-					}
-				}
-				soundList = null;
-
-				GetBossProfileMusicSounds(profile, soundInfo, 3);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackInsane, sizeof(currentMusicTrackInsane));
-				}
-				if (currentMusicTrackInsane[0] == '\0')
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 2);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackInsane, sizeof(currentMusicTrackInsane));
-					}
-					if (currentMusicTrackInsane[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 1);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackInsane, sizeof(currentMusicTrackInsane));
-						}
-					}
-				}
-				soundList = null;
-
-				GetBossProfileMusicSounds(profile, soundInfo, 4);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-				}
-				if (currentMusicTrackNightmare[0] == '\0')
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 3);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-					}
-					if (currentMusicTrackNightmare[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 2);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-						}
-						if (currentMusicTrackNightmare[0] == '\0')
-						{
-							GetBossProfileMusicSounds(profile, soundInfo, 1);
-							soundList = soundInfo.Paths;
-							if (soundList != null && soundList.Length > 0)
-							{
-								soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackNightmare, sizeof(currentMusicTrackNightmare));
-							}
-						}
-					}
-				}
-				soundList = null;
-
-				GetBossProfileMusicSounds(profile, soundInfo, 5);
-				soundList = soundInfo.Paths;
-				if (soundList != null && soundList.Length > 0)
-				{
-					soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-				}
-				if (currentMusicTrackApollyon[0] == '\0')
-				{
-					GetBossProfileMusicSounds(profile, soundInfo, 4);
-					soundList = soundInfo.Paths;
-					if (soundList != null && soundList.Length > 0)
-					{
-						soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-					}
-					if (currentMusicTrackApollyon[0] == '\0')
-					{
-						GetBossProfileMusicSounds(profile, soundInfo, 3);
-						soundList = soundInfo.Paths;
-						if (soundList != null && soundList.Length > 0)
-						{
-							soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-						}
-						if (currentMusicTrackApollyon[0] == '\0')
-						{
-							GetBossProfileMusicSounds(profile, soundInfo, 2);
-							soundList = soundInfo.Paths;
-							if (soundList != null && soundList.Length > 0)
-							{
-								soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-							}
-							if (currentMusicTrackApollyon[0] == '\0')
-							{
-								GetBossProfileMusicSounds(profile, soundInfo, 1);
-								soundList = soundInfo.Paths;
-								if (soundList != null && soundList.Length > 0)
-								{
-									soundList.GetString(GetRandomInt(0, soundList.Length - 1), currentMusicTrackApollyon, sizeof(currentMusicTrackApollyon));
-								}
-							}
-						}
-					}
-				}
-				soundList = null;
-
-				if ((g_NpcAllowMusicOnDifficulty[npc.Index] & g_DifficultyConVar.IntValue) && time > 0.0)
-				{
-					timerMusic = CreateTimer(time, BossMusic, npc.Index, TIMER_FLAG_NO_MAPCHANGE);
-					for(int client = 1; client <= MaxClients; client++)
-					{
-						if (IsValidClient(client) && (!g_PlayerEliminated[client] || IsClientInGhostMode(client)))
-						{
-							ClientChaseMusicReset(client);
-							ClientChaseMusicSeeReset(client);
-							ClientAlertMusicReset(client);
-							ClientIdleMusicReset(client);
-							GetChaserProfileChaseMusics(profile, soundInfo);
-							soundInfo.StopAllSounds(client);
-							GetChaserProfileChaseVisibleMusics(profile, soundInfo);
-							soundInfo.StopAllSounds(client);
-							GetChaserProfileAlertMusics(profile, soundInfo);
-							soundInfo.StopAllSounds(client);
-							GetChaserProfileIdleMusics(profile, soundInfo);
-							soundInfo.StopAllSounds(client);
-							if (g_PlayerMusicString[client][0] != '\0')
-							{
-								EmitSoundToClient(client, g_PlayerMusicString[client], _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, 0.0001);
-							}
-							switch (g_DifficultyConVar.IntValue)
-							{
-								case Difficulty_Normal:
-								{
-									strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackNormal);
-								}
-								case Difficulty_Hard:
-								{
-									strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackHard);
-								}
-								case Difficulty_Insane:
-								{
-									strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackInsane);
-								}
-								case Difficulty_Nightmare:
-								{
-									strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackNightmare);
-								}
-								case Difficulty_Apollyon:
-								{
-									strcopy(currentMusicTrack, sizeof(currentMusicTrack), currentMusicTrackApollyon);
-								}
-							}
-							if (currentMusicTrack[0] != '\0')
-							{
-								StopSound(client, MUSIC_CHAN, currentMusicTrack);
-							}
-							ClientMusicStart(client, currentMusicTrack, _, MUSIC_PAGE_VOLUME,true);
-							ClientUpdateMusicSystem(client);
-						}
-					}
-				}
-			}
-		}
 		if (spawnCompanions)
 		{
 			char compProfile[SF2_MAX_PROFILE_NAME_LENGTH];
@@ -2373,10 +1527,43 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 				}
 			}
 		}
+
+		if (profileDataEx.GetRedCameraOverlays() != null)
+		{
+			char value[PLATFORM_MAX_PATH];
+			profileDataEx.GetRedCameraOverlays().GetString(GetRandomInt(0, profileDataEx.GetRedCameraOverlays().Length - 1), value, sizeof(value));
+			profileDataEx.SetActiveRedCameraOverlay(value);
+		}
 	}
+
+	if (profileDataEx.GetWhitelistedTeleportMaps() != null)
+	{
+		char map[128], key[128];
+		GetCurrentMap(map, sizeof(map));
+		bool found = false;
+		for (int i = 0; i < profileDataEx.GetWhitelistedTeleportMaps().Length; i++)
+		{
+			profileDataEx.GetWhitelistedTeleportMaps().GetString(i, key, sizeof(key));
+			if (StrContains(map, key, false) == 0)
+			{
+				found = true;
+				break;
+			}
+		}
+		profileDataEx.IsInWhitelistedMap = found;
+	}
+
+	int difficulty = GetLocalGlobalDifficulty(npc.Index);
+	float gameTime = GetGameTime();
+	float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(npc.Index, difficulty), NPCGetTeleportTimeMax(npc.Index, difficulty));
+	g_SlenderNextTeleportTime[npc.Index] = gameTime + teleportTime;
 
 	Call_StartForward(g_OnBossAddedFwd);
 	Call_PushCell(npc.Index);
+	Call_Finish();
+
+	Call_StartForward(g_OnBossAddedPFwd);
+	Call_PushCell(npc);
 	Call_Finish();
 
 	if (!npc.IsCopy)
@@ -2783,11 +1970,6 @@ void RemoveProfile(int bossIndex)
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	controller.GetProfile(profile, sizeof(profile));
 
-	if (!controller.IsCopy && MusicActive() && BossHasMusic(profile) && BossMatchesCurrentMusic(profile))
-	{
-		NPCStopMusic();
-	}
-
 	controller.UnSpawn(true);
 
 	// Call our forward.
@@ -2856,8 +2038,6 @@ void RemoveProfile(int bossIndex)
 	g_NpcFestiveLightBrightness[bossIndex] = 0;
 	g_NpcFestiveLightDistance[bossIndex] = 0.0;
 	g_NpcFestiveLightRadius[bossIndex] = 0.0;
-
-	NPCSetDeathCamEnabled(bossIndex, false);
 
 	controller.CopyMaster = SF2_INVALID_NPC;
 	controller.CompanionMaster = SF2_INVALID_NPC;
@@ -3158,6 +2338,7 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 
 	SF2BossProfileData data;
 	data = npc.GetProfileData();
+	BaseBossProfile profileData = npc.GetProfileDataEx();
 
 	if (g_Enabled)
 	{
@@ -3271,6 +2452,20 @@ void SpawnSlender(SF2NPC_BaseNPC npc, const float pos[3])
 		soundInfo.EmitSound(_, entity.index);
 	}
 
+	float gameTime = GetGameTime();
+	if (npc.TeleportType == SF2BossTeleportType_Vanisher)
+	{
+		BossProfileTeleportVanishingData vanishingData = profileData.GetVanishingData();
+		if (vanishingData == null)
+		{
+			g_SlenderTimeUntilKill[bossIndex] = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty)) + gameTime;
+		}
+		else
+		{
+			g_SlenderTimeUntilKill[bossIndex] = GetRandomFloat(vanishingData.GetMinDefaultDespawnTime(difficulty), vanishingData.GetMaxDefaultDespawnTime(difficulty)) + gameTime;
+		}
+	}
+
 	// Call our forward.
 	Call_StartForward(g_OnBossSpawnFwd);
 	Call_PushCell(bossIndex);
@@ -3314,6 +2509,10 @@ void UpdateHealthBar(int bossIndex, int optionalSetPercent = -1)
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(NPCGetEntIndex(bossIndex));
 	if (!chaser.IsValid())
 	{
+		if (g_HealthBar != -1)
+		{
+			SetEntProp(g_HealthBar, Prop_Send, "m_iBossHealthPercentageByte", 0);
+		}
 		return;
 	}
 	float maxHealth = chaser.MaxHealth;
@@ -3743,6 +2942,8 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 		return Plugin_Stop;
 	}
 
+	int difficulty = GetLocalGlobalDifficulty(bossIndex);
+
 	if (SF_IsRenevantMap() && GetRoundState() != SF2RoundState_Escape)
 	{
 		return Plugin_Continue;
@@ -3753,15 +2954,17 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 		return Plugin_Continue;
 	}
 
-	float gameTime = GetGameTime();
-
-	int difficulty = GetLocalGlobalDifficulty(bossIndex);
-
-	// Check to see if anyone's looking at me before doing anything.
-	if (PeopleCanSeeSlender(bossIndex, _, false))
+	BaseBossProfile profileData = controller.GetProfileDataEx();
+	if (!profileData.IsInWhitelistedMap)
 	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Teleport for boss %d: map is not whitelisted!", bossIndex);
+		#endif
 		return Plugin_Continue;
 	}
+
+	float gameTime = GetGameTime();
+
 	int bossEnt = controller.EntIndex;
 	if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 	{
@@ -3772,391 +2975,341 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 		}
 	}
 
-	if (!NPCIsTeleportAllowed(bossIndex, difficulty) && (!bossEnt || bossEnt == INVALID_ENT_REFERENCE))
+	float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
+	if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
 	{
+		if (SlenderCanRemove(bossIndex))
+		{
+			controller.UnSpawn();
+		}
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Time until boss despawns %d: %f", bossIndex, g_SlenderTimeUntilKill[bossIndex] - gameTime);
+		#endif
+		return Plugin_Continue;
+	}
+	else
+	{
+		if (!NPCIsTeleportAllowed(bossIndex, difficulty))
+		{
+			return Plugin_Continue;
+		}
+	}
+
+	if (!IsRoundPlaying())
+	{
+		g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
 		return Plugin_Continue;
 	}
 
-	if (controller.TeleportType == 2)
+	if (gameTime < g_SlenderNextTeleportTime[bossIndex])
 	{
-		if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
-		{
-			if (NPCGetType(bossIndex) == SF2BossType_Chaser)
-			{
-				SF2_ChaserEntity chaser = SF2_ChaserEntity(bossEnt);
-				// Check to see if it's a good time to teleport away.
-				int state = chaser.State;
-				if (state == STATE_IDLE && chaser.IsAllowedToDespawn)
-				{
-					if (gameTime < g_SlenderTimeUntilKill[bossIndex])
-					{
-						return Plugin_Continue;
-					}
-				}
-				else
-				{
-					if (gameTime >= g_SlenderTimeUntilKill[bossIndex])
-					{
-						g_SlenderTimeUntilKill[bossIndex] = gameTime + NPCGetIdleLifetime(bossIndex, difficulty);
-					}
-					return Plugin_Continue;
-				}
-			}
-			else if (NPCGetType(bossIndex) == SF2BossType_Statue)
-			{
-				if (g_SlenderStatueIdleLifeTime[bossIndex] > gameTime)
-				{
-					return Plugin_Continue;
-				}
-			}
-		}
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Teleport for boss %d: failed because of teleport time (curtime: %f, teletime: %f)", bossIndex, gameTime, g_SlenderNextTeleportTime[bossIndex]);
+		#endif
+		return Plugin_Continue;
 	}
 
 	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 	NPCGetProfile(bossIndex, profile, sizeof(profile));
 
-	if (IsRoundPlaying())
+	bool ignoreFuncNavPrefer = g_NpcHasIgnoreNavPrefer[bossIndex];
+
+	int teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[bossIndex]);
+
+	if (!IsTargetValidForSlenderEx(CBaseEntity(teleportTarget), bossIndex))
 	{
-		if (gameTime >= g_SlenderNextTeleportTime[bossIndex])
+		g_SlenderTeleportTarget[bossIndex] = INVALID_ENT_REFERENCE;
+
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Teleport for boss %d: no good target, removing...", bossIndex);
+		#endif
+		return Plugin_Continue;
+	}
+
+	// Let's start the persistency timer here, so that way we won't have infinite looping impossible to spawn bosses
+	float targetDuration = controller.GetTeleportPersistencyPeriod(difficulty);
+	float deviation = GetRandomFloat(0.92, 1.08);
+	targetDuration = Pow(deviation * targetDuration, ((g_RoundDifficultyModifier) / 2.0)) + ((deviation * targetDuration) - 1.0);
+	g_SlenderTeleportMaxTargetTime[controller.Index] = gameTime + targetDuration;
+
+	float teleportMinRange = g_SlenderTeleportMinRange[bossIndex][difficulty];
+	bool shouldBeBehindObstruction = false;
+	if (controller.TeleportType == SF2BossTeleportType_Default)
+	{
+		shouldBeBehindObstruction = true;
+	}
+	float navPos[3];
+	CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(teleportTarget);
+	tempCharacter.GetAbsOrigin(navPos);
+
+	CNavArea targetArea = TheNavMesh.GetNearestNavArea(navPos, false, _, false, false);
+	if (targetArea == NULL_AREA)
+	{
+		return Plugin_Continue;
+	}
+
+	SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(targetArea, g_SlenderTeleportMaxRange[bossIndex][difficulty]);
+	int areaCount = collector.Count();
+	ArrayList areaArray = new ArrayList();
+	for (int i = 0; i < areaCount; i++)
+	{
+		CNavArea temp = collector.Get(i);
+		if (ignoreFuncNavPrefer && NavHasFuncPrefer(temp))
 		{
-			if (!NPCIsTeleportAllowed(bossIndex, difficulty) && bossEnt && bossEnt != INVALID_ENT_REFERENCE)
+			continue;
+		}
+
+		if (view_as<CTFNavArea>(temp).HasAttributeTF(NO_SPAWNING))
+		{
+			continue;
+		}
+
+		if (temp.GetCostSoFar() >= teleportMinRange)
+		{
+			areaArray.Push(temp);
+		}
+	}
+	delete collector;
+
+	CNavArea area = NULL_AREA;
+	int randomCell = 0;
+	float spawnPos[3], playerPos[3];
+
+	CNavArea usedArea = NULL_AREA;
+	while (areaArray.Length > 0)
+	{
+		bool canSpawn = true;
+		randomCell = GetRandomInt(0, areaArray.Length - 1);
+		area = areaArray.Get(randomCell);
+		area.GetCenter(spawnPos);
+		CNavArea closestArea = NULL_AREA;
+		TheNavMesh.BuildPath(area, NULL_AREA, navPos, .closestArea = closestArea, .maxPathLength = teleportMinRange * 1.5, .ignoreNavBlockers = true);
+		if (closestArea == targetArea)
+		{
+			float areaPos[3];
+			closestArea.GetCenter(areaPos);
+			if (GetVectorDistance(spawnPos, areaPos, true) <= Pow(teleportMinRange, 2.0))
 			{
-				controller.UnSpawn();
-				return Plugin_Continue;
-			}
-			float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
-			g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
-			bool ignoreFuncNavPrefer = g_NpcHasIgnoreNavPrefer[bossIndex];
-
-			int teleportTarget = EntRefToEntIndex(g_SlenderTeleportTarget[bossIndex]);
-
-			if (!IsTargetValidForSlenderEx(CBaseEntity(teleportTarget), bossIndex))
-			{
-				// We don't have any good targets. Remove myself for now.
-				if (SlenderCanRemove(bossIndex))
-				{
-					controller.UnSpawn();
-				}
-
-				g_SlenderTeleportTarget[bossIndex] = INVALID_ENT_REFERENCE;
-
+				areaArray.Erase(randomCell);
 				#if defined DEBUG
-				SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: no good target, removing...", bossIndex);
+				SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Area index %d: area is too close to player %f", randomCell, GetVectorDistance(areaPos, spawnPos));
+				float end[3];
+				CopyVector(spawnPos, end);
+				end[2] += 40.0;
+				TraceDebugLineToPlayers(DEBUG_BOSS_TELEPORTATION, spawnPos, end, _, { 255, 255, 0, 255 });
 				#endif
-			}
-			else
-			{
-				if (bossEnt && bossEnt != INVALID_ENT_REFERENCE)
-				{
-					controller.UnSpawn();
-					return Plugin_Continue;
-				}
-
-				// Let's start the persistency timer here, so that way we won't have infinite looping impossible to spawn bosses
-				float targetDuration = controller.GetTeleportPersistencyPeriod(difficulty);
-				float deviation = GetRandomFloat(0.92, 1.08);
-				targetDuration = Pow(deviation * targetDuration, ((g_RoundDifficultyModifier) / 2.0)) + ((deviation * targetDuration) - 1.0);
-				g_SlenderTeleportMaxTargetTime[controller.Index] = gameTime + targetDuration;
-
-				float teleportMinRange = g_SlenderTeleportMinRange[bossIndex][difficulty];
-				bool shouldBeBehindObstruction = false;
-				if (NPCGetTeleportType(bossIndex) == 2)
-				{
-					shouldBeBehindObstruction = true;
-				}
-				float navPos[3];
-				CBaseCombatCharacter tempCharacter = CBaseCombatCharacter(teleportTarget);
-				CNavArea targetArea = tempCharacter.GetLastKnownArea();
-				if (targetArea != NULL_AREA)
-				{
-					targetArea.GetCenter(navPos);
-				}
-
-				CNavArea area = TheNavMesh.GetNearestNavArea(navPos, false, _, false, false);
-				if (area != NULL_AREA)
-				{
-					SurroundingAreasCollector collector = TheNavMesh.CollectSurroundingAreas(area, g_SlenderTeleportMaxRange[bossIndex][difficulty]);
-					int areaCount = collector.Count();
-					ArrayList areaArray = new ArrayList(1, areaCount);
-					int validAreaCount = 0;
-					for (int i = 0; i < areaCount; i++)
-					{
-						if (ignoreFuncNavPrefer && NavHasFuncPrefer(collector.Get(i)))
-						{
-							continue;
-						}
-
-						if (view_as<CTFNavArea>(collector.Get(i)).HasAttributeTF(NO_SPAWNING))
-						{
-							continue;
-						}
-
-						if (collector.Get(i).GetCostSoFar() >= teleportMinRange)
-						{
-							areaArray.Set(validAreaCount, i);
-							validAreaCount++;
-						}
-					}
-
-					areaArray.Resize(validAreaCount);
-					area = NULL_AREA;
-					int randomArea = 0, randomCell = 0;
-					float spawnPos[3], playerPos[3];
-					bool canSpawn = true;
-
-					while (validAreaCount > 1)
-					{
-						randomCell = GetRandomInt(0, validAreaCount - 1);
-						randomArea = areaArray.Get(randomCell);
-						area = collector.Get(randomArea);
-						area.GetCenter(spawnPos);
-						/*float cornerPosition[3]; // Will revisit later
-						ArrayList corners = new ArrayList();
-						for (int i = 0; i < 4; i++)
-						{
-							corners.Push(view_as<NavCornerType>(i));
-						}
-						NavCornerType cornerA = view_as<NavCornerType>(GetRandomInt(0, 3));
-						NavCornerType invert = cornerA;
-						switch (cornerA)
-						{
-							case NORTH_WEST:
-							{
-								invert = SOUTH_EAST;
-							}
-							case NORTH_EAST:
-							{
-								invert = SOUTH_WEST;
-							}
-							case SOUTH_EAST:
-							{
-								invert = NORTH_WEST;
-							}
-							case SOUTH_WEST:
-							{
-								invert = NORTH_EAST;
-							}
-						}
-						corners.Erase(corners.FindValue(cornerA));
-						corners.Erase(corners.FindValue(invert));
-						NavCornerType cornerB = corners.Get(GetRandomInt(0, corners.Length - 1));
-						area.GetCorner(cornerA, spawnPos);
-						area.GetCorner(cornerB, cornerPosition);
-						LerpVectors(spawnPos, cornerPosition, spawnPos, GetRandomFloat(0.3, 0.7));
-						area.GetCorner(invert, cornerPosition);
-						LerpVectors(spawnPos, cornerPosition, spawnPos, GetRandomFloat(0.3, 0.7));
-						delete corners;*/
-
-						float traceMins[3];
-						traceMins[0] = g_SlenderDetectMins[bossIndex][0];
-						traceMins[1] = g_SlenderDetectMins[bossIndex][1];
-						traceMins[2] = 0.0;
-
-						float traceMaxs[3];
-						traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0];
-						traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1];
-						traceMaxs[2] = g_SlenderDetectMaxs[bossIndex][2];
-
-						TR_TraceHullFilter(spawnPos, spawnPos, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitEntity);
-						if (TR_DidHit())
-						{
-							area = NULL_AREA;
-							validAreaCount--;
-							int findValue = areaArray.FindValue(randomCell);
-							if (findValue != -1)
-							{
-								areaArray.Erase(findValue);
-
-								#if defined DEBUG
-								SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: boss index %d collides with something", findValue, bossIndex);
-								#endif
-							}
-						}
-						else
-						{
-							canSpawn = true;
-							for (int i = 1; i <= MaxClients; i++)
-							{
-								if (!IsValidClient(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i) || g_PlayerEliminated[i]
-									|| g_PlayerProxy[i] || DidClientEscape(i))
-								{
-									continue;
-								}
-								if (!canSpawn)
-								{
-									continue;
-								}
-
-								GetClientAbsOrigin(i, playerPos);
-								if (GetVectorSquareMagnitude(spawnPos, playerPos) <= SquareFloat(teleportMinRange))
-								{
-									area = NULL_AREA;
-									validAreaCount--;
-									int findValue = areaArray.FindValue(randomCell);
-									if (findValue != -1 && findValue < validAreaCount)
-									{
-										areaArray.Erase(findValue);
-										#if defined DEBUG
-										SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: too close to %N", findValue, i);
-										#endif
-									}
-									canSpawn = false;
-									break;
-								}
-							}
-
-							// Check visibility.
-							if (!g_SlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(spawnPos, !shouldBeBehindObstruction, false, _, true))
-							{
-								area = NULL_AREA;
-								validAreaCount--;
-								int findValue = areaArray.FindValue(randomCell);
-								if (findValue != -1)
-								{
-									areaArray.Erase(findValue);
-									#if defined DEBUG
-									SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: is visible to someone", findValue);
-									#endif
-								}
-								canSpawn = false;
-							}
-
-							AddVectors(spawnPos, g_SlenderEyePosOffset[bossIndex], spawnPos);
-
-							if (!g_SlenderTeleportIgnoreVis[bossIndex] && IsPointVisibleToAPlayer(spawnPos, !shouldBeBehindObstruction, false, _, true))
-							{
-								area = NULL_AREA;
-								validAreaCount--;
-								int findValue = areaArray.FindValue(randomCell);
-								if (findValue != -1)
-								{
-									areaArray.Erase(findValue);
-								}
-								canSpawn = false;
-							}
-
-							SubtractVectors(spawnPos, g_SlenderEyePosOffset[bossIndex], spawnPos);
-
-							// Look for copies
-							if (controller.GetProfileData().CopiesInfo.Enabled[difficulty] && canSpawn)
-							{
-								float minDistBetweenBosses = GetBossProfileTeleportCopyDistance(profile, difficulty);
-
-								for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
-								{
-									SF2NPC_BaseNPC check = SF2NPC_BaseNPC(bossCheck);
-									if (bossCheck == bossIndex ||
-										!check.IsValid())
-									{
-										continue;
-									}
-
-									if (check.CopyMaster != controller && controller.CopyMaster != check && controller.CopyMaster != check.CopyMaster)
-									{
-										continue;
-									}
-
-									int bossEntCheck = check.EntIndex;
-									if (!bossEntCheck || bossEntCheck == INVALID_ENT_REFERENCE)
-									{
-										continue;
-									}
-
-									float tempPos[3];
-									CBaseEntity(bossEntCheck).GetAbsOrigin(tempPos);
-
-									if (GetVectorSquareMagnitude(spawnPos, tempPos) <= SquareFloat(minDistBetweenBosses))
-									{
-										area = NULL_AREA;
-										validAreaCount--;
-										int findValue = areaArray.FindValue(randomCell);
-										if (findValue != -1)
-										{
-											areaArray.Erase(findValue);
-											#if defined DEBUG
-											SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Area index %d: boss index %d is too close to copy %d", findValue, bossIndex, bossCheck);
-											#endif
-										}
-										canSpawn = false;
-										break;
-									}
-								}
-							}
-
-							if (canSpawn)
-							{
-								controller.Spawn(spawnPos);
-
-								if (g_PlayerIsExitCamping[teleportTarget])
-								{
-									g_SlenderTeleportTargetIsCamping[bossIndex] = true;
-								}
-								else
-								{
-									g_SlenderTeleportTargetIsCamping[bossIndex] = false;
-								}
-
-								if (NPCGetFlags(bossIndex) & SFF_HASJUMPSCARE)
-								{
-									bool didJumpScare = false;
-
-									for (int i = 1; i <= MaxClients; i++)
-									{
-										if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
-										{
-											continue;
-										}
-
-										if (PlayerCanSeeSlender(i, bossIndex, false))
-										{
-											if ((NPCGetDistanceFromEntity(bossIndex, i) <= SquareFloat(NPCGetJumpscareDistance(bossIndex, difficulty)) && GetGameTime() >= g_SlenderNextJumpScare[bossIndex]) ||
-											(PlayerCanSeeSlender(i, bossIndex) && !GetBossProfileJumpscareNoSight(profile)))
-											{
-												didJumpScare = true;
-
-												float jumpScareDuration = NPCGetJumpscareDuration(bossIndex, difficulty);
-												ClientDoJumpScare(i, bossIndex, jumpScareDuration);
-											}
-										}
-									}
-
-									if (didJumpScare)
-									{
-										g_SlenderNextJumpScare[bossIndex] = GetGameTime() + NPCGetJumpscareCooldown(bossIndex, difficulty);
-									}
-								}
-								break;
-							}
-							else
-							{
-								#if defined DEBUG
-								SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: can't spawn due to no available areas", bossIndex);
-								#endif
-							}
-						}
-					}
-
-					if (validAreaCount <= 0)
-					{
-						controller.UnSpawn();
-					}
-
-					delete collector;
-					delete areaArray;
-				}
+				continue;
 			}
 		}
-		else
+
+		spawnPos[2] += 18.0;
+
+		float traceMins[3];
+		traceMins[0] = g_SlenderDetectMins[bossIndex][0];
+		traceMins[1] = g_SlenderDetectMins[bossIndex][1];
+		traceMins[2] = 0.0;
+
+		float traceMaxs[3];
+		traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0];
+		traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1];
+		traceMaxs[2] = g_SlenderDetectMaxs[bossIndex][2];
+
+		TR_TraceHullFilter(spawnPos, spawnPos, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitEntity);
+		if (TR_DidHit())
 		{
+			spawnPos[2] -= 18.0;
+			areaArray.Erase(randomCell);
 			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 0, "Teleport for boss %d: failed because of teleport time (curtime: %f, teletime: %f)", bossIndex, GetGameTime(), g_SlenderNextTeleportTime[bossIndex]);
+			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Area index %d: boss index %d collides with something", randomCell, bossIndex);
+			float end[3];
+			CopyVector(spawnPos, end);
+			end[2] += 40.0;
+			TraceDebugLineToPlayers(DEBUG_BOSS_TELEPORTATION, spawnPos, end);
 			#endif
+			continue;
 		}
+
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!IsValidClient(i) || !IsPlayerAlive(i) || IsClientInGhostMode(i) || g_PlayerEliminated[i]
+				|| g_PlayerProxy[i] || DidClientEscape(i))
+			{
+				continue;
+			}
+
+			GetClientAbsOrigin(i, playerPos);
+			if (GetVectorSquareMagnitude(spawnPos, playerPos) <= SquareFloat(teleportMinRange))
+			{
+				canSpawn = false;
+				break;
+			}
+		}
+
+		if (!canSpawn)
+		{
+			spawnPos[2] -= 18.0;
+			areaArray.Erase(randomCell);
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Area index %d: too close to a client", randomCell);
+			float end[3];
+			CopyVector(spawnPos, end);
+			end[2] += 40.0;
+			TraceDebugLineToPlayers(DEBUG_BOSS_TELEPORTATION, spawnPos, end, _, { 255, 255, 255, 255 });
+			#endif
+			continue;
+		}
+
+		spawnPos[2] -= 18.0;
+		// Check visibility.
+		if (!g_SlenderTeleportIgnoreVis[bossIndex])
+		{
+			float eyeCheckPos[3];
+			CopyVector(spawnPos, eyeCheckPos);
+			AddVectors(eyeCheckPos, g_SlenderEyePosOffset[bossIndex], eyeCheckPos);
+			if (IsPointVisibleToAPlayer(spawnPos, !shouldBeBehindObstruction, false, _, true, true) || IsPointVisibleToAPlayer(eyeCheckPos, !shouldBeBehindObstruction, false, _, true, true))
+			{
+				areaArray.Erase(randomCell);
+				#if defined DEBUG
+				SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Area index %d: is visible to someone", randomCell);
+				float end[3];
+				CopyVector(spawnPos, end);
+				end[2] += 40.0;
+				TraceDebugLineToPlayers(DEBUG_BOSS_TELEPORTATION, spawnPos, end, _, { 255, 0, 0, 255 });
+				#endif
+				continue;
+			}
+		}
+
+		// Look for copies
+		if (controller.GetProfileData().CopiesInfo.Enabled[difficulty] && canSpawn)
+		{
+			float minDistBetweenBosses = GetBossProfileTeleportCopyDistance(profile, difficulty);
+
+			for (int bossCheck = 0; bossCheck < MAX_BOSSES; bossCheck++)
+			{
+				SF2NPC_BaseNPC check = SF2NPC_BaseNPC(bossCheck);
+				if (bossCheck == bossIndex ||
+					!check.IsValid())
+				{
+					continue;
+				}
+
+				if (check.CopyMaster != controller && controller.CopyMaster != check && controller.CopyMaster != check.CopyMaster)
+				{
+					continue;
+				}
+
+				int bossEntCheck = check.EntIndex;
+				if (!bossEntCheck || bossEntCheck == INVALID_ENT_REFERENCE)
+				{
+					continue;
+				}
+
+				float tempPos[3];
+				CBaseEntity(bossEntCheck).GetAbsOrigin(tempPos);
+
+				if (GetVectorSquareMagnitude(spawnPos, tempPos) <= SquareFloat(minDistBetweenBosses))
+				{
+					canSpawn = false;
+					break;
+				}
+			}
+		}
+
+		if (!canSpawn)
+		{
+			areaArray.Erase(randomCell);
+			#if defined DEBUG
+			SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Area index %d: boss index %d is too close to a copy", randomCell, bossIndex);
+			float end[3];
+			CopyVector(spawnPos, end);
+			end[2] += 40.0;
+			TraceDebugLineToPlayers(DEBUG_BOSS_TELEPORTATION, spawnPos, end, 10.0, { 0, 0, 255, 255 });
+			#endif
+			continue;
+		}
+
+		usedArea = area;
+		break;
+	}
+
+	delete areaArray;
+
+	if (usedArea == NULL_AREA)
+	{
+		#if defined DEBUG
+		SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Teleport for boss %d: can't spawn due to no available areas", bossIndex);
+		#endif
 	}
 	else
 	{
-		float teleportTime = GetRandomFloat(NPCGetTeleportTimeMin(bossIndex, difficulty), NPCGetTeleportTimeMax(bossIndex, difficulty));
-		g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
+		usedArea.GetCenter(spawnPos);
+		spawnPos[0] = spawnPos[0] + ((GetRandomFloat() - 0.5) / 4.0) * usedArea.GetSizeX();
+		spawnPos[1] = spawnPos[1] + ((GetRandomFloat() - 0.5) / 4.0) * usedArea.GetSizeY();
+
+		spawnPos[2] += 18.0;
+		float traceEndPos[3];
+		CopyVector(spawnPos, traceEndPos);
+		traceEndPos[2] -= 1000.0;
+		float traceMins[3], traceMaxs[3];
+		if (NPCGetRaidHitbox(bossIndex))
+		{
+			traceMins[0] = g_SlenderDetectMins[bossIndex][0];
+			traceMins[1] = g_SlenderDetectMins[bossIndex][1];
+			traceMaxs[0] = g_SlenderDetectMaxs[bossIndex][0];
+			traceMaxs[1] = g_SlenderDetectMaxs[bossIndex][1];
+		}
+		else
+		{
+			traceMins[0] = HULL_HUMAN_MINS[0];
+			traceMins[1] = HULL_HUMAN_MINS[1];
+			traceMaxs[0] = HULL_HUMAN_MAXS[0];
+			traceMaxs[1] = HULL_HUMAN_MAXS[1];
+		}
+
+		TR_TraceHullFilter(spawnPos, traceEndPos, traceMins, traceMaxs, MASK_NPCSOLID, TraceRayDontHitEntity);
+		TR_GetEndPosition(spawnPos);
+
+		controller.Spawn(spawnPos);
+
+		if (g_PlayerIsExitCamping[teleportTarget])
+		{
+			g_SlenderTeleportTargetIsCamping[bossIndex] = true;
+		}
+		else
+		{
+			g_SlenderTeleportTargetIsCamping[bossIndex] = false;
+		}
+
+		if (NPCGetFlags(bossIndex) & SFF_HASJUMPSCARE)
+		{
+			bool didJumpScare = false;
+
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!IsValidClient(i) || !IsPlayerAlive(i) || g_PlayerEliminated[i] || IsClientInGhostMode(i))
+				{
+					continue;
+				}
+
+				if (PlayerCanSeeSlender(i, bossIndex, false))
+				{
+					if ((NPCGetDistanceFromEntity(bossIndex, i) <= SquareFloat(NPCGetJumpscareDistance(bossIndex, difficulty)) && gameTime >= g_SlenderNextJumpScare[bossIndex]) ||
+					(PlayerCanSeeSlender(i, bossIndex) && !GetBossProfileJumpscareNoSight(profile)))
+					{
+						didJumpScare = true;
+
+						float jumpScareDuration = NPCGetJumpscareDuration(bossIndex, difficulty);
+						ClientDoJumpScare(i, bossIndex, jumpScareDuration);
+					}
+				}
+			}
+
+			if (didJumpScare)
+			{
+				g_SlenderNextJumpScare[bossIndex] = gameTime + NPCGetJumpscareCooldown(bossIndex, difficulty);
+			}
+		}
 	}
 
 	return Plugin_Continue;
@@ -4504,9 +3657,17 @@ bool TraceRayBossVisibility(int entity, int mask, any data)
 	}
 	if (IsValidClient(entity))
 	{
-		if (g_PlayerProxy[entity] || IsClientInGhostMode(entity))
+		if (IsClientInGhostMode(entity))
 		{
 			return false;
+		}
+
+		if (g_PlayerProxy[entity])
+		{
+			if ((NPCGetFlags(NPCGetFromEntIndex(data)) & SFF_ATTACKWAITERS) == 0)
+			{
+				return false;
+			}
 		}
 	}
 	if (IsValidEntity(entity) && NPCGetFromEntIndex(entity) != -1)
@@ -4595,14 +3756,14 @@ bool TraceRayDontHitAnything(int entity, int mask, any data)
 /**
  *	Calculates the position and spawn point for a proxy.
  */
-bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPointEnt=-1)
+bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPointEnt = -1)
 {
 	spawnPointEnt = -1;
 
 	if (bossIndex == -1 || client <= 0)
 	{
 		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss index and or client are not valid!");
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss index and or client are not valid!");
 		#endif
 		return false;
 	}
@@ -4610,7 +3771,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	if (!IsRoundPlaying())
 	{
 		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxies because the round is not playing!", bossIndex);
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d could not spawn proxies because the round is not playing!", bossIndex);
 		#endif
 		return false;
 	}
@@ -4618,7 +3779,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	if (!(NPCGetFlags(bossIndex) & SFF_PROXIES))
 	{
 		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d cannot spawn proxies!");
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d cannot spawn proxies!");
 		#endif
 		return false;
 	}
@@ -4663,7 +3824,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	if (ent && ent != -1)
 	{
 		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d found a spawnpoint entity %d.", bossIndex, ent);
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d found a spawnpoint entity %d.", bossIndex, ent);
 		#endif
 		spawnPointEnt = ent;
 		GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", teleportPos);
@@ -4676,13 +3837,14 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	if (!teleportTarget || teleportTarget == INVALID_ENT_REFERENCE)
 	{
 		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d has no proxy target, aborting!", bossIndex);
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d has no proxy target, aborting!", bossIndex);
 		#endif
 		return false;
 	}
 
-	if (!IsPlayerAlive(teleportTarget))
+	if (!IsPlayerAlive(teleportTarget) || g_PlayerEliminated[teleportTarget] || DidClientEscape(teleportTarget))
 	{
+		g_SlenderProxyTarget[bossIndex] = INVALID_ENT_REFERENCE;
 		return false;
 	}
 
@@ -4716,7 +3878,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 			}
 
 			#if defined DEBUG
-			SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "Teleport for boss %d: collected %d areas", bossIndex, poppedAreas);
+			SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "Teleport for boss %d: collected %d areas", bossIndex, poppedAreas);
 			#endif
 			delete collector;
 		}
@@ -4737,28 +3899,42 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				float areaSpawnPoint[3];
 				area.GetCenter(areaSpawnPoint);
 
-				// Check space. First raise to HalfHumanHeight * 2, then trace downwards to get ground level.
 				float traceStartPos[3];
 				traceStartPos[0] = areaSpawnPoint[0];
 				traceStartPos[1] = areaSpawnPoint[1];
-				traceStartPos[2] = areaSpawnPoint[2] + (HalfHumanHeight * 2.0);
+				traceStartPos[2] = areaSpawnPoint[2] + (HalfHumanHeight / 2.0) + 1.0;
 
 				float traceMins[3];
 				traceMins[0] = HULL_TF2PLAYER_MINS[0];
 				traceMins[1] = HULL_TF2PLAYER_MINS[1];
-				traceMins[2] = 0.0;
+				traceMins[2] = HULL_TF2PLAYER_MINS[2];
 
 				float traceMaxs[3];
 				traceMaxs[0] = HULL_TF2PLAYER_MAXS[0];
 				traceMaxs[1] = HULL_TF2PLAYER_MAXS[1];
-				traceMaxs[2] = 0.0;
+				traceMaxs[2] = HULL_TF2PLAYER_MAXS[2];
+
+				TR_TraceHullFilter(traceStartPos,
+					traceStartPos,
+					traceMins,
+					traceMaxs,
+					MASK_PLAYERSOLID,
+					TraceRayDontHitAnyEntity,
+					client);
+				if (TR_DidHit())
+				{
+					#if defined DEBUG
+					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d could not spawn proxy %d because the space is in entity %d!", bossIndex, client, TR_GetEntityIndex());
+					#endif
+					continue;
+				}
 
 				Handle trace = TR_TraceHullFilterEx(traceStartPos,
 					areaSpawnPoint,
 					traceMins,
 					traceMaxs,
-					MASK_NPCSOLID,
-					TraceRayDontHitEntity,
+					MASK_PLAYERSOLID,
+					TraceRayDontHitPlayersOrEntity,
 					teleportTarget);
 
 				float traceHitPos[3];
@@ -4769,30 +3945,22 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				if (TR_PointOutsideWorld(traceHitPos))
 				{
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d spawn proxy %d because the position is outside the world!", bossIndex, client);
+					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d spawn proxy %d because the position is outside the world!", bossIndex, client);
 					#endif
 					continue;
 				}
-				if (IsSpaceOccupiedPlayer(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
+
+				if (IsSpaceOccupiedIgnorePlayers(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
 				{
 					traceHitPos[2] += 5.0;
-					if (IsSpaceOccupiedPlayer(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
+					if (IsSpaceOccupiedIgnorePlayers(traceHitPos, HULL_TF2PLAYER_MINS, HULL_TF2PLAYER_MAXS, client))
 					{
 						#if defined DEBUG
-						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because the space is occupied!", bossIndex, client);
+						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d could not spawn proxy %d because the space is occupied by an entity!", bossIndex, client);
 						#endif
 						continue;
 					}
-				}
-				if (IsSpaceOccupiedNPC(traceHitPos,
-					HULL_TF2PLAYER_MINS,
-					HULL_TF2PLAYER_MAXS,
-					client))
-				{
-					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because the space is occupied by another boss!", bossIndex, client);
-					#endif
-					continue;
+					traceHitPos[2] -= 5.0;
 				}
 
 				areaSpawnPoint[0] = traceHitPos[0];
@@ -4800,10 +3968,10 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 				areaSpawnPoint[2] = traceHitPos[2];
 
 				// Check visibility.
-				if (IsPointVisibleToAPlayer(areaSpawnPoint, false, false) && !SF_IsBoxingMap() && !SF_IsRaidMap() && !SF_IsProxyMap() && !SF_BossesChaseEndlessly())
+				if (IsPointVisibleToAPlayer(areaSpawnPoint, false, _, _, _, true) && !SF_IsBoxingMap() && !SF_IsRaidMap() && !SF_IsProxyMap() && !SF_BossesChaseEndlessly())
 				{
 					#if defined DEBUG
-					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because a player sees the spawn position!", bossIndex, client);
+					SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d could not spawn proxy %d because a player sees the spawn position!", bossIndex, client);
 					#endif
 					continue;
 				}
@@ -4828,7 +3996,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 					if (GetVectorSquareMagnitude(areaSpawnPoint, tempPos) <= SquareFloat(g_SlenderProxyTeleportMinRange[bossIndex][difficulty]))
 					{
 						#if defined DEBUG
-						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not spawn proxy %d because player %d is too close!", bossIndex, client, teleportClient);
+						SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d could not spawn proxy %d because player %d is too close!", bossIndex, client, teleportClient);
 						#endif
 						tooNear = true;
 						break;
@@ -4912,7 +4080,7 @@ bool SpawnProxy(int client, int bossIndex, float teleportPos[3], int &spawnPoint
 	if (teleportAreaIndex == -1)
 	{
 		#if defined DEBUG
-		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 0, "[PROXIES] Boss %d could not find any areas to place proxy %d!", bossIndex, client);
+		SendDebugMessageToPlayers(DEBUG_BOSS_PROXIES, 3, "[PROXIES] Boss %d could not find any areas to place proxy %d!", bossIndex, client);
 		#endif
 		return false;
 	}
@@ -5209,6 +4377,24 @@ static any Native_GetProfileDataEx(Handle plugin, int numParams)
 
 	SetNativeArray(2, data, sizeof(data));
 	return true;
+}
+
+static any Native_GetProfileDataNew(Handle plugin, int numParams)
+{
+	SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(GetNativeCell(1));
+	if (!controller.IsValid())
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid boss index %d", controller.Index);
+	}
+
+	return controller.GetProfileDataEx();
+}
+
+static any Native_GetProfileDataNewEx(Handle plugin, int numParams)
+{
+	char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+	GetNativeString(1, profile, sizeof(profile));
+	return GetBossProfile(profile);
 }
 
 static any Native_SpawnBossEffects(Handle plugin, int numParams)

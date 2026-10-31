@@ -163,13 +163,14 @@ methodmap KeyMap < StringMap
 		return StringToBool(string);
 	}
 
-	public void GetString(const char[] key, char[] buffer, int bufferSize, const char[] def = "")
+	public bool GetString(const char[] key, char[] buffer, int bufferSize, const char[] def = "")
 	{
 		bool status = this.Super.GetString(key, buffer, bufferSize);
 		if (!status)
 		{
 			strcopy(buffer, bufferSize, def);
 		}
+		return status;
 	}
 
 	public KeyMap GetSection(const char[] key, KeyMap def = null)

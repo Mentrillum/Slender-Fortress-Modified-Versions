@@ -4,6 +4,7 @@
 #define _sf2_game_events_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 Action Event_RoundStart(Handle event, const char[] name, bool dB)
 {
@@ -14,6 +15,17 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 			NPCRemoveAll();
 		}
 		return Plugin_Continue;
+	}
+
+	int ent = -1;
+	while ((ent = FindEntityByClassname(ent, "trigger_teleport")) != -1)
+	{
+		CBaseEntity teleporter = CBaseEntity(ent);
+		int flags = teleporter.GetProp(Prop_Data, "m_spawnflags");
+		if ((flags & TRIGGER_CLIENTS) != 0 && (flags & TRIGGER_NPCS) == 0)
+		{
+			teleporter.SetProp(Prop_Data, "m_spawnflags", flags | TRIGGER_NPCS);
+		}
 	}
 
 	#if defined DEBUG
@@ -38,8 +50,6 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	g_PageMax = 0;
 
 	g_VoteTimer = null;
-	//Stop the music if needed.
-	NPCStopMusic();
 	// Remove all bosses from the game.
 	NPCRemoveAll();
 	// Collect trigger_multiple to prevent touch bug.
@@ -64,7 +74,7 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	// Calculate the new round state.
 	if (g_RoundWaitingForPlayers)
 	{
-		int ent = -1;
+		ent = -1;
 		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
 		{
 			AcceptEntityInput(ent, "Disable");
@@ -73,7 +83,7 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	}
 	else if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
 	{
-		int ent = -1;
+		ent = -1;
 		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
 		{
 			AcceptEntityInput(ent, "Disable");
@@ -308,7 +318,7 @@ Action Event_PlayerTeam(Handle event, const char[] name, bool dB)
 			{
 				g_PlayerChoseTeam[client] = true;
 
-				if (g_PlayerPreferences[client].PlayerPreference_ProjectedFlashlight)
+				if (IsClientUsingProjectedFlashlight(client))
 				{
 					EmitSoundToClient(client, SF2_PROJECTED_FLASHLIGHT_CONFIRM_SOUND);
 					CPrintToChat(client, "%T", "SF2 Projected Flashlight", client);
@@ -446,15 +456,6 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 
 	if (IsPlayerAlive(client) && IsClientParticipating(client))
 	{
-		if (MusicActive()) //A boss is overriding the music.
-		{
-			char path[PLATFORM_MAX_PATH];
-			GetBossMusic(path, sizeof(path));
-			if (path[0] != '\0')
-			{
-				StopSound(client, MUSIC_CHAN, path);
-			}
-		}
 		g_PlayerBackStabbed[client] = false;
 		TF2_RemoveCondition(client, TFCond_HalloweenKart);
 		TF2_RemoveCondition(client, TFCond_HalloweenKartDash);
@@ -670,7 +671,7 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	int inflictor = event.GetInt("inflictor_entindex");
 	int owner = inflictor;
 
-	if (IsValidEntity(inflictor) && !SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor))
+	if (IsValidEntity(inflictor) && !SF2_ChaserEntity(inflictor).IsValid() && !SF2_StatueEntity(inflictor).IsValid() && !IsValidClient(inflictor) && HasEntProp(inflictor, Prop_Send, "m_hOwnerEntity"))
 	{
 		owner = GetEntPropEnt(inflictor, Prop_Send, "m_hOwnerEntity");
 	}
@@ -794,6 +795,11 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 		if (data.CustomDeathFlag)
 		{
 			event.SetInt("death_flags", data.CustomDeathFlagType);
+		}
+
+		if (data.SilentKill)
+		{
+			event.SetBool("silent_kill", true);
 		}
 
 		if (!modify && data.DecapOrGibRagdoll)

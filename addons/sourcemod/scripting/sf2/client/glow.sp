@@ -1,3 +1,6 @@
+#pragma semicolon 1
+#pragma newdecls required
+
 static const int g_DefaultRedColor[4] = { 184, 56, 59, 255 };
 static const int g_DefaultProxyColor[4] = { 255, 208, 0, 255 };
 
@@ -201,6 +204,11 @@ static bool ShouldBeVisibleToPlayer(SF2_BasePlayer client, SF2_BasePlayer other)
 		}
 		else if (other.IsProxy)
 		{
+			if (g_EnableWallHaxConVar.BoolValue)
+			{
+				return true;
+			}
+
 			if (TF2_IsInvisible(client.index))
 			{
 				return false;
@@ -230,7 +238,7 @@ static bool ShouldBeVisibleToPlayer(SF2_BasePlayer client, SF2_BasePlayer other)
 	{
 		if (client.IsProxy)
 		{
-			if (other.IsProxy || other.IsInGhostMode)
+			if (other.IsProxy || (!other.IsEliminated && g_EnableWallHaxConVar.BoolValue) || other.IsInGhostMode)
 			{
 				return true;
 			}

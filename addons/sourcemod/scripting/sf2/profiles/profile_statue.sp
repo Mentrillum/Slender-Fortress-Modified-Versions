@@ -5,6 +5,12 @@
 #define _sf2_profiles_statue
 
 #pragma semicolon 1
+#pragma newdecls required
+
+methodmap StatueBossProfile < BaseBossProfile
+{
+
+}
 
 StringMap g_StatueBossProfileData;
 

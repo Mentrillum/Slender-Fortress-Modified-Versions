@@ -4,6 +4,7 @@
 #define _sf2_adminmenu_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 static Handle g_TopMenu = null;
 static int g_PlayerAdminMenuTargetUserId[MAXTF2PLAYERS] = { -1, ... };
@@ -319,6 +320,10 @@ void DisplayBossMainAdminMenu(int client)
 	menuHandle.AddItem("force_attack", buffer);
 	FormatEx(buffer, sizeof(buffer), "Force a mod boss to be loaded next pack");
 	menuHandle.AddItem("force_bossload", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Add Boss Silent", client);
+	menuHandle.AddItem("add_boss_silent", buffer);
+	FormatEx(buffer, sizeof(buffer), "%T", "SF2 Admin Menu Add Fake Boss Silent", client);
+	menuHandle.AddItem("add_boss_fake_silent", buffer);
 
 	menuHandle.ExitBackButton = true;
 	menuHandle.Display(client, MENU_TIME_FOREVER);
@@ -348,6 +353,14 @@ static int AdminMenu_BossMain(Menu menu, MenuAction action, int param1, int para
 		else if (strcmp(info, "add_boss_fake") == 0)
 		{
 			DisplayAddFakeBossAdminMenu(param1);
+		}
+		if (strcmp(info, "add_boss_silent") == 0)
+		{
+			DisplayAddBossAdminMenu(param1, true);
+		}
+		else if (strcmp(info, "add_boss_fake_silent") == 0)
+		{
+			DisplayAddFakeBossAdminMenu(param1, true);
 		}
 		else if (strcmp(info, "remove_boss") == 0)
 		{
@@ -425,13 +438,13 @@ static void AddAllBossesToMenu(Menu menu)
 	}
 }
 
-static bool DisplayAddBossAdminMenu(int client) //Use for view boss list
+static bool DisplayAddBossAdminMenu(int client, bool silent = false) //Use for view boss list
 {
 	ArrayList bossList = GetBossProfileList();
 	if (bossList != null)
 	{
-		Menu menuHandle = new Menu(AdminMenu_AddBoss);
-		menuHandle.SetTitle("%t %T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Boss", client);
+		Menu menuHandle = new Menu(!silent ? AdminMenu_AddBoss : AdminMenu_AddBossSilent);
+		menuHandle.SetTitle("%t %T\n \n", "SF2 Prefix", !silent ? "SF2 Admin Menu Add Boss" : "SF2 Admin Menu Add Boss Silent", client);
 
 		AddAllBossesToMenu(menuHandle);
 
@@ -464,20 +477,45 @@ static int AdminMenu_AddBoss(Menu menu, MenuAction action, int param1, int param
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		menu.GetItem(param2, profile, sizeof(profile));
 
-		FakeClientCommand(param1, "sm_sf2_add_boss %s", profile);
+		AddSlenderViaCommand(profile);
 
 		DisplayAddBossAdminMenu(param1);
 	}
 	return 0;
 }
 
-static bool DisplayAddFakeBossAdminMenu(int client)
+static int AdminMenu_AddBossSilent(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			DisplayBossMainAdminMenu(param1);
+		}
+	}
+	else if (action == MenuAction_Select)
+	{
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		menu.GetItem(param2, profile, sizeof(profile));
+
+		AddSlenderViaCommand(profile, .silent = true);
+
+		DisplayAddBossAdminMenu(param1, true);
+	}
+	return 0;
+}
+
+static bool DisplayAddFakeBossAdminMenu(int client, bool silent = false)
 {
 	ArrayList bossList = GetBossProfileList();
 	if (bossList != null)
 	{
-		Menu menuHandle = new Menu(AdminMenu_AddFakeBoss);
-		menuHandle.SetTitle("%t %T\n \n", "SF2 Prefix", "SF2 Admin Menu Add Fake Boss", client);
+		Menu menuHandle = new Menu(!silent ? AdminMenu_AddFakeBoss : AdminMenu_AddFakeBossSilent);
+		menuHandle.SetTitle("%t %T\n \n", "SF2 Prefix", !silent ? "SF2 Admin Menu Add Fake Boss" : "SF2 Admin Menu Add Fake Boss Silent", client);
 
 		AddAllBossesToMenu(menuHandle);
 
@@ -510,9 +548,34 @@ static int AdminMenu_AddFakeBoss(Menu menu, MenuAction action, int param1, int p
 		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
 		menu.GetItem(param2, profile, sizeof(profile));
 
-		FakeClientCommand(param1, "sm_sf2_add_boss_fake %s", profile);
+		AddSlenderViaCommand(profile, .fake = true);
 
 		DisplayAddFakeBossAdminMenu(param1);
+	}
+	return 0;
+}
+
+static int AdminMenu_AddFakeBossSilent(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			DisplayBossMainAdminMenu(param1);
+		}
+	}
+	else if (action == MenuAction_Select)
+	{
+		char profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		menu.GetItem(param2, profile, sizeof(profile));
+
+		AddSlenderViaCommand(profile, .fake = true, .silent = true);
+
+		DisplayAddFakeBossAdminMenu(param1, true);
 	}
 	return 0;
 }

@@ -4,6 +4,7 @@
 #define _sf2_specialround_included
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #define SR_CYCLELENGTH 10.0
 #define SR_STARTDELAY 0.25
@@ -656,6 +657,48 @@ static void SpecialRoundGetIconHud(int specialRound, char[] buffer,int bufferLen
 	g_SpecialRoundsConfig.GetString("display_icon_hud", buffer, bufferLen);
 }
 
+static void SpecialRoundGetNameMenu(int specialRound, char[] buffer,int bufferLen)
+{
+	strcopy(buffer, bufferLen, "");
+
+	if (g_SpecialRoundsConfig == null)
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.Rewind();
+	char specialRoundString[64];
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
+
+	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.GetString("menu_name", buffer, bufferLen);
+}
+
+static void SpecialRoundGetDescriptionMenu(int specialRound, char[] buffer,int bufferLen)
+{
+	strcopy(buffer, bufferLen, "");
+
+	if (g_SpecialRoundsConfig == null)
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.Rewind();
+	char specialRoundString[64];
+	FormatEx(specialRoundString, sizeof(specialRoundString), "%d", specialRound);
+
+	if (!g_SpecialRoundsConfig.JumpToKey(specialRoundString))
+	{
+		return;
+	}
+
+	g_SpecialRoundsConfig.GetString("menu_desc", buffer, bufferLen);
+}
+
 static bool SpecialRoundCanBeSelected(int specialRound)
 {
 	if (g_SpecialRoundsConfig == null)
@@ -841,11 +884,14 @@ static void SpecialRoundCycleFinish()
 		char iconHud[64];
 		SpecialRoundGetIconHud(g_SpecialRoundType, iconHud, sizeof(iconHud));
 
-		char descChat[64];
-		SpecialRoundGetDescriptionChat(g_SpecialRoundType, descChat, sizeof(descChat));
-
 		SpecialRoundGameText(descHud, iconHud);
-		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", descChat); // For those who are using minimized HUD...
+		for(int client = 1; client <= MaxClients; client++)
+		{
+			if (IsValidClient(client))
+			{
+				ShowSpecialDesc(client, g_SpecialRoundType, true); // For those who are using minimized HUD...
+			}
+		}
 	}
 
 	g_SpecialRoundTimer = CreateTimer(SR_STARTDELAY, Timer_SpecialRoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -1207,20 +1253,14 @@ void SpecialRoundStart()
 						delete classArrays;
 					}
 				}
-				if (TF2_GetPlayerClass(client) == TFClass_Sniper)
+				int ent = -1;
+				while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
 				{
-					int ent = -1;
-					while ((ent = FindEntityByClassname(ent, "tf_wearable")) != -1)
-					{
-						int itemIndex = GetEntProp(ent, Prop_Send, "m_iItemDefinitionIndex");
+					int itemIndex = GetEntProp(ent, Prop_Send, "m_iItemDefinitionIndex");
 
-						if (642 == itemIndex)
-						{
-							if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client)
-							{
-								RemoveEntity(ent);
-							}
-						}
+					if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == client && IsWeaponRestricted(SF2_BasePlayer(client), itemIndex))
+					{
+						RemoveEntity(ent);
 					}
 				}
 			}
@@ -1338,7 +1378,6 @@ void SpecialRoundStart()
 			char buffer[SF2_MAX_PROFILE_NAME_LENGTH], nightmareDisplay[256];
 			if (!SF_SpecialRound(SPECIALROUND_DOUBLEROULETTE) && !SF_SpecialRound(SPECIALROUND_REVOLUTION))
 			{
-				NPCStopMusic();
 				NPCRemoveAll();
 			}
 			ArrayList selectableBosses = GetSelectableAdminBossProfileList();
@@ -1526,7 +1565,6 @@ void SpecialRoundStart()
 			int tripleBosses = 0;
 			for (int i = 0; i < MAX_BOSSES; i++)
 			{
-				NPCStopMusic();
 				SF2NPC_BaseNPC Npc = SF2NPC_BaseNPC(i);
 				if (!Npc.IsValid())
 				{
@@ -1774,17 +1812,13 @@ Action Timer_DisplaySpecialRound(Handle timer)
 	char iconHud[64];
 	SpecialRoundGetIconHud(g_SpecialRoundType, iconHud, sizeof(iconHud));
 
-	char descChat[64];
-	SpecialRoundGetDescriptionChat(g_SpecialRoundType, descChat, sizeof(descChat));
-
 	SpecialRoundGameText(descHud, iconHud);
-	if (strcmp(descChat, "") != 0)
+	for(int client = 1; client <= MaxClients; client++)
 	{
-		CPrintToChatAll("%t", "SF2 Special Round Announce Chat", descChat);
-	}
-	else
-	{
-		CPrintToChatAll("{dodgerblue}Special round in developement...");
+		if (IsValidClient(client))
+		{
+			ShowSpecialDesc(client, g_SpecialRoundType, true);
+		}
 	}
 
 	return Plugin_Stop;
@@ -1829,156 +1863,22 @@ static void SpecialCreateVote()
 		}
 
 		char item[30], itemOutPut[30];
-		switch (round)
+		SpecialRoundGetNameMenu(round, item, sizeof(item));
+		if (item[0] != '\0')
 		{
-			case SPECIALROUND_DOUBLETROUBLE:
-			{
-				FormatEx(item, sizeof(item), "Double Trouble");
-			}
-			case SPECIALROUND_INSANEDIFFICULTY:
-			{
-				FormatEx(item, sizeof(item), "Suicide Time");
-			}
-			case SPECIALROUND_DOUBLEMAXPLAYERS:
-			{
-				FormatEx(item, sizeof(item), "Double Players");
-			}
-			case SPECIALROUND_LIGHTSOUT:
-			{
-				FormatEx(item, sizeof(item), "Lights Out");
-			}
-			case SPECIALROUND_BEACON:
-			{
-				FormatEx(item, sizeof(item), "Bacon Spray");
-			}
-			case SPECIALROUND_SILENTSLENDER:
-			{
-				FormatEx(item, sizeof(item), "Silent Slender");
-			}
-			case SPECIALROUND_NOGRACE:
-			{
-				FormatEx(item, sizeof(item), "Start Running");
-			}
-			case SPECIALROUND_2DOUBLE:
-			{
-				FormatEx(item, sizeof(item), "Double It All");
-			}
-			case SPECIALROUND_DOUBLEROULETTE:
-			{
-				FormatEx(item, sizeof(item), "Double Roulette");
-			}
-			case SPECIALROUND_NIGHTVISION:
-			{
-				FormatEx(item, sizeof(item), "Night Vision");
-			}
-			case SPECIALROUND_INFINITEFLASHLIGHT:
-			{
-				FormatEx(item, sizeof(item), "Infinite Flashlight");
-			}
-			case SPECIALROUND_DREAMFAKEBOSSES:
-			{
-				FormatEx(item, sizeof(item), "Just a Dream");
-			}
-			case SPECIALROUND_EYESONTHECLOACK:
-			{
-				FormatEx(item, sizeof(item), "Countdown");
-			}
-			case SPECIALROUND_NOPAGEBONUS:
-			{
-				FormatEx(item, sizeof(item), "Deadline");
-			}
-			case SPECIALROUND_DUCKS:
-			{
-				FormatEx(item, sizeof(item), "Ducks");
-			}
-			case SPECIALROUND_1UP:
-			{
-				FormatEx(item, sizeof(item), "1-Up");
-			}
-			case SPECIALROUND_NOULTRAVISION:
-			{
-				FormatEx(item, sizeof(item), "Blind");
-			}
-			case SPECIALROUND_SUPRISE:
-			{
-				FormatEx(item, sizeof(item), "Surprise");
-			}
-			case SPECIALROUND_LASTRESORT:
-			{
-				FormatEx(item, sizeof(item), "Last Resort");
-			}
-			case SPECIALROUND_ESCAPETICKETS:
-			{
-				FormatEx(item, sizeof(item), "Escape Tickets");
-			}
-			case SPECIALROUND_REVOLUTION:
-			{
-				FormatEx(item, sizeof(item), "Special Round Revolution");
-			}
-			case SPECIALROUND_DISTORTION:
-			{
-				FormatEx(item, sizeof(item), "Space Distortion");
-			}
-			case SPECIALROUND_MULTIEFFECT:
-			{
-				FormatEx(item, sizeof(item), "Multieffect");
-			}
-			case SPECIALROUND_BOO:
-			{
-				FormatEx(item, sizeof(item), "Boo");
-			}
-			case SPECIALROUND_COFFEE:
-			{
-				FormatEx(item, sizeof(item), "Coffee");
-			}
-			case SPECIALROUND_PAGEDETECTOR:
-			{
-				FormatEx(item, sizeof(item), "Page Detector");
-			}
-			case SPECIALROUND_CLASSSCRAMBLE:
-			{
-				FormatEx(item, sizeof(item), "Class Scramble");
-			}
-			case SPECIALROUND_PAGEREWARDS:
-			{
-				FormatEx(item, sizeof(item), "Page Rewards");
-			}
-			case SPECIALROUND_TINYBOSSES:
-			{
-				FormatEx(item, sizeof(item), "Tiny Bosses");
-			}
-			case SPECIALROUND_RUNNINGINTHE90S:
-			{
-				FormatEx(item, sizeof(item), "In The 90s");
-			}
-			case SPECIALROUND_TRIPLEBOSSES:
-			{
-				FormatEx(item, sizeof(item), "Triple Bosses");
-			}
-			case SPECIALROUND_BOSSROULETTE:
-			{
-				FormatEx(item, sizeof(item), "Boss Roulette");
-			}
-			case SPECIALROUND_WALLHAX:
-			{
-				FormatEx(item, sizeof(item), "Wall Hax");
-			}
-			case SPECIALROUND_SINGLEPLAYER:
-			{
-				FormatEx(item, sizeof(item), "Single Player");
-			}
-			case SPECIALROUND_BEATBOX:
-			{
-				FormatEx(item, sizeof(item), "Beat Box");
-			}
+			strcopy(itemOutPut, sizeof(itemOutPut), item);
 		}
-		for (int bit = 0; bit < 30; bit++)
+		else
 		{
-			if (strcmp(item[bit], "-") == 0 || strcmp(item[bit], ":") == 0)
+			SpecialRoundGetDescriptionChat(round, item, sizeof(item));
+			for (int bit = 0; bit < 30; bit++)
 			{
-				break;
+				if (strcmp(item[bit], "-") == 0 || strcmp(item[bit], ":") == 0)
+				{
+					break;
+				}
+				itemOutPut[bit] = item[bit];
 			}
-			itemOutPut[bit] = item[bit];
 		}
 		FormatEx(item, sizeof(item), "%d", round);
 		NativeVotes_AddItem(voteMenu, item, itemOutPut);
@@ -2059,6 +1959,140 @@ void SpecialRoundReset()
 bool IsSpecialRoundRunning()
 {
 	return g_IsSpecialRound;
+}
+
+Action SpecialRoundMenu(int client, int args)
+{
+	if (IsValidClient(client) && IsSpecialRoundRunning())
+	{
+		MainMenu(client);
+	}
+
+	return Plugin_Handled;
+}
+
+static void MainMenu(int client, int page = 0)
+{
+	Menu menu = new Menu(MainMenuH);
+
+	menu.SetTitle("Special Round List:\n ");
+
+	char buffer[64];
+
+	for (int i = 1; i < SPECIALROUND_MAXROUNDS; i++)
+	{
+		SpecialRoundGetNameMenu(i, buffer, sizeof(buffer));
+		if (buffer[0] != '\0')
+		{
+			SpecialRoundGetDescriptionChat(i, buffer, sizeof(buffer));
+			int pos = FindCharInString(buffer, '-');
+			if (pos > 0)
+			{
+				buffer[pos - 1] = '\0';
+			}
+		}
+
+		menu.AddItem(buffer, buffer);
+	}
+
+	menu.ExitBackButton = true;
+	menu.DisplayAt(client, page / 7 * 7, MENU_TIME_FOREVER);
+}
+
+static int MainMenuH(Menu menu, MenuAction action, int client, int choice)
+{
+	switch(action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+		case MenuAction_Cancel:
+		{
+			// Do nothing
+		}
+		case MenuAction_Select:
+		{
+			ShowSpecialDesc(client, choice + 1, false);
+			MainMenu(client, choice);
+		}
+	}
+	return 0;
+}
+
+static void ShowSpecialDesc(int client, int special, bool fromRound)
+{
+	if (fromRound && !g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc)
+	{
+		char descChat[64];
+		SpecialRoundGetDescriptionChat(special, descChat, sizeof(descChat));
+		CPrintToChat(client, "%t", "SF2 Special Round Announce Chat", descChat);
+		return;
+	}
+
+	char buffer[512];
+	SpecialRoundGetDescriptionMenu(special, buffer, sizeof(buffer));
+	if (buffer[0] != '\0')
+	{
+		SpecialRoundGetDescriptionHud(special, buffer, sizeof(buffer));
+		int pos = FindCharInString(buffer, '-');
+		if (pos > 0)
+		{
+			strcopy(buffer, sizeof(buffer), buffer[pos + 2]);
+		}
+		else
+		{
+			strcopy(buffer, sizeof(buffer), "No description");
+		}
+	}
+
+	char buffer2[512];
+	SpecialRoundGetNameMenu(special, buffer2, sizeof(buffer2));
+	if (buffer2[0] != '\0')
+	{
+		SpecialRoundGetDescriptionChat(special, buffer2, sizeof(buffer2));
+		int pos = FindCharInString(buffer2, '-');
+		if (pos > 0)
+		{
+			buffer2[pos - 1] = '\0';
+		}
+	}
+
+	Format(buffer, sizeof(buffer), "%s - %s", buffer2, buffer);
+
+	for (int i;;)
+	{
+		int pos = FindCharInString(buffer[i], '\n');
+		if (pos != -1)
+		{
+			strcopy(buffer2, pos + 1, buffer[i]);
+			buffer2[pos] = '\0';
+		}
+		else
+		{
+			pos = FindCharInString(buffer[i], '\\');
+			if (pos != -1)
+			{
+				strcopy(buffer2, pos + 1, buffer[i]);
+				buffer2[pos] = '\0';
+				pos++;
+			}
+		}
+
+		if(pos == -1)
+		{
+			strcopy(buffer2, sizeof(buffer2), buffer[i]);
+		}
+
+		CPrintToChat(client, "%s{lightblue}%s", (fromRound && !i) ? "Chosen special round: " : "", buffer2);
+
+		if(pos == -1)
+		{
+			break;
+		}
+
+		i = pos + 1;
+	}
 }
 
 void SpecialRoundInitializeAPI()

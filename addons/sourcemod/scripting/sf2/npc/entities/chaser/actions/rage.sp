@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 static NextBotActionFactory g_Factory;
 
@@ -119,6 +120,7 @@ static int Update(SF2_ChaserRageAction action, SF2_ChaserEntity actor, float int
 
 static void OnEnd(SF2_ChaserRageAction action, SF2_ChaserEntity actor)
 {
+	actor.MyNextBotPointer().GetLocomotionInterface().ClearStuckStatus();
 	actor.IsRaging = false;
 	actor.OverrideInvincible = false;
 	actor.IsGoingToHeal = false;
