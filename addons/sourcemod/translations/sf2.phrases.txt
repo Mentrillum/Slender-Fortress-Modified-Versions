@@ -11,39 +11,39 @@
 	}
 	"SF2 Renevant Wall Hax"
 	{
-		"en" "You can now see bosses and players through walls."
+		"en" "You can now see everything through walls"
 	}
 	"SF2 Renevant Marked"
 	{
-		"en" "Everyone is marked for death permanently."
+		"en" "Everyone is marked for death permanently"
 	}
 	"SF2 Renevant 90s"
 	{
-		"en" "You feel really nervous, now run faster."
+		"en" "Everyone run more faster"
 	}
 	"SF2 Renevant Bacon"
 	{
-		"en" "Bosses are now alerted on spawn."
+		"en" "Now Bosses are now alerted on spawn"
 	}
 	"SF2 Renevant Multieffects"
 	{
-		"en" "Bosses can now inflict Multieffect."
+		"en" "Now Bosses can now inflict Multieffect on damage"
 	}
 	"SF2 Renevant Difficulty"
 	{
-		"en" "Difficulty has been set to"
+		"en" "Now difficulty got changed to"
 	}
 	"SF2 Boss Added"
 	{
-		"en" "Next Boss"
+		"en" "New Boss"
 	}
 	"SF2 Bosses Added"
 	{
-		"en" "Next Bosses"
+		"en" "New Bosses Added"
 	}
 	"SF2 Admin Boss"
 	{
-		"en" "Next Exclusive Boss"
+		"en" "Special Boss Added"
 	}
 	"SF2 Difficulty Vote Finished"
 	{
@@ -1128,6 +1128,16 @@
 		"ko"	"가짜 보스 추가"
 	}
 
+	"SF2 Admin Menu Add Boss Silent"
+	{
+		"en"	"Silently add a boss"
+	}
+
+	"SF2 Admin Menu Add Fake Boss Silent"
+	{
+		"en"	"Silently add a fake boss"
+	}
+
 	"SF2 Admin Menu Remove Boss"
 	{
 		"en"	"Remove a boss"
@@ -2156,6 +2166,11 @@
 
 	"SF2 Teleport Ghost Players"
 	{
+		"en"	"{lightblue}You can now teleport to both players and bosses during ghost mode."
+	}
+
+	"SF2 Teleport Ghost Players"
+	{
 		"en"	"{lightblue}You can now teleport to only players during ghost mode."
 		"fi"	"{lightblue}Voit nyt teleportata pelaajiin vain haamu tilassa."
 		"pt"	"{lightblue}Agora, você pode teletransportar-se apenas a jogadores no modo fantasma."
@@ -2338,5 +2353,4 @@
 		"en" "Removed music {1}."
 	}
 }
-
 
