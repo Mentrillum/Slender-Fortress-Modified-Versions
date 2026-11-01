@@ -331,6 +331,12 @@ enum struct MusicState
 		this.Init();
 	}
 
+	void Play(SF2_BasePlayer client)
+	{
+		float volume = this.CurrentVolume * g_PlayerPreferences[client.index].PlayerPreference_MusicVolume;
+		EmitSoundToClient(client.index, this.MusicPath, _, MUSIC_CHAN, SNDLEVEL_NONE, SND_CHANGEVOL, volume, this.Pitch);
+	}
+
 	void SetFadeState(SF2MusicFadeState state)
 	{
 		if (this.IsNull)
@@ -502,6 +508,8 @@ static void OnDisconnected(SF2_BasePlayer client)
 	{
 		delete g_LayeredThemes[client.index];
 	}
+	g_CurrentTheme[client.index] = g_NullMusicState;
+	g_GlobalMusicState[client.index] = g_NullMusicState;
 }
 
 static void OnPostInitMapEntities()
@@ -747,11 +755,15 @@ static void GetPageMusicRanges()
 			if (StrContains(map, key, false) == 0)
 			{
 				KeyMap obj = g_EscapeThemesConfig.GetSection(key);
-				obj.GetString("entity", key, sizeof(key));
-				if (key[0] == '\0')
+				obj = obj.GetSection("entities");
+				if (obj == null)
 				{
 					continue;
 				}
+
+				int index = GetRandomInt(0, obj.KeyLength - 1);
+				obj.GetKeyNameFromIndex(index, key, sizeof(key));
+				obj.GetString(key, key, sizeof(key));
 
 				ent = -1;
 				while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
@@ -787,18 +799,23 @@ static void GetPageMusicRanges()
 					}
 				}
 
-				ent = -1;
-				while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
+				for (int i2 = 0; i2 < obj.KeyLength; i2++)
 				{
-					GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
-					if (targetName[0] == '\0')
+					obj.GetKeyNameFromIndex(i2, key, sizeof(key));
+					obj.GetString(key, key, sizeof(key));
+					ent = -1;
+					while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
 					{
-						continue;
-					}
+						GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+						if (targetName[0] == '\0')
+						{
+							continue;
+						}
 
-					if (strcmp(targetName, key, false) == 0)
-					{
-						RemoveEntity(ent);
+						if (strcmp(targetName, key, false) == 0)
+						{
+							RemoveEntity(ent);
+						}
 					}
 				}
 				break;
@@ -883,6 +900,8 @@ static void ClearMusic(SF2_BasePlayer client)
 
 	g_CurrentTheme[client.index].Stop(client);
 	g_CurrentTheme[client.index] = g_NullMusicState;
+	g_GlobalMusicState[client.index].Stop(client);
+	g_GlobalMusicState[client.index] = g_NullMusicState;
 }
 
 static void UpdatePageMusic()
@@ -1320,6 +1339,13 @@ static void MusicThink()
 		if (g_CurrentTheme[client.index].IsNull)
 		{
 			AddMusicToQueue(client, globalMusic ? g_GlobalMusicState[client.index] : g_DefaultMusicState);
+		}
+		else
+		{
+			if (g_CurrentTheme[client.index].FadeState == SF2MusicFadeState_None)
+			{
+				g_CurrentTheme[client.index].Play(client);
+			}
 		}
 
 		if (globalMusic)
