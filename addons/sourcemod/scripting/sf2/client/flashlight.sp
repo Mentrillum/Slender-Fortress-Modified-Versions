@@ -479,6 +479,14 @@ static Action FlashlightBeamSetTransmit(int ent, int other)
 		return Plugin_Handled;
 	}
 
+	if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+	{
+		if (!g_PlayerEliminated[other] && !DidClientEscape(other))
+		{
+			return Plugin_Handled;
+		}
+	}
+
 	return Plugin_Continue;
 }
 
@@ -489,9 +497,17 @@ static Action FlashlightLightSetTransmit(int ent, int other)
 		return Plugin_Continue;
 	}
 
-	if (IsValidClient(other) && g_PlayerFlashlightLightEnt[other] == EntIndexToEntRef(ent))
+	if (IsValidClient(other) && IsClientUsingProjectedFlashlight(other) && g_PlayerFlashlightLightEnt[other] == EntIndexToEntRef(ent))
 	{
 		return Plugin_Handled;
+	}
+
+	if (SF_SpecialRound(SPECIALROUND_SINGLEPLAYER))
+	{
+		if (!g_PlayerEliminated[other] && !DidClientEscape(other) && g_PlayerFlashlightLightEnt[other] != EntIndexToEntRef(ent))
+		{
+			return Plugin_Handled;
+		}
 	}
 
 	return Plugin_Continue;
@@ -678,11 +694,7 @@ void ClientTurnOnFlashlight(int client)
 			g_PlayerFlashlightEnt[client] = EntIndexToEntRef(ent.index);
 			g_PlayerFlashlightLightEnt[client] = EntIndexToEntRef(ent.End.index);
 			SDKHook(ent.index, SDKHook_SetTransmit, FlashlightBeamSetTransmit);
-
-			if (IsClientUsingProjectedFlashlight(client))
-			{
-				SDKHook(ent.End.index, SDKHook_SetTransmit, FlashlightLightSetTransmit);
-			}
+			SDKHook(ent.End.index, SDKHook_SetTransmit, FlashlightLightSetTransmit);
 		}
 	}
 

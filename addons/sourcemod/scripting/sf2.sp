@@ -1040,6 +1040,7 @@ static void StartPlugin()
 	ReloadModifiedWeapons();
 	ReloadSpecialRounds();
 	ReloadClassConfigs();
+	ReloadEscapeConfig();
 
 	NPCOnConfigsExecuted();
 	BossPreview_ReloadPack();
@@ -5814,7 +5815,7 @@ Action Timer_RevertClientName(Handle timer, int index)
 
 Action Timer_CheckAlivePlayers(Handle timer)
 {
-	if (!g_Enabled || !SF_IsBoxingMap())
+	if (!g_Enabled || !SF_IsBoxingMap() || !IsRoundInEscapeObjective())
 	{
 		return Plugin_Stop;
 	}

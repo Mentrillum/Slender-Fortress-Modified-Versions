@@ -136,7 +136,7 @@ void SendPlayerGroupInvitation(int client, int groupID, int inviter = -1)
 	}
 
 	Menu menu = new Menu(Menu_GroupInvite);
-	menu.SetTitle("%t%T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, leaderName, groupName);
+	menu.SetTitle("%t %T\n \n", "SF2 Prefix", "SF2 Group Invite Menu Description", client, leaderName, groupName);
 
 	char groupIDString[64];
 	FormatEx(groupIDString, sizeof(groupIDString), "%d", groupID);
@@ -222,7 +222,7 @@ void DisplayResetGroupQueuePointsMenuToClient(int client)
 	}
 
 	Menu menu = new Menu(Menu_ResetGroupQueuePoints);
-	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
+	menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Reset Group Queue Points Menu Title", client, "SF2 Reset Group Queue Points Menu Description", client);
 
 	char buffer[256];
 	FormatEx(buffer, sizeof(buffer), "%T", "Yes", client);

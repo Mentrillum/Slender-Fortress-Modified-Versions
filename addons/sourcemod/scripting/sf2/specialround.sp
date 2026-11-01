@@ -1830,7 +1830,7 @@ static void SpecialCreateVote()
 	NativeVotes_SetInitiator(voteMenu, NATIVEVOTES_SERVER_INDEX);
 
 	char title[255];
-	FormatEx(title, 255, "%t%t", "SF2 Prefix", "SF2 Special Round Vote Menu Title");
+	FormatEx(title, 255, "%t %t", "SF2 Prefix", "SF2 Special Round Vote Menu Title");
 	NativeVotes_SetDetails(voteMenu,title);
 
 	ArrayList enabledRounds = SpecialEnabledList().Clone();

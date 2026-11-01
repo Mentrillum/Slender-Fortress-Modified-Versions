@@ -10,6 +10,9 @@
 #define FILE_CLASSCONFIGS "configs/sf2/class_stats.cfg"
 #define FILE_CLASSCONFIGS_DATA "data/sf2/class_stats.cfg"
 
+#define FILE_ESCAPECONFIG "configs/sf2/escape_themes.cfg"
+#define FILE_ESCAPECONFIG_DATA "data/sf2/escape_themes.cfg"
+
 #define CRIT_SOUND "player/crit_hit.wav"
 #define CRIT_PARTICLENAME "crit_text"
 #define MINICRIT_SOUND "player/crit_hit_mini.wav"

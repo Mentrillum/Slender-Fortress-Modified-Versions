@@ -10,7 +10,7 @@
 void DisplayGroupMainMenuToClient(int client)
 {
 	Menu menu = new Menu(Menu_GroupMain);
-	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Group Main Menu Title", client, "SF2 Group Main Menu Description", client);
+	menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Group Main Menu Title", client, "SF2 Group Main Menu Description", client);
 
 	int groupIndex = ClientGetPlayerGroup(client);
 	bool groupIsActive = IsPlayerGroupActive(groupIndex);
@@ -82,7 +82,7 @@ void DisplayCreateGroupMenuToClient(int client)
 	}
 
 	Menu menu = new Menu(Menu_CreateGroup);
-	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Create Group Menu Title", client, "SF2 Create Group Menu Description", client, GetMaxPlayersForRound(), g_PlayerQueuePoints[client]);
+	menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Create Group Menu Title", client, "SF2 Create Group Menu Description", client, GetMaxPlayersForRound(), g_PlayerQueuePoints[client]);
 
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Yes", client);
@@ -151,7 +151,7 @@ void DisplayLeaveGroupMenuToClient(int client)
 	GetPlayerGroupName(groupIndex, groupName, sizeof(groupName));
 
 	Menu menu = new Menu(Menu_LeaveGroup);
-	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Leave Group Menu Title", client, "SF2 Leave Group Menu Description", client, groupName);
+	menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Leave Group Menu Title", client, "SF2 Leave Group Menu Description", client, groupName);
 
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Yes", client);
@@ -212,7 +212,7 @@ void DisplayAdminGroupMenuToClient(int client)
 	int queuePoints = GetPlayerGroupQueuePoints(groupIndex);
 
 	Menu menu = new Menu(Menu_AdminGroup);
-	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Admin Group Menu Title", client, "SF2 Admin Group Menu Description", client, groupName, leaderName, memberCount, maxPlayers, queuePoints);
+	menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Admin Group Menu Title", client, "SF2 Admin Group Menu Description", client, groupName, leaderName, memberCount, maxPlayers, queuePoints);
 
 	char buffer[256];
 	FormatEx(buffer, sizeof(buffer), "%T", "SF2 View Group Members Menu Title", client);
@@ -325,7 +325,7 @@ void DisplayViewGroupMembersMenuToClient(int client)
 	if (playerCount)
 	{
 		Menu menu = new Menu(Menu_ViewGroupMembers);
-		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, "SF2 View Group Members Menu Description", client);
+		menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 View Group Members Menu Title", client, "SF2 View Group Members Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -414,7 +414,7 @@ void DisplaySetGroupLeaderMenuToClient(int client)
 	if (playerCount)
 	{
 		Menu menu = new Menu(Menu_SetGroupLeader);
-		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Leader Menu Title", client, "SF2 Set Group Leader Menu Description", client);
+		menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Leader Menu Title", client, "SF2 Set Group Leader Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -526,7 +526,7 @@ void DisplayKickFromGroupMenuToClient(int client)
 	if (playerCount)
 	{
 		Menu menu = new Menu(Menu_KickFromGroup);
-		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Kick From Group Menu Title", client, "SF2 Kick From Group Menu Description", client);
+		menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Kick From Group Menu Title", client, "SF2 Kick From Group Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];
@@ -616,7 +616,7 @@ void DisplaySetGroupNameMenuToClient(int client)
 	}
 
 	Menu menu = new Menu(Menu_SetGroupName);
-	menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Name Menu Title", client, "SF2 Set Group Name Menu Description", client);
+	menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Set Group Name Menu Title", client, "SF2 Set Group Name Menu Description", client);
 
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%T", "Back", client);
@@ -695,7 +695,7 @@ void DisplayInviteToGroupMenuToClient(int client)
 	if (playerCount)
 	{
 		Menu menu = new Menu(Menu_InviteToGroup);
-		menu.SetTitle("%t%T\n \n%T\n \n", "SF2 Prefix", "SF2 Invite To Group Menu Title", client, "SF2 Invite To Group Menu Description", client);
+		menu.SetTitle("%t %T\n \n%T\n \n", "SF2 Prefix", "SF2 Invite To Group Menu Title", client, "SF2 Invite To Group Menu Description", client);
 
 		char userId[32];
 		char name[MAX_NAME_LENGTH];

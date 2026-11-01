@@ -210,7 +210,7 @@ void ClientHandleGhostMode(int client, bool forceSpawn = false)
 		SetEntPropFloat(client, Prop_Send, "m_flHandScale", 1.0);
 
 		// Set first observer target.
-		ClientGhostModeNextTarget(client);
+		ClientGhostModeNextTarget(client, true);
 		ClientActivateUltravision(client);
 
 		// screen overlay timer
@@ -245,7 +245,7 @@ static Action Timer_ClientGhostStripWearables(Handle timer, int userid)
 	return Plugin_Stop;
 }
 
-void ClientGhostModeNextTarget(int client)
+void ClientGhostModeNextTarget(int client, bool bypass = false)
 {
 	#if defined DEBUG
 	if (g_DebugDetailConVar.IntValue > 2)
@@ -262,7 +262,7 @@ void ClientGhostModeNextTarget(int client)
 	int firstTarget = -1;
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (state == 2)
+		if (!bypass && state == 2)
 		{
 			break;
 		}

@@ -611,13 +611,14 @@ static Action Command_MenuSwitchHud(int client, int args)
 	}
 
 	char buffer[512];
-	FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Hud Version Title", client);
+	FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Hud Version Title", client);
 
 	Panel panel = new Panel();
 	panel.SetTitle(buffer);
 
 	panel.DrawItem("Use the new HUD");
 	panel.DrawItem("Use the legacy HUD");
+	panel.DrawItem("Back");
 
 	panel.Send(client, Panel_SettingsHudVersion, 30);
 	delete panel;
@@ -631,11 +632,12 @@ static Action Command_MenuViewBob(int client, int args)
 		return Plugin_Continue;
 	}
 	char buffer[512];
-	FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings View Bobbing Toggle Title", client);
+	FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings View Bobbing Toggle Title", client);
 	Panel panel = new Panel();
 	panel.SetTitle(buffer);
 	panel.DrawItem("Enable View Bobbing");
 	panel.DrawItem("Disable View Bobbing");
+	panel.DrawItem("Back");
 	panel.Send(client, Panel_SettingsViewBobbing, 30);
 	delete panel;
 	return Plugin_Handled;
@@ -1765,6 +1767,7 @@ static Action Command_ReloadProfiles(int client, int args)
 		ReloadSpecialRounds();
 		ReloadClassConfigs();
 		BossPreview_ReloadPack();
+		ReloadEscapeConfig();
 	}
 
 	for (int i = 0; i < MAX_BOSSES; i++)

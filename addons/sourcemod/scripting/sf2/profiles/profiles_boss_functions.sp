@@ -1820,7 +1820,6 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 			{
 				SF2BossProfileBaseEffectInfo effects;
 				effects.Init();
-				effects.ModelScale = profileData.ModelScale;
 				effects.Load(kv, g_FileCheckConVar.BoolValue);
 				profileData.EffectsArray.PushArray(effects);
 			}

@@ -152,6 +152,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 				int index = ranges.Push(EnsureEntRef(this.index));
 				ranges.Set(index, rangeData.MinRequiredPages, 1);
 				ranges.Set(index, rangeData.MaxRequiredPages, 2);
+				rangeData.State.StopAfterFade = true;
 			}
 		}
 	}

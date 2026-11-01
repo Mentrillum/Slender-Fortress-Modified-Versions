@@ -117,20 +117,20 @@ static int OnStart(SF2_ChaserStunnedAction action, SF2_ChaserEntity actor, NextB
 		SlenderSpawnEffects(data.StunData.StartEffects, controller.Index, false, pos, ang, _, _, true);
 	}
 
-	if (data.KeyDrop)
+	if (data.StunData.KeyDrop)
 	{
 		if (SF_IsBoxingMap() && data.StunData.Disappear[difficulty] && data.BoxingBoss && !g_SlenderBoxingBossIsKilled[controller.Index] && !view_as<SF2NPC_BaseNPC>(controller).GetProfileData().IsPvEBoss)
 		{
 			g_SlenderBoxingBossKilled++;
 			if ((g_SlenderBoxingBossKilled == g_SlenderBoxingBossCount))
 			{
-				NPC_DropKey(controller.Index, data.KeyModel, data.KeyTrigger);
+				NPC_DropKey(controller.Index, data.StunData.KeyModel, data.StunData.KeyTrigger);
 			}
 			g_SlenderBoxingBossIsKilled[controller.Index] = true;
 		}
 		else
 		{
-			NPC_DropKey(controller.Index, data.KeyModel, data.KeyTrigger);
+			NPC_DropKey(controller.Index, data.StunData.KeyModel, data.StunData.KeyTrigger);
 		}
 	}
 

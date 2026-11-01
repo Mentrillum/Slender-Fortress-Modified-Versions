@@ -382,6 +382,9 @@ static ArrayList g_CurrentTracks;
 static int g_CurrentTrackIndex;
 static SF2BossGlobalMusicShuffleType g_CurrentTrackShuffleType;
 
+static KeyMap g_EscapeThemesConfig = null;
+static bool g_EscapeThemeChanged = false;
+
 void SetupNewMusic()
 {
 	g_OnGamemodeEndPFwd.AddFunction(null, OnGamemodeEnd);
@@ -406,6 +409,8 @@ void SetupNewMusic()
 	g_BossesWithPageMusic = new ArrayList();
 	g_NullMusicState.Init();
 	g_NullMusicState.IsNull = true;
+
+	ReloadEscapeConfig();
 }
 
 void SetupNewMusicAPI()
@@ -635,6 +640,7 @@ static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 static void GetPageMusicRanges()
 {
 	g_PageMusicRanges.Clear();
+	g_EscapeThemeChanged = false;
 
 	char name[64], path[PLATFORM_MAX_PATH];
 
@@ -669,6 +675,7 @@ static void GetPageMusicRanges()
 			musicInfo.MinRequiredPages = StringToInt(pageRanges[0]);
 			musicInfo.MaxRequiredPages = StringToInt(pageRanges[1]);
 			musicInfo.State.MusicPath = path;
+			musicInfo.State.StopAfterFade = true;
 
 			g_PageMusicRanges.PushArray(musicInfo);
 		}
@@ -699,6 +706,7 @@ static void GetPageMusicRanges()
 		strcopy(path, sizeof(path), MUSIC_GOTPAGES1_SOUND);
 		PrecacheSound2(path, false);
 		musicInfo.State.MusicPath = path;
+		musicInfo.State.StopAfterFade = true;
 		g_PageMusicRanges.PushArray(musicInfo);
 
 		musicInfo.State.Init();
@@ -707,6 +715,7 @@ static void GetPageMusicRanges()
 		strcopy(path, sizeof(path), MUSIC_GOTPAGES2_SOUND);
 		PrecacheSound2(path, false);
 		musicInfo.State.MusicPath = path;
+		musicInfo.State.StopAfterFade = true;
 		g_PageMusicRanges.PushArray(musicInfo);
 
 		musicInfo.State.Init();
@@ -715,6 +724,7 @@ static void GetPageMusicRanges()
 		strcopy(path, sizeof(path), MUSIC_GOTPAGES3_SOUND);
 		PrecacheSound2(path, false);
 		musicInfo.State.MusicPath = path;
+		musicInfo.State.StopAfterFade = true;
 		g_PageMusicRanges.PushArray(musicInfo);
 
 		musicInfo.State.Init();
@@ -723,10 +733,108 @@ static void GetPageMusicRanges()
 		strcopy(path, sizeof(path), MUSIC_GOTPAGES4_SOUND);
 		PrecacheSound2(path, false);
 		musicInfo.State.MusicPath = path;
+		musicInfo.State.StopAfterFade = true;
 		g_PageMusicRanges.PushArray(musicInfo);
 	}
 
+	if (g_EscapeThemesConfig != null)
+	{
+		char map[128], key[128], targetName[128];
+		GetCurrentMap(map, sizeof(map));
+		for (int i = 0; i < g_EscapeThemesConfig.SectionLength; i++)
+		{
+			g_EscapeThemesConfig.GetSectionNameFromIndex(i, key, sizeof(key));
+			if (StrContains(map, key, false) == 0)
+			{
+				KeyMap obj = g_EscapeThemesConfig.GetSection(key);
+				obj.GetString("entity", key, sizeof(key));
+				if (key[0] == '\0')
+				{
+					continue;
+				}
+
+				ent = -1;
+				while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
+				{
+					GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+					if (targetName[0] == '\0')
+					{
+						continue;
+					}
+
+					if (strcmp(targetName, key, false) == 0)
+					{
+						char musicPath[PLATFORM_MAX_PATH];
+						GetEntPropString(ent, Prop_Data, "m_iszSound", musicPath, sizeof(musicPath));
+
+						PageMusicInfo musicInfo;
+
+						musicInfo.State.Init();
+						musicInfo.MinRequiredPages = g_PageMax;
+						musicInfo.MaxRequiredPages = g_PageMax;
+						PrecacheSound(musicPath, false);
+						musicInfo.State.MusicPath = musicPath;
+						musicInfo.State.StopAfterFade = true;
+						g_PageMusicRanges.PushArray(musicInfo);
+						RemoveEntity(ent);
+						g_RoundStopPageMusicOnEscape = false;
+						if (musicPath[0] != '#' && path[1] != '#')
+						{
+							Format(musicPath, sizeof(musicPath), "#%s", musicPath);
+						}
+						g_EscapeThemeChanged = true;
+						break;
+					}
+				}
+
+				ent = -1;
+				while ((ent = FindEntityByClassname(ent, "ambient_generic")) != -1)
+				{
+					GetEntPropString(ent, Prop_Data, "m_iName", targetName, sizeof(targetName));
+					if (targetName[0] == '\0')
+					{
+						continue;
+					}
+
+					if (strcmp(targetName, key, false) == 0)
+					{
+						RemoveEntity(ent);
+					}
+				}
+				break;
+			}
+		}
+	}
+
 	LogSF2Message("Loaded page music ranges successfully!");
+}
+
+void ReloadEscapeConfig()
+{
+	if (g_EscapeThemesConfig != null)
+	{
+		CleanupKeyMap(g_EscapeThemesConfig);
+	}
+
+	char buffer[PLATFORM_MAX_PATH];
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
+	{
+		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_ESCAPECONFIG);
+	}
+	else
+	{
+		BuildPath(Path_SM, buffer, sizeof(buffer), FILE_ESCAPECONFIG_DATA);
+	}
+	KeyValues kv = new KeyValues("root");
+	if (!FileToKeyValues(kv, buffer))
+	{
+		delete kv;
+		return;
+	}
+
+	g_EscapeThemesConfig = KeyValuesToKeyMap(kv);
+
+	delete kv;
 }
 
 static void ClearMusic(SF2_BasePlayer client)
@@ -784,6 +892,26 @@ static void UpdatePageMusic()
 		return;
 	}
 
+	if (g_PageCount >= g_PageMax && g_RoundStopPageMusicOnEscape)
+	{
+		g_DefaultMusicState.Reset();
+		g_OldDefaultMusicState.Reset();
+
+		g_OldDefaultMusicState = g_NullMusicState;
+		g_DefaultMusicState = g_NullMusicState;
+
+		for (int i2 = 1; i2 <= MaxClients; i2++)
+		{
+			SF2_BasePlayer client = SF2_BasePlayer(i2);
+			if (g_CanSwapBackToDefault[client.index])
+			{
+				g_CurrentTheme[client.index] = g_NullMusicState;
+				AddMusicToQueue(client, g_DefaultMusicState);
+			}
+		}
+		return;
+	}
+
 	MusicState oldState;
 	oldState = g_DefaultMusicState;
 	g_OldDefaultMusicState = g_DefaultMusicState;
@@ -798,8 +926,12 @@ static void UpdatePageMusic()
 	{
 		PageMusicInfo info;
 
-		for (int i = 0; i < ranges.Length; i++)
+		for (int i = ranges.Length - 1; i >= 0; i--)
 		{
+			if (g_EscapeThemeChanged && i != ranges.Length - 1 && g_PageCount >= g_PageMax)
+			{
+				continue;
+			}
 			ranges.GetArray(i, info);
 			if (g_PageCount >= info.MinRequiredPages && g_PageCount <= info.MaxRequiredPages)
 			{
@@ -1444,11 +1576,6 @@ static void MusicThink()
 			g_PlayerActiveLayerBoss[client.index] = -1;
 			g_PlayerActiveLayerBossState[client.index] = SF2BossMusicState_Invalid;
 		}
-	}
-
-	if (IsRoundInEscapeObjective() && g_RoundStopPageMusicOnEscape)
-	{
-		g_OldDefaultMusicState.Reset();
 	}
 
 	RequestFrame(MusicThink);

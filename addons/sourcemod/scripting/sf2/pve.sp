@@ -1114,7 +1114,7 @@ static int PvEMenu_MusicSelection(Menu menu, MenuAction action, int param1, int 
 		{
 			if (param2 == MenuCancel_ExitBack)
 			{
-				g_MenuSettings.Display(param1, 30);
+				g_MenuSettingsPvE.Display(param1, 30);
 			}
 		}
 		case MenuAction_Select:
@@ -1155,7 +1155,7 @@ static int PvEMenu_SelectedMusic(Menu menu, MenuAction action, int param1, int p
 			case 0:
 			{
 				char buffer[512];
-				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Music Volume Title", param1);
+				Format(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Music Volume Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);

@@ -160,7 +160,7 @@ void SetupMenus()
 	g_MenuSettings.ExitBackButton = true;
 
 	g_MenuSettingsFlashlightTemp1 = new Menu(Menu_Settings_Flashlighttemp1);
-	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlight Temperature Title");
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Prefix", "SF2 Settings Flashlight Temperature Title");
 	g_MenuSettingsFlashlightTemp1.SetTitle(buffer);
 	g_MenuSettingsFlashlightTemp1.AddItem("0", "1k Kelvin");
 	g_MenuSettingsFlashlightTemp1.AddItem("1", "2k Kelvin");
@@ -490,14 +490,17 @@ static int Menu_Main(Menu menu, MenuAction action, int param1, int param2)
 			case 3:
 			{
 				FakeClientCommand(param1, "sm_slghost");
+				g_MenuMain.Display(param1, 30);
 			}
 			case 4:
 			{
 				FakeClientCommand(param1, "sm_slpack");
+				g_MenuMain.Display(param1, 30);
 			}
 			case 5:
 			{
 				FakeClientCommand(param1, "sm_slnextpack");
+				g_MenuMain.Display(param1, 30);
 			}
 			case 6:
 			{
@@ -1216,7 +1219,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 1:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Hints Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Hints Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1225,6 +1228,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 				panel.DrawItem(buffer);
 				FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
 				panel.DrawItem(buffer);
+				panel.DrawItem("Back");
 
 				panel.Send(param1, Panel_SettingsHints, 30);
 				delete panel;
@@ -1232,7 +1236,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 2:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Mute Mode Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Mute Mode Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1240,6 +1244,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 				panel.DrawItem("Normal");
 				panel.DrawItem("Mute opposing team");
 				panel.DrawItem("Mute opposing team except when I'm a proxy");
+				panel.DrawItem("Back");
 
 				panel.Send(param1, Panel_SettingsMuteMode, 30);
 				delete panel;
@@ -1247,7 +1252,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 3:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Film Grain Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Film Grain Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1256,6 +1261,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 				panel.DrawItem(buffer);
 				FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
 				panel.DrawItem(buffer);
+				panel.DrawItem("Back");
 
 				panel.Send(param1, Panel_SettingsFilmGrain, 30);
 				delete panel;
@@ -1266,22 +1272,12 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			}
 			case 5:
 			{
-				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Hud Version Title", param1);
-
-				Panel panel = new Panel();
-				panel.SetTitle(buffer);
-
-				panel.DrawItem("Use the new HUD");
-				panel.DrawItem("Use the legacy HUD");
-
-				panel.Send(param1, Panel_SettingsHudVersion, 30);
-				delete panel;
+				FakeClientCommand(param1, "sm_slhud");
 			}
 			case 6:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Proxy Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Proxy Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1290,6 +1286,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 				panel.DrawItem(buffer);
 				FormatEx(buffer, sizeof(buffer), "%T", "No", param1);
 				panel.DrawItem(buffer);
+				panel.DrawItem("Back");
 
 				panel.Send(param1, Panel_SettingsProxy, 30);
 				delete panel;
@@ -1297,7 +1294,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 7:
 			{
 				char buffer[512];
-				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Music Volume Title", param1);
+				Format(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Music Volume Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1319,7 +1316,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 9:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Ghost Mode Teleport Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Ghost Mode Teleport Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1335,7 +1332,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 10:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Ghost Mode Toggle State Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Ghost Mode Toggle State Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1351,7 +1348,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 11:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings Proxy Menu Title", param1);
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Proxy Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1370,7 +1367,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 13:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "Show extended special round description\n \n");
+				FormatEx(buffer, sizeof(buffer), "%t Show extended special round description\n \n", "SF2 Prefix");
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1385,7 +1382,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			case 14:
 			{
 				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "Set flashlight type\n \n");
+				FormatEx(buffer, sizeof(buffer), "%t Set flashlight type\n \n", "SF2 Prefix");
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -1472,7 +1469,7 @@ static int Menu_Settings_Flashlighttemp1(Menu menu, MenuAction action, int param
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			g_MenuMain.Display(param1, 30);
+			g_MenuSettings.Display(param1, 30);
 		}
 	}
 	return 0;
@@ -1749,6 +1746,11 @@ static int Panel_SettingsMusicVolume(Menu menu, MenuAction action, int param1, i
 {
 	if (action == MenuAction_Select)
 	{
+		if (param2 > 5)
+		{
+			g_MenuSettings.Display(param1, 30);
+			return 0;
+		}
 		float volume;
 		for (int i = 1; i < param2; i++)
 		{

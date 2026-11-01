@@ -1196,7 +1196,7 @@ void InitiateBossPackVote(int initiator)
 	Handle voteMenu = NativeVotes_Create(Menu_BossPackVote, NativeVotesType_Custom_Mult);
 	NativeVotes_SetInitiator(voteMenu, initiator);
 	char title[255];
-	FormatEx(title, 255, "%t%t", "SF2 Prefix", "SF2 Boss Pack Vote Menu Title");
+	FormatEx(title, 255, "%t %t", "SF2 Prefix", "SF2 Boss Pack Vote Menu Title");
 	NativeVotes_SetDetails(voteMenu, title);
 	StringMap menuDisplayNamesTrie = new StringMap();
 	ArrayList menuOptionsInfo = new ArrayList(128);
@@ -1334,7 +1334,7 @@ static int Menu_BossPackVote(Handle menu, MenuAction action,int param1,int param
 
 			g_BossProfilePackConVar.SetString(bossPack);
 
-			CPrintToChatAll("%t%t", "SF2 Prefix", "SF2 Boss Pack Vote Successful", bossPackName);
+			CPrintToChatAll("%t %t", "SF2 Prefix", "SF2 Boss Pack Vote Successful", bossPackName);
 			FormatEx(display,120,"%t","SF2 Boss Pack Vote Successful", bossPackName);
 			NativeVotes_DisplayPass(menu, display);
 		}

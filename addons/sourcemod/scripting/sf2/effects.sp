@@ -1079,9 +1079,9 @@ static void SpawnEffect(SF2BossProfileBaseEffectInfo effectsInfo, int bossIndex,
 				{
 					modelScale *= 0.5;
 				}
-				DispatchKeyValueFloat(entity, "modelscale", modelScale);
+				SetEntPropFloat(entity, Prop_Send, "m_flModelScale", modelScale);
 				SetEntProp(entity, Prop_Send, "m_nSkin", effectsInfo.ModelSkin);
-				SetEntProp(entity, Prop_Send, "m_fEffects", EF_BONEMERGE|EF_PARENT_ANIMATES);
+				SetEntProp(entity, Prop_Send, "m_fEffects", EF_BONEMERGE | EF_PARENT_ANIMATES);
 				if (effectsInfo.ModelAnimation[0] != '\0')
 				{
 					SetVariantString(value);

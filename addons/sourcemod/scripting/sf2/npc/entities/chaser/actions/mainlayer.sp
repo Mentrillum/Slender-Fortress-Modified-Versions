@@ -403,6 +403,7 @@ static int OnInjured(SF2_ChaserMainAction action, SF2_ChaserEntity actor, CBaseE
 			maxHealth = actor.MaxStunHealth;
 			health = actor.StunHealth;
 		}
+		health -= damage;
 		if (health <= maxHealth * rageInfo.PercentageThreshold)
 		{
 			return action.TrySuspendFor(SF2_ChaserRageAction(), RESULT_IMPORTANT, "I need to rage!");

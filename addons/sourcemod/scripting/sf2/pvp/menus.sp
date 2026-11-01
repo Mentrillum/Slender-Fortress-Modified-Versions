@@ -18,7 +18,7 @@ int Menu_SettingsPvP(Menu menu, MenuAction action, int param1, int param2)
 			case 0:
 			{
 				char buffer[512];
-				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings PvP Spawn Menu Title", param1);
+				Format(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings PvP Spawn Menu Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
@@ -27,6 +27,7 @@ int Menu_SettingsPvP(Menu menu, MenuAction action, int param1, int param2)
 				panel.DrawItem(buffer);
 				Format(buffer, sizeof(buffer), "%T", "No", param1);
 				panel.DrawItem(buffer);
+				panel.DrawItem("Back");
 
 				panel.Send(param1, Panel_SettingsPvPSpawn, 30);
 				delete panel;
@@ -34,13 +35,14 @@ int Menu_SettingsPvP(Menu menu, MenuAction action, int param1, int param2)
 			case 1:
 			{
 				char buffer[512];
-				Format(buffer, sizeof(buffer), "%T\n \n", "SF2 Settings PvP Spawn Protection Title", param1);
+				Format(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings PvP Spawn Protection Title", param1);
 
 				Panel panel = new Panel();
 				panel.SetTitle(buffer);
 
 				panel.DrawItem("On");
 				panel.DrawItem("Off");
+				panel.DrawItem("Back");
 
 				panel.Send(param1, Panel_SettingsPvPProtection, 30);
 				delete panel;
@@ -75,7 +77,7 @@ static int Panel_SettingsPvPSpawn(Menu menu, MenuAction action, int param1, int 
 			}
 		}
 
-		g_MenuSettings.Display(param1, 30);
+		g_MenuSettingsPvP.Display(param1, 30);
 	}
 	return 0;
 }
@@ -98,7 +100,7 @@ static int Panel_SettingsPvPProtection(Menu menu, MenuAction action, int param1,
 			}
 		}
 
-		g_MenuSettings.Display(param1, 30);
+		g_MenuSettingsPvP.Display(param1, 30);
 	}
 	return 0;
 }

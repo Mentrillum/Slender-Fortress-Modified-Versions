@@ -1460,6 +1460,13 @@ enum struct SF2BossProfileBaseEffectInfo
 	{
 		this.Colors = new ArrayList(4);
 		int renderColor[Difficulty_Max][4];
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			renderColor[i][0] = 255;
+			renderColor[i][1] = 255;
+			renderColor[i][2] = 255;
+			renderColor[i][3] = 255;
+		}
 		GetProfileDifficultyColorValues(kv, "rendercolor", renderColor, renderColor);
 
 		for (int i = 0; i < Difficulty_Max; i++)
@@ -3172,6 +3179,10 @@ enum struct SF2BossProfileData
 		else if (strcmp(sectionName, "sound_sight") == 0)
 		{
 			this.SightSounds.Load(kv, checkFile);
+		}
+		else if (strcmp(sectionName, "sound_jumpscare") == 0)
+		{
+			this.JumpscareSounds.Load(kv, checkFile);
 		}
 	}
 }

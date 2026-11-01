@@ -320,15 +320,6 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 	bool removeWearables = false;
 	bool preventAttack = false;
 
-	if (IsRoundEnding())
-	{
-		if (!client.IsEliminated)
-		{
-			removeWeapons = true;
-			restrictWeapons = true;
-		}
-	}
-
 	if (client.IsEliminated)
 	{
 		removeWeapons = !g_PlayerKeepWeaponsConVar.BoolValue;
@@ -392,6 +383,16 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 		restrictWeapons = true;
 		keepUtilityItems = true;
 		preventAttack = false;
+	}
+
+	if (IsRoundEnding())
+	{
+		if (!client.IsEliminated)
+		{
+			removeWeapons = false;
+			restrictWeapons = false;
+			preventAttack = false;
+		}
 	}
 
 	if (removeWeapons && !keepUtilityItems)

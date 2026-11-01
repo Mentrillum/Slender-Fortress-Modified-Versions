@@ -332,7 +332,7 @@ void PvP_Initialize()
 void PvP_SetupMenus()
 {
 	g_MenuSettingsPvP = new Menu(Menu_SettingsPvP);
-	g_MenuSettingsPvP.SetTitle("%t%t\n \n", "SF2 Prefix", "SF2 Settings PvP Menu Title");
+	g_MenuSettingsPvP.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings PvP Menu Title");
 	g_MenuSettingsPvP.AddItem("0", "Toggle automatic spawning");
 	g_MenuSettingsPvP.AddItem("1", "Toggle spawn protection");
 	g_MenuSettingsPvP.ExitBackButton = true;
