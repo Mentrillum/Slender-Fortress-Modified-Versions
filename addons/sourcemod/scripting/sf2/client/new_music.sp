@@ -900,8 +900,6 @@ static void ClearMusic(SF2_BasePlayer client)
 
 	g_CurrentTheme[client.index].Stop(client);
 	g_CurrentTheme[client.index] = g_NullMusicState;
-	g_GlobalMusicState[client.index].Stop(client);
-	g_GlobalMusicState[client.index] = g_NullMusicState;
 }
 
 static void UpdatePageMusic()
@@ -1066,6 +1064,7 @@ static void UpdateBossGlobalTrackForPlayer(SF2_BasePlayer client)
 		}
 	}
 
+	g_GlobalMusicState[client.index].Stop(client);
 	g_GlobalMusicState[client.index] = g_NullMusicState;
 }
 
