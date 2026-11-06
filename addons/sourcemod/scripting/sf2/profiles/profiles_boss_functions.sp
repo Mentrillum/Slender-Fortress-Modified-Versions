@@ -101,6 +101,11 @@ methodmap BaseBossProfile < ProfileObject
 		return view_as<BossProfileTeleportVanishingData>(this.GetSection("vanisher"));
 	}
 
+	public BossProfileDeathHintsData GetDeathHintsData()
+	{
+		return view_as<BossProfileDeathHintsData>(this.GetSection("death_hints"));
+	}
+
 	public void Precache()
 	{
 		char path[PLATFORM_MAX_PATH], key[512];
@@ -160,6 +165,11 @@ methodmap BaseBossProfile < ProfileObject
 		if (this.GetGlobalTracks() != null)
 		{
 			this.GetGlobalTracks().Precache();
+		}
+
+		if (this.GetDeathHintsData() != null)
+		{
+			this.GetDeathHintsData().Precache();
 		}
 
 		switch (this.Type)
@@ -366,6 +376,37 @@ methodmap BossProfileTeleportVanishingData < ProfileObject
 			return obj.GetDifficultyBool("on_stun", difficulty, def);
 		}
 		return def;
+	}
+}
+
+methodmap BossProfileDeathHintsData < ProfileObject
+{
+	public bool IsEnabled(int difficulty)
+	{
+		if (this == null)
+		{
+			return false;
+		}
+
+		return this.GetDifficultyBool("enabled", difficulty, true);
+	}
+
+	public int GetDisplayTime(int difficulty)
+	{
+		return this.GetDifficultyInt("display_time", difficulty, 30);
+	}
+
+	public KeyMap_Array GetHints(int difficulty)
+	{
+		return this.GetDifficultyArray("hints_list", difficulty);
+	}
+
+	public void Precache()
+	{
+		for (int i = 0; i < Difficulty_Max; i++)
+		{
+			this.ConvertValuesSectionToDifficultyArrays("hints_list", i);
+		}
 	}
 }
 

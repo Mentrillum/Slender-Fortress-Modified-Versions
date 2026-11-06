@@ -2352,5 +2352,11 @@
 		"#format" "{1:s}"
 		"en" "Removed music {1}."
 	}
+
+	"SF2 Death Hint Died To Boss"
+	{
+		"#format" "{1:s}"
+		"en" "You have died to {1}!"
+	}
 }
 

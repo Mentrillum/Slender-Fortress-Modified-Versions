@@ -688,11 +688,15 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	if (npcIndex != -1)
 	{
 		int target = GetClientOfUserId(g_SourceTVUserID);
+		int difficulty = GetLocalGlobalDifficulty(npcIndex);
 		if (!IsValidClient(target) || !IsClientSourceTV(target)) // If the server has a source TV bot uses to print boss' name in kill feed.
 		{
 			target = GetClientForDeath(client);
 		}
 
+		char bossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
+		NPCGetProfile(npcIndex, profile, sizeof(profile));
+		NPCGetBossName(npcIndex, bossName, sizeof(bossName));
 		if (target != -1)
 		{
 			if (g_TimerChangeClientName[target] != null)
@@ -703,10 +707,6 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			{
 				GetEntPropString(target, Prop_Data, "m_szNetname", g_OldClientName[target], sizeof(g_OldClientName[]));
 			}
-
-			char bossName[SF2_MAX_NAME_LENGTH], profile[SF2_MAX_PROFILE_NAME_LENGTH];
-			NPCGetProfile(npcIndex, profile, sizeof(profile));
-			NPCGetBossName(npcIndex, bossName, sizeof(bossName));
 
 			SetClientName(target, bossName);
 			SetEntPropString(target, Prop_Data, "m_szNetname", bossName);
@@ -744,6 +744,31 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			int userid = GetClientUserId(target);
 			event.SetInt("attacker", userid);
 			g_TimerChangeClientName[target] = CreateTimer(0.6, Timer_RevertClientName, target, TIMER_FLAG_NO_MAPCHANGE);
+		}
+
+		BaseBossProfile profileData = SF2NPC_BaseNPC(npcIndex).GetProfileDataEx();
+		BossProfileDeathHintsData deathHintsData = profileData.GetDeathHintsData();
+		if (deathHintsData != null && deathHintsData.GetHints(difficulty) != null && deathHintsData.IsEnabled(difficulty))
+		{
+			char title[128];
+			FormatEx(title, sizeof(title), "%T", "SF2 Death Hint Died To Boss", client, bossName);
+
+			Panel panel = new Panel();
+			panel.SetTitle(title);
+			panel.DrawItem("", ITEMDRAW_SPACER);
+			for (int i = 0; i < deathHintsData.GetHints(difficulty).Length; i++)
+			{
+				char hint[256];
+				deathHintsData.GetHints(difficulty).GetString(i, hint, sizeof(hint));
+				panel.DrawText(hint);
+			}
+
+			panel.DrawItem("", ITEMDRAW_SPACER);
+			panel.CurrentKey = GetMaxPageItems(panel.Style);
+			panel.DrawItem("Exit", ITEMDRAW_CONTROL);
+			panel.Send(client, Panel_Empty, deathHintsData.GetDisplayTime(difficulty));
+
+			delete panel;
 		}
 	}
 
@@ -1128,4 +1153,10 @@ Action Event_HealOnHit(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
+}
+
+static int Panel_Empty(Menu menu, MenuAction action, int param1, int param2)
+{
+	/* Do nothing */
+	return 0;
 }
