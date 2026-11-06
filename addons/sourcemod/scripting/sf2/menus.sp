@@ -107,22 +107,22 @@ void SetupMenus()
 	g_MenuHelpClassInfo.SetTitle("%t %t\n \n%t\n \n", "SF2 Prefix", "SF2 Help Class Info Menu Title", "SF2 Help Class Info Description");
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Scout Class Info Menu Title");
 	g_MenuHelpClassInfo.AddItem("Scout", buffer);
-	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Sniper Class Info Menu Title");
-	g_MenuHelpClassInfo.AddItem("Sniper", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Soldier Class Info Menu Title");
 	g_MenuHelpClassInfo.AddItem("Soldier", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Pyro Class Info Menu Title");
+	g_MenuHelpClassInfo.AddItem("Pyro", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Demoman Class Info Menu Title");
 	g_MenuHelpClassInfo.AddItem("Demoman", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Heavy Class Info Menu Title");
 	g_MenuHelpClassInfo.AddItem("Heavy", buffer);
-	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Medic Class Info Menu Title");
-	g_MenuHelpClassInfo.AddItem("Medic", buffer);
-	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Pyro Class Info Menu Title");
-	g_MenuHelpClassInfo.AddItem("Pyro", buffer);
-	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Spy Class Info Menu Title");
-	g_MenuHelpClassInfo.AddItem("Spy", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Engineer Class Info Menu Title");
 	g_MenuHelpClassInfo.AddItem("Engineer", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Medic Class Info Menu Title");
+	g_MenuHelpClassInfo.AddItem("Medic", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Sniper Class Info Menu Title");
+	g_MenuHelpClassInfo.AddItem("Sniper", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Help Spy Class Info Menu Title");
+	g_MenuHelpClassInfo.AddItem("Spy", buffer);
 	g_MenuHelpClassInfo.ExitBackButton = true;
 
 	g_MenuSettings = new Menu(Menu_Settings);
@@ -1182,11 +1182,24 @@ static int Menu_ClassInfo(Menu menu, MenuAction action, int param1, int param2)
 
 		Menu menuHandle = new Menu(Menu_ClassInfoBackOnly);
 
-		char title[64], description[64];
+		char title[1024], description[1024];
 		FormatEx(title, sizeof(title), "SF2 Help %s Class Info Menu Title", info);
-		FormatEx(description, sizeof(description), "SF2 Help %s Class Info Description", info);
-
-		menuHandle.SetTitle("%t %t\n \n%t\n \n", "SF2 Prefix", title, description);
+		info[0] = CharToLower(info[0]);
+		KeyMap_Array arr = GetClassHelpInfo(info);
+		if (arr != null)
+		{
+			char item[1024];
+			for (int i = 0; i < arr.Length; i++)
+			{
+				arr.GetString(i, item, sizeof(item));
+				if (i < arr.Length - 1)
+				{
+					StrCat(item, sizeof(item), "\n");
+				}
+				StrCat(description, sizeof(description), item);
+			}
+		}
+		menuHandle.SetTitle("%t %t\n \n%s\n \n", "SF2 Prefix", title, description);
 		menuHandle.AddItem("0", "Back");
 		menuHandle.Display(param1, 30);
 	}

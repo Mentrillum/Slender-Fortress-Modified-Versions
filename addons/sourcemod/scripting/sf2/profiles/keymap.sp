@@ -578,6 +578,22 @@ methodmap KeyMap < StringMap
 		array.SetSectionName(name);
 		array.Parent = this;
 	}
+
+	public KeyMap_Array GetArray(const char[] key, KeyMap_Array def = view_as<KeyMap_Array>(INVALID_HANDLE))
+	{
+		if (this.GetType(key) != Key_Type_Section)
+		{
+			return def;
+		}
+
+		KeyMap_Array value = view_as<KeyMap_Array>(this.GetSection(key));
+		if (value == null || !value.IsArray)
+		{
+			return def;
+		}
+
+		return value;
+	}
 }
 
 methodmap KeyMap_Array < KeyMap

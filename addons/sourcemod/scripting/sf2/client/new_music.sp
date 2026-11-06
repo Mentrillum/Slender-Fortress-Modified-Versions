@@ -408,6 +408,7 @@ void SetupNewMusic()
 	g_OnBossAddedPFwd.AddFunction(null, OnBossAdded);
 	g_OnBossRemovedPFwd.AddFunction(null, OnBossRemoved);
 	g_OnDifficultyChangePFwd.AddFunction(null, OnDifficultyChange);
+	g_OnSpecialRoundStartPFwd.AddFunction(null, OnSpecialRoundStart);
 
 	g_PageMusicRanges = new ArrayList(sizeof(PageMusicInfo));
 	g_BossPageMusicRanges = new ArrayList(sizeof(PageMusicInfo));
@@ -641,6 +642,22 @@ static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 			{
 				UpdateBossGlobalTracks();
 			}
+		}
+	}
+}
+
+static void OnSpecialRoundStart(int specialRound)
+{
+	if (specialRound == SPECIALROUND_BEATBOX)
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			SF2_BasePlayer client = SF2_BasePlayer(i);
+			if (!client.IsValid)
+			{
+				continue;
+			}
+			ClearMusic(client);
 		}
 	}
 }
@@ -1266,6 +1283,11 @@ static void MusicThink()
 		}
 
 		if (!client.IsEliminated && client.HasEscaped)
+		{
+			continue;
+		}
+
+		if (SF_SpecialRound(SPECIALROUND_BEATBOX))
 		{
 			continue;
 		}

@@ -123,7 +123,6 @@ float g_LastCommandTime[MAXTF2PLAYERS];
 bool g_Enabled;
 
 KeyValues g_SpecialRoundsConfig;
-KeyValues g_ClassStatsConfig;
 
 int g_SlenderModel[MAX_BOSSES] = { INVALID_ENT_REFERENCE, ... };
 int g_SlenderCopyMaster[MAX_BOSSES] = { -1, ... };
@@ -358,6 +357,7 @@ bool g_IsSlaughterRunMap = false;
 bool g_RoundInfiniteBlink = false;
 bool g_IsRoundInfiniteSprint = false;
 
+int g_RoundSystemTime = 0;
 bool g_RoundTimerPaused = false;
 Handle g_RoundGraceTimer = null;
 Handle g_RoundTimer = null;
@@ -3569,6 +3569,13 @@ public void OnClientCookiesCached(int client)
 		if (count > 16)
 		{
 			g_PlayerPreferences[client].PlayerPreference_FlashlightType = StringToInt(s2[16]) != 0;
+		}
+		if (count > 17)
+		{
+			if (g_RoundSystemTime != 0 && g_RoundSystemTime == StringToInt(s2[17]))
+			{
+				g_PlayerPlaying[client] = true;
+			}
 		}
 	}
 }

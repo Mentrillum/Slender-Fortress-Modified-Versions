@@ -674,8 +674,8 @@ static void Hook_SpeedThink(int client)
 
 		if (modifySpeed.SectionLength <= 0)
 		{
-			walkSpeed += (walkSpeed * modifySpeed.GetFloat("walkspeed"));
-			sprintSpeed += (sprintSpeed * modifySpeed.GetFloat("runspeed"));
+			walkSpeed += (walkSpeed * modifySpeed.GetFloat("walkspeed", 0.0));
+			sprintSpeed += (sprintSpeed * modifySpeed.GetFloat("runspeed", 0.0));
 		}
 		else
 		{
@@ -696,9 +696,8 @@ static void Hook_SpeedThink(int client)
 					float min = StringToFloat(speeds[1]);
 					if (percentage < max && percentage >= min)
 					{
-						bestWalkSpeed = modifySpeed.GetSection(key).GetFloat("walkspeed");
-						bestRunSpeed = modifySpeed.GetSection(key).GetFloat("runspeed");
-
+						bestWalkSpeed = modifySpeed.GetSection(key).GetFloat("walkspeed", 0.0);
+						bestRunSpeed = modifySpeed.GetSection(key).GetFloat("runspeed", 0.0);
 					}
 				}
 			}

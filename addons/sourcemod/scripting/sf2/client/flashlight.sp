@@ -5,8 +5,8 @@
 
 #define SF2_FLASHLIGHT_WIDTH 512.0 // How wide the player's Flashlight should be in world units.
 #define SF2_FLASHLIGHT_BRIGHTNESS 0 // Intensity of the players' Flashlight.
-#define SF2_FLASHLIGHT_DRAIN_RATE 0.05 // How long (in seconds) each bar on the player's Flashlight meter lasts.
-#define SF2_FLASHLIGHT_RECHARGE_RATE 0.025 // How long (in seconds) it takes each bar on the player's Flashlight meter to recharge.
+#define SF2_FLASHLIGHT_DRAIN_RATE 0.5 // How long each bar on the player's Flashlight meter lasts.
+#define SF2_FLASHLIGHT_RECHARGE_RATE 0.25 // How long it takes each bar on the player's Flashlight meter to recharge.
 #define SF2_FLASHLIGHT_FLICKERAT 0.25 // The percentage of the Flashlight battery where the Flashlight will start to blink.
 #define SF2_FLASHLIGHT_ENABLEAT 0.3 // The percentage of the Flashlight battery where the Flashlight will be able to be used again (if the player shortens out the Flashlight from excessive use).
 #define SF2_FLASHLIGHT_COOLDOWN 0.4 // How much time players have to wait before being able to switch their flashlight on again after turning it off.
@@ -245,7 +245,7 @@ static float GetFlashlightDecreaseRate(SF2_BasePlayer client)
 		if (class == TFClass_Engineer)
 		{
 			// Engineers have a 50% longer battery life and 20% decreased recharge rate, basically.
-			drainRate *= 1.5;
+			drainRate *= 0.5;
 		}
 	}
 	else
@@ -290,7 +290,7 @@ static float GetFlashlightRechargeRate(SF2_BasePlayer client)
 	{
 		if (class == TFClass_Engineer)
 		{
-			rechargeRate *= 1.2;
+			rechargeRate *= 0.1;
 		}
 	}
 	else

@@ -12,6 +12,7 @@
 #define SR_SOUND_SELECT "slender/specialroundselect.mp3"
 #define SR_SOUND_SELECT_BR "ambient/rottenburg/rottenburg_belltower.wav"
 #define SR_DUCK_MODEL "models/workshop/player/items/pyro/eotl_ducky/eotl_bonus_duck.mdl"
+
 #define SR_BEATBOX_MUSIC "sf2m/specialround/beatbox/theme.wav"
 #define SR_BEATBOX_BEEP "sf2m/specialround/beatbox/beep.wav"
 #define SR_BEATBOX_FLICK "sf2m/specialround/beatbox/flick.mp3"
@@ -224,15 +225,15 @@ static void EmitBeatBoxMusic()
 		}
 		if (client.HasEscaped)
 		{
-			volume = 0.0;
+			volume = 0.015;
 		}
 		else if (client.IsEliminated && !client.IsInGhostMode && !client.IsProxy)
 		{
-			volume = 0.0;
+			volume = 0.015;
 		}
 		else if (!client.IsAlive)
 		{
-			volume = 0.0;
+			volume = 0.015;
 		}
 		EmitSoundToClient(client.index, SR_BEATBOX_MUSIC, _, MUSIC_CHAN, _, (1 << 0) | (1 << 8), volume, _, _, _, _, false);
 	}
@@ -1963,7 +1964,7 @@ bool IsSpecialRoundRunning()
 
 Action SpecialRoundMenu(int client, int args)
 {
-	if (IsValidClient(client) && IsSpecialRoundRunning())
+	if (IsValidClient(client))
 	{
 		MainMenu(client);
 	}
@@ -2009,7 +2010,7 @@ static int MainMenuH(Menu menu, MenuAction action, int client, int choice)
 		}
 		case MenuAction_Cancel:
 		{
-			// Do nothing
+			g_MenuMain.Display(client, 30);
 		}
 		case MenuAction_Select:
 		{
@@ -2030,69 +2031,22 @@ static void ShowSpecialDesc(int client, int special, bool fromRound)
 		return;
 	}
 
-	char buffer[512];
+	char buffer[512], buffer2[512];
 	SpecialRoundGetDescriptionMenu(special, buffer, sizeof(buffer));
-	if (buffer[0] != '\0')
+	SpecialRoundGetNameMenu(special, buffer2, sizeof(buffer2));
+	if (buffer[0] == '\0' || buffer[2] == '\0')
 	{
 		SpecialRoundGetDescriptionHud(special, buffer, sizeof(buffer));
-		int pos = FindCharInString(buffer, '-');
-		if (pos > 0)
+		if (buffer[0] == '\0')
 		{
-			strcopy(buffer, sizeof(buffer), buffer[pos + 2]);
+			strcopy(buffer, sizeof(buffer), "No description provided");
 		}
-		else
-		{
-			strcopy(buffer, sizeof(buffer), "No description");
-		}
-	}
-
-	char buffer2[512];
-	SpecialRoundGetNameMenu(special, buffer2, sizeof(buffer2));
-	if (buffer2[0] != '\0')
-	{
-		SpecialRoundGetDescriptionChat(special, buffer2, sizeof(buffer2));
-		int pos = FindCharInString(buffer2, '-');
-		if (pos > 0)
-		{
-			buffer2[pos - 1] = '\0';
-		}
+		CPrintToChat(client, "%t", "SF2 Special Round Announce Chat", buffer);
+		return;
 	}
 
 	Format(buffer, sizeof(buffer), "%s - %s", buffer2, buffer);
-
-	for (int i;;)
-	{
-		int pos = FindCharInString(buffer[i], '\n');
-		if (pos != -1)
-		{
-			strcopy(buffer2, pos + 1, buffer[i]);
-			buffer2[pos] = '\0';
-		}
-		else
-		{
-			pos = FindCharInString(buffer[i], '\\');
-			if (pos != -1)
-			{
-				strcopy(buffer2, pos + 1, buffer[i]);
-				buffer2[pos] = '\0';
-				pos++;
-			}
-		}
-
-		if(pos == -1)
-		{
-			strcopy(buffer2, sizeof(buffer2), buffer[i]);
-		}
-
-		CPrintToChat(client, "%s{lightblue}%s", (fromRound && !i) ? "Chosen special round: " : "", buffer2);
-
-		if(pos == -1)
-		{
-			break;
-		}
-
-		i = pos + 1;
-	}
+	CPrintToChat(client, "%t", "SF2 Special Round Announce Chat", buffer);
 }
 
 void SpecialRoundInitializeAPI()

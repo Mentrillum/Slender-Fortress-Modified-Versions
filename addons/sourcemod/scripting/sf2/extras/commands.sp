@@ -1798,7 +1798,7 @@ static Action Command_ReloadProfiles(int client, int args)
 			NPCStatueSetProfileData(npc.Index, statueData);
 		}
 	}
-	CPrintToChatAll("{royalblue}%t {default} Reloaded all profiles successfully.", "SF2 Prefix");
+	CPrintToChatAll("{royalblue}%t {default}Reloaded all profiles successfully.", "SF2 Prefix");
 
 	return Plugin_Handled;
 }

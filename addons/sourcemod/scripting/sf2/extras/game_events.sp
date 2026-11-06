@@ -43,6 +43,7 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	g_RoundCount++;
 	g_RoundTimer = null;
 	g_RoundTimerPaused = false;
+	g_RoundSystemTime = GetTime();
 
 	SetRoundState(SF2RoundState_Invalid);
 

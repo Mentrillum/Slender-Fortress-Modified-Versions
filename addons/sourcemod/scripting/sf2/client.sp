@@ -2120,7 +2120,7 @@ void ClientSaveCookies(int client)
 
 	// Save and reset our queue points.
 	char s[512];
-	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d",
+	FormatEx(s, sizeof(s), "%d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d ; %d",
 		g_PlayerQueuePoints[client],
 		g_PlayerPreferences[client].PlayerPreference_PvPAutoSpawn,
 		g_PlayerPreferences[client].PlayerPreference_ShowHints,
@@ -2137,7 +2137,8 @@ void ClientSaveCookies(int client)
 		g_PlayerPreferences[client].PlayerPreference_LegacyHud,
 		RoundToNearest(g_PlayerPreferences[client].PlayerPreference_MusicVolume * 100),
 		g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc,
-		g_PlayerPreferences[client].PlayerPreference_FlashlightType);
+		g_PlayerPreferences[client].PlayerPreference_FlashlightType,
+		g_PlayerPlaying[client] ? g_RoundSystemTime : 0);
 
 	SetClientCookie(client, g_Cookie, s);
 }

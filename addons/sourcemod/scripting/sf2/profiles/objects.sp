@@ -361,22 +361,6 @@ methodmap ProfileObject < KeyMap
 		this.SetString(key, vecString);
 	}
 
-	public KeyMap_Array GetArray(const char[] key, KeyMap_Array def = view_as<KeyMap_Array>(INVALID_HANDLE))
-	{
-		if (this.GetType(key) != Key_Type_Section)
-		{
-			return def;
-		}
-
-		KeyMap_Array value = view_as<KeyMap_Array>(this.Super.GetSection(key));
-		if (value == null || !value.IsArray)
-		{
-			return def;
-		}
-
-		return value;
-	}
-
 	public ProfileObject GetDifficultySection(const char[] key, int difficulty, ProfileObject def = null)
 	{
 		if (this == null)

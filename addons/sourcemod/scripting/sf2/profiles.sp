@@ -940,7 +940,66 @@ static void LoadProfilesFromDirectory(const char[] relDirPath, int maxLoadedBoss
 				g_AllBossesName.SetString(profileName, fileName);
 			}
 
-			if (kv.GetNum("always_load", false) != 0)
+			bool skip = (maxLoadedBosses > 0);
+			if (skip)
+			{
+				// In this, we're basically just gonna go look for companion bosses and skip them here
+				if (kv.GetNum("enable_random_selection", true) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.GetNum("admin_only", false) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.GetNum("enable_random_selection_boxing", false) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.GetNum("enable_random_selection_renevant", false) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.GetNum("enable_random_selection_renevant_admin", false) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.GetNum("always_load", false) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.GetNum("is_pve", false) != 0 && kv.GetNum("pve_selectable", 1) != 0)
+				{
+					skip = false;
+				}
+
+				if (kv.JumpToKey("pve"))
+				{
+					if (kv.GetNum("selectable", 1) != 0)
+					{
+						skip = false;
+					}
+
+					kv.GoBack();
+				}
+			}
+
+			if (skip)
+			{
+				int index = directories.FindString(filePath);
+				if (index != -1)
+				{
+					directories.Erase(index);
+				}
+				i--;
+			}
+			else if (kv.GetNum("always_load", false) != 0)
 			{
 				int index = directories.FindString(filePath);
 				if (index != -1)
