@@ -406,7 +406,8 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 
 	float duration = deathCamData.LegacyDuration;
 	float overlayDuration = deathCamData.LegacyOverlayStartTime;
-	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlays != null;
+	g_PlayerDeathCamMustDoOverlay[client] = deathCamData.Overlays != null && deathCamData.Overlays.Length > 0;
+	g_PlayerDeathCamCurrentOverlay[client][0] = '\0';
 	if (duration <= 0.0)
 	{
 		char animation[64];
