@@ -1706,19 +1706,31 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return nbAction;
 		}
 
-		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(attackName);
-
-		Call_StartForward(g_OnBossGetCustomAttackActionExFwd);
-		Call_PushCell(this);
-		Call_PushString(attackName);
-		Call_PushCell(attackDataEx);
-		Call_PushCell(target);
-		Call_PushCellRef(nbAction);
-		Call_Finish(action);
-
-		if (action != Plugin_Continue)
+		// Caps momento
+		int size = strlen(attackName) + 1;
+		char[] lower = new char[size];
+		strcopy(lower, size, attackName);
+		for (int i = 0; i < size; i++)
 		{
-			return nbAction;
+			lower[i] = CharToLower(lower[i]);
+		}
+
+		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(lower);
+
+		if (attackDataEx != null)
+		{
+			Call_StartForward(g_OnBossGetCustomAttackActionExFwd);
+			Call_PushCell(this);
+			Call_PushString(lower);
+			Call_PushCell(attackDataEx);
+			Call_PushCell(target);
+			Call_PushCellRef(nbAction);
+			Call_Finish(action);
+
+			if (action != Plugin_Continue)
+			{
+				return nbAction;
+			}
 		}
 
 		return NULL_ACTION;
@@ -1739,14 +1751,26 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		Call_PushCell(target);
 		Call_Finish(action);
 
-		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(attackName);
+		// Caps momento
+		int size = strlen(attackName) + 1;
+		char[] lower = new char[size];
+		strcopy(lower, size, attackName);
+		for (int i = 0; i < size; i++)
+		{
+			lower[i] = CharToLower(lower[i]);
+		}
 
-		Call_StartForward(g_OnIsBossCustomAttackPossibleExFwd);
-		Call_PushCell(this);
-		Call_PushString(attackName);
-		Call_PushCell(attackDataEx);
-		Call_PushCell(target);
-		Call_Finish(action);
+		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(lower);
+
+		if (attackDataEx != null)
+		{
+			Call_StartForward(g_OnIsBossCustomAttackPossibleExFwd);
+			Call_PushCell(this);
+			Call_PushString(lower);
+			Call_PushCell(attackDataEx);
+			Call_PushCell(target);
+			Call_Finish(action);
+		}
 
 		return action == Plugin_Continue;
 	}
@@ -3194,7 +3218,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_ChaserBossEntity.IsValid.get", Native_GetIsValid);
-		CreateNative("SF2_ChaserBossEntity.ControllerEx.get", Native_GetController);
+		CreateNative("SF2_ChaserBossEntity.Controller.get", Native_GetController);
+		CreateNative("SF2_ChaserBossEntity.ControllerEx.get", Native_GetControllerEx);
 		CreateNative("SF2_ChaserBossEntity.IsAttemptingToMove.get", Native_GetIsAttemptingToMove);
 		CreateNative("SF2_ChaserBossEntity.IsAttacking.get", Native_GetIsAttacking);
 		CreateNative("SF2_ChaserBossEntity.IsStunned.get", Native_GetIsStunned);
@@ -5639,6 +5664,22 @@ static any Native_GetIsValid(Handle plugin, int numParams)
 }
 
 static any Native_GetController(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	if (!IsValidEntity(ent))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", ent);
+	}
+
+	SF2_ChaserEntity boss = SF2_ChaserEntity(ent);
+	if (!boss.Controller.IsValid())
+	{
+		return -1;
+	}
+	return boss.Controller.Index;
+}
+
+static any Native_GetControllerEx(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
 	if (!IsValidEntity(ent))

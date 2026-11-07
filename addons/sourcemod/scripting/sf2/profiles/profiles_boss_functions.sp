@@ -1966,6 +1966,17 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	Call_PushCell(kv);
 	Call_Finish();
 
+	kv.Rewind();
+	BaseBossProfile profileDataEx = view_as<BaseBossProfile>(KeyValuesToKeyMap(kv));
+
+	profileDataEx.Precache();
+
+	Call_StartForward(g_OnBossProfileLoadedExFwd);
+	Call_PushString(profile);
+	Call_PushCell(profileDataEx);
+	Call_Finish();
+
+	g_BossProfileDataKeyMap.SetValue(profile, profileDataEx);
 	return true;
 }
 

@@ -848,20 +848,6 @@ static bool LoadProfileFile(const char[] profilePath, char[] profileName, int pr
 
 	bool result = LoadBossProfile(kv, profileName, errorReason, errorReasonLen, lookIntoLoads, originalDir);
 
-	if (result)
-	{
-		BaseBossProfile profileData = view_as<BaseBossProfile>(KeyValuesToKeyMap(kv));
-
-		profileData.Precache();
-
-		Call_StartForward(g_OnBossProfileLoadedExFwd);
-		Call_PushString(profileName);
-		Call_PushCell(profileData);
-		Call_Finish();
-
-		g_BossProfileDataKeyMap.SetValue(profileName, profileData);
-	}
-
 	delete kv;
 
 	return result;

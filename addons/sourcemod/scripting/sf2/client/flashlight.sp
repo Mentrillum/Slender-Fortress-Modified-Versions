@@ -147,6 +147,7 @@ static void Hook_FlashlightThink(int client)
 			if (player.FlashlightBatteryLife <= 0.0)
 			{
 				ClientBreakFlashlight(player.index);
+				ClientActivateUltravision(player.index);
 				player.FlashlightBatteryLife = 0.0;
 			}
 		}

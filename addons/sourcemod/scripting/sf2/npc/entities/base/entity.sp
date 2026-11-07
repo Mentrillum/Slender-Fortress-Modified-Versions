@@ -519,7 +519,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 	{
 		CreateNative("SF2_BaseBossEntity.IsValid.get", Native_GetIsValid);
 		CreateNative("SF2_BaseBossEntity.Controller.get", Native_GetController);
-		CreateNative("SF2_BaseBossEntity.ControllerEx.get", Native_GetController);
+		CreateNative("SF2_BaseBossEntity.ControllerEx.get", Native_GetControllerEx);
 		CreateNative("SF2_BaseBossEntity.Target.get", Native_GetTarget);
 		CreateNative("SF2_BaseBossEntity.State.get", Native_GetState);
 		CreateNative("SF2_BaseBossEntity.CurrentChaseDuration.get", Native_GetCurrentChaseDuration);
@@ -873,6 +873,22 @@ static any Native_GetIsValid(Handle plugin, int numParams)
 }
 
 static any Native_GetController(Handle plugin, int numParams)
+{
+	int ent = GetNativeCell(1);
+	if (!IsValidEntity(ent))
+	{
+		return ThrowNativeError(SP_ERROR_NATIVE, "Invalid entity index %d", ent);
+	}
+
+	SF2_BaseBoss boss = SF2_BaseBoss(ent);
+	if (!boss.Controller.IsValid())
+	{
+		return -1;
+	}
+	return boss.Controller.Index;
+}
+
+static any Native_GetControllerEx(Handle plugin, int numParams)
 {
 	int ent = GetNativeCell(1);
 	if (!IsValidEntity(ent))

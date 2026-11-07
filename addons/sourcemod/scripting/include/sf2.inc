@@ -10,8 +10,8 @@
 #include <tf2_stocks>
 #include <sdkhooks>
 
-#define PLUGIN_VERSION "1.8.0 M RC2.21"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M RC2.21"
+#define PLUGIN_VERSION "1.8.0 M RC2.22"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M RC2.22"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -2054,6 +2054,14 @@ methodmap SF2_StatueBossEntity < SF2_BaseBossEntity
 	}
 
 	/**
+	 *	Gets the controller index that owns this entity.
+	 */
+	property int Controller
+	{
+		public native get();
+	}
+
+	/**
 	 *	Gets the controller methodmap that owns this entity.
 	 */
 	property SF2_StatueBossController ControllerEx
@@ -2108,6 +2116,14 @@ methodmap SF2_ChaserBossEntity < SF2_BaseBossEntity
 	 * Whether or not the entity is actually a chaser boss
 	 */
 	property bool IsValid
+	{
+		public native get();
+	}
+
+	/**
+	 *	Gets the controller index that owns this entity.
+	 */
+	property int Controller
 	{
 		public native get();
 	}
@@ -5630,6 +5646,7 @@ public void __pl_sf2_SetNTVOptional()
 
 	// npc/entities/chaser/entity.sp
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_ChaserBossEntity.Controller.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.ControllerEx.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsAttemptingToMove.get");
 	MarkNativeAsOptional("SF2_ChaserBossEntity.IsAttacking.get");
@@ -5662,6 +5679,7 @@ public void __pl_sf2_SetNTVOptional()
 
 	// npc/entities/statue/entity.sp
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsValid.get");
+	MarkNativeAsOptional("SF2_StatueBossEntity.Controller.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.ControllerEx.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.IsMoving.get");
 	MarkNativeAsOptional("SF2_StatueBossEntity.LastKillTime.get");

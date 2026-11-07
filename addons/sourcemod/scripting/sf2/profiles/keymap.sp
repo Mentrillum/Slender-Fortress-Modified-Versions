@@ -175,6 +175,11 @@ methodmap KeyMap < StringMap
 
 	public KeyMap GetSection(const char[] key, KeyMap def = null)
 	{
+		if (this == null)
+		{
+			return def;
+		}
+
 		if (this.GetType(key) != Key_Type_Section)
 		{
 			return def;
@@ -581,6 +586,11 @@ methodmap KeyMap < StringMap
 
 	public KeyMap_Array GetArray(const char[] key, KeyMap_Array def = view_as<KeyMap_Array>(INVALID_HANDLE))
 	{
+		if (this == null)
+		{
+			return def;
+		}
+
 		if (this.GetType(key) != Key_Type_Section)
 		{
 			return def;

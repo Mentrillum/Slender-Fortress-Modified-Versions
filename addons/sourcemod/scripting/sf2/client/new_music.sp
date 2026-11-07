@@ -530,11 +530,6 @@ static void OnPageCountChanged(int pageCount, int oldPageCount)
 
 static void OnBossAdded(SF2NPC_BaseNPC npc)
 {
-	if (SF_IsRaidMap() || SF_IsRenevantMap() || SF_IsProxyMap())
-	{
-		return;
-	}
-
 	if (npc.GetProfileDataEx().IsPvEBoss)
 	{
 		return;
@@ -566,11 +561,6 @@ static void OnBossAdded(SF2NPC_BaseNPC npc)
 
 static void OnBossRemoved(SF2NPC_BaseNPC npc)
 {
-	if (SF_IsRaidMap() || SF_IsRenevantMap() || SF_IsProxyMap())
-	{
-		return;
-	}
-
 	if (npc.GetProfileDataEx().IsPvEBoss)
 	{
 		return;
@@ -601,11 +591,6 @@ static void OnBossRemoved(SF2NPC_BaseNPC npc)
 
 static void OnDifficultyChange(int oldDifficulty, int newDifficulty)
 {
-	if (SF_IsRaidMap() || SF_IsRenevantMap() || SF_IsProxyMap())
-	{
-		return;
-	}
-
 	g_BossesWithGlobalMusic.Clear();
 	g_BossesWithPageMusic.Clear();
 	g_BossPageMusicRanges.Clear();
@@ -1294,11 +1279,6 @@ static void MusicThink()
 
 		bool dontAdd = true;
 
-		if (g_CurrentTheme[client.index].FadeState == SF2MusicFadeState_FadeIn)
-		{
-			g_CurrentTheme[client.index].FadeIn(client, delta);
-		}
-
 		if (g_QueuedThemes[client.index] != null)
 		{
 			StringMapSnapshot snapshot = g_QueuedThemes[client.index].Snapshot();
@@ -1350,6 +1330,11 @@ static void MusicThink()
 					dontAdd = false;
 				}
 			}
+		}
+
+		if (g_CurrentTheme[client.index].FadeState == SF2MusicFadeState_FadeIn)
+		{
+			g_CurrentTheme[client.index].FadeIn(client, delta);
 		}
 
 		if (g_IsMusicLocked[client.index])

@@ -140,7 +140,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 		return false;
 	}
 
-	public void InsertRanges(ArrayList ranges)
+	public void InsertRanges(ArrayList &ranges)
 	{
 		PageMusicInfo rangeData;
 
@@ -149,10 +149,7 @@ methodmap SF2PageMusicEntity < CBaseEntity
 			this.GetRange(i, rangeData);
 			if (rangeData.State.MusicPath[0] != '\0')
 			{
-				int index = ranges.Push(EnsureEntRef(this.index));
-				ranges.Set(index, rangeData.MinRequiredPages, 1);
-				ranges.Set(index, rangeData.MaxRequiredPages, 2);
-				rangeData.State.StopAfterFade = true;
+				ranges.PushArray(rangeData);
 			}
 		}
 	}
@@ -253,6 +250,10 @@ static void OnSpawn(int entity)
 
 		// Get the range music from keyvalue.
 		thisEnt.GetRangeMusicKeyValue((i + 1), buffer, sizeof(buffer));
+		if (buffer[0] == '\0')
+		{
+			continue;
+		}
 		if (buffer[0] != '#' && buffer[1] != '#')
 		{
 			Format(buffer, sizeof(buffer), "#%s", buffer);
