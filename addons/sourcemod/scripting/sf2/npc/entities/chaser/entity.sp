@@ -3194,7 +3194,7 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_ChaserBossEntity.IsValid.get", Native_GetIsValid);
-		CreateNative("SF2_ChaserBossEntity.Controller.get", Native_GetController);
+		CreateNative("SF2_ChaserBossEntity.ControllerEx.get", Native_GetController);
 		CreateNative("SF2_ChaserBossEntity.IsAttemptingToMove.get", Native_GetIsAttemptingToMove);
 		CreateNative("SF2_ChaserBossEntity.IsAttacking.get", Native_GetIsAttacking);
 		CreateNative("SF2_ChaserBossEntity.IsStunned.get", Native_GetIsStunned);

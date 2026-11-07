@@ -185,7 +185,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_StatueBossEntity.IsValid.get", Native_GetIsValid);
-		CreateNative("SF2_StatueBossEntity.Controller.get", Native_GetController);
+		CreateNative("SF2_StatueBossEntity.ControllerEx.get", Native_GetController);
 		CreateNative("SF2_StatueBossEntity.IsMoving.get", Native_GetIsMoving);
 		CreateNative("SF2_StatueBossEntity.LastKillTime.get", Native_GetLastKillTime);
 		CreateNative("SF2_StatueBossEntity.ProfileData", Native_GetProfileData);
