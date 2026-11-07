@@ -213,16 +213,30 @@ static Action Think(int entIndex)
 {
 	SF2_StatueEntity statue = SF2_StatueEntity(entIndex);
 	int interruptConditions = 0;
-	CBaseEntity target = ProcessVision(statue, interruptConditions);
-	statue.InterruptConditions |= interruptConditions;
-	statue.Target = target;
+	float gameTime = GetGameTime();
+	if (statue.VisionUpdateInterval < gameTime)
+	{
+		CBaseEntity target = ProcessVision(statue, interruptConditions);
+		statue.InterruptConditions |= interruptConditions;
+		statue.Target = target;
+
+		statue.CheckVelocityCancel();
+		int bosses = 0;
+		for (int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
+		{
+			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(npcIndex);
+			if (npc.IsValid() && IsValidEntity(npc.EntIndex))
+			{
+				bosses++;
+			}
+		}
+		statue.VisionUpdateInterval = gameTime + 0.1 + (0.005 * bosses);
+	}
 
 	if (statue.IsMoving)
 	{
 		statue.DoAlwaysLookAt(statue.Target);
 	}
-
-	statue.CheckVelocityCancel();
 
 	return Plugin_Continue;
 }
