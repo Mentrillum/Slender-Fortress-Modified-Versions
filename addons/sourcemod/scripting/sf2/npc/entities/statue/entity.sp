@@ -222,8 +222,6 @@ static Action Think(int entIndex)
 		statue.DoAlwaysLookAt(statue.Target);
 	}
 
-	statue.CheckVelocityCancel();
-
 	return Plugin_Continue;
 }
 

@@ -1543,6 +1543,17 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		int difficulty = controller.Difficulty;
 		ArrayList arrayAttacks = null;
 		SF2ChaserBossProfileAttackData attackData;
+		float eyePos[3], targetPos[3], direction[3], eyeAng[3];
+		this.GetAbsAngles(eyeAng);
+		controller.GetEyePosition(eyePos);
+		target.GetAbsOrigin(targetPos);
+		SubtractVectors(targetPos, eyePos, direction);
+		GetVectorAngles(direction, direction);
+		direction[2] = 180.0;
+
+		float distance = bot.GetRangeSquaredTo(target.index);
+		float fov = FloatAbs(AngleDiff(direction[1], eyeAng[1]));
+		bool glass = this.IsVisibleFromGlass(target);
 		for (int index = 0; index < data.Attacks.Length; index++)
 		{
 			data.GetAttackFromIndex(index, attackData);
@@ -1572,7 +1583,22 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 				continue;
 			}
 
-			if (!attackData.StartThroughWalls[difficulty] && (this.InterruptConditions & COND_ENEMYVISIBLE_NOGLASS) == 0)
+			if (attackData.Type != SF2BossAttackType_Custom)
+			{
+				float beginRange = attackData.BeginRange[difficulty];
+				float beginFOV = attackData.BeginFOV[difficulty];
+				if (distance > Pow(beginRange, 2.0))
+				{
+					continue;
+				}
+
+				if (fov > beginFOV)
+				{
+					continue;
+				}
+			}
+
+			if (!attackData.StartThroughWalls[difficulty] && !glass)
 			{
 				continue;
 			}
@@ -1643,17 +1669,6 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		Call_PushCell(controller.Index);
 		Call_PushCell(arrayAttacks);
 		Call_Finish();
-
-		float eyePos[3], targetPos[3], direction[3], eyeAng[3];
-		this.GetAbsAngles(eyeAng);
-		controller.GetEyePosition(eyePos);
-		target.GetAbsOrigin(targetPos);
-		SubtractVectors(targetPos, eyePos, direction);
-		GetVectorAngles(direction, direction);
-		direction[2] = 180.0;
-
-		float distance = bot.GetRangeSquaredTo(target.index);
-		float fov = FloatAbs(AngleDiff(direction[1], eyeAng[1]));
 
 		arrayAttacks.Sort(Sort_Random, Sort_Integer);
 		for (int i = 0; i < arrayAttacks.Length; i++)
@@ -2067,7 +2082,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
-		if ((this.InterruptConditions & COND_ENEMYVISIBLE_NOGLASS) == 0)
+		CBaseEntity target = this.Target;
+		if (!this.IsVisibleFromGlass(target))
 		{
 			return;
 		}
@@ -3522,9 +3538,25 @@ static Action Think(int entIndex)
 	SF2NPC_Chaser controller = chaser.Controller;
 	BaseBossProfile profileData = controller.GetProfileDataEx();
 	int interruptConditions = 0;
-	CBaseEntity target = ProcessVision(chaser, interruptConditions);
-	chaser.InterruptConditions |= interruptConditions;
-	chaser.Target = target;
+	float gameTime = GetGameTime();
+	if (chaser.VisionUpdateInterval < gameTime)
+	{
+		CBaseEntity target = ProcessVision(chaser, interruptConditions);
+		chaser.InterruptConditions |= interruptConditions;
+		chaser.Target = target;
+
+		chaser.CheckVelocityCancel();
+		int bosses = 0;
+		for (int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
+		{
+			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(npcIndex);
+			if (npc.IsValid() && IsValidEntity(npc.EntIndex))
+			{
+				bosses++;
+			}
+		}
+		chaser.VisionUpdateInterval = gameTime + 0.1 + (0.005 * bosses);
+	}
 	int difficulty = controller.Difficulty;
 
 	if (chaser.State == STATE_CHASE && !chaser.IsRaging)
@@ -3532,13 +3564,10 @@ static Action Think(int entIndex)
 		chaser.DoAlwaysLookAt(chaser.Target);
 	}
 
-	float gameTime = GetGameTime();
 	if (chaser.LegacyFootstepInterval > 0.0 && chaser.LegacyFootstepTime < gameTime)
 	{
 		chaser.CastFootstep();
 	}
-
-	chaser.CheckVelocityCancel();
 
 	if (controller.TeleportType == SF2BossTeleportType_Vanisher)
 	{
@@ -4500,9 +4529,9 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 
 		entity.GetAbsOrigin(targetPos);
 
-		bool isVisible, isTraceVisible, isTraceVisibleNoGlass;
+		bool isVisible, isTraceVisible;
 		int traceHitEntity;
-		TR_TraceHullFilter(traceStartPos,
+		Handle trace = TR_TraceHullFilterEx(traceStartPos,
 		traceEndPos,
 		traceMins,
 		traceMaxs,
@@ -4510,16 +4539,8 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		TraceRayBossVisibility,
 		chaser.index);
 
-		isVisible = !TR_DidHit();
-		traceHitEntity = TR_GetEntityIndex();
-
-		TR_TraceHullFilter(traceStartPos,
-		traceEndPos,
-		traceMins,
-		traceMaxs,
-		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_WINDOW | CONTENTS_GRATE,
-		TraceRayBossVisibility,
-		chaser.index);
+		isVisible = !TR_DidHit(trace);
+		traceHitEntity = TR_GetEntityIndex(trace);
 
 		if (!isVisible && traceHitEntity == entity.index)
 		{
@@ -4527,15 +4548,12 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 			isTraceVisible = true;
 		}
 
-		if (TR_GetEntityIndex() == entity.index)
-		{
-			isTraceVisibleNoGlass = true;
-		}
-
 		if (isVisible)
 		{
 			isVisible = NPCShouldSeeEntity(controller.Index, entity.index);
 		}
+
+		delete trace;
 
 		float dist = GetVectorSquareMagnitude(myPos, targetPos);
 
@@ -4549,7 +4567,6 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 				{
 					isVisible = false;
 					isTraceVisible = false;
-					isTraceVisibleNoGlass = false;
 				}
 			}
 		}
@@ -4595,11 +4612,6 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		if (isTraceVisible)
 		{
 			playerInterruptFlags[entity.index] |= COND_ENEMYVISIBLE;
-		}
-
-		if (isTraceVisibleNoGlass)
-		{
-			playerInterruptFlags[entity.index] |= COND_ENEMYVISIBLE_NOGLASS;
 		}
 
 		playerDists[entity.index] = dist;

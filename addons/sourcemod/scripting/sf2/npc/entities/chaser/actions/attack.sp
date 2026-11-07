@@ -1022,7 +1022,7 @@ static int Update(SF2_ChaserAttackAction action, SF2_ChaserEntity actor, float i
 			end = true;
 		}
 
-		if (attackData.CancelLos[difficulty] && (actor.InterruptConditions & COND_ENEMYVISIBLE_NOGLASS) == 0)
+		if (attackData.CancelLos[difficulty] && !actor.IsVisibleFromGlass(target))
 		{
 			end = true;
 		}

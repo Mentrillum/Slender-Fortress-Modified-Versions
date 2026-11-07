@@ -68,6 +68,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			.DefineIntField("m_EyeBoneIndex")
 			.DefineBoolField("m_VelocityCancel")
 			.DefineIntField("m_Teleporters")
+			.DefineFloatField("m_VisionUpdateInterval")
 		.EndDataMapDesc();
 		g_Factory.Install();
 
@@ -515,6 +516,19 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		}
 	}
 
+	property float VisionUpdateInterval
+	{
+		public get()
+		{
+			return this.GetPropFloat(Prop_Data, "m_VisionUpdateInterval");
+		}
+
+		public set(float value)
+		{
+			this.SetPropFloat(Prop_Data, "m_VisionUpdateInterval", value);
+		}
+	}
+
 	public static void SetupAPI()
 	{
 		CreateNative("SF2_BaseBossEntity.IsValid.get", Native_GetIsValid);
@@ -783,6 +797,48 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			loco.SetVelocity(origin);
 			this.VelocityCancel = true;
 		}
+	}
+
+	public bool IsVisibleFromGlass(CBaseEntity target)
+	{
+		if (!target.IsValid())
+		{
+			return false;
+		}
+
+		if (!this.GetIsVisible(target))
+		{
+			return false;
+		}
+
+		float traceStartPos[3], traceEndPos[3];
+		float traceMins[3] = { -16.0, ... };
+		traceMins[2] = 0.0;
+		float traceMaxs[3] = { 16.0, ... };
+		traceMaxs[2] = 0.0;
+		this.Controller.GetEyePosition(traceStartPos);
+		if (SF2_Player(target.index).IsValid)
+		{
+			SF2_Player(target.index).GetEyePosition(traceEndPos);
+		}
+		else
+		{
+			target.WorldSpaceCenter(traceEndPos);
+		}
+		Handle trace = TR_TraceHullFilterEx(traceStartPos,
+		traceEndPos,
+		traceMins,
+		traceMaxs,
+		CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MIST | CONTENTS_MONSTERCLIP | CONTENTS_WINDOW | CONTENTS_GRATE,
+		TraceRayBossVisibility,
+		this.index);
+
+		if (TR_GetEntityIndex(trace) == target.index)
+		{
+			delete trace;
+			return true;
+		}
+		return false;
 	}
 }
 
