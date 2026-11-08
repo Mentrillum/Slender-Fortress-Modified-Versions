@@ -62,7 +62,11 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	}
 	SF_RemoveAllSpecialRound();
 	// Calculate the new round state.
-	if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
+	if (g_RoundWaitingForPlayers)
+	{
+		SetRoundState(SF2RoundState_Waiting);
+	}
+	else if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
 	{
 		g_RoundWarmupRoundCount++;
 
