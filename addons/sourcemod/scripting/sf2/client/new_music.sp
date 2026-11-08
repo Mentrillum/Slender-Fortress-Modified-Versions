@@ -396,6 +396,7 @@ void SetupNewMusic()
 	g_OnGamemodeEndPFwd.AddFunction(null, OnGamemodeEnd);
 	g_OnMapStartPFwd.AddFunction(null, MapStart);
 	g_OnRoundEndPFwd.AddFunction(null, OnRoundEnd);
+	g_OnTrueGameFramePFwd.AddFunction(null, OnTrueGameFrame);
 	g_OnConfigsExecutedPFwd.AddFunction(null, ConfigsExecuted);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
 	g_OnPlayerDeathPFwd.AddFunction(null, OnPlayerDeath);
@@ -445,7 +446,6 @@ static void OnGamemodeEnd()
 static void MapStart()
 {
 	g_LastMusicThink = -1.0;
-	RequestFrame(MusicThink);
 	g_BossesWithGlobalMusic.Clear();
 	g_BossesWithPageMusic.Clear();
 	g_BossPageMusicRanges.Clear();
@@ -456,6 +456,11 @@ static void OnRoundEnd()
 	g_BossesWithGlobalMusic.Clear();
 	g_BossesWithPageMusic.Clear();
 	g_BossPageMusicRanges.Clear();
+}
+
+static void OnTrueGameFrame()
+{
+	MusicThink();
 }
 
 static void ConfigsExecuted()
@@ -1255,6 +1260,50 @@ static void MusicThink()
 		globalMusic = false;
 	}
 
+	ArrayList validBosses = new ArrayList(2);
+	ArrayList validVisibleBosses = new ArrayList();
+	for (int i = MAX_BOSSES; i >= 0; i--)
+	{
+		SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(i);
+		if (!controller.IsValid())
+		{
+			continue;
+		}
+
+		if (controller.EntIndex == INVALID_ENT_REFERENCE)
+		{
+			continue;
+		}
+
+		BaseBossProfile data = controller.GetProfileDataEx();
+		if (data.IsPvEBoss)
+		{
+			continue;
+		}
+
+		if (data.Type != SF2BossType_Chaser)
+		{
+			continue;
+		}
+
+		char path[2];
+		float radius = 850.0;
+		GetBossMusicTrack(controller, SF2BossMusicTrackType_Normal, path, sizeof(path), .radius = radius);
+		if (path[0] != '\0')
+		{
+			int index = validBosses.Push(i);
+			validBosses.Set(index, radius, 1);
+		}
+
+		path[0] = '\0';
+		GetBossMusicTrack(controller, SF2BossMusicTrackType_Visible, path, sizeof(path));
+		if (path[0] == '\0')
+		{
+			validVisibleBosses.Push(i);
+		}
+	}
+
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		SF2_BasePlayer client = SF2_BasePlayer(i);
@@ -1391,11 +1440,6 @@ static void MusicThink()
 			delete snapshot;
 		}
 
-		if (SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsRenevantMap())
-		{
-			continue;
-		}
-
 		float clientPos[3], bossPos[3], targetPos[3];
 		client.GetAbsOrigin(clientPos);
 		char path[PLATFORM_MAX_PATH];
@@ -1406,31 +1450,10 @@ static void MusicThink()
 		int priorityBoss = -1, layeredBoss = -1;
 		int priorityState = ConvertMusicStateToBossState(g_PlayerActiveBossState[client.index]);
 
-		for (int i2 = MAX_BOSSES; i2 >= 0; i2--)
+		for (int i2 = 0; i2 < validBosses.Length; i2++)
 		{
-			SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(i2);
+			SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(validBosses.Get(i2));
 			path[0] = '\0';
-			if (!controller.IsValid())
-			{
-				continue;
-			}
-
-			if (controller.EntIndex == INVALID_ENT_REFERENCE)
-			{
-				continue;
-			}
-
-			BaseBossProfile data = controller.GetProfileDataEx();
-			if (data.IsPvEBoss)
-			{
-				continue;
-			}
-
-			if (data.Type != SF2BossType_Chaser)
-			{
-				continue;
-			}
-
 			SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 
 			if (chaser.State == STATE_DEATH)
@@ -1439,13 +1462,6 @@ static void MusicThink()
 			}
 
 			chaser.GetAbsOrigin(bossPos);
-
-			GetBossMusicTrack(controller, SF2BossMusicTrackType_Normal, path, sizeof(path), volume, pitch, radius, .fadeSpeed = fadeSpeed, .stopAfterFade = stopAfterFade);
-			if (path[0] == '\0')
-			{
-				continue;
-			}
-
 			CBaseEntity target = chaser.Target;
 
 			if (chaser.State != priorityState)
@@ -1461,6 +1477,7 @@ static void MusicThink()
 					continue;
 				}
 			}
+			radius = validBosses.Get(i2, 1);
 
 			if (GetVectorDistance(clientPos, bossPos, true) <= SquareFloat(radius))
 			{
@@ -1525,40 +1542,13 @@ static void MusicThink()
 			AddMusicToQueue(client, globalMusic ? g_GlobalMusicState[client.index] : g_DefaultMusicState);
 		}
 
-		for (int i2 = 0; i2 < MAX_BOSSES; i2++)
+		for (int i2 = 0; i2 < validVisibleBosses.Length; i2++)
 		{
-			SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(i2);
+			SF2NPC_BaseNPC controller = SF2NPC_BaseNPC(validVisibleBosses.Get(i2));
 			path[0] = '\0';
-			if (!controller.IsValid())
-			{
-				continue;
-			}
-
-			if (controller.EntIndex == INVALID_ENT_REFERENCE)
-			{
-				continue;
-			}
-
-			BaseBossProfile data = SF2NPC_BaseNPC(i).GetProfileDataEx();
-			if (data.IsPvEBoss)
-			{
-				continue;
-			}
-
-			if (data.Type != SF2BossType_Chaser)
-			{
-				continue;
-			}
-
 			SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 
 			if (chaser.State == STATE_DEATH || chaser.State == STATE_STUN)
-			{
-				continue;
-			}
-
-			GetBossMusicTrack(controller, SF2BossMusicTrackType_Visible, path, sizeof(path), volume, pitch, radius);
-			if (path[0] == '\0')
 			{
 				continue;
 			}
@@ -1610,8 +1600,8 @@ static void MusicThink()
 			g_PlayerActiveLayerBossState[client.index] = SF2BossMusicState_Invalid;
 		}
 	}
-
-	RequestFrame(MusicThink);
+	delete validBosses;
+	delete validVisibleBosses;
 }
 
 static SF2BossMusicState ConvertBossStateToMusicState(int state)
@@ -1678,11 +1668,6 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 
 	SF2_ChaserEntity chaser = SF2_ChaserEntity(controller.EntIndex);
 
-	if (chaser.IsValid() && chaser.State == STATE_DEATH)
-	{
-		return;
-	}
-
 	ProfileMusic soundInfo;
 	ProfileGlobalTracks globalTrack;
 	int difficulty = controller.Difficulty;
@@ -1690,7 +1675,7 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 	{
 		case SF2BossMusicTrackType_Normal:
 		{
-			if (!chaser.IsValid())
+			if (!chaser.IsValid() || chaser.State == STATE_DEATH)
 			{
 				return;
 			}
@@ -1721,7 +1706,7 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 
 		case SF2BossMusicTrackType_Visible:
 		{
-			if (!chaser.IsValid())
+			if (!chaser.IsValid() || chaser.State == STATE_DEATH)
 			{
 				return;
 			}

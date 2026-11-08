@@ -421,6 +421,7 @@ public void OnPluginStart()
 	g_OnMapStartPFwd = new PrivateForward(ET_Ignore);
 	g_OnMapEndPFwd = new PrivateForward(ET_Ignore);
 	g_OnGameFramePFwd = new PrivateForward(ET_Ignore);
+	g_OnTrueGameFramePFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundStartPFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundEndPFwd = new PrivateForward(ET_Ignore);
 	g_OnConfigsExecutedPFwd = new PrivateForward(ET_Ignore);

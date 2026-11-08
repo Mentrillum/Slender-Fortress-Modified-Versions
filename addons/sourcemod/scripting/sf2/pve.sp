@@ -383,13 +383,7 @@ static void OnDisconnected(SF2_BasePlayer client)
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
-	if (IsRoundInWarmup() || GameRules_GetProp("m_bInWaitingForPlayers"))
-	{
-		return;
-	}
-
 	PvE_SetPlayerPvEState(client.index, false, false);
-
 	g_PlayerIsLeavingPvE[client.index] = false;
 }
 

@@ -3898,10 +3898,10 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 						model.SetProp(Prop_Send, "m_nSequence", sequence);
 					}
 
-					damage = 750.0;
+					damage = 750.0 / 3.0;
 					if (chaser.IsRaging && !chaser.IsGoingToHeal)
 					{
-						damage = 188.0;
+						damage = 188.0 / 3.0;
 					}
 					switch (weaponEnt.GetProp(Prop_Send, "m_iItemDefinitionIndex"))
 					{
