@@ -102,7 +102,7 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 
 		INextBot bot = this.MyNextBotPointer();
 		ILocomotion loco = bot.GetLocomotionInterface();
-		if ((this.InterruptConditions & COND_ENEMYVISIBLE) == 0)
+		if (!this.GetIsVisible(target))
 		{
 			return;
 		}
@@ -110,6 +110,24 @@ methodmap SF2_StatueEntity < SF2_BaseBoss
 		float pos[3];
 		target.GetAbsOrigin(pos);
 		loco.FaceTowards(pos);
+	}
+
+	public void StopMoving()
+	{
+		this.IsMoving = false;
+		SF2NPC_Statue controller = this.Controller;
+		if (controller.IsValid() && controller.Path != view_as<PathFollower>(0))
+		{
+			controller.Path.Invalidate();
+		}
+		CBaseNPC npc = TheNPCs.FindNPCByEntIndex(this.index);
+		CBaseNPC_Locomotion loco = npc.GetLocomotion();
+		loco.Stop();
+		float velocity[3];
+		loco.GetVelocity(velocity);
+		velocity[0] = 0.0;
+		velocity[1] = 0.0;
+		loco.SetVelocity(velocity);
 	}
 
 	public static SF2_StatueEntity Create(SF2NPC_BaseNPC controller, const float pos[3], const float ang[3])
@@ -202,6 +220,9 @@ static bool LocoCollideWith(CBaseNPC_Locomotion loco, int other)
 static void OnCreate(SF2_StatueEntity ent)
 {
 	ent.LastKillTime = 0.0;
+	ent.OldTarget = CBaseEntity(-1);
+	ent.IsMoving = false;
+	ent.NextMoveTime = 0.0;
 	SDKHook(ent.index, SDKHook_Think, Think);
 	SDKHook(ent.index, SDKHook_ThinkPost, ThinkPost);
 	SetEntityTransmitState(ent.index, FL_EDICT_FULLCHECK);
@@ -222,7 +243,7 @@ static Action Think(int entIndex)
 
 		statue.CheckVelocityCancel();
 		int bosses = 0;
-		for (int npcIndex = 0; npcIndex <= MAX_BOSSES; npcIndex++)
+		for (int npcIndex = 0; npcIndex < MAX_BOSSES; npcIndex++)
 		{
 			SF2NPC_BaseNPC npc = SF2NPC_BaseNPC(npcIndex);
 			if (npc.IsValid() && IsValidEntity(npc.EntIndex))
@@ -299,7 +320,6 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 	StatueBossProfile profileData = controller.GetProfileDataEx();
 	int difficulty = controller.Difficulty;
 
-	float playerDists[MAXTF2PLAYERS];
 	int playerInterruptFlags[MAXTF2PLAYERS];
 
 	float traceMins[3] = { -16.0, ... };
@@ -354,14 +374,14 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 		}
 		#endif
 
+		statue.SetIsVisible(client, false);
+		statue.SetInFOV(client, false);
+		statue.SetIsNear(client, false);
+
 		if (!IsTargetValidForSlender(statue, client, attackEliminated))
 		{
 			continue;
 		}
-
-		statue.SetIsVisible(client, false);
-		statue.SetInFOV(client, false);
-		statue.SetIsNear(client, false);
 
 		Action result = Plugin_Continue;
 		Call_StartForward(g_OnBossPreValidateTargetFwd);
@@ -442,8 +462,6 @@ static CBaseEntity ProcessVision(SF2_StatueEntity statue, int &interruptConditio
 		{
 			playerInterruptFlags[client.index] |= COND_NEWENEMY;
 		}
-
-		playerDists[client.index] = dist;
 
 		if (statue.GetIsVisible(client))
 		{
