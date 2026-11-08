@@ -869,7 +869,7 @@ void SlenderSpawnEffects(ArrayList effects, int bossIndex, bool nonEffects = tru
 				// Check base position behavior.
 				if (!slenderEnt || slenderEnt == INVALID_ENT_REFERENCE)
 				{
-					LogError("Could not spawn effect %s for boss %d: unable to read position and angles due to boss entity not in game!");
+					LogError("Could not spawn effect %s for boss %d: unable to read position and angles due to boss entity not in game!", effectsInfo.SectionName, bossIndex);
 					continue;
 				}
 

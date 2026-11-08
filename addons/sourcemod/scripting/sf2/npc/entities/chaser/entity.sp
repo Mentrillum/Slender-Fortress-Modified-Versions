@@ -2088,14 +2088,15 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return;
 		}
 
+		if (controller.Flags & SFF_FAKE)
+		{
+			isFake = true;
+			controller.MarkAsFake();
+			return;
+		}
+
 		if (!data.ProjectileClips)
 		{
-			if (controller.Flags & SFF_FAKE)
-			{
-				isFake = true;
-				return;
-			}
-
 			this.ShootProjectile();
 		}
 		else

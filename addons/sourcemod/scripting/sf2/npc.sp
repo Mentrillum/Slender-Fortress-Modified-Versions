@@ -1501,7 +1501,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 							companionInfo.Bosses.GetString(i, compProfile, sizeof(compProfile));
 							if (IsProfileValid(compProfile))
 							{
-								SF2NPC_BaseNPC npcCompanion = AddProfile(compProfile, _, _, false, false, false);
+								SF2NPC_BaseNPC npcCompanion = AddProfile(compProfile, npc.Flags & SFF_FAKE, _, false, false, false);
 								if (npcCompanion.IsValid())
 								{
 									npcCompanion.CompanionMaster = npc;
@@ -1652,7 +1652,7 @@ void NPCAddCompanions(SF2NPC_BaseNPC npc)
 		companionsToAdd.GetString(i, compProfile, sizeof(compProfile));
 		if (IsProfileValid(compProfile))
 		{
-			SF2NPC_BaseNPC npcCompanion = AddProfile(compProfile, _, _, false, false);
+			SF2NPC_BaseNPC npcCompanion = AddProfile(compProfile, npc.Flags & SFF_FAKE, _, false, false);
 			if (npcCompanion.IsValid())
 			{
 				npcCompanion.CompanionMaster = npc;
