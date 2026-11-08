@@ -349,11 +349,7 @@ static bool Trace(int entity, int mask, any data)
 	{
 		return false;
 	}
-	if (SF2_ChaserEntity(entity).IsValid() || SF2_StatueEntity(entity).IsValid())
-	{
-		return false;
-	}
-	if (SF2_BasePlayer(entity).IsValid)
+	if (CBaseEntity(entity).IsCombatCharacter())
 	{
 		return false;
 	}

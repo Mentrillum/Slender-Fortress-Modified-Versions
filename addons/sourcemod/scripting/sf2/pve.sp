@@ -594,7 +594,7 @@ void PvE_SetPlayerPvEState(int client, bool status, bool regenerate = true)
 		{
 			CBaseEntity building = CBaseEntity(ent);
 			int owner = building.GetPropEnt(Prop_Send, "m_hBuilder");
-			if (IsValidClient(owner))
+			if (IsValidClient(owner) && owner == client)
 			{
 				SDKHooks_TakeDamage(building.index, 0, 0, building.GetProp(Prop_Data, "m_iHealth") * 4.0);
 			}

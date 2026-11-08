@@ -514,6 +514,11 @@ static Action FlashlightLightSetTransmit(int ent, int other)
 	return Plugin_Continue;
 }
 
+int GetFlashlightEndEntity(int client)
+{
+	return EntRefToEntIndex(g_PlayerFlashlightLightEnt[client]);
+}
+
 /*static Action Hook_Flashlight2SetTransmit(int ent,int other)
 {
 	if (!g_Enabled)

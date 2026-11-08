@@ -1990,7 +1990,8 @@ void ClientUpdateListeningFlags(int client, bool reset = false)
 				}
 				else
 				{
-					if (g_PlayerVoiceDistanceConVar.FloatValue <= 0.0)
+					// All of this code is unnecessary and needs to be rethought.
+					/*if (g_PlayerVoiceDistanceConVar.FloatValue <= 0.0)
 					{
 						canHear = true;
 					}
@@ -2019,7 +2020,8 @@ void ClientUpdateListeningFlags(int client, bool reset = false)
 						{
 							canHear = true;
 						}
-					}
+					}*/
+					canHear = true;
 
 					if (canHear)
 					{

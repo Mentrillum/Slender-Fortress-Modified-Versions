@@ -1168,6 +1168,7 @@ static void AddLayeredTrack(SF2_BasePlayer client, MusicState state, int index)
 				g_QueuedThemes[client.index].Remove(key);
 			}
 		}
+		delete snapshot;
 	}
 
 	char intString[16];

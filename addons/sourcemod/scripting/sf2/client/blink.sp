@@ -289,29 +289,15 @@ static float ClientGetBlinkRate(int client)
 
 	if (IsClientUsingFlashlight(client))
 	{
-		float startPos[3], endPos[3], direction[3];
-		float length = SF2_FLASHLIGHT_LENGTH;
-		GetClientEyePosition(client, startPos);
-		GetClientEyePosition(client, endPos);
-		GetClientEyeAngles(client, direction);
-		GetAngleVectors(direction, direction, NULL_VECTOR, NULL_VECTOR);
-		NormalizeVector(direction, direction);
-		ScaleVector(direction, length);
-		AddVectors(endPos, direction, endPos);
-		Handle trace = TR_TraceRayFilterEx(startPos, endPos, MASK_VISIBLE, RayType_EndPoint, TraceRayDontHitCharactersOrEntity, client);
-		TR_GetEndPosition(endPos, trace);
-		bool hit = TR_DidHit(trace);
-		delete trace;
-
-		if (hit)
+		int end = GetFlashlightEndEntity(client);
+		if (end && end != INVALID_ENT_REFERENCE)
 		{
-			float percent = ((GetVectorSquareMagnitude(startPos, endPos) / length));
-			percent *= 3.5;
-			if (percent > 1.0)
-			{
-				percent = 1.0;
-			}
-			value *= percent;
+			float startPos[3], endPos[3];
+			GetClientEyePosition(client, startPos);
+			CBaseEntity(end).GetAbsOrigin(endPos);
+			float percent = (Pow(SF2_FLASHLIGHT_LENGTH, 2.0) / GetVectorDistance(startPos, endPos, true));
+			percent *= 0.035;
+			value *= 1.0 + percent;
 		}
 	}
 

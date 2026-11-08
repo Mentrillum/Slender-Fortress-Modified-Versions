@@ -838,6 +838,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 			delete trace;
 			return true;
 		}
+		delete trace;
 		return false;
 	}
 }

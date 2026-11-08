@@ -17,14 +17,19 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 		return Plugin_Continue;
 	}
 
+	char map[64];
+	GetCurrentMap(map, sizeof(map));
 	int ent = -1;
-	while ((ent = FindEntityByClassname(ent, "trigger_teleport")) != -1)
+	if (strcmp(map, "slender_hellfire", false) == 0)
 	{
-		CBaseEntity teleporter = CBaseEntity(ent);
-		int flags = teleporter.GetProp(Prop_Data, "m_spawnflags");
-		if ((flags & TRIGGER_CLIENTS) != 0 && (flags & TRIGGER_NPCS) == 0)
+		while ((ent = FindEntityByClassname(ent, "trigger_teleport")) != -1)
 		{
-			teleporter.SetProp(Prop_Data, "m_spawnflags", flags | TRIGGER_NPCS);
+			CBaseEntity teleporter = CBaseEntity(ent);
+			int flags = teleporter.GetProp(Prop_Data, "m_spawnflags");
+			if ((flags & TRIGGER_CLIENTS) != 0 && (flags & TRIGGER_NPCS) == 0)
+			{
+				teleporter.SetProp(Prop_Data, "m_spawnflags", flags | TRIGGER_NPCS);
+			}
 		}
 	}
 

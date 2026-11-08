@@ -95,8 +95,8 @@ public void OnPluginStart()
 	g_AllChatConVar = CreateConVar("sf2_alltalk", "0");
 	g_AllChatConVar.AddChangeHook(OnConVarChanged);
 
-	g_PlayerVoiceDistanceConVar = CreateConVar("sf2_player_voice_distance", "800.0", "The maximum distance RED can communicate in voice chat. Set to 0 if you want them to be heard at all times.", _, true, 0.0);
-	g_PlayerVoiceWallScaleConVar = CreateConVar("sf2_player_voice_scale_blocked", "0.5", "The distance required to hear RED in voice chat will be multiplied by this amount if something is blocking them.");
+	//g_PlayerVoiceDistanceConVar = CreateConVar("sf2_player_voice_distance", "0.0", "The maximum distance RED can communicate in voice chat. Set to 0 if you want them to be heard at all times.", _, true, 0.0);
+	//g_PlayerVoiceWallScaleConVar = CreateConVar("sf2_player_voice_scale_blocked", "0.5", "The distance required to hear RED in voice chat will be multiplied by this amount if something is blocking them.");
 
 	g_PlayerViewbobEnabledConVar = CreateConVar("sf2_player_viewbob_enabled", "1", "Enable/Disable player viewbobbing.", _, true, 0.0, true, 1.0);
 	g_PlayerViewbobEnabledConVar.AddChangeHook(OnConVarChanged);

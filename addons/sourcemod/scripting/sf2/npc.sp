@@ -3677,7 +3677,7 @@ bool TraceRayBossVisibility(int entity, int mask, any data)
 	return true;
 }
 
-bool TraceRayDontHitCharacters(int entity, int mask, any data)
+/*bool TraceRayDontHitCharacters(int entity, int mask, any data)
 {
 	if (IsValidClient(entity))
 	{
@@ -3690,7 +3690,7 @@ bool TraceRayDontHitCharacters(int entity, int mask, any data)
 	}
 
 	return true;
-}
+}*/
 
 bool TraceRayDontHitAnyEntity(int entity, int mask, any data)
 {
