@@ -302,7 +302,7 @@ static void GameFrame()
 				ownerEntity = GetEntPropEnt(ownerEntity, Prop_Data, "m_hOwnerEntity");
 			}
 
-			if (IsValidClient(ownerEntity) && (IsRoundInWarmup() || IsClientInPvP(ownerEntity)))
+			if (IsValidClient(ownerEntity) && (IsClientInPvP(ownerEntity)))
 			{
 				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", origin);
 
@@ -446,7 +446,7 @@ static void Hook_PvPProjectileSpawnPost(int ent)
 
 	if (IsValidClient(ownerEntity))
 	{
-		if (IsRoundInWarmup() || IsClientInPvP(ownerEntity))
+		if (IsClientInPvP(ownerEntity))
 		{
 			static const char fixWeaponNotCollidingWithTeammates[][] =
 			{
@@ -520,14 +520,13 @@ static void Hook_PvPProjectileBallOfFireTouchPost(int projectile, int otherEntit
 
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
+	PvP_SetPlayerPvPState(client.index, false, false, false);
+	g_PlayerIsLeavingPvP[client.index] = false;
+
 	if (IsRoundInWarmup() || GameRules_GetProp("m_bInWaitingForPlayers"))
 	{
 		return;
 	}
-
-	PvP_SetPlayerPvPState(client.index, false, false, false);
-
-	g_PlayerIsLeavingPvP[client.index] = false;
 
 	if (client.IsAlive && client.IsParticipating)
 	{
@@ -819,7 +818,7 @@ static void PvP_OnFlameEntityStartTouchPost(int flame, int other) //Thanks Fire
 		{
 			lastHit[client.index] = time + FLAME_HIT_DELAY;
 
-			if ((IsRoundInWarmup() || client.IsInPvP) && !IsRoundEnding())
+			if (client.IsInPvP && !IsRoundEnding())
 			{
 				int flamethrower = GetEntPropEnt(flame, Prop_Data, "m_hOwnerEntity");
 				if (IsValidEdict(flamethrower))
@@ -827,7 +826,7 @@ static void PvP_OnFlameEntityStartTouchPost(int flame, int other) //Thanks Fire
 					SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(flamethrower, Prop_Data, "m_hOwnerEntity"));
 					if (ownerEntity.index != client.index && ownerEntity.IsValid)
 					{
-						if (IsRoundInWarmup() || ownerEntity.IsInPvP)
+						if (ownerEntity.IsInPvP)
 						{
 							if (client.Team == ownerEntity.Team && ownerEntity.Team != TFTeam_Red)
 							{
@@ -1207,7 +1206,7 @@ static MRESReturn Hook_PvPProjectileCanCollideWithTeammates(int projectile, DHoo
 	}
 
 	int owner = GetEntPropEnt(projectile, Prop_Data, "m_hOwnerEntity");
-	if (IsValidClient(owner) && (IsRoundInWarmup() || IsClientInPvP(owner)))
+	if (IsValidClient(owner) && (IsClientInPvP(owner)))
 	{
 		returnHandle.Value = true;
 		return MRES_Supercede;

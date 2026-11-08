@@ -17,22 +17,6 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 		return Plugin_Continue;
 	}
 
-	char map[64];
-	GetCurrentMap(map, sizeof(map));
-	int ent = -1;
-	if (strcmp(map, "slender_hellfire", false) == 0)
-	{
-		while ((ent = FindEntityByClassname(ent, "trigger_teleport")) != -1)
-		{
-			CBaseEntity teleporter = CBaseEntity(ent);
-			int flags = teleporter.GetProp(Prop_Data, "m_spawnflags");
-			if ((flags & TRIGGER_CLIENTS) != 0 && (flags & TRIGGER_NPCS) == 0)
-			{
-				teleporter.SetProp(Prop_Data, "m_spawnflags", flags | TRIGGER_NPCS);
-			}
-		}
-	}
-
 	#if defined DEBUG
 	Handle profiler = CreateProfiler();
 	StartProfiling(profiler);
@@ -78,23 +62,8 @@ Action Event_RoundStart(Handle event, const char[] name, bool dB)
 	}
 	SF_RemoveAllSpecialRound();
 	// Calculate the new round state.
-	if (g_RoundWaitingForPlayers)
+	if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
 	{
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-		{
-			AcceptEntityInput(ent, "Disable");
-		}
-		SetRoundState(SF2RoundState_Waiting);
-	}
-	else if (g_WarmupRoundConVar.BoolValue && g_RoundWarmupRoundCount < g_WarmupRoundNumConVar.IntValue)
-	{
-		ent = -1;
-		while ((ent = FindEntityByClassname(ent, "func_regenerate")) != -1)
-		{
-			AcceptEntityInput(ent, "Disable");
-		}
-
 		g_RoundWarmupRoundCount++;
 
 		SetRoundState(SF2RoundState_Waiting);
