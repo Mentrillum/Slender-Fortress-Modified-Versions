@@ -34,7 +34,7 @@ static int OnStart(SF2_StatueChaseAction action, SF2_StatueEntity actor, NextBot
 	return action.Continue();
 }
 
-static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
+static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor, float interval)
 {
 	if (actor.CurrentChaseDuration <= 0.0)
 	{
@@ -44,7 +44,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 	}
 
 	CBaseEntity target = actor.Target;
-	if (!target.IsValid())
+	if (!IsTargetValidForSlender(actor, target, (actor.Controller.Flags & SFF_ATTACKWAITERS) != 0))
 	{
 		return action.ChangeTo(SF2_StatueIdleAction(), "No target? No problem, idle.");
 	}
@@ -53,6 +53,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 	if (actor.LastKillTime > gameTime)
 	{
+		actor.StopMoving();
 		return action.Continue();
 	}
 
@@ -82,7 +83,10 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 		player.SetForceChaseState(controller, false);
 	}
 
-	bool visible = (actor.InterruptConditions & COND_ENEMYVISIBLE) != 0;
+	// Vision is scanned less frequently than this action is updated. Use the
+	// cached result, since ThinkPost clears the transient interrupt conditions.
+	bool visible = actor.GetIsVisible(target);
+	bool extendChase = false;
 
 	if (visible)
 	{
@@ -96,21 +100,19 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 				float durationTimeAddMax = data.ChaseDurationAddVisibilityMax[difficulty];
 				float durationAdd = durationTimeAddMin + ((durationTimeAddMax - durationTimeAddMin) * distanceRatio);
 
-				actor.CurrentChaseDuration += durationAdd * GetGameFrameTime();
+				extendChase = true;
+				actor.CurrentChaseDuration += durationAdd * interval;
 				if (actor.CurrentChaseDuration > data.ChaseDuration[difficulty])
 				{
 					actor.CurrentChaseDuration = data.ChaseDuration[difficulty];
 				}
 			}
 		}
-		else
-		{
-			actor.CurrentChaseDuration -= GetGameFrameTime();
-		}
 	}
-	else
+
+	if (!extendChase)
 	{
-		actor.CurrentChaseDuration -= GetGameFrameTime();
+		actor.CurrentChaseDuration -= interval;
 	}
 
 	if (SF_IsRaidMap() || SF_BossesChaseEndlessly() || SF_IsProxyMap() || SF_IsBoxingMap() || SF_IsSlaughterRunMap())
@@ -122,9 +124,14 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 		visible &&
 		bot.IsRangeLessThan(target.index, 8.0);
 
-	if ((tooClose || !actor.IsMoving) && path.IsValid())
+	if (!actor.IsMoving)
+	{
+		actor.StopMoving();
+	}
+	else if (tooClose)
 	{
 		path.Invalidate();
+		loco.Stop();
 	}
 	else
 	{
@@ -137,7 +144,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 		if (!bot.IsRangeLessThanEx(pos, 8.0) && actor.IsMoving)
 		{
-			if (path.GetAge() > 0.3 || (path.IsValid() && (path.GetLength() - path.GetCursorPosition()) < 256.0))
+			if (!path.IsValid() || path.GetAge() > 0.3 || (path.GetLength() - path.GetCursorPosition()) < 256.0)
 			{
 				path.ComputeToPos(bot, pos);
 			}
@@ -168,6 +175,9 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 			{
 				actor.LastKillTime = gameTime + originalData.InstantKillCooldown[difficulty];
 				player.StartDeathCam(controller.Index, myPos);
+				actor.StopMoving();
+				actor.Target = CBaseEntity(-1);
+				actor.OldTarget = CBaseEntity(-1);
 			}
 		}
 	}
@@ -180,6 +190,7 @@ static int Update(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 
 static void OnEnd(SF2_StatueChaseAction action, SF2_StatueEntity actor)
 {
+	actor.StopMoving();
 	if (actor.Teleporters != null)
 	{
 		actor.Teleporters.Clear();
