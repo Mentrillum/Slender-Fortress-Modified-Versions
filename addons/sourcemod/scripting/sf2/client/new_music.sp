@@ -870,7 +870,6 @@ static void ClearMusic(SF2_BasePlayer client)
 	g_PlayerActiveLayerBoss[client.index] = -1;
 	g_PlayerActiveBossState[client.index] = SF2BossMusicState_Invalid;
 	g_PlayerActiveLayerBossState[client.index] = SF2BossMusicState_Invalid;
-	g_GlobalMusicUpdateLimit[client.index] = SF2BossMusicState_Max;
 	g_SubPluginMusicUpdateLimit[client.index] = SF2BossMusicState_Invalid;
 	g_SubPluginMusicState[client.index].Stop(client);
 	g_SubPluginMusicState[client.index] = g_NullMusicState;
@@ -1073,6 +1072,7 @@ static void UpdateBossGlobalTrackForPlayer(SF2_BasePlayer client)
 
 	g_GlobalMusicState[client.index].Stop(client);
 	g_GlobalMusicState[client.index] = g_NullMusicState;
+	g_GlobalMusicUpdateLimit[client.index] = SF2BossMusicState_Max;
 }
 
 static void AddMusicToQueue(SF2_BasePlayer client, MusicState state)
@@ -1286,7 +1286,7 @@ static void MusicThink()
 			continue;
 		}
 
-		char path[2];
+		char path[PLATFORM_MAX_PATH];
 		float radius = 850.0;
 		GetBossMusicTrack(controller, SF2BossMusicTrackType_Normal, path, sizeof(path), .radius = radius);
 		if (path[0] != '\0')
@@ -1481,7 +1481,7 @@ static void MusicThink()
 
 			if (GetVectorDistance(clientPos, bossPos, true) <= SquareFloat(radius))
 			{
-				priorityBoss = i2;
+				priorityBoss = controller.Index;
 				priorityState = chaser.State;
 				continue;
 			}
@@ -1493,7 +1493,7 @@ static void MusicThink()
 					target.GetAbsOrigin(targetPos);
 					if (target.index == client.index || GetVectorDistance(clientPos, targetPos, true) <= SquareFloat(radius))
 					{
-						priorityBoss = i2;
+						priorityBoss = controller.Index;
 						priorityState = chaser.State;
 						continue;
 					}
@@ -1505,7 +1505,7 @@ static void MusicThink()
 				controller.Path.GetEndPosition(targetPos);
 				if (GetVectorDistance(clientPos, targetPos, true) <= SquareFloat(radius))
 				{
-					priorityBoss = i2;
+					priorityBoss = controller.Index;
 					priorityState = chaser.State;
 					continue;
 				}
@@ -1567,9 +1567,9 @@ static void MusicThink()
 				}
 			}
 
-			if (PlayerCanSeeSlender(client.index, i2, false))
+			if (PlayerCanSeeSlender(client.index, controller.Index, false))
 			{
-				layeredBoss = i2;
+				layeredBoss = controller.Index;
 				priorityState = chaser.State;
 				break;
 			}

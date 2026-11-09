@@ -738,6 +738,10 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 			{
 				char hint[256];
 				deathHintsData.GetHints(difficulty).GetString(i, hint, sizeof(hint));
+				if (StrContains(hint, "[BOSS]", true) != -1)
+				{
+					ReplaceString(hint, sizeof(hint), "[BOSS]", bossName);
+				}
 				panel.DrawText(hint);
 			}
 

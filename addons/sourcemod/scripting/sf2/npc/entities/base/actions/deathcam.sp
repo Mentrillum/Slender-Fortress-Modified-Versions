@@ -75,6 +75,10 @@ static NextBotAction InitialContainedAction(SF2_DeathCamAction action, SF2_BaseB
 		duration *= (1.0 - cycle);
 	}
 	action.Duration = duration;
+	if (SF2_ChaserEntity(actor.index).IsValid())
+	{
+		SF2_ChaserEntity(actor.index).EndCloak();
+	}
 	return SF2_PlaySequenceAndWait(sequence, duration, rate, cycle);
 }
 

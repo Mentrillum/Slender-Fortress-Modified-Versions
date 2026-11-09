@@ -319,6 +319,22 @@ void ClientStartDeathCam(int client, int bossIndex, const float lookPos[3], bool
 		slender = NPCGetEntIndex(bossIndex);
 		if (SF2_ChaserEntity(slender).IsValid() || SF2_StatueEntity(slender).IsValid())
 		{
+			if (SF2_BaseBoss(slender).IsKillingSomeone)
+			{
+				SetEntProp(client, Prop_Data, "m_takedamage", 2); // We do this because the point_viewcontrol changes our lifestate.
+
+				if (NPCHasAttribute(bossIndex, SF2Attribute_IgnitePlayerOnDeath))
+				{
+					TF2_IgnitePlayer(client, client);
+				}
+
+				CBaseEntity boss = CBaseEntity(NPCGetEntIndex(bossIndex));
+				float damage = float(GetEntProp(client, Prop_Send, "m_iHealth")) * 4.0;
+				SDKHooks_TakeDamage(client, boss.IsValid() ? boss.index : 0, boss.IsValid() ? boss.index : 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 }, .bypassHooks = false);
+				ForcePlayerSuicide(client); // Sometimes SDKHooks_TakeDamage doesn't work (probably because of point_viewcontrol), the player is still alive and result in a endless round.
+				KillClient(client);
+				return;
+			}
 			SF2_BaseBoss(slender).IsKillingSomeone = true;
 			SF2_BaseBoss(slender).KillTarget = CBaseEntity(client);
 			SF2_BaseBoss(slender).FullDeathCamDuration = deathCamData.LegacyDuration <= 0.0;
