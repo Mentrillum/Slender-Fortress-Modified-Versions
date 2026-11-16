@@ -1070,7 +1070,7 @@ static int Menu_SettingsPvE(Menu menu, MenuAction action, int param1, int param2
 		{
 			if (param2 == MenuCancel_ExitBack)
 			{
-				g_MenuSettings.Display(param1, 30);
+				ShowMainSettings(param1);
 			}
 		}
 		case MenuAction_Select:

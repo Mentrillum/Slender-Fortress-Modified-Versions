@@ -253,8 +253,6 @@ bool g_PlayerLatchedByTongue[MAXTF2PLAYERS];
 int g_PlayerLatchCount[MAXTF2PLAYERS];
 int g_PlayerLatcher[MAXTF2PLAYERS];
 
-int g_PlayerBossKillSubject[MAXTF2PLAYERS];
-
 // Difficulty
 bool g_PlayerCalledForNightmare[MAXTF2PLAYERS];
 bool g_InProxySurvivalRageMode = false;
@@ -282,6 +280,7 @@ enum struct PlayerPreferences
 	float PlayerPreference_MusicVolume;
 	bool PlayerPreference_SpecialFullDesc;
 	bool PlayerPreference_FlashlightType;
+	bool PlayerPreference_OtherLights;
 }
 
 PlayerPreferences g_PlayerPreferences[MAXTF2PLAYERS];
@@ -503,6 +502,7 @@ ConVar g_DefaultBossTeamConVar;
 ConVar g_EngineerBuildInBLUConVar;
 ConVar g_DisableTauntLoopsConVar;
 ConVar g_BossPreviewWikiConVar;
+ConVar g_DamagePvPLeaversConVar;
 
 ConVar g_RestartSessionConVar;
 bool g_RestartSessionEnabled;
@@ -604,6 +604,7 @@ PrivateForward g_OnGamemodeStartPFwd;
 PrivateForward g_OnGamemodeEndPFwd;
 PrivateForward g_OnMapStartPFwd;
 PrivateForward g_OnMapEndPFwd;
+PrivateForward g_OnSF2GamedataLoadedPFwd;
 PrivateForward g_OnGameFramePFwd;
 PrivateForward g_OnTrueGameFramePFwd;
 PrivateForward g_OnRoundStartPFwd;
@@ -3503,10 +3504,11 @@ public void OnClientCookiesCached(int client)
 	g_PlayerPreferences[client].PlayerPreference_MusicVolume = 1.0;
 	g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc = false;
 	g_PlayerPreferences[client].PlayerPreference_FlashlightType = false;
+	g_PlayerPreferences[client].PlayerPreference_OtherLights = false;
 
 	if (cookie[0] != '\0')
 	{
-		char s2[18][16];
+		char s2[20][16];
 		int count = ExplodeString(cookie, " ; ", s2, sizeof(s2), sizeof(s2[]));
 
 		if (count > 0)
@@ -3583,6 +3585,10 @@ public void OnClientCookiesCached(int client)
 			{
 				g_PlayerPlaying[client] = true;
 			}
+		}
+		if (count > 18)
+		{
+			g_PlayerPreferences[client].PlayerPreference_OtherLights = StringToInt(s2[18]) != 0;
 		}
 	}
 }
@@ -3784,6 +3790,7 @@ public void OnClientDisconnect(int client)
 	g_PlayerPreferences[client].PlayerPreference_MusicVolume = 1.0;
 	g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc = false;
 	g_PlayerPreferences[client].PlayerPreference_FlashlightType = false;
+	g_PlayerPreferences[client].PlayerPreference_OtherLights = false;
 
 	// Reset any client functions that may be still active.
 	ClientResetOverlay(client);
@@ -5634,7 +5641,7 @@ Action Timer_SwitchBot(Handle timer, any userid)
 		return Plugin_Stop;
 	}
 
-	if (GetClientTeam(client) != TFTeam_Red || DidClientEscape(client))
+	if (GetClientTeam(client) != TFTeam_Red)
 	{
 		return Plugin_Stop;
 	}
@@ -6034,17 +6041,17 @@ Action Timer_ReplacePlayerRagdoll(Handle timer, any userid)
 	return Plugin_Stop;
 }
 
-Action Timer_IceRagdoll(Handle timer, any userid)
+void Frame_IceRagdoll(int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (0 >= client)
+	if (client <= 0)
 	{
-		return Plugin_Stop;
+		return;
 	}
 	int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 	if (!IsValidEntity(ragdoll))
 	{
-		return Plugin_Stop;
+		return;
 	}
 	int ent = CreateEntityByName("tf_ragdoll", -1);
 	if (ent != -1)
@@ -6082,20 +6089,19 @@ Action Timer_IceRagdoll(Handle timer, any userid)
 		SetEntPropEnt(client, Prop_Send, "m_hRagdoll", ent, 0);
 	}
 	AcceptEntityInput(ragdoll, "Kill", -1, -1, 0);
-	return Plugin_Stop;
 }
 
-Action Timer_ManglerRagdoll(Handle timer, any userid)
+void Frame_ManglerRagdoll(int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (0 >= client)
+	if (client <= 0)
 	{
-		return Plugin_Stop;
+		return;
 	}
 	int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 	if (!IsValidEntity(ragdoll))
 	{
-		return Plugin_Stop;
+		return;
 	}
 	int ent = CreateEntityByName("tf_ragdoll", -1);
 	if (ent != -1)
@@ -6132,20 +6138,19 @@ Action Timer_ManglerRagdoll(Handle timer, any userid)
 		SetEntPropEnt(client, Prop_Send, "m_hRagdoll", ent, 0);
 	}
 	AcceptEntityInput(ragdoll, "Kill", -1, -1, 0);
-	return Plugin_Stop;
 }
 
-Action Timer_DeGibRagdoll(Handle timer, any userid)
+void Frame_DeGibRagdoll(int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (0 >= client)
+	if (client <= 0)
 	{
-		return Plugin_Continue;
+		return;
 	}
 	int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 	if (!IsValidEntity(ragdoll))
 	{
-		return Plugin_Continue;
+		return;
 	}
 	int ent = CreateEntityByName("tf_ragdoll", -1);
 	if (ent != -1)
@@ -6194,20 +6199,19 @@ Action Timer_DeGibRagdoll(Handle timer, any userid)
 		SetEntPropEnt(client, Prop_Send, "m_hRagdoll", ent, 0);
 	}
 	AcceptEntityInput(ragdoll, "Kill", -1, -1, 0);
-	return Plugin_Continue;
 }
 
-Action Timer_MultiRagdoll(Handle timer, any userid)
+void Frame_MultiRagdoll(int userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (0 >= client)
+	if (client <= 0)
 	{
-		return Plugin_Continue;
+		return;
 	}
 	int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 	if (!IsValidEntity(ragdoll))
 	{
-		return Plugin_Continue;
+		return;
 	}
 	int ent = CreateEntityByName("tf_ragdoll", -1);
 	if (ent != -1)
@@ -6284,27 +6288,28 @@ Action Timer_MultiRagdoll(Handle timer, any userid)
 		SetEntPropEnt(client, Prop_Send, "m_hRagdoll", ent, 0);
 	}
 	AcceptEntityInput(ragdoll, "Kill", -1, -1, 0);
-	return Plugin_Continue;
 }
 
-Action Timer_ModifyRagdoll(Handle timer, any userid)
+void Frame_ModifyRagdoll(DataPack pack)
 {
-	int client = GetClientOfUserId(userid);
-	if (0 >= client)
+	pack.Reset();
+	int client = GetClientOfUserId(pack.ReadCell());
+	int bossIndex = NPCGetFromUniqueID(pack.ReadCell());
+	delete pack;
+	if (client <= 0)
 	{
-		return Plugin_Stop;
+		return;
 	}
-	int bossIndex = g_PlayerBossKillSubject[client];
 	if (bossIndex == -1)
 	{
-		return Plugin_Stop;
+		return;
 	}
 	SF2BossProfileData data;
 	data = NPCGetProfileData(bossIndex);
 	int ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
 	if (!IsValidEntity(ragdoll))
 	{
-		return Plugin_Stop;
+		return;
 	}
 	if (!data.DeleteRagdoll)
 	{
@@ -6321,6 +6326,15 @@ Action Timer_ModifyRagdoll(Handle timer, any userid)
 			if (data.PushRagdoll)
 			{
 				force = data.PushRagdollForce;
+				int bossEnt = NPCGetEntIndex(bossIndex);
+				if (IsValidEntity(bossEnt))
+				{
+					float myPos[3], direction[3];
+					CBaseEntity(bossEnt).GetAbsOrigin(myPos);
+					SubtractVectors(pos, myPos, direction);
+					GetVectorAngles(direction, direction);
+					VectorTransform(force, myPos, direction, force);
+				}
 				SetEntPropVector(ent, Prop_Send, "m_vecRagdollVelocity", force);
 				SetEntPropVector(ent, Prop_Send, "m_vecForce", force);
 			}
@@ -6435,7 +6449,7 @@ Action Timer_ModifyRagdoll(Handle timer, any userid)
 			int dissolver = CreateEntityByName("env_entity_dissolver");
 			if (!IsValidEntity(dissolver))
 			{
-				return Plugin_Stop;
+				return;
 			}
 			char type[2];
 			int typeInt = data.DissolveKillType;
@@ -6449,7 +6463,6 @@ Action Timer_ModifyRagdoll(Handle timer, any userid)
 		}
 	}
 	RemoveEntity(ragdoll);
-	return Plugin_Stop;
 }
 
 Action Timer_SetPlayerHealth(Handle timer, any data)

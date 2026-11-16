@@ -830,6 +830,10 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 	GetProfileDifficultyFloatValues(kv, "search_range", profileData.SearchRange, profileData.SearchRange);
 	GetProfileDifficultyFloatValues(kv, "hearing_range", profileData.SearchSoundRange, profileData.SearchSoundRange);
 	GetProfileDifficultyFloatValues(kv, "search_sound_range", profileData.SearchSoundRange, profileData.SearchSoundRange);
+	for (int i = 0; i < Difficulty_Max; i++)
+	{
+		profileData.TauntAlertRange[i] = profileData.SearchRange[i];
+	}
 	GetProfileDifficultyFloatValues(kv, "taunt_alert_range", profileData.TauntAlertRange, profileData.TauntAlertRange);
 
 	GetProfileDifficultyBoolValues(kv, "teleport_allowed", profileData.TeleportAllowed, profileData.TeleportAllowed);
@@ -1569,6 +1573,11 @@ bool LoadBossProfile(KeyValues kv, const char[] profile, char[] loadFailReasonBu
 					else if (strcmp(s2, "sound_static_shake_local") == 0)
 					{
 						profileData.StaticShakeLocal = s4;
+						break;
+					}
+					else if (strcmp(s2, "sound_static") == 0)
+					{
+						profileData.StaticSound = s4;
 						break;
 					}
 				}

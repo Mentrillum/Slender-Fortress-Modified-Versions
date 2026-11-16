@@ -66,24 +66,27 @@ methodmap ProfileGlobalTracks < ProfileObject
 		return SF2BossGlobalMusicShuffleType_None;
 	}
 
-	public KeyMap_Array GetTracks()
+	public KeyMap_Array GetTracks(int difficulty = Difficulty_Normal)
 	{
-		return this.GetArray("tracks");
+		return this.GetDifficultyArray("tracks", difficulty);
 	}
 
 	public void Precache()
 	{
-		this.ConvertSectionsSectionToArray("tracks");
-		if (this.GetTracks() != null)
+		for (int i = 0; i < Difficulty_Max; i++)
 		{
-			for (int i = 0; i < this.GetTracks().Length; i++)
+			this.ConvertSectionsSectionToDifficultyArrays("tracks", i);
+			if (this.GetTracks(i) != null)
 			{
-				ProfileGlobalTrack track = view_as<ProfileGlobalTrack>(this.GetTracks().GetSection(i));
-				if (track == null)
+				for (int i2 = 0; i2 < this.GetTracks(i).Length; i2++)
 				{
-					continue;
+					ProfileGlobalTrack track = view_as<ProfileGlobalTrack>(this.GetTracks(i).GetSection(i2));
+					if (track == null)
+					{
+						continue;
+					}
+					track.Precache();
 				}
-				track.Precache();
 			}
 		}
 	}
@@ -1742,7 +1745,7 @@ static void GetBossMusicTrack(SF2NPC_BaseNPC controller,
 			{
 				return;
 			}
-			KeyMap_Array tracks = globalTrack.GetTracks();
+			KeyMap_Array tracks = globalTrack.GetTracks(difficulty);
 			if (tracks == null || tracks.Length == 0)
 			{
 				return;

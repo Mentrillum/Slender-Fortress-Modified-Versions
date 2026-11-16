@@ -1474,7 +1474,7 @@ bool SelectProfile(SF2NPC_BaseNPC npc, const char[] profile, int additionalBossF
 				}
 				if (g_Enabled)
 				{
-					if (profileData.IsPvEBoss && !g_PlayerEliminated[i])
+					if (profileData.IsPvEBoss && !g_PlayerEliminated[i] && !g_PlayerEscaped[i])
 					{
 						continue;
 					}

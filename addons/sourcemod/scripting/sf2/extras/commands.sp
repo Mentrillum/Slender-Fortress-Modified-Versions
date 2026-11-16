@@ -239,6 +239,8 @@ public void OnPluginStart()
 
 	g_BossPreviewWikiConVar = CreateConVar("sf2_bosspreview_wikiurl", "", "The url format to show the wiki (%s for the boss name)");
 
+	g_DamagePvPLeaversConVar = CreateConVar("sf2_damage_pvp_leavers", "0", "Determines if people who leave the PvP arena should be damaged by players not in the PvP arena", _, true, 0.0, true, 1.0);
+
 	g_MaxRoundsConVar = FindConVar("mp_maxrounds");
 
 	g_HudSync = CreateHudSynchronizer();
@@ -420,6 +422,7 @@ public void OnPluginStart()
 	g_OnGamemodeEndPFwd = new PrivateForward(ET_Ignore);
 	g_OnMapStartPFwd = new PrivateForward(ET_Ignore);
 	g_OnMapEndPFwd = new PrivateForward(ET_Ignore);
+	g_OnSF2GamedataLoadedPFwd = new PrivateForward(ET_Ignore, Param_Cell);
 	g_OnGameFramePFwd = new PrivateForward(ET_Ignore);
 	g_OnTrueGameFramePFwd = new PrivateForward(ET_Ignore);
 	g_OnRoundStartPFwd = new PrivateForward(ET_Ignore);
@@ -600,7 +603,7 @@ static Action Command_Settings(int client, int args)
 		return Plugin_Continue;
 	}
 
-	g_MenuSettings.Display(client, 30);
+	ShowMainSettings(client);
 	return Plugin_Handled;
 }
 
@@ -611,18 +614,7 @@ static Action Command_MenuSwitchHud(int client, int args)
 		return Plugin_Continue;
 	}
 
-	char buffer[512];
-	FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Hud Version Title", client);
-
-	Panel panel = new Panel();
-	panel.SetTitle(buffer);
-
-	panel.DrawItem("Use the new HUD");
-	panel.DrawItem("Use the legacy HUD");
-	panel.DrawItem("Back");
-
-	panel.Send(client, Panel_SettingsHudVersion, 30);
-	delete panel;
+	ShowHUDSettings(client);
 	return Plugin_Handled;
 }
 
@@ -632,15 +624,8 @@ static Action Command_MenuViewBob(int client, int args)
 	{
 		return Plugin_Continue;
 	}
-	char buffer[512];
-	FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings View Bobbing Toggle Title", client);
-	Panel panel = new Panel();
-	panel.SetTitle(buffer);
-	panel.DrawItem("Enable View Bobbing");
-	panel.DrawItem("Disable View Bobbing");
-	panel.DrawItem("Back");
-	panel.Send(client, Panel_SettingsViewBobbing, 30);
-	delete panel;
+
+	ShowHUDSettings(client);
 	return Plugin_Handled;
 }
 

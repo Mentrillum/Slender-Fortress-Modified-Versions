@@ -18,12 +18,13 @@ static const char g_PvPProjectileClasses[][] =
 	"tf_projectile_sentryrocket",
 	"tf_projectile_stun_ball",
 	"tf_projectile_ball_ornament",
-	"tf_projectile_cleaver",
+	//"tf_projectile_cleaver",
 	"tf_projectile_energy_ball",
 	"tf_projectile_flare",
 	"tf_projectile_balloffire",
 	"tf_projectile_jar",
 	"tf_projectile_jar_milk",
+	"tf_projectile_jar_gas",
 	"tf_projectile_pipe",
 	"tf_projectile_pipe_remote",
 	"tf_projectile_stun_ball",
@@ -48,6 +49,7 @@ Handle g_PlayerPvPTimer[MAXTF2PLAYERS];
 Handle g_PlayerPvPRespawnTimer[MAXTF2PLAYERS];
 static int g_PlayerPvPTimerCount[MAXTF2PLAYERS];
 static ArrayList g_PlayerEnteredPvPTriggers[MAXTF2PLAYERS] = { null, ... };
+static float g_PlayerLastFlameHit[MAXTF2PLAYERS];
 
 //Blood
 static int g_PvPUserIdLastTrace;
@@ -57,6 +59,8 @@ static ArrayList g_PvPBallsOfFire;
 
 static GlobalForward g_OnPlayerEnterPvP;
 static GlobalForward g_OnPlayerExitPvP;
+
+static DynamicHook g_DHookDetonateStickies;
 
 enum struct PvPProjectile_BallOfFire
 {
@@ -104,6 +108,11 @@ enum struct PvPProjectile_BallOfFire
 
 					TF2_IgnitePlayer(otherEntity, ownerEntity);
 					SDKHooks_TakeDamage(otherEntity, ownerEntity, ownerEntity, damage * damageBonus, 0x1220000, GetEntPropEnt(ownerEntity, Prop_Send, "m_hActiveWeapon"), NULL_VECTOR, damagePos);
+					CBaseEntity primary = CBaseEntity(GetPlayerWeaponSlot(ownerEntity, TFWeaponSlot_Primary));
+					if (primary.IsValid())
+					{
+						primary.SetPropFloat(Prop_Send, "m_flRechargeScale", 1.5);
+					}
 				}
 			}
 		}
@@ -122,6 +131,7 @@ void PvP_Initialize()
 
 	g_PvPBallsOfFire = new ArrayList(sizeof(PvPProjectile_BallOfFire));
 
+	g_OnSF2GamedataLoadedPFwd.AddFunction(null, OnSF2GamedataLoaded);
 	g_OnMapStartPFwd.AddFunction(null, MapStart);
 	g_OnGameFramePFwd.AddFunction(null, GameFrame);
 	g_OnRoundStartPFwd.AddFunction(null, RoundStart);
@@ -137,13 +147,15 @@ void PvP_Initialize()
 	AddTempEntHook("Entity Decal", TempEntHook_PvPDecal);
 }
 
-void PvP_SetupMenus()
+static void OnSF2GamedataLoaded(GameData gameData)
 {
-	g_MenuSettingsPvP = new Menu(Menu_SettingsPvP);
-	g_MenuSettingsPvP.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings PvP Menu Title");
-	g_MenuSettingsPvP.AddItem("0", "Toggle automatic spawning");
-	g_MenuSettingsPvP.AddItem("1", "Toggle spawn protection");
-	g_MenuSettingsPvP.ExitBackButton = true;
+	int offset = gameData.GetOffset("CTFGrenadePipebombProjectile::DetonateStickies");
+	g_DHookDetonateStickies = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	if (g_DHookDetonateStickies == null)
+	{
+		// Not important, log the error
+		LogError("Failed to create hook CTFGrenadePipebombProjectile::DetonateStickies offset from SF2 gamedata!");
+	}
 }
 
 static void MapStart()
@@ -277,47 +289,6 @@ static void GameFrame()
 			}
 		}
 	}
-
-	// Process through PvP flame entities.
-	{
-		static float mins[3] = { -6.0, ... };
-		static float maxs[3] = { 6.0, ... };
-
-		float origin[3];
-
-		Handle trace = null;
-		int ent = -1;
-		int ownerEntity = INVALID_ENT_REFERENCE;
-		int hitEntity = INVALID_ENT_REFERENCE;
-
-		while ((ent = FindEntityByClassname(ent, "tf_flame_manager")) != -1)
-		{
-			ownerEntity = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-
-			if (IsValidEdict(ownerEntity))
-			{
-				// tf_flame's initial owner SHOULD be the flamethrower that it originates from.
-				// If not, then something's completely bogus.
-
-				ownerEntity = GetEntPropEnt(ownerEntity, Prop_Data, "m_hOwnerEntity");
-			}
-
-			if (IsValidClient(ownerEntity) && (IsClientInPvP(ownerEntity)))
-			{
-				GetEntPropVector(ent, Prop_Data, "m_vecAbsOrigin", origin);
-
-				trace = TR_TraceHullFilterEx(origin, origin, mins, maxs, MASK_PLAYERSOLID, TraceRayDontHitEntity, ownerEntity);
-				hitEntity = TR_GetEntityIndex(trace);
-				delete trace;
-
-				if (IsValidEntity(hitEntity))
-				{
-					PvP_OnFlameEntityStartTouchPost(ent, hitEntity);
-				}
-			}
-		}
-		delete trace;
-	}
 }
 
 static void EntityCreated(CBaseEntity ent, const char[] classname)
@@ -343,6 +314,132 @@ static void EntityCreated(CBaseEntity ent, const char[] classname)
 			break;
 		}
 	}
+
+	if (strcmp(classname, "tf_flame_manager", false) == 0)
+	{
+		SDKHook(ent.index, SDKHook_Touch, FlameStartTouch);
+	}
+	else if (strcmp(classname, "tf_projectile_cleaver", false) == 0)
+	{
+		SDKHook(ent.index, SDKHook_Touch, CleaverStartTouch);
+	}
+	else if (strcmp(classname, "tf_projectile_pipe_remote", false) == 0)
+	{
+		g_DHookDetonateStickies.HookEntity(Hook_Pre, ent.index, DetonateStickies);
+	}
+}
+
+static void FlameStartTouch(int ent, int other)
+{
+	if (!g_Enabled)
+	{
+		return;
+	}
+
+	if (IsRoundEnding())
+	{
+		return;
+	}
+
+	int weapon = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
+	int owner = GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity");
+	if (!IsValidClient(owner) || !IsClientInPvP(owner))
+	{
+		return;
+	}
+	if (other == owner)
+	{
+		return;
+	}
+
+	if (!IsValidClient(other) || !IsClientInPvP(other))
+	{
+		return;
+	}
+
+	if (GetClientTeam(other) != GetClientTeam(owner))
+	{
+		return;
+	}
+
+	SF2_BasePlayer client = SF2_BasePlayer(other);
+	SF2_BasePlayer ownerEntity = SF2_BasePlayer(owner);
+	float time = GetGameTime();
+	if (g_PlayerLastFlameHit[client.index] > time)
+	{
+		return;
+	}
+	int itemIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+	g_PlayerLastFlameHit[client.index] = time + FLAME_HIT_DELAY;
+	float myPos[3], theirPos[3], theirAng[3], buffer[3];
+	client.GetEyePosition(theirPos);
+	ownerEntity.GetEyePosition(myPos);
+	SubtractVectors(myPos, theirPos, buffer);
+	GetVectorAngles(buffer, buffer);
+	client.GetEyeAngles(theirAng);
+	int flags = DMG_BURN | DMG_PREVENT_PHYSICS_FORCE;
+	if (ownerEntity.IsCritBoosted() || (FloatAbs(AngleDiff(theirAng[1], buffer[1])) >= 160.0 && (itemIndex == 40 || itemIndex == 1146))) //Backburner crits or normal crits
+	{
+		flags |= DMG_ACID;
+	}
+	client.Ignite(_, ownerEntity.index);
+	client.TakeDamage(_, ownerEntity.index, ownerEntity.index, 3.0, flags);
+}
+
+static void CleaverStartTouch(int ent, int other)
+{
+	if (!g_Enabled)
+	{
+		return;
+	}
+
+	if (IsRoundEnding())
+	{
+		return;
+	}
+
+	int owner = GetEntPropEnt(ent, Prop_Data, "m_hThrower");
+	if (!IsValidClient(owner) || !IsClientInPvP(owner))
+	{
+		return;
+	}
+	if (other == owner)
+	{
+		return;
+	}
+
+	if (!IsValidClient(other) || !IsClientInPvP(other))
+	{
+		return;
+	}
+
+	if (GetClientTeam(other) != GetClientTeam(owner))
+	{
+		return;
+	}
+
+	int flags = DMG_GENERIC;
+	if (IsClientCritBoosted(owner))
+	{
+		flags |= DMG_ACID;
+	}
+	SF2_BasePlayer client = SF2_BasePlayer(other);
+	client.TakeDamage(_, ent, owner, 50.0, flags, ent);
+	client.Bleed(_, owner, 5.0);
+	EmitGameSoundToClient(owner, "Cleaver.ImpactFlesh");
+	EmitGameSoundToAll("Cleaver.ImpactFlesh", other);
+	RemoveEntity(ent);
+}
+
+// Scottish Resistance and Quickiebomb mains rejoice!
+static MRESReturn DetonateStickies(int entity, DHookReturn retValue)
+{
+	if (!g_Enabled)
+	{
+		return MRES_Ignored;
+	}
+	retValue.Value = false;
+	return MRES_Supercede;
 }
 
 static void EntityDestroyed(CBaseEntity ent, const char[] classname)
@@ -459,7 +556,7 @@ static void Hook_PvPProjectileSpawnPost(int ent)
 			{
 				if (IsValidEntity(ent) && strcmp(class, fixWeaponNotCollidingWithTeammates[i], false) == 0)
 				{
-					DHookEntity(g_DHookProjectileCanCollideWithTeammates, false, ent, _, Hook_PvPProjectileCanCollideWithTeammates);
+					g_DHookProjectileCanCollideWithTeammates.HookEntity(Hook_Pre, ent, Hook_PvPProjectileCanCollideWithTeammates);
 					break;
 				}
 			}
@@ -803,42 +900,6 @@ void PvP_SetPlayerPvPState(int client, bool status, bool removeProjectiles = tru
 		player.Regenerate();
 		player.SetProp(Prop_Data, "m_iHealth", health);
 		player.SetProp(Prop_Send, "m_iHealth", health);
-	}
-}
-
-static void PvP_OnFlameEntityStartTouchPost(int flame, int other) //Thanks Fire
-{
-	static float lastHit[MAXPLAYERS + 1];
-
-	SF2_BasePlayer client = SF2_BasePlayer(other);
-	if (client.IsValid)
-	{
-		float time = GetEngineTime();
-		if (lastHit[client.index] < time)
-		{
-			lastHit[client.index] = time + FLAME_HIT_DELAY;
-
-			if (client.IsInPvP && !IsRoundEnding())
-			{
-				int flamethrower = GetEntPropEnt(flame, Prop_Data, "m_hOwnerEntity");
-				if (IsValidEdict(flamethrower))
-				{
-					SF2_BasePlayer ownerEntity = SF2_BasePlayer(GetEntPropEnt(flamethrower, Prop_Data, "m_hOwnerEntity"));
-					if (ownerEntity.index != client.index && ownerEntity.IsValid)
-					{
-						if (ownerEntity.IsInPvP)
-						{
-							if (client.Team == ownerEntity.Team && ownerEntity.Team != TFTeam_Red)
-							{
-								//TF2_MakeBleed(other, ownerEntity, 4.0);
-								client.Ignite(_, ownerEntity.index);
-								client.TakeDamage(_, ownerEntity.index, ownerEntity.index, 10.0, ownerEntity.IsCritBoosted() ? (DMG_BURN | DMG_PREVENT_PHYSICS_FORCE | DMG_ACID) : DMG_BURN | DMG_PREVENT_PHYSICS_FORCE);
-							}
-						}
-					}
-				}
-			}
-		}
 	}
 }
 

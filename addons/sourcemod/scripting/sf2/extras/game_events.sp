@@ -370,10 +370,13 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	}
 	#endif
 
-	for (int i = 0; i < view_as<int>(TFCond_PowerupModeDominant); i++)
+	for (int i = 0; i < view_as<int>(TFCond_ImmuneToPushback); i++)
 	{
 		g_ClientInCondition[client][i] = false;
 	}
+
+	TFClassType class = TF2_GetPlayerClass(client);
+	int classToInt = view_as<int>(class);
 
 	if (GetClientTeam(client) > 1)
 	{
@@ -383,6 +386,8 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 	{
 		TF2Attrib_SetByName(client, "increased jump height", 1.0);
 		TF2Attrib_RemoveByDefIndex(client, 10);
+		TF2Attrib_RemoveByDefIndex(client, 49);
+		TF2Attrib_RemoveByDefIndex(client, 70);
 
 		SetEntityGravity(client, 1.0);
 		g_PlayerPageCount[client] = 0;
@@ -499,6 +504,12 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				{
 					TF2Attrib_SetByDefIndex(client, 49, 1.0);
 					CreateTimer(0.1, Timer_StopAirDash, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+					float value = 0.5;
+					if (IsClassConfigsValid())
+					{
+						value = g_ClassHealingRate[classToInt];
+					}
+					TF2Attrib_SetByDefIndex(client, 70, value);
 				}
 
 				ClientSetScareBoostEndTime(client, -1.0);
@@ -527,6 +538,7 @@ Action Event_PlayerSpawn(Handle event, const char[] name, bool dB)
 				TF2Attrib_RemoveByDefIndex(client, 10);
 				TF2Attrib_RemoveByDefIndex(client, 49);
 				TF2Attrib_RemoveByDefIndex(client, 28);
+				TF2Attrib_RemoveByDefIndex(client, 70);
 			}
 			ClientSwitchToWeaponSlot(client, TFWeaponSlot_Melee);
 			g_PlayerPostWeaponsTimer[client] = CreateTimer(0.1, Timer_ClientPostWeapons, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -777,27 +789,29 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 	if (!modify && SF2_ProjectileIceball(inflictor).IsValid())
 	{
 		modify = true;
-		CreateTimer(0.01, Timer_IceRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		RequestFrame(Frame_IceRagdoll, GetClientUserId(client));
 	}
 
 	if (!modify && SF2_ProjectileCowMangler(inflictor).IsValid())
 	{
 		modify = true;
-		CreateTimer(0.01, Timer_ManglerRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		RequestFrame(Frame_ManglerRagdoll, GetClientUserId(client));
 	}
 
 	if (npcIndex != -1)
 	{
 		SF2BossProfileData data;
 		data = NPCGetProfileData(npcIndex);
-		g_PlayerBossKillSubject[client] = npcIndex;
 
 		if (!modify && (data.AshRagdoll || data.CloakRagdoll || data.DecapRagdoll || data.DeleteRagdoll || data.DissolveRagdoll ||
 			data.ElectrocuteRagdoll || data.GoldRagdoll || data.IceRagdoll || data.PlasmaRagdoll || data.PushRagdoll ||
 			data.ResizeRagdoll || data.BurnRagdoll || data.GibRagdoll))
 		{
 			modify = true;
-			CreateTimer(0.01, Timer_ModifyRagdoll, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			DataPack pack = new DataPack();
+			pack.WriteCell(GetClientUserId(client));
+			pack.WriteCell(NPCGetUniqueID(npcIndex));
+			RequestFrame(Frame_ModifyRagdoll, pack);
 		}
 
 		if (data.CustomDeathFlag)
@@ -813,13 +827,13 @@ Action Event_PlayerDeathPre(Event event, const char[] name, bool dB)
 		if (!modify && data.DecapOrGibRagdoll)
 		{
 			modify = true;
-			CreateTimer(0.01, Timer_DeGibRagdoll, GetClientUserId(client));
+			RequestFrame(Frame_DeGibRagdoll, GetClientUserId(client));
 		}
 
 		if (!modify && data.MultiEffectRagdoll)
 		{
 			modify = true;
-			CreateTimer(0.01, Timer_MultiRagdoll, GetClientUserId(client));
+			RequestFrame(Frame_MultiRagdoll, GetClientUserId(client));
 		}
 	}
 

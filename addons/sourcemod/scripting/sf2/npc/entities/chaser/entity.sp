@@ -86,6 +86,8 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			.DefineIntField("m_AutoChaseCount", MAXTF2PLAYERS)
 			.DefineFloatField("m_AutoChaseAddCooldown", MAXTF2PLAYERS)
 			.DefineFloatField("m_AutoChaseCooldown", MAXTF2PLAYERS)
+			.DefineIntField("m_TauntAlertStrikes", MAXTF2PLAYERS)
+			.DefineFloatField("m_TauntAlertStrikeCooldown", MAXTF2PLAYERS)
 			.DefineBoolField("m_MaintainTarget")
 			.DefineBoolField("m_AlertWithBoss")
 			.DefineBoolField("m_FollowedCompanionAlert")
@@ -725,6 +727,26 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 	public void SetAutoChaseCooldown(SF2_BasePlayer player, float value)
 	{
 		this.SetPropFloat(Prop_Data, "m_AutoChaseCooldown", value, player.index);
+	}
+
+	public int GetTauntAlertStrikes(SF2_BasePlayer player)
+	{
+		return this.GetProp(Prop_Data, "m_TauntAlertStrikes", _, player.index);
+	}
+
+	public void SetTauntAlertStrikes(SF2_BasePlayer player, int value)
+	{
+		this.SetProp(Prop_Data, "m_TauntAlertStrikes", value, _, player.index);
+	}
+
+	public float GetTauntAlertStrikeCooldown(SF2_BasePlayer player)
+	{
+		return this.GetPropFloat(Prop_Data, "m_TauntAlertStrikeCooldown", player.index);
+	}
+
+	public void SetTauntAlertStrikeCooldown(SF2_BasePlayer player, float value)
+	{
+		this.SetPropFloat(Prop_Data, "m_TauntAlertStrikeCooldown", value, player.index);
 	}
 
 	property SF2_BasePlayer AlertTriggerTarget
@@ -3318,6 +3340,8 @@ static void OnPlayerSpawn(SF2_BasePlayer client)
 		chaser.SetAlertSoundTriggerCooldown(client, 0.0);
 		chaser.SetAutoChaseCount(client, 0);
 		chaser.SetAutoChaseCooldown(client, -1.0);
+		chaser.SetTauntAlertStrikes(client, 0);
+		chaser.SetTauntAlertStrikeCooldown(client, -1.0);
 		client.SetForceChaseState(controller, false);
 		SetTargetMarkState(controller, client, false);
 
@@ -4630,6 +4654,28 @@ static CBaseEntity ProcessVision(SF2_ChaserEntity chaser, int &interruptConditio
 		{
 			player.SetForceChaseState(controller, true);
 			SetTargetMarkState(controller, player, true);
+		}
+
+		float tauntDist = Pow(originalData.TauntAlertRange[difficulty], 2.0);
+		if (!chaser.GetIsVisible(entity))
+		{
+			tauntDist *= 0.66;
+		}
+		if (player.IsValid && (chaser.State == STATE_IDLE || chaser.State == STATE_ALERT) &&
+			player.InCondition(TFCond_Taunting) && dist <= tauntDist)
+		{
+			if (chaser.GetTauntAlertStrikeCooldown(player) < gameTime)
+			{
+				chaser.SetTauntAlertStrikes(player, chaser.GetTauntAlertStrikes(player) + 1);
+				chaser.SetTauntAlertStrikeCooldown(player, gameTime + 3.0);
+				if (chaser.GetTauntAlertStrikes(player) >= 3)
+				{
+					chaser.SetTauntAlertStrikes(player, 0);
+					player.SetForceChaseState(controller, true);
+					SetTargetMarkState(controller, player, true);
+				}
+			}
+			chaser.UpdateAlertTriggerCountEx(targetPos);
 		}
 
 		if (data.ChaseOnLookData.Enabled[difficulty] && isTraceVisible && player.IsValid && controller.ChaseOnLookTargets.FindValue(player.index) == -1)

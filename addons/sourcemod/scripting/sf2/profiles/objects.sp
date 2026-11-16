@@ -1066,7 +1066,6 @@ methodmap ProfileSound < ProfileObject
 
 			TryPrecacheBossProfileSoundPath(path, g_FileCheckConVar.BoolValue);
 			paths.PushString(path);
-			obj.RemoveKey(key);
 		}
 		if (doDelete)
 		{

@@ -208,7 +208,14 @@ static Action Timer_ClientCheckCamp(Handle timer, any userid)
 			else
 			{
 				g_PlayerCampingStrikes[client] = 0;
-				ClientStartDeathCam(client, 0, pos, true);
+				if (!IsClientInDeathCam(client))
+				{
+					SetEntProp(client, Prop_Data, "m_takedamage", 2);
+					float damage = float(GetEntProp(client, Prop_Send, "m_iHealth")) * 4.0;
+					SDKHooks_TakeDamage(client, 0, 0, damage, 0x80 | DMG_PREVENT_PHYSICS_FORCE, _, { 0.0, 0.0, 0.0 }, .bypassHooks = false);
+					ForcePlayerSuicide(client);
+					KillClient(client);
+				}
 			}
 		}
 		else

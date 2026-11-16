@@ -372,6 +372,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 		return Plugin_Continue;
 	}
 
+	float gameTime = GetGameTime();
 	int hours, minutes, seconds;
 	FloatToTimeHMS(float(g_RoundTime), hours, minutes, seconds);
 	char addon[16];
@@ -394,7 +395,7 @@ Action Timer_ClientAverageUpdate(Handle timer)
 			continue;
 		}
 		SF2_BasePlayer player = SF2_BasePlayer(i);
-		if (!player.IsValid || player.IsBot || (player.IsEliminated && !player.IsInGhostMode))
+		if (!player.IsValid || player.IsBot || (player.IsEliminated && !player.IsInGhostMode) || player.IsInPvE)
 		{
 			continue;
 		}
@@ -454,6 +455,14 @@ Action Timer_ClientAverageUpdate(Handle timer)
 		{
 			continue;
 		}
+		if (player.IsInPvE)
+		{
+			Call_StartForward(g_OnPlayerAverageUpdatePFwd);
+			Call_PushCell(player);
+			Call_Finish();
+			continue;
+		}
+
 		if (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud)
 		{
 			hudColorHealthy = { 50, 255, 50 };
@@ -475,6 +484,12 @@ Action Timer_ClientAverageUpdate(Handle timer)
 				int maxBars = 12;
 				int bars;
 				char buffer2[64];
+				if (ClientGetCurrentTauntCooldown(player.index) > gameTime)
+				{
+					FormatEx(buffer2, sizeof(buffer2), "TAUNT:  %i\n", RoundToCeil(ClientGetCurrentTauntCooldown(player.index) - gameTime));
+					StrCat(buffer, sizeof(buffer), buffer2);
+				}
+
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap() && !IsInfiniteBlinkEnabled() && player.HasStartedBlinking)
 				{
 					bars = RoundToCeil(float(maxBars) * player.BlinkMeter);
@@ -487,57 +502,36 @@ Action Timer_ClientAverageUpdate(Handle timer)
 					{
 						if (bars != 0)
 						{
-							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
+							FormatEx(buffer2, sizeof(buffer2), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_ON);
 						}
 						else
 						{
-							FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
+							FormatEx(buffer2, sizeof(buffer2), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OFF);
 						}
 					}
 					else
 					{
-						FormatEx(buffer, sizeof(buffer), "\n%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
+						FormatEx(buffer2, sizeof(buffer2), "%s  ", SF2_PLAYER_HUD_BLINK_SYMBOL_OLD);
 					}
 
 					for (int i2 = 0; i2 < maxBars; i2++)
 					{
 						if (i2 < bars)
 						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
+							StrCat(buffer2, sizeof(buffer2), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
 						}
 						else
 						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
+							StrCat(buffer2, sizeof(buffer2), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
 						}
 					}
-					StrCat(buffer, sizeof(buffer), "\n");
+					StrCat(buffer2, sizeof(buffer2), "\n");
+					StrCat(buffer, sizeof(buffer), buffer2);
 				}
 
 				if (!SF_IsRaidMap() && !SF_IsBoxingMap())
 				{
-					float percent = float(player.Health) / float(player.MaxHealth);
-					if (percent > 1.0)
-					{
-						percent = 1.0;
-					}
-					bars = RoundToCeil(float(maxBars) * percent);
-					if (bars > maxBars)
-					{
-						bars = maxBars;
-					}
-					FormatEx(buffer2, sizeof(buffer2), "%s  ", SF2_PLAYER_HUD_HEALTH_SYMBOL);
-					StrCat(buffer, sizeof(buffer), buffer2);
-					for (int i2 = 0; i2 < maxBars; i2++)
-					{
-						if (i2 < bars)
-						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_SYMBOL : SF2_PLAYER_HUD_BAR_SYMBOL_OLD));
-						}
-						else
-						{
-							StrCat(buffer, sizeof(buffer), (!g_PlayerPreferences[player.index].PlayerPreference_LegacyHud ? SF2_PLAYER_HUD_BAR_MISSING_SYMBOL : SF2_PLAYER_HUD_BAR_MISSING_SYMBOL_OLD));
-						}
-					}
+					FormatEx(buffer, sizeof(buffer), "%s  %i/%i", SF2_PLAYER_HUD_HEALTH_SYMBOL, player.Health, player.MaxHealth);
 				}
 
 				if (!SF_SpecialRound(SPECIALROUND_LIGHTSOUT) && !SF_IsRaidMap() && !SF_IsBoxingMap())
@@ -610,7 +604,11 @@ Action Timer_ClientAverageUpdate(Handle timer)
 					float yPos = 0.83;
 					if (player.HasStartedBlinking)
 					{
-						yPos = 0.756;
+						yPos -= 0.037;
+					}
+					if (ClientGetCurrentTauntCooldown(player.index) > gameTime)
+					{
+						yPos -= 0.037;
 					}
 					SetHudTextParams(0.035, yPos,
 						0.3,

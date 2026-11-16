@@ -902,6 +902,11 @@ bool IsHiddenKey(const char[] key)
 	return !strncmp(key, "__", 2);
 }
 
+bool IsInternalKey(const char[] key)
+{
+	return StrContains(key, "||__", false) != -1;
+}
+
 void CleanupKeyMap(KeyMap obj)
 {
 	if (obj == null)
@@ -910,7 +915,7 @@ void CleanupKeyMap(KeyMap obj)
 	}
 
 	StringMapSnapshot snapshot = obj.Snapshot();
-	for (int i = 0; i < snapshot.Length; i += 1)
+	for (int i = 0; i < snapshot.Length; i++)
 	{
 		char key[512];
 		snapshot.GetKey(i, key, sizeof(key));
@@ -925,4 +930,60 @@ void CleanupKeyMap(KeyMap obj)
 	delete snapshot;
 
 	delete obj;
+}
+
+void PrintKeyMap(int client, KeyMap obj, const int newLine = 0)
+{
+	if (obj == null)
+	{
+		return;
+	}
+
+	StringMapSnapshot snapshot = obj.Snapshot();
+	for (int i = snapshot.Length - 1; i >= 0; i--)
+	{
+		char key[512], printer[1024], value[1024];
+		snapshot.GetKey(i, key, sizeof(key));
+		if (IsHiddenKey(key) || IsInternalKey(key))
+		{
+			continue;
+		}
+
+		obj.GetString(key, value, sizeof(value));
+		for (int i2 = 0; i2 < newLine; i2++)
+		{
+			StrCat(printer, sizeof(printer), "\t");
+		}
+		KeyMap section = obj.GetSection(key);
+		if (section != null)
+		{
+			Format(printer, sizeof(printer), "%s\"%s\"", printer, key);
+			char tabs[64], tabsEx[64];
+			StrCat(tabs, sizeof(tabs), "\n");
+			for (int i2 = 0; i2 < newLine; i2++)
+			{
+				StrCat(tabs, sizeof(tabs), "\t");
+			}
+			StrCat(tabs, sizeof(tabs), "{");
+			StrCat(printer, sizeof(printer), tabs);
+
+			PrintToServer(printer);
+			PrintKeyMap(client, section, newLine + 1);
+
+			StrCat(tabsEx, sizeof(tabsEx), "\n");
+			for (int i2 = 0; i2 < newLine; i2++)
+			{
+				StrCat(tabsEx, sizeof(tabsEx), "\t");
+			}
+			StrCat(tabsEx, sizeof(tabsEx), "}");
+			PrintToServer(tabsEx);
+		}
+		else
+		{
+			Format(printer, sizeof(printer), "%s\"%s\" \"%s\"", printer, key, value);
+			PrintToServer(printer);
+		}
+	}
+
+	delete snapshot;
 }

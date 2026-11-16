@@ -511,7 +511,7 @@ void ClientEnableProxy(int client, int bossIndex, const float pos[3], int spawnP
 		return;
 	}
 
-	if (GetClientTeam(client) != TFTeam_Blue)
+	if (!g_PlayerEliminated[client])
 	{
 		return;
 	}

@@ -2627,6 +2627,10 @@ static any Native_SetClientIsProxy(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
+	if (!player.IsEliminated)
+	{
+		return 0;
+	}
 	player.IsProxy = GetNativeCell(2);
 	return 0;
 }

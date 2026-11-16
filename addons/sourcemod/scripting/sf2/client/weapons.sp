@@ -92,6 +92,14 @@ methodmap ModifiedWeaponObject < KeyMap
 			return obj.GetBool("when_active", def);
 		}
 	}
+
+	property float TauntCooldown
+	{
+		public get()
+		{
+			return this.GetFloat("taunt_cooldown", 0.0);
+		}
+	}
 }
 
 void SetupPlayerWeapons()
@@ -556,6 +564,8 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 			continue;
 		}
 
+		ClientSetTauntCooldown(client.index, slot, 0.0);
+
 		char name[64];
 		TF2_GetClassName(playerClass, name, sizeof(name), true);
 		int itemDef = GetEntProp(weaponEnt, Prop_Send, "m_iItemDefinitionIndex");
@@ -566,14 +576,11 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 			continue;
 		}
 
+		ClientSetTauntCooldown(client.index, slot, usedObject.TauntCooldown);
 		KeyMap attributes = usedObject.Attributes;
 		if (SF_SpecialRound(SPECIALROUND_THANATOPHOBIA) && usedObject.AttributesThanatophobia != null)
 		{
 			attributes = usedObject.AttributesThanatophobia;
-		}
-		if (attributes == null)
-		{
-			continue;
 		}
 
 		bool allowed = !client.IsEliminated;
@@ -625,18 +632,21 @@ Action Timer_ClientPostWeapons(Handle timer, any userid)
 
 		char itemName[64], attributeList[1024];
 		usedObject.GetItemName(itemName, sizeof(itemName));
-		for (int i2 = 0; i2 < attributes.KeyLength; i2++)
+		if (attributes != null)
 		{
-			if (i2 != 0)
+			for (int i2 = 0; i2 < attributes.KeyLength; i2++)
 			{
+				if (i2 != 0)
+				{
+					StrCat(attributeList, sizeof(attributeList), " ; ");
+				}
+				char key[64], value[64];
+				attributes.GetKeyNameFromIndex(i2, key, sizeof(key));
+				FloatToString(attributes.GetFloat(key, 0.0), value, sizeof(value));
+				StrCat(attributeList, sizeof(attributeList), key);
 				StrCat(attributeList, sizeof(attributeList), " ; ");
+				StrCat(attributeList, sizeof(attributeList), value);
 			}
-			char key[64], value[64];
-			attributes.GetKeyNameFromIndex(i2, key, sizeof(key));
-			FloatToString(attributes.GetFloat(key, 0.0), value, sizeof(value));
-			StrCat(attributeList, sizeof(attributeList), key);
-			StrCat(attributeList, sizeof(attributeList), " ; ");
-			StrCat(attributeList, sizeof(attributeList), value);
 		}
 		weaponHandle = PrepareItemHandle(itemName, itemDef, 0, 0, attributeList);
 		if (weaponHandle != null)

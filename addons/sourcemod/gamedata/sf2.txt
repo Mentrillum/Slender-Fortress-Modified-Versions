@@ -76,6 +76,14 @@
 				"linux64" "212"
 				"windows64" "211"
 			}
+
+			"CTFGrenadePipebombProjectile::DetonateStickies"
+			{
+				"linux" "260"
+				"windows" "259"
+				"linux64" "260"
+				"windows64" "259"
+			}
 		}
 
 		"Signatures"
@@ -141,6 +149,23 @@
 				"windows"	"\x55\x8B\xEC\x83\xEC\x24\xA1\x2A\x2A\x2A\x2A\x56\x8B\xF1\x89\x75\xF0"
 				"linux64"	"@_ZN9CTFPlayer21TeamFortress_SetSpeedEv"
 				"windows64"	"\x40\x55\x48\x83\xEC\x60\x48\x8B\x05\x03\x3D\x7A\x00"
+			}
+
+			"CTFPlayer::IsAllowedToTaunt"
+			{
+				"linux" "@_ZN9CTFPlayer16IsAllowedToTauntEv"
+				"windows" "\x55\x8B\xEC\x51\x53\x56\x8B\xF1\x57\x8B\x06\x8B\x80\x0C\x01\x00\x00"
+			}
+		}
+
+		"Functions"
+		{
+			"CTFPlayer::IsAllowedToTaunt"
+			{
+				"signature" "CTFPlayer::IsAllowedToTaunt"
+				"callconv" "thiscall"
+				"return" "bool"
+				"this" "entity"
 			}
 		}
 	}

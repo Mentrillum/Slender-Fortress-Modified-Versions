@@ -109,6 +109,8 @@ void InitializeBossProfiles()
 
 	g_MaxCorePackBosses = CreateConVar("sf2_max_core_pack_bosses", "-1", "Determines how many bosses can load randomly from the core pack, if set to less than 0 will keep this feature off. Note that companion bosses will still load if needed.");
 
+	RegAdminCmd("sm_sf2_print_profile", Command_PrintProfile, ADMFLAG_ROOT);
+
 	InitializeStatueProfiles();
 	InitializeChaserProfiles();
 }
@@ -1632,6 +1634,107 @@ void RemoveBossProfileFromQueueList(const char[] profile)
 	{
 		GetSelectableBossProfileQueueList().Erase(selectIndex);
 	}
+}
+
+static Action Command_PrintProfile(int client, int args)
+{
+	if (!g_Enabled)
+	{
+		return Plugin_Continue;
+	}
+
+	if (args < 1)
+	{
+		ReplyToCommand(client, "Usage: sm_sf2_print_profile <config/profile file, no need for configs/sf2/profiles or the .cfg extension.> <(optional) from KeyMap 0-1>");
+		return Plugin_Handled;
+	}
+	char arg1[PLATFORM_MAX_PATH];
+	GetCmdArg(1, arg1, sizeof(arg1));
+
+	bool fromKeyMap = false;
+	if (args == 2)
+	{
+		char arg2[4];
+		GetCmdArg(2, arg2, sizeof(arg2));
+		fromKeyMap = StringToBool(arg2);
+	}
+	if (fromKeyMap)
+	{
+		if (GetBossProfile(arg1) == null)
+		{
+			ReplyToCommand(client, "Profile %s not found!", arg1);
+			return Plugin_Handled;
+		}
+		PrintToServer("------------ %s ------------\n", arg1);
+		PrintKeyMap(client, GetBossProfile(arg1));
+		if (IsValidClient(client))
+		{
+			CPrintToChat(client, "{royalblue}%t {default}Printed %s profile to server console.", "SF2 Prefix", arg1);
+		}
+		return Plugin_Handled;
+	}
+
+	StrCat(arg1, sizeof(arg1), ".cfg");
+	char filePath[PLATFORM_MAX_PATH];
+	if (!g_UseAlternateConfigDirectoryConVar.BoolValue)
+	{
+		FormatEx(filePath, sizeof(filePath), "%s/%s", FILE_PROFILES_DIR, arg1);
+	}
+	else
+	{
+		FormatEx(filePath, sizeof(filePath), "%s/%s", FILE_PROFILES_DIR_DATA, arg1);
+	}
+	BuildPath(Path_SM, filePath, sizeof(filePath), filePath);
+	File file = OpenFile(filePath, "r");
+	if (file == null)
+	{
+		ReplyToCommand(client, "File %s not found!", arg1);
+		return Plugin_Handled;
+	}
+
+	ArrayList strings = new ArrayList(ByteCountToCells(1024));
+	int length = 0;
+	while (!file.EndOfFile())
+	{
+		char line[1024];
+		if (!file.ReadLine(line, sizeof(line)))
+		{
+			continue;
+		}
+		length += strlen(line);
+		strings.PushString(line);
+	}
+	length++;
+	char[] fileStr = new char[length];
+	for (int i = 0; i < strings.Length; i++)
+	{
+		char line[1024];
+		strings.GetString(i, line, sizeof(line));
+		StrCat(fileStr, length, line);
+	}
+	delete strings;
+	int pos = 0;
+	while (pos < length)
+	{
+		char console[1024];
+		int index = length - pos;
+		if (index > 1024)
+		{
+			index = 1024;
+		}
+		for (int i = pos; i < pos + index + 1; i++)
+		{
+			StrCat(console, sizeof(console), fileStr[i]);
+		}
+		pos += index;
+		PrintToServer(console);
+	}
+	file.Close();
+	if (IsValidClient(client))
+	{
+		CPrintToChat(client, "Printed %s profile to server console.", "SF2 Prefix", arg1);
+	}
+	return Plugin_Handled;
 }
 
 static any Native_GetBossProfileData(Handle plugin,int numParams)

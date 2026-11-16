@@ -18,6 +18,7 @@ Menu g_MenuHelpControls;
 Menu g_MenuHelpClassInfo;
 Menu g_MenuHelpGhostMode;
 Menu g_MenuSettings;
+Menu g_MenuSettingsFlashlights;
 Menu g_MenuSettingsFlashlightTemp1;
 Menu g_MenuCredits;
 Menu g_MenuCredits1;
@@ -143,7 +144,7 @@ void SetupMenus()
 	g_MenuSettings.AddItem("0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Music Volume Title");
 	g_MenuSettings.AddItem("0", buffer);
-	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlight Temperature Title");
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlights Title");
 	g_MenuSettings.AddItem("0", buffer);
 	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Ghost Mode Teleport Title");
 	g_MenuSettings.AddItem("0", buffer);
@@ -155,9 +156,14 @@ void SetupMenus()
 	g_MenuSettings.AddItem("0", buffer);
 	FormatEx(buffer, sizeof(buffer), "Extended Special Round Descriptions");
 	g_MenuSettings.AddItem("0", buffer);
-	FormatEx(buffer, sizeof(buffer), "Set Flashlight Types");
-	g_MenuSettings.AddItem("0", buffer);
 	g_MenuSettings.ExitBackButton = true;
+
+	g_MenuSettingsFlashlights = new Menu(Menu_Settings_Flashlights);
+	g_MenuSettingsFlashlights.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings Flashlights Title");
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlight Temperature Title");
+	g_MenuSettingsFlashlights.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlight Types Title");
+	g_MenuSettingsFlashlights.AddItem("0", buffer);
 
 	g_MenuSettingsFlashlightTemp1 = new Menu(Menu_Settings_Flashlighttemp1);
 	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Prefix", "SF2 Settings Flashlight Temperature Title");
@@ -291,7 +297,6 @@ void SetupMenus()
 	g_MenuCredits6.SetTitle(buffer);
 	g_MenuCredits6.AddItem("0", "Back");
 
-	PvP_SetupMenus();
 	PvE_SetupMenus();
 }
 
@@ -504,7 +509,7 @@ static int Menu_Main(Menu menu, MenuAction action, int param1, int param2)
 			}
 			case 6:
 			{
-				g_MenuSettings.Display(param1, 30);
+				ShowMainSettings(param1);
 			}
 			case 7:
 			{
@@ -1219,7 +1224,92 @@ static int Menu_ClassInfoBackOnly(Menu menu, MenuAction action, int param1, int 
 	return 0;
 }
 
+void ShowMainSettings(int client)
+{
+	char buffer[512];
+	Menu menu = new Menu(Menu_Settings);
+	menu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings Menu Title");
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings PvP Menu Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings HUD Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Sound Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Flashlights Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Proxy Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings Ghost Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t", "SF2 Settings PvE Menu Title");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Extended Special Rounds Title",
+	g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	menu.ExitBackButton = true;
+	menu.Display(client, 30);
+}
+
 static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 0:
+			{
+				ShowPvPSettings(param1);
+			}
+
+			case 1:
+			{
+				ShowHUDSettings(param1);
+			}
+
+			case 2:
+			{
+				ShowSoundSettings(param1);
+			}
+
+			case 3:
+			{
+				ShowFlashlightSettings(param1);
+			}
+
+			case 4:
+			{
+				ShowProxySettings(param1);
+			}
+
+			case 5:
+			{
+				ShowGhostSettings(param1);
+			}
+
+			case 6:
+			{
+				GetPvEMenu().Display(param1, 30);
+			}
+
+			case 7:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_SpecialFullDesc = !g_PlayerPreferences[param1].PlayerPreference_SpecialFullDesc;
+				ClientSaveCookies(param1);
+				ShowMainSettings(param1);
+			}
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			g_MenuMain.Display(param1, 30);
+		}
+	}
+	return 0;
+}
+
+/*static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1324,7 +1414,7 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 			}
 			case 8:
 			{
-				g_MenuSettingsFlashlightTemp1.Display(param1, 30);
+				ShowFlashlightSettings(param1);
 			}
 			case 9:
 			{
@@ -1392,21 +1482,6 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 				panel.Send(param1, Panel_SettingsSpecialDesc, 30);
 				delete panel;
 			}
-			case 14:
-			{
-				char buffer[512];
-				FormatEx(buffer, sizeof(buffer), "%t Set flashlight type\n \n", "SF2 Prefix");
-
-				Panel panel = new Panel();
-				panel.SetTitle(buffer);
-
-				panel.DrawItem("Use Projected Flashlights");
-				panel.DrawItem("Use Standard Flashlights");
-				panel.DrawItem("Back");
-
-				panel.Send(param1, Panel_SettingsFlashlightType, 30);
-				delete panel;
-			}
 		}
 	}
 	else if (action == MenuAction_Cancel)
@@ -1417,12 +1492,244 @@ static int Menu_Settings(Menu menu, MenuAction action, int param1, int param2)
 		}
 	}
 	return 0;
+}*/
+
+void ShowHUDSettings(int client)
+{
+	char buffer[512];
+	Menu menu = new Menu(Menu_Settings_HUD);
+	menu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings HUD Title");
+	FormatEx(buffer, sizeof(buffer), "%t (%t)", "SF2 Settings Hud Version Title",
+	g_PlayerPreferences[client].PlayerPreference_LegacyHud ? "SF2 Settings Hud Legacy" : "SF2 Settings Hud New");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Hints Menu Title",
+	g_PlayerPreferences[client].PlayerPreference_ShowHints ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Film Grain Menu Title",
+	g_PlayerPreferences[client].PlayerPreference_FilmGrain ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings View Bobbing Title",
+	g_PlayerPreferences[client].PlayerPreference_ViewBobbing ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	menu.ExitBackButton = true;
+	menu.Display(client, 30);
+}
+
+static int Menu_Settings_HUD(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 0:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_LegacyHud = !g_PlayerPreferences[param1].PlayerPreference_LegacyHud;
+				ClientSaveCookies(param1);
+			}
+
+			case 1:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_ShowHints = !g_PlayerPreferences[param1].PlayerPreference_ShowHints;
+				ClientSaveCookies(param1);
+			}
+
+			case 2:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_FilmGrain = !g_PlayerPreferences[param1].PlayerPreference_FilmGrain;
+				ClientSaveCookies(param1);
+			}
+
+			case 3:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_ViewBobbing = !g_PlayerPreferences[param1].PlayerPreference_ViewBobbing;
+				ClientSaveCookies(param1);
+			}
+		}
+		ShowHUDSettings(param1);
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			ShowMainSettings(param1);
+		}
+	}
+	return 0;
+}
+
+void ShowSoundSettings(int client)
+{
+	char buffer[512], buffer2[512];
+	Menu menu = new Menu(Menu_Settings_Sound);
+	menu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings Sound Title");
+	FormatEx(buffer, sizeof(buffer), "%t (%i%%)", "SF2 Settings Music Volume Title", RoundToNearest(g_PlayerPreferences[client].PlayerPreference_MusicVolume * 100.0));
+	menu.AddItem("0", buffer);
+	switch (g_PlayerPreferences[client].PlayerPreference_MuteMode)
+	{
+		case 0:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Mute Mode Normal");
+		}
+
+		case 1:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Mute Mode Opposing");
+		}
+
+		case 2:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Mute Mode Opposing Proxy");
+		}
+	}
+	FormatEx(buffer, sizeof(buffer), "%t (%s)", "SF2 Settings Mute Mode Menu Title", buffer2);
+	menu.AddItem("0", buffer);
+	menu.ExitBackButton = true;
+	menu.Display(client, 30);
+}
+
+static int Menu_Settings_Sound(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 0:
+			{
+				char buffer[512];
+				Format(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Music Volume Title", param1);
+
+				Panel panel = new Panel();
+				panel.SetTitle(buffer);
+
+				panel.DrawItem("0%");
+				panel.DrawItem("25%");
+				panel.DrawItem("50%");
+				panel.DrawItem("75%");
+				panel.DrawItem("100% (Default)");
+				panel.DrawItem("Back");
+
+				panel.Send(param1, Panel_SettingsMusicVolume, 30);
+				delete panel;
+			}
+
+			case 1:
+			{
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Mute Mode Menu Title", param1);
+
+				Panel panel = new Panel();
+				panel.SetTitle(buffer);
+
+				panel.DrawItem("Normal");
+				panel.DrawItem("Mute opposing team");
+				panel.DrawItem("Mute opposing team except when I'm a proxy");
+				panel.DrawItem("Back");
+
+				panel.Send(param1, Panel_SettingsMuteMode, 30);
+				delete panel;
+			}
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			ShowMainSettings(param1);
+		}
+	}
+	return 0;
+}
+
+void ShowFlashlightSettings(int client)
+{
+	char buffer[512];
+	Menu menu = new Menu(Menu_Settings_Flashlights);
+	menu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings Flashlights Title");
+	FormatEx(buffer, sizeof(buffer), "%t (%ik %t)", "SF2 Settings Flashlight Temperature Title",
+	g_PlayerPreferences[client].PlayerPreference_FlashlightTemperature, "SF2 Flashlight Temperature Kelvin");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Flashlight Types Title",
+	g_PlayerPreferences[client].PlayerPreference_FlashlightType ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Show Other Flashlights Title",
+	!g_PlayerPreferences[client].PlayerPreference_OtherLights ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	menu.ExitBackButton = true;
+	menu.Display(client, 30);
+}
+
+static int Menu_Settings_Flashlights(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 0:
+			{
+				g_MenuSettingsFlashlightTemp1.Display(param1, 30);
+			}
+
+			case 1:
+			{
+				if (g_PlayerEliminated[param1])
+				{
+					SF2_BasePlayer client = SF2_BasePlayer(param1);
+					if (client.UsingFlashlight)
+					{
+						client.ToggleFlashlight();
+					}
+					bool state = g_PlayerPreferences[param1].PlayerPreference_FlashlightType;
+					if (!state)
+					{
+						if (!g_PlayerPreferences[param1].PlayerPreference_ProjectedFlashlight)
+						{
+							CPrintToChat(param1, "%T", "SF2 Settings Projected Flashlight Not Supported", param1);
+						}
+						else
+						{
+							g_PlayerPreferences[param1].PlayerPreference_FlashlightType = true;
+						}
+					}
+					else
+					{
+						g_PlayerPreferences[param1].PlayerPreference_FlashlightType = false;
+					}
+					ClientSaveCookies(param1);
+				}
+				else
+				{
+					CPrintToChat(param1, "%T", "SF2 Settings Projected Flashlight Cant Change In Red", param1);
+				}
+				ShowFlashlightSettings(param1);
+			}
+
+			case 2:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_OtherLights = !g_PlayerPreferences[param1].PlayerPreference_OtherLights;
+				ClientSaveCookies(param1);
+				ShowFlashlightSettings(param1);
+			}
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			ShowMainSettings(param1);
+		}
+	}
+	return 0;
 }
 
 static int Menu_Settings_Flashlighttemp1(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
+		SF2_BasePlayer client = SF2_BasePlayer(param1);
+		if (client.UsingFlashlight && !IsClientUsingProjectedFlashlight(param1))
+		{
+			client.ToggleFlashlight();
+		}
 		switch (param2)
 		{
 			case 0:
@@ -1477,178 +1784,157 @@ static int Menu_Settings_Flashlighttemp1(Menu menu, MenuAction action, int param
 			}
 		}
 		CPrintToChat(param1, "%t", "SF2 Flashlight Temperature Changed", g_PlayerPreferences[param1].PlayerPreference_FlashlightTemperature);
+		ShowFlashlightSettings(param1);
 	}
 	else if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack)
 		{
-			g_MenuSettings.Display(param1, 30);
+			ShowFlashlightSettings(param1);
 		}
 	}
 	return 0;
 }
 
-static int Panel_SettingsFilmGrain(Menu menu, MenuAction action, int param1, int param2)
+void ShowProxySettings(int client)
+{
+	char buffer[512];
+	Menu menu = new Menu(Menu_Settings_Proxy);
+	menu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings Proxy Title");
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Proxy Menu Title",
+	g_PlayerPreferences[client].PlayerPreference_EnableProxySelection ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	FormatEx(buffer, sizeof(buffer), "%t %t", "SF2 Settings Proxy Ask Menu Title",
+	g_PlayerPreferences[client].PlayerPreference_ProxyShowMessage ? "SF2 On" : "SF2 Off");
+	menu.AddItem("0", buffer);
+	menu.ExitBackButton = true;
+	menu.Display(client, 30);
+}
+
+static int Menu_Settings_Proxy(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
 		switch (param2)
 		{
+			case 0:
+			{
+				g_PlayerPreferences[param1].PlayerPreference_EnableProxySelection = !g_PlayerPreferences[param1].PlayerPreference_EnableProxySelection;
+				ClientSaveCookies(param1);
+			}
+
 			case 1:
 			{
-				g_PlayerPreferences[param1].PlayerPreference_FilmGrain = true;
+				g_PlayerPreferences[param1].PlayerPreference_ProxyShowMessage = !g_PlayerPreferences[param1].PlayerPreference_ProxyShowMessage;
 				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Enabled Film Grain", param1);
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_FilmGrain = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Disabled Film Grain", param1);
 			}
 		}
-
-		g_MenuSettings.Display(param1, 30);
+		ShowProxySettings(param1);
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack)
+		{
+			ShowMainSettings(param1);
+		}
 	}
 	return 0;
 }
 
-static int Panel_SettingsHints(Menu menu, MenuAction action, int param1, int param2)
+void ShowGhostSettings(int client)
+{
+	char buffer[512], buffer2[512];
+	Menu menu = new Menu(Menu_Settings_Ghost);
+	menu.SetTitle("%t %t\n \n", "SF2 Prefix", "SF2 Settings Ghost Title");
+	switch (g_PlayerPreferences[client].PlayerPreference_GhostModeTeleportState)
+	{
+		case 0:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Teleport Ghost Both");
+		}
+
+		case 1:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Teleport Ghost Players");
+		}
+
+		case 2:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Teleport Ghost Bosses");
+		}
+	}
+	FormatEx(buffer, sizeof(buffer), "%t (%s)", "SF2 Settings Ghost Mode Teleport Title", buffer2);
+	menu.AddItem("0", buffer);
+	switch (g_PlayerPreferences[client].PlayerPreference_GhostModeToggleState)
+	{
+		case 0:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Toggle Ghost Default");
+		}
+
+		case 1:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Toggle Ghost On Grace");
+		}
+
+		case 2:
+		{
+			FormatEx(buffer2, sizeof(buffer2), "%t", "SF2 Settings Toggle Ghost On Death");
+		}
+	}
+	FormatEx(buffer, sizeof(buffer), "%t (%s)", "SF2 Settings Ghost Mode Toggle State Title", buffer2);
+	menu.AddItem("0", buffer);
+	menu.ExitBackButton = true;
+	menu.Display(client, 30);
+}
+
+static int Menu_Settings_Ghost(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
 		switch (param2)
 		{
+			case 0:
+			{
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Ghost Mode Teleport Menu Title", param1);
+
+				Panel panel = new Panel();
+				panel.SetTitle(buffer);
+
+				panel.DrawItem("Teleport to both players and bosses");
+				panel.DrawItem("Teleport to only players");
+				panel.DrawItem("Teleport to only bosses");
+				panel.DrawItem("Back");
+
+				panel.Send(param1, Panel_SettingsGhostModeTeleport, 30);
+				delete panel;
+			}
+
 			case 1:
 			{
-				g_PlayerPreferences[param1].PlayerPreference_ShowHints = true;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Enabled Hints", param1);
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_ShowHints = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Disabled Hints", param1);
+				char buffer[512];
+				FormatEx(buffer, sizeof(buffer), "%t %T\n \n", "SF2 Prefix", "SF2 Settings Ghost Mode Toggle State Menu Title", param1);
+
+				Panel panel = new Panel();
+				panel.SetTitle(buffer);
+
+				panel.DrawItem("Default state");
+				panel.DrawItem("Enable ghost mode upon grace period ends");
+				panel.DrawItem("Enable ghost mode upon death on RED");
+				panel.DrawItem("Back");
+
+				panel.Send(param1, Panel_SettingsGhostModeToggleState, 30);
+				delete panel;
 			}
 		}
-
-		g_MenuSettings.Display(param1, 30);
 	}
-	return 0;
-}
-
-static int Panel_SettingsProxy(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_Select)
+	else if (action == MenuAction_Cancel)
 	{
-		switch (param2)
+		if (param2 == MenuCancel_ExitBack)
 		{
-			case 1:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_EnableProxySelection = true;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Enabled Proxy", param1);
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_EnableProxySelection = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Disabled Proxy", param1);
-			}
+			ShowMainSettings(param1);
 		}
-
-		g_MenuSettings.Display(param1, 30);
-	}
-	return 0;
-}
-
-static int Panel_SettingsProxyAskMenu(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_Select)
-	{
-		switch (param2)
-		{
-			case 1:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_ProxyShowMessage = true;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Enabled Ask Message Proxy", param1);
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_ProxyShowMessage = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Disabled Ask Message Proxy", param1);
-			}
-		}
-
-		g_MenuSettings.Display(param1, 30);
-	}
-	return 0;
-}
-
-static int Panel_SettingsSpecialDesc(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_Select)
-	{
-		switch (param2)
-		{
-			case 1:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_SpecialFullDesc = true;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "{lightblue}You will now see extended special round descriptions.");
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_SpecialFullDesc = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "{lightblue}You will no longer see extended special round descriptions.");
-			}
-		}
-
-		g_MenuSettings.Display(param1, 30);
-	}
-	return 0;
-}
-
-static int Panel_SettingsFlashlightType(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_Select)
-	{
-		if (!g_PlayerEliminated[param1])
-		{
-			CPrintToChat(param1, "{red}You can not switch flashlight types while in match, wait until your eliminated.");
-		}
-		else
-		{
-			switch (param2)
-			{
-				case 1:
-				{
-					g_PlayerPreferences[param1].PlayerPreference_FlashlightType = true;
-					ClientSaveCookies(param1);
-
-					if (g_PlayerPreferences[param1].PlayerPreference_ProjectedFlashlight)
-					{
-						CPrintToChat(param1, "{lightblue}You will now see projected flashlights.");
-					}
-					else
-					{
-						CPrintToChat(param1, "{red}You must set 'mat_supportflashlight 1' to use projected flashlights (reconnect after setting).");
-					}
-				}
-				case 2:
-				{
-					g_PlayerPreferences[param1].PlayerPreference_FlashlightType = false;
-					ClientSaveCookies(param1);
-					CPrintToChat(param1, "{lightblue}You will no longer see projected flashlights.");
-				}
-			}
-		}
-
-		g_MenuSettings.Display(param1, 30);
 	}
 	return 0;
 }
@@ -1682,7 +1968,7 @@ static int Panel_SettingsMuteMode(Menu menu, MenuAction action, int param1, int 
 			}
 		}
 
-		g_MenuSettings.Display(param1, 30);
+		ShowSoundSettings(param1);
 	}
 	return 0;
 }
@@ -1716,7 +2002,7 @@ static int Panel_SettingsGhostModeTeleport(Menu menu, MenuAction action, int par
 			}
 		}
 
-		g_MenuSettings.Display(param1, 30);
+		ShowGhostSettings(param1);
 	}
 	return 0;
 }
@@ -1750,7 +2036,7 @@ static int Panel_SettingsGhostModeToggleState(Menu menu, MenuAction action, int 
 			}
 		}
 
-		g_MenuSettings.Display(param1, 30);
+		ShowGhostSettings(param1);
 	}
 	return 0;
 }
@@ -1761,7 +2047,7 @@ static int Panel_SettingsMusicVolume(Menu menu, MenuAction action, int param1, i
 	{
 		if (param2 > 5)
 		{
-			g_MenuSettings.Display(param1, 30);
+			ShowSoundSettings(param1);
 			return 0;
 		}
 		float volume;
@@ -1773,57 +2059,7 @@ static int Panel_SettingsMusicVolume(Menu menu, MenuAction action, int param1, i
 		CPrintToChat(param1, "%t", "SF2 Music Volum Changed", RoundToNearest(volume * 100.0));
 		ClientSaveCookies(param1);
 
-		g_MenuSettings.Display(param1, 30);
-	}
-	return 0;
-}
-
-int Panel_SettingsHudVersion(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_Select)
-	{
-		switch (param2)
-		{
-			case 1:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_LegacyHud = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 New Hud Use", param1);
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_LegacyHud = true;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Legacy Hud Use", param1);
-			}
-		}
-
-		g_MenuSettings.Display(param1, 30);
-	}
-	return 0;
-}
-
-int Panel_SettingsViewBobbing(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_Select)
-	{
-		switch (param2)
-		{
-			case 1:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_ViewBobbing = true;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Toggle View Bobbing On", param1);
-			}
-			case 2:
-			{
-				g_PlayerPreferences[param1].PlayerPreference_ViewBobbing = false;
-				ClientSaveCookies(param1);
-				CPrintToChat(param1, "%T", "SF2 Toggle View Bobbing Off", param1);
-			}
-		}
-
-		g_MenuSettings.Display(param1, 30);
+		ShowSoundSettings(param1);
 	}
 	return 0;
 }

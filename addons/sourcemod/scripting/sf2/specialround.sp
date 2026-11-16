@@ -1750,6 +1750,9 @@ void SpecialRoundStart()
 				if (IsValidClient(client) && !g_PlayerEliminated[client] && !DidClientEscape(client))
 				{
 					TF2_StripContrackerOnly(client);
+					ClientDeactivateUltravision(client);
+					ClientTurnOffFlashlight(client);
+					ClientActivateUltravision(client);
 				}
 			}
 			SF_AddSpecialRound(SPECIALROUND_SINGLEPLAYER);

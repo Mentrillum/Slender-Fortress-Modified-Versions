@@ -11,39 +11,39 @@
 	}
 	"SF2 Renevant Wall Hax"
 	{
-		"en" "You can now see everything through walls"
+		"en" "You can now see bosses and players through walls."
 	}
 	"SF2 Renevant Marked"
 	{
-		"en" "Everyone is marked for death permanently"
+		"en" "Everyone is marked for death permanently."
 	}
 	"SF2 Renevant 90s"
 	{
-		"en" "Everyone run more faster"
+		"en" "Everyone run much faster."
 	}
 	"SF2 Renevant Bacon"
 	{
-		"en" "Now Bosses are now alerted on spawn"
+		"en" "Bosses are now alerted on spawn."
 	}
 	"SF2 Renevant Multieffects"
 	{
-		"en" "Now Bosses can now inflict Multieffect on damage"
+		"en" "Bosses can now inflict Multieffect on damage."
 	}
 	"SF2 Renevant Difficulty"
 	{
-		"en" "Now difficulty got changed to"
+		"en" "Difficulty has been set to"
 	}
 	"SF2 Boss Added"
 	{
-		"en" "New Boss"
+		"en" "Next Boss"
 	}
 	"SF2 Bosses Added"
 	{
-		"en" "New Bosses Added"
+		"en" "Next Bosses"
 	}
 	"SF2 Admin Boss"
 	{
-		"en" "Special Boss Added"
+		"en" "Next Special Boss"
 	}
 	"SF2 Difficulty Vote Finished"
 	{
@@ -491,11 +491,6 @@
 		"ko"	"스카웃"
 	}
 
-	"SF2 Help Scout Class Info Description"
-	{
-		"en"	"[+] 10%% increase in sprint duration\n[-] Low health, most affected by screen wobbling"
-	}
-
 	"SF2 Help Soldier Class Info Menu Title"
 	{
 		"en"	"The Soldier"
@@ -504,11 +499,6 @@
 		"chi"	"士兵"
 		"pt"	"Soldier"
 		"ko"	"솔저"
-	}
-
-	"SF2 Help Soldier Class Info Description"
-	{
-		"en"	"[+] The Disciplinary Action increases both walking\nand sprinting speed\n[+] Cannot lose sprint points while non-sprint jumping\n[-] The Half-Zatoichi only restores 5 HP on kill\n[-] The Escape Plan only affects sprinting speed"
 	}
 
 	"SF2 Help Sniper Class Info Menu Title"
@@ -521,11 +511,6 @@
 		"ko"	"스나이퍼"
 	}
 
-	"SF2 Help Sniper Class Info Description"
-	{
-		"en"	"[+] Blink rate increased by 100%%\n[-] Low health, most affected by screen wobbling"
-	}
-
 	"SF2 Help Demoman Class Info Menu Title"
 	{
 		"en"	"The Demoman"
@@ -534,11 +519,6 @@
 		"chi"	"爆破手"
 		"pt"	"Demoman"
 		"ko"	"데모맨"
-	}
-
-	"SF2 Help Demoman Class Info Description"
-	{
-		"en"	"[+] 10%% increase in sprint duration\n[-] The Half-Zatoichi only restores 5 HP on kill"
 	}
 
 	"SF2 Help Heavy Class Info Menu Title"
@@ -551,11 +531,6 @@
 		"ko"	"헤비"
 	}
 
-	"SF2 Help Heavy Class Info Description"
-	{
-		"en"	"[+] Large health, least affected by screen wobbling\n[+] Bear traps only deal minimum damage\n[-] The Gloves of Running Urgently only affects sprinting speed"
-	}
-
 	"SF2 Help Medic Class Info Menu Title"
 	{
 		"en"	"The Medic"
@@ -564,11 +539,6 @@
 		"chi"	"医生"
 		"pt"	"Medic"
 		"ko"	"메딕"
-	}
-
-	"SF2 Help Medic Class Info Description"
-	{
-		"en"	"[+] Regenerates health over time\n[-] Prioritized target to bosses\n[-] Blocked on the special round Thanatophobia"
 	}
 
 	"SF2 Help Pyro Class Info Menu Title"
@@ -581,11 +551,6 @@
 		"ko"	"파이로"
 	}
 
-	"SF2 Help Pyro Class Info Description"
-	{
-		"en"	"[+] Fireproof, duh!\n[-] The Powerjack only restores 20 HP on kill, and\nmelee damage taken increased to 33%%"
-	}
-
 	"SF2 Help Spy Class Info Menu Title"
 	{
 		"en"	"The Spy"
@@ -594,11 +559,6 @@
 		"chi"	"间谍"
 		"pt"	"Spy"
 		"ko"	"스파이"
-	}
-
-	"SF2 Help Spy Class Info Description"
-	{
-		"en"	"[+] All sounds you make are 30%% quieter to bosses\n[-] Low health, most affected by screen wobbling\n[-] Slightly prioritized target to bosses"
 	}
 
 	"SF2 Help Engineer Class Info Menu Title"
@@ -611,11 +571,6 @@
 		"ko"	"엔지니어"
 	}
 
-	"SF2 Help Engineer Class Info Description"
-	{
-		"en"	"[+] 50%% increase in Flashlight battery life\n[+] 20%% decrease in Flashlight recharge rate\n[+] Flashlight is overall brighter\n[-] Low health, most affected by screen wobbling"
-	}
-
 	"SF2 Settings Menu Title"
 	{
 		"en"	"Settings"
@@ -624,6 +579,16 @@
 		"chi"	"设置"
 		"pt"	"Configurações"
 		"ko"	"설정"
+	}
+
+	"SF2 On"
+	{
+		"en" "☒"
+	}
+
+	"SF2 Off"
+	{
+		"en" "☐"
 	}
 
 	"SF2 Settings PvP Menu Title"
@@ -652,6 +617,26 @@
 		"fi"	"Ota käyttöön/Poista käytöstä spawn suojaus"
 		"pt"	"Ativar/desativar proteção de renascimento"
 		"ko"	"스폰 보호 활성화/비활성화"
+	}
+
+	"SF2 Settings HUD Title"
+	{
+		"en" "HUD Settings"
+	}
+
+	"SF2 Settings Proxy Title"
+	{
+		"en" "Proxy Settings"
+	}
+
+	"SF2 Settings Ghost Title"
+	{
+		"en" "Ghost Mode Settings"
+	}
+
+	"SF2 Settings Sound Title"
+	{
+		"en" "Sound Settings"
 	}
 
 	"SF2 Settings Hints Menu Title"
@@ -766,6 +751,11 @@
 		"en"	"PvE Arena Settings"
 	}
 
+	"SF2 Settings Extended Special Rounds Title"
+	{
+		"en" "Extended Special Round Descriptions"
+	}
+
 	"SF2 Music Volum Changed"
 	{
 		"#format"		"{1:d}"
@@ -777,9 +767,24 @@
 		"ko"	"{lightblue}음악 볼륨이 {1}%% 으로 설정 되었습니다."
 	}
 
+	"SF2 Settings Flashlights Title"
+	{
+		"en" "Flashlight Settings"
+	}
+
 	"SF2 Settings Projected Flashlight Title"
 	{
 		"en" 	"Projected flashlight"
+	}
+
+	"SF2 Settings Projected Flashlight Not Supported"
+	{
+		"en" "{red}You must set 'mat_supportflashlight 1' in the console to use projected flashlights (reconnect after setting)."
+	}
+
+	"SF2 Settings Projected Flashlight Cant Change In Red"
+	{
+		"en" "{red}You can't switch flashlight types while in the match, wait until you're eliminated."
 	}
 
 	"SF2 Settings Flashlight Temperature Title"
@@ -796,6 +801,21 @@
 	{
 		"#format"		"{1:d}"
 		"en" 	"{lightblue}Flashlight temperature set to {1}k kelvin."
+	}
+
+	"SF2 Flashlight Temperature Kelvin"
+	{
+		"en" "Kelvin"
+	}
+
+	"SF2 Settings Flashlight Types Title"
+	{
+		"en" "Projected Flashlight"
+	}
+
+	"SF2 Settings Show Other Flashlights Title"
+	{
+		"en" "Toggle showing other players flashlights"
 	}
 
 	"SF2 Ad Message 1"
@@ -2156,6 +2176,21 @@
 		"ko"	"{lightblue}상대 팀을 음소거하지만 프록시가 되는 경우 설정이 자동으로 기본값으로 설정됩니다."
 	}
 
+	"SF2 Settings Mute Mode Normal"
+	{
+		"en" "Normal"
+	}
+
+	"SF2 Settings Mute Mode Opposing"
+	{
+		"en" "Opposing team"
+	}
+
+	"SF2 Settings Mute Mode Opposing Proxy"
+	{
+		"en" "Opposing team except when a proxy"
+	}
+
 	"SF2 Settings Ghost Mode Teleport Title"
 	{
 		"en" 	"Change ghost mode teleport state"
@@ -2182,6 +2217,21 @@
 		"en"	"{lightblue}You can now teleport to only bosses during ghost mode."
 		"pt"	"{lightblue}Agora, você pode teletransportar-se apenas ao chefão no modo fantasma."
 		"ko"	"{lightblue}이제 보스를 향해서만 텔레포트 할 수 있습니다."
+	}
+
+	"SF2 Settings Teleport Ghost Both"
+	{
+		"en" "Both players and bosses"
+	}
+
+	"SF2 Settings Teleport Ghost Players"
+	{
+		"en" "Only players"
+	}
+
+	"SF2 Settings Teleport Ghost Bosses"
+	{
+		"en" "Only bosses"
 	}
 
 	"SF2 Settings Ghost Mode Toggle State Title"
@@ -2214,6 +2264,21 @@
 		"fi"	"{lightblue}Haamu tila otetaan nyt käyttöön, kun kuolet RED:llä."
 		"pt"	"{lightblue}Agora, o modo fantasma será ativado após morrer estando na RED."
 		"ko"	"{lightblue}이제 RED 팀으로 플레이 도중 사망 시 유령 모드가 활성화됩니다."
+	}
+
+	"SF2 Settings Toggle Ghost Default"
+	{
+		"en" "Default"
+	}
+
+	"SF2 Settings Toggle Ghost On Grace"
+	{
+		"en" "On grace period end"
+	}
+
+	"SF2 Settings Toggle Ghost On Death"
+	{
+		"en" "On death in RED"
 	}
 
 	"SF2 Settings View Bobbing Toggle Title"

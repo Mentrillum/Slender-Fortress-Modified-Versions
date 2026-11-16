@@ -398,6 +398,10 @@ void SDK_Init()
 	//Initialize tutorial detours & calls
 	//Tutorial_SetupSDK(gameData);
 
+	Call_StartForward(g_OnSF2GamedataLoadedPFwd);
+	Call_PushCell(gameData);
+	Call_Finish();
+
 	delete gameData;
 }
 

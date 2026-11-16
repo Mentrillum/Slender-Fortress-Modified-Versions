@@ -25,6 +25,11 @@ static float g_PlayerScareBoostEndTime[MAXTF2PLAYERS] = { -1.0, ... };
 int g_ClientMaxFrameDeathAnim[MAXTF2PLAYERS];
 int g_ClientFrame[MAXTF2PLAYERS];
 
+static float g_ClientTauntCooldown[MAXTF2PLAYERS][6];
+static float g_ClientCurrentTauntCooldown[MAXTF2PLAYERS];
+
+static DynamicDetour g_DDetourIsAllowedToTaunt;
+
 //Nav Data
 //static CNavArea g_lastNavArea[MAXTF2PLAYERS];
 
@@ -47,13 +52,25 @@ int g_ClientFrame[MAXTF2PLAYERS];
 
 void SetupClients()
 {
+	g_OnSF2GamedataLoadedPFwd.AddFunction(null, OnSF2GamedataLoaded);
 	g_OnPlayerPutInServerPFwd.AddFunction(null, OnPutInServer);
 	g_OnPlayerSpawnPFwd.AddFunction(null, OnPlayerSpawn);
+	g_OnPlayerConditionAddedPFwd.AddFunction(null, OnPlayerConditionAdded);
 }
 
 void Client_SetupAPI()
 {
 	Sprint_SetupAPI();
+}
+
+static void OnSF2GamedataLoaded(GameData gameData)
+{
+	g_DDetourIsAllowedToTaunt = DynamicDetour.FromConf(gameData, "CTFPlayer::IsAllowedToTaunt");
+	if (g_DDetourIsAllowedToTaunt == null || !g_DDetourIsAllowedToTaunt.Enable(Hook_Post, IsAllowedToTaunt))
+	{
+		// Not too important, log the error
+		LogError("Failed to create hook CTFPlayer::IsAllowedToTaunt offset from SF2 gamedata!");
+	}
 }
 
 static void OnPutInServer(SF2_BasePlayer client)
@@ -69,6 +86,32 @@ static void OnPutInServer(SF2_BasePlayer client)
 static void OnPlayerSpawn(SF2_BasePlayer client)
 {
 	CreateTimer(0.1, Timer_CheckHealth, client.UserID, TIMER_FLAG_NO_MAPCHANGE);
+	g_ClientCurrentTauntCooldown[client.index] = 0.0;
+}
+
+static void OnPlayerConditionAdded(SF2_BasePlayer client, TFCond cond)
+{
+	if (cond == TFCond_Taunting && client.GetProp(Prop_Send, "m_iTauntIndex") == 0)
+	{
+		CBaseEntity weapon = CBaseEntity(client.GetPropEnt(Prop_Send, "m_hActiveWeapon"));
+		if (weapon.IsValid())
+		{
+			int slot = -1;
+			for (int i = 0; i <= 6; i++)
+			{
+				CBaseEntity temp = CBaseEntity(client.GetWeaponSlot(i));
+				if (temp.index == weapon.index)
+				{
+					slot = i;
+					break;
+				}
+			}
+			if (slot != -1 && ClientGetTauntCooldown(client, slot) > 0.0)
+			{
+				ClientSetCurrentTauntCooldown(client, ClientGetTauntCooldown(client, slot) + GetGameTime());
+			}
+		}
+	}
 }
 
 static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -154,7 +197,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		TF2_RemoveCondition(victim, TFCond_Gas);
 	}
 
-	if (IsValidClient(attacker) && IsValidClient(victim) && (IsClientInPvP(victim) || IsClientInPvE(victim)) && GetClientTeam(victim) == TFTeam_Red && GetClientTeam(attacker) == TFTeam_Red && victim != attacker)
+	if (IsValidClient(attacker) && IsValidClient(victim) && (IsClientInPvE(victim)) && victim != attacker)
 	{
 		damage = 0.0;
 		return Plugin_Changed;
@@ -233,7 +276,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 		{
 			canDamage = true;
 		}
-		if (IsClientLeavingPvP(victim) && !IsClientInPvP(attacker))
+		if (g_DamagePvPLeaversConVar.BoolValue && IsClientLeavingPvP(victim) && !IsClientInPvP(attacker))
 		{
 			canDamage = true;
 		}
@@ -323,7 +366,7 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 									if (GetClientTeam(victim) == GetClientTeam(attacker))
 									{
 										int pistol = GetPlayerWeaponSlot(attacker, TFWeaponSlot_Primary);
-										if (pistol > MaxClients && GetEntProp(pistol, Prop_Send, "m_iItemDefinitionIndex") == 525) //Give one crit fort the backstab
+										if (pistol > MaxClients && GetEntProp(pistol, Prop_Send, "m_iItemDefinitionIndex") == 525) //Give one crit for the backstab
 										{
 											int crits = GetEntProp(attacker, Prop_Send, "m_iRevengeCrits");
 											crits++;
@@ -333,6 +376,23 @@ static Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 									if (GetEntProp(victim, Prop_Send, "m_iHealth") <= 120)
 									{
 										g_PlayerBackStabbed[victim] = true;
+										switch (GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+										{
+											case 356: // Kunai
+											{
+												int health = SF2_BasePlayer(attacker).Health + 100;
+												if (health > 210)
+												{
+													health = 210;
+												}
+												SetEntityHealth(attacker, health);
+											}
+
+											case 461: // Big Earner
+											{
+												SF2_BasePlayer(attacker).ChangeCondition(TFCond_SpeedBuffAlly, _, 4.0);
+											}
+										}
 									}
 									else
 									{
@@ -541,6 +601,24 @@ static MRESReturn TakeHealth(int entity, DHookReturn retValue, DHookParam params
 	return MRES_Ignored;
 }
 
+static MRESReturn IsAllowedToTaunt(int entity, DHookReturn retValue)
+{
+	if (!g_Enabled || !IsValidClient(entity))
+	{
+		return MRES_Ignored;
+	}
+
+	SF2_BasePlayer player = SF2_BasePlayer(entity);
+	if (g_ClientCurrentTauntCooldown[player.index] > GetGameTime())
+	{
+		retValue.Value = false;
+		EmitSoundToClient(player.index, FLASHLIGHT_NOSOUND, _, SNDCHAN_ITEM, SNDLEVEL_NONE);
+		return MRES_Supercede;
+	}
+
+	return MRES_Ignored;
+}
+
 static Action Timer_CheckHealth(Handle timer, any id)
 {
 	int client = GetClientOfUserId(id);
@@ -552,6 +630,26 @@ static Action Timer_CheckHealth(Handle timer, any id)
 	g_ClientModifiedMaxHealth[client] = SF2_BasePlayer(client).Health;
 
 	return Plugin_Stop;
+}
+
+float ClientGetTauntCooldown(int client, int slot)
+{
+	return g_ClientTauntCooldown[client][slot];
+}
+
+void ClientSetTauntCooldown(int client, int slot, float value)
+{
+	g_ClientTauntCooldown[client][slot] = value;
+}
+
+float ClientGetCurrentTauntCooldown(int client)
+{
+	return g_ClientCurrentTauntCooldown[client];
+}
+
+void ClientSetCurrentTauntCooldown(int client, float value)
+{
+	g_ClientCurrentTauntCooldown[client] = value;
 }
 
 //	==========================================================
@@ -810,6 +908,8 @@ void ClientEscape(int client)
 	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.001);
 	TF2Attrib_RemoveByDefIndex(client, 49);
 	SetEntProp(client, Prop_Send, "m_iAirDash", 0);
+
+	TF2Attrib_RemoveByDefIndex(client, 70);
 
 	HandlePlayerHUD(client);
 	if (!SF_IsBoxingMap())
@@ -2140,7 +2240,8 @@ void ClientSaveCookies(int client)
 		RoundToNearest(g_PlayerPreferences[client].PlayerPreference_MusicVolume * 100),
 		g_PlayerPreferences[client].PlayerPreference_SpecialFullDesc,
 		g_PlayerPreferences[client].PlayerPreference_FlashlightType,
-		g_PlayerPlaying[client] ? g_RoundSystemTime : 0);
+		g_PlayerPlaying[client] ? g_RoundSystemTime : 0,
+		g_PlayerPreferences[client].PlayerPreference_OtherLights);
 
 	SetClientCookie(client, g_Cookie, s);
 }

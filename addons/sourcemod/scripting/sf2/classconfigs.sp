@@ -48,6 +48,8 @@ bool g_ClassInvulnerableToTraps[MAX_CLASSES + 1];
 
 float g_ClassMedicAddedHealthRegen[MAX_CLASSES + 1];
 
+float g_ClassHealingRate[MAX_CLASSES + 1];
+
 void ReloadClassConfigs()
 {
 	if (g_ClassStatsConfig != null)
@@ -276,6 +278,8 @@ static void PrecacheClassProfiles()
 		g_ClassInvulnerableToTraps[i] = obj.GetInt("immune_to_traps") != 0;
 
 		g_ClassMedicAddedHealthRegen[i] = obj.GetFloat("medic_add_health_regen");
+
+		g_ClassHealingRate[i] = obj.GetFloat("healing_rate", 1.0);
 
 		obj.ConvertValuesSectionToArray("help_info");
 	}
