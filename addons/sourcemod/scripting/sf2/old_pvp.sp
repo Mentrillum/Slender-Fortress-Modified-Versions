@@ -342,7 +342,7 @@ static void FlameStartTouch(int ent, int other)
 	}
 
 	int weapon = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
-	if (IsValidEntity(weapon))
+	if (!IsValidEntity(weapon))
 	{
 		return;
 	}
