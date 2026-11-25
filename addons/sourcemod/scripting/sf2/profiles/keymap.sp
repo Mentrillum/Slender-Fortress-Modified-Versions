@@ -839,13 +839,15 @@ static void IterateKeyValues(KeyValues kv, KeyMap obj)
 	{
 		kv.GetSectionName(key, sizeof(key));
 
-		int keyLen = strlen(key);
-		for (int i = 0; i < keyLen; i++)
-		{
-			key[i] = CharToLower(key[i]);
-		}
-
 		bool isSection = ((kv.NodesInStack() == 0) || (kv.GetDataType(NULL_STRING) == KvData_None && kv.NodesInStack() > 0));
+		if (!isSection)
+		{
+			int keyLen = strlen(key);
+			for (int i = 0; i < keyLen; i++)
+			{
+				key[i] = CharToLower(key[i]);
+			}
+		}
 
 		if (isSection)
 		{
@@ -860,11 +862,13 @@ static void IterateKeyValues(KeyValues kv, KeyMap obj)
 				IterateKeyValues(kv, child);
 				kv.GoBack();
 			}
+			//PrintToServer("Section: [%s]", key);
 		}
 		else
 		{
 			kv.GetString(NULL_STRING, value, sizeof(value));
 			obj.SetKeyValue(key, value);
+			//PrintToServer("Key: [%s] [%s]", key, value);
 		}
 	}
 	while (kv.GotoNextKey(false));

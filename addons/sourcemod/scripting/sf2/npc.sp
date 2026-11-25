@@ -3019,6 +3019,7 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 	if (!IsTargetValidForSlenderEx(CBaseEntity(teleportTarget), bossIndex))
 	{
 		g_SlenderTeleportTarget[bossIndex] = INVALID_ENT_REFERENCE;
+		g_SlenderNextTeleportTime[bossIndex] = gameTime + teleportTime;
 
 		#if defined DEBUG
 		SendDebugMessageToPlayers(DEBUG_BOSS_TELEPORTATION, 3, "Teleport for boss %d: no good target, removing...", bossIndex);
@@ -3244,8 +3245,9 @@ static Action Timer_SlenderTeleportThink(Handle timer, any id)
 	else
 	{
 		usedArea.GetCenter(spawnPos);
-		spawnPos[0] = spawnPos[0] + ((GetRandomFloat() - 0.5) / 4.0) * usedArea.GetSizeX();
-		spawnPos[1] = spawnPos[1] + ((GetRandomFloat() - 0.5) / 4.0) * usedArea.GetSizeY();
+		// Sadly rarely able to spawn bosses in FOV and in LOS
+		//spawnPos[0] = spawnPos[0] + ((GetRandomFloat() - 0.5) / 4.0) * usedArea.GetSizeX();
+		//spawnPos[1] = spawnPos[1] + ((GetRandomFloat() - 0.5) / 4.0) * usedArea.GetSizeY();
 
 		spawnPos[2] += 18.0;
 		float traceEndPos[3];

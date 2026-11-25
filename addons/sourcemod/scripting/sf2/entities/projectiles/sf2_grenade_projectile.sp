@@ -289,6 +289,7 @@ methodmap SF2_ProjectileGrenade < SF2_ProjectileBase
 		grenade.Timer = GetGameTime() + 2.0;
 
 		CreateTimer(0.1, Timer_Think, EntIndexToEntRef(grenade.index), TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+		return grenade;
 	}
 }
 

@@ -977,7 +977,8 @@ static any Native_GetSprintPoints(Handle plugin, int numParams)
 
 static any Native_SetSprintPoints(Handle plugin, int numParams)
 {
-	float newValue = GetNativeCell(2) / 100.0;
+	float newValue = GetNativeCell(2);
+	newValue /= 100.0;
 	SF2_BasePlayer(GetNativeCell(1)).Stamina = newValue;
 	return 0;
 }

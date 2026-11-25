@@ -94,6 +94,7 @@ methodmap SF2_ProjectileArrow < SF2_ProjectileBase
 		arrow.SetVelocity();
 
 		SDKHook(arrow.index, SDKHook_StartTouch, StartTouch);
+		return arrow;
 	}
 }
 

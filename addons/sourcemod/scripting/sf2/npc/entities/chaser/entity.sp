@@ -1743,22 +1743,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 			return nbAction;
 		}
 
-		// Caps momento
-		int size = strlen(attackName) + 1;
-		char[] lower = new char[size];
-		strcopy(lower, size, attackName);
-		for (int i = 0; i < size; i++)
-		{
-			lower[i] = CharToLower(lower[i]);
-		}
-
-		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(lower);
+		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(attackName);
 
 		if (attackDataEx != null)
 		{
 			Call_StartForward(g_OnBossGetCustomAttackActionExFwd);
 			Call_PushCell(this);
-			Call_PushString(lower);
+			Call_PushString(attackName);
 			Call_PushCell(attackDataEx);
 			Call_PushCell(target);
 			Call_PushCellRef(nbAction);
@@ -1788,22 +1779,13 @@ methodmap SF2_ChaserEntity < SF2_BaseBoss
 		Call_PushCell(target);
 		Call_Finish(action);
 
-		// Caps momento
-		int size = strlen(attackName) + 1;
-		char[] lower = new char[size];
-		strcopy(lower, size, attackName);
-		for (int i = 0; i < size; i++)
-		{
-			lower[i] = CharToLower(lower[i]);
-		}
-
-		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(lower);
+		ChaserBossProfileBaseAttack attackDataEx = this.Controller.GetProfileDataEx().GetAttack(attackName);
 
 		if (attackDataEx != null)
 		{
 			Call_StartForward(g_OnIsBossCustomAttackPossibleExFwd);
 			Call_PushCell(this);
-			Call_PushString(lower);
+			Call_PushString(attackName);
 			Call_PushCell(attackDataEx);
 			Call_PushCell(target);
 			Call_Finish(action);

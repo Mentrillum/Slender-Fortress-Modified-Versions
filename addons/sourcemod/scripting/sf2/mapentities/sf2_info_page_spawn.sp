@@ -108,7 +108,7 @@ methodmap SF2PageSpawnEntity < CBaseEntity
 	{
 		public get()
 		{
-			this.GetProp(Prop_Data, "sf2_iCollectSoundPitch");
+			return this.GetProp(Prop_Data, "sf2_iCollectSoundPitch");
 		}
 
 		public set(int value)

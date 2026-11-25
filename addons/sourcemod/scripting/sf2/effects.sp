@@ -75,6 +75,7 @@ methodmap ProfileEffect < ProfileObject
 			{
 				return EffectType_Sound;
 			}
+			return EffectType_Invalid;
 		}
 	}
 
@@ -96,6 +97,7 @@ methodmap ProfileEffect < ProfileObject
 			{
 				return EffectEvent_PlayerSeesBoss;
 			}
+			return EffectEvent_Invalid;
 		}
 	}
 

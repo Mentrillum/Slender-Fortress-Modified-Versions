@@ -707,6 +707,7 @@ methodmap SF2_BaseBoss < CBaseCombatCharacter
 		this.SetLayerPlaybackRate(layer, rate);
 		this.SetLayerCycle(layer, cycle);
 		this.SetLayerAutokill(layer, true);
+		return true;
 	}
 
 	public bool IsLOSClearFromTarget(CBaseEntity target, bool checkGlass = true)

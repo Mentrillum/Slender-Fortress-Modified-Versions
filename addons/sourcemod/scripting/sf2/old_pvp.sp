@@ -342,6 +342,11 @@ static void FlameStartTouch(int ent, int other)
 	}
 
 	int weapon = GetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity");
+	if (IsValidEntity(weapon))
+	{
+		return;
+	}
+
 	int owner = GetEntPropEnt(weapon, Prop_Data, "m_hOwnerEntity");
 	if (!IsValidClient(owner) || !IsClientInPvP(owner))
 	{

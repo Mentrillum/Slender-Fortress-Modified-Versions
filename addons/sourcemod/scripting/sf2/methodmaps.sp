@@ -623,7 +623,7 @@ methodmap SF2_BasePlayer < CBaseCombatCharacter
 		return TF2_IsPlayerInCondition(this.index, condition);
 	}
 
-	public bool ChangeCondition(TFCond condition, bool remove = false, float duration = TFCondDuration_Infinite, int inflictor = 0)
+	public void ChangeCondition(TFCond condition, bool remove = false, float duration = TFCondDuration_Infinite, int inflictor = 0)
 	{
 		if (remove)
 		{
@@ -3297,7 +3297,8 @@ static any Native_CheckClientAFKTime(Handle plugin, int numParams)
 	}
 
 	SF2_BasePlayer player = SF2_BasePlayer(client);
-	return player.CheckAFKTime();
+	player.CheckAFKTime();
+	return 0;
 }
 
 static any Native_GetClientShouldBeForceChased(Handle plugin, int numParams)

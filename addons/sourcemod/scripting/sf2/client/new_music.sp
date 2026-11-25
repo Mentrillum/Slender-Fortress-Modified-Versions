@@ -373,6 +373,7 @@ static float g_CurrentTrackLength[MAXTF2PLAYERS];
 static StringMap g_QueuedThemes[MAXTF2PLAYERS]; // Fade out queue
 static StringMap g_LayeredThemes[MAXTF2PLAYERS]; // Layered tracks
 static MusicState g_CurrentTheme[MAXTF2PLAYERS];
+static MusicState g_CurrentLayeredTheme[MAXTF2PLAYERS];
 static MusicState g_DefaultMusicState; // Pages
 static MusicState g_OldDefaultMusicState;
 static MusicState g_GlobalMusicState[MAXTF2PLAYERS]; // Boss global theme
@@ -518,6 +519,7 @@ static void OnDisconnected(SF2_BasePlayer client)
 		delete g_LayeredThemes[client.index];
 	}
 	g_CurrentTheme[client.index] = g_NullMusicState;
+	g_CurrentLayeredTheme[client.index] = g_NullMusicState;
 	g_GlobalMusicState[client.index] = g_NullMusicState;
 }
 
@@ -909,6 +911,8 @@ static void ClearMusic(SF2_BasePlayer client)
 
 	g_CurrentTheme[client.index].Stop(client);
 	g_CurrentTheme[client.index] = g_NullMusicState;
+	g_CurrentLayeredTheme[client.index].Stop(client);
+	g_CurrentLayeredTheme[client.index] = g_NullMusicState;
 }
 
 static void UpdatePageMusic()
@@ -1162,21 +1166,11 @@ static void AddLayeredTrack(SF2_BasePlayer client, MusicState state, int index)
 		return;
 	}
 
-	if (g_QueuedThemes[client.index] != null)
+	MusicState currentState;
+	currentState = g_CurrentLayeredTheme[client.index];
+	if (strcmp(currentState.MusicPath, state.MusicPath, false) == 0)
 	{
-		StringMapSnapshot snapshot = g_QueuedThemes[client.index].Snapshot();
-		for (int i = 0; i < snapshot.Length; i++)
-		{
-			char key[PLATFORM_MAX_PATH];
-			snapshot.GetKey(i, key, sizeof(key));
-			MusicState oldState;
-			g_QueuedThemes[client.index].GetArray(key, oldState, sizeof(oldState));
-			if (strcmp(oldState.MusicPath, state.MusicPath, false) == 0)
-			{
-				g_QueuedThemes[client.index].Remove(key);
-			}
-		}
-		delete snapshot;
+		return;
 	}
 
 	char intString[16];
@@ -1213,6 +1207,8 @@ static void AddLayeredTrack(SF2_BasePlayer client, MusicState state, int index)
 			g_LayeredThemes[client.index].SetArray(intString, state, sizeof(state));
 		}
 	}
+	state.SetFadeState(SF2MusicFadeState_FadeIn);
+	g_CurrentLayeredTheme[client.index] = state;
 }
 
 static void RemoveLayeredTracks(SF2_BasePlayer client, int index = -1)
@@ -1300,7 +1296,7 @@ static void MusicThink()
 
 		path[0] = '\0';
 		GetBossMusicTrack(controller, SF2BossMusicTrackType_Visible, path, sizeof(path));
-		if (path[0] == '\0')
+		if (path[0] != '\0')
 		{
 			validVisibleBosses.Push(i);
 		}
@@ -1390,6 +1386,11 @@ static void MusicThink()
 			g_CurrentTheme[client.index].FadeIn(client, delta);
 		}
 
+		if (g_CurrentLayeredTheme[client.index].FadeState == SF2MusicFadeState_FadeIn)
+		{
+			g_CurrentLayeredTheme[client.index].FadeIn(client, delta);
+		}
+
 		if (g_IsMusicLocked[client.index])
 		{
 			continue;
@@ -1429,16 +1430,25 @@ static void MusicThink()
 				snapshot.GetKey(i2, key, sizeof(key));
 				MusicState state;
 				g_LayeredThemes[client.index].GetArray(key, state, sizeof(state));
-				if (state.FadeState == SF2MusicFadeState_FadeIn)
+				if (strcmp(state.MusicPath, g_CurrentLayeredTheme[client.index].MusicPath, false) == 0)
 				{
-					state.FadeIn(client, delta);
+					g_LayeredThemes[client.index].Remove(key);
+					g_CurrentLayeredTheme[client.index].CurrentVolume = state.CurrentVolume;
+					continue;
+				}
+				if (state.FadeState == SF2MusicFadeState_FadeOut)
+				{
+					state.FadeOut(client, delta, g_CurrentLayeredTheme[client.index].InstantFade, g_CurrentLayeredTheme[client.index].FadeSpeed);
 					g_LayeredThemes[client.index].SetArray(key, state, sizeof(state));
 				}
-				else if (state.FadeState == SF2MusicFadeState_FadeOut)
+				else
 				{
-					state.FadeOut(client, delta);
-					g_LayeredThemes[client.index].SetArray(key, state, sizeof(state));
+					g_LayeredThemes[client.index].Remove(key);
 				}
+			}
+			if (snapshot.Length == 0)
+			{
+				delete g_LayeredThemes[client.index];
 			}
 			delete snapshot;
 		}
@@ -1556,15 +1566,15 @@ static void MusicThink()
 				continue;
 			}
 
-			if (priorityState != -1)
+			if (chaser.State != priorityState)
 			{
 				if ((priorityState == STATE_CHASE || priorityState == STATE_ATTACK || priorityState == STATE_STUN)
-					&& chaser.State < STATE_CHASE)
+					&& chaser.State <= STATE_CHASE)
 				{
 					continue;
 				}
 
-				if (priorityState == STATE_ALERT && chaser.State < priorityState)
+				if (priorityState == STATE_ALERT && chaser.State <= priorityState)
 				{
 					continue;
 				}

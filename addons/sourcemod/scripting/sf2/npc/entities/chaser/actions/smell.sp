@@ -111,7 +111,6 @@ static int Update(SF2_ChaserSmellAction action, SF2_ChaserEntity actor, NextBotA
 			}
 			else
 			{
-				actor.Target = target;
 				SF2_BasePlayer player = SF2_BasePlayer(target.index);
 				player.SetForceChaseState(controller, true);
 				actor.State = STATE_CHASE;

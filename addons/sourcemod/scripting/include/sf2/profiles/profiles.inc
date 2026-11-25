@@ -123,22 +123,7 @@ stock int PrecacheModel2(const char[] path, bool phy = true, bool dx8 = false, b
 	char buffer[PLATFORM_MAX_PATH];
 	if (dx8)
 	{
-		FormatEx(buffer, sizeof(buffer), "models/%s.dx80.vtx", fixedPath);
-		if (checkFile)
-		{
-			if (FileExists(buffer, true))
-			{
-				AddFileToDownloadsTable(buffer);
-			}
-			else
-			{
-				PrintToServer("[SF2] File %s is missing from the server files!", buffer);
-			}
-		}
-		else
-		{
-			AddFileToDownloadsTable(buffer);
-		}
+
 	}
 
 	FormatEx(buffer, sizeof(buffer), "models/%s.dx90.vtx", fixedPath);

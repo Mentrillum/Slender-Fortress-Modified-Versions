@@ -95,6 +95,7 @@ methodmap SF2_ProjectileBaseball < SF2_ProjectileGrenade
 		ball.Timer = GetGameTime() + 12.0;
 
 		SDKHook(ball.index, SDKHook_VPhysicsUpdate, Think);
+		return ball;
 	}
 }
 

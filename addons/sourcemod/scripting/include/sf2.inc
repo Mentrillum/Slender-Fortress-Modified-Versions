@@ -10,8 +10,8 @@
 #include <tf2_stocks>
 #include <sdkhooks>
 
-#define PLUGIN_VERSION "1.8.0 M RC2.3"
-#define PLUGIN_VERSION_DISPLAY "1.8.0 M RC2.3"
+#define PLUGIN_VERSION "1.8.0 M RC2.31"
+#define PLUGIN_VERSION_DISPLAY "1.8.0 M RC2.31"
 
 // Some defines.
 #define SF2_MAX_PROFILE_NAME_LENGTH 64
@@ -4028,7 +4028,7 @@ methodmap SF2_Player < CBaseCombatCharacter
 	 * @param duration		How long the condition will last
 	 * @param inflictor		Inflictor of the condition
 	 */
-	public native bool ChangeCondition(TFCond condition, bool remove = false, float duration = -1.0, int inflictor = 0);
+	public native void ChangeCondition(TFCond condition, bool remove = false, float duration = -1.0, int inflictor = 0);
 	#endif
 
 	/**

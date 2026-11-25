@@ -61,7 +61,7 @@ static int Update(SF2_ChaserChaseLayerAction action, SF2_ChaserEntity actor, flo
 	{
 		float pos[3];
 		target.GetAbsOrigin(pos);
-		if (actor.Teleporters.Length > 0)
+		if (actor.Teleporters != null && actor.Teleporters.Length > 0)
 		{
 			CBaseEntity(actor.Teleporters.Get(0)).GetAbsOrigin(pos);
 			if ((interrputConditions & COND_ENEMYVISIBLE) != 0 && actor.GetInFOV(target))

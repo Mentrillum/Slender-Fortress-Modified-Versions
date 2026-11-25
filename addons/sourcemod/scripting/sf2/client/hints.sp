@@ -6,6 +6,19 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+// Hint data.
+enum
+{
+	PlayerHint_Sprint = 0,
+	PlayerHint_Flashlight,
+	PlayerHint_MainMenu,
+	PlayerHint_Blink,
+	PlayerHint_Trap,
+	PlayerHint_Noises,
+	PlayerHint_Crouch,
+	PlayerHint_MaxNum
+};
+
 bool g_PlayerHints[MAXTF2PLAYERS][PlayerHint_MaxNum];
 static Handle g_ShowHintTimer[MAXPLAYERS + 1];
 
@@ -184,19 +197,6 @@ static Action Timer_ShowNoisesHint(Handle timer, any userId)
 
 	return Plugin_Stop;
 }
-
-// Hint data.
-enum
-{
-	PlayerHint_Sprint = 0,
-	PlayerHint_Flashlight,
-	PlayerHint_MainMenu,
-	PlayerHint_Blink,
-	PlayerHint_Trap,
-	PlayerHint_Noises,
-	PlayerHint_Crouch,
-	PlayerHint_MaxNum
-};
 
 void ClientResetHints(int client)
 {

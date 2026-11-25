@@ -1243,13 +1243,11 @@ static void PrecacheStuff()
 	PrecacheSound2(SF2_INTRO_DEFAULT_MUSIC, true);
 
 	AddFileToDownloadsTable("models/slender/pickups/sheet.mdl");
-	AddFileToDownloadsTable("models/slender/pickups/sheet.dx80.vtx");
 	AddFileToDownloadsTable("models/slender/pickups/sheet.dx90.vtx");
 	AddFileToDownloadsTable("models/slender/pickups/sheet.phy");
 	AddFileToDownloadsTable("models/slender/pickups/sheet.vvd");
 
 	AddFileToDownloadsTable("models/demani_sf/key_australium.mdl");
-	AddFileToDownloadsTable("models/demani_sf/key_australium.dx80.vtx");
 	AddFileToDownloadsTable("models/demani_sf/key_australium.dx90.vtx");
 	AddFileToDownloadsTable("models/demani_sf/key_australium.vvd");
 
@@ -1275,7 +1273,6 @@ static void PrecacheStuff()
 	AddFileToDownloadsTable("materials/models/jason278/slender/sheets/sheet_8.vmt");
 
 	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.mdl");
-	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.dx80.vtx");
 	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.dx90.vtx");
 	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.phy");
 	AddFileToDownloadsTable("models/mentrillum/traps/beartrap.vvd");
