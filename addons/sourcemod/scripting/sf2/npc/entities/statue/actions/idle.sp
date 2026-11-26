@@ -19,6 +19,7 @@ methodmap SF2_StatueIdleAction < NextBotAction
 static int OnStart(SF2_StatueIdleAction action, SF2_StatueEntity actor, NextBotAction priorAction)
 {
 	actor.State = STATE_IDLE;
+	actor.StopMoving();
 	return action.Continue();
 }
 

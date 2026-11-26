@@ -85,7 +85,7 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 
 	if (actor.LastKillTime > gameTime)
 	{
-		actor.IsMoving = false;
+		actor.StopMoving();
 	}
 
 	if (actor.IsMoving)
@@ -106,13 +106,13 @@ static int Update(SF2_StatueBaseAction action, SF2_StatueEntity actor, float int
 			target.GetAbsOrigin(targetPos);
 
 			float distance = GetVectorSquareMagnitude(targetPos, myPos);
-			float maxRange = Pow(data.ModelChangeDistanceMax[difficulty], 2.0);
+			float maxRange = data.ModelChangeDistanceMax[difficulty];
 			char model[PLATFORM_MAX_PATH];
-			if (distance < maxRange * 0.33)
+			if (distance < SquareFloat(maxRange * 0.33))
 			{
 				data.ModelsCloseDist.GetString(difficulty, model, sizeof(model));
 			}
-			else if (distance < maxRange * 0.66)
+			else if (distance < SquareFloat(maxRange * 0.66))
 			{
 				data.ModelsAverageDist.GetString(difficulty, model, sizeof(model));
 			}
